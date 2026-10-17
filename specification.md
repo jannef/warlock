@@ -152,7 +152,7 @@ rate or animation.
 - Symbol commands (`<`, `>`, `?`) are bound by **logical key**, so they work on non-US layouts.
 - Bindings live in the settings file. The `?` controls overlay is generated from the binding table,
   so it is always accurate. A rebinding UI comes in M5.
-- First-phase commands: move, wait, open/close door, ascend/descend, look, help, save and quit.
+- First-phase commands: move, wait, open/close door, ascend/descend, look, help, save and quit (`Q`).
   Free actions (look, help, menus) do not advance time.
 - Screen layout: map viewport, message log, status panel (turn, position, level, light at the
   player, vision profile, seed).
@@ -196,7 +196,13 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   continues the run. Dev builds add named snapshots. Format: a versioned envelope (magic, format
   version, game version) around a JSON payload, gzip-compressed with a pure-Rust backend, written
   atomically (temp file + rename). Before 1.0, incompatible saves are rejected with a clear message;
-  from 1.0 on, saves are migrated. The web build uses browser storage.
+  from 1.0 on, saves are migrated. The web build uses browser storage. The envelope also records a
+  content fingerprint (hash of the ordered terrain, creature, and level ids), because ids are
+  indices; a save made with different content is rejected. The save is `run.sav` in the platform
+  data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
+  and on level change, and a save that cannot be read is renamed `run.sav.bad`, never deleted, while
+  a new run starts. Starting resumes the save unless `--new` is given. Dev snapshots: `F5` saves and
+  `F9` loads `snapshots/quick.sav` (debug builds or `--dev`).
 - **Settings**: a separate file in the platform config directory.
 - **Replays**: JSON action logs with a header (game version, scenario, seed) and per-turn state hashes.
 - **Dumps**: JSON simulation state plus ASCII layers.

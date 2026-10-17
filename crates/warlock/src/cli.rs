@@ -48,6 +48,19 @@ pub struct Args {
     #[arg(long)]
     pub capture: Option<PathBuf>,
 
+    /// Start a fresh run instead of resuming the saved one (the old save is overwritten on the
+    /// next save).
+    #[arg(long)]
+    pub new: bool,
+
+    /// Enable developer features in release builds (F5/F9 snapshots). Always on in debug builds.
+    #[arg(long)]
+    pub dev: bool,
+
+    /// Keep saves in this directory instead of the platform data directory.
+    #[arg(long)]
+    pub save_dir: Option<PathBuf>,
+
     /// Number of frames to render before taking the `--capture` screenshot.
     #[arg(long, default_value_t = 10)]
     pub capture_after_frames: u32,

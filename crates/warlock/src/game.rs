@@ -1,6 +1,7 @@
 //! The running game: owns the simulation and applies player actions.
 
 use crate::cli::Args;
+use crate::save::{Resume, SaveStore};
 use bevy::prelude::*;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -28,6 +29,21 @@ impl Game {
         };
         let content = Content::load(&files).map_err(|e| format!("invalid content: {e}"))?;
         let content = Arc::new(content);
+        let mut failure = None;
+        if SaveStore::resumes(args) {
+            match SaveStore::from_args(args).resume(&content) {
+                Resume::Loaded(mut world) => {
+                    world.notice("Welcome back.");
+                    return Ok(Self {
+                        world,
+                        last_outcome: Outcome::default(),
+                        recorder: None,
+                    });
+                }
+                Resume::Failed(message) => failure = Some(message),
+                Resume::NoSave => {}
+            }
+        }
         let (world, replay) = match &args.replay {
             Some(path) => {
                 let text = std::fs::read_to_string(path)
@@ -43,8 +59,11 @@ impl Game {
                 (world, Some(replay))
             }
             None => {
-                let world = World::new(content, &args.scenario, args.seed)
+                let mut world = World::new(content, &args.scenario, args.seed)
                     .map_err(|e| format!("cannot start scenario `{}`: {e}", args.scenario))?;
+                if let Some(message) = failure {
+                    world.notice(message);
+                }
                 let replay = args.record.is_some().then(|| Replay::new(&world));
                 (world, replay)
             }

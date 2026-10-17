@@ -5,7 +5,9 @@ mod cli;
 mod game;
 mod input;
 mod logging;
+mod paths;
 mod render;
+mod save;
 mod ui;
 mod viewport;
 
@@ -68,6 +70,7 @@ fn main() -> AppExit {
             game::GamePlugin,
             input::InputPlugin,
             render::RenderPlugin,
+            save::SavePlugin,
             ui::UiPlugin,
             capture::CapturePlugin,
         ))
