@@ -30,9 +30,10 @@ Build the engine and framework, not the game. Everything built is production qua
 - Development interface (§9)
 - Procedural generation with reproducible seeds (M6): dungeon branches of generated levels
   (rooms and corridors, caves) with hand-made vaults, joined to the hand-authored levels by stairs
+- An overworld with travel time, locations, local areas, and day and night (M9)
 
 **Out of scope for now**: combat, statistics, item effects, AI, character creation, audio, mouse
-input, overworld/wilderness map, infravision, localization.
+input, infravision, localization.
 
 Vision types are in scope even though there are no other mechanics yet: they are part of perception,
 and the light data model must carry them from the start.
@@ -54,7 +55,7 @@ regression scene for golden screenshots, replays, and snapshot tests.
 | Darkness chamber | vision types, a UV-only rune, darkvision fade | M3 |
 | Water garden | still ponds and running rills (flow, glints, foam), pulsing altar | M4, M8 |
 | Effects room | glyph particles, glow, fades, distortion | M4 |
-| Stairs | connection to Level 2; up to the courtyard | M2, M9 |
+| Stairs | connection to Level 2 (down), the courtyard and the overworld (up) | M2, M9 |
 
 **Courtyard (66×19, outdoor)**: up the stairs nook's `<`, a walled garden under the open sky —
 trees, a ruined wall, a pond, standing stones, flower beds, and a roofed gazebo with a lamp — where
@@ -62,12 +63,37 @@ sunlight, sky light, and shadows turn and stretch with the time of day (§5 "Sun
 `courtyard` scenario starts there at 06:30, while the shadows are long.
 
 **Level 2 — Vast (≥ 400×300)**: scrolling camera, many light sources, performance budget check.
-Introduced in M2, lit in M3. Beside its stairs up to the hub, stairs down lead into the depths.
-A river of running water winds through it from north to south, foaming against a few boulders.
+Introduced in M2, lit in M3. Beside its stairs up to the hub, stairs down lead into the depths and
+stairs up lead out to the overworld (the cavern mouth). A river of running water winds through it
+from north to south, foaming against a few boulders.
 
 **The Depths (generated, M6)**: a dungeon branch of eight procedurally generated levels
 (`depths:1` to `depths:8`; rooms and corridors at 80×21, caverns at 120×60 on depths 3–5) built
 from the run seed, with vaults stamped in. The `depths` scenario starts on its first level.
+
+**The Overworld (M9)**: *The Wildlands*, a hand-authored 100×50 map of the land at large
+(`levels/overworld.toml`, level kind `overworld`), ADOM-like. Overworld terrain: plains,
+grassland, forest, dense forest, hills, mountain ranges, swamp, rivers and deep water, roads, a
+bridge, and locations. A step is a journey: it takes the destination terrain's `travel_minutes`
+(road and bridge 20, plains 45, grassland 50, forest 90, hills 120, swamp and dense forest 150,
+locations 30); mountains and open water are impassable, and the river Wendle (drawn flowing, with
+legend arrows like running water; §4.3) can only be crossed by the bridge. Named regions (Greenmarch, Thornwood, Barrowdowns, Hollowcrag, Silvermere, Sallow
+Plains, Mirefen, Greyspine Mountains) show in the status bar.
+- **Locations** are stairs down: the Hall (to the hub), the cavern mouth in the Hollowcrag (to the
+  vast level), and the way into the Depths in the Barrowdowns (`depths:1`). `>` on a location
+  enters its level, arriving on the stairs that lead back; those stairs (`<`) lead out to the
+  overworld at the location. The hub's stairs nook has a `<` to the overworld.
+- **Local areas**: `>` on any other cell whose terrain names a local ground enters the outdoor
+  local area of that cell (level id `local:x,y`), generated on the first visit and then persistent
+  like any level. Walking off any edge of a local area returns to its overworld cell. For now a
+  local area is a placeholder: an 80×40 open field of the ground the overworld terrain names
+  (`local`: grass, forest floor, rocky ground, marsh), arrival in the middle; the outdoor
+  generators replace it.
+- **Day and night**: sight on the overworld depends on daylight (§5), and the sun and the sky
+  light the overworld and its local areas by day (§5 "Sunlight"); at night the overworld is drawn
+  by a faint cold light, while local areas are dark.
+- The `world` scenario starts on the road beside the Hall; the showcase scenario keeps starting in
+  the hub.
 
 ## 4. Rendering
 
@@ -278,7 +304,7 @@ rate or animation.
   its 8 neighbors is transparent, seen, and lit by the same source. This prevents light leaking
   through walls, and a wall is never brighter than the floor at the same distance. Its base light
   is ambient plus the brightest sky-plus-bounce light of its seen transparent neighbors.
-- **Sunlight**: levels under the open sky (`kind = "outdoor"`; the overworld will be too; never
+- **Sunlight**: levels under the open sky (`kind = "outdoor"` and the overworld; never
   dungeons) are lit by the sun and the sky by day. Terrain with `roofed = true` (indoor floors on
   an outdoor map) never receives either.
   - **Sun path**: one entry per minute of the day, computed at compile time with integer math (a
@@ -310,6 +336,15 @@ rate or animation.
   (its perceived brightness ≥ the eye's threshold **or** its distance ≤ the darkvision radius). The
   player's own cell is always visible. Creatures are seen iff their cell is visible: creatures in
   darkness are hidden (unless within darkvision), creatures carrying light are seen.
+- **Overworld sight** is at map scale: a cell of the overworld is visible iff it is in line of
+  sight within the daylight radius: 9 by day (06:30–17:30), 5 in twilight (half an hour either side
+  of 06:00 and 18:00), 2 at night (moonlight is darkness for now). Light, the eye's threshold, and
+  darkvision play no part. Mountain ranges and dense forest are opaque; forest is not.
+- **Overworld night light**: the overworld is lit by the sun and the sky like any level under the
+  open sky ("Sunlight" below), and never gets darker than a faint cold light (`[48, 56, 90]`,
+  channel by channel, added to its ambient light where sun and sky fall short): it only draws the
+  cells in sight at night apart from the remembered map, since sight there ignores light. Local
+  outdoor levels get no such light: at night they are dark (bring a lantern).
 - **Wall completion**: an opaque cell within the view range that is 8-adjacent to a transparent cell
   seen by light or darkvision is visible too, even outside line of sight, so floor seen through a
   narrow, irregular gap is never shown without the walls bounding it. (The player's own cell, which
@@ -375,18 +410,21 @@ rate or animation.
   `rest:dawn`, `rest:dusk`); any other command cancels. Resting is one action that passes turn
   after turn and stops early when a creature comes into view or a message is logged (§8 "Time").
   It is a gameplay input mode like the open/close direction prompt, not a menu screen.
-- Screen layout: map viewport, message log, status panel (level, time of day and date as
-  `14:32 · 12 Rainmoon`, turn, position, light at the player, vision profile, lantern, seed;
-  segments drop in priority order when the window is narrow, the time last after the level name).
+- Screen layout: map viewport, message log, status panel (level, region (on the overworld and in
+  its local areas), time of day and date as `14:32 · 12 Rainmoon`, turn, position, light at the
+  player, vision profile, lantern, seed; segments drop in priority order when the window is narrow,
+  the time last after the level name).
 
 ## 7. Levels and data formats
 
 Rule: **hand-authored data is TOML; machine-written data is JSON.**
 
 - **Level files** (TOML): a header (name, ambient light, legend, lights, patrols, stair links,
-  and how time passes: `kind = "dungeon"` (default) or `"outdoor"` (under the open sky, lit by the
-  sun and the sky; §5 "Sunlight"), optional `turn_seconds`, 1 to 3600, default 6 for both kinds;
-  §8 "Time") plus a multiline ASCII map. Level size comes from the map, with no fixed upper limit: most dungeon levels
+  and how time passes: `kind = "dungeon"` (default), `"outdoor"` (under the open sky, lit by the
+  sun and the sky; §5 "Sunlight"), or `"overworld"` (also under the sky), optional `turn_seconds`,
+  1 to 3600, default 6 on dungeon and outdoor levels and 600 on the overworld; §8 "Time"; optional
+  named regions, `[[region]] name = "Thornwood" area = [x0, y0, x1, y1]`, inclusive, first match
+  wins) plus a multiline ASCII map. Level size comes from the map, with no fixed upper limit: most dungeon levels
   are about 80×21, some are vast. The camera scrolls when a level is larger than the viewport. The
   same format defines vaults for procedural generation (below). Illustrative only — exact syntax
   is designed in M1:
@@ -430,8 +468,11 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   effects (glow, heat haze, particle emitters; §4.8). Terrain has a `move_cost`: the time to step
   onto it in percent of the level's turn (default 100; still and running water 200), a `bounce`
   tint for the light it reflects (§5), a `height` in cells for sun shadows (default 1 if opaque,
-  else 0; at most 4), and `roofed` (never lit by the sun or the sky). The calendar's month names
-  are `data/calendar.toml` (exactly 12; without the file months are numbered).
+  else 0; at most 4), and `roofed` (never lit by the sun or the sky). Overworld terrain has
+  `travel_minutes` (1 to 1440; required for every walkable terrain on the overworld) and
+  optionally `local`, the ground terrain of the local area entered from a cell of it (none:
+  nothing to explore there; locations never have one). The calendar's month names are
+  `data/calendar.toml` (exactly 12; without the file months are numbered).
 - **Dungeon branches** (`data/dungeons.toml`): stacks of generated levels, e.g.
   `{ id = "depths", generator = "rooms", depth = 8, size = [80, 21] }`, plus optional name,
   patrolling creature kinds, ambient light, and per-depth overrides of generator and size. Stairs
@@ -439,6 +480,12 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   that depth. A branch level is generated on its first visit from its own random stream (§8) and
   then persists like a hand-made level. Its `<` leads to `depths:N-1` (on depth 1, back to the
   level it was first entered from), its `>` to `depths:N+1` (the deepest level has none).
+- **The overworld**: at most one level of kind `overworld`. Its stairs down are locations; every
+  other cell whose terrain has a `local` ground names a local area, level id `local:x,y` (canonical
+  decimal, no signs or leading zeros), which stairs and scenarios may also target. A local area is
+  generated on its first visit from the content, the seed, and its id (its own random stream,
+  `map/local:x,y`), then persists; it records its edge exit (the overworld and the cell), and
+  walking off its edge leads there.
 - **Generators** (`warlock-core`, integer-only): *rooms* — walled rooms joined along a minimum
   spanning tree plus a few loops by corridors dug as cheapest paths (bends cost extra), with closed
   doors, open doors, or doorways where corridors enter, and wall torches in most rooms; *caves* —
@@ -462,7 +509,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   content fingerprint (hash of the ordered terrain, creature, level, light, and dungeon-branch
   ids), because ids are indices; a save made with different content is rejected. Generated levels
   are saved with the run like visited hand-made ones (terrain, memory, stairs, lights, kind and
-  turn length), together with the gameplay random stream and the game clock (format version 3). The save is `run.sav` in the platform
+  turn length, arrival point, and edge exit), together with the gameplay random stream and the game
+  clock (format version 4). The save is `run.sav` in the platform
   data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
   and on level change, and a save that cannot be read is renamed `run.sav.bad`, never deleted, while
   a new run starts. Starting resumes the save unless `--new` is given. Dev snapshots: `F5` saves and
@@ -505,11 +553,12 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   integer arithmetic; no wall-clock time.
   - **Costs**: every action that takes a turn advances the clock. A turn (a wait, a door, stairs,
     lighting the lantern) takes the turn length of the level it starts on (6 s on `dungeon` and
-    `outdoor` levels unless the level sets `turn_seconds`). A step takes that turn scaled by the
-    destination terrain's `move_cost` percent (at least 1 s). `LevelState::step_time` is the one
-    place movement time is decided; the overworld will add its own level kind there, whose steps
-    cost the terrain's travel time in minutes. Free and refused actions take no time. Creatures
-    act once per turn, however long it took (no speed system yet).
+    `outdoor` levels, 10 min on the overworld, unless the level sets `turn_seconds`). A step takes
+    that turn scaled by the destination terrain's `move_cost` percent (at least 1 s); on the
+    overworld it takes the destination terrain's `travel_minutes`. `LevelState::step_time` is the
+    one place movement time is decided. Walking off a local area's edge takes its turn. Free and
+    refused actions take no time. Creatures act once per turn, however long it took (no speed
+    system yet).
   - **Rest** passes turn after turn through the normal pipeline: the player waits, creatures act,
     perception runs; the last turn is cut short so the rest ends exactly at its goal (one hour,
     the next 06:00, or the next 18:00; at most a day). It stops after a turn in which a creature
@@ -545,7 +594,8 @@ warlock-cli dump --scenario showcase --actions "move:N move:N" \
 warlock-cli dump --replay runs/doors.json --format json --state   # structured dump
 warlock-cli replay --create --scenario showcase --actions "move:N wait" -o runs/x.json
 warlock-cli replay --verify runs/doors.json               # check per-turn state hashes
-warlock-cli gen --level depths:3 --seed warlock           # print a generated level (dev-only)
+warlock-cli gen --level depths:3 --seed warlock           # print a generated level (dev-only;
+                                                          # also local areas: local:49,23)
 cargo xtask golden [--update]                             # compare golden screenshots
 ```
 
@@ -641,7 +691,6 @@ All through the `gh` CLI:
 
 - License (the repo is private for now; bundled fonts must be OFL-compatible regardless)
 - Mouse support (hover-inspect first)
-- Overworld / wilderness map
 - Infravision
 - Audio
 - Localization

@@ -1,12 +1,13 @@
 //! `cargo xtask bench-turns`: turn-processing time in the hub, the vast level, the first
-//! generated level of the depths, and the sunlit courtyard at dawn (spec §10 budgets; a generated
-//! 80×21 level and the courtyard get the hub's), and the time a night's rest takes on each (dusk
-//! to dawn: 7200 turns of six seconds).
+//! generated level of the depths, the sunlit courtyard at dawn, and the overworld (spec §10
+//! budgets; a generated 80×21 level, the courtyard, and the 100×50 overworld get the hub's), and
+//! the time a night's rest takes on each (dusk to dawn: 7200 turns of six seconds, 72 of ten
+//! minutes on the overworld).
 
 use std::sync::Arc;
 use std::time::Instant;
 use warlock_core::content::Content;
-use warlock_core::time::{DUSK, Duration};
+use warlock_core::time::DUSK;
 use warlock_core::{Action, Dir, Rest, World};
 
 const TURNS: usize = 400;
@@ -14,12 +15,13 @@ const TURNS: usize = 400;
 const REST_BUDGET_MS: f64 = 500.0;
 
 /// (scenario, level label, budget in ms)
-const CASES: [(&str, &str, f64); 4] = [
+const CASES: [(&str, &str, f64); 5] = [
     ("showcase", "hub", 5.0),
     ("vast", "vast", 16.0),
     ("depths", "depths", 5.0),
     // Starts at 06:30, while shadows are long.
     ("courtyard", "court", 5.0),
+    ("world", "world", 5.0),
 ];
 
 /// Tiny deterministic generator for the scripted walk (kept local; the game RNG is not involved).
@@ -68,10 +70,10 @@ fn measure(content: &Arc<Content>, scenario: &str) -> Result<Stats, String> {
     // Rest from dusk to dawn wherever the walk ended (a creature may cut it short).
     let to_dusk = world.time().next_at(DUSK).since(world.time());
     world.apply(&Action::SkipTime(to_dusk));
-    let start = Instant::now();
-    let outcome = world.apply(&Action::Rest(Rest::Dawn));
+    let (start, turn) = (Instant::now(), world.turn());
+    world.apply(&Action::Rest(Rest::Dawn));
     let rest_ms = start.elapsed().as_secs_f64() * 1000.0;
-    let rest_turns = outcome.elapsed.as_seconds() / Duration::seconds(6).as_seconds();
+    let rest_turns = world.turn() - turn;
     Ok(Stats {
         avg_ms: times.iter().sum::<f64>() / times.len() as f64,
         max_ms: times.iter().copied().fold(0.0, f64::max),

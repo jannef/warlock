@@ -180,12 +180,15 @@ fn seeds_and_levels_give_different_maps() {
 #[test]
 fn only_branch_levels_generate() {
     let err = |id: &str| generate(&CONTENT, 1, id, None).unwrap_err();
-    assert_eq!(err("hub"), GenError::NotABranchLevel("hub".into()));
+    assert_eq!(err("hub"), GenError::NotAGeneratedLevel("hub".into()));
     assert_eq!(
         err("depths:9"),
-        GenError::NotABranchLevel("depths:9".into())
+        GenError::NotAGeneratedLevel("depths:9".into())
     );
-    assert_eq!(err("caves:1"), GenError::NotABranchLevel("caves:1".into()));
+    assert_eq!(
+        err("caves:1"),
+        GenError::NotAGeneratedLevel("caves:1".into())
+    );
 }
 
 /// Positions where `vault`'s terrain appears verbatim in `level`.

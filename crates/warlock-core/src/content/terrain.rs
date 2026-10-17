@@ -41,6 +41,11 @@ pub(super) struct TerrainSpec {
     /// Time to step onto this terrain, in percent of the level's turn (spec §8 "Time").
     #[serde(default = "full_cost")]
     pub move_cost: u16,
+    /// Overworld terrain: minutes one overworld step onto it takes (spec §8 "Time").
+    pub travel_minutes: Option<u16>,
+    /// Overworld terrain: the ground of the local area entered from it (`>` on the cell); none
+    /// means the cell has no local area.
+    pub local: Option<String>,
     /// For a closed door: the terrain it becomes when opened.
     pub opens_to: Option<String>,
     /// For an open door: the terrain it becomes when closed.
@@ -91,6 +96,12 @@ pub struct TerrainDef {
     /// Time to step onto this terrain, in percent of the level's turn: 100 is a normal step,
     /// 200 (shallow water) takes twice as long. Always at least 1.
     pub move_cost: u16,
+    /// Overworld terrain: minutes one overworld step onto it takes (1 to a day). Every walkable
+    /// terrain on the overworld has it.
+    pub travel_minutes: Option<u16>,
+    /// Overworld terrain: the ground of the local area entered from a cell of it; `None` if such
+    /// cells have no local area (roads have one; bridges and locations do not).
+    pub local: Option<TerrainId>,
     pub opens_to: Option<TerrainId>,
     pub closes_to: Option<TerrainId>,
     pub stairs: Option<StairsDir>,

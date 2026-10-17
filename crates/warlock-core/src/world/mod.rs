@@ -5,9 +5,13 @@
 //! are returned to the caller.
 //!
 //! Time (spec §8): every action that takes a turn advances the clock by its duration: the level's
-//! turn ([`LevelState::turn`], 6 s on local levels), or for a step the level's
-//! [`LevelState::step_time`] of the destination terrain. Creatures act once per turn, however
-//! long it took. Resting ([`Action::Rest`]) passes many turns in one action.
+//! turn ([`LevelState::turn`], 6 s on local levels, 10 min on the overworld), or for a step the
+//! level's [`LevelState::step_time`] of the destination terrain. Creatures act once per turn,
+//! however long it took. Resting ([`Action::Rest`]) passes many turns in one action.
+//!
+//! The overworld (spec §3): stairs down on it are locations leading into other levels; `>` on
+//! any other cell enters that cell's local area (`local:x,y`, generated on the first visit), and
+//! walking off a local area's edge leads back to its overworld cell (the level state's edge exit).
 
 mod actor;
 mod hash;
@@ -18,7 +22,9 @@ pub(crate) use hash::fnv1a;
 pub use level::LevelState;
 
 use crate::action::{Action, Event, MAX_REST, Outcome, Rest};
-use crate::content::{Content, LevelTemplate, StairsDir, TerrainId};
+use crate::content::{
+    Content, EdgeExit, LevelKind, LevelTemplate, StairsDir, TerrainId, local_area_id,
+};
 use crate::geom::{Dir, Pos};
 use crate::light::LightCache;
 use crate::messages::MessageLog;
@@ -502,6 +508,9 @@ impl World {
         let to = from.step(dir);
         let level = self.state.current();
         let Some(&terrain) = level.terrain.get(to) else {
+            if let Some(exit) = level.exit.clone() {
+                return self.leave_by_edge(exit, events);
+            }
             self.say("You can't go that way.");
             return Spent::Nothing;
         };
@@ -535,14 +544,64 @@ impl World {
             from,
             to,
         });
-        if let Some(stairs) = self.state.current().stairs_at(to) {
-            let way = match stairs.dir {
-                StairsDir::Down => "down",
-                StairsDir::Up => "up",
+        let level = self.state.current();
+        if let Some(stairs) = level.stairs_at(to) {
+            let text = match (level.kind, stairs.dir, &stairs.to) {
+                (LevelKind::Overworld, StairsDir::Down, Some(target)) => {
+                    format!("The way into {} is here.", self.place_name(target))
+                }
+                (_, StairsDir::Down, _) => "There is a staircase down here.".into(),
+                (_, StairsDir::Up, _) => "There is a staircase up here.".into(),
             };
-            self.say(format!("There is a staircase {way} here."));
+            self.say(text);
         }
         Spent::Turn(step)
+    }
+
+    /// What a level is called in messages; a dungeon branch goes by the branch's name.
+    fn place_name(&self, id: &str) -> String {
+        if let Some((branch, _)) = self.content.branch_level(id) {
+            return branch.name.clone();
+        }
+        if let Some(level) = self.state.levels.get(id) {
+            return level.name.clone();
+        }
+        self.content
+            .level(id)
+            .map_or_else(|| id.to_string(), |t| t.name.clone())
+    }
+
+    /// Walks off the edge of a local area, back to its overworld cell. Takes the level's turn.
+    fn leave_by_edge(&mut self, exit: EdgeExit, events: &mut Vec<Event>) -> Spent {
+        let turn = self.state.current().turn;
+        let from = self.state.current_level.clone();
+        if let Err(err) = self.travel(&exit.to, Some(exit.pos)) {
+            self.say(format!("You cannot leave this way ({err})."));
+            return Spent::Nothing;
+        }
+        events.push(Event::LevelChanged { from, to: exit.to });
+        let name = self.state.current().name.clone();
+        self.say(format!("You return to {name}."));
+        Spent::Turn(turn)
+    }
+
+    /// `>` on an overworld cell that is not a location: enters the cell's local area, arriving
+    /// at its start.
+    fn enter_local_area(&mut self, events: &mut Vec<Event>) -> bool {
+        let id = local_area_id(self.player_pos());
+        let Some(area) = self.content.local_area(&id) else {
+            self.say("There is nothing to explore here.");
+            return false;
+        };
+        let what = self.content.terrain(area.terrain).name.clone();
+        let from = self.state.current_level.clone();
+        if let Err(err) = self.travel(&id, None) {
+            self.say(format!("You cannot go there ({err})."));
+            return false;
+        }
+        events.push(Event::LevelChanged { from, to: id });
+        self.say(format!("You explore the {what}."));
+        true
     }
 
     fn open_door(&mut self, p: Pos, events: &mut Vec<Event>) -> bool {
@@ -605,7 +664,11 @@ impl World {
             StairsDir::Down => "down",
             StairsDir::Up => "up",
         };
+        let kind = self.state.current().kind;
         let Some(link) = link else {
+            if kind == LevelKind::Overworld && dir == StairsDir::Down {
+                return self.enter_local_area(events);
+            }
             self.say(format!("You see no way {way} here."));
             return false;
         };
@@ -614,38 +677,42 @@ impl World {
             return false;
         };
         let from = self.state.current_level.clone();
-        if let Err(err) = self.travel(&to) {
+        if let Err(err) = self.travel(&to, None) {
             self.say(format!("The stairs are blocked ({err})."));
             return false;
         }
         events.push(Event::LevelChanged { from, to });
-        let name = self.state.current().name.clone();
-        let verb = match dir {
-            StairsDir::Down => "descend",
-            StairsDir::Up => "climb",
+        let level = self.state.current();
+        let name = level.name.clone();
+        let text = match (kind, level.kind, dir) {
+            (LevelKind::Overworld, _, _) => format!("You enter {name}."),
+            (_, LevelKind::Overworld, _) => format!("You climb out to {name}."),
+            (_, _, StairsDir::Down) => format!("You descend the stairs to {name}."),
+            (_, _, StairsDir::Up) => format!("You climb the stairs to {name}."),
         };
-        self.say(format!("You {verb} the stairs to {name}."));
+        self.say(text);
         true
     }
 
-    /// Moves the player to level `to` (generating it on the first visit), arriving on the stairs
-    /// that lead back, else the level's player start, else its first staircase.
-    fn travel(&mut self, to: &str) -> Result<(), WorldError> {
+    /// Moves the player to level `to` (generating it on the first visit), arriving at `at` if
+    /// given, else on the stairs that lead back, else at the level's start, else on its first
+    /// staircase.
+    fn travel(&mut self, to: &str, at: Option<Pos>) -> Result<(), WorldError> {
         let from = self.state.current_level.clone();
-        let mut start = None;
         if !self.state.levels.contains_key(to) {
             let template = level_template(&self.content, self.state.seed, to, Some(&from))?;
-            start = template.player_start;
             instantiate_level(&mut self.state, &template);
         }
         let target = &self.state.levels[to];
-        let arrival = target
-            .stairs
-            .iter()
-            .find(|s| s.to.as_deref() == Some(from.as_str()))
-            .map(|s| s.pos)
-            .or(start)
-            .or_else(|| self.content.level(to).and_then(|t| t.player_start))
+        let arrival = at
+            .or_else(|| {
+                target
+                    .stairs
+                    .iter()
+                    .find(|s| s.to.as_deref() == Some(from.as_str()))
+                    .map(|s| s.pos)
+            })
+            .or(target.start)
             .or_else(|| target.stairs.first().map(|s| s.pos))
             .ok_or_else(|| WorldError::NoPlayerStart(to.to_string()))?;
         let arrival = self.free_cell_near(to, arrival);
@@ -725,8 +792,9 @@ fn article(noun: &str) -> &'static str {
     }
 }
 
-/// The template of level `id`: a hand-made level, or a level of a dungeon branch generated from
-/// the run seed (`entered_from` is where the up staircase of a branch's first level leads).
+/// The template of level `id`: a hand-made level, or one generated from the run seed: a level of
+/// a dungeon branch (`entered_from` is where the up staircase of a branch's first level leads)
+/// or a local area of the overworld.
 fn level_template<'a>(
     content: &'a Content,
     seed: u64,
@@ -736,7 +804,7 @@ fn level_template<'a>(
     if let Some(template) = content.level(id) {
         return Ok(Cow::Borrowed(template));
     }
-    if content.branch_level(id).is_none() {
+    if !content.has_level(id) {
         return Err(WorldError::UnknownLevel(id.to_string()));
     }
     crate::mapgen::generate(content, seed, id, entered_from)
@@ -774,6 +842,8 @@ fn instantiate_level(state: &mut WorldState, template: &LevelTemplate) {
 mod branch_tests;
 #[cfg(test)]
 mod light_tests;
+#[cfg(test)]
+mod overworld_tests;
 #[cfg(test)]
 mod sun_tests;
 #[cfg(test)]

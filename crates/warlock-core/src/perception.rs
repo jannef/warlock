@@ -9,6 +9,10 @@
 //! light is at least the vision profile's threshold or it lies within the darkvision radius. The
 //! player's own cell is always visible.
 //!
+//! The overworld is seen at map scale instead: a cell is visible iff it is in line of sight
+//! within the daylight sight radius ([`daylight::overworld_sight`]: day 9, twilight 5, night 2),
+//! whatever its light; eyes and darkvision do not change that.
+//!
 //! Light on a transparent cell is the level's ambient light, plus the light of every source that
 //! reaches it, plus weak **bounce light** reflected by the lit surfaces around it
 //! ([`crate::light::BOUNCE`]). On a level under the open sky, by day, the **sun** is one more
@@ -26,7 +30,8 @@
 //!   floor through a narrow gap without the walls around it). Such a cell shows only its terrain
 //!   and wall-face light: never creatures, and nothing beyond it.
 
-use crate::content::{Content, CreatureId, Flow, LightId, TerrainId, VisionProfile};
+use crate::content::{Content, CreatureId, Flow, LevelKind, LightId, TerrainId, VisionProfile};
+use crate::daylight;
 use crate::fov::{compute_fov, radius2};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
@@ -179,11 +184,19 @@ impl Perception {
         let vision = content.vision_index(&state.vision).unwrap_or(0);
         let eye = &content.vision_profiles()[vision];
         let is_opaque = |p: Pos| level.is_opaque(content, p);
+        // On the overworld, daylight sets how far one sees; light does not matter.
+        let overworld = level.kind == LevelKind::Overworld;
+        let range = if overworld {
+            daylight::overworld_sight(state.time)
+        } else {
+            VIEW_RADIUS
+        };
+        let sees = |light: Light, dist2: i32| overworld || eye.sees(light, dist2);
 
         // Line of sight.
         let mut los = Grid::new(width, height, false);
         let mut los_cells = Vec::new();
-        compute_fov(viewer, VIEW_RADIUS, is_opaque, |p| {
+        compute_fov(viewer, range, is_opaque, |p| {
             if let Some(seen) = los.get_mut(p)
                 && !*seen
             {
@@ -211,8 +224,13 @@ impl Perception {
         let sky = sun.map_or(Light::DARK, |s| eye.perceive(s.sky));
 
         // Base light on cells in line of sight: ambient, sky, and bounce (on transparent cells;
-        // RGB only, so every eye perceives all of it).
-        let ambient = eye.perceive(level.ambient);
+        // RGB only, so every eye perceives all of it). The overworld never gets darker than its
+        // faint night light.
+        let night = match sun {
+            Some(sun) if overworld => daylight::overworld_night(sun.sky),
+            _ => Light::DARK,
+        };
+        let ambient = eye.perceive(level.ambient.saturating_add(night));
         let bounce = area.map(|area| {
             let tint = |p: Pos| {
                 let rgb = terrain(p).map(|t| t.bounce);
@@ -268,7 +286,7 @@ impl Perception {
         let mut visible_cells = Vec::new();
         let mut seen = Vec::new();
         for &p in los_cells.iter().filter(|p| !is_opaque(**p)) {
-            let by_eye = eye.sees(light[p], p.dist2(viewer));
+            let by_eye = sees(light[p], p.dist2(viewer));
             if by_eye || p == viewer {
                 sight[p] = Sight::Seen;
                 visible_cells.push(p);
@@ -279,7 +297,7 @@ impl Perception {
         }
 
         // Wall completion: opaque cells bounding a transparent cell seen by eye.
-        let reach2 = radius2(VIEW_RADIUS);
+        let reach2 = radius2(range);
         for q in seen {
             for w in Dir::ALL.map(|d| q.step(d)) {
                 if sight.get(w) == Some(&Sight::Hidden) && is_opaque(w) && w.dist2(viewer) <= reach2
@@ -332,7 +350,7 @@ impl Perception {
 
         // Other opaque cells in line of sight: visible by their face light or darkvision.
         for &p in &los_cells {
-            if sight[p] == Sight::Hidden && is_opaque(p) && eye.sees(light[p], p.dist2(viewer)) {
+            if sight[p] == Sight::Hidden && is_opaque(p) && sees(light[p], p.dist2(viewer)) {
                 sight[p] = Sight::Seen;
                 visible_cells.push(p);
             }
@@ -419,6 +437,20 @@ impl<'a> PerceptionView<'a> {
         &self.level.name
     }
 
+    pub fn level_kind(&self) -> LevelKind {
+        self.level.kind
+    }
+
+    /// The named region the player is in: on a level with regions (the overworld), the one
+    /// around the viewer; in a local area, the one around its overworld cell.
+    pub fn region(&self) -> Option<&'a str> {
+        let (level, at) = match &self.level.exit {
+            Some(exit) => (exit.to.as_str(), exit.pos),
+            None => (self.level.id.as_str(), self.snapshot.viewer),
+        };
+        self.content.level(level)?.region_at(at)
+    }
+
     pub fn width(&self) -> i32 {
         self.level.width()
     }
@@ -472,10 +504,13 @@ impl<'a> PerceptionView<'a> {
         }
         let light = self.snapshot.light[p];
         let vision = self.vision();
+        let overworld = self.level.kind == LevelKind::Overworld;
         Some(PerceivedLight {
             rgb: light.rgb,
             uv: light.uv,
-            darkvision: vision.darkvision > 0 && light.brightness() < vision.threshold,
+            darkvision: !overworld
+                && vision.darkvision > 0
+                && light.brightness() < vision.threshold,
             dist2: p.dist2(self.snapshot.viewer),
         })
     }

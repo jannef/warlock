@@ -268,6 +268,20 @@ mod tests {
     }
 
     #[test]
+    fn every_content_glyph_is_in_the_font() {
+        let font = Font::load().unwrap();
+        let content = warlock_core::content::Content::builtin().unwrap();
+        let glyphs = content.glyphs();
+        let set = glyph_set(glyphs.iter().copied());
+        let atlas = rasterize(&font.0, 18.0, &set, 1);
+        let missing: String = glyphs
+            .into_iter()
+            .filter(|c| !atlas.index.contains_key(c))
+            .collect();
+        assert!(missing.is_empty(), "missing from the font: {missing:?}");
+    }
+
+    #[test]
     fn ui_text_glyphs_are_covered() {
         let font = Font::load().unwrap();
         let atlas = rasterize(&font.0, 18.0, &glyph_set([]), 1);

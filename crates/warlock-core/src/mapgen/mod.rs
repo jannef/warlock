@@ -1,8 +1,9 @@
 //! Procedural level generation (spec §2, §7, §8 Determinism).
 //!
 //! [`generate`] builds the [`LevelTemplate`] of a dungeon-branch level such as `depths:3` (see
-//! [`crate::content::DungeonDef`]). The level is a pure function of the content, the run seed, the
-//! level id, and (for a branch's first level) the level it was entered from:
+//! [`crate::content::DungeonDef`]), or of a local area of the overworld such as `local:12,30`
+//! ([`local`]). The level is a pure function of the content, the run seed, the level id, and (for
+//! a branch's first level) the level it was entered from. Branch levels:
 //!
 //! 1. Draw from the level's own stream, [`Rng::map`]`(seed, id, attempt)`.
 //! 2. Build the map with the branch's generator for that depth: `rooms` (rooms joined by
@@ -19,6 +20,7 @@
 
 mod caves;
 mod connect;
+pub mod local;
 mod rooms;
 mod vault;
 
@@ -40,8 +42,8 @@ const CARDINALS: [Dir; 4] = [Dir::N, Dir::E, Dir::S, Dir::W];
 /// Why a level could not be generated.
 #[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
 pub enum GenError {
-    #[error("`{0}` is not a level of any dungeon branch")]
-    NotABranchLevel(String),
+    #[error("`{0}` is neither a level of a dungeon branch nor a local area of the overworld")]
+    NotAGeneratedLevel(String),
     #[error("{0}")]
     Content(String),
     #[error("no valid map after {0} attempts")]
@@ -282,20 +284,24 @@ impl<'a> Canvas<'a> {
     }
 }
 
-/// Generates the branch level `id` (e.g. `depths:3`) for the run with `seed`. On a branch's first
-/// level the up staircase leads to `entered_from` (or nowhere if `None`).
+/// Generates the level `id` for the run with `seed`: a branch level (e.g. `depths:3`; on a
+/// branch's first level the up staircase leads to `entered_from`, or nowhere if `None`) or a
+/// local area (`local:12,30`).
 pub fn generate(
     content: &Content,
     seed: u64,
     id: &str,
     entered_from: Option<&str>,
 ) -> Result<LevelTemplate, GenError> {
+    if content.local_area(id).is_some() {
+        return local::generate(content, seed, id);
+    }
     let (def, depth) = content
         .branch_level(id)
-        .ok_or_else(|| GenError::NotABranchLevel(id.to_string()))?;
+        .ok_or_else(|| GenError::NotAGeneratedLevel(id.to_string()))?;
     let plan = def
         .plan(depth)
-        .ok_or_else(|| GenError::NotABranchLevel(id.to_string()))?;
+        .ok_or_else(|| GenError::NotAGeneratedLevel(id.to_string()))?;
     let pal = Palette::resolve(content).map_err(GenError::Content)?;
     let needs = Needs {
         down: depth < def.depth,
@@ -349,6 +355,8 @@ pub fn generate(
             stairs,
             lights: canvas.lights,
             flow: canvas.flow,
+            regions: Vec::new(),
+            exit: None,
         };
         if connect::validate(&template, content).is_ok() {
             return Ok(template);

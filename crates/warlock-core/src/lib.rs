@@ -10,6 +10,7 @@
 pub mod action;
 pub mod color;
 pub mod content;
+pub mod daylight;
 pub mod dump;
 pub mod fov;
 pub mod geom;

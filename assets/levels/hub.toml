@@ -1,6 +1,7 @@
 # The showcase hub (spec §3). Each room demonstrates one engine capability:
 # top row: light hall (M3), darkness chamber (M3), water garden (M4);
-# bottom row: start room, door corridor, patrol gallery, effects room (M4), stairs nook.
+# bottom row: start room, door corridor, patrol gallery, effects room (M4), stairs nook (> down to
+# the Vast Caverns, < up and out to the overworld, ^ up to the courtyard).
 #
 # Lighting (M3): no ambient light. Rooms are lit by wall torches (t), lamps (l), and a brazier (B);
 # the light hall has colored crystals (R G U A) between pillars that cast colored shadows; the
@@ -36,7 +37,7 @@ map = '''
 #..............##t....#l#....t##..#...#...#...#...#...#..#..........~F~#...l.^.#
 #..............##.....+.+.....##1........................#..........~~~#.......#
 #......@.......##.....#.#.....##.........................#......B......#.......#
-#..............####+###.###+####..#...#...#...#...#...#..#.............#...>...#
+#..............####+###.###+####..#...#...#...#...#...#..#.............#.<.>...#
 #..............##.............##2........................#.===.....::::#.......#
 #..............##......t......##.........................#.===.....::::#.......#
 #..t.......t...#################t.......................t#.........::::#.......#
@@ -48,6 +49,7 @@ map = '''
 "1" = { terrain = "floor", creature = "rat", route = "E24 W24" }
 "2" = { terrain = "floor", creature = "kobold", route = "E24 N5 W24 S5" }
 ">" = { terrain = "stairs_down", to = "vast" }
+"<" = { terrain = "stairs_up", to = "overworld" }
 "t" = "sconce"
 "B" = "brazier"
 "l" = { terrain = "floor", light = "lamp" }

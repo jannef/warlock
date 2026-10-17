@@ -1,0 +1,8 @@
+name = "World"
+description = "The overworld: travel the Wildlands by road and wild, day and night; enter the Hall, the Vast Caverns, the Depths, or any cell's local area with >."
+start_level = "overworld"
+seed = 1
+vision = "normal"
+lantern = "lantern"
+start_date = [1, 5, 14]
+start_time = "08:00"
