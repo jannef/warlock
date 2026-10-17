@@ -144,7 +144,7 @@ impl Perception {
         });
 
         // Light on transparent cells in line of sight: ambient plus every source reaching them.
-        let ambient = eye.perceive(content.level(&level.id).map_or(Light::DARK, |t| t.ambient));
+        let ambient = eye.perceive(level.ambient);
         let mut light = Grid::new(width, height, Light::DARK);
         for &p in &los_cells {
             light[p] = ambient;

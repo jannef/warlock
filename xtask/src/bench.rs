@@ -1,4 +1,5 @@
-//! `cargo xtask bench-turns`: turn-processing time in the hub and the vast level (spec §10 budgets).
+//! `cargo xtask bench-turns`: turn-processing time in the hub, the vast level, and the first
+//! generated level of the depths (spec §10 budgets; a generated 80×21 level gets the hub's).
 
 use std::sync::Arc;
 use std::time::Instant;
@@ -8,7 +9,11 @@ use warlock_core::{Action, Dir, World};
 const TURNS: usize = 400;
 
 /// (scenario, level label, budget in ms)
-const CASES: [(&str, &str, f64); 2] = [("showcase", "hub", 5.0), ("vast", "vast", 16.0)];
+const CASES: [(&str, &str, f64); 3] = [
+    ("showcase", "hub", 5.0),
+    ("vast", "vast", 16.0),
+    ("depths", "depths", 5.0),
+];
 
 /// Tiny deterministic generator for the scripted walk (kept local; the game RNG is not involved).
 fn next(state: &mut u64) -> u64 {

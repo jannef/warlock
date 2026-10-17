@@ -1,0 +1,14 @@
+# Vault: a flooded cell with glowing fungus in its corners and a lamp over the dry middle.
+name = "Flooded cell"
+map = '''
+#########
+#,~~~~~,#
+#~~~.~~~#
+#~~.*.~~#
+#,~~.~~,#
+####+####
+'''
+
+[legend]
+"," = "fungus"
+"*" = { terrain = "floor", light = "lamp" }

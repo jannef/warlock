@@ -15,9 +15,11 @@ pub mod fov;
 pub mod geom;
 pub mod grid;
 pub mod light;
+pub mod mapgen;
 pub mod messages;
 pub mod perception;
 pub mod replay;
+pub mod rng;
 pub mod save;
 pub mod world;
 

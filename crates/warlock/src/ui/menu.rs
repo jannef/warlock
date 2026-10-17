@@ -191,7 +191,7 @@ pub struct Menu {
 
 impl Menu {
     pub fn new(content: &Content, has_save: bool, open: Option<ScreenName>) -> Self {
-        let scenarios = content
+        let mut scenarios: Vec<ScenarioInfo> = content
             .scenarios()
             .map(|s| ScenarioInfo {
                 id: s.id.clone(),
@@ -200,6 +200,8 @@ impl Menu {
                 seed: s.seed,
             })
             .collect();
+        // The showcase (the command-line default) comes first and is preselected.
+        scenarios.sort_by_key(|s| s.id != "showcase");
         let mut menu = Self {
             screen: Screen::Main(0),
             scenarios,

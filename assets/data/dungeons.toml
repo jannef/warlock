@@ -1,0 +1,34 @@
+# Dungeon branches (spec §7): stacks of procedurally generated levels. Stairs lead into a branch
+# with `to = "<id>:<depth>"` (e.g. `to = "depths:1"`), and a scenario may start in one. Each level
+# is generated on its first visit from the run seed and its id, then persists like a hand-made
+# level. Its `<` leads one level up (on depth 1: back where the player came from), its `>` one
+# level down (the deepest level has none).
+#
+# Fields:
+#   id         branch id; its levels are "<id>:1" to "<id>:<depth>"
+#   name       level names are "<name> <depth>" (default: the id)
+#   generator  "rooms" (rooms and corridors, ADOM-like) or "caves" (cellular automata)
+#   depth      number of levels
+#   size       [width, height]
+#   creatures  creature ids generators may place on patrol (default none)
+#   ambient    [r, g, b, uv] light everywhere (default none)
+#   [[dungeon.levels]]  per-depth overrides, first match wins:
+#              from, to (inclusive; default `from`), generator, size (default the branch's)
+#
+# Generators build with the terrain void, wall, floor, door_closed, door_open, stairs_up,
+# stairs_down, water, sconce, fungus and the light lamp, and stamp vaults (assets/vaults).
+
+[[dungeon]]
+id = "depths"
+name = "The Depths"
+generator = "rooms"
+depth = 8
+size = [80, 21]
+creatures = ["rat", "bat", "kobold"]
+
+# Depths 3 to 5 are caverns.
+[[dungeon.levels]]
+from = 3
+to = 5
+generator = "caves"
+size = [120, 60]

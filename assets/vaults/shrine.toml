@@ -1,0 +1,17 @@
+# Vault (assets/vaults, spec §7): a pillared shrine with an altar, lit by four wall torches.
+# Vaults use the level-file format. The edge must be solid except for entrance doors (not on a
+# corner); no stairs or player start. Generators stamp the whole rectangle where it fits and join
+# every entrance to the level.
+name = "Shrine"
+map = '''
+####+####
+#t.....t#
+#.#...#.#
++..._...+
+#.#...#.#
+#t.....t#
+#########
+'''
+
+[legend]
+"t" = "sconce"

@@ -7,7 +7,7 @@ const FNV_PRIME: u64 = 0x0000_0100_0000_01b3;
 
 /// FNV-1a 64-bit. Unlike `std::hash::DefaultHasher` it is specified, so hashes are identical
 /// across platforms and Rust versions.
-fn fnv1a(bytes: &[u8]) -> u64 {
+pub(crate) fn fnv1a(bytes: &[u8]) -> u64 {
     bytes.iter().fold(FNV_OFFSET, |hash, &b| {
         (hash ^ u64::from(b)).wrapping_mul(FNV_PRIME)
     })

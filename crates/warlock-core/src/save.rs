@@ -16,7 +16,9 @@ use std::sync::Arc;
 /// Marker identifying a Warlock save inside the envelope.
 const MAGIC: &str = "WARLOCK-SAVE";
 /// The only save format version this build reads. Bump on any incompatible state change.
-pub const FORMAT_VERSION: u32 = 1;
+///
+/// 2: the gameplay random stream in the world state; ambient and placed lights in level states.
+pub const FORMAT_VERSION: u32 = 2;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 
@@ -158,10 +160,11 @@ mod tests {
 
     #[test]
     fn rejects_content_mismatch() {
-        let json =
-            r#"{"magic":"WARLOCK-SAVE","format_version":1,"content_fingerprint":1,"state":null}"#;
+        let json = format!(
+            r#"{{"magic":"WARLOCK-SAVE","format_version":{FORMAT_VERSION},"content_fingerprint":1,"state":null}}"#
+        );
         assert_eq!(
-            decode(&gz(json), content()).err(),
+            decode(&gz(&json), content()).err(),
             Some(SaveError::ContentMismatch)
         );
     }
@@ -186,7 +189,7 @@ mod tests {
             Err(SaveError::Corrupt(_))
         ));
         let bad_state = format!(
-            r#"{{"magic":"WARLOCK-SAVE","format_version":1,"content_fingerprint":{},"state":{{"seed":"x"}}}}"#,
+            r#"{{"magic":"WARLOCK-SAVE","format_version":{FORMAT_VERSION},"content_fingerprint":{},"state":{{"seed":"x"}}}}"#,
             content().fingerprint()
         );
         assert!(matches!(
