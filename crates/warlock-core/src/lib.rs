@@ -10,11 +10,13 @@
 pub mod action;
 pub mod color;
 pub mod content;
+pub mod dump;
 pub mod fov;
 pub mod geom;
 pub mod grid;
 pub mod messages;
 pub mod perception;
+pub mod replay;
 pub mod world;
 
 pub use action::{Action, Event, Outcome};

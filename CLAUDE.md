@@ -30,6 +30,25 @@ Game flags (`cargo run -p warlock -- --help`):
 - `--capture out.png` — render **offscreen** (no window), save a screenshot, exit.
   `--capture-after-frames N` (default 10), `--freeze-time SECONDS` pins animation time.
 
+- `--replay FILE` — apply a replay at startup (its scenario/seed win; a hash divergence is logged
+  as a warning), so `--capture` can screenshot any state. `--record FILE` — write every applied
+  action (with state hashes) to a replay, rewritten after each action.
+
+Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
+
+| Task | Command |
+|---|---|
+| ASCII dump after actions | `cargo run -p warlock-cli -- dump --scenario showcase --actions "move:N move:N" --layers view,fov,memory` |
+| Dump a replay's end state | `... dump --replay runs/x.json [--actions "wait"] --format ascii\|json [--state]` |
+| Create a replay | `... replay --create --scenario showcase --actions "move:N wait" -o runs/x.json` |
+| Verify a replay | `... replay --verify runs/x.json` (exit 1 and first diverging step on mismatch) |
+
+Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascend descend`
+(`DIR` = N NE E SE S SW W NW). Dump layers: `view` (what the player sees), `fov` (`*` visible),
+`memory` (seen terrain), `truth` (ground truth, **dev-only**). Replay files are JSON
+`{game_version, scenario, seed, steps:[{action, hash}]}`; `hash` is the FNV-1a 64 state hash
+(`World::state_hash`) after the step, as 16 hex digits.
+
 Typical render check: `cargo run -p warlock -- --scale 1 --freeze-time 1 --capture target/shot.png`,
 then read the PNG.
 
@@ -91,7 +110,10 @@ Known differences from older Bevy:
 
 A successful compile does not verify anything visual. Before opening a PR:
 1. `cargo fmt`, clippy with `-D warnings`, `cargo test --workspace`.
-2. Simulation changes: add or update unit, property, or snapshot tests in `warlock-core`.
+2. Simulation changes: add or update unit, property, or snapshot tests in `warlock-core`
+   (`insta` snapshots live in `crates/warlock-core/src/snapshots/`; review with `cargo insta review`
+   or `INSTA_UPDATE=always`, and read the diff). Look at the result with `warlock-cli dump`, and
+   check determinism with `replay --create` then `replay --verify`.
 3. Rendering changes: capture a screenshot with `--capture` and **look at it** (read the PNG).
    Golden images are updated deliberately, never to make a failing check pass.
 4. Note in the PR what you verified and how.

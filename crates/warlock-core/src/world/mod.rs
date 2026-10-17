@@ -4,6 +4,7 @@
 //! (sight, memory) → perceived events are returned to the caller.
 
 mod actor;
+mod hash;
 mod level;
 
 pub use actor::{Actor, ActorId, ActorKind, Patrol};

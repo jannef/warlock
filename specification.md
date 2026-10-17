@@ -235,16 +235,26 @@ assets/           fonts, levels, scenarios, definitions, shaders
 
 ```
 warlock --scenario showcase --seed 42                     # play a named scenario
-warlock --scenario showcase --replay runs/doors.json \
+warlock --replay runs/doors.json \
         --freeze-time 1.5 --window 1280x720 --scale 1 \
         --capture out.png                                 # reproducible screenshot, then exit
 warlock --record runs/new.json                            # record actions for bug reproduction
-warlock-cli dump --scenario showcase --replay runs/doors.json \
-        --format ascii --layers view,light,fov,memory     # text view of the simulation
+warlock-cli dump --scenario showcase --actions "move:N move:N" \
+        --format ascii --layers view,fov,memory           # text view of the simulation
+warlock-cli dump --replay runs/doors.json --format json --state   # structured dump
+warlock-cli replay --create --scenario showcase --actions "move:N wait" -o runs/x.json
 warlock-cli replay --verify runs/doors.json               # check per-turn state hashes
 cargo xtask golden [--update]                             # compare golden screenshots
 ```
 
+- Replays are JSON: `{game_version, scenario, seed, steps: [{action, hash}]}`. Actions use a text
+  syntax (`move:E wait open:E close:W ascend descend`); `hash` is the FNV-1a 64 hash of the
+  canonical JSON encoding of `WorldState` after the step. Verification reports the first
+  diverging step. `--replay` takes its scenario and seed from the file; `--record` rewrites its
+  file after every action (including replayed steps).
+- Dump layers: `view`, `fov`, `memory` are built from the perception snapshot only; `truth` shows
+  ground truth and is dev-only; `light` arrives with lighting (M3). JSON dumps carry turn, level,
+  viewer, seen actors, recent messages, and optionally the full world state.
 - Freezing visual time and fixing window size and scale make screenshots reproducible.
 - Dev builds add in-game commands: switch vision profile, reveal map, toggle debug overlays (light
   values, line of sight, memory), save and load named snapshots.
