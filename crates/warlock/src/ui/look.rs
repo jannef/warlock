@@ -13,7 +13,11 @@ const CURSOR_BG: Rgb = Rgb::new(0xe0, 0xc0, 0x70);
 /// One line describing what the player knows about `p`.
 pub fn describe(view: &PerceptionView<'_>, p: Pos) -> String {
     let content = view.content();
-    let terrain = |t| content.terrain(t).name.clone();
+    // Stairs and locations name where they lead: "a staircase down, leading to The Depths 1".
+    let terrain = |t| match view.leads_to(p) {
+        Some(to) => format!("{}, leading to {to}", content.terrain(t).name),
+        None => content.terrain(t).name.clone(),
+    };
     match view.cell(p) {
         CellView::Visible(t) => match view.actor_at(p) {
             Some(_) if p == view.viewer() => format!("You, on {}.", terrain(t)),
@@ -103,6 +107,31 @@ mod tests {
         }
         let text = describe(&w.perception(), me);
         assert!(text.starts_with("You remember"), "{text}");
+    }
+
+    #[test]
+    fn stairs_name_where_they_lead() {
+        let mut w = world();
+        // Walk to the stairs nook (see the golden manifest's `stairs-nook` walk).
+        let steps = |dir, n| std::iter::repeat_n(Action::Move(dir), n);
+        let walk: Vec<Action> = steps(Dir::N, 3)
+            .chain([Action::Open(Dir::N)])
+            .chain(steps(Dir::N, 2))
+            .chain(steps(Dir::E, 67))
+            .chain([Action::Open(Dir::S)])
+            .chain(steps(Dir::S, 4))
+            .collect();
+        for action in &walk {
+            w.apply(action);
+        }
+        let view = w.perception();
+        let (level, _) = w.ground_truth();
+        let down = (0..level.height())
+            .flat_map(|y| (0..level.width()).map(move |x| Pos::new(x, y)))
+            .find(|&p| view.leads_to(p).as_deref() == Some("The Vast Caverns"))
+            .expect("the staircase to the vast level is in view");
+        let text = describe(&view, down);
+        assert!(text.ends_with("leading to The Vast Caverns."), "{text}");
     }
 
     #[test]

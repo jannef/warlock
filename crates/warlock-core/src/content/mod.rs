@@ -612,6 +612,16 @@ impl Content {
             || self.local_area(id).is_some()
     }
 
+    /// The name a player would know a level by: a hand-made level's name or a branch level's
+    /// generated name (e.g. "The Depths 3"). `None` for unknown ids and local areas.
+    pub fn level_display_name(&self, id: &str) -> Option<String> {
+        if let Some(level) = self.levels.get(id) {
+            return Some(level.name.clone());
+        }
+        self.branch_level(id)
+            .map(|(def, depth)| def.level_name(depth))
+    }
+
     /// The branch and depth of a generated level id such as `depths:3`, if the branch exists and
     /// has that depth.
     pub fn branch_level(&self, id: &str) -> Option<(&DungeonDef, u32)> {
