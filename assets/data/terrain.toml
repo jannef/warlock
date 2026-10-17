@@ -3,7 +3,10 @@
 # transparent (default true), move_cost (time to step onto it, in percent of the level's turn;
 # default 100), opens_to / closes_to (doors), stairs ("up"/"down"),
 # light (a preset in lights.toml the terrain emits), bounce (gameplay, spec §5: the tint of the
-# light the surface bounces, "#rrggbb", default white = neutral), anim (presentation-only, §4.3).
+# light the surface bounces, "#rrggbb", default white = neutral), height (gameplay, spec §5
+# "Sunlight": how many cells tall it stands for sun shadows, 0 to 4; default 1 if opaque, else 0),
+# roofed (gameplay: under a roof, never lit by the sun or the sky; default false),
+# anim (presentation-only, §4.3).
 # Terrain with a "flow" anim is running water: every cell of it needs a flow direction from the
 # level legend (the arrows in legend.toml).
 # Presentation-only effects (spec §4.8): glow (0-1, the glyph blooms), haze (0-1, heat haze rises
@@ -336,3 +339,74 @@ area = [0.5, 0.5]
 sway = 0.3
 scale = 0.5
 fade = 0.4
+
+# Under the open sky (spec §5 "Sunlight"): outdoor levels are lit by the sun and the sky by day.
+# Tall terrain casts shadows that turn and stretch with the sun (`height`); roofed floor never
+# gets sun or sky light.
+
+[[terrain]]
+id = "grass"
+name = "grass"
+glyph = "."
+fg = "#86ba5c"
+bg = "#22401a"
+bounce = "#b4dc8c"
+
+[[terrain]]
+id = "flowers"
+name = "wildflowers"
+glyph = "*"
+fg = "#f0b4dc"
+bg = "#22401a"
+bounce = "#e8c8dc"
+
+[[terrain]]
+id = "flagstones"
+name = "flagstone path"
+glyph = "."
+fg = "#c0b29a"
+bg = "#3a3428"
+
+[[terrain]]
+id = "tree"
+name = "tree"
+glyph = "♣"
+fg = "#62c450"
+bg = "#173012"
+walkable = false
+transparent = false
+height = 2
+bounce = "#98c878"
+
+[[terrain]]
+id = "standing_stone"
+name = "standing stone"
+glyph = "●"
+fg = "#c4bcb0"
+bg = "#2e2b26"
+walkable = false
+transparent = false
+height = 3
+
+# A gazebo: wooden posts holding up a roof over plank floor. The roof shades the floor from sun
+# and sky and casts its own shadow.
+[[terrain]]
+id = "gazebo_floor"
+name = "gazebo floor"
+glyph = "."
+fg = "#c89c6c"
+bg = "#3a2814"
+roofed = true
+height = 2
+bounce = "#e0c098"
+
+[[terrain]]
+id = "gazebo_post"
+name = "wooden post"
+glyph = "○"
+fg = "#d8a470"
+bg = "#3a2814"
+walkable = false
+transparent = false
+roofed = true
+height = 2

@@ -1,0 +1,8 @@
+name = "Courtyard"
+description = "The walled garden at dawn: sunlight, sky light, and shadows that turn with the sun."
+start_level = "courtyard"
+seed = 1
+vision = "normal"
+lantern = "lantern"
+# Early, while the shadows are long (the turn benchmark walks here then).
+start_time = "06:30"

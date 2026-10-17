@@ -11,7 +11,9 @@
 //!
 //! Light on a transparent cell is the level's ambient light, plus the light of every source that
 //! reaches it, plus weak **bounce light** reflected by the lit surfaces around it
-//! ([`crate::light::BOUNCE`]). Ambient plus bounce is the cell's *base light*: steady, and not
+//! ([`crate::light::BOUNCE`]). On a level under the open sky, by day, the **sun** is one more
+//! source (directional, shaded by tall terrain; see [`Sun`]) and the **sky** lights every cell
+//! that is not roofed. Ambient plus sky plus bounce is the cell's *base light*: steady, and not
 //! tied to one source.
 //!
 //! Opaque cells follow two extra rules:
@@ -29,7 +31,8 @@ use crate::fov::{compute_fov, radius2};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use crate::light::{
-    Area, BOUNCE_STEPS, Bounce, Light, LightCache, falloff, lit_in_sight, wall_faces,
+    Area, BOUNCE_STEPS, Bounce, Light, LightCache, SUN_KEY, Sun, Sunlight, falloff, lit_in_sight,
+    wall_faces,
 };
 use crate::world::{ActorId, ActorKind, LevelState, WorldState};
 use serde::Serialize;
@@ -86,20 +89,53 @@ impl PerceivedLight {
     }
 }
 
+/// Where a perceived light comes from.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Emitter {
+    /// A light on a cell: placed by the level or emitted by terrain, carried by a creature, or the
+    /// player's lantern.
+    Point {
+        /// Where the source is; it may itself be out of view (light from around a corner).
+        pos: Pos,
+        /// The source's preset (color, radius, flicker).
+        preset: LightId,
+    },
+    /// The sun over a level under the open sky: directional (its shadows fall along
+    /// [`Sun::shadow_steps`]), on no cell, and steady.
+    Sun(Sun),
+}
+
 /// A light source whose light reaches cells the player sees.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct SeenLight {
     /// Stable across turns (derived from level and position for static lights, from the actor for
-    /// carried ones), e.g. to seed visual flicker.
+    /// carried ones; one fixed key for the sun), e.g. to seed visual flicker.
     pub key: u64,
-    /// Where the source is; it may itself be out of view (light from around a corner).
-    pub pos: Pos,
-    /// The source's preset (color, radius, flicker).
-    pub preset: LightId,
+    /// What gives the light.
+    pub emitter: Emitter,
     /// Perceived light this source adds to each visible cell it reaches, wall-face rule applied.
     /// Summed over all sources plus [`PerceptionView::base_light`] this gives
     /// [`PerceptionView::light`].
     pub contributions: Vec<(Pos, Light)>,
+}
+
+impl SeenLight {
+    /// Where a point light is; `None` for the sun.
+    pub fn pos(&self) -> Option<Pos> {
+        match self.emitter {
+            Emitter::Point { pos, .. } => Some(pos),
+            Emitter::Sun(_) => None,
+        }
+    }
+
+    /// A point light's preset; `None` for the sun.
+    pub fn preset(&self) -> Option<LightId> {
+        match self.emitter {
+            Emitter::Point { preset, .. } => Some(preset),
+            Emitter::Sun(_) => None,
+        }
+    }
 }
 
 /// How the player sees a cell this turn.
@@ -120,7 +156,9 @@ pub(crate) struct Perception {
     vision: usize,
     /// Perceived ambient light.
     ambient: Light,
-    /// Ambient plus bounce light; meaningful on visible cells only.
+    /// The sun and the sky over a level under the open sky.
+    sun: Option<Sun>,
+    /// Ambient plus sky plus bounce light; meaningful on visible cells only.
     base: Grid<Light>,
     sight: Grid<Sight>,
     /// Visible cells in the order they were found.
@@ -157,31 +195,68 @@ impl Perception {
         // Sources that can light a cell in view, or a surface whose bounce light reaches one (a
         // bounce step moves at most √2 < 2 cells; wall faces are within a cell of view).
         let near = lights.near(state, content, viewer, VIEW_RADIUS + 1 + 2 * BOUNCE_STEPS);
+        // Direct light is needed on everything in sight and within bounce reach of it.
+        let area = Area::around(los_cells.iter().copied(), BOUNCE_STEPS, width, height);
 
-        // Base light on cells in line of sight: ambient plus bounce (on transparent cells; RGB
-        // only, so every eye perceives all of it).
+        // Under the open sky: the sun where no taller terrain shades a cell, the sky everywhere
+        // (neither under a roof).
+        let terrain = |p: Pos| level.terrain.get(p).map(|t| content.terrain(*t));
+        let exposed = |p: Pos| terrain(p).is_some_and(|t| !t.roofed);
+        let sun = level.kind.is_sky_exposed().then(|| Sun::at(state.time));
+        let sunlight = sun.filter(Sun::is_up).zip(area).map(|(sun, area)| {
+            let height = |p: Pos| terrain(p).map_or(0, |t| t.height);
+            let tallest = content.tallest_terrain();
+            Sunlight::compute(&sun, area, tallest, height, exposed, is_opaque)
+        });
+        let sky = sun.map_or(Light::DARK, |s| eye.perceive(s.sky));
+
+        // Base light on cells in line of sight: ambient, sky, and bounce (on transparent cells;
+        // RGB only, so every eye perceives all of it).
         let ambient = eye.perceive(level.ambient);
-        let bounce =
-            Area::around(los_cells.iter().copied(), BOUNCE_STEPS, width, height).map(|area| {
-                let tint = |p: Pos| {
-                    let rgb = level.terrain.get(p).map(|t| content.terrain(*t).bounce);
-                    rgb.map_or([0; 3], |c| [c.r, c.g, c.b])
-                };
-                Bounce::compute(area, near.iter().map(|(_, mask)| *mask), is_opaque, tint)
-            });
-        let indirect = |p: Pos| bounce.as_ref().map_or(Light::DARK, |b| b.at(p));
+        let bounce = area.map(|area| {
+            let tint = |p: Pos| {
+                let rgb = terrain(p).map(|t| t.bounce);
+                rgb.map_or([0; 3], |c| [c.r, c.g, c.b])
+            };
+            let masks = (near.iter())
+                .filter(|(_, mask)| mask.overlaps(area.min, area.max))
+                .map(|(_, mask)| mask.cells.as_slice());
+            let sun = sunlight.iter().map(|s| s.cells.as_slice());
+            Bounce::compute(area, masks.chain(sun), is_opaque, tint)
+        });
+        // Steady light on a transparent cell beyond the ambient light: sky and bounce.
+        let indirect = |p: Pos| {
+            let bounce = bounce.as_ref().map_or(Light::DARK, |b| b.at(p));
+            if !sky.is_dark() && exposed(p) {
+                bounce.saturating_add(sky)
+            } else {
+                bounce
+            }
+        };
         let mut base = Grid::new(width, height, Light::DARK);
         for &p in &los_cells {
             base[p] = ambient.saturating_add(indirect(p));
         }
 
-        // Light on cells in line of sight: base light plus every source reaching them.
+        // Light on cells in line of sight: base light plus every source reaching them, the sun
+        // last.
         let mut light = base.clone();
-        let lit: Vec<_> = near
+        let mut lit: Vec<_> = near
             .into_iter()
-            .map(|(source, mask)| (source, lit_in_sight(mask, &los, |l| eye.perceive(l))))
+            .map(|(source, mask)| {
+                let emitter = Emitter::Point {
+                    pos: source.pos,
+                    preset: source.preset,
+                };
+                let cells = lit_in_sight(&mask.cells, &los, |l| eye.perceive(l));
+                (source.key, emitter, cells)
+            })
             .collect();
-        for (_, cells) in &lit {
+        if let (Some(sun), Some(sunlight)) = (sun, &sunlight) {
+            let cells = lit_in_sight(&sunlight.cells, &los, |l| eye.perceive(l));
+            lit.push((SUN_KEY, Emitter::Sun(sun), cells));
+        }
+        for (_, _, cells) in &lit {
             for &(p, c) in cells {
                 light[p] = light[p].saturating_add(c);
             }
@@ -215,9 +290,9 @@ impl Perception {
             }
         }
 
-        // Wall faces: opaque cells in line of sight or completed take the brightest bounce light
-        // of their visible transparent neighbors, then each source's light at their own distance
-        // if they face a visible cell it lights.
+        // Wall faces: opaque cells in line of sight or completed take the brightest sky and bounce
+        // light of their visible transparent neighbors, then each source's light at their own
+        // distance (the sun's where it reaches them) if they face a visible cell it lights.
         let is_seen = |q: Pos| sight.get(q) == Some(&Sight::Seen);
         let is_face = |w: Pos| {
             is_opaque(w) && (los.get(w) == Some(&true) || sight.get(w) == Some(&Sight::Edge))
@@ -233,17 +308,23 @@ impl Perception {
                 light[w] = base[w];
             }
         }
+        let light_at = |emitter: Emitter, w: Pos| match emitter {
+            Emitter::Point { pos, preset } => {
+                let preset = content.light(preset);
+                eye.perceive(falloff(preset.color, preset.radius.max(0), w.dist2(pos)))
+            }
+            Emitter::Sun(_) => sunlight
+                .as_ref()
+                .map_or(Light::DARK, |s| eye.perceive(s.at(w))),
+        };
         let lit: Vec<_> = lit
             .into_iter()
-            .map(|(source, cells)| {
-                let preset = content.light(source.preset);
-                let (color, radius) = (preset.color, preset.radius.max(0));
-                let light_at = |w: Pos| eye.perceive(falloff(color, radius, w.dist2(source.pos)));
-                let faces = wall_faces(&cells, light_at, is_seen, is_face);
-                (source, cells, faces)
+            .map(|(key, emitter, cells)| {
+                let faces = wall_faces(&cells, |w| light_at(emitter, w), is_seen, is_face);
+                (key, emitter, cells, faces)
             })
             .collect();
-        for (_, _, faces) in &lit {
+        for (_, _, _, faces) in &lit {
             for &(p, c) in faces {
                 light[p] = light[p].saturating_add(c);
             }
@@ -260,16 +341,15 @@ impl Perception {
         let is_visible = |p: Pos| sight.get(p).is_some_and(|s| *s != Sight::Hidden);
         let sources = lit
             .into_iter()
-            .filter_map(|(source, cells, faces)| {
+            .filter_map(|(key, emitter, cells, faces)| {
                 let contributions: Vec<_> = cells
                     .into_iter()
                     .chain(faces)
                     .filter(|(p, _)| is_visible(*p))
                     .collect();
                 (!contributions.is_empty()).then_some(SeenLight {
-                    key: source.key,
-                    pos: source.pos,
-                    preset: source.preset,
+                    key,
+                    emitter,
                     contributions,
                 })
             })
@@ -290,6 +370,7 @@ impl Perception {
             viewer,
             vision,
             ambient,
+            sun,
             base,
             sight,
             visible_cells,
@@ -400,7 +481,7 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// Light sources whose light reaches visible cells: static lights by position, then carried
-    /// lights by actor id.
+    /// lights by actor id, then the sun.
     pub fn light_sources(&self) -> &'a [SeenLight] {
         &self.snapshot.sources
     }
@@ -415,9 +496,15 @@ impl<'a> PerceptionView<'a> {
         self.snapshot.ambient
     }
 
-    /// Steady light at a visible cell that no single source gives: ambient light plus bounce
-    /// light; `None` for cells not in view. With every [`SeenLight`] contribution to the cell
-    /// added, it is [`PerceptionView::light`].
+    /// The sun and the sky over the player's level right now (they may be down); `None` on a
+    /// level not under the open sky.
+    pub fn sun(&self) -> Option<Sun> {
+        self.snapshot.sun
+    }
+
+    /// Steady light at a visible cell that no single source gives: ambient light plus sky light
+    /// (under the open sky) plus bounce light; `None` for cells not in view. With every
+    /// [`SeenLight`] contribution to the cell added, it is [`PerceptionView::light`].
     pub fn base_light(&self, p: Pos) -> Option<Light> {
         self.snapshot.is_visible(p).then(|| self.snapshot.base[p])
     }

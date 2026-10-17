@@ -13,14 +13,20 @@
 //!
 //! Masks are cached per source ([`LightCache`]); the perception phase combines them with the
 //! player's line of sight, adds one weak bounce ([`bounce`]), and applies the wall-face rule (see
-//! [`crate::perception`]).
+//! [`crate::perception`]). On levels under the open sky the sun and the sky add their light by
+//! day ([`Sun`]).
 
 mod bounce;
 mod cache;
+mod sun;
 
 pub(crate) use bounce::{Area, Bounce};
 pub use bounce::{BOUNCE, BOUNCE_STEPS};
-pub(crate) use cache::{LightCache, Mask};
+#[cfg(test)]
+pub(crate) use cache::Mask;
+pub(crate) use cache::{LightCache, SUN_KEY};
+pub(crate) use sun::Sunlight;
+pub use sun::{MAX_SHADOW, NOON_ELEVATION, SHADOW_ONE, ShadowSteps, Sun};
 
 use crate::fov::radius2;
 use crate::geom::{Dir, Pos};
@@ -116,14 +122,14 @@ pub fn falloff(color: Light, radius: i32, d2: i32) -> Light {
 }
 
 /// The light one source adds to the transparent cells the viewer has in line of sight, as the eye
-/// perceives it (`perceive`, e.g. dropping UV). Cells with no perceived light are left out; the
-/// order is the mask's.
+/// perceives it (`perceive`, e.g. dropping UV), from the cells it lights (a mask's, or the sun's).
+/// Cells with no perceived light are left out; the order is kept.
 pub(crate) fn lit_in_sight(
-    mask: &Mask,
+    cells: &[(Pos, Light)],
     los: &Grid<bool>,
     perceive: impl Fn(Light) -> Light,
 ) -> Vec<(Pos, Light)> {
-    mask.cells
+    cells
         .iter()
         .map(|&(q, light)| (q, perceive(light)))
         .filter(|&(q, light)| !light.is_dark() && los.get(q) == Some(&true))

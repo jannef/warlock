@@ -1,8 +1,9 @@
 //! Bounce light (spec §5, "Bounce light"): one weak bounce of source light off the surfaces it
 //! falls on, as gameplay light.
 //!
-//! 1. **Direct light**: the sum of every source's light (its cached [`Mask`]) on each transparent
-//!    cell of an area, red, green, and blue only — UV light does not bounce.
+//! 1. **Direct light**: the sum of every source's light (its cached [`super::Mask`], or the
+//!    sunlight) on each transparent cell of an area, red, green, and blue only — UV light does
+//!    not bounce.
 //! 2. **Reflection**: each lit transparent cell reflects its direct light, tinted by the mean
 //!    `bounce` color of the surfaces there: its own terrain (the floor) and the wall faces that
 //!    bound it (its opaque orthogonal neighbors, lit from this side).
@@ -19,7 +20,7 @@
 //! so it is deterministic. Indirect light is a property of the level and its lights, not of the
 //! viewer: the area only has to cover every cell within `BOUNCE_STEPS` of the cells asked about.
 
-use super::{Light, Mask};
+use super::Light;
 use crate::geom::{Dir, Pos};
 
 /// Indirect light is this many 256ths of the reflected light around a cell (12.5 %).
@@ -64,20 +65,20 @@ impl Area {
         (min.x <= max.x && min.y <= max.y).then_some(Self { min, max })
     }
 
-    fn width(self) -> i32 {
+    pub(super) fn width(self) -> i32 {
         self.max.x - self.min.x + 1
     }
 
-    fn len(self) -> usize {
+    pub(super) fn len(self) -> usize {
         (self.width() * (self.max.y - self.min.y + 1)) as usize
     }
 
-    fn index(self, p: Pos) -> Option<usize> {
+    pub(super) fn index(self, p: Pos) -> Option<usize> {
         (p.x >= self.min.x && p.y >= self.min.y && p.x <= self.max.x && p.y <= self.max.y)
             .then(|| ((p.y - self.min.y) * self.width() + (p.x - self.min.x)) as usize)
     }
 
-    fn pos(self, i: usize) -> Pos {
+    pub(super) fn pos(self, i: usize) -> Pos {
         let i = i as i32;
         Pos::new(self.min.x + i % self.width(), self.min.y + i / self.width())
     }
@@ -91,13 +92,14 @@ pub(crate) struct Bounce {
 }
 
 impl Bounce {
-    /// Bounces the light of `masks` within `area`. `is_opaque` says which cells block light (out
-    /// of bounds counts as opaque); `tint` gives the `bounce` color of the surface at a cell, each
-    /// channel 0 to 255. Correct on cells at least [`BOUNCE_STEPS`] inside the area's edges (or
-    /// at the level's edges): the area must cover everything within reach of the cells asked about.
+    /// Bounces the light of `sources` (each the cells it lights, with their light) within `area`.
+    /// `is_opaque` says which cells block light (out of bounds counts as opaque); `tint` gives the
+    /// `bounce` color of the surface at a cell, each channel 0 to 255. Correct on cells at least
+    /// [`BOUNCE_STEPS`] inside the area's edges (or at the level's edges): the area must cover
+    /// everything within reach of the cells asked about.
     pub fn compute<'a>(
         area: Area,
-        masks: impl IntoIterator<Item = &'a Mask>,
+        sources: impl IntoIterator<Item = &'a [(Pos, Light)]>,
         is_opaque: impl Fn(Pos) -> bool,
         tint: impl Fn(Pos) -> [u8; 3],
     ) -> Self {
@@ -117,8 +119,8 @@ impl Bounce {
 
         // Direct light (red, green, blue) on transparent cells, saturating like gameplay light.
         let mut direct = vec![[0u32; 3]; n];
-        for mask in masks.into_iter().filter(|m| m.overlaps(area.min, area.max)) {
-            for &(p, light) in &mask.cells {
+        for cells in sources {
+            for &(p, light) in cells {
                 if let Some(i) = area.index(p).and_then(|_| padded.index(p)) {
                     for (sum, c) in direct[i].iter_mut().zip(light.rgb) {
                         *sum = (*sum + u32::from(c)).min(u32::from(u16::MAX));
@@ -213,6 +215,7 @@ impl Bounce {
 mod tests {
     use super::*;
     use crate::content::{LightId, LightPreset};
+    use crate::light::Mask;
     use proptest::prelude::*;
 
     const SIZE: i32 = 14;
@@ -225,6 +228,10 @@ mod tests {
             radius,
             stability: Default::default(),
         }
+    }
+
+    fn cells(masks: &[Mask]) -> impl Iterator<Item = &[(Pos, Light)]> {
+        masks.iter().map(|m| m.cells.as_slice())
     }
 
     fn whole(width: i32, height: i32) -> Area {
@@ -280,7 +287,7 @@ mod tests {
             .map(|i| Pos::new(i % 9, i / 9))
             .map(|p| Mask::compute(p, LightId(0), &preset(color, 0), |_| false))
             .collect();
-        let bounce = Bounce::compute(whole(9, 9), &masks, |_| false, |_| STONE);
+        let bounce = Bounce::compute(whole(9, 9), cells(&masks), |_| false, |_| STONE);
         let mid = bounce.at(Pos::new(4, 4));
         assert_eq!(
             mid,
@@ -315,7 +322,7 @@ mod tests {
                 )
             })
             .collect();
-        let bounce = Bounce::compute(whole(11, 5), &masks, opaque, |_| STONE);
+        let bounce = Bounce::compute(whole(11, 5), cells(&masks), opaque, |_| STONE);
         let at = |x: i32| bounce.at(Pos::new(x, 2)).rgb[0];
         assert!(
             at(5) > at(6) && at(6) > at(7) && at(7) > 0,
@@ -342,7 +349,7 @@ mod tests {
         let mask = Mask::compute(Pos::new(2, 2), LightId(0), &white, opaque);
         let rgb = |floor: [u8; 3], wall: [u8; 3]| {
             let tint = |p: Pos| if opaque(p) { wall } else { floor };
-            Bounce::compute(whole(5, 5), [&mask], opaque, tint)
+            Bounce::compute(whole(5, 5), [mask.cells.as_slice()], opaque, tint)
                 .at(Pos::new(2, 2))
                 .rgb
         };
@@ -387,7 +394,7 @@ mod tests {
                     *acc = acc.saturating_add(l);
                 }
             }
-            let bounce = Bounce::compute(whole(SIZE, SIZE), &masks, &opaque, |_| STONE);
+            let bounce = Bounce::compute(whole(SIZE, SIZE), cells(&masks), &opaque, |_| STONE);
             for y in 0..SIZE {
                 for x in 0..SIZE {
                     let p = Pos::new(x, y);
@@ -420,8 +427,8 @@ mod tests {
             let light = preset(Light::new(300, 200, 100, 0), 5);
             let mask = Mask::compute(Pos::new(lx, ly), LightId(0), &light, &opaque);
             let small = Area::around([p], BOUNCE_STEPS, SIZE, SIZE).expect("area");
-            let a = Bounce::compute(small, [&mask], &opaque, |_| STONE);
-            let b = Bounce::compute(whole(SIZE, SIZE), [&mask], &opaque, |_| STONE);
+            let a = Bounce::compute(small, [mask.cells.as_slice()], &opaque, |_| STONE);
+            let b = Bounce::compute(whole(SIZE, SIZE), [mask.cells.as_slice()], &opaque, |_| STONE);
             prop_assert_eq!(a.at(p), b.at(p));
         }
     }

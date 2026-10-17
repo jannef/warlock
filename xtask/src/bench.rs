@@ -1,6 +1,7 @@
-//! `cargo xtask bench-turns`: turn-processing time in the hub, the vast level, and the first
-//! generated level of the depths (spec §10 budgets; a generated 80×21 level gets the hub's), and
-//! the time a night's rest takes on each (dusk to dawn: 7200 turns of six seconds).
+//! `cargo xtask bench-turns`: turn-processing time in the hub, the vast level, the first
+//! generated level of the depths, and the sunlit courtyard at dawn (spec §10 budgets; a generated
+//! 80×21 level and the courtyard get the hub's), and the time a night's rest takes on each (dusk
+//! to dawn: 7200 turns of six seconds).
 
 use std::sync::Arc;
 use std::time::Instant;
@@ -13,10 +14,12 @@ const TURNS: usize = 400;
 const REST_BUDGET_MS: f64 = 500.0;
 
 /// (scenario, level label, budget in ms)
-const CASES: [(&str, &str, f64); 3] = [
+const CASES: [(&str, &str, f64); 4] = [
     ("showcase", "hub", 5.0),
     ("vast", "vast", 16.0),
     ("depths", "depths", 5.0),
+    // Starts at 06:30, while shadows are long.
+    ("courtyard", "court", 5.0),
 ];
 
 /// Tiny deterministic generator for the scripted walk (kept local; the game RNG is not involved).

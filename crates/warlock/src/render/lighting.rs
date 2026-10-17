@@ -164,9 +164,10 @@ impl VisualLight {
             }
         }
         for source in view.light_sources() {
-            let modulation = match time {
-                Some(time) => modulation(source.key, content.light(source.preset), time),
-                None => Modulation::STEADY,
+            // The sun has no preset: it is never modulated.
+            let modulation = match (time, source.preset()) {
+                (Some(time), Some(preset)) => modulation(source.key, content.light(preset), time),
+                _ => Modulation::STEADY,
             };
             let shadows = shadows.of(source.key);
             for &(p, light) in &source.contributions {
@@ -671,7 +672,7 @@ mod tests {
         let (mut stable, mut varying) = (BTreeSet::new(), BTreeSet::new());
         for source in view.light_sources() {
             let cells = source.contributions.iter().map(|(p, _)| *p);
-            if content.light(source.preset).stability.is_stable() {
+            if source.preset().is_none_or(|id| content.light(id).stability.is_stable()) {
                 stable.extend(cells);
             } else {
                 varying.extend(cells);

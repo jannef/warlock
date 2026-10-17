@@ -281,6 +281,21 @@ mod tests {
     }
 
     #[test]
+    fn content_glyphs_are_covered() {
+        // A glyph the font lacks would fall back to `?` on screen.
+        let font = Font::load().unwrap();
+        let content = warlock_core::content::Content::builtin().expect("builtin content");
+        let glyphs = content.glyphs();
+        let atlas = rasterize(&font.0, 18.0, &glyph_set(glyphs.iter().copied()), 1);
+        for c in glyphs {
+            assert!(
+                atlas.index.contains_key(&c),
+                "content glyph `{c}` is missing from the font"
+            );
+        }
+    }
+
+    #[test]
     fn glyph_set_has_no_duplicates() {
         let set = glyph_set(['#', 'é']);
         let unique: std::collections::BTreeSet<_> = set.iter().collect();

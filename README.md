@@ -28,8 +28,14 @@ procedurally generated dungeon levels below it.
 
   ![The effects room](docs/screenshots/m4-effects-room.png)
 
-- **Levels** — the hub, a 420×300 cavern, and "The Depths": rooms-and-corridors and cave levels
-  generated from the run seed (numbers or words), with hand-made vaults stamped in.
+- **Sunlight** — a game clock moves the sun across the sky of outdoor levels: warm and low at dawn
+  and dusk, white at noon, with a dim blue sky light in the shade and shadows from trees, walls,
+  and stones that turn and stretch with it. Night is dark; bring a lantern.
+
+  ![The courtyard at 07:00, 12:00, 17:30, and 22:00](docs/screenshots/m9-courtyard-day.png)
+
+- **Levels** — the hub, a sunlit courtyard, a 420×300 cavern, and "The Depths": rooms-and-corridors
+  and cave levels generated from the run seed (numbers or words), with hand-made vaults stamped in.
 
   ![A generated level in The Depths](docs/screenshots/m6-depths-rooms.png)
 
