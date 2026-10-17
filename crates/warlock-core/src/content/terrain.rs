@@ -35,6 +35,9 @@ pub(super) struct TerrainSpec {
     pub walkable: bool,
     #[serde(default = "yes")]
     pub transparent: bool,
+    /// Time to step onto this terrain, in percent of the level's turn (spec §8 "Time").
+    #[serde(default = "full_cost")]
+    pub move_cost: u16,
     /// For a closed door: the terrain it becomes when opened.
     pub opens_to: Option<String>,
     /// For an open door: the terrain it becomes when closed.
@@ -55,6 +58,10 @@ fn yes() -> bool {
     true
 }
 
+fn full_cost() -> u16 {
+    100
+}
+
 /// A resolved terrain definition.
 #[derive(Clone, Debug)]
 pub struct TerrainDef {
@@ -65,6 +72,9 @@ pub struct TerrainDef {
     pub bg: Rgb,
     pub walkable: bool,
     pub transparent: bool,
+    /// Time to step onto this terrain, in percent of the level's turn: 100 is a normal step,
+    /// 200 (shallow water) takes twice as long. Always at least 1.
+    pub move_cost: u16,
     pub opens_to: Option<TerrainId>,
     pub closes_to: Option<TerrainId>,
     pub stairs: Option<StairsDir>,

@@ -23,8 +23,8 @@ mod rooms;
 mod vault;
 
 use crate::content::{
-    Content, CreatureId, CreatureSpawn, Generator, LevelTemplate, LightId, StairsDir, StairsLink,
-    TerrainId,
+    Content, CreatureId, CreatureSpawn, Generator, LevelKind, LevelTemplate, LightId, StairsDir,
+    StairsLink, TerrainId,
 };
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
@@ -334,6 +334,8 @@ pub fn generate(
             id: id.to_string(),
             name: def.level_name(depth),
             ambient: def.ambient,
+            kind: LevelKind::Dungeon,
+            turn: LevelKind::Dungeon.default_turn(),
             terrain: canvas.terrain,
             player_start: Some(up),
             creatures: canvas.creatures,

@@ -275,6 +275,10 @@ fn draw_messages(console: &mut Console, game: &Game, mode: InputMode) {
         console.print(1, 0, "In which direction? (Esc to cancel)", ACCENT);
         return;
     }
+    if mode == InputMode::Rest {
+        console.print(1, 0, REST_PROMPT, ACCENT);
+        return;
+    }
     if let InputMode::Look(p) = mode {
         console.print(1, 0, &look::describe(&game.world.perception(), p), TEXT);
         console.print(
@@ -299,6 +303,9 @@ fn draw_messages(console: &mut Console, game: &Game, mode: InputMode) {
     }
 }
 
+/// The rest prompt; its letters are [`crate::input::REST_CHOICES`].
+const REST_PROMPT: &str = "Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to cancel)";
+
 fn draw_status(console: &mut Console, game: &Game, y: i32) {
     let cols = console.cols() as i32;
     console.fill(
@@ -315,6 +322,7 @@ fn draw_status(console: &mut Console, game: &Game, y: i32) {
     let world = &game.world;
     let view = world.perception();
     let pos = world.player_pos();
+    let time = world.time();
     let light = view.light(pos).map_or(0, |l| l.brightness());
     let lantern = match world.lantern() {
         Some(true) => Some("Lantern lit".to_string()),
@@ -324,12 +332,14 @@ fn draw_status(console: &mut Console, game: &Game, y: i32) {
     // Display order; the number is the drop priority (higher drops first when space runs out).
     let segments: Vec<(u8, String)> = [
         Some((0, view.level_name().to_string())),
-        Some((1, format!("Turn {}", world.turn()))),
-        Some((5, format!("{},{}", pos.x, pos.y))),
-        Some((2, format!("Light {light}"))),
-        Some((3, format!("{} vision", view.vision().name))),
-        lantern.map(|l| (4, l)),
-        Some((6, format!("Seed {}", world.seed()))),
+        Some((1, format!("{:02}:{:02}", time.hour(), time.minute()))),
+        Some((2, view.content().calendar().date(time))),
+        Some((3, format!("Turn {}", world.turn()))),
+        Some((7, format!("{},{}", pos.x, pos.y))),
+        Some((4, format!("Light {light}"))),
+        Some((5, format!("{} vision", view.vision().name))),
+        lantern.map(|l| (6, l)),
+        Some((8, format!("Seed {}", world.seed()))),
     ]
     .into_iter()
     .flatten()
@@ -442,6 +452,13 @@ mod tests {
         let narrow = fit_segments(&segs, 34);
         assert_eq!(narrow, "The Hub  ·  Turn 12  ·  Light 366");
         assert_eq!(fit_segments(&segs, 4), "The ");
+    }
+
+    #[test]
+    fn rest_prompt_names_every_choice() {
+        for (key, _) in crate::input::REST_CHOICES {
+            assert!(REST_PROMPT.contains(&format!("({key})")), "{key}");
+        }
     }
 
     #[test]

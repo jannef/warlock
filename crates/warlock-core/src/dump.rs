@@ -136,8 +136,9 @@ fn rows(width: i32, height: i32, glyph: impl Fn(Pos) -> char) -> Vec<String> {
 fn summary(world: &World) -> String {
     let view = world.perception();
     format!(
-        "turn {} level {} viewer {} hash {:016x}",
+        "turn {} time {} level {} viewer {} hash {:016x}",
         world.turn(),
+        world.time(),
         view.level_id(),
         view.viewer(),
         world.state_hash()
@@ -163,8 +164,8 @@ pub fn ascii(world: &World, layers: &[Layer]) -> String {
     out
 }
 
-/// Structured dump: turn, level, viewer, seen actors, recent messages, the requested layers as
-/// arrays of rows, and optionally the full [`crate::WorldState`] under `state`.
+/// Structured dump: turn, game time, level, viewer, seen actors, recent messages, the requested
+/// layers as arrays of rows, and optionally the full [`crate::WorldState`] under `state`.
 pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     let view = world.perception();
     let content = world.content();
@@ -189,6 +190,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "scenario": world.scenario(),
         "seed": world.seed(),
         "turn": world.turn(),
+        "time": time_json(world),
         "level": view.level_id(),
         "viewer": view.viewer(),
         "hash": format!("{:016x}", world.state_hash()),
@@ -200,6 +202,22 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         out["state"] = serde_json::to_value(world.state()).expect("state serializes");
     }
     out
+}
+
+/// The clock in seconds since the epoch, and as a calendar date and time of day.
+fn time_json(world: &World) -> Value {
+    let t = world.time();
+    json!({
+        "seconds": t.seconds(),
+        "text": t.to_string(),
+        "year": t.year(),
+        "month": t.month(),
+        "month_name": world.content().calendar().month_name(t),
+        "day": t.day(),
+        "hour": t.hour(),
+        "minute": t.minute(),
+        "second": t.second(),
+    })
 }
 
 #[cfg(test)]
@@ -249,6 +267,8 @@ mod tests {
         world.apply(&Action::Wait);
         let value = json(&world, &[Layer::View, Layer::Fov], true);
         assert_eq!(value["turn"], 1);
+        assert_eq!(value["time"]["text"], "0001-01-01 08:00:06");
+        assert_eq!(value["time"]["month_name"], "Frostmere");
         assert_eq!(value["level"], "hub");
         assert_eq!(value["layers"]["fov"].as_array().map(Vec::len), Some(21));
         assert!(value["layers"].get("memory").is_none());

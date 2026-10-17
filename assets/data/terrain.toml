@@ -1,6 +1,7 @@
 # Terrain types. Colors are the fully lit appearance; lighting darkens and tints them.
 # Fields: id, name, glyph, fg, bg (default black), walkable (default true),
-# transparent (default true), opens_to / closes_to (doors), stairs ("up"/"down"),
+# transparent (default true), move_cost (time to step onto it, in percent of the level's turn;
+# default 100), opens_to / closes_to (doors), stairs ("up"/"down"),
 # light (a preset in lights.toml the terrain emits), anim (presentation-only, see spec §4.3).
 # Presentation-only effects (spec §4.8): glow (0-1, the glyph blooms), haze (0-1, heat haze rises
 # above the cell), and [[terrain.particles]] emitters:
@@ -104,6 +105,8 @@ name = "shallow water"
 glyph = "~"
 fg = "#4f8fe0"
 bg = "#0a1a30"
+# Wading takes twice as long as a step on dry ground.
+move_cost = 200
 anim = { kind = "wave", speed = 0.2, amount = 0.07 }
 
 # A splash when something wades in.

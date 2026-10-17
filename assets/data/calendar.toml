@@ -1,0 +1,16 @@
+# The calendar (spec §8 "Time"): 12 months of 30 days (a 360-day year), 24-hour days. The
+# structure is fixed; only the month names are data. Exactly 12 names, in calendar order.
+months = [
+  "Frostmere",
+  "Thawmonth",
+  "Seedtide",
+  "Rainmoon",
+  "Greenleaf",
+  "Highsun",
+  "Emberheat",
+  "Harvestide",
+  "Leaffall",
+  "Mistmoon",
+  "Darkening",
+  "Deepwinter",
+]

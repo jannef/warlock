@@ -1,9 +1,12 @@
 //! Per-level mutable state: terrain as it is now, and what the player remembers of it.
 
-use crate::content::{Content, LevelTemplate, LightId, StairsLink, TerrainId};
+use crate::content::{
+    Content, LevelKind, LevelTemplate, LightId, StairsLink, TerrainDef, TerrainId,
+};
 use crate::geom::Pos;
 use crate::grid::Grid;
 use crate::light::Light;
+use crate::time::Duration;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -17,6 +20,9 @@ pub struct LevelState {
     pub(crate) name: String,
     /// Light everywhere on the level.
     pub(crate) ambient: Light,
+    pub(crate) kind: LevelKind,
+    /// How long a turn takes here (see [`LevelState::step_time`]).
+    pub(crate) turn: Duration,
     pub(crate) terrain: Grid<TerrainId>,
     /// Terrain as last seen by the player; `None` where never seen.
     pub(crate) memory: Grid<Option<TerrainId>>,
@@ -34,6 +40,8 @@ impl LevelState {
             id: template.id.clone(),
             name: template.name.clone(),
             ambient: template.ambient,
+            kind: template.kind,
+            turn: template.turn,
             terrain,
             memory,
             stairs: template.stairs.clone(),
@@ -55,6 +63,24 @@ impl LevelState {
 
     pub fn height(&self) -> i32 {
         self.terrain.height()
+    }
+
+    pub fn kind(&self) -> LevelKind {
+        self.kind
+    }
+
+    /// How long a turn takes on this level: a wait, opening or closing a door, taking stairs.
+    pub fn turn(&self) -> Duration {
+        self.turn
+    }
+
+    /// How long stepping onto `terrain` takes. This is the one place movement time is decided:
+    /// on local levels it is the level's turn scaled by the terrain's `move_cost` percent. (The
+    /// overworld adds its own kind here, whose steps cost the terrain's travel time.)
+    pub fn step_time(&self, terrain: &TerrainDef) -> Duration {
+        match self.kind {
+            LevelKind::Dungeon | LevelKind::Outdoor => self.turn.percent(terrain.move_cost),
+        }
     }
 
     /// The terrain at `p` as it is now (ground truth, `None` out of bounds). Only reachable

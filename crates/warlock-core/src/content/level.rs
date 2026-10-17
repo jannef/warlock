@@ -4,6 +4,8 @@
 //! placed on that terrain (player start, creatures with patrol routes, stair links, lights).
 //! Characters not in the level's legend fall back to the shared default legend
 //! (`assets/data/legend.toml`). An optional `ambient = [r, g, b, uv]` lights the whole level.
+//! `kind` (`dungeon`, the default, or `outdoor`) and `turn_seconds` decide how time passes on it
+//! (spec §8 "Time").
 
 use super::creature::CreatureId;
 use super::light::LightId;
@@ -12,8 +14,30 @@ use super::{Content, ContentError};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use crate::light::Light;
-use serde::Deserialize;
+use crate::time::{Duration, HOUR};
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+
+/// What kind of place a level is (spec §8 "Time"). It sets the default length of a turn there.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum LevelKind {
+    /// Underground or indoors.
+    #[default]
+    Dungeon,
+    /// Under the open sky.
+    Outdoor,
+}
+
+impl LevelKind {
+    /// How long a turn (a step, a wait, opening a door) takes unless the level overrides it:
+    /// six seconds on local levels.
+    pub const fn default_turn(self) -> Duration {
+        match self {
+            LevelKind::Dungeon | LevelKind::Outdoor => Duration::seconds(6),
+        }
+    }
+}
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -22,6 +46,10 @@ struct LevelFile {
     /// Light everywhere on the level, `[r, g, b, uv]`; default none.
     #[serde(default)]
     ambient: Light,
+    #[serde(default)]
+    kind: LevelKind,
+    /// Length of a turn in seconds; default [`LevelKind::default_turn`].
+    turn_seconds: Option<u64>,
     map: String,
     #[serde(default)]
     legend: BTreeMap<String, LegendEntry>,
@@ -99,6 +127,9 @@ pub struct LevelTemplate {
     pub name: String,
     /// Light everywhere on the level.
     pub ambient: Light,
+    pub kind: LevelKind,
+    /// How long a turn takes here; a step takes this scaled by the terrain's `move_cost`.
+    pub turn: Duration,
     pub terrain: Grid<TerrainId>,
     pub player_start: Option<Pos>,
     pub creatures: Vec<CreatureSpawn>,
@@ -128,6 +159,15 @@ pub(super) fn parse_level(
 ) -> Result<LevelTemplate, ContentError> {
     let err = |msg: String| ContentError::new(file, msg);
     let parsed: LevelFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
+    let turn = match parsed.turn_seconds {
+        None => parsed.kind.default_turn(),
+        Some(s) if (1..=HOUR).contains(&s) => Duration::seconds(s),
+        Some(s) => {
+            return Err(err(format!(
+                "turn_seconds {s} is outside 1 to {HOUR} (one hour)"
+            )));
+        }
+    };
 
     let mut legend = default_legend.clone();
     for (key, entry) in parsed.legend {
@@ -222,6 +262,8 @@ pub(super) fn parse_level(
         id: id.to_string(),
         name: parsed.name,
         ambient: parsed.ambient,
+        kind: parsed.kind,
+        turn,
         terrain: Grid::from_vec(width, height, cells),
         player_start,
         creatures,

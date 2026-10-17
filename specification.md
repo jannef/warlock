@@ -253,16 +253,24 @@ rate or animation.
   is named, so the table never holds a conflict. Esc (cancel) is fixed. Delete resets a command,
   "Reset all keys" resets everything.
 - First-phase commands: move, wait, open/close door, ascend/descend, light/douse lantern (`L`),
-  look, help, save and quit (`Q`). Free actions (look, help, menus) do not advance time.
-- Screen layout: map viewport, message log, status panel (turn, position, level, light at the
-  player, vision profile, seed).
+  rest (`R`), look, help, save and quit (`Q`). Free actions (look, help, menus, vision switch) do
+  not advance time.
+- **Rest** (`R`) asks in the message line: `Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to
+  cancel)`. `h` rests an hour, `d` until 06:00, `n` until 18:00 (replay text `rest:1h`,
+  `rest:dawn`, `rest:dusk`); any other command cancels. Resting is one action that passes turn
+  after turn and stops early when a creature comes into view or a message is logged (§8 "Time").
+  It is a gameplay input mode like the open/close direction prompt, not a menu screen.
+- Screen layout: map viewport, message log, status panel (level, time of day and date as
+  `14:32 · 12 Rainmoon`, turn, position, light at the player, vision profile, lantern, seed;
+  segments drop in priority order when the window is narrow, the time last after the level name).
 
 ## 7. Levels and data formats
 
 Rule: **hand-authored data is TOML; machine-written data is JSON.**
 
-- **Level files** (TOML): a header (name, ambient light, legend, lights, patrols, stair links) plus a
-  multiline ASCII map. Level size comes from the map, with no fixed upper limit: most dungeon levels
+- **Level files** (TOML): a header (name, ambient light, legend, lights, patrols, stair links,
+  and how time passes: `kind = "dungeon"` (default) or `"outdoor"`, optional `turn_seconds`, 1 to
+  3600, default 6 for both kinds; §8 "Time") plus a multiline ASCII map. Level size comes from the map, with no fixed upper limit: most dungeon levels
   are about 80×21, some are vast. The camera scrolls when a level is larger than the viewport. The
   same format defines vaults for procedural generation (below). Illustrative only — exact syntax
   is designed in M1:
@@ -291,7 +299,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   path = [[12, 3], [20, 3], [20, 8]]
   ```
 - **Definitions** (TOML): terrain types, light presets, vision profiles, glyph animations, and
-  effects (glow, heat haze, particle emitters; §4.8).
+  effects (glow, heat haze, particle emitters; §4.8). Terrain has a `move_cost`: the time to step
+  onto it in percent of the level's turn (default 100; shallow water 200). The calendar's month
+  names are `data/calendar.toml` (exactly 12; without the file months are numbered).
 - **Dungeon branches** (`data/dungeons.toml`): stacks of generated levels, e.g.
   `{ id = "depths", generator = "rooms", depth = 8, size = [80, 21] }`, plus optional name,
   patrolling creature kinds, ambient light, and per-depth overrides of generator and size. Stairs
@@ -312,7 +322,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   every entrance. A vault's edge is solid except for its entrances (doors, not on a corner); it has
   no stairs or player start, and all its walkable cells are reachable from an entrance.
 - **Scenarios** (`assets/scenarios/*.toml`): level set, start position, vision profile, lantern,
-  options.
+  options, and when the run starts: `start_date = [year, month, day]` (all from 1; default
+  `[1, 1, 1]`) and `start_time = "hh:mm"` (default `"08:00"`).
 - **Saves**: suspend-only. One save per run, written on quit and by periodic autosave; loading
   continues the run. Dev builds add named snapshots. Format: a versioned envelope (magic, format
   version, game version) around a JSON payload, gzip-compressed with a pure-Rust backend, written
@@ -320,8 +331,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   from 1.0 on, saves are migrated. The web build uses browser storage. The envelope also records a
   content fingerprint (hash of the ordered terrain, creature, level, light, and dungeon-branch
   ids), because ids are indices; a save made with different content is rejected. Generated levels
-  are saved with the run like visited hand-made ones (terrain, memory, stairs, lights), together
-  with the gameplay random stream. The save is `run.sav` in the platform
+  are saved with the run like visited hand-made ones (terrain, memory, stairs, lights, kind and
+  turn length), together with the gameplay random stream and the game clock (format version 3). The save is `run.sav` in the platform
   data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
   and on level change, and a save that cannot be read is renamed `run.sav.bad`, never deleted, while
   a new run starts. Starting resumes the save unless `--new` is given. Dev snapshots: `F5` saves and
@@ -334,7 +345,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 
 ```
 crates/
-  warlock-core/   plain Rust, no Bevy: map, actors, actions, turns, fov, light,
+  warlock-core/   plain Rust, no Bevy: map, actors, actions, turns, time, fov, light,
                   perception, rng, levels, mapgen, save
   warlock-cli/    no Bevy: scenarios, replay, dump, verify
   warlock/        Bevy app: render, input, UI, effects, platform (ECS lives here)
@@ -350,8 +361,34 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
 - **Perception snapshot**: after each turn, the core produces what the player perceives. The
   renderer, UI, and dumps read only this snapshot, so hidden information cannot leak by construction
   (a dev "reveal" mode excepted).
-- **Turn phases**, in order: player action → creatures (stable id order) → environment → perception
-  (line of sight, light, memory) → emit presentation events.
+- **Turn phases**, in order: player action → the clock advances by the action's duration →
+  creatures (stable id order) → environment → perception (line of sight, light, memory) → emit
+  presentation events.
+- **Time** (`warlock-core/src/time.rs`): world time is whole seconds since the calendar epoch
+  (year 1, day 1 of the first month, 00:00), kept in the world state (saved, covered by the state
+  hash). The calendar has 12 months of 30 days (a 360-day year) and 24-hour days; month names are
+  content (Frostmere, Thawmonth, Seedtide, Rainmoon, Greenleaf, Highsun, Emberheat, Harvestide,
+  Leaffall, Mistmoon, Darkening, Deepwinter). `World::time()` returns a `GameTime` with year,
+  month (number and index; the name from `Content::calendar`), day, hour, minute, second, minute
+  of day (the index for per-minute tables), and the day fraction in 16-bit fixed point. All
+  integer arithmetic; no wall-clock time.
+  - **Costs**: every action that takes a turn advances the clock. A turn (a wait, a door, stairs,
+    lighting the lantern) takes the turn length of the level it starts on (6 s on `dungeon` and
+    `outdoor` levels unless the level sets `turn_seconds`). A step takes that turn scaled by the
+    destination terrain's `move_cost` percent (at least 1 s). `LevelState::step_time` is the one
+    place movement time is decided; the overworld will add its own level kind there, whose steps
+    cost the terrain's travel time in minutes. Free and refused actions take no time. Creatures
+    act once per turn, however long it took (no speed system yet).
+  - **Rest** passes turn after turn through the normal pipeline: the player waits, creatures act,
+    perception runs; the last turn is cut short so the rest ends exactly at its goal (one hour,
+    the next 06:00, or the next 18:00; at most a day). It stops after a turn in which a creature
+    came into view (one not seen the turn before) or a message was logged, and logs how long the
+    player rested. While every creature on the level is farther than the view range plus one
+    (Chebyshev) from the player, the turns until one could come within view pass between two
+    perceptions: they cannot change when the rest stops, and a night's rest stays fast on large
+    levels (`cargo xtask bench-turns` times one; budget 500 ms).
+  - **Dev skip** (`F6` in dev builds, replay text `skip:1h`) moves the clock ahead at once;
+    nobody acts and no turn passes, but it is recorded like any action.
 - **Events to effects**: the core emits events (door opened, actor moved); the presentation layer
   turns them into animations. Gameplay never waits for them.
 - **Determinism**: ChaCha8 RNG (`rand_chacha`) with separate streams, each seeded with FNV-1a 64 of
@@ -382,21 +419,25 @@ cargo xtask golden [--update]                             # compare golden scree
 ```
 
 - Replays are JSON: `{game_version, scenario, seed, steps: [{action, hash}]}`. Actions use a text
-  syntax (`move:E wait open:E close:W ascend descend lantern vision:darkvision`); `hash` is the
+  syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
+  vision:darkvision skip:1h`; durations are a whole number with `s`, `m`, or `h`, a rest at most
+  `24h`); `hash` is the
   FNV-1a 64 hash of the
   canonical JSON encoding of `WorldState` after the step. Verification reports the first
   diverging step. `--replay` takes its scenario and seed from the file; `--record` rewrites its
   file after every action (including replayed steps).
 - Dump layers: `view`, `fov`, `memory`, `light` (perceived brightness of each visible cell as a
   digit, `0` dark to `9` fully lit or brighter) are built from the perception snapshot only;
-  `truth` shows ground truth and is dev-only. JSON dumps carry turn, level,
-  viewer, seen actors, recent messages, and optionally the full world state.
+  `truth` shows ground truth and is dev-only. JSON dumps carry turn, game time (seconds and
+  calendar fields), level, viewer, seen actors, recent messages, and optionally the full world
+  state; the ASCII header line has the turn, the time (`0001-01-01 08:00:00`), level, viewer, and
+  hash.
 - Freezing visual time and fixing window size and scale make screenshots reproducible. With frozen
   time, glyph animations show that moment and motion (slides, camera) completes instantly.
 - Dev builds add in-game commands: switch vision profile (`F3`), reveal map (`F2`, ground truth,
   marked as dev-only on screen), toggle debug overlays (light values `F4`; line of sight and memory
-  later), save and load named snapshots (`F5`/`F9`). They are in the bindings table, so the `?`
-  overlay lists them.
+  later), save and load named snapshots (`F5`/`F9`), skip an hour (`F6`, recorded as `skip:1h`).
+  They are in the bindings table, so the `?` overlay lists them.
 - CLAUDE.md documents build commands, architecture notes, pinned documentation references, and
   verification procedures, including the agent workflow guidance from the original brief.
   Verification uses tests, dumps, logs, and screenshots — a successful compile alone does not
