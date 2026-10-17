@@ -69,6 +69,11 @@ impl Map {
         }
     }
 
+    /// `test(cell)` for in-bounds cells; false outside the map.
+    fn get_inside(&self, x: i32, y: i32, test: impl Fn(u8) -> bool) -> bool {
+        x >= 0 && y >= 0 && x < WIDTH as i32 && y < HEIGHT as i32 && test(self.get(x, y))
+    }
+
     fn set(&mut self, x: i32, y: i32, c: u8) {
         if x >= 0 && y >= 0 && x < WIDTH as i32 && y < HEIGHT as i32 {
             self.cells[y as usize * WIDTH + x as usize] = c;
@@ -447,8 +452,21 @@ pub fn generate() -> Result<String, String> {
          # Spec §3 Level 2: caverns, a winding river, pillars, walled rooms with doors, patrols.\n",
     );
     out.push_str("name = \"The Vast Caverns\"\nmap = '''\n");
-    for row in map.cells.chunks(WIDTH) {
-        out.push_str(std::str::from_utf8(row).map_err(|e| e.to_string())?);
+    // Rock that touches open ground is a visible wall; deeper rock stays void. The final cell is
+    // always a wall so the loader (which drops blank trailing rows) keeps the full height.
+    for y in 0..HEIGHT as i32 {
+        let mut row = String::with_capacity(WIDTH + 1);
+        for x in 0..WIDTH as i32 {
+            let c = map.get(x, y);
+            let touches_open =
+                (-1..=1).any(|dy| (-1..=1).any(|dx| map.get_inside(x + dx, y + dy, |n| n != WALL)));
+            row.push(match c {
+                WALL if touches_open || (y == HEIGHT as i32 - 1 && x == WIDTH as i32 - 1) => '#',
+                WALL => ' ',
+                other => other as char,
+            });
+        }
+        out.push_str(&row);
         out.push('\n');
     }
     out.push_str("'''\n\n[legend]\n");
