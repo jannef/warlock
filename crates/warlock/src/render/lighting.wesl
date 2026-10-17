@@ -3,9 +3,9 @@
 //
 // `light_values` holds each cell's light (red, green, blue: 1.0 = fully lit, more = overbright)
 // and color saturation; `light_flags` marks cells that are lit (visible) and opaque (red) and holds
-// their flicker gain (green, `gain_byte` in lighting.rs). Both cover the console with a margin of
-// `MARGIN` cells. Consoles without light (the UI) get 1×1 textures, so every lookup misses and
-// their cells are drawn as they are.
+// their intensity gain (green, `gain_byte` in lighting.rs; light stability). Both cover the
+// console with a margin of `MARGIN` cells. Consoles without light (the UI) get 1×1 textures, so
+// every lookup misses and their cells are drawn as they are.
 
 @group(constants::MATERIAL_BIND_GROUP) @binding(9) var light_values: texture_2d<f32>;
 @group(constants::MATERIAL_BIND_GROUP) @binding(10) var light_flags: texture_2d<u32>;
@@ -39,7 +39,7 @@ fn is_open(t: vec2<i32>) -> bool {
     return (flags_at(t).r & (LIT | OPAQUE)) == LIT;
 }
 
-// A cell's flicker gain (`gain_byte` in lighting.rs).
+// A cell's intensity gain from light stability (`gain_byte` in lighting.rs).
 fn gain_at(t: vec2<i32>) -> f32 {
     return 1.0 + (f32(flags_at(t).g) - 128.0) / 256.0;
 }

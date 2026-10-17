@@ -50,7 +50,7 @@ regression scene for golden screenshots, replays, and snapshot tests.
 | Start room | movement, message line, `?` help | M1 |
 | Door corridor | opening/closing doors, doors blocking sight | M1–M2 |
 | Patrol gallery | creatures moving in and out of view, never shown in memory | M2 |
-| Light hall | colored lights, falloff, pillar and creature shadows, flicker | M3, M8 |
+| Light hall | colored lights, falloff, pillar and creature shadows, steady magical light | M3, M8 |
 | Darkness chamber | vision types, a UV-only rune, darkvision fade | M3 |
 | Water garden | still ponds and running rills (flow, glints, foam), pulsing altar | M4, M8 |
 | Effects room | glyph particles, glow, fades, distortion | M4 |
@@ -102,8 +102,9 @@ Water is calm by design; motion stays tasteful, never busy:
 - **Still water** (pools, ponds, the water garden, cave pools) is a `wave` with a faint, slow
   swell (a pixel or so), and **glints** (`glint`, 0–1, on `wave` and `flow`): now and then, at a
   random moment of each cell's own cycle (about one glint every 20 s per cell, under a second
-  long), the glyph brightens a little in the color of the light on it, flicker included. Dark
-  water never glints; the glints are reflections of nearby lights.
+  long), the glyph brightens a little in the color of the light on it, following that light's
+  stability (its flicker and hue drift, §4.4). Dark water never glints; the glints are
+  reflections of nearby lights.
 - **Running water** (rivers, streams) is a `flow`. Each cell has a flow direction (8 ways) and
   speed (§7). The shader draws the glyph as a pattern repeating every cell and moves it
   downstream at the terrain's `speed` (cell widths per second) times the cell's flow speed, so
@@ -117,8 +118,9 @@ Water is calm by design; motion stays tasteful, never busy:
   foams.
 
 ### 4.4 Visual lighting
-- Derived from gameplay light (§5), plus visual-only modulation: flicker, creature shadows, and
-  transient effect lights (e.g. a spell's glow). Visual-only light never affects gameplay.
+- Derived from gameplay light (§5), plus visual-only modulation: light stability (flicker and hue
+  drift), creature shadows, and transient effect lights (e.g. a spell's glow). Visual-only light
+  never affects gameplay.
 - Each frame, the CPU composites the perceived light of the viewport's cells (plus a one-cell
   margin) from the perception snapshot — the base light (ambient plus bounce, steady) plus every
   visible source's per-cell contribution — into a viewport-sized float texture aligned with the map
@@ -129,10 +131,29 @@ Water is calm by design; motion stays tasteful, never busy:
 - A surface's base color is its look at full light (255). Below that it dims linearly (in linear
   light) to a readability floor; overbright light brightens it a little more along a soft knee and
   adds a faint glow in the light's own color, so strongly lit floors pool with color.
-- **Flicker** is per source (preset `flicker = { amount, speed }`): smooth noise from the source's
-  stable key and visual time, applied as a per-cell brightness gain (the mean of the flicker of the
-  sources lighting the cell, weighted by their light) after shading, so it reads the same in dim
-  and bright light. Gentle by design: brightness drifts within ±`amount`, no strobing.
+- **Light stability** is per source, from its preset's optional `stability` block; a preset
+  without one is perfectly stable (constant hue and intensity), as magical light (crystals, runes,
+  fungus) is. Firelight is gently alive; lamps and the lantern burn calmer. Three optional parts,
+  each a pure function of the source's stable key and visual time (so frozen-time captures are
+  reproducible):
+  - `intensity = { amount, speed }`: smooth noise (two octaves of value noise) within ±`amount`,
+    changing about `speed` times a second;
+  - `hue = { degrees, speed }`: smooth noise from an independent stream turns the light's HSV hue
+    within ±`degrees` (positive toward yellow), its luminance kept. The turn scales the two weaker
+    channels together against the strongest, the way a flame's color moves when it burns hotter
+    or cooler: a warm light goes paler yellow one way and deeper, more saturated orange the other.
+    A channel the light lacks stays dark;
+  - `dips = { depth, every, length }`: about once every `every` seconds (one dip at a random moment
+    in each `every`-second slot) the intensity eases down by up to `depth` and back over `length`
+    seconds (a raised cosine, its depth drawn between half and all of `depth`); with hue drift the
+    dip also pulls the hue toward its deep end.
+  - Compositing: the hue tints the source's contributions on the CPU, exactly (they are
+    composited per source); the intensity becomes a per-cell brightness gain (the mean of the
+    intensity of the sources lighting the cell, weighted by the light they draw; base light counts
+    as steady) applied after shading, so it reads the same in dim and bright light. Creature
+    shadows scale the modulated light.
+  - Subtle by design: felt more than noticed, no strobing. `amount` and `depth` are at most 0.25
+    each, `degrees` at most 30. Off (steady light) with the flicker switch or reduced effects.
 - **Creature shadows** (visual only: gameplay light and visibility ignore them, so creatures never
   hide in each other's shadows): every visible creature, the player included, shades each perceived
   source that lights its cell, except a source on its own cell (the light it carries). The cells
@@ -166,11 +187,11 @@ Water is calm by design; motion stays tasteful, never busy:
 ### 4.7 Readability and reduced effects
 - Glyphs stay legible under every effect: minimum contrast against their background, glow added
   around glyphs rather than over them, small distortion amplitudes.
-- A **reduced effects** setting is a preset that turns off glyph animation, flicker, sliding
-  (instant snap), camera easing, bloom and glow, distortion, particles, and screen fades and
-  flashes. Each can also be switched off on its own (settings: glyph animation, light flicker,
-  motion = slides and camera easing, bloom and glow, distortion, particles, screen fades); an
-  effect runs only when its switch is on and reduced effects is off. No gameplay information may
+- A **reduced effects** setting is a preset that turns off glyph animation, flicker (light
+  stability: light is steady), sliding (instant snap), camera easing, bloom and glow, distortion,
+  particles, and screen fades and flashes. Each can also be switched off on its own (settings:
+  glyph animation, light flicker, motion = slides and camera easing, bloom and glow, distortion,
+  particles, screen fades); an effect runs only when its switch is on and reduced effects is off. No gameplay information may
   depend on an effect. These are settings (§6); the `--reduced-effects` flag forces everything off.
 - Colors that effects introduce, such as the shimmer target color, go through the active palette
   like any other color.
@@ -225,8 +246,8 @@ rate or animation.
   and `radius`): terrain that emits light, lights placed on cells by the level legend (overriding
   the terrain's own), creatures that carry light, and the player's lantern (from the scenario,
   toggled by the player; takes a turn). Emitters must be transparent; a source in an opaque cell
-  (e.g. on a closed door) gives no light. Presets also carry visual-only flicker, never read by
-  rules.
+  (e.g. on a closed door) gives no light. Presets also carry visual-only stability (§4.4), never
+  read by rules.
 - **Falloff and shadows**: a source shadowcasts with the same shadowcasting within its radius and
   adds `color · (R² − d²) / R²` with `R² = r² + r`: full color at the source, monotonically less
   with distance, zero at the edge. Integer math only — no floating point or transcendental
@@ -240,7 +261,7 @@ rate or animation.
   A cell's bounce light is 32/256 (12.5 %) of the result: it never crosses a wall, reaches at most
   3 cells from the surface that reflected it, fading with distance, and is never more than 12.5 %
   of the brightest direct light within reach (exactly that in an evenly lit area). Integer math,
-  derived from un-flickered gameplay light, so steady. Ambient plus bounce light is a cell's *base
+  derived from unmodulated gameplay light, so steady. Ambient plus bounce light is a cell's *base
   light*.
 - **Wall faces**: an opaque cell is lit by each source as a transparent cell at its own distance
   would be (`color · (R² − d²) / R²`), but only if the viewer sees a face the source lights: one of

@@ -204,10 +204,16 @@ occluder; contribution cells only the first reaches keep `shadows::keep` of that
 (`KEEP` 0.4 right behind the creature, back to all of it at `REACH` 3.5 cells), so colored shadows
 come from per-source attenuation. `shadows::update` recomputes the `Shadows` resource only when
 `Game` changes (once per turn), not per frame; darkvision still measures the unshaded light (else
-its glow would brighten shadows). Flicker (deterministic noise from the
-source key and `VisualTime`; off with the `flicker` effect) is a per-cell brightness gain applied after
-shading. Two textures on the map material: `light` (`Rgba32Float`: rgb light, 1.0 = fully lit,
-and saturation) and `light_flags` (`Rgba8Uint`: lit/opaque flags, flicker gain byte). The shader
+its glow would brighten shadows). **Light stability** (`render/modulation.rs`; presets'
+`stability.{intensity,hue,dips}` in `lights.toml`, absent = steady): each source's `Modulation`
+is a pure function of its key, preset, and `VisualTime` (steady with the `flicker` effect off).
+Its hue `tint` multiplies the source's contributions on the CPU (exact; drawn light =
+Σ tinted contributions · shadow keep + base light, while darkvision still measures the perceived
+light); its intensity `gain` becomes the per-cell brightness gain (drawn-light-weighted mean,
+base light = 1) applied after shading. Tune with captures at several `--freeze-time` values;
+the crystals, fungus, runes, and altar must stay constant. Two textures on the map material:
+`light` (`Rgba32Float`: rgb light, 1.0 = fully lit, and saturation) and `light_flags`
+(`Rgba8Uint`: lit/opaque flags, intensity gain byte). The shader
 interpolates light per pixel between cell centers, never across opaque, unseen, or remembered
 cells (walls are lit flat by their wall-face light); then exposure (readability floor, soft
 overbright knee plus a faint glow in the light's hue), desaturation, gain. Unlit cells (remembered

@@ -261,7 +261,7 @@ mod tests {
             id: "test".into(),
             color: Light::new(255, 255, 255, 255),
             radius,
-            flicker: None,
+            stability: Default::default(),
         }
     }
 

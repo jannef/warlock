@@ -24,7 +24,7 @@ pub use dungeon::{DungeonDef, Generator, LevelPlan, parse_branch_level};
 pub use flow::{FLOW_SPEEDS, Flow};
 pub(crate) use level::validate_route;
 pub use level::{CreatureSpawn, LevelKind, LevelTemplate, StairsLink, parse_route};
-pub use light::{Flicker, LightId, LightPreset, MAX_LIGHT_RADIUS};
+pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use scenario::ScenarioDef;
 pub use terrain::{StairsDir, TerrainDef, TerrainId};
@@ -350,6 +350,10 @@ impl Content {
                     preset.id, preset.radius
                 )));
             }
+            preset
+                .stability
+                .check()
+                .map_err(|m| err(format!("light `{}`: stability: {m}", preset.id)))?;
             if self.light_ids.insert(preset.id.clone(), id).is_some() {
                 return Err(err(format!("duplicate light id `{}`", preset.id)));
             }
@@ -818,7 +822,8 @@ mod tests {
     }
 
     const LIGHTS: &str = "[[light]]\nid = \"torch\"\ncolor = [300, 200, 100, 0]\nradius = 6\n\
-                          flicker = { amount = 0.2, speed = 1.5 }\n";
+                          stability.intensity = { amount = 0.2, speed = 1.5 }\n\
+                          stability.hue = { degrees = 5, speed = 0.4 }\n";
 
     #[test]
     fn builtin_lights_and_vision_profiles_load() {
@@ -827,7 +832,9 @@ mod tests {
         assert_eq!(ids, ["normal", "low_light", "darkvision", "uv_sight"]);
         assert_eq!(content.vision("darkvision").map(|v| v.darkvision), Some(5));
         let torch = content.light(content.light_id("torch").unwrap());
-        assert!(torch.flicker.is_some() && torch.radius > 0);
+        assert!(!torch.stability.is_stable() && torch.radius > 0);
+        let crystal = content.light(content.light_id("crystal_red").unwrap());
+        assert!(crystal.stability.is_stable(), "magical light is constant");
         let kobold = content.creature(content.creature_id("kobold").unwrap());
         assert_eq!(kobold.light, content.light_id("torch"));
         let hub = content.level("hub").unwrap();
@@ -894,6 +901,18 @@ mod tests {
         );
         let err = Content::load(&files).unwrap_err();
         assert!(err.message.contains("radius 99"), "{}", err.message);
+
+        files.insert(
+            "data/lights.toml",
+            "[[light]]\nid = \"fire\"\ncolor = [1, 1, 1, 0]\nradius = 3\n\
+             stability.hue = { degrees = 90, speed = 1 }\n",
+        );
+        let err = Content::load(&files).unwrap_err();
+        assert!(
+            err.message.contains("light `fire`: stability: hue"),
+            "{}",
+            err.message
+        );
 
         let mut files = minimal_files("#@#\n", "");
         files.insert(
