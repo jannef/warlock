@@ -77,6 +77,16 @@ impl Mask {
         }
     }
 
+    /// Whether any lit cell can lie within `min..=max` (corners included): the mask's square of
+    /// side `2 · radius + 1` overlaps it.
+    pub fn overlaps(&self, min: Pos, max: Pos) -> bool {
+        let r = self.radius;
+        self.origin.x + r >= min.x
+            && self.origin.x - r <= max.x
+            && self.origin.y + r >= min.y
+            && self.origin.y - r <= max.y
+    }
+
     fn is_for(&self, source: &Source) -> bool {
         self.origin == source.pos && self.preset == source.preset
     }

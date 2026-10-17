@@ -2,7 +2,7 @@
 //! perceived gameplay light plus visual-only flicker. Gameplay never reads any of it.
 //!
 //! [`VisualLight::composite`] covers the map grid's cells plus a one-cell margin ([`MARGIN`]). For
-//! each visible cell it sums the level's ambient light and every visible source's contribution,
+//! each visible cell it sums its base light (ambient + bounce) and every source's contribution,
 //! and folds in the presentation rules: UV light as a violet tint (perception reports UV only to
 //! eyes that see it) and the [`darkvision`] fade. Flicker ([`flicker`]: smooth noise keyed by the
 //! source, driven by [`VisualTime`]; none with flicker off) becomes a per-cell brightness
@@ -139,12 +139,11 @@ impl VisualLight {
             )
         };
 
-        // Ambient light on every visible cell, then each source. `flickers` sums each source's
+        // Base light on every visible cell, then each source. `flickers` sums each source's
         // flicker weighted by how much light it adds (x), and those weights (y).
         let mut flags = vec![0; n];
         let mut sums = vec![Vec4::ZERO; n];
         let mut flickers = vec![Vec2::ZERO; n];
-        let ambient = light_vec(view.ambient());
         for (i, flag) in flags.iter_mut().enumerate() {
             if let CellView::Visible(t) = view.cell(at(i)) {
                 *flag = if content.terrain(t).transparent {
@@ -152,8 +151,9 @@ impl VisualLight {
                 } else {
                     LIT | OPAQUE
                 };
-                sums[i] = ambient;
-                flickers[i] = Vec2::splat(ambient.element_sum());
+                let base = light_vec(view.base_light(at(i)).unwrap_or_default());
+                sums[i] = base;
+                flickers[i] = Vec2::splat(base.element_sum());
             }
         }
         // The light creature shadows take away: not drawn, but kept apart from `sums`, which

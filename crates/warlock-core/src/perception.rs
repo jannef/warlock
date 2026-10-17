@@ -9,9 +9,16 @@
 //! light is at least the vision profile's threshold or it lies within the darkvision radius. The
 //! player's own cell is always visible.
 //!
+//! Light on a transparent cell is the level's ambient light, plus the light of every source that
+//! reaches it, plus weak **bounce light** reflected by the lit surfaces around it
+//! ([`crate::light::BOUNCE`]). Ambient plus bounce is the cell's *base light*: steady, and not
+//! tied to one source.
+//!
 //! Opaque cells follow two extra rules:
-//! - **Wall faces**: an opaque cell takes, per light source, the maximum light of its adjacent
-//!   visible transparent cells, so light never leaks through a wall to a viewer on its dark side.
+//! - **Wall faces**: an opaque cell is lit by a source as a transparent cell at its own distance
+//!   would be, but only if the viewer sees a face the source lights (an adjacent visible
+//!   transparent cell receives the same source), so light never leaks through a wall to a viewer
+//!   on its dark side. Its bounce light is the brightest of its visible transparent neighbors'.
 //! - **Wall completion**: an opaque cell within view range that bounds a transparent cell seen by
 //!   light or darkvision is visible even outside line of sight (symmetric shadowcasting can show
 //!   floor through a narrow gap without the walls around it). Such a cell shows only its terrain
@@ -21,7 +28,9 @@ use crate::content::{Content, CreatureId, LightId, TerrainId, VisionProfile};
 use crate::fov::{compute_fov, radius2};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
-use crate::light::{Light, LightCache, lit_in_sight, wall_faces};
+use crate::light::{
+    Area, BOUNCE_STEPS, Bounce, Light, LightCache, falloff, lit_in_sight, wall_faces,
+};
 use crate::world::{ActorId, ActorKind, LevelState, WorldState};
 use serde::Serialize;
 
@@ -88,7 +97,7 @@ pub struct SeenLight {
     /// The source's preset (color, radius, flicker).
     pub preset: LightId,
     /// Perceived light this source adds to each visible cell it reaches, wall-face rule applied.
-    /// Summed over all sources plus [`PerceptionView::ambient`] this gives
+    /// Summed over all sources plus [`PerceptionView::base_light`] this gives
     /// [`PerceptionView::light`].
     pub contributions: Vec<(Pos, Light)>,
 }
@@ -111,6 +120,8 @@ pub(crate) struct Perception {
     vision: usize,
     /// Perceived ambient light.
     ambient: Light,
+    /// Ambient plus bounce light; meaningful on visible cells only.
+    base: Grid<Light>,
     sight: Grid<Sight>,
     /// Visible cells in the order they were found.
     visible_cells: Vec<Pos>,
@@ -143,14 +154,30 @@ impl Perception {
             }
         });
 
-        // Light on transparent cells in line of sight: ambient plus every source reaching them.
+        // Sources that can light a cell in view, or a surface whose bounce light reaches one (a
+        // bounce step moves at most √2 < 2 cells; wall faces are within a cell of view).
+        let near = lights.near(state, content, viewer, VIEW_RADIUS + 1 + 2 * BOUNCE_STEPS);
+
+        // Base light on cells in line of sight: ambient plus bounce (on transparent cells; RGB
+        // only, so every eye perceives all of it).
         let ambient = eye.perceive(level.ambient);
-        let mut light = Grid::new(width, height, Light::DARK);
+        let bounce =
+            Area::around(los_cells.iter().copied(), BOUNCE_STEPS, width, height).map(|area| {
+                let tint = |p: Pos| {
+                    let rgb = level.terrain.get(p).map(|t| content.terrain(*t).bounce);
+                    rgb.map_or([0; 3], |c| [c.r, c.g, c.b])
+                };
+                Bounce::compute(area, near.iter().map(|(_, mask)| *mask), is_opaque, tint)
+            });
+        let indirect = |p: Pos| bounce.as_ref().map_or(Light::DARK, |b| b.at(p));
+        let mut base = Grid::new(width, height, Light::DARK);
         for &p in &los_cells {
-            light[p] = ambient;
+            base[p] = ambient.saturating_add(indirect(p));
         }
-        let lit: Vec<_> = lights
-            .near(state, content, viewer, VIEW_RADIUS + 1)
+
+        // Light on cells in line of sight: base light plus every source reaching them.
+        let mut light = base.clone();
+        let lit: Vec<_> = near
             .into_iter()
             .map(|(source, mask)| (source, lit_in_sight(mask, &los, |l| eye.perceive(l))))
             .collect();
@@ -182,31 +209,40 @@ impl Perception {
             for w in Dir::ALL.map(|d| q.step(d)) {
                 if sight.get(w) == Some(&Sight::Hidden) && is_opaque(w) && w.dist2(viewer) <= reach2
                 {
-                    if los[w] {
-                        sight[w] = Sight::Seen;
-                    } else {
-                        sight[w] = Sight::Edge;
-                        light[w] = ambient;
-                    }
+                    sight[w] = if los[w] { Sight::Seen } else { Sight::Edge };
                     visible_cells.push(w);
                 }
             }
         }
 
-        // Wall faces: opaque cells in line of sight or completed take light from visible
-        // transparent neighbors, per source.
-        let lit: Vec<_> = {
-            let is_visible = |q: Pos| sight.get(q) == Some(&Sight::Seen);
-            let is_face = |w: Pos| {
-                is_opaque(w) && (los.get(w) == Some(&true) || sight.get(w) == Some(&Sight::Edge))
-            };
-            lit.into_iter()
-                .map(|(source, cells)| {
-                    let faces = wall_faces(&cells, is_visible, is_face);
-                    (source, cells, faces)
-                })
-                .collect()
+        // Wall faces: opaque cells in line of sight or completed take the brightest bounce light
+        // of their visible transparent neighbors, then each source's light at their own distance
+        // if they face a visible cell it lights.
+        let is_seen = |q: Pos| sight.get(q) == Some(&Sight::Seen);
+        let is_face = |w: Pos| {
+            is_opaque(w) && (los.get(w) == Some(&true) || sight.get(w) == Some(&Sight::Edge))
         };
+        for &w in los_cells.iter().chain(&visible_cells) {
+            if is_face(w) {
+                let from_neighbors = Dir::ALL
+                    .map(|d| w.step(d))
+                    .into_iter()
+                    .filter(|q| is_seen(*q) && !is_opaque(*q))
+                    .fold(Light::DARK, |acc, q| acc.max(indirect(q)));
+                base[w] = ambient.saturating_add(from_neighbors);
+                light[w] = base[w];
+            }
+        }
+        let lit: Vec<_> = lit
+            .into_iter()
+            .map(|(source, cells)| {
+                let preset = content.light(source.preset);
+                let (color, radius) = (preset.color, preset.radius.max(0));
+                let light_at = |w: Pos| eye.perceive(falloff(color, radius, w.dist2(source.pos)));
+                let faces = wall_faces(&cells, light_at, is_seen, is_face);
+                (source, cells, faces)
+            })
+            .collect();
         for (_, _, faces) in &lit {
             for &(p, c) in faces {
                 light[p] = light[p].saturating_add(c);
@@ -254,6 +290,7 @@ impl Perception {
             viewer,
             vision,
             ambient,
+            base,
             sight,
             visible_cells,
             light,
@@ -367,5 +404,12 @@ impl<'a> PerceptionView<'a> {
     /// The level's ambient light, as the player perceives it.
     pub fn ambient(&self) -> Light {
         self.snapshot.ambient
+    }
+
+    /// Steady light at a visible cell that no single source gives: ambient light plus bounce
+    /// light; `None` for cells not in view. With every [`SeenLight`] contribution to the cell
+    /// added, it is [`PerceptionView::light`].
+    pub fn base_light(&self, p: Pos) -> Option<Light> {
+        self.snapshot.is_visible(p).then(|| self.snapshot.base[p])
     }
 }

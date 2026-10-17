@@ -2,7 +2,8 @@
 # Fields: id, name, glyph, fg, bg (default black), walkable (default true),
 # transparent (default true), move_cost (time to step onto it, in percent of the level's turn;
 # default 100), opens_to / closes_to (doors), stairs ("up"/"down"),
-# light (a preset in lights.toml the terrain emits), anim (presentation-only, see spec §4.3).
+# light (a preset in lights.toml the terrain emits), bounce (gameplay, spec §5: the tint of the
+# light the surface bounces, "#rrggbb", default white = neutral), anim (presentation-only, §4.3).
 # Presentation-only effects (spec §4.8): glow (0-1, the glyph blooms), haze (0-1, heat haze rises
 # above the cell), and [[terrain.particles]] emitters:
 #   on        "ambient" (default; `rate` per second while in view), "step" (a burst of `count` when
@@ -107,6 +108,7 @@ fg = "#4f8fe0"
 bg = "#0a1a30"
 # Wading takes twice as long as a step on dry ground.
 move_cost = 200
+bounce = "#a8c8ff"
 anim = { kind = "wave", speed = 0.2, amount = 0.07 }
 
 # A splash when something wades in.
@@ -204,6 +206,7 @@ glyph = '"'
 fg = "#70e8a8"
 bg = "#0d0d10"
 light = "fungus"
+bounce = "#90ffc0"
 glow = 0.25
 
 [[terrain]]
@@ -225,6 +228,7 @@ fg = "#ff7020"
 bg = "#3a0c04"
 walkable = false
 light = "lava"
+bounce = "#ffb070"
 anim = { kind = "shimmer", color = "#ffd060", speed = 0.35 }
 glow = 0.5
 haze = 0.6

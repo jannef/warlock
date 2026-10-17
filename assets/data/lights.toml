@@ -73,11 +73,12 @@ id = "crystal_amber"
 color = [320, 220, 40, 0]
 radius = 7
 
-# Darkness chamber: too faint for normal eyes (even in pairs), visible with low-light vision.
+# Darkness chamber: too faint for normal eyes (even in pairs, bounce included: brightness 37 < 40);
+# low-light eyes (12) see it and the floor glowing about two cells around it.
 [[light]]
 id = "fungus"
-color = [0, 20, 10, 0]
-radius = 2
+color = [0, 24, 13, 0]
+radius = 3
 flicker = { amount = 0.08, speed = 0.2 }
 
 # Darkness chamber: ultraviolet only, visible with UV sight.
