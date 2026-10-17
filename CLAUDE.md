@@ -26,6 +26,7 @@ behavior, commands, or architecture change.
 | Regenerate the vast level | `cargo xtask gen-vast` (writes `assets/levels/vast.toml`; deterministic, never hand-edit) |
 | Check the vast level is fresh | `cargo xtask gen-vast --check` (fails if the file differs from the generator output; run it after touching `xtask/src/vast.rs`) |
 | Turn-time benchmark | `cargo xtask bench-turns` (re-runs itself in release; budgets: hub 5 ms, vast 16 ms) |
+| Light stress benchmark | `cargo test --release -p warlock-core turn_cost -- --ignored --nocapture` (400×300, 825 lights) |
 
 Game flags (`cargo run -p warlock -- --help`):
 - `--scenario NAME` (default `showcase`), `--seed N` (default: the scenario's seed)
@@ -55,8 +56,8 @@ Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascen
 `{game_version, scenario, seed, steps:[{action, hash}]}`; `hash` is the FNV-1a 64 state hash
 (`World::state_hash`) after the step, as 16 hex digits.
 
-- `--new` start a fresh run instead of resuming the save; `--dev` enables F5/F9 snapshots in release
-  builds (always on in debug); `--save-dir DIR` keeps saves in DIR instead of the platform data dir.
+- `--new` start a fresh run instead of resuming the save; `--dev` enables the dev keys in release
+  builds (always on in debug: F3 next vision profile, F5/F9 snapshots); `--save-dir DIR` keeps saves in DIR instead of the platform data dir.
 
 Saves: `Q` saves and quits (closing the window saves too); the game autosaves every 50 turns and on
 level change to `run.sav` in the platform data dir (`paths.rs`, app name "warlock"; macOS

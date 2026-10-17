@@ -6,14 +6,18 @@
 mod anim;
 mod creature;
 mod level;
+mod light;
 mod scenario;
 mod terrain;
+mod vision;
 
 pub use anim::GlyphAnim;
 pub use creature::{CreatureDef, CreatureId};
 pub use level::{CreatureSpawn, LevelTemplate, StairsLink, parse_route};
+pub use light::{Flicker, LightId, LightPreset, MAX_LIGHT_RADIUS};
 pub use scenario::ScenarioDef;
 pub use terrain::{StairsDir, TerrainDef, TerrainId};
+pub use vision::VisionProfile;
 
 use level::{LegendEntry, legend_char};
 use serde::Deserialize;
@@ -88,10 +92,12 @@ impl ContentFiles {
     }
 
     fn get(&self, path: &str) -> Result<&str, ContentError> {
-        self.files
-            .get(path)
-            .map(String::as_str)
+        self.get_optional(path)
             .ok_or_else(|| ContentError::new(path, "file is missing"))
+    }
+
+    fn get_optional(&self, path: &str) -> Option<&str> {
+        self.files.get(path).map(String::as_str)
     }
 
     /// Files directly under `dir/` with their stem (`levels/hub.toml` → `hub`).
@@ -113,7 +119,19 @@ struct TerrainFile {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct CreatureFile {
-    creature: Vec<CreatureDef>,
+    creature: Vec<creature::CreatureSpec>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct LightFile {
+    light: Vec<LightPreset>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct VisionFile {
+    vision: Vec<VisionProfile>,
 }
 
 #[derive(Deserialize)]
@@ -123,12 +141,19 @@ struct LegendFile {
 }
 
 /// All loaded and cross-validated content.
+///
+/// `data/lights.toml` and `data/vision.toml` are optional. Without vision profiles, a single
+/// `normal` profile that needs no light is used, so content without lighting stays fully visible.
 #[derive(Debug)]
 pub struct Content {
     terrain: Vec<TerrainDef>,
     terrain_ids: BTreeMap<String, TerrainId>,
     creatures: Vec<CreatureDef>,
     creature_ids: BTreeMap<String, CreatureId>,
+    lights: Vec<LightPreset>,
+    light_ids: BTreeMap<String, LightId>,
+    visions: Vec<VisionProfile>,
+    vision_ids: BTreeMap<String, usize>,
     levels: BTreeMap<String, LevelTemplate>,
     scenarios: BTreeMap<String, ScenarioDef>,
 }
@@ -145,9 +170,15 @@ impl Content {
             terrain_ids: BTreeMap::new(),
             creatures: Vec::new(),
             creature_ids: BTreeMap::new(),
+            lights: Vec::new(),
+            light_ids: BTreeMap::new(),
+            visions: Vec::new(),
+            vision_ids: BTreeMap::new(),
             levels: BTreeMap::new(),
             scenarios: BTreeMap::new(),
         };
+        content.load_lights(files)?;
+        content.load_vision(files)?;
         content.load_terrain(files)?;
         content.load_creatures(files)?;
 
@@ -194,6 +225,13 @@ impl Content {
         };
         let mut defs = Vec::with_capacity(parsed.terrain.len());
         for spec in &parsed.terrain {
+            let light = self.resolve_light(path, spec.light.as_deref())?;
+            if light.is_some() && !spec.transparent {
+                return Err(err(format!(
+                    "terrain `{}` emits light but is opaque; its light would leak through walls",
+                    spec.id
+                )));
+            }
             defs.push(TerrainDef {
                 id: spec.id.clone(),
                 name: spec.name.clone(),
@@ -205,6 +243,7 @@ impl Content {
                 opens_to: resolve(&spec.opens_to)?,
                 closes_to: resolve(&spec.closes_to)?,
                 stairs: spec.stairs,
+                light,
                 anim: spec.anim.clone(),
             });
         }
@@ -217,12 +256,13 @@ impl Content {
         let err = |m: String| ContentError::new(path, m);
         let parsed: CreatureFile =
             toml::from_str(files.get(path)?).map_err(|e| err(e.to_string()))?;
-        for (i, def) in parsed.creature.into_iter().enumerate() {
+        for (i, spec) in parsed.creature.into_iter().enumerate() {
             let id = CreatureId(u16::try_from(i).map_err(|_| err("too many creatures".into()))?);
-            if self.creature_ids.insert(def.id.clone(), id).is_some() {
-                return Err(err(format!("duplicate creature id `{}`", def.id)));
+            if self.creature_ids.insert(spec.id.clone(), id).is_some() {
+                return Err(err(format!("duplicate creature id `{}`", spec.id)));
             }
-            self.creatures.push(def);
+            let light = self.resolve_light(path, spec.light.as_deref())?;
+            self.creatures.push(spec.resolve(light));
         }
         if !self.creature_ids.contains_key("player") {
             return Err(err("a creature with id `player` is required".into()));
@@ -230,7 +270,72 @@ impl Content {
         Ok(())
     }
 
-    /// Cross-file checks: stair targets and scenario start levels exist.
+    fn load_lights(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
+        let path = "data/lights.toml";
+        let Some(text) = files.get_optional(path) else {
+            return Ok(());
+        };
+        let err = |m: String| ContentError::new(path, m);
+        let parsed: LightFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
+        for (i, preset) in parsed.light.into_iter().enumerate() {
+            let id = LightId(u16::try_from(i).map_err(|_| err("too many lights".into()))?);
+            if !(0..=MAX_LIGHT_RADIUS).contains(&preset.radius) {
+                return Err(err(format!(
+                    "light `{}` has radius {}; expected 0 to {MAX_LIGHT_RADIUS}",
+                    preset.id, preset.radius
+                )));
+            }
+            if self.light_ids.insert(preset.id.clone(), id).is_some() {
+                return Err(err(format!("duplicate light id `{}`", preset.id)));
+            }
+            self.lights.push(preset);
+        }
+        Ok(())
+    }
+
+    fn load_vision(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
+        let path = "data/vision.toml";
+        let err = |m: String| ContentError::new(path, m);
+        let profiles = match files.get_optional(path) {
+            Some(text) => {
+                let parsed: VisionFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
+                parsed.vision
+            }
+            None => vec![VisionProfile::needs_no_light()],
+        };
+        if profiles.is_empty() {
+            return Err(err("at least one vision profile is required".into()));
+        }
+        for (i, profile) in profiles.into_iter().enumerate() {
+            if profile.darkvision < 0 {
+                return Err(err(format!(
+                    "vision `{}` has a negative darkvision radius",
+                    profile.id
+                )));
+            }
+            if self.vision_ids.insert(profile.id.clone(), i).is_some() {
+                return Err(err(format!("duplicate vision id `{}`", profile.id)));
+            }
+            self.visions.push(profile);
+        }
+        Ok(())
+    }
+
+    /// Resolves an optional light preset name used in `file`.
+    fn resolve_light(
+        &self,
+        file: &str,
+        name: Option<&str>,
+    ) -> Result<Option<LightId>, ContentError> {
+        name.map(|n| {
+            self.light_id(n)
+                .ok_or_else(|| ContentError::new(file, format!("unknown light `{n}`")))
+        })
+        .transpose()
+    }
+
+    /// Cross-file checks: stair targets, and each scenario's start level, vision profile, and
+    /// lantern exist.
     fn validate(&self) -> Result<(), ContentError> {
         for level in self.levels.values() {
             for link in &level.stairs {
@@ -258,6 +363,13 @@ impl Content {
                     format!("start level `{}` has no player start", level.id),
                 ));
             }
+            if self.vision(&scenario.vision).is_none() {
+                return Err(ContentError::new(
+                    &file,
+                    format!("unknown vision profile `{}`", scenario.vision),
+                ));
+            }
+            self.resolve_light(&file, scenario.lantern.as_deref())?;
         }
         Ok(())
     }
@@ -311,6 +423,33 @@ impl Content {
 
     pub fn creature_defs(&self) -> &[CreatureDef] {
         &self.creatures
+    }
+
+    pub fn light(&self, id: LightId) -> &LightPreset {
+        &self.lights[usize::from(id.0)]
+    }
+
+    pub fn light_id(&self, name: &str) -> Option<LightId> {
+        self.light_ids.get(name).copied()
+    }
+
+    pub fn light_presets(&self) -> &[LightPreset] {
+        &self.lights
+    }
+
+    /// The vision profile with id `name`.
+    pub fn vision(&self, name: &str) -> Option<&VisionProfile> {
+        self.vision_index(name).map(|i| &self.visions[i])
+    }
+
+    /// Index of profile `name` in [`Content::vision_profiles`].
+    pub fn vision_index(&self, name: &str) -> Option<usize> {
+        self.vision_ids.get(name).copied()
+    }
+
+    /// Every vision profile in file order; never empty.
+    pub fn vision_profiles(&self) -> &[VisionProfile] {
+        &self.visions
     }
 
     pub fn level(&self, id: &str) -> Option<&LevelTemplate> {
@@ -462,5 +601,125 @@ mod tests {
         let ok = "\"r\" = { terrain = \"floor\", creature = \"rat\", route = \"S W N E\" }";
         let content = Content::load(&minimal_files(map, ok)).unwrap();
         assert_eq!(content.level("test").unwrap().creatures[0].route.len(), 4);
+    }
+
+    const LIGHTS: &str = "[[light]]\nid = \"torch\"\ncolor = [300, 200, 100, 0]\nradius = 6\n\
+                          flicker = { amount = 0.2, speed = 1.5 }\n";
+
+    #[test]
+    fn builtin_lights_and_vision_profiles_load() {
+        let content = Content::builtin().unwrap();
+        let ids: Vec<_> = content.vision_profiles().iter().map(|v| &v.id).collect();
+        assert_eq!(ids, ["normal", "low_light", "darkvision", "uv_sight"]);
+        assert_eq!(content.vision("darkvision").map(|v| v.darkvision), Some(5));
+        let torch = content.light(content.light_id("torch").unwrap());
+        assert!(torch.flicker.is_some() && torch.radius > 0);
+        let kobold = content.creature(content.creature_id("kobold").unwrap());
+        assert_eq!(kobold.light, content.light_id("torch"));
+        let hub = content.level("hub").unwrap();
+        assert!(!hub.lights.is_empty());
+        let showcase = content.scenario("showcase").unwrap();
+        assert_eq!(showcase.lantern.as_deref(), Some("lantern"));
+    }
+
+    #[test]
+    fn missing_vision_file_means_light_is_not_needed() {
+        let content = Content::load(&minimal_files("#@#\n", "")).unwrap();
+        let profiles = content.vision_profiles();
+        assert_eq!(profiles.len(), 1);
+        assert_eq!(
+            (profiles[0].id.as_str(), profiles[0].threshold),
+            ("normal", 0)
+        );
+        assert!(content.light_presets().is_empty());
+    }
+
+    #[test]
+    fn levels_place_lights_and_set_ambient_light() {
+        let mut files = minimal_files(
+            "#@T#\n",
+            "\"T\" = { terrain = \"floor\", light = \"torch\" }",
+        );
+        files.insert("data/lights.toml", LIGHTS);
+        let text = files
+            .get("levels/test.toml")
+            .unwrap()
+            .replace("name = \"Test\"", "name = \"Test\"\nambient = [1, 2, 3, 4]");
+        files.insert("levels/test.toml", &text);
+        let content = Content::load(&files).unwrap();
+        let level = content.level("test").unwrap();
+        assert_eq!(level.ambient, crate::light::Light::new(1, 2, 3, 4));
+        assert_eq!(
+            level.lights.get(&Pos::new(2, 0)).copied(),
+            content.light_id("torch")
+        );
+    }
+
+    #[test]
+    fn light_references_are_validated() {
+        let unknown = "\"T\" = { terrain = \"floor\", light = \"sun\" }";
+        let err = Content::load(&minimal_files("#@T#\n", unknown)).unwrap_err();
+        assert!(
+            err.message.contains("unknown light `sun`"),
+            "{}",
+            err.message
+        );
+
+        let mut files = minimal_files(
+            "#@T#\n",
+            "\"T\" = { terrain = \"wall\", light = \"torch\" }",
+        );
+        files.insert("data/lights.toml", LIGHTS);
+        let err = Content::load(&files).unwrap_err();
+        assert!(err.message.contains("opaque terrain"), "{}", err.message);
+
+        let mut files = minimal_files("#@#\n", "");
+        files.insert(
+            "data/lights.toml",
+            "[[light]]\nid = \"sun\"\ncolor = [1, 1, 1, 0]\nradius = 99\n",
+        );
+        let err = Content::load(&files).unwrap_err();
+        assert!(err.message.contains("radius 99"), "{}", err.message);
+
+        let mut files = minimal_files("#@#\n", "");
+        files.insert(
+            "scenarios/test.toml",
+            "name = \"T\"\nstart_level = \"test\"\nvision = \"x-ray\"\n",
+        );
+        let err = Content::load(&files).unwrap_err();
+        assert!(
+            err.message.contains("vision profile `x-ray`"),
+            "{}",
+            err.message
+        );
+
+        let mut files = minimal_files("#@#\n", "");
+        files.insert(
+            "scenarios/test.toml",
+            "name = \"T\"\nstart_level = \"test\"\nlantern = \"torch\"\n",
+        );
+        let err = Content::load(&files).unwrap_err();
+        assert!(
+            err.message.contains("unknown light `torch`"),
+            "{}",
+            err.message
+        );
+    }
+
+    #[test]
+    fn opaque_terrain_cannot_emit_light() {
+        let mut files = minimal_files("#@#\n", "");
+        files.insert("data/lights.toml", LIGHTS);
+        let terrain = files.get("data/terrain.toml").unwrap().replace(
+            "glyph = \"#\"",
+            "glyph = \"#\"\n            light = \"torch\"",
+        );
+        files.insert("data/terrain.toml", &terrain);
+        let err = Content::load(&files).unwrap_err();
+        assert!(
+            err.message.contains("emits light but is opaque"),
+            "{}",
+            err.message
+        );
     }
 }

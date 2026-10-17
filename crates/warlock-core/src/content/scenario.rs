@@ -3,7 +3,7 @@
 use super::ContentError;
 use serde::Deserialize;
 
-/// A scenario: which level a run starts on, plus defaults.
+/// A scenario: which level a run starts on, the player's eyes and lantern, plus defaults.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ScenarioDef {
@@ -17,6 +17,15 @@ pub struct ScenarioDef {
     /// Seed used when none is given on the command line.
     #[serde(default)]
     pub seed: u64,
+    /// The player's starting vision profile (an id in `data/vision.toml`).
+    #[serde(default = "default_vision")]
+    pub vision: String,
+    /// Light preset of the lantern the player carries (unlit at the start), if any.
+    pub lantern: Option<String>,
+}
+
+fn default_vision() -> String {
+    "normal".into()
 }
 
 impl ScenarioDef {

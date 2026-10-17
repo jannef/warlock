@@ -123,16 +123,32 @@ pulse above 1.0 scale) uses the free-glyph layer.
 These are gameplay rules. They live in `warlock-core`, are deterministic, and never depend on frame
 rate or animation.
 
-- **Line of sight**: symmetric shadowcasting (if A sees B, B sees A). Walls and closed doors are opaque.
-- **Light**: each cell stores integer **RGB + UV**. A light source has a position, color (RGB + UV),
-  intensity, and radius. Falloff uses integer math or lookup tables — no transcendental
-  floating-point functions in gameplay. Shadows use the same shadowcasting. Each level has an
-  ambient light value.
-- **Wall faces**: an opaque cell's perceived light is the maximum light of the adjacent transparent
-  cells the viewer can see. This prevents light leaking through walls. (Refined in M3.)
+- **Line of sight**: symmetric shadowcasting (if A sees B, B sees A). Walls and closed doors are
+  opaque. Radii are Euclidean with a slightly rounded edge: a cell is within radius `r` iff
+  `d² ≤ r² + r`. The maximum view range is 40.
+- **Light**: each cell's light is integer **RGB + UV**, one `u16` per channel: **255 = fully lit**
+  (a surface shows its base color), more is overbright. A cell's light is the level's ambient light
+  (`ambient = [r, g, b, uv]`, default 0) plus the sum of all sources that reach it (saturating).
+- **Light sources** come from light presets (`color = [r, g, b, uv]`, which is also the intensity,
+  and `radius`): terrain that emits light, lights placed on cells by the level legend (overriding
+  the terrain's own), creatures that carry light, and the player's lantern (from the scenario,
+  toggled by the player; takes a turn). Emitters must be transparent; a source in an opaque cell
+  (e.g. on a closed door) gives no light. Presets also carry visual-only flicker, never read by
+  rules.
+- **Falloff and shadows**: a source shadowcasts with the same shadowcasting within its radius and
+  adds `color · (R² − d²) / R²` with `R² = r² + r`: full color at the source, monotonically less
+  with distance, zero at the edge. Integer math only — no floating point or transcendental
+  functions in gameplay.
+- **Wall faces**: an opaque cell's perceived light is the channel-wise maximum light of the adjacent
+  (8-neighborhood) transparent cells in the viewer's line of sight — applied per source, then summed
+  with ambient light. This prevents light leaking through walls.
+- **Brightness** is the integer luma of RGB, `(54·r + 183·g + 19·b) / 256`, plus UV for eyes that
+  see UV. Eyes without UV sight do not perceive UV at all (perception reports it as 0).
 - **Visibility**: a cell is visible iff it is in line of sight within the maximum view range **and**
-  (its perceived light ≥ the eye's threshold **or** its distance ≤ the darkvision radius).
-- **Vision profiles** are data. First version:
+  (its perceived brightness ≥ the eye's threshold **or** its distance ≤ the darkvision radius). The
+  player's own cell is always visible. Creatures are seen iff their cell is visible: creatures in
+  darkness are hidden (unless within darkvision), creatures carrying light are seen.
+- **Vision profiles** are data (`data/vision.toml`). First version:
 
   | Profile | Light threshold | Darkvision radius | Senses |
   |---|---|---|---|
@@ -141,11 +157,17 @@ rate or animation.
   | Darkvision | 40 | 5 | visible light |
   | UV sight | 40 | 0 | visible + UV light |
 
-  Values are illustrative; the light scale is fixed in M3. The player's profile can be switched
-  with a dev command. Infravision is deferred.
+  The scenario sets the starting profile. The dev action `SetVision` switches it; it takes no game
+  time but is recorded in replays like any action. Infravision is deferred.
 - **Memory**: per level, terrain only, as last seen (a door is remembered open until seen closed).
-- **Recomputation**: perception updates in the perception phase of every turn. Per-light shadow masks
-  are cached and invalidated when the light moves or opacity changes within its radius.
+- **Recomputation**: perception updates in the perception phase of every turn (and after
+  `SetVision`). Per-light shadow masks are cached and invalidated when the light moves or opacity
+  changes within its radius; only sources whose radius can reach the view range are evaluated.
+- **Perception API**: the snapshot exposes, for visible cells only, the perceived light (after the
+  wall-face rule; plus whether the cell is seen only through darkvision and its squared distance),
+  the light sources whose light reaches visible cells (stable key, position, preset, and per-cell
+  contributions; contributions plus ambient sum to the cell's light), the active vision profile,
+  and the ambient light. Visual lighting (§4.4) is derived from this.
 
 ## 6. Input and UI
 
@@ -153,8 +175,8 @@ rate or animation.
 - Symbol commands (`<`, `>`, `?`) are bound by **logical key**, so they work on non-US layouts.
 - Bindings live in the settings file. The `?` controls overlay is generated from the binding table,
   so it is always accurate. A rebinding UI comes in M5.
-- First-phase commands: move, wait, open/close door, ascend/descend, look, help, save and quit (`Q`).
-  Free actions (look, help, menus) do not advance time.
+- First-phase commands: move, wait, open/close door, ascend/descend, light/douse lantern (`L`),
+  look, help, save and quit (`Q`). Free actions (look, help, menus) do not advance time.
 - Screen layout: map viewport, message log, status panel (turn, position, level, light at the
   player, vision profile, seed).
 
@@ -192,7 +214,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   path = [[12, 3], [20, 3], [20, 8]]
   ```
 - **Definitions** (TOML): terrain types, light presets, vision profiles, glyph animations.
-- **Scenarios** (`assets/scenarios/*.toml`): level set, start position, vision profile, options.
+- **Scenarios** (`assets/scenarios/*.toml`): level set, start position, vision profile, lantern,
+  options.
 - **Saves**: suspend-only. One save per run, written on quit and by periodic autosave; loading
   continues the run. Dev builds add named snapshots. Format: a versioned envelope (magic, format
   version, game version) around a JSON payload, gzip-compressed with a pure-Rust backend, written

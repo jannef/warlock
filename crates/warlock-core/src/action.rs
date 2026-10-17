@@ -20,6 +20,11 @@ pub enum Action {
     Ascend,
     /// Take stairs down.
     Descend,
+    /// Light or douse the lantern the scenario gives the player. Takes a turn.
+    ToggleLantern,
+    /// Dev command: switch the player's vision profile (an id in `data/vision.toml`). Takes no
+    /// game time, but changes state and perception, so replays record it like any action.
+    SetVision(String),
 }
 
 /// Something the player perceived happening during a turn. Presentation turns these into

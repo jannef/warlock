@@ -2,3 +2,6 @@ name = "Showcase"
 description = "A hand-made tour of every engine capability, one room per feature."
 start_level = "hub"
 seed = 1
+# The player's eyes (data/vision.toml) and lantern (data/lights.toml; starts unlit).
+vision = "normal"
+lantern = "lantern"

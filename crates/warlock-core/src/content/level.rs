@@ -1,14 +1,17 @@
 //! Hand-authored level files (`assets/levels/*.toml`, spec §7).
 //!
 //! A level is a multiline ASCII `map` plus a `legend` mapping characters to terrain and to things
-//! placed on that terrain (player start, creatures with patrol routes, stair links). Characters not
-//! in the level's legend fall back to the shared default legend (`assets/data/legend.toml`).
+//! placed on that terrain (player start, creatures with patrol routes, stair links, lights).
+//! Characters not in the level's legend fall back to the shared default legend
+//! (`assets/data/legend.toml`). An optional `ambient = [r, g, b, uv]` lights the whole level.
 
 use super::creature::CreatureId;
+use super::light::LightId;
 use super::terrain::{StairsDir, TerrainId};
 use super::{Content, ContentError};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
+use crate::light::Light;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -16,6 +19,9 @@ use std::collections::BTreeMap;
 #[serde(deny_unknown_fields)]
 struct LevelFile {
     name: String,
+    /// Light everywhere on the level, `[r, g, b, uv]`; default none.
+    #[serde(default)]
+    ambient: Light,
     map: String,
     #[serde(default)]
     legend: BTreeMap<String, LegendEntry>,
@@ -41,6 +47,8 @@ pub(super) struct LegendDetail {
     route: Option<String>,
     /// Level id the stairs on this cell lead to.
     to: Option<String>,
+    /// Light preset placed on this cell (overrides the terrain's own light).
+    light: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize)]
@@ -88,10 +96,14 @@ pub struct StairsLink {
 pub struct LevelTemplate {
     pub id: String,
     pub name: String,
+    /// Light everywhere on the level.
+    pub ambient: Light,
     pub terrain: Grid<TerrainId>,
     pub player_start: Option<Pos>,
     pub creatures: Vec<CreatureSpawn>,
     pub stairs: Vec<StairsLink>,
+    /// Lights placed by the legend, by position.
+    pub lights: BTreeMap<Pos, LightId>,
 }
 
 /// Parses a single-character legend key.
@@ -138,6 +150,7 @@ pub(super) fn parse_level(
     let mut player_start = None;
     let mut creatures = Vec::new();
     let mut stairs = Vec::new();
+    let mut lights = BTreeMap::new();
 
     for (y, row) in rows.iter().enumerate() {
         for x in 0..width as usize {
@@ -168,6 +181,18 @@ pub(super) fn parse_level(
                 )));
             }
             let Some(detail) = detail else { continue };
+            if let Some(light) = &detail.light {
+                let id = content
+                    .light_id(light)
+                    .ok_or_else(|| err(format!("legend `{ch}` uses unknown light `{light}`")))?;
+                if !content.terrain(terrain).transparent {
+                    return Err(err(format!(
+                        "legend `{ch}` places a light on opaque terrain `{}`",
+                        entry.terrain()
+                    )));
+                }
+                lights.insert(pos, id);
+            }
             if let Some(Spawn::Player) = detail.spawn
                 && player_start.replace(pos).is_some()
             {
@@ -195,10 +220,12 @@ pub(super) fn parse_level(
     let template = LevelTemplate {
         id: id.to_string(),
         name: parsed.name,
+        ambient: parsed.ambient,
         terrain: Grid::from_vec(width, height, cells),
         player_start,
         creatures,
         stairs,
+        lights,
     };
     for spawn in &template.creatures {
         validate_route(&template, content, spawn).map_err(err)?;

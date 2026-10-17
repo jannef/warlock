@@ -1,7 +1,7 @@
 //! The simulation: world state and the turn pipeline (spec §8).
 //!
 //! Turn phases, in order: player action → creatures (ascending id) → environment → perception
-//! (sight, memory) → perceived events are returned to the caller.
+//! (sight, light, memory) → perceived events are returned to the caller.
 
 mod actor;
 mod hash;
@@ -11,8 +11,9 @@ pub use actor::{Actor, ActorId, ActorKind, Patrol};
 pub use level::LevelState;
 
 use crate::action::{Action, Event, Outcome};
-use crate::content::{Content, StairsDir};
+use crate::content::{Content, StairsDir, TerrainId};
 use crate::geom::{Dir, Pos};
+use crate::light::LightCache;
 use crate::messages::MessageLog;
 use crate::perception::{Perception, PerceptionView};
 use serde::{Deserialize, Serialize};
@@ -44,6 +45,10 @@ pub struct WorldState {
     pub(crate) player: ActorId,
     pub(crate) next_actor_id: u32,
     pub(crate) messages: MessageLog,
+    /// The player's vision profile (an id in `data/vision.toml`).
+    pub(crate) vision: String,
+    /// Whether the player's lantern (the scenario's `lantern`) is lit.
+    pub(crate) lantern_lit: bool,
 }
 
 impl WorldState {
@@ -97,6 +102,29 @@ pub struct World {
     content: Arc<Content>,
     state: WorldState,
     perception: Perception,
+    /// Cached light masks; derived, never saved.
+    lights: LightCache,
+}
+
+/// How much time an action took.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Spent {
+    /// Refused or failed: nothing changed but the message log.
+    Nothing,
+    /// Changed state without game time passing; perception must be recomputed.
+    NoTime,
+    /// A full turn: creatures act, then perception is recomputed.
+    Turn,
+}
+
+impl From<bool> for Spent {
+    fn from(took_turn: bool) -> Self {
+        if took_turn {
+            Spent::Turn
+        } else {
+            Spent::Nothing
+        }
+    }
 }
 
 impl World {
@@ -129,6 +157,8 @@ impl World {
             player: ActorId(0),
             next_actor_id: 1,
             messages: MessageLog::default(),
+            vision: def.vision.clone(),
+            lantern_lit: false,
         };
         state.actors.insert(
             ActorId(0),
@@ -154,16 +184,24 @@ impl World {
         if content.scenario(&state.scenario).is_none() {
             return Err(WorldError::UnknownScenario(state.scenario.clone()));
         }
+        if content.vision(&state.vision).is_none() {
+            return Err(WorldError::InconsistentState(format!(
+                "unknown vision profile `{}`",
+                state.vision
+            )));
+        }
         Ok(Self::assemble(content, state))
     }
 
     fn assemble(content: Arc<Content>, mut state: WorldState) -> Self {
-        let perception = Perception::compute(&state, &content);
+        let mut lights = LightCache::default();
+        let perception = Perception::compute(&state, &content, &mut lights);
         perception.remember(state.current_mut());
         Self {
             content,
             state,
             perception,
+            lights,
         }
     }
 
@@ -199,6 +237,14 @@ impl World {
         &self.state.messages
     }
 
+    /// The player's lantern: `None` if the scenario gives none, else whether it is lit.
+    pub fn lantern(&self) -> Option<bool> {
+        self.content
+            .scenario(&self.state.scenario)
+            .and_then(|s| s.lantern.as_ref())
+            .map(|_| self.state.lantern_lit)
+    }
+
     /// What the player perceives right now. Rendering and dumps must go through this.
     pub fn perception(&self) -> PerceptionView<'_> {
         PerceptionView {
@@ -223,29 +269,39 @@ impl World {
     /// Applies one player action and runs the rest of the turn if it took time.
     pub fn apply(&mut self, action: &Action) -> Outcome {
         let mut events = Vec::new();
-        let took_turn = self.player_acts(action, &mut events);
-        if took_turn {
+        let spent = self.player_acts(action, &mut events);
+        if spent == Spent::Turn {
             self.state.turn += 1;
             self.creatures_act(&mut events);
-            self.perception = Perception::compute(&self.state, &self.content);
-            let current = self.state.current_level.clone();
-            if let Some(level) = self.state.levels.get_mut(&current) {
-                self.perception.remember(level);
-            }
-            let player = self.state.player;
-            events.retain(|e| match e {
-                Event::ActorMoved { actor, from, to } => {
-                    *actor == player
-                        || self.perception.is_visible(*from)
-                        || self.perception.is_visible(*to)
-                }
-                Event::DoorOpened { pos } | Event::DoorClosed { pos } => {
-                    self.perception.is_visible(*pos)
-                }
-                Event::LevelChanged { .. } => true,
-            });
         }
-        Outcome { took_turn, events }
+        if spent != Spent::Nothing {
+            self.perceive(&mut events);
+        }
+        Outcome {
+            took_turn: spent == Spent::Turn,
+            events,
+        }
+    }
+
+    /// Phase 4: recomputes perception, updates memory, and drops events the player did not see.
+    fn perceive(&mut self, events: &mut Vec<Event>) {
+        self.perception = Perception::compute(&self.state, &self.content, &mut self.lights);
+        let current = self.state.current_level.clone();
+        if let Some(level) = self.state.levels.get_mut(&current) {
+            self.perception.remember(level);
+        }
+        let player = self.state.player;
+        events.retain(|e| match e {
+            Event::ActorMoved { actor, from, to } => {
+                *actor == player
+                    || self.perception.is_visible(*from)
+                    || self.perception.is_visible(*to)
+            }
+            Event::DoorOpened { pos } | Event::DoorClosed { pos } => {
+                self.perception.is_visible(*pos)
+            }
+            Event::LevelChanged { .. } => true,
+        });
     }
 
     /// Appends a system notice (for example "Game saved.") to the message log.
@@ -258,17 +314,52 @@ impl World {
         self.state.messages.push(turn, text);
     }
 
-    /// Phase 1. Returns whether the action took time.
-    fn player_acts(&mut self, action: &Action, events: &mut Vec<Event>) -> bool {
+    /// Phase 1. Returns how much time the action took.
+    fn player_acts(&mut self, action: &Action, events: &mut Vec<Event>) -> Spent {
         let here = self.player_pos();
         match action {
-            Action::Move(dir) => self.player_moves(*dir, events),
-            Action::Wait => true,
-            Action::Open(dir) => self.open_door(here.step(*dir), events),
-            Action::Close(dir) => self.close_door(here.step(*dir), events),
-            Action::Descend => self.take_stairs(StairsDir::Down, events),
-            Action::Ascend => self.take_stairs(StairsDir::Up, events),
+            Action::Move(dir) => self.player_moves(*dir, events).into(),
+            Action::Wait => Spent::Turn,
+            Action::Open(dir) => self.open_door(here.step(*dir), events).into(),
+            Action::Close(dir) => self.close_door(here.step(*dir), events).into(),
+            Action::Descend => self.take_stairs(StairsDir::Down, events).into(),
+            Action::Ascend => self.take_stairs(StairsDir::Up, events).into(),
+            Action::ToggleLantern => self.toggle_lantern().into(),
+            Action::SetVision(id) => self.set_vision(id),
         }
+    }
+
+    fn toggle_lantern(&mut self) -> bool {
+        if self.lantern().is_none() {
+            self.say("You have no lantern.");
+            return false;
+        }
+        self.state.lantern_lit = !self.state.lantern_lit;
+        if self.state.lantern_lit {
+            self.say("You light your lantern.");
+        } else {
+            self.say("You douse your lantern.");
+        }
+        true
+    }
+
+    fn set_vision(&mut self, id: &str) -> Spent {
+        let Some(profile) = self.content.vision(id) else {
+            self.say(format!("There is no vision profile `{id}`."));
+            return Spent::Nothing;
+        };
+        let name = profile.name.clone();
+        self.state.vision = id.to_string();
+        self.say(format!("Vision: {name}."));
+        Spent::NoTime
+    }
+
+    /// Changes terrain on the current level and invalidates light masks it may affect.
+    fn set_terrain(&mut self, p: Pos, terrain: TerrainId) {
+        let level = self.state.current_mut();
+        level.terrain.set(p, terrain);
+        let level = self.state.current();
+        self.lights.terrain_changed(level, &self.content, p);
     }
 
     fn player_moves(&mut self, dir: Dir, events: &mut Vec<Event>) -> bool {
@@ -318,7 +409,7 @@ impl World {
         match def {
             Some(def) if def.is_closed_door() => {
                 let opened = def.opens_to.expect("closed doors have opens_to");
-                self.state.current_mut().terrain.set(p, opened);
+                self.set_terrain(p, opened);
                 events.push(Event::DoorOpened { pos: p });
                 self.say("You open the door.");
                 true
@@ -344,7 +435,7 @@ impl World {
                     self.say("Something is in the way.");
                     return false;
                 }
-                self.state.current_mut().terrain.set(p, closed);
+                self.set_terrain(p, closed);
                 events.push(Event::DoorClosed { pos: p });
                 self.say("You close the door.");
                 true
@@ -511,5 +602,7 @@ fn instantiate_level(
     Ok(())
 }
 
+#[cfg(test)]
+mod light_tests;
 #[cfg(test)]
 mod tests;

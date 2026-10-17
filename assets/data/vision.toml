@@ -1,0 +1,28 @@
+# Vision profiles (spec §5). A cell in line of sight is visible if its perceived brightness is at
+# least `threshold`, or it lies within the `darkvision` radius. Brightness is the luma of the
+# cell's light (255 = fully lit white), plus its UV light if `sees_uv`.
+#
+# Fields: id, name, threshold, darkvision (radius in cells, default 0), sees_uv (default false).
+# The first profile is listed first when cycling profiles (dev key F3).
+
+[[vision]]
+id = "normal"
+name = "Normal"
+threshold = 40
+
+[[vision]]
+id = "low_light"
+name = "Low-light"
+threshold = 12
+
+[[vision]]
+id = "darkvision"
+name = "Darkvision"
+threshold = 40
+darkvision = 5
+
+[[vision]]
+id = "uv_sight"
+name = "UV sight"
+threshold = 40
+sees_uv = true

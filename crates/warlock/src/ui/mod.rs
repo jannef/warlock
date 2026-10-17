@@ -18,7 +18,7 @@ use bevy::prelude::*;
 use motion::Motion;
 use warlock_core::Pos;
 use warlock_core::color::Rgb;
-use warlock_core::perception::{CellView, PerceptionView};
+use warlock_core::perception::{CellView, PerceivedLight, PerceptionView};
 
 const MESSAGE_ROWS: i32 = 2;
 const STATUS_ROWS: i32 = 1;
@@ -162,10 +162,11 @@ fn draw_map(grid: &mut MapGrid, view: &PerceptionView<'_>, anims: &AnimTable, co
                 }
                 CellView::Visible(t) => {
                     let def = content.terrain(t);
+                    let light = view.light(p);
                     Cell {
                         ch: def.glyph,
-                        fg: def.fg,
-                        bg: def.bg,
+                        fg: lit(def.fg, light, TERRAIN_FLOOR),
+                        bg: lit(def.bg, light, TERRAIN_FLOOR),
                     }
                 }
             };
@@ -190,6 +191,32 @@ fn draw_map(grid: &mut MapGrid, view: &PerceptionView<'_>, anims: &AnimTable, co
         let at = grid.to_console(p);
         grid.console.clear_glyph(at.x, at.y);
     }
+}
+
+/// Lowest light factor for visible terrain and actors, so dim cells stay readable.
+const TERRAIN_FLOOR: f32 = 0.3;
+/// Lowest light factor for creatures (drawn on the free-glyph layer by [`glyphs`]).
+const ACTOR_FLOOR: f32 = 0.6;
+
+/// Simple per-cell lighting until visual light compositing lands (#19): each channel is scaled by
+/// the perceived light of that channel (a square-root curve, with a readability floor). UV, when
+/// perceived, tints violet; cells seen only through darkvision are drawn in dim grey.
+pub(super) fn lit(c: Rgb, light: Option<PerceivedLight>, floor: f32) -> Rgb {
+    let Some(light) = light else {
+        return c;
+    };
+    if light.darkvision {
+        let luma = (u32::from(c.r) * 54 + u32::from(c.g) * 183 + u32::from(c.b) * 19) / 256;
+        let grey = (luma as f32 * (floor + 0.15)).round() as u8;
+        return Rgb::new(grey, grey, grey);
+    }
+    let [r, g, b] = light.rgb.map(f32::from);
+    let uv = f32::from(light.uv);
+    let scale = |v: u8, l: f32| {
+        let t = (l / 255.0).clamp(0.0, 1.0).sqrt();
+        (f32::from(v) * (floor + (1.0 - floor) * t)).round() as u8
+    };
+    Rgb::new(scale(c.r, r + uv * 0.6), scale(c.g, g), scale(c.b, b + uv))
 }
 
 /// Remembered terrain: dim and desaturated, so it never reads as "in view".
@@ -234,12 +261,21 @@ fn draw_status(console: &mut Console, game: &Game, y: i32) {
     let world = &game.world;
     let view = world.perception();
     let pos = world.player_pos();
+    let light = view.light(pos).map_or(0, |l| l.brightness());
+    let lantern = match world.lantern() {
+        Some(true) => "  ·  Lantern lit",
+        Some(false) => "  ·  Lantern out",
+        None => "",
+    };
     let status = format!(
-        "{}  ·  Turn {}  ·  {},{}  ·  Seed {}",
+        "{}  ·  Turn {}  ·  {},{}  ·  Light {}  ·  {} vision{}  ·  Seed {}",
         view.level_name(),
         world.turn(),
         pos.x,
         pos.y,
+        light,
+        view.vision().name,
+        lantern,
         world.seed()
     );
     console.print(1, y, &status, TEXT);
@@ -318,7 +354,7 @@ mod tests {
         let mut files = ContentFiles::builtin();
         files.insert(
             "levels/pool.toml",
-            "name = \"Pool\"\nmap = '''\n#######\n#~@+~_#\n#######\n'''\n\
+            "name = \"Pool\"\nambient = [255, 255, 255, 0]\nmap = '''\n#######\n#~@+~_#\n#######\n'''\n\
              [legend]\n\"@\" = { terrain = \"floor\", spawn = \"player\" }\n",
         );
         files.insert(
@@ -362,5 +398,29 @@ mod tests {
         draw_map(&mut grid, &view, &anims, &[player]);
         assert_eq!(grid.free_terrain, vec![(Pos::new(5, 1), altar)]);
         assert_eq!(grid.console.cells()[at(5, 1)].map(|c| c.ch), Some(' '));
+    }
+
+    fn perceived(rgb: [u16; 3], uv: u16, darkvision: bool) -> Option<PerceivedLight> {
+        Some(PerceivedLight {
+            rgb,
+            uv,
+            darkvision,
+            dist2: 4,
+        })
+    }
+
+    #[test]
+    fn light_scales_colors_with_a_readable_floor() {
+        let c = Rgb::new(200, 200, 200);
+        assert_eq!(lit(c, perceived([255, 255, 255], 0, false), 0.3), c);
+        assert_eq!(lit(c, perceived([600, 600, 600], 0, false), 0.3), c);
+        let dark = lit(c, perceived([0, 0, 0], 0, false), 0.3);
+        assert_eq!(dark, Rgb::new(60, 60, 60));
+        let red = lit(c, perceived([255, 0, 0], 0, false), 0.3);
+        assert!(red.r > red.g && red.g == red.b);
+        let dv = lit(Rgb::new(200, 100, 50), perceived([0, 0, 0], 0, true), 0.3);
+        assert!(dv.r == dv.g && dv.g == dv.b, "darkvision is monochrome");
+        let uv = lit(c, perceived([0, 0, 0], 200, false), 0.3);
+        assert!(uv.b > uv.r && uv.r > uv.g, "UV tints violet");
     }
 }
