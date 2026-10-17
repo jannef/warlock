@@ -188,9 +188,9 @@ Water is calm by design; motion stays tasteful, never busy:
   around glyphs rather than over them, small distortion amplitudes.
 - A **reduced effects** setting is a preset that turns off glyph animation, flicker (light
   stability: light is steady), sliding (instant snap), camera easing, bloom and glow, distortion,
-  particles, and screen fades and flashes. Each can also be switched off on its own (settings: glyph animation, light flicker,
-  motion = slides and camera easing, bloom and glow, distortion, particles, screen fades); an
-  effect runs only when its switch is on and reduced effects is off. No gameplay information may
+  particles, and screen fades and flashes. Each can also be switched off on its own (settings:
+  glyph animation, light flicker, motion = slides and camera easing, bloom and glow, distortion,
+  particles, screen fades); an effect runs only when its switch is on and reduced effects is off. No gameplay information may
   depend on an effect. These are settings (§6); the `--reduced-effects` flag forces everything off.
 - Colors that effects introduce, such as the shimmer target color, go through the active palette
   like any other color.
