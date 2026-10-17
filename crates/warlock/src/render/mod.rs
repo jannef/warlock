@@ -73,13 +73,9 @@ pub struct VisualTime {
     pub frozen: bool,
 }
 
-/// Visual effect settings (spec §4.7).
-#[derive(Resource, Debug, Default, Clone, Copy)]
-pub struct Effects {
-    /// Reduced effects: no glyph animation, no slides (instant snap), no camera easing, no
-    /// particles, bloom, glow, heat haze, or screen fades.
-    pub reduced: bool,
-}
+/// The effective visual effect switches (spec §4.7): the settings' per-effect switches with the
+/// reduced-effects preset and `--reduced-effects` applied.
+pub use crate::settings::EffectSwitches as Effects;
 
 /// Largest heat-haze displacement, in cell widths (at full haze strength).
 const HAZE_CELLS: f32 = 0.07;
@@ -210,14 +206,17 @@ pub(crate) fn setup(
         camera.insert(RenderTarget::Image(capture.0.clone().into()));
     }
 
-    let effects = Effects {
-        reduced: args.reduced_effects || settings.reduced_effects,
-    };
+    let effects = settings.effective_effects(args.reduced_effects);
     let font = Font::load().expect("the bundled font is valid");
     let px = settings.font_px as f32 * viewport.scale;
     let content = &content.0;
     let atlas = GlyphAtlas::new(&font.0, px, &glyph_set(content.glyphs()), &mut images);
-    let anims = AnimTable::new(content, |c| atlas.glyph(c), !effects.reduced);
+    let anims = AnimTable::new(
+        content,
+        |c| atlas.glyph(c),
+        effects.glyph_animation,
+        settings.palette,
+    );
 
     let quad = meshes.add(Rectangle::new(QUAD_SIZE, QUAD_SIZE));
     let map = materials.add(console_material(&mut images, &atlas, &anims));
@@ -246,16 +245,16 @@ fn advance_visual_time(mut visual: ResMut<VisualTime>, time: Res<Time>) {
     }
 }
 
-/// Reduced effects come from the settings, or from `--reduced-effects`, which always wins.
+/// Effects come from the settings; `--reduced-effects` always forces them all off.
 fn sync_effects(settings: Res<Settings>, args: Res<Args>, mut effects: ResMut<Effects>) {
-    let reduced = args.reduced_effects || settings.reduced_effects;
-    if effects.reduced != reduced {
-        effects.reduced = reduced;
+    let wanted = settings.effective_effects(args.reduced_effects);
+    if *effects != wanted {
+        *effects = wanted;
     }
 }
 
 /// Fits the console to the viewport; rebuilds the atlas when the font size or display scale
-/// changes, and the animation table when reduced effects toggle.
+/// changes, and the animation table when glyph animation or the palette changes.
 fn layout(
     viewport: Res<Viewport>,
     mut layout: ResMut<ConsoleLayout>,
@@ -267,12 +266,13 @@ fn layout(
     content: Res<GameContent>,
     settings: Res<Settings>,
     mut images: ResMut<Assets<Image>>,
-    mut animated: Local<Option<bool>>,
+    mut animated: Local<Option<(bool, Palette)>>,
 ) {
     let (size, scale) = (viewport.size, viewport.scale);
     let px = settings.font_px as f32 * scale;
-    let animate = !effects.reduced;
-    let animation_changed = animated.replace(animate).is_some_and(|was| was != animate);
+    let animate = effects.glyph_animation;
+    let state = (animate, settings.palette);
+    let animation_changed = animated.replace(state).is_some_and(|was| was != state);
     let font_changed = (px - atlas.px).abs() > f32::EPSILON;
     if size == layout.window && scale == layout.scale && !font_changed && !animation_changed {
         return;
@@ -282,7 +282,7 @@ fn layout(
         *atlas = GlyphAtlas::new(&font.0, px, &glyph_set(content.glyphs()), &mut images);
     }
     if font_changed || animation_changed {
-        *anims = AnimTable::new(content, |c| atlas.glyph(c), animate);
+        *anims = AnimTable::new(content, |c| atlas.glyph(c), animate, settings.palette);
     }
     let cell = atlas.cell;
     let cols = (size.x / cell.x).max(1);
@@ -317,25 +317,32 @@ fn upload(
         console.dirty = true;
         grid.console.dirty = true;
     }
-    let params = |console: &Console, origin: Vec2, clip: Rect, fx: bool| ConsoleParams {
-        origin,
-        cell_size: layout.cell.as_vec2(),
-        clip_min: clip.min,
-        clip_max: clip.max,
-        grid_size: UVec2::new(console.cols(), console.rows()),
-        atlas_columns: atlas::ATLAS_COLUMNS,
-        supersample: atlas::SUPERSAMPLE,
-        time: visual.seconds,
-        glow_gain: if fx { post::GLOW_GAIN } else { 0.0 },
-        haze_px: if fx {
-            HAZE_CELLS * layout.cell.x as f32
-        } else {
-            0.0
-        },
-    };
+    let params =
+        |console: &Console, origin: Vec2, clip: Rect, glow: bool, haze: bool| ConsoleParams {
+            origin,
+            cell_size: layout.cell.as_vec2(),
+            clip_min: clip.min,
+            clip_max: clip.max,
+            grid_size: UVec2::new(console.cols(), console.rows()),
+            atlas_columns: atlas::ATLAS_COLUMNS,
+            supersample: atlas::SUPERSAMPLE,
+            time: visual.seconds,
+            glow_gain: if glow { post::GLOW_GAIN } else { 0.0 },
+            haze_px: if haze {
+                HAZE_CELLS * layout.cell.x as f32
+            } else {
+                0.0
+            },
+        };
     let screen = Rect::from_corners(Vec2::ZERO, layout.window.as_vec2());
-    let ui = params(&console, layout.origin, screen, false);
-    let map = params(&grid.console, grid.origin, grid.clip, !effects.reduced);
+    let ui = params(&console, layout.origin, screen, false, false);
+    let map = params(
+        &grid.console,
+        grid.origin,
+        grid.clip,
+        effects.glow,
+        effects.distortion,
+    );
     for (handle, console, params) in [
         (&handles.ui, &mut *console, ui),
         (&handles.map, &mut grid.console, map),

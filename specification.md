@@ -135,10 +135,14 @@ pulse above 1.0 scale) uses the free-glyph layer.
 ### 4.7 Readability and reduced effects
 - Glyphs stay legible under every effect: minimum contrast against their background, glow added
   around glyphs rather than over them, small distortion amplitudes.
-- A **reduced effects** setting turns off glyph animation, flicker, sliding (instant snap), camera
-  easing, bloom and glow, distortion, particles, and screen fades and flashes. No gameplay
-  information may depend on an effect. It is a setting (§6); the `--reduced-effects` flag forces it
-  on.
+- A **reduced effects** setting is a preset that turns off glyph animation, flicker, sliding
+  (instant snap), camera easing, bloom and glow, distortion, particles, and screen fades and
+  flashes. Each can also be switched off on its own (settings: glyph animation, light flicker,
+  motion = slides and camera easing, bloom and glow, distortion, particles, screen fades); an
+  effect runs only when its switch is on and reduced effects is off. No gameplay information may
+  depend on an effect. These are settings (§6); the `--reduced-effects` flag forces everything off.
+- Colors that effects introduce, such as the shimmer target color, go through the active palette
+  like any other color.
 - **Color palettes** (default, high contrast, a red-green colorblind variant) are transforms
   applied when colors are written to the screen, so game data colors are never altered. UI text
   keeps at least 4.5:1 contrast, and the UI never conveys information by color alone (selection
@@ -241,7 +245,7 @@ rate or animation.
   Resume, Settings, Controls, Save and quit to menu, Quit (which saves). No game time passes while
   it is open; Esc or Back in Settings/Controls returns to it.
 - **Settings** (`settings.toml` in the platform config dir; never on the web): font size (logical
-  px, 12 to 36), reduced effects, color palette, key bindings. A missing or damaged file means
+  px, 12 to 36), reduced effects and the per-effect switches, color palette, key bindings. A missing or damaged file means
   defaults and a logged warning. Changes apply live (a font size change rebuilds the glyph atlas)
   and are written immediately.
 - **Rebinding**: in Controls, select a command and press a key; it becomes the command's primary

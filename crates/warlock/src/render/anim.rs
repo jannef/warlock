@@ -8,6 +8,7 @@
 //! beyond its cell.
 
 use super::console::CellAnim;
+use crate::settings::{Palette, Role};
 use bevy::prelude::*;
 use bevy::render::render_resource::ShaderType;
 use std::f32::consts::{PI, TAU};
@@ -199,7 +200,8 @@ impl Default for GridAnimTable {
 }
 
 /// How each terrain type animates, and the shader table for those animated in the grid. Rebuilt
-/// when the atlas changes (cycle frames are atlas slots). Empty with reduced effects.
+/// when the atlas or palette changes (cycle frames are atlas slots; shimmer colors go through the
+/// palette). Empty with glyph animation off.
 #[derive(Resource, Debug, Default)]
 pub struct AnimTable {
     terrain: Vec<Option<TerrainAnim>>,
@@ -208,8 +210,13 @@ pub struct AnimTable {
 
 impl AnimTable {
     /// Builds the table for `content`; `slot` maps a glyph to its atlas slot. With `enabled`
-    /// false (reduced effects) nothing animates.
-    pub fn new(content: &Content, slot: impl Fn(char) -> u16, enabled: bool) -> Self {
+    /// false (glyph animation off) nothing animates.
+    pub fn new(
+        content: &Content,
+        slot: impl Fn(char) -> u16,
+        enabled: bool,
+        palette: Palette,
+    ) -> Self {
         let mut table = Self::default();
         let mut next = 0;
         for def in content.terrain_defs() {
@@ -221,7 +228,7 @@ impl AnimTable {
                     warn!("too many animated terrain types; `{}` stays still", def.id);
                     None
                 }
-                Some(anim) => grid_anim(anim, &slot).map(|gpu| {
+                Some(anim) => grid_anim(anim, &slot, palette).map(|gpu| {
                     table.gpu.entries[next] = gpu;
                     next += 1;
                     TerrainAnim::Grid {
@@ -262,7 +269,7 @@ fn linear(c: Rgb) -> Vec4 {
 }
 
 /// The shader form of a grid animation; `None` for animations that do nothing.
-fn grid_anim(anim: &GlyphAnim, slot: impl Fn(char) -> u16) -> Option<GridAnim> {
+fn grid_anim(anim: &GlyphAnim, slot: impl Fn(char) -> u16, palette: Palette) -> Option<GridAnim> {
     Some(match anim {
         GlyphAnim::Wave { speed, amount } => GridAnim {
             kind: KIND_WAVE,
@@ -273,7 +280,7 @@ fn grid_anim(anim: &GlyphAnim, slot: impl Fn(char) -> u16) -> Option<GridAnim> {
         GlyphAnim::Shimmer { color, speed } => GridAnim {
             kind: KIND_SHIMMER,
             speed: *speed,
-            color: linear(*color),
+            color: linear(palette.apply(*color, Role::Fg)),
             ..default()
         },
         GlyphAnim::Cycle { frames, fps } => {
@@ -441,7 +448,7 @@ mod tests {
         let water = content.terrain_id("water").expect("water exists");
         let altar = content.terrain_id("altar").expect("altar exists");
         let floor = content.terrain_id("floor").expect("floor exists");
-        let table = AnimTable::new(&content, |_| 7, true);
+        let table = AnimTable::new(&content, |_| 7, true, Palette::Default);
         assert!(matches!(
             table.terrain(water),
             Some(TerrainAnim::Grid {
@@ -459,9 +466,22 @@ mod tests {
         );
         assert_eq!(table.cell(floor, Pos::new(4, 2)), CellAnim::STILL);
 
-        let reduced = AnimTable::new(&content, |_| 7, false);
+        let reduced = AnimTable::new(&content, |_| 7, false, Palette::Default);
         assert_eq!(reduced.terrain(water), None);
         assert_eq!(reduced.terrain(altar), None);
+    }
+
+    #[test]
+    fn shimmer_color_in_the_shader_table_uses_the_palette() {
+        let shimmer = GlyphAnim::Shimmer {
+            color: Rgb::new(0xff, 0xd0, 0x60),
+            speed: 1.0,
+        };
+        let table = |palette| grid_anim(&shimmer, |_| 0, palette).expect("shimmer").color;
+        assert_eq!(table(Palette::Default), linear(Rgb::new(0xff, 0xd0, 0x60)));
+        let high = Palette::HighContrast.apply(Rgb::new(0xff, 0xd0, 0x60), Role::Fg);
+        assert_eq!(table(Palette::HighContrast), linear(high));
+        assert_ne!(table(Palette::HighContrast), table(Palette::Default));
     }
 
     #[test]
@@ -470,7 +490,7 @@ mod tests {
             frames: "abc".into(),
             fps: 2.0,
         };
-        let gpu = grid_anim(&anim, |c| c as u16).expect("three frames animate");
+        let gpu = grid_anim(&anim, |c| c as u16, Palette::Default).expect("three frames animate");
         assert_eq!(gpu.frame_count, 3);
         assert_eq!(gpu.frames.x, u32::from(b'a') | (u32::from(b'b') << 16));
         assert_eq!(gpu.frames.y, u32::from(b'c'));
@@ -478,6 +498,6 @@ mod tests {
             frames: "a".into(),
             fps: 2.0,
         };
-        assert_eq!(grid_anim(&single, |c| c as u16), None);
+        assert_eq!(grid_anim(&single, |c| c as u16, Palette::Default), None);
     }
 }

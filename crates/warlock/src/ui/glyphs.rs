@@ -38,7 +38,7 @@ pub(super) fn emit(
     for &(p, terrain) in &grid.free_terrain {
         let def = content.terrain(terrain);
         let frame = def.anim.as_ref().map_or(AnimFrame::STILL, |a| {
-            anim::evaluate(a, time, anim::cell_phase(p))
+            through_palette(anim::evaluate(a, time, anim::cell_phase(p)), &settings)
         });
         let at = Vec2::new(p.x as f32, p.y as f32);
         let mut g = glyph(&grid, at, def.glyph, palette(def.fg), frame);
@@ -48,7 +48,9 @@ pub(super) fn emit(
     for actor in view.actors() {
         let def = content.creature(actor.creature);
         let frame = match &def.anim {
-            Some(a) if !effects.reduced => anim::evaluate(a, time, creature_phase(actor.id)),
+            Some(a) if effects.glyph_animation => {
+                through_palette(anim::evaluate(a, time, creature_phase(actor.id)), &settings)
+            }
             _ => AnimFrame::STILL,
         };
         let at = motion.actor_pos(actor.id, actor.pos, time);
@@ -57,6 +59,14 @@ pub(super) fn emit(
         g.color = lit(g.color, &light, at, home, ACTOR_FLOOR);
         free.push(glow(g, def.glow, &effects));
     }
+}
+
+/// `frame` with its shimmer tint color run through the active palette, like every other color.
+fn through_palette(mut frame: AnimFrame, settings: &Settings) -> AnimFrame {
+    frame.tint = frame
+        .tint
+        .map(|(color, weight)| (settings.palette.apply(color, Role::Fg), weight));
+    frame
 }
 
 /// `color` lit by the visual light at the center of the cell-sized glyph at `at` (level cells).
@@ -83,7 +93,7 @@ pub(super) fn lit(
 /// With effects on, keeps a lit glyph within display range (bright light alone never blooms) and
 /// makes it glow (bloom) by `amount`, as the grid shader does.
 fn glow(mut g: FreeGlyph, amount: f32, effects: &Effects) -> FreeGlyph {
-    if !effects.reduced {
+    if effects.glow {
         g.color = emissive(in_range(g.color), amount);
     }
     g
@@ -158,6 +168,28 @@ mod tests {
         };
         let g = glyph(&grid, Vec2::ZERO, '*', Rgb::BLACK, frame);
         assert_eq!(g.color, LinearRgba::WHITE);
+    }
+
+    #[test]
+    fn shimmer_tint_goes_through_the_palette() {
+        let shimmer = |palette| {
+            let settings = Settings {
+                palette,
+                ..Settings::default()
+            };
+            let frame = AnimFrame {
+                tint: Some((Rgb::new(0x80, 0x40, 0x20), 0.5)),
+                ..AnimFrame::STILL
+            };
+            through_palette(frame, &settings).tint.expect("tint kept")
+        };
+        assert_eq!(
+            shimmer(crate::settings::Palette::Default).0,
+            Rgb::new(0x80, 0x40, 0x20)
+        );
+        let high = shimmer(crate::settings::Palette::HighContrast);
+        assert_ne!(high.0, Rgb::new(0x80, 0x40, 0x20));
+        assert_eq!(high.1, 0.5);
     }
 
     #[test]

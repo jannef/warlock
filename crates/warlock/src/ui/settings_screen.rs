@@ -1,27 +1,89 @@
-//! The settings screen: font size, reduced effects, color palette (spec §4.7). Changes apply
+//! The settings screen: font size, reduced effects and its per-effect switches, color palette
+//! (spec §4.7). Changes apply
 //! live, because the screen edits the [`Settings`] resource that rendering reads.
 
 use super::menu::{Nav, Panel, Press};
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::render::console::Console;
-use crate::settings::{MAX_FONT_PX, MIN_FONT_PX, Settings};
+use crate::settings::{EffectSwitches, MAX_FONT_PX, MIN_FONT_PX, Settings};
+
+/// One per-effect switch, listed under the reduced-effects preset.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Effect {
+    GlyphAnimation,
+    Flicker,
+    Motion,
+    Glow,
+    Distortion,
+    Particles,
+    ScreenFades,
+}
+
+impl Effect {
+    fn label(self) -> &'static str {
+        match self {
+            Effect::GlyphAnimation => "Glyph animation",
+            Effect::Flicker => "Light flicker",
+            Effect::Motion => "Slides, camera",
+            Effect::Glow => "Bloom and glow",
+            Effect::Distortion => "Heat haze",
+            Effect::Particles => "Particles",
+            Effect::ScreenFades => "Screen fades",
+        }
+    }
+
+    fn help(self) -> &'static str {
+        match self {
+            Effect::GlyphAnimation => "Water waves, pulsing altars, shimmering lava.",
+            Effect::Flicker => "Torches and fires flicker; light stays steady when off.",
+            Effect::Motion => "Creatures slide between cells and the camera eases; off snaps.",
+            Effect::Glow => "Bloom around glowing glyphs such as lava and crystals.",
+            Effect::Distortion => "Heat haze rising over lava and fires.",
+            Effect::Particles => "Sparks, embers, splashes, and dust.",
+            Effect::ScreenFades => "The fade after changing level, and screen flashes.",
+        }
+    }
+
+    fn switch(self, e: &mut EffectSwitches) -> &mut bool {
+        match self {
+            Effect::GlyphAnimation => &mut e.glyph_animation,
+            Effect::Flicker => &mut e.flicker,
+            Effect::Motion => &mut e.motion,
+            Effect::Glow => &mut e.glow,
+            Effect::Distortion => &mut e.distortion,
+            Effect::Particles => &mut e.particles,
+            Effect::ScreenFades => &mut e.screen_fades,
+        }
+    }
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Row {
     FontSize,
     ReducedEffects,
+    Effect(Effect),
     Palette,
     Reset,
     Back,
 }
 
-const ROWS: [Row; 5] = [
+const ROWS: [Row; 12] = [
     Row::FontSize,
     Row::ReducedEffects,
+    Row::Effect(Effect::GlyphAnimation),
+    Row::Effect(Effect::Flicker),
+    Row::Effect(Effect::Motion),
+    Row::Effect(Effect::Glow),
+    Row::Effect(Effect::Distortion),
+    Row::Effect(Effect::Particles),
+    Row::Effect(Effect::ScreenFades),
     Row::Palette,
     Row::Reset,
     Row::Back,
 ];
+
+/// Index of the first action row (Reset); a gap is drawn before it.
+const FIRST_ACTION: usize = 10;
 
 /// Selection state of the settings screen.
 #[derive(Debug, Default)]
@@ -48,12 +110,20 @@ impl SettingsScreen {
                     settings.font_px = px.clamp(MIN_FONT_PX as i32, MAX_FONT_PX as i32) as u32;
                 }
                 Row::ReducedEffects => settings.reduced_effects = !settings.reduced_effects,
+                Row::Effect(e) => {
+                    let on = e.switch(&mut settings.effects);
+                    *on = !*on;
+                }
                 Row::Palette => settings.palette = settings.palette.cycle(step < 0),
                 Row::Reset | Row::Back => {}
             },
             Nav::Enter if !press.repeat => match row {
                 Row::FontSize => {}
                 Row::ReducedEffects => settings.reduced_effects = !settings.reduced_effects,
+                Row::Effect(e) => {
+                    let on = e.switch(&mut settings.effects);
+                    *on = !*on;
+                }
                 Row::Palette => settings.palette = settings.palette.cycle(false),
                 Row::Reset => *settings = Settings::default(),
                 Row::Back => return true,
@@ -64,43 +134,63 @@ impl SettingsScreen {
     }
 
     pub fn draw(&self, console: &mut Console, settings: &Settings) {
-        let panel = Panel::new(console, " Settings ", 60, 17);
+        let panel = Panel::new(console, " Settings ", 60, 24);
         let label_w = 18;
+        let mut switches = settings.effects;
         for (i, row) in ROWS.iter().enumerate() {
+            let on_off = |on: bool| if on { "On" } else { "Off" }.to_string();
             let (label, value) = match row {
-                Row::FontSize => ("Font size", format!("{} px", settings.font_px)),
+                Row::FontSize => ("Font size".to_string(), format!("{} px", settings.font_px)),
                 Row::ReducedEffects => (
-                    "Reduced effects",
-                    if settings.reduced_effects {
-                        "On"
-                    } else {
-                        "Off"
-                    }
-                    .to_string(),
+                    "Reduced effects".to_string(),
+                    on_off(settings.reduced_effects),
                 ),
-                Row::Palette => ("Color palette", settings.palette.label().to_string()),
-                Row::Reset => ("Reset to defaults", String::new()),
-                Row::Back => ("Back", String::new()),
+                Row::Effect(e) => {
+                    let own = *e.switch(&mut switches);
+                    // The preset overrides every switch; say so rather than show a lie.
+                    let value = if own && settings.reduced_effects {
+                        "Off (preset)".to_string()
+                    } else {
+                        on_off(own)
+                    };
+                    (format!("  {}", e.label()), value)
+                }
+                Row::Palette => (
+                    "Color palette".to_string(),
+                    settings.palette.label().to_string(),
+                ),
+                Row::Reset => ("Reset to defaults".to_string(), String::new()),
+                Row::Back => ("Back".to_string(), String::new()),
             };
             // A gap before Reset and Back separates actions from options.
-            let y = panel.y + 2 + i as i32 + i32::from(i >= 3);
-            panel.row_with(console, y, i == self.selected, label, &value, label_w, true);
+            let y = panel.y + 2 + i as i32 + i32::from(i >= FIRST_ACTION);
+            panel.row_with(
+                console,
+                y,
+                i == self.selected,
+                &label,
+                &value,
+                label_w,
+                true,
+            );
         }
         let help = match ROWS[self.selected] {
             Row::FontSize => "Size of the glyphs, in logical pixels.",
-            Row::ReducedEffects => "No glyph animation, slides, or camera easing.",
+            Row::ReducedEffects => "Preset: turns every effect below off.",
+            Row::Effect(e) => e.help(),
             Row::Palette => "Recolors everything on screen; game data is unchanged.",
             Row::Reset => "Restores these settings (not the key bindings).",
             Row::Back => "Settings are saved as you change them.",
         };
-        console.print(panel.inner_x(), panel.y + 10, help, TEXT_DIM);
+        let help_y = panel.y + 16;
+        console.print(panel.inner_x(), help_y, help, TEXT_DIM);
         console.print(
             panel.inner_x(),
-            panel.y + 12,
+            help_y + 2,
             "Sample: legible text, then  [ marked ]  and  * flagged *",
             TEXT,
         );
-        console.print(panel.inner_x(), panel.y + 13, "Sample accent text", ACCENT);
+        console.print(panel.inner_x(), help_y + 3, "Sample accent text", ACCENT);
         panel.footer(console, "↑↓ select   ←→ change   Esc back");
     }
 }
@@ -133,7 +223,9 @@ mod tests {
         press(&mut screen, &mut s, Nav::Down);
         press(&mut screen, &mut s, Nav::Enter);
         assert!(s.reduced_effects);
-        press(&mut screen, &mut s, Nav::Down);
+        for _ in 0..8 {
+            press(&mut screen, &mut s, Nav::Down);
+        }
         press(&mut screen, &mut s, Nav::Right);
         assert_eq!(s.palette, Palette::HighContrast);
         press(&mut screen, &mut s, Nav::Down);
@@ -142,5 +234,22 @@ mod tests {
         press(&mut screen, &mut s, Nav::Down);
         assert!(press(&mut screen, &mut s, Nav::Enter));
         assert!(press(&mut screen, &mut s, Nav::Back));
+    }
+
+    #[test]
+    fn effect_rows_flip_their_own_switch() {
+        let (mut screen, mut s) = (SettingsScreen::default(), Settings::default());
+        // Down past the font size and the preset: the first effect is glyph animation.
+        for _ in 0..2 {
+            press(&mut screen, &mut s, Nav::Down);
+        }
+        press(&mut screen, &mut s, Nav::Enter);
+        assert!(!s.effects.glyph_animation && s.effects.particles);
+        for _ in 0..5 {
+            press(&mut screen, &mut s, Nav::Down);
+        }
+        press(&mut screen, &mut s, Nav::Left);
+        assert!(!s.effects.particles && s.effects.glow);
+        assert!(!s.reduced_effects, "the preset is untouched");
     }
 }
