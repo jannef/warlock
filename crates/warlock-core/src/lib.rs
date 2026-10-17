@@ -14,6 +14,7 @@ pub mod dump;
 pub mod fov;
 pub mod geom;
 pub mod grid;
+pub mod light;
 pub mod messages;
 pub mod perception;
 pub mod replay;

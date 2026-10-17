@@ -1,7 +1,7 @@
-# Terrain types. Colors are the fully lit appearance; lighting (M3) darkens and tints them.
+# Terrain types. Colors are the fully lit appearance; lighting darkens and tints them.
 # Fields: id, name, glyph, fg, bg (default black), walkable (default true),
 # transparent (default true), opens_to / closes_to (doors), stairs ("up"/"down"),
-# anim (presentation-only, see spec §4.3).
+# light (a preset in lights.toml the terrain emits), anim (presentation-only, see spec §4.3).
 
 [[terrain]]
 id = "void"
@@ -75,4 +75,50 @@ name = "altar"
 glyph = "_"
 fg = "#e0c060"
 bg = "#0d0d10"
+light = "altar_glow"
 anim = { kind = "pulse", bpm = 54, amount = 0.18 }
+
+# Light sources (spec §5). Emitting terrain must be transparent so light cannot leak through it.
+
+[[terrain]]
+id = "sconce"
+name = "wall torch"
+glyph = "¡"
+fg = "#ffb860"
+bg = "#0d0d10"
+walkable = false
+light = "sconce"
+
+[[terrain]]
+id = "brazier"
+name = "brazier"
+glyph = "Ω"
+fg = "#ffa040"
+bg = "#0d0d10"
+walkable = false
+light = "brazier"
+
+# A pedestal for colored light; the level legend gives each crystal its light.
+[[terrain]]
+id = "crystal"
+name = "light crystal"
+glyph = "♦"
+fg = "#f4f0ff"
+bg = "#0d0d10"
+walkable = false
+
+[[terrain]]
+id = "fungus"
+name = "glowing fungus"
+glyph = '"'
+fg = "#70e8a8"
+bg = "#0d0d10"
+light = "fungus"
+
+[[terrain]]
+id = "uv_rune"
+name = "faint rune"
+glyph = "ᛟ"
+fg = "#c890ff"
+bg = "#0d0d10"
+light = "uv_rune"

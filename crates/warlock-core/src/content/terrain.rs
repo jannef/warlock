@@ -1,6 +1,7 @@
 //! Terrain definitions (`assets/data/terrain.toml`).
 
 use super::anim::GlyphAnim;
+use super::light::LightId;
 use crate::color::Rgb;
 use serde::{Deserialize, Serialize};
 
@@ -38,6 +39,8 @@ pub(super) struct TerrainSpec {
     /// For an open door: the terrain it becomes when closed.
     pub closes_to: Option<String>,
     pub stairs: Option<StairsDir>,
+    /// Light preset the terrain emits (torch sconce, glowing fungus, rune). Must be transparent.
+    pub light: Option<String>,
     pub anim: Option<GlyphAnim>,
 }
 
@@ -58,6 +61,8 @@ pub struct TerrainDef {
     pub opens_to: Option<TerrainId>,
     pub closes_to: Option<TerrainId>,
     pub stairs: Option<StairsDir>,
+    /// Light this terrain emits, if any.
+    pub light: Option<LightId>,
     /// Presentation-only.
     pub anim: Option<GlyphAnim>,
 }

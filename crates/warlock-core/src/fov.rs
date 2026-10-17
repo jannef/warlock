@@ -9,7 +9,14 @@
 
 use crate::geom::Pos;
 
-/// Calls `reveal` for every cell visible from `origin` within `radius` (Euclidean).
+/// Squared reach of a Euclidean `radius`: `radius² + radius`, which gives slightly rounder circles
+/// than a strict `radius²` cutoff. Line of sight, light, and darkvision all use it.
+pub const fn radius2(radius: i32) -> i32 {
+    radius * radius + radius
+}
+
+/// Calls `reveal` for every cell visible from `origin` within `radius` (Euclidean, see
+/// [`radius2`]).
 ///
 /// `is_opaque` must return `true` for out-of-bounds positions. `reveal` may be called more than
 /// once for the same cell and may receive out-of-bounds positions (treated as opaque walls), which
@@ -24,9 +31,8 @@ pub fn compute_fov(
     if radius <= 0 {
         return;
     }
-    // Slightly rounder circles than a strict r² cutoff.
-    let radius2 = radius * radius + radius;
-    let in_range = |depth: i32, col: i32| depth * depth + col * col <= radius2;
+    let reach2 = radius2(radius);
+    let in_range = |depth: i32, col: i32| depth * depth + col * col <= reach2;
 
     for quadrant in [
         Quadrant::North,

@@ -2,6 +2,7 @@
 //! visible terrain whose animation outgrows its cell (`pulse`). Rebuilt every frame.
 
 use super::motion::Motion;
+use super::{ACTOR_FLOOR, TERRAIN_FLOOR, lit};
 use crate::game::Game;
 use crate::render::anim::{self, AnimFrame};
 use crate::render::free_glyph::{FreeGlyph, FreeGlyphs};
@@ -24,14 +25,15 @@ pub(super) fn emit(
     let content = view.content();
     let time = visual.seconds;
     free.clip = grid.clip;
-    // Terrain first, so creatures draw on top.
+    // Terrain first, so creatures draw on top. Both are shaded by the light at their cell.
     for &(p, terrain) in &grid.free_terrain {
         let def = content.terrain(terrain);
         let frame = def.anim.as_ref().map_or(AnimFrame::STILL, |a| {
             anim::evaluate(a, time, anim::cell_phase(p))
         });
         let at = Vec2::new(p.x as f32, p.y as f32);
-        free.push(glyph(&grid, at, def.glyph, def.fg, frame));
+        let fg = lit(def.fg, view.light(p), TERRAIN_FLOOR);
+        free.push(glyph(&grid, at, def.glyph, fg, frame));
     }
     for actor in view.actors() {
         let def = content.creature(actor.creature);
@@ -40,7 +42,8 @@ pub(super) fn emit(
             _ => AnimFrame::STILL,
         };
         let at = motion.actor_pos(actor.id, actor.pos, time);
-        free.push(glyph(&grid, at, def.glyph, def.fg, frame));
+        let fg = lit(def.fg, view.light(actor.pos), ACTOR_FLOOR);
+        free.push(glyph(&grid, at, def.glyph, fg, frame));
     }
 }
 

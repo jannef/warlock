@@ -4,11 +4,12 @@
 //! so `<`, `>`, and `?` work on any layout. Arrows and the numpad bind by physical key code.
 
 use crate::cli::Args;
-use crate::game::{PlayerAction, SimSet};
+use crate::game::{Game, PlayerAction, SimSet};
 use crate::save::SaveCommand;
 use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
+use warlock_core::content::VisionProfile;
 use warlock_core::{Action, Dir};
 
 /// What a key does.
@@ -20,6 +21,9 @@ pub enum KeyCommand {
     Close,
     Descend,
     Ascend,
+    Lantern,
+    /// Dev: switch to the next vision profile.
+    CycleVision,
     Help,
     Cancel,
     Quit,
@@ -37,6 +41,8 @@ impl KeyCommand {
             KeyCommand::Close => "Close a door",
             KeyCommand::Descend => "Go down stairs",
             KeyCommand::Ascend => "Go up stairs",
+            KeyCommand::Lantern => "Light / douse lantern",
+            KeyCommand::CycleVision => "Next vision profile (dev)",
             KeyCommand::Help => "Show / hide controls",
             KeyCommand::Cancel => "Cancel",
             KeyCommand::Quit => "Save and quit",
@@ -126,6 +132,7 @@ impl Default for Bindings {
             (ch("c"), Close),
             (ch(">"), Descend),
             (ch("<"), Ascend),
+            (ch("L"), Lantern),
             (ch("?"), Help),
             (Code(KeyCode::Escape), Cancel),
             (ch("Q"), Quit),
@@ -138,9 +145,11 @@ impl Default for Bindings {
 }
 
 impl Bindings {
-    /// Adds the developer snapshot keys (always present in debug builds, `--dev` otherwise).
+    /// Adds the developer keys — vision profile switching and snapshots (always present in debug
+    /// builds, `--dev` otherwise).
     fn add_dev_keys(&mut self) {
         let dev = [
+            (KeyBinding::Code(KeyCode::F3), KeyCommand::CycleVision),
             (KeyBinding::Code(KeyCode::F5), KeyCommand::Snapshot),
             (KeyBinding::Code(KeyCode::F9), KeyCommand::LoadSnapshot),
         ];
@@ -214,6 +223,7 @@ impl Plugin for InputPlugin {
 fn read_keys(
     mut keys: MessageReader<KeyboardInput>,
     bindings: Res<Bindings>,
+    game: Res<Game>,
     mut mode: ResMut<InputMode>,
     mut actions: MessageWriter<PlayerAction>,
     mut saves: MessageWriter<SaveCommand>,
@@ -258,6 +268,16 @@ fn read_keys(
                 actions.write(PlayerAction(Action::Ascend));
                 InputMode::Normal
             }
+            (InputMode::Normal, KeyCommand::Lantern) => {
+                actions.write(PlayerAction(Action::ToggleLantern));
+                InputMode::Normal
+            }
+            (InputMode::Normal, KeyCommand::CycleVision) => {
+                let view = game.world.perception();
+                let next = next_vision(view.content().vision_profiles(), &view.vision().id);
+                actions.write(PlayerAction(Action::SetVision(next)));
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::Open | KeyCommand::Close) => {
                 InputMode::Direction(command)
             }
@@ -282,6 +302,14 @@ fn read_keys(
     }
 }
 
+/// The id of the profile after `current` in `profiles`, wrapping around.
+fn next_vision(profiles: &[VisionProfile], current: &str) -> String {
+    let i = profiles.iter().position(|p| p.id == current).unwrap_or(0);
+    profiles
+        .get((i + 1) % profiles.len().max(1))
+        .map_or_else(|| current.to_string(), |p| p.id.clone())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -297,6 +325,7 @@ mod tests {
         assert!(move_keys.contains(&"↑".to_string()));
         assert_eq!(b.keys_for("Go down stairs"), vec![">".to_string()]);
         assert_eq!(b.keys_for("Save and quit"), vec!["Q".to_string()]);
+        assert_eq!(b.keys_for("Light / douse lantern"), vec!["L".to_string()]);
     }
 
     #[test]
@@ -306,5 +335,18 @@ mod tests {
         b.add_dev_keys();
         assert_eq!(b.keys_for("Save snapshot (dev)"), vec!["F5".to_string()]);
         assert_eq!(b.keys_for("Load snapshot (dev)"), vec!["F9".to_string()]);
+        assert_eq!(
+            b.keys_for("Next vision profile (dev)"),
+            vec!["F3".to_string()]
+        );
+    }
+
+    #[test]
+    fn vision_cycles_through_profiles() {
+        let content = warlock_core::content::Content::builtin().unwrap();
+        let profiles = content.vision_profiles();
+        assert_eq!(next_vision(profiles, "normal"), "low_light");
+        let last = &profiles[profiles.len() - 1].id;
+        assert_eq!(next_vision(profiles, last), "normal");
     }
 }

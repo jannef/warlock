@@ -1,0 +1,85 @@
+# Light presets (spec §5). Referenced by terrain (`light = "..."`), level legends, creatures,
+# and scenarios (the player's lantern).
+#
+# Fields:
+#   id
+#   color   = [r, g, b, uv] at the source; 255 per channel = fully lit, more = overbright.
+#             Brightness for vision thresholds is luma (54r + 183g + 19b) / 256, plus UV for eyes
+#             that see UV.
+#   radius  = reach in cells; light falls off as color · (R² − d²) / R² with R² = radius² + radius.
+#   flicker = { amount, speed } — visual only (renderer); gameplay never reads it.
+
+# Carried by creatures (kobolds).
+[[light]]
+id = "torch"
+color = [300, 180, 90, 0]
+radius = 6
+flicker = { amount = 0.2, speed = 1.6 }
+
+# Wall torches in sconces.
+[[light]]
+id = "sconce"
+color = [280, 170, 90, 0]
+radius = 7
+flicker = { amount = 0.15, speed = 1.2 }
+
+[[light]]
+id = "brazier"
+color = [360, 210, 100, 0]
+radius = 8
+flicker = { amount = 0.2, speed = 1.0 }
+
+# Hanging oil lamps (corridors, nooks).
+[[light]]
+id = "lamp"
+color = [230, 200, 150, 0]
+radius = 6
+flicker = { amount = 0.05, speed = 0.5 }
+
+# The player's lantern (see scenarios).
+[[light]]
+id = "lantern"
+color = [250, 215, 160, 0]
+radius = 5
+flicker = { amount = 0.08, speed = 0.8 }
+
+[[light]]
+id = "altar_glow"
+color = [220, 180, 90, 0]
+radius = 5
+flicker = { amount = 0.1, speed = 0.4 }
+
+# Light hall crystals: steady colored light.
+[[light]]
+id = "crystal_red"
+color = [340, 50, 40, 0]
+radius = 7
+
+[[light]]
+id = "crystal_green"
+color = [60, 300, 80, 0]
+radius = 7
+
+[[light]]
+id = "crystal_blue"
+color = [60, 110, 380, 0]
+radius = 7
+
+[[light]]
+id = "crystal_amber"
+color = [320, 220, 40, 0]
+radius = 7
+
+# Darkness chamber: too faint for normal eyes (even in pairs), visible with low-light vision.
+[[light]]
+id = "fungus"
+color = [0, 20, 10, 0]
+radius = 2
+flicker = { amount = 0.1, speed = 0.2 }
+
+# Darkness chamber: ultraviolet only, visible with UV sight.
+[[light]]
+id = "uv_rune"
+color = [0, 0, 0, 180]
+radius = 4
+flicker = { amount = 0.1, speed = 0.3 }

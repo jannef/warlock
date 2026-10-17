@@ -114,6 +114,15 @@ impl<T> std::ops::Index<Pos> for Grid<T> {
     }
 }
 
+impl<T> std::ops::IndexMut<Pos> for Grid<T> {
+    /// # Panics
+    /// If `p` is out of bounds.
+    fn index_mut(&mut self, p: Pos) -> &mut T {
+        let i = Grid::index(self, p).expect("grid position out of bounds");
+        &mut self.cells[i]
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
