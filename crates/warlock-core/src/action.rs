@@ -47,9 +47,10 @@ pub struct Outcome {
     pub events: Vec<Event>,
 }
 
-/// Text syntax for scripting: `move:E wait open:E close:W ascend descend`.
+/// Text syntax for scripting: `move:E wait open:E close:W ascend descend lantern vision:ID`.
 ///
-/// `Display` and `FromStr` round-trip; names are case-insensitive when parsing.
+/// `Display` and `FromStr` round-trip; action names are case-insensitive when parsing (vision
+/// profile ids keep their case).
 impl fmt::Display for Action {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -59,6 +60,8 @@ impl fmt::Display for Action {
             Action::Close(d) => write!(f, "close:{d}"),
             Action::Ascend => f.write_str("ascend"),
             Action::Descend => f.write_str("descend"),
+            Action::ToggleLantern => f.write_str("lantern"),
+            Action::SetVision(id) => write!(f, "vision:{id}"),
         }
     }
 }
@@ -87,8 +90,14 @@ impl FromStr for Action {
             "wait" => bare(Action::Wait),
             "ascend" => bare(Action::Ascend),
             "descend" => bare(Action::Descend),
+            "lantern" => bare(Action::ToggleLantern),
+            "vision" => match s.split_once(':').map(|(_, id)| id) {
+                Some(id) if !id.is_empty() => Ok(Action::SetVision(id.to_string())),
+                _ => Err("`vision` needs a profile id, e.g. `vision:darkvision`".into()),
+            },
             _ => Err(format!(
-                "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, descend)"
+                "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
+                 descend, lantern, vision:ID)"
             )),
         }
     }
@@ -111,7 +120,14 @@ mod tests {
 
     #[test]
     fn text_round_trips() {
-        let mut all = vec![Action::Wait, Action::Ascend, Action::Descend];
+        let mut all = vec![
+            Action::Wait,
+            Action::Ascend,
+            Action::Descend,
+            Action::ToggleLantern,
+            Action::SetVision("low_light".into()),
+            Action::SetVision("Mixed_Case".into()),
+        ];
         for d in Dir::ALL {
             all.extend([Action::Move(d), Action::Open(d), Action::Close(d)]);
         }
@@ -129,5 +145,15 @@ mod tests {
         assert!(parse_actions("move:up").is_err());
         assert!(parse_actions("wait:E").is_err());
         assert!(parse_actions("dance").is_err());
+        assert_eq!(
+            parse_actions("LANTERN vision:uv_sight"),
+            Ok(vec![
+                Action::ToggleLantern,
+                Action::SetVision("uv_sight".into())
+            ])
+        );
+        assert!(parse_actions("vision").is_err());
+        assert!(parse_actions("vision:").is_err());
+        assert!(parse_actions("lantern:E").is_err());
     }
 }

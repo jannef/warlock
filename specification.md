@@ -284,7 +284,8 @@ cargo xtask golden [--update]                             # compare golden scree
 ```
 
 - Replays are JSON: `{game_version, scenario, seed, steps: [{action, hash}]}`. Actions use a text
-  syntax (`move:E wait open:E close:W ascend descend`); `hash` is the FNV-1a 64 hash of the
+  syntax (`move:E wait open:E close:W ascend descend lantern vision:darkvision`); `hash` is the
+  FNV-1a 64 hash of the
   canonical JSON encoding of `WorldState` after the step. Verification reports the first
   diverging step. `--replay` takes its scenario and seed from the file; `--record` rewrites its
   file after every action (including replayed steps).

@@ -50,8 +50,8 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 | Create a replay | `... replay --create --scenario showcase --actions "move:N wait" -o runs/x.json` |
 | Verify a replay | `... replay --verify runs/x.json` (exit 1 and first diverging step on mismatch) |
 
-Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascend descend`
-(`DIR` = N NE E SE S SW W NW). Dump layers: `view` (what the player sees), `fov` (`*` visible),
+Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascend descend lantern
+vision:PROFILE` (`DIR` = N NE E SE S SW W NW; `PROFILE` = an id in `assets/data/vision.toml`). Dump layers: `view` (what the player sees), `fov` (`*` visible),
 `memory` (seen terrain), `truth` (ground truth, **dev-only**). Replay files are JSON
 `{game_version, scenario, seed, steps:[{action, hash}]}`; `hash` is the FNV-1a 64 state hash
 (`World::state_hash`) after the step, as 16 hex digits.
