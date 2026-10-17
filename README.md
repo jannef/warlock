@@ -53,6 +53,7 @@ cargo run --release -p warlock
 | `o` / `c` + direction | Open / close a door (walking into a closed door opens it) |
 | `>` / `<` | Go down / up stairs |
 | `L` | Light or douse your lantern |
+| `R` | Rest an hour, until dawn, or until nightfall (stops when something comes into view) |
 | `x` | Look around: move a cursor to read what is there (takes no time) |
 | `?` | Show all controls |
 | `Esc` | Pause menu: settings, controls, save and quit |

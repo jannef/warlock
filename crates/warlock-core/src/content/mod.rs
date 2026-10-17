@@ -5,6 +5,7 @@
 //! build, including the web build, is self-contained) or a directory on disk for development.
 
 mod anim;
+mod calendar;
 mod creature;
 mod dungeon;
 mod level;
@@ -16,10 +17,11 @@ mod vault;
 mod vision;
 
 pub use anim::GlyphAnim;
+pub use calendar::Calendar;
 pub use creature::{CreatureDef, CreatureId};
 pub use dungeon::{DungeonDef, Generator, LevelPlan, parse_branch_level};
 pub(crate) use level::validate_route;
-pub use level::{CreatureSpawn, LevelTemplate, StairsLink, parse_route};
+pub use level::{CreatureSpawn, LevelKind, LevelTemplate, StairsLink, parse_route};
 pub use light::{Flicker, LightId, LightPreset, MAX_LIGHT_RADIUS};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use scenario::ScenarioDef;
@@ -150,9 +152,9 @@ struct LegendFile {
 
 /// All loaded and cross-validated content.
 ///
-/// `data/lights.toml`, `data/vision.toml`, and `data/dungeons.toml` are optional. Without vision
-/// profiles, a single `normal` profile that needs no light is used, so content without lighting
-/// stays fully visible.
+/// `data/lights.toml`, `data/vision.toml`, `data/dungeons.toml`, and `data/calendar.toml` are
+/// optional. Without vision profiles, a single `normal` profile that needs no light is used, so
+/// content without lighting stays fully visible; without a calendar, months are numbered.
 #[derive(Debug)]
 pub struct Content {
     terrain: Vec<TerrainDef>,
@@ -168,6 +170,7 @@ pub struct Content {
     dungeons: BTreeMap<String, DungeonDef>,
     /// Sorted by id.
     vaults: Vec<Vault>,
+    calendar: Calendar,
 }
 
 impl Content {
@@ -190,7 +193,12 @@ impl Content {
             scenarios: BTreeMap::new(),
             dungeons: BTreeMap::new(),
             vaults: Vec::new(),
+            calendar: Calendar::default(),
         };
+        let path = "data/calendar.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.calendar = Calendar::parse(path, text)?;
+        }
         content.load_lights(files)?;
         content.load_vision(files)?;
         content.load_terrain(files)?;
@@ -252,6 +260,12 @@ impl Content {
                     spec.id
                 )));
             }
+            if spec.move_cost == 0 {
+                return Err(err(format!(
+                    "terrain `{}` has move_cost 0; every step takes some time",
+                    spec.id
+                )));
+            }
             check_effects(
                 path,
                 "terrain",
@@ -268,6 +282,7 @@ impl Content {
                 bg: spec.bg,
                 walkable: spec.walkable,
                 transparent: spec.transparent,
+                move_cost: spec.move_cost,
                 opens_to: resolve(&spec.opens_to)?,
                 closes_to: resolve(&spec.closes_to)?,
                 stairs: spec.stairs,
@@ -554,6 +569,11 @@ impl Content {
 
     pub fn scenarios(&self) -> impl Iterator<Item = &ScenarioDef> {
         self.scenarios.values()
+    }
+
+    /// Month names for showing dates.
+    pub fn calendar(&self) -> &Calendar {
+        &self.calendar
     }
 
     /// Every glyph content may display (for building the glyph atlas).

@@ -28,7 +28,7 @@ behavior, commands, or architecture change.
 | Check the vast level is fresh | `cargo xtask gen-vast --check` (fails if the file differs from the generator output; run it after touching `xtask/src/vast.rs`) |
 | Golden screenshots | `cargo xtask golden` (compare; authoritative on Linux only), `--local` (capture to `target/xtask/golden/*.local.png`, no compare), `--update` (rewrite references; see "Golden screenshots") |
 | Frame-time benchmark | `cargo xtask bench-frames [WxH]` (release, offscreen; method and results in `docs/perf.md`) |
-| Turn-time benchmark | `cargo xtask bench-turns` (re-runs itself in release; budgets: hub 5 ms, vast 16 ms, generated depths level 5 ms) |
+| Turn-time benchmark | `cargo xtask bench-turns` (re-runs itself in release; budgets: hub 5 ms, vast 16 ms, generated depths level 5 ms per turn; a dusk-to-dawn rest 500 ms) |
 | Light stress benchmark | `cargo test --release -p warlock-core turn_cost -- --ignored --nocapture` (400×300, 825 lights) |
 
 Game flags (`cargo run -p warlock -- --help`):
@@ -65,7 +65,9 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 | Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor) |
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascend descend lantern
-vision:PROFILE` (`DIR` = N NE E SE S SW W NW; `PROFILE` = an id in `assets/data/vision.toml`). Dump layers: `view` (what the player sees), `fov` (`*` visible),
+rest:GOAL vision:PROFILE skip:DURATION` (`DIR` = N NE E SE S SW W NW; `PROFILE` = an id in
+`assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are
+`30s`, `10m`, `2h`; `skip` is the dev hour skip). Dump layers: `view` (what the player sees), `fov` (`*` visible),
 `memory` (seen terrain), `light` (perceived brightness of visible cells as a digit, `0` dark to `9`
 fully lit), `truth` (ground truth, **dev-only**). Replay files are JSON
 `{game_version, scenario, seed, steps:[{action, hash}]}`; `hash` is the FNV-1a 64 state hash
@@ -73,7 +75,8 @@ fully lit), `truth` (ground truth, **dev-only**). Replay files are JSON
 
 - `--new` start a fresh run instead of resuming the save; `--dev` enables the dev keys in release
   builds (always on in debug: F2 reveal map (ground truth), F3 next vision profile, F4 light-value
-  overlay, F5/F9 snapshots; all listed by `?`); `--save-dir DIR` keeps saves in DIR instead of the platform data dir.
+  overlay, F5/F9 snapshots, F6 skip an hour (recorded as `skip:1h`); all listed by `?`);
+  `--save-dir DIR` keeps saves in DIR instead of the platform data dir.
 
 Saves: `Q` saves and quits (closing the window saves too); the game autosaves every 50 turns and on
 level change to `run.sav` in the platform data dir (`paths.rs`, app name "warlock"; macOS
@@ -115,6 +118,18 @@ assets                fonts, data definitions, levels, scenarios, vaults
 Content (`assets/data`, `assets/levels`, `assets/scenarios`, `assets/vaults`) is TOML, embedded into
 `warlock-core` at build time by `build.rs`. Level maps are ASCII with a legend; see
 `assets/levels/hub.toml` and spec §7.
+
+Time (spec §8 "Time") lives in `warlock-core`: `time.rs` (`GameTime` = seconds since the
+calendar epoch with calendar fields, minute of day, and 16-bit day fraction; `Duration`; 12×30-day
+calendar math; `DAWN`/`DUSK`), `content/calendar.rs` (month names from `data/calendar.toml`), and
+the turn pipeline in `world/mod.rs`: `player_acts` returns `Spent::Turn(duration)` (the level's
+turn, or `LevelState::step_time` for a step — the one place movement time is decided, where the
+overworld's travel times will plug in), `pass_time` advances the clock and lets creatures act once
+per turn, and `rest` loops turns until the goal or an interruption (batching turns only while no
+creature can come into view). New actions that take time must return their duration there.
+Levels carry `kind` and `turn` (`turn_seconds`); terrain carries `move_cost` (percent); scenarios
+carry `start_date`/`start_time`. Rest (`R`) is a message-line input mode (`InputMode::Rest`,
+`input::REST_CHOICES`), not a menu screen.
 
 Procedural generation (spec §7, §8) lives in `warlock-core`: `rng.rs` (ChaCha8 streams derived
 from the run seed: `map/<level id>` per generated level, `gameplay` kept in `WorldState`;

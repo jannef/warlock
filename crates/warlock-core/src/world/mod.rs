@@ -1,7 +1,13 @@
 //! The simulation: world state and the turn pipeline (spec §8).
 //!
-//! Turn phases, in order: player action → creatures (ascending id) → environment → perception
-//! (sight, light, memory) → perceived events are returned to the caller.
+//! Turn phases, in order: player action → the clock advances by the action's duration →
+//! creatures (ascending id) → environment → perception (sight, light, memory) → perceived events
+//! are returned to the caller.
+//!
+//! Time (spec §8): every action that takes a turn advances the clock by its duration: the level's
+//! turn ([`LevelState::turn`], 6 s on local levels), or for a step the level's
+//! [`LevelState::step_time`] of the destination terrain. Creatures act once per turn, however
+//! long it took. Resting ([`Action::Rest`]) passes many turns in one action.
 
 mod actor;
 mod hash;
@@ -11,13 +17,14 @@ pub use actor::{Actor, ActorId, ActorKind, Patrol};
 pub(crate) use hash::fnv1a;
 pub use level::LevelState;
 
-use crate::action::{Action, Event, Outcome};
+use crate::action::{Action, Event, MAX_REST, Outcome, Rest};
 use crate::content::{Content, LevelTemplate, StairsDir, TerrainId};
 use crate::geom::{Dir, Pos};
 use crate::light::LightCache;
 use crate::messages::MessageLog;
-use crate::perception::{Perception, PerceptionView};
+use crate::perception::{Perception, PerceptionView, VIEW_RADIUS};
 use crate::rng::Rng;
+use crate::time::{self, Duration, GameTime};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -47,6 +54,8 @@ pub struct WorldState {
     /// from it: each generated level has its own stream derived from the seed and its id.
     pub(crate) rng: Rng,
     pub(crate) turn: u64,
+    /// The game clock.
+    pub(crate) time: GameTime,
     pub(crate) current_level: String,
     pub(crate) levels: BTreeMap<String, LevelState>,
     pub(crate) actors: BTreeMap<ActorId, Actor>,
@@ -114,6 +123,9 @@ pub struct World {
     perception: Box<Perception>,
     /// Cached light masks; derived, never saved.
     lights: LightCache,
+    /// Messages logged since this world was created or loaded (not saved): resting stops when it
+    /// changes.
+    said: u64,
 }
 
 /// How much time an action took.
@@ -123,18 +135,12 @@ enum Spent {
     Nothing,
     /// Changed state without game time passing; perception must be recomputed.
     NoTime,
-    /// A full turn: creatures act, then perception is recomputed.
-    Turn,
-}
-
-impl From<bool> for Spent {
-    fn from(took_turn: bool) -> Self {
-        if took_turn {
-            Spent::Turn
-        } else {
-            Spent::Nothing
-        }
-    }
+    /// A turn this long: the clock advances, creatures act, then perception is recomputed.
+    Turn(Duration),
+    /// A rest until this moment (see [`World::rest`]).
+    Rest(GameTime, Rest),
+    /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
+    Skip(Duration),
 }
 
 impl World {
@@ -161,6 +167,7 @@ impl World {
             seed,
             rng: Rng::gameplay(seed),
             turn: 0,
+            time: def.start,
             current_level: start.id.clone(),
             levels: BTreeMap::new(),
             actors: BTreeMap::new(),
@@ -219,6 +226,7 @@ impl World {
             state: Box::new(state),
             perception,
             lights,
+            said: 0,
         }
     }
 
@@ -240,6 +248,11 @@ impl World {
 
     pub fn turn(&self) -> u64 {
         self.state.turn
+    }
+
+    /// The game clock. Month names are in [`Content::calendar`].
+    pub fn time(&self) -> GameTime {
+        self.state.time
     }
 
     pub fn player_id(&self) -> ActorId {
@@ -285,19 +298,100 @@ impl World {
 
     /// Applies one player action and runs the rest of the turn if it took time.
     pub fn apply(&mut self, action: &Action) -> Outcome {
+        let (turn, time) = (self.state.turn, self.state.time);
         let mut events = Vec::new();
-        let spent = self.player_acts(action, &mut events);
-        if spent == Spent::Turn {
-            self.state.turn += 1;
-            self.creatures_act(&mut events);
-        }
-        if spent != Spent::Nothing {
-            self.perceive(&mut events);
+        match self.player_acts(action, &mut events) {
+            Spent::Nothing => {}
+            Spent::NoTime => self.perceive(&mut events),
+            Spent::Turn(duration) => self.pass_time(duration, 1, &mut events),
+            Spent::Rest(until, goal) => self.rest(until, goal, &mut events),
+            Spent::Skip(duration) => {
+                self.state.time += duration;
+                self.perceive(&mut events);
+            }
         }
         Outcome {
-            took_turn: spent == Spent::Turn,
+            took_turn: self.state.turn != turn,
+            elapsed: self.state.time.since(time),
             events,
         }
+    }
+
+    /// The phases after the player's action: the clock advances by `duration`, which is `turns`
+    /// turns (the creatures act once per turn), then perception. Only the last turn's creature
+    /// moves are kept for presentation, after the player's own events.
+    fn pass_time(&mut self, duration: Duration, turns: u64, events: &mut Vec<Event>) {
+        self.state.time += duration;
+        let player_events = events.len();
+        for _ in 0..turns {
+            events.truncate(player_events);
+            self.state.turn += 1;
+            self.creatures_act(events);
+        }
+        self.perceive(events);
+    }
+
+    /// Rests until `until`: turn after turn through the normal pipeline (the player waits, the
+    /// creatures act, perception), stopping after a turn in which a creature came into view or a
+    /// message was logged. The last turn is cut short to end exactly at `until`. While every
+    /// creature is too far away to come into view soon, those turns pass between two
+    /// perceptions ([`World::turns_out_of_view`]), which cannot change the outcome.
+    fn rest(&mut self, until: GameTime, goal: Rest, events: &mut Vec<Event>) {
+        let start = self.state.time;
+        let turn = self.state.current().turn.max(Duration::seconds(1));
+        let said = self.said;
+        let mut in_view = self.creatures_in_view();
+        let mut came = None;
+        while self.state.time < until && came.is_none() && self.said == said {
+            let turns = self.turns_out_of_view().max(1);
+            let span = (turn * turns).min(until.since(self.state.time));
+            events.clear();
+            let turns = span.as_seconds().div_ceil(turn.as_seconds());
+            self.pass_time(span, turns, events);
+            let now_in_view = self.creatures_in_view();
+            came = now_in_view.iter().find(|a| !in_view.contains(a)).copied();
+            in_view = now_in_view;
+        }
+        let rested = self.state.time.since(start).spoken();
+        let text = match (came, self.said != said, goal) {
+            (Some(id), _, _) => {
+                let creature = self.state.actors[&id].creature;
+                let name = &self.content.creature(creature).name;
+                format!(
+                    "{} {name} comes into view; you stop resting after {rested}.",
+                    article(name)
+                )
+            }
+            (None, true, _) => format!("You stop resting after {rested}."),
+            (None, false, Rest::For(_)) => format!("You rest for {rested}."),
+            (None, false, Rest::Dawn) => "You rest until dawn.".into(),
+            (None, false, Rest::Dusk) => "You rest until dusk.".into(),
+        };
+        self.say(text);
+    }
+
+    /// Creatures (not the player) the player sees.
+    fn creatures_in_view(&self) -> Vec<ActorId> {
+        self.perception()
+            .actors()
+            .iter()
+            .filter(|a| a.kind == ActorKind::Creature)
+            .map(|a| a.id)
+            .collect()
+    }
+
+    /// How many turns pass before any creature on the current level could come into view:
+    /// creatures move at most one cell a turn and are only seen within [`VIEW_RADIUS`].
+    fn turns_out_of_view(&self) -> u64 {
+        let player = self.player_pos();
+        let nearest = self
+            .state
+            .actors
+            .values()
+            .filter(|a| a.level == self.state.current_level && a.kind == ActorKind::Creature)
+            .map(|a| a.pos.chebyshev(player))
+            .min();
+        nearest.map_or(u64::MAX, |d| (d - VIEW_RADIUS - 1).max(0) as u64)
     }
 
     /// Phase 4: recomputes perception, updates memory, and drops events the player did not see.
@@ -329,21 +423,45 @@ impl World {
     fn say(&mut self, text: impl Into<String>) {
         let turn = self.state.turn;
         self.state.messages.push(turn, text);
+        self.said += 1;
     }
 
     /// Phase 1. Returns how much time the action took.
     fn player_acts(&mut self, action: &Action, events: &mut Vec<Event>) -> Spent {
         let here = self.player_pos();
+        // One turn of the level the action starts on (taking stairs ends on another level).
+        let turn = Spent::Turn(self.state.current().turn);
+        let took = move |done: bool| if done { turn } else { Spent::Nothing };
         match action {
-            Action::Move(dir) => self.player_moves(*dir, events).into(),
-            Action::Wait => Spent::Turn,
-            Action::Open(dir) => self.open_door(here.step(*dir), events).into(),
-            Action::Close(dir) => self.close_door(here.step(*dir), events).into(),
-            Action::Descend => self.take_stairs(StairsDir::Down, events).into(),
-            Action::Ascend => self.take_stairs(StairsDir::Up, events).into(),
-            Action::ToggleLantern => self.toggle_lantern().into(),
+            Action::Move(dir) => self.player_moves(*dir, events),
+            Action::Wait => turn,
+            Action::Open(dir) => took(self.open_door(here.step(*dir), events)),
+            Action::Close(dir) => took(self.close_door(here.step(*dir), events)),
+            Action::Descend => took(self.take_stairs(StairsDir::Down, events)),
+            Action::Ascend => took(self.take_stairs(StairsDir::Up, events)),
+            Action::ToggleLantern => took(self.toggle_lantern()),
+            Action::Rest(goal) => self.start_rest(*goal),
             Action::SetVision(id) => self.set_vision(id),
+            Action::SkipTime(duration) => {
+                self.say(format!("Time skips ahead {} (dev).", duration.spoken()));
+                Spent::Skip(*duration)
+            }
         }
+    }
+
+    /// When a rest toward `goal` ends: at most [`MAX_REST`] from now.
+    fn start_rest(&mut self, goal: Rest) -> Spent {
+        let now = self.state.time;
+        let until = match goal {
+            Rest::For(duration) => now + duration.min(MAX_REST),
+            Rest::Dawn => now.next_at(time::DAWN),
+            Rest::Dusk => now.next_at(time::DUSK),
+        };
+        if until == now {
+            self.say("You do not rest.");
+            return Spent::Nothing;
+        }
+        Spent::Rest(until, goal)
     }
 
     fn toggle_lantern(&mut self) -> bool {
@@ -379,28 +497,35 @@ impl World {
         self.lights.terrain_changed(level, &self.content, p);
     }
 
-    fn player_moves(&mut self, dir: Dir, events: &mut Vec<Event>) -> bool {
+    fn player_moves(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
         let from = self.player_pos();
         let to = from.step(dir);
         let level = self.state.current();
         let Some(&terrain) = level.terrain.get(to) else {
             self.say("You can't go that way.");
-            return false;
+            return Spent::Nothing;
         };
         let def = self.content.terrain(terrain);
         if def.is_closed_door() {
-            return self.open_door(to, events);
+            let turn = level.turn;
+            let opened = self.open_door(to, events);
+            return if opened {
+                Spent::Turn(turn)
+            } else {
+                Spent::Nothing
+            };
         }
         if !def.walkable {
             let name = def.name.clone();
             self.say(format!("The {name} blocks your way."));
-            return false;
+            return Spent::Nothing;
         }
         if let Some(other) = self.state.actor_at(&level.id, to) {
             let name = self.content.creature(other.creature).name.clone();
             self.say(format!("The {name} is in the way."));
-            return false;
+            return Spent::Nothing;
         }
+        let step = level.step_time(def);
         let player = self.state.player;
         if let Some(actor) = self.state.actors.get_mut(&player) {
             actor.pos = to;
@@ -417,7 +542,7 @@ impl World {
             };
             self.say(format!("There is a staircase {way} here."));
         }
-        true
+        Spent::Turn(step)
     }
 
     fn open_door(&mut self, p: Pos, events: &mut Vec<Event>) -> bool {
@@ -592,6 +717,14 @@ impl World {
     }
 }
 
+/// `A` or `An` for a noun.
+fn article(noun: &str) -> &'static str {
+    match noun.chars().next() {
+        Some(c) if "aeiouAEIOU".contains(c) => "An",
+        _ => "A",
+    }
+}
+
 /// The template of level `id`: a hand-made level, or a level of a dungeon branch generated from
 /// the run seed (`entered_from` is where the up staircase of a branch's first level leads).
 fn level_template<'a>(
@@ -643,3 +776,5 @@ mod branch_tests;
 mod light_tests;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod time_tests;

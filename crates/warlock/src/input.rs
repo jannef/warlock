@@ -11,7 +11,8 @@ use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
 use warlock_core::content::VisionProfile;
-use warlock_core::{Action, Dir, Pos};
+use warlock_core::time::Duration;
+use warlock_core::{Action, Dir, Pos, Rest};
 
 /// What a key does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -23,10 +24,14 @@ pub enum KeyCommand {
     Descend,
     Ascend,
     Lantern,
+    /// Ask how long to rest (an hour, until dawn, until dusk).
+    Rest,
     /// Move a cursor over the map to read what is there (no time passes).
     Look,
     /// Dev: switch to the next vision profile.
     CycleVision,
+    /// Dev: move the clock an hour ahead at once.
+    SkipHour,
     /// Dev: show ground truth where the player does not see.
     RevealMap,
     /// Dev: show perceived light values on visible cells.
@@ -49,8 +54,10 @@ impl KeyCommand {
             KeyCommand::Descend => "Go down stairs",
             KeyCommand::Ascend => "Go up stairs",
             KeyCommand::Lantern => "Light / douse lantern",
+            KeyCommand::Rest => "Rest",
             KeyCommand::Look => "Look around",
             KeyCommand::CycleVision => "Next vision profile (dev)",
+            KeyCommand::SkipHour => "Skip an hour (dev)",
             KeyCommand::RevealMap => "Reveal map (dev)",
             KeyCommand::LightValues => "Light values (dev)",
             KeyCommand::Help => "Show / hide controls",
@@ -143,6 +150,7 @@ impl Default for Bindings {
             (ch(">"), Descend),
             (ch("<"), Ascend),
             (ch("L"), Lantern),
+            (ch("R"), Rest),
             (ch("x"), Look),
             (ch("?"), Help),
             (Code(KeyCode::Escape), Cancel),
@@ -156,14 +164,15 @@ impl Default for Bindings {
 }
 
 impl Bindings {
-    /// Adds the developer keys — reveal map, vision profile switching, light values, snapshots
-    /// (always present in debug builds, `--dev` otherwise).
+    /// Adds the developer keys — reveal map, vision profile switching, light values, snapshots,
+    /// skipping an hour (always present in debug builds, `--dev` otherwise).
     fn add_dev_keys(&mut self) {
         let dev = [
             (KeyBinding::Code(KeyCode::F2), KeyCommand::RevealMap),
             (KeyBinding::Code(KeyCode::F3), KeyCommand::CycleVision),
             (KeyBinding::Code(KeyCode::F4), KeyCommand::LightValues),
             (KeyBinding::Code(KeyCode::F5), KeyCommand::Snapshot),
+            (KeyBinding::Code(KeyCode::F6), KeyCommand::SkipHour),
             (KeyBinding::Code(KeyCode::F9), KeyCommand::LoadSnapshot),
         ];
         for entry in dev {
@@ -216,6 +225,8 @@ pub enum InputMode {
     Normal,
     /// Waiting for a direction for `Open` or `Close`.
     Direction(KeyCommand),
+    /// Asking how long to rest ([`REST_CHOICES`]).
+    Rest,
     /// The controls overlay is open.
     Help,
     /// Look mode: a cursor at this level position.
@@ -264,6 +275,14 @@ fn read_keys(
         if key.state != ButtonState::Pressed {
             continue;
         }
+        // The rest prompt answers by letter, whatever those letters are bound to.
+        if *mode == InputMode::Rest
+            && let Some(rest) = rest_choice(key)
+        {
+            actions.write(PlayerAction(Action::Rest(rest)));
+            *mode = InputMode::Normal;
+            continue;
+        }
         let Some(command) = bindings.lookup(key) else {
             continue;
         };
@@ -295,6 +314,9 @@ fn read_keys(
                 InputMode::Normal
             }
             (InputMode::Direction(_), _) => InputMode::Normal,
+            // Any other command (Esc, or `R` again) cancels the rest prompt.
+            (InputMode::Rest, _) => InputMode::Normal,
+            (InputMode::Normal, KeyCommand::Rest) => InputMode::Rest,
             (InputMode::Normal, KeyCommand::Move(dir)) => {
                 actions.write(PlayerAction(Action::Move(dir)));
                 InputMode::Normal
@@ -319,6 +341,10 @@ fn read_keys(
                 let view = game.world.perception();
                 let next = next_vision(view.content().vision_profiles(), &view.vision().id);
                 actions.write(PlayerAction(Action::SetVision(next)));
+                InputMode::Normal
+            }
+            (InputMode::Normal, KeyCommand::SkipHour) => {
+                actions.write(PlayerAction(Action::SkipTime(Duration::hours(1))));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::RevealMap) => {
@@ -356,6 +382,25 @@ fn read_keys(
     }
 }
 
+/// The rest prompt's answers: the key (a character) and what it rests for.
+pub const REST_CHOICES: [(&str, Rest); 3] = [
+    ("h", Rest::For(Duration::hours(1))),
+    ("d", Rest::Dawn),
+    ("n", Rest::Dusk),
+];
+
+/// The rest a key press picks in the rest prompt, if any.
+fn rest_choice(key: &KeyboardInput) -> Option<Rest> {
+    let Key::Character(c) = &key.logical_key else {
+        return None;
+    };
+    let c = c.as_str().to_lowercase();
+    REST_CHOICES
+        .iter()
+        .find(|(k, _)| *k == c)
+        .map(|(_, rest)| *rest)
+}
+
 /// The id of the profile after `current` in `profiles`, wrapping around.
 fn next_vision(profiles: &[VisionProfile], current: &str) -> String {
     let i = profiles.iter().position(|p| p.id == current).unwrap_or(0);
@@ -380,6 +425,7 @@ mod tests {
         assert_eq!(b.keys_for("Go down stairs"), vec![">".to_string()]);
         assert_eq!(b.keys_for("Save and quit"), vec!["Q".to_string()]);
         assert_eq!(b.keys_for("Light / douse lantern"), vec!["L".to_string()]);
+        assert_eq!(b.keys_for("Rest"), vec!["R".to_string()]);
     }
 
     #[test]
@@ -395,6 +441,7 @@ mod tests {
         );
         assert_eq!(b.keys_for("Reveal map (dev)"), vec!["F2".to_string()]);
         assert_eq!(b.keys_for("Light values (dev)"), vec!["F4".to_string()]);
+        assert_eq!(b.keys_for("Skip an hour (dev)"), vec!["F6".to_string()]);
     }
 
     #[test]

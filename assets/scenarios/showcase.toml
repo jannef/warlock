@@ -5,3 +5,6 @@ seed = 1
 # The player's eyes (data/vision.toml) and lantern (data/lights.toml; starts unlit).
 vision = "normal"
 lantern = "lantern"
+# When the run starts: [year, month, day] (months in data/calendar.toml) and hh:mm.
+start_date = [1, 1, 1]
+start_time = "08:00"

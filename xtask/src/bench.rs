@@ -1,12 +1,16 @@
 //! `cargo xtask bench-turns`: turn-processing time in the hub, the vast level, and the first
-//! generated level of the depths (spec §10 budgets; a generated 80×21 level gets the hub's).
+//! generated level of the depths (spec §10 budgets; a generated 80×21 level gets the hub's), and
+//! the time a night's rest takes on each (dusk to dawn: 7200 turns of six seconds).
 
 use std::sync::Arc;
 use std::time::Instant;
 use warlock_core::content::Content;
-use warlock_core::{Action, Dir, World};
+use warlock_core::time::{DUSK, Duration};
+use warlock_core::{Action, Dir, Rest, World};
 
 const TURNS: usize = 400;
+/// Longest a rest from dusk to dawn may take, in ms.
+const REST_BUDGET_MS: f64 = 500.0;
 
 /// (scenario, level label, budget in ms)
 const CASES: [(&str, &str, f64); 3] = [
@@ -27,6 +31,9 @@ struct Stats {
     avg_ms: f64,
     max_ms: f64,
     turns: usize,
+    /// A rest from dusk to dawn after the walk.
+    rest_ms: f64,
+    rest_turns: u64,
 }
 
 fn measure(content: &Arc<Content>, scenario: &str) -> Result<Stats, String> {
@@ -55,10 +62,19 @@ fn measure(content: &Arc<Content>, scenario: &str) -> Result<Stats, String> {
     if times.is_empty() {
         return Err(format!("no turns taken in scenario `{scenario}`"));
     }
+    // Rest from dusk to dawn wherever the walk ended (a creature may cut it short).
+    let to_dusk = world.time().next_at(DUSK).since(world.time());
+    world.apply(&Action::SkipTime(to_dusk));
+    let start = Instant::now();
+    let outcome = world.apply(&Action::Rest(Rest::Dawn));
+    let rest_ms = start.elapsed().as_secs_f64() * 1000.0;
+    let rest_turns = outcome.elapsed.as_seconds() / Duration::seconds(6).as_seconds();
     Ok(Stats {
         avg_ms: times.iter().sum::<f64>() / times.len() as f64,
         max_ms: times.iter().copied().fold(0.0, f64::max),
         turns: times.len(),
+        rest_ms,
+        rest_turns,
     })
 }
 
@@ -70,19 +86,21 @@ pub fn run() -> Result<(), String> {
     }
     let content = Arc::new(Content::builtin().map_err(|e| e.to_string())?);
     println!(
-        "{:<6} {:>6} {:>10} {:>10} {:>10}  verdict",
-        "level", "turns", "avg ms", "max ms", "budget ms"
+        "{:<6} {:>6} {:>10} {:>10} {:>10}  {:>11} {:>8}  verdict (rest budget {REST_BUDGET_MS} ms)",
+        "level", "turns", "avg ms", "max ms", "budget ms", "rest turns", "rest ms"
     );
     let mut failed = false;
     for (scenario, label, budget) in CASES {
         let s = measure(&content, scenario)?;
-        let ok = s.max_ms <= budget;
+        let ok = s.max_ms <= budget && s.rest_ms <= REST_BUDGET_MS;
         failed |= !ok;
         println!(
-            "{label:<6} {:>6} {:>10.3} {:>10.3} {budget:>10.1}  {}",
+            "{label:<6} {:>6} {:>10.3} {:>10.3} {budget:>10.1}  {:>11} {:>8.1}  {}",
             s.turns,
             s.avg_ms,
             s.max_ms,
+            s.rest_turns,
+            s.rest_ms,
             if ok { "ok" } else { "OVER BUDGET" }
         );
     }
