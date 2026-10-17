@@ -139,7 +139,11 @@ assets                fonts, data definitions, levels, scenarios, vaults
 
 Content (`assets/data`, `assets/levels`, `assets/scenarios`, `assets/vaults`) is TOML, embedded into
 `warlock-core` at build time by `build.rs`. Level maps are ASCII with a legend; see
-`assets/levels/hub.toml` and spec §7.
+`assets/levels/hub.toml` and spec §7. Water: `~` is still water; running water (terrain with a
+`flow` anim) needs a flow on every cell from its legend entry (`flow = "S"`, optional
+`flow_speed` percent), and the shared legend draws it as arrows (`→` normal, `⇒` double speed).
+Flow is presentation data carried by `LevelTemplate::flow` / `LevelState::flow` and read by the
+renderer through `PerceptionView::flow` (visible cells only); no rule reads it.
 
 Time (spec §8 "Time") lives in `warlock-core`: `time.rs` (`GameTime` = seconds since the
 calendar epoch with calendar fields, minute of day, and 16-bit day fraction; `Duration`; 12×30-day
@@ -171,7 +175,12 @@ Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebu
    texel addressing, so still glyphs are pixel-exact. The grid is one cell larger than the map
    viewport and drawn behind a clip rect with a whole-pixel sub-cell offset (smooth camera). A
    per-cell `Rgba8Uint` texture (table entry, phase byte) drives in-cell animation (`wave`,
-   `shimmer`, `cycle`) evaluated in the shader from a uniform table (`render/anim.rs`).
+   `flow`, `shimmer`, `cycle`) evaluated in the shader from a uniform table (`render/anim.rs`).
+   Water (`render/water.rs`): running water's flow (direction and speed, `water::flow_byte`)
+   rides in the glyph texture's spare third byte, and the shader scrolls the glyph pattern
+   downstream (cells with the same flow line up; a direction or speed change along a stream shows
+   a seam). Glints are hashed from the level position (`ConsoleParams::level_origin`), so they
+   stay put while the camera scrolls.
 2. **Free-glyph layer** (`render/free_glyph.rs` + `.wesl`): producers push `FreeGlyph`s
    (pixel position, color/alpha, scale) each frame; they become one dynamic mesh, one draw call.
    Glyphs at rest read the 1:1 atlas; moving or scaled ones sample a supersampled (2×, linear)
@@ -211,7 +220,9 @@ Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distor
   a visual-only SplitMix RNG (ambient emitters: one particle per `1/rate` slot; bursts: `count`
   particles per event). `ui/effects.rs` emits them from perception (visible cells, seen creatures,
   `Outcome.events`) onto the free-glyph layer, below creatures; non-glowing ones are lit like
-  free glyphs (`VisualLight::sample` + `lighting::shade`).
+  free glyphs (`VisualLight::sample` + `lighting::shade`). `obstacle` emitters (foam) run like
+  ambient ones on visible running water whose flow runs into a known cell that is not running
+  water, turned so their `y` points downstream (`particles::Source::down`).
 - **Glow and heat haze** run in `console.wesl` from two spare bytes of the per-cell animation
   texture (`CellFx`, written by `ui/effects.rs::draw_cell_fx`): haze moves where glyph coverage is
   sampled (backgrounds and light stay put); after lighting, colors are clamped to 1 (overbright
@@ -226,8 +237,8 @@ Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distor
 base colors), `ui/glyphs.rs` (free glyphs), `ui/motion.rs` (slides from `Outcome.events`, camera
 easing; new input completes running motion), `ui/effects.rs` (particles, bursts, glow and haze,
 fades), `ui/dev.rs` (dev overlays: reveal map, the one reader of ground truth, and light values).
-Animation curves live in `render/anim.rs` and are mirrored in `console.wesl` — change both
-together. Everything animated is a function of `VisualTime`. Effects are deliberately subtle (the
+Animation curves live in `render/anim.rs` (water: `render/water.rs`, test-only mirrors of the
+shader) and are mirrored in `console.wesl` — change both together. Everything animated is a function of `VisualTime`. Effects are deliberately subtle (the
 bar: sparse, short-lived particles, gentle bloom, barely perceptible distortion, short fades); judge
 changes by capturing several `--freeze-time` values, at `--scale 1` and `--window 2560x1440
 --scale 2`.
@@ -292,10 +303,11 @@ A successful compile does not verify anything visual. Before opening a PR:
 
 ## Golden screenshots
 
-`tests/golden/manifest.toml` lists one entry per showcase room plus the vast level: a scenario and
-text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file, and optional `window`, `scale`,
-`freeze_time`, `screen` (`--screen` over the run: `pause`, `help`, `settings`, `controls`),
-`tolerance` (per-channel, default 2) and `max_diff_ratio` (default 0.05% of pixels).
+`tests/golden/manifest.toml` lists one entry per showcase room plus the vast level (its start and
+its river): a scenario and text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file,
+and optional `window`, `scale`, `freeze_time`, `screen` (`--screen` over the run: `pause`,
+`help`, `settings`, `controls`), `tolerance` (per-channel, default 2) and `max_diff_ratio`
+(default 0.05% of pixels).
 `cargo xtask golden` builds a replay per entry with `warlock-core`, runs the game with
 `--replay ... --capture ...`, and compares with `tests/golden/<name>.png`. On a mismatch it writes
 `target/xtask/golden/<name>.{actual,diff}.png` (diff: red pixels are over tolerance) and fails.

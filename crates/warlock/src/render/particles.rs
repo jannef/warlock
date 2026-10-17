@@ -106,12 +106,19 @@ pub fn fade(x: f32, fade: f32) -> f32 {
     (fade_in * fade_out).clamp(0.0, 1.0)
 }
 
-/// How particles are placed and colored: the emitter's origin (a cell's top-left, in level cells)
-/// and the color palette applied to its colors.
+/// How particles are placed and colored: the emitter's origin (a cell's top-left, in level cells),
+/// which way its `y` points (a unit vector; [`Source::UPRIGHT`] as written, or downstream for
+/// `obstacle` emitters), and the color palette applied to its colors.
 #[derive(Clone, Copy, Debug)]
 pub struct Source<P> {
     pub origin: Vec2,
+    pub down: Vec2,
     pub paint: P,
+}
+
+impl Source<()> {
+    /// An emitter as written: `y` points down the screen.
+    pub const UPRIGHT: Vec2 = Vec2::new(0.0, 1.0);
 }
 
 /// The particle drawn from `rng`, `age` seconds after it left its source, or `None` if it is not
@@ -139,8 +146,10 @@ fn particle(
     }
     let x = age / life;
     let sway = e.sway * (TAU * (age * SWAY_HZ + sway_phase)).sin();
-    let pos =
-        source.origin + offset + velocity * age + Vec2::new(sway, 0.5 * e.gravity * age * age);
+    let moved = offset + velocity * age + Vec2::new(sway, 0.5 * e.gravity * age * age);
+    // Turn the emitter so its `y` points `down` (its `x` stays to the right of it).
+    let down = source.down;
+    let pos = source.origin + Vec2::new(down.y, -down.x) * moved.x + down * moved.y;
     let mut color = emissive(gradient(&e.colors, x, source.paint), e.glow);
     color.alpha = fade(x, e.fade);
     Some(Particle {
@@ -227,8 +236,30 @@ mod tests {
     fn at(x: f32, y: f32) -> Source<fn(Rgb) -> Rgb> {
         Source {
             origin: Vec2::new(x, y),
+            down: Source::UPRIGHT,
             paint: |c| c,
         }
+    }
+
+    #[test]
+    fn turned_emitters_move_their_way() {
+        let mut e = sparks();
+        e.gravity = 0.0;
+        e.sway = 0.0;
+        e.velocity = [0.0, 1.0];
+        e.spread = [0.0, 0.0];
+        e.area = [0.0, 0.0];
+        e.offset = [0.2, 0.0];
+        let mut rng = Rng::new(1, 1);
+        let upright = particle(&e, &mut rng.clone(), at(0.0, 0.0), 0.5).expect("alive");
+        assert!((upright.pos - Vec2::new(0.2, 0.5)).length() < 1e-5);
+        // Turned to run east: `y` (downstream) is east, `x` is north.
+        let east = Source {
+            down: Vec2::new(1.0, 0.0),
+            ..at(0.0, 0.0)
+        };
+        let turned = particle(&e, &mut rng, east, 0.5).expect("alive");
+        assert!((turned.pos - Vec2::new(0.5, -0.2)).length() < 1e-5);
     }
 
     #[test]

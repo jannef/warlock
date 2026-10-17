@@ -5,8 +5,14 @@
 // atlas with integer texel addressing — so still glyphs are drawn 1:1, crisp, with no filtering.
 //
 // In-cell animation (spec §4.3) is evaluated here from visual time: `wave` bobs the glyph inside
-// its cell (sampling the supersampled atlas with linear filtering), `shimmer` moves the foreground
-// toward a color, `cycle` steps through glyph frames. The curves mirror `render/anim.rs`.
+// its cell (sampling the supersampled atlas with linear filtering), `flow` moves it downstream
+// along the cell's flow (running water), `shimmer` moves the foreground toward a color, `cycle`
+// steps through glyph frames. Water may also glint in the color of the light on it. The curves
+// mirror `render/anim.rs` and `render/water.rs`.
+//
+// Per-cell textures: `glyphs` (atlas slot, low and high byte; then the cell's flow, `flow_byte` in
+// water.rs), `fg_colors`, `bg_colors`, and `anims` (animation table entry plus one, phase, glow,
+// haze).
 //
 // Effects (spec §4.8): `glow` brightens a glyph past 1 so bloom picks it up, and heat haze
 // distorts glyphs over hot cells by shifting where their coverage is read. Both come from per-cell
@@ -39,6 +45,8 @@ struct ConsoleParams {
     glow_gain: f32,
     // Largest heat-haze displacement in pixels; 0 turns haze off.
     haze_px: f32,
+    // Level position of cell (0, 0) (map grid).
+    level_origin: vec2<i32>,
 }
 
 // One grid animation (`GridAnim` in anim.rs).
@@ -49,6 +57,7 @@ struct GridAnim {
     frame_count: u32,
     color: vec4<f32>,
     frames: vec4<u32>,
+    glint: f32,
 }
 
 struct GridAnimTable {
@@ -58,8 +67,17 @@ struct GridAnimTable {
 const KIND_WAVE: u32 = 1u;
 const KIND_SHIMMER: u32 = 2u;
 const KIND_CYCLE: u32 = 3u;
+const KIND_FLOW: u32 = 4u;
+const PI: f32 = 3.14159265;
 const TAU: f32 = 6.2831853;
 const WAVE_SWAY: f32 = 0.35;
+// Constants of `glint` and `flow_byte` in water.rs.
+const GLINT_PERIOD: f32 = 9.0;
+const GLINT_CHANCE: f32 = 0.4;
+const GLINT_LENGTH: f32 = 0.9;
+const FLOW_SPEED_STEPS: f32 = 8.0;
+// How much a full glint adds to the glyph, times the (flickering) light on it.
+const GLINT_GAIN: f32 = 0.5;
 
 @group(constants::MATERIAL_BIND_GROUP) @binding(0) var<uniform> params: ConsoleParams;
 @group(constants::MATERIAL_BIND_GROUP) @binding(1) var atlas: texture_2d<f32>;
@@ -113,6 +131,73 @@ fn cycle_glyph(anim: GridAnim, t: f32, phase: f32) -> u32 {
     let i = u32(((step % n) + n) % n);
     return (anim.frames[i / 2u] >> ((i % 2u) * 16u)) & 0xffffu;
 }
+
+// --- Water (spec §4.3) -------------------------------------------------------------------------
+
+// `scramble` in anim.rs (MurmurHash3 finalizer).
+fn scramble(x: u32) -> u32 {
+    var h = x;
+    h ^= h >> 16u;
+    h *= 0x85ebca6bu;
+    h ^= h >> 13u;
+    h *= 0xc2b2ae35u;
+    return h ^ (h >> 16u);
+}
+
+// `cell_hash` in anim.rs.
+fn cell_hash(p: vec2<i32>) -> u32 {
+    return scramble((bitcast<u32>(p.x) * 0x8da6b343u) ^ (bitcast<u32>(p.y) * 0xd8163841u));
+}
+
+// `hash_phase` in anim.rs.
+fn hash_phase(h: u32) -> f32 {
+    return f32(h >> 8u) / 16777216.0;
+}
+
+// `glint` in water.rs: how bright a glint is on the cell with hash `h`, 0 to 1.
+fn glint(t: f32, h: u32) -> f32 {
+    let period = GLINT_PERIOD * (0.75 + 0.5 * hash_phase(h));
+    let cycles = t / period + hash_phase(scramble(h ^ 0x68e31da4u));
+    let n = floor(cycles);
+    let roll = scramble(h ^ (u32(n) * 0x9e3779b9u));
+    if hash_phase(roll) >= GLINT_CHANCE {
+        return 0.0;
+    }
+    let start = hash_phase(scramble(roll)) * (period - GLINT_LENGTH);
+    let x = ((cycles - n) * period - start) / GLINT_LENGTH;
+    if x < 0.0 || x >= 1.0 {
+        return 0.0;
+    }
+    let s = sin(PI * x);
+    return s * s;
+}
+
+// The step (each axis -1, 0, or 1; y down) of a flow byte's direction: `Dir::ALL` runs
+// clockwise from N in steps of 45 degrees (`unpack_flow` in water.rs).
+fn flow_step(code: u32) -> vec2<f32> {
+    let a = f32(code & 7u) * (PI / 4.0);
+    return round(vec2(sin(a), -cos(a)));
+}
+
+// `flow_shift` in water.rs: how far the glyph pattern has moved, in pixels within one cell.
+fn flow_shift(t: f32, speed: f32, step: vec2<f32>, cell: vec2<f32>) -> vec2<f32> {
+    let cycles = vec2(t * speed) * cell.x / cell;
+    return step * (cycles - floor(cycles)) * cell;
+}
+
+// Coverage of a running-water glyph: the glyph repeats every cell and the pattern moves
+// downstream, so ripples leave the cell on one side and come back in on the other, and
+// neighbors with the same flow line up into one moving surface.
+fn flow_coverage(index: u32, local: vec2<f32>, anim: GridAnim, code: u32) -> f32 {
+    let speed = anim.speed * f32(code >> 3u) / FLOW_SPEED_STEPS;
+    if speed <= 0.0 {
+        return coverage_smooth(index, local);
+    }
+    let p = local - flow_shift(params.time, speed, flow_step(code), params.cell_size);
+    return coverage_smooth(index, p - floor(p / params.cell_size) * params.cell_size);
+}
+
+// -----------------------------------------------------------------------------------------------
 
 // Coverage of glyph `index` at `local`: 1:1 unless the pixel was moved off the pixel grid.
 fn coverage_at(index: u32, local: vec2<f32>, smooth_sample: bool) -> f32 {
@@ -192,15 +277,21 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     let a = textureLoad(anims, cell, 0);
 
     var coverage = 0.0;
+    var glint_strength = 0.0;
     if a.r == 0u {
         coverage = coverage_at(index, glyph_local, hazed);
     } else {
         let anim = anim_table.entries[a.r - 1u];
         let phase = f32(a.g) / 256.0;
         let t = params.time;
+        if anim.glint > 0.0 {
+            glint_strength = anim.glint * glint(t, cell_hash(cell + params.level_origin));
+        }
         if anim.kind == KIND_WAVE {
             let offset = wave_offset(t, anim.speed, anim.amount, phase) * params.cell_size.x;
             coverage = coverage_smooth(index, glyph_local - offset);
+        } else if anim.kind == KIND_FLOW {
+            coverage = flow_coverage(index, glyph_local, anim, g.b);
         } else {
             if anim.kind == KIND_SHIMMER {
                 fg = mix(fg, anim.color.rgb, shimmer_mix(t, anim.speed, phase));
@@ -215,6 +306,8 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     if light.lit {
         fg = shade(fg, light);
         bg = vec4(shade(bg.rgb, light), bg.a);
+        // A glint reflects the light on the cell: its color, flicker and all; none in the dark.
+        fg += glint_strength * GLINT_GAIN * min(light.rgb, vec3(1.0)) * light.gain;
     }
     // Effects: lit colors stay within display range, so bright light alone never blooms; then
     // glowing glyphs (not their backgrounds) go past 1, and bloom puts a halo around them.

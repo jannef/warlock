@@ -8,6 +8,7 @@ mod anim;
 mod calendar;
 mod creature;
 mod dungeon;
+mod flow;
 mod level;
 mod light;
 mod particles;
@@ -20,6 +21,7 @@ pub use anim::GlyphAnim;
 pub use calendar::Calendar;
 pub use creature::{CreatureDef, CreatureId};
 pub use dungeon::{DungeonDef, Generator, LevelPlan, parse_branch_level};
+pub use flow::{FLOW_SPEEDS, Flow};
 pub(crate) use level::validate_route;
 pub use level::{CreatureSpawn, LevelKind, LevelTemplate, StairsLink, parse_route};
 pub use light::{Flicker, LightId, LightPreset, MAX_LIGHT_RADIUS};
@@ -270,6 +272,7 @@ impl Content {
                 path,
                 "terrain",
                 &spec.id,
+                spec.anim.as_ref(),
                 spec.glow,
                 spec.haze,
                 &spec.particles,
@@ -309,7 +312,21 @@ impl Content {
                 return Err(err(format!("duplicate creature id `{}`", spec.id)));
             }
             let light = self.resolve_light(path, spec.light.as_deref())?;
-            check_effects(path, "creature", &spec.id, spec.glow, 0.0, &spec.particles)?;
+            check_effects(
+                path,
+                "creature",
+                &spec.id,
+                spec.anim.as_ref(),
+                spec.glow,
+                0.0,
+                &spec.particles,
+            )?;
+            if spec.anim.as_ref().is_some_and(GlyphAnim::is_flow) {
+                return Err(err(format!(
+                    "creature `{}`: only terrain can have a `flow` animation",
+                    spec.id
+                )));
+            }
             self.creatures.push(spec.resolve(light));
         }
         if !self.creature_ids.contains_key("player") {
@@ -596,16 +613,20 @@ impl Content {
     }
 }
 
-/// Checks the presentation-only effect fields of a terrain or creature type.
+/// Checks the presentation-only animation and effect fields of a terrain or creature type.
 fn check_effects(
     file: &str,
     kind: &str,
     id: &str,
+    anim: Option<&GlyphAnim>,
     glow: f32,
     haze: f32,
     particles: &[ParticleEmitter],
 ) -> Result<(), ContentError> {
     let err = |m: String| ContentError::new(file, format!("{kind} `{id}`: {m}"));
+    if let Some(anim) = anim {
+        anim.check().map_err(err)?;
+    }
     if !(0.0..=1.0).contains(&glow) || !(0.0..=1.0).contains(&haze) {
         return Err(err("`glow` and `haze` must be between 0 and 1".into()));
     }
@@ -613,6 +634,11 @@ fn check_effects(
         emitter
             .check()
             .map_err(|m| err(format!("particles: {m}")))?;
+        if emitter.on == ParticleTrigger::Obstacle && !anim.is_some_and(GlyphAnim::is_flow) {
+            return Err(err(
+                "particles: `obstacle` emitters need a `flow` animation (running water)".into(),
+            ));
+        }
     }
     Ok(())
 }
@@ -620,7 +646,7 @@ fn check_effects(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::geom::Pos;
+    use crate::geom::{Dir, Pos};
 
     #[test]
     fn builtin_content_loads() {
@@ -990,5 +1016,129 @@ mod tests {
             "{}",
             err.message
         );
+    }
+
+    /// The built-in content plus a level `stream` with `map` and `legend`.
+    fn stream(map: &str, legend: &str) -> Result<Content, ContentError> {
+        let mut files = ContentFiles::builtin();
+        files.insert(
+            "levels/stream.toml",
+            &format!("name = \"Stream\"\nmap = '''\n{map}'''\n[legend]\n{legend}"),
+        );
+        Content::load(&files)
+    }
+
+    #[test]
+    fn legend_arrows_are_running_water_with_a_flow() {
+        let content = stream("#####\n#→⇓↙#\n#####\n", "").unwrap();
+        let level = content.level("stream").unwrap();
+        let running = content.terrain_id("running_water").unwrap();
+        assert!(content.terrain(running).flows());
+        assert!(
+            !content
+                .terrain(content.terrain_id("water").unwrap())
+                .flows()
+        );
+        assert_eq!(level.terrain[Pos::new(1, 1)], running);
+        let flows: Vec<_> = level.flow.iter().map(|(p, f)| (*p, *f)).collect();
+        assert_eq!(
+            flows,
+            [
+                (Pos::new(1, 1), Flow::new(Dir::E, 100)),
+                (Pos::new(2, 1), Flow::new(Dir::S, 200)),
+                (Pos::new(3, 1), Flow::new(Dir::SW, 100)),
+            ]
+        );
+        // A level's own legend may give any speed in range.
+        let slow = "\"s\" = { terrain = \"running_water\", flow = \"N\", flow_speed = 40 }\n";
+        let content = stream("###\n#s#\n###\n", slow).unwrap();
+        let flow = content.level("stream").unwrap().flow[&Pos::new(1, 1)];
+        assert_eq!(flow, Flow::new(Dir::N, 40));
+    }
+
+    #[test]
+    fn flow_is_required_on_running_water_and_only_there() {
+        let cases = [
+            ("\"s\" = \"running_water\"\n", "needs a flow direction"),
+            (
+                "\"s\" = { terrain = \"floor\", flow = \"S\" }\n",
+                "is not running water",
+            ),
+            (
+                "\"s\" = { terrain = \"floor\", flow_speed = 50 }\n",
+                "`flow_speed` but no `flow`",
+            ),
+            (
+                "\"s\" = { terrain = \"running_water\", flow = \"S\", flow_speed = 0 }\n",
+                "expected 10 to 300",
+            ),
+            (
+                "\"s\" = { terrain = \"running_water\", flow = \"Down\" }\n",
+                "flow = \"Down\"",
+            ),
+        ];
+        for (legend, expected) in cases {
+            let err = stream("###\n#s#\n###\n", legend).unwrap_err();
+            assert_eq!(err.file, "levels/stream.toml");
+            assert!(err.message.contains(expected), "{legend}: {}", err.message);
+        }
+    }
+
+    #[test]
+    fn water_animations_are_checked() {
+        let cases = [
+            (
+                "anim = { kind = \"wave\", glint = 1.5 }",
+                "`glint` must be between 0 and 1",
+            ),
+            (
+                "anim = { kind = \"flow\", speed = -1 }",
+                "finite and not negative",
+            ),
+        ];
+        for (anim, expected) in cases {
+            let mut files = minimal_files("#@#\n", "");
+            let terrain = files.get("data/terrain.toml").unwrap().replace(
+                "glyph = \".\"",
+                &format!("glyph = \".\"\n            {anim}"),
+            );
+            files.insert("data/terrain.toml", &terrain);
+            let err = Content::load(&files).unwrap_err();
+            assert!(err.message.contains(expected), "{anim}: {}", err.message);
+        }
+        // Foam needs running water to foam in.
+        let mut files = minimal_files("#@#\n", "");
+        let terrain = files.get("data/terrain.toml").unwrap().to_string();
+        let foam =
+            "on = \"obstacle\"\nglyphs = \".\"\ncolors = [\"#ffffff\"]\nrate = 1\nlife = 1\n";
+        files.insert(
+            "data/terrain.toml",
+            &format!("{terrain}\n[[terrain.particles]]\n{foam}"),
+        );
+        let err = Content::load(&files).unwrap_err();
+        assert!(
+            err.message.contains("need a `flow` animation"),
+            "{}",
+            err.message
+        );
+    }
+
+    #[test]
+    fn the_hub_has_still_ponds_and_running_rills() {
+        let content = Content::builtin().unwrap();
+        let hub = content.level("hub").unwrap();
+        let still = content.terrain_id("water").unwrap();
+        let running = content.terrain_id("running_water").unwrap();
+        assert!(hub.terrain.cells().iter().filter(|t| **t == still).count() > 50);
+        let rill: Vec<_> = hub
+            .terrain
+            .iter()
+            .filter(|(_, t)| **t == running)
+            .map(|(p, _)| p)
+            .collect();
+        assert!(!rill.is_empty());
+        assert!(rill.iter().all(|p| hub.flow.contains_key(p)));
+        assert_eq!(hub.flow.len(), rill.len());
+        assert!(hub.flow.values().any(|f| f.speed > 100), "a fast spring");
     }
 }

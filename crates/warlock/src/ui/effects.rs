@@ -2,10 +2,11 @@
 //! haze in the map grid, and the screen fade on level change.
 //!
 //! Only perceived things produce effects. Ambient emitters run on visible cells and seen
-//! creatures. Bursts come from the turn's events (`Outcome.events`, already filtered by
-//! perception) at visible cells: a splash where a creature steps into water, dust where a door
-//! opens or closes. Particles over cells that are not visible are not drawn, and remembered cells
-//! never glow, haze, or emit. Each part runs only with its effect on.
+//! creatures; obstacle emitters (foam) on visible running water whose flow runs into a known cell
+//! that is not running water. Bursts come from the turn's events (`Outcome.events`, already
+//! filtered by perception) at visible cells: a splash where a creature steps into water, dust
+//! where a door opens or closes. Particles over cells that are not visible are not drawn, and
+//! remembered cells never glow, haze, or emit. Each part runs only with its effect on.
 
 use super::glyphs;
 use super::motion::Motion;
@@ -148,6 +149,8 @@ pub(super) fn track(
 pub(super) struct Sources {
     key: Option<(IVec2, UVec2)>,
     cells: Vec<(Pos, TerrainId)>,
+    /// Visible running water whose flow runs into something else, with the way it flows.
+    blocked: Vec<(Pos, TerrainId, Vec2)>,
 }
 
 /// Puts this frame's particles on the free-glyph layer, below creatures.
@@ -175,16 +178,32 @@ pub(super) fn emit(
     if game.is_changed() || sources.key != Some(key) {
         sources.key = Some(key);
         sources.cells = ambient_sources(&view, grid.level_origin, size);
+        sources.blocked = blocked_flows(&view, grid.level_origin, size);
     }
 
     let out = &mut *scratch;
     out.clear();
     let paint = |c: Rgb| settings.palette.apply(c, Role::Fg);
-    let from = |origin: Vec2| Source { origin, paint };
+    let from = |origin: Vec2| Source {
+        origin,
+        down: Source::UPRIGHT,
+        paint,
+    };
     let ambient = |e: &&ParticleEmitter| e.on == ParticleTrigger::Ambient;
     for &(p, terrain) in &sources.cells {
         for e in content.terrain(terrain).particles.iter().filter(ambient) {
             particles::ambient(e, particles::cell_key(p.x, p.y), from(cell(p)), time, out);
+        }
+    }
+    // Foam where running water runs into something: emitters turned downstream.
+    let obstacle = |e: &&ParticleEmitter| e.on == ParticleTrigger::Obstacle;
+    for &(p, terrain, down) in &sources.blocked {
+        let source = Source {
+            down,
+            ..from(cell(p))
+        };
+        for e in content.terrain(terrain).particles.iter().filter(obstacle) {
+            particles::ambient(e, particles::cell_key(p.x, p.y), source, time, out);
         }
     }
     for actor in view.actors() {
@@ -240,6 +259,44 @@ fn ambient_sources(view: &PerceptionView<'_>, origin: IVec2, size: UVec2) -> Vec
                     .any(|e| e.on == ParticleTrigger::Ambient)
             {
                 cells.push((p, t));
+            }
+        }
+    }
+    cells
+}
+
+/// Visible running water among the `size` cells from `origin` whose flow runs into a known cell
+/// that is not running water (a bank, a rock, a pool), with the unit vector it flows along: where
+/// `obstacle` emitters foam. Cells the player has never seen do not count, so foam never gives
+/// them away.
+fn blocked_flows(
+    view: &PerceptionView<'_>,
+    origin: IVec2,
+    size: UVec2,
+) -> Vec<(Pos, TerrainId, Vec2)> {
+    let content = view.content();
+    let mut cells = Vec::new();
+    for y in origin.y..origin.y + size.y as i32 {
+        for x in origin.x..origin.x + size.x as i32 {
+            let p = Pos::new(x, y);
+            let (CellView::Visible(t), Some(flow)) = (view.cell(p), view.flow(p)) else {
+                continue;
+            };
+            let def = content.terrain(t);
+            if !def
+                .particles
+                .iter()
+                .any(|e| e.on == ParticleTrigger::Obstacle)
+            {
+                continue;
+            }
+            let blocked = match view.cell(p.step(flow.dir)) {
+                CellView::Visible(n) | CellView::Remembered(n) => !content.terrain(n).flows(),
+                CellView::Unknown => false,
+            };
+            if blocked {
+                let (dx, dy) = flow.dir.delta();
+                cells.push((p, t, Vec2::new(dx as f32, dy as f32).normalize()));
             }
         }
     }
@@ -361,6 +418,34 @@ mod tests {
         assert_eq!(fx(6, 1), CellFx::NONE);
         // Far from any brazier nothing changes.
         assert_eq!(fx(3, 3), CellFx::NONE);
+    }
+
+    #[test]
+    fn running_water_foams_where_its_flow_runs_into_something_else() {
+        let mut files = ContentFiles::builtin();
+        files.insert(
+            "levels/foam.toml",
+            "name = \"Foam\"\nambient = [255, 255, 255, 0]\nmap = '''\n\
+             ########\n#→→~~@.#\n#↓.....#\n########\n'''\n\
+             [legend]\n\"@\" = { terrain = \"floor\", spawn = \"player\" }\n",
+        );
+        files.insert(
+            "scenarios/foam.toml",
+            "name = \"F\"\nstart_level = \"foam\"\n",
+        );
+        let content = Content::load(&files).expect("test content loads");
+        let running = content.terrain_id("running_water").expect("running water");
+        let world = World::new(Arc::new(content), "foam", None).expect("scenario starts");
+        let view = world.perception();
+        let blocked = blocked_flows(&view, IVec2::ZERO, UVec2::new(8, 4));
+        // Into the pool (turned east) and into the wall (south); not where it runs on.
+        assert_eq!(
+            blocked,
+            vec![
+                (Pos::new(2, 1), running, Vec2::new(1.0, 0.0)),
+                (Pos::new(1, 2), running, Vec2::new(0.0, 1.0)),
+            ]
+        );
     }
 
     #[test]

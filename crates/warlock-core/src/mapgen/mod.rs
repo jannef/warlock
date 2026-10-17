@@ -23,8 +23,8 @@ mod rooms;
 mod vault;
 
 use crate::content::{
-    Content, CreatureId, CreatureSpawn, Generator, LevelKind, LevelTemplate, LightId, StairsDir,
-    StairsLink, TerrainId,
+    Content, CreatureId, CreatureSpawn, Flow, Generator, LevelKind, LevelTemplate, LightId,
+    StairsDir, StairsLink, TerrainId,
 };
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
@@ -102,6 +102,10 @@ impl Palette {
                 "`floor`, `water`, and `fungus` must be walkable",
             ),
             (
+                !def(pal.water).flows(),
+                "`water` must be still water (generated pools have no flow)",
+            ),
+            (
                 def(pal.door_closed).opens_to == Some(pal.door_open),
                 "`door_closed` must open to `door_open`",
             ),
@@ -138,6 +142,8 @@ pub(crate) struct Canvas<'a> {
     pub pal: Palette,
     pub terrain: Grid<TerrainId>,
     pub lights: BTreeMap<Pos, LightId>,
+    /// Flow of running water stamped from vaults (generators make none of their own).
+    pub flow: BTreeMap<Pos, Flow>,
     pub creatures: Vec<CreatureSpawn>,
     /// Cells stamped from vaults; later passes leave them alone.
     pub locked: Grid<bool>,
@@ -152,6 +158,7 @@ impl<'a> Canvas<'a> {
             pal,
             terrain: Grid::new(width, height, pal.void),
             lights: BTreeMap::new(),
+            flow: BTreeMap::new(),
             creatures: Vec::new(),
             locked: Grid::new(width, height, false),
             up: None,
@@ -341,6 +348,7 @@ pub fn generate(
             creatures: canvas.creatures,
             stairs,
             lights: canvas.lights,
+            flow: canvas.flow,
         };
         if connect::validate(&template, content).is_ok() {
             return Ok(template);

@@ -10,14 +10,18 @@
 # Effects (M4): the effects room has a brazier (sparks, glow, heat haze), a lava pool (=, embers,
 # haze), a fountain (F) in a pool to wade through (splashes), and dusty floor (:, drifting motes);
 # doors puff dust when they open or close, and the stairs fade the screen on the way down.
+#
+# Water (M8): the water garden's ponds are still water (~); a fast spring (⇐) runs out of the east
+# wall into the east pond, and a rill (←) carries its overflow into the west pond. Arrows are
+# running water flowing that way (data/legend.toml).
 name = "The Hub"
 ambient = [0, 0, 0, 0]
 map = '''
 ################################################################################
 #..........................#................ff.#t.........t.........t.........t#
 #..#.....#.....#.....#.....#.....f.............#..~~~~~~~.........~~~~~~~......#
-#..........................#....#####.#####....#.~~~~~~~~~.......~~~~~~~~~.....#
-#.....R.....G.....U.....A..#....#.......f.#....#.~~~~~~~~~...._..~~~~~~~~~.....#
+#..........................#....#####.#####....#.~~~~~~~~~←←←←←←←~~~~~~~~~.....#
+#.....R.....G.....U.....A..#....#.......f.#....#.~~~~~~~~~...._..~~~~~~~~~⇐⇐⇐⇐⇐#
 #..........................#....#....u....#....#.~~~~~~~~~.......~~~~~~~~~.....#
 #..#.....#.....#.....#.....#....###########....#..~~~~~~~.........~~~~~~~......#
 #..........................#...................#...............................#

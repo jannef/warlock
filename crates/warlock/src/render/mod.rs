@@ -16,6 +16,7 @@ pub mod lighting;
 pub mod particles;
 pub mod post;
 pub mod shadows;
+pub mod water;
 
 use crate::capture::CaptureTarget;
 use crate::cli::Args;
@@ -107,6 +108,9 @@ pub struct ConsoleParams {
     pub glow_gain: f32,
     /// Largest heat-haze displacement in pixels; 0 turns haze off.
     pub haze_px: f32,
+    /// Level position shown in cell (0, 0) (map grid), so per-cell randomness such as glints
+    /// stays with the level as the camera scrolls.
+    pub level_origin: IVec2,
 }
 
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
@@ -335,16 +339,20 @@ fn upload(
             } else {
                 0.0
             },
+            level_origin: IVec2::ZERO,
         };
     let screen = Rect::from_corners(Vec2::ZERO, layout.window.as_vec2());
     let ui = params(&console, layout.origin, screen, false, false);
-    let map = params(
-        &grid.console,
-        grid.origin,
-        grid.clip,
-        effects.glow,
-        effects.distortion,
-    );
+    let map = ConsoleParams {
+        level_origin: grid.level_origin,
+        ..params(
+            &grid.console,
+            grid.origin,
+            grid.clip,
+            effects.glow,
+            effects.distortion,
+        )
+    };
     for (handle, console, params) in [
         (&handles.ui, &mut *console, ui),
         (&handles.map, &mut grid.console, map),
@@ -387,7 +395,8 @@ fn upload_cells(
         match cell {
             Some(cell) => {
                 let [lo, hi] = atlas.glyph(cell.ch).to_le_bytes();
-                glyphs.extend_from_slice(&[lo, hi, 0, 0]);
+                // The glyph texture's spare byte carries running water's flow.
+                glyphs.extend_from_slice(&[lo, hi, anim.flow, 0]);
                 // Content colors stay as written; the palette applies only on the way out.
                 let (f, b) = (
                     palette.apply(cell.fg, Role::Fg),

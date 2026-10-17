@@ -108,4 +108,9 @@ impl TerrainDef {
     pub fn is_open_door(&self) -> bool {
         self.closes_to.is_some()
     }
+
+    /// Running water: every cell of it has a [`super::Flow`] (presentation-only).
+    pub fn flows(&self) -> bool {
+        self.anim.as_ref().is_some_and(GlyphAnim::is_flow)
+    }
 }

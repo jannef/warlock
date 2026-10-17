@@ -4,11 +4,15 @@
 # default 100), opens_to / closes_to (doors), stairs ("up"/"down"),
 # light (a preset in lights.toml the terrain emits), bounce (gameplay, spec §5: the tint of the
 # light the surface bounces, "#rrggbb", default white = neutral), anim (presentation-only, §4.3).
+# Terrain with a "flow" anim is running water: every cell of it needs a flow direction from the
+# level legend (the arrows in legend.toml).
 # Presentation-only effects (spec §4.8): glow (0-1, the glyph blooms), haze (0-1, heat haze rises
 # above the cell), and [[terrain.particles]] emitters:
 #   on        "ambient" (default; `rate` per second while in view), "step" (a burst of `count` when
-#             a creature is seen stepping in), or "toggle" (a burst when a door is seen opening or
-#             closing into this terrain)
+#             a creature is seen stepping in), "toggle" (a burst when a door is seen opening or
+#             closing into this terrain), or "obstacle" (running water only: `rate` per second
+#             where the flow runs into anything but running water; turned with the flow, so `y`
+#             points downstream)
 #   glyphs    glyphs to pick from; colors: color stops over the particle's life
 #   life      seconds; velocity [x, y] cells/s (y down) ± spread [x, y]; gravity cells/s² (down)
 #   offset    start [x, y] cells from the cell; area: random spread ± [x, y] cells around it
@@ -100,16 +104,17 @@ fg = "#f0e6c8"
 bg = "#0d0d10"
 stairs = "up"
 
+# Still water (pools, ponds): a slow, faint swell and now and then a glint of the light on it.
 [[terrain]]
 id = "water"
-name = "shallow water"
+name = "still water"
 glyph = "~"
 fg = "#4f8fe0"
 bg = "#0a1a30"
 # Wading takes twice as long as a step on dry ground.
 move_cost = 200
 bounce = "#a8c8ff"
-anim = { kind = "wave", speed = 0.2, amount = 0.07 }
+anim = { kind = "wave", speed = 0.16, amount = 0.05, glint = 0.5 }
 
 # A splash when something wades in.
 [[terrain.particles]]
@@ -125,6 +130,49 @@ offset = [0.0, -0.1]
 area = [0.35, 0.1]
 scale = 0.6
 fade = 0.4
+
+# Running water (rivers, streams): ripples move downstream along each cell's flow (the legend
+# arrows), at `speed` cell widths per second times the cell's flow speed.
+[[terrain]]
+id = "running_water"
+name = "running water"
+glyph = "~"
+fg = "#62a2e6"
+bg = "#0b1e36"
+# Wading, as in still water (the current does not push yet).
+move_cost = 200
+bounce = "#a8c8ff"
+anim = { kind = "flow", speed = 0.5, glint = 0.4 }
+
+[[terrain.particles]]
+on = "step"
+glyphs = "'`,."
+colors = ["#b8dcff", "#4f8fe0"]
+count = 5
+life = 0.45
+velocity = [0.0, -2.6]
+spread = [2.4, 0.8]
+gravity = 10.0
+offset = [0.0, -0.1]
+area = [0.35, 0.1]
+scale = 0.6
+fade = 0.4
+
+# Flecks of foam where the current runs into a bank, a rock, or a pool (turned with the flow:
+# y is downstream), spreading sideways along it.
+[[terrain.particles]]
+on = "obstacle"
+glyphs = "·.,"
+colors = ["#d8ecff", "#6a9cd0"]
+rate = 0.6
+life = 1.4
+velocity = [0.0, -0.05]
+spread = [0.3, 0.05]
+offset = [0.0, 0.3]
+area = [0.4, 0.08]
+sway = 0.08
+scale = 0.5
+fade = 0.6
 
 [[terrain]]
 id = "altar"

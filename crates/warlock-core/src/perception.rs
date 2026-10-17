@@ -24,7 +24,7 @@
 //!   floor through a narrow gap without the walls around it). Such a cell shows only its terrain
 //!   and wall-face light: never creatures, and nothing beyond it.
 
-use crate::content::{Content, CreatureId, LightId, TerrainId, VisionProfile};
+use crate::content::{Content, CreatureId, Flow, LightId, TerrainId, VisionProfile};
 use crate::fov::{compute_fov, radius2};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
@@ -364,6 +364,15 @@ impl<'a> PerceptionView<'a> {
 
     pub fn is_visible(&self, p: Pos) -> bool {
         self.snapshot.is_visible(p)
+    }
+
+    /// The flow of running water at a visible cell (presentation-only); `None` for cells that are
+    /// not in view or not running water.
+    pub fn flow(&self, p: Pos) -> Option<Flow> {
+        if !self.snapshot.is_visible(p) {
+            return None;
+        }
+        self.level.flow.get(&p).copied()
     }
 
     /// Creatures in view, in ascending id order (the player included).
