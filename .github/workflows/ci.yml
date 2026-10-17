@@ -88,6 +88,9 @@ jobs:
           if ! wasm-bindgen --version 2>/dev/null | grep -q " $version\$"; then
             cargo install wasm-bindgen-cli --version "$version" --locked
           fi
+      # wasm-opt (binaryen) shrinks the wasm; xtask fails on CI if it is missing.
+      - name: Install binaryen
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends binaryen
       - run: cargo xtask web
       - uses: actions/upload-artifact@v4
         with:

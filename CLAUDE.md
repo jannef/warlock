@@ -23,6 +23,7 @@ behavior, commands, or architecture change.
 | Dependency audit | `cargo deny check` |
 | Screenshot smoke test | `cargo xtask smoke` (writes `target/xtask/smoke.png`) |
 | Web build | `cargo xtask web` (writes `target/web/`; see "Releases, web build, logs") |
+| Web smoke test | `cargo xtask web-smoke <chrome>` (serves `target/web`, drives headless Chromium through menu → New run → hub, writes `target/xtask/web-smoke.png`; fails on logged errors) |
 | Regenerate the vast level | `cargo xtask gen-vast` (writes `assets/levels/vast.toml`; deterministic, never hand-edit) |
 | Check the vast level is fresh | `cargo xtask gen-vast --check` (fails if the file differs from the generator output; run it after touching `xtask/src/vast.rs`) |
 | Golden screenshots | `cargo xtask golden` (compare; authoritative on Linux only), `--local` (capture to `target/xtask/golden/*.local.png`, no compare), `--update` (rewrite references; see "Golden screenshots") |
@@ -275,7 +276,14 @@ publishing. Releases are the only place macOS and Windows runners are used.
 `std::fs`): one-time setup is `rustup target add wasm32-unknown-unknown` and
 `cargo install wasm-bindgen-cli --version <X> --locked`, where `<X>` is the `wasm-bindgen` version
 in `Cargo.lock` (the CLI must match exactly; `cargo xtask web` checks it and prints the command).
-Then `cargo xtask web` builds `target/web/` (`index.html` from `web/`, `warlock.js`,
+Then `cargo xtask web` builds `target/web/` with the size-tuned `[profile.web]` (opt-level `s`, fat LTO,
+1 codegen unit, `panic = "abort"`) and then runs binaryen's `wasm-opt -Oz` (`brew install binaryen`;
+locally optional with a warning, required on CI, which apt-installs it). `multi_threaded` is a
+native-only Bevy feature. Sizes (`warlock_bg.wasm`): 45.9 MB raw / 10.1 MB gzip / 5.9 MB brotli
+before, 20.8 MB / 6.8 MB / 4.6 MB after. Do not give wasm-opt `-all`: it emits compact imports
+that Chromium rejects. After changing the web build run `cargo xtask web-smoke` and read the
+screenshot (the Playwright Chromium under `~/Library/Caches/ms-playwright` works with
+`--use-angle=metal`). The output is `target/web/` (`index.html` from `web/`, `warlock.js`,
 `warlock_bg.wasm`). Serve it with `python3 -m http.server --directory target/web 8080` and open
 http://localhost:8080 in a WebGPU browser. CI builds it on pushes to `main` (artifact
 `warlock-web`). There is no command line on the web, so `cli.rs` uses the defaults.

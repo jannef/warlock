@@ -3,6 +3,7 @@
 //! Commands:
 //! - `smoke`: run the game with `--capture` and check that something was rendered.
 //! - `web`: build the WebGPU site into `target/web` (needs `wasm-bindgen-cli`, see CLAUDE.md).
+//! - `web-smoke [CHROME]`: load `target/web` in headless Chromium, start a run, screenshot it.
 //! - `gen-vast [--check]`: regenerate `assets/levels/vast.toml` (`--check` fails if it is stale).
 //! - `golden [--update | --local]`: compare headless captures with `tests/golden/*.png`.
 //! - `bench-frames`: release-mode frame-time measurement of offscreen captures.
@@ -20,13 +21,14 @@ fn main() -> ExitCode {
     let result = match args.first().map(String::as_str) {
         Some("smoke") => smoke(),
         Some("web") => web(),
+        Some("web-smoke") => web_smoke(&args[1..]),
         Some("gen-vast") => gen_vast(args.get(1).is_some_and(|a| a == "--check")),
         Some("golden") => golden::parse_mode(&args[1..]).and_then(golden::run),
         Some("bench-turns") => bench_turns(),
         Some("bench-frames") => bench::frames(args.get(1).map_or("2560x1440", String::as_str)),
         _ => {
             eprintln!(
-                "usage: cargo xtask <smoke | web | gen-vast [--check] | golden [--update | --local] | bench-turns | bench-frames [WxH]>"
+                "usage: cargo xtask <smoke | web | web-smoke [CHROME] | gen-vast [--check] | golden [--update | --local] | bench-turns | bench-frames [WxH]>"
             );
             return ExitCode::from(2);
         }
@@ -127,7 +129,8 @@ fn web() -> Result<(), String> {
         .current_dir(&root)
         .args([
             "build",
-            "--release",
+            "--profile",
+            "web",
             "--locked",
             "--package",
             "warlock",
@@ -156,12 +159,13 @@ fn web() -> Result<(), String> {
             "--out-dir",
         ])
         .arg(&out)
-        .arg("target/wasm32-unknown-unknown/release/warlock.wasm")
+        .arg("target/wasm32-unknown-unknown/web/warlock.wasm")
         .status()
         .map_err(|e| format!("failed to run wasm-bindgen: {e}"))?;
     if !status.success() {
         return Err(format!("wasm-bindgen failed: {status}"));
     }
+    optimize_wasm(&out.join("warlock_bg.wasm"))?;
     std::fs::copy(root.join("web/index.html"), out.join("index.html"))
         .map_err(|e| format!("cannot copy web/index.html: {e}"))?;
     println!(
@@ -169,6 +173,95 @@ fn web() -> Result<(), String> {
         out.display(),
         out.display()
     );
+    Ok(())
+}
+
+/// Shrinks the wasm further with binaryen's `wasm-opt -Oz`. Optional locally (a hint is printed
+/// when it is missing); CI installs it so the published build is always optimized.
+fn optimize_wasm(wasm: &Path) -> Result<(), String> {
+    let before = std::fs::metadata(wasm).map_or(0, |m| m.len());
+    let tmp = wasm.with_extension("opt.wasm");
+    let status = Command::new("wasm-opt")
+        // Enable exactly the features rustc emits; `-all` would let newer binaryen use
+        // proposals (compact imports) that browsers do not ship yet.
+        .args([
+            "-Oz",
+            "--enable-bulk-memory",
+            "--enable-nontrapping-float-to-int",
+            "--enable-sign-ext",
+            "--enable-mutable-globals",
+            "--enable-multivalue",
+            "--enable-reference-types",
+            "--strip-debug",
+            "--strip-producers",
+            "-o",
+        ])
+        .arg(&tmp)
+        .arg(wasm)
+        .status();
+    match status {
+        Ok(s) if s.success() => {
+            std::fs::rename(&tmp, wasm).map_err(|e| format!("cannot replace wasm: {e}"))?;
+            let after = std::fs::metadata(wasm).map_or(0, |m| m.len());
+            println!("wasm-opt: {before} -> {after} bytes");
+            Ok(())
+        }
+        Ok(s) => Err(format!("wasm-opt failed: {s}")),
+        Err(_) if std::env::var_os("CI").is_some() => {
+            Err("wasm-opt (binaryen) is required on CI; install it with apt-get".into())
+        }
+        Err(_) => {
+            eprintln!(
+                "warning: wasm-opt (binaryen) not found; the build works but is larger.\n  \
+                 Install it: `brew install binaryen` or `sudo apt-get install binaryen`."
+            );
+            Ok(())
+        }
+    }
+}
+
+/// Loads `target/web` in headless Chromium (WebGPU), starts a run and screenshots it.
+fn web_smoke(args: &[String]) -> Result<(), String> {
+    let root = workspace_root();
+    let web = root.join("target/web");
+    if !web.join("warlock_bg.wasm").exists() {
+        return Err("target/web is missing; run `cargo xtask web` first".into());
+    }
+    let chrome = match args.first() {
+        Some(c) => c.clone(),
+        None => std::env::var("CHROME").map_err(|_| {
+            "pass a Chromium/Chrome binary: `cargo xtask web-smoke <chrome>` (or set CHROME)"
+                .to_string()
+        })?,
+    };
+    let port = "8765";
+    let mut server = Command::new("python3")
+        .args(["-m", "http.server", "--directory"])
+        .arg(&web)
+        .arg(port)
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .spawn()
+        .map_err(|e| format!("cannot start python3 http.server: {e}"))?;
+    let out = root.join("target/xtask/web-smoke.png");
+    let profile = root.join("target/xtask/web-smoke-profile");
+    let _ = std::fs::create_dir_all(root.join("target/xtask"));
+    let _ = std::fs::remove_dir_all(&profile);
+    let result = Command::new("node")
+        .current_dir(&root)
+        .arg("xtask/web-smoke.mjs")
+        .arg(&chrome)
+        .arg(format!("http://127.0.0.1:{port}/"))
+        .arg(&out)
+        .arg(&profile)
+        .status()
+        .map_err(|e| format!("cannot run node: {e}"));
+    let _ = server.kill();
+    let _ = server.wait();
+    if !result?.success() {
+        return Err("web smoke run failed (see output above)".into());
+    }
+    println!("web-smoke ok: look at {}", out.display());
     Ok(())
 }
 
