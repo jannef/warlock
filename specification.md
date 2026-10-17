@@ -140,14 +140,20 @@ rate or animation.
   with distance, zero at the edge. Integer math only — no floating point or transcendental
   functions in gameplay.
 - **Wall faces**: an opaque cell's perceived light is the channel-wise maximum light of the adjacent
-  (8-neighborhood) transparent cells in the viewer's line of sight — applied per source, then summed
-  with ambient light. This prevents light leaking through walls.
+  (8-neighborhood) transparent cells the viewer sees — applied per source, then summed with ambient
+  light. This prevents light leaking through walls.
 - **Brightness** is the integer luma of RGB, `(54·r + 183·g + 19·b) / 256`, plus UV for eyes that
   see UV. Eyes without UV sight do not perceive UV at all (perception reports it as 0).
 - **Visibility**: a cell is visible iff it is in line of sight within the maximum view range **and**
   (its perceived brightness ≥ the eye's threshold **or** its distance ≤ the darkvision radius). The
   player's own cell is always visible. Creatures are seen iff their cell is visible: creatures in
   darkness are hidden (unless within darkvision), creatures carrying light are seen.
+- **Wall completion**: an opaque cell within the view range that is 8-adjacent to a transparent cell
+  seen by light or darkvision is visible too, even outside line of sight, so floor seen through a
+  narrow, irregular gap is never shown without the walls bounding it. (The player's own cell, which
+  is visible regardless of light, does not complete walls: in total darkness the player sees only
+  themselves.) Such a cell reveals only its terrain and wall-face light — never creatures, and
+  nothing beyond it.
 - **Vision profiles** are data (`data/vision.toml`). First version:
 
   | Profile | Light threshold | Darkvision radius | Senses |

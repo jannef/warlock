@@ -5,6 +5,7 @@ use crate::content::ContentFiles;
 use crate::light::Light;
 use crate::perception::{CellView, PerceptionView};
 use proptest::prelude::*;
+use std::collections::BTreeSet;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -670,6 +671,113 @@ fn turn_cost() {
     println!("vast 400×300: avg {avg:.3} ms, max {max:.3} ms per turn (825 lights, 60 carried)");
 }
 
+/// Cells in line of sight from the player (independent of light), computed directly.
+fn line_of_sight(world: &World) -> BTreeSet<Pos> {
+    let level = world.state().current();
+    let content = world.content();
+    let mut los = BTreeSet::new();
+    crate::fov::compute_fov(
+        world.player_pos(),
+        crate::perception::VIEW_RADIUS,
+        |p| level.is_opaque(content, p),
+        |p| {
+            if level.terrain.in_bounds(p) {
+                los.insert(p);
+            }
+        },
+    );
+    los
+}
+
+/// Wall-completion invariants: every opaque cell bounding a transparent cell seen by eye (within
+/// view range) is visible; nothing else outside line of sight is; creatures only in line of sight.
+fn check_wall_completion(world: &World) -> Result<(), TestCaseError> {
+    let view = world.perception();
+    let level = world.state().current();
+    let content = world.content();
+    let los = line_of_sight(world);
+    let viewer = view.viewer();
+    let opaque = |p: Pos| level.is_opaque(content, p);
+    let seen_by_eye = |p: Pos| {
+        view.light(p)
+            .is_some_and(|l| view.vision().sees(l.light(), l.dist2))
+    };
+    for y in 0..view.height() {
+        for x in 0..view.width() {
+            let p = Pos::new(x, y);
+            let bounds_seen = opaque(p)
+                && p.dist2(viewer) <= crate::fov::radius2(crate::perception::VIEW_RADIUS)
+                && Dir::ALL
+                    .iter()
+                    .any(|d| !opaque(p.step(*d)) && seen_by_eye(p.step(*d)));
+            if bounds_seen {
+                prop_assert!(view.is_visible(p), "wall {} bounds seen floor", p);
+            }
+            if view.is_visible(p) && !los.contains(&p) {
+                prop_assert!(bounds_seen, "{} is visible outside line of sight", p);
+            }
+        }
+    }
+    for actor in view.actors() {
+        prop_assert!(
+            los.contains(&actor.pos),
+            "creature shown outside line of sight"
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn walls_bounding_far_floor_seen_through_a_gap_are_visible() {
+    // A corridor that jogs down twice. From the start, the torch-lit floor in the middle section
+    // is seen through the first jog, but the walls above and below it are not in line of sight.
+    let map = "\
+########################################
+#@..........############################
+###########.........T...################
+#######################.......r........#
+########################################
+";
+    let w = dark_world(map, "normal");
+    let view = w.perception();
+    let los = line_of_sight(&w);
+    let far_floor = Pos::new(20, 2);
+    assert!(visible(&view, far_floor), "the lit far floor is seen");
+    for wall in [Pos::new(20, 1), Pos::new(20, 3)] {
+        assert!(!los.contains(&wall), "{wall} is not in line of sight");
+        assert!(
+            visible(&view, wall),
+            "{wall} bounds seen floor, so it is shown"
+        );
+        // Wall-face light: the maximum of the adjacent visible floor.
+        let expected = Dir::ALL
+            .iter()
+            .map(|d| wall.step(*d))
+            .filter(|p| matches!(view.cell(*p), CellView::Visible(t) if view.content().terrain(t).transparent))
+            .filter_map(|p| view.light(p))
+            .fold(Light::DARK, |acc, l| acc.max(l.light()));
+        assert_eq!(view.light(wall).map(|l| l.light()), Some(expected));
+    }
+    // Nothing beyond those walls: not the lit floor behind them, not the rat standing there.
+    for hidden in [Pos::new(20, 0), Pos::new(24, 3), Pos::new(30, 3)] {
+        assert!(!visible(&view, hidden), "{hidden} is behind a wall");
+    }
+    assert!(view.actor_at(Pos::new(30, 3)).is_none());
+    // Completed walls are remembered like any seen terrain.
+    assert!(w.state().current().memory[Pos::new(20, 1)].is_some());
+    check_wall_completion(&w).expect("wall completion");
+    check_invariants(&w).expect("light invariants");
+}
+
+#[test]
+fn wall_completion_needs_seen_floor_not_just_the_players_cell() {
+    // In total darkness the player sees only their own cell, not the walls around it.
+    let w = dark_world("#####\n#@..#\n#####\n", "normal");
+    let view = w.perception();
+    assert!(!visible(&view, Pos::new(1, 0)));
+    assert!(!visible(&view, Pos::new(0, 1)));
+}
+
 proptest! {
     #![proptest_config(ProptestConfig::with_cases(24))]
 
@@ -692,6 +800,36 @@ proptest! {
             };
             w.apply(&action);
         }
+        check_invariants(&w)?;
+        check_wall_completion(&w)?;
+    }
+
+    /// Random caves (walls, torches, a rat), any profile and ambient level: wall completion shows
+    /// exactly the walls bounding seen floor, and the light invariants hold.
+    #[test]
+    fn wall_completion_holds_in_random_caves(
+        cells in prop::collection::vec(0u8..100, 22 * 9),
+        vision in prop::sample::select(vec!["normal", "low_light", "darkvision", "uv_sight"]),
+        ambient in prop::sample::select(vec![0u16, 20, 255]),
+    ) {
+        let mut map = format!("{}\n", "#".repeat(24));
+        for y in 0..9 {
+            map.push('#');
+            for x in 0..22 {
+                map.push(match (x, y, cells[y * 22 + x]) {
+                    (0, 4, _) => '@',
+                    (_, _, 0..=41) => '#',
+                    (_, _, 42..=44) => 'T',
+                    (_, _, 45) => 'r',
+                    _ => '.',
+                });
+            }
+            map.push_str("#\n");
+        }
+        map.push_str(&"#".repeat(24));
+        map.push('\n');
+        let w = world_with(&map, [ambient, ambient, ambient, 0], vision);
+        check_wall_completion(&w)?;
         check_invariants(&w)?;
     }
 }

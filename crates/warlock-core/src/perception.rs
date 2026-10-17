@@ -7,15 +7,21 @@
 //!
 //! A cell is **visible** iff it is in line of sight within [`VIEW_RADIUS`] **and** its perceived
 //! light is at least the vision profile's threshold or it lies within the darkvision radius. The
-//! player's own cell is always visible. Light at opaque cells follows the **wall-face rule**: an
-//! opaque cell takes the maximum light of the adjacent transparent cells in line of sight, so light
-//! never leaks through a wall to a viewer on its dark side.
+//! player's own cell is always visible.
+//!
+//! Opaque cells follow two extra rules:
+//! - **Wall faces**: an opaque cell takes, per light source, the maximum light of its adjacent
+//!   visible transparent cells, so light never leaks through a wall to a viewer on its dark side.
+//! - **Wall completion**: an opaque cell within view range that bounds a transparent cell seen by
+//!   light or darkvision is visible even outside line of sight (symmetric shadowcasting can show
+//!   floor through a narrow gap without the walls around it). Such a cell shows only its terrain
+//!   and wall-face light: never creatures, and nothing beyond it.
 
 use crate::content::{Content, CreatureId, LightId, TerrainId, VisionProfile};
-use crate::fov::compute_fov;
-use crate::geom::Pos;
+use crate::fov::{compute_fov, radius2};
+use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
-use crate::light::{Light, LightCache, perceived_contributions};
+use crate::light::{Light, LightCache, lit_in_sight, wall_faces};
 use crate::world::{ActorId, ActorKind, LevelState, WorldState};
 use serde::Serialize;
 
@@ -87,6 +93,16 @@ pub struct SeenLight {
     pub contributions: Vec<(Pos, Light)>,
 }
 
+/// How the player sees a cell this turn.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Sight {
+    Hidden,
+    /// In line of sight and visible.
+    Seen,
+    /// An opaque cell outside line of sight, visible by wall completion: terrain only.
+    Edge,
+}
+
 /// Derived each turn from world state; not saved.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct Perception {
@@ -95,7 +111,7 @@ pub(crate) struct Perception {
     vision: usize,
     /// Perceived ambient light.
     ambient: Light,
-    visible: Grid<bool>,
+    sight: Grid<Sight>,
     /// Visible cells in the order they were found.
     visible_cells: Vec<Pos>,
     /// Perceived light; meaningful on visible cells only.
@@ -110,12 +126,13 @@ impl Perception {
     pub(crate) fn compute(state: &WorldState, content: &Content, lights: &mut LightCache) -> Self {
         let viewer = state.player().pos;
         let level = state.current();
+        let (width, height) = (level.width(), level.height());
         let vision = content.vision_index(&state.vision).unwrap_or(0);
         let eye = &content.vision_profiles()[vision];
         let is_opaque = |p: Pos| level.is_opaque(content, p);
 
         // Line of sight.
-        let mut los = Grid::new(level.width(), level.height(), false);
+        let mut los = Grid::new(width, height, false);
         let mut los_cells = Vec::new();
         compute_fov(viewer, VIEW_RADIUS, is_opaque, |p| {
             if let Some(seen) = los.get_mut(p)
@@ -126,46 +143,106 @@ impl Perception {
             }
         });
 
-        // Light on cells in line of sight: ambient plus every source that reaches them.
+        // Light on transparent cells in line of sight: ambient plus every source reaching them.
         let ambient = eye.perceive(content.level(&level.id).map_or(Light::DARK, |t| t.ambient));
-        let mut light = Grid::new(level.width(), level.height(), Light::DARK);
+        let mut light = Grid::new(width, height, Light::DARK);
         for &p in &los_cells {
             light[p] = ambient;
         }
-        let mut sources = Vec::new();
-        for (source, mask) in lights.near(state, content, viewer, VIEW_RADIUS + 1) {
-            let contributions = perceived_contributions(mask, &los, is_opaque, |l| eye.perceive(l));
-            for &(p, c) in &contributions {
+        let lit: Vec<_> = lights
+            .near(state, content, viewer, VIEW_RADIUS + 1)
+            .into_iter()
+            .map(|(source, mask)| (source, lit_in_sight(mask, &los, |l| eye.perceive(l))))
+            .collect();
+        for (_, cells) in &lit {
+            for &(p, c) in cells {
                 light[p] = light[p].saturating_add(c);
             }
-            if !contributions.is_empty() {
-                sources.push(SeenLight {
+        }
+
+        // Transparent cells: visible with enough light or within darkvision; the viewer's own
+        // cell always.
+        let mut sight = Grid::new(width, height, Sight::Hidden);
+        let mut visible_cells = Vec::new();
+        let mut seen = Vec::new();
+        for &p in los_cells.iter().filter(|p| !is_opaque(**p)) {
+            let by_eye = eye.sees(light[p], p.dist2(viewer));
+            if by_eye || p == viewer {
+                sight[p] = Sight::Seen;
+                visible_cells.push(p);
+            }
+            if by_eye {
+                seen.push(p);
+            }
+        }
+
+        // Wall completion: opaque cells bounding a transparent cell seen by eye.
+        let reach2 = radius2(VIEW_RADIUS);
+        for q in seen {
+            for w in Dir::ALL.map(|d| q.step(d)) {
+                if sight.get(w) == Some(&Sight::Hidden) && is_opaque(w) && w.dist2(viewer) <= reach2
+                {
+                    if los[w] {
+                        sight[w] = Sight::Seen;
+                    } else {
+                        sight[w] = Sight::Edge;
+                        light[w] = ambient;
+                    }
+                    visible_cells.push(w);
+                }
+            }
+        }
+
+        // Wall faces: opaque cells in line of sight or completed take light from visible
+        // transparent neighbors, per source.
+        let lit: Vec<_> = {
+            let is_visible = |q: Pos| sight.get(q) == Some(&Sight::Seen);
+            let is_face = |w: Pos| {
+                is_opaque(w) && (los.get(w) == Some(&true) || sight.get(w) == Some(&Sight::Edge))
+            };
+            lit.into_iter()
+                .map(|(source, cells)| {
+                    let faces = wall_faces(&cells, is_visible, is_face);
+                    (source, cells, faces)
+                })
+                .collect()
+        };
+        for (_, _, faces) in &lit {
+            for &(p, c) in faces {
+                light[p] = light[p].saturating_add(c);
+            }
+        }
+
+        // Other opaque cells in line of sight: visible by their face light or darkvision.
+        for &p in &los_cells {
+            if sight[p] == Sight::Hidden && is_opaque(p) && eye.sees(light[p], p.dist2(viewer)) {
+                sight[p] = Sight::Seen;
+                visible_cells.push(p);
+            }
+        }
+
+        let is_visible = |p: Pos| sight.get(p).is_some_and(|s| *s != Sight::Hidden);
+        let sources = lit
+            .into_iter()
+            .filter_map(|(source, cells, faces)| {
+                let contributions: Vec<_> = cells
+                    .into_iter()
+                    .chain(faces)
+                    .filter(|(p, _)| is_visible(*p))
+                    .collect();
+                (!contributions.is_empty()).then_some(SeenLight {
                     key: source.key,
                     pos: source.pos,
                     preset: source.preset,
                     contributions,
-                });
-            }
-        }
-
-        // Visibility: enough light, or darkvision; the viewer's own cell always.
-        let mut visible = Grid::new(level.width(), level.height(), false);
-        let mut visible_cells = Vec::new();
-        for p in los_cells {
-            if p == viewer || eye.sees(light[p], p.dist2(viewer)) {
-                visible[p] = true;
-                visible_cells.push(p);
-            }
-        }
-        for source in &mut sources {
-            source.contributions.retain(|(p, _)| visible[*p]);
-        }
-        sources.retain(|s| !s.contributions.is_empty());
+                })
+            })
+            .collect();
 
         let actors = state
             .actors
             .values()
-            .filter(|a| a.level == level.id && visible.get(a.pos) == Some(&true))
+            .filter(|a| a.level == level.id && sight.get(a.pos) == Some(&Sight::Seen))
             .map(|a| SeenActor {
                 id: a.id,
                 kind: a.kind,
@@ -177,7 +254,7 @@ impl Perception {
             viewer,
             vision,
             ambient,
-            visible,
+            sight,
             visible_cells,
             light,
             sources,
@@ -185,8 +262,14 @@ impl Perception {
         }
     }
 
+    /// Whether the cell's terrain is visible (in sight, or a completed wall).
     pub(crate) fn is_visible(&self, p: Pos) -> bool {
-        self.visible.get(p) == Some(&true)
+        self.sight.get(p).is_some_and(|s| *s != Sight::Hidden)
+    }
+
+    /// Whether creatures at `p` can be seen: only in line of sight, never on completed walls.
+    pub(crate) fn sees_actors_at(&self, p: Pos) -> bool {
+        self.sight.get(p) == Some(&Sight::Seen)
     }
 
     /// Writes currently visible terrain into the level's memory.

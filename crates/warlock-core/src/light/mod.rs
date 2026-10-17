@@ -111,32 +111,35 @@ pub fn falloff(color: Light, radius: i32, d2: i32) -> Light {
     Light::new(scale(r), scale(g), scale(b), scale(uv))
 }
 
-/// What one source contributes to the cells the viewer has in line of sight.
-///
-/// Transparent cells take the mask's light directly. **Wall-face rule**: an opaque cell in line
-/// of sight takes the channel-wise maximum of the contributions at its (up to eight) neighbors
-/// that are transparent and in line of sight, so light never leaks through a wall to a viewer on
-/// its dark side. `perceive` maps raw light to what the eye perceives (e.g. drops UV); cells with
-/// no perceived contribution are left out. Order: lit transparent cells in mask order, then wall
-/// faces by position.
-pub(crate) fn perceived_contributions(
+/// The light one source adds to the transparent cells the viewer has in line of sight, as the eye
+/// perceives it (`perceive`, e.g. dropping UV). Cells with no perceived light are left out; the
+/// order is the mask's.
+pub(crate) fn lit_in_sight(
     mask: &Mask,
     los: &Grid<bool>,
-    is_opaque: impl Fn(Pos) -> bool,
     perceive: impl Fn(Light) -> Light,
 ) -> Vec<(Pos, Light)> {
-    let in_los = |p: Pos| los.get(p) == Some(&true);
-    let mut out = Vec::new();
+    mask.cells
+        .iter()
+        .map(|&(q, light)| (q, perceive(light)))
+        .filter(|&(q, light)| !light.is_dark() && los.get(q) == Some(&true))
+        .collect()
+}
+
+/// **Wall-face rule** for one source: each opaque cell `is_face` accepts takes the channel-wise
+/// maximum of the source's light (`lit`, from [`lit_in_sight`]) at its (up to eight) neighbors
+/// that are transparent and visible, so light never leaks through a wall to a viewer on its dark
+/// side. Sorted by position.
+pub(crate) fn wall_faces(
+    lit: &[(Pos, Light)],
+    is_visible: impl Fn(Pos) -> bool,
+    is_face: impl Fn(Pos) -> bool,
+) -> Vec<(Pos, Light)> {
     let mut faces = Vec::new();
-    for &(q, light) in &mask.cells {
-        let light = perceive(light);
-        if light.is_dark() || !in_los(q) {
-            continue;
-        }
-        out.push((q, light));
+    for &(q, light) in lit.iter().filter(|(q, _)| is_visible(*q)) {
         for dir in Dir::ALL {
             let w = q.step(dir);
-            if in_los(w) && is_opaque(w) {
+            if is_face(w) {
                 faces.push((w, light));
             }
         }
@@ -149,8 +152,7 @@ pub(crate) fn perceived_contributions(
             _ => merged.push((p, light)),
         }
     }
-    out.extend(merged);
-    out
+    merged
 }
 
 #[cfg(test)]

@@ -294,8 +294,8 @@ impl World {
         events.retain(|e| match e {
             Event::ActorMoved { actor, from, to } => {
                 *actor == player
-                    || self.perception.is_visible(*from)
-                    || self.perception.is_visible(*to)
+                    || self.perception.sees_actors_at(*from)
+                    || self.perception.sees_actors_at(*to)
             }
             Event::DoorOpened { pos } | Event::DoorClosed { pos } => {
                 self.perception.is_visible(*pos)
