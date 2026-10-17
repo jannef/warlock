@@ -187,6 +187,7 @@ mod tests {
             nav: Nav::Other,
             binding: KeyBinding::from_text(text),
             repeat: false,
+            text: None,
         };
         screen.handle(&press, b);
     }

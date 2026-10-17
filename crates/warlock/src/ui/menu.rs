@@ -45,7 +45,6 @@ pub enum Nav {
     Back,
     Backspace,
     Delete,
-    Digit(char),
     Other,
 }
 
@@ -56,6 +55,8 @@ pub struct Press {
     pub binding: Option<KeyBinding>,
     /// A held key repeating.
     pub repeat: bool,
+    /// The character the key typed, if any (for text fields such as the seed).
+    pub text: Option<char>,
 }
 
 impl Press {
@@ -75,18 +76,26 @@ impl Press {
                     "j" => Nav::Down,
                     "h" => Nav::Left,
                     "l" => Nav::Right,
-                    d => match d.chars().next() {
-                        Some(ch) if ch.is_ascii_digit() && d.len() == 1 => Nav::Digit(ch),
-                        _ => Nav::Other,
-                    },
+                    _ => Nav::Other,
                 },
                 _ => Nav::Other,
             },
+        };
+        let text = match &input.logical_key {
+            Key::Character(c) => {
+                let mut chars = c.chars();
+                match (chars.next(), chars.next()) {
+                    (Some(ch), None) if !ch.is_control() => Some(ch),
+                    _ => None,
+                }
+            }
+            _ => None,
         };
         Self {
             nav,
             binding: KeyBinding::from_input(input),
             repeat: input.repeat,
+            text,
         }
     }
 
@@ -97,6 +106,18 @@ impl Press {
             nav,
             binding: None,
             repeat: false,
+            text: None,
+        }
+    }
+
+    /// A press that types `ch`.
+    #[cfg(test)]
+    pub fn typed(ch: char) -> Self {
+        Self {
+            nav: Nav::Other,
+            binding: None,
+            repeat: false,
+            text: Some(ch),
         }
     }
 }
@@ -166,12 +187,20 @@ struct NewRun {
     seed: String,
 }
 
-/// Longest seed we accept: fits a `u64` with room to spare.
-const MAX_SEED_DIGITS: usize = 18;
+/// Longest seed text we accept.
+const MAX_SEED_LEN: usize = 24;
 
 impl NewRun {
+    /// The typed seed: a number as-is, a word hashed (`warlock_core::rng::parse_seed`); empty
+    /// means the scenario default.
     fn seed(&self) -> Option<u64> {
-        self.seed.parse().ok()
+        warlock_core::rng::parse_seed(&self.seed).ok()
+    }
+
+    /// Characters the seed field accepts. Letters double as hjkl navigation elsewhere, so on this
+    /// screen the arrow keys navigate and typed characters go to the seed.
+    fn accepts(ch: char) -> bool {
+        ch.is_alphanumeric() || ch == '-' || ch == '_'
     }
 }
 
@@ -302,6 +331,13 @@ impl Menu {
                     _ => {}
                 }
             }
+            Screen::NewRun(new_run) if press.text.is_some_and(NewRun::accepts) && !press.repeat => {
+                if new_run.seed.chars().count() < MAX_SEED_LEN
+                    && let Some(ch) = press.text
+                {
+                    new_run.seed.push(ch);
+                }
+            }
             Screen::NewRun(new_run) => match press.nav {
                 Nav::Back => self.screen = Screen::Main(self.back_row(MainItem::NewRun)),
                 Nav::Up if scenario_count > 0 => {
@@ -310,7 +346,6 @@ impl Menu {
                 Nav::Down if scenario_count > 0 => {
                     new_run.selected = (new_run.selected + 1) % scenario_count;
                 }
-                Nav::Digit(d) if new_run.seed.len() < MAX_SEED_DIGITS => new_run.seed.push(d),
                 Nav::Backspace | Nav::Delete => {
                     new_run.seed.pop();
                 }
@@ -427,7 +462,12 @@ impl Menu {
             console.print(x + 2, y, "Seed: [", TEXT);
             let printed = console.print(x + 9, y, &seed, color);
             console.print(x + 9 + printed, y, "_]", TEXT);
-            console.print(x + 2, y + 1, "Type digits to set a seed.", TEXT_DIM);
+            console.print(
+                x + 2,
+                y + 1,
+                "Type a number or a word to set a seed.",
+                TEXT_DIM,
+            );
         }
         if self.has_save {
             let warning = "! Starting a new run replaces your saved run.";
@@ -683,10 +723,18 @@ mod tests {
         assert_eq!(press(&mut m, Nav::Enter), None); // opens New run
         assert!(matches!(m.screen, Screen::NewRun(_)));
         for d in ['4', '2'] {
-            press(&mut m, Nav::Digit(d));
+            m.handle(
+                &Press::typed(d),
+                &mut Settings::default(),
+                &mut Bindings::default(),
+            );
         }
         press(&mut m, Nav::Backspace);
-        press(&mut m, Nav::Digit('7'));
+        m.handle(
+            &Press::typed('7'),
+            &mut Settings::default(),
+            &mut Bindings::default(),
+        );
         let Some(Start::NewRun { scenario, seed }) = press(&mut m, Nav::Enter) else {
             panic!("expected a new run");
         };
@@ -695,6 +743,23 @@ mod tests {
         // Esc returns to the main menu, on the New run row.
         press(&mut m, Nav::Back);
         assert!(matches!(m.screen, Screen::Main(0)));
+    }
+
+    #[test]
+    fn word_seeds_are_hashed_and_hjkl_type_letters() {
+        let mut m = menu(false);
+        press(&mut m, Nav::Enter);
+        for ch in "jolly".chars() {
+            m.handle(
+                &Press::typed(ch),
+                &mut Settings::default(),
+                &mut Bindings::default(),
+            );
+        }
+        let Some(Start::NewRun { seed, .. }) = press(&mut m, Nav::Enter) else {
+            panic!("expected a new run");
+        };
+        assert_eq!(seed, warlock_core::rng::parse_seed("jolly").ok());
     }
 
     #[test]
