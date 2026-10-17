@@ -35,7 +35,13 @@ Game flags (`cargo run -p warlock -- --help`):
 - `--capture out.png` — render **offscreen** (no window), save a screenshot, exit.
   `--capture-after-frames N` (default 10), `--freeze-time SECONDS` pins animation time (glyph
   animations show that moment; slides and camera moves complete instantly).
-- `--reduced-effects` — no glyph animation, slides, or camera easing (until settings exist, M5).
+- `--reduced-effects` — force reduced effects on (no glyph animation, slides, or camera easing);
+  the settings file can turn them on too.
+- Without `--scenario`, `--new`, `--replay`, `--record`, or `--capture` the game opens on the main
+  menu. Dev: `--screen main|new-run|settings|controls` opens the menu on a screen even with
+  `--capture` (e.g. `--scale 1 --screen controls --capture target/menu.png`).
+  `--config-dir DIR` keeps `settings.toml` in DIR; captures and replays otherwise use default
+  settings and never write the file.
 
 - `--replay FILE` — apply a replay at startup (its scenario/seed win; a hash divergence is logged
   as a warning), so `--capture` can screenshot any state. `--record FILE` — write every applied
@@ -66,6 +72,17 @@ level change to `run.sav` in the platform data dir (`paths.rs`, app name "warloc
 never deleted. Format and `Content::fingerprint` live in `warlock-core/src/save.rs`: bump
 `FORMAT_VERSION` on any incompatible `WorldState` change; adding or reordering terrain, creatures, or
 levels invalidates existing saves.
+
+Settings (`crates/warlock/src/settings/`): `settings.toml` in the platform config dir (macOS
+`~/Library/Application Support/warlock`), schema in the `settings/mod.rs` module docs. Changes
+apply live and are written at once; a bad file means defaults plus a warning, per value. Palettes
+(`settings/palette.rs`) are applied only when cells are uploaded to the GPU (`render::upload`) and
+in `ui/glyphs.rs`, never to content colors. Rebindable commands have stable ids in
+`settings/keys.rs` (`KeyCommand::id`): **a new `KeyCommand` variant must be added there**
+(`REBINDABLE` or the non-rebindable arm). UI: `ui/menu.rs` (main menu state machine, `Panel`
+helpers), `ui/settings_screen.rs`, `ui/controls_screen.rs`. `Game` exists only during a run (the
+menu runs without it): gate systems that read it with `run_if(resource_exists::<Game>)`; content
+is the `GameContent` resource.
 
 Typical render check: `cargo run -p warlock -- --scale 1 --freeze-time 1 --capture target/shot.png`,
 then read the PNG.

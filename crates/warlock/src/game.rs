@@ -9,7 +9,24 @@ use warlock_core::content::{Content, ContentFiles};
 use warlock_core::replay::Replay;
 use warlock_core::{Action, Outcome, World};
 
-/// The simulation as an ECS resource.
+/// Loaded content, shared by the menu (scenario list) and every run.
+#[derive(Resource, Debug, Clone)]
+pub struct GameContent(pub Arc<Content>);
+
+/// Loads the content named by the command line (the built-in copy unless `--content-dir`).
+pub fn load_content(args: &Args) -> Result<Arc<Content>, String> {
+    let files = match &args.content_dir {
+        Some(dir) => ContentFiles::from_dir(dir)
+            .map_err(|e| format!("cannot read content from {}: {e}", dir.display()))?,
+        None => ContentFiles::builtin(),
+    };
+    Content::load(&files)
+        .map(Arc::new)
+        .map_err(|e| format!("invalid content: {e}"))
+}
+
+/// The simulation as an ECS resource. It exists only while a run is in progress: the main menu
+/// runs without it, and everything that needs a run is gated on `resource_exists::<Game>`.
 #[derive(Resource)]
 pub struct Game {
     pub world: World,
@@ -20,20 +37,48 @@ pub struct Game {
 }
 
 impl Game {
-    /// Loads content and starts the scenario named on the command line.
-    pub fn start(args: &Args) -> Result<Self, String> {
-        let files = match &args.content_dir {
-            Some(dir) => ContentFiles::from_dir(dir)
-                .map_err(|e| format!("cannot read content from {}: {e}", dir.display()))?,
-            None => ContentFiles::builtin(),
-        };
-        let content = Content::load(&files).map_err(|e| format!("invalid content: {e}"))?;
-        let content = Arc::new(content);
+    /// A fresh run of `scenario`, e.g. from the main menu.
+    pub fn new_run(
+        content: Arc<Content>,
+        scenario: &str,
+        seed: Option<u64>,
+    ) -> Result<Self, String> {
+        let world = World::new(content, scenario, seed)
+            .map_err(|e| format!("cannot start scenario `{scenario}`: {e}"))?;
+        Ok(Self {
+            world,
+            last_outcome: Outcome::default(),
+            recorder: None,
+        })
+    }
+
+    /// A game around a world loaded elsewhere (the saved run).
+    pub fn from_world(world: World) -> Self {
+        Self {
+            world,
+            last_outcome: Outcome::default(),
+            recorder: None,
+        }
+    }
+
+    /// The saved run, if there is a usable one.
+    pub fn resumed(store: &SaveStore, content: &Arc<Content>) -> Resume {
+        match store.resume(content) {
+            Resume::Loaded(mut world) => {
+                world.notice("Welcome back.");
+                Resume::Loaded(world)
+            }
+            other => other,
+        }
+    }
+
+    /// Starts the game the command line asks for: the saved run, a replay, or the scenario.
+    /// Only used when the main menu is skipped.
+    pub fn start(args: &Args, content: Arc<Content>) -> Result<Self, String> {
         let mut failure = None;
         if SaveStore::resumes(args) {
-            match SaveStore::from_args(args).resume(&content) {
-                Resume::Loaded(mut world) => {
-                    world.notice("Welcome back.");
+            match Self::resumed(&SaveStore::from_args(args), &content) {
+                Resume::Loaded(world) => {
                     return Ok(Self {
                         world,
                         last_outcome: Outcome::default(),
@@ -59,8 +104,9 @@ impl Game {
                 (world, Some(replay))
             }
             None => {
-                let mut world = World::new(content, &args.scenario, args.seed)
-                    .map_err(|e| format!("cannot start scenario `{}`: {e}", args.scenario))?;
+                let scenario = args.scenario_name();
+                let mut world = World::new(content, scenario, args.seed)
+                    .map_err(|e| format!("cannot start scenario `{scenario}`: {e}"))?;
                 if let Some(message) = failure {
                     world.notice(message);
                 }
@@ -109,8 +155,10 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_message::<PlayerAction>()
-            .add_systems(Update, apply_actions.in_set(SimSet));
+        app.add_message::<PlayerAction>().add_systems(
+            Update,
+            apply_actions.in_set(SimSet).run_if(resource_exists::<Game>),
+        );
     }
 }
 

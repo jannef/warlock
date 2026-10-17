@@ -154,7 +154,8 @@ impl Bindings {
             (KeyBinding::Code(KeyCode::F9), KeyCommand::LoadSnapshot),
         ];
         for entry in dev {
-            if !self.0.contains(&entry) {
+            // A key the player bound to something else stays theirs.
+            if !self.0.iter().any(|(k, _)| *k == entry.0) {
                 self.0.push(entry);
             }
         }
@@ -210,13 +211,21 @@ pub struct InputPlugin;
 
 impl Plugin for InputPlugin {
     fn build(&self, app: &mut App) {
-        let mut bindings = Bindings::default();
+        // The settings file's bindings, if `main` loaded them.
+        let mut bindings = app
+            .world()
+            .get_resource::<Bindings>()
+            .cloned()
+            .unwrap_or_default();
         if app.world().resource::<Args>().dev {
             bindings.add_dev_keys();
         }
         app.insert_resource(bindings)
             .init_resource::<InputMode>()
-            .add_systems(Update, read_keys.before(SimSet));
+            .add_systems(
+                Update,
+                read_keys.before(SimSet).run_if(resource_exists::<Game>),
+            );
     }
 }
 

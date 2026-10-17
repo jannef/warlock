@@ -5,8 +5,13 @@
 //! ([`glyphs`]), and text and panels into the UI console on top. [`motion`] moves the camera and
 //! slides creatures between cells.
 
+mod controls_screen;
 mod glyphs;
+mod menu;
 mod motion;
+mod settings_screen;
+
+pub use menu::{Menu, ScreenName};
 
 use crate::game::{Game, SimSet};
 use crate::input::{Bindings, InputMode};
@@ -24,7 +29,8 @@ const MESSAGE_ROWS: i32 = 2;
 const STATUS_ROWS: i32 = 1;
 
 const TEXT: Rgb = Rgb::new(0xd8, 0xd4, 0xc8);
-const TEXT_DIM: Rgb = Rgb::new(0x7c, 0x78, 0x70);
+/// Secondary text. Every UI text color keeps at least 4.5:1 contrast on the panel and on black.
+const TEXT_DIM: Rgb = Rgb::new(0x8e, 0x8a, 0x82);
 const ACCENT: Rgb = Rgb::new(0xe0, 0xb0, 0x50);
 const PANEL_BG: Rgb = Rgb::new(0x12, 0x12, 0x18);
 
@@ -34,9 +40,13 @@ impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Motion>().add_systems(
             Update,
-            (motion::track, (draw, draw_map_layer), glyphs::emit)
-                .chain()
-                .after(SimSet),
+            (
+                (motion::track, (draw, draw_map_layer), glyphs::emit)
+                    .chain()
+                    .after(SimSet)
+                    .run_if(resource_exists::<Game>),
+                menu::run.run_if(resource_exists::<Menu>),
+            ),
         );
     }
 }
@@ -319,6 +329,17 @@ mod tests {
     use std::sync::Arc;
     use warlock_core::content::{Content, ContentFiles};
     use warlock_core::{Action, Dir, World};
+
+    #[test]
+    fn ui_text_has_readable_contrast() {
+        use crate::settings::palette::contrast_ratio;
+        for (name, fg) in [("TEXT", TEXT), ("TEXT_DIM", TEXT_DIM), ("ACCENT", ACCENT)] {
+            for bg in [PANEL_BG, Rgb::BLACK] {
+                let ratio = contrast_ratio(fg, bg);
+                assert!(ratio >= 4.5, "{name} on {bg:?} is only {ratio:.2}:1");
+            }
+        }
+    }
 
     #[test]
     fn camera_centers_small_levels_and_clamps_large_ones() {

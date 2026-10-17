@@ -12,7 +12,8 @@ pub mod grid;
 
 use crate::capture::CaptureTarget;
 use crate::cli::Args;
-use crate::game::Game;
+use crate::game::GameContent;
+use crate::settings::{Palette, Role, Settings};
 use crate::viewport::Viewport;
 use anim::{AnimTable, GridAnimTable};
 use atlas::{Font, GlyphAtlas, glyph_set};
@@ -28,9 +29,6 @@ use bevy::shader::ShaderRef;
 use bevy::sprite_render::{AlphaMode2d, Material2d, Material2dPlugin};
 use console::Console;
 use grid::MapGrid;
-
-/// Font size in logical pixels.
-pub const DEFAULT_FONT_PX: f32 = 18.0;
 
 /// Draw order of the map grid (bottom layer).
 const MAP_Z: f32 = 0.0;
@@ -52,7 +50,10 @@ impl Plugin for RenderPlugin {
         .init_resource::<MapGrid>()
         .init_resource::<ConsoleLayout>()
         .add_systems(Startup, setup)
-        .add_systems(PreUpdate, (advance_visual_time, layout))
+        .add_systems(
+            PreUpdate,
+            (advance_visual_time, sync_effects, layout).chain(),
+        )
         .add_systems(PostUpdate, upload);
     }
 }
@@ -176,7 +177,8 @@ pub(crate) fn setup(
     mut materials: ResMut<Assets<ConsoleMaterial>>,
     viewport: Res<Viewport>,
     capture: Option<Res<CaptureTarget>>,
-    game: Res<Game>,
+    content: Res<GameContent>,
+    settings: Res<Settings>,
     args: Res<Args>,
 ) {
     let mut camera = commands.spawn((Camera2d, Tonemapping::None));
@@ -185,11 +187,11 @@ pub(crate) fn setup(
     }
 
     let effects = Effects {
-        reduced: args.reduced_effects,
+        reduced: args.reduced_effects || settings.reduced_effects,
     };
     let font = Font::load().expect("the bundled font is valid");
-    let px = DEFAULT_FONT_PX * viewport.scale;
-    let content = game.world.content();
+    let px = settings.font_px as f32 * viewport.scale;
+    let content = &content.0;
     let atlas = GlyphAtlas::new(&font.0, px, &glyph_set(content.glyphs()), &mut images);
     let anims = AnimTable::new(content, |c| atlas.glyph(c), !effects.reduced);
 
@@ -220,7 +222,16 @@ fn advance_visual_time(mut visual: ResMut<VisualTime>, time: Res<Time>) {
     }
 }
 
-/// Fits the console to the viewport; rebuilds the atlas when the display scale changes.
+/// Reduced effects come from the settings, or from `--reduced-effects`, which always wins.
+fn sync_effects(settings: Res<Settings>, args: Res<Args>, mut effects: ResMut<Effects>) {
+    let reduced = args.reduced_effects || settings.reduced_effects;
+    if effects.reduced != reduced {
+        effects.reduced = reduced;
+    }
+}
+
+/// Fits the console to the viewport; rebuilds the atlas when the font size or display scale
+/// changes, and the animation table when reduced effects toggle.
 fn layout(
     viewport: Res<Viewport>,
     mut layout: ResMut<ConsoleLayout>,
@@ -229,18 +240,25 @@ fn layout(
     mut anims: ResMut<AnimTable>,
     effects: Res<Effects>,
     font: Res<Font>,
-    game: Res<Game>,
+    content: Res<GameContent>,
+    settings: Res<Settings>,
     mut images: ResMut<Assets<Image>>,
+    mut animated: Local<Option<bool>>,
 ) {
     let (size, scale) = (viewport.size, viewport.scale);
-    if size == layout.window && scale == layout.scale {
+    let px = settings.font_px as f32 * scale;
+    let animate = !effects.reduced;
+    let animation_changed = animated.replace(animate).is_some_and(|was| was != animate);
+    let font_changed = (px - atlas.px).abs() > f32::EPSILON;
+    if size == layout.window && scale == layout.scale && !font_changed && !animation_changed {
         return;
     }
-    let px = DEFAULT_FONT_PX * scale;
-    if (px - atlas.px).abs() > f32::EPSILON {
-        let content = game.world.content();
+    let content = &content.0;
+    if font_changed {
         *atlas = GlyphAtlas::new(&font.0, px, &glyph_set(content.glyphs()), &mut images);
-        *anims = AnimTable::new(content, |c| atlas.glyph(c), !effects.reduced);
+    }
+    if font_changed || animation_changed {
+        *anims = AnimTable::new(content, |c| atlas.glyph(c), animate);
     }
     let cell = atlas.cell;
     let cols = (size.x / cell.x).max(1);
@@ -265,9 +283,15 @@ fn upload(
     anims: Res<AnimTable>,
     visual: Res<VisualTime>,
     handles: Res<ConsoleHandles>,
+    settings: Res<Settings>,
     mut materials: ResMut<Assets<ConsoleMaterial>>,
     mut images: ResMut<Assets<Image>>,
 ) {
+    if settings.is_changed() {
+        // A new palette recolors every cell.
+        console.dirty = true;
+        grid.console.dirty = true;
+    }
     let params = |console: &Console, origin: Vec2, clip: Rect| ConsoleParams {
         origin,
         cell_size: layout.cell.as_vec2(),
@@ -294,7 +318,7 @@ fn upload(
         material.anim_table = anims.gpu;
         if console.dirty {
             console.dirty = false;
-            upload_cells(console, &material, &atlas, &mut images);
+            upload_cells(console, &material, &atlas, settings.palette, &mut images);
         }
     }
 }
@@ -304,6 +328,7 @@ fn upload_cells(
     console: &Console,
     material: &ConsoleMaterial,
     atlas: &GlyphAtlas,
+    palette: Palette,
     images: &mut Assets<Image>,
 ) {
     let n = console.cells().len();
@@ -318,8 +343,13 @@ fn upload_cells(
             Some(cell) => {
                 let [lo, hi] = atlas.glyph(cell.ch).to_le_bytes();
                 glyphs.extend_from_slice(&[lo, hi, 0, 0]);
-                fg.extend_from_slice(&[cell.fg.r, cell.fg.g, cell.fg.b, 255]);
-                bg.extend_from_slice(&[cell.bg.r, cell.bg.g, cell.bg.b, 255]);
+                // Content colors stay as written; the palette applies only on the way out.
+                let (f, b) = (
+                    palette.apply(cell.fg, Role::Fg),
+                    palette.apply(cell.bg, Role::Bg),
+                );
+                fg.extend_from_slice(&[f.r, f.g, f.b, 255]);
+                bg.extend_from_slice(&[b.r, b.g, b.b, 255]);
             }
             // Transparent: no glyph, background alpha 0.
             None => {
