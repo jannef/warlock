@@ -7,50 +7,71 @@
 #             Brightness for vision thresholds is luma (54r + 183g + 19b) / 256, plus UV for eyes
 #             that see UV.
 #   radius  = reach in cells; light falls off as color · (R² − d²) / R² with R² = radius² + radius.
-#   flicker = { amount, speed } — visual only (renderer); gameplay never reads it. What the
-#             light falls on brightens and dims smoothly within ±amount (0.1 = ±10 %, usually
-#             about a third of that), changing about `speed` times a second. Keep it gentle:
-#             flames livelier than lamps, nothing strobing.
+#   stability.* — how the drawn light varies over time (spec §4.4). Visual only (renderer);
+#             gameplay never reads it, and the `flicker` effect switch turns it off. Every part is
+#             optional; a light without any is perfectly stable (constant hue and intensity), as
+#             magical light should be. Keep it subtle: felt more than noticed, nothing strobing.
+#     stability.intensity = { amount, speed } — brightness drifts smoothly within ±amount
+#             (0.1 = ±10 %, usually about a third of that), changing about `speed` times a second.
+#     stability.hue = { degrees, speed } — the hue drifts within ±degrees around the light's
+#             color, luminance kept (positive toward yellow, negative toward deeper red).
+#     stability.dips = { depth, every, length } — about once every `every` seconds, at an
+#             irregular moment, the light eases down by up to `depth` (0.1 = 10 %) and back over
+#             `length` seconds; with hue drift the dip also turns it toward deeper red.
+#             `amount` and `depth` are at most 0.25 each, `degrees` at most 30.
+
+# Tuning: open flames (torches, braziers, lava) are gently alive: a soft flicker, the hue drifting
+# between deeper orange and yellow, and a rare soft dip. Enclosed flames (lamps, the lantern) burn
+# calmer. Magical light (crystals, fungus, runes, the altar) is perfectly steady.
 
 # Carried by creatures (kobolds).
 [[light]]
 id = "torch"
 color = [300, 180, 90, 0]
 radius = 6
-flicker = { amount = 0.15, speed = 1.0 }
+stability.intensity = { amount = 0.1, speed = 1.0 }
+stability.hue = { degrees = 8, speed = 0.4 }
+stability.dips = { depth = 0.12, every = 7, length = 0.8 }
 
 # Wall torches in sconces.
 [[light]]
 id = "sconce"
 color = [280, 170, 90, 0]
 radius = 7
-flicker = { amount = 0.12, speed = 0.8 }
+stability.intensity = { amount = 0.08, speed = 0.8 }
+stability.hue = { degrees = 7, speed = 0.35 }
+stability.dips = { depth = 0.1, every = 9, length = 0.9 }
 
 [[light]]
 id = "brazier"
 color = [360, 210, 100, 0]
 radius = 8
-flicker = { amount = 0.15, speed = 0.7 }
+stability.intensity = { amount = 0.1, speed = 0.7 }
+stability.hue = { degrees = 8, speed = 0.3 }
+stability.dips = { depth = 0.1, every = 11, length = 1.0 }
 
 # Hanging oil lamps (corridors, nooks).
 [[light]]
 id = "lamp"
 color = [230, 200, 150, 0]
 radius = 6
-flicker = { amount = 0.04, speed = 0.35 }
+stability.intensity = { amount = 0.04, speed = 0.35 }
+stability.hue = { degrees = 2, speed = 0.2 }
 
 # The player's lantern (see scenarios).
 [[light]]
 id = "lantern"
 color = [250, 215, 160, 0]
 radius = 5
-flicker = { amount = 0.06, speed = 0.6 }
+stability.intensity = { amount = 0.05, speed = 0.6 }
+stability.hue = { degrees = 4, speed = 0.3 }
+stability.dips = { depth = 0.06, every = 14, length = 0.8 }
 
+# Water garden altar: magical, so steady (its glyph pulses instead).
 [[light]]
 id = "altar_glow"
 color = [220, 180, 90, 0]
 radius = 5
-flicker = { amount = 0.08, speed = 0.3 }
 
 # Light hall crystals: steady colored light.
 [[light]]
@@ -79,18 +100,18 @@ radius = 7
 id = "fungus"
 color = [0, 24, 13, 0]
 radius = 3
-flicker = { amount = 0.08, speed = 0.2 }
 
 # Darkness chamber: ultraviolet only, visible with UV sight.
 [[light]]
 id = "uv_rune"
 color = [0, 0, 0, 180]
 radius = 4
-flicker = { amount = 0.08, speed = 0.25 }
 
 # Effects room: a lava pool.
 [[light]]
 id = "lava"
 color = [300, 110, 30, 0]
 radius = 4
-flicker = { amount = 0.15, speed = 0.5 }
+stability.intensity = { amount = 0.08, speed = 0.4 }
+stability.hue = { degrees = 6, speed = 0.2 }
+stability.dips = { depth = 0.08, every = 15, length = 1.6 }

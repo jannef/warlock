@@ -1,18 +1,20 @@
 //! Visual lighting (spec §4.4): the light the map is drawn with, derived every frame from the
-//! perceived gameplay light plus visual-only flicker. Gameplay never reads any of it.
+//! perceived gameplay light plus visual-only modulation. Gameplay never reads any of it.
 //!
 //! [`VisualLight::composite`] covers the map grid's cells plus a one-cell margin ([`MARGIN`]). For
-//! each visible cell it sums its base light (ambient + bounce) and every source's contribution,
-//! and folds in the presentation rules: UV light as a violet tint (perception reports UV only to
-//! eyes that see it) and the [`darkvision`] fade. Flicker ([`flicker`]: smooth noise keyed by the
-//! source, driven by [`VisualTime`]; none with flicker off) becomes a per-cell brightness
-//! gain, the contribution-weighted mean of the flicker of the sources lighting the cell, applied
-//! after shading so it reads the same in dim and in overbright light. The result is one
-//! [`CellLight`] per cell, uploaded as two textures aligned with the map grid:
+//! each visible cell it sums its base light (ambient + bounce, steady) and every source's
+//! contribution, and folds in the presentation rules: UV light as a violet tint (perception
+//! reports UV only to eyes that see it) and the [`darkvision`] fade. Each source is modulated by
+//! its preset's stability ([`super::modulation`]: keyed by the source, driven by [`VisualTime`];
+//! steady with the `flicker` effect off): its hue tints its contributions here, exactly,
+//! and its intensity becomes a per-cell brightness gain, the mean of the intensity of the sources
+//! lighting the cell weighted by their drawn light, applied after shading so it reads the same in
+//! dim and in overbright light. The result is one [`CellLight`] per cell, uploaded as two
+//! textures aligned with the map grid:
 //! - `light` (`Rgba32Float`): red, green, and blue light (1.0 = fully lit, more = overbright)
 //!   and color saturation;
 //! - `light_flags` (`Rgba8Uint`): [`LIT`] on visible cells and [`OPAQUE`] on walls (red), and
-//!   the flicker gain (green, see [`gain_byte`]).
+//!   the intensity gain (green, see [`gain_byte`]).
 //!
 //! Creature shadows ([`super::shadows`], visual only as well) take part of each source's
 //! contribution away behind the creatures it lights. The shaded light is left out of what is
@@ -26,6 +28,7 @@
 //! shader: change both together.
 
 use super::grid::MapGrid;
+use super::modulation::{Modulation, modulation};
 use super::shadows::Shadows;
 use super::{ConsoleHandles, ConsoleMaterial, Effects, VisualTime};
 use crate::game::Game;
@@ -33,7 +36,6 @@ use bevy::prelude::*;
 use bevy::render::render_resource::Extent3d;
 use bevy::shader::load_shader_library;
 use warlock_core::Pos;
-use warlock_core::content::Flicker;
 use warlock_core::fov::radius2;
 use warlock_core::light::Light;
 use warlock_core::perception::{CellView, PerceptionView};
@@ -63,7 +65,7 @@ pub const GLOW: f32 = 0.03;
 /// The violet UV light tints with, per unit of perceived UV.
 pub const UV_TINT: Vec3 = Vec3::new(0.5, 0.15, 1.0);
 /// Linear-light luma weights (Rec. 709). Mirrored in `lighting.wesl`.
-const LUMA: Vec3 = Vec3::new(0.2126, 0.7152, 0.0722);
+pub const LUMA: Vec3 = Vec3::new(0.2126, 0.7152, 0.0722);
 
 /// Darkvision glow (as light, 1.0 = fully lit) in total darkness next to the viewer and at the
 /// edge of the darkvision radius.
@@ -90,7 +92,7 @@ pub struct CellLight {
     pub rgb: Vec3,
     /// Color saturation: 1 = full color, 0 = monochrome.
     pub saturation: f32,
-    /// Flicker: brightness multiplier of the lit color.
+    /// Brightness multiplier of the lit color: the intensity modulation of the light.
     pub gain: f32,
 }
 
@@ -118,8 +120,8 @@ pub struct VisualLight {
 
 impl VisualLight {
     /// Recomputes the light of the `size` cells from level position `origin` on, with creature
-    /// `shadows` (computed from the same `view`). `time` is the visual time for flicker, `None`
-    /// for steady light (flicker off).
+    /// `shadows` (computed from the same `view`). `time` is the visual time for the sources'
+    /// modulation, `None` for steady light (the `flicker` effect off).
     pub fn composite(
         &mut self,
         view: &PerceptionView<'_>,
@@ -139,11 +141,15 @@ impl VisualLight {
             )
         };
 
-        // Base light on every visible cell, then each source. `flickers` sums each source's
-        // flicker weighted by how much light it adds (x), and those weights (y).
+        // Base light on every visible cell, then each source. `sums` is the perceived light,
+        // which darkvision measures; `drawn` is what is drawn: modulated in hue, less what
+        // creature shadows take away (darkvision's glow would otherwise brighten shadows).
+        // `gains` sums each source's intensity weighted by how much light it draws (x), and
+        // those weights (y); the base light is steady.
         let mut flags = vec![0; n];
         let mut sums = vec![Vec4::ZERO; n];
-        let mut flickers = vec![Vec2::ZERO; n];
+        let mut drawn = vec![Vec4::ZERO; n];
+        let mut gains = vec![Vec2::ZERO; n];
         for (i, flag) in flags.iter_mut().enumerate() {
             if let CellView::Visible(t) = view.cell(at(i)) {
                 *flag = if content.terrain(t).transparent {
@@ -153,16 +159,14 @@ impl VisualLight {
                 };
                 let base = light_vec(view.base_light(at(i)).unwrap_or_default());
                 sums[i] = base;
-                flickers[i] = Vec2::splat(base.element_sum());
+                drawn[i] = base;
+                gains[i] = Vec2::splat(base.element_sum());
             }
         }
-        // The light creature shadows take away: not drawn, but kept apart from `sums`, which
-        // darkvision measures (its glow would otherwise brighten shadows).
-        let mut shaded = vec![Vec4::ZERO; n];
         for source in view.light_sources() {
-            let gain = match (time, &content.light(source.preset).flicker) {
-                (Some(time), Some(f)) => flicker(source.key, f, time),
-                _ => 1.0,
+            let modulation = match time {
+                Some(time) => modulation(source.key, content.light(source.preset), time),
+                None => Modulation::STEADY,
             };
             let shadows = shadows.of(source.key);
             for &(p, light) in &source.contributions {
@@ -170,10 +174,10 @@ impl VisualLight {
                     && flags[i] & LIT != 0
                 {
                     let light = light_vec(light);
-                    let shade = light * (1.0 - shadows.keep(p));
+                    let draw = modulation.color(light) * shadows.keep(p);
                     sums[i] += light;
-                    shaded[i] += shade;
-                    flickers[i] += Vec2::new(gain, 1.0) * (light - shade).element_sum();
+                    drawn[i] += draw;
+                    gains[i] += Vec2::new(modulation.gain, 1.0) * draw.element_sum();
                 }
             }
         }
@@ -187,11 +191,9 @@ impl VisualLight {
                     return CellLight::DARK;
                 }
                 let sum = sums[i];
-                let drawn = sum - shaded[i];
-                let rgb = drawn.truncate() + UV_TINT * drawn.w;
-                let flicker = flickers[i];
-                let gain = if flicker.y > 0.0 {
-                    flicker.x / flicker.y
+                let rgb = drawn[i].truncate() + UV_TINT * drawn[i].w;
+                let gain = if gains[i].y > 0.0 {
+                    gains[i].x / gains[i].y
                 } else {
                     1.0
                 };
@@ -279,42 +281,10 @@ fn light_vec(light: Light) -> Vec4 {
     Vec4::new(r.into(), g.into(), b.into(), uv.into()) / 255.0
 }
 
-/// A flicker gain as stored in the light flags texture: 128 is 1, in steps of 1/256 (0.5 to
+/// An intensity gain as stored in the light flags texture: 128 is 1, in steps of 1/256 (0.5 to
 /// about 1.5). Decoded in `lighting.wesl`.
 pub fn gain_byte(gain: f32) -> u8 {
     (128.0 + (gain - 1.0) * 256.0).round().clamp(0.0, 255.0) as u8
-}
-
-/// Intensity multiplier of a flickering source at visual time `time`: smooth noise between
-/// `1 - amount` and `1 + amount` that changes about `speed` times a second, different for every
-/// source `key`. Deterministic: the same key and time give the same value.
-pub fn flicker(key: u64, flicker: &Flicker, time: f32) -> f32 {
-    1.0 + flicker.amount * noise(key, time * flicker.speed)
-}
-
-/// Smooth noise in `[-1, 1]`: two octaves of value noise, the second faster and weaker, so the
-/// light drifts calmly with a little life in it.
-fn noise(key: u64, x: f32) -> f32 {
-    const OCTAVE: u64 = 0x5bd1_e995_9e37_79b9;
-    0.7 * value_noise(key, x) + 0.3 * value_noise(key ^ OCTAVE, x * 2.3 + 0.37)
-}
-
-/// Value noise: random values in `[-1, 1]` at whole `x`, eased in between.
-fn value_noise(key: u64, x: f32) -> f32 {
-    let i = x.floor();
-    let t = x - i;
-    let ease = t * t * (3.0 - 2.0 * t);
-    let (a, b) = (lattice(key, i as i64), lattice(key, i as i64 + 1));
-    a + (b - a) * ease
-}
-
-fn lattice(key: u64, i: i64) -> f32 {
-    // SplitMix64 finalizer over the key and the lattice index.
-    let mut h = key ^ (i as u64).wrapping_mul(0x9e37_79b9_7f4a_7c15);
-    h = (h ^ (h >> 30)).wrapping_mul(0xbf58_476d_1ce4_e5b9);
-    h = (h ^ (h >> 27)).wrapping_mul(0x94d0_49bb_1331_11eb);
-    h ^= h >> 31;
-    (h >> 40) as f32 / (1u64 << 23) as f32 - 1.0
 }
 
 /// Darkvision (spec §4.4) for a cell seen only through it, with light `rgb`, brightness `lit`
@@ -385,7 +355,7 @@ fn knee(light: f32) -> f32 {
 
 /// A linear color under `light`, with exposure floor `floor`: scaled by [`exposure`] per
 /// channel, plus the overbright [`GLOW`] in the light's hue, desaturated, and scaled by the
-/// flicker gain. Mirrored in `lighting.wesl`.
+/// intensity gain. Mirrored in `lighting.wesl`.
 pub fn shade(color: Vec3, light: CellLight, floor: f32) -> Vec3 {
     let [r, g, b] = light.rgb.to_array();
     let peak = light.rgb.max_element();
@@ -459,35 +429,10 @@ fn upload(
 mod tests {
     use super::*;
     use crate::render::shadows::{KEEP, REACH};
+    use std::collections::BTreeSet;
     use std::sync::Arc;
     use warlock_core::World;
     use warlock_core::content::Content;
-
-    const TORCH: Flicker = Flicker {
-        amount: 0.2,
-        speed: 1.6,
-    };
-
-    #[test]
-    fn flicker_is_deterministic_smooth_and_in_range() {
-        let mut seen = (f32::MAX, f32::MIN);
-        let mut last = flicker(7, &TORCH, 0.0);
-        for i in 0..20_000 {
-            let t = i as f32 * 0.001;
-            let f = flicker(7, &TORCH, t);
-            assert_eq!(f, flicker(7, &TORCH, t), "same key and time, same value");
-            assert!((0.8..=1.2).contains(&f), "{f} at {t}");
-            assert!((f - last).abs() < 0.01, "smooth: {last} -> {f} at {t}");
-            seen = (seen.0.min(f), seen.1.max(f));
-            last = f;
-        }
-        assert!(seen.1 - seen.0 > 0.15, "it varies: {seen:?}");
-        let differs = (0..50).any(|i| {
-            let t = i as f32 * 0.37;
-            (flicker(7, &TORCH, t) - flicker(8, &TORCH, t)).abs() > 0.01
-        });
-        assert!(differs, "sources flicker independently");
-    }
 
     #[test]
     fn gains_round_trip_through_a_byte() {
@@ -498,14 +443,6 @@ mod tests {
         }
         assert_eq!(gain_byte(9.0), 255);
         assert_eq!(gain_byte(-1.0), 0);
-    }
-
-    #[test]
-    fn noise_stays_in_range_far_from_zero() {
-        for i in 0..10_000 {
-            let x = -5_000.0 + i as f32 * 1.37;
-            assert!((-1.0..=1.0).contains(&noise(u64::MAX - i, x)));
-        }
     }
 
     fn all_open(_: IVec2) -> bool {
@@ -665,21 +602,26 @@ mod tests {
 
     #[test]
     fn composited_light_is_the_perceived_light() {
-        // Without creature shadows, which are visual only.
+        // Steady (no modulation) and without creature shadows, which are visual only. Modulated,
+        // the hue drift keeps each cell's luminance.
         let world = showcase(&[]);
         let view = world.perception();
-        let light = composite_level(&view, &Shadows::default(), Some(1.7));
-        assert!(light.dirty);
+        let steady = composite_level(&view, &Shadows::default(), None);
+        let modulated = composite_level(&view, &Shadows::default(), Some(1.7));
+        assert!(steady.dirty);
+        let luma = |c: Vec3| c.dot(LUMA);
         let mut lit = 0;
         for y in 0..view.height() {
             for x in 0..view.width() {
                 let p = Pos::new(x, y);
-                let cell = light.sample(Vec2::new(x as f32 + 0.5, y as f32 + 0.5));
+                let cell = steady.sample(center(p));
                 match view.light(p) {
                     Some(seen) => {
                         let cell = cell.expect("visible cells are lit");
                         let expected = Vec3::from_array(seen.rgb.map(f32::from)) / 255.0;
                         assert!((cell.rgb - expected).abs().max_element() < 1e-4, "{p}");
+                        let turned = modulated.sample(center(p)).expect("lit").rgb;
+                        assert!((luma(turned) - luma(expected)).abs() < 1e-3, "{p}");
                         lit += 1;
                     }
                     None => assert_eq!(cell, None, "{p}"),
@@ -690,14 +632,20 @@ mod tests {
     }
 
     #[test]
-    fn flicker_changes_gain_over_time_but_not_reduced() {
+    fn firelight_drifts_in_hue_and_intensity_but_not_reduced() {
+        // The start room is lit by its sconces.
         let world = showcase(&[]);
-        let a = whole_level(&world, Some(1.0));
-        let b = whole_level(&world, Some(2.3));
-        assert_eq!(a.flags, b.flags);
+        let frames = [0.3, 1.1, 2.4, 3.7].map(|t| whole_level(&world, Some(t)));
+        let rgb = |l: &VisualLight| l.cells.iter().map(|c| c.rgb).collect::<Vec<_>>();
         let gains = |l: &VisualLight| l.cells.iter().map(|c| c.gain).collect::<Vec<_>>();
-        assert_ne!(gains(&a), gains(&b), "torches flicker");
-        assert!(a.cells.iter().all(|c| (0.9..=1.1).contains(&c.gain)));
+        for pair in frames.windows(2) {
+            assert_eq!(pair[0].flags, pair[1].flags);
+            assert_ne!(gains(&pair[0]), gains(&pair[1]), "torches flicker");
+            assert_ne!(rgb(&pair[0]), rgb(&pair[1]), "and drift in hue");
+        }
+        for frame in &frames {
+            assert!(frame.cells.iter().all(|c| (0.75..=1.25).contains(&c.gain)));
+        }
         let mut steady = whole_level(&world, None);
         assert!(steady.cells.iter().all(|c| c.gain == 1.0));
         steady.dirty = false;
@@ -705,6 +653,43 @@ mod tests {
         let size = steady.size;
         steady.composite(&view, &Shadows::compute(&view), IVec2::ZERO, size, None);
         assert!(!steady.dirty, "unchanged light is not uploaded again");
+    }
+
+    #[test]
+    fn magical_light_is_constant() {
+        // In the light hall, cells lit only by stable sources (the crystals) and the steady base
+        // light look the same at every moment; light from the corridor lamps varies.
+        let actions = format!(
+            "{} open:N move:N move:N {} open:N move:N move:N",
+            "move:N ".repeat(3),
+            "move:E ".repeat(6)
+        );
+        let actions = warlock_core::action::parse_actions(&actions).expect("actions parse");
+        let world = showcase(&actions);
+        let view = world.perception();
+        let content = view.content();
+        let (mut stable, mut varying) = (BTreeSet::new(), BTreeSet::new());
+        for source in view.light_sources() {
+            let cells = source.contributions.iter().map(|(p, _)| *p);
+            if content.light(source.preset).stability.is_stable() {
+                stable.extend(cells);
+            } else {
+                varying.extend(cells);
+            }
+        }
+        let constant: Vec<Pos> = stable.difference(&varying).copied().collect();
+        assert!(constant.len() > 50, "{}", constant.len());
+        let steady = whole_level(&world, None);
+        for t in [0.3, 1.1, 2.4, 3.7] {
+            let frame = whole_level(&world, Some(t));
+            for &p in &constant {
+                assert_eq!(
+                    frame.sample(center(p)),
+                    steady.sample(center(p)),
+                    "{p} at {t}"
+                );
+            }
+        }
     }
 
     #[test]

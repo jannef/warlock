@@ -12,7 +12,7 @@
 //!
 //! [effects]               # per-effect switches, all on by default
 //! glyph_animation = true  # wave, pulse, shimmer, cycle
-//! flicker = true          # light flicker
+//! flicker = true          # light flicker: firelight varies in intensity and hue
 //! motion = true           # movement slides and camera easing
 //! glow = true             # bloom and glyph glow
 //! distortion = true       # heat haze
@@ -57,7 +57,7 @@ pub struct Settings {
 pub struct EffectSwitches {
     /// Glyph animation: wave, pulse, shimmer, cycle.
     pub glyph_animation: bool,
-    /// Light flicker.
+    /// Light flicker: per-source modulation of intensity and hue (light stability).
     pub flicker: bool,
     /// Movement slides and camera easing.
     pub motion: bool,

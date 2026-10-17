@@ -223,7 +223,7 @@ mod tests {
             id: "test".into(),
             color,
             radius,
-            flicker: None,
+            stability: Default::default(),
         }
     }
 
