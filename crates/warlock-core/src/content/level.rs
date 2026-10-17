@@ -5,7 +5,8 @@
 //! flow of running water). Characters not in the level's legend fall back to the shared default
 //! legend (`assets/data/legend.toml`, which has arrows for running water). An optional
 //! `ambient = [r, g, b, uv]` lights the whole level. `kind` (`dungeon`, the default, or
-//! `outdoor`) and `turn_seconds` decide how time passes on it (spec §8 "Time").
+//! `outdoor`) and `turn_seconds` decide how time passes on it (spec §8 "Time"); outdoor levels
+//! are lit by the sun and the sky by day (spec §5).
 
 use super::creature::CreatureId;
 use super::flow::{FLOW_SPEEDS, Flow};
@@ -19,7 +20,8 @@ use crate::time::{Duration, HOUR};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-/// What kind of place a level is (spec §8 "Time"). It sets the default length of a turn there.
+/// What kind of place a level is (spec §8 "Time"). It sets the default length of a turn there and
+/// whether the sun shines on it.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum LevelKind {
@@ -31,6 +33,15 @@ pub enum LevelKind {
 }
 
 impl LevelKind {
+    /// Whether the level lies under the open sky, lit by the sun and the sky by day (spec §5
+    /// "Sunlight"): outdoor levels; never dungeons. Terrain with `roofed` is covered even here.
+    pub const fn is_sky_exposed(self) -> bool {
+        match self {
+            LevelKind::Dungeon => false,
+            LevelKind::Outdoor => true,
+        }
+    }
+
     /// How long a turn (a step, a wait, opening a door) takes unless the level overrides it:
     /// six seconds on local levels.
     pub const fn default_turn(self) -> Duration {

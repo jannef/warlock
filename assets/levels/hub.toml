@@ -14,6 +14,9 @@
 # Water (M8): the water garden's ponds are still water (~); a fast spring (⇐) runs out of the east
 # wall into the east pond, and a rill (←) carries its overflow into the west pond. Arrows are
 # running water flowing that way (data/legend.toml).
+#
+# Sunlight (M9): the stairs nook's staircase up (^ in the map, drawn `<`) climbs to the courtyard,
+# a garden under the open sky.
 name = "The Hub"
 ambient = [0, 0, 0, 0]
 map = '''
@@ -30,7 +33,7 @@ map = '''
 #.....l..........l..........l..........l..........l..........l..........l......#
 #######+###############+###################+###################+##########+#####
 #..t.......t...########.########.........................#..........~~~#.......#
-#..............##t....#l#....t##..#...#...#...#...#...#..#..........~F~#...l...#
+#..............##t....#l#....t##..#...#...#...#...#...#..#..........~F~#...l.^.#
 #..............##.....+.+.....##1........................#..........~~~#.......#
 #......@.......##.....#.#.....##.........................#......B......#.......#
 #..............####+###.###+####..#...#...#...#...#...#..#.............#...>...#
@@ -57,3 +60,5 @@ map = '''
 "=" = "lava"
 "F" = "fountain"
 ":" = "dusty_floor"
+# Stairs up (drawn `<`) to the courtyard.
+"^" = { terrain = "stairs_up", to = "courtyard" }

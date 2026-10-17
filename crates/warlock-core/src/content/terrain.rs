@@ -6,6 +6,9 @@ use super::particles::ParticleEmitter;
 use crate::color::Rgb;
 use serde::{Deserialize, Serialize};
 
+/// Tallest terrain for sun shadows, in cells: it bounds how far a shadow can reach.
+pub const MAX_HEIGHT: u8 = 4;
+
 /// Index of a terrain definition in [`super::Content::terrain`].
 ///
 /// Ids are assigned in file order when content loads; saves must not assume they are stable
@@ -48,6 +51,12 @@ pub(super) struct TerrainSpec {
     /// Tint of the light the surface bounces (spec §5); white (neutral) by default.
     #[serde(default = "neutral")]
     pub bounce: Rgb,
+    /// How tall it stands for sun shadows, in cells (spec §5 "Sunlight"); default 1 for opaque
+    /// terrain, 0 for transparent terrain.
+    pub height: Option<u8>,
+    /// Under a roof: never lit by the sun or the sky (indoor floors on outdoor levels).
+    #[serde(default)]
+    pub roofed: bool,
     pub anim: Option<GlyphAnim>,
     #[serde(default)]
     pub glow: f32,
@@ -90,6 +99,11 @@ pub struct TerrainDef {
     /// Gameplay: the tint of the light this surface bounces, per channel (white = neutral, the
     /// full [`crate::light::BOUNCE`] fraction).
     pub bounce: Rgb,
+    /// Gameplay: how tall it stands, in cells, for sun shadows ([`crate::light::Sun`]); 0 casts
+    /// none. At most [`MAX_HEIGHT`].
+    pub height: u8,
+    /// Gameplay: under a roof, so never lit by the sun or the sky.
+    pub roofed: bool,
     /// Presentation-only.
     pub anim: Option<GlyphAnim>,
     /// Presentation-only: how much the glyph glows (bloom), 0 to 1.

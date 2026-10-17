@@ -775,6 +775,8 @@ mod branch_tests;
 #[cfg(test)]
 mod light_tests;
 #[cfg(test)]
+mod sun_tests;
+#[cfg(test)]
 mod tests;
 #[cfg(test)]
 mod time_tests;

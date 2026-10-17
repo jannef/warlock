@@ -10,6 +10,11 @@
 //! away. Where several creatures stand in the way their shadows multiply. Colored shadows follow
 //! on their own: a creature blocking the red crystal leaves the cells behind it lit by the others.
 //!
+//! The sun is directional: a creature, [`CREATURE_HEIGHT`] cell tall, shades the cells along the
+//! sun's shadow line from its cell ([`warlock_core::light::Sun::shadow_steps`], the line terrain
+//! shadows use), up to the first opaque cell: [`KEEP`] next to it, easing back to all of the light
+//! one step past the shadow's end, so shadows are long at dawn and dusk and short at noon.
+//!
 //! [`Shadows`] is derived from the perception snapshot and recomputed when it changes (once per
 //! turn), not per frame; [`super::lighting::VisualLight::composite`] scales each source's
 //! contributions by [`SourceShadows::keep`]. Creatures sliding between cells cast their shadow
@@ -17,13 +22,16 @@
 
 use crate::game::Game;
 use bevy::prelude::*;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use warlock_core::Pos;
 use warlock_core::fov::compute_fov;
-use warlock_core::perception::{CellView, PerceptionView};
+use warlock_core::light::Sun;
+use warlock_core::perception::{CellView, Emitter, PerceptionView};
 
 /// Fraction of a source's light that reaches the cell right behind a creature.
 pub const KEEP: f32 = 0.4;
+/// How tall a creature stands for sun shadows, in cells (terrain heights are in the same unit).
+pub const CREATURE_HEIGHT: u8 = 1;
 /// Distance from the creature (cells, Euclidean) at which its shadow has faded out.
 pub const REACH: f32 = 3.5;
 
@@ -60,23 +68,34 @@ impl Shadows {
         };
         let mut sources = BTreeMap::new();
         for source in view.light_sources() {
-            let lights = |p: Pos| source.contributions.iter().any(|(q, _)| *q == p);
+            let lit: BTreeSet<Pos> = source.contributions.iter().map(|(p, _)| *p).collect();
             let blockers: Vec<Pos> = view
                 .actors()
                 .iter()
                 .map(|a| a.pos)
-                .filter(|&p| p != source.pos && lights(p))
+                .filter(|&p| Some(p) != source.pos() && lit.contains(&p))
                 .collect();
             if blockers.is_empty() {
                 continue;
             }
-            let radius = content.light(source.preset).radius;
-            let open = Shadowcast::new(source.pos, radius, is_opaque);
             let mut kept: BTreeMap<Pos, f32> = BTreeMap::new();
-            for blocker in blockers {
-                let cells = source.contributions.iter().map(|(p, _)| *p);
-                for (p, k) in shade(&open, blocker, is_opaque, cells) {
-                    *kept.entry(p).or_insert(1.0) *= k;
+            match source.emitter {
+                Emitter::Point { pos, preset } => {
+                    let radius = content.light(preset).radius;
+                    let open = Shadowcast::new(pos, radius, is_opaque);
+                    for blocker in blockers {
+                        let cells = source.contributions.iter().map(|(p, _)| *p);
+                        for (p, k) in shade(&open, blocker, is_opaque, cells) {
+                            *kept.entry(p).or_insert(1.0) *= k;
+                        }
+                    }
+                }
+                Emitter::Sun(sun) => {
+                    for blocker in blockers {
+                        for (p, k) in sun_shade(&sun, blocker, is_opaque, |p| lit.contains(&p)) {
+                            *kept.entry(p).or_insert(1.0) *= k;
+                        }
+                    }
                 }
             }
             if !kept.is_empty() {
@@ -183,6 +202,27 @@ fn shade(
         .collect()
 }
 
+/// The cells a creature at `blocker` shades from the sun, each with the fraction of the light it
+/// keeps: the sun's shadow line for a creature's height, up to the first opaque cell, among the
+/// cells the sun lights (`lit`). [`KEEP`] right behind the creature, easing back to all of the
+/// light one step past the shadow's end.
+fn sun_shade(
+    sun: &Sun,
+    blocker: Pos,
+    is_opaque: impl Fn(Pos) -> bool,
+    lit: impl Fn(Pos) -> bool,
+) -> Vec<(Pos, f32)> {
+    let steps = sun.shadow_steps(CREATURE_HEIGHT);
+    let len = steps.len() as f32;
+    steps
+        .map(|(dx, dy)| Pos::new(blocker.x + dx, blocker.y + dy))
+        .take_while(|&p| !is_opaque(p))
+        .enumerate()
+        .filter(|&(_, p)| lit(p))
+        .map(|(k, p)| (p, keep(1.0 + k as f32 * (REACH - 1.0) / len)))
+        .collect()
+}
+
 /// Recomputes the shadows when the perception snapshot may have changed: after a turn, a level
 /// change, or a new or loaded game.
 pub fn update(game: Res<Game>, mut shadows: ResMut<Shadows>) {
@@ -286,13 +326,17 @@ mod tests {
         assert_eq!(shadows.of(8).keep(Pos::new(1, 2)), 1.0);
     }
 
-    fn showcase(actions: &str) -> World {
+    fn run(scenario: &str, actions: &str) -> World {
         let content = Arc::new(Content::builtin().expect("builtin content"));
-        let mut world = World::new(content, "showcase", None).expect("world");
+        let mut world = World::new(content, scenario, None).expect("world");
         for action in parse_actions(actions).expect("actions parse") {
             world.apply(&action);
         }
         world
+    }
+
+    fn showcase(actions: &str) -> World {
+        run("showcase", actions)
     }
 
     #[test]
@@ -304,16 +348,21 @@ mod tests {
         let lantern = view
             .light_sources()
             .iter()
-            .find(|s| s.pos == player)
+            .find(|s| s.pos() == Some(player))
             .expect("the lantern is lit");
         assert!(shadows.of(lantern.key).0.is_empty(), "never its own light");
         // The start room's torches light the player, who shades them.
         let mut shaded = 0;
-        for source in view.light_sources().iter().filter(|s| s.pos != player) {
+        for source in view
+            .light_sources()
+            .iter()
+            .filter(|s| s.pos() != Some(player))
+        {
+            let pos = source.pos().expect("no sun underground");
             for &(p, k) in shadows.of(source.key).0 {
                 assert!((KEEP..1.0).contains(&k), "{p}: {k}");
                 assert!(view.is_visible(p) && p != player);
-                assert!(p.dist2(source.pos) > player.dist2(source.pos), "behind");
+                assert!(p.dist2(pos) > player.dist2(pos), "behind");
                 shaded += 1;
             }
         }
@@ -327,5 +376,66 @@ mod tests {
         assert_eq!(a, Shadows::compute(&world.perception()), "deterministic");
         let moved = showcase("move:N");
         assert_ne!(a, Shadows::compute(&moved.perception()));
+    }
+
+    #[test]
+    fn creatures_cast_sun_shadows_away_from_the_sun() {
+        // A sun from due east, 1.5 cells of shadow per cell of height: a creature shades the two
+        // cells west of it, darkest next to it; the line stops at a wall.
+        let sun = Sun {
+            elevation: 300,
+            shadow: [-384, 0],
+            light: warlock_core::light::Light::new(300, 300, 300, 0),
+            sky: warlock_core::light::Light::DARK,
+        };
+        let open = |_: Pos| false;
+        let shaded = sun_shade(&sun, Pos::new(5, 5), open, |_| true);
+        assert_eq!(
+            shaded,
+            [
+                (Pos::new(4, 5), KEEP),
+                (Pos::new(3, 5), keep(1.0 + (REACH - 1.0) / 2.0))
+            ]
+        );
+        let wall = |p: Pos| p == Pos::new(3, 5);
+        assert_eq!(sun_shade(&sun, Pos::new(5, 5), wall, |_| true).len(), 1);
+        // Only cells the sun lights are shaded.
+        let lit = |p: Pos| p != Pos::new(4, 5);
+        assert_eq!(sun_shade(&sun, Pos::new(5, 5), open, lit).len(), 1);
+    }
+
+    #[test]
+    fn the_player_casts_a_sun_shadow_that_turns_with_the_day() {
+        // In the courtyard, out in the open on the path: at dawn the shadow falls west, at noon
+        // north, and late in the afternoon east.
+        let shadow_of = |actions: &str| {
+            let world = run("courtyard", actions);
+            let view = world.perception();
+            let player = view.viewer();
+            let sun = view
+                .light_sources()
+                .iter()
+                .find(|s| matches!(s.emitter, Emitter::Sun(_)))
+                .expect("the sun is up");
+            assert!(
+                sun.contributions.iter().any(|(p, _)| *p == player),
+                "in the sun"
+            );
+            let shadows = Shadows::compute(&view);
+            let cells: Vec<Pos> = shadows.of(sun.key).0.iter().map(|(p, _)| *p).collect();
+            assert!(!cells.is_empty(), "{actions}");
+            cells
+                .into_iter()
+                .map(|p| (p.x - player.x, p.y - player.y))
+                .collect::<Vec<_>>()
+        };
+        let walk = "move:E move:E move:E move:E move:E move:E move:E move:E";
+        let dawn = shadow_of(&format!("{walk} skip:15m"));
+        assert!(dawn.iter().all(|&(dx, _)| dx < 0), "{dawn:?}");
+        let noon = shadow_of(&format!("{walk} skip:329m"));
+        assert_eq!(noon, [(0, -1)]);
+        let evening = shadow_of(&format!("{walk} skip:585m"));
+        assert!(evening.iter().all(|&(dx, _)| dx > 0), "{evening:?}");
+        assert!(evening.len() > noon.len());
     }
 }

@@ -1,0 +1,44 @@
+# The courtyard (spec §3): a walled garden under the open sky, up the stairs from the hub's stairs
+# nook. It shows sunlight (spec §5 "Sunlight"): by day the sun lights every cell no taller terrain
+# shades and the sky lights the rest a dim blue; shadows turn and stretch with the sun (long to the
+# west at dawn, short to the north at noon, long to the east at dusk), warm and orange low in the
+# sky; at night there is neither (a lamp still burns in the gazebo).
+#
+# Heights (data/terrain.toml): the walls 1, trees (T) 2, the gazebo roof (=, o) 2, standing
+# stones (O) 3. The gazebo floor is roofed: no sun or sky reaches it, only its lamp and a little
+# bounce light from the sunlit grass around it.
+name = "The Courtyard"
+kind = "outdoor"
+map = '''
+##################################################################
+#.............................................................**.#
+#..T...........T....................T..........................*.#
+#......................******.......................T............#
+#.....................##########.................................#
+#.........T....................#.................................#
+#..............................#........................O........#
+#.......................................o=====o.*............T...#
+#..........................T............=======.*................#
+#...>:@:::::::::::::::::::::::::::::::::===L===.......T..........#
+#.......................................=======.*................#
+#...........T...........................o=====o.*................#
+#.............**...~~~~~~........................................#
+#.............*.~~~~~~~~~~~.*.............................T......#
+#.......T......~~~~~~~~~~~~~*.O..................................#
+#................~~~~~~~~~...*....T..............................#
+#.**................~~~~.........................T...............#
+#.**.............................................................#
+##################################################################
+'''
+
+[legend]
+"." = "grass"
+"*" = "flowers"
+":" = "flagstones"
+"T" = "tree"
+"O" = "standing_stone"
+"=" = "gazebo_floor"
+"o" = "gazebo_post"
+"L" = { terrain = "gazebo_floor", light = "lamp" }
+">" = { terrain = "stairs_down", to = "hub" }
+"@" = { terrain = "flagstones", spawn = "player" }

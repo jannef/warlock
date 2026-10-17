@@ -27,7 +27,7 @@ pub use level::{CreatureSpawn, LevelKind, LevelTemplate, StairsLink, parse_route
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use scenario::ScenarioDef;
-pub use terrain::{StairsDir, TerrainDef, TerrainId};
+pub use terrain::{MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
 pub use vault::Vault;
 pub use vision::VisionProfile;
 
@@ -268,6 +268,13 @@ impl Content {
                     spec.id
                 )));
             }
+            let height = spec.height.unwrap_or(u8::from(!spec.transparent));
+            if height > MAX_HEIGHT {
+                return Err(err(format!(
+                    "terrain `{}` has height {height}; expected 0 to {MAX_HEIGHT}",
+                    spec.id
+                )));
+            }
             check_effects(
                 path,
                 "terrain",
@@ -291,6 +298,8 @@ impl Content {
                 stairs: spec.stairs,
                 light,
                 bounce: spec.bounce,
+                height,
+                roofed: spec.roofed,
                 anim: spec.anim.clone(),
                 glow: spec.glow,
                 haze: spec.haze,
@@ -500,6 +509,11 @@ impl Content {
 
     pub fn terrain(&self, id: TerrainId) -> &TerrainDef {
         &self.terrain[usize::from(id.0)]
+    }
+
+    /// The height of the tallest terrain (sun shadows reach no farther than its shadow).
+    pub fn tallest_terrain(&self) -> u8 {
+        self.terrain.iter().map(|t| t.height).max().unwrap_or(0)
     }
 
     pub fn terrain_id(&self, name: &str) -> Option<TerrainId> {

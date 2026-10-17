@@ -3,7 +3,7 @@
 use super::*;
 use crate::content::ContentFiles;
 use crate::light::{BOUNCE, Light, falloff};
-use crate::perception::{CellView, PerceptionView};
+use crate::perception::{CellView, Emitter, PerceptionView};
 use proptest::prelude::*;
 use std::collections::BTreeSet;
 
@@ -217,7 +217,7 @@ fn indirect(view: &PerceptionView<'_>, p: Pos) -> [u16; 3] {
 }
 
 /// Light API invariants that must hold in any state.
-fn check_invariants(world: &World) -> Result<(), TestCaseError> {
+pub(super) fn check_invariants(world: &World) -> Result<(), TestCaseError> {
     let view = world.perception();
     for (p, sum) in summed_light(&view) {
         let light = view.light(p).expect("visible cells have light");
@@ -257,13 +257,18 @@ fn check_wall_faces(view: &PerceptionView<'_>) -> Result<(), TestCaseError> {
     let transparent =
         |p: Pos| matches!(view.cell(p), CellView::Visible(t) if content.terrain(t).transparent);
     for source in view.light_sources() {
-        let preset = content.light(source.preset);
         let lit: BTreeSet<Pos> = (source.contributions.iter())
             .map(|(p, _)| *p)
             .filter(|p| transparent(*p))
             .collect();
         for &(p, c) in source.contributions.iter().filter(|(p, _)| opaque(*p)) {
-            let own = falloff(preset.color, preset.radius, p.dist2(source.pos));
+            let own = match source.emitter {
+                Emitter::Point { pos, preset } => {
+                    let preset = content.light(preset);
+                    falloff(preset.color, preset.radius, p.dist2(pos))
+                }
+                Emitter::Sun(sun) => sun.light,
+            };
             prop_assert_eq!(
                 c,
                 view.vision().perceive(own),
@@ -337,8 +342,9 @@ fn a_torch_lights_its_room_with_falloff() {
     );
     let sources = view.light_sources();
     assert_eq!(sources.len(), 1);
-    assert_eq!(sources[0].pos, Pos::new(5, 1));
-    assert_eq!(view.content().light(sources[0].preset).id, "torch");
+    assert_eq!(sources[0].pos(), Some(Pos::new(5, 1)));
+    let preset = sources[0].preset().expect("a point light");
+    assert_eq!(view.content().light(preset).id, "torch");
 }
 
 #[test]
@@ -517,7 +523,7 @@ fn creatures_in_darkness_are_hidden_but_light_bearers_are_seen() {
     let seen: Vec<_> = view.actors().iter().map(|a| a.pos).collect();
     assert_eq!(seen, vec![Pos::new(1, 1), Pos::new(10, 1)]);
     let carried = &view.light_sources()[0];
-    assert_eq!(carried.pos, Pos::new(10, 1));
+    assert_eq!(carried.pos(), Some(Pos::new(10, 1)));
     // With darkvision the rat would be seen up close.
     let dv = teleport(&dark_world(map, "darkvision"), Pos::new(3, 1));
     assert!(dv.perception().actor_at(Pos::new(5, 1)).is_some());
@@ -581,7 +587,7 @@ fn the_lantern_takes_a_turn_and_lights_the_way() {
         source.key, key,
         "carried lights keep their key as they move"
     );
-    assert_eq!(source.pos, Pos::new(2, 1));
+    assert_eq!(source.pos(), Some(Pos::new(2, 1)));
     w.apply(&Action::ToggleLantern);
     assert!(w.perception().light_sources().is_empty());
 }
@@ -724,7 +730,7 @@ fn showcase_darkness_chamber_needs_special_eyes() {
     let view = at.perception();
     assert!(visible(&view, Pos::new(38, 4)), "d² = 4 from the fungus");
     let glow = (view.light_sources().iter())
-        .find(|s| s.pos == fungus)
+        .find(|s| s.pos() == Some(fungus))
         .expect("the fungus");
     let from_fungus = |p: Pos| {
         glow.contributions
@@ -842,6 +848,17 @@ fn turn_cost() {
     assert!(cold.lights.cached_masks("vast") > 0);
     let (avg, max) = time_turns(vast, 300);
     println!("vast 400×300: avg {avg:.3} ms, max {max:.3} ms per turn (825 lights, 60 carried)");
+    // The same caverns under the open sky just after sunrise, when shadows are longest.
+    let vast = vast_world();
+    let mut state = vast.state().clone();
+    for level in state.levels.values_mut() {
+        level.kind = crate::content::LevelKind::Outdoor;
+    }
+    state.time = crate::time::GameTime::from_calendar(1, 1, 1, 6, 15).expect("valid");
+    let outdoors = World::from_state(vast.content().clone(), state).expect("restore");
+    assert!(outdoors.perception().sun().is_some_and(|s| s.is_up()));
+    let (avg, max) = time_turns(outdoors, 300);
+    println!("vast 400×300 outdoors at 06:15: avg {avg:.3} ms, max {max:.3} ms per turn");
 }
 
 /// Cells in line of sight from the player (independent of light), computed directly.
@@ -864,7 +881,7 @@ fn line_of_sight(world: &World) -> BTreeSet<Pos> {
 
 /// Wall-completion invariants: every opaque cell bounding a transparent cell seen by eye (within
 /// view range) is visible; nothing else outside line of sight is; creatures only in line of sight.
-fn check_wall_completion(world: &World) -> Result<(), TestCaseError> {
+pub(super) fn check_wall_completion(world: &World) -> Result<(), TestCaseError> {
     let view = world.perception();
     let level = world.state().current();
     let content = world.content();

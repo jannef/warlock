@@ -54,7 +54,12 @@ regression scene for golden screenshots, replays, and snapshot tests.
 | Darkness chamber | vision types, a UV-only rune, darkvision fade | M3 |
 | Water garden | still ponds and running rills (flow, glints, foam), pulsing altar | M4, M8 |
 | Effects room | glyph particles, glow, fades, distortion | M4 |
-| Stairs | connection to Level 2 | M2 |
+| Stairs | connection to Level 2; up to the courtyard | M2, M9 |
+
+**Courtyard (66×19, outdoor)**: up the stairs nook's `<`, a walled garden under the open sky —
+trees, a ruined wall, a pond, standing stones, flower beds, and a roofed gazebo with a lamp — where
+sunlight, sky light, and shadows turn and stretch with the time of day (§5 "Sunlight"; M9). The
+`courtyard` scenario starts there at 06:30, while the shadows are long.
 
 **Level 2 — Vast (≥ 400×300)**: scrolling camera, many light sources, performance budget check.
 Introduced in M2, lit in M3. Beside its stairs up to the hub, stairs down lead into the depths.
@@ -122,9 +127,9 @@ Water is calm by design; motion stays tasteful, never busy:
   drift), creature shadows, and transient effect lights (e.g. a spell's glow). Visual-only light
   never affects gameplay.
 - Each frame, the CPU composites the perceived light of the viewport's cells (plus a one-cell
-  margin) from the perception snapshot — the base light (ambient plus bounce, steady) plus every
-  visible source's per-cell contribution — into a viewport-sized float texture aligned with the map
-  grid. The shader
+  margin) from the perception snapshot — the base light (ambient plus sky plus bounce, steady) plus
+  every visible source's per-cell contribution, the sun's included — into a viewport-sized float
+  texture aligned with the map grid. The shader
   interpolates it per pixel between cell centers for smooth gradients; a neighbor contributes only
   if it is visible and transparent, so light never bleeds across walls or corners, nor into unseen
   or remembered cells. Walls show their own wall-face light, flat.
@@ -162,6 +167,11 @@ Water is calm by design; motion stays tasteful, never busy:
   that source's light: a creature does not fill its cell, so about 40 % right behind it, easing
   back to all of it 3.5 cells away. Shadows of several creatures multiply. Colored shadows follow
   from the per-source attenuation: blocking a red light leaves the cells behind lit by the others.
+  The sun (§5 "Sunlight") has no preset, so it is never modulated (no flicker or hue drift), and
+  it is directional: a creature, one cell tall, shades the
+  cells along the sun's shadow line from its cell (the line terrain shadows use, up to the first
+  opaque cell), 40 % next to it easing back to all of the light one step past the shadow's end — so
+  creature shadows are long at dawn and dusk and short at noon.
   Shadows are derived from the perception snapshot once per turn (a sliding creature's shadow is
   already at its destination); darkvision's glow follows the perceived light, not the shadows.
 - **Darkvision**: a cell seen only through darkvision gets a faint monochrome glow that dims toward
@@ -240,8 +250,8 @@ rate or animation.
   `d² ≤ r² + r`. The maximum view range is 40.
 - **Light**: each cell's light is integer **RGB + UV**, one `u16` per channel: **255 = fully lit**
   (a surface shows its base color), more is overbright. A cell's light is the level's ambient light
-  (`ambient = [r, g, b, uv]`, default 0) plus the sum of all sources that reach it plus bounce light
-  (saturating).
+  (`ambient = [r, g, b, uv]`, default 0) plus sky light (outdoors, below) plus the sum of all
+  sources that reach it (the sun included) plus bounce light (saturating).
 - **Light sources** come from light presets (`color = [r, g, b, uv]`, which is also the intensity,
   and `radius`): terrain that emits light, lights placed on cells by the level legend (overriding
   the terrain's own), creatures that carry light, and the player's lantern (from the scenario,
@@ -261,13 +271,39 @@ rate or animation.
   A cell's bounce light is 32/256 (12.5 %) of the result: it never crosses a wall, reaches at most
   3 cells from the surface that reflected it, fading with distance, and is never more than 12.5 %
   of the brightest direct light within reach (exactly that in an evenly lit area). Integer math,
-  derived from unmodulated gameplay light, so steady. Ambient plus bounce light is a cell's *base
-  light*.
+  derived from unmodulated gameplay light, so steady. Sunlight bounces like any other light.
+  Ambient plus sky plus bounce light is a cell's *base light*.
 - **Wall faces**: an opaque cell is lit by each source as a transparent cell at its own distance
   would be (`color · (R² − d²) / R²`), but only if the viewer sees a face the source lights: one of
   its 8 neighbors is transparent, seen, and lit by the same source. This prevents light leaking
   through walls, and a wall is never brighter than the floor at the same distance. Its base light
-  is ambient plus the brightest bounce light of its seen transparent neighbors.
+  is ambient plus the brightest sky-plus-bounce light of its seen transparent neighbors.
+- **Sunlight**: levels under the open sky (`kind = "outdoor"`; the overworld will be too; never
+  dungeons) are lit by the sun and the sky by day. Terrain with `roofed = true` (indoor floors on
+  an outdoor map) never receives either.
+  - **Sun path**: one entry per minute of the day, computed at compile time with integer math (a
+    fixed-point sine; no runtime trigonometry, so identical on every platform). The hour angle runs
+    from 0 at 06:00 to half a turn at 18:00; the sun's direction is its cosine and sine (east,
+    screen +x, at sunrise; south, +y, at noon; west at sunset), and its elevation is 60° times its
+    sine — below the horizon at night. A test pins a hash of the whole table. (Seasons later.)
+  - **Light by elevation**: sunlight fades in over the first 2°, dim deep orange, then orange
+    (6°), warm gold (12°), warm white (25°), and bright neutral white from 40° (`[325, 312, 280]`);
+    it is one more source with a stable key and no flicker. **Sky light** is a dimmer bluish light
+    (`[58, 72, 110]` with the sun high, dimmer and more violet while it is low) on every cell under
+    the sky, shaded or not, part of the base light; a short twilight glow while the sun is less
+    than 6° below the horizon (about 23 minutes before 06:00 and after 18:00). At night there is
+    neither: moonlight is darkness for now.
+  - **Shadows**: terrain stands `height` cells tall (default 1 if opaque, 0 if transparent; trees
+    2, standing stones 3, at most 4). A cell `h` tall casts a shadow `h · cot(elevation)` long (at
+    most 12 cells per unit of height), away from the sun: long at dawn and dusk, short at noon (one
+    cell north of a tree). It covers the cells an integer line from the caster passes through, one
+    step per cell along the line's major axis, as many steps as the shadow is long along that axis
+    (rounded). A cell is in sun shadow iff, marching toward the sun, a cell taller than itself is
+    within that cell's shadow. An opaque cell takes sunlight by the wall-face rule (a seen face lit
+    by the sun) unless it is shaded itself. Sky light is not shadowed.
+  - Computed in the perception phase over the bounce area (the cells in line of sight plus 3),
+    marching at most as far as the tallest terrain's shadow reaches, so cost follows the view, not
+    the level size.
 - **Brightness** is the integer luma of RGB, `(54·r + 183·g + 19·b) / 256`, plus UV for eyes that
   see UV. Eyes without UV sight do not perceive UV at all (perception reports it as 0).
 - **Visibility**: a cell is visible iff it is in line of sight within the maximum view range **and**
@@ -295,14 +331,16 @@ rate or animation.
 - **Recomputation**: perception updates in the perception phase of every turn (and after
   `SetVision`). Per-light shadow masks are cached and invalidated when the light moves or opacity
   changes within its radius; only sources whose radius can reach the view range (or a surface whose
-  bounce light reaches it) are evaluated. Bounce light is computed over the bounding box of the
-  cells in line of sight plus its 3-cell reach, so it does not depend on where the viewer stands.
+  bounce light reaches it) are evaluated. Bounce light and sunlight are computed over the bounding
+  box of the cells in line of sight plus bounce's 3-cell reach, so they do not depend on where the
+  viewer stands. Sunlight is not cached (it moves every minute).
 - **Perception API**: the snapshot exposes, for visible cells only, the perceived light (after the
   wall-face rule; plus whether the cell is seen only through darkvision and its squared distance),
-  the light sources whose light reaches visible cells (stable key, position, preset, and per-cell
-  contributions; contributions plus the cell's base light sum to the cell's light), the base light
-  of visible cells, the active vision profile, and the ambient light. Visual lighting (§4.4) is
-  derived from this.
+  the light sources whose light reaches visible cells (stable key; emitter: a point light's
+  position and preset, or the sun with its shadow direction; and per-cell contributions;
+  contributions plus the cell's base light sum to the cell's light), the base light of visible
+  cells, the active vision profile, the ambient light, and on a level under the sky the sun and sky
+  of the moment. Visual lighting (§4.4) is derived from this.
 
 ## 6. Input and UI
 
@@ -346,8 +384,9 @@ rate or animation.
 Rule: **hand-authored data is TOML; machine-written data is JSON.**
 
 - **Level files** (TOML): a header (name, ambient light, legend, lights, patrols, stair links,
-  and how time passes: `kind = "dungeon"` (default) or `"outdoor"`, optional `turn_seconds`, 1 to
-  3600, default 6 for both kinds; §8 "Time") plus a multiline ASCII map. Level size comes from the map, with no fixed upper limit: most dungeon levels
+  and how time passes: `kind = "dungeon"` (default) or `"outdoor"` (under the open sky, lit by the
+  sun and the sky; §5 "Sunlight"), optional `turn_seconds`, 1 to 3600, default 6 for both kinds;
+  §8 "Time") plus a multiline ASCII map. Level size comes from the map, with no fixed upper limit: most dungeon levels
   are about 80×21, some are vast. The camera scrolls when a level is larger than the viewport. The
   same format defines vaults for procedural generation (below). Illustrative only — exact syntax
   is designed in M1:
@@ -389,9 +428,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   level is unchanged) stand in the wide stretches for the water to foam against.
 - **Definitions** (TOML): terrain types, light presets, vision profiles, glyph animations, and
   effects (glow, heat haze, particle emitters; §4.8). Terrain has a `move_cost`: the time to step
-  onto it in percent of the level's turn (default 100; still and running water 200), and a
-  `bounce` tint for the light it reflects (§5). The calendar's month names are
-  `data/calendar.toml` (exactly 12; without the file months are numbered).
+  onto it in percent of the level's turn (default 100; still and running water 200), a `bounce`
+  tint for the light it reflects (§5), a `height` in cells for sun shadows (default 1 if opaque,
+  else 0; at most 4), and `roofed` (never lit by the sun or the sky). The calendar's month names
+  are `data/calendar.toml` (exactly 12; without the file months are numbered).
 - **Dungeon branches** (`data/dungeons.toml`): stacks of generated levels, e.g.
   `{ id = "depths", generator = "rooms", depth = 8, size = [80, 21] }`, plus optional name,
   patrolling creature kinds, ambient light, and per-depth overrides of generator and size. Stairs
@@ -460,7 +500,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   content (Frostmere, Thawmonth, Seedtide, Rainmoon, Greenleaf, Highsun, Emberheat, Harvestide,
   Leaffall, Mistmoon, Darkening, Deepwinter). `World::time()` returns a `GameTime` with year,
   month (number and index; the name from `Content::calendar`), day, hour, minute, second, minute
-  of day (the index for per-minute tables), and the day fraction in 16-bit fixed point. All
+  of day (the index for per-minute tables such as the sun's path, §5), and the day fraction in
+  16-bit fixed point. All
   integer arithmetic; no wall-clock time.
   - **Costs**: every action that takes a turn advances the clock. A turn (a wait, a door, stairs,
     lighting the lantern) takes the turn length of the level it starts on (6 s on `dungeon` and

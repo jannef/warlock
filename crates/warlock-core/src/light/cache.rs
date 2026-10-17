@@ -16,6 +16,9 @@ use std::collections::BTreeMap;
 const CARRIED: u64 = 1 << 63;
 /// Extra key tag for the player's lantern.
 const LANTERN: u64 = 1 << 62;
+/// The sun's key: the lantern tag without the carried tag, which no other source has (static
+/// keys have both tags clear).
+pub(crate) const SUN_KEY: u64 = LANTERN;
 
 /// A light source active on a level.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -330,6 +333,8 @@ mod tests {
         assert_eq!(a, static_key("hub", Pos::new(3, 4)));
         assert_ne!(a, static_key("hub", Pos::new(4, 3)));
         assert_ne!(a, static_key("vast", Pos::new(3, 4)));
-        assert_eq!(a & CARRIED, 0);
+        assert_eq!(a & (CARRIED | LANTERN), 0, "never the sun's key either");
+        assert_ne!(SUN_KEY & LANTERN, 0);
+        assert_eq!(SUN_KEY & CARRIED, 0);
     }
 }

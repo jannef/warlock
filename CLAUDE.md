@@ -28,11 +28,12 @@ behavior, commands, or architecture change.
 | Check the vast level is fresh | `cargo xtask gen-vast --check` (fails if the file differs from the generator output; run it after touching `xtask/src/vast.rs`) |
 | Golden screenshots | `cargo xtask golden` (compare; authoritative on Linux only), `--local` (capture to `target/xtask/golden/*.local.png`, no compare), `--update` (rewrite references; see "Golden screenshots") |
 | Frame-time benchmark | `cargo xtask bench-frames [WxH]` (release, offscreen; method and results in `docs/perf.md`) |
-| Turn-time benchmark | `cargo xtask bench-turns` (re-runs itself in release; budgets: hub 5 ms, vast 16 ms, generated depths level 5 ms per turn; a dusk-to-dawn rest 500 ms) |
-| Light stress benchmark | `cargo test --release -p warlock-core turn_cost -- --ignored --nocapture` (400×300, 825 lights) |
+| Turn-time benchmark | `cargo xtask bench-turns` (re-runs itself in release; budgets: hub 5 ms, vast 16 ms, generated depths level 5 ms, sunlit courtyard at dawn 5 ms per turn; a dusk-to-dawn rest 500 ms) |
+| Light stress benchmark | `cargo test --release -p warlock-core turn_cost -- --ignored --nocapture` (400×300, 825 lights; again outdoors at 06:15) |
 
 Game flags (`cargo run -p warlock -- --help`):
-- `--scenario NAME` (default `showcase`; `depths` starts in the generated dungeon), `--seed S`
+- `--scenario NAME` (default `showcase`; `depths` starts in the generated dungeon, `courtyard` in
+  the sunlit courtyard at 06:30), `--seed S`
   (default: the scenario's seed; a number, or a word hashed with FNV-1a, e.g. `--seed warlock`)
 - `--content-dir assets` — read content from disk instead of the copy built into the binary
 - `--window WxH` (physical pixels), `--scale F` (display scale; `1` for reproducible captures)
@@ -195,14 +196,15 @@ cells plus a one-cell margin, from `PerceptionView::base_light` (ambient plus ga
 steady, never shadowed by creatures) and `light_sources()` contributions, less creature shadows,
 and folds in UV (violet tint) and the darkvision fade. Gameplay light lives in
 `warlock-core/src/light/` (`mod.rs`: falloff and the wall-face rule; `cache.rs`: per-source shadow
-masks; `bounce.rs`: one weak bounce) and is combined in `perception.rs`; Σ contributions + base
-light == `light(p)` is a tested invariant. **Creature shadows**
+masks; `bounce.rs`: one weak bounce; `sun.rs`: sunlight) and is combined in `perception.rs`;
+Σ contributions + base light == `light(p)` is a tested invariant. **Creature shadows**
 (`render/shadows.rs`, visual only): each visible creature shades every perceived source that
 lights its cell, except one on its own cell (its carried light). The source is shadowcast
 (`fov::compute_fov`) over the perceived terrain with and without the creature's cell as an extra
 occluder; contribution cells only the first reaches keep `shadows::keep` of that source's light
 (`KEEP` 0.4 right behind the creature, back to all of it at `REACH` 3.5 cells), so colored shadows
-come from per-source attenuation. `shadows::update` recomputes the `Shadows` resource only when
+come from per-source attenuation. The sun is directional: `shadows::sun_shade` walks
+`Sun::shadow_steps(CREATURE_HEIGHT)` from the creature instead. `shadows::update` recomputes the `Shadows` resource only when
 `Game` changes (once per turn), not per frame; darkvision still measures the unshaded light (else
 its glow would brighten shadows). **Light stability** (`render/modulation.rs`; presets'
 `stability.{intensity,hue,dips}` in `lights.toml`, absent = steady): each source's `Modulation`
@@ -219,6 +221,20 @@ cells (walls are lit flat by their wall-face light); then exposure (readability 
 overbright knee plus a faint glow in the light's hue), desaturation, gain. Unlit cells (remembered
 terrain, the UI console's 1×1 textures) are drawn as they are. Free glyphs are lit on the CPU by
 `VisualLight::sample` + `lighting::shade`, which mirror the shader — change both together.
+
+**Sunlight** (spec §5 "Sunlight", `light/sun.rs`): a level gets the sun and sky iff
+`LevelKind::is_sky_exposed()` (outdoor; add new sky kinds such as the overworld there, nowhere
+else); terrain `roofed` never does. `Sun::at(time)` reads a per-minute table (`SUN_PATH`) built by
+`const fn`s with integer math only (fixed-point sine), so no runtime trig; a test pins a hash of
+the whole table — after a deliberate change to the sun's path or colors, update the hash.
+`Sun::shadow_steps(height)` is the one shadow line (core terrain shadows and renderer creature
+shadows both use it). `Sunlight::compute` marches each cell of the bounce area toward the sun
+(terrain `height`, `Content::tallest_terrain` bounds the reach); it is not cached. The sun is a
+`SeenLight` with key `SUN_KEY` and `emitter: Emitter::Sun(sun)` (point lights:
+`Emitter::Point { pos, preset }`; use `SeenLight::pos()`/`preset()`), last in `light_sources()`;
+sky light goes into base light. `PerceptionView::sun()` gives the sun and sky of the moment on a
+sky-exposed level (`is_up`, `is_night`, `elevation`), e.g. for day/night rules. The showcase
+courtyard (`levels/courtyard.toml`, scenario `courtyard`) is up the hub stairs nook's `<`.
 
 Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distortion`,
 `screen_fades`) and all off with reduced effects:
