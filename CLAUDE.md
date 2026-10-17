@@ -236,10 +236,11 @@ A successful compile does not verify anything visual. Before opening a PR:
 
 **Cut a release.** Make sure `main` is green, then tag and push the tag (for example
 `v0.1.0`); the `Release` workflow does the rest. It builds Linux x86_64 (`.tar.gz`), Windows
-x86_64 (`.zip`) and macOS arm64 (`.zip` with an unsigned `Warlock.app` plus the bare binary; see
-`release/`) and attaches them, with generated notes, to a GitHub Release. Run the workflow by hand
-(Actions > Release > Run workflow) to get the archives as workflow artifacts without publishing.
-Releases are the only place macOS and Windows runners are used.
+x86_64 (`.zip`), macOS arm64 (`.zip` with an unsigned `Warlock.app` plus the bare binary; see
+`release/`) and the web build (`.zip` to serve from any static host) and attaches them, with
+generated notes, to a GitHub Release; `v0.x` tags are published as pre-releases. Run the workflow
+by hand (Actions > Release > Run workflow) to get the archives as workflow artifacts without
+publishing. Releases are the only place macOS and Windows runners are used.
 
 **Web build** (wasm32 + WebGPU; all content is embedded, nothing on the startup path may touch
 `std::fs`): one-time setup is `rustup target add wasm32-unknown-unknown` and
