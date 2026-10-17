@@ -207,7 +207,7 @@ mod tests {
         let view = world.perception();
         let mut light = VisualLight::default();
         let size = UVec2::new(view.width() as u32, view.height() as u32);
-        light.composite(&view, IVec2::ZERO, size, None);
+        light.composite(&view, &Default::default(), IVec2::ZERO, size, None);
 
         let color = LinearRgba::new(0.5, 0.5, 0.5, 0.8);
         let home = Vec2::new(7.0, 15.0);

@@ -50,7 +50,7 @@ regression scene for golden screenshots, replays, and snapshot tests.
 | Start room | movement, message line, `?` controls overlay | M1 |
 | Door corridor | opening/closing doors, doors blocking sight | M1–M2 |
 | Patrol gallery | creatures moving in and out of view, never shown in memory | M2 |
-| Light hall | colored lights, falloff, pillar shadows, flicker | M3 |
+| Light hall | colored lights, falloff, pillar and creature shadows, flicker | M3, M8 |
 | Darkness chamber | vision types, a UV-only rune, darkvision fade | M3 |
 | Water garden | rippling water, pulsing altar, shimmer | M4 |
 | Effects room | glyph particles, glow, fades, distortion | M4 |
@@ -97,8 +97,8 @@ Animation that stays inside the cell runs in the grid shader; animation that exc
 pulse above 1.0 scale) uses the free-glyph layer.
 
 ### 4.4 Visual lighting
-- Derived from gameplay light (§5), plus visual-only modulation: flicker and transient effect lights
-  (e.g. a spell's glow). Visual-only light never affects gameplay.
+- Derived from gameplay light (§5), plus visual-only modulation: flicker, creature shadows, and
+  transient effect lights (e.g. a spell's glow). Visual-only light never affects gameplay.
 - Each frame, the CPU composites the perceived light of the viewport's cells (plus a one-cell
   margin) from the perception snapshot — ambient light plus every visible source's per-cell
   contribution — into a viewport-sized float texture aligned with the map grid. The shader
@@ -112,6 +112,16 @@ pulse above 1.0 scale) uses the free-glyph layer.
   stable key and visual time, applied as a per-cell brightness gain (the mean of the flicker of the
   sources lighting the cell, weighted by their light) after shading, so it reads the same in dim
   and bright light. Gentle by design: brightness drifts within ±`amount`, no strobing.
+- **Creature shadows** (visual only: gameplay light and visibility ignore them, so creatures never
+  hide in each other's shadows): every visible creature, the player included, shades each perceived
+  source that lights its cell, except a source on its own cell (the light it carries). The cells
+  behind it as seen from the source (the source's shadowcast over the terrain the player perceives,
+  with the creature's cell as an extra occluder, among the cells the source lights) keep only part of
+  that source's light: a creature does not fill its cell, so about 40 % right behind it, easing
+  back to all of it 3.5 cells away. Shadows of several creatures multiply. Colored shadows follow
+  from the per-source attenuation: blocking a red light leaves the cells behind lit by the others.
+  Shadows are derived from the perception snapshot once per turn (a sliding creature's shadow is
+  already at its destination); darkvision's glow follows the perceived light, not the shadows.
 - **Darkvision**: a cell seen only through darkvision gets a faint monochrome glow that dims toward
   the edge of the darkvision radius, and its color fades toward monochrome as it gets darker and
   farther from the viewer: saturation = 1 − darkness · (1 − 0.3 · (1 − distance / radius)) with
