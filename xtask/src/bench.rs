@@ -92,3 +92,72 @@ pub fn run() -> Result<(), String> {
         Ok(())
     }
 }
+
+/// Frame-time measurement: runs the release game offscreen with `--capture-after-frames` N and
+/// M, and divides the wall-clock difference by M - N, which cancels startup and capture cost.
+/// `WARLOCK_UNPACED=1` removes the game's 60 Hz capture-mode pacing, so this measures CPU + GPU
+/// throughput per frame (offscreen render, no presentation).
+pub fn frames(window: &str) -> Result<(), String> {
+    use crate::workspace_root;
+    use std::process::Command;
+
+    let root = workspace_root();
+    let status = Command::new(env!("CARGO"))
+        .current_dir(&root)
+        .args(["build", "--quiet", "--release", "--package", "warlock"])
+        .status()
+        .map_err(|e| format!("failed to run cargo: {e}"))?;
+    if !status.success() {
+        return Err(format!("release build failed: {status}"));
+    }
+    let exe = root.join("target/release/warlock");
+    let out = root.join("target/xtask/bench-frame.png");
+    std::fs::create_dir_all(out.parent().expect("has parent")).map_err(|e| e.to_string())?;
+    const LOW: u32 = 10;
+    const HIGH: u32 = 2010;
+    const RUNS: usize = 5;
+    println!(
+        "{:<6} {:>10} {:>12} {:>10}  verdict ({window}, scale 1, best of {RUNS} runs, {} frames)",
+        "level",
+        "fps",
+        "ms/frame",
+        "budget ms",
+        HIGH - LOW
+    );
+    let mut failed = false;
+    for (scenario, label) in [("showcase", "hub"), ("vast", "vast")] {
+        let time = |frames: u32| -> Result<f64, String> {
+            let mut best = f64::MAX;
+            for _ in 0..RUNS {
+                let start = Instant::now();
+                let status = Command::new(&exe)
+                    .current_dir(&root)
+                    .env("WARLOCK_UNPACED", "1")
+                    .args(["--scenario", scenario, "--window", window, "--scale", "1"])
+                    .args(["--capture-after-frames", &frames.to_string(), "--capture"])
+                    .arg(&out)
+                    .status()
+                    .map_err(|e| format!("failed to run the game: {e}"))?;
+                if !status.success() {
+                    return Err(format!("game exited with {status}"));
+                }
+                best = best.min(start.elapsed().as_secs_f64());
+            }
+            Ok(best)
+        };
+        let ms = (time(HIGH)? - time(LOW)?) * 1000.0 / f64::from(HIGH - LOW);
+        let budget = 1000.0 / 60.0;
+        let ok = ms <= budget;
+        failed |= !ok;
+        println!(
+            "{label:<6} {:>10.1} {ms:>12.3} {budget:>10.2}  {}",
+            1000.0 / ms,
+            if ok { "ok" } else { "OVER BUDGET" }
+        );
+    }
+    if failed {
+        Err("frame time over budget".into())
+    } else {
+        Ok(())
+    }
+}
