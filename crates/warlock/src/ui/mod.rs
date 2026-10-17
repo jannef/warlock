@@ -1,12 +1,21 @@
 //! Glyph UI: the map viewport, message line, status bar, and controls overlay (spec §6).
 //!
-//! Everything shown about the world comes from `World::perception()`.
+//! Everything shown about the world comes from `World::perception()`. Terrain goes into the map
+//! grid layer, creatures and glyphs that outgrow their cell into the free-glyph layer
+//! ([`glyphs`]), and text and panels into the UI console on top. [`motion`] moves the camera and
+//! slides creatures between cells.
+
+mod glyphs;
+mod motion;
 
 use crate::game::{Game, SimSet};
 use crate::input::{Bindings, InputMode};
-use crate::render::ConsoleLayout;
+use crate::render::anim::{AnimTable, TerrainAnim};
 use crate::render::console::{Cell, Console};
+use crate::render::grid::MapGrid;
+use crate::render::{ConsoleLayout, VisualTime};
 use bevy::prelude::*;
+use motion::Motion;
 use warlock_core::Pos;
 use warlock_core::color::Rgb;
 use warlock_core::perception::{CellView, PerceptionView};
@@ -23,7 +32,12 @@ pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, draw.after(SimSet));
+        app.init_resource::<Motion>().add_systems(
+            Update,
+            (motion::track, (draw, draw_map_layer), glyphs::emit)
+                .chain()
+                .after(SimSet),
+        );
     }
 }
 
@@ -38,21 +52,7 @@ fn draw(
         return;
     }
     console.clear();
-    let cols = console.cols() as i32;
     let rows = console.rows() as i32;
-    let map_rows = rows - MESSAGE_ROWS - STATUS_ROWS;
-    if map_rows > 0 {
-        draw_map(
-            &mut console,
-            &game.world.perception(),
-            Rect2 {
-                x: 0,
-                y: MESSAGE_ROWS,
-                w: cols,
-                h: map_rows,
-            },
-        );
-    }
     draw_messages(&mut console, &game, *mode);
     draw_status(&mut console, &game, rows - 1);
     if *mode == InputMode::Help {
@@ -60,12 +60,74 @@ fn draw(
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct Rect2 {
     x: i32,
     y: i32,
     w: i32,
     h: i32,
+}
+
+/// The map viewport in UI console cells: everything between the message line and the status bar.
+fn map_area(cols: i32, rows: i32) -> Option<Rect2> {
+    let h = rows - MESSAGE_ROWS - STATUS_ROWS;
+    (h > 0 && cols > 0).then_some(Rect2 {
+        x: 0,
+        y: MESSAGE_ROWS,
+        w: cols,
+        h,
+    })
+}
+
+/// What the map grid was last drawn for.
+#[derive(Debug, PartialEq, Eq)]
+struct MapKey {
+    level_origin: IVec2,
+    area: Rect2,
+    covered: Vec<Pos>,
+}
+
+/// Places the map grid under the camera and redraws it when the view changed.
+fn draw_map_layer(
+    game: Res<Game>,
+    console: Res<Console>,
+    layout: Res<ConsoleLayout>,
+    motion: Res<Motion>,
+    visual: Res<VisualTime>,
+    anims: Res<AnimTable>,
+    mut grid: ResMut<MapGrid>,
+    mut drawn: Local<Option<MapKey>>,
+) {
+    let Some(area) = map_area(console.cols() as i32, console.rows() as i32) else {
+        grid.clip = Rect::default();
+        return;
+    };
+    let cell = layout.cell.as_vec2();
+    let (level_origin, offset) = motion::camera_split(motion.camera(visual.seconds), cell);
+    let top_left = layout.origin + Vec2::new(area.x as f32, area.y as f32) * cell;
+    grid.cell = cell;
+    grid.clip = Rect::from_corners(
+        top_left,
+        top_left + Vec2::new(area.w as f32, area.h as f32) * cell,
+    );
+    grid.origin = top_left - offset;
+    grid.level_origin = level_origin;
+
+    let view = game.world.perception();
+    let key = MapKey {
+        level_origin,
+        area,
+        covered: motion.occupied(view.actors().iter().map(|a| a.pos)),
+    };
+    let changed = game.is_changed() || anims.is_changed() || layout.is_changed();
+    if !changed && drawn.as_ref() == Some(&key) {
+        return;
+    }
+    // One margin cell right and below, so a sub-cell offset never shows a gap.
+    grid.console.resize(area.w as u32 + 1, area.h as u32 + 1);
+    grid.console.clear();
+    draw_map(&mut grid, &view, &anims, &key.covered);
+    *drawn = Some(key);
 }
 
 /// World position shown at the viewport's top-left. Levels smaller than the viewport are
@@ -78,15 +140,17 @@ fn camera_origin(view: i32, level: i32, viewer: i32) -> i32 {
     }
 }
 
-fn draw_map(console: &mut Console, view: &PerceptionView<'_>, area: Rect2) {
+/// Draws terrain into the map grid. Creatures are on the free-glyph layer: the grid keeps the
+/// terrain under them but not its glyph (`covered`). Only visible terrain animates.
+fn draw_map(grid: &mut MapGrid, view: &PerceptionView<'_>, anims: &AnimTable, covered: &[Pos]) {
     let content = view.content();
-    let viewer = view.viewer();
-    let ox = camera_origin(area.w, view.width(), viewer.x);
-    let oy = camera_origin(area.h, view.height(), viewer.y);
-    for sy in 0..area.h {
-        for sx in 0..area.w {
+    let (ox, oy) = (grid.level_origin.x, grid.level_origin.y);
+    grid.free_terrain.clear();
+    for sy in 0..grid.console.rows() as i32 {
+        for sx in 0..grid.console.cols() as i32 {
             let p = Pos::new(ox + sx, oy + sy);
-            let cell = match view.cell(p) {
+            let seen = view.cell(p);
+            let cell = match seen {
                 CellView::Unknown => continue,
                 CellView::Remembered(t) => {
                     let def = content.terrain(t);
@@ -105,26 +169,26 @@ fn draw_map(console: &mut Console, view: &PerceptionView<'_>, area: Rect2) {
                     }
                 }
             };
-            console.put(area.x + sx, area.y + sy, cell);
+            grid.console.put(sx, sy, cell);
+            if let CellView::Visible(t) = seen {
+                match anims.terrain(t) {
+                    Some(TerrainAnim::Grid { .. }) => {
+                        grid.console.animate(sx, sy, anims.cell(t, p))
+                    }
+                    Some(TerrainAnim::Free) => {
+                        grid.console.clear_glyph(sx, sy);
+                        if covered.binary_search(&p).is_err() {
+                            grid.free_terrain.push((p, t));
+                        }
+                    }
+                    None => {}
+                }
+            }
         }
     }
-    for actor in view.actors() {
-        let (sx, sy) = (actor.pos.x - ox, actor.pos.y - oy);
-        if sx < 0 || sy < 0 || sx >= area.w || sy >= area.h {
-            continue;
-        }
-        let def = content.creature(actor.creature);
-        let (x, y) = (area.x + sx, area.y + sy);
-        let bg = console.get(x, y).map_or(Rgb::BLACK, |c| c.bg);
-        console.put(
-            x,
-            y,
-            Cell {
-                ch: def.glyph,
-                fg: def.fg,
-                bg,
-            },
-        );
+    for &p in covered {
+        let at = grid.to_console(p);
+        grid.console.clear_glyph(at.x, at.y);
     }
 }
 
@@ -215,6 +279,10 @@ fn draw_help(console: &mut Console, bindings: &Bindings) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::render::console::CellAnim;
+    use std::sync::Arc;
+    use warlock_core::content::{Content, ContentFiles};
+    use warlock_core::{Action, Dir, World};
 
     #[test]
     fn camera_centers_small_levels_and_clamps_large_ones() {
@@ -229,5 +297,70 @@ mod tests {
         let c = Rgb::new(200, 100, 50);
         let r = remembered(c);
         assert!(r.r < c.r && r.g < c.g);
+    }
+
+    #[test]
+    fn map_area_lies_between_messages_and_status() {
+        assert_eq!(
+            map_area(80, 24),
+            Some(Rect2 {
+                x: 0,
+                y: MESSAGE_ROWS,
+                w: 80,
+                h: 24 - MESSAGE_ROWS - STATUS_ROWS
+            })
+        );
+        assert_eq!(map_area(80, MESSAGE_ROWS + STATUS_ROWS), None);
+    }
+
+    /// Water and an altar on both sides of a door; the player looks, then closes the door.
+    fn pool_world() -> World {
+        let mut files = ContentFiles::builtin();
+        files.insert(
+            "levels/pool.toml",
+            "name = \"Pool\"\nmap = '''\n#######\n#~@+~_#\n#######\n'''\n\
+             [legend]\n\"@\" = { terrain = \"floor\", spawn = \"player\" }\n",
+        );
+        files.insert(
+            "scenarios/pool.toml",
+            "name = \"P\"\nstart_level = \"pool\"\n",
+        );
+        let content = Content::load(&files).expect("test content loads");
+        let mut world = World::new(Arc::new(content), "pool", None).expect("scenario starts");
+        world.apply(&Action::Open(Dir::E));
+        world.apply(&Action::Close(Dir::E));
+        world
+    }
+
+    #[test]
+    fn map_animates_only_visible_terrain_and_hands_pulses_to_free_glyphs() {
+        let mut world = pool_world();
+        let view = world.perception();
+        let content = view.content();
+        let anims = AnimTable::new(content, |_| 0, true);
+        let mut grid = MapGrid::default();
+        grid.console.resize(7, 3);
+        let player = view.viewer();
+        draw_map(&mut grid, &view, &anims, &[player]);
+
+        let at = |x: i32, y: i32| (y * 7 + x) as usize;
+        let cell = |x, y| grid.console.cells()[at(x, y)];
+        // The player's cell keeps its floor background but not the floor glyph.
+        assert_eq!(cell(2, 1).map(|c| c.ch), Some(' '));
+        // Visible water animates; remembered water behind the closed door does not.
+        assert!(grid.console.anims()[at(1, 1)].entry > 0);
+        assert_eq!(cell(4, 1).map(|c| c.ch), Some('~'));
+        assert_eq!(grid.console.anims()[at(4, 1)], CellAnim::STILL);
+        // The remembered altar is a still glyph in the grid, not a pulse.
+        assert_eq!(cell(5, 1).map(|c| c.ch), Some('_'));
+        assert!(grid.free_terrain.is_empty());
+
+        // With the door open the altar is visible: it pulses on the free-glyph layer.
+        let altar = content.terrain_id("altar").expect("altar exists");
+        world.apply(&Action::Open(Dir::E));
+        let view = world.perception();
+        draw_map(&mut grid, &view, &anims, &[player]);
+        assert_eq!(grid.free_terrain, vec![(Pos::new(5, 1), altar)]);
+        assert_eq!(grid.console.cells()[at(5, 1)].map(|c| c.ch), Some(' '));
     }
 }

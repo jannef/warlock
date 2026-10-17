@@ -114,8 +114,9 @@ pulse above 1.0 scale) uses the free-glyph layer.
 ### 4.7 Readability and reduced effects
 - Glyphs stay legible under every effect: minimum contrast against their background, glow added
   around glyphs rather than over them, small distortion amplitudes.
-- A **reduced effects** setting turns off glyph animation, flicker, sliding (instant snap), bloom,
-  and distortion, and minimizes particles. No gameplay information may depend on an effect.
+- A **reduced effects** setting turns off glyph animation, flicker, sliding (instant snap), camera
+  easing, bloom, and distortion, and minimizes particles. No gameplay information may depend on an
+  effect. Until settings exist (M5) it is the `--reduced-effects` flag.
 
 ## 5. Visibility, light, and vision
 
@@ -255,7 +256,8 @@ cargo xtask golden [--update]                             # compare golden scree
 - Dump layers: `view`, `fov`, `memory` are built from the perception snapshot only; `truth` shows
   ground truth and is dev-only; `light` arrives with lighting (M3). JSON dumps carry turn, level,
   viewer, seen actors, recent messages, and optionally the full world state.
-- Freezing visual time and fixing window size and scale make screenshots reproducible.
+- Freezing visual time and fixing window size and scale make screenshots reproducible. With frozen
+  time, glyph animations show that moment and motion (slides, camera) completes instantly.
 - Dev builds add in-game commands: switch vision profile, reveal map, toggle debug overlays (light
   values, line of sight, memory), save and load named snapshots.
 - CLAUDE.md documents build commands, architecture notes, pinned documentation references, and
