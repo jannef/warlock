@@ -101,7 +101,8 @@ impl WorldState {
 pub struct World {
     content: Arc<Content>,
     state: WorldState,
-    perception: Perception,
+    /// Boxed: the snapshot is large and replaced wholesale every turn.
+    perception: Box<Perception>,
     /// Cached light masks; derived, never saved.
     lights: LightCache,
 }
@@ -195,7 +196,7 @@ impl World {
 
     fn assemble(content: Arc<Content>, mut state: WorldState) -> Self {
         let mut lights = LightCache::default();
-        let perception = Perception::compute(&state, &content, &mut lights);
+        let perception = Box::new(Perception::compute(&state, &content, &mut lights));
         perception.remember(state.current_mut());
         Self {
             content,
@@ -285,7 +286,7 @@ impl World {
 
     /// Phase 4: recomputes perception, updates memory, and drops events the player did not see.
     fn perceive(&mut self, events: &mut Vec<Event>) {
-        self.perception = Perception::compute(&self.state, &self.content, &mut self.lights);
+        *self.perception = Perception::compute(&self.state, &self.content, &mut self.lights);
         let current = self.state.current_level.clone();
         if let Some(level) = self.state.levels.get_mut(&current) {
             self.perception.remember(level);
