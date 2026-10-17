@@ -35,8 +35,8 @@ Game flags (`cargo run -p warlock -- --help`):
 - `--capture out.png` — render **offscreen** (no window), save a screenshot, exit.
   `--capture-after-frames N` (default 10), `--freeze-time SECONDS` pins animation time (glyph
   animations show that moment; slides and camera moves complete instantly).
-- `--reduced-effects` — force reduced effects on (no glyph animation, slides, or camera easing);
-  the settings file can turn them on too.
+- `--reduced-effects` — force reduced effects on (no glyph animation, light flicker, slides, or
+  camera easing); the settings file can turn them on too.
 - Without `--scenario`, `--new`, `--replay`, `--record`, or `--capture` the game opens on the main
   menu. Dev: `--screen main|new-run|settings|controls` opens the menu on a screen even with
   `--capture` (e.g. `--scale 1 --screen controls --capture target/menu.png`).
@@ -59,12 +59,14 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascend descend lantern
 vision:PROFILE` (`DIR` = N NE E SE S SW W NW; `PROFILE` = an id in `assets/data/vision.toml`). Dump layers: `view` (what the player sees), `fov` (`*` visible),
-`memory` (seen terrain), `truth` (ground truth, **dev-only**). Replay files are JSON
+`memory` (seen terrain), `light` (perceived brightness of visible cells as a digit, `0` dark to `9`
+fully lit), `truth` (ground truth, **dev-only**). Replay files are JSON
 `{game_version, scenario, seed, steps:[{action, hash}]}`; `hash` is the FNV-1a 64 state hash
 (`World::state_hash`) after the step, as 16 hex digits.
 
 - `--new` start a fresh run instead of resuming the save; `--dev` enables the dev keys in release
-  builds (always on in debug: F3 next vision profile, F5/F9 snapshots); `--save-dir DIR` keeps saves in DIR instead of the platform data dir.
+  builds (always on in debug: F2 reveal map (ground truth), F3 next vision profile, F4 light-value
+  overlay, F5/F9 snapshots; all listed by `?`); `--save-dir DIR` keeps saves in DIR instead of the platform data dir.
 
 Saves: `Q` saves and quits (closing the window saves too); the game autosaves every 50 turns and on
 level change to `run.sav` in the platform data dir (`paths.rs`, app name "warlock"; macOS
@@ -117,9 +119,23 @@ Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebu
 3. **UI console**: the same console material over the whole window; unwritten cells are
    transparent.
 
-`ui/` decides what is drawn from the perception snapshot: `ui/mod.rs` (UI console, map grid),
-`ui/glyphs.rs` (free glyphs), `ui/motion.rs` (slides from `Outcome.events`, camera easing; new
-input completes running motion). Animation curves live in `render/anim.rs` and are mirrored in
+**Visual lighting** (spec §4.4, `render/lighting.rs` + `lighting.wesl`, imported by
+`console.wesl`): every frame `lighting::update` composites the perceived light for the map grid's
+cells plus a one-cell margin, from `PerceptionView::ambient` and `light_sources()` contributions,
+and folds in UV (violet tint) and the darkvision fade. Flicker (deterministic noise from the
+source key and `VisualTime`; off with reduced effects) is a per-cell brightness gain applied after
+shading. Two textures on the map material: `light` (`Rgba32Float`: rgb light, 1.0 = fully lit,
+and saturation) and `light_flags` (`Rgba8Uint`: lit/opaque flags, flicker gain byte). The shader
+interpolates light per pixel between cell centers, never across opaque, unseen, or remembered
+cells (walls are lit flat by their wall-face light); then exposure (readability floor, soft
+overbright knee plus a faint glow in the light's hue), desaturation, gain. Unlit cells (remembered
+terrain, the UI console's 1×1 textures) are drawn as they are. Free glyphs are lit on the CPU by
+`VisualLight::sample` + `lighting::shade`, which mirror the shader — change both together.
+
+`ui/` decides what is drawn from the perception snapshot: `ui/mod.rs` (UI console, map grid in
+base colors), `ui/glyphs.rs` (free glyphs), `ui/motion.rs` (slides from `Outcome.events`, camera
+easing; new input completes running motion), `ui/dev.rs` (dev overlays: reveal map, the one reader
+of ground truth, and light values). Animation curves live in `render/anim.rs` and are mirrored in
 `console.wesl` — change both together. Everything animated is a function of `VisualTime`.
 
 Hard rules:

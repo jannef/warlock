@@ -6,7 +6,7 @@
 use crate::cli::Args;
 use crate::game::{Game, PlayerAction, SimSet};
 use crate::save::SaveCommand;
-use crate::ui::{Menu, OpenPause};
+use crate::ui::{DevOverlays, Menu, OpenPause};
 use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
@@ -25,6 +25,10 @@ pub enum KeyCommand {
     Lantern,
     /// Dev: switch to the next vision profile.
     CycleVision,
+    /// Dev: show ground truth where the player does not see.
+    RevealMap,
+    /// Dev: show perceived light values on visible cells.
+    LightValues,
     Help,
     Cancel,
     Quit,
@@ -44,6 +48,8 @@ impl KeyCommand {
             KeyCommand::Ascend => "Go up stairs",
             KeyCommand::Lantern => "Light / douse lantern",
             KeyCommand::CycleVision => "Next vision profile (dev)",
+            KeyCommand::RevealMap => "Reveal map (dev)",
+            KeyCommand::LightValues => "Light values (dev)",
             KeyCommand::Help => "Show / hide controls",
             KeyCommand::Cancel => "Cancel",
             KeyCommand::Quit => "Save and quit",
@@ -146,11 +152,13 @@ impl Default for Bindings {
 }
 
 impl Bindings {
-    /// Adds the developer keys — vision profile switching and snapshots (always present in debug
-    /// builds, `--dev` otherwise).
+    /// Adds the developer keys — reveal map, vision profile switching, light values, snapshots
+    /// (always present in debug builds, `--dev` otherwise).
     fn add_dev_keys(&mut self) {
         let dev = [
+            (KeyBinding::Code(KeyCode::F2), KeyCommand::RevealMap),
             (KeyBinding::Code(KeyCode::F3), KeyCommand::CycleVision),
+            (KeyBinding::Code(KeyCode::F4), KeyCommand::LightValues),
             (KeyBinding::Code(KeyCode::F5), KeyCommand::Snapshot),
             (KeyBinding::Code(KeyCode::F9), KeyCommand::LoadSnapshot),
         ];
@@ -235,6 +243,7 @@ fn read_keys(
     bindings: Res<Bindings>,
     game: Res<Game>,
     mut mode: ResMut<InputMode>,
+    mut overlays: ResMut<DevOverlays>,
     mut actions: MessageWriter<PlayerAction>,
     mut saves: MessageWriter<SaveCommand>,
     mut pause: MessageWriter<OpenPause>,
@@ -293,6 +302,14 @@ fn read_keys(
                 let view = game.world.perception();
                 let next = next_vision(view.content().vision_profiles(), &view.vision().id);
                 actions.write(PlayerAction(Action::SetVision(next)));
+                InputMode::Normal
+            }
+            (InputMode::Normal, KeyCommand::RevealMap) => {
+                overlays.reveal = !overlays.reveal;
+                InputMode::Normal
+            }
+            (InputMode::Normal, KeyCommand::LightValues) => {
+                overlays.light_values = !overlays.light_values;
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Open | KeyCommand::Close) => {
@@ -359,6 +376,8 @@ mod tests {
             b.keys_for("Next vision profile (dev)"),
             vec!["F3".to_string()]
         );
+        assert_eq!(b.keys_for("Reveal map (dev)"), vec!["F2".to_string()]);
+        assert_eq!(b.keys_for("Light values (dev)"), vec!["F4".to_string()]);
     }
 
     #[test]

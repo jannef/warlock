@@ -4,7 +4,7 @@
 //! leak information the player does not have. `Truth` reads ground truth and is dev-only.
 
 use crate::geom::Pos;
-use crate::perception::{CellView, PerceptionView};
+use crate::perception::{CellView, PerceivedLight, PerceptionView};
 use crate::world::World;
 use serde_json::{Value, json};
 use std::fmt::Write;
@@ -22,6 +22,9 @@ pub enum Layer {
     Fov,
     /// Terrain glyphs for every cell the player has seen (visible or remembered).
     Memory,
+    /// Perceived light on every visible cell as a digit, `0` (dark) to `9` (fully lit or
+    /// brighter); see [`light_digit`].
+    Light,
     /// Ground truth: all terrain and all actors on the level. **Dev-only.**
     Truth,
 }
@@ -33,6 +36,7 @@ impl Layer {
             Layer::View => "view",
             Layer::Fov => "fov",
             Layer::Memory => "memory",
+            Layer::Light => "light",
             Layer::Truth => "truth",
         }
     }
@@ -42,10 +46,16 @@ impl FromStr for Layer {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        [Layer::View, Layer::Fov, Layer::Memory, Layer::Truth]
-            .into_iter()
-            .find(|l| l.name() == s)
-            .ok_or_else(|| format!("unknown layer `{s}` (expected view, fov, memory, truth)"))
+        [
+            Layer::View,
+            Layer::Fov,
+            Layer::Memory,
+            Layer::Light,
+            Layer::Truth,
+        ]
+        .into_iter()
+        .find(|l| l.name() == s)
+        .ok_or_else(|| format!("unknown layer `{s}` (expected view, fov, memory, light, truth)"))
     }
 }
 
@@ -87,8 +97,16 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
             }
         }
         Layer::Memory => terrain_glyph(cell),
+        Layer::Light => view.light(p).map_or(' ', light_digit),
         Layer::Truth => unreachable!("truth is not built from perception"),
     }
+}
+
+/// Perceived brightness ([`PerceivedLight::brightness`]: luma, plus UV for eyes that see it) in
+/// tenths of full light: `0` below 26, `9` from 230 up (overbright included).
+pub fn light_digit(light: PerceivedLight) -> char {
+    let tenths = (u32::from(light.brightness()) * 10 / 256).min(9);
+    char::from_digit(tenths, 10).unwrap_or('9')
 }
 
 fn truth_rows(world: &World) -> Vec<String> {
@@ -98,7 +116,9 @@ fn truth_rows(world: &World) -> Vec<String> {
     rows(level.width(), level.height(), |p| {
         match actors.iter().find(|a| a.pos == p) {
             Some(actor) => content.creature(actor.creature).glyph,
-            None => content.terrain(level.terrain[p]).glyph,
+            None => level
+                .terrain_at(p)
+                .map_or(' ', |t| content.terrain(t).glyph),
         }
     })
 }
@@ -209,7 +229,8 @@ mod tests {
             parse_layers("view, fov,truth"),
             Ok(vec![Layer::View, Layer::Fov, Layer::Truth])
         );
-        assert!(parse_layers("view,light").is_err());
+        assert_eq!(parse_layers("light"), Ok(vec![Layer::Light]));
+        assert!(parse_layers("view,lights").is_err());
     }
 
     #[test]
@@ -246,5 +267,40 @@ mod tests {
         let mut world = showcase();
         run(&mut world, SHOWCASE_RUN);
         insta::assert_snapshot!("showcase_end", ascii(&world, &[Layer::View, Layer::Memory]));
+    }
+
+    #[test]
+    fn light_digits_are_tenths_of_full_light() {
+        let light = |rgb: [u16; 3], uv: u16| PerceivedLight {
+            rgb,
+            uv,
+            darkvision: false,
+            dist2: 0,
+        };
+        assert_eq!(light_digit(light([0, 0, 0], 0)), '0');
+        assert_eq!(light_digit(light([25, 25, 25], 0)), '0');
+        assert_eq!(light_digit(light([26, 26, 26], 0)), '1');
+        assert_eq!(light_digit(light([128, 128, 128], 0)), '5');
+        assert_eq!(light_digit(light([255, 255, 255], 0)), '9');
+        assert_eq!(light_digit(light([900, 900, 900], 0)), '9');
+        assert_eq!(
+            light_digit(light([0, 0, 0], 128)),
+            '5',
+            "perceived UV counts"
+        );
+    }
+
+    #[test]
+    fn light_layer_shows_visible_cells_only() {
+        let world = showcase();
+        insta::assert_snapshot!("showcase_light", ascii(&world, &[Layer::Light]));
+        let rows = layer_rows(&world, Layer::Light);
+        let fov = layer_rows(&world, Layer::Fov);
+        for (light, fov) in rows.iter().zip(&fov) {
+            assert_eq!(light.len(), fov.len());
+            for (l, f) in light.chars().zip(fov.chars()) {
+                assert_eq!(l.is_ascii_digit(), f == '*');
+            }
+        }
     }
 }

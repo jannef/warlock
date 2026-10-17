@@ -45,6 +45,12 @@ impl LevelState {
         self.terrain.height()
     }
 
+    /// The terrain at `p` as it is now (ground truth, `None` out of bounds). Only reachable
+    /// through [`crate::World::ground_truth`], **for developer tools only**.
+    pub fn terrain_at(&self, p: Pos) -> Option<TerrainId> {
+        self.terrain.get(p).copied()
+    }
+
     /// Opaque cells block sight. Out-of-bounds counts as opaque.
     pub(crate) fn is_opaque(&self, content: &Content, p: Pos) -> bool {
         self.terrain

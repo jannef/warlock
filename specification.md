@@ -94,10 +94,26 @@ pulse above 1.0 scale) uses the free-glyph layer.
 ### 4.4 Visual lighting
 - Derived from gameplay light (§5), plus visual-only modulation: flicker and transient effect lights
   (e.g. a spell's glow). Visual-only light never affects gameplay.
-- Each frame, the CPU composites cached per-light shadow masks × flicker into a viewport-sized float
-  texture. The shader interpolates it for smooth gradients without bleeding across walls.
-- **Darkvision**: color fades toward monochrome as a cell gets darker and farther from the viewer.
+- Each frame, the CPU composites the perceived light of the viewport's cells (plus a one-cell
+  margin) from the perception snapshot — ambient light plus every visible source's per-cell
+  contribution — into a viewport-sized float texture aligned with the map grid. The shader
+  interpolates it per pixel between cell centers for smooth gradients; a neighbor contributes only
+  if it is visible and transparent, so light never bleeds across walls or corners, nor into unseen
+  or remembered cells. Walls show their own wall-face light, flat.
+- A surface's base color is its look at full light (255). Below that it dims linearly (in linear
+  light) to a readability floor; overbright light brightens it a little more along a soft knee and
+  adds a faint glow in the light's own color, so strongly lit floors pool with color.
+- **Flicker** is per source (preset `flicker = { amount, speed }`): smooth noise from the source's
+  stable key and visual time, applied as a per-cell brightness gain (the mean of the flicker of the
+  sources lighting the cell, weighted by their light) after shading, so it reads the same in dim
+  and bright light. Gentle by design: brightness drifts within ±`amount`, no strobing.
+- **Darkvision**: a cell seen only through darkvision gets a faint monochrome glow that dims toward
+  the edge of the darkvision radius, and its color fades toward monochrome as it gets darker and
+  farther from the viewer: saturation = 1 − darkness · (1 − 0.3 · (1 − distance / radius)) with
+  darkness = 1 − brightness / threshold. Full color at the threshold, 30 % in total darkness next
+  to the viewer, monochrome in total darkness at the edge of the radius.
 - **UV light** is drawn (as a violet tint) only when the viewer has UV sight.
+- Free glyphs (creatures, pulsing terrain) are lit by the same light, sampled at their center.
 
 ### 4.5 Perception states
 - **Visible** — fully lit rendering, including creatures and effects.
@@ -307,13 +323,16 @@ cargo xtask golden [--update]                             # compare golden scree
   canonical JSON encoding of `WorldState` after the step. Verification reports the first
   diverging step. `--replay` takes its scenario and seed from the file; `--record` rewrites its
   file after every action (including replayed steps).
-- Dump layers: `view`, `fov`, `memory` are built from the perception snapshot only; `truth` shows
-  ground truth and is dev-only; `light` arrives with lighting (M3). JSON dumps carry turn, level,
+- Dump layers: `view`, `fov`, `memory`, `light` (perceived brightness of each visible cell as a
+  digit, `0` dark to `9` fully lit or brighter) are built from the perception snapshot only;
+  `truth` shows ground truth and is dev-only. JSON dumps carry turn, level,
   viewer, seen actors, recent messages, and optionally the full world state.
 - Freezing visual time and fixing window size and scale make screenshots reproducible. With frozen
   time, glyph animations show that moment and motion (slides, camera) completes instantly.
-- Dev builds add in-game commands: switch vision profile, reveal map, toggle debug overlays (light
-  values, line of sight, memory), save and load named snapshots.
+- Dev builds add in-game commands: switch vision profile (`F3`), reveal map (`F2`, ground truth,
+  marked as dev-only on screen), toggle debug overlays (light values `F4`; line of sight and memory
+  later), save and load named snapshots (`F5`/`F9`). They are in the bindings table, so the `?`
+  overlay lists them.
 - CLAUDE.md documents build commands, architecture notes, pinned documentation references, and
   verification procedures, including the agent workflow guidance from the original brief.
   Verification uses tests, dumps, logs, and screenshots — a successful compile alone does not

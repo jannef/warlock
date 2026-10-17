@@ -95,7 +95,9 @@ impl KeyCommand {
             Lantern => "lantern",
             Help => "help",
             Quit => "quit",
-            Cancel | Snapshot | LoadSnapshot | CycleVision => return None,
+            Cancel | Snapshot | LoadSnapshot | CycleVision | RevealMap | LightValues => {
+                return None;
+            }
         })
     }
 

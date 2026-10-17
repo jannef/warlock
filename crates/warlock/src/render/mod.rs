@@ -2,13 +2,15 @@
 //!
 //! Layers, bottom to top: the map grid (terrain, in-cell animation; [`grid`]), the free-glyph
 //! layer (creatures and glyphs that move or grow; [`free_glyph`]), and the UI console (text,
-//! panels, overlays). Both consoles are drawn by the same console material.
+//! panels, overlays). Both consoles are drawn by the same console material; the map grid's is lit
+//! by the visual light ([`lighting`]).
 
 pub mod anim;
 pub mod atlas;
 pub mod console;
 pub mod free_glyph;
 pub mod grid;
+pub mod lighting;
 
 use crate::capture::CaptureTarget;
 use crate::cli::Args;
@@ -20,6 +22,7 @@ use atlas::{Font, GlyphAtlas, glyph_set};
 use bevy::asset::{AssetPath, RenderAssetUsages, embedded_asset, embedded_path};
 use bevy::camera::RenderTarget;
 use bevy::core_pipeline::tonemapping::Tonemapping;
+use bevy::image::TextureFormatPixelInfo;
 use bevy::prelude::*;
 use bevy::reflect::TypePath;
 use bevy::render::render_resource::{
@@ -44,6 +47,7 @@ impl Plugin for RenderPlugin {
         app.add_plugins((
             Material2dPlugin::<ConsoleMaterial>::default(),
             free_glyph::FreeGlyphPlugin,
+            lighting::LightingPlugin,
         ))
         .insert_resource(ClearColor(Color::BLACK))
         .init_resource::<Console>()
@@ -114,6 +118,11 @@ pub struct ConsoleMaterial {
     pub smooth_atlas: Handle<Image>,
     #[uniform(8)]
     pub anim_table: GridAnimTable,
+    /// Visual light per cell (`lighting.rs`); 1×1 on consoles that are not lit.
+    #[texture(9, sample_type = "float", filterable = false)]
+    pub light: Handle<Image>,
+    #[texture(10, sample_type = "u_int")]
+    pub light_flags: Handle<Image>,
 }
 
 impl Material2d for ConsoleMaterial {
@@ -139,6 +148,7 @@ struct ConsoleHandles {
 /// shows from its framebuffer position, so a quad only needs to cover the screen.
 const QUAD_SIZE: f32 = 1.0e6;
 
+/// A 1×1 texture of zeros, until the first upload.
 fn cell_texture(images: &mut Assets<Image>, format: TextureFormat) -> Handle<Image> {
     images.add(Image::new_fill(
         Extent3d {
@@ -147,7 +157,7 @@ fn cell_texture(images: &mut Assets<Image>, format: TextureFormat) -> Handle<Ima
             depth_or_array_layers: 1,
         },
         TextureDimension::D2,
-        &[0, 0, 0, 0],
+        &vec![0; format.pixel_size().unwrap_or(4)],
         format,
         RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
     ))
@@ -167,6 +177,8 @@ fn console_material(
         anims: cell_texture(images, TextureFormat::Rgba8Uint),
         smooth_atlas: atlas.smooth.clone(),
         anim_table: anims.gpu,
+        light: cell_texture(images, TextureFormat::Rgba32Float),
+        light_flags: cell_texture(images, TextureFormat::Rgba8Uint),
     }
 }
 
