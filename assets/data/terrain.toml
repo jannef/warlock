@@ -2,6 +2,16 @@
 # Fields: id, name, glyph, fg, bg (default black), walkable (default true),
 # transparent (default true), opens_to / closes_to (doors), stairs ("up"/"down"),
 # light (a preset in lights.toml the terrain emits), anim (presentation-only, see spec §4.3).
+# Presentation-only effects (spec §4.8): glow (0-1, the glyph blooms), haze (0-1, heat haze rises
+# above the cell), and [[terrain.particles]] emitters:
+#   on        "ambient" (default; `rate` per second while in view), "step" (a burst of `count` when
+#             a creature is seen stepping in), or "toggle" (a burst when a door is seen opening or
+#             closing into this terrain)
+#   glyphs    glyphs to pick from; colors: color stops over the particle's life
+#   life      seconds; velocity [x, y] cells/s (y down) ± spread [x, y]; gravity cells/s² (down)
+#   offset    start [x, y] cells from the cell; area: random spread ± [x, y] cells around it
+#   sway      sideways drift in cells; scale: glyph size
+#   fade      fraction of the life spent fading out (default 0.5); glow: 0-1
 
 [[terrain]]
 id = "void"
@@ -37,6 +47,20 @@ walkable = false
 transparent = false
 opens_to = "door_open"
 
+# Dust shaken loose when the door swings.
+[[terrain.particles]]
+on = "toggle"
+glyphs = "·.,"
+colors = ["#8a806c", "#4a4438"]
+count = 5
+life = 0.7
+velocity = [0.0, 0.2]
+spread = [0.9, 0.4]
+gravity = 0.4
+area = [0.35, 0.4]
+scale = 0.7
+fade = 0.6
+
 [[terrain]]
 id = "door_open"
 name = "open door"
@@ -44,6 +68,19 @@ glyph = "'"
 fg = "#c08040"
 bg = "#0d0d10"
 closes_to = "door_closed"
+
+[[terrain.particles]]
+on = "toggle"
+glyphs = "·.,"
+colors = ["#8a806c", "#4a4438"]
+count = 5
+life = 0.7
+velocity = [0.0, 0.2]
+spread = [0.9, 0.4]
+gravity = 0.4
+area = [0.35, 0.4]
+scale = 0.7
+fade = 0.6
 
 [[terrain]]
 id = "stairs_down"
@@ -69,6 +106,21 @@ fg = "#4f8fe0"
 bg = "#0a1a30"
 anim = { kind = "wave", speed = 0.2, amount = 0.07 }
 
+# A splash when something wades in.
+[[terrain.particles]]
+on = "step"
+glyphs = "'`,."
+colors = ["#b8dcff", "#4f8fe0"]
+count = 5
+life = 0.45
+velocity = [0.0, -2.6]
+spread = [2.4, 0.8]
+gravity = 10.0
+offset = [0.0, -0.1]
+area = [0.35, 0.1]
+scale = 0.6
+fade = 0.4
+
 [[terrain]]
 id = "altar"
 name = "altar"
@@ -77,6 +129,7 @@ fg = "#e0c060"
 bg = "#0d0d10"
 light = "altar_glow"
 anim = { kind = "pulse", bpm = 54, amount = 0.18 }
+glow = 0.35
 
 # Light sources (spec §5). Emitting terrain must be transparent so light cannot leak through it.
 
@@ -88,6 +141,22 @@ fg = "#ffb860"
 bg = "#0d0d10"
 walkable = false
 light = "sconce"
+glow = 0.4
+
+# An occasional spark.
+[[terrain.particles]]
+glyphs = "'`·"
+colors = ["#ffe8a0", "#ff9030", "#802008"]
+rate = 0.6
+life = 0.5
+velocity = [0.0, -1.2]
+spread = [0.25, 0.3]
+gravity = 0.4
+offset = [0.0, -0.35]
+area = [0.15, 0.0]
+sway = 0.06
+scale = 0.5
+glow = 0.5
 
 [[terrain]]
 id = "brazier"
@@ -97,6 +166,23 @@ fg = "#ffa040"
 bg = "#0d0d10"
 walkable = false
 light = "brazier"
+glow = 0.6
+haze = 1.0
+
+# Sparks rising from the coals.
+[[terrain.particles]]
+glyphs = "'`.·"
+colors = ["#ffeab0", "#ffa040", "#c04010", "#501408"]
+rate = 3
+life = 0.9
+velocity = [0.0, -1.4]
+spread = [0.4, 0.4]
+gravity = 0.5
+offset = [0.0, -0.35]
+area = [0.25, 0.05]
+sway = 0.12
+scale = 0.6
+glow = 0.6
 
 # A pedestal for colored light; the level legend gives each crystal its light.
 [[terrain]]
@@ -106,6 +192,7 @@ glyph = "♦"
 fg = "#f4f0ff"
 bg = "#0d0d10"
 walkable = false
+glow = 0.35
 
 [[terrain]]
 id = "fungus"
@@ -114,6 +201,7 @@ glyph = '"'
 fg = "#70e8a8"
 bg = "#0d0d10"
 light = "fungus"
+glow = 0.25
 
 [[terrain]]
 id = "uv_rune"
@@ -122,3 +210,74 @@ glyph = "ᛟ"
 fg = "#c890ff"
 bg = "#0d0d10"
 light = "uv_rune"
+glow = 0.3
+
+# Effects room (spec §3, §4.8).
+
+[[terrain]]
+id = "lava"
+name = "lava"
+glyph = "≈"
+fg = "#ff7020"
+bg = "#3a0c04"
+walkable = false
+light = "lava"
+anim = { kind = "shimmer", color = "#ffd060", speed = 0.35 }
+glow = 0.5
+haze = 0.6
+
+# Embers drifting up from the surface.
+[[terrain.particles]]
+glyphs = "·.'"
+colors = ["#ffd070", "#ff6010", "#501005"]
+rate = 0.2
+life = 1.4
+velocity = [0.0, -0.6]
+spread = [0.2, 0.25]
+gravity = 0.1
+area = [0.4, 0.2]
+sway = 0.2
+scale = 0.5
+glow = 0.5
+
+[[terrain]]
+id = "fountain"
+name = "fountain"
+glyph = "{"
+fg = "#8fd0ff"
+bg = "#0a1a30"
+walkable = false
+
+# Spray arcing up and falling back into the basin.
+[[terrain.particles]]
+glyphs = "'`.,"
+colors = ["#a8d4ff", "#4f8fe0"]
+rate = 5
+life = 0.7
+velocity = [0.0, -3.0]
+spread = [0.7, 0.4]
+gravity = 9.0
+offset = [0.0, -0.45]
+area = [0.1, 0.0]
+scale = 0.55
+fade = 0.3
+
+[[terrain]]
+id = "dusty_floor"
+name = "dusty floor"
+glyph = "."
+fg = "#7a7264"
+bg = "#0f0e0c"
+
+# Dust motes hanging in the air.
+[[terrain.particles]]
+glyphs = "·"
+colors = ["#8c8472"]
+rate = 0.06
+life = 4.0
+velocity = [0.05, -0.06]
+spread = [0.08, 0.05]
+area = [0.5, 0.5]
+sway = 0.3
+scale = 0.5
+fade = 0.4

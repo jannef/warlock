@@ -6,7 +6,8 @@ use bevy::prelude::*;
 use std::path::PathBuf;
 use std::sync::Arc;
 use warlock_core::content::{Content, ContentFiles};
-use warlock_core::replay::Replay;
+use warlock_core::replay::{Divergence, Replay};
+use warlock_core::world::WorldError;
 use warlock_core::{Action, Outcome, World};
 
 /// Loaded content, shared by the menu (scenario list) and every run.
@@ -89,18 +90,19 @@ impl Game {
                 Resume::NoSave => {}
             }
         }
+        let mut last_outcome = Outcome::default();
         let (world, replay) = match &args.replay {
             Some(path) => {
                 let text = std::fs::read_to_string(path)
                     .map_err(|e| format!("cannot read {}: {e}", path.display()))?;
                 let replay =
                     Replay::from_json(&text).map_err(|e| format!("{}: {e}", path.display()))?;
-                let (world, divergence) = replay
-                    .play(content)
+                let (world, divergence, outcome) = play_replay(&replay, content)
                     .map_err(|e| format!("{}: {e}", path.display()))?;
                 if let Some(divergence) = divergence {
                     eprintln!("warlock: warning: {}: {divergence}", path.display());
                 }
+                last_outcome = outcome;
                 (world, Some(replay))
             }
             None => {
@@ -117,7 +119,7 @@ impl Game {
         let recorder = args.record.clone().zip(replay).map(|(path, r)| (r, path));
         let game = Self {
             world,
-            last_outcome: Outcome::default(),
+            last_outcome,
             recorder,
         };
         game.save_recording();
@@ -143,6 +145,31 @@ impl Game {
     }
 }
 
+/// Plays `replay` like [`Replay::play`], also returning the outcome of its last step, so
+/// presentation shows that turn's events (e.g. a splash in a `--capture`).
+fn play_replay(
+    replay: &Replay,
+    content: Arc<Content>,
+) -> Result<(World, Option<Divergence>, Outcome), WorldError> {
+    let mut head = replay.clone();
+    let Some(last) = head.steps.pop() else {
+        let (world, divergence) = replay.play(content)?;
+        return Ok((world, divergence, Outcome::default()));
+    };
+    let (mut world, mut divergence) = head.play(content)?;
+    let outcome = world.apply(&last.action);
+    let actual = world.state_hash();
+    if divergence.is_none() && actual != last.hash {
+        divergence = Some(Divergence {
+            step: head.steps.len(),
+            action: last.action,
+            expected: last.hash,
+            actual,
+        });
+    }
+    Ok((world, divergence, outcome))
+}
+
 /// A gameplay action requested by input (or a replay).
 #[derive(Message, Debug, Clone)]
 pub struct PlayerAction(pub Action);
@@ -165,5 +192,37 @@ impl Plugin for GamePlugin {
 fn apply_actions(mut actions: MessageReader<PlayerAction>, mut game: ResMut<Game>) {
     for PlayerAction(action) in actions.read() {
         game.apply(action);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use warlock_core::{Dir, Event};
+
+    #[test]
+    fn replays_keep_the_last_steps_events() {
+        let content = Arc::new(Content::builtin().expect("built-in content loads"));
+        let mut world = World::new(content.clone(), "showcase", None).expect("scenario starts");
+        let mut replay = Replay::new(&world);
+        for action in [Action::Move(Dir::N), Action::Move(Dir::N)] {
+            world.apply(&action);
+            replay.push(&action, &world);
+        }
+        let (played, divergence, outcome) =
+            play_replay(&replay, content.clone()).expect("replay plays");
+        assert_eq!(divergence, None);
+        assert_eq!(played.state_hash(), world.state_hash());
+        assert!(matches!(
+            outcome.events.as_slice(),
+            [Event::ActorMoved { .. }, ..]
+        ));
+
+        replay.steps.last_mut().expect("two steps").hash ^= 1;
+        let (_, divergence, _) = play_replay(&replay, content.clone()).expect("replay plays");
+        assert_eq!(divergence.map(|d| d.step), Some(1));
+        replay.steps.clear();
+        let (_, _, outcome) = play_replay(&replay, content).expect("empty replay plays");
+        assert_eq!(outcome, Outcome::default());
     }
 }

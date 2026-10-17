@@ -2,6 +2,7 @@
 
 use super::anim::GlyphAnim;
 use super::light::LightId;
+use super::particles::ParticleEmitter;
 use crate::color::Rgb;
 use serde::{Deserialize, Serialize};
 
@@ -42,6 +43,12 @@ pub(super) struct TerrainSpec {
     /// Light preset the terrain emits (torch sconce, glowing fungus, rune). Must be transparent.
     pub light: Option<String>,
     pub anim: Option<GlyphAnim>,
+    #[serde(default)]
+    pub glow: f32,
+    #[serde(default)]
+    pub haze: f32,
+    #[serde(default)]
+    pub particles: Vec<ParticleEmitter>,
 }
 
 fn yes() -> bool {
@@ -65,6 +72,12 @@ pub struct TerrainDef {
     pub light: Option<LightId>,
     /// Presentation-only.
     pub anim: Option<GlyphAnim>,
+    /// Presentation-only: how much the glyph glows (bloom), 0 to 1.
+    pub glow: f32,
+    /// Presentation-only: strength of the heat haze rising above the cell, 0 to 1.
+    pub haze: f32,
+    /// Presentation-only: glyph particle emitters.
+    pub particles: Vec<ParticleEmitter>,
 }
 
 impl TerrainDef {

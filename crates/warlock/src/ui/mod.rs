@@ -3,13 +3,14 @@
 //! Everything shown about the world comes from `World::perception()`. Terrain goes into the map
 //! grid layer, creatures and glyphs that outgrow their cell into the free-glyph layer
 //! ([`glyphs`]), and text and panels into the UI console on top. [`motion`] moves the camera and
-//! slides creatures between cells. Terrain is drawn in its base colors: the map grid's shader
-//! lights it with the visual light (`render::lighting`), composited after the map is placed and
-//! before free glyphs are lit. [`dev`] adds the developer overlays (reveal mode is the one
-//! exception that reads ground truth).
+//! slides creatures between cells; [`effects`] adds particles, glow, heat haze, and fades. Terrain
+//! is drawn in its base colors: the map grid's shader lights it with the visual light
+//! (`render::lighting`), composited after the map is placed and before free glyphs are lit.
+//! [`dev`] adds the developer overlays (reveal mode is the one exception that reads ground truth).
 
 mod controls_screen;
 mod dev;
+mod effects;
 mod glyphs;
 mod menu;
 mod motion;
@@ -24,7 +25,7 @@ use crate::input::{Bindings, InputMode};
 use crate::render::anim::{AnimTable, TerrainAnim};
 use crate::render::console::{Cell, Console};
 use crate::render::grid::MapGrid;
-use crate::render::{ConsoleLayout, VisualTime, lighting};
+use crate::render::{ConsoleLayout, Effects, VisualTime, lighting};
 use bevy::prelude::*;
 use motion::Motion;
 use warlock_core::Pos;
@@ -47,13 +48,15 @@ impl Plugin for UiPlugin {
         app.init_resource::<Motion>()
             .init_resource::<DevOverlays>()
             .add_message::<OpenPause>()
+            .init_resource::<effects::Bursts>()
             .add_systems(
                 Update,
                 (
                     (
-                        motion::track,
+                        (motion::track, effects::track),
                         (draw, draw_map_layer),
                         lighting::update,
+                        effects::emit,
                         glyphs::emit,
                     )
                         .chain()
@@ -128,6 +131,7 @@ fn draw_map_layer(
     visual: Res<VisualTime>,
     anims: Res<AnimTable>,
     overlays: Res<DevOverlays>,
+    effects: Res<Effects>,
     mut grid: ResMut<MapGrid>,
     mut drawn: Local<Option<MapKey>>,
 ) {
@@ -152,8 +156,11 @@ fn draw_map_layer(
         area,
         covered: motion.occupied(view.actors().iter().map(|a| a.pos)),
     };
-    let changed =
-        game.is_changed() || anims.is_changed() || layout.is_changed() || overlays.is_changed();
+    let changed = game.is_changed()
+        || anims.is_changed()
+        || layout.is_changed()
+        || overlays.is_changed()
+        || effects.is_changed();
     if !changed && drawn.as_ref() == Some(&key) {
         return;
     }
@@ -161,6 +168,9 @@ fn draw_map_layer(
     grid.console.resize(area.w as u32 + 1, area.h as u32 + 1);
     grid.console.clear();
     draw_map(&mut grid, &view, &anims, &key.covered);
+    if !effects.reduced {
+        effects::draw_cell_fx(&mut grid, &view);
+    }
     dev::draw_map_overlays(&mut grid, &game.world, *overlays);
     *drawn = Some(key);
 }

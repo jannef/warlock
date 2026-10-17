@@ -86,3 +86,10 @@ id = "uv_rune"
 color = [0, 0, 0, 180]
 radius = 4
 flicker = { amount = 0.08, speed = 0.25 }
+
+# Effects room: a lava pool.
+[[light]]
+id = "lava"
+color = [300, 110, 30, 0]
+radius = 4
+flicker = { amount = 0.15, speed = 0.5 }

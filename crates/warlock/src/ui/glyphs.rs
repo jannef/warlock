@@ -11,6 +11,7 @@ use crate::render::anim::{self, AnimFrame};
 use crate::render::free_glyph::{FreeGlyph, FreeGlyphs};
 use crate::render::grid::MapGrid;
 use crate::render::lighting::{self, ACTOR_FLOOR, TERRAIN_FLOOR, VisualLight};
+use crate::render::post::{emissive, in_range};
 use crate::render::{Effects, VisualTime};
 use crate::settings::{Role, Settings};
 use bevy::prelude::*;
@@ -42,7 +43,7 @@ pub(super) fn emit(
         let at = Vec2::new(p.x as f32, p.y as f32);
         let mut g = glyph(&grid, at, def.glyph, palette(def.fg), frame);
         g.color = lit(g.color, &light, at, at, TERRAIN_FLOOR);
-        free.push(g);
+        free.push(glow(g, def.glow, &effects));
     }
     for actor in view.actors() {
         let def = content.creature(actor.creature);
@@ -54,14 +55,20 @@ pub(super) fn emit(
         let home = Vec2::new(actor.pos.x as f32, actor.pos.y as f32);
         let mut g = glyph(&grid, at, def.glyph, palette(def.fg), frame);
         g.color = lit(g.color, &light, at, home, ACTOR_FLOOR);
-        free.push(g);
+        free.push(glow(g, def.glow, &effects));
     }
 }
 
 /// `color` lit by the visual light at the center of the cell-sized glyph at `at` (level cells).
 /// Where that point is not lit (a creature sliding in from the dark), the light at the center of
 /// `home`, the cell the glyph belongs to, is used; with neither, the color is left as it is.
-fn lit(color: LinearRgba, light: &VisualLight, at: Vec2, home: Vec2, floor: f32) -> LinearRgba {
+pub(super) fn lit(
+    color: LinearRgba,
+    light: &VisualLight,
+    at: Vec2,
+    home: Vec2,
+    floor: f32,
+) -> LinearRgba {
     let center = Vec2::splat(0.5);
     let Some(cell) = light
         .sample(at + center)
@@ -71,6 +78,15 @@ fn lit(color: LinearRgba, light: &VisualLight, at: Vec2, home: Vec2, floor: f32)
     };
     let rgb = lighting::shade(Vec3::new(color.red, color.green, color.blue), cell, floor);
     LinearRgba::new(rgb.x, rgb.y, rgb.z, color.alpha)
+}
+
+/// With effects on, keeps a lit glyph within display range (bright light alone never blooms) and
+/// makes it glow (bloom) by `amount`, as the grid shader does.
+fn glow(mut g: FreeGlyph, amount: f32, effects: &Effects) -> FreeGlyph {
+    if !effects.reduced {
+        g.color = emissive(in_range(g.color), amount);
+    }
+    g
 }
 
 /// A creature's animation phase, keyed by identity rather than position so it does not jump

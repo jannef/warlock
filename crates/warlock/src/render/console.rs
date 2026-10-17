@@ -2,7 +2,8 @@
 //! uploads it to textures when it changes.
 //!
 //! A console is a layer: cells nothing was drawn into are transparent, so the layers below show
-//! through. Each cell can also carry in-cell animation data for the grid shader.
+//! through. Each cell can also carry in-cell animation data and effects (glow, heat haze) for the
+//! grid shader.
 
 use bevy::prelude::*;
 use warlock_core::color::Rgb;
@@ -36,6 +37,19 @@ impl CellAnim {
     pub const STILL: CellAnim = CellAnim { entry: 0, phase: 0 };
 }
 
+/// Visual effects of one console cell (spec §4.8), stored next to its animation.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct CellFx {
+    /// How much the glyph glows (HDR, picked up by bloom), in 1/255.
+    pub glow: u8,
+    /// Heat haze strength: the shader distorts this part of the screen, in 1/255.
+    pub haze: u8,
+}
+
+impl CellFx {
+    pub const NONE: CellFx = CellFx { glow: 0, haze: 0 };
+}
+
 /// A grid of cells; `None` cells are transparent.
 #[derive(Resource, Debug, Default)]
 pub struct Console {
@@ -43,6 +57,7 @@ pub struct Console {
     rows: u32,
     cells: Vec<Option<Cell>>,
     anims: Vec<CellAnim>,
+    fx: Vec<CellFx>,
     /// Set when cells change; cleared by the upload.
     pub dirty: bool,
 }
@@ -66,20 +81,27 @@ impl Console {
         &self.anims
     }
 
+    /// Per-cell effects, parallel to [`Console::cells`].
+    pub fn fx(&self) -> &[CellFx] {
+        &self.fx
+    }
+
     pub fn resize(&mut self, cols: u32, rows: u32) {
         if (cols, rows) != (self.cols, self.rows) {
             self.cols = cols;
             self.rows = rows;
             self.cells = vec![None; (cols * rows) as usize];
             self.anims = vec![CellAnim::STILL; (cols * rows) as usize];
+            self.fx = vec![CellFx::NONE; (cols * rows) as usize];
             self.dirty = true;
         }
     }
 
-    /// Makes every cell transparent and still.
+    /// Makes every cell transparent and still, without effects.
     pub fn clear(&mut self) {
         self.cells.fill(None);
         self.anims.fill(CellAnim::STILL);
+        self.fx.fill(CellFx::NONE);
         self.dirty = true;
     }
 
@@ -94,11 +116,12 @@ impl Console {
         self.index(x, y).and_then(|i| self.cells[i])
     }
 
-    /// Writes a still cell; out-of-range positions are ignored.
+    /// Writes a still cell without effects; out-of-range positions are ignored.
     pub fn put(&mut self, x: i32, y: i32, cell: Cell) {
         if let Some(i) = self.index(x, y) {
             self.cells[i] = Some(cell);
             self.anims[i] = CellAnim::STILL;
+            self.fx[i] = CellFx::NONE;
             self.dirty = true;
         }
     }
@@ -107,6 +130,16 @@ impl Console {
     pub fn animate(&mut self, x: i32, y: i32, anim: CellAnim) {
         if let Some(i) = self.index(x, y) {
             self.anims[i] = anim;
+            self.dirty = true;
+        }
+    }
+
+    /// Sets the effects of the cell at `(x, y)`.
+    pub fn set_fx(&mut self, x: i32, y: i32, fx: CellFx) {
+        if let Some(i) = self.index(x, y)
+            && self.fx[i] != fx
+        {
+            self.fx[i] = fx;
             self.dirty = true;
         }
     }
@@ -213,6 +246,25 @@ mod tests {
         // Clearing a transparent cell's glyph leaves it transparent.
         c.clear_glyph(1, 0);
         assert_eq!(c.get(1, 0), None);
+    }
+
+    #[test]
+    fn effects_follow_the_cell() {
+        let mut c = Console::default();
+        c.resize(2, 1);
+        let hot = CellFx {
+            glow: 200,
+            haze: 90,
+        };
+        c.put(0, 0, Cell::BLANK);
+        c.set_fx(0, 0, hot);
+        c.set_fx(5, 0, hot);
+        assert_eq!(c.fx(), &[hot, CellFx::NONE]);
+        c.put(0, 0, Cell::BLANK);
+        assert_eq!(c.fx()[0], CellFx::NONE, "a new cell has no effects");
+        c.set_fx(1, 0, hot);
+        c.clear();
+        assert!(c.fx().iter().all(|fx| *fx == CellFx::NONE));
     }
 
     #[test]
