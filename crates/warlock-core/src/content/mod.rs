@@ -11,6 +11,7 @@ mod dungeon;
 mod flow;
 mod level;
 mod light;
+mod overworld;
 mod particles;
 mod scenario;
 mod terrain;
@@ -23,8 +24,11 @@ pub use creature::{CreatureDef, CreatureId};
 pub use dungeon::{DungeonDef, Generator, LevelPlan, parse_branch_level};
 pub use flow::{FLOW_SPEEDS, Flow};
 pub(crate) use level::validate_route;
-pub use level::{CreatureSpawn, LevelKind, LevelTemplate, StairsLink, parse_route};
+pub use level::{
+    CreatureSpawn, EdgeExit, LevelKind, LevelTemplate, Region, StairsLink, parse_route,
+};
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
+pub use overworld::{LocalArea, local_area_id, parse_local_area};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use scenario::ScenarioDef;
 pub use terrain::{MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
@@ -268,6 +272,15 @@ impl Content {
                     spec.id
                 )));
             }
+            if spec
+                .travel_minutes
+                .is_some_and(|m| m == 0 || u32::from(m) > crate::time::MINUTES_PER_DAY)
+            {
+                return Err(err(format!(
+                    "terrain `{}`: travel_minutes must be 1 to 1440 (a day)",
+                    spec.id
+                )));
+            }
             let height = spec.height.unwrap_or(u8::from(!spec.transparent));
             if height > MAX_HEIGHT {
                 return Err(err(format!(
@@ -293,6 +306,8 @@ impl Content {
                 walkable: spec.walkable,
                 transparent: spec.transparent,
                 move_cost: spec.move_cost,
+                travel_minutes: spec.travel_minutes,
+                local: resolve(&spec.local)?,
                 opens_to: resolve(&spec.opens_to)?,
                 closes_to: resolve(&spec.closes_to)?,
                 stairs: spec.stairs,
@@ -305,6 +320,15 @@ impl Content {
                 haze: spec.haze,
                 particles: spec.particles.clone(),
             });
+        }
+        if let Some(def) = defs
+            .iter()
+            .find(|d| d.local.is_some_and(|l| !defs[usize::from(l.0)].walkable))
+        {
+            return Err(err(format!(
+                "terrain `{}`: its local area ground must be walkable",
+                def.id
+            )));
         }
         self.terrain = defs;
         Ok(())
@@ -434,9 +458,20 @@ impl Content {
         .transpose()
     }
 
-    /// Cross-file checks: stair targets, and each scenario's start level, vision profile, and
-    /// lantern exist. Levels of dungeon branches (`depths:3`) count as existing.
+    /// Cross-file checks: at most one overworld, stair targets, and each scenario's start level,
+    /// vision profile, and lantern exist. Levels of dungeon branches (`depths:3`) and local areas
+    /// of the overworld (`local:12,30`) count as existing.
     fn validate(&self) -> Result<(), ContentError> {
+        let mut overworlds = self
+            .levels
+            .values()
+            .filter(|l| l.kind == LevelKind::Overworld);
+        if let (Some(_), Some(second)) = (overworlds.next(), overworlds.next()) {
+            return Err(ContentError::new(
+                &format!("levels/{}.toml", second.id),
+                "there can be only one level of kind `overworld`",
+            ));
+        }
         for level in self.levels.values() {
             for link in &level.stairs {
                 if let Some(to) = &link.to
@@ -563,15 +598,18 @@ impl Content {
         &self.visions
     }
 
-    /// A hand-made level. Generated levels (`depths:3`) are not stored here; see
+    /// A hand-made level. Generated levels (`depths:3`, `local:12,30`) are not stored here; see
     /// [`Content::has_level`] and [`crate::mapgen`].
     pub fn level(&self, id: &str) -> Option<&LevelTemplate> {
         self.levels.get(id)
     }
 
-    /// Whether `id` names a hand-made level or a level of a dungeon branch.
+    /// Whether `id` names a hand-made level, a level of a dungeon branch, or a local area of the
+    /// overworld.
     pub fn has_level(&self, id: &str) -> bool {
-        self.levels.contains_key(id) || self.branch_level(id).is_some()
+        self.levels.contains_key(id)
+            || self.branch_level(id).is_some()
+            || self.local_area(id).is_some()
     }
 
     /// The branch and depth of a generated level id such as `depths:3`, if the branch exists and

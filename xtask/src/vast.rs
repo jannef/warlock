@@ -3,10 +3,11 @@
 //! Pipeline: cellular-automata caverns, keep the largest connected cave, carve a winding river of
 //! running water (its flow follows the channel south; a few boulders break it), scatter pillars,
 //! stamp walled rooms with doors (joined to the caves by a dug corridor), place the stairs (up to
-//! the hub, and beside them down into the generated `depths` branch) and player start, drop
-//! everything unreachable, then place patrolling creatures whose routes go out along walkable
-//! cells and return along the same path, and finally lights (lamps and glowing fungus). Uses its
-//! own SplitMix64 so the output never depends on the game's RNG or on platform float behavior.
+//! the hub, beside them down into the generated `depths` branch and up out to the overworld at the
+//! cavern mouth) and player start, drop everything unreachable, then place patrolling creatures
+//! whose routes go out along walkable cells and return along the same path, and finally lights
+//! (lamps and glowing fungus). Uses its own SplitMix64 so the output never depends on the game's
+//! RNG or on platform float behavior.
 
 use std::collections::{BTreeMap, VecDeque};
 use std::fmt::Write as _;
@@ -31,6 +32,8 @@ const ALTAR: u8 = b'_';
 const STAIRS: u8 = b'<';
 /// Stairs down into the procedurally generated `depths` branch (`assets/data/dungeons.toml`).
 const DEPTHS: u8 = b'>';
+/// Stairs up and out to the overworld (the cavern mouth there leads back down).
+const MOUTH: u8 = b'^';
 const START: u8 = b'@';
 /// A hanging lamp over floor (legend light).
 const LAMP: u8 = b'*';
@@ -96,7 +99,10 @@ impl Map {
     }
 
     fn passable(c: u8) -> bool {
-        matches!(c, FLOOR | WATER | DOOR | ALTAR | STAIRS | DEPTHS | START)
+        matches!(
+            c,
+            FLOOR | WATER | DOOR | ALTAR | STAIRS | DEPTHS | MOUTH | START
+        )
     }
 
     /// Cells a patrolling creature may step on (closed doors are not walkable).
@@ -527,6 +533,7 @@ pub fn generate() -> Result<String, String> {
     map.set(stairs.0, stairs.1, STAIRS);
     map.set(stairs.0 + 1, stairs.1, START);
     map.set(stairs.0 - 1, stairs.1, DEPTHS);
+    map.set(stairs.0, stairs.1 - 1, MOUTH);
 
     // Drop everything the player cannot walk to.
     let reach = map.flood((stairs.0 as usize, stairs.1 as usize));
@@ -592,7 +599,8 @@ pub fn generate() -> Result<String, String> {
          # `cargo xtask gen-vast --check` fails when this file is stale.\n\
          # Spec §3 Level 2: caverns, a winding river, pillars, walled rooms with doors, patrols,\n\
          # and many lights: hanging lamps (*) and glowing fungus (,); no ambient light.\n\
-         # Beside the stairs up to the hub, stairs down (>) lead into the generated depths.\n\
+         # Beside the stairs up to the hub, stairs down (>) lead into the generated depths and\n\
+         # stairs up (^) out to the overworld, where the cavern mouth leads back down.\n\
          # The river is running water drawn as arrows the way it flows (data/legend.toml).\n",
     );
     out.push_str("name = \"The Vast Caverns\"\nmap = '''\n");
@@ -618,6 +626,7 @@ pub fn generate() -> Result<String, String> {
     out.push_str("\"@\" = { terrain = \"floor\", spawn = \"player\" }\n");
     out.push_str("\"<\" = { terrain = \"stairs_up\", to = \"hub\" }\n");
     out.push_str("\">\" = { terrain = \"stairs_down\", to = \"depths:1\" }\n");
+    out.push_str("\"^\" = { terrain = \"stairs_up\", to = \"overworld\" }\n");
     out.push_str("\"*\" = { terrain = \"floor\", light = \"lamp\" }\n");
     out.push_str("\",\" = \"fungus\"\n");
     for (ch, (kind, route)) in &legend {
@@ -649,7 +658,7 @@ mod tests {
         assert!(level.creatures.len() >= 8);
         assert!(level.player_start.is_some());
         let targets: Vec<_> = level.stairs.iter().map(|s| s.to.as_deref()).collect();
-        assert_eq!(targets, [Some("depths:1"), Some("hub")]);
+        assert_eq!(targets, [Some("overworld"), Some("depths:1"), Some("hub")]);
         assert!(level.lights.len() >= 150, "{} lamps", level.lights.len());
         // The river is running water flowing south, with boulders for it to foam against.
         use warlock_core::Dir;

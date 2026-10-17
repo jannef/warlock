@@ -1,7 +1,7 @@
 //! Per-level mutable state: terrain as it is now, and what the player remembers of it.
 
 use crate::content::{
-    Content, Flow, LevelKind, LevelTemplate, LightId, StairsLink, TerrainDef, TerrainId,
+    Content, EdgeExit, Flow, LevelKind, LevelTemplate, LightId, StairsLink, TerrainDef, TerrainId,
 };
 use crate::geom::Pos;
 use crate::grid::Grid;
@@ -27,6 +27,10 @@ pub struct LevelState {
     /// Terrain as last seen by the player; `None` where never seen.
     pub(crate) memory: Grid<Option<TerrainId>>,
     pub(crate) stairs: Vec<StairsLink>,
+    /// Where the player arrives when no staircase leads back to where they came from.
+    pub(crate) start: Option<Pos>,
+    /// Where walking off the edge leads (local areas: back to their overworld cell).
+    pub(crate) exit: Option<EdgeExit>,
     /// Lights placed on cells (overriding the terrain's own light), by position.
     #[serde(with = "by_pos")]
     pub(crate) lights: BTreeMap<Pos, LightId>,
@@ -48,6 +52,8 @@ impl LevelState {
             terrain,
             memory,
             stairs: template.stairs.clone(),
+            start: template.player_start,
+            exit: template.exit.clone(),
             lights: template.lights.clone(),
             flow: template.flow.clone(),
         }
@@ -79,11 +85,16 @@ impl LevelState {
     }
 
     /// How long stepping onto `terrain` takes. This is the one place movement time is decided:
-    /// on local levels it is the level's turn scaled by the terrain's `move_cost` percent. (The
-    /// overworld adds its own kind here, whose steps cost the terrain's travel time.)
+    /// on local levels it is the level's turn scaled by the terrain's `move_cost` percent; on the
+    /// overworld it is the terrain's `travel_minutes` (content validation guarantees walkable
+    /// overworld terrain has them).
     pub fn step_time(&self, terrain: &TerrainDef) -> Duration {
+        let local = self.turn.percent(terrain.move_cost);
         match self.kind {
-            LevelKind::Dungeon | LevelKind::Outdoor => self.turn.percent(terrain.move_cost),
+            LevelKind::Dungeon | LevelKind::Outdoor => local,
+            LevelKind::Overworld => terrain
+                .travel_minutes
+                .map_or(local, |m| Duration::minutes(u64::from(m))),
         }
     }
 

@@ -19,7 +19,8 @@ const MAGIC: &str = "WARLOCK-SAVE";
 ///
 /// 2: the gameplay random stream in the world state; ambient and placed lights in level states.
 /// 3: the game clock (`time`) in the world state; level kind and turn length in level states.
-pub const FORMAT_VERSION: u32 = 3;
+/// 4: level states keep their start (arrival point) and edge exit (local areas of the overworld).
+pub const FORMAT_VERSION: u32 = 4;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 

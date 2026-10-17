@@ -9,6 +9,9 @@
 # anim (presentation-only, §4.3).
 # Terrain with a "flow" anim is running water: every cell of it needs a flow direction from the
 # level legend (the arrows in legend.toml).
+# Overworld terrain (spec §3, §7): travel_minutes (an overworld step onto it, 1 to 1440; required
+# for walkable terrain on the overworld) and local (the ground of the local area entered with `>`
+# from a cell of it; none: nothing to explore there).
 # Presentation-only effects (spec §4.8): glow (0-1, the glyph blooms), haze (0-1, heat haze rises
 # above the cell), and [[terrain.particles]] emitters:
 #   on        "ambient" (default; `rate` per second while in view), "step" (a burst of `count` when
@@ -410,3 +413,164 @@ walkable = false
 transparent = false
 roofed = true
 height = 2
+
+# More outdoor ground for the local areas of the overworld (each overworld terrain names
+# its own with `local`; grass is above).
+
+[[terrain]]
+id = "forest_floor"
+name = "forest floor"
+glyph = "."
+fg = "#857a48"
+bg = "#0f0d06"
+
+[[terrain]]
+id = "rocky_ground"
+name = "rocky ground"
+glyph = "."
+fg = "#958b78"
+bg = "#13110d"
+
+[[terrain]]
+id = "marsh"
+name = "marsh"
+glyph = '"'
+fg = "#6c9c78"
+bg = "#09130e"
+# Wading through reeds and mud.
+move_cost = 150
+
+# The overworld (spec §3): the land at large, at map scale. A step takes `travel_minutes`.
+
+[[terrain]]
+id = "plains"
+name = "plains"
+glyph = "."
+fg = "#b4a660"
+bg = "#100f09"
+travel_minutes = 45
+local = "grass"
+
+[[terrain]]
+id = "grassland"
+name = "grassland"
+glyph = '"'
+fg = "#6cb84e"
+bg = "#0b1709"
+travel_minutes = 50
+local = "grass"
+
+[[terrain]]
+id = "forest"
+name = "forest"
+glyph = "♣"
+fg = "#42a24c"
+bg = "#071208"
+travel_minutes = 90
+local = "forest_floor"
+
+# Too thick to see through.
+[[terrain]]
+id = "dense_forest"
+name = "dense forest"
+glyph = "♠"
+fg = "#2e7c3c"
+bg = "#040c05"
+transparent = false
+travel_minutes = 150
+local = "forest_floor"
+
+[[terrain]]
+id = "hills"
+name = "hills"
+glyph = "^"
+fg = "#bc9a62"
+bg = "#17110a"
+travel_minutes = 120
+local = "rocky_ground"
+
+[[terrain]]
+id = "mountains"
+name = "mountain range"
+glyph = "▲"
+fg = "#c6c2cc"
+bg = "#1c1b21"
+walkable = false
+transparent = false
+
+[[terrain]]
+id = "swamp"
+name = "swamp"
+glyph = "≈"
+fg = "#7a9a52"
+bg = "#0b1209"
+travel_minutes = 150
+local = "marsh"
+
+[[terrain]]
+id = "river"
+name = "river"
+glyph = "~"
+fg = "#4f94e6"
+bg = "#081a32"
+walkable = false
+# Flowing, at map scale: the ripples run downstream along the legend arrows.
+anim = { kind = "flow", speed = 0.35, glint = 0.3 }
+
+[[terrain]]
+id = "lake"
+name = "deep water"
+glyph = "~"
+fg = "#3a74c8"
+bg = "#061226"
+walkable = false
+anim = { kind = "wave", speed = 0.15, amount = 0.06 }
+
+[[terrain]]
+id = "road"
+name = "road"
+glyph = "·"
+fg = "#f4e2b0"
+bg = "#4a3820"
+travel_minutes = 20
+local = "grass"
+
+[[terrain]]
+id = "bridge"
+name = "bridge"
+glyph = "="
+fg = "#e8c48c"
+bg = "#4a3820"
+travel_minutes = 20
+
+# Locations: stairs down into other levels (the overworld's legend gives each its `to`).
+
+[[terrain]]
+id = "hall"
+name = "hall"
+glyph = "⌂"
+fg = "#f2d27a"
+bg = "#1e1608"
+stairs = "down"
+glow = 0.3
+travel_minutes = 30
+
+[[terrain]]
+id = "cave_mouth"
+name = "cave mouth"
+glyph = "∩"
+fg = "#d8d0c0"
+bg = "#000000"
+stairs = "down"
+glow = 0.2
+travel_minutes = 30
+
+[[terrain]]
+id = "dungeon_entrance"
+name = "dungeon entrance"
+glyph = ">"
+fg = "#f0e6c8"
+bg = "#120e0c"
+stairs = "down"
+glow = 0.2
+travel_minutes = 30

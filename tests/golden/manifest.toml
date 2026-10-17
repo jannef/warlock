@@ -133,3 +133,15 @@ actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:E*2 move:NE a
 name = "courtyard-dusk"
 scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:E*2 move:NE ascend move:E*22 skip:560m"
+
+# The overworld (`world` scenario): along the road from the Hall to the bridge over the Wendle,
+# at 12:20 (sunlit, sight radius 9) and after a skip to 22:20 (cold night light, radius 2).
+[[golden]]
+name = "overworld-noon"
+scenario = "world"
+actions = "move:E*2 move:NE move:E*6 move:NE move:E*3"
+
+[[golden]]
+name = "overworld-night"
+scenario = "world"
+actions = "move:E*2 move:NE move:E*6 move:NE move:E*3 skip:10h"

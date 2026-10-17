@@ -354,14 +354,15 @@ fn draw_status(console: &mut Console, game: &Game, y: i32) {
     // Display order; the number is the drop priority (higher drops first when space runs out).
     let segments: Vec<(u8, String)> = [
         Some((0, view.level_name().to_string())),
+        view.region().map(|r| (3, r.to_string())),
         Some((1, format!("{:02}:{:02}", time.hour(), time.minute()))),
         Some((2, view.content().calendar().date(time))),
-        Some((3, format!("Turn {}", world.turn()))),
-        Some((7, format!("{},{}", pos.x, pos.y))),
-        Some((4, format!("Light {light}"))),
-        Some((5, format!("{} vision", view.vision().name))),
-        lantern.map(|l| (6, l)),
-        Some((8, format!("Seed {}", world.seed()))),
+        Some((4, format!("Turn {}", world.turn()))),
+        Some((8, format!("{},{}", pos.x, pos.y))),
+        Some((5, format!("Light {light}"))),
+        Some((6, format!("{} vision", view.vision().name))),
+        lantern.map(|l| (7, l)),
+        Some((9, format!("Seed {}", world.seed()))),
     ]
     .into_iter()
     .flatten()

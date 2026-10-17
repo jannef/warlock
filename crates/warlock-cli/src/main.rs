@@ -37,7 +37,7 @@ enum Command {
     Dump(DumpArgs),
     /// Create or verify a replay file.
     Replay(ReplayArgs),
-    /// Print a generated dungeon level (dev-only ground truth) without playing to it.
+    /// Print a generated level (dev-only ground truth) without playing to it.
     Gen(GenArgs),
 }
 
@@ -98,7 +98,8 @@ struct ReplayArgs {
 
 #[derive(Debug, Args)]
 struct GenArgs {
-    /// A level of a dungeon branch, e.g. `depths:3`.
+    /// A level of a dungeon branch, e.g. `depths:3`, or a local area of the overworld, e.g.
+    /// `local:49,23`.
     #[arg(long)]
     level: String,
     /// Run seed: a number, or a word that is hashed.
@@ -217,6 +218,9 @@ fn gen_command(content: &Content, args: &GenArgs) -> Result<(), String> {
         let to = stairs.to.as_deref().unwrap_or("nowhere");
         println!("stairs {:?} at {} -> {to}", stairs.dir, stairs.pos);
     }
+    if let Some(exit) = &level.exit {
+        println!("edges -> {} at {}", exit.to, exit.pos);
+    }
     print!("{}", mapgen::ascii(&level, content));
     Ok(())
 }
@@ -254,6 +258,11 @@ mod tests {
             seed: 1,
         };
         assert!(gen_command(&content, &args).is_ok());
+        let local = GenArgs {
+            level: "local:49,23".into(),
+            ..args
+        };
+        assert!(gen_command(&content, &local).is_ok());
         let bad = GenArgs {
             level: "hub".into(),
             seed: 1,

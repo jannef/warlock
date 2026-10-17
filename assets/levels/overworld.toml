@@ -1,0 +1,120 @@
+# The overworld (spec §3): the Wildlands at map scale, 100x50. One step is a journey: it takes
+# the terrain's `travel_minutes` (road 20, plains 45, grassland 50, forest 90, hills 120, swamp
+# and dense forest 150). Mountains (M) and water are impassable: the river Wendle (arrows, the
+# way it flows) and the deep water of Silvermere, the ponds, and the Grey Sea (w); the one bridge
+# (b) carries the road over the Wendle. By day the traveller sees 9 cells, in twilight 5, at night
+# 2; mountains and dense forest block sight. The sun and the sky light the land by day.
+#
+# Locations are stairs down: the Hall (H, the showcase hub), the mouth of the Vast Caverns (C) in
+# the Hollowcrag, and the way into the Depths (D) in the Barrowdowns. Their levels' `<` lead back
+# here. `>` anywhere else enters that cell's local area. Roads run from the Hall west through the
+# Thornwood, south-west to the Depths, south to the Sallow Plains, and north-east over the bridge
+# to the caverns. The `world` scenario starts on the road beside the Hall (@).
+name = "The Wildlands"
+kind = "overworld"
+map = '''
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMwwwwww
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM↓↓MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMwwwwww
+MMhhhhhhhhhMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM↓↓MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMwwwww
+hhhhhhhhhhhhhhhhhhhhhhhhhMMMMMMMMMMMMMhhhhhhhhhMMMMMMMMMMMMM↓↓MMMMMMMMMMMMMMMMMMMMMMMMMMhhhhhhMwwwww
+hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhMMMMMMMhhM↓↓MMMMMMMMMMMMMMMMMMMMMMMhhhhhhhhhhwwwww
+hh.."""""""hhhhhhhhhhhhhhhhhhhhhhhhhhh.""""hhhhhhhMhhhhhhhhh↓↓hhMMMhhhhhhhhMMMMMhMMMMhhhhhhhhhhwwwww
+....""""""""""""""""""hhhhhhh.....hhhh.""""""""hhhhhhhhhhhhh↓↓hhhhhhhhhhhhhhhhhhhhhMMM"h""""..hwwwww
+...""""""""""""""""""""""""............"""""""""""hhhhhhh..h↓↓hhhhhhhhhhhhhhhhhhhMMMMMMM.""""..wwwww
+..."""""""""""""""""""""""""".........."""""""""""h"hhhh...↓↓.""hhh"""hhhh"hhhhhMMMMMMMMM""""".wwwww
+...."""""""""f""""""""""""".""""..."...."""""""""""""".....↓↓""""h""""....hhhhhhMMMMMMMMMM"""".wwwww
+...."""..""ffffffffffffff"".""""".""....""""""""""""""...""↓↓""""""""..hhhhhhhhhMMMMMMMMMh"""".wwwww
+.....""...fffffffffffffffffffff"""""..."""""""""""""""..."↓↓..""..""..hhhhhhhhhhCMMMMMMMhhh""""wwwww
+.........fffffffffffffffffffffff""..."""""""""""""""""""".↓↓..........hhhhhhh===hhhhhhhhhhhh""wwwwww
+........fffffffffffffffffffffffff...."""""""""""""""""""".↓↓..fffff...hhhhhh=hhhhhhhhhhhhhhh""wwwwww
+.."".fffffffffffffffffffffffffff"....."""""""""""""hhh"""..↓↓.ffffff..hhhh==hhhhhhhhhhhhhhhh""wwwwww
+..""ffffffFFFFFFFfffffffffffff""......""""""""""""hhhhh""..↓↓.fffff...hh==hhhhhhhhhhhhhhhhh""wwwwwww
+."fffffFFFFFFFFFFFFffffffffff".....".ffff".""""""""hhh......↘↘..f....."=hhhhhhhhhhhhhhhhhh"""wwwwwww
+ffffffFFFFFFFFFFFFFFffffffffff....."fffff...""""""........".↘↘..""..."="""hhhhhhhhhhhhh""""""wwwwwww
+fffffFFFFFFFFFFFFFFFffffffffff.....""ffff....."""............↘↘.."...=""""""......"""""""""""wwwwwww
+fffffFFFFFFFFFFFFFFFFffffffffff.""""""........""""...........↓↓.....=."""........"""""""""""""wwwwww
+fffffFFFFFFFFFFFFFFFFfffffffffff""""""........""""""""".""....↓↓...=.............""""""""""""""wwwww
+fffffFFFFFFFFFFFFFFFFfffffffffff""""""""""..""""""""""""""====bb===..............""""""""""""""wwwww
+.ffffFFFFFFFFFFFFFFFFffffffffff""""""""""""""""""""======="""""↘↘"""""""".........""""".."""""wwwwww
+.ffffFFFFFFFFFFFFFFFFffffffffff""""""=========H=@==""""""""""""↘↘""""""..........."""""...""""wwwwww
+.fffffFFFFFFFFFFFFFF================="""""""""="""""""""""""""""↘↘.......www....""""""".....""wwwwww
+====================ffffffffffff"""""""""""""=="""""""""w""""""""↘↘↘.wwwwwwwwww.""""""".......wwwwww
+..fffffFFFFFFFFFFFFfffffffffffff"""""""""""==""="""""""www"""""""..↘↘wwwwwwwwwwww"""""""""wwwwwwwwww
+..ffffffFFFFFFFFFffffffffffffff.""""""""""=""""=""""""""w"""""""..wwwwwwwwwwwwwwww..""""""wwwwwwwwww
+...fffffffffFFFffffffffffffffff..""""""""=""""""=""""""f"""""""...wwwwwwwwwwwwwwww..."""""wwwwwwwwww
+..""fffffffffffffffffffffffff....."""""=="""""""=".""fffff"""""...wwwwwwwwwwwwwwww....""""wwwwwwwwww
+."""ffffffffffffffffffffffff......""""=""""""""""=."fffffff""""....wwwwwwwwwwwwww↘↘....."wwwwwwwwwww
+"""""ffffffffffffffffffffff......""""=""""""""""""=""fffff""""""...""wwwwwwwwww.".↘↘↘.."""wwwwwwwwww
+"""""fffffffffffffffffffff"..""""""==""""""""""""".=""fff.........."""..............↘↘→→""wwwwwwwwww
+"""""""fffffffffffffffff""""""""""="""""""""".......=................................""→→→→wwwwwwwww
+"""""""""""ffffffffffff"""""""""==hhh"...............=...................."""""......"""""→→→wwwwwww
+"""""."""""""ffffffff""""""""""="hhhhh................=...................."...".....""""""wwwwwwwww
+""""""""""""""""fffhh"""""""h=="""hhh..................=............................."""""wwwwwwwwww
+"""""""""""""""hhhhhhhhhhhhh=hh"""""....................=.............................""""wwwwwwwwww
+"""""""""""""hhhhhhhhhhhhhh=hhhhh""".............................................."..."""wwwwwwwwwww
+""""""""""hhhhhhhhhhhhhhhh=hhhhhhhh""".......................................""""""".."""....wwwwwww
+...""""""hhhhhhhhhhhhhhhh=hhhhhhhhhh"""""..............sssssssss............"".""""""."""...wwwwwwww
+...."""".hhhhhhhhhhhhhhhDhhhhhhhhhhh"""""""........ssssssssssssssssssssssssssss.""""".......wwwwwwww
+"..."""..hhhhhhhhhhhhhhhhhhhhhhhhhh""""""""""""sssssssssssssssssssssssssssssssssss""".......wwwwwwww
+"".."""..hhhhhhhhhhhhhhhhhhhhhhhhhh"""""""""""sssssssssssssssssssssswwsssssssssssss"".......wwwwwwww
+"""""MMMMMMMMhhhhhhhhhhhhhhhhhhhhh""""""""""sssssssswwsssssssssssssssssssssssssssss."".....""wwwwwww
+"""""MMMMMMMMMhhhhhhhhhhhhhhhhhhhh"""""""""ssssssssssssssssssssssssssssssssssssssss.."....."""wwwwww
+""""MMMMMMMMMMMhhhhhhhhhhhhhhh..""""".....ssssswsssssssssssswwssssssssssssssssssss".....""""""wwwwww
+"""""MMMMMMMMMMhhhhhhhhhhhhh""....."......ssssssssssssssssssswsssssssssssssssssss"""..."""""""wwwwww
+"""""".MMMMMMM"hhhhhhhhh"""""""....".......sssssssssssssssssssssssssssssssssssss""""..."""""""wwwwww
+""""""..""M"""""...."""""""""""""...........sssssssssssssssssssssssssssssssssss"""""...""""""""wwwww
+'''
+
+[legend]
+"." = "plains"
+'"' = "grassland"
+"f" = "forest"
+"F" = "dense_forest"
+"h" = "hills"
+"M" = "mountains"
+"s" = "swamp"
+# The river Wendle, drawn as arrows the way it flows.
+"→" = { terrain = "river", flow = "E" }
+"↘" = { terrain = "river", flow = "SE" }
+"↓" = { terrain = "river", flow = "S" }
+"w" = "lake"
+"=" = "road"
+"b" = "bridge"
+"H" = { terrain = "hall", to = "hub" }
+"C" = { terrain = "cave_mouth", to = "vast" }
+"D" = { terrain = "dungeon_entrance", to = "depths:1" }
+"@" = { terrain = "road", spawn = "player" }
+
+# Named regions, shown in the status bar: `area = [x0, y0, x1, y1]`, inclusive, first match wins.
+
+[[region]]
+name = "Hollowcrag"
+area = [66, 5, 99, 19]
+
+[[region]]
+name = "Silvermere"
+area = [64, 20, 99, 31]
+
+[[region]]
+name = "Greyspine Mountains"
+area = [0, 0, 99, 5]
+
+[[region]]
+name = "Thornwood"
+area = [0, 6, 31, 36]
+
+[[region]]
+name = "Barrowdowns"
+area = [0, 37, 37, 49]
+
+[[region]]
+name = "Mirefen"
+area = [38, 40, 99, 49]
+
+[[region]]
+name = "Sallow Plains"
+area = [38, 32, 99, 39]
+
+[[region]]
+name = "Greenmarch"
+area = [32, 6, 65, 36]

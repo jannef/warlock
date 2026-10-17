@@ -4,9 +4,11 @@
 //! placed on that terrain (player start, creatures with patrol routes, stair links, lights, the
 //! flow of running water). Characters not in the level's legend fall back to the shared default
 //! legend (`assets/data/legend.toml`, which has arrows for running water). An optional
-//! `ambient = [r, g, b, uv]` lights the whole level. `kind` (`dungeon`, the default, or
-//! `outdoor`) and `turn_seconds` decide how time passes on it (spec §8 "Time"); outdoor levels
-//! are lit by the sun and the sky by day (spec §5).
+//! `ambient = [r, g, b, uv]` lights the whole level. `kind` (`dungeon`, the default, `outdoor`,
+//! or `overworld`) and `turn_seconds` decide how time passes on it (spec §8 "Time"); outdoor
+//! levels and the overworld are lit by the sun and the sky by day (spec §5). Optional
+//! `[[region]]` tables name areas of the level (`name`, `area = [x0, y0, x1, y1]`, inclusive; the
+//! first match wins), shown in the status bar.
 
 use super::creature::CreatureId;
 use super::flow::{FLOW_SPEEDS, Flow};
@@ -20,8 +22,8 @@ use crate::time::{Duration, HOUR};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-/// What kind of place a level is (spec §8 "Time"). It sets the default length of a turn there and
-/// whether the sun shines on it.
+/// What kind of place a level is (spec §8 "Time"). It sets the default length of a turn there,
+/// what a step costs, and whether the sun shines on it.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum LevelKind {
@@ -30,23 +32,29 @@ pub enum LevelKind {
     Dungeon,
     /// Under the open sky.
     Outdoor,
+    /// The map of the land at large: a step is a journey of the terrain's `travel_minutes`, sight
+    /// reaches as far as daylight allows (spec §5), and cells that are not locations lead into
+    /// outdoor local areas.
+    Overworld,
 }
 
 impl LevelKind {
     /// Whether the level lies under the open sky, lit by the sun and the sky by day (spec §5
-    /// "Sunlight"): outdoor levels; never dungeons. Terrain with `roofed` is covered even here.
+    /// "Sunlight"): outdoor levels and the overworld; never dungeons. Terrain with `roofed` is
+    /// covered even here.
     pub const fn is_sky_exposed(self) -> bool {
         match self {
             LevelKind::Dungeon => false,
-            LevelKind::Outdoor => true,
+            LevelKind::Outdoor | LevelKind::Overworld => true,
         }
     }
 
-    /// How long a turn (a step, a wait, opening a door) takes unless the level overrides it:
-    /// six seconds on local levels.
+    /// How long a turn (a wait, opening a door, taking stairs) takes unless the level overrides
+    /// it: six seconds on local levels, ten minutes on the overworld.
     pub const fn default_turn(self) -> Duration {
         match self {
             LevelKind::Dungeon | LevelKind::Outdoor => Duration::seconds(6),
+            LevelKind::Overworld => Duration::minutes(10),
         }
     }
 }
@@ -65,6 +73,40 @@ struct LevelFile {
     map: String,
     #[serde(default)]
     legend: BTreeMap<String, LegendEntry>,
+    #[serde(default)]
+    region: Vec<RegionSpec>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RegionSpec {
+    name: String,
+    /// `[x0, y0, x1, y1]`, inclusive.
+    area: [i32; 4],
+}
+
+/// A named area of a level, e.g. a forest or a range of hills on the overworld.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Region {
+    pub name: String,
+    /// Corners, inclusive.
+    pub min: Pos,
+    pub max: Pos,
+}
+
+impl Region {
+    pub fn contains(&self, p: Pos) -> bool {
+        (self.min.x..=self.max.x).contains(&p.x) && (self.min.y..=self.max.y).contains(&p.y)
+    }
+}
+
+/// Where walking off the edge of a level leads: from a local area, back to its overworld cell.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct EdgeExit {
+    /// The level id (the overworld).
+    pub to: String,
+    /// Where the player arrives there.
+    pub pos: Pos,
 }
 
 /// What a map character stands for.
@@ -155,6 +197,20 @@ pub struct LevelTemplate {
     pub lights: BTreeMap<Pos, LightId>,
     /// Flow of every running-water cell, by position (presentation-only).
     pub flow: BTreeMap<Pos, Flow>,
+    /// Named areas, first match wins.
+    pub regions: Vec<Region>,
+    /// Where walking off the edge leads (local areas); `None`: the edge cannot be crossed.
+    pub exit: Option<EdgeExit>,
+}
+
+impl LevelTemplate {
+    /// The name of the first region containing `p`.
+    pub fn region_at(&self, p: Pos) -> Option<&str> {
+        self.regions
+            .iter()
+            .find(|r| r.contains(p))
+            .map(|r| r.name.as_str())
+    }
 }
 
 /// Parses a single-character legend key.
@@ -282,6 +338,22 @@ pub(super) fn parse_level(
         }
     }
 
+    let mut regions = Vec::with_capacity(parsed.region.len());
+    for spec in parsed.region {
+        let [x0, y0, x1, y1] = spec.area;
+        if !(0 <= x0 && x0 <= x1 && x1 < width && 0 <= y0 && y0 <= y1 && y1 < height) {
+            return Err(err(format!(
+                "region `{}` area {:?} is not a rectangle inside the {width}x{height} map",
+                spec.name, spec.area
+            )));
+        }
+        regions.push(Region {
+            name: spec.name,
+            min: Pos::new(x0, y0),
+            max: Pos::new(x1, y1),
+        });
+    }
+
     let template = LevelTemplate {
         id: id.to_string(),
         name: parsed.name,
@@ -294,9 +366,23 @@ pub(super) fn parse_level(
         stairs,
         lights,
         flow,
+        regions,
+        exit: None,
     };
     for spawn in &template.creatures {
         validate_route(&template, content, spawn).map_err(err)?;
+    }
+    if template.kind == LevelKind::Overworld {
+        let untimed = template.terrain.cells().iter().find(|t| {
+            let def = content.terrain(**t);
+            def.walkable && def.travel_minutes.is_none()
+        });
+        if let Some(t) = untimed {
+            return Err(err(format!(
+                "overworld terrain `{}` is walkable but has no travel_minutes",
+                content.terrain(*t).id
+            )));
+        }
     }
     Ok(template)
 }
