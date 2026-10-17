@@ -10,7 +10,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "lowercase", deny_unknown_fields)]
 pub enum GlyphAnim {
-    /// Gentle sideways sway inside the cell; phase travels across neighboring cells.
+    /// Gentle bob inside the cell (mostly vertical, a little sway); phase travels across
+    /// neighboring cells so ripples move through pools.
     Wave {
         #[serde(default = "default_speed")]
         speed: f32,

@@ -251,7 +251,7 @@ fn draw_messages(console: &mut Console, game: &Game, mode: InputMode) {
         .collect();
     for (row, msg) in recent.iter().rev().enumerate() {
         let color = if msg.turn + 1 >= turn { TEXT } else { TEXT_DIM };
-        console.print(1, row as i32, &msg.text, color);
+        console.print(1, row as i32, &msg.display(), color);
     }
 }
 
