@@ -6,12 +6,15 @@
 //! a window. Selection is always shown by text (a `>` marker), never by color alone.
 
 use super::controls_screen::ControlsScreen;
+use super::motion::Motion;
 use super::settings_screen::SettingsScreen;
 use super::{ACCENT, PANEL_BG, TEXT, TEXT_DIM};
 use crate::game::{Game, GameContent};
-use crate::input::{Bindings, KeyBinding};
+use crate::input::{Bindings, InputMode, KeyBinding};
 use crate::render::ConsoleLayout;
 use crate::render::console::Console;
+use crate::render::grid::MapGrid;
+use crate::save::SaveCommand;
 use crate::save::SaveStore;
 use crate::settings::Settings;
 use bevy::input::ButtonState;
@@ -27,6 +30,8 @@ pub enum ScreenName {
     NewRun,
     Settings,
     Controls,
+    /// The in-run pause menu (needs a running game; see `main`).
+    Pause,
 }
 
 /// A key press reduced to what menus care about.
@@ -100,8 +105,15 @@ impl Press {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Start {
     Continue,
-    NewRun { scenario: String, seed: Option<u64> },
+    NewRun {
+        scenario: String,
+        seed: Option<u64>,
+    },
     Quit,
+    /// Pause menu: close it and keep playing.
+    Resume,
+    /// Pause menu: save the run and return to the main menu.
+    SaveToMenu,
 }
 
 /// A scenario as listed in the New run screen.
@@ -115,6 +127,8 @@ struct ScenarioInfo {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum MainItem {
+    Resume,
+    SaveToMenu,
     Continue,
     NewRun,
     Settings,
@@ -125,6 +139,8 @@ enum MainItem {
 impl MainItem {
     fn label(self) -> &'static str {
         match self {
+            MainItem::Resume => "Resume",
+            MainItem::SaveToMenu => "Save and quit to menu",
             MainItem::Continue => "Continue",
             MainItem::NewRun => "New run",
             MainItem::Settings => "Settings",
@@ -165,6 +181,10 @@ pub struct Menu {
     screen: Screen,
     scenarios: Vec<ScenarioInfo>,
     has_save: bool,
+    /// The in-run pause menu rather than the main menu.
+    pause: bool,
+    /// Just opened: the key press that opened it must not also act on it.
+    fresh: bool,
     /// Something the player should know, e.g. why Continue failed.
     notice: Option<String>,
 }
@@ -184,6 +204,8 @@ impl Menu {
             screen: Screen::Main(0),
             scenarios,
             has_save,
+            pause: false,
+            fresh: true,
             notice: None,
         };
         menu.screen = match open {
@@ -191,11 +213,29 @@ impl Menu {
             Some(ScreenName::NewRun) => Screen::NewRun(NewRun::default()),
             Some(ScreenName::Settings) => Screen::Settings(SettingsScreen::default()),
             Some(ScreenName::Controls) => Screen::Controls(ControlsScreen::default()),
+            Some(ScreenName::Pause) => {
+                menu.pause = true;
+                Screen::Main(0)
+            }
         };
         menu
     }
 
+    /// The pause menu, opened over a running game.
+    pub fn pause(content: &Content) -> Self {
+        Self::new(content, false, Some(ScreenName::Pause))
+    }
+
     fn items(&self) -> Vec<MainItem> {
+        if self.pause {
+            return vec![
+                MainItem::Resume,
+                MainItem::Settings,
+                MainItem::Controls,
+                MainItem::SaveToMenu,
+                MainItem::Quit,
+            ];
+        }
         let mut items = Vec::new();
         if self.has_save {
             items.push(MainItem::Continue);
@@ -207,6 +247,12 @@ impl Menu {
             MainItem::Quit,
         ]);
         items
+    }
+
+    /// The main menu with a message, e.g. after saving and quitting a run.
+    pub fn with_notice(mut self, message: &str) -> Self {
+        self.notice = Some(message.to_string());
+        self
     }
 
     /// Shows why a run could not be started and drops Continue if there is nothing to resume.
@@ -234,10 +280,13 @@ impl Menu {
                 match press.nav {
                     Nav::Up => *selected = (*selected + items.len() - 1) % items.len(),
                     Nav::Down => *selected = (*selected + 1) % items.len(),
+                    Nav::Back if self.pause => return Some(Start::Resume),
                     Nav::Enter => {
                         self.notice = None;
                         match items[*selected] {
                             MainItem::Continue => return Some(Start::Continue),
+                            MainItem::Resume => return Some(Start::Resume),
+                            MainItem::SaveToMenu => return Some(Start::SaveToMenu),
                             MainItem::NewRun => self.screen = Screen::NewRun(NewRun::default()),
                             MainItem::Settings => {
                                 self.screen = Screen::Settings(SettingsScreen::default());
@@ -309,11 +358,19 @@ impl Menu {
         let h = 12 + items.len() as i32 + notice_lines.len() as i32;
         let panel = Panel::new(console, "", 52, h);
         let cx = |text: &str| panel.x + (panel.w - text.chars().count() as i32) / 2;
-        let title = "W A R L O C K";
+        let title = if self.pause {
+            "P A U S E D"
+        } else {
+            "W A R L O C K"
+        };
         console.print(cx(title), panel.y + 2, title, ACCENT);
         let rule = "═".repeat(title.chars().count());
         console.print(cx(&rule), panel.y + 3, &rule, TEXT_DIM);
-        let tagline = "an ASCII roguelike";
+        let tagline = if self.pause {
+            "the world waits"
+        } else {
+            "an ASCII roguelike"
+        };
         console.print(cx(tagline), panel.y + 4, tagline, TEXT_DIM);
         for (i, item) in items.iter().enumerate() {
             let y = panel.y + 7 + i as i32;
@@ -328,7 +385,12 @@ impl Menu {
                 ACCENT,
             );
         }
-        panel.footer(console, "↑↓ select   Enter choose");
+        let hint = if self.pause {
+            "↑↓ select   Enter choose   Esc resume"
+        } else {
+            "↑↓ select   Enter choose"
+        };
+        panel.footer(console, hint);
     }
 
     fn draw_new_run(&self, console: &mut Console, new_run: &NewRun) {
@@ -475,7 +537,24 @@ pub(super) fn wrap(text: &str, width: i32) -> Vec<String> {
     lines
 }
 
-/// Feeds key presses to the menu, redraws it, and starts the run it asks for.
+/// Asks to open the pause menu over the running game. Written by input on Esc.
+#[derive(Message, Debug, Clone, Copy)]
+pub struct OpenPause;
+
+/// Opens the pause menu. Game time does not advance while it is open: input is not read as
+/// commands (see `input::read_keys`).
+pub(super) fn open_pause(
+    mut commands: Commands,
+    mut requests: MessageReader<OpenPause>,
+    content: Res<GameContent>,
+    menu: Option<Res<Menu>>,
+) {
+    if requests.read().count() > 0 && menu.is_none() {
+        commands.insert_resource(Menu::pause(&content.0));
+    }
+}
+
+/// Feeds key presses to the menu, redraws it, and acts on what it asks for.
 pub(super) fn run(
     mut commands: Commands,
     mut keys: MessageReader<KeyboardInput>,
@@ -485,9 +564,17 @@ pub(super) fn run(
     content: Res<GameContent>,
     store: Res<SaveStore>,
     layout: Res<ConsoleLayout>,
+    mut game: Option<ResMut<Game>>,
+    mut grid: ResMut<MapGrid>,
+    mut mode: ResMut<InputMode>,
     mut console: ResMut<Console>,
+    mut saves: MessageWriter<SaveCommand>,
     mut exit: MessageWriter<AppExit>,
 ) {
+    if menu.fresh {
+        keys.clear();
+        menu.fresh = false;
+    }
     let mut start = None;
     let (mut new_settings, mut new_bindings) = (settings.clone(), bindings.clone());
     for key in keys.read() {
@@ -504,8 +591,41 @@ pub(super) fn run(
         *bindings = new_bindings;
     }
     match start {
+        Some(Start::Quit) if game.is_some() => {
+            // From the pause menu: quitting keeps the run.
+            saves.write(SaveCommand::SaveAndQuit);
+        }
         Some(Start::Quit) => {
             exit.write(AppExit::Success);
+        }
+        Some(Start::Resume) => {
+            // Make the game redraw its UI over the menu's.
+            if let Some(game) = &mut game {
+                game.set_changed();
+            }
+            commands.remove_resource::<Menu>();
+            return;
+        }
+        Some(Start::SaveToMenu) => {
+            let Some(game) = game else { return };
+            let game = &game;
+            match store.save_run(&game.world) {
+                Ok(()) => {
+                    // Back to the main menu: nothing of the run stays on screen.
+                    grid.console.clear();
+                    grid.free_terrain.clear();
+                    grid.clip = Rect::default();
+                    *mode = InputMode::Normal;
+                    commands.insert_resource(Motion::default());
+                    commands.remove_resource::<Game>();
+                    let has_save = store.has_save();
+                    commands.insert_resource(
+                        Menu::new(&content.0, has_save, None).with_notice("Game saved."),
+                    );
+                    return;
+                }
+                Err(e) => menu.fail(e, false),
+            }
         }
         Some(Start::Continue) => match Game::resumed(&store, &content.0) {
             crate::save::Resume::Loaded(world) => {
@@ -586,6 +706,34 @@ mod tests {
     }
 
     #[test]
+    fn pause_menu_resumes_on_esc_and_settings_return_to_it() {
+        let content = Content::builtin().expect("content");
+        let mut m = Menu::pause(&content);
+        let rows: Vec<_> = m.items().iter().map(|i| i.label()).collect();
+        assert_eq!(
+            rows,
+            [
+                "Resume",
+                "Settings",
+                "Controls",
+                "Save and quit to menu",
+                "Quit"
+            ]
+        );
+        press(&mut m, Nav::Down); // Settings
+        press(&mut m, Nav::Enter);
+        assert!(matches!(m.screen, Screen::Settings(_)));
+        press(&mut m, Nav::Back);
+        assert!(matches!(m.screen, Screen::Main(1)));
+        assert_eq!(press(&mut m, Nav::Back), Some(Start::Resume));
+        press(&mut m, Nav::Down);
+        assert_eq!(press(&mut m, Nav::Enter), None); // Controls
+        press(&mut m, Nav::Back);
+        press(&mut m, Nav::Down);
+        assert_eq!(press(&mut m, Nav::Enter), Some(Start::SaveToMenu));
+    }
+
+    #[test]
     fn quit_is_the_last_row_and_selection_wraps() {
         let mut m = menu(false);
         press(&mut m, Nav::Up);
@@ -610,6 +758,7 @@ mod tests {
             ScreenName::NewRun,
             ScreenName::Settings,
             ScreenName::Controls,
+            ScreenName::Pause,
         ] {
             for (cols, rows) in [(80, 30), (40, 12), (5, 3), (0, 0)] {
                 let mut console = Console::default();

@@ -6,6 +6,7 @@
 use crate::cli::Args;
 use crate::game::{Game, PlayerAction, SimSet};
 use crate::save::SaveCommand;
+use crate::ui::{Menu, OpenPause};
 use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
@@ -236,7 +237,14 @@ fn read_keys(
     mut mode: ResMut<InputMode>,
     mut actions: MessageWriter<PlayerAction>,
     mut saves: MessageWriter<SaveCommand>,
+    mut pause: MessageWriter<OpenPause>,
+    menu: Option<Res<Menu>>,
 ) {
+    // The pause menu owns the keyboard (and eats these presses), so time cannot advance.
+    if menu.is_some() {
+        keys.clear();
+        return;
+    }
     for key in keys.read() {
         if key.state != ButtonState::Pressed {
             continue;
@@ -291,7 +299,10 @@ fn read_keys(
                 InputMode::Direction(command)
             }
             (InputMode::Normal, KeyCommand::Help) => InputMode::Help,
-            (InputMode::Normal, KeyCommand::Cancel) => InputMode::Normal,
+            (InputMode::Normal, KeyCommand::Cancel) => {
+                pause.write(OpenPause);
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::Quit) => {
                 saves.write(SaveCommand::SaveAndQuit);
                 InputMode::Normal

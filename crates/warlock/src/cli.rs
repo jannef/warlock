@@ -92,7 +92,8 @@ impl Args {
     /// `--new`, `--replay`, `--record`, `--capture`) start it directly, so dev flows and
     /// captures need no input; `--screen` forces the menu.
     pub fn starts_in_menu(&self) -> bool {
-        self.screen.is_some()
+        self.screen
+            .is_some_and(|s| s != crate::ui::ScreenName::Pause)
             || (self.scenario.is_none()
                 && !self.new
                 && self.replay.is_none()
