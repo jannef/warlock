@@ -287,6 +287,7 @@ impl Content {
                 closes_to: resolve(&spec.closes_to)?,
                 stairs: spec.stairs,
                 light,
+                bounce: spec.bounce,
                 anim: spec.anim.clone(),
                 glow: spec.glow,
                 haze: spec.haze,

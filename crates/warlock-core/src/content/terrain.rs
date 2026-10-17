@@ -45,6 +45,9 @@ pub(super) struct TerrainSpec {
     pub stairs: Option<StairsDir>,
     /// Light preset the terrain emits (torch sconce, glowing fungus, rune). Must be transparent.
     pub light: Option<String>,
+    /// Tint of the light the surface bounces (spec §5); white (neutral) by default.
+    #[serde(default = "neutral")]
+    pub bounce: Rgb,
     pub anim: Option<GlyphAnim>,
     #[serde(default)]
     pub glow: f32,
@@ -60,6 +63,10 @@ fn yes() -> bool {
 
 fn full_cost() -> u16 {
     100
+}
+
+fn neutral() -> Rgb {
+    Rgb::WHITE
 }
 
 /// A resolved terrain definition.
@@ -80,6 +87,9 @@ pub struct TerrainDef {
     pub stairs: Option<StairsDir>,
     /// Light this terrain emits, if any.
     pub light: Option<LightId>,
+    /// Gameplay: the tint of the light this surface bounces, per channel (white = neutral, the
+    /// full [`crate::light::BOUNCE`] fraction).
+    pub bounce: Rgb,
     /// Presentation-only.
     pub anim: Option<GlyphAnim>,
     /// Presentation-only: how much the glyph glows (bloom), 0 to 1.

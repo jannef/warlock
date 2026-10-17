@@ -100,8 +100,9 @@ pulse above 1.0 scale) uses the free-glyph layer.
 - Derived from gameplay light (§5), plus visual-only modulation: flicker, creature shadows, and
   transient effect lights (e.g. a spell's glow). Visual-only light never affects gameplay.
 - Each frame, the CPU composites the perceived light of the viewport's cells (plus a one-cell
-  margin) from the perception snapshot — ambient light plus every visible source's per-cell
-  contribution — into a viewport-sized float texture aligned with the map grid. The shader
+  margin) from the perception snapshot — the base light (ambient plus bounce, steady) plus every
+  visible source's per-cell contribution — into a viewport-sized float texture aligned with the map
+  grid. The shader
   interpolates it per pixel between cell centers for smooth gradients; a neighbor contributes only
   if it is visible and transparent, so light never bleeds across walls or corners, nor into unseen
   or remembered cells. Walls show their own wall-face light, flat.
@@ -195,7 +196,8 @@ rate or animation.
   `d² ≤ r² + r`. The maximum view range is 40.
 - **Light**: each cell's light is integer **RGB + UV**, one `u16` per channel: **255 = fully lit**
   (a surface shows its base color), more is overbright. A cell's light is the level's ambient light
-  (`ambient = [r, g, b, uv]`, default 0) plus the sum of all sources that reach it (saturating).
+  (`ambient = [r, g, b, uv]`, default 0) plus the sum of all sources that reach it plus bounce light
+  (saturating).
 - **Light sources** come from light presets (`color = [r, g, b, uv]`, which is also the intensity,
   and `radius`): terrain that emits light, lights placed on cells by the level legend (overriding
   the terrain's own), creatures that carry light, and the player's lantern (from the scenario,
@@ -206,9 +208,22 @@ rate or animation.
   adds `color · (R² − d²) / R²` with `R² = r² + r`: full color at the source, monotonically less
   with distance, zero at the edge. Integer math only — no floating point or transcendental
   functions in gameplay.
-- **Wall faces**: an opaque cell's perceived light is the channel-wise maximum light of the adjacent
-  (8-neighborhood) transparent cells the viewer sees — applied per source, then summed with ambient
-  light. This prevents light leaking through walls.
+- **Bounce light**: one weak bounce, gameplay light like the rest. The direct light of all sources
+  (red, green, blue; UV does not bounce) on each transparent cell is reflected, tinted by the mean
+  `bounce` color (a terrain field, default white = neutral) of the surfaces there: the cell's own
+  terrain and the opaque orthogonal neighbors bounding it. The reflected light then spreads 3 steps:
+  each step, every transparent cell takes the mean of itself and its linked neighbors (transparent
+  orthogonal neighbors, and transparent diagonal ones with a transparent orthogonal cell between).
+  A cell's bounce light is 32/256 (12.5 %) of the result: it never crosses a wall, reaches at most
+  3 cells from the surface that reflected it, fading with distance, and is never more than 12.5 %
+  of the brightest direct light within reach (exactly that in an evenly lit area). Integer math,
+  derived from un-flickered gameplay light, so steady. Ambient plus bounce light is a cell's *base
+  light*.
+- **Wall faces**: an opaque cell is lit by each source as a transparent cell at its own distance
+  would be (`color · (R² − d²) / R²`), but only if the viewer sees a face the source lights: one of
+  its 8 neighbors is transparent, seen, and lit by the same source. This prevents light leaking
+  through walls, and a wall is never brighter than the floor at the same distance. Its base light
+  is ambient plus the brightest bounce light of its seen transparent neighbors.
 - **Brightness** is the integer luma of RGB, `(54·r + 183·g + 19·b) / 256`, plus UV for eyes that
   see UV. Eyes without UV sight do not perceive UV at all (perception reports it as 0).
 - **Visibility**: a cell is visible iff it is in line of sight within the maximum view range **and**
@@ -235,12 +250,15 @@ rate or animation.
 - **Memory**: per level, terrain only, as last seen (a door is remembered open until seen closed).
 - **Recomputation**: perception updates in the perception phase of every turn (and after
   `SetVision`). Per-light shadow masks are cached and invalidated when the light moves or opacity
-  changes within its radius; only sources whose radius can reach the view range are evaluated.
+  changes within its radius; only sources whose radius can reach the view range (or a surface whose
+  bounce light reaches it) are evaluated. Bounce light is computed over the bounding box of the
+  cells in line of sight plus its 3-cell reach, so it does not depend on where the viewer stands.
 - **Perception API**: the snapshot exposes, for visible cells only, the perceived light (after the
   wall-face rule; plus whether the cell is seen only through darkvision and its squared distance),
   the light sources whose light reaches visible cells (stable key, position, preset, and per-cell
-  contributions; contributions plus ambient sum to the cell's light), the active vision profile,
-  and the ambient light. Visual lighting (§4.4) is derived from this.
+  contributions; contributions plus the cell's base light sum to the cell's light), the base light
+  of visible cells, the active vision profile, and the ambient light. Visual lighting (§4.4) is
+  derived from this.
 
 ## 6. Input and UI
 
@@ -310,8 +328,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   ```
 - **Definitions** (TOML): terrain types, light presets, vision profiles, glyph animations, and
   effects (glow, heat haze, particle emitters; §4.8). Terrain has a `move_cost`: the time to step
-  onto it in percent of the level's turn (default 100; shallow water 200). The calendar's month
-  names are `data/calendar.toml` (exactly 12; without the file months are numbered).
+  onto it in percent of the level's turn (default 100; shallow water 200), and a `bounce` tint
+  for the light it reflects (§5). The calendar's month names are `data/calendar.toml` (exactly 12;
+  without the file months are numbered).
 - **Dungeon branches** (`data/dungeons.toml`): stacks of generated levels, e.g.
   `{ id = "depths", generator = "rooms", depth = 8, size = [80, 21] }`, plus optional name,
   patrolling creature kinds, ambient light, and per-depth overrides of generator and size. Stairs

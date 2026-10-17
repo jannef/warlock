@@ -160,8 +160,12 @@ Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebu
 
 **Visual lighting** (spec §4.4, `render/lighting.rs` + `lighting.wesl`, imported by
 `console.wesl`): every frame `lighting::update` composites the perceived light for the map grid's
-cells plus a one-cell margin, from `PerceptionView::ambient` and `light_sources()` contributions,
-less creature shadows, and folds in UV (violet tint) and the darkvision fade. **Creature shadows**
+cells plus a one-cell margin, from `PerceptionView::base_light` (ambient plus gameplay bounce light,
+steady, never shadowed by creatures) and `light_sources()` contributions, less creature shadows,
+and folds in UV (violet tint) and the darkvision fade. Gameplay light lives in
+`warlock-core/src/light/` (`mod.rs`: falloff and the wall-face rule; `cache.rs`: per-source shadow
+masks; `bounce.rs`: one weak bounce) and is combined in `perception.rs`; Σ contributions + base
+light == `light(p)` is a tested invariant. **Creature shadows**
 (`render/shadows.rs`, visual only): each visible creature shades every perceived source that
 lights its cell, except one on its own cell (its carried light). The source is shadowcast
 (`fov::compute_fov`) over the perceived terrain with and without the creature's cell as an extra

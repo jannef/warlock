@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::content::ContentFiles;
-use crate::light::Light;
+use crate::light::{BOUNCE, Light, falloff};
 use crate::perception::{CellView, PerceptionView};
 use proptest::prelude::*;
 use std::collections::BTreeSet;
@@ -100,6 +100,11 @@ radius = 2
 id = "lantern"
 color = [255, 255, 255, 0]
 radius = 3
+
+[[light]]
+id = "glare"
+color = [2000, 2000, 2000, 0]
+radius = 3
 "##;
 
 const VISION: &str = r##"
@@ -138,6 +143,7 @@ const LEGEND: &str = r##"
 "T" = { terrain = "floor", light = "torch" }
 "D" = { terrain = "floor", light = "dim" }
 "E" = { terrain = "floor", light = "red" }
+"G" = { terrain = "floor", light = "glare" }
 "r" = { terrain = "floor", creature = "rat" }
 "k" = { terrain = "floor", creature = "kobold" }
 "##;
@@ -184,14 +190,14 @@ fn visible(view: &PerceptionView<'_>, p: Pos) -> bool {
     matches!(view.cell(p), CellView::Visible(_))
 }
 
-/// Σ contributions + ambient for every visible cell, recomputed from `light_sources()`.
+/// Σ contributions + base light for every visible cell, recomputed from `light_sources()`.
 fn summed_light(view: &PerceptionView<'_>) -> BTreeMap<Pos, Light> {
     let mut sum = BTreeMap::new();
     for y in 0..view.height() {
         for x in 0..view.width() {
             let p = Pos::new(x, y);
-            if view.is_visible(p) {
-                sum.insert(p, view.ambient());
+            if let Some(base) = view.base_light(p) {
+                sum.insert(p, base);
             }
         }
     }
@@ -204,17 +210,27 @@ fn summed_light(view: &PerceptionView<'_>) -> BTreeMap<Pos, Light> {
     sum
 }
 
+/// Bounce light at a visible cell: its base light minus ambient light.
+fn indirect(view: &PerceptionView<'_>, p: Pos) -> [u16; 3] {
+    let base = view.base_light(p).expect("visible");
+    std::array::from_fn(|c| base.rgb[c] - view.ambient().rgb[c])
+}
+
 /// Light API invariants that must hold in any state.
 fn check_invariants(world: &World) -> Result<(), TestCaseError> {
     let view = world.perception();
     for (p, sum) in summed_light(&view) {
         let light = view.light(p).expect("visible cells have light");
-        prop_assert_eq!(light.light(), sum, "Σ contributions + ambient at {}", p);
+        prop_assert_eq!(light.light(), sum, "Σ contributions + base light at {}", p);
         prop_assert_eq!(light.dist2, p.dist2(view.viewer()));
         if !view.vision().sees_uv {
             prop_assert_eq!(light.uv, 0, "UV is never exposed to eyes without UV sight");
         }
+        let base = view.base_light(p).expect("visible");
+        prop_assert_eq!(base.uv, view.ambient().uv, "UV does not bounce");
+        prop_assert_eq!(base.max(view.ambient()), base, "bounce only adds light");
     }
+    check_wall_faces(&view)?;
     prop_assert!(
         view.is_visible(view.viewer()),
         "the player's own cell is visible"
@@ -226,6 +242,55 @@ fn check_invariants(world: &World) -> Result<(), TestCaseError> {
         &world.perception,
         "a cold light cache agrees"
     );
+    Ok(())
+}
+
+/// Wall faces: a source lights a visible opaque cell exactly as at the cell's own distance, and
+/// only if the cell faces a visible transparent cell the same source lights (so no light from
+/// beyond the wall); its bounce light is the brightest of its visible transparent neighbors'.
+fn check_wall_faces(view: &PerceptionView<'_>) -> Result<(), TestCaseError> {
+    let content = view.content();
+    let opaque = |p: Pos| match view.cell(p) {
+        CellView::Visible(t) => !content.terrain(t).transparent,
+        _ => false,
+    };
+    let transparent =
+        |p: Pos| matches!(view.cell(p), CellView::Visible(t) if content.terrain(t).transparent);
+    for source in view.light_sources() {
+        let preset = content.light(source.preset);
+        let lit: BTreeSet<Pos> = (source.contributions.iter())
+            .map(|(p, _)| *p)
+            .filter(|p| transparent(*p))
+            .collect();
+        for &(p, c) in source.contributions.iter().filter(|(p, _)| opaque(*p)) {
+            let own = falloff(preset.color, preset.radius, p.dist2(source.pos));
+            prop_assert_eq!(
+                c,
+                view.vision().perceive(own),
+                "wall {} at its own distance",
+                p
+            );
+            prop_assert!(
+                Dir::ALL.iter().any(|d| lit.contains(&p.step(*d))),
+                "wall {} faces no visible cell the source lights",
+                p
+            );
+        }
+    }
+    for y in 0..view.height() {
+        for x in 0..view.width() {
+            let p = Pos::new(x, y);
+            if opaque(p) {
+                let brightest = Dir::ALL
+                    .iter()
+                    .map(|d| p.step(*d))
+                    .filter(|q| transparent(*q))
+                    .map(|q| indirect(view, q))
+                    .fold([0; 3], |acc, i| std::array::from_fn(|c| acc[c].max(i[c])));
+                prop_assert_eq!(indirect(view, p), brightest, "bounce on wall {}", p);
+            }
+        }
+    }
     Ok(())
 }
 
@@ -257,7 +322,11 @@ fn ambient_light_lights_everything_in_sight() {
 fn a_torch_lights_its_room_with_falloff() {
     let w = dark_world("###########\n#@...T....#\n###########\n", "normal");
     let view = w.perception();
-    let at = |x: i32| view.light(Pos::new(x, 1)).map(|l| l.rgb[0]);
+    // The torch's own light: the cell's light minus its base (bounce) light.
+    let at = |x: i32| {
+        let p = Pos::new(x, 1);
+        (view.light(p).zip(view.base_light(p))).map(|(l, base)| l.rgb[0] - base.rgb[0])
+    };
     assert_eq!(at(5), Some(255), "full color at the source");
     assert_eq!(at(4), Some(255 * 19 / 20), "R² = 4² + 4 = 20, d² = 1");
     assert_eq!(at(3), Some(255 * 16 / 20));
@@ -284,19 +353,104 @@ fn light_never_crosses_walls_and_wall_faces_take_their_sides_light() {
     let face = view.light(wall).expect("wall seen with darkvision");
     assert_eq!(face.rgb, [0; 3]);
     assert!(face.darkvision);
+    assert_eq!(
+        view.base_light(Pos::new(3, 2)),
+        Some(Light::DARK),
+        "no bounce light through the wall"
+    );
     assert!(
         view.light_sources().is_empty(),
         "the torch's light is not seen"
     );
-    // From the lit side, the wall face takes the brightest adjacent visible floor.
+    // From the lit side, the wall is lit from its own distance to the torch (d² = 4), exactly as
+    // the floor at that distance, plus the bounce light of the floor in front of it.
     let lit = teleport(&w, Pos::new(5, 2));
     let view = lit.perception();
-    let expected = [Pos::new(5, 1), Pos::new(5, 2), Pos::new(5, 3)]
-        .into_iter()
-        .filter_map(|p| view.light(p))
-        .fold(Light::DARK, |acc, l| acc.max(l.light()));
-    assert!(!expected.is_dark());
-    assert_eq!(view.light(wall).map(|l| l.light()), Some(expected));
+    let torch = &view.light_sources()[0];
+    let from_torch = |p: Pos| {
+        torch
+            .contributions
+            .iter()
+            .find(|(q, _)| *q == p)
+            .map(|c| c.1)
+    };
+    let own = falloff(Light::new(255, 255, 255, 0), 4, 4);
+    assert_eq!(from_torch(wall), Some(own));
+    assert_eq!(from_torch(Pos::new(8, 2)), Some(own), "the floor at d² = 4");
+    let base = view.base_light(wall).expect("wall in view");
+    assert!(!base.is_dark(), "lit floor bounces light onto the wall");
+    assert_eq!(
+        view.light(wall).map(|l| l.light()),
+        Some(base.saturating_add(own))
+    );
+}
+
+#[test]
+fn bounce_light_reaches_around_a_corner_and_fades() {
+    // A glaring light in the west room (x 1..3). The east room (x 5..7) opens onto it only through
+    // (4, 3), which is out of the light's reach (d² = 13 ≥ R² = 12): no direct light gets in.
+    let map = "#########\n#G..#..@#\n#...#...#\n#.......#\n#########\n";
+    let w = dark_world(map, "low_light");
+    let view = w.perception();
+    let (gap, corner) = (Pos::new(4, 3), Pos::new(5, 3));
+    for p in [gap, corner] {
+        let light = view
+            .light(p)
+            .expect("bounce light makes it visible")
+            .light();
+        assert_eq!(Some(light), view.base_light(p), "{p}: no direct light");
+        assert!(
+            u32::from(light.rgb[0]) <= 2000 * BOUNCE / 256,
+            "{p}: a small fraction of the glare"
+        );
+    }
+    let brightness = |p: Pos| view.light(p).map_or(0, |l| l.brightness());
+    assert!(
+        brightness(gap) >= 40,
+        "the gap is lit enough for normal eyes"
+    );
+    assert!(
+        (12..40).contains(&brightness(corner)),
+        "around the corner: only low-light eyes see it"
+    );
+    assert_eq!(
+        view.base_light(Pos::new(7, 1)),
+        Some(Light::DARK),
+        "4 steps from the nearest lit cell: out of reach"
+    );
+    check_invariants(&w).expect("invariants");
+    let normal = dark_world(map, "normal");
+    assert!(visible(&normal.perception(), gap));
+    assert!(!visible(&normal.perception(), corner));
+}
+
+#[test]
+fn walls_are_never_brighter_than_the_floor_at_their_distance() {
+    // A dim light (radius 1) in a nook: the walls around it get the light of a cell one step away,
+    // not the full light of the source's own cell.
+    let map = "#####\n#.D.#\n#...#\n#.@.#\n#####\n";
+    let w = dark_world(map, "low_light");
+    let view = w.perception();
+    let dim = &view.light_sources()[0];
+    let source = Pos::new(2, 1);
+    for &(p, c) in &dim.contributions {
+        assert_eq!(
+            c,
+            falloff(Light::new(20, 20, 20, 0), 1, p.dist2(source)),
+            "{p}"
+        );
+    }
+    let wall = Pos::new(2, 0);
+    assert!(visible(&view, wall), "it bounds seen floor");
+    assert_eq!(
+        dim.contributions
+            .iter()
+            .find(|(p, _)| *p == wall)
+            .map(|c| c.1),
+        Some(falloff(Light::new(20, 20, 20, 0), 1, 1)),
+        "d² = 1, not the source's full light"
+    );
+    check_invariants(&w).expect("invariants");
 }
 
 #[test]
@@ -512,7 +666,7 @@ fn same_actions_give_identical_states_and_perception() {
 #[test]
 fn only_lights_near_the_player_get_masks() {
     // A long corridor with a torch every 4 cells; only those within reach are computed.
-    let len = 400;
+    let len = 500;
     let mut row = String::from("#@");
     for x in 2..len - 1 {
         row.push(if x % 4 == 0 { 'T' } else { '.' });
@@ -522,9 +676,9 @@ fn only_lights_near_the_player_get_masks() {
     let w = dark_world(&format!("{wall}\n{row}\n{wall}\n"), "normal");
     let total = (2..len - 1).filter(|x| x % 4 == 0).count();
     let cached = w.lights.cached_masks("test");
-    // Reach: view radius 40 + 1 (wall faces) + torch radius 4.
+    // Reach: view radius 40 + 1 (wall faces) + 6 (bounce) + torch radius 4.
     let near = (2..len - 1)
-        .filter(|x| x % 4 == 0 && (*x as i32 - 1) <= 45)
+        .filter(|x| x % 4 == 0 && (*x as i32 - 1) <= 51)
         .count();
     assert_eq!(cached, near);
     assert!(cached * 8 < total, "{cached} of {total} lights computed");
@@ -565,6 +719,25 @@ fn showcase_darkness_chamber_needs_special_eyes() {
     assert_eq!(seen(&at), (false, false), "normal eyes see nothing");
     at.apply(&Action::SetVision("low_light".into()));
     assert_eq!(seen(&at), (false, true), "low-light sees the fungus");
+    // Its glow reaches the floor two cells away, and lights the walls no brighter than the floor
+    // at the same distance.
+    let view = at.perception();
+    assert!(visible(&view, Pos::new(38, 4)), "d² = 4 from the fungus");
+    let glow = (view.light_sources().iter())
+        .find(|s| s.pos == fungus)
+        .expect("the fungus");
+    let from_fungus = |p: Pos| {
+        glow.contributions
+            .iter()
+            .find(|(q, _)| *q == p)
+            .map(|c| c.1)
+    };
+    assert!(from_fungus(Pos::new(40, 3)).is_some());
+    assert_eq!(
+        from_fungus(Pos::new(40, 3)),
+        from_fungus(Pos::new(40, 5)),
+        "wall and floor at d² = 1"
+    );
     at.apply(&Action::SetVision("uv_sight".into()));
     assert!(seen(&at).0, "UV sight sees the rune");
     at.apply(&Action::SetVision("darkvision".into()));
@@ -749,14 +922,14 @@ fn walls_bounding_far_floor_seen_through_a_gap_are_visible() {
             visible(&view, wall),
             "{wall} bounds seen floor, so it is shown"
         );
-        // Wall-face light: the maximum of the adjacent visible floor.
-        let expected = Dir::ALL
-            .iter()
-            .map(|d| wall.step(*d))
-            .filter(|p| matches!(view.cell(*p), CellView::Visible(t) if view.content().terrain(t).transparent))
-            .filter_map(|p| view.light(p))
-            .fold(Light::DARK, |acc, l| acc.max(l.light()));
-        assert_eq!(view.light(wall).map(|l| l.light()), Some(expected));
+        // Wall-face light: the torch at (20, 2) from the wall's own distance (d² = 1), plus the
+        // bounce light of the adjacent visible floor.
+        let base = view.base_light(wall).expect("visible");
+        let torch = falloff(Light::new(255, 255, 255, 0), 4, 1);
+        assert_eq!(
+            view.light(wall).map(|l| l.light()),
+            Some(base.saturating_add(torch))
+        );
     }
     // Nothing beyond those walls: not the lit floor behind them, not the rat standing there.
     for hidden in [Pos::new(20, 0), Pos::new(24, 3), Pos::new(30, 3)] {
@@ -804,6 +977,46 @@ proptest! {
         check_wall_completion(&w)?;
     }
 
+    /// Random caves split by a solid wall, lights (glaring ones too) only east of it, the player
+    /// west of it: no light of any kind — direct, wall face, or bounce — is seen.
+    #[test]
+    fn no_light_is_seen_through_a_solid_wall(
+        cells in prop::collection::vec(0u8..100, 22 * 9),
+        vision in prop::sample::select(vec!["normal", "low_light", "darkvision", "uv_sight"]),
+    ) {
+        let mut map = format!("{}\n", "#".repeat(24));
+        for y in 0..9 {
+            map.push('#');
+            for x in 0..22 {
+                map.push(match (x, y, cells[y * 22 + x]) {
+                    (0, 4, _) => '@',
+                    (10, _, _) => '#',
+                    (_, _, 0..=29) => '#',
+                    (11.., _, 30..=34) => 'T',
+                    (11.., _, 35..=37) => 'G',
+                    (11.., _, 38..=39) => 'R',
+                    _ => '.',
+                });
+            }
+            map.push_str("#\n");
+        }
+        map.push_str(&"#".repeat(24));
+        map.push('\n');
+        let w = dark_world(&map, vision);
+        let view = w.perception();
+        for y in 0..view.height() {
+            for x in 0..view.width() {
+                let p = Pos::new(x, y);
+                if let Some(light) = view.light(p) {
+                    prop_assert!(light.light().is_dark(), "light at {}", p);
+                    prop_assert_eq!(view.base_light(p), Some(Light::DARK));
+                }
+            }
+        }
+        prop_assert!(view.light_sources().is_empty());
+        check_invariants(&w)?;
+    }
+
     /// Random caves (walls, torches, a rat), any profile and ambient level: wall completion shows
     /// exactly the walls bounding seen floor, and the light invariants hold.
     #[test]
@@ -821,6 +1034,7 @@ proptest! {
                     (_, _, 0..=41) => '#',
                     (_, _, 42..=44) => 'T',
                     (_, _, 45) => 'r',
+                    (_, _, 46) => 'G',
                     _ => '.',
                 });
             }

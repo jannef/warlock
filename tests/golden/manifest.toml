@@ -65,6 +65,11 @@ scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 move:E*6 move:S*2 vision:uv_sight"
 
 [[golden]]
+name = "darkness-chamber-low-light"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 move:E*6 move:S*2 vision:low_light"
+
+[[golden]]
 name = "darkness-chamber-darkvision"
 scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 move:E*6 move:S*2 vision:darkvision"

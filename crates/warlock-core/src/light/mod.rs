@@ -12,10 +12,14 @@
 //! platform.
 //!
 //! Masks are cached per source ([`LightCache`]); the perception phase combines them with the
-//! player's line of sight and applies the wall-face rule (see [`crate::perception`]).
+//! player's line of sight, adds one weak bounce ([`bounce`]), and applies the wall-face rule (see
+//! [`crate::perception`]).
 
+mod bounce;
 mod cache;
 
+pub(crate) use bounce::{Area, Bounce};
+pub use bounce::{BOUNCE, BOUNCE_STEPS};
 pub(crate) use cache::{LightCache, Mask};
 
 use crate::fov::radius2;
@@ -126,33 +130,31 @@ pub(crate) fn lit_in_sight(
         .collect()
 }
 
-/// **Wall-face rule** for one source: each opaque cell `is_face` accepts takes the channel-wise
-/// maximum of the source's light (`lit`, from [`lit_in_sight`]) at its (up to eight) neighbors
-/// that are transparent and visible, so light never leaks through a wall to a viewer on its dark
-/// side. Sorted by position.
+/// **Wall-face rule** for one source: an opaque cell `is_face` accepts is lit by the source as a
+/// transparent cell at its own distance would be (`light_at`), but only if the viewer sees a face
+/// the source lights: one of its (up to eight) neighbors is transparent, visible, and lit by the
+/// source (`lit`, from [`lit_in_sight`]). So light never leaks through a wall to a viewer on its
+/// dark side, and a wall is never brighter than the floor at the same distance. Sorted by
+/// position.
 pub(crate) fn wall_faces(
     lit: &[(Pos, Light)],
+    light_at: impl Fn(Pos) -> Light,
     is_visible: impl Fn(Pos) -> bool,
     is_face: impl Fn(Pos) -> bool,
 ) -> Vec<(Pos, Light)> {
-    let mut faces = Vec::new();
-    for &(q, light) in lit.iter().filter(|(q, _)| is_visible(*q)) {
-        for dir in Dir::ALL {
-            let w = q.step(dir);
-            if is_face(w) {
-                faces.push((w, light));
-            }
-        }
-    }
-    faces.sort_by_key(|(p, _)| *p);
-    let mut merged: Vec<(Pos, Light)> = Vec::with_capacity(faces.len());
-    for (p, light) in faces {
-        match merged.last_mut() {
-            Some((last, acc)) if *last == p => *acc = acc.max(light),
-            _ => merged.push((p, light)),
-        }
-    }
-    merged
+    let mut faces: Vec<Pos> = lit
+        .iter()
+        .filter(|(q, _)| is_visible(*q))
+        .flat_map(|(q, _)| Dir::ALL.map(|d| q.step(d)))
+        .filter(|w| is_face(*w))
+        .collect();
+    faces.sort();
+    faces.dedup();
+    faces
+        .into_iter()
+        .map(|w| (w, light_at(w)))
+        .filter(|(_, light)| !light.is_dark())
+        .collect()
 }
 
 #[cfg(test)]
