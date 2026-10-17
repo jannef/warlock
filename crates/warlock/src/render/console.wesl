@@ -76,7 +76,7 @@ const GLINT_PERIOD: f32 = 9.0;
 const GLINT_CHANCE: f32 = 0.4;
 const GLINT_LENGTH: f32 = 0.9;
 const FLOW_SPEED_STEPS: f32 = 8.0;
-// How much a full glint adds to the glyph, times the (flickering) light on it.
+// How much a full glint adds to the glyph, times the (modulated) light on it.
 const GLINT_GAIN: f32 = 0.5;
 
 @group(constants::MATERIAL_BIND_GROUP) @binding(0) var<uniform> params: ConsoleParams;
@@ -306,7 +306,8 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     if light.lit {
         fg = shade(fg, light);
         bg = vec4(shade(bg.rgb, light), bg.a);
-        // A glint reflects the light on the cell: its color, flicker and all; none in the dark.
+        // A glint reflects the light on the cell: its color (hue drift included) and intensity
+        // gain (light stability); none in the dark.
         fg += glint_strength * GLINT_GAIN * min(light.rgb, vec3(1.0)) * light.gain;
     }
     // Effects: lit colors stay within display range, so bright light alone never blooms; then

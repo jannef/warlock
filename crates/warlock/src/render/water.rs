@@ -10,9 +10,9 @@
 //!   stream the two patterns meet with a seam, so streams keep an even speed along their length
 //!   (the vast river turns only by steps that keep the same speed downstream).
 //! - Either may **glint** ([`glint`]): now and then, at a random moment of each cell's own cycle,
-//!   the glyph brightens briefly in the color of the light on it (flicker included), so dark
-//!   water never glints. Glints are hashed from the level position (the shader gets the map
-//!   grid's level origin), so they stay put while the camera scrolls.
+//!   the glyph brightens briefly in the color of the light on it (its flicker and hue drift
+//!   included), so dark water never glints. Glints are hashed from the level position (the
+//!   shader gets the map grid's level origin), so they stay put while the camera scrolls.
 //!
 //! With glyph animation off nothing here runs (the animation table is empty). The curves below
 //! mirror the shader and exist to test it: change both together.

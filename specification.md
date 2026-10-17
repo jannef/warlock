@@ -102,8 +102,9 @@ Water is calm by design; motion stays tasteful, never busy:
 - **Still water** (pools, ponds, the water garden, cave pools) is a `wave` with a faint, slow
   swell (a pixel or so), and **glints** (`glint`, 0–1, on `wave` and `flow`): now and then, at a
   random moment of each cell's own cycle (about one glint every 20 s per cell, under a second
-  long), the glyph brightens a little in the color of the light on it, flicker included. Dark
-  water never glints; the glints are reflections of nearby lights.
+  long), the glyph brightens a little in the color of the light on it, following that light's
+  stability (its flicker and hue drift, §4.4). Dark water never glints; the glints are
+  reflections of nearby lights.
 - **Running water** (rivers, streams) is a `flow`. Each cell has a flow direction (8 ways) and
   speed (§7). The shader draws the glyph as a pattern repeating every cell and moves it
   downstream at the terrain's `speed` (cell widths per second) times the cell's flow speed, so
