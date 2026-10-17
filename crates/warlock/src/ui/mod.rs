@@ -3,9 +3,13 @@
 //! Everything shown about the world comes from `World::perception()`. Terrain goes into the map
 //! grid layer, creatures and glyphs that outgrow their cell into the free-glyph layer
 //! ([`glyphs`]), and text and panels into the UI console on top. [`motion`] moves the camera and
-//! slides creatures between cells.
+//! slides creatures between cells. Terrain is drawn in its base colors: the map grid's shader
+//! lights it with the visual light (`render::lighting`), composited after the map is placed and
+//! before free glyphs are lit. [`dev`] adds the developer overlays (reveal mode is the one
+//! exception that reads ground truth).
 
 mod controls_screen;
+mod dev;
 mod glyphs;
 mod menu;
 mod motion;
@@ -13,17 +17,19 @@ mod settings_screen;
 
 pub use menu::{Menu, OpenPause, ScreenName};
 
+pub use dev::DevOverlays;
+
 use crate::game::{Game, SimSet};
 use crate::input::{Bindings, InputMode};
 use crate::render::anim::{AnimTable, TerrainAnim};
 use crate::render::console::{Cell, Console};
 use crate::render::grid::MapGrid;
-use crate::render::{ConsoleLayout, VisualTime};
+use crate::render::{ConsoleLayout, VisualTime, lighting};
 use bevy::prelude::*;
 use motion::Motion;
 use warlock_core::Pos;
 use warlock_core::color::Rgb;
-use warlock_core::perception::{CellView, PerceivedLight, PerceptionView};
+use warlock_core::perception::{CellView, PerceptionView};
 
 const MESSAGE_ROWS: i32 = 2;
 const STATUS_ROWS: i32 = 1;
@@ -39,11 +45,17 @@ pub struct UiPlugin;
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Motion>()
+            .init_resource::<DevOverlays>()
             .add_message::<OpenPause>()
             .add_systems(
                 Update,
                 (
-                    (motion::track, (draw, draw_map_layer), glyphs::emit)
+                    (
+                        motion::track,
+                        (draw, draw_map_layer),
+                        lighting::update,
+                        glyphs::emit,
+                    )
                         .chain()
                         .after(SimSet)
                         .run_if(resource_exists::<Game>),
@@ -59,15 +71,22 @@ fn draw(
     mode: Res<InputMode>,
     layout: Res<ConsoleLayout>,
     bindings: Res<Bindings>,
+    overlays: Res<DevOverlays>,
     mut console: ResMut<Console>,
 ) {
-    if !(game.is_changed() || mode.is_changed() || layout.is_changed() || bindings.is_changed()) {
+    if !(game.is_changed()
+        || mode.is_changed()
+        || layout.is_changed()
+        || bindings.is_changed()
+        || overlays.is_changed())
+    {
         return;
     }
     console.clear();
     let rows = console.rows() as i32;
     draw_messages(&mut console, &game, *mode);
     draw_status(&mut console, &game, rows - 1);
+    dev::draw_indicator(&mut console, *overlays);
     if *mode == InputMode::Help {
         draw_help(&mut console, &bindings);
     }
@@ -108,6 +127,7 @@ fn draw_map_layer(
     motion: Res<Motion>,
     visual: Res<VisualTime>,
     anims: Res<AnimTable>,
+    overlays: Res<DevOverlays>,
     mut grid: ResMut<MapGrid>,
     mut drawn: Local<Option<MapKey>>,
 ) {
@@ -132,7 +152,8 @@ fn draw_map_layer(
         area,
         covered: motion.occupied(view.actors().iter().map(|a| a.pos)),
     };
-    let changed = game.is_changed() || anims.is_changed() || layout.is_changed();
+    let changed =
+        game.is_changed() || anims.is_changed() || layout.is_changed() || overlays.is_changed();
     if !changed && drawn.as_ref() == Some(&key) {
         return;
     }
@@ -140,6 +161,7 @@ fn draw_map_layer(
     grid.console.resize(area.w as u32 + 1, area.h as u32 + 1);
     grid.console.clear();
     draw_map(&mut grid, &view, &anims, &key.covered);
+    dev::draw_map_overlays(&mut grid, &game.world, *overlays);
     *drawn = Some(key);
 }
 
@@ -154,7 +176,8 @@ fn camera_origin(view: i32, level: i32, viewer: i32) -> i32 {
 }
 
 /// Draws terrain into the map grid. Creatures are on the free-glyph layer: the grid keeps the
-/// terrain under them but not its glyph (`covered`). Only visible terrain animates.
+/// terrain under them but not its glyph (`covered`). Only visible terrain animates. Visible
+/// terrain keeps its base colors (the shader lights it); remembered terrain is dimmed here.
 fn draw_map(grid: &mut MapGrid, view: &PerceptionView<'_>, anims: &AnimTable, covered: &[Pos]) {
     let content = view.content();
     let (ox, oy) = (grid.level_origin.x, grid.level_origin.y);
@@ -175,11 +198,10 @@ fn draw_map(grid: &mut MapGrid, view: &PerceptionView<'_>, anims: &AnimTable, co
                 }
                 CellView::Visible(t) => {
                     let def = content.terrain(t);
-                    let light = view.light(p);
                     Cell {
                         ch: def.glyph,
-                        fg: lit(def.fg, light, TERRAIN_FLOOR),
-                        bg: lit(def.bg, light, TERRAIN_FLOOR),
+                        fg: def.fg,
+                        bg: def.bg,
                     }
                 }
             };
@@ -206,36 +228,11 @@ fn draw_map(grid: &mut MapGrid, view: &PerceptionView<'_>, anims: &AnimTable, co
     }
 }
 
-/// Lowest light factor for visible terrain and actors, so dim cells stay readable.
-const TERRAIN_FLOOR: f32 = 0.3;
-/// Lowest light factor for creatures (drawn on the free-glyph layer by [`glyphs`]).
-const ACTOR_FLOOR: f32 = 0.6;
-
-/// Simple per-cell lighting until visual light compositing lands (#19): each channel is scaled by
-/// the perceived light of that channel (a square-root curve, with a readability floor). UV, when
-/// perceived, tints violet; cells seen only through darkvision are drawn in dim grey.
-pub(super) fn lit(c: Rgb, light: Option<PerceivedLight>, floor: f32) -> Rgb {
-    let Some(light) = light else {
-        return c;
-    };
-    if light.darkvision {
-        let luma = (u32::from(c.r) * 54 + u32::from(c.g) * 183 + u32::from(c.b) * 19) / 256;
-        let grey = (luma as f32 * (floor + 0.15)).round() as u8;
-        return Rgb::new(grey, grey, grey);
-    }
-    let [r, g, b] = light.rgb.map(f32::from);
-    let uv = f32::from(light.uv);
-    let scale = |v: u8, l: f32| {
-        let t = (l / 255.0).clamp(0.0, 1.0).sqrt();
-        (f32::from(v) * (floor + (1.0 - floor) * t)).round() as u8
-    };
-    Rgb::new(scale(c.r, r + uv * 0.6), scale(c.g, g), scale(c.b, b + uv))
-}
-
-/// Remembered terrain: dim and desaturated, so it never reads as "in view".
+/// Remembered terrain: dim and desaturated, so it never reads as "in view" (visible terrain in
+/// the dark stays a little brighter; see `render::lighting::TERRAIN_FLOOR`).
 fn remembered(c: Rgb) -> Rgb {
     let luma = (u32::from(c.r) * 54 + u32::from(c.g) * 183 + u32::from(c.b) * 19) / 256;
-    let f = |v: u8| ((u32::from(v) + luma) / 2 * 45 / 100) as u8;
+    let f = |v: u8| ((u32::from(v) + luma) / 2 * 35 / 100) as u8;
     Rgb::new(f(c.r), f(c.g), f(c.b))
 }
 
@@ -422,29 +419,5 @@ mod tests {
         draw_map(&mut grid, &view, &anims, &[player]);
         assert_eq!(grid.free_terrain, vec![(Pos::new(5, 1), altar)]);
         assert_eq!(grid.console.cells()[at(5, 1)].map(|c| c.ch), Some(' '));
-    }
-
-    fn perceived(rgb: [u16; 3], uv: u16, darkvision: bool) -> Option<PerceivedLight> {
-        Some(PerceivedLight {
-            rgb,
-            uv,
-            darkvision,
-            dist2: 4,
-        })
-    }
-
-    #[test]
-    fn light_scales_colors_with_a_readable_floor() {
-        let c = Rgb::new(200, 200, 200);
-        assert_eq!(lit(c, perceived([255, 255, 255], 0, false), 0.3), c);
-        assert_eq!(lit(c, perceived([600, 600, 600], 0, false), 0.3), c);
-        let dark = lit(c, perceived([0, 0, 0], 0, false), 0.3);
-        assert_eq!(dark, Rgb::new(60, 60, 60));
-        let red = lit(c, perceived([255, 0, 0], 0, false), 0.3);
-        assert!(red.r > red.g && red.g == red.b);
-        let dv = lit(Rgb::new(200, 100, 50), perceived([0, 0, 0], 0, true), 0.3);
-        assert!(dv.r == dv.g && dv.g == dv.b, "darkvision is monochrome");
-        let uv = lit(c, perceived([0, 0, 0], 200, false), 0.3);
-        assert!(uv.b > uv.r && uv.r > uv.g, "UV tints violet");
     }
 }

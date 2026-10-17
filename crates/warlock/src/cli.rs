@@ -38,8 +38,8 @@ pub struct Args {
     #[arg(long)]
     pub freeze_time: Option<f32>,
 
-    /// Force reduced effects on: no glyph animation, no movement slides, no camera easing (spec
-    /// §4.7). The settings file can turn them on too; this flag always wins.
+    /// Force reduced effects on: no glyph animation, no light flicker, no movement slides, no
+    /// camera easing (spec §4.7). The settings file can turn them on too; this flag always wins.
     #[arg(long)]
     pub reduced_effects: bool,
 
@@ -59,7 +59,8 @@ pub struct Args {
     #[arg(long)]
     pub new: bool,
 
-    /// Enable developer features in release builds (F5/F9 snapshots). Always on in debug builds.
+    /// Enable developer features in release builds (F2 reveal map, F3 next vision profile, F4
+    /// light values, F5/F9 snapshots). Always on in debug builds.
     #[arg(long)]
     pub dev: bool,
 

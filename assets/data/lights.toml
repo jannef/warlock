@@ -7,47 +7,50 @@
 #             Brightness for vision thresholds is luma (54r + 183g + 19b) / 256, plus UV for eyes
 #             that see UV.
 #   radius  = reach in cells; light falls off as color · (R² − d²) / R² with R² = radius² + radius.
-#   flicker = { amount, speed } — visual only (renderer); gameplay never reads it.
+#   flicker = { amount, speed } — visual only (renderer); gameplay never reads it. What the
+#             light falls on brightens and dims smoothly within ±amount (0.1 = ±10 %, usually
+#             about a third of that), changing about `speed` times a second. Keep it gentle:
+#             flames livelier than lamps, nothing strobing.
 
 # Carried by creatures (kobolds).
 [[light]]
 id = "torch"
 color = [300, 180, 90, 0]
 radius = 6
-flicker = { amount = 0.2, speed = 1.6 }
+flicker = { amount = 0.15, speed = 1.0 }
 
 # Wall torches in sconces.
 [[light]]
 id = "sconce"
 color = [280, 170, 90, 0]
 radius = 7
-flicker = { amount = 0.15, speed = 1.2 }
+flicker = { amount = 0.12, speed = 0.8 }
 
 [[light]]
 id = "brazier"
 color = [360, 210, 100, 0]
 radius = 8
-flicker = { amount = 0.2, speed = 1.0 }
+flicker = { amount = 0.15, speed = 0.7 }
 
 # Hanging oil lamps (corridors, nooks).
 [[light]]
 id = "lamp"
 color = [230, 200, 150, 0]
 radius = 6
-flicker = { amount = 0.05, speed = 0.5 }
+flicker = { amount = 0.04, speed = 0.35 }
 
 # The player's lantern (see scenarios).
 [[light]]
 id = "lantern"
 color = [250, 215, 160, 0]
 radius = 5
-flicker = { amount = 0.08, speed = 0.8 }
+flicker = { amount = 0.06, speed = 0.6 }
 
 [[light]]
 id = "altar_glow"
 color = [220, 180, 90, 0]
 radius = 5
-flicker = { amount = 0.1, speed = 0.4 }
+flicker = { amount = 0.08, speed = 0.3 }
 
 # Light hall crystals: steady colored light.
 [[light]]
@@ -75,11 +78,11 @@ radius = 7
 id = "fungus"
 color = [0, 20, 10, 0]
 radius = 2
-flicker = { amount = 0.1, speed = 0.2 }
+flicker = { amount = 0.08, speed = 0.2 }
 
 # Darkness chamber: ultraviolet only, visible with UV sight.
 [[light]]
 id = "uv_rune"
 color = [0, 0, 0, 180]
 radius = 4
-flicker = { amount = 0.1, speed = 0.3 }
+flicker = { amount = 0.08, speed = 0.25 }

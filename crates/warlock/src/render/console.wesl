@@ -9,8 +9,11 @@
 // toward a color, `cycle` steps through glyph frames. The curves mirror `render/anim.rs`.
 //
 // Cells nothing was drawn into are transparent (background alpha 0), so layers below show through.
+//
+// Visual lighting (spec §4.4) lights the map grid's terrain per pixel; see `lighting.wesl`.
 
 import bevy_sprite_render::mesh2d::vertex_output::VertexOutput;
+import super::lighting::{light_at, shade};
 
 struct ConsoleParams {
     // Framebuffer position (physical pixels) of cell (0, 0)'s top-left corner.
@@ -129,7 +132,7 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     let g = textureLoad(glyphs, cell, 0);
     var index = g.r | (g.g << 8u);
     var fg = textureLoad(fg_colors, cell, 0).rgb;
-    let bg = textureLoad(bg_colors, cell, 0);
+    var bg = textureLoad(bg_colors, cell, 0);
     let a = textureLoad(anims, cell, 0);
 
     var coverage = 0.0;
@@ -150,6 +153,11 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
             }
             coverage = coverage_crisp(index, vec2<i32>(floor(local)));
         }
+    }
+    let light = light_at(cell, local / params.cell_size);
+    if light.lit {
+        fg = shade(fg, light);
+        bg = vec4(shade(bg.rgb, light), bg.a);
     }
     return compose(fg, coverage, bg);
 }

@@ -60,7 +60,8 @@ struct DumpArgs {
     replay: Option<PathBuf>,
     #[arg(long, value_enum, default_value_t = Format::Ascii)]
     format: Format,
-    /// Comma-separated layers: view, fov, memory, truth (truth is dev-only ground truth).
+    /// Comma-separated layers: view, fov, memory, light (brightness digit 0-9 per visible cell),
+    /// truth (dev-only ground truth).
     #[arg(long, default_value = "view")]
     layers: String,
     /// With `--format json`, include the full world state.
