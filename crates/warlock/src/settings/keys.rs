@@ -12,7 +12,7 @@ use warlock_core::Dir;
 /// The commands the player may rebind, in the order the controls screen lists them. `Cancel`
 /// (Esc) is fixed so a rebinding can always be cancelled, and the dev snapshot keys are not
 /// player commands.
-pub const REBINDABLE: [KeyCommand; 16] = [
+pub const REBINDABLE: [KeyCommand; 17] = [
     KeyCommand::Move(Dir::N),
     KeyCommand::Move(Dir::NE),
     KeyCommand::Move(Dir::E),
@@ -27,6 +27,7 @@ pub const REBINDABLE: [KeyCommand; 16] = [
     KeyCommand::Descend,
     KeyCommand::Ascend,
     KeyCommand::Lantern,
+    KeyCommand::Look,
     KeyCommand::Help,
     KeyCommand::Quit,
 ];
@@ -93,6 +94,7 @@ impl KeyCommand {
             Descend => "descend",
             Ascend => "ascend",
             Lantern => "lantern",
+            Look => "look",
             Help => "help",
             Quit => "quit",
             Cancel | Snapshot | LoadSnapshot | CycleVision | RevealMap | LightValues => {
