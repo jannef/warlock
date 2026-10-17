@@ -25,8 +25,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             pkg-config libudev-dev libwayland-dev libxkbcommon-dev \
-            xvfb mesa-vulkan-drivers libvulkan1 libxkbcommon-x11-0 \
-            libxcursor1 libxrandr2 libxi6 libx11-xcb1
+            mesa-vulkan-drivers libvulkan1
       - name: Install pinned toolchain
         run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2
@@ -36,15 +35,17 @@ jobs:
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - name: Test
         run: cargo test --workspace --locked
+      # --capture renders offscreen (no window), so no X server is needed; Mesa lavapipe
+      # provides a software Vulkan adapter.
       - name: Screenshot smoke test (software Vulkan)
         env:
           WGPU_BACKEND: vulkan
-        run: xvfb-run -a -s "-screen 0 1920x1080x24" cargo xtask smoke
+        run: cargo xtask smoke
       - name: Golden screenshots
         if: hashFiles('tests/golden/*.png') != ''
         env:
           WGPU_BACKEND: vulkan
-        run: xvfb-run -a -s "-screen 0 1920x1080x24" cargo xtask golden
+        run: cargo xtask golden
       - name: Upload captures
         if: always()
         uses: actions/upload-artifact@v4

@@ -9,6 +9,23 @@ use std::path::PathBuf;
 #[derive(Debug, Clone, Parser, Resource)]
 #[command(name = "warlock", version, about = "Warlock — an ASCII roguelike")]
 pub struct Args {
+    /// Scenario to start (a file stem under `assets/scenarios/`).
+    #[arg(long, default_value = "showcase")]
+    pub scenario: String,
+
+    /// Run seed; defaults to the scenario's seed.
+    #[arg(long)]
+    pub seed: Option<u64>,
+
+    /// Read content (`data/`, `levels/`, `scenarios/`) from this directory instead of the
+    /// built-in copy, e.g. `--content-dir assets`.
+    #[arg(long)]
+    pub content_dir: Option<PathBuf>,
+
+    /// Freeze visual time at this many seconds (reproducible screenshots).
+    #[arg(long)]
+    pub freeze_time: Option<f32>,
+
     /// Window size in physical pixels, e.g. `1280x720`.
     #[arg(long, value_parser = parse_size, default_value = "1280x720")]
     pub window: UVec2,

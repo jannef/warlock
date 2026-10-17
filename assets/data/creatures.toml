@@ -1,0 +1,25 @@
+# Creature types. The player is the creature with id "player".
+
+[[creature]]
+id = "player"
+name = "you"
+glyph = "@"
+fg = "#f4f4f4"
+
+[[creature]]
+id = "rat"
+name = "giant rat"
+glyph = "r"
+fg = "#b08458"
+
+[[creature]]
+id = "bat"
+name = "cave bat"
+glyph = "b"
+fg = "#9a7ab8"
+
+[[creature]]
+id = "kobold"
+name = "kobold"
+glyph = "k"
+fg = "#7cb85a"
