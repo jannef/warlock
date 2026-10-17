@@ -17,6 +17,16 @@ pub struct Args {
     #[arg(long)]
     pub seed: Option<u64>,
 
+    /// Apply this replay file at startup (its scenario and seed win); hashes are verified and a
+    /// divergence is logged as a warning.
+    #[arg(long)]
+    pub replay: Option<PathBuf>,
+
+    /// Record every applied action to this replay file, rewritten after each action. Includes
+    /// the steps of `--replay`, if given.
+    #[arg(long)]
+    pub record: Option<PathBuf>,
+
     /// Read content (`data/`, `levels/`, `scenarios/`) from this directory instead of the
     /// built-in copy, e.g. `--content-dir assets`.
     #[arg(long)]

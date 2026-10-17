@@ -322,6 +322,16 @@ fn same_actions_give_identical_states() {
         b.apply(action);
     }
     assert_eq!(a.state(), b.state());
+    assert_eq!(a.state_hash(), b.state_hash());
+}
+
+#[test]
+fn state_hash_tracks_state() {
+    let mut w = world();
+    let start = w.state_hash();
+    assert_eq!(start, world().state_hash());
+    w.apply(&Action::Wait);
+    assert_ne!(w.state_hash(), start);
 }
 
 #[test]
