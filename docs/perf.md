@@ -20,17 +20,18 @@ turn processing at most 5 ms in the hub and 16 ms in the vast level.
 
 ## Results
 
-Machine: Apple M5 Pro (integrated GPU, Metal), macOS 26.6.2, release profile, 2026-10-17.
+Machine: Apple M5 Pro (integrated GPU, Metal), macOS 26.6.2, release profile, 2026-10-17, measured
+on `main` with lighting (#39), effects (#37), procgen (#40) and the status line (#41) merged.
 
-| Measurement | Hub | Vast | Budget |
-|---|---|---|---|
-| Turn time, avg | 0.004 ms | 0.076 ms | |
-| Turn time, max (400 turns) | 0.013 ms | 0.130 ms | 5 ms / 16 ms |
-| Frame time, 2560x1440 | 0.48 ms (about 2080 fps) | 0.48 ms (about 2090 fps) | 16.7 ms |
-| Frame time, 1280x720 | 0.48 ms | 0.48 ms | 16.7 ms |
+| Measurement | Hub | Vast | Depths | Budget |
+|---|---|---|---|---|
+| Turn time, avg | 0.020 ms | 0.051 ms | 0.007 ms | |
+| Turn time, max (400 turns) | 0.042 ms | 0.123 ms | 0.016 ms | 5 ms / 16 ms / 5 ms |
+| Frame time, 2560x1440 | 0.89 ms (about 1120 fps) | 0.89 ms (about 1120 fps) | n/a | 16.7 ms |
+| Frame time, 1280x720 | 0.79 ms | 0.84 ms | n/a | 16.7 ms |
 
-Frame time is identical across levels and resolutions, which means the loop is CPU/submission
-bound on this machine (the scene is a few full-window quads plus a small free-glyph mesh); the
-offscreen run at the default 60 Hz pacing is bounded by the sleep granularity, not by rendering.
-All budgets are met with a large margin. Re-measure after the lighting (#29/#19) and effects (#21)
-work lands, and on a real Windows/Linux integrated GPU before confirming the budgets in the spec.
+Frame time is nearly identical across levels and resolutions, which means the loop is CPU or
+submission bound on this machine; the offscreen run at the default 60 Hz pacing is bounded by the
+sleep granularity, not by rendering. All budgets are met with a large margin. Before lighting and
+effects landed the same measurement gave 0.48 ms per frame; the cost roughly doubled. Re-measure on
+a real Windows/Linux integrated GPU before confirming the budgets in the spec.

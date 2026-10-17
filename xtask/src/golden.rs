@@ -31,6 +31,8 @@ struct Defaults {
     window: String,
     scale: f32,
     freeze_time: f32,
+    /// Frames rendered before the capture (software Vulkan compiles pipelines slowly).
+    capture_after_frames: u32,
     /// Largest allowed difference per color channel (0-255) before a pixel counts as different.
     tolerance: u8,
     /// Largest allowed fraction of differing pixels.
@@ -43,6 +45,7 @@ impl Default for Defaults {
             window: "960x540".into(),
             scale: 1.0,
             freeze_time: 1.0,
+            capture_after_frames: 60,
             tolerance: 2,
             max_diff_ratio: 0.0005,
         }
@@ -62,6 +65,7 @@ struct Entry {
     window: Option<String>,
     scale: Option<f32>,
     freeze_time: Option<f32>,
+    capture_after_frames: Option<u32>,
     tolerance: Option<u8>,
     max_diff_ratio: Option<f64>,
 }
@@ -186,6 +190,10 @@ pub fn run(mode: Mode) -> Result<(), String> {
         let window = entry.window.as_deref().unwrap_or(&d.window);
         let scale = entry.scale.unwrap_or(d.scale).to_string();
         let freeze = entry.freeze_time.unwrap_or(d.freeze_time).to_string();
+        let frames = entry
+            .capture_after_frames
+            .unwrap_or(d.capture_after_frames)
+            .to_string();
         let tolerance = entry.tolerance.unwrap_or(d.tolerance);
         let max_ratio = entry.max_diff_ratio.unwrap_or(d.max_diff_ratio);
 
@@ -203,6 +211,8 @@ pub fn run(mode: Mode) -> Result<(), String> {
             &scale,
             "--freeze-time",
             &freeze,
+            "--capture-after-frames",
+            &frames,
             "--replay",
             replay.to_str().ok_or("non-UTF-8 path")?,
             "--capture",

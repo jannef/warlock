@@ -11,6 +11,8 @@
 window = "960x540"
 scale = 1.0
 freeze_time = 1.0
+# Frames rendered before the capture; software Vulkan needs time to finish pipelines and lighting.
+capture_after_frames = 60
 # Largest per-channel difference (0-255) that still counts as equal.
 tolerance = 2
 # Largest fraction of pixels allowed to differ by more than the tolerance.
