@@ -273,24 +273,64 @@ fn draw_status(console: &mut Console, game: &Game, y: i32) {
     let pos = world.player_pos();
     let light = view.light(pos).map_or(0, |l| l.brightness());
     let lantern = match world.lantern() {
-        Some(true) => "  ·  Lantern lit",
-        Some(false) => "  ·  Lantern out",
-        None => "",
+        Some(true) => Some("Lantern lit".to_string()),
+        Some(false) => Some("Lantern out".to_string()),
+        None => None,
     };
-    let status = format!(
-        "{}  ·  Turn {}  ·  {},{}  ·  Light {}  ·  {} vision{}  ·  Seed {}",
-        view.level_name(),
-        world.turn(),
-        pos.x,
-        pos.y,
-        light,
-        view.vision().name,
-        lantern,
-        world.seed()
-    );
-    console.print(1, y, &status, TEXT);
+    // Display order; the number is the drop priority (higher drops first when space runs out).
+    let segments: Vec<(u8, String)> = [
+        Some((0, view.level_name().to_string())),
+        Some((1, format!("Turn {}", world.turn()))),
+        Some((5, format!("{},{}", pos.x, pos.y))),
+        Some((2, format!("Light {light}"))),
+        Some((3, format!("{} vision", view.vision().name))),
+        lantern.map(|l| (4, l)),
+        Some((6, format!("Seed {}", world.seed()))),
+    ]
+    .into_iter()
+    .flatten()
+    .collect();
+    // The controls hint matters most to new players, so it keeps its place unless the window is
+    // very narrow; status segments give way around it.
     let hint = "? controls";
-    console.print(cols - hint.chars().count() as i32 - 1, y, hint, TEXT_DIM);
+    let hint_w = hint.chars().count() as i32;
+    let show_hint = cols >= 50;
+    let reserved = if show_hint { hint_w + 3 } else { 0 };
+    let width = (cols - 2 - reserved).max(0) as usize;
+    console.print(1, y, &fit_segments(&segments, width), TEXT);
+    if show_hint {
+        console.print(cols - hint_w - 1, y, hint, TEXT_DIM);
+    }
+}
+
+/// Joins `segments` with separators, dropping the highest-priority-number segments first until
+/// the line fits in `width` characters. Kept segments stay in their original order.
+fn fit_segments(segments: &[(u8, String)], width: usize) -> String {
+    const SEP: &str = "  ·  ";
+    let mut keep: Vec<bool> = vec![true; segments.len()];
+    loop {
+        let line = segments
+            .iter()
+            .zip(&keep)
+            .filter(|(_, k)| **k)
+            .map(|((_, text), _)| text.as_str())
+            .collect::<Vec<_>>()
+            .join(SEP);
+        if line.chars().count() <= width {
+            return line;
+        }
+        let drop = segments
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| keep[*i])
+            .max_by_key(|(i, (priority, _))| (*priority, *i))
+            .map(|(i, _)| i);
+        match drop {
+            Some(i) if keep.iter().filter(|k| **k).count() > 1 => keep[i] = false,
+            // A single segment that is still too long is cut at the edge.
+            _ => return line.chars().take(width).collect(),
+        }
+    }
 }
 
 fn draw_help(console: &mut Console, bindings: &Bindings) {
@@ -339,6 +379,25 @@ mod tests {
                 assert!(ratio >= 4.5, "{name} on {bg:?} is only {ratio:.2}:1");
             }
         }
+    }
+
+    #[test]
+    fn status_segments_drop_by_priority_and_keep_order() {
+        let segs: Vec<(u8, String)> = vec![
+            (0, "The Hub".into()),
+            (1, "Turn 12".into()),
+            (5, "7,15".into()),
+            (2, "Light 366".into()),
+            (6, "Seed 1".into()),
+        ];
+        let full = fit_segments(&segs, 200);
+        assert_eq!(
+            full,
+            "The Hub  ·  Turn 12  ·  7,15  ·  Light 366  ·  Seed 1"
+        );
+        let narrow = fit_segments(&segs, 34);
+        assert_eq!(narrow, "The Hub  ·  Turn 12  ·  Light 366");
+        assert_eq!(fit_segments(&segs, 4), "The ");
     }
 
     #[test]
