@@ -116,7 +116,8 @@ fn make_replay(
     let text = entry.actions.as_deref().unwrap_or("");
     for action in expand_actions(text)? {
         let outcome = world.apply(&action);
-        if !outcome.took_turn {
+        // Switching vision is free by design; anything else that takes no turn was refused.
+        if !outcome.took_turn && !matches!(action, Action::SetVision(_)) {
             return Err(format!(
                 "{}: action `{action}` took no turn (blocked?); fix the action sequence",
                 entry.name

@@ -58,6 +58,23 @@ name = "stairs-nook"
 scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4"
 
+# Inside the darkness chamber's inner room (entered from the north), next to the UV rune.
+[[golden]]
+name = "darkness-chamber-uv"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 move:E*6 move:S*2 vision:uv_sight"
+
+[[golden]]
+name = "darkness-chamber-darkvision"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 move:E*6 move:S*2 vision:darkvision"
+
+# A generated level (rooms generator, The Depths 1) from the scenario's fixed seed.
+[[golden]]
+name = "depths-1"
+scenario = "depths"
+actions = "wait"
+
 [[golden]]
 name = "vast-level"
 scenario = "vast"

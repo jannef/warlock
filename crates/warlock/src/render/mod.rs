@@ -324,7 +324,7 @@ fn upload(
             clip_min: clip.min,
             clip_max: clip.max,
             grid_size: UVec2::new(console.cols(), console.rows()),
-            atlas_columns: atlas::ATLAS_COLUMNS,
+            atlas_columns: atlas.columns,
             supersample: atlas::SUPERSAMPLE,
             time: visual.seconds,
             glow_gain: if glow { post::GLOW_GAIN } else { 0.0 },

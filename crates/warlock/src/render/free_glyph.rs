@@ -179,7 +179,7 @@ fn build_mesh(
         clip_min: free.clip.min,
         clip_max: free.clip.max,
         cell_size: atlas.cell.as_vec2(),
-        atlas_columns: atlas::ATLAS_COLUMNS,
+        atlas_columns: atlas.columns,
         supersample: atlas::SUPERSAMPLE,
     };
     if let Some(material) = materials.get(&handles.material)

@@ -13,14 +13,22 @@ use std::collections::BTreeMap;
 
 const FONT_BYTES: &[u8] = include_bytes!("../../../../assets/fonts/JuliaMono-Medium.ttf");
 
-/// Slots per atlas row.
-pub const ATLAS_COLUMNS: u32 = 32;
-
 /// Linear size of the supersampled atlas relative to the 1:1 atlas.
 pub const SUPERSAMPLE: u32 = 2;
 
 /// Glyphs the UI may draw in addition to printable ASCII and content glyphs.
-const UI_GLYPHS: &str = "─│┌┐└┘├┤┬┴┼═║╔╗╚╝╠╣╦╩╬░▒▓█▀▄▌▐·•◆◇○●←↑→↓↖↗↘↙…≈";
+/// Unicode ranges always in the atlas besides printable ASCII and content glyphs, so UI text and
+/// messages never fall back to `?` (e.g. `×`, `—`, arrows, box drawing). Characters the font lacks
+/// are skipped when rasterizing.
+const GLYPH_RANGES: &[(char, char)] = &[
+    ('\u{00A1}', '\u{017F}'), // Latin-1 Supplement, Latin Extended-A
+    ('\u{0391}', '\u{03C9}'), // Greek
+    ('\u{2010}', '\u{205E}'), // General Punctuation
+    ('\u{2190}', '\u{21FF}'), // Arrows
+    ('\u{2200}', '\u{22FF}'), // Mathematical Operators
+    ('\u{2500}', '\u{25FF}'), // Box Drawing, Block Elements, Geometric Shapes
+    ('\u{2600}', '\u{26FF}'), // Miscellaneous Symbols
+];
 
 /// The loaded font, parsed once.
 #[derive(Resource)]
@@ -39,6 +47,8 @@ impl Font {
 pub struct AtlasBitmap {
     /// Slot size in this bitmap's pixels.
     pub cell: UVec2,
+    /// Slots per atlas row.
+    pub columns: u32,
     pub size: UVec2,
     pub pixels: Vec<u8>,
     pub index: BTreeMap<char, u16>,
@@ -69,6 +79,8 @@ pub struct GlyphAtlas {
     pub smooth: Handle<Image>,
     /// Cell size in physical pixels.
     pub cell: UVec2,
+    /// Slots per atlas row (the same in both atlases).
+    pub columns: u32,
     /// Font size in physical pixels the atlas was built for.
     pub px: f32,
     index: BTreeMap<char, u16>,
@@ -82,11 +94,12 @@ impl GlyphAtlas {
         let mut smooth = rasterize(font, px, chars, SUPERSAMPLE).into_image();
         smooth.sampler = ImageSampler::linear();
         let fallback = crisp.index.get(&'?').copied().unwrap_or(0);
-        let (cell, index) = (crisp.cell, crisp.index.clone());
+        let (cell, columns, index) = (crisp.cell, crisp.columns, crisp.index.clone());
         Self {
             image: images.add(crisp.into_image()),
             smooth: images.add(smooth),
             cell,
+            columns,
             px,
             index,
             fallback,
@@ -103,7 +116,7 @@ impl GlyphAtlas {
 pub fn glyph_set(extra: impl IntoIterator<Item = char>) -> Vec<char> {
     let mut chars = vec![' '];
     chars.extend((0x21u8..0x7f).map(char::from));
-    chars.extend(UI_GLYPHS.chars());
+    chars.extend(GLYPH_RANGES.iter().flat_map(|&(a, b)| a..=b));
     chars.extend(extra);
     let mut seen = std::collections::BTreeSet::new();
     chars.retain(|c| seen.insert(*c));
@@ -127,8 +140,9 @@ pub fn rasterize(font: &fontdue::Font, px: f32, chars: &[char], supersample: u32
     let baseline = ascent.round() as i32 * supersample as i32;
     let px = px * supersample as f32;
 
-    let rows = (chars.len() as u32).div_ceil(ATLAS_COLUMNS).max(1);
-    let size = UVec2::new(ATLAS_COLUMNS * cell_w, rows * cell_h);
+    let columns = atlas_columns(chars.len(), cell_w, cell_h);
+    let rows = (chars.len() as u32).div_ceil(columns).max(1);
+    let size = UVec2::new(columns * cell_w, rows * cell_h);
     let mut pixels = vec![0u8; (size.x * size.y) as usize];
     let mut index = BTreeMap::new();
 
@@ -139,8 +153,8 @@ pub fn rasterize(font: &fontdue::Font, px: f32, chars: &[char], supersample: u32
             continue;
         }
         let (m, bitmap) = font.rasterize(c, px);
-        let origin_x = (slot % ATLAS_COLUMNS * cell_w) as i32;
-        let origin_y = (slot / ATLAS_COLUMNS * cell_h) as i32;
+        let origin_x = (slot % columns * cell_w) as i32;
+        let origin_y = (slot / columns * cell_h) as i32;
         let top = baseline - (m.height as i32 + m.ymin);
         for gy in 0..m.height as i32 {
             for gx in 0..m.width as i32 {
@@ -155,10 +169,20 @@ pub fn rasterize(font: &fontdue::Font, px: f32, chars: &[char], supersample: u32
     }
     AtlasBitmap {
         cell: UVec2::new(cell_w, cell_h),
+        columns,
         size,
         pixels,
         index,
     }
+}
+
+/// Slots per row that keep the atlas roughly square, so large fonts on high-DPI displays stay
+/// within GPU texture size limits. Depends only on the glyph count and the cell's aspect ratio,
+/// so the 1:1 and supersampled atlases share one layout.
+fn atlas_columns(glyphs: usize, cell_w: u32, cell_h: u32) -> u32 {
+    let n = glyphs.max(1) as f64;
+    let aspect = f64::from(cell_h.max(1)) / f64::from(cell_w.max(1));
+    ((n * aspect).sqrt().ceil() as u32).clamp(1, glyphs.max(1) as u32)
 }
 
 #[cfg(test)]
@@ -169,8 +193,8 @@ mod tests {
     fn texel(atlas: &AtlasBitmap, c: char, x: u32, y: u32) -> u8 {
         let slot = u32::from(atlas.index[&c]);
         let (ox, oy) = (
-            slot % ATLAS_COLUMNS * atlas.cell.x,
-            slot / ATLAS_COLUMNS * atlas.cell.y,
+            slot % atlas.columns * atlas.cell.x,
+            slot / atlas.columns * atlas.cell.y,
         );
         atlas.pixels[((oy + y) * atlas.size.x + ox + x) as usize]
     }
@@ -182,7 +206,7 @@ mod tests {
         let atlas = rasterize(&font.0, 20.0, &chars, 1);
         assert!(atlas.cell.x >= 8 && atlas.cell.y >= atlas.cell.x);
         assert_eq!(atlas.index[&' '], 0);
-        assert_eq!(atlas.size.x, ATLAS_COLUMNS * atlas.cell.x);
+        assert_eq!(atlas.size.x, atlas.columns * atlas.cell.x);
         // '#' has ink; ' ' has none.
         let slot_ink = |c: char| {
             (0..atlas.cell.y)
@@ -222,6 +246,36 @@ mod tests {
             assert!(
                 worst <= Some(2),
                 "{c:?}: worst coverage difference {worst:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn large_fonts_stay_within_texture_limits() {
+        let font = Font::load().unwrap();
+        let set = glyph_set([]);
+        // Largest font setting (36 px) on a 3x display, supersampled.
+        let a = rasterize(&font.0, 108.0, &set, SUPERSAMPLE);
+        assert!(
+            a.size.x <= 8192 && a.size.y <= 8192,
+            "{}x{}",
+            a.size.x,
+            a.size.y
+        );
+        // Both atlases share one slot layout.
+        let crisp = rasterize(&font.0, 108.0, &set, 1);
+        assert_eq!(crisp.columns, a.columns);
+    }
+
+    #[test]
+    fn ui_text_glyphs_are_covered() {
+        let font = Font::load().unwrap();
+        let atlas = rasterize(&font.0, 18.0, &glyph_set([]), 1);
+        for c in "×—–…·•←↑→↓↔≈≠≤≥°±─│┌┐└┘█░♥♦♣♠☼".chars()
+        {
+            assert!(
+                atlas.index.contains_key(&c),
+                "`{c}` is missing from the atlas"
             );
         }
     }
