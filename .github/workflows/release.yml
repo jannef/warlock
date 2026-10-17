@@ -1,4 +1,5 @@
-# Release packaging: builds Linux, Windows and macOS archives and attaches them to a GitHub Release.
+# Release packaging: builds Linux, Windows, macOS and web archives and attaches them to a GitHub
+# Release (pre-release for v0.x).
 #
 # Runs on tags `v*` (publishes a release with generated notes) and on manual dispatch (builds the
 # archives and uploads them as workflow artifacts only; nothing is published). This is the only
@@ -76,10 +77,43 @@ jobs:
           path: dist/*
           if-no-files-found: error
 
+  web:
+    name: Web (WebGPU)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install pinned toolchain
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      # The CLI must match the wasm-bindgen crate version in Cargo.lock exactly.
+      - name: Install wasm-bindgen-cli
+        run: |
+          version=$(grep -A1 '^name = "wasm-bindgen"$' Cargo.lock | sed -n 's/^version = "\(.*\)"$/\1/p')
+          if ! wasm-bindgen --version 2>/dev/null | grep -q " $version\$"; then
+            cargo install wasm-bindgen-cli --version "$version" --locked
+          fi
+      - run: cargo xtask web
+      - name: Package
+        env:
+          REF_NAME: ${{ github.ref_type == 'tag' && github.ref_name || format('dev-{0}', github.run_number) }}
+        run: |
+          mkdir -p dist
+          name="warlock-${REF_NAME}-web"
+          cp -r target/web "dist/$name"
+          cp release/README.txt assets/fonts/JuliaMono-OFL.txt "dist/$name/"
+          (cd dist && zip -r -q "$name.zip" "$name")
+          rm -rf "dist/$name"
+          ls -l dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-web
+          path: dist/*
+          if-no-files-found: error
+
   publish:
     name: Publish GitHub Release
     if: github.ref_type == 'tag'
-    needs: build
+    needs: [build, web]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -94,5 +128,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          gh release create "$GITHUB_REF_NAME" dist/* \
+          # Versions before 1.0 are published as pre-releases.
+          prerelease=""
+          case "$GITHUB_REF_NAME" in v0.*) prerelease="--prerelease" ;; esac
+          gh release create "$GITHUB_REF_NAME" dist/* $prerelease \
             --title "Warlock $GITHUB_REF_NAME" --generate-notes --verify-tag
