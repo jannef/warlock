@@ -1,5 +1,5 @@
 //! Developer overlays (spec §9), toggled by dev keys (debug builds or `--dev`; see the bindings
-//! table, so the `?` overlay lists them):
+//! table, so the `?` help lists them):
 //! - **Reveal map** draws ground truth — terrain and creatures the player does not see — in a
 //!   cold violet nothing else uses. It is the one place presentation reads ground truth
 //!   (`World::ground_truth`), and is clearly dev-only.

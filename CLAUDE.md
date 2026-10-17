@@ -44,9 +44,11 @@ Game flags (`cargo run -p warlock -- --help`):
   (`Settings::effective_effects(force)`). With `--freeze-time`, particle bursts from the last turn's events (a `--replay`'s last step)
   show a fixed moment of their life; fades complete instantly.
 - Without `--scenario`, `--new`, `--replay`, `--record`, or `--capture` the game opens on the main
-  menu. Dev: `--screen main|new-run|settings|controls` opens the menu on a screen even with
-  `--capture` (e.g. `--scale 1 --screen controls --capture target/menu.png`).
-  `--screen pause` starts a game and opens the pause menu over it.
+  menu. Dev: `--screen NAME` opens a screen at startup, even with `--capture`: `main` and
+  `new-run` on the main menu (e.g. `--scale 1 --screen new-run --capture target/menu.png`);
+  `pause` and `help` over a run; `settings` and `controls` over the main menu, or over the pause
+  menu when `--scenario`, `--new`, `--replay`, or `--record` names a run (`--capture` alone does
+  not).
   `--config-dir DIR` keeps `settings.toml` in DIR; captures and replays otherwise use default
   settings and never write the file.
 
@@ -97,10 +99,30 @@ its own switch from the `render::Effects` resource (the effective values, synced
 (`settings/palette.rs`) are applied only when cells are uploaded to the GPU (`render::upload`) and
 in `ui/glyphs.rs`, never to content colors. Rebindable commands have stable ids in
 `settings/keys.rs` (`KeyCommand::id`): **a new `KeyCommand` variant must be added there**
-(`REBINDABLE` or the non-rebindable arm). UI: `ui/menu.rs` (main menu state machine, `Panel`
-helpers), `ui/settings_screen.rs`, `ui/controls_screen.rs`. `Game` exists only during a run (the
-menu runs without it): gate systems that read it with `run_if(resource_exists::<Game>)`; content
-is the `GameContent` resource.
+(`REBINDABLE` or the non-rebindable arm). `Game` exists only during a run (the menu runs without
+it): gate systems that read it with `run_if(resource_exists::<Game>)`; content is the
+`GameContent` resource.
+
+Modal screens (spec §6) — main menu, new run, pause, settings, controls, and the `?` help — are one
+screen stack (`ui/screens.rs`, the `ScreenStack` resource); add a screen there, never a second way
+to open, read keys for, or draw one:
+- **Open**: `Screens::open(ScreenName)` (a `SystemParam` over the stack, content, and save store)
+  is the one way a screen opens: `?` and Esc in play, sub-screens, the startup main menu and
+  `--screen`, and the return to the main menu after a run. Back/Esc pops the top screen, so a
+  sub-screen returns to the screen it was opened from as it was left.
+- **Input**: `input::route_keys` is the one reader of `KeyboardInput`. Stack not empty: the press
+  goes to the top screen (`ScreenStack::handle` → `ScreenAction`: stay, close, open, or a
+  `MenuChoice`); otherwise it is a gameplay command in the current `InputMode`. Opens and closes
+  apply at once, so the next press in the same frame goes to the new top; menu choices (start,
+  resume, save-and-quit to menu, quit) are messages applied by `screens::apply_choice`, and the
+  rest of that frame's presses are dropped. Held-key repeats never open, close, or choose.
+- **Draw**: `ui::draw` is the one system that writes the UI console: when anything it shows
+  changed, it clears the console, draws the gameplay UI if a run exists, then the top screen.
+- Prompts in the message line (open/close direction, rest, look mode) are `InputMode`s, not
+  screens.
+- Screens are plain state machines tested without a window: `ui/menu.rs` (`Press`, `Panel`, main
+  and pause menu), `ui/new_run_screen.rs`, `ui/settings_screen.rs`, `ui/controls_screen.rs` (also
+  the `?` help: the same binding list, read-only).
 
 Typical render check: `cargo run -p warlock -- --scale 1 --freeze-time 1 --capture target/shot.png`,
 then read the PNG.
@@ -272,7 +294,8 @@ A successful compile does not verify anything visual. Before opening a PR:
 
 `tests/golden/manifest.toml` lists one entry per showcase room plus the vast level: a scenario and
 text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file, and optional `window`, `scale`,
-`freeze_time`, `tolerance` (per-channel, default 2) and `max_diff_ratio` (default 0.05% of pixels).
+`freeze_time`, `screen` (`--screen` over the run: `pause`, `help`, `settings`, `controls`),
+`tolerance` (per-channel, default 2) and `max_diff_ratio` (default 0.05% of pixels).
 `cargo xtask golden` builds a replay per entry with `warlock-core`, runs the game with
 `--replay ... --capture ...`, and compares with `tests/golden/<name>.png`. On a mismatch it writes
 `target/xtask/golden/<name>.{actual,diff}.png` (diff: red pixels are over tolerance) and fails.

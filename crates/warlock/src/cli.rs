@@ -1,5 +1,6 @@
 //! Command-line options of the game binary (see spec §9).
 
+use crate::ui::ScreenName;
 use bevy::prelude::*;
 use clap::Parser;
 use std::path::PathBuf;
@@ -75,10 +76,11 @@ pub struct Args {
     #[arg(long)]
     pub config_dir: Option<PathBuf>,
 
-    /// Dev: open the main menu on this screen (`main`, `new-run`, `settings`, `controls`), even
-    /// with `--capture`.
+    /// Dev: open this screen at startup, even with `--capture`. `main` and `new-run` open on the
+    /// main menu; `pause` and `help` over a run; `settings` and `controls` over the main menu, or
+    /// over the pause menu when `--scenario`, `--new`, `--replay`, or `--record` names a run.
     #[arg(long, value_enum)]
-    pub screen: Option<crate::ui::ScreenName>,
+    pub screen: Option<ScreenName>,
 
     /// Number of frames to render before taking the `--capture` screenshot.
     #[arg(long, default_value_t = 10)]
@@ -93,15 +95,18 @@ impl Args {
 
     /// Whether the game opens on the main menu. Flags that name what to run (`--scenario`,
     /// `--new`, `--replay`, `--record`, `--capture`) start it directly, so dev flows and
-    /// captures need no input; `--screen` forces the menu.
+    /// captures need no input. `--screen` picks: the main menu for `main` and `new-run`, a run
+    /// for `pause` and `help`, and for `settings` and `controls` the menu unless a run is named
+    /// (`--capture` alone does not name one).
     pub fn starts_in_menu(&self) -> bool {
-        self.screen
-            .is_some_and(|s| s != crate::ui::ScreenName::Pause)
-            || (self.scenario.is_none()
-                && !self.new
-                && self.replay.is_none()
-                && self.record.is_none()
-                && self.capture.is_none())
+        let names_run =
+            self.scenario.is_some() || self.new || self.replay.is_some() || self.record.is_some();
+        match self.screen {
+            Some(ScreenName::Main | ScreenName::NewRun) => true,
+            Some(ScreenName::Pause | ScreenName::Help) => false,
+            Some(ScreenName::Settings | ScreenName::Controls) => !names_run,
+            None => !names_run && self.capture.is_none(),
+        }
     }
 
     /// Parses the process arguments; uses defaults where there is no command line.
@@ -129,6 +134,19 @@ fn parse_size(s: &str) -> Result<UVec2, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn screen_picks_the_menu_or_a_run() {
+        let menu = |args: &[&str]| Args::parse_from([&["warlock"], args].concat()).starts_in_menu();
+        assert!(menu(&[]));
+        assert!(!menu(&["--capture", "x.png"]));
+        assert!(!menu(&["--scenario", "showcase"]));
+        assert!(menu(&["--screen", "new-run", "--capture", "x.png"]));
+        assert!(!menu(&["--screen", "pause"]));
+        assert!(!menu(&["--screen", "help", "--capture", "x.png"]));
+        assert!(menu(&["--screen", "controls", "--capture", "x.png"]));
+        assert!(!menu(&["--screen", "settings", "--replay", "r.json"]));
+    }
 
     #[test]
     fn parses_window_size() {

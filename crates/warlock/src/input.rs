@@ -1,4 +1,9 @@
-//! Keyboard input: bindings, input modes, and translating keys into commands (spec §6).
+//! Keyboard input: bindings, input modes, and the one router of key presses (spec §6).
+//!
+//! [`route_keys`] reads every key press exactly once. While a screen is open (the screen stack is
+//! not empty) the press goes to the top screen; otherwise it is a gameplay command, read through
+//! the bindings in the current [`InputMode`]. Prompts in the message line (the direction for
+//! open/close, how long to rest, look mode) are input modes, not screens.
 //!
 //! Letter and symbol commands bind by *logical* key (the character the keyboard layout produces),
 //! so `<`, `>`, and `?` work on any layout. Arrows and the numpad bind by physical key code.
@@ -6,7 +11,9 @@
 use crate::cli::Args;
 use crate::game::{Game, PlayerAction, SimSet};
 use crate::save::SaveCommand;
-use crate::ui::{DevOverlays, Menu, OpenPause};
+use crate::settings::Settings;
+use crate::ui::{DevOverlays, MenuChoice, Press, ScreenAction, ScreenName, Screens};
+use bevy::ecs::system::SystemParam;
 use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
@@ -44,7 +51,7 @@ pub enum KeyCommand {
 }
 
 impl KeyCommand {
-    /// Label for the controls overlay; movement directions share one entry.
+    /// What the command does; movement directions share one label (see `KeyCommand::name`).
     pub fn label(self) -> &'static str {
         match self {
             KeyCommand::Move(_) => "Move",
@@ -79,7 +86,7 @@ pub enum KeyBinding {
 }
 
 impl KeyBinding {
-    /// Human-readable key name for the controls overlay.
+    /// Human-readable key name for the controls screen and help.
     pub fn display(&self) -> String {
         match self {
             KeyBinding::Char(s) => s.clone(),
@@ -113,7 +120,8 @@ impl KeyBinding {
     }
 }
 
-/// The binding table. The controls overlay is generated from it, so it is always accurate.
+/// The binding table. The controls screen and `?` help are generated from it, so they are always
+/// accurate.
 #[derive(Resource, Debug, Clone)]
 pub struct Bindings(pub Vec<(KeyBinding, KeyCommand)>);
 
@@ -166,7 +174,7 @@ impl Default for Bindings {
 impl Bindings {
     /// Adds the developer keys — reveal map, vision profile switching, light values, snapshots,
     /// skipping an hour (always present in debug builds, `--dev` otherwise).
-    fn add_dev_keys(&mut self) {
+    pub(crate) fn add_dev_keys(&mut self) {
         let dev = [
             (KeyBinding::Code(KeyCode::F2), KeyCommand::RevealMap),
             (KeyBinding::Code(KeyCode::F3), KeyCommand::CycleVision),
@@ -196,26 +204,6 @@ impl Bindings {
             .find(|(k, _)| k.matches(input))
             .map(|(_, c)| *c)
     }
-
-    /// Keys bound to commands with the same overlay label, in table order.
-    pub fn keys_for(&self, label: &str) -> Vec<String> {
-        self.0
-            .iter()
-            .filter(|(_, c)| c.label() == label)
-            .map(|(k, _)| k.display())
-            .collect()
-    }
-
-    /// Overlay labels in first-appearance order.
-    pub fn labels(&self) -> Vec<&'static str> {
-        let mut labels: Vec<&'static str> = Vec::new();
-        for (_, c) in &self.0 {
-            if !labels.contains(&c.label()) {
-                labels.push(c.label());
-            }
-        }
-        labels
-    }
 }
 
 /// What keys currently mean.
@@ -227,8 +215,6 @@ pub enum InputMode {
     Direction(KeyCommand),
     /// Asking how long to rest ([`REST_CHOICES`]).
     Rest,
-    /// The controls overlay is open.
-    Help,
     /// Look mode: a cursor at this level position.
     Look(Pos),
 }
@@ -248,49 +234,90 @@ impl Plugin for InputPlugin {
         }
         app.insert_resource(bindings)
             .init_resource::<InputMode>()
-            .add_systems(
-                Update,
-                read_keys.before(SimSet).run_if(resource_exists::<Game>),
-            );
+            .add_systems(Update, route_keys.before(SimSet));
     }
 }
 
-fn read_keys(
+/// The one reader of key presses, so each press has exactly one consumer. While a screen is
+/// open, every press goes to the top screen and gameplay sees none; otherwise presses are
+/// gameplay commands. Screens open and close at once, so the next press in the same frame
+/// already goes to the new top. A menu choice (starting or leaving a run) is applied after this
+/// system, so the rest of that frame's presses are dropped.
+pub fn route_keys(
     mut keys: MessageReader<KeyboardInput>,
-    bindings: Res<Bindings>,
-    game: Res<Game>,
-    mut mode: ResMut<InputMode>,
-    mut overlays: ResMut<DevOverlays>,
-    mut actions: MessageWriter<PlayerAction>,
-    mut saves: MessageWriter<SaveCommand>,
-    mut pause: MessageWriter<OpenPause>,
-    menu: Option<Res<Menu>>,
+    mut screens: Screens,
+    mut settings: ResMut<Settings>,
+    mut bindings: ResMut<Bindings>,
+    mut play: Gameplay,
+    mut choices: MessageWriter<MenuChoice>,
 ) {
-    // The pause menu owns the keyboard (and eats these presses), so time cannot advance.
-    if menu.is_some() {
-        keys.clear();
-        return;
-    }
+    let mut chosen = false;
     for key in keys.read() {
-        if key.state != ButtonState::Pressed {
+        if chosen || key.state != ButtonState::Pressed {
             continue;
         }
+        let action = if screens.stack.is_empty() {
+            play.press(key, &bindings)
+                .map_or(ScreenAction::Stay, ScreenAction::Open)
+        } else {
+            // Screens edit copies, so the resources only change (and are saved) when a press
+            // changed them.
+            let (mut new_settings, mut new_bindings) = (settings.clone(), bindings.clone());
+            let action = screens.stack.handle(
+                &Press::from_input(key),
+                &mut new_settings,
+                &mut new_bindings,
+            );
+            if new_settings != *settings {
+                *settings = new_settings;
+            }
+            if new_bindings.0 != bindings.0 {
+                *bindings = new_bindings;
+            }
+            action
+        };
+        match action {
+            ScreenAction::Stay => {}
+            ScreenAction::Close => screens.stack.close(),
+            ScreenAction::Open(name) => screens.open(name),
+            ScreenAction::Choose(choice) => {
+                choices.write(choice);
+                chosen = true;
+            }
+        }
+    }
+}
+
+/// What gameplay input reads and writes.
+#[derive(SystemParam)]
+pub struct Gameplay<'w> {
+    game: Option<Res<'w, Game>>,
+    mode: ResMut<'w, InputMode>,
+    overlays: ResMut<'w, DevOverlays>,
+    actions: MessageWriter<'w, PlayerAction>,
+    saves: MessageWriter<'w, SaveCommand>,
+}
+
+impl Gameplay<'_> {
+    /// Applies one key press in play. Returns the screen it opens: `?` help, or the pause menu
+    /// on Esc when no prompt is open.
+    fn press(&mut self, key: &KeyboardInput, bindings: &Bindings) -> Option<ScreenName> {
+        let game = self.game.as_ref()?;
         // The rest prompt answers by letter, whatever those letters are bound to.
-        if *mode == InputMode::Rest
+        if *self.mode == InputMode::Rest
             && let Some(rest) = rest_choice(key)
         {
-            actions.write(PlayerAction(Action::Rest(rest)));
-            *mode = InputMode::Normal;
-            continue;
+            self.actions.write(PlayerAction(Action::Rest(rest)));
+            *self.mode = InputMode::Normal;
+            return None;
         }
-        let Some(command) = bindings.lookup(key) else {
-            continue;
-        };
+        let command = bindings.lookup(key)?;
         // Held keys repeat only for movement and waiting.
         if key.repeat && !matches!(command, KeyCommand::Move(_) | KeyCommand::Wait) {
-            continue;
+            return None;
         }
-        let next = match (*mode, command) {
+        let mut open = None;
+        let next = match (*self.mode, command) {
             (InputMode::Look(_), KeyCommand::Look | KeyCommand::Cancel) => InputMode::Normal,
             (InputMode::Look(at), KeyCommand::Move(dir)) => {
                 let view = game.world.perception();
@@ -302,15 +329,13 @@ fn read_keys(
             }
             (InputMode::Look(at), _) => InputMode::Look(at),
             (InputMode::Normal, KeyCommand::Look) => InputMode::Look(game.world.player_pos()),
-            (InputMode::Help, KeyCommand::Help | KeyCommand::Cancel) => InputMode::Normal,
-            (InputMode::Help, _) => InputMode::Help,
             (InputMode::Direction(cmd), KeyCommand::Move(dir)) => {
                 let action = if cmd == KeyCommand::Open {
                     Action::Open(dir)
                 } else {
                     Action::Close(dir)
                 };
-                actions.write(PlayerAction(action));
+                self.actions.write(PlayerAction(action));
                 InputMode::Normal
             }
             (InputMode::Direction(_), _) => InputMode::Normal,
@@ -318,67 +343,72 @@ fn read_keys(
             (InputMode::Rest, _) => InputMode::Normal,
             (InputMode::Normal, KeyCommand::Rest) => InputMode::Rest,
             (InputMode::Normal, KeyCommand::Move(dir)) => {
-                actions.write(PlayerAction(Action::Move(dir)));
+                self.actions.write(PlayerAction(Action::Move(dir)));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Wait) => {
-                actions.write(PlayerAction(Action::Wait));
+                self.actions.write(PlayerAction(Action::Wait));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Descend) => {
-                actions.write(PlayerAction(Action::Descend));
+                self.actions.write(PlayerAction(Action::Descend));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Ascend) => {
-                actions.write(PlayerAction(Action::Ascend));
+                self.actions.write(PlayerAction(Action::Ascend));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Lantern) => {
-                actions.write(PlayerAction(Action::ToggleLantern));
+                self.actions.write(PlayerAction(Action::ToggleLantern));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::CycleVision) => {
                 let view = game.world.perception();
                 let next = next_vision(view.content().vision_profiles(), &view.vision().id);
-                actions.write(PlayerAction(Action::SetVision(next)));
+                self.actions.write(PlayerAction(Action::SetVision(next)));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::SkipHour) => {
-                actions.write(PlayerAction(Action::SkipTime(Duration::hours(1))));
+                self.actions
+                    .write(PlayerAction(Action::SkipTime(Duration::hours(1))));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::RevealMap) => {
-                overlays.reveal = !overlays.reveal;
+                self.overlays.reveal = !self.overlays.reveal;
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::LightValues) => {
-                overlays.light_values = !overlays.light_values;
+                self.overlays.light_values = !self.overlays.light_values;
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Open | KeyCommand::Close) => {
                 InputMode::Direction(command)
             }
-            (InputMode::Normal, KeyCommand::Help) => InputMode::Help,
+            (InputMode::Normal, KeyCommand::Help) => {
+                open = Some(ScreenName::Help);
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::Cancel) => {
-                pause.write(OpenPause);
+                open = Some(ScreenName::Pause);
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Quit) => {
-                saves.write(SaveCommand::SaveAndQuit);
+                self.saves.write(SaveCommand::SaveAndQuit);
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Snapshot) => {
-                saves.write(SaveCommand::Snapshot);
+                self.saves.write(SaveCommand::Snapshot);
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::LoadSnapshot) => {
-                saves.write(SaveCommand::LoadSnapshot);
+                self.saves.write(SaveCommand::LoadSnapshot);
                 InputMode::Normal
             }
         };
-        if *mode != next {
-            *mode = next;
+        if *self.mode != next {
+            *self.mode = next;
         }
+        open
     }
 }
 
@@ -413,19 +443,21 @@ fn next_vision(profiles: &[VisionProfile], current: &str) -> String {
 mod tests {
     use super::*;
 
+    fn keys(b: &Bindings, command: KeyCommand) -> Vec<String> {
+        b.keys_of(command).iter().map(|k| k.display()).collect()
+    }
+
     #[test]
-    fn overlay_lists_every_command_once_with_all_keys() {
+    fn default_keys_cover_vi_numpad_and_arrows() {
         let b = Bindings::default();
-        let labels = b.labels();
-        assert_eq!(labels.iter().filter(|l| **l == "Move").count(), 1);
-        let move_keys = b.keys_for("Move");
-        assert!(move_keys.contains(&"h".to_string()));
-        assert!(move_keys.contains(&"Num8".to_string()));
-        assert!(move_keys.contains(&"↑".to_string()));
-        assert_eq!(b.keys_for("Go down stairs"), vec![">".to_string()]);
-        assert_eq!(b.keys_for("Save and quit"), vec!["Q".to_string()]);
-        assert_eq!(b.keys_for("Light / douse lantern"), vec!["L".to_string()]);
-        assert_eq!(b.keys_for("Rest"), vec!["R".to_string()]);
+        assert_eq!(keys(&b, KeyCommand::Move(Dir::N)), ["k", "Num8", "↑"]);
+        assert_eq!(keys(&b, KeyCommand::Move(Dir::NE)), ["u", "Num9"]);
+        assert_eq!(keys(&b, KeyCommand::Descend), [">"]);
+        assert_eq!(keys(&b, KeyCommand::Quit), ["Q"]);
+        assert_eq!(keys(&b, KeyCommand::Lantern), ["L"]);
+        assert_eq!(keys(&b, KeyCommand::Help), ["?"]);
+        assert_eq!(keys(&b, KeyCommand::Cancel), ["Esc"]);
+        assert_eq!(keys(&b, KeyCommand::Rest), ["R"]);
     }
 
     #[test]
@@ -433,15 +465,12 @@ mod tests {
         let mut b = Bindings::default();
         b.add_dev_keys();
         b.add_dev_keys();
-        assert_eq!(b.keys_for("Save snapshot (dev)"), vec!["F5".to_string()]);
-        assert_eq!(b.keys_for("Load snapshot (dev)"), vec!["F9".to_string()]);
-        assert_eq!(
-            b.keys_for("Next vision profile (dev)"),
-            vec!["F3".to_string()]
-        );
-        assert_eq!(b.keys_for("Reveal map (dev)"), vec!["F2".to_string()]);
-        assert_eq!(b.keys_for("Light values (dev)"), vec!["F4".to_string()]);
-        assert_eq!(b.keys_for("Skip an hour (dev)"), vec!["F6".to_string()]);
+        assert_eq!(keys(&b, KeyCommand::Snapshot), ["F5"]);
+        assert_eq!(keys(&b, KeyCommand::LoadSnapshot), ["F9"]);
+        assert_eq!(keys(&b, KeyCommand::CycleVision), ["F3"]);
+        assert_eq!(keys(&b, KeyCommand::RevealMap), ["F2"]);
+        assert_eq!(keys(&b, KeyCommand::LightValues), ["F4"]);
+        assert_eq!(keys(&b, KeyCommand::SkipHour), ["F6"]);
     }
 
     #[test]

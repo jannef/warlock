@@ -1,4 +1,4 @@
-//! Glyph UI: the map viewport, message line, status bar, and controls overlay (spec §6).
+//! Glyph UI: the map viewport, message line, status bar, and the modal screens (spec §6).
 //!
 //! Everything shown about the world comes from `World::perception()`. Terrain goes into the map
 //! grid layer, creatures and glyphs that outgrow their cell into the free-glyph layer
@@ -7,6 +7,10 @@
 //! is drawn in its base colors: the map grid's shader lights it with the visual light
 //! (`render::lighting`), composited after the map is placed and before free glyphs are lit.
 //! [`dev`] adds the developer overlays (reveal mode is the one exception that reads ground truth).
+//!
+//! Menus, settings, controls, and the `?` help are screens on one stack ([`screens`]): opened by
+//! [`Screens::open`], fed key presses by `input::route_keys`, and drawn by [`draw`], the one
+//! system that writes the UI console.
 
 mod controls_screen;
 mod dev;
@@ -15,18 +19,22 @@ mod glyphs;
 mod look;
 mod menu;
 mod motion;
+mod new_run_screen;
+mod screens;
 mod settings_screen;
 
-pub use menu::{Menu, OpenPause, ScreenName};
+pub use menu::Press;
+pub use screens::{MenuChoice, ScreenAction, ScreenName, ScreenStack, Screens};
 
 pub use dev::DevOverlays;
 
 use crate::game::{Game, SimSet};
-use crate::input::{Bindings, InputMode};
+use crate::input::{Bindings, InputMode, route_keys};
 use crate::render::anim::{AnimTable, TerrainAnim};
 use crate::render::console::{Cell, Console};
 use crate::render::grid::MapGrid;
 use crate::render::{ConsoleLayout, Effects, VisualTime, lighting, shadows};
+use crate::settings::Settings;
 use bevy::prelude::*;
 use motion::Motion;
 use warlock_core::Pos;
@@ -48,14 +56,17 @@ impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Motion>()
             .init_resource::<DevOverlays>()
-            .add_message::<OpenPause>()
+            .init_resource::<ScreenStack>()
+            .add_message::<MenuChoice>()
             .init_resource::<effects::Bursts>()
+            .add_systems(Startup, screens::open_startup_screens)
             .add_systems(
                 Update,
                 (
+                    screens::apply_choice.after(route_keys).before(SimSet),
                     (
                         (motion::track, effects::track),
-                        (draw, draw_map_layer),
+                        draw_map_layer,
                         shadows::update,
                         lighting::update,
                         effects::emit,
@@ -64,59 +75,69 @@ impl Plugin for UiPlugin {
                         .chain()
                         .after(SimSet)
                         .run_if(resource_exists::<Game>),
-                    menu::run.run_if(resource_exists::<Menu>).after(draw),
-                    menu::open_pause.run_if(resource_exists::<Game>),
+                    draw.after(draw_map_layer).after(screens::apply_choice),
                 ),
             );
     }
 }
 
+/// The one draw pass of the UI console: clears it, draws the gameplay UI when a run exists, then
+/// the top screen of the stack over it. It redraws only when something it draws changed, and
+/// nothing else writes the console, so nothing drawn here can be wiped by another system.
 fn draw(
-    game: Res<Game>,
+    game: Option<Res<Game>>,
+    stack: Res<ScreenStack>,
     mode: Res<InputMode>,
     layout: Res<ConsoleLayout>,
+    settings: Res<Settings>,
     bindings: Res<Bindings>,
     overlays: Res<DevOverlays>,
     grid: Res<MapGrid>,
-    mut cursor_origin: Local<Option<IVec2>>,
+    mut drawn: Local<Option<(bool, Option<IVec2>)>>,
     mut console: ResMut<Console>,
 ) {
-    // The look cursor moves with the map, but MapGrid is rewritten every frame, so watch only the
-    // origin the cursor depends on. Redrawing on every frame would wipe overlays drawn after this
-    // system, such as the pause menu (#56).
-    let cursor_moved =
-        matches!(*mode, InputMode::Look(_)) && *cursor_origin != Some(grid.level_origin);
-    *cursor_origin = Some(grid.level_origin);
-    if !(game.is_changed()
-        || cursor_moved
+    // Whether a run exists, and in look mode the map origin the cursor is drawn relative to. The
+    // map grid is rewritten every frame, so only that origin is watched (#56).
+    let look = matches!(*mode, InputMode::Look(_)).then_some(grid.level_origin);
+    let key = (game.is_some(), look);
+    let changed = drawn.replace(key) != Some(key)
+        || game.as_ref().is_some_and(|game| game.is_changed())
+        || stack.is_changed()
         || mode.is_changed()
         || layout.is_changed()
+        || settings.is_changed()
         || bindings.is_changed()
-        || overlays.is_changed())
-    {
+        || overlays.is_changed();
+    if !changed {
         return;
     }
     console.clear();
+    if let Some(game) = &game {
+        draw_game(&mut console, game, *mode, &grid, *overlays);
+    }
+    stack.draw(&mut console, &settings, &bindings);
+}
+
+/// The gameplay UI: message line (or the current prompt), status bar, dev indicator, and the
+/// look cursor.
+fn draw_game(
+    console: &mut Console,
+    game: &Game,
+    mode: InputMode,
+    grid: &MapGrid,
+    overlays: DevOverlays,
+) {
     let rows = console.rows() as i32;
-    draw_messages(&mut console, &game, *mode);
-    draw_status(&mut console, &game, rows - 1);
-    dev::draw_indicator(&mut console, *overlays);
-    if let InputMode::Look(p) = *mode
+    draw_messages(console, game, mode);
+    draw_status(console, game, rows - 1);
+    dev::draw_indicator(console, overlays);
+    if let InputMode::Look(p) = mode
         && let Some(area) = map_area(console.cols() as i32, console.rows() as i32)
     {
         let (x, y) = (p.x - grid.level_origin.x, p.y - grid.level_origin.y);
         if (0..area.w).contains(&x) && (0..area.h).contains(&y) {
-            look::draw_cursor(
-                &mut console,
-                area.x + x,
-                area.y + y,
-                &game.world.perception(),
-                p,
-            );
+            look::draw_cursor(console, area.x + x, area.y + y, &game.world.perception(), p);
         }
-    }
-    if *mode == InputMode::Help {
-        draw_help(&mut console, &bindings);
     }
 }
 
@@ -385,35 +406,6 @@ fn fit_segments(segments: &[(u8, String)], width: usize) -> String {
             // A single segment that is still too long is cut at the edge.
             _ => return line.chars().take(width).collect(),
         }
-    }
-}
-
-fn draw_help(console: &mut Console, bindings: &Bindings) {
-    let lines: Vec<(String, String)> = bindings
-        .labels()
-        .into_iter()
-        .map(|label| (label.to_string(), bindings.keys_for(label).join(" ")))
-        .collect();
-    let label_w = lines
-        .iter()
-        .map(|(l, _)| l.chars().count())
-        .max()
-        .unwrap_or(0) as i32;
-    let keys_w = lines
-        .iter()
-        .map(|(_, k)| k.chars().count())
-        .max()
-        .unwrap_or(0) as i32;
-    let w = (label_w + keys_w + 7).min(console.cols() as i32);
-    let h = (lines.len() as i32 + 4).min(console.rows() as i32);
-    let x = (console.cols() as i32 - w) / 2;
-    let y = (console.rows() as i32 - h) / 2;
-    console.frame(x, y, w, h, TEXT_DIM, PANEL_BG);
-    console.print(x + 2, y, " Controls ", ACCENT);
-    for (i, (label, keys)) in lines.iter().enumerate() {
-        let row = y + 2 + i as i32;
-        console.print(x + 2, row, label, TEXT);
-        console.print(x + 4 + label_w, row, keys, ACCENT);
     }
 }
 
