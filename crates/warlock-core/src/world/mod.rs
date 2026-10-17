@@ -1,0 +1,509 @@
+//! The simulation: world state and the turn pipeline (spec §8).
+//!
+//! Turn phases, in order: player action → creatures (ascending id) → environment → perception
+//! (sight, memory) → perceived events are returned to the caller.
+
+mod actor;
+mod level;
+
+pub use actor::{Actor, ActorId, ActorKind, Patrol};
+pub use level::LevelState;
+
+use crate::action::{Action, Event, Outcome};
+use crate::content::{Content, StairsDir};
+use crate::geom::{Dir, Pos};
+use crate::messages::MessageLog;
+use crate::perception::{Perception, PerceptionView};
+use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
+use std::sync::Arc;
+
+/// Why a world could not be created or restored.
+#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+pub enum WorldError {
+    #[error("unknown scenario `{0}`")]
+    UnknownScenario(String),
+    #[error("unknown level `{0}`")]
+    UnknownLevel(String),
+    #[error("level `{0}` has no player start")]
+    NoPlayerStart(String),
+    #[error("saved state is inconsistent: {0}")]
+    InconsistentState(String),
+}
+
+/// All persistent simulation state. This is what saves contain.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct WorldState {
+    pub(crate) scenario: String,
+    pub(crate) seed: u64,
+    pub(crate) turn: u64,
+    pub(crate) current_level: String,
+    pub(crate) levels: BTreeMap<String, LevelState>,
+    pub(crate) actors: BTreeMap<ActorId, Actor>,
+    pub(crate) player: ActorId,
+    pub(crate) next_actor_id: u32,
+    pub(crate) messages: MessageLog,
+}
+
+impl WorldState {
+    pub(crate) fn player(&self) -> &Actor {
+        &self.actors[&self.player]
+    }
+
+    pub(crate) fn current(&self) -> &LevelState {
+        &self.levels[&self.current_level]
+    }
+
+    fn current_mut(&mut self) -> &mut LevelState {
+        self.levels
+            .get_mut(&self.current_level)
+            .expect("current level is instantiated")
+    }
+
+    fn actor_at(&self, level: &str, p: Pos) -> Option<&Actor> {
+        self.actors
+            .values()
+            .find(|a| a.level == level && a.pos == p)
+    }
+
+    fn check(&self) -> Result<(), WorldError> {
+        let bad = |m: String| Err(WorldError::InconsistentState(m));
+        if !self.levels.contains_key(&self.current_level) {
+            return bad(format!("current level `{}` missing", self.current_level));
+        }
+        match self.actors.get(&self.player) {
+            Some(p) if p.kind == ActorKind::Player && p.level == self.current_level => {}
+            _ => return bad("player actor missing or misplaced".into()),
+        }
+        for actor in self.actors.values() {
+            let Some(level) = self.levels.get(&actor.level) else {
+                return bad(format!("actor {} is on missing level", actor.id));
+            };
+            if !level.terrain.in_bounds(actor.pos) || actor.id.0 >= self.next_actor_id {
+                return bad(format!(
+                    "actor {} is out of bounds or has a future id",
+                    actor.id
+                ));
+            }
+        }
+        Ok(())
+    }
+}
+
+/// A running game: state plus the content it refers to and the current perception.
+#[derive(Clone, Debug)]
+pub struct World {
+    content: Arc<Content>,
+    state: WorldState,
+    perception: Perception,
+}
+
+impl World {
+    /// Starts a new run of `scenario`. `seed` defaults to the scenario's seed.
+    pub fn new(
+        content: Arc<Content>,
+        scenario: &str,
+        seed: Option<u64>,
+    ) -> Result<Self, WorldError> {
+        let def = content
+            .scenario(scenario)
+            .ok_or_else(|| WorldError::UnknownScenario(scenario.to_string()))?;
+        let start = content
+            .level(&def.start_level)
+            .ok_or_else(|| WorldError::UnknownLevel(def.start_level.clone()))?;
+        let player_pos = start
+            .player_start
+            .ok_or_else(|| WorldError::NoPlayerStart(start.id.clone()))?;
+        let player_creature = content
+            .creature_id("player")
+            .expect("content validation guarantees a player creature");
+
+        let mut state = WorldState {
+            scenario: def.id.clone(),
+            seed: seed.unwrap_or(def.seed),
+            turn: 0,
+            current_level: start.id.clone(),
+            levels: BTreeMap::new(),
+            actors: BTreeMap::new(),
+            player: ActorId(0),
+            next_actor_id: 1,
+            messages: MessageLog::default(),
+        };
+        state.actors.insert(
+            ActorId(0),
+            Actor {
+                id: ActorId(0),
+                kind: ActorKind::Player,
+                creature: player_creature,
+                level: start.id.clone(),
+                pos: player_pos,
+                patrol: None,
+            },
+        );
+        instantiate_level(&mut state, &content, &def.start_level)?;
+        state
+            .messages
+            .push(0, format!("Welcome to {}. Press ? for controls.", def.name));
+        Ok(Self::assemble(content, state))
+    }
+
+    /// Restores a world from saved state.
+    pub fn from_state(content: Arc<Content>, state: WorldState) -> Result<Self, WorldError> {
+        state.check()?;
+        if content.scenario(&state.scenario).is_none() {
+            return Err(WorldError::UnknownScenario(state.scenario.clone()));
+        }
+        Ok(Self::assemble(content, state))
+    }
+
+    fn assemble(content: Arc<Content>, mut state: WorldState) -> Self {
+        let perception = Perception::compute(&state, &content);
+        perception.remember(state.current_mut());
+        Self {
+            content,
+            state,
+            perception,
+        }
+    }
+
+    pub fn content(&self) -> &Arc<Content> {
+        &self.content
+    }
+
+    pub fn state(&self) -> &WorldState {
+        &self.state
+    }
+
+    pub fn scenario(&self) -> &str {
+        &self.state.scenario
+    }
+
+    pub fn seed(&self) -> u64 {
+        self.state.seed
+    }
+
+    pub fn turn(&self) -> u64 {
+        self.state.turn
+    }
+
+    pub fn player_id(&self) -> ActorId {
+        self.state.player
+    }
+
+    pub fn player_pos(&self) -> Pos {
+        self.state.player().pos
+    }
+
+    pub fn messages(&self) -> &MessageLog {
+        &self.state.messages
+    }
+
+    /// What the player perceives right now. Rendering and dumps must go through this.
+    pub fn perception(&self) -> PerceptionView<'_> {
+        PerceptionView {
+            content: &self.content,
+            level: self.state.current(),
+            snapshot: &self.perception,
+        }
+    }
+
+    /// Ground truth for the current level, **for developer tools only** (reveal mode, debug
+    /// dumps). Gameplay presentation must use [`World::perception`].
+    pub fn ground_truth(&self) -> (&LevelState, impl Iterator<Item = &Actor>) {
+        let level = self.state.current();
+        let actors = self
+            .state
+            .actors
+            .values()
+            .filter(move |a| a.level == level.id);
+        (level, actors)
+    }
+
+    /// Applies one player action and runs the rest of the turn if it took time.
+    pub fn apply(&mut self, action: &Action) -> Outcome {
+        let mut events = Vec::new();
+        let took_turn = self.player_acts(action, &mut events);
+        if took_turn {
+            self.state.turn += 1;
+            self.creatures_act(&mut events);
+            self.perception = Perception::compute(&self.state, &self.content);
+            let current = self.state.current_level.clone();
+            if let Some(level) = self.state.levels.get_mut(&current) {
+                self.perception.remember(level);
+            }
+            let player = self.state.player;
+            events.retain(|e| match e {
+                Event::ActorMoved { actor, from, to } => {
+                    *actor == player
+                        || self.perception.is_visible(*from)
+                        || self.perception.is_visible(*to)
+                }
+                Event::DoorOpened { pos } | Event::DoorClosed { pos } => {
+                    self.perception.is_visible(*pos)
+                }
+                Event::LevelChanged { .. } => true,
+            });
+        }
+        Outcome { took_turn, events }
+    }
+
+    fn say(&mut self, text: impl Into<String>) {
+        let turn = self.state.turn;
+        self.state.messages.push(turn, text);
+    }
+
+    /// Phase 1. Returns whether the action took time.
+    fn player_acts(&mut self, action: &Action, events: &mut Vec<Event>) -> bool {
+        let here = self.player_pos();
+        match action {
+            Action::Move(dir) => self.player_moves(*dir, events),
+            Action::Wait => true,
+            Action::Open(dir) => self.open_door(here.step(*dir), events),
+            Action::Close(dir) => self.close_door(here.step(*dir), events),
+            Action::Descend => self.take_stairs(StairsDir::Down, events),
+            Action::Ascend => self.take_stairs(StairsDir::Up, events),
+        }
+    }
+
+    fn player_moves(&mut self, dir: Dir, events: &mut Vec<Event>) -> bool {
+        let from = self.player_pos();
+        let to = from.step(dir);
+        let level = self.state.current();
+        let Some(&terrain) = level.terrain.get(to) else {
+            self.say("You can't go that way.");
+            return false;
+        };
+        let def = self.content.terrain(terrain);
+        if def.is_closed_door() {
+            return self.open_door(to, events);
+        }
+        if !def.walkable {
+            let name = def.name.clone();
+            self.say(format!("The {name} blocks your way."));
+            return false;
+        }
+        if let Some(other) = self.state.actor_at(&level.id, to) {
+            let name = self.content.creature(other.creature).name.clone();
+            self.say(format!("The {name} is in the way."));
+            return false;
+        }
+        let player = self.state.player;
+        if let Some(actor) = self.state.actors.get_mut(&player) {
+            actor.pos = to;
+        }
+        events.push(Event::ActorMoved {
+            actor: player,
+            from,
+            to,
+        });
+        if let Some(stairs) = self.state.current().stairs_at(to) {
+            let way = match stairs.dir {
+                StairsDir::Down => "down",
+                StairsDir::Up => "up",
+            };
+            self.say(format!("There is a staircase {way} here."));
+        }
+        true
+    }
+
+    fn open_door(&mut self, p: Pos, events: &mut Vec<Event>) -> bool {
+        let terrain = self.state.current().terrain.get(p).copied();
+        let def = terrain.map(|t| self.content.terrain(t));
+        match def {
+            Some(def) if def.is_closed_door() => {
+                let opened = def.opens_to.expect("closed doors have opens_to");
+                self.state.current_mut().terrain.set(p, opened);
+                events.push(Event::DoorOpened { pos: p });
+                self.say("You open the door.");
+                true
+            }
+            Some(def) if def.is_open_door() => {
+                self.say("That door is already open.");
+                false
+            }
+            _ => {
+                self.say("There is nothing to open there.");
+                false
+            }
+        }
+    }
+
+    fn close_door(&mut self, p: Pos, events: &mut Vec<Event>) -> bool {
+        let terrain = self.state.current().terrain.get(p).copied();
+        let def = terrain.map(|t| self.content.terrain(t));
+        match def {
+            Some(def) if def.is_open_door() => {
+                let closed = def.closes_to.expect("open doors have closes_to");
+                if self.state.actor_at(&self.state.current_level, p).is_some() {
+                    self.say("Something is in the way.");
+                    return false;
+                }
+                self.state.current_mut().terrain.set(p, closed);
+                events.push(Event::DoorClosed { pos: p });
+                self.say("You close the door.");
+                true
+            }
+            Some(def) if def.is_closed_door() => {
+                self.say("That door is already closed.");
+                false
+            }
+            _ => {
+                self.say("There is nothing to close there.");
+                false
+            }
+        }
+    }
+
+    fn take_stairs(&mut self, dir: StairsDir, events: &mut Vec<Event>) -> bool {
+        let here = self.player_pos();
+        let link = self
+            .state
+            .current()
+            .stairs_at(here)
+            .filter(|s| s.dir == dir)
+            .cloned();
+        let way = match dir {
+            StairsDir::Down => "down",
+            StairsDir::Up => "up",
+        };
+        let Some(link) = link else {
+            self.say(format!("You see no way {way} here."));
+            return false;
+        };
+        let Some(to) = link.to else {
+            self.say("These stairs lead nowhere yet.");
+            return false;
+        };
+        let from = self.state.current_level.clone();
+        if let Err(err) = self.travel(&to) {
+            self.say(format!("The stairs are blocked ({err})."));
+            return false;
+        }
+        events.push(Event::LevelChanged { from, to });
+        let name = self.state.current().name.clone();
+        let verb = match dir {
+            StairsDir::Down => "descend",
+            StairsDir::Up => "climb",
+        };
+        self.say(format!("You {verb} the stairs to {name}."));
+        true
+    }
+
+    /// Moves the player to level `to`, arriving on the stairs that lead back.
+    fn travel(&mut self, to: &str) -> Result<(), WorldError> {
+        if !self.state.levels.contains_key(to) {
+            instantiate_level(&mut self.state, &self.content, to)?;
+        }
+        let from = self.state.current_level.clone();
+        let target = &self.state.levels[to];
+        let arrival = target
+            .stairs
+            .iter()
+            .find(|s| s.to.as_deref() == Some(from.as_str()))
+            .map(|s| s.pos)
+            .or_else(|| self.content.level(to).and_then(|t| t.player_start))
+            .ok_or_else(|| WorldError::NoPlayerStart(to.to_string()))?;
+        let arrival = self.free_cell_near(to, arrival);
+        let player = self.state.player;
+        if let Some(actor) = self.state.actors.get_mut(&player) {
+            actor.level = to.to_string();
+            actor.pos = arrival;
+        }
+        self.state.current_level = to.to_string();
+        Ok(())
+    }
+
+    /// `p` if no actor stands there, else the nearest walkable unoccupied cell (ring search).
+    fn free_cell_near(&self, level_id: &str, p: Pos) -> Pos {
+        let level = &self.state.levels[level_id];
+        let free = |q: Pos| {
+            level.is_walkable(&self.content, q) && self.state.actor_at(level_id, q).is_none()
+        };
+        if self.state.actor_at(level_id, p).is_none() {
+            return p;
+        }
+        for r in 1..level.width().max(level.height()) {
+            for dy in -r..=r {
+                for dx in -r..=r {
+                    let q = Pos::new(p.x + dx, p.y + dy);
+                    if q.chebyshev(p) == r && free(q) {
+                        return q;
+                    }
+                }
+            }
+        }
+        p
+    }
+
+    /// Phase 2: creatures follow their patrol routes, waiting when blocked.
+    fn creatures_act(&mut self, events: &mut Vec<Event>) {
+        let current = self.state.current_level.clone();
+        let movers: Vec<ActorId> = self
+            .state
+            .actors
+            .values()
+            .filter(|a| a.level == current && a.patrol.is_some())
+            .map(|a| a.id)
+            .collect();
+        for id in movers {
+            let actor = &self.state.actors[&id];
+            let Some(patrol) = &actor.patrol else {
+                continue;
+            };
+            let from = actor.pos;
+            let to = from.step(patrol.route[patrol.step]);
+            let blocked = !self.state.current().is_walkable(&self.content, to)
+                || self.state.actor_at(&current, to).is_some();
+            if blocked {
+                continue;
+            }
+            if let Some(actor) = self.state.actors.get_mut(&id) {
+                actor.pos = to;
+                if let Some(patrol) = &mut actor.patrol {
+                    patrol.step = (patrol.step + 1) % patrol.route.len();
+                }
+            }
+            events.push(Event::ActorMoved {
+                actor: id,
+                from,
+                to,
+            });
+        }
+    }
+}
+
+/// Creates the runtime state for level `id` and spawns its creatures.
+fn instantiate_level(
+    state: &mut WorldState,
+    content: &Content,
+    id: &str,
+) -> Result<(), WorldError> {
+    let template = content
+        .level(id)
+        .ok_or_else(|| WorldError::UnknownLevel(id.to_string()))?;
+    state
+        .levels
+        .insert(id.to_string(), LevelState::from_template(template));
+    for spawn in &template.creatures {
+        let actor_id = ActorId(state.next_actor_id);
+        state.next_actor_id += 1;
+        state.actors.insert(
+            actor_id,
+            Actor {
+                id: actor_id,
+                kind: ActorKind::Creature,
+                creature: spawn.creature,
+                level: id.to_string(),
+                pos: spawn.pos,
+                patrol: (!spawn.route.is_empty()).then(|| Patrol {
+                    route: spawn.route.clone(),
+                    step: 0,
+                }),
+            },
+        );
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests;

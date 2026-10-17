@@ -1,0 +1,12 @@
+# Default map legend shared by all level files. A level's own [legend] overrides these.
+
+[legend]
+" " = "void"
+"." = "floor"
+"#" = "wall"
+"+" = "door_closed"
+"'" = "door_open"
+"<" = "stairs_up"
+">" = "stairs_down"
+"~" = "water"
+"_" = "altar"

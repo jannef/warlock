@@ -1,0 +1,4 @@
+name = "Showcase"
+description = "A hand-made tour of every engine capability, one room per feature."
+start_level = "hub"
+seed = 1

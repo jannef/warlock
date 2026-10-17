@@ -1,0 +1,78 @@
+# Terrain types. Colors are the fully lit appearance; lighting (M3) darkens and tints them.
+# Fields: id, name, glyph, fg, bg (default black), walkable (default true),
+# transparent (default true), opens_to / closes_to (doors), stairs ("up"/"down"),
+# anim (presentation-only, see spec §4.3).
+
+[[terrain]]
+id = "void"
+name = "solid rock"
+glyph = " "
+fg = "#000000"
+walkable = false
+transparent = false
+
+[[terrain]]
+id = "floor"
+name = "stone floor"
+glyph = "."
+fg = "#6a6a72"
+bg = "#0d0d10"
+
+[[terrain]]
+id = "wall"
+name = "stone wall"
+glyph = "#"
+fg = "#958c80"
+bg = "#262220"
+walkable = false
+transparent = false
+
+[[terrain]]
+id = "door_closed"
+name = "closed door"
+glyph = "+"
+fg = "#c08040"
+bg = "#2a1a0e"
+walkable = false
+transparent = false
+opens_to = "door_open"
+
+[[terrain]]
+id = "door_open"
+name = "open door"
+glyph = "'"
+fg = "#c08040"
+bg = "#0d0d10"
+closes_to = "door_closed"
+
+[[terrain]]
+id = "stairs_down"
+name = "staircase down"
+glyph = ">"
+fg = "#f0e6c8"
+bg = "#0d0d10"
+stairs = "down"
+
+[[terrain]]
+id = "stairs_up"
+name = "staircase up"
+glyph = "<"
+fg = "#f0e6c8"
+bg = "#0d0d10"
+stairs = "up"
+
+[[terrain]]
+id = "water"
+name = "shallow water"
+glyph = "~"
+fg = "#4f8fe0"
+bg = "#0a1a30"
+anim = { kind = "wave", speed = 0.6, amount = 0.25 }
+
+[[terrain]]
+id = "altar"
+name = "altar"
+glyph = "_"
+fg = "#e0c060"
+bg = "#0d0d10"
+anim = { kind = "pulse", bpm = 54, amount = 0.18 }

@@ -23,8 +23,15 @@ behavior, commands, or architecture change.
 | Dependency audit | `cargo deny check` |
 | Screenshot smoke test | `cargo xtask smoke` (writes `target/xtask/smoke.png`) |
 
-Game flags: `--window WxH` (physical pixels), `--scale F` (override DPI scale; use `1` for
-reproducible captures), `--capture out.png` (render, save screenshot, exit).
+Game flags (`cargo run -p warlock -- --help`):
+- `--scenario NAME` (default `showcase`), `--seed N` (default: the scenario's seed)
+- `--content-dir assets` — read content from disk instead of the copy built into the binary
+- `--window WxH` (physical pixels), `--scale F` (display scale; `1` for reproducible captures)
+- `--capture out.png` — render **offscreen** (no window), save a screenshot, exit.
+  `--capture-after-frames N` (default 10), `--freeze-time SECONDS` pins animation time.
+
+Typical render check: `cargo run -p warlock -- --scale 1 --freeze-time 1 --capture target/shot.png`,
+then read the PNG.
 
 ## Architecture (spec §8)
 
@@ -33,8 +40,17 @@ crates/warlock-core   plain Rust, no Bevy, deterministic simulation
 crates/warlock-cli    headless dev tool on top of core (no Bevy)
 crates/warlock        Bevy app: rendering, input, UI, effects, platform
 xtask                 screenshot capture and golden-image comparison
-assets                fonts, levels, scenarios, definitions, shaders
+assets                fonts, data definitions, levels, scenarios
 ```
+
+Content (`assets/data`, `assets/levels`, `assets/scenarios`) is TOML, embedded into
+`warlock-core` at build time by `build.rs`. Level maps are ASCII with a legend; see
+`assets/levels/hub.toml` and spec §7.
+
+Rendering: the window is one console grid (`render/console.rs`) drawn by a single quad with a
+custom `Material2d` (`render/console.wesl`). Each fragment finds its cell from its framebuffer
+position and reads glyph coverage from the font atlas (`render/atlas.rs`) with integer texel
+addressing, so glyphs are pixel-exact. UI and the map write into the console (`ui/`).
 
 Hard rules:
 - `warlock-core` never depends on Bevy, never reads wall-clock time, and never does platform I/O
