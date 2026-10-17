@@ -9,6 +9,7 @@ mod creature;
 mod dungeon;
 mod level;
 mod light;
+mod particles;
 mod scenario;
 mod terrain;
 mod vault;
@@ -20,6 +21,7 @@ pub use dungeon::{DungeonDef, Generator, LevelPlan, parse_branch_level};
 pub(crate) use level::validate_route;
 pub use level::{CreatureSpawn, LevelTemplate, StairsLink, parse_route};
 pub use light::{Flicker, LightId, LightPreset, MAX_LIGHT_RADIUS};
+pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use scenario::ScenarioDef;
 pub use terrain::{StairsDir, TerrainDef, TerrainId};
 pub use vault::Vault;
@@ -250,6 +252,14 @@ impl Content {
                     spec.id
                 )));
             }
+            check_effects(
+                path,
+                "terrain",
+                &spec.id,
+                spec.glow,
+                spec.haze,
+                &spec.particles,
+            )?;
             defs.push(TerrainDef {
                 id: spec.id.clone(),
                 name: spec.name.clone(),
@@ -263,6 +273,9 @@ impl Content {
                 stairs: spec.stairs,
                 light,
                 anim: spec.anim.clone(),
+                glow: spec.glow,
+                haze: spec.haze,
+                particles: spec.particles.clone(),
             });
         }
         self.terrain = defs;
@@ -280,6 +293,7 @@ impl Content {
                 return Err(err(format!("duplicate creature id `{}`", spec.id)));
             }
             let light = self.resolve_light(path, spec.light.as_deref())?;
+            check_effects(path, "creature", &spec.id, spec.glow, 0.0, &spec.particles)?;
             self.creatures.push(spec.resolve(light));
         }
         if !self.creature_ids.contains_key("player") {
@@ -544,14 +558,42 @@ impl Content {
 
     /// Every glyph content may display (for building the glyph atlas).
     pub fn glyphs(&self) -> BTreeSet<char> {
+        let particles = |emitters: &[ParticleEmitter]| -> Vec<char> {
+            emitters.iter().flat_map(|e| e.glyphs.chars()).collect()
+        };
         let terrain = self.terrain.iter().flat_map(|t| {
-            std::iter::once(t.glyph).chain(t.anim.iter().flat_map(|a| a.extra_glyphs()))
+            std::iter::once(t.glyph)
+                .chain(t.anim.iter().flat_map(|a| a.extra_glyphs()))
+                .chain(particles(&t.particles))
         });
         let creatures = self.creatures.iter().flat_map(|c| {
-            std::iter::once(c.glyph).chain(c.anim.iter().flat_map(|a| a.extra_glyphs()))
+            std::iter::once(c.glyph)
+                .chain(c.anim.iter().flat_map(|a| a.extra_glyphs()))
+                .chain(particles(&c.particles))
         });
         terrain.chain(creatures).collect()
     }
+}
+
+/// Checks the presentation-only effect fields of a terrain or creature type.
+fn check_effects(
+    file: &str,
+    kind: &str,
+    id: &str,
+    glow: f32,
+    haze: f32,
+    particles: &[ParticleEmitter],
+) -> Result<(), ContentError> {
+    let err = |m: String| ContentError::new(file, format!("{kind} `{id}`: {m}"));
+    if !(0.0..=1.0).contains(&glow) || !(0.0..=1.0).contains(&haze) {
+        return Err(err("`glow` and `haze` must be between 0 and 1".into()));
+    }
+    for emitter in particles {
+        emitter
+            .check()
+            .map_err(|m| err(format!("particles: {m}")))?;
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -675,6 +717,57 @@ mod tests {
         let ok = "\"r\" = { terrain = \"floor\", creature = \"rat\", route = \"S W N E\" }";
         let content = Content::load(&minimal_files(map, ok)).unwrap();
         assert_eq!(content.level("test").unwrap().creatures[0].route.len(), 4);
+    }
+
+    #[test]
+    fn effects_load_and_their_glyphs_join_the_atlas() {
+        let content = Content::builtin().unwrap();
+        let brazier = content.terrain(content.terrain_id("brazier").unwrap());
+        assert!(brazier.glow > 0.0 && brazier.haze > 0.0);
+        assert!(
+            brazier
+                .particles
+                .iter()
+                .any(|e| e.on == ParticleTrigger::Ambient)
+        );
+        let water = content.terrain(content.terrain_id("water").unwrap());
+        assert!(
+            water
+                .particles
+                .iter()
+                .any(|e| e.on == ParticleTrigger::Step)
+        );
+        let glyphs = content.glyphs();
+        for e in brazier.particles.iter().chain(&water.particles) {
+            assert!(e.glyphs.chars().all(|c| glyphs.contains(&c)));
+        }
+    }
+
+    #[test]
+    fn bad_effects_are_reported_with_the_terrain() {
+        let mut files = minimal_files("#@#\n", "");
+        let terrain = files.get("data/terrain.toml").unwrap().to_string();
+        let sparks = "glyphs = \"'\"\ncolors = [\"#ffa040\"]\nlife = 1\n";
+        files.insert(
+            "data/terrain.toml",
+            &format!("{terrain}\n[[terrain.particles]]\n{sparks}"),
+        );
+        let err = Content::load(&files).unwrap_err();
+        assert_eq!(err.file, "data/terrain.toml");
+        assert!(
+            err.message
+                .contains("terrain `wall`: particles: ambient particles need a positive `rate`"),
+            "{}",
+            err.message
+        );
+        files.insert("data/terrain.toml", &format!("{terrain}glow = 3\n"));
+        let err = Content::load(&files).unwrap_err();
+        assert!(err.message.contains("`glow` and `haze`"), "{}", err.message);
+        files.insert(
+            "data/terrain.toml",
+            &format!("{terrain}\n[[terrain.particles]]\n{sparks}rate = 2\n"),
+        );
+        assert!(Content::load(&files).is_ok());
     }
 
     const LIGHTS: &str = "[[light]]\nid = \"torch\"\ncolor = [300, 200, 100, 0]\nradius = 6\n\

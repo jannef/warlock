@@ -2,6 +2,7 @@
 
 use super::anim::GlyphAnim;
 use super::light::LightId;
+use super::particles::ParticleEmitter;
 use crate::color::Rgb;
 use serde::{Deserialize, Serialize};
 
@@ -20,6 +21,10 @@ pub(super) struct CreatureSpec {
     /// Light preset the creature carries.
     pub light: Option<String>,
     pub anim: Option<GlyphAnim>,
+    #[serde(default)]
+    pub glow: f32,
+    #[serde(default)]
+    pub particles: Vec<ParticleEmitter>,
 }
 
 impl CreatureSpec {
@@ -31,6 +36,8 @@ impl CreatureSpec {
             fg: self.fg,
             light,
             anim: self.anim,
+            glow: self.glow,
+            particles: self.particles,
         }
     }
 }
@@ -46,4 +53,8 @@ pub struct CreatureDef {
     pub light: Option<LightId>,
     /// Presentation-only.
     pub anim: Option<GlyphAnim>,
+    /// Presentation-only: how much the glyph glows (bloom), 0 to 1.
+    pub glow: f32,
+    /// Presentation-only: glyph particle emitters that move with the creature.
+    pub particles: Vec<ParticleEmitter>,
 }

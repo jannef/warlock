@@ -81,7 +81,7 @@ from the run seed, with vaults stamped in. The `depths` scenario starts on its f
 2. **Free-glyph layer** — instanced glyph quads from the same atlas for actors, particles, and
    anything that moves between cells or grows beyond its cell. Lit by sampling the light texture.
 3. **UI layer** — panels, message log, and overlays, drawn in glyphs.
-4. **Post-processing** — glow/bloom, distortion, fades.
+4. **Post-processing** — glow/bloom, distortion, fades (§4.8).
 
 Rendering is viewport-based: drawing cost does not depend on level size.
 
@@ -136,12 +136,40 @@ pulse above 1.0 scale) uses the free-glyph layer.
 - Glyphs stay legible under every effect: minimum contrast against their background, glow added
   around glyphs rather than over them, small distortion amplitudes.
 - A **reduced effects** setting turns off glyph animation, flicker, sliding (instant snap), camera
-  easing, bloom, and distortion, and minimizes particles. No gameplay information may depend on an
-  effect. It is a setting (§6); the `--reduced-effects` flag forces it on.
+  easing, bloom and glow, distortion, particles, and screen fades and flashes. No gameplay
+  information may depend on an effect. It is a setting (§6); the `--reduced-effects` flag forces it
+  on.
 - **Color palettes** (default, high contrast, a red-green colorblind variant) are transforms
   applied when colors are written to the screen, so game data colors are never altered. UI text
   keeps at least 4.5:1 contrast, and the UI never conveys information by color alone (selection
   has a `>` marker, refusals start with `!`).
+
+### 4.8 Effects
+Declared in data per terrain or creature type, like glyph animation. They are presentation-only:
+gameplay never reads them. Effects are deliberately subtle — sparse, short-lived particles, gentle
+glow, barely perceptible distortion, short fades.
+- **Glyph particles** on the free-glyph layer. An emitter has glyphs to pick from, colors over the
+  particle's life, a lifetime, velocity ± spread, gravity, a start offset and spawn area, sideways
+  sway, scale, fade-out, and glow. Emitters fire `ambient` (a steady rate while the source is in
+  view: sparks over braziers and torches, embers over lava, fountain spray, dust motes), on `step`
+  (a burst when a creature is seen entering the cell: a splash in water), or on `toggle` (a burst
+  when a door is seen opening or closing: dust). Creature emitters move with the creature.
+- Particles are a pure function of visual time and a seed (the source's cell or identity, or the
+  event) through a visual-only RNG, so they never depend on frame rate or gameplay randomness. Only
+  visible cells, seen creatures, and perceived events emit; particles over cells that are not
+  visible are not drawn. Non-glowing particles are lit like free glyphs (§4.4); glowing ones are
+  light themselves.
+- **Glow**: glowing glyphs (`glow`, 0–1) are drawn brighter than white into an HDR target. Lit
+  colors, even under overbright light, are kept at most white, so bloom takes only glowing glyphs
+  and adds a tight, faint halo; every other color looks as without bloom and glyph cores stay
+  readable.
+- **Heat haze** (`haze`, 0–1) rises a few cells above hot terrain (braziers, lava). The grid shader
+  moves where glyphs there are sampled by about a pixel, in slow rising ripples; backgrounds stay
+  put and text elsewhere stays crisp.
+- **Screen tints** over the map viewport: a short fade in from black after a level change, and a
+  flash (color, strength, duration) as the hook for hit-style events.
+- With frozen visual time (`--freeze-time`) fades complete instantly and bursts show a fixed
+  moment early in their life, so captures are reproducible.
 
 ## 5. Visibility, light, and vision
 
@@ -258,7 +286,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   creature = "rat"
   path = [[12, 3], [20, 3], [20, 8]]
   ```
-- **Definitions** (TOML): terrain types, light presets, vision profiles, glyph animations.
+- **Definitions** (TOML): terrain types, light presets, vision profiles, glyph animations, and
+  effects (glow, heat haze, particle emitters; §4.8).
 - **Dungeon branches** (`data/dungeons.toml`): stacks of generated levels, e.g.
   `{ id = "depths", generator = "rooms", depth = 8, size = [80, 21] }`, plus optional name,
   patrolling creature kinds, ambient light, and per-depth overrides of generator and size. Stairs

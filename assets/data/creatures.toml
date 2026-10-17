@@ -1,5 +1,7 @@
 # Creature types. The player is the creature with id "player".
-# Fields: id, name, glyph, fg, light (a preset in lights.toml the creature carries), anim.
+# Fields: id, name, glyph, fg, light (a preset in lights.toml the creature carries), anim, and the
+# presentation-only effects glow and [[creature.particles]] (see terrain.toml; they move with the
+# creature).
 
 [[creature]]
 id = "player"
@@ -25,3 +27,17 @@ name = "kobold"
 glyph = "k"
 fg = "#7cb85a"
 light = "torch"
+
+# Sparks from the torch it carries.
+[[creature.particles]]
+glyphs = "'`·"
+colors = ["#ffe8a0", "#ff9030", "#802008"]
+rate = 0.8
+life = 0.5
+velocity = [0.15, -1.2]
+spread = [0.25, 0.3]
+gravity = 0.4
+offset = [0.2, -0.4]
+area = [0.15, 0.0]
+scale = 0.5
+glow = 0.5

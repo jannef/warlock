@@ -36,8 +36,10 @@ Game flags (`cargo run -p warlock -- --help`):
 - `--capture out.png` — render **offscreen** (no window), save a screenshot, exit.
   `--capture-after-frames N` (default 10), `--freeze-time SECONDS` pins animation time (glyph
   animations show that moment; slides and camera moves complete instantly).
-- `--reduced-effects` — force reduced effects on (no glyph animation, light flicker, slides, or
-  camera easing); the settings file can turn them on too.
+- `--reduced-effects` — force reduced effects on (no glyph animation, light flicker, slides,
+  camera easing, particles, bloom/glow, heat haze, or fades); the settings file can turn them on
+  too. With `--freeze-time`, particle bursts from the last turn's events (a `--replay`'s last step)
+  show a fixed moment of their life; fades complete instantly.
 - Without `--scenario`, `--new`, `--replay`, `--record`, or `--capture` the game opens on the main
   menu. Dev: `--screen main|new-run|settings|controls` opens the menu on a screen even with
   `--capture` (e.g. `--scale 1 --screen controls --capture target/menu.png`).
@@ -128,7 +130,8 @@ Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebu
 2. **Free-glyph layer** (`render/free_glyph.rs` + `.wesl`): producers push `FreeGlyph`s
    (pixel position, color/alpha, scale) each frame; they become one dynamic mesh, one draw call.
    Glyphs at rest read the 1:1 atlas; moving or scaled ones sample a supersampled (2×, linear)
-   atlas whose slots are exactly 2× the 1:1 slots. Creatures and `pulse` terrain live here.
+   atlas whose slots are exactly 2× the 1:1 slots. Creatures, particles, and `pulse` terrain live
+   here.
 3. **UI console**: the same console material over the whole window; unwritten cells are
    transparent.
 
@@ -145,11 +148,31 @@ overbright knee plus a faint glow in the light's hue), desaturation, gain. Unlit
 terrain, the UI console's 1×1 textures) are drawn as they are. Free glyphs are lit on the CPU by
 `VisualLight::sample` + `lighting::shade`, which mirror the shader — change both together.
 
+Effects (spec §4.8), all off with reduced effects:
+- **Particles** (`render/particles.rs`): stateless, a pure function of visual time and a seed via
+  a visual-only SplitMix RNG (ambient emitters: one particle per `1/rate` slot; bursts: `count`
+  particles per event). `ui/effects.rs` emits them from perception (visible cells, seen creatures,
+  `Outcome.events`) onto the free-glyph layer, below creatures; non-glowing ones are lit like
+  free glyphs (`VisualLight::sample` + `lighting::shade`).
+- **Glow and heat haze** run in `console.wesl` from two spare bytes of the per-cell animation
+  texture (`CellFx`, written by `ui/effects.rs::draw_cell_fx`): haze moves where glyph coverage is
+  sampled (backgrounds and light stay put); after lighting, colors are clamped to 1 (overbright
+  light alone never blooms) and glowing glyphs are multiplied past 1. Free glyphs do the same
+  through their HDR vertex color (`post::in_range`, `post::emissive`).
+- **Post** (`render/post.rs` + `tint.wesl`): the camera gets `Hdr` + `Bloom` (threshold 1,
+  additive, `Tonemapping::None`), so only glowing glyphs bloom (reduced effects keeps the plain LDR
+  camera, pixel-identical to no effects). `ScreenTints` draws a fading color over the map viewport:
+  the level-change fade, and `flash()` for hit-style events.
+
 `ui/` decides what is drawn from the perception snapshot: `ui/mod.rs` (UI console, map grid in
 base colors), `ui/glyphs.rs` (free glyphs), `ui/motion.rs` (slides from `Outcome.events`, camera
-easing; new input completes running motion), `ui/dev.rs` (dev overlays: reveal map, the one reader
-of ground truth, and light values). Animation curves live in `render/anim.rs` and are mirrored in
-`console.wesl` — change both together. Everything animated is a function of `VisualTime`.
+easing; new input completes running motion), `ui/effects.rs` (particles, bursts, glow and haze,
+fades), `ui/dev.rs` (dev overlays: reveal map, the one reader of ground truth, and light values).
+Animation curves live in `render/anim.rs` and are mirrored in `console.wesl` — change both
+together. Everything animated is a function of `VisualTime`. Effects are deliberately subtle (the
+bar: sparse, short-lived particles, gentle bloom, barely perceptible distortion, short fades); judge
+changes by capturing several `--freeze-time` values, at `--scale 1` and `--window 2560x1440
+--scale 2`.
 
 Hard rules:
 - `warlock-core` never depends on Bevy, never reads wall-clock time, and never does platform I/O

@@ -8,6 +8,10 @@
 // its cell (sampling the supersampled atlas with linear filtering), `shimmer` moves the foreground
 // toward a color, `cycle` steps through glyph frames. The curves mirror `render/anim.rs`.
 //
+// Effects (spec §4.8): `glow` brightens a glyph past 1 so bloom picks it up, and heat haze
+// distorts glyphs over hot cells by shifting where their coverage is read. Both come from per-cell
+// bytes next to the animation data, and are off (0) on the UI console and with reduced effects.
+//
 // Cells nothing was drawn into are transparent (background alpha 0), so layers below show through.
 //
 // Visual lighting (spec §4.4) lights the map grid's terrain per pixel; see `lighting.wesl`.
@@ -31,6 +35,10 @@ struct ConsoleParams {
     supersample: u32,
     // Visual time in seconds (frozen by --freeze-time).
     time: f32,
+    // HDR gain of glowing glyphs; 0 turns glow off.
+    glow_gain: f32,
+    // Largest heat-haze displacement in pixels; 0 turns haze off.
+    haze_px: f32,
 }
 
 // One grid animation (`GridAnim` in anim.rs).
@@ -106,6 +114,46 @@ fn cycle_glyph(anim: GridAnim, t: f32, phase: f32) -> u32 {
     return (anim.frames[i / 2u] >> ((i % 2u) * 16u)) & 0xffffu;
 }
 
+// Coverage of glyph `index` at `local`: 1:1 unless the pixel was moved off the pixel grid.
+fn coverage_at(index: u32, local: vec2<f32>, smooth_sample: bool) -> f32 {
+    if smooth_sample {
+        return coverage_smooth(index, local);
+    }
+    return coverage_crisp(index, vec2<i32>(floor(local)));
+}
+
+// --- Heat haze (spec §4.8) ---------------------------------------------------------------------
+
+// Haze strength of a cell (0 to 1), from the per-cell effect bytes.
+fn cell_haze(cell: vec2<i32>) -> f32 {
+    let max_cell = vec2<i32>(params.grid_size) - vec2(1);
+    return f32(textureLoad(anims, clamp(cell, vec2(0), max_cell), 0).a) / 255.0;
+}
+
+// Haze strength at grid pixel `px`, interpolated between cell centers so it has no seams.
+fn haze_at(px: vec2<f32>) -> f32 {
+    if params.haze_px <= 0.0 {
+        return 0.0;
+    }
+    let c = px / params.cell_size - vec2(0.5);
+    let base = vec2<i32>(floor(c));
+    let f = c - floor(c);
+    let top = mix(cell_haze(base), cell_haze(base + vec2(1, 0)), f.x);
+    let bottom = mix(cell_haze(base + vec2(0, 1)), cell_haze(base + vec2(1, 1)), f.x);
+    return mix(top, bottom, f.y);
+}
+
+// Haze displacement at `p` (in cells) at time `t`, at most about 1: mostly sideways ripples that
+// rise, like air over a fire. A glyph pixel at `p` shows the glyph moved by minus this.
+fn haze_offset(p: vec2<f32>, t: f32) -> vec2<f32> {
+    let rise = TAU * (p.y * 1.4 + t * 0.9) + 1.7 * sin(TAU * (p.x * 0.6 + t * 0.3));
+    let x = 0.7 * sin(rise) + 0.3 * sin(TAU * (p.y * 3.1 + p.x * 0.8 + t * 1.9));
+    let y = 0.35 * sin(TAU * (p.x * 1.2 - p.y * 0.5 + t * 0.7));
+    return vec2(x, y);
+}
+
+// -----------------------------------------------------------------------------------------------
+
 // Glyph over background over whatever is below (non-premultiplied output for alpha blending).
 fn compose(fg: vec3<f32>, coverage: f32, bg: vec4<f32>) -> vec4<f32> {
     let alpha = coverage + bg.a * (1.0 - coverage);
@@ -128,6 +176,14 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     }
     let cell = vec2<i32>(floor(px / params.cell_size));
     let local = px - vec2<f32>(cell) * params.cell_size;
+    // Heat haze: glyphs read their coverage from a slightly moved position (sub-pixel, so sampled
+    // smoothly). Backgrounds and light stay put, so cell edges stay straight.
+    let haze = haze_at(px);
+    let hazed = haze > 0.0;
+    var glyph_local = local;
+    if hazed {
+        glyph_local += haze_offset(px / params.cell_size, params.time) * haze * params.haze_px;
+    }
 
     let g = textureLoad(glyphs, cell, 0);
     var index = g.r | (g.g << 8u);
@@ -137,27 +193,34 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
 
     var coverage = 0.0;
     if a.r == 0u {
-        coverage = coverage_crisp(index, vec2<i32>(floor(local)));
+        coverage = coverage_at(index, glyph_local, hazed);
     } else {
         let anim = anim_table.entries[a.r - 1u];
         let phase = f32(a.g) / 256.0;
         let t = params.time;
         if anim.kind == KIND_WAVE {
             let offset = wave_offset(t, anim.speed, anim.amount, phase) * params.cell_size.x;
-            coverage = coverage_smooth(index, local - offset);
+            coverage = coverage_smooth(index, glyph_local - offset);
         } else {
             if anim.kind == KIND_SHIMMER {
                 fg = mix(fg, anim.color.rgb, shimmer_mix(t, anim.speed, phase));
             } else if anim.kind == KIND_CYCLE {
                 index = cycle_glyph(anim, t, phase);
             }
-            coverage = coverage_crisp(index, vec2<i32>(floor(local)));
+            coverage = coverage_at(index, glyph_local, hazed);
         }
     }
+    // Visual light, sampled where the pixel is (not where haze moved the glyph from).
     let light = light_at(cell, local / params.cell_size);
     if light.lit {
         fg = shade(fg, light);
         bg = vec4(shade(bg.rgb, light), bg.a);
+    }
+    // Effects: lit colors stay within display range, so bright light alone never blooms; then
+    // glowing glyphs (not their backgrounds) go past 1, and bloom puts a halo around them.
+    if params.glow_gain > 0.0 {
+        fg = min(fg, vec3(1.0)) * (1.0 + f32(a.b) / 255.0 * params.glow_gain);
+        bg = vec4(min(bg.rgb, vec3(1.0)), bg.a);
     }
     return compose(fg, coverage, bg);
 }

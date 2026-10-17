@@ -34,13 +34,14 @@ pub struct Args {
     #[arg(long)]
     pub content_dir: Option<PathBuf>,
 
-    /// Freeze visual time at this many seconds (reproducible screenshots). Glyph animations show
-    /// that moment; slides and camera moves complete instantly.
+    /// Freeze visual time at this many seconds (reproducible screenshots). Glyph animations and
+    /// particles show that moment; slides, camera moves, and fades complete instantly.
     #[arg(long)]
     pub freeze_time: Option<f32>,
 
-    /// Force reduced effects on: no glyph animation, no light flicker, no movement slides, no
-    /// camera easing (spec §4.7). The settings file can turn them on too; this flag always wins.
+    /// Force reduced effects on: no glyph animation, light flicker, movement slides, camera
+    /// easing, particles, bloom, heat haze, or screen fades (spec §4.7). The settings file can turn
+    /// them on too; this flag always wins.
     #[arg(long)]
     pub reduced_effects: bool,
 

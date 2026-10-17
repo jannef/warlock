@@ -1,9 +1,10 @@
 //! Rendering: the glyph atlas, console buffers, and the layers they are drawn in (spec §4).
 //!
 //! Layers, bottom to top: the map grid (terrain, in-cell animation; [`grid`]), the free-glyph
-//! layer (creatures and glyphs that move or grow; [`free_glyph`]), and the UI console (text,
-//! panels, overlays). Both consoles are drawn by the same console material; the map grid's is lit
-//! by the visual light ([`lighting`]).
+//! layer (creatures, particles, and glyphs that move or grow; [`free_glyph`], [`particles`]), and
+//! the UI console (text, panels, overlays). Both consoles are drawn by the same console material;
+//! the map grid's is lit by the visual light ([`lighting`]). Post-processing ([`post`]) adds bloom
+//! for glowing glyphs and screen tints; heat haze is drawn by the console material.
 
 pub mod anim;
 pub mod atlas;
@@ -11,6 +12,8 @@ pub mod console;
 pub mod free_glyph;
 pub mod grid;
 pub mod lighting;
+pub mod particles;
+pub mod post;
 
 use crate::capture::CaptureTarget;
 use crate::cli::Args;
@@ -48,6 +51,7 @@ impl Plugin for RenderPlugin {
             Material2dPlugin::<ConsoleMaterial>::default(),
             free_glyph::FreeGlyphPlugin,
             lighting::LightingPlugin,
+            post::PostPlugin,
         ))
         .insert_resource(ClearColor(Color::BLACK))
         .init_resource::<Console>()
@@ -72,9 +76,13 @@ pub struct VisualTime {
 /// Visual effect settings (spec §4.7).
 #[derive(Resource, Debug, Default, Clone, Copy)]
 pub struct Effects {
-    /// Reduced effects: no glyph animation, no slides (instant snap), no camera easing.
+    /// Reduced effects: no glyph animation, no slides (instant snap), no camera easing, no
+    /// particles, bloom, glow, heat haze, or screen fades.
     pub reduced: bool,
 }
+
+/// Largest heat-haze displacement, in cell widths (at full haze strength).
+const HAZE_CELLS: f32 = 0.07;
 
 /// Where the console sits in the window, in physical pixels.
 #[derive(Resource, Debug, Default, Clone, Copy, PartialEq)]
@@ -97,6 +105,10 @@ pub struct ConsoleParams {
     pub atlas_columns: u32,
     pub supersample: u32,
     pub time: f32,
+    /// HDR gain of glowing glyphs (`1 + glow × glow_gain`); 0 turns glow off.
+    pub glow_gain: f32,
+    /// Largest heat-haze displacement in pixels; 0 turns haze off.
+    pub haze_px: f32,
 }
 
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
@@ -294,6 +306,7 @@ fn upload(
     atlas: Res<GlyphAtlas>,
     anims: Res<AnimTable>,
     visual: Res<VisualTime>,
+    effects: Res<Effects>,
     handles: Res<ConsoleHandles>,
     settings: Res<Settings>,
     mut materials: ResMut<Assets<ConsoleMaterial>>,
@@ -304,7 +317,7 @@ fn upload(
         console.dirty = true;
         grid.console.dirty = true;
     }
-    let params = |console: &Console, origin: Vec2, clip: Rect| ConsoleParams {
+    let params = |console: &Console, origin: Vec2, clip: Rect, fx: bool| ConsoleParams {
         origin,
         cell_size: layout.cell.as_vec2(),
         clip_min: clip.min,
@@ -313,10 +326,16 @@ fn upload(
         atlas_columns: atlas::ATLAS_COLUMNS,
         supersample: atlas::SUPERSAMPLE,
         time: visual.seconds,
+        glow_gain: if fx { post::GLOW_GAIN } else { 0.0 },
+        haze_px: if fx {
+            HAZE_CELLS * layout.cell.x as f32
+        } else {
+            0.0
+        },
     };
     let screen = Rect::from_corners(Vec2::ZERO, layout.window.as_vec2());
-    let ui = params(&console, layout.origin, screen);
-    let map = params(&grid.console, grid.origin, grid.clip);
+    let ui = params(&console, layout.origin, screen, false);
+    let map = params(&grid.console, grid.origin, grid.clip, !effects.reduced);
     for (handle, console, params) in [
         (&handles.ui, &mut *console, ui),
         (&handles.map, &mut grid.console, map),
@@ -350,7 +369,12 @@ fn upload_cells(
         Vec::with_capacity(n * 4),
         Vec::with_capacity(n * 4),
     );
-    for (cell, anim) in console.cells().iter().zip(console.anims()) {
+    for ((cell, anim), fx) in console
+        .cells()
+        .iter()
+        .zip(console.anims())
+        .zip(console.fx())
+    {
         match cell {
             Some(cell) => {
                 let [lo, hi] = atlas.glyph(cell.ch).to_le_bytes();
@@ -370,7 +394,7 @@ fn upload_cells(
                 bg.extend_from_slice(&[0; 4]);
             }
         }
-        anims.extend_from_slice(&[anim.entry, anim.phase, 0, 0]);
+        anims.extend_from_slice(&[anim.entry, anim.phase, fx.glow, fx.haze]);
     }
     let size = Extent3d {
         width: console.cols().max(1),
