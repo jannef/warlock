@@ -262,6 +262,33 @@ impl Content {
         Ok(())
     }
 
+    /// A stable hash (64-bit FNV-1a) of the ordered terrain, creature, and level ids.
+    ///
+    /// `TerrainId` and `CreatureId` are indices, so a save is only meaningful for content with the
+    /// same ids in the same order; saves record this fingerprint to detect a mismatch.
+    pub fn fingerprint(&self) -> u64 {
+        let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+        let mut feed = |bytes: &[u8]| {
+            for &b in bytes {
+                hash = (hash ^ u64::from(b)).wrapping_mul(0x0000_0100_0000_01b3);
+            }
+        };
+        let groups: [Vec<&str>; 3] = [
+            self.terrain.iter().map(|t| t.id.as_str()).collect(),
+            self.creatures.iter().map(|c| c.id.as_str()).collect(),
+            self.levels.keys().map(String::as_str).collect(),
+        ];
+        for ids in groups {
+            for id in ids {
+                feed(id.as_bytes());
+                feed(&[0]);
+            }
+            // Group separator, so an id cannot migrate between groups unnoticed.
+            feed(&[1]);
+        }
+        hash
+    }
+
     pub fn terrain(&self, id: TerrainId) -> &TerrainDef {
         &self.terrain[usize::from(id.0)]
     }
@@ -326,6 +353,18 @@ mod tests {
         assert!(content.level("hub").is_some());
         assert!(content.terrain_id("wall").is_some());
         assert!(content.glyphs().contains(&'#'));
+    }
+
+    #[test]
+    fn fingerprint_is_stable_and_tracks_ids() {
+        let a = Content::builtin().expect("content").fingerprint();
+        assert_eq!(a, Content::builtin().expect("content").fingerprint());
+        let mut files = ContentFiles::builtin();
+        let hub = files.get("levels/hub.toml").expect("hub").to_string();
+        files.insert("levels/hub_copy.toml", &hub);
+        if let Ok(other) = Content::load(&files) {
+            assert_ne!(a, other.fingerprint());
+        }
     }
 
     fn minimal_files(level_map: &str, extra_legend: &str) -> ContentFiles {

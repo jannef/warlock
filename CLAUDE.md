@@ -50,6 +50,17 @@ Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascen
 `{game_version, scenario, seed, steps:[{action, hash}]}`; `hash` is the FNV-1a 64 state hash
 (`World::state_hash`) after the step, as 16 hex digits.
 
+- `--new` start a fresh run instead of resuming the save; `--dev` enables F5/F9 snapshots in release
+  builds (always on in debug); `--save-dir DIR` keeps saves in DIR instead of the platform data dir.
+
+Saves: `Q` saves and quits (closing the window saves too); the game autosaves every 50 turns and on
+level change to `run.sav` in the platform data dir (`paths.rs`, app name "warlock"; macOS
+`~/Library/Application Support/warlock`). On startup an existing save is resumed unless `--new`, `--capture`,
+`--replay`, or `--record` (replays and recordings always start a fresh run). F5 / F9 write / load `snapshots/quick.sav`. An unreadable save is renamed `run.sav.bad`,
+never deleted. Format and `Content::fingerprint` live in `warlock-core/src/save.rs`: bump
+`FORMAT_VERSION` on any incompatible `WorldState` change; adding or reordering terrain, creatures, or
+levels invalidates existing saves.
+
 Typical render check: `cargo run -p warlock -- --scale 1 --freeze-time 1 --capture target/shot.png`,
 then read the PNG.
 

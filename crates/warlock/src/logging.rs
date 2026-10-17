@@ -88,7 +88,7 @@ mod desktop {
     }
 
     fn log_dir() -> Option<PathBuf> {
-        let dirs = directories::ProjectDirs::from("", "", "warlock")?;
+        let dirs = crate::paths::project_dirs()?;
         Some(dirs.data_local_dir().join("logs"))
     }
 

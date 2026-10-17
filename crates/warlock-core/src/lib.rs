@@ -17,6 +17,7 @@ pub mod grid;
 pub mod messages;
 pub mod perception;
 pub mod replay;
+pub mod save;
 pub mod world;
 
 pub use action::{Action, Event, Outcome};

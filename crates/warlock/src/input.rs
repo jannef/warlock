@@ -3,7 +3,9 @@
 //! Letter and symbol commands bind by *logical* key (the character the keyboard layout produces),
 //! so `<`, `>`, and `?` work on any layout. Arrows and the numpad bind by physical key code.
 
+use crate::cli::Args;
 use crate::game::{PlayerAction, SimSet};
+use crate::save::SaveCommand;
 use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
@@ -21,6 +23,8 @@ pub enum KeyCommand {
     Help,
     Cancel,
     Quit,
+    Snapshot,
+    LoadSnapshot,
 }
 
 impl KeyCommand {
@@ -35,7 +39,9 @@ impl KeyCommand {
             KeyCommand::Ascend => "Go up stairs",
             KeyCommand::Help => "Show / hide controls",
             KeyCommand::Cancel => "Cancel",
-            KeyCommand::Quit => "Quit",
+            KeyCommand::Quit => "Save and quit",
+            KeyCommand::Snapshot => "Save snapshot (dev)",
+            KeyCommand::LoadSnapshot => "Load snapshot (dev)",
         }
     }
 }
@@ -93,7 +99,7 @@ impl Default for Bindings {
         use KeyBinding::{Char, Code};
         use KeyCommand::*;
         let ch = |s: &str| Char(s.to_string());
-        Self(vec![
+        let mut table = Self(vec![
             (ch("k"), Move(Dir::N)),
             (ch("u"), Move(Dir::NE)),
             (ch("l"), Move(Dir::E)),
@@ -123,11 +129,28 @@ impl Default for Bindings {
             (ch("?"), Help),
             (Code(KeyCode::Escape), Cancel),
             (ch("Q"), Quit),
-        ])
+        ]);
+        if cfg!(debug_assertions) {
+            table.add_dev_keys();
+        }
+        table
     }
 }
 
 impl Bindings {
+    /// Adds the developer snapshot keys (always present in debug builds, `--dev` otherwise).
+    fn add_dev_keys(&mut self) {
+        let dev = [
+            (KeyBinding::Code(KeyCode::F5), KeyCommand::Snapshot),
+            (KeyBinding::Code(KeyCode::F9), KeyCommand::LoadSnapshot),
+        ];
+        for entry in dev {
+            if !self.0.contains(&entry) {
+                self.0.push(entry);
+            }
+        }
+    }
+
     pub fn lookup(&self, input: &KeyboardInput) -> Option<KeyCommand> {
         // Physical bindings first: numpad keys also produce digit characters.
         self.0
@@ -178,7 +201,11 @@ pub struct InputPlugin;
 
 impl Plugin for InputPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<Bindings>()
+        let mut bindings = Bindings::default();
+        if app.world().resource::<Args>().dev {
+            bindings.add_dev_keys();
+        }
+        app.insert_resource(bindings)
             .init_resource::<InputMode>()
             .add_systems(Update, read_keys.before(SimSet));
     }
@@ -189,7 +216,7 @@ fn read_keys(
     bindings: Res<Bindings>,
     mut mode: ResMut<InputMode>,
     mut actions: MessageWriter<PlayerAction>,
-    mut exit: MessageWriter<AppExit>,
+    mut saves: MessageWriter<SaveCommand>,
 ) {
     for key in keys.read() {
         if key.state != ButtonState::Pressed {
@@ -237,7 +264,15 @@ fn read_keys(
             (InputMode::Normal, KeyCommand::Help) => InputMode::Help,
             (InputMode::Normal, KeyCommand::Cancel) => InputMode::Normal,
             (InputMode::Normal, KeyCommand::Quit) => {
-                exit.write(AppExit::Success);
+                saves.write(SaveCommand::SaveAndQuit);
+                InputMode::Normal
+            }
+            (InputMode::Normal, KeyCommand::Snapshot) => {
+                saves.write(SaveCommand::Snapshot);
+                InputMode::Normal
+            }
+            (InputMode::Normal, KeyCommand::LoadSnapshot) => {
+                saves.write(SaveCommand::LoadSnapshot);
                 InputMode::Normal
             }
         };
@@ -261,5 +296,15 @@ mod tests {
         assert!(move_keys.contains(&"Num8".to_string()));
         assert!(move_keys.contains(&"↑".to_string()));
         assert_eq!(b.keys_for("Go down stairs"), vec![">".to_string()]);
+        assert_eq!(b.keys_for("Save and quit"), vec!["Q".to_string()]);
+    }
+
+    #[test]
+    fn dev_keys_are_added_once() {
+        let mut b = Bindings::default();
+        b.add_dev_keys();
+        b.add_dev_keys();
+        assert_eq!(b.keys_for("Save snapshot (dev)"), vec!["F5".to_string()]);
+        assert_eq!(b.keys_for("Load snapshot (dev)"), vec!["F9".to_string()]);
     }
 }

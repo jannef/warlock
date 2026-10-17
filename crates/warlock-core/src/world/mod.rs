@@ -248,6 +248,11 @@ impl World {
         Outcome { took_turn, events }
     }
 
+    /// Appends a system notice (for example "Game saved.") to the message log.
+    pub fn notice(&mut self, text: impl Into<String>) {
+        self.say(text);
+    }
+
     fn say(&mut self, text: impl Into<String>) {
         let turn = self.state.turn;
         self.state.messages.push(turn, text);

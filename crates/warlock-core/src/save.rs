@@ -1,0 +1,197 @@
+//! Save format: a versioned envelope around [`WorldState`], as gzip-compressed JSON (spec §7).
+//!
+//! This module only turns a world into bytes and back; where the bytes live is the app's concern.
+//! Before 1.0, a save from another format version, a build with different content, or a damaged
+//! file is rejected with a clear error and never misread.
+
+use crate::content::Content;
+use crate::world::{World, WorldState};
+use flate2::Compression;
+use flate2::read::GzDecoder;
+use flate2::write::GzEncoder;
+use serde::{Deserialize, Serialize};
+use std::io::{Read, Write};
+use std::sync::Arc;
+
+/// Marker identifying a Warlock save inside the envelope.
+const MAGIC: &str = "WARLOCK-SAVE";
+/// The only save format version this build reads. Bump on any incompatible state change.
+pub const FORMAT_VERSION: u32 = 1;
+/// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
+const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
+
+/// Why a save could not be read. Messages are meant for the player.
+#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+pub enum SaveError {
+    #[error("this is not a Warlock save file")]
+    NotASave,
+    #[error("this save uses format version {found}, but this game reads version {supported}")]
+    UnsupportedVersion { found: u32, supported: u32 },
+    #[error("this save was made with different game content and cannot be loaded")]
+    ContentMismatch,
+    #[error("the save file is damaged: {0}")]
+    Corrupt(String),
+}
+
+#[derive(Serialize)]
+struct EnvelopeOut<'a> {
+    magic: &'static str,
+    format_version: u32,
+    game_version: &'a str,
+    content_fingerprint: u64,
+    state: &'a WorldState,
+}
+
+/// The envelope with the payload still undecoded, so the header is checked before the state.
+#[derive(Deserialize)]
+struct EnvelopeIn {
+    magic: String,
+    format_version: u32,
+    #[serde(default)]
+    content_fingerprint: u64,
+    state: serde_json::Value,
+}
+
+/// Serializes the world's state into save bytes.
+pub fn encode(world: &World) -> Vec<u8> {
+    let envelope = EnvelopeOut {
+        magic: MAGIC,
+        format_version: FORMAT_VERSION,
+        game_version: crate::GAME_VERSION,
+        content_fingerprint: world.content().fingerprint(),
+        state: world.state(),
+    };
+    let mut gz = GzEncoder::new(Vec::new(), Compression::default());
+    // The state is plain data with string-keyed maps, and writing to a Vec cannot fail, so these
+    // fallbacks are unreachable; an empty result would simply fail to decode as a save.
+    let json = serde_json::to_vec(&envelope).unwrap_or_default();
+    let _ = gz.write_all(&json);
+    gz.finish().unwrap_or_default()
+}
+
+/// Restores a world from save bytes, validating it against `content`.
+pub fn decode(bytes: &[u8], content: Arc<Content>) -> Result<World, SaveError> {
+    if !bytes.starts_with(&[0x1f, 0x8b]) {
+        return Err(SaveError::NotASave);
+    }
+    let mut json = Vec::new();
+    GzDecoder::new(bytes)
+        .take(MAX_JSON_BYTES)
+        .read_to_end(&mut json)
+        .map_err(|e| SaveError::Corrupt(e.to_string()))?;
+    let envelope: EnvelopeIn = serde_json::from_slice(&json).map_err(|e| {
+        if e.is_syntax() || e.is_eof() {
+            SaveError::Corrupt(e.to_string())
+        } else {
+            SaveError::NotASave
+        }
+    })?;
+    if envelope.magic != MAGIC {
+        return Err(SaveError::NotASave);
+    }
+    if envelope.format_version != FORMAT_VERSION {
+        return Err(SaveError::UnsupportedVersion {
+            found: envelope.format_version,
+            supported: FORMAT_VERSION,
+        });
+    }
+    if envelope.content_fingerprint != content.fingerprint() {
+        return Err(SaveError::ContentMismatch);
+    }
+    let state: WorldState =
+        serde_json::from_value(envelope.state).map_err(|e| SaveError::Corrupt(e.to_string()))?;
+    World::from_state(content, state).map_err(|e| SaveError::Corrupt(e.to_string()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{Action, Dir};
+
+    fn content() -> Arc<Content> {
+        Arc::new(Content::builtin().expect("builtin content loads"))
+    }
+
+    fn world() -> World {
+        let mut w = World::new(content(), "showcase", None).expect("world");
+        for _ in 0..5 {
+            w.apply(&Action::Move(Dir::E));
+        }
+        w
+    }
+
+    fn gz(json: &str) -> Vec<u8> {
+        let mut e = GzEncoder::new(Vec::new(), Compression::default());
+        e.write_all(json.as_bytes()).expect("write");
+        e.finish().expect("finish")
+    }
+
+    #[test]
+    fn round_trip_preserves_state() {
+        let w = world();
+        let restored = decode(&encode(&w), content()).expect("decode");
+        assert_eq!(restored.state(), w.state());
+    }
+
+    #[test]
+    fn restored_world_continues_identically() {
+        let mut a = world();
+        let mut b = decode(&encode(&a), content()).expect("decode");
+        for _ in 0..20 {
+            a.apply(&Action::Wait);
+            b.apply(&Action::Wait);
+        }
+        assert_eq!(a.state(), b.state());
+    }
+
+    #[test]
+    fn rejects_other_format_version() {
+        let json = r#"{"magic":"WARLOCK-SAVE","format_version":99,"state":null}"#;
+        assert_eq!(
+            decode(&gz(json), content()).err(),
+            Some(SaveError::UnsupportedVersion {
+                found: 99,
+                supported: FORMAT_VERSION
+            })
+        );
+    }
+
+    #[test]
+    fn rejects_content_mismatch() {
+        let json =
+            r#"{"magic":"WARLOCK-SAVE","format_version":1,"content_fingerprint":1,"state":null}"#;
+        assert_eq!(
+            decode(&gz(json), content()).err(),
+            Some(SaveError::ContentMismatch)
+        );
+    }
+
+    #[test]
+    fn rejects_foreign_data() {
+        assert_eq!(decode(b"hello", content()).err(), Some(SaveError::NotASave));
+        let other = gz(r#"{"magic":"OTHER","format_version":1,"state":1}"#);
+        assert_eq!(decode(&other, content()).err(), Some(SaveError::NotASave));
+    }
+
+    #[test]
+    fn rejects_corrupt_and_truncated_data() {
+        let bytes = encode(&world());
+        let truncated = &bytes[..bytes.len() / 2];
+        assert!(matches!(
+            decode(truncated, content()),
+            Err(SaveError::Corrupt(_))
+        ));
+        assert!(matches!(
+            decode(&gz("{ not json"), content()),
+            Err(SaveError::Corrupt(_))
+        ));
+        let bad_state = format!(
+            r#"{{"magic":"WARLOCK-SAVE","format_version":1,"content_fingerprint":{},"state":{{"seed":"x"}}}}"#,
+            content().fingerprint()
+        );
+        assert!(matches!(
+            decode(&gz(&bad_state), content()),
+            Err(SaveError::Corrupt(_))
+        ));
+    }
+}
