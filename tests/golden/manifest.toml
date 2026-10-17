@@ -1,0 +1,65 @@
+# Golden screenshots (spec §3, §10). `cargo xtask golden` renders each entry headlessly and compares
+# it with `tests/golden/<name>.png`. References are produced on Linux CI only (workflow "Golden
+# references"); see CLAUDE.md, "Golden screenshots".
+#
+# `actions` uses the replay text syntax; `ACTION*N` repeats an action. All walks start at the
+# showcase spawn (7,15) in the start room. Corridor: row y=10; its doors are at x=13 (light hall),
+# 37 (darkness chamber), 43 (patrol gallery), 63 (water garden north / effects room south) and
+# 74 (stairs nook).
+
+[defaults]
+window = "960x540"
+scale = 1.0
+freeze_time = 1.0
+# Frames rendered before the capture; software Vulkan needs time to finish pipelines and lighting.
+capture_after_frames = 60
+# Largest per-channel difference (0-255) that still counts as equal.
+tolerance = 2
+# Largest fraction of pixels allowed to differ by more than the tolerance.
+max_diff_ratio = 0.0005
+
+[[golden]]
+name = "start-room"
+scenario = "showcase"
+actions = "wait"
+
+[[golden]]
+name = "door-corridor"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2"
+
+[[golden]]
+name = "patrol-gallery"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*36 open:S move:S*4"
+
+[[golden]]
+name = "light-hall"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*6 open:N move:N*2"
+
+[[golden]]
+name = "darkness-chamber"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3"
+
+[[golden]]
+name = "water-garden"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*56 open:N move:N*4"
+
+[[golden]]
+name = "effects-room"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*56 open:S move:S*3"
+
+[[golden]]
+name = "stairs-nook"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4"
+
+[[golden]]
+name = "vast-level"
+scenario = "vast"
+actions = "wait"
+window = "1280x720"

@@ -63,7 +63,13 @@ fn main() -> AppExit {
                     ..default()
                 })
                 .disable::<WinitPlugin>(),
-            ScheduleRunnerPlugin::run_loop(Duration::from_secs_f64(1.0 / 60.0)),
+            // `WARLOCK_UNPACED=1` removes the 60 Hz pacing so `cargo xtask bench-frames` measures
+            // real frame cost.
+            ScheduleRunnerPlugin::run_loop(if std::env::var_os("WARLOCK_UNPACED").is_some() {
+                Duration::ZERO
+            } else {
+                Duration::from_secs_f64(1.0 / 60.0)
+            }),
         ));
     } else {
         let mut resolution = WindowResolution::new(args.window.x, args.window.y);

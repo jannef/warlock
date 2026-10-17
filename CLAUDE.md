@@ -25,6 +25,8 @@ behavior, commands, or architecture change.
 | Web build | `cargo xtask web` (writes `target/web/`; see "Releases, web build, logs") |
 | Regenerate the vast level | `cargo xtask gen-vast` (writes `assets/levels/vast.toml`; deterministic, never hand-edit) |
 | Check the vast level is fresh | `cargo xtask gen-vast --check` (fails if the file differs from the generator output; run it after touching `xtask/src/vast.rs`) |
+| Golden screenshots | `cargo xtask golden` (compare; authoritative on Linux only), `--local` (capture to `target/xtask/golden/*.local.png`, no compare), `--update` (rewrite references; see "Golden screenshots") |
+| Frame-time benchmark | `cargo xtask bench-frames [WxH]` (release, offscreen; method and results in `docs/perf.md`) |
 | Turn-time benchmark | `cargo xtask bench-turns` (re-runs itself in release; budgets: hub 5 ms, vast 16 ms, generated depths level 5 ms) |
 | Light stress benchmark | `cargo test --release -p warlock-core turn_cost -- --ignored --nocapture` (400×300, 825 lights) |
 
@@ -237,6 +239,27 @@ A successful compile does not verify anything visual. Before opening a PR:
   cargo-deny; the web build on pushes to `main`). macOS is not run in Actions: development happens
   on macOS, so run the full local check there before every PR. `main` is branch-protected: PRs
   only, the Linux, wasm32, and cargo-deny checks must pass, linear history.
+
+## Golden screenshots
+
+`tests/golden/manifest.toml` lists one entry per showcase room plus the vast level: a scenario and
+text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file, and optional `window`, `scale`,
+`freeze_time`, `tolerance` (per-channel, default 2) and `max_diff_ratio` (default 0.05% of pixels).
+`cargo xtask golden` builds a replay per entry with `warlock-core`, runs the game with
+`--replay ... --capture ...`, and compares with `tests/golden/<name>.png`. On a mismatch it writes
+`target/xtask/golden/<name>.{actual,diff}.png` (diff: red pixels are over tolerance) and fails.
+
+References are produced on **Linux CI (Mesa lavapipe) only**; other GPUs and drivers rasterize
+differently, so on macOS `cargo xtask golden` is advisory and `--local` is the way to look at the
+captures. CI compares and never updates.
+
+Deliberate update procedure (after an intended visual change, e.g. lighting or effects landing):
+1. Push the branch, then Actions > CI > Run workflow on that branch with "update_golden" ticked
+   (`gh workflow run ci.yml --ref <branch> -f update_golden=true`, then `gh run watch`).
+2. `gh run download <run-id> -n golden-references -D tests/golden`, review the images (look at them,
+   and check the diff against the old ones makes sense), and commit them with the change.
+3. Adding a room or scenario: add a manifest entry and generate its reference the same way. Never
+   update references just to make a failing check pass.
 
 ## Releases, web build, logs
 

@@ -4,9 +4,12 @@
 //! - `smoke`: run the game with `--capture` and check that something was rendered.
 //! - `web`: build the WebGPU site into `target/web` (needs `wasm-bindgen-cli`, see CLAUDE.md).
 //! - `gen-vast [--check]`: regenerate `assets/levels/vast.toml` (`--check` fails if it is stale).
+//! - `golden [--update | --local]`: compare headless captures with `tests/golden/*.png`.
+//! - `bench-frames`: release-mode frame-time measurement of offscreen captures.
 //! - `bench-turns`: release-mode turn-time table for the hub and the vast level.
 
 mod bench;
+mod golden;
 mod vast;
 
 use std::path::{Path, PathBuf};
@@ -18,9 +21,13 @@ fn main() -> ExitCode {
         Some("smoke") => smoke(),
         Some("web") => web(),
         Some("gen-vast") => gen_vast(args.get(1).is_some_and(|a| a == "--check")),
+        Some("golden") => golden::parse_mode(&args[1..]).and_then(golden::run),
         Some("bench-turns") => bench_turns(),
+        Some("bench-frames") => bench::frames(args.get(1).map_or("2560x1440", String::as_str)),
         _ => {
-            eprintln!("usage: cargo xtask <smoke | web | gen-vast [--check] | bench-turns>");
+            eprintln!(
+                "usage: cargo xtask <smoke | web | gen-vast [--check] | golden [--update | --local] | bench-turns | bench-frames [WxH]>"
+            );
             return ExitCode::from(2);
         }
     };
@@ -33,7 +40,7 @@ fn main() -> ExitCode {
     }
 }
 
-fn workspace_root() -> PathBuf {
+pub(crate) fn workspace_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .expect("xtask lives in the workspace root")
@@ -41,7 +48,7 @@ fn workspace_root() -> PathBuf {
 }
 
 /// Runs the game binary with the given arguments (debug profile).
-fn run_game(extra: &[&str]) -> Result<(), String> {
+pub(crate) fn run_game(extra: &[&str]) -> Result<(), String> {
     let status = Command::new(env!("CARGO"))
         .current_dir(workspace_root())
         .args(["run", "--quiet", "--package", "warlock", "--"])
