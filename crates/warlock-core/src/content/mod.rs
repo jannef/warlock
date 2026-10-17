@@ -24,10 +24,7 @@ pub use dungeon::{DungeonDef, Generator, LevelPlan, parse_branch_level};
 pub use flow::{FLOW_SPEEDS, Flow};
 pub(crate) use level::validate_route;
 pub use level::{CreatureSpawn, LevelKind, LevelTemplate, StairsLink, parse_route};
-pub use light::{
-    Dips, Drift, HueDrift, LightId, LightPreset, MAX_HUE_DRIFT, MAX_INTENSITY_VARIATION,
-    MAX_LIGHT_RADIUS, Stability,
-};
+pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use scenario::ScenarioDef;
 pub use terrain::{StairsDir, TerrainDef, TerrainId};
