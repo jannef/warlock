@@ -47,7 +47,7 @@ regression scene for golden screenshots, replays, and snapshot tests.
 
 | Room | Demonstrates | Milestone |
 |---|---|---|
-| Start room | movement, message line, `?` controls overlay | M1 |
+| Start room | movement, message line, `?` help | M1 |
 | Door corridor | opening/closing doors, doors blocking sight | M1–M2 |
 | Patrol gallery | creatures moving in and out of view, never shown in memory | M2 |
 | Light hall | colored lights, falloff, pillar and creature shadows, flicker | M3, M8 |
@@ -264,12 +264,17 @@ rate or animation.
 
 - Keyboard-first. Default sets: vi-keys (`hjklyubn`), numpad, arrows (4 directions).
 - Symbol commands (`<`, `>`, `?`) are bound by **logical key**, so they work on non-US layouts.
-- Bindings live in the settings file. The `?` controls overlay is generated from the binding table,
-  so it is always accurate.
+- Bindings live in the settings file. The `?` help (the controls list, read-only) is generated from
+  the binding table, so it is always accurate.
+- **Screens**: the main menu, New run, pause menu, Settings, Controls, and help are modal screens on
+  one stack. Opening a screen puts it on top; Esc or Back closes it and returns to the screen
+  below as it was left. While any screen is open it receives every key press, the run (if any)
+  stays visible beneath it, and no game time passes. Prompts in the message line (a direction
+  to open or close, how long to rest, look mode) are not screens.
 - **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
   `--record`, or `--capture` name what to run): Continue (only if a save exists), New run
   (scenario list from content, optional seed), Settings, Controls, Quit.
-- **Pause menu**: Esc during a run (when no prompt or overlay is open) opens it, drawn in glyphs:
+- **Pause menu**: Esc during a run (when no prompt is open) opens it, drawn in glyphs:
   Resume, Settings, Controls, Save and quit to menu, Quit (which saves). No game time passes while
   it is open; Esc or Back in Settings/Controls returns to it.
 - **Settings** (`settings.toml` in the platform config dir; never on the web): font size (logical
@@ -466,7 +471,7 @@ cargo xtask golden [--update]                             # compare golden scree
 - Dev builds add in-game commands: switch vision profile (`F3`), reveal map (`F2`, ground truth,
   marked as dev-only on screen), toggle debug overlays (light values `F4`; line of sight and memory
   later), save and load named snapshots (`F5`/`F9`), skip an hour (`F6`, recorded as `skip:1h`).
-  They are in the bindings table, so the `?` overlay lists them.
+  They are in the bindings table, so the `?` help lists them.
 - CLAUDE.md documents build commands, architecture notes, pinned documentation references, and
   verification procedures, including the agent workflow guidance from the original brief.
   Verification uses tests, dumps, logs, and screenshots — a successful compile alone does not

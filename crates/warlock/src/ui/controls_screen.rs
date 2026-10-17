@@ -3,7 +3,11 @@
 //! Enter on a command waits for a key, which becomes the command's primary key (its other keys,
 //! such as the numpad, stay). A key another command uses is refused and the owner is named, so
 //! the table never holds a conflict. Esc cancels, Delete resets one command, and "Reset all
-//! keys" restores the defaults. The `?` overlay reads the same table, so it follows.
+//! keys" restores the defaults.
+//!
+//! The `?` help is the same screen, read-only ([`ControlsScreen::help`]): it lists every command
+//! in the binding table, including Esc and the dev keys, and closes on `?` or Esc. The list is
+//! drawn by one piece of code for both, so help always matches the bindings.
 
 use super::menu::{Nav, Panel, Press};
 use super::{ACCENT, TEXT, TEXT_DIM};
@@ -18,10 +22,20 @@ enum Mode {
     Browse,
     /// Waiting for a key for the command at this row.
     Capture,
+    /// The `?` help: nothing can be changed; `selected` is the first row shown.
+    ReadOnly,
+}
+
+/// One row of the list.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Row {
+    Command(KeyCommand),
+    Reset,
+    Back,
 }
 
 /// Selection state of the controls screen. Rows are the rebindable commands, then "Reset all
-/// keys", then "Back".
+/// keys", then "Back"; in help, every bound command (see [`ControlsScreen::rows`]).
 #[derive(Debug, Default)]
 pub struct ControlsScreen {
     selected: usize,
@@ -35,11 +49,44 @@ const BACK_ROW: usize = REBINDABLE.len() + 1;
 const ROW_COUNT: usize = REBINDABLE.len() + 2;
 
 impl ControlsScreen {
+    /// The `?` help: every bound command, read-only.
+    pub fn help() -> Self {
+        Self {
+            mode: Mode::ReadOnly,
+            ..Self::default()
+        }
+    }
+
+    #[cfg(test)]
+    pub fn is_help(&self) -> bool {
+        self.mode == Mode::ReadOnly
+    }
+
+    /// The rows shown. Help lists every command in the table: the rebindable ones in their usual
+    /// order, then the fixed and dev keys.
+    fn rows(&self, bindings: &Bindings) -> Vec<Row> {
+        if self.mode != Mode::ReadOnly {
+            let commands = REBINDABLE.into_iter().map(Row::Command);
+            return commands.chain([Row::Reset, Row::Back]).collect();
+        }
+        let mut commands = REBINDABLE.to_vec();
+        for (_, command) in &bindings.0 {
+            if !commands.contains(command) {
+                commands.push(*command);
+            }
+        }
+        commands.into_iter().map(Row::Command).collect()
+    }
+
     /// Applies a key press to `bindings`. Returns true when the player leaves the screen.
     pub fn handle(&mut self, press: &Press, bindings: &mut Bindings) -> bool {
-        if self.mode == Mode::Capture {
-            self.capture(press, bindings);
-            return false;
+        match self.mode {
+            Mode::Capture => {
+                self.capture(press, bindings);
+                return false;
+            }
+            Mode::ReadOnly => return self.read_only(press, bindings),
+            Mode::Browse => {}
         }
         match press.nav {
             Nav::Back => return true,
@@ -66,6 +113,25 @@ impl ControlsScreen {
                 let command = REBINDABLE[self.selected];
                 bindings.reset_command(command);
                 self.message = Some(format!("{} is back to its default keys.", command.name()));
+            }
+            _ => {}
+        }
+        false
+    }
+
+    /// Help: the arrows scroll; Esc or the help key (`?`) closes.
+    fn read_only(&mut self, press: &Press, bindings: &Bindings) -> bool {
+        let help_key = press
+            .binding
+            .as_ref()
+            .is_some_and(|key| bindings.owner(key) == Some(KeyCommand::Help));
+        match press.nav {
+            _ if help_key => return true,
+            Nav::Back => return true,
+            Nav::Up => self.selected = self.selected.saturating_sub(1),
+            Nav::Down => {
+                let last = self.rows(bindings).len().saturating_sub(1);
+                self.selected = (self.selected + 1).min(last);
             }
             _ => {}
         }
@@ -99,42 +165,50 @@ impl ControlsScreen {
     }
 
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
-        let panel = Panel::new(console, " Controls ", 60, ROW_COUNT as i32 + 8);
+        let rows = self.rows(bindings);
+        let count = rows.len();
+        let read_only = self.mode == Mode::ReadOnly;
+        // Help has no messages, so it needs fewer spare rows.
+        let spare = if read_only { 6 } else { 8 };
+        let panel = Panel::new(console, " Controls ", 60, count as i32 + spare);
         // Leave room for the message and footer below the list.
         let visible = (panel.body_rows() - 2).max(1) as usize;
-        let first = self
-            .selected
-            .saturating_sub(visible - 1)
-            .min(ROW_COUNT.saturating_sub(visible));
-        let label_w = REBINDABLE
+        let first = if read_only {
+            self.selected
+        } else {
+            self.selected.saturating_sub(visible - 1)
+        }
+        .min(count.saturating_sub(visible));
+        let label_w = rows
             .iter()
-            .map(|c| c.name().chars().count())
+            .filter_map(|row| match row {
+                Row::Command(c) => Some(c.name().chars().count()),
+                Row::Reset | Row::Back => None,
+            })
             .max()
             .unwrap_or(0) as i32;
-        for (line, row) in (first..ROW_COUNT).take(visible).enumerate() {
-            let y = panel.y + 2 + line as i32;
-            let selected = row == self.selected;
-            if let Some(command) = REBINDABLE.get(row) {
-                let keys = key_list(bindings, *command);
-                let value = if selected && self.mode == Mode::Capture {
-                    "press a key...".to_string()
-                } else {
-                    keys
-                };
-                panel.row(console, y, selected, &command.name(), &value, label_w);
-            } else {
-                let label = if row == RESET_ROW {
-                    "Reset all keys"
-                } else {
-                    "Back"
-                };
-                panel.row(console, y, selected, label, "", label_w);
+        for (i, row) in rows.iter().enumerate().skip(first).take(visible) {
+            let y = panel.y + 2 + (i - first) as i32;
+            // Help has nothing to select.
+            let selected = !read_only && i == self.selected;
+            match row {
+                Row::Command(command) => {
+                    let value = if selected && self.mode == Mode::Capture {
+                        "press a key...".to_string()
+                    } else {
+                        key_list(bindings, *command)
+                    };
+                    panel.row(console, y, selected, &command.name(), &value, label_w);
+                }
+                Row::Reset => panel.row(console, y, selected, "Reset all keys", "", label_w),
+                Row::Back => panel.row(console, y, selected, "Back", "", label_w),
             }
         }
         if first > 0 {
             console.print(panel.x + panel.w - 3, panel.y + 1, "↑", TEXT_DIM);
         }
-        if first + visible < ROW_COUNT {
+        let more = first + visible < count;
+        if more {
             console.print(panel.x + panel.w - 3, panel.y + panel.h - 2, "↓", TEXT_DIM);
         }
         let status_y = panel.y + panel.h - 3;
@@ -154,7 +228,21 @@ impl ControlsScreen {
             };
             console.print(panel.inner_x(), status_y, message, color);
         }
-        panel.footer(console, "Enter rebind   Del reset   Esc back");
+        let footer = if read_only {
+            let close = match bindings.keys_of(KeyCommand::Help).first() {
+                Some(key) => format!("{} or Esc close", key.display()),
+                None => "Esc close".to_string(),
+            };
+            let scroll = if first > 0 || more {
+                "↑↓ scroll   "
+            } else {
+                ""
+            };
+            format!("{scroll}{close}")
+        } else {
+            "Enter rebind   Del reset   Esc back".to_string()
+        };
+        panel.footer(console, &footer);
     }
 }
 
@@ -254,11 +342,89 @@ mod tests {
         for rows in [40, 14, 6] {
             let mut console = Console::default();
             console.resize(70, rows);
-            let mut screen = ControlsScreen::default();
-            for selected in [0, 7, BACK_ROW] {
-                screen.selected = selected;
-                screen.draw(&mut console, &b);
+            for mut screen in [ControlsScreen::default(), ControlsScreen::help()] {
+                for selected in [0, 7, BACK_ROW, 40] {
+                    screen.selected = selected;
+                    screen.draw(&mut console, &b);
+                }
             }
         }
+    }
+
+    /// The text of console row `y`.
+    fn line(console: &Console, y: i32) -> String {
+        (0..console.cols() as i32)
+            .map(|x| console.get(x, y).map_or(' ', |c| c.ch))
+            .collect()
+    }
+
+    #[test]
+    fn help_lists_every_bound_command_and_changes_nothing() {
+        let mut b = Bindings::default();
+        b.add_dev_keys();
+        let mut help = ControlsScreen::help();
+        let rows = help.rows(&b);
+        assert_eq!(rows[..REBINDABLE.len()], REBINDABLE.map(Row::Command));
+        for extra in [
+            KeyCommand::Cancel,
+            KeyCommand::RevealMap,
+            KeyCommand::Snapshot,
+        ] {
+            assert!(rows.contains(&Row::Command(extra)), "{extra:?}");
+        }
+        assert!(!rows.contains(&Row::Reset) && !rows.contains(&Row::Back));
+
+        let before = b.0.clone();
+        for nav in [Nav::Enter, Nav::Delete, Nav::Down, Nav::Enter] {
+            assert!(!help.handle(&Press::nav(nav), &mut b));
+        }
+        assert_eq!(b.0, before);
+        assert_eq!(help.mode, Mode::ReadOnly);
+
+        let mut console = Console::default();
+        console.resize(80, 40);
+        help.selected = 0;
+        help.draw(&mut console, &b);
+        let text: Vec<String> = (0..40).map(|y| line(&console, y)).collect();
+        assert!(
+            text.iter()
+                .any(|l| l.contains("Move north") && l.contains("k Num8 ↑"))
+        );
+        assert!(
+            text.iter()
+                .any(|l| l.contains("Cancel") && l.contains("Esc"))
+        );
+        assert!(text.iter().any(|l| l.contains("? or Esc close")));
+        assert!(
+            !text.iter().any(|l| l.contains("│ >")),
+            "nothing is selected"
+        );
+    }
+
+    #[test]
+    fn help_closes_on_the_help_key_or_escape() {
+        let mut b = Bindings::default();
+        let question = Press {
+            nav: Nav::Other,
+            binding: KeyBinding::from_text("?"),
+            repeat: false,
+            text: Some('?'),
+        };
+        assert!(ControlsScreen::help().handle(&question, &mut b));
+        assert!(ControlsScreen::help().handle(&Press::nav(Nav::Back), &mut b));
+        // The rebinding screen takes `?` as an ordinary key.
+        assert!(!ControlsScreen::default().handle(&question, &mut b));
+    }
+
+    #[test]
+    fn help_scrolls_within_the_list() {
+        let mut b = Bindings::default();
+        let mut help = ControlsScreen::help();
+        nav(&mut help, &mut b, Nav::Up);
+        assert_eq!(help.selected, 0);
+        for _ in 0..100 {
+            nav(&mut help, &mut b, Nav::Down);
+        }
+        assert_eq!(help.selected, help.rows(&b).len() - 1);
     }
 }

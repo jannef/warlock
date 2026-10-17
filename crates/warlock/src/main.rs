@@ -31,14 +31,7 @@ fn main() -> AppExit {
     };
     let (settings_store, settings, bindings) = settings::load_for(&args);
     // Flags that name what to run skip the menu; otherwise the game starts when the player picks.
-    let menu = args.starts_in_menu().then(|| {
-        let has_save = save::SaveStore::from_args(&args).has_save();
-        ui::Menu::new(&content, has_save, args.screen)
-    });
-    // `--screen pause` starts a game and opens the pause menu over it.
-    let menu = menu.or_else(|| {
-        (args.screen == Some(ui::ScreenName::Pause)).then(|| ui::Menu::pause(&content))
-    });
+    // The main menu and `--screen` are opened at startup (`ui::screens`).
     let game = if !args.starts_in_menu() {
         match game::Game::start(&args, content.clone()) {
             Ok(game) => Some(game),
@@ -97,9 +90,6 @@ fn main() -> AppExit {
         .insert_resource(settings)
         .insert_resource(settings_store)
         .insert_resource(bindings);
-    if let Some(menu) = menu {
-        app.insert_resource(menu);
-    }
     if let Some(game) = game {
         app.insert_resource(game);
     }
