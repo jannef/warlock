@@ -5,6 +5,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      update_golden:
+        description: "Only regenerate golden references (Linux, lavapipe) and upload them as an artifact"
+        type: boolean
+        default: false
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -17,6 +22,7 @@ env:
 jobs:
   linux:
     name: Linux (fmt, clippy, test, smoke)
+    if: ${{ !inputs.update_golden }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -56,6 +62,7 @@ jobs:
 
   wasm:
     name: wasm32 check
+    if: ${{ !inputs.update_golden }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -67,7 +74,7 @@ jobs:
   # Builds the browser version on main only; PRs get the quicker wasm32 check above.
   web:
     name: Web build (WebGPU)
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && !inputs.update_golden)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -90,7 +97,38 @@ jobs:
 
   deny:
     name: cargo-deny
+    if: ${{ !inputs.update_golden }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: EmbarkStudios/cargo-deny-action@v2
+
+  # Manual only: Actions > CI > Run workflow with "update_golden" ticked (or
+  # `gh workflow run ci.yml --ref <branch> -f update_golden=true`). Reference screenshots are
+  # produced on Linux (lavapipe) only, because GPU and driver output differs across platforms.
+  # Download the artifact, review the images, and commit them deliberately (CLAUDE.md,
+  # "Golden screenshots"). Normal CI only compares and never updates.
+  golden-update:
+    name: Regenerate golden references (Linux, lavapipe)
+    if: github.event_name == 'workflow_dispatch' && inputs.update_golden
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            pkg-config libudev-dev libwayland-dev libxkbcommon-dev \
+            mesa-vulkan-drivers libvulkan1
+      - name: Install pinned toolchain
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - name: Regenerate references
+        env:
+          WGPU_BACKEND: vulkan
+        run: cargo xtask golden --update
+      - uses: actions/upload-artifact@v4
+        with:
+          name: golden-references
+          path: tests/golden/
+          if-no-files-found: error

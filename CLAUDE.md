@@ -254,8 +254,8 @@ differently, so on macOS `cargo xtask golden` is advisory and `--local` is the w
 captures. CI compares and never updates.
 
 Deliberate update procedure (after an intended visual change, e.g. lighting or effects landing):
-1. Push the branch, then Actions > "Golden references" > Run workflow on that branch
-   (`gh workflow run golden.yml --ref <branch>`, then `gh run watch`).
+1. Push the branch, then Actions > CI > Run workflow on that branch with "update_golden" ticked
+   (`gh workflow run ci.yml --ref <branch> -f update_golden=true`, then `gh run watch`).
 2. `gh run download <run-id> -n golden-references -D tests/golden`, review the images (look at them,
    and check the diff against the old ones makes sense), and commit them with the change.
 3. Adding a room or scenario: add a manifest entry and generate its reference the same way. Never
