@@ -40,6 +40,7 @@ Game flags (`cargo run -p warlock -- --help`):
 - Without `--scenario`, `--new`, `--replay`, `--record`, or `--capture` the game opens on the main
   menu. Dev: `--screen main|new-run|settings|controls` opens the menu on a screen even with
   `--capture` (e.g. `--scale 1 --screen controls --capture target/menu.png`).
+  `--screen pause` starts a game and opens the pause menu over it.
   `--config-dir DIR` keeps `settings.toml` in DIR; captures and replays otherwise use default
   settings and never write the file.
 

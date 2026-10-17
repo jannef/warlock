@@ -11,7 +11,7 @@ mod menu;
 mod motion;
 mod settings_screen;
 
-pub use menu::{Menu, ScreenName};
+pub use menu::{Menu, OpenPause, ScreenName};
 
 use crate::game::{Game, SimSet};
 use crate::input::{Bindings, InputMode};
@@ -38,16 +38,19 @@ pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<Motion>().add_systems(
-            Update,
-            (
-                (motion::track, (draw, draw_map_layer), glyphs::emit)
-                    .chain()
-                    .after(SimSet)
-                    .run_if(resource_exists::<Game>),
-                menu::run.run_if(resource_exists::<Menu>),
-            ),
-        );
+        app.init_resource::<Motion>()
+            .add_message::<OpenPause>()
+            .add_systems(
+                Update,
+                (
+                    (motion::track, (draw, draw_map_layer), glyphs::emit)
+                        .chain()
+                        .after(SimSet)
+                        .run_if(resource_exists::<Game>),
+                    menu::run.run_if(resource_exists::<Menu>).after(draw),
+                    menu::open_pause.run_if(resource_exists::<Game>),
+                ),
+            );
     }
 }
 

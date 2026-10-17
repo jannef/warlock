@@ -35,7 +35,11 @@ fn main() -> AppExit {
         let has_save = save::SaveStore::from_args(&args).has_save();
         ui::Menu::new(&content, has_save, args.screen)
     });
-    let game = if menu.is_none() {
+    // `--screen pause` starts a game and opens the pause menu over it.
+    let menu = menu.or_else(|| {
+        (args.screen == Some(ui::ScreenName::Pause)).then(|| ui::Menu::pause(&content))
+    });
+    let game = if !args.starts_in_menu() {
         match game::Game::start(&args, content.clone()) {
             Ok(game) => Some(game),
             Err(err) => {
