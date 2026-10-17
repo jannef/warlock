@@ -5,7 +5,7 @@
 //! each visible cell it sums the level's ambient light and every visible source's contribution,
 //! and folds in the presentation rules: UV light as a violet tint (perception reports UV only to
 //! eyes that see it) and the [`darkvision`] fade. Flicker ([`flicker`]: smooth noise keyed by the
-//! source, driven by [`VisualTime`]; none with reduced effects) becomes a per-cell brightness
+//! source, driven by [`VisualTime`]; none with flicker off) becomes a per-cell brightness
 //! gain, the contribution-weighted mean of the flicker of the sources lighting the cell, applied
 //! after shading so it reads the same in dim and in overbright light. The result is one
 //! [`CellLight`] per cell, uploaded as two textures aligned with the map grid:
@@ -112,7 +112,7 @@ pub struct VisualLight {
 
 impl VisualLight {
     /// Recomputes the light of the `size` cells from level position `origin` on. `time` is the
-    /// visual time for flicker, `None` for steady light (reduced effects).
+    /// visual time for flicker, `None` for steady light (flicker off).
     pub fn composite(
         &mut self,
         view: &PerceptionView<'_>,
@@ -394,7 +394,7 @@ pub fn update(
 ) {
     let view = game.world.perception();
     let size = UVec2::new(grid.console.cols(), grid.console.rows()) + 2 * MARGIN as u32;
-    let time = (!effects.reduced).then_some(visual.seconds);
+    let time = effects.flicker.then_some(visual.seconds);
     light.composite(&view, grid.level_origin - MARGIN, size, time);
 }
 

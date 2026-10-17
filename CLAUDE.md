@@ -37,8 +37,8 @@ Game flags (`cargo run -p warlock -- --help`):
   `--capture-after-frames N` (default 10), `--freeze-time SECONDS` pins animation time (glyph
   animations show that moment; slides and camera moves complete instantly).
 - `--reduced-effects` — force reduced effects on (no glyph animation, light flicker, slides,
-  camera easing, particles, bloom/glow, heat haze, or fades); the settings file can turn them on
-  too. With `--freeze-time`, particle bursts from the last turn's events (a `--replay`'s last step)
+  camera easing, particles, bloom/glow, heat haze, or fades); always wins over the settings
+  (`Settings::effective_effects(force)`). With `--freeze-time`, particle bursts from the last turn's events (a `--replay`'s last step)
   show a fixed moment of their life; fades complete instantly.
 - Without `--scenario`, `--new`, `--replay`, `--record`, or `--capture` the game opens on the main
   menu. Dev: `--screen main|new-run|settings|controls` opens the menu on a screen even with
@@ -82,7 +82,12 @@ lights, levels, or dungeon branches invalidates existing saves.
 
 Settings (`crates/warlock/src/settings/`): `settings.toml` in the platform config dir (macOS
 `~/Library/Application Support/warlock`), schema in the `settings/mod.rs` module docs. Changes
-apply live and are written at once; a bad file means defaults plus a warning, per value. Palettes
+apply live and are written at once; a bad file means defaults plus a warning, per value. Effects:
+`reduced_effects` is a preset over the `[effects]` switches (`EffectSwitches`: glyph_animation,
+flicker, motion, glow, distortion, particles, screen_fades; all on by default). Each consumer reads
+its own switch from the `render::Effects` resource (the effective values, synced every frame from
+`Settings` + `--reduced-effects`), never the preset; a new effect needs a switch in
+`EffectSwitches`, the file, and a row in `ui/settings_screen.rs`. Palettes
 (`settings/palette.rs`) are applied only when cells are uploaded to the GPU (`render::upload`) and
 in `ui/glyphs.rs`, never to content colors. Rebindable commands have stable ids in
 `settings/keys.rs` (`KeyCommand::id`): **a new `KeyCommand` variant must be added there**
@@ -139,7 +144,7 @@ Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebu
 `console.wesl`): every frame `lighting::update` composites the perceived light for the map grid's
 cells plus a one-cell margin, from `PerceptionView::ambient` and `light_sources()` contributions,
 and folds in UV (violet tint) and the darkvision fade. Flicker (deterministic noise from the
-source key and `VisualTime`; off with reduced effects) is a per-cell brightness gain applied after
+source key and `VisualTime`; off with the `flicker` effect) is a per-cell brightness gain applied after
 shading. Two textures on the map material: `light` (`Rgba32Float`: rgb light, 1.0 = fully lit,
 and saturation) and `light_flags` (`Rgba8Uint`: lit/opaque flags, flicker gain byte). The shader
 interpolates light per pixel between cell centers, never across opaque, unseen, or remembered
@@ -148,7 +153,8 @@ overbright knee plus a faint glow in the light's hue), desaturation, gain. Unlit
 terrain, the UI console's 1×1 textures) are drawn as they are. Free glyphs are lit on the CPU by
 `VisualLight::sample` + `lighting::shade`, which mirror the shader — change both together.
 
-Effects (spec §4.8), all off with reduced effects:
+Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distortion`,
+`screen_fades`) and all off with reduced effects:
 - **Particles** (`render/particles.rs`): stateless, a pure function of visual time and a seed via
   a visual-only SplitMix RNG (ambient emitters: one particle per `1/rate` slot; bursts: `count`
   particles per event). `ui/effects.rs` emits them from perception (visible cells, seen creatures,
@@ -160,8 +166,8 @@ Effects (spec §4.8), all off with reduced effects:
   light alone never blooms) and glowing glyphs are multiplied past 1. Free glyphs do the same
   through their HDR vertex color (`post::in_range`, `post::emissive`).
 - **Post** (`render/post.rs` + `tint.wesl`): the camera gets `Hdr` + `Bloom` (threshold 1,
-  additive, `Tonemapping::None`), so only glowing glyphs bloom (reduced effects keeps the plain LDR
-  camera, pixel-identical to no effects). `ScreenTints` draws a fading color over the map viewport:
+  additive, `Tonemapping::None`), so only glowing glyphs bloom (with `glow` off the camera stays plain LDR,
+  pixel-identical to no effects). `ScreenTints` draws a fading color over the map viewport:
   the level-change fade, and `flash()` for hit-style events.
 
 `ui/` decides what is drawn from the perception snapshot: `ui/mod.rs` (UI console, map grid in

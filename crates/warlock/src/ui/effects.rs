@@ -5,7 +5,7 @@
 //! creatures. Bursts come from the turn's events (`Outcome.events`, already filtered by
 //! perception) at visible cells: a splash where a creature steps into water, dust where a door
 //! opens or closes. Particles over cells that are not visible are not drawn, and remembered cells
-//! never glow, haze, or emit. With reduced effects none of this runs.
+//! never glow, haze, or emit. Each part runs only with its effect on.
 
 use super::glyphs;
 use super::motion::Motion;
@@ -114,7 +114,7 @@ pub(super) fn track(
         return;
     }
     let turn = game.world.turn();
-    if bursts.turn.replace(turn) == Some(turn) || effects.reduced {
+    if bursts.turn.replace(turn) == Some(turn) || !effects.particles {
         return;
     }
     let view = game.world.perception();
@@ -135,7 +135,7 @@ pub(super) fn track(
             Event::LevelChanged { .. } => {
                 bursts.list.clear();
                 tints.clear();
-                if !visual.frozen {
+                if !visual.frozen && effects.screen_fades {
                     tints.flash(LinearRgba::BLACK, FADE_SECONDS, now);
                 }
             }
@@ -164,7 +164,7 @@ pub(super) fn emit(
     mut sources: Local<Sources>,
     mut scratch: Local<Vec<Particle>>,
 ) {
-    if effects.reduced {
+    if !effects.particles {
         return;
     }
     let view = game.world.perception();

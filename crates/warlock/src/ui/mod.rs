@@ -168,7 +168,7 @@ fn draw_map_layer(
     grid.console.resize(area.w as u32 + 1, area.h as u32 + 1);
     grid.console.clear();
     draw_map(&mut grid, &view, &anims, &key.covered);
-    if !effects.reduced {
+    if effects.glow || effects.distortion {
         effects::draw_cell_fx(&mut grid, &view);
     }
     dev::draw_map_overlays(&mut grid, &game.world, *overlays);
@@ -463,7 +463,7 @@ mod tests {
         let mut world = pool_world();
         let view = world.perception();
         let content = view.content();
-        let anims = AnimTable::new(content, |_| 0, true);
+        let anims = AnimTable::new(content, |_| 0, true, Default::default());
         let mut grid = MapGrid::default();
         grid.console.resize(7, 3);
         let player = view.viewer();

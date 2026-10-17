@@ -7,8 +7,17 @@
 //!
 //! ```toml
 //! font_px = 18            # logical pixels, 12 to 36
-//! reduced_effects = false
+//! reduced_effects = false # preset: forces every effect below off
 //! palette = "default"     # "default", "high-contrast", "colorblind"
+//!
+//! [effects]               # per-effect switches, all on by default
+//! glyph_animation = true  # wave, pulse, shimmer, cycle
+//! flicker = true          # light flicker
+//! motion = true           # movement slides and camera easing
+//! glow = true             # bloom and glyph glow
+//! distortion = true       # heat haze
+//! particles = true
+//! screen_fades = true     # level-change fade and flashes
 //!
 //! [bindings]              # command id -> keys; a character, or a key name like "ArrowUp"
 //! move_n = ["k", "Numpad8", "ArrowUp"]
@@ -37,7 +46,100 @@ pub struct Settings {
     pub font_px: u32,
     /// Reduced effects (the `--reduced-effects` flag forces this on regardless).
     pub reduced_effects: bool,
+    /// Per-effect switches; an effect runs only when its switch is on and reduced effects is off.
+    pub effects: EffectSwitches,
     pub palette: Palette,
+}
+
+/// Which visual effects run (spec §4.7). In [`Settings`] these are the player's per-effect
+/// switches; the `Effects` resource in rendering holds the effective values.
+#[derive(Resource, Debug, Clone, Copy, PartialEq, Eq)]
+pub struct EffectSwitches {
+    /// Glyph animation: wave, pulse, shimmer, cycle.
+    pub glyph_animation: bool,
+    /// Light flicker.
+    pub flicker: bool,
+    /// Movement slides and camera easing.
+    pub motion: bool,
+    /// Bloom and glyph glow.
+    pub glow: bool,
+    /// Heat haze.
+    pub distortion: bool,
+    pub particles: bool,
+    /// The level-change fade and screen flashes.
+    pub screen_fades: bool,
+}
+
+impl EffectSwitches {
+    pub const ALL_ON: Self = Self {
+        glyph_animation: true,
+        flicker: true,
+        motion: true,
+        glow: true,
+        distortion: true,
+        particles: true,
+        screen_fades: true,
+    };
+    pub const ALL_OFF: Self = Self {
+        glyph_animation: false,
+        flicker: false,
+        motion: false,
+        glow: false,
+        distortion: false,
+        particles: false,
+        screen_fades: false,
+    };
+
+    /// The effective switches: each as set, and everything off when `reduced`.
+    pub fn effective(self, reduced: bool) -> Self {
+        if reduced { Self::ALL_OFF } else { self }
+    }
+
+    /// The setting names, for the file.
+    const KEYS: [&'static str; 7] = [
+        "glyph_animation",
+        "flicker",
+        "motion",
+        "glow",
+        "distortion",
+        "particles",
+        "screen_fades",
+    ];
+
+    fn to_map(self) -> std::collections::BTreeMap<&'static str, bool> {
+        let mut copy = self;
+        Self::KEYS
+            .iter()
+            .map(|&k| (k, *copy.slot(k).expect("known key")))
+            .collect()
+    }
+
+    fn slot(&mut self, key: &str) -> Option<&mut bool> {
+        Some(match key {
+            "glyph_animation" => &mut self.glyph_animation,
+            "flicker" => &mut self.flicker,
+            "motion" => &mut self.motion,
+            "glow" => &mut self.glow,
+            "distortion" => &mut self.distortion,
+            "particles" => &mut self.particles,
+            "screen_fades" => &mut self.screen_fades,
+            _ => return None,
+        })
+    }
+}
+
+impl Default for EffectSwitches {
+    fn default() -> Self {
+        Self::ALL_ON
+    }
+}
+
+impl Settings {
+    /// The effects that actually run; `force_reduced` is the `--reduced-effects` flag.
+    pub fn effective_effects(&self, force_reduced: bool) -> EffectSwitches {
+        self.effects
+            .effective(force_reduced || self.reduced_effects)
+    }
 }
 
 impl Default for Settings {
@@ -45,6 +147,7 @@ impl Default for Settings {
         Self {
             font_px: DEFAULT_FONT_PX,
             reduced_effects: false,
+            effects: EffectSwitches::ALL_ON,
             palette: Palette::Default,
         }
     }
@@ -82,7 +185,15 @@ pub fn parse(text: &str) -> Loaded {
     let mut warnings = Vec::new();
     let mut settings = Settings::default();
     for key in table.keys() {
-        if !["font_px", "reduced_effects", "palette", "bindings"].contains(&key.as_str()) {
+        if ![
+            "font_px",
+            "reduced_effects",
+            "effects",
+            "palette",
+            "bindings",
+        ]
+        .contains(&key.as_str())
+        {
             warnings.push(format!("unknown setting `{key}` ignored"));
         }
     }
@@ -106,6 +217,21 @@ pub fn parse(text: &str) -> Loaded {
             Some(on) => settings.reduced_effects = on,
             None => warnings.push("reduced_effects must be true or false".into()),
         }
+    }
+    match table.get("effects") {
+        Some(toml::Value::Table(t)) => {
+            for (key, value) in t {
+                match settings.effects.slot(key) {
+                    None => warnings.push(format!("unknown effect `{key}` ignored")),
+                    Some(slot) => match value.as_bool() {
+                        Some(on) => *slot = on,
+                        None => warnings.push(format!("effects.{key} must be true or false")),
+                    },
+                }
+            }
+        }
+        Some(_) => warnings.push("effects must be a table; using the defaults".into()),
+        None => {}
     }
     if let Some(value) = table.get("palette") {
         match value.as_str().and_then(Palette::from_id) {
@@ -133,6 +259,7 @@ struct FileOut<'a> {
     font_px: u32,
     reduced_effects: bool,
     palette: &'a str,
+    effects: std::collections::BTreeMap<&'static str, bool>,
     bindings: std::collections::BTreeMap<String, Vec<String>>,
 }
 
@@ -142,6 +269,7 @@ pub fn to_toml(settings: &Settings, bindings: &Bindings) -> String {
         font_px: settings.font_px,
         reduced_effects: settings.reduced_effects,
         palette: settings.palette.id(),
+        effects: settings.effects.to_map(),
         bindings: bindings.to_map(),
     };
     toml::to_string_pretty(&out).unwrap_or_default()
@@ -289,6 +417,11 @@ mod tests {
         let settings = Settings {
             font_px: 24,
             reduced_effects: true,
+            effects: EffectSwitches {
+                particles: false,
+                flicker: false,
+                ..EffectSwitches::ALL_ON
+            },
             palette: Palette::Colorblind,
         };
         let mut bindings = Bindings::default();
@@ -300,6 +433,40 @@ mod tests {
         assert!(loaded.warnings.is_empty(), "{:?}", loaded.warnings);
         assert_eq!(loaded.settings, settings);
         assert_eq!(loaded.bindings.to_map(), bindings.to_map());
+    }
+
+    #[test]
+    fn old_files_without_effects_load_with_everything_on() {
+        let loaded = parse("font_px = 20\nreduced_effects = false\npalette = \"default\"\n");
+        assert!(loaded.warnings.is_empty(), "{:?}", loaded.warnings);
+        assert_eq!(loaded.settings.effects, EffectSwitches::ALL_ON);
+    }
+
+    #[test]
+    fn bad_effect_values_fall_back_one_by_one() {
+        let loaded =
+            parse("[effects]\nglow = false\nparticles = \"no\"\nsparkles = true\nmotion = false\n");
+        let e = loaded.settings.effects;
+        assert!(!e.glow && !e.motion);
+        assert!(e.particles && e.flicker && e.distortion);
+        assert_eq!(loaded.warnings.len(), 2, "{:?}", loaded.warnings);
+        let loaded = parse("effects = 3\n");
+        assert_eq!(loaded.settings.effects, EffectSwitches::ALL_ON);
+        assert_eq!(loaded.warnings.len(), 1);
+    }
+
+    #[test]
+    fn effective_effects_combine_switches_and_the_preset() {
+        let mut s = Settings::default();
+        s.effects.particles = false;
+        let e = s.effective_effects(false);
+        assert!(!e.particles && e.glow && e.flicker);
+        s.reduced_effects = true;
+        assert_eq!(s.effective_effects(false), EffectSwitches::ALL_OFF);
+        s.reduced_effects = false;
+        assert_eq!(s.effective_effects(true), EffectSwitches::ALL_OFF);
+        // Turning the preset off again restores the individual switches.
+        assert!(s.effective_effects(false).glow);
     }
 
     #[test]

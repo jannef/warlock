@@ -3,7 +3,7 @@
 //!
 //! Motion starts from the turn's perceived events (`Outcome.events`) and is a pure function of
 //! visual time. Any new input completes running motion instantly, so fast play never waits. With
-//! reduced effects or frozen visual time (`--freeze-time`), all motion is instant.
+//! the `motion` effect off or frozen visual time (`--freeze-time`), all motion is instant.
 
 use super::{camera_origin, map_area};
 use crate::game::Game;
@@ -158,7 +158,7 @@ pub(super) fn track(
     mut motion: ResMut<Motion>,
 ) {
     let now = visual.seconds;
-    let animate = !effects.reduced && !visual.frozen;
+    let animate = effects.motion && !visual.frozen;
     let view = game.world.perception();
     let mut snap = !animate || layout.is_changed();
     if game.is_changed() {

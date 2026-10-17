@@ -4,7 +4,7 @@
 //! Bloom runs on an HDR camera. Only colors brighter than 1 bloom (glyphs that content marks as
 //! glowing are pushed past 1), and the bloom is added on top, so everything else keeps its exact
 //! palette color. Heat-haze distortion is not here: it runs in the console shader, per cell, so
-//! text elsewhere stays crisp. With reduced effects there is no bloom and no tint.
+//! text elsewhere stays crisp. With the `glow` effect off there is no bloom; with `screen_fades` off, no tint.
 
 use super::Effects;
 use super::grid::MapGrid;
@@ -83,9 +83,9 @@ fn sync_camera(
         return;
     }
     for (camera, has_bloom) in &cameras {
-        if effects.reduced && has_bloom {
+        if !effects.glow && has_bloom {
             commands.entity(camera).remove::<(Bloom, Hdr)>();
-        } else if !effects.reduced && !has_bloom {
+        } else if effects.glow && !has_bloom {
             commands.entity(camera).insert(bloom());
         }
     }
@@ -212,10 +212,14 @@ fn update_overlay(
     time: Res<super::VisualTime>,
     grid: Res<MapGrid>,
     overlay: Res<Overlay>,
+    effects: Res<Effects>,
     mut tints: ResMut<ScreenTints>,
     mut materials: ResMut<Assets<TintMaterial>>,
     mut visibility: Query<&mut Visibility>,
 ) {
+    if !effects.screen_fades {
+        tints.clear();
+    }
     tints.prune(time.seconds);
     let color = tints.overlay(time.seconds);
     let shown = color.alpha > 0.0;
