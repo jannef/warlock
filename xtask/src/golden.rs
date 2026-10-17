@@ -66,6 +66,8 @@ struct Entry {
     scale: Option<f32>,
     freeze_time: Option<f32>,
     capture_after_frames: Option<u32>,
+    /// Open this menu screen over the game (`--screen`, e.g. `pause`).
+    screen: Option<String>,
     tolerance: Option<u8>,
     max_diff_ratio: Option<f64>,
 }
@@ -205,20 +207,30 @@ pub fn run(mode: Mode) -> Result<(), String> {
             Mode::Compare => out_dir.join(format!("{}.actual.png", entry.name)),
         };
         let _ = std::fs::remove_file(&actual_path);
-        run_game(&[
-            "--window",
-            window,
-            "--scale",
-            &scale,
-            "--freeze-time",
-            &freeze,
-            "--capture-after-frames",
-            &frames,
-            "--replay",
-            replay.to_str().ok_or("non-UTF-8 path")?,
-            "--capture",
-            actual_path.to_str().ok_or("non-UTF-8 path")?,
-        ])?;
+        let screen_args: Vec<&str> = match &entry.screen {
+            Some(screen) => vec!["--screen", screen.as_str()],
+            None => Vec::new(),
+        };
+        run_game(
+            &[
+                &screen_args[..],
+                &[
+                    "--window",
+                    window,
+                    "--scale",
+                    &scale,
+                    "--freeze-time",
+                    &freeze,
+                    "--capture-after-frames",
+                    &frames,
+                    "--replay",
+                    replay.to_str().ok_or("non-UTF-8 path")?,
+                    "--capture",
+                    actual_path.to_str().ok_or("non-UTF-8 path")?,
+                ],
+            ]
+            .concat(),
+        )?;
         if !actual_path.exists() {
             return Err(format!("{}: game wrote no capture", entry.name));
         }

@@ -75,6 +75,13 @@ name = "depths-1"
 scenario = "depths"
 actions = "wait"
 
+# The pause menu over a running game: guards against overlays being wiped (#56).
+[[golden]]
+name = "pause-menu"
+scenario = "showcase"
+actions = "wait"
+screen = "pause"
+
 [[golden]]
 name = "vast-level"
 scenario = "vast"

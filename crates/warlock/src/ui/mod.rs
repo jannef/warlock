@@ -77,10 +77,17 @@ fn draw(
     bindings: Res<Bindings>,
     overlays: Res<DevOverlays>,
     grid: Res<MapGrid>,
+    mut cursor_origin: Local<Option<IVec2>>,
     mut console: ResMut<Console>,
 ) {
+    // The look cursor moves with the map, but MapGrid is rewritten every frame, so watch only the
+    // origin the cursor depends on. Redrawing on every frame would wipe overlays drawn after this
+    // system, such as the pause menu (#56).
+    let cursor_moved =
+        matches!(*mode, InputMode::Look(_)) && *cursor_origin != Some(grid.level_origin);
+    *cursor_origin = Some(grid.level_origin);
     if !(game.is_changed()
-        || grid.is_changed()
+        || cursor_moved
         || mode.is_changed()
         || layout.is_changed()
         || bindings.is_changed()
