@@ -3,8 +3,9 @@
 //! Layers, bottom to top: the map grid (terrain, in-cell animation; [`grid`]), the free-glyph
 //! layer (creatures, particles, and glyphs that move or grow; [`free_glyph`], [`particles`]), and
 //! the UI console (text, panels, overlays). Both consoles are drawn by the same console material;
-//! the map grid's is lit by the visual light ([`lighting`]). Post-processing ([`post`]) adds bloom
-//! for glowing glyphs and screen tints; heat haze is drawn by the console material.
+//! the map grid's is lit by the visual light ([`lighting`], with creature [`shadows`]).
+//! Post-processing ([`post`]) adds bloom for glowing glyphs and screen tints; heat haze is drawn
+//! by the console material.
 
 pub mod anim;
 pub mod atlas;
@@ -14,6 +15,7 @@ pub mod grid;
 pub mod lighting;
 pub mod particles;
 pub mod post;
+pub mod shadows;
 
 use crate::capture::CaptureTarget;
 use crate::cli::Args;

@@ -161,7 +161,15 @@ Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebu
 **Visual lighting** (spec §4.4, `render/lighting.rs` + `lighting.wesl`, imported by
 `console.wesl`): every frame `lighting::update` composites the perceived light for the map grid's
 cells plus a one-cell margin, from `PerceptionView::ambient` and `light_sources()` contributions,
-and folds in UV (violet tint) and the darkvision fade. Flicker (deterministic noise from the
+less creature shadows, and folds in UV (violet tint) and the darkvision fade. **Creature shadows**
+(`render/shadows.rs`, visual only): each visible creature shades every perceived source that
+lights its cell, except one on its own cell (its carried light). The source is shadowcast
+(`fov::compute_fov`) over the perceived terrain with and without the creature's cell as an extra
+occluder; contribution cells only the first reaches keep `shadows::keep` of that source's light
+(`KEEP` 0.4 right behind the creature, back to all of it at `REACH` 3.5 cells), so colored shadows
+come from per-source attenuation. `shadows::update` recomputes the `Shadows` resource only when
+`Game` changes (once per turn), not per frame; darkvision still measures the unshaded light (else
+its glow would brighten shadows). Flicker (deterministic noise from the
 source key and `VisualTime`; off with the `flicker` effect) is a per-cell brightness gain applied after
 shading. Two textures on the map material: `light` (`Rgba32Float`: rgb light, 1.0 = fully lit,
 and saturation) and `light_flags` (`Rgba8Uint`: lit/opaque flags, flicker gain byte). The shader

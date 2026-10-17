@@ -26,7 +26,7 @@ use crate::input::{Bindings, InputMode};
 use crate::render::anim::{AnimTable, TerrainAnim};
 use crate::render::console::{Cell, Console};
 use crate::render::grid::MapGrid;
-use crate::render::{ConsoleLayout, Effects, VisualTime, lighting};
+use crate::render::{ConsoleLayout, Effects, VisualTime, lighting, shadows};
 use bevy::prelude::*;
 use motion::Motion;
 use warlock_core::Pos;
@@ -56,6 +56,7 @@ impl Plugin for UiPlugin {
                     (
                         (motion::track, effects::track),
                         (draw, draw_map_layer),
+                        shadows::update,
                         lighting::update,
                         effects::emit,
                         glyphs::emit,

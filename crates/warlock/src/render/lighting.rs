@@ -14,6 +14,10 @@
 //! - `light_flags` (`Rgba8Uint`): [`LIT`] on visible cells and [`OPAQUE`] on walls (red), and
 //!   the flicker gain (green, see [`gain_byte`]).
 //!
+//! Creature shadows ([`super::shadows`], visual only as well) take part of each source's
+//! contribution away behind the creatures it lights. The shaded light is left out of what is
+//! drawn but not out of what darkvision measures, so darkvision's glow never brightens a shadow.
+//!
 //! The console shader (`lighting.wesl`) lights terrain per pixel, interpolating between cell
 //! centers ([`interpolation_weights`]). A neighbor only contributes if it is lit and transparent,
 //! so light never bleeds across walls or into unseen or remembered cells, and walls show their own
@@ -22,6 +26,7 @@
 //! shader: change both together.
 
 use super::grid::MapGrid;
+use super::shadows::Shadows;
 use super::{ConsoleHandles, ConsoleMaterial, Effects, VisualTime};
 use crate::game::Game;
 use bevy::prelude::*;
@@ -73,6 +78,7 @@ impl Plugin for LightingPlugin {
     fn build(&self, app: &mut App) {
         load_shader_library!(app, "lighting.wesl");
         app.init_resource::<VisualLight>()
+            .init_resource::<Shadows>()
             .add_systems(PostUpdate, upload.before(super::upload));
     }
 }
@@ -111,11 +117,13 @@ pub struct VisualLight {
 }
 
 impl VisualLight {
-    /// Recomputes the light of the `size` cells from level position `origin` on. `time` is the
-    /// visual time for flicker, `None` for steady light (flicker off).
+    /// Recomputes the light of the `size` cells from level position `origin` on, with creature
+    /// `shadows` (computed from the same `view`). `time` is the visual time for flicker, `None`
+    /// for steady light (flicker off).
     pub fn composite(
         &mut self,
         view: &PerceptionView<'_>,
+        shadows: &Shadows,
         origin: IVec2,
         size: UVec2,
         time: Option<f32>,
@@ -148,18 +156,24 @@ impl VisualLight {
                 flickers[i] = Vec2::splat(ambient.element_sum());
             }
         }
+        // The light creature shadows take away: not drawn, but kept apart from `sums`, which
+        // darkvision measures (its glow would otherwise brighten shadows).
+        let mut shaded = vec![Vec4::ZERO; n];
         for source in view.light_sources() {
             let gain = match (time, &content.light(source.preset).flicker) {
                 (Some(time), Some(f)) => flicker(source.key, f, time),
                 _ => 1.0,
             };
+            let shadows = shadows.of(source.key);
             for &(p, light) in &source.contributions {
                 if let Some(i) = index(p)
                     && flags[i] & LIT != 0
                 {
                     let light = light_vec(light);
+                    let shade = light * (1.0 - shadows.keep(p));
                     sums[i] += light;
-                    flickers[i] += Vec2::new(gain, 1.0) * light.element_sum();
+                    shaded[i] += shade;
+                    flickers[i] += Vec2::new(gain, 1.0) * (light - shade).element_sum();
                 }
             }
         }
@@ -173,7 +187,8 @@ impl VisualLight {
                     return CellLight::DARK;
                 }
                 let sum = sums[i];
-                let rgb = sum.truncate() + UV_TINT * sum.w;
+                let drawn = sum - shaded[i];
+                let rgb = drawn.truncate() + UV_TINT * drawn.w;
                 let flicker = flickers[i];
                 let gain = if flicker.y > 0.0 {
                     flicker.x / flicker.y
@@ -390,12 +405,13 @@ pub fn update(
     grid: Res<MapGrid>,
     visual: Res<VisualTime>,
     effects: Res<Effects>,
+    shadows: Res<Shadows>,
     mut light: ResMut<VisualLight>,
 ) {
     let view = game.world.perception();
     let size = UVec2::new(grid.console.cols(), grid.console.rows()) + 2 * MARGIN as u32;
     let time = effects.flicker.then_some(visual.seconds);
-    light.composite(&view, grid.level_origin - MARGIN, size, time);
+    light.composite(&view, &shadows, grid.level_origin - MARGIN, size, time);
 }
 
 /// Writes the visual light into the map material's light textures when it changed.
@@ -442,6 +458,7 @@ fn upload(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::render::shadows::{KEEP, REACH};
     use std::sync::Arc;
     use warlock_core::World;
     use warlock_core::content::Content;
@@ -628,17 +645,30 @@ mod tests {
 
     fn whole_level(world: &World, time: Option<f32>) -> VisualLight {
         let view = world.perception();
+        composite_level(&view, &Shadows::compute(&view), time)
+    }
+
+    fn composite_level(
+        view: &PerceptionView<'_>,
+        shadows: &Shadows,
+        time: Option<f32>,
+    ) -> VisualLight {
         let mut light = VisualLight::default();
         let size = UVec2::new(view.width() as u32, view.height() as u32);
-        light.composite(&view, IVec2::ZERO, size, time);
+        light.composite(view, shadows, IVec2::ZERO, size, time);
         light
+    }
+
+    fn center(p: Pos) -> Vec2 {
+        Vec2::new(p.x as f32 + 0.5, p.y as f32 + 0.5)
     }
 
     #[test]
     fn composited_light_is_the_perceived_light() {
+        // Without creature shadows, which are visual only.
         let world = showcase(&[]);
         let view = world.perception();
-        let light = whole_level(&world, Some(1.7));
+        let light = composite_level(&view, &Shadows::default(), Some(1.7));
         assert!(light.dirty);
         let mut lit = 0;
         for y in 0..view.height() {
@@ -673,8 +703,43 @@ mod tests {
         steady.dirty = false;
         let view = world.perception();
         let size = steady.size;
-        steady.composite(&view, IVec2::ZERO, size, None);
+        steady.composite(&view, &Shadows::compute(&view), IVec2::ZERO, size, None);
         assert!(!steady.dirty, "unchanged light is not uploaded again");
+    }
+
+    #[test]
+    fn creatures_shade_the_light_behind_them() {
+        // The player in the start room, between its torches: cells right behind the player (seen
+        // from a torch) get less light, nothing gets more, and the player's own cell keeps it all.
+        let world = showcase(&[]);
+        let view = world.perception();
+        let player = view.viewer();
+        let shaded = whole_level(&world, None);
+        let plain = composite_level(&view, &Shadows::default(), None);
+        let mut darker = 0;
+        for &p in view
+            .light_sources()
+            .iter()
+            .flat_map(|s| &s.contributions)
+            .map(|(p, _)| p)
+        {
+            let (a, b) = (shaded.sample(center(p)), plain.sample(center(p)));
+            let (a, b) = (a.expect("lit").rgb, b.expect("lit").rgb);
+            assert!(a.cmple(b + 1e-6).all(), "{p}: {a} > {b}");
+            if a.element_sum() < b.element_sum() - 1e-4 {
+                assert!(
+                    (p.dist2(player) as f32) < REACH * REACH,
+                    "{p} is near the player"
+                );
+                assert!(
+                    a.element_sum() >= KEEP * b.element_sum() - 1e-4,
+                    "never black: {p}"
+                );
+                darker += 1;
+            }
+        }
+        assert!(darker > 0, "the player casts shadows");
+        assert_eq!(shaded.sample(center(player)), plain.sample(center(player)));
     }
 
     #[test]
@@ -692,10 +757,8 @@ mod tests {
         assert_eq!(light.sample(Vec2::new(5.5, 10.5)), None);
     }
 
-    #[test]
-    fn darkvision_fades_cells_seen_in_the_dark() {
-        // In the darkness chamber with darkvision and no lantern: the cells around the player are
-        // seen only through darkvision, greyer and dimmer toward the edge of the radius.
+    /// In the darkness chamber with darkvision and no lantern, at (37, 7).
+    fn darkness_chamber() -> World {
         let actions = format!(
             "{} {} {} vision:darkvision",
             "move:N ".repeat(6),
@@ -703,7 +766,14 @@ mod tests {
             "move:N ".repeat(4)
         );
         let actions = warlock_core::action::parse_actions(&actions).expect("actions parse");
-        let world = showcase(&actions);
+        showcase(&actions)
+    }
+
+    #[test]
+    fn darkvision_fades_cells_seen_in_the_dark() {
+        // The cells around the player are seen only through darkvision, greyer and dimmer toward
+        // the edge of the radius.
+        let world = darkness_chamber();
         let view = world.perception();
         assert_eq!(view.viewer(), Pos::new(37, 7));
         let light = whole_level(&world, None);
@@ -718,5 +788,30 @@ mod tests {
         assert!(near.saturation < 1.0 && far.saturation < near.saturation);
         assert!(far.rgb.min_element() > 0.0, "the glow lights darkness");
         assert!(far.rgb.x < near.rgb.x, "and fades with distance");
+    }
+
+    #[test]
+    fn shadows_darken_cells_seen_through_darkvision() {
+        // Darkvision's glow follows the perceived light, not the shadows, so shading the faint
+        // fungus light around the player never makes a cell brighter.
+        let world = darkness_chamber();
+        let view = world.perception();
+        let everywhere = Shadows::from_cells(view.light_sources().iter().map(|s| {
+            let cells = s.contributions.iter().map(|(p, _)| (*p, KEEP)).collect();
+            (s.key, cells)
+        }));
+        let plain = composite_level(&view, &Shadows::default(), None);
+        let shaded = composite_level(&view, &everywhere, None);
+        let mut darker = 0;
+        for &(p, _) in view.light_sources().iter().flat_map(|s| &s.contributions) {
+            if !view.light(p).is_some_and(|l| l.darkvision) {
+                continue;
+            }
+            let a = shaded.sample(center(p)).expect("lit").rgb;
+            let b = plain.sample(center(p)).expect("lit").rgb;
+            assert!(a.cmple(b + 1e-6).all(), "{p}: {a} > {b}");
+            darker += usize::from(a.element_sum() < b.element_sum() - 1e-6);
+        }
+        assert!(darker > 0);
     }
 }
