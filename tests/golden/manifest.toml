@@ -107,3 +107,17 @@ name = "vast-level"
 scenario = "vast"
 actions = "wait"
 window = "1280x720"
+
+# The vast level's river (running water flowing south and south-west, boulders) by lantern light,
+# at a lamp on its east bank (251,181), walked to from the start.
+[[golden]]
+name = "vast-river"
+scenario = "vast"
+actions = '''
+move:NE*4 move:E move:NE*2 move:N move:NE*12 move:E*2 move:NE*3 move:E move:SE*5 move:E move:SE*2
+move:E*2 move:SE*3 move:E*2 move:NE*2 move:SE move:E*3 move:SE*15 move:S move:SE move:E*6 move:SE*3
+move:E*4 move:NE move:E move:SE*7 move:E move:S move:E*2 move:NE move:SE*5 move:E*4 move:SE*8 move:S
+move:SE move:E*7 move:NE*2 move:SE*5 move:E*8 move:SE*9 move:E*2 move:NE move:E*2 move:NE*4 move:E*2
+move:SE*2 move:E*2 move:NE move:E*4 move:NE*4 move:E move:NE move:E move:NE*3 move:SE*2 lantern
+'''
+window = "1280x720"

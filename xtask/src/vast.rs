@@ -1,12 +1,12 @@
 //! `cargo xtask gen-vast`: deterministic generator for `assets/levels/vast.toml` (spec §3 Level 2).
 //!
-//! Pipeline: cellular-automata caverns, keep the largest connected cave, carve a winding shallow
-//! river, scatter pillars, stamp walled rooms with doors (joined to the caves by a dug corridor),
-//! place the stairs (up to the hub, and beside them down into the generated `depths` branch) and
-//! player start, drop everything unreachable, then place patrolling
-//! creatures whose routes go out along walkable cells and return along the same path, and finally
-//! lights (lamps and glowing fungus). Uses its own
-//! SplitMix64 so the output never depends on the game's RNG or on platform float behavior.
+//! Pipeline: cellular-automata caverns, keep the largest connected cave, carve a winding river of
+//! running water (its flow follows the channel south; a few boulders break it), scatter pillars,
+//! stamp walled rooms with doors (joined to the caves by a dug corridor), place the stairs (up to
+//! the hub, and beside them down into the generated `depths` branch) and player start, drop
+//! everything unreachable, then place patrolling creatures whose routes go out along walkable
+//! cells and return along the same path, and finally lights (lamps and glowing fungus). Uses its
+//! own SplitMix64 so the output never depends on the game's RNG or on platform float behavior.
 
 use std::collections::{BTreeMap, VecDeque};
 use std::fmt::Write as _;
@@ -14,6 +14,10 @@ use std::fmt::Write as _;
 pub const WIDTH: usize = 420;
 pub const HEIGHT: usize = 300;
 const SEED: u64 = 0x5741_524c_4f43_4b15;
+/// Seed of the boulders' own stream, so placing them leaves the rest of the level as it was.
+const BOULDER_SEED: u64 = 0x426f_756c_6465_7273;
+/// Percent of the river's rows that get a boulder, where the river is wide enough.
+const BOULDER_ROWS: usize = 8;
 const ROOM_ATTEMPTS: usize = 60;
 const ROOMS: usize = 8;
 const CREATURES: usize = 16;
@@ -191,11 +195,14 @@ fn caverns(rng: &mut SplitMix64) -> Map {
     map
 }
 
-/// A winding north-south river of shallow water with a floor bank carved where rock would hug it.
-fn river(map: &mut Map, rng: &mut SplitMix64) {
+/// A winding north-south river of running water with a floor bank carved where rock would hug it.
+/// Returns the flow of each river cell (see [`flow_arrows`]).
+fn river(map: &mut Map, rng: &mut SplitMix64) -> Vec<Option<char>> {
     let mut cx = (WIDTH * 11 / 20) as i32;
     let mut vx = 0i32;
     let mut half = 1i32;
+    // Each row and the center of its channel.
+    let mut rows = Vec::with_capacity(HEIGHT);
     for y in 1..HEIGHT as i32 - 1 {
         if rng.percent(18) {
             vx = (vx + rng.range(0, 2) as i32 - 1).clamp(-1, 1);
@@ -216,7 +223,63 @@ fn river(map: &mut Map, rng: &mut SplitMix64) {
                 map.set(bank, y, FLOOR);
             }
         }
+        rows.push((y, cx));
     }
+    let flow = flow_arrows(map, &rows);
+    boulders(map);
+    flow
+}
+
+/// Boulders in the river (rock): the water right above one runs into it, where it foams. Only
+/// where the river is wide, on water with water on all four sides, so the river stays connected,
+/// no corridor or room ever reaches one before reaching the water around it, and later passes
+/// behave as without them.
+fn boulders(map: &mut Map) {
+    let mut rng = SplitMix64(BOULDER_SEED);
+    for y in 4..HEIGHT as i32 - 4 {
+        if !rng.percent(BOULDER_ROWS) {
+            continue;
+        }
+        let open = |m: &Map, x: i32, y: i32| {
+            let water = |dx: i32, dy: i32| m.get(x + dx, y + dy) == WATER;
+            water(0, 0)
+                && CARDINALS.iter().all(|(dx, dy, _)| water(*dx, *dy))
+                && (water(-2, 0) || water(2, 0))
+        };
+        let spots: Vec<i32> = (0..WIDTH as i32).filter(|&x| open(map, x, y)).collect();
+        if !spots.is_empty() {
+            let x = spots[rng.below(spots.len())];
+            map.set(x, y, WALL);
+        }
+    }
+}
+
+/// The river flows south: each cell of a row toward where the channel continues in the next row
+/// (`↓`, or `↘` / `↙` where it steps sideways); a cell at the edge with no water there turns
+/// toward water below it (where the channel narrows). The last row runs into the rock at the
+/// bottom of the map. The arrows are running water in the default legend
+/// (`assets/data/legend.toml`).
+fn flow_arrows(map: &Map, rows: &[(i32, i32)]) -> Vec<Option<char>> {
+    let mut flow = vec![None; WIDTH * HEIGHT];
+    for (i, &(y, cx)) in rows.iter().enumerate() {
+        let step = rows.get(i + 1).map_or(0, |&(_, next)| next - cx);
+        for x in 0..WIDTH as i32 {
+            if map.get(x, y) != WATER {
+                continue;
+            }
+            let ahead = |dx: i32| map.get(x + dx, y + 1) == WATER;
+            let dx = [step, 0, -1, 1]
+                .into_iter()
+                .find(|dx| ahead(*dx))
+                .unwrap_or(step);
+            flow[y as usize * WIDTH + x as usize] = Some(match dx {
+                -1 => '↙',
+                1 => '↘',
+                _ => '↓',
+            });
+        }
+    }
+    flow
 }
 
 fn pillars(map: &mut Map, rng: &mut SplitMix64) {
@@ -450,7 +513,7 @@ fn lights(
 pub fn generate() -> Result<String, String> {
     let mut rng = SplitMix64(SEED);
     let mut map = caverns(&mut rng);
-    river(&mut map, &mut rng);
+    let flow = river(&mut map, &mut rng);
     pillars(&mut map, &mut rng);
     let rooms = rooms(&mut map, &mut rng);
 
@@ -529,7 +592,8 @@ pub fn generate() -> Result<String, String> {
          # `cargo xtask gen-vast --check` fails when this file is stale.\n\
          # Spec §3 Level 2: caverns, a winding river, pillars, walled rooms with doors, patrols,\n\
          # and many lights: hanging lamps (*) and glowing fungus (,); no ambient light.\n\
-         # Beside the stairs up to the hub, stairs down (>) lead into the generated depths.\n",
+         # Beside the stairs up to the hub, stairs down (>) lead into the generated depths.\n\
+         # The river is running water drawn as arrows the way it flows (data/legend.toml).\n",
     );
     out.push_str("name = \"The Vast Caverns\"\nmap = '''\n");
     // Rock that touches open ground is a visible wall; deeper rock stays void. The final cell is
@@ -543,6 +607,7 @@ pub fn generate() -> Result<String, String> {
             row.push(match c {
                 WALL if touches_open || (y == HEIGHT as i32 - 1 && x == WIDTH as i32 - 1) => '#',
                 WALL => ' ',
+                WATER => flow[y as usize * WIDTH + x as usize].unwrap_or('~'),
                 other => other as char,
             });
         }
@@ -586,5 +651,20 @@ mod tests {
         let targets: Vec<_> = level.stairs.iter().map(|s| s.to.as_deref()).collect();
         assert_eq!(targets, [Some("depths:1"), Some("hub")]);
         assert!(level.lights.len() >= 150, "{} lamps", level.lights.len());
+        // The river is running water flowing south, with boulders for it to foam against.
+        use warlock_core::Dir;
+        assert!(level.flow.len() > 1000, "{} river cells", level.flow.len());
+        assert!(
+            level
+                .flow
+                .values()
+                .all(|f| matches!(f.dir, Dir::S | Dir::SE | Dir::SW) && f.speed == 100)
+        );
+        let blocked = level
+            .flow
+            .iter()
+            .filter(|(p, f)| !level.flow.contains_key(&p.step(f.dir)))
+            .count();
+        assert!(blocked >= 5, "{blocked} cells run into rock");
     }
 }

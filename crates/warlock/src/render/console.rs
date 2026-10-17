@@ -24,17 +24,24 @@ impl Cell {
     };
 }
 
-/// In-cell animation of one console cell, as stored in the per-cell animation texture.
+/// In-cell animation of one console cell, as stored in the per-cell animation texture (and, for
+/// `flow`, the spare byte of the glyph texture).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct CellAnim {
     /// Entry in the grid animation table plus one; 0 is still.
     pub entry: u8,
     /// Phase in 1/256 cycles.
     pub phase: u8,
+    /// Running water's flow on this cell ([`super::anim::flow_byte`]); 0 is none.
+    pub flow: u8,
 }
 
 impl CellAnim {
-    pub const STILL: CellAnim = CellAnim { entry: 0, phase: 0 };
+    pub const STILL: CellAnim = CellAnim {
+        entry: 0,
+        phase: 0,
+        flow: 0,
+    };
 }
 
 /// Visual effects of one console cell (spec §4.8), stored next to its animation.
@@ -232,7 +239,11 @@ mod tests {
     fn animation_follows_the_cell() {
         let mut c = Console::default();
         c.resize(2, 1);
-        let wave = CellAnim { entry: 1, phase: 9 };
+        let wave = CellAnim {
+            entry: 1,
+            phase: 9,
+            flow: 0,
+        };
         c.put(0, 0, Cell::BLANK);
         c.animate(0, 0, wave);
         assert_eq!(c.anims()[0], wave);

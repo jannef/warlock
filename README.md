@@ -21,7 +21,8 @@ procedurally generated dungeon levels below it.
 
 - **Perception and memory** — symmetric line of sight; explored terrain stays as dim memory, never
   showing creatures or current light.
-- **Living glyphs and effects** — rippling water, a pulsing altar, flickering torches, sparks and
+- **Living glyphs and effects** — still ponds that glint in the torchlight, streams and a river
+  that visibly flow and foam against rocks, a pulsing altar, flickering torches, sparks and
   embers, a soft glow, heat haze over braziers, short fades. All of it is tunable per effect, and
   a reduced-effects preset turns it off.
 

@@ -2,24 +2,29 @@
 //! the grid shader reads.
 //!
 //! Everything here is a pure function of visual time, so `--freeze-time` makes frames
-//! reproducible. Animation that stays inside its cell (`wave`, `shimmer`, `cycle`) runs in the grid
-//! shader (`console.wesl`, which mirrors the curves below) from per-cell data. The free-glyph layer
-//! evaluates the same curves on the CPU ([`evaluate`]) for creatures and for `pulse`, which grows
-//! beyond its cell.
+//! reproducible. Animation that stays inside its cell (`wave`, `flow`, `shimmer`, `cycle`) runs in
+//! the grid shader (`console.wesl`, which mirrors the curves below) from per-cell data. The
+//! free-glyph layer evaluates the same curves on the CPU ([`evaluate`]) for creatures and for
+//! `pulse`, which grows beyond its cell.
+//!
+//! Water (still water is a `wave`, running water a `flow`, either may glint) is in
+//! [`super::water`].
 
 use super::console::CellAnim;
+use super::water::flow_byte;
 use crate::settings::{Palette, Role};
 use bevy::prelude::*;
 use bevy::render::render_resource::ShaderType;
 use std::f32::consts::{PI, TAU};
 use warlock_core::Pos;
 use warlock_core::color::Rgb;
-use warlock_core::content::{Content, GlyphAnim, TerrainId};
+use warlock_core::content::{Content, Flow, GlyphAnim, TerrainId};
 
 /// Shader kind of a grid animation (`GridAnim::kind`); 0 means static.
 const KIND_WAVE: u32 = 1;
 const KIND_SHIMMER: u32 = 2;
 const KIND_CYCLE: u32 = 3;
+const KIND_FLOW: u32 = 4;
 
 /// Most animated terrain types the grid shader can tell apart.
 pub const MAX_GRID_ANIMS: usize = 32;
@@ -43,10 +48,15 @@ const LUB: (f32, f32) = (0.10, 0.10);
 const DUB: (f32, f32) = (0.32, 0.10);
 const DUB_HEIGHT: f32 = 0.6;
 
-/// A well-mixed 32-bit hash of a grid position, identical on every platform.
+/// A well-mixed 32-bit hash of a grid position, identical on every platform. Mirrored in
+/// `console.wesl`.
 pub fn cell_hash(p: Pos) -> u32 {
-    let mut h = (p.x as u32).wrapping_mul(0x8da6_b343) ^ (p.y as u32).wrapping_mul(0xd816_3841);
-    // MurmurHash3 finalizer.
+    scramble((p.x as u32).wrapping_mul(0x8da6_b343) ^ (p.y as u32).wrapping_mul(0xd816_3841))
+}
+
+/// The MurmurHash3 finalizer: mixes every bit of `h` into every bit of the result. Mirrored in
+/// `console.wesl`.
+pub fn scramble(mut h: u32) -> u32 {
     h ^= h >> 16;
     h = h.wrapping_mul(0x85eb_ca6b);
     h ^= h >> 13;
@@ -146,9 +156,11 @@ impl AnimFrame {
 pub fn evaluate(anim: &GlyphAnim, time: f32, phase: f32) -> AnimFrame {
     let mut frame = AnimFrame::STILL;
     match anim {
-        GlyphAnim::Wave { speed, amount } => {
+        GlyphAnim::Wave { speed, amount, .. } => {
             frame.offset = wave_offset(time, *speed, *amount, phase);
         }
+        // Running water is terrain in the grid; a free glyph has no flow to follow.
+        GlyphAnim::Flow { .. } => {}
         GlyphAnim::Pulse { bpm, amount } => frame.scale = pulse_scale(time, *bpm, *amount, phase),
         GlyphAnim::Shimmer { color, speed } => {
             frame.tint = Some((*color, shimmer_mix(time, *speed, phase)));
@@ -164,8 +176,14 @@ pub fn evaluate(anim: &GlyphAnim, time: f32, phase: f32) -> AnimFrame {
 /// Where a terrain type's animation runs.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TerrainAnim {
-    /// In the grid shader; the value is the table entry plus one (as stored per cell).
-    Grid { entry: u8, travelling: bool },
+    /// In the grid shader; `entry` is the table entry plus one (as stored per cell). A
+    /// `travelling` phase follows a front across the level (`wave`); a `flows` cell carries its
+    /// flow (`flow`).
+    Grid {
+        entry: u8,
+        travelling: bool,
+        flows: bool,
+    },
     /// On the free-glyph layer, because it grows beyond its cell (`pulse`).
     Free,
 }
@@ -174,15 +192,18 @@ pub enum TerrainAnim {
 #[derive(ShaderType, Clone, Copy, Debug, Default, PartialEq)]
 pub struct GridAnim {
     pub kind: u32,
-    /// Cycles per second (`wave`, `shimmer`) or frames per second (`cycle`).
+    /// Cycles per second (`wave`, `shimmer`), frames per second (`cycle`), or cells per second
+    /// (`flow`).
     pub speed: f32,
-    /// Sway in cell widths (`wave`).
+    /// Sway in cell widths (`wave`) or how far a ripple drifts, in cell widths (`flow`).
     pub amount: f32,
     pub frame_count: u32,
     /// Target color, linear RGB (`shimmer`).
     pub color: Vec4,
     /// Atlas slots of the frames, two 16-bit slots per component (`cycle`).
     pub frames: UVec4,
+    /// Glint strength, 0 to 1 (`wave`, `flow`).
+    pub glint: f32,
 }
 
 /// The grid shader's animation table (a uniform).
@@ -234,6 +255,7 @@ impl AnimTable {
                     TerrainAnim::Grid {
                         entry: next as u8,
                         travelling: gpu.kind == KIND_WAVE,
+                        flows: gpu.kind == KIND_FLOW,
                     }
                 }),
             };
@@ -247,16 +269,22 @@ impl AnimTable {
         self.terrain.get(usize::from(t.0)).copied().flatten()
     }
 
-    /// Per-cell animation data for visible terrain `t` at level position `p`.
-    pub fn cell(&self, t: TerrainId, p: Pos) -> CellAnim {
+    /// Per-cell animation data for visible terrain `t` at level position `p`, where running water
+    /// flows as `flow`.
+    pub fn cell(&self, t: TerrainId, p: Pos, flow: Option<Flow>) -> CellAnim {
         match self.terrain(t) {
-            Some(TerrainAnim::Grid { entry, travelling }) => CellAnim {
+            Some(TerrainAnim::Grid {
+                entry,
+                travelling,
+                flows,
+            }) => CellAnim {
                 entry,
                 phase: phase_byte(if travelling {
                     wave_phase(p)
                 } else {
                     cell_phase(p)
                 }),
+                flow: flow.filter(|_| flows).map_or(0, flow_byte),
             },
             _ => CellAnim::STILL,
         }
@@ -271,10 +299,21 @@ fn linear(c: Rgb) -> Vec4 {
 /// The shader form of a grid animation; `None` for animations that do nothing.
 fn grid_anim(anim: &GlyphAnim, slot: impl Fn(char) -> u16, palette: Palette) -> Option<GridAnim> {
     Some(match anim {
-        GlyphAnim::Wave { speed, amount } => GridAnim {
+        GlyphAnim::Wave {
+            speed,
+            amount,
+            glint,
+        } => GridAnim {
             kind: KIND_WAVE,
             speed: *speed,
             amount: *amount,
+            glint: *glint,
+            ..default()
+        },
+        GlyphAnim::Flow { speed, glint } => GridAnim {
+            kind: KIND_FLOW,
+            speed: *speed,
+            glint: *glint,
             ..default()
         },
         GlyphAnim::Shimmer { color, speed } => GridAnim {
@@ -421,8 +460,14 @@ mod tests {
         let wave = GlyphAnim::Wave {
             speed: 1.0,
             amount: 0.2,
+            glint: 0.0,
         };
         assert!((evaluate(&wave, 0.25, 0.0).offset.y - 0.2).abs() < 1e-5);
+        let flow = GlyphAnim::Flow {
+            speed: 1.0,
+            glint: 0.0,
+        };
+        assert_eq!(evaluate(&flow, 0.25, 0.0), AnimFrame::STILL);
         let cycle = GlyphAnim::Cycle {
             frames: "~≈".into(),
             fps: 1.0,
@@ -458,17 +503,44 @@ mod tests {
         ));
         assert_eq!(table.terrain(altar), Some(TerrainAnim::Free));
         assert_eq!(table.terrain(floor), None);
-        let cell = table.cell(water, Pos::new(4, 2));
+        let cell = table.cell(water, Pos::new(4, 2), None);
         assert!(cell.entry > 0);
-        assert_eq!(
-            table.gpu.entries[usize::from(cell.entry) - 1].kind,
-            KIND_WAVE
-        );
-        assert_eq!(table.cell(floor, Pos::new(4, 2)), CellAnim::STILL);
+        let still = table.gpu.entries[usize::from(cell.entry) - 1];
+        assert_eq!(still.kind, KIND_WAVE);
+        assert!(still.glint > 0.0, "still water glints");
+        assert_eq!(table.cell(floor, Pos::new(4, 2), None), CellAnim::STILL);
 
         let reduced = AnimTable::new(&content, |_| 7, false, Palette::Default);
         assert_eq!(reduced.terrain(water), None);
         assert_eq!(reduced.terrain(altar), None);
+    }
+
+    #[test]
+    fn running_water_cells_carry_their_flow() {
+        let content = Content::builtin().expect("built-in content loads");
+        let running = content.terrain_id("running_water").expect("running water");
+        let water = content.terrain_id("water").expect("still water");
+        let table = AnimTable::new(&content, |_| 7, true, Palette::Default);
+        assert!(matches!(
+            table.terrain(running),
+            Some(TerrainAnim::Grid { flows: true, .. })
+        ));
+        let south = Flow::new(warlock_core::Dir::S, 100);
+        let cell = table.cell(running, Pos::new(4, 2), Some(south));
+        assert_eq!(
+            table.gpu.entries[usize::from(cell.entry) - 1].kind,
+            KIND_FLOW
+        );
+        assert_eq!(cell.flow, flow_byte(south));
+        // Without a flow the water lies still; still water never carries one.
+        assert_eq!(table.cell(running, Pos::new(4, 2), None).flow, 0);
+        assert_eq!(table.cell(water, Pos::new(4, 2), Some(south)).flow, 0);
+        // Reduced effects: nothing animates, so no flow either.
+        let reduced = AnimTable::new(&content, |_| 7, false, Palette::Default);
+        assert_eq!(
+            reduced.cell(running, Pos::new(4, 2), Some(south)),
+            CellAnim::STILL
+        );
     }
 
     #[test]

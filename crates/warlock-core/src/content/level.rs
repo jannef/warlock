@@ -1,13 +1,14 @@
 //! Hand-authored level files (`assets/levels/*.toml`, spec §7).
 //!
 //! A level is a multiline ASCII `map` plus a `legend` mapping characters to terrain and to things
-//! placed on that terrain (player start, creatures with patrol routes, stair links, lights).
-//! Characters not in the level's legend fall back to the shared default legend
-//! (`assets/data/legend.toml`). An optional `ambient = [r, g, b, uv]` lights the whole level.
-//! `kind` (`dungeon`, the default, or `outdoor`) and `turn_seconds` decide how time passes on it
-//! (spec §8 "Time").
+//! placed on that terrain (player start, creatures with patrol routes, stair links, lights, the
+//! flow of running water). Characters not in the level's legend fall back to the shared default
+//! legend (`assets/data/legend.toml`, which has arrows for running water). An optional
+//! `ambient = [r, g, b, uv]` lights the whole level. `kind` (`dungeon`, the default, or
+//! `outdoor`) and `turn_seconds` decide how time passes on it (spec §8 "Time").
 
 use super::creature::CreatureId;
+use super::flow::{FLOW_SPEEDS, Flow};
 use super::light::LightId;
 use super::terrain::{StairsDir, TerrainId};
 use super::{Content, ContentError};
@@ -77,6 +78,11 @@ pub(super) struct LegendDetail {
     to: Option<String>,
     /// Light preset placed on this cell (overrides the terrain's own light).
     light: Option<String>,
+    /// Which way running water on this cell flows (presentation-only); required on terrain with
+    /// a `flow` animation and allowed nowhere else.
+    flow: Option<Dir>,
+    /// Flow speed in percent of the terrain's (default 100).
+    flow_speed: Option<u16>,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize)]
@@ -136,6 +142,8 @@ pub struct LevelTemplate {
     pub stairs: Vec<StairsLink>,
     /// Lights placed by the legend, by position.
     pub lights: BTreeMap<Pos, LightId>,
+    /// Flow of every running-water cell, by position (presentation-only).
+    pub flow: BTreeMap<Pos, Flow>,
 }
 
 /// Parses a single-character legend key.
@@ -192,6 +200,7 @@ pub(super) fn parse_level(
     let mut creatures = Vec::new();
     let mut stairs = Vec::new();
     let mut lights = BTreeMap::new();
+    let mut flow = BTreeMap::new();
 
     for (y, row) in rows.iter().enumerate() {
         for x in 0..width as usize {
@@ -209,6 +218,10 @@ pub(super) fn parse_level(
             cells.push(terrain);
 
             let detail = entry.detail();
+            let running = content.terrain(terrain).flows();
+            if let Some(f) = parse_flow(ch, entry, running, pos).map_err(err)? {
+                flow.insert(pos, f);
+            }
             if let Some(dir) = content.terrain(terrain).stairs {
                 stairs.push(StairsLink {
                     pos,
@@ -269,11 +282,50 @@ pub(super) fn parse_level(
         creatures,
         stairs,
         lights,
+        flow,
     };
     for spawn in &template.creatures {
         validate_route(&template, content, spawn).map_err(err)?;
     }
     Ok(template)
+}
+
+/// The flow a legend entry gives the cell at `pos`: required on running water, an error anywhere
+/// else.
+fn parse_flow(
+    ch: char,
+    entry: &LegendEntry,
+    running: bool,
+    pos: Pos,
+) -> Result<Option<Flow>, String> {
+    let detail = entry.detail();
+    let dir = detail.and_then(|d| d.flow);
+    let speed = detail.and_then(|d| d.flow_speed);
+    match (dir, running) {
+        (None, true) => Err(format!(
+            "running water `{}` at {pos} needs a flow direction (`flow` in legend `{ch}`)",
+            entry.terrain()
+        )),
+        (Some(_), false) => Err(format!(
+            "legend `{ch}` has `flow` but terrain `{}` is not running water",
+            entry.terrain()
+        )),
+        (None, false) if speed.is_some() => {
+            Err(format!("legend `{ch}` has `flow_speed` but no `flow`"))
+        }
+        (None, false) => Ok(None),
+        (Some(dir), true) => {
+            let speed = speed.unwrap_or(100);
+            if !FLOW_SPEEDS.contains(&speed) {
+                return Err(format!(
+                    "legend `{ch}` has `flow_speed` {speed}; expected {} to {}",
+                    FLOW_SPEEDS.start(),
+                    FLOW_SPEEDS.end()
+                ));
+            }
+            Ok(Some(Flow::new(dir, speed)))
+        }
+    }
 }
 
 /// Parses a route like `"E4 S2 W4 N2"` (count defaults to 1).

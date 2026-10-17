@@ -10,3 +10,23 @@
 ">" = "stairs_down"
 "~" = "water"
 "_" = "altar"
+
+# Running water, drawn as arrows pointing the way it flows (presentation-only; spec §7).
+# `flow` is the direction; `flow_speed` the speed in percent (default 100): double arrows run
+# twice as fast.
+"↑" = { terrain = "running_water", flow = "N" }
+"↗" = { terrain = "running_water", flow = "NE" }
+"→" = { terrain = "running_water", flow = "E" }
+"↘" = { terrain = "running_water", flow = "SE" }
+"↓" = { terrain = "running_water", flow = "S" }
+"↙" = { terrain = "running_water", flow = "SW" }
+"←" = { terrain = "running_water", flow = "W" }
+"↖" = { terrain = "running_water", flow = "NW" }
+"⇑" = { terrain = "running_water", flow = "N", flow_speed = 200 }
+"⇗" = { terrain = "running_water", flow = "NE", flow_speed = 200 }
+"⇒" = { terrain = "running_water", flow = "E", flow_speed = 200 }
+"⇘" = { terrain = "running_water", flow = "SE", flow_speed = 200 }
+"⇓" = { terrain = "running_water", flow = "S", flow_speed = 200 }
+"⇙" = { terrain = "running_water", flow = "SW", flow_speed = 200 }
+"⇐" = { terrain = "running_water", flow = "W", flow_speed = 200 }
+"⇖" = { terrain = "running_water", flow = "NW", flow_speed = 200 }

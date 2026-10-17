@@ -52,12 +52,13 @@ regression scene for golden screenshots, replays, and snapshot tests.
 | Patrol gallery | creatures moving in and out of view, never shown in memory | M2 |
 | Light hall | colored lights, falloff, pillar and creature shadows, flicker | M3, M8 |
 | Darkness chamber | vision types, a UV-only rune, darkvision fade | M3 |
-| Water garden | rippling water, pulsing altar, shimmer | M4 |
+| Water garden | still ponds and running rills (flow, glints, foam), pulsing altar | M4, M8 |
 | Effects room | glyph particles, glow, fades, distortion | M4 |
 | Stairs | connection to Level 2 | M2 |
 
 **Level 2 — Vast (≥ 400×300)**: scrolling camera, many light sources, performance budget check.
 Introduced in M2, lit in M3. Beside its stairs up to the hub, stairs down lead into the depths.
+A river of running water winds through it from north to south, foaming against a few boulders.
 
 **The Depths (generated, M6)**: a dungeon branch of eight procedurally generated levels
 (`depths:1` to `depths:8`; rooms and corridors at 80×21, caverns at 120×60 on depths 3–5) built
@@ -87,7 +88,8 @@ Rendering is viewport-based: drawing cost does not depend on level size.
 
 ### 4.3 Glyph animation
 Declared in data per terrain or entity type:
-- `wave` — ripple, e.g. water `~` swaying gently, with waves travelling across a pool
+- `wave` — ripple, e.g. still water `~` swaying gently, with waves travelling across a pool
+- `flow` — running water: the glyph moves downstream along the cell's flow (§7)
 - `pulse` — heartbeat-style "lub-dub" grow/shrink
 - `shimmer` — color oscillation
 - `cycle` — glyph frame sequence, e.g. `~` ↔ `≈`
@@ -95,6 +97,24 @@ Declared in data per terrain or entity type:
 Each cell gets its own phase from a hash of its position, so neighbors never move in lockstep.
 Animation that stays inside the cell runs in the grid shader; animation that exceeds the cell (a
 pulse above 1.0 scale) uses the free-glyph layer.
+
+Water is calm by design; motion stays tasteful, never busy:
+- **Still water** (pools, ponds, the water garden, cave pools) is a `wave` with a faint, slow
+  swell (a pixel or so), and **glints** (`glint`, 0–1, on `wave` and `flow`): now and then, at a
+  random moment of each cell's own cycle (about one glint every 20 s per cell, under a second
+  long), the glyph brightens a little in the color of the light on it, flicker included. Dark
+  water never glints; the glints are reflections of nearby lights.
+- **Running water** (rivers, streams) is a `flow`. Each cell has a flow direction (8 ways) and
+  speed (§7). The shader draws the glyph as a pattern repeating every cell and moves it
+  downstream at the terrain's `speed` (cell widths per second) times the cell's flow speed, so
+  ripples leave a cell on one side and enter the next, and a stream reads as one moving surface;
+  faster water visibly runs faster. Neighbors with the same flow line up seamlessly; where the
+  direction or speed changes along a stream the two patterns meet at a seam, so streams keep an
+  even speed along their length. Where the flow runs into something that is not running water —
+  a bank, a boulder, a pool — sparse foam particles (`obstacle` emitters, §4.8) appear.
+- Flow is presentation data like the animations: gameplay never reads it (currents may come
+  later). With glyph animation off, water is still and never glints; with particles off, nothing
+  foams.
 
 ### 4.4 Visual lighting
 - Derived from gameplay light (§5), plus visual-only modulation: flicker, creature shadows, and
@@ -167,8 +187,11 @@ glow, barely perceptible distortion, short fades.
   particle's life, a lifetime, velocity ± spread, gravity, a start offset and spawn area, sideways
   sway, scale, fade-out, and glow. Emitters fire `ambient` (a steady rate while the source is in
   view: sparks over braziers and torches, embers over lava, fountain spray, dust motes), on `step`
-  (a burst when a creature is seen entering the cell: a splash in water), or on `toggle` (a burst
-  when a door is seen opening or closing: dust). Creature emitters move with the creature.
+  (a burst when a creature is seen entering the cell: a splash in water), on `toggle` (a burst
+  when a door is seen opening or closing: dust), or at an `obstacle` (a steady rate from visible
+  running water whose flow runs into a known cell that is not running water: foam at banks and
+  boulders, ripples where a stream enters a pool; the emitter is turned with the flow, its `y`
+  pointing downstream). Creature emitters move with the creature.
 - Particles are a pure function of visual time and a seed (the source's cell or identity, or the
   event) through a visual-only RNG, so they never depend on frame rate or gameplay randomness. Only
   visible cells, seen creatures, and perceived events emit; particles over cells that are not
@@ -331,11 +354,23 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   creature = "rat"
   path = [[12, 3], [20, 3], [20, 8]]
   ```
+- **Water**: `~` is still water (`water`). Running water (`running_water`, terrain with a `flow`
+  animation) needs a flow on every cell, given by its legend entry: `flow` (the direction it runs,
+  `N` … `NW`) and an optional `flow_speed` (percent of the terrain's animation speed, 10–300,
+  default 100). The shared legend (`data/legend.toml`) draws running water as arrows pointing the
+  way it flows: `↑ ↗ → ↘ ↓ ↙ ← ↖` at normal speed and `⇑ ⇗ ⇒ ⇘ ⇓ ⇙ ⇐ ⇖` at double speed, so a
+  stream reads in the map file as it flows, e.g. `~~~←←←~~~`. A `flow` on any other terrain, or
+  running water without one, is a content error. Levels carry their flow into the game (saved with
+  the level; generated levels get theirs from vaults); like animation it is presentation data that
+  no rule reads. The vast level's generator derives the river's flow from its channel: each row
+  runs toward where the channel continues in the next row, edge cells turn toward water below them
+  where the channel narrows, and a few boulders (from their own random stream, so the rest of the
+  level is unchanged) stand in the wide stretches for the water to foam against.
 - **Definitions** (TOML): terrain types, light presets, vision profiles, glyph animations, and
   effects (glow, heat haze, particle emitters; §4.8). Terrain has a `move_cost`: the time to step
-  onto it in percent of the level's turn (default 100; shallow water 200), and a `bounce` tint
-  for the light it reflects (§5). The calendar's month names are `data/calendar.toml` (exactly 12;
-  without the file months are numbered).
+  onto it in percent of the level's turn (default 100; still and running water 200), and a
+  `bounce` tint for the light it reflects (§5). The calendar's month names are
+  `data/calendar.toml` (exactly 12; without the file months are numbered).
 - **Dungeon branches** (`data/dungeons.toml`): stacks of generated levels, e.g.
   `{ id = "depths", generator = "rooms", depth = 8, size = [80, 21] }`, plus optional name,
   patrolling creature kinds, ambient light, and per-depth overrides of generator and size. Stairs
@@ -346,7 +381,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 - **Generators** (`warlock-core`, integer-only): *rooms* — walled rooms joined along a minimum
   spanning tree plus a few loops by corridors dug as cheapest paths (bends cost extra), with closed
   doors, open doors, or doorways where corridors enter, and wall torches in most rooms; *caves* —
-  cellular automata (45 % rock, five 4-5 smoothing passes, largest cave kept), pools of water,
+  cellular automata (45 % rock, five 4-5 smoothing passes, largest cave kept), pools of still water,
   lamps and glowing fungus. Both place the up staircase (the arrival point) and the down staircase
   far from it, and a few creatures on looping patrols. Every level is validated by flood fill —
   every stair, door, and walkable cell reachable from the up staircase, patrols valid, some light

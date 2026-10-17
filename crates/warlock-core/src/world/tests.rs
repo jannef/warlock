@@ -357,3 +357,36 @@ fn inconsistent_state_is_rejected() {
         Err(WorldError::InconsistentState(_))
     ));
 }
+
+#[test]
+fn flow_is_perceived_only_on_visible_running_water() {
+    let mut files = ContentFiles::builtin();
+    files.insert(
+        "levels/stream.toml",
+        "name = \"Stream\"\nambient = [255, 255, 255, 0]\nmap = '''\n\
+         #########\n#@.↓#.↓.#\n#..↓+.↓.#\n#########\n'''\n\
+         [legend]\n\"@\" = { terrain = \"floor\", spawn = \"player\" }\n",
+    );
+    files.insert(
+        "scenarios/stream.toml",
+        "name = \"S\"\nstart_level = \"stream\"\n",
+    );
+    let content = Content::load(&files).expect("content loads");
+    let mut w = World::new(Arc::new(content), "stream", None).expect("world");
+    let south = crate::content::Flow::new(Dir::S, 100);
+    let view = w.perception();
+    assert_eq!(view.flow(Pos::new(3, 1)), Some(south));
+    assert_eq!(view.flow(Pos::new(2, 1)), None, "floor does not flow");
+    assert_eq!(view.flow(Pos::new(6, 1)), None, "behind the closed door");
+    // Seen once, then out of sight again: remembered running water has no flow.
+    w.apply(&Action::Move(Dir::SE));
+    w.apply(&Action::Move(Dir::E));
+    w.apply(&Action::Open(Dir::E));
+    assert_eq!(w.perception().flow(Pos::new(6, 2)), Some(south));
+    w.apply(&Action::Close(Dir::E));
+    assert!(matches!(
+        w.perception().cell(Pos::new(6, 2)),
+        CellView::Remembered(_)
+    ));
+    assert_eq!(w.perception().flow(Pos::new(6, 2)), None);
+}

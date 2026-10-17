@@ -1,7 +1,7 @@
 //! Per-level mutable state: terrain as it is now, and what the player remembers of it.
 
 use crate::content::{
-    Content, LevelKind, LevelTemplate, LightId, StairsLink, TerrainDef, TerrainId,
+    Content, Flow, LevelKind, LevelTemplate, LightId, StairsLink, TerrainDef, TerrainId,
 };
 use crate::geom::Pos;
 use crate::grid::Grid;
@@ -28,8 +28,11 @@ pub struct LevelState {
     pub(crate) memory: Grid<Option<TerrainId>>,
     pub(crate) stairs: Vec<StairsLink>,
     /// Lights placed on cells (overriding the terrain's own light), by position.
-    #[serde(with = "placed_lights")]
+    #[serde(with = "by_pos")]
     pub(crate) lights: BTreeMap<Pos, LightId>,
+    /// Flow of running water, by position. Presentation-only: no rule reads it.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) flow: BTreeMap<Pos, Flow>,
 }
 
 impl LevelState {
@@ -46,6 +49,7 @@ impl LevelState {
             memory,
             stairs: template.stairs.clone(),
             lights: template.lights.clone(),
+            flow: template.flow.clone(),
         }
     }
 
@@ -117,23 +121,23 @@ impl LevelState {
     }
 }
 
-/// Serde adapter: JSON object keys must be strings, so placed lights are written as a list of
-/// `[{x, y}, light]` pairs in position order.
-mod placed_lights {
+/// Serde adapter: JSON object keys must be strings, so maps by position (placed lights, flow) are
+/// written as a list of `[{x, y}, value]` pairs in position order.
+mod by_pos {
     use super::*;
     use serde::{Deserializer, Serializer};
 
-    pub fn serialize<S: Serializer>(
-        lights: &BTreeMap<Pos, LightId>,
+    pub fn serialize<S: Serializer, V: Serialize>(
+        map: &BTreeMap<Pos, V>,
         s: S,
     ) -> Result<S::Ok, S::Error> {
-        s.collect_seq(lights.iter())
+        s.collect_seq(map.iter())
     }
 
-    pub fn deserialize<'de, D: Deserializer<'de>>(
+    pub fn deserialize<'de, D: Deserializer<'de>, V: Deserialize<'de>>(
         d: D,
-    ) -> Result<BTreeMap<Pos, LightId>, D::Error> {
-        let pairs: Vec<(Pos, LightId)> = Vec::deserialize(d)?;
+    ) -> Result<BTreeMap<Pos, V>, D::Error> {
+        let pairs: Vec<(Pos, V)> = Vec::deserialize(d)?;
         Ok(pairs.into_iter().collect())
     }
 }

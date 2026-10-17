@@ -265,7 +265,7 @@ fn draw_map(grid: &mut MapGrid, view: &PerceptionView<'_>, anims: &AnimTable, co
             if let CellView::Visible(t) = seen {
                 match anims.terrain(t) {
                     Some(TerrainAnim::Grid { .. }) => {
-                        grid.console.animate(sx, sy, anims.cell(t, p))
+                        grid.console.animate(sx, sy, anims.cell(t, p, view.flow(p)))
                     }
                     Some(TerrainAnim::Free) => {
                         grid.console.clear_glyph(sx, sy);

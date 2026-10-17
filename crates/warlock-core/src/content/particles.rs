@@ -20,6 +20,10 @@ pub enum ParticleTrigger {
     /// A burst of `count` particles when a cell is seen turning into this terrain (dust when a
     /// door opens or closes).
     Toggle,
+    /// Continuously, `rate` particles per second, from running water whose flow runs into
+    /// anything but running water: foam at a bank, ripples where a stream enters a pool. The
+    /// emitter is turned with the flow: its `y` points downstream.
+    Obstacle,
 }
 
 /// A source of glyph particles on a terrain or creature type. Positions are in cells: x right,
@@ -33,7 +37,7 @@ pub struct ParticleEmitter {
     pub glyphs: String,
     /// Color over the particle's life: evenly spaced stops from birth to death.
     pub colors: Vec<Rgb>,
-    /// Particles per second (`ambient`).
+    /// Particles per second (`ambient`, `obstacle`).
     #[serde(default)]
     pub rate: f32,
     /// Particles per burst (`step`, `toggle`).
@@ -116,6 +120,9 @@ impl ParticleEmitter {
         match self.on {
             ParticleTrigger::Ambient if self.rate <= 0.0 => {
                 Err("ambient particles need a positive `rate`".into())
+            }
+            ParticleTrigger::Obstacle if self.rate <= 0.0 => {
+                Err("obstacle particles need a positive `rate`".into())
             }
             ParticleTrigger::Step | ParticleTrigger::Toggle if self.count == 0 => {
                 Err("particle bursts need a positive `count`".into())
