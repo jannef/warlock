@@ -8,6 +8,7 @@ use crate::render::anim::{self, AnimFrame};
 use crate::render::free_glyph::{FreeGlyph, FreeGlyphs};
 use crate::render::grid::MapGrid;
 use crate::render::{Effects, VisualTime};
+use crate::settings::{Role, Settings};
 use bevy::prelude::*;
 use warlock_core::Pos;
 use warlock_core::color::Rgb;
@@ -19,11 +20,13 @@ pub(super) fn emit(
     motion: Res<Motion>,
     visual: Res<VisualTime>,
     effects: Res<Effects>,
+    settings: Res<Settings>,
     mut free: ResMut<FreeGlyphs>,
 ) {
     let view = game.world.perception();
     let content = view.content();
     let time = visual.seconds;
+    let palette = |c: Rgb| settings.palette.apply(c, Role::Fg);
     free.clip = grid.clip;
     // Terrain first, so creatures draw on top. Both are shaded by the light at their cell.
     for &(p, terrain) in &grid.free_terrain {
@@ -32,7 +35,7 @@ pub(super) fn emit(
             anim::evaluate(a, time, anim::cell_phase(p))
         });
         let at = Vec2::new(p.x as f32, p.y as f32);
-        let fg = lit(def.fg, view.light(p), TERRAIN_FLOOR);
+        let fg = lit(palette(def.fg), view.light(p), TERRAIN_FLOOR);
         free.push(glyph(&grid, at, def.glyph, fg, frame));
     }
     for actor in view.actors() {
@@ -42,7 +45,7 @@ pub(super) fn emit(
             _ => AnimFrame::STILL,
         };
         let at = motion.actor_pos(actor.id, actor.pos, time);
-        let fg = lit(def.fg, view.light(actor.pos), ACTOR_FLOOR);
+        let fg = lit(palette(def.fg), view.light(actor.pos), ACTOR_FLOOR);
         free.push(glyph(&grid, at, def.glyph, fg, frame));
     }
 }

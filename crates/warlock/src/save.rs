@@ -61,6 +61,13 @@ impl SaveStore {
         !args.new && args.capture.is_none() && args.replay.is_none() && args.record.is_none()
     }
 
+    /// Whether a run save file exists (it may still turn out to be unusable).
+    pub fn has_save(&self) -> bool {
+        self.dir
+            .as_ref()
+            .is_some_and(|d| d.join(RUN_FILE).is_file())
+    }
+
     /// Reads the run save. An unusable save is renamed to `run.sav.bad` (never deleted).
     pub fn resume(&self, content: &Arc<Content>) -> Resume {
         let Some(dir) = &self.dir else {
@@ -171,7 +178,13 @@ impl Plugin for SavePlugin {
         app.insert_resource(store)
             .init_resource::<QuitSaved>()
             .add_message::<SaveCommand>()
-            .add_systems(Update, (handle_commands, autosave).chain().after(SimSet))
+            .add_systems(
+                Update,
+                (handle_commands, autosave)
+                    .chain()
+                    .after(SimSet)
+                    .run_if(resource_exists::<Game>),
+            )
             .add_systems(Last, save_on_exit.after(ExitSystems));
     }
 }
@@ -231,10 +244,12 @@ fn autosave(store: Res<SaveStore>, mut game: ResMut<Game>, mut last: Local<Optio
 fn save_on_exit(
     mut exits: MessageReader<AppExit>,
     store: Res<SaveStore>,
-    game: Res<Game>,
+    game: Option<Res<Game>>,
     quit_saved: Res<QuitSaved>,
 ) {
-    if exits.read().count() > 0
+    // No game: the player quit from the main menu.
+    if let Some(game) = game
+        && exits.read().count() > 0
         && !quit_saved.0
         && let Err(e) = store.save_run(&game.world)
     {

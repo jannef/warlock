@@ -116,7 +116,11 @@ pulse above 1.0 scale) uses the free-glyph layer.
   around glyphs rather than over them, small distortion amplitudes.
 - A **reduced effects** setting turns off glyph animation, flicker, sliding (instant snap), camera
   easing, bloom, and distortion, and minimizes particles. No gameplay information may depend on an
-  effect. Until settings exist (M5) it is the `--reduced-effects` flag.
+  effect. It is a setting (§6); the `--reduced-effects` flag forces it on.
+- **Color palettes** (default, high contrast, a red-green colorblind variant) are transforms
+  applied when colors are written to the screen, so game data colors are never altered. UI text
+  keeps at least 4.5:1 contrast, and the UI never conveys information by color alone (selection
+  has a `>` marker, refusals start with `!`).
 
 ## 5. Visibility, light, and vision
 
@@ -180,7 +184,18 @@ rate or animation.
 - Keyboard-first. Default sets: vi-keys (`hjklyubn`), numpad, arrows (4 directions).
 - Symbol commands (`<`, `>`, `?`) are bound by **logical key**, so they work on non-US layouts.
 - Bindings live in the settings file. The `?` controls overlay is generated from the binding table,
-  so it is always accurate. A rebinding UI comes in M5.
+  so it is always accurate.
+- **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
+  `--record`, or `--capture` name what to run): Continue (only if a save exists), New run
+  (scenario list from content, optional seed), Settings, Controls, Quit.
+- **Settings** (`settings.toml` in the platform config dir; never on the web): font size (logical
+  px, 12 to 36), reduced effects, color palette, key bindings. A missing or damaged file means
+  defaults and a logged warning. Changes apply live (a font size change rebuilds the glyph atlas)
+  and are written immediately.
+- **Rebinding**: in Controls, select a command and press a key; it becomes the command's primary
+  key (alternates such as the numpad stay). A key another command uses is refused and the owner
+  is named, so the table never holds a conflict. Esc (cancel) is fixed. Delete resets a command,
+  "Reset all keys" resets everything.
 - First-phase commands: move, wait, open/close door, ascend/descend, light/douse lantern (`L`),
   look, help, save and quit (`Q`). Free actions (look, help, menus) do not advance time.
 - Screen layout: map viewport, message log, status panel (turn, position, level, light at the

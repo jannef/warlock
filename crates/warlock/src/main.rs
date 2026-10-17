@@ -8,6 +8,7 @@ mod logging;
 mod paths;
 mod render;
 mod save;
+mod settings;
 mod ui;
 mod viewport;
 
@@ -21,12 +22,29 @@ fn main() -> AppExit {
     let args = cli::Args::from_env();
     logging::init();
     logging::maybe_crash_test();
-    let game = match game::Game::start(&args) {
-        Ok(game) => game,
+    let content = match game::load_content(&args) {
+        Ok(content) => content,
         Err(err) => {
             eprintln!("warlock: {err}");
             return AppExit::error();
         }
+    };
+    let (settings_store, settings, bindings) = settings::load_for(&args);
+    // Flags that name what to run skip the menu; otherwise the game starts when the player picks.
+    let menu = args.starts_in_menu().then(|| {
+        let has_save = save::SaveStore::from_args(&args).has_save();
+        ui::Menu::new(&content, has_save, args.screen)
+    });
+    let game = if menu.is_none() {
+        match game::Game::start(&args, content.clone()) {
+            Ok(game) => Some(game),
+            Err(err) => {
+                eprintln!("warlock: {err}");
+                return AppExit::error();
+            }
+        }
+    } else {
+        None
     };
 
     let mut app = App::new();
@@ -65,14 +83,24 @@ fn main() -> AppExit {
         ));
     }
     app.insert_resource(args)
-        .insert_resource(game)
-        .add_plugins((
-            game::GamePlugin,
-            input::InputPlugin,
-            render::RenderPlugin,
-            save::SavePlugin,
-            ui::UiPlugin,
-            capture::CapturePlugin,
-        ))
-        .run()
+        .insert_resource(game::GameContent(content))
+        .insert_resource(settings)
+        .insert_resource(settings_store)
+        .insert_resource(bindings);
+    if let Some(menu) = menu {
+        app.insert_resource(menu);
+    }
+    if let Some(game) = game {
+        app.insert_resource(game);
+    }
+    app.add_plugins((
+        game::GamePlugin,
+        input::InputPlugin,
+        render::RenderPlugin,
+        save::SavePlugin,
+        settings::SettingsPlugin,
+        ui::UiPlugin,
+        capture::CapturePlugin,
+    ))
+    .run()
 }

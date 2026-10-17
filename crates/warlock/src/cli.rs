@@ -9,9 +9,10 @@ use std::path::PathBuf;
 #[derive(Debug, Clone, Parser, Resource)]
 #[command(name = "warlock", version, about = "Warlock — an ASCII roguelike")]
 pub struct Args {
-    /// Scenario to start (a file stem under `assets/scenarios/`).
-    #[arg(long, default_value = "showcase")]
-    pub scenario: String,
+    /// Scenario to start (a file stem under `assets/scenarios/`; default `showcase`). Giving it
+    /// skips the main menu.
+    #[arg(long)]
+    pub scenario: Option<String>,
 
     /// Run seed; defaults to the scenario's seed.
     #[arg(long)]
@@ -37,7 +38,8 @@ pub struct Args {
     #[arg(long)]
     pub freeze_time: Option<f32>,
 
-    /// Reduced effects: no glyph animation, no movement slides, no camera easing (spec §4.7).
+    /// Force reduced effects on: no glyph animation, no movement slides, no camera easing (spec
+    /// §4.7). The settings file can turn them on too; this flag always wins.
     #[arg(long)]
     pub reduced_effects: bool,
 
@@ -53,8 +55,7 @@ pub struct Args {
     #[arg(long)]
     pub capture: Option<PathBuf>,
 
-    /// Start a fresh run instead of resuming the saved one (the old save is overwritten on the
-    /// next save).
+    /// Skip the main menu and start a fresh run (the old save is overwritten on the next save).
     #[arg(long)]
     pub new: bool,
 
@@ -66,12 +67,39 @@ pub struct Args {
     #[arg(long)]
     pub save_dir: Option<PathBuf>,
 
+    /// Keep `settings.toml` in this directory instead of the platform config directory. Captures
+    /// and replays otherwise use default settings and never write the file.
+    #[arg(long)]
+    pub config_dir: Option<PathBuf>,
+
+    /// Dev: open the main menu on this screen (`main`, `new-run`, `settings`, `controls`), even
+    /// with `--capture`.
+    #[arg(long, value_enum)]
+    pub screen: Option<crate::ui::ScreenName>,
+
     /// Number of frames to render before taking the `--capture` screenshot.
     #[arg(long, default_value_t = 10)]
     pub capture_after_frames: u32,
 }
 
 impl Args {
+    /// The scenario to start directly.
+    pub fn scenario_name(&self) -> &str {
+        self.scenario.as_deref().unwrap_or("showcase")
+    }
+
+    /// Whether the game opens on the main menu. Flags that name what to run (`--scenario`,
+    /// `--new`, `--replay`, `--record`, `--capture`) start it directly, so dev flows and
+    /// captures need no input; `--screen` forces the menu.
+    pub fn starts_in_menu(&self) -> bool {
+        self.screen.is_some()
+            || (self.scenario.is_none()
+                && !self.new
+                && self.replay.is_none()
+                && self.record.is_none()
+                && self.capture.is_none())
+    }
+
     /// Parses the process arguments; uses defaults where there is no command line.
     pub fn from_env() -> Self {
         if cfg!(target_arch = "wasm32") {
