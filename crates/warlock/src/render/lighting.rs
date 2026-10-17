@@ -672,7 +672,10 @@ mod tests {
         let (mut stable, mut varying) = (BTreeSet::new(), BTreeSet::new());
         for source in view.light_sources() {
             let cells = source.contributions.iter().map(|(p, _)| *p);
-            if source.preset().is_none_or(|id| content.light(id).stability.is_stable()) {
+            if source
+                .preset()
+                .is_none_or(|id| content.light(id).stability.is_stable())
+            {
                 stable.extend(cells);
             } else {
                 varying.extend(cells);
