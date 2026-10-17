@@ -32,7 +32,9 @@ Game flags (`cargo run -p warlock -- --help`):
 - `--content-dir assets` — read content from disk instead of the copy built into the binary
 - `--window WxH` (physical pixels), `--scale F` (display scale; `1` for reproducible captures)
 - `--capture out.png` — render **offscreen** (no window), save a screenshot, exit.
-  `--capture-after-frames N` (default 10), `--freeze-time SECONDS` pins animation time.
+  `--capture-after-frames N` (default 10), `--freeze-time SECONDS` pins animation time (glyph
+  animations show that moment; slides and camera moves complete instantly).
+- `--reduced-effects` — no glyph animation, slides, or camera easing (until settings exist, M5).
 
 - `--replay FILE` — apply a replay at startup (its scenario/seed win; a hash divergence is logged
   as a warning), so `--capture` can screenshot any state. `--record FILE` — write every applied
@@ -81,10 +83,25 @@ Content (`assets/data`, `assets/levels`, `assets/scenarios`) is TOML, embedded i
 `warlock-core` at build time by `build.rs`. Level maps are ASCII with a legend; see
 `assets/levels/hub.toml` and spec §7.
 
-Rendering: the window is one console grid (`render/console.rs`) drawn by a single quad with a
-custom `Material2d` (`render/console.wesl`). Each fragment finds its cell from its framebuffer
-position and reads glyph coverage from the font atlas (`render/atlas.rs`) with integer texel
-addressing, so glyphs are pixel-exact. UI and the map write into the console (`ui/`).
+Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebuffer pixels:
+1. **Map grid** (`render/grid.rs`): a `Console` (`render/console.rs`) drawn by one quad with the
+   console `Material2d` (`render/console.wesl`). Each fragment finds its cell from its framebuffer
+   position and reads glyph coverage from the 1:1 font atlas (`render/atlas.rs`) with integer
+   texel addressing, so still glyphs are pixel-exact. The grid is one cell larger than the map
+   viewport and drawn behind a clip rect with a whole-pixel sub-cell offset (smooth camera). A
+   per-cell `Rgba8Uint` texture (table entry, phase byte) drives in-cell animation (`wave`,
+   `shimmer`, `cycle`) evaluated in the shader from a uniform table (`render/anim.rs`).
+2. **Free-glyph layer** (`render/free_glyph.rs` + `.wesl`): producers push `FreeGlyph`s
+   (pixel position, color/alpha, scale) each frame; they become one dynamic mesh, one draw call.
+   Glyphs at rest read the 1:1 atlas; moving or scaled ones sample a supersampled (2×, linear)
+   atlas whose slots are exactly 2× the 1:1 slots. Creatures and `pulse` terrain live here.
+3. **UI console**: the same console material over the whole window; unwritten cells are
+   transparent.
+
+`ui/` decides what is drawn from the perception snapshot: `ui/mod.rs` (UI console, map grid),
+`ui/glyphs.rs` (free glyphs), `ui/motion.rs` (slides from `Outcome.events`, camera easing; new
+input completes running motion). Animation curves live in `render/anim.rs` and are mirrored in
+`console.wesl` — change both together. Everything animated is a function of `VisualTime`.
 
 Hard rules:
 - `warlock-core` never depends on Bevy, never reads wall-clock time, and never does platform I/O

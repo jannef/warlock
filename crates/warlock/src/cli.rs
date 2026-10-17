@@ -32,9 +32,14 @@ pub struct Args {
     #[arg(long)]
     pub content_dir: Option<PathBuf>,
 
-    /// Freeze visual time at this many seconds (reproducible screenshots).
+    /// Freeze visual time at this many seconds (reproducible screenshots). Glyph animations show
+    /// that moment; slides and camera moves complete instantly.
     #[arg(long)]
     pub freeze_time: Option<f32>,
+
+    /// Reduced effects: no glyph animation, no movement slides, no camera easing (spec §4.7).
+    #[arg(long)]
+    pub reduced_effects: bool,
 
     /// Window size in physical pixels, e.g. `1280x720`.
     #[arg(long, value_parser = parse_size, default_value = "1280x720")]

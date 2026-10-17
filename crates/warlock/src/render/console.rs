@@ -1,5 +1,8 @@
-//! The CPU-side console: a window-sized grid of glyph cells that UI and map drawing write into.
-//! The renderer uploads it to textures when it changes.
+//! The CPU-side console: a grid of glyph cells that UI and map drawing write into. The renderer
+//! uploads it to textures when it changes.
+//!
+//! A console is a layer: cells nothing was drawn into are transparent, so the layers below show
+//! through. Each cell can also carry in-cell animation data for the grid shader.
 
 use bevy::prelude::*;
 use warlock_core::color::Rgb;
@@ -20,12 +23,26 @@ impl Cell {
     };
 }
 
-/// A grid of cells sized to the window.
+/// In-cell animation of one console cell, as stored in the per-cell animation texture.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct CellAnim {
+    /// Entry in the grid animation table plus one; 0 is still.
+    pub entry: u8,
+    /// Phase in 1/256 cycles.
+    pub phase: u8,
+}
+
+impl CellAnim {
+    pub const STILL: CellAnim = CellAnim { entry: 0, phase: 0 };
+}
+
+/// A grid of cells; `None` cells are transparent.
 #[derive(Resource, Debug, Default)]
 pub struct Console {
     cols: u32,
     rows: u32,
-    cells: Vec<Cell>,
+    cells: Vec<Option<Cell>>,
+    anims: Vec<CellAnim>,
     /// Set when cells change; cleared by the upload.
     pub dirty: bool,
 }
@@ -39,21 +56,30 @@ impl Console {
         self.rows
     }
 
-    pub fn cells(&self) -> &[Cell] {
+    /// Cells in row-major order; `None` is transparent.
+    pub fn cells(&self) -> &[Option<Cell>] {
         &self.cells
+    }
+
+    /// Per-cell animation, parallel to [`Console::cells`].
+    pub fn anims(&self) -> &[CellAnim] {
+        &self.anims
     }
 
     pub fn resize(&mut self, cols: u32, rows: u32) {
         if (cols, rows) != (self.cols, self.rows) {
             self.cols = cols;
             self.rows = rows;
-            self.cells = vec![Cell::BLANK; (cols * rows) as usize];
+            self.cells = vec![None; (cols * rows) as usize];
+            self.anims = vec![CellAnim::STILL; (cols * rows) as usize];
             self.dirty = true;
         }
     }
 
+    /// Makes every cell transparent and still.
     pub fn clear(&mut self) {
-        self.cells.fill(Cell::BLANK);
+        self.cells.fill(None);
+        self.anims.fill(CellAnim::STILL);
         self.dirty = true;
     }
 
@@ -62,27 +88,51 @@ impl Console {
             .then(|| (y as u32 * self.cols + x as u32) as usize)
     }
 
+    /// The cell at `(x, y)`; `None` if it is out of range or transparent.
+    #[cfg(test)]
     pub fn get(&self, x: i32, y: i32) -> Option<Cell> {
-        self.index(x, y).map(|i| self.cells[i])
+        self.index(x, y).and_then(|i| self.cells[i])
     }
 
-    /// Writes a cell; out-of-range positions are ignored.
+    /// Writes a still cell; out-of-range positions are ignored.
     pub fn put(&mut self, x: i32, y: i32, cell: Cell) {
         if let Some(i) = self.index(x, y) {
-            self.cells[i] = cell;
+            self.cells[i] = Some(cell);
+            self.anims[i] = CellAnim::STILL;
             self.dirty = true;
         }
     }
 
-    /// Writes `text` starting at `(x, y)` keeping each cell's background. Returns the number of
-    /// cells written (clipped at the right edge).
+    /// Animates the cell at `(x, y)` in the grid shader.
+    pub fn animate(&mut self, x: i32, y: i32, anim: CellAnim) {
+        if let Some(i) = self.index(x, y) {
+            self.anims[i] = anim;
+            self.dirty = true;
+        }
+    }
+
+    /// Removes the glyph at `(x, y)` but keeps the background, e.g. where a glyph on the
+    /// free-glyph layer stands in for it.
+    pub fn clear_glyph(&mut self, x: i32, y: i32) {
+        if let Some(i) = self.index(x, y)
+            && let Some(cell) = &mut self.cells[i]
+        {
+            cell.ch = ' ';
+            self.anims[i] = CellAnim::STILL;
+            self.dirty = true;
+        }
+    }
+
+    /// Writes `text` starting at `(x, y)` keeping each cell's background (black where the cell
+    /// was transparent). Returns the number of cells written (clipped at the right edge).
     pub fn print(&mut self, x: i32, y: i32, text: &str, fg: Rgb) -> i32 {
         let mut written = 0;
         for (i, ch) in text.chars().enumerate() {
             let cx = x + i as i32;
             if let Some(idx) = self.index(cx, y) {
-                self.cells[idx].ch = ch;
-                self.cells[idx].fg = fg;
+                let cell = self.cells[idx].get_or_insert(Cell::BLANK);
+                cell.ch = ch;
+                cell.fg = fg;
                 written += 1;
             }
         }
@@ -132,6 +182,37 @@ mod tests {
         assert_eq!(c.print(3, 0, "hello", Rgb::WHITE), 2);
         assert_eq!(c.get(4, 0).map(|cell| cell.ch), Some('e'));
         assert_eq!(c.print(0, 5, "x", Rgb::WHITE), 0);
+    }
+
+    #[test]
+    fn unwritten_cells_are_transparent() {
+        let mut c = Console::default();
+        c.resize(3, 1);
+        assert_eq!(c.get(0, 0), None);
+        c.print(0, 0, "a", Rgb::WHITE);
+        assert_eq!(c.get(0, 0).map(|cell| cell.bg), Some(Rgb::BLACK));
+        c.clear();
+        assert!(c.cells().iter().all(Option::is_none));
+    }
+
+    #[test]
+    fn animation_follows_the_cell() {
+        let mut c = Console::default();
+        c.resize(2, 1);
+        let wave = CellAnim { entry: 1, phase: 9 };
+        c.put(0, 0, Cell::BLANK);
+        c.animate(0, 0, wave);
+        assert_eq!(c.anims()[0], wave);
+        // A new cell is still unless animated again; a cleared glyph stops animating.
+        c.put(0, 0, Cell::BLANK);
+        assert_eq!(c.anims()[0], CellAnim::STILL);
+        c.animate(0, 0, wave);
+        c.clear_glyph(0, 0);
+        assert_eq!(c.anims()[0], CellAnim::STILL);
+        assert_eq!(c.get(0, 0).map(|cell| cell.ch), Some(' '));
+        // Clearing a transparent cell's glyph leaves it transparent.
+        c.clear_glyph(1, 0);
+        assert_eq!(c.get(1, 0), None);
     }
 
     #[test]
