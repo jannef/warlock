@@ -67,7 +67,7 @@ name = "shallow water"
 glyph = "~"
 fg = "#4f8fe0"
 bg = "#0a1a30"
-anim = { kind = "wave", speed = 0.6, amount = 0.25 }
+anim = { kind = "wave", speed = 0.2, amount = 0.07 }
 
 [[terrain]]
 id = "altar"
