@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Warlock</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+    #warlock-canvas { display: block; width: 100%; height: 100%; outline: none; }
+    #message {
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; padding: 2rem; text-align: center;
+      color: #c8c8c8; font: 16px/1.5 ui-monospace, Menlo, Consolas, monospace;
+    }
+    #message[hidden] { display: none; }
+    #message h1 { font-size: 1.4rem; margin: 0 0 1rem; color: #fff; }
+    #message p { max-width: 36rem; margin: 0.25rem 0; }
+  </style>
+</head>
+<body>
+  <canvas id="warlock-canvas" tabindex="0"></canvas>
+  <div id="message"><p id="status">Loading Warlock...</p></div>
+  <script type="module">
+    const message = document.getElementById("message");
+    const canvas = document.getElementById("warlock-canvas");
+
+    function fail(title, detail) {
+      message.hidden = false;
+      message.innerHTML = "";
+      const h = document.createElement("h1");
+      h.textContent = title;
+      const p = document.createElement("p");
+      p.textContent = detail;
+      message.append(h, p);
+    }
+
+    if (!("gpu" in navigator)) {
+      fail(
+        "WebGPU is not available",
+        "Warlock needs WebGPU. Use a recent Chrome, Edge, or Safari (or Firefox on a " +
+          "platform where WebGPU is enabled), over HTTPS or localhost."
+      );
+    } else {
+      try {
+        const adapter = await navigator.gpu.requestAdapter();
+        if (!adapter) throw new Error("no suitable GPU adapter was found");
+        const { default: init } = await import("./warlock.js");
+        await init();
+        message.hidden = true;
+        canvas.focus();
+      } catch (err) {
+        // Bevy signals its normal exit by throwing a control-flow string; ignore that.
+        if (String(err).includes("Using exceptions for control flow")) {
+          message.hidden = true;
+        } else {
+          console.error(err);
+          fail("Warlock could not start", String(err));
+        }
+      }
+    }
+  </script>
+</body>
+</html>

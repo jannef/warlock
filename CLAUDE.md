@@ -22,6 +22,7 @@ behavior, commands, or architecture change.
 | WASM check | `cargo check -p warlock -p warlock-core --target wasm32-unknown-unknown` |
 | Dependency audit | `cargo deny check` |
 | Screenshot smoke test | `cargo xtask smoke` (writes `target/xtask/smoke.png`) |
+| Web build | `cargo xtask web` (writes `target/web/`; see "Releases, web build, logs") |
 
 Game flags (`cargo run -p warlock -- --help`):
 - `--scenario NAME` (default `showcase`), `--seed N` (default: the scenario's seed)
@@ -123,5 +124,32 @@ A successful compile does not verify anything visual. Before opening a PR:
 - Work is tracked in GitHub issues under milestones M0–M7; use the `gh` CLI.
 - One branch and PR per issue (or a tight group of related issues); reference issues with
   `Closes #N`. CI must be green before a squash merge into `main`.
-- PRs run the Linux suite. Windows builds run on pushes to `main`; macOS builds run via manual
-  dispatch of the `Platforms` workflow (private-repo Actions minutes are expensive on macOS).
+- CI runs on Linux only (`CI` workflow: fmt, clippy, tests, headless screenshots, wasm32 check,
+  cargo-deny; the web build on pushes to `main`). macOS is not run in Actions: development happens
+  on macOS, so run the full local check there before every PR. `main` is branch-protected: PRs
+  only, the Linux, wasm32, and cargo-deny checks must pass, linear history.
+
+## Releases, web build, logs
+
+**Cut a release.** Make sure `main` is green, then tag and push the tag (for example
+`v0.1.0`); the `Release` workflow does the rest. It builds Linux x86_64 (`.tar.gz`), Windows
+x86_64 (`.zip`) and macOS arm64 (`.zip` with an unsigned `Warlock.app` plus the bare binary; see
+`release/`) and attaches them, with generated notes, to a GitHub Release. Run the workflow by hand
+(Actions > Release > Run workflow) to get the archives as workflow artifacts without publishing.
+Releases are the only place macOS and Windows runners are used.
+
+**Web build** (wasm32 + WebGPU; all content is embedded, nothing on the startup path may touch
+`std::fs`): one-time setup is `rustup target add wasm32-unknown-unknown` and
+`cargo install wasm-bindgen-cli --version <X> --locked`, where `<X>` is the `wasm-bindgen` version
+in `Cargo.lock` (the CLI must match exactly; `cargo xtask web` checks it and prints the command).
+Then `cargo xtask web` builds `target/web/` (`index.html` from `web/`, `warlock.js`,
+`warlock_bg.wasm`). Serve it with `python3 -m http.server --directory target/web 8080` and open
+http://localhost:8080 in a WebGPU browser. CI builds it on pushes to `main` (artifact
+`warlock-web`). There is no command line on the web, so `cli.rs` uses the defaults.
+
+**Logs and crash reports** (desktop only): each run writes `warlock-<UTC>.log` (last 5 kept) in
+`<data dir>/warlock/logs` (macOS `~/Library/Application Support/warlock/logs`, Linux
+`~/.local/share/warlock/logs`, Windows `%LOCALAPPDATA%\warlock\data\logs`). A panic writes
+`crash-<UTC>.txt` (version, OS, backtrace, last log lines; last 10 kept) next to them and prints
+its path. `WARLOCK_CRASH_TEST=1 cargo run -p warlock` triggers a deliberate panic to test this.
+Code: `crates/warlock/src/logging.rs`.
