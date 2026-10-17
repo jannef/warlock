@@ -64,6 +64,30 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo check --package warlock --package warlock-core --target wasm32-unknown-unknown --locked
 
+  # Builds the browser version on main only; PRs get the quicker wasm32 check above.
+  web:
+    name: Web build (WebGPU)
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install pinned toolchain
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      # The CLI must match the wasm-bindgen crate version in Cargo.lock exactly.
+      - name: Install wasm-bindgen-cli
+        run: |
+          version=$(grep -A1 '^name = "wasm-bindgen"$' Cargo.lock | sed -n 's/^version = "\(.*\)"$/\1/p')
+          if ! wasm-bindgen --version 2>/dev/null | grep -q " $version\$"; then
+            cargo install wasm-bindgen-cli --version "$version" --locked
+          fi
+      - run: cargo xtask web
+      - uses: actions/upload-artifact@v4
+        with:
+          name: warlock-web
+          path: target/web/
+          if-no-files-found: error
+
   deny:
     name: cargo-deny
     runs-on: ubuntu-latest
