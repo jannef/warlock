@@ -41,20 +41,29 @@ fn create_target(mut commands: Commands, args: Res<Args>, mut images: ResMut<Ass
     });
 }
 
+/// Frames to wait for a requested screenshot before giving up, so a broken renderer fails fast
+/// instead of hanging (e.g. in CI).
+const CAPTURE_TIMEOUT_FRAMES: u32 = 600;
+
 fn request_capture(
     mut commands: Commands,
     args: Res<Args>,
     target: Option<Res<CaptureTarget>>,
     mut frames: Local<u32>,
     mut requested: Local<bool>,
+    mut exit: MessageWriter<AppExit>,
 ) {
     let (Some(path), Some(target)) = (args.capture.clone(), target) else {
         return;
     };
+    *frames += 1;
     if *requested {
+        if *frames == args.capture_after_frames + CAPTURE_TIMEOUT_FRAMES {
+            error!("screenshot did not complete within {CAPTURE_TIMEOUT_FRAMES} frames; giving up");
+            exit.write(AppExit::error());
+        }
         return;
     }
-    *frames += 1;
     if *frames < args.capture_after_frames {
         return;
     }
