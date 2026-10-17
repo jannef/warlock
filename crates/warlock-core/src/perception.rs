@@ -451,6 +451,16 @@ impl<'a> PerceptionView<'a> {
         self.content.level(level)?.region_at(at)
     }
 
+    /// Where the stairs or location at `p` lead, by name — only for cells the player sees or
+    /// remembers (the staircase itself is known; its destination is public knowledge).
+    pub fn leads_to(&self, p: Pos) -> Option<String> {
+        if matches!(self.cell(p), CellView::Unknown) {
+            return None;
+        }
+        let to = self.level.stairs_at(p)?.to.as_deref()?;
+        self.content.level_display_name(to)
+    }
+
     pub fn width(&self) -> i32 {
         self.level.width()
     }

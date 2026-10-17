@@ -678,6 +678,15 @@ Each milestone ships a playable build.
 - **M6 Procedural generation** — RNG streams, generators, vault embedding, connectivity validation,
   seed UX, snapshot tests.
 - **M7 Ship** — packaging per OS, tagged releases, web build, performance budgets verified, crash logs.
+  Released as v0.1.0.
+- **M8 Lighting polish** — creature shadows, weak bounce light, walls lit from their own distance,
+  fungus glow, still and running water, per-source light stability (hue and intensity drift), and
+  along the way the screen stack (one way to open, route keys to, and draw modal screens), look
+  mode, and a smaller web build.
+- **M9 Time, sunlight and overworld** — game clock and 12×30 calendar, time costs per level and
+  terrain, resting; sunlight, sky light and moving shadows on sky-exposed levels over a 24-hour
+  day (moonlight is darkness for now); an ADOM-like overworld with per-terrain travel time,
+  locations, and sight by daylight; outdoor local areas generated from overworld terrain.
 
 ## 13. GitHub workflow
 
