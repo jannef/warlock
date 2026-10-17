@@ -28,7 +28,8 @@ Build the engine and framework, not the game. Everything built is production qua
 - Save and resume an unfinished run
 - Keyboard controls with an in-game controls reference
 - Development interface (§9)
-- Procedural generation with reproducible seeds — late (M6), not a first priority
+- Procedural generation with reproducible seeds (M6): dungeon branches of generated levels
+  (rooms and corridors, caves) with hand-made vaults, joined to the hand-authored levels by stairs
 
 **Out of scope for now**: combat, statistics, item effects, AI, character creation, audio, mouse
 input, overworld/wilderness map, infravision, localization.
@@ -56,7 +57,11 @@ regression scene for golden screenshots, replays, and snapshot tests.
 | Stairs | connection to Level 2 | M2 |
 
 **Level 2 — Vast (≥ 400×300)**: scrolling camera, many light sources, performance budget check.
-Introduced in M2, lit in M3.
+Introduced in M2, lit in M3. Beside its stairs up to the hub, stairs down lead into the depths.
+
+**The Depths (generated, M6)**: a dungeon branch of eight procedurally generated levels
+(`depths:1` to `depths:8`; rooms and corridors at 80×21, caverns at 120×60 on depths 3–5) built
+from the run seed, with vaults stamped in. The `depths` scenario starts on its first level.
 
 ## 4. Rendering
 
@@ -227,7 +232,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 - **Level files** (TOML): a header (name, ambient light, legend, lights, patrols, stair links) plus a
   multiline ASCII map. Level size comes from the map, with no fixed upper limit: most dungeon levels
   are about 80×21, some are vast. The camera scrolls when a level is larger than the viewport. The
-  same format will later define vaults for procedural generation. Illustrative only — exact syntax
+  same format defines vaults for procedural generation (below). Illustrative only — exact syntax
   is designed in M1:
 
   ```toml
@@ -254,6 +259,25 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   path = [[12, 3], [20, 3], [20, 8]]
   ```
 - **Definitions** (TOML): terrain types, light presets, vision profiles, glyph animations.
+- **Dungeon branches** (`data/dungeons.toml`): stacks of generated levels, e.g.
+  `{ id = "depths", generator = "rooms", depth = 8, size = [80, 21] }`, plus optional name,
+  patrolling creature kinds, ambient light, and per-depth overrides of generator and size. Stairs
+  (and scenarios) may target `depths:N`; content validation accepts such ids when the branch has
+  that depth. A branch level is generated on its first visit from its own random stream (§8) and
+  then persists like a hand-made level. Its `<` leads to `depths:N-1` (on depth 1, back to the
+  level it was first entered from), its `>` to `depths:N+1` (the deepest level has none).
+- **Generators** (`warlock-core`, integer-only): *rooms* — walled rooms joined along a minimum
+  spanning tree plus a few loops by corridors dug as cheapest paths (bends cost extra), with closed
+  doors, open doors, or doorways where corridors enter, and wall torches in most rooms; *caves* —
+  cellular automata (45 % rock, five 4-5 smoothing passes, largest cave kept), pools of water,
+  lamps and glowing fungus. Both place the up staircase (the arrival point) and the down staircase
+  far from it, and a few creatures on looping patrols. Every level is validated by flood fill —
+  every stair, door, and walkable cell reachable from the up staircase, patrols valid, some light
+  — and a level that fails is regenerated from the next derived stream.
+- **Vaults** (`assets/vaults/*.toml`): hand-made pieces in the level-file format, stamped verbatim
+  (terrain, lights, creatures) where they fit — into rock with room for corridors or tunnels to
+  every entrance. A vault's edge is solid except for its entrances (doors, not on a corner); it has
+  no stairs or player start, and all its walkable cells are reachable from an entrance.
 - **Scenarios** (`assets/scenarios/*.toml`): level set, start position, vision profile, lantern,
   options.
 - **Saves**: suspend-only. One save per run, written on quit and by periodic autosave; loading
@@ -261,8 +285,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   version, game version) around a JSON payload, gzip-compressed with a pure-Rust backend, written
   atomically (temp file + rename). Before 1.0, incompatible saves are rejected with a clear message;
   from 1.0 on, saves are migrated. The web build uses browser storage. The envelope also records a
-  content fingerprint (hash of the ordered terrain, creature, and level ids), because ids are
-  indices; a save made with different content is rejected. The save is `run.sav` in the platform
+  content fingerprint (hash of the ordered terrain, creature, level, light, and dungeon-branch
+  ids), because ids are indices; a save made with different content is rejected. Generated levels
+  are saved with the run like visited hand-made ones (terrain, memory, stairs, lights), together
+  with the gameplay random stream. The save is `run.sav` in the platform
   data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
   and on level change, and a save that cannot be read is renamed `run.sav.bad`, never deleted, while
   a new run starts. Starting resumes the save unless `--new` is given. Dev snapshots: `F5` saves and
@@ -276,11 +302,11 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 ```
 crates/
   warlock-core/   plain Rust, no Bevy: map, actors, actions, turns, fov, light,
-                  perception, rng, levels, save
+                  perception, rng, levels, mapgen, save
   warlock-cli/    no Bevy: scenarios, replay, dump, verify
   warlock/        Bevy app: render, input, UI, effects, platform (ECS lives here)
 xtask/            screenshot capture, golden-image diff, CI helpers
-assets/           fonts, levels, scenarios, definitions, shaders
+assets/           fonts, levels, scenarios, vaults, definitions, shaders
 ```
 
 - **Pure core**: `warlock-core` has no Bevy dependency, no platform I/O inside the rules, and no
@@ -295,10 +321,14 @@ assets/           fonts, levels, scenarios, definitions, shaders
   (line of sight, light, memory) → emit presentation events.
 - **Events to effects**: the core emits events (door opened, actor moved); the presentation layer
   turns them into animations. Gameplay never waits for them.
-- **Determinism**: ChaCha8 RNG with separate streams — map generation (hash of run seed and level
-  id), gameplay, and visual-only. No hash-order iteration in the core. The same seed and actions
-  produce the same result within a game version; seeds are not guaranteed stable across versions,
-  and snapshot tests flag when generator output changes.
+- **Determinism**: ChaCha8 RNG (`rand_chacha`) with separate streams, each seeded with FNV-1a 64 of
+  the run seed (little-endian) and a label: map generation per level (`map/<level id>`, retry *k*
+  `map/<level id>/<k>`), so a level depends only on the seed and its id, never on visiting order;
+  gameplay (`gameplay`, kept in the world state and saved); and visual-only randomness in the app,
+  which never uses either. No hash-order iteration and no floating point in the core's decisions.
+  The same seed and actions produce the same result within a game version; seeds are not
+  guaranteed stable across versions, and snapshot tests flag when generator output changes. A seed
+  is a number or a word (`--seed warlock`, hashed with FNV-1a 64).
 - Small modules with clear responsibilities; no speculative abstractions or premature optimization.
 
 ## 9. Development interface
@@ -314,6 +344,7 @@ warlock-cli dump --scenario showcase --actions "move:N move:N" \
 warlock-cli dump --replay runs/doors.json --format json --state   # structured dump
 warlock-cli replay --create --scenario showcase --actions "move:N wait" -o runs/x.json
 warlock-cli replay --verify runs/doors.json               # check per-turn state hashes
+warlock-cli gen --level depths:3 --seed warlock           # print a generated level (dev-only)
 cargo xtask golden [--update]                             # compare golden screenshots
 ```
 

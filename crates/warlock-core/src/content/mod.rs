@@ -1,22 +1,28 @@
-//! Game content: definitions, levels, and scenarios loaded from TOML (spec §7).
+//! Game content: definitions, levels, scenarios, dungeon branches, and vaults loaded from TOML
+//! (spec §7).
 //!
 //! Content is read from a [`ContentFiles`] set: the built-in set compiled into the binary (so every
 //! build, including the web build, is self-contained) or a directory on disk for development.
 
 mod anim;
 mod creature;
+mod dungeon;
 mod level;
 mod light;
 mod scenario;
 mod terrain;
+mod vault;
 mod vision;
 
 pub use anim::GlyphAnim;
 pub use creature::{CreatureDef, CreatureId};
+pub use dungeon::{DungeonDef, Generator, LevelPlan, parse_branch_level};
+pub(crate) use level::validate_route;
 pub use level::{CreatureSpawn, LevelTemplate, StairsLink, parse_route};
 pub use light::{Flicker, LightId, LightPreset, MAX_LIGHT_RADIUS};
 pub use scenario::ScenarioDef;
 pub use terrain::{StairsDir, TerrainDef, TerrainId};
+pub use vault::Vault;
 pub use vision::VisionProfile;
 
 use level::{LegendEntry, legend_char};
@@ -69,10 +75,10 @@ impl ContentFiles {
         files
     }
 
-    /// Reads `data/`, `levels/`, and `scenarios/` TOML files under `root`.
+    /// Reads `data/`, `levels/`, `scenarios/`, and `vaults/` TOML files under `root`.
     pub fn from_dir(root: &Path) -> std::io::Result<Self> {
         let mut files = Self::default();
-        for dir in ["data", "levels", "scenarios"] {
+        for dir in ["data", "levels", "scenarios", "vaults"] {
             let Ok(entries) = std::fs::read_dir(root.join(dir)) else {
                 continue;
             };
@@ -142,8 +148,9 @@ struct LegendFile {
 
 /// All loaded and cross-validated content.
 ///
-/// `data/lights.toml` and `data/vision.toml` are optional. Without vision profiles, a single
-/// `normal` profile that needs no light is used, so content without lighting stays fully visible.
+/// `data/lights.toml`, `data/vision.toml`, and `data/dungeons.toml` are optional. Without vision
+/// profiles, a single `normal` profile that needs no light is used, so content without lighting
+/// stays fully visible.
 #[derive(Debug)]
 pub struct Content {
     terrain: Vec<TerrainDef>,
@@ -156,6 +163,9 @@ pub struct Content {
     vision_ids: BTreeMap<String, usize>,
     levels: BTreeMap<String, LevelTemplate>,
     scenarios: BTreeMap<String, ScenarioDef>,
+    dungeons: BTreeMap<String, DungeonDef>,
+    /// Sorted by id.
+    vaults: Vec<Vault>,
 }
 
 impl Content {
@@ -176,6 +186,8 @@ impl Content {
             vision_ids: BTreeMap::new(),
             levels: BTreeMap::new(),
             scenarios: BTreeMap::new(),
+            dungeons: BTreeMap::new(),
+            vaults: Vec::new(),
         };
         content.load_lights(files)?;
         content.load_vision(files)?;
@@ -198,6 +210,12 @@ impl Content {
             let scenario = ScenarioDef::parse(path, id, text)?;
             content.scenarios.insert(id.to_string(), scenario);
         }
+        for (path, id, text) in files.in_dir("vaults") {
+            let template = level::parse_level(path, id, text, &content, &default_legend)?;
+            let vault = Vault::new(template, &content).map_err(|m| ContentError::new(path, m))?;
+            content.vaults.push(vault);
+        }
+        content.load_dungeons(files)?;
         content.validate()?;
         Ok(content)
     }
@@ -293,6 +311,28 @@ impl Content {
         Ok(())
     }
 
+    fn load_dungeons(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
+        let path = "data/dungeons.toml";
+        let Some(text) = files.get_optional(path) else {
+            return Ok(());
+        };
+        let parsed: dungeon::DungeonFile =
+            toml::from_str(text).map_err(|e| ContentError::new(path, e.to_string()))?;
+        for def in parsed.resolve(path, |name| self.creature_id(name))? {
+            if self.levels.contains_key(&def.id) {
+                return Err(ContentError::new(
+                    path,
+                    format!("dungeon `{}` has the same id as a level", def.id),
+                ));
+            }
+            self.dungeons.insert(def.id.clone(), def);
+        }
+        if !self.dungeons.is_empty() {
+            crate::mapgen::Palette::resolve(self).map_err(|m| ContentError::new(path, m))?;
+        }
+        Ok(())
+    }
+
     fn load_vision(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
         let path = "data/vision.toml";
         let err = |m: String| ContentError::new(path, m);
@@ -335,12 +375,12 @@ impl Content {
     }
 
     /// Cross-file checks: stair targets, and each scenario's start level, vision profile, and
-    /// lantern exist.
+    /// lantern exist. Levels of dungeon branches (`depths:3`) count as existing.
     fn validate(&self) -> Result<(), ContentError> {
         for level in self.levels.values() {
             for link in &level.stairs {
                 if let Some(to) = &link.to
-                    && !self.levels.contains_key(to)
+                    && !self.has_level(to)
                 {
                     return Err(ContentError::new(
                         &format!("levels/{}.toml", level.id),
@@ -351,13 +391,15 @@ impl Content {
         }
         for scenario in self.scenarios.values() {
             let file = format!("scenarios/{}.toml", scenario.id);
-            let level = self.levels.get(&scenario.start_level).ok_or_else(|| {
-                ContentError::new(
+            if !self.has_level(&scenario.start_level) {
+                return Err(ContentError::new(
                     &file,
                     format!("unknown start level `{}`", scenario.start_level),
-                )
-            })?;
-            if level.player_start.is_none() {
+                ));
+            }
+            if let Some(level) = self.levels.get(&scenario.start_level)
+                && level.player_start.is_none()
+            {
                 return Err(ContentError::new(
                     &file,
                     format!("start level `{}` has no player start", level.id),
@@ -374,10 +416,12 @@ impl Content {
         Ok(())
     }
 
-    /// A stable hash (64-bit FNV-1a) of the ordered terrain, creature, and level ids.
+    /// A stable hash (64-bit FNV-1a) of the ordered terrain, creature, level, light, and dungeon
+    /// ids.
     ///
-    /// `TerrainId` and `CreatureId` are indices, so a save is only meaningful for content with the
-    /// same ids in the same order; saves record this fingerprint to detect a mismatch.
+    /// `TerrainId`, `CreatureId`, and `LightId` are indices, so a save is only meaningful for
+    /// content with the same ids in the same order; saves record this fingerprint to detect a
+    /// mismatch.
     pub fn fingerprint(&self) -> u64 {
         let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
         let mut feed = |bytes: &[u8]| {
@@ -385,10 +429,12 @@ impl Content {
                 hash = (hash ^ u64::from(b)).wrapping_mul(0x0000_0100_0000_01b3);
             }
         };
-        let groups: [Vec<&str>; 3] = [
+        let groups: [Vec<&str>; 5] = [
             self.terrain.iter().map(|t| t.id.as_str()).collect(),
             self.creatures.iter().map(|c| c.id.as_str()).collect(),
             self.levels.keys().map(String::as_str).collect(),
+            self.lights.iter().map(|l| l.id.as_str()).collect(),
+            self.dungeons.keys().map(String::as_str).collect(),
         ];
         for ids in groups {
             for id in ids {
@@ -452,8 +498,36 @@ impl Content {
         &self.visions
     }
 
+    /// A hand-made level. Generated levels (`depths:3`) are not stored here; see
+    /// [`Content::has_level`] and [`crate::mapgen`].
     pub fn level(&self, id: &str) -> Option<&LevelTemplate> {
         self.levels.get(id)
+    }
+
+    /// Whether `id` names a hand-made level or a level of a dungeon branch.
+    pub fn has_level(&self, id: &str) -> bool {
+        self.levels.contains_key(id) || self.branch_level(id).is_some()
+    }
+
+    /// The branch and depth of a generated level id such as `depths:3`, if the branch exists and
+    /// has that depth.
+    pub fn branch_level(&self, id: &str) -> Option<(&DungeonDef, u32)> {
+        let (branch, depth) = parse_branch_level(id)?;
+        let def = self.dungeons.get(branch)?;
+        def.plan(depth).map(|_| (def, depth))
+    }
+
+    pub fn dungeon(&self, id: &str) -> Option<&DungeonDef> {
+        self.dungeons.get(id)
+    }
+
+    pub fn dungeons(&self) -> impl Iterator<Item = &DungeonDef> {
+        self.dungeons.values()
+    }
+
+    /// Vaults, sorted by id.
+    pub fn vaults(&self) -> &[Vault] {
+        &self.vaults
     }
 
     pub fn levels(&self) -> impl Iterator<Item = &LevelTemplate> {
@@ -704,6 +778,87 @@ mod tests {
             "{}",
             err.message
         );
+    }
+
+    #[test]
+    fn stairs_and_scenarios_may_lead_into_dungeon_branches() {
+        let content = Content::builtin().unwrap();
+        assert!(content.has_level("depths:8") && !content.has_level("depths:9"));
+        let (branch, depth) = content.branch_level("depths:3").unwrap();
+        assert_eq!((branch.id.as_str(), depth), ("depths", 3));
+        assert_eq!(content.scenario("depths").unwrap().start_level, "depths:1");
+
+        let with_target = |to: &str| {
+            let mut files = ContentFiles::builtin();
+            let hub = files.get("levels/hub.toml").unwrap().to_string();
+            files.insert(
+                "levels/hub.toml",
+                &hub.replace("to = \"vast\"", &format!("to = \"{to}\"")),
+            );
+            Content::load(&files)
+        };
+        assert!(with_target("depths:2").is_ok());
+        for bad in ["depths:9", "depths:0", "caves:1"] {
+            let err = with_target(bad).unwrap_err();
+            assert!(
+                err.message.contains(&format!("unknown level `{bad}`")),
+                "{}",
+                err.message
+            );
+        }
+
+        let mut files = ContentFiles::builtin();
+        files.insert(
+            "scenarios/deep.toml",
+            "name = \"D\"\nstart_level = \"depths:9\"\n",
+        );
+        let err = Content::load(&files).unwrap_err();
+        assert!(
+            err.message.contains("unknown start level"),
+            "{}",
+            err.message
+        );
+    }
+
+    #[test]
+    fn dungeons_need_the_terrain_generators_build_with() {
+        let mut files = minimal_files("#@#\n", "");
+        files.insert(
+            "data/dungeons.toml",
+            "[[dungeon]]\nid = \"d\"\ngenerator = \"rooms\"\ndepth = 1\nsize = [80, 21]\n",
+        );
+        let err = Content::load(&files).unwrap_err();
+        assert_eq!(err.file, "data/dungeons.toml");
+        assert!(
+            err.message.contains("needs terrain `door_closed`"),
+            "{}",
+            err.message
+        );
+    }
+
+    #[test]
+    fn vaults_are_validated() {
+        let cases = [
+            ("####\n#..#\n####\n", "needs at least one entrance"),
+            ("##+##\n#.<.#\n#####\n", "cannot have stairs"),
+            ("##+##\n#...#\n#.#.#\n##.##\n", "must be solid"),
+            ("##+##\n#.#.#\n#####\n", "cannot be reached"),
+            ("+###\n#..#\n####\n", "not on a corner"),
+        ];
+        for (map, expected) in cases {
+            let mut files = ContentFiles::builtin();
+            files.insert(
+                "vaults/bad.toml",
+                &format!("name = \"Bad\"\nmap = '''\n{map}'''\n"),
+            );
+            let err = Content::load(&files).unwrap_err();
+            assert_eq!(err.file, "vaults/bad.toml");
+            assert!(err.message.contains(expected), "{map}: {}", err.message);
+        }
+        let content = Content::builtin().unwrap();
+        let ids: Vec<_> = content.vaults().iter().map(Vault::id).collect();
+        assert_eq!(ids, ["flooded_cell", "guard_post", "shrine"]);
+        assert_eq!(content.vaults()[2].entrances.len(), 3);
     }
 
     #[test]

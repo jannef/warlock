@@ -1,0 +1,13 @@
+# Vault: a guard post. A kobold paces the front room; a closed door hides a lamp-lit store room.
+name = "Guard post"
+map = '''
+###########
+#....#....#
+#.k..+..*.#
+#....#....#
+###+#######
+'''
+
+[legend]
+"k" = { terrain = "floor", creature = "kobold", route = "E2 W2" }
+"*" = { terrain = "floor", light = "lamp" }

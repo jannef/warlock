@@ -8,15 +8,18 @@ mod hash;
 mod level;
 
 pub use actor::{Actor, ActorId, ActorKind, Patrol};
+pub(crate) use hash::fnv1a;
 pub use level::LevelState;
 
 use crate::action::{Action, Event, Outcome};
-use crate::content::{Content, StairsDir, TerrainId};
+use crate::content::{Content, LevelTemplate, StairsDir, TerrainId};
 use crate::geom::{Dir, Pos};
 use crate::light::LightCache;
 use crate::messages::MessageLog;
 use crate::perception::{Perception, PerceptionView};
+use crate::rng::Rng;
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
@@ -29,6 +32,8 @@ pub enum WorldError {
     UnknownLevel(String),
     #[error("level `{0}` has no player start")]
     NoPlayerStart(String),
+    #[error("cannot generate level `{0}`: {1}")]
+    Generation(String, String),
     #[error("saved state is inconsistent: {0}")]
     InconsistentState(String),
 }
@@ -38,6 +43,9 @@ pub enum WorldError {
 pub struct WorldState {
     pub(crate) scenario: String,
     pub(crate) seed: u64,
+    /// The gameplay random stream (spec §8), continued across saves. Map generation never draws
+    /// from it: each generated level has its own stream derived from the seed and its id.
+    pub(crate) rng: Rng,
     pub(crate) turn: u64,
     pub(crate) current_level: String,
     pub(crate) levels: BTreeMap<String, LevelState>,
@@ -100,7 +108,8 @@ impl WorldState {
 #[derive(Clone, Debug)]
 pub struct World {
     content: Arc<Content>,
-    state: WorldState,
+    /// Boxed: the state (with its random stream) is large, and worlds are moved around whole.
+    state: Box<WorldState>,
     /// Boxed: the snapshot is large and replaced wholesale every turn.
     perception: Box<Perception>,
     /// Cached light masks; derived, never saved.
@@ -138,9 +147,8 @@ impl World {
         let def = content
             .scenario(scenario)
             .ok_or_else(|| WorldError::UnknownScenario(scenario.to_string()))?;
-        let start = content
-            .level(&def.start_level)
-            .ok_or_else(|| WorldError::UnknownLevel(def.start_level.clone()))?;
+        let seed = seed.unwrap_or(def.seed);
+        let start = level_template(&content, seed, &def.start_level, None)?;
         let player_pos = start
             .player_start
             .ok_or_else(|| WorldError::NoPlayerStart(start.id.clone()))?;
@@ -150,7 +158,8 @@ impl World {
 
         let mut state = WorldState {
             scenario: def.id.clone(),
-            seed: seed.unwrap_or(def.seed),
+            seed,
+            rng: Rng::gameplay(seed),
             turn: 0,
             current_level: start.id.clone(),
             levels: BTreeMap::new(),
@@ -172,7 +181,8 @@ impl World {
                 patrol: None,
             },
         );
-        instantiate_level(&mut state, &content, &def.start_level)?;
+        instantiate_level(&mut state, &start);
+        drop(start); // It may borrow `content`, which `assemble` takes.
         state
             .messages
             .push(0, format!("Welcome to {}. Press ? for controls.", def.name));
@@ -191,6 +201,12 @@ impl World {
                 state.vision
             )));
         }
+        if let Some(level) = state.levels.values().find(|l| !l.ids_valid_for(&content)) {
+            return Err(WorldError::InconsistentState(format!(
+                "level `{}` uses terrain or lights this content does not have",
+                level.id
+            )));
+        }
         Ok(Self::assemble(content, state))
     }
 
@@ -200,7 +216,7 @@ impl World {
         perception.remember(state.current_mut());
         Self {
             content,
-            state,
+            state: Box::new(state),
             perception,
             lights,
         }
@@ -487,19 +503,25 @@ impl World {
         true
     }
 
-    /// Moves the player to level `to`, arriving on the stairs that lead back.
+    /// Moves the player to level `to` (generating it on the first visit), arriving on the stairs
+    /// that lead back, else the level's player start, else its first staircase.
     fn travel(&mut self, to: &str) -> Result<(), WorldError> {
-        if !self.state.levels.contains_key(to) {
-            instantiate_level(&mut self.state, &self.content, to)?;
-        }
         let from = self.state.current_level.clone();
+        let mut start = None;
+        if !self.state.levels.contains_key(to) {
+            let template = level_template(&self.content, self.state.seed, to, Some(&from))?;
+            start = template.player_start;
+            instantiate_level(&mut self.state, &template);
+        }
         let target = &self.state.levels[to];
         let arrival = target
             .stairs
             .iter()
             .find(|s| s.to.as_deref() == Some(from.as_str()))
             .map(|s| s.pos)
+            .or(start)
             .or_else(|| self.content.level(to).and_then(|t| t.player_start))
+            .or_else(|| target.stairs.first().map(|s| s.pos))
             .ok_or_else(|| WorldError::NoPlayerStart(to.to_string()))?;
         let arrival = self.free_cell_near(to, arrival);
         let player = self.state.player;
@@ -570,15 +592,28 @@ impl World {
     }
 }
 
-/// Creates the runtime state for level `id` and spawns its creatures.
-fn instantiate_level(
-    state: &mut WorldState,
-    content: &Content,
+/// The template of level `id`: a hand-made level, or a level of a dungeon branch generated from
+/// the run seed (`entered_from` is where the up staircase of a branch's first level leads).
+fn level_template<'a>(
+    content: &'a Content,
+    seed: u64,
     id: &str,
-) -> Result<(), WorldError> {
-    let template = content
-        .level(id)
-        .ok_or_else(|| WorldError::UnknownLevel(id.to_string()))?;
+    entered_from: Option<&str>,
+) -> Result<Cow<'a, LevelTemplate>, WorldError> {
+    if let Some(template) = content.level(id) {
+        return Ok(Cow::Borrowed(template));
+    }
+    if content.branch_level(id).is_none() {
+        return Err(WorldError::UnknownLevel(id.to_string()));
+    }
+    crate::mapgen::generate(content, seed, id, entered_from)
+        .map(Cow::Owned)
+        .map_err(|e| WorldError::Generation(id.to_string(), e.to_string()))
+}
+
+/// Creates the runtime state for a level and spawns its creatures.
+fn instantiate_level(state: &mut WorldState, template: &LevelTemplate) {
+    let id = template.id.as_str();
     state
         .levels
         .insert(id.to_string(), LevelState::from_template(template));
@@ -600,9 +635,10 @@ fn instantiate_level(
             },
         );
     }
-    Ok(())
 }
 
+#[cfg(test)]
+mod branch_tests;
 #[cfg(test)]
 mod light_tests;
 #[cfg(test)]

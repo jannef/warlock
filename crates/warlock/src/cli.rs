@@ -14,8 +14,9 @@ pub struct Args {
     #[arg(long)]
     pub scenario: Option<String>,
 
-    /// Run seed; defaults to the scenario's seed.
-    #[arg(long)]
+    /// Run seed: a number, or a word that is hashed (`--seed warlock`); defaults to the
+    /// scenario's seed.
+    #[arg(long, value_parser = warlock_core::rng::parse_seed)]
     pub seed: Option<u64>,
 
     /// Apply this replay file at startup (its scenario and seed win); hashes are verified and a
@@ -28,8 +29,8 @@ pub struct Args {
     #[arg(long)]
     pub record: Option<PathBuf>,
 
-    /// Read content (`data/`, `levels/`, `scenarios/`) from this directory instead of the
-    /// built-in copy, e.g. `--content-dir assets`.
+    /// Read content (`data/`, `levels/`, `scenarios/`, `vaults/`) from this directory instead of
+    /// the built-in copy, e.g. `--content-dir assets`.
     #[arg(long)]
     pub content_dir: Option<PathBuf>,
 

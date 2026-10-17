@@ -167,10 +167,8 @@ impl LevelLights {
             .iter()
             .filter_map(|(p, t)| content.terrain(*t).light.map(|id| (p, id)))
             .collect();
-        if let Some(template) = content.level(&level.id) {
-            // Placed lights override terrain lights on the same cell.
-            statics.extend(template.lights.iter().map(|(p, id)| (*p, *id)));
-        }
+        // Placed lights override terrain lights on the same cell.
+        statics.extend(level.lights.iter().map(|(p, id)| (*p, *id)));
         Self {
             statics,
             masks: BTreeMap::new(),
@@ -221,9 +219,7 @@ impl LevelLights {
 
 /// The static light at `p`: a light placed there by the level legend, else the terrain's own.
 fn static_light(level: &LevelState, content: &Content, p: Pos) -> Option<LightId> {
-    let placed = content
-        .level(&level.id)
-        .and_then(|t| t.lights.get(&p).copied());
+    let placed = level.lights.get(&p).copied();
     placed.or_else(|| level.terrain.get(p).and_then(|t| content.terrain(*t).light))
 }
 

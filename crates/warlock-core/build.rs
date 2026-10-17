@@ -1,5 +1,5 @@
-//! Embeds the TOML content under `assets/{data,levels,scenarios}` into the binary, so every build
-//! (including the web build) is self-contained.
+//! Embeds the TOML content under `assets/{data,levels,scenarios,vaults}` into the binary, so every
+//! build (including the web build) is self-contained.
 
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
@@ -8,7 +8,7 @@ fn main() {
     let manifest = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").expect("set by cargo"));
     let assets = manifest.join("../../assets");
     let mut files = Vec::new();
-    for dir in ["data", "levels", "scenarios"] {
+    for dir in ["data", "levels", "scenarios", "vaults"] {
         let path = assets.join(dir);
         println!("cargo:rerun-if-changed={}", path.display());
         collect(&path, dir, &mut files);

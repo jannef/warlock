@@ -74,7 +74,7 @@ impl LegendEntry {
 }
 
 /// A creature placed by a level file.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CreatureSpawn {
     pub creature: CreatureId,
     pub pos: Pos,
@@ -91,8 +91,9 @@ pub struct StairsLink {
     pub to: Option<String>,
 }
 
-/// A parsed, validated level ready to instantiate.
-#[derive(Clone, Debug)]
+/// A parsed, validated level ready to instantiate: from a level file, or generated (see
+/// [`crate::mapgen`]).
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LevelTemplate {
     pub id: String,
     pub name: String,
@@ -258,7 +259,7 @@ pub fn parse_route(route: &str) -> Result<Vec<Dir>, String> {
 }
 
 /// A patrol must stay on walkable terrain and loop back to its start.
-fn validate_route(
+pub(crate) fn validate_route(
     level: &LevelTemplate,
     content: &Content,
     spawn: &CreatureSpawn,

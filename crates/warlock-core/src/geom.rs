@@ -85,6 +85,20 @@ impl Dir {
         }
     }
 
+    /// The direction pointing the other way.
+    pub const fn opposite(self) -> Self {
+        match self {
+            Dir::N => Dir::S,
+            Dir::NE => Dir::SW,
+            Dir::E => Dir::W,
+            Dir::SE => Dir::NW,
+            Dir::S => Dir::N,
+            Dir::SW => Dir::NE,
+            Dir::W => Dir::E,
+            Dir::NW => Dir::SE,
+        }
+    }
+
     pub fn from_delta(dx: i32, dy: i32) -> Option<Self> {
         Dir::ALL.into_iter().find(|d| d.delta() == (dx, dy))
     }
@@ -131,6 +145,7 @@ mod tests {
         for dir in Dir::ALL {
             let next = origin.step(dir);
             assert_eq!(Dir::from_delta(next.x - 5, next.y - 5), Some(dir));
+            assert_eq!(next.step(dir.opposite()), origin);
         }
     }
 
