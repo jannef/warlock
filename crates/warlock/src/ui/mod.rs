@@ -12,6 +12,7 @@ mod controls_screen;
 mod dev;
 mod effects;
 mod glyphs;
+mod look;
 mod menu;
 mod motion;
 mod settings_screen;
@@ -75,9 +76,11 @@ fn draw(
     layout: Res<ConsoleLayout>,
     bindings: Res<Bindings>,
     overlays: Res<DevOverlays>,
+    grid: Res<MapGrid>,
     mut console: ResMut<Console>,
 ) {
     if !(game.is_changed()
+        || grid.is_changed()
         || mode.is_changed()
         || layout.is_changed()
         || bindings.is_changed()
@@ -90,6 +93,20 @@ fn draw(
     draw_messages(&mut console, &game, *mode);
     draw_status(&mut console, &game, rows - 1);
     dev::draw_indicator(&mut console, *overlays);
+    if let InputMode::Look(p) = *mode
+        && let Some(area) = map_area(console.cols() as i32, console.rows() as i32)
+    {
+        let (x, y) = (p.x - grid.level_origin.x, p.y - grid.level_origin.y);
+        if (0..area.w).contains(&x) && (0..area.h).contains(&y) {
+            look::draw_cursor(
+                &mut console,
+                area.x + x,
+                area.y + y,
+                &game.world.perception(),
+                p,
+            );
+        }
+    }
     if *mode == InputMode::Help {
         draw_help(&mut console, &bindings);
     }
@@ -249,6 +266,16 @@ fn remembered(c: Rgb) -> Rgb {
 fn draw_messages(console: &mut Console, game: &Game, mode: InputMode) {
     if let InputMode::Direction(_) = mode {
         console.print(1, 0, "In which direction? (Esc to cancel)", ACCENT);
+        return;
+    }
+    if let InputMode::Look(p) = mode {
+        console.print(1, 0, &look::describe(&game.world.perception(), p), TEXT);
+        console.print(
+            1,
+            1,
+            "Looking: direction keys move, Esc or x to stop.",
+            TEXT_DIM,
+        );
         return;
     }
     let turn = game.world.turn();

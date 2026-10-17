@@ -11,7 +11,7 @@ use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
 use warlock_core::content::VisionProfile;
-use warlock_core::{Action, Dir};
+use warlock_core::{Action, Dir, Pos};
 
 /// What a key does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -23,6 +23,8 @@ pub enum KeyCommand {
     Descend,
     Ascend,
     Lantern,
+    /// Move a cursor over the map to read what is there (no time passes).
+    Look,
     /// Dev: switch to the next vision profile.
     CycleVision,
     /// Dev: show ground truth where the player does not see.
@@ -47,6 +49,7 @@ impl KeyCommand {
             KeyCommand::Descend => "Go down stairs",
             KeyCommand::Ascend => "Go up stairs",
             KeyCommand::Lantern => "Light / douse lantern",
+            KeyCommand::Look => "Look around",
             KeyCommand::CycleVision => "Next vision profile (dev)",
             KeyCommand::RevealMap => "Reveal map (dev)",
             KeyCommand::LightValues => "Light values (dev)",
@@ -140,6 +143,7 @@ impl Default for Bindings {
             (ch(">"), Descend),
             (ch("<"), Ascend),
             (ch("L"), Lantern),
+            (ch("x"), Look),
             (ch("?"), Help),
             (Code(KeyCode::Escape), Cancel),
             (ch("Q"), Quit),
@@ -214,6 +218,8 @@ pub enum InputMode {
     Direction(KeyCommand),
     /// The controls overlay is open.
     Help,
+    /// Look mode: a cursor at this level position.
+    Look(Pos),
 }
 
 pub struct InputPlugin;
@@ -266,6 +272,17 @@ fn read_keys(
             continue;
         }
         let next = match (*mode, command) {
+            (InputMode::Look(_), KeyCommand::Look | KeyCommand::Cancel) => InputMode::Normal,
+            (InputMode::Look(at), KeyCommand::Move(dir)) => {
+                let view = game.world.perception();
+                let to = at.step(dir);
+                InputMode::Look(Pos::new(
+                    to.x.clamp(0, view.width() - 1),
+                    to.y.clamp(0, view.height() - 1),
+                ))
+            }
+            (InputMode::Look(at), _) => InputMode::Look(at),
+            (InputMode::Normal, KeyCommand::Look) => InputMode::Look(game.world.player_pos()),
             (InputMode::Help, KeyCommand::Help | KeyCommand::Cancel) => InputMode::Normal,
             (InputMode::Help, _) => InputMode::Help,
             (InputMode::Direction(cmd), KeyCommand::Move(dir)) => {
