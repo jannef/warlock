@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  linux:
+    name: Linux (fmt, clippy, test, smoke)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            pkg-config libudev-dev libwayland-dev libxkbcommon-dev \
+            xvfb mesa-vulkan-drivers libvulkan1 libxkbcommon-x11-0 \
+            libxcursor1 libxrandr2 libxi6 libx11-xcb1
+      - name: Install pinned toolchain
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - name: Format
+        run: cargo fmt --all --check
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: Test
+        run: cargo test --workspace --locked
+      - name: Screenshot smoke test (software Vulkan)
+        env:
+          WGPU_BACKEND: vulkan
+        run: xvfb-run -a -s "-screen 0 1920x1080x24" cargo xtask smoke
+      - name: Golden screenshots
+        if: hashFiles('tests/golden/*.png') != ''
+        env:
+          WGPU_BACKEND: vulkan
+        run: xvfb-run -a -s "-screen 0 1920x1080x24" cargo xtask golden
+      - name: Upload captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: captures-linux
+          path: target/xtask/
+          if-no-files-found: ignore
+
+  wasm:
+    name: wasm32 check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install pinned toolchain
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo check --package warlock --package warlock-core --target wasm32-unknown-unknown --locked
+
+  deny:
+    name: cargo-deny
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: EmbarkStudios/cargo-deny-action@v2

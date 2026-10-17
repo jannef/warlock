@@ -1,0 +1,19 @@
+[package]
+name = "warlock"
+description = "Warlock: GPU-rendered ASCII roguelike (Bevy app: rendering, input, UI, effects)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+bevy.workspace = true
+clap.workspace = true
+image.workspace = true
+warlock-core.workspace = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+bevy = { workspace = true, features = ["webgpu"] }
+
+[lints]
+workspace = true

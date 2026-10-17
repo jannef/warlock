@@ -1,0 +1,6 @@
+[alias]
+xtask = "run --package xtask --"
+
+# Bevy's wasm build needs getrandom's web backend.
+[target.wasm32-unknown-unknown]
+rustflags = ["--cfg", "getrandom_backend=\"wasm_js\""]
