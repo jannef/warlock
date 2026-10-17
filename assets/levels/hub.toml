@@ -30,3 +30,4 @@ map = '''
 "@" = { terrain = "floor", spawn = "player" }
 "1" = { terrain = "floor", creature = "rat", route = "E24 W24" }
 "2" = { terrain = "floor", creature = "kobold", route = "E24 N5 W24 S5" }
+">" = { terrain = "stairs_down", to = "vast" }

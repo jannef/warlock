@@ -23,6 +23,9 @@ behavior, commands, or architecture change.
 | Dependency audit | `cargo deny check` |
 | Screenshot smoke test | `cargo xtask smoke` (writes `target/xtask/smoke.png`) |
 | Web build | `cargo xtask web` (writes `target/web/`; see "Releases, web build, logs") |
+| Regenerate the vast level | `cargo xtask gen-vast` (writes `assets/levels/vast.toml`; deterministic, never hand-edit) |
+| Check the vast level is fresh | `cargo xtask gen-vast --check` (fails if the file differs from the generator output; run it after touching `xtask/src/vast.rs`) |
+| Turn-time benchmark | `cargo xtask bench-turns` (re-runs itself in release; budgets: hub 5 ms, vast 16 ms) |
 
 Game flags (`cargo run -p warlock -- --help`):
 - `--scenario NAME` (default `showcase`), `--seed N` (default: the scenario's seed)
@@ -70,7 +73,7 @@ then read the PNG.
 crates/warlock-core   plain Rust, no Bevy, deterministic simulation
 crates/warlock-cli    headless dev tool on top of core (no Bevy)
 crates/warlock        Bevy app: rendering, input, UI, effects, platform
-xtask                 screenshot capture and golden-image comparison
+xtask                 screenshot capture, golden-image comparison, vast level generator, benchmarks
 assets                fonts, data definitions, levels, scenarios
 ```
 

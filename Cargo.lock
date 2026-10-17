@@ -6348,6 +6348,7 @@ name = "xtask"
 version = "0.1.0"
 dependencies = [
  "image",
+ "warlock-core",
 ]
 
 [[package]]

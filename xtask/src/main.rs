@@ -3,6 +3,11 @@
 //! Commands:
 //! - `smoke`: run the game with `--capture` and check that something was rendered.
 //! - `web`: build the WebGPU site into `target/web` (needs `wasm-bindgen-cli`, see CLAUDE.md).
+//! - `gen-vast [--check]`: regenerate `assets/levels/vast.toml` (`--check` fails if it is stale).
+//! - `bench-turns`: release-mode turn-time table for the hub and the vast level.
+
+mod bench;
+mod vast;
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode};
@@ -12,8 +17,10 @@ fn main() -> ExitCode {
     let result = match args.first().map(String::as_str) {
         Some("smoke") => smoke(),
         Some("web") => web(),
+        Some("gen-vast") => gen_vast(args.get(1).is_some_and(|a| a == "--check")),
+        Some("bench-turns") => bench_turns(),
         _ => {
-            eprintln!("usage: cargo xtask <smoke|web>");
+            eprintln!("usage: cargo xtask <smoke | web | gen-vast [--check] | bench-turns>");
             return ExitCode::from(2);
         }
     };
@@ -156,4 +163,54 @@ fn web() -> Result<(), String> {
         out.display()
     );
     Ok(())
+}
+
+fn gen_vast(check: bool) -> Result<(), String> {
+    let path = workspace_root().join("assets/levels/vast.toml");
+    let text = vast::generate()?;
+    if check {
+        let current = std::fs::read_to_string(&path).unwrap_or_default();
+        if current != text {
+            return Err(format!(
+                "{} is stale; run `cargo xtask gen-vast` and commit the result",
+                path.display()
+            ));
+        }
+        println!("gen-vast ok: {} is up to date", path.display());
+    } else {
+        std::fs::write(&path, &text)
+            .map_err(|e| format!("cannot write {}: {e}", path.display()))?;
+        println!(
+            "wrote {} ({}x{})",
+            path.display(),
+            vast::WIDTH,
+            vast::HEIGHT
+        );
+    }
+    Ok(())
+}
+
+/// Turn timing is only meaningful with optimizations, so a debug xtask re-runs itself in release.
+fn bench_turns() -> Result<(), String> {
+    if !cfg!(debug_assertions) {
+        return bench::run();
+    }
+    let status = Command::new(env!("CARGO"))
+        .current_dir(workspace_root())
+        .args([
+            "run",
+            "--quiet",
+            "--release",
+            "--package",
+            "xtask",
+            "--",
+            "bench-turns",
+        ])
+        .status()
+        .map_err(|e| format!("failed to run cargo: {e}"))?;
+    if status.success() {
+        Ok(())
+    } else {
+        Err(format!("bench exited with {status}"))
+    }
 }
