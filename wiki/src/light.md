@@ -53,5 +53,7 @@ Some effects look like light but never change what you can see:
 - **Creature shadows.** Creatures, you included, cast soft shadows. They are only drawn: a creature
   cannot hide in another creature's shadow.
 - **Glow and particles.** Sparks over a brazier or the glow of a rune are decoration.
+- **Falling rain.** The drops are decoration; the clouds that dim the light are not (see
+  [Weather](weather.md)).
 
 The reduced effects setting turns all of these off.

@@ -88,6 +88,9 @@ pub struct ParticleEmitter {
     /// Emissive strength: how much the particle glows (bloom), 0 to 1.
     #[serde(default)]
     pub glow: f32,
+    /// How opaque the particle is at most, 0 to 1 (default 1): faint particles such as rain.
+    #[serde(default = "one")]
+    pub opacity: f32,
 }
 
 fn one() -> f32 {
@@ -117,6 +120,7 @@ impl ParticleEmitter {
             self.scale,
             self.fade,
             self.glow,
+            self.opacity,
         ];
         if finite.iter().any(|v| !v.is_finite()) {
             return Err("particle values must be finite numbers".into());
@@ -130,8 +134,11 @@ impl ParticleEmitter {
         if self.life <= 0.0 || self.scale <= 0.0 {
             return Err("particle `life` and `scale` must be positive".into());
         }
-        if !(0.0..=1.0).contains(&self.fade) || !(0.0..=1.0).contains(&self.glow) {
-            return Err("particle `fade` and `glow` must be between 0 and 1".into());
+        if [self.fade, self.glow, self.opacity]
+            .iter()
+            .any(|v| !(0.0..=1.0).contains(v))
+        {
+            return Err("particle `fade`, `glow`, and `opacity` must be between 0 and 1".into());
         }
         match self.on {
             ParticleTrigger::Ambient if self.rate <= 0.0 => {
@@ -164,6 +171,7 @@ mod tests {
         assert_eq!(e.on, ParticleTrigger::Ambient);
         assert_eq!(e.scale, 1.0);
         assert_eq!(e.fade, 0.5);
+        assert_eq!(e.opacity, 1.0);
         assert_eq!(e.velocity, [0.0, 0.0]);
         assert_eq!(e.check(), Ok(()));
     }
@@ -183,6 +191,11 @@ mod tests {
         assert!(parse(no_colors).check().is_err());
         assert!(
             parse(&format!("{base}rate = 1\nglow = 2\n"))
+                .check()
+                .is_err()
+        );
+        assert!(
+            parse(&format!("{base}rate = 1\nopacity = 1.5\n"))
                 .check()
                 .is_err()
         );

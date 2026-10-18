@@ -2,6 +2,7 @@
 
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
+use crate::weather::Weather;
 use crate::world::ActorId;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -37,6 +38,9 @@ pub enum Action {
     SetVision(String),
     /// Dev command: move the clock ahead at once; nothing else acts.
     SkipTime(Duration),
+    /// Dev command: set the weather for three hours of game time ([`crate::weather::OVERRIDE`]),
+    /// then the weather of the day returns. Takes no game time; recorded in replays.
+    SetWeather(Weather),
 }
 
 /// How long to rest.
@@ -188,8 +192,9 @@ pub struct Outcome {
 }
 
 /// Text syntax for scripting: `move:E wait open:E close:W ascend descend lantern rest:1h
-/// rest:dawn rest:dusk pickup pickup:ac drop:b vision:ID skip:1h` (durations: `30s`, `10m`,
-/// `2h`; letters name stacks, `a` first; `pickup` and `drop` without letters take everything).
+/// rest:dawn rest:dusk pickup pickup:ac drop:b vision:ID skip:1h weather:rain` (durations: `30s`,
+/// `10m`, `2h`; letters name stacks, `a` first; `pickup` and `drop` without letters take
+/// everything; weather: `clear`, `overcast`, `rain`, `heavy`).
 ///
 /// `Display` and `FromStr` round-trip; action names are case-insensitive when parsing (vision
 /// profile ids keep their case).
@@ -212,6 +217,7 @@ impl fmt::Display for Action {
             Action::Rest(Rest::Dusk) => f.write_str("rest:dusk"),
             Action::SetVision(id) => write!(f, "vision:{id}"),
             Action::SkipTime(d) => write!(f, "skip:{d}"),
+            Action::SetWeather(w) => write!(f, "weather:{}", w.id()),
         }
     }
 }
@@ -268,6 +274,10 @@ impl FromStr for Action {
                 Some(d) if !d.is_zero() => Ok(Action::SkipTime(d)),
                 _ => Err("`skip` needs a positive duration, e.g. `skip:1h`".into()),
             },
+            "weather" => match arg.and_then(Weather::from_id) {
+                Some(w) => Ok(Action::SetWeather(w)),
+                None => Err("`weather` needs `clear`, `overcast`, `rain`, or `heavy`".into()),
+            },
             "vision" => match s.split_once(':').map(|(_, id)| id) {
                 Some(id) if !id.is_empty() => Ok(Action::SetVision(id.to_string())),
                 _ => Err("`vision` needs a profile id, e.g. `vision:darkvision`".into()),
@@ -275,7 +285,7 @@ impl FromStr for Action {
             _ => Err(format!(
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
                  descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
-                 vision:ID, skip:DURATION)"
+                 vision:ID, skip:DURATION, weather:clear|overcast|rain|heavy)"
             )),
         }
     }
@@ -346,6 +356,7 @@ mod tests {
             Action::Drop(Letters::of([1])),
             Action::Drop(Letters::of(0..Letters::COUNT)),
         ];
+        all.extend(Weather::ALL.map(Action::SetWeather));
         for d in Dir::ALL {
             all.extend([Action::Move(d), Action::Open(d), Action::Close(d)]);
         }
@@ -402,7 +413,16 @@ mod tests {
             ])
         );
         assert_eq!(Action::PickUp(Letters::of([2, 0])).to_string(), "pickup:ac");
+        assert_eq!(
+            parse_actions("WEATHER:Heavy weather:clear"),
+            Ok(vec![
+                Action::SetWeather(Weather::HeavyRain),
+                Action::SetWeather(Weather::Clear)
+            ])
+        );
         for bad in [
+            "weather",
+            "weather:snow",
             "pickup:",
             "pickup:a1",
             "drop:A-",

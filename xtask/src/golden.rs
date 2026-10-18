@@ -105,8 +105,10 @@ fn make_replay(
     let text = entry.actions.as_deref().unwrap_or("");
     for action in parse_actions(text)? {
         let outcome = world.apply(&action);
-        // Switching vision is free by design; anything else that takes no time was refused.
-        if outcome.elapsed.is_zero() && !matches!(action, Action::SetVision(_)) {
+        // Switching vision and setting the weather are free by design; anything else that takes
+        // no time was refused.
+        let free = matches!(action, Action::SetVision(_) | Action::SetWeather(_));
+        if outcome.elapsed.is_zero() && !free {
             return Err(format!(
                 "{}: action `{action}` took no turn (blocked?); fix the action sequence",
                 entry.name

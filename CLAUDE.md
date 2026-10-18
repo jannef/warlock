@@ -30,7 +30,7 @@ behavior, commands, or architecture change.
 | Player wiki tables | `cargo xtask wiki` (writes `wiki/src/generated/*.md` from the game data), `--check` (fails when stale), `--build` (also runs `mdbook build wiki` into `wiki/book/`; needs `cargo install mdbook --locked`) |
 | Golden screenshots | `cargo xtask golden` (compare; authoritative on Linux only), `--local` (capture to `target/xtask/golden/*.local.png`, no compare), `--update` (rewrite references; see "Golden screenshots") |
 | Frame-time benchmark | `cargo xtask bench-frames [WxH]` (release, offscreen; method and results in `docs/perf.md`) |
-| Turn-time benchmark | `cargo xtask bench-turns` (re-runs itself in release; budgets: hub 5 ms, vast 16 ms, generated depths level 5 ms, sunlit courtyard at dawn 5 ms, overworld 5 ms, generated forest area at dawn 5 ms, courtyard and forest area at full-moon midnight 5 ms, arena 5 ms per turn; a dusk-to-dawn rest 500 ms, also with the arena's fight going on unseen all night) |
+| Turn-time benchmark | `cargo xtask bench-turns` (re-runs itself in release; budgets: hub 5 ms, vast 16 ms, generated depths level 5 ms, sunlit courtyard at dawn 5 ms, overworld 5 ms, generated forest area at dawn 5 ms, courtyard and forest area at full-moon midnight 5 ms, arena 5 ms per turn; a dusk-to-dawn rest 500 ms, also with the arena's fight going on unseen all night, and rested on to dawn when rain wakes the player) |
 | Light stress benchmark | `cargo test --release -p warlock-core turn_cost -- --ignored --nocapture` (400×300, 825 lights; again outdoors at 06:15) |
 
 Game flags (`cargo run -p warlock -- --help`):
@@ -73,11 +73,13 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 | Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor; also local areas, `--level local:49,23`) |
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascend descend lantern
-pickup[:LETTERS] drop[:LETTERS] rest:GOAL vision:PROFILE skip:DURATION` (`DIR` = N NE E SE S SW W
-NW; `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the player's cell, `a`
-its top) or `drop:b` (the inventory), none = everything; `PROFILE` = an id in
+pickup[:LETTERS] drop[:LETTERS] rest:GOAL vision:PROFILE skip:DURATION weather:KIND` (`DIR` = N
+NE E SE S SW W NW; `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
+player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `PROFILE` = an id in
 `assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are
-`30s`, `10m`, `2h`; `skip` is the dev hour skip; `ACTION*N` repeats one, e.g. `wait*10`). Dump layers: `view` (what the player sees), `fov` (`*` visible),
+`30s`, `10m`, `2h`; `skip` is the dev hour skip; `weather` is the dev weather override, `KIND` =
+`clear`, `overcast`, `rain`, `heavy`, for three hours of game time; `ACTION*N` repeats one, e.g.
+`wait*10`). Dump layers: `view` (what the player sees), `fov` (`*` visible),
 `memory` (seen terrain and remembered objects), `light` (perceived brightness of visible cells as a
 digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places over the view: `f`
 footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m` chanting, upper case
@@ -90,7 +92,8 @@ carries, **dev-only**). Replay files are JSON
 
 - `--new` start a fresh run instead of resuming the save; `--dev` enables the dev keys in release
   builds (always on in debug: F2 reveal map (ground truth), F3 next vision profile, F4 light-value
-  overlay, F5/F9 snapshots, F6 skip an hour (recorded as `skip:1h`); all listed by `?`);
+  overlay, F5/F9 snapshots, F6 skip an hour (recorded as `skip:1h`), F7 next weather (recorded as
+  `weather:KIND`); all listed by `?`);
   `--save-dir DIR` keeps saves in DIR instead of the platform data dir.
 
 Storage backends (`crates/warlock/src/storage.rs`): `Backend::Dir` (native files, atomic writes) or
@@ -115,7 +118,7 @@ Settings (`crates/warlock/src/settings/`): `settings.toml` in the platform confi
 `~/Library/Application Support/warlock`), schema in the `settings/mod.rs` module docs. Changes
 apply live and are written at once; a bad file means defaults plus a warning, per value. Effects:
 `reduced_effects` is a preset over the `[effects]` switches (`EffectSwitches`: glyph_animation,
-flicker, motion, glow, distortion, particles, screen_fades; all on by default). Each consumer reads
+flicker, motion, glow, distortion, particles, screen_fades, weather; all on by default). Each consumer reads
 its own switch from the `render::Effects` resource (the effective values, synced every frame from
 `Settings` + `--reduced-effects`), never the preset; a new effect needs a switch in
 `EffectSwitches`, the file, and a row in `ui/settings_screen.rs`. Palettes
@@ -182,7 +185,8 @@ on local levels, `travel_minutes` on the overworld), `run_turn` (the energy sche
 `world/schedule.rs`, spec §8 "Speed") charges the player for it and runs the other actors on the
 level in time order until the player may act again, advancing the clock to each action, and
 `rest` loops turns until the goal or an interruption (perceiving only after turns in which a
-creature could have come into view: `out_of_view_for`, which accounts for speed). New actions
+creature could have come into view: `out_of_view_for`, which accounts for speed, or in which the
+weather the player would see changed: `weather_turned`). New actions
 that take time must return their duration there. `creature_turn` is one creature's action and
 returns how long it took: the one place creature behavior lives (AI decisions, the noise and
 events an action makes; the AI is `world/ai.rs`, below). Speed (`speed` in `data/creatures.toml`, default 1000 = the player's)
@@ -240,7 +244,9 @@ patrol), paths `world/path.rs` (A*, fixed tie-breaks), and per-creature memory `
 cells where hostiles stand (nearest first, line of sight only out to that distance, darkvision
 before light, bounce light only when needed); it must stay equal to the player's perception —
 `light_tests::check_creature_sight` compares `sight::light` with the perceived light on every
-visible cell in the light property tests. Attacks are intents: `Event::Attacked` (kept only when
+visible cell in the light property tests (and under each weather in `weather_tests`). Both take
+the sky from `WorldState::sky` (the weather's clouds included) and overworld sight from
+`daylight::sight_under` (rain included). Attacks are intents: `Event::Attacked` (kept only when
 the player sees both ends), a noise (`noise::Act::Attack`), and messages built in
 `World::perceive` (`attack_report`; unseen ends are "something"). The app shows a lunge
 (`ui/motion.rs`, `motion` switch), a shot glyph, and a creature's `on = "attack"` particle burst
@@ -382,8 +388,29 @@ The status bar shows the phase (`MoonPhase`, glyph in `ui/mod.rs`) and the full 
 from disk without a rebuild. The wiki's moons and overworld-sight tables come from `sky.toml`
 (`Moon::brightest`); run `cargo xtask wiki` after changing it.
 
+**Weather** (spec §5 "Weather", `weather.rs`; data `data/weather.toml`, `content/weather.rs`,
+`Climate`, `WeatherDef`, `Content::climate()`; optional, always clear without the file, so test
+fixtures without it have clear skies — `ContentFiles::remove("data/weather.toml")` gives built-in
+content a clear sky, as the overworld tests do): stateless, `weather::conditions(seed, time,
+climate, override)` (weather and `Clouds`) and `weather_at` (just the weather, cheap). Blocks of
+~3 h with a hashed start shift; a block's weather is the Irwin–Hall-spread sum of `WINDOW` block
+draws against the month's chances; clouds ramp over `CHANGE` around a change. Never keep weather
+state: only the dev override (`Action::SetWeather`, `weather:rain`, `WorldState::weather_override`,
+3 hours) lives in the world state. The clouds apply in `Sky::at(time, moons, conditions)`, and
+nowhere else (rounded up, so `is_up`/`shines` never change); `Sky::clear` is the sky without them;
+`WorldState::sky` is the sky of the moment for perception and creature sight alike.
+Perception knows the weather only on sky-exposed levels (`Sky::conditions`,
+`PerceptionView::weather`); `World::perceive` compares it with the previous snapshot's and says the
+change (`weather_news`: rain starting or growing heavier `say`s, which stops a rest; the rest
+`note`s, which does not). Overworld sight loses the weather's `sight` (`daylight::overworld_sight`).
+Look at the weather of a seed: `WARLOCK_SEED=1 WARLOCK_FROM=4,1 WARLOCK_DAYS=10 cargo test -p
+warlock-core --lib print_weather -- --ignored --nocapture` (a line per day, `.` clear, `o`
+overcast, `r` rain, `R` heavy). Tune the clouds and the rain with captures of the `courtyard` and
+`forest` scenarios after `skip:330m weather:rain` (noon) and `skip:353h skip:30m weather:heavy`
+(full-moon midnight) with `--content-dir assets`; the wiki's weather tables come from the file.
+
 Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distortion`,
-`screen_fades`) and all off with reduced effects:
+`screen_fades`, `weather`) and all off with reduced effects:
 - **Particles** (`render/particles.rs`): stateless, a pure function of visual time and a seed via
   a visual-only SplitMix RNG (ambient emitters: one particle per `1/rate` slot; bursts: `count`
   particles per event). `ui/effects.rs` emits them from perception (visible cells, seen creatures,
@@ -400,12 +427,17 @@ Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distor
   additive, `Tonemapping::None`), so only glowing glyphs bloom (with `glow` off the camera stays plain LDR,
   pixel-identical to no effects). `ScreenTints` draws a fading color over the map viewport:
   the level-change fade, and `flash()` for hit-style events.
+- **Rain** (`ui/rain.rs`, the `weather` switch): the weather's `drops`/`splash`/`ripples` emitters
+  (`data/weather.toml`) run as ambient emitters on every visible unroofed cell of the grid (plus
+  `BELOW` rows), keyed by level position; a particle is drawn only over a cell it rains on, at most
+  `MAX_PARTICLES` a frame. Drops are `│` sheared along their velocity (`FreeGlyph::slant`, pixels
+  across per pixel down, applied in `free_glyph::glyph_mesh`) and faint (`ParticleEmitter::opacity`).
 
 `ui/` decides what is drawn from the perception snapshot: `ui/mod.rs` (UI console, map grid in
-base colors), `ui/glyphs.rs` (free glyphs), `ui/motion.rs` (slides from `Outcome.events`, one per
-creature along all the steps it took that turn; camera easing; new input completes running
-motion), `ui/effects.rs` (particles, bursts, glow and haze, fades), `ui/sounds.rs` (heard-sound
-markers), `ui/look.rs` (look mode), `ui/dev.rs` (dev overlays: reveal map, the one reader of
+base colors, the status bar: `status_segments`), `ui/glyphs.rs` (free glyphs), `ui/motion.rs`
+(slides from `Outcome.events`, one per creature along all the steps it took that turn; camera
+easing; new input completes running motion), `ui/effects.rs` (particles, bursts, glow and haze,
+fades), `ui/rain.rs` (rain), `ui/sounds.rs` (heard-sound markers), `ui/look.rs` (look mode), `ui/dev.rs` (dev overlays: reveal map, the one reader of
 ground truth, and light values).
 Animation curves live in `render/anim.rs` (water: `render/water.rs`, test-only mirrors of the
 shader) and are mirrored in `console.wesl` — change both together. Everything animated is a function of `VisualTime`. Effects are deliberately subtle (the
@@ -428,10 +460,10 @@ Hard rules:
 notes, and no locations or level walkthroughs yet), built with [mdBook](https://rust-lang.github.io/mdBook/)
 (`wiki/book.toml`, table of contents in `wiki/src/SUMMARY.md`, default theme `coal`). It is
 published at https://jannef.github.io/warlock/wiki/ by the release workflow's web job, which
-builds it into `pages/wiki/` beside the game. Facts that live in data (months, moons, terrain,
-footstep loudness in words, vision profiles, light presets, creatures, objects, materials, sight
-radii, the pack's size; never hidden rules such as speed, hearing thresholds, or creature weights)
-are tables generated by `cargo xtask wiki`
+builds it into `pages/wiki/` beside the game. Facts that live in data (months, moons, weather,
+terrain, footstep loudness in words, vision profiles, light presets, creatures, objects,
+materials, sight radii, the pack's size; never hidden rules such as speed, hearing thresholds, or
+creature weights) are tables generated by `cargo xtask wiki`
 (`xtask/src/wiki.rs`) into `wiki/src/generated/` (committed) and pulled into pages with
 `{{#include generated/NAME.md}}`; CI runs `cargo xtask wiki --check` and `mdbook build wiki` on the
 Linux job (mdBook pinned there and in `release.yml`). To preview: `cargo xtask wiki --build`, then

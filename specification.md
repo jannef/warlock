@@ -134,6 +134,10 @@ Plains, Mirefen, Greyspine Mountains) show in the status bar.
   and the sky light the overworld and its local areas by day (§5 "Sunlight"), the moon by night
   (§5 "Moonlight"); at night the overworld is drawn by a faint cold light with the moonlight on
   top, while local areas are dark but for the moon.
+- **Weather** (M12): clear, overcast, rain, or heavy rain over the overworld and its local areas
+  (and the courtyard), changing every few hours by the month's chances; clouds dim the sun, the
+  sky, and the moon, rain shortens sight on the overworld, and faint rain falls on what the player
+  sees (§5 "Weather", §4.8).
 - The `world` scenario starts on the road beside the Hall; the showcase scenario keeps starting in
   the hub.
 
@@ -272,9 +276,12 @@ Water is calm by design; motion stays tasteful, never busy:
   around glyphs rather than over them, small distortion amplitudes.
 - A **reduced effects** setting is a preset that turns off glyph animation, flicker (light
   stability: light is steady), sliding (instant snap), camera easing, bloom and glow, distortion,
-  particles, and screen fades and flashes. Each can also be switched off on its own (settings:
-  glyph animation, light flicker, motion = slides and camera easing, bloom and glow, distortion,
-  particles, screen fades); an effect runs only when its switch is on and reduced effects is off. No gameplay information may
+  particles, screen fades and flashes, and falling rain. Each can also be switched off on its own
+  (settings: glyph animation, light flicker, motion = slides and camera easing, bloom and glow,
+  distortion, particles, screen fades, weather); an effect runs only when its switch is on and
+  reduced effects is off. Rain has a switch of its own rather than riding on particles: it moves
+  over the whole view, not around a few sources. The weather itself (its light, the status bar)
+  never depends on it. No gameplay information may
   depend on an effect: heard sounds keep a still marker when their ripple (glyph animation) is
   off (§5 "Hearing"). These are settings (§6); the `--reduced-effects` flag forces everything off.
 - Colors that effects introduce, such as the shimmer target color, go through the active palette
@@ -285,12 +292,12 @@ Water is calm by design; motion stays tasteful, never busy:
   has a `>` marker, refusals start with `!`).
 
 ### 4.8 Effects
-Declared in data per terrain or creature type, like glyph animation. They are presentation-only:
-gameplay never reads them. Effects are deliberately subtle — sparse, short-lived particles, gentle
+Declared in data per terrain or creature type (and per weather), like glyph animation. They are
+presentation-only: gameplay never reads them. Effects are deliberately subtle — sparse, short-lived particles, gentle
 glow, barely perceptible distortion, short fades.
 - **Glyph particles** on the free-glyph layer. An emitter has glyphs to pick from, colors over the
   particle's life, a lifetime, velocity ± spread, gravity, a start offset and spawn area, sideways
-  sway, scale, fade-out, and glow. Emitters fire `ambient` (a steady rate while the source is in
+  sway, scale, fade-out, glow, and opacity (how opaque it is at most, default 1). Emitters fire `ambient` (a steady rate while the source is in
   view: sparks over braziers and torches, embers over lava, fountain spray, dust motes), on `step`
   (a burst when a creature is seen entering the cell: a splash in water), on `toggle` (a burst
   when a door is seen opening or closing: dust), or at an `obstacle` (a steady rate from visible
@@ -317,6 +324,16 @@ glow, barely perceptible distortion, short fades.
   put and text elsewhere stays crisp.
 - **Screen tints** over the map viewport: a short fade in from black after a level change, and a
   flash (color, strength, duration) as the hook for hit-style events.
+- **Weather** (§5 "Weather"): while it rains where the player is, faint drops fall on every visible
+  cell under the open sky (never on a roofed cell), small splashes rise from visible open ground,
+  and rings spread on visible still water; heavy rain falls thicker. They are particle emitters of
+  the weather (`data/weather.toml`, §7), ambient per cell and keyed by the cell's level position, so
+  the rain stays put while the camera scrolls; a drop is drawn only while it is over a cell it
+  rains on. Drops are thin strokes (`│`) sheared along their fall (the free-glyph layer's `slant`),
+  slightly slanted, short-lived, and at most about half opaque (`opacity`); they are lit like other
+  particles, so they vanish in the dark and catch a lantern's light. At most 3000 rain particles
+  are drawn a frame. The darker, cooler look of a rainy day is the gameplay light itself, not an
+  effect. Off with the `weather` switch.
 - With frozen visual time (`--freeze-time`) fades complete instantly and bursts show a fixed
   moment early in their life, so captures are reproducible.
 
@@ -412,6 +429,44 @@ rate or animation.
     ground in its light but not its shadows, low-light eyes see by a half moon too, and a new moon
     gives nothing.
   - Computed like sunlight, per moon that shines, over the same area, and not cached.
+- **Weather** (`warlock-core/src/weather.rs`; M12): one weather over every level under the open
+  sky — clear, overcast, rain, or heavy rain — a pure function of the run seed and the time, so
+  skipping time and resting need no history.
+  - **Blocks**: time is cut into blocks of about 3 hours; block `k` starts at `k · 3 h` plus a
+    shift of 0 to 90 minutes drawn for it (so blocks last 1½ to 4½ hours and the weather does not
+    change on the hour). Each block has one weather.
+  - **Which weather**: each block draws a number uniform in `[0, 1)` (FNV-1a over the seed, a
+    label, and `k`, mixed by SplitMix64's finalizer; 16 bits). A block's value is the sum of its
+    own and the 3 previous blocks' draws mapped through the sum's distribution (the Irwin–Hall
+    CDF, integer math), which makes it uniform again while neighboring blocks share most of their
+    value: weather lasts (in Rainmoon a wet spell lasts about 12 hours on average) and mostly
+    changes to a neighboring kind. The value picks the weather by the chances of the month the
+    block starts in (`data/weather.toml`, §7; ordered clear, overcast, rain, heavy rain, the lowest
+    values the clearest), so each weather comes up exactly as often as its chance. Rainmoon is
+    wet (35 % rain, 15 % heavy), Highsun dry (70 % clear).
+  - **Clouds** dim the light of the sky, applied where the sky's light is assembled
+    (`Sky::at`): `direct` percent of the direct light of the sun and the moons gets through,
+    `sky` percent of the sky light (the sun's and the moons'), and the clouds spread `scatter`
+    percent of the direct light over the whole sky as more sky light, so shadows grow faint and the
+    light flat: overcast 35/85/15, rain 22/70/12, heavy rain 14/55/8 — at noon in the open 57 %,
+    41 %, and 28 % of a clear sky's light, and a full moon's light 58 %, 44 %, and 30 %. Channels
+    are rounded up, so a sun or moon that shines at all still shines behind the clouds (the sun
+    stays up, a moon still casts its shadows). Where the weather changes, the clouds change
+    linearly over an hour centred on the change, so the light dims and brightens smoothly; the
+    weather itself (messages, status, rain) changes at the block's start. Integer math only.
+  - **Perception**: the player knows the weather only under the open sky (it is part of the sky in
+    the snapshot); not underground. A change the player sees there is a message ("Clouds
+    gather.", "It starts to rain.", "It starts to pour.", "The rain grows heavy.", "The rain
+    eases.", "The rain stops.", "The rain stops and the sky clears.", "The sky clears."), at most
+    one per change (changes are at least 1½ hours apart); arriving under the sky says nothing (the
+    status bar shows it). Rain starting or growing heavier stops a rest; the other news is logged
+    without stopping it.
+  - **Dev override**: the action `weather:clear|overcast|rain|heavy` sets the weather (with its
+    full clouds, at once) for 3 hours of game time from the moment it is given; then the weather
+    of the day returns. It takes no time, is recorded in replays, and is kept in the world state
+    (saved, hashed) until it runs out. Captures and tests use it.
+  - Weather is the same over the whole land for now; snow, fog, and rain masking sounds (hearing)
+    may come later.
 - **Brightness** is the integer luma of RGB, `(54·r + 183·g + 19·b) / 256`, plus UV for eyes that
   see UV. Eyes without UV sight do not perceive UV at all (perception reports it as 0).
 - **Visibility**: a cell is visible iff it is in line of sight within the maximum view range **and**
@@ -421,9 +476,10 @@ rate or animation.
 - **Overworld sight** is at map scale: a cell of the overworld is visible iff it is in line of
   sight within the daylight radius: 9 by day (06:30–17:30), 5 in twilight (half an hour either side
   of 06:00 and 18:00), at night 2 plus one cell per 20 of moonlight (the brightness of all moons'
-  direct and sky light together on open ground), at most 4: a full moon high in the sky gives 4, a
-  half moon 3. Light, the eye's threshold, and darkvision play no part. Mountain ranges and dense
-  forest are opaque; forest is not.
+  direct and sky light together on open ground, through the clouds), at most 4: a full moon high in
+  the sky gives 4, a half moon 3. Rain then takes its `sight` away (2 cells in rain, 4 in heavy
+  rain; "Weather" above), never below 2. Light, the eye's threshold, and darkvision play no part.
+  Mountain ranges and dense forest are opaque; forest is not.
 - **Overworld night light**: the overworld is lit by the sun and the sky like any level under the
   open sky ("Sunlight" below), and never gets darker than a faint cold light (`[48, 56, 90]`,
   channel by channel, added to its ambient light where sun and sky fall short; moonlight comes on
@@ -512,8 +568,9 @@ rate or animation.
   with its own eyes (its type's `vision`, a profile above) and radius (its `sight`, default 10,
   at most 40): an actor is seen iff its cell is in the creature's line of sight (the same
   symmetric shadowcasting) within its sight radius and lit at least to its eye's threshold by the
-  same gameplay light the player sees (ambient, sky, every source, the sun, bounce), or within its
-  darkvision; on the overworld, line of sight within its sight and the daylight radius. (An actor
+  same gameplay light the player sees (ambient, sky, every source, the sun and the moons through
+  the weather's clouds, bounce), or within its darkvision; on the overworld, line of sight within
+  its sight and the daylight radius (moonlight and rain included). (An actor
   on an opaque cell is seen only within darkvision; no such terrain exists off the overworld.)
   Creatures never read the player's perception: each computes its own, and only for the cells
   where a hostile stands, nearest first, stopping at the first it sees: line of sight only out to
@@ -528,7 +585,7 @@ rate or animation.
   position and preset, or the sun or a moon with its shadow direction; and per-cell
   contributions; contributions plus the cell's base light sum to the cell's light), the base light
   of visible cells, the active vision profile, the ambient light, on a level under the sky the
-  sun, the moons, and the sky of the moment, and the perceived sounds (kind, volume, rough place;
+  sun, the moons, the sky, and the weather of the moment, and the perceived sounds (kind, volume, rough place;
   "Hearing" above). Visual lighting (§4.4) is derived from this.
 
 ## 6. Input and UI
@@ -587,7 +644,9 @@ rate or animation.
   cancel)`. `h` rests an hour, `d` until 06:00, `n` until 18:00 (replay text `rest:1h`,
   `rest:dawn`, `rest:dusk`); any other command cancels. Resting is one action that passes turn
   after turn and stops early when a creature comes into view or a message is logged (§8 "Time"),
-  such as a sound that is news (§5 "Hearing"); a sound already known goes on without stopping it.
+  such as a sound that is news (§5 "Hearing") or rain starting or growing heavier (§5 "Weather");
+  a sound already known goes on without stopping it, and so does other news of the weather (the
+  rain easing or stopping, clouds gathering or parting), which is logged all the same.
   It is a gameplay input mode like the open/close direction prompt, not a menu screen.
 - **Messages**: the last two show in the message line; the same text logged again in a row folds
   into one entry with a count (`You open the door. (×2)`). Heard sounds are logged only when they
@@ -608,13 +667,15 @@ rate or animation.
 - Screen layout: map viewport, message log, status panel (level, region (on the overworld and in
   its local areas), time of day and date as `14:32 · 12 Rainmoon, Year 1`, the moon's phase as a
   glyph and its name (`◑ First quarter`; with several moons each moon's name and glyph, `Moon ●
-  Ilse ☽`), turn, position, light at the player, vision profile, lantern, seed). The phase glyph
+  Ilse ☽`), the weather under the open sky (`Clear`, `Overcast`, `Rain`, `Heavy rain`; §5
+  "Weather"), turn, position, light at the player, vision profile, lantern, seed). The phase glyph
   shows the lit part of the disc, lit on the right while waxing: `○` new, `☽` waxing crescent,
   `◑` first quarter and waxing gibbous, `●` full, `◐` waning gibbous and last quarter, `☾` waning
   crescent. When the window is narrow, segments give way in priority order — seed, position,
-  lantern, vision, light, turn, then the moon's phase (first cut down to its glyph), region, date,
-  and time, the level name last — and segments that fit again in the room left take it back, most
-  important first.
+  lantern, vision, light, turn, then the moon's phase (first cut down to its glyph), region, date
+  (first cut down to day and month, `12 Rainmoon`), weather, and time, the level name last — and
+  segments that fit again in the room left take it back, most important first. Outdoors the
+  weather outranks the date: it changes the light and how far one sees.
 
 ## 7. Levels and data formats
 
@@ -724,6 +785,16 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   gives the stance (`Hostile` or `Neutral`) of two factions, creature types, or actors. Test
   factions: `vermin` (giant rats; hostile to the player), `kobolds` (the war band; hostile to the
   player and the vermin), `wildlife` (deer, cave bats, the cave beetle; neutral to everyone).
+- **The weather** (`data/weather.toml`, optional; without it the sky is always clear): exactly 12
+  `[[month]]`s in calendar order, each with the chance in percent of `clear`, `overcast`, `rain`,
+  and `heavy_rain` (adding up to 100), and a table for each of `overcast`, `rain`, and
+  `heavy_rain` (clear is the sky as it is): `direct` and `sky` (percent of the direct light of the
+  sun and the moons, and of the sky light, that gets through; 1 to 100), `scatter` (percent of the
+  direct light the clouds spread over the sky as sky light, 0 to 100, default 0), `sight` (cells
+  of overworld sight lost, 0 to 8, default 0), and presentation-only `ambient` particle emitters
+  (§4.8; `rate` per cell and second): `drops` (on every visible cell under the sky), `splash` (on
+  open ground: walkable, transparent, not running water), and `ripples` (on still water, terrain
+  with a `wave` animation). §5 "Weather".
 - **Dungeon branches** (`data/dungeons.toml`): stacks of generated levels, e.g.
   `{ id = "depths", generator = "rooms", depth = 8, size = [80, 21] }`, plus optional name,
   patrolling creature kinds, ambient light, and per-depth overrides of generator and size. Stairs
@@ -787,7 +858,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   acted on, the sounds the player perceived lately (§5 "Hearing"; saves without them load with
   none), what every actor carries, and what each creature has in mind (where it last saw a
   hostile or heard a noise to look into, and the post it left; §8 "Creature behavior"; saves
-  without it load with every creature calm; format version 7). The save is `run.sav` in the
+  without it load with every creature calm; format version 7), and a dev weather override while
+  it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
+  itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
   platform data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
   and on level change, and a save that cannot be read is renamed `run.sav.bad`, never deleted, while
   a new run starts. Starting resumes the save unless `--new` is given. Dev snapshots: `F5` saves and
@@ -866,9 +939,11 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   - **Rest** passes turn after turn through the normal pipeline: the player waits, the others
     act, perception runs; the last turn is cut short so the rest ends exactly at its goal (one
     hour, the next 06:00, or the next 18:00; at most a day). It stops after a turn in which a
-    creature came into view (one not seen the turn before) or a message was logged, and logs how
-    long the player rested. Turns that end before any creature on the level could come within
-    view pass without perception: a creature is seen only within the view range, and before its
+    creature came into view (one not seen the turn before) or a message was logged that stops a
+    rest (all but weather news other than rain starting or growing heavier, §5 "Weather"), and
+    logs how long the player rested. Turns that end before any creature on the level could come
+    within view, and in which the weather the player would see did not change, pass without
+    perception: a creature is seen only within the view range, and before its
     first step that could bring it there it needs the energy for every step that cannot (each at
     least the level's quickest step), so a fast creature shortens the stretch. Those turns cannot
     change when the rest stops (sounds carry at most 30 cells, less than the view range, so none
@@ -916,8 +991,9 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
 - **Determinism**: ChaCha8 RNG (`rand_chacha`) with separate streams, each seeded with FNV-1a 64 of
   the run seed (little-endian) and a label: map generation per level (`map/<level id>`, retry *k*
   `map/<level id>/<k>`), so a level depends only on the seed and its id, never on visiting order;
-  gameplay (`gameplay`, kept in the world state and saved); and visual-only randomness in the app,
-  which never uses either. No hash-order iteration and no floating point in the core's decisions.
+  gameplay (`gameplay`, kept in the world state and saved); the weather, which keeps no stream at
+  all: each weather block hashes the seed, a label, and its number (FNV-1a, then SplitMix64's
+  finalizer; §5 "Weather"); and visual-only randomness in the app, which never uses either. No hash-order iteration and no floating point in the core's decisions.
   The same seed and actions produce the same result within a game version; seeds are not
   guaranteed stable across versions, and snapshot tests flag when generator output changes. A seed
   is a number or a word (`--seed warlock`, hashed with FNV-1a 64).
@@ -943,9 +1019,10 @@ cargo xtask golden [--update]                             # compare golden scree
 
 - Replays are JSON: `{game_version, scenario, seed, steps: [{action, hash}]}`. Actions use a text
   syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
-  pickup pickup:ac drop drop:b vision:darkvision skip:1h`; durations are a whole number with `s`,
-  `m`, or `h`, a rest at most `24h`; letters name stacks of the pile or the inventory, `a` first,
-  and without letters `pickup` and `drop` take everything; in scripts, `ACTION*N` repeats an
+  pickup pickup:ac drop drop:b vision:darkvision skip:1h weather:rain`; durations are a whole
+  number with `s`, `m`, or `h`, a rest at most `24h`; letters name stacks of the pile or the
+  inventory, `a` first, and without letters `pickup` and `drop` take everything; the dev weather
+  override takes `clear`, `overcast`, `rain`, or `heavy`; in scripts, `ACTION*N` repeats an
   action, e.g. `wait*10`); `hash` is the
   FNV-1a 64 hash of the
   canonical JSON encoding of `WorldState` after the step. Verification reports the first
@@ -959,14 +1036,17 @@ cargo xtask golden [--update]                             # compare golden scree
   are built from the perception snapshot only;
   `truth` (terrain, objects, and creatures) and `actors` (every actor on the level with its
   weight, base plus carried, and what it carries) show ground truth and are dev-only. JSON dumps
-  carry turn, game time (seconds and calendar fields), level, viewer, seen actors, heard sounds,
-  the player's inventory and weight, recent messages, and optionally the full world state; the
-  ASCII header line has the turn, the time (`0001-01-01 08:00:00`), level, viewer, and hash.
+  carry turn, game time (seconds and calendar fields), level, viewer, the weather (under the open
+  sky; else null), seen actors, heard sounds, the player's inventory and weight, recent messages,
+  and optionally the full world state; the ASCII header line has the turn, the time
+  (`0001-01-01 08:00:00`), level, viewer, the weather under the open sky (`weather rain`), and
+  hash.
 - Freezing visual time and fixing window size and scale make screenshots reproducible. With frozen
   time, glyph animations show that moment and motion (slides, camera) completes instantly.
 - Dev builds add in-game commands: switch vision profile (`F3`), reveal map (`F2`, ground truth,
   marked as dev-only on screen), toggle debug overlays (light values `F4`; line of sight and memory
-  later), save and load named snapshots (`F5`/`F9`), skip an hour (`F6`, recorded as `skip:1h`).
+  later), save and load named snapshots (`F5`/`F9`), skip an hour (`F6`, recorded as `skip:1h`),
+  set the next weather for three hours (`F7`, recorded as `weather:overcast` and so on).
   They are in the bindings table, so the `?` help lists them.
 - CLAUDE.md documents build commands, architecture notes, pinned documentation references, and
   verification procedures, including the agent workflow guidance from the original brief.

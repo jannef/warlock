@@ -165,16 +165,18 @@ move:SE*2 move:E*2 move:NE move:E*4 move:NE*4 move:E move:NE move:E move:NE*3 mo
 window = "1280x720"
 
 # The courtyard up the stairs nook's `<` (spec §5 "Sunlight"): short shadows due north at noon,
-# long warm ones to the east at 17:30. `skip` moves the clock without turns passing.
+# long warm ones to the east at 17:30. `skip` moves the clock without turns passing; the
+# outdoor entries set a clear sky (`weather:clear`, spec §5 "Weather"), whatever the weather of
+# the day.
 [[golden]]
 name = "courtyard-noon"
 scenario = "showcase"
-actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:E*2 move:NE ascend move:E*22 skip:230m"
+actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:E*2 move:NE ascend move:E*22 skip:230m weather:clear"
 
 [[golden]]
 name = "courtyard-dusk"
 scenario = "showcase"
-actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:E*2 move:NE ascend move:E*22 skip:560m"
+actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:E*2 move:NE ascend move:E*22 skip:560m weather:clear"
 
 # The courtyard scenario at midnight under the full moon (spec §5 "Moonlight"; the 16th at
 # 00:00): faint, slightly purple moonlight on open ground, short moon shadows due north, and the
@@ -182,7 +184,20 @@ actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:E*2 move:NE a
 [[golden]]
 name = "courtyard-full-moon"
 scenario = "courtyard"
-actions = "move:E*20 skip:353h skip:28m"
+actions = "move:E*20 skip:353h skip:28m weather:clear"
+
+# Weather (spec §5 "Weather", §4.8): the courtyard at noon in rain (duller, flatter light, faint
+# shadows, sparse slanted drops, splashes, rings on the pond) and the forest glade at noon in heavy
+# rain (darker, denser drops).
+[[golden]]
+name = "courtyard-rain"
+scenario = "courtyard"
+actions = "move:E*20 skip:330m weather:rain"
+
+[[golden]]
+name = "forest-heavy-rain"
+scenario = "forest"
+actions = "skip:330m weather:heavy"
 
 # The overworld (`world` scenario): along the road from the Hall to the bridge over the Wendle,
 # at 12:20 (sunlit, sight radius 9) and after a skip to 22:20 on the 14th (cold night light with
@@ -190,12 +205,12 @@ actions = "move:E*20 skip:353h skip:28m"
 [[golden]]
 name = "overworld-noon"
 scenario = "world"
-actions = "move:E*2 move:NE move:E*6 move:NE move:E*3"
+actions = "move:E*2 move:NE move:E*6 move:NE move:E*3 weather:clear"
 
 [[golden]]
 name = "overworld-night"
 scenario = "world"
-actions = "move:E*2 move:NE move:E*6 move:NE move:E*3 skip:10h"
+actions = "move:E*2 move:NE move:E*6 move:NE move:E*3 skip:10h weather:clear"
 
 # A forest clearing at noon (#55): along the road west into the Thornwood and north onto a forest
 # cell, `>` into its local area (arriving on its south side), back out, and `>` again into the
@@ -204,4 +219,4 @@ actions = "move:E*2 move:NE move:E*6 move:NE move:E*3 skip:10h"
 [[golden]]
 name = "forest-noon"
 scenario = "world"
-actions = "move:W*11 move:SW move:W*10 move:N descend move:S descend skip:1120m"
+actions = "move:W*11 move:SW move:W*10 move:N descend move:S descend skip:1120m weather:clear"

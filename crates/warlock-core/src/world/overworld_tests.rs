@@ -13,8 +13,17 @@ use crate::replay::Replay;
 use std::collections::VecDeque;
 use std::sync::LazyLock;
 
+/// Built-in content under an always clear sky: these tests are about travel, daylight, and
+/// moonlight; `weather_tests.rs` has the weather.
 static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
+    LazyLock::new(|| Arc::new(Content::load(&clear_files()).expect("builtin content")));
+
+/// The built-in content files without the weather.
+fn clear_files() -> ContentFiles {
+    let mut files = ContentFiles::builtin();
+    files.remove("data/weather.toml");
+    files
+}
 
 /// The `world` scenario: on the road beside the Hall at 08:00.
 fn world() -> World {
@@ -23,7 +32,7 @@ fn world() -> World {
 
 /// The `world` scenario under a sky without moons: nights are dark.
 fn moonless_world() -> World {
-    let mut files = ContentFiles::builtin();
+    let mut files = clear_files();
     files.insert("data/sky.toml", "");
     let content = Arc::new(Content::load(&files).expect("loads"));
     World::new(content, "world", None).expect("world")
@@ -37,7 +46,7 @@ fn with_overworld(map: &str) -> Arc<Content> {
 
 /// The files of [`with_overworld`].
 fn overworld_files(map: &str) -> ContentFiles {
-    let mut files = ContentFiles::builtin();
+    let mut files = clear_files();
     files.insert(
         "levels/overworld.toml",
         &format!(
@@ -711,7 +720,7 @@ fn overworld_replays_verify_and_saves_continue_identically() {
 
 #[test]
 fn a_run_may_start_in_a_local_area() {
-    let mut files = ContentFiles::builtin();
+    let mut files = clear_files();
     files.insert(
         "scenarios/meadow.toml",
         "name = \"Meadow\"\nstart_level = \"local:49,23\"\n",

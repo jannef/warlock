@@ -16,8 +16,9 @@ bar shows the name of the region you are in.
 
 ## Sight by daylight and moonlight
 
-Sight on the overworld is plain line of sight within a radius that depends on the time of day and,
-at night, on the moon. Light, your eyes' threshold, and darkvision play no part. Mountain ranges and
+Sight on the overworld is plain line of sight within a radius that depends on the time of day, at
+night on the moon, and on the [weather](weather.md): rain shortens it. Light, your eyes' threshold,
+and darkvision play no part. Mountain ranges and
 dense forest block sight; ordinary forest does not.
 
 {{#include generated/overworld-sight.md}}

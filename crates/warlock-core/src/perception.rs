@@ -16,7 +16,11 @@
 //!
 //! The overworld is seen at map scale instead: a cell is visible iff it is in line of sight
 //! within the daylight sight radius ([`daylight::overworld_sight`]: day 9, twilight 5, night 2,
-//! more under a bright moon), whatever its light; eyes and darkvision do not change that.
+//! more under a bright moon, less in rain), whatever its light; eyes and darkvision do not change
+//! that.
+//!
+//! **Weather** ([`crate::weather`]) is known only under the open sky: on such a level the sky
+//! carries it ([`PerceptionView::weather`]), and its clouds dim the sun, the moons, and the sky.
 //!
 //! Light on a transparent cell is the level's ambient light, plus the light of every source that
 //! reaches it, plus weak **bounce light** reflected by the lit surfaces around it
@@ -52,6 +56,7 @@ use crate::light::{
 };
 use crate::noise::{self, PerceivedSound};
 use crate::object::{Stack, Weight};
+use crate::weather::Weather;
 use crate::world::{Actor, ActorId, ActorKind, LevelState, WorldState};
 use serde::Serialize;
 
@@ -214,14 +219,12 @@ impl Perception {
         let vision = content.vision_index(&state.vision).unwrap_or(0);
         let eye = &content.vision_profiles()[vision];
         let is_opaque = |p: Pos| level.is_opaque(content, p);
-        let sky = level
-            .kind
-            .is_sky_exposed()
-            .then(|| Sky::at(state.time, content.moons()));
-        // On the overworld, daylight (and moonlight) sets how far one sees; light does not matter.
+        let sky = state.sky(content);
+        // On the overworld, daylight (and moonlight, and rain) sets how far one sees; light does
+        // not matter.
         let overworld = level.kind == LevelKind::Overworld;
         let range = match &sky {
-            Some(sky) if overworld => daylight::overworld_sight(state.time, sky.moonlight()),
+            Some(sky) if overworld => daylight::sight_under(state.time, sky, content.climate()),
             _ => VIEW_RADIUS,
         };
         let sees = |light: Light, dist2: i32| overworld || eye.sees(light, dist2);
@@ -465,6 +468,11 @@ impl Perception {
         &self.sounds
     }
 
+    /// The weather, under the open sky.
+    pub(crate) fn weather(&self) -> Option<Weather> {
+        self.sky.as_ref().map(|s| s.conditions.weather)
+    }
+
     /// Whether the cell's terrain is visible (in sight, or a completed wall).
     pub(crate) fn is_visible(&self, p: Pos) -> bool {
         self.sight.get(p).is_some_and(|s| *s != Sight::Hidden)
@@ -665,10 +673,15 @@ impl<'a> PerceptionView<'a> {
         self.snapshot.sky.as_ref().map(|s| s.sun)
     }
 
-    /// The sun, the moons, and the sky over the player's level right now (they may be down);
-    /// `None` on a level not under the open sky.
+    /// The sun, the moons, and the sky over the player's level right now (they may be down),
+    /// under the weather; `None` on a level not under the open sky.
     pub fn sky(&self) -> Option<&'a Sky> {
         self.snapshot.sky.as_ref()
+    }
+
+    /// The weather, which the player knows only under the open sky; `None` elsewhere.
+    pub fn weather(&self) -> Option<Weather> {
+        self.snapshot.weather()
     }
 
     /// Steady light at a visible cell that no single source gives: ambient light plus sky light

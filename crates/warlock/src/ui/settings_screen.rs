@@ -17,6 +17,7 @@ enum Effect {
     Distortion,
     Particles,
     ScreenFades,
+    Weather,
 }
 
 impl Effect {
@@ -29,6 +30,7 @@ impl Effect {
             Effect::Distortion => "Heat haze",
             Effect::Particles => "Particles",
             Effect::ScreenFades => "Screen fades",
+            Effect::Weather => "Weather",
         }
     }
 
@@ -41,6 +43,7 @@ impl Effect {
             Effect::Distortion => "Heat haze rising over lava and fires.",
             Effect::Particles => "Sparks, embers, splashes, and dust.",
             Effect::ScreenFades => "The fade after changing level, and screen flashes.",
+            Effect::Weather => "Rain falling, splashing, and rings on water.",
         }
     }
 
@@ -53,6 +56,7 @@ impl Effect {
             Effect::Distortion => &mut e.distortion,
             Effect::Particles => &mut e.particles,
             Effect::ScreenFades => &mut e.screen_fades,
+            Effect::Weather => &mut e.weather,
         }
     }
 }
@@ -67,7 +71,7 @@ enum Row {
     Back,
 }
 
-const ROWS: [Row; 12] = [
+const ROWS: [Row; 13] = [
     Row::FontSize,
     Row::ReducedEffects,
     Row::Effect(Effect::GlyphAnimation),
@@ -77,13 +81,14 @@ const ROWS: [Row; 12] = [
     Row::Effect(Effect::Distortion),
     Row::Effect(Effect::Particles),
     Row::Effect(Effect::ScreenFades),
+    Row::Effect(Effect::Weather),
     Row::Palette,
     Row::Reset,
     Row::Back,
 ];
 
 /// Index of the first action row (Reset); a gap is drawn before it.
-const FIRST_ACTION: usize = 10;
+const FIRST_ACTION: usize = 11;
 
 /// Selection state of the settings screen.
 #[derive(Debug, Default)]
@@ -182,7 +187,7 @@ impl SettingsScreen {
             Row::Reset => "Restores these settings (not the key bindings).",
             Row::Back => "Settings are saved as you change them.",
         };
-        let help_y = panel.y + 16;
+        let help_y = panel.y + 17;
         console.print(panel.inner_x(), help_y, help, TEXT_DIM);
         console.print(
             panel.inner_x(),
@@ -223,7 +228,7 @@ mod tests {
         press(&mut screen, &mut s, Nav::Down);
         press(&mut screen, &mut s, Nav::Enter);
         assert!(s.reduced_effects);
-        for _ in 0..8 {
+        for _ in 0..9 {
             press(&mut screen, &mut s, Nav::Down);
         }
         press(&mut screen, &mut s, Nav::Right);
@@ -250,6 +255,12 @@ mod tests {
         }
         press(&mut screen, &mut s, Nav::Left);
         assert!(!s.effects.particles && s.effects.glow);
+        // Past the screen fades: the weather.
+        for _ in 0..2 {
+            press(&mut screen, &mut s, Nav::Down);
+        }
+        press(&mut screen, &mut s, Nav::Enter);
+        assert!(!s.effects.weather && s.effects.screen_fades);
         assert!(!s.reduced_effects, "the preset is untouched");
     }
 }

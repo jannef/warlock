@@ -246,11 +246,16 @@ fn rows(width: i32, height: i32, glyph: impl Fn(Pos) -> char) -> Vec<String> {
         .collect()
 }
 
-/// One-line summary used as the dump header.
+/// One-line summary used as the dump header; under the open sky it names the weather.
 fn summary(world: &World) -> String {
     let view = world.perception();
+    // Spelled as in the JSON dump (`heavy_rain`).
+    let weather = (view.weather())
+        .and_then(|w| serde_json::to_value(w).ok())
+        .and_then(|v| v.as_str().map(|w| format!(" weather {w}")))
+        .unwrap_or_default();
     format!(
-        "turn {} time {} level {} viewer {} hash {:016x}",
+        "turn {} time {} level {} viewer {}{weather} hash {:016x}",
         world.turn(),
         world.time(),
         view.level_id(),
@@ -278,9 +283,10 @@ pub fn ascii(world: &World, layers: &[Layer]) -> String {
     out
 }
 
-/// Structured dump: turn, game time, level, viewer, seen actors, heard sounds, the player's
-/// inventory and weight, recent messages, the requested layers as arrays of rows, and optionally
-/// the full [`crate::WorldState`] under `state`.
+/// Structured dump: turn, game time, level, viewer, the weather (under the open sky; else
+/// null), seen actors, heard sounds, the player's inventory and weight, recent messages, the
+/// requested layers as arrays of rows, and optionally the full [`crate::WorldState`] under
+/// `state`.
 pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     let view = world.perception();
     let content = world.content();
@@ -322,6 +328,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "time": time_json(world),
         "level": view.level_id(),
         "viewer": view.viewer(),
+        "weather": view.weather(),
         "hash": format!("{:016x}", world.state_hash()),
         "seen_actors": seen,
         "heard_sounds": view.sounds(),

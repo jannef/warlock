@@ -21,14 +21,16 @@
 //! Integer math only (the sun's fixed-point cosine and path), so moonlight is the same on every
 //! platform.
 //!
-//! **The sky** ([`Sky::at`]) puts the sun and every moon of a moment together: it is the one
-//! place where light from the sky is assembled, so anything that dims the whole sky (clouds)
-//! belongs there.
+//! **The sky** ([`Sky::at`]) puts the sun and every moon of a moment together under the weather
+//! of that moment: it is the one place where light from the sky is assembled, and where the
+//! clouds ([`Clouds`]) dim it: the direct light of the sun and the moons, their sky light, and
+//! the share of the direct light the clouds spread over the whole sky.
 
 use super::Light;
 use super::sun::{ONE, ShadowSteps, Sun, cos};
 use crate::content::{MoonDef, PHASE_ONE, STANDARD_SIZE};
 use crate::time::{DAY, GameTime, MINUTE};
+use crate::weather::{Clouds, Conditions};
 use serde::Serialize;
 
 /// Moonlight by the moon's elevation (tenths of a degree), in per mille of its full light: it
@@ -124,6 +126,15 @@ impl Moon {
     }
 }
 
+/// A moon's light through `clouds`.
+fn dim(moon: Moon, clouds: Clouds) -> Moon {
+    Moon {
+        light: clouds.direct(moon.light),
+        sky: clouds.sky(moon.sky, moon.light),
+        ..moon
+    }
+}
+
 /// `light` scaled by a moon's `size` (percent of [`STANDARD_SIZE`], by area), its `lit` fraction
 /// (1/[`PHASE_ONE`]), its `rise` (per mille, [`RISE`]), and the `night` (the sun's depth below the
 /// horizon in tenths of a degree, up to [`DUSK_DEPTH`]).
@@ -203,22 +214,41 @@ impl MoonPhase {
     }
 }
 
-/// The sun and every moon at one moment, over a level under the open sky.
+/// The sun and every moon at one moment, over a level under the open sky, and the weather.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct Sky {
+    /// The sun, its light as it comes through the clouds.
     pub sun: Sun,
-    /// Every moon, in content order (up or not).
+    /// Every moon, in content order (up or not), their light as it comes through the clouds.
     pub moons: Vec<Moon>,
+    /// The weather and its clouds.
+    pub conditions: Conditions,
 }
 
 impl Sky {
-    /// The sky at `time` with the moons `moons`. The one place light from the sky is assembled.
-    pub fn at(time: GameTime, moons: &[MoonDef]) -> Self {
-        let sun = Sun::at(time);
+    /// The sky at `time` with the moons `moons` under the weather `conditions`. The one place
+    /// light from the sky is assembled: the clouds dim it here.
+    pub fn at(time: GameTime, moons: &[MoonDef], conditions: Conditions) -> Self {
+        let clear = Sun::at(time);
+        let clouds = conditions.clouds;
+        let sun = Sun {
+            light: clouds.direct(clear.light),
+            sky: clouds.sky(clear.sky, clear.light),
+            ..clear
+        };
         let moons = (moons.iter().enumerate())
-            .map(|(i, def)| Moon::at(time, &sun, def, i as u8))
+            .map(|(i, def)| dim(Moon::at(time, &clear, def, i as u8), clouds))
             .collect();
-        Self { sun, moons }
+        Self {
+            sun,
+            moons,
+            conditions,
+        }
+    }
+
+    /// The sky at `time` with the moons `moons` and no clouds.
+    pub fn clear(time: GameTime, moons: &[MoonDef]) -> Self {
+        Self::at(time, moons, Conditions::CLEAR)
     }
 
     /// Light from the whole sky on every cell under it, shaded or not: the sun's sky light plus
@@ -408,7 +438,7 @@ mod tests {
             moon_at(&big, time).light,
             Light::new(4 * 48, 4 * 28, 4 * 66, 0)
         );
-        let sky = Sky::at(time, &[moon(), small.clone()]);
+        let sky = Sky::clear(time, &[moon(), small.clone()]);
         assert_eq!(sky.moons.len(), 2);
         let (a, b) = (sky.moons[0], sky.moons[1]);
         assert_eq!((a.index, b.index), (0, 1));
@@ -418,8 +448,53 @@ mod tests {
         assert_eq!(sky.glow(), sky.sun.sky.saturating_add(both));
         let light = a.light.saturating_add(b.light).saturating_add(both);
         assert_eq!(sky.moonlight(), light);
-        assert!(Sky::at(time, &[]).moonlight().is_dark());
-        assert_eq!(Sky::at(time, &[]).glow(), Sun::at(time).sky);
+        assert!(Sky::clear(time, &[]).moonlight().is_dark());
+        assert_eq!(Sky::clear(time, &[]).glow(), Sun::at(time).sky);
+    }
+
+    #[test]
+    fn clouds_dim_the_sun_the_moons_and_the_sky() {
+        use crate::weather::{Clouds, Weather};
+        let clouds = Clouds {
+            direct: 300,
+            sky: 800,
+            scatter: 200,
+        };
+        let rain = Conditions {
+            weather: Weather::Rain,
+            clouds,
+        };
+        let moons = [moon()];
+        for time in [at(16, 0, 0), at(16, 12, 0), at(16, 6, 5)] {
+            let (clear, cloudy) = (Sky::clear(time, &moons), Sky::at(time, &moons, rain));
+            assert_eq!(cloudy.conditions, rain);
+            assert_eq!(cloudy.sun.light, clouds.direct(clear.sun.light));
+            assert_eq!(cloudy.sun.sky, clouds.sky(clear.sun.sky, clear.sun.light));
+            assert_eq!(
+                (cloudy.sun.elevation, cloudy.sun.shadow),
+                (clear.sun.elevation, clear.sun.shadow)
+            );
+            assert_eq!(cloudy.sun.is_up(), clear.sun.is_up());
+            assert_eq!(cloudy.sun.is_night(), clear.sun.is_night());
+            let (m, c) = (clear.moons[0], cloudy.moons[0]);
+            assert_eq!(c.light, clouds.direct(m.light));
+            assert_eq!(c.sky, clouds.sky(m.sky, m.light));
+            assert_eq!(
+                (c.phase, c.shadow, c.shines()),
+                (m.phase, m.shadow, m.shines())
+            );
+        }
+        // At midnight under the full moon, the moonlight and the glow are both less.
+        let (clear, cloudy) = (
+            Sky::clear(at(16, 0, 0), &moons),
+            Sky::at(at(16, 0, 0), &moons, rain),
+        );
+        assert!(cloudy.moonlight().luma() < clear.moonlight().luma());
+        assert!(cloudy.moons[0].light.luma() < clear.moons[0].light.luma());
+        assert_eq!(
+            cloudy.moonlight(),
+            cloudy.moons[0].light.saturating_add(cloudy.moons[0].sky)
+        );
     }
 
     #[test]
@@ -429,7 +504,7 @@ mod tests {
             let t = GameTime::from_seconds(seconds);
             assert_eq!(moon_at(&def, t), moon_at(&def, t));
             let moons = std::slice::from_ref(&def);
-            assert_eq!(Sky::at(t, moons), Sky::at(t, moons));
+            assert_eq!(Sky::clear(t, moons), Sky::clear(t, moons));
         }
     }
 }

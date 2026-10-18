@@ -19,6 +19,7 @@ use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
 use warlock_core::content::VisionProfile;
 use warlock_core::time::Duration;
+use warlock_core::weather::Weather;
 use warlock_core::{Action, Dir, Letters, Pos, Rest};
 
 /// What a key does.
@@ -45,6 +46,8 @@ pub enum KeyCommand {
     CycleVision,
     /// Dev: move the clock an hour ahead at once.
     SkipHour,
+    /// Dev: set the next weather (clear, overcast, rain, heavy rain) for three hours.
+    NextWeather,
     /// Dev: show ground truth where the player does not see.
     RevealMap,
     /// Dev: show perceived light values on visible cells.
@@ -74,6 +77,7 @@ impl KeyCommand {
             KeyCommand::Look => "Look around",
             KeyCommand::CycleVision => "Next vision profile (dev)",
             KeyCommand::SkipHour => "Skip an hour (dev)",
+            KeyCommand::NextWeather => "Next weather (dev)",
             KeyCommand::RevealMap => "Reveal map (dev)",
             KeyCommand::LightValues => "Light values (dev)",
             KeyCommand::Help => "Show / hide controls",
@@ -186,7 +190,7 @@ impl Default for Bindings {
 
 impl Bindings {
     /// Adds the developer keys — reveal map, vision profile switching, light values, snapshots,
-    /// skipping an hour (always present in debug builds, `--dev` otherwise).
+    /// skipping an hour, the next weather (always present in debug builds, `--dev` otherwise).
     pub(crate) fn add_dev_keys(&mut self) {
         let dev = [
             (KeyBinding::Code(KeyCode::F2), KeyCommand::RevealMap),
@@ -194,6 +198,7 @@ impl Bindings {
             (KeyBinding::Code(KeyCode::F4), KeyCommand::LightValues),
             (KeyBinding::Code(KeyCode::F5), KeyCommand::Snapshot),
             (KeyBinding::Code(KeyCode::F6), KeyCommand::SkipHour),
+            (KeyBinding::Code(KeyCode::F7), KeyCommand::NextWeather),
             (KeyBinding::Code(KeyCode::F9), KeyCommand::LoadSnapshot),
         ];
         for entry in dev {
@@ -420,6 +425,12 @@ impl Gameplay<'_> {
                     .write(PlayerAction(Action::SkipTime(Duration::hours(1))));
                 InputMode::Normal
             }
+            (InputMode::Normal, KeyCommand::NextWeather) => {
+                let now = game.world.perception().weather();
+                self.actions
+                    .write(PlayerAction(Action::SetWeather(next_weather(now))));
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::RevealMap) => {
                 self.overlays.reveal = !self.overlays.reveal;
                 InputMode::Normal
@@ -484,6 +495,12 @@ fn rest_choice(key: &KeyboardInput) -> Option<Rest> {
 }
 
 /// The id of the profile after `current` in `profiles`, wrapping around.
+/// The weather after `now` (clear when it is not known, underground), wrapping around.
+fn next_weather(now: Option<Weather>) -> Weather {
+    let i = now.map_or(0, |w| (w.index() + 1) % Weather::ALL.len());
+    Weather::ALL[i]
+}
+
 fn next_vision(profiles: &[VisionProfile], current: &str) -> String {
     let i = profiles.iter().position(|p| p.id == current).unwrap_or(0);
     profiles
@@ -526,6 +543,15 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::RevealMap), ["F2"]);
         assert_eq!(keys(&b, KeyCommand::LightValues), ["F4"]);
         assert_eq!(keys(&b, KeyCommand::SkipHour), ["F6"]);
+        assert_eq!(keys(&b, KeyCommand::NextWeather), ["F7"]);
+    }
+
+    #[test]
+    fn weather_cycles_from_clear_to_heavy_rain() {
+        assert_eq!(next_weather(None), Weather::Clear);
+        assert_eq!(next_weather(Some(Weather::Clear)), Weather::Overcast);
+        assert_eq!(next_weather(Some(Weather::Rain)), Weather::HeavyRain);
+        assert_eq!(next_weather(Some(Weather::HeavyRain)), Weather::Clear);
     }
 
     #[test]

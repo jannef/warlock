@@ -21,6 +21,7 @@ mod sky;
 mod terrain;
 mod vault;
 mod vision;
+mod weather;
 
 pub use anim::GlyphAnim;
 pub use calendar::Calendar;
@@ -42,6 +43,7 @@ pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use terrain::{MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
 pub use vault::Vault;
 pub use vision::VisionProfile;
+pub use weather::{Climate, MAX_SIGHT_LOSS, WeatherDef};
 
 use crate::noise::MAX_LOUDNESS;
 use crate::perception::VIEW_RADIUS;
@@ -117,6 +119,11 @@ impl ContentFiles {
         self.files.insert(path.to_string(), text.to_string());
     }
 
+    /// Leaves a file out, e.g. `data/weather.toml` for an always clear sky.
+    pub fn remove(&mut self, path: &str) {
+        self.files.remove(path);
+    }
+
     fn get(&self, path: &str) -> Result<&str, ContentError> {
         self.get_optional(path)
             .ok_or_else(|| ContentError::new(path, "file is missing"))
@@ -181,11 +188,11 @@ struct LegendFile {
 /// All loaded and cross-validated content.
 ///
 /// `data/lights.toml`, `data/vision.toml`, `data/factions.toml`, `data/dungeons.toml`,
-/// `data/calendar.toml`, `data/sky.toml`, `data/materials.toml`, and `data/objects.toml` are
-/// optional. Without vision profiles, a single `normal` profile that needs no light is used, so
-/// content without lighting stays fully visible; without factions, everyone is neutral; without a
-/// calendar, months are numbered; without a sky file there are no moons; without an objects file
-/// there are no objects.
+/// `data/calendar.toml`, `data/sky.toml`, `data/materials.toml`, `data/objects.toml`, and
+/// `data/weather.toml` are optional. Without vision profiles, a single `normal` profile that needs
+/// no light is used, so content without lighting stays fully visible; without factions, everyone
+/// is neutral; without a calendar, months are numbered; without a sky file there are no moons;
+/// without an objects file there are no objects; without a weather file the sky is always clear.
 #[derive(Debug)]
 pub struct Content {
     terrain: Vec<TerrainDef>,
@@ -209,6 +216,7 @@ pub struct Content {
     calendar: Calendar,
     /// In `data/sky.toml` order.
     moons: Vec<MoonDef>,
+    climate: Climate,
 }
 
 impl Content {
@@ -238,6 +246,7 @@ impl Content {
             vaults: Vec::new(),
             calendar: Calendar::default(),
             moons: Vec::new(),
+            climate: Climate::default(),
         };
         let path = "data/calendar.toml";
         if let Some(text) = files.get_optional(path) {
@@ -246,6 +255,10 @@ impl Content {
         let path = "data/sky.toml";
         if let Some(text) = files.get_optional(path) {
             content.moons = sky::parse(path, text)?;
+        }
+        let path = "data/weather.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.climate = Climate::parse(path, text)?;
         }
         content.load_lights(files)?;
         content.load_vision(files)?;
@@ -881,6 +894,11 @@ impl Content {
         &self.moons
     }
 
+    /// The weather's chances and effects (always clear without `data/weather.toml`).
+    pub fn climate(&self) -> &Climate {
+        &self.climate
+    }
+
     /// Every glyph content may display (for building the glyph atlas).
     pub fn glyphs(&self) -> BTreeSet<char> {
         let particles = |emitters: &[ParticleEmitter]| -> Vec<char> {
@@ -897,7 +915,15 @@ impl Content {
                 .chain(particles(&c.particles))
         });
         let objects = self.objects.iter().map(|o| o.glyph);
-        terrain.chain(creatures).chain(objects).collect()
+        let weather = crate::weather::Weather::ALL
+            .into_iter()
+            .flat_map(|w| self.climate.def(w).emitters())
+            .flat_map(|e| e.glyphs.chars());
+        terrain
+            .chain(creatures)
+            .chain(objects)
+            .chain(weather)
+            .collect()
     }
 }
 

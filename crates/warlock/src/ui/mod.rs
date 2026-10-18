@@ -4,7 +4,8 @@
 //! of each pile go into the map grid layer, creatures and glyphs that outgrow their cell into the
 //! free-glyph layer ([`glyphs`]), and text and panels into the UI console on top. [`motion`]
 //! moves the camera and slides creatures between cells; [`effects`] adds particles, glow, heat
-//! haze, and fades; [`sounds`] marks where unseen sounds were heard. Terrain and objects are drawn
+//! haze, and fades; [`rain`] lets it rain under the open sky; [`sounds`] marks where unseen
+//! sounds were heard. Terrain and objects are drawn
 //! in their base colors: the map grid's shader lights them with the visual light
 //! (`render::lighting`), composited after the map is placed and before free glyphs are lit.
 //! [`dev`] adds the developer overlays (reveal mode is the one exception that reads ground truth).
@@ -23,6 +24,7 @@ mod menu;
 mod motion;
 mod new_run_screen;
 mod object_screen;
+mod rain;
 mod screens;
 mod settings_screen;
 mod sounds;
@@ -42,6 +44,7 @@ use crate::settings::Settings;
 use bevy::prelude::*;
 use motion::Motion;
 use warlock_core::Pos;
+use warlock_core::World;
 use warlock_core::color::Rgb;
 use warlock_core::content::MoonDef;
 use warlock_core::light::MoonPhase;
@@ -78,6 +81,7 @@ impl Plugin for UiPlugin {
                         shadows::update,
                         lighting::update,
                         effects::emit,
+                        rain::emit,
                         sounds::emit,
                         glyphs::emit,
                     )
@@ -356,39 +360,7 @@ fn draw_status(console: &mut Console, game: &Game, y: i32) {
             bg: PANEL_BG,
         },
     );
-    let world = &game.world;
-    let view = world.perception();
-    let pos = world.player_pos();
-    let time = world.time();
-    let light = view.light(pos).map_or(0, |l| l.brightness());
-    let lantern = match world.lantern() {
-        Some(true) => Some("Lantern lit".to_string()),
-        Some(false) => Some("Lantern out".to_string()),
-        None => None,
-    };
-    let content = view.content();
-    // Display order; the number is the drop priority (higher drops first when space runs out).
-    // The moon phase is cut down to its glyph before it is dropped.
-    let segments: Vec<Segment> = [
-        Some(Segment::new(0, view.level_name())),
-        view.region().map(|r| Segment::new(3, r)),
-        Some(Segment::new(
-            1,
-            format!("{:02}:{:02}", time.hour(), time.minute()),
-        )),
-        Some(Segment::new(2, content.calendar().full_date(time))),
-        moon_status(content.moons(), time)
-            .map(|(text, glyphs)| Segment::new(4, text).or_short(glyphs)),
-        Some(Segment::new(5, format!("Turn {}", world.turn()))),
-        Some(Segment::new(9, format!("{},{}", pos.x, pos.y))),
-        Some(Segment::new(6, format!("Light {light}"))),
-        Some(Segment::new(7, format!("{} vision", view.vision().name))),
-        lantern.map(|l| Segment::new(8, l)),
-        Some(Segment::new(10, format!("Seed {}", world.seed()))),
-    ]
-    .into_iter()
-    .flatten()
-    .collect();
+    let segments = status_segments(&game.world);
     // The controls hint matters most to new players, so it keeps its place unless the window is
     // very narrow; status segments give way around it.
     let hint = "? controls";
@@ -400,6 +372,46 @@ fn draw_status(console: &mut Console, game: &Game, y: i32) {
     if show_hint {
         console.print(cols - hint_w - 1, y, hint, TEXT_DIM);
     }
+}
+
+/// The status bar's segments for `world`, in display order.
+fn status_segments(world: &World) -> Vec<Segment> {
+    let view = world.perception();
+    let pos = world.player_pos();
+    let time = world.time();
+    let light = view.light(pos).map_or(0, |l| l.brightness());
+    let lantern = match world.lantern() {
+        Some(true) => Some("Lantern lit".to_string()),
+        Some(false) => Some("Lantern out".to_string()),
+        None => None,
+    };
+    let content = view.content();
+    // Display order; the number is the drop priority (higher drops first when space runs out).
+    // The moon phase is cut down to its glyph and the date to its day and month before they are
+    // dropped. The weather shows only under the open sky, where the player knows it, and there
+    // it matters more than the date: it changes the light and how far one sees.
+    let calendar = content.calendar();
+    [
+        Some(Segment::new(0, view.level_name())),
+        view.region().map(|r| Segment::new(4, r)),
+        Some(Segment::new(
+            1,
+            format!("{:02}:{:02}", time.hour(), time.minute()),
+        )),
+        Some(Segment::new(3, calendar.full_date(time)).or_short(calendar.date(time))),
+        moon_status(content.moons(), time)
+            .map(|(text, glyphs)| Segment::new(5, text).or_short(glyphs)),
+        view.weather().map(|w| Segment::new(2, w.name())),
+        Some(Segment::new(6, format!("Turn {}", world.turn()))),
+        Some(Segment::new(10, format!("{},{}", pos.x, pos.y))),
+        Some(Segment::new(7, format!("Light {light}"))),
+        Some(Segment::new(8, format!("{} vision", view.vision().name))),
+        lantern.map(|l| Segment::new(9, l)),
+        Some(Segment::new(11, format!("Seed {}", world.seed()))),
+    ]
+    .into_iter()
+    .flatten()
+    .collect()
 }
 
 /// The moons' phases for the status bar, and just their glyphs for a narrow window: the glyph
@@ -599,6 +611,38 @@ mod tests {
         assert_eq!(fit_segments(&segs, 15), "Wilds  ·  22:20");
         // The seed is short enough to fit where the turn does not, but never shows without it.
         assert_eq!(fit_segments(&segs, 32), "Wilds  ·  22:20  ·  ●");
+    }
+
+    #[test]
+    fn the_status_bar_shows_the_weather_only_under_the_open_sky() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let texts = |world: &World| -> Vec<String> {
+            status_segments(world).into_iter().map(|s| s.text).collect()
+        };
+        let mut world = World::new(content.clone(), "showcase", None).expect("starts");
+        world.apply(&Action::SetWeather(warlock_core::weather::Weather::Rain));
+        let names = ["Clear", "Overcast", "Rain", "Heavy rain"];
+        assert!(!texts(&world).iter().any(|t| names.contains(&t.as_str())));
+        let mut world = World::new(content, "courtyard", None).expect("starts");
+        world.apply(&Action::SetWeather(
+            warlock_core::weather::Weather::HeavyRain,
+        ));
+        let segments = status_segments(&world);
+        let at = |text: &str| segments.iter().position(|s| s.text.contains(text));
+        let (weather, moon, date) = (at("Heavy rain"), at("New moon"), at("Frostmere"));
+        assert_eq!(weather, moon.map(|m| m + 1), "shown after the moon");
+        // It gives way after the time, before the date (cut to day and month first).
+        let priority = |i: Option<usize>| segments[i.expect("shown")].priority;
+        assert!(priority(weather) > 1 && priority(weather) < priority(date));
+        assert_eq!(
+            segments[date.expect("date")].short.as_deref(),
+            Some("1 Frostmere")
+        );
+        let line = fit_segments(&segments, 60);
+        assert!(
+            line.contains("Heavy rain") && line.contains("1 Frostmere"),
+            "{line}"
+        );
     }
 
     #[test]

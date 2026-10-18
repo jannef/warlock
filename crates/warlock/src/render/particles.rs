@@ -151,7 +151,7 @@ fn particle(
     let down = source.down;
     let pos = source.origin + Vec2::new(down.y, -down.x) * moved.x + down * moved.y;
     let mut color = emissive(gradient(&e.colors, x, source.paint), e.glow);
-    color.alpha = fade(x, e.fade);
+    color.alpha = fade(x, e.fade) * e.opacity;
     Some(Particle {
         pos,
         ch,
@@ -181,6 +181,11 @@ pub fn ambient(
     for slot in first..=last {
         let mut rng = Rng::new(key, slot as u64);
         let born = (slot as f32 + rng.unit()) * period;
+        // No particle outlives the emitter's life: skip the rest of its draws (sparse emitters
+        // over many cells, such as rain, mostly land here).
+        if !(0.0..e.life).contains(&(time - born)) {
+            continue;
+        }
         if let Some(p) = particle(e, &mut rng, source, time - born) {
             out.push(p);
         }
@@ -230,6 +235,7 @@ mod tests {
             scale: 0.7,
             fade: 0.5,
             glow: 0.5,
+            opacity: 1.0,
         }
     }
 
@@ -339,6 +345,19 @@ mod tests {
         out.clear();
         burst(&e, 42, at(0.0, 0.0), 1.0, &mut out);
         assert!(out.is_empty());
+    }
+
+    #[test]
+    fn opacity_keeps_particles_faint() {
+        let mut e = sparks();
+        e.opacity = 0.4;
+        let mut out = Vec::new();
+        for i in 0..40 {
+            ambient(&e, 7, at(0.0, 0.0), i as f32 * 0.13, &mut out);
+        }
+        assert!(!out.is_empty());
+        assert!(out.iter().all(|p| p.color.alpha <= 0.4 + 1e-6));
+        assert!(out.iter().any(|p| p.color.alpha > 0.3));
     }
 
     #[test]
