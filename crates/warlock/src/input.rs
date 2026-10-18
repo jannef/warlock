@@ -38,6 +38,8 @@ pub enum KeyCommand {
     Drop,
     /// Show what the player carries and weighs (no time passes).
     Inventory,
+    /// Show what the player wears and wields, slot by slot, to change it.
+    Equipment,
     /// Show the player's name, stats, and weight (no time passes).
     Character,
     /// Ask how long to rest (an hour, until dawn, until dusk).
@@ -75,6 +77,7 @@ impl KeyCommand {
             KeyCommand::PickUp => "Pick up",
             KeyCommand::Drop => "Drop",
             KeyCommand::Inventory => "Inventory",
+            KeyCommand::Equipment => "Equipment",
             KeyCommand::Character => "Character",
             KeyCommand::Rest => "Rest",
             KeyCommand::Look => "Look around",
@@ -178,6 +181,7 @@ impl Default for Bindings {
             (ch("g"), PickUp),
             (ch("d"), Drop),
             (ch("i"), Inventory),
+            (ch("e"), Equipment),
             (ch("@"), Character),
             (ch("R"), Rest),
             (ch("x"), Look),
@@ -419,6 +423,10 @@ impl Gameplay<'_> {
                 open = Some(ScreenName::Inventory);
                 InputMode::Normal
             }
+            (InputMode::Normal, KeyCommand::Equipment) => {
+                open = Some(ScreenName::Equipment);
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::Character) => {
                 open = Some(ScreenName::Character);
                 InputMode::Normal
@@ -539,6 +547,7 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::PickUp), [",", "g"]);
         assert_eq!(keys(&b, KeyCommand::Drop), ["d"]);
         assert_eq!(keys(&b, KeyCommand::Inventory), ["i"]);
+        assert_eq!(keys(&b, KeyCommand::Equipment), ["e"]);
         assert_eq!(keys(&b, KeyCommand::Character), ["@"]);
     }
 

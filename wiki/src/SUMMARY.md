@@ -16,6 +16,7 @@
 - [The overworld](overworld.md)
 - [Terrain](terrain.md)
 - [Objects and your pack](objects.md)
+- [Equipment](equipment.md)
 - [Your character](character.md)
   - [Races](races.md)
   - [Classes](classes.md)

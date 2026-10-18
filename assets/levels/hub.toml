@@ -30,7 +30,12 @@
 # Objects (M11): gold and a small pile in the start room to pick up (`,` or `g`); the door
 # corridor's west room is a storeroom of arms and armor and its east room a pantry; an amulet lies
 # in the dark of the darkness chamber, and a ring before the water garden's altar. The patrolling
-# kobold carries a sword and some coins. The piles are placed with [[pile]] tables at the end.
+# kobold carries a sword and some coins, and wields the sword. The piles are placed with [[pile]]
+# tables at the end.
+#
+# Equipment (M16): the storeroom has something for every slot but the rings and the neck (the
+# ring and the amulets lie elsewhere): a helm, mail, a cloak, weapons (a quarterstaff for both
+# hands), a shield, gloves, boots, and a bow with arrows. Wear and wield them with `e`.
 name = "The Hub"
 ambient = [0, 0, 0, 0]
 map = '''
@@ -60,7 +65,7 @@ map = '''
 [legend]
 "@" = { terrain = "floor", spawn = "player" }
 "1" = { terrain = "floor", creature = "beetle", route = "E24 W24" }
-"2" = { terrain = "floor", creature = "kobold", route = "E24 N5 W24 S5", carry = ["short_sword", "copper_coin*7"] }
+"2" = { terrain = "floor", creature = "kobold", route = "E24 N5 W24 S5", carry = ["short_sword", "copper_coin*7"], wield = "short_sword" }
 # Beside the beetle, a cave bat on a parallel lane: it is faster (creatures.toml `speed`), so it
 # pulls ahead and laps the beetle.
 "3" = { terrain = "floor", creature = "bat", route = "E24 W24" }
@@ -109,6 +114,14 @@ objects = ["short_bow", "arrow*24"]
 [[pile]]
 at = [17, 15]
 objects = ["rope", "club"]
+
+[[pile]]
+at = [21, 13]
+objects = ["small_shield", "quarterstaff"]
+
+[[pile]]
+at = [17, 14]
+objects = ["wool_cloak", "leather_gloves", "leather_boots"]
 
 # The pantry (the door corridor's east room).
 [[pile]]

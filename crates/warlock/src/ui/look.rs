@@ -4,9 +4,10 @@
 use crate::render::console::{Cell, Console};
 use warlock_core::Pos;
 use warlock_core::color::Rgb;
-use warlock_core::content::Stance;
-use warlock_core::object::phrase;
+use warlock_core::content::{ActionKind, Stance};
+use warlock_core::object::{Stack, phrase};
 use warlock_core::perception::{CellView, PerceptionView};
+use warlock_core::world::ActorId;
 
 /// Cursor colors: dark glyph on a warm highlight, so it reads on any terrain and under any light.
 const CURSOR_FG: Rgb = Rgb::new(0x14, 0x12, 0x10);
@@ -44,7 +45,12 @@ pub fn describe(view: &PerceptionView<'_>, p: Pos) -> String {
                     Stance::Hostile => " (hostile)",
                     Stance::Neutral => "",
                 };
-                format!("{} {name}{stance}, on {}{here}.", article(name), terrain(t))
+                let gear = gear(view, actor.id);
+                format!(
+                    "{} {name}{stance}{gear}, on {}{here}.",
+                    article(name),
+                    terrain(t)
+                )
             }
             (None, Some(things)) => format!("{}, on {}.", capitalize(things), terrain(t)),
             (None, None) => format!("{}.", capitalize(&with_article(&terrain(t)))),
@@ -59,6 +65,31 @@ pub fn describe(view: &PerceptionView<'_>, p: Pos) -> String {
         (CellView::Unknown, Some(heard)) => format!("{heard} here."),
         (CellView::Unknown, None) => "You don't know what is there.".to_string(),
     }
+}
+
+/// What a seen creature wears and wields, as it reads after its name: ", wielding a spear,
+/// wearing a leather jerkin", ", with a short bow and 20 arrows ready"; nothing if it has none.
+/// That is all the player sees of what it carries.
+fn gear(view: &PerceptionView<'_>, actor: ActorId) -> String {
+    let content = view.content();
+    let mut groups: [(&str, &str, Vec<Stack>); 3] = [
+        ("wielding ", "", Vec::new()),
+        ("wearing ", "", Vec::new()),
+        ("with ", " ready", Vec::new()),
+    ];
+    for g in view.gear(actor) {
+        let group = match content.slot(g.slot).action {
+            ActionKind::Wield => 0,
+            ActionKind::Ready => 2,
+            _ => 1,
+        };
+        groups[group].2.push(g.stack);
+    }
+    groups
+        .iter()
+        .filter(|(_, _, stacks)| !stacks.is_empty())
+        .map(|(before, after, stacks)| format!(", {before}{}{after}", phrase(stacks, content)))
+        .collect()
 }
 
 fn article(noun: &str) -> &'static str {
@@ -253,6 +284,50 @@ mod tests {
         assert!(rat.starts_with("A giant rat (hostile), on "), "{rat}");
         let bat = of("bat").expect("a cave bat in view");
         assert!(bat.starts_with("A cave bat, on "), "{bat}");
+    }
+
+    #[test]
+    fn creatures_are_seen_with_what_they_wield_and_wear() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let mut w = World::new(content, "arena", None).expect("arena");
+        // The war band comes into the torchlight of the fire pit (the `arena-shot` golden).
+        for _ in 0..12 {
+            w.apply(&Action::Wait);
+        }
+        let view = w.perception();
+        let content = view.content();
+        let described: Vec<(String, String)> = (view.actors().iter())
+            .map(|a| {
+                let id = content.creature(a.creature).id.clone();
+                (id, describe(&view, a.pos))
+            })
+            .collect();
+        let of = |id: &str| {
+            (described
+                .iter()
+                .find(|(c, _)| c == id)
+                .map(|(_, d)| d.as_str()))
+            .unwrap_or_else(|| panic!("a {id} in view: {described:#?}"))
+        };
+        let kobold = of("kobold");
+        assert!(
+            kobold.starts_with("A kobold (hostile), wielding a spear, on "),
+            "{kobold}"
+        );
+        let archer = of("kobold_archer");
+        assert!(
+            archer.starts_with(
+                "A kobold archer (hostile), with a short bow and 20 arrows ready, on "
+            ),
+            "{archer}"
+        );
+        let shaman = of("kobold_shaman");
+        assert!(
+            shaman.starts_with("A kobold shaman (hostile), wearing a bone amulet, on "),
+            "{shaman}"
+        );
+        // Nothing else of what they carry; and nothing of what the rats do not have.
+        assert!(of("rat").starts_with("A giant rat (hostile), on "));
     }
 
     #[test]

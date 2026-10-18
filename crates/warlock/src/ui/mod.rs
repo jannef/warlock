@@ -11,7 +11,8 @@
 //! [`dev`] adds the developer overlays (reveal mode is the one exception that reads ground truth).
 //!
 //! Menus, character creation ([`chargen_screen`]), settings, controls, the `?` help, the
-//! inventory, choosing what to pick up or drop ([`object_screen`]), and the character screen
+//! inventory, choosing what to pick up or drop ([`object_screen`]), the equipment screen and its
+//! choice of what goes in a slot ([`equipment_screen`]), and the character screen
 //! ([`character_screen`]) are screens on one stack
 //! ([`screens`]): opened by [`Screens::open`], fed key presses by `input::route_keys`, and drawn
 //! by [`draw`], the one system that writes the UI console.
@@ -21,6 +22,7 @@ mod chargen_screen;
 mod controls_screen;
 mod dev;
 mod effects;
+mod equipment_screen;
 mod glyphs;
 mod look;
 mod menu;
@@ -90,6 +92,10 @@ impl Plugin for UiPlugin {
                     )
                         .chain()
                         .after(SimSet)
+                        .run_if(resource_exists::<Game>),
+                    screens::refresh
+                        .after(SimSet)
+                        .before(draw)
                         .run_if(resource_exists::<Game>),
                     draw.after(draw_map_layer).after(screens::apply_choice),
                 ),

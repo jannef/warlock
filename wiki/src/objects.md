@@ -1,8 +1,9 @@
 # Objects and your pack
 
 Weapons, armor, tools, potions, scrolls, food, stones and gems, coins, rings, and amulets lie about
-the world. You can pick them up, carry them, and put them down again. They do nothing else yet:
-you cannot wield, wear, drink, read, or eat them.
+the world. You can pick them up, carry them, and put them down again, and wear and wield weapons,
+armor, rings, and amulets (see [Equipment](equipment.md)). They do nothing else yet: equipment
+does not change any rule, and you cannot drink, read, or eat anything.
 
 ## What an object is
 
@@ -76,7 +77,8 @@ time passes.
 
 Press `d` to choose what to drop. The screen works like the pick-up screen and lists what you
 carry. Dropped objects go on top of the pile where you stand, and stackable ones join a stack of
-the same object already there. Dropping is one action too.
+the same object already there. Dropping is one action too. Something you wear or wield is taken
+off first, which takes its own time as well (see [Equipment](equipment.md)).
 
 You cannot close a door while objects lie in its doorway.
 
@@ -91,14 +93,15 @@ already carry adds to that stack, and dropping a stack moves the later letters u
 When every letter is taken, you cannot pick up anything new, though more of a stackable object you
 already carry still fits. The message says `You have no room for more.`
 
-The inventory screen lists each stack's weight, then:
+The inventory screen lists each stack's weight, marks what you wear or wield ("(being worn)",
+"(wielded)", and so on; see [Equipment](equipment.md)), then:
 
-- **Carrying**: the weight of everything in your pack;
+- **Carrying**: the weight of everything in your pack, worn and wielded things included;
 - **Your weight**: your own weight plus what you carry.
 
 Weight has no effect yet: you can carry as much as fits in your pack, and it does not slow you.
 Creatures have weights too, and some carry objects, but you cannot see what they carry or what
-they weigh.
+they weigh, only what they wear and wield.
 
 ## The objects
 

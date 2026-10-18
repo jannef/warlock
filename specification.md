@@ -29,6 +29,9 @@ Build the engine and framework, not the game. Everything built is production qua
   each other, hear noise, see by the player's rules (§5 "Creature sight"), and fight with
   deterministic AI whose attacks are intents only (§8 "Creature behavior")
 - Pickable objects (glyph, color, material, weight), inventory, and creature weight (M11)
+- Equipment (M16): ADOM-like slots in which the player and creatures wear and wield what they
+  carry, an equipment screen, and the time it takes to put things on and off (§6 "Equipment").
+  No rule uses equipment yet: combat comes later (#113)
 - Moons with phases and moonlight, weather starting with rain (M12)
 - Action costs: what an actor does and its speed decide how long it takes (M13)
 - Stats (M14): Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
@@ -65,8 +68,8 @@ regression scene for golden screenshots, replays, and snapshot tests.
 | Room | Demonstrates | Milestone |
 |---|---|---|
 | Start room | movement, message line, `?` help; gold and a small pile to pick up | M1, M11 |
-| Door corridor | opening/closing doors, doors blocking sight; a storeroom and a pantry of objects | M1–M2, M11 |
-| Patrol gallery | creatures moving in and out of view, never shown in memory; a cave beetle and a quicker cave bat (wildlife, so they keep to their lanes) on parallel lanes, a slower torch-bearing kobold circling them (carrying a sword and coins), which comes for the player once it sees them, searches where it lost them, and returns to its round; heard from the corridor behind its closed door, and in its dark middle (the bat flies silently) | M2, M10, M11 |
+| Door corridor | opening/closing doors, doors blocking sight; a storeroom of arms and armor (something for every equipment slot but the neck and the rings, a two-handed quarterstaff, a bow and arrows) and a pantry of objects | M1–M2, M11, M16 |
+| Patrol gallery | creatures moving in and out of view, never shown in memory; a cave beetle and a quicker cave bat (wildlife, so they keep to their lanes) on parallel lanes, a slower torch-bearing kobold circling them (wielding a sword, carrying coins), which comes for the player once it sees them, searches where it lost them, and returns to its round; heard from the corridor behind its closed door, and in its dark middle (the bat flies silently) | M2, M10, M11 |
 | Light hall | colored lights, falloff, pillar and creature shadows, steady magical light | M3, M8 |
 | Darkness chamber | vision types, a UV-only rune, darkvision fade; an amulet seen only by those who see in the dark | M3, M11 |
 | Water garden | still ponds and running rills (flow, glints, foam), pulsing altar with a ring before it | M4, M8, M11 |
@@ -81,7 +84,9 @@ moon lights it faintly by night, waxing and waning with the month (§5 "Moonligh
 a tree, and a candle and a scroll in the gazebo (M11).
 
 **Arena (72×21, M10)**: down the stairs nook's second `>`: factions at war. A kobold war band
-(three torch-bearing kobolds, an archer, a slow shaman) and five giant rats meet at a fire pit in
+(three torch-bearing kobolds wielding spears, an archer with a short bow and arrows ready, a slow
+shaman wearing a bone amulet; look mode shows what each wields and wears, M16) and five giant
+rats meet at a fire pit in
 a pit lit by wall torches, with pillars for cover; two cave bats and a cave beetle (wildlife) go
 their ways untouched. West lies the kobolds' camp behind two doors (kobolds open doors, rats do
 not), east the rat warren. The player arrives in the dark south-west corner and can watch unseen;
@@ -518,7 +523,8 @@ rate or animation.
   time but is recorded in replays like any action. Infravision is deferred.
 - **Objects are seen** where creatures are: on cells in line of sight that are visible (never on
   completed walls). The player's own cell is always visible, so they always know what lies under
-  them. What creatures carry is never seen.
+  them. What creatures carry is never seen; what a seen creature wears and wields is (look mode,
+  §6).
 - **Memory**: per level, terrain and piles of objects, as last seen (a door is remembered open
   until seen closed; a pile is remembered as it lay when last in sight, even if it changed out of
   sight since, and is forgotten once seen gone). Never creatures.
@@ -608,11 +614,13 @@ rate or animation.
 - Bindings live in the settings file. The `?` help (the controls list, read-only) is generated from
   the binding table, so it is always accurate.
 - **Screens**: the main menu, New run and its character creation steps, pause menu, Settings,
-  Controls, help, the inventory, the character screen, and choosing what to pick up or drop are
-  modal screens on one stack. Opening a screen puts it on top; Esc or Back closes it and returns
-  to the screen below as it was left. While any screen is open it receives every key press, the run (if any)
-  stays visible beneath it, and no game time passes. Prompts in the message line (a direction
-  to open or close, how long to rest, look mode) are not screens.
+  Controls, help, the inventory, the equipment screen and its choice of what goes in a slot, the
+  character screen, and choosing what to pick up or drop are modal screens on one stack. Opening
+  a screen puts it on top; Esc or Back closes it and returns to the screen below as it was left.
+  While any screen is open it receives every key press, the run (if any) stays visible beneath
+  it, and no game time passes but for what is chosen on a screen (picking up, dropping, wearing,
+  wielding), which is done as it is chosen and takes its time. Prompts in the message line (a
+  direction to open or close, how long to rest, look mode) are not screens.
 - **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
   `--record`, or `--capture` name what to run): Continue (only if a save exists), New run
   (scenario list from content, optional seed, then character creation), Settings, Controls,
@@ -647,9 +655,9 @@ rate or animation.
   is named, so the table never holds a conflict. Esc (cancel) is fixed. Delete resets a command,
   "Reset all keys" resets everything.
 - First-phase commands: move, wait, open/close door, ascend/descend, light/douse lantern (`L`),
-  pick up (`,` or `g`), drop (`d`), inventory (`i`), character (`@`), rest (`R`), look, help,
-  save and quit (`Q`). Free actions (look, help, the inventory, the character screen, menus,
-  vision switch) do not advance time.
+  pick up (`,` or `g`), drop (`d`), inventory (`i`), equipment (`e`), character (`@`), rest
+  (`R`), look, help, save and quit (`Q`). Free actions (look, help, the inventory, looking at the
+  equipment screen, the character screen, menus, vision switch) do not advance time.
 - **Objects** (M11) lie in piles on cells, the top first: the map shows the top object's glyph
   (§4.2), and dropped objects go on top. Stepping onto a pile says what lies there: `You see here
   a dagger.` for one stack, `There are several objects here.` for more. Look mode names what lies
@@ -664,11 +672,38 @@ rate or animation.
   (`d`) chooses from the inventory the same way. Picking up and dropping are one action each
   (replay text `pickup:ac`, `drop:b`; `pickup` and `drop` alone take everything) and take their
   action's time (§8 "Time"); with nothing there or nothing carried, they are refused and take
-  none.
+  none. Dropping something worn or wielded takes it off first ("You take off a leather
+  jerkin."), which takes its time too, and the stacks after a dropped one move up a letter
+  (worn things keep being worn).
 - **Inventory** (`i`): what the player carries, ADOM-like: stacks lettered `a` to `z` in the order
   they were picked up (at most 26; a pile with more stacks keeps what does not fit), each with its
   glyph, name, and weight, then what the player carries and their weight (their own plus what
-  they carry). Read-only; `i` or Esc closes it.
+  they carry). What is worn or wielded is marked with its slot's mark: "(being worn)",
+  "(wielded)", "(in off hand)", "(on left hand)", "(readied)", "(quivered)", and a two-handed
+  weapon "(wielded in both hands)"; the drop screen marks it the same way. Read-only; `i` or Esc
+  closes it.
+- **Equipment** (`e`; M16), as in ADOM: the slots, lettered `a` to `l` in this order — Head, Neck,
+  Body, Cloak, Main hand, Off hand, Hands, Left ring, Right ring, Feet, Missile weapon, Missiles
+  (data, `data/slots.toml`, §7, so more can be added) — each with what is in it (glyph, name,
+  weight) or `—`, then what the player carries and weighs. A two-handed weapon shows in both
+  hands, "(both hands)". A slot's letter (or Enter on the `>` row; the arrows move it) opens the
+  choice of what goes there: the inventory stacks that fit the slot (and what it holds, such as a
+  two-handed weapon in the off hand), by their inventory letters, marked as in the inventory; the
+  stack already there is the `>` row. Choosing a stack (its
+  letter, or Enter) puts it on in the slot, taking off first what is there (a swap) and moving it
+  if it is in another slot; choosing what is already there takes it off. Rings fit either ring
+  slot, a two-handed weapon takes both hands (and puts away what they hold), launchers and their
+  ammunition go in the missile weapon and missiles slots. That is one action (replay text
+  `equip:body:b`, `remove:body`): it is done at once and takes its time, the choice closes, and
+  the equipment screen beneath shows the result, as in ADOM; Esc goes back to it, and Esc there
+  returns to play (its own key too, when that is not a slot's letter). Each thing put on or taken
+  off takes the time of its slot's action (§8 "Time": wielding, wearing, body armor, readying;
+  taking off costs what putting on does), so a swap takes both, and a refused one (the wrong
+  slot, nothing there) takes none. Messages say it: "You put on a leather jerkin.", "You wield a
+  quarterstaff in both hands.", "You ready 24 arrows.", "You take off an iron helm.", "You put
+  away a short bow." Equipped things stay in the inventory and still count toward the player's
+  weight. **No rule uses equipment yet**: it changes neither sight, noise, nor speed, and
+  combat (#113) comes later.
 - **Character** (`@`): who the player is, as far as they know it: their name (the player
   creature's, "You"), their race, gender, and class (`Race    Dwarf`; "other" with the stat it
   raised), their age today, birthday, and birth sign as on the summary (when the run has a
@@ -679,7 +714,9 @@ rate or animation.
   actor weighs its creature's base weight plus everything it carries; the rules know every
   actor's weight (no rule uses it yet; footstep noise, §5 "Hearing", may), but the player is shown
   only their own.
-  Creatures carry objects from their spawn (`carry`, §7); nothing makes them drop anything yet.
+  Creatures carry objects from their spawn (`carry`, §7), and wield and wear some of them
+  (`wield`, `wear`); nothing makes them drop or change anything yet. Worn and wielded things
+  weigh what they weigh.
   Weights read `450 g` below a kilogram and `3.5 kg` above.
 - **Rest** (`R`) asks in the message line: `Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to
   cancel)`. `h` rests an hour, `d` until 06:00, `n` until 18:00 (replay text `rest:1h`,
@@ -703,7 +740,11 @@ rate or animation.
   "Something is in the way."; no time passes).
 - **Look mode** describes what the player perceives at the cursor: a creature and its terrain
   (a hostile one marked: "A giant rat (hostile), on stone floor."; its type tells the player its
-  faction's stance toward them, the only faction information presentation gets), terrain,
+  faction's stance toward them, the only faction information presentation gets), what the
+  creature wields, wears, and has ready, which is in plain sight ("A kobold (hostile), wielding a
+  spear, on stone floor.", "A kobold shaman (hostile), wearing a bone amulet, ...", "A kobold
+  archer (hostile), with a short bow and 20 arrows ready, ..."; never what else it carries),
+  terrain,
   remembered terrain, where stairs lead, and a sound heard there ("You hear footsteps here.").
 - Screen layout: map viewport, message log, status panel (level, region (on the overworld and in
   its local areas), time of day and date as `14:32 · 12 Rainmoon, Year 1444`, the moon's phase as a
@@ -758,9 +799,15 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 - **Objects in level files** (M11): a legend entry places a pile with `objects = ["dagger",
   "arrow*12"]` (top first; `*N` places N, as one stack if the object is stackable, else as N
   stacks of one), and a creature's entry gives what it carries with `carry = ["spear",
-  "copper_coin*7"]` (at most 26 stacks). `[[pile]] at = [x, y] objects = [...]` places a pile
-  without a legend character (on top of the legend's there, if any). Objects lie only on walkable
-  terrain. Vaults place objects the same way, and generators stamp them with the vault.
+  "copper_coin*7"]` (at most 26 stacks), and what of that it wields and wears with `wield =
+  "spear"` and `wear = ["leather_jerkin"]` (an object id or a list; M16): each the first carried
+  stack of that object not yet equipped, in the first free slot that fits it (a second ring on
+  the other hand). `wield` takes what goes in a slot of action `wield` or `ready` (weapons,
+  shields, missile weapons and missiles), `wear` the rest; an object it does not carry, one with
+  no free slot, or the wrong one of the two is a content error. `[[pile]] at = [x, y] objects =
+  [...]` places a pile without a legend character (on top of the legend's there, if any).
+  Objects lie only on walkable terrain. Vaults place objects the same way, and generators stamp
+  them with the vault.
 - **Water**: `~` is still water (`water`). Running water (`running_water`, terrain with a `flow`
   animation) needs a flow on every cell, given by its legend entry: `flow` (the direction it runs,
   `N` … `NW`) and an optional `flow_speed` (percent of the terrain's animation speed, 10–300,
@@ -815,9 +862,11 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   e.g. `wait = 1000`, 1000 being a normal action (6 s at normal speed; §8 "Time"), 100 to
   10 000. The ids are `step` (onto terrain of `move_cost` 100), `wait`, `open_door`,
   `close_door`, `lantern`, `stairs` (also entering a location or local area and walking off an
-  area's edge), `pick_up`, `drop`, `melee`, `shoot`, and `cast`. An action left out, or every
-  action without the file, costs 1000; an unknown id or a cost out of range is a content error.
-  The wiki shows them in a generated table.
+  area's edge), `pick_up`, `drop`, `melee`, `shoot`, `cast`, and for equipment (each slot names
+  one, below) `wield` (1000), `wear` (1000: helmets, cloaks, gloves, boots, rings, amulets),
+  `body_armor` (3000: it takes a while to strap on), and `ready` (1000: a missile weapon and
+  missiles). An action left out, or every action without the file, costs 1000; an unknown id or
+  a cost out of range is a content error. The wiki shows them in a generated table.
 - **The sky** (`data/sky.toml`, optional; without it there are no moons): up to 8 `[[moon]]`s,
   each with `name` (shown in the status bar when there are several), `color` (`[r, g, b, uv]`,
   the direct light of the moon when full and high in the night sky), `sky` (the same for the
@@ -833,6 +882,28 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   ADOM loosely: `)` weapons, `}` missile weapons, `/` missiles, `[` armor, `(` tools, `!`
   potions, `?` scrolls, `%` food, `*` stones and gems, `$` coins, `=` rings, `"` amulets.
   Every creature in `data/creatures.toml` has a base `weight` in grams (required, at least 1).
+  Things that can be worn or wielded (M16) say where they go: `slot`, a slot's id or what it
+  `fits` (`slot = "body"`, `slot = "ring"` for either ring slot; an unknown one is a content
+  error), `two_handed` (default false; only with a hand slot's `slot`, and there must be two
+  hand slots: it takes both), `ammo` (the kind of ammunition it is, `ammo = "arrow"`), and
+  `launches` (the kind a missile weapon shoots, `launches = "arrow"`; some object must be that
+  ammunition). Launchers and ammunition pair by that kind (`Content::fires`, for ranged combat
+  later). Test objects: weapons for the main hand (dagger, short sword, spear, club; a
+  two-handed quarterstaff), a small shield (off hand), an iron helm, a wool cloak, leather
+  gloves and boots, body armor (leather jerkin, chain mail shirt), a silver ring, amulets, a
+  short bow that launches arrows, and arrows.
+- **Equipment slots** (`data/slots.toml`, optional; without it nothing can be worn or wielded;
+  M16): up to 26 `[[slot]]`s in the order the equipment screen lists them (lettered `a` on):
+  `id` (objects name it in `slot`, replays in `equip:SLOT:LETTER`), `name`, `fits` (what objects
+  give as their `slot` to go here; default the id, so slots may share it: `left_ring` and
+  `right_ring` both fit `ring`), `action` (the action that puts a thing on here or takes it off,
+  for its time: `wield`, `wear`, `body_armor`, or `ready` in `data/actions.toml`), `mark` (what
+  the inventory says of a thing here: "being worn"), and `hand` (default false; a two-handed
+  object takes every hand slot). The built-in slots, ADOM's: Head, Neck, Body (`body_armor`),
+  Cloak, Main hand and Off hand (`wield`, hands; "wielded", "in off hand"), Hands, Left ring
+  and Right ring ("on left hand", "on right hand"), Feet, Missile weapon and Missiles (`ready`;
+  "readied", "quivered"); the rest `wear`, "being worn". The wiki shows them in a generated
+  table with what fits each.
 - **Factions** (`data/factions.toml`, optional; without it everyone is neutral): `[[faction]]`
   with `id`, `name`, and `hostile` (faction ids). Relations are pairwise and symmetric: if A lists
   B, A and B are hostile to each other; every pair not listed (a faction and itself too) is
@@ -942,7 +1013,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   atomically (temp file + rename). Before 1.0, incompatible saves are rejected with a clear message;
   from 1.0 on, saves are migrated. The web build keeps the same bytes in the browser's
   `localStorage` (below). The envelope also records a content fingerprint (hash of the ordered
-  terrain, creature, level, light, dungeon-branch, and object ids), because ids are indices; a
+  terrain, creature, level, light, dungeon-branch, object, and equipment slot ids), because ids are indices; a
   save made with different content is rejected. Generated levels are saved with the run like
   visited hand-made ones (terrain, memory, stairs, lights, kind, arrival point,
   edge exit, piles of objects and the piles as remembered), together with the gameplay random
@@ -954,7 +1025,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   without it load with every creature calm; format version 7), every actor's stats, scores and
   potentials (§8 "Stats"; format version 8), the player's character (race, gender, and class,
   the stat the gender raised, birth date, and birth sign; §8 "Character creation"; format
-  version 9), and a dev weather override while
+  version 9), what every actor wears and wields (which inventory stack is in which slot, §6
+  "Equipment"; format version 10), and a dev weather override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
   platform data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
@@ -988,7 +1060,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   wall-clock time. It builds and tests in seconds and is insulated from Bevy upgrades.
 - **Data layout**: dense grids for terrain, light, and memory; a simple entity store with stable ids
   for actors; objects as stacks (object id and count) in sparse piles by position, remembered
-  piles beside them, and an inventory and stats on each actor. ECS is used in the presentation
+  piles beside them, and an inventory, its equipment (slot → inventory stack;
+  `warlock-core/src/equipment.rs`), and stats on each actor. ECS is used in the presentation
   layer, where it helps with effects, particles, and animation.
 - **Perception snapshot**: after each turn, the core produces what the player perceives. The
   renderer, UI, and dumps read only this snapshot, so hidden information cannot leak by construction
@@ -1011,12 +1084,18 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   - **Costs** (M13): the action decides how long it takes, and the actor's speed scales
     it. Every action that takes time has a **cost** in energy, 1000 for a normal action, given in
     `data/actions.toml` (`step`, `wait`, `open_door`, `close_door`, `lantern`, `stairs`,
-    `pick_up`, `drop`, `melee`, `shoot`, `cast`; 100 to 10 000; an action left out, or every
-    action without the file, costs 1000; unknown ids are errors), and a **base time**: 6 s
+    `pick_up`, `drop`, `melee`, `shoot`, `cast`, `wield`, `wear`, `body_armor`, `ready`; 100 to
+    10 000; an action left out, or every action without the file, costs 1000; unknown ids are
+    errors), and a **base time**: 6 s
     (`BASE_TURN`) for every action but a step on the overworld. An action of cost *c* takes an
     actor of speed *v* `c / 1000 × 1000 / v × 6 s`: a normal action takes 6 s at normal speed
     (the player's), one of cost 1400 (two-weapon fighting, say) 8.4 s, and a normal action at
-    speed 1111 about 5.4 s, at speed 900 about 6.7 s. All built-in actions cost 1000 for now.
+    speed 1111 about 5.4 s, at speed 900 about 6.7 s. All built-in actions cost 1000 for now but
+    `body_armor` (3000: 18 s).
+    - Equipment (§6 "Equipment"): every thing put on or taken off costs the action of the slot it
+      goes in or comes out of (a two-handed weapon: the first hand's), taking off what putting on
+      does, and one action pays for all of them: a swap costs both, a quarterstaff that puts away
+      a sword and a shield three, dropping a worn jerkin `body_armor` plus `drop`.
     - A step costs `step` scaled by the destination terrain's `move_cost` percent (water 200: 12 s
       at normal speed); on the overworld its base is the destination terrain's `travel_minutes`
       instead of 6 s (scaled by speed like everything else: twice the speed, half the journey).
@@ -1216,9 +1295,11 @@ cargo xtask golden [--update]                             # compare golden scree
   character `{race, gender, class}` (left out for a run without one; a replay without it starts
   as the scenario's character, so older replays still load). Actions use a text
   syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
-  pickup pickup:ac drop drop:b vision:darkvision skip:1h weather:rain`; durations are a whole
-  number with `s`, `m`, or `h`, a rest at most `24h`; letters name stacks of the pile or the
-  inventory, `a` first, and without letters `pickup` and `drop` take everything; the dev weather
+  pickup pickup:ac drop drop:b equip:body:b remove:body vision:darkvision skip:1h weather:rain`;
+  durations are a whole number with `s`, `m`, or `h`, a rest at most `24h`; letters name stacks
+  of the pile or the inventory, `a` first, and without letters `pickup` and `drop` take
+  everything; `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT (a slot id of
+  `data/slots.toml`) and `remove:SLOT` takes off what is there; the dev weather
   override takes `clear`, `overcast`, `rain`, or `heavy`; in scripts, `ACTION*N` repeats an
   action, e.g. `wait*10`); `hash` is the
   FNV-1a 64 hash of the
@@ -1232,15 +1313,19 @@ cargo xtask golden [--update]                             # compare golden scree
   (perceived brightness of each visible cell as a digit, `0` dark to `9` fully lit or brighter),
   `sound` (the view with each heard sound at its rough place: `f` footsteps, `o` a door opening,
   `c` a door closing, `x` fighting, `b` a bowstring, `m` chanting, upper case when loud),
-  `inventory` (what the player carries, by letter with weights, then what they carry and weigh),
+  `inventory` (what the player carries, by letter with weights and what is worn or wielded
+  marked, `b - a leather jerkin (being worn) (3.5 kg)`, then what they carry and weigh),
+  `equipment` (the player's slots by letter, `c Body: a leather jerkin (b)`, `-` when empty),
   and `stats` (the player's race, gender, and class, `Race Dwarf`, their age, birthday, and
   sign, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`, then their own scores,
   `Strength 12`) are built from the perception snapshot only;
   `truth` (terrain, objects, and creatures) and `actors` (every actor on the level with its
-  weight, base plus carried, what it carries, and its stats as score/potential, `St 12/15`) show
+  weight, base plus carried, what it carries and of that wears and wields, `equipped main_hand a
+  spear`, and its stats as score/potential, `St 12/15`) show
   ground truth and are dev-only. JSON dumps
   carry turn, game time (seconds and calendar fields), level, viewer, the weather (under the open
-  sky; else null), seen actors, heard sounds, the player's inventory, weight, character
+  sky; else null), seen actors, heard sounds, the player's inventory, equipment (by slot id:
+  letter, object, count), weight, character
   (`{race, gender, class, raised, age, born: {year, month, day}, sign: {animal, element}}` or
   null), and scores (`stats`, by stat id), recent messages,
   and optionally the full world state; the ASCII header line has the turn, the time
@@ -1343,6 +1428,9 @@ Each milestone ships a playable build.
   and class set the starting stats, partly rolled with dice; a random age and birthday give the
   horoscope sign (12 animals × 5 elements, a 60-year great cycle), which adjusts them too; a
   summary before the run starts; the character saved, replayed, and given on the command line.
+- **M16 Combat** (begun) — equipment: ADOM-like slots (data), an equipment screen (`e`),
+  wearing and wielding with their action costs, creatures that wield and wear what they carry;
+  combat itself follows (#113).
 
 ## 13. GitHub workflow
 

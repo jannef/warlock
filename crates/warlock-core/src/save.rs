@@ -26,7 +26,8 @@ const MAGIC: &str = "WARLOCK-SAVE";
 /// 8: actors have stats (`Actor::stats`: a score and a potential for every stat).
 /// 9: the player's character (`WorldState::character`: race, gender, and class, the stat the
 /// gender raised, birth date, and birth sign).
-pub const FORMAT_VERSION: u32 = 9;
+/// 10: actors wear and wield things (`Actor::equipment`: an inventory stack per slot).
+pub const FORMAT_VERSION: u32 = 10;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 

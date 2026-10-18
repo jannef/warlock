@@ -13,3 +13,7 @@
 | Attacking up close | 1000 | 6 seconds |
 | Shooting (creatures) | 1000 | 6 seconds |
 | Casting a spell (creatures) | 1000 | 6 seconds |
+| Wielding something, or putting it away: Main hand, off hand | 1000 | 6 seconds |
+| Putting something on, or taking it off: Head, neck, cloak, hands, left ring, right ring, feet | 1000 | 6 seconds |
+| Putting something on, or taking it off: Body | 3000 | 18 seconds |
+| Readying something, or putting it away: Missile weapon, missiles | 1000 | 6 seconds |

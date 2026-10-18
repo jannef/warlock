@@ -8,6 +8,15 @@
 #   weight    grams for one, at least 1
 #   stackable several lie in one stack (coins, arrows); default false: a stack of one each
 #
+# Things that can be worn or wielded also say where they go (equipment, slots.toml):
+#   slot       the slot it goes in, by id (`slot = "body"`), or what a slot fits (`slot = "ring"`
+#              goes on either hand); none: it cannot be worn or wielded
+#   two_handed takes both hands (main and off hand); default false
+#   ammo       the kind of ammunition it is (`ammo = "arrow"`)
+#   launches   the kind of ammunition a missile weapon shoots (`launches = "arrow"`); launchers
+#              and ammunition pair by that kind, and some object must be that kind of ammunition
+# Equipment changes no rule yet (combat comes later); it only takes time to put on and off.
+#
 # Glyphs follow ADOM loosely: ) weapons, } missile weapons, / missiles, [ armor, ( tools,
 # ! potions, ? scrolls, % food, * stones and gems, $ coins, = rings, " amulets.
 
@@ -19,6 +28,7 @@ glyph = ")"
 fg = "#c8ccd4"
 material = "steel"
 weight = 450
+slot = "main_hand"
 
 [[object]]
 id = "short_sword"
@@ -27,6 +37,7 @@ glyph = ")"
 fg = "#dce0e8"
 material = "steel"
 weight = 1100
+slot = "main_hand"
 
 [[object]]
 id = "spear"
@@ -35,6 +46,7 @@ glyph = ")"
 fg = "#b8955a"
 material = "wood"
 weight = 1800
+slot = "main_hand"
 
 [[object]]
 id = "club"
@@ -43,6 +55,18 @@ glyph = ")"
 fg = "#946a42"
 material = "wood"
 weight = 1400
+slot = "main_hand"
+
+[[object]]
+id = "quarterstaff"
+name = "quarterstaff"
+plural = "quarterstaves"
+glyph = ")"
+fg = "#a87c4c"
+material = "wood"
+weight = 2000
+slot = "main_hand"
+two_handed = true
 
 [[object]]
 id = "short_bow"
@@ -51,6 +75,8 @@ glyph = "}"
 fg = "#b08048"
 material = "wood"
 weight = 700
+slot = "missile_weapon"
+launches = "arrow"
 
 [[object]]
 id = "arrow"
@@ -60,6 +86,8 @@ fg = "#c8a878"
 material = "wood"
 weight = 30
 stackable = true
+slot = "missiles"
+ammo = "arrow"
 
 # Armor
 [[object]]
@@ -69,6 +97,7 @@ glyph = "["
 fg = "#9a6838"
 material = "leather"
 weight = 3500
+slot = "body"
 
 [[object]]
 id = "chain_mail"
@@ -77,6 +106,7 @@ glyph = "["
 fg = "#aab2ba"
 material = "iron"
 weight = 11000
+slot = "body"
 
 [[object]]
 id = "iron_helm"
@@ -85,6 +115,45 @@ glyph = "["
 fg = "#9ea4aa"
 material = "iron"
 weight = 1500
+slot = "head"
+
+[[object]]
+id = "wool_cloak"
+name = "wool cloak"
+glyph = "["
+fg = "#6e7c5a"
+material = "cloth"
+weight = 1200
+slot = "cloak"
+
+[[object]]
+id = "small_shield"
+name = "small shield"
+glyph = "["
+fg = "#a07a4a"
+material = "wood"
+weight = 2500
+slot = "off_hand"
+
+[[object]]
+id = "leather_gloves"
+name = "pair of leather gloves"
+plural = "pairs of leather gloves"
+glyph = "["
+fg = "#8a6040"
+material = "leather"
+weight = 250
+slot = "hands"
+
+[[object]]
+id = "leather_boots"
+name = "pair of leather boots"
+plural = "pairs of leather boots"
+glyph = "["
+fg = "#7a5434"
+material = "leather"
+weight = 1000
+slot = "feet"
 
 # Tools
 [[object]]
@@ -210,6 +279,7 @@ glyph = "="
 fg = "#d4dce4"
 material = "silver"
 weight = 10
+slot = "ring"
 
 # Amulets
 [[object]]
@@ -219,6 +289,7 @@ glyph = '"'
 fg = "#e8e0c8"
 material = "bone"
 weight = 60
+slot = "neck"
 
 [[object]]
 id = "jade_amulet"
@@ -227,3 +298,4 @@ glyph = '"'
 fg = "#68c090"
 material = "stone"
 weight = 80
+slot = "neck"

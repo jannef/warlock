@@ -29,8 +29,18 @@ pub enum Action {
     /// of the pile), or everything there with no letters. Takes a turn (its cost: `pick_up`).
     PickUp(Letters),
     /// Drop the inventory stacks with these letters onto the player's cell, or everything
-    /// carried with no letters. Takes a turn (its cost: `drop`).
+    /// carried with no letters. Takes a turn (its cost: `drop`, plus taking off what of it is
+    /// worn or wielded).
     Drop(Letters),
+    /// Wear or wield inventory stack `item` (a position, `a` = 0) in `slot` (an id in
+    /// `data/slots.toml`), taking off what is there first (a swap). Takes the time of the slot's
+    /// action (`wield`, `wear`, `body_armor`, `ready`) for each thing put on or taken off.
+    Equip {
+        slot: String,
+        item: usize,
+    },
+    /// Take off what is in a slot (an id in `data/slots.toml`). Takes the time of its action.
+    Remove(String),
     /// Wait turn after turn (creatures act) until the goal, stopping early when a creature comes
     /// into view or a message is logged.
     Rest(Rest),
@@ -204,12 +214,14 @@ pub struct Outcome {
 }
 
 /// Text syntax for scripting: `move:E wait open:E close:W ascend descend lantern rest:1h
-/// rest:dawn rest:dusk pickup pickup:ac drop:b vision:ID skip:1h weather:rain` (durations: `30s`,
-/// `10m`, `2h`; letters name stacks, `a` first; `pickup` and `drop` without letters take
-/// everything; weather: `clear`, `overcast`, `rain`, `heavy`).
+/// rest:dawn rest:dusk pickup pickup:ac drop:b equip:body:b remove:body vision:ID skip:1h
+/// weather:rain` (durations: `30s`, `10m`, `2h`; letters name stacks, `a` first; `pickup` and
+/// `drop` without letters take everything; `equip:SLOT:LETTER` puts inventory stack LETTER on in
+/// slot SLOT, `remove:SLOT` takes off what is there; weather: `clear`, `overcast`, `rain`,
+/// `heavy`).
 ///
 /// `Display` and `FromStr` round-trip; action names are case-insensitive when parsing (vision
-/// profile ids keep their case).
+/// profile and slot ids keep their case).
 impl fmt::Display for Action {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -224,6 +236,10 @@ impl fmt::Display for Action {
             Action::PickUp(l) => write!(f, "pickup:{l}"),
             Action::Drop(l) if l.is_empty() => f.write_str("drop"),
             Action::Drop(l) => write!(f, "drop:{l}"),
+            Action::Equip { slot, item } => {
+                write!(f, "equip:{slot}:{}", letter(*item).unwrap_or('?'))
+            }
+            Action::Remove(slot) => write!(f, "remove:{slot}"),
             Action::Rest(Rest::For(d)) => write!(f, "rest:{d}"),
             Action::Rest(Rest::Dawn) => f.write_str("rest:dawn"),
             Action::Rest(Rest::Dusk) => f.write_str("rest:dusk"),
@@ -290,6 +306,30 @@ impl FromStr for Action {
                 Some(w) => Ok(Action::SetWeather(w)),
                 None => Err("`weather` needs `clear`, `overcast`, `rain`, or `heavy`".into()),
             },
+            "equip" => {
+                // The slot id keeps its case; the letter is a letter.
+                let usage = || "`equip` needs a slot and a letter, e.g. `equip:body:b`".to_string();
+                let (slot, item) = s
+                    .split_once(':')
+                    .and_then(|(_, rest)| rest.rsplit_once(':'))
+                    .ok_or_else(usage)?;
+                let mut chars = item.chars();
+                match (chars.next().map(|c| c.to_ascii_lowercase()), chars.next()) {
+                    (Some(c @ 'a'..='z'), None) if !slot.is_empty() && !slot.contains(':') => {
+                        Ok(Action::Equip {
+                            slot: slot.to_string(),
+                            item: usize::from(c as u8 - b'a'),
+                        })
+                    }
+                    _ => Err(usage()),
+                }
+            }
+            "remove" => match s.split_once(':').map(|(_, id)| id) {
+                Some(id) if !id.is_empty() && !id.contains(':') => {
+                    Ok(Action::Remove(id.to_string()))
+                }
+                _ => Err("`remove` needs a slot, e.g. `remove:body`".into()),
+            },
             "vision" => match s.split_once(':').map(|(_, id)| id) {
                 Some(id) if !id.is_empty() => Ok(Action::SetVision(id.to_string())),
                 _ => Err("`vision` needs a profile id, e.g. `vision:darkvision`".into()),
@@ -297,7 +337,8 @@ impl FromStr for Action {
             _ => Err(format!(
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
                  descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
-                 vision:ID, skip:DURATION, weather:clear|overcast|rain|heavy)"
+                 equip:SLOT:LETTER, remove:SLOT, vision:ID, skip:DURATION, \
+                 weather:clear|overcast|rain|heavy)"
             )),
         }
     }
@@ -367,6 +408,15 @@ mod tests {
             Action::Drop(Letters::default()),
             Action::Drop(Letters::of([1])),
             Action::Drop(Letters::of(0..Letters::COUNT)),
+            Action::Equip {
+                slot: "body".into(),
+                item: 1,
+            },
+            Action::Equip {
+                slot: "Left_Ring".into(),
+                item: 25,
+            },
+            Action::Remove("main_hand".into()),
         ];
         all.extend(Weather::ALL.map(Action::SetWeather));
         for d in Dir::ALL {
@@ -432,7 +482,35 @@ mod tests {
                 Action::SetWeather(Weather::Clear)
             ])
         );
+        assert_eq!(
+            parse_actions("EQUIP:body:B remove:Missiles"),
+            Ok(vec![
+                Action::Equip {
+                    slot: "body".into(),
+                    item: 1
+                },
+                Action::Remove("Missiles".into()),
+            ])
+        );
+        assert_eq!(
+            Action::Equip {
+                slot: "head".into(),
+                item: 2
+            }
+            .to_string(),
+            "equip:head:c"
+        );
         for bad in [
+            "equip",
+            "equip:body",
+            "equip:body:",
+            "equip::b",
+            "equip:body:ab",
+            "equip:body:1",
+            "equip:a:b:c",
+            "remove",
+            "remove:",
+            "remove:a:b",
             "weather",
             "weather:snow",
             "pickup:",

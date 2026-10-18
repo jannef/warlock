@@ -31,10 +31,13 @@
 //!
 //! Objects (spec §6): piles lie on cells of a level ([`LevelState`]), actors carry inventories.
 //! Picking up and dropping are actions with their own costs; stepping onto a pile says what lies
-//! there. An actor's weight is its creature's plus what it carries ([`Actor::weight`]).
+//! there. An actor's weight is its creature's plus what it carries ([`Actor::weight`]), worn and
+//! wielded things included. Wearing and wielding (`equip.rs`) take the time of each slot's
+//! action; dropping something worn takes it off first.
 
 mod actor;
 mod ai;
+mod equip;
 mod hash;
 mod level;
 mod path;
@@ -292,6 +295,7 @@ impl World {
                 heard: Vec::new(),
                 mind: Mind::default(),
                 inventory: Vec::new(),
+                equipment: Default::default(),
                 stats,
             },
         );
@@ -331,9 +335,11 @@ impl World {
             usize::from(a.creature.0) >= creatures
                 || !a.inventory.iter().all(|s| s.is_valid_for(&content))
                 || a.inventory.len() > object::INVENTORY_SLOTS
+                || !a.equipment.is_valid_for(&a.inventory, &content)
         }) {
             return Err(WorldError::InconsistentState(format!(
-                "actor {} is a creature or carries objects this content does not have",
+                "actor {} is a creature, carries objects, or wears them in slots this content \
+                 does not have",
                 actor.id
             )));
         }
@@ -711,7 +717,9 @@ impl World {
             Action::Ascend => (self.take_stairs(StairsDir::Up, events), ActionKind::Stairs),
             Action::ToggleLantern => (self.toggle_lantern(), ActionKind::Lantern),
             Action::PickUp(letters) => (self.pick_up(*letters), ActionKind::PickUp),
-            Action::Drop(letters) => (self.drop_objects(*letters), ActionKind::Drop),
+            Action::Drop(letters) => return self.drop_objects(*letters),
+            Action::Equip { slot, item } => return self.equip(slot, *item),
+            Action::Remove(slot) => return self.remove(slot),
             Action::Rest(goal) => return self.start_rest(*goal),
             Action::SetVision(id) => return self.set_vision(id),
             Action::SetWeather(weather) => {
@@ -801,19 +809,23 @@ impl World {
     }
 
     /// Drops the inventory stacks `letters` names (everything with no letters) on top of the pile
-    /// on the player's cell. Returns whether anything was dropped.
-    fn drop_objects(&mut self, letters: Letters) -> bool {
+    /// on the player's cell, taking off first what of them is worn or wielded (which takes its
+    /// time too).
+    fn drop_objects(&mut self, letters: Letters) -> Spent {
         let inventory = self.state.player().inventory.clone();
         if inventory.is_empty() {
             self.say("You are not carrying anything.");
-            return false;
+            return Spent::Nothing;
         }
         let Some(chosen) = self.chosen(letters, inventory.len(), |c| format!("You carry no {c}."))
         else {
-            return false;
+            return Spent::Nothing;
         };
+        let mut kinds = self.take_off_before_dropping(chosen.iter());
+        kinds.push(ActionKind::Drop);
         let (dropped, kept) = split(&inventory, chosen);
         *self.state.inventory_mut() = kept;
+        self.player_mut().equipment.after_removal(chosen);
         let here = self.player_pos();
         let content = self.content.clone();
         let level = self.state.current_mut();
@@ -821,7 +833,7 @@ impl World {
         object::add_to_pile(&mut pile, &dropped, &content);
         level.set_pile(here, pile);
         self.say(format!("You drop {}.", object::phrase(&dropped, &content)));
-        true
+        self.price_for(&kinds)
     }
 
     /// The positions `letters` names in a list of `len` stacks, every position (up to `z`) for
@@ -1230,7 +1242,8 @@ fn level_template<'a>(
         .map_err(|e| WorldError::Generation(id.to_string(), e.to_string()))
 }
 
-/// Creates the runtime state for a level and spawns its creatures, each with its type's stats.
+/// Creates the runtime state for a level and spawns its creatures, each with its type's stats,
+/// carrying, wearing, and wielding what the level gives it.
 fn instantiate_level(state: &mut WorldState, content: &Content, template: &LevelTemplate) {
     let id = template.id.as_str();
     state
@@ -1255,6 +1268,7 @@ fn instantiate_level(state: &mut WorldState, content: &Content, template: &Level
                 heard: Vec::new(),
                 mind: Mind::default(),
                 inventory: spawn.carry.clone(),
+                equipment: spawn.equipment.clone(),
                 stats: content.creature(spawn.creature).stats,
             },
         );
@@ -1269,6 +1283,8 @@ mod branch_tests;
 mod character_tests;
 #[cfg(test)]
 mod cost_tests;
+#[cfg(test)]
+mod equip_tests;
 #[cfg(test)]
 mod hearing_tests;
 #[cfg(test)]

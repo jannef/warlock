@@ -268,6 +268,7 @@ impl<'a> Canvas<'a> {
             pos: start,
             route,
             carry: Vec::new(),
+            equipment: Default::default(),
         });
         true
     }

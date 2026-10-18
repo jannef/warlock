@@ -1,0 +1,93 @@
+# Equipment slots (spec §7): where you and creatures wear and wield things, in the order the
+# equipment screen lists them, lettered a on, as in ADOM.
+#
+# Every slot defines:
+#   id      stable name: objects say where they go with `slot = "<id>"`, replays name slots by it
+#           (`equip:body:b`, `remove:body`), and saves record equipment by its place in this file
+#   name    as the equipment screen shows it
+#   fits    the `slot` objects give to go here, if not the id: slots that share one take the same
+#           objects (a ring fits either ring slot)
+#   action  the action that puts a thing on here or takes it off, and so its time: `wield`,
+#           `wear`, `body_armor`, or `ready` (costs in actions.toml)
+#   mark    what the inventory says of a thing here: "being worn" shows as "(being worn)"
+#   hand    one of the hands (default false): a two-handed object (`two_handed` in objects.toml)
+#           takes every hand slot
+#
+# Nothing changes any rule yet: equipment only takes time to put on and off, and weighs what it
+# weighs (combat comes later).
+
+[[slot]]
+id = "head"
+name = "Head"
+action = "wear"
+mark = "being worn"
+
+[[slot]]
+id = "neck"
+name = "Neck"
+action = "wear"
+mark = "being worn"
+
+[[slot]]
+id = "body"
+name = "Body"
+action = "body_armor"
+mark = "being worn"
+
+[[slot]]
+id = "cloak"
+name = "Cloak"
+action = "wear"
+mark = "being worn"
+
+[[slot]]
+id = "main_hand"
+name = "Main hand"
+action = "wield"
+mark = "wielded"
+hand = true
+
+[[slot]]
+id = "off_hand"
+name = "Off hand"
+action = "wield"
+mark = "in off hand"
+hand = true
+
+[[slot]]
+id = "hands"
+name = "Hands"
+action = "wear"
+mark = "being worn"
+
+[[slot]]
+id = "left_ring"
+name = "Left ring"
+fits = "ring"
+action = "wear"
+mark = "on left hand"
+
+[[slot]]
+id = "right_ring"
+name = "Right ring"
+fits = "ring"
+action = "wear"
+mark = "on right hand"
+
+[[slot]]
+id = "feet"
+name = "Feet"
+action = "wear"
+mark = "being worn"
+
+[[slot]]
+id = "missile_weapon"
+name = "Missile weapon"
+action = "ready"
+mark = "readied"
+
+[[slot]]
+id = "missiles"
+name = "Missiles"
+action = "ready"
+mark = "quivered"

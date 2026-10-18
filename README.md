@@ -43,7 +43,10 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   it stay as dim memory, never showing creatures or current light.
 - **Objects** — weapons, armor, tools, potions, scrolls, food, gems, coins, rings, and amulets,
   each with its own glyph, color, material, and weight, lie in piles to pick up and drop; an
-  ADOM-style inventory lettered a–z shows what you carry and what it weighs.
+  ADOM-style inventory lettered a–z shows what you carry and what it weighs, and an ADOM-style
+  equipment screen puts it on: helm, amulet, armor, cloak, weapons and shield (or a two-handed
+  staff), gloves, rings, boots, a bow and arrows. Creatures wield and wear what they carry, and
+  you see it. Equipment takes time to put on but changes no rule yet (combat is next).
 - **Stats** — Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
   D&D, for you and every creature; a character screen shows your own. They do not change the
   rules yet.
@@ -122,6 +125,7 @@ cargo run --release -p warlock
 | `,` or `g` | Pick up what lies here (choose by letter where several things lie) |
 | `d` | Drop something |
 | `i` | Inventory: what you carry, by letter, and what it all weighs |
+| `e` | Equipment: wear and wield things, slot by slot (head, body, hands, rings, missiles, …), as in ADOM |
 | `@` | Character: your race, gender, class, age, birth sign, stats, and weight |
 | `R` | Rest an hour, until dawn, or until nightfall (stops when something comes into view) |
 | `x` | Look around: move a cursor to read what is there (takes no time) |

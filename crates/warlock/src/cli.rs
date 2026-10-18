@@ -88,9 +88,10 @@ pub struct Args {
     /// Dev: open this screen at startup, even with `--capture`. `main` and `new-run` open on the
     /// main menu, and so do character creation's `race`, `gender`, `class`, and `summary` (over
     /// New run and the steps before them, each on its preselection: the scenario's character);
-    /// `pause`, `help`, `inventory`, `character`, `pick-up`, and `drop` over a run; `settings` and
-    /// `controls` over the main menu, or over the pause menu when `--scenario`, `--new`,
-    /// `--replay`, or `--record` names a run.
+    /// `pause`, `help`, `inventory`, `equipment`, `character`, `pick-up`, and `drop` over a run,
+    /// and `equip-item` (choosing what goes in the first slot) over the equipment screen;
+    /// `settings` and `controls` over the main menu, or over the pause menu when `--scenario`,
+    /// `--new`, `--replay`, or `--record` names a run.
     #[arg(long, value_enum)]
     pub screen: Option<ScreenName>,
 

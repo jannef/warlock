@@ -52,10 +52,19 @@ pub enum ActionKind {
     Shoot,
     /// A creature's spell.
     Cast,
+    /// Wielding a thing in a hand, or putting it away (`data/slots.toml` names each slot's
+    /// action).
+    Wield,
+    /// Putting on or taking off a helmet, cloak, gloves, boots, a ring, or an amulet.
+    Wear,
+    /// Putting on or taking off body armor: it takes a while to strap on.
+    BodyArmor,
+    /// Readying a missile weapon or missiles, or putting them away.
+    Ready,
 }
 
 impl ActionKind {
-    pub const ALL: [ActionKind; 11] = [
+    pub const ALL: [ActionKind; 15] = [
         ActionKind::Step,
         ActionKind::Wait,
         ActionKind::OpenDoor,
@@ -67,6 +76,10 @@ impl ActionKind {
         ActionKind::Melee,
         ActionKind::Shoot,
         ActionKind::Cast,
+        ActionKind::Wield,
+        ActionKind::Wear,
+        ActionKind::BodyArmor,
+        ActionKind::Ready,
     ];
 
     /// Its id in `data/actions.toml`.
@@ -83,6 +96,10 @@ impl ActionKind {
             ActionKind::Melee => "melee",
             ActionKind::Shoot => "shoot",
             ActionKind::Cast => "cast",
+            ActionKind::Wield => "wield",
+            ActionKind::Wear => "wear",
+            ActionKind::BodyArmor => "body_armor",
+            ActionKind::Ready => "ready",
         }
     }
 
@@ -91,6 +108,15 @@ impl ActionKind {
         matches!(
             self,
             ActionKind::Melee | ActionKind::Shoot | ActionKind::Cast
+        )
+    }
+
+    /// Whether it puts equipment on or takes it off (a slot's `action` in `data/slots.toml`).
+    /// Taking a thing off costs what putting it on does.
+    pub const fn is_equipment(self) -> bool {
+        matches!(
+            self,
+            ActionKind::Wield | ActionKind::Wear | ActionKind::BodyArmor | ActionKind::Ready
         )
     }
 
