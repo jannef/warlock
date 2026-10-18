@@ -556,7 +556,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   continues the run. Dev builds add named snapshots. Format: a versioned envelope (magic, format
   version, game version) around a JSON payload, gzip-compressed with a pure-Rust backend, written
   atomically (temp file + rename). Before 1.0, incompatible saves are rejected with a clear message;
-  from 1.0 on, saves are migrated. The web build uses browser storage. The envelope also records a
+  from 1.0 on, saves are migrated. The web build keeps the same bytes in the browser's
+  `localStorage` (below). The envelope also records a
   content fingerprint (hash of the ordered terrain, creature, level, light, and dungeon-branch
   ids), because ids are indices; a save made with different content is rejected. Generated levels
   are saved with the run like visited hand-made ones (terrain, memory, stairs, lights, kind and
@@ -567,6 +568,12 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   and on level change, and a save that cannot be read is renamed `run.sav.bad`, never deleted, while
   a new run starts. Starting resumes the save unless `--new` is given. Dev snapshots: `F5` saves and
   `F9` loads `snapshots/quick.sav` (debug builds or `--dev`).
+  On the web the files are `localStorage` keys `warlock/run.sav`, `warlock/run.sav.bad`,
+  `warlock/snapshots/quick.sav`, and `warlock/settings.toml`, the save bytes base64-encoded, with the
+  same envelope and checks. The same triggers save (autosave, level change, `Q`), and so does the page
+  being hidden or closed (`visibilitychange` to hidden, `pagehide`); main menu Continue works after a
+  reload. Storage that is unavailable (some privacy modes) turns saving off with a warning in the log;
+  a write that fails (quota) shows a message in the message line; neither panics.
 - **Settings**: a separate file in the platform config directory.
 - **Replays**: JSON action logs with a header (game version, scenario, seed) and per-turn state hashes.
 - **Dumps**: JSON simulation state plus ASCII layers.

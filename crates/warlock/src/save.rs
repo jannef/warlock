@@ -1,15 +1,15 @@
 //! Saving and resuming: the run save, autosave, dev snapshots, and quit handling (spec §7).
 //!
 //! The core turns a world into bytes (`warlock_core::save`); this module owns where they live.
-//! Saving never panics or aborts the game: failures become a message in the log. On wasm there is
-//! no save directory yet (web storage comes with the web build), so every operation is a no-op.
+//! Saving never panics or aborts the game: failures become a message in the log. Files live in a
+//! directory natively and in `localStorage` on the web (`storage.rs`); the envelope and checks are
+//! the same. On the web the page being hidden or closed also saves (see `web_hooks`).
 
 use crate::cli::Args;
 use crate::game::{Game, SimSet};
+use crate::storage::Backend;
 use bevy::prelude::*;
 use bevy::window::ExitSystems;
-use std::io::Write;
-use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use warlock_core::World;
 use warlock_core::content::Content;
@@ -34,8 +34,8 @@ pub enum Resume {
 /// Where saves live, and whether saving is on at all.
 #[derive(Resource, Debug, Clone)]
 pub struct SaveStore {
-    /// `None` disables saving (capture mode, wasm, or no resolvable data directory).
-    dir: Option<PathBuf>,
+    /// `None` disables saving (capture mode, no resolvable data directory, or no browser storage).
+    backend: Option<Backend>,
     /// Dev snapshots (F5/F9) are available.
     dev: bool,
 }
@@ -44,13 +44,16 @@ impl SaveStore {
     /// The store for this run's command line.
     pub fn from_args(args: &Args) -> Self {
         // Captures and replays are dev tools: they must never touch the player's save.
-        let dir = if args.capture.is_some() || args.replay.is_some() {
+        let backend = if args.capture.is_some() || args.replay.is_some() {
             None
         } else {
-            args.save_dir.clone().or_else(default_dir)
+            args.save_dir
+                .clone()
+                .map(Backend::Dir)
+                .or_else(default_backend)
         };
         Self {
-            dir,
+            backend,
             dev: cfg!(debug_assertions) || args.dev,
         }
     }
@@ -63,18 +66,15 @@ impl SaveStore {
 
     /// Whether a run save file exists (it may still turn out to be unusable).
     pub fn has_save(&self) -> bool {
-        self.dir
-            .as_ref()
-            .is_some_and(|d| d.join(RUN_FILE).is_file())
+        self.backend.as_ref().is_some_and(|b| b.exists(RUN_FILE))
     }
 
     /// Reads the run save. An unusable save is renamed to `run.sav.bad` (never deleted).
     pub fn resume(&self, content: &Arc<Content>) -> Resume {
-        let Some(dir) = &self.dir else {
+        let Some(backend) = &self.backend else {
             return Resume::NoSave;
         };
-        let path = dir.join(RUN_FILE);
-        let bytes = match std::fs::read(&path) {
+        let bytes = match backend.read(RUN_FILE) {
             Ok(bytes) => bytes,
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Resume::NoSave,
             Err(e) => return Resume::Failed(format!("Could not read the save: {e}.")),
@@ -82,7 +82,7 @@ impl SaveStore {
         match save::decode(&bytes, content.clone()) {
             Ok(world) => Resume::Loaded(world),
             Err(err) => {
-                let kept = match std::fs::rename(&path, dir.join(BAD_FILE)) {
+                let kept = match backend.rename(RUN_FILE, BAD_FILE) {
                     Ok(()) => format!("The old save was kept as {BAD_FILE}."),
                     Err(_) => "The old save was left in place.".to_string(),
                 };
@@ -108,51 +108,38 @@ impl SaveStore {
 
     /// Reads the dev snapshot.
     pub fn load_snapshot(&self, content: &Arc<Content>) -> Result<World, String> {
-        let dir = self.dir.as_ref().filter(|_| self.dev);
-        let dir = dir.ok_or("Snapshots are unavailable.")?;
-        let bytes = std::fs::read(dir.join(SNAPSHOT_FILE))
+        let backend = self.backend.as_ref().filter(|_| self.dev);
+        let backend = backend.ok_or("Snapshots are unavailable.")?;
+        let bytes = backend
+            .read(SNAPSHOT_FILE)
             .map_err(|e| format!("No snapshot to load ({e})."))?;
         save::decode(&bytes, content.clone()).map_err(|e| format!("Could not load snapshot: {e}."))
     }
 
     fn write(&self, name: &str, world: &World) -> Result<(), String> {
-        let Some(dir) = &self.dir else {
+        let Some(backend) = &self.backend else {
             return Ok(());
         };
-        write_atomic(&dir.join(name), &save::encode(world))
+        backend
+            .write(name, &save::encode(world))
             .map_err(|e| format!("Could not save: {e}."))
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn default_dir() -> Option<PathBuf> {
-    crate::paths::project_dirs().map(|d| d.data_dir().to_path_buf())
+fn default_backend() -> Option<Backend> {
+    crate::paths::project_dirs().map(|d| Backend::Dir(d.data_dir().to_path_buf()))
 }
 
+/// Browser storage, unless the browser refuses it (some privacy modes): then saving is off.
 #[cfg(target_arch = "wasm32")]
-fn default_dir() -> Option<PathBuf> {
-    None
-}
-
-/// Writes `bytes` to `path` via a temp file in the same directory and a rename, so a crash never
-/// leaves a half-written save.
-fn write_atomic(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
+fn default_backend() -> Option<Backend> {
+    if crate::storage::web::available() {
+        Some(Backend::Browser)
+    } else {
+        warn!("browser storage is unavailable; progress will not be saved");
+        None
     }
-    let mut tmp = path.as_os_str().to_owned();
-    tmp.push(".tmp");
-    let tmp = PathBuf::from(tmp);
-    let result = (|| {
-        let mut file = std::fs::File::create(&tmp)?;
-        file.write_all(bytes)?;
-        file.sync_all()?;
-        std::fs::rename(&tmp, path)
-    })();
-    if result.is_err() {
-        let _ = std::fs::remove_file(&tmp);
-    }
-    result
 }
 
 /// Asks the save systems to act. Written by input.
@@ -186,6 +173,41 @@ impl Plugin for SavePlugin {
                     .run_if(resource_exists::<Game>),
             )
             .add_systems(Last, save_on_exit.after(ExitSystems));
+        #[cfg(target_arch = "wasm32")]
+        web_hooks::build(app);
+    }
+}
+
+/// The web build also saves when the page is hidden or closed. A hidden tab runs no frames, so a
+/// system cannot do it: after each turn the current run is encoded and parked in
+/// `storage::web`, and the `visibilitychange`/`pagehide` listeners write those bytes out.
+#[cfg(target_arch = "wasm32")]
+mod web_hooks {
+    use super::*;
+    use crate::storage::web;
+
+    pub fn build(app: &mut App) {
+        if app.world().resource::<SaveStore>().backend.is_some() {
+            web::hook_page_hide(RUN_FILE);
+            app.add_systems(Update, park_run.after(SimSet));
+        }
+    }
+
+    fn park_run(game: Option<Res<Game>>, mut last: Local<Option<(u64, String)>>) {
+        let Some(game) = game else {
+            if last.take().is_some() {
+                web::set_pending(None);
+            }
+            return;
+        };
+        let key = (
+            game.world.turn(),
+            game.world.perception().level_name().to_string(),
+        );
+        if last.as_ref() != Some(&key) {
+            web::set_pending(Some(save::encode(&game.world)));
+            *last = Some(key);
+        }
     }
 }
 
@@ -270,7 +292,7 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("warlock-test-{}-{name}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         SaveStore {
-            dir: Some(dir),
+            backend: Some(Backend::Dir(dir)),
             dev: true,
         }
     }
@@ -291,14 +313,18 @@ mod tests {
             panic!("expected a loaded world");
         };
         assert_eq!(restored.state(), w.state());
-        let dir = s.dir.as_ref().expect("dir");
+        let Some(Backend::Dir(dir)) = &s.backend else {
+            panic!("dir backend");
+        };
         assert!(!dir.join("run.sav.tmp").exists());
     }
 
     #[test]
     fn unreadable_save_is_kept_as_bad() {
         let s = store("bad");
-        let dir = s.dir.clone().expect("dir");
+        let Some(Backend::Dir(dir)) = s.backend.clone() else {
+            panic!("dir backend");
+        };
         std::fs::create_dir_all(&dir).expect("mkdir");
         std::fs::write(dir.join(RUN_FILE), b"garbage").expect("write");
         let Resume::Failed(msg) = s.resume(&content()) else {
@@ -327,7 +353,7 @@ mod tests {
     #[test]
     fn disabled_store_is_a_no_op() {
         let s = SaveStore {
-            dir: None,
+            backend: None,
             dev: false,
         };
         assert!(s.save_run(&world()).is_ok());

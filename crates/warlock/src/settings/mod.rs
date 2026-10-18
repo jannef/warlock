@@ -1,7 +1,7 @@
 //! Player settings (spec §4.7, §6): font size, reduced effects, color palette, key bindings.
 //!
-//! They live in `settings.toml` in the platform config directory (never on the web, which has
-//! no filesystem; settings then last for the session). A missing or damaged file means defaults
+//! They live in `settings.toml` in the platform config directory, or under the key
+//! `warlock/settings.toml` in the browser's local storage on the web (`storage.rs`). A missing or damaged file means defaults
 //! plus a logged warning, never a crash. Every change is applied live and written back at once.
 //! Captures and replays use defaults and never touch the file unless `--config-dir` is given.
 //!
@@ -28,10 +28,9 @@ pub mod palette;
 
 use crate::cli::Args;
 use crate::input::Bindings;
+use crate::storage::Backend;
 use bevy::prelude::*;
 pub use palette::{Palette, Role};
-use std::io::Write;
-use std::path::{Path, PathBuf};
 
 pub const MIN_FONT_PX: u32 = 12;
 pub const MAX_FONT_PX: u32 = 36;
@@ -278,87 +277,73 @@ pub fn to_toml(settings: &Settings, bindings: &Bindings) -> String {
 /// Where the settings file lives; `None` means settings are not stored.
 #[derive(Resource, Debug, Clone, Default)]
 pub struct SettingsStore {
-    path: Option<PathBuf>,
+    backend: Option<Backend>,
 }
 
 impl SettingsStore {
     /// The store for this run's command line.
     pub fn from_args(args: &Args) -> Self {
-        let dir = match &args.config_dir {
-            Some(dir) => Some(dir.clone()),
+        let backend = match &args.config_dir {
+            Some(dir) => Some(Backend::Dir(dir.clone())),
             // Captures and replays are reproducible dev tools: no player settings in or out.
             None if args.capture.is_some() || args.replay.is_some() => None,
-            None => default_dir(),
+            None => default_backend(),
         };
-        Self {
-            path: dir.map(|d| d.join(FILE_NAME)),
-        }
+        Self { backend }
     }
 
     #[cfg(test)]
-    pub fn at(path: PathBuf) -> Self {
-        Self { path: Some(path) }
+    pub fn at(dir: std::path::PathBuf) -> Self {
+        Self {
+            backend: Some(Backend::Dir(dir)),
+        }
     }
 
     /// Reads the file. Missing means defaults, silently; unreadable or damaged means defaults
     /// with a warning.
     pub fn load(&self) -> Loaded {
-        let Some(path) = &self.path else {
+        let Some(backend) = &self.backend else {
             return Loaded::defaults(Vec::new());
         };
-        match std::fs::read_to_string(path) {
-            Ok(text) => {
-                let mut loaded = parse(&text);
-                for w in &mut loaded.warnings {
-                    *w = format!("{}: {w}", path.display());
+        let place = backend.describe(FILE_NAME);
+        match backend.read(FILE_NAME) {
+            Ok(bytes) => match String::from_utf8(bytes) {
+                Ok(text) => {
+                    let mut loaded = parse(&text);
+                    for w in &mut loaded.warnings {
+                        *w = format!("{place}: {w}");
+                    }
+                    loaded
                 }
-                loaded
-            }
+                Err(_) => Loaded::defaults(vec![format!(
+                    "cannot read {place}: not UTF-8; using defaults"
+                )]),
+            },
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => Loaded::defaults(Vec::new()),
-            Err(e) => Loaded::defaults(vec![format!(
-                "cannot read {}: {e}; using defaults",
-                path.display()
-            )]),
+            Err(e) => Loaded::defaults(vec![format!("cannot read {place}: {e}; using defaults")]),
         }
     }
 
     /// Writes the file atomically. A no-op where settings are not stored.
     pub fn save(&self, settings: &Settings, bindings: &Bindings) -> Result<(), String> {
-        let Some(path) = &self.path else {
+        let Some(backend) = &self.backend else {
             return Ok(());
         };
-        write_atomic(path, to_toml(settings, bindings).as_bytes())
-            .map_err(|e| format!("cannot write {}: {e}", path.display()))
+        backend
+            .write(FILE_NAME, to_toml(settings, bindings).as_bytes())
+            .map_err(|e| format!("cannot write {}: {e}", backend.describe(FILE_NAME)))
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn default_dir() -> Option<PathBuf> {
-    crate::paths::project_dirs().map(|d| d.config_dir().to_path_buf())
+fn default_backend() -> Option<Backend> {
+    crate::paths::project_dirs().map(|d| Backend::Dir(d.config_dir().to_path_buf()))
 }
 
+/// Browser storage; without it (some privacy modes) settings last for the session only.
 #[cfg(target_arch = "wasm32")]
-fn default_dir() -> Option<PathBuf> {
-    None
-}
-
-fn write_atomic(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-    let mut tmp = path.as_os_str().to_owned();
-    tmp.push(".tmp");
-    let tmp = PathBuf::from(tmp);
-    let result = (|| {
-        let mut file = std::fs::File::create(&tmp)?;
-        file.write_all(bytes)?;
-        file.sync_all()?;
-        std::fs::rename(&tmp, path)
-    })();
-    if result.is_err() {
-        let _ = std::fs::remove_file(&tmp);
-    }
-    result
+fn default_backend() -> Option<Backend> {
+    crate::storage::web::available().then_some(Backend::Browser)
 }
 
 /// Loads the settings for this run, logging what was wrong with the file (if anything).
@@ -403,12 +388,13 @@ fn persist(
 mod tests {
     use super::*;
     use crate::input::{KeyBinding, KeyCommand};
+    use std::path::PathBuf;
 
     fn temp_store(name: &str) -> SettingsStore {
         let dir =
             std::env::temp_dir().join(format!("warlock-settings-{}-{name}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
-        SettingsStore::at(dir.join(FILE_NAME))
+        SettingsStore::at(dir)
     }
 
     #[test]
@@ -479,9 +465,8 @@ mod tests {
     #[test]
     fn damaged_file_falls_back_to_defaults_with_a_warning() {
         let store = temp_store("damaged");
-        let path = store.path.clone().expect("path");
-        std::fs::create_dir_all(path.parent().expect("parent")).expect("mkdir");
-        std::fs::write(&path, "font_px = [[[").expect("write");
+        let backend = store.backend.clone().expect("backend");
+        backend.write(FILE_NAME, b"font_px = [[[").expect("write");
         let loaded = store.load();
         assert_eq!(loaded.settings, Settings::default());
         assert_eq!(loaded.bindings.0, Bindings::default().0);
@@ -509,11 +494,11 @@ mod tests {
     fn captures_do_not_read_player_settings() {
         use clap::Parser;
         let args = Args::parse_from(["warlock", "--capture", "x.png"]);
-        assert!(SettingsStore::from_args(&args).path.is_none());
+        assert!(SettingsStore::from_args(&args).backend.is_none());
         let args = Args::parse_from(["warlock", "--capture", "x.png", "--config-dir", "cfg"]);
         assert_eq!(
-            SettingsStore::from_args(&args).path,
-            Some(PathBuf::from("cfg").join(FILE_NAME))
+            SettingsStore::from_args(&args).backend,
+            Some(Backend::Dir(PathBuf::from("cfg")))
         );
     }
 }
