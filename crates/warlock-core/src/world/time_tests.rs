@@ -278,8 +278,8 @@ fn resting_passes_turns_until_the_goal() {
 fn resting_stops_on_the_turn_a_creature_comes_into_view() {
     // In the hall the rat is far enough away for turns to pass between perceptions; the rest
     // must still stop on the very turn it comes into view.
-    assert_eq!(world("hall").turns_out_of_view(), 94 - 41);
-    assert_eq!(world("camp").turns_out_of_view(), 0);
+    assert_eq!(world("hall").out_of_view_for(), secs(6 * (94 - 41)));
+    assert_eq!(world("camp").out_of_view_for(), Duration::ZERO);
     for scenario in ["camp", "hall"] {
         let mut waited = world(scenario);
         let turns = waits_until_a_creature_shows(&mut waited);

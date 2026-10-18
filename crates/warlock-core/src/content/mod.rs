@@ -20,7 +20,7 @@ mod vision;
 
 pub use anim::GlyphAnim;
 pub use calendar::Calendar;
-pub use creature::{CreatureDef, CreatureId};
+pub use creature::{CreatureDef, CreatureId, NORMAL_SPEED, SPEEDS};
 pub use dungeon::{DungeonDef, Generator, LevelPlan, parse_branch_level};
 pub use flow::{FLOW_SPEEDS, Flow};
 pub(crate) use level::validate_route;
@@ -355,6 +355,15 @@ impl Content {
             let id = CreatureId(u16::try_from(i).map_err(|_| err("too many creatures".into()))?);
             if self.creature_ids.insert(spec.id.clone(), id).is_some() {
                 return Err(err(format!("duplicate creature id `{}`", spec.id)));
+            }
+            if !SPEEDS.contains(&spec.speed) {
+                return Err(err(format!(
+                    "creature `{}`: speed {} is out of range ({} to {})",
+                    spec.id,
+                    spec.speed,
+                    SPEEDS.start(),
+                    SPEEDS.end()
+                )));
             }
             let light = self.resolve_light(path, spec.light.as_deref())?;
             check_effects(

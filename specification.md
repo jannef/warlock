@@ -24,8 +24,9 @@ Build the engine and framework, not the game. Everything built is production qua
 - Hand-authored levels from text files; multiple levels joined by stairs, each persistent
 - Player movement (8 directions), doors (open/close), stairs
 - Line of sight, terrain memory, gameplay lighting, vision types
-- Test creatures walking fixed patrol routes; from M10 they act at their own hidden speed, belong
-  to factions, hear noise, and fight with deterministic AI whose attacks are intents only
+- Test creatures walking fixed patrol routes; from M10 they act at their own hidden speed (§8
+  "Speed"), belong to factions, hear noise, and fight with deterministic AI whose attacks are
+  intents only
 - Pickable objects (glyph, color, material, weight), inventory, and creature weight (M11)
 - Moons with phases and moonlight, weather starting with rain (M12)
 - Save and resume an unfinished run
@@ -53,7 +54,7 @@ regression scene for golden screenshots, replays, and snapshot tests.
 |---|---|---|
 | Start room | movement, message line, `?` help | M1 |
 | Door corridor | opening/closing doors, doors blocking sight | M1–M2 |
-| Patrol gallery | creatures moving in and out of view, never shown in memory | M2 |
+| Patrol gallery | creatures moving in and out of view, never shown in memory; a giant rat and a quicker cave bat on parallel lanes, a slower torch-bearing kobold circling them | M2, M10 |
 | Light hall | colored lights, falloff, pillar and creature shadows, steady magical light | M3, M8 |
 | Darkness chamber | vision types, a UV-only rune, darkvision fade | M3 |
 | Water garden | still ponds and running rills (flow, glints, foam), pulsing altar | M4, M8 |
@@ -243,8 +244,10 @@ Water is calm by design; motion stays tasteful, never busy:
 ### 4.6 Motion and time
 - Visual time runs continuously while gameplay waits for input. Animation never blocks or changes
   gameplay.
-- Moving glyphs slide between cells over ~80 ms; the camera follows smoothly. Any new input
-  completes running animations instantly, so fast play never waits.
+- Moving glyphs slide between cells over ~80 ms; the camera follows smoothly. A creature that
+  steps several times in one turn (one quicker than the player, §8 "Speed") slides along the cells
+  it passed in one motion, a little longer (√steps × 80 ms). Any new input completes running
+  animations instantly, so fast play never waits.
 - Visual randomness uses its own RNG and never consumes gameplay randomness.
 
 ### 4.7 Readability and reduced effects
@@ -491,11 +494,14 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   runs toward where the channel continues in the next row, edge cells turn toward water below them
   where the channel narrows, and a few boulders (from their own random stream, so the rest of the
   level is unchanged) stand in the wide stretches for the water to foam against.
-- **Definitions** (TOML): terrain types, light presets, vision profiles, glyph animations, and
-  effects (glow, heat haze, particle emitters; §4.8). Terrain has a `move_cost`: the time to step
-  onto it in percent of the level's turn (default 100; still and running water 200), a `bounce`
-  tint for the light it reflects (§5), a `height` in cells for sun shadows (default 1 if opaque,
-  else 0; at most 4), and `roofed` (never lit by the sun or the sky). Overworld terrain has
+- **Definitions** (TOML): terrain types, creature types, light presets, vision profiles, glyph
+  animations, and effects (glow, heat haze, particle emitters; §4.8). Creature types have a
+  `speed` (100 to 10 000, default 1000, the player's; never shown to the player; §8 "Speed"): the
+  giant rat 1200, the cave bat 2000, the kobold 900, the deer 1300. Terrain has a `move_cost`:
+  the time to step onto it in percent of the level's turn (default 100; still and running water
+  200), a `bounce` tint for the light it reflects (§5), a `height` in cells for sun shadows
+  (default 1 if opaque, else 0; at most 4), and `roofed` (never lit by the sun or the sky).
+  Overworld terrain has
   `travel_minutes` (1 to 1440; required for every walkable terrain on the overworld),
   optionally `local`, the ground terrain of the local area entered from a cell of it (none:
   nothing to explore there; locations never have one), and `landscape`, what its land is like in
@@ -562,8 +568,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   ids), because ids are indices; a save made with different content is rejected. Generated levels
   are saved with the run like visited hand-made ones (terrain, memory, stairs, lights, kind and
   turn length, arrival point, and edge exit), together with the gameplay random stream, the game
-  clock, and the direction of the last overworld step (format version 4; saves without it load
-  with none). The save is `run.sav` in the platform
+  clock, every actor's scheduler energy (§8 "Speed"), and the direction of the last overworld
+  step (format version 5; saves without the step load with none). The save is `run.sav` in the platform
   data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
   and on level change, and a save that cannot be read is renamed `run.sav.bad`, never deleted, while
   a new run starts. Starting resumes the save unless `--new` is given. Dev snapshots: `F5` saves and
@@ -598,8 +604,9 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
 - **Perception snapshot**: after each turn, the core produces what the player perceives. The
   renderer, UI, and dumps read only this snapshot, so hidden information cannot leak by construction
   (a dev "reveal" mode excepted).
-- **Turn phases**, in order: player action → the clock advances by the action's duration →
-  creatures (stable id order) → environment → perception (line of sight, light, memory) → emit
+- **Turn phases**, in order: player action → the other actors on the level act in time order
+  until the player may act again, the clock advancing to the moment of each action (the energy
+  scheduler, "Speed" below) → environment → perception (line of sight, light, memory) → emit
   presentation events.
 - **Time** (`warlock-core/src/time.rs`): world time is whole seconds since the calendar epoch
   (year 1, day 1 of the first month, 00:00), kept in the world state (saved, covered by the state
@@ -616,18 +623,37 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     that turn scaled by the destination terrain's `move_cost` percent (at least 1 s); on the
     overworld it takes the destination terrain's `travel_minutes`. `LevelState::step_time` is the
     one place movement time is decided. Walking off a local area's edge takes its turn. Free and
-    refused actions take no time. Creatures act once per turn, however long it took (no speed
-    system yet).
-  - **Rest** passes turn after turn through the normal pipeline: the player waits, creatures act,
-    perception runs; the last turn is cut short so the rest ends exactly at its goal (one hour,
-    the next 06:00, or the next 18:00; at most a day). It stops after a turn in which a creature
-    came into view (one not seen the turn before) or a message was logged, and logs how long the
-    player rested. While every creature on the level is farther than the view range plus one
-    (Chebyshev) from the player, the turns until one could come within view pass between two
-    perceptions: they cannot change when the rest stops, and a night's rest stays fast on large
-    levels (`cargo xtask bench-turns` times one; budget 500 ms).
+    refused actions take no time. A creature's action takes the same: a step onto the destination
+    terrain, or the level's turn for anything else (a patrol creature waits when blocked). How
+    often each actor acts follows from these durations and its speed.
+  - **Speed** (`warlock-core/src/world/schedule.rs`), ADOM-like: every creature type has a
+    `speed` (§7), 1000 being normal and the player's; twice the speed is twice as many actions in
+    the same game time. An energy scheduler, integer only: each actor on the current level gains
+    its speed in energy per second of game time; an action that takes *d* seconds costs
+    1000 × *d*; an actor may act while its energy is at least 0, and leftover energy carries
+    over, so action counts stay exactly proportional to speed over any span while the clock keeps
+    whole seconds. After the player acts, the other actors act in time order until the player may
+    act again: next is whoever reaches 0 soonest, the clock moves to that moment, and ties go to
+    the player first, then by ascending actor id. With equal speeds every creature acts once per
+    player turn, in id order, right after the player; a speed-2000 creature acts exactly twice
+    per normal turn and a speed-1500 one three times in two. A creature's action is one function
+    (`World::creature_turn`, returning how long it took): creature behavior lives there.
+    Creatures on other levels are frozen (they gain no energy), so coming back to a level never
+    sets off a burst of actions. Energy is part of the world state (saved, covered by the state
+    hash). Speed is hidden from the player: it is not in the perception snapshot, the status bar,
+    look mode, or messages; only ground-truth dev dumps (the world state) show energy.
+  - **Rest** passes turn after turn through the normal pipeline: the player waits, the others
+    act, perception runs; the last turn is cut short so the rest ends exactly at its goal (one
+    hour, the next 06:00, or the next 18:00; at most a day). It stops after a turn in which a
+    creature came into view (one not seen the turn before) or a message was logged, and logs how
+    long the player rested. Turns that end before any creature on the level could come within
+    view pass without perception: a creature is seen only within the view range, and before its
+    first step that could bring it there it needs the energy for every step that cannot (each at
+    least the level's quickest step), so a fast creature shortens the stretch. Those turns cannot
+    change when the rest stops, and a night's rest stays fast on large levels
+    (`cargo xtask bench-turns` times one; budget 500 ms).
   - **Dev skip** (`F6` in dev builds, replay text `skip:1h`) moves the clock ahead at once;
-    nobody acts and no turn passes, but it is recorded like any action.
+    nobody acts or gains energy and no turn passes, but it is recorded like any action.
 - **Events to effects**: the core emits events (door opened, actor moved); the presentation layer
   turns them into animations. Gameplay never waits for them.
 - **Determinism**: ChaCha8 RNG (`rand_chacha`) with separate streams, each seeded with FNV-1a 64 of

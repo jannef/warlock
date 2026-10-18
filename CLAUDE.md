@@ -164,9 +164,16 @@ calendar epoch with calendar fields, minute of day, and 16-bit day fraction; `Du
 calendar math; `DAWN`/`DUSK`), `content/calendar.rs` (month names from `data/calendar.toml`), and
 the turn pipeline in `world/mod.rs`: `player_acts` returns `Spent::Turn(duration)` (the level's
 turn, or `LevelState::step_time` for a step — the one place movement time is decided: `move_cost`
-on local levels, `travel_minutes` on the overworld), `pass_time` advances the clock and lets creatures act once
-per turn, and `rest` loops turns until the goal or an interruption (batching turns only while no
-creature can come into view). New actions that take time must return their duration there.
+on local levels, `travel_minutes` on the overworld), `run_turn` (the energy scheduler,
+`world/schedule.rs`, spec §8 "Speed") charges the player for it and runs the other actors on the
+level in time order until the player may act again, advancing the clock to each action, and
+`rest` loops turns until the goal or an interruption (perceiving only after turns in which a
+creature could have come into view: `out_of_view_for`, which accounts for speed). New actions
+that take time must return their duration there. `creature_turn` is one creature's action and
+returns how long it took: the one place creature behavior lives (AI decisions, the noise and
+events an action makes). Speed (`speed` in `data/creatures.toml`, default 1000 = the player's)
+is rules-only: never put it in perception, the UI, or messages; energy is per actor in
+`WorldState` (saved, hashed); creatures on other levels and the dev skip gain none.
 Levels carry `kind` and `turn` (`turn_seconds`); terrain carries `move_cost` (percent); scenarios
 carry `start_date`/`start_time`. Rest (`R`) is a message-line input mode (`InputMode::Rest`,
 `input::REST_CHOICES`), not a menu screen.
@@ -303,8 +310,9 @@ Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distor
   the level-change fade, and `flash()` for hit-style events.
 
 `ui/` decides what is drawn from the perception snapshot: `ui/mod.rs` (UI console, map grid in
-base colors), `ui/glyphs.rs` (free glyphs), `ui/motion.rs` (slides from `Outcome.events`, camera
-easing; new input completes running motion), `ui/effects.rs` (particles, bursts, glow and haze,
+base colors), `ui/glyphs.rs` (free glyphs), `ui/motion.rs` (slides from `Outcome.events`, one per
+creature along all the steps it took that turn; camera easing; new input completes running
+motion), `ui/effects.rs` (particles, bursts, glow and haze,
 fades), `ui/dev.rs` (dev overlays: reveal map, the one reader of ground truth, and light values).
 Animation curves live in `render/anim.rs` (water: `render/water.rs`, test-only mirrors of the
 shader) and are mirrored in `console.wesl` — change both together. Everything animated is a function of `VisualTime`. Effects are deliberately subtle (the

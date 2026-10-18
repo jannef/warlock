@@ -1,6 +1,7 @@
 # Turns and movement
 
-The game is turn based. You act, time passes, and then every creature acts once.
+The game is turn based. You act, and then time passes while the creatures around you act, each at
+its own pace, until it is your turn again.
 
 ## Turn length
 
@@ -30,8 +31,16 @@ On the overworld a step is a journey: it takes the time given for the terrain yo
 You can move in eight directions, diagonals included. You cannot step into a wall or other solid
 terrain, or onto a creature. Walking into a closed door opens it, and that takes a turn.
 
-## Creatures act once per turn
+## Creatures act at their own pace
 
-After your action, each creature on the level acts once, however long your action took. Wading
-through water takes you 12 seconds, but a creature still takes just one step. There is no speed
-system yet.
+Every creature has its own pace, and the game does not show it. After your action, the
+creatures on the level act in the order their turns come up until it is your turn again:
+
+- A creature as quick as you acts once for each of your turns, right after you.
+- A quicker creature may act twice or more before your next turn, and a slower one now and then
+  skips one of your turns.
+- The longer your action takes, the more the creatures do meanwhile. Wading through water takes
+  you twice as long as a normal step, so creatures get about twice as many actions during it.
+- When a creature's turn comes up at the same moment as yours, you go first.
+
+Creatures on other levels do not act at all while you are away. See [Creatures](creatures.md).

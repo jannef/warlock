@@ -1,13 +1,15 @@
 //! The simulation: world state and the turn pipeline (spec §8).
 //!
-//! Turn phases, in order: player action → the clock advances by the action's duration →
-//! creatures (ascending id) → environment → perception (sight, light, memory) → perceived events
-//! are returned to the caller.
+//! Turn phases, in order: player action → the other actors on the level act in time order until
+//! the player may act again, the clock advancing to the moment of each action (the energy
+//! scheduler, `schedule.rs`; [`World::creature_turn`] is one creature's action) → environment →
+//! perception (sight, light, memory) → perceived events are returned to the caller.
 //!
-//! Time (spec §8): every action that takes a turn advances the clock by its duration: the level's
-//! turn ([`LevelState::turn`], 6 s on local levels, 10 min on the overworld), or for a step the
-//! level's [`LevelState::step_time`] of the destination terrain. Creatures act once per turn,
-//! however long it took. Resting ([`Action::Rest`]) passes many turns in one action.
+//! Time (spec §8): every action that takes time has a duration: the level's turn
+//! ([`LevelState::turn`], 6 s on local levels, 10 min on the overworld), or for a step the level's
+//! [`LevelState::step_time`] of the destination terrain. An actor's speed decides how soon it may
+//! act again: at normal speed (the player's) after exactly that long, at twice the speed after
+//! half of it. Resting ([`Action::Rest`]) passes many turns in one action.
 //!
 //! The overworld (spec §3): stairs down on it are locations leading into other levels; `>` on
 //! any other cell enters that cell's local area (`local:x,y`, generated on the first visit) on
@@ -17,6 +19,7 @@
 mod actor;
 mod hash;
 mod level;
+mod schedule;
 
 pub use actor::{Actor, ActorId, ActorKind, Patrol};
 pub(crate) use hash::fnv1a;
@@ -30,7 +33,7 @@ use crate::geom::{Dir, Pos};
 use crate::light::LightCache;
 use crate::mapgen::local::arrival;
 use crate::messages::MessageLog;
-use crate::perception::{Perception, PerceptionView, VIEW_RADIUS};
+use crate::perception::{Perception, PerceptionView};
 use crate::rng::Rng;
 use crate::time::{self, Duration, GameTime};
 use serde::{Deserialize, Serialize};
@@ -107,8 +110,11 @@ impl WorldState {
             return bad(format!("current level `{}` missing", self.current_level));
         }
         match self.actors.get(&self.player) {
-            Some(p) if p.kind == ActorKind::Player && p.level == self.current_level => {}
-            _ => return bad("player actor missing or misplaced".into()),
+            Some(p)
+                if p.kind == ActorKind::Player
+                    && p.level == self.current_level
+                    && p.energy >= 0 => {}
+            _ => return bad("player actor missing, misplaced, or not ready to act".into()),
         }
         for actor in self.actors.values() {
             let Some(level) = self.levels.get(&actor.level) else {
@@ -147,7 +153,8 @@ enum Spent {
     Nothing,
     /// Changed state without game time passing; perception must be recomputed.
     NoTime,
-    /// A turn this long: the clock advances, creatures act, then perception is recomputed.
+    /// A turn: the player's action took this long; the others act until the player may act again
+    /// (the clock advances), then perception is recomputed.
     Turn(Duration),
     /// A rest until this moment (see [`World::rest`]).
     Rest(GameTime, Rest),
@@ -199,6 +206,7 @@ impl World {
                 level: start.id.clone(),
                 pos: player_pos,
                 patrol: None,
+                energy: 0,
             },
         );
         instantiate_level(&mut state, &start);
@@ -316,9 +324,13 @@ impl World {
         match self.player_acts(action, &mut events) {
             Spent::Nothing => {}
             Spent::NoTime => self.perceive(&mut events),
-            Spent::Turn(duration) => self.pass_time(duration, 1, &mut events),
+            Spent::Turn(duration) => {
+                self.run_turn(duration, &mut events);
+                self.perceive(&mut events);
+            }
             Spent::Rest(until, goal) => self.rest(until, goal, &mut events),
             Spent::Skip(duration) => {
+                // Nobody acts or gains energy.
                 self.state.time += duration;
                 self.perceive(&mut events);
             }
@@ -330,25 +342,11 @@ impl World {
         }
     }
 
-    /// The phases after the player's action: the clock advances by `duration`, which is `turns`
-    /// turns (the creatures act once per turn), then perception. Only the last turn's creature
-    /// moves are kept for presentation, after the player's own events.
-    fn pass_time(&mut self, duration: Duration, turns: u64, events: &mut Vec<Event>) {
-        self.state.time += duration;
-        let player_events = events.len();
-        for _ in 0..turns {
-            events.truncate(player_events);
-            self.state.turn += 1;
-            self.creatures_act(events);
-        }
-        self.perceive(events);
-    }
-
     /// Rests until `until`: turn after turn through the normal pipeline (the player waits, the
-    /// creatures act, perception), stopping after a turn in which a creature came into view or a
-    /// message was logged. The last turn is cut short to end exactly at `until`. While every
-    /// creature is too far away to come into view soon, those turns pass between two
-    /// perceptions ([`World::turns_out_of_view`]), which cannot change the outcome.
+    /// others act, perception), stopping after a turn in which a creature came into view or a
+    /// message was logged. The last turn is cut short to end exactly at `until`. Turns that end
+    /// before any creature could come into view ([`World::out_of_view_for`]) pass without
+    /// perception, which cannot change the outcome; only the last turn's events are kept.
     fn rest(&mut self, until: GameTime, goal: Rest, events: &mut Vec<Event>) {
         let start = self.state.time;
         let turn = self.state.current().turn.max(Duration::seconds(1));
@@ -356,11 +354,16 @@ impl World {
         let mut in_view = self.creatures_in_view();
         let mut came = None;
         while self.state.time < until && came.is_none() && self.said == said {
-            let turns = self.turns_out_of_view().max(1);
-            let span = (turn * turns).min(until.since(self.state.time));
-            events.clear();
-            let turns = span.as_seconds().div_ceil(turn.as_seconds());
-            self.pass_time(span, turns, events);
+            let unseen_until = self.state.time + self.out_of_view_for();
+            loop {
+                events.clear();
+                self.run_turn(turn.min(until.since(self.state.time)), events);
+                let done = self.state.time >= until || self.said != said;
+                if done || self.state.time > unseen_until {
+                    break;
+                }
+            }
+            self.perceive(events);
             let now_in_view = self.creatures_in_view();
             came = now_in_view.iter().find(|a| !in_view.contains(a)).copied();
             in_view = now_in_view;
@@ -391,20 +394,6 @@ impl World {
             .filter(|a| a.kind == ActorKind::Creature)
             .map(|a| a.id)
             .collect()
-    }
-
-    /// How many turns pass before any creature on the current level could come into view:
-    /// creatures move at most one cell a turn and are only seen within [`VIEW_RADIUS`].
-    fn turns_out_of_view(&self) -> u64 {
-        let player = self.player_pos();
-        let nearest = self
-            .state
-            .actors
-            .values()
-            .filter(|a| a.level == self.state.current_level && a.kind == ActorKind::Creature)
-            .map(|a| a.pos.chebyshev(player))
-            .min();
-        nearest.map_or(u64::MAX, |d| (d - VIEW_RADIUS - 1).max(0) as u64)
     }
 
     /// Phase 4: recomputes perception, updates memory, and drops events the player did not see.
@@ -772,40 +761,40 @@ impl World {
         p
     }
 
-    /// Phase 2: creatures follow their patrol routes, waiting when blocked.
-    fn creatures_act(&mut self, events: &mut Vec<Event>) {
-        let current = self.state.current_level.clone();
-        let movers: Vec<ActorId> = self
-            .state
-            .actors
-            .values()
-            .filter(|a| a.level == current && a.patrol.is_some())
-            .map(|a| a.id)
-            .collect();
-        for id in movers {
-            let actor = &self.state.actors[&id];
-            let Some(patrol) = &actor.patrol else {
-                continue;
-            };
-            let from = actor.pos;
-            let to = from.step(patrol.route[patrol.step]);
-            let blocked = !self.state.current().is_walkable(&self.content, to)
-                || self.state.actor_at(&current, to).is_some();
-            if blocked {
-                continue;
+    /// One action of creature `id` on the current level, taken whenever the scheduler lets it act
+    /// (phase 2; `schedule.rs` decides who acts when, and so how often). Returns how long the
+    /// action took, which decides how soon the creature may act again: a step takes the level's
+    /// step time onto the destination ([`LevelState::step_time`]), anything else the level's turn.
+    ///
+    /// This is the one place a creature decides and does something. Today it follows its patrol
+    /// route, waiting when blocked or without one; creature behavior (AI) replaces that decision
+    /// here, and whatever the action lets the player perceive (events, noise) starts here too.
+    fn creature_turn(&mut self, id: ActorId, events: &mut Vec<Event>) -> Duration {
+        let level = self.state.current();
+        let actor = &self.state.actors[&id];
+        let Some(patrol) = &actor.patrol else {
+            return level.turn;
+        };
+        let from = actor.pos;
+        let to = from.step(patrol.route[patrol.step]);
+        let step = match level.terrain.get(to).map(|t| self.content.terrain(*t)) {
+            Some(def) if def.walkable && self.state.actor_at(&level.id, to).is_none() => {
+                level.step_time(def)
             }
-            if let Some(actor) = self.state.actors.get_mut(&id) {
-                actor.pos = to;
-                if let Some(patrol) = &mut actor.patrol {
-                    patrol.step = (patrol.step + 1) % patrol.route.len();
-                }
+            _ => return level.turn,
+        };
+        if let Some(actor) = self.state.actors.get_mut(&id) {
+            actor.pos = to;
+            if let Some(patrol) = &mut actor.patrol {
+                patrol.step = (patrol.step + 1) % patrol.route.len();
             }
-            events.push(Event::ActorMoved {
-                actor: id,
-                from,
-                to,
-            });
         }
+        events.push(Event::ActorMoved {
+            actor: id,
+            from,
+            to,
+        });
+        step
     }
 }
 
@@ -858,6 +847,7 @@ fn instantiate_level(state: &mut WorldState, template: &LevelTemplate) {
                     route: spawn.route.clone(),
                     step: 0,
                 }),
+                energy: 0,
             },
         );
     }
@@ -869,6 +859,8 @@ mod branch_tests;
 mod light_tests;
 #[cfg(test)]
 mod overworld_tests;
+#[cfg(test)]
+mod speed_tests;
 #[cfg(test)]
 mod sun_tests;
 #[cfg(test)]

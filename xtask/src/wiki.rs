@@ -298,6 +298,7 @@ fn lights(content: &Content) -> String {
     out
 }
 
+/// Speed is deliberately left out: it is hidden from the player (spec §8 "Speed").
 fn creatures(content: &Content) -> String {
     let mut out = String::from("| Creature | Glyph | Carries a light |\n|---|:---:|:---:|\n");
     for c in content.creature_defs().iter().filter(|c| c.id != "player") {
