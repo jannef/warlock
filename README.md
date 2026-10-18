@@ -47,6 +47,13 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
 - **Stats** — Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
   D&D, for you and every creature; a character screen shows your own. They do not change the
   rules yet.
+- **Character creation** — ADOM-style, at the start of every run: seven races (elf, half-elf,
+  human, dwarf, halfling, gnome, half-orc), each with its own eyes, three genders, and fifteen
+  classes from barbarian and wizard to merchant and commoner shape your starting stats, with
+  dice rolled in the background (a warrior's Strength is 1d3+1). Your age and birthday are
+  random, and the year you were born gives you a horoscope sign: one of twelve mythological
+  animals and five elements, sixty signs in a great cycle (the Fire Manticore, the Water
+  Basilisk). Not balanced, on purpose: some characters are a challenge.
 - **Living glyphs and effects** — still ponds that glint in the torchlight, streams and a river
   that visibly flow and foam against rocks, a pulsing altar, flickering torches, sparks and
   embers, a soft glow, heat haze over braziers, short fades. All of it is tunable per effect, and
@@ -115,7 +122,7 @@ cargo run --release -p warlock
 | `,` or `g` | Pick up what lies here (choose by letter where several things lie) |
 | `d` | Drop something |
 | `i` | Inventory: what you carry, by letter, and what it all weighs |
-| `@` | Character: your stats and your weight |
+| `@` | Character: your race, gender, class, age, birth sign, stats, and weight |
 | `R` | Rest an hour, until dawn, or until nightfall (stops when something comes into view) |
 | `x` | Look around: move a cursor to read what is there (takes no time) |
 | `?` | Show all controls |
@@ -133,6 +140,7 @@ can be rebound in the Controls screen. The [wiki](https://jannef.github.io/warlo
 ```sh
 cargo test --workspace                                   # tests
 cargo run -p warlock -- --scale 1 --capture shot.png     # render offscreen, save a screenshot
+cargo run -p warlock -- --scenario depths --character dwarf,female,warrior   # start as a dwarf
 cargo run -p warlock-cli -- dump --scenario showcase --actions "move:N move:N" --layers view
 ```
 

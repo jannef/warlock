@@ -2,13 +2,13 @@ name = "Showcase"
 description = "A hand-made tour of every engine capability, one room per feature."
 start_level = "hub"
 seed = 1
-# The player's eyes (data/vision.toml) and lantern (data/lights.toml; starts unlit).
-vision = "normal"
+# The player's character when the run does not choose one (New run and --character do): a
+# race (data/races.toml), a gender (male, female, or other), and a class (data/classes.toml). The
+# player's eyes and stats come from it. A scenario without one gives them itself: `vision` (a
+# profile in data/vision.toml; default "normal"), and `stats` and `potential` by stat id (1 to 40;
+# a missing score 10, the average; a missing potential the score; hidden from the player).
+character = { race = "human", gender = "female", class = "thief" }
+# The lantern the player carries (data/lights.toml; starts unlit).
 lantern = "lantern"
 # The start time (hh:mm); the date is the default, 11 Darkening 1444 (data/calendar.toml).
 start_time = "08:00"
-# The player's stats: scores by stat (strength, dexterity, toughness, intelligence, willpower,
-# presence; 1 to 40, default 10, the average), and potential, how far each score could grow
-# (default: the score; never below it; hidden from the player).
-stats = { strength = 12, dexterity = 14, toughness = 11, intelligence = 13, willpower = 9, presence = 10 }
-potential = { strength = 15, dexterity = 17, toughness = 14, intelligence = 16, willpower = 13, presence = 12 }

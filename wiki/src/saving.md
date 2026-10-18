@@ -14,7 +14,8 @@ On the web the page is also saved when it is hidden or closed.
 
 Choose **Continue** on the main menu to resume the saved run (it appears only if a save exists).
 **New run** lets you pick a [scenario](introduction.md#starting-a-run) and optionally a seed (a
-number, or a word), and starts a fresh run, which replaces the saved one.
+number, or a word), then [create your character](character.md), and starts a fresh run, which
+replaces the saved one. Your character is saved with the run.
 
 ## Where saves are kept
 

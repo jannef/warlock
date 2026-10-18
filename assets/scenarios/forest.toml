@@ -2,7 +2,7 @@ name = "Forest"
 description = "A glade deep in the Thornwood at dawn: a generated local area of the overworld, where the trees cast long shadows. Walk off any edge to reach the overworld."
 start_level = "local:25,20"
 seed = 1
-vision = "normal"
+character = { race = "human", gender = "female", class = "ranger" }
 lantern = "lantern"
 # Early, while the shadows are long (the turn benchmark walks here then).
 start_time = "06:30"

@@ -23,7 +23,7 @@ behavior, commands, or architecture change.
 | Dependency audit | `cargo deny check` |
 | Screenshot smoke test | `cargo xtask smoke` (writes `target/xtask/smoke.png`) |
 | Web build | `cargo xtask web` (writes `target/web/`; see "Releases, web build, logs") |
-| Web smoke test | `cargo xtask web-smoke <chrome>` (serves `target/web`, drives headless Chromium through menu → New run → hub, waits five turns, reloads, Continue, and checks the run resumed at turn 5; writes `target/xtask/web-smoke.png`; fails on logged errors; not run in CI) |
+| Web smoke test | `cargo xtask web-smoke <chrome>` (serves `target/web`, drives headless Chromium through menu → New run → race, gender, class (preselected) → summary → hub, waits five turns, reloads, Continue, and checks the run resumed at turn 5; writes `target/xtask/web-smoke.png`; fails on logged errors; not run in CI) |
 | Regenerate the vast level | `cargo xtask gen-vast` (writes `assets/levels/vast.toml`; deterministic, never hand-edit) |
 | Check the vast level is fresh | `cargo xtask gen-vast --check` (fails if the file differs from the generator output; run it after touching `xtask/src/vast.rs`) |
 | Third-party notices | `cargo xtask licenses` (regenerates `THIRD_PARTY_LICENSES.html` with `cargo-about`, config `about.toml`/`about.hbs`; install: `cargo install cargo-about --locked --features cli`); `--check` fails when it is stale (CI runs it). **Run it after changing dependencies** (`Cargo.toml`/`Cargo.lock`); keep `about.toml`'s `accepted` list in sync with `deny.toml`'s `allow` |
@@ -38,7 +38,9 @@ Game flags (`cargo run -p warlock -- --help`):
   the sunlit courtyard at 06:30, `world` on the overworld beside the Hall, `forest` in the glade
   of a generated forest area of the overworld at 06:30, `arena` in the dark corner of the arena
   where kobolds and giant rats fight), `--seed S`
-  (default: the scenario's seed; a number, or a word hashed with FNV-1a, e.g. `--seed warlock`)
+  (default: the scenario's seed; a number, or a word hashed with FNV-1a, e.g. `--seed warlock`),
+  `--character RACE,GENDER,CLASS` (e.g. `dwarf,female,warrior`; default: the scenario's
+  character; like `--seed` it shapes the run other flags start and alone does not skip the menu)
 - `--content-dir assets` — read content from disk instead of the copy built into the binary
 - `--window WxH` (physical pixels), `--scale F` (display scale; `1` for reproducible captures)
 - `--capture out.png` — render **offscreen** (no window), save a screenshot, exit.
@@ -50,7 +52,9 @@ Game flags (`cargo run -p warlock -- --help`):
   show a fixed moment of their life; fades complete instantly.
 - Without `--scenario`, `--new`, `--replay`, `--record`, or `--capture` the game opens on the main
   menu. Dev: `--screen NAME` opens a screen at startup, even with `--capture`: `main` and
-  `new-run` on the main menu (e.g. `--scale 1 --screen new-run --capture target/menu.png`);
+  `new-run` on the main menu (e.g. `--scale 1 --screen new-run --capture target/menu.png`), and
+  character creation's `race`, `gender`, `class`, and `summary` over New run and the steps
+  before them (each on its preselection: the showcase's character);
   `pause`, `help`, `inventory`, `character`, `pick-up` (the pile on the player's cell), and `drop` over a run
   (e.g. after a `--replay` that walks onto a pile); `settings` and `controls` over the main menu, or over the pause
   menu when `--scenario`, `--new`, `--replay`, or `--record` names a run (`--capture` alone does
@@ -58,15 +62,15 @@ Game flags (`cargo run -p warlock -- --help`):
   `--config-dir DIR` keeps `settings.toml` in DIR; captures and replays otherwise use default
   settings and never write the file.
 
-- `--replay FILE` — apply a replay at startup (its scenario/seed win; a hash divergence is logged
-  as a warning), so `--capture` can screenshot any state. `--record FILE` — write every applied
+- `--replay FILE` — apply a replay at startup (its scenario/seed/character win; a hash divergence
+  is logged as a warning), so `--capture` can screenshot any state. `--record FILE` — write every applied
   action (with state hashes) to a replay, rewritten after each action.
 
 Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 
 | Task | Command |
 |---|---|
-| ASCII dump after actions | `cargo run -p warlock-cli -- dump --scenario showcase --actions "move:N move:N" --layers view,fov,memory` |
+| ASCII dump after actions | `cargo run -p warlock-cli -- dump --scenario showcase --actions "move:N move:N" --layers view,fov,memory` (`--character dwarf,female,warrior` starts as that character, here and in `replay --create`) |
 | Dump a replay's end state | `... dump --replay runs/x.json [--actions "wait"] --format ascii\|json [--state]` |
 | Create a replay | `... replay --create --scenario showcase --actions "move:N wait" -o runs/x.json` |
 | Verify a replay | `... replay --verify runs/x.json` (exit 1 and first diverging step on mismatch) |
@@ -84,11 +88,13 @@ player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `PRO
 digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places over the view: `f`
 footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m` chanting, upper case
 when loud), `inventory` (what the player
-carries and weighs), `stats` (the player's own scores), `truth`
+carries and weighs), `stats` (the player's race, gender, and class, then their own scores), `truth`
 (ground truth, **dev-only**), `actors` (every actor on the level with its weight, what it
 carries, and its stats as score/potential, **dev-only**). Replay files are JSON
-`{game_version, scenario, seed, steps:[{action, hash}]}`; `hash` is the FNV-1a 64 state hash
-(`World::state_hash`) after the step, as 16 hex digits.
+`{game_version, scenario, seed, character, steps:[{action, hash}]}` (`character` =
+`{race, gender, class}`, left out for a run without one; a replay without it starts as the
+scenario's, so old replays load); `hash` is the FNV-1a 64 state hash (`World::state_hash`) after
+the step, as 16 hex digits.
 
 - `--new` start a fresh run instead of resuming the save; `--dev` enables the dev keys in release
   builds (always on in debug: F2 reveal map (ground truth), F3 next vision profile, F4 light-value
@@ -129,9 +135,9 @@ in `ui/glyphs.rs`, never to content colors. Rebindable commands have stable ids 
 it): gate systems that read it with `run_if(resource_exists::<Game>)`; content is the
 `GameContent` resource.
 
-Modal screens (spec §6) — main menu, new run, pause, settings, controls, the `?` help, the
-inventory (`i`), the character screen (`@`), and choosing what to pick up (`,`/`g` on several
-stacks) or drop (`d`) — are one
+Modal screens (spec §6) — main menu, new run and character creation (race, gender, class,
+summary), pause, settings, controls, the `?` help, the inventory (`i`), the character screen
+(`@`), and choosing what to pick up (`,`/`g` on several stacks) or drop (`d`) — are one
 screen stack (`ui/screens.rs`, the `ScreenStack` resource); add a screen there, never a second way
 to open, read keys for, or draw one:
 - **Open**: `Screens::open(ScreenName)` (a `SystemParam` over the stack, content, save store, and
@@ -139,7 +145,11 @@ to open, read keys for, or draw one:
   sub-screens, the startup main menu and `--screen`, and the return to the main menu after a run.
   Screens that show the run read the perception snapshot when they open (no time passes while
   they are open). Back/Esc pops the top screen, so a sub-screen returns to the screen it was
-  opened from as it was left.
+  opened from as it was left; `ScreenAction::Return(name)` pops until `name` is on top (the
+  summary going back to a step). Character creation's steps read what was chosen below them off
+  the stack (`ScreenStack::draft`: New run's scenario and seed, each step's selection) and
+  preselect what was chosen before going back (`ScreenStack::picks`), else the scenario's
+  character; the summary's Start is `MenuChoice::NewRun { scenario, seed, character }`.
 - **Input**: `input::route_keys` is the one reader of `KeyboardInput`. Stack not empty: the press
   goes to the top screen (`ScreenStack::handle` → `ScreenAction`: stay, close, open, a
   `MenuChoice`, or `Act(Action)`: close and apply a gameplay action, e.g. `pickup:ac`); otherwise
@@ -155,7 +165,10 @@ to open, read keys for, or draw one:
   and pause menu), `ui/new_run_screen.rs`, `ui/settings_screen.rs`, `ui/controls_screen.rs` (also
   the `?` help: the same binding list, read-only), `ui/object_screen.rs` (inventory, pick up,
   drop: stacks by letter; in the choices letters always name stacks, even `h j k l`),
-  `ui/character_screen.rs` (name, the player's scores, weight).
+  `ui/character_screen.rs` (name, race, gender, class, age, birthday, and sign
+  (`birth_parts`/`fit_parts`, shared with the summary), the player's scores, weight),
+  `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per step with a Random row rolled
+  from the seed, `SummaryScreen`, `Draft`).
 
 Typical render check: `cargo run -p warlock -- --scale 1 --freeze-time 1 --capture target/shot.png`,
 then read the PNG.
@@ -251,13 +264,43 @@ Toughness, Intelligence, Willpower, Presence; id, abbreviation, name) is generat
 and potentials (`Actor::stats`, saved and hashed), and `modifier(score)` /
 `Stats::modifier(stat)` the D&D 3.5 modifier (`floor((score − 10) / 2)`) for the rules. Content:
 `stats` and `potential` tables (by stat id; 1 to 40; missing score 10, missing potential = the
-score, never below it; `Stats::from_data` validates) on creature types in `data/creatures.toml`
-and, for the player, in the scenario (`ScenarioDef::player_stats`; the `player` creature may not
-set any). **Never show a modifier, a potential, or a creature's stats**: presentation reads only
+score, never below it; `Stats::from_data` validates) on creature types in `data/creatures.toml`;
+the player's come from their character (below), or from a scenario without one
+(`ScenarioDef::player_stats`; the `player` creature may not set any). **Never show a modifier, a potential, or a creature's stats**: presentation reads only
 `PerceptionView::own_scores` (the player's scores) — the character screen and the `stats` dump
 layer; only the dev `actors` layer and `--state` dumps show the rest. No rule uses stats yet, and
 no other D&D concept (checks, saves, hit points, carrying capacity) comes with them. The status
 bar has no stats segment: it is already full at common window sizes.
+
+Character creation (spec §8 "Character creation"; M15) lives in `warlock-core/src/character.rs`:
+`CharacterSpec` (race id, `Gender`, class id; `FromStr`/`Display` as `dwarf,female,warrior`;
+serialized as `{race, gender, class}`) and `CharacterSpec::start(content, seed, start_date)` →
+`Start` (starting `Stats`, the race's vision, and a `Character`: the spec, `raised` (the stat the
+gender raised: male Strength, female Dexterity, other `other_stat(seed)` from the
+`character/gender` stream), `born` (`BirthDate { year: i64, month, day }`: age uniform in the
+race's `age` range and birthday from `character/birth/<race>`, counted back from the start date
+with `BirthDate::counted_back`; `age_on(date)`), and `sign` (`content::Sign { animal, element }`,
+the birth year's)). Scores: 10 + race + gender + class + animal + element, clamped to 1..=40;
+potentials `base_potential` + the race's, never below the score. Flags for rules:
+`Character::born_of_element("fire")`, `born_in_year_of("manticore")`. Content:
+`data/races.toml` (`content/race.rs`: `Races` with `base_potential`, `RaceDef` with `vision`,
+`age`, `stats`, `potential`), `data/classes.toml` (`content/class.rs`: `ClassDef` with `stats`),
+and `data/horoscope.toml` (`content/horoscope.rs`: `Horoscope` with `anchor_year`, `animals`,
+`elements`, `sign_of_year`, `great_cycle` (60), `name` ("Fire Manticore")); all optional.
+Adjustments are `PerStat<Dice>` (`stats::adjustments` checks every result is within -10..=10;
+`stats::roll` rolls them in stat order) and are rolled from `character/rolls/<spec>` in a fixed
+order (race, class, animal, element, race potentials): **adding a die to data changes later
+rolls** of every character with that race or class. `Dice` (`warlock-core/src/dice.rs`) is the
+one dice type (parse `2d3+1`/`-1d2`/`+2`, `Display`, `min`/`max`, `roll(&mut Rng)`); combat will
+reuse it. Scenarios name their character (`character = { race, gender, class }`,
+`ScenarioDef::character`); with one, `vision`, `stats`, and `potential` are refused.
+`World::new` starts as the scenario's character, `World::with_character(content, scenario, seed,
+Some(&spec))` as another; `WorldState::character` (the `Character`, saved, hashed;
+`FORMAT_VERSION` 9) and `PerceptionView::character` (the player knows it; `PerceptionView::time`
+for their age). Replays record only the spec. The summary and the character screen show final
+scores only: never dice, a breakdown, a modifier, or a potential (the step screens and the wiki
+show adjustments as written in data). Balance is not a goal; classes only adjust starting
+scores.
 
 Factions and creature behavior (spec §7 "Factions", §5 "Creature sight", §8 "Creature behavior"):
 `data/factions.toml` (`content/faction.rs`: `Factions`, symmetric hostility, `Stance`; optional,
@@ -492,8 +535,10 @@ published at https://jannef.github.io/warlock/wiki/ by the release workflow's we
 builds it into `pages/wiki/` beside the game. Facts that live in data (months, moons, weather,
 terrain, footstep loudness in words, vision profiles, light presets (named as the player sees
 them), creatures, factions, objects, materials, scenarios, action costs, sight radii, the pack's
-size, the stats' names; never hidden rules such as speed, hearing thresholds, creature sight,
-creature weights, stat modifiers and potentials, or creatures' stats) are tables generated by
+size, the stats' names, races (stat adjustments as written, dice included, vision, starting
+ages), classes (stat adjustments), what each gender raises, the horoscope (animals, elements,
+and the great cycle's signs and years); never hidden rules such as speed, hearing thresholds, creature sight, creature
+weights, stat modifiers and potentials, or creatures' stats) are tables generated by
 `cargo xtask wiki`
 (`xtask/src/wiki.rs`) into `wiki/src/generated/` (committed) and pulled into pages with
 `{{#include generated/NAME.md}}`; CI runs `cargo xtask wiki --check` and `mdbook build wiki` on the
@@ -558,7 +603,8 @@ A successful compile does not verify anything visual. Before opening a PR:
 `tests/golden/manifest.toml` lists one entry per showcase room plus the vast level (its start and
 its river): a scenario and text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file,
 and optional `window`, `scale`, `freeze_time`, `screen` (`--screen` over the run: `pause`,
-`help`, `settings`, `controls`, `inventory`, `character`, `pick-up`, `drop`), `tolerance` (per-channel, default 2) and `max_diff_ratio`
+`help`, `settings`, `controls`, `inventory`, `character`, `pick-up`, `drop`; or over the main
+menu, the replay then unused: `race`, `summary`), `tolerance` (per-channel, default 2) and `max_diff_ratio`
 (default 0.05% of pixels).
 `cargo xtask golden` builds a replay per entry with `warlock-core`, runs the game with
 `--replay ... --capture ...`, and compares with `tests/golden/<name>.png`. On a mismatch it writes

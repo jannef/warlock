@@ -1,0 +1,15 @@
+# Races
+
+Your race is the first choice of a new run (see [Your character](character.md)). It changes your
+starting [stats](stats.md), gives you your eyes (the [vision type](vision.md) you start with), and
+sets how old you can be when you start.
+
+{{#include generated/races.md}}
+
+The changes are added to the average score of 10, together with your gender's, your class's, and
+your [birth sign's](horoscope.md). Most are plain numbers; a few are dice, rolled when you start:
+`1d2+1` is one or two, plus one (see [How your stats add up](character.md#how-your-stats-add-up)).
+Your starting age is picked at random within the race's range.
+
+Races are not balanced against each other. Humans start with no gifts and no flaws, and the
+others trade one strength for one weakness, or for two.

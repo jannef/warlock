@@ -35,6 +35,10 @@ Build the engine and framework, not the game. Everything built is production qua
   D&D, with D&D 3.5 modifiers and ADOM-like potentials that the player never sees; every actor
   has them, and the player sees their own scores on a character screen (§8 "Stats"). No rule
   uses them yet, and no other D&D concept comes with them
+- Character creation (M15): every new run chooses a race, a gender, and a class, which set the
+  player's starting stats (partly rolled with dice, ADOM-like) and eyes; a random age by race
+  and a random birthday give the birth year, whose horoscope sign (12 mythological animals × 5
+  elements) adjusts the stats too (§8 "Character creation"); classes do nothing else yet
 - Save and resume an unfinished run
 - Keyboard controls with an in-game controls reference
 - Development interface (§9)
@@ -43,8 +47,9 @@ Build the engine and framework, not the game. Everything built is production qua
 - An overworld with travel time, locations, local areas, and day and night (M9)
 
 **Out of scope for now**: combat resolution (attacks are announced, nothing is damaged), rules
-that use stats (ability checks, saving throws, hit points, carrying capacity, training), item
-effects, character creation, audio, mouse input, infravision, localization.
+that use stats (ability checks, saving throws, hit points, carrying capacity, training), what
+a class gives beyond starting stats (skills, equipment, spells), item effects, audio, mouse
+input, infravision, localization.
 
 Vision types are in scope even though there are no other mechanics yet: they are part of perception,
 and the light data model must carry them from the start.
@@ -602,14 +607,34 @@ rate or animation.
 - Symbol commands (`<`, `>`, `?`) are bound by **logical key**, so they work on non-US layouts.
 - Bindings live in the settings file. The `?` help (the controls list, read-only) is generated from
   the binding table, so it is always accurate.
-- **Screens**: the main menu, New run, pause menu, Settings, Controls, help, the inventory, the
-  character screen, and choosing what to pick up or drop are modal screens on one stack. Opening a screen puts it on top; Esc or Back closes it and returns to the screen
-  below as it was left. While any screen is open it receives every key press, the run (if any)
+- **Screens**: the main menu, New run and its character creation steps, pause menu, Settings,
+  Controls, help, the inventory, the character screen, and choosing what to pick up or drop are
+  modal screens on one stack. Opening a screen puts it on top; Esc or Back closes it and returns
+  to the screen below as it was left. While any screen is open it receives every key press, the run (if any)
   stays visible beneath it, and no game time passes. Prompts in the message line (a direction
   to open or close, how long to rest, look mode) are not screens.
 - **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
   `--record`, or `--capture` name what to run): Continue (only if a save exists), New run
-  (scenario list from content, optional seed), Settings, Controls, Quit.
+  (scenario list from content, optional seed, then character creation), Settings, Controls,
+  Quit.
+- **Character creation** (§8 "Character creation"): after the scenario and seed, New run asks for
+  a **race**, a **gender**, and a **class**, one screen each and in that order (race first: it
+  is the biggest choice and sets the player's eyes), then shows a **summary**. Each step lists
+  its options in data order with a `>` marker, the selected option's one-line description, and
+  for races and classes their stat adjustments as written in data, dice included
+  (`St 1d3+1  Dx −1`), and for races their vision; the gender step names the stat "other"
+  raises with the run's seed. Every step ends with a
+  **Random** row, rolled from the run seed and how often Random was pressed there. Up/Down (or
+  `k`/`j`) choose, Enter goes on, Esc goes back a step as it was left. A step opens on the
+  choice made there before going back, else on the scenario's character's, else on the first
+  option. The summary lists Start the run, then Race, Gender, and Class with their choices (Enter
+  on one returns to that step as it was left; the steps after it close), the character's age,
+  birthday, and birth sign on one line (`Age 27 · born 3 Seedtide 1417 · year of the Fire
+  Manticore`; the sign on a line of its own when the panel is too narrow), the six starting
+  scores (the final scores only: the dice already rolled, no breakdown, never a potential or a
+  modifier), the vision, and the scenario and seed; "other" names the stat it raised. The
+  player does not choose the age, the birthday, or the sign. Starting replaces any saved run. Content without races or classes skips
+  character creation: New run starts the scenario as it is.
 - **Pause menu**: Esc during a run (when no prompt is open) opens it, drawn in glyphs:
   Resume, Settings, Controls, Save and quit to menu, Quit (which saves). No game time passes while
   it is open; Esc or Back in Settings/Controls returns to it.
@@ -645,9 +670,10 @@ rate or animation.
   glyph, name, and weight, then what the player carries and their weight (their own plus what
   they carry). Read-only; `i` or Esc closes it.
 - **Character** (`@`): who the player is, as far as they know it: their name (the player
-  creature's, "You"), their score in each stat (§8 "Stats") in display order with its
-  abbreviation and full name (`St  Strength  12`), and their weight (their own plus what they
-  carry). Never a modifier or a potential, which the player does not know. Read-only; `@`, Enter,
+  creature's, "You"), their race, gender, and class (`Race    Dwarf`; "other" with the stat it
+  raised), their age today, birthday, and birth sign as on the summary (when the run has a
+  character), their score in each stat (§8 "Stats") in display order with its abbreviation and
+  full name (`St  Strength  12`), and their weight (their own plus what they carry). Never a modifier or a potential, which the player does not know. Read-only; `@`, Enter,
   or Esc closes it. The status bar does not show stats: it is full at common window sizes.
 - **Weight**: every object and every creature (the player included) has a weight in grams. An
   actor weighs its creature's base weight plus everything it carries; the rules know every
@@ -870,11 +896,46 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   around them: their spaces (`void`) keep the area's own ground, every open cell on their edge is
   a way in, and their walkable cells are reachable from the edge. Dungeon generators use only
   dungeon vaults, local areas only outdoor ones.
-- **Scenarios** (`assets/scenarios/*.toml`): level set, start position, vision profile, lantern,
-  options, when the run starts: `start_date = [year, month, day]` (all from 1; default
-  `[1444, 11, 11]`, 11 Darkening, Year 1444) and `start_time = "hh:mm"` (default `"08:00"`), and the player's stats: `stats`
-  and `potential` as for creature types (default 10 each, the potential the score). The
-  showcase's player has St 12 Dx 14 To 11 In 13 Wi 9 Pr 10 (potentials 15, 17, 14, 16, 13, 12).
+- **Stat adjustments** (races, classes, the horoscope) are, per stat id, a fixed number (`2`,
+  `-1`) or dice as text (`"2d3+1"`, `"1d4-1"`, `"-1d2"`; §8 "Dice"), rolled when the character
+  is made; a missing stat is 0, and every result a roll can have must lie within −10 to 10.
+- **Races** (`data/races.toml`, optional; §8 "Character creation"), in the order New run offers
+  them: `id`, `name`, a one-line `description`, `vision` (a profile in `vision.toml`: the
+  player's eyes), `age = [youngest, oldest]` (a new character's age in years, 1 to 1000),
+  `stats` (adjustments to the starting scores), and `potential` (adjustments to the potentials,
+  the same way; hidden from the player); and at the top `base_potential` (1 to 40), what every
+  potential is before the race adjusts it (15). Races are mostly fixed numbers, their identity,
+  with a little dice. The races, their eyes, and ages: elf (low-light, 90–300), half-elf
+  (low-light, 20–60), human (normal, 16–35), dwarf (darkvision, 40–120), halfling (normal,
+  20–50), gnome (low-light, 40–150), half-orc (darkvision, 14–30); humans adjust no score but
+  roll `1d2` on every potential.
+- **Classes** (`data/classes.toml`, optional), in the order offered: `id`, `name`, a one-line
+  `description`, and `stats` (adjustments as for races). Each class rolls its key stats (the
+  warrior St `1d3+1` and To `1d3`, the wizard In `2d2+1` and To `-1d2`, the commoner To
+  `1d3-1`); the rest are fixed. Adventurers: barbarian, bard, priest, druid, monk, paladin,
+  ranger, thief, wizard, witch, warrior; everyday folk: aristocrat, commoner, craftsperson,
+  merchant. A class only adjusts the starting scores.
+- **Horoscope** (`data/horoscope.toml`, optional; §8 "Character creation"): `anchor_year`, a
+  year that starts a great cycle (1: the year of the Great Race, the first of the reckoning),
+  then the `[[animal]]`s in the order of the Great Race and the `[[element]]`s, each with `id`,
+  `name`, a one-line `description`, and `stats` (small fixed adjustments). Their numbers must
+  have no common divisor, so every pair comes once a great cycle. The twelve animals:
+  Salamander, Hydra, Manticore, Unicorn, Wyvern, Basilisk, Roc, Griffin, Sphinx, Phoenix,
+  Kraken, Barghest; the five elements: Wood, Fire, Earth, Metal, Water. Without the file there
+  are no signs.
+- **Scenarios** (`assets/scenarios/*.toml`): level set, start position, lantern, options, when
+  the run starts: `start_date = [year, month, day]` (all from 1; default `[1444, 11, 11]`, 11 Darkening,
+  Year 1444) and
+  `start_time = "hh:mm"` (default `"08:00"`), and the player's character when the run does not
+  choose one: `character = { race = "human", gender = "female", class = "thief" }` (ids in
+  `races.toml` and `classes.toml`; gender `male`, `female`, or `other`), from which the player's
+  eyes and stats follow. A scenario without a character (test fixtures, content without races or
+  classes) gives them itself: `vision` (default `normal`), and `stats` and `potential` as for
+  creature types (default 10 each, the potential the score); with a character these three are
+  refused. Every built-in scenario has a character with normal eyes: the showcase a human female
+  thief, the arena a halfling male thief, the courtyard a human female druid, the depths and the
+  vast level a human male warrior, the forest a human female ranger, the world a human male
+  ranger.
 - **Saves**: suspend-only. One save per run, written on quit and by periodic autosave; loading
   continues the run. Dev builds add named snapshots. Format: a versioned envelope (magic, format
   version, game version) around a JSON payload, gzip-compressed with a pure-Rust backend, written
@@ -891,7 +952,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   none), what every actor carries, and what each creature has in mind (where it last saw a
   hostile or heard a noise to look into, and the post it left; §8 "Creature behavior"; saves
   without it load with every creature calm; format version 7), every actor's stats, scores and
-  potentials (§8 "Stats"; format version 8), and a dev weather override while
+  potentials (§8 "Stats"; format version 8), the player's character (race, gender, and class,
+  the stat the gender raised, birth date, and birth sign; §8 "Character creation"; format
+  version 9), and a dev weather override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
   platform data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
@@ -905,7 +968,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   reload. Storage that is unavailable (some privacy modes) turns saving off with a warning in the log;
   a write that fails (quota) shows a message in the message line; neither panics.
 - **Settings**: a separate file in the platform config directory.
-- **Replays**: JSON action logs with a header (game version, scenario, seed) and per-turn state hashes.
+- **Replays**: JSON action logs with a header (game version, scenario, seed, character) and
+  per-turn state hashes.
 - **Dumps**: JSON simulation state plus ASCII layers.
 
 ## 8. Architecture
@@ -913,7 +977,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 ```
 crates/
   warlock-core/   plain Rust, no Bevy: map, actors, actions, turns, time, fov, light,
-                  perception, rng, levels, mapgen, stats, save
+                  perception, rng, levels, mapgen, stats, dice, character, save
   warlock-cli/    no Bevy: scenarios, replay, dump, verify
   warlock/        Bevy app: render, input, UI, effects, platform (ECS lives here)
 xtask/            screenshot capture, golden-image diff, CI helpers
@@ -1044,7 +1108,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   magic): the list is one typed definition in core (id, abbreviation, name per stat), and every
   per-stat value is stored by stat, so a new stat is one entry there (plus a save format bump).
   - **Scores** are integers, 10 the average and the default. Every actor has one in each stat:
-    a creature from its type, the player from the scenario (§7). There is no character creation.
+    a creature from its type, the player from their character (§8 "Character creation") or,
+    without one, from the scenario (§7).
   - **Modifier**: as in D&D 3.5, `floor((score − 10) / 2)` (1 → −5, 8–9 → −1, 10–11 → 0,
     12–13 → +1, 18 → +4; rounded down for scores below 10 and below 0 alike). It is a core API
     for the rules (`stats::modifier`, `Stats::modifier`) and is **never shown**: not in the UI,
@@ -1059,6 +1124,55 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   - **No rule uses stats yet**, and no other D&D concept comes with them: no ability checks,
     saving throws, hit points from Toughness, or carrying capacity from Strength. Stats and
     potentials are part of the world state (saved, covered by the state hash).
+- **Character creation** (`warlock-core/src/character.rs`; M15): a run starts as a character, a
+  race (`data/races.toml`), a gender (male, female, or other), and a class
+  (`data/classes.toml`), chosen on New run (§6) or given on the command line (`--character
+  dwarf,female,warrior`, §9); otherwise the scenario's character (§7). It decides:
+  - **Age and birthday**: the starting age is uniform within the race's `age` range, the
+    birthday (month, then day) uniform over the year, both from the stream
+    `character/birth/<race>` (so the class and gender never move a birthday). The birth date is
+    counted back from the run's start date (the scenario's `start_date`): the character is
+    exactly that old on it, so a birthday later in the year falls one year further back. Birth
+    years before the calendar's year 1 count on down through 0. The age on the character screen
+    is the age on the current date: one more on every birthday.
+  - **Birth sign** (the horoscope, `data/horoscope.toml`): every year has an animal and an
+    element; both advance one step a year, in data order, on the 1st of Frostmere (the new
+    year), so with 12 animals and 5 elements every pair comes exactly once in a **great cycle**
+    of 60 years. The anchor year 1 (the Great Race) is a Wood Salamander year, and so are 61,
+    …, 1381, and 1441 (1444 is Metal Unicorn). The sign is the birth year's; the player does
+    not choose it. A sign is said element first: "the Fire Manticore". Signs are **flags** for
+    later rules: `Character::born_of_element("fire")` ("is this character Fire-born?"),
+    `Character::born_in_year_of("manticore")`, and `Sign::is_element`/`is_animal`.
+  - **Starting scores**: 10 plus the race's adjustment, plus the gender's (male: Strength +1;
+    female: Dexterity +1; other: +1 to a stat picked uniformly from the run seed's
+    `character/gender` stream, so the same seed always raises the same stat), plus the class's,
+    plus the birth sign's animal's and element's, kept within 1 to 40.
+  - **Dice**: adjustments that are dice are rolled in the background, ADOM-like, from the stream
+    `character/rolls/<race>,<gender>,<class>`, in this order: the race's scores, the class's,
+    the animal's, the element's (each in stat order), then the race's potentials; fixed numbers
+    draw nothing. The same seed, choices, and start date always make the same character. The
+    player sees only the final scores; the step screens and the wiki show adjustments as
+    written in data (`St 1d3+1`): they are rules, not modifiers.
+  - **Potentials** (hidden): `base_potential` plus the race's potential adjustment (possibly
+    rolled), within 1 to 40 and never below the starting score. Classes, genders, and signs do
+    not change potentials.
+  - **Eyes**: the player's vision profile is the race's (the dev vision switch still works).
+  - Balance is deliberately not a goal: some combinations are poor (a halfling commoner), and
+    classes do nothing but adjust starting scores. No other D&D concept comes with them
+    (alignment, skills, hit points, equipment, spells).
+  - The character (`Character`: the race, gender, and class ids, the stat the gender raised,
+    the birth date, and the birth sign) is part of the world state (saved, hashed) and shown on
+    the character screen; replays record the choice only, and since everything else follows
+    from the content, the choice, the seed, and the start date, a run is reproduced by its
+    scenario, seed, and character. `World::new` starts as the scenario's character,
+    `World::with_character` as a given one.
+- **Dice** (`warlock-core/src/dice.rs`): one type for every roll the rules make (character
+  creation now, weapon damage later). Text form: a fixed number (`+2`, `-1`, `0`) or `NdS`
+  (`N` dice of `S` sides: 1 to 100 dice, 2 to 1000 sides), optionally negated (`-1d2`) and
+  with a fixed number after it (`2d3+1`, `1d4-1`; within ±1000); no spaces, lower-case `d`.
+  `Dice` parses, prints its canonical text, gives its `min` and `max`, and rolls from a
+  deterministic stream: one uniform draw per die, none for a fixed number. Data files may give
+  a fixed number as a TOML integer.
 - **Events to effects**: the core emits events (door opened, actor moved, attacked); the
   presentation layer turns them into animations: slides, a short lunge toward the target for a
   melee attack (motion), a shot glyph flying from shooter to target and a creature's `attack`
@@ -1067,7 +1181,11 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
 - **Determinism**: ChaCha8 RNG (`rand_chacha`) with separate streams, each seeded with FNV-1a 64 of
   the run seed (little-endian) and a label: map generation per level (`map/<level id>`, retry *k*
   `map/<level id>/<k>`), so a level depends only on the seed and its id, never on visiting order;
-  gameplay (`gameplay`, kept in the world state and saved); the weather, which keeps no stream at
+  gameplay (`gameplay`, kept in the world state and saved); character creation (derived on
+  demand: `character/gender` for the stat "other" raises, `character/birth/<race>` for the age
+  and birthday, `character/rolls/<race>,<gender>,<class>` for the dice; New run's Random rows
+  roll `new-run/<step>/<n>` streams, which never touch a run); the weather, which keeps no
+  stream at
   all: each weather block hashes the seed, a label, and its number (FNV-1a, then SplitMix64's
   finalizer; §5 "Weather"); and visual-only randomness in the app, which never uses either. No hash-order iteration and no floating point in the core's decisions.
   The same seed and actions produce the same result within a game version; seeds are not
@@ -1079,6 +1197,7 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
 
 ```
 warlock --scenario showcase --seed 42                     # play a named scenario
+warlock --scenario depths --character dwarf,female,warrior # ... as a chosen character
 warlock --replay runs/doors.json \
         --freeze-time 1.5 --window 1280x720 --scale 1 \
         --capture out.png                                 # reproducible screenshot, then exit
@@ -1093,7 +1212,9 @@ warlock-cli gen --level depths:3 --seed warlock           # print a generated le
 cargo xtask golden [--update]                             # compare golden screenshots
 ```
 
-- Replays are JSON: `{game_version, scenario, seed, steps: [{action, hash}]}`. Actions use a text
+- Replays are JSON: `{game_version, scenario, seed, character, steps: [{action, hash}]}`, the
+  character `{race, gender, class}` (left out for a run without one; a replay without it starts
+  as the scenario's character, so older replays still load). Actions use a text
   syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
   pickup pickup:ac drop drop:b vision:darkvision skip:1h weather:rain`; durations are a whole
   number with `s`, `m`, or `h`, a rest at most `24h`; letters name stacks of the pile or the
@@ -1102,21 +1223,26 @@ cargo xtask golden [--update]                             # compare golden scree
   action, e.g. `wait*10`); `hash` is the
   FNV-1a 64 hash of the
   canonical JSON encoding of `WorldState` after the step. Verification reports the first
-  diverging step. `--replay` takes its scenario and seed from the file; `--record` rewrites its
-  file after every action (including replayed steps).
+  diverging step. `--replay` takes its scenario, seed, and character from the file; `--record`
+  rewrites its file after every action (including replayed steps). `--character
+  RACE,GENDER,CLASS`, like `--seed`, shapes the run that `--scenario`, `--new`, `--record`, or
+  `--capture` starts (and `warlock-cli dump` and `replay --create`); without it, the scenario's
+  character.
 - Dump layers: `view`, `fov`, `memory` (terrain and the top object of each known pile), `light`
   (perceived brightness of each visible cell as a digit, `0` dark to `9` fully lit or brighter),
   `sound` (the view with each heard sound at its rough place: `f` footsteps, `o` a door opening,
   `c` a door closing, `x` fighting, `b` a bowstring, `m` chanting, upper case when loud),
   `inventory` (what the player carries, by letter with weights, then what they carry and weigh),
-  and `stats` (the player's own scores, `Strength 12`) are built from the perception snapshot
-  only;
+  and `stats` (the player's race, gender, and class, `Race Dwarf`, their age, birthday, and
+  sign, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`, then their own scores,
+  `Strength 12`) are built from the perception snapshot only;
   `truth` (terrain, objects, and creatures) and `actors` (every actor on the level with its
   weight, base plus carried, what it carries, and its stats as score/potential, `St 12/15`) show
   ground truth and are dev-only. JSON dumps
   carry turn, game time (seconds and calendar fields), level, viewer, the weather (under the open
-  sky; else null), seen actors, heard sounds, the player's inventory, weight, and scores
-  (`stats`, by stat id), recent messages,
+  sky; else null), seen actors, heard sounds, the player's inventory, weight, character
+  (`{race, gender, class, raised, age, born: {year, month, day}, sign: {animal, element}}` or
+  null), and scores (`stats`, by stat id), recent messages,
   and optionally the full world state; the ASCII header line has the turn, the time
   (`0001-01-01 08:00:00`), level, viewer, the weather under the open sky (`weather rain`), and
   hash.
@@ -1213,6 +1339,10 @@ Each milestone ships a playable build.
 - **M14 Stats** — D&D-inspired stats (Strength, Dexterity, Toughness, Intelligence, Willpower,
   Presence) on every actor, with hidden D&D 3.5 modifiers and hidden ADOM-like potentials; the
   player's own scores on a character screen (`@`).
+- **M15 Character generation** — character creation on New run: race (with its eyes), gender,
+  and class set the starting stats, partly rolled with dice; a random age and birthday give the
+  horoscope sign (12 animals × 5 elements, a 60-year great cycle), which adjusts them too; a
+  summary before the run starts; the character saved, replayed, and given on the command line.
 
 ## 13. GitHub workflow
 

@@ -51,6 +51,12 @@ impl Calendar {
         &self.months[time.month_index()]
     }
 
+    /// The name of month `month` (1 to 12; others are clamped into that range).
+    pub fn month(&self, month: u32) -> &str {
+        let index = (month.clamp(1, MONTHS_PER_YEAR as u32) - 1) as usize;
+        &self.months[index]
+    }
+
     /// Day and month, e.g. `12 Rainmoon`.
     pub fn date(&self, time: GameTime) -> String {
         format!("{} {}", time.day(), self.month_name(time))
@@ -75,6 +81,8 @@ mod tests {
         let text = format!("months = [{}]", names.join(", "));
         let calendar = Calendar::parse("c", &text).expect("valid");
         assert_eq!(calendar.month_name(t), "M4");
+        assert_eq!((calendar.month(1), calendar.month(12)), ("M1", "M12"));
+        assert_eq!((calendar.month(0), calendar.month(13)), ("M1", "M12"));
         assert!(Calendar::parse("c", "months = [\"A\"]").is_err());
         let blank = text.replace("\"M3\"", "\" \"");
         assert!(

@@ -4,6 +4,7 @@ use crate::ui::ScreenName;
 use bevy::prelude::*;
 use clap::Parser;
 use std::path::PathBuf;
+use warlock_core::character::CharacterSpec;
 
 /// Options parsed from the command line. On the web build there is no command line, so the
 /// defaults are used.
@@ -19,6 +20,13 @@ pub struct Args {
     /// scenario's seed.
     #[arg(long, value_parser = warlock_core::rng::parse_seed)]
     pub seed: Option<u64>,
+
+    /// The character to start a new run as, RACE,GENDER,CLASS (e.g. `dwarf,female,warrior`; ids
+    /// from `data/races.toml` and `data/classes.toml`; gender male, female, or other); defaults
+    /// to the scenario's. Like `--seed`, it applies to the run that `--scenario`, `--new`,
+    /// `--record`, or `--capture` starts; a replay's character wins.
+    #[arg(long)]
+    pub character: Option<CharacterSpec>,
 
     /// Apply this replay file at startup (its scenario and seed win); hashes are verified and a
     /// divergence is logged as a warning.
@@ -78,7 +86,9 @@ pub struct Args {
     pub config_dir: Option<PathBuf>,
 
     /// Dev: open this screen at startup, even with `--capture`. `main` and `new-run` open on the
-    /// main menu; `pause`, `help`, `inventory`, `pick-up`, and `drop` over a run; `settings` and
+    /// main menu, and so do character creation's `race`, `gender`, `class`, and `summary` (over
+    /// New run and the steps before them, each on its preselection: the scenario's character);
+    /// `pause`, `help`, `inventory`, `character`, `pick-up`, and `drop` over a run; `settings` and
     /// `controls` over the main menu, or over the pause menu when `--scenario`, `--new`,
     /// `--replay`, or `--record` names a run.
     #[arg(long, value_enum)]
@@ -97,14 +107,21 @@ impl Args {
 
     /// Whether the game opens on the main menu. Flags that name what to run (`--scenario`,
     /// `--new`, `--replay`, `--record`, `--capture`) start it directly, so dev flows and
-    /// captures need no input. `--screen` picks: the main menu for `main` and `new-run`, a run
-    /// for `pause` and `help`, and for `settings` and `controls` the menu unless a run is named
-    /// (`--capture` alone does not name one).
+    /// captures need no input. `--screen` picks: the main menu for `main`, `new-run`, and
+    /// character creation's screens, a run for `pause` and `help`, and for `settings` and
+    /// `controls` the menu unless a run is named (`--capture` alone does not name one).
     pub fn starts_in_menu(&self) -> bool {
         let names_run =
             self.scenario.is_some() || self.new || self.replay.is_some() || self.record.is_some();
         match self.screen {
-            Some(ScreenName::Main | ScreenName::NewRun) => true,
+            Some(
+                ScreenName::Main
+                | ScreenName::NewRun
+                | ScreenName::Race
+                | ScreenName::Gender
+                | ScreenName::Class
+                | ScreenName::Summary,
+            ) => true,
             Some(s) if s.needs_run() => false,
             Some(_) => !names_run,
             None => !names_run && self.capture.is_none(),
@@ -150,6 +167,30 @@ mod tests {
         assert!(!menu(&["--screen", "settings", "--replay", "r.json"]));
         assert!(!menu(&["--screen", "inventory", "--capture", "x.png"]));
         assert!(!menu(&["--screen", "pick-up"]));
+        for creation in ["race", "gender", "class", "summary"] {
+            assert!(menu(&["--screen", creation, "--capture", "x.png"]));
+            assert!(menu(&["--screen", creation, "--replay", "r.json"]));
+        }
+    }
+
+    #[test]
+    fn characters_are_race_gender_class() {
+        let args = Args::parse_from(["warlock", "--character", "dwarf,female,warrior"]);
+        assert_eq!(
+            args.character.map(|c| c.to_string()).as_deref(),
+            Some("dwarf,female,warrior")
+        );
+        assert!(Args::try_parse_from(["warlock", "--character", "dwarf"]).is_err());
+        // Like `--seed`, it shapes a run that other flags name; alone it opens the menu.
+        assert!(Args::parse_from(["warlock", "--character", "elf,male,bard"]).starts_in_menu());
+        let named = [
+            "warlock",
+            "--scenario",
+            "depths",
+            "--character",
+            "elf,male,bard",
+        ];
+        assert!(!Args::parse_from(named).starts_in_menu());
     }
 
     #[test]

@@ -8,9 +8,11 @@
 //! the player perceives through [`World::perception`].
 
 pub mod action;
+pub mod character;
 pub mod color;
 pub mod content;
 pub mod daylight;
+pub mod dice;
 pub mod dump;
 pub mod fov;
 pub mod geom;

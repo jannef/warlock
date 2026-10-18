@@ -7,16 +7,19 @@
 mod action;
 mod anim;
 mod calendar;
+mod class;
 mod creature;
 mod dungeon;
 mod faction;
 mod flow;
+mod horoscope;
 mod level;
 mod light;
 mod material;
 mod object;
 mod overworld;
 mod particles;
+mod race;
 mod scenario;
 mod sky;
 mod terrain;
@@ -27,10 +30,12 @@ mod weather;
 pub use action::{ActionCosts, ActionKind, BASE_TURN, COSTS, NORMAL_COST, price};
 pub use anim::GlyphAnim;
 pub use calendar::Calendar;
+pub use class::ClassDef;
 pub use creature::{Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, NORMAL_SPEED, SPEEDS};
 pub use dungeon::{DungeonDef, Generator, LevelPlan, parse_branch_level};
 pub use faction::{FactionDef, FactionId, Factions, PLAYER_FACTION, Stance};
 pub use flow::{FLOW_SPEEDS, Flow};
+pub use horoscope::{Horoscope, Sign, SignPart};
 pub(crate) use level::validate_route;
 pub use level::{
     CreatureSpawn, EdgeExit, LevelKind, LevelTemplate, Region, StairsLink, parse_route,
@@ -40,6 +45,7 @@ pub use material::{MaterialDef, MaterialId};
 pub use object::{MAX_PLACED, ObjectDef, ObjectId, article};
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use particles::{ParticleEmitter, ParticleTrigger};
+pub use race::{RaceDef, Races};
 pub use scenario::ScenarioDef;
 pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use terrain::{MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
@@ -192,11 +198,14 @@ struct LegendFile {
 ///
 /// `data/lights.toml`, `data/vision.toml`, `data/factions.toml`, `data/dungeons.toml`,
 /// `data/calendar.toml`, `data/sky.toml`, `data/materials.toml`, `data/objects.toml`,
-/// `data/weather.toml`, and `data/actions.toml` are optional. Without vision profiles, a single
-/// `normal` profile that needs no light is used, so content without lighting stays fully
-/// visible; without factions, everyone is neutral; without a calendar, months are numbered;
-/// without a sky file there are no moons; without an objects file there are no objects; without a
-/// weather file the sky is always clear; without an actions file every action costs 1000.
+/// `data/weather.toml`, `data/actions.toml`, `data/races.toml`, `data/classes.toml`, and
+/// `data/horoscope.toml` are optional. Without vision profiles, a single `normal` profile that
+/// needs no light is used, so content without lighting stays fully visible; without factions,
+/// everyone is neutral; without a calendar, months are numbered; without a sky file there are no
+/// moons; without an objects file there are no objects; without a weather file the sky is always
+/// clear; without an actions file every action costs 1000; without races or classes there is no
+/// character to choose, and scenarios give the player's eyes and stats themselves; without a
+/// horoscope, characters are born under no sign.
 #[derive(Debug)]
 pub struct Content {
     terrain: Vec<TerrainDef>,
@@ -222,6 +231,9 @@ pub struct Content {
     moons: Vec<MoonDef>,
     climate: Climate,
     actions: ActionCosts,
+    races: Races,
+    classes: Vec<ClassDef>,
+    horoscope: Option<Horoscope>,
 }
 
 impl Content {
@@ -253,6 +265,9 @@ impl Content {
             moons: Vec::new(),
             climate: Climate::default(),
             actions: ActionCosts::default(),
+            races: Races::default(),
+            classes: Vec::new(),
+            horoscope: None,
         };
         let path = "data/calendar.toml";
         if let Some(text) = files.get_optional(path) {
@@ -272,6 +287,18 @@ impl Content {
         }
         content.load_lights(files)?;
         content.load_vision(files)?;
+        let path = "data/races.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.races = Races::parse(path, text, |id| content.vision(id).is_some())?;
+        }
+        let path = "data/classes.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.classes = ClassDef::parse(path, text)?;
+        }
+        let path = "data/horoscope.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.horoscope = Some(Horoscope::parse(path, text)?);
+        }
         content.load_terrain(files)?;
         content.load_factions(files)?;
         content.load_creatures(files)?;
@@ -672,7 +699,7 @@ impl Content {
     }
 
     /// Cross-file checks: at most one overworld, stair targets, and each scenario's start level,
-    /// vision profile, and lantern exist. Levels of dungeon branches (`depths:3`) and local areas
+    /// vision profile, lantern, and character's race and class exist. Levels of dungeon branches (`depths:3`) and local areas
     /// of the overworld (`local:12,30`) count as existing.
     fn validate(&self) -> Result<(), ContentError> {
         let mut overworlds = self
@@ -713,11 +740,16 @@ impl Content {
                     format!("start level `{}` has no player start", level.id),
                 ));
             }
-            if self.vision(&scenario.vision).is_none() {
+            if self.vision(scenario.vision()).is_none() {
                 return Err(ContentError::new(
                     &file,
-                    format!("unknown vision profile `{}`", scenario.vision),
+                    format!("unknown vision profile `{}`", scenario.vision()),
                 ));
+            }
+            if let Some(character) = &scenario.character {
+                character
+                    .check(self)
+                    .map_err(|m| ContentError::new(&file, format!("character: {m}")))?;
             }
             self.resolve_light(&file, scenario.lantern.as_deref())?;
         }
@@ -907,6 +939,31 @@ impl Content {
 
     pub fn scenarios(&self) -> impl Iterator<Item = &ScenarioDef> {
         self.scenarios.values()
+    }
+
+    /// The races of `data/races.toml`, in the order offered (none without the file).
+    pub fn races(&self) -> &Races {
+        &self.races
+    }
+
+    /// The race with id `id`.
+    pub fn race(&self, id: &str) -> Option<&RaceDef> {
+        self.races.list.iter().find(|r| r.id == id)
+    }
+
+    /// The classes of `data/classes.toml`, in the order offered (none without the file).
+    pub fn classes(&self) -> &[ClassDef] {
+        &self.classes
+    }
+
+    /// The class with id `id`.
+    pub fn class(&self, id: &str) -> Option<&ClassDef> {
+        self.classes.iter().find(|c| c.id == id)
+    }
+
+    /// The horoscope of `data/horoscope.toml` (none without the file).
+    pub fn horoscope(&self) -> Option<&Horoscope> {
+        self.horoscope.as_ref()
     }
 
     /// Month names for showing dates.
@@ -1235,6 +1292,120 @@ mod tests {
     const LIGHTS: &str = "[[light]]\nid = \"torch\"\ncolor = [300, 200, 100, 0]\nradius = 6\n\
                           stability.intensity = { amount = 0.2, speed = 1.5 }\n\
                           stability.hue = { degrees = 5, speed = 0.4 }\n";
+
+    #[test]
+    fn builtin_races_and_classes_load_in_the_order_offered() {
+        let content = Content::builtin().expect("content");
+        let races: Vec<&str> = (content.races().list.iter())
+            .map(|r| r.id.as_str())
+            .collect();
+        assert_eq!(
+            races,
+            [
+                "elf", "half_elf", "human", "dwarf", "halfling", "gnome", "half_orc"
+            ]
+        );
+        let classes: Vec<&str> = content.classes().iter().map(|c| c.id.as_str()).collect();
+        assert_eq!(
+            classes,
+            [
+                "barbarian",
+                "bard",
+                "priest",
+                "druid",
+                "monk",
+                "paladin",
+                "ranger",
+                "thief",
+                "wizard",
+                "witch",
+                "warrior",
+                "aristocrat",
+                "commoner",
+                "craftsperson",
+                "merchant"
+            ]
+        );
+        for race in &content.races().list {
+            assert!(content.vision(&race.vision).is_some(), "{}", race.id);
+            assert!(!race.description.is_empty() && !race.name.is_empty());
+        }
+        for class in content.classes() {
+            assert!(!class.description.is_empty() && !class.name.is_empty());
+        }
+        assert_eq!(
+            content.race("dwarf").map(|r| r.vision.as_str()),
+            Some("darkvision")
+        );
+        assert_eq!(
+            content
+                .class("wizard")
+                .map(|c| c.stats[crate::stats::Stat::Intelligence].to_string()),
+            Some("2d2+1".to_string())
+        );
+        let h = content.horoscope().expect("a horoscope");
+        assert_eq!(
+            (h.animals.len(), h.elements.len(), h.great_cycle()),
+            (12, 5, 60)
+        );
+        let elements: Vec<&str> = h.elements.iter().map(|e| e.name.as_str()).collect();
+        assert_eq!(elements, ["Wood", "Fire", "Earth", "Metal", "Water"]);
+        for part in h.animals.iter().chain(&h.elements) {
+            assert!(
+                !part.description.is_empty() && !part.name.is_empty(),
+                "{}",
+                part.id
+            );
+            // The horoscope stays flat and small.
+            for (_, by) in part.stats.iter() {
+                assert!(by.is_fixed() && by.min().abs() <= 2, "{} {by}", part.id);
+            }
+        }
+        assert!(content.race("orc").is_none() && content.class("necromancer").is_none());
+    }
+
+    #[test]
+    fn scenario_characters_and_race_eyes_must_exist() {
+        let bad = "name = \"B\"\nstart_level = \"hub\"\n\
+                   character = { race = \"orc\", gender = \"male\", class = \"warrior\" }\n";
+        let mut files = ContentFiles::builtin();
+        files.insert("scenarios/bad.toml", bad);
+        let err = Content::load(&files).unwrap_err();
+        assert_eq!(err.file, "scenarios/bad.toml");
+        assert!(
+            err.message.contains("character: unknown race `orc`"),
+            "{}",
+            err.message
+        );
+        // Content without races has no characters to give.
+        let mut files = minimal_files("#@#\n", "");
+        files.insert(
+            "scenarios/bad.toml",
+            &bad.replace("start_level = \"hub\"", "start_level = \"test\""),
+        );
+        let err = Content::load(&files).unwrap_err();
+        assert!(
+            err.message.contains("unknown race `orc`"),
+            "{}",
+            err.message
+        );
+        // A race's eyes are a known vision profile.
+        let mut files = ContentFiles::builtin();
+        let races = files.get("data/races.toml").unwrap().replacen(
+            "vision = \"darkvision\"",
+            "vision = \"tremorsense\"",
+            1,
+        );
+        files.insert("data/races.toml", &races);
+        let err = Content::load(&files).unwrap_err();
+        assert_eq!(err.file, "data/races.toml");
+        assert!(
+            err.message
+                .contains("race `dwarf`: unknown vision profile `tremorsense`"),
+            "{}",
+            err.message
+        );
+    }
 
     #[test]
     fn builtin_lights_and_vision_profiles_load() {
@@ -1692,9 +1863,6 @@ mod tests {
         assert_eq!(rat.score(Stat::Intelligence), 1);
         let shaman = def("kobold_shaman").stats;
         assert!(shaman.score(Stat::Willpower) > def("kobold").stats.score(Stat::Willpower));
-        let player = content.scenario("showcase").unwrap().player_stats;
-        assert_eq!(player.score(Stat::Dexterity), 14);
-        assert_eq!(player.potential(Stat::Dexterity), 17);
         // A creature type without stats is average in each.
         let content = Content::load(&minimal_files("#@#\n", "")).unwrap();
         let rat = content.creature(content.creature_id("rat").unwrap());

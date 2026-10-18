@@ -7,12 +7,14 @@ Charisma.
 
 {{#include generated/stats.md}}
 
-Each scenario sets your stats when a run starts; there is no character creation yet.
+Your stats are set when you create your character at the start of a run: your
+[race](races.md), your gender, and your [class](classes.md) each add to or take from the average
+of 10 (see [Your character](character.md)). After that, nothing changes them yet.
 
 ## Seeing your stats
 
-Press `@` to open the **character screen**. It shows your name, your stats in the order above
-(with their short names), and your weight: your own, plus what you carry (see
+Press `@` to open the **character screen**. It shows your name, your race, gender, and class,
+your age, birthday, and [birth sign](horoscope.md), your stats in the order above (with their short names), and your weight: your own, plus what you carry (see
 [Objects and your pack](objects.md)). Looking takes no time; press `@` or `Esc` to close it.
 
 Creatures have stats too, but you cannot see theirs.

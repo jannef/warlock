@@ -43,6 +43,7 @@
 //! is not visible are perceived with their kind, volume, and a rough place (a cell the player
 //! does not see, near the source); never with who made them.
 
+use crate::character::Character;
 use crate::content::{
     Content, CreatureId, Flow, LevelKind, LightId, Stance, TerrainId, VisionProfile,
 };
@@ -57,6 +58,7 @@ use crate::light::{
 use crate::noise::{self, PerceivedSound};
 use crate::object::{Stack, Weight};
 use crate::stats::PerStat;
+use crate::time::GameTime;
 use crate::weather::Weather;
 use crate::world::{Actor, ActorId, ActorKind, LevelState, WorldState};
 use serde::Serialize;
@@ -512,6 +514,10 @@ pub struct PerceptionView<'a> {
     pub(crate) level: &'a LevelState,
     /// The player, for what they carry.
     pub(crate) player: &'a Actor,
+    /// The player's character, which they know.
+    pub(crate) character: Option<&'a Character>,
+    /// The time on the clock, which the player knows.
+    pub(crate) time: GameTime,
     pub(crate) snapshot: &'a Perception,
 }
 
@@ -623,6 +629,18 @@ impl<'a> PerceptionView<'a> {
     /// The player's own weight: their base weight plus what they carry.
     pub fn own_weight(&self) -> Weight {
         self.player.weight(self.content)
+    }
+
+    /// Who the player is (spec §8 "Character creation"): their race, gender, and class, the
+    /// stat their gender raised, their birth date, and their birth sign; `None` when the
+    /// scenario gave no character.
+    pub fn character(&self) -> Option<&'a Character> {
+        self.character
+    }
+
+    /// The time on the clock.
+    pub fn time(&self) -> GameTime {
+        self.time
     }
 
     /// The player's own scores, by stat (spec §8 "Stats"). That is all the player knows of

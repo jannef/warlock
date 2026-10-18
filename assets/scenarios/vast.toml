@@ -2,5 +2,5 @@ name = "Vast"
 description = "The 420x300 cavern level: scrolling camera, river, rooms, patrols, many lights; used for captures and perf checks."
 start_level = "vast"
 seed = 1
-vision = "normal"
+character = { race = "human", gender = "male", class = "warrior" }
 lantern = "lantern"

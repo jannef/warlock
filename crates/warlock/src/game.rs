@@ -5,6 +5,7 @@ use crate::save::{Resume, SaveStore};
 use bevy::prelude::*;
 use std::path::PathBuf;
 use std::sync::Arc;
+use warlock_core::character::CharacterSpec;
 use warlock_core::content::{Content, ContentFiles};
 use warlock_core::replay::{Divergence, Replay};
 use warlock_core::world::WorldError;
@@ -38,13 +39,15 @@ pub struct Game {
 }
 
 impl Game {
-    /// A fresh run of `scenario`, e.g. from the main menu.
+    /// A fresh run of `scenario` as `character` (the scenario's if `None`), e.g. from the main
+    /// menu.
     pub fn new_run(
         content: Arc<Content>,
         scenario: &str,
         seed: Option<u64>,
+        character: Option<&CharacterSpec>,
     ) -> Result<Self, String> {
-        let world = World::new(content, scenario, seed)
+        let world = World::with_character(content, scenario, seed, character)
             .map_err(|e| format!("cannot start scenario `{scenario}`: {e}"))?;
         Ok(Self {
             world,
@@ -74,8 +77,8 @@ impl Game {
         }
     }
 
-    /// Starts the game the command line asks for: the saved run, a replay, or the scenario.
-    /// Only used when the main menu is skipped.
+    /// Starts the game the command line asks for: the saved run, a replay, or the scenario (as
+    /// `--character`, else the scenario's). Only used when the main menu is skipped.
     pub fn start(args: &Args, content: Arc<Content>) -> Result<Self, String> {
         let mut failure = None;
         if SaveStore::resumes(args) {
@@ -108,7 +111,8 @@ impl Game {
             }
             None => {
                 let scenario = args.scenario_name();
-                let mut world = World::new(content, scenario, args.seed)
+                let character = args.character.as_ref();
+                let mut world = World::with_character(content, scenario, args.seed, character)
                     .map_err(|e| format!("cannot start scenario `{scenario}`: {e}"))?;
                 if let Some(message) = failure {
                     world.notice(message);

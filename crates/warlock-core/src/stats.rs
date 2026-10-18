@@ -13,6 +13,8 @@
 //!
 //! Adding a stat is one entry in the `stats!` list below; saves then need a new format version.
 
+use crate::dice::Dice;
+use crate::rng::Rng;
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::BTreeMap;
@@ -23,6 +25,10 @@ pub const AVERAGE: u8 = 10;
 
 /// The scores and potentials content may give an actor.
 pub const SCORES: RangeInclusive<u8> = 1..=40;
+
+/// The adjustments a race, class, or birth sign may make to a stat (spec §8 "Character
+/// creation"): every result a rolled adjustment can have lies within.
+pub const ADJUSTMENTS: RangeInclusive<i8> = -10..=10;
 
 /// Defines [`Stat`] from one entry per stat: the variant, its id in data files and saves, its
 /// two-letter abbreviation, and its name, in display order.
@@ -114,6 +120,42 @@ impl<'de> Deserialize<'de> for Stat {
 /// 11 → 0, 12 and 13 → +1, 18 → +4. For the rules only: **never shown** to the player.
 pub const fn modifier(score: i32) -> i32 {
     (score - AVERAGE as i32).div_euclid(2)
+}
+
+/// `score` adjusted by `by`, kept within [`SCORES`].
+pub fn adjusted(score: u8, by: i32) -> u8 {
+    let (lo, hi) = (i32::from(*SCORES.start()), i32::from(*SCORES.end()));
+    (i32::from(score) + by).clamp(lo, hi) as u8
+}
+
+/// Stat adjustments as data gives them (`stats = { strength = "1d3+1", presence = -1 }`): a
+/// fixed number or [`Dice`] per stat, 0 if missing, every possible result within
+/// [`ADJUSTMENTS`]; the error names the stat.
+pub fn adjustments(data: &BTreeMap<Stat, Dice>) -> Result<PerStat<Dice>, String> {
+    let mut out = PerStat::splat(Dice::fixed(0));
+    let range = i32::from(*ADJUSTMENTS.start())..=i32::from(*ADJUSTMENTS.end());
+    for (&stat, &by) in data {
+        if !range.contains(&by.min()) || !range.contains(&by.max()) {
+            return Err(format!(
+                "{} {by} is out of range ({} to {})",
+                stat.id(),
+                ADJUSTMENTS.start(),
+                ADJUSTMENTS.end()
+            ));
+        }
+        out[stat] = by;
+    }
+    Ok(out)
+}
+
+/// Rolls an adjustment for every stat, in display order, from `rng` (fixed numbers draw
+/// nothing).
+pub fn roll(by: &PerStat<Dice>, rng: &mut Rng) -> PerStat<i32> {
+    let mut out = PerStat::splat(0);
+    for stat in Stat::ALL {
+        out[stat] = by[stat].roll(rng);
+    }
+    out
 }
 
 /// One value for every stat, by stat. Serialized as a map from stat id to value, in display
@@ -220,6 +262,15 @@ impl Stats {
             stats.potential[stat] = potential;
         }
         Ok(stats)
+    }
+
+    /// Stats from a score and a potential for every stat; a potential below its score is raised
+    /// to it.
+    pub fn new(score: PerStat<u8>, mut potential: PerStat<u8>) -> Self {
+        for stat in Stat::ALL {
+            potential[stat] = potential[stat].max(score[stat]);
+        }
+        Self { score, potential }
     }
 
     /// The score in `stat`.
@@ -412,6 +463,44 @@ mod tests {
         let unknown = json.replacen("strength", "luck", 1);
         let err = serde_json::from_str::<Stats>(&unknown).unwrap_err();
         assert!(err.to_string().contains("unknown stat `luck`"), "{err}");
+    }
+
+    #[test]
+    fn adjustments_default_to_zero_and_stay_in_range() {
+        let dice = |t: &str| t.parse::<Dice>().expect("dice");
+        let data = BTreeMap::from([
+            (Stat::Strength, Dice::fixed(3)),
+            (Stat::Toughness, dice("1d3+1")),
+            (Stat::Presence, Dice::fixed(-10)),
+        ]);
+        let adj = adjustments(&data).expect("valid");
+        assert_eq!(
+            adj.iter().map(|(_, v)| v.to_string()).collect::<Vec<_>>(),
+            ["+3", "0", "1d3+1", "0", "0", "-10"]
+        );
+        let err = adjustments(&BTreeMap::from([(Stat::Willpower, Dice::fixed(11))])).unwrap_err();
+        assert!(err.contains("willpower +11 is out of range"), "{err}");
+        assert!(adjustments(&BTreeMap::from([(Stat::Dexterity, Dice::fixed(-11))])).is_err());
+        // Every result of a roll must be in range: 3d4 can be 12, -1d12 can be -12.
+        let err = adjustments(&BTreeMap::from([(Stat::Strength, dice("3d4"))])).unwrap_err();
+        assert!(err.contains("strength 3d4 is out of range"), "{err}");
+        assert!(adjustments(&BTreeMap::from([(Stat::Strength, dice("-1d12"))])).is_err());
+        assert!(adjustments(&BTreeMap::from([(Stat::Strength, dice("2d4+2"))])).is_ok());
+        // Rolls follow the stat order; fixed numbers draw nothing.
+        let mut rng = Rng::stream(1, "stats-test");
+        let rolled = roll(&adj, &mut rng);
+        assert_eq!((rolled[Stat::Strength], rolled[Stat::Presence]), (3, -10));
+        assert!((2..=4).contains(&rolled[Stat::Toughness]));
+        let mut again = Rng::stream(1, "stats-test");
+        assert_eq!(rolled[Stat::Toughness], dice("1d3+1").roll(&mut again));
+        assert_eq!(rng, again);
+        // Adjusted scores stay within 1 to 40.
+        assert_eq!(adjusted(10, 3), 13);
+        assert_eq!(adjusted(3, -5), 1);
+        assert_eq!(adjusted(38, 9), 40);
+        // A potential below its score is raised to it.
+        let stats = Stats::new(PerStat::splat(12), PerStat::splat(11));
+        assert_eq!(stats.potential(Stat::Strength), 12);
     }
 
     #[test]

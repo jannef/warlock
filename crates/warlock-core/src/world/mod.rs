@@ -45,6 +45,7 @@ pub(crate) use hash::fnv1a;
 pub use level::LevelState;
 
 use crate::action::{Action, AttackKind, Event, Letters, MAX_REST, Outcome, Rest, letter};
+use crate::character::{Character, CharacterSpec};
 use crate::content::{
     ActionKind, Content, EdgeExit, LevelKind, LevelTemplate, StairsDir, Stance, TerrainId,
     local_area_id,
@@ -73,6 +74,8 @@ pub enum WorldError {
     UnknownLevel(String),
     #[error("level `{0}` has no player start")]
     NoPlayerStart(String),
+    #[error("cannot create the character: {0}")]
+    Character(String),
     #[error("cannot generate level `{0}`: {1}")]
     Generation(String, String),
     #[error("saved state is inconsistent: {0}")]
@@ -98,6 +101,11 @@ pub struct WorldState {
     pub(crate) messages: MessageLog,
     /// The player's vision profile (an id in `data/vision.toml`).
     pub(crate) vision: String,
+    /// The player's character (spec §8 "Character creation"): race, gender, and class, the stat
+    /// the gender raised, birth date, and birth sign; none when the scenario gives the player's
+    /// eyes and stats itself.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) character: Option<Character>,
     /// Whether the player's lantern (the scenario's `lantern`) is lit.
     pub(crate) lantern_lit: bool,
     /// The step that brought the player onto their overworld cell, if they walked there: `>`
@@ -213,16 +221,37 @@ enum Spent {
 }
 
 impl World {
-    /// Starts a new run of `scenario`. `seed` defaults to the scenario's seed.
+    /// Starts a new run of `scenario` with the scenario's own character. `seed` defaults to the
+    /// scenario's seed.
     pub fn new(
         content: Arc<Content>,
         scenario: &str,
         seed: Option<u64>,
     ) -> Result<Self, WorldError> {
+        Self::with_character(content, scenario, seed, None)
+    }
+
+    /// Starts a new run of `scenario` as `character` (spec §8 "Character creation"); without
+    /// one, as the scenario's character, or if it names none, with the eyes and stats it gives.
+    /// `seed` defaults to the scenario's seed.
+    pub fn with_character(
+        content: Arc<Content>,
+        scenario: &str,
+        seed: Option<u64>,
+        character: Option<&CharacterSpec>,
+    ) -> Result<Self, WorldError> {
         let def = content
             .scenario(scenario)
             .ok_or_else(|| WorldError::UnknownScenario(scenario.to_string()))?;
         let seed = seed.unwrap_or(def.seed);
+        let (stats, vision, character) = match character.or(def.character.as_ref()) {
+            Some(spec) => {
+                let start =
+                    (spec.start(&content, seed, def.start)).map_err(WorldError::Character)?;
+                (start.stats, start.vision, Some(start.character))
+            }
+            None => (def.player_stats, def.vision().to_string(), None),
+        };
         let start = level_template(&content, seed, &def.start_level, None)?;
         let player_pos = start
             .player_start
@@ -243,7 +272,8 @@ impl World {
             player: ActorId(0),
             next_actor_id: 1,
             messages: MessageLog::default(),
-            vision: def.vision.clone(),
+            vision,
+            character,
             lantern_lit: false,
             overworld_step: None,
             recent_sounds: Vec::new(),
@@ -262,7 +292,7 @@ impl World {
                 heard: Vec::new(),
                 mind: Mind::default(),
                 inventory: Vec::new(),
-                stats: def.player_stats,
+                stats,
             },
         );
         instantiate_level(&mut state, &content, &start);
@@ -284,6 +314,11 @@ impl World {
                 "unknown vision profile `{}`",
                 state.vision
             )));
+        }
+        if let Some(character) = &state.character {
+            character
+                .check(&content)
+                .map_err(|m| WorldError::InconsistentState(format!("character: {m}")))?;
         }
         if let Some(level) = state.levels.values().find(|l| !l.ids_valid_for(&content)) {
             return Err(WorldError::InconsistentState(format!(
@@ -334,6 +369,11 @@ impl World {
         self.state.seed
     }
 
+    /// The player's character, if the run has one (spec §8 "Character creation").
+    pub fn character(&self) -> Option<&Character> {
+        self.state.character.as_ref()
+    }
+
     pub fn turn(&self) -> u64 {
         self.state.turn
     }
@@ -378,6 +418,8 @@ impl World {
             content: &self.content,
             level: self.state.current(),
             player: self.state.player(),
+            character: self.state.character.as_ref(),
+            time: self.state.time,
             snapshot: &self.perception,
         }
     }
@@ -1223,6 +1265,8 @@ fn instantiate_level(state: &mut WorldState, content: &Content, template: &Level
 mod ai_tests;
 #[cfg(test)]
 mod branch_tests;
+#[cfg(test)]
+mod character_tests;
 #[cfg(test)]
 mod cost_tests;
 #[cfg(test)]

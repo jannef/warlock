@@ -1,0 +1,88 @@
+# Races (spec §8 "Character creation"): the first choice of a new run, in the order offered.
+#
+# Fields:
+#   id, name      the race's id (for the command line and saves) and its name
+#   description   one line, shown when choosing
+#   vision        the race's eyes: a profile in vision.toml; the player starts with it
+#   age           [youngest, oldest]: a new character's age in years, picked at random from the
+#                 run seed (1 to 1000)
+#   stats         adjustments to the starting scores, by stat id (strength, dexterity, toughness,
+#                 intelligence, willpower, presence; a missing one 0): a number (`2`, `-1`) or
+#                 dice (`"1d2+1"`, `"-1d3"`), rolled when the character is made; every result
+#                 within -10 to 10
+#   potential     adjustments to the potentials, the same way (hidden from the player)
+#
+# A new character's score in each stat is 10 (the average), plus the race's adjustment, plus the
+# gender's (male: strength +1; female: dexterity +1; other: +1 to a stat picked from the run
+# seed), plus the class's (classes.toml), plus their birth sign's animal and element
+# (horoscope.toml), kept within 1 to 40. Its potential in each stat is `base_potential` plus the
+# race's potential adjustment, within 1 to 40 and never below the starting score. Dice are rolled
+# from the run seed and the choices, so the same seed and choices make the same character.
+#
+# Races are mostly fixed numbers, their identity, with a little dice where it fits. Balance is
+# not a goal: some choices are poor on purpose.
+
+base_potential = 15
+
+[[race]]
+id = "elf"
+name = "Elf"
+description = "Graceful and long-lived, keen of mind and eye but frail; elven eyes need little light."
+vision = "low_light"
+age = [90, 300]
+stats = { strength = -1, dexterity = "1d2+1", toughness = -2, intelligence = 1, presence = 1 }
+potential = { strength = -2, dexterity = 3, toughness = -3, intelligence = 2, willpower = 1, presence = 1 }
+
+[[race]]
+id = "half_elf"
+name = "Half-elf"
+description = "Of two peoples and at home in neither: adaptable and charming, with some of the elves' eyes."
+vision = "low_light"
+age = [20, 60]
+stats = { dexterity = 1, presence = "1d2" }
+potential = { dexterity = 1, toughness = -1, intelligence = 1, presence = 2 }
+
+# No gift and no flaw, but the most room to grow (rolled).
+[[race]]
+id = "human"
+name = "Human"
+description = "Short-lived, ambitious, and everywhere: no gift and no flaw."
+vision = "normal"
+age = [16, 35]
+potential = { strength = "1d2", dexterity = "1d2", toughness = "1d2", intelligence = "1d2", willpower = "1d2", presence = "1d2" }
+
+[[race]]
+id = "dwarf"
+name = "Dwarf"
+description = "Stout, stubborn folk of the deep halls: hard to kill, hard to hurry, and at home in the dark."
+vision = "darkvision"
+age = [40, 120]
+stats = { strength = 1, dexterity = -1, toughness = "1d2+2", willpower = 1, presence = -2 }
+potential = { strength = 2, dexterity = -2, toughness = 4, willpower = 1, presence = -2 }
+
+[[race]]
+id = "halfling"
+name = "Halfling"
+description = "Small, quick, and unflappable, with nimble fingers and quiet feet; no match for anything big."
+vision = "normal"
+age = [20, 50]
+stats = { strength = -3, dexterity = 3, willpower = 1 }
+potential = { strength = -4, dexterity = 3, willpower = 1, presence = 1 }
+
+[[race]]
+id = "gnome"
+name = "Gnome"
+description = "Small, tireless tinkerers and illusionists, curious about everything; they see well by little light."
+vision = "low_light"
+age = [40, 150]
+stats = { strength = -2, toughness = 1, intelligence = "1d2+1", willpower = -1 }
+potential = { strength = -3, dexterity = 1, toughness = 1, intelligence = 3 }
+
+[[race]]
+id = "half_orc"
+name = "Half-orc"
+description = "Strong, tough, and sharp-eyed in the dark, but slow with letters and short on charm."
+vision = "darkvision"
+age = [14, 30]
+stats = { strength = "1d2+2", toughness = 1, intelligence = "-1d3", presence = -2 }
+potential = { strength = 4, toughness = 2, intelligence = -3, presence = -3 }

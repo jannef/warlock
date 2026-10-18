@@ -2,17 +2,19 @@
 //!
 //! The wiki (`wiki/`, built with mdBook) is written by hand except for facts that live in data
 //! (month names, moons, weather, terrain, vision profiles, light presets, creatures, factions,
-//! objects and materials, scenarios, action costs) and a few constants of the rules (sight radii,
-//! the pack's size, the stats' names). Those are written to `wiki/src/generated/*.md` from the
-//! built-in content, and the pages pull them in with `{{#include generated/NAME.md}}`, so they
-//! cannot drift. Output is deterministic. `--check` fails when a file is stale; `--build` also
-//! runs `mdbook build wiki`.
+//! objects and materials, scenarios, action costs, races and classes, the horoscope) and a few
+//! constants of the rules (sight radii, the pack's size, the stats' names, what each gender
+//! raises). Those are
+//! written to `wiki/src/generated/*.md` from the built-in content, and the pages pull them in with
+//! `{{#include generated/NAME.md}}`, so they cannot drift. Output is deterministic. `--check` fails
+//! when a file is stale; `--build` also runs `mdbook build wiki`.
 
 use crate::workspace_root;
 use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use std::path::PathBuf;
 use std::process::Command;
+use warlock_core::character::Gender;
 use warlock_core::content::{
     ActionKind, BASE_TURN, Combat, Content, CreatureId, FactionId, LevelKind, LightId,
     NORMAL_SPEED, Stance, TerrainDef, price,
@@ -20,10 +22,11 @@ use warlock_core::content::{
 use warlock_core::daylight::{
     MOONLIGHT_PER_CELL, SIGHT_DAY, SIGHT_MOONLIT, SIGHT_NIGHT, SIGHT_TWILIGHT, overworld_sight,
 };
+use warlock_core::dice::Dice;
 use warlock_core::light::{Light, Moon, Sky, Sun};
 use warlock_core::object::{INVENTORY_SLOTS, format_weight};
 use warlock_core::perception::VIEW_RADIUS;
-use warlock_core::stats::{AVERAGE, Stat};
+use warlock_core::stats::{AVERAGE, PerStat, Stat};
 use warlock_core::time::{DAY, Duration, GameTime};
 use warlock_core::weather::{Clouds, Conditions, Weather};
 
@@ -128,6 +131,10 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("pack.md".to_string(), pack(content)),
         ("scenarios.md".to_string(), scenarios(content)),
         ("stats.md".to_string(), stats()),
+        ("genders.md".to_string(), genders()),
+        ("races.md".to_string(), races(content)),
+        ("classes.md".to_string(), classes(content)),
+        ("horoscope.md".to_string(), horoscope(content)),
     ];
     for (_, text) in &mut files {
         *text = format!(
@@ -810,6 +817,142 @@ fn stats() -> String {
     out
 }
 
+/// What each gender raises (spec §8 "Character creation").
+fn genders() -> String {
+    let mut out = String::from("| Gender | Starting stats |\n|---|---|\n");
+    for gender in Gender::ALL {
+        let raises = match gender {
+            Gender::Male => format!("{} +1", Stat::Strength.name()),
+            Gender::Female => format!("{} +1", Stat::Dexterity.name()),
+            Gender::Other => "+1 to one stat, picked by the run's seed".to_string(),
+        };
+        let _ = writeln!(out, "| {} | {raises} |", gender.name());
+    }
+    out
+}
+
+/// A stat adjustment in a table, as written in data: `+2`, `0`, `1d3+1`, and with a minus sign
+/// (not a hyphen) `−1`, `−1d2`. Rules, not modifiers.
+fn adjustment(v: Dice) -> String {
+    v.to_string().replace('-', "\u{2212}")
+}
+
+/// The stat columns' header: `| St | Dx | …` and its alignment row.
+fn stat_columns() -> (String, String) {
+    let names: Vec<String> = Stat::ALL
+        .iter()
+        .map(|s| format!(" {} |", s.abbrev()))
+        .collect();
+    (names.concat(), ":---:|".repeat(Stat::COUNT))
+}
+
+/// One adjustment per stat, as table cells.
+fn stat_cells(by: &PerStat<Dice>) -> String {
+    by.iter()
+        .map(|(_, v)| format!(" {} |", adjustment(v)))
+        .collect()
+}
+
+/// The races in the order New run offers them: their stat adjustments, vision, and starting
+/// age, then what they are. Never their potentials.
+fn races(content: &Content) -> String {
+    let (names, align) = stat_columns();
+    let mut out = format!("| Race |{names} Vision | Starting age |\n|---|{align}---|---|\n");
+    for r in &content.races().list {
+        let vision = content
+            .vision(&r.vision)
+            .map_or(r.vision.as_str(), |v| &v.name);
+        let _ = writeln!(
+            out,
+            "| {} |{} {vision} | {}–{} |",
+            r.name,
+            stat_cells(&r.stats),
+            r.age.start(),
+            r.age.end()
+        );
+    }
+    out.push('\n');
+    for r in &content.races().list {
+        let _ = writeln!(out, "- **{}**: {}", r.name, r.description);
+    }
+    out
+}
+
+/// The classes in the order New run offers them: their stat adjustments, then what they are.
+fn classes(content: &Content) -> String {
+    let (names, align) = stat_columns();
+    let mut out = format!("| Class |{names}\n|---|{align}\n");
+    for c in content.classes() {
+        let _ = writeln!(out, "| {} |{}", c.name, stat_cells(&c.stats));
+    }
+    out.push('\n');
+    for c in content.classes() {
+        let _ = writeln!(out, "- **{}**: {}", c.name, c.description);
+    }
+    out
+}
+
+/// The horoscope: the animals in the order of the Great Race and the elements, each with its
+/// stat adjustments and what it means; then the great cycle, sign by sign, with its years in the
+/// great cycle of the showcase's start and the two before it.
+fn horoscope(content: &Content) -> String {
+    let Some(h) = content.horoscope() else {
+        return "There is no horoscope.\n".into();
+    };
+    let (names, align) = stat_columns();
+    let mut out =
+        format!("## Animals\n\n| | Animal |{names} Those born under it |\n|---:|---|{align}---|\n");
+    for (i, a) in h.animals.iter().enumerate() {
+        let _ = writeln!(
+            out,
+            "| {} | {} |{} {} |",
+            i + 1,
+            a.name,
+            stat_cells(&a.stats),
+            table_text(&a.description)
+        );
+    }
+    let _ = write!(
+        out,
+        "\n## Elements\n\n| Element |{names} Those born under it |\n|---|{align}---|\n"
+    );
+    for e in &h.elements {
+        let _ = writeln!(
+            out,
+            "| {} |{} {} |",
+            e.name,
+            stat_cells(&e.stats),
+            table_text(&e.description)
+        );
+    }
+    let cycle = h.great_cycle() as i64;
+    let showcase = content
+        .scenario("showcase")
+        .map_or(1, |s| s.start.year() as i64);
+    // The first year of the great cycle the showcase starts in.
+    let current = showcase - (showcase - h.anchor_year).rem_euclid(cycle);
+    let starts = [current - 2 * cycle, current - cycle, current];
+    let _ = write!(
+        out,
+        "\n## Every sign\n\nEvery sign of the great cycle in order, with its years in the cycles \
+         that began in {}, {}, and {}. Add or take away {cycle} years for any other cycle.\n\n\
+         | | Sign | Years |\n|---:|---|---|\n",
+        starts[0], starts[1], starts[2]
+    );
+    for i in 0..cycle {
+        let sign = h.sign_of_year(current + i);
+        let years: Vec<String> = starts.iter().map(|s| (s + i).to_string()).collect();
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} |",
+            i + 1,
+            h.name(&sign),
+            years.join(", ")
+        );
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -847,6 +990,60 @@ mod tests {
         assert!(text("pack.md").contains("| Your own weight | 70 kg |"));
         assert!(text("stats.md").contains("| Strength | `St` |\n| Dexterity | `Dx` |"));
         assert!(text("stats.md").contains("| Presence | `Pr` |"));
+        assert!(text("genders.md").contains("| Female | Dexterity +1 |"));
+        assert!(
+            text("races.md")
+                .contains("| Race | St | Dx | To | In | Wi | Pr | Vision | Starting age |"),
+            "{}",
+            text("races.md")
+        );
+        // Adjustments as written in data, dice included.
+        assert!(
+            text("races.md").contains(
+                "| Dwarf | +1 | \u{2212}1 | 1d2+2 | 0 | +1 | \u{2212}2 | Darkvision | 40–120 |"
+            ),
+            "{}",
+            text("races.md")
+        );
+        assert!(text("races.md").contains("| Human | 0 | 0 | 0 | 0 | 0 | 0 | Normal | 16–35 |"));
+        assert!(text("races.md").contains("| Elf | \u{2212}1 | 1d2+1 |"));
+        assert!(text("races.md").contains("- **Halfling**: Small, quick"));
+        assert!(
+            text("classes.md")
+                .contains("| Wizard | \u{2212}2 | 0 | \u{2212}1d2 | 2d2+1 | +1 | 0 |"),
+            "{}",
+            text("classes.md")
+        );
+        assert!(text("classes.md").contains("| Warrior | 1d3+1 | +1 | 1d3 | \u{2212}1 | 0 | 0 |"));
+        assert!(text("classes.md").contains("- **Merchant**: A trader"));
+        // Potentials stay hidden: the human's rolled potentials are nowhere.
+        assert!(!text("races.md").contains("otential"));
+        let horoscope = text("horoscope.md");
+        assert!(
+            horoscope.contains("| 3 | Manticore | +1 | 0 | +1 | 0 | 0 | \u{2212}1 |"),
+            "{horoscope}"
+        );
+        assert!(
+            horoscope.contains("| Fire | 0 | 0 | 0 | 0 | 0 | +1 |"),
+            "{horoscope}"
+        );
+        assert!(
+            horoscope.contains("began in 1321, 1381, and 1441"),
+            "{horoscope}"
+        );
+        assert!(
+            horoscope.contains("| 1 | Wood Salamander | 1321, 1381, 1441 |"),
+            "{horoscope}"
+        );
+        assert!(
+            horoscope.contains("| 4 | Metal Unicorn | 1324, 1384, 1444 |"),
+            "{horoscope}"
+        );
+        assert!(
+            horoscope.contains("| 60 | Water Barghest | 1380, 1440, 1500 |"),
+            "{horoscope}"
+        );
+        assert_eq!(horoscope.matches(" Salamander | 1").count(), 5);
         // Every object glyph belongs to a class the objects page explains.
         for o in content.object_defs() {
             assert!(object_class(o.glyph).is_some(), "{}", o.id);

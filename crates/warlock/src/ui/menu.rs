@@ -155,7 +155,6 @@ impl MainMenu {
         }
     }
 
-    #[cfg(test)]
     pub fn is_pause(&self) -> bool {
         self.pause
     }

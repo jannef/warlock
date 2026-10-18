@@ -93,15 +93,18 @@ longest. Parts come back as soon as there is room.
 
 ## Character
 
-`@` shows your name, your [stats](stats.md), and your weight. It takes no time; press `@` or `Esc`
-to close it.
+`@` shows your name, your race, gender, and class, your age, birthday, and
+[birth sign](horoscope.md), your [stats](stats.md), and your weight. It takes no time; press `@`
+or `Esc` to close it.
 
 ## Menus
 
 `Esc` during play (when no prompt is open) opens the pause menu: Resume, Settings, Controls, Save
 and quit to menu, and Quit, which saves too. The main menu, where the game opens, has Continue
 (when there is a saved run), New run, Settings, Controls, and Quit; see [Saving](saving.md) and
-[Settings](settings.md). While any menu or screen is open (including the inventory, the character
+[Settings](settings.md). New run goes on to creating your character, a step at a time: the arrow
+keys (or `j` and `k`) choose, `Enter` goes on, and `Esc` goes back a step (see
+[Your character](character.md)). While any menu or screen is open (including the inventory, the character
 screen, and the pick-up and drop screens), no game time passes.
 
 ## Developer keys

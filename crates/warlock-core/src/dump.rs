@@ -5,6 +5,7 @@
 //! ground truth and are dev-only.
 
 use crate::action::letter;
+use crate::character::Gender;
 use crate::geom::Pos;
 use crate::noise::{PerceivedSound, SoundKind, Volume};
 use crate::object::format_weight;
@@ -37,8 +38,8 @@ pub enum Layer {
     Sound,
     /// Not a map: the player's inventory, one line per stack, then what they carry and weigh.
     Inventory,
-    /// Not a map: the player's own scores, one stat a line (`Strength 12`); never potentials or
-    /// modifiers.
+    /// Not a map: the player's character (`Race Dwarf`, `Gender Female`, `Class Warrior`), if
+    /// any, then their own scores, one stat a line (`Strength 12`); never potentials or modifiers.
     Stats,
     /// Ground truth: all terrain, objects, and actors on the level. **Dev-only.**
     Truth,
@@ -218,11 +219,34 @@ fn inventory_rows(view: &PerceptionView<'_>) -> Vec<String> {
     rows
 }
 
-/// The player's own scores, one stat a line: `Strength 12`.
+/// The player's character, if any (`Race Dwarf`, `Gender Female`, `Class Warrior`, `Age 27`,
+/// `Born 3 Seedtide 1417`, `Sign Fire Manticore`), then their own scores, one stat a line:
+/// `Strength 12`.
 fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
-    (view.own_scores().iter())
-        .map(|(stat, score)| format!("{} {score}", stat.name()))
-        .collect()
+    let content = view.content();
+    let mut rows = Vec::new();
+    if let Some(c) = view.character() {
+        let spec = &c.spec;
+        let race = spec
+            .race(content)
+            .map_or(spec.race.as_str(), |r| r.name.as_str());
+        let class = spec
+            .class(content)
+            .map_or(spec.class.as_str(), |k| k.name.as_str());
+        rows.push(format!("Race {race}"));
+        rows.push(match spec.gender {
+            Gender::Other => format!("Gender Other ({} +1)", c.raised.name()),
+            gender => format!("Gender {}", gender.name()),
+        });
+        rows.push(format!("Class {class}"));
+        rows.push(format!("Age {}", c.age_on(view.time())));
+        rows.push(format!("Born {}", c.born.text(content.calendar())));
+        if let Some(sign) = c.sign_name(content) {
+            rows.push(format!("Sign {sign}"));
+        }
+    }
+    rows.extend((view.own_scores().iter()).map(|(stat, score)| format!("{} {score}", stat.name())));
+    rows
 }
 
 /// Every actor on the level (ground truth): id, creature, position, weight, what it carries, and
@@ -357,6 +381,15 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "heard_sounds": view.sounds(),
         "inventory": inventory,
         "weight": { "base": weight.base, "carried": weight.carried, "total": weight.total() },
+        "character": view.character().map(|c| json!({
+            "race": c.spec.race,
+            "gender": c.spec.gender,
+            "class": c.spec.class,
+            "raised": c.raised,
+            "age": c.age_on(view.time()),
+            "born": c.born,
+            "sign": c.sign,
+        })),
         "stats": view.own_scores(),
         "messages": messages,
         "layers": layer_map,
@@ -437,11 +470,18 @@ mod tests {
         assert!(value["layers"].get("memory").is_none());
         assert_eq!(value["state"]["turn"], 1);
         assert!(value["seen_actors"][0]["kind"] == "player");
-        // The player's own scores, by stat id; nothing else about stats.
+        // The player's character, and their own scores by stat id; nothing else about stats.
+        assert_eq!(
+            value["character"],
+            json!({ "race": "human", "gender": "female", "class": "thief",
+                    "raised": "dexterity", "age": 34,
+                    "born": { "year": 1410, "month": 5, "day": 29 },
+                    "sign": { "animal": "basilisk", "element": "water" } })
+        );
         assert_eq!(
             value["stats"],
-            json!({ "strength": 12, "dexterity": 14, "toughness": 11, "intelligence": 13,
-                    "willpower": 9, "presence": 10 })
+            json!({ "strength": 9, "dexterity": 13, "toughness": 10, "intelligence": 12,
+                    "willpower": 11, "presence": 9 })
         );
         assert!(json(&world, &[], false).get("state").is_none());
     }
@@ -464,17 +504,34 @@ mod tests {
         assert_eq!(
             layer_rows(&world, Layer::Stats),
             [
-                "Strength 12",
-                "Dexterity 14",
-                "Toughness 11",
-                "Intelligence 13",
-                "Willpower 9",
-                "Presence 10"
+                "Race Human",
+                "Gender Female",
+                "Class Thief",
+                "Age 34",
+                "Born 29 Greenleaf 1410",
+                "Sign Water Basilisk",
+                "Strength 9",
+                "Dexterity 13",
+                "Toughness 10",
+                "Intelligence 12",
+                "Willpower 11",
+                "Presence 9"
             ]
+        );
+        // Other names the stat it raised.
+        let content = Arc::new(Content::builtin().expect("content"));
+        let other = "gnome,other,bard".parse().expect("a character");
+        let gnome =
+            World::with_character(content, "showcase", Some(3), Some(&other)).expect("world");
+        let raised = crate::character::other_stat(3).name();
+        assert!(
+            layer_rows(&gnome, Layer::Stats).contains(&format!("Gender Other ({raised} +1)")),
+            "{:?}",
+            layer_rows(&gnome, Layer::Stats)
         );
         let actors = layer_rows(&world, Layer::Actors);
         assert!(
-            actors[0].ends_with("stats St 12/15 Dx 14/17 To 11/14 In 13/16 Wi 9/13 Pr 10/12"),
+            actors[0].ends_with("stats St 9/16 Dx 13/16 To 10/16 In 12/16 Wi 11/16 Pr 9/16"),
             "{}",
             actors[0]
         );
