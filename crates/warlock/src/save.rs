@@ -93,9 +93,24 @@ impl SaveStore {
         }
     }
 
-    /// Writes the run save.
+    /// Writes the run save. A run that has ended in death is never saved: its save is deleted
+    /// instead (permadeath), whatever asks to save it (autosave, quitting, closing the window).
     pub fn save_run(&self, world: &World) -> Result<(), String> {
+        if world.death().is_some() {
+            return self.delete_run();
+        }
         self.write(RUN_FILE, world)
+    }
+
+    /// Deletes the run save (the player died): nothing is left to continue. A save that is not
+    /// there is no error.
+    pub fn delete_run(&self) -> Result<(), String> {
+        let Some(backend) = &self.backend else {
+            return Ok(());
+        };
+        backend
+            .remove(RUN_FILE)
+            .map_err(|e| format!("Could not delete the save: {e}."))
     }
 
     /// Writes the dev snapshot. Returns `Ok(false)` when snapshots are unavailable.
@@ -195,7 +210,8 @@ mod web_hooks {
     }
 
     fn park_run(game: Option<Res<Game>>, mut last: Local<Option<(u64, String)>>) {
-        let Some(game) = game else {
+        // No run, or one that ended in death (never saved again): nothing to save on hiding.
+        let Some(game) = game.filter(|g| g.world.death().is_none()) else {
             if last.take().is_some() {
                 web::set_pending(None);
             }
@@ -352,6 +368,37 @@ mod tests {
         };
         assert_eq!(off.save_snapshot(&w), Ok(false));
         assert!(off.load_snapshot(&content()).is_err());
+    }
+
+    /// A run that ended in death: in the arena the player lights their lantern, and the war
+    /// band's archer shoots them down from the dark.
+    fn dead_world() -> World {
+        let mut w = World::new(content(), "arena", None).expect("world");
+        w.apply(&Action::ToggleLantern);
+        for _ in 0..500 {
+            if w.death().is_some() {
+                break;
+            }
+            w.apply(&Action::Wait);
+        }
+        assert!(w.death().is_some(), "the player died");
+        w
+    }
+
+    #[test]
+    fn a_run_that_ended_in_death_is_never_saved_and_its_save_is_deleted() {
+        let s = store("permadeath");
+        s.save_run(&world()).expect("save");
+        assert!(s.has_save());
+        let dead = dead_world();
+        // Autosave, quitting, and closing the window all go through `save_run`: it deletes.
+        s.save_run(&dead).expect("no error");
+        assert!(!s.has_save(), "the save is gone");
+        assert!(matches!(s.resume(&content()), Resume::NoSave));
+        // Deleting what is not there is fine.
+        s.delete_run().expect("nothing to delete");
+        assert!(s.save_run(&dead).is_ok());
+        assert!(!s.has_save());
     }
 
     #[test]

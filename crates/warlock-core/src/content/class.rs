@@ -1,7 +1,8 @@
 //! Classes (`assets/data/classes.toml`, spec §8 "Character creation"): the third choice of a new
-//! run. For now a class only adjusts the starting scores, by fixed numbers or dice.
+//! run. A class adjusts the starting scores, by fixed numbers or dice, and adds hit points.
 
 use super::ContentError;
+use crate::combat::MAX_BASE_HP;
 use crate::dice::Dice;
 use crate::stats::{PerStat, Stat, adjustments};
 use serde::Deserialize;
@@ -21,6 +22,8 @@ struct ClassSpec {
     description: String,
     #[serde(default)]
     stats: BTreeMap<Stat, Dice>,
+    #[serde(default)]
+    hp: u16,
 }
 
 /// A class, in the order offered.
@@ -32,6 +35,8 @@ pub struct ClassDef {
     pub description: String,
     /// Adjustments to the starting scores.
     pub stats: PerStat<Dice>,
+    /// What the class adds to the hit points (spec §8 "Combat").
+    pub hp: i32,
 }
 
 impl ClassDef {
@@ -50,11 +55,18 @@ impl ClassDef {
             }
             let stats =
                 adjustments(&spec.stats).map_err(|m| err(format!("class `{id}`: stats: {m}")))?;
+            if spec.hp > MAX_BASE_HP {
+                return Err(err(format!(
+                    "class `{id}`: hp {} is more than {MAX_BASE_HP}",
+                    spec.hp
+                )));
+            }
             list.push(ClassDef {
                 id: spec.id,
                 name: spec.name,
                 description: spec.description,
                 stats,
+                hp: i32::from(spec.hp),
             });
         }
         Ok(list)

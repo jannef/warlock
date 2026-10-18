@@ -3,8 +3,11 @@
 use super::anim::GlyphAnim;
 use super::faction::FactionId;
 use super::light::LightId;
+use super::object::MAX_BONUS;
 use super::particles::ParticleEmitter;
 use crate::color::Rgb;
+use crate::combat::{Attack, CRITS, DEFAULT_CRIT, DEFAULT_THREAT, THREATS};
+use crate::dice::Dice;
 use crate::stats::{Stat, Stats};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -33,8 +36,8 @@ fn normal_vision() -> String {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct CreatureId(pub u16);
 
-/// How a creature fights (spec §8 "Creature behavior"). Attacks are intents only: nothing is
-/// damaged.
+/// How a creature fights (spec §8 "Creature behavior"): up close, shooting with the missile
+/// weapon it has ready, or casting (spells are intents only: nothing is damaged).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Combat {
@@ -89,11 +92,86 @@ pub(super) struct CreatureSpec {
     /// Its potentials by stat; a missing one equals the score.
     #[serde(default)]
     pub potential: BTreeMap<Stat, u8>,
+    /// Hit points beyond its Toughness (spec §8 "Combat").
+    #[serde(default)]
+    pub base_hp: u16,
+    /// Its natural attack, used when it wields no weapon.
+    pub attack: Option<NaturalAttackSpec>,
+    /// Its natural armour: hide, shell, or scales.
+    pub natural: Option<Hide>,
     pub anim: Option<GlyphAnim>,
     #[serde(default)]
     pub glow: f32,
     #[serde(default)]
     pub particles: Vec<ParticleEmitter>,
+}
+
+/// A natural attack as written in content files: `attack = { damage = "1d4", name = "bite",
+/// verb = "bites" }`, with an optional `threat`, `crit`, and `to_hit` like a weapon's.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct NaturalAttackSpec {
+    pub damage: Dice,
+    pub name: String,
+    pub verb: String,
+    pub threat: Option<u8>,
+    pub crit: Option<u8>,
+    #[serde(default)]
+    pub to_hit: i32,
+}
+
+/// A creature's natural attack (spec §8 "Combat"): what it does, and the words for it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NaturalAttack {
+    pub attack: Attack,
+    /// What it is called: "bite" ("You dodge the giant rat's bite.").
+    pub name: String,
+    /// What it does to its target: "bites" ("The giant rat bites you.").
+    pub verb: String,
+}
+
+/// A creature's natural armour: `natural = { defence = 3, name = "shell" }`.
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Hide {
+    /// Its bonus to Defence (the Natural category).
+    pub defence: i32,
+    /// What it is called: "shell" ("Your sword glances off the cave beetle's shell.").
+    pub name: String,
+}
+
+impl NaturalAttackSpec {
+    /// Checks the attack like a weapon's and resolves its defaults.
+    pub(super) fn resolve(self) -> Result<NaturalAttack, String> {
+        let threat = self.threat.unwrap_or(DEFAULT_THREAT);
+        let crit = self.crit.unwrap_or(DEFAULT_CRIT);
+        if !THREATS.contains(&threat) || !CRITS.contains(&crit) {
+            return Err(format!(
+                "attack: `threat` must be {} to {} and `crit` {} to {}",
+                THREATS.start(),
+                THREATS.end(),
+                CRITS.start(),
+                CRITS.end()
+            ));
+        }
+        if self.name.trim().is_empty() || self.verb.trim().is_empty() {
+            return Err("attack: `name` and `verb` must not be empty".into());
+        }
+        if self.to_hit.abs() > MAX_BONUS {
+            return Err(format!("attack: `to_hit` must be within ±{MAX_BONUS}"));
+        }
+        Ok(NaturalAttack {
+            attack: Attack {
+                damage: self.damage,
+                to_hit: self.to_hit,
+                threat,
+                crit,
+                strength: None,
+            },
+            name: self.name,
+            verb: self.verb,
+        })
+    }
 }
 
 /// What a creature type's names resolve to when content loads.
@@ -102,6 +180,7 @@ pub(super) struct Resolved {
     pub faction: Option<FactionId>,
     pub vision: usize,
     pub stats: Stats,
+    pub attack: Option<NaturalAttack>,
 }
 
 impl CreatureSpec {
@@ -124,6 +203,9 @@ impl CreatureSpec {
             footsteps: self.footsteps,
             hearing: self.hearing,
             stats: r.stats,
+            base_hp: i32::from(self.base_hp),
+            attack: r.attack,
+            natural: self.natural,
             anim: self.anim,
             glow: self.glow,
             particles: self.particles,
@@ -174,6 +256,13 @@ pub struct CreatureDef {
     /// "Stats"). Rules only: a creature's stats are never shown to the player. The player's
     /// come from the scenario instead ([`super::ScenarioDef::player_stats`]); theirs are average.
     pub stats: Stats,
+    /// Gameplay: hit points beyond its Toughness (spec §8 "Combat"); the player's come from the
+    /// scenario instead.
+    pub base_hp: i32,
+    /// Gameplay: its natural attack, used when it wields no weapon; `None`: bare hands (1d3).
+    pub attack: Option<NaturalAttack>,
+    /// Gameplay: its natural armour, if any.
+    pub natural: Option<Hide>,
     /// Presentation-only.
     pub anim: Option<GlyphAnim>,
     /// Presentation-only: how much the glyph glows (bloom), 0 to 1.

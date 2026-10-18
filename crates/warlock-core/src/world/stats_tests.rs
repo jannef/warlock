@@ -107,12 +107,12 @@ fn the_player_perceives_their_own_scores_only() {
         "presence": 9,
     });
     assert_eq!(json, expected);
-    // Seen creatures carry no stats.
+    // Seen creatures carry no stats (and of their hit points only how hurt they look).
     for seen in view.actors() {
         let json = serde_json::to_value(seen).expect("serializes");
         let keys: Vec<&str> = (json.as_object().expect("an object").keys())
             .map(String::as_str)
             .collect();
-        assert_eq!(keys, ["creature", "id", "kind", "pos"]);
+        assert_eq!(keys, ["creature", "health", "id", "kind", "pos"]);
     }
 }

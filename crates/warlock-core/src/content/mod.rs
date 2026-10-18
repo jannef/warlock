@@ -32,7 +32,9 @@ pub use action::{ActionCosts, ActionKind, BASE_TURN, COSTS, NORMAL_COST, price};
 pub use anim::GlyphAnim;
 pub use calendar::Calendar;
 pub use class::ClassDef;
-pub use creature::{Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, NORMAL_SPEED, SPEEDS};
+pub use creature::{
+    Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, NORMAL_SPEED, NaturalAttack, SPEEDS,
+};
 pub use dungeon::{DungeonDef, Generator, LevelPlan, parse_branch_level};
 pub use faction::{FactionDef, FactionId, Factions, PLAYER_FACTION, Stance};
 pub use flow::{FLOW_SPEEDS, Flow};
@@ -43,7 +45,7 @@ pub use level::{
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
 pub use material::{MaterialDef, MaterialId};
-pub use object::{MAX_PLACED, ObjectDef, ObjectId, article};
+pub use object::{MAX_BONUS, MAX_PLACED, ObjectDef, ObjectId, article};
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use race::{RaceDef, Races};
@@ -504,13 +506,28 @@ impl Content {
                 )));
             }
             let has_stats = !spec.stats.is_empty() || !spec.potential.is_empty();
-            if spec.id == "player" && has_stats {
+            if spec.id == "player" && (has_stats || spec.base_hp != 0) {
                 return Err(err(
-                    "creature `player`: the player's stats come from the scenario (`stats` and \
-                     `potential` in scenarios/*.toml)"
+                    "creature `player`: the player's stats and hit points come from the scenario \
+                     (`stats`, `potential`, and `hp` in scenarios/*.toml)"
                         .into(),
                 ));
             }
+            if spec
+                .natural
+                .as_ref()
+                .is_some_and(|n| !(1..=object::MAX_BONUS).contains(&n.defence) || n.name.is_empty())
+            {
+                return Err(err(format!(
+                    "creature `{}`: natural: `defence` must be 1 to {} and `name` given",
+                    spec.id,
+                    object::MAX_BONUS
+                )));
+            }
+            let attack = (spec.attack.clone())
+                .map(creature::NaturalAttackSpec::resolve)
+                .transpose()
+                .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let stats = Stats::from_data(&spec.stats, &spec.potential)
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             if let Some(cost) = spec.attack_cost {
@@ -520,6 +537,7 @@ impl Content {
             let resolved = creature::Resolved {
                 light,
                 stats,
+                attack,
                 faction: self.creature_faction(&spec).map_err(err)?,
                 vision: self.vision_index(&spec.vision).ok_or_else(|| {
                     err(format!(
@@ -1936,7 +1954,49 @@ mod tests {
             ("slot = \"head\"\ntwo_handed = true", "`two_handed` needs"),
             ("two_handed = true", "`two_handed` needs"),
             ("ammo = \"\"", "`ammo` must not be empty"),
-            ("launches = \"bolt\"", "launches `bolt`, but no object has"),
+            (
+                "slot = \"head\"\nlaunches = \"bolt\"\ndamage = \"1d6\"",
+                "launches `bolt`, but no object has",
+            ),
+            (
+                "launches = \"bolt\"",
+                "a missile weapon (`launches`) needs its `damage`",
+            ),
+            // Combat: weapons have damage, and only things worn or wielded fight or protect.
+            ("damage = \"1d4\"", "a weapon (`damage`) must go in a slot"),
+            (
+                "slot = \"main_hand\"\nthreat = 20",
+                "`threat` is for weapons",
+            ),
+            ("slot = \"main_hand\"\ncrit = 3", "`crit` is for weapons"),
+            (
+                "slot = \"main_hand\"\nstrength = 12",
+                "`strength` is for weapons",
+            ),
+            (
+                "slot = \"main_hand\"\ndamage = \"1d4\"\nthreat = 1",
+                "`threat` must be 2 to 24",
+            ),
+            (
+                "slot = \"main_hand\"\ndamage = \"1d4\"\ncrit = 6",
+                "`crit` 2 to 5",
+            ),
+            (
+                "slot = \"main_hand\"\ndamage = \"1d4\"\nto_hit = 21",
+                "`to_hit` must be within",
+            ),
+            (
+                "slot = \"main_hand\"\ndamage = \"1d4\"\nstrength = 41",
+                "`strength` is a Strength score",
+            ),
+            (
+                "slot = \"main_hand\"\ndamage = \"2d\"",
+                "number of sides is missing",
+            ),
+            ("armour = 2", "are for things worn or wielded"),
+            ("max_dex = 3", "are for things worn or wielded"),
+            ("slot = \"head\"\nshield = -1", "`shield` must be 0 to 20"),
+            ("slot = \"head\"\narmour = 21", "`armour` must be 0 to 20"),
         ] {
             let err = load(&slots, &object(fields)).unwrap_err();
             assert_eq!(err.file, "data/objects.toml", "{fields}");
@@ -1952,7 +2012,7 @@ mod tests {
         // A launcher pairs with the ammunition of its kind.
         let pair = format!(
             "{}{}",
-            object("launches = \"bolt\""),
+            object("slot = \"head\"\nlaunches = \"bolt\"\ndamage = \"1d10+1\""),
             object("ammo = \"bolt\"").replace("\"key\"", "\"bolt\"")
         );
         let content = load(&slots, &pair).expect("a crossbow and a bolt");
@@ -2018,12 +2078,33 @@ mod tests {
             (
                 "player",
                 "stats = { strength = 12 }",
-                "the player's stats come from the scenario",
+                "the player's stats and hit points come from the scenario",
             ),
             (
                 "player",
                 "potential = { strength = 12 }",
                 "come from the scenario",
+            ),
+            ("player", "base_hp = 3", "come from the scenario"),
+            (
+                "rat",
+                "attack = { damage = \"1d4\", name = \"bite\", verb = \"bites\", threat = 25 }",
+                "creature `rat`: attack: `threat` must be 2 to 24",
+            ),
+            (
+                "rat",
+                "attack = { damage = \"1d4\", name = \"\", verb = \"bites\" }",
+                "`name` and `verb` must not be empty",
+            ),
+            (
+                "rat",
+                "attack = { damage = \"1d1\", name = \"bite\", verb = \"bites\" }",
+                "2 to 1000 sides",
+            ),
+            (
+                "rat",
+                "natural = { defence = 0, name = \"hide\" }",
+                "natural: `defence` must be 1 to 20",
             ),
         ];
         for (creature, fields, expected) in cases {

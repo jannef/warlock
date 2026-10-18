@@ -3,6 +3,7 @@
 //! player their eyes, and sets the range of their starting age.
 
 use super::ContentError;
+use crate::combat::MAX_BASE_HP;
 use crate::dice::Dice;
 use crate::stats::{PerStat, SCORES, Stat, adjustments};
 use serde::Deserialize;
@@ -28,6 +29,8 @@ struct RaceSpec {
     stats: BTreeMap<Stat, Dice>,
     #[serde(default)]
     potential: BTreeMap<Stat, Dice>,
+    #[serde(default)]
+    hp: u16,
 }
 
 /// The oldest a character may start, in years.
@@ -49,6 +52,9 @@ pub struct RaceDef {
     pub stats: PerStat<Dice>,
     /// Adjustments to the potentials on [`Races::base_potential`]; hidden from the player.
     pub potential: PerStat<Dice>,
+    /// What the race adds to the hit points (spec §8 "Combat"): maximum hit points are
+    /// Toughness plus the race's and the class's.
+    pub hp: i32,
 }
 
 /// Every race, and the base every potential starts from.
@@ -103,6 +109,12 @@ impl Races {
                 adjustments(&spec.stats).map_err(|m| err(format!("race `{id}`: stats: {m}")))?;
             let potential = adjustments(&spec.potential)
                 .map_err(|m| err(format!("race `{id}`: potential: {m}")))?;
+            if spec.hp > MAX_BASE_HP {
+                return Err(err(format!(
+                    "race `{id}`: hp {} is more than {MAX_BASE_HP}",
+                    spec.hp
+                )));
+            }
             list.push(RaceDef {
                 id: spec.id,
                 name: spec.name,
@@ -111,6 +123,7 @@ impl Races {
                 age: young..=old,
                 stats,
                 potential,
+                hp: i32::from(spec.hp),
             });
         }
         Ok(Self {

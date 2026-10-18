@@ -1,5 +1,6 @@
 //! Player actions and the events a turn produces.
 
+use crate::combat::Strike;
 use crate::content::ActionKind;
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
@@ -165,16 +166,24 @@ pub enum Event {
         from: String,
         to: String,
     },
-    /// An actor attacked another: an intent only, nothing is damaged (spec §8 "Creature
-    /// behavior"). `from` and `to` are where they stood at that moment. Kept only when the
-    /// player saw both of them (or is one of them); the message line reports more (an attack on
-    /// the player by something unseen, an attack the player saw only one end of).
+    /// An actor attacked another (spec §8 "Combat"). `from` and `to` are where they stood at
+    /// that moment; `strike` is what came of it: a hit (a critical, perhaps) or a miss and why,
+    /// or `None` for an intent only (a spell). Kept only when the player saw both of them (or
+    /// is one of them); the message line reports more (an attack on the player by something
+    /// unseen, an attack the player saw only one end of).
     Attacked {
         attacker: ActorId,
         target: ActorId,
         kind: AttackKind,
         from: Pos,
         to: Pos,
+        strike: Option<Strike>,
+    },
+    /// An actor died where it stood, killed by the attack before it. Kept when the player saw
+    /// it (their own death always).
+    Died {
+        actor: ActorId,
+        at: Pos,
     },
 }
 

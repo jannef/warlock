@@ -8,9 +8,9 @@ This wiki explains how the game works: the rules you play by and the facts about
 for players. It describes the game as it is today, which is an early build. You can walk and
 explore, travel the overworld, watch the days, the moon, and the weather change, hear what you
 cannot see, and pick up, carry, wear, and wield objects. Creatures go about their business,
-notice you, and fight each other and you, but attacks are only announced: nothing is hurt and
-nothing dies. You have stats, but they do not change anything yet, and neither does what you
-wear or wield.
+notice you, and fight each other and you: blows and arrows are rolled against your Defence, hurt,
+and kill, and death is final (spells are only announced so far). Your stats, your weapon, and
+your armour decide how well you fight.
 
 - **Play in your browser:** <https://jannef.github.io/warlock/> (needs a browser with WebGPU)
 - **Download for Windows, macOS, and Linux:** <https://github.com/jannef/warlock/releases>
@@ -27,7 +27,8 @@ wear or wield.
 - [Sun, moon, and sky](sun.md), [Weather](weather.md), and [The overworld](overworld.md) explain
   the outdoors.
 - [Your character](character.md), with its [Races](races.md), [Classes](classes.md), and
-  [Horoscope](horoscope.md), and [Stats](stats.md) explain who you are.
+  [Horoscope](horoscope.md), and [Stats](stats.md) explain who you are; [Combat](combat.md) how
+  fights go, and how you die.
 - [Terrain](terrain.md), [Objects and your pack](objects.md), [Creatures](creatures.md),
   [Your lantern](lantern.md), and [Saving](saving.md) cover the rest.
 

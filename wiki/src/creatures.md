@@ -1,8 +1,8 @@
 # Creatures
 
 Creatures are the other glyphs that move about the world. They belong to factions, keep to their
-routines, notice what they see and hear, and some of them fight. Fights are only announced:
-nothing is hurt, and nothing dies. This page will grow as the game does.
+routines, notice what they see and hear, and some of them fight, to the death (see
+[Combat](combat.md)). This page will grow as the game does.
 
 ## Factions
 
@@ -13,8 +13,8 @@ leaves everyone alone, and everyone leaves it alone. A faction is neutral to its
 {{#include generated/factions.md}}
 
 You can tell how a creature stands toward you from what it is: look at it
-([look mode](controls.md#look-mode)) and a hostile one is marked, as in "A giant rat (hostile), on
-stone floor."
+([look mode](controls.md#look-mode)) and a hostile one is marked, as in "A giant rat (hostile,
+unhurt), on stone floor."
 
 ## What they do
 
@@ -46,22 +46,29 @@ behind them.
 
 ## Attacks
 
-An attack is announced, never resolved: "The kobold attacks you.", "The kobold archer shoots at
-the giant rat.", "The kobold shaman casts a spell at you." You only hear of attacks you perceive:
+Blows and shots are rolled, hit or miss, hurt, and kill, by the rules of [Combat](combat.md):
+"The kobold hits you.", "The giant rat bites the kobold hard!", "You block the kobold's spear
+with your shield.", "The kobold archer shoots the giant rat.", "The giant rat dies." Spells are
+only announced: "The kobold shaman casts a spell at you." You only hear of attacks you perceive:
 ones where you see the attacker or the target, or are the target. An end you cannot see is
-"something": "Something attacks you.", "The kobold archer shoots at something." Attacks are
-noisy, so you may also hear fighting, a bowstring, or chanting out of sight.
+"something": "Something hits you.", "The kobold archer misses something." Attacks are noisy, so
+you may also hear fighting, a bowstring, or chanting out of sight.
+
+A creature that dies is gone, and what it carried lies where it fell. Creatures do not flee or
+fight any differently when they are hurt, but [look mode](controls.md#look-mode) shows how hurt
+they look.
 
 When you see both ends of an attack, you also see it happen: a creature fighting up close (you
 too) lunges at its target, an arrow flies from the archer to its target, and a spell lands with a
 faint violet sparkle (with the matching [settings](settings.md) on).
 
-Moving into a hostile creature attacks it ("You attack the giant rat.", or "You attack
-something." if you cannot see it), which takes a turn. Moving into a neutral one does not, and
-takes no time: "The deer is in the way." ("Something is in the way." if you cannot see it).
+Moving into a hostile creature attacks it ("You hit the giant rat.", "You miss something." if
+you cannot see it), which takes a turn. Moving into a neutral one does not, and takes no time:
+"The deer is in the way." ("Something is in the way." if you cannot see it).
 
 The **Arena** scenario (see [Starting a run](introduction.md#starting-a-run)) is the place to watch
-this: a kobold war band and a pack of giant rats fight there, and turn on you when they see you.
+this: a kobold war band and a pack of giant rats fight to the death there, and turn on you when
+they see you. Light your lantern there and the war band's archer will find you.
 
 ## Pace and levels
 
@@ -83,8 +90,7 @@ this: a kobold war band and a pack of giant rats fight there, and turn on you wh
 - Some creatures carry [objects](objects.md), and wear or wield some of them: the kobolds of the
   arena carry spears, their archer a bow and arrows, their shaman an amulet. You see what a
   creature wears and wields ([look mode](controls.md#look-mode) says it), never what else it
-  carries, and nothing makes them drop or change it yet. It changes nothing in a fight yet
-  ([Equipment](equipment.md)).
+  carries. They fight with it ([Equipment](equipment.md)), and drop all of it when they die.
 
 ## The creatures
 

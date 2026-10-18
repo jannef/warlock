@@ -11,6 +11,8 @@
 #                 dice (`"1d2+1"`, `"-1d3"`), rolled when the character is made; every result
 #                 within -10 to 10
 #   potential     adjustments to the potentials, the same way (hidden from the player)
+#   hp            hit points (spec §8 "Combat"; default 0): a character's maximum is their
+#                 Toughness plus their race's and their class's (classes.toml)
 #
 # A new character's score in each stat is 10 (the average), plus the race's adjustment, plus the
 # gender's (male: strength +1; female: dexterity +1; other: +1 to a stat picked from the run
@@ -32,6 +34,7 @@ vision = "low_light"
 age = [90, 300]
 stats = { strength = -1, dexterity = "1d2+1", toughness = -2, intelligence = 1, presence = 1 }
 potential = { strength = -2, dexterity = 3, toughness = -3, intelligence = 2, willpower = 1, presence = 1 }
+hp = 2
 
 [[race]]
 id = "half_elf"
@@ -41,6 +44,7 @@ vision = "low_light"
 age = [20, 60]
 stats = { dexterity = 1, presence = "1d2" }
 potential = { dexterity = 1, toughness = -1, intelligence = 1, presence = 2 }
+hp = 3
 
 # No gift and no flaw, but the most room to grow (rolled).
 [[race]]
@@ -50,6 +54,7 @@ description = "Short-lived, ambitious, and everywhere: no gift and no flaw."
 vision = "normal"
 age = [16, 35]
 potential = { strength = "1d2", dexterity = "1d2", toughness = "1d2", intelligence = "1d2", willpower = "1d2", presence = "1d2" }
+hp = 4
 
 [[race]]
 id = "dwarf"
@@ -59,6 +64,7 @@ vision = "darkvision"
 age = [40, 120]
 stats = { strength = 1, dexterity = -1, toughness = "1d2+2", willpower = 1, presence = -2 }
 potential = { strength = 2, dexterity = -2, toughness = 4, willpower = 1, presence = -2 }
+hp = 6
 
 [[race]]
 id = "halfling"
@@ -68,6 +74,7 @@ vision = "normal"
 age = [20, 50]
 stats = { strength = -3, dexterity = 3, willpower = 1 }
 potential = { strength = -4, dexterity = 3, willpower = 1, presence = 1 }
+hp = 2
 
 [[race]]
 id = "gnome"
@@ -77,6 +84,7 @@ vision = "low_light"
 age = [40, 150]
 stats = { strength = -2, toughness = 1, intelligence = "1d2+1", willpower = -1 }
 potential = { strength = -3, dexterity = 1, toughness = 1, intelligence = 3 }
+hp = 3
 
 [[race]]
 id = "half_orc"
@@ -86,3 +94,4 @@ vision = "darkvision"
 age = [14, 30]
 stats = { strength = "1d2+2", toughness = 1, intelligence = "-1d3", presence = -2 }
 potential = { strength = 4, toughness = 2, intelligence = -3, presence = -3 }
+hp = 6

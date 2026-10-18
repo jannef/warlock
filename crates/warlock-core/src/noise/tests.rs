@@ -119,6 +119,9 @@ fn actor(content: &Content, creature: &str) -> Actor {
         equipment: Default::default(),
         mind: Default::default(),
         stats: Default::default(),
+        hp: 10,
+        hp_base: 0,
+        regen: 0,
     }
 }
 

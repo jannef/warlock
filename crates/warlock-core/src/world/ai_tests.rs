@@ -3,7 +3,7 @@
 //! what the player perceives of it.
 
 use super::*;
-use crate::action::parse_actions;
+use crate::action::{AttackKind, parse_actions};
 use crate::content::{ContentFiles, Stance};
 use crate::replay::Replay;
 use std::sync::LazyLock;
@@ -90,6 +90,7 @@ name = "giant rat"
 glyph = "r"
 fg = "#806040"
 weight = 1000
+base_hp = 500
 faction = "vermin"
 
 [[creature]]
@@ -98,6 +99,7 @@ name = "giant rat"
 glyph = "r"
 fg = "#806040"
 weight = 1000
+base_hp = 500
 faction = "vermin"
 sight = 2
 
@@ -107,6 +109,7 @@ name = "kobold"
 glyph = "k"
 fg = "#60a040"
 weight = 1000
+base_hp = 500
 faction = "kobolds"
 opens_doors = true
 
@@ -116,6 +119,7 @@ name = "kobold archer"
 glyph = "k"
 fg = "#a0a040"
 weight = 1000
+base_hp = 500
 faction = "kobolds"
 combat = "ranged"
 range = 5
@@ -126,6 +130,7 @@ name = "kobold shaman"
 glyph = "k"
 fg = "#a040a0"
 weight = 1000
+base_hp = 500
 faction = "kobolds"
 combat = "caster"
 range = 4
@@ -136,6 +141,7 @@ name = "deer"
 glyph = "d"
 fg = "#c09060"
 weight = 1000
+base_hp = 500
 faction = "wildlife"
 "##;
 
@@ -213,7 +219,7 @@ fn files() -> ContentFiles {
         );
         files.insert(
             &format!("scenarios/{name}.toml"),
-            &format!("name = \"{name}\"\nstart_level = \"{name}\"\n"),
+            &format!("name = \"{name}\"\nstart_level = \"{name}\"\nhp = 500\n"),
         );
     }
     files
@@ -244,6 +250,22 @@ fn messages(world: &World) -> Vec<String> {
 
 fn last_message(world: &World) -> String {
     messages(world).pop().unwrap_or_default()
+}
+
+/// Whether `message` reports a melee blow (no weapon: fists) by `who` on `whom`, hit or miss.
+/// The test fixture's eyes see no Defence categories on an unarmoured player, so every miss is
+/// plain.
+fn blow(message: &str, who: &str, whom: &str) -> bool {
+    let message = message.split(" (×").next().unwrap_or_default();
+    [
+        format!("{who} hits {whom}."),
+        format!("{who} hits {whom} hard!"),
+        format!("{who} misses {whom}."),
+        format!("{who} hit {whom}."),
+        format!("{who} hit {whom} hard!"),
+        format!("{who} miss {whom}."),
+    ]
+    .contains(&message.to_string())
 }
 
 /// The attacks among the events: (attacker, target, kind).
@@ -398,11 +420,11 @@ fn a_melee_creature_closes_in_and_attacks() {
     assert!(outs.iter().all(|o| attacks(o).is_empty()));
     let out = w.apply(&Action::Wait);
     assert_eq!(attacks(&out), [(rat, PLAYER, AttackKind::Melee)]);
-    assert_eq!(last_message(&w), "The giant rat attacks you.");
-    // It stays and keeps attacking: nothing is damaged, nobody dies.
+    assert!(blow(&last_message(&w), "The giant rat", "you"));
+    // It stays and keeps attacking.
     let out = w.apply(&Action::Wait);
     assert_eq!(attacks(&out).len(), 1);
-    assert_eq!(last_message(&w), "The giant rat attacks you. (×2)");
+    assert!(blow(&last_message(&w), "The giant rat", "you"));
     assert_eq!(pos(&w, rat), Pos::new(2, 1));
     // It remembers where it left its routine.
     assert_eq!(w.state().actors[&rat].mind.post, Some(Pos::new(7, 1)));
@@ -455,7 +477,7 @@ fn paths_lead_around_walls_and_through_doors_for_those_that_open_them() {
         w.content().terrain(level.terrain[Pos::new(4, 4)]).id,
         "door_closed"
     );
-    assert!(!messages(&w).iter().any(|m| m.contains("attacks")));
+    assert!(!messages(&w).iter().any(|m| blow(m, "The giant rat", "you")));
 }
 
 #[test]
@@ -469,6 +491,7 @@ fn ranged_creatures_shoot_with_a_clear_line_of_fire_else_find_one() {
     assert_eq!(pos(&w, archer), Pos::new(4, 1));
     let out = w.apply(&Action::Wait);
     assert_eq!(attacks(&out), [(archer, PLAYER, AttackKind::Ranged)]);
+    // It has no bow ready: a shot announced, nothing rolled.
     assert_eq!(last_message(&w), "The kobold archer shoots at you.");
     assert_eq!(
         pos(&w, archer),
@@ -530,9 +553,13 @@ fn bumping_a_hostile_attacks_it_and_a_neutral_one_is_in_the_way() {
         ]
     );
     let shown = messages(&w);
-    assert_eq!(
-        shown[shown.len() - 2..],
-        ["You attack the giant rat.", "The giant rat attacks you."]
+    assert!(
+        blow(&shown[shown.len() - 2], "You", "the giant rat"),
+        "{shown:?}"
+    );
+    assert!(
+        blow(&shown[shown.len() - 1], "The giant rat", "you"),
+        "{shown:?}"
     );
 }
 
@@ -545,13 +572,17 @@ fn attacks_the_player_does_not_perceive_leave_no_trace() {
     let mut raw = Vec::new();
     let wait = w.price_of(w.state.player, ActionKind::Wait);
     w.run_turn(wait, &mut raw);
-    assert!(raw.contains(&Event::Attacked {
-        attacker: kobold,
-        target: rat,
-        kind: AttackKind::Melee,
-        from: Pos::new(3, 3),
-        to: Pos::new(4, 3),
-    }));
+    assert!(raw.iter().any(|e| matches!(
+        *e,
+        Event::Attacked {
+            attacker,
+            target,
+            kind: AttackKind::Melee,
+            from,
+            to,
+            strike: Some(_),
+        } if (attacker, target, from, to) == (kobold, rat, Pos::new(3, 3), Pos::new(4, 3))
+    )));
     let mut perceived = raw.clone();
     w.perceive(&mut perceived);
     assert!(perceived.is_empty());
@@ -560,44 +591,6 @@ fn attacks_the_player_does_not_perceive_leave_no_trace() {
         assert!(out.events.is_empty());
     }
     assert_eq!(w.messages().len(), said);
-}
-
-#[test]
-fn reports_name_what_the_player_saw() {
-    let report = |who, whom, kind| attack_report(who, whom, kind, true);
-    assert_eq!(
-        report(Some("kobold"), None, AttackKind::Melee).as_deref(),
-        Some("The kobold attacks you.")
-    );
-    assert_eq!(
-        report(
-            Some("kobold archer"),
-            Some(Some("giant rat")),
-            AttackKind::Ranged
-        )
-        .as_deref(),
-        Some("The kobold archer shoots at the giant rat.")
-    );
-    assert_eq!(
-        report(Some("kobold shaman"), None, AttackKind::Spell).as_deref(),
-        Some("The kobold shaman casts a spell at you.")
-    );
-    assert_eq!(
-        report(None, None, AttackKind::Melee).as_deref(),
-        Some("Something attacks you.")
-    );
-    assert_eq!(
-        report(None, Some(Some("giant rat")), AttackKind::Ranged).as_deref(),
-        Some("Something shoots at the giant rat.")
-    );
-    assert_eq!(
-        attack_report(Some("kobold archer"), Some(None), AttackKind::Ranged, false).as_deref(),
-        Some("The kobold archer shoots at something.")
-    );
-    assert_eq!(
-        attack_report(None, Some(None), AttackKind::Melee, false),
-        None
-    );
 }
 
 #[test]
@@ -615,7 +608,7 @@ fn search_the_last_seen_spot_then_go_back_and_patrol_on() {
     );
     files.insert(
         "scenarios/search.toml",
-        "name = \"s\"\nstart_level = \"search\"\n",
+        "name = \"s\"\nstart_level = \"search\"\nhp = 500\n",
     );
     let content = Arc::new(Content::load(&files).expect("content"));
     let mut w = World::new(content, "search", None).expect("world");
@@ -645,6 +638,9 @@ fn search_the_last_seen_spot_then_go_back_and_patrol_on() {
             inventory: Vec::new(),
             equipment: Default::default(),
             stats: Default::default(),
+            hp: 10,
+            hp_base: 0,
+            regen: 0,
         },
     );
     assert_ne!(player, rat);
@@ -677,9 +673,7 @@ fn rest_stops_when_a_hostile_attacks() {
     assert!(w.time().since(start) < Duration::minutes(2));
     let shown = messages(&w);
     assert!(
-        shown
-            .iter()
-            .any(|m| m.starts_with("The giant rat attacks you.")),
+        shown.iter().any(|m| blow(m, "The giant rat", "you")),
         "{shown:?}"
     );
     assert!(
@@ -716,7 +710,7 @@ fn listening_world(map: &str) -> World {
     );
     files.insert(
         "scenarios/listen.toml",
-        "name = \"l\"\nstart_level = \"listen\"\n",
+        "name = \"l\"\nstart_level = \"listen\"\nhp = 500\n",
     );
     let content = Arc::new(Content::load(&files).expect("content"));
     World::new(content, "listen", None).expect("world")
@@ -759,7 +753,8 @@ fn a_fight_out_of_sight_is_heard() {
         "{:?}",
         messages(&w)
     );
-    assert!(!messages(&w).iter().any(|m| m.contains("attacks")));
+    let fought = |m: &String| m.contains("hit") || m.contains("miss") || m.contains("dies");
+    assert!(!messages(&w).iter().any(fought));
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -803,6 +798,7 @@ name = "giant rat"
 glyph = "r"
 fg = "#806040"
 weight = 1000
+base_hp = 500
 faction = "vermin"
 sight = 10
 
@@ -812,6 +808,7 @@ name = "lurker"
 glyph = "l"
 fg = "#806040"
 weight = 1000
+base_hp = 500
 faction = "vermin"
 vision = "darkvision"
 "##;
@@ -853,7 +850,7 @@ fn dark_world(level: &str) -> World {
     files.insert("levels/dark.toml", level);
     files.insert(
         "scenarios/dark.toml",
-        "name = \"Dark\"\nstart_level = \"dark\"\nlantern = \"lantern\"\n",
+        "name = \"Dark\"\nstart_level = \"dark\"\nlantern = \"lantern\"\nhp = 500\n",
     );
     let content = Arc::new(Content::load(&files).expect("content"));
     World::new(content, "dark", None).expect("world")
@@ -901,10 +898,10 @@ fn something_unseen_attacks_you_in_the_dark() {
     assert!(w.perception().actors().iter().all(|a| a.id != lurker));
     let out = w.apply(&Action::Wait);
     assert!(out.events.is_empty(), "no event names the unseen attacker");
-    assert_eq!(last_message(&w), "Something attacks you.");
+    assert!(blow(&last_message(&w), "Something", "you"));
     // Bumping into it is an attack on something.
     w.apply(&Action::Move(Dir::W));
-    assert!(messages(&w).iter().any(|m| m == "You attack something."));
+    assert!(messages(&w).iter().any(|m| blow(m, "You", "something")));
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -958,9 +955,15 @@ fn the_arena_fights_the_same_way_every_time() {
         .run(content.clone())
         .expect("the replay verifies");
     assert_eq!(verified.state_hash(), a.state_hash());
-    // They did fight, and the player saw some of it.
+    // They did fight, and the player saw some of it: blows, shots, spells, and deaths.
     let shown = messages(&a);
-    for what in ["attacks the", "shoots at the", "casts a spell at the"] {
+    for what in [
+        "bites the kobold",
+        "hits the giant rat",
+        "kobold archer",
+        "casts a spell at the",
+        "dies.",
+    ] {
         assert!(shown.iter().any(|m| m.contains(what)), "{what}: {shown:?}");
     }
     // Saved mid-fight and loaded, the run goes on identically.

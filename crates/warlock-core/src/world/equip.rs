@@ -4,8 +4,8 @@
 //! Every thing put on or taken off takes the time of its slot's action (`wield`, `wear`,
 //! `body_armor`, or `ready` in `data/actions.toml`): a swap pays for both, and a two-handed
 //! weapon taking the place of a sword and a shield pays for all three. Taking something off
-//! costs what putting it on does. A refused attempt takes no time. Equipment changes no rule
-//! yet; it weighs what it weighs, worn or not.
+//! costs what putting it on does. A refused attempt takes no time. What is worn and wielded
+//! fights and protects (`fight.rs`); it weighs what it weighs, worn or not.
 
 use super::{Spent, World};
 use crate::action::letter;

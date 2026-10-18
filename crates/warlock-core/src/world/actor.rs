@@ -1,11 +1,12 @@
 //! Actors: the player and creatures.
 
-use crate::content::{Content, CreatureId};
+use crate::combat::{self, Attack, Category, Defence, Health, Profile};
+use crate::content::{ActionKind, Content, CreatureId, ObjectDef, ObjectId};
 use crate::equipment::Equipment;
 use crate::geom::{Dir, Pos};
 use crate::noise::Heard;
 use crate::object::{Stack, Weight, weight_of};
-use crate::stats::Stats;
+use crate::stats::{Stat, Stats};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -91,6 +92,114 @@ pub struct Actor {
     /// the player's from the scenario. Known to the rules (and dev tools) for every actor; the
     /// player is shown only their own scores.
     pub stats: Stats,
+    /// Hit points left (spec §8 "Combat"); at 0 or below it is dead.
+    pub hp: i32,
+    /// What its maximum hit points add to its Toughness: the creature type's `base_hp`, the
+    /// player's race and class (the scenario's `hp`).
+    pub hp_base: i32,
+    /// Seconds of game time toward its next hit point back, while it is hurt.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub regen: u32,
+}
+
+fn is_zero(n: &u32) -> bool {
+    *n == 0
+}
+
+impl Actor {
+    /// Its maximum hit points: Toughness plus [`Actor::hp_base`], at least 1.
+    pub fn max_hp(&self) -> i32 {
+        combat::max_hp(self.stats.score(Stat::Toughness), self.hp_base)
+    }
+
+    /// How hurt it looks, in words.
+    pub fn health(&self) -> Health {
+        Health::of(self.hp, self.max_hp())
+    }
+
+    /// Its Defence (spec §8 "Combat"): 10 plus its Dexterity modifier (capped by the worn
+    /// armour that allows the least), the best armour, shield, and parry of what it wears and
+    /// wields, and its creature type's natural armour.
+    pub fn defence(&self, content: &Content) -> Defence {
+        let equipped: Vec<&ObjectDef> = (self.equipment.items().into_iter())
+            .filter_map(|(_, item)| self.inventory.get(item))
+            .map(|s| content.object(s.object))
+            .collect();
+        let dexterity = self.stats.modifier(Stat::Dexterity);
+        let cap = equipped.iter().filter_map(|o| o.max_dex).min();
+        let dexterity = cap.map_or(dexterity, |cap| dexterity.min(cap));
+        let worn = equipped.iter().flat_map(|o| {
+            [
+                (Category::Armour, o.armour),
+                (Category::Shield, o.shield),
+                (Category::Parry, o.parry),
+            ]
+        });
+        let natural = (content.creature(self.creature).natural.as_ref())
+            .map(|hide| (Category::Natural, hide.defence));
+        Defence::from_bonuses(
+            std::iter::once((Category::Dexterity, dexterity))
+                .chain(worn)
+                .chain(natural),
+        )
+    }
+
+    /// The weapon it wields, if any: the first hand that holds one, and what it is.
+    pub fn weapon<'c>(&self, content: &'c Content) -> Option<(ObjectId, &'c Attack)> {
+        content.hand_slots().find_map(|slot| {
+            let stack = self.inventory.get(self.equipment.get(slot)?)?;
+            let def = content.object(stack.object);
+            def.attack.as_ref().map(|a| (stack.object, a))
+        })
+    }
+
+    /// The missile weapon it has ready and what it is: the object in a slot of action `ready`
+    /// that launches something.
+    pub fn launcher<'c>(&self, content: &'c Content) -> Option<(ObjectId, &'c Attack)> {
+        content.slot_ids().find_map(|(slot, def)| {
+            if def.action != ActionKind::Ready {
+                return None;
+            }
+            let stack = self.inventory.get(self.equipment.get(slot)?)?;
+            let object = content.object(stack.object);
+            object.launches.as_ref()?;
+            object.attack.as_ref().map(|a| (stack.object, a))
+        })
+    }
+
+    /// The ammunition it has ready for its launcher: the first ready stack the launcher fires.
+    pub fn ammunition(&self, content: &Content) -> Option<ObjectId> {
+        let (launcher, _) = self.launcher(content)?;
+        content.slot_ids().find_map(|(slot, def)| {
+            if def.action != ActionKind::Ready {
+                return None;
+            }
+            let stack = self.inventory.get(self.equipment.get(slot)?)?;
+            content
+                .fires(launcher, stack.object)
+                .then_some(stack.object)
+        })
+    }
+
+    /// What its melee attacks do: with the weapon it wields, else its natural attack, else its
+    /// bare hands; Strength to hit and to damage.
+    pub fn melee(&self, content: &Content) -> Profile {
+        let natural = content.creature(self.creature).attack.as_ref();
+        let attack = match (self.weapon(content), natural) {
+            (Some((_, weapon)), _) => *weapon,
+            (None, Some(natural)) => natural.attack,
+            (None, None) => Attack::unarmed(),
+        };
+        Profile::melee(&attack, &self.stats)
+    }
+
+    /// What its shots do, with the missile weapon it has ready (`None` without one): Dexterity to
+    /// hit, the launcher's own damage, and less of both for each point of Strength below what a
+    /// bow needs.
+    pub fn ranged(&self, content: &Content) -> Option<Profile> {
+        let (_, launcher) = self.launcher(content)?;
+        Some(Profile::ranged(launcher, &self.stats))
+    }
 }
 
 impl Actor {

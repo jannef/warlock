@@ -102,8 +102,8 @@ impl SoundKind {
     }
 }
 
-/// How loud an attack is where the attacker stands (spec §8 "Creature behavior": attacks are
-/// intents only, but they are heard): a scuffle, a bowstring, a chant.
+/// How loud an attack is where the attacker stands, hit or miss (spec §8 "Combat"): a scuffle, a
+/// bowstring, a chant.
 pub const MELEE_NOISE: u16 = 60;
 pub const SHOT_NOISE: u16 = 40;
 pub const SPELL_NOISE: u16 = 50;

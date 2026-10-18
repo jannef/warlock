@@ -2,6 +2,7 @@
 
 use super::ContentError;
 use crate::character::CharacterSpec;
+use crate::combat::MAX_BASE_HP;
 use crate::stats::{Stat, Stats};
 use crate::time::{GameTime, HOUR, MINUTE, parse_time_of_day};
 use serde::Deserialize;
@@ -54,6 +55,10 @@ pub struct ScenarioDef {
     /// `potential`; filled in by the loader.
     #[serde(skip)]
     pub player_stats: Stats,
+    /// Without a character: the player's hit points beyond their Toughness (spec §8 "Combat"),
+    /// what a race and a class would give (default 0).
+    #[serde(default)]
+    pub hp: u16,
 }
 
 fn default_date() -> [u32; 3] {
@@ -87,13 +92,19 @@ impl ScenarioDef {
         })?;
         def.player_stats = Stats::from_data(&def.stats, &def.potential).map_err(err)?;
         if def.character.is_some()
-            && (def.vision.is_some() || !def.stats.is_empty() || !def.potential.is_empty())
+            && (def.vision.is_some()
+                || !def.stats.is_empty()
+                || !def.potential.is_empty()
+                || def.hp != 0)
         {
             return Err(err(
-                "a scenario with a `character` takes the player's eyes and stats from it: leave \
-                 out `vision`, `stats`, and `potential`"
+                "a scenario with a `character` takes the player's eyes, stats, and hit points \
+                 from it: leave out `vision`, `stats`, `potential`, and `hp`"
                     .into(),
             ));
+        }
+        if def.hp > MAX_BASE_HP {
+            return Err(err(format!("hp {} is more than {MAX_BASE_HP}", def.hp)));
         }
         Ok(def)
     }
@@ -186,10 +197,17 @@ mod tests {
             def.character.map(|c| c.to_string()).as_deref(),
             Some("dwarf,other,monk")
         );
+        assert_eq!(
+            parse("hp = 7").unwrap().hp,
+            7,
+            "hit points without a character"
+        );
+        assert!(parse("hp = 1001").is_err());
         for extra in [
             "vision = \"normal\"",
             "stats = { strength = 12 }",
             "potential = { strength = 12 }",
+            "hp = 7",
         ] {
             let err = parse(&format!("{character}\n{extra}")).unwrap_err();
             assert!(

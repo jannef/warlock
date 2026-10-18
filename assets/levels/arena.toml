@@ -4,7 +4,8 @@
 # cave bats (1, 2) and a cave beetle (3), wildlife, go their ways untouched. Everyone hostile to
 # you fights you too: you arrive in the dark south-west corner, where you can watch unseen; each
 # fights the nearest foe it sees, so come close (lantern lit, or within a kobold's darkvision) and
-# they turn on you. Nothing dies: attacks are announced, never resolved.
+# they turn on you. Blows and arrows hurt and kill (the shaman's spells are only announced): the
+# brawl ends with the fallen's spears, bow, and amulet lying where they died.
 #
 # West: the kobolds' camp behind two doors, which kobolds open and rats do not. East: the rat
 # warren, open to the pit through three gaps. `<` leads back up to the hub's stairs nook.
@@ -39,8 +40,8 @@ map = '''
 "<" = { terrain = "stairs_up", to = "hub" }
 "t" = "sconce"
 "B" = "brazier"
-# The war band is armed: look mode (`x`) shows what each wields and wears (equipment changes no
-# rule yet: attacks are intents).
+# The war band is armed: look mode (`x`) shows what each wields and wears, and they fight with
+# it (spears up close, the bow from afar).
 "k" = { terrain = "floor", creature = "kobold", carry = ["spear"], wield = "spear" }
 "a" = { terrain = "floor", creature = "kobold_archer", carry = ["short_bow", "arrow*20"], wield = ["short_bow", "arrow"] }
 "s" = { terrain = "floor", creature = "kobold_shaman", carry = ["bone_amulet"], wear = "bone_amulet" }

@@ -10,6 +10,7 @@
 pub mod action;
 pub mod character;
 pub mod color;
+pub mod combat;
 pub mod content;
 pub mod daylight;
 pub mod dice;

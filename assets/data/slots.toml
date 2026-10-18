@@ -13,8 +13,9 @@
 #   hand    one of the hands (default false): a two-handed object (`two_handed` in objects.toml)
 #           takes every hand slot
 #
-# Nothing changes any rule yet: equipment only takes time to put on and off, and weighs what it
-# weighs (combat comes later).
+# What is worn and wielded fights and protects (spec §8 "Combat": the weapon in the first hand
+# that holds one, the missile weapon in a `ready` slot, and every worn thing's armour, shield,
+# and parry in Defence); it also takes time to put on and off, and weighs what it weighs.
 
 [[slot]]
 id = "head"

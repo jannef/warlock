@@ -196,6 +196,8 @@ pub struct Start {
     pub stats: Stats,
     /// The player's vision profile: the race's.
     pub vision: String,
+    /// What the race and the class add to the hit points (spec §8 "Combat").
+    pub hp: i32,
     pub character: Character,
 }
 
@@ -246,6 +248,7 @@ impl CharacterSpec {
         Ok(Start {
             stats: starting_stats(by, potential, content.races().base_potential),
             vision: race.vision.clone(),
+            hp: race.hp + class.hp,
             character: Character {
                 spec: self.clone(),
                 raised,

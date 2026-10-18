@@ -1,8 +1,8 @@
 //! The character screen (spec §6; `@`): who the player is, as far as they know it. Their name,
 //! their race, gender, and class, their age, birthday, and birth sign (spec §8 "Character
 //! creation"; when the run has a character), their score in each stat (spec §8 "Stats") with its
-//! abbreviation and full name, and what they weigh. Never a modifier or a potential: perception
-//! has neither.
+//! abbreviation and full name, their hit points and Defence (spec §8 "Combat"; the total only),
+//! and what they weigh. Never a modifier, a potential, or a to-hit: perception has none of them.
 //!
 //! Read-only: Esc, Enter, or its own key closes it. It is read from the perception snapshot when
 //! it opens; no game time passes while it is open, so it cannot go stale.
@@ -34,6 +34,10 @@ pub struct CharacterScreen {
     birth: Vec<String>,
     scores: PerStat<u8>,
     weight: Weight,
+    /// Hit points left and the most.
+    hp: (i32, i32),
+    /// Defence: the total only.
+    defence: i32,
 }
 
 impl CharacterScreen {
@@ -47,6 +51,8 @@ impl CharacterScreen {
                 birth: Vec::new(),
                 scores: PerStat::splat(warlock_core::stats::AVERAGE),
                 weight: Weight::default(),
+                hp: (0, 0),
+                defence: warlock_core::combat::BASE_DEFENCE,
             };
         };
         let content = view.content();
@@ -74,6 +80,8 @@ impl CharacterScreen {
             birth,
             scores: view.own_scores(),
             weight: view.own_weight(),
+            hp: view.own_hp(),
+            defence: view.own_defence(),
         }
     }
 
@@ -92,13 +100,14 @@ impl CharacterScreen {
 
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         // Rows: margin, the name, a gap, race, gender, class, the birth, and a gap (with a
-        // character), the stats, a gap, the weight, a gap, the footer, frame.
+        // character), the stats, a gap, hit points and Defence, a gap, the weight, a gap, the
+        // footer, frame.
         let birth = fit_parts(&self.birth, WIDTH.min(console.cols() as i32) - 4);
         let identity_rows = match self.identity.len() {
             0 => 0,
             n => (n + birth.len()) as i32 + 1,
         };
-        let h = Stat::COUNT as i32 + 9 + identity_rows;
+        let h = Stat::COUNT as i32 + 12 + identity_rows;
         let panel = Panel::new(console, " Character ", WIDTH, h);
         let x = panel.inner_x();
         // Rows from the footer's down would draw over it, or the frame, of a panel cut short.
@@ -129,6 +138,20 @@ impl CharacterScreen {
                 console.print(x, y, stat.abbrev(), TEXT_DIM);
                 console.print(x + 4, y, stat.name(), TEXT);
                 console.print(x + 4 + NAME_W, y, &format!("{score:>2}"), TEXT);
+            }
+            y += 1;
+        }
+        y += 1;
+        // `HP  Hit points  18/24` and `Dv  Defence  15`, in the stats' columns.
+        let (hp, max) = self.hp;
+        for (abbrev, name, value) in [
+            ("HP", "Hit points", format!("{hp}/{max}")),
+            ("Dv", "Defence", format!("{:>2}", self.defence)),
+        ] {
+            if fits(y) {
+                console.print(x, y, abbrev, TEXT_DIM);
+                console.print(x + 4, y, name, TEXT);
+                console.print(x + 4 + NAME_W, y, &value, TEXT);
             }
             y += 1;
         }
@@ -261,6 +284,9 @@ mod tests {
             "In  Intelligence  12",
             "Wi  Willpower     11",
             "Pr  Presence       9",
+            // Toughness 10 and a human's 4 and a thief's 3; Defence 10 and Dexterity's share.
+            "HP  Hit points    17/17",
+            "Dv  Defence       11",
         ] {
             row(expected);
         }

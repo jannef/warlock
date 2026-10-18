@@ -3,6 +3,9 @@
 A run is a single save: you can suspend it and continue later, but there are no manual save slots
 and no going back. Saves are for continuing, not for retrying.
 
+**Death is final.** When you die (see [Combat](combat.md#death)), the save is deleted at once,
+and a run that has ended is never saved again: there is nothing to continue.
+
 ## When the game saves
 
 - When you press `Q` (save and quit), and when you close the window.

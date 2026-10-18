@@ -10,13 +10,24 @@
 //! `data/slots.toml`: `slot = "body"`, `slot = "ring"` for either ring slot); a `two_handed` one
 //! takes both hands. Missiles say what kind of ammunition they are (`ammo = "arrow"`) and missile
 //! weapons what they shoot (`launches = "arrow"`): launchers and ammunition pair by that kind.
+//!
+//! Weapons and armour say what they do in a fight (spec §8 "Combat"): a weapon its `damage` dice
+//! (a launcher's carry its draw weight, `1d8+2`), its critical (`threat`, the lowest natural roll
+//! that threatens, default 22; `crit`, the damage multiplier, default 2), an optional `to_hit`,
+//! a `parry` bonus to Defence while wielded, and for bows the `strength` they need; armour its
+//! `armour` bonus and the most Dexterity bonus it allows (`max_dex`); a shield its `shield` bonus.
 
 use super::material::MaterialId;
 use super::slot::SlotDef;
 use super::{Content, ContentError};
 use crate::color::Rgb;
+use crate::combat::{Attack, CRITS, DEFAULT_CRIT, DEFAULT_THREAT, THREATS};
+use crate::dice::Dice;
 use crate::object::Stack;
 use serde::{Deserialize, Serialize};
+
+/// The largest Defence bonus one object may give, and the largest `to_hit` either way.
+pub const MAX_BONUS: i32 = 20;
 
 /// Index of an object definition in [`super::Content::object_defs`].
 ///
@@ -53,6 +64,27 @@ pub(super) struct ObjectSpec {
     pub ammo: Option<String>,
     /// The kind of ammunition it shoots, if it is a missile weapon ("arrow").
     pub launches: Option<String>,
+    /// A weapon's damage dice: of a blow with it, or of a shot from a launcher.
+    pub damage: Option<Dice>,
+    /// The lowest natural roll that threatens a critical (default 22).
+    pub threat: Option<u8>,
+    /// How many times a confirmed critical rolls the damage (default 2).
+    pub crit: Option<u8>,
+    #[serde(default)]
+    pub to_hit: i32,
+    /// The Strength a bow needs.
+    pub strength: Option<u8>,
+    /// Defence while wielded (the Parry category).
+    #[serde(default)]
+    pub parry: i32,
+    /// Defence while worn (the Armour category).
+    #[serde(default)]
+    pub armour: i32,
+    /// The most Dexterity bonus to Defence it allows while worn.
+    pub max_dex: Option<i32>,
+    /// Defence while held (the Shield category).
+    #[serde(default)]
+    pub shield: i32,
 }
 
 /// A resolved object type.
@@ -78,6 +110,17 @@ pub struct ObjectDef {
     pub ammo: Option<String>,
     /// The kind of ammunition it shoots, if it is a missile weapon ("arrow").
     pub launches: Option<String>,
+    /// What a blow with it does (a launcher: a shot from it); `None` for anything that is no
+    /// weapon. Rules only, like everything about combat but its words.
+    pub attack: Option<Attack>,
+    /// Defence while wielded: its Parry bonus.
+    pub parry: i32,
+    /// Defence while worn: its Armour bonus.
+    pub armour: i32,
+    /// While worn, the most the Dexterity bonus may add to Defence (`None`: no limit).
+    pub max_dex: Option<i32>,
+    /// Defence while held: its Shield bonus.
+    pub shield: i32,
 }
 
 impl ObjectDef {
@@ -144,6 +187,8 @@ impl ObjectSpec {
                 return Err(err(format!("`{field}` must not be empty")));
             }
         }
+        let attack = self.attack().map_err(err)?;
+        self.check_defence().map_err(err)?;
         let plural = self.plural.unwrap_or_else(|| format!("{}s", self.name));
         Ok(ObjectDef {
             id: self.id,
@@ -158,7 +203,85 @@ impl ObjectSpec {
             two_handed: self.two_handed,
             ammo: self.ammo,
             launches: self.launches,
+            attack,
+            parry: self.parry,
+            armour: self.armour,
+            max_dex: self.max_dex,
+            shield: self.shield,
         })
+    }
+
+    /// The weapon it is, from `damage` and the fields that go with it: only something that is
+    /// worn or wielded is a weapon, and a missile weapon must be one.
+    fn attack(&self) -> Result<Option<Attack>, String> {
+        let Some(damage) = self.damage else {
+            let weapon_only = [
+                ("threat", self.threat.is_some()),
+                ("crit", self.crit.is_some()),
+                ("to_hit", self.to_hit != 0),
+                ("strength", self.strength.is_some()),
+            ];
+            if let Some((field, _)) = weapon_only.iter().find(|(_, given)| *given) {
+                return Err(format!("`{field}` is for weapons, which have a `damage`"));
+            }
+            if self.launches.is_some() {
+                return Err("a missile weapon (`launches`) needs its `damage` dice".into());
+            }
+            return Ok(None);
+        };
+        if self.slot.is_none() {
+            return Err("a weapon (`damage`) must go in a slot (`slot`)".into());
+        }
+        let threat = self.threat.unwrap_or(DEFAULT_THREAT);
+        let crit = self.crit.unwrap_or(DEFAULT_CRIT);
+        if !THREATS.contains(&threat) || !CRITS.contains(&crit) {
+            return Err(format!(
+                "`threat` must be {} to {} (the lowest natural roll that threatens) and `crit` \
+                 {} to {}",
+                THREATS.start(),
+                THREATS.end(),
+                CRITS.start(),
+                CRITS.end()
+            ));
+        }
+        if self.to_hit.abs() > MAX_BONUS {
+            return Err(format!("`to_hit` must be within ±{MAX_BONUS}"));
+        }
+        if self
+            .strength
+            .is_some_and(|s| !crate::stats::SCORES.contains(&s))
+        {
+            return Err("`strength` is a Strength score, 1 to 40".into());
+        }
+        Ok(Some(Attack {
+            damage,
+            to_hit: self.to_hit,
+            threat,
+            crit,
+            strength: self.strength,
+        }))
+    }
+
+    /// Defence bonuses are for things worn or wielded, 0 to [`MAX_BONUS`].
+    fn check_defence(&self) -> Result<(), String> {
+        let bonuses = [
+            ("parry", self.parry),
+            ("armour", self.armour),
+            ("shield", self.shield),
+            ("max_dex", self.max_dex.unwrap_or(0)),
+        ];
+        if let Some((field, _)) = bonuses.iter().find(|(_, b)| !(0..=MAX_BONUS).contains(b)) {
+            return Err(format!("`{field}` must be 0 to {MAX_BONUS}"));
+        }
+        let given = bonuses.iter().any(|(_, b)| *b != 0) || self.max_dex.is_some();
+        if given && self.slot.is_none() {
+            return Err(
+                "`parry`, `armour`, `max_dex`, and `shield` are for things worn or wielded \
+                 (`slot`)"
+                    .into(),
+            );
+        }
+        Ok(())
     }
 }
 
@@ -216,6 +339,11 @@ mod tests {
             two_handed: false,
             ammo: None,
             launches: None,
+            attack: None,
+            parry: 0,
+            armour: 0,
+            max_dex: None,
+            shield: 0,
         };
         assert_eq!(def("dagger", "daggers").describe(1), "a dagger");
         assert_eq!(def("iron key", "iron keys").describe(1), "an iron key");

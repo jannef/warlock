@@ -72,7 +72,9 @@ impl World {
     /// moment of each action, and ends at the moment the player is ready.
     ///
     /// While the turn runs, energies live in the turn's schedule; they are written back to the
-    /// actors when the player is ready.
+    /// actors when the player is ready. As the clock moves, every actor on the level regains
+    /// hit points ([`World::regenerate`]). A creature that dies leaves the schedule; the
+    /// player's death ends the turn there and then.
     pub(super) fn run_turn(&mut self, price: i64, events: &mut Vec<Event>) {
         self.state.turn += 1;
         // The player has acted: what they heard before is spent, and they hear afresh.
@@ -92,7 +94,8 @@ impl World {
             .map(scheduled)
             .collect();
         schedule[0].energy = schedule[0].energy.saturating_sub(price.max(1));
-        loop {
+        // The player's death ends the turn, and the run, at once.
+        while self.state.death.is_none() {
             let (seconds, next) = schedule
                 .iter()
                 .enumerate()
@@ -101,6 +104,7 @@ impl World {
                 .expect("the player is scheduled");
             if seconds > 0 {
                 self.state.time += Duration::seconds(seconds);
+                self.regenerate(schedule.iter().map(|s| s.id), seconds);
                 let seconds = i64::try_from(seconds).unwrap_or(i64::MAX);
                 for s in &mut schedule {
                     let gain = i64::from(s.speed).saturating_mul(seconds);
@@ -110,8 +114,13 @@ impl World {
             if next == 0 {
                 break;
             }
+            let fallen = self.fallen.len();
             let price = self.creature_turn(schedule[next].id, events);
             schedule[next].energy = schedule[next].energy.saturating_sub(price.max(1));
+            // Those who died are gone from the schedule (the player stays, first).
+            if self.fallen.len() > fallen {
+                schedule.retain(|s| self.state.actors.contains_key(&s.id));
+            }
         }
         for s in schedule {
             if let Some(actor) = self.state.actors.get_mut(&s.id) {

@@ -4,7 +4,8 @@
 //! full moon, and the arena, where a dozen creatures fight (spec §10 budgets; a generated 80×21
 //! level, the courtyard, the 100×50 overworld, an 80×40 local area, and the 72×21 arena get the
 //! hub's), and the time a night's rest takes on each (dusk to dawn: 7200 turns of six seconds,
-//! the overworld's too).
+//! the overworld's too). Fights are real: a walk that gets the player killed starts over from
+//! the scenario's start, untimed.
 
 use std::sync::Arc;
 use std::time::Instant;
@@ -56,10 +57,15 @@ struct Stats {
 }
 
 fn measure(content: &Arc<Content>, scenario: &str, skip: u64) -> Result<Stats, String> {
-    let mut world = World::new(content.clone(), scenario, None).map_err(|e| e.to_string())?;
-    if skip > 0 {
-        world.apply(&Action::SkipTime(Duration::minutes(skip)));
-    }
+    // The scenario's start; a walk that gets the player killed starts over from it, untimed.
+    let fresh = || -> Result<World, String> {
+        let mut world = World::new(content.clone(), scenario, None).map_err(|e| e.to_string())?;
+        if skip > 0 {
+            world.apply(&Action::SkipTime(Duration::minutes(skip)));
+        }
+        Ok(world)
+    };
+    let mut world = fresh()?;
     let level = world.perception().level_id().to_string();
     let mut rng = 1u64;
     let mut heading = Dir::E;
@@ -85,6 +91,10 @@ fn measure(content: &Arc<Content>, scenario: &str, skip: u64) -> Result<Stats, S
         if world.perception().level_id() != level {
             world.apply(&Action::Descend);
             heading = Dir::ALL[next(&mut rng) as usize % Dir::ALL.len()];
+        }
+        // Killed (the walk blunders into fights): the run starts over, untimed.
+        if world.death().is_some() {
+            world = fresh()?;
         }
     }
     if times.is_empty() {
@@ -139,7 +149,7 @@ pub fn run() -> Result<(), String> {
             if ok { "ok" } else { "OVER BUDGET" }
         );
     }
-    // The worst rest: a fight nobody perceives goes on all night (nothing dies), every fighter
+    // A rest beside a fight nobody perceives, until one side is dead: every fighter
     // seeing, aiming, and attacking each turn, in view range, so no turn passes unperceived.
     let (turns, ms) = fight_rest(&content)?;
     let ok = ms <= REST_BUDGET_MS;

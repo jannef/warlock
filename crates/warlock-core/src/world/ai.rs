@@ -17,9 +17,11 @@
 //!
 //! Paths (`path.rs`) go over walkable cells and, for creatures that open doors, closed doors (it
 //! opens the door, then steps in). Other actors block: a path may lead through one only when the
-//! way around is much longer, and then the creature waits behind it. Attacks are intents only:
-//! an [`Event::Attacked`], a noise, and, if the player perceives it, a message; nothing is
-//! damaged. Steps and opened doors make noise too.
+//! way around is much longer, and then the creature waits behind it. Melee attacks and shots are
+//! real (`fight.rs`: rolled against Defence, they hurt and kill); spells stay intents until magic
+//! is designed. Each is an [`Event::Attacked`], a noise, and, if the player perceives it, a
+//! message. Steps and opened doors make noise too. Creatures neither flee nor change how they
+//! fight when hurt.
 
 use super::path::{Cost, Search};
 use super::{ActorId, Mind, World};
@@ -43,11 +45,7 @@ const SEARCH_LIMIT: i32 = 64;
 /// What a creature does with one action.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Plan {
-    Attack {
-        target: ActorId,
-        at: Pos,
-        kind: AttackKind,
-    },
+    Attack { target: ActorId, kind: AttackKind },
     Step(Dir),
     Patrol,
     Wait,
@@ -91,16 +89,8 @@ impl World {
             .map(|a| std::mem::take(&mut a.heard))
             .unwrap_or_default();
         match self.decide(id, &heard) {
-            Plan::Attack { target, at, kind } => {
-                let from = self.state.actors[&id].pos;
-                events.push(Event::Attacked {
-                    attacker: id,
-                    target,
-                    kind,
-                    from,
-                    to: at,
-                });
-                self.make_noise(id, Act::Attack(kind));
+            Plan::Attack { target, kind } => {
+                self.attack(id, target, kind, events);
                 self.price_of(id, kind.action())
             }
             Plan::Step(dir) => self.step_or_wait(id, dir, events).1,
@@ -219,7 +209,7 @@ impl World {
     fn fight(&self, id: ActorId, target: ActorId, at: Pos) -> Plan {
         let me = &self.state.actors[&id];
         let def = self.content.creature(me.creature);
-        let attack = |kind| Plan::Attack { target, at, kind };
+        let attack = |kind| Plan::Attack { target, kind };
         let close_in = || match self.route(id, at, 1, |q| q.chebyshev(at) <= 1) {
             Route::Step(dir) => Plan::Step(dir),
             Route::There | Route::Wait | Route::Unreachable => Plan::Wait,

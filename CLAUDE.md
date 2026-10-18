@@ -30,7 +30,7 @@ behavior, commands, or architecture change.
 | Player wiki tables | `cargo xtask wiki` (writes `wiki/src/generated/*.md` from the game data), `--check` (fails when stale), `--build` (also runs `mdbook build wiki` into `wiki/book/`; needs `cargo install mdbook --locked`) |
 | Golden screenshots | `cargo xtask golden` (compare; authoritative on Linux only), `--local` (capture to `target/xtask/golden/*.local.png`, no compare), `--update` (rewrite references; see "Golden screenshots") |
 | Frame-time benchmark | `cargo xtask bench-frames [WxH]` (release, offscreen; method and results in `docs/perf.md`) |
-| Turn-time benchmark | `cargo xtask bench-turns` (re-runs itself in release; budgets: hub 5 ms, vast 16 ms, generated depths level 5 ms, sunlit courtyard at dawn 5 ms, overworld 5 ms, generated forest area at dawn 5 ms, courtyard and forest area at full-moon midnight 5 ms, arena 5 ms per turn; a dusk-to-dawn rest 500 ms, also with the arena's fight going on unseen all night, and rested on to dawn when rain wakes the player) |
+| Turn-time benchmark | `cargo xtask bench-turns` (re-runs itself in release; budgets: hub 5 ms, vast 16 ms, generated depths level 5 ms, sunlit courtyard at dawn 5 ms, overworld 5 ms, generated forest area at dawn 5 ms, courtyard and forest area at full-moon midnight 5 ms, arena 5 ms per turn; a dusk-to-dawn rest 500 ms, also beside the arena's fight going on unseen until one side is dead (a walk that gets the player killed starts over, untimed), and rested on to dawn when rain wakes the player) |
 | Light stress benchmark | `cargo test --release -p warlock-core turn_cost -- --ignored --nocapture` (400×300, 825 lights; again outdoors at 06:15) |
 
 Game flags (`cargo run -p warlock -- --help`):
@@ -93,8 +93,10 @@ footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m` ch
 when loud), `inventory` (what the player
 carries and weighs, worn and wielded things marked), `equipment` (the player's slots), `stats`
 (the player's race, gender, and class, then their own scores), `truth`
-(ground truth, **dev-only**), `actors` (every actor on the level with its weight, what it
-carries and of that wears and wields, and its stats as score/potential, **dev-only**). Replay
+(ground truth, **dev-only**), `actors` (every actor on the level with its hit points and
+Defence, its weight, what it carries and of that wears and wields, and its stats as
+score/potential, **dev-only**). The header line has the player's `hp 17/17` (and `dead` once the
+run has ended); JSON dumps add `hp`, `defence`, `death`, and each seen actor's `health`. Replay
 files are JSON
 `{game_version, scenario, seed, character, steps:[{action, hash}]}` (`character` =
 `{race, gender, class}`, left out for a run without one; a replay without it starts as the
@@ -124,6 +126,10 @@ level change to `run.sav` in the platform data dir (`paths.rs`, app name "warloc
 never deleted. Format and `Content::fingerprint` live in `warlock-core/src/save.rs`: bump
 `FORMAT_VERSION` on any incompatible `WorldState` change; adding or reordering terrain, creatures,
 lights, levels, objects, equipment slots, or dungeon branches invalidates existing saves.
+**Permadeath**: when the player dies, `screens::on_death` deletes `run.sav`
+(`SaveStore::delete_run`) and opens the death screen; `SaveStore::save_run` never writes a dead
+run (it deletes instead), so autosave, `Q`, and closing the window cannot bring it back, and the
+web build parks no state for the page being hidden.
 
 Settings (`crates/warlock/src/settings/`): `settings.toml` in the platform config dir (macOS
 `~/Library/Application Support/warlock`), schema in the `settings/mod.rs` module docs. Changes
@@ -142,8 +148,10 @@ it): gate systems that read it with `run_if(resource_exists::<Game>)`; content i
 
 Modal screens (spec §6) — main menu, new run and character creation (race, gender, class,
 summary), pause, settings, controls, the `?` help, the inventory (`i`), the equipment screen
-(`e`) and its choice of what goes in a slot, the character screen (`@`), and choosing what to
-pick up (`,`/`g` on several stacks) or drop (`d`) — are one
+(`e`) and its choice of what goes in a slot, the character screen (`@`), choosing what to
+pick up (`,`/`g` on several stacks) or drop (`d`), and the death screen (opened by
+`screens::on_death` when `World::death` is set; Enter/Esc is `MenuChoice::LeaveRun`, back to the
+main menu without saving; no `--screen`: capture a dead replay instead) — are one
 screen stack (`ui/screens.rs`, the `ScreenStack` resource); add a screen there, never a second way
 to open, read keys for, or draw one:
 - **Open**: `Screens::open(ScreenName)` (a `SystemParam` over the stack, content, save store, and
@@ -178,9 +186,10 @@ to open, read keys for, or draw one:
   `ui/equipment_screen.rs` (`EquipmentScreen`: slots by letter, which always name slots, so its
   own key `e` closes it only when it names none; `ItemScreen`: the stacks that fit one slot, by
   their inventory letters), `ui/character_screen.rs` (name, race, gender, class, age, birthday,
-  and sign (`birth_parts`/`fit_parts`, shared with the summary), the player's scores, weight),
-  `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per step with a Random row rolled
-  from the seed, `SummaryScreen`, `Draft`).
+  and sign (`birth_parts`/`fit_parts`, shared with the summary), the player's scores, hit points
+  and Defence total, weight), `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per
+  step with a Random row rolled from the seed, `SummaryScreen`, `Draft`), `ui/death_screen.rs`
+  (who killed the player, where, when, after how many turns).
 
 Typical render check: `cargo run -p warlock -- --scale 1 --freeze-time 1 --capture target/shot.png`,
 then read the PNG.
@@ -282,7 +291,34 @@ taken off (`World::price_for`); dropping takes off first (`take_off_before_dropp
 (`wield`/`wear` in a level legend, resolved in `content/level.rs::equip`). Presentation reads
 `PerceptionView::equipment` (the player's own) and `PerceptionView::gear(actor)` (what a seen
 creature wears and wields, all of what it carries that is seen; look mode, `ui/look.rs::gear`).
-**No rule reads equipment yet**; combat (#113) will.
+Combat reads equipment (below): `Actor::weapon` (the first hand holding a weapon), `launcher` and
+`ammunition` (the `ready` slots), and `defence` (armour, shield, parry, Dexterity cap).
+
+Combat (spec §8 "Combat"; M16, #116): the pure rules are `warlock-core/src/combat.rs` (2d12
+`roll_natural`, `hits`, `hit_ways`, `ways`; `Category` (Dexterity, Armour, Shield, Parry,
+Natural, Dodge, Deflection: one entry each in its `categories!` list) and `Defence` (highest per
+category, Dodge stacks; `why_missed` weighs a miss by the positive bonuses); `Attack` (what data
+gives: dice, to-hit, threat, crit, a bow's Strength) and `Profile` (an attack with the attacker's
+modifiers: `melee`, `ranged`, `thrown`); `strike` resolves one with a fixed order of draws from
+the gameplay stream; `max_hp`, `regen_seconds`, `Health` words). `world/fight.rs` applies them:
+`World::attack` (picks the profile: melee weapon / natural attack / bare hands, the readied
+launcher for a shot, none for a spell) → `attack_with(attacker, target, kind, Option<Profile>)`
+(**the entry point for ranged combat, #117**) → `Event::Attacked { .., strike }`, noise, damage
+(`hurt`), `Event::Died`; `creature_dies` removes the actor and piles its inventory on its cell,
+the player's death sets `WorldState::death` (`Death`: turn, time, place, `by` the creature type
+if seen) and `run_turn` stops; `World::apply` refuses everything after it. `regenerate` runs as
+the scheduler moves the clock. Messages: the player's own attacks are said at once
+(`player_attacks`, by what they see as they strike); a creature's in `World::perceive_events`
+(`fight::attack_message`, `death_message`; actors that died this action are in the unsaved
+`World::fallen`, so their names and words still resolve). Data: objects `damage`, `threat`,
+`crit`, `to_hit`, `strength`, `parry`, `armour`, `max_dex`, `shield` (`content/object.rs`);
+creatures `base_hp`, `attack` (`NaturalAttack`), `natural` (`Hide`); races and classes `hp`; a
+scenario without a character `hp`. Hit points live on `Actor` (`hp`, `hp_base`, `regen`;
+`max_hp`, `health`), saved and hashed (`FORMAT_VERSION` 11). Presentation reads only
+`PerceptionView::own_hp`, `own_defence` (the total: its Dexterity part would give a modifier
+away), `SeenActor::health`, and `death`: **never a creature's hit points, a to-hit, a roll, or a
+modifier**. Spells stay intents (`strike: None`). Tests: `combat.rs` (exhaustive 2d12
+enumeration for hit chances, criticals, miss attribution), `world/fight_tests.rs`.
 
 Key commands `,`/`g` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop` screen),
 `i` (`Inventory` screen), `e` (`Equipment` screen), `@` (`Character` screen) are in `input.rs` and
@@ -299,9 +335,10 @@ score, never below it; `Stats::from_data` validates) on creature types in `data/
 the player's come from their character (below), or from a scenario without one
 (`ScenarioDef::player_stats`; the `player` creature may not set any). **Never show a modifier, a potential, or a creature's stats**: presentation reads only
 `PerceptionView::own_scores` (the player's scores) — the character screen and the `stats` dump
-layer; only the dev `actors` layer and `--state` dumps show the rest. No rule uses stats yet, and
-no other D&D concept (checks, saves, hit points, carrying capacity) comes with them. The status
-bar has no stats segment: it is already full at common window sizes.
+layer; only the dev `actors` layer and `--state` dumps show the rest. Only combat uses stats
+(Strength, Dexterity, Toughness), and no other D&D concept (checks, saves, carrying capacity)
+comes with them. The status bar has no stats segment: it is already full at common window
+sizes (it shows `HP 17/17` right after the level name, dropping only before it).
 
 Character creation (spec §8 "Character creation"; M15) lives in `warlock-core/src/character.rs`:
 `CharacterSpec` (race id, `Gender`, class id; `FromStr`/`Display` as `dwarf,female,warrior`;
@@ -315,23 +352,24 @@ the birth year's)). Scores: 10 + race + gender + class + animal + element, clamp
 potentials `base_potential` + the race's, never below the score. Flags for rules:
 `Character::born_of_element("fire")`, `born_in_year_of("manticore")`. Content:
 `data/races.toml` (`content/race.rs`: `Races` with `base_potential`, `RaceDef` with `vision`,
-`age`, `stats`, `potential`), `data/classes.toml` (`content/class.rs`: `ClassDef` with `stats`),
+`age`, `stats`, `potential`, `hp`), `data/classes.toml` (`content/class.rs`: `ClassDef` with
+`stats`, `hp`; `Start::hp` is their sum),
 and `data/horoscope.toml` (`content/horoscope.rs`: `Horoscope` with `anchor_year`, `animals`,
 `elements`, `sign_of_year`, `great_cycle` (60), `name` ("Fire Manticore")); all optional.
 Adjustments are `PerStat<Dice>` (`stats::adjustments` checks every result is within -10..=10;
 `stats::roll` rolls them in stat order) and are rolled from `character/rolls/<spec>` in a fixed
 order (race, class, animal, element, race potentials): **adding a die to data changes later
 rolls** of every character with that race or class. `Dice` (`warlock-core/src/dice.rs`) is the
-one dice type (parse `2d3+1`/`-1d2`/`+2`, `Display`, `min`/`max`, `roll(&mut Rng)`); combat will
-reuse it. Scenarios name their character (`character = { race, gender, class }`,
-`ScenarioDef::character`); with one, `vision`, `stats`, and `potential` are refused.
+one dice type (parse `2d3+1`/`-1d2`/`+2`, `Display`, `min`/`max`, `roll(&mut Rng)`); combat
+uses it for damage. Scenarios name their character (`character = { race, gender, class }`,
+`ScenarioDef::character`); with one, `vision`, `stats`, `potential`, and `hp` are refused.
 `World::new` starts as the scenario's character, `World::with_character(content, scenario, seed,
 Some(&spec))` as another; `WorldState::character` (the `Character`, saved, hashed;
 `FORMAT_VERSION` 9) and `PerceptionView::character` (the player knows it; `PerceptionView::time`
 for their age). Replays record only the spec. The summary and the character screen show final
 scores only: never dice, a breakdown, a modifier, or a potential (the step screens and the wiki
 show adjustments as written in data). Balance is not a goal; classes only adjust starting
-scores.
+scores and give hit points.
 
 Factions and creature behavior (spec §7 "Factions", §5 "Creature sight", §8 "Creature behavior"):
 `data/factions.toml` (`content/faction.rs`: `Factions`, symmetric hostility, `Stance`; optional,
@@ -348,12 +386,13 @@ before light, bounce light only when needed); it must stay equal to the player's
 `light_tests::check_creature_sight` compares `sight::light` with the perceived light on every
 visible cell in the light property tests (and under each weather in `weather_tests`). Both take
 the sky from `WorldState::sky` (the weather's clouds included) and overworld sight from
-`daylight::sight_under` (rain included). Attacks are intents: `Event::Attacked` (kept only when
-the player sees both ends), a noise (`noise::Act::Attack`), and messages built in
-`World::perceive` (`attack_report`; unseen ends are "something"). The app shows a lunge
+`daylight::sight_under` (rain included). A creature's attack is `World::attack` (Combat above):
+`Event::Attacked` (kept only when the player sees both ends), a noise (`noise::Act::Attack`), and
+messages built in `World::perceive_events` (unseen ends are "something"). The app shows a lunge
 (`ui/motion.rs`, `motion` switch), a shot glyph, and a creature's `on = "attack"` particle burst
-(`ui/effects.rs`, `particles` switch). No creature behavior may use randomness; tie-breaks are
-by distance, direction order, and actor id.
+(`ui/effects.rs`, `particles` switch); `Event::Died` has no effect of its own. No creature
+behavior may use randomness (combat rolls are the rules', from the gameplay stream); tie-breaks
+are by distance, direction order, and actor id.
 
 The overworld (spec §3, §5, §7) is `assets/levels/overworld.toml`, the one level of kind
 `overworld` (`LevelKind::Overworld`: a step's base time is the terrain's `travel_minutes`; every
@@ -568,9 +607,11 @@ terrain, footstep loudness in words, vision profiles, light presets (named as th
 them), creatures, factions, objects, materials, equipment slots and what fits them, scenarios,
 action costs, sight radii, the pack's
 size, the stats' names, races (stat adjustments as written, dice included, vision, starting
-ages), classes (stat adjustments), what each gender raises, the horoscope (animals, elements,
-and the great cycle's signs and years); never hidden rules such as speed, hearing thresholds, creature sight, creature
-weights, stat modifiers and potentials, or creatures' stats) are tables generated by
+ages, hit points), classes (stat adjustments, hit points), what each gender raises, the horoscope
+(animals, elements, and the great cycle's signs and years), combat (weapons, armour and shields,
+the 2d12 hit chances and threat ranges, regeneration by Toughness); never hidden rules such as
+speed, hearing thresholds, creature sight, creature weights, stat modifiers and potentials, a
+to-hit, or creatures' stats, hit points, and natural attacks and armour) are tables generated by
 `cargo xtask wiki`
 (`xtask/src/wiki.rs`) into `wiki/src/generated/` (committed) and pulled into pages with
 `{{#include generated/NAME.md}}`; CI runs `cargo xtask wiki --check` and `mdbook build wiki` on the

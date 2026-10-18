@@ -316,10 +316,14 @@ fn actor_rows(world: &World) -> Vec<String> {
                 })
                 .collect();
             format!(
-                "{} {} at {}: weight {} (base {} + carried {}: {carried}){equipped}; stats {}",
+                "{} {} at {}: hp {}/{} dv {}; weight {} (base {} + carried {}: {carried})\
+                 {equipped}; stats {}",
                 a.id,
                 content.creature(a.creature).id,
                 a.pos,
+                a.hp,
+                a.max_hp(),
+                a.defence(content).total(),
                 format_weight(w.total()),
                 format_weight(w.base),
                 format_weight(w.carried),
@@ -346,8 +350,10 @@ fn summary(world: &World) -> String {
         .and_then(|w| serde_json::to_value(w).ok())
         .and_then(|v| v.as_str().map(|w| format!(" weather {w}")))
         .unwrap_or_default();
+    let (hp, max) = view.own_hp();
+    let dead = if world.death().is_some() { " dead" } else { "" };
     format!(
-        "turn {} time {} level {} viewer {}{weather} hash {:016x}",
+        "turn {} time {} level {} viewer {} hp {hp}/{max}{dead}{weather} hash {:016x}",
         world.turn(),
         world.time(),
         view.level_id(),
@@ -388,7 +394,10 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         .iter()
         .map(|a| {
             let def = content.creature(a.creature);
-            json!({ "id": a.id, "kind": a.kind, "creature": def.id, "glyph": def.glyph.to_string(), "pos": a.pos })
+            json!({
+                "id": a.id, "kind": a.kind, "creature": def.id, "glyph": def.glyph.to_string(),
+                "pos": a.pos, "health": a.health,
+            })
         })
         .collect();
     let messages: Vec<&crate::messages::Message> = {
@@ -420,6 +429,15 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         })
         .collect();
     let weight = view.own_weight();
+    let (hp, max_hp) = view.own_hp();
+    let death = world.death().map(|d| {
+        json!({
+            "turn": d.turn,
+            "time": d.time.to_string(),
+            "place": d.place,
+            "by": d.by.map(|c| content.creature(c).id.clone()),
+        })
+    });
     let layer_map: serde_json::Map<String, Value> = layers
         .iter()
         .map(|&l| (l.name().to_string(), json!(layer_rows(world, l))))
@@ -449,6 +467,9 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             "sign": c.sign,
         })),
         "stats": view.own_scores(),
+        "hp": { "current": hp, "max": max_hp },
+        "defence": view.own_defence(),
+        "death": death,
         "messages": messages,
         "layers": layer_map,
     });
