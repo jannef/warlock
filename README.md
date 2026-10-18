@@ -37,13 +37,21 @@ procedurally generated dungeon levels.
 
 - **Sunlight** — a game clock moves the sun across the sky of outdoor levels: warm and low at dawn
   and dusk, white at noon, with a dim blue sky light in the shade and shadows from trees, walls,
-  and stones that turn and stretch with it. Night is dark; bring a lantern.
+  and stones that turn and stretch with it.
 
   ![The courtyard at 07:00, 12:00, 17:30, and 22:00](docs/screenshots/m9-courtyard-day.png)
 
+- **Moonlight** — by night a faint, slightly purple moon lights the land, waxing and waning with
+  the 30-day month and rising about 50 minutes later each day: under a full moon you dimly make out
+  open ground (not what lies in its shadows), low-light eyes see by a half moon, and a new moon
+  leaves you to your lantern. Moons cast shadows like the sun, widen your sight on the overworld,
+  and are data: add more, bigger or faster ones. The status bar shows the date and the phase.
+
+  ![The courtyard at midnight and 04:30 under the full moon, by a first-quarter moon with low-light eyes, and at a new moon](docs/screenshots/m12-courtyard-moon.png)
+
 - **Overworld and time** — a 12-month, 30-day calendar and a clock that every action advances.
   "The Wildlands" overworld takes real travel time per step (a road is quick, a swamp slow,
-  mountains impassable); how far you see follows the daylight. Its locations lead to the hub, the
+  mountains impassable); how far you see follows the daylight and the moon. Its locations lead to the hub, the
   cavern, and the dungeon, and any other cell opens a generated outdoor area — meadows, forests,
   hills, swamps, riverbanks — that you leave by walking off its edge.
 

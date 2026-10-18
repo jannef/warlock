@@ -926,6 +926,8 @@ mod hearing_tests;
 #[cfg(test)]
 mod light_tests;
 #[cfg(test)]
+mod moon_tests;
+#[cfg(test)]
 mod overworld_tests;
 #[cfg(test)]
 mod speed_tests;

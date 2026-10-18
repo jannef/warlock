@@ -164,7 +164,7 @@ impl VisualLight {
             }
         }
         for source in view.light_sources() {
-            // The sun has no preset: it is never modulated.
+            // The sun and the moons have no preset: they are never modulated.
             let modulation = match (time, source.preset()) {
                 (Some(time), Some(preset)) => modulation(source.key, content.light(preset), time),
                 _ => Modulation::STEADY,

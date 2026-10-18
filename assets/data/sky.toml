@@ -1,0 +1,38 @@
+# The moons (spec §5 "Moonlight", §7). Each `[[moon]]` walks the sun's path, trailing the sun by
+# its phase of a day: a new moon rises with the sun, a full moon at sunset, standing high at
+# midnight. Its light falls on every cell under the open sky (not roofed) that no taller terrain
+# shades from it, and casts shadows like the sun's. Several moons add up their light.
+#
+# Fields:
+#   name               shown in the status bar when there is more than one moon
+#   color              direct light [r, g, b, uv] of the full moon high in the night sky; less with
+#                      the lit part of its disc, near the horizon, and in twilight (none by day)
+#   sky                light from the sky around it on every cell under the sky, shaded or not,
+#                      scaled the same way (default none)
+#   size               apparent size in percent of a standard moon (default 100, 1 to 400); its
+#                      light scales with its area (size 200 gives four times the light)
+#   period_days        days from new moon to new moon (1 to 3600)
+#   phase_offset_days  its age in days at the calendar epoch (default 0: new on the first day of
+#                      the first month), less than period_days
+#
+# Up to 8 moons. Without this file there are no moons and nights are dark.
+#
+# The moon: faint and slightly purple. Full, high in the sky, it lets normal eyes (threshold 40)
+# dimly make out open ground, but not its shadows; low-light eyes (12) see by a half moon too.
+# With a 30-day period its phase follows the month: new on the 1st, full on the night of the
+# 15th to the 16th.
+[[moon]]
+name = "Moon"
+color = [48, 28, 66, 0]
+sky = [11, 7, 15, 0]
+size = 100
+period_days = 30
+phase_offset_days = 0
+
+# A second, smaller and faster moon would be, for example:
+# [[moon]]
+# name = "Ilse"
+# color = [40, 40, 44, 0]
+# size = 45
+# period_days = 7
+# phase_offset_days = 3

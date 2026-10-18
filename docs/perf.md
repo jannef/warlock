@@ -34,6 +34,11 @@ on `main` with lighting (#39), effects (#37), procgen (#40) and the status line 
 | Frame time, 2560x1440 | 0.89 ms (about 1120 fps) | 0.89 ms (about 1120 fps) | n/a | 16.7 ms |
 | Frame time, 1280x720 | 0.79 ms | 0.84 ms | n/a | 16.7 ms |
 
+Moonlight (#82, 2026-10-18, same machine): the courtyard and a forest area at midnight under the
+full moon (moon shadows instead of sun shadows) take at most 0.19 ms and 0.16 ms a turn; a rest
+from dusk to dawn under the full moon in the forest area, with deer in view range so that every
+turn is perceived, takes 218 ms (500 ms budget).
+
 A rest perceives after every turn while a creature is within the view range plus one; farther
 away, turns pass in batches between perceptions (no creature can come into view in them), which is
 why the vast level rests fastest.

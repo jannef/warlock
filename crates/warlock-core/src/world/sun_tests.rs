@@ -132,9 +132,16 @@ const LEGEND: &str = r##"
 "##;
 
 /// A world on one level of `kind` with `map`, starting at `time` (`hh:mm`) with normal eyes and an
-/// unlit lantern.
+/// unlit lantern, under a sky without moons.
 fn world(map: &str, kind: &str, time: &str) -> World {
+    sky_world(map, kind, [1, 1, 1], time, "")
+}
+
+/// A world on one level of `kind` with `map`, starting on `date` (`[year, month, day]`) at `time`
+/// (`hh:mm`) with normal eyes and an unlit lantern, under the moons of `sky` (a `data/sky.toml`).
+pub(super) fn sky_world(map: &str, kind: &str, date: [u32; 3], time: &str, sky: &str) -> World {
     let mut files = ContentFiles::default();
+    files.insert("data/sky.toml", sky);
     files.insert("data/terrain.toml", TERRAIN);
     files.insert("data/creatures.toml", CREATURES);
     files.insert("data/lights.toml", LIGHTS);
@@ -147,7 +154,8 @@ fn world(map: &str, kind: &str, time: &str) -> World {
     files.insert(
         "scenarios/test.toml",
         &format!(
-            "name = \"T\"\nstart_level = \"test\"\nlantern = \"lantern\"\nstart_time = \"{time}\"\n"
+            "name = \"T\"\nstart_level = \"test\"\nlantern = \"lantern\"\nstart_time = \"{time}\"\n\
+             start_date = {date:?}\n"
         ),
     );
     let content = Arc::new(Content::load(&files).expect("fixture content is valid"));
@@ -167,7 +175,7 @@ fn outdoors_low_light(map: &str, time: &str) -> World {
 
 /// An open field (no walls, so nothing but its casters shades it) `width × height` with `extra`
 /// cells placed on it.
-fn field(width: usize, height: usize, extra: &[(usize, usize, char)]) -> String {
+pub(super) fn field(width: usize, height: usize, extra: &[(usize, usize, char)]) -> String {
     let mut rows = vec![vec!['.'; width]; height];
     for &(x, y, c) in extra {
         rows[y][x] = c;
@@ -315,7 +323,7 @@ fn night_is_dark_and_twilight_has_only_the_sky() {
         view.light(Pos::new(10, 4)).map(|l| l.light()),
         Some(Light::DARK)
     );
-    assert!(!view.is_visible(Pos::new(11, 4)), "moonlight is darkness");
+    assert!(!view.is_visible(Pos::new(11, 4)), "no moon, no light");
     check_invariants(&night).expect("light invariants");
 
     // Twilight: no sun, a dim sky that low-light eyes see by.

@@ -10,15 +10,15 @@
 //! player's own cell is always visible.
 //!
 //! The overworld is seen at map scale instead: a cell is visible iff it is in line of sight
-//! within the daylight sight radius ([`daylight::overworld_sight`]: day 9, twilight 5, night 2),
-//! whatever its light; eyes and darkvision do not change that.
+//! within the daylight sight radius ([`daylight::overworld_sight`]: day 9, twilight 5, night 2,
+//! more under a bright moon), whatever its light; eyes and darkvision do not change that.
 //!
 //! Light on a transparent cell is the level's ambient light, plus the light of every source that
 //! reaches it, plus weak **bounce light** reflected by the lit surfaces around it
-//! ([`crate::light::BOUNCE`]). On a level under the open sky, by day, the **sun** is one more
-//! source (directional, shaded by tall terrain; see [`Sun`]) and the **sky** lights every cell
-//! that is not roofed. Ambient plus sky plus bounce is the cell's *base light*: steady, and not
-//! tied to one source.
+//! ([`crate::light::BOUNCE`]). On a level under the open sky ([`Sky`]) the **sun** by day and
+//! the **moons** by night are more sources (directional, shaded by tall terrain; see [`Sun`] and
+//! [`Moon`]), and the **sky** lights every cell that is not roofed. Ambient plus sky plus bounce
+//! is the cell's *base light*: steady, and not tied to one source.
 //!
 //! Opaque cells follow two extra rules:
 //! - **Wall faces**: an opaque cell is lit by a source as a transparent cell at its own distance
@@ -40,8 +40,8 @@ use crate::fov::{compute_fov, radius2};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use crate::light::{
-    Area, BOUNCE_STEPS, Bounce, Light, LightCache, SUN_KEY, Sun, Sunlight, falloff, lit_in_sight,
-    wall_faces,
+    Area, BOUNCE_STEPS, Bounce, Light, LightCache, Moon, SUN_KEY, ShadowSteps, Sky, Sun, Sunlight,
+    falloff, lit_in_sight, moon_key, wall_faces,
 };
 use crate::noise::{self, PerceivedSound};
 use crate::world::{ActorId, ActorKind, LevelState, WorldState};
@@ -114,13 +114,28 @@ pub enum Emitter {
     /// The sun over a level under the open sky: directional (its shadows fall along
     /// [`Sun::shadow_steps`]), on no cell, and steady.
     Sun(Sun),
+    /// A moon over a level under the open sky: directional like the sun, and steady.
+    Moon(Moon),
+}
+
+impl Emitter {
+    /// For the sun and the moons, the cells a caster `height` cells tall shades from them, as
+    /// offsets from it ([`Sun::shadow_steps`]); `None` for point lights.
+    pub fn shadow_steps(&self, height: u8) -> Option<ShadowSteps> {
+        match self {
+            Emitter::Point { .. } => None,
+            Emitter::Sun(sun) => Some(sun.shadow_steps(height)),
+            Emitter::Moon(moon) => Some(moon.shadow_steps(height)),
+        }
+    }
 }
 
 /// A light source whose light reaches cells the player sees.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct SeenLight {
     /// Stable across turns (derived from level and position for static lights, from the actor for
-    /// carried ones; one fixed key for the sun), e.g. to seed visual flicker.
+    /// carried ones; one fixed key for the sun and one for each moon), e.g. to seed visual
+    /// flicker.
     pub key: u64,
     /// What gives the light.
     pub emitter: Emitter,
@@ -131,19 +146,19 @@ pub struct SeenLight {
 }
 
 impl SeenLight {
-    /// Where a point light is; `None` for the sun.
+    /// Where a point light is; `None` for the sun and the moons.
     pub fn pos(&self) -> Option<Pos> {
         match self.emitter {
             Emitter::Point { pos, .. } => Some(pos),
-            Emitter::Sun(_) => None,
+            Emitter::Sun(_) | Emitter::Moon(_) => None,
         }
     }
 
-    /// A point light's preset; `None` for the sun.
+    /// A point light's preset; `None` for the sun and the moons.
     pub fn preset(&self) -> Option<LightId> {
         match self.emitter {
             Emitter::Point { preset, .. } => Some(preset),
-            Emitter::Sun(_) => None,
+            Emitter::Sun(_) | Emitter::Moon(_) => None,
         }
     }
 }
@@ -166,8 +181,8 @@ pub(crate) struct Perception {
     vision: usize,
     /// Perceived ambient light.
     ambient: Light,
-    /// The sun and the sky over a level under the open sky.
-    sun: Option<Sun>,
+    /// The sun, the moons, and the sky over a level under the open sky.
+    sky: Option<Sky>,
     /// Ambient plus sky plus bounce light; meaningful on visible cells only.
     base: Grid<Light>,
     sight: Grid<Sight>,
@@ -191,12 +206,15 @@ impl Perception {
         let vision = content.vision_index(&state.vision).unwrap_or(0);
         let eye = &content.vision_profiles()[vision];
         let is_opaque = |p: Pos| level.is_opaque(content, p);
-        // On the overworld, daylight sets how far one sees; light does not matter.
+        let sky = level
+            .kind
+            .is_sky_exposed()
+            .then(|| Sky::at(state.time, content.moons()));
+        // On the overworld, daylight (and moonlight) sets how far one sees; light does not matter.
         let overworld = level.kind == LevelKind::Overworld;
-        let range = if overworld {
-            daylight::overworld_sight(state.time)
-        } else {
-            VIEW_RADIUS
+        let range = match &sky {
+            Some(sky) if overworld => daylight::overworld_sight(state.time, sky.moonlight()),
+            _ => VIEW_RADIUS,
         };
         let sees = |light: Light, dist2: i32| overworld || eye.sees(light, dist2);
 
@@ -218,23 +236,40 @@ impl Perception {
         // Direct light is needed on everything in sight and within bounce reach of it.
         let area = Area::around(los_cells.iter().copied(), BOUNCE_STEPS, width, height);
 
-        // Under the open sky: the sun where no taller terrain shades a cell, the sky everywhere
-        // (neither under a roof).
+        // Under the open sky: the sun and each moon that shines where no taller terrain shades a
+        // cell, the sky everywhere (none of them under a roof).
         let terrain = |p: Pos| level.terrain.get(p).map(|t| content.terrain(*t));
         let exposed = |p: Pos| terrain(p).is_some_and(|t| !t.roofed);
-        let sun = level.kind.is_sky_exposed().then(|| Sun::at(state.time));
-        let sunlight = sun.filter(Sun::is_up).zip(area).map(|(sun, area)| {
-            let height = |p: Pos| terrain(p).map_or(0, |t| t.height);
-            let tallest = content.tallest_terrain();
-            Sunlight::compute(&sun, area, tallest, height, exposed, is_opaque)
-        });
-        let sky = sun.map_or(Light::DARK, |s| eye.perceive(s.sky));
+        let mut bodies: Vec<(u64, Emitter, [i16; 2], Light)> = Vec::new();
+        if let Some(sky) = &sky {
+            if sky.sun.is_up() {
+                let sun = sky.sun;
+                bodies.push((SUN_KEY, Emitter::Sun(sun), sun.shadow, sun.light));
+            }
+            for moon in sky.moons.iter().filter(|m| m.shines()) {
+                let emitter = Emitter::Moon(*moon);
+                bodies.push((moon_key(moon.index), emitter, moon.shadow, moon.light));
+            }
+        }
+        let beams: Vec<(u64, Emitter, Sunlight)> = match area {
+            Some(area) => (bodies.into_iter())
+                .map(|(key, emitter, shadow, light)| {
+                    let height = |p: Pos| terrain(p).map_or(0, |t| t.height);
+                    let tallest = content.tallest_terrain();
+                    let cells =
+                        Sunlight::compute(shadow, light, area, tallest, height, exposed, is_opaque);
+                    (key, emitter, cells)
+                })
+                .collect(),
+            None => Vec::new(),
+        };
+        let glow = sky.as_ref().map_or(Light::DARK, |s| eye.perceive(s.glow()));
 
         // Base light on cells in line of sight: ambient, sky, and bounce (on transparent cells;
         // RGB only, so every eye perceives all of it). The overworld never gets darker than its
-        // faint night light.
-        let night = match sun {
-            Some(sun) if overworld => daylight::overworld_night(sun.sky),
+        // faint night light (moonlight comes on top).
+        let night = match &sky {
+            Some(sky) if overworld => daylight::overworld_night(sky.sun.sky),
             _ => Light::DARK,
         };
         let ambient = eye.perceive(level.ambient.saturating_add(night));
@@ -246,14 +281,14 @@ impl Perception {
             let masks = (near.iter())
                 .filter(|(_, mask)| mask.overlaps(area.min, area.max))
                 .map(|(_, mask)| mask.cells.as_slice());
-            let sun = sunlight.iter().map(|s| s.cells.as_slice());
-            Bounce::compute(area, masks.chain(sun), is_opaque, tint)
+            let beams = beams.iter().map(|(_, _, s)| s.cells.as_slice());
+            Bounce::compute(area, masks.chain(beams), is_opaque, tint)
         });
         // Steady light on a transparent cell beyond the ambient light: sky and bounce.
         let indirect = |p: Pos| {
             let bounce = bounce.as_ref().map_or(Light::DARK, |b| b.at(p));
-            if !sky.is_dark() && exposed(p) {
-                bounce.saturating_add(sky)
+            if !glow.is_dark() && exposed(p) {
+                bounce.saturating_add(glow)
             } else {
                 bounce
             }
@@ -264,7 +299,7 @@ impl Perception {
         }
 
         // Light on cells in line of sight: base light plus every source reaching them, the sun
-        // last.
+        // and the moons last.
         let mut light = base.clone();
         let mut lit: Vec<_> = near
             .into_iter()
@@ -277,9 +312,9 @@ impl Perception {
                 (source.key, emitter, cells)
             })
             .collect();
-        if let (Some(sun), Some(sunlight)) = (sun, &sunlight) {
-            let cells = lit_in_sight(&sunlight.cells, &los, |l| eye.perceive(l));
-            lit.push((SUN_KEY, Emitter::Sun(sun), cells));
+        for (key, emitter, beam) in &beams {
+            let cells = lit_in_sight(&beam.cells, &los, |l| eye.perceive(l));
+            lit.push((*key, *emitter, cells));
         }
         for (_, _, cells) in &lit {
             for &(p, c) in cells {
@@ -317,7 +352,8 @@ impl Perception {
 
         // Wall faces: opaque cells in line of sight or completed take the brightest sky and bounce
         // light of their visible transparent neighbors, then each source's light at their own
-        // distance (the sun's where it reaches them) if they face a visible cell it lights.
+        // distance (the sun's or a moon's where it reaches them) if they face a visible cell it
+        // lights.
         let is_seen = |q: Pos| sight.get(q) == Some(&Sight::Seen);
         let is_face = |w: Pos| {
             is_opaque(w) && (los.get(w) == Some(&true) || sight.get(w) == Some(&Sight::Edge))
@@ -333,19 +369,19 @@ impl Perception {
                 light[w] = base[w];
             }
         }
-        let light_at = |emitter: Emitter, w: Pos| match emitter {
+        let light_at = |key: u64, emitter: Emitter, w: Pos| match emitter {
             Emitter::Point { pos, preset } => {
                 let preset = content.light(preset);
                 eye.perceive(falloff(preset.color, preset.radius.max(0), w.dist2(pos)))
             }
-            Emitter::Sun(_) => sunlight
-                .as_ref()
-                .map_or(Light::DARK, |s| eye.perceive(s.at(w))),
+            Emitter::Sun(_) | Emitter::Moon(_) => (beams.iter())
+                .find(|(k, _, _)| *k == key)
+                .map_or(Light::DARK, |(_, _, beam)| eye.perceive(beam.at(w))),
         };
         let lit: Vec<_> = lit
             .into_iter()
             .map(|(key, emitter, cells)| {
-                let faces = wall_faces(&cells, |w| light_at(emitter, w), is_seen, is_face);
+                let faces = wall_faces(&cells, |w| light_at(key, emitter, w), is_seen, is_face);
                 (key, emitter, cells, faces)
             })
             .collect();
@@ -405,7 +441,7 @@ impl Perception {
             viewer,
             vision,
             ambient,
-            sun,
+            sky,
             base,
             sight,
             visible_cells,
@@ -549,7 +585,7 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// Light sources whose light reaches visible cells: static lights by position, then carried
-    /// lights by actor id, then the sun.
+    /// lights by actor id, then the sun, then the moons in content order.
     pub fn light_sources(&self) -> &'a [SeenLight] {
         &self.snapshot.sources
     }
@@ -567,12 +603,19 @@ impl<'a> PerceptionView<'a> {
     /// The sun and the sky over the player's level right now (they may be down); `None` on a
     /// level not under the open sky.
     pub fn sun(&self) -> Option<Sun> {
-        self.snapshot.sun
+        self.snapshot.sky.as_ref().map(|s| s.sun)
+    }
+
+    /// The sun, the moons, and the sky over the player's level right now (they may be down);
+    /// `None` on a level not under the open sky.
+    pub fn sky(&self) -> Option<&'a Sky> {
+        self.snapshot.sky.as_ref()
     }
 
     /// Steady light at a visible cell that no single source gives: ambient light plus sky light
-    /// (under the open sky) plus bounce light; `None` for cells not in view. With every
-    /// [`SeenLight`] contribution to the cell added, it is [`PerceptionView::light`].
+    /// (under the open sky: the sun's and the moons') plus bounce light; `None` for cells not in
+    /// view. With every [`SeenLight`] contribution to the cell added, it is
+    /// [`PerceptionView::light`].
     pub fn base_light(&self, p: Pos) -> Option<Light> {
         self.snapshot.is_visible(p).then(|| self.snapshot.base[p])
     }

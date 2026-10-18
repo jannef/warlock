@@ -63,7 +63,8 @@ regression scene for golden screenshots, replays, and snapshot tests.
 
 **Courtyard (66×19, outdoor)**: up the stairs nook's `<`, a walled garden under the open sky —
 trees, a ruined wall, a pond, standing stones, flower beds, and a roofed gazebo with a lamp — where
-sunlight, sky light, and shadows turn and stretch with the time of day (§5 "Sunlight"; M9). The
+sunlight, sky light, and shadows turn and stretch with the time of day (§5 "Sunlight"; M9), and the
+moon lights it faintly by night, waxing and waning with the month (§5 "Moonlight"; M12). The
 `courtyard` scenario starts there at 06:30, while the shadows are long.
 
 **Level 2 — Vast (≥ 400×300)**: scrolling camera, many light sources, performance budget check.
@@ -117,9 +118,10 @@ Plains, Mirefen, Greyspine Mountains) show in the status bar.
   Trees stand 2 tall, pines 3, standing stones 3, crags 2, bushes and reeds 1 (they cast sun
   shadows; trees, pines, crags, and boulders block sight). The `forest` scenario starts in a
   forest glade of the Thornwood at 06:30.
-- **Day and night**: sight on the overworld depends on daylight (§5), and the sun and the sky
-  light the overworld and its local areas by day (§5 "Sunlight"); at night the overworld is drawn
-  by a faint cold light, while local areas are dark.
+- **Day and night**: sight on the overworld depends on daylight and moonlight (§5), and the sun
+  and the sky light the overworld and its local areas by day (§5 "Sunlight"), the moon by night
+  (§5 "Moonlight"); at night the overworld is drawn by a faint cold light with the moonlight on
+  top, while local areas are dark but for the moon.
 - The `world` scenario starts on the road beside the Hall; the showcase scenario keeps starting in
   the hub.
 
@@ -182,11 +184,11 @@ Water is calm by design; motion stays tasteful, never busy:
   never affects gameplay.
 - Each frame, the CPU composites the perceived light of the viewport's cells (plus a one-cell
   margin) from the perception snapshot — the base light (ambient plus sky plus bounce, steady) plus
-  every visible source's per-cell contribution, the sun's included — into a viewport-sized float
-  texture aligned with the map grid. The shader
-  interpolates it per pixel between cell centers for smooth gradients; a neighbor contributes only
-  if it is visible and transparent, so light never bleeds across walls or corners, nor into unseen
-  or remembered cells. Walls show their own wall-face light, flat.
+  every visible source's per-cell contribution, the sun's and the moons' included — into a
+  viewport-sized float texture aligned with the map grid. The shader interpolates it per pixel
+  between cell centers for smooth gradients; a neighbor contributes only if it is visible and
+  transparent, so light never bleeds across walls or corners, nor into unseen or remembered cells.
+  Walls show their own wall-face light, flat.
 - A surface's base color is its look at full light (255). Below that it dims linearly (in linear
   light) to a readability floor; overbright light brightens it a little more along a soft knee and
   adds a faint glow in the light's own color, so strongly lit floors pool with color.
@@ -221,11 +223,11 @@ Water is calm by design; motion stays tasteful, never busy:
   that source's light: a creature does not fill its cell, so about 40 % right behind it, easing
   back to all of it 3.5 cells away. Shadows of several creatures multiply. Colored shadows follow
   from the per-source attenuation: blocking a red light leaves the cells behind lit by the others.
-  The sun (§5 "Sunlight") has no preset, so it is never modulated (no flicker or hue drift), and
-  it is directional: a creature, one cell tall, shades the
-  cells along the sun's shadow line from its cell (the line terrain shadows use, up to the first
+  The sun and the moons (§5 "Sunlight", "Moonlight") have no preset, so they are never modulated
+  (no flicker or hue drift), and they are directional: a creature, one cell tall, shades the
+  cells along the body's shadow line from its cell (the line terrain shadows use, up to the first
   opaque cell), 40 % next to it easing back to all of the light one step past the shadow's end — so
-  creature shadows are long at dawn and dusk and short at noon.
+  creature shadows are long at dawn and dusk (or under a low moon) and short at noon.
   Shadows are derived from the perception snapshot once per turn (a sliding creature's shadow is
   already at its destination); darkvision's glow follows the perceived light, not the shadows.
 - **Darkvision**: a cell seen only through darkvision gets a faint monochrome glow that dims toward
@@ -308,7 +310,7 @@ rate or animation.
 - **Light**: each cell's light is integer **RGB + UV**, one `u16` per channel: **255 = fully lit**
   (a surface shows its base color), more is overbright. A cell's light is the level's ambient light
   (`ambient = [r, g, b, uv]`, default 0) plus sky light (outdoors, below) plus the sum of all
-  sources that reach it (the sun included) plus bounce light (saturating).
+  sources that reach it (the sun and the moons included) plus bounce light (saturating).
 - **Light sources** come from light presets (`color = [r, g, b, uv]`, which is also the intensity,
   and `radius`): terrain that emits light, lights placed on cells by the level legend (overriding
   the terrain's own), creatures that carry light, and the player's lantern (from the scenario,
@@ -349,7 +351,7 @@ rate or animation.
     (`[58, 72, 110]` with the sun high, dimmer and more violet while it is low) on every cell under
     the sky, shaded or not, part of the base light; a short twilight glow while the sun is less
     than 6° below the horizon (about 23 minutes before 06:00 and after 18:00). At night there is
-    neither: moonlight is darkness for now.
+    neither; the moons light the land (below).
   - **Shadows**: terrain stands `height` cells tall (default 1 if opaque, 0 if transparent; trees
     2, standing stones 3, at most 4). A cell `h` tall casts a shadow `h · cot(elevation)` long (at
     most 12 cells per unit of height), away from the sun: long at dawn and dusk, short at noon (one
@@ -361,6 +363,34 @@ rate or animation.
   - Computed in the perception phase over the bounce area (the cells in line of sight plus 3),
     marching at most as far as the tallest terrain's shadow reaches, so cost follows the view, not
     the level size.
+- **Moonlight**: the moons (`data/sky.toml`, §7; one by default) light the same levels by night.
+  Without moons the night is dark.
+  - **Phase**: a moon's age is the time since its last new moon (`period_days` from new to new;
+    `phase_offset_days` its age at the calendar epoch). The default moon has a 30-day period, so its
+    phase follows the month: new on the 1st, first quarter on the 8th at noon, full at midnight
+    starting the 16th, last quarter on the 23rd at noon. Its phase is named in eighths of the cycle
+    (new moon, waxing crescent, first quarter, waxing gibbous, full moon, waning gibbous, last
+    quarter, waning crescent).
+  - **Path**: a moon walks the sun's path (the same per-minute table), trailing the sun by its
+    phase of a day: a new moon rises and sets with the sun, a first quarter rises at noon and
+    stands high at dusk, a full moon rises at sunset and stands high in the south at midnight, a
+    last quarter rises at midnight. On a 30-day cycle it rises about 50 minutes later each day. Its
+    direction, elevation, and shadows are the sun's at that minute of the path.
+  - **Light**: a moon's direct light (`color`, shaded by tall terrain exactly like sunlight, and
+    never under a roof) and its sky light (`sky`, on every cell under the sky, shaded or not, part
+    of the base light), both scaled by the lit fraction of its disc (`(1 − cos phase) / 2`: none at
+    new moon), its elevation (fading in over its first degrees: 15 % at 2°, 40 % at 6°, 65 % at
+    12°, 90 % at 25°, all from 40°), the daylight (none while the sun is up, all once the sun is 6°
+    below the horizon, so it fades in through the evening twilight), and its size (the square of
+    its apparent size over a standard moon's). Integer math only (the sun's fixed-point cosine);
+    a test pins a hash of the default moon over a whole cycle. Several moons add up, each with its
+    own phase, place in the sky, and shadows; each is one more source with a stable key and no
+    flicker.
+  - The default moon is faint and slightly purple: full and high, `[48, 28, 66]` direct and
+    `[11, 7, 15]` sky light (brightness 35 and 8, plus bounce), so normal eyes dimly make out open
+    ground in its light but not its shadows, low-light eyes see by a half moon too, and a new moon
+    gives nothing.
+  - Computed like sunlight, per moon that shines, over the same area, and not cached.
 - **Brightness** is the integer luma of RGB, `(54·r + 183·g + 19·b) / 256`, plus UV for eyes that
   see UV. Eyes without UV sight do not perceive UV at all (perception reports it as 0).
 - **Visibility**: a cell is visible iff it is in line of sight within the maximum view range **and**
@@ -369,13 +399,16 @@ rate or animation.
   darkness are hidden (unless within darkvision), creatures carrying light are seen.
 - **Overworld sight** is at map scale: a cell of the overworld is visible iff it is in line of
   sight within the daylight radius: 9 by day (06:30–17:30), 5 in twilight (half an hour either side
-  of 06:00 and 18:00), 2 at night (moonlight is darkness for now). Light, the eye's threshold, and
-  darkvision play no part. Mountain ranges and dense forest are opaque; forest is not.
+  of 06:00 and 18:00), at night 2 plus one cell per 20 of moonlight (the brightness of all moons'
+  direct and sky light together on open ground), at most 4: a full moon high in the sky gives 4, a
+  half moon 3. Light, the eye's threshold, and darkvision play no part. Mountain ranges and dense
+  forest are opaque; forest is not.
 - **Overworld night light**: the overworld is lit by the sun and the sky like any level under the
   open sky ("Sunlight" below), and never gets darker than a faint cold light (`[48, 56, 90]`,
-  channel by channel, added to its ambient light where sun and sky fall short): it only draws the
-  cells in sight at night apart from the remembered map, since sight there ignores light. Local
-  outdoor levels get no such light: at night they are dark (bring a lantern).
+  channel by channel, added to its ambient light where sun and sky fall short; moonlight comes on
+  top): it only draws the cells in sight at night apart from the remembered map, since sight there
+  ignores light. Local outdoor levels get no such light: at night only the moon lights them (bring
+  a lantern).
 - **Wall completion**: an opaque cell within the view range that is 8-adjacent to a transparent cell
   seen by light or darkvision is visible too, even outside line of sight, so floor seen through a
   narrow, irregular gap is never shown without the walls bounding it. (The player's own cell, which
@@ -397,9 +430,9 @@ rate or animation.
 - **Recomputation**: perception updates in the perception phase of every turn (and after
   `SetVision`). Per-light shadow masks are cached and invalidated when the light moves or opacity
   changes within its radius; only sources whose radius can reach the view range (or a surface whose
-  bounce light reaches it) are evaluated. Bounce light and sunlight are computed over the bounding
-  box of the cells in line of sight plus bounce's 3-cell reach, so they do not depend on where the
-  viewer stands. Sunlight is not cached (it moves every minute).
+  bounce light reaches it) are evaluated. Bounce light, sunlight, and moonlight are computed over
+  the bounding box of the cells in line of sight plus bounce's 3-cell reach, so they do not depend
+  on where the viewer stands. Sunlight and moonlight are not cached (they move every minute).
 - **Hearing** (`warlock-core/src/noise.rs`; M10). Integer and deterministic, like sight:
   - **Noise**: actions make noise. A step makes the walker's `footsteps` (creature data: the
     player 60, kobold 80, giant rat and deer 50; bats fly silently) scaled by the `step_noise` of
@@ -447,11 +480,11 @@ rate or animation.
 - **Perception API**: the snapshot exposes, for visible cells only, the perceived light (after the
   wall-face rule; plus whether the cell is seen only through darkvision and its squared distance),
   the light sources whose light reaches visible cells (stable key; emitter: a point light's
-  position and preset, or the sun with its shadow direction; and per-cell contributions;
-  contributions plus the cell's base light sum to the cell's light), the base light of visible
-  cells, the active vision profile, the ambient light, on a level under the sky the sun and sky
-  of the moment, and the perceived sounds (kind, volume, rough place; "Hearing" above). Visual
-  lighting (§4.4) is derived from this.
+  position and preset, or the sun or a moon with its shadow direction; and per-cell
+  contributions; contributions plus the cell's base light sum to the cell's light), the base light
+  of visible cells, the active vision profile, the ambient light, on a level under the sky the
+  sun, the moons, and the sky of the moment, and the perceived sounds (kind, volume, rough place;
+  "Hearing" above). Visual lighting (§4.4) is derived from this.
 
 ## 6. Input and UI
 
@@ -495,9 +528,15 @@ rate or animation.
   terrain, remembered terrain, where stairs lead, and a sound heard there ("You hear footsteps
   here.").
 - Screen layout: map viewport, message log, status panel (level, region (on the overworld and in
-  its local areas), time of day and date as `14:32 · 12 Rainmoon`, turn, position, light at the
-  player, vision profile, lantern, seed; segments drop in priority order when the window is narrow,
-  the time last after the level name).
+  its local areas), time of day and date as `14:32 · 12 Rainmoon, Year 1`, the moon's phase as a
+  glyph and its name (`◑ First quarter`; with several moons each moon's name and glyph, `Moon ●
+  Ilse ☽`), turn, position, light at the player, vision profile, lantern, seed). The phase glyph
+  shows the lit part of the disc, lit on the right while waxing: `○` new, `☽` waxing crescent,
+  `◑` first quarter and waxing gibbous, `●` full, `◐` waning gibbous and last quarter, `☾` waning
+  crescent. When the window is narrow, segments give way in priority order — seed, position,
+  lantern, vision, light, turn, then the moon's phase (first cut down to its glyph), region, date,
+  and time, the level name last — and segments that fit again in the room left take it back, most
+  important first.
 
 ## 7. Levels and data formats
 
@@ -569,6 +608,13 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   neighbors' land; `river` and `lake` put running or still water along that side of the
   neighboring areas (§3). The calendar's month names are
   `data/calendar.toml` (exactly 12; without the file months are numbered).
+- **The sky** (`data/sky.toml`, optional; without it there are no moons): up to 8 `[[moon]]`s,
+  each with `name` (shown in the status bar when there are several), `color` (`[r, g, b, uv]`,
+  the direct light of the moon when full and high in the night sky), `sky` (the same for the
+  light of the sky around it; default none), `size` (apparent size in percent of a standard moon,
+  1 to 400, default 100; its light scales with the square), `period_days` (new moon to new moon,
+  1 to 3600), and `phase_offset_days` (its age at the calendar epoch, less than the period,
+  default 0). §5 "Moonlight".
 - **Dungeon branches** (`data/dungeons.toml`): stacks of generated levels, e.g.
   `{ id = "depths", generator = "rooms", depth = 8, size = [80, 21] }`, plus optional name,
   patrolling creature kinds, ambient light, and per-depth overrides of generator and size. Stairs
@@ -836,7 +882,7 @@ Each milestone ships a playable build.
   mode, and a smaller web build.
 - **M9 Time, sunlight and overworld** — game clock and 12×30 calendar, time costs per level and
   terrain, resting; sunlight, sky light and moving shadows on sky-exposed levels over a 24-hour
-  day (moonlight is darkness for now); an ADOM-like overworld with per-terrain travel time,
+  day (moonlight followed in M12); an ADOM-like overworld with per-terrain travel time,
   locations, and sight by daylight; outdoor local areas generated from overworld terrain.
 - **M10 Creatures** — an ADOM-like speed system (base speed 1000, never shown to the player),
   factions with hostile or neutral relations, deterministic AI that approaches and announces melee,

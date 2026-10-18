@@ -1,31 +1,39 @@
 //! `cargo xtask bench-turns`: turn-processing time in the hub, the vast level, the first
-//! generated level of the depths, the sunlit courtyard at dawn, the overworld, and a generated
-//! forest area of the overworld at dawn (spec §10 budgets; a generated 80×21 level, the
-//! courtyard, the 100×50 overworld, and an 80×40 local area get the hub's), and
+//! generated level of the depths, the sunlit courtyard at dawn, the overworld, a generated
+//! forest area of the overworld at dawn, and the courtyard and the forest area at midnight under
+//! the full moon (spec §10 budgets; a generated 80×21 level, the courtyard, the 100×50
+//! overworld, and an 80×40 local area get the hub's), and
 //! the time a night's rest takes on each (dusk to dawn: 7200 turns of six seconds, 72 of ten
 //! minutes on the overworld).
 
 use std::sync::Arc;
 use std::time::Instant;
 use warlock_core::content::Content;
-use warlock_core::time::DUSK;
+use warlock_core::time::{DUSK, Duration};
 use warlock_core::{Action, Dir, Rest, World};
 
 const TURNS: usize = 400;
 /// Longest a rest from dusk to dawn may take, in ms.
 const REST_BUDGET_MS: f64 = 500.0;
 
-/// (scenario, level label, budget in ms)
-const CASES: [(&str, &str, f64); 6] = [
-    ("showcase", "hub", 5.0),
-    ("vast", "vast", 16.0),
-    ("depths", "depths", 5.0),
+/// From the courtyard's and the forest's start (the 1st, 06:30) to midnight under the full moon
+/// (the 16th), in minutes.
+const TO_FULL_MOON: u64 = (14 * 24 + 17) * 60 + 30;
+
+/// (scenario, level label, budget in ms, minutes skipped before the walk)
+const CASES: [(&str, &str, f64, u64); 8] = [
+    ("showcase", "hub", 5.0, 0),
+    ("vast", "vast", 16.0, 0),
+    ("depths", "depths", 5.0, 0),
     // Starts at 06:30, while shadows are long.
-    ("courtyard", "court", 5.0),
-    ("world", "world", 5.0),
+    ("courtyard", "court", 5.0, 0),
+    ("world", "world", 5.0, 0),
     // A generated forest area of the overworld at 06:30 (walking off an edge, the walk goes
     // straight back in).
-    ("forest", "forest", 5.0),
+    ("forest", "forest", 5.0, 0),
+    // Moon shadows instead of sun shadows.
+    ("courtyard", "c-moon", 5.0, TO_FULL_MOON),
+    ("forest", "f-moon", 5.0, TO_FULL_MOON),
 ];
 
 /// Tiny deterministic generator for the scripted walk (kept local; the game RNG is not involved).
@@ -45,8 +53,11 @@ struct Stats {
     rest_turns: u64,
 }
 
-fn measure(content: &Arc<Content>, scenario: &str) -> Result<Stats, String> {
+fn measure(content: &Arc<Content>, scenario: &str, skip: u64) -> Result<Stats, String> {
     let mut world = World::new(content.clone(), scenario, None).map_err(|e| e.to_string())?;
+    if skip > 0 {
+        world.apply(&Action::SkipTime(Duration::minutes(skip)));
+    }
     let level = world.perception().level_id().to_string();
     let mut rng = 1u64;
     let mut heading = Dir::E;
@@ -105,8 +116,8 @@ pub fn run() -> Result<(), String> {
         "level", "turns", "avg ms", "max ms", "budget ms", "rest turns", "rest ms"
     );
     let mut failed = false;
-    for (scenario, label, budget) in CASES {
-        let s = measure(&content, scenario)?;
+    for (scenario, label, budget, skip) in CASES {
+        let s = measure(&content, scenario, skip)?;
         let ok = s.max_ms <= budget && s.rest_ms <= REST_BUDGET_MS;
         failed |= !ok;
         println!(
