@@ -38,6 +38,29 @@ impl Pos {
     pub fn chebyshev(self, other: Self) -> i32 {
         (self.x - other.x).abs().max((self.y - other.y).abs())
     }
+
+    /// The cells strictly between `self` and `to` on a straight line (Bresenham's, integer only):
+    /// one cell per step along the major axis, each a king's move from the last.
+    pub fn line_between(self, to: Self) -> impl Iterator<Item = Pos> {
+        let (dx, dy) = ((to.x - self.x).abs(), -(to.y - self.y).abs());
+        let (sx, sy) = ((to.x - self.x).signum(), (to.y - self.y).signum());
+        let (mut p, mut err) = (self, dx + dy);
+        std::iter::from_fn(move || {
+            if p == to {
+                return None;
+            }
+            let e2 = 2 * err;
+            if e2 >= dy {
+                err += dy;
+                p.x += sx;
+            }
+            if e2 <= dx {
+                err += dx;
+                p.y += sy;
+            }
+            (p != to).then_some(p)
+        })
+    }
 }
 
 impl fmt::Display for Pos {
@@ -197,6 +220,32 @@ mod tests {
         assert_eq!(toward(-2, -5), Some(Dir::N));
         assert_eq!(toward(-3, 5), Some(Dir::SW));
         assert_eq!(Dir::NW.compass_name(), "north-west");
+    }
+
+    #[test]
+    fn lines_step_a_kings_move_at_a_time() {
+        let between = |a: (i32, i32), b: (i32, i32)| -> Vec<(i32, i32)> {
+            Pos::new(a.0, a.1)
+                .line_between(Pos::new(b.0, b.1))
+                .map(|p| (p.x, p.y))
+                .collect()
+        };
+        assert_eq!(between((0, 0), (0, 0)), []);
+        assert_eq!(between((0, 0), (1, 1)), []);
+        assert_eq!(between((0, 0), (4, 0)), [(1, 0), (2, 0), (3, 0)]);
+        assert_eq!(between((0, 0), (-3, -3)), [(-1, -1), (-2, -2)]);
+        assert_eq!(between((0, 0), (4, 2)), [(1, 1), (2, 1), (3, 2)]);
+        assert_eq!(between((2, 5), (2, 1)), [(2, 4), (2, 3), (2, 2)]);
+        for (a, b) in [((0, 0), (7, 3)), ((5, 5), (-2, 9)), ((1, 1), (1, -6))] {
+            let cells = between(a, b);
+            let mut last = a;
+            for &c in cells.iter().chain([&b]) {
+                assert_eq!(Pos::new(last.0, last.1).chebyshev(Pos::new(c.0, c.1)), 1);
+                last = c;
+            }
+            let (pa, pb) = (Pos::new(a.0, a.1), Pos::new(b.0, b.1));
+            assert_eq!(cells.len() as i32, pa.chebyshev(pb) - 1);
+        }
     }
 
     #[test]

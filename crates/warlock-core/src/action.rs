@@ -135,10 +135,44 @@ impl FromStr for Letters {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Event {
-    ActorMoved { actor: ActorId, from: Pos, to: Pos },
-    DoorOpened { pos: Pos },
-    DoorClosed { pos: Pos },
-    LevelChanged { from: String, to: String },
+    ActorMoved {
+        actor: ActorId,
+        from: Pos,
+        to: Pos,
+    },
+    DoorOpened {
+        pos: Pos,
+    },
+    DoorClosed {
+        pos: Pos,
+    },
+    LevelChanged {
+        from: String,
+        to: String,
+    },
+    /// An actor attacked another: an intent only, nothing is damaged (spec §8 "Creature
+    /// behavior"). `from` and `to` are where they stood at that moment. Kept only when the
+    /// player saw both of them (or is one of them); the message line reports more (an attack on
+    /// the player by something unseen, an attack the player saw only one end of).
+    Attacked {
+        attacker: ActorId,
+        target: ActorId,
+        kind: AttackKind,
+        from: Pos,
+        to: Pos,
+    },
+}
+
+/// How an attack is made.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AttackKind {
+    /// From the next cell.
+    Melee,
+    /// A shot from a distance.
+    Ranged,
+    /// A spell cast from a distance.
+    Spell,
 }
 
 /// The result of applying an action.
@@ -247,9 +281,22 @@ impl FromStr for Action {
     }
 }
 
-/// Parses whitespace-separated actions, e.g. `"move:E move:SE wait"`.
+/// Parses whitespace-separated actions, e.g. `"move:E move:SE wait"`; `ACTION*N` repeats an
+/// action, e.g. `"move:N*3 wait*10"`.
 pub fn parse_actions(text: &str) -> Result<Vec<Action>, String> {
-    text.split_whitespace().map(str::parse).collect()
+    let mut actions = Vec::new();
+    for word in text.split_whitespace() {
+        let (action, count) = match word.split_once('*') {
+            Some((action, n)) => match n.parse::<usize>() {
+                Ok(n) => (action, n),
+                Err(e) => return Err(format!("`{word}`: {e}")),
+            },
+            None => (word, 1),
+        };
+        let action: Action = action.parse()?;
+        actions.extend(std::iter::repeat_n(action, count));
+    }
+    Ok(actions)
 }
 
 /// Formats actions as whitespace-separated text; inverse of [`parse_actions`].
@@ -316,6 +363,17 @@ mod tests {
         assert!(parse_actions("move:up").is_err());
         assert!(parse_actions("wait:E").is_err());
         assert!(parse_actions("dance").is_err());
+        assert_eq!(
+            parse_actions("move:N*3 wait*0 wait"),
+            Ok(vec![
+                Action::Move(Dir::N),
+                Action::Move(Dir::N),
+                Action::Move(Dir::N),
+                Action::Wait
+            ])
+        );
+        assert!(parse_actions("move:N*x").is_err());
+        assert!(parse_actions("wait*").is_err());
         assert_eq!(
             parse_actions("LANTERN vision:uv_sight"),
             Ok(vec![

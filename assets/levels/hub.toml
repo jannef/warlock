@@ -1,15 +1,20 @@
 # The showcase hub (spec §3). Each room demonstrates one engine capability:
 # top row: light hall (M3), darkness chamber (M3), water garden (M4);
 # bottom row: start room, door corridor, patrol gallery, effects room (M4), stairs nook (> down to
-# the Vast Caverns, < up and out to the overworld, ^ up to the courtyard).
+# the Vast Caverns, v down to the arena, < up and out to the overworld, ^ up to the courtyard).
 #
 # Lighting (M3): no ambient light. Rooms are lit by wall torches (t), lamps (l), and a brazier (B);
 # the light hall has colored crystals (R G U A) between pillars that cast colored shadows; the
 # darkness chamber has only faint fungus (f, low-light vision) and a UV rune (u, UV sight); the
 # patrol gallery is dark in the middle, where only the kobold's torch lights the way.
 #
-# Speed (M10): in the patrol gallery a giant rat (1) and a cave bat (3) run down parallel lanes,
+# Speed (M10): in the patrol gallery a cave beetle (1) and a cave bat (3) run down parallel lanes,
 # the bat faster; the torch-carrying kobold (2) circles them a little slower than you walk.
+#
+# Factions and behavior (M10): the beetle and the bat are wildlife, neutral to everyone, so they
+# keep to their lanes; the kobold is hostile to you: once it sees you it leaves its round to come
+# for you (opening doors on the way), goes to where it last saw you when you get out of sight, and
+# then walks back to its round. The arena (v, down) shows factions fighting each other.
 #
 # Effects (M4): the effects room has a brazier (sparks, glow, heat haze), a lava pool (=, embers,
 # haze), a fountain (F) in a pool to wade through (splashes), and dusty floor (:, drifting motes);
@@ -45,7 +50,7 @@ map = '''
 #..............##t....#l#....t##..#...#...#...#...#...#..#..........~F~#...l.^.#
 #..............##.....+.+.....##1........................#..........~~~#.......#
 #......@.......##.....#.#.....##3........................#......B......#.......#
-#..............####+###.###+####..#...#...#...#...#...#..#.............#.<.>...#
+#..............####+###.###+####..#...#...#...#...#...#..#.............#.<.>.v.#
 #..............##.............##2........................#.===.....::::#.......#
 #..............##......t......##.........................#.===.....::::#.......#
 #..t.......t...#################t.......................t#.........::::#.......#
@@ -54,10 +59,10 @@ map = '''
 
 [legend]
 "@" = { terrain = "floor", spawn = "player" }
-"1" = { terrain = "floor", creature = "rat", route = "E24 W24" }
+"1" = { terrain = "floor", creature = "beetle", route = "E24 W24" }
 "2" = { terrain = "floor", creature = "kobold", route = "E24 N5 W24 S5", carry = ["short_sword", "copper_coin*7"] }
-# Beside the rat, a cave bat on a parallel lane: it is faster (creatures.toml `speed`), so it
-# pulls ahead and laps the rat.
+# Beside the beetle, a cave bat on a parallel lane: it is faster (creatures.toml `speed`), so it
+# pulls ahead and laps the beetle.
 "3" = { terrain = "floor", creature = "bat", route = "E24 W24" }
 ">" = { terrain = "stairs_down", to = "vast" }
 "<" = { terrain = "stairs_up", to = "overworld" }
@@ -75,6 +80,8 @@ map = '''
 ":" = "dusty_floor"
 # Stairs up (drawn `<`) to the courtyard.
 "^" = { terrain = "stairs_up", to = "courtyard" }
+# Stairs down (drawn `>`) to the arena.
+"v" = { terrain = "stairs_down", to = "arena" }
 
 # Objects, top of each pile first.
 # The start room.

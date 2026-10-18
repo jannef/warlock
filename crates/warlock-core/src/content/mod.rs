@@ -8,6 +8,7 @@ mod anim;
 mod calendar;
 mod creature;
 mod dungeon;
+mod faction;
 mod flow;
 mod level;
 mod light;
@@ -23,8 +24,9 @@ mod vision;
 
 pub use anim::GlyphAnim;
 pub use calendar::Calendar;
-pub use creature::{CreatureDef, CreatureId, NORMAL_SPEED, SPEEDS};
+pub use creature::{Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, NORMAL_SPEED, SPEEDS};
 pub use dungeon::{DungeonDef, Generator, LevelPlan, parse_branch_level};
+pub use faction::{FactionDef, FactionId, Factions, PLAYER_FACTION, Stance};
 pub use flow::{FLOW_SPEEDS, Flow};
 pub(crate) use level::validate_route;
 pub use level::{
@@ -42,6 +44,7 @@ pub use vault::Vault;
 pub use vision::VisionProfile;
 
 use crate::noise::MAX_LOUDNESS;
+use crate::perception::VIEW_RADIUS;
 use level::{LegendEntry, legend_char};
 use serde::Deserialize;
 use std::collections::{BTreeMap, BTreeSet};
@@ -177,11 +180,12 @@ struct LegendFile {
 
 /// All loaded and cross-validated content.
 ///
-/// `data/lights.toml`, `data/vision.toml`, `data/dungeons.toml`, `data/calendar.toml`,
-/// `data/sky.toml`, `data/materials.toml`, and `data/objects.toml` are optional. Without vision
-/// profiles, a single `normal` profile that needs no light is used, so content without lighting
-/// stays fully visible; without a calendar, months are numbered; without a sky file there are no
-/// moons; without an objects file there are no objects.
+/// `data/lights.toml`, `data/vision.toml`, `data/factions.toml`, `data/dungeons.toml`,
+/// `data/calendar.toml`, `data/sky.toml`, `data/materials.toml`, and `data/objects.toml` are
+/// optional. Without vision profiles, a single `normal` profile that needs no light is used, so
+/// content without lighting stays fully visible; without factions, everyone is neutral; without a
+/// calendar, months are numbered; without a sky file there are no moons; without an objects file
+/// there are no objects.
 #[derive(Debug)]
 pub struct Content {
     terrain: Vec<TerrainDef>,
@@ -192,6 +196,7 @@ pub struct Content {
     material_ids: BTreeMap<String, MaterialId>,
     objects: Vec<ObjectDef>,
     object_ids: BTreeMap<String, ObjectId>,
+    factions: Factions,
     lights: Vec<LightPreset>,
     light_ids: BTreeMap<String, LightId>,
     visions: Vec<VisionProfile>,
@@ -222,6 +227,7 @@ impl Content {
             material_ids: BTreeMap::new(),
             objects: Vec::new(),
             object_ids: BTreeMap::new(),
+            factions: Factions::default(),
             lights: Vec::new(),
             light_ids: BTreeMap::new(),
             visions: Vec::new(),
@@ -244,6 +250,7 @@ impl Content {
         content.load_lights(files)?;
         content.load_vision(files)?;
         content.load_terrain(files)?;
+        content.load_factions(files)?;
         content.load_creatures(files)?;
         content.load_objects(files)?;
 
@@ -440,11 +447,67 @@ impl Content {
                     spec.id
                 )));
             }
-            self.creatures.push(spec.resolve(light));
+            let resolved = creature::Resolved {
+                light,
+                faction: self.creature_faction(&spec).map_err(err)?,
+                vision: self.vision_index(&spec.vision).ok_or_else(|| {
+                    err(format!(
+                        "creature `{}`: unknown vision profile `{}`",
+                        spec.id, spec.vision
+                    ))
+                })?,
+            };
+            check_combat(&spec).map_err(err)?;
+            self.creatures.push(spec.resolve(resolved));
         }
         if !self.creature_ids.contains_key("player") {
             return Err(err("a creature with id `player` is required".into()));
         }
+        Ok(())
+    }
+
+    /// The faction a creature type names. With factions defined, every creature but the player
+    /// must name one, and the player belongs to [`PLAYER_FACTION`]; without, none may.
+    fn creature_faction(&self, spec: &creature::CreatureSpec) -> Result<Option<FactionId>, String> {
+        if self.factions.is_empty() {
+            return match &spec.faction {
+                Some(name) => Err(format!(
+                    "creature `{}`: unknown faction `{name}` (there is no data/factions.toml)",
+                    spec.id
+                )),
+                None => Ok(None),
+            };
+        }
+        let is_player = spec.id == "player";
+        let name = match &spec.faction {
+            Some(name) => name.as_str(),
+            None if is_player => PLAYER_FACTION,
+            None => {
+                return Err(format!(
+                    "creature `{}` needs a `faction` (data/factions.toml)",
+                    spec.id
+                ));
+            }
+        };
+        if is_player && name != PLAYER_FACTION {
+            return Err(format!(
+                "the player belongs to the faction `{PLAYER_FACTION}`, not `{name}`"
+            ));
+        }
+        self.factions
+            .id(name)
+            .map(Some)
+            .ok_or_else(|| format!("creature `{}`: unknown faction `{name}`", spec.id))
+    }
+
+    fn load_factions(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
+        let path = "data/factions.toml";
+        let Some(text) = files.get_optional(path) else {
+            return Ok(());
+        };
+        let err = |m: String| ContentError::new(path, m);
+        let parsed: faction::FactionFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
+        self.factions = Factions::resolve(parsed.faction).map_err(err)?;
         Ok(())
     }
 
@@ -710,6 +773,20 @@ impl Content {
         &self.materials
     }
 
+    /// The factions of `data/factions.toml` (empty without the file).
+    pub fn factions(&self) -> &Factions {
+        &self.factions
+    }
+
+    /// How creatures of types `a` and `b` stand toward each other: their factions' stance
+    /// (spec §7 "Factions"); neutral without factions. The player is the creature `player`.
+    pub fn stance(&self, a: CreatureId, b: CreatureId) -> Stance {
+        match (self.creature(a).faction, self.creature(b).faction) {
+            (Some(a), Some(b)) => self.factions.stance(a, b),
+            _ => Stance::Neutral,
+        }
+    }
+
     pub fn light(&self, id: LightId) -> &LightPreset {
         &self.lights[usize::from(id.0)]
     }
@@ -846,6 +923,30 @@ fn check_terrain_noise(spec: &terrain::TerrainSpec) -> Result<(), String> {
     Ok(())
 }
 
+/// Checks a creature type's sight and combat: it sees 1 to [`VIEW_RADIUS`] cells; `ranged` and
+/// `caster` creatures need a `range` of 2 up to their sight, melee creatures have none.
+fn check_combat(spec: &creature::CreatureSpec) -> Result<(), String> {
+    let id = &spec.id;
+    if !(1..=VIEW_RADIUS).contains(&spec.sight) {
+        return Err(format!(
+            "creature `{id}`: sight {} is out of range (1 to {VIEW_RADIUS})",
+            spec.sight
+        ));
+    }
+    match (spec.combat, spec.range) {
+        (Combat::Melee, None) => Ok(()),
+        (Combat::Melee, Some(_)) => Err(format!(
+            "creature `{id}`: only `ranged` and `caster` creatures have a `range`"
+        )),
+        (_, None) => Err(format!("creature `{id}` needs a `range` to shoot or cast")),
+        (_, Some(range)) if !(2..=spec.sight).contains(&range) => Err(format!(
+            "creature `{id}`: range {range} is out of range (2 to its sight, {})",
+            spec.sight
+        )),
+        _ => Ok(()),
+    }
+}
+
 /// Checks the presentation-only animation and effect fields of a terrain or creature type.
 fn check_effects(
     file: &str,
@@ -871,6 +972,20 @@ fn check_effects(
             return Err(err(
                 "particles: `obstacle` emitters need a `flow` animation (running water)".into(),
             ));
+        }
+        let creature = kind == "creature";
+        let fits = match emitter.on {
+            ParticleTrigger::Ambient => true,
+            ParticleTrigger::Attack => creature,
+            ParticleTrigger::Step | ParticleTrigger::Toggle | ParticleTrigger::Obstacle => {
+                !creature
+            }
+        };
+        if !fits {
+            return Err(err(format!(
+                "particles: a {kind} cannot have `{}` emitters",
+                emitter.on.name()
+            )));
         }
     }
     Ok(())

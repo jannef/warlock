@@ -25,8 +25,8 @@ A rest stops early when:
 
 - a creature comes into view that you did not see the turn before, or
 - a message is written to the message line, such as a new sound you hear ("You hear footsteps to
-  the north-east."). A sound you have already been hearing does not stop you; see
-  [Hearing](hearing.md).
+  the north-east.") or an attack ("The kobold attacks you."). A sound you have already been
+  hearing does not stop you; see [Hearing](hearing.md).
 
 So resting next to a creature walking back and forth behind a door is interrupted each time it
 comes back into earshot.

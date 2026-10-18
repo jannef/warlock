@@ -1,0 +1,28 @@
+# Factions (spec §7): who fights whom. Every creature type in creatures.toml names its `faction`;
+# the player belongs to the faction "player".
+#
+# Fields: id, name, hostile (faction ids). Relations are symmetric: if A lists B as hostile, A and
+# B are hostile to each other. Every pair not listed is neutral (a faction and itself too).
+# Hostile creatures attack each other on sight; neutral ones leave each other alone. The player
+# learns a creature's stance toward them from its type (look mode: "a giant rat (hostile)").
+
+[[faction]]
+id = "player"
+name = "you"
+
+# Giant rats.
+[[faction]]
+id = "vermin"
+name = "vermin"
+hostile = ["player"]
+
+# The kobold war band: they hunt the player and the vermin alike.
+[[faction]]
+id = "kobolds"
+name = "kobolds"
+hostile = ["player", "vermin"]
+
+# Deer, cave bats, and cave beetles: neutral to everyone.
+[[faction]]
+id = "wildlife"
+name = "wildlife"

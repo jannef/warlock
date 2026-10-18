@@ -2,7 +2,9 @@
 //!
 //! **Noise**: actions make noise. A step makes the walker's `footsteps` (creature data) scaled by
 //! the `step_noise` percent of the terrain stepped onto (water splashes, grass is soft); opening or
-//! closing a door makes the door's `toggle_noise` (terrain data). [`noise`] is the one function
+//! closing a door makes the door's `toggle_noise` (terrain data); an attack (an intent, spec §8
+//! "Creature behavior") makes fighting, a bowstring, or chanting where the attacker stands
+//! ([`MELEE_NOISE`], [`SHOT_NOISE`], [`SPELL_NOISE`]). [`noise`] is the one function
 //! that decides how loud an action is, so skills such as moving silently can change it there.
 //! Loudness is an integer, at most [`MAX_LOUDNESS`]; a creature or door without the field is
 //! silent.
@@ -29,6 +31,7 @@
 //! where ([`rough_place`]); never who made them. [`Recent`] sounds decide which are news worth a
 //! message (and so stop a rest).
 
+use crate::action::AttackKind;
 use crate::content::Content;
 use crate::geom::{Dir, Pos};
 use crate::world::{Actor, ActorId, LevelState, WorldState, fnv1a};
@@ -65,6 +68,12 @@ pub enum SoundKind {
     Footsteps,
     DoorOpened,
     DoorClosed,
+    /// A melee attack.
+    Fighting,
+    /// A shot.
+    Bowstring,
+    /// A spell cast.
+    Chanting,
 }
 
 impl SoundKind {
@@ -74,6 +83,9 @@ impl SoundKind {
             SoundKind::Footsteps => "footsteps",
             SoundKind::DoorOpened => "door_opened",
             SoundKind::DoorClosed => "door_closed",
+            SoundKind::Fighting => "fighting",
+            SoundKind::Bowstring => "bowstring",
+            SoundKind::Chanting => "chanting",
         }
     }
 
@@ -83,9 +95,18 @@ impl SoundKind {
             SoundKind::Footsteps => "footsteps",
             SoundKind::DoorOpened => "a door open",
             SoundKind::DoorClosed => "a door close",
+            SoundKind::Fighting => "fighting",
+            SoundKind::Bowstring => "a bowstring",
+            SoundKind::Chanting => "chanting",
         }
     }
 }
+
+/// How loud an attack is where the attacker stands (spec §8 "Creature behavior": attacks are
+/// intents only, but they are heard): a scuffle, a bowstring, a chant.
+pub const MELEE_NOISE: u16 = 60;
+pub const SHOT_NOISE: u16 = 40;
+pub const SPELL_NOISE: u16 = 50;
 
 /// Something an actor does that makes noise.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -96,6 +117,8 @@ pub enum Act {
     OpenDoor(Pos),
     /// Closes the open door on this cell (before it closes).
     CloseDoor(Pos),
+    /// Attacks someone, from where it stands.
+    Attack(AttackKind),
 }
 
 /// A noise made by an actor.
@@ -192,6 +215,14 @@ pub fn noise(content: &Content, level: &LevelState, actor: &Actor, act: Act) -> 
             p,
             terrain(p).map_or(0, |t| u32::from(t.toggle_noise)),
         ),
+        Act::Attack(kind) => {
+            let (sound, loudness) = match kind {
+                AttackKind::Melee => (SoundKind::Fighting, MELEE_NOISE),
+                AttackKind::Ranged => (SoundKind::Bowstring, SHOT_NOISE),
+                AttackKind::Spell => (SoundKind::Chanting, SPELL_NOISE),
+            };
+            (sound, actor.pos, u32::from(loudness))
+        }
     };
     let loudness = loudness.min(u32::from(MAX_LOUDNESS)) as u16;
     (loudness > 0).then_some(Noise {

@@ -146,13 +146,16 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
     }
 }
 
-/// A heard sound in the `sound` layer: `f` footsteps, `o` a door opening, `c` a door closing;
-/// upper case when loud.
+/// A heard sound in the `sound` layer: `f` footsteps, `o` a door opening, `c` a door closing,
+/// `x` fighting, `b` a bowstring, `m` chanting (magic); upper case when loud.
 pub fn sound_char(sound: &PerceivedSound) -> char {
     let c = match sound.kind {
         SoundKind::Footsteps => 'f',
         SoundKind::DoorOpened => 'o',
         SoundKind::DoorClosed => 'c',
+        SoundKind::Fighting => 'x',
+        SoundKind::Bowstring => 'b',
+        SoundKind::Chanting => 'm',
     };
     if sound.volume == Volume::Loud {
         c.to_ascii_uppercase()

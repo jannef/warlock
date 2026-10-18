@@ -39,7 +39,9 @@
 //! is not visible are perceived with their kind, volume, and a rough place (a cell the player
 //! does not see, near the source); never with who made them.
 
-use crate::content::{Content, CreatureId, Flow, LevelKind, LightId, TerrainId, VisionProfile};
+use crate::content::{
+    Content, CreatureId, Flow, LevelKind, LightId, Stance, TerrainId, VisionProfile,
+};
 use crate::daylight;
 use crate::fov::{compute_fov, radius2};
 use crate::geom::{Dir, Pos};
@@ -612,6 +614,15 @@ impl<'a> PerceptionView<'a> {
     /// The player's own weight: their base weight plus what they carry.
     pub fn own_weight(&self) -> Weight {
         self.player.weight(self.content)
+    }
+
+    /// How a seen creature stands toward the player: its faction's stance (spec §7 "Factions"),
+    /// which the player knows from its type. Nothing else about factions is perceived.
+    pub fn stance(&self, actor: &SeenActor) -> Stance {
+        match self.content.creature_id("player") {
+            Some(player) => self.content.stance(player, actor.creature),
+            None => Stance::Neutral,
+        }
     }
 
     /// Perceived light at a visible cell (wall-face rule applied); `None` for cells not in view.

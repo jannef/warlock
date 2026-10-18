@@ -25,12 +25,35 @@ pub enum ActorKind {
     Creature,
 }
 
-/// A fixed, looping patrol route (spec: test creatures have no AI).
+/// A fixed, looping patrol route: what a creature does while no hostile is about.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Patrol {
     pub route: Vec<Dir>,
     /// Index of the next step to take.
     pub step: usize,
+}
+
+/// What a creature remembers between its actions (spec §8 "Creature behavior"); all `None` while
+/// it goes about its routine. The player has none.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Mind {
+    /// Where it last saw a hostile it has since lost sight of: it goes there.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_seen: Option<Pos>,
+    /// Where it heard a noise whose source it could not see: it goes to look.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub noise: Option<Pos>,
+    /// Where it left its routine (its patrol route, or the cell it waited on) to fight or look:
+    /// it walks back there once nothing is about, then carries on.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub post: Option<Pos>,
+}
+
+impl Mind {
+    /// Whether it is going about its routine.
+    pub fn is_calm(&self) -> bool {
+        *self == Mind::default()
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -52,6 +75,9 @@ pub struct Actor {
     /// and becomes the perceived sounds.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub heard: Vec<Heard>,
+    /// What a creature has in mind (`world/ai.rs`).
+    #[serde(default, skip_serializing_if = "Mind::is_calm")]
+    pub mind: Mind,
     /// What it carries, lettered `a` on (see [`crate::object`]).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub inventory: Vec<Stack>,

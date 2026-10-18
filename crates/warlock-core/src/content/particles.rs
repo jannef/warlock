@@ -24,6 +24,22 @@ pub enum ParticleTrigger {
     /// anything but running water: foam at a bank, ripples where a stream enters a pool. The
     /// emitter is turned with the flow: its `y` points downstream.
     Obstacle,
+    /// Creatures only: a burst of `count` particles at the target when a creature of this type
+    /// is seen attacking it (a spell's sparkle).
+    Attack,
+}
+
+impl ParticleTrigger {
+    /// The trigger as written in content files.
+    pub const fn name(self) -> &'static str {
+        match self {
+            ParticleTrigger::Ambient => "ambient",
+            ParticleTrigger::Step => "step",
+            ParticleTrigger::Toggle => "toggle",
+            ParticleTrigger::Obstacle => "obstacle",
+            ParticleTrigger::Attack => "attack",
+        }
+    }
 }
 
 /// A source of glyph particles on a terrain or creature type. Positions are in cells: x right,
@@ -124,7 +140,9 @@ impl ParticleEmitter {
             ParticleTrigger::Obstacle if self.rate <= 0.0 => {
                 Err("obstacle particles need a positive `rate`".into())
             }
-            ParticleTrigger::Step | ParticleTrigger::Toggle if self.count == 0 => {
+            ParticleTrigger::Step | ParticleTrigger::Toggle | ParticleTrigger::Attack
+                if self.count == 0 =>
+            {
                 Err("particle bursts need a positive `count`".into())
             }
             _ => Ok(()),

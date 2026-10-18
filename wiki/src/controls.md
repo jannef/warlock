@@ -38,7 +38,8 @@ Open, close, and rest ask a question on the message line. Answer with the key sh
 ## Look mode
 
 `x` puts a cursor on the map. Move it with the movement keys to read what is there: what you see
-(a creature, the objects lying there, the terrain), what you remember (terrain and objects), a
+(a creature, marked "(hostile)" if it is hostile to you, see [Creatures](creatures.md); the
+objects lying there; the terrain), what you remember (terrain and objects), a
 sound you heard there ([Hearing](hearing.md)), or that you do not know. Looking takes no time. Press `x` or `Esc` to leave.
 
 ## Objects

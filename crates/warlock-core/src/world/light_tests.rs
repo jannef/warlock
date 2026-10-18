@@ -238,6 +238,7 @@ pub(super) fn check_invariants(world: &World) -> Result<(), TestCaseError> {
         view.is_visible(view.viewer()),
         "the player's own cell is visible"
     );
+    check_creature_sight(world)?;
     let cold = World::from_state(world.content().clone(), world.state().clone())
         .map_err(|e| TestCaseError::fail(e.to_string()))?;
     prop_assert_eq!(
@@ -245,6 +246,32 @@ pub(super) fn check_invariants(world: &World) -> Result<(), TestCaseError> {
         &world.perception,
         "a cold light cache agrees"
     );
+    Ok(())
+}
+
+/// Creature sight uses the player's rules (spec §5 "Creature sight"): on every transparent cell
+/// the player sees, the light a creature with the player's eyes finds there ([`crate::sight::light`],
+/// one cell at a time, from a cold light cache) is the light the player perceives.
+pub(super) fn check_creature_sight(world: &World) -> Result<(), TestCaseError> {
+    let view = world.perception();
+    let content = world.content();
+    let mut cold = LightCache::default();
+    for y in 0..view.height() {
+        for x in 0..view.width() {
+            let p = Pos::new(x, y);
+            let (Some(light), CellView::Visible(t)) = (view.light(p), view.cell(p)) else {
+                continue;
+            };
+            if !content.terrain(t).transparent {
+                continue;
+            }
+            let eye = view.vision();
+            let found = crate::sight::light(&world.state, content, &mut cold, p, eye, true);
+            prop_assert_eq!(found, light.light(), "creature sight's light at {}", p);
+            let quick = crate::sight::light(&world.state, content, &mut cold, p, eye, false);
+            prop_assert_eq!(quick.max(found), found, "no more without bounce at {}", p);
+        }
+    }
     Ok(())
 }
 
