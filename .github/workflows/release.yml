@@ -98,9 +98,17 @@ jobs:
           if ! wasm-bindgen --version 2>/dev/null | grep -q " $version\$"; then
             cargo install wasm-bindgen-cli --version "$version" --locked
           fi
-      # wasm-opt (binaryen) shrinks the wasm; xtask fails on CI if it is missing.
+      # wasm-opt (binaryen) shrinks the wasm; xtask fails on CI if it is missing. Pinned to the
+      # version used locally: Ubuntu's older apt binaryen exported the wrong table as
+      # `__wbindgen_externrefs`, so the page could not start (`cargo xtask web` now checks this).
       - name: Install binaryen
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends binaryen
+        run: |
+          version=133
+          archive="binaryen-version_${version}-x86_64-linux.tar.gz"
+          curl -sSfL -o "$archive" "https://github.com/WebAssembly/binaryen/releases/download/version_${version}/${archive}"
+          echo "2dc9c7813f5375db93d96ead4b78222fcc3e2677bbb832297af4797782a37489  ${archive}" | sha256sum -c -
+          tar -xzf "$archive"
+          echo "$PWD/binaryen-version_${version}/bin" >> "$GITHUB_PATH"
       - run: cargo xtask web
       - name: Install mdBook
         uses: taiki-e/install-action@v2

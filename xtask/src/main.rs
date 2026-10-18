@@ -15,6 +15,7 @@ mod bench;
 mod golden;
 mod licenses;
 mod vast;
+mod wasm_check;
 mod wiki;
 
 use std::path::{Path, PathBuf};
@@ -172,6 +173,7 @@ fn web() -> Result<(), String> {
         return Err(format!("wasm-bindgen failed: {status}"));
     }
     optimize_wasm(&out.join("warlock_bg.wasm"))?;
+    wasm_check::check(&out.join("warlock_bg.wasm"))?;
     // Stamp the workspace version into the page (like `release/Info.plist.in`).
     let page = std::fs::read_to_string(root.join("web/index.html"))
         .map_err(|e| format!("cannot read web/index.html: {e}"))?;
@@ -221,9 +223,9 @@ fn optimize_wasm(wasm: &Path) -> Result<(), String> {
             Ok(())
         }
         Ok(s) => Err(format!("wasm-opt failed: {s}")),
-        Err(_) if std::env::var_os("CI").is_some() => {
-            Err("wasm-opt (binaryen) is required on CI; install it with apt-get".into())
-        }
+        Err(_) if std::env::var_os("CI").is_some() => Err(
+            "wasm-opt (binaryen) is required on CI; install the pinned release (see ci.yml)".into(),
+        ),
         Err(_) => {
             eprintln!(
                 "warning: wasm-opt (binaryen) not found; the build works but is larger.\n  \
