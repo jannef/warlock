@@ -1,8 +1,8 @@
 //! Developer overlays (spec §9), toggled by dev keys (debug builds or `--dev`; see the bindings
 //! table, so the `?` help lists them):
-//! - **Reveal map** draws ground truth — terrain and creatures the player does not see — in a
-//!   cold violet nothing else uses. It is the one place presentation reads ground truth
-//!   (`World::ground_truth`), and is clearly dev-only.
+//! - **Reveal map** draws ground truth — terrain, objects, and creatures the player does not
+//!   see — in a cold violet nothing else uses. It is the one place presentation reads ground
+//!   truth (`World::ground_truth`), and is clearly dev-only.
 //! - **Light values** replaces each visible cell's glyph with its perceived brightness as a digit,
 //!   like the dump's `light` layer (`0` dark to `9` fully lit); the shader still lights the cell,
 //!   so the digit shows the light's color too.
@@ -64,12 +64,19 @@ pub(super) fn draw_map_overlays(grid: &mut MapGrid, world: &World, overlays: Dev
                 && let Some(t) = level.terrain_at(p)
             {
                 let def = content.terrain(t);
+                let (ch, fg) = match level.objects_at(p).first() {
+                    Some(top) => {
+                        let object = content.object(top.object);
+                        (object.glyph, object.fg)
+                    }
+                    None => (def.glyph, def.fg),
+                };
                 grid.console.put(
                     x,
                     y,
                     Cell {
-                        ch: def.glyph,
-                        fg: revealed(def.fg),
+                        ch,
+                        fg: revealed(fg),
                         bg: revealed(def.bg),
                     },
                 );

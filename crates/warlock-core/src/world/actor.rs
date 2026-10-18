@@ -1,8 +1,9 @@
 //! Actors: the player and creatures.
 
-use crate::content::CreatureId;
+use crate::content::{Content, CreatureId};
 use crate::geom::{Dir, Pos};
 use crate::noise::Heard;
+use crate::object::{Stack, Weight, weight_of};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -51,4 +52,18 @@ pub struct Actor {
     /// and becomes the perceived sounds.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub heard: Vec<Heard>,
+    /// What it carries, lettered `a` on (see [`crate::object`]).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub inventory: Vec<Stack>,
+}
+
+impl Actor {
+    /// Its creature's base weight plus everything it carries, in grams. Known to the rules (and
+    /// dev tools) for every actor; the player is shown only their own.
+    pub fn weight(&self, content: &Content) -> Weight {
+        Weight {
+            base: u64::from(content.creature(self.creature).weight),
+            carried: weight_of(&self.inventory, content),
+        }
+    }
 }

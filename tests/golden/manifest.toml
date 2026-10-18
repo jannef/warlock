@@ -100,7 +100,7 @@ name = "help-screen"
 scenario = "showcase"
 actions = "wait"
 screen = "help"
-window = "1280x720"
+window = "1280x800"
 
 # Settings over a run, opened over the pause menu (#57).
 [[golden]]
@@ -108,6 +108,28 @@ name = "settings-screen"
 scenario = "showcase"
 actions = "wait"
 screen = "settings"
+
+# Objects (#79): the door corridor's storeroom of arms and armor, from its doorway, lit by its
+# torch; the start room's gold and pile are remembered behind.
+[[golden]]
+name = "storeroom"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W"
+
+# Choosing what to pick up from the start room's pile (#80).
+[[golden]]
+name = "pick-up-screen"
+scenario = "showcase"
+actions = "move:SW*2"
+screen = "pick-up"
+
+# The inventory after picking up the start room's pile and gold (#80, #81): letters, glyphs,
+# weights, and what the player carries and weighs.
+[[golden]]
+name = "inventory-screen"
+scenario = "showcase"
+actions = "move:SW*2 pickup move:NE*2 move:E*2 move:NE pickup"
+screen = "inventory"
 
 [[golden]]
 name = "vast-level"

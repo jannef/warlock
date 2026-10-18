@@ -50,7 +50,8 @@ Game flags (`cargo run -p warlock -- --help`):
 - Without `--scenario`, `--new`, `--replay`, `--record`, or `--capture` the game opens on the main
   menu. Dev: `--screen NAME` opens a screen at startup, even with `--capture`: `main` and
   `new-run` on the main menu (e.g. `--scale 1 --screen new-run --capture target/menu.png`);
-  `pause` and `help` over a run; `settings` and `controls` over the main menu, or over the pause
+  `pause`, `help`, `inventory`, `pick-up` (the pile on the player's cell), and `drop` over a run
+  (e.g. after a `--replay` that walks onto a pile); `settings` and `controls` over the main menu, or over the pause
   menu when `--scenario`, `--new`, `--replay`, or `--record` names a run (`--capture` alone does
   not).
   `--config-dir DIR` keeps `settings.toml` in DIR; captures and replays otherwise use default
@@ -71,12 +72,17 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 | Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor; also local areas, `--level local:49,23`) |
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascend descend lantern
-rest:GOAL vision:PROFILE skip:DURATION` (`DIR` = N NE E SE S SW W NW; `PROFILE` = an id in
+pickup[:LETTERS] drop[:LETTERS] rest:GOAL vision:PROFILE skip:DURATION` (`DIR` = N NE E SE S SW W
+NW; `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the player's cell, `a`
+its top) or `drop:b` (the inventory), none = everything; `PROFILE` = an id in
 `assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are
 `30s`, `10m`, `2h`; `skip` is the dev hour skip). Dump layers: `view` (what the player sees), `fov` (`*` visible),
-`memory` (seen terrain), `light` (perceived brightness of visible cells as a digit, `0` dark to `9`
-fully lit), `sound` (heard sounds at their rough places over the view: `f` footsteps, `o`/`c` a
-door opening/closing, upper case when loud), `truth` (ground truth, **dev-only**). Replay files are JSON
+`memory` (seen terrain and remembered objects), `light` (perceived brightness of visible cells as a
+digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places over the view: `f`
+footsteps, `o`/`c` a door opening/closing, upper case when loud), `inventory` (what the player
+carries and weighs), `truth`
+(ground truth, **dev-only**), `actors` (every actor on the level with its weight and what it
+carries, **dev-only**). Replay files are JSON
 `{game_version, scenario, seed, steps:[{action, hash}]}`; `hash` is the FNV-1a 64 state hash
 (`World::state_hash`) after the step, as 16 hex digits.
 
@@ -101,7 +107,7 @@ level change to `run.sav` in the platform data dir (`paths.rs`, app name "warloc
 `--replay`, or `--record` (replays and recordings always start a fresh run). F5 / F9 write / load `snapshots/quick.sav`. An unreadable save is renamed `run.sav.bad`,
 never deleted. Format and `Content::fingerprint` live in `warlock-core/src/save.rs`: bump
 `FORMAT_VERSION` on any incompatible `WorldState` change; adding or reordering terrain, creatures,
-lights, levels, or dungeon branches invalidates existing saves.
+lights, levels, objects, or dungeon branches invalidates existing saves.
 
 Settings (`crates/warlock/src/settings/`): `settings.toml` in the platform config dir (macOS
 `~/Library/Application Support/warlock`), schema in the `settings/mod.rs` module docs. Changes
@@ -118,26 +124,31 @@ in `ui/glyphs.rs`, never to content colors. Rebindable commands have stable ids 
 it): gate systems that read it with `run_if(resource_exists::<Game>)`; content is the
 `GameContent` resource.
 
-Modal screens (spec §6) — main menu, new run, pause, settings, controls, and the `?` help — are one
+Modal screens (spec §6) — main menu, new run, pause, settings, controls, the `?` help, the
+inventory (`i`), and choosing what to pick up (`,`/`g` on several stacks) or drop (`d`) — are one
 screen stack (`ui/screens.rs`, the `ScreenStack` resource); add a screen there, never a second way
 to open, read keys for, or draw one:
-- **Open**: `Screens::open(ScreenName)` (a `SystemParam` over the stack, content, and save store)
-  is the one way a screen opens: `?` and Esc in play, sub-screens, the startup main menu and
-  `--screen`, and the return to the main menu after a run. Back/Esc pops the top screen, so a
-  sub-screen returns to the screen it was opened from as it was left.
+- **Open**: `Screens::open(ScreenName)` (a `SystemParam` over the stack, content, save store, and
+  the run, if any) is the one way a screen opens: `?`, `i`, `,`, `d`, and Esc in play,
+  sub-screens, the startup main menu and `--screen`, and the return to the main menu after a run.
+  Screens that show the run read the perception snapshot when they open (no time passes while
+  they are open). Back/Esc pops the top screen, so a sub-screen returns to the screen it was
+  opened from as it was left.
 - **Input**: `input::route_keys` is the one reader of `KeyboardInput`. Stack not empty: the press
-  goes to the top screen (`ScreenStack::handle` → `ScreenAction`: stay, close, open, or a
-  `MenuChoice`); otherwise it is a gameplay command in the current `InputMode`. Opens and closes
-  apply at once, so the next press in the same frame goes to the new top; menu choices (start,
-  resume, save-and-quit to menu, quit) are messages applied by `screens::apply_choice`, and the
-  rest of that frame's presses are dropped. Held-key repeats never open, close, or choose.
+  goes to the top screen (`ScreenStack::handle` → `ScreenAction`: stay, close, open, a
+  `MenuChoice`, or `Act(Action)`: close and apply a gameplay action, e.g. `pickup:ac`); otherwise
+  it is a gameplay command in the current `InputMode`. Opens and closes apply at once, so the next
+  press in the same frame goes to the new top; menu choices (start, resume, save-and-quit to menu,
+  quit) are messages applied by `screens::apply_choice`, and the rest of that frame's presses are
+  dropped. Held-key repeats never open, close, choose, or act.
 - **Draw**: `ui::draw` is the one system that writes the UI console: when anything it shows
   changed, it clears the console, draws the gameplay UI if a run exists, then the top screen.
 - Prompts in the message line (open/close direction, rest, look mode) are `InputMode`s, not
   screens.
 - Screens are plain state machines tested without a window: `ui/menu.rs` (`Press`, `Panel`, main
   and pause menu), `ui/new_run_screen.rs`, `ui/settings_screen.rs`, `ui/controls_screen.rs` (also
-  the `?` help: the same binding list, read-only).
+  the `?` help: the same binding list, read-only), `ui/object_screen.rs` (inventory, pick up,
+  drop: stacks by letter; in the choices letters always name stacks, even `h j k l`).
 
 Typical render check: `cargo run -p warlock -- --scale 1 --freeze-time 1 --capture target/shot.png`,
 then read the PNG.
@@ -195,6 +206,24 @@ never the actor; a walker's several steps within one turn are one sound). `World
 `PerceptionView::sounds()` in `ui/sounds.rs` (a still `◌` marker, always: it is information; the
 ripple only with `glyph_animation`). Sounds carry at most `noise::MAX_REACH` (30) cells, under
 `VIEW_RADIUS`, which keeps rest batching (`out_of_view_for`) exact (a const assert guards it).
+Objects (spec §5, §6, §7; M11): every object in `data/objects.toml` defines its glyph, color,
+material (`data/materials.toml`), and weight in grams (`content/object.rs`: `ObjectDef`,
+`ObjectId`, and the `"id*N"` placement strings; `content/material.rs`); every creature has a base
+`weight`. `object.rs` holds the runtime side: `Stack` (object + count; stackable objects join,
+others are stacks of one), piles (`add_to_pile`: dropped stacks go on top, index 0 is the top the
+map shows), inventories (`add_to_inventory`, at most `INVENTORY_SLOTS` = 26, lettered by index),
+`Weight` (base + carried), `format_weight`, and `phrase` for messages. Piles live in
+`LevelState::objects` (by position, never empty) with `object_memory` beside them (piles as last
+seen, updated by `Perception::remember` on cells where creatures would be seen); inventories in
+`Actor::inventory` (spawned from a level's `carry`). The rules know every actor's weight
+(`Actor::weight`, `World::actor_weight`); presentation reads only `PerceptionView::objects`
+(current pile in sight, else remembered), `inventory`, and `own_weight`: never what creatures
+carry. `Action::PickUp(Letters)` / `Action::Drop(Letters)` (`Letters` = a set of `a`–`z`, empty
+= everything) take the level's turn; a refused one takes none. The map grid draws the top object
+in place of the terrain glyph (no terrain animation or glow there); look mode names piles.
+
+Key commands `,`/`g` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop` screen),
+`i` (`Inventory` screen) are in `input.rs` and `settings/keys.rs`.
 
 The overworld (spec §3, §5, §7) is `assets/levels/overworld.toml`, the one level of kind
 `overworld` (`LevelKind::Overworld`: 10-minute turns, steps cost the terrain's `travel_minutes`).
@@ -378,8 +407,9 @@ notes, and no locations or level walkthroughs yet), built with [mdBook](https://
 (`wiki/book.toml`, table of contents in `wiki/src/SUMMARY.md`, default theme `coal`). It is
 published at https://jannef.github.io/warlock/wiki/ by the release workflow's web job, which
 builds it into `pages/wiki/` beside the game. Facts that live in data (months, moons, terrain,
-footstep loudness in words, vision profiles, light presets, creatures, sight radii; never hidden
-rules such as speed or hearing thresholds) are tables generated by `cargo xtask wiki`
+footstep loudness in words, vision profiles, light presets, creatures, objects, materials, sight
+radii, the pack's size; never hidden rules such as speed, hearing thresholds, or creature weights)
+are tables generated by `cargo xtask wiki`
 (`xtask/src/wiki.rs`) into `wiki/src/generated/` (committed) and pulled into pages with
 `{{#include generated/NAME.md}}`; CI runs `cargo xtask wiki --check` and `mdbook build wiki` on the
 Linux job (mdBook pinned there and in `release.yml`). To preview: `cargo xtask wiki --build`, then
@@ -443,7 +473,7 @@ A successful compile does not verify anything visual. Before opening a PR:
 `tests/golden/manifest.toml` lists one entry per showcase room plus the vast level (its start and
 its river): a scenario and text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file,
 and optional `window`, `scale`, `freeze_time`, `screen` (`--screen` over the run: `pause`,
-`help`, `settings`, `controls`), `tolerance` (per-channel, default 2) and `max_diff_ratio`
+`help`, `settings`, `controls`, `inventory`, `pick-up`, `drop`), `tolerance` (per-channel, default 2) and `max_diff_ratio`
 (default 0.05% of pixels).
 `cargo xtask golden` builds a replay per entry with `warlock-core`, runs the game with
 `--replay ... --capture ...`, and compares with `tests/golden/<name>.png`. On a mismatch it writes

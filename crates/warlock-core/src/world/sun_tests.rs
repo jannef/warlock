@@ -88,12 +88,14 @@ id = "player"
 name = "you"
 glyph = "@"
 fg = "#ffffff"
+weight = 70000
 
 [[creature]]
 id = "rat"
 name = "rat"
 glyph = "r"
 fg = "#806040"
+weight = 4000
 "##;
 
 const LIGHTS: &str = r##"

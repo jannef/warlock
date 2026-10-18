@@ -30,6 +30,8 @@ pub(super) struct CreatureSpec {
     pub fg: Rgb,
     #[serde(default = "normal_speed")]
     pub speed: u32,
+    /// Base weight in grams, without anything carried.
+    pub weight: u32,
     /// Light preset the creature carries.
     pub light: Option<String>,
     /// How loud its steps are (spec §5 "Hearing"); none: it moves silently.
@@ -52,6 +54,7 @@ impl CreatureSpec {
             glyph: self.glyph,
             fg: self.fg,
             speed: self.speed,
+            weight: self.weight,
             light,
             footsteps: self.footsteps,
             hearing: self.hearing,
@@ -72,6 +75,9 @@ pub struct CreatureDef {
     /// How quickly it acts ([`NORMAL_SPEED`] is normal; twice that, twice as many actions in the
     /// same game time). Rules only: never shown to the player, nor put in the perception snapshot.
     pub speed: u32,
+    /// Gameplay: the creature's own weight in grams, without what it carries (see
+    /// [`crate::object::Weight`]). At least 1.
+    pub weight: u32,
     /// Light the creature carries with it (e.g. a torch), if any.
     pub light: Option<LightId>,
     /// Gameplay: the loudness of its steps on terrain with a `step_noise` of 100

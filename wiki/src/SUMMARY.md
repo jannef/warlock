@@ -13,6 +13,7 @@
 - [Sun, moon, and sky](sun.md)
 - [The overworld](overworld.md)
 - [Terrain](terrain.md)
+- [Objects and your pack](objects.md)
 - [Creatures](creatures.md)
 - [Your lantern](lantern.md)
 - [Saving](saving.md)

@@ -1,5 +1,6 @@
 //! The screen stack (spec §6): every modal screen — main menu, new run, pause, settings,
-//! controls, and the `?` help — lives on one stack, bottom to top.
+//! controls, the `?` help, the inventory, and choosing what to pick up or drop — lives on one
+//! stack, bottom to top.
 //!
 //! - **Open**: [`Screens::open`] is the one way to open a screen, by [`ScreenName`]: `?` and Esc
 //!   in play, screens opening sub-screens, the main menu at startup and after a run, and
@@ -8,7 +9,8 @@
 //! - **Input**: `input::route_keys` is the one reader of key presses. While the stack is not
 //!   empty, its top screen gets every press ([`ScreenStack::handle`]) and gameplay none. Back or
 //!   Esc closes (pops) the top screen; choices that start, leave, or end a run ([`MenuChoice`])
-//!   are applied by [`apply_choice`].
+//!   are applied by [`apply_choice`]. A screen that chooses a gameplay action (what to pick up
+//!   or drop) closes and hands the action to the simulation ([`ScreenAction::Act`]).
 //! - **Draw**: `ui::draw` clears the UI console, draws the gameplay UI when a run exists, then
 //!   the top screen ([`ScreenStack::draw`]).
 //!
@@ -19,6 +21,7 @@ use super::controls_screen::ControlsScreen;
 use super::menu::{MainMenu, Press};
 use super::motion::Motion;
 use super::new_run_screen::NewRunScreen;
+use super::object_screen::{ObjectList, ObjectScreen};
 use super::settings_screen::SettingsScreen;
 use crate::cli::Args;
 use crate::game::{Game, GameContent};
@@ -30,7 +33,9 @@ use crate::settings::Settings;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use clap::ValueEnum;
+use warlock_core::Action;
 use warlock_core::content::Content;
+use warlock_core::perception::PerceptionView;
 
 /// The screens that can be opened. Also the values of `--screen`, a dev flag for screenshots.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
@@ -44,6 +49,26 @@ pub enum ScreenName {
     Pause,
     /// The controls list over a run, read-only (`?` in play).
     Help,
+    /// What the player carries and weighs (`i` in play).
+    Inventory,
+    /// Choose what to pick up from the pile here (`,` or `g` where several objects lie).
+    PickUp,
+    /// Choose what to drop (`d` in play).
+    Drop,
+}
+
+impl ScreenName {
+    /// Screens that show something of a run and open only over one.
+    pub fn needs_run(self) -> bool {
+        matches!(
+            self,
+            ScreenName::Pause
+                | ScreenName::Help
+                | ScreenName::Inventory
+                | ScreenName::PickUp
+                | ScreenName::Drop
+        )
+    }
 }
 
 /// A menu choice that starts, leaves, or ends a run; applied by [`apply_choice`].
@@ -70,6 +95,8 @@ pub enum ScreenAction {
     /// Open a screen on top.
     Open(ScreenName),
     Choose(MenuChoice),
+    /// Close this screen and apply a gameplay action (what to pick up or drop).
+    Act(Action),
 }
 
 /// A modal screen.
@@ -81,10 +108,19 @@ enum Screen {
     Settings(SettingsScreen),
     /// The controls screen, or the read-only `?` help.
     Controls(ControlsScreen),
+    /// The inventory, or choosing what to pick up or drop.
+    Objects(ObjectScreen),
 }
 
 impl Screen {
-    fn new(name: ScreenName, content: &Content, has_save: bool) -> Self {
+    /// Screen `name`; `run` is what the player perceives in the run, if there is one.
+    fn new(
+        name: ScreenName,
+        content: &Content,
+        has_save: bool,
+        run: Option<&PerceptionView<'_>>,
+    ) -> Self {
+        let objects = |list| Screen::Objects(ObjectScreen::new(list, run));
         match name {
             ScreenName::Main => Screen::Menu(MainMenu::main(has_save)),
             ScreenName::Pause => Screen::Menu(MainMenu::pause()),
@@ -92,6 +128,9 @@ impl Screen {
             ScreenName::Settings => Screen::Settings(SettingsScreen::default()),
             ScreenName::Controls => Screen::Controls(ControlsScreen::default()),
             ScreenName::Help => Screen::Controls(ControlsScreen::help()),
+            ScreenName::Inventory => objects(ObjectList::Inventory),
+            ScreenName::PickUp => objects(ObjectList::PickUp),
+            ScreenName::Drop => objects(ObjectList::Drop),
         }
     }
 
@@ -104,6 +143,11 @@ impl Screen {
             Screen::Settings(_) => ScreenName::Settings,
             Screen::Controls(screen) if screen.is_help() => ScreenName::Help,
             Screen::Controls(_) => ScreenName::Controls,
+            Screen::Objects(screen) => match screen.list() {
+                ObjectList::Inventory => ScreenName::Inventory,
+                ObjectList::PickUp => ScreenName::PickUp,
+                ObjectList::Drop => ScreenName::Drop,
+            },
         }
     }
 }
@@ -161,6 +205,7 @@ impl ScreenStack {
             Some(Screen::NewRun(screen)) => screen.handle(press),
             Some(Screen::Settings(screen)) => leave(screen.handle(press, settings)),
             Some(Screen::Controls(screen)) => leave(screen.handle(press, bindings)),
+            Some(Screen::Objects(screen)) => screen.handle(press, bindings),
         };
         if action == ScreenAction::Stay {
             return action;
@@ -193,6 +238,7 @@ impl ScreenStack {
             Some(Screen::NewRun(screen)) => screen.draw(console),
             Some(Screen::Settings(screen)) => screen.draw(console, settings),
             Some(Screen::Controls(screen)) => screen.draw(console, bindings),
+            Some(Screen::Objects(screen)) => screen.draw(console, bindings),
         }
     }
 }
@@ -203,12 +249,15 @@ pub struct Screens<'w> {
     pub stack: ResMut<'w, ScreenStack>,
     content: Res<'w, GameContent>,
     store: Res<'w, SaveStore>,
+    /// The run, for screens that show what the player perceives (the inventory, a pile).
+    game: Option<Res<'w, Game>>,
 }
 
 impl Screens<'_> {
     /// Opens screen `name` on top of the stack. The one way screens open.
     pub fn open(&mut self, name: ScreenName) {
-        let screen = Screen::new(name, &self.content.0, self.store.has_save());
+        let view = self.game.as_ref().map(|game| game.world.perception());
+        let screen = Screen::new(name, &self.content.0, self.store.has_save(), view.as_ref());
         self.stack.screens.push(screen);
     }
 }
@@ -229,7 +278,7 @@ fn startup_screens(screen: Option<ScreenName>, in_run: bool) -> Vec<ScreenName> 
         (false, Some(s @ (NewRun | Settings | Controls))) => vec![Main, s],
         (false, _) => vec![Main],
         (true, Some(s @ (Settings | Controls))) => vec![Pause, s],
-        (true, Some(s @ (Pause | Help))) => vec![s],
+        (true, Some(s)) if s.needs_run() => vec![s],
         (true, _) => Vec::new(),
     }
 }
@@ -316,11 +365,30 @@ mod tests {
         stack.handle(&press, &mut s, &mut b)
     }
 
+    /// The showcase at its start, standing on the start room's pile (three stacks), having
+    /// picked up its first stack.
+    fn on_the_pile(content: Arc<Content>) -> warlock_core::World {
+        let mut world = warlock_core::World::new(content, "showcase", None).expect("run");
+        for action in [
+            Action::Move(Dir::SW),
+            Action::Move(Dir::SW),
+            Action::PickUp(warlock_core::Letters::of([0])),
+        ] {
+            world.apply(&action);
+        }
+        world
+    }
+
     fn stack_of(names: &[ScreenName], has_save: bool) -> ScreenStack {
         let content = content();
+        let world = on_the_pile(content.clone());
+        let view = world.perception();
         let mut stack = ScreenStack::default();
         for name in names {
-            stack.screens.push(Screen::new(*name, &content, has_save));
+            let run = name.needs_run().then_some(&view);
+            stack
+                .screens
+                .push(Screen::new(*name, &content, has_save, run));
         }
         stack
     }
@@ -335,7 +403,9 @@ mod tests {
             press(&mut stack, Press::nav(Nav::Enter)),
             ScreenAction::Open(Settings)
         );
-        stack.screens.push(Screen::new(Settings, &content(), false));
+        stack
+            .screens
+            .push(Screen::new(Settings, &content(), false, None));
         assert_eq!(stack.names(), [Pause, Settings]);
         assert_eq!(
             press(&mut stack, Press::nav(Nav::Back)),
@@ -397,6 +467,9 @@ mod tests {
         assert_eq!(startup_screens(Some(Pause), true), [Pause]);
         assert_eq!(startup_screens(Some(Help), true), [Help]);
         assert_eq!(startup_screens(Some(Settings), true), [Pause, Settings]);
+        assert_eq!(startup_screens(Some(Inventory), true), [Inventory]);
+        assert_eq!(startup_screens(Some(PickUp), true), [PickUp]);
+        assert_eq!(startup_screens(Some(Drop), false), [Main]);
     }
 
     #[test]
@@ -440,6 +513,12 @@ mod tests {
     /// An app with the router and the screen systems, on the main menu or in a run.
     fn app(run: bool) -> App {
         let content = content();
+        let game = run.then(|| Game::new_run(content.clone(), "showcase", None).expect("run"));
+        app_with(content, game)
+    }
+
+    /// An app with the router and the screen systems, in `game` or on the main menu.
+    fn app_with(content: Arc<Content>, game: Option<Game>) -> App {
         let args = Args::parse_from(["warlock", "--capture", "unused.png"]);
         let mut app = App::new();
         app.add_message::<KeyboardInput>()
@@ -457,10 +536,13 @@ mod tests {
             .init_resource::<MapGrid>()
             .init_resource::<Actions>()
             .add_systems(Update, (route_keys, apply_choice, count_actions).chain());
-        if run {
-            app.insert_resource(Game::new_run(content, "showcase", None).expect("run"));
-        } else {
-            app.add_systems(Startup, open_startup_screens);
+        match game {
+            Some(game) => {
+                app.insert_resource(game);
+            }
+            None => {
+                app.add_systems(Startup, open_startup_screens);
+            }
         }
         app
     }
@@ -604,6 +686,58 @@ mod tests {
         );
         frame(&mut app, &[WAIT]);
         assert_eq!(actions(&app), [Action::Wait]);
+    }
+
+    #[test]
+    fn pick_up_drop_and_inventory_open_screens_that_choose_actions() {
+        use warlock_core::Letters;
+        let content = content();
+        let game = Game::from_world(on_the_pile(content.clone()));
+        let mut app = app_with(content, Some(game));
+        // Two stacks are left on the pile: `,` opens the choice; a letter and Enter pick up,
+        // and the next press in the same frame is gameplay again.
+        let (comma, b, i, d) = (
+            (KeyCode::Comma, ","),
+            (KeyCode::KeyB, "b"),
+            (KeyCode::KeyI, "i"),
+            (KeyCode::KeyD, "d"),
+        );
+        frame(&mut app, &[comma]);
+        assert_eq!(names(&app), [ScreenName::PickUp]);
+        frame(&mut app, &[b, ENTER, WAIT]);
+        assert!(names(&app).is_empty());
+        assert_eq!(
+            actions(&app),
+            [Action::PickUp(Letters::of([1])), Action::Wait]
+        );
+        // `g` picks up too; Esc cancels without an action.
+        frame(&mut app, &[(KeyCode::KeyG, "g"), ESC]);
+        assert!(names(&app).is_empty());
+        assert_eq!(actions(&app).len(), 2);
+        // The inventory opens and closes on `i`; `d` chooses what to drop.
+        frame(&mut app, &[i]);
+        assert_eq!(names(&app), [ScreenName::Inventory]);
+        frame(&mut app, &[i]);
+        assert!(names(&app).is_empty());
+        frame(&mut app, &[d, ENTER]);
+        assert_eq!(actions(&app).last(), Some(&Action::Drop(Letters::of([0]))));
+        assert!(names(&app).is_empty());
+    }
+
+    #[test]
+    fn single_stacks_and_empty_hands_need_no_screen() {
+        use warlock_core::Letters;
+        let mut app = app(true);
+        // Nothing here and nothing carried: the actions are refused by the core, no screen.
+        frame(&mut app, &[(KeyCode::Comma, ","), (KeyCode::KeyD, "d")]);
+        assert!(names(&app).is_empty());
+        assert_eq!(
+            actions(&app),
+            [
+                Action::PickUp(Letters::default()),
+                Action::Drop(Letters::default())
+            ]
+        );
     }
 
     #[test]

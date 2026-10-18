@@ -77,8 +77,9 @@ pub struct Args {
     pub config_dir: Option<PathBuf>,
 
     /// Dev: open this screen at startup, even with `--capture`. `main` and `new-run` open on the
-    /// main menu; `pause` and `help` over a run; `settings` and `controls` over the main menu, or
-    /// over the pause menu when `--scenario`, `--new`, `--replay`, or `--record` names a run.
+    /// main menu; `pause`, `help`, `inventory`, `pick-up`, and `drop` over a run; `settings` and
+    /// `controls` over the main menu, or over the pause menu when `--scenario`, `--new`,
+    /// `--replay`, or `--record` names a run.
     #[arg(long, value_enum)]
     pub screen: Option<ScreenName>,
 
@@ -103,8 +104,8 @@ impl Args {
             self.scenario.is_some() || self.new || self.replay.is_some() || self.record.is_some();
         match self.screen {
             Some(ScreenName::Main | ScreenName::NewRun) => true,
-            Some(ScreenName::Pause | ScreenName::Help) => false,
-            Some(ScreenName::Settings | ScreenName::Controls) => !names_run,
+            Some(s) if s.needs_run() => false,
+            Some(_) => !names_run,
             None => !names_run && self.capture.is_none(),
         }
     }
@@ -146,6 +147,8 @@ mod tests {
         assert!(!menu(&["--screen", "help", "--capture", "x.png"]));
         assert!(menu(&["--screen", "controls", "--capture", "x.png"]));
         assert!(!menu(&["--screen", "settings", "--replay", "r.json"]));
+        assert!(!menu(&["--screen", "inventory", "--capture", "x.png"]));
+        assert!(!menu(&["--screen", "pick-up"]));
     }
 
     #[test]

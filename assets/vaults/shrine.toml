@@ -15,3 +15,8 @@ map = '''
 
 [legend]
 "t" = "sconce"
+
+# Objects (M11): an offering left before the altar.
+[[pile]]
+at = [4, 2]
+objects = ["jade_amulet"]

@@ -52,12 +52,12 @@ regression scene for golden screenshots, replays, and snapshot tests.
 
 | Room | Demonstrates | Milestone |
 |---|---|---|
-| Start room | movement, message line, `?` help | M1 |
-| Door corridor | opening/closing doors, doors blocking sight | M1–M2 |
-| Patrol gallery | creatures moving in and out of view, never shown in memory; a giant rat and a quicker cave bat on parallel lanes, a slower torch-bearing kobold circling them; heard from the corridor behind its closed door, and in its dark middle (the bat flies silently) | M2, M10 |
+| Start room | movement, message line, `?` help; gold and a small pile to pick up | M1, M11 |
+| Door corridor | opening/closing doors, doors blocking sight; a storeroom and a pantry of objects | M1–M2, M11 |
+| Patrol gallery | creatures moving in and out of view, never shown in memory; a giant rat and a quicker cave bat on parallel lanes, a slower torch-bearing kobold circling them (carrying a sword and coins); heard from the corridor behind its closed door, and in its dark middle (the bat flies silently) | M2, M10, M11 |
 | Light hall | colored lights, falloff, pillar and creature shadows, steady magical light | M3, M8 |
-| Darkness chamber | vision types, a UV-only rune, darkvision fade | M3 |
-| Water garden | still ponds and running rills (flow, glints, foam), pulsing altar | M4, M8 |
+| Darkness chamber | vision types, a UV-only rune, darkvision fade; an amulet seen only by those who see in the dark | M3, M11 |
+| Water garden | still ponds and running rills (flow, glints, foam), pulsing altar with a ring before it | M4, M8, M11 |
 | Effects room | glyph particles, glow, fades, distortion | M4 |
 | Stairs | connection to Level 2 (down), the courtyard and the overworld (up) | M2, M9 |
 
@@ -65,7 +65,8 @@ regression scene for golden screenshots, replays, and snapshot tests.
 trees, a ruined wall, a pond, standing stones, flower beds, and a roofed gazebo with a lamp — where
 sunlight, sky light, and shadows turn and stretch with the time of day (§5 "Sunlight"; M9), and the
 moon lights it faintly by night, waxing and waning with the month (§5 "Moonlight"; M12). The
-`courtyard` scenario starts there at 06:30, while the shadows are long.
+`courtyard` scenario starts there at 06:30, while the shadows are long. Windfall apples lie under
+a tree, and a candle and a scroll in the gazebo (M11).
 
 **Level 2 — Vast (≥ 400×300)**: scrolling camera, many light sources, performance budget check.
 Introduced in M2, lit in M3. Beside its stairs up to the hub, stairs down lead into the depths and
@@ -138,8 +139,9 @@ Plains, Mirefen, Greyspine Mountains) show in the status bar.
 
 ### 4.2 Layers
 1. **Grid layer** — viewport-sized textures (glyph index, foreground, background, visual light,
-   perception state) drawn as one quad with a custom 2D material. Terrain, remembered terrain, and
-   in-cell animation.
+   perception state) drawn as one quad with a custom 2D material. Terrain, remembered terrain,
+   objects (the top object of each pile in place of the terrain's glyph, over its background, lit
+   like terrain; a cell with objects does not animate), and in-cell animation.
 2. **Free-glyph layer** — instanced glyph quads from the same atlas for actors, particles, and
    anything that moves between cells or grows beyond its cell. Lit by sampling the light texture.
 3. **UI layer** — panels, message log, and overlays, drawn in glyphs.
@@ -240,7 +242,8 @@ Water is calm by design; motion stays tasteful, never busy:
 
 ### 4.5 Perception states
 - **Visible** — fully lit rendering, including creatures and effects.
-- **Remembered** — dim, desaturated terrain as last seen. Never creatures, effects, or current light.
+- **Remembered** — dim, desaturated terrain and objects as last seen. Never creatures, effects, or
+  current light.
 - **Unknown** — blank.
 
 ### 4.6 Motion and time
@@ -426,7 +429,12 @@ rate or animation.
 
   The scenario sets the starting profile. The dev action `SetVision` switches it; it takes no game
   time but is recorded in replays like any action. Infravision is deferred.
-- **Memory**: per level, terrain only, as last seen (a door is remembered open until seen closed).
+- **Objects are seen** where creatures are: on cells in line of sight that are visible (never on
+  completed walls). The player's own cell is always visible, so they always know what lies under
+  them. What creatures carry is never seen.
+- **Memory**: per level, terrain and piles of objects, as last seen (a door is remembered open
+  until seen closed; a pile is remembered as it lay when last in sight, even if it changed out of
+  sight since, and is forgotten once seen gone). Never creatures.
 - **Recomputation**: perception updates in the perception phase of every turn (and after
   `SetVision`). Per-light shadow masks are cached and invalidated when the light moves or opacity
   changes within its radius; only sources whose radius can reach the view range (or a surface whose
@@ -492,8 +500,8 @@ rate or animation.
 - Symbol commands (`<`, `>`, `?`) are bound by **logical key**, so they work on non-US layouts.
 - Bindings live in the settings file. The `?` help (the controls list, read-only) is generated from
   the binding table, so it is always accurate.
-- **Screens**: the main menu, New run, pause menu, Settings, Controls, and help are modal screens on
-  one stack. Opening a screen puts it on top; Esc or Back closes it and returns to the screen
+- **Screens**: the main menu, New run, pause menu, Settings, Controls, help, the inventory, and
+  choosing what to pick up or drop are modal screens on one stack. Opening a screen puts it on top; Esc or Back closes it and returns to the screen
   below as it was left. While any screen is open it receives every key press, the run (if any)
   stays visible beneath it, and no game time passes. Prompts in the message line (a direction
   to open or close, how long to rest, look mode) are not screens.
@@ -512,8 +520,32 @@ rate or animation.
   is named, so the table never holds a conflict. Esc (cancel) is fixed. Delete resets a command,
   "Reset all keys" resets everything.
 - First-phase commands: move, wait, open/close door, ascend/descend, light/douse lantern (`L`),
-  rest (`R`), look, help, save and quit (`Q`). Free actions (look, help, menus, vision switch) do
-  not advance time.
+  pick up (`,` or `g`), drop (`d`), inventory (`i`), rest (`R`), look, help, save and quit (`Q`).
+  Free actions (look, help, the inventory, menus, vision switch) do not advance time.
+- **Objects** (M11) lie in piles on cells, the top first: the map shows the top object's glyph
+  (§4.2), and dropped objects go on top. Stepping onto a pile says what lies there: `You see here
+  a dagger.` for one stack, `There are several objects here.` for more. Look mode names what lies
+  on a cell, seen or remembered: `a dagger`, `a dagger and 12 arrows`, up to three stacks, then a
+  count (`17 objects`). A stack is some number of one object: stackable objects (coins, arrows,
+  potions) join a stack of the same object wherever they go; any other object is a stack of one.
+  A door does not close on objects in its doorway.
+- **Pick up** (`,` or `g`) takes a lone stack at once. Where several lie, a screen lists them by
+  letter (`a` the top) with glyph, name, and weight: a letter marks or unmarks its stack (`+`
+  marked, `-` not), `,` marks everything, the arrows move the `>` cursor and Space marks its row,
+  Enter picks up the marked stacks (the cursor's row if none is marked), Esc cancels. **Drop**
+  (`d`) chooses from the inventory the same way. Picking up and dropping are one action each
+  (replay text `pickup:ac`, `drop:b`; `pickup` and `drop` alone take everything) and take the
+  level's turn; with nothing there or nothing carried, they are refused and take none.
+- **Inventory** (`i`): what the player carries, ADOM-like: stacks lettered `a` to `z` in the order
+  they were picked up (at most 26; a pile with more stacks keeps what does not fit), each with its
+  glyph, name, and weight, then what the player carries and their weight (their own plus what
+  they carry). Read-only; `i` or Esc closes it.
+- **Weight**: every object and every creature (the player included) has a weight in grams. An
+  actor weighs its creature's base weight plus everything it carries; the rules know every
+  actor's weight (no rule uses it yet; footstep noise, §5 "Hearing", may), but the player is shown
+  only their own.
+  Creatures carry objects from their spawn (`carry`, §7); nothing makes them drop anything yet.
+  Weights read `450 g` below a kilogram and `3.5 kg` above.
 - **Rest** (`R`) asks in the message line: `Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to
   cancel)`. `h` rests an hour, `d` until 06:00, `n` until 18:00 (replay text `rest:1h`,
   `rest:dawn`, `rest:dusk`); any other command cancels. Resting is one action that passes turn
@@ -575,6 +607,12 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   creature = "rat"
   path = [[12, 3], [20, 3], [20, 8]]
   ```
+- **Objects in level files** (M11): a legend entry places a pile with `objects = ["dagger",
+  "arrow*12"]` (top first; `*N` places N, as one stack if the object is stackable, else as N
+  stacks of one), and a creature's entry gives what it carries with `carry = ["spear",
+  "copper_coin*7"]` (at most 26 stacks). `[[pile]] at = [x, y] objects = [...]` places a pile
+  without a legend character (on top of the legend's there, if any). Objects lie only on walkable
+  terrain. Vaults place objects the same way, and generators stamp them with the vault.
 - **Water**: `~` is still water (`water`). Running water (`running_water`, terrain with a `flow`
   animation) needs a flow on every cell, given by its legend entry: `flow` (the direction it runs,
   `N` … `NW`) and an optional `flow_speed` (percent of the terrain's animation speed, 10–300,
@@ -615,6 +653,14 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   1 to 400, default 100; its light scales with the square), `period_days` (new moon to new moon,
   1 to 3600), and `phase_offset_days` (its age at the calendar epoch, less than the period,
   default 0). §5 "Moonlight".
+- **Objects and materials** (M11): every object (`[[object]]` in `data/objects.toml`) defines the
+  symbol it renders with and its color, material, and weight: `id`, `name` (singular, without an
+  article; `plural` defaults to the name plus `s`), `glyph`, `fg`, `material` (an id in
+  `data/materials.toml`, whose `[[material]]` entries have an `id` and a `name`; properties come
+  later), `weight` (integer grams, at least 1), and `stackable` (default false). Glyphs follow
+  ADOM loosely: `)` weapons, `}` missile weapons, `/` missiles, `[` armor, `(` tools, `!`
+  potions, `?` scrolls, `%` food, `*` stones and gems, `$` coins, `=` rings, `"` amulets.
+  Every creature in `data/creatures.toml` has a base `weight` in grams (required, at least 1).
 - **Dungeon branches** (`data/dungeons.toml`): stacks of generated levels, e.g.
   `{ id = "depths", generator = "rooms", depth = 8, size = [80, 21] }`, plus optional name,
   patrolling creature kinds, ambient light, and per-depth overrides of generator and size. Stairs
@@ -653,7 +699,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   cell is reachable from it (4-connected), every side has at least 3 walkable cells, running water
   and only running water has a flow, and patrols are valid.
 - **Vaults** (`assets/vaults/*.toml`): hand-made pieces in the level-file format, stamped verbatim
-  (terrain, lights, creatures) where they fit — into rock with room for corridors or tunnels to
+  (terrain, lights, objects, creatures) where they fit — into rock with room for corridors or tunnels to
   every entrance. A vault's edge is solid except for its entrances (doors, not on a corner); it has
   no stairs or player start, and all its walkable cells are reachable from an entrance. Vaults of
   `kind = "outdoor"` are ruins for local areas, stamped on open land with a ring of open ground
@@ -668,15 +714,15 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   version, game version) around a JSON payload, gzip-compressed with a pure-Rust backend, written
   atomically (temp file + rename). Before 1.0, incompatible saves are rejected with a clear message;
   from 1.0 on, saves are migrated. The web build keeps the same bytes in the browser's
-  `localStorage` (below). The envelope also records a
-  content fingerprint (hash of the ordered terrain, creature, level, light, and dungeon-branch
-  ids), because ids are indices; a save made with different content is rejected. Generated levels
-  are saved with the run like visited hand-made ones (terrain, memory, stairs, lights, kind and
-  turn length, arrival point, and edge exit), together with the gameplay random stream, the game
-  clock, every actor's scheduler energy (§8 "Speed"), the direction of the last overworld step
-  (format version 5; saves without the step load with none), what each actor heard and has not
-  yet acted on, and the sounds the player perceived lately (§5 "Hearing"; saves without them load
-  with none). The save is `run.sav` in the platform
+  `localStorage` (below). The envelope also records a content fingerprint (hash of the ordered
+  terrain, creature, level, light, dungeon-branch, and object ids), because ids are indices; a
+  save made with different content is rejected. Generated levels are saved with the run like
+  visited hand-made ones (terrain, memory, stairs, lights, kind and turn length, arrival point,
+  edge exit, piles of objects and the piles as remembered), together with the gameplay random
+  stream, the game clock, every actor's scheduler energy (§8 "Speed"), the direction of the last
+  overworld step (saves without the step load with none), what each actor heard and has not yet
+  acted on, the sounds the player perceived lately (§5 "Hearing"; saves without them load with
+  none), and what every actor carries (format version 6). The save is `run.sav` in the platform
   data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
   and on level change, and a save that cannot be read is renamed `run.sav.bad`, never deleted, while
   a new run starts. Starting resumes the save unless `--new` is given. Dev snapshots: `F5` saves and
@@ -706,8 +752,9 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
 - **Pure core**: `warlock-core` has no Bevy dependency, no platform I/O inside the rules, and no
   wall-clock time. It builds and tests in seconds and is insulated from Bevy upgrades.
 - **Data layout**: dense grids for terrain, light, and memory; a simple entity store with stable ids
-  for actors. ECS is used in the presentation layer, where it helps with effects, particles, and
-  animation.
+  for actors; objects as stacks (object id and count) in sparse piles by position, remembered
+  piles beside them, and an inventory on each actor. ECS is used in the presentation layer, where
+  it helps with effects, particles, and animation.
 - **Perception snapshot**: after each turn, the core produces what the player perceives. The
   renderer, UI, and dumps read only this snapshot, so hidden information cannot leak by construction
   (a dev "reveal" mode excepted).
@@ -796,19 +843,23 @@ cargo xtask golden [--update]                             # compare golden scree
 
 - Replays are JSON: `{game_version, scenario, seed, steps: [{action, hash}]}`. Actions use a text
   syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
-  vision:darkvision skip:1h`; durations are a whole number with `s`, `m`, or `h`, a rest at most
-  `24h`); `hash` is the
+  pickup pickup:ac drop drop:b vision:darkvision skip:1h`; durations are a whole number with `s`,
+  `m`, or `h`, a rest at most `24h`; letters name stacks of the pile or the inventory, `a` first,
+  and without letters `pickup` and `drop` take everything); `hash` is the
   FNV-1a 64 hash of the
   canonical JSON encoding of `WorldState` after the step. Verification reports the first
   diverging step. `--replay` takes its scenario and seed from the file; `--record` rewrites its
   file after every action (including replayed steps).
-- Dump layers: `view`, `fov`, `memory`, `light` (perceived brightness of each visible cell as a
-  digit, `0` dark to `9` fully lit or brighter), `sound` (the view with each heard sound at its
-  rough place: `f` footsteps, `o` a door opening, `c` a door closing, upper case when loud) are
-  built from the perception snapshot only; `truth` shows ground truth and is dev-only. JSON dumps
+- Dump layers: `view`, `fov`, `memory` (terrain and the top object of each known pile), `light`
+  (perceived brightness of each visible cell as a digit, `0` dark to `9` fully lit or brighter),
+  `sound` (the view with each heard sound at its rough place: `f` footsteps, `o` a door opening,
+  `c` a door closing, upper case when loud), and `inventory` (what the player carries, by letter
+  with weights, then what they carry and weigh) are built from the perception snapshot only;
+  `truth` (terrain, objects, and creatures) and `actors` (every actor on the level with its
+  weight, base plus carried, and what it carries) show ground truth and are dev-only. JSON dumps
   carry turn, game time (seconds and calendar fields), level, viewer, seen actors, heard sounds,
-  recent messages, and optionally the full world state; the ASCII header line has the turn, the
-  time (`0001-01-01 08:00:00`), level, viewer, and hash.
+  the player's inventory and weight, recent messages, and optionally the full world state; the
+  ASCII header line has the turn, the time (`0001-01-01 08:00:00`), level, viewer, and hash.
 - Freezing visual time and fixing window size and scale make screenshots reproducible. With frozen
   time, glyph animations show that moment and motion (slides, camera) completes instantly.
 - Dev builds add in-game commands: switch vision profile (`F3`), reveal map (`F2`, ground truth,

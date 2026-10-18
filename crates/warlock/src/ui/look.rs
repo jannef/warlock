@@ -4,13 +4,15 @@
 use crate::render::console::{Cell, Console};
 use warlock_core::Pos;
 use warlock_core::color::Rgb;
+use warlock_core::object::phrase;
 use warlock_core::perception::{CellView, PerceptionView};
 
 /// Cursor colors: dark glyph on a warm highlight, so it reads on any terrain and under any light.
 const CURSOR_FG: Rgb = Rgb::new(0x14, 0x12, 0x10);
 const CURSOR_BG: Rgb = Rgb::new(0xe0, 0xc0, 0x70);
 
-/// One line describing what the player knows about `p`.
+/// One line describing what the player knows about `p`: who is there, what lies there (as seen
+/// or remembered), on what, and what was heard there.
 pub fn describe(view: &PerceptionView<'_>, p: Pos) -> String {
     let content = view.content();
     // Stairs and locations name where they lead: "a staircase down, leading to The Depths 1".
@@ -20,24 +22,34 @@ pub fn describe(view: &PerceptionView<'_>, p: Pos) -> String {
     };
     // A sound heard there (never on a cell the player sees): "You hear footsteps here."
     let heard = view.sound_at(p).map(|s| s.you_hear());
+    // "a dagger", "a dagger and 12 arrows", "17 objects".
+    let objects = view.objects(p);
+    let things = (!objects.is_empty()).then(|| phrase(objects, content));
+    let here = things
+        .as_ref()
+        .map_or(String::new(), |o| format!("; here: {o}"));
+    // What the player remembers at a cell out of sight.
+    let memory = |t| match &things {
+        Some(things) => format!("{things} on {}", terrain(t)),
+        None => with_article(&terrain(t)),
+    };
     match (view.cell(p), heard) {
-        (CellView::Visible(t), _) => match view.actor_at(p) {
-            Some(_) if p == view.viewer() => format!("You, on {}.", terrain(t)),
-            Some(actor) => {
+        (CellView::Visible(t), _) => match (view.actor_at(p), &things) {
+            (Some(_), _) if p == view.viewer() => format!("You, on {}{here}.", terrain(t)),
+            (Some(actor), _) => {
                 let name = &content.creature(actor.creature).name;
-                format!("{} {name}, on {}.", article(name), terrain(t))
+                format!("{} {name}, on {}{here}.", article(name), terrain(t))
             }
-            None => format!("{}.", capitalize(&with_article(&terrain(t)))),
+            (None, Some(things)) => format!("{}, on {}.", capitalize(things), terrain(t)),
+            (None, None) => format!("{}.", capitalize(&with_article(&terrain(t)))),
         },
         (CellView::Remembered(t), Some(heard)) => {
-            format!(
-                "{heard} here, where you remember {}.",
-                with_article(&terrain(t))
-            )
+            format!("{heard} here, where you remember {}.", memory(t))
         }
-        (CellView::Remembered(t), None) => {
-            format!("You remember {} here.", with_article(&terrain(t)))
-        }
+        (CellView::Remembered(t), None) => match &things {
+            Some(things) => format!("You remember {things} here, on {}.", terrain(t)),
+            None => format!("You remember {} here.", with_article(&terrain(t))),
+        },
         (CellView::Unknown, Some(heard)) => format!("{heard} here."),
         (CellView::Unknown, None) => "You don't know what is there.".to_string(),
     }
@@ -65,11 +77,15 @@ fn capitalize(text: &str) -> String {
 /// Draws the cursor at console cell `(x, y)`, showing what the player perceives there.
 pub fn draw_cursor(console: &mut Console, x: i32, y: i32, view: &PerceptionView<'_>, p: Pos) {
     let content = view.content();
-    let ch = match (view.cell(p), view.actor_at(p)) {
-        (CellView::Visible(_), Some(actor)) => content.creature(actor.creature).glyph,
+    let top = view.objects(p).first();
+    let ch = match (view.cell(p), view.actor_at(p), top) {
+        (CellView::Visible(_), Some(actor), _) => content.creature(actor.creature).glyph,
         _ if view.sound_at(p).is_some() => super::sounds::MARKER,
-        (CellView::Visible(t) | CellView::Remembered(t), _) => content.terrain(t).glyph,
-        (CellView::Unknown, _) => ' ',
+        (CellView::Visible(_) | CellView::Remembered(_), None, Some(top)) => {
+            content.object(top.object).glyph
+        }
+        (CellView::Visible(t) | CellView::Remembered(t), _, _) => content.terrain(t).glyph,
+        (CellView::Unknown, _, _) => ' ',
     };
     console.put(
         x,
@@ -169,6 +185,45 @@ mod tests {
             text == "You hear footsteps here." || text == "You faintly hear footsteps here.",
             "{text}"
         );
+    }
+
+    #[test]
+    fn objects_are_named_where_they_lie_and_where_they_are_remembered() {
+        let mut w = world();
+        let gold = Pos::new(10, 14);
+        let pile = Pos::new(5, 17);
+        assert_eq!(
+            describe(&w.perception(), gold),
+            "12 gold coins, on stone floor."
+        );
+        assert_eq!(
+            describe(&w.perception(), pile),
+            "A leather jerkin, a dagger, and 2 wax candles, on stone floor."
+        );
+        w.apply(&Action::Move(Dir::SW));
+        w.apply(&Action::Move(Dir::SW));
+        assert_eq!(
+            describe(&w.perception(), pile),
+            "You, on stone floor; here: a leather jerkin, a dagger, and 2 wax candles."
+        );
+        // Out of the room, the gold is remembered.
+        for dir in [Dir::NE, Dir::NE, Dir::N, Dir::N, Dir::N] {
+            w.apply(&Action::Move(dir));
+        }
+        w.apply(&Action::Open(Dir::N));
+        for _ in 0..3 {
+            w.apply(&Action::Move(Dir::N));
+        }
+        w.apply(&Action::Move(Dir::E));
+        for _ in 0..8 {
+            w.apply(&Action::Move(Dir::E));
+        }
+        let text = describe(&w.perception(), gold);
+        assert_eq!(text, "You remember 12 gold coins here, on stone floor.");
+        let mut console = Console::default();
+        console.resize(3, 1);
+        draw_cursor(&mut console, 1, 0, &w.perception(), gold);
+        assert_eq!(console.get(1, 0).map(|c| c.ch), Some('$'));
     }
 
     #[test]

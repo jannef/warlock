@@ -1,8 +1,9 @@
 //! `cargo xtask wiki [--check | --build]`: the player wiki's generated tables.
 //!
 //! The wiki (`wiki/`, built with mdBook) is written by hand except for facts that live in data
-//! (month names, moons, terrain, vision profiles, light presets, creatures) and a few constants of the
-//! rules. Those are written to `wiki/src/generated/*.md` from the built-in content, and the pages
+//! (month names, moons, terrain, vision profiles, light presets, creatures, objects and materials)
+//! and a few constants of the rules (sight radii, the pack's size). Those are written to
+//! `wiki/src/generated/*.md` from the built-in content, and the pages
 //! pull them in with `{{#include generated/NAME.md}}`, so they cannot drift. Output is
 //! deterministic. `--check` fails when a file is stale; `--build` also runs `mdbook build wiki`.
 
@@ -16,6 +17,7 @@ use warlock_core::daylight::{
     MOONLIGHT_PER_CELL, SIGHT_DAY, SIGHT_MOONLIT, SIGHT_NIGHT, SIGHT_TWILIGHT, overworld_sight,
 };
 use warlock_core::light::{Light, Moon};
+use warlock_core::object::{INVENTORY_SLOTS, format_weight};
 use warlock_core::perception::VIEW_RADIUS;
 use warlock_core::time::{DAY, Duration, GameTime};
 
@@ -111,6 +113,9 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("lights.md".to_string(), lights(content)),
         ("creatures.md".to_string(), creatures(content)),
         ("footsteps.md".to_string(), footsteps(content)),
+        ("objects.md".to_string(), objects(content)),
+        ("materials.md".to_string(), materials(content)),
+        ("pack.md".to_string(), pack(content)),
     ];
     for (_, text) in &mut files {
         *text = format!(
@@ -423,6 +428,78 @@ fn creatures(content: &Content) -> String {
     out
 }
 
+/// What a glyph means for objects (ADOM-like classes); `None` for a glyph no class uses.
+fn object_class(glyph: char) -> Option<&'static str> {
+    Some(match glyph {
+        ')' => "weapon",
+        '}' => "missile weapon",
+        '/' => "missile",
+        '[' => "armor",
+        '(' => "tool",
+        '!' => "potion",
+        '?' => "scroll",
+        '%' => "food",
+        '*' => "stone or gem",
+        '$' => "coin",
+        '=' => "ring",
+        '"' => "amulet",
+        _ => return None,
+    })
+}
+
+fn objects(content: &Content) -> String {
+    let mut out = String::from(
+        "| Object | Glyph | Kind | Material | Weight (each) | Stacks |\n\
+         |---|:---:|---|---|---:|:---:|\n",
+    );
+    for o in content.object_defs() {
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} | {} | {} |",
+            capital(&o.name),
+            glyph(o.glyph),
+            object_class(o.glyph).unwrap_or("-"),
+            content.material(o.material).name,
+            format_weight(u64::from(o.weight)),
+            yes(o.stackable)
+        );
+    }
+    out
+}
+
+fn materials(content: &Content) -> String {
+    let mut out = String::from("| Material | Objects made of it |\n|---|---|\n");
+    for (i, m) in content.materials().iter().enumerate() {
+        let made: Vec<&str> = content
+            .object_defs()
+            .iter()
+            .filter(|o| usize::from(o.material.0) == i)
+            .map(|o| o.plural.as_str())
+            .collect();
+        let made = if made.is_empty() {
+            "-".to_string()
+        } else {
+            made.join(", ")
+        };
+        let _ = writeln!(out, "| {} | {made} |", capital(&m.name));
+    }
+    out
+}
+
+/// The pack's size and the player's own weight.
+fn pack(content: &Content) -> String {
+    let player = content
+        .creature_id("player")
+        .map_or(0, |id| content.creature(id).weight);
+    let last = char::from(b'a' + (INVENTORY_SLOTS - 1) as u8);
+    format!(
+        "| Fact | Value |\n|---|---|\n\
+         | Stacks your pack holds | {INVENTORY_SLOTS}, lettered `a` to `{last}` |\n\
+         | Your own weight | {} |\n",
+        format_weight(u64::from(player))
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -454,5 +531,13 @@ mod tests {
         assert!(text("terrain-local.md").contains("muffles sound"));
         assert!(text("footsteps.md").contains("| Very loud | Still water, running water |"));
         assert!(text("footsteps.md").contains("grass"));
+        assert!(text("objects.md").contains("| Dagger | `)` | weapon | steel | 450 g | no |"));
+        assert!(text("objects.md").contains("| Arrow | `/` | missile | wood | 30 g | yes |"));
+        assert!(text("materials.md").contains("| Steel | daggers, short swords |"));
+        assert!(text("pack.md").contains("| Your own weight | 70 kg |"));
+        // Every object glyph belongs to a class the objects page explains.
+        for o in content.object_defs() {
+            assert!(object_class(o.glyph).is_some(), "{}", o.id);
+        }
     }
 }

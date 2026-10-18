@@ -1,10 +1,13 @@
 //! Text and JSON dumps of the simulation for developers and agents (spec §9).
 //!
-//! Every layer except [`Layer::Truth`] is built from [`World::perception`] only, so dumps cannot
-//! leak information the player does not have. `Truth` reads ground truth and is dev-only.
+//! Every layer except [`Layer::Truth`] and [`Layer::Actors`] is built from [`World::perception`]
+//! only, so dumps cannot leak information the player does not have. `Truth` and `Actors` read
+//! ground truth and are dev-only.
 
+use crate::action::letter;
 use crate::geom::Pos;
 use crate::noise::{PerceivedSound, SoundKind, Volume};
+use crate::object::format_weight;
 use crate::perception::{CellView, PerceivedLight, PerceptionView};
 use crate::world::World;
 use serde_json::{Value, json};
@@ -17,11 +20,13 @@ const RECENT_MESSAGES: usize = 10;
 /// A map layer to render.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Layer {
-    /// What the player sees: actors on visible cells, remembered terrain, unknown as space.
+    /// What the player sees: actors on visible cells, then the top object of each pile in sight
+    /// or remembered, then terrain seen or remembered; unknown as space.
     View,
     /// `*` on every currently visible cell.
     Fov,
-    /// Terrain glyphs for every cell the player has seen (visible or remembered).
+    /// Terrain glyphs for every cell the player has seen (visible or remembered), with the top
+    /// object of each known pile over them.
     Memory,
     /// Perceived light on every visible cell as a digit, `0` (dark) to `9` (fully lit or
     /// brighter); see [`light_digit`].
@@ -29,18 +34,25 @@ pub enum Layer {
     /// Sounds the player heard from unseen sources, at their rough places ([`sound_char`]: `f`
     /// footsteps, `o` a door opening, `c` a door closing; upper case when loud), over the view.
     Sound,
-    /// Ground truth: all terrain and all actors on the level. **Dev-only.**
+    /// Not a map: the player's inventory, one line per stack, then what they carry and weigh.
+    Inventory,
+    /// Ground truth: all terrain, objects, and actors on the level. **Dev-only.**
     Truth,
+    /// Not a map: every actor on the level with its weight and what it carries (ground truth).
+    /// **Dev-only.**
+    Actors,
 }
 
 impl Layer {
-    const ALL: [Layer; 6] = [
+    const ALL: [Layer; 8] = [
         Layer::View,
         Layer::Fov,
         Layer::Memory,
         Layer::Light,
         Layer::Sound,
+        Layer::Inventory,
         Layer::Truth,
+        Layer::Actors,
     ];
 
     /// Layer name as used on the command line and in JSON.
@@ -51,8 +63,15 @@ impl Layer {
             Layer::Memory => "memory",
             Layer::Light => "light",
             Layer::Sound => "sound",
+            Layer::Inventory => "inventory",
             Layer::Truth => "truth",
+            Layer::Actors => "actors",
         }
+    }
+
+    /// Whether the layer reads ground truth.
+    pub const fn is_dev_only(self) -> bool {
+        matches!(self, Layer::Truth | Layer::Actors)
     }
 }
 
@@ -64,7 +83,10 @@ impl FromStr for Layer {
             .into_iter()
             .find(|l| l.name() == s)
             .ok_or_else(|| {
-                format!("unknown layer `{s}` (expected view, fov, memory, light, sound, truth)")
+                format!(
+                    "unknown layer `{s}` (expected view, fov, memory, light, sound, inventory, \
+                     truth, actors)"
+                )
             })
     }
 }
@@ -78,6 +100,8 @@ pub fn parse_layers(text: &str) -> Result<Vec<Layer>, String> {
 pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
     match layer {
         Layer::Truth => truth_rows(world),
+        Layer::Actors => actor_rows(world),
+        Layer::Inventory => inventory_rows(&world.perception()),
         _ => {
             let view = world.perception();
             rows(view.width(), view.height(), |p| {
@@ -94,10 +118,14 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
         CellView::Unknown => ' ',
         CellView::Remembered(t) | CellView::Visible(t) => content.terrain(t).glyph,
     };
+    let known_glyph = |cell: CellView| match view.objects(p).first() {
+        Some(top) => content.object(top.object).glyph,
+        None => terrain_glyph(cell),
+    };
     match layer {
         Layer::View => match view.actor_at(p) {
             Some(actor) => content.creature(actor.creature).glyph,
-            None => terrain_glyph(cell),
+            None => known_glyph(cell),
         },
         Layer::Fov => {
             if view.is_visible(p) {
@@ -106,13 +134,15 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
                 ' '
             }
         }
-        Layer::Memory => terrain_glyph(cell),
+        Layer::Memory => known_glyph(cell),
         Layer::Light => view.light(p).map_or(' ', light_digit),
         Layer::Sound => match view.sound_at(p) {
             Some(sound) => sound_char(sound),
             None => perceived_glyph(view, Layer::View, p),
         },
-        Layer::Truth => unreachable!("truth is not built from perception"),
+        Layer::Inventory | Layer::Truth | Layer::Actors => {
+            unreachable!("not a map built from perception")
+        }
     }
 }
 
@@ -143,13 +173,65 @@ fn truth_rows(world: &World) -> Vec<String> {
     let (level, actors) = world.ground_truth();
     let actors: Vec<_> = actors.collect();
     rows(level.width(), level.height(), |p| {
-        match actors.iter().find(|a| a.pos == p) {
-            Some(actor) => content.creature(actor.creature).glyph,
-            None => level
+        match (
+            actors.iter().find(|a| a.pos == p),
+            level.objects_at(p).first(),
+        ) {
+            (Some(actor), _) => content.creature(actor.creature).glyph,
+            (None, Some(top)) => content.object(top.object).glyph,
+            (None, None) => level
                 .terrain_at(p)
                 .map_or(' ', |t| content.terrain(t).glyph),
         }
     })
+}
+
+/// The player's inventory (`a - a dagger (450 g)`), then what they carry and weigh.
+fn inventory_rows(view: &PerceptionView<'_>) -> Vec<String> {
+    let content = view.content();
+    let mut rows: Vec<String> = view
+        .inventory()
+        .iter()
+        .enumerate()
+        .map(|(i, s)| {
+            let name = s.describe(content);
+            let weight = format_weight(s.weight(content));
+            format!("{} - {name} ({weight})", letter(i).unwrap_or('?'))
+        })
+        .collect();
+    let weight = view.own_weight();
+    rows.push(format!(
+        "carried {}, total weight {}",
+        format_weight(weight.carried),
+        format_weight(weight.total())
+    ));
+    rows
+}
+
+/// Every actor on the level (ground truth): id, creature, position, weight, and what it carries.
+fn actor_rows(world: &World) -> Vec<String> {
+    let content = world.content();
+    let (_, actors) = world.ground_truth();
+    actors
+        .map(|a| {
+            let w = a.weight(content);
+            let carried: Vec<String> = a.inventory.iter().map(|s| s.describe(content)).collect();
+            let carried = if carried.is_empty() {
+                "nothing".to_string()
+            } else {
+                carried.join(", ")
+            };
+            format!(
+                "{} {} at {}: weight {} (base {} + carried {}: {carried})",
+                a.id,
+                content.creature(a.creature).id,
+                a.pos,
+                format_weight(w.total()),
+                format_weight(w.base),
+                format_weight(w.carried),
+            )
+        })
+        .collect()
 }
 
 fn rows(width: i32, height: i32, glyph: impl Fn(Pos) -> char) -> Vec<String> {
@@ -175,12 +257,12 @@ fn summary(world: &World) -> String {
 }
 
 /// Plain-text dump: a header line, then each requested layer under a `== name ==` heading.
-/// The truth layer is headed `== truth (DEV ONLY: ground truth) ==`.
+/// Dev-only layers are headed like `== truth (DEV ONLY: ground truth) ==`.
 pub fn ascii(world: &World, layers: &[Layer]) -> String {
     let mut out = String::new();
     let _ = writeln!(out, "{}", summary(world));
     for &layer in layers {
-        let note = if layer == Layer::Truth {
+        let note = if layer.is_dev_only() {
             " (DEV ONLY: ground truth)"
         } else {
             ""
@@ -193,9 +275,9 @@ pub fn ascii(world: &World, layers: &[Layer]) -> String {
     out
 }
 
-/// Structured dump: turn, game time, level, viewer, seen actors, heard sounds, recent messages,
-/// the requested layers as arrays of rows, and optionally the full [`crate::WorldState`] under
-/// `state`.
+/// Structured dump: turn, game time, level, viewer, seen actors, heard sounds, the player's
+/// inventory and weight, recent messages, the requested layers as arrays of rows, and optionally
+/// the full [`crate::WorldState`] under `state`.
 pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     let view = world.perception();
     let content = world.content();
@@ -211,6 +293,20 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         let all: Vec<_> = world.messages().iter().collect();
         all[all.len().saturating_sub(RECENT_MESSAGES)..].to_vec()
     };
+    let inventory: Vec<Value> = view
+        .inventory()
+        .iter()
+        .enumerate()
+        .map(|(i, s)| {
+            json!({
+                "letter": letter(i).map(String::from),
+                "object": content.object(s.object).id,
+                "count": s.count,
+                "weight": s.weight(content),
+            })
+        })
+        .collect();
+    let weight = view.own_weight();
     let layer_map: serde_json::Map<String, Value> = layers
         .iter()
         .map(|&l| (l.name().to_string(), json!(layer_rows(world, l))))
@@ -226,6 +322,8 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "hash": format!("{:016x}", world.state_hash()),
         "seen_actors": seen,
         "heard_sounds": view.sounds(),
+        "inventory": inventory,
+        "weight": { "base": weight.base, "carried": weight.carried, "total": weight.total() },
         "messages": messages,
         "layers": layer_map,
     });

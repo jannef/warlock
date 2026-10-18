@@ -1,9 +1,12 @@
 //! Hand-authored level files (`assets/levels/*.toml`, spec §7).
 //!
 //! A level is a multiline ASCII `map` plus a `legend` mapping characters to terrain and to things
-//! placed on that terrain (player start, creatures with patrol routes, stair links, lights, the
-//! flow of running water). Characters not in the level's legend fall back to the shared default
-//! legend (`assets/data/legend.toml`, which has arrows for running water). An optional
+//! placed on that terrain (player start, creatures with patrol routes and what they carry, stair
+//! links, lights, the flow of running water, objects). Characters not in the level's legend fall
+//! back to the shared default legend (`assets/data/legend.toml`, which has arrows for running
+//! water). Objects may also be placed without a legend character: `[[pile]]` tables with `at =
+//! [x, y]` and `objects`. Objects are written as ids with an optional count, top of the pile
+//! first: `objects = ["dagger", "arrow*12"]`. An optional
 //! `ambient = [r, g, b, uv]` lights the whole level. `kind` (`dungeon`, the default, `outdoor`,
 //! or `overworld`) and `turn_seconds` decide how time passes on it (spec §8 "Time"); outdoor
 //! levels and the overworld are lit by the sun and the sky by day (spec §5). Optional
@@ -13,11 +16,13 @@
 use super::creature::CreatureId;
 use super::flow::{FLOW_SPEEDS, Flow};
 use super::light::LightId;
+use super::object::parse_stacks;
 use super::terrain::{StairsDir, TerrainId};
 use super::{Content, ContentError};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use crate::light::Light;
+use crate::object::{INVENTORY_SLOTS, Stack, add_to_pile};
 use crate::time::{Duration, HOUR};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -75,6 +80,17 @@ struct LevelFile {
     legend: BTreeMap<String, LegendEntry>,
     #[serde(default)]
     region: Vec<RegionSpec>,
+    /// Objects placed by position rather than by a legend character.
+    #[serde(default)]
+    pile: Vec<PileSpec>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PileSpec {
+    at: [i32; 2],
+    /// Top first, e.g. `["dagger", "arrow*12"]`.
+    objects: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -136,6 +152,10 @@ pub(super) struct LegendDetail {
     flow: Option<Dir>,
     /// Flow speed in percent of the terrain's (default 100).
     flow_speed: Option<u16>,
+    /// Objects lying on this cell, top first, e.g. `["dagger", "arrow*12"]`.
+    objects: Option<Vec<String>>,
+    /// Objects the creature on this cell carries.
+    carry: Option<Vec<String>>,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize)]
@@ -167,6 +187,8 @@ pub struct CreatureSpawn {
     pub pos: Pos,
     /// Looping patrol route; empty means the creature stays put.
     pub route: Vec<Dir>,
+    /// What it carries.
+    pub carry: Vec<Stack>,
 }
 
 /// A staircase cell and where it leads.
@@ -197,6 +219,8 @@ pub struct LevelTemplate {
     pub lights: BTreeMap<Pos, LightId>,
     /// Flow of every running-water cell, by position (presentation-only).
     pub flow: BTreeMap<Pos, Flow>,
+    /// Piles of objects, by position, each top first; only on walkable terrain.
+    pub objects: BTreeMap<Pos, Vec<Stack>>,
     /// Named areas, first match wins.
     pub regions: Vec<Region>,
     /// Where walking off the edge leads (local areas); `None`: the edge cannot be crossed.
@@ -268,6 +292,7 @@ pub(super) fn parse_level(
     let mut stairs = Vec::new();
     let mut lights = BTreeMap::new();
     let mut flow = BTreeMap::new();
+    let mut objects: BTreeMap<Pos, Vec<Stack>> = BTreeMap::new();
 
     for (y, row) in rows.iter().enumerate() {
         for x in 0..width as usize {
@@ -319,6 +344,13 @@ pub(super) fn parse_level(
             {
                 return Err(err("more than one player start".into()));
             }
+            if let Some(specs) = &detail.objects {
+                let pile = parse_stacks(specs, content)
+                    .map_err(|m| err(format!("legend `{ch}`: objects: {m}")))?;
+                if !pile.is_empty() {
+                    objects.insert(pos, pile);
+                }
+            }
             if let Some(creature) = &detail.creature {
                 let id = content.creature_id(creature).ok_or_else(|| {
                     err(format!("legend `{ch}` uses unknown creature `{creature}`"))
@@ -327,13 +359,26 @@ pub(super) fn parse_level(
                     Some(r) => parse_route(r).map_err(|m| err(format!("legend `{ch}`: {m}")))?,
                     None => Vec::new(),
                 };
+                let carry = match &detail.carry {
+                    Some(specs) => parse_stacks(specs, content)
+                        .map_err(|m| err(format!("legend `{ch}`: carry: {m}")))?,
+                    None => Vec::new(),
+                };
+                if carry.len() > INVENTORY_SLOTS {
+                    return Err(err(format!(
+                        "legend `{ch}`: a creature carries at most {INVENTORY_SLOTS} stacks"
+                    )));
+                }
                 creatures.push(CreatureSpawn {
                     creature: id,
                     pos,
                     route,
+                    carry,
                 });
-            } else if detail.route.is_some() {
-                return Err(err(format!("legend `{ch}` has a route but no creature")));
+            } else if detail.route.is_some() || detail.carry.is_some() {
+                return Err(err(format!(
+                    "legend `{ch}` has a route or carry but no creature"
+                )));
             }
         }
     }
@@ -354,18 +399,44 @@ pub(super) fn parse_level(
         });
     }
 
+    let terrain = Grid::from_vec(width, height, cells);
+    for spec in parsed.pile {
+        let at = Pos::new(spec.at[0], spec.at[1]);
+        if !terrain.in_bounds(at) {
+            return Err(err(format!(
+                "pile at {at} is outside the {width}x{height} map"
+            )));
+        }
+        let stacks =
+            parse_stacks(&spec.objects, content).map_err(|m| err(format!("pile at {at}: {m}")))?;
+        if stacks.is_empty() {
+            return Err(err(format!("pile at {at} has no objects")));
+        }
+        add_to_pile(objects.entry(at).or_default(), &stacks, content);
+    }
+    if let Some(at) = objects
+        .keys()
+        .find(|p| !content.terrain(terrain[**p]).walkable)
+    {
+        return Err(err(format!(
+            "objects at {at} lie on terrain `{}`, which is not walkable",
+            content.terrain(terrain[*at]).id
+        )));
+    }
+
     let template = LevelTemplate {
         id: id.to_string(),
         name: parsed.name,
         ambient: parsed.ambient,
         kind: parsed.kind,
         turn,
-        terrain: Grid::from_vec(width, height, cells),
+        terrain,
         player_start,
         creatures,
         stairs,
         lights,
         flow,
+        objects,
         regions,
         exit: None,
     };

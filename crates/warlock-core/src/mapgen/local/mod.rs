@@ -179,6 +179,7 @@ pub(super) fn generate(content: &Content, seed: u64, id: &str) -> Result<LevelTe
             stairs: Vec::new(),
             lights: land.lights,
             flow: land.flow,
+            objects: land.objects,
             regions: Vec::new(),
             exit: Some(EdgeExit {
                 to: area.overworld.id.clone(),
@@ -281,6 +282,9 @@ fn ruins(land: &mut Land, rng: &mut Rng) {
             for (p, flow) in &template.flow {
                 land.flow.insert(shift(*p), *flow);
             }
+            for (p, pile) in &template.objects {
+                land.objects.insert(shift(*p), pile.clone());
+            }
             for spawn in &template.creatures {
                 land.creatures.push(CreatureSpawn {
                     pos: shift(spawn.pos),
@@ -312,6 +316,7 @@ fn graze(land: &mut Land, rng: &mut Rng, count: i32, start: Pos) {
                 creature: land.kit.deer,
                 pos: p,
                 route,
+                carry: Vec::new(),
             });
             break;
         }

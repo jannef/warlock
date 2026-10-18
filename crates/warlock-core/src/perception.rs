@@ -1,9 +1,14 @@
 //! The per-turn perception snapshot (spec §5, §8).
 //!
 //! Everything the player can know — and therefore everything rendering, UI, and dumps may show —
-//! goes through [`PerceptionView`]. It exposes currently visible cells, creatures, and light, and
-//! remembered terrain; it never exposes unseen terrain, hidden creatures, or light the player's
-//! eyes cannot perceive.
+//! goes through [`PerceptionView`]. It exposes currently visible cells, creatures, objects, and
+//! light, remembered terrain and objects, and what the player carries; it never exposes unseen
+//! terrain or objects, hidden creatures, what creatures carry, or light the player's eyes cannot
+//! perceive.
+//!
+//! **Memory** (spec §5): terrain and piles of objects as last seen. Objects are seen where
+//! creatures are (cells in line of sight, never completed walls); a pile seen gone is forgotten,
+//! and one that changed out of sight is remembered as it was.
 //!
 //! A cell is **visible** iff it is in line of sight within [`VIEW_RADIUS`] **and** its perceived
 //! light is at least the vision profile's threshold or it lies within the darkvision radius. The
@@ -44,7 +49,8 @@ use crate::light::{
     falloff, lit_in_sight, moon_key, wall_faces,
 };
 use crate::noise::{self, PerceivedSound};
-use crate::world::{ActorId, ActorKind, LevelState, WorldState};
+use crate::object::{Stack, Weight};
+use crate::world::{Actor, ActorId, ActorKind, LevelState, WorldState};
 use serde::Serialize;
 
 /// Maximum sight distance, however bright the light.
@@ -467,10 +473,23 @@ impl Perception {
         self.sight.get(p) == Some(&Sight::Seen)
     }
 
-    /// Writes currently visible terrain into the level's memory.
+    /// Writes currently visible terrain, and the piles on cells in sight, into the level's
+    /// memory.
     pub(crate) fn remember(&self, level: &mut LevelState) {
         for &p in &self.visible_cells {
             level.memory.set(p, Some(level.terrain[p]));
+            if !self.sees_actors_at(p) {
+                continue;
+            }
+            match level.objects.get(&p) {
+                Some(pile) if level.object_memory.get(&p) != Some(pile) => {
+                    level.object_memory.insert(p, pile.clone());
+                }
+                Some(_) => {}
+                None => {
+                    level.object_memory.remove(&p);
+                }
+            }
         }
     }
 }
@@ -480,6 +499,8 @@ impl Perception {
 pub struct PerceptionView<'a> {
     pub(crate) content: &'a Content,
     pub(crate) level: &'a LevelState,
+    /// The player, for what they carry.
+    pub(crate) player: &'a Actor,
     pub(crate) snapshot: &'a Perception,
 }
 
@@ -564,6 +585,33 @@ impl<'a> PerceptionView<'a> {
 
     pub fn actor_at(&self, p: Pos) -> Option<&'a SeenActor> {
         self.snapshot.actors.iter().find(|a| a.pos == p)
+    }
+
+    /// The pile at `p` as the player knows it, top first: what lies there now on a cell in sight
+    /// (where creatures would be seen), as last seen on any other cell; empty where nothing is
+    /// known to lie.
+    pub fn objects(&self, p: Pos) -> &'a [Stack] {
+        let pile = if self.snapshot.sees_actors_at(p) {
+            self.level.objects.get(&p)
+        } else {
+            self.level.object_memory.get(&p)
+        };
+        pile.map_or(&[], Vec::as_slice)
+    }
+
+    /// Whether the pile at `p` is in sight now (rather than remembered or unknown).
+    pub fn sees_objects_at(&self, p: Pos) -> bool {
+        self.snapshot.sees_actors_at(p)
+    }
+
+    /// What the player carries, letter `a` first.
+    pub fn inventory(&self) -> &'a [Stack] {
+        &self.player.inventory
+    }
+
+    /// The player's own weight: their base weight plus what they carry.
+    pub fn own_weight(&self) -> Weight {
+        self.player.weight(self.content)
     }
 
     /// Perceived light at a visible cell (wall-face rule applied); `None` for cells not in view.

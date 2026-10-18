@@ -58,6 +58,7 @@ id = "player"
 name = "you"
 glyph = "@"
 fg = "#ffffff"
+weight = 70000
 footsteps = 50
 hearing = 10
 
@@ -66,6 +67,7 @@ id = "mouse"
 name = "mouse"
 glyph = "m"
 fg = "#806040"
+weight = 1000
 "##;
 
 const LEGEND: &str = r##"
@@ -113,6 +115,7 @@ fn actor(content: &Content, creature: &str) -> Actor {
         patrol: None,
         energy: 0,
         heard: Vec::new(),
+        inventory: Vec::new(),
     }
 }
 

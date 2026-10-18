@@ -12,3 +12,8 @@ map = '''
 [legend]
 "," = "fungus"
 "*" = { terrain = "floor", light = "lamp" }
+
+# Objects (M11): rubies on the dry middle, under the lamp.
+[[pile]]
+at = [4, 2]
+objects = ["ruby*2"]

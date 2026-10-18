@@ -29,7 +29,7 @@ pub(super) fn fits(canvas: &Canvas, vault: &Vault, at: Pos) -> bool {
 }
 
 /// Copies `vault` with its top-left corner at `at` (terrain, placed lights, the flow of running
-/// water, and creatures with their patrols) and locks its cells. Returns its entrances in level
+/// water, objects, and creatures with their patrols) and locks its cells. Returns its entrances in level
 /// coordinates, each with the direction leading out.
 pub(super) fn stamp(canvas: &mut Canvas, vault: &Vault, at: Pos) -> Vec<(Pos, Dir)> {
     let offset = |p: Pos| Pos::new(at.x + p.x, at.y + p.y);
@@ -43,6 +43,9 @@ pub(super) fn stamp(canvas: &mut Canvas, vault: &Vault, at: Pos) -> Vec<(Pos, Di
     }
     for (p, flow) in &template.flow {
         canvas.flow.insert(offset(*p), *flow);
+    }
+    for (p, pile) in &template.objects {
+        canvas.objects.insert(offset(*p), pile.clone());
     }
     for spawn in &template.creatures {
         canvas.creatures.push(CreatureSpawn {

@@ -13,7 +13,8 @@ A level decides how long one turn takes:
 | The overworld | 10 minutes |
 
 A few things always take exactly one turn: waiting (`.`), opening or closing a door, lighting or
-dousing the lantern, and taking stairs. The turn is the length of the level you start on, so
+dousing the lantern, picking up or dropping objects (however many at once), and taking stairs.
+Looking at your pack (`i`) takes no time. The turn is the length of the level you start on, so
 taking stairs off the overworld costs 10 minutes and walking off the edge of an outdoor area costs
 6 seconds.
 

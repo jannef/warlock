@@ -1,4 +1,5 @@
-//! Per-level mutable state: terrain as it is now, and what the player remembers of it.
+//! Per-level mutable state: terrain and piles of objects as they are now, and what the player
+//! remembers of them.
 
 use crate::content::{
     Content, EdgeExit, Flow, LevelKind, LevelTemplate, LightId, StairsLink, TerrainDef, TerrainId,
@@ -6,6 +7,7 @@ use crate::content::{
 use crate::geom::Pos;
 use crate::grid::Grid;
 use crate::light::Light;
+use crate::object::Stack;
 use crate::time::Duration;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -37,6 +39,13 @@ pub struct LevelState {
     /// Flow of running water, by position. Presentation-only: no rule reads it.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) flow: BTreeMap<Pos, Flow>,
+    /// Piles of objects lying on cells, by position, each top first and never empty.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) objects: BTreeMap<Pos, Vec<Stack>>,
+    /// Piles as the player last saw them, by position (spec §5 "Memory"): a pile seen taken
+    /// away is forgotten, one that changed out of sight is remembered as it was.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) object_memory: BTreeMap<Pos, Vec<Stack>>,
 }
 
 impl LevelState {
@@ -56,6 +65,8 @@ impl LevelState {
             exit: template.exit.clone(),
             lights: template.lights.clone(),
             flow: template.flow.clone(),
+            objects: template.objects.clone(),
+            object_memory: BTreeMap::new(),
         }
     }
 
@@ -104,6 +115,21 @@ impl LevelState {
         self.terrain.get(p).copied()
     }
 
+    /// The pile at `p` as it is now, top first (ground truth, empty where nothing lies). Only
+    /// reachable through [`crate::World::ground_truth`], **for developer tools only**.
+    pub fn objects_at(&self, p: Pos) -> &[Stack] {
+        self.objects.get(&p).map_or(&[], Vec::as_slice)
+    }
+
+    /// Replaces the pile at `p`; an empty pile removes it.
+    pub(crate) fn set_pile(&mut self, p: Pos, pile: Vec<Stack>) {
+        if pile.is_empty() {
+            self.objects.remove(&p);
+        } else {
+            self.objects.insert(p, pile);
+        }
+    }
+
     /// Opaque cells block sight. Out-of-bounds counts as opaque.
     pub(crate) fn is_opaque(&self, content: &Content, p: Pos) -> bool {
         self.terrain
@@ -121,19 +147,22 @@ impl LevelState {
         self.stairs.iter().find(|s| s.pos == p)
     }
 
-    /// Whether every terrain and light id is valid for `content` (a guard for loaded saves).
+    /// Whether every terrain, light, and object id is valid for `content` (a guard for loaded
+    /// saves).
     pub(crate) fn ids_valid_for(&self, content: &Content) -> bool {
         let terrain = content.terrain_defs().len();
         let lights = content.light_presets().len();
         let known = |t: &TerrainId| usize::from(t.0) < terrain;
+        let piles = self.objects.values().chain(self.object_memory.values());
         self.terrain.cells().iter().all(known)
             && self.memory.cells().iter().flatten().all(known)
             && self.lights.values().all(|l| usize::from(l.0) < lights)
+            && piles.flatten().all(|s| s.is_valid_for(content))
     }
 }
 
-/// Serde adapter: JSON object keys must be strings, so maps by position (placed lights, flow) are
-/// written as a list of `[{x, y}, value]` pairs in position order.
+/// Serde adapter: JSON object keys must be strings, so maps by position (placed lights, flow,
+/// piles) are written as a list of `[{x, y}, value]` pairs in position order.
 mod by_pos {
     use super::*;
     use serde::{Deserializer, Serializer};

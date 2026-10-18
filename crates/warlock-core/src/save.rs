@@ -21,7 +21,8 @@ const MAGIC: &str = "WARLOCK-SAVE";
 /// 3: the game clock (`time`) in the world state; level kind and turn length in level states.
 /// 4: level states keep their start (arrival point) and edge exit (local areas of the overworld).
 /// 5: actors carry scheduler energy (the speed system).
-pub const FORMAT_VERSION: u32 = 5;
+/// 6: objects: piles and remembered piles in level states, inventories on actors.
+pub const FORMAT_VERSION: u32 = 6;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 

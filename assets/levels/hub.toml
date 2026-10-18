@@ -21,6 +21,11 @@
 #
 # Sunlight (M9): the stairs nook's staircase up (^ in the map, drawn `<`) climbs to the courtyard,
 # a garden under the open sky.
+#
+# Objects (M11): gold and a small pile in the start room to pick up (`,` or `g`); the door
+# corridor's west room is a storeroom of arms and armor and its east room a pantry; an amulet lies
+# in the dark of the darkness chamber, and a ring before the water garden's altar. The patrolling
+# kobold carries a sword and some coins. The piles are placed with [[pile]] tables at the end.
 name = "The Hub"
 ambient = [0, 0, 0, 0]
 map = '''
@@ -50,7 +55,7 @@ map = '''
 [legend]
 "@" = { terrain = "floor", spawn = "player" }
 "1" = { terrain = "floor", creature = "rat", route = "E24 W24" }
-"2" = { terrain = "floor", creature = "kobold", route = "E24 N5 W24 S5" }
+"2" = { terrain = "floor", creature = "kobold", route = "E24 N5 W24 S5", carry = ["short_sword", "copper_coin*7"] }
 # Beside the rat, a cave bat on a parallel lane: it is faster (creatures.toml `speed`), so it
 # pulls ahead and laps the rat.
 "3" = { terrain = "floor", creature = "bat", route = "E24 W24" }
@@ -70,3 +75,53 @@ map = '''
 ":" = "dusty_floor"
 # Stairs up (drawn `<`) to the courtyard.
 "^" = { terrain = "stairs_up", to = "courtyard" }
+
+# Objects, top of each pile first.
+# The start room.
+[[pile]]
+at = [10, 14]
+objects = ["gold_coin*12"]
+
+[[pile]]
+at = [5, 17]
+objects = ["leather_jerkin", "dagger", "candle*2"]
+
+# The storeroom (the door corridor's west room).
+[[pile]]
+at = [18, 13]
+objects = ["chain_mail", "iron_helm"]
+
+[[pile]]
+at = [20, 13]
+objects = ["spear"]
+
+[[pile]]
+at = [21, 15]
+objects = ["short_bow", "arrow*24"]
+
+[[pile]]
+at = [17, 15]
+objects = ["rope", "club"]
+
+# The pantry (the door corridor's east room).
+[[pile]]
+at = [25, 13]
+objects = ["dried_meat*6"]
+
+[[pile]]
+at = [26, 15]
+objects = ["apple*4"]
+
+[[pile]]
+at = [28, 15]
+objects = ["red_potion*2", "blue_potion", "scroll_of_light"]
+
+# In the dark of the darkness chamber.
+[[pile]]
+at = [35, 4]
+objects = ["bone_amulet"]
+
+# Before the water garden's altar.
+[[pile]]
+at = [62, 5]
+objects = ["silver_ring"]
