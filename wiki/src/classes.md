@@ -1,8 +1,8 @@
 # Classes
 
 Your class is the last choice of a new run (see [Your character](character.md)): what you did
-before you set out. For now a class only changes your starting [stats](stats.md); no skills,
-equipment, or spells come with it.
+before you set out. For now a class changes your starting [stats](stats.md) and adds to your hit
+points (see [Combat](combat.md#hit-points)); no skills, equipment, or spells come with it.
 
 The first eleven are adventurers. The last four are everyday folk: an aristocrat, a commoner, a
 craftsperson, and a merchant, who were never trained for this and mostly show it.

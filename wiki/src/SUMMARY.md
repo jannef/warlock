@@ -22,6 +22,7 @@
   - [Classes](classes.md)
   - [Horoscope](horoscope.md)
 - [Stats](stats.md)
+- [Combat](combat.md)
 - [Creatures](creatures.md)
 - [Your lantern](lantern.md)
 - [Saving](saving.md)

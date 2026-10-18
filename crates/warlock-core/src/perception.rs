@@ -1,11 +1,12 @@
 //! The per-turn perception snapshot (spec §5, §8).
 //!
 //! Everything the player can know — and therefore everything rendering, UI, and dumps may show —
-//! goes through [`PerceptionView`]. It exposes currently visible cells, creatures (and what they
-//! wear and wield), objects, and light, remembered terrain and objects, and what the player
-//! carries, wears, weighs, and scores in each stat; it never exposes unseen terrain or objects,
-//! hidden creatures, what else creatures carry, any stat's modifier or potential, a creature's
-//! stats, or light the player's eyes cannot perceive.
+//! goes through [`PerceptionView`]. It exposes currently visible cells, creatures (what they
+//! wear and wield, and how hurt they look, in words), objects, and light, remembered terrain and
+//! objects, and what the player carries, wears, weighs, and scores in each stat, and their hit
+//! points and Defence; it never exposes unseen terrain or objects, hidden creatures, what else
+//! creatures carry or their hit points, any stat's modifier or potential, a creature's stats,
+//! a to-hit, or light the player's eyes cannot perceive.
 //!
 //! **Memory** (spec §5): terrain and piles of objects as last seen. Objects are seen where
 //! creatures are (cells in line of sight, never completed walls); a pile seen gone is forgotten,
@@ -45,6 +46,7 @@
 //! does not see, near the source); never with who made them.
 
 use crate::character::Character;
+use crate::combat::Health;
 use crate::content::{
     Content, CreatureId, Flow, LevelKind, LightId, SlotId, Stance, TerrainId, VisionProfile,
 };
@@ -62,7 +64,7 @@ use crate::object::{Stack, Weight};
 use crate::stats::PerStat;
 use crate::time::GameTime;
 use crate::weather::Weather;
-use crate::world::{Actor, ActorId, ActorKind, LevelState, WorldState};
+use crate::world::{Actor, ActorId, ActorKind, Death, LevelState, WorldState};
 use serde::Serialize;
 
 /// Maximum sight distance, however bright the light.
@@ -87,6 +89,8 @@ pub struct SeenActor {
     pub kind: ActorKind,
     pub creature: CreatureId,
     pub pos: Pos,
+    /// How hurt it looks: words, never hit points (spec §8 "Combat").
+    pub health: Health,
 }
 
 /// Something a creature the player sees wears or wields: what is seen of what it carries.
@@ -454,6 +458,7 @@ impl Perception {
                 kind: a.kind,
                 creature: a.creature,
                 pos: a.pos,
+                health: a.health(),
             })
             .collect();
         // What creatures wear and wield is in plain sight; the rest of what they carry is not.
@@ -548,6 +553,8 @@ pub struct PerceptionView<'a> {
     pub(crate) character: Option<&'a Character>,
     /// The time on the clock, which the player knows.
     pub(crate) time: GameTime,
+    /// How the run ended, once the player has died.
+    pub(crate) death: Option<&'a Death>,
     pub(crate) snapshot: &'a Perception,
 }
 
@@ -689,6 +696,24 @@ impl<'a> PerceptionView<'a> {
     /// stats: never their potentials or modifiers, and nothing of a creature's.
     pub fn own_scores(&self) -> PerStat<u8> {
         self.player.stats.scores()
+    }
+
+    /// The player's hit points: what they have left (at most their maximum, never below 0) and
+    /// their maximum (spec §8 "Combat").
+    pub fn own_hp(&self) -> (i32, i32) {
+        let max = self.player.max_hp();
+        (self.player.hp.clamp(0, max), max)
+    }
+
+    /// The player's Defence ("Dv"): the total an attack roll must reach. Only the total: its
+    /// Dexterity part would give away a modifier.
+    pub fn own_defence(&self) -> i32 {
+        self.player.defence(self.content).total()
+    }
+
+    /// How the run ended, once the player has died (what killed them only if they saw it).
+    pub fn death(&self) -> Option<&'a Death> {
+        self.death
     }
 
     /// How a seen creature stands toward the player: its faction's stance (spec §7 "Factions"),

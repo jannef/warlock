@@ -4,9 +4,10 @@ You can wear and wield what you carry, as in ADOM: a helm on your head, an amule
 neck, armor on your body, a cloak, a weapon in your main hand and a shield in your off hand,
 gloves, a ring on each hand, boots, and a missile weapon with its missiles ready.
 
-Equipment does nothing else yet. It does not protect you, your weapon does not hit harder, and
-nothing slows you down: combat comes later. Putting things on and taking them off takes time,
-and what you wear still weighs what it weighs.
+What you wield and wear decides how you fight (see [Combat](combat.md)): the weapon in your
+hand does its damage, a bow shoots, body armour and a shield add to your Defence, and a
+quarterstaff parries. Nothing you wear slows you down. Putting things on and taking them off
+takes time, and what you wear still weighs what it weighs.
 
 ## The equipment screen
 
@@ -69,7 +70,7 @@ letter, and stay worn.
 ## Creatures
 
 Creatures wear and wield some of what they carry, and you can see it. [Look mode](controls.md#look-mode)
-says so: "A kobold (hostile), wielding a spear, on stone floor.", "A kobold shaman (hostile),
-wearing a bone amulet, ...", "A kobold archer (hostile), with a short bow and 20 arrows ready,
-...". You still cannot see anything else they carry. For now, creatures keep what they start
-with.
+says so: "A kobold (hostile, unhurt), wielding a spear, on stone floor.", "A kobold shaman
+(hostile, unhurt), wearing a bone amulet, ...", "A kobold archer (hostile, unhurt), with a short
+bow and 20 arrows ready, ...". You still cannot see anything else they carry. They fight with it
+as you do, and keep what they start with until they die: then all of it falls where they stood.

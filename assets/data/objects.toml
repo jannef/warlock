@@ -15,7 +15,21 @@
 #   ammo       the kind of ammunition it is (`ammo = "arrow"`)
 #   launches   the kind of ammunition a missile weapon shoots (`launches = "arrow"`); launchers
 #              and ammunition pair by that kind, and some object must be that kind of ammunition
-# Equipment changes no rule yet (combat comes later); it only takes time to put on and off.
+#
+# Weapons and armour say what they do in a fight (spec §8 "Combat"; only for things with a slot):
+#   damage     a weapon's damage dice (`1d8`); a launcher's are those of its shots and carry its
+#              draw weight (`1d8+2`). Melee blows add the wielder's Strength modifier; shots add
+#              nothing. A missile weapon must have them
+#   threat     the lowest natural roll (2d12, 2 to 24) that threatens a critical: 22 (the
+#              default) for most weapons, 20 for swords and daggers, 19 for the keenest
+#   crit       how many times a confirmed critical rolls the damage: 2 (default) to 5
+#   to_hit     a weapon's own bonus to hit (default 0)
+#   strength   the Strength a bow needs: each point short is -1 to hit and -1 damage
+#   parry      Defence while wielded (the Parry category)
+#   armour     Defence while worn (the Armour category); max_dex the most a worn armour lets
+#              Dexterity add to Defence
+#   shield     Defence while held (the Shield category)
+# Within a category only the best bonus counts.
 #
 # Glyphs follow ADOM loosely: ) weapons, } missile weapons, / missiles, [ armor, ( tools,
 # ! potions, ? scrolls, % food, * stones and gems, $ coins, = rings, " amulets.
@@ -29,6 +43,8 @@ fg = "#c8ccd4"
 material = "steel"
 weight = 450
 slot = "main_hand"
+damage = "1d4"
+threat = 20
 
 [[object]]
 id = "short_sword"
@@ -38,6 +54,8 @@ fg = "#dce0e8"
 material = "steel"
 weight = 1100
 slot = "main_hand"
+damage = "1d6"
+threat = 20
 
 [[object]]
 id = "spear"
@@ -47,6 +65,8 @@ fg = "#b8955a"
 material = "wood"
 weight = 1800
 slot = "main_hand"
+damage = "1d8"
+crit = 3
 
 [[object]]
 id = "club"
@@ -56,6 +76,7 @@ fg = "#946a42"
 material = "wood"
 weight = 1400
 slot = "main_hand"
+damage = "1d6"
 
 [[object]]
 id = "quarterstaff"
@@ -67,6 +88,9 @@ material = "wood"
 weight = 2000
 slot = "main_hand"
 two_handed = true
+damage = "1d6"
+# Held across the body: it turns blows aside.
+parry = 1
 
 [[object]]
 id = "short_bow"
@@ -77,6 +101,9 @@ material = "wood"
 weight = 700
 slot = "missile_weapon"
 launches = "arrow"
+damage = "1d6"
+crit = 3
+strength = 10
 
 [[object]]
 id = "arrow"
@@ -98,6 +125,8 @@ fg = "#9a6838"
 material = "leather"
 weight = 3500
 slot = "body"
+armour = 2
+max_dex = 6
 
 [[object]]
 id = "chain_mail"
@@ -107,6 +136,8 @@ fg = "#aab2ba"
 material = "iron"
 weight = 11000
 slot = "body"
+armour = 4
+max_dex = 4
 
 [[object]]
 id = "iron_helm"
@@ -134,6 +165,7 @@ fg = "#a07a4a"
 material = "wood"
 weight = 2500
 slot = "off_hand"
+shield = 1
 
 [[object]]
 id = "leather_gloves"

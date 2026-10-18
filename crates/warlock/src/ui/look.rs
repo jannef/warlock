@@ -40,14 +40,16 @@ pub fn describe(view: &PerceptionView<'_>, p: Pos) -> String {
             (Some(_), _) if p == view.viewer() => format!("You, on {}{here}.", terrain(t)),
             (Some(actor), _) => {
                 let name = &content.creature(actor.creature).name;
-                // Its type tells the player how it stands toward them (its faction).
+                // Its type tells the player how it stands toward them (its faction), and they
+                // see how hurt it is: in words, never in hit points.
                 let stance = match view.stance(actor) {
-                    Stance::Hostile => " (hostile)",
+                    Stance::Hostile => "hostile, ",
                     Stance::Neutral => "",
                 };
+                let health = actor.health.word();
                 let gear = gear(view, actor.id);
                 format!(
-                    "{} {name}{stance}{gear}, on {}{here}.",
+                    "{} {name} ({stance}{health}){gear}, on {}{here}.",
                     article(name),
                     terrain(t)
                 )
@@ -281,17 +283,39 @@ mod tests {
             .collect();
         let of = |id: &str| described.iter().find(|(c, _)| c == id).map(|(_, d)| d);
         let rat = of("rat").expect("a giant rat in view");
-        assert!(rat.starts_with("A giant rat (hostile), on "), "{rat}");
+        assert!(
+            rat.starts_with("A giant rat (hostile, unhurt), on "),
+            "{rat}"
+        );
         let bat = of("bat").expect("a cave bat in view");
-        assert!(bat.starts_with("A cave bat, on "), "{bat}");
+        assert!(bat.starts_with("A cave bat (unhurt), on "), "{bat}");
+    }
+
+    #[test]
+    fn creatures_look_as_hurt_as_they_are_in_words() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let mut w = World::new(content, "arena", None).expect("arena");
+        // The brawl at the fire pit goes on until someone in view is hurt.
+        let hurt = (0..60).find_map(|_| {
+            w.apply(&Action::Wait);
+            let view = w.perception();
+            let actor = view.actors().iter().find(|a| {
+                a.pos != view.viewer() && a.health != warlock_core::combat::Health::Unhurt
+            })?;
+            Some((actor.health, describe(&view, actor.pos)))
+        });
+        let (health, text) = hurt.expect("someone in view was hurt");
+        assert!(text.contains(&format!(", {})", health.word())), "{text}");
+        // Never a number of hit points.
+        assert!(!text.chars().any(|c| c.is_ascii_digit()), "{text}");
     }
 
     #[test]
     fn creatures_are_seen_with_what_they_wield_and_wear() {
         let content = Arc::new(Content::builtin().expect("content"));
         let mut w = World::new(content, "arena", None).expect("arena");
-        // The war band comes into the torchlight of the fire pit (the `arena-shot` golden).
-        for _ in 0..12 {
+        // The war band comes into the torchlight of the fire pit, all of it still standing.
+        for _ in 0..8 {
             w.apply(&Action::Wait);
         }
         let view = w.perception();
@@ -309,25 +333,28 @@ mod tests {
                 .map(|(_, d)| d.as_str()))
             .unwrap_or_else(|| panic!("a {id} in view: {described:#?}"))
         };
+        // How hurt each looks comes before what it wields: "(hostile, wounded), wielding...".
         let kobold = of("kobold");
         assert!(
-            kobold.starts_with("A kobold (hostile), wielding a spear, on "),
+            kobold.starts_with("A kobold (hostile, ")
+                && kobold.contains("), wielding a spear, on "),
             "{kobold}"
         );
         let archer = of("kobold_archer");
         assert!(
-            archer.starts_with(
-                "A kobold archer (hostile), with a short bow and 20 arrows ready, on "
-            ),
+            archer.starts_with("A kobold archer (hostile, ")
+                && archer.contains("), with a short bow and 20 arrows ready, on "),
             "{archer}"
         );
         let shaman = of("kobold_shaman");
         assert!(
-            shaman.starts_with("A kobold shaman (hostile), wearing a bone amulet, on "),
+            shaman.starts_with("A kobold shaman (hostile, ")
+                && shaman.contains("), wearing a bone amulet, on "),
             "{shaman}"
         );
         // Nothing else of what they carry; and nothing of what the rats do not have.
-        assert!(of("rat").starts_with("A giant rat (hostile), on "));
+        let rat = of("rat");
+        assert!(rat.starts_with("A giant rat (hostile, ") && !rat.contains("wield"));
     }
 
     #[test]

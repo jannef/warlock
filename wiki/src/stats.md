@@ -14,12 +14,20 @@ of 10 (see [Your character](character.md)). After that, nothing changes them yet
 ## Seeing your stats
 
 Press `@` to open the **character screen**. It shows your name, your race, gender, and class,
-your age, birthday, and [birth sign](horoscope.md), your stats in the order above (with their short names), and your weight: your own, plus what you carry (see
-[Objects and your pack](objects.md)). Looking takes no time; press `@` or `Esc` to close it.
+your age, birthday, and [birth sign](horoscope.md), your stats in the order above (with their
+short names), your hit points and Defence (see [Combat](combat.md)), and your weight: your own,
+plus what you carry (see [Objects and your pack](objects.md)). Looking takes no time; press `@`
+or `Esc` to close it.
 
 Creatures have stats too, but you cannot see theirs.
 
 ## What they do
 
-Nothing, yet. No rule uses stats so far: they do not change how far you see, how quietly you
-walk, how much you can carry, or how fights go, and nothing raises or lowers them.
+So far only in a fight (see [Combat](combat.md)):
+
+- **Strength** helps you hit up close and adds to the damage of your blows, and draws a bow.
+- **Dexterity** helps you aim a shot and dodge blows: it adds to your Defence.
+- **Toughness** gives you hit points, and makes them come back sooner.
+
+The other three do nothing yet. Stats do not change how far you see, how quietly you walk, or how
+much you can carry, and nothing raises or lowers them.

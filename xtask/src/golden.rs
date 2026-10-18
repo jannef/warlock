@@ -106,9 +106,10 @@ fn make_replay(
     for action in parse_actions(text)? {
         let outcome = world.apply(&action);
         // Switching vision and setting the weather are free by design; anything else that takes
-        // no time was refused.
+        // no time and no turn was refused. (A turn can pass in no time: a creature quick off the
+        // mark may kill the player at the very second they acted.)
         let free = matches!(action, Action::SetVision(_) | Action::SetWeather(_));
-        if outcome.elapsed.is_zero() && !free {
+        if outcome.elapsed.is_zero() && !outcome.took_turn && !free {
             return Err(format!(
                 "{}: action `{action}` took no turn (blocked?); fix the action sequence",
                 entry.name

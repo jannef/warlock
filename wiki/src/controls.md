@@ -51,10 +51,11 @@ press `Esc` to cancel. Pressing any other command cancels the prompt.
 `x` puts a cursor on the map, on you. Move it with the movement keys, and the message line
 describes what you know about the cell under it:
 
-- what you see there: a creature, marked "(hostile)" if it is hostile to you (see
-  [Creatures](creatures.md)), with what it wields and wears, the objects lying there, and the
-  terrain, as in "A giant rat (hostile), on stone floor." or "A kobold (hostile), wielding a
-  spear, on stone floor.";
+- what you see there: a creature, marked "hostile" if it is hostile to you (see
+  [Creatures](creatures.md)), with how hurt it looks (unhurt, lightly wounded, wounded, badly
+  wounded, or nearly dead; see [Combat](combat.md)), what it wields and wears, the objects lying
+  there, and the terrain, as in "A giant rat (hostile, unhurt), on stone floor." or "A kobold
+  (hostile, badly wounded), wielding a spear, on stone floor.";
 - what you remember there, if you cannot see it now: the terrain and the objects you saw on it;
 - for stairs and the places on the overworld, where they lead;
 - a sound you heard there this turn ([Hearing](hearing.md));
@@ -84,6 +85,7 @@ as in `You open the door. (×2)`. Prompts and look mode use the same line.
 Below the map, the **status bar** shows, from left to right:
 
 - the name of the level, and on the overworld and in its local areas the region you are in;
+- your hit points, as `HP 18/24`: what you have left of your most (see [Combat](combat.md));
 - the time, the date, and the phase of the moon (see [Time and the calendar](time.md));
 - the weather, while you are under the open sky (see [Weather](weather.md));
 - the turn count and your position (column, row);
@@ -95,14 +97,20 @@ At its right end, `? controls` reminds you where the keys are.
 When the window is too narrow for everything, the status bar leaves out the least important parts
 first: the seed, your position, your lantern, your vision, the light at your feet, and the turn
 count; then it shortens the moon's phase to its picture, and only then drops it; then the region,
-then the year of the date, then the date. The weather, the time, and the name of the level stay
-longest. Parts come back as soon as there is room.
+then the year of the date, then the date. The weather, the time, your hit points, and the name of
+the level stay longest. Parts come back as soon as there is room.
 
 ## Character
 
 `@` shows your name, your race, gender, and class, your age, birthday, and
-[birth sign](horoscope.md), your [stats](stats.md), and your weight. It takes no time; press `@`
-or `Esc` to close it.
+[birth sign](horoscope.md), your [stats](stats.md), your hit points and Defence (`Dv`; see
+[Combat](combat.md)), and your weight. It takes no time; press `@` or `Esc` to close it.
+
+## Death
+
+When you die, a screen says what killed you (if you saw it), where, when, and after how many
+turns. Your save is already gone (see [Saving](saving.md)); `Enter` or `Esc` returns to the main
+menu.
 
 ## Menus
 

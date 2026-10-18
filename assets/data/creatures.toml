@@ -17,7 +17,8 @@
 #                as the player, under the same light
 #   sight        how far it sees, in cells (default 10, at most 40)
 #   combat       "melee" (default: closes in and attacks from next to its target), "ranged"
-#                (shoots), or "caster" (casts spells); attacks are announced, nothing is damaged
+#                (shoots with the missile weapon it has ready), or "caster" (casts spells, which
+#                are announced only: nothing is damaged until magic is designed)
 #   range        how far a ranged or caster creature reaches, in cells (2 up to its sight; it
 #                needs a clear line of fire)
 #   opens_doors  whether it opens closed doors in its way (default false)
@@ -28,6 +29,14 @@
 # by stat (strength, dexterity, toughness, intelligence, willpower, presence; 1 to 40, default 10,
 # the average), and potential, how far each score could grow (default: the score; never below
 # it). The player's stats come from the scenario, not from here.
+#
+# Combat (spec §8 "Combat"; never shown to the player but as words):
+#   base_hp   hit points beyond its Toughness (default 0); the player's come from the scenario
+#   attack    its natural attack, used when it wields no weapon (without one: bare hands, 1d3):
+#             { damage = "1d4", name = "bite", verb = "bites" } and optionally threat, crit,
+#             and to_hit as for weapons (objects.toml); Strength adds to hit and to damage
+#   natural   its natural armour: { defence = 3, name = "shell" } (the Natural category of
+#             Defence; "Your sword glances off the cave beetle's shell.")
 
 [[creature]]
 id = "player"
@@ -53,6 +62,7 @@ footsteps = 50
 hearing = 5
 weight = 4000
 stats = { strength = 10, dexterity = 17, toughness = 12, intelligence = 1, willpower = 12, presence = 4 }
+attack = { damage = "1d4", name = "bite", verb = "bites" }
 
 # Bats fly: no footsteps, and the keenest ears.
 [[creature]]
@@ -67,6 +77,7 @@ sight = 8
 hearing = 3
 weight = 500
 stats = { strength = 1, dexterity = 15, toughness = 10, intelligence = 2, willpower = 14, presence = 4 }
+attack = { damage = "1d3", name = "bite", verb = "bites" }
 
 [[creature]]
 id = "kobold"
@@ -111,6 +122,8 @@ footsteps = 50
 hearing = 5
 weight = 80000
 stats = { strength = 14, dexterity = 15, toughness = 12, intelligence = 2, willpower = 12, presence = 5 }
+base_hp = 4
+attack = { damage = "1d4", name = "hoof", verb = "kicks" }
 
 # The kobold war band's archer: keeps its distance and shoots.
 [[creature]]
@@ -173,3 +186,5 @@ footsteps = 30
 hearing = 20
 weight = 300
 stats = { strength = 10, dexterity = 11, toughness = 11, intelligence = 1, willpower = 10, presence = 7 }
+attack = { damage = "1d3", name = "bite", verb = "bites" }
+natural = { defence = 3, name = "shell" }

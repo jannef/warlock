@@ -54,6 +54,18 @@ impl Backend {
         }
     }
 
+    /// Deletes a file; one that is not there is no error.
+    pub fn remove(&self, name: &str) -> io::Result<()> {
+        match self {
+            Self::Dir(dir) => match std::fs::remove_file(dir.join(name)) {
+                Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(()),
+                other => other,
+            },
+            #[cfg(target_arch = "wasm32")]
+            Self::Browser => web::remove(name),
+        }
+    }
+
     /// Whether the file exists.
     pub fn exists(&self, name: &str) -> bool {
         match self {

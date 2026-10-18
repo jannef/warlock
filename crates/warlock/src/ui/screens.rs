@@ -25,6 +25,7 @@
 use super::character_screen::CharacterScreen;
 use super::chargen_screen::{ChoiceScreen, Draft, Picks, Step, SummaryScreen};
 use super::controls_screen::ControlsScreen;
+use super::death_screen::DeathScreen;
 use super::equipment_screen::{EquipmentScreen, ItemScreen};
 use super::menu::{MainMenu, Press};
 use super::motion::Motion;
@@ -79,6 +80,10 @@ pub enum ScreenName {
     PickUp,
     /// Choose what to drop (`d` in play).
     Drop,
+    /// The run is over: who died, where, when, and of what. It opens by itself when the player
+    /// dies, so it is no `--screen`.
+    #[value(skip)]
+    Death,
 }
 
 impl ScreenName {
@@ -94,6 +99,7 @@ impl ScreenName {
                 | ScreenName::Character
                 | ScreenName::PickUp
                 | ScreenName::Drop
+                | ScreenName::Death
         )
     }
 }
@@ -110,6 +116,8 @@ pub enum MenuChoice {
     },
     /// Pause menu: save the run and return to the main menu.
     SaveToMenu,
+    /// Death screen: the run is over (its save already gone); return to the main menu.
+    LeaveRun,
     /// Quit the game; from the pause menu, the run is saved first.
     Quit,
 }
@@ -149,6 +157,7 @@ enum Screen {
     /// Choosing what goes in a slot.
     EquipItem(ItemScreen),
     Character(CharacterScreen),
+    Death(DeathScreen),
 }
 
 impl Screen {
@@ -184,6 +193,7 @@ impl Screen {
             ScreenName::Character => Screen::Character(CharacterScreen::new(run)),
             ScreenName::PickUp => objects(ObjectList::PickUp),
             ScreenName::Drop => objects(ObjectList::Drop),
+            ScreenName::Death => Screen::Death(DeathScreen::new(run)),
         }
     }
 
@@ -205,6 +215,7 @@ impl Screen {
             Screen::Equipment(_) => ScreenName::Equipment,
             Screen::EquipItem(_) => ScreenName::EquipItem,
             Screen::Character(_) => ScreenName::Character,
+            Screen::Death(_) => ScreenName::Death,
         }
     }
 }
@@ -331,6 +342,7 @@ impl ScreenStack {
             Some(Screen::Equipment(screen)) => screen.handle(press, bindings),
             Some(Screen::EquipItem(screen)) => screen.handle(press, bindings),
             Some(Screen::Character(screen)) => screen.handle(press, bindings),
+            Some(Screen::Death(screen)) => screen.handle(press),
         };
         if action == ScreenAction::Stay {
             return action;
@@ -369,7 +381,13 @@ impl ScreenStack {
             Some(Screen::Equipment(screen)) => screen.draw(console, bindings),
             Some(Screen::EquipItem(screen)) => screen.draw(console, bindings),
             Some(Screen::Character(screen)) => screen.draw(console, bindings),
+            Some(Screen::Death(screen)) => screen.draw(console),
         }
+    }
+
+    /// Whether the death screen is open.
+    fn shows_death(&self) -> bool {
+        (self.screens.iter()).any(|s| matches!(s, Screen::Death(_)))
     }
 }
 
@@ -435,6 +453,29 @@ fn startup_screens(screen: Option<ScreenName>, in_run: bool) -> Vec<ScreenName> 
     }
 }
 
+/// Ends the run on screen: nothing of it stays (the map, motion, a prompt), and the game goes.
+fn leave_run(commands: &mut Commands, grid: &mut MapGrid, mode: &mut InputMode) {
+    grid.console.clear();
+    grid.free_terrain.clear();
+    grid.clip = Rect::default();
+    *mode = InputMode::Normal;
+    commands.insert_resource(Motion::default());
+    commands.remove_resource::<Game>();
+}
+
+/// When the run has ended in death: its save is deleted (permadeath), and the death screen
+/// opens over the run as it ended, in place of whatever screen was open. Once.
+pub(super) fn on_death(game: Res<Game>, mut screens: Screens) {
+    if !game.is_changed() || game.world.death().is_none() || screens.stack.shows_death() {
+        return;
+    }
+    if let Err(e) = screens.store.delete_run() {
+        warn!("{e}");
+    }
+    screens.stack.clear();
+    screens.open(ScreenName::Death);
+}
+
 /// Applies menu choices: starts or resumes a run, saves and returns to the main menu, or quits.
 /// A choice that fails shows why on the menu it was made from.
 pub(super) fn apply_choice(
@@ -460,19 +501,19 @@ pub(super) fn apply_choice(
                 let Some(game) = &game else { continue };
                 match screens.store.save_run(&game.world) {
                     Ok(()) => {
-                        // Back to the main menu: nothing of the run stays on screen.
-                        grid.console.clear();
-                        grid.free_terrain.clear();
-                        grid.clip = Rect::default();
-                        *mode = InputMode::Normal;
-                        commands.insert_resource(Motion::default());
-                        commands.remove_resource::<Game>();
+                        leave_run(&mut commands, &mut grid, &mut mode);
                         screens.stack.clear();
                         screens.open(ScreenName::Main);
                         screens.stack.notice = Some("Game saved.".into());
                     }
                     Err(e) => screens.stack.fail(e, false),
                 }
+            }
+            // The run ended in death: its save is already gone, so nothing is saved.
+            MenuChoice::LeaveRun => {
+                leave_run(&mut commands, &mut grid, &mut mode);
+                screens.stack.clear();
+                screens.open(ScreenName::Main);
             }
             MenuChoice::Continue => match Game::resumed(&screens.store, &screens.content.0) {
                 Resume::Loaded(world) => {
@@ -1088,6 +1129,62 @@ mod tests {
                 Action::Drop(Letters::default())
             ]
         );
+    }
+
+    #[test]
+    fn death_deletes_the_save_and_the_death_screen_leads_to_the_main_menu() {
+        let content = content();
+        let dir = std::env::temp_dir().join(format!("warlock-death-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let args = Args::parse_from(["warlock", "--save-dir", dir.to_str().expect("utf-8")]);
+        let store = SaveStore::from_args(&args);
+        // The run was saved while it went on; then the archer shoots the lit player down.
+        let mut world = warlock_core::World::new(content.clone(), "arena", None).expect("run");
+        store.save_run(&world).expect("saved");
+        assert!(store.has_save());
+        world.apply(&Action::ToggleLantern);
+        while world.death().is_none() {
+            world.apply(&Action::Wait);
+        }
+        let mut app = App::new();
+        app.add_message::<KeyboardInput>()
+            .add_message::<PlayerAction>()
+            .add_message::<SaveCommand>()
+            .add_message::<MenuChoice>()
+            .insert_resource(store.clone())
+            .insert_resource(args)
+            .insert_resource(GameContent(content))
+            .insert_resource(Game::from_world(world))
+            .init_resource::<ScreenStack>()
+            .init_resource::<Settings>()
+            .init_resource::<Bindings>()
+            .init_resource::<InputMode>()
+            .init_resource::<DevOverlays>()
+            .init_resource::<MapGrid>()
+            .init_resource::<Actions>()
+            .add_systems(
+                Update,
+                (
+                    route_keys,
+                    apply_choice,
+                    count_actions,
+                    on_death.run_if(resource_exists::<Game>),
+                )
+                    .chain(),
+            );
+        app.update();
+        assert_eq!(names(&app), [ScreenName::Death]);
+        assert!(!store.has_save(), "permadeath: the save is gone");
+        // It takes every key; gameplay sees none.
+        frame(&mut app, &[WAIT, (KeyCode::KeyK, "k"), HELP]);
+        assert_eq!(names(&app), [ScreenName::Death]);
+        assert!(actions(&app).is_empty());
+        // Enter leaves the run for the main menu, which offers nothing to continue.
+        frame(&mut app, &[ENTER]);
+        assert!(!app.world().contains_resource::<Game>());
+        assert_eq!(names(&app), [ScreenName::Main]);
+        assert!(!store.has_save());
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]

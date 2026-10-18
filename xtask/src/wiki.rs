@@ -15,6 +15,7 @@ use std::fmt::Write as _;
 use std::path::PathBuf;
 use std::process::Command;
 use warlock_core::character::Gender;
+use warlock_core::combat;
 use warlock_core::content::{
     ActionKind, BASE_TURN, Combat, Content, CreatureId, FactionId, LevelKind, LightId,
     NORMAL_SPEED, ObjectId, Stance, TerrainDef, price,
@@ -136,6 +137,12 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("races.md".to_string(), races(content)),
         ("classes.md".to_string(), classes(content)),
         ("horoscope.md".to_string(), horoscope(content)),
+        ("weapons.md".to_string(), weapons(content)),
+        ("armour.md".to_string(), armour(content)),
+        ("hit-chances.md".to_string(), hit_chances()),
+        ("threats.md".to_string(), threats()),
+        ("hit-points.md".to_string(), hit_points(content)),
+        ("regeneration.md".to_string(), regeneration()),
     ];
     for (_, text) in &mut files {
         *text = format!(
@@ -941,18 +948,21 @@ fn stat_cells(by: &PerStat<Dice>) -> String {
 /// age, then what they are. Never their potentials.
 fn races(content: &Content) -> String {
     let (names, align) = stat_columns();
-    let mut out = format!("| Race |{names} Vision | Starting age |\n|---|{align}---|---|\n");
+    let mut out = format!(
+        "| Race |{names} Vision | Starting age | Hit points |\n|---|{align}---|---|:---:|\n"
+    );
     for r in &content.races().list {
         let vision = content
             .vision(&r.vision)
             .map_or(r.vision.as_str(), |v| &v.name);
         let _ = writeln!(
             out,
-            "| {} |{} {vision} | {}–{} |",
+            "| {} |{} {vision} | {}–{} | {} |",
             r.name,
             stat_cells(&r.stats),
             r.age.start(),
-            r.age.end()
+            r.age.end(),
+            r.hp
         );
     }
     out.push('\n');
@@ -965,9 +975,9 @@ fn races(content: &Content) -> String {
 /// The classes in the order New run offers them: their stat adjustments, then what they are.
 fn classes(content: &Content) -> String {
     let (names, align) = stat_columns();
-    let mut out = format!("| Class |{names}\n|---|{align}\n");
+    let mut out = format!("| Class |{names} Hit points |\n|---|{align}:---:|\n");
     for c in content.classes() {
-        let _ = writeln!(out, "| {} |{}", c.name, stat_cells(&c.stats));
+        let _ = writeln!(out, "| {} |{} {} |", c.name, stat_cells(&c.stats), c.hp);
     }
     out.push('\n');
     for c in content.classes() {
@@ -1033,6 +1043,168 @@ fn horoscope(content: &Content) -> String {
             h.name(&sign),
             years.join(", ")
         );
+    }
+    out
+}
+
+/// The natural rolls of a threat range: `22–24`, or `24` alone.
+fn threat_range(threat: u8) -> String {
+    if i32::from(threat) >= combat::SURE_HIT {
+        combat::SURE_HIT.to_string()
+    } else {
+        format!("{threat}–{}", combat::SURE_HIT)
+    }
+}
+
+/// `part` of `of` as a percentage, one decimal below 10 %, whole above.
+fn percent(part: u32, of: u32) -> String {
+    let p = f64::from(part) * 100.0 / f64::from(of);
+    if p < 10.0 && p.fract() != 0.0 {
+        format!("{p:.1}%")
+    } else {
+        format!("{p:.0}%")
+    }
+}
+
+/// The weapons and missile weapons: their damage dice, critical (threat range and multiplier),
+/// parry, the Strength a bow needs, and how they are held. Rules from data, nothing about who
+/// wields them.
+fn weapons(content: &Content) -> String {
+    let mut out = String::from(
+        "| Weapon | Damage | Critical on | Critical damage | Parry | Needs Strength | Held |\n\
+         |---|:---:|:---:|:---:|:---:|:---:|---|\n",
+    );
+    for (i, o) in content.object_defs().iter().enumerate() {
+        let Some(attack) = &o.attack else { continue };
+        let parry = if o.parry > 0 {
+            format!("+{}", o.parry)
+        } else {
+            "-".into()
+        };
+        let strength = attack.strength.map_or("-".to_string(), |s| s.to_string());
+        let held = if o.launches.is_some() {
+            format!("{}, shoots", goes_on(content, i).to_lowercase())
+        } else {
+            goes_on(content, i).to_lowercase()
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | ×{} | {parry} | {strength} | {held} |",
+            capital(&o.name),
+            attack.damage,
+            threat_range(attack.threat),
+            attack.crit,
+        );
+    }
+    let _ = writeln!(
+        out,
+        "\nBare hands: {} (plus your Strength, as every blow), critical on {}, ×{}.",
+        combat::Attack::unarmed().damage,
+        threat_range(combat::DEFAULT_THREAT),
+        combat::DEFAULT_CRIT
+    );
+    out
+}
+
+/// Armour and shields: what each adds to Defence, in which category, and the most Dexterity
+/// may add while it is worn.
+fn armour(content: &Content) -> String {
+    let mut out = String::from(
+        "| Armour or shield | Worn on | Defence | Category | Most Dexterity adds |\n\
+         |---|---|:---:|---|:---:|\n",
+    );
+    for (i, o) in content.object_defs().iter().enumerate() {
+        let (bonus, category) = match (o.armour, o.shield) {
+            (0, 0) => continue,
+            (a, s) if a >= s => (a, "Armour"),
+            (_, s) => (s, "Shield"),
+        };
+        let max_dex = o
+            .max_dex
+            .map_or("no limit".to_string(), |m| format!("+{m}"));
+        let _ = writeln!(
+            out,
+            "| {} | {} | +{bonus} | {category} | {max_dex} |",
+            capital(&o.name),
+            goes_on(content, i).to_lowercase(),
+        );
+    }
+    out
+}
+
+/// How often an attack hits by what its roll needs (Defence minus to-hit): the 2d12 bell.
+fn hit_chances() -> String {
+    let mut out = String::from("| The roll needs | Hits |\n|:---:|:---:|\n");
+    for needed in [4, 6, 8, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24] {
+        let _ = writeln!(
+            out,
+            "| {needed} | {} |",
+            percent(combat::hit_ways(0, needed), 144)
+        );
+    }
+    out
+}
+
+/// How often an attack roll threatens a critical, by threat range, and how often one confirms
+/// against Defence 10 at +0.
+fn threats() -> String {
+    let mut out = String::from(
+        "| Critical on | A roll threatens | Confirmed, with no bonus against Defence 10 | Like D&D's |\n\
+         |:---:|:---:|:---:|:---:|\n",
+    );
+    for (threat, dnd) in [(22, "20"), (20, "19–20"), (19, "18–20")] {
+        let threatens: u32 = (threat..=combat::SURE_HIT).map(combat::ways).sum();
+        let hit = combat::hit_ways(0, combat::BASE_DEFENCE);
+        let confirmed: u32 = (threat..=combat::SURE_HIT)
+            .filter(|&n| combat::hits(n, 0, combat::BASE_DEFENCE))
+            .map(combat::ways)
+            .sum::<u32>()
+            * hit;
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {dnd} |",
+            threat_range(threat as u8),
+            percent(threatens, 144),
+            percent(confirmed, 144 * 144),
+        );
+    }
+    out
+}
+
+/// What each race and each class adds to the hit points.
+fn hit_points(content: &Content) -> String {
+    let mut out = String::from("| Race | Hit points |\n|---|:---:|\n");
+    for r in &content.races().list {
+        let _ = writeln!(out, "| {} | {} |", r.name, r.hp);
+    }
+    out.push_str("\n| Class | Hit points |\n|---|:---:|\n");
+    for c in content.classes() {
+        let _ = writeln!(out, "| {} | {} |", c.name, c.hp);
+    }
+    out
+}
+
+/// How long a hit point takes to come back, by Toughness.
+fn regeneration() -> String {
+    let mut out = String::from("| Toughness | A hit point back every |\n|:---:|---|\n");
+    for toughness in [3, 6, 8, 10, 12, 14, 16, 18, 20, 22, 25] {
+        let seconds = combat::regen_seconds(toughness);
+        let (m, s) = (seconds / 60, seconds % 60);
+        let minutes = if m == 1 {
+            "1 minute".to_string()
+        } else {
+            format!("{m} minutes")
+        };
+        let text = match s {
+            0 => minutes,
+            s => format!("{minutes} and {s} seconds"),
+        };
+        let label = if toughness == 25 {
+            "25 or more".to_string()
+        } else {
+            toughness.to_string()
+        };
+        let _ = writeln!(out, "| {label} | {text} |");
     }
     out
 }
@@ -1132,6 +1304,44 @@ mod tests {
         );
         assert!(text("classes.md").contains("| Warrior | 1d3+1 | +1 | 1d3 | \u{2212}1 | 0 | 0 |"));
         assert!(text("classes.md").contains("- **Merchant**: A trader"));
+        // Combat: race and class hit points, weapons, armour, the rules' odds.
+        assert!(text("races.md").contains("| Normal | 16–35 | 4 |"));
+        assert!(
+            text("classes.md").contains("| Barbarian |") && text("classes.md").contains(" 8 |")
+        );
+        assert!(text("hit-points.md").contains("| Dwarf | 6 |"));
+        assert!(text("hit-points.md").contains("| Wizard | 0 |"));
+        let weapons = text("weapons.md");
+        assert!(
+            weapons.contains("| Dagger | 1d4 | 20–24 | ×2 | - | - | main hand |"),
+            "{weapons}"
+        );
+        assert!(weapons.contains("| Spear | 1d8 | 22–24 | ×3 |"));
+        assert!(
+            weapons
+                .contains("| Quarterstaff | 1d6 | 22–24 | ×2 | +1 | - | main hand (both hands) |")
+        );
+        assert!(
+            weapons.contains("| Short bow | 1d6 | 22–24 | ×3 | - | 10 | missile weapon, shoots |")
+        );
+        assert!(weapons.contains("Bare hands: 1d3"));
+        let armour = text("armour.md");
+        assert!(
+            armour.contains("| Chain mail shirt | body | +4 | Armour | +4 |"),
+            "{armour}"
+        );
+        assert!(armour.contains("| Small shield | off hand | +1 | Shield | no limit |"));
+        assert!(text("hit-chances.md").contains("| 10 | 75% |"));
+        assert!(text("hit-chances.md").contains("| 24 | 0.7% |"));
+        assert!(
+            text("threats.md").contains("| 22–24 | 4.2% | 3.1% | 20 |"),
+            "{}",
+            text("threats.md")
+        );
+        assert!(text("threats.md").contains("| 19–24 | 15% | 11% | 18–20 |"));
+        assert!(text("regeneration.md").contains("| 10 | 4 minutes |"));
+        assert!(text("regeneration.md").contains("| 3 | 5 minutes and 24 seconds |"));
+        assert!(text("regeneration.md").contains("| 25 or more | 1 minute |"));
         // Potentials stay hidden: the human's rolled potentials are nowhere.
         assert!(!text("races.md").contains("otential"));
         let horoscope = text("horoscope.md");

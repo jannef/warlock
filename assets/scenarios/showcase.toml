@@ -4,9 +4,11 @@ start_level = "hub"
 seed = 1
 # The player's character when the run does not choose one (New run and --character do): a
 # race (data/races.toml), a gender (male, female, or other), and a class (data/classes.toml). The
-# player's eyes and stats come from it. A scenario without one gives them itself: `vision` (a
-# profile in data/vision.toml; default "normal"), and `stats` and `potential` by stat id (1 to 40;
-# a missing score 10, the average; a missing potential the score; hidden from the player).
+# player's eyes, stats, and hit points come from it. A scenario without one gives them itself:
+# `vision` (a profile in data/vision.toml; default "normal"), `stats` and `potential` by stat id
+# (1 to 40; a missing score 10, the average; a missing potential the score; hidden from the
+# player), and `hp`, the hit points beyond Toughness that a race and a class would give (default
+# 0).
 character = { race = "human", gender = "female", class = "thief" }
 # The lantern the player carries (data/lights.toml; starts unlit).
 lantern = "lantern"

@@ -1,8 +1,9 @@
 # Races
 
 Your race is the first choice of a new run (see [Your character](character.md)). It changes your
-starting [stats](stats.md), gives you your eyes (the [vision type](vision.md) you start with), and
-sets how old you can be when you start.
+starting [stats](stats.md), gives you your eyes (the [vision type](vision.md) you start with),
+sets how old you can be when you start, and adds to your hit points (see
+[Combat](combat.md#hit-points)).
 
 {{#include generated/races.md}}
 

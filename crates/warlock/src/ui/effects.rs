@@ -265,6 +265,8 @@ pub(super) fn track(
                     (start, frozen_at),
                 );
             }
+            // A death shows as the creature gone (and what it dropped) and in the message line.
+            Event::Died { .. } => {}
             Event::LevelChanged { .. } => {
                 bursts.list.clear();
                 bursts.shots.clear();

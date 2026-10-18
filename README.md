@@ -10,8 +10,8 @@ and glyph-based effects — while every character stays crisp and readable.
 
 ![The light hall: colored crystals, pillar shadows, smooth falloff](docs/screenshots/m3-light-hall.png)
 
-This is the engine and framework phase: creatures hunt, shoot, and cast at you, but attacks are only
-announced (nothing takes damage yet), and there is no character progression. You walk a hand-made
+This is the engine and framework phase: creatures hunt you, fight, shoot, and die (spells are only
+announced so far), death is permanent, and there is no character progression yet. You walk a hand-made
 **showcase world** where each room demonstrates one capability, an arena where kobolds and giant
 rats fight, an ADOM-like **overworld** with day and night and weather, outdoor areas generated
 from it, a vast lit cavern, and procedurally generated dungeon levels.
@@ -46,10 +46,16 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   ADOM-style inventory lettered a–z shows what you carry and what it weighs, and an ADOM-style
   equipment screen puts it on: helm, amulet, armor, cloak, weapons and shield (or a two-handed
   staff), gloves, rings, boots, a bow and arrows. Creatures wield and wear what they carry, and
-  you see it. Equipment takes time to put on but changes no rule yet (combat is next).
+  you see it.
+- **Combat** — D&D-style with two twelve-sided dice: every blow and shot is rolled against
+  Defence (Dexterity, armour, shield, parry, a beetle's shell), misses say why ("You block the
+  kobold's spear with your shield."), criticals threaten and confirm ("The kobold hits you
+  hard!"), and weapons and armour come from data. ADOM-like hit points from Toughness, race, and
+  class heal with time; creatures die and drop what they carried, look as hurt as they are, and
+  your own death ends the run for good: the save is gone.
 - **Stats** — Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
-  D&D, for you and every creature; a character screen shows your own. They do not change the
-  rules yet.
+  D&D, for you and every creature; a character screen shows your own. Strength, Dexterity, and
+  Toughness count in a fight; the rest do nothing yet.
 - **Character creation** — ADOM-style, at the start of every run: seven races (elf, half-elf,
   human, dwarf, halfling, gnome, half-orc), each with its own eyes, three genders, and fifteen
   classes from barbarian and wizard to merchant and commoner shape your starting stats, with
@@ -101,7 +107,7 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   ![A generated level in The Depths](docs/screenshots/m6-depths-rooms.png)
 
 - **Saves** — one save per run, written when you quit and autosaved as you play (in the browser
-  too).
+  too); when you die, it is deleted.
 - **Settings** — font size, color palettes (including high contrast and a colorblind-friendly
   variant), per-effect switches, and fully rebindable keys.
 - **Everywhere** — Windows, macOS, Linux, and the browser (WebGPU).
@@ -126,7 +132,7 @@ cargo run --release -p warlock
 | `d` | Drop something |
 | `i` | Inventory: what you carry, by letter, and what it all weighs |
 | `e` | Equipment: wear and wield things, slot by slot (head, body, hands, rings, missiles, …), as in ADOM |
-| `@` | Character: your race, gender, class, age, birth sign, stats, and weight |
+| `@` | Character: your race, gender, class, age, birth sign, stats, hit points, Defence, and weight |
 | `R` | Rest an hour, until dawn, or until nightfall (stops when something comes into view) |
 | `x` | Look around: move a cursor to read what is there (takes no time) |
 | `?` | Show all controls |

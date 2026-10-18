@@ -27,21 +27,25 @@ Build the engine and framework, not the game. Everything built is production qua
 - Test creatures walking fixed patrol routes; from M10 they act at their own hidden speed (§8
   "Speed"), belong to factions (§7 "Factions") that are hostile or neutral to the player and to
   each other, hear noise, see by the player's rules (§5 "Creature sight"), and fight with
-  deterministic AI whose attacks are intents only (§8 "Creature behavior")
+  deterministic AI (§8 "Creature behavior")
 - Pickable objects (glyph, color, material, weight), inventory, and creature weight (M11)
 - Equipment (M16): ADOM-like slots in which the player and creatures wear and wield what they
-  carry, an equipment screen, and the time it takes to put things on and off (§6 "Equipment").
-  No rule uses equipment yet: combat comes later (#113)
+  carry, an equipment screen, and the time it takes to put things on and off (§6 "Equipment")
+- Combat (M16): melee blows and shots rolled with 2d12 against Defence (D&D-like, with threat
+  ranges and confirmed criticals), weapon and armour data, ADOM-like hit points from Toughness,
+  race, and class, regeneration with game time, and death: creatures die and drop what they
+  carry, the player's death ends the run for good (§8 "Combat"). Spells stay announced only
 - Moons with phases and moonlight, weather starting with rain (M12)
 - Action costs: what an actor does and its speed decide how long it takes (M13)
 - Stats (M14): Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
   D&D, with D&D 3.5 modifiers and ADOM-like potentials that the player never sees; every actor
-  has them, and the player sees their own scores on a character screen (§8 "Stats"). No rule
-  uses them yet, and no other D&D concept comes with them
+  has them, and the player sees their own scores on a character screen (§8 "Stats"). Combat uses
+  Strength, Dexterity, and Toughness (§8 "Combat"); no other rule uses stats yet
 - Character creation (M15): every new run chooses a race, a gender, and a class, which set the
   player's starting stats (partly rolled with dice, ADOM-like) and eyes; a random age by race
   and a random birthday give the birth year, whose horoscope sign (12 mythological animals × 5
-  elements) adjusts the stats too (§8 "Character creation"); classes do nothing else yet
+  elements) adjusts the stats too (§8 "Character creation"); race and class also give hit points
+  (§8 "Combat"); classes do nothing else yet
 - Save and resume an unfinished run
 - Keyboard controls with an in-game controls reference
 - Development interface (§9)
@@ -49,10 +53,10 @@ Build the engine and framework, not the game. Everything built is production qua
   (rooms and corridors, caves) with hand-made vaults, joined to the hand-authored levels by stairs
 - An overworld with travel time, locations, local areas, and day and night (M9)
 
-**Out of scope for now**: combat resolution (attacks are announced, nothing is damaged), rules
-that use stats (ability checks, saving throws, hit points, carrying capacity, training), what
-a class gives beyond starting stats (skills, equipment, spells), item effects, audio, mouse
-input, infravision, localization.
+**Out of scope for now**: magic (spells are announced, nothing is damaged), ranged combat for
+the player (#117), rules that use stats beyond combat (ability checks, saving throws, carrying
+capacity, training), levels and experience, what a class gives beyond starting stats and hit
+points (skills, equipment, spells), item effects, audio, mouse input, infravision, localization.
 
 Vision types are in scope even though there are no other mechanics yet: they are part of perception,
 and the light data model must carry them from the start.
@@ -91,9 +95,11 @@ a pit lit by wall torches, with pillars for cover; two cave bats and a cave beet
 their ways untouched. West lies the kobolds' camp behind two doors (kobolds open doors, rats do
 not), east the rat warren. The player arrives in the dark south-west corner and can watch unseen;
 each creature fights the nearest foe it sees, so coming close (lit, or within a kobold's
-darkvision) turns them on the player. Nothing dies, so the fight settles into a brawl that
-goes on: melee pairs attack each other turn after turn, the archer shoots and the shaman casts
-over them. The `arena` scenario starts there.
+darkvision) turns them on the player. The brawl resolves (M16): melee pairs trade blows, the
+archer shoots and the shaman casts (its spells announced only) over them, the wounded look it,
+and the fallen drop their spears, bow, and amulet where they die; the rats, quicker and harder
+to hit, win within a few minutes of game time. Lighting the lantern there gets the
+player shot from the dark. The `arena` scenario starts there.
 
 **Level 2 — Vast (≥ 400×300)**: scrolling camera, many light sources, performance budget check.
 Introduced in M2, lit in M3. Beside its stairs up to the hub, stairs down lead into the depths and
@@ -545,7 +551,7 @@ rate or animation.
     an action's loudness, so skills such as moving silently can change it there later. Loudness
     is at most 300; a creature without `footsteps` moves silently, a door without `toggle_noise`
     is silent. (Footsteps may scale with a creature's weight once it has one, M11.) Attacks
-    (intents, §8 "Creature behavior") are heard where the attacker stands: fighting (melee, 60), a
+    (§8 "Combat"; hit or miss) are heard where the attacker stands: fighting (melee, 60), a
     bowstring (a shot, 40), chanting (a spell, 50).
   - **Propagation**: a noise spreads from its cell through the 8 neighbors, losing 10 loudness
     per orthogonal step and 14 per diagonal one, plus the `muffle` of every cell it enters (a
@@ -615,7 +621,8 @@ rate or animation.
   the binding table, so it is always accurate.
 - **Screens**: the main menu, New run and its character creation steps, pause menu, Settings,
   Controls, help, the inventory, the equipment screen and its choice of what goes in a slot, the
-  character screen, and choosing what to pick up or drop are modal screens on one stack. Opening
+  character screen, choosing what to pick up or drop, and the death screen are modal screens on
+  one stack. Opening
   a screen puts it on top; Esc or Back closes it and returns to the screen below as it was left.
   While any screen is open it receives every key press, the run (if any) stays visible beneath
   it, and no game time passes but for what is chosen on a screen (picking up, dropping, wearing,
@@ -702,27 +709,38 @@ rate or animation.
   slot, nothing there) takes none. Messages say it: "You put on a leather jerkin.", "You wield a
   quarterstaff in both hands.", "You ready 24 arrows.", "You take off an iron helm.", "You put
   away a short bow." Equipped things stay in the inventory and still count toward the player's
-  weight. **No rule uses equipment yet**: it changes neither sight, noise, nor speed, and
-  combat (#113) comes later.
+  weight. What is worn and wielded fights and protects (§8 "Combat": the wielded weapon's blows,
+  the readied missile weapon's shots, armour, shield, and parry in Defence); it changes neither
+  sight, noise, nor speed.
 - **Character** (`@`): who the player is, as far as they know it: their name (the player
   creature's, "You"), their race, gender, and class (`Race    Dwarf`; "other" with the stat it
   raised), their age today, birthday, and birth sign as on the summary (when the run has a
   character), their score in each stat (§8 "Stats") in display order with its abbreviation and
-  full name (`St  Strength  12`), and their weight (their own plus what they carry). Never a modifier or a potential, which the player does not know. Read-only; `@`, Enter,
-  or Esc closes it. The status bar does not show stats: it is full at common window sizes.
+  full name (`St  Strength  12`), their hit points (`HP  Hit points  18/24`) and Defence
+  (`Dv  Defence  15`; the total only, as its Dexterity part would give away a modifier; §8
+  "Combat"), and their weight (their own plus what they carry). Never a modifier, a potential, or
+  a to-hit, which the player does not know. Read-only; `@`, Enter, or Esc closes it. The status
+  bar does not show stats: it is full at common window sizes.
+- **Death screen** (§8 "Combat"): when the player dies, the death screen opens over the run as it
+  ended, in place of any other screen, and the run's save is deleted (permadeath): `Y O U   D I E
+  D`, then who killed them ("Killed by a kobold", or "Killed by something you did not see" when
+  they did not see it), where (the level's name), when (the date and time), and after how many
+  turns. It takes every key press; Enter or Esc returns to the main menu (no Continue: nothing is
+  left to continue). A run that has ended is never saved again, by any trigger.
 - **Weight**: every object and every creature (the player included) has a weight in grams. An
   actor weighs its creature's base weight plus everything it carries; the rules know every
   actor's weight (no rule uses it yet; footstep noise, §5 "Hearing", may), but the player is shown
   only their own.
   Creatures carry objects from their spawn (`carry`, §7), and wield and wear some of them
-  (`wield`, `wear`); nothing makes them drop or change anything yet. Worn and wielded things
-  weigh what they weigh.
+  (`wield`, `wear`); they drop everything when they die (§8 "Combat"), and nothing else makes
+  them drop or change anything yet. Worn and wielded things weigh what they weigh.
   Weights read `450 g` below a kilogram and `3.5 kg` above.
 - **Rest** (`R`) asks in the message line: `Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to
   cancel)`. `h` rests an hour, `d` until 06:00, `n` until 18:00 (replay text `rest:1h`,
   `rest:dawn`, `rest:dusk`); any other command cancels. Resting is one action that passes turn
   after turn and stops early when a creature comes into view or a message is logged (§8 "Time"),
-  such as a sound that is news (§5 "Hearing") or rain starting or growing heavier (§5 "Weather");
+  such as an attack the player perceives (§8 "Combat"), a sound that is news (§5 "Hearing"), or
+  rain starting or growing heavier (§5 "Weather"), and when the player dies;
   a sound already known goes on without stopping it, and so does other news of the weather (the
   rain easing or stopping, clouds gathering or parting), which is logged all the same.
   It is a gameplay input mode like the open/close direction prompt, not a menu screen.
@@ -730,23 +748,34 @@ rate or animation.
   into one entry with a count (`You open the door. (×2)`). Heard sounds are logged only when they
   are news (§5 "Hearing"), so a patrol walking back and forth out of sight gives one message per
   pass, not one a turn.
-- **Attacks** (intents only, §8 "Creature behavior") are reported when the player perceives them:
-  they see the attacker or the target, or are the target. "The kobold attacks you.", "The kobold
-  archer shoots at the giant rat.", "The kobold shaman casts a spell at you."; an end the player
-  does not see is "something" ("Something attacks you.", "The kobold archer shoots at
-  something."). Attacks the player perceives nothing of leave no message (and no event). Moving
-  into a hostile creature attacks it ("You attack the giant rat.", or "You attack something."
-  when it is not seen; it takes a turn); into a neutral one stops ("The deer is in the way.",
-  "Something is in the way."; no time passes).
-- **Look mode** describes what the player perceives at the cursor: a creature and its terrain
-  (a hostile one marked: "A giant rat (hostile), on stone floor."; its type tells the player its
-  faction's stance toward them, the only faction information presentation gets), what the
-  creature wields, wears, and has ready, which is in plain sight ("A kobold (hostile), wielding a
-  spear, on stone floor.", "A kobold shaman (hostile), wearing a bone amulet, ...", "A kobold
-  archer (hostile), with a short bow and 20 arrows ready, ..."; never what else it carries),
-  terrain,
-  remembered terrain, where stairs lead, and a sound heard there ("You hear footsteps here.").
-- Screen layout: map viewport, message log, status panel (level, region (on the overworld and in
+- **Attacks** (§8 "Combat") are reported when the player perceives them: they see the attacker
+  or the target, or are the target. Messages say what came of an attack and never carry a number:
+  a hit ("The kobold hits you.", "The giant rat bites the kobold."; with a natural attack, its
+  verb), a confirmed critical ("The kobold hits you hard!"), a miss, and why it missed when the
+  player saw both ends ("The kobold misses you." for a plain miss; "You dodge the kobold's
+  spear.", "The kobold's spear glances off your armour.", "You block the kobold's spear with your
+  shield.", "You parry the kobold's spear.", "Your sword glances off the cave beetle's shell."),
+  a shot ("The kobold archer shoots the giant rat."), and a death ("The giant rat dies.", "You
+  die..."). Spells are announced ("The kobold shaman casts a spell at you."), and so is a shot by
+  a creature with no missile weapon ready ("... shoots at ..."). An end the player does not see is
+  "something" ("Something hits you.", "The kobold misses something."), and a miss is then just
+  a miss. A creature's attack is reported when the turn is perceived, the player's own as it is
+  made (by what they see as they strike). Attacks the player perceives nothing of leave no
+  message (and no event). Moving into a hostile creature attacks it in melee ("You hit the
+  giant rat.", "You miss something."; it takes a turn); into a neutral one stops ("The deer is
+  in the way.", "Something is in the way."; no time passes).
+- **Look mode** describes what the player perceives at the cursor: a creature and its terrain,
+  with how it stands toward the player and how hurt it looks ("A giant rat (hostile, unhurt), on
+  stone floor."; its type tells the player its faction's stance toward them, the only faction
+  information presentation gets; health in words, never hit points: unhurt, lightly wounded
+  (above two thirds), wounded (above a third), badly wounded (above a sixth), or nearly dead),
+  what the creature wields, wears, and has ready, which is in plain sight ("A kobold (hostile,
+  wounded), wielding a spear, on stone floor.", "A kobold shaman (hostile, unhurt), wearing a
+  bone amulet, ...", "A kobold archer (hostile, unhurt), with a short bow and 20 arrows ready,
+  ..."; never what else it carries), terrain, remembered terrain, where stairs lead, and a sound
+  heard there ("You hear footsteps here.").
+- Screen layout: map viewport, message log, status panel (level, the player's hit points as
+  `HP 18/24` (never below 0), region (on the overworld and in
   its local areas), time of day and date as `14:32 · 12 Rainmoon, Year 1444`, the moon's phase as a
   glyph and its name (`◑ First quarter`; with several moons each moon's name and glyph, `Moon ●
   Ilse ☽`), the weather under the open sky (`Clear`, `Overcast`, `Rain`, `Heavy rain`; §5
@@ -755,7 +784,8 @@ rate or animation.
   `◑` first quarter and waxing gibbous, `●` full, `◐` waning gibbous and last quarter, `☾` waning
   crescent. When the window is narrow, segments give way in priority order — seed, position,
   lantern, vision, light, turn, then the moon's phase (first cut down to its glyph), region, date
-  (first cut down to day and month, `12 Rainmoon`), weather, and time, the level name last — and
+  (first cut down to day and month, `12 Rainmoon`), weather, time, and hit points, the level name
+  last — and
   segments that fit again in the room left take it back, most important first. Outdoors the
   weather outranks the date: it changes the light and how far one sees.
 
@@ -840,7 +870,15 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   missing one 10), and `potential`, the same for its potentials (1 to 40, not below the score;
   a missing one equals the score). The player creature has none: the scenario gives the
   player's. The test creatures have D&D-like scores (the kobold St 9 Dx 13 To 10 In 10 Wi 9
-  Pr 8, the giant rat Dx 17 In 1, the cave bat St 1, the shaman Wi 14). Creature particle emitters may
+  Pr 8, the giant rat Dx 17 In 1, the cave bat St 1, the shaman Wi 14). For combat (§8
+  "Combat"; never shown but as words): `base_hp`, its hit points beyond its Toughness (0 to 1000,
+  default 0; the player creature has none: race and class give the player's); `attack`, its
+  natural attack, used when it wields no weapon (`{ damage = "1d4", name = "bite", verb = "bites"
+  }`, with optional `threat`, `crit`, and `to_hit` as for weapons; without one, bare hands:
+  1d3, "fist", "hits"); and `natural`, its natural armour (`{ defence = 3, name = "shell" }`, 1
+  to 20, the Natural category of Defence; the name is said when it turns a blow). The giant rat
+  and the cave bat bite (1d4, 1d3), the deer kicks (1d4, "hoof"; `base_hp` 4), the cave beetle
+  bites (1d3) and has a shell (3); kobolds fight with what they wield. Creature particle emitters may
   fire `on = "attack"`: a burst at the target of each attack the player sees (the shaman's
   violet sparkle). Terrain has a `move_cost`: what a step onto it costs in percent of a normal
   step (the `step` action; default 100; still and running water 200; local levels only), a
@@ -887,11 +925,19 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   error), `two_handed` (default false; only with a hand slot's `slot`, and there must be two
   hand slots: it takes both), `ammo` (the kind of ammunition it is, `ammo = "arrow"`), and
   `launches` (the kind a missile weapon shoots, `launches = "arrow"`; some object must be that
-  ammunition). Launchers and ammunition pair by that kind (`Content::fires`, for ranged combat
-  later). Test objects: weapons for the main hand (dagger, short sword, spear, club; a
-  two-handed quarterstaff), a small shield (off hand), an iron helm, a wool cloak, leather
-  gloves and boots, body armor (leather jerkin, chain mail shirt), a silver ring, amulets, a
-  short bow that launches arrows, and arrows.
+  ammunition). Launchers and ammunition pair by that kind (`Content::fires`). What they do in a
+  fight (§8 "Combat"; only for things with a `slot`): a weapon's `damage` dice (`"1d8"`; a
+  launcher's, required for one, are its shots' and carry its draw weight, `"1d8+2"`), `threat`
+  (the lowest natural roll that threatens a critical, 2 to 24, default 22), `crit` (the damage
+  multiplier, 2 to 5, default 2), `to_hit` (default 0, within ±20), and for bows `strength` (the
+  Strength they need, 1 to 40), all four only with `damage`; `parry` (Defence while wielded),
+  `armour` (while worn) and `max_dex` (the most Dexterity may add to Defence while it is worn),
+  and `shield` (while held), each 0 to 20. Test objects: weapons for the main hand (dagger 1d4
+  and short sword 1d6, threat 20; spear 1d8 ×3; club 1d6; a two-handed quarterstaff 1d6 with
+  parry 1), a small shield (off hand, shield 1), an iron helm, a wool cloak, leather gloves and
+  boots, body armor (leather jerkin armour 2, max Dexterity 6; chain mail shirt armour 4, max
+  Dexterity 4), a silver ring, amulets, a short bow that launches arrows (1d6 ×3, Strength 10),
+  and arrows.
 - **Equipment slots** (`data/slots.toml`, optional; without it nothing can be worn or wielded;
   M16): up to 26 `[[slot]]`s in the order the equipment screen lists them (lettered `a` on):
   `id` (objects name it in `slot`, replays in `equip:SLOT:LETTER`), `name`, `fits` (what objects
@@ -973,19 +1019,21 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 - **Races** (`data/races.toml`, optional; §8 "Character creation"), in the order New run offers
   them: `id`, `name`, a one-line `description`, `vision` (a profile in `vision.toml`: the
   player's eyes), `age = [youngest, oldest]` (a new character's age in years, 1 to 1000),
-  `stats` (adjustments to the starting scores), and `potential` (adjustments to the potentials,
-  the same way; hidden from the player); and at the top `base_potential` (1 to 40), what every
+  `stats` (adjustments to the starting scores), `potential` (adjustments to the potentials,
+  the same way; hidden from the player), and `hp` (its hit points, 0 to 1000, default 0; §8
+  "Combat"); and at the top `base_potential` (1 to 40), what every
   potential is before the race adjusts it (15). Races are mostly fixed numbers, their identity,
-  with a little dice. The races, their eyes, and ages: elf (low-light, 90–300), half-elf
-  (low-light, 20–60), human (normal, 16–35), dwarf (darkvision, 40–120), halfling (normal,
-  20–50), gnome (low-light, 40–150), half-orc (darkvision, 14–30); humans adjust no score but
-  roll `1d2` on every potential.
+  with a little dice. The races, their eyes, ages, and hit points: elf (low-light, 90–300, 2),
+  half-elf (low-light, 20–60, 3), human (normal, 16–35, 4), dwarf (darkvision, 40–120, 6),
+  halfling (normal, 20–50, 2), gnome (low-light, 40–150, 3), half-orc (darkvision, 14–30, 6);
+  humans adjust no score but roll `1d2` on every potential.
 - **Classes** (`data/classes.toml`, optional), in the order offered: `id`, `name`, a one-line
-  `description`, and `stats` (adjustments as for races). Each class rolls its key stats (the
-  warrior St `1d3+1` and To `1d3`, the wizard In `2d2+1` and To `-1d2`, the commoner To
-  `1d3-1`); the rest are fixed. Adventurers: barbarian, bard, priest, druid, monk, paladin,
-  ranger, thief, wizard, witch, warrior; everyday folk: aristocrat, commoner, craftsperson,
-  merchant. A class only adjusts the starting scores.
+  `description`, `stats` (adjustments as for races), and `hp` (as for races). Each class rolls
+  its key stats (the warrior St `1d3+1` and To `1d3`, the wizard In `2d2+1` and To `-1d2`, the
+  commoner To `1d3-1`); the rest are fixed. Adventurers: barbarian (8 hit points), bard (2),
+  priest (4), druid (4), monk (5), paladin (6), ranger (5), thief (3), wizard (0), witch (1),
+  warrior (7); everyday folk: aristocrat (1), commoner (3), craftsperson (3), merchant (2). A
+  class adjusts the starting scores and gives hit points, nothing more.
 - **Horoscope** (`data/horoscope.toml`, optional; §8 "Character creation"): `anchor_year`, a
   year that starts a great cycle (1: the year of the Great Race, the first of the reckoning),
   then the `[[animal]]`s in the order of the Great Race and the `[[element]]`s, each with `id`,
@@ -1000,10 +1048,11 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   `start_time = "hh:mm"` (default `"08:00"`), and the player's character when the run does not
   choose one: `character = { race = "human", gender = "female", class = "thief" }` (ids in
   `races.toml` and `classes.toml`; gender `male`, `female`, or `other`), from which the player's
-  eyes and stats follow. A scenario without a character (test fixtures, content without races or
-  classes) gives them itself: `vision` (default `normal`), and `stats` and `potential` as for
-  creature types (default 10 each, the potential the score); with a character these three are
-  refused. Every built-in scenario has a character with normal eyes: the showcase a human female
+  eyes, stats, and hit points follow. A scenario without a character (test fixtures, content
+  without races or classes) gives them itself: `vision` (default `normal`), `stats` and
+  `potential` as for creature types (default 10 each, the potential the score), and `hp` (the hit
+  points beyond Toughness a race and a class would give, 0 to 1000, default 0); with a character
+  these four are refused. Every built-in scenario has a character with normal eyes: the showcase a human female
   thief, the arena a halfling male thief, the courtyard a human female druid, the depths and the
   vast level a human male warrior, the forest a human female ranger, the world a human male
   ranger.
@@ -1026,13 +1075,18 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   potentials (§8 "Stats"; format version 8), the player's character (race, gender, and class,
   the stat the gender raised, birth date, and birth sign; §8 "Character creation"; format
   version 9), what every actor wears and wields (which inventory stack is in which slot, §6
-  "Equipment"; format version 10), and a dev weather override while
+  "Equipment"; format version 10), every actor's hit points (what it has left, what its race and
+  class or its type add to its Toughness, and the seconds banked toward the next one back; §8
+  "Combat"; format version 11), and a dev weather override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
   platform data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
   and on level change, and a save that cannot be read is renamed `run.sav.bad`, never deleted, while
-  a new run starts. Starting resumes the save unless `--new` is given. Dev snapshots: `F5` saves and
-  `F9` loads `snapshots/quick.sav` (debug builds or `--dev`).
+  a new run starts. Starting resumes the save unless `--new` is given. **Permadeath**: when the
+  player dies the save is deleted, and a run that has ended is never saved again (every trigger
+  that would save it deletes the save instead; on the web nothing is kept for the page being
+  hidden). Dev snapshots: `F5` saves and `F9` loads `snapshots/quick.sav` (debug builds or
+  `--dev`).
   On the web the files are `localStorage` keys `warlock/run.sav`, `warlock/run.sav.bad`,
   `warlock/snapshots/quick.sav`, and `warlock/settings.toml`, the save bytes base64-encoded, with the
   same envelope and checks. The same triggers save (autosave, level change, `Q`), and so does the page
@@ -1146,8 +1200,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     least the level's cheapest step), so a fast creature shortens the stretch. Those turns cannot
     change when the rest stops (sounds carry at most 30 cells, less than the view range, so none
     is missed), and a night's rest stays fast on large levels
-    (`cargo xtask bench-turns` times one; budget 500 ms; also the worst case, a fight in the
-    arena going on all night out of the player's sight and hearing).
+    (`cargo xtask bench-turns` times one; budget 500 ms; also one beside a fight in the
+    arena out of the player's sight and hearing, which goes on until one side is dead).
   - **Dev skip** (`F6` in dev builds, replay text `skip:1h`) moves the clock ahead at once;
     nobody acts or gains energy and no turn passes, but it is recorded like any action.
 - **Creature behavior** (`warlock-core/src/world/ai.rs`, inside `World::creature_turn`; M10):
@@ -1175,12 +1229,78 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   them rather than take a long one. Ties go to cells nearer the target, then to the earlier
   direction (N, NE, E, … NW). A spot it cannot reach is given up.
 
-  **Attacks are intents only**: no damage, hit points, or death. An attack is an event
-  (`Event::Attacked { attacker, target, kind: Melee | Ranged | Spell, from, to }`), a noise (§5),
-  and a message when the player perceives it (§6). The event reaches presentation only when the
-  player sees both ends (or made the attack). The player moving into a hostile creature is a
-  melee attack; into a neutral one it stops. What a creature has in mind (last seen, noise to
-  look into, post) is part of the world state.
+  **Attacks** are resolved by the rules of combat ("Combat" below): melee blows and shots hurt
+  and kill; spells (and shots by a creature with no missile weapon ready) stay intents until
+  magic is designed. An attack is an event (`Event::Attacked { attacker, target, kind: Melee |
+  Ranged | Spell, from, to, strike }`, `strike` what came of it, `None` for an intent), a noise
+  (§5), and a message when the player perceives it (§6). The event reaches presentation only
+  when the player sees both ends (or made the attack and saw the target). The player moving into
+  a hostile creature is a melee attack; into a neutral one it stops. Creatures neither flee nor
+  fight differently when hurt. What a creature has in mind (last seen, noise to look into, post)
+  is part of the world state.
+- **Combat** (`warlock-core/src/combat.rs`, the rules; `world/fight.rs`, applying them; M16),
+  after D&D 3rd edition with 2d12 and ADOM-like hit points. Every roll comes from the gameplay
+  random stream.
+  - **Hitting**: an attack hits when 2d12 (its *natural* roll, 2 to 24, average 13) plus its
+    to-hit is at least the target's **Defence** ("Dv"). A natural 2 always misses (and is a plain
+    miss), a natural 24 always hits. To-hit is the attack's own (`to_hit`, default 0) plus, in
+    melee, the attacker's Strength modifier, and for a shot the Dexterity modifier. At +0 against
+    Defence 10 an attack hits 75 % of the time; each point is worth about 7–8 points of chance
+    near the middle and much less at the ends.
+  - **Criticals** (3.5's threat range and confirmation): a hit whose natural roll is at least
+    the attack's `threat` (default 22, "22–24", 3.5's natural 20 by probability; 20 for 3.5's
+    19–20, 19 for 18–20) threatens; a second roll with the same to-hit against the same Defence
+    confirms it (by the same rule: 2 never, 24 always), and then the damage is rolled `crit`
+    times (default 2), modifiers each time. At +0 against Defence 10 a default weapon confirms
+    on 3.1 % of attacks, a 19–24 one on 10.9 %.
+  - **Damage**: the attack's dice (their fixed part included) plus its bonus, at least 1 a hit.
+    Melee (and later thrown) weapons add the Strength modifier; a shot adds no modifier: the
+    launcher's own bonus is in its dice (its draw weight), and each point of Strength below what
+    a bow needs costs 1 to hit and 1 damage. Bare hands are 1d3 plus Strength; a creature with
+    no weapon uses its natural attack (§7), else bare hands. Melee uses the weapon in the first
+    hand slot that holds one; a shot uses the missile weapon in a `ready` slot, and the
+    ammunition matched to it only names the shot (#117 adds launching, ammunition use, and the
+    player's shots; `World::attack_with` takes any `Profile`: `Profile::ranged`,
+    `Profile::thrown`).
+  - **Defence** = 10 + one bonus per category: **Dexterity** (the Dexterity modifier, capped
+    by the lowest `max_dex` of what the actor wears; a penalty counts in full), **Armour** (worn
+    `armour`), **Shield** (held `shield`), **Parry** (a wielded weapon's `parry`), **Natural** (the
+    creature type's `natural` armour), **Dodge** (none yet: training and effects), and
+    **Deflection** (none yet: magic). Within a category only the highest bonus counts, except
+    Dodge, whose bonuses add up.
+  - **Why it missed**: a miss whose natural roll plus to-hit is below 10 would have missed an
+    unarmoured, motionless target: a plain miss. Otherwise one category with a positive bonus
+    made the difference, picked by one draw weighted by its bonus (in category order); a
+    negative bonus is never the reason. Against Defence 16 (Dexterity 2, Armour 3, Shield 1) an
+    attacker at +0 misses 69 % of the time: 36 % of those plain, 32 % the armour, 21 % a dodge,
+    11 % the shield. The reason is in the attack's `strike` and its message (§6): Dexterity and
+    Dodge are dodges, Armour and Natural glance off, Shield blocks, Parry parries, Deflection
+    turns aside. Later rules hook in there (dodges training Dexterity, shield and parry effects).
+  - **Order of draws**: the two dice of the attack roll; on an attributable miss one draw for
+    why; on a threat the two dice of the confirmation; then one draw per damage die each time the
+    damage is rolled.
+  - **Hit points** (ADOM-like, no hit dice, no levels): maximum = Toughness + race HP + class
+    HP (§7 tables: e.g. a dwarf barbarian with To 16 has 6 + 8 + 16 = 30; a human warrior with
+    To 12 has 23; an elf wizard with To 8 has 10), at least 1; a creature's = Toughness + its
+    type's `base_hp` (a giant rat with To 12 and none has 12). Linear in Toughness: no runaway
+    pools. Every actor starts at its maximum (`Actor::hp`, `hp_base`).
+  - **Regeneration**: a hurt actor on the current level gets 1 hit point back per
+    `max(60 s, 360 s − 12 s × Toughness)` of game time (To 10: 4 minutes; To 25 and up: 1
+    minute), counted as the scheduler moves the clock (resting included; the dev time skip and
+    other levels' frozen actors get none). Seconds toward the next point carry over
+    (`Actor::regen`, saved) and are dropped at full health.
+  - **Death**: at 0 hit points an actor dies (`Event::Died { actor, at }`, right after the
+    attack). A creature leaves the world, and what it carried, worn and wielded things too, falls
+    on its cell on top of the pile there, in inventory order. The player's death ends the run: it
+    is recorded (`World::death`: turn, time, the level's name, and the creature type that killed
+    them if they saw it), the turn stops there, every later action is refused, and presentation
+    shows the death screen and deletes the save (§6, §7 "Saves").
+  - **What the player perceives**: their own hit points and Defence total (`PerceptionView::
+    own_hp`, `own_defence`); how hurt each seen creature looks, in words (`SeenActor::health`:
+    unhurt, lightly wounded, wounded, badly wounded, nearly dead); and the messages. Never a
+    creature's hit points, a to-hit, a roll, a modifier, or the Defence breakdown (its Dexterity
+    part would give a modifier away). Ground-truth dev dumps (`actors`) show every actor's hit
+    points and Defence.
 - **Stats** (`warlock-core/src/stats.rs`; M14): six stats inspired by D&D, in display order
   Strength (St), Dexterity (Dx), Toughness (To; D&D's Constitution), Intelligence (In),
   Willpower (Wi; D&D's Wisdom), and Presence (Pr; D&D's Charisma). More will come (mostly
@@ -1200,9 +1320,11 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     `stats` dump layer; the perception snapshot carries those and nothing else of stats
     (`PerceptionView::own_scores`). A creature's stats are never shown; ground-truth dev dumps
     (`actors`, the world state) show every actor's scores and potentials.
-  - **No rule uses stats yet**, and no other D&D concept comes with them: no ability checks,
-    saving throws, hit points from Toughness, or carrying capacity from Strength. Stats and
-    potentials are part of the world state (saved, covered by the state hash).
+  - **What uses them**: combat (Strength to hit and to damage in melee, Dexterity to hit with
+    shots and in Defence, Toughness in hit points and regeneration; "Combat" below). No other
+    rule does yet, and no other D&D concept comes with them: no ability checks, saving throws, or
+    carrying capacity from Strength. Stats and potentials are part of the world state (saved,
+    covered by the state hash).
 - **Character creation** (`warlock-core/src/character.rs`; M15): a run starts as a character, a
   race (`data/races.toml`), a gender (male, female, or other), and a class
   (`data/classes.toml`), chosen on New run (§6) or given on the command line (`--character
@@ -1236,9 +1358,11 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     rolled), within 1 to 40 and never below the starting score. Classes, genders, and signs do
     not change potentials.
   - **Eyes**: the player's vision profile is the race's (the dev vision switch still works).
+  - **Hit points**: the race's and the class's `hp` add to Toughness for the maximum ("Combat"
+    below).
   - Balance is deliberately not a goal: some combinations are poor (a halfling commoner), and
-    classes do nothing but adjust starting scores. No other D&D concept comes with them
-    (alignment, skills, hit points, equipment, spells).
+    classes do nothing but adjust starting scores and give hit points. No other D&D concept
+    comes with them (alignment, skills, equipment, spells).
   - The character (`Character`: the race, gender, and class ids, the stat the gender raised,
     the birth date, and the birth sign) is part of the world state (saved, hashed) and shown on
     the character screen; replays record the choice only, and since everything else follows
@@ -1246,17 +1370,18 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     scenario, seed, and character. `World::new` starts as the scenario's character,
     `World::with_character` as a given one.
 - **Dice** (`warlock-core/src/dice.rs`): one type for every roll the rules make (character
-  creation now, weapon damage later). Text form: a fixed number (`+2`, `-1`, `0`) or `NdS`
+  creation, weapon and natural attack damage). Text form: a fixed number (`+2`, `-1`, `0`) or `NdS`
   (`N` dice of `S` sides: 1 to 100 dice, 2 to 1000 sides), optionally negated (`-1d2`) and
   with a fixed number after it (`2d3+1`, `1d4-1`; within ±1000); no spaces, lower-case `d`.
   `Dice` parses, prints its canonical text, gives its `min` and `max`, and rolls from a
   deterministic stream: one uniform draw per die, none for a fixed number. Data files may give
   a fixed number as a TOML integer.
-- **Events to effects**: the core emits events (door opened, actor moved, attacked); the
+- **Events to effects**: the core emits events (door opened, actor moved, attacked, died); the
   presentation layer turns them into animations: slides, a short lunge toward the target for a
   melee attack (motion), a shot glyph flying from shooter to target and a creature's `attack`
-  particles where its attack lands, e.g. the shaman's violet sparkle (particles). Gameplay never
-  waits for them.
+  particles where its attack lands, e.g. the shaman's violet sparkle (particles); a death shows
+  as the creature gone and what it dropped, and in the message line. Gameplay never waits for
+  them.
 - **Determinism**: ChaCha8 RNG (`rand_chacha`) with separate streams, each seeded with FNV-1a 64 of
   the run seed (little-endian) and a label: map generation per level (`map/<level id>`, retry *k*
   `map/<level id>/<k>`), so a level depends only on the seed and its id, never on visiting order;
@@ -1319,18 +1444,21 @@ cargo xtask golden [--update]                             # compare golden scree
   and `stats` (the player's race, gender, and class, `Race Dwarf`, their age, birthday, and
   sign, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`, then their own scores,
   `Strength 12`) are built from the perception snapshot only;
-  `truth` (terrain, objects, and creatures) and `actors` (every actor on the level with its
+  `truth` (terrain, objects, and creatures) and `actors` (every actor on the level with its hit
+  points and Defence, `hp 8/12 dv 13`, its
   weight, base plus carried, what it carries and of that wears and wields, `equipped main_hand a
   spear`, and its stats as score/potential, `St 12/15`) show
   ground truth and are dev-only. JSON dumps
   carry turn, game time (seconds and calendar fields), level, viewer, the weather (under the open
-  sky; else null), seen actors, heard sounds, the player's inventory, equipment (by slot id:
-  letter, object, count), weight, character
+  sky; else null), seen actors (each with how hurt it looks, `health`: `unhurt`,
+  `lightly_wounded`, `wounded`, `badly_wounded`, `nearly_dead`), heard sounds, the player's
+  inventory, equipment (by slot id: letter, object, count), weight, character
   (`{race, gender, class, raised, age, born: {year, month, day}, sign: {animal, element}}` or
-  null), and scores (`stats`, by stat id), recent messages,
+  null), scores (`stats`, by stat id), hit points (`hp: {current, max}`), Defence (`defence`, the
+  total), how the run ended (`death: {turn, time, place, by}` or null), recent messages,
   and optionally the full world state; the ASCII header line has the turn, the time
-  (`0001-01-01 08:00:00`), level, viewer, the weather under the open sky (`weather rain`), and
-  hash.
+  (`0001-01-01 08:00:00`), level, viewer, the player's hit points (`hp 17/17`, then `dead` once
+  they have died), the weather under the open sky (`weather rain`), and hash.
 - Freezing visual time and fixing window size and scale make screenshots reproducible. With frozen
   time, glyph animations show that moment and motion (slides, camera) completes instantly.
 - Dev builds add in-game commands: switch vision profile (`F3`), reveal map (`F2`, ground truth,
@@ -1428,9 +1556,12 @@ Each milestone ships a playable build.
   and class set the starting stats, partly rolled with dice; a random age and birthday give the
   horoscope sign (12 animals × 5 elements, a 60-year great cycle), which adjusts them too; a
   summary before the run starts; the character saved, replayed, and given on the command line.
-- **M16 Combat** (begun) — equipment: ADOM-like slots (data), an equipment screen (`e`),
+- **M16 Combat** — equipment: ADOM-like slots (data), an equipment screen (`e`),
   wearing and wielding with their action costs, creatures that wield and wear what they carry;
-  combat itself follows (#113).
+  the combat core (#113, #116): 2d12 against Defence with categories and miss attribution,
+  threat ranges with confirmed criticals, weapon and armour data, hit points from Toughness,
+  race, and class, regeneration, death with drops and permadeath, health in words; ranged
+  combat for the player follows (#117).
 
 ## 13. GitHub workflow
 

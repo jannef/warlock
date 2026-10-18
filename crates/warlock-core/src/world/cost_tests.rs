@@ -128,6 +128,7 @@ name = "walker"
 glyph = "w"
 fg = "#806040"
 weight = 1000
+base_hp = 1000
 faction = "wildlife"
 
 [[creature]]
@@ -136,6 +137,7 @@ name = "grunt"
 glyph = "g"
 fg = "#60a040"
 weight = 1000
+base_hp = 1000
 faction = "foes"
 
 [[creature]]
@@ -144,6 +146,7 @@ name = "brute"
 glyph = "B"
 fg = "#60a040"
 weight = 1000
+base_hp = 1000
 faction = "foes"
 attack_cost = 2000
 
@@ -153,6 +156,7 @@ name = "archer"
 glyph = "a"
 fg = "#a0a040"
 weight = 1000
+base_hp = 1000
 faction = "foes"
 combat = "ranged"
 range = 3
@@ -163,6 +167,7 @@ name = "shaman"
 glyph = "s"
 fg = "#a040a0"
 weight = 1000
+base_hp = 1000
 faction = "foes"
 combat = "caster"
 range = 3
@@ -281,7 +286,7 @@ fn files(player_speed: u32) -> ContentFiles {
     for name in ["yard", "pit", "wilds", "hall"] {
         files.insert(
             &format!("scenarios/{name}.toml"),
-            &format!("name = \"{name}\"\nstart_level = \"{name}\"\n"),
+            &format!("name = \"{name}\"\nstart_level = \"{name}\"\nhp = 1000\n"),
         );
     }
     files

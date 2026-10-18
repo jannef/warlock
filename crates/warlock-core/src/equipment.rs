@@ -3,7 +3,7 @@
 //! Equipped things stay in the actor's inventory (they keep their letters and still count
 //! toward its weight); [`Equipment`] records which inventory stack is in which slot
 //! (`data/slots.toml`, [`crate::content::SlotDef`]). A two-handed object is in every hand slot at
-//! once. Equipment changes no rule yet: combat comes later.
+//! once. Combat reads it (`Actor::weapon`, `launcher`, `defence`).
 
 use crate::action::Letters;
 use crate::content::{ActionKind, Content, ObjectId, SlotId};

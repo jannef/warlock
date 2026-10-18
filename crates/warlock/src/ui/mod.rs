@@ -12,14 +12,15 @@
 //!
 //! Menus, character creation ([`chargen_screen`]), settings, controls, the `?` help, the
 //! inventory, choosing what to pick up or drop ([`object_screen`]), the equipment screen and its
-//! choice of what goes in a slot ([`equipment_screen`]), and the character screen
-//! ([`character_screen`]) are screens on one stack
+//! choice of what goes in a slot ([`equipment_screen`]), the character screen
+//! ([`character_screen`]), and the death screen ([`death_screen`]) are screens on one stack
 //! ([`screens`]): opened by [`Screens::open`], fed key presses by `input::route_keys`, and drawn
 //! by [`draw`], the one system that writes the UI console.
 
 mod character_screen;
 mod chargen_screen;
 mod controls_screen;
+mod death_screen;
 mod dev;
 mod effects;
 mod equipment_screen;
@@ -93,7 +94,7 @@ impl Plugin for UiPlugin {
                         .chain()
                         .after(SimSet)
                         .run_if(resource_exists::<Game>),
-                    screens::refresh
+                    (screens::refresh, screens::on_death)
                         .after(SimSet)
                         .before(draw)
                         .run_if(resource_exists::<Game>),
@@ -395,13 +396,16 @@ fn status_segments(world: &World) -> Vec<Segment> {
         None => None,
     };
     let content = view.content();
-    // Display order; the number is the drop priority (higher drops first when space runs out).
-    // The moon phase is cut down to its glyph and the date to its day and month before they are
-    // dropped. The weather shows only under the open sky, where the player knows it, and there
-    // it matters more than the date: it changes the light and how far one sees.
+    // Display order; the number is the drop priority (higher drops first when space runs out;
+    // of equal ones the later first). The moon phase is cut down to its glyph and the date to
+    // its day and month before they are dropped. The weather shows only under the open sky,
+    // where the player knows it, and there it matters more than the date: it changes the light
+    // and how far one sees. Hit points matter most after the level: they outlast the time.
     let calendar = content.calendar();
+    let (hp, max_hp) = view.own_hp();
     [
         Some(Segment::new(0, view.level_name())),
+        Some(Segment::new(1, format!("HP {hp}/{max_hp}"))),
         view.region().map(|r| Segment::new(4, r)),
         Some(Segment::new(
             1,
@@ -647,11 +651,24 @@ mod tests {
             segments[date.expect("date")].short.as_deref(),
             Some("11 Darkening")
         );
-        let line = fit_segments(&segments, 60);
+        let line = fit_segments(&segments, 70);
         assert!(
             line.contains("Heavy rain") && line.contains("11 Darkening"),
             "{line}"
         );
+    }
+
+    #[test]
+    fn the_status_bar_shows_hit_points_and_keeps_them_late() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let world = World::new(content, "showcase", None).expect("starts");
+        let segments = status_segments(&world);
+        assert_eq!(segments[1].text, "HP 17/17", "right after the level");
+        // Narrow: everything but the level gives way first, the time included.
+        let line = fit_segments(&segments, 25);
+        assert!(line.starts_with("The Hub  ·  HP 17/17"), "{line}");
+        assert!(!line.contains(':'), "{line}");
+        assert_eq!(fit_segments(&segments, 20), "The Hub  ·  HP 17/17");
     }
 
     #[test]
