@@ -8,6 +8,9 @@
 # darkness chamber has only faint fungus (f, low-light vision) and a UV rune (u, UV sight); the
 # patrol gallery is dark in the middle, where only the kobold's torch lights the way.
 #
+# Speed (M10): in the patrol gallery a giant rat (1) and a cave bat (3) run down parallel lanes,
+# the bat faster; the torch-carrying kobold (2) circles them a little slower than you walk.
+#
 # Effects (M4): the effects room has a brazier (sparks, glow, heat haze), a lava pool (=, embers,
 # haze), a fountain (F) in a pool to wade through (splashes), and dusty floor (:, drifting motes);
 # doors puff dust when they open or close, and the stairs fade the screen on the way down.
@@ -36,7 +39,7 @@ map = '''
 #..t.......t...########.########.........................#..........~~~#.......#
 #..............##t....#l#....t##..#...#...#...#...#...#..#..........~F~#...l.^.#
 #..............##.....+.+.....##1........................#..........~~~#.......#
-#......@.......##.....#.#.....##.........................#......B......#.......#
+#......@.......##.....#.#.....##3........................#......B......#.......#
 #..............####+###.###+####..#...#...#...#...#...#..#.............#.<.>...#
 #..............##.............##2........................#.===.....::::#.......#
 #..............##......t......##.........................#.===.....::::#.......#
@@ -48,6 +51,9 @@ map = '''
 "@" = { terrain = "floor", spawn = "player" }
 "1" = { terrain = "floor", creature = "rat", route = "E24 W24" }
 "2" = { terrain = "floor", creature = "kobold", route = "E24 N5 W24 S5" }
+# Beside the rat, a cave bat on a parallel lane: it is faster (creatures.toml `speed`), so it
+# pulls ahead and laps the rat.
+"3" = { terrain = "floor", creature = "bat", route = "E24 W24" }
 ">" = { terrain = "stairs_down", to = "vast" }
 "<" = { terrain = "stairs_up", to = "overworld" }
 "t" = "sconce"

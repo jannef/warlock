@@ -5,7 +5,8 @@ use crate::geom::{Dir, Pos};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-/// Stable actor identity. Ids are never reused within a run; creatures act in ascending id order.
+/// Stable actor identity. Ids are never reused within a run; actors ready at the same moment act
+/// in ascending id order, after the player.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct ActorId(pub u32);
 
@@ -38,4 +39,8 @@ pub struct Actor {
     pub level: String,
     pub pos: Pos,
     pub patrol: Option<Patrol>,
+    /// Scheduler energy (spec §8 "Speed", `world/schedule.rs`): the actor may act while this is
+    /// at least 0. It gains the creature type's speed per second of game time while the actor is
+    /// on the current level; an action costs 1000 per second it takes.
+    pub energy: i64,
 }

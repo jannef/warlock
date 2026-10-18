@@ -1,31 +1,36 @@
 # Creature types. The player is the creature with id "player".
-# Fields: id, name, glyph, fg, light (a preset in lights.toml the creature carries), anim, and the
-# presentation-only effects glow and [[creature.particles]] (see terrain.toml; they move with the
-# creature).
+# Fields: id, name, glyph, fg, speed (how quickly it acts: 1000 is normal and the default, 2000
+# twice as many actions in the same game time; 100 to 10000; never shown to the player), light (a
+# preset in lights.toml the creature carries), anim, and the presentation-only effects glow and
+# [[creature.particles]] (see terrain.toml; they move with the creature).
 
 [[creature]]
 id = "player"
 name = "you"
 glyph = "@"
 fg = "#f4f4f4"
+speed = 1000
 
 [[creature]]
 id = "rat"
 name = "giant rat"
 glyph = "r"
 fg = "#b08458"
+speed = 1200
 
 [[creature]]
 id = "bat"
 name = "cave bat"
 glyph = "b"
 fg = "#9a7ab8"
+speed = 2000
 
 [[creature]]
 id = "kobold"
 name = "kobold"
 glyph = "k"
 fg = "#7cb85a"
+speed = 900
 light = "torch"
 
 # Sparks from the torch it carries.
@@ -48,3 +53,4 @@ id = "deer"
 name = "deer"
 glyph = "d"
 fg = "#c89a64"
+speed = 1300
