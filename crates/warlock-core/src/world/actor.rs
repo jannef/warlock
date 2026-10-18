@@ -4,6 +4,7 @@ use crate::content::{Content, CreatureId};
 use crate::geom::{Dir, Pos};
 use crate::noise::Heard;
 use crate::object::{Stack, Weight, weight_of};
+use crate::stats::Stats;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -81,6 +82,10 @@ pub struct Actor {
     /// What it carries, lettered `a` on (see [`crate::object`]).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub inventory: Vec<Stack>,
+    /// Its scores and potentials (spec §8 "Stats"; [`crate::stats`]): from its creature type,
+    /// the player's from the scenario. Known to the rules (and dev tools) for every actor; the
+    /// player is shown only their own scores.
+    pub stats: Stats,
 }
 
 impl Actor {

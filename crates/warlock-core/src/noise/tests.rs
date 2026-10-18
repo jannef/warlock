@@ -117,6 +117,7 @@ fn actor(content: &Content, creature: &str) -> Actor {
         heard: Vec::new(),
         inventory: Vec::new(),
         mind: Default::default(),
+        stats: Default::default(),
     }
 }
 

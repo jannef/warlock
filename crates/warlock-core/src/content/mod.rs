@@ -47,6 +47,7 @@ pub use weather::{Climate, MAX_SIGHT_LOSS, WeatherDef};
 
 use crate::noise::MAX_LOUDNESS;
 use crate::perception::VIEW_RADIUS;
+use crate::stats::Stats;
 use level::{LegendEntry, legend_char};
 use serde::Deserialize;
 use std::collections::{BTreeMap, BTreeSet};
@@ -460,8 +461,19 @@ impl Content {
                     spec.id
                 )));
             }
+            let has_stats = !spec.stats.is_empty() || !spec.potential.is_empty();
+            if spec.id == "player" && has_stats {
+                return Err(err(
+                    "creature `player`: the player's stats come from the scenario (`stats` and \
+                     `potential` in scenarios/*.toml)"
+                        .into(),
+                ));
+            }
+            let stats = Stats::from_data(&spec.stats, &spec.potential)
+                .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let resolved = creature::Resolved {
                 light,
+                stats,
                 faction: self.creature_faction(&spec).map_err(err)?,
                 vision: self.vision_index(&spec.vision).ok_or_else(|| {
                     err(format!(
@@ -1631,6 +1643,92 @@ mod tests {
         files.insert("data/creatures.toml", &creatures);
         let err = Content::load(&files).unwrap_err();
         assert!(err.message.contains("creature `rat`"), "{}", err.message);
+    }
+
+    #[test]
+    fn creature_types_have_stats_that_default_to_average() {
+        use crate::stats::{Stat, Stats};
+        let content = Content::builtin().unwrap();
+        let def = |id: &str| content.creature(content.creature_id(id).unwrap());
+        assert_eq!(
+            def("player").stats,
+            Stats::default(),
+            "the scenario gives the player's"
+        );
+        let rat = def("rat").stats;
+        assert_eq!(rat.score(Stat::Dexterity), 17);
+        assert_eq!(
+            rat.potential(Stat::Dexterity),
+            17,
+            "the potential defaults to the score"
+        );
+        assert_eq!(rat.score(Stat::Intelligence), 1);
+        let shaman = def("kobold_shaman").stats;
+        assert!(shaman.score(Stat::Willpower) > def("kobold").stats.score(Stat::Willpower));
+        let player = content.scenario("showcase").unwrap().player_stats;
+        assert_eq!(player.score(Stat::Dexterity), 14);
+        assert_eq!(player.potential(Stat::Dexterity), 17);
+        // A creature type without stats is average in each.
+        let content = Content::load(&minimal_files("#@#\n", "")).unwrap();
+        let rat = content.creature(content.creature_id("rat").unwrap());
+        assert_eq!(rat.stats, Stats::default());
+    }
+
+    #[test]
+    fn bad_creature_stats_are_reported() {
+        let cases = [
+            (
+                "rat",
+                "stats = { strength = 41 }",
+                "creature `rat`: stats: strength 41",
+            ),
+            (
+                "rat",
+                "stats = { presence = 0 }",
+                "presence 0 is out of range (1 to 40)",
+            ),
+            (
+                "rat",
+                "potential = { toughness = 50 }",
+                "potential: toughness 50",
+            ),
+            (
+                "rat",
+                "stats = { dexterity = 16 }\npotential = { dexterity = 12 }",
+                "dexterity 12 is below its score 16",
+            ),
+            ("rat", "stats = { luck = 3 }", "unknown stat `luck`"),
+            (
+                "player",
+                "stats = { strength = 12 }",
+                "the player's stats come from the scenario",
+            ),
+            (
+                "player",
+                "potential = { strength = 12 }",
+                "come from the scenario",
+            ),
+        ];
+        for (creature, fields, expected) in cases {
+            let mut files = minimal_files("#@#\n", "");
+            let marker = format!("id = \"{creature}\"\n");
+            let creatures = files
+                .get("data/creatures.toml")
+                .unwrap()
+                .replace(&marker, &format!("{marker}{fields}\n"));
+            files.insert("data/creatures.toml", &creatures);
+            let err = Content::load(&files).unwrap_err();
+            assert_eq!(err.file, "data/creatures.toml", "{fields}");
+            assert!(err.message.contains(expected), "{fields}: {}", err.message);
+        }
+        let mut files = minimal_files("#@#\n", "");
+        files.insert(
+            "scenarios/test.toml",
+            "name = \"T\"\nstart_level = \"test\"\nstats = { willpower = 99 }\n",
+        );
+        let err = Content::load(&files).unwrap_err();
+        assert_eq!(err.file, "scenarios/test.toml");
+        assert!(err.message.contains("willpower 99"), "{}", err.message);
     }
 
     #[test]

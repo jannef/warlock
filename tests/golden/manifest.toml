@@ -144,6 +144,14 @@ scenario = "showcase"
 actions = "move:SW*2 pickup move:NE*2 move:E*2 move:NE pickup"
 screen = "inventory"
 
+# The character screen (#107): the player's name, their score in each stat (never a modifier or
+# a potential), and what they weigh, carrying the start room's pile.
+[[golden]]
+name = "character-screen"
+scenario = "showcase"
+actions = "move:SW*2 pickup"
+screen = "character"
+
 [[golden]]
 name = "vast-level"
 scenario = "vast"

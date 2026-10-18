@@ -9,6 +9,7 @@ use crate::geom::Pos;
 use crate::noise::{PerceivedSound, SoundKind, Volume};
 use crate::object::format_weight;
 use crate::perception::{CellView, PerceivedLight, PerceptionView};
+use crate::stats::Stat;
 use crate::world::World;
 use serde_json::{Value, json};
 use std::fmt::Write;
@@ -36,21 +37,25 @@ pub enum Layer {
     Sound,
     /// Not a map: the player's inventory, one line per stack, then what they carry and weigh.
     Inventory,
+    /// Not a map: the player's own scores, one stat a line (`Strength 12`); never potentials or
+    /// modifiers.
+    Stats,
     /// Ground truth: all terrain, objects, and actors on the level. **Dev-only.**
     Truth,
-    /// Not a map: every actor on the level with its weight and what it carries (ground truth).
-    /// **Dev-only.**
+    /// Not a map: every actor on the level with its weight, what it carries, and its stats
+    /// (scores and potentials) (ground truth). **Dev-only.**
     Actors,
 }
 
 impl Layer {
-    const ALL: [Layer; 8] = [
+    const ALL: [Layer; 9] = [
         Layer::View,
         Layer::Fov,
         Layer::Memory,
         Layer::Light,
         Layer::Sound,
         Layer::Inventory,
+        Layer::Stats,
         Layer::Truth,
         Layer::Actors,
     ];
@@ -64,6 +69,7 @@ impl Layer {
             Layer::Light => "light",
             Layer::Sound => "sound",
             Layer::Inventory => "inventory",
+            Layer::Stats => "stats",
             Layer::Truth => "truth",
             Layer::Actors => "actors",
         }
@@ -85,7 +91,7 @@ impl FromStr for Layer {
             .ok_or_else(|| {
                 format!(
                     "unknown layer `{s}` (expected view, fov, memory, light, sound, inventory, \
-                     truth, actors)"
+                     stats, truth, actors)"
                 )
             })
     }
@@ -102,6 +108,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
         Layer::Truth => truth_rows(world),
         Layer::Actors => actor_rows(world),
         Layer::Inventory => inventory_rows(&world.perception()),
+        Layer::Stats => stat_rows(&world.perception()),
         _ => {
             let view = world.perception();
             rows(view.width(), view.height(), |p| {
@@ -140,7 +147,7 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
             Some(sound) => sound_char(sound),
             None => perceived_glyph(view, Layer::View, p),
         },
-        Layer::Inventory | Layer::Truth | Layer::Actors => {
+        Layer::Inventory | Layer::Stats | Layer::Truth | Layer::Actors => {
             unreachable!("not a map built from perception")
         }
     }
@@ -211,7 +218,15 @@ fn inventory_rows(view: &PerceptionView<'_>) -> Vec<String> {
     rows
 }
 
-/// Every actor on the level (ground truth): id, creature, position, weight, and what it carries.
+/// The player's own scores, one stat a line: `Strength 12`.
+fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
+    (view.own_scores().iter())
+        .map(|(stat, score)| format!("{} {score}", stat.name()))
+        .collect()
+}
+
+/// Every actor on the level (ground truth): id, creature, position, weight, what it carries, and
+/// its stats as score/potential (`St 12/15`).
 fn actor_rows(world: &World) -> Vec<String> {
     let content = world.content();
     let (_, actors) = world.ground_truth();
@@ -224,14 +239,22 @@ fn actor_rows(world: &World) -> Vec<String> {
             } else {
                 carried.join(", ")
             };
+            let stats: Vec<String> = Stat::ALL
+                .iter()
+                .map(|&s| {
+                    let (score, potential) = (a.stats.score(s), a.stats.potential(s));
+                    format!("{} {score}/{potential}", s.abbrev())
+                })
+                .collect();
             format!(
-                "{} {} at {}: weight {} (base {} + carried {}: {carried})",
+                "{} {} at {}: weight {} (base {} + carried {}: {carried}); stats {}",
                 a.id,
                 content.creature(a.creature).id,
                 a.pos,
                 format_weight(w.total()),
                 format_weight(w.base),
                 format_weight(w.carried),
+                stats.join(" "),
             )
         })
         .collect()
@@ -284,9 +307,9 @@ pub fn ascii(world: &World, layers: &[Layer]) -> String {
 }
 
 /// Structured dump: turn, game time, level, viewer, the weather (under the open sky; else
-/// null), seen actors, heard sounds, the player's inventory and weight, recent messages, the
-/// requested layers as arrays of rows, and optionally the full [`crate::WorldState`] under
-/// `state`.
+/// null), seen actors, heard sounds, the player's inventory, weight, and scores (by stat id),
+/// recent messages, the requested layers as arrays of rows, and optionally the full
+/// [`crate::WorldState`] under `state`.
 pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     let view = world.perception();
     let content = world.content();
@@ -334,6 +357,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "heard_sounds": view.sounds(),
         "inventory": inventory,
         "weight": { "base": weight.base, "carried": weight.carried, "total": weight.total() },
+        "stats": view.own_scores(),
         "messages": messages,
         "layers": layer_map,
     });
@@ -413,6 +437,12 @@ mod tests {
         assert!(value["layers"].get("memory").is_none());
         assert_eq!(value["state"]["turn"], 1);
         assert!(value["seen_actors"][0]["kind"] == "player");
+        // The player's own scores, by stat id; nothing else about stats.
+        assert_eq!(
+            value["stats"],
+            json!({ "strength": 12, "dexterity": 14, "toughness": 11, "intelligence": 13,
+                    "willpower": 9, "presence": 10 })
+        );
         assert!(json(&world, &[], false).get("state").is_none());
     }
 
@@ -426,6 +456,34 @@ mod tests {
         let mut world = showcase();
         run(&mut world, SHOWCASE_RUN);
         insta::assert_snapshot!("showcase_end", ascii(&world, &[Layer::View, Layer::Memory]));
+    }
+
+    #[test]
+    fn stats_show_the_players_scores_and_actors_show_everyones() {
+        let world = showcase();
+        assert_eq!(
+            layer_rows(&world, Layer::Stats),
+            [
+                "Strength 12",
+                "Dexterity 14",
+                "Toughness 11",
+                "Intelligence 13",
+                "Willpower 9",
+                "Presence 10"
+            ]
+        );
+        let actors = layer_rows(&world, Layer::Actors);
+        assert!(
+            actors[0].ends_with("stats St 12/15 Dx 14/17 To 11/14 In 13/16 Wi 9/13 Pr 10/12"),
+            "{}",
+            actors[0]
+        );
+        let kobold = actors.iter().find(|a| a.contains(" kobold at "));
+        assert!(
+            kobold.is_some_and(|k| k.ends_with("St 9/9 Dx 13/13 To 10/10 In 10/10 Wi 9/9 Pr 8/8")),
+            "{actors:#?}"
+        );
+        assert!(Layer::Actors.is_dev_only() && !Layer::Stats.is_dev_only());
     }
 
     #[test]

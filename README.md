@@ -44,6 +44,9 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
 - **Objects** — weapons, armor, tools, potions, scrolls, food, gems, coins, rings, and amulets,
   each with its own glyph, color, material, and weight, lie in piles to pick up and drop; an
   ADOM-style inventory lettered a–z shows what you carry and what it weighs.
+- **Stats** — Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
+  D&D, for you and every creature; a character screen shows your own. They do not change the
+  rules yet.
 - **Living glyphs and effects** — still ponds that glint in the torchlight, streams and a river
   that visibly flow and foam against rocks, a pulsing altar, flickering torches, sparks and
   embers, a soft glow, heat haze over braziers, short fades. All of it is tunable per effect, and
@@ -112,6 +115,7 @@ cargo run --release -p warlock
 | `,` or `g` | Pick up what lies here (choose by letter where several things lie) |
 | `d` | Drop something |
 | `i` | Inventory: what you carry, by letter, and what it all weighs |
+| `@` | Character: your stats and your weight |
 | `R` | Rest an hour, until dawn, or until nightfall (stops when something comes into view) |
 | `x` | Look around: move a cursor to read what is there (takes no time) |
 | `?` | Show all controls |

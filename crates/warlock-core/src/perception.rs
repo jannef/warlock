@@ -2,9 +2,9 @@
 //!
 //! Everything the player can know — and therefore everything rendering, UI, and dumps may show —
 //! goes through [`PerceptionView`]. It exposes currently visible cells, creatures, objects, and
-//! light, remembered terrain and objects, and what the player carries; it never exposes unseen
-//! terrain or objects, hidden creatures, what creatures carry, or light the player's eyes cannot
-//! perceive.
+//! light, remembered terrain and objects, and what the player carries, weighs, and scores in each
+//! stat; it never exposes unseen terrain or objects, hidden creatures, what creatures carry, any
+//! stat's modifier or potential, a creature's stats, or light the player's eyes cannot perceive.
 //!
 //! **Memory** (spec §5): terrain and piles of objects as last seen. Objects are seen where
 //! creatures are (cells in line of sight, never completed walls); a pile seen gone is forgotten,
@@ -56,6 +56,7 @@ use crate::light::{
 };
 use crate::noise::{self, PerceivedSound};
 use crate::object::{Stack, Weight};
+use crate::stats::PerStat;
 use crate::weather::Weather;
 use crate::world::{Actor, ActorId, ActorKind, LevelState, WorldState};
 use serde::Serialize;
@@ -622,6 +623,12 @@ impl<'a> PerceptionView<'a> {
     /// The player's own weight: their base weight plus what they carry.
     pub fn own_weight(&self) -> Weight {
         self.player.weight(self.content)
+    }
+
+    /// The player's own scores, by stat (spec §8 "Stats"). That is all the player knows of
+    /// stats: never their potentials or modifiers, and nothing of a creature's.
+    pub fn own_scores(&self) -> PerStat<u8> {
+        self.player.stats.scores()
     }
 
     /// How a seen creature stands toward the player: its faction's stance (spec §7 "Factions"),

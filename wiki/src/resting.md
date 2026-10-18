@@ -38,4 +38,4 @@ being there: only by leaving your sight and coming back, or by an attack you not
 
 When it ends, the game tells you how long you rested ("You rest for 1 hour.", "You rest until
 dawn."). Resting is how you wait out the night, or wait for the light to change. There are no hit
-points or other statistics yet, so resting does not heal anything.
+points yet, so resting does not heal anything.

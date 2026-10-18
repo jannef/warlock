@@ -5,7 +5,9 @@ use super::faction::FactionId;
 use super::light::LightId;
 use super::particles::ParticleEmitter;
 use crate::color::Rgb;
+use crate::stats::{Stat, Stats};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use std::ops::RangeInclusive;
 
 /// The speed of a normal creature, and of the player (spec §8 "Speed").
@@ -79,6 +81,12 @@ pub(super) struct CreatureSpec {
     pub footsteps: u16,
     /// The faintest loudness it hears; none: it is deaf.
     pub hearing: Option<u16>,
+    /// Its scores by stat (spec §8 "Stats"); a missing one is average.
+    #[serde(default)]
+    pub stats: BTreeMap<Stat, u8>,
+    /// Its potentials by stat; a missing one equals the score.
+    #[serde(default)]
+    pub potential: BTreeMap<Stat, u8>,
     pub anim: Option<GlyphAnim>,
     #[serde(default)]
     pub glow: f32,
@@ -91,6 +99,7 @@ pub(super) struct Resolved {
     pub light: Option<LightId>,
     pub faction: Option<FactionId>,
     pub vision: usize,
+    pub stats: Stats,
 }
 
 impl CreatureSpec {
@@ -111,6 +120,7 @@ impl CreatureSpec {
             light: r.light,
             footsteps: self.footsteps,
             hearing: self.hearing,
+            stats: r.stats,
             anim: self.anim,
             glow: self.glow,
             particles: self.particles,
@@ -153,6 +163,10 @@ pub struct CreatureDef {
     /// Gameplay: the faintest loudness it hears (1 to [`crate::noise::MAX_LOUDNESS`]); `None` is
     /// deaf.
     pub hearing: Option<u16>,
+    /// Gameplay: the scores and potentials a creature of this type starts with (spec §8
+    /// "Stats"). Rules only: a creature's stats are never shown to the player. The player's
+    /// come from the scenario instead ([`super::ScenarioDef::player_stats`]); theirs are average.
+    pub stats: Stats,
     /// Presentation-only.
     pub anim: Option<GlyphAnim>,
     /// Presentation-only: how much the glyph glows (bloom), 0 to 1.

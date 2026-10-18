@@ -8,3 +8,8 @@ lantern = "lantern"
 # When the run starts: [year, month, day] (months in data/calendar.toml) and hh:mm.
 start_date = [1, 1, 1]
 start_time = "08:00"
+# The player's stats: scores by stat (strength, dexterity, toughness, intelligence, willpower,
+# presence; 1 to 40, default 10, the average), and potential, how far each score could grow
+# (default: the score; never below it; hidden from the player).
+stats = { strength = 12, dexterity = 14, toughness = 11, intelligence = 13, willpower = 9, presence = 10 }
+potential = { strength = 15, dexterity = 17, toughness = 14, intelligence = 16, willpower = 13, presence = 12 }
