@@ -26,14 +26,18 @@ but carry them.
   [Hearing](hearing.md) explain what you can see and hear, and why.
 - [Sun, moon, and sky](sun.md), [Weather](weather.md), and [The overworld](overworld.md) explain
   the outdoors.
-- [Terrain](terrain.md), [Objects and your pack](objects.md), [Stats](stats.md),
-  [Creatures](creatures.md), [Your lantern](lantern.md), and [Saving](saving.md) cover the rest.
+- [Your character](character.md), with its [Races](races.md), [Classes](classes.md), and
+  [Horoscope](horoscope.md), and [Stats](stats.md) explain who you are.
+- [Terrain](terrain.md), [Objects and your pack](objects.md), [Creatures](creatures.md),
+  [Your lantern](lantern.md), and [Saving](saving.md) cover the rest.
 
 ## Starting a run
 
 The game opens on the main menu. **New run** lists the scenarios you can start, and takes an
-optional seed (see [Saving](saving.md)). Each scenario starts you somewhere else in the same
-world, at its own time of day:
+optional seed (see [Saving](saving.md)). Then you create your character: your race, your gender,
+and your class, one step at a time, and a summary of your age, birth sign, and the stats you
+will start with (see [Your character](character.md)). Each scenario starts you somewhere else in the same world, at
+its own time of day:
 
 {{#include generated/scenarios.md}}
 

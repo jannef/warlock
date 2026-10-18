@@ -2,6 +2,7 @@
 //!
 //! ```text
 //! warlock-cli dump --scenario showcase --actions "move:N move:N" --layers view,fov
+//! warlock-cli dump --scenario showcase --character dwarf,female,warrior --layers stats
 //! warlock-cli replay --create --scenario showcase --actions "move:N wait" -o run.json
 //! warlock-cli replay --verify run.json
 //! warlock-cli gen --level depths:3 --seed warlock
@@ -12,6 +13,7 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::sync::Arc;
 use warlock_core::action::parse_actions;
+use warlock_core::character::CharacterSpec;
 use warlock_core::content::{Content, ContentFiles};
 use warlock_core::dump;
 use warlock_core::mapgen;
@@ -51,6 +53,10 @@ struct RunArgs {
     /// when `--replay` is given).
     #[arg(long, value_parser = parse_seed)]
     seed: Option<u64>,
+    /// The character to start as, RACE,GENDER,CLASS (e.g. `dwarf,female,warrior`); defaults to
+    /// the scenario's (ignored when `--replay` is given).
+    #[arg(long)]
+    character: Option<CharacterSpec>,
     /// Actions as text, e.g. "move:E move:SE wait open:E close:W descend ascend pickup:ab
     /// drop:a".
     #[arg(long)]
@@ -69,7 +75,8 @@ struct DumpArgs {
     format: Format,
     /// Comma-separated layers: view, fov, memory, light (brightness digit 0-9 per visible cell),
     /// sound (heard sounds over the view: f footsteps, o/c a door opening/closing; upper case
-    /// when loud), inventory (what the player carries and weighs), stats (the player's scores),
+    /// when loud), inventory (what the player carries and weighs), stats (the player's race,
+    /// gender, class, and scores),
     /// truth (dev-only ground truth), actors (dev-only: every actor on the level with its weight,
     /// what it carries, and its stats as score/potential).
     #[arg(long, default_value = "view")]
@@ -90,7 +97,7 @@ struct ReplayArgs {
     /// Verify the state hash after every step of this replay file.
     #[arg(long, value_name = "FILE", conflicts_with = "create")]
     verify: Option<PathBuf>,
-    /// Record a new replay from `--scenario`, `--seed` and `--actions`.
+    /// Record a new replay from `--scenario`, `--seed`, `--character`, and `--actions`.
     #[arg(long, requires = "output")]
     create: bool,
     #[command(flatten)]
@@ -151,13 +158,18 @@ fn parse_run_actions(args: &RunArgs) -> Result<Vec<Action>, String> {
     parse_actions(args.actions.as_deref().unwrap_or("")).map_err(|e| format!("--actions: {e}"))
 }
 
+/// A fresh run of `--scenario` with `--seed` and `--character`.
+fn start(content: Arc<Content>, args: &RunArgs) -> Result<World, String> {
+    World::with_character(content, &args.scenario, args.seed, args.character.as_ref())
+        .map_err(|e| format!("cannot start scenario `{}`: {e}", args.scenario))
+}
+
 fn dump_command(content: Arc<Content>, args: DumpArgs) -> Result<(), String> {
     let layers = dump::parse_layers(&args.layers)?;
     let actions = parse_run_actions(&args.run)?;
     let mut world = match &args.replay {
         Some(path) => read_replay(path)?.run(content).map_err(|e| e.to_string())?,
-        None => World::new(content, &args.run.scenario, args.run.seed)
-            .map_err(|e| format!("cannot start scenario `{}`: {e}", args.run.scenario))?,
+        None => start(content, &args.run)?,
     };
     for action in &actions {
         world.apply(action);
@@ -188,8 +200,7 @@ fn replay_command(content: Arc<Content>, args: ReplayArgs) -> Result<(), String>
         return Err("expected --verify FILE or --create -o FILE".into());
     };
     let actions = parse_run_actions(&args.run)?;
-    let mut world = World::new(content, &args.run.scenario, args.run.seed)
-        .map_err(|e| format!("cannot start scenario `{}`: {e}", args.run.scenario))?;
+    let mut world = start(content, &args.run)?;
     let mut replay = Replay::new(&world);
     for action in &actions {
         world.apply(action);
@@ -252,6 +263,28 @@ mod tests {
         assert_eq!(seed("warlock"), parse_seed("warlock").ok());
         assert_ne!(seed("warlock"), seed("Warlock"));
         assert!(Cli::try_parse_from(["warlock-cli", "dump", "--seed", ""]).is_err());
+    }
+
+    #[test]
+    fn characters_are_race_gender_class() {
+        let run = |args: &[&str]| {
+            let cli = Cli::try_parse_from([&["warlock-cli", "dump"], args].concat())?;
+            let Command::Dump(args) = cli.command else {
+                panic!("expected dump");
+            };
+            Ok::<_, clap::Error>(args.run)
+        };
+        let args = run(&["--character", "dwarf,female,warrior"]).expect("parses");
+        let content = load_content(None).expect("content");
+        let world = start(content.clone(), &args).expect("starts");
+        assert_eq!(
+            world.character().map(|c| c.spec.to_string()).as_deref(),
+            Some("dwarf,female,warrior")
+        );
+        assert!(run(&["--character", "dwarf,woman,warrior"]).is_err());
+        let orc = run(&["--character", "orc,male,warrior"]).expect("parses");
+        let err = start(content, &orc).expect_err("refused");
+        assert!(err.contains("unknown race `orc`"), "{err}");
     }
 
     #[test]

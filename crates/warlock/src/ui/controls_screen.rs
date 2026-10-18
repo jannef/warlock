@@ -57,7 +57,6 @@ impl ControlsScreen {
         }
     }
 
-    #[cfg(test)]
     pub fn is_help(&self) -> bool {
         self.mode == Mode::ReadOnly
     }

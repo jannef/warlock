@@ -1,6 +1,8 @@
 //! The character screen (spec §6; `@`): who the player is, as far as they know it. Their name,
-//! their score in each stat (spec §8 "Stats") with its abbreviation and full name, and what they
-//! weigh. Never a modifier or a potential: perception has neither.
+//! their race, gender, and class, their age, birthday, and birth sign (spec §8 "Character
+//! creation"; when the run has a character), their score in each stat (spec §8 "Stats") with its
+//! abbreviation and full name, and what they weigh. Never a modifier or a potential: perception
+//! has neither.
 //!
 //! Read-only: Esc, Enter, or its own key closes it. It is read from the perception snapshot when
 //! it opens; no game time passes while it is open, so it cannot go stale.
@@ -10,16 +12,26 @@ use super::screens::ScreenAction;
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
+use warlock_core::character::{Character, Gender};
+use warlock_core::content::Content;
 use warlock_core::object::{Weight, format_weight};
 use warlock_core::perception::PerceptionView;
 use warlock_core::stats::{PerStat, Stat};
+use warlock_core::time::GameTime;
 
 /// Width of the stat name column: the longest name and a space.
 const NAME_W: i32 = 14;
 
+/// Width of the panel.
+const WIDTH: i32 = 48;
+
 #[derive(Debug)]
 pub struct CharacterScreen {
     name: String,
+    /// Race, gender, and class, by name; empty for a run without a character.
+    identity: Vec<(&'static str, String)>,
+    /// Age, birthday, and birth sign ([`birth_parts`]); empty without a character.
+    birth: Vec<String>,
     scores: PerStat<u8>,
     weight: Weight,
 }
@@ -31,6 +43,8 @@ impl CharacterScreen {
         let Some(view) = view else {
             return Self {
                 name: "You".into(),
+                identity: Vec::new(),
+                birth: Vec::new(),
                 scores: PerStat::splat(warlock_core::stats::AVERAGE),
                 weight: Weight::default(),
             };
@@ -39,8 +53,25 @@ impl CharacterScreen {
         let name = content
             .creature_id("player")
             .map_or("you", |id| content.creature(id).name.as_str());
+        let identity = view.character().map_or(Vec::new(), |c| {
+            let spec = &c.spec;
+            vec![
+                (
+                    "Race",
+                    (spec.race(content)).map_or(spec.race.clone(), |r| r.name.clone()),
+                ),
+                ("Gender", gender_text(c)),
+                (
+                    "Class",
+                    (spec.class(content)).map_or(spec.class.clone(), |k| k.name.clone()),
+                ),
+            ]
+        });
+        let birth = (view.character()).map_or(Vec::new(), |c| birth_parts(c, content, view.time()));
         Self {
             name: capitalized(name),
+            identity,
+            birth,
             scores: view.own_scores(),
             weight: view.own_weight(),
         }
@@ -60,9 +91,15 @@ impl CharacterScreen {
     }
 
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
-        // Rows: margin, the name, a gap, the stats, a gap, the weight, a gap, the footer, frame.
-        let h = Stat::COUNT as i32 + 9;
-        let panel = Panel::new(console, " Character ", 48, h);
+        // Rows: margin, the name, a gap, race, gender, class, the birth, and a gap (with a
+        // character), the stats, a gap, the weight, a gap, the footer, frame.
+        let birth = fit_parts(&self.birth, WIDTH.min(console.cols() as i32) - 4);
+        let identity_rows = match self.identity.len() {
+            0 => 0,
+            n => (n + birth.len()) as i32 + 1,
+        };
+        let h = Stat::COUNT as i32 + 9 + identity_rows;
+        let panel = Panel::new(console, " Character ", WIDTH, h);
         let x = panel.inner_x();
         // Rows from the footer's down would draw over it, or the frame, of a panel cut short.
         let fits = |y: i32| y < panel.y + panel.h - 2;
@@ -71,6 +108,21 @@ impl CharacterScreen {
             console.print(x, y, &self.name, ACCENT);
         }
         y += 2;
+        for (label, value) in &self.identity {
+            // `Race    Dwarf`: the value lines up with the stat names.
+            if fits(y) {
+                console.print(x, y, label, TEXT_DIM);
+                console.print(x + 8, y, value, TEXT);
+            }
+            y += 1;
+        }
+        for line in &birth {
+            if fits(y) {
+                console.print(x, y, line, TEXT);
+            }
+            y += 1;
+        }
+        y += i32::from(!self.identity.is_empty());
         for (stat, score) in self.scores.iter() {
             // `St  Strength      12`: the abbreviation, the name, the score right-aligned.
             if fits(y) {
@@ -100,6 +152,43 @@ impl CharacterScreen {
         };
         panel.footer(console, &footer);
     }
+}
+
+/// The gender as shown: its name, and for "other" the stat it raised (`Other (Willpower +1)`).
+pub fn gender_text(character: &Character) -> String {
+    match character.spec.gender {
+        Gender::Other => format!("Other ({} +1)", character.raised.name()),
+        gender => gender.name().to_string(),
+    }
+}
+
+/// Age on `now`, birthday, and birth sign, as shown: `Age 27`, `born 3 Seedtide 1417`, `year of
+/// the Fire Manticore` (no sign without a horoscope).
+pub fn birth_parts(character: &Character, content: &Content, now: GameTime) -> Vec<String> {
+    let mut parts = vec![
+        format!("Age {}", character.age_on(now)),
+        format!("born {}", character.born.text(content.calendar())),
+    ];
+    if let Some(sign) = character.sign_name(content) {
+        parts.push(format!("year of the {sign}"));
+    }
+    parts
+}
+
+/// `parts` joined with ` · ` into lines of at most `width` characters, a new line where the next
+/// part would not fit: `Age 27 · born 3 Seedtide 1417 · year of the Fire Manticore`.
+pub fn fit_parts(parts: &[String], width: i32) -> Vec<String> {
+    let mut lines: Vec<String> = Vec::new();
+    for part in parts {
+        match lines.last_mut() {
+            Some(line) if (line.chars().count() + 3 + part.chars().count()) as i32 <= width => {
+                line.push_str(" · ");
+                line.push_str(part);
+            }
+            _ => lines.push(part.clone()),
+        }
+    }
+    lines
 }
 
 /// `name` with its first letter in upper case.
@@ -161,12 +250,17 @@ mod tests {
                 .starts_with("You")
         );
         for expected in [
-            "St  Strength      12",
-            "Dx  Dexterity     14",
-            "To  Toughness     11",
-            "In  Intelligence  13",
-            "Wi  Willpower      9",
-            "Pr  Presence      10",
+            "Race    Human",
+            "Gender  Female",
+            "Class   Thief",
+            "Age 34 · born 29 Greenleaf 1410",
+            "year of the Water Basilisk",
+            "St  Strength       9",
+            "Dx  Dexterity     13",
+            "To  Toughness     10",
+            "In  Intelligence  12",
+            "Wi  Willpower     11",
+            "Pr  Presence       9",
         ] {
             row(expected);
         }
@@ -182,11 +276,71 @@ mod tests {
     #[test]
     fn never_shows_potentials_or_modifiers() {
         let text = drawn(&showcase(), 80, 30).join("\n");
-        // The showcase player's potentials that are not also scores (15, 16, 17), and their
-        // modifiers (+1, +2, -1), appear nowhere; neither do signs or the words.
-        for hidden in ["15", "16", "17", "+", "-", "otential", "odifier"] {
+        // The showcase player's potentials (16 each), and their modifiers (+2, -1), appear
+        // nowhere; neither do signs or the words.
+        for hidden in ["16", "+", "-", "otential", "odifier"] {
             assert!(!text.contains(hidden), "{hidden:?} in\n{text}");
         }
+    }
+
+    #[test]
+    fn shows_the_chosen_character_and_nothing_without_one() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let spec = "half_orc,other,witch".parse().expect("a character");
+        let world =
+            World::with_character(content.clone(), "showcase", None, Some(&spec)).expect("world");
+        let text = drawn(&world, 80, 30).join("\n");
+        let raised = warlock_core::character::other_stat(1).name();
+        for expected in [
+            "Race    Half-orc",
+            &format!("Gender  Other ({raised} +1)"),
+            "Class   Witch",
+            "year of the",
+        ] {
+            assert!(text.contains(expected), "{expected:?} in\n{text}");
+        }
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        files.insert(
+            "scenarios/plain.toml",
+            "name = \"P\"\nstart_level = \"hub\"\n",
+        );
+        let content = Arc::new(Content::load(&files).expect("valid"));
+        let plain = World::new(content, "plain", None).expect("world");
+        let text = drawn(&plain, 80, 30).join("\n");
+        assert!(!text.contains("Race") && !text.contains("Class"), "{text}");
+        assert!(!text.contains("Age") && !text.contains("born"), "{text}");
+        assert!(text.contains("St  Strength      10"), "{text}");
+    }
+
+    #[test]
+    fn the_age_counts_birthdays_and_the_parts_fit_the_width() {
+        let world = showcase();
+        let c = world.character().expect("a character").clone();
+        let content = world.content().clone();
+        let parts = birth_parts(&c, &content, world.time());
+        assert_eq!(
+            parts,
+            [
+                "Age 34",
+                "born 29 Greenleaf 1410",
+                "year of the Water Basilisk"
+            ]
+        );
+        assert_eq!(
+            fit_parts(&parts, 60),
+            ["Age 34 · born 29 Greenleaf 1410 · year of the Water Basilisk"]
+        );
+        assert_eq!(
+            fit_parts(&parts, 44),
+            [
+                "Age 34 · born 29 Greenleaf 1410",
+                "year of the Water Basilisk"
+            ]
+        );
+        assert_eq!(fit_parts(&parts, 5).len(), 3);
+        // Past the birthday (29 Greenleaf), a year older.
+        let later = warlock_core::time::GameTime::from_calendar(1445, 5, 29, 0, 0).expect("a date");
+        assert_eq!(birth_parts(&c, &content, later)[0], "Age 35");
     }
 
     #[test]

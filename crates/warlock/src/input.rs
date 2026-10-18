@@ -306,6 +306,7 @@ pub fn route_keys(
                 play.act(action);
             }
             ScreenAction::Open(name) => screens.open(name),
+            ScreenAction::Return(name) => screens.stack.return_to(name),
             ScreenAction::Choose(choice) => {
                 choices.write(choice);
                 chosen = true;

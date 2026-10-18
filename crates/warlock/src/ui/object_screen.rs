@@ -113,7 +113,6 @@ impl ObjectScreen {
         }
     }
 
-    #[cfg(test)]
     pub fn list(&self) -> ObjectList {
         self.list
     }

@@ -1,5 +1,6 @@
 // Dev tool for `cargo xtask web-smoke`: drive headless Chromium over CDP, load the web build,
-// press Enter twice (main menu -> New run -> start), wait five turns, reload the page (its pagehide
+// press Enter six times (main menu -> New run -> race -> gender -> class -> summary -> start, the
+// scenario's character preselected), wait five turns, reload the page (its pagehide
 // hook must write the run to localStorage), choose Continue and check the run resumed at turn 5;
 // screenshot, and fail if errors were logged.
 // Usage: node xtask/web-smoke.mjs <chrome-binary> <url> <out.png> <profile-dir>
@@ -35,7 +36,11 @@ const key = async (k, code, vk) => {
 };
 await send('Runtime.evaluate', { expression: "document.querySelector('canvas')?.focus()" });
 await key('Enter', 'Enter', 13);   // New run
-await key('Enter', 'Enter', 13);   // start Showcase
+await key('Enter', 'Enter', 13);   // Showcase: on to the race
+await key('Enter', 'Enter', 13);   // the race (the showcase's, preselected)
+await key('Enter', 'Enter', 13);   // the gender
+await key('Enter', 'Enter', 13);   // the class
+await key('Enter', 'Enter', 13);   // start from the summary
 await sleep(4000);
 const stored = async () => (await send('Runtime.evaluate', {
   expression: "JSON.stringify([localStorage.getItem('warlock/run.sav')?.length ?? null, Object.keys(localStorage)])",

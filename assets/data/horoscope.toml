@@ -1,0 +1,129 @@
+# The horoscope (spec §8 "Character creation"): the sign a character is born under.
+#
+# Every year has an animal and an element. Both advance one step a year, in the order below, on
+# the 1st of Frostmere: the animals in the order they finished the Great Race (the legend is on
+# the wiki's Horoscope page), the elements Wood, Fire, Earth, Metal, Water. With 12 animals and
+# 5 elements every pair comes exactly once in a great cycle of 60 years (their numbers must have
+# no common divisor). The player does not choose a sign: it follows from the birth year.
+#
+# Fields:
+#   anchor_year   a year that starts a great cycle: the year of the first animal and the first
+#                 element. Year 1 of the reckoning was the year of the Great Race, a Wood
+#                 Salamander year; great cycles began again in 1381 and 1441.
+#   [[animal]], [[element]]
+#     id, name      the id (for the rules and saves) and the name; a sign is said element first,
+#                   "the Fire Manticore"
+#     description   one line: what those born under it are like
+#     stats         adjustments to the starting scores, by stat id, as in races.toml (fixed
+#                   numbers here, small); a character gets both their animal's and their element's
+#
+# Signs are also flags later rules may ask about: "is this character Fire-born?", "born in the
+# year of the Manticore?".
+
+anchor_year = 1
+
+# The animals, in the order of the Great Race.
+
+[[animal]]
+id = "salamander"
+name = "Salamander"
+description = "The smallest racer, who rode the Hydra across the river and leapt through the gate first: quick and clever, if slight."
+stats = { dexterity = 1, intelligence = 1, strength = -1 }
+
+[[animal]]
+id = "hydra"
+name = "Hydra"
+description = "The strongest swimmer, who carried the Salamander across and was beaten by it at the gate: tireless and hard to kill, but of many minds."
+stats = { toughness = 2, intelligence = -1 }
+
+[[animal]]
+id = "manticore"
+name = "Manticore"
+description = "Ran the whole course without rest while every other racer fled its path: fierce and relentless, and little loved."
+stats = { strength = 1, toughness = 1, presence = -1 }
+
+[[animal]]
+id = "unicorn"
+name = "Unicorn"
+description = "Crossed the river leaping from stone to stone without wetting a hoof: graceful and fair, and easily hurt."
+stats = { dexterity = 1, presence = 1, toughness = -1 }
+
+[[animal]]
+id = "wyvern"
+name = "Wyvern"
+description = "Could have flown in first, but stopped to burn a path through the Mistwood for those behind: bold and generous, and clumsy on the ground."
+stats = { strength = 1, presence = 1, dexterity = -1 }
+
+[[animal]]
+id = "basilisk"
+name = "Basilisk"
+description = "Rode coiled around the Roc's talon and slid off in front of it at the gate: patient and unblinking, and trusted by no one."
+stats = { willpower = 2, presence = -1 }
+
+[[animal]]
+id = "roc"
+name = "Roc"
+description = "The mightiest of fliers, who soared so high it lost sight of the gate: powerful and proud, and not one for details."
+stats = { strength = 2, intelligence = -1 }
+
+[[animal]]
+id = "griffin"
+name = "Griffin"
+description = "Landed on every hilltop on the way to watch over its gold: noble and watchful, and stiff in its ways."
+stats = { willpower = 1, presence = 1, dexterity = -1 }
+
+[[animal]]
+id = "sphinx"
+name = "Sphinx"
+description = "Stopped to set every racer it met a riddle, and lost the morning to those who answered: wise and cunning, and slow to move."
+stats = { intelligence = 2, dexterity = -1 }
+
+[[animal]]
+id = "phoenix"
+name = "Phoenix"
+description = "Burned to ash in the noon of the Glass Waste and rose again at dusk to finish: hard to keep down and bright to behold, but frail between fires."
+stats = { toughness = 1, presence = 1, strength = -1 }
+
+[[animal]]
+id = "kraken"
+name = "Kraken"
+description = "Could not leave the water, so swam the long way round by sea and arrived on the evening tide: strong and deep, and ungainly ashore."
+stats = { strength = 1, willpower = 1, dexterity = -1 }
+
+[[animal]]
+id = "barghest"
+name = "Barghest"
+description = "The black hound who ran last on purpose, to see every racer through, and was given the last year for it: loyal and steadfast, and grim company."
+stats = { toughness = 1, willpower = 1, presence = -1 }
+
+# The elements, in the order the years go through them.
+
+[[element]]
+id = "wood"
+name = "Wood"
+description = "Growing things that bend and do not break: supple."
+stats = { dexterity = 1 }
+
+[[element]]
+id = "fire"
+name = "Fire"
+description = "Warmth, light, and passion: bright company."
+stats = { presence = 1 }
+
+[[element]]
+id = "earth"
+name = "Earth"
+description = "Stone and soil, slow and steady: enduring."
+stats = { toughness = 1 }
+
+[[element]]
+id = "metal"
+name = "Metal"
+description = "Iron and the forge, hard and keen: strong."
+stats = { strength = 1 }
+
+[[element]]
+id = "water"
+name = "Water"
+description = "Rivers and the deep sea, that always find a way: clever."
+stats = { intelligence = 1 }

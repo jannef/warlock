@@ -7,9 +7,13 @@
 //! |---|---|---|
 //! | Map generation, per level | `map/<level id>` (retry *k*: `map/<level id>/<k>`) | never; derived on demand |
 //! | Gameplay | `gameplay` | in [`crate::WorldState`], so saves continue it |
+//! | The stat gender "other" raises | `character/gender` | never; derived on demand |
+//! | A new character's age and birthday | `character/birth/<race>` | never |
+//! | A new character's dice | `character/rolls/<race>,<gender>,<class>` | never |
 //!
 //! A level's map therefore depends only on the run seed and its id, never on the order in which
-//! levels are visited or on gameplay. Visual randomness in the app uses its own generator and never
+//! levels are visited or on gameplay; a new character only on the run seed and the choices
+//! (`crate::character`). Visual randomness in the app uses its own generator and never
 //! touches these streams. All helpers are integer-only: no floating point decides anything.
 
 use crate::world::fnv1a;

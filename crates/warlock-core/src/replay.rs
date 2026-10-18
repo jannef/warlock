@@ -1,14 +1,20 @@
-//! Replays: a scenario, a seed, and the actions taken, with the state hash after every step
-//! (spec §9). Replaying verifies the hashes and reports the first step that diverges.
+//! Replays: a scenario, a seed, the character, and the actions taken, with the state hash after
+//! every step (spec §9). Replaying verifies the hashes and reports the first step that diverges.
 //!
 //! JSON shape (hashes are 16-digit hex strings, actions use the text syntax of [`Action`]):
 //!
 //! ```json
 //! { "game_version": "0.1.0", "scenario": "showcase", "seed": 1,
+//!   "character": { "race": "dwarf", "gender": "female", "class": "warrior" },
 //!   "steps": [ { "action": "move:N", "hash": "0123456789abcdef" } ] }
 //! ```
+//!
+//! `character` is left out for a run without one (a scenario that gives the player's eyes and
+//! stats itself); a replay without it starts as the scenario's character, so replays recorded
+//! before characters existed still load.
 
 use crate::action::Action;
+use crate::character::CharacterSpec;
 use crate::content::Content;
 use crate::world::{World, WorldError};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -61,16 +67,21 @@ pub struct Replay {
     pub game_version: String,
     pub scenario: String,
     pub seed: u64,
+    /// The character the run started as; `None` for the scenario's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub character: Option<CharacterSpec>,
     pub steps: Vec<Step>,
 }
 
 impl Replay {
-    /// An empty replay starting from the scenario and seed of `world` (which should be fresh).
+    /// An empty replay starting from the scenario, seed, and character of `world` (which should
+    /// be fresh).
     pub fn new(world: &World) -> Self {
         Self {
             game_version: crate::GAME_VERSION.to_string(),
             scenario: world.scenario().to_string(),
             seed: world.seed(),
+            character: world.character().map(|c| c.spec.clone()),
             steps: Vec::new(),
         }
     }
@@ -97,7 +108,12 @@ impl Replay {
 
     /// A fresh world at the start of this replay.
     pub fn start(&self, content: Arc<Content>) -> Result<World, WorldError> {
-        World::new(content, &self.scenario, Some(self.seed))
+        World::with_character(
+            content,
+            &self.scenario,
+            Some(self.seed),
+            self.character.as_ref(),
+        )
     }
 
     /// Plays every step, returning the final world and the first divergence, if any. Playing
@@ -190,8 +206,57 @@ mod tests {
         let json: serde_json::Value =
             serde_json::from_str(&recorded("wait").to_json()).expect("json");
         assert_eq!(json["scenario"], "showcase");
+        assert_eq!(json["character"]["race"], "human");
+        assert_eq!(json["character"]["gender"], "female");
+        assert_eq!(json["character"]["class"], "thief");
         assert_eq!(json["steps"][0]["action"], "wait");
         assert_eq!(json["steps"][0]["hash"].as_str().map(str::len), Some(16));
+    }
+
+    #[test]
+    fn replays_record_and_reproduce_the_character() {
+        let dwarf: CharacterSpec = "dwarf,other,monk".parse().expect("a character");
+        let mut world =
+            World::with_character(content(), "showcase", Some(9), Some(&dwarf)).expect("world");
+        let mut replay = Replay::new(&world);
+        assert_eq!(replay.character.as_ref(), Some(&dwarf));
+        for action in parse_actions("move:N wait").expect("actions") {
+            world.apply(&action);
+            replay.push(&action, &world);
+        }
+        let parsed = Replay::from_json(&replay.to_json()).expect("parse");
+        let played = parsed.run(content()).expect("verifies");
+        assert_eq!(played.character().map(|c| &c.spec), Some(&dwarf));
+        assert_eq!(played.character(), world.character());
+        assert_eq!(played.state_hash(), world.state_hash());
+        // Without the character, the run is the scenario's human thief: another state.
+        let mut theirs = parsed.clone();
+        theirs.character = None;
+        assert!(matches!(
+            theirs.run(content()),
+            Err(ReplayError::Diverged(_))
+        ));
+        // An unknown race is an error, not a silent fallback.
+        let mut unknown = parsed;
+        unknown.character = Some("orc,male,monk".parse().expect("a character"));
+        assert!(matches!(
+            unknown.run(content()),
+            Err(ReplayError::World(WorldError::Character(_)))
+        ));
+    }
+
+    #[test]
+    fn replays_without_a_character_start_as_the_scenarios() {
+        let old = r#"{"game_version":"0.3.0","scenario":"showcase","seed":1,"steps":[]}"#;
+        let replay = Replay::from_json(old).expect("loads");
+        assert_eq!(replay.character, None);
+        let world = replay.run(content()).expect("starts");
+        assert_eq!(
+            world.character().map(|c| c.spec.to_string()).as_deref(),
+            Some("human,female,thief")
+        );
+        // And it is written back without one.
+        assert!(!replay.to_json().contains("character"));
     }
 
     #[test]

@@ -2,6 +2,7 @@
 //! hashed, and the player perceives only their own scores.
 
 use super::*;
+use crate::content::ContentFiles;
 use crate::save;
 use crate::stats::{Stat, Stats};
 use std::sync::LazyLock;
@@ -23,15 +24,29 @@ fn potentials(stats: &Stats) -> Vec<u8> {
 
 #[test]
 fn the_player_starts_with_the_scenarios_stats() {
+    // The showcase's character, a human female thief born in a Water Basilisk year.
     let w = showcase();
     let stats = &w.state.player().stats;
-    assert_eq!(scores(stats), [12, 14, 11, 13, 9, 10]);
-    assert_eq!(potentials(stats), [15, 17, 14, 16, 13, 12]);
-    assert_eq!(stats.modifier(Stat::Dexterity), 2);
-    assert_eq!(stats.modifier(Stat::Willpower), -1);
-    // A scenario that gives none: average in everything.
-    let depths = World::new(CONTENT.clone(), "depths", None).expect("world");
-    assert_eq!(depths.state.player().stats, Stats::default());
+    assert_eq!(scores(stats), [9, 13, 10, 12, 11, 9]);
+    assert_eq!(potentials(stats), [16; 6]);
+    assert_eq!(stats.modifier(Stat::Dexterity), 1);
+    assert_eq!(stats.modifier(Stat::Presence), -1);
+    // A scenario without a character gives the stats itself; without any, average.
+    let mut files = ContentFiles::builtin();
+    let plain = "name = \"Plain\"\nstart_level = \"hub\"\n";
+    files.insert("scenarios/plain.toml", plain);
+    files.insert(
+        "scenarios/given.toml",
+        &format!("{plain}stats = {{ strength = 12 }}\npotential = {{ strength = 15 }}\n"),
+    );
+    let content = Arc::new(Content::load(&files).expect("valid"));
+    let plain = World::new(content.clone(), "plain", None).expect("world");
+    assert_eq!(plain.state.player().stats, Stats::default());
+    assert_eq!(plain.character(), None);
+    let given = World::new(content, "given", None).expect("world");
+    let stats = &given.state.player().stats;
+    assert_eq!(scores(stats), [12, 10, 10, 10, 10, 10]);
+    assert_eq!(potentials(stats), [15, 10, 10, 10, 10, 10]);
 }
 
 #[test]
@@ -88,8 +103,8 @@ fn the_player_perceives_their_own_scores_only() {
     // What perception hands out is a score per stat id: no potentials, no modifiers.
     let json = serde_json::to_value(own).expect("serializes");
     let expected = serde_json::json!({
-        "strength": 12, "dexterity": 14, "toughness": 11, "intelligence": 13, "willpower": 9,
-        "presence": 10,
+        "strength": 9, "dexterity": 13, "toughness": 10, "intelligence": 12, "willpower": 11,
+        "presence": 9,
     });
     assert_eq!(json, expected);
     // Seen creatures carry no stats.

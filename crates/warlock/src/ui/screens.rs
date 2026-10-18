@@ -1,11 +1,13 @@
-//! The screen stack (spec §6): every modal screen — main menu, new run, pause, settings,
-//! controls, the `?` help, the inventory, the character screen, and choosing what to pick up or
-//! drop — lives on one stack, bottom to top.
+//! The screen stack (spec §6): every modal screen — main menu, new run and character creation,
+//! pause, settings, controls, the `?` help, the inventory, the character screen, and choosing
+//! what to pick up or drop — lives on one stack, bottom to top.
 //!
 //! - **Open**: [`Screens::open`] is the one way to open a screen, by [`ScreenName`]: `?` and Esc
 //!   in play, screens opening sub-screens, the main menu at startup and after a run, and
 //!   `--screen` all go through it. A screen opens on top of the one it was opened from, so
-//!   closing it returns there as it was left.
+//!   closing it returns there as it was left; [`ScreenAction::Return`] closes several at once
+//!   (the character summary going back to a step). Character creation's steps read what was
+//!   chosen below them off the stack ([`ScreenStack::draft`]).
 //! - **Input**: `input::route_keys` is the one reader of key presses. While the stack is not
 //!   empty, its top screen gets every press ([`ScreenStack::handle`]) and gameplay none. Back or
 //!   Esc closes (pops) the top screen; choices that start, leave, or end a run ([`MenuChoice`])
@@ -18,6 +20,7 @@
 //! so they are testable without a window.
 
 use super::character_screen::CharacterScreen;
+use super::chargen_screen::{ChoiceScreen, Draft, Picks, Step, SummaryScreen};
 use super::controls_screen::ControlsScreen;
 use super::menu::{MainMenu, Press};
 use super::motion::Motion;
@@ -35,6 +38,7 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use clap::ValueEnum;
 use warlock_core::Action;
+use warlock_core::character::CharacterSpec;
 use warlock_core::content::Content;
 use warlock_core::perception::PerceptionView;
 
@@ -44,6 +48,14 @@ pub enum ScreenName {
     /// The main menu (no run).
     Main,
     NewRun,
+    /// Character creation, over New run: choose a race.
+    Race,
+    /// Choose a gender (after the race).
+    Gender,
+    /// Choose a class (after the gender).
+    Class,
+    /// The character before the run starts: start, or go back to a step.
+    Summary,
     Settings,
     Controls,
     /// The pause menu over a run (Esc in play).
@@ -82,6 +94,8 @@ pub enum MenuChoice {
     NewRun {
         scenario: String,
         seed: Option<u64>,
+        /// The character chosen; `None` for the scenario's (content without races or classes).
+        character: Option<CharacterSpec>,
     },
     /// Pause menu: save the run and return to the main menu.
     SaveToMenu,
@@ -98,6 +112,8 @@ pub enum ScreenAction {
     Close,
     /// Open a screen on top.
     Open(ScreenName),
+    /// Close screens until this one is on top (as it was left).
+    Return(ScreenName),
     Choose(MenuChoice),
     /// Close this screen and apply a gameplay action (what to pick up or drop).
     Act(Action),
@@ -109,6 +125,10 @@ enum Screen {
     /// The main menu, or the pause menu over a run.
     Menu(MainMenu),
     NewRun(NewRunScreen),
+    /// A step of character creation.
+    Choice(ChoiceScreen),
+    /// Boxed: it holds the whole character.
+    Summary(Box<SummaryScreen>),
     Settings(SettingsScreen),
     /// The controls screen, or the read-only `?` help.
     Controls(ControlsScreen),
@@ -118,18 +138,25 @@ enum Screen {
 }
 
 impl Screen {
-    /// Screen `name`; `run` is what the player perceives in the run, if there is one.
+    /// Screen `name`; `run` is what the player perceives in the run, if there is one, and
+    /// `draft` what New run has chosen on the screens below.
     fn new(
         name: ScreenName,
         content: &Content,
         has_save: bool,
         run: Option<&PerceptionView<'_>>,
+        draft: &Draft,
     ) -> Self {
         let objects = |list| Screen::Objects(ObjectScreen::new(list, run));
+        let choice = |step| Screen::Choice(ChoiceScreen::new(step, content, draft));
         match name {
             ScreenName::Main => Screen::Menu(MainMenu::main(has_save)),
             ScreenName::Pause => Screen::Menu(MainMenu::pause()),
             ScreenName::NewRun => Screen::NewRun(NewRunScreen::new(content, has_save)),
+            ScreenName::Race => choice(Step::Race),
+            ScreenName::Gender => choice(Step::Gender),
+            ScreenName::Class => choice(Step::Class),
+            ScreenName::Summary => Screen::Summary(Box::new(SummaryScreen::new(content, draft))),
             ScreenName::Settings => Screen::Settings(SettingsScreen::default()),
             ScreenName::Controls => Screen::Controls(ControlsScreen::default()),
             ScreenName::Help => Screen::Controls(ControlsScreen::help()),
@@ -140,12 +167,13 @@ impl Screen {
         }
     }
 
-    #[cfg(test)]
     fn name(&self) -> ScreenName {
         match self {
             Screen::Menu(menu) if menu.is_pause() => ScreenName::Pause,
             Screen::Menu(_) => ScreenName::Main,
             Screen::NewRun(_) => ScreenName::NewRun,
+            Screen::Choice(screen) => screen.step().screen(),
+            Screen::Summary(_) => ScreenName::Summary,
             Screen::Settings(_) => ScreenName::Settings,
             Screen::Controls(screen) if screen.is_help() => ScreenName::Help,
             Screen::Controls(_) => ScreenName::Controls,
@@ -167,6 +195,9 @@ pub struct ScreenStack {
     /// Something the player should know, shown by the main or pause menu: why a choice failed,
     /// or that the run was saved. It lasts until the player picks something.
     notice: Option<String>,
+    /// Character creation choices made before going back to an earlier step, preselected when
+    /// their steps open again.
+    picks: Picks,
 }
 
 impl ScreenStack {
@@ -185,10 +216,40 @@ impl ScreenStack {
         self.screens.pop();
     }
 
+    /// Closes screens until `name` is on top; all of them if it is not open.
+    pub fn return_to(&mut self, name: ScreenName) {
+        while self.screens.last().is_some_and(|s| s.name() != name) {
+            self.screens.pop();
+        }
+    }
+
     /// Closes every screen.
     fn clear(&mut self) {
         self.screens.clear();
         self.notice = None;
+        self.picks = Picks::default();
+    }
+
+    /// What New run has chosen so far: the scenario and seed, and each character creation
+    /// step's selection, read off the open screens; plus the choices remembered from steps since
+    /// left.
+    pub fn draft(&self) -> Draft {
+        let mut draft = Draft {
+            remembered: self.picks.clone(),
+            ..Draft::default()
+        };
+        for screen in &self.screens {
+            match screen {
+                Screen::NewRun(screen) => draft.scenario = screen.pick(),
+                Screen::Choice(screen) => {
+                    if let Some(id) = screen.chosen() {
+                        draft.chosen.set(screen.step(), id);
+                    }
+                }
+                _ => {}
+            }
+        }
+        draft
     }
 
     /// Applies one key press to the top screen; settings and bindings change in place. A held
@@ -210,6 +271,14 @@ impl ScreenStack {
             None => ScreenAction::Stay,
             Some(Screen::Menu(menu)) => menu.handle(press),
             Some(Screen::NewRun(screen)) => screen.handle(press),
+            Some(Screen::Choice(screen)) => {
+                let action = screen.handle(press);
+                if let (ScreenAction::Open(_), Some(id)) = (&action, screen.chosen()) {
+                    self.picks.set(screen.step(), id);
+                }
+                action
+            }
+            Some(Screen::Summary(screen)) => screen.handle(press),
             Some(Screen::Settings(screen)) => leave(screen.handle(press, settings)),
             Some(Screen::Controls(screen)) => leave(screen.handle(press, bindings)),
             Some(Screen::Objects(screen)) => screen.handle(press, bindings),
@@ -244,6 +313,8 @@ impl ScreenStack {
             None => {}
             Some(Screen::Menu(menu)) => menu.draw(console, self.notice.as_deref()),
             Some(Screen::NewRun(screen)) => screen.draw(console),
+            Some(Screen::Choice(screen)) => screen.draw(console),
+            Some(Screen::Summary(screen)) => screen.draw(console),
             Some(Screen::Settings(screen)) => screen.draw(console, settings),
             Some(Screen::Controls(screen)) => screen.draw(console, bindings),
             Some(Screen::Objects(screen)) => screen.draw(console, bindings),
@@ -267,7 +338,9 @@ impl Screens<'_> {
     /// Opens screen `name` on top of the stack. The one way screens open.
     pub fn open(&mut self, name: ScreenName) {
         let view = self.game.as_ref().map(|game| game.world.perception());
-        let screen = Screen::new(name, &self.content.0, self.store.has_save(), view.as_ref());
+        let draft = self.stack.draft();
+        let has_save = self.store.has_save();
+        let screen = Screen::new(name, &self.content.0, has_save, view.as_ref(), &draft);
         self.stack.screens.push(screen);
     }
 }
@@ -281,10 +354,20 @@ pub(super) fn open_startup_screens(args: Res<Args>, game: Option<Res<Game>>, mut
 
 /// The screens open at startup, bottom to top: the main menu when there is no run, and
 /// `--screen` over the main menu or the run. In a run, settings and controls are reached from
-/// the pause menu, so they open over it.
+/// the pause menu, so they open over it; character creation's steps open over New run and the
+/// steps before them, each with its preselection.
 fn startup_screens(screen: Option<ScreenName>, in_run: bool) -> Vec<ScreenName> {
     use ScreenName::*;
+    let creation = [Race, Gender, Class, Summary];
     match (in_run, screen) {
+        (false, Some(s)) if creation.contains(&s) => {
+            let steps = creation.iter().take_while(|&&c| c != s);
+            [Main, NewRun]
+                .into_iter()
+                .chain(steps.copied())
+                .chain([s])
+                .collect()
+        }
         (false, Some(s @ (NewRun | Settings | Controls))) => vec![Main, s],
         (false, _) => vec![Main],
         (true, Some(s @ (Settings | Controls))) => vec![Pause, s],
@@ -340,8 +423,13 @@ pub(super) fn apply_choice(
                 Resume::Failed(message) => screens.stack.fail(message, true),
                 Resume::NoSave => screens.stack.fail("There is no saved run.".into(), true),
             },
-            MenuChoice::NewRun { scenario, seed } => {
-                match Game::new_run(screens.content.0.clone(), scenario, *seed) {
+            MenuChoice::NewRun {
+                scenario,
+                seed,
+                character,
+            } => {
+                let content = screens.content.0.clone();
+                match Game::new_run(content, scenario, *seed, character.as_ref()) {
                     Ok(game) => {
                         commands.insert_resource(game);
                         screens.stack.clear();
@@ -396,9 +484,10 @@ mod tests {
         let mut stack = ScreenStack::default();
         for name in names {
             let run = name.needs_run().then_some(&view);
+            let draft = stack.draft();
             stack
                 .screens
-                .push(Screen::new(*name, &content, has_save, run));
+                .push(Screen::new(*name, &content, has_save, run, &draft));
         }
         stack
     }
@@ -413,9 +502,13 @@ mod tests {
             press(&mut stack, Press::nav(Nav::Enter)),
             ScreenAction::Open(Settings)
         );
-        stack
-            .screens
-            .push(Screen::new(Settings, &content(), false, None));
+        stack.screens.push(Screen::new(
+            Settings,
+            &content(),
+            false,
+            None,
+            &Draft::default(),
+        ));
         assert_eq!(stack.names(), [Pause, Settings]);
         assert_eq!(
             press(&mut stack, Press::nav(Nav::Back)),
@@ -482,6 +575,15 @@ mod tests {
         assert_eq!(startup_screens(Some(Character), false), [Main]);
         assert_eq!(startup_screens(Some(PickUp), true), [PickUp]);
         assert_eq!(startup_screens(Some(Drop), false), [Main]);
+        assert_eq!(startup_screens(Some(Race), false), [Main, NewRun, Race]);
+        assert_eq!(
+            startup_screens(Some(Class), false),
+            [Main, NewRun, Race, Gender, Class]
+        );
+        assert_eq!(
+            startup_screens(Some(Summary), false),
+            [Main, NewRun, Race, Gender, Class, Summary]
+        );
     }
 
     #[test]
@@ -525,7 +627,8 @@ mod tests {
     /// An app with the router and the screen systems, on the main menu or in a run.
     fn app(run: bool) -> App {
         let content = content();
-        let game = run.then(|| Game::new_run(content.clone(), "showcase", None).expect("run"));
+        let game =
+            run.then(|| Game::new_run(content.clone(), "showcase", None, None).expect("run"));
         app_with(content, game)
     }
 
@@ -688,16 +791,83 @@ mod tests {
         let mut app = app(false);
         app.update();
         assert_eq!(names(&app), [ScreenName::Main]);
-        // Enter opens New run and the next Enter, in the same frame, starts the showcase.
-        frame(&mut app, &[ENTER, ENTER, WAIT]);
+        // Enter opens New run, and the next Enters, in the same frame, pick the showcase, its
+        // character's race, gender, and class (preselected), and start it from the summary.
+        frame(&mut app, &[ENTER, ENTER, ENTER, ENTER, ENTER]);
+        assert_eq!(
+            names(&app),
+            [
+                ScreenName::Main,
+                ScreenName::NewRun,
+                ScreenName::Race,
+                ScreenName::Gender,
+                ScreenName::Class,
+                ScreenName::Summary
+            ]
+        );
+        frame(&mut app, &[ENTER, WAIT]);
         assert!(app.world().contains_resource::<Game>());
         assert!(names(&app).is_empty());
         assert!(
             actions(&app).is_empty(),
             "presses after the choice are dropped"
         );
+        let game = app.world().resource::<Game>();
+        assert_eq!(
+            game.world
+                .character()
+                .map(|c| c.spec.to_string())
+                .as_deref(),
+            Some("human,female,thief")
+        );
         frame(&mut app, &[WAIT]);
         assert_eq!(actions(&app), [Action::Wait]);
+    }
+
+    #[test]
+    fn character_creation_goes_back_and_remembers_choices() {
+        let (up, down) = ((KeyCode::ArrowUp, ""), DOWN);
+        let mut app = app(false);
+        app.update();
+        // New run, then race: down from human to dwarf; gender: down to other; class: up from
+        // thief to ranger.
+        frame(
+            &mut app,
+            &[ENTER, ENTER, down, ENTER, down, ENTER, up, ENTER],
+        );
+        assert_eq!(names(&app).last(), Some(&ScreenName::Summary));
+        let draft = app.world().resource::<ScreenStack>().draft();
+        let spec = draft.spec(&content()).expect("a character");
+        assert_eq!(spec.to_string(), "dwarf,other,ranger");
+        // Change race (the summary's second row): back on the race step as it was left, the
+        // gender and class steps closed.
+        frame(&mut app, &[down, ENTER]);
+        assert_eq!(
+            names(&app),
+            [ScreenName::Main, ScreenName::NewRun, ScreenName::Race]
+        );
+        // Another race; the gender and class open on what was chosen before.
+        frame(&mut app, &[down, ENTER, ENTER, ENTER]);
+        assert_eq!(names(&app).last(), Some(&ScreenName::Summary));
+        let spec = (app.world().resource::<ScreenStack>().draft())
+            .spec(&content())
+            .expect("a character");
+        assert_eq!(spec.to_string(), "halfling,other,ranger");
+        // Esc steps back one screen at a time, to the main menu.
+        for left in [5, 4, 3, 2, 1] {
+            frame(&mut app, &[ESC]);
+            assert_eq!(names(&app).len(), left);
+        }
+        frame(&mut app, &[ENTER, ENTER, ENTER, ENTER, ENTER, ENTER]);
+        let game = app.world().resource::<Game>();
+        assert_eq!(
+            game.world
+                .character()
+                .map(|c| c.spec.to_string())
+                .as_deref(),
+            Some("halfling,other,ranger"),
+            "the choices are remembered until the run starts"
+        );
     }
 
     #[test]

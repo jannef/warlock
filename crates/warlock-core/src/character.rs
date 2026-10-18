@@ -1,0 +1,717 @@
+//! Character creation (spec §8 "Character creation"): who the player is, made when a run
+//! starts. A [`CharacterSpec`] is the choice — a race (`data/races.toml`), a gender, and a class
+//! (`data/classes.toml`) — written `dwarf,female,warrior` on the command line. A [`Character`]
+//! is what came of it in a run: the choice, the stat the gender raised, the birth date, and the
+//! birth sign (`data/horoscope.toml`).
+//!
+//! - **Age and birthday**: the age is uniform in the race's `age` range and the birthday
+//!   (month, then day) uniform over the year, from the random stream `character/birth/<race>`.
+//!   The birth date counts back from the run's start date, so the character is exactly that old
+//!   on it ([`BirthDate::counted_back`]).
+//! - **Birth sign**: the horoscope's sign of the birth year
+//!   ([`Horoscope::sign_of_year`](crate::content::Horoscope::sign_of_year)); never chosen.
+//! - **Starting scores**: [`AVERAGE`] plus the race's adjustment, plus the gender's (male:
+//!   Strength +1; female: Dexterity +1; other: +1 to a stat picked from the run seed, see
+//!   [`Gender::raises`]), plus the class's, plus the sign's animal's and element's, kept within
+//!   [`SCORES`](crate::stats::SCORES).
+//! - **Potentials**: the races file's `base_potential` plus the race's potential adjustment,
+//!   kept within the same range and never below the starting score; like every potential they
+//!   are hidden from the player.
+//! - **Dice**: adjustments may be dice ([`Dice`](crate::dice::Dice)), rolled from the stream
+//!   `character/rolls/<race>,<gender>,<class>` in this order: the race's scores, the class's,
+//!   the animal's, the element's (each in stat order), then the race's potentials. Fixed numbers
+//!   draw nothing.
+//! - **Eyes**: the player's vision profile is the race's.
+//!
+//! Everything follows from the content, the spec, the run seed, and the start date, so a run
+//! (and its replay) is reproduced by its scenario, seed, and character.
+
+use crate::content::{Calendar, ClassDef, Content, RaceDef, Sign};
+use crate::rng::Rng;
+use crate::stats::{self, AVERAGE, PerStat, Stat, Stats, adjusted};
+use crate::time::{DAYS_PER_MONTH, GameTime, MONTHS_PER_YEAR};
+use serde::{Deserialize, Serialize};
+use std::fmt;
+use std::str::FromStr;
+
+/// The player's gender. It raises one stat by one.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Gender {
+    Male,
+    Female,
+    Other,
+}
+
+impl Gender {
+    /// Every gender, in the order offered.
+    pub const ALL: [Gender; 3] = [Gender::Male, Gender::Female, Gender::Other];
+
+    /// The id on the command line and in saves: `female`.
+    pub const fn id(self) -> &'static str {
+        match self {
+            Gender::Male => "male",
+            Gender::Female => "female",
+            Gender::Other => "other",
+        }
+    }
+
+    /// The name: `Female`.
+    pub const fn name(self) -> &'static str {
+        match self {
+            Gender::Male => "Male",
+            Gender::Female => "Female",
+            Gender::Other => "Other",
+        }
+    }
+
+    pub fn from_id(id: &str) -> Option<Gender> {
+        Gender::ALL.into_iter().find(|g| g.id() == id)
+    }
+
+    /// The stat this gender raises by one in a run with `seed`: Strength for male, Dexterity
+    /// for female, and for other a stat picked from the seed ([`other_stat`]).
+    pub fn raises(self, seed: u64) -> Stat {
+        match self {
+            Gender::Male => Stat::Strength,
+            Gender::Female => Stat::Dexterity,
+            Gender::Other => other_stat(seed),
+        }
+    }
+}
+
+/// The stat the gender "other" raises in a run with `seed`: uniform over the stats, from the
+/// random stream `character/gender` (`rng.rs`), so it never depends on the rest of the
+/// character or on gameplay.
+pub fn other_stat(seed: u64) -> Stat {
+    let mut rng = Rng::stream(seed, "character/gender");
+    Stat::ALL[rng.index(Stat::COUNT)]
+}
+
+/// What the player chooses: a race, a gender, and a class, by id. Written
+/// `race,gender,class` (`dwarf,female,warrior`) on the command line; an object with those
+/// three fields in scenarios, replays, and saves.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CharacterSpec {
+    pub race: String,
+    pub gender: Gender,
+    pub class: String,
+}
+
+/// A date on the calendar that may lie before its year 1: a birth date. `month` is 1 to 12,
+/// `day` 1 to 30.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BirthDate {
+    pub year: i64,
+    pub month: u32,
+    pub day: u32,
+}
+
+impl BirthDate {
+    /// The birth date of someone who is `age` years old on `today` and has their birthday on
+    /// `month`/`day`: their last birthday on or before `today` was their `age`th.
+    pub fn counted_back(today: GameTime, age: u32, month: u32, day: u32) -> Self {
+        let not_yet = (month, day) > (today.month(), today.day());
+        Self {
+            year: today.year() as i64 - i64::from(age) - i64::from(not_yet),
+            month,
+            day,
+        }
+    }
+
+    /// Age in whole years on `date`: one more on every birthday; 0 before the first.
+    pub fn age_on(&self, date: GameTime) -> u32 {
+        let before = (date.month(), date.day()) < (self.month, self.day);
+        let age = date.year() as i64 - self.year - i64::from(before);
+        u32::try_from(age).unwrap_or(0)
+    }
+
+    /// Day, month, and year: `3 Seedtide 1417`.
+    pub fn text(&self, calendar: &Calendar) -> String {
+        format!("{} {} {}", self.day, calendar.month(self.month), self.year)
+    }
+}
+
+/// Who the player is in a run (spec §8 "Character creation"): the choice and what came of it.
+/// Saved with the run; the player knows all of it.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Character {
+    /// What was chosen.
+    pub spec: CharacterSpec,
+    /// The stat the gender raised by one.
+    pub raised: Stat,
+    pub born: BirthDate,
+    /// The birth sign; `None` for content without a horoscope.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sign: Option<Sign>,
+}
+
+impl Character {
+    /// Age in whole years on `date`.
+    pub fn age_on(&self, date: GameTime) -> u32 {
+        self.born.age_on(date)
+    }
+
+    /// Whether the character was born in a year of `element` (an id: "is this character
+    /// Fire-born?" is `born_of_element("fire")`).
+    pub fn born_of_element(&self, element: &str) -> bool {
+        self.sign.as_ref().is_some_and(|s| s.is_element(element))
+    }
+
+    /// Whether the character was born in a year of `animal` (an id: `manticore`).
+    pub fn born_in_year_of(&self, animal: &str) -> bool {
+        self.sign.as_ref().is_some_and(|s| s.is_animal(animal))
+    }
+
+    /// The birth sign as players say it (`Fire Manticore`); `None` without one.
+    pub fn sign_name(&self, content: &Content) -> Option<String> {
+        let sign = self.sign.as_ref()?;
+        Some(content.horoscope().map_or_else(
+            || format!("{} {}", sign.element, sign.animal),
+            |h| h.name(sign),
+        ))
+    }
+
+    /// Whether `content` has everything this character names: race, class, and sign.
+    pub fn check(&self, content: &Content) -> Result<(), String> {
+        self.spec.check(content)?;
+        match (&self.sign, content.horoscope()) {
+            (None, _) => Ok(()),
+            (Some(sign), Some(h)) if h.parts(sign).is_some() => Ok(()),
+            (Some(sign), _) => Err(format!(
+                "unknown birth sign `{} {}`",
+                sign.element, sign.animal
+            )),
+        }
+    }
+}
+
+/// What a character starts a run with.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Start {
+    /// The starting scores and (hidden) potentials.
+    pub stats: Stats,
+    /// The player's vision profile: the race's.
+    pub vision: String,
+    pub character: Character,
+}
+
+impl CharacterSpec {
+    /// The race, or why there is none.
+    pub fn race<'c>(&self, content: &'c Content) -> Result<&'c RaceDef, String> {
+        content
+            .race(&self.race)
+            .ok_or_else(|| format!("unknown race `{}`", self.race))
+    }
+
+    /// The class, or why there is none.
+    pub fn class<'c>(&self, content: &'c Content) -> Result<&'c ClassDef, String> {
+        content
+            .class(&self.class)
+            .ok_or_else(|| format!("unknown class `{}`", self.class))
+    }
+
+    /// Whether `content` has the race and the class.
+    pub fn check(&self, content: &Content) -> Result<(), String> {
+        self.race(content).and(self.class(content)).map(|_| ())
+    }
+
+    /// What this character starts a run with `seed` on `today` (the run's start) with: see the
+    /// module docs.
+    pub fn start(&self, content: &Content, seed: u64, today: GameTime) -> Result<Start, String> {
+        let race = self.race(content)?;
+        let class = self.class(content)?;
+        let raised = self.gender.raises(seed);
+        let born = birth(race, seed, today);
+        let horoscope = content.horoscope();
+        let sign = horoscope.map(|h| h.sign_of_year(born.year));
+        let mut rng = Rng::stream(seed, &format!("character/rolls/{self}"));
+        let mut by = stats::roll(&race.stats, &mut rng);
+        by[raised] += 1;
+        let mut add = |more: PerStat<i32>| {
+            for stat in Stat::ALL {
+                by[stat] += more[stat];
+            }
+        };
+        add(stats::roll(&class.stats, &mut rng));
+        if let Some((animal, element)) = horoscope.zip(sign.as_ref()).and_then(|(h, s)| h.parts(s))
+        {
+            add(stats::roll(&animal.stats, &mut rng));
+            add(stats::roll(&element.stats, &mut rng));
+        }
+        let potential = stats::roll(&race.potential, &mut rng);
+        Ok(Start {
+            stats: starting_stats(by, potential, content.races().base_potential),
+            vision: race.vision.clone(),
+            character: Character {
+                spec: self.clone(),
+                raised,
+                born,
+                sign,
+            },
+        })
+    }
+}
+
+/// The birth date of a new character of `race` in a run with `seed` that starts `today`.
+fn birth(race: &RaceDef, seed: u64, today: GameTime) -> BirthDate {
+    let mut rng = Rng::stream(seed, &format!("character/birth/{}", race.id));
+    let (young, old) = (*race.age.start() as i32, *race.age.end() as i32);
+    let age = rng.range(young, old) as u32;
+    let month = rng.range(1, MONTHS_PER_YEAR as i32) as u32;
+    let day = rng.range(1, DAYS_PER_MONTH as i32) as u32;
+    BirthDate::counted_back(today, age, month, day)
+}
+
+/// Starting stats from the adjustments: scores 10 plus `by`, potentials `base_potential` plus
+/// `potential`, all within 1 to 40 and no potential below its score.
+fn starting_stats(by: PerStat<i32>, potential: PerStat<i32>, base_potential: u8) -> Stats {
+    let mut scores = PerStat::splat(AVERAGE);
+    let mut potentials = PerStat::splat(AVERAGE);
+    for stat in Stat::ALL {
+        scores[stat] = adjusted(AVERAGE, by[stat]);
+        potentials[stat] = adjusted(base_potential, potential[stat]);
+    }
+    Stats::new(scores, potentials)
+}
+
+impl fmt::Display for CharacterSpec {
+    /// `race,gender,class`, as on the command line.
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{},{},{}", self.race, self.gender.id(), self.class)
+    }
+}
+
+impl FromStr for CharacterSpec {
+    type Err = String;
+
+    /// `race,gender,class` (`dwarf,female,warrior`). Only the gender is checked here; the race
+    /// and class are checked against content when a run starts ([`CharacterSpec::check`]).
+    fn from_str(text: &str) -> Result<Self, String> {
+        let parts: Vec<&str> = text.split(',').map(str::trim).collect();
+        let [race, gender, class] = parts[..] else {
+            return Err(format!(
+                "expected RACE,GENDER,CLASS (e.g. dwarf,female,warrior), got `{text}`"
+            ));
+        };
+        let gender = Gender::from_id(gender).ok_or_else(|| {
+            format!("unknown gender `{gender}` (expected male, female, or other)")
+        })?;
+        if race.is_empty() || class.is_empty() {
+            return Err(format!(
+                "the race and the class must be named, got `{text}`"
+            ));
+        }
+        Ok(Self {
+            race: race.to_string(),
+            gender,
+            class: class.to_string(),
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::content::ContentFiles;
+    use crate::dice::Dice;
+    use std::collections::{BTreeMap, BTreeSet};
+
+    fn content() -> Content {
+        Content::builtin().expect("builtin content")
+    }
+
+    fn spec(text: &str) -> CharacterSpec {
+        text.parse().expect("a character")
+    }
+
+    /// 08:00 on `day` `month` `year`.
+    fn date(year: u64, month: u32, day: u32) -> GameTime {
+        GameTime::from_calendar(year, month, day, 8, 0).expect("a date")
+    }
+
+    /// The default start: 11 Darkening 1444.
+    fn start_date() -> GameTime {
+        date(1444, 11, 11)
+    }
+
+    fn start(content: &Content, text: &str, seed: u64) -> Start {
+        spec(text)
+            .start(content, seed, start_date())
+            .expect("starts")
+    }
+
+    fn scores(stats: &Stats) -> Vec<u8> {
+        Stat::ALL.map(|s| stats.score(s)).to_vec()
+    }
+
+    fn potentials(stats: &Stats) -> Vec<u8> {
+        Stat::ALL.map(|s| stats.potential(s)).to_vec()
+    }
+
+    /// The builtin content plus a race `giant` and a class `brute` with fixed adjustments, and a
+    /// horoscope of one animal and one element; `horoscope: false` leaves the horoscope out.
+    fn fixed_content(horoscope: bool) -> Content {
+        let mut files = ContentFiles::builtin();
+        let races = include_str!("../../../assets/data/races.toml");
+        files.insert(
+            "data/races.toml",
+            &format!(
+                "{races}\n[[race]]\nid = \"giant\"\nname = \"Giant\"\ndescription = \"\"\n\
+                 vision = \"normal\"\nage = [20, 20]\n\
+                 stats = {{ strength = 4, dexterity = -2 }}\npotential = {{ strength = 3 }}\n"
+            ),
+        );
+        let classes = include_str!("../../../assets/data/classes.toml");
+        files.insert(
+            "data/classes.toml",
+            &format!(
+                "{classes}\n[[class]]\nid = \"brute\"\nname = \"Brute\"\ndescription = \"\"\n\
+                 stats = {{ strength = 2, intelligence = -3 }}\n"
+            ),
+        );
+        if horoscope {
+            files.insert(
+                "data/horoscope.toml",
+                "anchor_year = 1\n\
+                 [[animal]]\nid = \"ox\"\nname = \"Ox\"\ndescription = \"\"\n\
+                 stats = { toughness = 2, strength = 1 }\n\
+                 [[element]]\nid = \"stone\"\nname = \"Stone\"\ndescription = \"\"\n\
+                 stats = { willpower = 1 }\n",
+            );
+        } else {
+            files.remove("data/horoscope.toml");
+        }
+        Content::load(&files).expect("valid content")
+    }
+
+    #[test]
+    fn specs_parse_and_print_as_race_gender_class() {
+        let dwarf = spec("dwarf,female,warrior");
+        assert_eq!(dwarf.race, "dwarf");
+        assert_eq!(dwarf.gender, Gender::Female);
+        assert_eq!(dwarf.class, "warrior");
+        assert_eq!(dwarf.to_string(), "dwarf,female,warrior");
+        assert_eq!(spec(" elf , other , wizard "), spec("elf,other,wizard"));
+        for (bad, why) in [
+            ("dwarf,female", "expected RACE,GENDER,CLASS"),
+            ("dwarf,female,warrior,extra", "expected RACE,GENDER,CLASS"),
+            ("dwarf,woman,warrior", "unknown gender `woman`"),
+            (",male,warrior", "must be named"),
+        ] {
+            let err = bad.parse::<CharacterSpec>().unwrap_err();
+            assert!(err.contains(why), "{bad}: {err}");
+        }
+        let json = serde_json::to_string(&dwarf).expect("serializes");
+        assert_eq!(
+            json,
+            r#"{"race":"dwarf","gender":"female","class":"warrior"}"#
+        );
+        assert_eq!(
+            serde_json::from_str::<CharacterSpec>(&json).ok(),
+            Some(dwarf)
+        );
+    }
+
+    #[test]
+    fn scores_add_race_gender_class_animal_and_element_to_ten() {
+        let content = fixed_content(true);
+        // Giant: St +4 Dx -2; male: St +1; brute: St +2 In -3; ox: St +1 To +2; stone: Wi +1.
+        let giant = start(&content, "giant,male,brute", 1);
+        assert_eq!(scores(&giant.stats), [18, 8, 12, 7, 11, 10]);
+        // Potentials: 15 plus the race's (St +3), never below the score.
+        assert_eq!(potentials(&giant.stats), [18, 15, 15, 15, 15, 15]);
+        assert_eq!(giant.vision, "normal");
+        assert_eq!(giant.character.raised, Stat::Strength);
+        let sign = giant.character.sign.as_ref().expect("a sign");
+        assert!(giant.character.born_of_element("stone"));
+        assert!(giant.character.born_in_year_of("ox"));
+        assert!(!giant.character.born_of_element("fire"));
+        assert_eq!(
+            sign,
+            &Sign {
+                animal: "ox".into(),
+                element: "stone".into()
+            }
+        );
+        assert_eq!(
+            giant.character.sign_name(&content).as_deref(),
+            Some("Stone Ox")
+        );
+        // Female raises Dexterity instead; other the stat its seed picks.
+        let female = start(&content, "giant,female,brute", 1);
+        assert_eq!(scores(&female.stats), [17, 9, 12, 7, 11, 10]);
+        for seed in 0..12 {
+            let other = start(&content, "giant,other,brute", seed);
+            let raised = other_stat(seed);
+            assert_eq!(other.character.raised, raised);
+            let mut expected = [17, 8, 12, 7, 11, 10];
+            expected[Stat::ALL.iter().position(|&s| s == raised).expect("a stat")] += 1;
+            assert_eq!(scores(&other.stats), expected, "seed {seed}");
+        }
+        // Without a horoscope there is no sign, and nothing from it.
+        let content = fixed_content(false);
+        let signless = start(&content, "giant,male,brute", 1);
+        assert_eq!(signless.character.sign, None);
+        assert_eq!(scores(&signless.stats), [17, 8, 10, 7, 10, 10]);
+        assert!(!signless.character.born_of_element("stone"));
+        assert_eq!(signless.character.sign_name(&content), None);
+    }
+
+    #[test]
+    fn scores_and_potentials_are_clamped_to_the_valid_range() {
+        let by = |pairs: &[(Stat, i32)]| {
+            let mut out = PerStat::splat(0);
+            for &(stat, v) in pairs {
+                out[stat] = v;
+            }
+            out
+        };
+        // St 10 + 31 caps at 40 and its potential 35 + 10 too; Dx 10 - 30 stops at 1, its
+        // potential 35 - 10 = 25.
+        let stats = starting_stats(
+            by(&[(Stat::Strength, 31), (Stat::Dexterity, -30)]),
+            by(&[(Stat::Strength, 10), (Stat::Dexterity, -10)]),
+            35,
+        );
+        assert_eq!(scores(&stats), [40, 1, 10, 10, 10, 10]);
+        assert_eq!(potentials(&stats), [40, 25, 35, 35, 35, 35]);
+        // A potential below the score is raised to it; a potential of 1 - 10 stops at 1.
+        let low = starting_stats(
+            by(&[(Stat::Strength, 20)]),
+            by(&[(Stat::Dexterity, -10)]),
+            1,
+        );
+        assert_eq!(scores(&low)[..2], [30, 10]);
+        assert_eq!(potentials(&low)[..3], [30, 10, 10]);
+        let floor = starting_stats(by(&[]), by(&[(Stat::Dexterity, -10)]), 5);
+        assert_eq!(potentials(&floor)[..2], [10, 10]);
+    }
+
+    #[test]
+    fn rolls_are_the_same_for_the_same_seed_and_choices() {
+        let content = content();
+        let warrior = start(&content, "dwarf,female,warrior", 1);
+        assert_eq!(warrior, start(&content, "dwarf,female,warrior", 1));
+        // The warrior's St 1d3+1 and To 1d3 (with the dwarf's To 1d2+2) vary from seed to seed,
+        // within what the dice allow; other choices roll their own.
+        let mut strength = BTreeSet::new();
+        let mut differ = 0;
+        for seed in 0..100 {
+            let a = start(&content, "dwarf,female,warrior", seed);
+            let b = start(&content, "dwarf,female,barbarian", seed);
+            strength.insert(a.stats.score(Stat::Strength));
+            differ += usize::from(scores(&a.stats) != scores(&b.stats));
+        }
+        assert!(strength.len() >= 3, "{strength:?}");
+        assert!(differ > 50, "{differ}");
+        // The birth depends on the seed and the race only: the class does not move a birthday.
+        let a = start(&content, "elf,male,wizard", 9);
+        let b = start(&content, "elf,female,merchant", 9);
+        assert_eq!(a.character.born, b.character.born);
+        assert_ne!(
+            a.character.born,
+            start(&content, "elf,male,wizard", 10).character.born
+        );
+    }
+
+    #[test]
+    fn rolled_scores_stay_within_what_the_dice_allow() {
+        let content = content();
+        let h = content.horoscope().expect("a horoscope");
+        for seed in 0..40 {
+            let s = start(&content, "half_orc,other,barbarian", seed);
+            let race = content.race("half_orc").expect("race");
+            let class = content.class("barbarian").expect("class");
+            let (animal, element) = h
+                .parts(s.character.sign.as_ref().expect("a sign"))
+                .expect("parts");
+            for stat in Stat::ALL {
+                let dice: [Dice; 4] = [
+                    race.stats[stat],
+                    class.stats[stat],
+                    animal.stats[stat],
+                    element.stats[stat],
+                ];
+                let gender = i32::from(stat == s.character.raised);
+                let lo = 10 + gender + dice.iter().map(Dice::min).sum::<i32>();
+                let hi = 10 + gender + dice.iter().map(Dice::max).sum::<i32>();
+                let score = i32::from(s.stats.score(stat));
+                assert!(
+                    (lo..=hi).contains(&score),
+                    "seed {seed} {stat:?}: {score} not in {lo}..={hi}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn ages_and_birthdays_follow_the_race_and_count_back_from_the_start() {
+        let content = content();
+        let today = start_date();
+        for race in &content.races().list {
+            let mut ages = BTreeSet::new();
+            let mut months = BTreeSet::new();
+            for seed in 0..300 {
+                let c = spec(&format!("{},male,commoner", race.id))
+                    .start(&content, seed, today)
+                    .expect("starts")
+                    .character;
+                let age = c.age_on(today);
+                assert!(race.age.contains(&age), "{} {age}", race.id);
+                assert!((1..=12).contains(&c.born.month) && (1..=30).contains(&c.born.day));
+                // A birthday still to come this year was last year's age.
+                let not_yet = (c.born.month, c.born.day) > (11, 11);
+                assert_eq!(c.born.year, 1444 - i64::from(age) - i64::from(not_yet));
+                ages.insert(age);
+                months.insert(c.born.month);
+            }
+            assert_eq!(months.len(), 12, "{}", race.id);
+            assert!(
+                ages.len() > 10.min(race.age.clone().count()),
+                "{} {ages:?}",
+                race.id
+            );
+        }
+        // Humans start 16 to 35, elves 90 to 300.
+        assert_eq!(content.race("human").map(|r| r.age.clone()), Some(16..=35));
+        assert_eq!(content.race("elf").map(|r| r.age.clone()), Some(90..=300));
+    }
+
+    #[test]
+    fn ages_count_birthdays() {
+        let born = BirthDate {
+            year: 1417,
+            month: 3,
+            day: 3,
+        };
+        assert_eq!(born.age_on(date(1444, 3, 2)), 26);
+        assert_eq!(born.age_on(date(1444, 3, 3)), 27, "on the birthday");
+        assert_eq!(born.age_on(date(1444, 11, 11)), 27);
+        assert_eq!(born.age_on(date(1445, 1, 1)), 27);
+        assert_eq!(born.age_on(date(1417, 3, 3)), 0);
+        assert_eq!(born.age_on(date(1416, 1, 1)), 0, "before birth");
+        assert_eq!(BirthDate::counted_back(date(1444, 11, 11), 27, 3, 3), born);
+        assert_eq!(BirthDate::counted_back(date(1444, 3, 3), 27, 3, 3), born);
+        assert_eq!(BirthDate::counted_back(date(1444, 3, 2), 26, 3, 3), born);
+        // Before the calendar's year 1, years go on down through 0.
+        let early = BirthDate::counted_back(date(1, 6, 1), 30, 12, 30);
+        assert_eq!(early.year, -30);
+        assert_eq!(early.age_on(date(1, 6, 1)), 30);
+        assert_eq!(born.text(content().calendar()), "3 Seedtide 1417");
+    }
+
+    #[test]
+    fn the_sign_follows_the_birth_year_and_changes_on_the_first_of_frostmere() {
+        let content = content();
+        let h = content.horoscope().expect("a horoscope");
+        assert_eq!(h.anchor_year, 1);
+        assert_eq!(h.great_cycle(), 60);
+        let name = |year| h.name(&h.sign_of_year(year));
+        // Year 1, the year of the Great Race, starts a great cycle, and so do 1381 and 1441.
+        for year in [1, 61, 1381, 1441] {
+            assert_eq!(name(year), "Wood Salamander", "{year}");
+        }
+        assert_eq!(name(1444), "Metal Unicorn");
+        assert_eq!(name(1417), "Fire Salamander");
+        assert_eq!(name(1416), "Wood Barghest");
+        assert_eq!(name(1440), "Water Barghest", "the last of a great cycle");
+        // On 1 Frostmere 1444 someone aged 27 with a birthday on 30 Deepwinter was born in 1416,
+        // one with a birthday that day in 1417: across the year boundary, another sign.
+        let today = date(1444, 1, 1);
+        let late = BirthDate::counted_back(today, 27, 12, 30);
+        let early = BirthDate::counted_back(today, 27, 1, 1);
+        assert_eq!((late.year, early.year), (1416, 1417));
+        assert_ne!(h.sign_of_year(late.year), h.sign_of_year(early.year));
+        // A new character's sign is their birth year's.
+        for seed in 0..50 {
+            let c = start(&content, "gnome,female,bard", seed).character;
+            assert_eq!(c.sign, Some(h.sign_of_year(c.born.year)));
+        }
+    }
+
+    #[test]
+    fn characters_round_trip_and_check_against_content() {
+        let content = content();
+        let c = start(&content, "half_elf,other,ranger", 4).character;
+        let json = serde_json::to_string(&c).expect("serializes");
+        assert!(
+            json.contains(r#""spec":{"race":"half_elf","gender":"other","class":"ranger"}"#),
+            "{json}"
+        );
+        assert!(json.contains(r#""born":{"year":"#), "{json}");
+        assert_eq!(
+            serde_json::from_str::<Character>(&json).ok().as_ref(),
+            Some(&c)
+        );
+        assert!(c.check(&content).is_ok());
+        let mut odd = c.clone();
+        odd.sign = Some(Sign {
+            animal: "dragon".into(),
+            element: "fire".into(),
+        });
+        assert_eq!(
+            odd.check(&content).unwrap_err(),
+            "unknown birth sign `fire dragon`"
+        );
+        let mut no_race = c;
+        no_race.spec.race = "orc".into();
+        assert_eq!(no_race.check(&content).unwrap_err(), "unknown race `orc`");
+    }
+
+    #[test]
+    fn unknown_races_and_classes_are_errors() {
+        let content = content();
+        assert_eq!(
+            spec("orc,male,warrior")
+                .start(&content, 1, start_date())
+                .unwrap_err(),
+            "unknown race `orc`"
+        );
+        assert_eq!(
+            spec("human,male,necromancer").check(&content).unwrap_err(),
+            "unknown class `necromancer`"
+        );
+        assert!(spec("half_orc,other,witch").check(&content).is_ok());
+    }
+
+    #[test]
+    fn every_builtin_combination_starts_within_range() {
+        let content = content();
+        let mut lowest = BTreeMap::new();
+        let mut highest = BTreeMap::new();
+        for race in &content.races().list {
+            for gender in Gender::ALL {
+                for class in content.classes() {
+                    let spec = CharacterSpec {
+                        race: race.id.clone(),
+                        gender,
+                        class: class.id.clone(),
+                    };
+                    for seed in 0..4 {
+                        let start = spec.start(&content, seed, start_date()).expect("starts");
+                        for stat in Stat::ALL {
+                            let (s, p) = (start.stats.score(stat), start.stats.potential(stat));
+                            assert!((4..=22).contains(&s), "{spec} {stat:?} {s}");
+                            assert!(p >= s && p <= 22, "{spec} {stat:?} {p}");
+                            let low = lowest.entry(stat).or_insert(s);
+                            *low = (*low).min(s);
+                            let high = highest.entry(stat).or_insert(s);
+                            *high = (*high).max(s);
+                        }
+                        assert!(content.vision(&start.vision).is_some());
+                        assert!(start.character.check(&content).is_ok());
+                    }
+                }
+            }
+        }
+        // Some characters are poor on purpose, some strong.
+        assert!(lowest.values().all(|&s| s <= 8), "{lowest:?}");
+        assert!(lowest.values().any(|&s| s <= 5), "{lowest:?}");
+        assert!(highest.values().all(|&s| s >= 13), "{highest:?}");
+        assert!(highest.values().any(|&s| s >= 18), "{highest:?}");
+    }
+}

@@ -2,5 +2,5 @@ name = "Depths"
 description = "Straight into the generated dungeon branch: eight levels of rooms and caverns built from the run seed (try --seed with a word)."
 start_level = "depths:1"
 seed = 1
-vision = "normal"
+character = { race = "human", gender = "male", class = "warrior" }
 lantern = "lantern"

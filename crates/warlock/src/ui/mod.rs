@@ -10,12 +10,14 @@
 //! (`render::lighting`), composited after the map is placed and before free glyphs are lit.
 //! [`dev`] adds the developer overlays (reveal mode is the one exception that reads ground truth).
 //!
-//! Menus, settings, controls, the `?` help, the inventory, choosing what to pick up or drop
-//! ([`object_screen`]), and the character screen ([`character_screen`]) are screens on one stack
+//! Menus, character creation ([`chargen_screen`]), settings, controls, the `?` help, the
+//! inventory, choosing what to pick up or drop ([`object_screen`]), and the character screen
+//! ([`character_screen`]) are screens on one stack
 //! ([`screens`]): opened by [`Screens::open`], fed key presses by `input::route_keys`, and drawn
 //! by [`draw`], the one system that writes the UI console.
 
 mod character_screen;
+mod chargen_screen;
 mod controls_screen;
 mod dev;
 mod effects;

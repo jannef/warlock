@@ -1,0 +1,16 @@
+# Classes
+
+Your class is the last choice of a new run (see [Your character](character.md)): what you did
+before you set out. For now a class only changes your starting [stats](stats.md); no skills,
+equipment, or spells come with it.
+
+The first eleven are adventurers. The last four are everyday folk: an aristocrat, a commoner, a
+craftsperson, and a merchant, who were never trained for this and mostly show it.
+
+{{#include generated/classes.md}}
+
+The changes are added to the average score of 10, together with your race's, your gender's, and
+your [birth sign's](horoscope.md). Each class rolls dice for its key stats, and sometimes for a
+weakness too: `1d3+1` is two to four, `−1d2` takes away one or two (see
+[How your stats add up](character.md#how-your-stats-add-up)). Classes are not balanced against
+each other, and some are poor choices on purpose.

@@ -144,13 +144,28 @@ scenario = "showcase"
 actions = "move:SW*2 pickup move:NE*2 move:E*2 move:NE pickup"
 screen = "inventory"
 
-# The character screen (#107): the player's name, their score in each stat (never a modifier or
-# a potential), and what they weigh, carrying the start room's pile.
+# The character screen (#107, #108, #111): the player's name, race, gender, and class, their
+# age, birthday, and birth sign, their score in each stat (never a modifier or a potential), and
+# what they weigh, carrying the start room's pile.
 [[golden]]
 name = "character-screen"
 scenario = "showcase"
 actions = "move:SW*2 pickup"
 screen = "character"
+
+# Character creation (#108, #111, #118), over New run on the main menu (no run; the replay goes
+# unused): the race step with the showcase's character's race preselected, and the summary of
+# that character (race, gender, and class each preselected), with its age, birthday, and sign
+# and its final scores (the dice rolled from the seed).
+[[golden]]
+name = "race-screen"
+scenario = "showcase"
+screen = "race"
+
+[[golden]]
+name = "character-summary"
+scenario = "showcase"
+screen = "summary"
 
 [[golden]]
 name = "vast-level"

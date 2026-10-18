@@ -1,13 +1,14 @@
 //! Scenarios (`assets/scenarios/*.toml`): a named starting setup for a run.
 
 use super::ContentError;
+use crate::character::CharacterSpec;
 use crate::stats::{Stat, Stats};
 use crate::time::{GameTime, HOUR, MINUTE, parse_time_of_day};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
-/// A scenario: which level a run starts on, the player's eyes, lantern, and stats, plus
-/// defaults.
+/// A scenario: which level a run starts on, the player's character (or, without one, their eyes
+/// and stats), and lantern, plus defaults.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ScenarioDef {
@@ -21,9 +22,15 @@ pub struct ScenarioDef {
     /// Seed used when none is given on the command line.
     #[serde(default)]
     pub seed: u64,
-    /// The player's starting vision profile (an id in `data/vision.toml`).
-    #[serde(default = "default_vision")]
-    pub vision: String,
+    /// The player's character when the run does not choose one (spec §8 "Character creation"):
+    /// their eyes and stats then come from it, so `vision`, `stats`, and `potential` may not be
+    /// given.
+    #[serde(default)]
+    pub character: Option<CharacterSpec>,
+    /// Without a character: the player's vision profile (an id in `data/vision.toml`; default
+    /// `normal`).
+    #[serde(default)]
+    vision: Option<String>,
     /// Light preset of the lantern the player carries (unlit at the start), if any.
     pub lantern: Option<String>,
     /// Starting date `[year, month, day]` (all from 1); default `[1444, 11, 11]`.
@@ -36,20 +43,17 @@ pub struct ScenarioDef {
     /// loader.
     #[serde(skip)]
     pub start: GameTime,
-    /// The player's scores by stat (spec §8 "Stats"); a missing one is average.
+    /// Without a character: the player's scores by stat (spec §8 "Stats"); a missing one is
+    /// average.
     #[serde(default)]
     stats: BTreeMap<Stat, u8>,
-    /// The player's potentials by stat; a missing one equals the score.
+    /// Without a character: the player's potentials by stat; a missing one equals the score.
     #[serde(default)]
     potential: BTreeMap<Stat, u8>,
-    /// The player's stats at the start of a run, from `stats` and `potential`; filled in by the
-    /// loader.
+    /// Without a character: the player's stats at the start of a run, from `stats` and
+    /// `potential`; filled in by the loader.
     #[serde(skip)]
     pub player_stats: Stats,
-}
-
-fn default_vision() -> String {
-    "normal".into()
 }
 
 fn default_date() -> [u32; 3] {
@@ -82,7 +86,21 @@ impl ScenarioDef {
             ))
         })?;
         def.player_stats = Stats::from_data(&def.stats, &def.potential).map_err(err)?;
+        if def.character.is_some()
+            && (def.vision.is_some() || !def.stats.is_empty() || !def.potential.is_empty())
+        {
+            return Err(err(
+                "a scenario with a `character` takes the player's eyes and stats from it: leave \
+                 out `vision`, `stats`, and `potential`"
+                    .into(),
+            ));
+        }
         Ok(def)
+    }
+
+    /// Without a character: the player's vision profile (`normal` unless the scenario says).
+    pub fn vision(&self) -> &str {
+        self.vision.as_deref().unwrap_or("normal")
     }
 }
 
@@ -145,5 +163,47 @@ mod tests {
             let err = parse(bad).unwrap_err();
             assert!(err.message.contains(why), "{bad}: {}", err.message);
         }
+    }
+
+    #[test]
+    fn a_character_replaces_the_eyes_and_stats() {
+        let parse = |extra: &str| {
+            ScenarioDef::parse(
+                "s",
+                "s",
+                &format!("name = \"S\"\nstart_level = \"hub\"\n{extra}"),
+            )
+        };
+        assert_eq!(parse("").unwrap().character, None);
+        assert_eq!(parse("").unwrap().vision(), "normal");
+        assert_eq!(
+            parse("vision = \"low_light\"").unwrap().vision(),
+            "low_light"
+        );
+        let character = "character = { race = \"dwarf\", gender = \"other\", class = \"monk\" }";
+        let def = parse(character).unwrap();
+        assert_eq!(
+            def.character.map(|c| c.to_string()).as_deref(),
+            Some("dwarf,other,monk")
+        );
+        for extra in [
+            "vision = \"normal\"",
+            "stats = { strength = 12 }",
+            "potential = { strength = 12 }",
+        ] {
+            let err = parse(&format!("{character}\n{extra}")).unwrap_err();
+            assert!(
+                err.message.contains("leave out `vision`"),
+                "{}",
+                err.message
+            );
+        }
+        let err = parse("character = { race = \"dwarf\", gender = \"x\", class = \"monk\" }")
+            .unwrap_err();
+        assert!(
+            err.message.contains("unknown variant `x`"),
+            "{}",
+            err.message
+        );
     }
 }

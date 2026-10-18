@@ -1,10 +1,15 @@
-//! The New run screen (spec §6): the scenarios from content and an optional seed.
+//! The New run screen (spec §6): the scenarios from content and an optional seed. Enter goes on
+//! to character creation ([`super::chargen_screen`]), or with content that has no races or
+//! classes, starts the run as the scenario's.
 
+use super::chargen_screen::ScenarioPick;
 use super::menu::{Nav, Panel, Press, wrap};
-use super::screens::{MenuChoice, ScreenAction};
+use super::screens::{MenuChoice, ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::render::console::Console;
+use warlock_core::character::CharacterSpec;
 use warlock_core::content::Content;
+use warlock_core::time::GameTime;
 
 /// A scenario as listed on the screen.
 #[derive(Clone, Debug)]
@@ -13,6 +18,8 @@ struct ScenarioInfo {
     name: String,
     description: String,
     seed: u64,
+    character: Option<CharacterSpec>,
+    start: GameTime,
 }
 
 /// Longest seed text we accept.
@@ -24,6 +31,8 @@ pub struct NewRunScreen {
     scenarios: Vec<ScenarioInfo>,
     /// A saved run exists, which a new run replaces; the screen says so.
     has_save: bool,
+    /// The content has races and classes to choose a character from.
+    creates_characters: bool,
     selected: usize,
     seed: String,
 }
@@ -37,6 +46,8 @@ impl NewRunScreen {
                 name: s.name.clone(),
                 description: s.description.clone(),
                 seed: s.seed,
+                character: s.character.clone(),
+                start: s.start,
             })
             .collect();
         // The showcase (the command-line default) comes first and is preselected.
@@ -44,9 +55,24 @@ impl NewRunScreen {
         Self {
             scenarios,
             has_save,
+            creates_characters: !content.races().list.is_empty() && !content.classes().is_empty(),
             selected: 0,
             seed: String::new(),
         }
+    }
+
+    /// The selected scenario and the seed, for character creation.
+    pub fn pick(&self) -> Option<ScenarioPick> {
+        let info = self.scenarios.get(self.selected)?;
+        let typed_seed = self.seed();
+        Some(ScenarioPick {
+            id: info.id.clone(),
+            name: info.name.clone(),
+            typed_seed,
+            seed: typed_seed.unwrap_or(info.seed),
+            character: info.character.clone(),
+            start: info.start,
+        })
     }
 
     /// The typed seed: a number as-is, a word hashed (`warlock_core::rng::parse_seed`); empty
@@ -78,11 +104,15 @@ impl NewRunScreen {
             Nav::Backspace | Nav::Delete => {
                 self.seed.pop();
             }
+            Nav::Enter if self.creates_characters && !self.scenarios.is_empty() => {
+                return ScreenAction::Open(ScreenName::Race);
+            }
             Nav::Enter => {
                 if let Some(info) = self.scenarios.get(self.selected) {
                     return ScreenAction::Choose(MenuChoice::NewRun {
                         scenario: info.id.clone(),
                         seed: self.seed(),
+                        character: None,
                     });
                 }
             }
@@ -130,7 +160,12 @@ impl NewRunScreen {
             let warning = "! Starting a new run replaces your saved run.";
             console.print(x, panel.y + panel.h - 4, warning, ACCENT);
         }
-        panel.footer(console, "↑↓ scenario   Enter start   Esc back");
+        let footer = if self.creates_characters {
+            "↑↓ scenario   Enter next   Esc back"
+        } else {
+            "↑↓ scenario   Enter start   Esc back"
+        };
+        panel.footer(console, footer);
     }
 }
 
@@ -143,20 +178,24 @@ mod tests {
     }
 
     #[test]
-    fn starts_the_chosen_scenario_with_the_typed_seed() {
+    fn goes_on_to_the_character_with_the_chosen_scenario_and_typed_seed() {
         let mut s = screen();
         for d in ['4', '2'] {
             s.handle(&Press::typed(d));
         }
         s.handle(&Press::nav(Nav::Backspace));
         s.handle(&Press::typed('7'));
-        let ScreenAction::Choose(MenuChoice::NewRun { scenario, seed }) =
-            s.handle(&Press::nav(Nav::Enter))
-        else {
-            panic!("expected a new run");
-        };
-        assert_eq!(scenario, "showcase");
-        assert_eq!(seed, Some(47));
+        assert_eq!(
+            s.handle(&Press::nav(Nav::Enter)),
+            ScreenAction::Open(ScreenName::Race)
+        );
+        let pick = s.pick().expect("a scenario");
+        assert_eq!(pick.id, "showcase");
+        assert_eq!((pick.typed_seed, pick.seed), (Some(47), 47));
+        assert_eq!(
+            pick.character.map(|c| c.to_string()).as_deref(),
+            Some("human,female,thief")
+        );
         assert_eq!(s.handle(&Press::nav(Nav::Back)), ScreenAction::Close);
     }
 
@@ -166,21 +205,46 @@ mod tests {
         for ch in "jolly".chars() {
             s.handle(&Press::typed(ch));
         }
-        let ScreenAction::Choose(MenuChoice::NewRun { seed, .. }) =
-            s.handle(&Press::nav(Nav::Enter))
-        else {
-            panic!("expected a new run");
-        };
-        assert_eq!(seed, warlock_core::rng::parse_seed("jolly").ok());
+        let seed = warlock_core::rng::parse_seed("jolly").ok();
+        assert_eq!(s.pick().map(|p| p.typed_seed), Some(seed));
     }
 
     #[test]
     fn empty_seed_means_the_scenario_default() {
-        let ScreenAction::Choose(MenuChoice::NewRun { seed, .. }) =
-            screen().handle(&Press::nav(Nav::Enter))
-        else {
-            panic!("expected a new run");
-        };
-        assert_eq!(seed, None);
+        let pick = screen().pick().expect("a scenario");
+        assert_eq!((pick.typed_seed, pick.seed), (None, 1));
+    }
+
+    #[test]
+    fn without_races_or_classes_enter_starts_the_scenario() {
+        use warlock_core::content::ContentFiles;
+        let mut files = ContentFiles::builtin();
+        files.remove("data/races.toml");
+        files.remove("data/classes.toml");
+        for id in [
+            "arena",
+            "courtyard",
+            "depths",
+            "forest",
+            "showcase",
+            "vast",
+            "world",
+        ] {
+            files.remove(&format!("scenarios/{id}.toml"));
+        }
+        files.insert(
+            "scenarios/plain.toml",
+            "name = \"Plain\"\nstart_level = \"hub\"\n",
+        );
+        let content = Content::load(&files).expect("valid");
+        let mut s = NewRunScreen::new(&content, false);
+        assert_eq!(
+            s.handle(&Press::nav(Nav::Enter)),
+            ScreenAction::Choose(MenuChoice::NewRun {
+                scenario: "plain".into(),
+                seed: None,
+                character: None,
+            })
+        );
     }
 }
