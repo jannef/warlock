@@ -16,16 +16,17 @@ Choose **Continue** on the main menu to resume the saved run (it appears only if
 
 ## Where saves are kept
 
-**Desktop.** The save is the file `run.sav` in the game's data folder:
+**Desktop.** The save is the file `run.sav` in the game's data folder, and your settings are
+`settings.toml` in its configuration folder:
 
-| System | Folder |
-|---|---|
-| macOS | `~/Library/Application Support/warlock` |
-| Linux | `~/.local/share/warlock` |
-| Windows | `%LOCALAPPDATA%\warlock\data` |
+| System | Save (data folder) | Settings (configuration folder) |
+|---|---|---|
+| macOS | `~/Library/Application Support/warlock` | `~/Library/Application Support/warlock` |
+| Linux | `~/.local/share/warlock` | `~/.config/warlock` |
+| Windows | `%APPDATA%\warlock\data` | `%APPDATA%\warlock\config` |
 
-Your settings (`settings.toml`) are kept in the matching configuration folder. Logs and crash
-reports are in a `logs` folder inside the data folder.
+Logs and crash reports are in a `logs` folder: on macOS and Linux inside the data folder, on Windows
+in `%LOCALAPPDATA%\warlock\data\logs`.
 
 **Browser.** The save is kept in your browser's local storage for the page, under `warlock/run.sav`,
 as are your settings. It survives reloads. If the browser blocks storage (some private modes), the
