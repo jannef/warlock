@@ -9,6 +9,7 @@
 - [Light](light.md)
 - [Sight and memory](sight.md)
 - [Vision types](vision.md)
+- [Hearing](hearing.md)
 - [Sun, sky, and night](sun.md)
 - [The overworld](overworld.md)
 - [Terrain](terrain.md)

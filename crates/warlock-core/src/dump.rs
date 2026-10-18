@@ -4,6 +4,7 @@
 //! leak information the player does not have. `Truth` reads ground truth and is dev-only.
 
 use crate::geom::Pos;
+use crate::noise::{PerceivedSound, SoundKind, Volume};
 use crate::perception::{CellView, PerceivedLight, PerceptionView};
 use crate::world::World;
 use serde_json::{Value, json};
@@ -25,11 +26,23 @@ pub enum Layer {
     /// Perceived light on every visible cell as a digit, `0` (dark) to `9` (fully lit or
     /// brighter); see [`light_digit`].
     Light,
+    /// Sounds the player heard from unseen sources, at their rough places ([`sound_char`]: `f`
+    /// footsteps, `o` a door opening, `c` a door closing; upper case when loud), over the view.
+    Sound,
     /// Ground truth: all terrain and all actors on the level. **Dev-only.**
     Truth,
 }
 
 impl Layer {
+    const ALL: [Layer; 6] = [
+        Layer::View,
+        Layer::Fov,
+        Layer::Memory,
+        Layer::Light,
+        Layer::Sound,
+        Layer::Truth,
+    ];
+
     /// Layer name as used on the command line and in JSON.
     pub const fn name(self) -> &'static str {
         match self {
@@ -37,6 +50,7 @@ impl Layer {
             Layer::Fov => "fov",
             Layer::Memory => "memory",
             Layer::Light => "light",
+            Layer::Sound => "sound",
             Layer::Truth => "truth",
         }
     }
@@ -46,16 +60,12 @@ impl FromStr for Layer {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        [
-            Layer::View,
-            Layer::Fov,
-            Layer::Memory,
-            Layer::Light,
-            Layer::Truth,
-        ]
-        .into_iter()
-        .find(|l| l.name() == s)
-        .ok_or_else(|| format!("unknown layer `{s}` (expected view, fov, memory, light, truth)"))
+        Layer::ALL
+            .into_iter()
+            .find(|l| l.name() == s)
+            .ok_or_else(|| {
+                format!("unknown layer `{s}` (expected view, fov, memory, light, sound, truth)")
+            })
     }
 }
 
@@ -98,7 +108,26 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
         }
         Layer::Memory => terrain_glyph(cell),
         Layer::Light => view.light(p).map_or(' ', light_digit),
+        Layer::Sound => match view.sound_at(p) {
+            Some(sound) => sound_char(sound),
+            None => perceived_glyph(view, Layer::View, p),
+        },
         Layer::Truth => unreachable!("truth is not built from perception"),
+    }
+}
+
+/// A heard sound in the `sound` layer: `f` footsteps, `o` a door opening, `c` a door closing;
+/// upper case when loud.
+pub fn sound_char(sound: &PerceivedSound) -> char {
+    let c = match sound.kind {
+        SoundKind::Footsteps => 'f',
+        SoundKind::DoorOpened => 'o',
+        SoundKind::DoorClosed => 'c',
+    };
+    if sound.volume == Volume::Loud {
+        c.to_ascii_uppercase()
+    } else {
+        c
     }
 }
 
@@ -164,8 +193,9 @@ pub fn ascii(world: &World, layers: &[Layer]) -> String {
     out
 }
 
-/// Structured dump: turn, game time, level, viewer, seen actors, recent messages, the requested
-/// layers as arrays of rows, and optionally the full [`crate::WorldState`] under `state`.
+/// Structured dump: turn, game time, level, viewer, seen actors, heard sounds, recent messages,
+/// the requested layers as arrays of rows, and optionally the full [`crate::WorldState`] under
+/// `state`.
 pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     let view = world.perception();
     let content = world.content();
@@ -195,6 +225,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "viewer": view.viewer(),
         "hash": format!("{:016x}", world.state_hash()),
         "seen_actors": seen,
+        "heard_sounds": view.sounds(),
         "messages": messages,
         "layers": layer_map,
     });

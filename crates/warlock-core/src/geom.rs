@@ -103,6 +103,35 @@ impl Dir {
         Dir::ALL.into_iter().find(|d| d.delta() == (dx, dy))
     }
 
+    /// The direction of the eight nearest to the way from `from` to `to` (within 22.5° of an
+    /// axis it is that axis, integer math); `None` if they are the same cell.
+    pub fn toward(from: Pos, to: Pos) -> Option<Self> {
+        let (dx, dy) = (i64::from(to.x - from.x), i64::from(to.y - from.y));
+        // tan 22.5° ≈ 5/12.
+        let (sx, sy) = if 12 * dy.abs() < 5 * dx.abs() {
+            (dx.signum(), 0)
+        } else if 12 * dx.abs() < 5 * dy.abs() {
+            (0, dy.signum())
+        } else {
+            (dx.signum(), dy.signum())
+        };
+        Dir::from_delta(sx as i32, sy as i32)
+    }
+
+    /// The compass name, e.g. `north-east`.
+    pub const fn compass_name(self) -> &'static str {
+        match self {
+            Dir::N => "north",
+            Dir::NE => "north-east",
+            Dir::E => "east",
+            Dir::SE => "south-east",
+            Dir::S => "south",
+            Dir::SW => "south-west",
+            Dir::W => "west",
+            Dir::NW => "north-west",
+        }
+    }
+
     /// Short uppercase name, e.g. `NE`.
     pub const fn name(self) -> &'static str {
         match self {
@@ -154,6 +183,20 @@ mod tests {
         assert_eq!("ne".parse::<Dir>(), Ok(Dir::NE));
         assert_eq!("W".parse::<Dir>(), Ok(Dir::W));
         assert!("up".parse::<Dir>().is_err());
+    }
+
+    #[test]
+    fn toward_picks_the_nearest_of_eight_directions() {
+        let o = Pos::new(0, 0);
+        let toward = |x, y| Dir::toward(o, Pos::new(x, y));
+        assert_eq!(toward(0, 0), None);
+        assert_eq!(toward(5, 0), Some(Dir::E));
+        assert_eq!(toward(5, 2), Some(Dir::E), "within 22.5° of east");
+        assert_eq!(toward(5, 3), Some(Dir::SE));
+        assert_eq!(toward(1, -1), Some(Dir::NE));
+        assert_eq!(toward(-2, -5), Some(Dir::N));
+        assert_eq!(toward(-3, 5), Some(Dir::SW));
+        assert_eq!(Dir::NW.compass_name(), "north-west");
     }
 
     #[test]

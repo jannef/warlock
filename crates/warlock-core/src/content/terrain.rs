@@ -66,6 +66,15 @@ pub(super) struct TerrainSpec {
     /// Under a roof: never lit by the sun or the sky (indoor floors on outdoor levels).
     #[serde(default)]
     pub roofed: bool,
+    /// How loud steps onto it are, in percent of the walker's footsteps (spec §5 "Hearing").
+    #[serde(default = "full_noise")]
+    pub step_noise: u16,
+    /// For a door: how loud opening or closing it is; none: silent.
+    #[serde(default)]
+    pub toggle_noise: u16,
+    /// Loudness a sound loses entering the cell; none: 0, or for solid terrain (neither walkable
+    /// nor transparent) blocking sound.
+    pub muffle: Option<u16>,
     pub anim: Option<GlyphAnim>,
     #[serde(default)]
     pub glow: f32,
@@ -80,6 +89,10 @@ fn yes() -> bool {
 }
 
 fn full_cost() -> u16 {
+    100
+}
+
+fn full_noise() -> u16 {
     100
 }
 
@@ -122,6 +135,16 @@ pub struct TerrainDef {
     pub height: u8,
     /// Gameplay: under a roof, so never lit by the sun or the sky.
     pub roofed: bool,
+    /// Gameplay: how loud steps onto it are, in percent of the walker's footsteps
+    /// ([`crate::noise::noise`]): water splashes (200), grass is soft (70).
+    pub step_noise: u16,
+    /// Gameplay: for a door, how loud opening it (a closed door) or closing it (an open one) is;
+    /// 0 is silent.
+    pub toggle_noise: u16,
+    /// Gameplay: the loudness a sound loses entering the cell ([`crate::noise::propagate`]);
+    /// `None` blocks sound (solid terrain without a `muffle`: walls, rock, trees). A closed door
+    /// muffles.
+    pub muffle: Option<u16>,
     /// Presentation-only.
     pub anim: Option<GlyphAnim>,
     /// Presentation-only: how much the glyph glows (bloom), 0 to 1.

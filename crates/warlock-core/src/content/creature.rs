@@ -32,6 +32,11 @@ pub(super) struct CreatureSpec {
     pub speed: u32,
     /// Light preset the creature carries.
     pub light: Option<String>,
+    /// How loud its steps are (spec §5 "Hearing"); none: it moves silently.
+    #[serde(default)]
+    pub footsteps: u16,
+    /// The faintest loudness it hears; none: it is deaf.
+    pub hearing: Option<u16>,
     pub anim: Option<GlyphAnim>,
     #[serde(default)]
     pub glow: f32,
@@ -48,6 +53,8 @@ impl CreatureSpec {
             fg: self.fg,
             speed: self.speed,
             light,
+            footsteps: self.footsteps,
+            hearing: self.hearing,
             anim: self.anim,
             glow: self.glow,
             particles: self.particles,
@@ -67,6 +74,12 @@ pub struct CreatureDef {
     pub speed: u32,
     /// Light the creature carries with it (e.g. a torch), if any.
     pub light: Option<LightId>,
+    /// Gameplay: the loudness of its steps on terrain with a `step_noise` of 100
+    /// ([`crate::noise::noise`]); 0 moves silently. At most [`crate::noise::MAX_LOUDNESS`].
+    pub footsteps: u16,
+    /// Gameplay: the faintest loudness it hears (1 to [`crate::noise::MAX_LOUDNESS`]); `None` is
+    /// deaf.
+    pub hearing: Option<u16>,
     /// Presentation-only.
     pub anim: Option<GlyphAnim>,
     /// Presentation-only: how much the glyph glows (bloom), 0 to 1.

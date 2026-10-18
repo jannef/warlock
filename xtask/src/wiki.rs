@@ -103,6 +103,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("vision.md".to_string(), vision(content)),
         ("lights.md".to_string(), lights(content)),
         ("creatures.md".to_string(), creatures(content)),
+        ("footsteps.md".to_string(), footsteps(content)),
     ];
     for (_, text) in &mut files {
         *text = format!(
@@ -159,8 +160,8 @@ fn local_terrain(content: &Content) -> String {
     let ids = overworld_ids(content);
     let turn = Duration::seconds(6);
     let mut out = String::from(
-        "| Terrain | Glyph | Walk on it | Blocks sight | Step takes | Height (cells) | Notes |\n\
-         |---|:---:|:---:|:---:|---:|:---:|---|\n",
+        "| Terrain | Glyph | Walk on it | Blocks sight | Step takes | Footsteps | Height (cells) \
+         | Notes |\n|---|:---:|:---:|:---:|---:|:---:|:---:|---|\n",
     );
     for t in content
         .terrain_defs()
@@ -192,17 +193,63 @@ fn local_terrain(content: &Content) -> String {
         if t.roofed {
             notes.push("roofed: no sun or sky light".into());
         }
+        match t.muffle {
+            None => {}
+            Some(0) if t.walkable || t.transparent => {}
+            Some(_) => notes.push("muffles sound".into()),
+        }
+        let footsteps = if t.walkable {
+            footsteps_word(t.step_noise)
+        } else {
+            "-"
+        };
         let _ = writeln!(
             out,
-            "| {} | {} | {} | {} | {} | {} | {} |",
+            "| {} | {} | {} | {} | {} | {} | {} | {} |",
             capital(&t.name),
             glyph(t.glyph),
             yes(t.walkable || t.is_closed_door()),
             yes(!t.transparent),
             step,
+            footsteps,
             t.height,
             notes.join("; ")
         );
+    }
+    out
+}
+
+/// How loud steps onto terrain are, in words: the exact numbers are rules detail.
+fn footsteps_word(step_noise: u16) -> &'static str {
+    match step_noise {
+        0..=90 => "quiet",
+        91..=109 => "normal",
+        110..=199 => "loud",
+        _ => "very loud",
+    }
+}
+
+/// Walkable dungeon and outdoor terrain on which steps are louder or quieter than normal,
+/// grouped (spec §5 "Hearing"); the overworld is silent.
+fn footsteps(content: &Content) -> String {
+    let ids = overworld_ids(content);
+    let mut out = String::from("| Footsteps | Terrain |\n|---|---|\n");
+    for word in ["very loud", "loud", "quiet"] {
+        let names: Vec<String> = content
+            .terrain_defs()
+            .iter()
+            .filter(|t| t.walkable && !is_overworld_terrain(t, &ids))
+            .filter(|t| footsteps_word(t.step_noise) == word)
+            .map(|t| t.name.clone())
+            .collect();
+        if !names.is_empty() {
+            let _ = writeln!(
+                out,
+                "| {} | {} |",
+                capital(word),
+                capital(&names.join(", "))
+            );
+        }
     }
     out
 }
@@ -327,5 +374,9 @@ mod tests {
         assert!(text("vision.md").contains("| Darkvision | about 16% of full light | 5 cells |"));
         assert!(text("terrain-overworld.md").contains("| Road | `·` | 20 minutes |"));
         assert!(text("terrain-local.md").contains("| Still water | `~` | yes | no | 12 seconds |"));
+        assert!(text("terrain-local.md").contains("| 12 seconds | very loud |"));
+        assert!(text("terrain-local.md").contains("muffles sound"));
+        assert!(text("footsteps.md").contains("| Very loud | Still water, running water |"));
+        assert!(text("footsteps.md").contains("grass"));
     }
 }

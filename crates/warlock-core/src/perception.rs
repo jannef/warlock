@@ -29,6 +29,10 @@
 //!   light or darkvision is visible even outside line of sight (symmetric shadowcasting can show
 //!   floor through a narrow gap without the walls around it). Such a cell shows only its terrain
 //!   and wall-face light: never creatures, and nothing beyond it.
+//!
+//! **Hearing** ([`crate::noise`]): sounds the player heard during the last turn whose source cell
+//! is not visible are perceived with their kind, volume, and a rough place (a cell the player
+//! does not see, near the source); never with who made them.
 
 use crate::content::{Content, CreatureId, Flow, LevelKind, LightId, TerrainId, VisionProfile};
 use crate::daylight;
@@ -39,6 +43,7 @@ use crate::light::{
     Area, BOUNCE_STEPS, Bounce, Light, LightCache, SUN_KEY, Sun, Sunlight, falloff, lit_in_sight,
     wall_faces,
 };
+use crate::noise::{self, PerceivedSound};
 use crate::world::{ActorId, ActorKind, LevelState, WorldState};
 use serde::Serialize;
 
@@ -172,6 +177,8 @@ pub(crate) struct Perception {
     light: Grid<Light>,
     sources: Vec<SeenLight>,
     actors: Vec<SeenActor>,
+    /// Sounds heard during the last turn from sources the player does not see.
+    sounds: Vec<PerceivedSound>,
 }
 
 impl Perception {
@@ -384,6 +391,16 @@ impl Perception {
                 pos: a.pos,
             })
             .collect();
+
+        // Sounds the player heard whose source they do not see, placed roughly.
+        let player = state.player();
+        let sounds = match content.creature(player.creature).hearing {
+            Some(threshold) => {
+                let hidden = |p: Pos| sight.get(p) == Some(&Sight::Hidden) && p != viewer;
+                noise::perceive(level, content, &player.heard, threshold, state.turn, hidden)
+            }
+            None => Vec::new(),
+        };
         Self {
             viewer,
             vision,
@@ -395,7 +412,13 @@ impl Perception {
             light,
             sources,
             actors,
+            sounds,
         }
+    }
+
+    /// Sounds heard during the last turn from sources the player does not see.
+    pub(crate) fn sounds(&self) -> &[PerceivedSound] {
+        &self.sounds
     }
 
     /// Whether the cell's terrain is visible (in sight, or a completed wall).
@@ -552,5 +575,22 @@ impl<'a> PerceptionView<'a> {
     /// [`SeenLight`] contribution to the cell added, it is [`PerceptionView::light`].
     pub fn base_light(&self, p: Pos) -> Option<Light> {
         self.snapshot.is_visible(p).then(|| self.snapshot.base[p])
+    }
+
+    /// Sounds the player heard during the last turn from sources they do not see (spec §5
+    /// "Hearing"), in the order heard: the kind, how loud, and roughly where (a cell the player
+    /// does not see) — never who or what made them. Sounds whose source the player sees are not
+    /// here: the player sees what happens.
+    pub fn sounds(&self) -> &'a [PerceivedSound] {
+        &self.snapshot.sounds
+    }
+
+    /// The loudest sound perceived at `p`, if any.
+    pub fn sound_at(&self, p: Pos) -> Option<&'a PerceivedSound> {
+        self.snapshot
+            .sounds
+            .iter()
+            .filter(|s| s.pos == p)
+            .max_by_key(|s| s.volume)
     }
 }

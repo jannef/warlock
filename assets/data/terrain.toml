@@ -7,6 +7,11 @@
 # "Sunlight": how many cells tall it stands for sun shadows, 0 to 4; default 1 if opaque, else 0),
 # roofed (gameplay: under a roof, never lit by the sun or the sky; default false),
 # anim (presentation-only, §4.3).
+# Noise (gameplay, spec §5 "Hearing"): step_noise (how loud steps onto it are, in percent of the
+# walker's footsteps, 0 to 1000; default 100), toggle_noise (doors only: how loud opening the
+# closed door or closing the open one is, at most 300; default 0, silent), and muffle (the
+# loudness a sound loses entering the cell, at most 300; default 0, but solid terrain, neither
+# walkable nor transparent, blocks sound unless it has a muffle).
 # Terrain with a "flow" anim is running water: every cell of it needs a flow direction from the
 # level legend (the arrows in legend.toml).
 # Overworld terrain (spec §3, §7): travel_minutes (an overworld step onto it, 1 to 1440; required
@@ -62,6 +67,9 @@ bg = "#2a1a0e"
 walkable = false
 transparent = false
 opens_to = "door_open"
+# It creaks open, and muffles what goes on behind it.
+toggle_noise = 60
+muffle = 30
 
 # Dust shaken loose when the door swings.
 [[terrain.particles]]
@@ -84,6 +92,8 @@ glyph = "'"
 fg = "#c08040"
 bg = "#0d0d10"
 closes_to = "door_closed"
+# Shutting it is louder still.
+toggle_noise = 70
 
 [[terrain.particles]]
 on = "toggle"
@@ -121,8 +131,9 @@ name = "still water"
 glyph = "~"
 fg = "#4f8fe0"
 bg = "#0a1a30"
-# Wading takes twice as long as a step on dry ground.
+# Wading takes twice as long as a step on dry ground, and splashes.
 move_cost = 200
+step_noise = 200
 bounce = "#a8c8ff"
 anim = { kind = "wave", speed = 0.16, amount = 0.05, glint = 0.5 }
 
@@ -151,6 +162,7 @@ fg = "#62a2e6"
 bg = "#0b1e36"
 # Wading, as in still water (the current does not push yet).
 move_cost = 200
+step_noise = 200
 bounce = "#a8c8ff"
 anim = { kind = "flow", speed = 0.5, glint = 0.4 }
 
@@ -333,6 +345,8 @@ name = "dusty floor"
 glyph = "."
 fg = "#7a7264"
 bg = "#0f0e0c"
+# The dust deadens steps.
+step_noise = 70
 
 # Dust motes hanging in the air.
 [[terrain.particles]]
@@ -358,6 +372,8 @@ glyph = "."
 fg = "#86ba5c"
 bg = "#22401a"
 bounce = "#b4dc8c"
+# Soft underfoot.
+step_noise = 70
 
 [[terrain]]
 id = "flowers"
@@ -366,6 +382,7 @@ glyph = "*"
 fg = "#f0b4dc"
 bg = "#22401a"
 bounce = "#e8c8dc"
+step_noise = 70
 
 [[terrain]]
 id = "flagstones"
@@ -406,6 +423,8 @@ bg = "#3a2814"
 roofed = true
 height = 2
 bounce = "#e0c098"
+# Boards creak.
+step_noise = 120
 
 [[terrain]]
 id = "gazebo_post"
@@ -428,6 +447,8 @@ glyph = "."
 fg = "#9c8c5a"
 bg = "#2a2314"
 bounce = "#c8b48c"
+# Moss and needles, with a twig now and then.
+step_noise = 80
 
 [[terrain]]
 id = "rocky_ground"
@@ -435,6 +456,7 @@ name = "rocky ground"
 glyph = "."
 fg = "#a89e8a"
 bg = "#2b2822"
+step_noise = 110
 
 [[terrain]]
 id = "marsh"
@@ -442,8 +464,9 @@ name = "marsh"
 glyph = '"'
 fg = "#628e6a"
 bg = "#17271b"
-# Wading through reeds and mud.
+# Wading through reeds and mud: slow and squelching.
 move_cost = 150
+step_noise = 150
 
 [[terrain]]
 id = "dry_grass"
@@ -452,6 +475,8 @@ glyph = "."
 fg = "#bcae6a"
 bg = "#2a2612"
 bounce = "#dcd098"
+# It rustles.
+step_noise = 120
 
 # What the local area generators grow and strew on the ground (mapgen/local; spec §3).
 
@@ -462,6 +487,7 @@ glyph = '"'
 fg = "#a4c462"
 bg = "#22401a"
 bounce = "#b4dc8c"
+step_noise = 110
 
 [[terrain]]
 id = "buttercups"
@@ -470,6 +496,7 @@ glyph = "*"
 fg = "#f2d653"
 bg = "#22401a"
 bounce = "#e8dca0"
+step_noise = 70
 
 [[terrain]]
 id = "bluebells"
@@ -477,8 +504,9 @@ name = "bluebells"
 glyph = "*"
 fg = "#9a9cf4"
 bg = "#1a2a16"
+step_noise = 70
 
-# Undergrowth: low enough to see over, slow to push through. Its shadow is short.
+# Undergrowth: low enough to see over, slow and loud to push through. Its shadow is short.
 [[terrain]]
 id = "bush"
 name = "bush"
@@ -486,6 +514,7 @@ glyph = "♧"
 fg = "#5cae4c"
 bg = "#142a10"
 move_cost = 200
+step_noise = 150
 height = 1
 bounce = "#98c878"
 
@@ -536,6 +565,7 @@ glyph = "¦"
 fg = "#9aac5e"
 bg = "#182a19"
 move_cost = 150
+step_noise = 130
 height = 1
 bounce = "#c0d090"
 
@@ -546,6 +576,7 @@ glyph = "."
 fg = "#dcc596"
 bg = "#4a3b20"
 bounce = "#e0c8a0"
+step_noise = 90
 
 [[terrain]]
 id = "rubble"
@@ -554,6 +585,8 @@ glyph = ","
 fg = "#a49c8e"
 bg = "#1c1a15"
 move_cost = 150
+# Loose stones clatter.
+step_noise = 150
 
 # The overworld (spec §3): the land at large, at map scale. A step takes `travel_minutes`.
 

@@ -33,6 +33,13 @@ name = "patrol-gallery"
 scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*36 open:S move:S*4"
 
+# Hearing (spec §5 "Hearing"): in the corridor at the patrol gallery's closed door, the kobold's
+# footsteps behind it are heard: a faint marker at their rough place, and a message.
+[[golden]]
+name = "patrol-heard"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*36 wait*3"
+
 [[golden]]
 name = "light-hall"
 scenario = "showcase"

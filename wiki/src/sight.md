@@ -19,7 +19,8 @@ A cell is visible when it is in line of sight, within 40 cells, **and** one of t
 The cell you stand on is always visible.
 
 You see a creature when you see its cell. So a creature in the dark is hidden from you unless it is
-within your darkvision, and a creature carrying a light shows up.
+within your darkvision, and a creature carrying a light shows up. You may still hear one you cannot
+see: see [Hearing](hearing.md).
 
 If you see floor through a narrow gap, you also see the walls around that floor, so a lit passage
 never appears without its walls. Such walls show only the terrain itself: no creatures, and
@@ -33,7 +34,8 @@ drawn dim and desaturated. A door you saw open is remembered open until you see 
 
 Memory holds terrain only. You never remember creatures, effects, or the light that was there.
 When you look away, a creature you saw drops off the map, and the light on remembered cells is
-gone: they are simply dimmed.
+gone: they are simply dimmed. The faint `◌` markers of [sounds you heard](hearing.md) last only
+until your next turn.
 
 ## The overworld is different
 

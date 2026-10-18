@@ -67,7 +67,8 @@ struct DumpArgs {
     #[arg(long, value_enum, default_value_t = Format::Ascii)]
     format: Format,
     /// Comma-separated layers: view, fov, memory, light (brightness digit 0-9 per visible cell),
-    /// truth (dev-only ground truth).
+    /// sound (heard sounds over the view: f footsteps, o/c a door opening/closing; upper case
+    /// when loud), truth (dev-only ground truth).
     #[arg(long, default_value = "view")]
     layers: String,
     /// With `--format json`, include the full world state.

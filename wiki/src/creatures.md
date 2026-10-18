@@ -1,7 +1,8 @@
 # Creatures
 
 Creatures are the other glyphs that move about the world. Today they are simple: they cannot
-fight, notice you, or speak. This page will grow as the game does.
+fight or speak, and though they hear you, nothing comes of it yet. This page will grow as the game
+does.
 
 ## What they do
 
@@ -18,6 +19,8 @@ fight, notice you, or speak. This page will grow as the game does.
   back, and then carry on where they left off: they do not catch up on the time you were away.
 - You only see a creature while you see its cell, so creatures in the dark are hidden unless they
   carry a light. See [Sight and memory](sight.md). You never remember where one was.
+- Creatures make noise as they walk (bats fly silently), so you may hear one you cannot see, and
+  they hear your steps and doors. See [Hearing](hearing.md).
 
 Combat is not in the game yet: nothing can hurt you, and you cannot hurt anything.
 
