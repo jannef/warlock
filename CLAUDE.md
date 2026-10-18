@@ -350,7 +350,7 @@ A successful compile does not verify anything visual. Before opening a PR:
 
 ## Workflow
 
-- Work is tracked in GitHub issues under milestones M0–M7; use the `gh` CLI.
+- Work is tracked in GitHub issues under milestones (M0–M12, Housekeeping); use the `gh` CLI.
 - One branch and PR per issue (or a tight group of related issues); reference issues with
   `Closes #N`. CI must be green before a squash merge into `main`.
 - CI runs on Linux only (`CI` workflow: fmt, clippy, tests, headless screenshots, wasm32 check,
