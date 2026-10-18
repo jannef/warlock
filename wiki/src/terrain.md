@@ -1,14 +1,16 @@
 # Terrain
 
 Every cell of the map has a terrain. It decides whether you can walk there, how long a step takes,
-whether it blocks sight, and how tall it stands for [shadows](sun.md). The overworld has its own
-terrain, described on [its page](overworld.md).
+how loud your steps are, whether it blocks sight and sound, and how tall it stands for
+[shadows](sun.md). The overworld has its own terrain, described on [its page](overworld.md).
 
 ## Doors
 
-A closed door (`+`) blocks movement, sight, and light. Walk into it to open it, which takes a turn,
-or press `o` and a direction. An open door (`'`) lets you and your light through. Press `c` and a
-direction to close it again; you cannot close a door while something stands in the doorway.
+A closed door (`+`) blocks movement, sight, and light, and muffles sound: you hear only what
+happens close behind it. Walk into it to open it, which takes a turn, or press `o` and a
+direction. An open door (`'`) lets you, your light, and sound through. Press `c` and a direction
+to close it again; you cannot close a door while something stands in the doorway. Opening and
+closing doors makes noise (see [Hearing](hearing.md)).
 
 The game remembers a door as you last saw it: one you saw open stays drawn open until you see it
 closed.
@@ -22,9 +24,9 @@ on your first visit from the run's seed. Levels you leave and return to are exac
 ## Water
 
 Still water (ponds and pools) and running water (streams) are both wadeable but slow: a step into
-either takes twice as long as a step on dry ground. Running water flows in a direction you can see
-in the ripples, and foams where it meets a bank or rock. The current does not push you yet. Water
-glints with nearby light.
+either takes twice as long as a step on dry ground, and splashes loudly. Running water flows in a
+direction you can see in the ripples, and foams where it meets a bank or rock. The current does
+not push you yet. Water glints with nearby light.
 
 ## Plants and rock outdoors
 
@@ -32,9 +34,14 @@ Trees, pines, boulders, crags, and standing stones block your way, and the tall 
 too (dead trees do not). Bushes can be pushed through but slowly. Reeds, marsh, and rubble slow you
 a little. Their heights set how long their shadows are.
 
+Walls, solid rock, and the solid plants and stones above block sound; it has to go around them.
+Bushes, reeds, marsh, rubble, and dry grass make your steps louder; grass, flowers, the forest
+floor, and dusty floors soften them. See [Hearing](hearing.md).
+
 ## All terrain
 
 Step times below are for a 6-second turn, which is what dungeons and outdoor areas use. "Walk on
 it" is yes for terrain you can enter, and for a closed door, which you open by walking into it.
+"Footsteps" is how loud a step onto it is: quiet, normal, loud, or very loud.
 
 {{#include generated/terrain-local.md}}
