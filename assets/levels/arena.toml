@@ -39,9 +39,11 @@ map = '''
 "<" = { terrain = "stairs_up", to = "hub" }
 "t" = "sconce"
 "B" = "brazier"
-"k" = { terrain = "floor", creature = "kobold" }
-"a" = { terrain = "floor", creature = "kobold_archer" }
-"s" = { terrain = "floor", creature = "kobold_shaman" }
+# The war band is armed: look mode (`x`) shows what each wields and wears (equipment changes no
+# rule yet: attacks are intents).
+"k" = { terrain = "floor", creature = "kobold", carry = ["spear"], wield = "spear" }
+"a" = { terrain = "floor", creature = "kobold_archer", carry = ["short_bow", "arrow*20"], wield = ["short_bow", "arrow"] }
+"s" = { terrain = "floor", creature = "kobold_shaman", carry = ["bone_amulet"], wear = "bone_amulet" }
 "r" = { terrain = "floor", creature = "rat" }
 # Cave bats circling the north and south of the pit, and a beetle pottering about the warren.
 "1" = { terrain = "floor", creature = "bat", route = "E28 S1 W28 N1" }

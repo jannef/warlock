@@ -1,18 +1,21 @@
 //! The screen stack (spec §6): every modal screen — main menu, new run and character creation,
-//! pause, settings, controls, the `?` help, the inventory, the character screen, and choosing
-//! what to pick up or drop — lives on one stack, bottom to top.
+//! pause, settings, controls, the `?` help, the inventory, the equipment screen and its choice of
+//! what goes in a slot, the character screen, and choosing what to pick up or drop — lives on
+//! one stack, bottom to top.
 //!
 //! - **Open**: [`Screens::open`] is the one way to open a screen, by [`ScreenName`]: `?` and Esc
 //!   in play, screens opening sub-screens, the main menu at startup and after a run, and
 //!   `--screen` all go through it. A screen opens on top of the one it was opened from, so
 //!   closing it returns there as it was left; [`ScreenAction::Return`] closes several at once
 //!   (the character summary going back to a step). Character creation's steps read what was
-//!   chosen below them off the stack ([`ScreenStack::draft`]).
+//!   chosen below them off the stack ([`ScreenStack::draft`]), and so does the choice of what
+//!   goes in a slot: its slot is the one selected on the equipment screen beneath it.
 //! - **Input**: `input::route_keys` is the one reader of key presses. While the stack is not
 //!   empty, its top screen gets every press ([`ScreenStack::handle`]) and gameplay none. Back or
 //!   Esc closes (pops) the top screen; choices that start, leave, or end a run ([`MenuChoice`])
-//!   are applied by [`apply_choice`]. A screen that chooses a gameplay action (what to pick up
-//!   or drop) closes and hands the action to the simulation ([`ScreenAction::Act`]).
+//!   are applied by [`apply_choice`]. A screen that chooses a gameplay action (what to pick up,
+//!   drop, wear, or wield) closes and hands the action to the simulation ([`ScreenAction::Act`]);
+//!   the equipment screen beneath a choice stays open and [`refresh`] shows it the result.
 //! - **Draw**: `ui::draw` clears the UI console, draws the gameplay UI when a run exists, then
 //!   the top screen ([`ScreenStack::draw`]).
 //!
@@ -22,6 +25,7 @@
 use super::character_screen::CharacterScreen;
 use super::chargen_screen::{ChoiceScreen, Draft, Picks, Step, SummaryScreen};
 use super::controls_screen::ControlsScreen;
+use super::equipment_screen::{EquipmentScreen, ItemScreen};
 use super::menu::{MainMenu, Press};
 use super::motion::Motion;
 use super::new_run_screen::NewRunScreen;
@@ -39,7 +43,7 @@ use bevy::prelude::*;
 use clap::ValueEnum;
 use warlock_core::Action;
 use warlock_core::character::CharacterSpec;
-use warlock_core::content::Content;
+use warlock_core::content::{Content, SlotId};
 use warlock_core::perception::PerceptionView;
 
 /// The screens that can be opened. Also the values of `--screen`, a dev flag for screenshots.
@@ -64,6 +68,11 @@ pub enum ScreenName {
     Help,
     /// What the player carries and weighs (`i` in play).
     Inventory,
+    /// What the player wears and wields, slot by slot (`e` in play).
+    Equipment,
+    /// Choose what goes in the slot selected on the equipment screen beneath (a slot's letter
+    /// there).
+    EquipItem,
     /// The player's name, stats, and weight (`@` in play).
     Character,
     /// Choose what to pick up from the pile here (`,` or `g` where several objects lie).
@@ -80,6 +89,8 @@ impl ScreenName {
             ScreenName::Pause
                 | ScreenName::Help
                 | ScreenName::Inventory
+                | ScreenName::Equipment
+                | ScreenName::EquipItem
                 | ScreenName::Character
                 | ScreenName::PickUp
                 | ScreenName::Drop
@@ -115,7 +126,7 @@ pub enum ScreenAction {
     /// Close screens until this one is on top (as it was left).
     Return(ScreenName),
     Choose(MenuChoice),
-    /// Close this screen and apply a gameplay action (what to pick up or drop).
+    /// Close this screen and apply a gameplay action (what to pick up, drop, wear, or wield).
     Act(Action),
 }
 
@@ -134,18 +145,23 @@ enum Screen {
     Controls(ControlsScreen),
     /// The inventory, or choosing what to pick up or drop.
     Objects(ObjectScreen),
+    Equipment(EquipmentScreen),
+    /// Choosing what goes in a slot.
+    EquipItem(ItemScreen),
     Character(CharacterScreen),
 }
 
 impl Screen {
-    /// Screen `name`; `run` is what the player perceives in the run, if there is one, and
-    /// `draft` what New run has chosen on the screens below.
+    /// Screen `name`; `run` is what the player perceives in the run, if there is one, `draft`
+    /// what New run has chosen on the screens below, and `slot` the slot selected on the
+    /// equipment screen beneath, if any (the first slot if none).
     fn new(
         name: ScreenName,
         content: &Content,
         has_save: bool,
         run: Option<&PerceptionView<'_>>,
         draft: &Draft,
+        slot: Option<SlotId>,
     ) -> Self {
         let objects = |list| Screen::Objects(ObjectScreen::new(list, run));
         let choice = |step| Screen::Choice(ChoiceScreen::new(step, content, draft));
@@ -161,6 +177,10 @@ impl Screen {
             ScreenName::Controls => Screen::Controls(ControlsScreen::default()),
             ScreenName::Help => Screen::Controls(ControlsScreen::help()),
             ScreenName::Inventory => objects(ObjectList::Inventory),
+            ScreenName::Equipment => Screen::Equipment(EquipmentScreen::new(run)),
+            ScreenName::EquipItem => {
+                Screen::EquipItem(ItemScreen::new(run, slot.unwrap_or(SlotId(0))))
+            }
             ScreenName::Character => Screen::Character(CharacterScreen::new(run)),
             ScreenName::PickUp => objects(ObjectList::PickUp),
             ScreenName::Drop => objects(ObjectList::Drop),
@@ -182,6 +202,8 @@ impl Screen {
                 ObjectList::PickUp => ScreenName::PickUp,
                 ObjectList::Drop => ScreenName::Drop,
             },
+            Screen::Equipment(_) => ScreenName::Equipment,
+            Screen::EquipItem(_) => ScreenName::EquipItem,
             Screen::Character(_) => ScreenName::Character,
         }
     }
@@ -252,6 +274,30 @@ impl ScreenStack {
         draft
     }
 
+    /// The slot selected on the topmost equipment screen, if one is open: what a choice opened
+    /// from it is for.
+    fn selected_slot(&self) -> Option<SlotId> {
+        self.screens.iter().rev().find_map(|s| match s {
+            Screen::Equipment(screen) => Some(screen.selected()),
+            _ => None,
+        })
+    }
+
+    /// Whether an equipment screen is open (it shows the run as it changes, [`refresh`]).
+    fn shows_equipment(&self) -> bool {
+        (self.screens.iter()).any(|s| matches!(s, Screen::Equipment(_)))
+    }
+
+    /// Reads the run again into the screens that stay open while it changes: the equipment
+    /// screen, beneath a choice that was just done.
+    fn refresh(&mut self, view: &PerceptionView<'_>) {
+        for screen in &mut self.screens {
+            if let Screen::Equipment(screen) = screen {
+                screen.refresh(view);
+            }
+        }
+    }
+
     /// Applies one key press to the top screen; settings and bindings change in place. A held
     /// key's repeats may move the selection or change a value, but never open, close, or choose.
     pub fn handle(
@@ -282,6 +328,8 @@ impl ScreenStack {
             Some(Screen::Settings(screen)) => leave(screen.handle(press, settings)),
             Some(Screen::Controls(screen)) => leave(screen.handle(press, bindings)),
             Some(Screen::Objects(screen)) => screen.handle(press, bindings),
+            Some(Screen::Equipment(screen)) => screen.handle(press, bindings),
+            Some(Screen::EquipItem(screen)) => screen.handle(press, bindings),
             Some(Screen::Character(screen)) => screen.handle(press, bindings),
         };
         if action == ScreenAction::Stay {
@@ -318,6 +366,8 @@ impl ScreenStack {
             Some(Screen::Settings(screen)) => screen.draw(console, settings),
             Some(Screen::Controls(screen)) => screen.draw(console, bindings),
             Some(Screen::Objects(screen)) => screen.draw(console, bindings),
+            Some(Screen::Equipment(screen)) => screen.draw(console, bindings),
+            Some(Screen::EquipItem(screen)) => screen.draw(console, bindings),
             Some(Screen::Character(screen)) => screen.draw(console, bindings),
         }
     }
@@ -338,10 +388,18 @@ impl Screens<'_> {
     /// Opens screen `name` on top of the stack. The one way screens open.
     pub fn open(&mut self, name: ScreenName) {
         let view = self.game.as_ref().map(|game| game.world.perception());
-        let draft = self.stack.draft();
-        let has_save = self.store.has_save();
-        let screen = Screen::new(name, &self.content.0, has_save, view.as_ref(), &draft);
+        let (draft, slot) = (self.stack.draft(), self.stack.selected_slot());
+        let (content, has_save) = (&self.content.0, self.store.has_save());
+        let screen = Screen::new(name, content, has_save, view.as_ref(), &draft, slot);
         self.stack.screens.push(screen);
+    }
+}
+
+/// Shows the screens that stay open while the run changes what they show (the equipment screen,
+/// beneath a choice that was just done) the run as it is now.
+pub(super) fn refresh(game: Res<Game>, mut stack: ResMut<ScreenStack>) {
+    if game.is_changed() && stack.shows_equipment() {
+        stack.refresh(&game.world.perception());
     }
 }
 
@@ -371,6 +429,7 @@ fn startup_screens(screen: Option<ScreenName>, in_run: bool) -> Vec<ScreenName> 
         (false, Some(s @ (NewRun | Settings | Controls))) => vec![Main, s],
         (false, _) => vec![Main],
         (true, Some(s @ (Settings | Controls))) => vec![Pause, s],
+        (true, Some(EquipItem)) => vec![Equipment, EquipItem],
         (true, Some(s)) if s.needs_run() => vec![s],
         (true, _) => Vec::new(),
     }
@@ -484,10 +543,9 @@ mod tests {
         let mut stack = ScreenStack::default();
         for name in names {
             let run = name.needs_run().then_some(&view);
-            let draft = stack.draft();
-            stack
-                .screens
-                .push(Screen::new(*name, &content, has_save, run, &draft));
+            let (draft, slot) = (stack.draft(), stack.selected_slot());
+            let screen = Screen::new(*name, &content, has_save, run, &draft, slot);
+            stack.screens.push(screen);
         }
         stack
     }
@@ -508,6 +566,7 @@ mod tests {
             false,
             None,
             &Draft::default(),
+            None,
         ));
         assert_eq!(stack.names(), [Pause, Settings]);
         assert_eq!(
@@ -574,6 +633,12 @@ mod tests {
         assert_eq!(startup_screens(Some(Character), true), [Character]);
         assert_eq!(startup_screens(Some(Character), false), [Main]);
         assert_eq!(startup_screens(Some(PickUp), true), [PickUp]);
+        assert_eq!(startup_screens(Some(Equipment), true), [Equipment]);
+        assert_eq!(
+            startup_screens(Some(EquipItem), true),
+            [Equipment, EquipItem]
+        );
+        assert_eq!(startup_screens(Some(EquipItem), false), [Main]);
         assert_eq!(startup_screens(Some(Drop), false), [Main]);
         assert_eq!(startup_screens(Some(Race), false), [Main, NewRun, Race]);
         assert_eq!(
@@ -904,6 +969,93 @@ mod tests {
         frame(&mut app, &[d, ENTER]);
         assert_eq!(actions(&app).last(), Some(&Action::Drop(Letters::of([0]))));
         assert!(names(&app).is_empty());
+    }
+
+    #[test]
+    fn the_equipment_screen_chooses_what_goes_in_a_slot_and_stays_open() {
+        let content = content();
+        let mut world = warlock_core::World::new(content.clone(), "showcase", None).expect("run");
+        // Into the storeroom, to pick up the chain mail shirt and the iron helm.
+        let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*5 \
+                    move:N pickup";
+        for action in warlock_core::action::parse_actions(walk).expect("actions") {
+            world.apply(&action);
+        }
+        assert_eq!(world.perception().inventory().len(), 2);
+        let mut app = app_with(content, Some(Game::from_world(world)));
+        let (e, c, a) = (
+            (KeyCode::KeyE, "e"),
+            (KeyCode::KeyC, "c"),
+            (KeyCode::KeyA, "a"),
+        );
+        frame(&mut app, &[e]);
+        assert_eq!(names(&app), [ScreenName::Equipment]);
+        // `c` is the body's letter: its choice opens over the equipment screen.
+        frame(&mut app, &[c]);
+        assert_eq!(names(&app), [ScreenName::Equipment, ScreenName::EquipItem]);
+        // Esc goes back to the equipment screen; `c` again, then `a` puts the mail on and
+        // returns there, and the press after it in the same frame goes to it.
+        frame(&mut app, &[ESC]);
+        assert_eq!(names(&app), [ScreenName::Equipment]);
+        frame(&mut app, &[c, a, (KeyCode::KeyA, "a")]);
+        let wear = Action::Equip {
+            slot: "body".into(),
+            item: 0,
+        };
+        assert_eq!(actions(&app), [wear]);
+        assert_eq!(names(&app), [ScreenName::Equipment, ScreenName::EquipItem]);
+        frame(&mut app, &[ESC, ESC]);
+        assert!(names(&app).is_empty());
+        assert_eq!(actions(&app).len(), 1);
+    }
+
+    #[test]
+    fn the_equipment_screen_shows_what_was_done_once_it_is_done() {
+        let content = content();
+        let mut world = warlock_core::World::new(content.clone(), "showcase", None).expect("run");
+        let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*5 \
+                    move:N pickup";
+        for action in warlock_core::action::parse_actions(walk).expect("actions") {
+            world.apply(&action);
+        }
+        let mut app = app_with(content, Some(Game::from_world(world)));
+        // The simulation applies what was chosen; the screens are refreshed after it.
+        fn apply(mut actions: MessageReader<PlayerAction>, mut game: ResMut<Game>) {
+            for PlayerAction(action) in actions.read() {
+                game.apply(action);
+            }
+        }
+        app.add_systems(Update, (apply, refresh).chain().after(count_actions));
+        let worn = |app: &App| {
+            let stack = app.world().resource::<ScreenStack>();
+            let mut console = Console::default();
+            console.resize(80, 30);
+            stack.screens[0..1].iter().for_each(|s| {
+                if let Screen::Equipment(screen) = s {
+                    screen.draw(&mut console, &Bindings::default());
+                }
+            });
+            (0..30)
+                .map(|y| {
+                    (0..80)
+                        .map(|x| console.get(x, y).map_or(' ', |c| c.ch))
+                        .collect()
+                })
+                .find(|l: &String| l.contains("c  Body"))
+                .unwrap_or_default()
+        };
+        frame(&mut app, &[(KeyCode::KeyE, "e")]);
+        assert!(worn(&app).contains('—'), "{}", worn(&app));
+        frame(&mut app, &[(KeyCode::KeyC, "c"), (KeyCode::KeyA, "a")]);
+        assert_eq!(names(&app), [ScreenName::Equipment]);
+        assert!(worn(&app).contains("a chain mail shirt"), "{}", worn(&app));
+        let game = app.world().resource::<Game>();
+        assert!(
+            game.world
+                .messages()
+                .iter()
+                .any(|m| m.text == "You put on a chain mail shirt.")
+        );
     }
 
     #[test]

@@ -1,6 +1,7 @@
 //! Actors: the player and creatures.
 
 use crate::content::{Content, CreatureId};
+use crate::equipment::Equipment;
 use crate::geom::{Dir, Pos};
 use crate::noise::Heard;
 use crate::object::{Stack, Weight, weight_of};
@@ -82,6 +83,10 @@ pub struct Actor {
     /// What it carries, lettered `a` on (see [`crate::object`]).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub inventory: Vec<Stack>,
+    /// What of its inventory it wears and wields, by slot ([`crate::equipment`]). Others see
+    /// what a creature wears and wields; never what else it carries.
+    #[serde(default, skip_serializing_if = "Equipment::is_empty")]
+    pub equipment: Equipment,
     /// Its scores and potentials (spec §8 "Stats"; [`crate::stats`]): from its creature type,
     /// the player's from the scenario. Known to the rules (and dev tools) for every actor; the
     /// player is shown only their own scores.

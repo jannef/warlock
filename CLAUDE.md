@@ -55,8 +55,9 @@ Game flags (`cargo run -p warlock -- --help`):
   `new-run` on the main menu (e.g. `--scale 1 --screen new-run --capture target/menu.png`), and
   character creation's `race`, `gender`, `class`, and `summary` over New run and the steps
   before them (each on its preselection: the showcase's character);
-  `pause`, `help`, `inventory`, `character`, `pick-up` (the pile on the player's cell), and `drop` over a run
-  (e.g. after a `--replay` that walks onto a pile); `settings` and `controls` over the main menu, or over the pause
+  `pause`, `help`, `inventory`, `equipment`, `character`, `pick-up` (the pile on the player's cell), and `drop` over a run
+  (e.g. after a `--replay` that walks onto a pile), `equip-item` (the choice for the first slot,
+  Head) over the equipment screen; `settings` and `controls` over the main menu, or over the pause
   menu when `--scenario`, `--new`, `--replay`, or `--record` names a run (`--capture` alone does
   not).
   `--config-dir DIR` keeps `settings.toml` in DIR; captures and replays otherwise use default
@@ -77,9 +78,11 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 | Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor; also local areas, `--level local:49,23`) |
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascend descend lantern
-pickup[:LETTERS] drop[:LETTERS] rest:GOAL vision:PROFILE skip:DURATION weather:KIND` (`DIR` = N
+pickup[:LETTERS] drop[:LETTERS] equip:SLOT:LETTER remove:SLOT rest:GOAL vision:PROFILE
+skip:DURATION weather:KIND` (`DIR` = N
 NE E SE S SW W NW; `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
-player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `PROFILE` = an id in
+player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `SLOT` = a slot id in
+`assets/data/slots.toml`, e.g. `equip:body:b` (put inventory stack `b` on), `remove:body`; `PROFILE` = an id in
 `assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are
 `30s`, `10m`, `2h`; `skip` is the dev hour skip; `weather` is the dev weather override, `KIND` =
 `clear`, `overcast`, `rain`, `heavy`, for three hours of game time; `ACTION*N` repeats one, e.g.
@@ -88,9 +91,11 @@ player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `PRO
 digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places over the view: `f`
 footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m` chanting, upper case
 when loud), `inventory` (what the player
-carries and weighs), `stats` (the player's race, gender, and class, then their own scores), `truth`
+carries and weighs, worn and wielded things marked), `equipment` (the player's slots), `stats`
+(the player's race, gender, and class, then their own scores), `truth`
 (ground truth, **dev-only**), `actors` (every actor on the level with its weight, what it
-carries, and its stats as score/potential, **dev-only**). Replay files are JSON
+carries and of that wears and wields, and its stats as score/potential, **dev-only**). Replay
+files are JSON
 `{game_version, scenario, seed, character, steps:[{action, hash}]}` (`character` =
 `{race, gender, class}`, left out for a run without one; a replay without it starts as the
 scenario's, so old replays load); `hash` is the FNV-1a 64 state hash (`World::state_hash`) after
@@ -118,7 +123,7 @@ level change to `run.sav` in the platform data dir (`paths.rs`, app name "warloc
 `--replay`, or `--record` (replays and recordings always start a fresh run). F5 / F9 write / load `snapshots/quick.sav`. An unreadable save is renamed `run.sav.bad`,
 never deleted. Format and `Content::fingerprint` live in `warlock-core/src/save.rs`: bump
 `FORMAT_VERSION` on any incompatible `WorldState` change; adding or reordering terrain, creatures,
-lights, levels, objects, or dungeon branches invalidates existing saves.
+lights, levels, objects, equipment slots, or dungeon branches invalidates existing saves.
 
 Settings (`crates/warlock/src/settings/`): `settings.toml` in the platform config dir (macOS
 `~/Library/Application Support/warlock`), schema in the `settings/mod.rs` module docs. Changes
@@ -136,23 +141,28 @@ it): gate systems that read it with `run_if(resource_exists::<Game>)`; content i
 `GameContent` resource.
 
 Modal screens (spec §6) — main menu, new run and character creation (race, gender, class,
-summary), pause, settings, controls, the `?` help, the inventory (`i`), the character screen
-(`@`), and choosing what to pick up (`,`/`g` on several stacks) or drop (`d`) — are one
+summary), pause, settings, controls, the `?` help, the inventory (`i`), the equipment screen
+(`e`) and its choice of what goes in a slot, the character screen (`@`), and choosing what to
+pick up (`,`/`g` on several stacks) or drop (`d`) — are one
 screen stack (`ui/screens.rs`, the `ScreenStack` resource); add a screen there, never a second way
 to open, read keys for, or draw one:
 - **Open**: `Screens::open(ScreenName)` (a `SystemParam` over the stack, content, save store, and
-  the run, if any) is the one way a screen opens: `?`, `i`, `@`, `,`, `d`, and Esc in play,
+  the run, if any) is the one way a screen opens: `?`, `i`, `e`, `@`, `,`, `d`, and Esc in play,
   sub-screens, the startup main menu and `--screen`, and the return to the main menu after a run.
   Screens that show the run read the perception snapshot when they open (no time passes while
-  they are open). Back/Esc pops the top screen, so a sub-screen returns to the screen it was
-  opened from as it was left; `ScreenAction::Return(name)` pops until `name` is on top (the
-  summary going back to a step). Character creation's steps read what was chosen below them off
-  the stack (`ScreenStack::draft`: New run's scenario and seed, each step's selection) and
-  preselect what was chosen before going back (`ScreenStack::picks`), else the scenario's
-  character; the summary's Start is `MenuChoice::NewRun { scenario, seed, character }`.
+  they are open but for an action chosen on one). Back/Esc pops the top screen, so a sub-screen
+  returns to the screen it was opened from as it was left; `ScreenAction::Return(name)` pops
+  until `name` is on top (the summary going back to a step). Sub-screens read what was chosen
+  below them off the stack: character creation's steps (`ScreenStack::draft`: New run's scenario
+  and seed, each step's selection) preselect what was chosen before going back
+  (`ScreenStack::picks`), else the scenario's character, and the summary's Start is
+  `MenuChoice::NewRun { scenario, seed, character }`; `EquipItem` takes the slot selected on the
+  equipment screen beneath (`ScreenStack::selected_slot`).
 - **Input**: `input::route_keys` is the one reader of `KeyboardInput`. Stack not empty: the press
   goes to the top screen (`ScreenStack::handle` → `ScreenAction`: stay, close, open, a
-  `MenuChoice`, or `Act(Action)`: close and apply a gameplay action, e.g. `pickup:ac`); otherwise
+  `MenuChoice`, or `Act(Action)`: close and apply a gameplay action, e.g. `pickup:ac`,
+  `equip:body:b`; the screens beneath stay, and `screens::refresh`, after `SimSet`, shows the
+  equipment screen the result, as in ADOM); otherwise
   it is a gameplay command in the current `InputMode`. Opens and closes apply at once, so the next
   press in the same frame goes to the new top; menu choices (start, resume, save-and-quit to menu,
   quit) are messages applied by `screens::apply_choice`, and the rest of that frame's presses are
@@ -165,8 +175,10 @@ to open, read keys for, or draw one:
   and pause menu), `ui/new_run_screen.rs`, `ui/settings_screen.rs`, `ui/controls_screen.rs` (also
   the `?` help: the same binding list, read-only), `ui/object_screen.rs` (inventory, pick up,
   drop: stacks by letter; in the choices letters always name stacks, even `h j k l`),
-  `ui/character_screen.rs` (name, race, gender, class, age, birthday, and sign
-  (`birth_parts`/`fit_parts`, shared with the summary), the player's scores, weight),
+  `ui/equipment_screen.rs` (`EquipmentScreen`: slots by letter, which always name slots, so its
+  own key `e` closes it only when it names none; `ItemScreen`: the stacks that fit one slot, by
+  their inventory letters), `ui/character_screen.rs` (name, race, gender, class, age, birthday,
+  and sign (`birth_parts`/`fit_parts`, shared with the summary), the player's scores, weight),
   `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per step with a Random row rolled
   from the seed, `SummaryScreen`, `Draft`).
 
@@ -254,8 +266,27 @@ carry. `Action::PickUp(Letters)` / `Action::Drop(Letters)` (`Letters` = a set of
 = everything) are actions of their own cost (`pick_up`, `drop`); a refused one takes no time. The map grid draws the top object
 in place of the terrain glyph (no terrain animation or glow there); look mode names piles.
 
+Equipment (spec §6 "Equipment", §7; M16): slots are data, `data/slots.toml`
+(`content/slot.rs`: `SlotDef` with `id`, `name`, `fits`, `action`, `mark`, `hand`; `SlotId` is an
+index in screen order, in the content fingerprint), so **a new slot is one entry there** (and a
+`FORMAT_VERSION` bump if saves change). Objects say where they go (`slot` = a slot's `fits`,
+`two_handed`, `ammo`, `launches`; `Content::fits`, `Content::fires`, `Content::hand_slots`).
+`equipment.rs` holds the runtime side: `Equipment` (slot → inventory position, on
+`Actor::equipment`, saved and hashed; equipped stacks stay in the inventory and keep weighing),
+`slots_taken` (every hand for a two-handed object), `free_slot` (spawn data), `mark` ("being
+worn"), `verbs` (the message verbs per action). `world/equip.rs` is the rules: `Action::Equip {
+slot, item }` / `Action::Remove(slot)` take off what is in the way (a swap) and cost the slot
+action (`wield`, `wear`, `body_armor`, `ready` in `data/actions.toml`) of everything put on or
+taken off (`World::price_for`); dropping takes off first (`take_off_before_dropping`) and
+`Equipment::after_removal` follows the letters. Creatures wield and wear from their spawn
+(`wield`/`wear` in a level legend, resolved in `content/level.rs::equip`). Presentation reads
+`PerceptionView::equipment` (the player's own) and `PerceptionView::gear(actor)` (what a seen
+creature wears and wields, all of what it carries that is seen; look mode, `ui/look.rs::gear`).
+**No rule reads equipment yet**; combat (#113) will.
+
 Key commands `,`/`g` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop` screen),
-`i` (`Inventory` screen), `@` (`Character` screen) are in `input.rs` and `settings/keys.rs`.
+`i` (`Inventory` screen), `e` (`Equipment` screen), `@` (`Character` screen) are in `input.rs` and
+`settings/keys.rs`.
 
 Stats (spec §8 "Stats"; M14) live in `warlock-core/src/stats.rs`: `Stat` (Strength, Dexterity,
 Toughness, Intelligence, Willpower, Presence; id, abbreviation, name) is generated by the
@@ -534,7 +565,8 @@ notes, and no locations or level walkthroughs yet), built with [mdBook](https://
 published at https://jannef.github.io/warlock/wiki/ by the release workflow's web job, which
 builds it into `pages/wiki/` beside the game. Facts that live in data (months, moons, weather,
 terrain, footstep loudness in words, vision profiles, light presets (named as the player sees
-them), creatures, factions, objects, materials, scenarios, action costs, sight radii, the pack's
+them), creatures, factions, objects, materials, equipment slots and what fits them, scenarios,
+action costs, sight radii, the pack's
 size, the stats' names, races (stat adjustments as written, dice included, vision, starting
 ages), classes (stat adjustments), what each gender raises, the horoscope (animals, elements,
 and the great cycle's signs and years); never hidden rules such as speed, hearing thresholds, creature sight, creature
@@ -603,8 +635,9 @@ A successful compile does not verify anything visual. Before opening a PR:
 `tests/golden/manifest.toml` lists one entry per showcase room plus the vast level (its start and
 its river): a scenario and text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file,
 and optional `window`, `scale`, `freeze_time`, `screen` (`--screen` over the run: `pause`,
-`help`, `settings`, `controls`, `inventory`, `character`, `pick-up`, `drop`; or over the main
-menu, the replay then unused: `race`, `summary`), `tolerance` (per-channel, default 2) and `max_diff_ratio`
+`help`, `settings`, `controls`, `inventory`, `equipment`, `equip-item`, `character`, `pick-up`,
+`drop`; or over the main menu, the replay then unused: `race`, `summary`), `tolerance`
+(per-channel, default 2) and `max_diff_ratio`
 (default 0.05% of pixels).
 `cargo xtask golden` builds a replay per entry with `warlock-core`, runs the game with
 `--replay ... --capture ...`, and compares with `tests/golden/<name>.png`. On a mismatch it writes

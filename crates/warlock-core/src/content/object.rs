@@ -5,8 +5,14 @@
 //! grams. Glyphs follow ADOM loosely: `)` weapons, `/` missiles, `}` missile weapons, `[` armor,
 //! `(` tools, `!` potions, `?` scrolls, `%` food, `*` stones and gems, `$` coins, `=` rings,
 //! `"` amulets.
+//!
+//! Things that can be worn or wielded say where they go (`slot`, the id or `fits` of a slot in
+//! `data/slots.toml`: `slot = "body"`, `slot = "ring"` for either ring slot); a `two_handed` one
+//! takes both hands. Missiles say what kind of ammunition they are (`ammo = "arrow"`) and missile
+//! weapons what they shoot (`launches = "arrow"`): launchers and ammunition pair by that kind.
 
 use super::material::MaterialId;
+use super::slot::SlotDef;
 use super::{Content, ContentError};
 use crate::color::Rgb;
 use crate::object::Stack;
@@ -38,6 +44,15 @@ pub(super) struct ObjectSpec {
     pub weight: u32,
     #[serde(default)]
     pub stackable: bool,
+    /// Where it is worn or wielded: a slot's `fits` (its id unless it says otherwise).
+    pub slot: Option<String>,
+    /// Takes both hands (only for things that go in a hand).
+    #[serde(default)]
+    pub two_handed: bool,
+    /// The kind of ammunition it is ("arrow"), for launchers of that kind.
+    pub ammo: Option<String>,
+    /// The kind of ammunition it shoots, if it is a missile weapon ("arrow").
+    pub launches: Option<String>,
 }
 
 /// A resolved object type.
@@ -55,6 +70,14 @@ pub struct ObjectDef {
     pub weight: u32,
     /// Several lie in one stack (coins, arrows) instead of a stack each.
     pub stackable: bool,
+    /// Where it is worn or wielded: the `fits` of the slots it goes in (`None`: nowhere).
+    pub slot: Option<String>,
+    /// Takes both hands: every hand slot.
+    pub two_handed: bool,
+    /// The kind of ammunition it is, if it is ammunition ("arrow").
+    pub ammo: Option<String>,
+    /// The kind of ammunition it shoots, if it is a missile weapon ("arrow").
+    pub launches: Option<String>,
 }
 
 impl ObjectDef {
@@ -77,11 +100,13 @@ pub fn article(noun: &str) -> &'static str {
 }
 
 impl ObjectSpec {
-    /// Checks the definition and resolves its material.
+    /// Checks the definition and resolves its material; `slots` are where things may be worn or
+    /// wielded.
     pub(super) fn resolve(
         self,
         file: &str,
         material: impl Fn(&str) -> Option<MaterialId>,
+        slots: &[SlotDef],
     ) -> Result<ObjectDef, ContentError> {
         let err = |m: String| ContentError::new(file, format!("object `{}`: {m}", self.id));
         if self.name.trim().is_empty() || self.plural.as_ref().is_some_and(|p| p.trim().is_empty())
@@ -98,6 +123,27 @@ impl ObjectSpec {
         }
         let material = material(&self.material)
             .ok_or_else(|| err(format!("unknown material `{}`", self.material)))?;
+        if let Some(slot) = &self.slot
+            && !slots.iter().any(|s| s.fits == *slot)
+        {
+            return Err(err(format!(
+                "`slot = \"{slot}\"` is no slot of data/slots.toml, nor what one fits"
+            )));
+        }
+        if self.two_handed {
+            let hands = slots.iter().filter(|s| s.hand).count();
+            let in_hand = (slots.iter()).any(|s| s.hand && Some(&s.fits) == self.slot.as_ref());
+            if !in_hand || hands < 2 {
+                return Err(err(
+                    "`two_handed` needs a `slot` that is a hand, and two hand slots".into(),
+                ));
+            }
+        }
+        for (field, kind) in [("ammo", &self.ammo), ("launches", &self.launches)] {
+            if kind.as_ref().is_some_and(|k| k.trim().is_empty()) {
+                return Err(err(format!("`{field}` must not be empty")));
+            }
+        }
         let plural = self.plural.unwrap_or_else(|| format!("{}s", self.name));
         Ok(ObjectDef {
             id: self.id,
@@ -108,6 +154,10 @@ impl ObjectSpec {
             material,
             weight: self.weight,
             stackable: self.stackable,
+            slot: self.slot,
+            two_handed: self.two_handed,
+            ammo: self.ammo,
+            launches: self.launches,
         })
     }
 }
@@ -162,6 +212,10 @@ mod tests {
             material: MaterialId(0),
             weight: 1,
             stackable: false,
+            slot: None,
+            two_handed: false,
+            ammo: None,
+            launches: None,
         };
         assert_eq!(def("dagger", "daggers").describe(1), "a dagger");
         assert_eq!(def("iron key", "iron keys").describe(1), "an iron key");

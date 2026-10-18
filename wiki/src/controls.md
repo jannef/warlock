@@ -19,6 +19,7 @@ authoritative: it is generated from your current key bindings.
 | Pick up | `,` or `g` |
 | Drop | `d` |
 | Inventory | `i` |
+| Equipment (wear and wield) | `e` |
 | Character (your stats and weight) | `@` |
 | Rest | `R` |
 | Look around | `x` |
@@ -51,8 +52,9 @@ press `Esc` to cancel. Pressing any other command cancels the prompt.
 describes what you know about the cell under it:
 
 - what you see there: a creature, marked "(hostile)" if it is hostile to you (see
-  [Creatures](creatures.md)), the objects lying there, and the terrain, as in "A giant rat
-  (hostile), on stone floor.";
+  [Creatures](creatures.md)), with what it wields and wears, the objects lying there, and the
+  terrain, as in "A giant rat (hostile), on stone floor." or "A kobold (hostile), wielding a
+  spear, on stone floor.";
 - what you remember there, if you cannot see it now: the terrain and the objects you saw on it;
 - for stairs and the places on the overworld, where they lead;
 - a sound you heard there this turn ([Hearing](hearing.md));
@@ -67,6 +69,11 @@ a screen listing them by letter. `d` opens the same kind of screen for what you 
 On these screens a letter marks or unmarks a stack (even `h`, `j`, `k`, `l`), `,` marks
 everything, the arrows and Space work too, `Enter` confirms, and `Esc` cancels. `i` shows your
 pack and what it weighs; it takes no time. See [Objects and your pack](objects.md).
+
+`e` shows what you wear and wield, slot by slot. A slot's letter (on this screen every letter
+names a slot) opens a list of what you carry that fits there: its letter puts it on, swapping
+out what was there, and choosing what is there takes it off. Each change takes its time; you
+stay on the equipment screen until you press `Esc`. See [Equipment](equipment.md).
 
 ## The screen
 
@@ -104,8 +111,10 @@ and quit to menu, and Quit, which saves too. The main menu, where the game opens
 (when there is a saved run), New run, Settings, Controls, and Quit; see [Saving](saving.md) and
 [Settings](settings.md). New run goes on to creating your character, a step at a time: the arrow
 keys (or `j` and `k`) choose, `Enter` goes on, and `Esc` goes back a step (see
-[Your character](character.md)). While any menu or screen is open (including the inventory, the character
-screen, and the pick-up and drop screens), no game time passes.
+[Your character](character.md)). While any menu or screen is open (including the inventory, the
+equipment screen, the character screen, and the pick-up and drop screens), no game time passes,
+except for what you choose there: picking up, dropping, and putting on or taking off take their
+time.
 
 ## Developer keys
 

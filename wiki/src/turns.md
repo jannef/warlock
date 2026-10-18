@@ -14,8 +14,10 @@ in proportion, and one that costs less is quicker: an action of cost 1400 would 
 Every action takes the same time wherever you are, the overworld included: waiting there takes 6
 seconds, and so do entering a place with `>` and walking off the edge of an outdoor area back to
 the overworld. Only steps on the overworld are different: each is a journey (below). Picking up
-or dropping takes one action however many stacks you take. Looking at your pack (`i`) takes no
-time, and neither does anything that is refused, such as walking into a wall.
+or dropping takes one action however many stacks you take. Putting on or taking off
+[equipment](equipment.md) takes its slot's time for each thing that moves, so a swap takes both.
+Looking at your pack (`i`) or your equipment (`e`) takes no time, and neither does anything that
+is refused, such as walking into a wall.
 
 The clock counts whole seconds, so an action of 8.4 seconds shows as 8 or 9 seconds on it, but a
 run of actions always adds up to their exact time: five such actions take exactly 42 seconds.

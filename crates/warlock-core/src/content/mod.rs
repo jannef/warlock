@@ -22,6 +22,7 @@ mod particles;
 mod race;
 mod scenario;
 mod sky;
+mod slot;
 mod terrain;
 mod vault;
 mod vision;
@@ -48,6 +49,7 @@ pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use race::{RaceDef, Races};
 pub use scenario::ScenarioDef;
 pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
+pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use terrain::{MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
 pub use vault::Vault;
 pub use vision::VisionProfile;
@@ -198,12 +200,13 @@ struct LegendFile {
 ///
 /// `data/lights.toml`, `data/vision.toml`, `data/factions.toml`, `data/dungeons.toml`,
 /// `data/calendar.toml`, `data/sky.toml`, `data/materials.toml`, `data/objects.toml`,
-/// `data/weather.toml`, `data/actions.toml`, `data/races.toml`, `data/classes.toml`, and
-/// `data/horoscope.toml` are optional. Without vision profiles, a single `normal` profile that
-/// needs no light is used, so content without lighting stays fully visible; without factions,
-/// everyone is neutral; without a calendar, months are numbered; without a sky file there are no
-/// moons; without an objects file there are no objects; without a weather file the sky is always
-/// clear; without an actions file every action costs 1000; without races or classes there is no
+/// `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/races.toml`,
+/// `data/classes.toml`, and `data/horoscope.toml` are optional. Without vision profiles, a single
+/// `normal` profile that needs no light is used, so content without lighting stays fully
+/// visible; without factions, everyone is neutral; without a calendar, months are numbered;
+/// without a sky file there are no moons; without an objects file there are no objects; without a
+/// weather file the sky is always clear; without an actions file every action costs 1000;
+/// without a slots file nothing can be worn or wielded; without races or classes there is no
 /// character to choose, and scenarios give the player's eyes and stats themselves; without a
 /// horoscope, characters are born under no sign.
 #[derive(Debug)]
@@ -216,6 +219,8 @@ pub struct Content {
     material_ids: BTreeMap<String, MaterialId>,
     objects: Vec<ObjectDef>,
     object_ids: BTreeMap<String, ObjectId>,
+    /// Equipment slots, in display order.
+    slots: Vec<SlotDef>,
     factions: Factions,
     lights: Vec<LightPreset>,
     light_ids: BTreeMap<String, LightId>,
@@ -252,6 +257,7 @@ impl Content {
             material_ids: BTreeMap::new(),
             objects: Vec::new(),
             object_ids: BTreeMap::new(),
+            slots: Vec::new(),
             factions: Factions::default(),
             lights: Vec::new(),
             light_ids: BTreeMap::new(),
@@ -591,6 +597,10 @@ impl Content {
                 self.materials.push(def);
             }
         }
+        let path = "data/slots.toml";
+        if let Some(text) = files.get_optional(path) {
+            self.slots = slot::parse(path, text)?;
+        }
         let path = "data/objects.toml";
         let Some(text) = files.get_optional(path) else {
             return Ok(());
@@ -602,8 +612,19 @@ impl Content {
             if self.object_ids.insert(spec.id.clone(), id).is_some() {
                 return Err(err(format!("duplicate object id `{}`", spec.id)));
             }
-            let def = spec.resolve(path, |m| self.material_ids.get(m).copied())?;
+            let def = spec.resolve(path, |m| self.material_ids.get(m).copied(), &self.slots)?;
             self.objects.push(def);
+        }
+        // Launchers and ammunition pair by kind: a launcher shoots something there is.
+        for o in &self.objects {
+            if let Some(kind) = &o.launches
+                && !self.objects.iter().any(|a| a.ammo.as_ref() == Some(kind))
+            {
+                return Err(err(format!(
+                    "object `{}` launches `{kind}`, but no object has `ammo = \"{kind}\"`",
+                    o.id
+                )));
+            }
         }
         Ok(())
     }
@@ -756,10 +777,10 @@ impl Content {
         Ok(())
     }
 
-    /// A stable hash (64-bit FNV-1a) of the ordered terrain, creature, level, light, dungeon, and
-    /// object ids.
+    /// A stable hash (64-bit FNV-1a) of the ordered terrain, creature, level, light, dungeon,
+    /// object, and slot ids.
     ///
-    /// `TerrainId`, `CreatureId`, `LightId`, and `ObjectId` are indices, so a save is only meaningful for
+    /// `TerrainId`, `CreatureId`, `LightId`, `ObjectId`, and `SlotId` are indices, so a save is only meaningful for
     /// content with the same ids in the same order; saves record this fingerprint to detect a
     /// mismatch.
     pub fn fingerprint(&self) -> u64 {
@@ -769,13 +790,14 @@ impl Content {
                 hash = (hash ^ u64::from(b)).wrapping_mul(0x0000_0100_0000_01b3);
             }
         };
-        let groups: [Vec<&str>; 6] = [
+        let groups: [Vec<&str>; 7] = [
             self.terrain.iter().map(|t| t.id.as_str()).collect(),
             self.creatures.iter().map(|c| c.id.as_str()).collect(),
             self.levels.keys().map(String::as_str).collect(),
             self.lights.iter().map(|l| l.id.as_str()).collect(),
             self.dungeons.keys().map(String::as_str).collect(),
             self.objects.iter().map(|o| o.id.as_str()).collect(),
+            self.slots.iter().map(|s| s.id.as_str()).collect(),
         ];
         for ids in groups {
             for id in ids {
@@ -828,6 +850,42 @@ impl Content {
     /// Every object type, in file order (by [`ObjectId`]).
     pub fn object_defs(&self) -> &[ObjectDef] {
         &self.objects
+    }
+
+    /// The equipment slots, in display order (by [`SlotId`]; empty without `data/slots.toml`).
+    pub fn slots(&self) -> &[SlotDef] {
+        &self.slots
+    }
+
+    pub fn slot(&self, id: SlotId) -> &SlotDef {
+        &self.slots[usize::from(id.0)]
+    }
+
+    pub fn slot_id(&self, name: &str) -> Option<SlotId> {
+        let i = self.slots.iter().position(|s| s.id == name)?;
+        u8::try_from(i).ok().map(SlotId)
+    }
+
+    /// Every slot, with its id, in display order.
+    pub fn slot_ids(&self) -> impl Iterator<Item = (SlotId, &SlotDef)> {
+        (0u8..).zip(&self.slots).map(|(i, s)| (SlotId(i), s))
+    }
+
+    /// Whether `object` goes in `slot`: its `slot` is what the slot fits.
+    pub fn fits(&self, object: ObjectId, slot: SlotId) -> bool {
+        self.object(object).slot.as_ref() == Some(&self.slot(slot).fits)
+    }
+
+    /// The hand slots (a two-handed object takes them all), in display order.
+    pub fn hand_slots(&self) -> impl Iterator<Item = SlotId> + '_ {
+        self.slot_ids().filter(|(_, s)| s.hand).map(|(id, _)| id)
+    }
+
+    /// Whether missile weapon `launcher` shoots `ammo`: they pair by kind (`launches` and
+    /// `ammo` in `data/objects.toml`).
+    pub fn fires(&self, launcher: ObjectId, ammo: ObjectId) -> bool {
+        let kind = &self.object(launcher).launches;
+        kind.is_some() && *kind == self.object(ammo).ammo
     }
 
     pub fn material(&self, id: MaterialId) -> &MaterialDef {
@@ -1844,6 +1902,70 @@ mod tests {
     }
 
     #[test]
+    fn bad_equipment_is_reported() {
+        const MATERIALS: &str = "[[material]]\nid = \"iron\"\nname = \"iron\"\n";
+        let slot = |id: &str, action: &str, hand: bool| {
+            format!(
+                "[[slot]]\nid = \"{id}\"\nname = \"{id}\"\naction = \"{action}\"\n\
+                 mark = \"worn\"\nhand = {hand}\n"
+            )
+        };
+        let slots = [
+            slot("main_hand", "wield", true),
+            slot("off_hand", "wield", true),
+            slot("head", "wear", false),
+        ]
+        .concat();
+        let object = |fields: &str| {
+            format!(
+                "[[object]]\nid = \"key\"\nname = \"key\"\nglyph = \"(\"\nfg = \"#ffffff\"\n\
+                 material = \"iron\"\nweight = 5\n{fields}\n"
+            )
+        };
+        let load = |slots: &str, objects: &str| {
+            let mut files = minimal_files("#@#\n", "");
+            files.insert("data/materials.toml", MATERIALS);
+            files.insert("data/objects.toml", objects);
+            if !slots.is_empty() {
+                files.insert("data/slots.toml", slots);
+            }
+            Content::load(&files)
+        };
+        for (fields, expected) in [
+            ("slot = \"tail\"", "`slot = \"tail\"` is no slot"),
+            ("slot = \"head\"\ntwo_handed = true", "`two_handed` needs"),
+            ("two_handed = true", "`two_handed` needs"),
+            ("ammo = \"\"", "`ammo` must not be empty"),
+            ("launches = \"bolt\"", "launches `bolt`, but no object has"),
+        ] {
+            let err = load(&slots, &object(fields)).unwrap_err();
+            assert_eq!(err.file, "data/objects.toml", "{fields}");
+            assert!(err.message.contains(expected), "{fields}: {}", err.message);
+        }
+        let staff = object("slot = \"main_hand\"\ntwo_handed = true");
+        assert!(load(&slots, &staff).is_ok());
+        // Two hands are needed for a two-handed object; no slots file, no slots.
+        let one_hand = slot("main_hand", "wield", true);
+        assert!(load(&one_hand, &staff).is_err());
+        let err = load("", &object("slot = \"head\"")).unwrap_err();
+        assert!(err.message.contains("is no slot"), "{}", err.message);
+        // A launcher pairs with the ammunition of its kind.
+        let pair = format!(
+            "{}{}",
+            object("launches = \"bolt\""),
+            object("ammo = \"bolt\"").replace("\"key\"", "\"bolt\"")
+        );
+        let content = load(&slots, &pair).expect("a crossbow and a bolt");
+        let (key, bolt) = (content.object_id("key"), content.object_id("bolt"));
+        assert!(content.fires(key.unwrap(), bolt.unwrap()));
+        assert!(!content.fires(bolt.unwrap(), key.unwrap()));
+        // Slots enter the fingerprint: equipment is saved by slot index.
+        let without = load("", &object("")).expect("loads");
+        let with = load(&slots, &object("")).expect("loads");
+        assert_ne!(without.fingerprint(), with.fingerprint());
+    }
+
+    #[test]
     fn creature_types_have_stats_that_default_to_average() {
         use crate::stats::{Stat, Stats};
         let content = Content::builtin().unwrap();
@@ -1974,7 +2096,7 @@ mod tests {
             ),
             (
                 "\"x\" = { terrain = \"floor\", carry = [\"dagger\"] }",
-                "carry but no creature",
+                "carry, wield, or wear but no creature",
             ),
             (
                 "\"x\" = { terrain = \"floor\", creature = \"kobold\", carry = [\"dagger*27\"] }",

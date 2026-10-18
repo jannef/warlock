@@ -1,10 +1,11 @@
 //! The per-turn perception snapshot (spec §5, §8).
 //!
 //! Everything the player can know — and therefore everything rendering, UI, and dumps may show —
-//! goes through [`PerceptionView`]. It exposes currently visible cells, creatures, objects, and
-//! light, remembered terrain and objects, and what the player carries, weighs, and scores in each
-//! stat; it never exposes unseen terrain or objects, hidden creatures, what creatures carry, any
-//! stat's modifier or potential, a creature's stats, or light the player's eyes cannot perceive.
+//! goes through [`PerceptionView`]. It exposes currently visible cells, creatures (and what they
+//! wear and wield), objects, and light, remembered terrain and objects, and what the player
+//! carries, wears, weighs, and scores in each stat; it never exposes unseen terrain or objects,
+//! hidden creatures, what else creatures carry, any stat's modifier or potential, a creature's
+//! stats, or light the player's eyes cannot perceive.
 //!
 //! **Memory** (spec §5): terrain and piles of objects as last seen. Objects are seen where
 //! creatures are (cells in line of sight, never completed walls); a pile seen gone is forgotten,
@@ -45,9 +46,10 @@
 
 use crate::character::Character;
 use crate::content::{
-    Content, CreatureId, Flow, LevelKind, LightId, Stance, TerrainId, VisionProfile,
+    Content, CreatureId, Flow, LevelKind, LightId, SlotId, Stance, TerrainId, VisionProfile,
 };
 use crate::daylight;
+use crate::equipment::Equipment;
 use crate::fov::{compute_fov, radius2};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
@@ -85,6 +87,15 @@ pub struct SeenActor {
     pub kind: ActorKind,
     pub creature: CreatureId,
     pub pos: Pos,
+}
+
+/// Something a creature the player sees wears or wields: what is seen of what it carries.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+pub struct SeenGear {
+    pub actor: ActorId,
+    /// The first slot it is in (a two-handed weapon is in both hands).
+    pub slot: SlotId,
+    pub stack: Stack,
 }
 
 /// Light as the player perceives it at a visible cell.
@@ -208,6 +219,8 @@ pub(crate) struct Perception {
     light: Grid<Light>,
     sources: Vec<SeenLight>,
     actors: Vec<SeenActor>,
+    /// What the seen creatures (not the player) wear and wield, by actor, in slot order.
+    gear: Vec<SeenGear>,
     /// Sounds heard during the last turn from sources the player does not see.
     sounds: Vec<PerceivedSound>,
 }
@@ -430,15 +443,31 @@ impl Perception {
             })
             .collect();
 
-        let actors = state
+        let seen: Vec<&Actor> = state
             .actors
             .values()
             .filter(|a| a.level == level.id && sight.get(a.pos) == Some(&Sight::Seen))
+            .collect();
+        let actors = (seen.iter())
             .map(|a| SeenActor {
                 id: a.id,
                 kind: a.kind,
                 creature: a.creature,
                 pos: a.pos,
+            })
+            .collect();
+        // What creatures wear and wield is in plain sight; the rest of what they carry is not.
+        let gear = (seen.iter())
+            .filter(|a| a.kind == ActorKind::Creature)
+            .flat_map(|a| {
+                (a.equipment.items().into_iter()).filter_map(|(slot, item)| {
+                    let stack = *a.inventory.get(item)?;
+                    Some(SeenGear {
+                        actor: a.id,
+                        slot,
+                        stack,
+                    })
+                })
             })
             .collect();
 
@@ -462,6 +491,7 @@ impl Perception {
             light,
             sources,
             actors,
+            gear,
             sounds,
         }
     }
@@ -626,7 +656,8 @@ impl<'a> PerceptionView<'a> {
         &self.player.inventory
     }
 
-    /// The player's own weight: their base weight plus what they carry.
+    /// The player's own weight: their base weight plus what they carry, worn and wielded things
+    /// included.
     pub fn own_weight(&self) -> Weight {
         self.player.weight(self.content)
     }
@@ -641,6 +672,17 @@ impl<'a> PerceptionView<'a> {
     /// The time on the clock.
     pub fn time(&self) -> GameTime {
         self.time
+    }
+
+    /// What of their inventory the player wears and wields, by slot.
+    pub fn equipment(&self) -> &'a Equipment {
+        &self.player.equipment
+    }
+
+    /// What seen creature `actor` wears and wields, each thing once, in slot order: all the
+    /// player sees of what a creature carries. Empty for creatures not in view and the player.
+    pub fn gear(&self, actor: ActorId) -> impl Iterator<Item = &'a SeenGear> + 'a {
+        self.snapshot.gear.iter().filter(move |g| g.actor == actor)
     }
 
     /// The player's own scores, by stat (spec §8 "Stats"). That is all the player knows of

@@ -1,8 +1,9 @@
 //! Object screens (spec §6): the inventory (`i`), and the selection screens for picking up from a
 //! pile (`,` or `g` where several objects lie) and for dropping (`d`).
 //!
-//! Each lists stacks by letter, `a` first, with their glyph, name, and weight. The inventory is
-//! read-only and also shows what the player carries and weighs. In a selection screen a letter
+//! Each lists stacks by letter, `a` first, with their glyph, name, and weight; the inventory and
+//! the drop screen mark what is worn or wielded ("(being worn)", "(wielded)"; dropping it takes
+//! it off first). The inventory is read-only and also shows what the player carries and weighs. In a selection screen a letter
 //! marks or unmarks its stack (`+` marked, `-` not: never color alone), `,` marks everything (or,
 //! with everything marked, nothing), the arrows move the `>` cursor and Space marks its row, and
 //! Enter picks up or drops the marked stacks (the cursor's row if none is marked); that is one
@@ -17,6 +18,7 @@ use crate::render::console::Console;
 use bevy::input::keyboard::KeyCode;
 use warlock_core::action::letter;
 use warlock_core::color::Rgb;
+use warlock_core::equipment;
 use warlock_core::object::{Stack, Weight, format_weight};
 use warlock_core::perception::PerceptionView;
 use warlock_core::{Action, Letters};
@@ -55,6 +57,8 @@ struct Entry {
     glyph: char,
     fg: Rgb,
     name: String,
+    /// What the inventory says of it if it is worn or wielded: "being worn".
+    mark: Option<String>,
     /// Grams.
     weight: u64,
 }
@@ -88,15 +92,21 @@ impl ObjectScreen {
         let entries = match view {
             Some(view) => {
                 let content = view.content();
+                // The inventory marks what is worn or wielded; a pile has nothing worn.
+                let carried = list != ObjectList::PickUp;
                 stacks
                     .iter()
                     .take(Letters::COUNT)
-                    .map(|s| {
+                    .enumerate()
+                    .map(|(i, s)| {
                         let def = content.object(s.object);
                         Entry {
                             glyph: def.glyph,
                             fg: def.fg,
                             name: s.describe(content),
+                            mark: carried
+                                .then(|| equipment::mark(content, view.equipment(), i))
+                                .flatten(),
                             weight: s.weight(content),
                         }
                     })
@@ -227,7 +237,8 @@ impl ObjectScreen {
             let weight = format_weight(entry.weight);
             let weight_x = panel.x + panel.w - 3 - weight.chars().count() as i32;
             let room = (weight_x - name_x - 1).max(0) as usize;
-            let name: String = entry.name.chars().take(room).collect();
+            let mark = (entry.mark.as_ref()).map_or(String::new(), |m| format!(" ({m})"));
+            let name: String = format!("{}{mark}", entry.name).chars().take(room).collect();
             console.print(name_x, y, &name, color);
             console.print(weight_x, y, &weight, TEXT_DIM);
         }
@@ -402,6 +413,37 @@ mod tests {
             screen.handle(&Press::nav(Nav::Back), &b),
             ScreenAction::Close
         );
+    }
+
+    #[test]
+    fn the_inventory_and_drop_screens_mark_what_is_worn_or_wielded() {
+        let mut world = on_the_pile();
+        world.apply(&Action::PickUp(Letters::default()));
+        for (slot, item) in [("body", 0), ("main_hand", 1)] {
+            world.apply(&Action::Equip {
+                slot: slot.into(),
+                item,
+            });
+        }
+        let b = Bindings::default();
+        for list in [ObjectList::Inventory, ObjectList::Drop] {
+            let screen = ObjectScreen::new(list, Some(&world.perception()));
+            let mut console = Console::default();
+            console.resize(80, 30);
+            screen.draw(&mut console, &b);
+            let text = text(&console);
+            let row = |needle: &str| {
+                text.iter()
+                    .find(|l| l.contains(needle))
+                    .unwrap_or_else(|| panic!("{needle} in {text:#?}"))
+            };
+            assert!(row("a leather jerkin (being worn)").contains("3.5 kg"));
+            row("a dagger (wielded)");
+            assert!(!row("2 wax candles").contains("candles ("), "not worn");
+        }
+        // Worn things still weigh what they weigh.
+        let screen = ObjectScreen::new(ObjectList::Inventory, Some(&world.perception()));
+        assert_eq!(screen.weight.carried, 3500 + 450 + 2 * 100);
     }
 
     #[test]

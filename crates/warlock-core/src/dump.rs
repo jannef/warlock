@@ -6,6 +6,7 @@
 
 use crate::action::letter;
 use crate::character::Gender;
+use crate::equipment;
 use crate::geom::Pos;
 use crate::noise::{PerceivedSound, SoundKind, Volume};
 use crate::object::format_weight;
@@ -36,26 +37,31 @@ pub enum Layer {
     /// Sounds the player heard from unseen sources, at their rough places ([`sound_char`]: `f`
     /// footsteps, `o` a door opening, `c` a door closing; upper case when loud), over the view.
     Sound,
-    /// Not a map: the player's inventory, one line per stack, then what they carry and weigh.
+    /// Not a map: the player's inventory, one line per stack (marked when worn or wielded), then
+    /// what they carry and weigh.
     Inventory,
+    /// Not a map: the player's equipment, one slot a line (`c Body: a leather jerkin`, `-` when
+    /// empty).
+    Equipment,
     /// Not a map: the player's character (`Race Dwarf`, `Gender Female`, `Class Warrior`), if
     /// any, then their own scores, one stat a line (`Strength 12`); never potentials or modifiers.
     Stats,
     /// Ground truth: all terrain, objects, and actors on the level. **Dev-only.**
     Truth,
-    /// Not a map: every actor on the level with its weight, what it carries, and its stats
-    /// (scores and potentials) (ground truth). **Dev-only.**
+    /// Not a map: every actor on the level with its weight, what it carries (and of that wears
+    /// and wields), and its stats (scores and potentials) (ground truth). **Dev-only.**
     Actors,
 }
 
 impl Layer {
-    const ALL: [Layer; 9] = [
+    const ALL: [Layer; 10] = [
         Layer::View,
         Layer::Fov,
         Layer::Memory,
         Layer::Light,
         Layer::Sound,
         Layer::Inventory,
+        Layer::Equipment,
         Layer::Stats,
         Layer::Truth,
         Layer::Actors,
@@ -70,6 +76,7 @@ impl Layer {
             Layer::Light => "light",
             Layer::Sound => "sound",
             Layer::Inventory => "inventory",
+            Layer::Equipment => "equipment",
             Layer::Stats => "stats",
             Layer::Truth => "truth",
             Layer::Actors => "actors",
@@ -92,7 +99,7 @@ impl FromStr for Layer {
             .ok_or_else(|| {
                 format!(
                     "unknown layer `{s}` (expected view, fov, memory, light, sound, inventory, \
-                     stats, truth, actors)"
+                     equipment, stats, truth, actors)"
                 )
             })
     }
@@ -109,6 +116,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
         Layer::Truth => truth_rows(world),
         Layer::Actors => actor_rows(world),
         Layer::Inventory => inventory_rows(&world.perception()),
+        Layer::Equipment => equipment_rows(&world.perception()),
         Layer::Stats => stat_rows(&world.perception()),
         _ => {
             let view = world.perception();
@@ -148,7 +156,7 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
             Some(sound) => sound_char(sound),
             None => perceived_glyph(view, Layer::View, p),
         },
-        Layer::Inventory | Layer::Stats | Layer::Truth | Layer::Actors => {
+        Layer::Inventory | Layer::Equipment | Layer::Stats | Layer::Truth | Layer::Actors => {
             unreachable!("not a map built from perception")
         }
     }
@@ -197,7 +205,8 @@ fn truth_rows(world: &World) -> Vec<String> {
     })
 }
 
-/// The player's inventory (`a - a dagger (450 g)`), then what they carry and weigh.
+/// The player's inventory (`a - a dagger (450 g)`, `b - a leather jerkin (being worn) (3.5
+/// kg)`), then what they carry and weigh.
 fn inventory_rows(view: &PerceptionView<'_>) -> Vec<String> {
     let content = view.content();
     let mut rows: Vec<String> = view
@@ -207,7 +216,9 @@ fn inventory_rows(view: &PerceptionView<'_>) -> Vec<String> {
         .map(|(i, s)| {
             let name = s.describe(content);
             let weight = format_weight(s.weight(content));
-            format!("{} - {name} ({weight})", letter(i).unwrap_or('?'))
+            let mark = equipment::mark(content, view.equipment(), i)
+                .map_or(String::new(), |m| format!(" ({m})"));
+            format!("{} - {name}{mark} ({weight})", letter(i).unwrap_or('?'))
         })
         .collect();
     let weight = view.own_weight();
@@ -217,6 +228,25 @@ fn inventory_rows(view: &PerceptionView<'_>) -> Vec<String> {
         format_weight(weight.total())
     ));
     rows
+}
+
+/// The player's equipment, one slot a line by its letter: `c Body: a leather jerkin (b)` (the
+/// inventory letter in parentheses), `a Head: -` when empty.
+fn equipment_rows(view: &PerceptionView<'_>) -> Vec<String> {
+    let content = view.content();
+    let worn = view.equipment();
+    (content.slot_ids())
+        .enumerate()
+        .map(|(i, (slot, def))| {
+            let what = match worn.get(slot) {
+                Some(item) => view.inventory().get(item).map_or("?".into(), |s| {
+                    format!("{} ({})", s.describe(content), letter(item).unwrap_or('?'))
+                }),
+                None => "-".into(),
+            };
+            format!("{} {}: {what}", letter(i).unwrap_or('?'), def.name)
+        })
+        .collect()
 }
 
 /// The player's character, if any (`Race Dwarf`, `Gender Female`, `Class Warrior`, `Age 27`,
@@ -263,6 +293,21 @@ fn actor_rows(world: &World) -> Vec<String> {
             } else {
                 carried.join(", ")
             };
+            let equipped: Vec<String> = (a.equipment.items().into_iter())
+                .filter_map(|(slot, item)| {
+                    let stack = a.inventory.get(item)?;
+                    Some(format!(
+                        "{} {}",
+                        content.slot(slot).id,
+                        stack.describe(content)
+                    ))
+                })
+                .collect();
+            let equipped = if equipped.is_empty() {
+                String::new()
+            } else {
+                format!("; equipped {}", equipped.join(", "))
+            };
             let stats: Vec<String> = Stat::ALL
                 .iter()
                 .map(|&s| {
@@ -271,7 +316,7 @@ fn actor_rows(world: &World) -> Vec<String> {
                 })
                 .collect();
             format!(
-                "{} {} at {}: weight {} (base {} + carried {}: {carried}); stats {}",
+                "{} {} at {}: weight {} (base {} + carried {}: {carried}){equipped}; stats {}",
                 a.id,
                 content.creature(a.creature).id,
                 a.pos,
@@ -331,7 +376,8 @@ pub fn ascii(world: &World, layers: &[Layer]) -> String {
 }
 
 /// Structured dump: turn, game time, level, viewer, the weather (under the open sky; else
-/// null), seen actors, heard sounds, the player's inventory, weight, and scores (by stat id),
+/// null), seen actors, heard sounds, the player's inventory, equipment (by slot id), weight, and
+/// scores (by stat id),
 /// recent messages, the requested layers as arrays of rows, and optionally the full
 /// [`crate::WorldState`] under `state`.
 pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
@@ -362,6 +408,17 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             })
         })
         .collect();
+    let equipment: serde_json::Map<String, Value> = (view.equipment().iter())
+        .filter_map(|(slot, item)| {
+            let s = view.inventory().get(item)?;
+            let entry = json!({
+                "letter": letter(item).map(String::from),
+                "object": content.object(s.object).id,
+                "count": s.count,
+            });
+            Some((content.slot(slot).id.clone(), entry))
+        })
+        .collect();
     let weight = view.own_weight();
     let layer_map: serde_json::Map<String, Value> = layers
         .iter()
@@ -380,6 +437,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "seen_actors": seen,
         "heard_sounds": view.sounds(),
         "inventory": inventory,
+        "equipment": equipment,
         "weight": { "base": weight.base, "carried": weight.carried, "total": weight.total() },
         "character": view.character().map(|c| json!({
             "race": c.spec.race,

@@ -555,11 +555,15 @@ fn costs_and_speeds_are_deterministic_saved_and_replayed() {
 
 #[test]
 fn costs_come_from_data_and_are_validated() {
-    // The built-in content: every action a normal one, and no creature with an attack of its
-    // own cost (yet).
+    // The built-in content: every action a normal one but strapping on body armor (3000), and no
+    // creature with an attack of its own cost (yet).
     let builtin = Content::builtin().expect("builtin content");
     for kind in ActionKind::ALL {
-        assert_eq!(builtin.action_costs().cost(kind), NORMAL_COST, "{kind:?}");
+        let expected = match kind {
+            ActionKind::BodyArmor => 3 * NORMAL_COST,
+            _ => NORMAL_COST,
+        };
+        assert_eq!(builtin.action_costs().cost(kind), expected, "{kind:?}");
     }
     assert!(
         builtin

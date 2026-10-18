@@ -7,10 +7,10 @@ real shadows, and gently animated terrain.
 This wiki explains how the game works: the rules you play by and the facts about its world. It is
 for players. It describes the game as it is today, which is an early build. You can walk and
 explore, travel the overworld, watch the days, the moon, and the weather change, hear what you
-cannot see, and pick up and carry objects. Creatures go about their business, notice you, and
-fight each other and you, but attacks are only announced: nothing is hurt and nothing dies.
-You have stats, but they do not change anything yet, and there is nothing you can do with objects
-but carry them.
+cannot see, and pick up, carry, wear, and wield objects. Creatures go about their business,
+notice you, and fight each other and you, but attacks are only announced: nothing is hurt and
+nothing dies. You have stats, but they do not change anything yet, and neither does what you
+wear or wield.
 
 - **Play in your browser:** <https://jannef.github.io/warlock/> (needs a browser with WebGPU)
 - **Download for Windows, macOS, and Linux:** <https://github.com/jannef/warlock/releases>

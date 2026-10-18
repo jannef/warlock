@@ -2,9 +2,9 @@
 //!
 //! The wiki (`wiki/`, built with mdBook) is written by hand except for facts that live in data
 //! (month names, moons, weather, terrain, vision profiles, light presets, creatures, factions,
-//! objects and materials, scenarios, action costs, races and classes, the horoscope) and a few
-//! constants of the rules (sight radii, the pack's size, the stats' names, what each gender
-//! raises). Those are
+//! objects and materials, equipment slots, scenarios, action costs, races and classes, the
+//! horoscope) and a few constants of the rules (sight radii, the pack's size, the stats' names,
+//! what each gender raises). Those are
 //! written to `wiki/src/generated/*.md` from the built-in content, and the pages pull them in with
 //! `{{#include generated/NAME.md}}`, so they cannot drift. Output is deterministic. `--check` fails
 //! when a file is stale; `--build` also runs `mdbook build wiki`.
@@ -17,7 +17,7 @@ use std::process::Command;
 use warlock_core::character::Gender;
 use warlock_core::content::{
     ActionKind, BASE_TURN, Combat, Content, CreatureId, FactionId, LevelKind, LightId,
-    NORMAL_SPEED, Stance, TerrainDef, price,
+    NORMAL_SPEED, ObjectId, Stance, TerrainDef, price,
 };
 use warlock_core::daylight::{
     MOONLIGHT_PER_CELL, SIGHT_DAY, SIGHT_MOONLIT, SIGHT_NIGHT, SIGHT_TWILIGHT, overworld_sight,
@@ -127,6 +127,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("factions.md".to_string(), factions(content)),
         ("footsteps.md".to_string(), footsteps(content)),
         ("objects.md".to_string(), objects(content)),
+        ("equipment.md".to_string(), equipment(content)),
         ("materials.md".to_string(), materials(content)),
         ("pack.md".to_string(), pack(content)),
         ("scenarios.md".to_string(), scenarios(content)),
@@ -218,6 +219,20 @@ fn action_costs(content: &Content) -> String {
             ActionKind::Melee => "Attacking up close",
             ActionKind::Shoot => "Shooting (creatures)",
             ActionKind::Cast => "Casting a spell (creatures)",
+            ActionKind::Wield => "Wielding something, or putting it away",
+            ActionKind::Wear | ActionKind::BodyArmor => "Putting something on, or taking it off",
+            ActionKind::Ready => "Readying something, or putting it away",
+        };
+        // Equipment actions say which slots take them (data/slots.toml); a kind no slot uses
+        // is left out.
+        let what = if kind.is_equipment() {
+            let slots = slots_of(content, kind);
+            if slots.is_empty() {
+                continue;
+            }
+            format!("{what}: {slots}")
+        } else {
+            what.to_string()
         };
         let cost = content.action_costs().cost(kind);
         let _ = writeln!(
@@ -232,6 +247,74 @@ fn action_costs(content: &Content) -> String {
         }
     }
     out
+}
+
+/// The names of the slots whose action is `kind`, in screen order, lower case after the first:
+/// "Head, neck, cloak".
+fn slots_of(content: &Content, kind: ActionKind) -> String {
+    let names: Vec<String> = (content.slots().iter())
+        .filter(|s| s.action == kind)
+        .map(|s| s.name.to_lowercase())
+        .collect();
+    capital(&names.join(", "))
+}
+
+/// The equipment slots in the order the screen lists them, with their letters, what goes in
+/// each, and how long putting a thing on there or taking it off takes.
+fn equipment(content: &Content) -> String {
+    let mut out = String::from(
+        "| Letter | Slot | What goes there | On or off takes |\n|:---:|---|---|---:|\n",
+    );
+    for (i, (slot, def)) in content.slot_ids().enumerate() {
+        let fits: Vec<String> = (content.object_defs().iter().enumerate())
+            .filter(|&(o, _)| content.fits(ObjectId(o as u16), slot))
+            .map(|(_, o)| {
+                let mut name = o.name.clone();
+                if o.two_handed {
+                    name.push_str(" (both hands)");
+                }
+                if let Some(kind) = &o.launches {
+                    let ammo = (content.object_defs().iter())
+                        .find(|a| a.ammo.as_ref() == Some(kind))
+                        .map_or(kind.clone(), |a| a.plural.clone());
+                    let _ = write!(name, " (shoots {ammo})");
+                }
+                name
+            })
+            .collect();
+        let fits = if fits.is_empty() {
+            "-".to_string()
+        } else {
+            capital(&fits.join(", "))
+        };
+        let cost = content.action_costs().cost(def.action);
+        let _ = writeln!(
+            out,
+            "| `{}` | {} | {fits} | {} |",
+            char::from(b'a' + i as u8),
+            def.name,
+            at_normal_pace(price(cost, BASE_TURN))
+        );
+    }
+    out
+}
+
+/// Where an object goes, if it can be worn or wielded: the slots that fit it.
+fn goes_on(content: &Content, object: usize) -> String {
+    let id = ObjectId(object as u16);
+    let slots: Vec<String> = (content.slot_ids())
+        .filter(|&(s, _)| content.fits(id, s))
+        .map(|(_, s)| s.name.to_lowercase())
+        .collect();
+    if slots.is_empty() {
+        return "-".into();
+    }
+    let both = if content.object(id).two_handed {
+        " (both hands)"
+    } else {
+        ""
+    };
+    format!("{}{both}", capital(&slots.join(" or ")))
 }
 
 fn local_terrain(content: &Content) -> String {
@@ -735,19 +818,20 @@ fn object_class(glyph: char) -> Option<&'static str> {
 
 fn objects(content: &Content) -> String {
     let mut out = String::from(
-        "| Object | Glyph | Kind | Material | Weight (each) | Stacks |\n\
-         |---|:---:|---|---|---:|:---:|\n",
+        "| Object | Glyph | Kind | Material | Weight (each) | Stacks | Worn or wielded on |\n\
+         |---|:---:|---|---|---:|:---:|---|\n",
     );
-    for o in content.object_defs() {
+    for (i, o) in content.object_defs().iter().enumerate() {
         let _ = writeln!(
             out,
-            "| {} | {} | {} | {} | {} | {} |",
+            "| {} | {} | {} | {} | {} | {} | {} |",
             capital(&o.name),
             glyph(o.glyph),
             object_class(o.glyph).unwrap_or("-"),
             content.material(o.material).name,
             format_weight(u64::from(o.weight)),
-            yes(o.stackable)
+            yes(o.stackable),
+            goes_on(content, i)
         );
     }
     out
@@ -984,8 +1068,40 @@ mod tests {
         assert!(text("terrain-local.md").contains("muffles sound"));
         assert!(text("footsteps.md").contains("| Very loud | Still water, running water |"));
         assert!(text("footsteps.md").contains("grass"));
-        assert!(text("objects.md").contains("| Dagger | `)` | weapon | steel | 450 g | no |"));
-        assert!(text("objects.md").contains("| Arrow | `/` | missile | wood | 30 g | yes |"));
+        assert!(
+            text("objects.md")
+                .contains("| Dagger | `)` | weapon | steel | 450 g | no | Main hand |")
+        );
+        assert!(
+            text("objects.md").contains("| Arrow | `/` | missile | wood | 30 g | yes | Missiles |")
+        );
+        assert!(text("objects.md").contains("| Left ring or right ring |"));
+        assert!(text("objects.md").contains("| Main hand (both hands) |"));
+        assert!(
+            text("objects.md").contains("| Apple | `%` | food | plant matter | 150 g | yes | - |")
+        );
+        let equipment = text("equipment.md");
+        assert!(
+            equipment.contains("| `a` | Head | Iron helm | 6 seconds |"),
+            "{equipment}"
+        );
+        assert!(
+            equipment.contains("| `c` | Body | Leather jerkin, chain mail shirt | 18 seconds |")
+        );
+        assert!(equipment.contains(", quarterstaff (both hands) |"));
+        assert!(equipment.contains("| `k` | Missile weapon | Short bow (shoots arrows) |"));
+        assert!(equipment.contains("| `l` | Missiles | Arrow | 6 seconds |"));
+        let actions = text("actions.md");
+        assert!(
+            actions.contains(
+                "| Wielding something, or putting it away: Main hand, off hand | 1000 | 6 seconds |"
+            ),
+            "{actions}"
+        );
+        assert!(
+            actions
+                .contains("| Putting something on, or taking it off: Body | 3000 | 18 seconds |")
+        );
         assert!(text("materials.md").contains("| Steel | daggers, short swords |"));
         assert!(text("pack.md").contains("| Your own weight | 70 kg |"));
         assert!(text("stats.md").contains("| Strength | `St` |\n| Dexterity | `Dx` |"));

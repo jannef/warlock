@@ -167,6 +167,30 @@ name = "character-summary"
 scenario = "showcase"
 screen = "summary"
 
+# The equipment screen (#114): every slot by letter with what is in it, after arming in the
+# storeroom: a helm, mail, a two-handed quarterstaff in both hands, boots, a bow and arrows.
+[[golden]]
+name = "equipment-screen"
+scenario = "showcase"
+actions = '''
+move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N pickup move:S*2 pickup
+move:NW move:W*2 move:N pickup move:SW pickup equip:head:f equip:body:e equip:main_hand:b
+equip:missile_weapon:c equip:missiles:d equip:feet:i
+'''
+screen = "equipment"
+
+# Choosing what goes in a slot (#114): the head, where the iron helm is worn (marked so; choosing
+# it takes it off).
+[[golden]]
+name = "equip-item-screen"
+scenario = "showcase"
+actions = '''
+move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N pickup move:S*2 pickup
+move:NW move:W*2 move:N pickup move:SW pickup equip:head:f equip:body:e equip:main_hand:b
+equip:missile_weapon:c equip:missiles:d equip:feet:i
+'''
+screen = "equip-item"
+
 [[golden]]
 name = "vast-level"
 scenario = "vast"

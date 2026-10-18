@@ -7,9 +7,9 @@
 | Copper | copper coins |
 | Silver | silver rings |
 | Gold | gold coins |
-| Wood | spears, clubs, short bows, arrows |
-| Leather | leather jerkins |
-| Cloth | coils of rope |
+| Wood | spears, clubs, quarterstaves, short bows, arrows, small shields |
+| Leather | leather jerkins, pairs of leather gloves, pairs of leather boots |
+| Cloth | wool cloaks, coils of rope |
 | Glass | red potions, blue potions |
 | Paper | scrolls of light |
 | Wax | wax candles |

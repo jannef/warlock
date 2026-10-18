@@ -316,6 +316,7 @@ fn graze(land: &mut Land, rng: &mut Rng, count: i32, start: Pos) {
                 pos: p,
                 route,
                 carry: Vec::new(),
+                equipment: Default::default(),
             });
             break;
         }

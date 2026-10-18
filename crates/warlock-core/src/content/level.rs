@@ -1,8 +1,9 @@
 //! Hand-authored level files (`assets/levels/*.toml`, spec §7).
 //!
 //! A level is a multiline ASCII `map` plus a `legend` mapping characters to terrain and to things
-//! placed on that terrain (player start, creatures with patrol routes and what they carry, stair
-//! links, lights, the flow of running water, objects). Characters not in the level's legend fall
+//! placed on that terrain (player start, creatures with patrol routes, what they carry, and what
+//! of that they wield and wear (`wield = "spear"`, `wear = ["leather_jerkin"]`), stair links,
+//! lights, the flow of running water, objects). Characters not in the level's legend fall
 //! back to the shared default legend (`assets/data/legend.toml`, which has arrows for running
 //! water). Objects may also be placed without a legend character: `[[pile]]` tables with `at =
 //! [x, y]` and `objects`. Objects are written as ids with an optional count, top of the pile
@@ -18,7 +19,8 @@ use super::flow::{FLOW_SPEEDS, Flow};
 use super::light::LightId;
 use super::object::parse_stacks;
 use super::terrain::{StairsDir, TerrainId};
-use super::{Content, ContentError};
+use super::{ActionKind, Content, ContentError};
+use crate::equipment::{self, Equipment};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use crate::light::Light;
@@ -119,8 +121,8 @@ pub struct EdgeExit {
 pub(super) enum LegendEntry {
     /// Just a terrain id.
     Terrain(String),
-    /// Terrain plus something placed on it.
-    Detailed(LegendDetail),
+    /// Terrain plus something placed on it (boxed: it is much larger).
+    Detailed(Box<LegendDetail>),
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -144,6 +146,28 @@ pub(super) struct LegendDetail {
     objects: Option<Vec<String>>,
     /// Objects the creature on this cell carries.
     carry: Option<Vec<String>>,
+    /// Objects of what it carries that it wields (weapons, shields, missile weapons and
+    /// missiles), by object id: `wield = "spear"` or a list.
+    wield: Option<OneOrMany>,
+    /// Objects of what it carries that it wears (armor, rings, amulets), by object id.
+    wear: Option<OneOrMany>,
+}
+
+/// One object id or a list of them.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(untagged)]
+enum OneOrMany {
+    One(String),
+    Many(Vec<String>),
+}
+
+impl OneOrMany {
+    fn ids(&self) -> &[String] {
+        match self {
+            OneOrMany::One(id) => std::slice::from_ref(id),
+            OneOrMany::Many(ids) => ids,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Deserialize)]
@@ -163,7 +187,7 @@ impl LegendEntry {
     fn detail(&self) -> Option<&LegendDetail> {
         match self {
             LegendEntry::Terrain(_) => None,
-            LegendEntry::Detailed(d) => Some(d),
+            LegendEntry::Detailed(d) => Some(&**d),
         }
     }
 }
@@ -177,6 +201,8 @@ pub struct CreatureSpawn {
     pub route: Vec<Dir>,
     /// What it carries.
     pub carry: Vec<Stack>,
+    /// What of that it wears and wields.
+    pub equipment: Equipment,
 }
 
 /// A staircase cell and where it leads.
@@ -346,15 +372,22 @@ pub(super) fn parse_level(
                         "legend `{ch}`: a creature carries at most {INVENTORY_SLOTS} stacks"
                     )));
                 }
+                let equipment = equip(detail, &carry, content)
+                    .map_err(|m| err(format!("legend `{ch}`: {m}")))?;
                 creatures.push(CreatureSpawn {
                     creature: id,
                     pos,
                     route,
                     carry,
+                    equipment,
                 });
-            } else if detail.route.is_some() || detail.carry.is_some() {
+            } else if detail.route.is_some()
+                || detail.carry.is_some()
+                || detail.wield.is_some()
+                || detail.wear.is_some()
+            {
                 return Err(err(format!(
-                    "legend `{ch}` has a route or carry but no creature"
+                    "legend `{ch}` has a route, carry, wield, or wear but no creature"
                 )));
             }
         }
@@ -494,6 +527,40 @@ pub fn parse_route(route: &str) -> Result<Vec<Dir>, String> {
         return Err("route is empty".into());
     }
     Ok(steps)
+}
+
+/// What a creature spawned carrying `carry` wears and wields: its `wield` objects, then its
+/// `wear` ones, each the first carried stack of it not yet equipped, in the first free slot it
+/// fits (a second ring on the other hand).
+fn equip(detail: &LegendDetail, carry: &[Stack], content: &Content) -> Result<Equipment, String> {
+    let mut equipment = Equipment::default();
+    for (wields, list) in [(true, &detail.wield), (false, &detail.wear)] {
+        let verb = if wields { "wield" } else { "wear" };
+        for id in list.iter().flat_map(OneOrMany::ids) {
+            let object = content
+                .object_id(id)
+                .ok_or_else(|| format!("{verb}: unknown object `{id}`"))?;
+            let item = (0..carry.len())
+                .find(|&i| carry[i].object == object && !equipment.holds(i))
+                .ok_or_else(|| format!("{verb}s `{id}`, which it does not carry"))?;
+            let slot = equipment::free_slot(content, &equipment, object)
+                .ok_or_else(|| format!("cannot {verb} `{id}`: no free slot fits it"))?;
+            let held = matches!(
+                content.slot(slot).action,
+                ActionKind::Wield | ActionKind::Ready
+            );
+            if held != wields {
+                let (is, other) = if held {
+                    ("wielded, not worn", "wield")
+                } else {
+                    ("worn, not wielded", "wear")
+                };
+                return Err(format!("`{id}` is {is}: use `{other}`"));
+            }
+            equipment.put(&equipment::slots_taken(content, object, slot), item);
+        }
+    }
+    Ok(equipment)
 }
 
 /// A patrol must stay on walkable terrain and loop back to its start.

@@ -80,8 +80,11 @@ this: a kobold war band and a pack of giant rats fight there, and turn on you wh
   carry a light. You never remember where one was.
 - Creatures make noise as they walk (bats fly silently), so you may hear one you cannot see, and
   they hear your steps, doors, and attacks.
-- Some creatures carry [objects](objects.md). You cannot see what they carry, and nothing makes
-  them drop it yet.
+- Some creatures carry [objects](objects.md), and wear or wield some of them: the kobolds of the
+  arena carry spears, their archer a bow and arrows, their shaman an amulet. You see what a
+  creature wears and wields ([look mode](controls.md#look-mode) says it), never what else it
+  carries, and nothing makes them drop or change it yet. It changes nothing in a fight yet
+  ([Equipment](equipment.md)).
 
 ## The creatures
 
