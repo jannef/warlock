@@ -208,8 +208,8 @@ scenario = "forest"
 actions = "skip:330m weather:heavy"
 
 # The overworld (`world` scenario): along the road from the Hall to the bridge over the Wendle,
-# at 12:20 (sunlit, sight radius 9) and after a skip of three days and ten hours to 22:20 on the 14th (cold night light with
-# a nearly full moon on top, sight radius 4).
+# at 12:20 (sunlit, sight radius 9) and after a skip of three days and ten hours to 22:20 on the
+# 14th of Darkening (cold night light with a nearly full moon on top, sight radius 4).
 [[golden]]
 name = "overworld-noon"
 scenario = "world"
