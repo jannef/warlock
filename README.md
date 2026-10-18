@@ -1,5 +1,7 @@
 # Warlock
 
+**Play in your browser: https://jannef.github.io/warlock/** (updated with each release; needs a WebGPU browser and a keyboard)
+
 A turn-based ASCII roguelike in the spirit of ADOM, drawn entirely in glyphs and rendered on the
 GPU: colored light with real shadows, vision that depends on your eyes, gently animated terrain,
 and glyph-based effects — while every character stays crisp and readable.

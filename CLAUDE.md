@@ -417,6 +417,16 @@ screenshot (the Playwright Chromium under `~/Library/Caches/ms-playwright` works
 http://localhost:8080 in a WebGPU browser. CI builds it on pushes to `main` (artifact
 `warlock-web`). There is no command line on the web, so `cli.rs` uses the defaults.
 
+**GitHub Pages** (https://jannef.github.io/warlock/): the `web` job of the `Release` workflow also
+uploads `target/web` plus `LICENSE` as the Pages artifact, and the `pages` job (`environment:
+github-pages`) deploys it on every `v*` tag; a manual run deploys only with the `publish_pages`
+input ticked. The page is `web/index.html` (inline, no external requests, relative asset paths so
+it works under `/warlock/`): top bar with links, the canvas in `#stage` (Bevy's
+`fit_canvas_to_parent` sizes it to that container), fullscreen on `#stage`, a hint footer.
+`cargo xtask web` replaces `@VERSION@` in the page with the workspace version (as
+`release/Info.plist.in` does in the macOS bundle). Keep the canvas id `#warlock-canvas` (the window
+plugin selects it).
+
 **Logs and crash reports** (desktop only): each run writes `warlock-<UTC>.log` (last 5 kept) in
 `<data dir>/warlock/logs` (macOS `~/Library/Application Support/warlock/logs`, Linux
 `~/.local/share/warlock/logs`, Windows `%LOCALAPPDATA%\warlock\data\logs`). A panic writes
