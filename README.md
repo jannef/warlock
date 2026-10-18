@@ -10,10 +10,11 @@ and glyph-based effects — while every character stays crisp and readable.
 
 ![The light hall: colored crystals, pillar shadows, smooth falloff](docs/screenshots/m3-light-hall.png)
 
-This is the engine and framework phase: there is no combat or character progression yet. You walk
-a hand-made **showcase world** where each room demonstrates one capability, an ADOM-like
-**overworld** with day and night, outdoor areas generated from it, a vast lit cavern, and
-procedurally generated dungeon levels.
+This is the engine and framework phase: creatures hunt, shoot, and cast at you, but attacks are only
+announced (nothing takes damage yet), and there is no character progression. You walk a hand-made
+**showcase world** where each room demonstrates one capability, an arena where kobolds and giant
+rats fight, an ADOM-like **overworld** with day and night and weather, outdoor areas generated
+from it, a vast lit cavern, and procedurally generated dungeon levels.
 
 ## What's in it
 
@@ -26,6 +27,18 @@ procedurally generated dungeon levels.
 
   ![The darkness chamber under four kinds of vision](docs/screenshots/m3-darkness-chamber-visions.png)
 
+- **Creatures** — every creature acts at its own pace (some twice for each of your turns, some
+  less; the game never tells you) and belongs to a faction that is hostile or neutral to you and to
+  the others. Hostile creatures see by the same rules of light and eyes as you do, then approach
+  and attack, keep their distance and shoot, or cast from afar, entirely deterministically; when
+  they lose you, they search where they last saw you, follow noises, and return to their rounds.
+
+  ![The arena: kobolds and giant rats fight around a fire pit while an archer shoots](docs/screenshots/m10-arena.png)
+
+- **Hearing** — footsteps, doors, and fights make noise that travels around corners, is muffled by
+  closed doors, and is louder in water and rubble than on grass. You hear what you cannot see as
+  faint marks on the map and short messages ("You hear footsteps to the north-east."), without
+  learning who made them; creatures hear you too and come to look.
 - **Perception and memory** — symmetric line of sight; explored terrain and the objects seen on
   it stay as dim memory, never showing creatures or current light.
 - **Objects** — weapons, armor, tools, potions, scrolls, food, gems, coins, rings, and amulets,
@@ -52,6 +65,13 @@ procedurally generated dungeon levels.
 
   ![The courtyard at midnight and 04:30 under the full moon, by a first-quarter moon with low-light eyes, and at a new moon](docs/screenshots/m12-courtyard-moon.png)
 
+- **Weather** — clear skies, overcast, rain, and heavy rain come and go with the season (Rainmoon is
+  wet, Highsun dry). Clouds dim the sun and the moon and flatten shadows, for you and every
+  creature alike; rain shortens your sight on the overworld, falls as faint drops, and rings the
+  ponds. The status bar shows the weather when you are outside.
+
+  ![The courtyard in rain at noon](docs/screenshots/m12-courtyard-rain.png)
+
 - **Overworld and time** — a 12-month, 30-day calendar and a clock that every action advances.
   "The Wildlands" overworld takes real travel time per step (a road is quick, a swamp slow,
   mountains impassable); how far you see follows the daylight and the moon. Its locations lead to the hub, the
@@ -62,12 +82,13 @@ procedurally generated dungeon levels.
 
   ![A forest clearing in Thornwood at noon](docs/screenshots/m9-forest-clearing.png)
 
-- **Levels** — the hub, a sunlit courtyard, a 420×300 cavern, and "The Depths": rooms-and-corridors
+- **Levels** — the hub, a sunlit courtyard, the arena, a 420×300 cavern, and "The Depths": rooms-and-corridors
   and cave levels generated from the run seed (numbers or words), with hand-made vaults stamped in.
 
   ![A generated level in The Depths](docs/screenshots/m6-depths-rooms.png)
 
-- **Saves** — one save per run, written when you quit and autosaved as you play.
+- **Saves** — one save per run, written when you quit and autosaved as you play (in the browser
+  too).
 - **Settings** — font size, color palettes (including high contrast and a colorblind-friendly
   variant), per-effect switches, and fully rebindable keys.
 - **Everywhere** — Windows, macOS, Linux, and the browser (WebGPU).
@@ -83,7 +104,7 @@ cargo run --release -p warlock
 
 | Key | Action |
 |---|---|
-| `h j k l y u b n`, numpad, arrows | Move (8 directions; arrows move orthogonally) |
+| `h j k l y u b n`, numpad, arrows | Move (8 directions; arrows move orthogonally); moving into a hostile creature attacks it |
 | `.` or numpad 5 | Wait a turn |
 | `o` / `c` + direction | Open / close a door (walking into a closed door opens it) |
 | `>` / `<` | Go down / up stairs |
