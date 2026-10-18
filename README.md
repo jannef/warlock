@@ -96,6 +96,16 @@ cargo run -p warlock-cli -- dump --scenario showcase --actions "move:N move:N" -
 The simulation lives in `warlock-core` (plain Rust, deterministic, no engine); the game is a
 [Bevy](https://bevy.org) 0.20 app on top of it.
 
+## License
+
+Copyright © 2026 Janne Lê Forsell.
+
+Warlock is free software: you can redistribute it and/or modify it under the terms of the
+[GNU General Public License, version 3](LICENSE), as published by the Free Software Foundation.
+It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
+implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the license for
+details.
+
 ## Credits
 
 Font: [JuliaMono](https://github.com/cormullion/juliamono) by cormullion, SIL Open Font License 1.1

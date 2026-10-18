@@ -27,7 +27,8 @@ allow = [
 ]
 
 [licenses.private]
-# Our own crates are unpublished and carry no license yet (spec §14).
+# Our own crates (GPL-3.0-only, see LICENSE) are unpublished; the allow list is for dependencies,
+# which must all be GPL-3.0-compatible.
 ignore = true
 
 [bans]
