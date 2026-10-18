@@ -765,6 +765,8 @@ All through the `gh` CLI:
 - Labels: `area:core`, `area:render`, `area:input`, `area:tools`, `area:ci`, `area:docs`;
   `type:feature`, `type:bug`, `type:chore`.
 - One pull request per issue, referencing it; CI required; squash merge into `main`.
+- The player wiki (`wiki/`, mdBook, published at `/wiki/` on GitHub Pages with each release) is
+  updated in the same PR as any change to gameplay mechanics or world facts.
 
 ## 14. Deferred and open
 

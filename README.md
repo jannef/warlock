@@ -2,6 +2,8 @@
 
 **Play in your browser: https://jannef.github.io/warlock/** (updated with each release; needs a WebGPU browser and a keyboard)
 
+**Read the wiki: https://jannef.github.io/warlock/wiki/** (how time, light, sight, and the overworld work; its source is in [`wiki/`](wiki/))
+
 A turn-based ASCII roguelike in the spirit of ADOM, drawn entirely in glyphs and rendered on the
 GPU: colored light with real shadows, vision that depends on your eyes, gently animated terrain,
 and glyph-based effects — while every character stays crisp and readable.
@@ -82,7 +84,7 @@ cargo run --release -p warlock
 | `Q` | Save and quit |
 
 Symbol keys follow your keyboard layout, so `<`, `>` and `?` work on non-US keyboards. Every key
-can be rebound in Settings.
+can be rebound in Settings. The [wiki](https://jannef.github.io/warlock/wiki/) explains the rules.
 
 ## Develop
 

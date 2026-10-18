@@ -102,6 +102,10 @@ jobs:
       - name: Install binaryen
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends binaryen
       - run: cargo xtask web
+      - name: Install mdBook
+        uses: taiki-e/install-action@v2
+        with:
+          tool: mdbook@0.5.4
       - name: Package
         env:
           REF_NAME: ${{ github.ref_type == 'tag' && github.ref_name || format('dev-{0}', github.run_number) }}
@@ -125,6 +129,10 @@ jobs:
           mkdir -p pages
           cp -r target/web/. pages/
           cp LICENSE pages/
+          # The player wiki, at https://jannef.github.io/warlock/wiki/ (its tables are committed;
+          # CI checks they are fresh).
+          mdbook build wiki
+          cp -r wiki/book pages/wiki
       - uses: actions/upload-pages-artifact@v4
         with:
           path: pages

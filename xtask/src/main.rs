@@ -7,6 +7,7 @@
 //! - `gen-vast [--check]`: regenerate `assets/levels/vast.toml` (`--check` fails if it is stale).
 //! - `licenses [--check]`: regenerate `THIRD_PARTY_LICENSES.html` (needs `cargo-about`).
 //! - `golden [--update | --local]`: compare headless captures with `tests/golden/*.png`.
+//! - `wiki [--check | --build]`: write the player wiki's generated tables (`--build`: run mdBook).
 //! - `bench-frames`: release-mode frame-time measurement of offscreen captures.
 //! - `bench-turns`: release-mode turn-time table for the hub and the vast level.
 
@@ -14,6 +15,7 @@ mod bench;
 mod golden;
 mod licenses;
 mod vast;
+mod wiki;
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode};
@@ -27,11 +29,12 @@ fn main() -> ExitCode {
         Some("gen-vast") => gen_vast(args.get(1).is_some_and(|a| a == "--check")),
         Some("licenses") => licenses::run(args.get(1).is_some_and(|a| a == "--check")),
         Some("golden") => golden::parse_mode(&args[1..]).and_then(golden::run),
+        Some("wiki") => wiki::parse_mode(&args[1..]).and_then(wiki::run),
         Some("bench-turns") => bench_turns(),
         Some("bench-frames") => bench::frames(args.get(1).map_or("2560x1440", String::as_str)),
         _ => {
             eprintln!(
-                "usage: cargo xtask <smoke | web | web-smoke [CHROME] | gen-vast [--check] | licenses [--check] | golden [--update | --local] | bench-turns | bench-frames [WxH]>"
+                "usage: cargo xtask <smoke | web | web-smoke [CHROME] | gen-vast [--check] | licenses [--check] | golden [--update | --local] | wiki [--check | --build] | bench-turns | bench-frames [WxH]>"
             );
             return ExitCode::from(2);
         }

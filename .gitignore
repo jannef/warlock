@@ -1,4 +1,5 @@
 /target
+/wiki/book
 **/*.rs.bk
 .DS_Store
 *.png.new

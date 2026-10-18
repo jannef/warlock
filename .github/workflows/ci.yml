@@ -41,6 +41,15 @@ jobs:
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - name: Test
         run: cargo test --workspace --locked
+      # The player wiki (wiki/, mdBook): its generated tables must be fresh and the book must build.
+      - name: Install mdBook
+        uses: taiki-e/install-action@v2
+        with:
+          tool: mdbook@0.5.4
+      - name: Wiki tables are up to date
+        run: cargo xtask wiki --check
+      - name: Build the wiki
+        run: mdbook build wiki
       # --capture renders offscreen (no window), so no X server is needed; Mesa lavapipe
       # provides a software Vulkan adapter.
       - name: Screenshot smoke test (software Vulkan)
