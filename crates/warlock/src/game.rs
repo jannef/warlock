@@ -66,6 +66,7 @@ impl Game {
     pub fn resumed(store: &SaveStore, content: &Arc<Content>) -> Resume {
         match store.resume(content) {
             Resume::Loaded(mut world) => {
+                info!("resumed the saved run at turn {}", world.turn());
                 world.notice("Welcome back.");
                 Resume::Loaded(world)
             }

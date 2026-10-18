@@ -23,7 +23,7 @@ behavior, commands, or architecture change.
 | Dependency audit | `cargo deny check` |
 | Screenshot smoke test | `cargo xtask smoke` (writes `target/xtask/smoke.png`) |
 | Web build | `cargo xtask web` (writes `target/web/`; see "Releases, web build, logs") |
-| Web smoke test | `cargo xtask web-smoke <chrome>` (serves `target/web`, drives headless Chromium through menu → New run → hub, writes `target/xtask/web-smoke.png`; fails on logged errors) |
+| Web smoke test | `cargo xtask web-smoke <chrome>` (serves `target/web`, drives headless Chromium through menu → New run → hub, waits five turns, reloads, Continue, and checks the run resumed at turn 5; writes `target/xtask/web-smoke.png`; fails on logged errors; not run in CI) |
 | Regenerate the vast level | `cargo xtask gen-vast` (writes `assets/levels/vast.toml`; deterministic, never hand-edit) |
 | Check the vast level is fresh | `cargo xtask gen-vast --check` (fails if the file differs from the generator output; run it after touching `xtask/src/vast.rs`) |
 | Golden screenshots | `cargo xtask golden` (compare; authoritative on Linux only), `--local` (capture to `target/xtask/golden/*.local.png`, no compare), `--update` (rewrite references; see "Golden screenshots") |
@@ -81,6 +81,16 @@ fully lit), `truth` (ground truth, **dev-only**). Replay files are JSON
   builds (always on in debug: F2 reveal map (ground truth), F3 next vision profile, F4 light-value
   overlay, F5/F9 snapshots, F6 skip an hour (recorded as `skip:1h`); all listed by `?`);
   `--save-dir DIR` keeps saves in DIR instead of the platform data dir.
+
+Storage backends (`crates/warlock/src/storage.rs`): `Backend::Dir` (native files, atomic writes) or
+`Backend::Browser` (wasm `localStorage`, keys `warlock/<name>`, e.g. `warlock/run.sav`,
+`warlock/run.sav.bad`, `warlock/snapshots/quick.sav`, `warlock/settings.toml`; bytes base64).
+`SaveStore` and `SettingsStore` hold an `Option<Backend>`; new persistent files go through it, never
+`std::fs` directly. On the web the page-hide save cannot ask the world for a save (a hidden tab runs
+no frames), so `save.rs::web_hooks` keeps a clone of the state after every turn (encoding is
+milliseconds on the vast level) and the `visibilitychange`/`pagehide` listeners encode and write it. Unavailable storage means no saving plus a log
+warning; failed writes (quota) are messages, never panics. Only the `web-sys` features in
+`crates/warlock/Cargo.toml` are enabled (size).
 
 Saves: `Q` saves and quits (closing the window saves too); the game autosaves every 50 turns and on
 level change to `run.sav` in the platform data dir (`paths.rs`, app name "warlock"; macOS

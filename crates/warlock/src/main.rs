@@ -9,6 +9,7 @@ mod paths;
 mod render;
 mod save;
 mod settings;
+mod storage;
 mod ui;
 mod viewport;
 
