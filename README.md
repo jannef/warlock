@@ -112,3 +112,8 @@ details.
 
 Font: [JuliaMono](https://github.com/cormullion/juliamono) by cormullion, SIL Open Font License 1.1
 (`assets/fonts/JuliaMono-OFL.txt`).
+
+Dependencies: Warlock is built on Bevy, wgpu, and several hundred other open-source Rust crates.
+Their copyright notices and license texts are in
+[`THIRD_PARTY_LICENSES.html`](THIRD_PARTY_LICENSES.html) (generated with `cargo xtask licenses`),
+which also ships in every release archive and the web build.

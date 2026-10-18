@@ -63,7 +63,7 @@ jobs:
           if [ "$RUNNER_OS" = "Windows" ]; then exe=".exe"; fi
           mkdir -p "dist/$name"
           cp "target/release/warlock$exe" "target/release/warlock-cli$exe" "dist/$name/"
-          cp release/README.txt LICENSE assets/fonts/JuliaMono-OFL.txt "dist/$name/"
+          cp release/README.txt LICENSE THIRD_PARTY_LICENSES.html assets/fonts/JuliaMono-OFL.txt "dist/$name/"
           if [ "$RUNNER_OS" = "macOS" ]; then
             app="dist/$name/Warlock.app/Contents"
             mkdir -p "$app/MacOS"
@@ -110,6 +110,7 @@ jobs:
           name="warlock-${REF_NAME}-web"
           cp -r target/web "dist/$name"
           cp release/README.txt LICENSE assets/fonts/JuliaMono-OFL.txt "dist/$name/"
+          # target/web already holds THIRD_PARTY_LICENSES.html (copied by `cargo xtask web`).
           (cd dist && zip -r -q "$name.zip" "$name")
           rm -rf "dist/$name"
           ls -l dist
