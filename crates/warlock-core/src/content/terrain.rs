@@ -2,6 +2,7 @@
 
 use super::anim::GlyphAnim;
 use super::light::LightId;
+use super::overworld::Landscape;
 use super::particles::ParticleEmitter;
 use crate::color::Rgb;
 use serde::{Deserialize, Serialize};
@@ -46,6 +47,9 @@ pub(super) struct TerrainSpec {
     /// Overworld terrain: the ground of the local area entered from it (`>` on the cell); none
     /// means the cell has no local area.
     pub local: Option<String>,
+    /// Overworld terrain: what its land is like in local areas (the generator of its own local
+    /// areas, or what it adds to its neighbors').
+    pub landscape: Option<Landscape>,
     /// For a closed door: the terrain it becomes when opened.
     pub opens_to: Option<String>,
     /// For an open door: the terrain it becomes when closed.
@@ -102,6 +106,9 @@ pub struct TerrainDef {
     /// Overworld terrain: the ground of the local area entered from a cell of it; `None` if such
     /// cells have no local area (roads have one; bridges and locations do not).
     pub local: Option<TerrainId>,
+    /// Overworld terrain: what its land is like in local areas. Every terrain with a `local`
+    /// ground has a land or road landscape.
+    pub landscape: Option<Landscape>,
     pub opens_to: Option<TerrainId>,
     pub closes_to: Option<TerrainId>,
     pub stairs: Option<StairsDir>,

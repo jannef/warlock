@@ -1,0 +1,17 @@
+# Outdoor vault (spec §7): the stump of a round watchtower, its wall broken open to the south and
+# east, rubble on the flagstones inside. Spaces take the local area's own ground.
+name = "Ruined tower"
+kind = "outdoor"
+map = '''
+   #####
+ ##,...,##
+#,.......##
+#.........,
+#,.......,
+ ##.....##
+   ##,. #
+'''
+
+[legend]
+"." = "flagstones"
+"," = "rubble"

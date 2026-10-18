@@ -206,11 +206,12 @@ fn stamped_at(level: &LevelTemplate, vault: &Vault) -> Vec<Pos> {
 
 #[test]
 fn vaults_are_stamped_verbatim_with_their_lights_and_creatures() {
-    let mut seen = vec![0; CONTENT.vaults().len()];
+    let vaults: Vec<&Vault> = CONTENT.vaults().iter().collect();
+    let mut seen = vec![0; vaults.len()];
     for seed in 0..10 {
         for depth in 1..=8 {
             let level = level(seed, depth);
-            for (i, vault) in CONTENT.vaults().iter().enumerate() {
+            for (i, vault) in vaults.iter().enumerate() {
                 for at in stamped_at(&level, vault) {
                     seen[i] += 1;
                     let shift = |p: Pos| Pos::new(at.x + p.x, at.y + p.y);
@@ -231,7 +232,12 @@ fn vaults_are_stamped_verbatim_with_their_lights_and_creatures() {
             }
         }
     }
-    for (vault, count) in CONTENT.vaults().iter().zip(&seen) {
-        assert!(*count > 0, "vault `{}` never placed", vault.id());
+    // Dungeons get every dungeon vault and never the ruins meant for the overworld's local areas.
+    for (vault, count) in vaults.iter().zip(&seen) {
+        if vault.is_outdoor() {
+            assert_eq!(*count, 0, "outdoor vault `{}` in a dungeon", vault.id());
+        } else {
+            assert!(*count > 0, "vault `{}` never placed", vault.id());
+        }
     }
 }

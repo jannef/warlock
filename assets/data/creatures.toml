@@ -41,3 +41,10 @@ offset = [0.2, -0.4]
 area = [0.15, 0.0]
 scale = 0.5
 glow = 0.5
+
+# Grazing in the meadows and woods of the overworld's local areas.
+[[creature]]
+id = "deer"
+name = "deer"
+glyph = "d"
+fg = "#c89a64"

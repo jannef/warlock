@@ -1,0 +1,48 @@
+---
+source: crates/warlock-core/src/mapgen/local/tests.rs
+expression: "describe(&area(1, 25, 20))"
+---
+Forest (local:25,20) 80x40
+edges -> overworld at (25, 20)
+deer at (74, 23) route N N E W E W S S
+0 placed lights, flow speeds {}
+..........PPPP.....PPP.bb.TTTTTTTTTTPPPTTTT......b,,,,,,,*******,,,,,,,,,,.TTTTT
+,,,,,,,,,......,,,..PPP..bTTTTTTTTTTTTTTTTTTTTbTT.b,,,****,,,,,,,,,,,,,,,,.TTTTT
+,,,,,,,,,,,,,,,,,,,,..T....b...TTTTTTTTTTTTTT....T.....,,,,,,,,,,,,,,.....TTTT.T
+,,,,,,,,,,,,,,,,,,,,,,...T.TTTTTTTTTTTTTTTTTTTTTTT..T..T..,,,,,,,%.%b%TTTTTTTTbT
+,,,,,,,,,,,,,,,,,,,,.b.TTTTTTTTTTTTTTTTTTTTTTTTTPPPPPTTTTT...........bTTTT..T..T
+*,,,,,,,,,,,,,,,,...TTTTTTTTTTTTTTTTTTTTTTTTTTPPPPPPP...TT..T....,,,..TTT.......
+..,,,,,,,,,,,,,,...bTTTTTTTTTTTTTTT.b..TTTTTTTPPPPP....TTTT.TTT..**,,....b...,,,
+,,,,,,,,,,,,,,,,,..T.TTTTTTTTTTTT....TTT.TT..bTPPPPPTTb....b...T.....PPPPP...,,,
+,,,,,,,,,,,,,,,,,,...PPTTTTTTTTTPbT..b...........TTTT.%..b..T...TTTPPP..........
+,,,,,,,,,,,,,***,,%b.PPPTTTTTTTTbb..b.TTTTT..b.....%.....bTbTTTTTTTPP.,,,,,.....
+....,,,,,,,,,,,,,,..%.bbPPPPTTTTT...b.TTTTTTTT%TT..T.TTTTTTTTTTTTTTPP..,,,.....P
+.TTT.Tb.,,,,,,,,,*,b......PPPPTPPPP.....TTTTTT...TTbb.TTTTTTTTTT..TPPPPbb.PPPP.P
+.T....TT.b...,,,,,*.b.P%...bb.PPPPPP....PPPPPTTTTT.TT.bTTTTTTTTTT..b.PPPT.%.PPbP
+T.bTb.TTTTb..,,,,.....T..PPb..PPPPPPPPPPPPPPPTTT..%..bTTTTTTTTTTTbTP..b..PPP.P..
+...TTTTTTT...,,,..TTTTTTTTTTPPTTTP.PPPPPPPPPPTb.%....TTTTTTTTTTT..,,,,.....,,,,,
+TTT...%TTb..,,,,.b.b...TTTTTTTTTT...%PPPPPPP...T%Tb%%bTTTTTTTTTT.,,,,,.o...,,,,,
+TT....%...,,,,,,,...%.T.T..TTTTTTT.P,,,,PP,,,T..TT.T.TTTTTTTTTTTT.,,,,b....,,,,,
+TT.TTT.,,,,,,,,,,,,,..T..T.TTTTTTT*,,,,,,,PT.Tb.,,.TTTTTTTTTTT............b...,,
+TTTT%,,,,,,,,,,,,,,,,...%%%TTTT*,,,,,,*,,,,,*,.TTT,TTTTTTTTPPPP..bPb..T...b.b.TP
+..,,,,,,,,,,,,,,,,,,,,...T.,,****,,,,,*,,,,,,,,,.T,..TbTTTPPPPP...PPPP.b....T.TP
+,,,,,,*,,,,.%b.,,,,,,,,,,,,,,,,,,,,,,,,,@,,,,,,..TTT...TTTPPPPPP.PPPP.b.%%TTTTTP
+,,,,,****,bPPPb.,,,,,,,,*,,***,,*,,,,,,,,,,,,,,,,.T.....T..PPPPPPPPTTT.T.b%.PP.T
+,,,,,***,%TTTTT.,,,,,,,,,,,,**,,,,,,,,,,,,,,,,%,,T.b..Tb..PPPPPPPPTTTT.TTb.b....
+,,,..b..TbTTTT.Pb,,,,,,.,,,,,,,,,,,,,,,,,,,,,,PPPPPP.PPP....PPPPPPTTb..TTTdb.TTT
+.TT...b...TTPP..Pb....PPT......,,,,,**,,,,,,,,,PPPPPPPPP.PPPP.........TTTTTT.TTT
+.TTTTb.b.b.TTT..P....b....b......,,,,**......PPPPPPPPPPPPPP..b..TTTTT.TTTTTTTTTT
+T.b..b...b..TT.b.bP...PP.b..TT.PPPPPTT.........%PPPPPPPPTT..Tb.TTTTTT...PPTTTTTT
+TTT..TT....bTTT.....PP.......TTTTTT..TT....,,...PPPPPPTTTTT..TTT.......PPPTTTTTT
+TTTTTTTT.TT.....T...TTTTTTT...T....bTTTT........bP.PTTTTTTTTTTTTTP.....PPPPPPTTT
+TTTT.TTT...TTTT.bb..TTTTTTTTTbb...T..TT..,,,,...b.bPTTTTTTTTTTTb..PPb.....PPPTTT
+b...b....TTTTTTT...TTTTTTTTTTTTT.TTT....,,,,,..b.bPPTTTTTTTTTTTTbT..PPPP.P...TTP
+..bTT.b.Tb.TTTTTTTTTTTTTTTTTTTTT..T.............PPPPTTTTTTTT...b.bbbPPPP.....TTT
+,,....b.......TTTTTTTTTTTTTTTTTT...,,,,.TTT..bTTTTTTTTTTTTT...TT...bP.b.PP......
+*,,,,,,...bTTTTTTTTTTTTTTTTTTTTb..,,,,,.PT....TT.TTTTTTTTPPP.......bPb.b....TTbT
+,,,,,,...bTTTTTTTTTTTTTTTTT.b..bb...,,,.b....T....TTTTTPPPP.......PPP....PPPPPTT
+,,,..TTTT..TTTbbTTTTTTTTTTTT.T.....T..............TTTTT.P.b.b.b..bPPP.....PPTTTT
+%%%T%TT%.....bb.TT..TTTTTTTTTTT.T.TTTPPb.,,,,,,.....TTT...PP..PPPPPPP..,,.bTTTTT
+%..bTTTTTTTTTTTTTTT.TTTT.TTTTTTbT........,,,,,...TT.T.....PPPPPPPPPPP.,,,.PPTTTT
+b.TTT...T...........PPPP%bTTTTTTT.,,,,,,,.b...............TPPPTTTTTT..,,,.PPPPPT
+......bbb..P.b....Pb.PPPP%%.....,,,,*,,,,..........bTTT.P.PPPPPPTTb...,,,,.TPPPP

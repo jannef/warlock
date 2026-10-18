@@ -1,0 +1,19 @@
+# Outdoor vault (spec §7): the walls of a roofless chapel, pillars still standing in the nave, an
+# altar at its east end that glows faintly at night. Grass grows through the flagstones. Spaces
+# take the local area's own ground.
+name = "Ruined chapel"
+kind = "outdoor"
+map = '''
+ ####  ### ###
+ #,.."...,...##
+   #...#...#..#
+.........".._.#
+   #...#...#..#
+ #,..."..,...##
+ ###  #### ###
+'''
+
+[legend]
+"." = "flagstones"
+"," = "rubble"
+'"' = "tall_grass"
