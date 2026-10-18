@@ -58,12 +58,18 @@ struct EnvelopeIn {
 
 /// Serializes the world's state into save bytes.
 pub fn encode(world: &World) -> Vec<u8> {
+    encode_state(world.state(), world.content().fingerprint())
+}
+
+/// Serializes a state (for example a clone taken earlier) with the content fingerprint of the
+/// content it was played with.
+pub fn encode_state(state: &WorldState, content_fingerprint: u64) -> Vec<u8> {
     let envelope = EnvelopeOut {
         magic: MAGIC,
         format_version: FORMAT_VERSION,
         game_version: crate::GAME_VERSION,
-        content_fingerprint: world.content().fingerprint(),
-        state: world.state(),
+        content_fingerprint,
+        state,
     };
     let mut gz = GzEncoder::new(Vec::new(), Compression::default());
     // The state is plain data with string-keyed maps, and writing to a Vec cannot fail, so these
@@ -135,6 +141,13 @@ mod tests {
         let w = world();
         let restored = decode(&encode(&w), content()).expect("decode");
         assert_eq!(restored.state(), w.state());
+    }
+
+    #[test]
+    fn encode_state_matches_encode() {
+        let w = world();
+        let parked = (w.state().clone(), w.content().fingerprint());
+        assert_eq!(encode_state(&parked.0, parked.1), encode(&w));
     }
 
     #[test]

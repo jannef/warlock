@@ -179,8 +179,9 @@ impl Plugin for SavePlugin {
 }
 
 /// The web build also saves when the page is hidden or closed. A hidden tab runs no frames, so a
-/// system cannot do it: after each turn the current run is encoded and parked in
-/// `storage::web`, and the `visibilitychange`/`pagehide` listeners write those bytes out.
+/// system cannot do it: after each turn a copy of the state (cheap; encoding is not, on big
+/// levels) is parked in `storage::web`, and the `visibilitychange`/`pagehide` listeners encode and
+/// write it.
 #[cfg(target_arch = "wasm32")]
 mod web_hooks {
     use super::*;
@@ -205,7 +206,10 @@ mod web_hooks {
             game.world.perception().level_name().to_string(),
         );
         if last.as_ref() != Some(&key) {
-            web::set_pending(Some(save::encode(&game.world)));
+            web::set_pending(Some((
+                game.world.state().clone(),
+                game.world.content().fingerprint(),
+            )));
             *last = Some(key);
         }
     }

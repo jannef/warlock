@@ -87,8 +87,8 @@ Storage backends (`crates/warlock/src/storage.rs`): `Backend::Dir` (native files
 `warlock/run.sav.bad`, `warlock/snapshots/quick.sav`, `warlock/settings.toml`; bytes base64).
 `SaveStore` and `SettingsStore` hold an `Option<Backend>`; new persistent files go through it, never
 `std::fs` directly. On the web the page-hide save cannot ask the world for a save (a hidden tab runs
-no frames), so `save.rs::web_hooks` parks the encoded run after every turn and the
-`visibilitychange`/`pagehide` listeners write it. Unavailable storage means no saving plus a log
+no frames), so `save.rs::web_hooks` keeps a clone of the state after every turn (encoding is
+milliseconds on the vast level) and the `visibilitychange`/`pagehide` listeners encode and write it. Unavailable storage means no saving plus a log
 warning; failed writes (quota) are messages, never panics. Only the `web-sys` features in
 `crates/warlock/Cargo.toml` are enabled (size).
 

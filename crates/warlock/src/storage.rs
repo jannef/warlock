@@ -143,6 +143,7 @@ pub mod web {
 
     use std::cell::{Cell, RefCell};
     use std::io;
+    use warlock_core::world::WorldState;
     use wasm_bindgen::JsCast;
     use wasm_bindgen::closure::Closure;
 
@@ -183,20 +184,25 @@ pub mod web {
     }
 
     thread_local! {
-        /// The run save as of the last turn, encoded and waiting for the page to be hidden. Frames
-        /// stop running in a hidden tab, so the listener cannot ask the world for a save; it
-        /// flushes these bytes instead (encoding is well under a millisecond).
-        static PENDING: RefCell<Option<Vec<u8>>> = const { RefCell::new(None) };
+        /// The run's state (and content fingerprint) as of the last turn, waiting for the page to
+        /// be hidden. Frames stop running in a hidden tab, so the listener cannot ask the world
+        /// for a save; it encodes and writes this copy instead. Only the clone is made per turn:
+        /// encoding costs milliseconds on big levels.
+        static PENDING: RefCell<Option<(WorldState, u64)>> = const { RefCell::new(None) };
         static HOOKED: Cell<bool> = const { Cell::new(false) };
     }
 
-    /// Replaces (or with `None` clears) the bytes written when the page is hidden or closed.
-    pub fn set_pending(bytes: Option<Vec<u8>>) {
-        PENDING.with(|p| *p.borrow_mut() = bytes);
+    /// Replaces (or with `None` clears) the state saved when the page is hidden or closed.
+    pub fn set_pending(state: Option<(WorldState, u64)>) {
+        PENDING.with(|p| *p.borrow_mut() = state);
     }
 
     fn flush(run_file: &str) {
-        let Some(bytes) = PENDING.with(|p| p.borrow().clone()) else {
+        let Some(bytes) = PENDING.with(|p| {
+            p.borrow()
+                .as_ref()
+                .map(|(state, fingerprint)| warlock_core::save::encode_state(state, *fingerprint))
+        }) else {
             return;
         };
         if let Err(e) = set(run_file, &super::encode_base64(&bytes)) {
