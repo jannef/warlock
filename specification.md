@@ -680,7 +680,7 @@ rate or animation.
   faction's stance toward them, the only faction information presentation gets), terrain,
   remembered terrain, where stairs lead, and a sound heard there ("You hear footsteps here.").
 - Screen layout: map viewport, message log, status panel (level, region (on the overworld and in
-  its local areas), time of day and date as `14:32 · 12 Rainmoon, Year 1`, the moon's phase as a
+  its local areas), time of day and date as `14:32 · 12 Rainmoon, Year 1444`, the moon's phase as a
   glyph and its name (`◑ First quarter`; with several moons each moon's name and glyph, `Moon ●
   Ilse ☽`), the weather under the open sky (`Clear`, `Overcast`, `Rain`, `Heavy rain`; §5
   "Weather"), turn, position, light at the player, vision profile, lantern, seed). The phase glyph
@@ -872,7 +872,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   dungeon vaults, local areas only outdoor ones.
 - **Scenarios** (`assets/scenarios/*.toml`): level set, start position, vision profile, lantern,
   options, when the run starts: `start_date = [year, month, day]` (all from 1; default
-  `[1, 1, 1]`) and `start_time = "hh:mm"` (default `"08:00"`), and the player's stats: `stats`
+  `[1444, 11, 11]`, 11 Darkening, Year 1444) and `start_time = "hh:mm"` (default `"08:00"`), and the player's stats: `stats`
   and `potential` as for creature types (default 10 each, the potential the score). The
   showcase's player has St 12 Dx 14 To 11 In 13 Wi 9 Pr 10 (potentials 15, 17, 14, 16, 13, 12).
 - **Saves**: suspend-only. One save per run, written on quit and by periodic autosave; loading

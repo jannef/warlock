@@ -922,8 +922,8 @@ fn creature_sight_matches_the_players_under_the_sun_and_the_moon() {
         ("courtyard", "skip:5h wait"),
         ("courtyard", "skip:14h wait lantern"),
         // The night of the full moon: moonlight and moon shadows.
-        ("courtyard", "move:E*20 skip:353h skip:28m wait"),
-        ("forest", "skip:353h skip:30m wait"),
+        ("courtyard", "move:E*20 skip:113h skip:28m wait"),
+        ("forest", "skip:113h skip:30m wait"),
         ("world", "wait"),
         ("world", "skip:10h wait"),
         ("forest", "wait"),

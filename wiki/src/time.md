@@ -6,12 +6,12 @@ is saved with it. Nothing depends on real-world time.
 ## Days
 
 A day has 24 hours, as usual. The [status bar](controls.md#the-screen) shows the time, the date,
-and the phase of the moon like this: `14:32 · 12 Rainmoon, Year 1 · ◑ First quarter`.
+and the phase of the moon like this: `14:32 · 12 Rainmoon, Year 1444 · ◑ First quarter`.
 
 - **Dawn** is at 06:00 and **dusk** is at 18:00. The sun rises at dawn and sets at dusk; see
   [Sun, moon, and sky](sun.md).
-- A new run starts at a time set by its scenario. The default is 08:00 on the first day of the
-  first month of year 1.
+- A new run starts at a time set by its scenario. The default is 08:00 on the 11th day of the
+  eleventh month (Darkening) of year 1444, unless a scenario sets another date.
 
 ## The calendar
 

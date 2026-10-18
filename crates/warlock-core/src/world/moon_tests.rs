@@ -253,7 +253,7 @@ fn moonlight_is_deterministic_and_replays_verify() {
     // The built-in courtyard on the night of the full moon.
     let content = Arc::new(Content::builtin().expect("builtin content"));
     let actions = crate::action::parse_actions(
-        "skip:353h skip:30m move:E move:E move:SE rest:1h move:E skip:3h move:W rest:dawn",
+        "skip:113h skip:30m move:E move:E move:SE rest:1h move:E skip:3h move:W rest:dawn",
     )
     .expect("actions parse");
     let mut a = World::new(content.clone(), "courtyard", None).expect("courtyard");

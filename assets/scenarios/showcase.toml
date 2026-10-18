@@ -5,8 +5,7 @@ seed = 1
 # The player's eyes (data/vision.toml) and lantern (data/lights.toml; starts unlit).
 vision = "normal"
 lantern = "lantern"
-# When the run starts: [year, month, day] (months in data/calendar.toml) and hh:mm.
-start_date = [1, 1, 1]
+# The start time (hh:mm); the date is the default, 11 Darkening 1444 (data/calendar.toml).
 start_time = "08:00"
 # The player's stats: scores by stat (strength, dexterity, toughness, intelligence, willpower,
 # presence; 1 to 40, default 10, the average), and potential, how far each score could grow

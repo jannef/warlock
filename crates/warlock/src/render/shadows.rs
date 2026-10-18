@@ -444,7 +444,7 @@ mod tests {
 
     #[test]
     fn the_player_casts_a_moon_shadow_on_the_night_of_the_full_moon() {
-        // The courtyard scenario starts on the 1st at 06:30; the moon is full at midnight on the
+        // The courtyard scenario starts on the 11th at 06:30; the moon is full at midnight on the
         // 16th, high in the south (shadows due north, short), and in the east at 21:00 (west).
         // Under a clear sky (clouds would dim the moon below what normal eyes see).
         let shadow_of = |skip: &str| {
@@ -462,8 +462,8 @@ mod tests {
                 .collect();
             cells
         };
-        assert_eq!(shadow_of("skip:353h skip:29m"), [(0, -1)]);
-        let evening = shadow_of("skip:350h skip:29m");
+        assert_eq!(shadow_of("skip:113h skip:29m"), [(0, -1)]);
+        let evening = shadow_of("skip:110h skip:29m");
         assert!(
             !evening.is_empty() && evening.iter().all(|&(dx, _)| dx < 0),
             "{evening:?}"

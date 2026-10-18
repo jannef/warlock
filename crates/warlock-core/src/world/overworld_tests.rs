@@ -619,9 +619,9 @@ fn the_sky_lights_the_overworld_and_local_areas_by_day_only() {
 
 #[test]
 fn moonlight_widens_night_sight_on_the_overworld_and_lights_local_areas() {
-    // The world scenario starts on the 14th of the month: two days later the moon is full.
+    // The world scenario starts on the 11th of the month: three days later the moon is full.
     let mut world = world();
-    world.apply(&Action::SkipTime(Duration::hours(14)));
+    world.apply(&Action::SkipTime(Duration::hours(86)));
     assert_eq!((world.time().day(), world.time().hour()), (14, 22));
     let view = world.perception();
     let sky = view.sky().expect("under the open sky");

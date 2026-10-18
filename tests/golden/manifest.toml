@@ -192,7 +192,7 @@ actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:E*2 move:NE a
 [[golden]]
 name = "courtyard-full-moon"
 scenario = "courtyard"
-actions = "move:E*20 skip:353h skip:28m weather:clear"
+actions = "move:E*20 skip:113h skip:28m weather:clear"
 
 # Weather (spec §5 "Weather", §4.8): the courtyard at noon in rain (duller, flatter light, faint
 # shadows, sparse slanted drops, splashes, rings on the pond) and the forest glade at noon in heavy
@@ -208,7 +208,7 @@ scenario = "forest"
 actions = "skip:330m weather:heavy"
 
 # The overworld (`world` scenario): along the road from the Hall to the bridge over the Wendle,
-# at 12:20 (sunlit, sight radius 9) and after a skip to 22:20 on the 14th (cold night light with
+# at 12:20 (sunlit, sight radius 9) and after a skip of three days and ten hours to 22:20 on the 14th (cold night light with
 # a nearly full moon on top, sight radius 4).
 [[golden]]
 name = "overworld-noon"
@@ -218,7 +218,7 @@ actions = "move:E*2 move:NE move:E*6 move:NE move:E*3 weather:clear"
 [[golden]]
 name = "overworld-night"
 scenario = "world"
-actions = "move:E*2 move:NE move:E*6 move:NE move:E*3 skip:10h weather:clear"
+actions = "move:E*2 move:NE move:E*6 move:NE move:E*3 skip:82h weather:clear"
 
 # A forest clearing at noon (#55): along the road west into the Thornwood and north onto a forest
 # cell, `>` into its local area (arriving on its south side), back out, and `>` again into the

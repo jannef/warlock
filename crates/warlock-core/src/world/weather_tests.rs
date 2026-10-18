@@ -185,7 +185,7 @@ fn clouds_dim_the_sun_the_sky_and_the_moon() {
 
     // The full moon at midnight: each moon shines less, and so the moonlight.
     let mut w = world("courtyard");
-    run(&mut w, "skip:353h skip:30m");
+    run(&mut w, "skip:113h skip:30m");
     let mut last = u16::MAX;
     for weather in Weather::ALL {
         w.apply(&Action::SetWeather(weather));
