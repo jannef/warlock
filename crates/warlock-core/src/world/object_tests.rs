@@ -43,6 +43,14 @@ const DOOR: Pos = Pos::new(6, 2);
 
 fn content() -> Arc<Content> {
     let mut files = ContentFiles::builtin();
+    // At peace: the kobold only carries objects here; it neither hunts the player nor blocks them.
+    files.insert(
+        "data/factions.toml",
+        "[[faction]]\nid = \"player\"\nname = \"you\"\n\
+         [[faction]]\nid = \"vermin\"\nname = \"vermin\"\n\
+         [[faction]]\nid = \"kobolds\"\nname = \"kobolds\"\n\
+         [[faction]]\nid = \"wildlife\"\nname = \"wildlife\"\n",
+    );
     files.insert("levels/store.toml", LEVEL);
     files.insert(
         "scenarios/store.toml",

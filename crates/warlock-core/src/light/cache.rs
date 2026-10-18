@@ -95,6 +95,15 @@ impl Mask {
             && self.origin.y - r <= max.y
     }
 
+    /// The light the source adds at `p`; `None` where it adds none (the cells are row-major, so
+    /// this is a binary search).
+    pub fn at(&self, p: Pos) -> Option<Light> {
+        self.cells
+            .binary_search_by(|(q, _)| (q.y, q.x).cmp(&(p.y, p.x)))
+            .ok()
+            .map(|i| self.cells[i].1)
+    }
+
     fn is_for(&self, source: &Source) -> bool {
         self.origin == source.pos && self.preset == source.preset
     }

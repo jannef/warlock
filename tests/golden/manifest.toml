@@ -81,6 +81,19 @@ name = "darkness-chamber-darkvision"
 scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 move:E*6 move:S*2 vision:darkvision"
 
+# The arena (spec §3, factions and creature behavior): watched from the dark south-west corner.
+# After four turns the kobold war band and the giant rats meet at the fire pit; after twelve the
+# fight is on, and the frozen moment shows the archer's shot in flight and the shaman's sparkle.
+[[golden]]
+name = "arena"
+scenario = "arena"
+actions = "wait*4"
+
+[[golden]]
+name = "arena-shot"
+scenario = "arena"
+actions = "wait*12"
+
 # A generated level (rooms generator, The Depths 1) from the scenario's fixed seed.
 [[golden]]
 name = "depths-1"

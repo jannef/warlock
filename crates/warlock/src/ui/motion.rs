@@ -1,11 +1,11 @@
-//! Motion and time (spec §4.6): creatures slide between cells and the map camera eases toward
-//! its target.
+//! Motion and time (spec §4.6): creatures slide between cells, lunge at what they attack in
+//! melee, and the map camera eases toward its target.
 //!
 //! Motion starts from the turn's perceived events (`Outcome.events`) and is a pure function of
 //! visual time. A creature quicker than the player can step several times in one turn; its steps
-//! make one slide along the cells it passed. Any new input completes running motion instantly, so
-//! fast play never waits. With the `motion` effect off or frozen visual time (`--freeze-time`),
-//! all motion is instant.
+//! make one slide along the cells it passed. A melee attack is a short lunge toward the target
+//! and back. Any new input completes running motion instantly, so fast play never waits. With the
+//! `motion` effect off or frozen visual time (`--freeze-time`), all motion is instant (no lunges).
 
 use super::{camera_origin, map_area};
 use crate::game::Game;
@@ -13,11 +13,18 @@ use crate::render::console::Console;
 use crate::render::{ConsoleLayout, Effects, VisualTime};
 use bevy::prelude::*;
 use warlock_core::world::ActorId;
-use warlock_core::{Event, Pos};
+use warlock_core::{AttackKind, Event, Pos};
 
 /// How long a slide (and a camera move) takes, in seconds of visual time. The camera uses the
 /// same duration and curve, so a sliding player stays put on screen while the map scrolls.
 pub const SLIDE_SECONDS: f32 = 0.08;
+
+/// How long a lunge takes, out and back, in seconds of visual time.
+pub const LUNGE_SECONDS: f32 = 0.16;
+/// How far toward its target a lunging creature reaches, in cells.
+const LUNGE_REACH: f32 = 0.22;
+/// The share of a lunge spent going out; the rest eases back.
+const LUNGE_OUT: f32 = 0.35;
 
 /// Ease-out cubic over `[0, 1]`: a fast start and a gentle stop.
 pub fn ease_out(x: f32) -> f32 {
@@ -91,6 +98,59 @@ impl Slide {
     }
 }
 
+/// A creature lunging at what it attacks in melee: a short reach toward it and back.
+#[derive(Clone, Debug, PartialEq)]
+struct Lunge {
+    actor: ActorId,
+    /// Where it attacked from; the lunge shows only while it stands there.
+    from: Pos,
+    /// The way to its target, [`LUNGE_REACH`] long.
+    reach: Vec2,
+    start: f32,
+}
+
+impl Lunge {
+    /// How far out it is at `time`: quickly out, then eased back.
+    fn offset(&self, time: f32) -> Vec2 {
+        let x = (time - self.start) / LUNGE_SECONDS;
+        let out = match x {
+            x if !(0.0..1.0).contains(&x) => 0.0,
+            x if x < LUNGE_OUT => ease_out(x / LUNGE_OUT),
+            x => 1.0 - ease_out((x - LUNGE_OUT) / (1.0 - LUNGE_OUT)),
+        };
+        self.reach * out
+    }
+
+    fn is_done(&self, time: f32) -> bool {
+        time - self.start >= LUNGE_SECONDS
+    }
+}
+
+/// The lunges a turn's `events` start at `now`: one for each melee attack (the last per actor).
+fn lunges(events: &[Event], now: f32) -> Vec<Lunge> {
+    let mut lunges: Vec<Lunge> = Vec::new();
+    for event in events {
+        if let &Event::Attacked {
+            attacker,
+            kind: AttackKind::Melee,
+            from,
+            to,
+            ..
+        } = event
+        {
+            lunges.retain(|l| l.actor != attacker);
+            let way = Vec2::new((to.x - from.x) as f32, (to.y - from.y) as f32);
+            lunges.push(Lunge {
+                actor: attacker,
+                from,
+                reach: way.normalize_or_zero() * LUNGE_REACH,
+                start: now,
+            });
+        }
+    }
+    lunges
+}
+
 /// The slides a turn's `events` start at `now`: for each actor, its last run of one-cell steps,
 /// if it ends where the actor now stands (`standing`; `None` if not seen). Several steps in a row
 /// make one slide; a jump or a level change starts over.
@@ -131,10 +191,11 @@ fn slides(events: &[Event], now: f32, standing: impl Fn(ActorId) -> Option<Pos>)
         .collect()
 }
 
-/// Running motion: creature slides and the camera.
+/// Running motion: creature slides and lunges, and the camera.
 #[derive(Resource, Debug, Default)]
 pub struct Motion {
     slides: Vec<Slide>,
+    lunges: Vec<Lunge>,
     camera: Option<Ease>,
     /// The turn whose events started the current slides.
     turn: Option<u64>,
@@ -143,10 +204,16 @@ pub struct Motion {
 impl Motion {
     /// Where a creature standing at `pos` is drawn at `time`, in level cells.
     pub fn actor_pos(&self, actor: ActorId, pos: Pos, time: f32) -> Vec2 {
-        self.slides
+        let at = self
+            .slides
             .iter()
             .find(|s| s.actor == actor && s.to() == pos)
-            .map_or(cell(pos), |s| s.at(time))
+            .map_or(cell(pos), |s| s.at(time));
+        let lunge = self
+            .lunges
+            .iter()
+            .find(|l| l.actor == actor && l.from == pos);
+        at + lunge.map_or(Vec2::ZERO, |l| l.offset(time))
     }
 
     /// The level position (in cells, fractional while easing) at the map viewport's top-left.
@@ -168,6 +235,7 @@ impl Motion {
     /// Completes all running motion instantly.
     fn complete(&mut self) {
         self.slides.clear();
+        self.lunges.clear();
         if let Some(camera) = &mut self.camera {
             *camera = Ease::still(camera.to);
         }
@@ -231,11 +299,15 @@ pub(super) fn track(
                 // Only creatures seen where their last step took them slide.
                 let standing = |id| view.actors().iter().find(|a| a.id == id).map(|a| a.pos);
                 motion.slides = slides(events, now, standing);
+                motion.lunges = lunges(events, now);
             }
         }
     }
     if motion.slides.iter().any(|s| s.is_done(now)) {
         motion.slides.retain(|s| !s.is_done(now));
+    }
+    if motion.lunges.iter().any(|l| l.is_done(now)) {
+        motion.lunges.retain(|l| !l.is_done(now));
     }
     if let Some(area) = map_area(console.cols() as i32, console.rows() as i32) {
         let viewer = view.viewer();
@@ -356,6 +428,52 @@ mod tests {
         let after = slides(&events, 0.0, standing);
         assert_eq!(after.len(), 1);
         assert_eq!(after[0].path, [Pos::new(6, 5), Pos::new(7, 6)]);
+    }
+
+    #[test]
+    fn melee_attacks_lunge_toward_the_target_and_back() {
+        let attack = |attacker, kind, from: (i32, i32), to: (i32, i32)| Event::Attacked {
+            attacker: ActorId(attacker),
+            target: ActorId(9),
+            kind,
+            from: Pos::new(from.0, from.1),
+            to: Pos::new(to.0, to.1),
+        };
+        let events = [
+            attack(3, AttackKind::Melee, (4, 4), (5, 3)),
+            // Shots and spells do not lunge.
+            attack(4, AttackKind::Ranged, (1, 1), (6, 1)),
+            attack(5, AttackKind::Spell, (2, 2), (6, 2)),
+        ];
+        let mut motion = Motion {
+            lunges: lunges(&events, 1.0),
+            ..Motion::default()
+        };
+        assert_eq!(motion.lunges.len(), 1);
+        let at = Pos::new(4, 4);
+        let actor = ActorId(3);
+        assert_eq!(motion.actor_pos(actor, at, 1.0), Vec2::new(4.0, 4.0));
+        // Out toward the north-east, a fraction of a cell, then back.
+        let out = motion.actor_pos(actor, at, 1.0 + LUNGE_SECONDS * LUNGE_OUT);
+        assert!(out.x > 4.1 && out.y < 3.9, "{out}");
+        assert!((out - Vec2::new(4.0, 4.0)).length() <= LUNGE_REACH + 1e-4);
+        let back = motion.actor_pos(actor, at, 1.0 + LUNGE_SECONDS * 0.8);
+        assert!(back.x < out.x && back.x > 4.0, "{back}");
+        assert_eq!(
+            motion.actor_pos(actor, at, 1.0 + LUNGE_SECONDS),
+            Vec2::new(4.0, 4.0)
+        );
+        // Only where it attacked from (if it moved on since, no lunge), and not the others.
+        assert_eq!(
+            motion.actor_pos(actor, Pos::new(5, 5), 1.05),
+            Vec2::new(5.0, 5.0)
+        );
+        assert_eq!(
+            motion.actor_pos(ActorId(4), Pos::new(1, 1), 1.05),
+            Vec2::new(1.0, 1.0)
+        );
+        motion.complete();
+        assert!(motion.lunges.is_empty());
     }
 
     #[test]

@@ -1,0 +1,6 @@
+name = "Arena"
+description = "Factions at war: a kobold war band and a pack of giant rats fight in a torch-lit pit while the wildlife looks on. Watch unseen from the dark corner; come close, and they turn on you too."
+start_level = "arena"
+seed = 1
+vision = "normal"
+lantern = "lantern"

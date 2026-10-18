@@ -24,10 +24,11 @@ pub mod perception;
 pub mod replay;
 pub mod rng;
 pub mod save;
+mod sight;
 pub mod time;
 pub mod world;
 
-pub use action::{Action, Event, Letters, Outcome, Rest};
+pub use action::{Action, AttackKind, Event, Letters, Outcome, Rest};
 pub use geom::{Dir, Pos};
 pub use world::{World, WorldError, WorldState};
 

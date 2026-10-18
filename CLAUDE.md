@@ -30,13 +30,14 @@ behavior, commands, or architecture change.
 | Player wiki tables | `cargo xtask wiki` (writes `wiki/src/generated/*.md` from the game data), `--check` (fails when stale), `--build` (also runs `mdbook build wiki` into `wiki/book/`; needs `cargo install mdbook --locked`) |
 | Golden screenshots | `cargo xtask golden` (compare; authoritative on Linux only), `--local` (capture to `target/xtask/golden/*.local.png`, no compare), `--update` (rewrite references; see "Golden screenshots") |
 | Frame-time benchmark | `cargo xtask bench-frames [WxH]` (release, offscreen; method and results in `docs/perf.md`) |
-| Turn-time benchmark | `cargo xtask bench-turns` (re-runs itself in release; budgets: hub 5 ms, vast 16 ms, generated depths level 5 ms, sunlit courtyard at dawn 5 ms, overworld 5 ms, generated forest area at dawn 5 ms, courtyard and forest area at full-moon midnight 5 ms per turn; a dusk-to-dawn rest 500 ms) |
+| Turn-time benchmark | `cargo xtask bench-turns` (re-runs itself in release; budgets: hub 5 ms, vast 16 ms, generated depths level 5 ms, sunlit courtyard at dawn 5 ms, overworld 5 ms, generated forest area at dawn 5 ms, courtyard and forest area at full-moon midnight 5 ms, arena 5 ms per turn; a dusk-to-dawn rest 500 ms, also with the arena's fight going on unseen all night) |
 | Light stress benchmark | `cargo test --release -p warlock-core turn_cost -- --ignored --nocapture` (400×300, 825 lights; again outdoors at 06:15) |
 
 Game flags (`cargo run -p warlock -- --help`):
 - `--scenario NAME` (default `showcase`; `depths` starts in the generated dungeon, `courtyard` in
   the sunlit courtyard at 06:30, `world` on the overworld beside the Hall, `forest` in the glade
-  of a generated forest area of the overworld at 06:30), `--seed S`
+  of a generated forest area of the overworld at 06:30, `arena` in the dark corner of the arena
+  where kobolds and giant rats fight), `--seed S`
   (default: the scenario's seed; a number, or a word hashed with FNV-1a, e.g. `--seed warlock`)
 - `--content-dir assets` — read content from disk instead of the copy built into the binary
 - `--window WxH` (physical pixels), `--scale F` (display scale; `1` for reproducible captures)
@@ -76,10 +77,11 @@ pickup[:LETTERS] drop[:LETTERS] rest:GOAL vision:PROFILE skip:DURATION` (`DIR` =
 NW; `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the player's cell, `a`
 its top) or `drop:b` (the inventory), none = everything; `PROFILE` = an id in
 `assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are
-`30s`, `10m`, `2h`; `skip` is the dev hour skip). Dump layers: `view` (what the player sees), `fov` (`*` visible),
+`30s`, `10m`, `2h`; `skip` is the dev hour skip; `ACTION*N` repeats one, e.g. `wait*10`). Dump layers: `view` (what the player sees), `fov` (`*` visible),
 `memory` (seen terrain and remembered objects), `light` (perceived brightness of visible cells as a
 digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places over the view: `f`
-footsteps, `o`/`c` a door opening/closing, upper case when loud), `inventory` (what the player
+footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m` chanting, upper case
+when loud), `inventory` (what the player
 carries and weighs), `truth`
 (ground truth, **dev-only**), `actors` (every actor on the level with its weight and what it
 carries, **dev-only**). Replay files are JSON
@@ -183,7 +185,7 @@ level in time order until the player may act again, advancing the clock to each 
 creature could have come into view: `out_of_view_for`, which accounts for speed). New actions
 that take time must return their duration there. `creature_turn` is one creature's action and
 returns how long it took: the one place creature behavior lives (AI decisions, the noise and
-events an action makes). Speed (`speed` in `data/creatures.toml`, default 1000 = the player's)
+events an action makes; the AI is `world/ai.rs`, below). Speed (`speed` in `data/creatures.toml`, default 1000 = the player's)
 is rules-only: never put it in perception, the UI, or messages; energy is per actor in
 `WorldState` (saved, hashed); creatures on other levels and the dev skip gain none.
 Levels carry `kind` and `turn` (`turn_seconds`); terrain carries `move_cost` (percent); scenarios
@@ -224,6 +226,26 @@ in place of the terrain glyph (no terrain animation or glow there); look mode na
 
 Key commands `,`/`g` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop` screen),
 `i` (`Inventory` screen) are in `input.rs` and `settings/keys.rs`.
+
+Factions and creature behavior (spec §7 "Factions", §5 "Creature sight", §8 "Creature behavior"):
+`data/factions.toml` (`content/faction.rs`: `Factions`, symmetric hostility, `Stance`; optional,
+without it everyone is neutral, but then no creature may name a faction) and per creature type
+`faction`, `vision`, `sight`, `combat` (`melee`/`ranged`/`caster`), `range`, `opens_doors`
+(`content/creature.rs`, checked in `content/mod.rs`). Stance comes from types:
+`Content::stance(creature, creature)`, `World::stance(actor, actor)`, and for presentation only
+`PerceptionView::stance(seen actor)` (look mode's "(hostile)"). The AI is `world/ai.rs`
+(look → fight → search the last seen spot → look into the newest unseen noise → back to the post →
+patrol), paths `world/path.rs` (A*, fixed tie-breaks), and per-creature memory `Mind` on `Actor`
+(saved, hashed). Creature sight is `sight.rs`: the player's rules computed per creature, only for
+cells where hostiles stand (nearest first, line of sight only out to that distance, darkvision
+before light, bounce light only when needed); it must stay equal to the player's perception —
+`light_tests::check_creature_sight` compares `sight::light` with the perceived light on every
+visible cell in the light property tests. Attacks are intents: `Event::Attacked` (kept only when
+the player sees both ends), a noise (`noise::Act::Attack`), and messages built in
+`World::perceive` (`attack_report`; unseen ends are "something"). The app shows a lunge
+(`ui/motion.rs`, `motion` switch), a shot glyph, and a creature's `on = "attack"` particle burst
+(`ui/effects.rs`, `particles` switch). No creature behavior may use randomness; tie-breaks are
+by distance, direction order, and actor id.
 
 The overworld (spec §3, §5, §7) is `assets/levels/overworld.toml`, the one level of kind
 `overworld` (`LevelKind::Overworld`: 10-minute turns, steps cost the terrain's `travel_minutes`).

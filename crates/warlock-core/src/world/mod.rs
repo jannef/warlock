@@ -26,17 +26,19 @@
 //! actor's weight is its creature's plus what it carries ([`Actor::weight`]).
 
 mod actor;
+mod ai;
 mod hash;
 mod level;
+mod path;
 mod schedule;
 
-pub use actor::{Actor, ActorId, ActorKind, Patrol};
+pub use actor::{Actor, ActorId, ActorKind, Mind, Patrol};
 pub(crate) use hash::fnv1a;
 pub use level::LevelState;
 
-use crate::action::{Action, Event, Letters, MAX_REST, Outcome, Rest, letter};
+use crate::action::{Action, AttackKind, Event, Letters, MAX_REST, Outcome, Rest, letter};
 use crate::content::{
-    Content, EdgeExit, LevelKind, LevelTemplate, StairsDir, TerrainId, local_area_id,
+    Content, EdgeExit, LevelKind, LevelTemplate, StairsDir, Stance, TerrainId, local_area_id,
 };
 use crate::geom::{Dir, Pos};
 use crate::light::LightCache;
@@ -233,6 +235,7 @@ impl World {
                 patrol: None,
                 energy: 0,
                 heard: Vec::new(),
+                mind: Mind::default(),
                 inventory: Vec::new(),
             },
         );
@@ -320,6 +323,15 @@ impl World {
 
     pub fn player_pos(&self) -> Pos {
         self.state.player().pos
+    }
+
+    /// How actors `a` and `b` stand toward each other: the stance of their factions (spec §7
+    /// "Factions"), so it follows from their types; [`Stance::Neutral`] if either is unknown.
+    pub fn stance(&self, a: ActorId, b: ActorId) -> Stance {
+        match (self.state.actors.get(&a), self.state.actors.get(&b)) {
+            (Some(a), Some(b)) => self.content.stance(a.creature, b.creature),
+            _ => Stance::Neutral,
+        }
     }
 
     pub fn messages(&self) -> &MessageLog {
@@ -443,8 +455,8 @@ impl World {
             .collect()
     }
 
-    /// Phase 4: recomputes perception, updates memory, says what news the player heard, and
-    /// drops events the player did not see.
+    /// Phase 4: recomputes perception, updates memory, says what news the player heard, reports
+    /// the attacks the player perceived, and drops events the player did not see.
     fn perceive(&mut self, events: &mut Vec<Event>) {
         *self.perception = Perception::compute(&self.state, &self.content, &mut self.lights);
         let current = self.state.current_level.clone();
@@ -453,6 +465,7 @@ impl World {
         }
         self.hear();
         let player = self.state.player;
+        let mut reports = Vec::new();
         events.retain(|e| match e {
             Event::ActorMoved { actor, from, to } => {
                 *actor == player
@@ -463,7 +476,33 @@ impl World {
                 self.perception.is_visible(*pos)
             }
             Event::LevelChanged { .. } => true,
+            &Event::Attacked {
+                attacker,
+                target,
+                kind,
+                from,
+                to,
+            } => {
+                // Reported if the player saw the attacker or the target, or is the target (the
+                // player's own attacks are reported, and only seen ones recorded, when made);
+                // kept for presentation only if the player saw both.
+                let sees_attacker = self.perception.sees_actors_at(from);
+                let sees_target = target == player || self.perception.sees_actors_at(to);
+                if attacker != player {
+                    let name = |id: ActorId, seen: bool| {
+                        let creature = self.state.actors[&id].creature;
+                        seen.then(|| self.content.creature(creature).name.as_str())
+                    };
+                    let who = name(attacker, sees_attacker);
+                    let whom = (target != player).then(|| name(target, sees_target));
+                    reports.extend(attack_report(who, whom, kind, sees_target));
+                }
+                attacker == player || (sees_attacker && sees_target)
+            }
         });
+        for text in reports {
+            self.say(text);
+        }
     }
 
     /// A message for each sound the player perceives that is news ([`noise::news`]): a patrol
@@ -700,8 +739,38 @@ impl World {
             return Spent::Nothing;
         }
         if let Some(other) = self.state.actor_at(&level.id, to) {
+            // What the player knows of it: its name if they see it, else just that something is
+            // there; and its stance toward them (from its type), which decides between attacking
+            // and stopping.
+            let (target, turn) = (other.id, level.turn);
+            let seen = self.perception.sees_actors_at(to);
             let name = self.content.creature(other.creature).name.clone();
-            self.say(format!("The {name} is in the way."));
+            let what = if seen {
+                format!("the {name}")
+            } else {
+                "something".into()
+            };
+            let player = self.state.player;
+            if self.stance(player, target) == Stance::Hostile {
+                if seen {
+                    events.push(Event::Attacked {
+                        attacker: player,
+                        target,
+                        kind: AttackKind::Melee,
+                        from,
+                        to,
+                    });
+                }
+                self.say(format!("You attack {what}."));
+                self.make_noise(player, Act::Attack(AttackKind::Melee));
+                return Spent::Turn(turn);
+            }
+            let what = if seen {
+                format!("The {name}")
+            } else {
+                "Something".into()
+            };
+            self.say(format!("{what} is in the way."));
             return Spent::Nothing;
         }
         let step = level.step_time(def);
@@ -949,48 +1018,33 @@ impl World {
         }
         p
     }
+}
 
-    /// One action of creature `id` on the current level, taken whenever the scheduler lets it act
-    /// (phase 2; `schedule.rs` decides who acts when, and so how often). Returns how long the
-    /// action took, which decides how soon the creature may act again: a step takes the level's
-    /// step time onto the destination ([`LevelState::step_time`]), anything else the level's turn.
-    ///
-    /// This is the one place a creature decides and does something. Today it follows its patrol
-    /// route, waiting when blocked or without one; creature behavior (AI) replaces that decision
-    /// here, and whatever the action lets the player perceive (events, noise) starts here too.
-    /// What the creature heard since it last acted ([`Actor::heard`]) is the AI's to read here;
-    /// it is spent as the creature acts. Its steps make noise.
-    fn creature_turn(&mut self, id: ActorId, events: &mut Vec<Event>) -> Duration {
-        if let Some(actor) = self.state.actors.get_mut(&id) {
-            actor.heard.clear();
-        }
-        let level = self.state.current();
-        let actor = &self.state.actors[&id];
-        let Some(patrol) = &actor.patrol else {
-            return level.turn;
-        };
-        let from = actor.pos;
-        let to = from.step(patrol.route[patrol.step]);
-        let step = match level.terrain.get(to).map(|t| self.content.terrain(*t)) {
-            Some(def) if def.walkable && self.state.actor_at(&level.id, to).is_none() => {
-                level.step_time(def)
-            }
-            _ => return level.turn,
-        };
-        if let Some(actor) = self.state.actors.get_mut(&id) {
-            actor.pos = to;
-            if let Some(patrol) = &mut actor.patrol {
-                patrol.step = (patrol.step + 1) % patrol.route.len();
-            }
-        }
-        events.push(Event::ActorMoved {
-            actor: id,
-            from,
-            to,
-        });
-        self.make_noise(id, Act::Step(to));
-        step
+/// The message for a creature's attack the player perceived: by `who` (a creature type's name,
+/// `None` if the player did not see the attacker), on `whom` (`None`: the player; `Some(None)`: a
+/// creature the player did not see). Nothing if the player saw neither end and was not the
+/// target (`target_seen` is whether the target was seen, or is the player).
+fn attack_report(
+    who: Option<&str>,
+    whom: Option<Option<&str>>,
+    kind: AttackKind,
+    target_seen: bool,
+) -> Option<String> {
+    if who.is_none() && !target_seen {
+        return None;
     }
+    let who = who.map_or_else(|| "Something".to_string(), |n| format!("The {n}"));
+    let whom = match whom {
+        None => "you".to_string(),
+        Some(Some(name)) => format!("the {name}"),
+        Some(None) => "something".to_string(),
+    };
+    let verb = match kind {
+        AttackKind::Melee => "attacks",
+        AttackKind::Ranged => "shoots at",
+        AttackKind::Spell => "casts a spell at",
+    };
+    Some(format!("{who} {verb} {whom}."))
 }
 
 /// The stacks of `stacks` that `chosen` names, and the others, each in order.
@@ -1054,12 +1108,15 @@ fn instantiate_level(state: &mut WorldState, template: &LevelTemplate) {
                 }),
                 energy: 0,
                 heard: Vec::new(),
+                mind: Mind::default(),
                 inventory: spawn.carry.clone(),
             },
         );
     }
 }
 
+#[cfg(test)]
+mod ai_tests;
 #[cfg(test)]
 mod branch_tests;
 #[cfg(test)]

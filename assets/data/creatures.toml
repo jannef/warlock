@@ -3,11 +3,24 @@
 # twice as many actions in the same game time; 100 to 10000; never shown to the player), weight
 # (the creature's own weight in grams, required; what it carries adds to it), light (a preset in
 # lights.toml the creature carries), anim, and the presentation-only effects glow and
-# [[creature.particles]] (see terrain.toml; they move with the creature).
+# [[creature.particles]] (see terrain.toml; they move with the creature; `on = "attack"` bursts
+# at the target of each attack the player sees, e.g. a spell's sparkle).
 # Hearing (gameplay, spec §5 "Hearing"): footsteps (how loud its steps are on terrain with a
 # step_noise of 100; a sound loses 10 a cell, 14 diagonally, and a closed door muffles 30; at most
 # 300; default 0: it moves silently) and hearing (the faintest loudness it hears, 1 to 300; default
 # none: it is deaf).
+#
+# Behavior (spec §8 "Creature behavior"; nothing here is shown to the player but the faction's
+# stance toward them):
+#   faction      a faction id in factions.toml (required; the player's is "player")
+#   vision       its eyes: a profile in vision.toml (default "normal"); it sees by the same rules
+#                as the player, under the same light
+#   sight        how far it sees, in cells (default 10, at most 40)
+#   combat       "melee" (default: closes in and attacks from next to its target), "ranged"
+#                (shoots), or "caster" (casts spells); attacks are announced, nothing is damaged
+#   range        how far a ranged or caster creature reaches, in cells (2 up to its sight; it
+#                needs a clear line of fire)
+#   opens_doors  whether it opens closed doors in its way (default false)
 
 [[creature]]
 id = "player"
@@ -25,6 +38,9 @@ name = "giant rat"
 glyph = "r"
 fg = "#b08458"
 speed = 1200
+faction = "vermin"
+vision = "low_light"
+sight = 8
 # Light on its feet, sharp of ear.
 footsteps = 50
 hearing = 5
@@ -37,6 +53,9 @@ name = "cave bat"
 glyph = "b"
 fg = "#9a7ab8"
 speed = 2000
+faction = "wildlife"
+vision = "darkvision"
+sight = 8
 hearing = 3
 weight = 500
 
@@ -48,6 +67,9 @@ fg = "#7cb85a"
 speed = 900
 weight = 25000
 light = "torch"
+faction = "kobolds"
+vision = "darkvision"
+opens_doors = true
 # Clumsy and loud, and not the best listener.
 footsteps = 80
 hearing = 15
@@ -73,6 +95,67 @@ name = "deer"
 glyph = "d"
 fg = "#c89a64"
 speed = 1300
+faction = "wildlife"
+sight = 12
 footsteps = 50
 hearing = 5
 weight = 80000
+
+# The kobold war band's archer: keeps its distance and shoots.
+[[creature]]
+id = "kobold_archer"
+name = "kobold archer"
+glyph = "k"
+fg = "#c8b45a"
+faction = "kobolds"
+vision = "darkvision"
+sight = 12
+combat = "ranged"
+range = 7
+opens_doors = true
+footsteps = 70
+hearing = 12
+weight = 22000
+
+# The war band's shaman, slow and frail: casts from a few cells away. A faint violet sparkle
+# where its spells land.
+[[creature]]
+id = "kobold_shaman"
+name = "kobold shaman"
+glyph = "k"
+fg = "#b080d8"
+speed = 800
+faction = "kobolds"
+vision = "darkvision"
+combat = "caster"
+range = 5
+opens_doors = true
+footsteps = 60
+hearing = 10
+weight = 18000
+
+[[creature.particles]]
+on = "attack"
+glyphs = "·*+"
+colors = ["#e0c8ff", "#a080f0", "#5040a0"]
+count = 5
+life = 0.4
+spread = [0.9, 0.9]
+area = [0.15, 0.15]
+scale = 0.5
+fade = 0.6
+glow = 0.5
+
+# Harmless, clicking along the walls of the patrol gallery.
+[[creature]]
+id = "beetle"
+name = "cave beetle"
+glyph = "a"
+fg = "#6a9aa8"
+speed = 1200
+faction = "wildlife"
+vision = "darkvision"
+sight = 6
+footsteps = 30
+hearing = 20
+weight = 300

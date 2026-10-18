@@ -25,8 +25,9 @@ Build the engine and framework, not the game. Everything built is production qua
 - Player movement (8 directions), doors (open/close), stairs
 - Line of sight, terrain memory, gameplay lighting, vision types
 - Test creatures walking fixed patrol routes; from M10 they act at their own hidden speed (§8
-  "Speed"), belong to factions, hear noise, and fight with deterministic AI whose attacks are
-  intents only
+  "Speed"), belong to factions (§7 "Factions") that are hostile or neutral to the player and to
+  each other, hear noise, see by the player's rules (§5 "Creature sight"), and fight with
+  deterministic AI whose attacks are intents only (§8 "Creature behavior")
 - Pickable objects (glyph, color, material, weight), inventory, and creature weight (M11)
 - Moons with phases and moonlight, weather starting with rain (M12)
 - Save and resume an unfinished run
@@ -54,12 +55,12 @@ regression scene for golden screenshots, replays, and snapshot tests.
 |---|---|---|
 | Start room | movement, message line, `?` help; gold and a small pile to pick up | M1, M11 |
 | Door corridor | opening/closing doors, doors blocking sight; a storeroom and a pantry of objects | M1–M2, M11 |
-| Patrol gallery | creatures moving in and out of view, never shown in memory; a giant rat and a quicker cave bat on parallel lanes, a slower torch-bearing kobold circling them (carrying a sword and coins); heard from the corridor behind its closed door, and in its dark middle (the bat flies silently) | M2, M10, M11 |
+| Patrol gallery | creatures moving in and out of view, never shown in memory; a cave beetle and a quicker cave bat (wildlife, so they keep to their lanes) on parallel lanes, a slower torch-bearing kobold circling them (carrying a sword and coins), which comes for the player once it sees them, searches where it lost them, and returns to its round; heard from the corridor behind its closed door, and in its dark middle (the bat flies silently) | M2, M10, M11 |
 | Light hall | colored lights, falloff, pillar and creature shadows, steady magical light | M3, M8 |
 | Darkness chamber | vision types, a UV-only rune, darkvision fade; an amulet seen only by those who see in the dark | M3, M11 |
 | Water garden | still ponds and running rills (flow, glints, foam), pulsing altar with a ring before it | M4, M8, M11 |
 | Effects room | glyph particles, glow, fades, distortion | M4 |
-| Stairs | connection to Level 2 (down), the courtyard and the overworld (up) | M2, M9 |
+| Stairs | connection to Level 2 and the arena (down), the courtyard and the overworld (up) | M2, M9, M10 |
 
 **Courtyard (66×19, outdoor)**: up the stairs nook's `<`, a walled garden under the open sky —
 trees, a ruined wall, a pond, standing stones, flower beds, and a roofed gazebo with a lamp — where
@@ -67,6 +68,16 @@ sunlight, sky light, and shadows turn and stretch with the time of day (§5 "Sun
 moon lights it faintly by night, waxing and waning with the month (§5 "Moonlight"; M12). The
 `courtyard` scenario starts there at 06:30, while the shadows are long. Windfall apples lie under
 a tree, and a candle and a scroll in the gazebo (M11).
+
+**Arena (72×21, M10)**: down the stairs nook's second `>`: factions at war. A kobold war band
+(three torch-bearing kobolds, an archer, a slow shaman) and five giant rats meet at a fire pit in
+a pit lit by wall torches, with pillars for cover; two cave bats and a cave beetle (wildlife) go
+their ways untouched. West lies the kobolds' camp behind two doors (kobolds open doors, rats do
+not), east the rat warren. The player arrives in the dark south-west corner and can watch unseen;
+each creature fights the nearest foe it sees, so coming close (lit, or within a kobold's
+darkvision) turns them on the player. Nothing dies, so the fight settles into a brawl that
+goes on: melee pairs attack each other turn after turn, the archer shoots and the shaman casts
+over them. The `arena` scenario starts there.
 
 **Level 2 — Vast (≥ 400×300)**: scrolling camera, many light sources, performance budget check.
 Introduced in M2, lit in M3. Beside its stairs up to the hub, stairs down lead into the depths and
@@ -251,8 +262,9 @@ Water is calm by design; motion stays tasteful, never busy:
   gameplay.
 - Moving glyphs slide between cells over ~80 ms; the camera follows smoothly. A creature that
   steps several times in one turn (one quicker than the player, §8 "Speed") slides along the cells
-  it passed in one motion, a little longer (√steps × 80 ms). Any new input completes running
-  animations instantly, so fast play never waits.
+  it passed in one motion, a little longer (√steps × 80 ms). A creature attacking in melee (the
+  player too) lunges a fifth of a cell toward its target and back over 160 ms. Any new input
+  completes running animations instantly, so fast play never waits.
 - Visual randomness uses its own RNG and never consumes gameplay randomness.
 
 ### 4.7 Readability and reduced effects
@@ -284,7 +296,13 @@ glow, barely perceptible distortion, short fades.
   when a door is seen opening or closing: dust), or at an `obstacle` (a steady rate from visible
   running water whose flow runs into a known cell that is not running water: foam at banks and
   boulders, ripples where a stream enters a pool; the emitter is turned with the flow, its `y`
-  pointing downstream). Creature emitters move with the creature.
+  pointing downstream). Creature emitters move with the creature; a creature's `attack` emitters
+  burst at the target of each attack the player sees (the kobold shaman's faint violet sparkle).
+- **Shots**: a ranged attack the player sees sends one glyph (`-`, `|`, `/`, or `\`, pointing
+  the way it flies; pale wood, lit like free glyphs) from the edge of the shooter's cell to the
+  edge of the target's at 24 cells a second (at least 60 ms), fading in and out at the ends.
+  Shots and attack bursts run with the particles switch; with frozen visual time a shot is shown
+  halfway.
 - Particles are a pure function of visual time and a seed (the source's cell or identity, or the
   event) through a visual-only RNG, so they never depend on frame rate or gameplay randomness. Only
   visible cells, seen creatures, and perceived events emit; particles over cells that are not
@@ -443,14 +461,17 @@ rate or animation.
   on where the viewer stands. Sunlight and moonlight are not cached (they move every minute).
 - **Hearing** (`warlock-core/src/noise.rs`; M10). Integer and deterministic, like sight:
   - **Noise**: actions make noise. A step makes the walker's `footsteps` (creature data: the
-    player 60, kobold 80, giant rat and deer 50; bats fly silently) scaled by the `step_noise` of
+    player 60, kobold 80, kobold archer 70, kobold shaman 60, giant rat and deer 50, cave beetle
+    30; bats fly silently) scaled by the `step_noise` of
     the terrain stepped onto, in percent (water and running water 200, marsh, bushes, and rubble
     150, reeds 130, gazebo boards and dry grass 120, tall grass and rocky ground 110, dirt road
     90, forest floor 80, grass, flowers, and dusty floor 70; default 100). Opening a door makes
     the closed door's `toggle_noise` (60), closing one the open door's (70). One function decides
     an action's loudness, so skills such as moving silently can change it there later. Loudness
     is at most 300; a creature without `footsteps` moves silently, a door without `toggle_noise`
-    is silent. (Footsteps may scale with a creature's weight once it has one, M11.)
+    is silent. (Footsteps may scale with a creature's weight once it has one, M11.) Attacks
+    (intents, §8 "Creature behavior") are heard where the attacker stands: fighting (melee, 60), a
+    bowstring (a shot, 40), chanting (a spell, 50).
   - **Propagation**: a noise spreads from its cell through the 8 neighbors, losing 10 loudness
     per orthogonal step and 14 per diagonal one, plus the `muffle` of every cell it enters (a
     closed door 30). Solid terrain (neither walkable nor transparent: walls, rock, trees,
@@ -461,14 +482,16 @@ rate or animation.
     in reach, so its cost does not depend on the level size. The overworld is silent (its steps
     are journeys).
   - **Listeners**: every creature type with `hearing` (the faintest loudness it hears: the
-    player 10, kobold 15, giant rat and deer 5, bat 3; none is deaf) hears a noise another actor
+    player 10, kobold 15, kobold archer 12, kobold shaman 10, cave beetle 20, giant rat and deer 5,
+    bat 3; none is deaf) hears a noise another actor
     makes on its level when the loudness at its cell reaches that, at once, as the action
     happens. A creature keeps what it heard (kind, where it was made, how loud it was at the
-    creature) until it next acts: the input its AI reads (M10, investigating noises); the list
-    is part of the world state.
+    creature) until it next acts: the input its AI reads (§8 "Creature behavior": it goes to look
+    where it heard a noise whose source it does not see); the list is part of the world state.
   - **The player** perceives the sounds they heard during the turn that just passed whose source
     cell they do not see (a creature in darkness or out of sight, a door around the corner),
-    never who or what made them: the kind (footsteps, a door opening, a door closing), how loud
+    never who or what made them: the kind (footsteps, a door opening, a door closing, fighting, a
+    bowstring, chanting), how loud
     (faint, clear, or loud: under 10, under 30, or at least 30 above their threshold), and
     roughly where: a cell up to 2 (faint), 1 (clear), or 0 (loud) steps from the source through
     cells that pass sound unmuffled, which the player does not see, picked by a hash of the
@@ -485,6 +508,20 @@ rate or animation.
     fainter sounds, never lit) at its rough place until the next turn; with glyph animation on
     it ripples in, a ring growing out of it and fading within a second. Look mode describes it
     ("You hear footsteps here.").
+- **Creature sight** (`warlock-core/src/sight.rs`; M10): a creature sees by the player's rules,
+  with its own eyes (its type's `vision`, a profile above) and radius (its `sight`, default 10,
+  at most 40): an actor is seen iff its cell is in the creature's line of sight (the same
+  symmetric shadowcasting) within its sight radius and lit at least to its eye's threshold by the
+  same gameplay light the player sees (ambient, sky, every source, the sun, bounce), or within its
+  darkvision; on the overworld, line of sight within its sight and the daylight radius. (An actor
+  on an opaque cell is seen only within darkvision; no such terrain exists off the overworld.)
+  Creatures never read the player's perception: each computes its own, and only for the cells
+  where a hostile stands, nearest first, stopping at the first it sees: line of sight only out to
+  that distance, light only where darkvision does not settle it (and bounce light only when the
+  rest is not enough), so the cost follows the hostiles nearby, not the level. A test checks that
+  on every cell the player sees, the light a creature with the player's eyes finds is the
+  player's. So a creature carrying a torch is seen and sees, a player in the dark is unseen by
+  eyes without darkvision, and lighting the lantern gets the player noticed.
 - **Perception API**: the snapshot exposes, for visible cells only, the perceived light (after the
   wall-face rule; plus whether the cell is seen only through darkvision and its squared distance),
   the light sources whose light reaches visible cells (stable key; emitter: a point light's
@@ -556,9 +593,18 @@ rate or animation.
   into one entry with a count (`You open the door. (×2)`). Heard sounds are logged only when they
   are news (§5 "Hearing"), so a patrol walking back and forth out of sight gives one message per
   pass, not one a turn.
-- **Look mode** describes what the player perceives at the cursor: a creature and its terrain,
-  terrain, remembered terrain, where stairs lead, and a sound heard there ("You hear footsteps
-  here.").
+- **Attacks** (intents only, §8 "Creature behavior") are reported when the player perceives them:
+  they see the attacker or the target, or are the target. "The kobold attacks you.", "The kobold
+  archer shoots at the giant rat.", "The kobold shaman casts a spell at you."; an end the player
+  does not see is "something" ("Something attacks you.", "The kobold archer shoots at
+  something."). Attacks the player perceives nothing of leave no message (and no event). Moving
+  into a hostile creature attacks it ("You attack the giant rat.", or "You attack something."
+  when it is not seen; it takes a turn); into a neutral one stops ("The deer is in the way.",
+  "Something is in the way."; no time passes).
+- **Look mode** describes what the player perceives at the cursor: a creature and its terrain
+  (a hostile one marked: "A giant rat (hostile), on stone floor."; its type tells the player its
+  faction's stance toward them, the only faction information presentation gets), terrain,
+  remembered terrain, where stairs lead, and a sound heard there ("You hear footsteps here.").
 - Screen layout: map viewport, message log, status panel (level, region (on the overworld and in
   its local areas), time of day and date as `14:32 · 12 Rainmoon, Year 1`, the moon's phase as a
   glyph and its name (`◑ First quarter`; with several moons each moon's name and glyph, `Moon ●
@@ -630,7 +676,16 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   `speed` (100 to 10 000, default 1000, the player's; never shown to the player; §8 "Speed"): the
   giant rat 1200, the cave bat 2000, the kobold 900, the deer 1300; and for hearing (§5)
   `footsteps` (at most 300; default 0, silent) and `hearing` (the faintest loudness heard, 1 to
-  300; default none, deaf). Terrain has a `move_cost`: the time to step onto it in percent of the
+  300; default none, deaf). For behavior (§8 "Creature behavior") a creature type names its
+  `faction` (below; required when factions exist, the player's is `player`), its eyes `vision`
+  (a profile; default `normal`) and `sight` (radius, 1 to 40, default 10), how it fights:
+  `combat = "melee"` (default), `"ranged"`, or `"caster"`, the latter two with a `range` (2 to its
+  sight), and `opens_doors` (default false). The kobold: darkvision, sight 10, melee, opens doors;
+  the kobold archer: darkvision, sight 12, ranged 7; the kobold shaman (speed 800): darkvision,
+  caster 5; the giant rat: low-light, sight 8; the cave bat: darkvision, sight 8; the cave
+  beetle (1200): darkvision, sight 6; the deer: normal, sight 12. Creature particle emitters may
+  fire `on = "attack"`: a burst at the target of each attack the player sees (the shaman's
+  violet sparkle). Terrain has a `move_cost`: the time to step onto it in percent of the
   level's turn (default 100; still and running water 200), a `bounce` tint for the light it
   reflects (§5), a `height` in cells for sun shadows (default 1 if opaque, else 0; at most 4),
   `roofed` (never lit by the sun or the sky), and for hearing a `step_noise` (how loud steps onto
@@ -661,6 +716,14 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   ADOM loosely: `)` weapons, `}` missile weapons, `/` missiles, `[` armor, `(` tools, `!`
   potions, `?` scrolls, `%` food, `*` stones and gems, `$` coins, `=` rings, `"` amulets.
   Every creature in `data/creatures.toml` has a base `weight` in grams (required, at least 1).
+- **Factions** (`data/factions.toml`, optional; without it everyone is neutral): `[[faction]]`
+  with `id`, `name`, and `hostile` (faction ids). Relations are pairwise and symmetric: if A lists
+  B, A and B are hostile to each other; every pair not listed (a faction and itself too) is
+  neutral. Validation: unique ids, known ids, no faction hostile to itself, a `player` faction
+  (the player's), and every creature type but the player naming a known faction. The core API
+  gives the stance (`Hostile` or `Neutral`) of two factions, creature types, or actors. Test
+  factions: `vermin` (giant rats; hostile to the player), `kobolds` (the war band; hostile to the
+  player and the vermin), `wildlife` (deer, cave bats, the cave beetle; neutral to everyone).
 - **Dungeon branches** (`data/dungeons.toml`): stacks of generated levels, e.g.
   `{ id = "depths", generator = "rooms", depth = 8, size = [80, 21] }`, plus optional name,
   patrolling creature kinds, ambient light, and per-depth overrides of generator and size. Stairs
@@ -722,8 +785,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   stream, the game clock, every actor's scheduler energy (§8 "Speed"), the direction of the last
   overworld step (saves without the step load with none), what each actor heard and has not yet
   acted on, the sounds the player perceived lately (§5 "Hearing"; saves without them load with
-  none), and what every actor carries (format version 6). The save is `run.sav` in the platform
-  data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
+  none), what every actor carries, and what each creature has in mind (where it last saw a
+  hostile or heard a noise to look into, and the post it left; §8 "Creature behavior"; saves
+  without it load with every creature calm; format version 7). The save is `run.sav` in the
+  platform data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
   and on level change, and a save that cannot be read is renamed `run.sav.bad`, never deleted, while
   a new run starts. Starting resumes the save unless `--new` is given. Dev snapshots: `F5` saves and
   `F9` loads `snapshots/quick.sav` (debug builds or `--dev`).
@@ -780,7 +845,7 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     overworld it takes the destination terrain's `travel_minutes`. `LevelState::step_time` is the
     one place movement time is decided. Walking off a local area's edge takes its turn. Free and
     refused actions take no time. A creature's action takes the same: a step onto the destination
-    terrain, or the level's turn for anything else (a patrol creature waits when blocked). How
+    terrain, or the level's turn for anything else (an attack, opening a door, waiting). How
     often each actor acts follows from these durations and its speed.
   - **Speed** (`warlock-core/src/world/schedule.rs`), ADOM-like: every creature type has a
     `speed` (§7), 1000 being normal and the player's; twice the speed is twice as many actions in
@@ -808,11 +873,46 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     least the level's quickest step), so a fast creature shortens the stretch. Those turns cannot
     change when the rest stops (sounds carry at most 30 cells, less than the view range, so none
     is missed), and a night's rest stays fast on large levels
-    (`cargo xtask bench-turns` times one; budget 500 ms).
+    (`cargo xtask bench-turns` times one; budget 500 ms; also the worst case, a fight in the
+    arena going on all night out of the player's sight and hearing).
   - **Dev skip** (`F6` in dev builds, replay text `skip:1h`) moves the clock ahead at once;
     nobody acts or gains energy and no turn passes, but it is recorded like any action.
-- **Events to effects**: the core emits events (door opened, actor moved); the presentation layer
-  turns them into animations. Gameplay never waits for them.
+- **Creature behavior** (`warlock-core/src/world/ai.rs`, inside `World::creature_turn`; M10):
+  quite deterministic, outplayable by design; no randomness. Each action, in order:
+  1. **Look**: the hostile actors it sees (§5 "Creature sight"; hostile by faction, §7); the
+     nearest is its target (squared distance; ties: the lower actor id).
+  2. **Fight**: a `melee` creature attacks a target next to it (diagonals too), else steps along
+     a shortest path toward a cell next to it. A `ranged` creature or `caster` shoots or casts
+     when the target is within its `range` (the rounded radius, like every radius) with a clear
+     line of fire: no opaque cell and no actor on the cells between (an integer Bresenham line);
+     else it steps toward the nearest cell that gives it one, failing that toward the target.
+     Leaving its routine it remembers where it was (its post) and where it saw the target.
+  3. **Search**: with no hostile in sight, it goes to where it last saw one (next to the spot if
+     someone it cannot see stands there).
+  4. **Listen**: failing that, to where it last heard a noise (§5 "Hearing"; the newest it heard
+     since it last acted) whose source cell it does not see. Only creatures whose faction is
+     hostile to someone go to look; wildlife does not care.
+  5. **Return**: then back to its post, and on along its patrol route from where it left it (or
+     it waits there).
+
+  Paths are A* over king's moves within a bounded box (12 cells beyond the target, at most 64
+  from the creature), each step costing 1: walkable cells, and closed doors for creatures that
+  open them (1 more: it opens the door, a turn and a noise, then steps in). Another actor's cell
+  costs 4 more, so a creature walks a short detour around someone in its way but waits behind
+  them rather than take a long one. Ties go to cells nearer the target, then to the earlier
+  direction (N, NE, E, … NW). A spot it cannot reach is given up.
+
+  **Attacks are intents only**: no damage, hit points, or death. An attack is an event
+  (`Event::Attacked { attacker, target, kind: Melee | Ranged | Spell, from, to }`), a noise (§5),
+  and a message when the player perceives it (§6). The event reaches presentation only when the
+  player sees both ends (or made the attack). The player moving into a hostile creature is a
+  melee attack; into a neutral one it stops. What a creature has in mind (last seen, noise to
+  look into, post) is part of the world state.
+- **Events to effects**: the core emits events (door opened, actor moved, attacked); the
+  presentation layer turns them into animations: slides, a short lunge toward the target for a
+  melee attack (motion), a shot glyph flying from shooter to target and a creature's `attack`
+  particles where its attack lands, e.g. the shaman's violet sparkle (particles). Gameplay never
+  waits for them.
 - **Determinism**: ChaCha8 RNG (`rand_chacha`) with separate streams, each seeded with FNV-1a 64 of
   the run seed (little-endian) and a label: map generation per level (`map/<level id>`, retry *k*
   `map/<level id>/<k>`), so a level depends only on the seed and its id, never on visiting order;
@@ -845,7 +945,8 @@ cargo xtask golden [--update]                             # compare golden scree
   syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
   pickup pickup:ac drop drop:b vision:darkvision skip:1h`; durations are a whole number with `s`,
   `m`, or `h`, a rest at most `24h`; letters name stacks of the pile or the inventory, `a` first,
-  and without letters `pickup` and `drop` take everything); `hash` is the
+  and without letters `pickup` and `drop` take everything; in scripts, `ACTION*N` repeats an
+  action, e.g. `wait*10`); `hash` is the
   FNV-1a 64 hash of the
   canonical JSON encoding of `WorldState` after the step. Verification reports the first
   diverging step. `--replay` takes its scenario and seed from the file; `--record` rewrites its
@@ -853,8 +954,9 @@ cargo xtask golden [--update]                             # compare golden scree
 - Dump layers: `view`, `fov`, `memory` (terrain and the top object of each known pile), `light`
   (perceived brightness of each visible cell as a digit, `0` dark to `9` fully lit or brighter),
   `sound` (the view with each heard sound at its rough place: `f` footsteps, `o` a door opening,
-  `c` a door closing, upper case when loud), and `inventory` (what the player carries, by letter
-  with weights, then what they carry and weigh) are built from the perception snapshot only;
+  `c` a door closing, `x` fighting, `b` a bowstring, `m` chanting, upper case when loud), and
+  `inventory` (what the player carries, by letter with weights, then what they carry and weigh)
+  are built from the perception snapshot only;
   `truth` (terrain, objects, and creatures) and `actors` (every actor on the level with its
   weight, base plus carried, and what it carries) show ground truth and are dev-only. JSON dumps
   carry turn, game time (seconds and calendar fields), level, viewer, seen actors, heard sounds,

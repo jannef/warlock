@@ -4,6 +4,7 @@
 use crate::render::console::{Cell, Console};
 use warlock_core::Pos;
 use warlock_core::color::Rgb;
+use warlock_core::content::Stance;
 use warlock_core::object::phrase;
 use warlock_core::perception::{CellView, PerceptionView};
 
@@ -38,7 +39,12 @@ pub fn describe(view: &PerceptionView<'_>, p: Pos) -> String {
             (Some(_), _) if p == view.viewer() => format!("You, on {}{here}.", terrain(t)),
             (Some(actor), _) => {
                 let name = &content.creature(actor.creature).name;
-                format!("{} {name}, on {}{here}.", article(name), terrain(t))
+                // Its type tells the player how it stands toward them (its faction).
+                let stance = match view.stance(actor) {
+                    Stance::Hostile => " (hostile)",
+                    Stance::Neutral => "",
+                };
+                format!("{} {name}{stance}, on {}{here}.", article(name), terrain(t))
             }
             (None, Some(things)) => format!("{}, on {}.", capitalize(things), terrain(t)),
             (None, None) => format!("{}.", capitalize(&with_article(&terrain(t)))),
@@ -224,6 +230,29 @@ mod tests {
         console.resize(3, 1);
         draw_cursor(&mut console, 1, 0, &w.perception(), gold);
         assert_eq!(console.get(1, 0).map(|c| c.ch), Some('$'));
+    }
+
+    #[test]
+    fn hostile_creatures_are_marked_as_such() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let mut w = World::new(content, "arena", None).expect("arena");
+        w.apply(&Action::Wait);
+        let view = w.perception();
+        let content = view.content();
+        let described: Vec<(String, String)> = view
+            .actors()
+            .iter()
+            .filter(|a| a.pos != view.viewer())
+            .map(|a| {
+                let id = content.creature(a.creature).id.clone();
+                (id, describe(&view, a.pos))
+            })
+            .collect();
+        let of = |id: &str| described.iter().find(|(c, _)| c == id).map(|(_, d)| d);
+        let rat = of("rat").expect("a giant rat in view");
+        assert!(rat.starts_with("A giant rat (hostile), on "), "{rat}");
+        let bat = of("bat").expect("a cave bat in view");
+        assert!(bat.starts_with("A cave bat, on "), "{bat}");
     }
 
     #[test]

@@ -1,8 +1,9 @@
 //! `cargo xtask bench-turns`: turn-processing time in the hub, the vast level, the first
 //! generated level of the depths, the sunlit courtyard at dawn, the overworld, a generated
-//! forest area of the overworld at dawn, and the courtyard and the forest area at midnight under
-//! the full moon (spec §10 budgets; a generated 80×21 level, the courtyard, the 100×50
-//! overworld, and an 80×40 local area get the hub's), and
+//! forest area of the overworld at dawn, the courtyard and the forest area at midnight under the
+//! full moon, and the arena, where a dozen creatures fight (spec §10 budgets; a generated 80×21
+//! level, the courtyard, the 100×50 overworld, an 80×40 local area, and the 72×21 arena get the
+//! hub's), and
 //! the time a night's rest takes on each (dusk to dawn: 7200 turns of six seconds, 72 of ten
 //! minutes on the overworld).
 
@@ -21,7 +22,7 @@ const REST_BUDGET_MS: f64 = 500.0;
 const TO_FULL_MOON: u64 = (14 * 24 + 17) * 60 + 30;
 
 /// (scenario, level label, budget in ms, minutes skipped before the walk)
-const CASES: [(&str, &str, f64, u64); 8] = [
+const CASES: [(&str, &str, f64, u64); 9] = [
     ("showcase", "hub", 5.0, 0),
     ("vast", "vast", 16.0, 0),
     ("depths", "depths", 5.0, 0),
@@ -34,6 +35,8 @@ const CASES: [(&str, &str, f64, u64); 8] = [
     // Moon shadows instead of sun shadows.
     ("courtyard", "c-moon", 5.0, TO_FULL_MOON),
     ("forest", "f-moon", 5.0, TO_FULL_MOON),
+    // Every creature thinks: they see, path, and attack each other (and the player) all along.
+    ("arena", "arena", 5.0, 0),
 ];
 
 /// Tiny deterministic generator for the scripted walk (kept local; the game RNG is not involved).
@@ -130,11 +133,40 @@ pub fn run() -> Result<(), String> {
             if ok { "ok" } else { "OVER BUDGET" }
         );
     }
+    // The worst rest: a fight nobody perceives goes on all night (nothing dies), every fighter
+    // seeing, aiming, and attacking each turn, in view range, so no turn passes unperceived.
+    let (turns, ms) = fight_rest(&content)?;
+    let ok = ms <= REST_BUDGET_MS;
+    failed |= !ok;
+    println!(
+        "{:<6} {:>6} {:>10} {:>10} {:>10}  {turns:>11} {ms:>8.1}  {}  (arena camp, fight out of sight)",
+        "fight",
+        "-",
+        "-",
+        "-",
+        "-",
+        if ok { "ok" } else { "OVER BUDGET" }
+    );
     if failed {
         Err("turn time over budget".into())
     } else {
         Ok(())
     }
+}
+
+/// A night's rest in the arena's camp, its door shut: the fight in the pit goes on unseen and
+/// unheard. Returns the turns rested and the time it took in ms.
+fn fight_rest(content: &Arc<Content>) -> Result<(u64, f64), String> {
+    let mut world = World::new(content.clone(), "arena", None).map_err(|e| e.to_string())?;
+    let walk = "move:W*5 move:NW*4 move:N open:W move:W*2 close:E";
+    for action in warlock_core::action::parse_actions(walk)? {
+        world.apply(&action);
+    }
+    let to_dusk = world.time().next_at(DUSK).since(world.time());
+    world.apply(&Action::SkipTime(to_dusk));
+    let (start, turn) = (Instant::now(), world.turn());
+    world.apply(&Action::Rest(Rest::Dawn));
+    Ok((world.turn() - turn, start.elapsed().as_secs_f64() * 1000.0))
 }
 
 /// Frame-time measurement: runs the release game offscreen with `--capture-after-frames` N and

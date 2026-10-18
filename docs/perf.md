@@ -31,6 +31,8 @@ on `main` with lighting (#39), effects (#37), procgen (#40) and the status line 
 | Turn time, max (400 turns) | 0.042 ms | 0.123 ms | 0.016 ms | 5 ms / 16 ms / 5 ms |
 | Rest dusk to dawn, 7200 turns (2026-10-17, game clock #52) | 121 ms | 17 ms | 50 ms | 500 ms |
 | Rest dusk to dawn, 7200 turns (2026-10-18, speed #75 and hearing #78; 232 / 53 / 82 ms without hearing) | 249 ms | 57 ms | 81 ms | 500 ms |
+| Turn time, max (400 turns; 2026-10-18, creature AI #77, after objects #98) | 0.129 ms | 0.293 ms | 0.026 ms | 5 ms / 16 ms / 5 ms |
+| Rest dusk to dawn, 7200 turns (2026-10-18, creature AI #77; the depths rest is cut short by an attack) | 269 ms | 66 ms | n/a | 500 ms |
 | Frame time, 2560x1440 | 0.89 ms (about 1120 fps) | 0.89 ms (about 1120 fps) | n/a | 16.7 ms |
 | Frame time, 1280x720 | 0.79 ms | 0.84 ms | n/a | 16.7 ms |
 
@@ -42,6 +44,15 @@ turn is perceived, takes 218 ms (500 ms budget).
 A rest perceives after every turn while a creature is within the view range plus one; farther
 away, turns pass in batches between perceptions (no creature can come into view in them), which is
 why the vast level rests fastest.
+
+Creature AI (#77) is measured in the arena too, where a dozen creatures see, aim, and attack every
+turn: 0.088 ms a turn on average, 0.202 ms at most (budget 5 ms). Its worst rest is a night in the
+kobolds' camp behind a closed door while the fight in the pit goes on unseen and unheard, every
+turn perceived because the fighters are within the view range: 353 ms for 7200 turns (budget
+500 ms; the `fight` row of `bench-turns`). Creature sight is the costly part; it is computed only
+for cells where a hostile stands, nearest first, with line of sight only out to that distance,
+darkvision before light, and bounce light only when the rest of the light falls short (before
+those, the same rest took about 1 s).
 
 Frame time is nearly identical across levels and resolutions, which means the loop is CPU or
 submission bound on this machine; the offscreen run at the default 60 Hz pacing is bounded by the

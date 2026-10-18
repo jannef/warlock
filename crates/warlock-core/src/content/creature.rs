@@ -1,6 +1,7 @@
 //! Creature definitions (`assets/data/creatures.toml`).
 
 use super::anim::GlyphAnim;
+use super::faction::FactionId;
 use super::light::LightId;
 use super::particles::ParticleEmitter;
 use crate::color::Rgb;
@@ -11,14 +12,38 @@ use std::ops::RangeInclusive;
 pub const NORMAL_SPEED: u32 = 1000;
 /// The speeds a creature type may have: a tenth of normal to ten times normal.
 pub const SPEEDS: RangeInclusive<u32> = 100..=10_000;
+/// How far a creature sees unless its type says otherwise, in cells (spec §5 "Creature sight").
+pub const DEFAULT_SIGHT: i32 = 10;
 
 fn normal_speed() -> u32 {
     NORMAL_SPEED
 }
 
+fn default_sight() -> i32 {
+    DEFAULT_SIGHT
+}
+
+fn normal_vision() -> String {
+    "normal".into()
+}
+
 /// Index of a creature definition in [`super::Content::creatures`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct CreatureId(pub u16);
+
+/// How a creature fights (spec §8 "Creature behavior"). Attacks are intents only: nothing is
+/// damaged.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Combat {
+    /// Closes in and attacks from an adjacent cell.
+    #[default]
+    Melee,
+    /// Shoots from up to its `range` away, with a clear line of fire.
+    Ranged,
+    /// Casts spells from up to its `range` away, with a clear line of fire.
+    Caster,
+}
 
 /// A creature type as written in content files.
 #[derive(Clone, Debug, Deserialize)]
@@ -32,6 +57,21 @@ pub(super) struct CreatureSpec {
     pub speed: u32,
     /// Base weight in grams, without anything carried.
     pub weight: u32,
+    /// The faction it belongs to (`data/factions.toml`).
+    pub faction: Option<String>,
+    /// Its eyes: a vision profile in `data/vision.toml`.
+    #[serde(default = "normal_vision")]
+    pub vision: String,
+    /// How far it sees, in cells.
+    #[serde(default = "default_sight")]
+    pub sight: i32,
+    #[serde(default)]
+    pub combat: Combat,
+    /// How far a `ranged` or `caster` creature reaches, in cells.
+    pub range: Option<i32>,
+    /// Whether it opens closed doors in its way.
+    #[serde(default)]
+    pub opens_doors: bool,
     /// Light preset the creature carries.
     pub light: Option<String>,
     /// How loud its steps are (spec §5 "Hearing"); none: it moves silently.
@@ -46,8 +86,15 @@ pub(super) struct CreatureSpec {
     pub particles: Vec<ParticleEmitter>,
 }
 
+/// What a creature type's names resolve to when content loads.
+pub(super) struct Resolved {
+    pub light: Option<LightId>,
+    pub faction: Option<FactionId>,
+    pub vision: usize,
+}
+
 impl CreatureSpec {
-    pub(super) fn resolve(self, light: Option<LightId>) -> CreatureDef {
+    pub(super) fn resolve(self, r: Resolved) -> CreatureDef {
         CreatureDef {
             id: self.id,
             name: self.name,
@@ -55,7 +102,13 @@ impl CreatureSpec {
             fg: self.fg,
             speed: self.speed,
             weight: self.weight,
-            light,
+            faction: r.faction,
+            vision: r.vision,
+            sight: self.sight,
+            combat: self.combat,
+            range: self.range.unwrap_or(1),
+            opens_doors: self.opens_doors,
+            light: r.light,
             footsteps: self.footsteps,
             hearing: self.hearing,
             anim: self.anim,
@@ -78,6 +131,20 @@ pub struct CreatureDef {
     /// Gameplay: the creature's own weight in grams, without what it carries (see
     /// [`crate::object::Weight`]). At least 1.
     pub weight: u32,
+    /// The faction it belongs to; `None` when the content defines no factions. The player's
+    /// creature belongs to [`super::PLAYER_FACTION`].
+    pub faction: Option<FactionId>,
+    /// Its eyes: an index into [`super::Content::vision_profiles`]. The player's eyes come from
+    /// the scenario (and the dev vision switch) instead.
+    pub vision: usize,
+    /// How far it sees, in cells (a Euclidean radius, like every radius).
+    pub sight: i32,
+    /// How it fights. Rules only, like the rest of its behavior.
+    pub combat: Combat,
+    /// How far its attacks reach, in cells: 1 for melee.
+    pub range: i32,
+    /// Whether it opens closed doors in its way.
+    pub opens_doors: bool,
     /// Light the creature carries with it (e.g. a torch), if any.
     pub light: Option<LightId>,
     /// Gameplay: the loudness of its steps on terrain with a `step_noise` of 100

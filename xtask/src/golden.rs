@@ -11,6 +11,7 @@ use crate::{run_game, workspace_root};
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use warlock_core::action::parse_actions;
 use warlock_core::content::Content;
 use warlock_core::replay::Replay;
 use warlock_core::{Action, World};
@@ -88,20 +89,6 @@ pub fn parse_mode(args: &[String]) -> Result<Mode, String> {
     }
 }
 
-/// Expands `move:N*3` into three actions.
-fn expand_actions(text: &str) -> Result<Vec<Action>, String> {
-    let mut out = Vec::new();
-    for word in text.split_whitespace() {
-        let (action, count) = match word.split_once('*') {
-            Some((a, n)) => (a, n.parse::<usize>().map_err(|e| format!("`{word}`: {e}"))?),
-            None => (word, 1),
-        };
-        let parsed: Action = action.parse()?;
-        out.extend(std::iter::repeat_n(parsed, count));
-    }
-    Ok(out)
-}
-
 /// Writes the replay for an entry and returns its path.
 fn make_replay(
     entry: &Entry,
@@ -116,7 +103,7 @@ fn make_replay(
     let mut world = World::new(content.clone(), scenario, entry.seed).map_err(|e| e.to_string())?;
     let mut replay = Replay::new(&world);
     let text = entry.actions.as_deref().unwrap_or("");
-    for action in expand_actions(text)? {
+    for action in parse_actions(text)? {
         let outcome = world.apply(&action);
         // Switching vision is free by design; anything else that takes no time was refused.
         if outcome.elapsed.is_zero() && !matches!(action, Action::SetVision(_)) {
@@ -319,14 +306,6 @@ fn check(
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn expands_repeats() {
-        let actions = expand_actions("move:N*3 open:E wait").unwrap();
-        assert_eq!(actions.len(), 5);
-        assert!(expand_actions("move:N*x").is_err());
-        assert!(expand_actions("jump").is_err());
-    }
 
     #[test]
     fn modes() {

@@ -1,0 +1,49 @@
+# The arena (spec §3): factions and creature behavior (M10). A kobold war band (k: kobolds with
+# torches, a: their archer, s: their shaman) and a pack of giant rats (r) face each other across a
+# fire pit (B) in a pit lit by wall torches (t); kobolds hunt rats and rats fight back, while the
+# cave bats (1, 2) and a cave beetle (3), wildlife, go their ways untouched. Everyone hostile to
+# you fights you too: you arrive in the dark south-west corner, where you can watch unseen; each
+# fights the nearest foe it sees, so come close (lantern lit, or within a kobold's darkvision) and
+# they turn on you. Nothing dies: attacks are announced, never resolved.
+#
+# West: the kobolds' camp behind two doors, which kobolds open and rats do not. East: the rat
+# warren, open to the pit through three gaps. `<` leads back up to the hub's stairs nook.
+name = "The Arena"
+ambient = [0, 0, 0, 0]
+map = '''
+########################################################################
+###########...t...........t........t........t...........t...############
+###########.................................................###......###
+###########...........1.....................................##........##
+#.........#.......##...............................##.......#..........#
+#.........#.......##...............................##..................#
+#.........#.................................................#..........#
+#.........+................................r................#....##....#
+#.........#...............s....k........r...................#....##....#
+#.........#..............##.................##..............#..........#
+#...B.....#..............##a..k....B.....r..##..................#..#...#
+#.........#.................................................#..........#
+#.........#....................k........r...................#....##....#
+#.........+................................r................#....##....#
+#.........#.................................................#..........#
+#.........#.......##...............................##..........3.......#
+#.........#.......##...............................##.......#..........#
+###########....................................2............##........##
+###########.........@.......................................###......###
+###########........<..................t...........t.........############
+########################################################################
+'''
+
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"<" = { terrain = "stairs_up", to = "hub" }
+"t" = "sconce"
+"B" = "brazier"
+"k" = { terrain = "floor", creature = "kobold" }
+"a" = { terrain = "floor", creature = "kobold_archer" }
+"s" = { terrain = "floor", creature = "kobold_shaman" }
+"r" = { terrain = "floor", creature = "rat" }
+# Cave bats circling the north and south of the pit, and a beetle pottering about the warren.
+"1" = { terrain = "floor", creature = "bat", route = "E28 S1 W28 N1" }
+"2" = { terrain = "floor", creature = "bat", route = "W28 S1 E28 N1" }
+"3" = { terrain = "floor", creature = "beetle", route = "N4 E4 S4 W4" }

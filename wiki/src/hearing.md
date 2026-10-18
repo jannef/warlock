@@ -8,6 +8,8 @@ around you hear too.
 - **Footsteps.** Every step makes noise, yours and the creatures'. Some creatures are heavier on
   their feet than others, and some (bats, which fly) make no sound at all.
 - **Doors.** Opening a door makes noise, and closing one is louder still.
+- **Fighting.** Attacks are noisy: you may hear fighting, a bowstring, or chanting (a spell)
+  where you cannot see it. See [Creatures](creatures.md).
 
 How loud a step is also depends on what you step onto. Wading through water splashes, and
 crashing through bushes or over loose rubble is loud. Grass, flowers, moss, and dust soften your
@@ -68,4 +70,5 @@ such as footsteps you have been hearing for a few turns, does not.
 ## Creatures hear you
 
 Your footsteps and the doors you open and close carry to the creatures around you, through the
-same rules. Today nothing comes of it: creatures still only walk their patrols.
+same rules. A creature with enemies that hears something it cannot see goes to have a look: walk
+softly, and mind the doors. See [Creatures](creatures.md).
