@@ -204,7 +204,7 @@ fn build<'c>(
     let mut land = Land::new(content, kit, setting.ground, width, height);
     water::sides(&mut land, setting, rng);
     if setting.rivers.is_empty() && rng.chance(features.brook) {
-        water::brook(&mut land, rng);
+        water::brook(&mut land, rng, &setting.roads);
     }
     road::lay(&mut land, rng, &setting.roads);
     glade(&mut land, rng, setting.landscape, features.glade);

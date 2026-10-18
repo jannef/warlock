@@ -211,16 +211,50 @@ pub(super) fn point_on(land: &Land, rng: &mut Rng, side: Dir, margin: i32) -> Po
 }
 
 /// A brook running across the area from one side to another, one or two cells wide.
-pub(super) fn brook(land: &mut Land, rng: &mut Rng) {
+///
+/// `road_ways` are the directions a road leaves the area (see `road.rs`). A brook never starts
+/// or ends on a side a road uses, so it crosses the road on a short bridge instead of running
+/// along it; with roads on every side there is no brook.
+pub(super) fn brook(land: &mut Land, rng: &mut Rng, road_ways: &[Dir]) {
     let sides = [Dir::N, Dir::E, Dir::S, Dir::W];
-    let from = sides[rng.index(4)];
-    // Mostly across to the far side, sometimes round a corner.
-    let to = if rng.chance(70) {
-        from.opposite()
+    let (from, to) = if road_ways.is_empty() {
+        let from = sides[rng.index(4)];
+        // Mostly across to the far side, sometimes round a corner.
+        let to = if rng.chance(70) {
+            from.opposite()
+        } else {
+            let i = sides.iter().position(|d| *d == from).unwrap_or(0);
+            sides[(i + if rng.chance(50) { 1 } else { 3 }) % 4]
+        };
+        (from, to)
     } else {
-        let i = sides.iter().position(|d| *d == from).unwrap_or(0);
-        sides[(i + if rng.chance(50) { 1 } else { 3 }) % 4]
+        // A diagonal road leaves through the corner: both of its sides are taken.
+        let taken = |side: Dir| {
+            road_ways.iter().any(|&way| {
+                let (dx, dy) = way.delta();
+                let (sx, sy) = side.delta();
+                (sx != 0 && sx == dx) || (sy != 0 && sy == dy)
+            })
+        };
+        let free: Vec<Dir> = sides.into_iter().filter(|&s| !taken(s)).collect();
+        match free.as_slice() {
+            [] => return,
+            [only] => (*only, *only),
+            _ => {
+                let from = free[rng.index(free.len())];
+                let to = if free.contains(&from.opposite()) {
+                    from.opposite()
+                } else {
+                    *free.iter().find(|&&s| s != from).unwrap_or(&from)
+                };
+                (from, to)
+            }
+        }
     };
+    if from == to {
+        // One free side: a brook in and out of it would run along the road; leave it dry.
+        return;
+    }
     let a = point_on(land, rng, from, 8);
     let b = point_on(land, rng, to, 8);
     let points = course(rng, a, b, 4, 10);
