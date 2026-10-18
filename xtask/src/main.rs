@@ -5,12 +5,14 @@
 //! - `web`: build the WebGPU site into `target/web` (needs `wasm-bindgen-cli`, see CLAUDE.md).
 //! - `web-smoke [CHROME]`: load `target/web` in headless Chromium, start a run, screenshot it.
 //! - `gen-vast [--check]`: regenerate `assets/levels/vast.toml` (`--check` fails if it is stale).
+//! - `licenses [--check]`: regenerate `THIRD_PARTY_LICENSES.html` (needs `cargo-about`).
 //! - `golden [--update | --local]`: compare headless captures with `tests/golden/*.png`.
 //! - `bench-frames`: release-mode frame-time measurement of offscreen captures.
 //! - `bench-turns`: release-mode turn-time table for the hub and the vast level.
 
 mod bench;
 mod golden;
+mod licenses;
 mod vast;
 
 use std::path::{Path, PathBuf};
@@ -23,12 +25,13 @@ fn main() -> ExitCode {
         Some("web") => web(),
         Some("web-smoke") => web_smoke(&args[1..]),
         Some("gen-vast") => gen_vast(args.get(1).is_some_and(|a| a == "--check")),
+        Some("licenses") => licenses::run(args.get(1).is_some_and(|a| a == "--check")),
         Some("golden") => golden::parse_mode(&args[1..]).and_then(golden::run),
         Some("bench-turns") => bench_turns(),
         Some("bench-frames") => bench::frames(args.get(1).map_or("2560x1440", String::as_str)),
         _ => {
             eprintln!(
-                "usage: cargo xtask <smoke | web | web-smoke [CHROME] | gen-vast [--check] | golden [--update | --local] | bench-turns | bench-frames [WxH]>"
+                "usage: cargo xtask <smoke | web | web-smoke [CHROME] | gen-vast [--check] | licenses [--check] | golden [--update | --local] | bench-turns | bench-frames [WxH]>"
             );
             return ExitCode::from(2);
         }
@@ -174,6 +177,8 @@ fn web() -> Result<(), String> {
         page.replace("@VERSION@", env!("CARGO_PKG_VERSION")),
     )
     .map_err(|e| format!("cannot write index.html: {e}"))?;
+    std::fs::copy(root.join(licenses::FILE), out.join(licenses::FILE))
+        .map_err(|e| format!("cannot copy {}: {e}", licenses::FILE))?;
     println!(
         "web ok: {}\nserve it with: python3 -m http.server --directory {} 8080",
         out.display(),

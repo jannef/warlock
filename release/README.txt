@@ -28,3 +28,6 @@ https://github.com/jannef/warlock
 
 The game embeds the JuliaMono font, licensed under the SIL Open Font License 1.1; see
 JuliaMono-OFL.txt.
+
+The game is built from many open-source Rust crates (Bevy, wgpu, and others). Their copyright
+notices and license texts are in THIRD_PARTY_LICENSES.html; open it in a web browser.

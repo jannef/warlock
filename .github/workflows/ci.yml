@@ -105,6 +105,16 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: EmbarkStudios/cargo-deny-action@v2
+      # Third-party notices: fail when THIRD_PARTY_LICENSES.html is stale (run
+      # `cargo xtask licenses` after changing dependencies).
+      - name: Install pinned toolchain
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-about
+      - name: Third-party licenses are current
+        run: cargo xtask licenses --check
 
   # Manual only: Actions > CI > Run workflow with "update_golden" ticked (or
   # `gh workflow run ci.yml --ref <branch> -f update_golden=true`). Reference screenshots are
