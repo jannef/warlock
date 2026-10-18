@@ -251,7 +251,32 @@ impl MainMenu {
             "↑↓ select   Enter choose"
         };
         panel.footer(console, hint);
+        if !self.pause {
+            let cols = console.cols() as usize;
+            if let Some(notice) = legal_notice(cols.saturating_sub(2)) {
+                let x = (cols - notice.chars().count()) as i32 / 2;
+                let y = console.rows() as i32 - 1;
+                console.print(x, y, &notice, TEXT_DIM);
+            }
+        }
     }
+}
+
+/// The copyright and license notice the main menu shows on its bottom row (GPL-3.0 "Appropriate
+/// Legal Notices": copyright, no warranty, where the license is), as long as fits in `width`
+/// columns; `None` if not even the short form fits.
+fn legal_notice(width: usize) -> Option<String> {
+    let version = env!("CARGO_PKG_VERSION");
+    [
+        format!(
+            "Warlock {version} · © 2026 Janne Lê Forsell · free software under GPL-3.0 \
+             (see LICENSE), without warranty"
+        ),
+        format!("Warlock {version} · © 2026 Janne Lê Forsell · GPL-3.0, no warranty"),
+        "© 2026 Janne Lê Forsell · GPL-3.0, no warranty".to_string(),
+    ]
+    .into_iter()
+    .find(|n| n.chars().count() <= width)
 }
 
 /// A centered, framed panel on the console, with helpers to lay out rows inside it.
@@ -362,6 +387,20 @@ mod tests {
 
     fn press(menu: &mut MainMenu, nav: Nav) -> ScreenAction {
         menu.handle(&Press::nav(nav))
+    }
+
+    #[test]
+    fn legal_notice_shortens_to_fit_and_always_names_the_license() {
+        let long = legal_notice(200).expect("fits");
+        assert!(long.contains("see LICENSE"));
+        for width in [60, 70, 90, 120] {
+            if let Some(n) = legal_notice(width) {
+                assert!(n.chars().count() <= width);
+                assert!(n.contains("© 2026 Janne Lê Forsell") && n.contains("GPL-3.0"));
+                assert!(n.contains("warranty"));
+            }
+        }
+        assert_eq!(legal_notice(10), None);
     }
 
     #[test]

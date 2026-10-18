@@ -22,5 +22,9 @@ Please attach the crash report when reporting a bug.
 
 License
 -------
+Copyright (C) 2026 Janne Lê Forsell. Warlock is free software under the GNU General Public License,
+version 3; see LICENSE. It comes with ABSOLUTELY NO WARRANTY. Source code:
+https://github.com/jannef/warlock
+
 The game embeds the JuliaMono font, licensed under the SIL Open Font License 1.1; see
 JuliaMono-OFL.txt.

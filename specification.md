@@ -706,6 +706,7 @@ cargo xtask golden [--update]                             # compare golden scree
 | Testing | cargo test, proptest, insta | |
 | CI/CD | GitHub Actions | CI on Linux only (software Vulkan for screenshots); release archives for Linux, Windows, and macOS on tags. |
 | Web | wasm32 + WebGPU | Compile check from M0; real web build in M7. |
+| License | GPL-3.0-only (`LICENSE`) | © Janne Lê Forsell. Dependencies must be GPL-3.0-compatible (the cargo-deny allow list); the bundled font stays under OFL-1.1. The main menu shows the copyright and license notice, and every release archive carries `LICENSE`. |
 
 ## 12. Milestones
 
@@ -760,8 +761,6 @@ All through the `gh` CLI:
 
 ## 14. Deferred and open
 
-- License: the repo is public without one; a proposal requiring attribution (Apache-2.0 with a
-  `NOTICE` file) awaits the owner's choice (#86). Bundled fonts must be OFL-compatible regardless.
 - Mouse support (hover-inspect first)
 - Infravision
 - Audio
