@@ -6,13 +6,15 @@ and no going back. Saves are for continuing, not for retrying.
 ## When the game saves
 
 - When you press `Q` (save and quit), and when you close the window.
+- When you choose **Save and quit to menu** or **Quit** in the pause menu (`Esc`).
 - Automatically every 50 turns.
 - Automatically when you change level.
 
 On the web the page is also saved when it is hidden or closed.
 
 Choose **Continue** on the main menu to resume the saved run (it appears only if a save exists).
-**New run** lets you pick a scenario and optionally a seed, and starts a fresh run.
+**New run** lets you pick a [scenario](introduction.md#starting-a-run) and optionally a seed (a
+number, or a word), and starts a fresh run, which replaces the saved one.
 
 ## Where saves are kept
 
@@ -39,5 +41,6 @@ message appears on the message line.
   the world's content, an old save may be rejected with a message. The unreadable file is renamed
   `run.sav.bad` and never deleted, and a new run starts.
 - Saves from before version 1.0 may be rejected after updates. From 1.0 on, saves will be migrated.
-- The run's **seed** (shown in the status bar) decides the generated levels. The same seed gives
-  the same levels in the same game version. Seeds are not kept the same across versions.
+- The run's **seed** (shown in the status bar) decides the generated levels and the weather. The
+  same seed gives the same levels and the same weather in the same game version. Seeds are not
+  kept the same across versions.

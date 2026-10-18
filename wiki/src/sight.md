@@ -23,6 +23,10 @@ within your darkvision, and a creature carrying a light shows up. You may still 
 see: see [Hearing](hearing.md). Objects lying on a cell are seen the same way as creatures (see
 [Objects and your pack](objects.md)).
 
+Creatures see by these same rules, each with its own eyes, so standing in the dark hides you from
+a creature that cannot see in the dark, while a lit lantern shows you to any creature that has a
+clear line to you and is near enough. See [Creatures](creatures.md).
+
 If you see floor through a narrow gap, you also see the walls around that floor, so a lit passage
 never appears without its walls. Such walls show only the terrain itself: no creatures or objects,
 and nothing beyond them. In total darkness this does not apply to your own cell, so you then see only
@@ -42,4 +46,5 @@ until your next turn.
 
 ## The overworld is different
 
-On the overworld sight follows the time of day, not light. See [The overworld](overworld.md).
+On the overworld sight follows the time of day, the moon, and the weather, not light. See
+[The overworld](overworld.md).

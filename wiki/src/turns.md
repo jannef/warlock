@@ -13,10 +13,10 @@ A level decides how long one turn takes:
 | The overworld | 10 minutes |
 
 A few things always take exactly one turn: waiting (`.`), opening or closing a door, lighting or
-dousing the lantern, picking up or dropping objects (however many at once), and taking stairs.
-Looking at your pack (`i`) takes no time. The turn is the length of the level you start on, so
-taking stairs off the overworld costs 10 minutes and walking off the edge of an outdoor area costs
-6 seconds.
+dousing the lantern, picking up or dropping objects (however many at once), attacking, and taking
+stairs. Looking at your pack (`i`) takes no time. The turn is the length of the level you start
+on, so taking stairs off the overworld (or entering a place there with `>`) costs 10 minutes and
+walking off the edge of an outdoor area costs 6 seconds.
 
 ## Steps
 
@@ -30,7 +30,10 @@ On the overworld a step is a journey: it takes the time given for the terrain yo
 20 minutes along a road to two and a half hours through a swamp. See [The overworld](overworld.md).
 
 You can move in eight directions, diagonals included. You cannot step into a wall or other solid
-terrain, or onto a creature. Walking into a closed door opens it, and that takes a turn.
+terrain; trying takes no time. Walking into a closed door opens it, and that takes a turn. You
+cannot step onto a creature either: moving into one that is hostile to you attacks it, which
+takes a turn, and moving into any other creature takes no time ("The deer is in the way."). See
+[Creatures](creatures.md#attacks).
 
 ## Creatures act at their own pace
 

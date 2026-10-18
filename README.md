@@ -119,7 +119,7 @@ cargo run --release -p warlock
 | `Q` | Save and quit |
 
 Symbol keys follow your keyboard layout, so `<`, `>` and `?` work on non-US keyboards. Every key
-can be rebound in Settings. The [wiki](https://jannef.github.io/warlock/wiki/) explains the rules.
+can be rebound in the Controls screen. The [wiki](https://jannef.github.io/warlock/wiki/) explains the rules.
 
 ## Develop
 

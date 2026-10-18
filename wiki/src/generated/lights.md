@@ -2,16 +2,16 @@
 
 | Light | Reaches | Kind |
 |---|---:|---|
-| Torch | 6 cells | visible |
-| Sconce | 7 cells | visible |
+| Torch carried by a kobold | 6 cells | visible |
+| Wall torch | 7 cells | visible |
 | Brazier | 8 cells | visible |
 | Lamp | 6 cells | visible |
-| Lantern | 5 cells | visible |
-| Altar glow | 5 cells | visible |
-| Crystal red | 7 cells | visible |
-| Crystal green | 7 cells | visible |
-| Crystal blue | 7 cells | visible |
-| Crystal amber | 7 cells | visible |
-| Fungus | 3 cells | visible |
-| UV rune | 4 cells | UV only: invisible without UV sight |
+| Your lantern | 5 cells | visible |
+| Altar | 5 cells | visible |
+| Light crystal (red) | 7 cells | visible |
+| Light crystal (green) | 7 cells | visible |
+| Light crystal (blue) | 7 cells | visible |
+| Light crystal (amber) | 7 cells | visible |
+| Glowing fungus | 3 cells | visible |
+| Faint rune | 4 cells | UV only: invisible without UV sight |
 | Lava | 4 cells | visible |

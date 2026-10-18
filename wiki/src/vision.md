@@ -26,5 +26,8 @@ all: they do not see it, and it does not light anything for them.
   violet tint, and only if you see UV.
 
 In the current game every run starts with normal vision. The other types exist in the rules and
-can be tried with a developer key that cycles through them; there is no way to gain them in play
-yet.
+can be tried with a [developer key](controls.md#developer-keys) (`F3`) that cycles through them;
+there is no way to gain them in play yet.
+
+Creatures have eyes of these types too, and see by the same rules (see
+[Creatures](creatures.md)); the game does not tell you which eyes a creature has.

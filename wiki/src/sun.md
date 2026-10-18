@@ -76,7 +76,8 @@ So the moon rises about 50 minutes later every day.
 
 Moonlight is faint and slightly purple. It is brightest when the moon is full and high in the sky,
 less when only part of it is lit, faint just after it rises and just before it sets, and none at
-all by day: the sun drowns it out, and it only grows in as the evening twilight fades. Besides its
+all by day: the sun drowns it out, so moonlight grows in as the evening twilight fades and fades
+away in the morning twilight. Besides its
 direct light, the moon gives a very faint glow from the whole sky, on every cell under the sky.
 
 Tall things cast **moon shadows** away from the moon, just as they cast shadows from the sun: long
