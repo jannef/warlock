@@ -232,9 +232,13 @@ fn check(level: &LevelTemplate, cell: Pos) -> Result<(), TestCaseError> {
     let speeds: BTreeSet<u16> = level.flow.values().map(|f| f.speed).collect();
     prop_assert!(speeds.len() <= 1, "{:?}", speeds);
 
-    // Patrols loop over walkable terrain; nothing glows but ruins.
+    // Patrols loop over walkable terrain; nothing glows but ruins; objects from ruins lie on
+    // walkable terrain.
     for spawn in &level.creatures {
         crate::content::validate_route(level, content, spawn).map_err(TestCaseError::fail)?;
+    }
+    for p in level.objects.keys() {
+        prop_assert!(content.terrain(level.terrain[*p]).walkable, "{}", p);
     }
     prop_assert_eq!(level.ambient, crate::light::Light::DARK);
     Ok(())
@@ -341,6 +345,10 @@ fn ruins_are_outdoor_vaults_stamped_verbatim() {
                     for (p, light) in &vault.template.lights {
                         let shifted = Pos::new(at.x + p.x, at.y + p.y);
                         assert_eq!(level.lights.get(&shifted), Some(light));
+                    }
+                    for (p, pile) in &vault.template.objects {
+                        let shifted = Pos::new(at.x + p.x, at.y + p.y);
+                        assert_eq!(level.objects.get(&shifted), Some(pile));
                     }
                 }
             }

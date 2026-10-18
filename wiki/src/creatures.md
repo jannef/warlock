@@ -21,6 +21,8 @@ does.
   carry a light. See [Sight and memory](sight.md). You never remember where one was.
 - Creatures make noise as they walk (bats fly silently), so you may hear one you cannot see, and
   they hear your steps and doors. See [Hearing](hearing.md).
+- Some creatures carry [objects](objects.md). You cannot see what they carry, and nothing makes
+  them drop it yet.
 
 Combat is not in the game yet: nothing can hurt you, and you cannot hurt anything.
 

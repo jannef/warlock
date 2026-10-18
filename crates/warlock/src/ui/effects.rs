@@ -332,7 +332,8 @@ pub(super) fn draw_cell_fx(grid: &mut MapGrid, view: &PerceptionView<'_>) {
                 continue;
             };
             let def = content.terrain(t);
-            if def.glow > 0.0 {
+            // An object lying on glowing terrain hides its glyph, and does not glow itself.
+            if def.glow > 0.0 && view.objects(at(x, y)).is_empty() {
                 grid.console.set_fx(
                     x,
                     y,

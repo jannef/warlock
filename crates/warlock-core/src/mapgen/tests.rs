@@ -133,6 +133,16 @@ fn check(level: &LevelTemplate, depth: u32) -> Result<(), TestCaseError> {
     for spawn in &level.creatures {
         crate::content::validate_route(level, content, spawn).map_err(TestCaseError::fail)?;
     }
+
+    // Objects stamped from vaults lie on walkable terrain, in piles that are never empty.
+    for (p, pile) in &level.objects {
+        prop_assert!(
+            content.terrain(terrain[*p]).walkable,
+            "objects on a wall at {}",
+            p
+        );
+        prop_assert!(!pile.is_empty());
+    }
     Ok(())
 }
 

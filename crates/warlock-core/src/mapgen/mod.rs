@@ -30,6 +30,7 @@ use crate::content::{
 };
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
+use crate::object::Stack;
 use crate::rng::Rng;
 use std::collections::BTreeMap;
 
@@ -146,6 +147,8 @@ pub(crate) struct Canvas<'a> {
     pub lights: BTreeMap<Pos, LightId>,
     /// Flow of running water stamped from vaults (generators make none of their own).
     pub flow: BTreeMap<Pos, Flow>,
+    /// Objects stamped from vaults.
+    pub objects: BTreeMap<Pos, Vec<Stack>>,
     pub creatures: Vec<CreatureSpawn>,
     /// Cells stamped from vaults; later passes leave them alone.
     pub locked: Grid<bool>,
@@ -161,6 +164,7 @@ impl<'a> Canvas<'a> {
             terrain: Grid::new(width, height, pal.void),
             lights: BTreeMap::new(),
             flow: BTreeMap::new(),
+            objects: BTreeMap::new(),
             creatures: Vec::new(),
             locked: Grid::new(width, height, false),
             up: None,
@@ -263,6 +267,7 @@ impl<'a> Canvas<'a> {
             creature,
             pos: start,
             route,
+            carry: Vec::new(),
         });
         true
     }
@@ -355,6 +360,7 @@ pub fn generate(
             stairs,
             lights: canvas.lights,
             flow: canvas.flow,
+            objects: canvas.objects,
             regions: Vec::new(),
             exit: None,
         };
@@ -365,8 +371,9 @@ pub fn generate(
     Err(GenError::Exhausted(MAX_ATTEMPTS))
 }
 
-/// The template as text: terrain glyphs, creatures on top, and `*` for a light placed on floor.
-/// Trailing spaces are trimmed. Used by snapshot tests and `warlock-cli gen`.
+/// The template as text: terrain glyphs, the top object of each pile over them, creatures on top,
+/// and `*` for a light placed on floor. Trailing spaces are trimmed. Used by snapshot tests and
+/// `warlock-cli gen`.
 pub fn ascii(template: &LevelTemplate, content: &Content) -> String {
     let floor = content.terrain_id("floor");
     let mut out = String::new();
@@ -377,6 +384,8 @@ pub fn ascii(template: &LevelTemplate, content: &Content) -> String {
                 let t = template.terrain[p];
                 if let Some(c) = template.creatures.iter().find(|c| c.pos == p) {
                     content.creature(c.creature).glyph
+                } else if let Some(top) = template.objects.get(&p).and_then(|o| o.first()) {
+                    content.object(top.object).glyph
                 } else if template.lights.contains_key(&p) && Some(t) == floor {
                     '*'
                 } else {

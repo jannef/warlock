@@ -5,6 +5,7 @@ use super::kit::Kit;
 use crate::content::{Content, CreatureSpawn, Flow, LightId, TerrainId};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
+use crate::object::Stack;
 use crate::rng::Rng;
 use std::collections::BTreeMap;
 
@@ -31,6 +32,8 @@ pub(super) struct Land<'a> {
     /// Flow of every running water cell.
     pub flow: BTreeMap<Pos, Flow>,
     pub lights: BTreeMap<Pos, LightId>,
+    /// Objects stamped from ruins.
+    pub objects: BTreeMap<Pos, Vec<Stack>>,
     pub creatures: Vec<CreatureSpawn>,
 }
 
@@ -44,6 +47,7 @@ impl<'a> Land<'a> {
             claim: Grid::new(width, height, Claim::Free),
             flow: BTreeMap::new(),
             lights: BTreeMap::new(),
+            objects: BTreeMap::new(),
             creatures: Vec::new(),
         }
     }

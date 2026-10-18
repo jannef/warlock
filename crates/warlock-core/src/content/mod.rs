@@ -11,6 +11,8 @@ mod dungeon;
 mod flow;
 mod level;
 mod light;
+mod material;
+mod object;
 mod overworld;
 mod particles;
 mod scenario;
@@ -29,6 +31,8 @@ pub use level::{
     CreatureSpawn, EdgeExit, LevelKind, LevelTemplate, Region, StairsLink, parse_route,
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
+pub use material::{MaterialDef, MaterialId};
+pub use object::{MAX_PLACED, ObjectDef, ObjectId, article};
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use scenario::ScenarioDef;
@@ -143,6 +147,18 @@ struct CreatureFile {
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
+struct MaterialFile {
+    material: Vec<MaterialDef>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ObjectFile {
+    object: Vec<object::ObjectSpec>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 struct LightFile {
     light: Vec<LightPreset>,
 }
@@ -161,16 +177,21 @@ struct LegendFile {
 
 /// All loaded and cross-validated content.
 ///
-/// `data/lights.toml`, `data/vision.toml`, `data/dungeons.toml`, `data/calendar.toml`, and
-/// `data/sky.toml` are optional. Without vision profiles, a single `normal` profile that needs no
-/// light is used, so content without lighting stays fully visible; without a calendar, months are
-/// numbered; without a sky file there are no moons.
+/// `data/lights.toml`, `data/vision.toml`, `data/dungeons.toml`, `data/calendar.toml`,
+/// `data/sky.toml`, `data/materials.toml`, and `data/objects.toml` are optional. Without vision
+/// profiles, a single `normal` profile that needs no light is used, so content without lighting
+/// stays fully visible; without a calendar, months are numbered; without a sky file there are no
+/// moons; without an objects file there are no objects.
 #[derive(Debug)]
 pub struct Content {
     terrain: Vec<TerrainDef>,
     terrain_ids: BTreeMap<String, TerrainId>,
     creatures: Vec<CreatureDef>,
     creature_ids: BTreeMap<String, CreatureId>,
+    materials: Vec<MaterialDef>,
+    material_ids: BTreeMap<String, MaterialId>,
+    objects: Vec<ObjectDef>,
+    object_ids: BTreeMap<String, ObjectId>,
     lights: Vec<LightPreset>,
     light_ids: BTreeMap<String, LightId>,
     visions: Vec<VisionProfile>,
@@ -197,6 +218,10 @@ impl Content {
             terrain_ids: BTreeMap::new(),
             creatures: Vec::new(),
             creature_ids: BTreeMap::new(),
+            materials: Vec::new(),
+            material_ids: BTreeMap::new(),
+            objects: Vec::new(),
+            object_ids: BTreeMap::new(),
             lights: Vec::new(),
             light_ids: BTreeMap::new(),
             visions: Vec::new(),
@@ -220,6 +245,7 @@ impl Content {
         content.load_vision(files)?;
         content.load_terrain(files)?;
         content.load_creatures(files)?;
+        content.load_objects(files)?;
 
         let path = "data/legend.toml";
         let legend_file: LegendFile =
@@ -408,10 +434,48 @@ impl Content {
                     spec.id
                 )));
             }
+            if spec.weight == 0 {
+                return Err(err(format!(
+                    "creature `{}`: `weight` is in grams and must be at least 1",
+                    spec.id
+                )));
+            }
             self.creatures.push(spec.resolve(light));
         }
         if !self.creature_ids.contains_key("player") {
             return Err(err("a creature with id `player` is required".into()));
+        }
+        Ok(())
+    }
+
+    /// Materials, then the objects made of them.
+    fn load_objects(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
+        let path = "data/materials.toml";
+        if let Some(text) = files.get_optional(path) {
+            let err = |m: String| ContentError::new(path, m);
+            let parsed: MaterialFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
+            for (i, def) in parsed.material.into_iter().enumerate() {
+                let id =
+                    MaterialId(u16::try_from(i).map_err(|_| err("too many materials".into()))?);
+                if self.material_ids.insert(def.id.clone(), id).is_some() {
+                    return Err(err(format!("duplicate material id `{}`", def.id)));
+                }
+                self.materials.push(def);
+            }
+        }
+        let path = "data/objects.toml";
+        let Some(text) = files.get_optional(path) else {
+            return Ok(());
+        };
+        let err = |m: String| ContentError::new(path, m);
+        let parsed: ObjectFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
+        for (i, spec) in parsed.object.into_iter().enumerate() {
+            let id = ObjectId(u16::try_from(i).map_err(|_| err("too many objects".into()))?);
+            if self.object_ids.insert(spec.id.clone(), id).is_some() {
+                return Err(err(format!("duplicate object id `{}`", spec.id)));
+            }
+            let def = spec.resolve(path, |m| self.material_ids.get(m).copied())?;
+            self.objects.push(def);
         }
         Ok(())
     }
@@ -559,10 +623,10 @@ impl Content {
         Ok(())
     }
 
-    /// A stable hash (64-bit FNV-1a) of the ordered terrain, creature, level, light, and dungeon
-    /// ids.
+    /// A stable hash (64-bit FNV-1a) of the ordered terrain, creature, level, light, dungeon, and
+    /// object ids.
     ///
-    /// `TerrainId`, `CreatureId`, and `LightId` are indices, so a save is only meaningful for
+    /// `TerrainId`, `CreatureId`, `LightId`, and `ObjectId` are indices, so a save is only meaningful for
     /// content with the same ids in the same order; saves record this fingerprint to detect a
     /// mismatch.
     pub fn fingerprint(&self) -> u64 {
@@ -572,12 +636,13 @@ impl Content {
                 hash = (hash ^ u64::from(b)).wrapping_mul(0x0000_0100_0000_01b3);
             }
         };
-        let groups: [Vec<&str>; 5] = [
+        let groups: [Vec<&str>; 6] = [
             self.terrain.iter().map(|t| t.id.as_str()).collect(),
             self.creatures.iter().map(|c| c.id.as_str()).collect(),
             self.levels.keys().map(String::as_str).collect(),
             self.lights.iter().map(|l| l.id.as_str()).collect(),
             self.dungeons.keys().map(String::as_str).collect(),
+            self.objects.iter().map(|o| o.id.as_str()).collect(),
         ];
         for ids in groups {
             for id in ids {
@@ -617,6 +682,32 @@ impl Content {
 
     pub fn creature_defs(&self) -> &[CreatureDef] {
         &self.creatures
+    }
+
+    pub fn object(&self, id: ObjectId) -> &ObjectDef {
+        &self.objects[usize::from(id.0)]
+    }
+
+    pub fn object_id(&self, name: &str) -> Option<ObjectId> {
+        self.object_ids.get(name).copied()
+    }
+
+    /// Every object type, in file order (by [`ObjectId`]).
+    pub fn object_defs(&self) -> &[ObjectDef] {
+        &self.objects
+    }
+
+    pub fn material(&self, id: MaterialId) -> &MaterialDef {
+        &self.materials[usize::from(id.0)]
+    }
+
+    pub fn material_id(&self, name: &str) -> Option<MaterialId> {
+        self.material_ids.get(name).copied()
+    }
+
+    /// Every material, in file order (by [`MaterialId`]).
+    pub fn materials(&self) -> &[MaterialDef] {
+        &self.materials
     }
 
     pub fn light(&self, id: LightId) -> &LightPreset {
@@ -728,7 +819,8 @@ impl Content {
                 .chain(c.anim.iter().flat_map(|a| a.extra_glyphs()))
                 .chain(particles(&c.particles))
         });
-        terrain.chain(creatures).collect()
+        let objects = self.objects.iter().map(|o| o.glyph);
+        terrain.chain(creatures).chain(objects).collect()
     }
 }
 
@@ -844,11 +936,13 @@ mod tests {
             name = "you"
             glyph = "@"
             fg = "#ffffff"
+            weight = 70000
             [[creature]]
             id = "rat"
             name = "rat"
             glyph = "r"
             fg = "#806040"
+            weight = 4000
             "##,
         );
         files.insert(
@@ -1319,6 +1413,157 @@ mod tests {
             "{}",
             err.message
         );
+    }
+
+    #[test]
+    fn every_object_has_a_glyph_color_material_and_weight() {
+        let content = Content::builtin().unwrap();
+        let objects = content.object_defs();
+        assert!((15..=30).contains(&objects.len()), "{}", objects.len());
+        let glyphs = content.glyphs();
+        for def in objects {
+            assert!(def.weight > 0 && glyphs.contains(&def.glyph), "{}", def.id);
+            assert!(!content.material(def.material).name.is_empty());
+            assert_eq!(
+                content
+                    .object_id(&def.id)
+                    .map(|id| content.object(id).id.as_str()),
+                Some(def.id.as_str())
+            );
+        }
+        let classes: BTreeSet<char> = objects.iter().map(|o| o.glyph).collect();
+        for class in [')', '[', '(', '!', '?', '%', '*', '$', '=', '"'] {
+            assert!(classes.contains(&class), "an object drawn `{class}`");
+        }
+        let materials: BTreeSet<MaterialId> = objects.iter().map(|o| o.material).collect();
+        assert!(materials.len() >= 10, "objects of many materials");
+        let ruby = content.object(content.object_id("ruby").unwrap());
+        assert_eq!(
+            (ruby.describe(1), ruby.describe(2)),
+            ("a ruby".into(), "2 rubies".into())
+        );
+        // Every creature has a weight; the hub places objects and its kobold carries some.
+        assert!(content.creature_defs().iter().all(|c| c.weight > 0));
+        let hub = content.level("hub").unwrap();
+        assert!(hub.objects.len() >= 8);
+        assert!(hub.creatures.iter().any(|c| !c.carry.is_empty()));
+    }
+
+    #[test]
+    fn bad_objects_are_reported() {
+        const MATERIALS: &str = "[[material]]\nid = \"iron\"\nname = \"iron\"\n";
+        let object = |fields: &str| {
+            format!(
+                "[[object]]\nid = \"key\"\nname = \"key\"\nglyph = \"(\"\nfg = \"#ffffff\"\n{fields}"
+            )
+        };
+        let cases = [
+            (object("material = \"iron\"\nweight = 0\n"), "at least 1"),
+            (
+                object("material = \"bronze\"\nweight = 5\n"),
+                "unknown material `bronze`",
+            ),
+            (object("material = \"iron\"\n"), "missing field `weight`"),
+            (object("weight = 5\n"), "missing field `material`"),
+            (
+                object("material = \"iron\"\nweight = 5\n").replace("\"(\"", "\" \""),
+                "visible character",
+            ),
+            (
+                format!("{0}\n{0}", object("material = \"iron\"\nweight = 5\n")),
+                "duplicate object id `key`",
+            ),
+        ];
+        for (objects, expected) in cases {
+            let mut files = minimal_files("#@#\n", "");
+            files.insert("data/materials.toml", MATERIALS);
+            files.insert("data/objects.toml", &objects);
+            let err = Content::load(&files).unwrap_err();
+            assert_eq!(err.file, "data/objects.toml", "{objects}");
+            assert!(err.message.contains(expected), "{objects}: {}", err.message);
+        }
+        let mut files = minimal_files("#@#\n", "");
+        let creatures = files
+            .get("data/creatures.toml")
+            .unwrap()
+            .replace("weight = 4000", "weight = 0");
+        files.insert("data/creatures.toml", &creatures);
+        let err = Content::load(&files).unwrap_err();
+        assert!(err.message.contains("creature `rat`"), "{}", err.message);
+    }
+
+    #[test]
+    fn levels_place_objects_by_legend_and_by_pile() {
+        let map = "#####\n#.d.#\n#####\n";
+        let legend = "\"d\" = { terrain = \"floor\", objects = [\"dagger\", \"arrow*12\", \"dagger*2\"] }\n\
+                      [[pile]]\nat = [3, 1]\nobjects = [\"gold_coin*5\", \"gold_coin*2\"]\n\
+                      [[pile]]\nat = [2, 1]\nobjects = [\"ruby\"]\n";
+        let content = stream(map, legend).unwrap();
+        let level = content.level("stream").unwrap();
+        let id = |name: &str| content.object_id(name).unwrap();
+        let stack = |name: &str, count| crate::object::Stack {
+            object: id(name),
+            count,
+        };
+        assert_eq!(
+            level.objects[&Pos::new(2, 1)],
+            [
+                stack("ruby", 1),
+                stack("dagger", 1),
+                stack("arrow", 12),
+                stack("dagger", 1),
+                stack("dagger", 1)
+            ],
+            "the pile goes on top; daggers do not stack"
+        );
+        assert_eq!(level.objects[&Pos::new(3, 1)], [stack("gold_coin", 7)]);
+    }
+
+    #[test]
+    fn misplaced_objects_are_reported() {
+        let cases = [
+            (
+                "\"x\" = { terrain = \"floor\", objects = [\"anvil\"] }",
+                "unknown object `anvil`",
+            ),
+            (
+                "\"x\" = { terrain = \"floor\", objects = [\"arrow*0\"] }",
+                "count must be",
+            ),
+            (
+                "\"x\" = { terrain = \"floor\", objects = [\"arrow*x\"] }",
+                "count must be",
+            ),
+            (
+                "\"x\" = { terrain = \"wall\", objects = [\"dagger\"] }",
+                "not walkable",
+            ),
+            (
+                "\"x\" = { terrain = \"floor\", carry = [\"dagger\"] }",
+                "carry but no creature",
+            ),
+            (
+                "\"x\" = { terrain = \"floor\", creature = \"kobold\", carry = [\"dagger*27\"] }",
+                "at most 26 stacks",
+            ),
+            (
+                "\"x\" = \"floor\"\n[[pile]]\nat = [9, 9]\nobjects = [\"dagger\"]",
+                "outside",
+            ),
+            (
+                "\"x\" = \"floor\"\n[[pile]]\nat = [0, 0]\nobjects = [\"dagger\"]",
+                "not walkable",
+            ),
+            (
+                "\"x\" = \"floor\"\n[[pile]]\nat = [1, 1]\nobjects = []",
+                "has no objects",
+            ),
+        ];
+        for (legend, expected) in cases {
+            let err = stream("###\n#x#\n###\n", &format!("{legend}\n")).unwrap_err();
+            assert_eq!(err.file, "levels/stream.toml");
+            assert!(err.message.contains(expected), "{legend}: {}", err.message);
+        }
     }
 
     #[test]

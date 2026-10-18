@@ -15,3 +15,8 @@ map = '''
 [legend]
 "." = "flagstones"
 "," = "rubble"
+
+# Objects (M11): a few coins among the rubble.
+[[pile]]
+at = [4, 3]
+objects = ["copper_coin*3"]

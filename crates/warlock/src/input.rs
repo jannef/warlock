@@ -19,7 +19,7 @@ use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
 use warlock_core::content::VisionProfile;
 use warlock_core::time::Duration;
-use warlock_core::{Action, Dir, Pos, Rest};
+use warlock_core::{Action, Dir, Letters, Pos, Rest};
 
 /// What a key does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -31,6 +31,12 @@ pub enum KeyCommand {
     Descend,
     Ascend,
     Lantern,
+    /// Pick up what lies here: a single stack at once, a choice of several on a screen.
+    PickUp,
+    /// Choose what to drop from the inventory.
+    Drop,
+    /// Show what the player carries and weighs (no time passes).
+    Inventory,
     /// Ask how long to rest (an hour, until dawn, until dusk).
     Rest,
     /// Move a cursor over the map to read what is there (no time passes).
@@ -61,6 +67,9 @@ impl KeyCommand {
             KeyCommand::Descend => "Go down stairs",
             KeyCommand::Ascend => "Go up stairs",
             KeyCommand::Lantern => "Light / douse lantern",
+            KeyCommand::PickUp => "Pick up",
+            KeyCommand::Drop => "Drop",
+            KeyCommand::Inventory => "Inventory",
             KeyCommand::Rest => "Rest",
             KeyCommand::Look => "Look around",
             KeyCommand::CycleVision => "Next vision profile (dev)",
@@ -158,6 +167,10 @@ impl Default for Bindings {
             (ch(">"), Descend),
             (ch("<"), Ascend),
             (ch("L"), Lantern),
+            (ch(","), PickUp),
+            (ch("g"), PickUp),
+            (ch("d"), Drop),
+            (ch("i"), Inventory),
             (ch("R"), Rest),
             (ch("x"), Look),
             (ch("?"), Help),
@@ -279,6 +292,10 @@ pub fn route_keys(
         match action {
             ScreenAction::Stay => {}
             ScreenAction::Close => screens.stack.close(),
+            ScreenAction::Act(action) => {
+                screens.stack.close();
+                play.act(action);
+            }
             ScreenAction::Open(name) => screens.open(name),
             ScreenAction::Choose(choice) => {
                 choices.write(choice);
@@ -362,6 +379,36 @@ impl Gameplay<'_> {
                 self.actions.write(PlayerAction(Action::ToggleLantern));
                 InputMode::Normal
             }
+            (InputMode::Normal, KeyCommand::PickUp) => {
+                // One stack is picked up at once; several are chosen from on a screen. With
+                // nothing here, the core says so.
+                let view = game.world.perception();
+                let letters = match view.objects(view.viewer()).len() {
+                    0 => Some(Letters::default()),
+                    1 => Some(Letters::of([0])),
+                    _ => None,
+                };
+                match letters {
+                    Some(letters) => {
+                        self.actions.write(PlayerAction(Action::PickUp(letters)));
+                    }
+                    None => open = Some(ScreenName::PickUp),
+                }
+                InputMode::Normal
+            }
+            (InputMode::Normal, KeyCommand::Drop) => {
+                if game.world.perception().inventory().is_empty() {
+                    self.actions
+                        .write(PlayerAction(Action::Drop(Letters::default())));
+                } else {
+                    open = Some(ScreenName::Drop);
+                }
+                InputMode::Normal
+            }
+            (InputMode::Normal, KeyCommand::Inventory) => {
+                open = Some(ScreenName::Inventory);
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::CycleVision) => {
                 let view = game.world.perception();
                 let next = next_vision(view.content().vision_profiles(), &view.vision().id);
@@ -409,6 +456,11 @@ impl Gameplay<'_> {
             *self.mode = next;
         }
         open
+    }
+
+    /// Asks the simulation to apply `action`, chosen on a screen.
+    fn act(&mut self, action: Action) {
+        self.actions.write(PlayerAction(action));
     }
 }
 
@@ -458,6 +510,9 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Help), ["?"]);
         assert_eq!(keys(&b, KeyCommand::Cancel), ["Esc"]);
         assert_eq!(keys(&b, KeyCommand::Rest), ["R"]);
+        assert_eq!(keys(&b, KeyCommand::PickUp), [",", "g"]);
+        assert_eq!(keys(&b, KeyCommand::Drop), ["d"]);
+        assert_eq!(keys(&b, KeyCommand::Inventory), ["i"]);
     }
 
     #[test]

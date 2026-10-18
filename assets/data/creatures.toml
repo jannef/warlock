@@ -1,7 +1,8 @@
 # Creature types. The player is the creature with id "player".
 # Fields: id, name, glyph, fg, speed (how quickly it acts: 1000 is normal and the default, 2000
-# twice as many actions in the same game time; 100 to 10000; never shown to the player), light (a
-# preset in lights.toml the creature carries), anim, and the presentation-only effects glow and
+# twice as many actions in the same game time; 100 to 10000; never shown to the player), weight
+# (the creature's own weight in grams, required; what it carries adds to it), light (a preset in
+# lights.toml the creature carries), anim, and the presentation-only effects glow and
 # [[creature.particles]] (see terrain.toml; they move with the creature).
 # Hearing (gameplay, spec §5 "Hearing"): footsteps (how loud its steps are on terrain with a
 # step_noise of 100; a sound loses 10 a cell, 14 diagonally, and a closed door muffles 30; at most
@@ -16,6 +17,7 @@ fg = "#f4f4f4"
 speed = 1000
 footsteps = 60
 hearing = 10
+weight = 70000
 
 [[creature]]
 id = "rat"
@@ -26,6 +28,7 @@ speed = 1200
 # Light on its feet, sharp of ear.
 footsteps = 50
 hearing = 5
+weight = 4000
 
 # Bats fly: no footsteps, and the keenest ears.
 [[creature]]
@@ -35,6 +38,7 @@ glyph = "b"
 fg = "#9a7ab8"
 speed = 2000
 hearing = 3
+weight = 500
 
 [[creature]]
 id = "kobold"
@@ -42,6 +46,7 @@ name = "kobold"
 glyph = "k"
 fg = "#7cb85a"
 speed = 900
+weight = 25000
 light = "torch"
 # Clumsy and loud, and not the best listener.
 footsteps = 80
@@ -70,3 +75,4 @@ fg = "#c89a64"
 speed = 1300
 footsteps = 50
 hearing = 5
+weight = 80000

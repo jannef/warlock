@@ -11,3 +11,12 @@ map = '''
 [legend]
 "k" = { terrain = "floor", creature = "kobold", route = "E2 W2" }
 "*" = { terrain = "floor", light = "lamp" }
+
+# Objects (M11): the store room holds spare arms and food.
+[[pile]]
+at = [7, 1]
+objects = ["spear", "leather_jerkin"]
+
+[[pile]]
+at = [8, 3]
+objects = ["dried_meat*4"]

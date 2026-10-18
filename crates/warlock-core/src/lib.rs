@@ -19,6 +19,7 @@ pub mod light;
 pub mod mapgen;
 pub mod messages;
 pub mod noise;
+pub mod object;
 pub mod perception;
 pub mod replay;
 pub mod rng;
@@ -26,7 +27,7 @@ pub mod save;
 pub mod time;
 pub mod world;
 
-pub use action::{Action, Event, Outcome, Rest};
+pub use action::{Action, Event, Letters, Outcome, Rest};
 pub use geom::{Dir, Pos};
 pub use world::{World, WorldError, WorldState};
 

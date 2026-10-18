@@ -80,18 +80,21 @@ id = "player"
 name = "you"
 glyph = "@"
 fg = "#ffffff"
+weight = 70000
 
 [[creature]]
 id = "normal"
 name = "normal creature"
 glyph = "n"
 fg = "#806040"
+weight = 1000
 
 [[creature]]
 id = "quick"
 name = "quick creature"
 glyph = "q"
 fg = "#806040"
+weight = 1000
 speed = 1500
 
 [[creature]]
@@ -99,6 +102,7 @@ id = "fast"
 name = "fast creature"
 glyph = "f"
 fg = "#806040"
+weight = 1000
 speed = 2000
 
 [[creature]]
@@ -106,6 +110,7 @@ id = "slow"
 name = "slow creature"
 glyph = "s"
 fg = "#806040"
+weight = 1000
 speed = 900
 "##;
 

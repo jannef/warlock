@@ -9,7 +9,7 @@ how loud your steps are, whether it blocks sight and sound, and how tall it stan
 A closed door (`+`) blocks movement, sight, and light, and muffles sound: you hear only what
 happens close behind it. Walk into it to open it, which takes a turn, or press `o` and a
 direction. An open door (`'`) lets you, your light, and sound through. Press `c` and a direction
-to close it again; you cannot close a door while something stands in the doorway. Opening and
+to close it again; you cannot close a door while something stands or lies in the doorway. Opening and
 closing doors makes noise (see [Hearing](hearing.md)).
 
 The game remembers a door as you last saw it: one you saw open stays drawn open until you see it

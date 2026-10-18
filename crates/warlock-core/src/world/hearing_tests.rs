@@ -56,6 +56,7 @@ id = "player"
 name = "you"
 glyph = "@"
 fg = "#ffffff"
+weight = 70000
 footsteps = 50
 hearing = 10
 
@@ -64,6 +65,7 @@ id = "rat"
 name = "rat"
 glyph = "r"
 fg = "#806040"
+weight = 4000
 footsteps = 80
 hearing = 5
 
@@ -73,6 +75,7 @@ name = "mole"
 glyph = "m"
 fg = "#806040"
 hearing = 5
+weight = 1000
 "##;
 
 const LEGEND: &str = r##"

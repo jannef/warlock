@@ -26,8 +26,11 @@ procedurally generated dungeon levels.
 
   ![The darkness chamber under four kinds of vision](docs/screenshots/m3-darkness-chamber-visions.png)
 
-- **Perception and memory** — symmetric line of sight; explored terrain stays as dim memory, never
-  showing creatures or current light.
+- **Perception and memory** — symmetric line of sight; explored terrain and the objects seen on
+  it stay as dim memory, never showing creatures or current light.
+- **Objects** — weapons, armor, tools, potions, scrolls, food, gems, coins, rings, and amulets,
+  each with its own glyph, color, material, and weight, lie in piles to pick up and drop; an
+  ADOM-style inventory lettered a–z shows what you carry and what it weighs.
 - **Living glyphs and effects** — still ponds that glint in the torchlight, streams and a river
   that visibly flow and foam against rocks, a pulsing altar, flickering torches, sparks and
   embers, a soft glow, heat haze over braziers, short fades. All of it is tunable per effect, and
@@ -85,6 +88,9 @@ cargo run --release -p warlock
 | `o` / `c` + direction | Open / close a door (walking into a closed door opens it) |
 | `>` / `<` | Go down / up stairs |
 | `L` | Light or douse your lantern |
+| `,` or `g` | Pick up what lies here (choose by letter where several things lie) |
+| `d` | Drop something |
+| `i` | Inventory: what you carry, by letter, and what it all weighs |
 | `R` | Rest an hour, until dawn, or until nightfall (stops when something comes into view) |
 | `x` | Look around: move a cursor to read what is there (takes no time) |
 | `?` | Show all controls |

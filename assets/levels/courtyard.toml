@@ -42,3 +42,12 @@ map = '''
 "L" = { terrain = "gazebo_floor", light = "lamp" }
 ">" = { terrain = "stairs_down", to = "hub" }
 "@" = { terrain = "flagstones", spawn = "player" }
+
+# Objects (M11): windfall apples under a tree, and a candle and a scroll left in the gazebo.
+[[pile]]
+at = [26, 7]
+objects = ["apple*3"]
+
+[[pile]]
+at = [44, 8]
+objects = ["candle*2", "scroll_of_light"]

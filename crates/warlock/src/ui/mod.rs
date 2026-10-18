@@ -1,17 +1,18 @@
 //! Glyph UI: the map viewport, message line, status bar, and the modal screens (spec §6).
 //!
-//! Everything shown about the world comes from `World::perception()`. Terrain goes into the map
-//! grid layer, creatures and glyphs that outgrow their cell into the free-glyph layer
-//! ([`glyphs`]), and text and panels into the UI console on top. [`motion`] moves the camera and
-//! slides creatures between cells; [`effects`] adds particles, glow, heat haze, and fades;
-//! [`sounds`] marks where unseen sounds were heard. Terrain
-//! is drawn in its base colors: the map grid's shader lights it with the visual light
+//! Everything shown about the world comes from `World::perception()`. Terrain and the top object
+//! of each pile go into the map grid layer, creatures and glyphs that outgrow their cell into the
+//! free-glyph layer ([`glyphs`]), and text and panels into the UI console on top. [`motion`]
+//! moves the camera and slides creatures between cells; [`effects`] adds particles, glow, heat
+//! haze, and fades; [`sounds`] marks where unseen sounds were heard. Terrain and objects are drawn
+//! in their base colors: the map grid's shader lights them with the visual light
 //! (`render::lighting`), composited after the map is placed and before free glyphs are lit.
 //! [`dev`] adds the developer overlays (reveal mode is the one exception that reads ground truth).
 //!
-//! Menus, settings, controls, and the `?` help are screens on one stack ([`screens`]): opened by
-//! [`Screens::open`], fed key presses by `input::route_keys`, and drawn by [`draw`], the one
-//! system that writes the UI console.
+//! Menus, settings, controls, the `?` help, the inventory, and choosing what to pick up or drop
+//! ([`object_screen`]) are screens on one stack ([`screens`]): opened by [`Screens::open`], fed
+//! key presses by `input::route_keys`, and drawn by [`draw`], the one system that writes the UI
+//! console.
 
 mod controls_screen;
 mod dev;
@@ -21,6 +22,7 @@ mod look;
 mod menu;
 mod motion;
 mod new_run_screen;
+mod object_screen;
 mod screens;
 mod settings_screen;
 mod sounds;
@@ -238,9 +240,11 @@ fn camera_origin(view: i32, level: i32, viewer: i32) -> i32 {
     }
 }
 
-/// Draws terrain into the map grid. Creatures are on the free-glyph layer: the grid keeps the
-/// terrain under them but not its glyph (`covered`). Only visible terrain animates. Visible
-/// terrain keeps its base colors (the shader lights it); remembered terrain is dimmed here.
+/// Draws terrain into the map grid, with the top object of each known pile in place of the
+/// terrain's glyph (over its background, lit like terrain). Creatures are on the free-glyph
+/// layer: the grid keeps the terrain under them but not its glyph (`covered`). Only visible
+/// terrain without objects animates. Visible cells keep their base colors (the shader lights
+/// them); remembered ones, objects included, are dimmed here.
 fn draw_map(grid: &mut MapGrid, view: &PerceptionView<'_>, anims: &AnimTable, covered: &[Pos]) {
     let content = view.content();
     let (ox, oy) = (grid.level_origin.x, grid.level_origin.y);
@@ -249,27 +253,31 @@ fn draw_map(grid: &mut MapGrid, view: &PerceptionView<'_>, anims: &AnimTable, co
         for sx in 0..grid.console.cols() as i32 {
             let p = Pos::new(ox + sx, oy + sy);
             let seen = view.cell(p);
+            let top = view.objects(p).first().map(|s| content.object(s.object));
+            let glyph = |t| {
+                let def = content.terrain(t);
+                let (ch, fg) = top.map_or((def.glyph, def.fg), |o| (o.glyph, o.fg));
+                (ch, fg, def.bg)
+            };
             let cell = match seen {
                 CellView::Unknown => continue,
                 CellView::Remembered(t) => {
-                    let def = content.terrain(t);
+                    let (ch, fg, bg) = glyph(t);
                     Cell {
-                        ch: def.glyph,
-                        fg: remembered(def.fg),
-                        bg: remembered(def.bg),
+                        ch,
+                        fg: remembered(fg),
+                        bg: remembered(bg),
                     }
                 }
                 CellView::Visible(t) => {
-                    let def = content.terrain(t);
-                    Cell {
-                        ch: def.glyph,
-                        fg: def.fg,
-                        bg: def.bg,
-                    }
+                    let (ch, fg, bg) = glyph(t);
+                    Cell { ch, fg, bg }
                 }
             };
             grid.console.put(sx, sy, cell);
-            if let CellView::Visible(t) = seen {
+            if let CellView::Visible(t) = seen
+                && top.is_none()
+            {
                 match anims.terrain(t) {
                     Some(TerrainAnim::Grid { .. }) => {
                         grid.console.animate(sx, sy, anims.cell(t, p, view.flow(p)))

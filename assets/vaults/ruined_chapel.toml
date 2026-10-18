@@ -17,3 +17,8 @@ map = '''
 "." = "flagstones"
 "," = "rubble"
 '"' = "tall_grass"
+
+# Objects (M11): a scroll left on the steps of the altar.
+[[pile]]
+at = [11, 3]
+objects = ["scroll_of_light"]

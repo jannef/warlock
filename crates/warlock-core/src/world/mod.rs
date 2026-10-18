@@ -20,6 +20,10 @@
 //! any other cell enters that cell's local area (`local:x,y`, generated on the first visit) on
 //! the side the player walked onto the cell from ([`WorldState`]'s last overworld step), and
 //! walking off a local area's edge leads back to its overworld cell (the level state's edge exit).
+//!
+//! Objects (spec §6): piles lie on cells of a level ([`LevelState`]), actors carry inventories.
+//! Picking up and dropping take the level's turn; stepping onto a pile says what lies there. An
+//! actor's weight is its creature's plus what it carries ([`Actor::weight`]).
 
 mod actor;
 mod hash;
@@ -30,7 +34,7 @@ pub use actor::{Actor, ActorId, ActorKind, Patrol};
 pub(crate) use hash::fnv1a;
 pub use level::LevelState;
 
-use crate::action::{Action, Event, MAX_REST, Outcome, Rest};
+use crate::action::{Action, Event, Letters, MAX_REST, Outcome, Rest, letter};
 use crate::content::{
     Content, EdgeExit, LevelKind, LevelTemplate, StairsDir, TerrainId, local_area_id,
 };
@@ -39,6 +43,7 @@ use crate::light::LightCache;
 use crate::mapgen::local::arrival;
 use crate::messages::MessageLog;
 use crate::noise::{self, Act, Recent};
+use crate::object::{self, Stack, Weight};
 use crate::perception::{Perception, PerceptionView};
 use crate::rng::Rng;
 use crate::time::{self, Duration, GameTime};
@@ -138,6 +143,16 @@ impl WorldState {
         }
         Ok(())
     }
+
+    /// The player's inventory.
+    fn inventory_mut(&mut self) -> &mut Vec<Stack> {
+        let player = self.player;
+        &mut self
+            .actors
+            .get_mut(&player)
+            .expect("the player actor exists")
+            .inventory
+    }
 }
 
 /// A running game: state plus the content it refers to and the current perception.
@@ -218,6 +233,7 @@ impl World {
                 patrol: None,
                 energy: 0,
                 heard: Vec::new(),
+                inventory: Vec::new(),
             },
         );
         instantiate_level(&mut state, &start);
@@ -242,8 +258,19 @@ impl World {
         }
         if let Some(level) = state.levels.values().find(|l| !l.ids_valid_for(&content)) {
             return Err(WorldError::InconsistentState(format!(
-                "level `{}` uses terrain or lights this content does not have",
+                "level `{}` uses terrain, lights, or objects this content does not have",
                 level.id
+            )));
+        }
+        let creatures = content.creature_defs().len();
+        if let Some(actor) = state.actors.values().find(|a| {
+            usize::from(a.creature.0) >= creatures
+                || !a.inventory.iter().all(|s| s.is_valid_for(&content))
+                || a.inventory.len() > object::INVENTORY_SLOTS
+        }) {
+            return Err(WorldError::InconsistentState(format!(
+                "actor {} is a creature or carries objects this content does not have",
+                actor.id
             )));
         }
         Ok(Self::assemble(content, state))
@@ -312,8 +339,16 @@ impl World {
         PerceptionView {
             content: &self.content,
             level: self.state.current(),
+            player: self.state.player(),
             snapshot: &self.perception,
         }
+    }
+
+    /// The weight of actor `id`, on any level: its creature's base weight plus everything it
+    /// carries. For the rules and dev tools; the player is shown only their own
+    /// ([`PerceptionView::own_weight`]).
+    pub fn actor_weight(&self, id: ActorId) -> Option<Weight> {
+        self.state.actors.get(&id).map(|a| a.weight(&self.content))
     }
 
     /// Ground truth for the current level, **for developer tools only** (reveal mode, debug
@@ -496,6 +531,8 @@ impl World {
             Action::Descend => took(self.take_stairs(StairsDir::Down, events)),
             Action::Ascend => took(self.take_stairs(StairsDir::Up, events)),
             Action::ToggleLantern => took(self.toggle_lantern()),
+            Action::PickUp(letters) => took(self.pick_up(*letters)),
+            Action::Drop(letters) => took(self.drop_objects(*letters)),
             Action::Rest(goal) => self.start_rest(*goal),
             Action::SetVision(id) => self.set_vision(id),
             Action::SkipTime(duration) => {
@@ -532,6 +569,89 @@ impl World {
             self.say("You douse your lantern.");
         }
         true
+    }
+
+    /// Picks up the stacks `letters` names in the pile on the player's cell (everything there
+    /// with no letters), as many as the inventory has letters for. Returns whether anything was
+    /// taken.
+    fn pick_up(&mut self, letters: Letters) -> bool {
+        let here = self.player_pos();
+        let pile = self.state.current().objects_at(here).to_vec();
+        if pile.is_empty() {
+            self.say("There is nothing here to pick up.");
+            return false;
+        }
+        let Some(chosen) = self.chosen(letters, pile.len(), |c| format!("There is no {c} here."))
+        else {
+            return false;
+        };
+        let content = self.content.clone();
+        let inventory = self.state.inventory_mut();
+        let mut taken = Letters::default();
+        for i in chosen.iter() {
+            if object::add_to_inventory(inventory, pile[i], &content) {
+                taken.insert(i);
+            }
+        }
+        if taken.is_empty() {
+            self.say("You have no room for more.");
+            return false;
+        }
+        // Everything was asked for, but the pile has more stacks than there are letters.
+        let more = letters.is_empty() && pile.len() > taken.len();
+        let full = taken != chosen || (more && inventory.len() >= object::INVENTORY_SLOTS);
+        let (got, left) = split(&pile, taken);
+        self.state.current_mut().set_pile(here, left);
+        let mut text = format!("You pick up {}.", object::phrase(&got, &content));
+        if full {
+            text.push_str(" You have no room for more.");
+        }
+        self.say(text);
+        true
+    }
+
+    /// Drops the inventory stacks `letters` names (everything with no letters) on top of the pile
+    /// on the player's cell. Returns whether anything was dropped.
+    fn drop_objects(&mut self, letters: Letters) -> bool {
+        let inventory = self.state.player().inventory.clone();
+        if inventory.is_empty() {
+            self.say("You are not carrying anything.");
+            return false;
+        }
+        let Some(chosen) = self.chosen(letters, inventory.len(), |c| format!("You carry no {c}."))
+        else {
+            return false;
+        };
+        let (dropped, kept) = split(&inventory, chosen);
+        *self.state.inventory_mut() = kept;
+        let here = self.player_pos();
+        let content = self.content.clone();
+        let level = self.state.current_mut();
+        let mut pile = level.objects_at(here).to_vec();
+        object::add_to_pile(&mut pile, &dropped, &content);
+        level.set_pile(here, pile);
+        self.say(format!("You drop {}.", object::phrase(&dropped, &content)));
+        true
+    }
+
+    /// The positions `letters` names in a list of `len` stacks, every position (up to `z`) for
+    /// no letters. A letter past the end is refused with the message `missing` makes of it.
+    fn chosen(
+        &mut self,
+        letters: Letters,
+        len: usize,
+        missing: impl Fn(char) -> String,
+    ) -> Option<Letters> {
+        if letters.is_empty() {
+            return Some(Letters::of(0..len));
+        }
+        match letters.iter().find(|i| *i >= len).and_then(letter) {
+            Some(c) => {
+                self.say(missing(c));
+                None
+            }
+            None => Some(letters),
+        }
     }
 
     fn set_vision(&mut self, id: &str) -> Spent {
@@ -605,6 +725,14 @@ impl World {
                 (_, StairsDir::Down, _) => "There is a staircase down here.".into(),
                 (_, StairsDir::Up, _) => "There is a staircase up here.".into(),
             };
+            self.say(text);
+        }
+        let text = match self.state.current().objects_at(to) {
+            [] => None,
+            [one] => Some(format!("You see here {}.", one.describe(&self.content))),
+            _ => Some("There are several objects here.".to_string()),
+        };
+        if let Some(text) = text {
             self.say(text);
         }
         Spent::Turn(step)
@@ -695,7 +823,9 @@ impl World {
         match def {
             Some(def) if def.is_open_door() => {
                 let closed = def.closes_to.expect("open doors have closes_to");
-                if self.state.actor_at(&self.state.current_level, p).is_some() {
+                if self.state.actor_at(&self.state.current_level, p).is_some()
+                    || !self.state.current().objects_at(p).is_empty()
+                {
                     self.say("Something is in the way.");
                     return false;
                 }
@@ -863,6 +993,16 @@ impl World {
     }
 }
 
+/// The stacks of `stacks` that `chosen` names, and the others, each in order.
+fn split(stacks: &[Stack], chosen: Letters) -> (Vec<Stack>, Vec<Stack>) {
+    let (picked, rest): (Vec<_>, Vec<_>) = stacks
+        .iter()
+        .enumerate()
+        .partition(|(i, _)| chosen.contains(*i));
+    let unzip = |v: Vec<(usize, &Stack)>| v.into_iter().map(|(_, s)| *s).collect();
+    (unzip(picked), unzip(rest))
+}
+
 /// `A` or `An` for a noun.
 fn article(noun: &str) -> &'static str {
     match noun.chars().next() {
@@ -914,6 +1054,7 @@ fn instantiate_level(state: &mut WorldState, template: &LevelTemplate) {
                 }),
                 energy: 0,
                 heard: Vec::new(),
+                inventory: spawn.carry.clone(),
             },
         );
     }
@@ -927,6 +1068,8 @@ mod hearing_tests;
 mod light_tests;
 #[cfg(test)]
 mod moon_tests;
+#[cfg(test)]
+mod object_tests;
 #[cfg(test)]
 mod overworld_tests;
 #[cfg(test)]

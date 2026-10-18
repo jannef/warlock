@@ -12,7 +12,7 @@ use warlock_core::Dir;
 /// The commands the player may rebind, in the order the controls screen lists them. `Cancel`
 /// (Esc) is fixed so a rebinding can always be cancelled, and the dev snapshot keys are not
 /// player commands.
-pub const REBINDABLE: [KeyCommand; 18] = [
+pub const REBINDABLE: [KeyCommand; 21] = [
     KeyCommand::Move(Dir::N),
     KeyCommand::Move(Dir::NE),
     KeyCommand::Move(Dir::E),
@@ -27,6 +27,9 @@ pub const REBINDABLE: [KeyCommand; 18] = [
     KeyCommand::Descend,
     KeyCommand::Ascend,
     KeyCommand::Lantern,
+    KeyCommand::PickUp,
+    KeyCommand::Drop,
+    KeyCommand::Inventory,
     KeyCommand::Rest,
     KeyCommand::Look,
     KeyCommand::Help,
@@ -95,6 +98,9 @@ impl KeyCommand {
             Descend => "descend",
             Ascend => "ascend",
             Lantern => "lantern",
+            PickUp => "pick_up",
+            Drop => "drop",
+            Inventory => "inventory",
             Rest => "rest",
             Look => "look",
             Help => "help",
@@ -441,7 +447,7 @@ mod tests {
     #[test]
     fn map_round_trips_through_the_table() {
         let mut b = Bindings::default();
-        b.bind_primary(KeyCommand::Descend, ch("d")).unwrap();
+        b.bind_primary(KeyCommand::Descend, ch("D")).unwrap();
         let text = toml::to_string(&b.to_map()).unwrap();
         let table: toml::Table = toml::from_str(&text).unwrap();
         let mut warnings = Vec::new();

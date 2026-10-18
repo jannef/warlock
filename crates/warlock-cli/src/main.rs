@@ -51,7 +51,8 @@ struct RunArgs {
     /// when `--replay` is given).
     #[arg(long, value_parser = parse_seed)]
     seed: Option<u64>,
-    /// Actions as text, e.g. "move:E move:SE wait open:E close:W descend ascend".
+    /// Actions as text, e.g. "move:E move:SE wait open:E close:W descend ascend pickup:ab
+    /// drop:a".
     #[arg(long)]
     actions: Option<String>,
 }
@@ -68,7 +69,8 @@ struct DumpArgs {
     format: Format,
     /// Comma-separated layers: view, fov, memory, light (brightness digit 0-9 per visible cell),
     /// sound (heard sounds over the view: f footsteps, o/c a door opening/closing; upper case
-    /// when loud), truth (dev-only ground truth).
+    /// when loud), inventory (what the player carries and weighs), truth (dev-only ground truth),
+    /// actors (dev-only: every actor on the level with its weight and what it carries).
     #[arg(long, default_value = "view")]
     layers: String,
     /// With `--format json`, include the full world state.

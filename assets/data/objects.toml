@@ -1,0 +1,229 @@
+# Objects: things that lie on the floor and are picked up and carried (spec §7).
+#
+# Every object defines:
+#   id        stable name used by level files (`objects = ["dagger", "arrow*12"]`)
+#   name      singular, without an article ("dagger"); `plural` defaults to the name plus "s"
+#   glyph     the character it is drawn with; fg its color
+#   material  an id in materials.toml
+#   weight    grams for one, at least 1
+#   stackable several lie in one stack (coins, arrows); default false: a stack of one each
+#
+# Glyphs follow ADOM loosely: ) weapons, } missile weapons, / missiles, [ armor, ( tools,
+# ! potions, ? scrolls, % food, * stones and gems, $ coins, = rings, " amulets.
+
+# Weapons
+[[object]]
+id = "dagger"
+name = "dagger"
+glyph = ")"
+fg = "#c8ccd4"
+material = "steel"
+weight = 450
+
+[[object]]
+id = "short_sword"
+name = "short sword"
+glyph = ")"
+fg = "#dce0e8"
+material = "steel"
+weight = 1100
+
+[[object]]
+id = "spear"
+name = "spear"
+glyph = ")"
+fg = "#b8955a"
+material = "wood"
+weight = 1800
+
+[[object]]
+id = "club"
+name = "club"
+glyph = ")"
+fg = "#946a42"
+material = "wood"
+weight = 1400
+
+[[object]]
+id = "short_bow"
+name = "short bow"
+glyph = "}"
+fg = "#b08048"
+material = "wood"
+weight = 700
+
+[[object]]
+id = "arrow"
+name = "arrow"
+glyph = "/"
+fg = "#c8a878"
+material = "wood"
+weight = 30
+stackable = true
+
+# Armor
+[[object]]
+id = "leather_jerkin"
+name = "leather jerkin"
+glyph = "["
+fg = "#9a6838"
+material = "leather"
+weight = 3500
+
+[[object]]
+id = "chain_mail"
+name = "chain mail shirt"
+glyph = "["
+fg = "#aab2ba"
+material = "iron"
+weight = 11000
+
+[[object]]
+id = "iron_helm"
+name = "iron helm"
+glyph = "["
+fg = "#9ea4aa"
+material = "iron"
+weight = 1500
+
+# Tools
+[[object]]
+id = "iron_key"
+name = "iron key"
+glyph = "("
+fg = "#b4b8bc"
+material = "iron"
+weight = 40
+
+[[object]]
+id = "candle"
+name = "wax candle"
+glyph = "("
+fg = "#f0e6c8"
+material = "wax"
+weight = 100
+stackable = true
+
+[[object]]
+id = "rope"
+name = "coil of rope"
+plural = "coils of rope"
+glyph = "("
+fg = "#c8b080"
+material = "cloth"
+weight = 1500
+
+# Potions
+[[object]]
+id = "red_potion"
+name = "red potion"
+glyph = "!"
+fg = "#e04848"
+material = "glass"
+weight = 250
+stackable = true
+
+[[object]]
+id = "blue_potion"
+name = "blue potion"
+glyph = "!"
+fg = "#5888f0"
+material = "glass"
+weight = 250
+stackable = true
+
+# Scrolls
+[[object]]
+id = "scroll_of_light"
+name = "scroll of light"
+plural = "scrolls of light"
+glyph = "?"
+fg = "#ece4cc"
+material = "paper"
+weight = 50
+stackable = true
+
+# Food
+[[object]]
+id = "dried_meat"
+name = "strip of dried meat"
+plural = "strips of dried meat"
+glyph = "%"
+fg = "#b06848"
+material = "flesh"
+weight = 150
+stackable = true
+
+[[object]]
+id = "apple"
+name = "apple"
+glyph = "%"
+fg = "#d84838"
+material = "plant"
+weight = 150
+stackable = true
+
+# Stones and gems
+[[object]]
+id = "rock"
+name = "rock"
+glyph = "*"
+fg = "#a29c90"
+material = "stone"
+weight = 800
+stackable = true
+
+[[object]]
+id = "ruby"
+name = "ruby"
+plural = "rubies"
+glyph = "*"
+fg = "#f03858"
+material = "gemstone"
+weight = 5
+stackable = true
+
+# Coins
+[[object]]
+id = "gold_coin"
+name = "gold coin"
+glyph = "$"
+fg = "#f0cc40"
+material = "gold"
+weight = 10
+stackable = true
+
+[[object]]
+id = "copper_coin"
+name = "copper coin"
+glyph = "$"
+fg = "#d08448"
+material = "copper"
+weight = 8
+stackable = true
+
+# Rings
+[[object]]
+id = "silver_ring"
+name = "silver ring"
+glyph = "="
+fg = "#d4dce4"
+material = "silver"
+weight = 10
+
+# Amulets
+[[object]]
+id = "bone_amulet"
+name = "bone amulet"
+glyph = '"'
+fg = "#e8e0c8"
+material = "bone"
+weight = 60
+
+[[object]]
+id = "jade_amulet"
+name = "jade amulet"
+glyph = '"'
+fg = "#68c090"
+material = "stone"
+weight = 80

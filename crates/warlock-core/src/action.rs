@@ -23,6 +23,12 @@ pub enum Action {
     Descend,
     /// Light or douse the lantern the scenario gives the player. Takes a turn.
     ToggleLantern,
+    /// Pick up the stacks with these letters from the pile on the player's cell (`a` is the top
+    /// of the pile), or everything there with no letters. Takes the level's turn.
+    PickUp(Letters),
+    /// Drop the inventory stacks with these letters onto the player's cell, or everything
+    /// carried with no letters. Takes the level's turn.
+    Drop(Letters),
     /// Wait turn after turn (creatures act) until the goal, stopping early when a creature comes
     /// into view or a message is logged.
     Rest(Rest),
@@ -48,6 +54,82 @@ pub enum Rest {
 /// The longest rest; resting until dawn or dusk is never longer either.
 pub const MAX_REST: Duration = Duration::seconds(DAY);
 
+/// A set of letters `a` to `z` naming stacks of a list the player sees (a pile, the inventory)
+/// by position: `a` is the first. Written as the letters in order, e.g. `ac`.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct Letters(u32);
+
+impl Letters {
+    /// How many letters there are.
+    pub const COUNT: usize = 26;
+
+    /// The letters of these positions; positions past `z` are left out.
+    pub fn of(positions: impl IntoIterator<Item = usize>) -> Self {
+        let mut letters = Self::default();
+        for i in positions {
+            letters.insert(i);
+        }
+        letters
+    }
+
+    pub fn insert(&mut self, i: usize) {
+        if i < Self::COUNT {
+            self.0 |= 1 << i;
+        }
+    }
+
+    pub fn remove(&mut self, i: usize) {
+        if i < Self::COUNT {
+            self.0 &= !(1 << i);
+        }
+    }
+
+    pub fn contains(self, i: usize) -> bool {
+        i < Self::COUNT && self.0 & (1 << i) != 0
+    }
+
+    pub fn is_empty(self) -> bool {
+        self.0 == 0
+    }
+
+    pub fn len(self) -> usize {
+        self.0.count_ones() as usize
+    }
+
+    /// The positions, in order.
+    pub fn iter(self) -> impl Iterator<Item = usize> {
+        (0..Self::COUNT).filter(move |i| self.contains(*i))
+    }
+}
+
+/// The letter of list position `i`: `a` for 0. Positions past `z` have none.
+pub fn letter(i: usize) -> Option<char> {
+    (i < Letters::COUNT).then(|| char::from(b'a' + i as u8))
+}
+
+impl fmt::Display for Letters {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.iter()
+            .filter_map(letter)
+            .try_for_each(|c| write!(f, "{c}"))
+    }
+}
+
+impl FromStr for Letters {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut letters = Letters::default();
+        for c in s.chars() {
+            if !c.is_ascii_lowercase() {
+                return Err(format!("`{c}` is not a letter from a to z"));
+            }
+            letters.insert(usize::from(c as u8 - b'a'));
+        }
+        Ok(letters)
+    }
+}
+
 /// Something the player perceived happening during a turn. Presentation turns these into
 /// animations; they never carry information about things the player could not perceive.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -72,7 +154,8 @@ pub struct Outcome {
 }
 
 /// Text syntax for scripting: `move:E wait open:E close:W ascend descend lantern rest:1h
-/// rest:dawn rest:dusk vision:ID skip:1h` (durations: `30s`, `10m`, `2h`).
+/// rest:dawn rest:dusk pickup pickup:ac drop:b vision:ID skip:1h` (durations: `30s`, `10m`,
+/// `2h`; letters name stacks, `a` first; `pickup` and `drop` without letters take everything).
 ///
 /// `Display` and `FromStr` round-trip; action names are case-insensitive when parsing (vision
 /// profile ids keep their case).
@@ -86,6 +169,10 @@ impl fmt::Display for Action {
             Action::Ascend => f.write_str("ascend"),
             Action::Descend => f.write_str("descend"),
             Action::ToggleLantern => f.write_str("lantern"),
+            Action::PickUp(l) if l.is_empty() => f.write_str("pickup"),
+            Action::PickUp(l) => write!(f, "pickup:{l}"),
+            Action::Drop(l) if l.is_empty() => f.write_str("drop"),
+            Action::Drop(l) => write!(f, "drop:{l}"),
             Action::Rest(Rest::For(d)) => write!(f, "rest:{d}"),
             Action::Rest(Rest::Dawn) => f.write_str("rest:dawn"),
             Action::Rest(Rest::Dusk) => f.write_str("rest:dusk"),
@@ -120,6 +207,18 @@ impl FromStr for Action {
             "ascend" => bare(Action::Ascend),
             "descend" => bare(Action::Descend),
             "lantern" => bare(Action::ToggleLantern),
+            "pickup" | "drop" => {
+                let letters = match arg {
+                    None => Letters::default(),
+                    Some("") => return Err(format!("`{verb}:` needs letters, e.g. `{verb}:ab`")),
+                    Some(text) => text.parse().map_err(|e| format!("`{s}`: {e}"))?,
+                };
+                Ok(if verb == "pickup" {
+                    Action::PickUp(letters)
+                } else {
+                    Action::Drop(letters)
+                })
+            }
             "rest" => match arg {
                 Some("dawn") => Ok(Action::Rest(Rest::Dawn)),
                 Some("dusk") => Ok(Action::Rest(Rest::Dusk)),
@@ -141,7 +240,8 @@ impl FromStr for Action {
             },
             _ => Err(format!(
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
-                 descend, lantern, rest:1h|dawn|dusk, vision:ID, skip:DURATION)"
+                 descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
+                 vision:ID, skip:DURATION)"
             )),
         }
     }
@@ -163,6 +263,21 @@ mod tests {
     use super::*;
 
     #[test]
+    fn letters_are_a_set_of_positions() {
+        let mut l = Letters::of([3, 0, 3, 30]);
+        assert_eq!((l.len(), l.to_string()), (2, "ad".to_string()));
+        assert!(l.contains(3) && !l.contains(1) && !l.contains(30));
+        l.remove(3);
+        l.insert(25);
+        assert_eq!(l.iter().collect::<Vec<_>>(), [0, 25]);
+        assert_eq!("za".parse::<Letters>(), Ok(Letters::of([0, 25])));
+        assert_eq!(letter(0), Some('a'));
+        assert_eq!(letter(25), Some('z'));
+        assert_eq!(letter(26), None);
+        assert!(Letters::default().is_empty());
+    }
+
+    #[test]
     fn text_round_trips() {
         let mut all = vec![
             Action::Wait,
@@ -177,6 +292,12 @@ mod tests {
             Action::Rest(Rest::Dusk),
             Action::SkipTime(Duration::hours(1)),
             Action::SkipTime(Duration::seconds(30)),
+            Action::PickUp(Letters::default()),
+            Action::PickUp(Letters::of([0])),
+            Action::PickUp(Letters::of([0, 2, 25])),
+            Action::Drop(Letters::default()),
+            Action::Drop(Letters::of([1])),
+            Action::Drop(Letters::of(0..Letters::COUNT)),
         ];
         for d in Dir::ALL {
             all.extend([Action::Move(d), Action::Open(d), Action::Close(d)]);
@@ -213,7 +334,21 @@ mod tests {
                 Action::SkipTime(Duration::hours(2)),
             ])
         );
+        assert_eq!(
+            parse_actions("PICKUP:CA drop pickup drop:b"),
+            Ok(vec![
+                Action::PickUp(Letters::of([0, 2])),
+                Action::Drop(Letters::default()),
+                Action::PickUp(Letters::default()),
+                Action::Drop(Letters::of([1])),
+            ])
+        );
+        assert_eq!(Action::PickUp(Letters::of([2, 0])).to_string(), "pickup:ac");
         for bad in [
+            "pickup:",
+            "pickup:a1",
+            "drop:A-",
+            "drop:",
             "rest",
             "rest:noon",
             "rest:0m",
