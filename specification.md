@@ -54,7 +54,7 @@ regression scene for golden screenshots, replays, and snapshot tests.
 |---|---|---|
 | Start room | movement, message line, `?` help | M1 |
 | Door corridor | opening/closing doors, doors blocking sight | M1–M2 |
-| Patrol gallery | creatures moving in and out of view, never shown in memory; a giant rat and a quicker cave bat on parallel lanes, a slower torch-bearing kobold circling them | M2, M10 |
+| Patrol gallery | creatures moving in and out of view, never shown in memory; a giant rat and a quicker cave bat on parallel lanes, a slower torch-bearing kobold circling them; heard from the corridor behind its closed door, and in its dark middle (the bat flies silently) | M2, M10 |
 | Light hall | colored lights, falloff, pillar and creature shadows, steady magical light | M3, M8 |
 | Darkness chamber | vision types, a UV-only rune, darkvision fade | M3 |
 | Water garden | still ponds and running rills (flow, glints, foam), pulsing altar | M4, M8 |
@@ -258,7 +258,8 @@ Water is calm by design; motion stays tasteful, never busy:
   particles, and screen fades and flashes. Each can also be switched off on its own (settings:
   glyph animation, light flicker, motion = slides and camera easing, bloom and glow, distortion,
   particles, screen fades); an effect runs only when its switch is on and reduced effects is off. No gameplay information may
-  depend on an effect. These are settings (§6); the `--reduced-effects` flag forces everything off.
+  depend on an effect: heard sounds keep a still marker when their ripple (glyph animation) is
+  off (§5 "Hearing"). These are settings (§6); the `--reduced-effects` flag forces everything off.
 - Colors that effects introduce, such as the shimmer target color, go through the active palette
   like any other color.
 - **Color palettes** (default, high contrast, a red-green colorblind variant) are transforms
@@ -399,13 +400,58 @@ rate or animation.
   bounce light reaches it) are evaluated. Bounce light and sunlight are computed over the bounding
   box of the cells in line of sight plus bounce's 3-cell reach, so they do not depend on where the
   viewer stands. Sunlight is not cached (it moves every minute).
+- **Hearing** (`warlock-core/src/noise.rs`; M10). Integer and deterministic, like sight:
+  - **Noise**: actions make noise. A step makes the walker's `footsteps` (creature data: the
+    player 60, kobold 80, giant rat and deer 50; bats fly silently) scaled by the `step_noise` of
+    the terrain stepped onto, in percent (water and running water 200, marsh, bushes, and rubble
+    150, reeds 130, gazebo boards and dry grass 120, tall grass and rocky ground 110, dirt road
+    90, forest floor 80, grass, flowers, and dusty floor 70; default 100). Opening a door makes
+    the closed door's `toggle_noise` (60), closing one the open door's (70). One function decides
+    an action's loudness, so skills such as moving silently can change it there later. Loudness
+    is at most 300; a creature without `footsteps` moves silently, a door without `toggle_noise`
+    is silent. (Footsteps may scale with a creature's weight once it has one, M11.)
+  - **Propagation**: a noise spreads from its cell through the 8 neighbors, losing 10 loudness
+    per orthogonal step and 14 per diagonal one, plus the `muffle` of every cell it enters (a
+    closed door 30). Solid terrain (neither walkable nor transparent: walls, rock, trees,
+    boulders) blocks sound unless it has a `muffle`, and a diagonal step needs one of the two
+    cells beside it to let sound through unmuffled. So sound goes around corners but never
+    through walls or past a closed door's corner. The loudness at a cell is that of its loudest
+    path; the search is bounded by the loudness (at most 30 cells) and by the quietest listener
+    in reach, so its cost does not depend on the level size. The overworld is silent (its steps
+    are journeys).
+  - **Listeners**: every creature type with `hearing` (the faintest loudness it hears: the
+    player 10, kobold 15, giant rat and deer 5, bat 3; none is deaf) hears a noise another actor
+    makes on its level when the loudness at its cell reaches that, at once, as the action
+    happens. A creature keeps what it heard (kind, where it was made, how loud it was at the
+    creature) until it next acts: the input its AI reads (M10, investigating noises); the list
+    is part of the world state.
+  - **The player** perceives the sounds they heard during the turn that just passed whose source
+    cell they do not see (a creature in darkness or out of sight, a door around the corner),
+    never who or what made them: the kind (footsteps, a door opening, a door closing), how loud
+    (faint, clear, or loud: under 10, under 30, or at least 30 above their threshold), and
+    roughly where: a cell up to 2 (faint), 1 (clear), or 0 (loud) steps from the source through
+    cells that pass sound unmuffled, which the player does not see, picked by a hash of the
+    source cell and the turn (deterministic, not the source more often than its neighbors).
+    Sounds whose source the player sees are not perceived: the player sees what happens. A quick
+    creature's steps within one turn are one sound (sounds of one kind made within 2 cells of a
+    later one that turn are left out).
+  - **Messages** for sounds that are news: "You hear footsteps to the north-east.", "You faintly
+    hear a door close to the west." (the direction of the rough place, of eight). A perceived
+    sound is no news if one of the same kind was perceived within 4 cells plus 2 per turn since,
+    in the last 10 turns (a creature takes up to two steps a turn), so a patrol heard turn after
+    turn is said once per pass, not every turn. Like any message they stop a rest.
+  - **On the map**, each perceived sound is a faint, still marker (`◌`, pale grey, fainter for
+    fainter sounds, never lit) at its rough place until the next turn; with glyph animation on
+    it ripples in, a ring growing out of it and fading within a second. Look mode describes it
+    ("You hear footsteps here.").
 - **Perception API**: the snapshot exposes, for visible cells only, the perceived light (after the
   wall-face rule; plus whether the cell is seen only through darkvision and its squared distance),
   the light sources whose light reaches visible cells (stable key; emitter: a point light's
   position and preset, or the sun with its shadow direction; and per-cell contributions;
   contributions plus the cell's base light sum to the cell's light), the base light of visible
-  cells, the active vision profile, the ambient light, and on a level under the sky the sun and sky
-  of the moment. Visual lighting (§4.4) is derived from this.
+  cells, the active vision profile, the ambient light, on a level under the sky the sun and sky
+  of the moment, and the perceived sounds (kind, volume, rough place; "Hearing" above). Visual
+  lighting (§4.4) is derived from this.
 
 ## 6. Input and UI
 
@@ -438,8 +484,16 @@ rate or animation.
 - **Rest** (`R`) asks in the message line: `Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to
   cancel)`. `h` rests an hour, `d` until 06:00, `n` until 18:00 (replay text `rest:1h`,
   `rest:dawn`, `rest:dusk`); any other command cancels. Resting is one action that passes turn
-  after turn and stops early when a creature comes into view or a message is logged (§8 "Time").
+  after turn and stops early when a creature comes into view or a message is logged (§8 "Time"),
+  such as a sound that is news (§5 "Hearing"); a sound already known goes on without stopping it.
   It is a gameplay input mode like the open/close direction prompt, not a menu screen.
+- **Messages**: the last two show in the message line; the same text logged again in a row folds
+  into one entry with a count (`You open the door. (×2)`). Heard sounds are logged only when they
+  are news (§5 "Hearing"), so a patrol walking back and forth out of sight gives one message per
+  pass, not one a turn.
+- **Look mode** describes what the player perceives at the cursor: a creature and its terrain,
+  terrain, remembered terrain, where stairs lead, and a sound heard there ("You hear footsteps
+  here.").
 - Screen layout: map viewport, message log, status panel (level, region (on the overworld and in
   its local areas), time of day and date as `14:32 · 12 Rainmoon`, turn, position, light at the
   player, vision profile, lantern, seed; segments drop in priority order when the window is narrow,
@@ -497,11 +551,16 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 - **Definitions** (TOML): terrain types, creature types, light presets, vision profiles, glyph
   animations, and effects (glow, heat haze, particle emitters; §4.8). Creature types have a
   `speed` (100 to 10 000, default 1000, the player's; never shown to the player; §8 "Speed"): the
-  giant rat 1200, the cave bat 2000, the kobold 900, the deer 1300. Terrain has a `move_cost`:
-  the time to step onto it in percent of the level's turn (default 100; still and running water
-  200), a `bounce` tint for the light it reflects (§5), a `height` in cells for sun shadows
-  (default 1 if opaque, else 0; at most 4), and `roofed` (never lit by the sun or the sky).
-  Overworld terrain has
+  giant rat 1200, the cave bat 2000, the kobold 900, the deer 1300; and for hearing (§5)
+  `footsteps` (at most 300; default 0, silent) and `hearing` (the faintest loudness heard, 1 to
+  300; default none, deaf). Terrain has a `move_cost`: the time to step onto it in percent of the
+  level's turn (default 100; still and running water 200), a `bounce` tint for the light it
+  reflects (§5), a `height` in cells for sun shadows (default 1 if opaque, else 0; at most 4),
+  `roofed` (never lit by the sun or the sky), and for hearing a `step_noise` (how loud steps onto
+  it are, in percent of the walker's footsteps, 0 to 1000; default 100), a door's `toggle_noise`
+  (how loud opening the closed door or closing the open one is, at most 300; default 0, silent;
+  only doors), and a `muffle` (the loudness a sound loses entering the cell, at most 300; default
+  0, but solid terrain blocks sound unless it has one). Overworld terrain has
   `travel_minutes` (1 to 1440; required for every walkable terrain on the overworld),
   optionally `local`, the ground terrain of the local area entered from a cell of it (none:
   nothing to explore there; locations never have one), and `landscape`, what its land is like in
@@ -568,8 +627,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   ids), because ids are indices; a save made with different content is rejected. Generated levels
   are saved with the run like visited hand-made ones (terrain, memory, stairs, lights, kind and
   turn length, arrival point, and edge exit), together with the gameplay random stream, the game
-  clock, every actor's scheduler energy (§8 "Speed"), and the direction of the last overworld
-  step (format version 5; saves without the step load with none). The save is `run.sav` in the platform
+  clock, every actor's scheduler energy (§8 "Speed"), the direction of the last overworld step
+  (format version 5; saves without the step load with none), what each actor heard and has not
+  yet acted on, and the sounds the player perceived lately (§5 "Hearing"; saves without them load
+  with none). The save is `run.sav` in the platform
   data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
   and on level change, and a save that cannot be read is renamed `run.sav.bad`, never deleted, while
   a new run starts. Starting resumes the save unless `--new` is given. Dev snapshots: `F5` saves and
@@ -606,8 +667,10 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   (a dev "reveal" mode excepted).
 - **Turn phases**, in order: player action → the other actors on the level act in time order
   until the player may act again, the clock advancing to the moment of each action (the energy
-  scheduler, "Speed" below) → environment → perception (line of sight, light, memory) → emit
-  presentation events.
+  scheduler, "Speed" below) → environment → perception (line of sight, light, memory, heard
+  sounds and their messages) → emit presentation events. An action that makes noise is heard by
+  every actor in earshot as it happens (§5 "Hearing"); a creature drops what it heard as it
+  acts, the player once they have acted.
 - **Time** (`warlock-core/src/time.rs`): world time is whole seconds since the calendar epoch
   (year 1, day 1 of the first month, 00:00), kept in the world state (saved, covered by the state
   hash). The calendar has 12 months of 30 days (a 360-day year) and 24-hour days; month names are
@@ -650,7 +713,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     view pass without perception: a creature is seen only within the view range, and before its
     first step that could bring it there it needs the energy for every step that cannot (each at
     least the level's quickest step), so a fast creature shortens the stretch. Those turns cannot
-    change when the rest stops, and a night's rest stays fast on large levels
+    change when the rest stops (sounds carry at most 30 cells, less than the view range, so none
+    is missed), and a night's rest stays fast on large levels
     (`cargo xtask bench-turns` times one; budget 500 ms).
   - **Dev skip** (`F6` in dev builds, replay text `skip:1h`) moves the clock ahead at once;
     nobody acts or gains energy and no turn passes, but it is recorded like any action.
@@ -693,11 +757,12 @@ cargo xtask golden [--update]                             # compare golden scree
   diverging step. `--replay` takes its scenario and seed from the file; `--record` rewrites its
   file after every action (including replayed steps).
 - Dump layers: `view`, `fov`, `memory`, `light` (perceived brightness of each visible cell as a
-  digit, `0` dark to `9` fully lit or brighter) are built from the perception snapshot only;
-  `truth` shows ground truth and is dev-only. JSON dumps carry turn, game time (seconds and
-  calendar fields), level, viewer, seen actors, recent messages, and optionally the full world
-  state; the ASCII header line has the turn, the time (`0001-01-01 08:00:00`), level, viewer, and
-  hash.
+  digit, `0` dark to `9` fully lit or brighter), `sound` (the view with each heard sound at its
+  rough place: `f` footsteps, `o` a door opening, `c` a door closing, upper case when loud) are
+  built from the perception snapshot only; `truth` shows ground truth and is dev-only. JSON dumps
+  carry turn, game time (seconds and calendar fields), level, viewer, seen actors, heard sounds,
+  recent messages, and optionally the full world state; the ASCII header line has the turn, the
+  time (`0001-01-01 08:00:00`), level, viewer, and hash.
 - Freezing visual time and fixing window size and scale make screenshots reproducible. With frozen
   time, glyph animations show that moment and motion (slides, camera) completes instantly.
 - Dev builds add in-game commands: switch vision profile (`F3`), reveal map (`F2`, ground truth,

@@ -59,6 +59,8 @@ impl World {
     /// actors when the player is ready.
     pub(super) fn run_turn(&mut self, took: Duration, events: &mut Vec<Event>) {
         self.state.turn += 1;
+        // The player has acted: what they heard before is spent, and they hear afresh.
+        self.player_mut().heard.clear();
         let player = self.state.player;
         let level = &self.state.current_level;
         let scheduled = |a: &Actor| Scheduled {
@@ -104,9 +106,11 @@ impl World {
 
     /// How long from now no creature on the current level could come into view, so a rest need
     /// not look after turns that end by then (spec §8 "Rest"). A creature is seen only within
-    /// [`VIEW_RADIUS`], and every step takes at least the level's quickest step: before its first
-    /// step that could bring it into view, it needs the energy for all the steps that cannot.
+    /// [`VIEW_RADIUS`] (and heard only within [`crate::noise::MAX_REACH`], less than that), and
+    /// every step takes at least the level's quickest step: before its first step that could
+    /// bring it into view, it needs the energy for all the steps that cannot.
     pub(super) fn out_of_view_for(&self) -> Duration {
+        const _: () = assert!(crate::noise::MAX_REACH < VIEW_RADIUS);
         let level = self.state.current();
         let quickest = self
             .content

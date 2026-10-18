@@ -285,7 +285,8 @@ mod tests {
     fn ui_text_glyphs_are_covered() {
         let font = Font::load().unwrap();
         let atlas = rasterize(&font.0, 18.0, &glyph_set([]), 1);
-        for c in "×—–…·•←↑→↓↔≈≠≤≥°±─│┌┐└┘█░♥♦♣♠☼".chars()
+        // The last is the heard-sound marker (`ui::sounds`).
+        for c in "×—–…·•←↑→↓↔≈≠≤≥°±─│┌┐└┘█░♥♦♣♠☼◌".chars()
         {
             assert!(
                 atlas.index.contains_key(&c),

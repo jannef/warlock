@@ -34,7 +34,7 @@ impl Effect {
 
     fn help(self) -> &'static str {
         match self {
-            Effect::GlyphAnimation => "Water waves, pulsing altars, shimmering lava.",
+            Effect::GlyphAnimation => "Water waves, pulsing altars, sounds rippling in.",
             Effect::Flicker => "Firelight flickers and drifts in hue; steady when off.",
             Effect::Motion => "Creatures slide between cells and the camera eases; off snaps.",
             Effect::Glow => "Bloom around glowing glyphs such as lava and crystals.",

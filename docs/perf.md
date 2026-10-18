@@ -30,6 +30,7 @@ on `main` with lighting (#39), effects (#37), procgen (#40) and the status line 
 | Turn time, avg | 0.020 ms | 0.051 ms | 0.007 ms | |
 | Turn time, max (400 turns) | 0.042 ms | 0.123 ms | 0.016 ms | 5 ms / 16 ms / 5 ms |
 | Rest dusk to dawn, 7200 turns (2026-10-17, game clock #52) | 121 ms | 17 ms | 50 ms | 500 ms |
+| Rest dusk to dawn, 7200 turns (2026-10-18, speed #75 and hearing #78; 232 / 53 / 82 ms without hearing) | 249 ms | 57 ms | 81 ms | 500 ms |
 | Frame time, 2560x1440 | 0.89 ms (about 1120 fps) | 0.89 ms (about 1120 fps) | n/a | 16.7 ms |
 | Frame time, 1280x720 | 0.79 ms | 0.84 ms | n/a | 16.7 ms |
 

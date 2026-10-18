@@ -3,7 +3,8 @@
 //! Everything shown about the world comes from `World::perception()`. Terrain goes into the map
 //! grid layer, creatures and glyphs that outgrow their cell into the free-glyph layer
 //! ([`glyphs`]), and text and panels into the UI console on top. [`motion`] moves the camera and
-//! slides creatures between cells; [`effects`] adds particles, glow, heat haze, and fades. Terrain
+//! slides creatures between cells; [`effects`] adds particles, glow, heat haze, and fades;
+//! [`sounds`] marks where unseen sounds were heard. Terrain
 //! is drawn in its base colors: the map grid's shader lights it with the visual light
 //! (`render::lighting`), composited after the map is placed and before free glyphs are lit.
 //! [`dev`] adds the developer overlays (reveal mode is the one exception that reads ground truth).
@@ -22,6 +23,7 @@ mod motion;
 mod new_run_screen;
 mod screens;
 mod settings_screen;
+mod sounds;
 
 pub use menu::Press;
 pub use screens::{MenuChoice, ScreenAction, ScreenName, ScreenStack, Screens};
@@ -59,17 +61,19 @@ impl Plugin for UiPlugin {
             .init_resource::<ScreenStack>()
             .add_message::<MenuChoice>()
             .init_resource::<effects::Bursts>()
+            .init_resource::<sounds::SoundMarkers>()
             .add_systems(Startup, screens::open_startup_screens)
             .add_systems(
                 Update,
                 (
                     screens::apply_choice.after(route_keys).before(SimSet),
                     (
-                        (motion::track, effects::track),
+                        (motion::track, effects::track, sounds::track),
                         draw_map_layer,
                         shadows::update,
                         lighting::update,
                         effects::emit,
+                        sounds::emit,
                         glyphs::emit,
                     )
                         .chain()

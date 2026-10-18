@@ -3,6 +3,10 @@
 # twice as many actions in the same game time; 100 to 10000; never shown to the player), light (a
 # preset in lights.toml the creature carries), anim, and the presentation-only effects glow and
 # [[creature.particles]] (see terrain.toml; they move with the creature).
+# Hearing (gameplay, spec §5 "Hearing"): footsteps (how loud its steps are on terrain with a
+# step_noise of 100; a sound loses 10 a cell, 14 diagonally, and a closed door muffles 30; at most
+# 300; default 0: it moves silently) and hearing (the faintest loudness it hears, 1 to 300; default
+# none: it is deaf).
 
 [[creature]]
 id = "player"
@@ -10,6 +14,8 @@ name = "you"
 glyph = "@"
 fg = "#f4f4f4"
 speed = 1000
+footsteps = 60
+hearing = 10
 
 [[creature]]
 id = "rat"
@@ -17,13 +23,18 @@ name = "giant rat"
 glyph = "r"
 fg = "#b08458"
 speed = 1200
+# Light on its feet, sharp of ear.
+footsteps = 50
+hearing = 5
 
+# Bats fly: no footsteps, and the keenest ears.
 [[creature]]
 id = "bat"
 name = "cave bat"
 glyph = "b"
 fg = "#9a7ab8"
 speed = 2000
+hearing = 3
 
 [[creature]]
 id = "kobold"
@@ -32,6 +43,9 @@ glyph = "k"
 fg = "#7cb85a"
 speed = 900
 light = "torch"
+# Clumsy and loud, and not the best listener.
+footsteps = 80
+hearing = 15
 
 # Sparks from the torch it carries.
 [[creature.particles]]
@@ -54,3 +68,5 @@ name = "deer"
 glyph = "d"
 fg = "#c89a64"
 speed = 1300
+footsteps = 50
+hearing = 5

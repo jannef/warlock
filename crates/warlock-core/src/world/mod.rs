@@ -11,6 +11,11 @@
 //! act again: at normal speed (the player's) after exactly that long, at twice the speed after
 //! half of it. Resting ([`Action::Rest`]) passes many turns in one action.
 //!
+//! Hearing (spec §5 "Hearing", [`crate::noise`]): steps and doors make noise as they happen, and
+//! every other actor in earshot on the level hears it at once ([`Actor::heard`], until it next
+//! acts). Perception turns what the player heard from unseen sources into perceived sounds, and
+//! news among them into messages ("You hear footsteps to the north-east."), which stop a rest.
+//!
 //! The overworld (spec §3): stairs down on it are locations leading into other levels; `>` on
 //! any other cell enters that cell's local area (`local:x,y`, generated on the first visit) on
 //! the side the player walked onto the cell from ([`WorldState`]'s last overworld step), and
@@ -33,6 +38,7 @@ use crate::geom::{Dir, Pos};
 use crate::light::LightCache;
 use crate::mapgen::local::arrival;
 use crate::messages::MessageLog;
+use crate::noise::{self, Act, Recent};
 use crate::perception::{Perception, PerceptionView};
 use crate::rng::Rng;
 use crate::time::{self, Duration, GameTime};
@@ -81,6 +87,9 @@ pub struct WorldState {
     /// then arrives on the side of the local area they came from. Cleared on any level change.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) overworld_step: Option<Dir>,
+    /// Sounds the player perceived lately: those like them are no news ([`noise::news`]).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) recent_sounds: Vec<Recent>,
 }
 
 impl WorldState {
@@ -196,6 +205,7 @@ impl World {
             vision: def.vision.clone(),
             lantern_lit: false,
             overworld_step: None,
+            recent_sounds: Vec::new(),
         };
         state.actors.insert(
             ActorId(0),
@@ -207,6 +217,7 @@ impl World {
                 pos: player_pos,
                 patrol: None,
                 energy: 0,
+                heard: Vec::new(),
             },
         );
         instantiate_level(&mut state, &start);
@@ -332,6 +343,7 @@ impl World {
             Spent::Skip(duration) => {
                 // Nobody acts or gains energy.
                 self.state.time += duration;
+                self.player_mut().heard.clear();
                 self.perceive(&mut events);
             }
         }
@@ -396,13 +408,15 @@ impl World {
             .collect()
     }
 
-    /// Phase 4: recomputes perception, updates memory, and drops events the player did not see.
+    /// Phase 4: recomputes perception, updates memory, says what news the player heard, and
+    /// drops events the player did not see.
     fn perceive(&mut self, events: &mut Vec<Event>) {
         *self.perception = Perception::compute(&self.state, &self.content, &mut self.lights);
         let current = self.state.current_level.clone();
         if let Some(level) = self.state.levels.get_mut(&current) {
             self.perception.remember(level);
         }
+        self.hear();
         let player = self.state.player;
         events.retain(|e| match e {
             Event::ActorMoved { actor, from, to } => {
@@ -415,6 +429,46 @@ impl World {
             }
             Event::LevelChanged { .. } => true,
         });
+    }
+
+    /// A message for each sound the player perceives that is news ([`noise::news`]): a patrol
+    /// heard turn after turn is said once, not every turn. Messages stop a rest.
+    fn hear(&mut self) {
+        let turn = self.state.turn;
+        let news = noise::news(
+            &mut self.state.recent_sounds,
+            self.perception.sounds(),
+            turn,
+        );
+        let viewer = self.player_pos();
+        let mut said: Vec<String> = Vec::new();
+        for sound in news {
+            let text = sound.message(viewer);
+            if !said.contains(&text) {
+                self.say(text.clone());
+                said.push(text);
+            }
+        }
+    }
+
+    /// The noise of `act` by `actor` on the current level, heard by those it reaches.
+    fn make_noise(&mut self, actor: ActorId, act: Act) {
+        let made = self
+            .state
+            .actors
+            .get(&actor)
+            .and_then(|a| noise::noise(&self.content, self.state.current(), a, act));
+        if let Some(made) = made {
+            noise::make(&mut self.state, &self.content, made);
+        }
+    }
+
+    fn player_mut(&mut self) -> &mut Actor {
+        let player = self.state.player;
+        self.state
+            .actors
+            .get_mut(&player)
+            .expect("the player actor exists")
     }
 
     /// Appends a system notice (for example "Game saved.") to the message log.
@@ -541,6 +595,7 @@ impl World {
             from,
             to,
         });
+        self.make_noise(player, Act::Step(to));
         let level = self.state.current();
         if let Some(stairs) = level.stairs_at(to) {
             let text = match (level.kind, stairs.dir, &stairs.to) {
@@ -617,6 +672,7 @@ impl World {
         match def {
             Some(def) if def.is_closed_door() => {
                 let opened = def.opens_to.expect("closed doors have opens_to");
+                self.make_noise(self.state.player, Act::OpenDoor(p));
                 self.set_terrain(p, opened);
                 events.push(Event::DoorOpened { pos: p });
                 self.say("You open the door.");
@@ -643,6 +699,7 @@ impl World {
                     self.say("Something is in the way.");
                     return false;
                 }
+                self.make_noise(self.state.player, Act::CloseDoor(p));
                 self.set_terrain(p, closed);
                 events.push(Event::DoorClosed { pos: p });
                 self.say("You close the door.");
@@ -727,6 +784,8 @@ impl World {
         }
         self.state.current_level = to.to_string();
         self.state.overworld_step = None;
+        // Sounds remembered on the level left say nothing about this one.
+        self.state.recent_sounds.clear();
         Ok(())
     }
 
@@ -769,7 +828,12 @@ impl World {
     /// This is the one place a creature decides and does something. Today it follows its patrol
     /// route, waiting when blocked or without one; creature behavior (AI) replaces that decision
     /// here, and whatever the action lets the player perceive (events, noise) starts here too.
+    /// What the creature heard since it last acted ([`Actor::heard`]) is the AI's to read here;
+    /// it is spent as the creature acts. Its steps make noise.
     fn creature_turn(&mut self, id: ActorId, events: &mut Vec<Event>) -> Duration {
+        if let Some(actor) = self.state.actors.get_mut(&id) {
+            actor.heard.clear();
+        }
         let level = self.state.current();
         let actor = &self.state.actors[&id];
         let Some(patrol) = &actor.patrol else {
@@ -794,6 +858,7 @@ impl World {
             from,
             to,
         });
+        self.make_noise(id, Act::Step(to));
         step
     }
 }
@@ -848,6 +913,7 @@ fn instantiate_level(state: &mut WorldState, template: &LevelTemplate) {
                     step: 0,
                 }),
                 energy: 0,
+                heard: Vec::new(),
             },
         );
     }
@@ -855,6 +921,8 @@ fn instantiate_level(state: &mut WorldState, template: &LevelTemplate) {
 
 #[cfg(test)]
 mod branch_tests;
+#[cfg(test)]
+mod hearing_tests;
 #[cfg(test)]
 mod light_tests;
 #[cfg(test)]

@@ -2,7 +2,7 @@
 source: crates/warlock-core/src/dump.rs
 expression: "ascii(&world, &layers)"
 ---
-turn 4 time 0001-01-01 08:00:24 level hub viewer (7, 12) hash 4e1ca24158719dc7
+turn 4 time 0001-01-01 08:00:24 level hub viewer (7, 12) hash 0b46e12204fecf4c
 == view ==
 
 

@@ -18,8 +18,10 @@ pub fn describe(view: &PerceptionView<'_>, p: Pos) -> String {
         Some(to) => format!("{}, leading to {to}", content.terrain(t).name),
         None => content.terrain(t).name.clone(),
     };
-    match view.cell(p) {
-        CellView::Visible(t) => match view.actor_at(p) {
+    // A sound heard there (never on a cell the player sees): "You hear footsteps here."
+    let heard = view.sound_at(p).map(|s| s.you_hear());
+    match (view.cell(p), heard) {
+        (CellView::Visible(t), _) => match view.actor_at(p) {
             Some(_) if p == view.viewer() => format!("You, on {}.", terrain(t)),
             Some(actor) => {
                 let name = &content.creature(actor.creature).name;
@@ -27,8 +29,17 @@ pub fn describe(view: &PerceptionView<'_>, p: Pos) -> String {
             }
             None => format!("{}.", capitalize(&with_article(&terrain(t)))),
         },
-        CellView::Remembered(t) => format!("You remember {} here.", with_article(&terrain(t))),
-        CellView::Unknown => "You don't know what is there.".to_string(),
+        (CellView::Remembered(t), Some(heard)) => {
+            format!(
+                "{heard} here, where you remember {}.",
+                with_article(&terrain(t))
+            )
+        }
+        (CellView::Remembered(t), None) => {
+            format!("You remember {} here.", with_article(&terrain(t)))
+        }
+        (CellView::Unknown, Some(heard)) => format!("{heard} here."),
+        (CellView::Unknown, None) => "You don't know what is there.".to_string(),
     }
 }
 
@@ -56,6 +67,7 @@ pub fn draw_cursor(console: &mut Console, x: i32, y: i32, view: &PerceptionView<
     let content = view.content();
     let ch = match (view.cell(p), view.actor_at(p)) {
         (CellView::Visible(_), Some(actor)) => content.creature(actor.creature).glyph,
+        _ if view.sound_at(p).is_some() => super::sounds::MARKER,
         (CellView::Visible(t) | CellView::Remembered(t), _) => content.terrain(t).glyph,
         (CellView::Unknown, _) => ' ',
     };
@@ -132,6 +144,31 @@ mod tests {
             .expect("the staircase to the vast level is in view");
         let text = describe(&view, down);
         assert!(text.ends_with("leading to The Vast Caverns."), "{text}");
+    }
+
+    #[test]
+    fn heard_sounds_are_described_where_they_were_heard() {
+        let mut w = world();
+        // Along the corridor to the patrol gallery's closed door: the kobold is heard behind it.
+        let steps = |dir, n| std::iter::repeat_n(Action::Move(dir), n);
+        let walk: Vec<Action> = steps(Dir::N, 3)
+            .chain([Action::Open(Dir::N)])
+            .chain(steps(Dir::N, 2))
+            .chain(steps(Dir::E, 36))
+            .collect();
+        for action in &walk {
+            w.apply(action);
+        }
+        while w.perception().sounds().is_empty() && w.turn() < 200 {
+            w.apply(&Action::Wait);
+        }
+        let view = w.perception();
+        let sound = view.sounds().first().expect("footsteps behind the door");
+        let text = describe(&view, sound.pos);
+        assert!(
+            text == "You hear footsteps here." || text == "You faintly hear footsteps here.",
+            "{text}"
+        );
     }
 
     #[test]

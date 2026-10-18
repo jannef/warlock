@@ -35,6 +35,7 @@ pub use terrain::{MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
 pub use vault::Vault;
 pub use vision::VisionProfile;
 
+use crate::noise::MAX_LOUDNESS;
 use level::{LegendEntry, legend_char};
 use serde::Deserialize;
 use std::collections::{BTreeMap, BTreeSet};
@@ -288,6 +289,7 @@ impl Content {
                     spec.id
                 )));
             }
+            check_terrain_noise(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
             check_effects(
                 path,
                 "terrain",
@@ -316,6 +318,12 @@ impl Content {
                 bounce: spec.bounce,
                 height,
                 roofed: spec.roofed,
+                step_noise: spec.step_noise,
+                toggle_noise: spec.toggle_noise,
+                // Solid terrain blocks sound unless it muffles it; everything else passes it.
+                muffle: spec
+                    .muffle
+                    .or((spec.walkable || spec.transparent).then_some(0)),
                 anim: spec.anim.clone(),
                 glow: spec.glow,
                 haze: spec.haze,
@@ -366,6 +374,15 @@ impl Content {
                 )));
             }
             let light = self.resolve_light(path, spec.light.as_deref())?;
+            if spec.footsteps > MAX_LOUDNESS
+                || spec.hearing.is_some_and(|h| h == 0 || h > MAX_LOUDNESS)
+            {
+                return Err(err(format!(
+                    "creature `{}`: `footsteps` must be at most {MAX_LOUDNESS} and `hearing` 1 to \
+                     {MAX_LOUDNESS}",
+                    spec.id
+                )));
+            }
             check_effects(
                 path,
                 "creature",
@@ -698,6 +715,28 @@ impl Content {
         });
         terrain.chain(creatures).collect()
     }
+}
+
+/// The most a terrain may scale footsteps by, in percent.
+const MAX_STEP_NOISE: u16 = 1000;
+
+/// Checks a terrain type's noise fields (spec §5 "Hearing").
+fn check_terrain_noise(spec: &terrain::TerrainSpec) -> Result<(), String> {
+    if spec.step_noise > MAX_STEP_NOISE {
+        return Err(format!(
+            "`step_noise` is {}%; expected 0 to {MAX_STEP_NOISE}",
+            spec.step_noise
+        ));
+    }
+    if spec.toggle_noise > MAX_LOUDNESS || spec.muffle.is_some_and(|m| m > MAX_LOUDNESS) {
+        return Err(format!(
+            "`toggle_noise` and `muffle` must be at most {MAX_LOUDNESS}"
+        ));
+    }
+    if spec.toggle_noise > 0 && spec.opens_to.is_none() && spec.closes_to.is_none() {
+        return Err("only doors have a `toggle_noise`".into());
+    }
+    Ok(())
 }
 
 /// Checks the presentation-only animation and effect fields of a terrain or creature type.

@@ -11,7 +11,7 @@
 //! palette = "default"     # "default", "high-contrast", "colorblind"
 //!
 //! [effects]               # per-effect switches, all on by default
-//! glyph_animation = true  # wave, pulse, shimmer, cycle
+//! glyph_animation = true  # wave, pulse, shimmer, cycle; heard sounds ripple in
 //! flicker = true          # light flicker: firelight varies in intensity and hue
 //! motion = true           # movement slides and camera easing
 //! glow = true             # bloom and glyph glow
@@ -54,7 +54,8 @@ pub struct Settings {
 /// switches; the `Effects` resource in rendering holds the effective values.
 #[derive(Resource, Debug, Clone, Copy, PartialEq, Eq)]
 pub struct EffectSwitches {
-    /// Glyph animation: wave, pulse, shimmer, cycle.
+    /// Glyph animation: wave, pulse, shimmer, cycle, and heard-sound markers rippling in (the
+    /// markers themselves stay: they are information).
     pub glyph_animation: bool,
     /// Light flicker: per-source modulation of intensity and hue (light stability).
     pub flicker: bool,

@@ -75,7 +75,8 @@ rest:GOAL vision:PROFILE skip:DURATION` (`DIR` = N NE E SE S SW W NW; `PROFILE` 
 `assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are
 `30s`, `10m`, `2h`; `skip` is the dev hour skip). Dump layers: `view` (what the player sees), `fov` (`*` visible),
 `memory` (seen terrain), `light` (perceived brightness of visible cells as a digit, `0` dark to `9`
-fully lit), `truth` (ground truth, **dev-only**). Replay files are JSON
+fully lit), `sound` (heard sounds at their rough places over the view: `f` footsteps, `o`/`c` a
+door opening/closing, upper case when loud), `truth` (ground truth, **dev-only**). Replay files are JSON
 `{game_version, scenario, seed, steps:[{action, hash}]}`; `hash` is the FNV-1a 64 state hash
 (`World::state_hash`) after the step, as 16 hex digits.
 
@@ -177,6 +178,23 @@ is rules-only: never put it in perception, the UI, or messages; energy is per ac
 Levels carry `kind` and `turn` (`turn_seconds`); terrain carries `move_cost` (percent); scenarios
 carry `start_date`/`start_time`. Rest (`R`) is a message-line input mode (`InputMode::Rest`,
 `input::REST_CHOICES`), not a menu screen.
+
+Hearing (spec §5 "Hearing") lives in `warlock-core/src/noise.rs`. `noise::noise(content, level,
+actor, Act)` is the one place an action's loudness is decided (creature `footsteps` × terrain
+`step_noise` percent for `Act::Step`, the door's `toggle_noise` for `Act::OpenDoor`/`CloseDoor`):
+a new noisy action gets an `Act` variant there, and its call site in `world/mod.rs` is one
+`self.make_noise(actor, Act::…)` where the action happens. `noise::make` delivers it at once to
+every other actor on the level whose `hearing` threshold it reaches (`propagate`: integer Dijkstra,
+10 a step, 14 diagonally, plus terrain `muffle`; solid terrain blocks unless it has a muffle),
+pushing a `Heard { kind, at, loudness }` onto `Actor::heard`. A creature's list is what it heard
+since it last acted and is cleared as it acts in `World::creature_turn` (the AI reads it there
+before clearing); the player's is cleared in `World::run_turn` once the player has acted, and
+becomes `PerceptionView::sounds()` (sources not visible only; kind, `Volume`, and `rough_place`,
+never the actor; a walker's several steps within one turn are one sound). `World::hear` logs news
+(`noise::news` against `WorldState::recent_sounds`) as messages, which stop a rest. The app draws
+`PerceptionView::sounds()` in `ui/sounds.rs` (a still `◌` marker, always: it is information; the
+ripple only with `glyph_animation`). Sounds carry at most `noise::MAX_REACH` (30) cells, under
+`VIEW_RADIUS`, which keeps rest batching (`out_of_view_for`) exact (a const assert guards it).
 
 The overworld (spec §3, §5, §7) is `assets/levels/overworld.toml`, the one level of kind
 `overworld` (`LevelKind::Overworld`: 10-minute turns, steps cost the terrain's `travel_minutes`).
@@ -312,8 +330,9 @@ Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distor
 `ui/` decides what is drawn from the perception snapshot: `ui/mod.rs` (UI console, map grid in
 base colors), `ui/glyphs.rs` (free glyphs), `ui/motion.rs` (slides from `Outcome.events`, one per
 creature along all the steps it took that turn; camera easing; new input completes running
-motion), `ui/effects.rs` (particles, bursts, glow and haze,
-fades), `ui/dev.rs` (dev overlays: reveal map, the one reader of ground truth, and light values).
+motion), `ui/effects.rs` (particles, bursts, glow and haze, fades), `ui/sounds.rs` (heard-sound
+markers), `ui/look.rs` (look mode), `ui/dev.rs` (dev overlays: reveal map, the one reader of
+ground truth, and light values).
 Animation curves live in `render/anim.rs` (water: `render/water.rs`, test-only mirrors of the
 shader) and are mirrored in `console.wesl` — change both together. Everything animated is a function of `VisualTime`. Effects are deliberately subtle (the
 bar: sparse, short-lived particles, gentle bloom, barely perceptible distortion, short fades); judge

@@ -18,6 +18,7 @@ pub mod grid;
 pub mod light;
 pub mod mapgen;
 pub mod messages;
+pub mod noise;
 pub mod perception;
 pub mod replay;
 pub mod rng;

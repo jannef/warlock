@@ -2,6 +2,7 @@
 
 use crate::content::CreatureId;
 use crate::geom::{Dir, Pos};
+use crate::noise::Heard;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -43,4 +44,11 @@ pub struct Actor {
     /// at least 0. It gains the creature type's speed per second of game time while the actor is
     /// on the current level; an action costs 1000 per second it takes.
     pub energy: i64,
+    /// Noises the actor heard since it last acted, in the order heard (spec §5 "Hearing"; see
+    /// [`crate::noise`]): where each was made, its kind, and how loud it was here. A creature's
+    /// list is what it may react to in its next action ([`crate::World`]'s `creature_turn`, where
+    /// the AI reads it) and is cleared as it acts; the player's covers the turn that last passed
+    /// and becomes the perceived sounds.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub heard: Vec<Heard>,
 }
