@@ -143,7 +143,6 @@ fn rain(
 }
 
 /// Puts this frame's rain on the free-glyph layer, below creatures.
-#[allow(clippy::too_many_arguments)]
 pub(super) fn emit(
     game: Res<Game>,
     grid: Res<MapGrid>,
