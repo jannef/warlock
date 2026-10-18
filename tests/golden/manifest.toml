@@ -113,7 +113,7 @@ name = "help-screen"
 scenario = "showcase"
 actions = "wait"
 screen = "help"
-window = "1280x800"
+window = "1280x840"
 
 # Settings over a run, opened over the pause menu (#57).
 [[golden]]
