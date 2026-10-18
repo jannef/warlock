@@ -5,10 +5,12 @@
 //! stairs down to other levels. Every other overworld cell whose terrain names a `local` ground
 //! leads into a **local area**, an outdoor level generated on the first visit
 //! ([`crate::mapgen`]) whose id is `local:x,y` after its overworld cell. Like a dungeon branch
-//! level, it then persists with the run.
+//! level, it then persists with the run. What the area looks like follows the [`Landscape`] of
+//! its cell and of the cells around it (a river or a lake beside it, a road through it).
 
 use super::{Content, LevelKind, LevelTemplate, TerrainId};
-use crate::geom::Pos;
+use crate::geom::{Dir, Pos};
+use serde::Deserialize;
 
 const LOCAL_PREFIX: &str = "local:";
 
@@ -31,6 +33,40 @@ pub fn parse_local_area(id: &str) -> Option<Pos> {
     (local_area_id(p) == id).then_some(p)
 }
 
+/// What the land of an overworld terrain is like at the scale of a local area (`landscape` in
+/// `data/terrain.toml`): which generator builds the local areas of its cells, and what it adds
+/// to the local areas beside it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Landscape {
+    /// Open dry grass, a lone tree here and there.
+    Plains,
+    /// Green meadows with flowers and copses.
+    Grassland,
+    /// Woods with clearings.
+    Forest,
+    /// Thick woods crossed by game trails.
+    DenseForest,
+    /// Rocky slopes, crags, and boulders.
+    Hills,
+    /// Marsh, pools, and reeds.
+    Swamp,
+    /// A road: it runs through the local area towards the neighboring roads and locations; the
+    /// land around it is like the neighbors'.
+    Road,
+    /// Running water: a river along that side of the neighboring local areas.
+    River,
+    /// Open water: a lake shore along that side of the neighboring local areas.
+    Lake,
+}
+
+impl Landscape {
+    /// Land a local area can be made of (not a road, not water).
+    pub const fn is_land(self) -> bool {
+        !matches!(self, Landscape::Road | Landscape::River | Landscape::Lake)
+    }
+}
+
 /// A local area: the overworld it belongs to, its cell, and the terrain there.
 #[derive(Clone, Copy, Debug)]
 pub struct LocalArea<'a> {
@@ -39,6 +75,16 @@ pub struct LocalArea<'a> {
     pub terrain: TerrainId,
     /// The ground the local area is made of (the overworld terrain's `local`).
     pub ground: TerrainId,
+    /// The landscape of the overworld terrain: land or a road (content validation guarantees
+    /// one).
+    pub landscape: Landscape,
+}
+
+impl LocalArea<'_> {
+    /// The overworld terrain next to the area's cell in direction `dir`, if on the map.
+    pub fn neighbor(&self, dir: Dir) -> Option<TerrainId> {
+        self.overworld.terrain.get(self.pos.step(dir)).copied()
+    }
 }
 
 impl Content {
@@ -62,6 +108,7 @@ impl Content {
             pos,
             terrain,
             ground,
+            landscape: def.landscape?,
         })
     }
 }
@@ -141,6 +188,17 @@ mod tests {
         assert!(err.is_err_and(|e| e.contains("local area ground must be walkable")));
         let err = terrain("local = \"grass\"", "local = \"lawn\"");
         assert!(err.is_err_and(|e| e.contains("unknown terrain `lawn`")));
+        for landscape in ["", "landscape = \"lake\""] {
+            let err = terrain("landscape = \"plains\"", landscape);
+            assert!(
+                err.as_ref().is_err_and(
+                    |e| e.contains("`plains` has a local area but no land or road `landscape`")
+                ),
+                "{err:?}"
+            );
+        }
+        let err = terrain("landscape = \"plains\"", "landscape = \"meadow\"");
+        assert!(err.is_err_and(|e| e.contains("unknown variant `meadow`")));
     }
 
     #[test]

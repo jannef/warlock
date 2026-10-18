@@ -84,11 +84,35 @@ Plains, Mirefen, Greyspine Mountains) show in the status bar.
   enters its level, arriving on the stairs that lead back; those stairs (`<`) lead out to the
   overworld at the location. The hub's stairs nook has a `<` to the overworld.
 - **Local areas**: `>` on any other cell whose terrain names a local ground enters the outdoor
-  local area of that cell (level id `local:x,y`), generated on the first visit and then persistent
-  like any level. Walking off any edge of a local area returns to its overworld cell. For now a
-  local area is a placeholder: an 80×40 open field of the ground the overworld terrain names
-  (`local`: grass, forest floor, rocky ground, marsh), arrival in the middle; the outdoor
-  generators replace it.
+  local area of that cell (level id `local:x,y`, 80×40), generated on the first visit from the
+  run seed and the cell (§7 "Generators", *outdoor*) and then persistent like any level. The
+  player arrives on the side (or corner) they walked onto the cell from — stepping east onto it,
+  on the area's west edge, on the road if they came along one — or in a glade in the middle if
+  they did not walk there (arriving by stairs or back from the area itself). Walking off any edge
+  returns to the overworld cell. What an area looks like follows its overworld terrain's
+  landscape and its neighbors:
+  - *plains*: dry grass with greener hollows, tall grass, a lone tree or a copse, bushes,
+    boulders; *grassland*: green meadows, tall grass, wildflowers and buttercups, copses fringed
+    with bushes, lone trees, grazing deer;
+  - *forest*: woods of leafy trees with stands of pines in clumps, undergrowth and bluebells,
+    grassy clearings, a glade in the middle; *dense forest*: thick woods, mostly pines, small
+    clearings, game trails from the middle out to every side;
+  - *hills*: rocky ground with grassy slopes, crags (rock outcrops, 2 tall) with fallen boulders
+    around them, a few pines, now and then a standing stone; *swamp*: marsh with pools of still
+    water, reeds, grassy hummocks, willows, and dead trees;
+  - a *road* cell runs a dirt road (2 wide, bridged where it crosses water) from near the middle
+    out towards every neighboring road, bridge, or location, through the land most of its
+    neighbors have; a *river* beside the cell runs along that side of the area (running water,
+    one speed, flowing the way the overworld river does) and a *lake* lies along it (still water,
+    reeds in the shallows);
+  - ponds, a brook (running water across the area, quicker than a river), and ruins (outdoor
+    vaults: a stone circle with an old altar that glows faintly at night, a broken watchtower, a
+    roofless chapel) turn up now and then, and how wooded the land is blends towards the
+    neighboring cells near each side, so areas side by side meet.
+
+  Trees stand 2 tall, pines 3, standing stones 3, crags 2, bushes and reeds 1 (they cast sun
+  shadows; trees, pines, crags, and boulders block sight). The `forest` scenario starts in a
+  forest glade of the Thornwood at 06:30.
 - **Day and night**: sight on the overworld depends on daylight (§5), and the sun and the sky
   light the overworld and its local areas by day (§5 "Sunlight"); at night the overworld is drawn
   by a faint cold light, while local areas are dark.
@@ -469,9 +493,13 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   onto it in percent of the level's turn (default 100; still and running water 200), a `bounce`
   tint for the light it reflects (§5), a `height` in cells for sun shadows (default 1 if opaque,
   else 0; at most 4), and `roofed` (never lit by the sun or the sky). Overworld terrain has
-  `travel_minutes` (1 to 1440; required for every walkable terrain on the overworld) and
+  `travel_minutes` (1 to 1440; required for every walkable terrain on the overworld),
   optionally `local`, the ground terrain of the local area entered from a cell of it (none:
-  nothing to explore there; locations never have one). The calendar's month names are
+  nothing to explore there; locations never have one), and `landscape`, what its land is like in
+  local areas (required with `local`): `plains`, `grassland`, `forest`, `dense_forest`, `hills`,
+  or `swamp` pick the generator of its own areas; `road` runs a road through them amid the
+  neighbors' land; `river` and `lake` put running or still water along that side of the
+  neighboring areas (§3). The calendar's month names are
   `data/calendar.toml` (exactly 12; without the file months are numbered).
 - **Dungeon branches** (`data/dungeons.toml`): stacks of generated levels, e.g.
   `{ id = "depths", generator = "rooms", depth = 8, size = [80, 21] }`, plus optional name,
@@ -485,7 +513,11 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   decimal, no signs or leading zeros), which stairs and scenarios may also target. A local area is
   generated on its first visit from the content, the seed, and its id (its own random stream,
   `map/local:x,y`), then persists; it records its edge exit (the overworld and the cell), and
-  walking off its edge leads there.
+  walking off its edge leads there. `>` arrives on the edge cell of the side the player walked
+  onto the cell from (the run remembers the direction of the last overworld step until the next
+  level change): on the road if one leaves the area there, else on dry ground if any, near the
+  middle of the side (or the corner) but trading a few cells along it for open ground around
+  it; with no such step, at the area's start in the middle.
 - **Generators** (`warlock-core`, integer-only): *rooms* — walled rooms joined along a minimum
   spanning tree plus a few loops by corridors dug as cheapest paths (bends cost extra), with closed
   doors, open doors, or doorways where corridors enter, and wall torches in most rooms; *caves* —
@@ -493,11 +525,27 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   lamps and glowing fungus. Both place the up staircase (the arrival point) and the down staircase
   far from it, and a few creatures on looping patrols. Every level is validated by flood fill —
   every stair, door, and walkable cell reachable from the up staircase, patrols valid, some light
-  — and a level that fails is regenerated from the next derived stream.
+  — and a level that fails is regenerated from the next derived stream. *outdoor* (the local
+  areas of the overworld, §3): smooth integer value noise (random values on a coarse lattice,
+  eased between) sized as a share of the area lays everything in natural blobs — woods, clearings,
+  meadows of flowers, pools, crags; the share of woods blends towards each neighboring cell's
+  within the third of the area nearest it. Each attempt lays water along river and lake sides
+  (bands whose banks wander with the noise), a brook (a winding course, two cells wide, one flow
+  direction per straight stretch), and the road first; keeps a glade clear around the middle;
+  adds a pond and ruins (outdoor vaults) where they fit on open land; grows the landscape; then
+  joins every walkable pocket to the start (small ones are grown over with what surrounds them,
+  larger ones get a way cleared through the cheapest obstacles) and opens every side. A few deer
+  graze on looping patrols in meadows and woods. Validation: the start is walkable, every walkable
+  cell is reachable from it (4-connected), every side has at least 3 walkable cells, running water
+  and only running water has a flow, and patrols are valid.
 - **Vaults** (`assets/vaults/*.toml`): hand-made pieces in the level-file format, stamped verbatim
   (terrain, lights, creatures) where they fit — into rock with room for corridors or tunnels to
   every entrance. A vault's edge is solid except for its entrances (doors, not on a corner); it has
-  no stairs or player start, and all its walkable cells are reachable from an entrance.
+  no stairs or player start, and all its walkable cells are reachable from an entrance. Vaults of
+  `kind = "outdoor"` are ruins for local areas, stamped on open land with a ring of open ground
+  around them: their spaces (`void`) keep the area's own ground, every open cell on their edge is
+  a way in, and their walkable cells are reachable from the edge. Dungeon generators use only
+  dungeon vaults, local areas only outdoor ones.
 - **Scenarios** (`assets/scenarios/*.toml`): level set, start position, vision profile, lantern,
   options, and when the run starts: `start_date = [year, month, day]` (all from 1; default
   `[1, 1, 1]`) and `start_time = "hh:mm"` (default `"08:00"`).
@@ -509,8 +557,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   content fingerprint (hash of the ordered terrain, creature, level, light, and dungeon-branch
   ids), because ids are indices; a save made with different content is rejected. Generated levels
   are saved with the run like visited hand-made ones (terrain, memory, stairs, lights, kind and
-  turn length, arrival point, and edge exit), together with the gameplay random stream and the game
-  clock (format version 4). The save is `run.sav` in the platform
+  turn length, arrival point, and edge exit), together with the gameplay random stream, the game
+  clock, and the direction of the last overworld step (format version 4; saves without it load
+  with none). The save is `run.sav` in the platform
   data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
   and on level change, and a save that cannot be read is renamed `run.sav.bad`, never deleted, while
   a new run starts. Starting resumes the save unless `--new` is given. Dev snapshots: `F5` saves and

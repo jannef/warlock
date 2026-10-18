@@ -28,7 +28,7 @@ pub use level::{
     CreatureSpawn, EdgeExit, LevelKind, LevelTemplate, Region, StairsLink, parse_route,
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
-pub use overworld::{LocalArea, local_area_id, parse_local_area};
+pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use scenario::ScenarioDef;
 pub use terrain::{MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
@@ -308,6 +308,7 @@ impl Content {
                 move_cost: spec.move_cost,
                 travel_minutes: spec.travel_minutes,
                 local: resolve(&spec.local)?,
+                landscape: spec.landscape,
                 opens_to: resolve(&spec.opens_to)?,
                 closes_to: resolve(&spec.closes_to)?,
                 stairs: spec.stairs,
@@ -327,6 +328,17 @@ impl Content {
         {
             return Err(err(format!(
                 "terrain `{}`: its local area ground must be walkable",
+                def.id
+            )));
+        }
+        if let Some(def) = defs.iter().find(|d| {
+            d.local.is_some()
+                && !d
+                    .landscape
+                    .is_some_and(|l| l.is_land() || l == Landscape::Road)
+        }) {
+            return Err(err(format!(
+                "terrain `{}` has a local area but no land or road `landscape`",
                 def.id
             )));
         }
@@ -1078,8 +1090,50 @@ mod tests {
         }
         let content = Content::builtin().unwrap();
         let ids: Vec<_> = content.vaults().iter().map(Vault::id).collect();
-        assert_eq!(ids, ["flooded_cell", "guard_post", "shrine"]);
-        assert_eq!(content.vaults()[2].entrances.len(), 3);
+        assert_eq!(
+            ids,
+            [
+                "flooded_cell",
+                "guard_post",
+                "ruined_chapel",
+                "ruined_tower",
+                "shrine",
+                "stone_circle"
+            ]
+        );
+        assert_eq!(content.vaults()[4].entrances.len(), 3);
+        let outdoor: Vec<_> = content.vaults().iter().filter(|v| v.is_outdoor()).collect();
+        assert_eq!(outdoor.len(), 3);
+    }
+
+    #[test]
+    fn outdoor_vaults_are_open_but_connected() {
+        let load = |map: &str, kind: &str| {
+            let mut files = ContentFiles::builtin();
+            files.insert(
+                "vaults/ruin.toml",
+                &format!("name = \"Ruin\"\nkind = \"{kind}\"\nmap = '''\n{map}'''\n"),
+            );
+            Content::load(&files)
+        };
+        // Open ground (spaces) and walkable cells on the edge are ways in; no doors needed.
+        let vault = load(" ### \n #.  \n ### \n", "outdoor").expect("an open ruin");
+        let ruin = vault
+            .vaults()
+            .iter()
+            .find(|v| v.id() == "ruin")
+            .expect("ruin");
+        assert!(ruin.is_outdoor());
+        assert!(ruin.entrances.len() > 5);
+        // A walled-in cell is still an error, and so is a ruin with no open edge.
+        for (map, expected) in [
+            (".####\n.#..#\n.####\n", "cannot be reached"),
+            ("###\n###\n###\n", "needs an open cell on its edge"),
+        ] {
+            let err = load(map, "outdoor").unwrap_err();
+            assert!(err.message.contains(expected), "{map}: {}", err.message);
+        }
+        assert!(load("###\n#.#\n###\n", "overworld").is_err());
     }
 
     #[test]

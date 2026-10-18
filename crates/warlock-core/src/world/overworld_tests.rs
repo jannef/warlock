@@ -34,6 +34,11 @@ fn with_overworld(map: &str) -> Arc<Content> {
              \"@\" = {{ terrain = \"road\", spawn = \"player\" }}\n"
         ),
     );
+    // The `forest` scenario starts in a local area of the real overworld.
+    files.insert(
+        "scenarios/forest.toml",
+        "name = \"Forest\"\nstart_level = \"overworld\"\n",
+    );
     Arc::new(Content::load(&files).expect("test content loads"))
 }
 
@@ -78,33 +83,39 @@ fn step_towards(world: &World, target: Pos) -> Dir {
         .expect("a way to the target")
 }
 
-/// Walks to `target`, recording the actions.
+/// Walks to `target`, recording the actions; waits when a creature is in the way.
 fn walk_to(world: &mut World, target: Pos, log: &mut Vec<Action>) {
     for _ in 0..500 {
         if world.player_pos() == target {
             return;
         }
-        let action = Action::Move(step_towards(world, target));
-        assert!(world.apply(&action).took_turn, "{}", last_message(world));
+        let mut action = Action::Move(step_towards(world, target));
+        if !world.apply(&action).took_turn {
+            assert!(last_message(world).ends_with("is in the way."));
+            action = Action::Wait;
+            world.apply(&action);
+        }
         log.push(action);
     }
     panic!("could not reach {target}");
 }
 
-/// Walks `dir` until the level changes (off the edge of a local area); returns the steps taken.
-fn leave(world: &mut World, dir: Dir) -> i32 {
+/// Walks to side `dir` of a local area (where arriving from there puts the player) and off it;
+/// returns the actions taken.
+fn leave(world: &mut World, dir: Dir) -> usize {
     let id = world.perception().level_id().to_string();
-    let mut steps = 0;
-    while world.perception().level_id() == id {
-        assert!(
-            world.apply(&Action::Move(dir)).took_turn,
-            "{}",
-            last_message(world)
-        );
-        steps += 1;
-        assert!(steps <= 100, "never reached the edge going {dir}");
-    }
-    steps
+    let level = world.state.current();
+    let edge = crate::mapgen::local::arrival(&level.terrain, &world.content, dir)
+        .expect("a way out on every side");
+    let mut log = Vec::new();
+    walk_to(world, edge, &mut log);
+    assert!(
+        world.apply(&Action::Move(dir)).took_turn,
+        "{}",
+        last_message(world)
+    );
+    assert_ne!(world.perception().level_id(), id, "left going {dir}");
+    log.len() + 1
 }
 
 /// The overworld cell of the location leading to `to`.
@@ -338,28 +349,65 @@ fn descending_elsewhere_enters_the_cells_local_area_and_its_edges_lead_back() {
     assert_eq!(last_message(&world), "You explore the road.");
     let (w, h) = crate::mapgen::local::SIZE;
     assert_eq!((view.width(), view.height()), (w, h));
-    assert_eq!(world.player_pos(), Pos::new(w / 2, h / 2));
+    // Walked in from the west: on the west side, on the road that comes from there.
+    let here = world.player_pos();
+    assert_eq!(here.x, 0);
+    assert_eq!(terrain_id(&world), "dirt_road");
     assert_eq!(world.state.current().turn(), Duration::seconds(6));
     assert_eq!(
-        world.apply(&Action::Move(Dir::N)).elapsed,
+        world.apply(&Action::Move(Dir::E)).elapsed,
         Duration::seconds(6)
     );
 
-    // West to the edge, then one more step leaves.
-    assert_eq!(leave(&mut world, Dir::W), w / 2 + 1);
+    // Back west and one more step leaves.
+    assert_eq!(leave(&mut world, Dir::W), 2);
     assert_eq!(world.perception().level_id(), "overworld");
     assert_eq!(world.player_pos(), cell);
     assert_eq!(last_message(&world), "You return to The Wildlands.");
 
-    // Every edge leads back, diagonally too.
+    // Not having walked onto the cell, the player arrives in the middle. Every edge leads back,
+    // diagonally too.
     for dir in [Dir::N, Dir::E, Dir::S, Dir::SE, Dir::NW] {
         assert!(world.apply(&Action::Descend).took_turn);
         assert_eq!(world.perception().level_id(), id);
+        assert_eq!(world.state.current().start, Some(world.player_pos()));
         leave(&mut world, dir);
         assert_eq!(world.player_pos(), cell, "{dir}");
     }
     assert!(world.apply(&Action::Move(Dir::W)).took_turn);
     assert_eq!(world.player_pos(), start);
+}
+
+#[test]
+fn walking_onto_a_cell_and_descending_arrives_on_the_side_walked_in_from() {
+    let mut world = world();
+    let (w, h) = crate::mapgen::local::SIZE;
+    // East along the road, north-west onto grassland, south back onto the road.
+    for (step, side) in [(Dir::E, Dir::W), (Dir::NW, Dir::SE), (Dir::S, Dir::N)] {
+        let cell = world.player_pos().step(step);
+        assert!(world.apply(&Action::Move(step)).took_turn);
+        assert_eq!(world.player_pos(), cell);
+        assert!(world.apply(&Action::Descend).took_turn);
+        let here = world.player_pos();
+        let (dx, dy) = side.delta();
+        let on_side = (dx == 1 && here.x == w - 1)
+            || (dx == -1 && here.x == 0)
+            || (dy == 1 && here.y == h - 1)
+            || (dy == -1 && here.y == 0);
+        assert!(on_side, "stepped {step}: arrived at {here}");
+        // Stepping back the way the player came leaves at once.
+        assert!(world.apply(&Action::Move(side)).took_turn);
+        assert_eq!(world.perception().level_id(), "overworld");
+        assert_eq!(world.player_pos(), cell);
+    }
+    // Resting on the cell keeps the way the player came; a level change forgets it.
+    assert!(world.apply(&Action::Move(Dir::E)).took_turn);
+    world.apply(&Action::Rest(Rest::For(Duration::hours(1))));
+    assert!(world.apply(&Action::Descend).took_turn);
+    assert_eq!(world.player_pos().x, 0, "came from the west");
+    leave(&mut world, Dir::E);
+    assert!(world.apply(&Action::Descend).took_turn);
+    assert_eq!(world.state.current().start, Some(world.player_pos()));
 }
 
 #[test]
@@ -371,10 +419,10 @@ fn local_areas_persist_per_overworld_cell() {
     for _ in 0..5 {
         world.apply(&Action::Move(Dir::E));
     }
-    let remembered = world.state.levels[&id].memory.clone();
-    assert!(remembered.cells().iter().any(Option::is_some));
     leave(&mut world, Dir::S);
     assert_eq!(world.perception().level_id(), "overworld");
+    let remembered = world.state.levels[&id].memory.clone();
+    assert!(remembered.cells().iter().any(Option::is_some));
     // A neighboring cell has its own area; the first one is kept as it was.
     assert!(world.apply(&Action::Move(Dir::W)).took_turn);
     let other = local_area_id(world.player_pos());
@@ -386,11 +434,11 @@ fn local_areas_persist_per_overworld_cell() {
     assert!(world.apply(&Action::Move(Dir::E)).took_turn);
     assert!(world.apply(&Action::Descend).took_turn);
     assert_eq!(world.perception().level_id(), id);
-    let (w, h) = crate::mapgen::local::SIZE;
+    let level = world.state.current();
     assert_eq!(
-        world.player_pos(),
-        Pos::new(w / 2, h / 2),
-        "back at the start"
+        Some(world.player_pos()),
+        crate::mapgen::local::arrival(&level.terrain, &CONTENT, Dir::W),
+        "in from the west"
     );
     // Same area as generated on the first visit, memory included.
     let generated = crate::mapgen::generate(&CONTENT, world.seed(), &id, None).expect("generates");
@@ -541,11 +589,13 @@ fn the_sky_lights_the_overworld_and_local_areas_by_day_only() {
 
 /// A tour: road and grass, a local area left by its edge, the Hall and back, and a rest.
 fn tour() -> Vec<Action> {
-    let parse = |text: &str| crate::action::parse_actions(text).expect("actions parse");
-    let mut actions = parse("move:E move:SE descend move:N move:W lantern rest:1h move:S");
-    actions.extend(std::iter::repeat_n(Action::Move(Dir::W), 43));
-    actions.extend(parse("move:NW descend ascend move:E rest:dusk"));
-    actions
+    // Into the area of a grassland cell from the north-west and straight back out that way,
+    // then west and north-west to the Hall.
+    crate::action::parse_actions(
+        "move:E move:SE descend lantern rest:1h move:NW move:W move:W move:W move:NW descend \
+         ascend move:E rest:dusk",
+    )
+    .expect("actions parse")
 }
 
 #[test]

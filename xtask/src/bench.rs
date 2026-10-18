@@ -1,6 +1,7 @@
 //! `cargo xtask bench-turns`: turn-processing time in the hub, the vast level, the first
-//! generated level of the depths, the sunlit courtyard at dawn, and the overworld (spec §10
-//! budgets; a generated 80×21 level, the courtyard, and the 100×50 overworld get the hub's), and
+//! generated level of the depths, the sunlit courtyard at dawn, the overworld, and a generated
+//! forest area of the overworld at dawn (spec §10 budgets; a generated 80×21 level, the
+//! courtyard, the 100×50 overworld, and an 80×40 local area get the hub's), and
 //! the time a night's rest takes on each (dusk to dawn: 7200 turns of six seconds, 72 of ten
 //! minutes on the overworld).
 
@@ -15,13 +16,16 @@ const TURNS: usize = 400;
 const REST_BUDGET_MS: f64 = 500.0;
 
 /// (scenario, level label, budget in ms)
-const CASES: [(&str, &str, f64); 5] = [
+const CASES: [(&str, &str, f64); 6] = [
     ("showcase", "hub", 5.0),
     ("vast", "vast", 16.0),
     ("depths", "depths", 5.0),
     // Starts at 06:30, while shadows are long.
     ("courtyard", "court", 5.0),
     ("world", "world", 5.0),
+    // A generated forest area of the overworld at 06:30 (walking off an edge, the walk goes
+    // straight back in).
+    ("forest", "forest", 5.0),
 ];
 
 /// Tiny deterministic generator for the scripted walk (kept local; the game RNG is not involved).
@@ -43,6 +47,7 @@ struct Stats {
 
 fn measure(content: &Arc<Content>, scenario: &str) -> Result<Stats, String> {
     let mut world = World::new(content.clone(), scenario, None).map_err(|e| e.to_string())?;
+    let level = world.perception().level_id().to_string();
     let mut rng = 1u64;
     let mut heading = Dir::E;
     let mut times = Vec::with_capacity(TURNS);
@@ -61,6 +66,11 @@ fn measure(content: &Arc<Content>, scenario: &str) -> Result<Stats, String> {
         if outcome.took_turn {
             times.push(elapsed);
         } else {
+            heading = Dir::ALL[next(&mut rng) as usize % Dir::ALL.len()];
+        }
+        // Walked off a local area: back in, untimed, and on in another direction.
+        if world.perception().level_id() != level {
+            world.apply(&Action::Descend);
             heading = Dir::ALL[next(&mut rng) as usize % Dir::ALL.len()];
         }
     }

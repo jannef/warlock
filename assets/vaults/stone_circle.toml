@@ -1,0 +1,19 @@
+# Outdoor vault (spec §7): a ring of standing stones around an old altar that still glows faintly
+# at night. Outdoor vaults (`kind = "outdoor"`) are stamped onto the open land of the overworld's
+# local areas: spaces (`void`) take the area's own ground, and every open cell on the edge is a way
+# in. The generator keeps a ring of open ground around it.
+name = "Stone circle"
+kind = "outdoor"
+map = '''
+    O   O
+ O         O
+
+O    *_*    O
+
+ O         O
+    O   O
+'''
+
+[legend]
+"O" = "standing_stone"
+"*" = "flowers"

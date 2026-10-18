@@ -10,7 +10,8 @@
 //! however long it took. Resting ([`Action::Rest`]) passes many turns in one action.
 //!
 //! The overworld (spec §3): stairs down on it are locations leading into other levels; `>` on
-//! any other cell enters that cell's local area (`local:x,y`, generated on the first visit), and
+//! any other cell enters that cell's local area (`local:x,y`, generated on the first visit) on
+//! the side the player walked onto the cell from ([`WorldState`]'s last overworld step), and
 //! walking off a local area's edge leads back to its overworld cell (the level state's edge exit).
 
 mod actor;
@@ -27,6 +28,7 @@ use crate::content::{
 };
 use crate::geom::{Dir, Pos};
 use crate::light::LightCache;
+use crate::mapgen::local::arrival;
 use crate::messages::MessageLog;
 use crate::perception::{Perception, PerceptionView, VIEW_RADIUS};
 use crate::rng::Rng;
@@ -72,6 +74,10 @@ pub struct WorldState {
     pub(crate) vision: String,
     /// Whether the player's lantern (the scenario's `lantern`) is lit.
     pub(crate) lantern_lit: bool,
+    /// The step that brought the player onto their overworld cell, if they walked there: `>`
+    /// then arrives on the side of the local area they came from. Cleared on any level change.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) overworld_step: Option<Dir>,
 }
 
 impl WorldState {
@@ -182,6 +188,7 @@ impl World {
             messages: MessageLog::default(),
             vision: def.vision.clone(),
             lantern_lit: false,
+            overworld_step: None,
         };
         state.actors.insert(
             ActorId(0),
@@ -535,6 +542,7 @@ impl World {
             return Spent::Nothing;
         }
         let step = level.step_time(def);
+        self.state.overworld_step = (level.kind == LevelKind::Overworld).then_some(dir);
         let player = self.state.player;
         if let Some(actor) = self.state.actors.get_mut(&player) {
             actor.pos = to;
@@ -586,7 +594,8 @@ impl World {
     }
 
     /// `>` on an overworld cell that is not a location: enters the cell's local area, arriving
-    /// at its start.
+    /// on the side the player walked onto the cell from (stepping east, on its west side), or at
+    /// its start (the middle) if they did not walk there.
     fn enter_local_area(&mut self, events: &mut Vec<Event>) -> bool {
         let id = local_area_id(self.player_pos());
         let Some(area) = self.content.local_area(&id) else {
@@ -595,7 +604,16 @@ impl World {
         };
         let what = self.content.terrain(area.terrain).name.clone();
         let from = self.state.current_level.clone();
-        if let Err(err) = self.travel(&id, None) {
+        let side = self.state.overworld_step.map(Dir::opposite);
+        let content = self.content.clone();
+        let arrival = match self.visit(&id, Some(&from)) {
+            Ok(level) => side.and_then(|s| arrival(&level.terrain, &content, s)),
+            Err(err) => {
+                self.say(format!("You cannot go there ({err})."));
+                return false;
+            }
+        };
+        if let Err(err) = self.travel(&id, arrival) {
             self.say(format!("You cannot go there ({err})."));
             return false;
         }
@@ -699,10 +717,7 @@ impl World {
     /// staircase.
     fn travel(&mut self, to: &str, at: Option<Pos>) -> Result<(), WorldError> {
         let from = self.state.current_level.clone();
-        if !self.state.levels.contains_key(to) {
-            let template = level_template(&self.content, self.state.seed, to, Some(&from))?;
-            instantiate_level(&mut self.state, &template);
-        }
+        self.visit(to, Some(&from))?;
         let target = &self.state.levels[to];
         let arrival = at
             .or_else(|| {
@@ -722,7 +737,17 @@ impl World {
             actor.pos = arrival;
         }
         self.state.current_level = to.to_string();
+        self.state.overworld_step = None;
         Ok(())
+    }
+
+    /// Level `id` as it is now, generating it on the first visit (entered from `from`).
+    fn visit(&mut self, id: &str, from: Option<&str>) -> Result<&LevelState, WorldError> {
+        if !self.state.levels.contains_key(id) {
+            let template = level_template(&self.content, self.state.seed, id, from)?;
+            instantiate_level(&mut self.state, &template);
+        }
+        Ok(&self.state.levels[id])
     }
 
     /// `p` if no actor stands there, else the nearest walkable unoccupied cell (ring search).

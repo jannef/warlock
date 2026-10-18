@@ -10,8 +10,12 @@
 # Terrain with a "flow" anim is running water: every cell of it needs a flow direction from the
 # level legend (the arrows in legend.toml).
 # Overworld terrain (spec §3, §7): travel_minutes (an overworld step onto it, 1 to 1440; required
-# for walkable terrain on the overworld) and local (the ground of the local area entered with `>`
-# from a cell of it; none: nothing to explore there).
+# for walkable terrain on the overworld), local (the ground of the local area entered with `>`
+# from a cell of it; none: nothing to explore there), and landscape (what its land is like in
+# local areas: "plains", "grassland", "forest", "dense_forest", "hills", or "swamp" pick the
+# generator of its own local areas; "road" runs a road through them towards the neighboring
+# roads and locations, amid the neighbors' land; "river" and "lake" put running or still water
+# along that side of the neighboring areas; required with `local`).
 # Presentation-only effects (spec §4.8): glow (0-1, the glyph blooms), haze (0-1, heat haze rises
 # above the cell), and [[terrain.particles]] emitters:
 #   on        "ambient" (default; `rate` per second while in view), "step" (a burst of `count` when
@@ -421,23 +425,134 @@ height = 2
 id = "forest_floor"
 name = "forest floor"
 glyph = "."
-fg = "#857a48"
-bg = "#0f0d06"
+fg = "#9c8c5a"
+bg = "#2a2314"
+bounce = "#c8b48c"
 
 [[terrain]]
 id = "rocky_ground"
 name = "rocky ground"
 glyph = "."
-fg = "#958b78"
-bg = "#13110d"
+fg = "#a89e8a"
+bg = "#2b2822"
 
 [[terrain]]
 id = "marsh"
 name = "marsh"
 glyph = '"'
-fg = "#6c9c78"
-bg = "#09130e"
+fg = "#628e6a"
+bg = "#17271b"
 # Wading through reeds and mud.
+move_cost = 150
+
+[[terrain]]
+id = "dry_grass"
+name = "dry grass"
+glyph = "."
+fg = "#bcae6a"
+bg = "#2a2612"
+bounce = "#dcd098"
+
+# What the local area generators grow and strew on the ground (mapgen/local; spec §3).
+
+[[terrain]]
+id = "tall_grass"
+name = "tall grass"
+glyph = '"'
+fg = "#a4c462"
+bg = "#22401a"
+bounce = "#b4dc8c"
+
+[[terrain]]
+id = "buttercups"
+name = "buttercups"
+glyph = "*"
+fg = "#f2d653"
+bg = "#22401a"
+bounce = "#e8dca0"
+
+[[terrain]]
+id = "bluebells"
+name = "bluebells"
+glyph = "*"
+fg = "#9a9cf4"
+bg = "#1a2a16"
+
+# Undergrowth: low enough to see over, slow to push through. Its shadow is short.
+[[terrain]]
+id = "bush"
+name = "bush"
+glyph = "♧"
+fg = "#5cae4c"
+bg = "#142a10"
+move_cost = 200
+height = 1
+bounce = "#98c878"
+
+# Conifers stand taller than the leafy trees and cast longer shadows.
+[[terrain]]
+id = "pine"
+name = "pine"
+glyph = "♠"
+fg = "#3c9c5c"
+bg = "#0c2412"
+walkable = false
+transparent = false
+height = 3
+bounce = "#88b890"
+
+[[terrain]]
+id = "dead_tree"
+name = "dead tree"
+glyph = "ψ"
+fg = "#a08e6c"
+bg = "#14120c"
+walkable = false
+height = 2
+
+[[terrain]]
+id = "boulder"
+name = "boulder"
+glyph = "●"
+fg = "#958c7e"
+bg = "#1e1c18"
+walkable = false
+transparent = false
+
+[[terrain]]
+id = "crag"
+name = "rock outcrop"
+glyph = "▲"
+fg = "#aaa294"
+bg = "#28251f"
+walkable = false
+transparent = false
+height = 2
+
+[[terrain]]
+id = "reeds"
+name = "reeds"
+glyph = "¦"
+fg = "#9aac5e"
+bg = "#182a19"
+move_cost = 150
+height = 1
+bounce = "#c0d090"
+
+[[terrain]]
+id = "dirt_road"
+name = "dirt road"
+glyph = "."
+fg = "#dcc596"
+bg = "#4a3b20"
+bounce = "#e0c8a0"
+
+[[terrain]]
+id = "rubble"
+name = "rubble"
+glyph = ","
+fg = "#a49c8e"
+bg = "#1c1a15"
 move_cost = 150
 
 # The overworld (spec §3): the land at large, at map scale. A step takes `travel_minutes`.
@@ -449,7 +564,8 @@ glyph = "."
 fg = "#b4a660"
 bg = "#100f09"
 travel_minutes = 45
-local = "grass"
+local = "dry_grass"
+landscape = "plains"
 
 [[terrain]]
 id = "grassland"
@@ -459,6 +575,7 @@ fg = "#6cb84e"
 bg = "#0b1709"
 travel_minutes = 50
 local = "grass"
+landscape = "grassland"
 
 [[terrain]]
 id = "forest"
@@ -468,6 +585,7 @@ fg = "#42a24c"
 bg = "#071208"
 travel_minutes = 90
 local = "forest_floor"
+landscape = "forest"
 
 # Too thick to see through.
 [[terrain]]
@@ -479,6 +597,7 @@ bg = "#040c05"
 transparent = false
 travel_minutes = 150
 local = "forest_floor"
+landscape = "dense_forest"
 
 [[terrain]]
 id = "hills"
@@ -488,6 +607,7 @@ fg = "#bc9a62"
 bg = "#17110a"
 travel_minutes = 120
 local = "rocky_ground"
+landscape = "hills"
 
 [[terrain]]
 id = "mountains"
@@ -506,6 +626,7 @@ fg = "#7a9a52"
 bg = "#0b1209"
 travel_minutes = 150
 local = "marsh"
+landscape = "swamp"
 
 [[terrain]]
 id = "river"
@@ -514,6 +635,7 @@ glyph = "~"
 fg = "#4f94e6"
 bg = "#081a32"
 walkable = false
+landscape = "river"
 # Flowing, at map scale: the ripples run downstream along the legend arrows.
 anim = { kind = "flow", speed = 0.35, glint = 0.3 }
 
@@ -524,6 +646,7 @@ glyph = "~"
 fg = "#3a74c8"
 bg = "#061226"
 walkable = false
+landscape = "lake"
 anim = { kind = "wave", speed = 0.15, amount = 0.06 }
 
 [[terrain]]
@@ -534,6 +657,7 @@ fg = "#f4e2b0"
 bg = "#4a3820"
 travel_minutes = 20
 local = "grass"
+landscape = "road"
 
 [[terrain]]
 id = "bridge"
@@ -542,6 +666,8 @@ glyph = "="
 fg = "#e8c48c"
 bg = "#4a3820"
 travel_minutes = 20
+# Roads in the local areas beside it lead onto it. Local areas lay it where a road fords water.
+landscape = "road"
 
 # Locations: stairs down into other levels (the overworld's legend gives each its `to`).
 
