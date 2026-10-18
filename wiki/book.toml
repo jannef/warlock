@@ -1,0 +1,17 @@
+[book]
+title = "Warlock Wiki"
+description = "How Warlock works: time, light, sight, the overworld, and more."
+authors = ["Janne Lê Forsell"]
+language = "en"
+src = "src"
+
+[build]
+build-dir = "book"
+
+[output.html]
+default-theme = "coal"
+preferred-dark-theme = "coal"
+# The wiki is published beside the game at https://jannef.github.io/warlock/wiki/.
+site-url = "/warlock/wiki/"
+git-repository-url = "https://github.com/jannef/warlock"
+edit-url-template = "https://github.com/jannef/warlock/edit/main/wiki/{path}"
