@@ -7,13 +7,16 @@ and glyph-based effects — while every character stays crisp and readable.
 ![The light hall: colored crystals, pillar shadows, smooth falloff](docs/screenshots/m3-light-hall.png)
 
 This is the engine and framework phase: there is no combat or character progression yet. You walk
-a hand-made **showcase world** where each room demonstrates one capability, a vast lit cavern, and
-procedurally generated dungeon levels below it.
+a hand-made **showcase world** where each room demonstrates one capability, an ADOM-like
+**overworld** with day and night, outdoor areas generated from it, a vast lit cavern, and
+procedurally generated dungeon levels.
 
 ## What's in it
 
 - **Light and vision** — every cell carries RGB + UV light from torches, lamps, crystals, braziers,
-  and your lantern, with shadows from walls and pillars. What you see depends on your eyes: normal
+  and your lantern, with shadows from walls and pillars, soft shadows from creatures, and a weak
+  bounce of light off nearby surfaces. Firelight drifts gently in hue and strength; magical light
+  holds steady. What you see depends on your eyes: normal
   vision needs light, low-light eyes see by faint fungus glow, darkvision sees in the dark in
   fading monochrome, and UV sight reveals runes no one else can see.
 
@@ -33,6 +36,16 @@ procedurally generated dungeon levels below it.
   and stones that turn and stretch with it. Night is dark; bring a lantern.
 
   ![The courtyard at 07:00, 12:00, 17:30, and 22:00](docs/screenshots/m9-courtyard-day.png)
+
+- **Overworld and time** — a 12-month, 30-day calendar and a clock that every action advances.
+  "The Wildlands" overworld takes real travel time per step (a road is quick, a swamp slow,
+  mountains impassable); how far you see follows the daylight. Its locations lead to the hub, the
+  cavern, and the dungeon, and any other cell opens a generated outdoor area — meadows, forests,
+  hills, swamps, riverbanks — that you leave by walking off its edge.
+
+  ![The Wildlands at noon](docs/screenshots/m9-overworld-noon.png)
+
+  ![A forest clearing in Thornwood at noon](docs/screenshots/m9-forest-clearing.png)
 
 - **Levels** — the hub, a sunlit courtyard, a 420×300 cavern, and "The Depths": rooms-and-corridors
   and cave levels generated from the run seed (numbers or words), with hand-made vaults stamped in.
