@@ -14,17 +14,19 @@
 //! Masks are cached per source ([`LightCache`]); the perception phase combines them with the
 //! player's line of sight, adds one weak bounce ([`bounce`]), and applies the wall-face rule (see
 //! [`crate::perception`]). On levels under the open sky the sun and the sky add their light by
-//! day ([`Sun`]).
+//! day ([`Sun`]), and the moons by night ([`Moon`]); [`Sky`] puts them together.
 
 mod bounce;
 mod cache;
+mod moon;
 mod sun;
 
 pub(crate) use bounce::{Area, Bounce};
 pub use bounce::{BOUNCE, BOUNCE_STEPS};
 #[cfg(test)]
 pub(crate) use cache::Mask;
-pub(crate) use cache::{LightCache, SUN_KEY};
+pub(crate) use cache::{LightCache, SUN_KEY, moon_key};
+pub use moon::{DUSK_DEPTH, Moon, MoonPhase, Sky};
 pub(crate) use sun::Sunlight;
 pub use sun::{MAX_SHADOW, NOON_ELEVATION, SHADOW_ONE, ShadowSteps, Sun};
 

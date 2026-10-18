@@ -30,7 +30,7 @@ behavior, commands, or architecture change.
 | Player wiki tables | `cargo xtask wiki` (writes `wiki/src/generated/*.md` from the game data), `--check` (fails when stale), `--build` (also runs `mdbook build wiki` into `wiki/book/`; needs `cargo install mdbook --locked`) |
 | Golden screenshots | `cargo xtask golden` (compare; authoritative on Linux only), `--local` (capture to `target/xtask/golden/*.local.png`, no compare), `--update` (rewrite references; see "Golden screenshots") |
 | Frame-time benchmark | `cargo xtask bench-frames [WxH]` (release, offscreen; method and results in `docs/perf.md`) |
-| Turn-time benchmark | `cargo xtask bench-turns` (re-runs itself in release; budgets: hub 5 ms, vast 16 ms, generated depths level 5 ms, sunlit courtyard at dawn 5 ms, overworld 5 ms, generated forest area at dawn 5 ms per turn; a dusk-to-dawn rest 500 ms) |
+| Turn-time benchmark | `cargo xtask bench-turns` (re-runs itself in release; budgets: hub 5 ms, vast 16 ms, generated depths level 5 ms, sunlit courtyard at dawn 5 ms, overworld 5 ms, generated forest area at dawn 5 ms, courtyard and forest area at full-moon midnight 5 ms per turn; a dusk-to-dawn rest 500 ms) |
 | Light stress benchmark | `cargo test --release -p warlock-core turn_cost -- --ignored --nocapture` (400×300, 825 lights; again outdoors at 06:15) |
 
 Game flags (`cargo run -p warlock -- --help`):
@@ -208,10 +208,12 @@ walking off any edge return to the cell. `>` arrives on the side the player walk
 from: `WorldState::overworld_step` (the last overworld step, cleared by any level change) picks
 the side and `mapgen::local::arrival` the edge cell (road first, then dry, open ground near the
 middle of the side); without a step, at the level's start (the middle). Sight on the overworld is line
-of sight within `daylight::overworld_sight` (day 9, twilight 5, night 2), ignoring light. The
-overworld is sky-exposed (sun and sky, like outdoor levels); `daylight::overworld_night` tops its
-ambient light up to the faint `OVERWORLD_NIGHT` where the sky falls short, so cells in sight stand
-apart from memory at night (local areas get none). Regions (`[[region]]` in level
+of sight within `daylight::overworld_sight` (day 9, twilight 5, night 2 plus one per
+`MOONLIGHT_PER_CELL` of `Sky::moonlight`, at most `SIGHT_MOONLIT` 4), ignoring light. The
+overworld is sky-exposed (sun, moons, and sky, like outdoor levels); `daylight::overworld_night`
+tops its ambient light up to the faint `OVERWORLD_NIGHT` where the sun's sky falls short
+(moonlight comes on top), so cells in sight stand apart from memory at night (local areas get
+none). Regions (`[[region]]` in level
 files, `LevelTemplate::region_at`, `PerceptionView::region`) show in the status bar. Unlike
 `vast.toml`, the overworld map is hand-authored: edit the file directly (keep every walkable cell
 inside a region; a test checks).
@@ -268,15 +270,16 @@ cells plus a one-cell margin, from `PerceptionView::base_light` (ambient plus ga
 steady, never shadowed by creatures) and `light_sources()` contributions, less creature shadows,
 and folds in UV (violet tint) and the darkvision fade. Gameplay light lives in
 `warlock-core/src/light/` (`mod.rs`: falloff and the wall-face rule; `cache.rs`: per-source shadow
-masks; `bounce.rs`: one weak bounce; `sun.rs`: sunlight) and is combined in `perception.rs`;
+masks; `bounce.rs`: one weak bounce; `sun.rs`: sunlight; `moon.rs`: moonlight and `Sky`) and is
+combined in `perception.rs`;
 Σ contributions + base light == `light(p)` is a tested invariant. **Creature shadows**
 (`render/shadows.rs`, visual only): each visible creature shades every perceived source that
 lights its cell, except one on its own cell (its carried light). The source is shadowcast
 (`fov::compute_fov`) over the perceived terrain with and without the creature's cell as an extra
 occluder; contribution cells only the first reaches keep `shadows::keep` of that source's light
 (`KEEP` 0.4 right behind the creature, back to all of it at `REACH` 3.5 cells), so colored shadows
-come from per-source attenuation. The sun is directional: `shadows::sun_shade` walks
-`Sun::shadow_steps(CREATURE_HEIGHT)` from the creature instead. `shadows::update` recomputes the `Shadows` resource only when
+come from per-source attenuation. The sun and the moons are directional: `shadows::sky_shade`
+walks `Emitter::shadow_steps(CREATURE_HEIGHT)` from the creature instead. `shadows::update` recomputes the `Shadows` resource only when
 `Game` changes (once per turn), not per frame; darkvision still measures the unshaded light (else
 its glow would brighten shadows). **Light stability** (`render/modulation.rs`; presets'
 `stability.{intensity,hue,dips}` in `lights.toml`, absent = steady): each source's `Modulation`
@@ -307,6 +310,26 @@ shadows both use it). `Sunlight::compute` marches each cell of the bounce area t
 sky light goes into base light. `PerceptionView::sun()` gives the sun and sky of the moment on a
 sky-exposed level (`is_up`, `is_night`, `elevation`), e.g. for day/night rules. The showcase
 courtyard (`levels/courtyard.toml`, scenario `courtyard`) is up the hub stairs nook's `<`.
+
+**Moonlight** (spec §5 "Moonlight", `light/moon.rs`): the moons are `data/sky.toml`
+(`content/sky.rs`, `MoonDef`, `Content::moons()`; optional, none without the file, so test
+fixtures have dark nights unless they add one). `MoonDef::phase_at(time)` is its age over its
+period (16-bit fraction, 0 new, half full). `Moon::at` walks the sun's path (`Sun::at_minute`)
+trailing the sun by its phase of a day, so a moon's elevation and shadow line are the sun's at that
+minute; its `color` and `sky` scale by lit fraction, elevation (`RISE`), daylight (none while the
+sun is up, all from `DUSK_DEPTH` 6° below), and size², integer math only; a test pins a hash of a
+whole cycle — update it after a deliberate change. **`Sky::at(time, content.moons())` is the one
+place sky light is assembled** (sun, moons, `Sky::glow` for base light, `Sky::moonlight` for
+overworld sight): anything that dims the whole sky (weather's clouds) applies there. A moon that
+`shines()` is a `SeenLight` with key `moon_key(index)` and `Emitter::Moon(moon)` after the sun in
+`light_sources()`, lit by `Sunlight::compute(shadow, light, ...)` like the sun;
+`Emitter::shadow_steps` gives the shadow line of either. `PerceptionView::sky()` has the moons.
+The status bar shows the phase (`MoonPhase`, glyph in `ui/mod.rs`) and the full date
+(`Calendar::full_date`); its segments give way by priority, the moon cut to its glyph first
+(`ui::fit_segments`). Tune moonlight with captures of the `courtyard` and `forest` scenarios after
+`skip:353h skip:30m` (full moon at midnight) and `--content-dir assets`, which reads `sky.toml`
+from disk without a rebuild. The wiki's moons and overworld-sight tables come from `sky.toml`
+(`Moon::brightest`); run `cargo xtask wiki` after changing it.
 
 Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distortion`,
 `screen_fades`) and all off with reduced effects:
@@ -354,9 +377,9 @@ Hard rules:
 notes, and no locations or level walkthroughs yet), built with [mdBook](https://rust-lang.github.io/mdBook/)
 (`wiki/book.toml`, table of contents in `wiki/src/SUMMARY.md`, default theme `coal`). It is
 published at https://jannef.github.io/warlock/wiki/ by the release workflow's web job, which
-builds it into `pages/wiki/` beside the game. Facts that live in data (months, terrain, footstep
-loudness in words, vision profiles, light presets, creatures, sight radii; never hidden rules such
-as speed or hearing thresholds) are tables generated by `cargo xtask wiki`
+builds it into `pages/wiki/` beside the game. Facts that live in data (months, moons, terrain,
+footstep loudness in words, vision profiles, light presets, creatures, sight radii; never hidden
+rules such as speed or hearing thresholds) are tables generated by `cargo xtask wiki`
 (`xtask/src/wiki.rs`) into `wiki/src/generated/` (committed) and pulled into pages with
 `{{#include generated/NAME.md}}`; CI runs `cargo xtask wiki --check` and `mdbook build wiki` on the
 Linux job (mdBook pinned there and in `release.yml`). To preview: `cargo xtask wiki --build`, then

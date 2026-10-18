@@ -268,6 +268,7 @@ fn check_wall_faces(view: &PerceptionView<'_>) -> Result<(), TestCaseError> {
                     falloff(preset.color, preset.radius, p.dist2(pos))
                 }
                 Emitter::Sun(sun) => sun.light,
+                Emitter::Moon(moon) => moon.light,
             };
             prop_assert_eq!(
                 c,

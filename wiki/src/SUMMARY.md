@@ -10,7 +10,7 @@
 - [Sight and memory](sight.md)
 - [Vision types](vision.md)
 - [Hearing](hearing.md)
-- [Sun, sky, and night](sun.md)
+- [Sun, moon, and sky](sun.md)
 - [The overworld](overworld.md)
 - [Terrain](terrain.md)
 - [Creatures](creatures.md)

@@ -14,6 +14,7 @@ mod light;
 mod overworld;
 mod particles;
 mod scenario;
+mod sky;
 mod terrain;
 mod vault;
 mod vision;
@@ -31,6 +32,7 @@ pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, S
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use scenario::ScenarioDef;
+pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use terrain::{MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
 pub use vault::Vault;
 pub use vision::VisionProfile;
@@ -159,9 +161,10 @@ struct LegendFile {
 
 /// All loaded and cross-validated content.
 ///
-/// `data/lights.toml`, `data/vision.toml`, `data/dungeons.toml`, and `data/calendar.toml` are
-/// optional. Without vision profiles, a single `normal` profile that needs no light is used, so
-/// content without lighting stays fully visible; without a calendar, months are numbered.
+/// `data/lights.toml`, `data/vision.toml`, `data/dungeons.toml`, `data/calendar.toml`, and
+/// `data/sky.toml` are optional. Without vision profiles, a single `normal` profile that needs no
+/// light is used, so content without lighting stays fully visible; without a calendar, months are
+/// numbered; without a sky file there are no moons.
 #[derive(Debug)]
 pub struct Content {
     terrain: Vec<TerrainDef>,
@@ -178,6 +181,8 @@ pub struct Content {
     /// Sorted by id.
     vaults: Vec<Vault>,
     calendar: Calendar,
+    /// In `data/sky.toml` order.
+    moons: Vec<MoonDef>,
 }
 
 impl Content {
@@ -201,10 +206,15 @@ impl Content {
             dungeons: BTreeMap::new(),
             vaults: Vec::new(),
             calendar: Calendar::default(),
+            moons: Vec::new(),
         };
         let path = "data/calendar.toml";
         if let Some(text) = files.get_optional(path) {
             content.calendar = Calendar::parse(path, text)?;
+        }
+        let path = "data/sky.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.moons = sky::parse(path, text)?;
         }
         content.load_lights(files)?;
         content.load_vision(files)?;
@@ -696,6 +706,11 @@ impl Content {
     /// Month names for showing dates.
     pub fn calendar(&self) -> &Calendar {
         &self.calendar
+    }
+
+    /// The moons, in `data/sky.toml` order (none without the file).
+    pub fn moons(&self) -> &[MoonDef] {
+        &self.moons
     }
 
     /// Every glyph content may display (for building the glyph atlas).

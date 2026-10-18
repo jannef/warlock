@@ -41,7 +41,10 @@ use bevy::prelude::*;
 use motion::Motion;
 use warlock_core::Pos;
 use warlock_core::color::Rgb;
+use warlock_core::content::MoonDef;
+use warlock_core::light::MoonPhase;
 use warlock_core::perception::{CellView, PerceptionView};
+use warlock_core::time::GameTime;
 
 const MESSAGE_ROWS: i32 = 2;
 const STATUS_ROWS: i32 = 1;
@@ -355,18 +358,25 @@ fn draw_status(console: &mut Console, game: &Game, y: i32) {
         Some(false) => Some("Lantern out".to_string()),
         None => None,
     };
+    let content = view.content();
     // Display order; the number is the drop priority (higher drops first when space runs out).
-    let segments: Vec<(u8, String)> = [
-        Some((0, view.level_name().to_string())),
-        view.region().map(|r| (3, r.to_string())),
-        Some((1, format!("{:02}:{:02}", time.hour(), time.minute()))),
-        Some((2, view.content().calendar().date(time))),
-        Some((4, format!("Turn {}", world.turn()))),
-        Some((8, format!("{},{}", pos.x, pos.y))),
-        Some((5, format!("Light {light}"))),
-        Some((6, format!("{} vision", view.vision().name))),
-        lantern.map(|l| (7, l)),
-        Some((9, format!("Seed {}", world.seed()))),
+    // The moon phase is cut down to its glyph before it is dropped.
+    let segments: Vec<Segment> = [
+        Some(Segment::new(0, view.level_name())),
+        view.region().map(|r| Segment::new(3, r)),
+        Some(Segment::new(
+            1,
+            format!("{:02}:{:02}", time.hour(), time.minute()),
+        )),
+        Some(Segment::new(2, content.calendar().full_date(time))),
+        moon_status(content.moons(), time)
+            .map(|(text, glyphs)| Segment::new(4, text).or_short(glyphs)),
+        Some(Segment::new(5, format!("Turn {}", world.turn()))),
+        Some(Segment::new(9, format!("{},{}", pos.x, pos.y))),
+        Some(Segment::new(6, format!("Light {light}"))),
+        Some(Segment::new(7, format!("{} vision", view.vision().name))),
+        lantern.map(|l| Segment::new(8, l)),
+        Some(Segment::new(10, format!("Seed {}", world.seed()))),
     ]
     .into_iter()
     .flatten()
@@ -384,34 +394,121 @@ fn draw_status(console: &mut Console, game: &Game, y: i32) {
     }
 }
 
-/// Joins `segments` with separators, dropping the highest-priority-number segments first until
-/// the line fits in `width` characters. Kept segments stay in their original order.
-fn fit_segments(segments: &[(u8, String)], width: usize) -> String {
-    const SEP: &str = "  ·  ";
-    let mut keep: Vec<bool> = vec![true; segments.len()];
-    loop {
-        let line = segments
-            .iter()
-            .zip(&keep)
-            .filter(|(_, k)| **k)
-            .map(|((_, text), _)| text.as_str())
+/// The moons' phases for the status bar, and just their glyphs for a narrow window: the glyph
+/// and name of a single moon's phase (`◑ First quarter`), each moon's name and glyph when there
+/// are several (`Moon ●  Ilse ☽`); `None` without moons.
+fn moon_status(moons: &[MoonDef], time: GameTime) -> Option<(String, String)> {
+    let glyph = |m: &MoonDef| phase_glyph(MoonPhase::of(m.phase_at(time)));
+    let glyphs = moons.iter().map(glyph).collect::<String>();
+    let text = match moons {
+        [] => return None,
+        [moon] => format!(
+            "{} {}",
+            glyph(moon),
+            MoonPhase::of(moon.phase_at(time)).name()
+        ),
+        _ => (moons.iter())
+            .map(|m| format!("{} {}", m.name, glyph(m)))
             .collect::<Vec<_>>()
-            .join(SEP);
-        if line.chars().count() <= width {
-            return line;
-        }
-        let drop = segments
-            .iter()
-            .enumerate()
-            .filter(|(i, _)| keep[*i])
-            .max_by_key(|(i, (priority, _))| (*priority, *i))
-            .map(|(i, _)| i);
-        match drop {
-            Some(i) if keep.iter().filter(|k| **k).count() > 1 => keep[i] = false,
-            // A single segment that is still too long is cut at the edge.
-            _ => return line.chars().take(width).collect(),
+            .join("  "),
+    };
+    Some((text, glyphs))
+}
+
+/// A glyph for a moon phase, its lit part drawn in ink (UI text is light on dark) and lit on the
+/// right while waxing: `○` new, `☽` waxing crescent, `◑` first quarter and waxing gibbous, `●`
+/// full, `◐` waning gibbous and last quarter, `☾` waning crescent.
+fn phase_glyph(phase: MoonPhase) -> char {
+    match phase {
+        MoonPhase::New => '○',
+        MoonPhase::WaxingCrescent => '☽',
+        MoonPhase::FirstQuarter | MoonPhase::WaxingGibbous => '◑',
+        MoonPhase::Full => '●',
+        MoonPhase::WaningGibbous | MoonPhase::LastQuarter => '◐',
+        MoonPhase::WaningCrescent => '☾',
+    }
+}
+
+/// One segment of the status bar.
+struct Segment {
+    /// Drop priority: higher gives way first when space runs out.
+    priority: u8,
+    text: String,
+    /// What it is cut down to before it is dropped, if anything.
+    short: Option<String>,
+}
+
+impl Segment {
+    fn new(priority: u8, text: impl Into<String>) -> Self {
+        Self {
+            priority,
+            text: text.into(),
+            short: None,
         }
     }
+
+    fn or_short(self, short: impl Into<String>) -> Self {
+        Self {
+            short: Some(short.into()),
+            ..self
+        }
+    }
+
+    /// The text in `form`: 0 dropped, 1 short, 2 full.
+    fn at(&self, form: u8) -> Option<&str> {
+        match form {
+            2 => Some(&self.text),
+            1 => self.short.as_deref(),
+            _ => None,
+        }
+    }
+}
+
+/// Joins `segments` with separators so the line fits in `width` characters: the segment with
+/// the highest priority number gives way first, cut down to its short form if it has one, else
+/// dropped. Then, most important first, segments take back the room that is left, until one
+/// that was dropped does not fit. Kept segments stay in their original order.
+fn fit_segments(segments: &[Segment], width: usize) -> String {
+    const SEP: &str = "  ·  ";
+    let line = |forms: &[u8]| {
+        (segments.iter().zip(forms))
+            .filter_map(|(s, &form)| s.at(form))
+            .collect::<Vec<_>>()
+            .join(SEP)
+    };
+    let fits = |forms: &[u8]| line(forms).chars().count() <= width;
+    // Shorter forms: a short form if the segment has one, else dropped.
+    let shorter = |s: &Segment, form: u8| if form == 2 && s.short.is_some() { 1 } else { 0 };
+    let longer = |s: &Segment, form: u8| if form == 0 && s.short.is_some() { 1 } else { 2 };
+    let mut forms: Vec<u8> = vec![2; segments.len()];
+    while !fits(&forms) {
+        let shown = forms.iter().filter(|f| **f > 0).count();
+        let give_way = (segments.iter().enumerate())
+            .filter(|(i, _)| forms[*i] > 0)
+            .max_by_key(|(i, s)| (s.priority, *i))
+            .map(|(i, s)| (i, shorter(s, forms[i])));
+        match give_way {
+            Some((i, form)) if form > 0 || shown > 1 => forms[i] = form,
+            // A single segment that is still too long is cut at the edge.
+            _ => return line(&forms).chars().take(width).collect(),
+        }
+    }
+    let mut order: Vec<usize> = (0..segments.len()).collect();
+    order.sort_by_key(|&i| (segments[i].priority, i));
+    for i in order {
+        while forms[i] < 2 {
+            let was = forms[i];
+            forms[i] = longer(&segments[i], was);
+            if !fits(&forms) {
+                forms[i] = was;
+                break;
+            }
+        }
+        if forms[i] == 0 {
+            break;
+        }
+    }
+    line(&forms)
 }
 
 #[cfg(test)]
@@ -434,13 +531,38 @@ mod tests {
     }
 
     #[test]
+    fn the_status_bar_shows_the_moon_phase() {
+        let content = Content::builtin().expect("builtin content");
+        let at = |day| GameTime::from_calendar(1, 4, day, 0, 0).expect("valid");
+        let moons = content.moons();
+        let text = |moons: &[MoonDef], day| moon_status(moons, at(day)).map(|(text, _)| text);
+        assert_eq!(text(moons, 1).as_deref(), Some("○ New moon"));
+        assert_eq!(text(moons, 8).as_deref(), Some("◑ First quarter"));
+        assert_eq!(text(moons, 16).as_deref(), Some("● Full moon"));
+        assert_eq!(text(moons, 27).as_deref(), Some("☾ Waning crescent"));
+        assert_eq!(text(moons, 20).as_deref(), Some("◐ Waning gibbous"));
+        assert_eq!(moon_status(&[], at(1)), None);
+        let ilse = MoonDef {
+            name: "Ilse".into(),
+            period_days: 7,
+            ..moons[0].clone()
+        };
+        let two = [moons[0].clone(), ilse];
+        assert_eq!(
+            moon_status(&two, at(16)),
+            Some(("Moon ●  Ilse ○".into(), "●○".into()))
+        );
+        assert_eq!(content.calendar().full_date(at(12)), "12 Rainmoon, Year 1");
+    }
+
+    #[test]
     fn status_segments_drop_by_priority_and_keep_order() {
-        let segs: Vec<(u8, String)> = vec![
-            (0, "The Hub".into()),
-            (1, "Turn 12".into()),
-            (5, "7,15".into()),
-            (2, "Light 366".into()),
-            (6, "Seed 1".into()),
+        let segs = vec![
+            Segment::new(0, "The Hub"),
+            Segment::new(1, "Turn 12"),
+            Segment::new(5, "7,15"),
+            Segment::new(2, "Light 366"),
+            Segment::new(6, "Seed 1"),
         ];
         let full = fit_segments(&segs, 200);
         assert_eq!(
@@ -450,6 +572,25 @@ mod tests {
         let narrow = fit_segments(&segs, 34);
         assert_eq!(narrow, "The Hub  ·  Turn 12  ·  Light 366");
         assert_eq!(fit_segments(&segs, 4), "The ");
+    }
+
+    #[test]
+    fn status_segments_shorten_before_they_drop_and_take_back_room() {
+        let segs = vec![
+            Segment::new(0, "Wilds"),
+            Segment::new(1, "22:20"),
+            Segment::new(2, "Moon ● Full moon").or_short("●"),
+            Segment::new(3, "Turn 13"),
+            Segment::new(4, "Seed 1"),
+        ];
+        let all = "Wilds  ·  22:20  ·  Moon ● Full moon  ·  Turn 13  ·  Seed 1";
+        assert_eq!(fit_segments(&segs, 200), all);
+        // Seed and turn give way, then the moon is cut to its glyph: room for the turn again.
+        assert_eq!(fit_segments(&segs, 33), "Wilds  ·  22:20  ·  ●  ·  Turn 13");
+        assert_eq!(fit_segments(&segs, 22), "Wilds  ·  22:20  ·  ●");
+        assert_eq!(fit_segments(&segs, 15), "Wilds  ·  22:20");
+        // The seed is short enough to fit where the turn does not, but never shows without it.
+        assert_eq!(fit_segments(&segs, 32), "Wilds  ·  22:20  ·  ●");
     }
 
     #[test]

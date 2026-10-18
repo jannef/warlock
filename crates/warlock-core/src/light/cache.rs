@@ -20,6 +20,11 @@ const LANTERN: u64 = 1 << 62;
 /// keys have both tags clear).
 pub(crate) const SUN_KEY: u64 = LANTERN;
 
+/// The key of the moon with index `index`: the sun's tag and one more than the index.
+pub(crate) fn moon_key(index: u8) -> u64 {
+    SUN_KEY | (u64::from(index) + 1)
+}
+
 /// A light source active on a level.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) struct Source {
@@ -336,5 +341,9 @@ mod tests {
         assert_eq!(a & (CARRIED | LANTERN), 0, "never the sun's key either");
         assert_ne!(SUN_KEY & LANTERN, 0);
         assert_eq!(SUN_KEY & CARRIED, 0);
+        let moons: BTreeSet<u64> = (0..8).map(moon_key).collect();
+        assert_eq!(moons.len(), 8);
+        assert!(!moons.contains(&SUN_KEY));
+        assert!(moons.iter().all(|k| k & (CARRIED | LANTERN) == LANTERN));
     }
 }

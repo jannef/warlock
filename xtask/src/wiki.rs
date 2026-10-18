@@ -1,7 +1,7 @@
 //! `cargo xtask wiki [--check | --build]`: the player wiki's generated tables.
 //!
 //! The wiki (`wiki/`, built with mdBook) is written by hand except for facts that live in data
-//! (month names, terrain, vision profiles, light presets, creatures) and a few constants of the
+//! (month names, moons, terrain, vision profiles, light presets, creatures) and a few constants of the
 //! rules. Those are written to `wiki/src/generated/*.md` from the built-in content, and the pages
 //! pull them in with `{{#include generated/NAME.md}}`, so they cannot drift. Output is
 //! deterministic. `--check` fails when a file is stale; `--build` also runs `mdbook build wiki`.
@@ -12,9 +12,12 @@ use std::fmt::Write as _;
 use std::path::PathBuf;
 use std::process::Command;
 use warlock_core::content::{Content, LevelKind, TerrainDef};
-use warlock_core::daylight::{SIGHT_DAY, SIGHT_NIGHT, SIGHT_TWILIGHT};
+use warlock_core::daylight::{
+    MOONLIGHT_PER_CELL, SIGHT_DAY, SIGHT_MOONLIT, SIGHT_NIGHT, SIGHT_TWILIGHT, overworld_sight,
+};
+use warlock_core::light::{Light, Moon};
 use warlock_core::perception::VIEW_RADIUS;
-use warlock_core::time::{Duration, GameTime};
+use warlock_core::time::{DAY, Duration, GameTime};
 
 /// What to do with the generated files.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -99,7 +102,11 @@ fn generate(content: &Content) -> Vec<(String, String)> {
             "terrain-overworld.md".to_string(),
             overworld_terrain(content),
         ),
-        ("overworld-sight.md".to_string(), overworld_sight()),
+        (
+            "overworld-sight.md".to_string(),
+            overworld_sight_table(content),
+        ),
+        ("moons.md".to_string(), moons(content)),
         ("vision.md".to_string(), vision(content)),
         ("lights.md".to_string(), lights(content)),
         ("creatures.md".to_string(), creatures(content)),
@@ -287,18 +294,74 @@ fn overworld_terrain(content: &Content) -> String {
     out
 }
 
-fn overworld_sight() -> String {
+/// A share of full light (255) in whole percent, rounded.
+fn percent_of_full(luma: u16) -> u32 {
+    (u32::from(luma) * 100 + 127) / 255
+}
+
+/// The light of the brightest moon when full and high, if there are moons.
+fn brightest_moon(content: &Content) -> Option<Light> {
+    content
+        .moons()
+        .iter()
+        .map(Moon::brightest)
+        .max_by_key(|l| l.luma())
+}
+
+fn overworld_sight_table(content: &Content) -> String {
     let mut out = String::from("| Time of day | Sight on the overworld |\n|---|---:|\n");
     let _ = writeln!(out, "| Day (06:30 to 17:30) | {SIGHT_DAY} cells |");
     let _ = writeln!(
         out,
         "| Twilight (half an hour either side of 06:00 and 18:00) | {SIGHT_TWILIGHT} cells |"
     );
-    let _ = writeln!(out, "| Night (the rest) | {SIGHT_NIGHT} cells |");
+    let _ = writeln!(out, "| Night, no moonlight | {SIGHT_NIGHT} cells |");
+    let midnight = GameTime::from_calendar(1, 1, 1, 0, 0).expect("a valid date");
+    if let Some(full) = brightest_moon(content) {
+        let half = Light::new(full.rgb[0] / 2, full.rgb[1] / 2, full.rgb[2] / 2, 0);
+        for (name, light) in [("half", half), ("full", full)] {
+            let sight = overworld_sight(midnight, light);
+            let _ = writeln!(
+                out,
+                "| Night, a {name} moon high in the sky | {sight} cells |"
+            );
+        }
+    }
     let _ = writeln!(
         out,
-        "\nThe farthest you can ever see is {VIEW_RADIUS} cells."
+        "\nAt night moonlight (all moons together) adds a cell of sight for every {}% of full light \
+         it gives, but by moonlight you never see farther than {SIGHT_MOONLIT} cells. The farthest \
+         you can ever see is {VIEW_RADIUS} cells.",
+        percent_of_full(MOONLIGHT_PER_CELL)
     );
+    out
+}
+
+fn moons(content: &Content) -> String {
+    if content.moons().is_empty() {
+        return "There are no moons: nights are dark.\n".into();
+    }
+    let mut out = String::from(
+        "| Moon | From new moon to new moon | Size | Light when full and high | First new moon |\n\
+         |---|---:|---|---:|---|\n",
+    );
+    for moon in content.moons() {
+        let size = if moon.size == 100 {
+            "standard".to_string()
+        } else {
+            format!("{}% of the standard", moon.size)
+        };
+        let first = (moon.period_days - moon.phase_offset_days) % moon.period_days;
+        let first = GameTime::from_seconds(u64::from(first) * DAY);
+        let _ = writeln!(
+            out,
+            "| {} | {} days | {size} | about {}% of full light | {} |",
+            moon.name,
+            moon.period_days,
+            percent_of_full(Moon::brightest(moon).luma()),
+            content.calendar().full_date(first)
+        );
+    }
     out
 }
 
@@ -371,6 +434,19 @@ mod tests {
         assert_eq!(files, generate(&content));
         let text = |name: &str| &files.iter().find(|(n, _)| n == name).expect("file").1;
         assert!(text("calendar.md").contains("| 4 | Rainmoon |"));
+        assert!(
+            text("moons.md").contains(
+                "| Moon | 30 days | standard | about 17% of full light | 1 Frostmere, Year 1 |"
+            ),
+            "{}",
+            text("moons.md")
+        );
+        assert!(
+            text("overworld-sight.md").contains("| Night, a full moon high in the sky | 4 cells |")
+        );
+        assert!(
+            text("overworld-sight.md").contains("| Night, a half moon high in the sky | 3 cells |")
+        );
         assert!(text("vision.md").contains("| Darkvision | about 16% of full light | 5 cells |"));
         assert!(text("terrain-overworld.md").contains("| Road | `·` | 20 minutes |"));
         assert!(text("terrain-local.md").contains("| Still water | `~` | yes | no | 12 seconds |"));

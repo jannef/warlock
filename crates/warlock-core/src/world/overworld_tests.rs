@@ -1,12 +1,14 @@
 //! The overworld (spec §3, §5, §8): travel time per terrain, impassable terrain, locations,
-//! local areas entered with `>` and left by their edges, persistence, sight by daylight, saves,
-//! and replays.
+//! local areas entered with `>` and left by their edges, persistence, sight by daylight and
+//! moonlight, saves, and replays.
 
+use super::light_tests::check_invariants;
 use super::*;
 use crate::content::{ContentFiles, LevelKind, local_area_id};
-use crate::daylight::{SIGHT_DAY, SIGHT_NIGHT, SIGHT_TWILIGHT};
+use crate::daylight::{SIGHT_DAY, SIGHT_MOONLIT, SIGHT_NIGHT, SIGHT_TWILIGHT};
 use crate::fov::radius2;
 use crate::grid::Grid;
+use crate::perception::Emitter;
 use crate::replay::Replay;
 use std::collections::VecDeque;
 use std::sync::LazyLock;
@@ -19,9 +21,22 @@ fn world() -> World {
     World::new(CONTENT.clone(), "world", None).expect("world")
 }
 
+/// The `world` scenario under a sky without moons: nights are dark.
+fn moonless_world() -> World {
+    let mut files = ContentFiles::builtin();
+    files.insert("data/sky.toml", "");
+    let content = Arc::new(Content::load(&files).expect("loads"));
+    World::new(content, "world", None).expect("world")
+}
+
 /// Built-in content with the overworld replaced by `map` (legend as in the real overworld; `@`
 /// is the start on a road, `H` the Hall leading to the hub).
 fn with_overworld(map: &str) -> Arc<Content> {
+    Arc::new(Content::load(&overworld_files(map)).expect("test content loads"))
+}
+
+/// The files of [`with_overworld`].
+fn overworld_files(map: &str) -> ContentFiles {
     let mut files = ContentFiles::builtin();
     files.insert(
         "levels/overworld.toml",
@@ -39,7 +54,7 @@ fn with_overworld(map: &str) -> Arc<Content> {
         "scenarios/forest.toml",
         "name = \"Forest\"\nstart_level = \"overworld\"\n",
     );
-    Arc::new(Content::load(&files).expect("test content loads"))
+    files
 }
 
 fn last_message(world: &World) -> String {
@@ -505,7 +520,11 @@ fn overworld_sight_reaches_as_far_as_daylight_and_mountains_block_it() {
         map.push_str(&row);
         map.push('\n');
     }
-    let mut world = World::new(with_overworld(&map), "world", None).expect("world");
+    // No moons: the night is dark (moonlight has its own test).
+    let mut files = overworld_files(&map);
+    files.insert("data/sky.toml", "");
+    let content = Arc::new(Content::load(&files).expect("loads"));
+    let mut world = World::new(content, "world", None).expect("world");
     let viewer = world.player_pos();
     let at = |dx: i32, dy: i32| Pos::new(viewer.x + dx, viewer.y + dy);
     // 08:00 is day; skip to noon, dusk, and night.
@@ -543,7 +562,7 @@ fn overworld_sight_reaches_as_far_as_daylight_and_mountains_block_it() {
 
 #[test]
 fn the_sky_lights_the_overworld_and_local_areas_by_day_only() {
-    let mut world = world();
+    let mut world = moonless_world();
     let ambient = |world: &World| world.perception().ambient();
     let view = world.perception();
     assert!(
@@ -585,6 +604,59 @@ fn the_sky_lights_the_overworld_and_local_areas_by_day_only() {
             .perception()
             .is_visible(next_to.step(Dir::E).step(Dir::E))
     );
+}
+
+#[test]
+fn moonlight_widens_night_sight_on_the_overworld_and_lights_local_areas() {
+    // The world scenario starts on the 14th of the month: two days later the moon is full.
+    let mut world = world();
+    world.apply(&Action::SkipTime(Duration::hours(14)));
+    assert_eq!((world.time().day(), world.time().hour()), (14, 22));
+    let view = world.perception();
+    let sky = view.sky().expect("under the open sky");
+    assert!(sky.sun.is_night());
+    let moon = sky.moons[0];
+    assert!(
+        moon.shines() && moon.elevation > 400,
+        "nearly full, high: {moon:?}"
+    );
+    // How far one sees: the radius whose rounded circle the farthest visible cell lies on.
+    let reach = |world: &World| {
+        let far = visible(world).iter().map(|(_, d2)| *d2).max().unwrap_or(0);
+        (0..).find(|r| far <= radius2(*r)).expect("a radius")
+    };
+    assert_eq!(reach(&world), SIGHT_MOONLIT);
+    assert!(
+        view.light_sources()
+            .iter()
+            .any(|s| s.emitter == Emitter::Moon(moon))
+    );
+    // Moonlight comes on top of the overworld's faint night light.
+    let here = view.light(view.viewer()).expect("own cell").light();
+    assert!(here.luma() > crate::daylight::OVERWORLD_NIGHT.luma());
+    check_invariants(&world).expect("light invariants");
+
+    // In a local area normal eyes dimly make out the open ground by the moon, lantern unlit.
+    assert!(world.apply(&Action::Descend).took_turn);
+    let view = world.perception();
+    let seen = visible(&world).len();
+    assert!(seen > 100, "moonlit ground in view: {seen}");
+    assert!(
+        view.light_sources().iter().all(|s| s.pos().is_none()),
+        "no lantern"
+    );
+    check_invariants(&world).expect("light invariants");
+    leave(&mut world, Dir::S);
+
+    // A new moon two weeks later: back to two cells.
+    world.apply(&Action::SkipTime(Duration::hours(17 * 24)));
+    assert_eq!((world.time().day(), world.time().hour()), (1, 22));
+    assert!(
+        world.perception().sky().expect("sky").moons[0]
+            .light
+            .is_dark()
+    );
+    assert_eq!(reach(&world), SIGHT_NIGHT);
 }
 
 /// A tour: road and grass, a local area left by its edge, the Hall and back, and a rest.

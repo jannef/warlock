@@ -55,6 +55,11 @@ impl Calendar {
     pub fn date(&self, time: GameTime) -> String {
         format!("{} {}", time.day(), self.month_name(time))
     }
+
+    /// Day, month, and year, e.g. `12 Rainmoon, Year 1`.
+    pub fn full_date(&self, time: GameTime) -> String {
+        format!("{}, Year {}", self.date(time), time.year())
+    }
 }
 
 #[cfg(test)]
@@ -65,6 +70,7 @@ mod tests {
     fn names_months_and_validates_the_file() {
         let t = GameTime::from_calendar(1, 4, 12, 14, 32).expect("valid");
         assert_eq!(Calendar::default().date(t), "12 Month 4");
+        assert_eq!(Calendar::default().full_date(t), "12 Month 4, Year 1");
         let names: Vec<String> = (1..=12).map(|m| format!("\"M{m}\"")).collect();
         let text = format!("months = [{}]", names.join(", "));
         let calendar = Calendar::parse("c", &text).expect("valid");

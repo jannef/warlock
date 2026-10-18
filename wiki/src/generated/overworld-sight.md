@@ -4,6 +4,8 @@
 |---|---:|
 | Day (06:30 to 17:30) | 9 cells |
 | Twilight (half an hour either side of 06:00 and 18:00) | 5 cells |
-| Night (the rest) | 2 cells |
+| Night, no moonlight | 2 cells |
+| Night, a half moon high in the sky | 3 cells |
+| Night, a full moon high in the sky | 4 cells |
 
-The farthest you can ever see is 40 cells.
+At night moonlight (all moons together) adds a cell of sight for every 8% of full light it gives, but by moonlight you never see farther than 4 cells. The farthest you can ever see is 40 cells.

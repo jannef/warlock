@@ -10,10 +10,11 @@
 //! away. Where several creatures stand in the way their shadows multiply. Colored shadows follow
 //! on their own: a creature blocking the red crystal leaves the cells behind it lit by the others.
 //!
-//! The sun is directional: a creature, [`CREATURE_HEIGHT`] cell tall, shades the cells along the
-//! sun's shadow line from its cell ([`warlock_core::light::Sun::shadow_steps`], the line terrain
-//! shadows use), up to the first opaque cell: [`KEEP`] next to it, easing back to all of the light
-//! one step past the shadow's end, so shadows are long at dawn and dusk and short at noon.
+//! The sun and the moons are directional: a creature, [`CREATURE_HEIGHT`] cell tall, shades the
+//! cells along the body's shadow line from its cell ([`warlock_core::light::Sun::shadow_steps`],
+//! the line terrain shadows use), up to the first opaque cell: [`KEEP`] next to it, easing back
+//! to all of the light one step past the shadow's end, so shadows are long at dawn and dusk (or
+//! while a moon is low) and short at noon.
 //!
 //! [`Shadows`] is derived from the perception snapshot and recomputed when it changes (once per
 //! turn), not per frame; [`super::lighting::VisualLight::composite`] scales each source's
@@ -25,12 +26,13 @@ use bevy::prelude::*;
 use std::collections::{BTreeMap, BTreeSet};
 use warlock_core::Pos;
 use warlock_core::fov::compute_fov;
-use warlock_core::light::Sun;
+use warlock_core::light::ShadowSteps;
 use warlock_core::perception::{CellView, Emitter, PerceptionView};
 
 /// Fraction of a source's light that reaches the cell right behind a creature.
 pub const KEEP: f32 = 0.4;
-/// How tall a creature stands for sun shadows, in cells (terrain heights are in the same unit).
+/// How tall a creature stands for sun and moon shadows, in cells (terrain heights are in the same
+/// unit).
 pub const CREATURE_HEIGHT: u8 = 1;
 /// Distance from the creature (cells, Euclidean) at which its shadow has faded out.
 pub const REACH: f32 = 3.5;
@@ -90,9 +92,13 @@ impl Shadows {
                         }
                     }
                 }
-                Emitter::Sun(sun) => {
+                Emitter::Sun(_) | Emitter::Moon(_) => {
+                    let steps = (source.emitter.shadow_steps(CREATURE_HEIGHT))
+                        .expect("the sun and the moons cast shadow lines");
                     for blocker in blockers {
-                        for (p, k) in sun_shade(&sun, blocker, is_opaque, |p| lit.contains(&p)) {
+                        let shade =
+                            sky_shade(steps.clone(), blocker, is_opaque, |p| lit.contains(&p));
+                        for (p, k) in shade {
                             *kept.entry(p).or_insert(1.0) *= k;
                         }
                     }
@@ -202,17 +208,16 @@ fn shade(
         .collect()
 }
 
-/// The cells a creature at `blocker` shades from the sun, each with the fraction of the light it
-/// keeps: the sun's shadow line for a creature's height, up to the first opaque cell, among the
-/// cells the sun lights (`lit`). [`KEEP`] right behind the creature, easing back to all of the
-/// light one step past the shadow's end.
-fn sun_shade(
-    sun: &Sun,
+/// The cells a creature at `blocker` shades from the sun or a moon, each with the fraction of the
+/// light it keeps: the body's shadow line for a creature's height (`steps`), up to the first
+/// opaque cell, among the cells it lights (`lit`). [`KEEP`] right behind the creature, easing back
+/// to all of the light one step past the shadow's end.
+fn sky_shade(
+    steps: ShadowSteps,
     blocker: Pos,
     is_opaque: impl Fn(Pos) -> bool,
     lit: impl Fn(Pos) -> bool,
 ) -> Vec<(Pos, f32)> {
-    let steps = sun.shadow_steps(CREATURE_HEIGHT);
     let len = steps.len() as f32;
     steps
         .map(|(dx, dy)| Pos::new(blocker.x + dx, blocker.y + dy))
@@ -382,14 +387,9 @@ mod tests {
     fn creatures_cast_sun_shadows_away_from_the_sun() {
         // A sun from due east, 1.5 cells of shadow per cell of height: a creature shades the two
         // cells west of it, darkest next to it; the line stops at a wall.
-        let sun = Sun {
-            elevation: 300,
-            shadow: [-384, 0],
-            light: warlock_core::light::Light::new(300, 300, 300, 0),
-            sky: warlock_core::light::Light::DARK,
-        };
+        let sun = ShadowSteps::new([-384, 0], CREATURE_HEIGHT);
         let open = |_: Pos| false;
-        let shaded = sun_shade(&sun, Pos::new(5, 5), open, |_| true);
+        let shaded = sky_shade(sun.clone(), Pos::new(5, 5), open, |_| true);
         assert_eq!(
             shaded,
             [
@@ -398,10 +398,13 @@ mod tests {
             ]
         );
         let wall = |p: Pos| p == Pos::new(3, 5);
-        assert_eq!(sun_shade(&sun, Pos::new(5, 5), wall, |_| true).len(), 1);
+        assert_eq!(
+            sky_shade(sun.clone(), Pos::new(5, 5), wall, |_| true).len(),
+            1
+        );
         // Only cells the sun lights are shaded.
         let lit = |p: Pos| p != Pos::new(4, 5);
-        assert_eq!(sun_shade(&sun, Pos::new(5, 5), open, lit).len(), 1);
+        assert_eq!(sky_shade(sun, Pos::new(5, 5), open, lit).len(), 1);
     }
 
     #[test]
@@ -437,5 +440,32 @@ mod tests {
         let evening = shadow_of(&format!("{walk} skip:585m"));
         assert!(evening.iter().all(|&(dx, _)| dx > 0), "{evening:?}");
         assert!(evening.len() > noon.len());
+    }
+
+    #[test]
+    fn the_player_casts_a_moon_shadow_on_the_night_of_the_full_moon() {
+        // The courtyard scenario starts on the 1st at 06:30; the moon is full at midnight on the
+        // 16th, high in the south (shadows due north, short), and in the east at 21:00 (west).
+        let shadow_of = |skip: &str| {
+            let walk = "move:E move:E move:E move:E move:E move:E move:E move:E";
+            let world = run("courtyard", &format!("{walk} {skip}"));
+            let view = world.perception();
+            let player = view.viewer();
+            let moon = (view.light_sources().iter())
+                .find(|s| matches!(s.emitter, Emitter::Moon(_)))
+                .expect("the moon shines");
+            assert!(moon.contributions.iter().any(|(p, _)| *p == player));
+            let shadows = Shadows::compute(&view);
+            let cells: Vec<(i32, i32)> = (shadows.of(moon.key).0.iter())
+                .map(|(p, _)| (p.x - player.x, p.y - player.y))
+                .collect();
+            cells
+        };
+        assert_eq!(shadow_of("skip:353h skip:29m"), [(0, -1)]);
+        let evening = shadow_of("skip:350h skip:29m");
+        assert!(
+            !evening.is_empty() && evening.iter().all(|&(dx, _)| dx < 0),
+            "{evening:?}"
+        );
     }
 }

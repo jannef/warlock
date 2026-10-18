@@ -1,10 +1,10 @@
-# Sun, sky, and night
+# Sun, moon, and sky
 
 ## Which places have a sky
 
-Levels under the open sky are lit by the sun and the sky: outdoor areas and the
-[overworld](overworld.md). Dungeons never are. Terrain with a roof (for example the floor under a
-gazebo) never receives sun or sky light even on an outdoor level.
+Levels under the open sky are lit by the sun and the sky by day and by the moon at night: outdoor
+areas and the [overworld](overworld.md). Dungeons never are. Terrain with a roof (for example the
+floor under a gazebo) never receives sun, moon, or sky light even on an outdoor level.
 
 ## The sun's path
 
@@ -38,13 +38,61 @@ tree. Shadows turn as the sun moves.
 
 Creatures cast soft shadows too, but those are only for show and do not change what you can see.
 
-## Night
+## Night and the moon
 
-At night there is neither sun nor sky light, and **moonlight is darkness for now**: there is no
-moon yet. Outdoor areas are completely dark at night unless you bring a light of your own. Light
+At night there is neither sun nor sky light. What light there is comes from the **moon**.
+
+### Phases
+
+The moon waxes and wanes once a month: its cycle from new moon to new moon is 30 days, the length
+of a month, so its phases fall on the same days every month.
+
+- **New moon** on the 1st: the moon is dark and gives no light at all.
+- It **waxes** through the first half of the month. Around the 8th it is half lit (the first
+  quarter).
+- **Full moon** on the night from the 15th to the 16th: the whole moon is lit.
+- It **wanes** through the second half, half lit again around the 23rd (the last quarter).
+
+The status bar shows the phase; see [Time and the calendar](time.md#the-moons-phase).
+
+{{#include generated/moons.md}}
+
+### The moon's path
+
+The moon crosses the sky along the same path as the sun, east to south to west, but it lags behind
+the sun by its phase:
+
+- A new moon rises and sets with the sun, so it is never in the night sky.
+- A first-quarter moon rises around noon, stands high at dusk, and sets around midnight.
+- A full moon rises at dusk, stands high in the south at midnight, and sets at dawn.
+- A last-quarter moon rises around midnight and stands high at dawn.
+
+So the moon rises about 50 minutes later every day.
+
+### Moonlight
+
+Moonlight is faint and slightly purple. It is brightest when the moon is full and high in the sky,
+less when only part of it is lit, faint just after it rises and just before it sets, and none at
+all by day: the sun drowns it out, and it only grows in as the evening twilight fades. Besides its
+direct light, the moon gives a very faint glow from the whole sky, on every cell under the sky.
+
+Tall things cast **moon shadows** away from the moon, just as they cast shadows from the sun: long
+while the moon is low, short when it is high. In a moon shadow there is only the faint glow of the
+sky.
+
+What you can see by moonlight depends on your [eyes](vision.md):
+
+- **Normal eyes** can just make out open ground, dimly, under a full or nearly full moon high in
+  the sky, but nothing in its shadows. Under a half moon, a low moon, or a new moon they see
+  nothing without a light.
+- **Low-light eyes** see by a half moon too, and under a full moon some of the shade as well.
+- **Darkvision** sees what normal eyes see, and everything within its radius as always.
+
+When the moon is new or down, outdoor areas are dark unless you bring a light of your own. Light
 your [lantern](lantern.md). A few things, such as a torch-carrying creature or a glowing altar,
-still shine.
+shine on any night.
 
 The overworld is a special case: it is drawn by a faint cold light at night, so you can tell the
-cells you see from the ones you only remember. That light does not help you see; see
-[The overworld](overworld.md) for how far you see.
+cells you see from the ones you only remember, and moonlight comes on top of it. That light does
+not decide what you see; the moon does widen your sight there, though. See
+[The overworld](overworld.md).

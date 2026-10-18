@@ -141,8 +141,17 @@ name = "courtyard-dusk"
 scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:E*2 move:NE ascend move:E*22 skip:560m"
 
+# The courtyard scenario at midnight under the full moon (spec §5 "Moonlight"; the 16th at
+# 00:00): faint, slightly purple moonlight on open ground, short moon shadows due north, and the
+# phase in the status bar.
+[[golden]]
+name = "courtyard-full-moon"
+scenario = "courtyard"
+actions = "move:E*20 skip:353h skip:28m"
+
 # The overworld (`world` scenario): along the road from the Hall to the bridge over the Wendle,
-# at 12:20 (sunlit, sight radius 9) and after a skip to 22:20 (cold night light, radius 2).
+# at 12:20 (sunlit, sight radius 9) and after a skip to 22:20 on the 14th (cold night light with
+# a nearly full moon on top, sight radius 4).
 [[golden]]
 name = "overworld-noon"
 scenario = "world"

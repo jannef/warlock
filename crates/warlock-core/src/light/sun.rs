@@ -10,14 +10,15 @@
 //! **Light** follows the elevation: [`Sun::light`] is warm, dim, and orange just after sunrise and
 //! before sunset, and bright neutral white once the sun is high; [`Sun::sky`] is a dimmer bluish
 //! light from the whole sky, which also glows faintly in the twilight while the sun is less than
-//! 6° below the horizon. At night both are dark: moonlight is darkness for now.
+//! 6° below the horizon. At night both are dark, and the moons light the land
+//! ([`super::Moon`], which walk the same path).
 //!
 //! **Shadows** are directional: terrain stands [`crate::content::TerrainDef::height`] cells tall,
 //! and a cell `h` tall casts a shadow `h ×` [`Sun::shadow`] long, away from the sun: long at dawn
 //! and dusk, short at noon. The shadow covers the cells an integer line from the caster passes
 //! through ([`Sun::shadow_steps`]); a cell is in shade if, marching from it toward the sun, a
-//! cell taller than itself is within that cell's shadow ([`Sunlight`]). Roofed terrain never
-//! receives sun or sky.
+//! cell taller than itself is within that cell's shadow ([`Sunlight`]). Moons cast their shadows
+//! the same way. Roofed terrain never receives sun, moon, or sky.
 
 use super::Light;
 use super::bounce::Area;
@@ -74,19 +75,7 @@ impl Sun {
     /// integer line away from the sun, one step per cell along its major axis, as many steps as
     /// the shadow is long along that axis (rounded to whole cells). Empty while the sun is down.
     pub fn shadow_steps(&self, height: u8) -> ShadowSteps {
-        let [x, y] = self.shadow.map(i32::from);
-        let major = x.abs().max(y.abs());
-        let len = if major == 0 {
-            0
-        } else {
-            (i32::from(height) * major + SHADOW_ONE / 2) / SHADOW_ONE
-        };
-        ShadowSteps {
-            shadow: [x, y],
-            major,
-            step: 0,
-            len,
-        }
+        ShadowSteps::new(self.shadow, height)
     }
 }
 
@@ -97,6 +86,27 @@ pub struct ShadowSteps {
     major: i32,
     step: i32,
     len: i32,
+}
+
+impl ShadowSteps {
+    /// The cells a caster `height` cells tall shades from a body in the sky whose shadow per
+    /// unit of height is `shadow` (1/[`SHADOW_ONE`] cells; `[0, 0]` while it is down): see
+    /// [`Sun::shadow_steps`].
+    pub fn new(shadow: [i16; 2], height: u8) -> Self {
+        let [x, y] = shadow.map(i32::from);
+        let major = x.abs().max(y.abs());
+        let len = if major == 0 {
+            0
+        } else {
+            (i32::from(height) * major + SHADOW_ONE / 2) / SHADOW_ONE
+        };
+        Self {
+            shadow: [x, y],
+            major,
+            step: 0,
+            len,
+        }
+    }
 }
 
 impl Iterator for ShadowSteps {
@@ -120,32 +130,37 @@ impl Iterator for ShadowSteps {
 
 impl ExactSizeIterator for ShadowSteps {}
 
-/// Where the sun shines within an area this turn.
+/// Where the sun (or a moon) shines within an area this turn.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct Sunlight {
     area: Area,
     light: Light,
-    /// Row-major over `area`: whether the sun reaches the cell.
+    /// Row-major over `area`: whether the light reaches the cell.
     lit: Vec<bool>,
-    /// The transparent cells the sun reaches, row-major, each with the sun's light.
+    /// The transparent cells the light reaches, row-major, each with its light.
     pub cells: Vec<(Pos, Light)>,
 }
 
 impl Sunlight {
-    /// Where `sun` shines within `area`: on every cell `exposed` (not roofed) that no taller cell
-    /// shades. `height` gives a cell's height (0 off the level) and `tallest` bounds it, which
-    /// bounds how far shadows reach.
+    /// Where the `light` of a body in the sky whose shadow per unit of height is `shadow` (the
+    /// sun's or a moon's; `[0, 0]` while it is down) falls within `area`: on every cell `exposed`
+    /// (not roofed) that no taller cell shades. `height` gives a cell's height (0 off the level)
+    /// and `tallest` bounds it, which bounds how far shadows reach.
     pub fn compute(
-        sun: &Sun,
+        shadow: [i16; 2],
+        light: Light,
         area: Area,
         tallest: u8,
         height: impl Fn(Pos) -> u8,
         exposed: impl Fn(Pos) -> bool,
         is_opaque: impl Fn(Pos) -> bool,
     ) -> Self {
-        let steps: Vec<(i32, i32)> = sun.shadow_steps(tallest).collect();
+        let up = shadow != [0, 0] && !light.is_dark();
+        let steps: Vec<(i32, i32)> = ShadowSteps::new(shadow, tallest).collect();
         // `reach[d]`: how many steps the shadow of a cell `d` taller than the receiver covers.
-        let reach: Vec<usize> = (0..=tallest).map(|h| sun.shadow_steps(h).len()).collect();
+        let reach: Vec<usize> = (0..=tallest)
+            .map(|h| ShadowSteps::new(shadow, h).len())
+            .collect();
         // Heights around the area, out to the longest shadow, so the march reads an array.
         let margin = steps.last().map_or(0, |&(dx, dy)| dx.abs().max(dy.abs()));
         let around = Area {
@@ -172,24 +187,22 @@ impl Sunlight {
                 });
             !shaded
         };
-        let lit: Vec<bool> = (0..area.len())
-            .map(|i| sun.is_up() && sunny(area.pos(i)))
-            .collect();
+        let lit: Vec<bool> = (0..area.len()).map(|i| up && sunny(area.pos(i))).collect();
         let cells = lit
             .iter()
             .enumerate()
             .filter(|&(i, lit)| *lit && !is_opaque(area.pos(i)))
-            .map(|(i, _)| (area.pos(i), sun.light))
+            .map(|(i, _)| (area.pos(i), light))
             .collect();
         Self {
             area,
-            light: sun.light,
+            light,
             lit,
             cells,
         }
     }
 
-    /// The sun's light at `p` (opaque cells included); dark in shade, under a roof, or outside the
+    /// The light at `p` (opaque cells included); dark in shade, under a roof, or outside the
     /// area.
     pub fn at(&self, p: Pos) -> Light {
         match self.area.index(p) {
@@ -203,15 +216,15 @@ impl Sunlight {
 // The table, computed at compile time with integer math.
 
 /// Angles are in 1/65 536 of a full turn.
-const TURN: i64 = 1 << 16;
+pub(super) const TURN: i64 = 1 << 16;
 const QUARTER: i64 = TURN / 4;
 /// Sines and cosines are in 1/65 536.
-const ONE: i64 = 1 << 16;
+pub(super) const ONE: i64 = 1 << 16;
 /// 2π in 1/65 536.
 const TAU: i64 = 411_775;
 
 /// `a / b` rounded to the nearest integer, halves away from zero; `b > 0`.
-const fn round_div(a: i64, b: i64) -> i64 {
+pub(super) const fn round_div(a: i64, b: i64) -> i64 {
     if a >= 0 {
         (2 * a + b) / (2 * b)
     } else {
@@ -250,7 +263,7 @@ const fn sin(a: i64) -> i64 {
     }
 }
 
-const fn cos(a: i64) -> i64 {
+pub(super) const fn cos(a: i64) -> i64 {
     sin(a + QUARTER)
 }
 
@@ -518,7 +531,8 @@ mod tests {
             max: Pos::new(width - 1, height - 1),
         };
         Sunlight::compute(
-            sun,
+            sun.shadow,
+            sun.light,
             area,
             3,
             |p| match cell(p) {
