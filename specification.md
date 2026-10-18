@@ -24,7 +24,10 @@ Build the engine and framework, not the game. Everything built is production qua
 - Hand-authored levels from text files; multiple levels joined by stairs, each persistent
 - Player movement (8 directions), doors (open/close), stairs
 - Line of sight, terrain memory, gameplay lighting, vision types
-- Inert test creatures walking fixed patrol routes
+- Test creatures walking fixed patrol routes; from M10 they act at their own hidden speed, belong
+  to factions, hear noise, and fight with deterministic AI whose attacks are intents only
+- Pickable objects (glyph, color, material, weight), inventory, and creature weight (M11)
+- Moons with phases and moonlight, weather starting with rain (M12)
 - Save and resume an unfinished run
 - Keyboard controls with an in-game controls reference
 - Development interface (§9)
@@ -32,8 +35,8 @@ Build the engine and framework, not the game. Everything built is production qua
   (rooms and corridors, caves) with hand-made vaults, joined to the hand-authored levels by stairs
 - An overworld with travel time, locations, local areas, and day and night (M9)
 
-**Out of scope for now**: combat, statistics, item effects, AI, character creation, audio, mouse
-input, infravision, localization.
+**Out of scope for now**: combat resolution (attacks are announced, nothing is damaged), statistics,
+item effects, character creation, audio, mouse input, infravision, localization.
 
 Vision types are in scope even though there are no other mechanics yet: they are part of perception,
 and the light data model must carry them from the start.
@@ -686,7 +689,7 @@ cargo xtask golden [--update]                             # compare golden scree
   in release builds.
 - Every milestone ends with a downloadable, playable build for each OS, published by the tagged
   release workflow (Linux, Windows, macOS).
-- Performance budgets (proposed; to be confirmed on reference hardware): 60 fps at 1440p on an
+- Performance budgets (the frame budget is not yet measured on an integrated GPU, #74): 60 fps at 1440p on an
   integrated GPU; turn processing ≤ 5 ms in the hub and ≤ 16 ms in the vast level.
 - The spec and CLAUDE.md are updated together with behavior changes.
 
@@ -736,6 +739,16 @@ Each milestone ships a playable build.
   terrain, resting; sunlight, sky light and moving shadows on sky-exposed levels over a 24-hour
   day (moonlight is darkness for now); an ADOM-like overworld with per-terrain travel time,
   locations, and sight by daylight; outdoor local areas generated from overworld terrain.
+- **M10 Creatures** — an ADOM-like speed system (base speed 1000, never shown to the player),
+  factions with hostile or neutral relations, deterministic AI that approaches and announces melee,
+  ranged, and spell attacks (no combat resolution), and hearing: actions make noise that the
+  player and creatures hear.
+- **M11 Objects and inventory** — pickable objects that each define glyph, color, material, and
+  weight; piles on the floor, pick up and drop, the inventory screen; creature weight (base plus
+  carried).
+- **M12 Moons and weather** — configurable moons (one by default: 30-day period, faint purple
+  light) with phases, paths, and shadows; weather starting with rain; the full calendar date and
+  moon phase in the status bar.
 
 ## 13. GitHub workflow
 
@@ -747,9 +760,11 @@ All through the `gh` CLI:
 
 ## 14. Deferred and open
 
-- License (the repo is private for now; bundled fonts must be OFL-compatible regardless)
+- License: the repo is public without one; a proposal requiring attribution (Apache-2.0 with a
+  `NOTICE` file) awaits the owner's choice (#86). Bundled fonts must be OFL-compatible regardless.
 - Mouse support (hover-inspect first)
 - Infravision
 - Audio
 - Localization
-- Performance budget numbers, pending reference hardware
+- Performance on an integrated GPU: the frame budget is estimated from offscreen timing on the
+  development Mac only; measuring it on an iGPU is deferred until such hardware is at hand (#74)
