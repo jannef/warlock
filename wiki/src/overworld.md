@@ -5,8 +5,10 @@ map scale, and each step takes real time.
 
 ## Travel
 
-Time on the overworld passes in minutes. A step takes as long as the terrain you step onto, and
-waiting or any other action takes one 10-minute turn (see [Turns and movement](turns.md)).
+A step on the overworld takes as long as the terrain you step onto: minutes or hours. Every other
+action takes its usual time, as anywhere else: waiting takes 6 seconds, and so does entering a
+location or a local area with `>` (see [Turns and movement](turns.md)). Resting passes the hours
+quickly all the same (see [Resting](resting.md)).
 Mountains and open water cannot be crossed; a river can only be crossed by a bridge.
 
 {{#include generated/terrain-overworld.md}}
@@ -45,8 +47,9 @@ explore that cell on foot. You enter an outdoor area, 80 by 40 cells, made for t
   Woods blend towards the neighboring cells so areas side by side fit together.
 - You arrive on the side you walked onto the cell from (on the road if you came along one), or in a
   clearing in the middle if you did not walk there.
-- Walk off any edge to return to the overworld cell. This takes one 6-second turn.
-- Inside, turns are 6 seconds and the sun and sky light the area by day, under the same
+- Walk off any edge to return to the overworld cell. This takes 6 seconds, like taking stairs.
+- Inside, a step is a pace again, not a journey (6 seconds on open ground), and the sun and sky
+  light the area by day, under the same
   [weather](weather.md) as the overworld. At night only the moon lights it: under a bright moon
   and a clear sky you dimly make out the open ground, otherwise it is dark, so bring your
   [lantern](lantern.md).

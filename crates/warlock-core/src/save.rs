@@ -166,6 +166,25 @@ mod tests {
     }
 
     #[test]
+    fn saves_with_a_level_turn_length_still_load() {
+        // Before action costs (#105) every level state had its turn length; it is ignored now.
+        let w = world();
+        let mut state = serde_json::to_value(w.state()).expect("state");
+        let levels = state["levels"].as_object_mut().expect("levels");
+        for level in levels.values_mut() {
+            level["turn"] = serde_json::json!(600);
+        }
+        let mut envelope = serde_json::json!({
+            "magic": MAGIC,
+            "format_version": FORMAT_VERSION,
+            "content_fingerprint": w.content().fingerprint(),
+        });
+        envelope["state"] = state;
+        let restored = decode(&gz(&envelope.to_string()), content()).expect("loads");
+        assert_eq!(restored.state(), w.state());
+    }
+
+    #[test]
     fn rejects_other_format_version() {
         let json = r#"{"magic":"WARLOCK-SAVE","format_version":99,"state":null}"#;
         assert_eq!(

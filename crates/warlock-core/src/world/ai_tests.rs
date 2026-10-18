@@ -543,8 +543,8 @@ fn attacks_the_player_does_not_perceive_leave_no_trace() {
     let said = w.messages().len();
     // They fight (the raw events say so), but behind the wall: no event, no message.
     let mut raw = Vec::new();
-    let turn = w.state.current().turn;
-    w.run_turn(turn, &mut raw);
+    let wait = w.price_of(w.state.player, ActionKind::Wait);
+    w.run_turn(wait, &mut raw);
     assert!(raw.contains(&Event::Attacked {
         attacker: kobold,
         target: rat,

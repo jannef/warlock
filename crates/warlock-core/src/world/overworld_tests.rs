@@ -164,7 +164,6 @@ fn the_world_scenario_starts_on_the_overworld_beside_the_hall() {
     assert_eq!(terrain_id(&world), "road");
     let hall = location(&world, "hub");
     assert_eq!(world.player_pos().chebyshev(hall), 2);
-    assert_eq!(world.state.current().turn(), Duration::minutes(10));
 }
 
 #[test]
@@ -219,12 +218,12 @@ fn a_step_takes_the_travel_time_of_the_terrain_stepped_onto() {
     assert_eq!(world.time().hour(), 8 + 14);
     assert_eq!(last_message(&world), "The way into The Hub is here.");
 
-    // Waiting and resting go by the overworld's ten-minute turn.
+    // Every other action takes the 6-second base, here too: waiting, and so a rest's turns.
     let turn = world.turn();
-    assert_eq!(world.apply(&Action::Wait).elapsed, minutes(10));
+    assert_eq!(world.apply(&Action::Wait).elapsed, Duration::seconds(6));
     let outcome = world.apply(&Action::Rest(Rest::For(Duration::hours(1))));
     assert_eq!(outcome.elapsed, Duration::hours(1));
-    assert_eq!(world.turn(), turn + 7);
+    assert_eq!(world.turn(), turn + 1 + 600);
 }
 
 #[test]
@@ -271,9 +270,10 @@ fn locations_lead_into_their_levels_and_back_out_to_the_location() {
             last_message(&world),
             format!("The way into {short} is here.")
         );
+        // Entering takes a normal action, 6 seconds, like any stairs.
         let before = world.time();
         assert!(world.apply(&Action::Descend).took_turn);
-        assert_eq!(world.time().since(before), Duration::minutes(10));
+        assert_eq!(world.time().since(before), Duration::seconds(6));
         assert_eq!(world.perception().level_id(), to);
         assert_eq!(last_message(&world), format!("You enter {name}."));
         let up = world
@@ -363,7 +363,7 @@ fn descending_elsewhere_enters_the_cells_local_area_and_its_edges_lead_back() {
     let cell = world.player_pos();
     let before = world.time();
     assert!(world.apply(&Action::Descend).took_turn);
-    assert_eq!(world.time().since(before), Duration::minutes(10));
+    assert_eq!(world.time().since(before), Duration::seconds(6));
     let id = local_area_id(cell);
     let view = world.perception();
     assert_eq!(view.level_id(), id);
@@ -377,14 +377,16 @@ fn descending_elsewhere_enters_the_cells_local_area_and_its_edges_lead_back() {
     let here = world.player_pos();
     assert_eq!(here.x, 0);
     assert_eq!(terrain_id(&world), "dirt_road");
-    assert_eq!(world.state.current().turn(), Duration::seconds(6));
     assert_eq!(
         world.apply(&Action::Move(Dir::E)).elapsed,
         Duration::seconds(6)
     );
 
-    // Back west and one more step leaves.
-    assert_eq!(leave(&mut world, Dir::W), 2);
+    // Back west and one more step leaves, taking a normal action's 6 seconds.
+    assert!(world.apply(&Action::Move(Dir::W)).took_turn);
+    let before = world.time();
+    assert_eq!(leave(&mut world, Dir::W), 1);
+    assert_eq!(world.time().since(before), Duration::seconds(6));
     assert_eq!(world.perception().level_id(), "overworld");
     assert_eq!(world.player_pos(), cell);
     assert_eq!(last_message(&world), "You return to The Wildlands.");

@@ -1,10 +1,13 @@
 //! Terrain definitions (`assets/data/terrain.toml`).
 
+use super::action::{BASE_TURN, price};
 use super::anim::GlyphAnim;
+use super::level::LevelKind;
 use super::light::LightId;
 use super::overworld::Landscape;
 use super::particles::ParticleEmitter;
 use crate::color::Rgb;
+use crate::time::Duration;
 use serde::{Deserialize, Serialize};
 
 /// Tallest terrain for sun shadows, in cells: it bounds how far a shadow can reach.
@@ -39,7 +42,7 @@ pub(super) struct TerrainSpec {
     pub walkable: bool,
     #[serde(default = "yes")]
     pub transparent: bool,
-    /// Time to step onto this terrain, in percent of the level's turn (spec §8 "Time").
+    /// What a step onto this terrain costs, in percent of a normal step (spec §8 "Time").
     #[serde(default = "full_cost")]
     pub move_cost: u16,
     /// Overworld terrain: minutes one overworld step onto it takes (spec §8 "Time").
@@ -110,8 +113,9 @@ pub struct TerrainDef {
     pub bg: Rgb,
     pub walkable: bool,
     pub transparent: bool,
-    /// Time to step onto this terrain, in percent of the level's turn: 100 is a normal step,
-    /// 200 (shallow water) takes twice as long. Always at least 1.
+    /// What a step onto this terrain costs, in percent of a normal step (the `step` action's
+    /// cost): 100 is a normal step, 200 (shallow water) takes twice as long. Always at least 1.
+    /// Local levels only: on the overworld a step takes the terrain's `travel_minutes`.
     pub move_cost: u16,
     /// Overworld terrain: minutes one overworld step onto it takes (1 to a day). Every walkable
     /// terrain on the overworld has it.
@@ -156,6 +160,20 @@ pub struct TerrainDef {
 }
 
 impl TerrainDef {
+    /// The energy price of stepping onto this terrain on a level of `kind` for an actor whose
+    /// step costs `step` (spec §8 "Time"; the rules ask through
+    /// [`crate::world::LevelState::step_price`]): on the overworld the step's cost over the
+    /// terrain's `travel_minutes`; elsewhere the step's cost scaled by its `move_cost` percent
+    /// over the 6-second base ([`BASE_TURN`]). The actor's speed decides how long it takes.
+    pub fn step_price(&self, step: u32, kind: LevelKind) -> i64 {
+        match (kind, self.travel_minutes) {
+            (LevelKind::Overworld, Some(minutes)) => {
+                price(step, Duration::minutes(u64::from(minutes)))
+            }
+            _ => (price(step, BASE_TURN) * i64::from(self.move_cost) / 100).max(1),
+        }
+    }
+
     pub fn is_closed_door(&self) -> bool {
         self.opens_to.is_some()
     }

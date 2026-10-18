@@ -7,9 +7,9 @@ how loud your steps are, whether it blocks sight and sound, and how tall it stan
 ## Doors
 
 A closed door (`+`) blocks movement, sight, and light, and muffles sound: you hear only what
-happens close behind it. Walk into it to open it, which takes a turn, or press `o` and a
-direction. An open door (`'`) lets you, your light, and sound through. Press `c` and a direction
-to close it again; you cannot close a door while something stands or lies in the doorway.
+happens close behind it. Walk into it to open it, which takes as long as opening it (6 seconds),
+or press `o` and a direction. An open door (`'`) lets you, your light, and sound through. Press
+`c` and a direction to close it again; you cannot close a door while something stands or lies in the doorway.
 Opening and closing doors makes noise (see [Hearing](hearing.md)). Some creatures open doors too;
 none closes them (see [Creatures](creatures.md)).
 
@@ -19,7 +19,7 @@ closed.
 ## Stairs
 
 Stairs (`>` down, `<` up) join levels. Step onto them, then press `>` or `<` to use them. Using
-stairs takes a turn. Each level you visit is kept as you left it, and dungeon levels are generated
+stairs is a normal action (6 seconds). Each level you visit is kept as you left it, and dungeon levels are generated
 on your first visit from the run's seed. Levels you leave and return to are exactly as they were.
 
 ## Water
@@ -43,8 +43,8 @@ soften them. See [Hearing](hearing.md).
 
 ## All terrain
 
-Step times below are for a 6-second turn, which is what dungeons and outdoor areas use. "Walk on
-it" is yes for terrain you can enter, and for a closed door, which you open by walking into it.
+Step times below are at a normal pace, which is yours: a normal step takes 6 seconds (see
+[Turns and movement](turns.md)). "Walk on it" is yes for terrain you can enter, and for a closed door, which you open by walking into it.
 "Footsteps" is how loud a step onto it is: quiet, normal, loud, or very loud.
 
 {{#include generated/terrain-local.md}}

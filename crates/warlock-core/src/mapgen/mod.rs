@@ -353,7 +353,6 @@ pub fn generate(
             name: def.level_name(depth),
             ambient: def.ambient,
             kind: LevelKind::Dungeon,
-            turn: LevelKind::Dungeon.default_turn(),
             terrain: canvas.terrain,
             player_start: Some(up),
             creatures: canvas.creatures,

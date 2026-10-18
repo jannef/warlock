@@ -17,9 +17,9 @@ it is that time exactly.
 
 ## How resting works
 
-Resting is a single action that waits turn after turn. Creatures keep acting and the world keeps
-being updated as usual, and the last turn is cut short so the rest ends exactly at its goal. A rest
-never lasts more than a day.
+Resting is a single action that waits turn after turn, each wait a normal action (6 seconds), on
+the overworld too. Creatures keep acting and the world keeps being updated as usual, and the last
+wait is cut short so the rest ends exactly at its goal. A rest never lasts more than a day.
 
 A rest stops early when:
 

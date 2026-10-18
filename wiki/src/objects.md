@@ -69,14 +69,14 @@ screen lists them:
 
 On this screen every letter names a stack, even `h`, `j`, `k`, and `l`.
 
-Picking up takes one turn, however many stacks you take. With nothing here, you are told so and no
+Picking up is one action (6 seconds), however many stacks you take. With nothing here, you are told so and no
 time passes.
 
 ## Dropping
 
 Press `d` to choose what to drop. The screen works like the pick-up screen and lists what you
 carry. Dropped objects go on top of the pile where you stand, and stackable ones join a stack of
-the same object already there. Dropping takes one turn.
+the same object already there. Dropping is one action too.
 
 You cannot close a door while objects lie in its doorway.
 

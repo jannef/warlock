@@ -3,46 +3,50 @@
 The game is turn based. You act, and then time passes while the creatures around you act, each at
 its own pace, until it is your turn again.
 
-## Turn length
+## What actions cost
 
-A level decides how long one turn takes:
+What you do decides how long it takes. Every action has a **cost**: a normal action costs 1000
+and takes 6 seconds at a normal pace, which is your pace. An action that costs more takes longer
+in proportion, and one that costs less is quicker: an action of cost 1400 would take 8.4 seconds.
 
-| Kind of level | One turn |
-|---|---|
-| Dungeons and outdoor areas | 6 seconds |
-| The overworld | 10 minutes |
+{{#include generated/actions.md}}
 
-A few things always take exactly one turn: waiting (`.`), opening or closing a door, lighting or
-dousing the lantern, picking up or dropping objects (however many at once), attacking, and taking
-stairs. Looking at your pack (`i`) takes no time. The turn is the length of the level you start
-on, so taking stairs off the overworld (or entering a place there with `>`) costs 10 minutes and
-walking off the edge of an outdoor area costs 6 seconds.
+Every action takes the same time wherever you are, the overworld included: waiting there takes 6
+seconds, and so do entering a place with `>` and walking off the edge of an outdoor area back to
+the overworld. Only steps on the overworld are different: each is a journey (below). Picking up
+or dropping takes one action however many stacks you take. Looking at your pack (`i`) takes no
+time, and neither does anything that is refused, such as walking into a wall.
+
+The clock counts whole seconds, so an action of 8.4 seconds shows as 8 or 9 seconds on it, but a
+run of actions always adds up to their exact time: five such actions take exactly 42 seconds.
 
 ## Steps
 
-On a dungeon or outdoor level a step takes one turn scaled by the terrain you step onto. A normal
-step takes 6 seconds, wading through water or pushing through a bush takes twice as long (12
-seconds), and moving through reeds, marsh, or rubble takes one and a half times as long (9
-seconds). The full table is on the
-[Terrain](terrain.md) page.
+On a dungeon or outdoor level a step costs more or less depending on the terrain you step onto. A
+normal step takes 6 seconds, wading through water or pushing through a bush takes twice as long
+(12 seconds), and moving through reeds, marsh, or rubble takes one and a half times as long (9
+seconds). The full table is on the [Terrain](terrain.md) page.
 
 On the overworld a step is a journey: it takes the time given for the terrain you step onto, from
 20 minutes along a road to two and a half hours through a swamp. See [The overworld](overworld.md).
 
 You can move in eight directions, diagonals included. You cannot step into a wall or other solid
-terrain; trying takes no time. Walking into a closed door opens it, and that takes a turn. You
-cannot step onto a creature either: moving into one that is hostile to you attacks it, which
-takes a turn, and moving into any other creature takes no time ("The deer is in the way."). See
+terrain; trying takes no time. Walking into a closed door opens it, which costs the same as
+opening it. You cannot step onto a creature either: moving into one that is hostile to you
+attacks it, and moving into any other creature takes no time ("The deer is in the way."). See
 [Creatures](creatures.md#attacks).
 
 ## Creatures act at their own pace
 
-Every creature has its own pace, and the game does not show it. After your action, the
-creatures on the level act in the order their turns come up until it is your turn again:
+Every creature has its own pace, and the game does not show it. A faster creature takes less time
+over the same action, so it acts more often; a slower one acts less often. Creatures' actions
+have costs too: a step, a wait, or an attack takes a creature as long as its cost and its pace
+say. After your action, the creatures on the level act in the order their turns come up until it
+is your turn again:
 
-- A creature as quick as you acts once for each of your turns, right after you.
+- A creature as quick as you acts once for each normal action of yours, right after you.
 - A quicker creature may act twice or more before your next turn, and a slower one now and then
-  skips one of your turns.
+  lets one of your turns pass.
 - The longer your action takes, the more the creatures do meanwhile. Wading through water takes
   you twice as long as a normal step, so creatures get about twice as many actions during it.
 - When a creature's turn comes up at the same moment as yours, you go first.

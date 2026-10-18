@@ -222,9 +222,9 @@ actions = "move:E*2 move:NE move:E*6 move:NE move:E*3 skip:10h weather:clear"
 
 # A forest clearing at noon (#55): along the road west into the Thornwood and north onto a forest
 # cell, `>` into its local area (arriving on its south side), back out, and `>` again into the
-# glade in the middle; then the clock skips to 12:00 the next day. Short shadows due north of
-# the trees; the strip seen on the first visit is remembered.
+# glade in the middle (6 seconds each); then the clock skips to 12:00 the next day. Short shadows
+# due north of the trees; the strip seen on the first visit is remembered.
 [[golden]]
 name = "forest-noon"
 scenario = "world"
-actions = "move:W*11 move:SW move:W*10 move:N descend move:S descend skip:1120m weather:clear"
+actions = "move:W*11 move:SW move:W*10 move:N descend move:S descend skip:1140m weather:clear"

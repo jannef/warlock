@@ -180,21 +180,32 @@ renderer through `PerceptionView::flow` (visible cells only); no rule reads it.
 
 Time (spec §8 "Time") lives in `warlock-core`: `time.rs` (`GameTime` = seconds since the
 calendar epoch with calendar fields, minute of day, and 16-bit day fraction; `Duration`; 12×30-day
-calendar math; `DAWN`/`DUSK`), `content/calendar.rs` (month names from `data/calendar.toml`), and
-the turn pipeline in `world/mod.rs`: `player_acts` returns `Spent::Turn(duration)` (the level's
-turn, or `LevelState::step_time` for a step — the one place movement time is decided: `move_cost`
-on local levels, `travel_minutes` on the overworld), `run_turn` (the energy scheduler,
-`world/schedule.rs`, spec §8 "Speed") charges the player for it and runs the other actors on the
-level in time order until the player may act again, advancing the clock to each action, and
-`rest` loops turns until the goal or an interruption (perceiving only after turns in which a
-creature could have come into view: `out_of_view_for`, which accounts for speed, or in which the
-weather the player would see changed: `weather_turned`). New actions
-that take time must return their duration there. `creature_turn` is one creature's action and
-returns how long it took: the one place creature behavior lives (AI decisions, the noise and
-events an action makes; the AI is `world/ai.rs`, below). Speed (`speed` in `data/creatures.toml`, default 1000 = the player's)
+calendar math; `DAWN`/`DUSK`), `content/calendar.rs` (month names from `data/calendar.toml`),
+`content/action.rs` (action costs, below), and the turn pipeline in `world/mod.rs`.
+**Action costs** (spec §8 "Time", M13): every action that takes time has a cost in energy
+(`ActionKind`, costs in `data/actions.toml`: 1000 = a normal action; a creature type may give its
+attacks their own `attack_cost`; `Content::action_cost`) and a base time, `BASE_TURN` (6 s) for
+everything but an overworld step, whose base is the terrain's `travel_minutes`. Its energy price
+is `content::price(cost, base)` = cost × base seconds; an actor gains its speed in energy per
+second, so it takes `cost / 1000 × 1000 / speed × base` (1400 at speed 1000: 8.4 s; 1000 at 1111:
+about 5.4 s). `TerrainDef::step_price` (asked through `LevelState::step_price`) is the one place
+movement time is decided: `move_cost` percent on local levels, `travel_minutes` on the overworld.
+`player_acts` returns `Spent::Turn(price)` (`World::price_of(actor, kind)`, `World::step_price`),
+`run_turn` (the energy scheduler, `world/schedule.rs`, spec §8 "Speed") charges the player for it
+and runs the other actors on the level in time order until the player may act again, advancing
+the clock (whole seconds; leftover energy carries, so a run of actions takes its exact total time,
+up to the second the actor is ready, with no drift) to each action, and `rest` loops waits until
+the goal or an interruption, its last turn cut short with `price_until` so it ends exactly at the
+goal at any player speed (perceiving only after turns in which a creature could have come into
+view: `out_of_view_for`, which accounts for speed and the cheapest step, or in which the weather
+the player would see changed: `weather_turned`). A new action that takes time needs an
+`ActionKind` (with its id and a line in `data/actions.toml`) and must return its price there.
+`creature_turn` is one creature's action and returns its price: the one place creature behavior
+lives (AI decisions, the noise and events an action makes; the AI is `world/ai.rs`, below).
+Speed (`speed` in `data/creatures.toml`, default 1000 = the player's; any player speed works)
 is rules-only: never put it in perception, the UI, or messages; energy is per actor in
 `WorldState` (saved, hashed); creatures on other levels and the dev skip gain none.
-Levels carry `kind` and `turn` (`turn_seconds`); terrain carries `move_cost` (percent); scenarios
+Levels carry `kind` (no turn length of their own); terrain carries `move_cost` (percent); scenarios
 carry `start_date`/`start_time`. Rest (`R`) is a message-line input mode (`InputMode::Rest`,
 `input::REST_CHOICES`), not a menu screen.
 
@@ -227,7 +238,7 @@ seen, updated by `Perception::remember` on cells where creatures would be seen);
 (`Actor::weight`, `World::actor_weight`); presentation reads only `PerceptionView::objects`
 (current pile in sight, else remembered), `inventory`, and `own_weight`: never what creatures
 carry. `Action::PickUp(Letters)` / `Action::Drop(Letters)` (`Letters` = a set of `a`–`z`, empty
-= everything) take the level's turn; a refused one takes none. The map grid draws the top object
+= everything) are actions of their own cost (`pick_up`, `drop`); a refused one takes no time. The map grid draws the top object
 in place of the terrain glyph (no terrain animation or glow there); look mode names piles.
 
 Key commands `,`/`g` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop` screen),
@@ -271,7 +282,8 @@ the player sees both ends), a noise (`noise::Act::Attack`), and messages built i
 by distance, direction order, and actor id.
 
 The overworld (spec §3, §5, §7) is `assets/levels/overworld.toml`, the one level of kind
-`overworld` (`LevelKind::Overworld`: 10-minute turns, steps cost the terrain's `travel_minutes`).
+`overworld` (`LevelKind::Overworld`: a step's base time is the terrain's `travel_minutes`; every
+other action, waiting and `>` included, the usual 6 s).
 Its locations are stairs-down terrain (`hall`, `cave_mouth`, `dungeon_entrance`) whose legend `to`
 names the level; the level's `<` with `to = "overworld"` leads back to the location (`World::travel`
 arrives on the stairs leading back). `>` on any other cell enters the local area `local:x,y`
@@ -479,9 +491,10 @@ notes, and no locations or level walkthroughs yet), built with [mdBook](https://
 published at https://jannef.github.io/warlock/wiki/ by the release workflow's web job, which
 builds it into `pages/wiki/` beside the game. Facts that live in data (months, moons, weather,
 terrain, footstep loudness in words, vision profiles, light presets (named as the player sees
-them), creatures, factions, objects, materials, scenarios, sight radii, the pack's size, the stats'
-names; never hidden rules such as speed, hearing thresholds, creature sight, creature weights,
-stat modifiers and potentials, or creatures' stats) are tables generated by `cargo xtask wiki`
+them), creatures, factions, objects, materials, scenarios, action costs, sight radii, the pack's
+size, the stats' names; never hidden rules such as speed, hearing thresholds, creature sight,
+creature weights, stat modifiers and potentials, or creatures' stats) are tables generated by
+`cargo xtask wiki`
 (`xtask/src/wiki.rs`) into `wiki/src/generated/` (committed) and pulled into pages with
 `{{#include generated/NAME.md}}`; CI runs `cargo xtask wiki --check` and `mdbook build wiki` on the
 Linux job (mdBook pinned there and in `release.yml`). To preview: `cargo xtask wiki --build`, then

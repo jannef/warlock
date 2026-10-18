@@ -59,15 +59,6 @@ impl Duration {
         self.0 == 0
     }
 
-    /// Scaled by `percent` (100 = unchanged), rounded down, but never below one second unless it
-    /// was zero: anything that takes time takes at least a second.
-    pub fn percent(self, percent: u16) -> Self {
-        if self.0 == 0 {
-            return self;
-        }
-        Self((self.0.saturating_mul(u64::from(percent)) / 100).max(1))
-    }
-
     /// In words for messages, e.g. `1 hour`, `2 hours and 30 minutes`, `45 seconds` (whole
     /// minutes only once it is a minute or more).
     pub fn spoken(self) -> String {
@@ -356,17 +347,7 @@ mod tests {
     }
 
     #[test]
-    fn durations_scale_and_read_aloud() {
-        let step = Duration::seconds(6);
-        assert_eq!(step.percent(100), step);
-        assert_eq!(step.percent(200), Duration::seconds(12));
-        assert_eq!(step.percent(50), Duration::seconds(3));
-        assert_eq!(
-            step.percent(1),
-            Duration::seconds(1),
-            "never below a second"
-        );
-        assert_eq!(Duration::ZERO.percent(200), Duration::ZERO);
+    fn durations_read_aloud() {
         assert_eq!(Duration::hours(1).spoken(), "1 hour");
         assert_eq!(Duration::minutes(150).spoken(), "2 hours and 30 minutes");
         assert_eq!(Duration::minutes(1).spoken(), "1 minute");

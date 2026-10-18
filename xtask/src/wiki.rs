@@ -2,11 +2,11 @@
 //!
 //! The wiki (`wiki/`, built with mdBook) is written by hand except for facts that live in data
 //! (month names, moons, weather, terrain, vision profiles, light presets, creatures, factions,
-//! objects and materials, scenarios) and a few constants of the rules (sight radii, the pack's
-//! size, the stats' names). Those are written to `wiki/src/generated/*.md` from the built-in
-//! content, and the pages pull them in with `{{#include generated/NAME.md}}`, so they cannot
-//! drift. Output is deterministic. `--check` fails when a file is stale; `--build` also runs
-//! `mdbook build wiki`.
+//! objects and materials, scenarios, action costs) and a few constants of the rules (sight radii,
+//! the pack's size, the stats' names). Those are written to `wiki/src/generated/*.md` from the
+//! built-in content, and the pages pull them in with `{{#include generated/NAME.md}}`, so they
+//! cannot drift. Output is deterministic. `--check` fails when a file is stale; `--build` also
+//! runs `mdbook build wiki`.
 
 use crate::workspace_root;
 use std::collections::BTreeSet;
@@ -14,7 +14,8 @@ use std::fmt::Write as _;
 use std::path::PathBuf;
 use std::process::Command;
 use warlock_core::content::{
-    Combat, Content, CreatureId, FactionId, LevelKind, LightId, Stance, TerrainDef,
+    ActionKind, BASE_TURN, Combat, Content, CreatureId, FactionId, LevelKind, LightId,
+    NORMAL_SPEED, Stance, TerrainDef, price,
 };
 use warlock_core::daylight::{
     MOONLIGHT_PER_CELL, SIGHT_DAY, SIGHT_MOONLIT, SIGHT_NIGHT, SIGHT_TWILIGHT, overworld_sight,
@@ -104,6 +105,7 @@ fn build_book() -> Result<(), String> {
 fn generate(content: &Content) -> Vec<(String, String)> {
     let mut files = vec![
         ("calendar.md".to_string(), months(content)),
+        ("actions.md".to_string(), action_costs(content)),
         ("terrain-local.md".to_string(), local_terrain(content)),
         (
             "terrain-overworld.md".to_string(),
@@ -178,9 +180,56 @@ fn is_overworld_terrain(t: &TerrainDef, ids: &BTreeSet<String>) -> bool {
     t.travel_minutes.is_some() || t.landscape.is_some() || ids.contains(&t.id)
 }
 
+/// How long an action of energy price `price` takes at normal speed (the player's), in words:
+/// `6 seconds`, `5.4 seconds`, `45 minutes`. Speed itself stays hidden.
+fn at_normal_pace(price: i64) -> String {
+    let speed = i64::from(NORMAL_SPEED);
+    let tenths = (price * 10 + speed / 2) / speed;
+    if tenths % 10 != 0 && tenths < 600 {
+        return format!("{}.{} seconds", tenths / 10, tenths % 10);
+    }
+    let seconds = u64::try_from(price.div_euclid(speed)).unwrap_or(0);
+    Duration::seconds(seconds).spoken()
+}
+
+/// What each action costs and how long it takes at a normal pace (spec §8 "Time"), and the
+/// creature types whose attacks cost something else.
+fn action_costs(content: &Content) -> String {
+    let mut out = String::from("| Action | Cost | Takes at a normal pace |\n|---|---:|---:|\n");
+    for kind in ActionKind::ALL {
+        let what = match kind {
+            ActionKind::Step => "A step onto normal ground (other ground: see Terrain)",
+            ActionKind::Wait => "Waiting",
+            ActionKind::OpenDoor => "Opening a door",
+            ActionKind::CloseDoor => "Closing a door",
+            ActionKind::Lantern => "Lighting or dousing the lantern",
+            ActionKind::Stairs => {
+                "Taking stairs, entering a place from the overworld, or walking off an area's edge"
+            }
+            ActionKind::PickUp => "Picking up (however many stacks)",
+            ActionKind::Drop => "Dropping (however many stacks)",
+            ActionKind::Melee => "Attacking up close",
+            ActionKind::Shoot => "Shooting (creatures)",
+            ActionKind::Cast => "Casting a spell (creatures)",
+        };
+        let cost = content.action_costs().cost(kind);
+        let _ = writeln!(
+            out,
+            "| {what} | {cost} | {} |",
+            at_normal_pace(price(cost, BASE_TURN))
+        );
+    }
+    for c in content.creature_defs() {
+        if let Some(cost) = c.attack_cost {
+            let _ = writeln!(out, "\nThe {}'s attacks cost {cost} each.", c.name);
+        }
+    }
+    out
+}
+
 fn local_terrain(content: &Content) -> String {
     let ids = overworld_ids(content);
-    let turn = Duration::seconds(6);
+    let step = content.action_costs().cost(ActionKind::Step);
     let mut out = String::from(
         "| Terrain | Glyph | Walk on it | Blocks sight | Step takes | Footsteps | Height (cells) \
          | Notes |\n|---|:---:|:---:|:---:|---:|:---:|:---:|---|\n",
@@ -190,10 +239,11 @@ fn local_terrain(content: &Content) -> String {
         .iter()
         .filter(|t| !is_overworld_terrain(t, &ids))
     {
-        let step = if t.walkable {
-            turn.percent(t.move_cost).spoken()
+        let step_time = if t.walkable {
+            at_normal_pace(t.step_price(step, LevelKind::Dungeon))
         } else if t.is_closed_door() {
-            "one turn (opens it)".into()
+            let open = content.action_costs().cost(ActionKind::OpenDoor);
+            format!("{} (opens it)", at_normal_pace(price(open, BASE_TURN)))
         } else {
             "-".into()
         };
@@ -232,7 +282,7 @@ fn local_terrain(content: &Content) -> String {
             glyph(t.glyph),
             yes(t.walkable || t.is_closed_door()),
             yes(!t.transparent),
-            step,
+            step_time,
             footsteps,
             t.height,
             notes.join("; ")
@@ -278,6 +328,7 @@ fn footsteps(content: &Content) -> String {
 
 fn overworld_terrain(content: &Content) -> String {
     let ids = overworld_ids(content);
+    let step = content.action_costs().cost(ActionKind::Step);
     let mut out = String::from(
         "| Terrain | Glyph | Travel per step | Blocks sight | Local area (`>`) |\n\
          |---|:---:|---:|:---:|:---:|\n",
@@ -287,10 +338,10 @@ fn overworld_terrain(content: &Content) -> String {
         .iter()
         .filter(|t| is_overworld_terrain(t, &ids))
     {
-        let travel = t.travel_minutes.map_or_else(
-            || "impassable".to_string(),
-            |m| Duration::minutes(u64::from(m)).spoken(),
-        );
+        let travel = match t.travel_minutes {
+            Some(_) => at_normal_pace(t.step_price(step, LevelKind::Overworld)),
+            None => "impassable".to_string(),
+        };
         let local = if t.stairs.is_some() {
             "location: `>` enters it"
         } else {
@@ -634,12 +685,16 @@ fn creatures(content: &Content) -> String {
             _ => "neutral",
         };
         let fights = c.faction.is_some_and(|f| content.factions().has_enemies(f));
-        let attacks = match c.combat {
+        let mut attacks = match c.combat {
             _ if !fights => "never",
             Combat::Melee => "up close",
             Combat::Ranged => "shoots from afar",
             Combat::Caster => "casts spells from afar",
-        };
+        }
+        .to_string();
+        if let (true, Some(cost)) = (fights, c.attack_cost) {
+            let _ = write!(attacks, " (cost {cost})");
+        }
         let _ = writeln!(
             out,
             "| {} | {} | {faction} | {stance} | {attacks} | {} | {} |",

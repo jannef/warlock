@@ -21,6 +21,8 @@
 #   range        how far a ranged or caster creature reaches, in cells (2 up to its sight; it
 #                needs a clear line of fire)
 #   opens_doors  whether it opens closed doors in its way (default false)
+#   attack_cost  what its attacks cost in energy (100 to 10000), instead of the attack's cost in
+#                actions.toml (melee, shoot, or cast; 1000 is a normal action)
 #
 # Stats (spec §8 "Stats"; never shown to the player, and no rule uses them yet): stats, its scores
 # by stat (strength, dexterity, toughness, intelligence, willpower, presence; 1 to 40, default 10,
