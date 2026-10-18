@@ -2,7 +2,8 @@
 # Release (pre-release for v0.x).
 #
 # Runs on tags `v*` (publishes a release with generated notes) and on manual dispatch (builds the
-# archives and uploads them as workflow artifacts only; nothing is published). This is the only
+# archives and uploads them as workflow artifacts only; nothing is published, and the Pages
+# deploy happens only with the `publish_pages` input). This is the only
 # workflow that uses macOS and Windows runners: CI runs on Linux, and macOS is checked locally.
 name: Release
 
@@ -10,6 +11,11 @@ on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      publish_pages:
+        description: Also deploy the web build to GitHub Pages
+        type: boolean
+        default: false
 
 env:
   CARGO_TERM_COLOR: always
@@ -112,6 +118,32 @@ jobs:
           name: release-web
           path: dist/*
           if-no-files-found: error
+      # The same build is the playable page on GitHub Pages (deployed by the `pages` job).
+      - name: Assemble Pages site
+        run: |
+          mkdir -p pages
+          cp -r target/web/. pages/
+          cp LICENSE pages/
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: pages
+
+  # Deploys the latest web build to https://jannef.github.io/warlock/ on every release tag, and on
+  # a manual run only when `publish_pages` is ticked.
+  pages:
+    name: Deploy to GitHub Pages
+    if: github.ref_type == 'tag' || inputs.publish_pages
+    needs: web
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
 
   publish:
     name: Publish GitHub Release

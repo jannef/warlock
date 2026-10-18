@@ -166,8 +166,14 @@ fn web() -> Result<(), String> {
         return Err(format!("wasm-bindgen failed: {status}"));
     }
     optimize_wasm(&out.join("warlock_bg.wasm"))?;
-    std::fs::copy(root.join("web/index.html"), out.join("index.html"))
-        .map_err(|e| format!("cannot copy web/index.html: {e}"))?;
+    // Stamp the workspace version into the page (like `release/Info.plist.in`).
+    let page = std::fs::read_to_string(root.join("web/index.html"))
+        .map_err(|e| format!("cannot read web/index.html: {e}"))?;
+    std::fs::write(
+        out.join("index.html"),
+        page.replace("@VERSION@", env!("CARGO_PKG_VERSION")),
+    )
+    .map_err(|e| format!("cannot write index.html: {e}"))?;
     println!(
         "web ok: {}\nserve it with: python3 -m http.server --directory {} 8080",
         out.display(),
