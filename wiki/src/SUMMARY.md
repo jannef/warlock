@@ -11,6 +11,7 @@
 - [Vision types](vision.md)
 - [Hearing](hearing.md)
 - [Sun, moon, and sky](sun.md)
+- [Weather](weather.md)
 - [The overworld](overworld.md)
 - [Terrain](terrain.md)
 - [Objects and your pack](objects.md)

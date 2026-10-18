@@ -7,5 +7,7 @@
 | Night, no moonlight | 2 cells |
 | Night, a half moon high in the sky | 3 cells |
 | Night, a full moon high in the sky | 4 cells |
+| Day, in rain | 7 cells |
+| Day, in heavy rain | 5 cells |
 
-At night moonlight (all moons together) adds a cell of sight for every 8% of full light it gives, but by moonlight you never see farther than 4 cells. The farthest you can ever see is 40 cells.
+At night moonlight (all moons together) adds a cell of sight for every 8% of full light it gives, but by moonlight you never see farther than 4 cells. Rain takes cells away at any hour (see [the weather](weather.md)), but never below 2. The farthest you can ever see is 40 cells.

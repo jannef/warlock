@@ -6,6 +6,9 @@ Levels under the open sky are lit by the sun and the sky by day and by the moon 
 areas and the [overworld](overworld.md). Dungeons never are. Terrain with a roof (for example the
 floor under a gazebo) never receives sun, moon, or sky light even on an outdoor level.
 
+Everything on this page is for a clear sky. Clouds dim the sun, the sky, and the moon, and soften
+their shadows; see [Weather](weather.md).
+
 ## The sun's path
 
 The sun follows the same path every day. It rises at dawn (06:00) due east, which is the right side
@@ -87,6 +90,9 @@ What you can see by moonlight depends on your [eyes](vision.md):
   nothing without a light.
 - **Low-light eyes** see by a half moon too, and under a full moon some of the shade as well.
 - **Darkvision** sees what normal eyes see, and everything within its radius as always.
+
+Clouds hide the moon too: under an overcast or rainy sky even a full moon is too faint for normal
+eyes (see [Weather](weather.md)).
 
 When the moon is new or down, outdoor areas are dark unless you bring a light of your own. Light
 your [lantern](lantern.md). A few things, such as a torch-carrying creature or a glowing altar,

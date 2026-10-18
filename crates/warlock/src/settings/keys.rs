@@ -105,7 +105,8 @@ impl KeyCommand {
             Look => "look",
             Help => "help",
             Quit => "quit",
-            Cancel | Snapshot | LoadSnapshot | CycleVision | RevealMap | LightValues | SkipHour => {
+            Cancel | Snapshot | LoadSnapshot | CycleVision | RevealMap | LightValues | SkipHour
+            | NextWeather => {
                 return None;
             }
         })

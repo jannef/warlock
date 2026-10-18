@@ -3,9 +3,10 @@
 //! A creature sees an actor iff the actor's cell is visible to it as the player's rules would
 //! have it (see [`crate::perception`]): in line of sight (symmetric shadowcasting from the
 //! creature's cell) within its sight radius, **and** lit at least to its eye's threshold by the
-//! same gameplay light the player sees (ambient, sky, every source, the sun and the moons, bounce)
-//! or within its darkvision radius. On the overworld, sight is at map scale: line of sight within
-//! the daylight (and moonlight) radius and the creature's own sight, whatever the light. An actor on an opaque cell is seen
+//! same gameplay light the player sees (ambient, sky, every source, the sun and the moons through
+//! the weather's clouds, bounce) or within its darkvision radius. On the overworld, sight is at map
+//! scale: line of sight within the daylight (and moonlight, and rain) radius and the creature's
+//! own sight, whatever the light. An actor on an opaque cell is seen
 //! only within darkvision (off the overworld; no such terrain exists there yet).
 //!
 //! Creatures never read the player's perception. They compute their own, and only for the cells
@@ -16,7 +17,7 @@ use crate::content::{Content, LevelKind, VisionProfile};
 use crate::daylight;
 use crate::fov::compute_fov;
 use crate::geom::Pos;
-use crate::light::{Area, BOUNCE_STEPS, Bounce, Light, LightCache, Sky, Sunlight};
+use crate::light::{Area, BOUNCE_STEPS, Bounce, Light, LightCache, Sunlight};
 use crate::world::WorldState;
 
 /// The cells in line of sight from one cell within a radius (symmetric shadowcasting).
@@ -75,14 +76,13 @@ impl LineOfSight {
 }
 
 /// How far a viewer whose eyes reach `sight` cells sees on the current level right now: on the
-/// overworld no farther than daylight (and moonlight) allows.
+/// overworld no farther than daylight (and moonlight, and rain) allows.
 pub(crate) fn sight_radius(state: &WorldState, content: &Content, sight: i32) -> i32 {
-    match state.current().kind {
-        LevelKind::Overworld => {
-            let moonlight = Sky::at(state.time, content.moons()).moonlight();
-            sight.min(daylight::overworld_sight(state.time, moonlight))
+    match (state.current().kind, state.sky(content)) {
+        (LevelKind::Overworld, Some(sky)) => {
+            sight.min(daylight::sight_under(state.time, &sky, content.climate()))
         }
-        LevelKind::Dungeon | LevelKind::Outdoor => sight,
+        _ => sight,
     }
 }
 
@@ -147,12 +147,10 @@ pub(crate) fn light(
     // The sources that light any cell of the area (a source lights cells within its radius, and
     // the area's cells lie within 2 · margin of `p`).
     let near = lights.near(state, content, p, 2 * margin);
-    // Under the open sky: the sun and every moon that shines, where nothing taller shades the
-    // area's cells (as the player's perception has them), and the sky's glow.
-    let sky = level
-        .kind
-        .is_sky_exposed()
-        .then(|| Sky::at(state.time, content.moons()));
+    // Under the open sky: the sun and every moon that shines through the weather's clouds, where
+    // nothing taller shades the area's cells (as the player's perception has them), and the
+    // sky's glow.
+    let sky = state.sky(content);
     let mut bodies: Vec<([i16; 2], Light)> = Vec::new();
     if let Some(sky) = &sky {
         if sky.sun.is_up() {

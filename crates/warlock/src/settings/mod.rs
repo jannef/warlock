@@ -18,6 +18,7 @@
 //! distortion = true       # heat haze
 //! particles = true
 //! screen_fades = true     # level-change fade and flashes
+//! weather = true          # rain falling, splashing, and rings on water
 //!
 //! [bindings]              # command id -> keys; a character, or a key name like "ArrowUp"
 //! move_n = ["k", "Numpad8", "ArrowUp"]
@@ -68,6 +69,10 @@ pub struct EffectSwitches {
     pub particles: bool,
     /// The level-change fade and screen flashes.
     pub screen_fades: bool,
+    /// Weather drawn over the map: rain falling, splashing, and rings on still water. A switch of
+    /// its own (not `particles`): it moves over the whole view, not around a few sources. The
+    /// weather itself (its light, the status bar) does not depend on it.
+    pub weather: bool,
 }
 
 impl EffectSwitches {
@@ -79,6 +84,7 @@ impl EffectSwitches {
         distortion: true,
         particles: true,
         screen_fades: true,
+        weather: true,
     };
     pub const ALL_OFF: Self = Self {
         glyph_animation: false,
@@ -88,6 +94,7 @@ impl EffectSwitches {
         distortion: false,
         particles: false,
         screen_fades: false,
+        weather: false,
     };
 
     /// The effective switches: each as set, and everything off when `reduced`.
@@ -96,7 +103,7 @@ impl EffectSwitches {
     }
 
     /// The setting names, for the file.
-    const KEYS: [&'static str; 7] = [
+    const KEYS: [&'static str; 8] = [
         "glyph_animation",
         "flicker",
         "motion",
@@ -104,6 +111,7 @@ impl EffectSwitches {
         "distortion",
         "particles",
         "screen_fades",
+        "weather",
     ];
 
     fn to_map(self) -> std::collections::BTreeMap<&'static str, bool> {
@@ -123,6 +131,7 @@ impl EffectSwitches {
             "distortion" => &mut self.distortion,
             "particles" => &mut self.particles,
             "screen_fades" => &mut self.screen_fades,
+            "weather" => &mut self.weather,
             _ => return None,
         })
     }
@@ -407,6 +416,7 @@ mod tests {
             effects: EffectSwitches {
                 particles: false,
                 flicker: false,
+                weather: false,
                 ..EffectSwitches::ALL_ON
             },
             palette: Palette::Colorblind,

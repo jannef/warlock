@@ -39,10 +39,13 @@ is on the right while the moon waxes and on the left while it wanes:
 If the game world has more than one moon, the status bar shows each moon's name and picture
 instead, for example `Moon ●  Ilse ☽`.
 
+Under the open sky the status bar also shows the [weather](weather.md), after the moon.
+
 When the window is too narrow for everything, the status bar leaves out the least important parts
 first: the seed, your position, your lantern, your vision, the light at your feet, and the turn
-count; then it shortens the moon's phase to its picture, and only then drops it. The time and the
-date stay longest, after the name of the level.
+count; then it shortens the moon's phase to its picture, and only then drops it; then the region,
+then the year of the date, then the date. The weather, the time, and the name of the level stay
+longest.
 
 ## What takes time
 

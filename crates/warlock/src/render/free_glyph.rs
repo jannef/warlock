@@ -54,12 +54,16 @@ pub struct FreeGlyph {
     pub color: LinearRgba,
     /// Scale about the cell center.
     pub scale: f32,
+    /// Shear about the cell center: pixels to the right per pixel down (0 upright), so a
+    /// vertical stroke leans along a slanted motion (falling rain).
+    pub slant: f32,
 }
 
 impl FreeGlyph {
-    /// Whether the glyph sits exactly on the pixel grid, unscaled, so it can be drawn 1:1.
+    /// Whether the glyph sits exactly on the pixel grid, unscaled and upright, so it can be drawn
+    /// 1:1.
     pub fn is_crisp(&self) -> bool {
-        self.scale == 1.0 && self.pos == self.pos.round()
+        self.scale == 1.0 && self.slant == 0.0 && self.pos == self.pos.round()
     }
 }
 
@@ -208,6 +212,7 @@ fn glyph_mesh(glyphs: &[FreeGlyph], cell: Vec2, slot: impl Fn(char) -> u16) -> M
         ch: ' ',
         color: LinearRgba::NONE,
         scale: 1.0,
+        slant: 0.0,
     };
     let glyphs = if glyphs.is_empty() {
         &[HIDDEN][..]
@@ -226,6 +231,7 @@ fn glyph_mesh(glyphs: &[FreeGlyph], cell: Vec2, slot: impl Fn(char) -> u16) -> M
         let size = cell * g.scale;
         let min = g.pos + (cell - size) * 0.5;
         let max = min + size;
+        let middle = (min.y + max.y) * 0.5;
         let flags = if g.is_crisp() { CRISP } else { 0 };
         for (corner, local) in [
             (Vec2::new(min.x, min.y), Vec2::ZERO),
@@ -233,7 +239,8 @@ fn glyph_mesh(glyphs: &[FreeGlyph], cell: Vec2, slot: impl Fn(char) -> u16) -> M
             (Vec2::new(max.x, max.y), cell),
             (Vec2::new(min.x, max.y), Vec2::new(0.0, cell.y)),
         ] {
-            positions.push([corner.x, corner.y, 0.0]);
+            let x = corner.x + g.slant * (corner.y - middle);
+            positions.push([x, corner.y, 0.0]);
             locals.push(local.to_array());
             colors.push(g.color.to_f32_array());
             data.push([u32::from(slot(g.ch)), flags]);
@@ -263,6 +270,7 @@ mod tests {
             ch: '@',
             color: LinearRgba::WHITE,
             scale,
+            slant: 0.0,
         }
     }
 
@@ -288,6 +296,26 @@ mod tests {
         };
         assert_eq!(d[0], [3, 0]);
         assert_eq!(mesh.indices().map(Indices::len), Some(6));
+    }
+
+    #[test]
+    fn slanted_quads_lean_about_the_cell_center() {
+        let cell = Vec2::new(10.0, 20.0);
+        let g = FreeGlyph {
+            slant: -0.25,
+            ..glyph(Vec2::new(100.0, 40.0), 1.0)
+        };
+        assert!(!g.is_crisp());
+        let mesh = glyph_mesh(&[g], cell, |_| 3);
+        let Some(VertexAttributeValues::Float32x3(p)) = mesh.attribute(Mesh::ATTRIBUTE_POSITION)
+        else {
+            panic!("positions are Float32x3");
+        };
+        // The top leans right, the bottom left: a stroke falling down and to the left.
+        assert_eq!(p[0], [102.5, 40.0, 0.0]);
+        assert_eq!(p[1], [112.5, 40.0, 0.0]);
+        assert_eq!(p[2], [107.5, 60.0, 0.0]);
+        assert_eq!(p[3], [97.5, 60.0, 0.0]);
     }
 
     #[test]

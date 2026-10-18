@@ -26,6 +26,7 @@ pub mod rng;
 pub mod save;
 mod sight;
 pub mod time;
+pub mod weather;
 pub mod world;
 
 pub use action::{Action, AttackKind, Event, Letters, Outcome, Rest};

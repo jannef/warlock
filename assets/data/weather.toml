@@ -1,0 +1,185 @@
+# Weather (spec §5 "Weather", §7). One weather over every level under the open sky (outdoor areas
+# and the overworld; never dungeons), changing every three hours or so: clear, overcast, rain, or
+# heavy rain. It follows from the run's seed and the time alone, so it is the same however the
+# time passes. Weather lasts: it mostly changes to a neighboring kind (clear and overcast, overcast
+# and rain, rain and heavy rain), and the light dims and brightens over an hour as the clouds come
+# and go. Without this file the sky is always clear.
+#
+# Chances of each weather in percent, one [[month]] per month in calendar order (exactly 12, see
+# calendar.toml); each month's chances add up to 100. Over many days each weather comes up exactly
+# as often as its chance says. (Snow may come later; for now winter rains too.)
+
+[[month]] # Frostmere
+clear = 40
+overcast = 40
+rain = 15
+heavy_rain = 5
+
+[[month]] # Thawmonth
+clear = 35
+overcast = 35
+rain = 22
+heavy_rain = 8
+
+[[month]] # Seedtide
+clear = 40
+overcast = 30
+rain = 22
+heavy_rain = 8
+
+[[month]] # Rainmoon: the wettest month
+clear = 20
+overcast = 30
+rain = 35
+heavy_rain = 15
+
+[[month]] # Greenleaf
+clear = 40
+overcast = 30
+rain = 22
+heavy_rain = 8
+
+[[month]] # Highsun: the driest month
+clear = 70
+overcast = 18
+rain = 9
+heavy_rain = 3
+
+[[month]] # Emberheat: dry, with a rare downpour
+clear = 65
+overcast = 20
+rain = 10
+heavy_rain = 5
+
+[[month]] # Harvestide
+clear = 55
+overcast = 25
+rain = 14
+heavy_rain = 6
+
+[[month]] # Leaffall
+clear = 40
+overcast = 30
+rain = 22
+heavy_rain = 8
+
+[[month]] # Mistmoon
+clear = 30
+overcast = 45
+rain = 18
+heavy_rain = 7
+
+[[month]] # Darkening
+clear = 30
+overcast = 35
+rain = 25
+heavy_rain = 10
+
+[[month]] # Deepwinter
+clear = 35
+overcast = 45
+rain = 15
+heavy_rain = 5
+
+# What each weather does (clear weather is the sky as it is):
+#   direct   percent of the direct light of the sun and the moons that gets through the clouds
+#            (1 to 100): shadows grow faint
+#   sky      percent of the sky's own light that gets through (1 to 100)
+#   scatter  percent of the direct light the clouds spread over the whole sky (0 to 100): soft
+#            sky light, in the shade too, so the light is flat and grey
+#   sight    cells of sight lost on the overworld (0 to 8; never below the 2 of a dark night)
+# Presentation only (particle emitters as in terrain.toml, `ambient`, `rate` per cell and second;
+# off with the `weather` effect switch):
+#   drops    rain falling on every visible cell under the open sky (never under a roof)
+#   splash   drops splashing on visible open ground
+#   ripples  rings on visible still water
+# `opacity` keeps them faint: rain is felt more than seen.
+
+[overcast]
+direct = 35
+sky = 85
+scatter = 15
+
+[rain]
+direct = 22
+sky = 70
+scatter = 12
+sight = 2
+
+[rain.drops]
+glyphs = "│"
+colors = ["#a4b6c8"]
+rate = 0.3
+life = 0.14
+velocity = [-4.0, 16.0]
+spread = [0.3, 1.5]
+offset = [0.56, -2.24]
+area = [0.5, 0.5]
+scale = 0.6
+fade = 0.4
+opacity = 0.35
+
+[rain.splash]
+glyphs = "·"
+colors = ["#9aacbe"]
+rate = 0.1
+life = 0.25
+velocity = [0.0, -1.5]
+gravity = 10.0
+offset = [0.0, 0.2]
+area = [0.4, 0.2]
+scale = 0.6
+fade = 0.6
+opacity = 0.45
+
+[rain.ripples]
+glyphs = "◦"
+colors = ["#9cb2c6"]
+rate = 0.12
+life = 0.8
+area = [0.3, 0.2]
+scale = 0.6
+fade = 0.8
+opacity = 0.4
+
+[heavy_rain]
+direct = 14
+sky = 55
+scatter = 8
+sight = 4
+
+[heavy_rain.drops]
+glyphs = "│"
+colors = ["#a4b6c8"]
+rate = 0.9
+life = 0.14
+velocity = [-4.5, 18.0]
+spread = [0.4, 1.5]
+offset = [0.63, -2.52]
+area = [0.5, 0.5]
+scale = 0.7
+fade = 0.4
+opacity = 0.4
+
+[heavy_rain.splash]
+glyphs = "·"
+colors = ["#9aacbe"]
+rate = 0.3
+life = 0.25
+velocity = [0.0, -1.8]
+gravity = 10.0
+offset = [0.0, 0.2]
+area = [0.4, 0.2]
+scale = 0.6
+fade = 0.6
+opacity = 0.5
+
+[heavy_rain.ripples]
+glyphs = "◦"
+colors = ["#9cb2c6"]
+rate = 0.35
+life = 0.8
+area = [0.3, 0.2]
+scale = 0.6
+fade = 0.8
+opacity = 0.45

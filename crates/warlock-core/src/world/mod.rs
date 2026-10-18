@@ -16,6 +16,11 @@
 //! acts). Perception turns what the player heard from unseen sources into perceived sounds, and
 //! news among them into messages ("You hear footsteps to the north-east."), which stop a rest.
 //!
+//! Weather (spec §5 "Weather", [`crate::weather`]) is a pure function of the seed and the time;
+//! the world only keeps a dev override. Perception knows it under the open sky, and a change seen
+//! there is a message ("It starts to rain."). Rain starting or growing heavier stops a rest; the
+//! rest of the news does not.
+//!
 //! The overworld (spec §3): stairs down on it are locations leading into other levels; `>` on
 //! any other cell enters that cell's local area (`local:x,y`, generated on the first visit) on
 //! the side the player walked onto the cell from ([`WorldState`]'s last overworld step), and
@@ -41,7 +46,7 @@ use crate::content::{
     Content, EdgeExit, LevelKind, LevelTemplate, StairsDir, Stance, TerrainId, local_area_id,
 };
 use crate::geom::{Dir, Pos};
-use crate::light::LightCache;
+use crate::light::{LightCache, Sky};
 use crate::mapgen::local::arrival;
 use crate::messages::MessageLog;
 use crate::noise::{self, Act, Recent};
@@ -49,6 +54,7 @@ use crate::object::{self, Stack, Weight};
 use crate::perception::{Perception, PerceptionView};
 use crate::rng::Rng;
 use crate::time::{self, Duration, GameTime};
+use crate::weather::{self, Weather};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -97,11 +103,25 @@ pub struct WorldState {
     /// Sounds the player perceived lately: those like them are no news ([`noise::news`]).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) recent_sounds: Vec<Recent>,
+    /// Dev: the weather set by hand (`weather:rain`), until it runs out.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) weather_override: Option<weather::Override>,
 }
 
 impl WorldState {
     pub(crate) fn player(&self) -> &Actor {
         &self.actors[&self.player]
+    }
+
+    /// The sky over the current level now, under the weather of the moment (the dev override
+    /// while it lasts): the sun, the moons, and their light through the clouds; `None` on a level
+    /// not under the open sky. The player's perception and creature sight both see this sky.
+    pub(crate) fn sky(&self, content: &Content) -> Option<Sky> {
+        self.current().kind.is_sky_exposed().then(|| {
+            let over = self.weather_override.as_ref();
+            let now = weather::conditions(self.seed, self.time, content.climate(), over);
+            Sky::at(self.time, content.moons(), now)
+        })
     }
 
     pub(crate) fn current(&self) -> &LevelState {
@@ -223,6 +243,7 @@ impl World {
             lantern_lit: false,
             overworld_step: None,
             recent_sounds: Vec::new(),
+            weather_override: None,
         };
         state.actors.insert(
             ActorId(0),
@@ -403,9 +424,11 @@ impl World {
 
     /// Rests until `until`: turn after turn through the normal pipeline (the player waits, the
     /// others act, perception), stopping after a turn in which a creature came into view or a
-    /// message was logged. The last turn is cut short to end exactly at `until`. Turns that end
-    /// before any creature could come into view ([`World::out_of_view_for`]) pass without
-    /// perception, which cannot change the outcome; only the last turn's events are kept.
+    /// message was logged that stops a rest. The last turn is cut short to end exactly at
+    /// `until`. Turns that end before any creature could come into view
+    /// ([`World::out_of_view_for`]) and in which the weather the player sees did not change
+    /// pass without perception, which cannot change the outcome; only the last turn's events are
+    /// kept.
     fn rest(&mut self, until: GameTime, goal: Rest, events: &mut Vec<Event>) {
         let start = self.state.time;
         let turn = self.state.current().turn.max(Duration::seconds(1));
@@ -418,7 +441,7 @@ impl World {
                 events.clear();
                 self.run_turn(turn.min(until.since(self.state.time)), events);
                 let done = self.state.time >= until || self.said != said;
-                if done || self.state.time > unseen_until {
+                if done || self.state.time > unseen_until || self.weather_turned() {
                     break;
                 }
             }
@@ -445,6 +468,21 @@ impl World {
         self.say(text);
     }
 
+    /// The weather now, which the player would see: on a level under the open sky.
+    fn weather_now(&self) -> Option<Weather> {
+        let state = &self.state;
+        state.current().kind.is_sky_exposed().then(|| {
+            let over = state.weather_override.as_ref();
+            weather::weather_at(state.seed, state.time, self.content.climate(), over)
+        })
+    }
+
+    /// Whether the weather the player would see differs from what they saw at the last
+    /// perception (so a rest perceives the change and says so).
+    fn weather_turned(&self) -> bool {
+        self.weather_now() != self.perception.weather()
+    }
+
     /// Creatures (not the player) the player sees.
     fn creatures_in_view(&self) -> Vec<ActorId> {
         self.perception()
@@ -455,15 +493,24 @@ impl World {
             .collect()
     }
 
-    /// Phase 4: recomputes perception, updates memory, says what news the player heard, reports
-    /// the attacks the player perceived, and drops events the player did not see.
+    /// Phase 4: recomputes perception, updates memory, says what news the player heard and how
+    /// the weather changed, reports the attacks the player perceived, and drops events the player
+    /// did not see.
     fn perceive(&mut self, events: &mut Vec<Event>) {
+        let now = self.state.time;
+        if self.state.weather_override.is_some_and(|o| o.until <= now) {
+            self.state.weather_override = None;
+        }
+        let before = self.perception.weather();
         *self.perception = Perception::compute(&self.state, &self.content, &mut self.lights);
         let current = self.state.current_level.clone();
         if let Some(level) = self.state.levels.get_mut(&current) {
             self.perception.remember(level);
         }
         self.hear();
+        if let (Some(from), Some(to)) = (before, self.perception.weather()) {
+            self.weather_news(from, to);
+        }
         let player = self.state.player;
         let mut reports = Vec::new();
         events.retain(|e| match e {
@@ -525,6 +572,29 @@ impl World {
         }
     }
 
+    /// A message when the weather the player sees changes under the open sky (never on
+    /// arriving there: the status bar shows it). Rain starting or growing heavier stops a rest;
+    /// clouds gathering or parting and rain easing or stopping are only logged.
+    fn weather_news(&mut self, from: Weather, to: Weather) {
+        use Weather::{Clear, HeavyRain, Overcast, Rain};
+        let text = match (from, to) {
+            (Clear, Overcast) => "Clouds gather.",
+            (Overcast, Clear) => "The sky clears.",
+            (Clear | Overcast, Rain) => "It starts to rain.",
+            (Clear | Overcast, HeavyRain) => "It starts to pour.",
+            (Rain, HeavyRain) => "The rain grows heavy.",
+            (HeavyRain, Rain) => "The rain eases.",
+            (Rain | HeavyRain, Overcast) => "The rain stops.",
+            (Rain | HeavyRain, Clear) => "The rain stops and the sky clears.",
+            _ => return,
+        };
+        if to.is_rain() && to > from {
+            self.say(text);
+        } else {
+            self.note(text);
+        }
+    }
+
     /// The noise of `act` by `actor` on the current level, heard by those it reaches.
     fn make_noise(&mut self, actor: ActorId, act: Act) {
         let made = self
@@ -550,10 +620,16 @@ impl World {
         self.say(text);
     }
 
+    /// Logs a message; it stops a rest.
     fn say(&mut self, text: impl Into<String>) {
+        self.note(text);
+        self.said += 1;
+    }
+
+    /// Logs a message that does not stop a rest.
+    fn note(&mut self, text: impl Into<String>) {
         let turn = self.state.turn;
         self.state.messages.push(turn, text);
-        self.said += 1;
     }
 
     /// Phase 1. Returns how much time the action took.
@@ -574,6 +650,16 @@ impl World {
             Action::Drop(letters) => took(self.drop_objects(*letters)),
             Action::Rest(goal) => self.start_rest(*goal),
             Action::SetVision(id) => self.set_vision(id),
+            Action::SetWeather(weather) => {
+                let over = weather::Override::new(*weather, self.state.time);
+                self.state.weather_override = Some(over);
+                self.say(format!(
+                    "Weather: {} for {} (dev).",
+                    weather.name().to_lowercase(),
+                    weather::OVERRIDE.spoken()
+                ));
+                Spent::NoTime
+            }
             Action::SkipTime(duration) => {
                 self.say(format!("Time skips ahead {} (dev).", duration.spoken()));
                 Spent::Skip(*duration)
@@ -1137,3 +1223,5 @@ mod sun_tests;
 mod tests;
 #[cfg(test)]
 mod time_tests;
+#[cfg(test)]
+mod weather_tests;

@@ -1,9 +1,9 @@
 //! `cargo xtask wiki [--check | --build]`: the player wiki's generated tables.
 //!
 //! The wiki (`wiki/`, built with mdBook) is written by hand except for facts that live in data
-//! (month names, moons, terrain, vision profiles, light presets, creatures, objects and materials)
-//! and a few constants of the rules (sight radii, the pack's size). Those are written to
-//! `wiki/src/generated/*.md` from the built-in content, and the pages
+//! (month names, moons, weather, terrain, vision profiles, light presets, creatures, objects and
+//! materials) and a few constants of the rules (sight radii, the pack's size). Those are written
+//! to `wiki/src/generated/*.md` from the built-in content, and the pages
 //! pull them in with `{{#include generated/NAME.md}}`, so they cannot drift. Output is
 //! deterministic. `--check` fails when a file is stale; `--build` also runs `mdbook build wiki`.
 
@@ -18,10 +18,11 @@ use warlock_core::content::{
 use warlock_core::daylight::{
     MOONLIGHT_PER_CELL, SIGHT_DAY, SIGHT_MOONLIT, SIGHT_NIGHT, SIGHT_TWILIGHT, overworld_sight,
 };
-use warlock_core::light::{Light, Moon};
+use warlock_core::light::{Light, Moon, Sky, Sun};
 use warlock_core::object::{INVENTORY_SLOTS, format_weight};
 use warlock_core::perception::VIEW_RADIUS;
 use warlock_core::time::{DAY, Duration, GameTime};
+use warlock_core::weather::{Clouds, Conditions, Weather};
 
 /// What to do with the generated files.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -111,6 +112,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
             overworld_sight_table(content),
         ),
         ("moons.md".to_string(), moons(content)),
+        ("weather.md".to_string(), weather_chances(content)),
+        ("weather-effects.md".to_string(), weather_effects(content)),
         ("vision.md".to_string(), vision(content)),
         ("lights.md".to_string(), lights(content)),
         ("creatures.md".to_string(), creatures(content)),
@@ -328,19 +331,105 @@ fn overworld_sight_table(content: &Content) -> String {
     if let Some(full) = brightest_moon(content) {
         let half = Light::new(full.rgb[0] / 2, full.rgb[1] / 2, full.rgb[2] / 2, 0);
         for (name, light) in [("half", half), ("full", full)] {
-            let sight = overworld_sight(midnight, light);
+            let sight = overworld_sight(midnight, light, 0);
             let _ = writeln!(
                 out,
                 "| Night, a {name} moon high in the sky | {sight} cells |"
             );
         }
     }
+    let noon = GameTime::from_calendar(1, 1, 1, 12, 0).expect("a valid date");
+    for weather in [Weather::Rain, Weather::HeavyRain] {
+        let lost = content.climate().def(weather).sight;
+        if lost > 0 {
+            let sight = overworld_sight(noon, Light::DARK, lost);
+            let name = weather.name().to_lowercase();
+            let _ = writeln!(out, "| Day, in {name} | {sight} cells |");
+        }
+    }
     let _ = writeln!(
         out,
         "\nAt night moonlight (all moons together) adds a cell of sight for every {}% of full light \
-         it gives, but by moonlight you never see farther than {SIGHT_MOONLIT} cells. The farthest \
-         you can ever see is {VIEW_RADIUS} cells.",
+         it gives, but by moonlight you never see farther than {SIGHT_MOONLIT} cells. Rain takes \
+         cells away at any hour (see [the weather](weather.md)), but never below {SIGHT_NIGHT}. \
+         The farthest you can ever see is {VIEW_RADIUS} cells.",
         percent_of_full(MOONLIGHT_PER_CELL)
+    );
+    out
+}
+
+/// The chance of each weather in each month.
+fn weather_chances(content: &Content) -> String {
+    let mut out = String::from("| Month |");
+    for w in Weather::ALL {
+        let _ = write!(out, " {} |", w.name());
+    }
+    out.push_str("\n|---|---:|---:|---:|---:|\n");
+    for month in 1..=12 {
+        let time = GameTime::from_calendar(1, month, 1, 0, 0).expect("a valid date");
+        let _ = write!(out, "| {} |", content.calendar().month_name(time));
+        for chance in content.climate().chances(month as usize - 1) {
+            let _ = write!(out, " {chance}% |");
+        }
+        out.push('\n');
+    }
+    out
+}
+
+/// A share of `of` in whole percent, rounded.
+fn share(part: u16, of: u16) -> u32 {
+    (u32::from(part) * 100 + u32::from(of) / 2) / u32::from(of.max(1))
+}
+
+/// What each weather does to the light and to overworld sight.
+fn weather_effects(content: &Content) -> String {
+    let mut out = String::from(
+        "| Weather | Light at noon, in the open | In the shade | A full moon's light | \
+         Sight on the overworld |\n|---|---:|---:|---:|---:|\n",
+    );
+    let noon = GameTime::from_calendar(1, 1, 1, 12, 0).expect("a valid date");
+    let full_moon = GameTime::from_calendar(1, 1, 16, 0, 0).expect("a valid date");
+    let clear = Sun::at(noon);
+    let open = |sun: &Sun| sun.light.saturating_add(sun.sky).luma();
+    let moonlight = |w: Weather| {
+        let conditions = Conditions {
+            weather: w,
+            clouds: Clouds::of(content.climate().def(w)),
+        };
+        Sky::at(full_moon, content.moons(), conditions)
+            .moonlight()
+            .luma()
+    };
+    for w in Weather::ALL {
+        let def = content.climate().def(w);
+        let clouds = Clouds::of(def);
+        let sun = Sun {
+            light: clouds.direct(clear.light),
+            sky: clouds.sky(clear.sky, clear.light),
+            ..clear
+        };
+        let moon = if content.moons().is_empty() {
+            "no moon".to_string()
+        } else {
+            format!("{}%", share(moonlight(w), moonlight(Weather::Clear)))
+        };
+        let sight = match def.sight {
+            0 => "as far as by day".to_string(),
+            n => format!("{n} cells less"),
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {}% | {}% | {moon} | {sight} |",
+            w.name(),
+            share(open(&sun), open(&clear)),
+            share(sun.sky.luma(), clear.sky.luma()),
+        );
+    }
+    let _ = writeln!(
+        out,
+        "\nPercentages are of the light of a clear sky at the same moment. The shade is where the \
+         sun does not reach but the sky does; the brighter it is next to the open ground, the \
+         fainter the shadows."
     );
     out
 }
@@ -595,5 +684,12 @@ mod tests {
         assert!(text("creatures.md").contains("shoots from afar"));
         assert!(text("factions.md").contains("| Kobolds | you, vermin |"));
         assert!(text("factions.md").contains("| Wildlife | nobody |"));
+        assert!(
+            text("weather.md").contains("| Rainmoon | 20% | 30% | 35% | 15% |"),
+            "{}",
+            text("weather.md")
+        );
+        assert!(text("weather-effects.md").contains("| Clear | 100% | 100% | 100% | as far"));
+        assert!(text("overworld-sight.md").contains("| Day, in heavy rain | 5 cells |"));
     }
 }

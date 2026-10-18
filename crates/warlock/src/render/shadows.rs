@@ -446,9 +446,10 @@ mod tests {
     fn the_player_casts_a_moon_shadow_on_the_night_of_the_full_moon() {
         // The courtyard scenario starts on the 1st at 06:30; the moon is full at midnight on the
         // 16th, high in the south (shadows due north, short), and in the east at 21:00 (west).
+        // Under a clear sky (clouds would dim the moon below what normal eyes see).
         let shadow_of = |skip: &str| {
             let walk = "move:E move:E move:E move:E move:E move:E move:E move:E";
-            let world = run("courtyard", &format!("{walk} {skip}"));
+            let world = run("courtyard", &format!("{walk} {skip} weather:clear"));
             let view = world.perception();
             let player = view.viewer();
             let moon = (view.light_sources().iter())

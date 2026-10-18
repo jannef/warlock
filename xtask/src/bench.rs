@@ -10,7 +10,7 @@
 use std::sync::Arc;
 use std::time::Instant;
 use warlock_core::content::Content;
-use warlock_core::time::{DUSK, Duration};
+use warlock_core::time::{DAWN, DUSK, Duration};
 use warlock_core::{Action, Dir, Rest, World};
 
 const TURNS: usize = 400;
@@ -91,11 +91,18 @@ fn measure(content: &Arc<Content>, scenario: &str, skip: u64) -> Result<Stats, S
     if times.is_empty() {
         return Err(format!("no turns taken in scenario `{scenario}`"));
     }
-    // Rest from dusk to dawn wherever the walk ended (a creature may cut it short).
+    // Rest from dusk to dawn wherever the walk ended (a creature may cut it short; rain
+    // starting wakes the player, who rests on until dawn).
     let to_dusk = world.time().next_at(DUSK).since(world.time());
     world.apply(&Action::SkipTime(to_dusk));
+    let dawn = world.time().next_at(DAWN);
     let (start, turn) = (Instant::now(), world.turn());
-    world.apply(&Action::Rest(Rest::Dawn));
+    for _ in 0..8 {
+        world.apply(&Action::Rest(Rest::Dawn));
+        if world.time() >= dawn {
+            break;
+        }
+    }
     let rest_ms = start.elapsed().as_secs_f64() * 1000.0;
     let rest_turns = world.turn() - turn;
     Ok(Stats {

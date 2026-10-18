@@ -23,10 +23,13 @@ never lasts more than a day.
 
 A rest stops early when:
 
-- a creature comes into view that you did not see the turn before, or
+- a creature comes into view that you did not see the turn before,
 - a message is written to the message line, such as a new sound you hear ("You hear footsteps to
   the north-east.") or an attack ("The kobold attacks you."). A sound you have already been
-  hearing does not stop you; see [Hearing](hearing.md).
+  hearing does not stop you; see [Hearing](hearing.md), or
+- under the open sky, rain starts or grows heavy ("It starts to rain."). Other news of the
+  [weather](weather.md), such as the rain stopping, is written to the message line but lets you
+  rest on.
 
 So resting next to a creature walking back and forth behind a door is interrupted each time it
 comes back into earshot.

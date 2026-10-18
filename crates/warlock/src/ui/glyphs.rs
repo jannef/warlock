@@ -125,6 +125,7 @@ fn glyph(grid: &MapGrid, at: Vec2, ch: char, fg: Rgb, frame: AnimFrame) -> FreeG
         ch: frame.glyph.unwrap_or(ch),
         color,
         scale: frame.scale,
+        slant: 0.0,
     }
 }
 

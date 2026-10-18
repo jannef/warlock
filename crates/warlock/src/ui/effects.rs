@@ -382,6 +382,7 @@ pub(super) fn emit(
             ch: p.ch,
             color: particle_color(p, at, &light),
             scale: p.scale,
+            slant: 0.0,
         });
     }
 }
@@ -451,7 +452,7 @@ fn blocked_flows(
 
 /// A particle's color on screen: glowing particles are light themselves; the rest are lit like
 /// free glyphs (sampled at the particle, else at its cell `home`) and kept within display range.
-fn particle_color(p: &Particle, home: Pos, light: &VisualLight) -> LinearRgba {
+pub(super) fn particle_color(p: &Particle, home: Pos, light: &VisualLight) -> LinearRgba {
     if p.emissive {
         return p.color;
     }

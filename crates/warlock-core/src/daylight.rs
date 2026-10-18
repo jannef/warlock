@@ -1,9 +1,10 @@
-//! Daylight on the overworld (spec §5): how far the traveller sees by time of day and moonlight,
-//! and the faint night light the overworld is drawn by. The sun, the moons, and the sky
+//! Daylight on the overworld (spec §5): how far the traveller sees by time of day, moonlight, and
+//! rain, and the faint night light the overworld is drawn by. The sun, the moons, and the sky
 //! themselves are [`crate::light::Sky`], which lights the overworld like any level under the open
 //! sky. Integer math only.
 
-use crate::light::Light;
+use crate::content::Climate;
+use crate::light::{Light, Sky};
 use crate::time::{DAWN, DUSK, GameTime, MINUTE};
 
 /// Where the day is, for the overworld's sight radius.
@@ -51,17 +52,28 @@ pub fn phase(time: GameTime) -> DayPhase {
 }
 
 /// How far the player sees on the overworld at `time` (line of sight within this radius) with
-/// `moonlight` (the moons' light on open ground, [`crate::light::Sky::moonlight`]): by day and in
-/// twilight as far as the daylight allows, at night farther the brighter the moonlight, up to
-/// [`SIGHT_MOONLIT`].
-pub fn overworld_sight(time: GameTime, moonlight: Light) -> i32 {
+/// `moonlight` (the moons' light on open ground through the clouds,
+/// [`crate::light::Sky::moonlight`]) and the weather taking `lost` cells away
+/// ([`crate::content::WeatherDef::sight`]): by day and in twilight as far as the daylight allows,
+/// at night farther the brighter the moonlight, up to [`SIGHT_MOONLIT`]; then rain takes its
+/// cells, but never below [`SIGHT_NIGHT`].
+pub fn overworld_sight(time: GameTime, moonlight: Light, lost: u8) -> i32 {
     let by_day = match phase(time) {
         DayPhase::Day => SIGHT_DAY,
         DayPhase::Twilight => SIGHT_TWILIGHT,
         DayPhase::Night => SIGHT_NIGHT,
     };
     let by_moon = SIGHT_NIGHT + i32::from(moonlight.luma() / MOONLIGHT_PER_CELL);
-    by_day.max(by_moon.min(SIGHT_MOONLIT))
+    let clear = by_day.max(by_moon.min(SIGHT_MOONLIT));
+    (clear - i32::from(lost)).max(SIGHT_NIGHT)
+}
+
+/// How far one sees on the overworld at `time` under `sky` ([`crate::light::Sky`]): by daylight,
+/// the moonlight through its clouds, and less in its weather's rain
+/// ([`crate::content::WeatherDef::sight`]); see [`overworld_sight`].
+pub fn sight_under(time: GameTime, sky: &Sky, climate: &Climate) -> i32 {
+    let lost = climate.def(sky.conditions.weather).sight;
+    overworld_sight(time, sky.moonlight(), lost)
 }
 
 /// The light the overworld gets on top of the `sky`'s so that together they are never darker
@@ -82,7 +94,7 @@ mod tests {
 
     #[test]
     fn sight_follows_the_phases_of_the_day() {
-        let dark = |t| overworld_sight(t, Light::DARK);
+        let dark = |t| overworld_sight(t, Light::DARK, 0);
         assert_eq!(dark(at(12, 0)), SIGHT_DAY);
         assert_eq!(dark(at(6, 30)), SIGHT_DAY);
         assert_eq!(dark(at(17, 29)), SIGHT_DAY);
@@ -99,18 +111,32 @@ mod tests {
     fn moonlight_lets_one_see_farther_at_night_but_never_as_far_as_twilight() {
         let moon = |luma: u16| Light::new(luma, luma, luma, 0);
         assert_eq!(
-            overworld_sight(at(0, 0), moon(MOONLIGHT_PER_CELL - 1)),
+            overworld_sight(at(0, 0), moon(MOONLIGHT_PER_CELL - 1), 0),
             SIGHT_NIGHT
         );
         assert_eq!(
-            overworld_sight(at(0, 0), moon(MOONLIGHT_PER_CELL)),
+            overworld_sight(at(0, 0), moon(MOONLIGHT_PER_CELL), 0),
             SIGHT_NIGHT + 1
         );
-        assert_eq!(overworld_sight(at(0, 0), moon(45)), SIGHT_NIGHT + 2);
-        assert_eq!(overworld_sight(at(0, 0), moon(500)), SIGHT_MOONLIT);
+        assert_eq!(overworld_sight(at(0, 0), moon(45), 0), SIGHT_NIGHT + 2);
+        assert_eq!(overworld_sight(at(0, 0), moon(500), 0), SIGHT_MOONLIT);
         const { assert!(SIGHT_MOONLIT < SIGHT_TWILIGHT) };
-        assert_eq!(overworld_sight(at(6, 0), moon(500)), SIGHT_TWILIGHT);
-        assert_eq!(overworld_sight(at(12, 0), moon(500)), SIGHT_DAY);
+        assert_eq!(overworld_sight(at(6, 0), moon(500), 0), SIGHT_TWILIGHT);
+        assert_eq!(overworld_sight(at(12, 0), moon(500), 0), SIGHT_DAY);
+    }
+
+    #[test]
+    fn rain_takes_sight_away_but_never_below_the_darkest_night() {
+        assert_eq!(overworld_sight(at(12, 0), Light::DARK, 2), SIGHT_DAY - 2);
+        assert_eq!(overworld_sight(at(12, 0), Light::DARK, 4), SIGHT_DAY - 4);
+        assert_eq!(
+            overworld_sight(at(6, 0), Light::DARK, 2),
+            SIGHT_TWILIGHT - 2
+        );
+        assert_eq!(overworld_sight(at(6, 0), Light::DARK, 4), SIGHT_NIGHT);
+        assert_eq!(overworld_sight(at(0, 0), Light::DARK, 4), SIGHT_NIGHT);
+        let moon = Light::new(200, 200, 200, 0);
+        assert_eq!(overworld_sight(at(0, 0), moon, 1), SIGHT_MOONLIT - 1);
     }
 
     #[test]
