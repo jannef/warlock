@@ -30,6 +30,7 @@ Build the engine and framework, not the game. Everything built is production qua
   deterministic AI whose attacks are intents only (§8 "Creature behavior")
 - Pickable objects (glyph, color, material, weight), inventory, and creature weight (M11)
 - Moons with phases and moonlight, weather starting with rain (M12)
+- Action costs: what an actor does and its speed decide how long it takes (M13)
 - Stats (M14): Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
   D&D, with D&D 3.5 modifiers and ADOM-like potentials that the player never sees; every actor
   has them, and the player sees their own scores on a character screen (§8 "Stats"). No rule
@@ -98,8 +99,10 @@ from the run seed, with vaults stamped in. The `depths` scenario starts on its f
 grassland, forest, dense forest, hills, mountain ranges, swamp, rivers and deep water, roads, a
 bridge, and locations. A step is a journey: it takes the destination terrain's `travel_minutes`
 (road and bridge 20, plains 45, grassland 50, forest 90, hills 120, swamp and dense forest 150,
-locations 30); mountains and open water are impassable, and the river Wendle (drawn flowing, with
-legend arrows like running water; §4.3) can only be crossed by the bridge. Named regions (Greenmarch, Thornwood, Barrowdowns, Hollowcrag, Silvermere, Sallow
+locations 30) at normal speed; every other action there (waiting, entering a location or a local
+area) takes its usual time, 6 s for a normal action (§8 "Time"); mountains and open water are
+impassable, and the river Wendle (drawn flowing, with legend arrows like running water; §4.3) can
+only be crossed by the bridge. Named regions (Greenmarch, Thornwood, Barrowdowns, Hollowcrag, Silvermere, Sallow
 Plains, Mirefen, Greyspine Mountains) show in the status bar.
 - **Locations** are stairs down: the Hall (to the hub), the cavern mouth in the Hollowcrag (to the
   vast level), and the way into the Depths in the Barrowdowns (`depths:1`). `>` on a location
@@ -634,8 +637,9 @@ rate or animation.
   marked, `-` not), `,` marks everything, the arrows move the `>` cursor and Space marks its row,
   Enter picks up the marked stacks (the cursor's row if none is marked), Esc cancels. **Drop**
   (`d`) chooses from the inventory the same way. Picking up and dropping are one action each
-  (replay text `pickup:ac`, `drop:b`; `pickup` and `drop` alone take everything) and take the
-  level's turn; with nothing there or nothing carried, they are refused and take none.
+  (replay text `pickup:ac`, `drop:b`; `pickup` and `drop` alone take everything) and take their
+  action's time (§8 "Time"); with nothing there or nothing carried, they are refused and take
+  none.
 - **Inventory** (`i`): what the player carries, ADOM-like: stacks lettered `a` to `z` in the order
   they were picked up (at most 26; a pile with more stacks keeps what does not fit), each with its
   glyph, name, and weight, then what the player carries and their weight (their own plus what
@@ -694,8 +698,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 
 - **Level files** (TOML): a header (name, ambient light, legend, lights, patrols, stair links,
   and how time passes: `kind = "dungeon"` (default), `"outdoor"` (under the open sky, lit by the
-  sun and the sky; §5 "Sunlight"), or `"overworld"` (also under the sky), optional `turn_seconds`,
-  1 to 3600, default 6 on dungeon and outdoor levels and 600 on the overworld; §8 "Time"; optional
+  sun and the sky; §5 "Sunlight"), or `"overworld"` (also under the sky, where a step's base time
+  is the terrain's travel time; §8 "Time"; a level has no turn length of its own); optional
   named regions, `[[region]] name = "Thornwood" area = [x0, y0, x1, y1]`, inclusive, first match
   wins) plus a multiline ASCII map. Level size comes from the map, with no fixed upper limit: most dungeon levels
   are about 80×21, some are vast. The camera scrolls when a level is larger than the viewport. The
@@ -752,7 +756,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   `faction` (below; required when factions exist, the player's is `player`), its eyes `vision`
   (a profile; default `normal`) and `sight` (radius, 1 to 40, default 10), how it fights:
   `combat = "melee"` (default), `"ranged"`, or `"caster"`, the latter two with a `range` (2 to its
-  sight), and `opens_doors` (default false). The kobold: darkvision, sight 10, melee, opens doors;
+  sight), `opens_doors` (default false), and optionally `attack_cost`, what its attacks cost
+  instead of the attack's cost in `data/actions.toml` (100 to 10 000; §8 "Time"; none of the
+  built-in creatures has one yet). The kobold: darkvision, sight 10, melee, opens doors;
   the kobold archer: darkvision, sight 12, ranged 7; the kobold shaman (speed 800): darkvision,
   caster 5; the giant rat: low-light, sight 8; the cave bat: darkvision, sight 8; the cave
   beetle (1200): darkvision, sight 6; the deer: normal, sight 12. Its stats (§8 "Stats"; never
@@ -763,9 +769,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   player's. The test creatures have D&D-like scores (the kobold St 9 Dx 13 To 10 In 10 Wi 9
   Pr 8, the giant rat Dx 17 In 1, the cave bat St 1, the shaman Wi 14). Creature particle emitters may
   fire `on = "attack"`: a burst at the target of each attack the player sees (the shaman's
-  violet sparkle). Terrain has a `move_cost`: the time to step onto it in percent of the
-  level's turn (default 100; still and running water 200), a `bounce` tint for the light it
-  reflects (§5), a `height` in cells for sun shadows (default 1 if opaque, else 0; at most 4),
+  violet sparkle). Terrain has a `move_cost`: what a step onto it costs in percent of a normal
+  step (the `step` action; default 100; still and running water 200; local levels only), a
+  `bounce` tint for the light it reflects (§5), a `height` in cells for sun shadows (default 1 if opaque, else 0; at most 4),
   `roofed` (never lit by the sun or the sky), and for hearing a `step_noise` (how loud steps onto
   it are, in percent of the walker's footsteps, 0 to 1000; default 100), a door's `toggle_noise`
   (how loud opening the closed door or closing the open one is, at most 300; default 0, silent;
@@ -779,6 +785,13 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   neighbors' land; `river` and `lake` put running or still water along that side of the
   neighboring areas (§3). The calendar's month names are
   `data/calendar.toml` (exactly 12; without the file months are numbered).
+- **Action costs** (`data/actions.toml`, optional): action ids mapped to their cost in energy,
+  e.g. `wait = 1000`, 1000 being a normal action (6 s at normal speed; §8 "Time"), 100 to
+  10 000. The ids are `step` (onto terrain of `move_cost` 100), `wait`, `open_door`,
+  `close_door`, `lantern`, `stairs` (also entering a location or local area and walking off an
+  area's edge), `pick_up`, `drop`, `melee`, `shoot`, and `cast`. An action left out, or every
+  action without the file, costs 1000; an unknown id or a cost out of range is a content error.
+  The wiki shows them in a generated table.
 - **The sky** (`data/sky.toml`, optional; without it there are no moons): up to 8 `[[moon]]`s,
   each with `name` (shown in the status bar when there are several), `color` (`[r, g, b, uv]`,
   the direct light of the moon when full and high in the night sky), `sky` (the same for the
@@ -870,7 +883,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   `localStorage` (below). The envelope also records a content fingerprint (hash of the ordered
   terrain, creature, level, light, dungeon-branch, and object ids), because ids are indices; a
   save made with different content is rejected. Generated levels are saved with the run like
-  visited hand-made ones (terrain, memory, stairs, lights, kind and turn length, arrival point,
+  visited hand-made ones (terrain, memory, stairs, lights, kind, arrival point,
   edge exit, piles of objects and the piles as remembered), together with the gameplay random
   stream, the game clock, every actor's scheduler energy (§8 "Speed"), the direction of the last
   overworld step (saves without the step load with none), what each actor heard and has not yet
@@ -931,41 +944,63 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   of day (the index for per-minute tables such as the sun's path, §5), and the day fraction in
   16-bit fixed point. All
   integer arithmetic; no wall-clock time.
-  - **Costs**: every action that takes a turn advances the clock. A turn (a wait, a door, stairs,
-    lighting the lantern) takes the turn length of the level it starts on (6 s on `dungeon` and
-    `outdoor` levels, 10 min on the overworld, unless the level sets `turn_seconds`). A step takes
-    that turn scaled by the destination terrain's `move_cost` percent (at least 1 s); on the
-    overworld it takes the destination terrain's `travel_minutes`. `LevelState::step_time` is the
-    one place movement time is decided. Walking off a local area's edge takes its turn. Free and
-    refused actions take no time. A creature's action takes the same: a step onto the destination
-    terrain, or the level's turn for anything else (an attack, opening a door, waiting). How
-    often each actor acts follows from these durations and its speed.
+  - **Costs** (M13): the action decides how long it takes, and the actor's speed scales
+    it. Every action that takes time has a **cost** in energy, 1000 for a normal action, given in
+    `data/actions.toml` (`step`, `wait`, `open_door`, `close_door`, `lantern`, `stairs`,
+    `pick_up`, `drop`, `melee`, `shoot`, `cast`; 100 to 10 000; an action left out, or every
+    action without the file, costs 1000; unknown ids are errors), and a **base time**: 6 s
+    (`BASE_TURN`) for every action but a step on the overworld. An action of cost *c* takes an
+    actor of speed *v* `c / 1000 × 1000 / v × 6 s`: a normal action takes 6 s at normal speed
+    (the player's), one of cost 1400 (two-weapon fighting, say) 8.4 s, and a normal action at
+    speed 1111 about 5.4 s, at speed 900 about 6.7 s. All built-in actions cost 1000 for now.
+    - A step costs `step` scaled by the destination terrain's `move_cost` percent (water 200: 12 s
+      at normal speed); on the overworld its base is the destination terrain's `travel_minutes`
+      instead of 6 s (scaled by speed like everything else: twice the speed, half the journey).
+      `TerrainDef::step_price` (through `LevelState::step_price`) is the one place movement time
+      is decided.
+    - `stairs` covers taking stairs, entering a location or a local area from the overworld, and
+      walking off a local area's edge: 6 s each at normal speed, on the overworld too, where
+      waiting and the lantern take 6 s as well. Bumping a closed door costs `open_door`; moving
+      into a hostile creature, `melee`.
+    - A creature's action costs the same: a step onto the destination terrain, else its action's
+      cost (`melee`, `shoot`, `cast` for attacks, `open_door`, `wait` when it waits or is
+      blocked). A creature type may give its attacks their own `attack_cost` (§7), so a future
+      attack or ability is one more entry. Free and refused actions take no time.
+    - The scheduler (below) prices an action at its cost × its base in seconds; an actor gains its
+      speed in energy per second, so it takes cost × base / speed seconds. The clock keeps whole
+      seconds and leftover energy carries, so a run of actions takes exactly its total time up to
+      the whole second the actor is ready, never drifting: ten 5.4 s steps (packed earth at 90 %)
+      take exactly 54 s, five 8.4 s attacks exactly 42 s, 1111 steps at speed 1111 exactly
+      6000 s; ten steps at speed 1111 (5.4005 s each) take 55 s, the first whole second after
+      54.005 s. Single actions show as whole seconds (8.4 s as 9, 8, 9, 8, 8).
   - **Speed** (`warlock-core/src/world/schedule.rs`), ADOM-like: every creature type has a
     `speed` (§7), 1000 being normal and the player's; twice the speed is twice as many actions in
     the same game time. An energy scheduler, integer only: each actor on the current level gains
-    its speed in energy per second of game time; an action that takes *d* seconds costs
-    1000 × *d*; an actor may act while its energy is at least 0, and leftover energy carries
-    over, so action counts stay exactly proportional to speed over any span while the clock keeps
-    whole seconds. After the player acts, the other actors act in time order until the player may
-    act again: next is whoever reaches 0 soonest, the clock moves to that moment, and ties go to
+    its speed in energy per second of game time; an action costs its price, cost × base seconds
+    ("Costs" above: 6000 for a normal action); an actor may act while its energy is at least 0,
+    and leftover energy carries over, so action counts stay exactly proportional to speed and
+    cost over any span while the clock keeps whole seconds. The player's speed may differ from
+    1000 too (none of the rules assume it does not). After the player acts, the other actors act
+    in time order until the player may act again: next is whoever reaches 0 soonest, the clock moves to that moment, and ties go to
     the player first, then by ascending actor id. With equal speeds every creature acts once per
     player turn, in id order, right after the player; a speed-2000 creature acts exactly twice
     per normal turn and a speed-1500 one three times in two. A creature's action is one function
-    (`World::creature_turn`, returning how long it took): creature behavior lives there.
+    (`World::creature_turn`, returning its price): creature behavior lives there.
     Creatures on other levels are frozen (they gain no energy), so coming back to a level never
     sets off a burst of actions. Energy is part of the world state (saved, covered by the state
     hash). Speed is hidden from the player: it is not in the perception snapshot, the status bar,
     look mode, or messages; only ground-truth dev dumps (the world state) show energy.
-  - **Rest** passes turn after turn through the normal pipeline: the player waits, the others
-    act, perception runs; the last turn is cut short so the rest ends exactly at its goal (one
-    hour, the next 06:00, or the next 18:00; at most a day). It stops after a turn in which a
+  - **Rest** passes turn after turn through the normal pipeline: the player waits (a `wait`
+    each turn), the others act, perception runs; the last turn is cut short so the rest ends
+    exactly at its goal at any speed of the player (it costs all the energy the player has and
+    gains until the goal; one hour, the next 06:00, or the next 18:00; at most a day). It stops after a turn in which a
     creature came into view (one not seen the turn before) or a message was logged that stops a
     rest (all but weather news other than rain starting or growing heavier, §5 "Weather"), and
     logs how long the player rested. Turns that end before any creature on the level could come
     within view, and in which the weather the player would see did not change, pass without
     perception: a creature is seen only within the view range, and before its
     first step that could bring it there it needs the energy for every step that cannot (each at
-    least the level's quickest step), so a fast creature shortens the stretch. Those turns cannot
+    least the level's cheapest step), so a fast creature shortens the stretch. Those turns cannot
     change when the rest stops (sounds carry at most 30 cells, less than the view range, so none
     is missed), and a night's rest stays fast on large levels
     (`cargo xtask bench-turns` times one; budget 500 ms; also the worst case, a fight in the
@@ -1171,6 +1206,10 @@ Each milestone ships a playable build.
 - **M12 Moons and weather** — configurable moons (one by default: 30-day period, faint purple
   light) with phases, paths, and shadows; weather starting with rain; the full calendar date and
   moon phase in the status bar.
+- **M13 Action costs** — every action has a cost in energy (data, 1000 a normal action; creature
+  types may give their attacks their own), and the cost and the actor's speed decide how long it
+  takes over one 6-second base (overworld steps: their travel time); levels lose their own turn
+  length; exact over any run of actions and at any speed of the player.
 - **M14 Stats** — D&D-inspired stats (Strength, Dexterity, Toughness, Intelligence, Willpower,
   Presence) on every actor, with hidden D&D 3.5 modifiers and hidden ADOM-like potentials; the
   player's own scores on a character screen (`@`).

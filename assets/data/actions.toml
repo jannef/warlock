@@ -1,0 +1,24 @@
+# What actions cost, in energy (spec §8 "Time"). 1000 is a normal action: it takes a creature of
+# normal speed (the player's) 6 seconds; a cost of 1400 would take it 8.4 seconds. How long an
+# action takes is cost / 1000 × 1000 / speed × 6 s, so a creature twice as fast takes half as
+# long. Costs are 100 to 10000; an action left out costs 1000. Creature types may give their
+# attacks a cost of their own (`attack_cost` in creatures.toml).
+
+# A step onto terrain of move_cost 100; a step costs this scaled by the terrain's move_cost
+# (shallow water, 200: twice as much). On the overworld a step's base is the terrain's
+# travel_minutes instead of 6 seconds.
+step = 1000
+wait = 1000
+open_door = 1000
+close_door = 1000
+# Lighting or dousing the lantern.
+lantern = 1000
+# Taking stairs, entering a location or a local area from the overworld, and walking off the
+# edge of a local area.
+stairs = 1000
+pick_up = 1000
+drop = 1000
+# Attacks: the player moving into a hostile creature, and creatures' attacks.
+melee = 1000
+shoot = 1000
+cast = 1000

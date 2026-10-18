@@ -5,7 +5,7 @@
 | Solid rock | (blank) | no | yes | - | - | 1 |  |
 | Stone floor | `.` | yes | no | 6 seconds | normal | 0 |  |
 | Stone wall | `#` | no | yes | - | - | 1 |  |
-| Closed door | `+` | yes | yes | one turn (opens it) | - | 1 | door: walking into it opens it; muffles sound |
+| Closed door | `+` | yes | yes | 6 seconds (opens it) | - | 1 | door: walking into it opens it; muffles sound |
 | Open door | `'` | yes | no | 6 seconds | normal | 0 | door: can be closed |
 | Staircase down | `>` | yes | no | 6 seconds | normal | 0 | stairs down |
 | Staircase up | `<` | yes | no | 6 seconds | normal | 0 | stairs up |

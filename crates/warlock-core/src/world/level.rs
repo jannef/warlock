@@ -8,7 +8,6 @@ use crate::geom::Pos;
 use crate::grid::Grid;
 use crate::light::Light;
 use crate::object::Stack;
-use crate::time::Duration;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -23,8 +22,6 @@ pub struct LevelState {
     /// Light everywhere on the level.
     pub(crate) ambient: Light,
     pub(crate) kind: LevelKind,
-    /// How long a turn takes here (see [`LevelState::step_time`]).
-    pub(crate) turn: Duration,
     pub(crate) terrain: Grid<TerrainId>,
     /// Terrain as last seen by the player; `None` where never seen.
     pub(crate) memory: Grid<Option<TerrainId>>,
@@ -57,7 +54,6 @@ impl LevelState {
             name: template.name.clone(),
             ambient: template.ambient,
             kind: template.kind,
-            turn: template.turn,
             terrain,
             memory,
             stairs: template.stairs.clone(),
@@ -90,23 +86,14 @@ impl LevelState {
         self.kind
     }
 
-    /// How long a turn takes on this level: a wait, opening or closing a door, taking stairs.
-    pub fn turn(&self) -> Duration {
-        self.turn
-    }
-
-    /// How long stepping onto `terrain` takes. This is the one place movement time is decided:
-    /// on local levels it is the level's turn scaled by the terrain's `move_cost` percent; on the
-    /// overworld it is the terrain's `travel_minutes` (content validation guarantees walkable
-    /// overworld terrain has them).
-    pub fn step_time(&self, terrain: &TerrainDef) -> Duration {
-        let local = self.turn.percent(terrain.move_cost);
-        match self.kind {
-            LevelKind::Dungeon | LevelKind::Outdoor => local,
-            LevelKind::Overworld => terrain
-                .travel_minutes
-                .map_or(local, |m| Duration::minutes(u64::from(m))),
-        }
+    /// The energy price of stepping onto `terrain` here for an actor whose step costs `step`
+    /// (its cost of [`crate::content::ActionKind::Step`]). This is how the rules decide movement
+    /// time (spec §8 "Time"; [`TerrainDef::step_price`]): on local levels a step is the step's
+    /// cost scaled by the terrain's `move_cost` percent over the 6-second base; on the overworld
+    /// it is the step's cost over the terrain's `travel_minutes` (content validation guarantees
+    /// walkable overworld terrain has them). The actor's speed then decides how long it takes.
+    pub fn step_price(&self, terrain: &TerrainDef, step: u32) -> i64 {
+        terrain.step_price(step, self.kind)
     }
 
     /// The terrain at `p` as it is now (ground truth, `None` out of bounds). Only reachable

@@ -3,9 +3,8 @@
 //! forest area of the overworld at dawn, the courtyard and the forest area at midnight under the
 //! full moon, and the arena, where a dozen creatures fight (spec §10 budgets; a generated 80×21
 //! level, the courtyard, the 100×50 overworld, an 80×40 local area, and the 72×21 arena get the
-//! hub's), and
-//! the time a night's rest takes on each (dusk to dawn: 7200 turns of six seconds, 72 of ten
-//! minutes on the overworld).
+//! hub's), and the time a night's rest takes on each (dusk to dawn: 7200 turns of six seconds,
+//! the overworld's too).
 
 use std::sync::Arc;
 use std::time::Instant;

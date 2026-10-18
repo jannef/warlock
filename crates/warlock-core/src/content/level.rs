@@ -8,8 +8,8 @@
 //! [x, y]` and `objects`. Objects are written as ids with an optional count, top of the pile
 //! first: `objects = ["dagger", "arrow*12"]`. An optional
 //! `ambient = [r, g, b, uv]` lights the whole level. `kind` (`dungeon`, the default, `outdoor`,
-//! or `overworld`) and `turn_seconds` decide how time passes on it (spec §8 "Time"); outdoor
-//! levels and the overworld are lit by the sun and the sky by day (spec §5). Optional
+//! or `overworld`) decides what a step there takes (spec §8 "Time"); outdoor levels and the
+//! overworld are lit by the sun and the sky by day (spec §5). Optional
 //! `[[region]]` tables name areas of the level (`name`, `area = [x0, y0, x1, y1]`, inclusive; the
 //! first match wins), shown in the status bar.
 
@@ -23,12 +23,11 @@ use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use crate::light::Light;
 use crate::object::{INVENTORY_SLOTS, Stack, add_to_pile};
-use crate::time::{Duration, HOUR};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-/// What kind of place a level is (spec §8 "Time"). It sets the default length of a turn there,
-/// what a step costs, and whether the sun shines on it.
+/// What kind of place a level is (spec §8 "Time"). It decides what a step there takes and
+/// whether the sun shines on it.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum LevelKind {
@@ -53,15 +52,6 @@ impl LevelKind {
             LevelKind::Outdoor | LevelKind::Overworld => true,
         }
     }
-
-    /// How long a turn (a wait, opening a door, taking stairs) takes unless the level overrides
-    /// it: six seconds on local levels, ten minutes on the overworld.
-    pub const fn default_turn(self) -> Duration {
-        match self {
-            LevelKind::Dungeon | LevelKind::Outdoor => Duration::seconds(6),
-            LevelKind::Overworld => Duration::minutes(10),
-        }
-    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -73,8 +63,6 @@ struct LevelFile {
     ambient: Light,
     #[serde(default)]
     kind: LevelKind,
-    /// Length of a turn in seconds; default [`LevelKind::default_turn`].
-    turn_seconds: Option<u64>,
     map: String,
     #[serde(default)]
     legend: BTreeMap<String, LegendEntry>,
@@ -209,8 +197,6 @@ pub struct LevelTemplate {
     /// Light everywhere on the level.
     pub ambient: Light,
     pub kind: LevelKind,
-    /// How long a turn takes here; a step takes this scaled by the terrain's `move_cost`.
-    pub turn: Duration,
     pub terrain: Grid<TerrainId>,
     pub player_start: Option<Pos>,
     pub creatures: Vec<CreatureSpawn>,
@@ -258,15 +244,6 @@ pub(super) fn parse_level(
 ) -> Result<LevelTemplate, ContentError> {
     let err = |msg: String| ContentError::new(file, msg);
     let parsed: LevelFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-    let turn = match parsed.turn_seconds {
-        None => parsed.kind.default_turn(),
-        Some(s) if (1..=HOUR).contains(&s) => Duration::seconds(s),
-        Some(s) => {
-            return Err(err(format!(
-                "turn_seconds {s} is outside 1 to {HOUR} (one hour)"
-            )));
-        }
-    };
 
     let mut legend = default_legend.clone();
     for (key, entry) in parsed.legend {
@@ -429,7 +406,6 @@ pub(super) fn parse_level(
         name: parsed.name,
         ambient: parsed.ambient,
         kind: parsed.kind,
-        turn,
         terrain,
         player_start,
         creatures,

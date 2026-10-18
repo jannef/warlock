@@ -24,12 +24,11 @@
 use super::path::{Cost, Search};
 use super::{ActorId, Mind, World};
 use crate::action::{AttackKind, Event};
-use crate::content::{Combat, Stance};
+use crate::content::{ActionKind, Combat, Stance};
 use crate::fov::radius2;
 use crate::geom::{Dir, Pos};
 use crate::noise::{Act, Heard};
 use crate::sight::{self, LineOfSight};
-use crate::time::Duration;
 
 /// Extra cost of a path through a cell another actor stands on, in steps: a creature walks a
 /// detour of up to this many more steps around someone in its way, else waits behind them.
@@ -69,8 +68,8 @@ enum Route {
 /// What a step does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Stepped {
-    /// Moved, taking this long.
-    Moved(Duration),
+    /// Moved, for this energy price.
+    Moved(i64),
     /// Opened the closed door in the way instead.
     Opened,
     Blocked,
@@ -78,16 +77,16 @@ enum Stepped {
 
 impl World {
     /// One action of creature `id` on the current level, taken whenever the scheduler lets it act
-    /// (phase 2; `schedule.rs` decides who acts when, and so how often). Returns how long the
-    /// action took, which decides how soon the creature may act again: a step takes the level's
-    /// step time onto the destination ([`super::LevelState::step_time`]), anything else (an
-    /// attack, opening a door, waiting) the level's turn.
+    /// (phase 2; `schedule.rs` decides who acts when, and so how often). Returns the action's
+    /// energy price, which with the creature's speed decides how soon it may act again: a step
+    /// costs the step onto the destination ([`super::LevelState::step_price`]), anything else its
+    /// action's cost (an attack, opening a door, waiting; [`crate::content::Content::action_cost`],
+    /// where a creature type may give its attacks their own) over the 6-second base.
     ///
     /// This is the one place a creature decides and does something; whatever the action lets
     /// the player perceive (events, noise) starts here too. What the creature heard since it
     /// last acted ([`super::Actor::heard`]) is read here and spent.
-    pub(super) fn creature_turn(&mut self, id: ActorId, events: &mut Vec<Event>) -> Duration {
-        let turn = self.state.current().turn;
+    pub(super) fn creature_turn(&mut self, id: ActorId, events: &mut Vec<Event>) -> i64 {
         let heard = (self.state.actors.get_mut(&id))
             .map(|a| std::mem::take(&mut a.heard))
             .unwrap_or_default();
@@ -102,15 +101,24 @@ impl World {
                     to: at,
                 });
                 self.make_noise(id, Act::Attack(kind));
-                turn
+                self.price_of(id, kind.action())
             }
-            Plan::Step(dir) => match self.creature_steps(id, dir, events) {
-                Stepped::Moved(took) => took,
-                Stepped::Opened | Stepped::Blocked => turn,
-            },
+            Plan::Step(dir) => self.step_or_wait(id, dir, events).1,
             Plan::Patrol => self.patrol(id, events),
-            Plan::Wait => turn,
+            Plan::Wait => self.price_of(id, ActionKind::Wait),
         }
+    }
+
+    /// Creature `id` steps in `dir` ([`World::creature_steps`]); returns what it did and its
+    /// price: the step, opening the door in the way, or waiting when blocked.
+    fn step_or_wait(&mut self, id: ActorId, dir: Dir, events: &mut Vec<Event>) -> (Stepped, i64) {
+        let stepped = self.creature_steps(id, dir, events);
+        let price = match stepped {
+            Stepped::Moved(price) => price,
+            Stepped::Opened => self.price_of(id, ActionKind::OpenDoor),
+            Stepped::Blocked => self.price_of(id, ActionKind::Wait),
+        };
+        (stepped, price)
     }
 
     /// Steps 1 to 5 of the module docs: what creature `id`, having `heard` what it heard since it
@@ -338,7 +346,7 @@ impl World {
         if !def.walkable || self.state.actor_at(&level.id, to).is_some() {
             return Stepped::Blocked;
         }
-        let took = level.step_time(def);
+        let price = self.step_price(id, def);
         if let Some(actor) = self.state.actors.get_mut(&id) {
             actor.pos = to;
         }
@@ -348,29 +356,21 @@ impl World {
             to,
         });
         self.make_noise(id, Act::Step(to));
-        Stepped::Moved(took)
+        Stepped::Moved(price)
     }
 
     /// The routine: the next step of the creature's patrol route; it waits when blocked (or
-    /// opens a closed door in the way, if it can) and when it has no route.
-    fn patrol(&mut self, id: ActorId, events: &mut Vec<Event>) -> Duration {
-        let turn = self.state.current().turn;
+    /// opens a closed door in the way, if it can) and when it has no route. Returns the price.
+    fn patrol(&mut self, id: ActorId, events: &mut Vec<Event>) -> i64 {
         let Some(dir) = (self.state.actors[&id].patrol.as_ref()).map(|p| p.route[p.step]) else {
-            return turn;
+            return self.price_of(id, ActionKind::Wait);
         };
-        match self.creature_steps(id, dir, events) {
-            Stepped::Moved(took) => {
-                if let Some(patrol) = self
-                    .state
-                    .actors
-                    .get_mut(&id)
-                    .and_then(|a| a.patrol.as_mut())
-                {
-                    patrol.step = (patrol.step + 1) % patrol.route.len();
-                }
-                took
-            }
-            Stepped::Opened | Stepped::Blocked => turn,
+        let (stepped, price) = self.step_or_wait(id, dir, events);
+        if let Stepped::Moved(_) = stepped
+            && let Some(patrol) = (self.state.actors.get_mut(&id)).and_then(|a| a.patrol.as_mut())
+        {
+            patrol.step = (patrol.step + 1) % patrol.route.len();
         }
+        price
     }
 }

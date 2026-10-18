@@ -123,8 +123,8 @@ const LEGEND: &str = r##"
 "##;
 
 // Four creatures of different speeds on parallel lanes (ids 1 to 4, top to bottom), out of the
-// player's way; a pool to wade through (steps take twice as long) and stairs down to a cellar
-// with ten-second turns. No vision file, so everything in line of sight is seen.
+// player's way; a pool to wade through (steps take twice as long) and stairs down to a cellar.
+// No vision file, so everything in line of sight is seen.
 const TRACK: &str = r##"
 name = "Track"
 map = '''
@@ -148,7 +148,6 @@ map = '''
 
 const CELLAR: &str = r##"
 name = "Cellar"
-turn_seconds = 10
 map = '''
 #####
 #<..#
@@ -389,14 +388,16 @@ fn twice_as_fast_acts_twice_a_turn_and_one_and_a_half_three_times_in_two() {
 }
 
 /// Checks that each creature's actions are exactly accounted for by its speed and the time on
-/// the level: its energy is all it gained less all it spent, and stays within one action of 0.
+/// the level: its energy is all it gained less all it spent on steps of base time `step`, and
+/// stays within one action of 0.
 fn assert_proportional(w: &World, elapsed: Duration, id: ActorId, steps: i64, step: Duration) {
     let speed = speed(w, id);
     let gained = speed * i64::try_from(elapsed.as_seconds()).unwrap();
-    let spent = steps * schedule::cost(step);
+    let price = crate::content::price(crate::content::NORMAL_COST, step);
+    let spent = steps * price;
     assert_eq!(actor(w, id).energy, gained - spent, "{id}: no drift");
     assert!(
-        (-schedule::cost(step)..speed).contains(&(gained - spent)),
+        (-price..speed).contains(&(gained - spent)),
         "{id}: {steps} steps in {elapsed}"
     );
 }
@@ -436,7 +437,7 @@ fn action_counts_stay_proportional_to_speed_over_long_spans() {
 
 #[test]
 fn action_counts_stay_proportional_on_the_overworld() {
-    // Road (20 min) and forest (90 min) steps and 10-minute waits; the creatures' steps across
+    // Road (20 min) and forest (90 min) steps and 6-second waits; the creatures' steps across
     // the plains take 45 minutes.
     let mut w = world("wilds");
     let start = w.time();
@@ -445,7 +446,10 @@ fn action_counts_stay_proportional_on_the_overworld() {
                    move:N wait";
     let steps = play_counting_steps(&mut w, journey, 20, &ids);
     let elapsed = w.time().since(start);
-    assert_eq!(elapsed, Duration::minutes(20 * (6 * 20 + 6 * 90 + 10)));
+    assert_eq!(
+        elapsed,
+        Duration::minutes(20 * (6 * 20 + 6 * 90)) + Duration::seconds(20 * 6)
+    );
     for (id, steps) in ids.iter().zip(steps) {
         assert_proportional(&w, elapsed, *id, steps, Duration::minutes(45));
     }
@@ -470,10 +474,10 @@ fn creatures_on_other_levels_stay_frozen() {
         others(&track),
         "no energy, no moves"
     );
-    // Back up, the climb (one ten-second cellar turn) is all the time they get: no burst.
+    // Back up, the climb (6 seconds) is all the time they get: no burst.
     let out = w.apply(&Action::Ascend);
-    assert_eq!(out.elapsed, Duration::seconds(10));
-    assert!((3..=4).contains(&moves(&out, FAST)), "{:?}", movers(&out));
+    assert_eq!(out.elapsed, Duration::seconds(6));
+    assert!((2..=3).contains(&moves(&out, FAST)), "{:?}", movers(&out));
     assert!((1..=2).contains(&moves(&out, NORMAL)), "{:?}", movers(&out));
 }
 

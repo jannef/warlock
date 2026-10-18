@@ -172,7 +172,6 @@ pub(super) fn generate(content: &Content, seed: u64, id: &str) -> Result<LevelTe
             name: capitalize(&content.terrain(area.terrain).name),
             ambient: crate::light::Light::DARK,
             kind: LevelKind::Outdoor,
-            turn: LevelKind::Outdoor.default_turn(),
             player_start: Some(start),
             terrain: land.terrain,
             creatures: land.creatures,

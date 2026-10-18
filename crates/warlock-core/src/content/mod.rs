@@ -4,6 +4,7 @@
 //! Content is read from a [`ContentFiles`] set: the built-in set compiled into the binary (so every
 //! build, including the web build, is self-contained) or a directory on disk for development.
 
+mod action;
 mod anim;
 mod calendar;
 mod creature;
@@ -23,6 +24,7 @@ mod vault;
 mod vision;
 mod weather;
 
+pub use action::{ActionCosts, ActionKind, BASE_TURN, COSTS, NORMAL_COST, price};
 pub use anim::GlyphAnim;
 pub use calendar::Calendar;
 pub use creature::{Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, NORMAL_SPEED, SPEEDS};
@@ -189,11 +191,12 @@ struct LegendFile {
 /// All loaded and cross-validated content.
 ///
 /// `data/lights.toml`, `data/vision.toml`, `data/factions.toml`, `data/dungeons.toml`,
-/// `data/calendar.toml`, `data/sky.toml`, `data/materials.toml`, `data/objects.toml`, and
-/// `data/weather.toml` are optional. Without vision profiles, a single `normal` profile that needs
-/// no light is used, so content without lighting stays fully visible; without factions, everyone
-/// is neutral; without a calendar, months are numbered; without a sky file there are no moons;
-/// without an objects file there are no objects; without a weather file the sky is always clear.
+/// `data/calendar.toml`, `data/sky.toml`, `data/materials.toml`, `data/objects.toml`,
+/// `data/weather.toml`, and `data/actions.toml` are optional. Without vision profiles, a single
+/// `normal` profile that needs no light is used, so content without lighting stays fully
+/// visible; without factions, everyone is neutral; without a calendar, months are numbered;
+/// without a sky file there are no moons; without an objects file there are no objects; without a
+/// weather file the sky is always clear; without an actions file every action costs 1000.
 #[derive(Debug)]
 pub struct Content {
     terrain: Vec<TerrainDef>,
@@ -218,6 +221,7 @@ pub struct Content {
     /// In `data/sky.toml` order.
     moons: Vec<MoonDef>,
     climate: Climate,
+    actions: ActionCosts,
 }
 
 impl Content {
@@ -248,6 +252,7 @@ impl Content {
             calendar: Calendar::default(),
             moons: Vec::new(),
             climate: Climate::default(),
+            actions: ActionCosts::default(),
         };
         let path = "data/calendar.toml";
         if let Some(text) = files.get_optional(path) {
@@ -260,6 +265,10 @@ impl Content {
         let path = "data/weather.toml";
         if let Some(text) = files.get_optional(path) {
             content.climate = Climate::parse(path, text)?;
+        }
+        let path = "data/actions.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.actions = ActionCosts::parse(path, text)?;
         }
         content.load_lights(files)?;
         content.load_vision(files)?;
@@ -471,6 +480,10 @@ impl Content {
             }
             let stats = Stats::from_data(&spec.stats, &spec.potential)
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
+            if let Some(cost) = spec.attack_cost {
+                action::check_cost(cost)
+                    .map_err(|m| err(format!("creature `{}`: attack_cost: {m}", spec.id)))?;
+            }
             let resolved = creature::Resolved {
                 light,
                 stats,
@@ -909,6 +922,20 @@ impl Content {
     /// The weather's chances and effects (always clear without `data/weather.toml`).
     pub fn climate(&self) -> &Climate {
         &self.climate
+    }
+
+    /// What every action costs (`data/actions.toml`; 1000 each without it).
+    pub fn action_costs(&self) -> &ActionCosts {
+        &self.actions
+    }
+
+    /// What action `kind` costs a creature of type `creature`: its type's own attack cost for an
+    /// attack, if it has one, else the action's cost (spec §8 "Time").
+    pub fn action_cost(&self, creature: CreatureId, kind: ActionKind) -> u32 {
+        match self.creature(creature).attack_cost {
+            Some(cost) if kind.is_attack() => cost,
+            _ => self.actions.cost(kind),
+        }
     }
 
     /// Every glyph content may display (for building the glyph atlas).

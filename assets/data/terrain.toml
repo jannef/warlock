@@ -1,7 +1,8 @@
 # Terrain types. Colors are the fully lit appearance; lighting darkens and tints them.
 # Fields: id, name, glyph, fg, bg (default black), walkable (default true),
-# transparent (default true), move_cost (time to step onto it, in percent of the level's turn;
-# default 100), opens_to / closes_to (doors), stairs ("up"/"down"),
+# transparent (default true), move_cost (what a step onto it costs, in percent of a normal step,
+# the `step` cost in actions.toml; default 100; local levels only), opens_to / closes_to (doors),
+# stairs ("up"/"down"),
 # light (a preset in lights.toml the terrain emits), bounce (gameplay, spec §5: the tint of the
 # light the surface bounces, "#rrggbb", default white = neutral), height (gameplay, spec §5
 # "Sunlight": how many cells tall it stands for sun shadows, 0 to 4; default 1 if opaque, else 0),
@@ -14,9 +15,10 @@
 # walkable nor transparent, blocks sound unless it has a muffle).
 # Terrain with a "flow" anim is running water: every cell of it needs a flow direction from the
 # level legend (the arrows in legend.toml).
-# Overworld terrain (spec §3, §7): travel_minutes (an overworld step onto it, 1 to 1440; required
-# for walkable terrain on the overworld), local (the ground of the local area entered with `>`
-# from a cell of it; none: nothing to explore there), and landscape (what its land is like in
+# Overworld terrain (spec §3, §7): travel_minutes (an overworld step onto it at normal speed: the
+# step's base time instead of 6 seconds; 1 to 1440; required for walkable terrain on the
+# overworld), local (the ground of the local area entered with `>` from a cell of it; none:
+# nothing to explore there), and landscape (what its land is like in
 # local areas: "plains", "grassland", "forest", "dense_forest", "hills", or "swamp" pick the
 # generator of its own local areas; "road" runs a road through them towards the neighboring
 # roads and locations, amid the neighbors' land; "river" and "lake" put running or still water

@@ -1,8 +1,9 @@
-//! The game clock in the turn pipeline (spec §8 "Time"): what actions cost, resting, skipping.
+//! The game clock in the turn pipeline (spec §8 "Time"): how long actions take, resting,
+//! skipping. What actions cost and how speed scales it: `cost_tests.rs`.
 
 use super::*;
 use crate::action::parse_actions;
-use crate::content::{ContentFiles, LevelKind};
+use crate::content::ContentFiles;
 use crate::replay::Replay;
 
 const TERRAIN: &str = r##"
@@ -92,8 +93,8 @@ const LEGEND: &str = r##"
 "'" = "door_open"
 "##;
 
-// A room with a pool, a door in its east wall, and stairs down to a cellar with ten-second
-// turns. Below the room, out of sight, a rat walks up a corridor into the room and back.
+// A room with a pool, a door in its east wall, and stairs down to a cellar. Below the room, out
+// of sight, a rat walks up a corridor into the room and back.
 const CAMP: &str = r##"
 name = "Camp"
 map = '''
@@ -116,7 +117,6 @@ map = '''
 
 const CELLAR: &str = r##"
 name = "Cellar"
-turn_seconds = 10
 map = '''
 #####
 #<..#
@@ -205,7 +205,7 @@ fn the_clock_starts_at_the_scenario_start() {
 }
 
 #[test]
-fn turns_take_the_level_turn_and_steps_the_terrain_move_cost() {
+fn actions_take_six_seconds_and_steps_the_terrain_move_cost() {
     let mut w = world("camp");
     let out = run(&mut w, "move:E move:E move:E wait");
     let elapsed: Vec<_> = out.iter().map(|o| o.elapsed).collect();
@@ -227,7 +227,7 @@ fn refused_and_free_actions_take_no_time() {
 }
 
 #[test]
-fn doors_take_a_turn_and_stairs_a_turn_of_the_level_they_start_on() {
+fn doors_and_stairs_take_a_normal_action_on_any_level() {
     let mut w = world("camp");
     run(&mut w, &format!("move:SE {}", "move:E ".repeat(6))); // (8, 2), west of the door
     let out = run(&mut w, "move:E close:E open:E");
@@ -237,8 +237,7 @@ fn doors_take_a_turn_and_stairs_a_turn_of_the_level_they_start_on() {
     let mut w = world("camp");
     run(&mut w, &"move:E ".repeat(6)); // onto the stairs at (7, 1)
     let out = run(&mut w, "descend wait move:E move:W ascend");
-    let elapsed: Vec<_> = out.iter().map(|o| o.elapsed).collect();
-    assert_eq!(elapsed, [secs(6), secs(10), secs(10), secs(10), secs(10)]);
+    assert!(out.iter().all(|o| o.elapsed == secs(6)));
     assert_eq!(w.state().current_level, "camp");
 }
 
@@ -246,14 +245,14 @@ fn doors_take_a_turn_and_stairs_a_turn_of_the_level_they_start_on() {
 fn resting_passes_turns_until_the_goal() {
     let mut w = world("camp");
     run(&mut w, &"move:E ".repeat(6));
-    run(&mut w, "descend"); // The cellar: ten-second turns, no creatures.
+    run(&mut w, "descend"); // The cellar: no creatures.
     let (turn, time) = (w.turn(), w.time());
     let rat = w.state().actors[&ActorId(1)].clone();
 
     let out = w.apply(&Action::Rest(Rest::For(Duration::hours(1))));
     assert!(out.took_turn);
     assert_eq!(out.elapsed, Duration::hours(1));
-    assert_eq!(w.turn(), turn + 360, "one turn per ten seconds");
+    assert_eq!(w.turn(), turn + 600, "one turn per six seconds");
     assert_eq!(last_message(&w), "You rest for 1 hour.");
     assert_eq!(
         w.state().actors[&ActorId(1)],
@@ -342,7 +341,7 @@ fn time_is_part_of_the_state_and_replays_reproduce_it() {
 }
 
 #[test]
-fn level_turns_and_move_costs_are_validated() {
+fn move_costs_are_validated_and_levels_set_no_turn_length() {
     let with = |path: &str, from: &str, to: &str| {
         let mut files = files();
         let text = match path {
@@ -352,28 +351,18 @@ fn level_turns_and_move_costs_are_validated() {
         files.insert(path, &text.replace(from, to));
         Content::load(&files)
     };
-    let err = with(
-        "levels/cellar.toml",
-        "turn_seconds = 10",
-        "turn_seconds = 0",
-    )
-    .unwrap_err();
-    assert!(err.message.contains("turn_seconds 0"), "{}", err.message);
-    let err = with(
-        "levels/cellar.toml",
-        "turn_seconds = 10",
-        "turn_seconds = 3601",
-    )
-    .unwrap_err();
-    assert!(err.message.contains("turn_seconds 3601"), "{}", err.message);
     let err = with("data/terrain.toml", "move_cost = 200", "move_cost = 0").unwrap_err();
     assert!(err.message.contains("move_cost 0"), "{}", err.message);
-    let outdoor = with(
+    // Six seconds is the one base: a level cannot have turns of its own any more.
+    let err = with(
         "levels/cellar.toml",
-        "turn_seconds = 10",
-        "kind = \"outdoor\"",
+        "name = \"Cellar\"",
+        "name = \"Cellar\"\nturn_seconds = 10",
     )
-    .unwrap();
-    let cellar = outdoor.level("cellar").expect("cellar");
-    assert_eq!((cellar.kind, cellar.turn), (LevelKind::Outdoor, secs(6)));
+    .unwrap_err();
+    assert!(
+        err.message.contains("unknown field `turn_seconds`"),
+        "{}",
+        err.message
+    );
 }

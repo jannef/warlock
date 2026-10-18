@@ -1,7 +1,7 @@
 # Your lantern
 
-You carry a lantern. Press `L` to light it, and `L` again to douse it. Each takes a turn, and the
-lantern starts unlit.
+You carry a lantern. Press `L` to light it, and `L` again to douse it. Each is a normal action (6
+seconds), and the lantern starts unlit.
 
 A lit lantern is a [light source](light.md) that moves with you: a warm light whose reach is in
 the [table of lights](light.md#light-sources). It burns calmly: it flickers a little, but less

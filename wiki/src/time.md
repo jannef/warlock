@@ -45,9 +45,13 @@ and month before it drops them; see [Controls](controls.md#the-screen).
 
 ## What takes time
 
-Almost everything you do that changes the world takes a turn, and a turn takes game time: seconds
-in a dungeon or outdoor area, minutes on the overworld. See [Turns and movement](turns.md) for the
-exact lengths, and [Resting](resting.md) for passing a long time at once.
+Almost everything you do that changes the world takes game time, and what you do decides how
+much: every action has a cost, and a normal action, such as waiting, opening a door, or a step,
+takes 6 seconds. Costlier actions take longer, and a step through water takes twice as long as a
+normal one. Steps on the overworld are journeys of minutes or hours. Creatures that are quicker
+than you take less time for the same action, so they act more often. See
+[Turns and movement](turns.md) for what each action costs, and [Resting](resting.md) for passing
+a long time at once.
 
 Actions that do not change the world, such as looking around, opening menus, and reading help, take
 no time. Refused actions, such as walking into a wall, take no time either.

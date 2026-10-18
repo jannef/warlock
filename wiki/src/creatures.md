@@ -67,8 +67,11 @@ this: a kobold war band and a pack of giant rats fight there, and turn on you wh
 
 - Creatures move at their **own pace**. Some are quicker than you and may act more than once
   while you take one turn; some are slower and now and then let a turn of yours pass without
-  acting. A creature of your own pace acts once for each of your turns. The game never tells you a
-  creature's pace: you learn it by watching it move.
+  acting. A creature of your own pace acts once for each normal action of yours. The game never
+  tells you a creature's pace: you learn it by watching it move.
+- Their actions have [costs](turns.md#what-actions-cost) like yours: a creature's step through
+  water takes it twice as long as a step on open ground, and a creature type's attacks may cost
+  it more or less than a normal action.
 - How often a creature acts follows game time, not your turns: while you wade through water or
   [rest](resting.md), creatures get to act for as long as that took you.
 - Creatures only act on the level you are on. On other levels they stand still until you come

@@ -5,11 +5,14 @@
 //! scheduler, `schedule.rs`; [`World::creature_turn`] is one creature's action) → environment →
 //! perception (sight, light, memory) → perceived events are returned to the caller.
 //!
-//! Time (spec §8): every action that takes time has a duration: the level's turn
-//! ([`LevelState::turn`], 6 s on local levels, 10 min on the overworld), or for a step the level's
-//! [`LevelState::step_time`] of the destination terrain. An actor's speed decides how soon it may
-//! act again: at normal speed (the player's) after exactly that long, at twice the speed after
-//! half of it. Resting ([`Action::Rest`]) passes many turns in one action.
+//! Time (spec §8): every action that takes time has a cost in energy (`data/actions.toml`, 1000
+//! for a normal action; [`ActionKind`]) and a base time: 6 s ([`crate::content::BASE_TURN`])
+//! for everything but a step on the overworld, whose base is the terrain's travel time. Its
+//! energy price is the cost times the base in seconds ([`crate::content::price`]; for a step,
+//! [`LevelState::step_price`]), and the actor's speed decides how long that takes:
+//! `cost / 1000 × 1000 / speed × base`, so a normal action takes the player (normal speed) 6 s,
+//! and twice the speed takes half of it. Resting ([`Action::Rest`]) passes many turns in one
+//! action.
 //!
 //! Hearing (spec §5 "Hearing", [`crate::noise`]): steps and doors make noise as they happen, and
 //! every other actor in earshot on the level hears it at once ([`Actor::heard`], until it next
@@ -27,8 +30,8 @@
 //! walking off a local area's edge leads back to its overworld cell (the level state's edge exit).
 //!
 //! Objects (spec §6): piles lie on cells of a level ([`LevelState`]), actors carry inventories.
-//! Picking up and dropping take the level's turn; stepping onto a pile says what lies there. An
-//! actor's weight is its creature's plus what it carries ([`Actor::weight`]).
+//! Picking up and dropping are actions with their own costs; stepping onto a pile says what lies
+//! there. An actor's weight is its creature's plus what it carries ([`Actor::weight`]).
 
 mod actor;
 mod ai;
@@ -43,7 +46,8 @@ pub use level::LevelState;
 
 use crate::action::{Action, AttackKind, Event, Letters, MAX_REST, Outcome, Rest, letter};
 use crate::content::{
-    Content, EdgeExit, LevelKind, LevelTemplate, StairsDir, Stance, TerrainId, local_area_id,
+    ActionKind, Content, EdgeExit, LevelKind, LevelTemplate, StairsDir, Stance, TerrainId,
+    local_area_id,
 };
 use crate::geom::{Dir, Pos};
 use crate::light::{LightCache, Sky};
@@ -199,9 +203,9 @@ enum Spent {
     Nothing,
     /// Changed state without game time passing; perception must be recomputed.
     NoTime,
-    /// A turn: the player's action took this long; the others act until the player may act again
-    /// (the clock advances), then perception is recomputed.
-    Turn(Duration),
+    /// A turn: the player's action costs this energy price; the others act until the player may
+    /// act again (the clock advances), then perception is recomputed.
+    Turn(i64),
     /// A rest until this moment (see [`World::rest`]).
     Rest(GameTime, Rest),
     /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
@@ -404,8 +408,8 @@ impl World {
         match self.player_acts(action, &mut events) {
             Spent::Nothing => {}
             Spent::NoTime => self.perceive(&mut events),
-            Spent::Turn(duration) => {
-                self.run_turn(duration, &mut events);
+            Spent::Turn(price) => {
+                self.run_turn(price, &mut events);
                 self.perceive(&mut events);
             }
             Spent::Rest(until, goal) => self.rest(until, goal, &mut events),
@@ -426,13 +430,13 @@ impl World {
     /// Rests until `until`: turn after turn through the normal pipeline (the player waits, the
     /// others act, perception), stopping after a turn in which a creature came into view or a
     /// message was logged that stops a rest. The last turn is cut short to end exactly at
-    /// `until`. Turns that end before any creature could come into view
-    /// ([`World::out_of_view_for`]) and in which the weather the player sees did not change
-    /// pass without perception, which cannot change the outcome; only the last turn's events are
-    /// kept.
+    /// `until`, whatever the player's speed ([`World::price_until`]). Turns that end before any
+    /// creature could come into view ([`World::out_of_view_for`]) and in which the weather the
+    /// player sees did not change pass without perception, which cannot change the outcome; only
+    /// the last turn's events are kept.
     fn rest(&mut self, until: GameTime, goal: Rest, events: &mut Vec<Event>) {
         let start = self.state.time;
-        let turn = self.state.current().turn.max(Duration::seconds(1));
+        let wait = self.price_of(self.state.player, ActionKind::Wait);
         let said = self.said;
         let mut in_view = self.creatures_in_view();
         let mut came = None;
@@ -440,7 +444,7 @@ impl World {
             let unseen_until = self.state.time + self.out_of_view_for();
             loop {
                 events.clear();
-                self.run_turn(turn.min(until.since(self.state.time)), events);
+                self.run_turn(wait.min(self.price_until(until)), events);
                 let done = self.state.time >= until || self.said != said;
                 if done || self.state.time > unseen_until || self.weather_turned() {
                     break;
@@ -633,24 +637,41 @@ impl World {
         self.state.messages.push(turn, text);
     }
 
-    /// Phase 1. Returns how much time the action took.
+    /// A turn of the player's action `kind` if they did it, else nothing.
+    fn took(&self, done: bool, kind: ActionKind) -> Spent {
+        if done {
+            Spent::Turn(self.price_of(self.state.player, kind))
+        } else {
+            Spent::Nothing
+        }
+    }
+
+    /// Phase 1. Returns what the action cost.
     fn player_acts(&mut self, action: &Action, events: &mut Vec<Event>) -> Spent {
         let here = self.player_pos();
-        // One turn of the level the action starts on (taking stairs ends on another level).
-        let turn = Spent::Turn(self.state.current().turn);
-        let took = move |done: bool| if done { turn } else { Spent::Nothing };
-        match action {
-            Action::Move(dir) => self.player_moves(*dir, events),
-            Action::Wait => turn,
-            Action::Open(dir) => took(self.open_door(here.step(*dir), events)),
-            Action::Close(dir) => took(self.close_door(here.step(*dir), events)),
-            Action::Descend => took(self.take_stairs(StairsDir::Down, events)),
-            Action::Ascend => took(self.take_stairs(StairsDir::Up, events)),
-            Action::ToggleLantern => took(self.toggle_lantern()),
-            Action::PickUp(letters) => took(self.pick_up(*letters)),
-            Action::Drop(letters) => took(self.drop_objects(*letters)),
-            Action::Rest(goal) => self.start_rest(*goal),
-            Action::SetVision(id) => self.set_vision(id),
+        // Whether the action was done, and what kind of action it was for its cost (the same on
+        // any level: taking stairs ends on another).
+        let (done, kind) = match action {
+            Action::Move(dir) => return self.player_moves(*dir, events),
+            Action::Wait => (true, ActionKind::Wait),
+            Action::Open(dir) => (
+                self.open_door(here.step(*dir), events),
+                ActionKind::OpenDoor,
+            ),
+            Action::Close(dir) => (
+                self.close_door(here.step(*dir), events),
+                ActionKind::CloseDoor,
+            ),
+            Action::Descend => (
+                self.take_stairs(StairsDir::Down, events),
+                ActionKind::Stairs,
+            ),
+            Action::Ascend => (self.take_stairs(StairsDir::Up, events), ActionKind::Stairs),
+            Action::ToggleLantern => (self.toggle_lantern(), ActionKind::Lantern),
+            Action::PickUp(letters) => (self.pick_up(*letters), ActionKind::PickUp),
+            Action::Drop(letters) => (self.drop_objects(*letters), ActionKind::Drop),
+            Action::Rest(goal) => return self.start_rest(*goal),
+            Action::SetVision(id) => return self.set_vision(id),
             Action::SetWeather(weather) => {
                 let over = weather::Override::new(*weather, self.state.time);
                 self.state.weather_override = Some(over);
@@ -659,13 +680,14 @@ impl World {
                     weather.name().to_lowercase(),
                     weather::OVERRIDE.spoken()
                 ));
-                Spent::NoTime
+                return Spent::NoTime;
             }
             Action::SkipTime(duration) => {
                 self.say(format!("Time skips ahead {} (dev).", duration.spoken()));
-                Spent::Skip(*duration)
+                return Spent::Skip(*duration);
             }
-        }
+        };
+        self.took(done, kind)
     }
 
     /// When a rest toward `goal` ends: at most [`MAX_REST`] from now.
@@ -812,13 +834,8 @@ impl World {
         };
         let def = self.content.terrain(terrain);
         if def.is_closed_door() {
-            let turn = level.turn;
             let opened = self.open_door(to, events);
-            return if opened {
-                Spent::Turn(turn)
-            } else {
-                Spent::Nothing
-            };
+            return self.took(opened, ActionKind::OpenDoor);
         }
         if !def.walkable {
             let name = def.name.clone();
@@ -829,7 +846,7 @@ impl World {
             // What the player knows of it: its name if they see it, else just that something is
             // there; and its stance toward them (from its type), which decides between attacking
             // and stopping.
-            let (target, turn) = (other.id, level.turn);
+            let target = other.id;
             let seen = self.perception.sees_actors_at(to);
             let name = self.content.creature(other.creature).name.clone();
             let what = if seen {
@@ -850,7 +867,7 @@ impl World {
                 }
                 self.say(format!("You attack {what}."));
                 self.make_noise(player, Act::Attack(AttackKind::Melee));
-                return Spent::Turn(turn);
+                return self.took(true, AttackKind::Melee.action());
             }
             let what = if seen {
                 format!("The {name}")
@@ -860,9 +877,9 @@ impl World {
             self.say(format!("{what} is in the way."));
             return Spent::Nothing;
         }
-        let step = level.step_time(def);
-        self.state.overworld_step = (level.kind == LevelKind::Overworld).then_some(dir);
         let player = self.state.player;
+        let step = self.step_price(player, def);
+        self.state.overworld_step = (level.kind == LevelKind::Overworld).then_some(dir);
         if let Some(actor) = self.state.actors.get_mut(&player) {
             actor.pos = to;
         }
@@ -907,9 +924,8 @@ impl World {
             .map_or_else(|| id.to_string(), |t| t.name.clone())
     }
 
-    /// Walks off the edge of a local area, back to its overworld cell. Takes the level's turn.
+    /// Walks off the edge of a local area, back to its overworld cell: like taking stairs.
     fn leave_by_edge(&mut self, exit: EdgeExit, events: &mut Vec<Event>) -> Spent {
-        let turn = self.state.current().turn;
         let from = self.state.current_level.clone();
         if let Err(err) = self.travel(&exit.to, Some(exit.pos)) {
             self.say(format!("You cannot leave this way ({err})."));
@@ -918,7 +934,7 @@ impl World {
         events.push(Event::LevelChanged { from, to: exit.to });
         let name = self.state.current().name.clone();
         self.say(format!("You return to {name}."));
-        Spent::Turn(turn)
+        self.took(true, ActionKind::Stairs)
     }
 
     /// `>` on an overworld cell that is not a location: enters the cell's local area, arriving
@@ -1207,6 +1223,8 @@ fn instantiate_level(state: &mut WorldState, content: &Content, template: &Level
 mod ai_tests;
 #[cfg(test)]
 mod branch_tests;
+#[cfg(test)]
+mod cost_tests;
 #[cfg(test)]
 mod hearing_tests;
 #[cfg(test)]

@@ -74,6 +74,8 @@ pub(super) struct CreatureSpec {
     /// Whether it opens closed doors in its way.
     #[serde(default)]
     pub opens_doors: bool,
+    /// What its attacks cost, in energy; none: the attack's cost in `data/actions.toml`.
+    pub attack_cost: Option<u32>,
     /// Light preset the creature carries.
     pub light: Option<String>,
     /// How loud its steps are (spec §5 "Hearing"); none: it moves silently.
@@ -117,6 +119,7 @@ impl CreatureSpec {
             combat: self.combat,
             range: self.range.unwrap_or(1),
             opens_doors: self.opens_doors,
+            attack_cost: self.attack_cost,
             light: r.light,
             footsteps: self.footsteps,
             hearing: self.hearing,
@@ -155,6 +158,10 @@ pub struct CreatureDef {
     pub range: i32,
     /// Whether it opens closed doors in its way.
     pub opens_doors: bool,
+    /// What its attacks (melee, shooting, or casting) cost in energy, if its type says
+    /// ([`super::Content::action_cost`]); `None`: the cost of the attack in `data/actions.toml`.
+    /// Rules only.
+    pub attack_cost: Option<u32>,
     /// Light the creature carries with it (e.g. a torch), if any.
     pub light: Option<LightId>,
     /// Gameplay: the loudness of its steps on terrain with a `step_noise` of 100

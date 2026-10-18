@@ -1,5 +1,6 @@
 //! Player actions and the events a turn produces.
 
+use crate::content::ActionKind;
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
 use crate::weather::Weather;
@@ -25,10 +26,10 @@ pub enum Action {
     /// Light or douse the lantern the scenario gives the player. Takes a turn.
     ToggleLantern,
     /// Pick up the stacks with these letters from the pile on the player's cell (`a` is the top
-    /// of the pile), or everything there with no letters. Takes the level's turn.
+    /// of the pile), or everything there with no letters. Takes a turn (its cost: `pick_up`).
     PickUp(Letters),
     /// Drop the inventory stacks with these letters onto the player's cell, or everything
-    /// carried with no letters. Takes the level's turn.
+    /// carried with no letters. Takes a turn (its cost: `drop`).
     Drop(Letters),
     /// Wait turn after turn (creatures act) until the goal, stopping early when a creature comes
     /// into view or a message is logged.
@@ -177,6 +178,17 @@ pub enum AttackKind {
     Ranged,
     /// A spell cast from a distance.
     Spell,
+}
+
+impl AttackKind {
+    /// The action whose cost it has (`data/actions.toml`: `melee`, `shoot`, `cast`).
+    pub const fn action(self) -> ActionKind {
+        match self {
+            AttackKind::Melee => ActionKind::Melee,
+            AttackKind::Ranged => ActionKind::Shoot,
+            AttackKind::Spell => ActionKind::Cast,
+        }
+    }
 }
 
 /// The result of applying an action.
