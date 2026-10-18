@@ -28,8 +28,9 @@ Some glyphs are shared with terrain. Wildflowers are `*` too, and glowing fungus
 are `"`. Color and [look mode](controls.md#look-mode) tell them apart.
 
 Weights are in grams. They read `450 g` below a kilogram and `3.5 kg` above. Some objects
-**stack**: coins, arrows, candles, potions, scrolls, food, and stones lie together as one stack,
-such as "12 gold coins". Everything else is a stack of one each: three daggers are three stacks.
+**stack**: coins, arrows, candles, potions, scrolls, food, and stones and gems lie together as
+one stack, such as "12 gold coins" (the "Stacks" column below). Everything else is a stack of one
+each: three daggers are three stacks.
 
 ## Piles
 

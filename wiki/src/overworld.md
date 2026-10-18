@@ -12,14 +12,14 @@ Mountains and open water cannot be crossed; a river can only be crossed by a bri
 {{#include generated/terrain-overworld.md}}
 
 Roads and bridges are the fast way to travel, and swamp and dense forest the slow way. The status
-bar shows the name of the region you are in.
+bar shows the name of the region you are in, here and in its local areas.
 
 ## Sight by daylight and moonlight
 
 Sight on the overworld is plain line of sight within a radius that depends on the time of day, at
-night on the moon, and on the [weather](weather.md): rain shortens it. Light, your eyes' threshold,
-and darkvision play no part. Mountain ranges and
-dense forest block sight; ordinary forest does not.
+night on the moon, and on the [weather](weather.md): rain shortens it, and clouds dim the moon.
+Light, your eyes' threshold, and darkvision play no part. Mountain ranges and dense forest block
+sight; ordinary forest does not.
 
 {{#include generated/overworld-sight.md}}
 
@@ -46,6 +46,7 @@ explore that cell on foot. You enter an outdoor area, 80 by 40 cells, made for t
 - You arrive on the side you walked onto the cell from (on the road if you came along one), or in a
   clearing in the middle if you did not walk there.
 - Walk off any edge to return to the overworld cell. This takes one 6-second turn.
-- Inside, turns are 6 seconds and the sun and sky light the area by day. At night only the moon
-  lights it: under a bright moon you dimly make out the open ground, otherwise it is dark, so
-  bring your [lantern](lantern.md).
+- Inside, turns are 6 seconds and the sun and sky light the area by day, under the same
+  [weather](weather.md) as the overworld. At night only the moon lights it: under a bright moon
+  and a clear sky you dimly make out the open ground, otherwise it is dark, so bring your
+  [lantern](lantern.md).

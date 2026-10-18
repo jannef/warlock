@@ -3,6 +3,7 @@
 [Introduction](introduction.md)
 
 - [Controls](controls.md)
+- [Settings](settings.md)
 - [Time and the calendar](time.md)
 - [Turns and movement](turns.md)
 - [Resting](resting.md)

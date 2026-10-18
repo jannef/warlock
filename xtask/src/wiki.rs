@@ -1,8 +1,9 @@
 //! `cargo xtask wiki [--check | --build]`: the player wiki's generated tables.
 //!
 //! The wiki (`wiki/`, built with mdBook) is written by hand except for facts that live in data
-//! (month names, moons, weather, terrain, vision profiles, light presets, creatures, objects and
-//! materials) and a few constants of the rules (sight radii, the pack's size). Those are written
+//! (month names, moons, weather, terrain, vision profiles, light presets, creatures, factions,
+//! objects and materials, scenarios) and a few constants of the rules (sight radii, the pack's
+//! size). Those are written
 //! to `wiki/src/generated/*.md` from the built-in content, and the pages
 //! pull them in with `{{#include generated/NAME.md}}`, so they cannot drift. Output is
 //! deterministic. `--check` fails when a file is stale; `--build` also runs `mdbook build wiki`.
@@ -13,7 +14,7 @@ use std::fmt::Write as _;
 use std::path::PathBuf;
 use std::process::Command;
 use warlock_core::content::{
-    Combat, Content, CreatureId, FactionId, LevelKind, Stance, TerrainDef,
+    Combat, Content, CreatureId, FactionId, LevelKind, LightId, Stance, TerrainDef,
 };
 use warlock_core::daylight::{
     MOONLIGHT_PER_CELL, SIGHT_DAY, SIGHT_MOONLIT, SIGHT_NIGHT, SIGHT_TWILIGHT, overworld_sight,
@@ -122,6 +123,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("objects.md".to_string(), objects(content)),
         ("materials.md".to_string(), materials(content)),
         ("pack.md".to_string(), pack(content)),
+        ("scenarios.md".to_string(), scenarios(content)),
     ];
     for (_, text) in &mut files {
         *text = format!(
@@ -320,7 +322,7 @@ fn brightest_moon(content: &Content) -> Option<Light> {
 }
 
 fn overworld_sight_table(content: &Content) -> String {
-    let mut out = String::from("| Time of day | Sight on the overworld |\n|---|---:|\n");
+    let mut out = String::from("| When | Sight on the overworld |\n|---|---:|\n");
     let _ = writeln!(out, "| Day (06:30 to 17:30) | {SIGHT_DAY} cells |");
     let _ = writeln!(
         out,
@@ -338,6 +340,27 @@ fn overworld_sight_table(content: &Content) -> String {
             );
         }
     }
+    // Clouds dim the moon, so they shorten moonlit sight even when they take no cells away.
+    if !content.moons().is_empty() {
+        let full_moon = GameTime::from_calendar(1, 1, 16, 0, 0).expect("a valid date");
+        for weather in [Weather::Overcast, Weather::Rain, Weather::HeavyRain] {
+            let def = content.climate().def(weather);
+            let conditions = Conditions {
+                weather,
+                clouds: Clouds::of(def),
+            };
+            let moonlight = Sky::at(full_moon, content.moons(), conditions).moonlight();
+            let sight = overworld_sight(full_moon, moonlight, def.sight);
+            let under = match weather {
+                Weather::Overcast => "overcast".to_string(),
+                w => format!("in {}", w.name().to_lowercase()),
+            };
+            let _ = writeln!(
+                out,
+                "| Night, a full moon high in the sky, {under} | {sight} cells |"
+            );
+        }
+    }
     let noon = GameTime::from_calendar(1, 1, 1, 12, 0).expect("a valid date");
     for weather in [Weather::Rain, Weather::HeavyRain] {
         let lost = content.climate().def(weather).sight;
@@ -350,9 +373,9 @@ fn overworld_sight_table(content: &Content) -> String {
     let _ = writeln!(
         out,
         "\nAt night moonlight (all moons together) adds a cell of sight for every {}% of full light \
-         it gives, but by moonlight you never see farther than {SIGHT_MOONLIT} cells. Rain takes \
-         cells away at any hour (see [the weather](weather.md)), but never below {SIGHT_NIGHT}. \
-         The farthest you can ever see is {VIEW_RADIUS} cells.",
+         it gives, but by moonlight you never see farther than {SIGHT_MOONLIT} cells. Clouds dim \
+         the moon, and rain takes cells away at any hour (see [the weather](weather.md)), but you \
+         always see at least {SIGHT_NIGHT}. The farthest you can ever see is {VIEW_RADIUS} cells.",
         percent_of_full(MOONLIGHT_PER_CELL)
     );
     out
@@ -385,7 +408,7 @@ fn share(part: u16, of: u16) -> u32 {
 fn weather_effects(content: &Content) -> String {
     let mut out = String::from(
         "| Weather | Light at noon, in the open | In the shade | A full moon's light | \
-         Sight on the overworld |\n|---|---:|---:|---:|---:|\n",
+         Overworld sight lost |\n|---|---:|---:|---:|---:|\n",
     );
     let noon = GameTime::from_calendar(1, 1, 1, 12, 0).expect("a valid date");
     let full_moon = GameTime::from_calendar(1, 1, 16, 0, 0).expect("a valid date");
@@ -414,8 +437,9 @@ fn weather_effects(content: &Content) -> String {
             format!("{}%", share(moonlight(w), moonlight(Weather::Clear)))
         };
         let sight = match def.sight {
-            0 => "as far as by day".to_string(),
-            n => format!("{n} cells less"),
+            0 => "none".to_string(),
+            1 => "1 cell".to_string(),
+            n => format!("{n} cells"),
         };
         let _ = writeln!(
             out,
@@ -429,7 +453,9 @@ fn weather_effects(content: &Content) -> String {
         out,
         "\nPercentages are of the light of a clear sky at the same moment. The shade is where the \
          sun does not reach but the sky does; the brighter it is next to the open ground, the \
-         fainter the shadows."
+         fainter the shadows. The last column is what the weather itself takes from your sight \
+         on the overworld; at night its clouds also dim the moon, and with it how far you see \
+         by moonlight (see [the overworld](overworld.md))."
     );
     out
 }
@@ -487,7 +513,7 @@ fn vision(content: &Content) -> String {
 
 fn lights(content: &Content) -> String {
     let mut out = String::from("| Light | Reaches | Kind |\n|---|---:|---|\n");
-    for l in content.light_presets() {
+    for (i, l) in content.light_presets().iter().enumerate() {
         let kind = if l.color.rgb == [0, 0, 0] {
             "UV only: invisible without UV sight"
         } else if l.color.uv > 0 {
@@ -498,11 +524,90 @@ fn lights(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {} cells | {kind} |",
-            capital(&l.id.replace('_', " ")).replace("Uv", "UV"),
+            light_name(content, LightId(i as u16)),
             l.radius
         );
     }
     out
+}
+
+/// What a player calls a light: the terrain that gives it ("Wall torch"), what carries it ("Torch
+/// carried by a kobold"), their own lantern, a crystal by its color ("Light crystal (red)" for a
+/// `crystal_red` the levels place on crystal pedestals), else its id in words ("Lamp").
+fn light_name(content: &Content, id: LightId) -> String {
+    let preset = &content.light_presets()[usize::from(id.0)];
+    let words = |id: &str| id.replace('_', " ").replace("uv", "UV");
+    let terrain: Vec<&str> = (content.terrain_defs().iter())
+        .filter(|t| t.light == Some(id))
+        .map(|t| t.name.as_str())
+        .collect();
+    if !terrain.is_empty() {
+        return capital(&terrain.join(", "));
+    }
+    let carriers: Vec<String> = (content.creature_defs().iter())
+        .filter(|c| c.light == Some(id))
+        .map(|c| format!("{} {}", article(&c.name), c.name))
+        .collect();
+    if !carriers.is_empty() {
+        return format!(
+            "{} carried by {}",
+            capital(&words(&preset.id)),
+            carriers.join(" or ")
+        );
+    }
+    if content
+        .scenarios()
+        .any(|s| s.lantern.as_deref() == Some(preset.id.as_str()))
+    {
+        return "Your lantern".into();
+    }
+    let pedestal = (content.terrain_defs().iter())
+        .filter(|t| !t.walkable && t.light.is_none())
+        .find_map(|t| Some((t, preset.id.strip_prefix(&format!("{}_", t.id))?)));
+    match pedestal {
+        Some((t, kind)) => format!("{} ({})", capital(&t.name), words(kind)),
+        None => capital(&words(&preset.id)),
+    }
+}
+
+/// `a` or `an` for a noun.
+fn article(noun: &str) -> &'static str {
+    match noun.chars().next() {
+        Some(c) if "aeiouAEIOU".contains(c) => "an",
+        _ => "a",
+    }
+}
+
+/// The scenarios a new run can start, as the New run screen lists them (the showcase first), with
+/// the moment each starts.
+fn scenarios(content: &Content) -> String {
+    let mut list: Vec<_> = content.scenarios().collect();
+    list.sort_by_key(|s| s.id != "showcase");
+    let mut out = String::from("| Scenario | Starts at | What it is |\n|---|---|---|\n");
+    for s in list {
+        let _ = writeln!(
+            out,
+            "| {} | {:02}:{:02}, {} | {} |",
+            s.name,
+            s.start.hour(),
+            s.start.minute(),
+            content.calendar().full_date(s.start),
+            table_text(&s.description)
+        );
+    }
+    out
+}
+
+/// Free text for a table cell: command-line flags (`--seed`) as code, so they keep both hyphens,
+/// and `|` escaped.
+fn table_text(text: &str) -> String {
+    text.split(' ')
+        .map(|word| match word.strip_prefix("--") {
+            Some(flag) if !flag.is_empty() => format!("`--{flag}`"),
+            _ => word.replace('|', "\\|"),
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 
 /// Speed, eyes, and sight radius are deliberately left out: they are hidden from the player (spec
@@ -689,7 +794,26 @@ mod tests {
             "{}",
             text("weather.md")
         );
-        assert!(text("weather-effects.md").contains("| Clear | 100% | 100% | 100% | as far"));
+        assert!(text("weather-effects.md").contains("| Clear | 100% | 100% | 100% | none |"));
+        assert!(text("weather-effects.md").contains("| 2 cells |"));
         assert!(text("overworld-sight.md").contains("| Day, in heavy rain | 5 cells |"));
+        assert!(
+            text("overworld-sight.md")
+                .contains("| Night, a full moon high in the sky, overcast | 3 cells |")
+        );
+        // Lights go by what the player sees: the terrain, the carrier, the lantern, the crystal.
+        for row in [
+            "| Wall torch | 7 cells |",
+            "| Torch carried by a kobold | 6 cells |",
+            "| Your lantern | 5 cells |",
+            "| Light crystal (red) | 7 cells |",
+            "| Faint rune | 4 cells | UV only",
+        ] {
+            assert!(text("lights.md").contains(row), "{row}");
+        }
+        let scenarios = text("scenarios.md");
+        assert!(scenarios.contains("| Showcase | 08:00, 1 Frostmere, Year 1 |"));
+        assert!(scenarios.contains("| World | 08:00, 14 Greenleaf, Year 1 |"));
+        assert!(scenarios.find("| Showcase").unwrap() < scenarios.find("| Arena").unwrap());
     }
 }

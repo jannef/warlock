@@ -9,8 +9,9 @@ how loud your steps are, whether it blocks sight and sound, and how tall it stan
 A closed door (`+`) blocks movement, sight, and light, and muffles sound: you hear only what
 happens close behind it. Walk into it to open it, which takes a turn, or press `o` and a
 direction. An open door (`'`) lets you, your light, and sound through. Press `c` and a direction
-to close it again; you cannot close a door while something stands or lies in the doorway. Opening and
-closing doors makes noise (see [Hearing](hearing.md)).
+to close it again; you cannot close a door while something stands or lies in the doorway.
+Opening and closing doors makes noise (see [Hearing](hearing.md)). Some creatures open doors too;
+none closes them (see [Creatures](creatures.md)).
 
 The game remembers a door as you last saw it: one you saw open stays drawn open until you see it
 closed.
@@ -30,13 +31,15 @@ not push you yet. Water glints with nearby light.
 
 ## Plants and rock outdoors
 
-Trees, pines, boulders, crags, and standing stones block your way, and the tall ones block sight
-too (dead trees do not). Bushes can be pushed through but slowly. Reeds, marsh, and rubble slow you
-a little. Their heights set how long their shadows are.
+Trees, pines, dead trees, boulders, crags (rock outcrops), and standing stones block your way,
+and all but dead trees block sight too. Bushes can be pushed through but slowly. Reeds, marsh, and
+rubble slow you a little. Their heights set how long their shadows are.
 
-Walls, solid rock, and the solid plants and stones above block sound; it has to go around them.
-Bushes, reeds, marsh, rubble, and dry grass make your steps louder; grass, flowers, the forest
-floor, and dusty floors soften them. See [Hearing](hearing.md).
+Anything you can neither walk on nor see through blocks sound, except a closed door, which only
+muffles it: walls, solid rock, and the trees, boulders, crags, and stones above. Sound has to go
+around them. Water, bushes, reeds, marsh, rubble, rocky ground, dry or tall grass, and creaking
+boards make your steps louder; grass, flowers, the forest floor, dirt roads, and dusty floors
+soften them. See [Hearing](hearing.md).
 
 ## All terrain
 

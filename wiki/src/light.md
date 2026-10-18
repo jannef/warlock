@@ -13,7 +13,8 @@ surroundings red, and a surface lit only by red light shows only red.
 A cell's light is the sum of:
 
 - the level's **ambient** light (zero in most dungeons, so they are dark),
-- **sunlight, moonlight, and sky light** under the open sky (see [Sun, moon, and sky](sun.md)),
+- **sunlight, moonlight, and sky light** under the open sky, dimmed by clouds (see
+  [Sun, moon, and sky](sun.md) and [Weather](weather.md)),
 - every **light source** that reaches the cell, and
 - a little **bounced** light.
 
@@ -25,9 +26,10 @@ and a reach in cells:
 
 {{#include generated/lights.md}}
 
-Light is strongest at the source and fades smoothly to nothing at the edge of its reach. Walls and
-closed doors stop light, so a light does not shine through them, and a light source in a cell
-that blocks sight, such as one on a closed door, gives no light.
+Light is strongest at the source and fades smoothly to nothing at the edge of its reach. Walls,
+closed doors, and anything else that blocks sight (such as trees and boulders) stop light, so a
+light does not shine through them, and a light source in a cell that blocks sight, such as one on
+a closed door, gives no light.
 
 Shadows come from the same rule: a pillar or a wall casts a shadow behind it, away from the light,
 and cells there get none of that light.
@@ -51,9 +53,10 @@ Some effects look like light but never change what you can see:
 - **Flicker.** Torches and fires flicker and drift in color, and lamps burn more calmly. Magical
   light (crystals, runes, fungus) holds perfectly steady. This can be switched off in the settings.
 - **Creature shadows.** Creatures, you included, cast soft shadows. They are only drawn: a creature
-  cannot hide in another creature's shadow.
+  cannot hide in another creature's shadow, and no creature sees you any less for standing in one.
 - **Glow and particles.** Sparks over a brazier or the glow of a rune are decoration.
 - **Falling rain.** The drops are decoration; the clouds that dim the light are not (see
   [Weather](weather.md)).
 
-The reduced effects setting turns all of these off.
+Each of these but the creature shadows has its own switch in the [settings](settings.md), and
+reduced effects turns them all off. Creature shadows are always drawn.

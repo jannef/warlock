@@ -12,8 +12,9 @@ around you hear too.
   where you cannot see it. See [Creatures](creatures.md).
 
 How loud a step is also depends on what you step onto. Wading through water splashes, and
-crashing through bushes or over loose rubble is loud. Grass, flowers, moss, and dust soften your
-steps. Steps on anything not listed here, such as stone floor, flagstones, and stairs, sound normal.
+crashing through bushes or over loose rubble is loud. Grass, flowers, the forest floor, a dirt
+road, and dust soften your steps. Steps on anything not listed here, such as stone floor,
+flagstones, and stairs, sound normal.
 
 {{#include generated/footsteps.md}}
 
@@ -45,7 +46,7 @@ A sound you hear shows on the map as a faint dotted ring, `◌`, until your next
 - With glyph animation on, a ring ripples out of the marker when you hear it. With reduced
   effects the marker is simply still; it never disappears, because it is information.
 
-[Look mode](controls.md) (`x`) describes a marker: "You hear footsteps here.", "You faintly hear
+[Look mode](controls.md#look-mode) (`x`) describes a marker: "You hear footsteps here.", "You faintly hear
 footsteps here.", or "You hear footsteps here, where you remember a stone floor."
 
 ## Messages
@@ -69,6 +70,6 @@ such as footsteps you have been hearing for a few turns, does not.
 
 ## Creatures hear you
 
-Your footsteps and the doors you open and close carry to the creatures around you, through the
-same rules. A creature with enemies that hears something it cannot see goes to have a look: walk
-softly, and mind the doors. See [Creatures](creatures.md).
+Your footsteps, the doors you open and close, and your attacks carry to the creatures around
+you, through the same rules. A creature with enemies that hears something it cannot see goes to
+have a look: walk softly, and mind the doors. See [Creatures](creatures.md).

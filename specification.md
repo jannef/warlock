@@ -605,7 +605,7 @@ rate or animation.
 - **Pause menu**: Esc during a run (when no prompt is open) opens it, drawn in glyphs:
   Resume, Settings, Controls, Save and quit to menu, Quit (which saves). No game time passes while
   it is open; Esc or Back in Settings/Controls returns to it.
-- **Settings** (`settings.toml` in the platform config dir; never on the web): font size (logical
+- **Settings** (`settings.toml` in the platform config dir; on the web, browser `localStorage`, §7): font size (logical
   px, 12 to 36), reduced effects and the per-effect switches, color palette, key bindings. A missing or damaged file means
   defaults and a logged warning. Changes apply live (a font size change rebuilds the glyph atlas)
   and are written immediately.
