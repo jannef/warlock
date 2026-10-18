@@ -4,5 +4,4 @@ start_level = "overworld"
 seed = 1
 vision = "normal"
 lantern = "lantern"
-start_date = [1, 5, 14]
 start_time = "08:00"

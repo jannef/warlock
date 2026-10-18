@@ -430,8 +430,8 @@ mod tests {
         world.apply(&Action::Wait);
         let value = json(&world, &[Layer::View, Layer::Fov], true);
         assert_eq!(value["turn"], 1);
-        assert_eq!(value["time"]["text"], "0001-01-01 08:00:06");
-        assert_eq!(value["time"]["month_name"], "Frostmere");
+        assert_eq!(value["time"]["text"], "1444-11-11 08:00:06");
+        assert_eq!(value["time"]["month_name"], "Darkening");
         assert_eq!(value["level"], "hub");
         assert_eq!(value["layers"]["fov"].as_array().map(Vec::len), Some(21));
         assert!(value["layers"].get("memory").is_none());

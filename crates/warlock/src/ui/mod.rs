@@ -630,18 +630,18 @@ mod tests {
         ));
         let segments = status_segments(&world);
         let at = |text: &str| segments.iter().position(|s| s.text.contains(text));
-        let (weather, moon, date) = (at("Heavy rain"), at("New moon"), at("Frostmere"));
+        let (weather, moon, date) = (at("Heavy rain"), at("Waxing gibbous"), at("Darkening"));
         assert_eq!(weather, moon.map(|m| m + 1), "shown after the moon");
         // It gives way after the time, before the date (cut to day and month first).
         let priority = |i: Option<usize>| segments[i.expect("shown")].priority;
         assert!(priority(weather) > 1 && priority(weather) < priority(date));
         assert_eq!(
             segments[date.expect("date")].short.as_deref(),
-            Some("1 Frostmere")
+            Some("11 Darkening")
         );
         let line = fit_segments(&segments, 60);
         assert!(
-            line.contains("Heavy rain") && line.contains("1 Frostmere"),
+            line.contains("Heavy rain") && line.contains("11 Darkening"),
             "{line}"
         );
     }

@@ -201,7 +201,7 @@ fn waits_until_a_creature_shows(world: &mut World) -> u64 {
 #[test]
 fn the_clock_starts_at_the_scenario_start() {
     assert_eq!(world("camp").time(), at(12, 14, 30));
-    assert_eq!(world("hall").time().to_string(), "0001-01-01 08:00:00");
+    assert_eq!(world("hall").time().to_string(), "1444-11-11 08:00:00");
 }
 
 #[test]

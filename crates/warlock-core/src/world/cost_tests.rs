@@ -338,6 +338,7 @@ fn acts_of(outs: &[Outcome], id: ActorId) -> usize {
 #[test]
 fn a_normal_action_takes_six_seconds_at_normal_speed() {
     let mut w = world("yard", 1000);
+    let start = w.time();
     // Waiting, steps, a door opened and closed and bumped open, the stairs down and up.
     let outs = run(
         &mut w,
@@ -348,10 +349,7 @@ fn a_normal_action_takes_six_seconds_at_normal_speed() {
         "{:?}",
         elapsed(&outs)
     );
-    assert_eq!(
-        w.time().since(GameTime::from_seconds(8 * 3600)),
-        secs(6 * 22)
-    );
+    assert_eq!(w.time().since(start), secs(6 * 22));
     assert_eq!(player_energy(&w), 0, "nothing left over");
 }
 

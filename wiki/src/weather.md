@@ -5,7 +5,7 @@ Under the open sky (outdoor areas and the [overworld](overworld.md)) there is we
 dungeons you cannot tell what the weather is outside.
 
 The [status bar](controls.md#the-screen) shows the weather while you are under the sky, for
-example `14:32 · 12 Rainmoon, Year 1 · ◑ First quarter · Rain`.
+example `14:32 · 12 Rainmoon, Year 1444 · ◑ First quarter · Rain`.
 
 ## How the weather changes
 

@@ -882,8 +882,8 @@ mod tests {
             assert!(text("lights.md").contains(row), "{row}");
         }
         let scenarios = text("scenarios.md");
-        assert!(scenarios.contains("| Showcase | 08:00, 1 Frostmere, Year 1 |"));
-        assert!(scenarios.contains("| World | 08:00, 14 Greenleaf, Year 1 |"));
+        assert!(scenarios.contains("| Showcase | 08:00, 11 Darkening, Year 1444 |"));
+        assert!(scenarios.contains("| World | 08:00, 11 Darkening, Year 1444 |"));
         assert!(scenarios.find("| Showcase").unwrap() < scenarios.find("| Arena").unwrap());
     }
 }

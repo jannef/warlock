@@ -26,7 +26,7 @@ pub struct ScenarioDef {
     pub vision: String,
     /// Light preset of the lantern the player carries (unlit at the start), if any.
     pub lantern: Option<String>,
-    /// Starting date `[year, month, day]` (all from 1); default `[1, 1, 1]`.
+    /// Starting date `[year, month, day]` (all from 1); default `[1444, 11, 11]`.
     #[serde(default = "default_date")]
     start_date: [u32; 3],
     /// Starting time of day, `hh:mm`; default `08:00`.
@@ -53,7 +53,7 @@ fn default_vision() -> String {
 }
 
 fn default_date() -> [u32; 3] {
-    [1, 1, 1]
+    [1444, 11, 11]
 }
 
 fn default_time() -> String {
@@ -91,9 +91,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn start_defaults_to_eight_on_the_first_day() {
+    fn start_defaults_to_eight_on_11_darkening_1444() {
         let def = ScenarioDef::parse("s", "s", "name = \"S\"\nstart_level = \"hub\"\n").unwrap();
-        assert_eq!(def.start.to_string(), "0001-01-01 08:00:00");
+        assert_eq!(def.start.to_string(), "1444-11-11 08:00:00");
     }
 
     #[test]
