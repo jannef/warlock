@@ -258,9 +258,10 @@ impl World {
                 heard: Vec::new(),
                 mind: Mind::default(),
                 inventory: Vec::new(),
+                stats: def.player_stats,
             },
         );
-        instantiate_level(&mut state, &start);
+        instantiate_level(&mut state, &content, &start);
         drop(start); // It may borrow `content`, which `assemble` takes.
         state
             .messages
@@ -1078,7 +1079,7 @@ impl World {
     fn visit(&mut self, id: &str, from: Option<&str>) -> Result<&LevelState, WorldError> {
         if !self.state.levels.contains_key(id) {
             let template = level_template(&self.content, self.state.seed, id, from)?;
-            instantiate_level(&mut self.state, &template);
+            instantiate_level(&mut self.state, &self.content, &template);
         }
         Ok(&self.state.levels[id])
     }
@@ -1171,8 +1172,8 @@ fn level_template<'a>(
         .map_err(|e| WorldError::Generation(id.to_string(), e.to_string()))
 }
 
-/// Creates the runtime state for a level and spawns its creatures.
-fn instantiate_level(state: &mut WorldState, template: &LevelTemplate) {
+/// Creates the runtime state for a level and spawns its creatures, each with its type's stats.
+fn instantiate_level(state: &mut WorldState, content: &Content, template: &LevelTemplate) {
     let id = template.id.as_str();
     state
         .levels
@@ -1196,6 +1197,7 @@ fn instantiate_level(state: &mut WorldState, template: &LevelTemplate) {
                 heard: Vec::new(),
                 mind: Mind::default(),
                 inventory: spawn.carry.clone(),
+                stats: content.creature(spawn.creature).stats,
             },
         );
     }
@@ -1217,6 +1219,8 @@ mod object_tests;
 mod overworld_tests;
 #[cfg(test)]
 mod speed_tests;
+#[cfg(test)]
+mod stats_tests;
 #[cfg(test)]
 mod sun_tests;
 #[cfg(test)]

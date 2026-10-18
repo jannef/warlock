@@ -16,6 +16,7 @@
 - [The overworld](overworld.md)
 - [Terrain](terrain.md)
 - [Objects and your pack](objects.md)
+- [Stats](stats.md)
 - [Creatures](creatures.md)
 - [Your lantern](lantern.md)
 - [Saving](saving.md)

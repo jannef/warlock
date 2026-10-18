@@ -1,10 +1,13 @@
 //! Scenarios (`assets/scenarios/*.toml`): a named starting setup for a run.
 
 use super::ContentError;
+use crate::stats::{Stat, Stats};
 use crate::time::{GameTime, HOUR, MINUTE, parse_time_of_day};
 use serde::Deserialize;
+use std::collections::BTreeMap;
 
-/// A scenario: which level a run starts on, the player's eyes and lantern, plus defaults.
+/// A scenario: which level a run starts on, the player's eyes, lantern, and stats, plus
+/// defaults.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ScenarioDef {
@@ -33,6 +36,16 @@ pub struct ScenarioDef {
     /// loader.
     #[serde(skip)]
     pub start: GameTime,
+    /// The player's scores by stat (spec §8 "Stats"); a missing one is average.
+    #[serde(default)]
+    stats: BTreeMap<Stat, u8>,
+    /// The player's potentials by stat; a missing one equals the score.
+    #[serde(default)]
+    potential: BTreeMap<Stat, u8>,
+    /// The player's stats at the start of a run, from `stats` and `potential`; filled in by the
+    /// loader.
+    #[serde(skip)]
+    pub player_stats: Stats,
 }
 
 fn default_vision() -> String {
@@ -68,6 +81,7 @@ impl ScenarioDef {
                 def.start_date
             ))
         })?;
+        def.player_stats = Stats::from_data(&def.stats, &def.potential).map_err(err)?;
         Ok(def)
     }
 }
@@ -98,6 +112,35 @@ mod tests {
             ("start_date = [0, 1, 1]", "not a date"),
             ("start_date = [1, 1, 31]", "not a date"),
             ("start_time = \"25:00\"", "start_time"),
+        ] {
+            let err = parse(bad).unwrap_err();
+            assert!(err.message.contains(why), "{bad}: {}", err.message);
+        }
+    }
+
+    #[test]
+    fn the_player_stats_are_read_and_validated() {
+        let parse = |extra: &str| {
+            ScenarioDef::parse(
+                "s",
+                "s",
+                &format!("name = \"S\"\nstart_level = \"hub\"\n{extra}"),
+            )
+        };
+        assert_eq!(parse("").unwrap().player_stats, Stats::default());
+        let def =
+            parse("stats = { dexterity = 14 }\npotential = { dexterity = 17, presence = 12 }")
+                .unwrap();
+        let stats = def.player_stats;
+        assert_eq!(stats.score(Stat::Dexterity), 14);
+        assert_eq!(stats.potential(Stat::Dexterity), 17);
+        assert_eq!(stats.score(Stat::Presence), 10);
+        assert_eq!(stats.potential(Stat::Presence), 12);
+        assert_eq!(stats.potential(Stat::Strength), 10);
+        for (bad, why) in [
+            ("stats = { strength = 0 }", "strength 0 is out of range"),
+            ("potential = { willpower = 9 }", "below its score"),
+            ("stats = { luck = 12 }", "unknown stat `luck`"),
         ] {
             let err = parse(bad).unwrap_err();
             assert!(err.message.contains(why), "{bad}: {}", err.message);

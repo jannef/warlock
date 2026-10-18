@@ -30,6 +30,10 @@ Build the engine and framework, not the game. Everything built is production qua
   deterministic AI whose attacks are intents only (§8 "Creature behavior")
 - Pickable objects (glyph, color, material, weight), inventory, and creature weight (M11)
 - Moons with phases and moonlight, weather starting with rain (M12)
+- Stats (M14): Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
+  D&D, with D&D 3.5 modifiers and ADOM-like potentials that the player never sees; every actor
+  has them, and the player sees their own scores on a character screen (§8 "Stats"). No rule
+  uses them yet, and no other D&D concept comes with them
 - Save and resume an unfinished run
 - Keyboard controls with an in-game controls reference
 - Development interface (§9)
@@ -37,8 +41,9 @@ Build the engine and framework, not the game. Everything built is production qua
   (rooms and corridors, caves) with hand-made vaults, joined to the hand-authored levels by stairs
 - An overworld with travel time, locations, local areas, and day and night (M9)
 
-**Out of scope for now**: combat resolution (attacks are announced, nothing is damaged), statistics,
-item effects, character creation, audio, mouse input, infravision, localization.
+**Out of scope for now**: combat resolution (attacks are announced, nothing is damaged), rules
+that use stats (ability checks, saving throws, hit points, carrying capacity, training), item
+effects, character creation, audio, mouse input, infravision, localization.
 
 Vision types are in scope even though there are no other mechanics yet: they are part of perception,
 and the light data model must carry them from the start.
@@ -594,8 +599,8 @@ rate or animation.
 - Symbol commands (`<`, `>`, `?`) are bound by **logical key**, so they work on non-US layouts.
 - Bindings live in the settings file. The `?` help (the controls list, read-only) is generated from
   the binding table, so it is always accurate.
-- **Screens**: the main menu, New run, pause menu, Settings, Controls, help, the inventory, and
-  choosing what to pick up or drop are modal screens on one stack. Opening a screen puts it on top; Esc or Back closes it and returns to the screen
+- **Screens**: the main menu, New run, pause menu, Settings, Controls, help, the inventory, the
+  character screen, and choosing what to pick up or drop are modal screens on one stack. Opening a screen puts it on top; Esc or Back closes it and returns to the screen
   below as it was left. While any screen is open it receives every key press, the run (if any)
   stays visible beneath it, and no game time passes. Prompts in the message line (a direction
   to open or close, how long to rest, look mode) are not screens.
@@ -614,8 +619,9 @@ rate or animation.
   is named, so the table never holds a conflict. Esc (cancel) is fixed. Delete resets a command,
   "Reset all keys" resets everything.
 - First-phase commands: move, wait, open/close door, ascend/descend, light/douse lantern (`L`),
-  pick up (`,` or `g`), drop (`d`), inventory (`i`), rest (`R`), look, help, save and quit (`Q`).
-  Free actions (look, help, the inventory, menus, vision switch) do not advance time.
+  pick up (`,` or `g`), drop (`d`), inventory (`i`), character (`@`), rest (`R`), look, help,
+  save and quit (`Q`). Free actions (look, help, the inventory, the character screen, menus,
+  vision switch) do not advance time.
 - **Objects** (M11) lie in piles on cells, the top first: the map shows the top object's glyph
   (§4.2), and dropped objects go on top. Stepping onto a pile says what lies there: `You see here
   a dagger.` for one stack, `There are several objects here.` for more. Look mode names what lies
@@ -634,6 +640,11 @@ rate or animation.
   they were picked up (at most 26; a pile with more stacks keeps what does not fit), each with its
   glyph, name, and weight, then what the player carries and their weight (their own plus what
   they carry). Read-only; `i` or Esc closes it.
+- **Character** (`@`): who the player is, as far as they know it: their name (the player
+  creature's, "You"), their score in each stat (§8 "Stats") in display order with its
+  abbreviation and full name (`St  Strength  12`), and their weight (their own plus what they
+  carry). Never a modifier or a potential, which the player does not know. Read-only; `@`, Enter,
+  or Esc closes it. The status bar does not show stats: it is full at common window sizes.
 - **Weight**: every object and every creature (the player included) has a weight in grams. An
   actor weighs its creature's base weight plus everything it carries; the rules know every
   actor's weight (no rule uses it yet; footstep noise, §5 "Hearing", may), but the player is shown
@@ -744,7 +755,13 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   sight), and `opens_doors` (default false). The kobold: darkvision, sight 10, melee, opens doors;
   the kobold archer: darkvision, sight 12, ranged 7; the kobold shaman (speed 800): darkvision,
   caster 5; the giant rat: low-light, sight 8; the cave bat: darkvision, sight 8; the cave
-  beetle (1200): darkvision, sight 6; the deer: normal, sight 12. Creature particle emitters may
+  beetle (1200): darkvision, sight 6; the deer: normal, sight 12. Its stats (§8 "Stats"; never
+  shown): `stats`, its scores by stat id (`stats = { strength = 9, dexterity = 13 }`; ids
+  `strength`, `dexterity`, `toughness`, `intelligence`, `willpower`, `presence`; 1 to 40, a
+  missing one 10), and `potential`, the same for its potentials (1 to 40, not below the score;
+  a missing one equals the score). The player creature has none: the scenario gives the
+  player's. The test creatures have D&D-like scores (the kobold St 9 Dx 13 To 10 In 10 Wi 9
+  Pr 8, the giant rat Dx 17 In 1, the cave bat St 1, the shaman Wi 14). Creature particle emitters may
   fire `on = "attack"`: a burst at the target of each attack the player sees (the shaman's
   violet sparkle). Terrain has a `move_cost`: the time to step onto it in percent of the
   level's turn (default 100; still and running water 200), a `bounce` tint for the light it
@@ -841,8 +858,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   a way in, and their walkable cells are reachable from the edge. Dungeon generators use only
   dungeon vaults, local areas only outdoor ones.
 - **Scenarios** (`assets/scenarios/*.toml`): level set, start position, vision profile, lantern,
-  options, and when the run starts: `start_date = [year, month, day]` (all from 1; default
-  `[1, 1, 1]`) and `start_time = "hh:mm"` (default `"08:00"`).
+  options, when the run starts: `start_date = [year, month, day]` (all from 1; default
+  `[1, 1, 1]`) and `start_time = "hh:mm"` (default `"08:00"`), and the player's stats: `stats`
+  and `potential` as for creature types (default 10 each, the potential the score). The
+  showcase's player has St 12 Dx 14 To 11 In 13 Wi 9 Pr 10 (potentials 15, 17, 14, 16, 13, 12).
 - **Saves**: suspend-only. One save per run, written on quit and by periodic autosave; loading
   continues the run. Dev builds add named snapshots. Format: a versioned envelope (magic, format
   version, game version) around a JSON payload, gzip-compressed with a pure-Rust backend, written
@@ -858,7 +877,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   acted on, the sounds the player perceived lately (§5 "Hearing"; saves without them load with
   none), what every actor carries, and what each creature has in mind (where it last saw a
   hostile or heard a noise to look into, and the post it left; §8 "Creature behavior"; saves
-  without it load with every creature calm; format version 7), and a dev weather override while
+  without it load with every creature calm; format version 7), every actor's stats, scores and
+  potentials (§8 "Stats"; format version 8), and a dev weather override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
   platform data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
@@ -880,7 +900,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 ```
 crates/
   warlock-core/   plain Rust, no Bevy: map, actors, actions, turns, time, fov, light,
-                  perception, rng, levels, mapgen, save
+                  perception, rng, levels, mapgen, stats, save
   warlock-cli/    no Bevy: scenarios, replay, dump, verify
   warlock/        Bevy app: render, input, UI, effects, platform (ECS lives here)
 xtask/            screenshot capture, golden-image diff, CI helpers
@@ -891,8 +911,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   wall-clock time. It builds and tests in seconds and is insulated from Bevy upgrades.
 - **Data layout**: dense grids for terrain, light, and memory; a simple entity store with stable ids
   for actors; objects as stacks (object id and count) in sparse piles by position, remembered
-  piles beside them, and an inventory on each actor. ECS is used in the presentation layer, where
-  it helps with effects, particles, and animation.
+  piles beside them, and an inventory and stats on each actor. ECS is used in the presentation
+  layer, where it helps with effects, particles, and animation.
 - **Perception snapshot**: after each turn, the core produces what the player perceives. The
   renderer, UI, and dumps read only this snapshot, so hidden information cannot leak by construction
   (a dev "reveal" mode excepted).
@@ -983,6 +1003,27 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   player sees both ends (or made the attack). The player moving into a hostile creature is a
   melee attack; into a neutral one it stops. What a creature has in mind (last seen, noise to
   look into, post) is part of the world state.
+- **Stats** (`warlock-core/src/stats.rs`; M14): six stats inspired by D&D, in display order
+  Strength (St), Dexterity (Dx), Toughness (To; D&D's Constitution), Intelligence (In),
+  Willpower (Wi; D&D's Wisdom), and Presence (Pr; D&D's Charisma). More will come (mostly
+  magic): the list is one typed definition in core (id, abbreviation, name per stat), and every
+  per-stat value is stored by stat, so a new stat is one entry there (plus a save format bump).
+  - **Scores** are integers, 10 the average and the default. Every actor has one in each stat:
+    a creature from its type, the player from the scenario (§7). There is no character creation.
+  - **Modifier**: as in D&D 3.5, `floor((score − 10) / 2)` (1 → −5, 8–9 → −1, 10–11 → 0,
+    12–13 → +1, 18 → +4; rounded down for scores below 10 and below 0 alike). It is a core API
+    for the rules (`stats::modifier`, `Stats::modifier`) and is **never shown**: not in the UI,
+    messages, look mode, player-facing dumps, or the wiki.
+  - **Potential** (ADOM-like): each stat's natural ceiling, the score it could grow towards.
+    Stored and saved, **hidden from the player** like the modifiers. Nothing raises a score
+    yet (training comes later).
+  - **What the player sees**: their own scores, on the character screen (§6) and in the
+    `stats` dump layer; the perception snapshot carries those and nothing else of stats
+    (`PerceptionView::own_scores`). A creature's stats are never shown; ground-truth dev dumps
+    (`actors`, the world state) show every actor's scores and potentials.
+  - **No rule uses stats yet**, and no other D&D concept comes with them: no ability checks,
+    saving throws, hit points from Toughness, or carrying capacity from Strength. Stats and
+    potentials are part of the world state (saved, covered by the state hash).
 - **Events to effects**: the core emits events (door opened, actor moved, attacked); the
   presentation layer turns them into animations: slides, a short lunge toward the target for a
   melee attack (motion), a shot glyph flying from shooter to target and a creature's `attack`
@@ -1031,13 +1072,16 @@ cargo xtask golden [--update]                             # compare golden scree
 - Dump layers: `view`, `fov`, `memory` (terrain and the top object of each known pile), `light`
   (perceived brightness of each visible cell as a digit, `0` dark to `9` fully lit or brighter),
   `sound` (the view with each heard sound at its rough place: `f` footsteps, `o` a door opening,
-  `c` a door closing, `x` fighting, `b` a bowstring, `m` chanting, upper case when loud), and
-  `inventory` (what the player carries, by letter with weights, then what they carry and weigh)
-  are built from the perception snapshot only;
+  `c` a door closing, `x` fighting, `b` a bowstring, `m` chanting, upper case when loud),
+  `inventory` (what the player carries, by letter with weights, then what they carry and weigh),
+  and `stats` (the player's own scores, `Strength 12`) are built from the perception snapshot
+  only;
   `truth` (terrain, objects, and creatures) and `actors` (every actor on the level with its
-  weight, base plus carried, and what it carries) show ground truth and are dev-only. JSON dumps
+  weight, base plus carried, what it carries, and its stats as score/potential, `St 12/15`) show
+  ground truth and are dev-only. JSON dumps
   carry turn, game time (seconds and calendar fields), level, viewer, the weather (under the open
-  sky; else null), seen actors, heard sounds, the player's inventory and weight, recent messages,
+  sky; else null), seen actors, heard sounds, the player's inventory, weight, and scores
+  (`stats`, by stat id), recent messages,
   and optionally the full world state; the ASCII header line has the turn, the time
   (`0001-01-01 08:00:00`), level, viewer, the weather under the open sky (`weather rain`), and
   hash.
@@ -1127,6 +1171,9 @@ Each milestone ships a playable build.
 - **M12 Moons and weather** — configurable moons (one by default: 30-day period, faint purple
   light) with phases, paths, and shadows; weather starting with rain; the full calendar date and
   moon phase in the status bar.
+- **M14 Stats** — D&D-inspired stats (Strength, Dexterity, Toughness, Intelligence, Willpower,
+  Presence) on every actor, with hidden D&D 3.5 modifiers and hidden ADOM-like potentials; the
+  player's own scores on a character screen (`@`).
 
 ## 13. GitHub workflow
 

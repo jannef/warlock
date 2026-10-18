@@ -3,10 +3,10 @@
 //! The wiki (`wiki/`, built with mdBook) is written by hand except for facts that live in data
 //! (month names, moons, weather, terrain, vision profiles, light presets, creatures, factions,
 //! objects and materials, scenarios) and a few constants of the rules (sight radii, the pack's
-//! size). Those are written
-//! to `wiki/src/generated/*.md` from the built-in content, and the pages
-//! pull them in with `{{#include generated/NAME.md}}`, so they cannot drift. Output is
-//! deterministic. `--check` fails when a file is stale; `--build` also runs `mdbook build wiki`.
+//! size, the stats' names). Those are written to `wiki/src/generated/*.md` from the built-in
+//! content, and the pages pull them in with `{{#include generated/NAME.md}}`, so they cannot
+//! drift. Output is deterministic. `--check` fails when a file is stale; `--build` also runs
+//! `mdbook build wiki`.
 
 use crate::workspace_root;
 use std::collections::BTreeSet;
@@ -22,6 +22,7 @@ use warlock_core::daylight::{
 use warlock_core::light::{Light, Moon, Sky, Sun};
 use warlock_core::object::{INVENTORY_SLOTS, format_weight};
 use warlock_core::perception::VIEW_RADIUS;
+use warlock_core::stats::{AVERAGE, Stat};
 use warlock_core::time::{DAY, Duration, GameTime};
 use warlock_core::weather::{Clouds, Conditions, Weather};
 
@@ -124,6 +125,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("materials.md".to_string(), materials(content)),
         ("pack.md".to_string(), pack(content)),
         ("scenarios.md".to_string(), scenarios(content)),
+        ("stats.md".to_string(), stats()),
     ];
     for (_, text) in &mut files {
         *text = format!(
@@ -742,6 +744,17 @@ fn pack(content: &Content) -> String {
     )
 }
 
+/// The stats in the order the character screen lists them, with their abbreviations. Only the
+/// names: never a modifier or a potential, nor anyone's scores.
+fn stats() -> String {
+    let mut out = String::from("| Stat | Short |\n|---|:---:|\n");
+    for stat in Stat::ALL {
+        let _ = writeln!(out, "| {} | `{}` |", stat.name(), stat.abbrev());
+    }
+    let _ = writeln!(out, "\nA score of {AVERAGE} is average.");
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -777,6 +790,8 @@ mod tests {
         assert!(text("objects.md").contains("| Arrow | `/` | missile | wood | 30 g | yes |"));
         assert!(text("materials.md").contains("| Steel | daggers, short swords |"));
         assert!(text("pack.md").contains("| Your own weight | 70 kg |"));
+        assert!(text("stats.md").contains("| Strength | `St` |\n| Dexterity | `Dx` |"));
+        assert!(text("stats.md").contains("| Presence | `Pr` |"));
         // Every object glyph belongs to a class the objects page explains.
         for o in content.object_defs() {
             assert!(object_class(o.glyph).is_some(), "{}", o.id);

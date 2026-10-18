@@ -1,6 +1,6 @@
 //! The screen stack (spec §6): every modal screen — main menu, new run, pause, settings,
-//! controls, the `?` help, the inventory, and choosing what to pick up or drop — lives on one
-//! stack, bottom to top.
+//! controls, the `?` help, the inventory, the character screen, and choosing what to pick up or
+//! drop — lives on one stack, bottom to top.
 //!
 //! - **Open**: [`Screens::open`] is the one way to open a screen, by [`ScreenName`]: `?` and Esc
 //!   in play, screens opening sub-screens, the main menu at startup and after a run, and
@@ -17,6 +17,7 @@
 //! Screens are plain state machines: they take [`Press`]es and answer with a [`ScreenAction`],
 //! so they are testable without a window.
 
+use super::character_screen::CharacterScreen;
 use super::controls_screen::ControlsScreen;
 use super::menu::{MainMenu, Press};
 use super::motion::Motion;
@@ -51,6 +52,8 @@ pub enum ScreenName {
     Help,
     /// What the player carries and weighs (`i` in play).
     Inventory,
+    /// The player's name, stats, and weight (`@` in play).
+    Character,
     /// Choose what to pick up from the pile here (`,` or `g` where several objects lie).
     PickUp,
     /// Choose what to drop (`d` in play).
@@ -65,6 +68,7 @@ impl ScreenName {
             ScreenName::Pause
                 | ScreenName::Help
                 | ScreenName::Inventory
+                | ScreenName::Character
                 | ScreenName::PickUp
                 | ScreenName::Drop
         )
@@ -110,6 +114,7 @@ enum Screen {
     Controls(ControlsScreen),
     /// The inventory, or choosing what to pick up or drop.
     Objects(ObjectScreen),
+    Character(CharacterScreen),
 }
 
 impl Screen {
@@ -129,6 +134,7 @@ impl Screen {
             ScreenName::Controls => Screen::Controls(ControlsScreen::default()),
             ScreenName::Help => Screen::Controls(ControlsScreen::help()),
             ScreenName::Inventory => objects(ObjectList::Inventory),
+            ScreenName::Character => Screen::Character(CharacterScreen::new(run)),
             ScreenName::PickUp => objects(ObjectList::PickUp),
             ScreenName::Drop => objects(ObjectList::Drop),
         }
@@ -148,6 +154,7 @@ impl Screen {
                 ObjectList::PickUp => ScreenName::PickUp,
                 ObjectList::Drop => ScreenName::Drop,
             },
+            Screen::Character(_) => ScreenName::Character,
         }
     }
 }
@@ -206,6 +213,7 @@ impl ScreenStack {
             Some(Screen::Settings(screen)) => leave(screen.handle(press, settings)),
             Some(Screen::Controls(screen)) => leave(screen.handle(press, bindings)),
             Some(Screen::Objects(screen)) => screen.handle(press, bindings),
+            Some(Screen::Character(screen)) => screen.handle(press, bindings),
         };
         if action == ScreenAction::Stay {
             return action;
@@ -239,6 +247,7 @@ impl ScreenStack {
             Some(Screen::Settings(screen)) => screen.draw(console, settings),
             Some(Screen::Controls(screen)) => screen.draw(console, bindings),
             Some(Screen::Objects(screen)) => screen.draw(console, bindings),
+            Some(Screen::Character(screen)) => screen.draw(console, bindings),
         }
     }
 }
@@ -249,7 +258,8 @@ pub struct Screens<'w> {
     pub stack: ResMut<'w, ScreenStack>,
     content: Res<'w, GameContent>,
     store: Res<'w, SaveStore>,
-    /// The run, for screens that show what the player perceives (the inventory, a pile).
+    /// The run, for screens that show what the player perceives (the inventory, a pile, the
+    /// character screen).
     game: Option<Res<'w, Game>>,
 }
 
@@ -468,6 +478,8 @@ mod tests {
         assert_eq!(startup_screens(Some(Help), true), [Help]);
         assert_eq!(startup_screens(Some(Settings), true), [Pause, Settings]);
         assert_eq!(startup_screens(Some(Inventory), true), [Inventory]);
+        assert_eq!(startup_screens(Some(Character), true), [Character]);
+        assert_eq!(startup_screens(Some(Character), false), [Main]);
         assert_eq!(startup_screens(Some(PickUp), true), [PickUp]);
         assert_eq!(startup_screens(Some(Drop), false), [Main]);
     }
@@ -722,6 +734,22 @@ mod tests {
         frame(&mut app, &[d, ENTER]);
         assert_eq!(actions(&app).last(), Some(&Action::Drop(Letters::of([0]))));
         assert!(names(&app).is_empty());
+    }
+
+    #[test]
+    fn the_character_screen_opens_and_closes_on_at_and_takes_no_time() {
+        let mut app = app(true);
+        let at = (KeyCode::Digit2, "@");
+        frame(&mut app, &[at]);
+        assert_eq!(names(&app), [ScreenName::Character]);
+        // Presses go to the screen: no gameplay while it is open.
+        frame(&mut app, &[WAIT, (KeyCode::KeyK, "k")]);
+        assert_eq!(names(&app), [ScreenName::Character]);
+        frame(&mut app, &[at]);
+        assert!(names(&app).is_empty());
+        frame(&mut app, &[at, ESC]);
+        assert!(names(&app).is_empty(), "Esc closes it rather than pausing");
+        assert!(actions(&app).is_empty());
     }
 
     #[test]

@@ -19,6 +19,7 @@ authoritative: it is generated from your current key bindings.
 | Pick up | `,` or `g` |
 | Drop | `d` |
 | Inventory | `i` |
+| Character (your stats and weight) | `@` |
 | Rest | `R` |
 | Look around | `x` |
 | Show or hide the controls | `?` |
@@ -90,13 +91,18 @@ count; then it shortens the moon's phase to its picture, and only then drops it;
 then the year of the date, then the date. The weather, the time, and the name of the level stay
 longest. Parts come back as soon as there is room.
 
+## Character
+
+`@` shows your name, your [stats](stats.md), and your weight. It takes no time; press `@` or `Esc`
+to close it.
+
 ## Menus
 
 `Esc` during play (when no prompt is open) opens the pause menu: Resume, Settings, Controls, Save
 and quit to menu, and Quit, which saves too. The main menu, where the game opens, has Continue
 (when there is a saved run), New run, Settings, Controls, and Quit; see [Saving](saving.md) and
-[Settings](settings.md). While any menu or screen is open (including the inventory and the pick-up
-and drop screens), no game time passes.
+[Settings](settings.md). While any menu or screen is open (including the inventory, the character
+screen, and the pick-up and drop screens), no game time passes.
 
 ## Developer keys
 

@@ -38,6 +38,8 @@ pub enum KeyCommand {
     Drop,
     /// Show what the player carries and weighs (no time passes).
     Inventory,
+    /// Show the player's name, stats, and weight (no time passes).
+    Character,
     /// Ask how long to rest (an hour, until dawn, until dusk).
     Rest,
     /// Move a cursor over the map to read what is there (no time passes).
@@ -73,6 +75,7 @@ impl KeyCommand {
             KeyCommand::PickUp => "Pick up",
             KeyCommand::Drop => "Drop",
             KeyCommand::Inventory => "Inventory",
+            KeyCommand::Character => "Character",
             KeyCommand::Rest => "Rest",
             KeyCommand::Look => "Look around",
             KeyCommand::CycleVision => "Next vision profile (dev)",
@@ -175,6 +178,7 @@ impl Default for Bindings {
             (ch("g"), PickUp),
             (ch("d"), Drop),
             (ch("i"), Inventory),
+            (ch("@"), Character),
             (ch("R"), Rest),
             (ch("x"), Look),
             (ch("?"), Help),
@@ -414,6 +418,10 @@ impl Gameplay<'_> {
                 open = Some(ScreenName::Inventory);
                 InputMode::Normal
             }
+            (InputMode::Normal, KeyCommand::Character) => {
+                open = Some(ScreenName::Character);
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::CycleVision) => {
                 let view = game.world.perception();
                 let next = next_vision(view.content().vision_profiles(), &view.vision().id);
@@ -530,6 +538,7 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::PickUp), [",", "g"]);
         assert_eq!(keys(&b, KeyCommand::Drop), ["d"]);
         assert_eq!(keys(&b, KeyCommand::Inventory), ["i"]);
+        assert_eq!(keys(&b, KeyCommand::Character), ["@"]);
     }
 
     #[test]

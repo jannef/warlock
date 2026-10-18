@@ -23,7 +23,8 @@ const MAGIC: &str = "WARLOCK-SAVE";
 /// 5: actors carry scheduler energy (the speed system).
 /// 6: objects: piles and remembered piles in level states, inventories on actors.
 /// 7: creatures keep what they have in mind (`Actor::mind`: last seen, noise, post; the AI).
-pub const FORMAT_VERSION: u32 = 7;
+/// 8: actors have stats (`Actor::stats`: a score and a potential for every stat).
+pub const FORMAT_VERSION: u32 = 8;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 

@@ -643,6 +643,7 @@ fn search_the_last_seen_spot_then_go_back_and_patrol_on() {
                 post: Some(Pos::new(1, 1)),
             },
             inventory: Vec::new(),
+            stats: Default::default(),
         },
     );
     assert_ne!(player, rat);
