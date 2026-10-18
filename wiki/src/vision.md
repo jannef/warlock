@@ -14,9 +14,10 @@ all: they do not see it, and it does not light anything for them.
 
 ## The four types
 
-- **Normal** eyes need real light. Where there is none, you see nothing but yourself.
+- **Normal** eyes need real light. Where there is none, you see nothing but yourself. A full moon
+  high in the sky is just enough to make out open ground.
 - **Low-light** eyes need only about a third as much light as normal eyes, so they can see by the
-  faint glow of fungus where normal eyes cannot.
+  faint glow of fungus where normal eyes cannot, and by a half moon.
 - **Darkvision** needs the same light as normal eyes, but also sees everything within its radius,
   lit or not. Cells seen only that way are drawn as a faint monochrome glow that fades out toward
   the edge of the radius. The darker and farther a cell is, the less color it keeps.

@@ -19,7 +19,7 @@ explore, and watch the day pass, but there is no combat, no character statistics
   explain how time passes.
 - [Light](light.md), [Sight and memory](sight.md), and [Vision types](vision.md) explain what you
   can see and why.
-- [Sun, sky, and night](sun.md) and [The overworld](overworld.md) explain the outdoors.
+- [Sun, moon, and sky](sun.md) and [The overworld](overworld.md) explain the outdoors.
 - [Terrain](terrain.md), [Creatures](creatures.md), [Your lantern](lantern.md), and
   [Saving](saving.md) cover the rest.
 

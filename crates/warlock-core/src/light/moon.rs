@@ -73,20 +73,13 @@ impl Moon {
         let second = (u64::from(time.second_of_day()) + DAY - lag) % DAY;
         let path = Sun::at_minute((second / MINUTE) as u32);
         let up = path.shadow != [0, 0];
-        let night = (-i32::from(sun.elevation)).clamp(0, DUSK_DEPTH) as u128;
-        let size = u128::from(def.size);
-        let num = if up {
-            u128::from(lit_fraction(phase)) * u128::from(rise(path.elevation)) * night * size * size
+        let night = (-i32::from(sun.elevation)).clamp(0, DUSK_DEPTH) as u32;
+        let (lit, rise) = if up {
+            (lit_fraction(phase), rise(path.elevation))
         } else {
-            0
+            (0, 0)
         };
-        let standard = u128::from(STANDARD_SIZE);
-        let den = u128::from(PHASE_ONE) * 1000 * DUSK_DEPTH as u128 * standard * standard;
-        let scale = |light: Light| {
-            let [r, g, b, uv]: [u16; 4] = light.into();
-            let c = |c: u16| u16::try_from(u128::from(c) * num / den).unwrap_or(u16::MAX);
-            Light::new(c(r), c(g), c(b), c(uv))
-        };
+        let scale = |light| scale(light, def.size, lit, rise, night);
         Moon {
             index,
             phase,
@@ -95,6 +88,13 @@ impl Moon {
             light: scale(def.color),
             sky: scale(def.sky),
         }
+    }
+
+    /// The light of the moon `def` when full and high in the night sky, direct and sky light
+    /// together: the most it ever gives.
+    pub fn brightest(def: &MoonDef) -> Light {
+        let full = |light| scale(light, def.size, PHASE_ONE, 1000, DUSK_DEPTH as u32);
+        full(def.color).saturating_add(full(def.sky))
     }
 
     /// Whether the moon is above the horizon (it may still give no light: new, or by day).
@@ -122,6 +122,19 @@ impl Moon {
     pub fn shadow_steps(&self, height: u8) -> ShadowSteps {
         ShadowSteps::new(self.shadow, height)
     }
+}
+
+/// `light` scaled by a moon's `size` (percent of [`STANDARD_SIZE`], by area), its `lit` fraction
+/// (1/[`PHASE_ONE`]), its `rise` (per mille, [`RISE`]), and the `night` (the sun's depth below the
+/// horizon in tenths of a degree, up to [`DUSK_DEPTH`]).
+fn scale(light: Light, size: u16, lit: u32, rise: u32, night: u32) -> Light {
+    let size = u128::from(size);
+    let num = u128::from(lit) * u128::from(rise) * u128::from(night) * size * size;
+    let standard = u128::from(STANDARD_SIZE);
+    let den = u128::from(PHASE_ONE) * 1000 * DUSK_DEPTH as u128 * standard * standard;
+    let [r, g, b, uv]: [u16; 4] = light.into();
+    let c = |c: u16| u16::try_from(u128::from(c) * num / den).unwrap_or(u16::MAX);
+    Light::new(c(r), c(g), c(b), c(uv))
 }
 
 /// The lit fraction of a moon's disc at `phase` (1/[`PHASE_ONE`] of its cycle), in 1/65 536:
@@ -336,6 +349,10 @@ mod tests {
         assert_eq!(midnight.elevation, 600, "as high as the sun at noon");
         assert_eq!(midnight.light, def.color, "all of its light");
         assert_eq!(midnight.sky, def.sky);
+        assert_eq!(
+            Moon::brightest(&def),
+            midnight.light.saturating_add(midnight.sky)
+        );
         assert_eq!(midnight.shadow, Sun::at(at(1, 12, 0)).shadow);
         // In the evening it stands in the east, so shadows point west; in the morning east.
         let evening = moon_at(&def, at(16, 21, 0));

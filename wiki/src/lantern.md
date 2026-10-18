@@ -5,8 +5,8 @@ lantern starts unlit.
 
 A lit lantern is a [light source](light.md) that moves with you. It reaches 5 cells and gives a
 warm light. It burns calmly: it flickers a little, but less than a torch. What it lights is what
-your [vision](vision.md) can see, so it is the answer to night outdoors, where there is no other
-light, and to dark dungeons. In daylight you do not need it.
+your [vision](vision.md) can see, so it is the answer to night outdoors, where the moon gives
+little light or none, and to dark dungeons. In daylight you do not need it.
 
 There is no fuel yet: the lantern burns as long as you leave it lit.
 

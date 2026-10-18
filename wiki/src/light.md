@@ -13,7 +13,7 @@ surroundings red, and a surface lit only by red light shows only red.
 A cell's light is the sum of:
 
 - the level's **ambient** light (zero in most dungeons, so they are dark),
-- **sunlight and sky light**, outdoors by day (see [Sun, sky, and night](sun.md)),
+- **sunlight, moonlight, and sky light** under the open sky (see [Sun, moon, and sky](sun.md)),
 - every **light source** that reaches the cell, and
 - a little **bounced** light.
 
