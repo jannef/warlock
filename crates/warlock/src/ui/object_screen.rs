@@ -116,7 +116,7 @@ impl ObjectScreen {
             None => (&[], Weight::default()),
         };
         let shown = |i: usize| match (list, view) {
-            (ObjectList::Throw, Some(view)) => view.throw_range(i).is_some(),
+            (ObjectList::Throw, Some(view)) => view.is_throwing_weapon(i),
             _ => true,
         };
         let items: Vec<usize> = (0..stacks.len().min(Letters::COUNT))
@@ -300,6 +300,9 @@ impl ObjectScreen {
             self.list.width(),
             count as i32 + extra,
         );
+        if self.list == ObjectList::Inventory {
+            super::info_tabs::draw_tabs(console, &panel, bindings, super::ScreenName::Inventory);
+        }
         let visible = (panel.body_rows() - (extra - 4)).max(1) as usize;
         let first = if read_only {
             self.cursor
@@ -471,6 +474,7 @@ mod tests {
             binding: Some(KeyBinding::Code(KeyCode::Space)),
             repeat: false,
             text: None,
+            shift: false,
         };
         screen.handle(&space, &b);
         assert_eq!(

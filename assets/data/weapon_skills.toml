@@ -1,0 +1,282 @@
+# Weapon skills (spec §8 "Weapon skills"): the categories of weapons the player and creatures
+# train with, ADOM-like, and how they default to each other, after The Riddle of Steel.
+#
+# Ranks go from 0 (untrained: no benefits, but marks still count) to 10. The player sees their
+# ranks and a bar of their marks toward the next one (the weapon skills screen, `W`); the numbers
+# here are rules and never shown in the game.
+#
+# Marks (ADOM-like): every use of a skill earns `attempt` marks (an attack, hit or miss), a
+# success `hit` more (a hit; for shield blocking, a blow the shield blocked), scaled by
+# 100 + per_level x (the opponent's level - the rank) percent, kept within 0 and `most`, and
+# rounded to the nearest mark (halves up): fewer against weak opponents and as the rank rises,
+# more against strong ones. A rank is gained when the marks reach what its curve asks for the
+# next rank; the marks left over count toward the one after.
+[marks]
+attempt = 1
+hit = 2
+per_level = 20
+most = 200
+
+# The marks each rank asks for, ranks 1 to 10: exponential. Missile weapons train a bit quicker.
+[curves]
+melee = [15, 30, 60, 120, 240, 480, 960, 1920, 3840, 7680]
+missile = [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120]
+
+# Every skill defines:
+#   id      stable name: weapons name it (`category` in objects.toml), races, classes, and
+#           creatures give ranks in it, saves record ranks by its place in this file
+#   name    as the weapon skills screen lists it
+#   phrase  what a rank gained says of it: "You feel more skilled <phrase>."
+#   role    what uses it:
+#             melee        weapons wielded in a hand name it; their blows train it, and its
+#                          `parry` defends while one is wielded
+#             launcher     missile weapons name it; their shots train it
+#             thrown       every throw trains it (things only thrown, a rock, name it too)
+#             unarmed      bare hands and natural attacks
+#             shield_block a blow blocked by a held shield trains it (a miss credited to the
+#                          Shield category of Defence); its `shield` adds to that category
+#             shield_bash  bashing with a held shield (an ability; spec §6 "Abilities")
+#           unarmed, thrown, shield_block, and shield_bash may have one skill each
+#   curve   the curve above it trains along
+# and what each rank gives, as 11 numbers for ranks 0 to 10 (rank 0 gives nothing; a higher rank
+# never less; a list left out is all 0):
+#   to_hit  added to the to-hit of attacks with it
+#   damage  added to every roll of their damage dice
+#   threat  how many natural rolls lower a critical threatens from (19-24 instead of 20-24)
+#   speed   percent off the attack's cost (melee, shoot, throw; actions.toml)
+#   parry   melee: added to the wielded weapon's Parry bonus to Defence
+#   reload  launcher: percent off the cost of reloading (a crossbow)
+#   shield  shield_block: added to the held shield's Shield bonus to Defence
+# Rank 10 is where later active or triggered abilities will hang.
+
+# Melee
+[[skill]]
+id = "daggers"
+name = "Daggers and knives"
+phrase = "with daggers"
+role = "melee"
+curve = "melee"
+to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]
+damage = [0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 3]
+threat = [0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2]
+speed = [0, 0, 0, 0, 0, 5, 5, 10, 10, 15, 20]
+parry = [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2]
+
+[[skill]]
+id = "short_blades"
+name = "Short blades"
+phrase = "with short blades"
+role = "melee"
+curve = "melee"
+to_hit = [0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 5]
+damage = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
+threat = [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1]
+speed = [0, 0, 0, 0, 0, 0, 0, 5, 5, 10, 10]
+parry = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
+
+[[skill]]
+id = "long_blades"
+name = "Long blades"
+phrase = "with long blades"
+role = "melee"
+curve = "melee"
+to_hit = [0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5]
+damage = [0, 0, 1, 1, 2, 2, 2, 3, 3, 4, 4]
+threat = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+parry = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4]
+
+[[skill]]
+id = "great_blades"
+name = "Great blades"
+phrase = "with great blades"
+role = "melee"
+curve = "melee"
+to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4]
+damage = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
+threat = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1]
+parry = [0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2]
+
+[[skill]]
+id = "axes"
+name = "Axes"
+phrase = "with axes"
+role = "melee"
+curve = "melee"
+to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4]
+damage = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]
+
+[[skill]]
+id = "maces"
+name = "Maces and clubs"
+phrase = "with maces and clubs"
+role = "melee"
+curve = "melee"
+to_hit = [0, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4]
+damage = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5]
+
+[[skill]]
+id = "spears"
+name = "Spears"
+phrase = "with spears"
+role = "melee"
+curve = "melee"
+to_hit = [0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 5]
+damage = [0, 0, 1, 1, 1, 2, 2, 3, 3, 3, 4]
+parry = [0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2]
+
+[[skill]]
+id = "polearms"
+name = "Polearms"
+phrase = "with polearms"
+role = "melee"
+curve = "melee"
+to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4]
+damage = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]
+
+[[skill]]
+id = "staves"
+name = "Staves"
+phrase = "with staves"
+role = "melee"
+curve = "melee"
+to_hit = [0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4]
+damage = [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3]
+parry = [0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4]
+
+[[skill]]
+id = "unarmed"
+name = "Unarmed"
+phrase = "at fighting unarmed"
+role = "unarmed"
+curve = "melee"
+to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]
+damage = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5]
+speed = [0, 0, 0, 0, 0, 5, 5, 10, 10, 15, 15]
+
+# Missile and thrown
+[[skill]]
+id = "bows"
+name = "Bows"
+phrase = "with bows"
+role = "launcher"
+curve = "missile"
+to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]
+damage = [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3]
+threat = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+speed = [0, 0, 0, 0, 0, 0, 5, 5, 10, 10, 15]
+
+[[skill]]
+id = "crossbows"
+name = "Crossbows"
+phrase = "with crossbows"
+role = "launcher"
+curve = "missile"
+to_hit = [0, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4]
+damage = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
+reload = [0, 0, 10, 10, 20, 20, 30, 30, 40, 40, 50]
+
+[[skill]]
+id = "slings"
+name = "Slings"
+phrase = "with slings"
+role = "launcher"
+curve = "missile"
+to_hit = [0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 5]
+damage = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4]
+speed = [0, 0, 0, 0, 0, 5, 5, 5, 10, 10, 10]
+
+[[skill]]
+id = "thrown"
+name = "Thrown weapons"
+phrase = "at throwing"
+role = "thrown"
+curve = "missile"
+to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]
+damage = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
+speed = [0, 0, 0, 0, 0, 0, 5, 5, 10, 10, 15]
+
+# Shields
+[[skill]]
+id = "shield_block"
+name = "Shield blocking"
+phrase = "at blocking with a shield"
+role = "shield_block"
+curve = "melee"
+shield = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4]
+
+[[skill]]
+id = "shield_bash"
+name = "Shield bashing"
+phrase = "at bashing with a shield"
+role = "shield_bash"
+curve = "melee"
+to_hit = [0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5]
+damage = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4]
+
+# Defaults (The Riddle of Steel): skill with one weapon carries over to related ones, less a
+# penalty, both ways. When a rank is gained in A, every B with rank(A) - penalty > rank(B) rises to
+# rank(A) - penalty, and its marks start again from 0. Long blades 8 gives short blades 6.
+# Skills not listed here are unrelated: no default.
+[[default]]
+between = ["long_blades", "short_blades"]
+penalty = 2
+
+[[default]]
+between = ["long_blades", "great_blades"]
+penalty = 2
+
+[[default]]
+between = ["short_blades", "daggers"]
+penalty = 2
+
+[[default]]
+between = ["long_blades", "daggers"]
+penalty = 4
+
+[[default]]
+between = ["short_blades", "thrown"]
+penalty = 4
+
+[[default]]
+between = ["daggers", "thrown"]
+penalty = 2
+
+[[default]]
+between = ["axes", "maces"]
+penalty = 2
+
+[[default]]
+between = ["axes", "polearms"]
+penalty = 3
+
+[[default]]
+between = ["maces", "staves"]
+penalty = 3
+
+[[default]]
+between = ["spears", "polearms"]
+penalty = 2
+
+[[default]]
+between = ["spears", "staves"]
+penalty = 3
+
+[[default]]
+between = ["spears", "thrown"]
+penalty = 4
+
+[[default]]
+between = ["polearms", "great_blades"]
+penalty = 4
+
+[[default]]
+between = ["bows", "crossbows"]
+penalty = 4
+
+[[default]]
+between = ["slings", "thrown"]
+penalty = 3
+
+[[default]]
+between = ["shield_block", "shield_bash"]
+penalty = 3

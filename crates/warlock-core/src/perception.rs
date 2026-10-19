@@ -33,6 +33,11 @@
 //! [`Moon`]), and the **sky** lights every cell that is not roofed. Ambient plus sky plus bounce
 //! is the cell's *base light*: steady, and not tied to one source.
 //!
+//! A **special room** (spec §7 "Special rooms") changes the light inside it: a shadowed room
+//! keeps only part of every bit of it (base light and each source's contribution alike, so they
+//! still add up), and a sanctuary's glow adds to the base light like ambient light (on walls
+//! through the wall-face rule, from the room's side only). Creature sight finds the same light.
+//!
 //! Opaque cells follow two extra rules:
 //! - **Wall faces**: an opaque cell is lit by a source as a transparent cell at its own distance
 //!   would be, but only if the viewer sees a face the source lights (an adjacent visible
@@ -47,12 +52,13 @@
 //! is not visible are perceived with their kind, volume, and a rough place (a cell the player
 //! does not see, near the source); never with who made them.
 
+use crate::ability::Ability;
 use crate::burden::{self, Load};
 use crate::character::Character;
 use crate::combat::Health;
 use crate::content::{
-    Content, CreatureId, FactionId, Flow, LevelKind, LightId, ObjectId, SlotId, Stance, TerrainId,
-    VisionProfile,
+    CombatStance, Content, CreatureId, FactionId, Flow, LevelKind, LightId, ObjectId,
+    RoomEffectDef, SlotId, Stance, TerrainId, VisionProfile,
 };
 use crate::daylight;
 use crate::equipment::Equipment;
@@ -68,6 +74,7 @@ use crate::object::{Stack, Weight};
 use crate::skills::{self, SkillId};
 use crate::stats::PerStat;
 use crate::time::GameTime;
+use crate::weapon_skills::WeaponSkills;
 use crate::weather::Weather;
 use crate::world::{Actor, ActorId, ActorKind, Death, LevelState, WorldState};
 use serde::Serialize;
@@ -340,18 +347,23 @@ impl Perception {
             let beams = beams.iter().map(|(_, _, s)| s.cells.as_slice());
             Bounce::compute(area, masks.chain(beams), is_opaque, tint)
         });
-        // Steady light on a transparent cell beyond the ambient light: sky and bounce.
+        // Steady light on a transparent cell beyond the ambient light: sky, bounce, and a special
+        // room's glow (a sanctuary's).
         let indirect = |p: Pos| {
             let bounce = bounce.as_ref().map_or(Light::DARK, |b| b.at(p));
+            let bounce = bounce.saturating_add(eye.perceive(level.room_glow(content, p)));
             if !glow.is_dark() && exposed(p) {
                 bounce.saturating_add(glow)
             } else {
                 bounce
             }
         };
+        // A shadowed room keeps only part of every bit of a cell's light: its base light and each
+        // source's contribution alike, so they still add up to the whole.
+        let shade = |p: Pos, light: Light| level.room_shade(content, p, light);
         let mut base = Grid::new(width, height, Light::DARK);
         for &p in &los_cells {
-            base[p] = ambient.saturating_add(indirect(p));
+            base[p] = shade(p, ambient.saturating_add(indirect(p)));
         }
 
         // Light on cells in line of sight: base light plus every source reaching them, the sun
@@ -364,12 +376,12 @@ impl Perception {
                     pos: source.pos,
                     preset: source.preset,
                 };
-                let cells = lit_in_sight(&mask.cells, &los, |l| eye.perceive(l));
+                let cells = lit_in_sight(&mask.cells, &los, |q, l| shade(q, eye.perceive(l)));
                 (source.key, emitter, cells)
             })
             .collect();
         for (key, emitter, beam) in &beams {
-            let cells = lit_in_sight(&beam.cells, &los, |l| eye.perceive(l));
+            let cells = lit_in_sight(&beam.cells, &los, |q, l| shade(q, eye.perceive(l)));
             lit.push((*key, *emitter, cells));
         }
         for (_, _, cells) in &lit {
@@ -421,18 +433,21 @@ impl Perception {
                     .into_iter()
                     .filter(|q| is_seen(*q) && !is_opaque(*q))
                     .fold(Light::DARK, |acc, q| acc.max(indirect(q)));
-                base[w] = ambient.saturating_add(from_neighbors);
+                base[w] = shade(w, ambient.saturating_add(from_neighbors));
                 light[w] = base[w];
             }
         }
-        let light_at = |key: u64, emitter: Emitter, w: Pos| match emitter {
-            Emitter::Point { pos, preset } => {
-                let preset = content.light(preset);
-                eye.perceive(falloff(preset.color, preset.radius.max(0), w.dist2(pos)))
-            }
-            Emitter::Sun(_) | Emitter::Moon(_) => (beams.iter())
-                .find(|(k, _, _)| *k == key)
-                .map_or(Light::DARK, |(_, _, beam)| eye.perceive(beam.at(w))),
+        let light_at = |key: u64, emitter: Emitter, w: Pos| {
+            let light = match emitter {
+                Emitter::Point { pos, preset } => {
+                    let preset = content.light(preset);
+                    falloff(preset.color, preset.radius.max(0), w.dist2(pos))
+                }
+                Emitter::Sun(_) | Emitter::Moon(_) => (beams.iter())
+                    .find(|(k, _, _)| *k == key)
+                    .map_or(Light::DARK, |(_, _, beam)| beam.at(w)),
+            };
+            shade(w, eye.perceive(light))
         };
         let lit: Vec<_> = lit
             .into_iter()
@@ -623,6 +638,27 @@ impl<'a> PerceptionView<'a> {
         self.content.level(level)?.region_at(at)
     }
 
+    /// The special room at `p` (spec §7 "Special rooms"), if the player knows it: they have been
+    /// inside it, and `p` is a cell they see or remember.
+    pub fn room(&self, p: Pos) -> Option<&'a RoomEffectDef> {
+        if matches!(self.cell(p), CellView::Unknown) {
+            return None;
+        }
+        let room = self.level.room_at(p).filter(|r| r.entered)?;
+        Some(self.content.room_effect(room.effect))
+    }
+
+    /// The percent of all light a special room keeps at a visible cell (a shadowed room's
+    /// darkness, which the player sees; 100 elsewhere), for light that presentation adds of its
+    /// own (a burning missile in flight); `None` for cells not in view.
+    pub fn light_kept(&self, p: Pos) -> Option<u16> {
+        if !self.snapshot.is_visible(p) {
+            return None;
+        }
+        let room = self.level.room_effect_at(self.content, p);
+        Some(room.map_or(100, |effect| effect.light))
+    }
+
     /// Where the stairs or location at `p` lead, by name — only for cells the player sees or
     /// remembers (the staircase itself is known; its destination is public knowledge).
     pub fn leads_to(&self, p: Pos) -> Option<String> {
@@ -733,15 +769,34 @@ impl<'a> PerceptionView<'a> {
         Some((launcher, item, self.content.object(launcher).range?))
     }
 
-    /// Where in their inventory the throwing weapon the player has ready is (a quiver of rocks).
+    /// Where in their inventory what the player has ready to throw is (a stack of rocks, or a
+    /// sword in the missile weapon slot).
     pub fn ready_to_throw(&self) -> Option<usize> {
         self.player.ready_to_throw(self.content)
     }
 
-    /// How far the player throws inventory stack `item`, if it is a throwing weapon.
+    /// The digging tool the player has ready (spec §8 "Digging"), if any.
+    pub fn ready_to_dig(&self) -> Option<ObjectId> {
+        self.player.dig_tool(self.content).map(|(tool, _)| tool)
+    }
+
+    /// Whether the wall at `p`, which the player sees, has been dug into and still stands.
+    pub fn is_dug(&self, p: Pos) -> bool {
+        self.is_visible(p) && self.level.dug.contains_key(&p)
+    }
+
+    /// How far the player throws inventory stack `item`, if it can be thrown (a throwing
+    /// weapon, or another weapon, badly).
     pub fn throw_range(&self, item: usize) -> Option<i32> {
-        let def = self.content.object(self.player.inventory.get(item)?.object);
-        def.range.filter(|_| def.is_thrown())
+        self.content
+            .object(self.player.inventory.get(item)?.object)
+            .throw_range()
+    }
+
+    /// Whether inventory stack `item` is a throwing weapon, made for throwing (what the throw
+    /// choice lists).
+    pub fn is_throwing_weapon(&self, item: usize) -> bool {
+        (self.player.inventory.get(item)).is_some_and(|s| self.content.object(s.object).is_thrown())
     }
 
     /// What seen creature `actor` wears and wields, each thing once, in slot order: all the
@@ -778,6 +833,20 @@ impl<'a> PerceptionView<'a> {
         self.own_skills().into_iter().filter(|s| s.active).collect()
     }
 
+    /// The abilities the player can use now, in menu order ([`crate::ability`]): for the
+    /// abilities menu (#156) to list.
+    pub fn abilities(&self) -> Vec<Ability> {
+        (Ability::ALL.into_iter())
+            .filter(|a| a.usable(self.player, self.content))
+            .collect()
+    }
+
+    /// The player's ranks and marks in weapon skills (spec §8 "Weapon skills"): they know their
+    /// ranks, and see their marks as a bar toward the next. Never what a rank gives.
+    pub fn own_weapon_skills(&self) -> &'a WeaponSkills {
+        &self.player.weapon_skills
+    }
+
     /// The player's hit points: what they have left (at most their maximum, never below 0) and
     /// their maximum (spec §8 "Combat").
     pub fn own_hp(&self) -> (i32, i32) {
@@ -802,6 +871,11 @@ impl<'a> PerceptionView<'a> {
     pub fn own_load(&self) -> Load {
         let race = self.character.and_then(|c| c.spec.race(self.content).ok());
         burden::load(self.player, race, self.content)
+    }
+
+    /// The player's combat stance (spec §8 "Stances"): only its name is ever shown.
+    pub fn own_stance(&self) -> CombatStance {
+        self.player.stance
     }
 
     /// The player's Defence ("Dv"): the total an attack roll must reach (their burden capping

@@ -3,7 +3,7 @@
 //! A key is written as the character it produces (`"k"`, `">"`) or as a physical key name
 //! (`"ArrowUp"`, `"Numpad8"`, `"F5"`). Commands have stable ids (`"move_n"`, `"wait"`).
 
-use crate::input::{Bindings, KeyBinding, KeyCommand};
+use crate::input::{Bindings, Context, KeyBinding, KeyCommand};
 use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
 use std::collections::BTreeMap;
@@ -12,7 +12,8 @@ use warlock_core::Dir;
 /// The commands the player may rebind, in the order the controls screen lists them. `Cancel`
 /// (Esc) is fixed so a rebinding can always be cancelled, and the dev snapshot keys are not
 /// player commands.
-pub const REBINDABLE: [KeyCommand; 27] = [
+/// A slice, not a fixed-size array, so features adding commands don't collide on the length.
+pub const REBINDABLE: &[KeyCommand] = &[
     KeyCommand::Move(Dir::N),
     KeyCommand::Move(Dir::NE),
     KeyCommand::Move(Dir::E),
@@ -33,14 +34,41 @@ pub const REBINDABLE: [KeyCommand; 27] = [
     KeyCommand::Equipment,
     KeyCommand::Character,
     KeyCommand::Skills,
+    KeyCommand::WeaponSkills,
     KeyCommand::Rest,
     KeyCommand::Look,
+    KeyCommand::Missile,
     KeyCommand::Fire,
     KeyCommand::Throw,
+    KeyCommand::MoreAggressive,
+    KeyCommand::MoreDefensive,
+    KeyCommand::Bash,
     KeyCommand::NextTarget,
+    KeyCommand::UseTool,
     KeyCommand::Help,
     KeyCommand::Quit,
+    KeyCommand::Page(1),
+    KeyCommand::Page(2),
+    KeyCommand::Page(3),
+    KeyCommand::Page(4),
+    KeyCommand::Page(5),
+    KeyCommand::Page(6),
+    KeyCommand::Page(7),
+    KeyCommand::Page(8),
+    KeyCommand::Page(9),
+    KeyCommand::NextPage,
+    KeyCommand::PrevPage,
 ];
+
+/// The settings ids of [`KeyCommand::Page`] 1 to 9.
+const PAGE_IDS: [&str; 9] = [
+    "page_1", "page_2", "page_3", "page_4", "page_5", "page_6", "page_7", "page_8", "page_9",
+];
+
+/// Rebindable commands with no key by default: abilities (`warlock_core::ability`), which the
+/// abilities menu (#156) lists instead of a key each; `f` (fire), which `t` covers; and Quit,
+/// done from the pause menu. The player may bind one in Controls.
+pub const UNBOUND: &[KeyCommand] = &[KeyCommand::Bash, KeyCommand::Fire, KeyCommand::Quit];
 
 /// Physical keys a command may be bound to.
 const CODES: &[KeyCode] = &[
@@ -110,13 +138,22 @@ impl KeyCommand {
             Equipment => "equipment",
             Character => "character",
             Skills => "skills",
+            WeaponSkills => "weapon_skills",
             Rest => "rest",
             Look => "look",
+            Missile => "missile",
             Fire => "fire",
             Throw => "throw",
+            MoreAggressive => "more_aggressive",
+            MoreDefensive => "more_defensive",
+            Bash => "bash",
             NextTarget => "next_target",
+            UseTool => "use_tool",
             Help => "help",
             Quit => "quit",
+            Page(n) => PAGE_IDS.get(usize::from(n).checked_sub(1)?)?,
+            NextPage => "next_page",
+            PrevPage => "prev_page",
             Cancel | Snapshot | LoadSnapshot | CycleVision | RevealMap | LightValues | SkipHour
             | NextWeather => {
                 return None;
@@ -125,13 +162,14 @@ impl KeyCommand {
     }
 
     pub fn from_id(id: &str) -> Option<Self> {
-        REBINDABLE.into_iter().find(|c| c.id() == Some(id))
+        REBINDABLE.iter().copied().find(|c| c.id() == Some(id))
     }
 
     /// Name for the controls screen; unlike [`KeyCommand::label`] it tells directions apart.
     pub fn name(self) -> String {
         match self {
             KeyCommand::Move(dir) => format!("Move {}", direction_name(dir)),
+            KeyCommand::Page(n) => format!("Info page {n}"),
             other => other.label().to_string(),
         }
     }
@@ -197,9 +235,16 @@ pub struct Conflict {
 }
 
 impl Bindings {
-    /// The first command that uses `key`.
+    /// The first command that uses `key` in play.
     pub fn owner(&self, key: &KeyBinding) -> Option<KeyCommand> {
-        self.0.iter().find(|(k, _)| k == key).map(|(_, c)| *c)
+        self.owner_in(Context::Play, key)
+    }
+
+    /// The first command that uses `key` in `context`.
+    pub fn owner_in(&self, context: Context, key: &KeyBinding) -> Option<KeyCommand> {
+        (self.0.iter())
+            .find(|(k, c)| k == key && c.context() == context)
+            .map(|(_, c)| *c)
     }
 
     /// Keys of `command`, primary first.
@@ -211,11 +256,13 @@ impl Bindings {
             .collect()
     }
 
-    /// Every key bound to two different commands: `(key, first, second)`.
+    /// Every key bound to two different commands of one context: `(key, first, second)`.
     pub fn conflicts(&self) -> Vec<(KeyBinding, KeyCommand, KeyCommand)> {
         let mut found = Vec::new();
         for (i, (key, command)) in self.0.iter().enumerate() {
-            if let Some((_, first)) = self.0[..i].iter().find(|(k, c)| k == key && c != command) {
+            if let Some((_, first)) = (self.0[..i].iter())
+                .find(|(k, c)| k == key && c != command && c.context() == command.context())
+            {
                 found.push((key.clone(), *first, *command));
             }
         }
@@ -224,7 +271,7 @@ impl Bindings {
 
     /// Makes `key` the primary (first) key of `command`. Refuses a key another command uses.
     pub fn bind_primary(&mut self, command: KeyCommand, key: KeyBinding) -> Result<(), Conflict> {
-        if let Some(owner) = self.owner(&key)
+        if let Some(owner) = self.owner_in(command.context(), &key)
             && owner != command
         {
             return Err(Conflict { key, owner });
@@ -259,7 +306,12 @@ impl Bindings {
         let defaults: Vec<KeyBinding> = Bindings::default()
             .0
             .into_iter()
-            .filter(|(k, c)| *c == command && self.owner(k).is_none_or(|o| o == command))
+            .filter(|(k, c)| {
+                *c == command
+                    && self
+                        .owner_in(command.context(), k)
+                        .is_none_or(|o| o == command)
+            })
             .map(|(k, _)| k)
             .collect();
         self.set_keys(command, defaults);
@@ -269,17 +321,18 @@ impl Bindings {
     pub fn reset_all(&mut self) {
         // Twice, so keys that swapped between commands end up home.
         for _ in 0..2 {
-            for command in REBINDABLE {
+            for &command in REBINDABLE {
                 self.reset_command(command);
             }
         }
     }
 
     /// The settings-file form: command id to key spellings (a command with no key, such as
-    /// Quit by default, is left out, and reads back as unbound).
+    /// Quit or an ability by default, is left out, and reads back as unbound).
     pub fn to_map(&self) -> BTreeMap<String, Vec<String>> {
         REBINDABLE
-            .into_iter()
+            .iter()
+            .copied()
             .filter_map(|c| {
                 let id = c.id()?;
                 let keys: Vec<String> = self.keys_of(c).iter().map(|k| k.to_text()).collect();
@@ -297,7 +350,7 @@ impl Bindings {
                 warnings.push(format!("bindings: unknown command `{id}` ignored"));
             }
         }
-        for command in REBINDABLE {
+        for &command in REBINDABLE {
             let Some(id) = command.id() else { continue };
             let Some(value) = table.get(id) else { continue };
             let Some(items) = value.as_array() else {
@@ -313,7 +366,10 @@ impl Bindings {
                 }
             }
             if keys.is_empty() {
-                warnings.push(format!("bindings.{id}: no usable keys; using the defaults"));
+                // A command without a default key (an ability, fire) may be left without one.
+                if !UNBOUND.contains(&command) || !items.is_empty() {
+                    warnings.push(format!("bindings.{id}: no usable keys; using the defaults"));
+                }
             } else {
                 bindings.set_keys(command, keys);
             }
@@ -327,13 +383,13 @@ impl Bindings {
                 second.name()
             ));
         }
-        let mut seen: Vec<KeyBinding> = Vec::new();
-        bindings.0.retain(|(k, _)| {
-            let fresh = !seen.contains(k);
-            seen.push(k.clone());
+        let mut seen: Vec<(Context, KeyBinding)> = Vec::new();
+        bindings.0.retain(|(k, c)| {
+            let fresh = !seen.iter().any(|(sc, sk)| *sc == c.context() && sk == k);
+            seen.push((c.context(), k.clone()));
             fresh
         });
-        for command in REBINDABLE {
+        for &command in REBINDABLE {
             if bindings.keys_of(command).is_empty() {
                 bindings.reset_command(command);
             }
@@ -352,18 +408,19 @@ mod tests {
 
     #[test]
     fn every_rebindable_command_has_a_unique_id_that_round_trips() {
-        for c in REBINDABLE {
+        for &c in REBINDABLE {
             let id = c.id().expect("rebindable commands have ids");
             assert_eq!(KeyCommand::from_id(id), Some(c));
         }
         assert_eq!(KeyCommand::Cancel.id(), None);
         let defaults = Bindings::default();
-        for c in REBINDABLE {
-            // Quitting is done from the pause menu; a quick key is the player's to assign.
-            if c == KeyCommand::Quit {
-                continue;
-            }
-            assert!(!defaults.keys_of(c).is_empty(), "{c:?} has a default key");
+        for &c in REBINDABLE {
+            let unbound = UNBOUND.contains(&c);
+            assert_eq!(
+                defaults.keys_of(c).is_empty(),
+                unbound,
+                "{c:?}: a default key"
+            );
         }
     }
 

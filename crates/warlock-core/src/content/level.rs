@@ -12,13 +12,16 @@
 //! or `overworld`) decides what a step there takes (spec §8 "Time"); outdoor levels and the
 //! overworld are lit by the sun and the sky by day (spec §5). Optional
 //! `[[region]]` tables name areas of the level (`name`, `area = [x0, y0, x1, y1]`, inclusive; the
-//! first match wins), shown in the status bar.
+//! first match wins), shown in the status bar. Optional `[[room]]` tables mark special rooms
+//! (spec §7 "Special rooms"): `effect` (an id in `data/room_effects.toml`) over `area = [x0, y0,
+//! x1, y1]` (inclusive, walls and doors included); rooms do not overlap.
 
 use super::creature::CreatureId;
 use super::faction::FactionId;
 use super::flow::{FLOW_SPEEDS, Flow};
 use super::light::LightId;
 use super::object::parse_stacks;
+use super::room_effect::SpecialRoom;
 use super::terrain::{StairsDir, TerrainId};
 use super::{ActionKind, Content, ContentError};
 use crate::equipment::{self, Equipment};
@@ -73,6 +76,9 @@ struct LevelFile {
     legend: BTreeMap<String, LegendEntry>,
     #[serde(default)]
     region: Vec<RegionSpec>,
+    /// Special rooms (spec §7 "Special rooms").
+    #[serde(default)]
+    room: Vec<RoomSpec>,
     /// Objects placed by position rather than by a legend character.
     #[serde(default)]
     pile: Vec<PileSpec>,
@@ -91,6 +97,15 @@ struct PileSpec {
 struct RegionSpec {
     name: String,
     /// `[x0, y0, x1, y1]`, inclusive.
+    area: [i32; 4],
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RoomSpec {
+    /// An effect id in `data/room_effects.toml`.
+    effect: String,
+    /// `[x0, y0, x1, y1]`, inclusive: the room with its walls.
     area: [i32; 4],
 }
 
@@ -245,6 +260,8 @@ pub struct LevelTemplate {
     pub objects: BTreeMap<Pos, Vec<Stack>>,
     /// Named areas, first match wins.
     pub regions: Vec<Region>,
+    /// Special rooms (spec §7 "Special rooms"), none overlapping another.
+    pub rooms: Vec<SpecialRoom>,
     /// Where walking off the edge leads (local areas); `None`: the edge cannot be crossed.
     pub exit: Option<EdgeExit>,
 }
@@ -427,6 +444,31 @@ pub(super) fn parse_level(
         });
     }
 
+    let mut rooms: Vec<SpecialRoom> = Vec::with_capacity(parsed.room.len());
+    for spec in parsed.room {
+        let effect = content.room_effects().id(&spec.effect).ok_or_else(|| {
+            err(format!(
+                "room at {:?} has unknown effect `{}`",
+                spec.area, spec.effect
+            ))
+        })?;
+        let [x0, y0, x1, y1] = spec.area;
+        let room = SpecialRoom::rect(effect, Pos::new(x0, y0), Pos::new(x1, y1));
+        if !room.is_valid_within(width, height) {
+            return Err(err(format!(
+                "room `{}` area {:?} is not a rectangle inside the {width}x{height} map",
+                spec.effect, spec.area
+            )));
+        }
+        if rooms.iter().any(|r| r.overlaps(&room)) {
+            return Err(err(format!(
+                "room `{}` area {:?} overlaps another room",
+                spec.effect, spec.area
+            )));
+        }
+        rooms.push(room);
+    }
+
     let terrain = Grid::from_vec(width, height, cells);
     for spec in parsed.pile {
         let at = Pos::new(spec.at[0], spec.at[1]);
@@ -466,6 +508,7 @@ pub(super) fn parse_level(
         flow,
         objects,
         regions,
+        rooms,
         exit: None,
     };
     for spawn in &template.creatures {

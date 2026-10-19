@@ -14,14 +14,31 @@ pub const CURSOR_FG: Rgb = Rgb::new(0x14, 0x12, 0x10);
 pub const CURSOR_BG: Rgb = Rgb::new(0xe0, 0xc0, 0x70);
 
 /// One line describing what the player knows about `p`: who is there, what lies there (as seen
-/// or remembered), on what, and what was heard there.
+/// or remembered), on what, in which special room (once they have been in it), and what was
+/// heard there.
 pub fn describe(view: &PerceptionView<'_>, p: Pos) -> String {
     let content = view.content();
-    // Stairs and locations name where they lead: "a staircase down, leading to The Depths 1".
-    let terrain = |t| match view.leads_to(p) {
+    // Stairs and locations name where they lead: "a staircase down, leading to The Depths 1";
+    // a wall in sight that was dug into says so: "a stone wall, partly dug".
+    let named = |t| match view.leads_to(p) {
         Some(to) => format!("{}, leading to {to}", content.terrain(t).name),
+        None if view.is_dug(p) => format!("{}, partly dug", content.terrain(t).name),
         None => content.terrain(t).name.clone(),
     };
+    // A special room the player has been in names the ground in it: "in an echoing hall".
+    let walkable = match view.cell(p) {
+        CellView::Visible(t) | CellView::Remembered(t) => content.terrain(t).walkable,
+        CellView::Unknown => false,
+    };
+    let room = (view.room(p))
+        .filter(|_| walkable)
+        .map(|r| format!("in {}", r.with_article()));
+    let terrain = |t| match (&room, view.leads_to(p)) {
+        (Some(room), Some(_)) => format!("{}, {room}", named(t)),
+        (Some(room), None) => format!("{} {room}", named(t)),
+        (None, _) => named(t),
+    };
+    let room_here = room.as_ref().map_or(String::new(), |r| format!(", {r}"));
     // A sound heard there (never on a cell the player sees): "You hear footsteps here."
     let heard = view.sound_at(p).map(|s| s.you_hear());
     // "a dagger", "a dagger and 12 arrows", "17 objects".
@@ -62,7 +79,7 @@ pub fn describe(view: &PerceptionView<'_>, p: Pos) -> String {
         }
         (CellView::Remembered(t), None) => match &things {
             Some(things) => format!("You remember {things} here, on {}.", terrain(t)),
-            None => format!("You remember {} here.", with_article(&terrain(t))),
+            None => format!("You remember {} here{room_here}.", with_article(&named(t))),
         },
         (CellView::Unknown, Some(heard)) => format!("{heard} here."),
         (CellView::Unknown, None) => "You don't know what is there.".to_string(),
@@ -209,7 +226,54 @@ mod tests {
             .find(|&p| view.leads_to(p).as_deref() == Some("The Vast Caverns"))
             .expect("the staircase to the vast level is in view");
         let text = describe(&view, down);
-        assert!(text.ends_with("leading to The Vast Caverns."), "{text}");
+        // The stairs nook is a sanctuary, which the player knows once they have been in it.
+        assert_eq!(
+            text,
+            "A staircase down, leading to The Vast Caverns, in a sanctuary."
+        );
+        let here = describe(&view, w.player_pos());
+        assert_eq!(here, "You, on stone floor in a sanctuary.");
+        let wall = Pos::new(79, 15);
+        assert_eq!(describe(&view, wall), "A stone wall.", "walls name no room");
+        // Walking back out, the nook is remembered as a sanctuary.
+        for action in [Action::Move(Dir::N), Action::Move(Dir::N)] {
+            w.apply(&action);
+        }
+        w.apply(&Action::Move(Dir::N));
+        w.apply(&Action::Move(Dir::N));
+        w.apply(&Action::Move(Dir::W));
+        w.apply(&Action::Move(Dir::W));
+        w.apply(&Action::Move(Dir::W));
+        let view = w.perception();
+        let floor = Pos::new(76, 18);
+        let text = describe(&view, floor);
+        assert_eq!(text, "You remember a stone floor here, in a sanctuary.");
+    }
+
+    #[test]
+    fn special_rooms_are_named_only_once_entered() {
+        let mut w = world();
+        // Up the corridor to the stairs nook's door: the nook is seen, but not yet known.
+        let steps = |dir, n| std::iter::repeat_n(Action::Move(dir), n);
+        let walk: Vec<Action> = steps(Dir::N, 3)
+            .chain([Action::Open(Dir::N)])
+            .chain(steps(Dir::N, 2))
+            .chain(steps(Dir::E, 67))
+            .chain([Action::Open(Dir::S)])
+            .collect();
+        for action in &walk {
+            w.apply(action);
+        }
+        let inside = Pos::new(74, 13);
+        let view = w.perception();
+        assert!(view.is_visible(inside));
+        assert_eq!(describe(&view, inside), "A stone floor.");
+        w.apply(&Action::Move(Dir::S));
+        w.apply(&Action::Move(Dir::S));
+        assert_eq!(
+            describe(&w.perception(), inside),
+            "A stone floor in a sanctuary."
+        );
     }
 
     #[test]

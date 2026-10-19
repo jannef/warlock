@@ -1,6 +1,7 @@
 //! The screen stack (spec §6): every modal screen — main menu, new run and character creation,
 //! pause, settings, controls, the `?` help, the inventory, the equipment screen and its choice of
-//! what goes in a slot, the character screen, and choosing what to pick up, drop, or throw —
+//! what goes in a slot, the character screen, the weapon skills screen, and choosing what to pick
+//! up, drop, or throw —
 //! lives on one stack, bottom to top.
 //!
 //! - **Open**: [`Screens::open`] is the one way to open a screen, by [`ScreenName`]: `?` and Esc
@@ -28,12 +29,14 @@ use super::confirm_screen::ConfirmScreen;
 use super::controls_screen::ControlsScreen;
 use super::death_screen::DeathScreen;
 use super::equipment_screen::{EquipmentScreen, ItemScreen};
+use super::info_tabs;
 use super::menu::{MainMenu, Press};
 use super::motion::Motion;
 use super::new_run_screen::NewRunScreen;
 use super::object_screen::{ObjectList, ObjectScreen};
 use super::settings_screen::SettingsScreen;
 use super::skills_screen::SkillsScreen;
+use super::weapon_skills_screen::WeaponSkillsScreen;
 use crate::cli::Args;
 use crate::game::{Game, GameContent};
 use crate::input::{Bindings, InputMode};
@@ -81,6 +84,8 @@ pub enum ScreenName {
     /// The player's trained skills and their values (`S` in play, or from the character
     /// screen).
     Skills,
+    /// The player's weapon skills: ranks and marks (`W` in play).
+    WeaponSkills,
     /// Choose what to pick up from the pile here (`,` or `g` where several objects lie).
     PickUp,
     /// Choose what to drop (`d` in play).
@@ -108,6 +113,7 @@ impl ScreenName {
                 | ScreenName::EquipItem
                 | ScreenName::Character
                 | ScreenName::Skills
+                | ScreenName::WeaponSkills
                 | ScreenName::PickUp
                 | ScreenName::Drop
                 | ScreenName::Throw
@@ -143,6 +149,8 @@ pub enum ScreenAction {
     Close,
     /// Open a screen on top.
     Open(ScreenName),
+    /// Close this screen and open another in its place (an info screen's page number).
+    Replace(ScreenName),
     /// Close screens until this one is on top (as it was left).
     Return(ScreenName),
     Choose(MenuChoice),
@@ -175,6 +183,7 @@ enum Screen {
     EquipItem(ItemScreen),
     Character(CharacterScreen),
     Skills(SkillsScreen),
+    WeaponSkills(WeaponSkillsScreen),
     Death(DeathScreen),
     /// The confirmation dialog.
     Confirm(ConfirmScreen),
@@ -212,6 +221,7 @@ impl Screen {
             }
             ScreenName::Character => Screen::Character(CharacterScreen::new(run)),
             ScreenName::Skills => Screen::Skills(SkillsScreen::new(run)),
+            ScreenName::WeaponSkills => Screen::WeaponSkills(WeaponSkillsScreen::new(run)),
             ScreenName::PickUp => objects(ObjectList::PickUp),
             ScreenName::Drop => objects(ObjectList::Drop),
             ScreenName::Throw => objects(ObjectList::Throw),
@@ -242,6 +252,7 @@ impl Screen {
             Screen::EquipItem(_) => ScreenName::EquipItem,
             Screen::Character(_) => ScreenName::Character,
             Screen::Skills(_) => ScreenName::Skills,
+            Screen::WeaponSkills(_) => ScreenName::WeaponSkills,
             Screen::Death(_) => ScreenName::Death,
             Screen::Confirm(_) => ScreenName::Confirm,
         }
@@ -352,6 +363,14 @@ impl ScreenStack {
                 ScreenAction::Stay
             }
         };
+        if !press.repeat
+            && let Some(screen) = self.screens.last()
+            && info_tabs::is_page(screen.name())
+            && let Some(action) = info_tabs::switch(screen.name(), press, bindings)
+        {
+            self.notice = None;
+            return action;
+        }
         let action = match self.screens.last_mut() {
             None => ScreenAction::Stay,
             Some(Screen::Menu(menu)) => menu.handle(press),
@@ -371,6 +390,7 @@ impl ScreenStack {
             Some(Screen::EquipItem(screen)) => screen.handle(press, bindings),
             Some(Screen::Character(screen)) => screen.handle(press, bindings),
             Some(Screen::Skills(screen)) => screen.handle(press, bindings),
+            Some(Screen::WeaponSkills(screen)) => screen.handle(press, bindings),
             Some(Screen::Death(screen)) => screen.handle(press),
             Some(Screen::Confirm(screen)) => screen.handle(press),
         };
@@ -418,7 +438,8 @@ impl ScreenStack {
             Some(Screen::EquipItem(screen)) => screen.draw(console, bindings),
             Some(Screen::Character(screen)) => screen.draw(console, bindings),
             Some(Screen::Skills(screen)) => screen.draw(console, bindings),
-            Some(Screen::Death(screen)) => screen.draw(console),
+            Some(Screen::WeaponSkills(screen)) => screen.draw(console, bindings),
+            Some(Screen::Death(screen)) => screen.draw(console, settings.clock),
             Some(Screen::Confirm(screen)) => screen.draw(console),
         }
     }
@@ -455,6 +476,13 @@ impl Screens<'_> {
         let (content, has_save) = (&self.content.0, self.store.has_save());
         let screen = Screen::new(name, content, has_save, view.as_ref(), &draft, slot);
         self.stack.screens.push(screen);
+    }
+
+    /// Replaces the top screen with screen `name`: the same stack depth, so closing it returns
+    /// to where the one it replaced was opened from.
+    pub fn replace(&mut self, name: ScreenName) {
+        self.stack.close();
+        self.open(name);
     }
 }
 
@@ -718,6 +746,8 @@ mod tests {
         assert_eq!(startup_screens(Some(Inventory), true), [Inventory]);
         assert_eq!(startup_screens(Some(Character), true), [Character]);
         assert_eq!(startup_screens(Some(Character), false), [Main]);
+        assert_eq!(startup_screens(Some(WeaponSkills), true), [WeaponSkills]);
+        assert_eq!(startup_screens(Some(WeaponSkills), false), [Main]);
         assert_eq!(startup_screens(Some(PickUp), true), [PickUp]);
         assert_eq!(startup_screens(Some(Equipment), true), [Equipment]);
         assert_eq!(
@@ -940,6 +970,36 @@ mod tests {
     }
 
     #[test]
+    fn using_a_tool_asks_which_way_to_dig_only_with_one_ready() {
+        const USE: (KeyCode, &str) = (KeyCode::KeyU, "U");
+        // Nothing to dig with: the rules say so at once, and no prompt opens.
+        let mut app = app(true);
+        frame(&mut app, &[USE]);
+        assert_eq!(actions(&app), [Action::Dig(Dir::N)]);
+        assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
+        // In the quarry with the pick-axe ready: `U` asks for a direction, Esc cancels it, and a
+        // direction digs.
+        let content = content();
+        let mut world = warlock_core::World::new(content.clone(), "quarry", None).expect("run");
+        for action in
+            warlock_core::action::parse_actions("move:E pickup equip:tool:a").expect("actions")
+        {
+            world.apply(&action);
+        }
+        let mut app = app_with(content, Some(Game::from_world(world)));
+        frame(&mut app, &[USE]);
+        assert_eq!(
+            app.world().resource::<InputMode>(),
+            &InputMode::Direction(crate::input::KeyCommand::UseTool)
+        );
+        frame(&mut app, &[ESC]);
+        assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
+        assert!(names(&app).is_empty() && actions(&app).is_empty());
+        frame(&mut app, &[USE, (KeyCode::KeyL, "l")]);
+        assert_eq!(actions(&app), [Action::Dig(Dir::E)]);
+    }
+
+    #[test]
     fn aiming_fires_at_the_cursor_cycles_targets_and_remembers_the_last() {
         use crate::ui::{Aim, AimKind, LastTarget};
         // In the arena, with the bow and arrows lying beside the player readied.
@@ -954,8 +1014,8 @@ mod tests {
             InputMode::Aim(aim) => Some(aim),
             _ => None,
         };
-        let (fire, tab) = ((KeyCode::KeyF, "f"), (KeyCode::Tab, ""));
-        // `f` aims at the nearest hostile creature in view.
+        let (fire, tab) = ((KeyCode::KeyT, "t"), (KeyCode::Tab, ""));
+        // `t` aims at the nearest hostile creature in view.
         frame(&mut app, &[fire]);
         let first = aim(&app).expect("aiming");
         assert_eq!(first.kind, AimKind::Fire);
@@ -980,13 +1040,13 @@ mod tests {
         frame(&mut app, &[fire, tab, ENTER]);
         assert_eq!(aim(&app), None);
         assert_eq!(actions(&app)[before..], [Action::Fire(second.at)]);
-        // The next `f` starts on that creature again: `f`, Enter shoots it once more.
+        // The next `t` starts on that creature again: `t`, Enter shoots it once more.
         frame(&mut app, &[fire]);
         assert_eq!(aim(&app).map(|a| a.at), Some(second.at));
-        frame(&mut app, &[(KeyCode::KeyF, "f")]);
+        frame(&mut app, &[ENTER]);
         assert_eq!(actions(&app).last(), Some(&Action::Fire(second.at)));
-        // `t` with nothing to throw ready opens the choice of what to throw.
-        frame(&mut app, &[(KeyCode::KeyT, "t")]);
+        // `T` opens the choice of what to throw.
+        frame(&mut app, &[(KeyCode::KeyT, "T")]);
         assert_eq!(names(&app), [ScreenName::Throw]);
         frame(&mut app, &[ESC]);
         assert!(names(&app).is_empty());
@@ -1213,6 +1273,70 @@ mod tests {
         frame(&mut app, &[at, ESC]);
         assert!(names(&app).is_empty(), "Esc closes it rather than pausing");
         assert!(actions(&app).is_empty());
+    }
+
+    #[test]
+    fn info_screen_digits_replace_the_page_and_esc_returns_to_play() {
+        let mut app = app(true);
+        let digit = |n: u8| {
+            let code = [KeyCode::Digit1, KeyCode::Digit2, KeyCode::Digit3][usize::from(n) - 1];
+            (code, ["1", "2", "3"][usize::from(n) - 1])
+        };
+        // Digits do nothing in play.
+        frame(&mut app, &[digit(2)]);
+        assert!(names(&app).is_empty());
+        assert!(actions(&app).is_empty());
+        frame(&mut app, &[(KeyCode::Digit2, "@")]);
+        assert_eq!(names(&app), [ScreenName::Character]);
+        frame(&mut app, &[digit(2)]);
+        assert_eq!(names(&app), [ScreenName::Inventory], "replaced, not pushed");
+        frame(&mut app, &[digit(3)]);
+        assert_eq!(names(&app), [ScreenName::Equipment]);
+        // Its own page, a page that does not exist, and the numpad change nothing.
+        frame(
+            &mut app,
+            &[digit(3), (KeyCode::Digit9, "9"), (KeyCode::Numpad1, "1")],
+        );
+        assert_eq!(names(&app), [ScreenName::Equipment]);
+        // A sub-step is not a page: its digits are its own.
+        frame(&mut app, &[(KeyCode::KeyC, "c")]);
+        assert_eq!(names(&app), [ScreenName::Equipment, ScreenName::EquipItem]);
+        frame(&mut app, &[digit(1)]);
+        assert_eq!(names(&app), [ScreenName::Equipment, ScreenName::EquipItem]);
+        frame(&mut app, &[ESC, digit(1), digit(2), ESC]);
+        assert!(
+            names(&app).is_empty(),
+            "Esc returns to where the first was opened"
+        );
+        assert!(actions(&app).is_empty());
+    }
+
+    #[test]
+    fn the_weapon_skills_screen_opens_on_w_and_a_bash_asks_for_a_direction() {
+        let mut app = app(true);
+        let skills = (KeyCode::KeyW, "W");
+        frame(&mut app, &[skills]);
+        assert_eq!(names(&app), [ScreenName::WeaponSkills]);
+        frame(&mut app, &[WAIT]);
+        assert_eq!(names(&app), [ScreenName::WeaponSkills]);
+        frame(&mut app, &[skills]);
+        assert!(names(&app).is_empty());
+        assert!(actions(&app).is_empty(), "no time passes");
+        // Bash is an ability: unbound by default. Bound (here to `B`), it asks for a direction
+        // in the message line, like opening a door.
+        let mut bindings = app.world_mut().resource_mut::<Bindings>();
+        let bash = crate::input::KeyCommand::Bash;
+        assert!(bindings.keys_of(bash).is_empty());
+        let key = crate::input::KeyBinding::from_text("B").expect("a key");
+        bindings.0.push((key, bash));
+        frame(&mut app, &[(KeyCode::KeyB, "B")]);
+        assert_eq!(
+            app.world().resource::<InputMode>(),
+            &InputMode::Direction(crate::input::KeyCommand::Bash)
+        );
+        frame(&mut app, &[(KeyCode::KeyL, "l")]);
+        assert_eq!(actions(&app), [Action::Bash(Dir::E)]);
+        assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
     }
 
     #[test]

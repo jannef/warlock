@@ -37,6 +37,8 @@ pub struct Press {
     pub repeat: bool,
     /// The character the key typed, if any (for text fields such as the seed).
     pub text: Option<char>,
+    /// Shift was held (set by the input router, which sees the keyboard state).
+    pub shift: bool,
 }
 
 impl Press {
@@ -76,6 +78,7 @@ impl Press {
             binding: KeyBinding::from_input(input),
             repeat: input.repeat,
             text,
+            shift: false,
         }
     }
 
@@ -87,6 +90,7 @@ impl Press {
             binding: None,
             repeat: false,
             text: None,
+            shift: false,
         }
     }
 
@@ -98,6 +102,7 @@ impl Press {
             binding: None,
             repeat: false,
             text: Some(ch),
+            shift: false,
         }
     }
 }
