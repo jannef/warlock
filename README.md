@@ -11,8 +11,8 @@ and glyph-based effects — while every character stays crisp and readable.
 ![The light hall: colored crystals, pillar shadows, smooth falloff](docs/screenshots/m3-light-hall.png)
 
 This is the engine and framework phase: creatures hunt you, fight, shoot, and die (spells are only
-announced so far), death is permanent, and the only character progression is skills that grow
-with use. You walk a hand-made
+announced so far), death is permanent, and you grow by experience levels and by skills that
+improve with use. You walk a hand-made
 **showcase world** where each room demonstrates one capability (its creatures are peaceful), an
 arena where kobolds and giant rats fight (and you can join in), an ADOM-like **overworld** with day and night and weather, outdoor areas generated
 from it, a vast lit cavern, and procedurally generated dungeon levels.
