@@ -1,7 +1,8 @@
 # Controls
 
-The game is played with the keyboard. These are the default keys. The in-game `?` screen is
-authoritative: it is generated from your current key bindings.
+The game is played with the keyboard. These are the default keys; every one of them can be
+rebound (see [Rebinding keys](#rebinding-keys)), and the hints on screen always name your keys.
+The in-game `?` screen is authoritative: it is generated from your current key bindings.
 
 | Command | Keys |
 |---|---|
@@ -48,16 +49,53 @@ The movement keys are the vi keys (`hjklyubn`), the numpad, and the arrows. Symb
 `<`, `>`, and `?` are matched by the character they produce, so they work on other keyboard
 layouts.
 
+## Menus and screens
+
+On every menu and screen:
+
+| Command | Keys |
+|---|---|
+| Up / down | Up / Down, or `k` / `j` |
+| Left / right (change a setting) | Left / Right, or `h` / `l` |
+| Choose | `Enter` |
+| Back | `Esc`, always |
+| Erase a character (the seed), reset a key (Controls) | `Delete` or `Backspace` |
+| Mark a stack, mark everything (picking up, dropping) | `Space`, `,` |
+
+On a list that names its rows by letter (your pack, a pile, the equipment slots) or by number
+(the topics someone offers), those letters and digits always pick rows, whatever
+else they are bound to.
+
 ## Rebinding keys
 
-You can rebind every command in the table above but `Esc` in the Controls screen (main menu or
-pause menu, then Controls): select a command, press `Enter`, then press the new key. It becomes
-the command's main key, and its other keys (such as the numpad) stay. A key another command
-already uses (in the same set of screens) moves to the new command, and the screen says what
-moved; the old command keeps its other keys, or shows `(none)` if that was its only one. `Esc`
-cannot be taken. `Delete` resets the
-selected command to its default keys, and **Reset all keys** resets every command. Your keys are
-kept with your [settings](settings.md).
+You can rebind every key but `Esc` in the Controls screen (main menu or pause menu, then
+Controls). It lists the commands in groups, by where they are used: in play, while aiming, in the
+rest prompt, on menus and screens, on the info pages, in the question windows, and (in builds
+that have them) the developer keys. Select a command, press `Enter`, then press the new key. It
+becomes the command's main key, and its other keys (such as the numpad) stay. A key another
+command of the same group already uses moves to the new command, and the screen says what moved;
+the old command keeps its other keys, or shows `(none)` if that was its only one. The same key
+can mean different things in different groups: `Tab` is the next target while aiming and the next
+page on an info screen, and `y` and `n` move you in play but answer yes and no in a question.
+
+You cannot lock yourself out: `Esc` always backs out of every screen and cancels every prompt,
+and it cannot be taken; neither can the last key of up, down, or choose on the menus, which you
+need to come back to Controls. `Delete` resets the selected command to its default keys, and
+**Reset all keys** resets every command. If your keys still get in the way, start the game with
+`warlock --reset-keys`: every key goes back to its default, and the game starts as usual. Your keys
+are kept with your [settings](settings.md).
+
+### Sharing your keys
+
+**Export keys…** in Controls writes all your keys to a file, `warlock-keys.toml`, in the folder
+with your settings (Settings, then Files, shows where); in the browser version it downloads the
+file. **Import keys…** reads it back (in the browser, choose the file). Copy it to another
+computer or install, back it up, or share it. It is a plain text file you can edit: each command
+by name with its keys, in groups like the Controls screen's, as in `descend = [">"]`. An import
+changes only the commands the file lists, moves keys the way rebinding does, skips anything it does
+not know (and says so), and is saved at once. From the command line, `warlock --export-keys FILE`
+and `warlock --import-keys FILE` do the same. The desktop downloads come with the default keys as
+such a file, `keymaps/default.toml`.
 
 ## Prompts
 
@@ -66,7 +104,9 @@ to cancel)` on the message line, digging asks `Dig in which direction? (Esc to c
 [Digging and walls](digging.md)), chatting with several creatures near asks `Talk in which
 direction? (Esc to cancel)` (see [People and talk](npcs.md)), and
 resting asks how long (see [Resting](resting.md)). Answer with a direction or the key shown, or
-press `Esc` to cancel. Pressing any other command cancels the prompt.
+press `Esc` to cancel. Pressing any other command cancels the prompt. The rest prompt's keys (`h`,
+`d`, `n`) are their own: they can be rebound without touching movement, and the prompt names
+them as bound.
 
 A few things ask first, in a small window over the map: quitting, stepping onto a trap you know
 (see [Traps](traps.md)), leaving a shop owing money, and dropping something a shop would buy
@@ -116,7 +156,8 @@ controls screen.) Either puts a cursor on the map:
   wall, or a creature in the way, which the missile would reach first);
 - the message line describes the target as look mode does. It never shows a chance to hit;
 - `Enter` (or `t` again) shoots or throws, `Esc` cancels. Doing it again later starts on the same
-  target, so `t` `Enter` shoots it again.
+  target, so `t` `Enter` shoots it again. The aiming keys (next target, previous target, which has
+  no key until you bind one, and shoot or throw) are their own group in Controls.
 
 See [Ranged combat](ranged.md).
 
@@ -230,7 +271,7 @@ up, dropping, and putting on or taking off take their time. Asking about a topic
 
 Builds made for testing, and desktop builds started with `--dev`, add a few keys for trying
 things out. They are not part of normal play, and they are not in the browser version. `?` lists
-them, marked "(dev)":
+them, marked "(dev)", and Controls can rebind them there:
 
 | Key | Does |
 |---|---|

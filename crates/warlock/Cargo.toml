@@ -25,8 +25,13 @@ directories.workspace = true
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 bevy = { workspace = true, features = ["webgpu"] }
 wasm-bindgen = "0.2"
-# Only what browser storage and the page-hide hook need (see `storage.rs`).
-web-sys = { version = "0.3", default-features = false, features = ["Window", "Document", "Storage", "Event", "EventTarget", "Location"] }
+# Only what browser storage and the page-hide hook need (see `storage.rs`), and the keymap's
+# download and file picker (`settings/keymap.rs`: Blob to File).
+web-sys = { version = "0.3", default-features = false, features = [
+  "Window", "Document", "Storage", "Event", "EventTarget", "Location",
+  "Blob", "BlobPropertyBag", "Element", "File", "FileList", "HtmlAnchorElement", "HtmlElement",
+  "HtmlInputElement", "Url",
+] }
 
 [lints]
 workspace = true

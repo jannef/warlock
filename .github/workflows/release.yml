@@ -64,6 +64,7 @@ jobs:
           mkdir -p "dist/$name"
           cp "target/release/warlock$exe" "target/release/warlock-cli$exe" "dist/$name/"
           cp release/README.txt LICENSE THIRD_PARTY_LICENSES.html assets/fonts/JuliaMono-OFL.txt "dist/$name/"
+          cp -r assets/keymaps "dist/$name/"
           if [ "$RUNNER_OS" = "macOS" ]; then
             app="dist/$name/Warlock.app/Contents"
             mkdir -p "$app/MacOS"

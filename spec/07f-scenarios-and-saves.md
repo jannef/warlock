@@ -95,7 +95,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `--config-dir` / `--save-dir` wins, then `--portable DIR`, then a `warlock-data` folder next to
   the game (the executable's folder; on macOS, the folder holding `Warlock.app`, never inside the
   bundle), then the platform's standard folders. A portable folder is laid out `config/`
-  (`settings.toml`, key bindings), `data/` (`run.sav`, `snapshots/`), `logs/` (logs, crash reports).
+  (`settings.toml`, key bindings; `warlock-keys.toml`, exported keys), `data/` (`run.sav`, `snapshots/`), `logs/` (logs, crash reports).
   `--portable` alone uses (and creates) `warlock-data` next to the game. A portable folder that
   cannot be written is reported on stderr and in Settings > Files, and the game runs on: what is
   there is read, writes fail with their usual messages. `warlock --paths` prints each location with

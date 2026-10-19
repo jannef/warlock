@@ -1,7 +1,12 @@
 //! Rebindable commands and their text form in the settings file (spec §6).
 //!
 //! A key is written as the character it produces (`"k"`, `">"`) or as a physical key name
-//! (`"ArrowUp"`, `"Numpad8"`, `"F5"`). Commands have stable ids (`"move_n"`, `"wait"`).
+//! (`"ArrowUp"`, `"Numpad8"`, `"Enter"`, `"F5"`). Commands have stable ids (`"move_n"`,
+//! `"wait"`, `"menu_up"`), unique across contexts.
+//!
+//! No lockout (#159): Esc cannot be bound (it always backs out, cancels, and opens the pause
+//! menu), and the [`VITAL`] commands, which reach the controls screen and its Reset all keys,
+//! never lose their last key.
 
 use crate::input::{Bindings, Context, KeyBinding, KeyCommand};
 use bevy::input::keyboard::{Key, KeyboardInput};
@@ -9,9 +14,9 @@ use bevy::prelude::*;
 use std::collections::BTreeMap;
 use warlock_core::Dir;
 
-/// The commands the player may rebind, in the order the controls screen lists them. `Cancel`
-/// (Esc) is fixed so a rebinding can always be cancelled, and the dev snapshot keys are not
-/// player commands.
+/// The commands the player may rebind, in the order the controls screen lists them within each
+/// context (it groups them by context). `Cancel` (Esc) is fixed so a rebinding can always be
+/// cancelled and every screen backed out of.
 /// A slice, not a fixed-size array, so features adding commands don't collide on the length.
 pub const REBINDABLE: &[KeyCommand] = &[
     KeyCommand::Move(Dir::N),
@@ -38,6 +43,9 @@ pub const REBINDABLE: &[KeyCommand] = &[
     KeyCommand::WeaponSkills,
     KeyCommand::Quests,
     KeyCommand::Rest,
+    KeyCommand::RestHour,
+    KeyCommand::RestDawn,
+    KeyCommand::RestDusk,
     KeyCommand::Eat,
     KeyCommand::Look,
     KeyCommand::Missile,
@@ -48,10 +56,21 @@ pub const REBINDABLE: &[KeyCommand] = &[
     KeyCommand::Bash,
     KeyCommand::Pay,
     KeyCommand::NextTarget,
+    KeyCommand::PrevTarget,
+    KeyCommand::Loose,
     KeyCommand::UseTool,
     KeyCommand::Chat,
     KeyCommand::Help,
     KeyCommand::Quit,
+    KeyCommand::MenuUp,
+    KeyCommand::MenuDown,
+    KeyCommand::MenuLeft,
+    KeyCommand::MenuRight,
+    KeyCommand::Confirm,
+    KeyCommand::Back,
+    KeyCommand::Erase,
+    KeyCommand::Mark,
+    KeyCommand::MarkAll,
     KeyCommand::Yes,
     KeyCommand::No,
     KeyCommand::Page(1),
@@ -65,6 +84,23 @@ pub const REBINDABLE: &[KeyCommand] = &[
     KeyCommand::Page(9),
     KeyCommand::NextPage,
     KeyCommand::PrevPage,
+    KeyCommand::RevealMap,
+    KeyCommand::CycleVision,
+    KeyCommand::LightValues,
+    KeyCommand::Snapshot,
+    KeyCommand::SkipHour,
+    KeyCommand::NextWeather,
+    KeyCommand::IdentifyAll,
+    KeyCommand::LoadSnapshot,
+];
+
+/// The commands that reach the controls screen (and its Reset all keys) from anywhere: they
+/// never lose their last key, so no binding, settings file, or keymap can lock the player out.
+/// Esc, which always backs out, is the rest of the way there.
+pub const VITAL: &[KeyCommand] = &[
+    KeyCommand::MenuUp,
+    KeyCommand::MenuDown,
+    KeyCommand::Confirm,
 ];
 
 /// The settings ids of [`KeyCommand::Page`] 1 to 9.
@@ -73,9 +109,16 @@ const PAGE_IDS: [&str; 9] = [
 ];
 
 /// Rebindable commands with no key by default: abilities (`warlock_core::ability`), which the
-/// abilities menu (#156) lists instead of a key each; `f` (fire), which `t` covers; and Quit,
-/// done from the pause menu. The player may bind one in Controls.
-pub const UNBOUND: &[KeyCommand] = &[KeyCommand::Bash, KeyCommand::Fire, KeyCommand::Quit];
+/// abilities menu (#156) lists instead of a key each; `f` (fire), which `t` covers; Quit, done
+/// from the pause menu; the previous target, which Shift with the next target's key picks; and
+/// Back, which Esc always does. The player may bind one in Controls.
+pub const UNBOUND: &[KeyCommand] = &[
+    KeyCommand::Bash,
+    KeyCommand::Fire,
+    KeyCommand::Quit,
+    KeyCommand::PrevTarget,
+    KeyCommand::Back,
+];
 
 /// Physical keys a command may be bound to.
 const CODES: &[KeyCode] = &[
@@ -99,6 +142,9 @@ const CODES: &[KeyCode] = &[
     KeyCode::NumpadDivide,
     KeyCode::NumpadDecimal,
     KeyCode::NumpadEnter,
+    KeyCode::Enter,
+    KeyCode::Backspace,
+    KeyCode::Delete,
     KeyCode::F1,
     KeyCode::F2,
     KeyCode::F3,
@@ -149,6 +195,9 @@ impl KeyCommand {
             WeaponSkills => "weapon_skills",
             Quests => "quests",
             Rest => "rest",
+            RestHour => "rest_hour",
+            RestDawn => "rest_dawn",
+            RestDusk => "rest_dusk",
             Eat => "eat",
             Look => "look",
             Missile => "missile",
@@ -158,9 +207,20 @@ impl KeyCommand {
             MoreDefensive => "more_defensive",
             Bash => "bash",
             NextTarget => "next_target",
+            PrevTarget => "prev_target",
+            Loose => "loose",
             UseTool => "use_tool",
             Chat => "chat",
             Pay => "pay",
+            MenuUp => "menu_up",
+            MenuDown => "menu_down",
+            MenuLeft => "menu_left",
+            MenuRight => "menu_right",
+            Confirm => "confirm",
+            Back => "back",
+            Erase => "erase",
+            Mark => "mark",
+            MarkAll => "mark_all",
             Yes => "yes",
             No => "no",
             Help => "help",
@@ -168,10 +228,15 @@ impl KeyCommand {
             Page(n) => PAGE_IDS.get(usize::from(n).checked_sub(1)?)?,
             NextPage => "next_page",
             PrevPage => "prev_page",
-            Cancel | Snapshot | LoadSnapshot | CycleVision | RevealMap | LightValues | SkipHour
-            | NextWeather | IdentifyAll => {
-                return None;
-            }
+            RevealMap => "dev_reveal_map",
+            CycleVision => "dev_next_vision",
+            LightValues => "dev_light_values",
+            Snapshot => "dev_snapshot",
+            SkipHour => "dev_skip_hour",
+            NextWeather => "dev_next_weather",
+            IdentifyAll => "dev_identify_all",
+            LoadSnapshot => "dev_load_snapshot",
+            Cancel => return None,
         })
     }
 
@@ -241,7 +306,8 @@ impl KeyBinding {
 }
 
 /// Why a key could not be bound: it belongs to a fixed command (one the player cannot rebind,
-/// such as Cancel, which opens the pause menu and backs out of screens), which would be locked out.
+/// such as Cancel, which opens the pause menu and backs out of screens), or it is the last key of
+/// a [`VITAL`] command, which would be locked out.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Conflict {
     pub key: KeyBinding,
@@ -285,6 +351,37 @@ impl Bindings {
             .collect()
     }
 
+    /// The name of `command`'s primary key, as hints and prompts show it; `None` without one.
+    pub fn key_name(&self, command: KeyCommand) -> Option<String> {
+        self.keys_of(command).first().map(|k| k.display())
+    }
+
+    /// Whether `owner` may not give up `key`: a fixed command's, or a vital command's last.
+    pub(super) fn keeps(&self, owner: KeyCommand, key: &KeyBinding) -> bool {
+        let last = self.keys_of(owner) == [key];
+        !REBINDABLE.contains(&owner) || (VITAL.contains(&owner) && last)
+    }
+
+    /// Gives every [`VITAL`] command left without a key its default keys back, taken from
+    /// whoever holds them unless that is another vital command's last key. The last guard
+    /// against a lockout, after a settings file or a keymap is read.
+    pub(crate) fn ensure_vital(&mut self) {
+        for &command in VITAL {
+            if !self.keys_of(command).is_empty() {
+                continue;
+            }
+            let defaults = Bindings::default();
+            for key in defaults.keys_of(command) {
+                match self.owner_in(command.context(), key) {
+                    Some(owner) if self.keeps(owner, key) => continue,
+                    Some(owner) => self.0.retain(|(k, c)| !(*c == owner && k == key)),
+                    None => {}
+                }
+                self.0.push((key.clone(), command));
+            }
+        }
+    }
+
     /// Every key bound to two different commands of one context: `(key, first, second)`.
     pub fn conflicts(&self) -> Vec<(KeyBinding, KeyCommand, KeyCommand)> {
         let mut found = Vec::new();
@@ -310,7 +407,7 @@ impl Bindings {
         if let Some(owner) = self.owner_in(command.context(), &key)
             && owner != command
         {
-            if !REBINDABLE.contains(&owner) {
+            if self.keeps(owner, &key) {
                 return Err(Conflict { key, owner });
             }
             self.0.retain(|(k, c)| !(*c == owner && *k == key));
@@ -334,7 +431,7 @@ impl Bindings {
     }
 
     /// Replaces all keys of `command` with `keys`, at the place of its first entry.
-    fn set_keys(&mut self, command: KeyCommand, keys: Vec<KeyBinding>) {
+    pub(super) fn set_keys(&mut self, command: KeyCommand, keys: Vec<KeyBinding>) {
         let at = self
             .0
             .iter()
@@ -345,7 +442,8 @@ impl Bindings {
         self.0.splice(at..at, entries);
     }
 
-    /// Restores the default keys of `command`, except keys another command now uses.
+    /// Restores the default keys of `command`, except keys another command now uses. A vital
+    /// command that would be left without a key keeps the keys it has.
     pub fn reset_command(&mut self, command: KeyCommand) {
         let defaults: Vec<KeyBinding> = Bindings::default()
             .0
@@ -358,6 +456,9 @@ impl Bindings {
             })
             .map(|(k, _)| k)
             .collect();
+        if defaults.is_empty() && VITAL.contains(&command) {
+            return;
+        }
         self.set_keys(command, defaults);
     }
 
@@ -412,7 +513,11 @@ impl Bindings {
                 }
             }
             if keys.is_empty() {
-                if items.is_empty() {
+                if items.is_empty() && VITAL.contains(&command) {
+                    warnings.push(format!(
+                        "bindings.{id}: needed to reach the controls; using the defaults"
+                    ));
+                } else if items.is_empty() {
                     // Left without a key on purpose (its key was moved to another command).
                     bindings.set_keys(command, Vec::new());
                     emptied.push(command);
@@ -443,6 +548,7 @@ impl Bindings {
                 bindings.reset_command(command);
             }
         }
+        bindings.ensure_vital();
         bindings
     }
 }
@@ -653,5 +759,107 @@ mod tests {
         let back = Bindings::from_table(&table, &mut warnings);
         assert!(warnings.is_empty(), "{warnings:?}");
         assert_eq!(back.to_map(), b.to_map());
+    }
+
+    /// Every key some command has by default, and a few more.
+    fn some_keys() -> Vec<KeyBinding> {
+        let mut keys: Vec<KeyBinding> = Vec::new();
+        let defaults = Bindings::default().0.into_iter().map(|(k, _)| k);
+        for key in defaults.chain(["w", "s", "x", "Q"].map(ch)) {
+            if !keys.contains(&key) {
+                keys.push(key);
+            }
+        }
+        keys
+    }
+
+    #[test]
+    fn the_vital_commands_never_lose_their_last_key() {
+        // Binding every key to every command, one after another, never leaves a vital command
+        // without a key, and Esc stays Cancel's.
+        let keys = some_keys();
+        let mut b = Bindings::default();
+        for &command in REBINDABLE {
+            for key in &keys {
+                let _ = b.bind_primary(command, key.clone());
+                for &vital in VITAL {
+                    assert!(!b.keys_of(vital).is_empty(), "{vital:?} after {command:?}");
+                }
+            }
+        }
+        let esc = KeyBinding::Code(KeyCode::Escape);
+        assert_eq!(b.keys_of(KeyCommand::Cancel), vec![&esc]);
+        assert!(b.conflicts().is_empty());
+        // Reset all keys gets everything back.
+        b.reset_all();
+        assert_eq!(b.to_map(), Bindings::default().to_map());
+    }
+
+    #[test]
+    fn a_vital_commands_last_key_is_refused_with_its_owner() {
+        let mut b = Bindings::default();
+        let enter = KeyBinding::Code(KeyCode::Enter);
+        // Choose has Enter and NumEnter: Enter may move to Erase, then NumEnter may not.
+        assert!(matches!(
+            b.bind_primary(KeyCommand::Erase, enter.clone()),
+            Ok(Bound::Moved { keyless: false, .. })
+        ));
+        let numpad = KeyBinding::Code(KeyCode::NumpadEnter);
+        assert_eq!(
+            b.bind_primary(KeyCommand::Mark, numpad.clone()),
+            Err(Conflict {
+                key: numpad.clone(),
+                owner: KeyCommand::Confirm
+            })
+        );
+        // Resetting a vital command whose default keys are all taken keeps the keys it has.
+        b.bind_primary(KeyCommand::Confirm, ch("x")).unwrap();
+        assert_eq!(b.keys_of(KeyCommand::Confirm), vec![&ch("x")]);
+        b.bind_primary(KeyCommand::Mark, numpad).unwrap();
+        b.reset_command(KeyCommand::Confirm);
+        assert_eq!(b.keys_of(KeyCommand::Confirm), vec![&ch("x")]);
+    }
+
+    #[test]
+    fn a_settings_file_cannot_lock_the_player_out() {
+        let table: toml::Table = toml::from_str(
+            r#"
+            menu_up = []
+            confirm = ["Escape"]
+            mark = ["ArrowDown", "j"]
+            menu_down = ["ArrowDown"]
+            "#,
+        )
+        .unwrap();
+        let mut warnings = Vec::new();
+        let b = Bindings::from_table(&table, &mut warnings);
+        for &vital in VITAL {
+            assert!(!b.keys_of(vital).is_empty(), "{vital:?}");
+        }
+        assert_eq!(b.keys_of(KeyCommand::MenuUp).len(), 2, "its defaults");
+        assert_eq!(
+            b.keys_of(KeyCommand::Confirm)[0],
+            &KeyBinding::Code(KeyCode::Enter)
+        );
+        assert!(b.conflicts().is_empty());
+        for needle in ["bindings.menu_up", "bindings.confirm"] {
+            assert!(warnings.iter().any(|w| w.contains(needle)), "{needle}");
+        }
+    }
+
+    #[test]
+    fn ensure_vital_takes_defaults_back_from_other_commands() {
+        let mut b = Bindings::default();
+        // Menu down without a key, one of its keys held by Mark (as a hand-edited file might
+        // leave it).
+        b.0.retain(|(_, c)| *c != KeyCommand::MenuDown);
+        b.0.push((KeyBinding::Code(KeyCode::ArrowDown), KeyCommand::Mark));
+        b.ensure_vital();
+        assert_eq!(b.keys_of(KeyCommand::MenuDown).len(), 2);
+        assert_eq!(
+            b.keys_of(KeyCommand::Mark),
+            vec![&KeyBinding::Code(KeyCode::Space)]
+        );
+        assert!(b.conflicts().is_empty());
     }
 }

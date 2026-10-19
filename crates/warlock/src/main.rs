@@ -21,12 +21,26 @@ use bevy::window::{ExitCondition, WindowResolution};
 use bevy::winit::WinitPlugin;
 use std::time::Duration;
 
-/// `--paths` and `--move-data`: print and exit, with no window and no log file.
+/// `--paths`, `--move-data`, `--export-keys`, and `--import-keys`: print and exit, with no
+/// window and no log file.
 #[cfg(not(target_arch = "wasm32"))]
 fn file_command(args: &cli::Args) -> Option<AppExit> {
     if args.paths {
         print!("{}", paths::init(args, true).report());
         return Some(AppExit::Success);
+    }
+    if args.export_keys.is_some() || args.import_keys.is_some() {
+        paths::init(args, false);
+        return Some(match settings::keymap::command(args) {
+            Ok(text) => {
+                print!("{text}");
+                AppExit::Success
+            }
+            Err(text) => {
+                eprintln!("warlock: {text}");
+                AppExit::error()
+            }
+        });
     }
     let words = args.move_data.as_ref()?;
     let result = move_data::Target::parse(words).and_then(|target| {
