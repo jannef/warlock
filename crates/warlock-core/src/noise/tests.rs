@@ -204,7 +204,7 @@ fn an_action_s_noise_comes_from_the_actor_and_the_terrain() {
     let footsteps = step(1).expect("footsteps");
     assert_eq!(
         (footsteps.kind, footsteps.loudness, footsteps.maker),
-        (SoundKind::Footsteps, 50, ActorId(1))
+        (SoundKind::Footsteps, 50, Some(ActorId(1)))
     );
     assert_eq!(step(2).map(|n| n.loudness), Some(100), "water splashes");
     // A load makes steps louder (spec §8 "Burden"): ×1.25 burdened, ×1.5 strained; doors and

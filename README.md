@@ -74,6 +74,11 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   block a little better ("You feel more skilled with long blades."). Skill carries over to
   related weapons, as in *The Riddle of Steel*: long blades 8 makes short blades 6. Your race and
   class start you off, a weapon skills screen shows your ranks, and a shield can bash too.
+- **Traps** — arrow and spear traps, fireballs, lightning bolts, pits, alarms, and teleports lie
+  hidden until someone steps on them: you, or a creature you lure there. One you saw go off is
+  known from then on, shown as `^` and remembered, and stepping onto it asks first. The Depths
+  hide a few on every level; a trap hall beside the arena lets you try them and watch them catch
+  creatures.
 - **Burden** — everything you carry weighs on you: past a third of what your Strength and
   Toughness can bear you are burdened, then strained, then overloaded. Every action takes longer,
   armour-like caps keep your Dexterity from helping your Defence, and your footsteps get louder.
@@ -132,7 +137,7 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
 
   ![A forest clearing in Thornwood at noon](docs/screenshots/m9-forest-clearing.png)
 
-- **Levels** — the hub, a sunlit courtyard, the arena, the quarry, a 420×300 cavern, and "The Depths": rooms-and-corridors
+- **Levels** — the hub, a sunlit courtyard, the arena, the quarry, the trap hall, a 420×300 cavern, and "The Depths": rooms-and-corridors
   and cave levels generated from the run seed (numbers or words), with hand-made vaults stamped in.
 - **Special rooms** — ADOM-like, about one level of the Depths in three has a room that changes
   the rules inside it, announced the first time you step in: a shadowed room that drains every

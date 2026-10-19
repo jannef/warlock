@@ -1,8 +1,8 @@
 # The showcase hub (spec §3). Each room demonstrates one engine capability:
 # top row: light hall (M3), darkness chamber (M3), water garden (M4);
 # bottom row: start room, door corridor, patrol gallery, effects room (M4), stairs nook (> down to
-# the Vast Caverns, v down to the arena, Q down to the quarry, < up and out to the overworld, ^ up
-# to the courtyard).
+# the Vast Caverns, v down to the arena, Q down to the quarry, T down to the trap hall, < up and
+# out to the overworld, ^ up to the courtyard).
 #
 # Lighting (M3): no ambient light. Rooms are lit by wall torches (t), lamps (l), and a brazier (B);
 # the light hall has colored crystals (R G U A) between pillars that cast colored shadows; the
@@ -70,7 +70,7 @@ map = '''
 #......@.......##.....#.#.....##3........................#......B......#.......#
 #..............####+###.###+####..#...#...#...#...#...#..#.............#.<.>.v.#
 #..............##.............##2........................#.===.....::::#.......#
-#..............##......t......##.........................#.===.....::::#.....Q.#
+#..............##......t......##.........................#.===.....::::#...T.Q.#
 #..t.......t...#################t.......................t#.........::::#.......#
 ################################################################################
 '''
@@ -102,6 +102,8 @@ map = '''
 "v" = { terrain = "stairs_down", to = "arena" }
 # Stairs down (drawn `>`) to the quarry, the place to dig.
 "Q" = { terrain = "stairs_down", to = "quarry" }
+# Stairs down (drawn `>`) to the trap hall (spec §8 "Traps"): the showcase has no traps.
+"T" = { terrain = "stairs_down", to = "trap_hall" }
 
 # Special rooms (data/room_effects.toml): the stairs nook, walls and door included, is a sanctuary.
 [[room]]

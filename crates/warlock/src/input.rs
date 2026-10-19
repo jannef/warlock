@@ -3,8 +3,8 @@
 //! [`route_keys`] reads every key press exactly once. While a screen is open (the screen stack is
 //! not empty) the press goes to the top screen; otherwise it is a gameplay command, read through
 //! the bindings in the current [`InputMode`]. Prompts in the message line (the direction for
-//! open/close and for digging, how long to rest, look mode, aiming a shot or a throw) are input
-//! modes, not screens.
+//! open/close and for digging, how long to rest, look mode, aiming a shot or a throw, whether
+//! to step onto a known trap) are input modes, not screens.
 //!
 //! Letter and symbol commands bind by *logical* key (the character the keyboard layout produces),
 //! so `<`, `>`, and `?` work on any layout. Arrows and the numpad bind by physical key code.
@@ -21,6 +21,7 @@ use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
 use warlock_core::content::VisionProfile;
+use warlock_core::perception::PerceptionView;
 use warlock_core::time::Duration;
 use warlock_core::weather::Weather;
 use warlock_core::{Action, Dir, Letters, Pos, Rest};
@@ -327,6 +328,9 @@ pub enum InputMode {
     Direction(KeyCommand),
     /// Asking how long to rest ([`REST_CHOICES`]).
     Rest,
+    /// Asking whether to step in this direction onto a known trap (spec §8 "Traps"): `y` steps,
+    /// anything else does not.
+    ConfirmStep(Dir),
     /// Look mode: a cursor at this level position.
     Look(Pos),
     /// Aiming a shot or a throw (`ui::target`).
@@ -447,6 +451,18 @@ impl Gameplay<'_> {
             *self.mode = InputMode::Normal;
             return None;
         }
+        // The trap prompt answers by letter: `y` steps on, anything else (Esc too) does not. A
+        // held key's repeats never answer it.
+        if let InputMode::ConfirmStep(dir) = *self.mode {
+            if key.repeat {
+                return None;
+            }
+            if is_yes(key) {
+                self.actions.write(PlayerAction(Action::Move(dir)));
+            }
+            *self.mode = InputMode::Normal;
+            return None;
+        }
         // Enter looses an aimed missile, whatever it is bound to.
         if let InputMode::Aim(aim) = *self.mode
             && matches!(key.key_code, KeyCode::Enter | KeyCode::NumpadEnter)
@@ -539,9 +555,15 @@ impl Gameplay<'_> {
             (InputMode::Rest, _) => InputMode::Normal,
             (InputMode::Normal, KeyCommand::Rest) => InputMode::Rest,
             (InputMode::Normal, KeyCommand::Move(dir)) => {
-                self.actions.write(PlayerAction(Action::Move(dir)));
-                InputMode::Normal
+                if asks_before_stepping(&game.world.perception(), dir) {
+                    InputMode::ConfirmStep(dir)
+                } else {
+                    self.actions.write(PlayerAction(Action::Move(dir)));
+                    InputMode::Normal
+                }
             }
+            // Answered above, by letter.
+            (InputMode::ConfirmStep(_), _) => InputMode::Normal,
             (InputMode::Normal, KeyCommand::Wait) => {
                 self.actions.write(PlayerAction(Action::Wait));
                 InputMode::Normal
@@ -722,6 +744,24 @@ pub const REST_CHOICES: [(&str, Rest); 3] = [
     ("n", Rest::Dusk),
 ];
 
+/// Whether a step in `dir` asks first (spec §8 "Traps"): onto a trap the player knows, where no
+/// one they see stands (moving there would be an attack, or stop).
+pub fn asks_before_stepping(view: &PerceptionView<'_>, dir: Dir) -> bool {
+    let to = view.viewer().step(dir);
+    view.trap(to).is_some() && view.actor_at(to).is_none()
+}
+
+/// Whether a key press is `y` (yes), by the character it types.
+fn is_yes(key: &KeyboardInput) -> bool {
+    matches!(&key.logical_key, Key::Character(c) if c.as_str().eq_ignore_ascii_case("y"))
+}
+
+/// The prompt asking whether to step onto a known trap, by its name: "Really step onto the
+/// fireball trap? (y/n)". No is the default: any key but `y`.
+pub fn confirm_step_prompt(trap: &str) -> String {
+    format!("Really step onto the {trap}? (y/n)")
+}
+
 /// The rest a key press picks in the rest prompt, if any.
 fn rest_choice(key: &KeyboardInput) -> Option<Rest> {
     let Key::Character(c) = &key.logical_key else {
@@ -806,6 +846,28 @@ mod tests {
         assert_eq!(next_weather(Some(Weather::Clear)), Weather::Overcast);
         assert_eq!(next_weather(Some(Weather::Rain)), Weather::HeavyRain);
         assert_eq!(next_weather(Some(Weather::HeavyRain)), Weather::Clear);
+    }
+
+    #[test]
+    fn stepping_onto_a_known_trap_asks_first() {
+        use std::sync::Arc;
+        use warlock_core::World;
+        use warlock_core::action::parse_actions;
+        let content = Arc::new(warlock_core::content::Content::builtin().unwrap());
+        let mut world = World::new(content, "traps", None).expect("the trap hall");
+        // Below the arrow trap at the west end of the proving row.
+        for action in parse_actions("move:NW*14 move:W*7 move:N*2").unwrap() {
+            world.apply(&action);
+        }
+        assert_eq!(world.player_pos(), Pos::new(16, 3));
+        let view = world.perception();
+        assert!(asks_before_stepping(&view, Dir::N));
+        assert!(!asks_before_stepping(&view, Dir::E));
+        let trap = view.trap(Pos::new(16, 2)).expect("known");
+        assert_eq!(
+            confirm_step_prompt(&view.content().trap(trap).name),
+            "Really step onto the arrow trap? (y/n)"
+        );
     }
 
     #[test]

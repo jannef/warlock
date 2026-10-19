@@ -30,6 +30,7 @@ mod sky;
 mod slot;
 mod stance;
 mod terrain;
+mod trap;
 mod vault;
 mod vision;
 mod weapon_skill;
@@ -69,6 +70,9 @@ pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use terrain::{Breakable, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
+pub use trap::{
+    BOLT_LENGTHS, BURST_RADII, MAX_CHARGES, Trap, TrapDef, TrapEffect, TrapId, TrapNoise,
+};
 pub use vault::Vault;
 pub use vision::VisionProfile;
 pub use weapon_skill::{
@@ -228,8 +232,8 @@ struct LegendFile {
 /// `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
 /// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, `data/horoscope.toml`,
 /// `data/effects.toml`, `data/room_effects.toml`, `data/weapon_skills.toml`, and
-/// `data/stances.toml` are optional (without effects, spell effects
-/// are not drawn). Without vision
+/// `data/stances.toml`, and `data/traps.toml` are optional (without effects, spell effects are
+/// not drawn; without traps there are none). Without vision
 /// profiles, a single `normal` profile that needs no light is used, so content without lighting
 /// stays fully visible; without sizes, everything is medium; without factions, everyone is neutral; without a calendar, months are numbered;
 /// without a sky file there are no moons; without an objects file there are no objects; without a
@@ -251,6 +255,9 @@ pub struct Content {
     object_ids: BTreeMap<String, ObjectId>,
     /// Equipment slots, in display order.
     slots: Vec<SlotDef>,
+    /// Trap types, in file order.
+    traps: Vec<TrapDef>,
+    trap_ids: BTreeMap<String, TrapId>,
     factions: Factions,
     lights: Vec<LightPreset>,
     light_ids: BTreeMap<String, LightId>,
@@ -298,6 +305,8 @@ impl Content {
             objects: Vec::new(),
             object_ids: BTreeMap::new(),
             slots: Vec::new(),
+            traps: Vec::new(),
+            trap_ids: BTreeMap::new(),
             factions: Factions::default(),
             lights: Vec::new(),
             light_ids: BTreeMap::new(),
@@ -392,6 +401,11 @@ impl Content {
         let path = "data/effects.toml";
         if let Some(text) = files.get_optional(path) {
             content.effects = effect::parse(path, text)?;
+        }
+        let path = "data/traps.toml";
+        if let Some(text) = files.get_optional(path) {
+            let (traps, ids) = trap::parse(path, text, &content)?;
+            (content.traps, content.trap_ids) = (traps, ids);
         }
 
         let path = "data/legend.toml";
@@ -863,7 +877,12 @@ impl Content {
         };
         let parsed: dungeon::DungeonFile =
             toml::from_str(text).map_err(|e| ContentError::new(path, e.to_string()))?;
-        for def in parsed.resolve(path, |name| self.creature_id(name))? {
+        let resolved = parsed.resolve(
+            path,
+            |name| self.creature_id(name),
+            |name| self.trap_id(name),
+        )?;
+        for def in resolved {
             if self.levels.contains_key(&def.id) {
                 return Err(ContentError::new(
                     path,
@@ -978,12 +997,11 @@ impl Content {
     }
 
     /// A stable hash (64-bit FNV-1a) of the ordered terrain, creature, level, light, dungeon,
-    /// object, slot, skill, room effect, and weapon skill ids.
+    /// object, slot, skill, room effect, weapon skill, and trap ids.
     ///
-    /// `TerrainId`, `CreatureId`, `LightId`, `ObjectId`, `SlotId`, `SkillId`, `RoomEffectId`, and
-    /// `WeaponSkillId` are indices, so a save is only meaningful for content with the same ids in
-    /// the same order;
-    /// saves record this fingerprint to detect a mismatch.
+    /// `TerrainId`, `CreatureId`, `LightId`, `ObjectId`, `SlotId`, `SkillId`, `RoomEffectId`,
+    /// `WeaponSkillId`, and `TrapId` are indices, so a save is only meaningful for content with the
+    /// same ids in the same order; saves record this fingerprint to detect a mismatch.
     pub fn fingerprint(&self) -> u64 {
         let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
         let mut feed = |bytes: &[u8]| {
@@ -991,7 +1009,7 @@ impl Content {
                 hash = (hash ^ u64::from(b)).wrapping_mul(0x0000_0100_0000_01b3);
             }
         };
-        let groups: [Vec<&str>; 10] = [
+        let groups: [Vec<&str>; 11] = [
             self.terrain.iter().map(|t| t.id.as_str()).collect(),
             self.creatures.iter().map(|c| c.id.as_str()).collect(),
             self.levels.keys().map(String::as_str).collect(),
@@ -1006,6 +1024,7 @@ impl Content {
             (self.weapon_skills.skills().iter())
                 .map(|s| s.id.as_str())
                 .collect(),
+            self.traps.iter().map(|t| t.id.as_str()).collect(),
         ];
         for ids in groups {
             for id in ids {
@@ -1102,6 +1121,19 @@ impl Content {
     pub fn fires(&self, launcher: ObjectId, ammo: ObjectId) -> bool {
         let kind = &self.object(launcher).launches;
         kind.is_some() && *kind == self.object(ammo).ammo
+    }
+
+    pub fn trap(&self, id: TrapId) -> &TrapDef {
+        &self.traps[usize::from(id.0)]
+    }
+
+    pub fn trap_id(&self, name: &str) -> Option<TrapId> {
+        self.trap_ids.get(name).copied()
+    }
+
+    /// Every trap type, in file order (by [`TrapId`]; none without `data/traps.toml`).
+    pub fn trap_defs(&self) -> &[TrapDef] {
+        &self.traps
     }
 
     pub fn material(&self, id: MaterialId) -> &MaterialDef {
@@ -1384,11 +1416,13 @@ impl Content {
             .flat_map(|w| self.climate.def(w).emitters())
             .flat_map(|e| e.glyphs.chars());
         let effects = self.effects.iter().flat_map(EffectDef::glyphs);
+        let traps = self.traps.iter().map(|t| t.glyph);
         terrain
             .chain(creatures)
             .chain(objects)
             .chain(weather)
             .chain(effects)
+            .chain(traps)
             .collect()
     }
 }

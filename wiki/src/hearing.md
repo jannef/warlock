@@ -17,6 +17,9 @@ around you hear too.
   [Creatures](creatures.md).
 - **Digging.** Digging into a wall is loud, louder than fighting (see
   [Digging and walls](digging.md)).
+- **Traps.** Some traps are loud when they go off: an alarm's bell carries farther than anything,
+  a fireball explodes, lightning cracks like thunder, and an arrow trap twangs like a bowstring
+  ("You hear an explosion to the west."). See [Traps](traps.md).
 
 How loud a step is also depends on what you step onto. Wading through water splashes, and
 crashing through bushes or over loose rubble is loud. Grass, flowers, the forest floor, a dirt

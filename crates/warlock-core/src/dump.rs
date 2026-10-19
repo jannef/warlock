@@ -24,13 +24,13 @@ const RECENT_MESSAGES: usize = 10;
 /// A map layer to render.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Layer {
-    /// What the player sees: actors on visible cells, then the top object of each pile in sight
-    /// or remembered, then terrain seen or remembered; unknown as space.
+    /// What the player sees: actors on visible cells, then known traps, then the top object of
+    /// each pile in sight or remembered, then terrain seen or remembered; unknown as space.
     View,
     /// `*` on every currently visible cell.
     Fov,
     /// Terrain glyphs for every cell the player has seen (visible or remembered), with the top
-    /// object of each known pile over them.
+    /// object of each known pile and the known traps over them.
     Memory,
     /// Perceived light on every visible cell as a digit, `0` (dark) to `9` (fully lit or
     /// brighter); see [`light_digit`].
@@ -53,7 +53,11 @@ pub enum Layer {
     /// Not a map: the player's weapon skills, one a line with its rank and how far its marks
     /// are toward the next (`Long blades 2 (40%)`); never what a rank gives.
     WeaponSkills,
-    /// Ground truth: all terrain, objects, and actors on the level. **Dev-only.**
+    /// Not a map: the traps the player knows on the level, one a line by position (`(12, 5)
+    /// fireball trap`, `(remembered)` when out of sight); never hidden ones.
+    Traps,
+    /// Ground truth: all terrain, objects, traps (hidden ones too), and actors on the level.
+    /// **Dev-only.**
     Truth,
     /// Not a map: every actor on the level with its weight, what it carries (and of that wears
     /// and wields), its stats (scores and potentials), and its trained skills with their marks
@@ -78,6 +82,7 @@ impl Layer {
         Layer::Stats,
         Layer::Skills,
         Layer::WeaponSkills,
+        Layer::Traps,
         Layer::Truth,
         Layer::Actors,
         Layer::Rooms,
@@ -96,6 +101,7 @@ impl Layer {
             Layer::Stats => "stats",
             Layer::Skills => "skills",
             Layer::WeaponSkills => "weapon_skills",
+            Layer::Traps => "traps",
             Layer::Truth => "truth",
             Layer::Actors => "actors",
             Layer::Rooms => "rooms",
@@ -119,7 +125,7 @@ impl FromStr for Layer {
             .ok_or_else(|| {
                 format!(
                     "unknown layer `{s}` (expected view, fov, memory, light, sound, inventory, \
-                     equipment, stats, skills, weapon_skills, truth, actors, rooms)"
+                     equipment, stats, skills, weapon_skills, traps, truth, actors, rooms)"
                 )
             })
     }
@@ -141,6 +147,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
         Layer::Stats => stat_rows(&world.perception()),
         Layer::Skills => skill_rows(&world.perception()),
         Layer::WeaponSkills => weapon_skill_rows(&world.perception()),
+        Layer::Traps => trap_rows(&world.perception()),
         _ => {
             let view = world.perception();
             rows(view.width(), view.height(), |p| {
@@ -157,9 +164,10 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
         CellView::Unknown => ' ',
         CellView::Remembered(t) | CellView::Visible(t) => content.terrain(t).glyph,
     };
-    let known_glyph = |cell: CellView| match view.objects(p).first() {
-        Some(top) => content.object(top.object).glyph,
-        None => terrain_glyph(cell),
+    let known_glyph = |cell: CellView| match (view.trap(p), view.objects(p).first()) {
+        (Some(trap), _) => content.trap(trap).glyph,
+        (None, Some(top)) => content.object(top.object).glyph,
+        (None, None) => terrain_glyph(cell),
     };
     match layer {
         Layer::View => match view.actor_at(p) {
@@ -184,6 +192,7 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
         | Layer::Stats
         | Layer::Skills
         | Layer::WeaponSkills
+        | Layer::Traps
         | Layer::Truth
         | Layer::Actors
         | Layer::Rooms => {
@@ -193,7 +202,8 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
 }
 
 /// A heard sound in the `sound` layer: `f` footsteps, `o` a door opening, `c` a door closing,
-/// `x` fighting, `b` a bowstring, `m` chanting (magic), `d` digging; upper case when loud.
+/// `x` fighting, `b` a bowstring, `m` chanting (magic), `d` digging, `a` an alarm bell, `e` an
+/// explosion, `t` a thunderclap; upper case when loud.
 pub fn sound_char(sound: &PerceivedSound) -> char {
     let c = match sound.kind {
         SoundKind::Footsteps => 'f',
@@ -203,6 +213,9 @@ pub fn sound_char(sound: &PerceivedSound) -> char {
         SoundKind::Bowstring => 'b',
         SoundKind::Chanting => 'm',
         SoundKind::Digging => 'd',
+        SoundKind::Bell => 'a',
+        SoundKind::Explosion => 'e',
+        SoundKind::Thunder => 't',
     };
     if sound.volume == Volume::Loud {
         c.to_ascii_uppercase()
@@ -225,11 +238,13 @@ fn truth_rows(world: &World) -> Vec<String> {
     rows(level.width(), level.height(), |p| {
         match (
             actors.iter().find(|a| a.pos == p),
+            level.trap_at(p),
             level.objects_at(p).first(),
         ) {
-            (Some(actor), _) => content.creature(actor.creature).glyph,
-            (None, Some(top)) => content.object(top.object).glyph,
-            (None, None) => level
+            (Some(actor), _, _) => content.creature(actor.creature).glyph,
+            (None, Some(trap), _) => content.trap(trap.kind).glyph,
+            (None, None, Some(top)) => content.object(top.object).glyph,
+            (None, None, None) => level
                 .terrain_at(p)
                 .map_or(' ', |t| content.terrain(t).glyph),
         }
@@ -263,6 +278,27 @@ fn room_rows(world: &World) -> Vec<String> {
         ));
     }
     out
+}
+
+/// The traps the player knows on the level, one a line by position: `(12, 5) fireball trap`,
+/// `(40, 2) alarm trap (remembered)` when out of sight; `no known traps` when there are none.
+fn trap_rows(view: &PerceptionView<'_>) -> Vec<String> {
+    let content = view.content();
+    let rows: Vec<String> = (view.known_traps().into_iter())
+        .map(|(p, trap)| {
+            let seen = if view.sees_objects_at(p) {
+                ""
+            } else {
+                " (remembered)"
+            };
+            format!("{p} {}{seen}", content.trap(trap).name)
+        })
+        .collect();
+    if rows.is_empty() {
+        vec!["no known traps".into()]
+    } else {
+        rows
+    }
 }
 
 /// The player's inventory (`a - a dagger (450 g)`, `b - a leather jerkin (being worn) (3.5
@@ -510,7 +546,8 @@ pub fn ascii(world: &World, layers: &[Layer]) -> String {
 
 /// Structured dump: turn, game time, level, viewer, the special room the player stands in if they
 /// know it (its effect id; else null), the weather (under the open sky; else null), seen actors,
-/// heard sounds, the player's inventory, equipment (by slot id), weight, and scores (by stat id),
+/// heard sounds, known traps (`known_traps`: position, trap id, and whether in sight), the
+/// player's inventory, equipment (by slot id), weight, and scores (by stat id),
 /// recent messages, the requested layers as arrays of rows, and optionally the full
 /// [`crate::WorldState`] under `state`.
 pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
@@ -564,6 +601,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             "time": d.time.to_string(),
             "place": d.place,
             "by": d.by.map(|c| content.creature(c).id.clone()),
+            "trap": d.trap.map(|t| content.trap(t).id.clone()),
         })
     });
     let weapon_skills: serde_json::Map<String, Value> = (content.weapon_skills().ids())
@@ -574,6 +612,11 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
                 def.id.clone(),
                 json!({ "rank": rank, "progress": progress }),
             )
+        })
+        .collect();
+    let traps: Vec<Value> = (view.known_traps().into_iter())
+        .map(|(p, trap)| {
+            json!({ "pos": p, "trap": content.trap(trap).id, "seen": view.sees_objects_at(p) })
         })
         .collect();
     let layer_map: serde_json::Map<String, Value> = layers
@@ -593,6 +636,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "hash": format!("{:016x}", world.state_hash()),
         "seen_actors": seen,
         "heard_sounds": view.sounds(),
+        "known_traps": traps,
         "inventory": inventory,
         "equipment": equipment,
         "weight": { "base": weight.base, "carried": weight.carried, "total": weight.total() },

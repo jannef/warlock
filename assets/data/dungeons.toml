@@ -11,6 +11,10 @@
 #   depth      number of levels
 #   size       [width, height]
 #   creatures  creature ids generators may place on patrol (default none)
+#   traps      trap ids (data/traps.toml) generators hide on each level, all hidden, never on or
+#              next to stairs nor on a patrol; an id named twice comes up twice as often
+#              (default none)
+#   traps_per_level  [least, most] traps a level gets (default [2, 4])
 #   ambient    [r, g, b, uv] light everywhere (default none)
 #   [[dungeon.levels]]  per-depth overrides, first match wins:
 #              from, to (inclusive; default `from`), generator, size (default the branch's)
@@ -25,6 +29,7 @@ generator = "rooms"
 depth = 8
 size = [80, 21]
 creatures = ["rat", "bat", "kobold"]
+traps = ["arrow", "arrow", "spear", "spear", "pit", "pit", "alarm", "teleport", "fireball", "lightning_bolt"]
 
 # Depths 3 to 5 are caverns.
 [[dungeon.levels]]

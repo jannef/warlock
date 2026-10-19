@@ -32,5 +32,6 @@
   - [Ammunition](ammunition.md)
   - [Weapon skills](weapon-skills.md)
 - [Creatures](creatures.md)
+- [Traps](traps.md)
 - [Your lantern](lantern.md)
 - [Saving](saving.md)

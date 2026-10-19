@@ -23,7 +23,7 @@ fn level(seed: u64, depth: u32) -> LevelTemplate {
     generate(&CONTENT, seed, &format!("depths:{depth}"), Some("vast")).expect("generates")
 }
 
-/// Header (name, stairs, creatures) plus the map, for snapshots.
+/// Header (name, stairs, creatures, traps) plus the map, for snapshots.
 fn describe(level: &LevelTemplate) -> String {
     let (w, h) = (level.terrain.width(), level.terrain.height());
     let mut out = format!("{} ({}) {w}x{h}\n", level.name, level.id);
@@ -35,6 +35,9 @@ fn describe(level: &LevelTemplate) -> String {
         let route: Vec<&str> = c.route.iter().map(|d| d.name()).collect();
         let name = &CONTENT.creature(c.creature).id;
         let _ = writeln!(out, "{name} at {} route {}", c.pos, route.join(" "));
+    }
+    for (p, trap) in &level.traps {
+        let _ = writeln!(out, "{} trap at {p}", CONTENT.trap(trap.kind).id);
     }
     let _ = writeln!(out, "{} placed lights", level.lights.len());
     for room in &level.rooms {
@@ -207,6 +210,34 @@ fn check(level: &LevelTemplate, depth: u32) -> Result<(), TestCaseError> {
         );
         prop_assert!(!pile.is_empty());
     }
+
+    // Traps (spec §8 "Traps") are hidden, on walkable ground that is not stairs, never next to
+    // stairs (the player arrives there), and never on a patrol (creatures would spring them
+    // every round).
+    let mut patrolled = Vec::new();
+    for spawn in &level.creatures {
+        let mut p = spawn.pos;
+        patrolled.push(p);
+        for dir in &spawn.route {
+            p = p.step(*dir);
+            patrolled.push(p);
+        }
+    }
+    for (p, trap) in &level.traps {
+        let ground = content.terrain(terrain[*p]);
+        prop_assert!(!trap.known, "a known trap at {}", p);
+        prop_assert!(
+            ground.walkable && ground.stairs.is_none(),
+            "trap on {}",
+            ground.id
+        );
+        prop_assert!(
+            level.stairs.iter().all(|s| s.pos.chebyshev(*p) > 1),
+            "trap at {} by the stairs",
+            p
+        );
+        prop_assert!(!patrolled.contains(p), "trap at {} on a patrol", p);
+    }
     Ok(())
 }
 
@@ -280,6 +311,40 @@ fn seeds_and_levels_give_different_maps() {
     );
 }
 
+/// Each generated level hides its branch's few traps (vaults may bring more), from a stream of
+/// its own: the map is the same with or without them.
+#[test]
+fn generated_levels_hide_a_few_traps_of_their_own() {
+    let def = CONTENT.dungeon("depths").expect("depths");
+    let [least, most] = def.traps_per_level;
+    let mut kinds = std::collections::BTreeSet::new();
+    for seed in 0..10 {
+        for depth in 1..=8 {
+            let level = level(seed, depth);
+            let from_vaults: usize = (CONTENT.vaults().iter())
+                .map(|v| stamped_at(&level, v).len() * v.template.traps.len())
+                .sum();
+            let own = level.traps.len() - from_vaults;
+            assert!(
+                (least as usize..=most as usize).contains(&own),
+                "{} traps on depths:{depth}, seed {seed}",
+                own
+            );
+            kinds.extend(level.traps.values().map(|t| t.kind));
+        }
+    }
+    assert!(kinds.len() >= 5, "a mix of kinds: {kinds:?}");
+    // Without traps in the branch the map is the same.
+    let mut files = ContentFiles::builtin();
+    let dungeons =
+        include_str!("../../../../assets/data/dungeons.toml").replace("traps = [", "# traps = [");
+    files.insert("data/dungeons.toml", &dungeons);
+    let bare = Content::load(&files).expect("content");
+    let plain = generate(&bare, 1, "depths:1", Some("vast")).expect("generates");
+    assert_eq!(plain.terrain, level(1, 1).terrain);
+    assert!(plain.traps.is_empty());
+}
+
 #[test]
 fn only_branch_levels_generate() {
     let err = |id: &str| generate(&CONTENT, 1, id, None).unwrap_err();
@@ -320,6 +385,9 @@ fn vaults_are_stamped_verbatim_with_their_lights_and_creatures() {
                     let shift = |p: Pos| Pos::new(at.x + p.x, at.y + p.y);
                     for (p, light) in &vault.template.lights {
                         assert_eq!(level.lights.get(&shift(*p)), Some(light), "{}", vault.id());
+                    }
+                    for (p, trap) in &vault.template.traps {
+                        assert_eq!(level.traps.get(&shift(*p)), Some(trap), "{}", vault.id());
                     }
                     for spawn in &vault.template.creatures {
                         assert!(

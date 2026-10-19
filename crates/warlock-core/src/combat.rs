@@ -317,6 +317,12 @@ impl Profile {
         }
     }
 
+    /// An attack with no one's stats behind it (a trap's, spec §8 "Traps"): its own to-hit and
+    /// damage, nothing added.
+    pub fn bare(attack: &Attack) -> Self {
+        Self::of(attack, attack.to_hit, 0)
+    }
+
     fn of(attack: &Attack, to_hit: i32, bonus: i32) -> Self {
         Self {
             to_hit,

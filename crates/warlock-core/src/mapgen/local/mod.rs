@@ -180,6 +180,7 @@ pub(super) fn generate(content: &Content, seed: u64, id: &str) -> Result<LevelTe
             lights: land.lights,
             flow: land.flow,
             objects: land.objects,
+            traps: Default::default(),
             regions: Vec::new(),
             rooms: Vec::new(),
             exit: Some(EdgeExit {

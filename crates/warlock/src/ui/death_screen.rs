@@ -34,12 +34,16 @@ impl DeathScreen {
         };
         let content = view.content();
         let calendar = content.calendar();
-        let by = match death.by {
-            Some(creature) => {
+        let by = match (death.trap, death.by) {
+            (Some(trap), _) => {
+                let name = &content.trap(trap).name;
+                format!("Killed by {} {name}", article(name))
+            }
+            (None, Some(creature)) => {
                 let name = &content.creature(creature).name;
                 format!("Killed by {} {name}", article(name))
             }
-            None => "Killed by something you did not see".into(),
+            (None, None) => "Killed by something you did not see".into(),
         };
         let turns = match death.turn {
             1 => "after 1 turn".to_string(),

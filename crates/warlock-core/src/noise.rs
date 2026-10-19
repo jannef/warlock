@@ -10,7 +10,9 @@
 //! noise made inside it by its effect's `noise` percent (spec §7 "Special rooms": an echoing hall
 //! doubles it, a hushed chamber takes it down to two fifths). [`noise`] is the one function that
 //! decides how loud an action is: the actor's skills (stealth; spec §8 "Skills") make its steps
-//! and doors quieter there ([`plain_noise`] is the noise without them).
+//! and doors quieter there ([`plain_noise`] is the noise without them). A trap going off (spec §8
+//! "Traps") makes its own noise on its cell, as its data says (an alarm's bell, a fireball's
+//! explosion, a lightning bolt's thunderclap), heard by everyone in earshot (no actor made it).
 //! Loudness is an integer, at most [`MAX_LOUDNESS`]; a creature or door without the field is
 //! silent.
 //!
@@ -84,6 +86,12 @@ pub enum SoundKind {
     Chanting,
     /// Digging into a wall (spec §8 "Digging").
     Digging,
+    /// A bell: an alarm trap (spec §8 "Traps").
+    Bell,
+    /// An explosion: a fireball trap.
+    Explosion,
+    /// A thunderclap: a lightning trap.
+    Thunder,
 }
 
 impl SoundKind {
@@ -97,6 +105,9 @@ impl SoundKind {
             SoundKind::Bowstring => "bowstring",
             SoundKind::Chanting => "chanting",
             SoundKind::Digging => "digging",
+            SoundKind::Bell => "bell",
+            SoundKind::Explosion => "explosion",
+            SoundKind::Thunder => "thunder",
         }
     }
 
@@ -110,6 +121,9 @@ impl SoundKind {
             SoundKind::Bowstring => "a bowstring",
             SoundKind::Chanting => "chanting",
             SoundKind::Digging => "digging",
+            SoundKind::Bell => "a bell ring",
+            SoundKind::Explosion => "an explosion",
+            SoundKind::Thunder => "a thunderclap",
         }
     }
 }
@@ -138,7 +152,7 @@ pub enum Act {
     Dig,
 }
 
-/// A noise made by an actor.
+/// A noise made by an actor, or by a trap going off.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Noise {
     pub kind: SoundKind,
@@ -146,8 +160,8 @@ pub struct Noise {
     pub at: Pos,
     /// How loud it is there.
     pub loudness: u16,
-    /// Who made it (it does not hear itself).
-    pub maker: ActorId,
+    /// Who made it (it does not hear itself); `None` for a trap, which everyone in earshot hears.
+    pub maker: Option<ActorId>,
 }
 
 /// A noise an actor heard (see [`crate::world::Actor::heard`]).
@@ -287,7 +301,7 @@ pub fn plain_noise(
         kind,
         at,
         loudness,
-        maker: actor.id,
+        maker: Some(actor.id),
     })
 }
 
@@ -414,7 +428,7 @@ fn hearers(state: &WorldState, content: &Content, noise: Noise) -> Vec<(ActorId,
     let listeners: Vec<(ActorId, Pos, u16)> = state
         .actors
         .values()
-        .filter(|a| a.id != noise.maker && a.level == level.id)
+        .filter(|a| Some(a.id) != noise.maker && a.level == level.id)
         .filter(|a| a.pos.chebyshev(noise.at) <= reach)
         .filter_map(|a| {
             let threshold = a.hearing(content)?;

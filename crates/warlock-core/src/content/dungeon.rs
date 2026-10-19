@@ -14,6 +14,8 @@
 //! depth = 8
 //! size = [80, 21]
 //! creatures = ["rat", "kobold"] # patrolling creatures generators may place; default none
+//! traps = ["arrow", "pit"]      # traps generators may hide (spec §8 "Traps"); default none
+//! traps_per_level = [2, 4]      # how many a level gets, at least and at most; default [2, 4]
 //! ambient = [0, 0, 0, 0]        # optional
 //!
 //! [[dungeon.levels]]            # optional per-depth overrides, first match wins
@@ -25,6 +27,7 @@
 
 use super::ContentError;
 use super::creature::CreatureId;
+use super::trap::TrapId;
 use crate::light::Light;
 use serde::Deserialize;
 
@@ -68,8 +71,16 @@ struct DungeonSpec {
     #[serde(default)]
     creatures: Vec<String>,
     #[serde(default)]
+    traps: Vec<String>,
+    traps_per_level: Option<[u32; 2]>,
+    #[serde(default)]
     levels: Vec<LevelsSpec>,
 }
+
+/// How many traps a level gets unless its branch says otherwise: 2 to 4.
+const TRAPS_PER_LEVEL: [u32; 2] = [2, 4];
+/// The most traps a generated level may get.
+const MAX_TRAPS_PER_LEVEL: u32 = 50;
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -98,6 +109,10 @@ pub struct DungeonDef {
     pub ambient: Light,
     /// Creatures generators may place on patrol.
     pub creatures: Vec<CreatureId>,
+    /// Traps generators may hide on a level (spec §8 "Traps"); none: the branch has none.
+    pub traps: Vec<TrapId>,
+    /// How many traps a level gets, at least and at most.
+    pub traps_per_level: [u32; 2],
     /// One plan per depth, index `depth - 1`.
     plans: Vec<LevelPlan>,
 }
@@ -131,11 +146,12 @@ pub fn parse_branch_level(id: &str) -> Option<(&str, u32)> {
 }
 
 impl DungeonFile {
-    /// Validates every branch; `creature_id` resolves creature names.
+    /// Validates every branch; `creature_id` resolves creature names, `trap_id` trap names.
     pub(super) fn resolve(
         self,
         file: &str,
         creature_id: impl Fn(&str) -> Option<CreatureId>,
+        trap_id: impl Fn(&str) -> Option<TrapId>,
     ) -> Result<Vec<DungeonDef>, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let mut defs: Vec<DungeonDef> = Vec::new();
@@ -198,12 +214,32 @@ impl DungeonFile {
                         .ok_or_else(|| err(format!("dungeon `{id}` uses unknown creature `{c}`")))
                 })
                 .collect::<Result<Vec<_>, _>>()?;
+            let traps = (spec.traps.iter())
+                .map(|t| {
+                    trap_id(t).ok_or_else(|| err(format!("dungeon `{id}` uses unknown trap `{t}`")))
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            let traps_per_level = spec.traps_per_level.unwrap_or(TRAPS_PER_LEVEL);
+            let [least, most] = traps_per_level;
+            if least > most || most > MAX_TRAPS_PER_LEVEL {
+                return Err(err(format!(
+                    "dungeon `{id}`: traps_per_level must be [least, most], at most \
+                     {MAX_TRAPS_PER_LEVEL}"
+                )));
+            }
+            if spec.traps_per_level.is_some() && traps.is_empty() {
+                return Err(err(format!(
+                    "dungeon `{id}` has traps_per_level but no `traps`"
+                )));
+            }
             defs.push(DungeonDef {
                 name: spec.name.unwrap_or_else(|| id.clone()),
                 id,
                 depth: spec.depth,
                 ambient: spec.ambient,
                 creatures,
+                traps,
+                traps_per_level,
                 plans,
             });
         }
@@ -218,7 +254,35 @@ mod tests {
     fn resolve(text: &str) -> Result<Vec<DungeonDef>, ContentError> {
         let file: DungeonFile =
             toml::from_str(text).map_err(|e| ContentError::new("d", e.to_string()))?;
-        file.resolve("d", |c| (c == "rat").then_some(CreatureId(1)))
+        file.resolve(
+            "d",
+            |c| (c == "rat").then_some(CreatureId(1)),
+            |t| (t == "pit").then_some(TrapId(0)),
+        )
+    }
+
+    #[test]
+    fn branches_name_the_traps_their_levels_hide() {
+        let base = "[[dungeon]]\nid = \"a\"\ngenerator = \"rooms\"\ndepth = 2\nsize = [80, 21]\n";
+        let none = resolve(base).unwrap();
+        assert!(none[0].traps.is_empty());
+        let pits = resolve(&format!("{base}traps = [\"pit\"]\n")).unwrap();
+        assert_eq!(
+            (pits[0].traps.as_slice(), pits[0].traps_per_level),
+            ([TrapId(0)].as_slice(), [2, 4])
+        );
+        let more = resolve(&format!(
+            "{base}traps = [\"pit\"]\ntraps_per_level = [5, 5]\n"
+        ));
+        assert_eq!(more.unwrap()[0].traps_per_level, [5, 5]);
+        for bad in [
+            "traps = [\"dragon_trap\"]\n",
+            "traps = [\"pit\"]\ntraps_per_level = [3, 1]\n",
+            "traps = [\"pit\"]\ntraps_per_level = [1, 100]\n",
+            "traps_per_level = [1, 2]\n",
+        ] {
+            assert!(resolve(&format!("{base}{bad}")).is_err(), "{bad}");
+        }
     }
 
     #[test]
