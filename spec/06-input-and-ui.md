@@ -9,7 +9,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - Keyboard-first. Default sets: vi-keys (`hjklyubn`), numpad, arrows (4 directions).
 - Symbol commands (`<`, `>`, `?`) are bound by **logical key**, so they work on non-US layouts.
 - Bindings live in the settings file. The `?` help (the controls list, read-only) is generated from
-  the binding table, so it is always accurate.
+  the binding table, so it is always accurate. Every key is rebindable (below).
 - **Screens**: the main menu, New run and its character creation steps, pause menu, Settings,
   Controls, help, the inventory, the equipment screen and its choice of what goes in a slot, an
   item's description, the character screen, the Skills screen, the weapon skills screen, the quest
@@ -73,13 +73,39 @@ developer notes (CLAUDE.md, `docs/dev/`).
   screen (where the files are and why; Open folder). A missing or damaged file means
   defaults and a logged warning. Changes apply live (a font size change rebuilds the glyph atlas)
   and are written immediately.
-- **Rebinding**: in Controls, select a command and press a key; it becomes the command's primary
+- **Every key is a command in its context** (#159): play (the map, the direction prompts, look
+  mode), aiming (next and previous target, shoot or throw: `Tab`, none, Enter), the rest prompt
+  (`h`, `d`, `n`), menus and screens (up, down, left, right: the arrows and `k` `j` `h` `l`;
+  choose: Enter; back: no key of its own, as Esc always backs out; erase a character or reset a
+  key: Delete, Backspace; on the pick-up and drop lists mark: Space, mark everything: `,`), info
+  pages, dialogs (yes, no), and the developer keys (§9). A key is unique within its context only,
+  so `Tab` is next target while aiming and next page on an info screen; a mode or screen with a
+  context of its own reads it first (the rest prompt and aiming before play's keys). Two kinds of
+  keys are fixed: Esc, which always cancels a prompt, backs out of every screen, and opens the
+  pause menu, and the letters and digits that name the rows of a list (stacks, slots, topics).
+  Hints (screen footers, the prompts, the status bar's `? controls`) name the keys as bound.
+- **Rebinding**: in Controls (the commands by context under headings, below notes on Esc and on
+  list letters), select a command and press a key; it becomes the command's primary
   key (alternates such as the numpad stay). A key another command of the same context uses is taken
   from it and bound to the new command, and the screen says so ("K moved to Wait; Kick has no
   key." or "... (was Kick)."), so the table never holds a conflict; a command left without a key
   shows as none and is saved as an empty list. Fixed commands never lose their key: Esc (cancel,
-  which opens the pause menu) is refused with a reason. Delete resets a command,
-  "Reset all keys" resets everything.
+  which opens the pause menu) is refused with a reason, and so is the last key of the commands
+  that reach Controls from anywhere (up, down, and choose on the menus), so no binding, settings
+  file, or keymap can lock the player out. Delete resets a command, "Reset all keys" resets
+  everything, and so does `--reset-keys` on the command line (saved at once; the game then starts
+  as usual).
+- **Keymaps**: "Export keys…" in Controls writes every command's keys, by context, with a format
+  version (`version = 1`), to `warlock-keys.toml` in the config folder (on the web, a download)
+  and says where; "Import keys…" reads it back (on the web, from a file picker).
+  `--export-keys FILE` and `--import-keys FILE` do the same from the command line, then exit. The
+  file is TOML, to read and edit by hand. An import changes only the commands it lists, as
+  rebinding does: a key another command of the context has moves to the listed one (said), a key
+  two listed commands claim goes to the first in Controls' order, unknown commands and keys are
+  skipped with a warning, the lockout rules hold, and the change applies and is saved at once. A
+  file without a version (command ids at the top level, or a settings file's `[bindings]`) is
+  read too, and a newer version as far as this one knows. The defaults ship as
+  `keymaps/default.toml` beside the game.
 - First-phase commands: move, wait, open/close door, kick (`K`, then a direction; §8 "Doors"),
   ascend/descend, light/douse lantern (`L`),
   pick up (`,` or `g`), drop (`d`), inventory (`i`), equipment (`e`), character (`@`), skills

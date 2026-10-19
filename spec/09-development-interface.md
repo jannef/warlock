@@ -149,7 +149,8 @@ cargo xtask golden [--update]                             # compare golden scree
   later), save and load named snapshots (`F5`/`F9`), skip an hour (`F6`, recorded as `skip:1h`),
   set the next weather for three hours (`F7`, recorded as `weather:overcast` and so on), identify
   everything carried (`F8`, recorded as `identify`; §8 "Magic items").
-  They are in the bindings table, so the `?` help lists them.
+  They are commands of their own context in the bindings table, read (and listed by Controls
+  and the `?` help, which can rebind them) only where they work.
 - CLAUDE.md documents build commands, architecture notes, pinned documentation references, and
   verification procedures, including the agent workflow guidance from the original brief.
   Verification uses tests, dumps, logs, and screenshots — a successful compile alone does not

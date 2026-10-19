@@ -31,7 +31,10 @@ to open, read keys for, or draw one:
   on the inventory or equipment screen beneath (`ScreenStack::looked_item`; the first stack
   without one, as `--screen describe` opens it over the inventory).
 - **Input**: `input::route_keys` is the one reader of `KeyboardInput`. Stack not empty: the press
-  goes to the top screen (`ScreenStack::handle` → `ScreenAction`: stay, close, open, a
+  goes to the top screen as a `Press` whose `nav` comes from the `Context::Menu` bindings (Esc is
+  always `Nav::Back`; see `docs/dev/settings.md` for contexts: a screen never matches a key code or
+  a character, except list letters and digits and the typed seed) (`ScreenStack::handle` →
+  `ScreenAction`: stay, close, open, a
   `MenuChoice`, or `Act(Action)`: close and apply a gameplay action, e.g. `pickup:ac`,
   `equip:body:b`; the screens beneath stay, and `screens::refresh`, after `SimSet`, shows the
   equipment screen the result, as in ADOM); otherwise
@@ -41,6 +44,7 @@ to open, read keys for, or draw one:
   dropped. Held-key repeats never open, close, choose, or act.
 - **Draw**: `ui::draw` is the one system that writes the UI console: when anything it shows
   changed, it clears the console, draws the gameplay UI if a run exists, then the top screen.
+  Footers name the menu keys as bound (`ui::menu::Hints`: `↑↓` and Enter with the defaults).
 - **Dialog** (`ui/dialog_screen.rs`): the one question screen; **every** confirmation is this
   screen with its own parameters, never a screen or prompt of its own. A screen or gameplay
   answers `ScreenAction::Dialog(Box<Dialog>)` (`Dialog` converts `into()` it; `Screens::ask`
@@ -83,9 +87,11 @@ to open, read keys for, or draw one:
   the dialog (above). The rules never ask: a `move` steps onto whatever is there. `C` with
   exactly one creature in view next to the player chats with it at once
   (`input::chat_partner`), else asks for a direction.
-- Screens are plain state machines tested without a window: `ui/menu.rs` (`Press`, `Panel`, main
-  and pause menu), `ui/new_run_screen.rs`, `ui/settings_screen.rs`, `ui/controls_screen.rs` (also
-  the `?` help: the same binding list, read-only), `ui/object_screen.rs` (inventory, pick up,
+- Screens are plain state machines tested without a window: `ui/menu.rs` (`Press`, `Hints`,
+  `Panel`, main and pause menu), `ui/new_run_screen.rs`, `ui/settings_screen.rs`,
+  `ui/controls_screen.rs` (commands grouped by `Context` under headings, notes on Esc and list
+  letters, Reset all keys, Export keys…, Import keys…; also the `?` help: the same list,
+  read-only, the developer keys only where they work), `ui/object_screen.rs` (inventory, pick up,
   drop, throw, eat: stacks by letter; in the choices letters always name stacks, even `h j k l`;
   the eat choice lists food lying here first, without letters, then the pack's by letter; in the
   inventory a letter opens the stack's description, and `i` closes it only when it names none),
