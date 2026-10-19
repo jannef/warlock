@@ -65,7 +65,7 @@ impl ControlsScreen {
     /// order, then the fixed and dev keys.
     fn rows(&self, bindings: &Bindings) -> Vec<Row> {
         if self.mode != Mode::ReadOnly {
-            let commands = REBINDABLE.into_iter().map(Row::Command);
+            let commands = REBINDABLE.iter().copied().map(Row::Command);
             return commands.chain([Row::Reset, Row::Back]).collect();
         }
         let mut commands = REBINDABLE.to_vec();
@@ -364,7 +364,14 @@ mod tests {
         b.add_dev_keys();
         let mut help = ControlsScreen::help();
         let rows = help.rows(&b);
-        assert_eq!(rows[..REBINDABLE.len()], REBINDABLE.map(Row::Command));
+        assert_eq!(
+            rows[..REBINDABLE.len()],
+            REBINDABLE
+                .iter()
+                .copied()
+                .map(Row::Command)
+                .collect::<Vec<_>>()[..]
+        );
         for extra in [
             KeyCommand::Cancel,
             KeyCommand::RevealMap,

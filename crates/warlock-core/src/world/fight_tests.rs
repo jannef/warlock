@@ -942,6 +942,8 @@ fn a_coward_s_attacks_cost_more_and_other_actions_do_not() {
     assert_eq!(shoot, base[1] * 5 / 4);
     assert_eq!(throw, base[2] * 5 / 4);
     assert_eq!(wait, base[3]);
+    // Attacks drawing on a weapon skill are priced by `attack_price`, which applies it too.
+    assert_eq!(w.attack_price(ActorId(0), ActionKind::Melee, None), melee);
     assert_eq!(
         w.price_of(ActorId(0), ActionKind::Reload),
         price(&world_on("#####\n#@r.#\n#####\n", ""), ActionKind::Reload),

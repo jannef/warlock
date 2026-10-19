@@ -25,7 +25,9 @@
 
 use super::{Actor, ActorId, ActorKind, World};
 use crate::action::Event;
-use crate::content::{ActionKind, BASE_TURN, LevelKind, Stance, TerrainDef, percent_of, price};
+use crate::content::{
+    ActionKind, BASE_TURN, Benefit, LevelKind, Stance, TerrainDef, WeaponSkillId, percent_of, price,
+};
 use crate::geom::Pos;
 use crate::perception::VIEW_RADIUS;
 use crate::skills::Effect;
@@ -60,16 +62,18 @@ impl World {
     pub(super) fn price_of(&self, id: ActorId, kind: ActionKind) -> i64 {
         let actor = &self.state.actors[&id];
         let base = price(self.content.action_cost(actor.creature, kind), BASE_TURN);
-        let attacks = matches!(
-            kind,
-            ActionKind::Melee | ActionKind::Shoot | ActionKind::Throw
-        );
-        let base = if attacks {
-            percent_of(base, self.content.stance_def(actor.stance).attack_cost)
-        } else {
-            base
-        };
-        self.burdened(id, base)
+        self.burdened(id, self.stanced(actor, kind, base))
+    }
+
+    /// `base` as dear as `actor`'s combat stance makes its attacks (spec §8 "Stances"): melee,
+    /// shots, and throws; reloading is not an attack.
+    fn stanced(&self, actor: &Actor, kind: ActionKind, base: i64) -> i64 {
+        match kind {
+            ActionKind::Melee | ActionKind::Shoot | ActionKind::Throw => {
+                percent_of(base, self.content.stance_def(actor.stance).attack_cost)
+            }
+            _ => base,
+        }
     }
 
     /// Whether actor `id` stepping to `to` flees: some hostile creature stands next to it now and
@@ -90,6 +94,27 @@ impl World {
                 && other.pos.chebyshev(to) > 1
                 && self.stance(id, other.id) == Stance::Hostile
         })
+    }
+
+    /// The energy price of attack action `kind` (`melee`, `shoot`, `throw`, `reload`) for actor
+    /// `id` drawing on weapon skill `skill` (spec §8 "Weapon skills"): its cost less what its
+    /// rank takes off (`speed`; `reload` for reloading), then priced like any action
+    /// ([`World::price_of`]), its combat stance included.
+    pub(super) fn attack_price(
+        &self,
+        id: ActorId,
+        kind: ActionKind,
+        skill: Option<WeaponSkillId>,
+    ) -> i64 {
+        let actor = &self.state.actors[&id];
+        let benefit = actor.benefit(&self.content, skill);
+        let saving = match kind {
+            ActionKind::Reload => benefit.reload,
+            _ => benefit.speed,
+        };
+        let cost = self.content.action_cost(actor.creature, kind);
+        let base = price(Benefit::saving(cost, saving), BASE_TURN);
+        self.burdened(id, self.stanced(actor, kind, base))
     }
 
     /// The energy price of actor `id` stepping onto terrain `to` on the current level, slowed by

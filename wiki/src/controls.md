@@ -22,6 +22,7 @@ authoritative: it is generated from your current key bindings.
 | Equipment (wear and wield) | `e` |
 | Character (your stats and weight) | `@` |
 | Skills | `S` |
+| Weapon skills | `W` |
 | Info page 1 to 9 (while an info screen is open) | `1` to `9` |
 | Next / previous info page (wraps) | `Tab` or `PageDown` / `Shift`+`Tab` or `PageUp` |
 | Rest | `R` |
@@ -29,7 +30,9 @@ authoritative: it is generated from your current key bindings.
 | Fire your missile weapon | `f`, then aim (see below) |
 | Throw something | `t`, then aim |
 | More aggressive combat stance, more defensive (no time passes) | `+`, `-` |
+| Bash with your shield | no key until you bind one, then a direction |
 | Next target while aiming (with Shift: the one before) | `Tab` |
+| Use a tool: dig into a wall with a pick-axe | `U`, then a direction |
 | Show or hide the controls | `?` |
 | Pause menu | `Esc` |
 | Save and quit | `Q` |
@@ -49,7 +52,9 @@ kept with your [settings](settings.md).
 
 ## Prompts
 
-Opening and closing a door ask `In which direction? (Esc to cancel)` on the message line, and
+Opening and closing a door, and bashing with your shield, ask `In which direction? (Esc to
+cancel)` on the message line, digging asks `Dig in which direction? (Esc to cancel)` (see
+[Digging and walls](digging.md)), and
 resting asks how long (see [Resting](resting.md)). Answer with a direction or the key shown, or
 press `Esc` to cancel. Pressing any other command cancels the prompt.
 
@@ -62,9 +67,12 @@ describes what you know about the cell under it:
   [Creatures](creatures.md)), with how hurt it looks (unhurt, lightly wounded, wounded, badly
   wounded, or nearly dead; see [Combat](combat.md)), what it wields and wears, the objects lying
   there, and the terrain, as in "A giant rat (hostile, unhurt), on stone floor." or "A kobold
-  (hostile, badly wounded), wielding a spear, on stone floor.";
+  (hostile, badly wounded), wielding a spear, on stone floor."; a wall you have started digging
+  into is "partly dug";
 - what you remember there, if you cannot see it now: the terrain and the objects you saw on it;
 - for stairs and the places on the overworld, where they lead;
+- the [special room](special-rooms.md) the ground lies in, once you have been inside it, as in
+  "A stone floor in an echoing hall.";
 - a sound you heard there this turn ([Hearing](hearing.md));
 - or "You don't know what is there."
 

@@ -71,11 +71,12 @@ enum Row {
     ReducedEffects,
     Effect(Effect),
     Palette,
+    Clock,
     Reset,
     Back,
 }
 
-const ROWS: [Row; 14] = [
+const ROWS: [Row; 15] = [
     Row::FontSize,
     Row::ReducedEffects,
     Row::Effect(Effect::GlyphAnimation),
@@ -88,12 +89,13 @@ const ROWS: [Row; 14] = [
     Row::Effect(Effect::ScreenShake),
     Row::Effect(Effect::Weather),
     Row::Palette,
+    Row::Clock,
     Row::Reset,
     Row::Back,
 ];
 
 /// Index of the first action row (Reset); a gap is drawn before it.
-const FIRST_ACTION: usize = 12;
+const FIRST_ACTION: usize = 13;
 
 /// Selection state of the settings screen.
 #[derive(Debug, Default)]
@@ -125,6 +127,7 @@ impl SettingsScreen {
                     *on = !*on;
                 }
                 Row::Palette => settings.palette = settings.palette.cycle(step < 0),
+                Row::Clock => settings.clock = settings.clock.toggle(),
                 Row::Reset | Row::Back => {}
             },
             Nav::Enter if !press.repeat => match row {
@@ -135,6 +138,7 @@ impl SettingsScreen {
                     *on = !*on;
                 }
                 Row::Palette => settings.palette = settings.palette.cycle(false),
+                Row::Clock => settings.clock = settings.clock.toggle(),
                 Row::Reset => *settings = Settings::default(),
                 Row::Back => return true,
             },
@@ -144,7 +148,7 @@ impl SettingsScreen {
     }
 
     pub fn draw(&self, console: &mut Console, settings: &Settings) {
-        let panel = Panel::new(console, " Settings ", 60, 24);
+        let panel = Panel::new(console, " Settings ", 60, 25);
         let label_w = 18;
         let mut switches = settings.effects;
         for (i, row) in ROWS.iter().enumerate() {
@@ -169,6 +173,7 @@ impl SettingsScreen {
                     "Color palette".to_string(),
                     settings.palette.label().to_string(),
                 ),
+                Row::Clock => ("Clock".to_string(), settings.clock.label().to_string()),
                 Row::Reset => ("Reset to defaults".to_string(), String::new()),
                 Row::Back => ("Back".to_string(), String::new()),
             };
@@ -189,6 +194,7 @@ impl SettingsScreen {
             Row::ReducedEffects => "Preset: turns every effect below off.",
             Row::Effect(e) => e.help(),
             Row::Palette => "Recolors everything on screen; game data is unchanged.",
+            Row::Clock => "How the time of day is written: 14:32 or 2:32 PM.",
             Row::Reset => "Restores these settings (not the key bindings).",
             Row::Back => "Settings are saved as you change them.",
         };
@@ -238,6 +244,9 @@ mod tests {
         }
         press(&mut screen, &mut s, Nav::Right);
         assert_eq!(s.palette, Palette::HighContrast);
+        press(&mut screen, &mut s, Nav::Down);
+        press(&mut screen, &mut s, Nav::Right);
+        assert_eq!(s.clock, crate::settings::Clock::H12);
         press(&mut screen, &mut s, Nav::Down);
         press(&mut screen, &mut s, Nav::Enter);
         assert_eq!(s, Settings::default());
