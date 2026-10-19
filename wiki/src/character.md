@@ -63,6 +63,7 @@ your stats, your level and experience (see [Experience](experience.md)), and you
 [Combat](combat.md#hit-points)) and Defence, what ails you (see
 [Status effects](status-effects.md)) and which diseases you know you have (see
 [Diseases](diseases.md)), and what you weigh and carry against what you can (see
-[Burden](burden.md)). `S` there, or anywhere in play, shows your [skills](skills.md). The game
-does not change your race, gender, class, or sign once a run has started; you get a year older
-on every birthday.
+[Burden](burden.md)). `S` there, or anywhere in play, shows your [skills](skills.md), and `W`
+your ranks in each [weapon skill](weapon-skills.md), which your race and class start you with.
+The game does not change your race, gender, class, or sign once a run has started; you get a
+year older on every birthday.

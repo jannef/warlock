@@ -53,6 +53,9 @@
 #             status's max), { disease = "filth_fever", chance = 10 } (then a check to resist it)
 #   natural   its natural armour: { defence = 3, name = "shell" } (the Natural category of
 #             Defence; "Your sword glances off the cave beetle's shell.")
+#   weapon_skills  its ranks in weapon skills (spec §8 "Weapon skills"), by skill id in
+#             weapon_skills.toml, 0 to 10: { spears = 1 }; each raises the skills it defaults
+#             to. Creatures do not train (yet); the player's come from their race and class
 
 [[creature]]
 id = "player"
@@ -128,6 +131,7 @@ opens_doors = true
 footsteps = 80
 hearing = 15
 stats = { strength = 9, dexterity = 13, toughness = 10, intelligence = 10, willpower = 9, presence = 8 }
+weapon_skills = { spears = 1 }
 
 # Sparks from the torch it carries.
 [[creature.particles]]
@@ -182,6 +186,7 @@ hearing = 12
 weight = 22000
 size = "small"
 stats = { strength = 8, dexterity = 15, toughness = 10, intelligence = 10, willpower = 10, presence = 8 }
+weapon_skills = { bows = 1 }
 
 # The war band's shaman, slow and frail: casts from a few cells away. A faint violet sparkle
 # where its spells land.

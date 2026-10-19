@@ -155,6 +155,7 @@ impl CharacterScreen {
             i32::from(!self.effects.is_empty()) + i32::from(!self.diseases.is_empty());
         let h = Stat::COUNT as i32 + 14 + identity_rows + thresholds.len() as i32 + status_rows;
         let panel = Panel::new(console, " Character ", WIDTH, h);
+        super::info_tabs::draw_tabs(console, &panel, bindings, super::ScreenName::Character);
         let x = panel.inner_x();
         // Rows from the footer's down would draw over it, or the frame, of a panel cut short.
         let fits = |y: i32| y < panel.y + panel.h - 2;

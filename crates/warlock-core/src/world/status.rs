@@ -17,9 +17,10 @@
 //!   passes no time for anyone.
 //! - **Healing** ([`World::healing_rate`]): normally one hit point per
 //!   [`combat::regen_seconds`] of the actor's (effective) Toughness; twice as fast while the
-//!   player rests (`[healing] resting`); slowed or stopped by the slowest `regen` of its statuses
-//!   (bleeding stops it, poison and disease halve it) and of the diseases that show (marsh ague
-//!   slows it more).
+//!   player rests (`[healing] resting`) and three times as fast in a sanctuary
+//!   ([`World::room_regen`]); slowed or stopped by the slowest `regen` of its statuses (bleeding
+//!   stops it, poison and disease halve it) and of the diseases that show (marsh ague slows it
+//!   more).
 //! - **Deaths**: a tick that takes the last hit point kills, at that moment, by the status
 //!   (`Event::Died`'s `of`, [`super::Death`]'s `of`); the creature counts as killed by whoever
 //!   caused the effect ([`crate::status::Effect::by`]).
@@ -170,14 +171,17 @@ impl World {
 
     /// How fast actor `id` gets hit points back now, in percent of the normal pace (spec §8
     /// "Healing"): the slowest `regen` of its statuses and of the diseases that show (100
-    /// without any), times the resting bonus while the player rests. Hunger (#137: Weak or
-    /// worse) slows it through its statuses' `regen`; disease through Diseased's and its own.
+    /// without any), times what a special room it stands in does to it (a sanctuary triples it,
+    /// [`World::room_regen`]), times the resting bonus while the player rests. The one place
+    /// that decides the pace. Hunger (#137: Weak or worse) slows it through its statuses'
+    /// `regen`; disease through Diseased's and its own.
     pub(crate) fn healing_rate(&self, id: ActorId) -> u32 {
         let Some(actor) = self.state.actors.get(&id) else {
             return 0;
         };
         let statuses = actor.effects.regen(&self.content);
         let rate = u32::from(statuses.min(actor.diseases.regen(&self.content)));
+        let rate = rate * self.room_regen(id) / 100;
         if self.resting && id == self.state.player {
             rate * u32::from(self.content.healing().resting) / 100
         } else {

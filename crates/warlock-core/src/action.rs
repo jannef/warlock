@@ -42,6 +42,10 @@ pub enum Action {
     },
     /// Take off what is in a slot (an id in `data/slots.toml`). Takes the time of its action.
     Remove(String),
+    /// Bash whoever stands in a direction with the shield the player holds (spec §8 "Weapon
+    /// skills"): a melee blow with the shield's own damage, drawing on and training shield
+    /// bashing. Takes the time of `melee`.
+    Bash(Dir),
     /// Shoot the readied missile weapon's ammunition at this cell (spec §8 "Ranged combat"):
     /// one shot flies along the line through it, as far as the weapon shoots. Takes the time of
     /// `shoot` (plus `reload` for a missile weapon that needs it).
@@ -55,6 +59,10 @@ pub enum Action {
     /// Wait turn after turn (creatures act) until the goal, stopping early when a creature comes
     /// into view or a message is logged.
     Rest(Rest),
+    /// Dig into the wall in this direction with the digging tool the player has ready (spec §8
+    /// "Digging"): turn after turn (each the `dig` action's time) until the wall gives way,
+    /// stopping early like a rest. What was dug stays dug.
+    Dig(Dir),
     /// Dev command: switch the player's vision profile (an id in `data/vision.toml`). Takes no
     /// game time, but changes state and perception, so replays record it like any action.
     SetVision(String),
@@ -71,6 +79,16 @@ pub enum Action {
     /// had failed to resist it: it incubates, then shows. Takes no game time; recorded in
     /// replays.
     Infect(String),
+    /// Dev command: show spell effect `effect` (an id in `data/effects.toml`) at level cell `at`,
+    /// or from `at` toward `to`: a burst around `at` (around `to`, flying there from `at`), or a
+    /// bolt from `at` to `to` (cut short by the first opaque cell). It only shows: it hurts no
+    /// one and takes no game time, but it is recorded in replays, so captures can show any moment
+    /// of an effect (spec §4.8 "Spell effects").
+    Effect {
+        effect: String,
+        at: Pos,
+        to: Option<Pos>,
+    },
 }
 
 /// How long to rest.
@@ -197,7 +215,7 @@ pub enum Event {
         to: Pos,
         strike: Option<Strike>,
         /// What a shot or a throw was made with: the missile (the ammunition as it flew, the
-        /// thrown thing); `None` for blows and spells.
+        /// thrown thing); for a shield bash, the shield; `None` for other blows and spells.
         with: Option<ObjectId>,
     },
     /// A missile flew (spec §8 "Ranged combat"): a shot or a throw. As the player perceives it
@@ -236,6 +254,25 @@ pub enum Event {
         disease: DiseaseId,
         news: DiseaseNews,
     },
+    /// A spell-like effect the player perceives (spec §4.8 "Spell effects"): traps now, spells
+    /// later. As the player perceives it: it is light itself, so its cells are cut to those the
+    /// player sees or has in line of sight (in the dark too), and a bolt's path to the stretch
+    /// from the first of them to the last. Kept when the player saw any of its cells.
+    Spell {
+        /// An id in `data/effects.toml` (`fireball`, `lightning_bolt`): what it looks like.
+        effect: String,
+        /// Where it comes from: the trap's cell, later a caster.
+        origin: Pos,
+        shape: SpellShape,
+        /// The affected cells the player can see; perception-filtered, never ground truth.
+        cells: Vec<Pos>,
+    },
+    /// A wall gave way (spec §8 "Digging") and is rubble now. Kept when the player sees the cell
+    /// afterwards.
+    WallBroken {
+        pos: Pos,
+        cause: Breach,
+    },
 }
 
 /// What became of a disease ([`Event::Disease`]).
@@ -248,6 +285,27 @@ pub enum DiseaseNews {
     Worse(u16),
     /// It is gone.
     Recovered,
+}
+
+/// The shape of a spell effect ([`Event::Spell`]).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SpellShape {
+    /// A ball around `center` reaching `radius` cells (the rounded radius, like every radius:
+    /// cells at squared distance up to `radius² + radius`).
+    Burst { center: Pos, radius: i32 },
+    /// A line along `path`, in order, from the cell next to its origin on.
+    Bolt { path: Vec<Pos> },
+}
+
+/// What broke a wall.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Breach {
+    /// Dug through with a tool.
+    Dug,
+    /// Blasted open by an explosion.
+    Blast,
 }
 
 /// How a missile's flight ended, on the last cell of its path.
@@ -302,16 +360,19 @@ pub struct Outcome {
 }
 
 /// Text syntax for scripting: `move:E wait open:E close:W ascend descend lantern rest:1h
-/// rest:dawn rest:dusk pickup pickup:ac drop:b equip:body:b remove:body fire:12,5 throw:c:12,5
-/// vision:ID skip:1h weather:rain afflict:bleeding infect:filth_fever` (durations: `30s`, `10m`, `2h`; letters
+/// rest:dawn rest:dusk pickup pickup:ac drop:b equip:body:b remove:body bash:E fire:12,5
+/// throw:c:12,5 dig:E vision:ID skip:1h weather:rain afflict:bleeding infect:filth_fever
+/// effect:fireball@12,5 effect:lightning_bolt@3,4>12,4` (durations: `30s`, `10m`, `2h`; letters
 /// name stacks, `a`
 /// first; `pickup` and `drop` without letters take everything; `equip:SLOT:LETTER` puts
-/// inventory stack LETTER on in slot SLOT, `remove:SLOT` takes off what is there; `fire:X,Y`
-/// shoots at the level cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack LETTER
-/// there; weather: `clear`, `overcast`, `rain`, `heavy`).
+/// inventory stack LETTER on in slot SLOT, `remove:SLOT` takes off what is there; `bash:DIR`
+/// bashes with the held shield; `dig:DIR` digs toward a wall; `fire:X,Y` shoots at the level
+/// cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack LETTER there; weather: `clear`,
+/// `overcast`, `rain`, `heavy`; `effect:ID@X,Y[>X,Y]` shows a spell effect at a cell, or from
+/// one cell toward another).
 ///
 /// `Display` and `FromStr` round-trip; action names are case-insensitive when parsing (vision
-/// profile and slot ids keep their case).
+/// profile, slot, and effect ids keep their case).
 impl fmt::Display for Action {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -330,6 +391,7 @@ impl fmt::Display for Action {
                 write!(f, "equip:{slot}:{}", letter(*item).unwrap_or('?'))
             }
             Action::Remove(slot) => write!(f, "remove:{slot}"),
+            Action::Bash(d) => write!(f, "bash:{d}"),
             Action::Fire(at) => write!(f, "fire:{},{}", at.x, at.y),
             Action::Throw { item, at } => {
                 let item = letter(*item).unwrap_or('?');
@@ -338,11 +400,19 @@ impl fmt::Display for Action {
             Action::Rest(Rest::For(d)) => write!(f, "rest:{d}"),
             Action::Rest(Rest::Dawn) => f.write_str("rest:dawn"),
             Action::Rest(Rest::Dusk) => f.write_str("rest:dusk"),
+            Action::Dig(d) => write!(f, "dig:{d}"),
             Action::SetVision(id) => write!(f, "vision:{id}"),
             Action::SkipTime(d) => write!(f, "skip:{d}"),
             Action::SetWeather(w) => write!(f, "weather:{}", w.id()),
             Action::Afflict(id) => write!(f, "afflict:{id}"),
             Action::Infect(id) => write!(f, "infect:{id}"),
+            Action::Effect { effect, at, to } => {
+                write!(f, "effect:{effect}@{},{}", at.x, at.y)?;
+                match to {
+                    Some(to) => write!(f, ">{},{}", to.x, to.y),
+                    None => Ok(()),
+                }
+            }
         }
     }
 }
@@ -368,6 +438,8 @@ impl FromStr for Action {
             "move" => dir().map(Action::Move),
             "open" => dir().map(Action::Open),
             "close" => dir().map(Action::Close),
+            "bash" => dir().map(Action::Bash),
+            "dig" => dir().map(Action::Dig),
             "wait" => bare(Action::Wait),
             "ascend" => bare(Action::Ascend),
             "descend" => bare(Action::Descend),
@@ -459,12 +531,36 @@ impl FromStr for Action {
                 }
                 _ => Err("`infect` needs a disease id, e.g. `infect:filth_fever`".into()),
             },
+            "effect" => {
+                // The effect id keeps its case.
+                let usage = || {
+                    "`effect` needs an effect and a cell, e.g. `effect:fireball@12,5` or \
+                     `effect:lightning_bolt@3,4>12,4`"
+                        .to_string()
+                };
+                let (effect, cells) = (s.split_once(':'))
+                    .and_then(|(_, rest)| rest.split_once('@'))
+                    .ok_or_else(usage)?;
+                let bad = |c: char| matches!(c, ':' | '@' | '>') || c.is_whitespace();
+                if effect.is_empty() || effect.contains(bad) {
+                    return Err(usage());
+                }
+                let (at, to) = match cells.split_once('>') {
+                    Some((at, to)) => (at, Some(to)),
+                    None => (cells, None),
+                };
+                Ok(Action::Effect {
+                    effect: effect.to_string(),
+                    at: parse_cell(at).map_err(|_| usage())?,
+                    to: to.map(parse_cell).transpose().map_err(|_| usage())?,
+                })
+            }
             _ => Err(format!(
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
                  descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
-                 equip:SLOT:LETTER, remove:SLOT, fire:X,Y, throw:LETTER:X,Y, vision:ID, \
-                 skip:DURATION, weather:clear|overcast|rain|heavy, afflict:STATUS, \
-                 infect:DISEASE)"
+                 equip:SLOT:LETTER, remove:SLOT, bash:DIR, fire:X,Y, throw:LETTER:X,Y, dig:DIR, \
+                 vision:ID, skip:DURATION, weather:clear|overcast|rain|heavy, afflict:STATUS, \
+                 infect:DISEASE, effect:ID@X,Y[>X,Y])"
             )),
         }
     }
@@ -561,10 +657,26 @@ mod tests {
             Action::Afflict("Odd_Case".into()),
             Action::Infect("filth_fever".into()),
             Action::Infect("Odd_Case".into()),
+            Action::Effect {
+                effect: "fireball".into(),
+                at: Pos::new(12, 5),
+                to: None,
+            },
+            Action::Effect {
+                effect: "Lightning_Bolt".into(),
+                at: Pos::new(-3, 4),
+                to: Some(Pos::new(12, 0)),
+            },
         ];
         all.extend(Weather::ALL.map(Action::SetWeather));
         for d in Dir::ALL {
-            all.extend([Action::Move(d), Action::Open(d), Action::Close(d)]);
+            all.extend([
+                Action::Move(d),
+                Action::Open(d),
+                Action::Close(d),
+                Action::Bash(d),
+                Action::Dig(d),
+            ]);
         }
         assert_eq!(parse_actions(&format_actions(&all)), Ok(all));
     }
@@ -579,6 +691,8 @@ mod tests {
         assert!(parse_actions("move").is_err());
         assert!(parse_actions("move:up").is_err());
         assert!(parse_actions("wait:E").is_err());
+        assert_eq!(parse_actions("BASH:sw"), Ok(vec![Action::Bash(Dir::SW)]));
+        assert!(parse_actions("bash").is_err());
         assert!(parse_actions("dance").is_err());
         assert_eq!(
             parse_actions("move:N*3 wait*0 wait"),
@@ -654,7 +768,41 @@ mod tests {
                 },
             ])
         );
+        assert_eq!(
+            parse_actions("EFFECT:Fireball@3,4 effect:lightning_bolt@1,2>9,2"),
+            Ok(vec![
+                Action::Effect {
+                    effect: "Fireball".into(),
+                    at: Pos::new(3, 4),
+                    to: None
+                },
+                Action::Effect {
+                    effect: "lightning_bolt".into(),
+                    at: Pos::new(1, 2),
+                    to: Some(Pos::new(9, 2))
+                },
+            ])
+        );
+        assert_eq!(
+            Action::Effect {
+                effect: "lightning_bolt".into(),
+                at: Pos::new(1, 2),
+                to: Some(Pos::new(9, 2)),
+            }
+            .to_string(),
+            "effect:lightning_bolt@1,2>9,2"
+        );
         for bad in [
+            "effect",
+            "effect:",
+            "effect:fireball",
+            "effect:fireball@",
+            "effect:@3,4",
+            "effect:fireball@3",
+            "effect:fireball@3,4>",
+            "effect:fireball@3,4>5",
+            "effect:fire:ball@3,4",
+            "effect:fireball@3,4>5,6>7,8",
             "fire",
             "fire:",
             "fire:3",
@@ -693,6 +841,9 @@ mod tests {
             "skip",
             "skip:0s",
             "skip:x",
+            "dig",
+            "dig:",
+            "dig:down",
         ] {
             assert!(parse_actions(bad).is_err(), "{bad}");
         }

@@ -14,7 +14,8 @@
 //! Menus, character creation ([`chargen_screen`]), settings, controls, the `?` help, the
 //! inventory, choosing what to pick up or drop ([`object_screen`]), the equipment screen and its
 //! choice of what goes in a slot ([`equipment_screen`]), the character screen
-//! ([`character_screen`]), and the death screen ([`death_screen`]) are screens on one stack
+//! ([`character_screen`]), the weapon skills screen ([`weapon_skills_screen`]), and the death
+//! screen ([`death_screen`]) are screens on one stack
 //! ([`screens`]): opened by [`Screens::open`], fed key presses by `input::route_keys`, and drawn
 //! by [`draw`], the one system that writes the UI console.
 
@@ -26,6 +27,7 @@ mod dev;
 mod effects;
 mod equipment_screen;
 mod glyphs;
+mod info_tabs;
 mod look;
 mod menu;
 mod missiles;
@@ -37,7 +39,9 @@ mod screens;
 mod settings_screen;
 mod skills_screen;
 mod sounds;
+mod spells;
 mod target;
+mod weapon_skills_screen;
 
 pub use menu::Press;
 pub use screens::{MenuChoice, ScreenAction, ScreenName, ScreenStack, Screens};
@@ -51,10 +55,11 @@ use crate::render::anim::{AnimTable, TerrainAnim};
 use crate::render::console::{Cell, Console};
 use crate::render::grid::MapGrid;
 use crate::render::{ConsoleLayout, Effects, VisualTime, lighting, shadows};
-use crate::settings::Settings;
+use crate::settings::{Clock, Settings};
 use bevy::prelude::*;
 use missiles::Missiles;
 use motion::Motion;
+use spells::Spells;
 use warlock_core::Pos;
 use warlock_core::World;
 use warlock_core::burden::Burden;
@@ -79,6 +84,7 @@ impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Motion>()
             .init_resource::<Missiles>()
+            .init_resource::<Spells>()
             .init_resource::<DevOverlays>()
             .init_resource::<ScreenStack>()
             .add_message::<MenuChoice>()
@@ -94,10 +100,11 @@ impl Plugin for UiPlugin {
                             motion::track,
                             effects::track,
                             missiles::track,
+                            spells::track,
                             sounds::track,
                         ),
                         draw_map_layer,
-                        missiles::lights,
+                        (missiles::lights, spells::lights),
                         shadows::update,
                         lighting::update,
                         effects::emit,
@@ -105,6 +112,8 @@ impl Plugin for UiPlugin {
                         sounds::emit,
                         glyphs::emit,
                         (missiles::emit, target::emit_path),
+                        // Spell effects are light themselves: on top of everything on the map.
+                        spells::emit,
                     )
                         .chain()
                         .after(SimSet)
@@ -151,7 +160,15 @@ fn draw(
     }
     console.clear();
     if let Some(game) = &game {
-        draw_game(&mut console, game, *mode, &grid, *overlays, &bindings);
+        draw_game(
+            &mut console,
+            game,
+            *mode,
+            &grid,
+            *overlays,
+            &bindings,
+            settings.clock,
+        );
     }
     stack.draw(&mut console, &settings, &bindings);
 }
@@ -165,10 +182,11 @@ fn draw_game(
     grid: &MapGrid,
     overlays: DevOverlays,
     bindings: &Bindings,
+    clock: Clock,
 ) {
     let rows = console.rows() as i32;
     draw_messages(console, game, mode, bindings);
-    draw_status(console, game, rows - 1);
+    draw_status(console, game, rows - 1, clock);
     dev::draw_indicator(console, overlays);
     let cursor = match mode {
         InputMode::Look(p) => Some(p),
@@ -231,6 +249,7 @@ fn draw_map_layer(
     layout: Res<ConsoleLayout>,
     motion: Res<Motion>,
     missiles: Res<Missiles>,
+    spells: Res<Spells>,
     mode: Res<InputMode>,
     visual: Res<VisualTime>,
     anims: Res<AnimTable>,
@@ -244,7 +263,14 @@ fn draw_map_layer(
         return;
     };
     let cell = layout.cell.as_vec2();
-    let (level_origin, offset) = motion::camera_split(motion.camera(visual.seconds), cell);
+    // A spell effect landing near the player shakes the camera by whole pixels.
+    let shake = if effects.screen_shake {
+        spells.shake(visual.seconds, layout.scale)
+    } else {
+        Vec2::ZERO
+    };
+    let camera = motion.camera(visual.seconds) + shake / cell;
+    let (level_origin, offset) = motion::camera_split(camera, cell);
     let top_left = layout.origin + Vec2::new(area.x as f32, area.y as f32) * cell;
     grid.cell = cell;
     grid.clip = Rect::from_corners(
@@ -374,8 +400,12 @@ fn remembered(c: Rgb) -> Rgb {
 }
 
 fn draw_messages(console: &mut Console, game: &Game, mode: InputMode, bindings: &Bindings) {
-    if let InputMode::Direction(_) = mode {
-        console.print(1, 0, "In which direction? (Esc to cancel)", ACCENT);
+    if let InputMode::Direction(command) = mode {
+        let prompt = match command {
+            crate::input::KeyCommand::UseTool => "Dig in which direction? (Esc to cancel)",
+            _ => "In which direction? (Esc to cancel)",
+        };
+        console.print(1, 0, prompt, ACCENT);
         return;
     }
     if mode == InputMode::Rest {
@@ -435,7 +465,7 @@ fn draw_messages(console: &mut Console, game: &Game, mode: InputMode, bindings: 
 /// The rest prompt; its letters are [`crate::input::REST_CHOICES`].
 const REST_PROMPT: &str = "Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to cancel)";
 
-fn draw_status(console: &mut Console, game: &Game, y: i32) {
+fn draw_status(console: &mut Console, game: &Game, y: i32, clock: Clock) {
     let cols = console.cols() as i32;
     console.fill(
         0,
@@ -448,7 +478,7 @@ fn draw_status(console: &mut Console, game: &Game, y: i32) {
             bg: PANEL_BG,
         },
     );
-    let segments = status_segments(&game.world);
+    let segments = status_segments(&game.world, clock);
     // The controls hint matters most to new players, so it keeps its place unless the window is
     // very narrow; status segments give way around it.
     let hint = "? controls";
@@ -463,7 +493,7 @@ fn draw_status(console: &mut Console, game: &Game, y: i32) {
 }
 
 /// The status bar's segments for `world`, in display order.
-fn status_segments(world: &World) -> Vec<Segment> {
+fn status_segments(world: &World, clock: Clock) -> Vec<Segment> {
     let view = world.perception();
     let pos = world.player_pos();
     let time = world.time();
@@ -498,10 +528,7 @@ fn status_segments(world: &World) -> Vec<Segment> {
             format!("Lv {}", view.own_experience().level),
         )),
         view.region().map(|r| Segment::new(4, r)),
-        Some(Segment::new(
-            1,
-            format!("{:02}:{:02}", time.hour(), time.minute()),
-        )),
+        Some(Segment::new(1, clock.format(time))),
         Some(Segment::new(3, calendar.full_date(time)).or_short(calendar.date(time))),
         moon_status(content.moons(), time)
             .map(|(text, glyphs)| Segment::new(5, text).or_short(glyphs)),
@@ -666,14 +693,18 @@ mod tests {
     #[test]
     fn the_status_bar_shows_the_burden_after_the_hit_points_and_keeps_it_late() {
         let mut world = hoard();
-        let texts =
-            |w: &World| -> Vec<String> { status_segments(w).into_iter().map(|s| s.text).collect() };
+        let texts = |w: &World| -> Vec<String> {
+            status_segments(w, Clock::H24)
+                .into_iter()
+                .map(|s| s.text)
+                .collect()
+        };
         assert!(
             !texts(&world).iter().any(|t| t.contains("urdened")),
             "unburdened: nothing"
         );
         world.apply(&Action::PickUp(Letters::default()));
-        let segments = status_segments(&world);
+        let segments = status_segments(&world, Clock::H24);
         assert_eq!(segments[1].text, "HP 10/10");
         assert_eq!(segments[2].text, "Burdened", "right after the hit points");
         // Narrow: the time gives way first, then the burden, before the hit points.
@@ -691,7 +722,7 @@ mod tests {
         let mut world = hoard();
         world.apply(&Action::Afflict("poisoned".into()));
         world.apply(&Action::Afflict("bleeding".into()));
-        let segments = status_segments(&world);
+        let segments = status_segments(&world, Clock::H24);
         let texts: Vec<&str> = segments.iter().map(|s| s.text.as_str()).collect();
         assert_eq!(texts[..4], ["Hoard", "HP 10/10", "Bleeding", "Poisoned"]);
         // They give way late, the least important first, but before the hit points.
@@ -707,8 +738,12 @@ mod tests {
     fn the_status_bar_shows_diseased_once_a_disease_shows_never_which() {
         let mut world = hoard();
         world.apply(&Action::Infect("the_shakes".into()));
-        let texts =
-            |w: &World| -> Vec<String> { status_segments(w).into_iter().map(|s| s.text).collect() };
+        let texts = |w: &World| -> Vec<String> {
+            status_segments(w, Clock::H24)
+                .into_iter()
+                .map(|s| s.text)
+                .collect()
+        };
         assert!(
             !texts(&world).iter().any(|t| t.contains("isease")),
             "incubating"
@@ -801,7 +836,10 @@ mod tests {
     fn the_status_bar_shows_the_weather_only_under_the_open_sky() {
         let content = Arc::new(Content::builtin().expect("content"));
         let texts = |world: &World| -> Vec<String> {
-            status_segments(world).into_iter().map(|s| s.text).collect()
+            status_segments(world, Clock::H24)
+                .into_iter()
+                .map(|s| s.text)
+                .collect()
         };
         let mut world = World::new(content.clone(), "showcase", None).expect("starts");
         world.apply(&Action::SetWeather(warlock_core::weather::Weather::Rain));
@@ -811,7 +849,7 @@ mod tests {
         world.apply(&Action::SetWeather(
             warlock_core::weather::Weather::HeavyRain,
         ));
-        let segments = status_segments(&world);
+        let segments = status_segments(&world, Clock::H24);
         let at = |text: &str| segments.iter().position(|s| s.text.contains(text));
         let (weather, moon, date) = (at("Heavy rain"), at("Waxing gibbous"), at("Darkening"));
         assert_eq!(weather, moon.map(|m| m + 1), "shown after the moon");
@@ -830,10 +868,29 @@ mod tests {
     }
 
     #[test]
+    fn the_twelve_hour_clock_is_longer_but_the_status_bar_still_fits() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let world = World::new(content, "showcase", None).expect("starts");
+        let segments = status_segments(&world, Clock::H12);
+        let time = (segments.iter())
+            .map(|s| &s.text)
+            .find(|t| t.ends_with(" AM") || t.ends_with(" PM"))
+            .expect("the time");
+        for width in [0, 10, 20, 25, 40, 55, 80, 120] {
+            let line = fit_segments(&segments, width);
+            assert!(line.chars().count() <= width, "{width}: {line}");
+        }
+        let line = fit_segments(&segments, 120);
+        assert!(line.contains(time.as_str()), "{line}");
+        // Narrow: the time gives way first, as in 24-hour form.
+        assert_eq!(fit_segments(&segments, 20), "The Hub  ·  HP 17/17");
+    }
+
+    #[test]
     fn the_status_bar_shows_hit_points_and_keeps_them_late() {
         let content = Arc::new(Content::builtin().expect("content"));
         let world = World::new(content, "showcase", None).expect("starts");
-        let segments = status_segments(&world);
+        let segments = status_segments(&world, Clock::H24);
         assert_eq!(segments[1].text, "HP 17/17", "right after the level");
         // Narrow: everything but the level gives way first, the time included.
         let line = fit_segments(&segments, 25);

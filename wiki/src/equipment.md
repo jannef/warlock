@@ -2,7 +2,7 @@
 
 You can wear and wield what you carry, as in ADOM: a helm on your head, an amulet around your
 neck, armor on your body, a cloak, a weapon in your main hand and a shield in your off hand,
-gloves, a ring on each hand, boots, and a missile weapon with its missiles ready.
+gloves, a ring on each hand, boots, a missile weapon with its missiles ready, and a tool.
 
 What you wield and wear decides how you fight (see [Combat](combat.md)): the weapon in your
 hand does its damage, a bow shoots, body armour and a shield add to your Defence, and a
@@ -20,7 +20,7 @@ empty, and below them what you carry and weigh, as the inventory does:
 long putting one on there, or taking it off, takes at a normal pace.
 
 - Press a slot's letter, or move the `>` with the arrow keys and press `Enter`, to choose what
-  goes there. On this screen every letter names a slot, even `e`, `h`, `j`, `k`, and `l`.
+  goes there. On this screen every letter names a slot, even `e`, `h`, `j`, `k`, `l`, and `m`.
 - The next screen lists what you carry that fits the slot, with each object's letter from your
   [pack](objects.md#your-pack). Press its letter, or `Enter` on the `>` row, to put it on.
 - If the slot already holds something, it is taken off first: the two swap places. Choose what
@@ -42,7 +42,10 @@ do it: creatures act meanwhile, just as when you wait. Looking at the screens ta
   shoots one kind of missile ("shoots arrows" in the table above). You can ready any missiles,
   matching or not, but only the matching ones can be shot ([Ranged combat](ranged.md)); rocks
   readied there are thrown with `t`.
-- Things that are not equipment (potions, food, coins, tools) fit nowhere.
+- **Tools** go in the Tool slot: a pick-axe or a mattock ready there is what you dig with (`U`;
+  see [Digging and walls](digging.md)). Other tools, such as keys, rope, and candles, fit nowhere
+  yet.
+- Things that are not equipment (potions, food, coins) fit nowhere.
 
 ## How long it takes
 
@@ -61,7 +64,8 @@ Every thing you put on or take off takes its slot's time from the table:
 
 What you wear and wield stays in your pack, with its letter. The [inventory](objects.md#your-pack)
 marks it: "(being worn)", "(wielded)", "(in off hand)", "(on left hand)", "(on right hand)",
-"(readied)", "(quivered)", and "(wielded in both hands)" for a two-handed weapon. It still counts
+"(readied)", "(quivered)", "(in use)" for a tool, and "(wielded in both hands)" for a two-handed
+weapon. It still counts
 toward the weight you carry, and so toward your [burden](burden.md).
 
 **Dropping** something you wear or wield takes it off first ("You take off a leather jerkin.")

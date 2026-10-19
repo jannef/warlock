@@ -11,6 +11,7 @@ mod class;
 mod creature;
 mod disease;
 mod dungeon;
+mod effect;
 mod experience;
 mod faction;
 mod flow;
@@ -22,6 +23,7 @@ mod object;
 mod overworld;
 mod particles;
 mod race;
+mod room_effect;
 mod scenario;
 mod size;
 mod skill;
@@ -31,6 +33,7 @@ mod status;
 mod terrain;
 mod vault;
 mod vision;
+mod weapon_skill;
 mod weather;
 
 pub use action::{ActionCosts, ActionKind, BASE_TURN, COSTS, NORMAL_COST, price};
@@ -42,6 +45,10 @@ pub use creature::{
 };
 pub use disease::{DIFFICULTIES, DiseaseDef, DiseaseId, SOURCES, Wading};
 pub use dungeon::{DungeonDef, Generator, LevelPlan, parse_branch_level};
+pub use effect::{
+    Darken, EffectDef, EffectLight, EffectShape, FILL_GLYPH, MAX_BURST_RADIUS, MAX_DARKEN,
+    MAX_SHAKE_PIXELS, Shake,
+};
 pub use experience::{Experience, MAX_LEVEL, MAX_XP};
 pub use faction::{FactionDef, FactionId, Factions, PLAYER_FACTION, Stance};
 pub use flow::{FLOW_SPEEDS, Flow};
@@ -52,10 +59,11 @@ pub use level::{
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
 pub use material::{MaterialDef, MaterialId};
-pub use object::{MAX_BONUS, MAX_PLACED, ObjectDef, ObjectId, article};
+pub use object::{MAX_BONUS, MAX_DIG, MAX_PLACED, ObjectDef, ObjectId, article};
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use race::{RaceDef, Races};
+pub use room_effect::{RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom};
 pub use scenario::ScenarioDef;
 pub use size::{CARRY, MEDIUM, SizeDef};
 pub use skill::{SkillBook, SkillDef};
@@ -65,15 +73,21 @@ pub use status::{
     Affliction, Healing, MAX_REGEN, MAX_SEVERITY, OnHit, Penalty, Stacking, StatusDef, StatusId,
     Wound,
 };
-pub use terrain::{MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
+pub use terrain::{Breakable, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
 pub use vault::Vault;
 pub use vision::VisionProfile;
+pub use weapon_skill::{
+    Benefit, MAX_RANK, MarkRules, RANKS, Role, Section, WeaponSkillDef, WeaponSkillId,
+    WeaponSkillTable,
+};
 pub use weather::{Climate, MAX_SIGHT_LOSS, WeatherDef};
 
+use crate::dice::Dice;
 use crate::noise::MAX_LOUDNESS;
 use crate::perception::VIEW_RADIUS;
 use crate::skills::{Increase, SkillId, Skills};
 use crate::stats::Stats;
+use crate::weapon_skills::WeaponSkills;
 use level::{LegendEntry, legend_char};
 use serde::Deserialize;
 use std::collections::{BTreeMap, BTreeSet};
@@ -218,8 +232,9 @@ struct LegendFile {
 /// `data/calendar.toml`, `data/sky.toml`, `data/materials.toml`, `data/objects.toml`,
 /// `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
 /// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, `data/horoscope.toml`,
-/// `data/status.toml`, and `data/diseases.toml` are
-/// optional. Without vision
+/// `data/status.toml`, `data/diseases.toml`, `data/effects.toml`, `data/room_effects.toml`, and
+/// `data/weapon_skills.toml` are optional (without effects, spell effects are not drawn). Without
+/// vision
 /// profiles, a single `normal` profile that needs no light is used, so content without lighting
 /// stays fully visible; without sizes, everything is medium; without factions, everyone is neutral; without a calendar, months are numbered;
 /// without a sky file there are no moons; without an objects file there are no objects; without a
@@ -229,6 +244,8 @@ struct LegendFile {
 /// skills nobody is trained in anything; without a horoscope, characters are born under no sign;
 /// without statuses nothing ails anyone, and resting heals twice as fast; without diseases
 /// nobody falls ill.
+/// without room effects there are no special rooms; without weapon skills nobody has any, and
+/// weapons name no category.
 #[derive(Debug)]
 pub struct Content {
     terrain: Vec<TerrainDef>,
@@ -272,6 +289,11 @@ pub struct Content {
     disease_ids: BTreeMap<String, DiseaseId>,
     /// The status diseases show as ("Diseased"), with any disease.
     disease_status: Option<StatusId>,
+    /// Spell effects, in `data/effects.toml` order: presentation only.
+    effects: Vec<EffectDef>,
+    weapon_skills: WeaponSkillTable,
+    /// Special rooms' effects (`data/room_effects.toml`).
+    room_effects: RoomEffects,
 }
 
 impl Content {
@@ -316,6 +338,9 @@ impl Content {
             diseases: Vec::new(),
             disease_ids: BTreeMap::new(),
             disease_status: None,
+            effects: Vec::new(),
+            weapon_skills: WeaponSkillTable::default(),
+            room_effects: RoomEffects::default(),
         };
         let path = "data/calendar.toml";
         if let Some(text) = files.get_optional(path) {
@@ -333,6 +358,10 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.actions = ActionCosts::parse(path, text)?;
         }
+        let path = "data/weapon_skills.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.weapon_skills = WeaponSkillTable::parse(path, text)?;
+        }
         content.load_lights(files)?;
         content.load_vision(files)?;
         let path = "data/sizes.toml";
@@ -348,11 +377,13 @@ impl Content {
             let has_vision = |id: &str| content.vision(id).is_some();
             let size_index = |id: &str| content.size_index(id);
             let skill_id = |id: &str| content.skill_id(id);
-            content.races = Races::parse(path, text, has_vision, size_index, skill_id)?;
+            let weapons = &content.weapon_skills;
+            content.races = Races::parse(path, text, has_vision, size_index, skill_id, weapons)?;
         }
         let path = "data/classes.toml";
         if let Some(text) = files.get_optional(path) {
-            content.classes = ClassDef::parse(path, text, |id| content.skill_id(id))?;
+            let skill_id = |id: &str| content.skill_id(id);
+            content.classes = ClassDef::parse(path, text, skill_id, &content.weapon_skills)?;
         }
         let path = "data/experience.toml";
         if let Some(text) = files.get_optional(path) {
@@ -365,9 +396,21 @@ impl Content {
         content.load_statuses(files)?;
         content.load_terrain(files)?;
         content.load_diseases(files)?;
+        let path = "data/room_effects.toml";
+        if let Some(text) = files.get_optional(path) {
+            let terrain = |name: &str| {
+                let id = content.terrain_id(name)?;
+                Some((id, content.terrain(id)))
+            };
+            content.room_effects = RoomEffects::parse(path, text, terrain)?;
+        }
         content.load_factions(files)?;
         content.load_creatures(files)?;
         content.load_objects(files)?;
+        let path = "data/effects.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.effects = effect::parse(path, text)?;
+        }
 
         let path = "data/legend.toml";
         let legend_file: LegendFile =
@@ -448,6 +491,27 @@ impl Content {
                 )));
             }
             check_terrain_noise(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
+            let breaks = match (spec.hardness, &spec.becomes) {
+                (None, None) => None,
+                (Some(hardness), Some(_)) if (1..=MAX_HARDNESS).contains(&hardness) => {
+                    Some(Breakable {
+                        hardness,
+                        becomes: resolve(&spec.becomes)?.expect("given"),
+                    })
+                }
+                (Some(_), Some(_)) => {
+                    return Err(err(format!(
+                        "terrain `{}`: hardness must be 1 to {MAX_HARDNESS}",
+                        spec.id
+                    )));
+                }
+                _ => {
+                    return Err(err(format!(
+                        "terrain `{}`: `hardness` and `becomes` go together",
+                        spec.id
+                    )));
+                }
+            };
             check_effects(
                 path,
                 "terrain",
@@ -482,11 +546,16 @@ impl Content {
                 muffle: spec
                     .muffle
                     .or((spec.walkable || spec.transparent).then_some(0)),
+                breaks,
+                face: resolve(&spec.face)?,
                 anim: spec.anim.clone(),
                 glow: spec.glow,
                 haze: spec.haze,
                 particles: spec.particles.clone(),
             });
+        }
+        for def in &defs {
+            check_breaking(def, &defs).map_err(|m| err(format!("terrain `{}`: {m}", def.id)))?;
         }
         if let Some(def) = defs
             .iter()
@@ -584,6 +653,19 @@ impl Content {
             let skills = self
                 .creature_skills(&spec.skills)
                 .map_err(|m| err(format!("creature `{}`: skills: {m}", spec.id)))?;
+            if spec.id == "player" && !spec.weapon_skills.is_empty() {
+                return Err(err(
+                    "creature `player`: the player's weapon skills come from their race and class"
+                        .into(),
+                ));
+            }
+            let ranks: BTreeMap<String, Dice> = (spec.weapon_skills.iter())
+                .map(|(id, &rank)| (id.clone(), Dice::fixed(i32::from(rank))))
+                .collect();
+            let ranks = (self.weapon_skills.starting_ranks(&ranks))
+                .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
+            let ranks = ranks.iter().map(|&(id, rank)| (id, rank.max() as u8));
+            let weapon_skills = WeaponSkills::from_ranks(&self.weapon_skills, ranks);
             if spec
                 .natural
                 .as_ref()
@@ -621,6 +703,7 @@ impl Content {
                 stats,
                 skills,
                 attack,
+                weapon_skills,
                 faction: self.creature_faction(&spec).map_err(err)?,
                 vision: self.vision_index(&spec.vision).ok_or_else(|| {
                     err(format!(
@@ -791,6 +874,7 @@ impl Content {
                 |m| self.material_ids.get(m).copied(),
                 |l| self.light_ids.get(l).copied(),
                 &self.slots,
+                &self.weapon_skills,
             )?;
             check_effects(path, "object", &def.id, None, def.glow, 0.0, &def.particles)?;
             lit.push(lit_as);
@@ -974,10 +1058,11 @@ impl Content {
     }
 
     /// A stable hash (64-bit FNV-1a) of the ordered terrain, creature, level, light, dungeon,
-    /// object, slot, skill, status, and disease ids.
+    /// object, slot, skill, status, disease, room effect, and weapon skill ids.
     ///
-    /// `TerrainId`, `CreatureId`, `LightId`, `ObjectId`, `SlotId`, `SkillId`, `StatusId`, and
-    /// `DiseaseId` are indices, so a save is only meaningful for content with the same ids in the same order;
+    /// `TerrainId`, `CreatureId`, `LightId`, `ObjectId`, `SlotId`, `SkillId`, `StatusId`,
+    /// `DiseaseId`, `RoomEffectId`, and `WeaponSkillId` are indices, so a save is only meaningful
+    /// for content with the same ids in the same order;
     /// saves record this fingerprint to detect a mismatch.
     pub fn fingerprint(&self) -> u64 {
         let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
@@ -986,7 +1071,7 @@ impl Content {
                 hash = (hash ^ u64::from(b)).wrapping_mul(0x0000_0100_0000_01b3);
             }
         };
-        let groups: [Vec<&str>; 10] = [
+        let groups: [Vec<&str>; 12] = [
             self.terrain.iter().map(|t| t.id.as_str()).collect(),
             self.creatures.iter().map(|c| c.id.as_str()).collect(),
             self.levels.keys().map(String::as_str).collect(),
@@ -997,6 +1082,12 @@ impl Content {
             self.skills.list.iter().map(|s| s.id.as_str()).collect(),
             self.statuses.iter().map(|s| s.id.as_str()).collect(),
             self.diseases.iter().map(|d| d.id.as_str()).collect(),
+            (self.room_effects.defs().iter())
+                .map(|e| e.id.as_str())
+                .collect(),
+            (self.weapon_skills.skills().iter())
+                .map(|s| s.id.as_str())
+                .collect(),
         ];
         for ids in groups {
             for id in ids {
@@ -1322,6 +1413,22 @@ impl Content {
         self.horoscope.as_ref()
     }
 
+    /// The spell effects of `data/effects.toml`, in file order (none without the file).
+    /// Presentation only: no rule reads them.
+    pub fn effects(&self) -> &[EffectDef] {
+        &self.effects
+    }
+
+    /// The spell effect with id `id`.
+    pub fn effect(&self, id: &str) -> Option<&EffectDef> {
+        self.effects.iter().find(|e| e.id == id)
+    }
+
+    /// The weapon skills (`data/weapon_skills.toml`; empty without the file).
+    pub fn weapon_skills(&self) -> &WeaponSkillTable {
+        &self.weapon_skills
+    }
+
     /// Month names for showing dates.
     pub fn calendar(&self) -> &Calendar {
         &self.calendar
@@ -1335,6 +1442,17 @@ impl Content {
     /// The weather's chances and effects (always clear without `data/weather.toml`).
     pub fn climate(&self) -> &Climate {
         &self.climate
+    }
+
+    /// The effects of special rooms and how often generated levels get them
+    /// (`data/room_effects.toml`; none without it).
+    pub fn room_effects(&self) -> &RoomEffects {
+        &self.room_effects
+    }
+
+    /// The effect `id` of a special room.
+    pub fn room_effect(&self, id: RoomEffectId) -> &RoomEffectDef {
+        self.room_effects.get(id)
     }
 
     /// What every action costs (`data/actions.toml`; 1000 each without it).
@@ -1375,10 +1493,12 @@ impl Content {
             .into_iter()
             .flat_map(|w| self.climate.def(w).emitters())
             .flat_map(|e| e.glyphs.chars());
+        let effects = self.effects.iter().flat_map(EffectDef::glyphs);
         terrain
             .chain(creatures)
             .chain(objects)
             .chain(weather)
+            .chain(effects)
             .collect()
     }
 }
@@ -1401,6 +1521,41 @@ fn check_terrain_noise(spec: &terrain::TerrainSpec) -> Result<(), String> {
     }
     if spec.toggle_noise > 0 && spec.opens_to.is_none() && spec.closes_to.is_none() {
         return Err("only doors have a `toggle_noise`".into());
+    }
+    Ok(())
+}
+
+/// Checks how a terrain type breaks (spec §8 "Digging"): only solid terrain (neither walkable
+/// nor a door, stairs, or a light) breaks, into plain open ground (walkable and transparent,
+/// that does not break itself); solid rock shows a solid face.
+fn check_breaking(def: &TerrainDef, defs: &[TerrainDef]) -> Result<(), String> {
+    let plain = |t: &TerrainDef| t.stairs.is_none() && !t.is_closed_door() && !t.is_open_door();
+    if let Some(breaks) = def.breaks {
+        if def.walkable || !plain(def) || def.light.is_some() {
+            return Err(
+                "only solid terrain breaks (`hardness`): not walkable, no door, stairs, or light"
+                    .into(),
+            );
+        }
+        let becomes = &defs[usize::from(breaks.becomes.0)];
+        if !becomes.walkable || !becomes.transparent || becomes.breaks.is_some() || !plain(becomes)
+        {
+            return Err(format!(
+                "it `becomes` `{}`, which must be open ground: walkable, transparent, no door or \
+                 stairs, and not breaking itself",
+                becomes.id
+            ));
+        }
+    }
+    if let Some(face) = def.face {
+        let face = &defs[usize::from(face.0)];
+        let solid = |t: &TerrainDef| !t.walkable && !t.transparent;
+        if !solid(def) || !solid(face) || face.face.is_some() {
+            return Err(format!(
+                "only solid rock has a `face`, and its face `{}` must be solid with none of its own",
+                face.id
+            ));
+        }
     }
     Ok(())
 }
@@ -1462,6 +1617,7 @@ fn check_effects(
             ParticleTrigger::Step | ParticleTrigger::Toggle | ParticleTrigger::Obstacle => {
                 kind == "terrain"
             }
+            ParticleTrigger::Impact | ParticleTrigger::Linger => false,
         };
         if !fits {
             return Err(err(format!(

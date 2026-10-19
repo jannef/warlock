@@ -14,7 +14,10 @@
 //! Masks are cached per source ([`LightCache`]); the perception phase combines them with the
 //! player's line of sight, adds one weak bounce ([`bounce`]), and applies the wall-face rule (see
 //! [`crate::perception`]). On levels under the open sky the sun and the sky add their light by
-//! day ([`Sun`]), and the moons by night ([`Moon`]); [`Sky`] puts them together.
+//! day ([`Sun`]), and the moons by night ([`Moon`]); [`Sky`] puts them together. A special room
+//! changes the light inside it (spec §5 "Special rooms"): a shadowed room keeps only part of every
+//! bit of it, a sanctuary adds a glow; perception and creature sight apply that to each part of a
+//! cell's light alike ([`Light::percent`]).
 
 mod bounce;
 mod cache;
@@ -77,6 +80,17 @@ impl Light {
         self.zip(other, u16::max)
     }
 
+    /// `percent` of the light, channel by channel, rounded down (a shadowed room's, spec §5
+    /// "Special rooms"); 100 leaves it as it is.
+    pub fn percent(self, percent: u16) -> Light {
+        if percent == 100 {
+            return self;
+        }
+        let scale =
+            |c: u16| u16::try_from(u32::from(c) * u32::from(percent) / 100).unwrap_or(u16::MAX);
+        Light::from(<[u16; 4]>::from(self).map(scale))
+    }
+
     /// The same light without its UV channel.
     pub fn without_uv(self) -> Light {
         Light { uv: 0, ..self }
@@ -124,16 +138,17 @@ pub fn falloff(color: Light, radius: i32, d2: i32) -> Light {
 }
 
 /// The light one source adds to the transparent cells the viewer has in line of sight, as the eye
-/// perceives it (`perceive`, e.g. dropping UV), from the cells it lights (a mask's, or the sun's).
-/// Cells with no perceived light are left out; the order is kept.
+/// perceives it on each (`perceive`, e.g. dropping UV, and a shadowed room keeping only part of
+/// it), from the cells it lights (a mask's, or the sun's). Cells with no perceived light are left
+/// out; the order is kept.
 pub(crate) fn lit_in_sight(
     cells: &[(Pos, Light)],
     los: &Grid<bool>,
-    perceive: impl Fn(Light) -> Light,
+    perceive: impl Fn(Pos, Light) -> Light,
 ) -> Vec<(Pos, Light)> {
     cells
         .iter()
-        .map(|&(q, light)| (q, perceive(light)))
+        .map(|&(q, light)| (q, perceive(q, light)))
         .filter(|&(q, light)| !light.is_dark() && los.get(q) == Some(&true))
         .collect()
 }

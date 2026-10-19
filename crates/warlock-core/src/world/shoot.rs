@@ -25,13 +25,14 @@
 //!
 //! A shot makes the noise of a bowstring and a throw that of fighting (quieter), once, as the
 //! missile is loosed. A shot takes `shoot` (and `reload` too for a missile weapon that needs it),
-//! a throw `throw`.
+//! a throw `throw`, less what the rank in the launcher's skill or in throwing takes off (spec §8
+//! "Weapon skills"), which also adds to their to-hit and damage.
 
 use super::fight::{End, Words, attack_message, death_message};
 use super::{ActorId, Fire, Spent, World};
 use crate::action::{AttackKind, Event, Letters, MissileEnd, letter};
 use crate::combat::Profile;
-use crate::content::{ActionKind, Content, LevelKind, ObjectId};
+use crate::content::{ActionKind, Content, LevelKind, ObjectId, Role};
 use crate::fov::radius2;
 use crate::geom::Pos;
 use crate::noise::Act;
@@ -64,7 +65,8 @@ impl World {
             return Spent::Nothing;
         }
         let me = self.state.player();
-        let Some((launcher, attack)) = me.launcher(&content) else {
+        let (Some((launcher, _)), Some(profile)) = (me.launcher(&content), me.ranged(&content))
+        else {
             self.say("You have no missile weapon ready.");
             return Spent::Nothing;
         };
@@ -75,13 +77,8 @@ impl World {
         };
         let def = content.object(launcher);
         let range = def.range.unwrap_or(1);
-        let profile = Profile::ranged(attack, &me.effective_stats(&content));
         if !self.within_reach(at, range, "shoot") {
             return Spent::Nothing;
-        }
-        let mut kinds = vec![ActionKind::Shoot];
-        if def.reloads {
-            kinds.push(ActionKind::Reload);
         }
         let loose = Loose {
             kind: AttackKind::Ranged,
@@ -90,7 +87,18 @@ impl World {
             range,
         };
         self.player_looses(at, loose, events);
-        self.price_for(&kinds)
+        Spent::Turn(self.shot_price(self.state.player, launcher))
+    }
+
+    /// What a shot from missile weapon `launcher` costs actor `id`: `shoot`, and `reload` too
+    /// for one that needs it, less what its rank in the launcher's skill takes off.
+    fn shot_price(&self, id: ActorId, launcher: ObjectId) -> i64 {
+        let def = self.content.object(launcher);
+        let mut price = self.attack_price(id, ActionKind::Shoot, def.skill);
+        if def.reloads {
+            price += self.attack_price(id, ActionKind::Reload, def.skill);
+        }
+        price
     }
 
     /// The player throws one of inventory stack `item`, a throwing weapon, at cell `at`.
@@ -111,7 +119,7 @@ impl World {
             self.say(format!("You cannot throw {}.", def.describe(1)));
             return Spent::Nothing;
         };
-        let profile = me.thrown(&attack, &content);
+        let profile = me.thrown(&content, &attack);
         if !self.within_reach(at, range, "throw") {
             return Spent::Nothing;
         }
@@ -122,7 +130,8 @@ impl World {
             range,
         };
         self.player_looses(at, loose, events);
-        self.price_for(&[ActionKind::Throw])
+        let throwing = content.weapon_skills().of_role(Role::Thrown);
+        Spent::Turn(self.attack_price(self.state.player, ActionKind::Throw, throwing))
     }
 
     /// Whether missiles fly here: not on the overworld, a map of the land.
@@ -236,24 +245,22 @@ impl World {
         let content = self.content.clone();
         let me = &self.state.actors[&id];
         let at = self.state.actors.get(&target).map(|a| a.pos);
-        let (Some((launcher, attack)), Some(item), Some(at)) =
-            (me.launcher(&content), me.ammunition_item(&content), at)
-        else {
+        let (Some((launcher, _)), Some(profile), Some(item), Some(at)) = (
+            me.launcher(&content),
+            me.ranged(&content),
+            me.ammunition_item(&content),
+            at,
+        ) else {
             return self.price_of(id, ActionKind::Wait);
         };
-        let def = content.object(launcher);
         let loose = Loose {
             kind: AttackKind::Ranged,
             item,
-            profile: Profile::ranged(attack, &me.effective_stats(&content)),
-            range: def.range.unwrap_or(1),
+            profile,
+            range: content.object(launcher).range.unwrap_or(1),
         };
         self.loose(id, at, loose, events);
-        let mut price = self.price_of(id, ActionKind::Shoot);
-        if def.reloads {
-            price += self.price_of(id, ActionKind::Reload);
-        }
-        price
+        self.shot_price(id, launcher)
     }
 
     /// Actor `shooter` looses one missile of `loose` at cell `at` (module docs): it leaves the

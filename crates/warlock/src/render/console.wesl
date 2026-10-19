@@ -23,7 +23,7 @@
 // Visual lighting (spec §4.4) lights the map grid's terrain per pixel; see `lighting.wesl`.
 
 import bevy_sprite_render::mesh2d::vertex_output::VertexOutput;
-import super::lighting::{light_at, shade};
+import super::lighting::{TERRAIN_FLOOR, light_at, shade};
 
 struct ConsoleParams {
     // Framebuffer position (physical pixels) of cell (0, 0)'s top-left corner.
@@ -47,6 +47,9 @@ struct ConsoleParams {
     haze_px: f32,
     // Level position of cell (0, 0) (map grid).
     level_origin: vec2<i32>,
+    // How much a spell effect darkens the map (0 on the UI): the readability floor and cells
+    // drawn unlit are scaled by 1 - dim; the light itself comes darkened from `lighting.rs`.
+    dim: f32,
 }
 
 // One grid animation (`GridAnim` in anim.rs).
@@ -303,12 +306,18 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     }
     // Visual light, sampled where the pixel is (not where haze moved the glyph from).
     let light = light_at(cell, local / params.cell_size);
+    let keep = 1.0 - params.dim;
     if light.lit {
-        fg = shade(fg, light);
-        bg = vec4(shade(bg.rgb, light), bg.a);
+        let floor = TERRAIN_FLOOR * keep;
+        fg = shade(fg, light, floor);
+        bg = vec4(shade(bg.rgb, light, floor), bg.a);
         // A glint reflects the light on the cell: its color (hue drift included) and intensity
         // gain (light stability); none in the dark.
         fg += glint_strength * GLINT_GAIN * min(light.rgb, vec3(1.0)) * light.gain;
+    } else {
+        // Remembered terrain darkens with the rest of the view.
+        fg *= keep;
+        bg = vec4(bg.rgb * keep, bg.a);
     }
     // Effects: lit colors stay within display range, so bright light alone never blooms; then
     // glowing glyphs (not their backgrounds) go past 1, and bloom puts a halo around them.
