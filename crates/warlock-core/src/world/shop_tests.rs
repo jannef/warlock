@@ -2,7 +2,7 @@
 //! theft, an attacked or dead keeper, saves, replays, and generated shops.
 
 use super::*;
-use crate::action::{Letters, parse_actions};
+use crate::action::{Letters, letter, parse_actions};
 use crate::content::{ContentFiles, Shops};
 use crate::geom::Dir;
 use crate::object::Stack;

@@ -4,9 +4,9 @@
 //! its face; explosions and their blast; noise; saves and replays mid-dig.
 
 use super::*;
-use crate::action::parse_actions;
+use crate::action::{Breach, parse_actions};
 use crate::content::ContentFiles;
-use crate::noise::SoundKind;
+use crate::noise::{self, Act, SoundKind};
 use crate::perception::CellView;
 use crate::replay::Replay;
 

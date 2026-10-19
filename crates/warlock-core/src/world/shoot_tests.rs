@@ -3,7 +3,7 @@
 //! picked up again; burning arrows light the level until they burn out.
 
 use super::*;
-use crate::action::{AttackKind, MissileEnd, parse_actions};
+use crate::action::{AttackKind, Letters, MissileEnd, parse_actions};
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::sight::{self, LineOfSight};

@@ -8,6 +8,7 @@ use crate::blood::{CAP, RED, Stain};
 use crate::combat::{Blow, Strike};
 use crate::content::ContentFiles;
 use crate::geom::Dir;
+use crate::time;
 use std::sync::LazyLock;
 
 /// A lit test level beside the built-in content: the player (`@`), a giant rat (`r`, 12 hit

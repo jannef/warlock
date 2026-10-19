@@ -5,7 +5,7 @@
 //! blasts, saves, replays, and catching up after a long absence.
 
 use super::*;
-use crate::content::ContentFiles;
+use crate::content::{ContentFiles, TerrainId};
 use crate::ice::{self, Shock};
 use crate::perception::CellView;
 use crate::replay::Replay;
