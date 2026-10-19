@@ -34,12 +34,18 @@ impl DeathScreen {
         };
         let content = view.content();
         let calendar = content.calendar();
-        let by = match death.by {
-            Some(creature) => {
+        let by = match (death.of, death.by) {
+            // A status effect killed them: "Bled to death".
+            (Some(status), _) => {
+                let def = content.status(status);
+                (def.death.clone())
+                    .unwrap_or_else(|| format!("Died of {}", def.name.to_lowercase()))
+            }
+            (None, Some(creature)) => {
                 let name = &content.creature(creature).name;
                 format!("Killed by {} {name}", article(name))
             }
-            None => "Killed by something you did not see".into(),
+            (None, None) => "Killed by something you did not see".into(),
         };
         let turns = match death.turn {
             1 => "after 1 turn".to_string(),
@@ -123,6 +129,31 @@ mod tests {
             })
             .collect::<Vec<_>>()
             .join("\n")
+    }
+
+    #[test]
+    fn a_death_by_a_status_effect_says_so() {
+        // One hit point (Toughness 1), and a bad wound.
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        files.insert(
+            "scenarios/frail.toml",
+            "name = \"Frail\"\nstart_level = \"hub\"\nstats = { toughness = 1 }\n",
+        );
+        let content = Arc::new(Content::load(&files).expect("content"));
+        let mut w = World::new(content, "frail", None).expect("world");
+        for _ in 0..5 {
+            w.apply(&Action::Afflict("bleeding".into()));
+        }
+        while w.death().is_none() {
+            w.apply(&Action::Wait);
+        }
+        let screen = DeathScreen::new(Some(&w.perception()));
+        let mut console = Console::default();
+        console.resize(80, 30);
+        screen.draw(&mut console, Clock::H24);
+        let shown = text(&console);
+        assert!(shown.contains("Bled to death,"), "{shown}");
+        assert!(!shown.contains("Killed by"), "{shown}");
     }
 
     #[test]

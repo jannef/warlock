@@ -49,7 +49,9 @@ pub enum Layer {
     /// empty).
     Equipment,
     /// Not a map: the player's character (`Race Dwarf`, `Gender Female`, `Class Warrior`), if
-    /// any, then their own scores, one stat a line (`Strength 12`); never potentials or modifiers.
+    /// any, then their own scores, one stat a line (`Strength 12`, lowered while a status effect
+    /// lowers it), then their status effects by name (`Effects Bleeding, Poisoned`) if any;
+    /// never potentials, modifiers, or how severe an effect is.
     Stats,
     /// Not a map: the player's own trained skills, one a line in skill order (`Stealth 17`);
     /// never an untrained skill, a mark, or a benefit.
@@ -60,8 +62,8 @@ pub enum Layer {
     /// Ground truth: all terrain, objects, and actors on the level. **Dev-only.**
     Truth,
     /// Not a map: every actor on the level with its weight, what it carries (and of that wears
-    /// and wields), its stats (scores and potentials), and its trained skills with their marks
-    /// (ground truth). **Dev-only.**
+    /// and wields), its stats (scores and potentials), its trained skills with their marks, and
+    /// its status effects with their severities (ground truth). **Dev-only.**
     Actors,
     /// The level's special rooms (spec §7 "Special rooms"; ground truth): the terrain, with the
     /// plain ground of each special room drawn as its effect's `mark`, then a line per room
@@ -356,6 +358,12 @@ fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
         }
     }
     rows.extend((view.own_scores().iter()).map(|(stat, score)| format!("{} {score}", stat.name())));
+    let effects: Vec<&str> = (view.own_effects())
+        .map(|s| content.status(s).name.as_str())
+        .collect();
+    if !effects.is_empty() {
+        rows.push(format!("Effects {}", effects.join(", ")));
+    }
     rows
 }
 
@@ -407,8 +415,8 @@ fn actor_weapon_skills(
 
 /// Every actor on the level (ground truth): id, creature, position, hit points and Defence,
 /// weight, what it carries, its burden and carrying limit, its stats as score/potential
-/// (`St 12/15`), and its trained skills with their marks toward the next point
-/// (`stealth 17 (2/5)`).
+/// (`St 12/15`), its trained skills with their marks toward the next point
+/// (`stealth 17 (2/5)`), and its status effects with their severities (`effects bleeding 2`).
 fn actor_rows(world: &World) -> Vec<String> {
     let content = world.content();
     let (_, actors) = world.ground_truth();
@@ -455,16 +463,24 @@ fn actor_rows(world: &World) -> Vec<String> {
             } else {
                 format!("; skills {}", skills.join(", "))
             };
+            let effects: Vec<String> = (a.effects.iter())
+                .map(|e| format!("{} {}", content.status(e.status).id, e.severity))
+                .collect();
+            let effects = if effects.is_empty() {
+                String::new()
+            } else {
+                format!("; effects {}", effects.join(", "))
+            };
             let weapons = actor_weapon_skills(content, a)
                 .map_or(String::new(), |s| format!("; weapon skills {s}"));
             format!(
                 "{} {} at {}: hp {}/{} dv {}; weight {} (base {} + carried {}: {carried})\
-                 {equipped}; {} (limit {}){weapons}; stats {}{skills}",
+                 {equipped}; {} (limit {}){weapons}; stats {}{skills}{effects}",
                 a.id,
                 content.creature(a.creature).id,
                 a.pos,
                 a.hp,
-                a.max_hp(),
+                a.max_hp(content),
                 a.defence(content, load.penalty()).total(),
                 format_weight(w.total()),
                 format_weight(w.base),
@@ -526,8 +542,9 @@ pub fn ascii(world: &World, layers: &[Layer]) -> String {
 }
 
 /// Structured dump: turn, game time, level, viewer, the special room the player stands in if they
-/// know it (its effect id; else null), the weather (under the open sky; else null), seen actors,
-/// heard sounds, the player's inventory, equipment (by slot id), weight, and scores (by stat id),
+/// know it (its effect id; else null), the weather (under the open sky; else null), seen actors
+/// (with the status effects that show on them), heard sounds, the player's inventory, equipment
+/// (by slot id), weight, scores (by stat id), and status effects (by id),
 /// recent messages, the requested layers as arrays of rows, and optionally the full
 /// [`crate::WorldState`] under `state`.
 pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
@@ -538,9 +555,12 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         .iter()
         .map(|a| {
             let def = content.creature(a.creature);
+            let effects: Vec<&str> = (view.effects_of(a.id))
+                .map(|s| content.status(s).id.as_str())
+                .collect();
             json!({
                 "id": a.id, "kind": a.kind, "creature": def.id, "glyph": def.glyph.to_string(),
-                "pos": a.pos, "health": a.health,
+                "pos": a.pos, "health": a.health, "effects": effects,
             })
         })
         .collect();
@@ -581,8 +601,12 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             "time": d.time.to_string(),
             "place": d.place,
             "by": d.by.map(|c| content.creature(c).id.clone()),
+            "of": d.of.map(|s| content.status(s).id.clone()),
         })
     });
+    let effects: Vec<&str> = (view.own_effects())
+        .map(|s| content.status(s).id.as_str())
+        .collect();
     let weapon_skills: serde_json::Map<String, Value> = (content.weapon_skills().ids())
         .map(|(id, def)| {
             let rank = view.own_weapon_skills().rank(id);
@@ -625,6 +649,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         })),
         "stats": view.own_scores(),
         "skills": skills_json(&view),
+        "effects": effects,
         "weapon_skills": weapon_skills,
         "hp": { "current": hp, "max": max_hp },
         "experience": view.own_experience(),

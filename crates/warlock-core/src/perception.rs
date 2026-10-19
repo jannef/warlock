@@ -2,13 +2,14 @@
 //!
 //! Everything the player can know — and therefore everything rendering, UI, and dumps may show —
 //! goes through [`PerceptionView`]. It exposes currently visible cells, creatures (what they
-//! wear and wield, and how hurt they look, in words), objects, and light, remembered terrain and
-//! objects, and what the player carries, wears, weighs, and scores in each stat, their trained
-//! skills' values, their burden and carrying limit, and their hit points and Defence; it never
+//! wear and wield, how hurt they look, in words, and the status effects that show on them, such
+//! as bleeding), objects, and light, remembered terrain and objects, and what the player carries,
+//! wears, weighs, and scores in each stat, their trained skills' values, their burden and
+//! carrying limit, their hit points and Defence, and their own status effects by name; it never
 //! exposes unseen terrain or objects, hidden creatures, what else creatures carry, their burden,
 //! their skills, or their hit points, any stat's modifier or potential, a skill's marks or
-//! benefits, an untrained skill, a creature's stats, a to-hit, or light the player's eyes cannot
-//! perceive.
+//! benefits, an untrained skill, a creature's stats, a to-hit, how severe a status effect is or
+//! how long it lasts, or light the player's eyes cannot perceive.
 //!
 //! **Memory** (spec §5): terrain, piles of objects, and blood as last seen. Objects are seen where
 //! creatures are (cells in line of sight, never completed walls); a pile seen gone is forgotten,
@@ -63,7 +64,7 @@ use crate::character::Character;
 use crate::combat::Health;
 use crate::content::{
     CombatStance, Content, CreatureId, FactionId, Flow, LevelKind, LightId, ObjectId,
-    RoomEffectDef, SlotId, Stance, TerrainId, VisionProfile,
+    RoomEffectDef, SlotId, Stance, StatusId, TerrainId, VisionProfile,
 };
 use crate::daylight;
 use crate::equipment::Equipment;
@@ -262,6 +263,9 @@ pub(crate) struct Perception {
     actors: Vec<SeenActor>,
     /// What the seen creatures (not the player) wear and wield, by actor, in slot order.
     gear: Vec<SeenGear>,
+    /// The status effects that show on the seen creatures (not the player), by actor, the most
+    /// important first.
+    effects: Vec<(ActorId, StatusId)>,
     /// Sounds heard during the last turn from sources the player does not see.
     sounds: Vec<PerceivedSound>,
     /// Cells whose blood the player sees, in position order.
@@ -506,7 +510,7 @@ impl Perception {
                 creature: a.creature,
                 faction: a.faction(content),
                 pos: a.pos,
-                health: a.health(),
+                health: a.health(content),
             })
             .collect();
         // What creatures wear and wield is in plain sight; the rest of what they carry is not.
@@ -521,6 +525,15 @@ impl Perception {
                         stack,
                     })
                 })
+            })
+            .collect();
+        // So do the statuses that show, such as bleeding; others (poison) do not.
+        let effects = (seen.iter())
+            .filter(|a| a.kind == ActorKind::Creature)
+            .flat_map(|a| {
+                (a.effects.iter())
+                    .filter(|e| content.status(e.status).seen.is_some())
+                    .map(|e| (a.id, e.status))
             })
             .collect();
 
@@ -562,6 +575,7 @@ impl Perception {
             sources,
             actors,
             gear,
+            effects,
             sounds,
             blood,
         }
@@ -859,9 +873,16 @@ impl<'a> PerceptionView<'a> {
         self.snapshot.gear.iter().filter(move |g| g.actor == actor)
     }
 
-    /// The player's own scores, by stat (spec §8 "Stats"). That is all the player knows of
-    /// stats: never their potentials or modifiers, and nothing of a creature's.
+    /// The player's own scores, by stat (spec §8 "Stats"), as the rules read them: lowered
+    /// while a status effect lowers them (spec §8 "Status effects"). That is all the player
+    /// knows of stats: never their potentials or modifiers, and nothing of a creature's.
     pub fn own_scores(&self) -> PerStat<u8> {
+        self.player.effective_stats(self.content).scores()
+    }
+
+    /// The player's scores as they are without their status effects: what [`PerceptionView::
+    /// own_scores`] would be with none (the character screen marks the lowered ones).
+    pub fn own_base_scores(&self) -> PerStat<u8> {
         self.player.stats.scores()
     }
 
@@ -887,6 +908,20 @@ impl<'a> PerceptionView<'a> {
         self.own_skills().into_iter().filter(|s| s.active).collect()
     }
 
+    /// The player's own status effects, the most important first (spec §8 "Status effects"):
+    /// what they suffer, never how badly or for how long.
+    pub fn own_effects(&self) -> impl Iterator<Item = StatusId> + 'a {
+        self.player.effects.iter().map(|e| e.status)
+    }
+
+    /// The status effects that show on seen creature `actor` (`seen` in `data/status.toml`:
+    /// bleeding), the most important first; none for creatures not in view and the player.
+    pub fn effects_of(&self, actor: ActorId) -> impl Iterator<Item = StatusId> + 'a {
+        (self.snapshot.effects.iter())
+            .filter(move |(a, _)| *a == actor)
+            .map(|(_, s)| *s)
+    }
+
     /// The abilities the player can use now, in menu order ([`crate::ability`]): for the
     /// abilities menu (#156) to list.
     pub fn abilities(&self) -> Vec<Ability> {
@@ -904,7 +939,7 @@ impl<'a> PerceptionView<'a> {
     /// The player's hit points: what they have left (at most their maximum, never below 0) and
     /// their maximum (spec §8 "Combat").
     pub fn own_hp(&self) -> (i32, i32) {
-        let max = self.player.max_hp();
+        let max = self.player.max_hp(self.content);
         (self.player.hp.clamp(0, max), max)
     }
 

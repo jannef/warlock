@@ -737,6 +737,7 @@ fn search_the_last_seen_spot_then_go_back_and_patrol_on() {
             hp_base: 0,
             regen: 0,
             skills: Default::default(),
+            effects: Default::default(),
             weapon_skills: Default::default(),
             faction_override: None,
             stance: Default::default(),
@@ -1088,7 +1089,7 @@ fn a_level_can_place_a_creature_among_the_peaceful_folk() {
     }
     assert_eq!(pos(&w, rat), Pos::new(7, 1), "it stays where it is");
     let me = &w.state().actors[&PLAYER];
-    assert_eq!(me.hp, me.max_hp());
+    assert_eq!(me.hp, me.max_hp(w.content()));
     // Bumping into the rat is "in the way", never an attack.
     run(&mut w, "move:E*5");
     assert_eq!(w.player_pos(), Pos::new(6, 1));

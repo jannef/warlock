@@ -46,7 +46,10 @@
 #   base_hp   hit points beyond its Toughness (default 0); the player's come from the scenario
 #   attack    its natural attack, used when it wields no weapon (without one: bare hands, 1d3):
 #             { damage = "1d4", name = "bite", verb = "bites" } and optionally threat, crit,
-#             and to_hit as for weapons (objects.toml); Strength adds to hit and to damage
+#             and to_hit as for weapons (objects.toml); Strength adds to hit and to damage.
+#             on_hit lists the status effects (status.toml) a hit with it may cause, if the
+#             target lives: [{ status = "poisoned", chance = 10, severity = 2 }] (chance in
+#             percent, 1 to 100; severity in degrees, up to the status's max)
 #   natural   its natural armour: { defence = 3, name = "shell" } (the Natural category of
 #             Defence; "Your sword glances off the cave beetle's shell.")
 #   weapon_skills  its ranks in weapon skills (spec §8 "Weapon skills"), by skill id in
@@ -84,7 +87,13 @@ hearing = 5
 weight = 4000
 size = "small"
 stats = { strength = 10, dexterity = 17, toughness = 12, intelligence = 1, willpower = 12, presence = 4 }
-attack = { damage = "1d4", name = "bite", verb = "bites" }
+
+# Its bite is filthy: now and then it poisons.
+[creature.attack]
+damage = "1d4"
+name = "bite"
+verb = "bites"
+on_hit = [{ status = "poisoned", chance = 10, severity = 2 }]
 
 # Bats fly: no footsteps, and the keenest ears.
 [[creature]]

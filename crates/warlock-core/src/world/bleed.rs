@@ -36,7 +36,7 @@ impl World {
             missile: kind != AttackKind::Melee,
             damage: blow.damage,
             hp: victim.hp,
-            max_hp: victim.max_hp(),
+            max_hp: victim.max_hp(&self.content),
             critical: blow.strike == Strike::Hit { critical: true },
             size: self.content.size(size).blood,
             seed: blood::seed(self.state.turn, self.state.time, attacker.0, target.0),

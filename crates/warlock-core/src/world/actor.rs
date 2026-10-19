@@ -13,6 +13,7 @@ use crate::noise::Heard;
 use crate::object::{Stack, Weight, weight_of};
 use crate::skills::{Effect, Skills};
 use crate::stats::{Stat, Stats};
+use crate::status::Effects;
 use crate::weapon_skills::WeaponSkills;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -97,14 +98,18 @@ pub struct Actor {
     pub equipment: Equipment,
     /// Its scores and potentials (spec §8 "Stats"; [`crate::stats`]): from its creature type,
     /// the player's from the scenario. Known to the rules (and dev tools) for every actor; the
-    /// player is shown only their own scores.
+    /// player is shown only their own scores. Rules read them through
+    /// [`Actor::effective_stats`], which status effects may lower.
     pub stats: Stats,
     /// Hit points left (spec §8 "Combat"); at 0 or below it is dead.
     pub hp: i32,
     /// What its maximum hit points add to its Toughness: the creature type's `base_hp`, the
     /// player's race and class (the scenario's `hp`).
     pub hp_base: i32,
-    /// Seconds of game time toward its next hit point back, while it is hurt.
+    /// Progress toward its next hit point back, while it is hurt, in hundredths of a second of
+    /// game time at the normal pace (spec §8 "Healing"): each second adds its healing rate in
+    /// percent (100 normally, 200 resting, less or none while a status slows it), and every
+    /// [`combat::regen_seconds`] × 100 of it is a hit point.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub regen: u32,
     /// Its trained skills, with their values and training marks (spec §8 "Skills";
@@ -113,6 +118,9 @@ pub struct Actor {
     /// actor; the player is shown only their own trained skills' values.
     #[serde(default, skip_serializing_if = "Skills::is_empty")]
     pub skills: Skills,
+    /// The status effects it suffers (spec §8 "Status effects"; [`crate::status`]).
+    #[serde(default, skip_serializing_if = "Effects::is_empty")]
+    pub effects: Effects,
     /// Its rank and marks in every weapon skill (spec §8 "Weapon skills";
     /// [`crate::weapon_skills`]): a creature's from its type, the player's from their race and
     /// class. Only the player trains. The player is shown their own ranks; what a rank gives
@@ -139,14 +147,24 @@ impl Actor {
             .or(content.creature(self.creature).faction)
     }
 
-    /// Its maximum hit points: Toughness plus [`Actor::hp_base`], at least 1.
-    pub fn max_hp(&self) -> i32 {
-        combat::max_hp(self.stats.score(Stat::Toughness), self.hp_base)
+    /// Its stats as the rules read them: its scores less what its status effects take from
+    /// them (spec §8 "Status effects": strong poison lowers Strength and Dexterity).
+    pub fn effective_stats(&self, content: &Content) -> Stats {
+        match self.effects.penalty(content) {
+            Some(by) => self.stats.adjusted_by(&by),
+            None => self.stats,
+        }
+    }
+
+    /// Its maximum hit points: its (effective) Toughness plus [`Actor::hp_base`], at least 1.
+    pub fn max_hp(&self, content: &Content) -> i32 {
+        let toughness = self.effective_stats(content).score(Stat::Toughness);
+        combat::max_hp(toughness, self.hp_base)
     }
 
     /// How hurt it looks, in words.
-    pub fn health(&self) -> Health {
-        Health::of(self.hp, self.max_hp())
+    pub fn health(&self, content: &Content) -> Health {
+        Health::of(self.hp, self.max_hp(content))
     }
 
     /// Its Defence (spec §8 "Combat"): 10 plus its Dexterity modifier (capped by the worn
@@ -166,7 +184,7 @@ impl Actor {
             })
             .map(|(item, hand, s)| (item, content.object(s.object), hand))
             .collect();
-        let dexterity = self.stats.modifier(Stat::Dexterity);
+        let dexterity = self.effective_stats(content).modifier(Stat::Dexterity);
         let worn = equipped.iter().filter_map(|(_, o, _)| o.max_dex);
         let cap = worn.chain(burden.max_dex()).min();
         let dexterity = cap.map_or(dexterity, |cap| dexterity.min(cap));
@@ -340,7 +358,8 @@ impl Actor {
             (None, None) => Attack::unarmed(),
         };
         let skill = self.melee_skill(content);
-        let profile = Profile::melee(&attack, &self.stats).with(&self.benefit(content, skill));
+        let profile = Profile::melee(&attack, &self.effective_stats(content))
+            .with(&self.benefit(content, skill));
         self.stanced(content, profile)
     }
 
@@ -355,7 +374,8 @@ impl Actor {
     pub fn ranged(&self, content: &Content) -> Option<Profile> {
         let (launcher, attack) = self.launcher(content)?;
         let skill = content.object(launcher).skill;
-        let profile = Profile::ranged(attack, &self.stats).with(&self.benefit(content, skill));
+        let profile = Profile::ranged(attack, &self.effective_stats(content))
+            .with(&self.benefit(content, skill));
         Some(self.stanced(content, profile))
     }
 
@@ -363,7 +383,8 @@ impl Actor {
     /// damage, what its skill at throwing gives, and its combat stance.
     pub fn thrown(&self, content: &Content, attack: &Attack) -> Profile {
         let skill = content.weapon_skills().of_role(Role::Thrown);
-        let profile = Profile::thrown(attack, &self.stats).with(&self.benefit(content, skill));
+        let profile = Profile::thrown(attack, &self.effective_stats(content))
+            .with(&self.benefit(content, skill));
         self.stanced(content, profile)
     }
 
@@ -373,7 +394,8 @@ impl Actor {
     pub fn bash(&self, content: &Content) -> Option<(ObjectId, Profile)> {
         let (shield, attack) = self.shield(content)?;
         let skill = content.weapon_skills().of_role(Role::ShieldBash);
-        let profile = Profile::melee(attack, &self.stats).with(&self.benefit(content, skill));
+        let profile = Profile::melee(attack, &self.effective_stats(content))
+            .with(&self.benefit(content, skill));
         Some((shield, self.stanced(content, profile)))
     }
 }

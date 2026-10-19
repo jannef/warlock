@@ -74,7 +74,7 @@ A hit whose dice come up high enough **threatens a critical**: most weapons thre
 24, swords and daggers on 20 to 24. A second roll, against the same Defence, decides: if it would
 hit too, the critical is **confirmed** and the damage is rolled again and added, twice in all for
 most weapons, three times for spears and bows. The message says so: "The kobold hits you
-hard!"
+hard!" A confirmed critical also opens a bleeding wound (see [Status effects](status-effects.md)).
 
 {{#include generated/threats.md}}
 
@@ -96,6 +96,9 @@ A hit does the weapon's damage dice, at least 1:
 
 Messages never give numbers: "The kobold hits you.", "The giant rat bites the kobold.", "You hit
 the giant rat hard!"
+
+A **big hit**, one that takes at least a third of the target's hit points at once, makes it
+bleed, and some creatures' attacks can poison: see [Status effects](status-effects.md).
 
 ## Stances
 
@@ -136,22 +139,20 @@ hurt a creature looks: unhurt, lightly wounded, wounded, badly wounded, or nearl
 
 ### Getting better
 
-Hit points come back with time, faster the tougher you are: one every so often, by Toughness. It
-does not matter what you do meanwhile; [resting](resting.md) is simply the quickest way to let
-the time pass (a rest stops when something attacks you).
-
-{{#include generated/regeneration.md}}
-
-Creatures heal the same way, while you are on their level. In a sanctuary (a
-[special room](special-rooms.md)) wounds heal three times as fast, yours and anyone's.
+Hit points come back with time, faster the tougher you are, twice as fast while you
+[rest](resting.md), and slower or not at all while you bleed or are poisoned: see
+[Healing](healing.md). Creatures heal the same way, while you are on their level. In a sanctuary
+(a [special room](special-rooms.md)) wounds heal three times as fast, yours and anyone's.
 
 ## Death
 
 A creature at 0 hit points dies: "The giant rat dies." It is gone, and everything it carried,
-what it wore and wielded too, falls where it stood, for you to pick up.
+what it wore and wielded too, falls where it stood, for you to pick up. A wounded creature may
+also die later of its wounds: "The giant rat bleeds to death."
 
 When **you** reach 0 hit points, you die: "You die..." The run is over, and a screen tells you
-what killed you (if you saw it), where, when, and after how many turns. There is no going back:
+what killed you (if you saw it, or "Bled to death" when your wounds did), where, when, and after
+how many turns. There is no going back:
 your save is deleted at once (see [Saving](saving.md)). Press `Enter` or `Esc` to return to the
 main menu and start a new run.
 

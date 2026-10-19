@@ -86,7 +86,8 @@ load, stats, and skills with their marks).
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-dig:DIR rest:GOAL stance:NAME vision:PROFILE skip:DURATION weather:KIND effect:ID@X,Y[>X,Y]` (`DIR` = N
+dig:DIR rest:GOAL stance:NAME vision:PROFILE skip:DURATION weather:KIND effect:ID@X,Y[>X,Y]
+afflict:STATUS` (`DIR` = N
 NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
 player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `SLOT` = a slot id in
 `assets/data/slots.toml`, e.g. `equip:body:b` (put inventory stack `b` on), `remove:body`;
@@ -99,7 +100,9 @@ after turn until it gives way or something interrupts; `PROFILE` = an id in
 `clear`, `overcast`, `rain`, `heavy`, for three hours of game time; `effect` is the dev spell
 effect, `ID` an id in `assets/data/effects.toml`: `effect:fireball@30,14` (a burst there),
 `effect:fireball@20,10>30,14` (flying there first), `effect:lightning_bolt@21,17>58,17` (a bolt
-toward the second cell), no time and no rules effect, for captures; `ACTION*N` repeats one, e.g.
+toward the second cell), no time and no rules effect, for captures; `afflict` is the dev status
+effect: one degree more of `STATUS`, an id in `assets/data/status.toml`, e.g.
+`afflict:poisoned*4 afflict:bleeding`, no game time; `ACTION*N` repeats one, e.g.
 `wait*10`). Dump layers: `view` (what the player sees), `fov` (`*` visible),
 `memory` (seen terrain and remembered objects), `light` (perceived brightness of visible cells as a
 digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places over the view: `f`
@@ -108,15 +111,17 @@ digging, upper case when loud), `blood` (blood the player sees or remembers as a
 view, `1` a few drops to `9` soaked), `inventory` (what the player
 carries and weighs, worn and wielded things marked, their burden and its thresholds),
 `equipment` (the player's slots), `stats`
-(the player's race, gender, and class, then their own scores), `weapon_skills` (the player's
+(the player's race, gender, and class, then their own scores as the rules read them, then
+`Effects Bleeding, Poisoned` when they suffer any), `weapon_skills` (the player's
 ranks and progress toward the next, `Long blades 2 (40%)`), `truth`
 (ground truth, **dev-only**), `actors` (every actor on the level with its hit points and
 Defence, its weight, what it carries and of that wears and wields, its burden and carrying
-limit, its weapon skills with marks, and its stats as score/potential, **dev-only**), `rooms` (the level's special rooms:
-their plain ground as the effect's `mark`, then a line per room, **dev-only**). The header line
-has the player's `hp
+limit, its weapon skills with marks, its stats as score/potential, and its status effects with
+severities, **dev-only**), `rooms` (the level's special rooms: their plain ground as the
+effect's `mark`, then a line per room, **dev-only**). The header line has the player's `hp
 17/17` (and `dead` once the run has ended); JSON dumps add `hp`, `defence`, `burden` (`level`,
-`limit`), `death`, `weapon_skills` (by skill id: `rank`, `progress`), each seen actor's `health`,
+`limit`), `effects` (status ids), `death` (with `of`, the status that killed), `weapon_skills`
+(by skill id: `rank`, `progress`), each seen actor's `health` and `effects` (those that show),
 and `room` (the special room the player stands in, if they know it). Replay
 files are JSON
 `{game_version, scenario, seed, character, steps:[{action, hash}]}` (`character` =
@@ -149,7 +154,7 @@ level change to `run.sav` in the data dir (see "File locations" below). On start
 `--replay`, or `--record` (replays and recordings always start a fresh run). F5 / F9 write / load `snapshots/quick.sav`. An unreadable save is renamed `run.sav.bad`,
 never deleted. Format and `Content::fingerprint` live in `warlock-core/src/save.rs`: bump
 `FORMAT_VERSION` on any incompatible `WorldState` change; adding or reordering terrain, creatures,
-lights, levels, objects, equipment slots, skills, weapon skills, or dungeon branches invalidates
+lights, levels, objects, equipment slots, skills, weapon skills, statuses, or dungeon branches invalidates
 existing saves.
 **Permadeath**: when the player dies, `screens::on_death` deletes `run.sav`
 (`SaveStore::delete_run`) and opens the death screen; `SaveStore::save_run` never writes a dead
@@ -281,9 +286,10 @@ renderer through `PerceptionView::flow` (visible cells only); no rule reads it.
 
 Experience (spec §8 "Experience", M21): `content/experience.rs` holds the rules from
 `data/experience.toml` (level curve, `hp_level`, the WoW-style `kill_xp` scaling with its zero
-difference bands), `world/experience.rs` applies them (`earn_kill` from `fight.rs::hurt` when the
-player lands the killing blow, `grant_xp`, level-up messages queued in `World::news` and said
-after the attack's own). Creatures carry `level` and `xp` in `creatures.toml`. The saved state is
+difference bands), `world/experience.rs` applies them (`earn_kill` from `fight.rs::dies` when the
+player lands the killing blow, or caused the status effect that killed: `Effect::by`; `grant_xp`,
+level-up messages queued in `World::news` and said after the attack's own, or at the end of
+`perceive` for a creature that bled to death). Creatures carry `level` and `xp` in `creatures.toml`. The saved state is
 only `WorldState::experience` (the level follows from it); the UI reads
 `PerceptionView::own_experience()`. Other kills (traps, creatures) give nothing: keep it that way
 by awarding only where the attacker is the player.
@@ -392,17 +398,20 @@ the gameplay stream; `max_hp`, `regen_seconds`, `Health` words). `world/fight.rs
 `World::attack` (picks the profile: melee weapon / natural attack / bare hands, the readied
 launcher for a shot, none for a spell) → `attack_with(attacker, target, kind, Option<Profile>)`
 (**the entry point for ranged combat, #117**) → `Event::Attacked { .., strike }`, noise, damage
-(`hurt`), `Event::Died`; `creature_dies` removes the actor and piles its inventory on its cell,
+(`hurt`), `Event::Died`, then for a target left alive `World::after_blow` (status effects:
+wounds and `on_hit`, `world/status.rs`); `dies` is the one way an actor dies (a blow or a status,
+`Event::Died { of }`): `creature_dies` removes the actor and piles its inventory on its cell,
 the player's death sets `WorldState::death` (`Death`: turn, time, place, `by` the creature type
-if seen) and `run_turn` stops; `World::apply` refuses everything after it. `regenerate` runs as
-the scheduler moves the clock. Messages: the player's own attacks are said at once
+if seen, `of` the status that killed) and `run_turn` stops; `World::apply` refuses everything
+after it. Healing and status ticks run as the scheduler moves the clock (`World::pass_time`,
+below). Messages: the player's own attacks are said at once
 (`player_attacks`, by what they see as they strike); a creature's in `World::perceive_events`
 (`fight::attack_message`, `death_message`; actors that died this action are in the unsaved
 `World::fallen`, so their names and words still resolve). Data: objects `damage`, `threat`,
 `crit`, `to_hit`, `strength`, `parry`, `armour`, `max_dex`, `shield` (`content/object.rs`);
 creatures `base_hp`, `attack` (`NaturalAttack`), `natural` (`Hide`); races and classes `hp`; a
 scenario without a character `hp`. Hit points live on `Actor` (`hp`, `hp_base`, `regen`;
-`max_hp`, `health`), saved and hashed (`FORMAT_VERSION` 11). Presentation reads only
+`max_hp(content)`, `health(content)`: the effective Toughness), saved and hashed. Presentation reads only
 `PerceptionView::own_hp`, `own_defence` (the total: its Dexterity part would give a modifier
 away), `SeenActor::health`, and `death`: **never a creature's hit points, a to-hit, a roll, or a
 modifier**. Spells stay intents (`strike: None`). Tests: `combat.rs` (exhaustive 2d12
@@ -453,10 +462,13 @@ and potentials (`Actor::stats`, saved and hashed), and `modifier(score)` /
 score, never below it; `Stats::from_data` validates) on creature types in `data/creatures.toml`;
 the player's come from their character (below), or from a scenario without one
 (`ScenarioDef::player_stats`; the `player` creature may not set any). **Never show a modifier, a potential, or a creature's stats**: presentation reads only
-`PerceptionView::own_scores` (the player's scores) — the character screen and the `stats` dump
-layer; only the dev `actors` layer and `--state` dumps show the rest. Only combat (Strength,
-Dexterity, Toughness) and burden (Strength and Toughness scores) use stats, and no other D&D
-concept (checks, saves) comes with them. The status bar has no stats segment: it is already
+`PerceptionView::own_scores` (the player's scores as the rules read them, lowered by status
+effects; `own_base_scores` without them, so the character screen can mark the lowered ones) — the
+character screen and the `stats` dump layer; only the dev `actors` layer and `--state` dumps show
+the rest. Only combat (Strength, Dexterity, Toughness) and burden (Strength and Toughness scores)
+use stats, **always through `Actor::effective_stats(content)`** (status penalties applied; never
+`actor.stats` directly in a rule, but for the hit points a level adds, `World::level_hp`, so a
+passing penalty never costs them for good), and no other D&D concept (checks, saves) comes with them. The status bar has no stats segment: it is already
 full at common window sizes (it shows `HP 17/17` right after the level name, dropping only
 before it, and the burden right after that when there is one).
 
@@ -672,6 +684,33 @@ dimming, and palettes apply as for terrain; look mode prefixes the terrain with 
 The `blood` switch hides both. Tune by capturing the arena at `wait*8` (first kills) and `wait*40`
 (after the brawl) and the `blood-wall` golden's walk.
 
+Status effects and healing (spec §8 "Status effects", "Healing"; M24, #138; **diseases, #139,
+build on this**): statuses are data, `data/status.toml` (`content/status.rs`: `StatusDef` with
+`seen`, `max`, `stacking`, `tick`/`damage`, `eases`, `regen`, `penalty`, `wound`, `cured_by`,
+and the words `start`/`end`/`dies`/`death`; `Healing { resting }`; `OnHit` on a creature's
+natural attack, `NaturalAttack::on_hit`; `Content::status`/`status_id`/`status_ids`/`healing`;
+optional file; `StatusId` is an index, in the fingerprint). `crate::status` holds one actor's
+effects (`Actor::effects: Effects`, at most one `Effect { status, severity, tick, wear, by }` per
+status in status order; `Effects::add` applies the stacking rule, `penalty`, `regen`,
+`is_valid_for`; `Effect::until_tick`/`until_eases`/`advance` are the timer math: ticks bank
+`seconds × severity` degree-seconds). `world/status.rs` applies them: `World::afflict(actor,
+status, severity, by, events)` (**the one way to give an actor a status**: hunger and rotten
+corpses (#137), traps, diseases call it), `World::cure(actor, means, events)` (the Heal skill's
+bandage, #132), `World::after_blow` (wounds by `combat::big_hit` and criticals, then `on_hit`
+with one gameplay draw per chance below 100), `World::healing_rate` (min of the statuses'
+`regen`, × resting for the player while `World::resting`; hook hunger's Weak here or as a status),
+and `World::pass_time` → `live`, called by `run_turn` for every scheduled actor as the clock
+moves: an event loop over the next tick, easing, or hit point back, so splitting time never
+changes the result, deaths at their exact moment (`dies(.., Some(status), when)`), the blood
+drip hook `drip_blood` (#127's stains go there). The player's statuses beginning and ending are
+`Event::Status` (said by `perceive_events`: begin = `say`, stops a rest; end = `note`, does not;
+the rest loop keeps them from the turns it does not perceive). Presentation reads
+`PerceptionView::own_effects` (status bar after HP, character screen `Status` row) and
+`effects_of(actor)` (look mode; only statuses with `seen`), never severities. Saved and hashed
+(`FORMAT_VERSION` 20; `Actor::regen` counts hundredths of a second at the normal pace). The dev
+action `afflict:ID` (`Action::Afflict`) gives the player a degree, for tests and captures. Tests:
+`status.rs`, `content/status.rs`, `world/status_tests.rs`.
+
 Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebuffer pixels:
 1. **Map grid** (`render/grid.rs`): a `Console` (`render/console.rs`) drawn by one quad with the
    console `Material2d` (`render/console.wesl`). Each fragment finds its cell from its framebuffer
@@ -864,8 +903,9 @@ action costs, sight radii, the pack's
 size, the stats' names, races (stat adjustments as written, dice included, vision, starting
 ages, hit points), classes (stat adjustments, hit points), what each gender raises, the horoscope
 (animals, elements, and the great cycle's signs and years), combat (weapons, armour and shields,
-the 2d12 hit chances and threat ranges, regeneration by Toughness), burden (its levels and what
-each costs, the races' sizes, sample carrying limits); never hidden rules such as
+the 2d12 hit chances and threat ranges, regeneration by Toughness), status effects (what causes
+them, what they cost, how they wear off, healing and stats) and healing paces, burden (its levels
+and what each costs, the races' sizes, sample carrying limits); never hidden rules such as
 speed, hearing thresholds, creature sight, creature weights, stat modifiers and potentials, a
 to-hit, or creatures' stats, hit points, and natural attacks and armour) are tables
 generated by

@@ -5,6 +5,7 @@ use super::faction::FactionId;
 use super::light::LightId;
 use super::object::MAX_BONUS;
 use super::particles::ParticleEmitter;
+use super::status::{OnHit, OnHitSpec, StatusId};
 use crate::color::Rgb;
 use crate::combat::{Attack, CRITS, DEFAULT_CRIT, DEFAULT_THREAT, THREATS};
 use crate::dice::Dice;
@@ -130,7 +131,8 @@ pub(super) struct CreatureSpec {
 }
 
 /// A natural attack as written in content files: `attack = { damage = "1d4", name = "bite",
-/// verb = "bites" }`, with an optional `threat`, `crit`, and `to_hit` like a weapon's.
+/// verb = "bites" }`, with an optional `threat`, `crit`, and `to_hit` like a weapon's, and the
+/// status effects a hit may cause (`on_hit`, `data/status.toml`).
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct NaturalAttackSpec {
@@ -141,6 +143,8 @@ pub(super) struct NaturalAttackSpec {
     pub crit: Option<u8>,
     #[serde(default)]
     pub to_hit: i32,
+    #[serde(default)]
+    pub on_hit: Vec<OnHitSpec>,
 }
 
 /// A creature's natural attack (spec §8 "Combat"): what it does, and the words for it.
@@ -151,6 +155,9 @@ pub struct NaturalAttack {
     pub name: String,
     /// What it does to its target: "bites" ("The giant rat bites you.").
     pub verb: String,
+    /// The status effects a hit with it may cause, in data order (spec §8 "Status effects"): a
+    /// giant rat's bite may poison.
+    pub on_hit: Vec<OnHit>,
 }
 
 /// A creature's natural armour: `natural = { defence = 3, name = "shell" }`.
@@ -176,8 +183,12 @@ pub(super) fn blood(spec: Option<&str>) -> Result<Option<Rgb>, String> {
 }
 
 impl NaturalAttackSpec {
-    /// Checks the attack like a weapon's and resolves its defaults.
-    pub(super) fn resolve(self) -> Result<NaturalAttack, String> {
+    /// Checks the attack like a weapon's and resolves its defaults; `status` resolves a status
+    /// id to the status and its `max`.
+    pub(super) fn resolve(
+        self,
+        status: impl Fn(&str) -> Option<(StatusId, u16)>,
+    ) -> Result<NaturalAttack, String> {
         let threat = self.threat.unwrap_or(DEFAULT_THREAT);
         let crit = self.crit.unwrap_or(DEFAULT_CRIT);
         if !THREATS.contains(&threat) || !CRITS.contains(&crit) {
@@ -195,6 +206,9 @@ impl NaturalAttackSpec {
         if self.to_hit.abs() > MAX_BONUS {
             return Err(format!("attack: `to_hit` must be within ±{MAX_BONUS}"));
         }
+        let on_hit = (self.on_hit.iter())
+            .map(|o| o.resolve(&status).map_err(|m| format!("attack: {m}")))
+            .collect::<Result<Vec<_>, _>>()?;
         Ok(NaturalAttack {
             attack: Attack {
                 damage: self.damage,
@@ -205,6 +219,7 @@ impl NaturalAttackSpec {
             },
             name: self.name,
             verb: self.verb,
+            on_hit,
         })
     }
 }

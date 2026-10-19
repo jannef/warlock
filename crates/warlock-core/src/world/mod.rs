@@ -62,6 +62,10 @@
 //! and to explosions stronger than they are hard; they become rubble.
 //! Blood (`bleed.rs`, [`crate::blood`]): big hits and kills stain the floor and the walls around
 //! the victim. Presentation state kept with the level; no rule reads it.
+//! Status effects and healing (spec §8 "Status effects", "Healing", `status.rs`): big hits and
+//! criticals make their targets bleed, a giant rat's bite may poison; effects cost hit points
+//! and ease as the clock moves, slow healing, and can kill. Hit points come back with game
+//! time, twice as fast while the player rests.
 
 mod actor;
 mod ai;
@@ -76,6 +80,7 @@ mod path;
 mod schedule;
 mod shoot;
 mod spell;
+mod status;
 mod train;
 
 pub use actor::{Actor, ActorId, ActorKind, Mind, Patrol};
@@ -286,6 +291,9 @@ pub struct World {
     /// What the player's kills earned them during the current action (not saved): said after
     /// the attack's own messages.
     news: Vec<String>,
+    /// Whether the player is resting ([`World::rest`]; not saved: a rest is one action): they
+    /// heal faster.
+    resting: bool,
 }
 
 /// How a long action (a rest, digging; [`World::keep_at`]) ended.
@@ -416,11 +424,12 @@ impl World {
             hp_base,
             regen: 0,
             skills,
+            effects: Default::default(),
             weapon_skills,
             faction_override: None,
             stance: CombatStance::Neutral,
         };
-        player.hp = player.max_hp();
+        player.hp = player.max_hp(&content);
         state.actors.insert(ActorId(0), player);
         instantiate_level(&mut state, &content, &start);
         drop(start); // It may borrow `content`, which `assemble` takes.
@@ -472,6 +481,16 @@ impl World {
                 actor.id
             )));
         }
+        if let Some(actor) = state
+            .actors
+            .values()
+            .find(|a| !a.effects.is_valid_for(&content))
+        {
+            return Err(WorldError::InconsistentState(format!(
+                "actor {} suffers status effects this content does not have",
+                actor.id
+            )));
+        }
         Ok(Self::assemble(content, state))
     }
 
@@ -487,6 +506,7 @@ impl World {
             said: 0,
             fallen: Vec::new(),
             news: Vec::new(),
+            resting: false,
         }
     }
 
@@ -622,6 +642,8 @@ impl World {
         if acted && slowed && self.trains(Use::Burdened) {
             self.train(Use::Burdened);
         }
+        // A status effect that lowers Strength during the turn may change it too.
+        let burden = self.load_of(self.state.player).burden();
         match spent {
             Spent::Nothing => {}
             Spent::NoTime => self.perceive(&mut events),
@@ -638,6 +660,9 @@ impl World {
                 self.perceive(&mut events);
             }
         }
+        if self.state.death.is_none() {
+            self.burden_news(burden);
+        }
         Outcome {
             took_turn: self.state.turn != turn,
             elapsed: self.state.time.since(time),
@@ -647,8 +672,14 @@ impl World {
 
     /// Rests until `until`: turn after turn of waiting ([`World::keep_at`]), the last cut short to
     /// end exactly at `until`, whatever the player's speed ([`World::price_until`]); then says
-    /// how long the player rested.
+    /// how long the player rested. The player heals faster all the while.
     fn rest(&mut self, until: GameTime, goal: Rest, events: &mut Vec<Event>) {
+        self.resting = true;
+        self.rest_until(until, goal, events);
+        self.resting = false;
+    }
+
+    fn rest_until(&mut self, until: GameTime, goal: Rest, events: &mut Vec<Event>) {
         let start = self.state.time;
         let wait = self.price_of(self.state.player, ActionKind::Wait);
         let ended = self.keep_at(
@@ -678,7 +709,8 @@ impl World {
     /// player dies. Turns that end before any creature could come into view
     /// ([`World::out_of_view_for`]) and in which the weather the player sees did not change pass
     /// without perception, which cannot change the outcome; only the last turn's events are
-    /// kept.
+    /// kept, and the player's status effects beginning and ending in the others (so they are
+    /// said).
     fn keep_at(
         &mut self,
         events: &mut Vec<Event>,
@@ -690,9 +722,11 @@ impl World {
         let mut came = None;
         let alive = |w: &Self| w.state.death.is_none();
         while more(self) && came.is_none() && self.said == said && alive(self) {
+            // What was perceived was said.
+            events.clear();
             let unseen_until = self.state.time + self.out_of_view_for();
             loop {
-                events.clear();
+                events.retain(|e| matches!(e, Event::Status { .. }));
                 let price = act(self, events);
                 self.run_turn(price, events);
                 let done = !more(self) || self.said != said || !alive(self);
@@ -779,26 +813,34 @@ impl World {
             self.weather_news(from, to);
         }
         let reports = self.perceive_events(events);
-        for text in reports {
-            self.say(text);
+        for (text, stops_rest) in reports {
+            if stops_rest {
+                self.say(text);
+            } else {
+                self.note(text);
+            }
         }
-        // A weapon skill a blocked blow raised (`fight.rs`).
+        // What kills earned the player meanwhile (a creature their wound bled to death), and a
+        // weapon skill a blocked blow raised (`fight.rs`).
         self.say_news();
     }
 
     /// Keeps the events the player perceived (dropping the rest) and returns the messages for
-    /// the attacks and deaths among them. A creature's attack is said if the player saw the
-    /// attacker or the target, or is the target, and kept for presentation if they saw both
-    /// (the player's own attacks were said, and only seen ones recorded, when made); a death is
-    /// said and kept with the attack that caused it, if the player saw who died. The player's
-    /// own death is always said, and settles whether they saw what killed them. A wall that gave
-    /// way is kept if the player sees its cell, and one blasted open is said ("The wall
+    /// the attacks, deaths, and status effects among them, each with whether it stops a rest. A
+    /// creature's attack is said if the player saw the attacker or the target, or is the
+    /// target, and kept for presentation if they saw both (the player's own attacks were said,
+    /// and only seen ones recorded, when made); a death is said and kept with the attack that
+    /// caused it, if the player saw who died. The player's own death is always said, and
+    /// settles whether they saw what killed them. A death of a status effect is said if the
+    /// player sees where it happened ("The giant rat bleeds to death."). The player's own status
+    /// effects are said as they begin (stopping a rest) and end (not stopping one). A wall that
+    /// gave way is kept if the player sees its cell, and one blasted open is said ("The wall
     /// collapses!"; digging says its own).
-    fn perceive_events(&mut self, events: &mut Vec<Event>) -> Vec<String> {
+    fn perceive_events(&mut self, events: &mut Vec<Event>) -> Vec<(String, bool)> {
         use fight::{End, Words, attack_message, death_message};
         let player = self.state.player;
         let content = self.content.clone();
-        let mut reports = Vec::new();
+        let mut reports: Vec<(String, bool)> = Vec::new();
         // The last attack: its attacker, its target, whether the player saw the target, and the
         // attacker's creature type if the player saw that.
         let mut last: Option<(ActorId, ActorId, bool, Option<CreatureId>)> = None;
@@ -899,9 +941,39 @@ impl World {
                         .and_then(|t| content.creature(t.creature).natural.as_ref())
                         .map(|h| h.name.as_str());
                     let (a, t) = (end(attacker, sees_attacker), end(target, sees_target));
-                    reports.extend(attack_message(a, t, &words, kind, strike, hide));
+                    let said = attack_message(a, t, &words, kind, strike, hide);
+                    reports.extend(said.map(|text| (text, true)));
                 }
                 sees_attacker && sees_target
+            }
+            Event::Status {
+                actor,
+                status,
+                began,
+            } => {
+                let def = content.status(status);
+                let text = if began { &def.start } else { &def.end };
+                if let Some(text) = text.clone().filter(|_| actor == player) {
+                    reports.push((text, began));
+                }
+                actor == player
+            }
+            Event::Died {
+                actor,
+                at,
+                of: Some(status),
+            } => {
+                if actor == player {
+                    reports.push((death_message(End::You), true));
+                    return true;
+                }
+                let seen = perception.sees_actors_at(at);
+                if let (true, Some(dead)) = (seen, self.actor_or_fallen(actor)) {
+                    let name = &content.creature(dead.creature).name;
+                    let dies = content.status(status).dies.as_deref().unwrap_or("dies");
+                    reports.push((format!("The {name} {dies}."), true));
+                }
+                seen
             }
             Event::Died { actor, .. } => {
                 let Some((attacker, target, seen, by)) = last else {
@@ -909,7 +981,7 @@ impl World {
                 };
                 if actor == player {
                     killer_seen = Some(by);
-                    reports.push(death_message(End::You));
+                    reports.push((death_message(End::You), true));
                     return true;
                 }
                 // A death by the player's hand was said with their blow, and recorded only if
@@ -919,7 +991,7 @@ impl World {
                 }
                 let seen = seen && target == actor;
                 if seen {
-                    reports.push(death_message(end(actor, true)));
+                    reports.push((death_message(end(actor, true)), true));
                 }
                 seen
             }
@@ -929,8 +1001,8 @@ impl World {
         }
         match collapsed {
             0 => {}
-            1 => reports.push("The wall collapses!".into()),
-            _ => reports.push("The walls collapse!".into()),
+            1 => reports.push(("The wall collapses!".into(), true)),
+            _ => reports.push(("The walls collapse!".into(), true)),
         }
         reports
     }
@@ -1116,6 +1188,15 @@ impl World {
             }
             Action::Effect { effect, at, to } => {
                 return self.show_effect(effect, *at, *to, events);
+            }
+            Action::Afflict(id) => {
+                let Some(status) = self.content.status_id(id) else {
+                    self.say(format!("There is no status `{id}`."));
+                    return Spent::Nothing;
+                };
+                let player = self.state.player;
+                self.afflict(player, status, 1, None, events);
+                return Spent::NoTime;
             }
         };
         self.took(done, kind)
@@ -1671,11 +1752,12 @@ fn instantiate_level(state: &mut WorldState, content: &Content, template: &Level
             hp_base: def.base_hp,
             regen: 0,
             skills: def.skills.clone(),
+            effects: Default::default(),
             weapon_skills: def.weapon_skills.clone(),
             faction_override: spawn.faction,
             stance: CombatStance::Neutral,
         };
-        actor.hp = actor.max_hp();
+        actor.hp = actor.max_hp(content);
         state.actors.insert(actor_id, actor);
     }
 }
@@ -1720,6 +1802,8 @@ mod skills_tests;
 mod speed_tests;
 #[cfg(test)]
 mod stats_tests;
+#[cfg(test)]
+mod status_tests;
 #[cfg(test)]
 mod sun_tests;
 #[cfg(test)]

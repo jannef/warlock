@@ -15,7 +15,8 @@
 //! - **Damage**: the attack's dice plus its bonus, at least 1 ([`Profile`]).
 //! - **Hit points**: Toughness plus what race and class (a creature: its type) give
 //!   ([`max_hp`]); one comes back every `max(60 s, 360 s − 12 s × Toughness)` of game time
-//!   ([`regen_seconds`]).
+//!   ([`regen_seconds`]) at the normal pace (resting and status effects change the pace,
+//!   `world/status.rs`). A **big hit** takes at least a third of them ([`big_hit`]).
 //!
 //! Every roll comes from the gameplay random stream, so fights replay exactly. Nothing here is
 //! shown to the player as a number but their own hit points and Defence: never a to-hit, a
@@ -391,6 +392,12 @@ pub fn strike(profile: &Profile, defence: &Defence, rng: &mut Rng) -> Blow {
     }
 }
 
+/// Whether a blow of `damage` against a target of `max` hit points is a **big hit**: at least a
+/// third of them (spec §8 "Status effects": it may make the target bleed).
+pub fn big_hit(damage: i32, max: i32) -> bool {
+    damage > 0 && 3 * i64::from(damage) >= i64::from(max.max(1))
+}
+
 /// Maximum hit points: Toughness plus `base` (race and class for the player, the creature
 /// type's `base_hp` for a creature), at least 1. Linear in Toughness: no runaway pools.
 pub fn max_hp(toughness: u8, base: i32) -> i32 {
@@ -403,7 +410,8 @@ pub const REGEN_FASTEST: u32 = 60;
 /// ...and how much each point of Toughness takes off.
 pub const REGEN_PER_TOUGHNESS: u32 = 12;
 
-/// Seconds of game time per regenerated hit point: `max(60, 360 − 12 × Toughness)`.
+/// Seconds of game time per regenerated hit point at the normal pace: `max(60, 360 − 12 ×
+/// Toughness)`.
 pub fn regen_seconds(toughness: u8) -> u32 {
     REGEN_SLOWEST
         .saturating_sub(REGEN_PER_TOUGHNESS * u32::from(toughness))

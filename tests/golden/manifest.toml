@@ -117,7 +117,7 @@ scale = 2.0
 [[golden]]
 name = "death-screen"
 scenario = "arena"
-actions = "lantern wait*16"
+actions = "lantern wait*17"
 
 # A generated level (rooms generator, The Depths 1) from the scenario's fixed seed.
 [[golden]]
@@ -196,6 +196,16 @@ screen = "character"
 name = "skills-screen"
 scenario = "showcase"
 screen = "skills"
+
+# Status effects (#138): four bites' worth of poison and a wound (the dev `afflict:` action), a
+# turn later. The character screen names them (never how bad) and shows Strength and Dexterity
+# lowered by the strong poison, in red; the status bar beneath names them after the hit points.
+[[golden]]
+name = "status-effects"
+scenario = "showcase"
+actions = "afflict:poisoned*4 afflict:bleeding wait"
+screen = "character"
+window = "960x600"
 
 # Character creation (#108, #111, #118), over New run on the main menu (no run; the replay goes
 # unused): the race step with the showcase's character's race preselected, and the summary of
