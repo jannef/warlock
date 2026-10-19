@@ -44,7 +44,7 @@
 #   light      the light preset (lights.toml) it gives while it burns where it lies, and
 #   burns      for how many seconds of game time it burns there; then it is gone. A burning
 #              object cannot be picked up
-# Digging (spec §8 "Digging"; ready a tool in the Tool slot, then apply it with `a`):
+# Digging (spec §8 "Digging"; ready a tool in the Tool slot, then use it with `U`):
 #   dig        a digging tool's power (1 to 100): each turn of digging does power × (Strength +
 #              10) / 20 work against a wall's hardness (terrain.toml), so a pick-axe (10) does 10
 #              at Strength 10. A tool goes in a `slot` (the Tool slot)

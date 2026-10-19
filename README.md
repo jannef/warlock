@@ -160,7 +160,7 @@ cargo run --release -p warlock
 | `x` | Look around: move a cursor to read what is there (takes no time) |
 | `f` | Fire your missile weapon: aim (Tab cycles targets), then Enter |
 | `t` | Throw something: choose it, aim, then Enter |
-| `a` + direction | Apply your tool: dig into a wall with a pick-axe ready in the Tool slot (goes on until the wall gives way) |
+| `U` + direction | Use your tool: dig into a wall with a pick-axe ready in the Tool slot (goes on until the wall gives way) |
 | `?` | Show all controls |
 | `Esc` | Pause menu: settings, controls, save and quit |
 | `Q` | Save and quit |

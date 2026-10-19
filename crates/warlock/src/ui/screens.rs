@@ -902,14 +902,14 @@ mod tests {
     }
 
     #[test]
-    fn apply_asks_which_way_to_dig_only_with_a_tool_ready() {
-        const APPLY: (KeyCode, &str) = (KeyCode::KeyA, "a");
+    fn using_a_tool_asks_which_way_to_dig_only_with_one_ready() {
+        const USE: (KeyCode, &str) = (KeyCode::KeyU, "U");
         // Nothing to dig with: the rules say so at once, and no prompt opens.
         let mut app = app(true);
-        frame(&mut app, &[APPLY]);
+        frame(&mut app, &[USE]);
         assert_eq!(actions(&app), [Action::Dig(Dir::N)]);
         assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
-        // In the quarry with the pick-axe ready: `a` asks for a direction, Esc cancels it, and a
+        // In the quarry with the pick-axe ready: `U` asks for a direction, Esc cancels it, and a
         // direction digs.
         let content = content();
         let mut world = warlock_core::World::new(content.clone(), "quarry", None).expect("run");
@@ -919,15 +919,15 @@ mod tests {
             world.apply(&action);
         }
         let mut app = app_with(content, Some(Game::from_world(world)));
-        frame(&mut app, &[APPLY]);
+        frame(&mut app, &[USE]);
         assert_eq!(
             app.world().resource::<InputMode>(),
-            &InputMode::Direction(crate::input::KeyCommand::Apply)
+            &InputMode::Direction(crate::input::KeyCommand::UseTool)
         );
         frame(&mut app, &[ESC]);
         assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
         assert!(names(&app).is_empty() && actions(&app).is_empty());
-        frame(&mut app, &[APPLY, (KeyCode::KeyL, "l")]);
+        frame(&mut app, &[USE, (KeyCode::KeyL, "l")]);
         assert_eq!(actions(&app), [Action::Dig(Dir::E)]);
     }
 

@@ -37,7 +37,7 @@ pub const REBINDABLE: [KeyCommand; 27] = [
     KeyCommand::Fire,
     KeyCommand::Throw,
     KeyCommand::NextTarget,
-    KeyCommand::Apply,
+    KeyCommand::UseTool,
     KeyCommand::Help,
     KeyCommand::Quit,
 ];
@@ -114,7 +114,7 @@ impl KeyCommand {
             Fire => "fire",
             Throw => "throw",
             NextTarget => "next_target",
-            Apply => "apply",
+            UseTool => "use_tool",
             Help => "help",
             Quit => "quit",
             Cancel | Snapshot | LoadSnapshot | CycleVision | RevealMap | LightValues | SkipHour

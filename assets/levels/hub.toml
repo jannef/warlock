@@ -43,7 +43,7 @@
 # with `e`, then fire with `f` (throw with `t`): a flaming arrow shot into the patrol gallery's
 # dark middle lights it where it lands until it burns out.
 #
-# Digging (M19): the storeroom has a pick-axe for the Tool slot; apply it with `a` toward a wall.
+# Digging (M19): the storeroom has a pick-axe for the Tool slot; use it with `U` toward a wall.
 # The stairs nook's Q leads down to the quarry, the place to dig.
 name = "The Hub"
 ambient = [0, 0, 0, 0]

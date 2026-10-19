@@ -745,7 +745,7 @@ rate or animation.
   "Reset all keys" resets everything.
 - First-phase commands: move, wait, open/close door, ascend/descend, light/douse lantern (`L`),
   pick up (`,` or `g`), drop (`d`), inventory (`i`), equipment (`e`), character (`@`), rest
-  (`R`), look, fire (`f`), throw (`t`), next target (`Tab`, while aiming), apply a tool (`a`, then
+  (`R`), look, fire (`f`), throw (`t`), next target (`Tab`, while aiming), use a tool (`U`, then
   a direction: dig), help, save and quit (`Q`). Free actions (look, help, the inventory, looking at
   the equipment screen, the character screen, menus, vision switch) do not advance time.
 - **Objects** (M11) lie in piles on cells, the top first: the map shows the top object's glyph
@@ -839,10 +839,11 @@ rate or animation.
   a sound already known goes on without stopping it, and so does other news of the weather (the
   rain easing or stopping, clouds gathering or parting), which is logged all the same.
   It is a gameplay input mode like the open/close direction prompt, not a menu screen.
-- **Dig** (`a`, "apply a tool"; §8 "Digging") asks in the message line `Dig in which direction?
-  (Esc to cancel)`; a direction digs (replay text `dig:E`), any other command cancels. With no
-  digging tool ready nothing is asked: the rules say so at once ("You have no digging tool
-  ready."). Digging goes on turn after turn like a rest and stops for the same reasons.
+- **Dig** (`U`, "use a tool", ADOM's use-item key, an item's use rather than an ability; §8
+  "Digging") asks in the message line `Dig in which direction? (Esc to cancel)`; a direction
+  digs (replay text `dig:E`), any other command cancels. With no digging tool ready nothing is
+  asked: the rules say so at once ("You have no digging tool ready."). Digging goes on turn
+  after turn like a rest and stops for the same reasons.
 - **Messages**: the last two show in the message line; the same text logged again in a row folds
   into one entry with a count (`You open the door. (×2)`). Heard sounds are logged only when they
   are news (§5 "Hearing"), so a patrol walking back and forth out of sight gives one message per
@@ -1656,7 +1657,7 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     neither does any cell on a level's edge, whatever its terrain, so no level is dug out of. Solid
     rock (`void`) shows its `face`, a stone wall, once a cell next to it is broken open, as
     generated levels wall their open ground, so a tunnel is walled like a corridor.
-  - **Digging** (`Action::Dig(dir)`, `dig:E`; key `a`): with a digging tool ready (the first thing
+  - **Digging** (`Action::Dig(dir)`, `dig:E`; key `U`): with a digging tool ready (the first thing
     worn or wielded with `dig` power: a pick-axe, 10, or a mattock, 15, in the Tool slot), into the
     wall next to the player in that direction. Refused, taking no time: without a tool ("You have
     no digging tool ready."), toward open ground ("There is nothing to dig there."), toward
