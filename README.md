@@ -172,8 +172,8 @@ cargo run --release -p warlock
 | `W` | Weapon skills: your rank in each, and how far to the next |
 | `R` | Rest an hour, until dawn, or until nightfall (stops when something comes into view) |
 | `x` | Look around: move a cursor to read what is there (takes no time) |
-| `f` | Fire your missile weapon: aim (Tab cycles targets), then Enter |
-| `t` | Throw something: choose it, aim, then Enter |
+| `t` | Shoot or throw what is in your Missile weapon slot: aim (Tab cycles targets), then Enter |
+| `T` | Throw something from your pack: choose it, aim, then Enter |
 | `U` + direction | Use your tool: dig into a wall with a pick-axe ready in the Tool slot (goes on until the wall gives way) |
 | `?` | Show all controls |
 | `Esc` | Pause menu: settings, controls, save and quit |

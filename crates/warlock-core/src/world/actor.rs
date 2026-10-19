@@ -160,15 +160,18 @@ impl Actor {
         let parry = self.benefit(content, self.melee_skill(content)).parry;
         let block = (content.weapon_skills().of_role(Role::ShieldBlock))
             .map_or(0, |id| self.benefit(content, Some(id)).shield);
-        let equipped: Vec<(usize, &ObjectDef)> = (self.equipment.items().into_iter())
-            .filter_map(|(_, item)| Some((item, self.inventory.get(item)?)))
-            .map(|(item, s)| (item, content.object(s.object)))
+        let equipped: Vec<(usize, &ObjectDef, bool)> = (self.equipment.items().into_iter())
+            .filter_map(|(slot, item)| {
+                Some((item, content.slot(slot).hand, self.inventory.get(item)?))
+            })
+            .map(|(item, hand, s)| (item, content.object(s.object), hand))
             .collect();
         let dexterity = self.stats.modifier(Stat::Dexterity);
-        let worn = equipped.iter().filter_map(|(_, o)| o.max_dex);
+        let worn = equipped.iter().filter_map(|(_, o, _)| o.max_dex);
         let cap = worn.chain(burden.max_dex()).min();
         let dexterity = cap.map_or(dexterity, |cap| dexterity.min(cap));
-        let worn = equipped.iter().flat_map(|&(item, o)| {
+        // A weapon readied to throw does not parry: only what is held in a hand.
+        let worn = equipped.iter().flat_map(|&(item, o, hand)| {
             let wielded = Some(item) == weapon;
             [
                 (Category::Armour, o.armour),
@@ -176,7 +179,10 @@ impl Actor {
                     Category::Shield,
                     o.shield + if o.shield > 0 { block } else { 0 },
                 ),
-                (Category::Parry, o.parry + if wielded { parry } else { 0 }),
+                (
+                    Category::Parry,
+                    (if hand { o.parry } else { 0 }) + if wielded { parry } else { 0 },
+                ),
             ]
         });
         let natural = (content.creature(self.creature).natural.as_ref())
@@ -301,8 +307,9 @@ impl Actor {
         })
     }
 
-    /// The throwing weapon it has ready, if any: the first stack in a `ready` slot (the
-    /// missiles) that is thrown (a quiver of rocks), and where in its inventory it is.
+    /// What it has ready to throw, if anything: the first stack in a `ready` slot (the missile
+    /// weapon slot) that can be thrown (a stack of rocks or daggers, or a sword), and where in
+    /// its inventory it is.
     pub fn ready_to_throw(&self, content: &Content) -> Option<usize> {
         content.slot_ids().find_map(|(slot, def)| {
             if def.action != ActionKind::Ready {
@@ -310,7 +317,7 @@ impl Actor {
             }
             let item = self.equipment.get(slot)?;
             let stack = self.inventory.get(item)?;
-            content.object(stack.object).is_thrown().then_some(item)
+            content.object(stack.object).can_throw().then_some(item)
         })
     }
 

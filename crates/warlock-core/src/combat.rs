@@ -258,6 +258,12 @@ impl Attack {
     }
 }
 
+/// To hit with a weapon thrown that was not made for it (a sword, a club), as in D&D: -4.
+pub const IMPROVISED_TO_HIT: i32 = -4;
+
+/// How far such a weapon is thrown, in cells.
+pub const IMPROVISED_RANGE: i32 = 3;
+
 impl Profile {
     /// A melee attack with `attack` (a weapon, a natural attack, bare hands): to-hit and damage
     /// both add the Strength modifier.
@@ -298,6 +304,15 @@ impl Profile {
                 .threat
                 .saturating_sub(benefit.threat)
                 .max(*THREATS.start()),
+            ..self
+        }
+    }
+
+    /// This throw, of a weapon thrown whole though not made for throwing: [`IMPROVISED_TO_HIT`]
+    /// to hit.
+    pub fn improvised(self) -> Self {
+        Self {
+            to_hit: self.to_hit + IMPROVISED_TO_HIT,
             ..self
         }
     }
