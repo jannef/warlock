@@ -409,7 +409,7 @@ impl ScreenStack {
             Some(Screen::EquipItem(screen)) => screen.draw(console, bindings),
             Some(Screen::Character(screen)) => screen.draw(console, bindings),
             Some(Screen::Skills(screen)) => screen.draw(console, bindings),
-            Some(Screen::Death(screen)) => screen.draw(console),
+            Some(Screen::Death(screen)) => screen.draw(console, settings.clock),
         }
     }
 
