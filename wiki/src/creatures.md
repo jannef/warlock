@@ -41,6 +41,7 @@ see by the same rules you do (see [Sight and memory](sight.md)), each with its o
 the same light, clouds included: a creature without darkvision does not see you standing in the
 dark, and lighting your [lantern](lantern.md) gets you noticed. Some creatures open closed doors
 in their way, which takes them a turn and makes noise; the others cannot get past a closed door.
+A locked door stops even those, unless they carry its key (see [Doors](doors.md)).
 
 Other creatures block the way: a creature walks a little way round someone in its way, or waits
 behind them.

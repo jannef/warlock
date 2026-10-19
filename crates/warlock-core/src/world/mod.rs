@@ -74,6 +74,7 @@ mod actor;
 mod ai;
 mod bleed;
 mod dig;
+mod door;
 mod eat;
 mod equip;
 mod experience;
@@ -920,7 +921,10 @@ impl World {
             Event::ActorMoved { actor, from, to } => {
                 actor == player || perception.sees_actors_at(from) || perception.sees_actors_at(to)
             }
-            Event::DoorOpened { pos } | Event::DoorClosed { pos } => perception.is_visible(pos),
+            Event::DoorOpened { pos }
+            | Event::DoorClosed { pos }
+            | Event::DoorKicked { pos }
+            | Event::DoorBroken { pos } => perception.is_visible(pos),
             Event::WallBroken { pos, cause } => {
                 let seen = perception.is_visible(pos);
                 if seen && cause == Breach::Blast {
@@ -1154,10 +1158,8 @@ impl World {
         let (done, kind) = match action {
             Action::Move(dir) => return self.player_moves(*dir, events),
             Action::Wait => (true, ActionKind::Wait),
-            Action::Open(dir) => (
-                self.open_door(here.step(*dir), events),
-                ActionKind::OpenDoor,
-            ),
+            Action::Open(dir) => return self.open_door(here.step(*dir), events),
+            Action::Kick(dir) => return self.kick(*dir, events),
             Action::Close(dir) => (
                 self.close_door(here.step(*dir), events),
                 ActionKind::CloseDoor,
@@ -1370,10 +1372,15 @@ impl World {
         Spent::NoTime
     }
 
-    /// Changes terrain on the current level and invalidates light masks it may affect.
+    /// Changes terrain on the current level and invalidates light masks it may affect. A lock
+    /// stays only on a closed door.
     fn set_terrain(&mut self, p: Pos, terrain: TerrainId) {
+        let closed_door = self.content.terrain(terrain).is_closed_door();
         let level = self.state.current_mut();
         level.terrain.set(p, terrain);
+        if !closed_door {
+            level.locks.remove(&p);
+        }
         let level = self.state.current();
         self.lights.terrain_changed(level, &self.content, p);
     }
@@ -1394,8 +1401,7 @@ impl World {
         };
         let def = self.content.terrain(terrain);
         if def.is_closed_door() {
-            let opened = self.open_door(to, events);
-            return self.took(opened, ActionKind::OpenDoor);
+            return self.open_door(to, events);
         }
         if !def.walkable {
             let name = def.name.clone();
@@ -1526,58 +1532,6 @@ impl World {
         events.push(Event::LevelChanged { from, to: id });
         self.say(format!("You explore the {what}."));
         true
-    }
-
-    fn open_door(&mut self, p: Pos, events: &mut Vec<Event>) -> bool {
-        let terrain = self.state.current().terrain.get(p).copied();
-        let def = terrain.map(|t| self.content.terrain(t));
-        match def {
-            Some(def) if def.is_closed_door() => {
-                let opened = def.opens_to.expect("closed doors have opens_to");
-                self.make_noise(self.state.player, Act::OpenDoor(p));
-                self.set_terrain(p, opened);
-                events.push(Event::DoorOpened { pos: p });
-                self.say("You open the door.");
-                true
-            }
-            Some(def) if def.is_open_door() => {
-                self.say("That door is already open.");
-                false
-            }
-            _ => {
-                self.say("There is nothing to open there.");
-                false
-            }
-        }
-    }
-
-    fn close_door(&mut self, p: Pos, events: &mut Vec<Event>) -> bool {
-        let terrain = self.state.current().terrain.get(p).copied();
-        let def = terrain.map(|t| self.content.terrain(t));
-        match def {
-            Some(def) if def.is_open_door() => {
-                let closed = def.closes_to.expect("open doors have closes_to");
-                if self.state.actor_at(&self.state.current_level, p).is_some()
-                    || !self.state.current().objects_at(p).is_empty()
-                {
-                    self.say("Something is in the way.");
-                    return false;
-                }
-                self.make_noise(self.state.player, Act::CloseDoor(p));
-                self.set_terrain(p, closed);
-                events.push(Event::DoorClosed { pos: p });
-                self.say("You close the door.");
-                true
-            }
-            Some(def) if def.is_closed_door() => {
-                self.say("That door is already closed.");
-                false
-            }
-            _ => {
-                self.say("There is nothing to close there.");
-                false
-            }
-        }
     }
 
     fn take_stairs(&mut self, dir: StairsDir, events: &mut Vec<Event>) -> bool {
@@ -1797,6 +1751,8 @@ mod character_tests;
 mod cost_tests;
 #[cfg(test)]
 mod dig_tests;
+#[cfg(test)]
+mod door_tests;
 #[cfg(test)]
 mod equip_tests;
 #[cfg(test)]

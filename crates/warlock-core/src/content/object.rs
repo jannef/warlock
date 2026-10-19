@@ -22,6 +22,9 @@
 //! "Weapon skills"): a skill of role `melee` for what is wielded in a hand, `launcher` for a
 //! missile weapon, `thrown` for what is only thrown (a rock).
 //!
+//! Keys (spec §8 "Doors") say which locks they open: `key = "pantry"` opens the locks with that
+//! lock id, `key = "*"` (a skeleton key) every lock.
+//!
 //! Ranged combat (spec §8 "Ranged combat"): a missile weapon shoots as far as its `range` (and
 //! one that `reloads`, a crossbow, takes the `reload` action after every shot); anything else
 //! with a `range` is a throwing weapon, thrown that far, its `damage` its own (a rock needs no
@@ -52,6 +55,7 @@ use super::{Content, ContentError, CreatureId};
 use crate::color::Rgb;
 use crate::combat::{Attack, CRITS, DEFAULT_CRIT, DEFAULT_THREAT, THREATS};
 use crate::dice::Dice;
+use crate::door::Key;
 use crate::object::Stack;
 use crate::time::{DAY, Duration};
 use serde::{Deserialize, Serialize};
@@ -136,6 +140,8 @@ pub(super) struct ObjectSpec {
     pub breaks: u8,
     /// Lit as it is shot or thrown: it flies and lands as this object (an object id).
     pub lit: Option<String>,
+    /// A key: the lock id it opens, or `*` for a skeleton key (every lock).
+    pub key: Option<String>,
     /// The light it gives while it burns where it lies (a light preset id); with `burns`.
     pub light: Option<String>,
     /// How long it burns where it lands, in seconds of game time; then it is gone.
@@ -208,6 +214,8 @@ pub struct ObjectDef {
     pub lit: Option<ObjectId>,
     /// The light it gives where it lies, while it burns, and for how long it burns.
     pub burning: Option<Burning>,
+    /// A key: what locks it opens (spec §8 "Doors").
+    pub key: Option<Key>,
     /// A digging tool's power (spec §8 "Digging"): a dig with it at Strength 10 does this much
     /// work against a wall's hardness ([`crate::world::dig_work`]). `None`: it does not dig.
     pub dig: Option<u16>,
@@ -274,6 +282,7 @@ impl ObjectDef {
             particles: Vec::new(),
             food: Some(food),
             corpse: Some(id),
+            key: None,
         }
     }
 
@@ -413,6 +422,12 @@ impl ObjectSpec {
                 ));
             }
         }
+        let key = self
+            .key
+            .as_deref()
+            .map(Key::parse)
+            .transpose()
+            .map_err(err)?;
         if let Some(power) = self.dig
             && (!(1..=MAX_DIG).contains(&power) || self.slot.is_none())
         {
@@ -446,6 +461,7 @@ impl ObjectSpec {
             breaks: self.breaks,
             lit: None,
             burning,
+            key,
             dig: self.dig,
             missile: self.missile,
             spins: self.spins,
@@ -693,6 +709,7 @@ mod tests {
             breaks: 0,
             lit: None,
             burning: None,
+            key: None,
             dig: None,
             missile: None,
             spins: false,

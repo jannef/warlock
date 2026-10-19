@@ -24,10 +24,12 @@ Creatures have stats too, but you cannot see theirs.
 
 ## What they do
 
-In a fight (see [Combat](combat.md)), and under a load (see [Burden](burden.md)):
+In a fight (see [Combat](combat.md)), under a load (see [Burden](burden.md)), and at a door
+(see [Doors](doors.md)):
 
 - **Strength** helps you hit up close and adds to the damage of your blows, and draws a bow. It
-  counts double toward how much you can carry.
+  counts double toward how much you can carry, and the stronger you are, the sooner you kick a
+  door in.
 - **Dexterity** helps you aim a shot and dodge blows: it adds to your Defence (less under a heavy
   load or heavy armour).
 - **Toughness** gives you hit points, and makes them come back sooner. It counts toward how much

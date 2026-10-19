@@ -78,13 +78,13 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 | Dump a replay's end state | `... dump --replay runs/x.json [--actions "wait"] --format ascii\|json [--state]` |
 | Create a replay | `... replay --create --scenario showcase --actions "move:N wait" -o runs/x.json` |
 | Verify a replay | `... replay --verify runs/x.json` (exit 1 and first diverging step on mismatch) |
-| Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor; a special room's floor by its effect's letter; also local areas, `--level local:49,23`) |
+| Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor, `&` = locked door; a special room's floor by its effect's letter; also local areas, `--level local:49,23`) |
 
 Dump layers beyond the map ones: `inventory`, `equipment`, `stats`, and `skills` (the player's
 trained skills, `Stealth 17`) from perception; `actors` (dev-only: every actor's hit points,
 load, stats, and skills with their marks).
 
-Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascend descend lantern
+Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
 eat:LETTER eat:floor:LETTER dig:DIR rest:GOAL stance:NAME vision:PROFILE skip:DURATION weather:KIND
 effect:ID@X,Y[>X,Y] afflict:STATUS` (`DIR` = N
@@ -107,9 +107,9 @@ effect: one degree more of `STATUS`, an id in `assets/data/status.toml`, e.g.
 `wait*10`). Dump layers: `view` (what the player sees), `fov` (`*` visible),
 `memory` (seen terrain and remembered objects), `light` (perceived brightness of visible cells as a
 digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places over the view: `f`
-footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m` chanting, `d`
-digging, upper case when loud), `blood` (blood the player sees or remembers as a digit over the
-view, `1` a few drops to `9` soaked), `inventory` (what the player
+footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m` chanting, `k`
+banging (a door kicked), `d` digging, upper case when loud), `blood` (blood the player sees or
+remembers as a digit over the view, `1` a few drops to `9` soaked), `inventory` (what the player
 carries and weighs, worn and wielded things marked, their burden and its thresholds),
 `equipment` (the player's slots), `stats`
 (the player's race, gender, and class, then their own scores as the rules read them, then
@@ -433,8 +433,10 @@ is `weapon_skills.rs`: `WeaponSkills` (a `Training { rank, marks }` per skill on
 `raise`: the defaults rise, their marks reset; no chaining), `from_ranks` (starting ranks,
 order-free), `progress`. The rules hook in at one place each: `Actor::attack_skill(kind, with)`
 picks the skill of an attack (a blow: the wielded weapon's, else unarmed; `Melee` `with` a
-shield: shield bashing; a shot: the launcher's; a throw: thrown); `Profile::with(&Benefit)` and
-`Actor::melee`/`ranged`/`thrown`/`bash` apply to-hit, damage, and threat; `Actor::defence` adds
+shield: shield bashing; a shot: the launcher's; a throw: thrown; a kick, spec §8 "Doors": unarmed
+whatever is wielded, `World::player_kicks`), and `fight.rs::resolve` takes the skill its caller
+picked; `Profile::with(&Benefit)` and
+`Actor::melee`/`ranged`/`thrown`/`bash`/`kick` apply to-hit, damage, and threat; `Actor::defence` adds
 parry and shield blocking; `World::attack_price` takes `speed`/`reload` off the cost;
 `World::resolve` (`fight.rs`) earns the player's marks (`practise`; a Shield-credited miss on
 the player trains shield blocking; `World::level_of` weighs the opponent by its creature type's
@@ -709,6 +711,27 @@ benefit numbers. Skills get no keys of their own: active uses will be chosen fro
 abilities menu (#156), which reads `PerceptionView::active_skills` (`OwnSkill::active`: the
 skill's kind is `action`; `available`: usable now, false until the uses exist). Pending hooks: athletics (kicking doors, #130; climbing out of pits, #128) and
 escape artist (pits, #128).
+
+Doors (spec §8 "Doors"; M19, #130): the rules are `warlock-core/src/door.rs` (`Lock`, `Key`,
+`kick_breaks`/`break_chance`: `1d(sturdiness) ≤ Strength`, one gameplay draw), applied in
+`world/door.rs` (`open_door` unlocks with `Actor::key_for` and costs `unlock` + `open_door`,
+`swing_open`, `close_door`, `kick`/`kick_door`; kicking a creature is `World::player_kicks`, an
+unarmed blow whatever is wielded: `Actor::kick` (bare hands with unarmed fighting's benefits and
+the stance), training unarmed fighting, priced `kick` by `attack_price`, said with `Words::kick`). Locks are per-cell state, never terrain: `locks` on
+`LevelTemplate` and `LevelState` (by position, saved, hashed, `FORMAT_VERSION` 22; ground truth only, so perception,
+memory, look mode, and dumps show a locked door as any closed door); `World::set_terrain` drops a
+lock whenever the cell stops being a closed door. Level legends lock with `lock = "id"` or
+`locked = true`; objects are keys with `key = "id"` (`"*"`: skeleton); closed doors break with
+`breaks_to` + `sturdiness` (`TerrainDef::kicked_in`; digging and blasts break only terrain with a
+`hardness`, `TerrainDef::breaks`, never a door). The AI (`world/ai.rs`) paths through a locked door, and opens it, only
+with a key (`Stepped::Unlocked`); `go_look` stops next to a spot no one can stand on (a door kicked
+at). Generated levels: `Needs::key` (the branch's `key` in `dungeons.toml`) makes `rooms.rs`'s
+`lock_rooms` lock up to two single-door rooms and drop the key in an unlocked room;
+`connect::validate` checks locks sit on closed doors and that the stairs and a key to each lock
+(`LevelTemplate::has_key_for`, lying or carried) are reachable without unlocking anything; vaults
+must hold their own keys (`content/vault.rs`, `check_keys`). The app binds `K` (`KeyCommand::Kick`,
+a direction prompt like open/close, bash, and dig) and bursts the door terrain's `toggle` particles on
+`Event::DoorKicked`/`DoorBroken`.
 
 Blood (spec §8 "Blood", §4.8; M17): the pure pattern is `warlock-core/src/blood.rs` (`Wound`:
 `volume` by kill or big hit (a third of the maximum, or a critical), size `blood` percent,

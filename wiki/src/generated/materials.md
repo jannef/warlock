@@ -2,7 +2,7 @@
 
 | Material | Objects made of it |
 |---|---|
-| Iron | chain mail shirts, iron helms, pick-axes, mattocks, iron keys |
+| Iron | chain mail shirts, iron helms, pick-axes, mattocks, iron keys, rusty keys, skeleton keys |
 | Steel | daggers, short swords |
 | Copper | copper coins |
 | Silver | silver rings |
@@ -18,3 +18,4 @@
 | Gemstone | rubies |
 | Flesh | strips of dried meat, corpses |
 | Plant matter | apples, food rations, loaves of bread |
+| Brass | brass keys |

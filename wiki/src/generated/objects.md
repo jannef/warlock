@@ -26,6 +26,9 @@
 | Pick-axe | `(` | tool | iron | 3 kg | no | Tool |
 | Mattock | `(` | tool | iron | 4.5 kg | no | Tool |
 | Iron key | `(` | tool | iron | 40 g | no | - |
+| Brass key | `(` | tool | brass | 40 g | no | - |
+| Rusty key | `(` | tool | iron | 50 g | no | - |
+| Skeleton key | `(` | tool | iron | 30 g | no | - |
 | Wax candle | `(` | tool | wax | 100 g | yes | - |
 | Coil of rope | `(` | tool | cloth | 1.5 kg | no | - |
 | Red potion | `!` | potion | glass | 250 g | yes | - |

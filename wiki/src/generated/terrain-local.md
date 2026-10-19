@@ -7,8 +7,9 @@
 | Stone wall | `#` | no | yes | - | - | 1 | can be dug through or blasted open |
 | Packed earth | `#` | no | yes | - | - | 1 | can be dug through or blasted open |
 | Granite | `#` | no | yes | - | - | 1 | can be dug through or blasted open |
-| Closed door | `+` | yes | yes | 6 seconds (opens it) | - | 1 | door: walking into it opens it; muffles sound |
+| Closed door | `+` | yes | yes | 6 seconds (opens it) | - | 1 | door: walking into it opens it; kicked in, it breaks into a broken door (sturdiness 30); muffles sound |
 | Open door | `'` | yes | no | 6 seconds | normal | 0 | door: can be closed |
+| Broken door | `,` | yes | no | 6 seconds | normal | 0 |  |
 | Staircase down | `>` | yes | no | 6 seconds | normal | 0 | stairs down |
 | Staircase up | `<` | yes | no | 6 seconds | normal | 0 | stairs up |
 | Still water | `~` | yes | no | 12 seconds | very loud | 0 |  |

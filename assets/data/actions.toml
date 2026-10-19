@@ -11,6 +11,11 @@ step = 1000
 wait = 1000
 open_door = 1000
 close_door = 1000
+# Unlocking a locked door with a key, on top of opening it: opening a locked door you have the
+# key for takes unlock + open_door.
+unlock = 1000
+# A kick (`K`): at a door, to break it in, or at a creature, an unarmed blow.
+kick = 1000
 # Lighting or dousing the lantern.
 lantern = 1000
 # Taking stairs, entering a location or a local area from the overworld, and walking off the

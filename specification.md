@@ -23,6 +23,8 @@ Build the engine and framework, not the game. Everything built is production qua
 - GPU glyph renderer with lighting, glyph animation, and effects
 - Hand-authored levels from text files; multiple levels joined by stairs, each persistent
 - Player movement (8 directions), doors (open/close), stairs
+- Doors (M19): locked doors opened with keys (a key for one lock, or a skeleton key for every
+  lock), and kicking doors in, by Strength against the door's sturdiness (§8 "Doors")
 - Line of sight, terrain memory, gameplay lighting, vision types
 - Test creatures walking fixed patrol routes; from M10 they act at their own hidden speed (§8
   "Speed"), belong to factions (§7 "Factions") that are hostile or neutral to the player and to
@@ -49,8 +51,9 @@ Build the engine and framework, not the game. Everything built is production qua
 - Stats (M14): Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
   D&D, with D&D 3.5 modifiers and ADOM-like potentials that the player never sees; every actor
   has them, and the player sees their own scores on a character screen (§8 "Stats"). Combat uses
-  Strength, Dexterity, and Toughness (§8 "Combat"), and so does burden; status effects may lower
-  them (§8 "Status effects"); no other rule uses stats yet
+  Strength, Dexterity, and Toughness (§8 "Combat"), and so do burden and kicking doors in
+  (Strength, §8 "Doors"); status effects may lower them (§8 "Status effects"); no other rule uses
+  stats yet
 - Experience (M21): creatures have a level and an XP value; the player's own kills (melee,
   shots, throws) earn XP, scaled down for monsters below the player's level as in World of
   Warcraft, and levels (to 50) grow the hit points up to level 20 (§8 "Experience")
@@ -93,11 +96,11 @@ Build the engine and framework, not the game. Everything built is production qua
   enters (§7 "Special rooms")
 
 **Out of scope for now**: magic (spells are announced, nothing is damaged), damage types (a
-flaming arrow does an arrow's damage), rules that use stats beyond combat and burden (ability
-checks, saving throws, training stats), levels and experience, digging down or up, creatures
-that dig, what a class gives beyond starting stats, hit points, skills, and weapon skills
-(equipment, spells), active uses of skills (searching, picking locks, healing, and the like),
-item effects (but food's: §8 "Hunger"), audio, mouse input, infravision, localization.
+flaming arrow does an arrow's damage), rules that use stats beyond combat, burden, and kicking
+doors in (ability checks, saving throws, training stats), levels and experience, digging down or
+up, creatures that dig, what a class gives beyond starting stats, hit points, skills, and weapon
+skills (equipment, spells), active uses of skills (searching, picking locks, healing, and the
+like), item effects (but food's: §8 "Hunger"), audio, mouse input, infravision, localization.
 
 Vision types are in scope even though there are no other mechanics yet: they are part of perception,
 and the light data model must carry them from the start.
@@ -113,7 +116,7 @@ regression scene for golden screenshots, replays, and snapshot tests.
 | Room | Demonstrates | Milestone |
 |---|---|---|
 | Start room | movement, message line, `?` help; gold and a small pile to pick up | M1, M11 |
-| Door corridor | opening/closing doors, doors blocking sight; a storeroom of arms and armor (something for every equipment slot but the neck and the rings, a two-handed quarterstaff, a short bow and arrows, flaming arrows, a long war bow, a crossbow and bolts, a sling and stones, rocks to throw, a pick-axe for the Tool slot) and a pantry of food (food rations, loaves of bread, dried meat, apples; eat with `E`) and other objects | M1–M2, M11, M16, M19, M23 |
+| Door corridor | opening/closing doors, doors blocking sight; a storeroom of arms and armor (something for every equipment slot but the neck and the rings, a two-handed quarterstaff, a short bow and arrows, flaming arrows, a long war bow, a crossbow and bolts, a sling and stones, rocks to throw, a pick-axe for the Tool slot) and a pantry of food (food rations, loaves of bread, dried meat, apples; eat with `E`) and other objects, whose west door is locked, the iron key to it lying in the storeroom (open it with the key, or kick it in) | M1–M2, M11, M16, M19, M23 |
 | Patrol gallery | creatures moving in and out of view, never shown in memory; a cave beetle and a quicker cave bat (wildlife, so they keep to their lanes) on parallel lanes, a slower torch-bearing kobold circling them (wielding a sword, carrying coins), a kobold by type but placed among the peaceful folk (§7 "Factions"), so it walks its round and never attacks the player; heard from the corridor behind its closed door, and in its dark middle (the bat flies silently), which a flaming arrow shot from its door lights where it lands | M2, M10, M11, M16 |
 | Light hall | colored lights, falloff, pillar and creature shadows, steady magical light | M3, M8 |
 | Darkness chamber | vision types, a UV-only rune, darkvision fade; an amulet seen only by those who see in the dark | M3, M11 |
@@ -164,7 +167,9 @@ from north to south, foaming against a few boulders.
 **The Depths (generated, M6)**: a dungeon branch of eight procedurally generated levels
 (`depths:1` to `depths:8`; rooms and corridors at 80×21, caverns at 120×60 on depths 3–5) built
 from the run seed, with vaults stamped in; about one level in two or three has a special room
-(§7 "Special rooms"). The `depths` scenario starts on its first level.
+(§7 "Special rooms"). On its rooms levels a few rooms are locked, their rusty key lying where the
+player reaches it, and the guard post vault's store room is locked, its brass key carried by the
+kobold on guard (M19). The `depths` scenario starts on its first level.
 
 **The Overworld (M9)**: *The Wildlands*, a hand-authored 100×50 map of the land at large
 (`levels/overworld.toml`, level kind `overworld`), ADOM-like. Overworld terrain: plains,
@@ -702,7 +707,8 @@ rate or animation.
     is silent. Attacks
     (§8 "Combat"; hit or miss) are heard where the attacker stands: fighting (melee, 60), a
     bowstring (a shot, 40), chanting (a spell, 50); a turn of digging where the digger stands
-    (digging, 80; §8 "Digging").
+    (digging, 80; §8 "Digging"). A kick at a door (§8 "Doors"), whether it holds or breaks, bangs
+    on the door: banging, 100, made on the door's cell, so both sides hear it.
   - **Propagation**: a noise spreads from its cell through the 8 neighbors, losing 10 loudness
     per orthogonal step and 14 per diagonal one, plus the `muffle` of every cell it enters (a
     closed door 30). Solid terrain (neither walkable nor transparent: walls, rock, trees,
@@ -723,7 +729,7 @@ rate or animation.
   - **The player** perceives the sounds they heard during the turn that just passed whose source
     cell they do not see (a creature in darkness or out of sight, a door around the corner),
     never who or what made them: the kind (footsteps, a door opening, a door closing, fighting, a
-    bowstring, chanting, digging), how loud
+    bowstring, chanting, banging, digging), how loud
     (faint, clear, or loud: under 10, under 30, or at least 30 above their threshold), and
     roughly where: a cell up to 2 (faint), 1 (clear), or 0 (loud) steps from the source through
     cells that pass sound unmuffled, which the player does not see, picked by a hash of the
@@ -779,8 +785,8 @@ rate or animation.
   While any screen is open it receives every key press, the run (if any) stays visible beneath
   it, and no game time passes but for what is chosen on a screen (picking up, dropping, wearing,
   wielding, eating), which is done as it is chosen and takes its time. Prompts in the message
-  line (a direction to open, close, or bash, or to dig, how long to rest, look mode, aiming a
-  shot or a throw) are not screens.
+  line (a direction to open, close, kick, or bash, or to dig, how long to rest, look mode, aiming
+  a shot or a throw) are not screens.
 - **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
   `--record`, or `--capture` name what to run): Continue (only if a save exists), New run
   (scenario list from content, optional seed, then character creation), Settings, Controls,
@@ -818,7 +824,8 @@ rate or animation.
   key (alternates such as the numpad stay). A key another command uses is refused and the owner
   is named, so the table never holds a conflict. Esc (cancel) is fixed. Delete resets a command,
   "Reset all keys" resets everything.
-- First-phase commands: move, wait, open/close door, ascend/descend, light/douse lantern (`L`),
+- First-phase commands: move, wait, open/close door, kick (`K`, then a direction; §8 "Doors"),
+  ascend/descend, light/douse lantern (`L`),
   pick up (`,` or `g`), drop (`d`), inventory (`i`), equipment (`e`), character (`@`), skills
   (`S`), weapon skills (`W`), rest (`R`), eat (`E`), look, shoot or throw what is in the missile weapon slot
   (`t`), throw from the pack (`T`), fire (`f`, unbound by default), more aggressive / more
@@ -952,7 +959,7 @@ rate or animation.
   rain easing or stopping, clouds gathering or parting), a status effect ending ("The bleeding
   stops."), and a full stomach settling ("You no longer feel satiated."), which are logged all
   the same. Hit points come back twice as fast while resting (§8 "Healing").
-  It is a gameplay input mode like the open/close direction prompt, not a menu screen.
+  It is a gameplay input mode like the open/close/kick direction prompt, not a menu screen.
 - **Eat** (`E`; §8 "Hunger") opens the choice of what to eat: the food lying on the player's
   cell first (no letter, marked "lying here"; the `>` cursor starts on it, as ADOM asks about
   the floor first), then the food in the inventory by its letters; with nothing, "You have
@@ -1098,6 +1105,11 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   [...]` places a pile without a legend character (on top of the legend's there, if any).
   Objects lie only on walkable terrain. Vaults place objects the same way, and generators stamp
   them with the vault.
+- **Locks in level files** (M19, §8 "Doors"): a legend entry on a closed door locks it with
+  `lock = "pantry"` (a lock id: keys with that id open it, and skeleton keys) or `locked = true`
+  (a lock without an id: only a skeleton key opens it). A lock on anything but a closed door, an
+  empty lock id or `*`, or a `lock` with `locked = false` is a content error. Hand-made levels
+  need not give a lock's key (a door may be meant to be kicked in); vaults must (below).
 - **Water**: `~` is still water (`water`); `shallow_water` (ankle-deep over a stone floor, paler,
   a flooded room's floor, §7 "Special rooms") steps at 150 and splashes like water. Running
   water (`running_water`, terrain with a `flow`
@@ -1182,12 +1194,16 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   it are, in percent of the walker's footsteps, 0 to 1000; default 100), a door's `toggle_noise`
   (how loud opening the closed door or closing the open one is, at most 300; default 0, silent;
   only doors), and a `muffle` (the loudness a sound loses entering the cell, at most 300; default
-  0, but solid terrain blocks sound unless it has one). For digging (§8 "Digging"), terrain that
-  breaks has a `hardness` (1 to 10 000, the work it takes: a pick-axe at Strength 10 does 10 a
-  turn) and what it `becomes` (walkable, transparent open ground that does not break, no door or
-  stairs: rubble), together; only solid terrain (not walkable, no door, stairs, or light) breaks.
-  Stone walls 600, packed earth 100, granite 3000. Solid rock may have a `face`, the solid terrain
-  it shows as once a cell next to it is broken open (`void`: `wall`). Overworld terrain has
+  0, but solid terrain blocks sound unless it has one). A closed door may break when kicked
+  (§8 "Doors"): `breaks_to`, the terrain it becomes (walkable and no door: the broken door), and
+  `sturdiness` (1 to 100: a kick breaks it with a chance of the kicker's Strength score in it;
+  the closed door's is 30), both or neither, and only on closed doors. For digging (§8
+  "Digging"), terrain that breaks has a `hardness` (1 to 10 000, the work it takes: a pick-axe at
+  Strength 10 does 10 a turn) and what it `becomes` (walkable, transparent open ground that does
+  not break, no door or stairs: rubble), together; only solid terrain (not walkable, no door,
+  stairs, or light) breaks, so digging and blasts never break a door. Stone walls 600, packed
+  earth 100, granite 3000. Solid rock may have a `face`, the solid terrain it shows as once a cell
+  next to it is broken open (`void`: `wall`). Overworld terrain has
   `travel_minutes` (1 to 1440; required for every walkable terrain on the overworld),
   optionally `local`, the ground terrain of the local area entered from a cell of it (none:
   nothing to explore there; locations never have one), and `landscape`, what its land is like in
@@ -1199,7 +1215,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 - **Action costs** (`data/actions.toml`, optional): action ids mapped to their cost in energy,
   e.g. `wait = 1000`, 1000 being a normal action (6 s at normal speed; §8 "Time"), 100 to
   10 000. The ids are `step` (onto terrain of `move_cost` 100), `wait`, `open_door`,
-  `close_door`, `lantern`, `stairs` (also entering a location or local area and walking off an
+  `close_door`, `unlock` (unlocking a door with a key, on top of opening it), `kick`, `lantern`,
+  `stairs` (also entering a location or local area and walking off an
   area's edge), `pick_up`, `drop`, `melee` (a shield bash too), `shoot`, `throw`, `reload` (a
   missile weapon that `reloads`: a crossbow shot costs `shoot` plus `reload`, 2000), `cast`,
   `dig` (a turn of digging), and for equipment (each slot names
@@ -1260,6 +1277,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   presentation only: `missile` (the glyph it flies as, drawn pointing right; default its own,
   upright), `spins` (it tumbles in flight), `glow` (0 to 1, where it lies), and particle
   `particles` (`ambient`: while it lies in view on top of its pile; `flight`: while it flies).
+  Keys (M19, §8 "Doors"): `key`, the lock id it opens, or `*` for a skeleton key, which opens
+  every lock. The keys: an iron key (`pantry`, the hub's pantry), a brass key (`guard_post`, the
+  guard post vault's store room), a rusty key (`depths`, the rooms locked in the Depths), and a
+  skeleton key (in the guard post's store room).
   Test objects: weapons for the main hand (dagger 1d4 and short sword 1d6, threat 20; spear 1d8
   ×3; club 1d6; a two-handed quarterstaff 1d6 with parry 1; the dagger thrown 5 cells, the spear
   6; of the daggers, short blades, spears, maces, and staves skills), a small shield (off hand,
@@ -1346,7 +1367,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   `projectile`) `flight`. Every glyph joins the atlas. §4.8 "Spell effects".
 - **Dungeon branches** (`data/dungeons.toml`): stacks of generated levels, e.g.
   `{ id = "depths", generator = "rooms", depth = 8, size = [80, 21] }`, plus optional name,
-  patrolling creature kinds, ambient light, and per-depth overrides of generator and size. Stairs
+  patrolling creature kinds, ambient light, a `key` (a key object: its rooms levels lock a few
+  rooms with the lock it opens, §8 "Doors"; the Depths' is the rusty key), and per-depth
+  overrides of generator and size. Stairs
   (and scenarios) may target `depths:N`; content validation accepts such ids when the branch has
   that depth. A branch level is generated on its first visit from its own random stream (§8) and
   then persists like a hand-made level. Its `<` leads to `depths:N-1` (on depth 1, back to the
@@ -1363,13 +1386,19 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   it; with no such step, at the area's start in the middle.
 - **Generators** (`warlock-core`, integer-only): *rooms* — walled rooms joined along a minimum
   spanning tree plus a few loops by corridors dug as cheapest paths (bends cost extra), with closed
-  doors, open doors, or doorways where corridors enter, and wall torches in most rooms; *caves* —
+  doors, open doors, or doorways where corridors enter, and wall torches in most rooms; with the
+  branch's `key`, last, up to two rooms with a single door (not the arrival room, no room with
+  stairs, no vault) get that door locked with the key's lock (a doorway or open door there
+  becomes a closed door), and the key lies on a free spot in a room that is not locked (what
+  lies or walks in a locked room stays there); *caves* —
   cellular automata (45 % rock, five 4-5 smoothing passes, largest cave kept), pools of still water,
   lamps and glowing fungus. Both place the up staircase (the arrival point) and the down staircase
   far from it, a few creatures on looping patrols, and last, now and then, a special room
   (below). Every level is validated by flood fill —
-  every stair, door, and walkable cell reachable from the up staircase, patrols valid, some light
-  — and a level that fails is regenerated from the next derived stream. *outdoor* (the local
+  every stair, door, and walkable cell reachable from the up staircase; locks only on closed
+  doors, and the stairs and a key to every lock (lying, or carried by a creature) reachable from
+  it without unlocking a door, so no level needs a key it does not give; patrols valid, some
+  light — and a level that fails is regenerated from the next derived stream. *outdoor* (the local
   areas of the overworld, §3): smooth integer value noise (random values on a coarse lattice,
   eased between) sized as a share of the area lays everything in natural blobs — woods, clearings,
   meadows of flowers, pools, crags; the share of woods blends towards each neighboring cell's
@@ -1383,9 +1412,12 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   cell is reachable from it (4-connected), every side has at least 3 walkable cells, running water
   and only running water has a flow, and patrols are valid.
 - **Vaults** (`assets/vaults/*.toml`): hand-made pieces in the level-file format, stamped verbatim
-  (terrain, lights, objects, creatures) where they fit — into rock with room for corridors or tunnels to
+  (terrain, lights, objects, locks, creatures) where they fit — into rock with room for corridors or tunnels to
   every entrance. A vault's edge is solid except for its entrances (doors, not on a corner); it has
-  no stairs or player start, and all its walkable cells are reachable from an entrance. Vaults of
+  no stairs or player start, and all its walkable cells are reachable from an entrance. Its locks
+  come with their keys: a key to every lock lies, or is carried by a creature, within reach of an
+  unlocked entrance without unlocking a door (the guard post: its store room locked, the brass
+  key carried by its kobold). Vaults of
   `kind = "outdoor"` are ruins for local areas, stamped on open land with a ring of open ground
   around them: their spaces (`void`) keep the area's own ground, every open cell on their edge is
   a way in, and their walkable cells are reachable from the edge. Dungeon generators use only
@@ -1607,8 +1639,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   status effect that killed the player (§8 "Status effects", "Healing"; format version 20), the
   player's satiation (their nutrition, the burn banked toward the next point, and the seconds
   toward the next hit point lost while starving), every corpse's death time, and what killed the
-  player when neither a creature nor a status effect did (§8 "Hunger"; format version 21), and
-  a dev weather override while
+  player when neither a creature nor a status effect did (§8 "Hunger"; format version 21), the
+  locks on each level's doors (§8 "Doors"; format version 22), and a dev weather override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
   platform data directory. quitting from the pause menu saves (closing the window saves too), autosave runs every 50 turns
@@ -1687,8 +1719,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   integer arithmetic; no wall-clock time.
   - **Costs** (M13): the action decides how long it takes, and the actor's speed scales
     it. Every action that takes time has a **cost** in energy, 1000 for a normal action, given in
-    `data/actions.toml` (`step`, `wait`, `open_door`, `close_door`, `lantern`, `stairs`,
-    `pick_up`, `drop`, `melee`, `shoot`, `throw`, `reload`, `cast`, `wield`, `wear`,
+    `data/actions.toml` (`step`, `wait`, `open_door`, `close_door`, `unlock`, `kick`, `lantern`,
+    `stairs`, `pick_up`, `drop`, `melee`, `shoot`, `throw`, `reload`, `cast`, `wield`, `wear`,
     `body_armor`, `ready`, `eat`, `dig`; 100 to
     10 000; an action left out, or every action without the file, costs 1000; unknown ids are
     errors), and a **base time**: 6 s
@@ -1696,7 +1728,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     actor of speed *v* `c / 1000 × 1000 / v × 6 s`: a normal action takes 6 s at normal speed
     (the player's), one of cost 1400 (two-weapon fighting, say) 8.4 s, and a normal action at
     speed 1111 about 5.4 s, at speed 900 about 6.7 s. All built-in actions cost 1000 for now but
-    `body_armor` (3000: 18 s); a crossbow shot takes `shoot` and `reload` (12 s).
+    `body_armor` (3000: 18 s); a crossbow shot takes `shoot` and `reload` (12 s), and opening a
+    locked door with its key `unlock` and `open_door` (12 s).
     - Equipment (§6 "Equipment"): every thing put on or taken off costs the action of the slot it
       goes in or comes out of (a two-handed weapon: the first hand's), taking off what putting on
       does, and one action pays for all of them: a swap costs both, a quarterstaff that puts away
@@ -1710,11 +1743,12 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
       is decided.
     - `stairs` covers taking stairs, entering a location or a local area from the overworld, and
       walking off a local area's edge: 6 s each at normal speed, on the overworld too, where
-      waiting and the lantern take 6 s as well. Bumping a closed door costs `open_door`; moving
-      into a hostile creature, `melee`.
+      waiting and the lantern take 6 s as well. Bumping a closed door costs `open_door` (a locked
+      one, with its key, `unlock` as well); moving into a hostile creature, `melee`; a kick,
+      `kick`.
     - A creature's action costs the same: a step onto the destination terrain, else its action's
-      cost (`melee`, `shoot` (and `reload`), `cast` for attacks, `open_door`, `wait` when it waits
-      or is blocked). A creature type may give its attacks their own `attack_cost` (§7), so a future
+      cost (`melee`, `shoot` (and `reload`), `cast` for attacks, `open_door` (and `unlock` for a
+      locked door it has the key to), `wait` when it waits or is blocked). A creature type may give its attacks their own `attack_cost` (§7), so a future
       attack or ability is one more entry. Free and refused actions take no time.
     - The scheduler (below) prices an action at its cost × its base in seconds; an actor gains its
       speed in energy per second, so it takes cost × base / speed seconds. The clock keeps whole
@@ -1784,16 +1818,19 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
      as a `melee` one.
      Leaving its routine it remembers where it was (its post) and where it saw the target.
   3. **Search**: with no hostile in sight, it goes to where it last saw one (next to the spot if
-     someone it cannot see stands there).
+     someone it cannot see stands there, or no one can stand there: a door shut or kicked at).
   4. **Listen**: failing that, to where it last heard a noise (§5 "Hearing"; the newest it heard
-     since it last acted) whose source cell it does not see. Only creatures whose faction is
-     hostile to someone go to look; wildlife does not care.
+     since it last acted) whose source cell it does not see (next to it, as above, when someone
+     stands there or no one can). Only creatures whose faction is hostile to someone go to look;
+     wildlife does not care.
   5. **Return**: then back to its post, and on along its patrol route from where it left it (or
      it waits there).
 
   Paths are A* over king's moves within a bounded box (12 cells beyond the target, at most 64
   from the creature), each step costing 1: walkable cells, and closed doors for creatures that
-  open them (1 more: it opens the door, a turn and a noise, then steps in). Another actor's cell
+  open them (1 more: it opens the door, a turn and a noise, then steps in); a locked door only
+  for one carrying a key that fits it (1 more again: it unlocks the door as it opens it, §8
+  "Doors"), to every other creature a wall. Another actor's cell
   costs 4 more, so a creature walks a short detour around someone in its way but waits behind
   them rather than take a long one. Ties go to cells nearer the target, then to the earlier
   direction (N, NE, E, … NW). A spot it cannot reach is given up. A creature hostile to the
@@ -1985,6 +2022,54 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     `Fell`, or `Unseen` when the last cell seen is not where it ended. Dropped if none of it was
     seen. The player's own readied missile weapon, its ammunition, and ranges are in the snapshot
     (`PerceptionView::ready_to_fire`, `ready_to_throw`, `throw_range`) for the targeting UI.
+- **Doors** (`warlock-core/src/door.rs`, the rules; `world/door.rs`, applying them; M19, #130):
+  locked doors and keys, and kicking doors in.
+  - **Locks** are per-cell state of a level, not terrain of their own: a locked door is the
+    closed door's terrain with a lock on its cell (`LevelState::locks`, saved and hashed). So it
+    looks, blocks sight and sound, and is remembered exactly like any closed door, and the player
+    cannot tell it is locked until they try it (perception never carries locks); every door
+    property stays in one terrain definition; and a lock carries what a terrain id cannot: its
+    optional **lock id** (§7 "Locks in level files"). A lock lies only on a closed door:
+    unlocking it or breaking the door takes it away. Locking a door again is later work.
+  - **Keys** are objects with a `key` (§7): the lock id they open, or `*` for a **skeleton key**,
+    which opens every lock; a lock without an id opens only to a skeleton key. Opening a locked
+    door (`o`, or walking into it) while carrying a key that fits unlocks it and opens it in one
+    action, ADOM-like: `unlock` plus `open_door` (12 s at normal speed), "You unlock the door with
+    your iron key and open it." The key made for the lock is used before a skeleton key; keys are
+    kept. Without one: "The door is locked.", refused, no time.
+  - **Kicking** (`K`, then a direction; `Action::Kick`, replay text `kick:DIR`; the `kick` action,
+    6 s), ADOM-like:
+    - **A closed door**, locked or not, breaks with a chance of the kicker's Strength **score**
+      (never the modifier) in the door's `sturdiness` (§7): one draw of the gameplay stream,
+      `1d(sturdiness) ≤ Strength`. The closed door's sturdiness is 30: Strength 9 breaks it 30 %
+      of the time, 10 33 %, 15 50 %, 18 60 %, 30 and up always. A door without a sturdiness never
+      breaks, and no die is rolled. A broken door becomes its `breaks_to`, the **broken door**
+      (`,`, splinters in the doorway): walkable and see-through for good (it cannot be closed),
+      its lock gone: "The door crashes open!" A door that holds: "WHAMM!" Either way the kick bangs
+      on the door, a noise of 100 made on the door's cell (§5 "Hearing", heard as banging), and
+      creatures that hear it and have enemies come to look (next to the door, §8 "Creature
+      behavior").
+    - **A creature** (seen or not, hostile or not) is an unarmed melee attack, whatever the
+      player wields: bare hands (1d3) with Strength to hit and to damage (§8 "Combat"), what
+      their unarmed fighting gives, and their combat stance (§8 "Weapon skills", "Stances"); it
+      trains unarmed fighting, and its speed takes off the `kick`'s cost. Rolled, heard, and
+      shown like any blow and said as a kick: "You kick the giant rat.", "You miss the giant
+      rat.", "The giant rat dodges your kick."
+    - **Anything else** is refused and takes no time: "You kick at empty space." where one could
+      walk (an open or broken door too), else "Kicking the stone wall would only hurt your
+      foot."
+    - Creatures do not kick (yet).
+  - **Creatures** that open doors (`opens_doors`) open a locked door only while they carry a key
+    that fits: they unlock and open it in one action (`unlock` plus `open_door`). To every other
+    creature a locked door is a wall (§8 "Creature behavior").
+  - **Events**: a kick at a door the player sees is `Event::DoorKicked` (it held: dust shaken off
+    it, the closed door's `toggle` particles) or `Event::DoorBroken` (splinters, the broken
+    door's); unlocking a door is seen as its opening (`DoorOpened`).
+  - **Where locks are**: hand-made levels lock doors in their legend (the hub's pantry, its
+    iron key in the storeroom); vaults bring their locks and keys (the guard post's store room,
+    its brass key carried by the kobold on guard, a skeleton key inside); a dungeon branch with a
+    `key` gets a few locked rooms on its rooms levels, its key always within reach (§7
+    "Generators", validated). The showcase's locked door is harmless.
 - **Digging** (`warlock-core/src/world/dig.rs`; M19, #131): walls give way to digging and to
   explosions, ADOM-like.
   - **Walls that break**: terrain with a `hardness` and what it `becomes` (§7): stone walls 600,
@@ -2142,7 +2227,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     (`actors`, the world state) show every actor's scores and potentials.
   - **What uses them**: combat (Strength to hit and to damage in melee, Dexterity to hit with
     shots and in Defence, Toughness in hit points and regeneration; "Combat" above) and burden
-    (Strength and Toughness scores, never modifiers, in the carrying limit; "Burden" below), each
+    (Strength and Toughness scores, never modifiers, in the carrying limit; "Burden" below), and
+    kicking doors in (the Strength score against the door's sturdiness; "Doors" above), each
     reading the effective score that status effects may lower ("Status effects" above). No
     other rule does yet, and no other D&D concept comes with them: no ability checks or saving
     throws. Stats and potentials are part of the world state (saved, covered by the state hash).
@@ -2383,13 +2469,14 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   - **Skills** (`data/weapon_skills.toml`, §7): the categories weapons belong to. A skill's
     role says what uses it: `melee` and `launcher` skills are named by weapons (`category`), the
     wielded weapon's for a blow, the readied missile weapon's for a shot; `thrown` is every
-    throw, whatever is thrown; `unarmed` bare hands and natural attacks; `shield_block` and
-    `shield_bash` a held shield's blocks and bashes (`Actor::attack_skill`).
+    throw, whatever is thrown; `unarmed` bare hands, natural attacks, and kicks, whatever is
+    wielded (§8 "Doors"); `shield_block` and `shield_bash` a held shield's blocks and bashes
+    (`Actor::attack_skill`).
   - **Ranks**: 0 (untrained: no benefits; marks still count) to 10, on every actor
     (`Actor::weapon_skills`, a rank and marks per skill): the player's from race and class, a
     creature's from its type (§7). Ranks are stored, not derived.
   - **Marks**: only the player trains. Each attack the player makes on someone (a blow, a bash,
-    a shot or throw for each actor it reaches; hit or miss) earns `attempt` marks (1) in its
+    a kick, a shot or throw for each actor it reaches; hit or miss) earns `attempt` marks (1) in its
     skill, a hit `hit` more (2); a blow the player's shield blocks (a miss credited to the
     Shield category, "Combat" above) earns `attempt + hit` in shield blocking. The marks scale
     by `100 + per_level × (the opponent's level − the rank)` percent (20 a level), kept within 0
@@ -2439,7 +2526,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   `Dice` parses, prints its canonical text, gives its `min` and `max`, and rolls from a
   deterministic stream: one uniform draw per die, none for a fixed number. Data files may give
   a fixed number as a TOML integer.
-- **Events to effects**: the core emits events (door opened, actor moved, attacked, died); the
+- **Events to effects**: the core emits events (door opened, door kicked or broken, actor moved,
+  attacked, died); the
   presentation layer turns them into animations: slides, a short lunge toward the target for a
   melee attack (motion), missiles flying (§4.8) and a creature's `attack`
   particles where its attack lands, e.g. the shaman's violet sparkle (particles); dust where a
@@ -2480,6 +2568,7 @@ warlock-cli replay --create --scenario showcase --actions "move:N wait" -o runs/
 warlock-cli replay --verify runs/doors.json               # check per-turn state hashes
 warlock-cli gen --level depths:3 --seed warlock           # print a generated level (dev-only;
                                                           # also local areas: local:49,23;
+                                                          # `*` a placed light, `&` a lock,
                                                           # special rooms by their letter)
 cargo xtask golden [--update]                             # compare golden screenshots
 ```
@@ -2517,8 +2606,8 @@ cargo xtask golden [--update]                             # compare golden scree
 - Dump layers: `view`, `fov`, `memory` (terrain and the top object of each known pile), `light`
   (perceived brightness of each visible cell as a digit, `0` dark to `9` fully lit or brighter),
   `sound` (the view with each heard sound at its rough place: `f` footsteps, `o` a door opening,
-  `c` a door closing, `x` fighting, `b` a bowstring, `m` chanting, `d` digging, upper case when
-  loud),
+  `c` a door closing, `x` fighting, `b` a bowstring, `m` chanting, `k` banging (a door kicked),
+  `d` digging, upper case when loud),
   `inventory` (what the player carries, by letter with weights and what is worn or wielded
   marked, `b - a leather jerkin (being worn) (3.5 kg)`, then what they carry, their burden and
   its thresholds, and what they weigh, `carried 4.2 kg (unburdened: burdened over 14 kg,
@@ -2674,7 +2763,11 @@ Each milestone ships a playable build.
   colour per creature type; accumulating, drying, remembered; subtle on the map, with a switch.
 - **M19 Doors and walls** — destructible walls (#131): terrain hardness, digging through walls
   with a pick-axe or a mattock in a new Tool slot, turn after turn by tool power and Strength,
-  explosions that break the softer walls, rubble, and the quarry to dig in.
+  explosions that break the softer walls, rubble, and the quarry to dig in. Locked doors and keys
+  (a key for its lock, a skeleton key for every lock; creatures that open doors need the key
+  too), kicking doors in by Strength against sturdiness and kicking creatures (#130); locked rooms
+  with reachable keys in the generated Depths, a locked store room in a vault, a locked pantry in
+  the hub.
 - **M20 Skills** — 26 skills in data (#132): trained or untrained (never shown, gives nothing),
   values from race and class dice and creature data, training marks on meaningful use with a
   provisional increase rule (gentle to 100, slow past it), passive benefits for tumble, stealth,

@@ -16,6 +16,7 @@
 - [The overworld](overworld.md)
 - [Terrain](terrain.md)
   - [Digging and walls](digging.md)
+- [Doors](doors.md)
 - [Special rooms](special-rooms.md)
 - [Objects and your pack](objects.md)
 - [Equipment](equipment.md)

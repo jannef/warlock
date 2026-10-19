@@ -17,6 +17,7 @@ pub mod combat;
 pub mod content;
 pub mod daylight;
 pub mod dice;
+pub mod door;
 pub mod dump;
 pub mod equipment;
 pub mod fov;

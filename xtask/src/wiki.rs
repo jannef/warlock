@@ -30,6 +30,7 @@ use warlock_core::daylight::{
     MOONLIGHT_PER_CELL, SIGHT_DAY, SIGHT_MOONLIT, SIGHT_NIGHT, SIGHT_TWILIGHT, overworld_sight,
 };
 use warlock_core::dice::Dice;
+use warlock_core::door;
 use warlock_core::hunger::Hunger;
 use warlock_core::light::{Light, Moon, Sky, Sun};
 use warlock_core::object::{INVENTORY_SLOTS, format_weight};
@@ -184,6 +185,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("burden.md".to_string(), burden_levels()),
         ("burden-races.md".to_string(), burden_races(content)),
         ("burden-examples.md".to_string(), burden_examples(content)),
+        ("doors.md".to_string(), doors(content)),
+        ("keys.md".to_string(), keys(content)),
         ("hunger-states.md".to_string(), hunger_states(content)),
         ("hunger-facts.md".to_string(), hunger_facts(content)),
         ("hunger-races.md".to_string(), hunger_races(content)),
@@ -279,6 +282,8 @@ fn action_costs(content: &Content) -> String {
             ActionKind::Wait => "Waiting",
             ActionKind::OpenDoor => "Opening a door",
             ActionKind::CloseDoor => "Closing a door",
+            ActionKind::Unlock => "Unlocking a door with a key (on top of opening it)",
+            ActionKind::Kick => "Kicking (a door, or a creature)",
             ActionKind::Lantern => "Lighting or dousing the lantern",
             ActionKind::Stairs => {
                 "Taking stairs, entering a place from the overworld, or walking off an area's edge"
@@ -428,6 +433,12 @@ fn local_terrain(content: &Content) -> String {
         let mut notes = Vec::new();
         if t.is_closed_door() {
             notes.push("door: walking into it opens it".to_string());
+        }
+        if let Some((to, sturdiness)) = t.kicked_in {
+            let broken = content.terrain(to).name.to_lowercase();
+            notes.push(format!(
+                "kicked in, it breaks into a {broken} (sturdiness {sturdiness})"
+            ));
         }
         if t.is_open_door() {
             notes.push("door: can be closed".to_string());
@@ -1581,6 +1592,51 @@ fn armour(content: &Content) -> String {
     out
 }
 
+/// The Strength scores the door table shows, and the last column's "and up".
+const KICK_STRENGTHS: [u8; 8] = [3, 6, 9, 10, 12, 15, 18, 20];
+
+/// How often a kick breaks each door that can break, by the kicker's Strength score
+/// (spec §8 "Doors").
+fn doors(content: &Content) -> String {
+    let mut out = String::from("| Door | Sturdiness |");
+    let mut rule = String::from("|---|:---:|");
+    for st in KICK_STRENGTHS {
+        let _ = write!(out, " Strength {st} |");
+        rule.push_str(":---:|");
+    }
+    let _ = writeln!(out, "\n{rule}");
+    for t in content.terrain_defs() {
+        let Some((_, sturdiness)) = t.kicked_in else {
+            continue;
+        };
+        let _ = write!(out, "| {} | {sturdiness} |", capital(&t.name));
+        for st in KICK_STRENGTHS {
+            let _ = write!(out, " {}% |", door::break_chance(st, sturdiness));
+        }
+        out.push('\n');
+    }
+    out
+}
+
+/// The keys and the locks they open (spec §8 "Doors").
+fn keys(content: &Content) -> String {
+    let mut out = String::from("| Key | Glyph | Opens |\n|---|:---:|---|\n");
+    for o in content.object_defs() {
+        let opens = match &o.key {
+            Some(door::Key::Skeleton) => "every lock".to_string(),
+            Some(door::Key::Lock(id)) => format!("locks named `{id}`"),
+            None => continue,
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {opens} |",
+            capital(&o.name),
+            glyph(o.glyph)
+        );
+    }
+    out
+}
+
 /// The combat stances: what each does to the player's attacks, Defence, and speed (percent for
 /// costs and noise; "-" for no change).
 fn stances(content: &Content) -> String {
@@ -2353,6 +2409,14 @@ mod tests {
         assert!(text("terrain-local.md").contains("| Still water | `~` | yes | no | 12 seconds |"));
         assert!(text("terrain-local.md").contains("| 12 seconds | very loud |"));
         assert!(text("terrain-local.md").contains("muffles sound"));
+        assert!(text("terrain-local.md").contains("breaks into a broken door (sturdiness 30)"));
+        assert!(
+            text("doors.md").contains("| Closed door | 30 | 10% | 20% | 30% | 33% |"),
+            "{}",
+            text("doors.md")
+        );
+        assert!(text("keys.md").contains("| Skeleton key | `(` | every lock |"));
+        assert!(text("keys.md").contains("| Iron key | `(` | locks named `pantry` |"));
         assert!(
             text("footsteps.md")
                 .contains("| Very loud | Still water, running water, shallow water |")

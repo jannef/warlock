@@ -39,6 +39,10 @@ pub enum ActionKind {
     Wait,
     OpenDoor,
     CloseDoor,
+    /// Unlocking a locked door with a key: part of opening it, so it costs this plus `open_door`.
+    Unlock,
+    /// A kick (`K`): at a door, to break it, or at a creature, an unarmed blow.
+    Kick,
     /// Lighting or dousing the lantern.
     Lantern,
     /// Taking stairs: also entering a location or a local area from the overworld, and walking
@@ -74,11 +78,13 @@ pub enum ActionKind {
 }
 
 impl ActionKind {
-    pub const ALL: [ActionKind; 19] = [
+    pub const ALL: [ActionKind; 21] = [
         ActionKind::Step,
         ActionKind::Wait,
         ActionKind::OpenDoor,
         ActionKind::CloseDoor,
+        ActionKind::Unlock,
+        ActionKind::Kick,
         ActionKind::Lantern,
         ActionKind::Stairs,
         ActionKind::PickUp,
@@ -103,6 +109,8 @@ impl ActionKind {
             ActionKind::Wait => "wait",
             ActionKind::OpenDoor => "open_door",
             ActionKind::CloseDoor => "close_door",
+            ActionKind::Unlock => "unlock",
+            ActionKind::Kick => "kick",
             ActionKind::Lantern => "lantern",
             ActionKind::Stairs => "stairs",
             ActionKind::PickUp => "pick_up",

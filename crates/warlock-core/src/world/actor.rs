@@ -7,6 +7,7 @@ use crate::content::{
     ActionKind, Benefit, CombatStance, Content, CreatureId, FactionId, ObjectDef, ObjectId, Role,
     WeaponSkillId,
 };
+use crate::door::{Key, Lock};
 use crate::equipment::Equipment;
 use crate::geom::{Dir, Pos};
 use crate::hunger::{Hunger, Satiation};
@@ -370,6 +371,25 @@ impl Actor {
         })
     }
 
+    /// The key it carries that opens `lock` (spec §8 "Doors"): the first one made for it, else
+    /// the first skeleton key; `None` if it carries none that fits.
+    pub fn key_for(&self, content: &Content, lock: &Lock) -> Option<ObjectId> {
+        let fitting = (self.inventory.iter())
+            .map(|s| s.object)
+            .filter_map(|o| Some((o, content.object(o).key.as_ref()?)))
+            .filter(|(_, key)| key.opens(lock));
+        let mut skeleton = None;
+        for (object, key) in fitting {
+            match key {
+                Key::Lock(_) => return Some(object),
+                Key::Skeleton => {
+                    skeleton.get_or_insert(object);
+                }
+            }
+        }
+        skeleton
+    }
+
     /// What its melee attacks do: with the weapon it wields, else its natural attack, else its
     /// bare hands; Strength to hit and to damage, and what its weapon skill gives.
     pub fn melee(&self, content: &Content) -> Profile {
@@ -419,6 +439,16 @@ impl Actor {
         let profile = Profile::melee(attack, &self.effective_stats(content))
             .with(&self.benefit(content, skill));
         Some((shield, self.stanced(content, profile)))
+    }
+
+    /// What its kicks at a creature do (spec §8 "Doors"): an unarmed blow whatever it wields
+    /// (bare hands' damage, Strength to hit and to damage), with what its unarmed fighting gives
+    /// and its combat stance.
+    pub fn kick(&self, content: &Content) -> Profile {
+        let skill = content.weapon_skills().of_role(Role::Unarmed);
+        let profile = Profile::melee(&Attack::unarmed(), &self.effective_stats(content))
+            .with(&self.benefit(content, skill));
+        self.stanced(content, profile)
     }
 }
 
