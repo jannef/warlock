@@ -197,8 +197,13 @@ pub(super) fn track(
                 bursts.attack(&view, creature.map(|a| a.creature), to, seed, start);
             }
             // A death shows as the creature gone (and what it dropped) and in the message line;
-            // a missile flies in `missiles`.
-            Event::Died { .. } | Event::Missile { .. } => {}
+            // a missile flies in `missiles`. A trap shows as itself once known, and in the
+            // message line; spell-like effects (a fireball) are for the spell effect renderer.
+            Event::Died { .. }
+            | Event::Missile { .. }
+            | Event::TrapSprung { .. }
+            | Event::TrapStruck { .. }
+            | Event::Spell { .. } => {}
             Event::LevelChanged { .. } => {
                 bursts.list.clear();
                 tints.clear();

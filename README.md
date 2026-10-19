@@ -62,6 +62,11 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   ADOM-style with a cursor and a faint line of fire, watch the arrow fly, and pick it up where it
   fell. A flaming arrow flies burning and lights the dark where it lands until it burns out:
   shoot one into the dark to see what waits there (and be seen).
+- **Traps** — arrow and spear traps, fireballs, lightning bolts, pits, alarms, and teleports lie
+  hidden until someone steps on them: you, or a creature you lure there. One you saw go off is
+  known from then on, shown as `^` and remembered, and stepping onto it asks first. The Depths
+  hide a few on every level; a trap hall beside the arena lets you try them and watch them catch
+  creatures.
 - **Burden** — everything you carry weighs on you: past a third of what your Strength and
   Toughness can bear you are burdened, then strained, then overloaded. Every action takes longer,
   armour-like caps keep your Dexterity from helping your Defence, and your footsteps get louder.
@@ -114,7 +119,7 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
 
   ![A forest clearing in Thornwood at noon](docs/screenshots/m9-forest-clearing.png)
 
-- **Levels** — the hub, a sunlit courtyard, the arena, a 420×300 cavern, and "The Depths": rooms-and-corridors
+- **Levels** — the hub, a sunlit courtyard, the arena, the trap hall, a 420×300 cavern, and "The Depths": rooms-and-corridors
   and cave levels generated from the run seed (numbers or words), with hand-made vaults stamped in.
 
   ![A generated level in The Depths](docs/screenshots/m6-depths-rooms.png)

@@ -21,7 +21,7 @@
 use super::{Actor, ActorId, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Category, Profile, Strike};
-use crate::content::{Content, CreatureId, ObjectId};
+use crate::content::{Content, CreatureId, ObjectId, TrapId};
 use crate::noise::Act;
 use crate::object;
 use crate::stats::Stat;
@@ -36,9 +36,19 @@ pub struct Death {
     pub time: GameTime,
     /// Where: the name of the level.
     pub place: String,
-    /// What killed them, if they saw it: a creature type. `None`: something unseen.
+    /// What killed them, if they saw it: a creature type. `None`: something unseen, or a trap.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub by: Option<CreatureId>,
+    /// The trap that killed them, if one did (spec §8 "Traps").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub trap: Option<TrapId>,
+}
+
+/// What hurt an actor: another actor's attack, or a trap.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum Cause {
+    Actor(ActorId),
+    Trap(TrapId),
 }
 
 /// What an attack is made with, in words: what it is called ("spear", "bite", "fist", "arrow")
@@ -50,12 +60,17 @@ pub(super) struct Words {
 }
 
 impl Words {
-    #[cfg(test)]
-    pub(super) fn test(noun: &str, verb: &str) -> Self {
+    /// What hits ("arrow", "fireball") and what it does ("hits", "burns").
+    pub(super) fn new(noun: &str, verb: &str) -> Self {
         Self {
             noun: noun.into(),
             verb: verb.into(),
         }
+    }
+
+    #[cfg(test)]
+    pub(super) fn test(noun: &str, verb: &str) -> Self {
+        Self::new(noun, verb)
     }
 
     /// What `actor` attacks with, by `kind`; a shot or a throw is made `with` its missile.
@@ -99,14 +114,17 @@ pub(super) enum End<'a> {
     Seen(&'a str),
     /// Something the player does not see.
     Unseen,
+    /// A trap's missile, blades, or blast, by what hits ("arrow", "fireball"): it attacks by
+    /// itself (spec §8 "Traps").
+    Trap(&'a str),
 }
 
 impl End<'_> {
-    /// As the subject: "You", "The kobold", "Something".
+    /// As the subject: "You", "The kobold", "Something", "The arrow".
     fn subject(self) -> String {
         match self {
             End::You => "You".into(),
-            End::Seen(name) => format!("The {name}"),
+            End::Seen(name) | End::Trap(name) => format!("The {name}"),
             End::Unseen => "Something".into(),
         }
     }
@@ -115,17 +133,18 @@ impl End<'_> {
     fn object(self) -> String {
         match self {
             End::You => "you".into(),
-            End::Seen(name) => format!("the {name}"),
+            End::Seen(name) | End::Trap(name) => format!("the {name}"),
             End::Unseen => "something".into(),
         }
     }
 
-    /// Whose: "your", "the kobold's".
+    /// Whose: "your", "the kobold's"; a trap's own missile or blast is just "the" one.
     fn whose(self) -> String {
         match self {
             End::You => "your".into(),
             End::Seen(name) => format!("the {name}'s"),
             End::Unseen => "something's".into(),
+            End::Trap(_) => "the".into(),
         }
     }
 
@@ -226,7 +245,7 @@ pub(super) fn death_message(who: End<'_>) -> String {
     match who {
         End::You => "You die...".into(),
         End::Seen(name) => format!("The {name} dies."),
-        End::Unseen => "Something dies.".into(),
+        End::Unseen | End::Trap(_) => "Something dies.".into(),
     }
 }
 
@@ -348,13 +367,13 @@ impl World {
         if let Some(blow) = blow
             && blow.damage > 0
         {
-            self.hurt(target, blow.damage, attacker, events);
+            self.hurt(target, blow.damage, Cause::Actor(attacker), events);
         }
         blow
     }
 
-    /// Actor `id` loses `damage` hit points to `by`; at 0 it dies.
-    fn hurt(&mut self, id: ActorId, damage: i32, by: ActorId, events: &mut Vec<Event>) {
+    /// Actor `id` loses `damage` hit points to `cause`; at 0 it dies.
+    pub(super) fn hurt(&mut self, id: ActorId, damage: i32, cause: Cause, events: &mut Vec<Event>) {
         let Some(actor) = self.state.actors.get_mut(&id) else {
             return;
         };
@@ -365,15 +384,20 @@ impl World {
         let (at, creature) = (actor.pos, actor.creature);
         events.push(Event::Died { actor: id, at });
         if id == self.state.player {
-            let by = self.actor_or_fallen(by).map(|a| a.creature);
+            let (by, trap) = match cause {
+                Cause::Actor(by) => (self.actor_or_fallen(by).map(|a| a.creature), None),
+                Cause::Trap(trap) => (None, Some(trap)),
+            };
             self.state.death = Some(Death {
                 turn: self.state.turn,
                 time: self.state.time,
                 place: self.state.current().name.clone(),
                 by,
+                trap,
             });
         } else {
-            if by == self.state.player {
+            // Only the player's own kills earn experience; a trap's earn no one anything.
+            if cause == Cause::Actor(self.state.player) {
                 self.earn_kill(creature);
             }
             self.creature_dies(id);

@@ -103,6 +103,20 @@ name = "death-screen"
 scenario = "arena"
 actions = "lantern wait*16"
 
+# The trap hall (spec §3, §8 "Traps"): the proving row's seven known traps, and creatures on their
+# rounds across hidden ones. After fourteen turns the hidden spear and lightning traps (turn 10)
+# and the fireball (this turn: it is spent and gone) have gone off in view: the first two show as
+# known traps now.
+[[golden]]
+name = "trap-hall"
+scenario = "traps"
+actions = "wait"
+
+[[golden]]
+name = "trap-hall-sprung"
+scenario = "traps"
+actions = "wait*14"
+
 # A generated level (rooms generator, The Depths 1) from the scenario's fixed seed.
 [[golden]]
 name = "depths-1"

@@ -49,6 +49,9 @@ Opening and closing a door ask `In which direction? (Esc to cancel)` on the mess
 resting asks how long (see [Resting](resting.md)). Answer with a direction or the key shown, or
 press `Esc` to cancel. Pressing any other command cancels the prompt.
 
+Stepping onto a trap you know asks `Really step onto the fireball trap? (y/n)`: only `y` steps
+on (see [Traps](traps.md)).
+
 ## Look mode
 
 `x` puts a cursor on the map, on you. Move it with the movement keys, and the message line
@@ -59,6 +62,7 @@ describes what you know about the cell under it:
   wounded, or nearly dead; see [Combat](combat.md)), what it wields and wears, the objects lying
   there, and the terrain, as in "A giant rat (hostile, unhurt), on stone floor." or "A kobold
   (hostile, badly wounded), wielding a spear, on stone floor.";
+- a trap you know there, as part of the ground: "A pit, on stone floor." (see [Traps](traps.md));
 - what you remember there, if you cannot see it now: the terrain and the objects you saw on it;
 - for stairs and the places on the overworld, where they lead;
 - a sound you heard there this turn ([Hearing](hearing.md));

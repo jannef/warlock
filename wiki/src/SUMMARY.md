@@ -28,5 +28,6 @@
   - [Ranged combat](ranged.md)
   - [Ammunition](ammunition.md)
 - [Creatures](creatures.md)
+- [Traps](traps.md)
 - [Your lantern](lantern.md)
 - [Saving](saving.md)

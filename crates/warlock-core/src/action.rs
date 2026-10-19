@@ -1,7 +1,7 @@
 //! Player actions and the events a turn produces.
 
 use crate::combat::Strike;
-use crate::content::{ActionKind, ObjectId};
+use crate::content::{ActionKind, ObjectId, TrapId};
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
 use crate::weather::Weather;
@@ -204,12 +204,48 @@ pub enum Event {
         path: Vec<Pos>,
         end: MissileEnd,
     },
-    /// An actor died where it stood, killed by the attack before it. Kept when the player saw
-    /// it (their own death always).
+    /// An actor died where it stood, killed by the attack (or trap) before it. Kept when the
+    /// player saw it (their own death always).
     Died {
         actor: ActorId,
         at: Pos,
     },
+    /// A trap went off (spec §8 "Traps"): `victim` set off trap `trap` lying on `at`. Kept when
+    /// the player perceived it: they set it off, saw its cell, or saw any of its blast.
+    TrapSprung {
+        trap: TrapId,
+        at: Pos,
+        victim: ActorId,
+    },
+    /// What a trap did to `target`, standing on `to`: what came of its attack roll, or a hit for
+    /// what is not rolled (a blast, a fall). Kept when the player is the target or saw them.
+    TrapStruck {
+        trap: TrapId,
+        target: ActorId,
+        to: Pos,
+        strike: Strike,
+    },
+    /// A spell-like effect the player perceives: traps now, spells later.
+    Spell {
+        /// An id in `data/effects.toml` ("fireball", "lightning_bolt", ...): what it looks like.
+        effect: String,
+        /// Where it comes from: the trap's cell, later a caster.
+        origin: Pos,
+        shape: SpellShape,
+        /// The affected cells the player can see; perception-filtered, never ground truth.
+        cells: Vec<Pos>,
+    },
+}
+
+/// The shape of a spell-like effect ([`Event::Spell`]).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SpellShape {
+    /// A blast of `radius` cells around `center` (a fireball).
+    Burst { center: Pos, radius: i32 },
+    /// A line along `path`, in order from where it starts (a lightning bolt), cut to the stretch
+    /// the player sees.
+    Bolt { path: Vec<Pos> },
 }
 
 /// How a missile's flight ended, on the last cell of its path.

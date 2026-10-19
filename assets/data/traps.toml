@@ -1,0 +1,97 @@
+# Traps (spec §7, §8 "Traps"). A trap lies on a cell, hidden until the player sets it off or sees
+# a creature do it; from then on it shows as its glyph and stays in memory. Whoever steps onto a
+# trap sets it off, the player and creatures alike (creatures know nothing of traps). Stepping
+# onto a known trap asks first. Levels place traps with `trap = "id"` in a legend entry (`known
+# = true` to show it from the start; `dir` for a bolt's direction); dungeon branches hide a few
+# on each generated level (data/dungeons.toml `traps`).
+#
+# Fields:
+#   id, name     the trap's id and what it is called ("Really step onto the fireball trap?")
+#   glyph, fg    how it shows once known (glyph default "^")
+#   message      said when the player perceives it go off (optional)
+#   charges      how often it goes off before it is spent and gone (default: it never runs out)
+#   noise        { sound, loudness }: what it sounds like going off (bowstring, explosion,
+#                thunder, bell, ...) and how loud on its cell, 1 to 300 (default: silent)
+#   kind         what it does:
+#     shot       `object` shoots out of a hidden slit in the nearest wall at whoever set it off:
+#                an attack roll (`to_hit`, `damage`) against their Defence; it lands as an object
+#     strike     an attack roll (`to_hit`, `damage`) with `noun` against whoever stands on it
+#     burst      everyone within `radius` the blast reaches (walls stop it) takes `damage`, half
+#                beyond radius - 1; no roll to hit; presentation shows the `spell` effect
+#     bolt       a line from the trap until a wall, at most `length` cells: everyone on it takes
+#                `damage`; presentation shows the `spell` effect
+#     pit        `damage`, and the next action is lost climbing out
+#     alarm      only its noise, which draws creatures that hear it
+#     teleport   whoever steps on it is moved to a free cell of the level
+#   noun, verb   what hits and what it does, for messages ("The fireball burns you."; verb
+#                default "hits"); a shot uses its object's name
+
+[[trap]]
+id = "arrow"
+name = "arrow trap"
+fg = "#c8b48c"
+message = "An arrow shoots out of the wall!"
+kind = "shot"
+object = "arrow"
+damage = "1d6"
+to_hit = 3
+noise = { sound = "bowstring", loudness = 40 }
+
+[[trap]]
+id = "spear"
+name = "spear trap"
+fg = "#b4b8c4"
+message = "Spears spring from the floor!"
+kind = "strike"
+noun = "spear"
+damage = "1d8"
+to_hit = 3
+
+[[trap]]
+id = "fireball"
+name = "fireball trap"
+fg = "#ff7a3a"
+message = "A fireball explodes!"
+charges = 1
+kind = "burst"
+spell = "fireball"
+noun = "fireball"
+verb = "burns"
+radius = 2
+damage = "3d6"
+noise = { sound = "explosion", loudness = 150 }
+
+[[trap]]
+id = "lightning_bolt"
+name = "lightning trap"
+fg = "#a8c8ff"
+message = "Lightning arcs across the floor!"
+charges = 2
+kind = "bolt"
+spell = "lightning_bolt"
+noun = "lightning bolt"
+verb = "strikes"
+length = 12
+damage = "4d6"
+noise = { sound = "thunder", loudness = 120 }
+
+[[trap]]
+id = "pit"
+name = "pit"
+fg = "#9a7a58"
+kind = "pit"
+damage = "1d6"
+
+[[trap]]
+id = "alarm"
+name = "alarm trap"
+fg = "#e8d060"
+message = "A loud bell rings!"
+kind = "alarm"
+noise = { sound = "bell", loudness = 300 }
+
+[[trap]]
+id = "teleport"
+name = "teleport trap"
+fg = "#c890ff"
+kind = "teleport"

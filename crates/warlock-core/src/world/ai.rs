@@ -361,7 +361,10 @@ impl World {
             to,
         });
         self.make_noise(id, Act::Step(to));
-        Stepped::Moved(price)
+        // It knows nothing of traps (spec §8 "Traps"): one there goes off; a pit costs it its
+        // next action.
+        let climb = self.spring_trap(to, id, events);
+        Stepped::Moved(price + climb)
     }
 
     /// The routine: the next step of the creature's patrol route; it waits when blocked (or

@@ -6,6 +6,7 @@
 //! | Stream | Label | Kept |
 //! |---|---|---|
 //! | Map generation, per level | `map/<level id>` (retry *k*: `map/<level id>/<k>`) | never; derived on demand |
+//! | Hidden traps, per generated level | `traps/<level id>` | never |
 //! | Gameplay | `gameplay` | in [`crate::WorldState`], so saves continue it |
 //! | The stat gender "other" raises | `character/gender` | never; derived on demand |
 //! | A new character's age and birthday | `character/birth/<race>` | never |
@@ -45,6 +46,12 @@ impl Rng {
         } else {
             Self::stream(run_seed, &format!("map/{level}/{attempt}"))
         }
+    }
+
+    /// The stream that hides traps on generated level `level` (spec §8 "Traps"), apart from its
+    /// map's, so a level is the same with or without traps.
+    pub fn traps(run_seed: u64, level: &str) -> Self {
+        Self::stream(run_seed, &format!("traps/{level}"))
     }
 
     pub fn next_u32(&mut self) -> u32 {

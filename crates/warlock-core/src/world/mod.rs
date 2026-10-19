@@ -47,6 +47,11 @@
 //! Ranged combat (`shoot.rs`): shots and throws fly along a line, attack whoever stands in their
 //! way, and come down to be picked up again; burning missiles are fires that light the level
 //! until they burn out.
+//!
+//! Traps (spec §8 "Traps", `trap.rs`): whoever steps onto a trap sets it off, the player and
+//! creatures alike: arrows, spears, fireballs, lightning, pits, alarms, and teleports. Traps are
+//! hidden until the player sets one off or sees a creature do it; then they are known and
+//! remembered.
 
 mod actor;
 mod ai;
@@ -58,18 +63,21 @@ mod level;
 mod path;
 mod schedule;
 mod shoot;
+mod trap;
 
 pub use actor::{Actor, ActorId, ActorKind, Mind, Patrol};
 pub use fight::Death;
 pub(crate) use hash::fnv1a;
 pub use level::{Fire, LevelState};
 
-use crate::action::{Action, Event, Letters, MAX_REST, MissileEnd, Outcome, Rest, letter};
+use crate::action::{
+    Action, AttackKind, Event, Letters, MAX_REST, MissileEnd, Outcome, Rest, SpellShape, letter,
+};
 use crate::burden::{self, Burden, Load};
 use crate::character::{Character, CharacterSpec};
 use crate::content::{
     ActionKind, Content, CreatureId, EdgeExit, LevelKind, LevelTemplate, StairsDir, Stance,
-    TerrainId, local_area_id,
+    TerrainId, TrapEffect, local_area_id,
 };
 use crate::geom::{Dir, Pos};
 use crate::light::{LightCache, Sky};
@@ -252,6 +260,9 @@ pub struct World {
     /// What the player's kills earned them during the current action (not saved): said after
     /// the attack's own messages.
     news: Vec<String>,
+    /// Traps sprung since this world was created or loaded (not saved): a rest perceives every
+    /// turn in which one went off (a teleport moves someone farther than a step).
+    sprung: u64,
 }
 
 /// How much time an action took.
@@ -417,6 +428,7 @@ impl World {
             said: 0,
             fallen: Vec::new(),
             news: Vec::new(),
+            sprung: 0,
         }
     }
 
@@ -563,8 +575,9 @@ impl World {
     /// others act, perception), stopping after a turn in which a creature came into view or a
     /// message was logged that stops a rest. The last turn is cut short to end exactly at
     /// `until`, whatever the player's speed ([`World::price_until`]). Turns that end before any
-    /// creature could come into view ([`World::out_of_view_for`]) and in which the weather the
-    /// player sees did not change pass without perception, which cannot change the outcome; only
+    /// creature could come into view ([`World::out_of_view_for`]), in which the weather the
+    /// player sees did not change, and in which no trap went off (a teleport moves a creature
+    /// farther than its steps) pass without perception, which cannot change the outcome; only
     /// the last turn's events are kept.
     fn rest(&mut self, until: GameTime, goal: Rest, events: &mut Vec<Event>) {
         let start = self.state.time;
@@ -575,11 +588,13 @@ impl World {
         let alive = |w: &Self| w.state.death.is_none();
         while self.state.time < until && came.is_none() && self.said == said && alive(self) {
             let unseen_until = self.state.time + self.out_of_view_for();
+            let sprung = self.sprung;
             loop {
                 events.clear();
                 self.run_turn(wait.min(self.price_until(until)), events);
                 let done = self.state.time >= until || self.said != said || !alive(self);
-                if done || self.state.time > unseen_until || self.weather_turned() {
+                let trapped = self.sprung != sprung;
+                if done || trapped || self.state.time > unseen_until || self.weather_turned() {
                     break;
                 }
             }
@@ -663,6 +678,7 @@ impl World {
         self.burn_out();
         let before = self.perception.weather();
         *self.perception = Perception::compute(&self.state, &self.content, &mut self.lights);
+        self.learn_traps(events);
         let current = self.state.current_level.clone();
         if let Some(level) = self.state.levels.get_mut(&current) {
             self.perception.remember(level);
@@ -677,20 +693,43 @@ impl World {
         }
     }
 
+    /// Traps the player saw go off are known from now on (spec §8 "Traps"): those they set off
+    /// themselves, and those set off where they see (a creature they see stepping onto one).
+    fn learn_traps(&mut self, events: &[Event]) {
+        let player = self.state.player;
+        let current = self.state.current_level.clone();
+        for event in events {
+            if let Event::TrapSprung { at, victim, .. } = *event
+                && (victim == player || self.perception.sees_actors_at(at))
+                && let Some(trap) =
+                    (self.state.levels.get_mut(&current)).and_then(|l| l.traps.get_mut(&at))
+            {
+                trap.known = true;
+            }
+        }
+    }
+
     /// Keeps the events the player perceived (dropping the rest) and returns the messages for
-    /// the attacks and deaths among them. A creature's attack is said if the player saw the
-    /// attacker or the target, or is the target, and kept for presentation if they saw both
+    /// the attacks, traps, and deaths among them. A creature's attack is said if the player saw
+    /// the attacker or the target, or is the target, and kept for presentation if they saw both
     /// (the player's own attacks were said, and only seen ones recorded, when made); a death is
     /// said and kept with the attack that caused it, if the player saw who died. The player's
-    /// own death is always said, and settles whether they saw what killed them.
+    /// own death is always said, and settles whether they saw what killed them. A trap going off
+    /// is said and kept if the player set it off, saw its cell, or saw any of its blast; what it
+    /// did to someone if they are the player or the player saw them.
     fn perceive_events(&mut self, events: &mut Vec<Event>) -> Vec<String> {
         use fight::{End, Words, attack_message, death_message};
         let player = self.state.player;
         let content = self.content.clone();
         let mut reports = Vec::new();
-        // The last attack: its attacker, its target, whether the player saw the target, and the
-        // attacker's creature type if the player saw that.
-        let mut last: Option<(ActorId, ActorId, bool, Option<CreatureId>)> = None;
+        // What came last: an attack (its attacker, its target, whether the player saw the
+        // target, and the attacker's creature type if the player saw that), or a trap (its
+        // target and whether the player saw it).
+        enum Last {
+            Attack(ActorId, ActorId, bool, Option<CreatureId>),
+            Trap(ActorId, bool),
+        }
+        let mut last: Option<Last> = None;
         let mut killer_seen: Option<Option<CreatureId>> = None;
         let perception = &self.perception;
         let end = |id: ActorId, seen: bool| match self.actor_or_fallen(id) {
@@ -736,7 +775,34 @@ impl World {
                     *from = None;
                 }
             }
+            // A spell-like effect is seen on the cells the player sees, a bolt on the stretch
+            // of its path between the first and the last of them.
+            if let Event::Spell { shape, cells, .. } = event {
+                cells.retain(|p| perception.is_visible(*p));
+                if let SpellShape::Bolt { path } = shape {
+                    let seen = |p: &Pos| perception.is_visible(*p);
+                    match (path.iter().position(seen), path.iter().rposition(seen)) {
+                        (Some(first), Some(last)) => {
+                            path.truncate(last + 1);
+                            path.drain(..first);
+                        }
+                        _ => path.clear(),
+                    }
+                }
+            }
         }
+        // Whether the player perceived each trap that went off, in order: they set it off, see
+        // its cell, or see any of its blast (a spell before the next trap).
+        let mut sprung_seen = Vec::new();
+        for (i, event) in events.iter().enumerate() {
+            if let Event::TrapSprung { at, victim, .. } = *event {
+                let blast = (events[i + 1..].iter())
+                    .take_while(|e| !matches!(e, Event::TrapSprung { .. }))
+                    .any(|e| matches!(e, Event::Spell { cells, .. } if !cells.is_empty()));
+                sprung_seen.push(victim == player || perception.sees_actors_at(at) || blast);
+            }
+        }
+        let mut sprung_seen = sprung_seen.into_iter();
         events.retain(|e| match *e {
             Event::ActorMoved { actor, from, to } => {
                 actor == player || perception.sees_actors_at(from) || perception.sees_actors_at(to)
@@ -757,7 +823,7 @@ impl World {
                 let sees_target = target == player || perception.sees_actors_at(to);
                 let creature = (self.actor_or_fallen(attacker)).map(|a| a.creature);
                 let by = creature.filter(|_| sees_attacker);
-                last = Some((attacker, target, sees_target, by));
+                last = Some(Last::Attack(attacker, target, sees_target, by));
                 if attacker == player {
                     return true;
                 }
@@ -771,26 +837,82 @@ impl World {
                 }
                 sees_attacker && sees_target
             }
-            Event::Died { actor, .. } => {
-                let Some((attacker, target, seen, by)) = last else {
-                    return actor == player;
-                };
-                if actor == player {
+            Event::Died { actor, .. } => match last {
+                None => actor == player,
+                Some(Last::Attack(_, _, _, by)) if actor == player => {
                     killer_seen = Some(by);
                     reports.push(death_message(End::You));
-                    return true;
+                    true
+                }
+                // A trap's victim: the death records the trap, not who was seen.
+                Some(Last::Trap(..)) if actor == player => {
+                    reports.push(death_message(End::You));
+                    true
                 }
                 // A death by the player's hand was said with their blow, and recorded only if
                 // they saw it.
-                if attacker == player {
-                    return true;
+                Some(Last::Attack(attacker, ..)) if attacker == player => true,
+                Some(Last::Attack(_, target, seen, _) | Last::Trap(target, seen)) => {
+                    let seen = seen && target == actor;
+                    if seen {
+                        reports.push(death_message(end(actor, true)));
+                    }
+                    seen
                 }
-                let seen = seen && target == actor;
+            },
+            Event::TrapSprung { trap, at, victim } => {
+                last = None;
+                let seen = sprung_seen.next().unwrap_or(false);
                 if seen {
-                    reports.push(death_message(end(actor, true)));
+                    let def = content.trap(trap);
+                    reports.extend(def.message.clone());
+                    let name = (self.actor_or_fallen(victim))
+                        .map(|a| content.creature(a.creature).name.as_str());
+                    let creature = name.filter(|_| perception.sees_actors_at(at));
+                    let text = match (&def.effect, victim == player, creature) {
+                        (TrapEffect::Pit { .. }, true, _) => Some("You fall into a pit.".into()),
+                        (TrapEffect::Pit { .. }, false, Some(name)) => {
+                            Some(format!("The {name} falls into a pit."))
+                        }
+                        (TrapEffect::Teleport, true, _) => {
+                            Some("You are wrenched elsewhere.".into())
+                        }
+                        (TrapEffect::Teleport, false, Some(name)) => {
+                            Some(format!("The {name} vanishes!"))
+                        }
+                        _ => None,
+                    };
+                    reports.extend(text);
                 }
                 seen
             }
+            Event::TrapStruck {
+                trap,
+                target,
+                to,
+                strike,
+            } => {
+                let seen = target == player || perception.sees_actors_at(to);
+                last = Some(Last::Trap(target, seen));
+                let def = content.trap(trap);
+                // A fall is said with the trap ("You fall into a pit.").
+                if seen && !matches!(def.effect, TrapEffect::Pit { .. }) {
+                    let words = Words::new(&def.noun, &def.verb);
+                    let hide = (self.actor_or_fallen(target))
+                        .and_then(|t| content.creature(t.creature).natural.as_ref())
+                        .map(|h| h.name.as_str());
+                    reports.extend(attack_message(
+                        End::Trap(&def.noun),
+                        end(target, true),
+                        &words,
+                        AttackKind::Melee,
+                        Some(strike),
+                        hide,
+                    ));
+                }
+                seen
+            }
+            Event::Spell { ref cells, .. } => !cells.is_empty(),
         });
         if let (Some(by), Some(death)) = (killer_seen, self.state.death.as_mut()) {
             death.by = by;
@@ -1176,7 +1298,9 @@ impl World {
         if let Some(text) = text {
             self.say(text);
         }
-        Spent::Turn(step)
+        // A trap there goes off (spec §8 "Traps"); a pit costs the next action too.
+        let climb = self.spring_trap(to, player, events);
+        Spent::Turn(step + climb)
     }
 
     /// What a level is called in messages; a dungeon branch goes by the branch's name.
@@ -1513,5 +1637,7 @@ mod sun_tests;
 mod tests;
 #[cfg(test)]
 mod time_tests;
+#[cfg(test)]
+mod trap_tests;
 #[cfg(test)]
 mod weather_tests;

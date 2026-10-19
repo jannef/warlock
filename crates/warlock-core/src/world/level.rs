@@ -1,8 +1,9 @@
-//! Per-level mutable state: terrain and piles of objects as they are now, and what the player
-//! remembers of them.
+//! Per-level mutable state: terrain, piles of objects, and traps as they are now, and what the
+//! player remembers of them.
 
 use crate::content::{
     Content, EdgeExit, Flow, LevelKind, LevelTemplate, LightId, StairsLink, TerrainDef, TerrainId,
+    Trap, TrapId,
 };
 use crate::geom::Pos;
 use crate::grid::Grid;
@@ -58,6 +59,12 @@ pub struct LevelState {
     /// burning objects themselves lie in the pile there.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) fires: BTreeMap<Pos, Fire>,
+    /// Traps, by position (spec §8 "Traps"), hidden or known; a spent one is gone.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) traps: BTreeMap<Pos, Trap>,
+    /// Known traps as the player last saw them, by position: a trap seen gone is forgotten.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) trap_memory: BTreeMap<Pos, TrapId>,
 }
 
 impl LevelState {
@@ -79,6 +86,8 @@ impl LevelState {
             objects: template.objects.clone(),
             object_memory: BTreeMap::new(),
             fires: BTreeMap::new(),
+            traps: template.traps.clone(),
+            trap_memory: BTreeMap::new(),
         }
     }
 
@@ -124,6 +133,12 @@ impl LevelState {
         self.objects.get(&p).map_or(&[], Vec::as_slice)
     }
 
+    /// The trap at `p` as it is now, hidden or known (ground truth). Only reachable through
+    /// [`crate::World::ground_truth`], **for developer tools only**.
+    pub fn trap_at(&self, p: Pos) -> Option<&Trap> {
+        self.traps.get(&p)
+    }
+
     /// Replaces the pile at `p`; an empty pile removes it.
     pub(crate) fn set_pile(&mut self, p: Pos, pile: Vec<Stack>) {
         if pile.is_empty() {
@@ -150,18 +165,22 @@ impl LevelState {
         self.stairs.iter().find(|s| s.pos == p)
     }
 
-    /// Whether every terrain, light, and object id is valid for `content` (a guard for loaded
-    /// saves).
+    /// Whether every terrain, light, object, and trap id is valid for `content` (a guard for
+    /// loaded saves).
     pub(crate) fn ids_valid_for(&self, content: &Content) -> bool {
         let terrain = content.terrain_defs().len();
         let lights = content.light_presets().len();
+        let traps = content.trap_defs().len();
         let known = |t: &TerrainId| usize::from(t.0) < terrain;
         let piles = self.objects.values().chain(self.object_memory.values());
+        let mut trap_kinds =
+            (self.traps.values().map(|t| t.kind)).chain(self.trap_memory.values().copied());
         self.terrain.cells().iter().all(known)
             && self.memory.cells().iter().flatten().all(known)
             && self.lights.values().all(|l| usize::from(l.0) < lights)
             && self.fires.values().all(|f| usize::from(f.light.0) < lights)
             && piles.flatten().all(|s| s.is_valid_for(content))
+            && trap_kinds.all(|t| usize::from(t.0) < traps)
     }
 }
 

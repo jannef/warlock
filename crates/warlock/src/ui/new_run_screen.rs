@@ -227,6 +227,7 @@ mod tests {
             "depths",
             "forest",
             "showcase",
+            "traps",
             "vast",
             "world",
         ] {

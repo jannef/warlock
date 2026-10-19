@@ -19,7 +19,7 @@ use warlock_core::character::Gender;
 use warlock_core::combat;
 use warlock_core::content::{
     ActionKind, BASE_TURN, Combat, Content, CreatureId, FactionId, LevelKind, LightId,
-    NORMAL_SPEED, ObjectId, Stance, TerrainDef, price,
+    NORMAL_SPEED, ObjectId, Stance, TerrainDef, TrapEffect, price,
 };
 use warlock_core::daylight::{
     MOONLIGHT_PER_CELL, SIGHT_DAY, SIGHT_MOONLIT, SIGHT_NIGHT, SIGHT_TWILIGHT, overworld_sight,
@@ -169,6 +169,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("burden.md".to_string(), burden_levels()),
         ("burden-races.md".to_string(), burden_races(content)),
         ("burden-examples.md".to_string(), burden_examples(content)),
+        ("traps.md".to_string(), traps(content)),
     ];
     for (_, text) in &mut files {
         *text = format!(
@@ -1272,6 +1273,70 @@ fn armour(content: &Content) -> String {
     out
 }
 
+/// The traps (spec §8 "Traps"): what each does, its damage dice, how often it goes off, and what
+/// it sounds like. Never a to-hit, which the player does not know.
+fn traps(content: &Content) -> String {
+    let mut out = String::from(
+        "| Trap | What it does | Damage | Goes off | Sound |\n|---|---|:---:|---|---|\n",
+    );
+    for t in content.trap_defs() {
+        let what = match &t.effect {
+            TrapEffect::Shot { object, .. } => format!(
+                "{} shoots out of a hidden slit in the nearest wall at whoever steps on it: an \
+                 attack against their Defence; it lands where it falls",
+                capital(&article_noun(&content.object(*object).name))
+            ),
+            TrapEffect::Strike { .. } => format!(
+                "{}s spring from the floor: an attack against the Defence of whoever steps on it",
+                capital(&t.noun)
+            ),
+            TrapEffect::Burst { radius, .. } => format!(
+                "A blast {radius} cells around it (walls stop it): everyone in it takes the \
+                 damage, half at the edge; no roll to hit"
+            ),
+            TrapEffect::Bolt { length, .. } => format!(
+                "A bolt from it along a line until a wall, up to {length} cells: everyone on it \
+                 takes the damage; no roll to hit"
+            ),
+            TrapEffect::Pit { .. } => {
+                "Whoever steps on it falls in and loses their next action climbing out".into()
+            }
+            TrapEffect::Alarm => "Only its noise: creatures that hear it come to look".into(),
+            TrapEffect::Teleport => {
+                "Whoever steps on it is moved to a free place on the level".into()
+            }
+        };
+        let damage = t.effect.damage().map_or("—".to_string(), |d| d.to_string());
+        let goes_off = match t.charges {
+            None => "every time".to_string(),
+            Some(1) => "once".to_string(),
+            Some(2) => "twice".to_string(),
+            Some(n) => format!("{n} times"),
+        };
+        let sound = t.noise.map_or("Silent".to_string(), |n| {
+            let loud = match n.loudness {
+                0..50 => "quiet",
+                50..150 => "loud",
+                150..250 => "very loud",
+                _ => "deafening",
+            };
+            format!("{}, {loud}", capital(&n.sound.name().replace('_', " ")))
+        });
+        let _ = writeln!(
+            out,
+            "| {} `{}` | {what} | {damage} | {goes_off} | {sound} |",
+            capital(&t.name),
+            t.glyph
+        );
+    }
+    out
+}
+
+/// A noun with its article: "an arrow".
+fn article_noun(noun: &str) -> String {
+    format!("{} {noun}", article(noun))
+}
+
 /// How often an attack hits by what its roll needs (Defence minus to-hit): the 2d12 bell.
 fn hit_chances() -> String {
     let mut out = String::from("| The roll needs | Hits |\n|:---:|:---:|\n");
@@ -1553,6 +1618,16 @@ mod tests {
         assert_eq!(files, generate(&content));
         let text = |name: &str| &files.iter().find(|(n, _)| n == name).expect("file").1;
         assert!(text("calendar.md").contains("| 4 | Rainmoon |"));
+        let traps = text("traps.md");
+        assert!(
+            traps.contains("| Fireball trap `^` | A blast 2 cells around it"),
+            "{traps}"
+        );
+        assert!(
+            traps.contains("| 3d6 | once | Explosion, very loud |"),
+            "{traps}"
+        );
+        assert!(traps.contains("| Pit `^` |") && !traps.contains("to_hit"));
         assert!(
             text("moons.md").contains(
                 "| Moon | 30 days | standard | about 17% of full light | 1 Frostmere, Year 1 |"
