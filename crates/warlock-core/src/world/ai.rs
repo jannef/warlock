@@ -17,10 +17,12 @@
 //!
 //! Paths (`path.rs`) go over walkable cells and, for creatures that open doors, closed doors (it
 //! opens the door, then steps in). Other actors block: a path may lead through one only when the
-//! way around is much longer, and then the creature waits behind it. Melee attacks and shots are
-//! real (`fight.rs`, `shoot.rs`: rolled against Defence, they hurt and kill; a shot spends an
-//! arrow, which flies and comes down to lie where it fell); a ranged creature with nothing left
-//! to shoot fights in melee. Spells stay intents until magic is designed. Each is an [`Event::Attacked`], a noise, and, if the player perceives it, a
+//! way around is much longer, and then the creature waits behind it. A creature hostile to the
+//! player never steps into a sanctuary (a special room its effect makes creatures shun, spec §7
+//! "Special rooms"): its paths go around it, and it waits when the only way leads in. Melee
+//! attacks and shots are real (`fight.rs`, `shoot.rs`: rolled against Defence, they hurt and
+//! kill; a shot spends an arrow, which flies and comes down to lie where it fell); a ranged
+//! creature with nothing left to shoot fights in melee. Spells stay intents until magic is designed. Each is an [`Event::Attacked`], a noise, and, if the player perceives it, a
 //! message. Steps and opened doors make noise too. Creatures neither flee nor change how they
 //! fight when hurt.
 
@@ -304,10 +306,14 @@ impl World {
         if goal(me.pos) {
             return Route::There;
         }
+        let shuns = self.shuns(id);
         let cost = |p: Pos| {
             let Some(def) = level.terrain.get(p).map(|t| self.content.terrain(*t)) else {
                 return Cost::Impassable;
             };
+            if shuns(p) {
+                return Cost::Impassable;
+            }
             let enter = if def.walkable {
                 1
             } else if opens_doors && def.is_closed_door() {
@@ -331,9 +337,25 @@ impl World {
         }
     }
 
+    /// Which cells creature `id` keeps out of on the current level: a creature hostile to the
+    /// player does not step into a special room whose effect it shuns (a sanctuary, spec §7
+    /// "Special rooms") from outside it; one already inside may move about in it, and leave.
+    fn shuns(&self, id: ActorId) -> impl Fn(Pos) -> bool + '_ {
+        let level = self.state.current();
+        let hostile = self.stance(id, self.state.player) == Stance::Hostile;
+        let inside = (self.state.actors.get(&id)).and_then(|me| level.room_at(me.pos));
+        move |p: Pos| {
+            hostile
+                && level.room_at(p).is_some_and(|room| {
+                    inside != Some(room) && self.content.room_effect(room.effect).shunned
+                })
+        }
+    }
+
     /// Creature `id` steps in `dir`: onto a walkable cell no one stands on, or, for a creature
     /// that opens doors, opening a closed door there. Either makes noise. An overloaded creature
-    /// opens doors but does not step.
+    /// opens doors but does not step. A creature hostile to the player does not step (or open a
+    /// door) into a sanctuary ([`World::shuns`]): it waits.
     fn creature_steps(&mut self, id: ActorId, dir: Dir, events: &mut Vec<Event>) -> Stepped {
         let level = self.state.current();
         let actor = &self.state.actors[&id];
@@ -341,6 +363,9 @@ impl World {
         let Some(def) = level.terrain.get(to).map(|t| self.content.terrain(*t)) else {
             return Stepped::Blocked;
         };
+        if self.shuns(id)(to) {
+            return Stepped::Blocked;
+        }
         if def.is_closed_door() && self.content.creature(actor.creature).opens_doors {
             let opened = def.opens_to.expect("closed doors have opens_to");
             self.make_noise(id, Act::OpenDoor(to));

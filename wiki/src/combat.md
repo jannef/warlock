@@ -119,7 +119,8 @@ the time pass (a rest stops when something attacks you).
 
 {{#include generated/regeneration.md}}
 
-Creatures heal the same way, while you are on their level.
+Creatures heal the same way, while you are on their level. In a sanctuary (a
+[special room](special-rooms.md)) wounds heal three times as fast, yours and anyone's.
 
 ## Death
 

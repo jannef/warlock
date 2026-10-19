@@ -72,6 +72,10 @@ Build the engine and framework, not the game. Everything built is production qua
 - Procedural generation with reproducible seeds (M6): dungeon branches of generated levels
   (rooms and corridors, caves) with hand-made vaults, joined to the hand-authored levels by stairs
 - An overworld with travel time, locations, local areas, and day and night (M9)
+- Special rooms (M25), ADOM-like: now and then a room of a generated level (or an area a
+  hand-made level marks) carries an effect that changes the rules inside it — a shadowed room, an
+  echoing hall, a hushed chamber, a sanctuary, a flooded room — told the first time the player
+  enters (§7 "Special rooms")
 
 **Out of scope for now**: magic (spells are announced, nothing is damaged), damage types (a
 flaming arrow does an arrow's damage), rules that use stats beyond combat and burden (ability
@@ -100,7 +104,7 @@ regression scene for golden screenshots, replays, and snapshot tests.
 | Darkness chamber | vision types, a UV-only rune, darkvision fade; an amulet seen only by those who see in the dark | M3, M11 |
 | Water garden | still ponds and running rills (flow, glints, foam), pulsing altar with a ring before it | M4, M8, M11 |
 | Effects room | glyph particles, glow, fades, distortion | M4 |
-| Stairs | connection to Level 2 and the arena (down), the courtyard and the overworld (up) | M2, M9, M10 |
+| Stairs | connection to Level 2 and the arena (down), the courtyard and the overworld (up); the nook is a sanctuary (§7 "Special rooms") | M2, M9, M10, M25 |
 
 **Courtyard (66×19, outdoor)**: up the stairs nook's `<`, a walled garden under the open sky —
 trees, a ruined wall, a pond, standing stones, flower beds, and a roofed gazebo with a lamp — where
@@ -134,7 +138,8 @@ from north to south, foaming against a few boulders.
 
 **The Depths (generated, M6)**: a dungeon branch of eight procedurally generated levels
 (`depths:1` to `depths:8`; rooms and corridors at 80×21, caverns at 120×60 on depths 3–5) built
-from the run seed, with vaults stamped in. The `depths` scenario starts on its first level.
+from the run seed, with vaults stamped in; about one level in two or three has a special room
+(§7 "Special rooms"). The `depths` scenario starts on its first level.
 
 **The Overworld (M9)**: *The Wildlands*, a hand-authored 100×50 map of the land at large
 (`levels/overworld.toml`, level kind `overworld`), ADOM-like. Overworld terrain: plains,
@@ -489,6 +494,15 @@ rate or animation.
   its 8 neighbors is transparent, seen, and lit by the same source. This prevents light leaking
   through walls, and a wall is never brighter than the floor at the same distance. Its base light
   is ambient plus the brightest sky-plus-bounce light of its seen transparent neighbors.
+- **Special rooms** (§7): a special room changes the light inside it. A shadowed room keeps only
+  its effect's `light` percent of every part of a cell's light: the base light (ambient, sky,
+  bounce) and each source's contribution (placed lights, carried ones and the lantern, fires, the
+  sun and the moons; a wall's face light too), each rounded down on its own, so contributions plus
+  base light still add up. A sanctuary's `glow` adds to the base light of its transparent cells,
+  like ambient light, as the eye perceives it (its UV only for UV sight); walls take it by the
+  wall-face rule (the brightest of their seen transparent neighbors'), so it never shows through
+  a wall. Light outside a special room is never changed (bounce is computed from the unchanged
+  direct light). Creature sight finds the same light (a test checks it in rooms of both kinds).
 - **Sunlight**: levels under the open sky (`kind = "outdoor"` and the overworld; never
   dungeons) are lit by the sun and the sky by day. Terrain with `roofed = true` (indoor floors on
   an outdoor map) never receives either.
@@ -634,12 +648,16 @@ rate or animation.
   - **Noise**: actions make noise. A step makes the walker's `footsteps` (creature data: the
     player 60, kobold 80, kobold archer 70, kobold shaman 60, giant rat and deer 50, cave beetle
     30; bats fly silently) scaled by the `step_noise` of
-    the terrain stepped onto, in percent (water and running water 200, marsh, bushes, and rubble
+    the terrain stepped onto, in percent (water, running water, and shallow water 200, marsh,
+    bushes, and rubble
     150, reeds 130, gazebo boards and dry grass 120, tall grass and rocky ground 110, dirt road
     90, forest floor 80, grass, flowers, and dusty floor 70; default 100), and by the walker's
     burden (§8 "Burden": ×1.25 Burdened, ×1.5 Strained; a dwarf's steps are not louder while
     Burdened), rounded down. Opening a door makes
-    the closed door's `toggle_noise` (60), closing one the open door's (70). One function decides
+    the closed door's `toggle_noise` (60), closing one the open door's (70). A special room
+    (§7) scales every noise made inside it (where the step lands, the door, where an attacker
+    stands) by its effect's `noise` percent, rounded down: an echoing hall doubles it (so it
+    carries farther), a hushed chamber leaves two fifths. One function decides
     an action's loudness (`noise::noise`): the actor's skills take their percent off its steps
     and doors there, rounded down (stealth, §8 "Skills": 60 % at 100; not its attacks). Loudness
     is at most 300; a creature without `footsteps` moves silently, a door without `toggle_noise`
@@ -688,7 +706,8 @@ rate or animation.
   at most 40): an actor is seen iff its cell is in the creature's line of sight (the same
   symmetric shadowcasting) within its sight radius and lit at least to its eye's threshold by the
   same gameplay light the player sees (ambient, sky, every source, the sun and the moons through
-  the weather's clouds, bounce), or within its darkvision; on the overworld, line of sight within
+  the weather's clouds, bounce, as a special room leaves it: a shadowed room's darkness, a
+  sanctuary's glow), or within its darkvision; on the overworld, line of sight within
   its sight and the daylight radius (moonlight and rain included). (An actor
   on an opaque cell is seen only within darkvision; no such terrain exists off the overworld.)
   Creatures never read the player's perception: each computes its own, and only for the cells
@@ -927,8 +946,10 @@ rate or animation.
   what the creature wields, wears, and has ready, which is in plain sight ("A kobold (hostile,
   wounded), wielding a spear, on stone floor.", "A kobold shaman (hostile, unhurt), wearing a
   bone amulet, ...", "A kobold archer (hostile, unhurt), with a short bow and 20 arrows ready,
-  ..."; never what else it carries), terrain, remembered terrain, where stairs lead, and a sound
-  heard there ("You hear footsteps here.").
+  ..."; never what else it carries), terrain, remembered terrain, where stairs lead, the
+  special room walkable ground lies in once the player has been inside it ("A stone floor in an
+  echoing hall.", "You remember a stone floor here, in a sanctuary."; §7 "Special rooms"), and a
+  sound heard there ("You hear footsteps here.").
 - Screen layout: map viewport, message log, status panel (level, the player's hit points as
   `HP 18/24` (never below 0), their burden when they have one (`Burdened`, `Strained`,
   `Overloaded`; §8 "Burden"), their level as `Lv 3` (§8 "Experience"; it goes after the
@@ -995,7 +1016,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   [...]` places a pile without a legend character (on top of the legend's there, if any).
   Objects lie only on walkable terrain. Vaults place objects the same way, and generators stamp
   them with the vault.
-- **Water**: `~` is still water (`water`). Running water (`running_water`, terrain with a `flow`
+- **Water**: `~` is still water (`water`); `shallow_water` (ankle-deep over a stone floor, paler,
+  a flooded room's floor, §7 "Special rooms") steps at 150 and splashes like water. Running
+  water (`running_water`, terrain with a `flow`
   animation) needs a flow on every cell, given by its legend entry: `flow` (the direction it runs,
   `N` … `NW`) and an optional `flow_speed` (percent of the terrain's animation speed, 10–300,
   default 100). The shared legend (`data/legend.toml`) draws running water as arrows pointing the
@@ -1050,7 +1073,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   concentration (20) and spellcraft (25). Creature particle emitters may
   fire `on = "attack"`: a burst at the target of each attack the player sees (the shaman's
   violet sparkle). Terrain has a `move_cost`: what a step onto it costs in percent of a normal
-  step (the `step` action; default 100; still and running water 200; local levels only), a
+  step (the `step` action; default 100; still and running water 200, shallow water 150; local
+  levels only), a
   `bounce` tint for the light it reflects (§5), a `height` in cells for sun shadows (default 1 if opaque, else 0; at most 4),
   `roofed` (never lit by the sun or the sky), and for hearing a `step_noise` (how loud steps onto
   it are, in percent of the walker's footsteps, 0 to 1000; default 100), a door's `toggle_noise`
@@ -1222,7 +1246,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   doors, open doors, or doorways where corridors enter, and wall torches in most rooms; *caves* —
   cellular automata (45 % rock, five 4-5 smoothing passes, largest cave kept), pools of still water,
   lamps and glowing fungus. Both place the up staircase (the arrival point) and the down staircase
-  far from it, and a few creatures on looping patrols. Every level is validated by flood fill —
+  far from it, a few creatures on looping patrols, and last, now and then, a special room
+  (below). Every level is validated by flood fill —
   every stair, door, and walkable cell reachable from the up staircase, patrols valid, some light
   — and a level that fails is regenerated from the next derived stream. *outdoor* (the local
   areas of the overworld, §3): smooth integer value noise (random values on a coarse lattice,
@@ -1245,6 +1270,50 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   around them: their spaces (`void`) keep the area's own ground, every open cell on their edge is
   a way in, and their walkable cells are reachable from the edge. Dungeon generators use only
   dungeon vaults, local areas only outdoor ones.
+- **Special rooms** (`data/room_effects.toml`, optional; without it there are none; M25),
+  ADOM-like: a room of a generated level, or an area a hand-made level marks, carries an
+  **effect** that changes the rules while one is inside it. Top level: `chance` (percent, 0 to
+  100: how likely each candidate room is to be special) and `per_level` (at most this many special
+  rooms a generated level, default 1). Each `[[effect]]` (at most 32, in file order; ids are
+  indices, in the save fingerprint): `id`, `name` (without an article: "echoing hall"), `mark` (one
+  character, unique: the `rooms` dev layer), `enter` (the message the first time the player is
+  inside one), and what it does, each optional: `light` (percent of all light kept inside, 0 to
+  100, default 100; §5 "Special rooms"), `glow` (`[r, g, b, uv]` added over the room like ambient
+  light), `noise` (percent of the loudness of every noise made inside, 1 to 1000, default 100; §5
+  "Hearing"), `regen` (percent of the usual pace of regeneration inside, 1 to 1000, default 100;
+  §8 "Combat"), `shunned` (creatures hostile to the player do not step in; §8 "Creature
+  behavior"), and `floor` (terrain generators lay over the room's plain floor: walkable,
+  transparent, not stairs, a door, or running water).
+  - **The effects**: a *shadowed room* keeps 30 % of the light ("The light seems to drain away
+    here."); an *echoing hall* doubles noise ("Your footsteps echo loudly."); a *hushed chamber*
+    leaves two fifths of it ("A deep hush fills this room."); a *sanctuary* heals three times as
+    fast, glows faintly warm (`[60, 44, 22]`, about enough for normal eyes to see by), and keeps
+    hostile creatures out ("You feel at peace here."); a *flooded room* has a floor of shallow
+    water, slower (150) and loud (200) to wade ("The floor here is flooded."). Blood washing away
+    in a flooded room waits for blood (#127).
+  - **Generation** (`mapgen/special.rs`): last of all, each room of a rooms level but the arrival
+    room and vaults, and each of eight chambers a caves level tries, is special with `chance`
+    (7 %) until the level has `per_level` (1); the effect is drawn uniformly, from the level's
+    map stream. A rooms level's special room is the room's rectangle, walls and doors included;
+    a cave's is a blob: the floor 4-connected to a random free floor cell more than 10 cells
+    (Chebyshev) from the arrival, within radius 5 of it (at least 12 cells; vaults left out), plus
+    the rock around it. The effect's `floor` replaces plain floor in it (doorways too). A shunned
+    effect never goes where a creature patrols. About 40 % of generated levels get one (a test
+    keeps it between a third and a half over 1200 levels).
+  - **Level files** mark rooms with `[[room]] effect = "sanctuary" area = [x0, y0, x1, y1]`
+    (inclusive, walls and doors included; inside the map; rooms never overlap; vaults mark none).
+    A hand-made level draws its own floor (a flooded room's water). The hub's stairs nook is a
+    sanctuary.
+  - **State**: each level state keeps its special rooms (`LevelState::rooms`: the effect, its
+    box, a blob's cells, and whether the player has been inside; saved and hashed, format
+    version 15). The rules ask one question, `World::room_effect_at(level, pos)` (inside the core
+    the level state's `room_effect_at`): light and creature sight, noise, regeneration, and
+    creatures that shun a sanctuary. The first time the player's cell is in a special room
+    (after any action, or arriving there), the room is marked entered and its `enter` message is
+    said; never again for that room. Perception knows a room only once entered
+    (`PerceptionView::room`, on cells seen or remembered): look mode names it (§6). The light it
+    changes is seen like any light, before and after.
+
 - **Stat adjustments** (races, classes, the horoscope) are, per stat id, a fixed number (`2`,
   `-1`) or dice as text (`"2d3+1"`, `"1d4-1"`, `"-1d2"`; §8 "Dice"), rolled when the character
   is made; a missing stat is 0, and every result a roll can have must lie within −10 to 10.
@@ -1338,7 +1407,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   atomically (temp file + rename). Before 1.0, incompatible saves are rejected with a clear message;
   from 1.0 on, saves are migrated. The web build keeps the same bytes in the browser's
   `localStorage` (below). The envelope also records a content fingerprint (hash of the ordered
-  terrain, creature, level, light, dungeon-branch, object, equipment slot, skill, and weapon skill
+  terrain, creature, level, light, dungeon-branch, object, equipment slot, skill, room effect,
+  and weapon skill
   ids), because ids are indices; a save made with different content is rejected. Generated levels
   are saved with the run like visited hand-made ones (terrain, memory, stairs, lights, kind,
   arrival point,
@@ -1357,9 +1427,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   "Combat"; format version 11), the fires burning on each level (§8 "Ranged combat"; format
   version 12), the player's experience total (§8 "Experience"; format version 13; absent while
   0, so a run without kills hashes as before), every actor's trained skills (value and training
-  marks) and the training random stream (§8 "Skills"; format version 14), every actor's weapon
-  skills (its rank and marks in each, §8 "Weapon skills"; format version 15), and a dev weather
-  override while
+  marks) and the training random stream (§8 "Skills"; format version 14), each level's special
+  rooms and whether the player has been in each (§7 "Special rooms"; format version 15), every
+  actor's weapon skills (its rank and marks in each, §8 "Weapon skills"; format version 16), and a
+  dev weather override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
   platform data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
@@ -1524,7 +1595,10 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   open them (1 more: it opens the door, a turn and a noise, then steps in). Another actor's cell
   costs 4 more, so a creature walks a short detour around someone in its way but waits behind
   them rather than take a long one. Ties go to cells nearer the target, then to the earlier
-  direction (N, NE, E, … NW). A spot it cannot reach is given up.
+  direction (N, NE, E, … NW). A spot it cannot reach is given up. A creature hostile to the
+  player never steps into a sanctuary (§7 "Special rooms") from outside it, on a path or on its
+  patrol (it waits instead); one already inside may move about and leave. It may still strike
+  across the threshold or shoot in.
 
   **Attacks** are resolved by the rules of combat ("Combat" below): melee blows and shots hurt
   and kill (a shot is a missile, "Ranged combat" below); spells stay intents until magic is
@@ -1589,8 +1663,10 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   - **Regeneration**: a hurt actor on the current level gets 1 hit point back per
     `max(60 s, 360 s − 12 s × Toughness)` of game time (To 10: 4 minutes; To 25 and up: 1
     minute), counted as the scheduler moves the clock (resting included; the dev time skip and
-    other levels' frozen actors get none). Seconds toward the next point carry over
-    (`Actor::regen`, saved) and are dropped at full health.
+    other levels' frozen actors get none), at the pace `World::regen_rate` decides, in percent
+    (the one place for it: three times as fast standing in a sanctuary, §7 "Special rooms").
+    Seconds toward the next point carry over (`Actor::regen`, saved) and are dropped at full
+    health.
   - **Death**: at 0 hit points an actor dies (`Event::Died { actor, at }`, right after the
     attack). A creature leaves the world, and what it carried, worn and wielded things too, falls
     on its cell on top of the pile there, in inventory order. The player's death ends the run: it
@@ -1894,7 +1970,7 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     (`PerceptionView::own_weapon_skills`), shown as ranks and a bar on the weapon skills screen
     (§6) and in the `weapon_skills` dump layer; never a benefit or a creature's ranks (the
     `actors` dev layer shows every actor's). Ranks and marks are part of the world state
-    (saved, hashed; format version 15).
+    (saved, hashed; format version 16).
 - **Dice** (`warlock-core/src/dice.rs`): one type for every roll the rules make (character
   creation, weapon and natural attack damage). Text form: a fixed number (`+2`, `-1`, `0`) or `NdS`
   (`N` dice of `S` sides: 1 to 100 dice, 2 to 1000 sides), optionally negated (`-1d2`) and
@@ -1910,7 +1986,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   them.
 - **Determinism**: ChaCha8 RNG (`rand_chacha`) with separate streams, each seeded with FNV-1a 64 of
   the run seed (little-endian) and a label: map generation per level (`map/<level id>`, retry *k*
-  `map/<level id>/<k>`), so a level depends only on the seed and its id, never on visiting order;
+  `map/<level id>/<k>`), so a level depends only on the seed and its id, never on visiting order
+  (its special room is drawn last, so a level without one is the map it would be without them);
   gameplay (`gameplay`, kept in the world state and saved); character creation (derived on
   demand: `character/gender` for the stat "other" raises, `character/birth/<race>` for the age
   and birthday, `character/rolls/<race>,<gender>,<class>` for the dice,
@@ -1940,7 +2017,8 @@ warlock-cli dump --replay runs/doors.json --format json --state   # structured d
 warlock-cli replay --create --scenario showcase --actions "move:N wait" -o runs/x.json
 warlock-cli replay --verify runs/doors.json               # check per-turn state hashes
 warlock-cli gen --level depths:3 --seed warlock           # print a generated level (dev-only;
-                                                          # also local areas: local:49,23)
+                                                          # also local areas: local:49,23;
+                                                          # special rooms by their letter)
 cargo xtask golden [--update]                             # compare golden screenshots
 ```
 
@@ -1989,9 +2067,12 @@ cargo xtask golden [--update]                             # compare golden scree
   weight, base plus carried, what it carries and of that wears and wields, `equipped main_hand a
   spear`, its burden and carrying limit, `unburdened (limit 31.5 kg)`, its weapon skills with
   rank and marks, `weapon skills spears 1 (0/30)`, its stats as score/potential, `St 12/15`, and
-  its trained skills with their marks toward the next point, `skills stealth 17 (2/5)`) show
+  its trained skills with their marks toward the next point, `skills stealth 17 (2/5)`), and
+  `rooms` (the level's special rooms: the terrain with each room's plain ground drawn as its
+  effect's `mark`, then a line per room, `s shadowed room at (34, 8)-(49, 13), entered`) show
   ground truth and are dev-only. JSON dumps
-  carry turn, game time (seconds and calendar fields), level, viewer, the weather (under the open
+  carry turn, game time (seconds and calendar fields), level, viewer, the special room the
+  player stands in if they know it (`room`, its effect id; else null), the weather (under the open
   sky; else null), seen actors (each with how hurt it looks, `health`: `unhurt`,
   `lightly_wounded`, `wounded`, `badly_wounded`, `nearly_dead`), heard sounds, the player's
   inventory, equipment (by slot id: letter, object, count), weight, burden (`burden: {level,
@@ -2123,6 +2204,12 @@ Each milestone ships a playable build.
   10 in sixteen categories with per-category passive benefits, The Riddle of Steel's defaults
   between related categories, shield blocking and a shield bash, starting ranks from race and
   class, and a weapon skills screen (`W`).
+
+- **M25 Special rooms** — ADOM-like special rooms (data, `data/room_effects.toml`): a
+  shadowed room, an echoing hall, a hushed chamber, a sanctuary, and a flooded room, in about one
+  generated level in two or three and in areas hand-made levels mark (the hub's stairs nook is a
+  sanctuary); one query for the rules (`World::room_effect_at`), a first-entry message, and look
+  mode naming rooms the player has been in.
 
 ## 13. GitHub workflow
 

@@ -11,6 +11,7 @@
 | Staircase up | `<` | yes | no | 6 seconds | normal | 0 | stairs up |
 | Still water | `~` | yes | no | 12 seconds | very loud | 0 |  |
 | Running water | `~` | yes | no | 12 seconds | very loud | 0 |  |
+| Shallow water | `~` | yes | no | 9 seconds | very loud | 0 |  |
 | Altar | `_` | yes | no | 6 seconds | normal | 0 | gives light |
 | Wall torch | `¡` | no | no | - | - | 0 | gives light |
 | Brazier | `Ω` | no | no | - | - | 0 | gives light |
