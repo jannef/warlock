@@ -12,7 +12,9 @@ only, with `burn`/`starve`/`feed`), data `data/hunger.toml` (`content/hunger.rs`
 `overeating`, optional `corpses` (material, rot hours, rotten vomit/harm, `sickness` (a status
 id: harm from food is degrees of it), `Food` per size);
 `Content::hunger()`; without the file nobody hungers and there are no corpses), races' `hunger`
-percent, objects' `food = { nutrition, turns }`, creatures' `corpse` (default true) and `on_eat`
+percent, objects' `food = { nutrition, turns }` and `cures` (a remedy: the means it applies with
+`World::cure` as it is eaten, `World::remedy`, checked against the statuses' and diseases'
+`cured_by` at load; the angelica root cures diseases), creatures' `corpse` (default true) and `on_eat`
 (`OnEat`), scenarios' `carry` (starting pack). Corpses are objects made at load
 (`Content::load_hunger`, after the file's objects, id `<creature>_corpse`, `ObjectDef::corpse`
 names the creature, `Content::corpse_of`); their stacks carry `Stack::died` (crate-private:

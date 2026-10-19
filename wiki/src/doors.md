@@ -40,7 +40,9 @@ Press `K` and a direction to kick. A kick takes a normal action (6 seconds).
 
 - **A closed door**, locked or not, may break. The chance is your Strength in the door's
   sturdiness: against a sturdiness of 30, Strength 9 breaks it three kicks in ten, Strength 15
-  one in two, and Strength 30 every time. A door that holds says `WHAMM!`; one that breaks says
+  one in two, and Strength 30 every time. Your **Athletics** skill adds to your Strength for this
+  (see [Skills](skills.md)), and kicking doors trains it. Kicking a door takes its 6 seconds
+  whatever your stance. A door that holds says `WHAMM!`; one that breaks says
   `The door crashes open!` and stays a **broken door** (`,`, splinters in the doorway) for good:
   you walk and see through it, and it can never be closed or locked again.
 - **Every kick at a door is loud.** It bangs on the door itself, so it is heard on both sides,
@@ -48,7 +50,8 @@ Press `K` and a direction to kick. A kick takes a normal action (6 seconds).
 - **A creature** you kick takes an unarmed blow, whatever you wield: your bare foot hits like a
   fist, with your Strength (see [Combat](combat.md)), and draws on and trains your **Unarmed**
   skill (see [Weapon skills](weapon-skills.md)). "You kick the giant rat." Kicking a creature
-  that is not hostile attacks it all the same.
+  that is not hostile attacks it all the same. Like every attack, it takes longer in a cowardly
+  stance and less time with magic that quickens your attacks.
 - **Anything else** takes no time: `You kick at empty space.` where you could walk (an open or
   broken door too), and kicking a wall would only hurt your foot.
 

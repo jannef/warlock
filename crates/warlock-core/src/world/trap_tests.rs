@@ -259,6 +259,7 @@ fn builtin_traps_load_and_bad_ones_are_reported() {
             "arrow",
             "spear",
             "fireball",
+            "frost",
             "lightning_bolt",
             "pit",
             "alarm",
@@ -326,6 +327,17 @@ fn builtin_traps_load_and_bad_ones_are_reported() {
             "kind = \"alarm\"\nnoise = { sound = \"bell\", loudness = 999 }\n",
             "loudness",
         ),
+        (
+            "kind = \"burst\"\nspell = \"x\"\nnoun = \"x\"\nradius = 2\ndamage = \"1d6\"\n\
+             heat = true\nfrost = 50\n",
+            "not both",
+        ),
+        (
+            "kind = \"burst\"\nspell = \"x\"\nnoun = \"x\"\nradius = 2\ndamage = \"1d6\"\n\
+             frost = 0\n",
+            "frost",
+        ),
+        ("kind = \"pit\"\ndamage = \"1d6\"\nheat = true\n", "heat"),
     ] {
         let err = bad(&format!("{TRAPS}{}", trap(body)), "").expect_err(body);
         assert!(err.contains(why), "{body}: {err}");
@@ -700,4 +712,20 @@ fn traps_save_and_replay() {
     }
     let played = replay.run(content).expect("replays");
     assert_eq!(played.state_hash(), w.state_hash());
+}
+
+#[test]
+fn whoever_makes_way_onto_a_trap_sets_it_off() {
+    // The player walks into a hidden pit and on into the dummy beyond, who makes way onto the
+    // pit's cell, and falls in too.
+    let mut w = world("######\n#@pD.#\n######\n");
+    let dummy = creature_at(&w, Pos::new(3, 1));
+    let pit = trap_id(&w, "pit");
+    let out = run(&mut w, "move:E move:E");
+    assert_eq!(w.state.actors[&dummy].pos, Pos::new(2, 1));
+    let sprung = (out[1].events.iter()).any(
+        |e| matches!(e, Event::TrapSprung { trap, victim, .. } if *trap == pit && *victim == dummy),
+    );
+    assert!(sprung, "{:?}", out[1].events);
+    assert!(lost(&w, dummy) > 0, "the fall hurt it");
 }

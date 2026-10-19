@@ -40,13 +40,15 @@ so it trains only [unarmed fighting](weapon-skills.md#the-skills), and Brawler d
 
 ## Two weapons
 
-Your off hand takes a shield, or a **light** weapon: a dagger, a stiletto, or a short sword (see the
-[weapons](combat.md#damage) table; "main hand or off hand"). With a weapon in each hand, every
+Your off hand takes a shield, or a **light** weapon (listed below; see the
+[weapons](combat.md#damage) table: "main hand or off hand"). With a weapon in each hand, every
 attack you make up close is two blows: the main hand's first, then the off hand's, each at a
 penalty to hit. The off hand's blow is made with its own weapon and trains that weapon's skill;
 a magic weapon's own powers (see [Magic items](magic-items.md)) go with its own blow, while what
 your other gear gives helps both. Each blow can draw blood and open a bleeding wound on its own.
 Both blows are one attack, in the time of one. If the first blow kills, there is no second.
+
+{{#include generated/light-weapons.md}}
 
 Twin Blades eases both penalties, and at rank 10 neither hand has any: a full attack with each.
 Creatures that hold two weapons fight with both too.

@@ -753,3 +753,24 @@ fn hunger_and_corpses_save_and_replay() {
     assert_eq!(loaded.state_hash(), saved.state_hash());
     assert!(said(&saved, "You eat the giant rat corpse."));
 }
+
+#[test]
+fn a_remedy_cures_every_disease_as_it_is_eaten_even_grave_rot() {
+    let mut w = world("pantry");
+    let root = object(&w, "angelica_root");
+    let grave_rot = w.content().disease_id("grave_rot").expect("grave rot");
+    w.player_mut().inventory.insert(0, Stack::new(root, 2));
+    run(&mut w, "infect:grave_rot rest:24h");
+    assert!(said(&w, "Your skin turns grey and clammy."), "it shows");
+    run(&mut w, "eat:a");
+    assert!(said(&w, "You eat the angelica root."));
+    assert!(said(&w, "The rot is gone from your flesh."));
+    assert!(w.state.player().diseases.get(grave_rot).is_none());
+    let diseased = w.content().status_id("diseased").expect("diseased");
+    assert!(!w.state.player().effects.has(diseased));
+    assert_eq!(count_of(&w.state.player().inventory, root), 1);
+    // Eaten while it incubates, unseen, it cures it as silently as it came.
+    run(&mut w, "infect:grave_rot eat:a");
+    assert!(w.state.player().diseases.get(grave_rot).is_none());
+    assert_eq!(count_of(&w.state.player().inventory, root), 0);
+}

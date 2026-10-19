@@ -76,10 +76,11 @@ impl World {
             if self.stance(player, target) == Stance::Hostile {
                 let me = self.state.player();
                 let melee = me.attack_skills(&self.content, AttackKind::Melee, None);
-                let price = self.attack_price(player, ActionKind::Melee, melee);
+                let with = me.weapon_item(&self.content);
+                // Priced as the attack begins (every attack is), before the blows and the
+                // exertion, which may burn enough to leave the player hungrier.
+                let price = self.attack_price(player, ActionKind::Melee, with, melee);
                 self.player_attacks(target, seen, events);
-                // Priced as the attack begins, before the exertion, which may burn enough to
-                // leave the player hungrier (no longer Bloated).
                 self.exert(ActionKind::Melee);
                 return Spent::Turn(price);
             }

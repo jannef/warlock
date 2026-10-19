@@ -122,7 +122,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Displacement** (`world/talk.rs`; M28, #147): the player moving into a creature that is not
   hostile to them (neutral or peaceful) swaps places with it: the player steps onto its cell (the
   step's time and noise) and it onto the player's (its footsteps), its own turn unaffected; "You
-  swap places with the deer." ("…with something." if unseen). It remembers the cell it stood on
+  swap places with the deer." ("…with something." if unseen). It lands there as any step lands:
+  ice there may give way under its weight (§5 "Ice"), and a trap there goes off at it (§8
+  "Traps"); what that costs it (climbing out of a pit or onto the ice) comes off its next action. It remembers the cell it stood on
   as its post (unless it already had one), walks back there once the player has moved off it, and
   carries on with its routine ("Creature behavior", Return). It refuses, and the move takes no
   time, when its type's `budge` is `never`, or `off_post` while its mind is calm (keeping its

@@ -23,11 +23,12 @@
 //! What the player sees: their own trained skills with their values, and a coarse sense of
 //! progress toward the next point ([`progress`]). Never a benefit's number, a mark, or a chance.
 //!
-//! **Pending hooks** (extension points for rules not on main yet): athletics will add to the
-//! Strength-based chance of kicking a door in (#130) and shorten the turns stuck in a pit (#128),
-//! and escape artist will take a turn off being stuck per 33 points (#128). Each becomes one more
-//! [`Effect`] (and a [`Use`] for its marks: a kick, a climb) read in that one place, with its
-//! numbers in `data/skills.toml`; until then those skills are trained and shown but give nothing.
+//! **Pending hooks** (extension points for rules not on main yet): athletics will shorten the
+//! turns stuck in a pit (#128), and escape artist will take a turn off being stuck per 33 points
+//! (#128). Each becomes one more [`Effect`] (and a [`Use`] for its marks: a climb) read in that
+//! one place, with its numbers in `data/skills.toml`; until then escape artist is trained and
+//! shown but gives nothing. Athletics already adds to the Strength a kick at a door is rolled
+//! against ([`Effect::Kick`], [`Use::Kick`]).
 
 use crate::content::Content;
 use crate::dice::Dice;
@@ -59,7 +60,7 @@ pub enum SkillKind {
     Passive,
     /// It is used as an action (search, open lock, heal), once actions for it exist.
     Action,
-    /// Rules read it when something calls for it (athletics when kicking a door).
+    /// Rules read it when something calls for it (athletics when kicking a door in).
     Rules,
 }
 
@@ -93,6 +94,9 @@ pub enum Effect {
     /// Percent better prices in shops (spec §7 "Shops"; `world/shop.rs`): less to pay and more
     /// offered, together with Presence at most half.
     Bargain,
+    /// Points added to the Strength score a kick at a closed door is rolled against (spec §8
+    /// "Doors"; `world/door.rs`).
+    Kick,
 }
 
 impl Effect {
@@ -101,6 +105,7 @@ impl Effect {
         match self {
             Effect::Dodge | Effect::Hearing => MAX_VALUE as i32,
             Effect::Quiet | Effect::Burden | Effect::Travel | Effect::Bargain => 100,
+            Effect::Kick => *crate::stats::SCORES.end() as i32,
         }
     }
 }
@@ -119,6 +124,8 @@ pub enum Use {
     Burdened,
     /// A step on the overworld: a journey.
     Travel,
+    /// A kick at a closed door (spec §8 "Doors").
+    Kick,
 }
 
 impl Use {
@@ -130,6 +137,7 @@ impl Use {
             Use::Dodge => "dodging an attack",
             Use::Burdened => "acting (not waiting) while your load slows you",
             Use::Travel => "a journey on the overworld",
+            Use::Kick => "kicking at a closed door",
         }
     }
 }
@@ -228,6 +236,7 @@ impl Use {
             Use::Dodge => "dodge",
             Use::Burdened => "burdened",
             Use::Travel => "travel",
+            Use::Kick => "kick",
         }
     }
 }
@@ -242,6 +251,7 @@ impl Effect {
             Effect::Burden => "burden",
             Effect::Travel => "travel",
             Effect::Bargain => "bargain",
+            Effect::Kick => "kick",
         }
     }
 }

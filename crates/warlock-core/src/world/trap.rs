@@ -17,7 +17,9 @@
 //! - **burst**: everyone on the cells within the radius that the blast reaches from the trap
 //!   (shadowcast: walls stop it) takes one roll of the damage, half of it (at least 1) beyond
 //!   radius − 1; no roll to hit; then the walls it reaches that are softer than its `blast` break
-//!   ([`World::blast`], spec §8 "Digging");
+//!   ([`World::blast`], spec §8 "Digging"); then a hot one melts the ice it reaches, and whoever
+//!   stood on it falls in ([`World::shock`]), and a cold one freezes the water it reaches
+//!   ([`World::frost`], spec §5 "Ice");
 //! - **bolt**: a line from the trap in its direction (the level's `dir`, else the longest clear
 //!   line from it, ties to the earlier of N, NE, ... NW) until a wall, at most its length:
 //!   everyone on it takes one roll of the damage;
@@ -36,10 +38,11 @@ use super::fight::Harm;
 use super::{ActorId, World, fnv1a, spell};
 use crate::action::{Event, MissileEnd, SpellShape};
 use crate::combat::{self, Blow, Profile, Strike};
-use crate::content::{ActionKind, ObjectId, TrapEffect, TrapId};
+use crate::content::{ActionKind, BurstIce, ObjectId, TrapEffect, TrapId};
 use crate::dice::Dice;
 use crate::fov::radius2;
 use crate::geom::{Dir, Pos};
+use crate::ice::Shock;
 use crate::noise::{self, Noise};
 use crate::object::Stack;
 use crate::perception::VIEW_RADIUS;
@@ -102,10 +105,20 @@ impl World {
                 radius,
                 damage,
                 blast,
+                ice,
             } => {
                 self.trap_burst(kind, at, spell, *radius, *damage, events);
                 if *blast > 0 {
                     self.blast(at, *radius, *blast, events);
+                }
+                match ice {
+                    Some(BurstIce::Melts) => {
+                        self.shock(at, *radius, Shock::Heat, events);
+                    }
+                    Some(BurstIce::Freezes(um)) => {
+                        self.frost(at, *radius, *um);
+                    }
+                    None => {}
                 }
             }
             TrapEffect::Bolt {

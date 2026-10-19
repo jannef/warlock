@@ -89,6 +89,8 @@ hit points.
 
 ## Heat and frost
 
-The world knows bursts of heat and frost, though nothing sets them off yet (traps and spells
-will): a burst of heat melts the ice it reaches, and whoever stood on it falls in; a blast
-without heat shatters thin ice; a frost freezes water at once, into ice that holds a laden person.
+Bursts of heat and frost change the ice at once (see [Traps](traps.md); spells will too): a
+fireball melts the ice it reaches, and whoever stood on it falls in; a frost trap freezes the
+water it reaches at once, into ice that holds a laden person (10 cm). A blast without heat (none
+yet) will shatter thin ice. Someone who makes way for you onto ice you stood on may break through
+it, if it is heavier than you.

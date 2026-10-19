@@ -30,13 +30,15 @@ last tick done), grouping cells by (water, thickness), so it is exact however ti
 skips, journeys) and a year away is cheap. It runs on the current level as the clock moves
 (`run_turn`) and as perception begins, and for a new sky-exposed level over `ice::PRE_ROLL` (30
 days) on instantiation. Stepping onto ice goes through `World::tread` (player and creatures
-alike; weight from `Actor::weight`, `ice::gives_way`: no draw up to what it holds, a gameplay draw
-up to twice that), then `tread_price` (the `climb` action from water onto ice) and `after_tread`
-(the plunge: `freeze.plunge` dice, never the last hit point, `Event::FellThroughIce`). Bursts:
-`World::frost` (instant freeze; dev `freeze:x,y,r`, which also shows the `frost_burst` effect of
-`data/effects.toml` through `World::frost_look`) and `World::shock` (`Shock::Heat` melts,
-`Shock::Blast(um)` shatters thinner ice; dev `thaw:x,y,r`) are the hooks fireballs, frost traps,
-blasts, and spells call. Saved and hashed. Tests: `ice.rs`, `temperature.rs`,
+alike, and one who makes way for the player onto their old cell, `talk.rs::swap_places`; weight
+from `Actor::weight`, `ice::gives_way`: no draw up to what it holds, a gameplay draw up to twice
+that), then `tread_price` (the `climb` action from water onto ice) and `after_tread` (the plunge:
+`freeze.plunge` dice through `hurt` with `Harm::Spared`, never the last hit point,
+`Event::FellThroughIce`). Bursts: `World::frost` (instant freeze; the frost trap, a burst with
+`frost`; dev `freeze:x,y,r`, which also shows the `frost_burst` effect of `data/effects.toml`
+through `World::frost_look`) and `World::shock` (`Shock::Heat` melts: the fireball trap, a burst
+with `heat`; `Shock::Blast(um)` shatters thinner ice, for blasts without heat, none yet; dev
+`thaw:x,y,r`) are the hooks traps (`world/trap.rs`, `docs/dev/traps.md`) and later spells call. Saved and hashed. Tests: `ice.rs`, `temperature.rs`,
 `world/ice_tests.rs` (growth/melt over rests, weight, falling in, climbing out, sinking objects,
 creatures, bursts, saves, replays, a year's catch-up). Tune the look with captures of the Frost
 Grotto (hub stairs nook, the `>` below the first) and the courtyard in winter (`skip:` into

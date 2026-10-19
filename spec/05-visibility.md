@@ -217,9 +217,11 @@ rate or animation.
     that thickness at once; `World::shock(center, radius, Shock)` breaks the ice it reaches: heat
     (a fireball) melts all of it, a blast without heat shatters ice thinner than its strength,
     and whoever stood on ice that broke falls in. The dev actions `freeze:x,y,r` (10 cm, shown
-    as the `frost_burst` spell effect, §4.8) and `thaw:x,y,r` (heat) use them; trapped fireballs
-    and a frost trap (#128) and blasts (#131) will.
-  - Creatures follow the same rules: they step onto ice, fall through, and climb out. The
+    as the `frost_burst` spell effect, §4.8) and `thaw:x,y,r` (heat) use them, and so do traps
+    (§8 "Traps"): the fireball trap's heat melts the ice it reaches, and the frost trap freezes
+    the water it reaches to 10 cm. Blasts without heat (none yet) will shatter thin ice.
+  - Creatures follow the same rules: they step onto ice, fall through, and climb out, and so
+    does one who makes way for the player onto the ice they stood on (§8 "Displacement"). The
     overworld's rivers and lakes do not freeze (map scale; crossing a frozen river may come
     later).
 - **Brightness** is the integer luma of RGB, `(54·r + 183·g + 19·b) / 256`, plus UV for eyes that

@@ -313,6 +313,10 @@ pub(super) struct ObjectSpec {
     pub frequency: Option<u32>,
     /// What eating it gives (spec §8 "Hunger"): its nutrition and the turns it takes.
     pub food: Option<Food>,
+    /// What eating it cures (food only): means named in the statuses' and diseases' `cured_by`
+    /// (`remove_disease`).
+    #[serde(default)]
+    pub cures: Vec<String>,
 }
 
 /// A resolved object type.
@@ -393,6 +397,9 @@ pub struct ObjectDef {
     pub frequency: u32,
     /// What eating it gives, if it is food or a corpse (spec §8 "Hunger").
     pub food: Option<Food>,
+    /// What eating it cures: means named in the statuses' and diseases' `cured_by` (a remedy
+    /// for diseases: `remove_disease`; spec §8 "Diseases").
+    pub cures: Vec<String>,
     /// The creature type it is the corpse of, if it is a corpse: it rots from the moment its
     /// creature died ([`Stack::died`]).
     pub corpse: Option<CreatureId>,
@@ -448,6 +455,7 @@ impl ObjectDef {
             glow: 0.0,
             particles: Vec::new(),
             food: Some(food),
+            cures: Vec::new(),
             corpse: Some(id),
             key: None,
             kind: None,
@@ -612,6 +620,9 @@ impl ObjectSpec {
                 ));
             }
         }
+        if !self.cures.is_empty() && self.food.is_none() {
+            return Err(err("`cures` is for food: it cures as it is eaten".into()));
+        }
         let key = self
             .key
             .as_deref()
@@ -667,6 +678,7 @@ impl ObjectSpec {
                 None => 0,
             },
             food: self.food,
+            cures: self.cures,
             corpse: None,
         };
         Ok((def, self.lit))
@@ -960,6 +972,7 @@ mod tests {
             level: 1,
             frequency: 0,
             food: None,
+            cures: Vec::new(),
             corpse: None,
         };
         assert_eq!(def("dagger", "daggers").describe(1), "a dagger");

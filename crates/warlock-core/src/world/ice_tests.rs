@@ -71,10 +71,62 @@ map = '''
 "t" = { terrain = "water", ice = 20 }
 "#;
 
+/// The player crosses ice that holds them to an ox, who makes way onto it.
+const FERRY: &str = r#"
+name = "Ferry"
+temperature = -5
+ambient = [255, 255, 255, 0]
+map = '''
+#######
+#@io..#
+#######
+'''
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"i" = { terrain = "water", ice = 50 }
+"o" = { terrain = "floor", creature = "ox" }
+"#;
+
+/// A fireball trap beside thick ice, and further on a frost trap above open water.
+const BURSTS: &str = r#"
+name = "Bursts"
+temperature = -5
+ambient = [255, 255, 255, 0]
+map = '''
+############
+#@f.....F..#
+#.TT...~~~.#
+############
+'''
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"f" = { terrain = "floor", trap = "fireball" }
+"F" = { terrain = "floor", trap = "frost" }
+"T" = { terrain = "water", ice = 200 }
+"~" = "water"
+"#;
+
+/// A heavy beast that makes way for anyone.
+const OX: &str = r##"
+[[creature]]
+id = "ox"
+name = "ox"
+glyph = "q"
+fg = "#a08060"
+weight = 400000
+faction = "peaceful"
+"##;
+
 static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
     let mut files = ContentFiles::builtin();
+    files.insert("data/creatures/ox.toml", OX);
     // Strong (St 40, To 40: a limit of 180 kg), so heavy loads still move.
-    for (name, level) in [("pond", POND), ("warm", WARM), ("crossing", CROSSING)] {
+    for (name, level) in [
+        ("pond", POND),
+        ("warm", WARM),
+        ("crossing", CROSSING),
+        ("ferry", FERRY),
+    ] {
         files.insert(&format!("levels/{name}.toml"), level);
         files.insert(
             &format!("scenarios/{name}.toml"),
@@ -84,6 +136,12 @@ static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
             ),
         );
     }
+    // Tough enough for a fireball and a burst of frost.
+    files.insert("levels/bursts.toml", BURSTS);
+    files.insert(
+        "scenarios/bursts.toml",
+        "name = \"bursts\"\nstart_level = \"bursts\"\nhp = 100\n",
+    );
     // The courtyard in deep winter and in high summer.
     for (name, month) in [("winter_yard", 12), ("summer_yard", 6)] {
         files.insert(
@@ -377,6 +435,22 @@ fn creatures_fall_through_too() {
 }
 
 #[test]
+fn one_who_makes_way_onto_the_ice_may_fall_through() {
+    let mut w = world("ferry");
+    let ox = (w.state.actors.values())
+        .find(|a| a.kind == ActorKind::Creature)
+        .map(|a| a.id)
+        .expect("the ox");
+    let out = run(&mut w, "move:E move:E");
+    assert!(said(&w, "You swap places with the ox."));
+    assert_eq!(w.state.actors[&ox].pos, Pos::new(2, 1));
+    let fell = (out[1].events.iter())
+        .any(|e| matches!(e, Event::FellThroughIce { actor, .. } if *actor == ox));
+    assert!(fell, "four hundred kilos break 5 cm of ice");
+    assert_eq!(terrain_id(&w, Pos::new(2, 1)), "water");
+}
+
+#[test]
 fn an_instant_frost_freezes_the_water_it_reaches() {
     let mut w = world("pond");
     let out = run(&mut w, "freeze:3,2,1");
@@ -419,6 +493,29 @@ fn heat_melts_the_ice_and_whoever_stood_on_it_falls_in() {
         assert_eq!(terrain_id(&w, p), "water", "{p}");
     }
     assert_eq!(terrain_id(&w, THIN), "thin_ice", "beyond the burst");
+}
+
+#[test]
+fn a_fireball_melts_the_ice_and_a_burst_of_frost_freezes_the_water() {
+    let mut w = world("bursts");
+    let (near, far) = (Pos::new(2, 2), Pos::new(3, 2));
+    assert_eq!((mm(&w, near), mm(&w, far)), (200, 200));
+    run(&mut w, "move:E");
+    assert!(said(&w, "A fireball explodes!"));
+    assert_eq!(
+        (mm(&w, near), mm(&w, far)),
+        (0, 0),
+        "the heat melts thick ice"
+    );
+    assert_eq!(terrain_id(&w, near), "water");
+    let water = [Pos::new(7, 2), Pos::new(8, 2), Pos::new(9, 2)];
+    assert!(water.iter().all(|&p| mm(&w, p) < 10), "open water");
+    run(&mut w, "move:E*6");
+    assert!(said(&w, "Frost bursts from the floor!"));
+    for p in water {
+        assert!(mm(&w, p) >= 100, "{p:?} froze at once");
+        assert_eq!(terrain_id(&w, p), "ice");
+    }
 }
 
 #[test]

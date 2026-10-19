@@ -82,6 +82,22 @@ pub(super) fn weapons(content: &Content) -> String {
     out
 }
 
+/// The light weapons, in name order, as a sentence: "The light weapons are the dagger, ... and
+/// the stiletto." (spec §7: `light_weapon`).
+pub(super) fn light_weapons(content: &Content) -> String {
+    let mut names: Vec<&str> = (order::objects(content).into_iter())
+        .filter(|(_, o)| o.light_weapon)
+        .map(|(_, o)| o.name.as_str())
+        .collect();
+    names.sort_unstable();
+    let the: Vec<String> = names.iter().map(|n| format!("the {n}")).collect();
+    match the.as_slice() {
+        [] => "No weapon is light.\n".into(),
+        [one] => format!("The one light weapon is {one}.\n"),
+        [rest @ .., last] => format!("The light weapons are {}, and {last}.\n", rest.join(", ")),
+    }
+}
+
 /// What a launcher kind of ammunition is called: every object of that kind, in the plural, in
 /// name order ("arrows, flaming arrows").
 fn ammunition_of(content: &Content, kind: &str) -> String {

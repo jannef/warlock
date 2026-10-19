@@ -574,15 +574,26 @@ fn ranks_change_to_hit_damage_threat_defence_and_cost() {
     assert_eq!(trained_shot.to_hit, shot.to_hit + 1);
     let player = w.player_id();
     let shot = me(&w).attack_skills(&content, AttackKind::Ranged, None);
-    assert_eq!(w.attack_price(player, ActionKind::Shoot, shot), 6000);
-    assert_eq!(w.attack_price(player, ActionKind::Reload, shot), 5400);
+    let crossbow = me(&w).launcher_item(&content);
+    assert_eq!(
+        w.attack_price(player, ActionKind::Shoot, crossbow, shot),
+        6000
+    );
+    assert_eq!(w.reload_price(player, shot), 5400);
     // Daggers 7: a blow takes a tenth less time.
     let mut w = world_on(YARD);
     arm(&mut w, &["dagger"]);
     let blow = me(&w).attack_skills(&content, AttackKind::Melee, None);
-    assert_eq!(w.attack_price(player, ActionKind::Melee, blow), 6000);
+    let dagger = me(&w).weapon_item(&content);
+    assert_eq!(
+        w.attack_price(player, ActionKind::Melee, dagger, blow),
+        6000
+    );
     set(&mut w, "daggers", 7, 0);
-    assert_eq!(w.attack_price(player, ActionKind::Melee, blow), 5400);
+    assert_eq!(
+        w.attack_price(player, ActionKind::Melee, dagger, blow),
+        5400
+    );
     let mut elapsed = Duration::ZERO;
     for _ in 0..5 {
         elapsed = elapsed + w.apply(&Action::Move(Dir::E)).elapsed;
@@ -605,6 +616,70 @@ fn ranks_change_to_hit_damage_threat_defence_and_cost() {
         untrained.to_hit + 3,
         "daggers 7 gives throwing 5 (−2)"
     );
+}
+
+#[test]
+fn an_attack_is_priced_as_it_begins_so_a_rank_it_earns_quickens_only_the_next() {
+    // The clock keeps whole seconds and leftover energy carries: what is left of the player's
+    // energy after an action tells what it cost.
+    let energy = |w: &World| w.state.player().energy;
+    let after = |energy: i64, price: i64| (energy - price).rem_euclid(1000);
+    let player = ActorId(0);
+    // Daggers 7 makes a blow quicker; the stone golem (level 6) teaches a rank-6 fighter
+    // something with every blow.
+    let mut w = world_on("######\n#.@g.#\n######\n");
+    arm(&mut w, &["dagger"]);
+    let content = w.content().clone();
+    let blow_price = |w: &World| {
+        let me = w.state.player();
+        let skills = me.attack_skills(&content, AttackKind::Melee, None);
+        w.attack_price(player, ActionKind::Melee, me.weapon_item(&content), skills)
+    };
+    let need = content.weapon_skills().skill(skill(&w, "daggers")).need[6];
+    set(&mut w, "daggers", 6, need - 1);
+    let (was, start) = (blow_price(&w), energy(&w));
+    w.apply(&Action::Move(Dir::E));
+    assert_eq!(training(&w, "daggers").rank, 7, "the blow made the rank");
+    let now = blow_price(&w);
+    assert!(now < was, "rank 7 is quicker");
+    assert_eq!(
+        energy(&w),
+        after(start, was),
+        "the blow cost what it began at"
+    );
+    let start = energy(&w);
+    w.apply(&Action::Move(Dir::E));
+    assert_eq!(energy(&w), after(start, now), "the next blow is quicker");
+    // Crossbows 2 makes reloading quicker: the shot that earns it still costs what it began at.
+    let mut w = world_on(YARD);
+    arm(&mut w, &["crossbow", "bolt"]);
+    let shot_price = |w: &World| {
+        let me = w.state.player();
+        let skills = me.attack_skills(&content, AttackKind::Ranged, None);
+        let shoot = w.attack_price(
+            player,
+            ActionKind::Shoot,
+            me.launcher_item(&content),
+            skills,
+        );
+        shoot + w.reload_price(player, skills)
+    };
+    let need = content.weapon_skills().skill(skill(&w, "crossbows")).need[1];
+    set(&mut w, "crossbows", 1, need - 1);
+    let dummy = Pos::new(3, 2);
+    let (was, start) = (shot_price(&w), energy(&w));
+    w.apply(&Action::Fire(dummy));
+    assert_eq!(training(&w, "crossbows").rank, 2, "the shot made the rank");
+    let now = shot_price(&w);
+    assert!(now < was, "rank 2 reloads quicker");
+    assert_eq!(
+        energy(&w),
+        after(start, was),
+        "the shot cost what it began at"
+    );
+    let start = energy(&w);
+    w.apply(&Action::Fire(dummy));
+    assert_eq!(energy(&w), after(start, now), "the next shot is quicker");
 }
 
 #[test]

@@ -23,6 +23,7 @@
 //! whoever stood on it falls in. A burst reaches the cells within its radius in line of sight of
 //! its centre.
 
+use super::fight::Harm;
 use super::{ActorId, LevelState, Spent, World, WorldState};
 use crate::action::{Event, SpellShape};
 use crate::content::{ActionKind, Content, TerrainId};
@@ -321,15 +322,14 @@ impl World {
     }
 
     /// Actor `id` plunged through the ice into the freezing water at `at`: it loses the water's
-    /// `plunge` hit points (never the last one: the cold does not kill yet). A creature's fall is
-    /// said when the player perceives it ([`World::perceive`]); the player's where it happens.
+    /// `plunge` hit points (never the last one: the cold does not kill yet, [`Harm::Spared`]). A
+    /// creature's fall is said when the player perceives it ([`World::perceive`]); the player's
+    /// where it happens.
     fn fall_in(&mut self, id: ActorId, at: Pos, events: &mut Vec<Event>) {
         let water = self.state.current().water_at(&self.content, at);
         let plunge = water.and_then(|w| self.content.terrain(w).freeze.map(|f| f.plunge));
         let damage = plunge.map_or(0, |d| d.roll(&mut self.state.rng).max(0));
-        if let Some(actor) = self.state.actors.get_mut(&id) {
-            actor.hp = (actor.hp - damage).max(actor.hp.min(1));
-        }
+        self.hurt(id, damage, Harm::Spared, events);
         events.push(Event::FellThroughIce { actor: id, at });
     }
 

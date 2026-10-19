@@ -11,8 +11,9 @@
 //! whole seconds: a run of actions takes their exact total time, up to the next whole second,
 //! with no drift. An actor's burden (spec §8 "Burden", [`crate::burden`]) raises every price it
 //! pays, ×1.25 Burdened and ×1.5 Strained or Overloaded, as a lower speed would: the prices
-//! here ([`World::price_of`], [`World::step_price`]) are the one place that happens, so it
-//! covers every action, overworld journeys included; being Bloated (spec §8 "Hunger") raises
+//! here ([`World::price_of`], [`World::step_price`], [`World::attack_price`],
+//! [`World::reload_price`]) are the one place that happens, so it covers every action, overworld
+//! journeys included; being Bloated (spec §8 "Hunger") raises
 //! them the same way, after the burden. Creatures on other levels are frozen (they
 //! gain nothing until the player is back), so coming back to a level never sets off a burst of
 //! actions; the dev time skip gives nobody energy either.
@@ -62,44 +63,23 @@ struct Scheduled {
 
 impl World {
     /// The energy price of action `kind` for actor `id`: what it costs it ([`World::cost_of`])
-    /// over the 6-second base, as dear as its combat stance makes an attack, slowed by its burden
-    /// ([`World::burdened`]). Steps are priced by the terrain instead ([`World::step_price`]).
+    /// over the 6-second base, slowed by its burden ([`World::burdened`]). Steps are priced by
+    /// the terrain instead ([`World::step_price`]), attacks by [`World::attack_price`].
     pub(super) fn price_of(&self, id: ActorId, kind: ActionKind) -> i64 {
-        let actor = &self.state.actors[&id];
         let base = price(self.cost_of(id, kind), BASE_TURN);
-        self.burdened(id, self.stanced(actor, kind, base))
+        self.burdened(id, base)
     }
 
-    /// What action `kind` costs actor `id`: its creature type's cost of it (spec §8 "Time"),
-    /// except that an attack with a weapon that has its own `attack_cost` costs that (a blow with
-    /// the weapon it wields, a shot with its missile weapon) unless the creature type gives its
-    /// attacks a cost of their own. Then magic items make attacks and steps faster (spec §8
-    /// "Magic items"): the attack speed of the weapon's affixes and of what the actor wears and
-    /// wields, and the moving speed of what it wears.
+    /// What action `kind` costs actor `id`: its creature type's cost of it (spec §8 "Time"); a
+    /// step is faster by the moving speed of what it wears (spec §8 "Magic items"). Attacks
+    /// cost what [`World::attack_cost`] says.
     pub(super) fn cost_of(&self, id: ActorId, kind: ActionKind) -> u32 {
         let content = &self.content;
         let actor = &self.state.actors[&id];
         let cost = content.action_cost(actor.creature, kind);
-        let item = match kind {
-            ActionKind::Melee => actor.weapon_item(content),
-            ActionKind::Shoot => actor.launcher_item(content),
-            ActionKind::Step | ActionKind::Throw => None,
-            _ => return cost,
-        };
-        let stack = item.and_then(|i| actor.inventory.get(i));
-        let own = stack.and_then(|s| content.object(s.object).attack_cost);
-        let cost = match own {
-            Some(own) if content.creature(actor.creature).attack_cost.is_none() => own,
-            _ => cost,
-        };
-        let mods = actor.mods(content);
         let speed = match kind {
-            ActionKind::Step => mods.get(ItemEffect::MoveSpeed),
-            _ => {
-                let local =
-                    stack.map_or(0, |s| Mods::local(s, content).get(ItemEffect::AttackSpeed));
-                mods.get(ItemEffect::AttackSpeed) + local
-            }
+            ActionKind::Step => actor.mods(content).get(ItemEffect::MoveSpeed),
+            _ => 0,
         };
         if speed == 0 {
             cost
@@ -108,14 +88,30 @@ impl World {
         }
     }
 
-    /// `base` as dear as `actor`'s combat stance makes its attacks (spec §8 "Stances"): melee,
-    /// shots, and throws; reloading is not an attack.
-    fn stanced(&self, actor: &Actor, kind: ActionKind, base: i64) -> i64 {
-        match kind {
-            ActionKind::Melee | ActionKind::Shoot | ActionKind::Throw => {
-                percent_of(base, self.content.stance_def(actor.stance).attack_cost)
-            }
-            _ => base,
+    /// What attack `kind` costs actor `id` made `with` the object at that position in its
+    /// inventory (the weapon it wields for a blow, the shield it bashes with, the missile weapon
+    /// it shoots), or with nothing (bare hands, a kick, a throw): its creature type's cost of
+    /// the attack (spec §8 "Time"), or the object's own `attack_cost` unless the creature type
+    /// gives its attacks a cost of their own, and then faster by the attack speed of what it
+    /// wears and wields and of the object's own affixes (spec §8 "Magic items"). So a shield
+    /// bash costs what a blow with the shield does, never what one with the wielded weapon
+    /// would.
+    pub(super) fn attack_cost(&self, id: ActorId, kind: ActionKind, with: Option<usize>) -> u32 {
+        let content = &self.content;
+        let actor = &self.state.actors[&id];
+        let cost = content.action_cost(actor.creature, kind);
+        let stack = with.and_then(|i| actor.inventory.get(i));
+        let own = stack.and_then(|s| content.object(s.object).attack_cost);
+        let cost = match own {
+            Some(own) if content.creature(actor.creature).attack_cost.is_none() => own,
+            _ => cost,
+        };
+        let local = stack.map_or(0, |s| Mods::local(s, content).get(ItemEffect::AttackSpeed));
+        let speed = actor.mods(content).get(ItemEffect::AttackSpeed) + local;
+        if speed == 0 {
+            cost
+        } else {
+            faster(cost, speed)
         }
     }
 
@@ -139,22 +135,39 @@ impl World {
         })
     }
 
-    /// The energy price of attack action `kind` (`melee`, `shoot`, `throw`, `reload`) for actor
-    /// `id` drawing on weapon skill and fighting style `skills` (spec §8 "Weapon skills",
-    /// "Fighting styles"): its cost with its weapon's and its magic items' (`World::cost_of`; a
-    /// shield bash costs what a blow does) less what the ranks of both take off (`speed`;
-    /// `reload` for reloading), then priced like any action ([`World::price_of`]), its combat
-    /// stance included.
-    pub(super) fn attack_price(&self, id: ActorId, kind: ActionKind, skills: AttackSkills) -> i64 {
+    /// The energy price of attack `kind` (a blow, a bash, a kick, a shot, a throw, a spell) for
+    /// actor `id`, made `with` the object at that position in its inventory, if any, drawing on
+    /// weapon skill and fighting style `skills` (spec §8 "Weapon skills", "Fighting styles"):
+    /// its cost ([`World::attack_cost`]) less what the ranks of both take off (`speed`), as dear
+    /// as the actor's combat stance makes every attack (spec §8 "Stances"), slowed by its burden
+    /// ([`World::burdened`]). Every attack is priced as it begins, before it is made: a rank its
+    /// marks raise, a load it lightens (a throw), or a kill changes the price of the next one,
+    /// never its own.
+    pub(super) fn attack_price(
+        &self,
+        id: ActorId,
+        kind: ActionKind,
+        with: Option<usize>,
+        skills: AttackSkills,
+    ) -> i64 {
         let actor = &self.state.actors[&id];
-        let benefit = actor.benefit_of(&self.content, skills);
-        let saving = match kind {
-            ActionKind::Reload => benefit.reload,
-            _ => benefit.speed,
-        };
-        let cost = self.cost_of(id, kind);
-        let base = price(Benefit::saving(cost, saving), BASE_TURN);
-        self.burdened(id, self.stanced(actor, kind, base))
+        let saving = actor.benefit_of(&self.content, skills).speed;
+        let base = price(
+            Benefit::saving(self.attack_cost(id, kind, with), saving),
+            BASE_TURN,
+        );
+        let stance = self.content.stance_def(actor.stance).attack_cost;
+        self.burdened(id, percent_of(base, stance))
+    }
+
+    /// The energy price of reloading a missile weapon after a shot for actor `id` drawing on
+    /// `skills`: the `reload` action less what their ranks take off (`reload`), slowed by its
+    /// burden. Reloading is not an attack: neither attack speed nor the stance changes it.
+    pub(super) fn reload_price(&self, id: ActorId, skills: AttackSkills) -> i64 {
+        let actor = &self.state.actors[&id];
+        let saving = actor.benefit_of(&self.content, skills).reload;
+        let cost = self.cost_of(id, ActionKind::Reload);
+        self.burdened(id, price(Benefit::saving(cost, saving), BASE_TURN))
     }
 
     /// The energy price of actor `id` stepping onto terrain `to` on the current level, slowed by

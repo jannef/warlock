@@ -160,13 +160,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   error), `two_handed` (default false; only with a hand slot's `slot`, and there must be two
   hand slots: it takes both), `light_weapon` (default false; only for a one-handed weapon with a
   hand slot's `slot`, not two-handed: it fits every hand slot, the off hand too, for fighting
-  with two weapons, §8 "Fighting styles"; `Content::fits`), `ammo` (the kind of ammunition it is, `ammo = "arrow"`), and
+  with two weapons, §8 "Fighting styles"; `Content::fits`; the built-in light weapons are the
+  dagger, the stiletto, the short sword, and the hand axe, as in D&D: one-handers like the
+  scimitar, the rapier, and the club are not), `ammo` (the kind of ammunition it is, `ammo = "arrow"`), and
   `launches` (the kind a missile weapon shoots, `launches = "arrow"`; some object must be that
   ammunition). Launchers and ammunition pair by that kind (`Content::fires`). Food (§8
   "Hunger") has `food = { nutrition = 1500, turns = 4 }`: the nutrition points it gives (1 to
   100 000) and the turns of eating it takes (1 to 100; never on things worn, wielded, shot,
   thrown, or burned): strips of dried meat (600, 2 turns), apples (150, 1), food rations (1500,
-  4), loaves of bread (800, 3). **Corpses** are objects too, one made for every creature type
+  4), loaves of bread (800, 3), angelica roots (20, 1). A remedy also has `cures`, the means it
+  applies as it is eaten (names some status or disease lists in its `cured_by`, else a content
+  error; food only): the angelica root `cures = ["remove_disease"]` (§8 "Diseases"). **Corpses** are objects too, one made for every creature type
   that leaves one (not the player) when content loads, after the objects of the file in creature
   order, with the id `<creature>_corpse`: "kobold corpse", `%` in the creature's color, made of
   the corpses' material (`data/hunger.toml`), weighing the creature's weight, not stackable, and
@@ -219,7 +223,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (default 100, 0 never), both only with a kind. Weapons (things with `damage`) may have an
   `attack_cost` (100 to 10 000; worn or wielded weapons only), what a blow with it (a missile
   weapon: a shot) costs instead of the `melee` (`shoot`) action, before its weapon skill's
-  `speed` (a shield bash costs what a blow does). The built-in base items, folding in the test
+  `speed` (a shield bash costs what a blow with the shield does: `melee`, never the wielded
+  weapon's `attack_cost`). The built-in base items, folding in the test
   objects (every weapon names its weapon skill `category`, which also names it in item
   descriptions: "Long blade, for the main hand"; rocks are `thrown`): daggers and stilettos (threat
   19, quick, 900), short swords and scimitars (threat 19), long swords (1d8, threat 20), rapiers

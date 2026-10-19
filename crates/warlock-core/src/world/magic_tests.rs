@@ -4,7 +4,7 @@
 //! it, deterministically.
 
 use super::*;
-use crate::action::{Letters, parse_actions};
+use crate::action::{AttackKind, Letters, parse_actions};
 use crate::combat::{self, Category, Profile};
 use crate::content::{ContentFiles, Effect};
 use crate::magic::{Affix, Magic, Rarity};
@@ -174,13 +174,29 @@ fn global_attack_effects_change_every_attack() {
     assert_eq!(p.crit, base.crit + 1);
 }
 
+/// What a blow with the wielded weapon costs the player.
+fn blow_price(w: &World) -> i64 {
+    let skills = me(w).attack_skills(w.content(), AttackKind::Melee, None);
+    let with = me(w).weapon_item(w.content());
+    w.attack_price(w.state.player, ActionKind::Melee, with, skills)
+}
+
+/// What a bash with the shield held costs the player.
+fn bash_price(w: &World) -> i64 {
+    let shield = me(w).shield(w.content()).map(|(s, _)| s);
+    let skills = me(w).attack_skills(w.content(), AttackKind::Melee, shield);
+    let with = me(w).shield_item(w.content());
+    assert!(with.is_some(), "a shield to bash with");
+    w.attack_price(w.state.player, ActionKind::Melee, with, skills)
+}
+
 #[test]
 fn speed_effects_make_attacks_and_steps_quicker() {
     let mut w = world();
     let player = w.state.player;
     let sword = plain(&w, "long_sword");
     wear(&mut w, "main_hand", sword);
-    let melee = w.price_of(player, ActionKind::Melee);
+    let melee = blow_price(&w);
     let floor = w
         .content()
         .terrain(w.content().terrain_id("floor").expect("floor"))
@@ -188,14 +204,41 @@ fn speed_effects_make_attacks_and_steps_quicker() {
     let step = w.step_price(player, &floor, false);
     let sword = magic(&w, "long_sword", &[("of_celerity", 8)], true);
     wear(&mut w, "main_hand", sword);
-    assert_eq!(w.price_of(player, ActionKind::Melee), melee * 92 / 100);
+    assert_eq!(blow_price(&w), melee * 92 / 100);
     let boots = magic(&w, "leather_boots", &[("fleet", 8)], true);
     wear(&mut w, "feet", boots);
     assert_eq!(w.step_price(player, &floor, false), step * 92 / 100);
     // A great sword is slower, by its own attack cost.
     let great = plain(&w, "great_sword");
     wear(&mut w, "main_hand", great);
-    assert_eq!(w.price_of(player, ActionKind::Melee), melee * 12 / 10);
+    assert_eq!(blow_price(&w), melee * 12 / 10);
+}
+
+#[test]
+fn a_shield_bash_costs_a_blow_with_the_shield() {
+    let mut w = world();
+    let shield = plain(&w, "small_shield");
+    wear(&mut w, "off_hand", shield);
+    let plain_bash = bash_price(&w);
+    // Neither the wielded weapon's own cost nor its affixes change a bash: a rapier's blows
+    // are quicker, and so are those of a sword of celerity, but the shield is neither.
+    for (object, affixes) in [
+        ("rapier", &[][..]),
+        ("long_sword", &[("of_celerity", 8)][..]),
+    ] {
+        let weapon = magic(&w, object, affixes, true);
+        wear(&mut w, "main_hand", weapon);
+        assert!(blow_price(&w) < plain_bash, "{object}: a quicker blow");
+        assert_eq!(
+            bash_price(&w),
+            plain_bash,
+            "{object}: the bash is the shield's"
+        );
+    }
+    // What the player wears quickens every attack, a bash too.
+    let gloves = magic(&w, "leather_gloves", &[("of_celerity", 8)], true);
+    wear(&mut w, "hands", gloves);
+    assert_eq!(bash_price(&w), plain_bash * 92 / 100);
 }
 
 #[test]

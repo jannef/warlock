@@ -21,7 +21,7 @@ regression scene for golden screenshots, replays, and snapshot tests.
 | Darkness chamber | vision types, a UV-only rune, darkvision fade; an amulet seen only by those who see in the dark | M3, M11 |
 | Water garden | still ponds and running rills (flow, glints, foam), pulsing altar with a ring before it | M4, M8, M11 |
 | Effects room | glyph particles, glow, fades, distortion | M4 |
-| Stairs | connection to Level 2, the arena, the quarry, the Frost Grotto, and the trap hall (down), the courtyard and the overworld (up); the nook is a sanctuary (§7 "Special rooms"); an old hermit sits in its corner beside the quarry stairs and tells of the hall's rooms (topics, §8 "Dialogue"); he wants three of the arena's giant rats killed, then a look three levels down into the Depths, and takes the bard's letter (§8 "Quests") | M2, M9, M10, M18, M19, M25, M26, M28 |
+| Stairs | connection to Level 2, the arena, the quarry, the Frost Grotto, and the trap hall (down), the courtyard and the overworld (up); the nook is a sanctuary (§7 "Special rooms"); an old hermit sits in its corner beside the quarry stairs and tells of the hall's rooms and its seven stairs (topics, §8 "Dialogue"); he wants three of the arena's giant rats killed, then a look three levels down into the Depths, and takes the bard's letter (§8 "Quests") | M2, M9, M10, M18, M19, M25, M26, M28 |
 
 **Courtyard (66×19, outdoor)**: up the stairs nook's `<`, a walled garden under the open sky —
 trees, a ruined wall, a pond, standing stones, flower beds, and a roofed gazebo with a lamp — where
@@ -37,7 +37,8 @@ start, the clear night has left thin ice on it at dawn, which the afternoon thin
 Deepwinter and Frostmere it freezes thick. A purse of 60 gold
 coins lies in the gazebo, and east of it a flagstone path leads to a small roofed timber hut with
 a door and a hanging lamp: Grimbold's General Store (§7 "Shops"; M27), Grimbold by the door and a
-bit of everything on the plank floor. A merchant fights no one, so the courtyard stays safe
+bit of everything on the plank floor, an angelica root among it (the remedy for diseases, §8
+"Diseases"). A merchant fights no one, so the courtyard stays safe
 unless the player steals.
 
 **Frost Grotto (44×11, M26)**: down the stairs nook's third `>` (below the first), outside the
