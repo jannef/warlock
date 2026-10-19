@@ -39,9 +39,9 @@ fn dryness(stain: &Stain, now: GameTime) -> f32 {
 pub fn color(stain: &Stain, now: GameTime) -> Rgb {
     let c = stain.color;
     let dried = Rgb::new(
-        channel(f32::from(c.r) * 0.55 + 10.0),
-        channel(f32::from(c.g) * 0.5 + 6.0),
-        channel(f32::from(c.b) * 0.45 + 3.0),
+        channel(f32::from(c.r) * 0.7 + 6.0),
+        channel(f32::from(c.g) * 0.7 + 10.0),
+        channel(f32::from(c.b) * 0.6 + 6.0),
     );
     lerp(c, dried, dryness(stain, now))
 }
