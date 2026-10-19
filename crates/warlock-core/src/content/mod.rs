@@ -10,6 +10,7 @@ mod calendar;
 mod class;
 mod creature;
 mod dungeon;
+mod effect;
 mod experience;
 mod faction;
 mod flow;
@@ -39,6 +40,10 @@ pub use creature::{
     Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, NORMAL_SPEED, NaturalAttack, SPEEDS,
 };
 pub use dungeon::{DungeonDef, Generator, LevelPlan, parse_branch_level};
+pub use effect::{
+    Darken, EffectDef, EffectLight, EffectShape, FILL_GLYPH, MAX_BURST_RADIUS, MAX_DARKEN,
+    MAX_SHAKE_PIXELS, Shake,
+};
 pub use experience::{Experience, MAX_LEVEL, MAX_XP};
 pub use faction::{FactionDef, FactionId, Factions, PLAYER_FACTION, Stance};
 pub use flow::{FLOW_SPEEDS, Flow};
@@ -210,8 +215,8 @@ struct LegendFile {
 /// `data/lights.toml`, `data/vision.toml`, `data/factions.toml`, `data/dungeons.toml`,
 /// `data/calendar.toml`, `data/sky.toml`, `data/materials.toml`, `data/objects.toml`,
 /// `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
-/// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, and `data/horoscope.toml` are
-/// optional. Without vision
+/// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, `data/horoscope.toml`, and
+/// `data/effects.toml` are optional (without effects, spell effects are not drawn). Without vision
 /// profiles, a single `normal` profile that needs no light is used, so content without lighting
 /// stays fully visible; without sizes, everything is medium; without factions, everyone is neutral; without a calendar, months are numbered;
 /// without a sky file there are no moons; without an objects file there are no objects; without a
@@ -253,6 +258,8 @@ pub struct Content {
     classes: Vec<ClassDef>,
     experience: Experience,
     horoscope: Option<Horoscope>,
+    /// Spell effects, in `data/effects.toml` order: presentation only.
+    effects: Vec<EffectDef>,
 }
 
 impl Content {
@@ -291,6 +298,7 @@ impl Content {
             classes: Vec::new(),
             experience: Experience::default(),
             horoscope: None,
+            effects: Vec::new(),
         };
         let path = "data/calendar.toml";
         if let Some(text) = files.get_optional(path) {
@@ -341,6 +349,10 @@ impl Content {
         content.load_factions(files)?;
         content.load_creatures(files)?;
         content.load_objects(files)?;
+        let path = "data/effects.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.effects = effect::parse(path, text)?;
+        }
 
         let path = "data/legend.toml";
         let legend_file: LegendFile =
@@ -1185,6 +1197,17 @@ impl Content {
         self.horoscope.as_ref()
     }
 
+    /// The spell effects of `data/effects.toml`, in file order (none without the file).
+    /// Presentation only: no rule reads them.
+    pub fn effects(&self) -> &[EffectDef] {
+        &self.effects
+    }
+
+    /// The spell effect with id `id`.
+    pub fn effect(&self, id: &str) -> Option<&EffectDef> {
+        self.effects.iter().find(|e| e.id == id)
+    }
+
     /// Month names for showing dates.
     pub fn calendar(&self) -> &Calendar {
         &self.calendar
@@ -1238,10 +1261,12 @@ impl Content {
             .into_iter()
             .flat_map(|w| self.climate.def(w).emitters())
             .flat_map(|e| e.glyphs.chars());
+        let effects = self.effects.iter().flat_map(EffectDef::glyphs);
         terrain
             .chain(creatures)
             .chain(objects)
             .chain(weather)
+            .chain(effects)
             .collect()
     }
 }
@@ -1325,6 +1350,7 @@ fn check_effects(
             ParticleTrigger::Step | ParticleTrigger::Toggle | ParticleTrigger::Obstacle => {
                 kind == "terrain"
             }
+            ParticleTrigger::Impact | ParticleTrigger::Linger => false,
         };
         if !fits {
             return Err(err(format!(

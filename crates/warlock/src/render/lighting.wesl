@@ -114,8 +114,9 @@ fn exposure(light: vec3<f32>, floor: f32) -> vec3<f32> {
     return select(dim, bright, light > vec3(1.0));
 }
 
-// `shade` in lighting.rs: a linear color under `light` (from `light_at`).
-fn shade(color: vec3<f32>, light: CellLight) -> vec3<f32> {
-    let lit = color * exposure(light.rgb, TERRAIN_FLOOR) + glow(light.rgb);
+// `shade` in lighting.rs: a linear color under `light` (from `light_at`), with readability
+// floor `floor` (`TERRAIN_FLOOR`, less while a spell effect darkens the view).
+fn shade(color: vec3<f32>, light: CellLight, floor: f32) -> vec3<f32> {
+    let lit = color * exposure(light.rgb, floor) + glow(light.rgb);
     return mix(vec3(dot(lit, LUMA)), lit, light.saturation) * light.gain;
 }

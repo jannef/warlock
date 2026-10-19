@@ -17,6 +17,7 @@ pub mod modulation;
 pub mod particles;
 pub mod post;
 pub mod shadows;
+pub mod spells;
 pub mod water;
 
 use crate::capture::CaptureTarget;
@@ -112,6 +113,9 @@ pub struct ConsoleParams {
     /// Level position shown in cell (0, 0) (map grid), so per-cell randomness such as glints
     /// stays with the level as the camera scrolls.
     pub level_origin: IVec2,
+    /// How much a spell effect darkens the map (`lighting::SpellLights::dim`): the readability
+    /// floor and cells drawn unlit (remembered terrain) are scaled by `1 − dim`; 0 on the UI.
+    pub dim: f32,
 }
 
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
@@ -314,6 +318,7 @@ fn upload(
     anims: Res<AnimTable>,
     visual: Res<VisualTime>,
     effects: Res<Effects>,
+    spells: Res<lighting::SpellLights>,
     handles: Res<ConsoleHandles>,
     settings: Res<Settings>,
     mut materials: ResMut<Assets<ConsoleMaterial>>,
@@ -341,11 +346,13 @@ fn upload(
                 0.0
             },
             level_origin: IVec2::ZERO,
+            dim: 0.0,
         };
     let screen = Rect::from_corners(Vec2::ZERO, layout.window.as_vec2());
     let ui = params(&console, layout.origin, screen, false, false);
     let map = ConsoleParams {
         level_origin: grid.level_origin,
+        dim: 1.0 - spells.keep(),
         ..params(
             &grid.console,
             grid.origin,

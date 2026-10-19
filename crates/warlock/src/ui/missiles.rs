@@ -334,7 +334,7 @@ pub(super) fn emit(
         // A burning missile is light; anything else is lit where it flies.
         let shade = |color: LinearRgba, at: Vec2| {
             let lit = match def.burning {
-                Some(_) => color,
+                Some(_) => glyphs::darkened(color, light.keep()),
                 None => glyphs::lit(color, &light, at, at, ACTOR_FLOOR),
             };
             let lit = in_range(lit);
