@@ -24,14 +24,39 @@ fn is_one(n: &u32) -> bool {
     *n == 1
 }
 
+/// Names in a message the key that runs a command, by the command's id in the app's key
+/// settings (`help`): core knows no bindings, so the text holds `{key:help}` and the app fills
+/// in the key as bound ([`Message::display_with`]).
+pub fn key(command: &str) -> String {
+    format!("{KEY_OPEN}{command}}}")
+}
+
+const KEY_OPEN: &str = "{key:";
+
 impl Message {
-    /// The text as shown to the player, e.g. `You open the door. (×2)`.
+    /// The text with its counted repeats, e.g. `You open the door. (×2)`, keys named in it
+    /// ([`key`]) left as written: for dev tools, which know no bindings.
     pub fn display(&self) -> String {
-        if self.count > 1 {
-            format!("{} (×{})", self.text, self.count)
-        } else {
-            self.text.clone()
+        self.display_with(key)
+    }
+
+    /// The text as shown to the player: [`Message::display`] with every key named in it filled
+    /// in by `key_name` from the command's id (`?` for `help` with the default keys).
+    pub fn display_with(&self, key_name: impl Fn(&str) -> String) -> String {
+        let mut text = String::with_capacity(self.text.len());
+        let mut rest = self.text.as_str();
+        while let Some(at) = rest.find(KEY_OPEN) {
+            let after = &rest[at + KEY_OPEN.len()..];
+            let Some(end) = after.find('}') else { break };
+            text.push_str(&rest[..at]);
+            text.push_str(&key_name(&after[..end]));
+            rest = &after[end + 1..];
         }
+        text.push_str(rest);
+        if self.count > 1 {
+            text.push_str(&format!(" (×{})", self.count));
+        }
+        text
     }
 }
 
@@ -95,6 +120,26 @@ mod tests {
             ]
         );
         assert_eq!(log.iter().next().map(|m| m.turn), Some(2));
+    }
+
+    #[test]
+    fn keys_named_in_a_message_are_filled_in_as_bound() {
+        let mut log = MessageLog::default();
+        log.push(1, format!("Press {} or {}.", key("help"), key("look")));
+        log.push(2, format!("Press {} or {}.", key("help"), key("look")));
+        let message = log.iter().next().unwrap();
+        let bound = |id: &str| match id {
+            "help" => "F1".to_string(),
+            other => other.to_uppercase(),
+        };
+        assert_eq!(message.display_with(bound), "Press F1 or LOOK. (×2)");
+        assert_eq!(message.display(), "Press {key:help} or {key:look}. (×2)");
+        let plain = Message {
+            turn: 0,
+            text: "No {keys} here, {key:open".into(),
+            count: 1,
+        };
+        assert_eq!(plain.display_with(bound), plain.text);
     }
 
     #[test]
