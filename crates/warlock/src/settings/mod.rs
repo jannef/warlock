@@ -370,7 +370,11 @@ impl SettingsStore {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn default_backend() -> Option<Backend> {
-    crate::paths::project_dirs().map(|d| Backend::Dir(d.config_dir().to_path_buf()))
+    crate::paths::locations()
+        .config
+        .dir
+        .clone()
+        .map(Backend::Dir)
 }
 
 /// Browser storage; without it (some privacy modes) settings last for the session only.

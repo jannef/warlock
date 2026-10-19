@@ -143,7 +143,7 @@ impl SaveStore {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn default_backend() -> Option<Backend> {
-    crate::paths::project_dirs().map(|d| Backend::Dir(d.data_dir().to_path_buf()))
+    crate::paths::locations().data.dir.clone().map(Backend::Dir)
 }
 
 /// Browser storage, unless the browser refuses it (some privacy modes): then saving is off.

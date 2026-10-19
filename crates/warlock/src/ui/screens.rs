@@ -29,6 +29,7 @@ use super::confirm_screen::ConfirmScreen;
 use super::controls_screen::ControlsScreen;
 use super::death_screen::DeathScreen;
 use super::equipment_screen::{EquipmentScreen, ItemScreen};
+use super::files_screen::FilesScreen;
 use super::info_tabs;
 use super::menu::{MainMenu, Press};
 use super::motion::Motion;
@@ -67,6 +68,8 @@ pub enum ScreenName {
     /// The character before the run starts: start, or go back to a step.
     Summary,
     Settings,
+    /// Where the settings, saves, and logs are, over Settings.
+    Files,
     Controls,
     /// The pause menu over a run (Esc in play).
     Pause,
@@ -174,6 +177,7 @@ enum Screen {
     /// Boxed: it holds the whole character.
     Summary(Box<SummaryScreen>),
     Settings(SettingsScreen),
+    Files(FilesScreen),
     /// The controls screen, or the read-only `?` help.
     Controls(ControlsScreen),
     /// The inventory, or choosing what to pick up or drop.
@@ -212,6 +216,7 @@ impl Screen {
             ScreenName::Class => choice(Step::Class),
             ScreenName::Summary => Screen::Summary(Box::new(SummaryScreen::new(content, draft))),
             ScreenName::Settings => Screen::Settings(SettingsScreen::default()),
+            ScreenName::Files => Screen::Files(FilesScreen::new(crate::paths::locations())),
             ScreenName::Controls => Screen::Controls(ControlsScreen::default()),
             ScreenName::Help => Screen::Controls(ControlsScreen::help()),
             ScreenName::Inventory => objects(ObjectList::Inventory),
@@ -240,6 +245,7 @@ impl Screen {
             Screen::Choice(screen) => screen.step().screen(),
             Screen::Summary(_) => ScreenName::Summary,
             Screen::Settings(_) => ScreenName::Settings,
+            Screen::Files(_) => ScreenName::Files,
             Screen::Controls(screen) if screen.is_help() => ScreenName::Help,
             Screen::Controls(_) => ScreenName::Controls,
             Screen::Objects(screen) => match screen.list() {
@@ -383,7 +389,8 @@ impl ScreenStack {
                 action
             }
             Some(Screen::Summary(screen)) => screen.handle(press),
-            Some(Screen::Settings(screen)) => leave(screen.handle(press, settings)),
+            Some(Screen::Settings(screen)) => screen.handle(press, settings),
+            Some(Screen::Files(screen)) => screen.handle(press),
             Some(Screen::Controls(screen)) => leave(screen.handle(press, bindings)),
             Some(Screen::Objects(screen)) => screen.handle(press, bindings),
             Some(Screen::Equipment(screen)) => screen.handle(press, bindings),
@@ -432,6 +439,7 @@ impl ScreenStack {
             Some(Screen::Choice(screen)) => screen.draw(console),
             Some(Screen::Summary(screen)) => screen.draw(console),
             Some(Screen::Settings(screen)) => screen.draw(console, settings),
+            Some(Screen::Files(screen)) => screen.draw(console),
             Some(Screen::Controls(screen)) => screen.draw(console, bindings),
             Some(Screen::Objects(screen)) => screen.draw(console, bindings),
             Some(Screen::Equipment(screen)) => screen.draw(console, bindings),
@@ -518,8 +526,10 @@ fn startup_screens(screen: Option<ScreenName>, in_run: bool) -> Vec<ScreenName> 
                 .collect()
         }
         (false, Some(s @ (NewRun | Settings | Controls | Confirm))) => vec![Main, s],
+        (false, Some(Files)) => vec![Main, Settings, Files],
         (false, _) => vec![Main],
         (true, Some(s @ (Settings | Controls | Confirm))) => vec![Pause, s],
+        (true, Some(Files)) => vec![Pause, Settings, Files],
         (true, Some(EquipItem)) => vec![Equipment, EquipItem],
         (true, Some(s)) if s.needs_run() => vec![s],
         (true, _) => Vec::new(),

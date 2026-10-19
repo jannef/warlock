@@ -34,6 +34,32 @@ replaces the saved one. Your character is saved with the run.
 Logs and crash reports are in a `logs` folder: on macOS and Linux inside the data folder, on Windows
 in `%LOCALAPPDATA%\warlock\data\logs`.
 
+To see the exact folders for your launch, and why they are there, run `warlock --paths`, or open
+**Settings**, then **Where are my files?**, which also has an **Open folder** action for each.
+
+### Portable mode
+
+To keep everything with the game, for a USB stick or a game folder you can copy, make an empty
+folder named **`warlock-data`** next to the game (on macOS, next to `Warlock.app`, not inside it).
+The game then keeps its settings, key bindings, save, and logs in it:
+
+| Inside `warlock-data` | What |
+|---|---|
+| `config/` | `settings.toml` (settings and key bindings) |
+| `data/` | `run.sav`, and `snapshots/` |
+| `logs/` | logs and crash reports |
+
+`warlock --portable` does the same and makes the folder if it is missing; `warlock --portable DIR`
+uses the folder DIR instead. Which folder wins, first to last: `--config-dir` and `--save-dir`
+(each for its own folder), then `--portable DIR`, then a `warlock-data` folder next to the game,
+then the standard folders above. If a portable folder cannot be written (a read-only disk), the
+game says so and carries on, reading what is there but not saving.
+
+`warlock --move-data native` moves a portable folder's files into the standard folders and renames
+the emptied folder to `warlock-data.moved-<date>`; `warlock --move-data portable [DIR]` does the
+reverse. Add `--dry-run` to see the plan first. Nothing is overwritten (a file already there is
+kept as `NAME.bak-<time>`), and it will not run while the game is running.
+
 **Browser.** The save is kept in your browser's local storage for the page, under `warlock/run.sav`,
 as are your settings. It survives reloads. If the browser blocks storage (some private modes), the
 game runs but cannot save, and writes a warning to its log. If the browser runs out of room, a
