@@ -190,9 +190,12 @@ pub(super) fn track(
                 bursts.trigger(&view, *to, ParticleTrigger::Step, seed, start);
             }
             // A door's dust as it swings, a wall's as it gives way: the toggle burst of the
-            // terrain the cell turned into.
+            // terrain the cell turned into. A kick that breaks a door throws the broken door's
+            // splinters; one that holds shakes dust off the closed door.
             Event::DoorOpened { pos }
             | Event::DoorClosed { pos }
+            | Event::DoorKicked { pos }
+            | Event::DoorBroken { pos }
             | Event::WallBroken { pos, .. } => {
                 bursts.trigger(&view, *pos, ParticleTrigger::Toggle, seed, start);
             }

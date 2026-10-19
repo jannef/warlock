@@ -5,11 +5,12 @@
 //! wear and wield, how hurt they look, in words, and the status effects that show on them, such
 //! as bleeding), objects, and light, remembered terrain and objects, and what the player carries,
 //! wears, weighs, and scores in each stat, their trained skills' values, their burden and
-//! carrying limit, their hit points and Defence, and their own status effects by name; it never
-//! exposes unseen terrain or objects, hidden creatures, what else creatures carry, their burden,
-//! their skills, or their hit points, any stat's modifier or potential, a skill's marks or
-//! benefits, an untrained skill, a creature's stats, a to-hit, how severe a status effect is or
-//! how long it lasts, or light the player's eyes cannot perceive.
+//! carrying limit, their hit points and Defence, their own status effects by name, and how
+//! hungry they are; it never exposes unseen terrain or objects, hidden creatures, what else
+//! creatures carry, their burden, their skills, or their hit points, any stat's modifier or
+//! potential, a skill's marks or benefits, an untrained skill, a creature's stats, a to-hit, how
+//! severe a status effect is or how long it lasts, the nutrition counter, a corpse's age, or
+//! light the player's eyes cannot perceive.
 //!
 //! **Memory** (spec §5): terrain, piles of objects, and blood as last seen. Objects are seen where
 //! creatures are (cells in line of sight, never completed walls); a pile seen gone is forgotten,
@@ -71,6 +72,7 @@ use crate::equipment::Equipment;
 use crate::fov::{compute_fov, radius2};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
+use crate::hunger::Hunger;
 use crate::light::{
     Area, BOUNCE_STEPS, Bounce, Light, LightCache, Moon, SUN_KEY, ShadowSteps, Sky, Sun, Sunlight,
     falloff, lit_in_sight, moon_key, wall_faces,
@@ -880,14 +882,22 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// The player's own scores, by stat (spec §8 "Stats"), as the rules read them: lowered
-    /// while a status effect lowers them (spec §8 "Status effects"). That is all the player
-    /// knows of stats: never their potentials or modifiers, and nothing of a creature's.
+    /// while a status effect lowers them (spec §8 "Status effects") and while hunger leaves them
+    /// Weak or worse (spec §8 "Hunger"). That is all the player knows of stats: never their
+    /// potentials or modifiers, and nothing of a creature's.
     pub fn own_scores(&self) -> PerStat<u8> {
         self.player.effective_stats(self.content).scores()
     }
 
-    /// The player's scores as they are without their status effects: what [`PerceptionView::
-    /// own_scores`] would be with none (the character screen marks the lowered ones).
+    /// How hungry the player is (spec §8 "Hunger"): the state, never the nutrition counter;
+    /// `None` when nobody hungers.
+    pub fn own_hunger(&self) -> Option<Hunger> {
+        self.player.hunger(self.content)
+    }
+
+    /// The player's scores as they are without their status effects and hunger: what
+    /// [`PerceptionView::own_scores`] would be with neither (the character screen marks the
+    /// lowered ones).
     pub fn own_base_scores(&self) -> PerStat<u8> {
         self.player.stats.scores()
     }

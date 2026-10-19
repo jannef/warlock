@@ -6,6 +6,8 @@
 //! **entrances**: doors on the edge, never on a corner. Generators join every entrance to the rest
 //! of the level. A vault has no stairs and no player start, and every walkable cell must be
 //! reachable from an entrance (doors count as passable), so stamping one never strands anything.
+//! Its locks (spec §8 "Doors") come with their keys: a key to every lock lies, or is carried by a
+//! creature, within reach of an unlocked entrance without unlocking a door.
 //!
 //! A vault of kind `outdoor` (ruins for the local areas of the overworld) is stamped onto open
 //! ground instead of into rock: its `void` cells (the default legend's space) are the local
@@ -90,6 +92,7 @@ impl Vault {
         if let Some((p, _)) = terrain.iter().find(|(p, _)| passable(*p) && !seen[*p]) {
             return Err(format!("{p} cannot be reached from the entrances"));
         }
+        check_keys(&template, &entrances, passable, content)?;
         Ok(Self {
             template,
             entrances,
@@ -111,6 +114,48 @@ impl Vault {
     /// Whether the vault is for the local areas of the overworld (kind `outdoor`).
     pub fn is_outdoor(&self) -> bool {
         self.template.kind == LevelKind::Outdoor
+    }
+}
+
+/// A vault's locks (spec §8 "Doors") come with their keys: for every lock, a key that opens it
+/// lies, or is carried by a creature, within reach of an unlocked entrance without unlocking any
+/// door, so a generator never has to place a vault's keys.
+fn check_keys(
+    template: &LevelTemplate,
+    entrances: &[(Pos, Dir)],
+    passable: impl Fn(Pos) -> bool,
+    content: &Content,
+) -> Result<(), String> {
+    if template.locks.is_empty() {
+        return Ok(());
+    }
+    let terrain = &template.terrain;
+    let unlocked = |p: Pos| passable(p) && !template.locks.contains_key(&p);
+    let mut seen = Grid::new(terrain.width(), terrain.height(), false);
+    let mut stack: Vec<Pos> = (entrances.iter())
+        .map(|(p, _)| *p)
+        .filter(|p| unlocked(*p))
+        .collect();
+    for p in &stack {
+        seen[*p] = true;
+    }
+    while let Some(p) = stack.pop() {
+        for dir in [Dir::N, Dir::E, Dir::S, Dir::W] {
+            let q = p.step(dir);
+            if unlocked(q) && !seen[q] {
+                seen[q] = true;
+                stack.push(q);
+            }
+        }
+    }
+    match (template.locks.iter())
+        .find(|(_, lock)| !template.has_key_for(content, lock, |q| seen[q]))
+    {
+        Some((p, _)) => Err(format!(
+            "no key to the lock at {p} lies or is carried within reach of an unlocked entrance \
+             (without unlocking a door)"
+        )),
+        None => Ok(()),
     }
 }
 

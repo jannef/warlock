@@ -57,7 +57,7 @@ struct RunArgs {
     /// the scenario's (ignored when `--replay` is given).
     #[arg(long)]
     character: Option<CharacterSpec>,
-    /// Actions as text, e.g. "move:E move:SE wait open:E close:W descend ascend pickup:ab
+    /// Actions as text, e.g. "move:E move:SE wait open:E close:W kick:N descend ascend pickup:ab
     /// drop:a bash:E chat:E ask:E:rooms".
     #[arg(long)]
     actions: Option<String>,
@@ -220,9 +220,9 @@ fn replay_command(content: Arc<Content>, args: ReplayArgs) -> Result<(), String>
     Ok(())
 }
 
-/// Prints the level's name, stairs, special rooms, and map (`*` marks a light placed on floor;
-/// the walkable cells of a special room show its effect's letter). On a branch's first level the
-/// up staircase leads nowhere here: it depends on where the player came from.
+/// Prints the level's name, stairs, special rooms, and map (`*` marks a light placed on floor, `&`
+/// a locked door; the walkable cells of a special room show its effect's letter). On a branch's
+/// first level the up staircase leads nowhere here: it depends on where the player came from.
 fn gen_command(content: &Content, args: &GenArgs) -> Result<(), String> {
     let level = mapgen::generate(content, args.seed, &args.level, None)
         .map_err(|e| format!("cannot generate `{}`: {e}", args.level))?;

@@ -154,6 +154,13 @@ name = "storeroom"
 scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W"
 
+# Doors (#130): the pantry's locked west door, across the corridor from the storeroom, kicked
+# in (it breaks on the fourth kick), seen from just inside the pantry: the broken door behind.
+[[golden]]
+name = "kicked-door"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 kick:E*4 move:E*2"
+
 # Choosing what to pick up from the start room's pile (#80).
 [[golden]]
 name = "pick-up-screen"

@@ -26,6 +26,9 @@
 | Pick-axe | `(` | tool | iron | 3 kg | no | Tool |
 | Mattock | `(` | tool | iron | 4.5 kg | no | Tool |
 | Iron key | `(` | tool | iron | 40 g | no | - |
+| Brass key | `(` | tool | brass | 40 g | no | - |
+| Rusty key | `(` | tool | iron | 50 g | no | - |
+| Skeleton key | `(` | tool | iron | 30 g | no | - |
 | Wax candle | `(` | tool | wax | 100 g | yes | - |
 | Coil of rope | `(` | tool | cloth | 1.5 kg | no | - |
 | Red potion | `!` | potion | glass | 250 g | yes | - |
@@ -33,6 +36,8 @@
 | Scroll of light | `?` | scroll | paper | 50 g | yes | - |
 | Strip of dried meat | `%` | food | flesh | 150 g | yes | - |
 | Apple | `%` | food | plant matter | 150 g | yes | - |
+| Food ration | `%` | food | plant matter | 500 g | yes | - |
+| Loaf of bread | `%` | food | plant matter | 400 g | yes | - |
 | Rock | `*` | stone or gem | stone | 800 g | yes | Missile weapon |
 | Ruby | `*` | stone or gem | gemstone | 5 g | yes | - |
 | Gold coin | `$` | coin | gold | 10 g | yes | - |

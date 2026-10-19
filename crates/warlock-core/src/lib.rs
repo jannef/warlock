@@ -17,11 +17,13 @@ pub mod combat;
 pub mod content;
 pub mod daylight;
 pub mod dice;
+pub mod door;
 pub mod dump;
 pub mod equipment;
 pub mod fov;
 pub mod geom;
 pub mod grid;
+pub mod hunger;
 pub mod light;
 pub mod mapgen;
 pub mod messages;
@@ -41,7 +43,7 @@ pub mod weather;
 pub mod world;
 
 pub use action::{
-    Action, AttackKind, Breach, Event, Letters, MissileEnd, Outcome, Rest, SpellShape,
+    Action, AttackKind, Breach, Event, Letters, Meal, MissileEnd, Outcome, Rest, SpellShape,
 };
 pub use geom::{Dir, Pos};
 pub use world::{World, WorldError, WorldState};

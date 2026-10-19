@@ -60,6 +60,12 @@ pub(super) struct TerrainSpec {
     pub opens_to: Option<String>,
     /// For an open door: the terrain it becomes when closed.
     pub closes_to: Option<String>,
+    /// For a closed door that can be kicked in: the terrain it becomes when broken (a broken
+    /// door, open for good); with `sturdiness`.
+    pub breaks_to: Option<String>,
+    /// For a closed door that can be kicked in: a kick breaks it with a chance of the kicker's
+    /// Strength in this (spec §8 "Doors"); with `breaks_to`.
+    pub sturdiness: Option<u8>,
     pub stairs: Option<StairsDir>,
     /// Light preset the terrain emits (torch sconce, glowing fungus, rune). Must be transparent.
     pub light: Option<String>,
@@ -142,6 +148,11 @@ pub struct TerrainDef {
     pub landscape: Option<Landscape>,
     pub opens_to: Option<TerrainId>,
     pub closes_to: Option<TerrainId>,
+    /// Gameplay: a closed door a kick can break, the terrain it becomes then (a broken door) and
+    /// its sturdiness: a kick breaks it with a chance of the kicker's Strength score in this
+    /// ([`crate::door::kick_breaks`]). `None`: kicks never break it. (Digging and blasts break
+    /// walls, `breaks`, never doors.)
+    pub kicked_in: Option<(TerrainId, u8)>,
     pub stairs: Option<StairsDir>,
     /// Light this terrain emits, if any.
     pub light: Option<LightId>,

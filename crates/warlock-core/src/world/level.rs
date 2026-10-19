@@ -1,6 +1,6 @@
-//! Per-level mutable state: terrain, piles of objects, and blood as they are now, and what the
-//! player remembers of them; fires, and the walls dug into; the level's special rooms (spec §7
-//! "Special rooms") and whether the player has been inside each.
+//! Per-level mutable state: terrain, locks, piles of objects, and blood as they are now, and what
+//! the player remembers of them; fires, and the walls dug into; the level's special rooms (spec
+//! §7 "Special rooms") and whether the player has been inside each.
 
 use crate::blood::{Spatter, Stain};
 use crate::color::Rgb;
@@ -8,6 +8,7 @@ use crate::content::{
     Content, EdgeExit, Flow, LevelKind, LevelTemplate, LightId, RoomEffectDef, SpecialRoom,
     StairsLink, TerrainDef, TerrainId,
 };
+use crate::door::Lock;
 use crate::geom::Pos;
 use crate::grid::Grid;
 use crate::light::Light;
@@ -62,6 +63,10 @@ pub struct LevelState {
     /// burning objects themselves lie in the pile there.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) fires: BTreeMap<Pos, Fire>,
+    /// Locks on closed doors, by position (spec §8 "Doors"): gone once the door is unlocked or
+    /// broken. Ground truth: a locked door looks like any closed door.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) locks: BTreeMap<Pos, Lock>,
     /// Blood on cells, by position (spec §8 "Blood"). Presentation-only: no rule reads it.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) blood: BTreeMap<Pos, Stain>,
@@ -97,6 +102,7 @@ impl LevelState {
             objects: template.objects.clone(),
             object_memory: BTreeMap::new(),
             fires: BTreeMap::new(),
+            locks: template.locks.clone(),
             blood: BTreeMap::new(),
             blood_memory: BTreeMap::new(),
             dug: BTreeMap::new(),
@@ -144,6 +150,13 @@ impl LevelState {
     /// reachable through [`crate::World::ground_truth`], **for developer tools only**.
     pub fn objects_at(&self, p: Pos) -> &[Stack] {
         self.objects.get(&p).map_or(&[], Vec::as_slice)
+    }
+
+    /// The lock on the door at `p`, if it is locked (ground truth, `None` for any other cell).
+    /// Only reachable through [`crate::World::ground_truth`] outside the rules, **for developer
+    /// tools only**: the player learns a door is locked by trying it.
+    pub fn lock_at(&self, p: Pos) -> Option<&Lock> {
+        self.locks.get(&p)
     }
 
     /// Blood of `color` lands here at `now`: on a cell whose terrain holds it, it adds to the

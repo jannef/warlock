@@ -14,12 +14,19 @@ use std::str::FromStr;
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Action {
-    /// Step in a direction; bumping a closed door opens it.
+    /// Step in a direction; bumping a closed door opens it (unlocking it first with a key that
+    /// fits, if it is locked).
     Move(Dir),
     /// Let a turn pass.
     Wait,
+    /// Open the door in a direction; a locked one only with a key that fits, which unlocks it
+    /// first (spec §8 "Doors").
     Open(Dir),
     Close(Dir),
+    /// Kick in a direction (spec §8 "Doors"): a closed door, to break it (a chance of Strength in
+    /// its sturdiness), or a creature, an unarmed blow. Takes the time of `kick`; kicking at
+    /// empty space or something solid takes none.
+    Kick(Dir),
     /// Take stairs up.
     Ascend,
     /// Take stairs down.
@@ -68,6 +75,10 @@ pub enum Action {
         dir: Dir,
         topic: String,
     },
+    /// Eat one of a stack, from the pack or the floor (spec §8 "Hunger"): a meal of as many
+    /// turns (each the `eat` action) as the food takes, stopping early like a rest; the food is
+    /// eaten and feeds at the end.
+    Eat(Meal),
     /// Take a combat stance (spec §8 "Stances"). Takes no game time, but changes state, so
     /// replays record it.
     SetStance(CombatStance),
@@ -113,6 +124,17 @@ pub enum Rest {
 
 /// The longest rest; resting until dawn or dusk is never longer either.
 pub const MAX_REST: Duration = Duration::seconds(DAY);
+
+/// Where the food of a meal is.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Meal {
+    /// Inventory stack at this position (`a` = 0): `eat:b`.
+    Pack(usize),
+    /// The stack at this position in the pile on the player's cell (`a` = the top):
+    /// `eat:floor:a`.
+    Floor(usize),
+}
 
 /// A set of letters `a` to `z` naming stacks of a list the player sees (a pile, the inventory)
 /// by position: `a` is the first. Written as the letters in order, e.g. `ac`.
@@ -204,6 +226,14 @@ pub enum Event {
         pos: Pos,
     },
     DoorClosed {
+        pos: Pos,
+    },
+    /// A kick at a closed door that held: "WHAMM!" (spec §8 "Doors").
+    DoorKicked {
+        pos: Pos,
+    },
+    /// A door kicked in: it broke, and is open for good.
+    DoorBroken {
         pos: Pos,
     },
     LevelChanged {
@@ -351,18 +381,18 @@ pub struct Outcome {
     pub events: Vec<Event>,
 }
 
-/// Text syntax for scripting: `move:E wait open:E close:W ascend descend lantern rest:1h
+/// Text syntax for scripting: `move:E wait open:E close:W kick:N ascend descend lantern rest:1h
 /// rest:dawn rest:dusk pickup pickup:ac drop:b equip:body:b remove:body bash:E fire:12,5
-/// throw:c:12,5 dig:E chat:E ask:E:TOPIC vision:ID skip:1h weather:rain effect:fireball@12,5
-/// effect:lightning_bolt@3,4>12,4 afflict:bleeding` (durations: `30s`, `10m`, `2h`; letters
-/// name stacks, `a`
-/// first; `pickup` and `drop` without letters take everything; `equip:SLOT:LETTER` puts
-/// inventory stack LETTER on in slot SLOT, `remove:SLOT` takes off what is there; `bash:DIR`
-/// bashes with the held shield; `dig:DIR` digs toward a wall; `fire:X,Y` shoots at the level
-/// cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack LETTER there; `chat:DIR` talks
-/// to the creature that way, `ask:DIR:TOPIC` asks it about a topic by id; weather: `clear`,
-/// `overcast`, `rain`, `heavy`; `effect:ID@X,Y[>X,Y]` shows a spell effect at a cell, or from
-/// one cell toward another).
+/// throw:c:12,5 dig:E eat:b eat:floor:a chat:E ask:E:TOPIC vision:ID skip:1h weather:rain
+/// effect:fireball@12,5 effect:lightning_bolt@3,4>12,4 afflict:bleeding` (durations: `30s`,
+/// `10m`, `2h`; letters name stacks, `a` first; `pickup` and `drop` without letters take
+/// everything; `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT, `remove:SLOT`
+/// takes off what is there; `bash:DIR` bashes with the held shield; `dig:DIR` digs toward a wall;
+/// `fire:X,Y` shoots at the level cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack
+/// LETTER there; `eat:LETTER` eats one of inventory stack LETTER, `eat:floor:LETTER` one of the
+/// stack LETTER of the pile underfoot; `chat:DIR` talks to the creature that way, `ask:DIR:TOPIC`
+/// asks it about a topic by id; weather: `clear`, `overcast`, `rain`, `heavy`;
+/// `effect:ID@X,Y[>X,Y]` shows a spell effect at a cell, or from one cell toward another).
 ///
 /// `Display` and `FromStr` round-trip; action names are case-insensitive when parsing (vision
 /// profile, slot, and effect ids keep their case).
@@ -373,6 +403,7 @@ impl fmt::Display for Action {
             Action::Wait => f.write_str("wait"),
             Action::Open(d) => write!(f, "open:{d}"),
             Action::Close(d) => write!(f, "close:{d}"),
+            Action::Kick(d) => write!(f, "kick:{d}"),
             Action::Ascend => f.write_str("ascend"),
             Action::Descend => f.write_str("descend"),
             Action::ToggleLantern => f.write_str("lantern"),
@@ -389,6 +420,10 @@ impl fmt::Display for Action {
             Action::Throw { item, at } => {
                 let item = letter(*item).unwrap_or('?');
                 write!(f, "throw:{item}:{},{}", at.x, at.y)
+            }
+            Action::Eat(Meal::Pack(item)) => write!(f, "eat:{}", letter(*item).unwrap_or('?')),
+            Action::Eat(Meal::Floor(item)) => {
+                write!(f, "eat:floor:{}", letter(*item).unwrap_or('?'))
             }
             Action::Rest(Rest::For(d)) => write!(f, "rest:{d}"),
             Action::Rest(Rest::Dawn) => f.write_str("rest:dawn"),
@@ -446,6 +481,7 @@ impl FromStr for Action {
                     topic: topic.to_string(),
                 })
             }
+            "kick" => dir().map(Action::Kick),
             "bash" => dir().map(Action::Bash),
             "dig" => dir().map(Action::Dig),
             "wait" => bare(Action::Wait),
@@ -511,6 +547,26 @@ impl FromStr for Action {
                 let at = arg.ok_or_else(|| "`fire` needs a cell, e.g. `fire:12,5`".to_string())?;
                 parse_cell(at).map(Action::Fire)
             }
+            "eat" => {
+                let usage = || "`eat` needs a letter, e.g. `eat:b` or `eat:floor:a`".to_string();
+                let (floor, item) = match arg.map(|a| a.split_once(':')) {
+                    Some(Some(("floor", item))) => (true, item),
+                    Some(None) => (false, arg.unwrap_or_default()),
+                    _ => return Err(usage()),
+                };
+                let mut chars = item.chars();
+                match (chars.next(), chars.next()) {
+                    (Some(c @ 'a'..='z'), None) => {
+                        let i = usize::from(c as u8 - b'a');
+                        Ok(Action::Eat(if floor {
+                            Meal::Floor(i)
+                        } else {
+                            Meal::Pack(i)
+                        }))
+                    }
+                    _ => Err(usage()),
+                }
+            }
             "throw" => {
                 let usage = || "`throw` needs a letter and a cell, e.g. `throw:c:12,5`".to_string();
                 let (item, at) = arg.and_then(|a| a.split_once(':')).ok_or_else(usage)?;
@@ -562,11 +618,12 @@ impl FromStr for Action {
                 _ => Err("`afflict` needs a status id, e.g. `afflict:bleeding`".into()),
             },
             _ => Err(format!(
-                "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
-                 descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
+                "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, kick:DIR, \
+                 ascend, descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
                  equip:SLOT:LETTER, remove:SLOT, bash:DIR, fire:X,Y, throw:LETTER:X,Y, dig:DIR, \
-                 chat:DIR, ask:DIR:TOPIC, stance:NAME, vision:ID, skip:DURATION, \
-                 weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y], afflict:STATUS)"
+                 eat:LETTER, eat:floor:LETTER, chat:DIR, ask:DIR:TOPIC, stance:NAME, vision:ID, \
+                 skip:DURATION, weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y], \
+                 afflict:STATUS)"
             )),
         }
     }
@@ -675,6 +732,9 @@ mod tests {
                 dir: Dir::NW,
                 topic: "the_rooms".into(),
             },
+            Action::Eat(Meal::Pack(1)),
+            Action::Eat(Meal::Floor(0)),
+            Action::Eat(Meal::Floor(25)),
             Action::Afflict("bleeding".into()),
             Action::Afflict("Odd_Case".into()),
         ];
@@ -685,6 +745,7 @@ mod tests {
                 Action::Open(d),
                 Action::Close(d),
                 Action::Chat(d),
+                Action::Kick(d),
                 Action::Bash(d),
                 Action::Dig(d),
             ]);
@@ -701,6 +762,8 @@ mod tests {
         assert_eq!(parse_actions(""), Ok(vec![]));
         assert!(parse_actions("move").is_err());
         assert!(parse_actions("move:up").is_err());
+        assert_eq!(parse_actions("KICK:sw"), Ok(vec![Action::Kick(Dir::SW)]));
+        assert!(parse_actions("kick").is_err());
         assert!(parse_actions("wait:E").is_err());
         assert_eq!(parse_actions("BASH:sw"), Ok(vec![Action::Bash(Dir::SW)]));
         assert!(parse_actions("bash").is_err());
@@ -824,6 +887,25 @@ mod tests {
             "effect:fireball@3,4>5",
             "effect:fire:ball@3,4",
             "effect:fireball@3,4>5,6>7,8",
+        ] {
+            assert!(parse_actions(bad).is_err(), "{bad}");
+        }
+        assert_eq!(
+            parse_actions("EAT:B eat:Floor:a"),
+            Ok(vec![
+                Action::Eat(Meal::Pack(1)),
+                Action::Eat(Meal::Floor(0))
+            ])
+        );
+        for bad in [
+            "eat",
+            "eat:",
+            "eat:ab",
+            "eat:1",
+            "eat:floor",
+            "eat:floor:",
+            "eat:floor:ab",
+            "eat:pack:a",
             "fire",
             "fire:",
             "fire:3",

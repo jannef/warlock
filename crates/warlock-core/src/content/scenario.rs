@@ -59,6 +59,13 @@ pub struct ScenarioDef {
     /// what a race and a class would give (default 0).
     #[serde(default)]
     pub hp: u16,
+    /// What the player starts with in their pack, as level files place objects
+    /// (`carry = ["ration*2"]`; spec §8 "Hunger": starting food).
+    #[serde(default, rename = "carry")]
+    pub(super) carry_spec: Vec<String>,
+    /// The player's starting pack, from `carry`; filled in by the loader.
+    #[serde(skip)]
+    pub carry: Vec<crate::object::Stack>,
 }
 
 fn default_date() -> [u32; 3] {

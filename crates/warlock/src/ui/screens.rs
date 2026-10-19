@@ -98,6 +98,8 @@ pub enum ScreenName {
     Drop,
     /// Choose what to throw (`t` in play, with no throwing weapon readied).
     Throw,
+    /// Choose what to eat (`E` in play): food lying here, then food in the pack.
+    Eat,
     /// Talking with someone who has topics (`C` next to them): opens by itself when they answer;
     /// as `--screen`, over a run whose last action was such a chat (a replay's last step).
     Dialogue,
@@ -126,6 +128,7 @@ impl ScreenName {
                 | ScreenName::PickUp
                 | ScreenName::Drop
                 | ScreenName::Throw
+                | ScreenName::Eat
                 | ScreenName::Dialogue
                 | ScreenName::Death
         )
@@ -240,6 +243,7 @@ impl Screen {
             ScreenName::PickUp => objects(ObjectList::PickUp),
             ScreenName::Drop => objects(ObjectList::Drop),
             ScreenName::Throw => objects(ObjectList::Throw),
+            ScreenName::Eat => objects(ObjectList::Eat),
             ScreenName::Dialogue => Screen::Dialogue(DialogueScreen::new(talk, run)),
             ScreenName::Death => Screen::Death(DeathScreen::new(run)),
             ScreenName::Confirm => {
@@ -264,6 +268,7 @@ impl Screen {
                 ObjectList::PickUp => ScreenName::PickUp,
                 ObjectList::Drop => ScreenName::Drop,
                 ObjectList::Throw => ScreenName::Throw,
+                ObjectList::Eat => ScreenName::Eat,
             },
             Screen::Equipment(_) => ScreenName::Equipment,
             Screen::EquipItem(_) => ScreenName::EquipItem,

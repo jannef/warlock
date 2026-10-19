@@ -10,11 +10,12 @@ use crate::character::Gender;
 use crate::content::WeaponSkillId;
 use crate::equipment;
 use crate::geom::Pos;
+use crate::hunger::Hunger;
 use crate::noise::{PerceivedSound, SoundKind, Volume};
 use crate::object::format_weight;
 use crate::perception::{CellView, PerceivedLight, PerceptionView};
 use crate::stats::Stat;
-use crate::world::World;
+use crate::world::{Rot, World, rot_at};
 use serde_json::{Value, json};
 use std::fmt::Write;
 use std::str::FromStr;
@@ -64,7 +65,8 @@ pub enum Layer {
     Truth,
     /// Not a map: every actor on the level with its weight, what it carries (and of that wears
     /// and wields), its stats (scores and potentials), its trained skills with their marks, and
-    /// its status effects with their severities (ground truth). **Dev-only.**
+    /// its status effects with their severities, the player's nutrition, then every corpse on
+    /// the level and in the player's pack with its age (ground truth). **Dev-only.**
     Actors,
     /// The level's special rooms (spec §7 "Special rooms"; ground truth): the terrain, with the
     /// plain ground of each special room drawn as its effect's `mark`, then a line per room
@@ -206,8 +208,8 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
 }
 
 /// A heard sound in the `sound` layer: `f` footsteps, `o` a door opening, `c` a door closing,
-/// `x` fighting, `b` a bowstring, `m` chanting (magic), `d` digging, `v` a voice; upper case when
-/// loud.
+/// `x` fighting, `b` a bowstring, `m` chanting (magic), `k` banging (a door kicked), `d` digging,
+/// `v` a voice; upper case when loud.
 pub fn sound_char(sound: &PerceivedSound) -> char {
     let c = match sound.kind {
         SoundKind::Footsteps => 'f',
@@ -216,6 +218,7 @@ pub fn sound_char(sound: &PerceivedSound) -> char {
         SoundKind::Fighting => 'x',
         SoundKind::Bowstring => 'b',
         SoundKind::Chanting => 'm',
+        SoundKind::Banging => 'k',
         SoundKind::Digging => 'd',
         SoundKind::Voice => 'v',
     };
@@ -419,12 +422,36 @@ fn actor_weapon_skills(
 /// Every actor on the level (ground truth): id, creature, position, hit points and Defence,
 /// weight, what it carries, its burden and carrying limit, its stats as score/potential
 /// (`St 12/15`), its trained skills with their marks toward the next point
-/// (`stealth 17 (2/5)`), its status effects with their severities (`effects bleeding 2`), and, if
-/// it has any, the unique character it is and how far its talk has got.
+/// (`stealth 17 (2/5)`), its status effects with their severities (`effects bleeding 2`), the
+/// player's nutrition and hunger (`nutrition 3540 (not_hungry)`), and, if it has any, the unique
+/// character it is and how far its talk has got; then every corpse on the level and in the
+/// player's pack with when it died and how it has rotted (`corpse kobold_corpse at (12, 5): died
+/// 1444-11-11 08:12:00, 2 hours ago, fresh`).
 fn actor_rows(world: &World) -> Vec<String> {
     let content = world.content();
-    let (_, actors) = world.ground_truth();
-    actors
+    let (level, actors) = world.ground_truth();
+    let now = world.time();
+    let corpse = |where_: String, s: &crate::object::Stack| {
+        let died = s.died?;
+        let rot = match rot_at(content, s, now)? {
+            Rot::Fresh => "fresh",
+            Rot::Rotten => "rotten",
+            Rot::Gone => "gone",
+        };
+        Some(format!(
+            "corpse {} {where_}: died {died}, {} ago, {rot}",
+            content.object(s.object).id,
+            now.since(died).spoken()
+        ))
+    };
+    let on_level = (level.objects.iter())
+        .flat_map(|(p, pile)| pile.iter().map(move |s| (*p, s)))
+        .filter_map(|(p, s)| corpse(format!("at {p}"), s));
+    let carried = (world.state().player().inventory.iter())
+        .filter_map(|s| corpse("carried".into(), s))
+        .collect::<Vec<_>>();
+    let corpses: Vec<String> = on_level.chain(carried).collect();
+    let rows: Vec<String> = actors
         .map(|a| {
             let w = a.weight(content);
             let load = world.actor_load(a.id).expect("the actor exists");
@@ -467,6 +494,10 @@ fn actor_rows(world: &World) -> Vec<String> {
             } else {
                 format!("; skills {}", skills.join(", "))
             };
+            let hunger = match (a.satiation, a.hunger(content)) {
+                (Some(s), Some(h)) => format!("; nutrition {} ({})", s.nutrition, h.id()),
+                _ => String::new(),
+            };
             let effects: Vec<String> = (a.effects.iter())
                 .map(|e| format!("{} {}", content.status(e.status).id, e.severity))
                 .collect();
@@ -488,7 +519,7 @@ fn actor_rows(world: &World) -> Vec<String> {
             };
             format!(
                 "{} {} at {}: hp {}/{} dv {}; weight {} (base {} + carried {}: {carried})\
-                 {equipped}; {} (limit {}){weapons}; stats {}{skills}{effects}{npc}{talk}",
+                 {equipped}; {} (limit {}){weapons}; stats {}{skills}{effects}{hunger}{npc}{talk}",
                 a.id,
                 content.creature(a.creature).id,
                 a.pos,
@@ -503,7 +534,8 @@ fn actor_rows(world: &World) -> Vec<String> {
                 stats.join(" "),
             )
         })
-        .collect()
+        .collect();
+    rows.into_iter().chain(corpses).collect()
 }
 
 fn rows(width: i32, height: i32, glyph: impl Fn(Pos) -> char) -> Vec<String> {
@@ -525,8 +557,12 @@ fn summary(world: &World) -> String {
         .unwrap_or_default();
     let (hp, max) = view.own_hp();
     let dead = if world.death().is_some() { " dead" } else { "" };
+    // As the status bar shows it: only when it is not Not hungry.
+    let hunger = (view.own_hunger())
+        .filter(|h| *h != Hunger::NotHungry)
+        .map_or(String::new(), |h| format!(" hunger {}", h.id()));
     format!(
-        "turn {} time {} level {} viewer {} hp {hp}/{max}{dead}{weather} hash {:016x}",
+        "turn {} time {} level {} viewer {} hp {hp}/{max}{dead}{hunger}{weather} hash {:016x}",
         world.turn(),
         world.time(),
         view.level_id(),
@@ -614,6 +650,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             "time": d.time.to_string(),
             "place": d.place,
             "by": d.by.map(|c| content.creature(c).id.clone()),
+            "cause": d.cause.map(|c| c.epitaph(content)),
             "of": d.of.map(|s| content.status(s).id.clone()),
         })
     });
@@ -667,6 +704,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "hp": { "current": hp, "max": max_hp },
         "experience": view.own_experience(),
         "defence": view.own_defence(),
+        "hunger": view.own_hunger(),
         "death": death,
         "messages": messages,
         "layers": layer_map,
@@ -868,7 +906,8 @@ mod tests {
             actors[0].contains(
                 "stats St 9/16 Dx 13/16 To 10/16 In 12/16 Wi 11/16 Pr 9/16; skills appraise 11 \
                  (0/5), disable_device 16 (0/5), escape_artist 7 (0/4), open_lock 18 (0/5), \
-                 search 9 (0/4), spot 10 (0/5), steal 17 (0/5), stealth 16 (0/5), tumble 16 (0/5)"
+                 search 9 (0/4), spot 10 (0/5), steal 17 (0/5), stealth 16 (0/5), tumble 16 (0/5); \
+                 nutrition 3600 (not_hungry)"
             ),
             "{}",
             actors[0]

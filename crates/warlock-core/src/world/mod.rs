@@ -66,15 +66,21 @@
 //! criticals make their targets bleed, a giant rat's bite may poison; effects cost hit points
 //! and ease as the clock moves, slow healing, and can kill. Hit points come back with game
 //! time, twice as fast while the player rests.
+//! Hunger (spec §8 "Hunger", `hunger.rs`, `eat.rs`): game time burns the player's nutrition, and
+//! the state it leaves them in takes effect (Weak, Fainting, Starving, Bloated); meals pass turns
+//! like a rest and feed at their end. Creatures that die leave corpses, which rot away.
 
 mod actor;
 mod ai;
 mod bleed;
 mod dig;
+mod door;
+mod eat;
 mod equip;
 mod experience;
 mod fight;
 mod hash;
+mod hunger;
 mod level;
 mod path;
 mod schedule;
@@ -86,7 +92,9 @@ mod train;
 
 pub use actor::{Actor, ActorId, ActorKind, Mind, Patrol};
 pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
-pub use fight::Death;
+pub use eat::Rot;
+pub(crate) use eat::rot_at;
+pub use fight::{Cause, Death};
 pub(crate) use hash::fnv1a;
 pub use level::{Fire, LevelState};
 pub use talk::{Conversation, Talk, TopicView};
@@ -99,6 +107,7 @@ use crate::content::{
     RoomEffectDef, StairsDir, Stance, TerrainId, local_area_id,
 };
 use crate::geom::{Dir, Pos};
+use crate::hunger::Satiation;
 use crate::light::{LightCache, Sky};
 use crate::mapgen::local::arrival;
 use crate::messages::MessageLog;
@@ -326,6 +335,8 @@ enum Spent {
     Turn(i64),
     /// A rest until this moment (see [`World::rest`]).
     Rest(GameTime, Rest),
+    /// A meal (see [`World::dine`]).
+    Meal(eat::Dish),
     /// Digging into the wall at this cell (see [`World::dig`]).
     Dig(Pos),
     /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
@@ -422,7 +433,7 @@ impl World {
             energy: 0,
             heard: Vec::new(),
             mind: Mind::default(),
-            inventory: Vec::new(),
+            inventory: def.carry.clone(),
             equipment: Default::default(),
             stats,
             hp: 0,
@@ -434,6 +445,7 @@ impl World {
             faction_override: None,
             npc: None,
             talk: Talk::default(),
+            satiation: content.hunger().map(|h| Satiation::new(h.start)),
             stance: CombatStance::Neutral,
         };
         player.hp = player.max_hp(&content);
@@ -660,6 +672,7 @@ impl World {
                 self.perceive(&mut events);
             }
             Spent::Rest(until, goal) => self.rest(until, goal, &mut events),
+            Spent::Meal(dish) => self.dine(dish, &mut events),
             Spent::Dig(at) => self.dig(at, &mut events),
             Spent::Skip(duration) => {
                 // Nobody acts or gains energy.
@@ -817,6 +830,7 @@ impl World {
             self.state.weather_override = None;
         }
         self.burn_out();
+        self.rot_away();
         let before = self.perception.weather();
         *self.perception = Perception::compute(&self.state, &self.content, &mut self.lights);
         let current = self.state.current_level.clone();
@@ -926,7 +940,10 @@ impl World {
             Event::ActorMoved { actor, from, to } => {
                 actor == player || perception.sees_actors_at(from) || perception.sees_actors_at(to)
             }
-            Event::DoorOpened { pos } | Event::DoorClosed { pos } => perception.is_visible(pos),
+            Event::DoorOpened { pos }
+            | Event::DoorClosed { pos }
+            | Event::DoorKicked { pos }
+            | Event::DoorBroken { pos } => perception.is_visible(pos),
             Event::WallBroken { pos, cause } => {
                 let seen = perception.is_visible(pos);
                 if seen && cause == Breach::Blast {
@@ -1015,7 +1032,9 @@ impl World {
                 seen
             }
         });
-        if let (Some(by), Some(death)) = (killer_seen, self.state.death.as_mut()) {
+        if let (Some(by), Some(death)) = (killer_seen, self.state.death.as_mut())
+            && death.cause.is_none()
+        {
             death.by = by;
         }
         match collapsed {
@@ -1159,10 +1178,8 @@ impl World {
         let (done, kind) = match action {
             Action::Move(dir) => return self.player_moves(*dir, events),
             Action::Wait => (true, ActionKind::Wait),
-            Action::Open(dir) => (
-                self.open_door(here.step(*dir), events),
-                ActionKind::OpenDoor,
-            ),
+            Action::Open(dir) => return self.open_door(here.step(*dir), events),
+            Action::Kick(dir) => return self.kick(*dir, events),
             Action::Close(dir) => (
                 self.close_door(here.step(*dir), events),
                 ActionKind::CloseDoor,
@@ -1191,6 +1208,7 @@ impl World {
             Action::Rest(goal) => return self.start_rest(*goal),
             Action::Chat(dir) => return self.chat(*dir, events),
             Action::Ask { dir, topic } => return self.ask(*dir, topic, events),
+            Action::Eat(meal) => return self.eat(*meal),
             Action::Dig(dir) => return self.start_dig(*dir),
             Action::SetVision(id) => return self.set_vision(id),
             Action::SetStance(stance) => return self.set_stance(*stance),
@@ -1376,10 +1394,15 @@ impl World {
         Spent::NoTime
     }
 
-    /// Changes terrain on the current level and invalidates light masks it may affect.
+    /// Changes terrain on the current level and invalidates light masks it may affect. A lock
+    /// stays only on a closed door.
     fn set_terrain(&mut self, p: Pos, terrain: TerrainId) {
+        let closed_door = self.content.terrain(terrain).is_closed_door();
         let level = self.state.current_mut();
         level.terrain.set(p, terrain);
+        if !closed_door {
+            level.locks.remove(&p);
+        }
         let level = self.state.current();
         self.lights.terrain_changed(level, &self.content, p);
     }
@@ -1400,8 +1423,7 @@ impl World {
         };
         let def = self.content.terrain(terrain);
         if def.is_closed_door() {
-            let opened = self.open_door(to, events);
-            return self.took(opened, ActionKind::OpenDoor);
+            return self.open_door(to, events);
         }
         if !def.walkable {
             let name = def.name.clone();
@@ -1419,7 +1441,11 @@ impl World {
             if self.stance(player, target) == Stance::Hostile {
                 let skill = self.state.player().melee_skill(&self.content);
                 self.player_attacks(target, seen, events);
-                return Spent::Turn(self.attack_price(player, ActionKind::Melee, skill));
+                // Priced before the exertion, which may burn enough to leave the player
+                // hungrier (no longer Bloated).
+                let price = self.attack_price(player, ActionKind::Melee, skill);
+                self.exert(ActionKind::Melee);
+                return Spent::Turn(price);
             }
             if let Some(why) = self.refusal(target) {
                 self.refused(target, why, seen);
@@ -1529,58 +1555,6 @@ impl World {
         events.push(Event::LevelChanged { from, to: id });
         self.say(format!("You explore the {what}."));
         true
-    }
-
-    fn open_door(&mut self, p: Pos, events: &mut Vec<Event>) -> bool {
-        let terrain = self.state.current().terrain.get(p).copied();
-        let def = terrain.map(|t| self.content.terrain(t));
-        match def {
-            Some(def) if def.is_closed_door() => {
-                let opened = def.opens_to.expect("closed doors have opens_to");
-                self.make_noise(self.state.player, Act::OpenDoor(p));
-                self.set_terrain(p, opened);
-                events.push(Event::DoorOpened { pos: p });
-                self.say("You open the door.");
-                true
-            }
-            Some(def) if def.is_open_door() => {
-                self.say("That door is already open.");
-                false
-            }
-            _ => {
-                self.say("There is nothing to open there.");
-                false
-            }
-        }
-    }
-
-    fn close_door(&mut self, p: Pos, events: &mut Vec<Event>) -> bool {
-        let terrain = self.state.current().terrain.get(p).copied();
-        let def = terrain.map(|t| self.content.terrain(t));
-        match def {
-            Some(def) if def.is_open_door() => {
-                let closed = def.closes_to.expect("open doors have closes_to");
-                if self.state.actor_at(&self.state.current_level, p).is_some()
-                    || !self.state.current().objects_at(p).is_empty()
-                {
-                    self.say("Something is in the way.");
-                    return false;
-                }
-                self.make_noise(self.state.player, Act::CloseDoor(p));
-                self.set_terrain(p, closed);
-                events.push(Event::DoorClosed { pos: p });
-                self.say("You close the door.");
-                true
-            }
-            Some(def) if def.is_closed_door() => {
-                self.say("That door is already closed.");
-                false
-            }
-            _ => {
-                self.say("There is nothing to close there.");
-                false
-            }
-        }
     }
 
     fn take_stairs(&mut self, dir: StairsDir, events: &mut Vec<Event>) -> bool {
@@ -1780,6 +1754,7 @@ fn instantiate_level(state: &mut WorldState, content: &Content, template: &Level
             faction_override: spawn.faction,
             npc: spawn.npc.clone(),
             talk: Talk::default(),
+            satiation: None,
             stance: CombatStance::Neutral,
         };
         actor.hp = actor.max_hp(content);
@@ -1802,6 +1777,8 @@ mod cost_tests;
 #[cfg(test)]
 mod dig_tests;
 #[cfg(test)]
+mod door_tests;
+#[cfg(test)]
 mod equip_tests;
 #[cfg(test)]
 mod experience_tests;
@@ -1809,6 +1786,8 @@ mod experience_tests;
 mod fight_tests;
 #[cfg(test)]
 mod hearing_tests;
+#[cfg(test)]
+mod hunger_tests;
 #[cfg(test)]
 mod light_tests;
 #[cfg(test)]

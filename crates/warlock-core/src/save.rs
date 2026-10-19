@@ -43,6 +43,10 @@ const MAGIC: &str = "WARLOCK-SAVE";
 /// 20: status effects: actors have them (`Actor::effects`), their healing progress counts
 ///     hundredths of a second (`Actor::regen`), and the player's death records the status that
 ///     killed them (`Death::of`).
+/// 21: hunger: the player's satiation (`Actor::satiation`: nutrition and what time has banked),
+///     corpses' death times (`Stack::died`), and what killed the player when neither a creature
+///     nor a status did (`Death::cause`: starving, choking).
+/// 22: doors: level states keep the locks on their doors (`LevelState::locks`).
 /// 23: NPCs and dialogue: actors keep how far their talk has got (`Actor::talk`: lines said and
 ///     muttered, met) and the unique character a level made them (`Actor::npc`).
 pub const FORMAT_VERSION: u32 = 23;

@@ -3,8 +3,8 @@
 //! [`route_keys`] reads every key press exactly once. While a screen is open (the screen stack is
 //! not empty) the press goes to the top screen; otherwise it is a gameplay command, read through
 //! the bindings in the current [`InputMode`]. Prompts in the message line (the direction for
-//! open/close, for digging, or for a chat, how long to rest, look mode, aiming a shot or a throw)
-//! are input modes, not screens.
+//! open/close/kick, for digging, or for a chat, how long to rest, look mode, aiming a shot or a
+//! throw) are input modes, not screens.
 //!
 //! Letter and symbol commands bind by *logical* key (the character the keyboard layout produces),
 //! so `<`, `>`, and `?` work on any layout. Arrows and the numpad bind by physical key code.
@@ -34,6 +34,8 @@ pub enum KeyCommand {
     Wait,
     Open,
     Close,
+    /// Kick in a direction: a door (to break it in), or a creature.
+    Kick,
     Descend,
     Ascend,
     Lantern,
@@ -53,6 +55,8 @@ pub enum KeyCommand {
     WeaponSkills,
     /// Ask how long to rest (an hour, until dawn, until dusk).
     Rest,
+    /// Choose something to eat, from the floor or the pack.
+    Eat,
     /// Move a cursor over the map to read what is there (no time passes).
     Look,
     /// Shoot or throw what is in the missile weapon slot (a cursor on the map): a launcher
@@ -128,6 +132,7 @@ impl KeyCommand {
             KeyCommand::Wait => "Wait a turn",
             KeyCommand::Open => "Open a door",
             KeyCommand::Close => "Close a door",
+            KeyCommand::Kick => "Kick",
             KeyCommand::Descend => "Go down stairs",
             KeyCommand::Ascend => "Go up stairs",
             KeyCommand::Lantern => "Light / douse lantern",
@@ -139,6 +144,7 @@ impl KeyCommand {
             KeyCommand::Skills => "Skills",
             KeyCommand::WeaponSkills => "Weapon skills",
             KeyCommand::Rest => "Rest",
+            KeyCommand::Eat => "Eat",
             KeyCommand::Look => "Look around",
             KeyCommand::Missile => "Throw or shoot the missile weapon",
             KeyCommand::Fire => "Fire missile weapon",
@@ -245,6 +251,7 @@ impl Default for Bindings {
             (Code(KeyCode::Numpad5), Wait),
             (ch("o"), Open),
             (ch("c"), Close),
+            (ch("K"), Kick),
             (ch(">"), Descend),
             (ch("<"), Ascend),
             (ch("L"), Lantern),
@@ -257,6 +264,7 @@ impl Default for Bindings {
             (ch("S"), Skills),
             (ch("W"), WeaponSkills),
             (ch("R"), Rest),
+            (ch("E"), Eat),
             (ch("x"), Look),
             (ch("t"), Missile),
             (ch("T"), Throw),
@@ -329,7 +337,7 @@ impl Bindings {
 pub enum InputMode {
     #[default]
     Normal,
-    /// Waiting for a direction for `Open`, `Close`, `Bash`, `UseTool`, or `Chat`.
+    /// Waiting for a direction for `Open`, `Close`, `Kick`, `Bash`, `UseTool`, or `Chat`.
     Direction(KeyCommand),
     /// Asking how long to rest ([`REST_CHOICES`]).
     Rest,
@@ -533,6 +541,7 @@ impl Gameplay<'_> {
             (InputMode::Direction(cmd), KeyCommand::Move(dir)) => {
                 let action = match cmd {
                     KeyCommand::Open => Action::Open(dir),
+                    KeyCommand::Kick => Action::Kick(dir),
                     KeyCommand::Bash => Action::Bash(dir),
                     KeyCommand::UseTool => Action::Dig(dir),
                     KeyCommand::Chat => Action::Chat(dir),
@@ -621,6 +630,10 @@ impl Gameplay<'_> {
                 open = Some(ScreenAction::Open(ScreenName::WeaponSkills));
                 InputMode::Normal
             }
+            (InputMode::Normal, KeyCommand::Eat) => {
+                open = Some(ScreenAction::Open(ScreenName::Eat));
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::CycleVision) => {
                 let view = game.world.perception();
                 let next = next_vision(view.content().vision_profiles(), &view.vision().id);
@@ -646,9 +659,10 @@ impl Gameplay<'_> {
                 self.overlays.light_values = !self.overlays.light_values;
                 InputMode::Normal
             }
-            (InputMode::Normal, KeyCommand::Open | KeyCommand::Close | KeyCommand::Bash) => {
-                InputMode::Direction(command)
-            }
+            (
+                InputMode::Normal,
+                KeyCommand::Open | KeyCommand::Close | KeyCommand::Kick | KeyCommand::Bash,
+            ) => InputMode::Direction(command),
             // The one creature in view next to the player, at once; else ask which way.
             (InputMode::Normal, KeyCommand::Chat) => match chat_partner(&game.world.perception()) {
                 Some(dir) => {
@@ -792,6 +806,7 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Descend), [">"]);
         assert!(keys(&b, KeyCommand::Quit).is_empty(), "unbound by default");
         assert_eq!(keys(&b, KeyCommand::Lantern), ["L"]);
+        assert_eq!(keys(&b, KeyCommand::Kick), ["K"]);
         assert_eq!(keys(&b, KeyCommand::Help), ["?"]);
         assert_eq!(keys(&b, KeyCommand::Cancel), ["Esc"]);
         assert_eq!(keys(&b, KeyCommand::Rest), ["R"]);
@@ -810,6 +825,7 @@ mod tests {
         assert!(keys(&b, KeyCommand::Bash).is_empty(), "an ability: unbound");
         assert_eq!(keys(&b, KeyCommand::MoreAggressive), ["+"]);
         assert_eq!(keys(&b, KeyCommand::MoreDefensive), ["-"]);
+        assert_eq!(keys(&b, KeyCommand::Eat), ["E"]);
         assert_eq!(keys(&b, KeyCommand::NextTarget), ["Tab"]);
         assert_eq!(keys(&b, KeyCommand::UseTool), ["U"]);
         assert_eq!(keys(&b, KeyCommand::Chat), ["C"]);

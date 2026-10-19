@@ -15,6 +15,7 @@ authoritative: it is generated from your current key bindings.
 | Wait a turn | `.` or numpad `5` |
 | Open a door | `o`, then a direction (or walk into the door) |
 | Close a door | `c`, then a direction |
+| Kick (a door, to break it in, or a creature) | `K`, then a direction (see [Doors](doors.md)) |
 | Go down stairs, or enter a place on the overworld | `>` |
 | Go up stairs | `<` |
 | Light or douse the lantern | `L` |
@@ -28,6 +29,7 @@ authoritative: it is generated from your current key bindings.
 | Info page 1 to 9 (while an info screen is open) | `1` to `9` |
 | Next / previous info page (wraps) | `Tab` or `PageDown` / `Shift`+`Tab` or `PageUp` |
 | Rest | `R` |
+| Eat | `E` |
 | Look around | `x` |
 | Shoot or throw what is in your Missile weapon slot | `t`, then aim (see below) |
 | Throw something from your pack | `T`, choose it, then aim |
@@ -54,8 +56,8 @@ kept with your [settings](settings.md).
 
 ## Prompts
 
-Opening and closing a door, and bashing with your shield, ask `In which direction? (Esc to
-cancel)` on the message line, digging asks `Dig in which direction? (Esc to cancel)` (see
+Opening, closing, and kicking a door, and bashing with your shield, ask `In which direction? (Esc
+to cancel)` on the message line, digging asks `Dig in which direction? (Esc to cancel)` (see
 [Digging and walls](digging.md)), chatting with several creatures near asks `Talk in which
 direction? (Esc to cancel)` (see [People and talk](npcs.md)), and
 resting asks how long (see [Resting](resting.md)). Answer with a direction or the key shown, or
@@ -116,6 +118,10 @@ takes no time. See [Objects and your pack](objects.md).
 `T` opens a list of what you carry that can be thrown, by its pack letter: choose one and aim
 it.
 
+`E` opens a list of what you can eat: food lying where you stand first, then the food you carry,
+by its pack letter. A letter, or `Enter` on the marked row, eats it. See
+[Food and corpses](food.md).
+
 `e` shows what you wear and wield, slot by slot. A slot's letter (on this screen every letter
 names a slot) opens a list of what you carry that fits there: its letter puts it on, swapping
 out what was there, and choosing what is there takes it off. Each change takes its time; you
@@ -133,6 +139,8 @@ Below the map, the **status bar** shows, from left to right:
 - your hit points, as `HP 18/24`: what you have left of your most (see [Combat](combat.md));
 - what ails you, if anything, the most urgent first: `Bleeding`, `Poisoned` (see
   [Status effects](status-effects.md));
+- how hungry you are, unless you are not hungry: `Hungry`, `Weak`, `Fainting`, `Starving`,
+  `Satiated`, or `Bloated` (see [Hunger](hunger.md));
 - your burden, when you have one: `Burdened`, `Strained`, or `Overloaded` (see
   [Burden](burden.md));
 - the time, the date, and the phase of the moon (see [Time and the calendar](time.md));
@@ -146,9 +154,9 @@ At its right end, `? controls` reminds you where the keys are.
 When the window is too narrow for everything, the status bar leaves out the least important parts
 first: the seed, your position, your lantern, your vision, the light at your feet, and the turn
 count; then it shortens the moon's phase to its picture, and only then drops it; then the region,
-then the year of the date, then the date. The weather, the time, your burden, your status
-effects (the least urgent first), your hit points, and the name of the level stay longest. Parts
-come back as soon as there is room.
+then the year of the date, then the date. The weather, the time, your burden, your hunger, your
+status effects (the least urgent first), your hit points, and the name of the level stay longest.
+Parts come back as soon as there is room.
 
 ## Character
 

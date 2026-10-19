@@ -23,6 +23,8 @@
 #                 0 to 100; added to the class's (a skill both train sums the two)
 #   class_skill   dice added to one of the class's skills, picked from the run seed when the
 #                 character is made (default none; humans: one extra class skill)
+#   hunger        how much the character needs to eat, in percent of a human (spec §8 "Hunger";
+#                 10 to 1000, default 100): game time burns their nutrition this much faster
 #   weapon_skills starting ranks in weapon skills (spec §8 "Weapon skills"), by skill id in
 #                 weapon_skills.toml: a number or dice, every result within 0 to 10; added to
 #                 the class's (at most 10), then each raises the skills it defaults to
@@ -50,6 +52,7 @@ potential = { strength = -2, dexterity = 3, toughness = -3, intelligence = 2, wi
 hp = 2
 size = "medium"
 skills = { listen = "1d6+4", spot = "1d6+4" }
+hunger = 80
 weapon_skills = { long_blades = 1, bows = 1 }
 
 [[race]]
@@ -63,6 +66,7 @@ potential = { dexterity = 1, toughness = -1, intelligence = 1, presence = 2 }
 hp = 3
 size = "medium"
 skills = { bluff = "1d4+2", spot = "1d4+2" }
+hunger = 90
 weapon_skills = { bows = "1d2-1" }
 
 # No gift and no flaw, but the most room to grow (rolled).
@@ -77,6 +81,7 @@ hp = 4
 size = "medium"
 # One extra class skill: one of the class's skills, picked when the character is made.
 class_skill = "2d4+4"
+hunger = 100
 
 [[race]]
 id = "dwarf"
@@ -92,6 +97,7 @@ skills = { metalcraft = "1d6+4", search = "1d6+4" }
 weapon_skills = { axes = 1, crossbows = 1 }
 # Dwarves carry loads all their lives: being Burdened costs them nothing.
 ignores_burdened = true
+hunger = 110
 
 [[race]]
 id = "halfling"
@@ -104,6 +110,8 @@ potential = { strength = -4, dexterity = 3, willpower = 1, presence = 1 }
 hp = 2
 size = "small"
 skills = { listen = "1d6+4", stealth = "1d6+4" }
+# Second breakfast.
+hunger = 125
 weapon_skills = { slings = 1 }
 
 [[race]]
@@ -117,6 +125,7 @@ potential = { strength = -3, dexterity = 1, toughness = 1, intelligence = 3 }
 hp = 3
 size = "small"
 skills = { appraise = "1d6+4", listen = "1d6+4" }
+hunger = 90
 weapon_skills = { crossbows = 1 }
 
 [[race]]
@@ -130,4 +139,5 @@ potential = { strength = 4, toughness = 2, intelligence = -3, presence = -3 }
 hp = 6
 size = "medium"
 skills = { intimidate = "1d6+4" }
+hunger = 120
 weapon_skills = { axes = 1 }

@@ -3,6 +3,7 @@
 
 use super::kit::Kit;
 use crate::content::{Content, CreatureSpawn, Flow, LightId, TerrainId};
+use crate::door::Lock;
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use crate::object::Stack;
@@ -34,6 +35,8 @@ pub(super) struct Land<'a> {
     pub lights: BTreeMap<Pos, LightId>,
     /// Objects stamped from ruins.
     pub objects: BTreeMap<Pos, Vec<Stack>>,
+    /// Locks on doors stamped from ruins.
+    pub locks: BTreeMap<Pos, Lock>,
     pub creatures: Vec<CreatureSpawn>,
 }
 
@@ -48,6 +51,7 @@ impl<'a> Land<'a> {
             flow: BTreeMap::new(),
             lights: BTreeMap::new(),
             objects: BTreeMap::new(),
+            locks: BTreeMap::new(),
             creatures: Vec::new(),
         }
     }

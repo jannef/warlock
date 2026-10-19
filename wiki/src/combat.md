@@ -147,12 +147,13 @@ Hit points come back with time, faster the tougher you are, twice as fast while 
 ## Death
 
 A creature at 0 hit points dies: "The giant rat dies." It is gone, and everything it carried,
-what it wore and wielded too, falls where it stood, for you to pick up. A wounded creature may
-also die later of its wounds: "The giant rat bleeds to death."
+what it wore and wielded too, falls where it stood, for you to pick up, with its corpse on top
+(see [Food and corpses](food.md)). A wounded creature may also die later of its wounds: "The
+giant rat bleeds to death."
 
 When **you** reach 0 hit points, you die: "You die..." The run is over, and a screen tells you
-what killed you (if you saw it, or "Bled to death" when your wounds did), where, when, and after
-how many turns. There is no going back:
+what killed you (if you saw it, or "Bled to death" when your wounds did, or that you starved; see
+[Hunger](hunger.md)), where, when, and after how many turns. There is no going back:
 your save is deleted at once (see [Saving](saving.md)). Press `Enter` or `Esc` to return to the
 main menu and start a new run.
 
