@@ -275,14 +275,15 @@ impl Bindings {
         }
     }
 
-    /// The settings-file form: command id to key spellings.
+    /// The settings-file form: command id to key spellings (a command with no key, such as
+    /// Quit by default, is left out, and reads back as unbound).
     pub fn to_map(&self) -> BTreeMap<String, Vec<String>> {
         REBINDABLE
             .into_iter()
             .filter_map(|c| {
                 let id = c.id()?;
-                let keys = self.keys_of(c).iter().map(|k| k.to_text()).collect();
-                Some((id.to_string(), keys))
+                let keys: Vec<String> = self.keys_of(c).iter().map(|k| k.to_text()).collect();
+                (!keys.is_empty()).then(|| (id.to_string(), keys))
             })
             .collect()
     }
@@ -358,6 +359,10 @@ mod tests {
         assert_eq!(KeyCommand::Cancel.id(), None);
         let defaults = Bindings::default();
         for c in REBINDABLE {
+            // Quitting is done from the pause menu; a quick key is the player's to assign.
+            if c == KeyCommand::Quit {
+                continue;
+            }
             assert!(!defaults.keys_of(c).is_empty(), "{c:?} has a default key");
         }
     }

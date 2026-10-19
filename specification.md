@@ -759,7 +759,11 @@ rate or animation.
 - First-phase commands: move, wait, open/close door, ascend/descend, light/douse lantern (`L`),
   pick up (`,` or `g`), drop (`d`), inventory (`i`), equipment (`e`), character (`@`), skills
   (`S`), rest (`R`), look, fire (`f`), throw (`t`), next target (`Tab`, while aiming), help, save
-  and quit (`Q`). Free actions (look, help, the inventory, looking at the
+  and quit (rebindable, unbound by default: quitting is done from the pause menu). Every way to
+  quit (the pause menu's Save and quit to menu and Quit, the main menu's Quit, a bound quick key)
+  asks first, in a Yes/No dialog with No selected (`y` yes; `n`, Esc no; closing the window or
+  the tab does not ask). On the web Quit saves and reloads the page to a fresh main menu (a page
+  cannot close itself), which has no Quit item. Free actions (look, help, the inventory, looking at the
   equipment screen, the character screen, the Skills screen, menus, vision switch) do not
   advance time.
 - **Objects** (M11) lie in piles on cells, the top first: the map shows the top object's glyph
@@ -1295,7 +1299,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
-  platform data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
+  platform data directory. quitting from the pause menu saves (closing the window saves too), autosave runs every 50 turns
   and on level change, and a save that cannot be read is renamed `run.sav.bad`, never deleted, while
   a new run starts. Starting resumes the save unless `--new` is given. **Permadeath**: when the
   player dies the save is deleted, and a run that has ended is never saved again (every trigger
@@ -1304,7 +1308,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   `--dev`).
   On the web the files are `localStorage` keys `warlock/run.sav`, `warlock/run.sav.bad`,
   `warlock/snapshots/quick.sav`, and `warlock/settings.toml`, the save bytes base64-encoded, with the
-  same envelope and checks. The same triggers save (autosave, level change, `Q`), and so does the page
+  same envelope and checks. The same triggers save (autosave, level change, quit), and so does the page
   being hidden or closed (`visibilitychange` to hidden, `pagehide`); main menu Continue works after a
   reload. Storage that is unavailable (some privacy modes) turns saving off with a warning in the log;
   a write that fails (quota) shows a message in the message line; neither panics.

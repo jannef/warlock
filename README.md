@@ -158,11 +158,10 @@ cargo run --release -p warlock
 | `f` | Fire your missile weapon: aim (Tab cycles targets), then Enter |
 | `t` | Throw something: choose it, aim, then Enter |
 | `?` | Show all controls |
-| `Esc` | Pause menu: settings, controls, save and quit |
-| `Q` | Save and quit |
+| `Esc` | Pause menu: settings, controls, save and quit (asks to confirm) |
 
 Symbol keys follow your keyboard layout, so `<`, `>` and `?` work on non-US keyboards. Every key
-can be rebound in the Controls screen. The [wiki](https://jannef.github.io/warlock/wiki/) explains the rules.
+can be rebound (including a quick Save and quit key, unbound by default) in the Controls screen. The [wiki](https://jannef.github.io/warlock/wiki/) explains the rules.
 
 ## Develop
 

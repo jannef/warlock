@@ -29,7 +29,7 @@ authoritative: it is generated from your current key bindings.
 | Next target while aiming (with Shift: the one before) | `Tab` |
 | Show or hide the controls | `?` |
 | Pause menu | `Esc` |
-| Save and quit | `Q` |
+| Save and quit (unbound by default; use the pause menu) | none |
 
 The movement keys are the vi keys (`hjklyubn`), the numpad, and the arrows. Symbol keys such as
 `<`, `>`, and `?` are matched by the character they produce, so they work on other keyboard
