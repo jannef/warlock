@@ -8,7 +8,7 @@ actor, burden, Act)` is the one place an action's loudness is decided (creature 
 terrain `step_noise` percent × the burden's `footsteps()` percent for `Act::Step`, the door's
 `toggle_noise` for `Act::OpenDoor`/`CloseDoor`, `VOICE_NOISE` for `Act::Mutter`; `make_noise` passes the actor's
 `Load::penalty`):
-a new noisy action gets an `Act` variant there, and its call site in `world/mod.rs` is one
+a new noisy action gets an `Act` variant there, and its call site in the feature's module (the makers are `world/hearing.rs`) is one
 `self.make_noise(actor, Act::…)` where the action happens. `noise::make` delivers it at once to
 every other actor on the level whose `hearing` threshold it reaches (`propagate`: integer Dijkstra,
 10 a step, 14 diagonally, plus terrain `muffle`; solid terrain blocks unless it has a muffle),

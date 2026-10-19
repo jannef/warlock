@@ -30,6 +30,6 @@ change `perception.rs` and `sight.rs` together; `special_rooms_keep_the_light_in
 they agree), noise (`noise::noise`), healing (the room's `regen` in `World::healing_rate`, the one
 pace hook), and
 hostile creatures shunning a sanctuary (`World::shuns` in `ai.rs`). A flooded room's slower,
-louder steps come from its floor terrain (`shallow_water`). `enter_room` (world/mod.rs) says the
+louder steps come from its floor terrain (`shallow_water`). `enter_room` (world/travel.rs) says the
 first-entry message; `PerceptionView::room` gives look mode the rooms the player knows;
 `PerceptionView::light_kept` lets the renderer dim its own transient light in a shadowed room.
