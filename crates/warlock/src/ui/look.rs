@@ -14,9 +14,9 @@ pub const CURSOR_FG: Rgb = Rgb::new(0x14, 0x12, 0x10);
 pub const CURSOR_BG: Rgb = Rgb::new(0xe0, 0xc0, 0x70);
 
 /// One line describing what the player knows about `p`: who is there, what lies there (as seen
-/// or remembered), on what, in which special room (once they have been in it), and what was
-/// heard there. Blood they know of there reads before the terrain ("on blood-stained stone
-/// floor") if `blood` is shown.
+/// or remembered), on what (a known trap on its terrain: "on a pit on stone floor"), in which
+/// special room (once they have been in it), and what was heard there. Blood they know of there
+/// reads before the terrain ("on blood-stained stone floor") if `blood` is shown.
 pub fn describe(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
     let content = view.content();
     // Stairs and locations name where they lead: "a staircase down, leading to The Depths 1";
@@ -41,12 +41,37 @@ pub fn describe(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
     let room = (view.room(p))
         .filter(|_| walkable)
         .map(|r| format!("in {}", r.with_article()));
-    let terrain = |t| match (&room, view.leads_to(p)) {
+    let ground = |t| match (&room, view.leads_to(p)) {
         (Some(room), Some(_)) => format!("{}, {room}", named(t)),
         (Some(room), None) => format!("{} {room}", named(t)),
         (None, _) => named(t),
     };
     let room_here = room.as_ref().map_or(String::new(), |r| format!(", {r}"));
+    // A known trap is part of the ground: "a fireball trap on stone floor".
+    let trap = view.trap(p).map(|t| content.trap(t).name.as_str());
+    let terrain = |t| match trap {
+        Some(trap) => format!("{} on {}", with_article(trap), ground(t)),
+        None => ground(t),
+    };
+    // Nothing but a trap there: the trap first ("A pit, on stone floor.").
+    if let Some(trap) = trap
+        && view.actor_at(p).is_none()
+        && view.objects(p).is_empty()
+    {
+        let a_trap = with_article(trap);
+        return match (view.cell(p), view.sound_at(p)) {
+            (CellView::Visible(t), _) => format!("{}, on {}.", capitalize(&a_trap), ground(t)),
+            (CellView::Remembered(t), Some(heard)) => format!(
+                "{} here, where you remember {a_trap} on {}.",
+                heard.you_hear(),
+                ground(t)
+            ),
+            (CellView::Remembered(t), None) => {
+                format!("You remember {a_trap} here, on {}.", ground(t))
+            }
+            (CellView::Unknown, _) => "You don't know what is there.".to_string(),
+        };
+    }
     // A sound heard there (never on a cell the player sees): "You hear footsteps here."
     let heard = view.sound_at(p).map(|s| s.you_hear());
     // "a dagger", "a dagger and 12 arrows", "17 objects".
@@ -158,9 +183,13 @@ pub fn draw_cursor_on(
 ) {
     let content = view.content();
     let top = view.objects(p).first();
+    let trap = view.trap(p);
     let ch = match (view.cell(p), view.actor_at(p), top) {
         (CellView::Visible(_), Some(actor), _) => content.creature(actor.creature).glyph,
         _ if view.sound_at(p).is_some() => super::sounds::MARKER,
+        (CellView::Visible(_) | CellView::Remembered(_), None, _) if trap.is_some() => {
+            trap.map_or(' ', |t| content.trap(t).glyph)
+        }
         (CellView::Visible(_) | CellView::Remembered(_), None, Some(top)) => {
             content.object(top.object).glyph
         }
@@ -484,6 +513,30 @@ mod tests {
         // Nothing else of what they carry; and nothing of what the rats do not have.
         let rat = of("rat");
         assert!(rat.starts_with("A giant rat (hostile, ") && !rat.contains("wield"));
+    }
+
+    #[test]
+    fn known_traps_are_named_as_part_of_the_ground() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let mut w = World::new(content, "traps", None).expect("the trap hall");
+        // A hidden trap (the fireball in the crossing) is just floor.
+        assert_eq!(
+            describe(&w.perception(), Pos::new(27, 11), true),
+            "A stone floor."
+        );
+        let actions = warlock_core::action::parse_actions("move:NW*14 move:W*7 move:N*2").unwrap();
+        for action in actions {
+            w.apply(&action);
+        }
+        assert_eq!(
+            describe(&w.perception(), Pos::new(16, 2), true),
+            "An arrow trap, on stone floor."
+        );
+        // On the trap with the player: part of the ground they stand on.
+        w.apply(&Action::Move(Dir::N));
+        let view = w.perception();
+        let here = view.viewer();
+        assert!(describe(&view, here, true).starts_with("You, on an arrow trap on stone floor"));
     }
 
     #[test]

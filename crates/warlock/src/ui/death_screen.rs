@@ -41,7 +41,7 @@ impl DeathScreen {
                 (def.death.clone())
                     .unwrap_or_else(|| format!("Died of {}", def.name.to_lowercase()))
             }
-            // Hunger, or overeating (spec §8 "Hunger").
+            // Hunger, overeating (spec §8 "Hunger"), or a trap: "Killed by a fireball trap".
             (None, Some(cause), _) => cause.epitaph(content),
             (None, None, Some(creature)) => {
                 let name = &content.creature(creature).name;

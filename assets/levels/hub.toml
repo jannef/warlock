@@ -1,8 +1,8 @@
 # The showcase hub (spec §3). Each room demonstrates one engine capability:
 # top row: light hall (M3), darkness chamber (M3), water garden (M4);
 # bottom row: start room, door corridor, patrol gallery, effects room (M4), stairs nook (> down to
-# the Vast Caverns, v down to the arena, Q down to the quarry, g down to the Frost Grotto, < up
-# and out to the overworld, ^ up to the courtyard).
+# the Vast Caverns, v down to the arena, Q down to the quarry, g down to the Frost Grotto, T down
+# to the trap hall, < up and out to the overworld, ^ up to the courtyard).
 #
 # Temperature and ice (M26): the hub is a mild 10 °C, like every dungeon by default, so its water
 # never freezes; the Frost Grotto (g, down) is below freezing, with a frozen pool to walk on.
@@ -85,7 +85,7 @@ map = '''
 #......@.......##.....#.#.....##3........................#......B......#.......#
 #..............####+###.###+####..#...#...#...#...#...#..#.............#.<.>.v.#
 #..............##.............##2........................#.===.....::::#.......#
-#..............##......t......##.........................#.===.....::::#...g.QH#
+#..............##......t......##.........................#.===.....::::#.T.g.QH#
 #..t.......t...#################t.......................t#.........::::#.......#
 ################################################################################
 '''
@@ -122,6 +122,8 @@ map = '''
 "Q" = { terrain = "stairs_down", to = "quarry" }
 # Stairs down (drawn `>`) to the Frost Grotto, where the cold has frozen a pool.
 "g" = { terrain = "stairs_down", to = "frost_grotto" }
+# Stairs down (drawn `>`) to the trap hall (spec §8 "Traps"): the showcase has no traps.
+"T" = { terrain = "stairs_down", to = "trap_hall" }
 # The old hermit, by the stairs.
 "H" = { terrain = "floor", creature = "hermit" }
 

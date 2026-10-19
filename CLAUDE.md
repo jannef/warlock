@@ -37,7 +37,8 @@ Game flags (`cargo run -p warlock -- --help`):
 - `--scenario NAME` (default `showcase`; `depths` starts in the generated dungeon, `courtyard` in
   the sunlit courtyard at 06:30, `world` on the overworld beside the Hall, `forest` in the glade
   of a generated forest area of the overworld at 06:30, `arena` in the dark corner of the arena
-  where kobolds and giant rats fight, `quarry` in the quarry beside a pick-axe), `--seed S`
+  where kobolds and giant rats fight, `quarry` in the quarry beside a pick-axe, `traps` in the
+  trap hall), `--seed S`
   (default: the scenario's seed; a number, or a word hashed with FNV-1a, e.g. `--seed warlock`),
   `--character RACE,GENDER,CLASS` (e.g. `dwarf,female,warrior`; default: the scenario's
   character; like `--seed` it shapes the run other flags start and alone does not skip the menu)
@@ -79,7 +80,7 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 | Dump a replay's end state | `... dump --replay runs/x.json [--actions "wait"] --format ascii\|json [--state]` |
 | Create a replay | `... replay --create --scenario showcase --actions "move:N wait" -o runs/x.json` |
 | Verify a replay | `... replay --verify runs/x.json` (exit 1 and first diverging step on mismatch) |
-| Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor, `&` = locked door; a special room's floor by its effect's letter; also local areas, `--level local:49,23`) |
+| Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor, `&` = locked door; `^` = a trap, hidden ones too; a special room's floor by its effect's letter; also local areas, `--level local:49,23`) |
 
 Dump layers beyond the map ones: `inventory`, `equipment`, `stats`, `skills` (the player's
 trained skills, `Stealth 17`), and `quests` (the quest log, active first) from perception;
@@ -115,10 +116,11 @@ as if they had lost the check (it incubates, then shows), e.g. `infect:the_shake
 no game time; `freeze:X,Y,R` and `thaw:X,Y,R` are the dev frost and heat bursts (radius 0 to 20
 around level cell (X, Y), in its line of sight; no time); `ACTION*N` repeats one, e.g.
 `wait*10`). Dump layers: `view` (what the player sees), `fov` (`*` visible),
-`memory` (seen terrain and remembered objects), `light` (perceived brightness of visible cells as a
-digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places over the view: `f`
-footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m` chanting, `k`
-banging (a door kicked), `d` digging, `v` a voice, upper case when loud), `blood` (blood the
+`memory` (seen terrain, remembered objects, and known traps), `light` (perceived brightness of
+visible cells as a digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places
+over the view: `f` footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m`
+chanting, `k` banging (a door kicked), `d` digging, `v` a voice, `a` an alarm bell, `e` an
+explosion, `t` a thunderclap, upper case when loud), `blood` (blood the
 player sees or remembers as a digit over the view, `1` a few drops to `9` soaked), `inventory`
 (what the player
 carries and weighs, worn and wielded things marked, their burden and its thresholds),
@@ -126,9 +128,10 @@ carries and weighs, worn and wielded things marked, their burden and its thresho
 (the player's race, gender, and class, then their own scores as the rules read them, then
 `Effects Bleeding, Diseased` when they suffer any, then `Diseases filth fever`, the diseases they
 know they have), `weapon_skills` (the player's
-ranks and progress toward the next, `Long blades 2 (40%)`), `quests` (the quest log, active
+ranks and progress toward the next, `Long blades 2 (40%)`), `traps` (the traps the player knows,
+one a line), `quests` (the quest log, active
 first: name, stage, giver, objective, and status), `truth`
-(ground truth, **dev-only**), `actors` (every actor on the level with its hit points and
+(ground truth, hidden traps too, **dev-only**), `actors` (every actor on the level with its hit points and
 Defence, its weight, what it carries and of that wears and wields (magic items as they truly
 are, "(unidentified)" marked), what its magic items do to it (`magic strength +1`), its burden
 and carrying limit, its weapon skills with marks, its stats as score/potential, its status
@@ -140,8 +143,9 @@ every corpse on the level and in the pack with its death time and rot, **dev-onl
 `0`-`9`, `a`-`z` for 10-35, `#` beyond, **dev-only**). The header line has the player's `hp
 17/17` (and `dead` once the run has ended), `hunger hungry` unless Not hungry, and the
 `temperature`; JSON dumps add `hp`, `defence`, `burden` (`level`, `limit`), `hunger`, `effects`
-(status ids), `diseases` (the known ones' ids), `death` (with `of`, the status that killed, and
-`cause`, starving or choking), `temperature` (°C to a tenth), `weapon_skills` (by skill id:
+(status ids), `diseases` (the known ones' ids), `death` (with `of`, the status that killed,
+`cause`, starving, choking, or a trap, and `trap`, the id of the trap that killed),
+`known_traps`, `temperature` (°C to a tenth), `weapon_skills` (by skill id:
 `rank`, `progress`), `quests` (the log: `id`, `name`, `kind`, `active`, `completed`, `giver`,
 `objective`, `status`), each seen actor's `health` and `effects` (those that show), `room` (the
 special room the player stands in, if they know it), and per inventory stack its `name`,
@@ -177,9 +181,9 @@ level change to `run.sav` in the data dir (see "File locations" below). On start
 `--replay`, or `--record` (replays and recordings always start a fresh run). F5 / F9 write / load `snapshots/quick.sav`. An unreadable save is renamed `run.sav.bad`,
 never deleted. Format and `Content::fingerprint` live in `warlock-core/src/save.rs`: bump
 `FORMAT_VERSION` on any incompatible `WorldState` change; adding or reordering terrain, creatures,
-lights, levels, objects, equipment slots, skills, weapon skills, statuses, diseases, or dungeon
-branches invalidates existing saves (affixes are saved by id: adding them does not, removing one
-a save uses does).
+lights, levels, objects, equipment slots, skills, weapon skills, statuses, diseases, traps, or
+dungeon branches invalidates existing saves (affixes are saved by id: adding them does not,
+removing one a save uses does).
 **Permadeath**: when the player dies, `screens::on_death` deletes `run.sav`
 (`SaveStore::delete_run`) and opens the death screen; `SaveStore::save_run` never writes a dead
 run (it deletes instead), so autosave, quitting, and closing the window cannot bring it back, and the
@@ -279,9 +283,11 @@ to open, read keys for, or draw one:
   per context, so Tab is `NextTarget` in play and `NextPage` here; `Bindings::owner_in` and
   `lookup` read one context). `Press::shift` carries Shift from the router. The dialogue screen
   is no page: its digits ask about topics.
-- Prompts in the message line (open/close/bash/chat direction, rest, look mode) are
-  `InputMode`s, not screens. `C` with exactly one creature in view next to the player chats with
-  it at once (`input::chat_partner`), else asks for a direction.
+- Prompts in the message line (open/close/bash/chat direction, rest, look mode, aiming, the
+  `Really step onto the X? (y/n)` prompt before a known trap, `InputMode::ConfirmStep`, asked by
+  `input::asks_before_stepping`) are `InputMode`s, not screens. The rules never ask: a `move`
+  steps onto whatever is there. `C` with exactly one creature in view next to the player chats
+  with it at once (`input::chat_partner`), else asks for a direction.
 - Screens are plain state machines tested without a window: `ui/menu.rs` (`Press`, `Panel`, main
   and pause menu), `ui/new_run_screen.rs`, `ui/settings_screen.rs`, `ui/controls_screen.rs` (also
   the `?` help: the same binding list, read-only), `ui/object_screen.rs` (inventory, pick up,
@@ -708,7 +714,9 @@ from the run seed: `map/<level id>` per generated level, `gameplay` kept in `Wor
 stamping, `connect.rs` flood fill / corridor digging / validation). A branch level is generated by
 `World::travel` on its first visit and then persists in `LevelState` like a hand-made level (level
 states carry their own ambient and placed lights). Generation is integer-only; a level that fails
-validation is regenerated from the next derived stream. The insta snapshots in
+validation is regenerated from the next derived stream. A valid branch level then hides its
+branch's traps (`mapgen::hide_traps`, from the stream `traps/<level id>`, so the map is the same
+with or without them). The insta snapshots in
 `src/mapgen/snapshots/` and `src/mapgen/local/snapshots/` flag any change in generator output:
 review the maps in the diff, then accept them deliberately. Loot (`mapgen::place_loot`: floor
 items by the branch's `loot`, vault `loot` cells) is rolled once a map is valid, from its own
@@ -754,6 +762,30 @@ louder steps come from its floor terrain (`shallow_water`). `enter_room` (world/
 first-entry message; `PerceptionView::room` gives look mode the rooms the player knows;
 `PerceptionView::light_kept` lets the renderer dim its own transient light in a shadowed room.
 
+Traps (spec §8 "Traps") are data (`data/traps.toml`, `content/trap.rs`: `TrapDef`, `TrapEffect`
+shot / strike / burst / bolt / pit / alarm / teleport, and the instance `Trap` with `known`,
+`charges`, `dir`) placed by level legends (`trap = "id"`, `known = true`, `dir`), dungeon vaults,
+and branches (`traps`, `traps_per_level` in `data/dungeons.toml`); the showcase has none, the
+trap hall (`levels/trap_hall.toml`, scenario `traps`) has one of each. They live in
+`LevelState::traps` (and `trap_memory`, what the player remembers). `World::spring_trap(at,
+victim)` in `world/trap.rs` is the one way a trap goes off: stepping onto a cell calls it (the
+player in `player_moves`, creatures in `ai.rs::creature_steps`; a trapped door will call it too)
+and returns the extra energy a pit costs. A trap's blow is dealt like any other
+(`World::trap_deals`: blood by `World::spill`, `hurt` with `Harm::Trap`, then the wound's
+statuses by `World::wounded`); its kills earn nothing, and the player's death records
+`Cause::Trap` (`Death::cause`: "Killed by a fireball trap"). Traps never lie on water that
+freezes (terrain with `freeze`: ice would cover them), and a teleport never lands on ice.
+Knowledge is decided as the turn is perceived
+(`World::learn_traps`: set off by the player, or on a cell they see); messages come from
+`perceive_events` (`Event::TrapSprung`, `TrapStruck`). Bursts and bolts emit the full
+`Event::Spell { effect, origin, shape: SpellShape, cells }` (`spell::burst_cells`, so what is drawn
+is what is hit; a bolt's path starts after the trap's cell; the trap's `spell` must be an effect of
+its shape), which `spell::perceive_spell` cuts and `ui/spells.rs` draws; a burst with a `blast`
+then calls `World::blast` (walls, below). A teleport's destination is an
+FNV-1a hash, never the gameplay stream. A rest (and every long action through `World::keep_at`)
+perceives every turn in which a trap went off (`World::sprung`), besides those in which the player
+heard something.
+
 Local areas (spec §3, §7) are generated in `mapgen/local/`: `mod.rs` (`Setting`: the cell's
 landscape and its neighbors' roads, rivers, lakes, and land, read from the overworld; per-landscape
 feature chances; the attempt loop, glade, ruins, deer), `kit.rs` (the terrain and creature ids it
@@ -781,8 +813,8 @@ abilities menu, #156) needs `Actor::dig_tool`; `start_dig` refuses (no time) or 
 `WORK_SCALE` = 20ths of a hardness point) to `LevelState::dug` (saved, by position); at hardness ×
 20 `break_wall` sets the `becomes` terrain through `set_terrain` (light masks), clears the
 progress, bares `face`s around, and pushes `Event::WallBroken { pos, cause: Breach::Dug }`.
-Explosions (none yet; the fireball trap, #128, is to be the first) call
-`World::blast(center, radius, blast, events)`: every breakable wall in the burst
+Explosions call `World::blast(center, radius, blast, events)` (a burst trap with a data `blast`,
+after its damage: the fireball's 1000): every breakable wall in the burst
 (line of sight from the center, computed before anything breaks) with hardness below the blast
 breaks (`Breach::Blast`; `perceive_events` says "The wall collapses!" for those the player sees).
 Perception sees and remembers the rubble like any terrain; `PerceptionView::ready_to_dig` and

@@ -351,14 +351,16 @@ fn camera_origin(view: i32, level: i32, viewer: i32) -> i32 {
     }
 }
 
-/// Draws terrain into the map grid, with the top object of each known pile in place of the
-/// terrain's glyph (over its background, lit like terrain). Creatures are on the free-glyph
+/// Draws terrain into the map grid, with each known trap, else the top object of each known
+/// pile, in place of the terrain's glyph (over its background, lit like terrain): a known trap
+/// is a danger, so it shows over what lies on it. Creatures are on the free-glyph
 /// layer: the grid keeps the terrain under them but not its glyph (`covered`); so do cells the
 /// line of fire is drawn over while aiming (`path`, its dots are free glyphs too), unless an
-/// object lies there. What a missile still in flight lands as (`arriving`) is not drawn until it
-/// arrives. Only visible terrain without objects animates. Visible cells keep their base colors
-/// (the shader lights them); remembered ones, objects included, are dimmed here. Blood the player
-/// knows of tints its cell first ([`blood::stained`]), unless `show_blood` is off.
+/// object or a trap lies there. What a missile still in flight lands as (`arriving`) is not drawn
+/// until it arrives. Only visible terrain without objects or traps animates. Visible cells keep
+/// their base colors (the shader lights them); remembered ones, objects and traps included, are
+/// dimmed here. Blood the player knows of tints its cell first ([`blood::stained`]), unless
+/// `show_blood` is off.
 fn draw_map(
     grid: &mut MapGrid,
     view: &PerceptionView<'_>,
@@ -381,14 +383,21 @@ fn draw_map(
                 pile => pile,
             };
             let top = pile.first().map(|s| content.object(s.object));
+            let trap = view.trap(p).map(|t| content.trap(t));
             let stain = view.blood(p).filter(|_| show_blood);
             let glyph = |t| {
                 let def = content.terrain(t);
-                let (ch, fg) = top.map_or((def.glyph_at(p), def.fg), |o| (o.glyph, o.fg));
+                let (ch, fg) = match (trap, top) {
+                    (Some(trap), _) => (trap.glyph, trap.fg),
+                    (None, Some(o)) => (o.glyph, o.fg),
+                    (None, None) => (def.glyph_at(p), def.fg),
+                };
+                // An object or a trap lies in the blood: only the background takes it.
+                let over = top.is_some() || trap.is_some();
                 let (fg, bg) = match stain {
                     Some(stain) => {
                         let wall = !def.transparent;
-                        blood::stained((fg, def.bg), stain, view.time(), wall, top.is_some())
+                        blood::stained((fg, def.bg), stain, view.time(), wall, over)
                     }
                     None => (fg, def.bg),
                 };
@@ -412,6 +421,7 @@ fn draw_map(
             grid.console.put(sx, sy, cell);
             if let CellView::Visible(t) = seen
                 && top.is_none()
+                && trap.is_none()
             {
                 match anims.terrain(t) {
                     Some(TerrainAnim::Grid { .. }) => {
@@ -433,7 +443,7 @@ fn draw_map(
         grid.console.clear_glyph(at.x, at.y);
     }
     for &p in &key.path {
-        if view.objects(p).is_empty() {
+        if view.objects(p).is_empty() && view.trap(p).is_none() {
             let at = grid.to_console(p);
             grid.console.clear_glyph(at.x, at.y);
         }
@@ -468,6 +478,13 @@ fn draw_messages(
     }
     if mode == InputMode::Rest {
         console.print(1, 0, REST_PROMPT, ACCENT);
+        return;
+    }
+    if let InputMode::ConfirmStep(dir) = mode {
+        let view = game.world.perception();
+        let trap = view.trap(view.viewer().step(dir));
+        let name = trap.map_or("trap", |t| view.content().trap(t).name.as_str());
+        console.print(1, 0, &crate::input::confirm_step_prompt(name), ACCENT);
         return;
     }
     if let InputMode::Aim(aim) = mode {

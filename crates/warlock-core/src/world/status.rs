@@ -130,20 +130,10 @@ impl World {
         blow: &Blow,
         events: &mut Vec<Event>,
     ) {
-        let content = self.content.clone();
-        let Some(victim) = self.state.actors.get(&target) else {
+        if !self.state.actors.contains_key(&target) {
             return;
-        };
-        let critical = matches!(blow.strike, Strike::Hit { critical: true });
-        let big = combat::big_hit(blow.damage, victim.max_hp(&content));
-        // Every blow wounds alike for now. Weapon categories (#134) will let only cutting and
-        // piercing ones bleed, and bloodless creatures (#127's `blood = "none"`) will not.
-        for (status, def) in content.status_ids() {
-            let degrees = def.wound.map_or(0, |w| w.degrees(critical, big));
-            if degrees > 0 {
-                self.afflict(target, status, degrees, Some(attacker), events);
-            }
         }
+        self.wounded(target, blow, Some(attacker), events);
         for hit in self.on_hit_of(attacker, kind) {
             let lands = hit.chance >= 100 || self.state.rng.chance(u32::from(hit.chance));
             if !lands {
@@ -156,6 +146,31 @@ impl World {
                 Affliction::Disease(disease) => {
                     self.expose(target, disease, Some(attacker));
                 }
+            }
+        }
+    }
+
+    /// `target` took `blow`, dealt by `by` (none for a trap's, spec §8 "Traps"), and lives: the
+    /// statuses its wound causes (bleeding from a big hit or a confirmed critical).
+    pub(super) fn wounded(
+        &mut self,
+        target: ActorId,
+        blow: &Blow,
+        by: Option<ActorId>,
+        events: &mut Vec<Event>,
+    ) {
+        let content = self.content.clone();
+        let Some(victim) = self.state.actors.get(&target) else {
+            return;
+        };
+        let critical = matches!(blow.strike, Strike::Hit { critical: true });
+        let big = combat::big_hit(blow.damage, victim.max_hp(&content));
+        // Every blow wounds alike for now. Weapon categories (#134) will let only cutting and
+        // piercing ones bleed, and bloodless creatures (#127's `blood = "none"`) will not.
+        for (status, def) in content.status_ids() {
+            let degrees = def.wound.map_or(0, |w| w.degrees(critical, big));
+            if degrees > 0 {
+                self.afflict(target, status, degrees, by, events);
             }
         }
     }

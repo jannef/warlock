@@ -82,6 +82,30 @@ pub(super) fn draw_map_overlays(grid: &mut MapGrid, world: &World, overlays: Dev
                 );
             }
         }
+        // Traps the player does not know, in view too (a hidden trap is hidden there).
+        for &((x, y), p) in &positions {
+            let Some(trap) = level.trap_at(p) else {
+                continue;
+            };
+            if view.trap(p).is_some() || view.actor_at(p).is_some() {
+                continue;
+            }
+            let bg = level.terrain_at(p).map_or(Rgb::BLACK, |t| {
+                let bg = content.terrain(t).bg;
+                if view.is_visible(p) { bg } else { revealed(bg) }
+            });
+            grid.free_terrain.retain(|(q, _)| *q != p);
+            let ch = content.trap(trap.kind).glyph;
+            grid.console.put(
+                x,
+                y,
+                Cell {
+                    ch,
+                    fg: DEV_ACCENT,
+                    bg,
+                },
+            );
+        }
         for actor in actors.filter(|a| view.actor_at(a.pos).is_none()) {
             let at = grid.to_console(actor.pos);
             let bg = level

@@ -268,7 +268,7 @@ fn listen_lowers_the_hearing_threshold() {
         kind: SoundKind::Footsteps,
         at: Pos::new(1, 1),
         loudness: 6,
-        maker: rat,
+        maker: Some(rat),
     };
     set(&mut w, "listen", None);
     noise::make(&mut w.state, &w.content, faint);

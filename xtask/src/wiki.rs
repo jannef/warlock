@@ -27,7 +27,7 @@ use warlock_core::content::Effect as ItemEffect;
 use warlock_core::content::{
     ActionKind, AffixDef, AffixKind, Affliction, BASE_TURN, Combat, Content, CreatureId,
     DiseaseDef, DiseaseId, FactionId, HungerDef, ItemKind, LevelKind, LightId, NORMAL_SPEED,
-    ObjectDef, ObjectId, Rarity, Speaker, Stance, StatusDef, TerrainDef, price,
+    ObjectDef, ObjectId, Rarity, Speaker, Stance, StatusDef, TerrainDef, TrapEffect, price,
 };
 use warlock_core::daylight::{
     MOONLIGHT_PER_CELL, SIGHT_DAY, SIGHT_MOONLIT, SIGHT_NIGHT, SIGHT_TWILIGHT, overworld_sight,
@@ -236,6 +236,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
             "weapon-benefits.md".to_string(),
             weapon_skills::benefits(content),
         ),
+        ("traps.md".to_string(), traps(content)),
     ];
     for (_, text) in &mut files {
         *text = format!(
@@ -614,12 +615,22 @@ fn digging(content: &Content) -> String {
     let tools: Vec<(&str, u16)> = (content.object_defs().iter())
         .filter_map(|o| o.dig.map(|power| (o.name.as_str(), power)))
         .collect();
+    let blasts: Vec<(&str, u16)> = (content.trap_defs().iter())
+        .filter_map(|t| match t.effect {
+            TrapEffect::Burst { blast, .. } if blast > 0 => Some((t.noun.as_str(), blast)),
+            _ => None,
+        })
+        .collect();
     let mut out = String::from("| Wall | Glyph | Hardness |");
     for (name, _) in &tools {
         let _ = write!(out, " With {} {name} |", article(name));
     }
+    for (name, _) in &blasts {
+        let _ = write!(out, " {} {name} breaks it |", capital(article(name)));
+    }
     out.push_str(" Becomes |\n|---|:---:|---:|");
     out.push_str(&"---:|".repeat(tools.len()));
+    out.push_str(&":---:|".repeat(blasts.len()));
     out.push_str("---|\n");
     for t in content.terrain_defs() {
         let Some(breaks) = t.breaks else { continue };
@@ -636,6 +647,9 @@ fn digging(content: &Content) -> String {
                 " {} |",
                 dig_time(content, breaks.hardness, *power, AVERAGE)
             );
+        }
+        for (_, blast) in &blasts {
+            let _ = write!(out, " {} |", yes(breaks.hardness < *blast));
         }
         let _ = writeln!(out, " {} |", content.terrain(breaks.becomes).name);
     }
@@ -2168,6 +2182,70 @@ fn stances(content: &Content) -> String {
     out
 }
 
+/// The traps (spec §8 "Traps"): what each does, its damage dice, how often it goes off, and what
+/// it sounds like. Never a to-hit, which the player does not know.
+fn traps(content: &Content) -> String {
+    let mut out = String::from(
+        "| Trap | What it does | Damage | Goes off | Sound |\n|---|---|:---:|---|---|\n",
+    );
+    for t in content.trap_defs() {
+        let what = match &t.effect {
+            TrapEffect::Shot { object, .. } => format!(
+                "{} shoots out of a hidden slit in the nearest wall at whoever steps on it: an \
+                 attack against their Defence; it lands where it falls",
+                capital(&article_noun(&content.object(*object).name))
+            ),
+            TrapEffect::Strike { .. } => format!(
+                "{}s spring from the floor: an attack against the Defence of whoever steps on it",
+                capital(&t.noun)
+            ),
+            TrapEffect::Burst { radius, .. } => format!(
+                "A blast {radius} cells around it (walls stop it): everyone in it takes the \
+                 damage, half at the edge; no roll to hit"
+            ),
+            TrapEffect::Bolt { length, .. } => format!(
+                "A bolt from it along a line until a wall, up to {length} cells: everyone on it \
+                 takes the damage; no roll to hit"
+            ),
+            TrapEffect::Pit { .. } => {
+                "Whoever steps on it falls in and loses their next action climbing out".into()
+            }
+            TrapEffect::Alarm => "Only its noise: creatures that hear it come to look".into(),
+            TrapEffect::Teleport => {
+                "Whoever steps on it is moved to a free place on the level".into()
+            }
+        };
+        let damage = t.effect.damage().map_or("—".to_string(), |d| d.to_string());
+        let goes_off = match t.charges {
+            None => "every time".to_string(),
+            Some(1) => "once".to_string(),
+            Some(2) => "twice".to_string(),
+            Some(n) => format!("{n} times"),
+        };
+        let sound = t.noise.map_or("Silent".to_string(), |n| {
+            let loud = match n.loudness {
+                0..50 => "quiet",
+                50..150 => "loud",
+                150..250 => "very loud",
+                _ => "deafening",
+            };
+            format!("{}, {loud}", capital(&n.sound.name().replace('_', " ")))
+        });
+        let _ = writeln!(
+            out,
+            "| {} `{}` | {what} | {damage} | {goes_off} | {sound} |",
+            capital(&t.name),
+            t.glyph
+        );
+    }
+    out
+}
+
+/// A noun with its article: "an arrow".
+fn article_noun(noun: &str) -> String {
+    format!("{} {noun}", article(noun))
+}
+
 /// How often an attack hits by what its roll needs (Defence minus to-hit): the 2d12 bell.
 fn hit_chances() -> String {
     let mut out = String::from("| The roll needs | Hits |\n|:---:|:---:|\n");
@@ -3009,6 +3087,16 @@ mod tests {
         assert_eq!(files, generate(&content));
         let text = |name: &str| &files.iter().find(|(n, _)| n == name).expect("file").1;
         assert!(text("calendar.md").contains("| 4 | Rainmoon |"));
+        let traps = text("traps.md");
+        assert!(
+            traps.contains("| Fireball trap `^` | A blast 2 cells around it"),
+            "{traps}"
+        );
+        assert!(
+            traps.contains("| 3d6 | once | Explosion, very loud |"),
+            "{traps}"
+        );
+        assert!(traps.contains("| Pit `^` |") && !traps.contains("to_hit"));
         assert!(
             text("moons.md").contains(
                 "| Moon | 30 days | standard | about 17% of full light | 1 Frostmere, Year 1 |"
@@ -3089,12 +3177,17 @@ mod tests {
         let digging = text("digging.md");
         assert!(
             digging.contains(
-                "| Wall | Glyph | Hardness | With a pick-axe | With a mattock | Becomes |"
+                "| Wall | Glyph | Hardness | With a pick-axe | With a mattock | A fireball breaks \
+                 it | Becomes |"
             ),
             "{digging}"
         );
-        assert!(digging.contains("| Stone wall | `#` | 600 | 6 minutes | 4 minutes | rubble |"));
-        assert!(digging.contains("| Granite | `#` | 3000 | 30 minutes | 20 minutes | rubble |"));
+        assert!(
+            digging.contains("| Stone wall | `#` | 600 | 6 minutes | 4 minutes | yes | rubble |")
+        );
+        assert!(
+            digging.contains("| Granite | `#` | 3000 | 30 minutes | 20 minutes | no | rubble |")
+        );
         let strength = text("digging-strength.md");
         assert!(strength.contains("| 18 |"), "{strength}");
         assert!(strength.contains("With a pick-axe, at a normal pace."));

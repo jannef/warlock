@@ -71,6 +71,10 @@ Build the engine and framework, not the game. Everything built is production qua
 - Burden (M16): a carrying limit from Strength, Toughness, and size; carrying more than a third,
   two thirds, or all of it slows every action, caps Dexterity in Defence, makes steps louder, and
   overloaded, keeps the actor from moving (§8 "Burden")
+- Traps (M18): arrow, spear, fireball, lightning bolt, pit, alarm, and teleport traps (data),
+  hidden until the player sets one off or sees a creature do it, then known and remembered;
+  creatures walk onto them too; a few hidden on every generated Depths level, and a trap hall to
+  try them (§8 "Traps"). No searching for traps and no saving throws
 - Magic items (M29, #149), after Path of Exile: base items (weapons, missile weapons,
   ammunition, armour, helmets, cloaks, gloves, boots, shields, rings, amulets) roll prefixes and
   suffixes by rarity (normal, magic: one of each at most; rare: up to three of each and a name),
@@ -123,13 +127,14 @@ Build the engine and framework, not the game. Everything built is production qua
   echoing hall, a hushed chamber, a sanctuary, a flooded room — told the first time the player
   enters (§7 "Special rooms")
 
-**Out of scope for now**: magic (spells are announced, nothing is damaged), damage types (a
-flaming arrow does an arrow's damage), rules that use stats beyond combat, burden, and kicking
-doors in (ability checks, saving throws, training stats), levels and experience, digging down or
-up, creatures that dig, what a class gives beyond starting stats, hit points, skills, and weapon
-skills (equipment, spells), active uses of skills (searching, picking locks, healing, and the
-like), item effects beyond magic items' affixes and food's (§8 "Hunger"; no potions or scrolls to
-use yet, no unique items, no enchanting), audio, mouse input, infravision, localization.
+**Out of scope for now**: magic (spells are announced, nothing is damaged; only traps burst into
+fireballs and lightning), damage types (a flaming arrow does an arrow's damage, a fireball no more
+than its dice), rules that use stats beyond combat, burden, and kicking doors in (ability checks,
+saving throws, training stats), levels and experience, digging down or up, creatures that dig,
+what a class gives beyond starting stats, hit points, skills, and weapon skills (equipment,
+spells), active uses of skills (searching, picking locks, healing, and the like), item effects
+beyond magic items' affixes and food's (§8 "Hunger"; no potions or scrolls to use yet, no unique
+items, no enchanting), audio, mouse input, infravision, localization.
 
 Vision types are in scope even though there are no other mechanics yet: they are part of perception,
 and the light data model must carry them from the start.
@@ -151,7 +156,7 @@ regression scene for golden screenshots, replays, and snapshot tests.
 | Darkness chamber | vision types, a UV-only rune, darkvision fade; an amulet seen only by those who see in the dark | M3, M11 |
 | Water garden | still ponds and running rills (flow, glints, foam), pulsing altar with a ring before it | M4, M8, M11 |
 | Effects room | glyph particles, glow, fades, distortion | M4 |
-| Stairs | connection to Level 2, the arena, the quarry, and the Frost Grotto (down), the courtyard and the overworld (up); the nook is a sanctuary (§7 "Special rooms"); an old hermit sits in its corner beside the quarry stairs and tells of the hall's rooms (topics, §8 "Dialogue"); he wants three of the arena's giant rats killed, then a look three levels down into the Depths, and takes the bard's letter (§8 "Quests") | M2, M9, M10, M19, M25, M26, M28 |
+| Stairs | connection to Level 2, the arena, the quarry, the Frost Grotto, and the trap hall (down), the courtyard and the overworld (up); the nook is a sanctuary (§7 "Special rooms"); an old hermit sits in its corner beside the quarry stairs and tells of the hall's rooms (topics, §8 "Dialogue"); he wants three of the arena's giant rats killed, then a look three levels down into the Depths, and takes the bard's letter (§8 "Quests") | M2, M9, M10, M18, M19, M25, M26, M28 |
 
 **Courtyard (66×19, outdoor)**: up the stairs nook's `<`, a walled garden under the open sky —
 trees, a ruined wall, a pond, standing stones, flower beds, and a roofed gazebo with a lamp — where
@@ -177,7 +182,21 @@ and try the ice heavily laden. Arriving says "Your breath mists in the cold air.
 faint cold ambient light the pool. The ice keeps and slowly thickens; a hole refreezes in a few
 hours.
 
-**Safety**: the hand-made showcase (the hub, Level 2, the courtyard) is safe. Its people (the hermit, the gardener, the bard) are peaceful folk by type. Creatures that would hunt the player by type (the hub's kobold, Level 2's kobolds and rats) are placed in the `peaceful` faction by their level (§7 "Factions"): they keep their types, patrols, speeds, footsteps, and looks, and attack no one. Fighting happens in the arena, and in the generated Depths (the real dungeon). Arriving in the arena says "The clash of arms echoes off the stone." (a level's `arrival` line).
+**Safety**: the hand-made showcase (the hub, Level 2, the courtyard) is safe. Its people (the hermit, the gardener, the bard) are peaceful folk by type. Creatures that would hunt the player by type (the hub's kobold, Level 2's kobolds and rats) are placed in the `peaceful` faction by their level (§7 "Factions"): they keep their types, patrols, speeds, footsteps, and looks, and attack no one. The showcase has no traps (§8 "Traps"). Fighting happens in the arena, and in the generated Depths (the real dungeon), which hide traps too. Arriving in the arena says "The clash of arms echoes off the stone." (a level's `arrival` line).
+
+**Trap hall (72×21, M18)**: down the `>` below the stairs nook's `<`: the place to learn traps (§8
+"Traps"), lit dimly throughout. The `traps` scenario starts there, in the middle of its south wall
+(beside the `<` back up), where the whole hall is in view; arriving by stairs says "Scorch marks
+and old arrows litter the flagstones." North, the proving row: seven bays, each with a known trap
+to try (arrow, spear, pit, alarm, teleport, lightning, whose bolt runs south out of its bay
+across the hall, and fireball). South, the crossing: creatures go their rounds across hidden
+traps, so within fifteen turns the player watches a giant rat run onto spears, a cave beetle onto
+a lightning trap whose bolt runs west along its lane (killing it), a torch-bearing kobold into a
+fireball, and a second kobold shot from the south wall by an arrow trap, and from then on knows
+those traps. Three pillars stand by that fireball, packed earth and stone north of it and granite
+south: its blast breaks the two softer ones into rubble and the granite holds (§8 "Digging").
+The rat and the kobolds are among the peaceful folk and the beetle is wildlife, so nobody attacks
+the player; the traps attack everybody.
 
 **Arena (72×21, M10)**: down the stairs nook's second `>`: the place to fight; factions at war. A kobold war band
 (three torch-bearing kobolds wielding spears, an archer with a short bow and arrows ready, a slow
@@ -213,11 +232,12 @@ from north to south, foaming against a few boulders.
 
 **The Depths (generated, M6)**: a dungeon branch of eight procedurally generated levels
 (`depths:1` to `depths:8`; rooms and corridors at 80×21, caverns at 120×60 on depths 3–5) built
-from the run seed, with vaults stamped in and a few items of loot on every floor, at the depth's
-item level (§8 "Magic items"); about one level in two or three has a special room (§7 "Special
-rooms"). On its rooms levels a few rooms are locked, their rusty key lying where the player
-reaches it, and the guard post vault's store room is locked, its brass key carried by the kobold
-on guard (M19). The `depths` scenario starts on its first level.
+from the run seed, with vaults stamped in, a few items of loot on every floor, at the depth's
+item level (§8 "Magic items"), and two to four hidden traps on each level (M18; the shrine
+vault's offering lies on a hidden spear trap); about one level in two or three has a special
+room (§7 "Special rooms"). On its rooms levels a few rooms are locked, their rusty key lying
+where the player reaches it, and the guard post vault's store room is locked, its brass key
+carried by the kobold on guard (M19). The `depths` scenario starts on its first level.
 
 **The Overworld (M9)**: *The Wildlands*, a hand-authored 100×50 map of the land at large
 (`levels/overworld.toml`, level kind `overworld`), ADOM-like. Overworld terrain: plains,
@@ -289,8 +309,8 @@ Plains, Mirefen, Greyspine Mountains) show in the status bar.
 1. **Grid layer** — viewport-sized textures (glyph index, foreground, background, visual light,
    perception state) drawn as one quad with a custom 2D material. Terrain, remembered terrain,
    objects (the top object of each pile in place of the terrain's glyph, over its background, lit
-   like terrain; a cell with objects does not animate), blood stains (§4.8), and in-cell
-   animation.
+   like terrain; a cell with objects does not animate), known traps (their glyph over any objects
+   there: a danger shows first; §8 "Traps"), blood stains (§4.8), and in-cell animation.
 2. **Free-glyph layer** — instanced glyph quads from the same atlas for actors, particles, and
    anything that moves between cells or grows beyond its cell. Lit by sampling the light texture.
 3. **UI layer** — panels, message log, and overlays, drawn in glyphs.
@@ -807,10 +827,10 @@ rate or animation.
   completed walls). The player's own cell is always visible, so they always know what lies under
   them. What creatures carry is never seen; what a seen creature wears and wields is (look mode,
   §6).
-- **Memory**: per level, terrain and piles of objects, as last seen (a door is remembered open
-  until seen closed, a wall standing until seen broken (§8 "Digging"); a pile is remembered as it
-  lay when last in sight, even if it changed out of sight since, and is forgotten once seen gone).
-  Never creatures.
+- **Memory**: per level, terrain, piles of objects, and known traps, as last seen (a door is
+  remembered open until seen closed, a wall standing until seen broken (§8 "Digging"); a pile is
+  remembered as it lay when last in sight, even if it changed out of sight since, and is forgotten
+  once seen gone; so is a known trap, seen spent and gone). Never creatures, never hidden traps.
 - **Recomputation**: perception updates in the perception phase of every turn (and after
   `SetVision`). Per-light shadow masks are cached and invalidated when the light moves or opacity
   changes within its radius; only sources whose radius can reach the view range (or a surface whose
@@ -840,7 +860,10 @@ rate or animation.
     bowstring (a shot, 40), chanting (a spell, 50); a turn of digging where the digger stands
     (digging, 80; §8 "Digging"). A kick at a door (§8 "Doors"), whether it holds or breaks, bangs
     on the door: banging, 100, made on the door's cell, so both sides hear it. A creature
-    muttering to itself (§8 "Dialogue") is a voice (50) where it stands.
+    muttering to itself (§8 "Dialogue") is a voice (50) where it stands. A trap going off (§8
+    "Traps") makes the noise its data gives on its cell, made by no actor (so everyone in earshot
+    hears it): an arrow trap's bowstring (40), a fireball's explosion (150), a lightning bolt's
+    thunderclap (120), an alarm's bell (300, as loud as anything gets).
   - **Propagation**: a noise spreads from its cell through the 8 neighbors, losing 10 loudness
     per orthogonal step and 14 per diagonal one, plus the `muffle` of every cell it enters (a
     closed door 30). Solid terrain (neither walkable nor transparent: walls, rock, trees,
@@ -861,7 +884,7 @@ rate or animation.
   - **The player** perceives the sounds they heard during the turn that just passed whose source
     cell they do not see (a creature in darkness or out of sight, a door around the corner),
     never who or what made them: the kind (footsteps, a door opening, a door closing, fighting, a
-    bowstring, chanting, banging, digging, a voice), how loud
+    bowstring, chanting, banging, digging, a voice, a bell, an explosion, a thunderclap), how loud
     (faint, clear, or loud: under 10, under 30, or at least 30 above their threshold), and
     roughly where: a cell up to 2 (faint), 1 (clear), or 0 (loud) steps from the source through
     cells that pass sound unmuffled, which the player does not see, picked by a hash of the
@@ -902,8 +925,9 @@ rate or animation.
   contributions; contributions plus the cell's base light sum to the cell's light), the base light
   of visible cells, the active vision profile, the ambient light, on a level under the sky the
   sun, the moons, the sky, and the weather of the moment, the temperature where the player is (§5
-  "Temperature"), and the perceived sounds (kind, volume, rough place;
-  "Hearing" above). Visual lighting (§4.4) is derived from this.
+  "Temperature"), the perceived sounds (kind, volume, rough place;
+  "Hearing" above), and the traps the player knows, seen or remembered (`PerceptionView::trap`,
+  `known_traps`; §8 "Traps"; never hidden ones). Visual lighting (§4.4) is derived from this.
 
 ## 6. Input and UI
 
@@ -922,7 +946,12 @@ rate or animation.
   it, and no game time passes but for what is chosen on a screen (picking up, dropping, wearing,
   wielding, eating), which is done as it is chosen and takes its time. Prompts in the message
   line (a direction to open, close, kick, or bash, to dig, or to chat, how long to rest, look
-  mode, aiming a shot or a throw) are not screens.
+  mode, aiming a shot or a throw, whether to step onto a known trap) are not screens.
+- **Known traps** (§8 "Traps"): a step onto a trap the player knows (where no creature they see
+  stands) asks first in the message line, ADOM-like: `Really step onto the fireball trap? (y/n)`.
+  `y` steps (the move as usual, replay text `move:DIR`: the rules never ask); any other key, Esc
+  too, cancels, and no is the default; a held key's repeats never answer it. Asking is the
+  interface's: the rules step onto whatever they are told to.
 - **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
   `--record`, or `--capture` name what to run): Continue (only if a save exists), New run
   (scenario list from content, optional seed, then character creation), Settings, Controls,
@@ -1110,7 +1139,8 @@ rate or animation.
   D`, then who killed them ("Killed by a kobold", or "Killed by something you did not see" when
   they did not see it), the status effect that did (its `death` line: "Bled to death"; a
   disease kills by Diseased: "Died of disease"), or what, when neither did (§8 "Hunger":
-  "Starved to death", "Choked to death on a food ration"), where
+  "Starved to death", "Choked to death on a food ration"; §8 "Traps": "Killed by a fireball
+  trap"), where
   (the level's name), when (the date and time), and after how many turns, and the level they
   had reached ("You had reached level 3."). It takes every key press; Enter or Esc returns to
   the main menu (no Continue: nothing is
@@ -1232,7 +1262,9 @@ rate or animation.
   ..."; never what else it carries), terrain (a wall in sight the player has dug into: "a stone
   wall, partly dug"), remembered terrain, blood seen or remembered there ("on blood-stained stone
   floor", "A blood-smeared stone wall."; §8 "Blood"; not with the blood switch off), where
-  stairs lead, the special room walkable ground lies in once the player has been inside it ("A
+  stairs lead, a known trap as part of the ground ("A fireball trap, on stone floor.", "A kobold
+  (hostile, unhurt), on a pit on stone floor.", "You remember a pit here, on stone floor."; §8
+  "Traps"), the special room walkable ground lies in once the player has been inside it ("A
   stone floor in an echoing hall.", "You remember a stone floor here, in a sanctuary."; §7
   "Special rooms"), and a sound heard there ("You hear footsteps here.").
 - Screen layout: map viewport, message log, status panel (level, the player's hit points as
@@ -1324,6 +1356,30 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   (a lock without an id: only a skeleton key opens it). A lock on anything but a closed door, an
   empty lock id or `*`, or a `lock` with `locked = false` is a content error. Hand-made levels
   need not give a lock's key (a door may be meant to be kicked in); vaults must (below).
+- **Traps in level files** (M18; §8 "Traps"): a legend entry places a trap with `trap = "id"` (an
+  id in `data/traps.toml`), hidden unless `known = true`, and for a bolt trap optionally the way
+  its bolt runs, `dir = "E"` (default: along the longest clear line from it). Traps lie only on
+  walkable terrain that is not stairs nor water that freezes; `known` or `dir` without a `trap`, `dir` on any other
+  trap, or an unknown id is a content error. Dungeon vaults place traps the same way and
+  generators stamp them with the vault; outdoor vaults have none.
+- **Traps** (`data/traps.toml`, optional; without it there are no traps; M18): `[[trap]]`s with
+  `id`, `name` ("fireball trap", said in "Really step onto the fireball trap?"), `glyph` (default
+  `^`) and `fg` (how it shows once known), an optional `message` said when the player perceives
+  it go off ("A fireball explodes!"), optional `charges` (1 to 1000; how often it goes off before
+  it is spent and gone; none: every time), an optional `noise` (`{ sound, loudness }`: a sound
+  kind of §5 "Hearing" and its loudness on the trap's cell, 1 to 300), and its `kind`, with the
+  fields each kind needs (any other is a content error): `shot` (`object`, the missile, which
+  lands as that object; `damage`, `to_hit`), `strike` (`noun`, `damage`, `to_hit`), `burst`
+  (`radius` 1 to 5, `damage`, `spell`, `noun`, an optional `blast` 0 to 10000: the walls it
+  reaches whose hardness is below it break, §8 "Digging"), `bolt` (`length` 1 to 40, `damage`,
+  `spell`, `noun`), `pit` (`damage`), `alarm` (needs a `noise`), `teleport`. `noun` and `verb`
+  (default "hits") make the messages ("The fireball burns you."); `spell` names the effect
+  presentation shows (`data/effects.toml`; §4.8). `to_hit` is within ±20 and never shown;
+  `damage` is dice that can do harm. The built-in traps: arrow (`shot`, an arrow, 1d6, a
+  bowstring 40), spear (`strike`, 1d8), fireball (`burst` radius 2, 3d6, a blast of 1000, once,
+  an explosion 150), lightning bolt
+  (`bolt` 12 cells, 4d6, twice, a thunderclap 120), pit (1d6), alarm (a bell 300), and teleport.
+  The wiki shows them in a generated table.
 - **Water**: `~` is still water (`water`); `shallow_water` (ankle-deep over a stone floor, paler,
   a flooded room's floor, §7 "Special rooms") steps at 150 and splashes like water. Running
   water (`running_water`, terrain with a `flow`
@@ -1707,7 +1763,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   `projectile`) `flight`. Every glyph joins the atlas. §4.8 "Spell effects".
 - **Dungeon branches** (`data/dungeons.toml`): stacks of generated levels, e.g.
   `{ id = "depths", generator = "rooms", depth = 8, size = [80, 21] }`, plus optional name,
-  patrolling creature kinds, ambient light, `loot = [fewest, most]` (items of loot on each
+  patrolling creature kinds, the traps its levels hide (`traps`, trap ids; one named twice comes
+  up twice as often) and how many a level gets (`traps_per_level = [least, most]`, default
+  `[2, 4]`, at most 50), ambient light, `loot = [fewest, most]` (items of loot on each
   level's floor, at most 50; the Depths 2 to 4; §8 "Magic items"), `temperature` (°C, −40 to 40;
   default 10; §5 "Temperature"), a `key` (a key object: its rooms levels lock a few rooms with
   the lock it opens, §8 "Doors"; the Depths' is the rusty key), and per-depth overrides of
@@ -1740,7 +1798,13 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   every stair, door, and walkable cell reachable from the up staircase; locks only on closed
   doors, and the stairs and a key to every lock (lying, or carried by a creature) reachable from
   it without unlocking a door, so no level needs a key it does not give; patrols valid, some
-  light — and a level that fails is regenerated from the next derived stream. *outdoor* (the local
+  light — and a level that fails is regenerated from the next derived stream. A valid level then
+  hides its branch's traps (§8 "Traps"), all hidden, drawn from a stream of their own
+  (`traps/<level id>`, so the level is the same with or without them): a count within
+  `traps_per_level`, each of a kind from `traps`, on plain floor nothing else claims (no object,
+  light, or trap), never on or next to a staircase (the player arrives there), and never on a
+  creature's patrol (creatures know nothing of traps and would spring one every round); its loot
+  is rolled after that (§8 "Magic items"). *outdoor* (the local
   areas of the overworld, §3): smooth integer value noise (random values on a coarse lattice,
   eased between) sized as a share of the area lays everything in natural blobs — woods, clearings,
   meadows of flowers, pools, crags; the share of woods blends towards each neighboring cell's
@@ -1754,7 +1818,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   cell is reachable from it (4-connected), every side has at least 3 walkable cells, running water
   and only running water has a flow, and patrols are valid.
 - **Vaults** (`assets/vaults/*.toml`): hand-made pieces in the level-file format, stamped verbatim
-  (terrain, lights, objects, locks, creatures) where they fit — into rock with room for corridors or tunnels to
+  (terrain, lights, objects, traps, locks, creatures) where they fit — into rock with room for corridors or tunnels to
   every entrance. A vault's edge is solid except for its entrances (doors, not on a corner); it has
   no stairs, player start, or unique character (`npc`), and all its walkable cells are reachable
   from an entrance. Its locks
@@ -1763,8 +1827,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   key carried by its kobold). Vaults of
   `kind = "outdoor"` are ruins for local areas, stamped on open land with a ring of open ground
   around them: their spaces (`void`) keep the area's own ground, every open cell on their edge is
-  a way in, and their walkable cells are reachable from the edge. Dungeon generators use only
-  dungeon vaults, local areas only outdoor ones.
+  a way in, and their walkable cells are reachable from the edge; they have no traps. Dungeon
+  generators use only dungeon vaults, local areas only outdoor ones.
 - **Special rooms** (`data/room_effects.toml`, optional; without it there are none; M25),
   ADOM-like: a room of a generated level, or an area a hand-made level marks, carries an
   **effect** that changes the rules while one is inside it. Top level: `chance` (percent, 0 to
@@ -1983,7 +2047,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   from 1.0 on, saves are migrated. The web build keeps the same bytes in the browser's
   `localStorage` (below). The envelope also records a content fingerprint (hash of the ordered
   terrain, creature, level, light, dungeon-branch, object, equipment slot, skill, room effect,
-  weapon skill, status, and disease
+  weapon skill, status, disease, and trap
   ids), because ids are indices; a save made with different content is rejected. Generated levels
   are saved with the run like visited hand-made ones (terrain, memory, stairs, lights, kind,
   arrival point,
@@ -2029,7 +2093,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   content fingerprint), the player's quests and the kills they count (§8 "Quests"; format
   version 27; left out while the player has heard of none and killed nothing a kill quest asks
   for; quests and creature types are recorded by id, so a save naming one this content does not
-  have is inconsistent), and a dev weather override while
+  have is inconsistent), the traps on each level (kind, whether the player knows it, charges
+  left, a bolt's direction), the known traps as the player remembers them, and a trap as what
+  killed the player (§8 "Traps"; format version 28), and a dev weather override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved, nor the temperature under the open sky: they follow from the seed and the
   clock. The save is `run.sav` in the
@@ -2199,8 +2265,9 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     below), and the player's status effects beginning and ending in the turns that pass without
     perception are said all the same. Digging ("Digging" below) runs through the same loop
     (`World::keep_at`). Turns that end before any creature on the level that could stop the rest
-    could come within view, in which the player heard nothing, and in which the weather the
-    player would see did not change, pass without
+    could come within view, in which the player heard nothing, in which the weather the
+    player would see did not change, and in which no trap went off (a teleport moves a creature
+    farther than its steps; §8 "Traps"), pass without
     perception: a creature is seen only within the view range, and before its
     first step that could bring it there it needs the energy for every step that cannot (each at
     least the level's cheapest step), so a fast creature shortens the stretch. Those turns cannot
@@ -2527,6 +2594,80 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     `Fell`, or `Unseen` when the last cell seen is not where it ended. Dropped if none of it was
     seen. The player's own readied missile weapon, its ammunition, and ranges are in the snapshot
     (`PerceptionView::ready_to_fire`, `ready_to_throw`, `throw_range`) for the targeting UI.
+- **Traps** (`warlock-core/src/world/trap.rs`, data `data/traps.toml` §7; M18, #128):
+  - **On a level**: a trap lies on a cell (`LevelState::traps`: its type, whether the player
+    knows it, its charges left, a bolt's direction; saved), from the level's legend, a vault, or
+    a generator (§7). It is **hidden** until the player sets it off, or sees it set off: the
+    trap's cell is in their sight as the turn is perceived (a creature they see stepping onto
+    it). Then it is **known** (`known`) from then on: drawn as its glyph and color over anything
+    lying there (§4.2), remembered like terrain (`trap_memory`, as last seen; forgotten when seen
+    gone), named by look mode, and in the snapshot (`PerceptionView::trap`, `known_traps`). There
+    is no searching yet; a level may show a trap from the start (`known = true`).
+  - **Setting one off**: whoever steps onto a trap sets it off, the player (any `move` onto it:
+    the rules never ask; the interface does, §6 "Known traps") and creatures alike: creatures
+    know nothing of traps, hidden or known, and walk onto them on their rounds or chasing someone,
+    so luring them is a tactic. `World::spring_trap(at, victim)` is the one way a trap goes off
+    (a trapped door, later, calls it too): it spends a charge (the last leaves the trap spent and
+    gone), makes the trap's noise on its cell (no actor made it, so everyone in earshot hears it,
+    §5 "Hearing"; an alarm's bell draws every creature with enemies to look), and does what the
+    trap does:
+    - **shot** (the arrow trap): the missile shoots out of a hidden slit, the nearest opaque cell
+      in the eight directions from the trap (outside the level counts; ties go to the direction
+      a hash of the level and the cell picks first), along the line from it through the victim
+      and on, at most 8 cells past them: it attacks whoever stands in its way in turn, rolled with
+      the trap's to-hit and damage against their Defence (combat's rules, §8 "Combat": misses
+      say why), until it hits, and comes down like any missile (§8 "Ranged combat": on whom it
+      hit, else where it stopped; it breaks on a hit by its `breaks` chance), to be picked up.
+      Its flight is an `Event::Missile` from the slit.
+    - **strike** (the spear trap): an attack roll against the victim's Defence.
+    - **burst** (the fireball): every actor on the transparent cells within the radius that a
+      shadowcast from the trap reaches (walls stop it) takes one roll of the damage, half of it
+      (at least 1) beyond radius − 1; no roll to hit, no saving throw. In ascending actor id
+      order. Then, with a `blast`, the walls it reaches whose hardness is below it break (§8
+      "Digging": the fireball's 1000 breaks earth and stone, not granite).
+    - **bolt** (lightning): a line from the trap's cell in its direction (the level's `dir`,
+      else the longest clear line from it, ties to the earlier of N, NE, … NW) until an opaque
+      cell, at most its `length` cells in all: every actor on it, from the trap outward, takes
+      one roll of the damage.
+    - **pit**: the victim takes the damage and loses its next action climbing out: its step
+      costs a `wait` more (6 s at normal speed; a creature's too).
+    - **alarm**: only its noise.
+    - **teleport**: the victim is moved at once to a free cell of the level (walkable, no one
+      there, no trap, no ice: §5 "Ice"), the cell at index `hash % count` of those in row order,
+      the hash FNV-1a over the seed, the level id, the turn, the victim's id, and the trap's cell:
+      deterministic, and never the gameplay random stream. A creature goes on from where it
+      lands.
+    Every roll (attack rolls, damage) comes from the gameplay random stream, so traps replay
+    exactly. A trap's blow is dealt like any other: a big one spills the victim's blood (§8
+    "Blood"; from the slit for an arrow, from the trap's cell for the rest), it takes hit points
+    and kills (`Event::Died`; a creature drops what it carried), and a victim that lives gets the
+    statuses its wound causes (bleeding from a big hit or a confirmed critical; §8 "Status
+    effects"; caused by no one). A trap that kills the player is recorded as what killed them
+    (`Death::cause`, the trap) and named on the death screen ("Killed by a fireball trap"). A
+    trap's kill is no one's: it earns the player no experience (§8 "Experience") and counts for
+    no quest (§8 "Quests"), even when they lured the creature there. Traps never lie on water
+    that freezes (§5 "Ice": ice would cover them; a content error in a level file), so a fall into
+    a pit and a fall through the ice never meet.
+  - **Events**: `Event::TrapSprung { trap, at, victim }`, then what came of it: the shot's
+    `Event::Missile`, a burst's or bolt's `Event::Spell { effect, origin, shape, cells }` (the
+    spell effect a trap names in data, which must be an effect of `data/effects.toml` of the same
+    shape when that file exists; `SpellShape::Burst { center, radius }` over the burst's cells,
+    the very cells it hits, or `Bolt { path }` from the trap along the cells after it; drawn by
+    the spell effects of §4.8 "Spell effects"), `Event::TrapStruck { trap, target, to, strike }`
+    for each actor it reached (a hit for what is not rolled), and deaths. A trap going off is
+    perceived (kept, and said) when the player set it off, sees its cell, or sees any of its
+    blast (a spell is light itself: its cells are cut to those the player sees or has in line of
+    sight, §4.8); what it did to someone is kept and said when that is the player or the player
+    sees them.
+  - **Messages**, only for what the player perceives, never a number: the trap's `message` ("An
+    arrow shoots out of the wall!", "Spears spring from the floor!", "A fireball explodes!",
+    "Lightning arcs across the floor!", "A loud bell rings!"), then what it did, by its `noun` and
+    `verb` and combat's words ("The arrow hits you.", "You dodge the arrow.", "The spear glances
+    off your armour.", "The fireball burns the kobold.", "The lightning bolt strikes the cave
+    beetle."), a pit's "You fall into a pit." / "The kobold falls into a pit.", a teleport's "You
+    are wrenched elsewhere." / "The kobold vanishes!", and deaths ("The cave beetle dies.", "You
+    die..."). Like any message they stop a rest; a rest also perceives every turn in which a trap
+    went off (a teleport moves a creature farther than its steps).
 - **Doors** (`warlock-core/src/door.rs`, the rules; `world/door.rs`, applying them; M19, #130):
   locked doors and keys, and kicking doors in.
   - **Locks** are per-cell state of a level, not terrain of their own: a locked door is the
@@ -2607,7 +2748,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     in line of sight of its centre within its radius, the walls bounding them included, taken
     before anything breaks, so a blast never reaches through a wall it breaks. Walls on the edge
     never break. "The wall collapses!" ("The walls collapse!") when the player sees one fall.
-    Nothing explodes yet: the fireball trap (#128) is to be the first explosion to call it.
+    A burst trap with a `blast` (§7) calls it after its damage, with its own radius: the fireball
+    trap's 1000 breaks packed earth and stone walls, never granite.
   - **What follows**: a broken wall is its rubble at once and the light masks it could change are
     dropped (`World::set_terrain`, as for a door), so light, the player's sight, and creature
     sight pass the gap from the next perception, and memory keeps the rubble like any terrain.
@@ -3195,16 +3337,20 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   melee attack (motion), missiles flying (§4.8) and a creature's `attack`
   particles where its attack lands, e.g. the shaman's violet sparkle (particles); dust where a
   door swings or a wall gives way (the `toggle` particles of what the cell became); a death shows
-  as the creature gone and what it dropped, and in the message line. Gameplay never waits for
-  them.
+  as the creature gone and what it dropped, and in the message line; a trap going off
+  (`TrapSprung`, `TrapStruck`) shows as the trap now known and in the message line, its arrow as
+  a missile, and its fireball or lightning (`Event::Spell`) by the spell effect renderer.
+  Gameplay never waits for them.
 - **Determinism**: ChaCha8 RNG (`rand_chacha`) with separate streams, each seeded with FNV-1a 64 of
   the run seed (little-endian) and a label: map generation per level (`map/<level id>`, retry *k*
   `map/<level id>/<k>`), so a level depends only on the seed and its id, never on visiting order
   (its special room is drawn last, so a level without one is the map it would be without them);
-  a generated level's loot (`loot/<level id>`, drawn once its map is valid, so the map is the
-  same with or without it); what a creature drops when it dies (`drop/<actor id>`, so a kill never
-  changes a later roll of the gameplay stream; actor ids are never reused);
-  gameplay (`gameplay`, kept in the world state and saved); character creation (derived on
+  the traps hidden on a generated level (`traps/<level id>`, apart from its map's); a generated
+  level's loot (`loot/<level id>`, drawn once its map is valid and its traps hidden, so the map
+  is the same with or without it); what a creature drops when it dies (`drop/<actor id>`, so a
+  kill never changes a later roll of the gameplay stream; actor ids are never reused);
+  gameplay (`gameplay`, kept in the world state and saved; a teleport trap's destination is a
+  hash, never this stream, §8 "Traps"); character creation (derived on
   demand: `character/gender` for the stat "other" raises, `character/birth/<race>` for the age
   and birthday, `character/rolls/<race>,<gender>,<class>` for the dice,
   `character/weapon-skills/<race>,<gender>,<class>` for the starting weapon skills; New run's
@@ -3277,11 +3423,15 @@ cargo xtask golden [--update]                             # compare golden scree
   RACE,GENDER,CLASS`, like `--seed`, shapes the run that `--scenario`, `--new`, `--record`, or
   `--capture` starts (and `warlock-cli dump` and `replay --create`); without it, the scenario's
   character.
-- Dump layers: `view`, `fov`, `memory` (terrain and the top object of each known pile), `light`
+- Dump layers: `view`, `fov`, `memory` (terrain, the top object of each known pile, and known
+  traps over them), `light`
   (perceived brightness of each visible cell as a digit, `0` dark to `9` fully lit or brighter),
   `sound` (the view with each heard sound at its rough place: `f` footsteps, `o` a door opening,
   `c` a door closing, `x` fighting, `b` a bowstring, `m` chanting, `k` banging (a door kicked),
-  `d` digging, `v` a voice, upper case when loud),
+  `d` digging, `v` a voice, `a` an alarm bell, `e` an explosion, `t` a thunderclap, upper case
+  when loud),
+  `traps` (the traps the player knows, one a line, `(12, 5) fireball trap`, `(remembered)` when
+  out of sight; `no known traps`),
   `inventory` (what the player carries, by letter with weights and what is worn or wielded
   marked, `b - a leather jerkin (being worn) (3.5 kg)`, then what they carry, their burden and
   its thresholds, and what they weigh, `carried 4.2 kg (unburdened: burdened over 14 kg,
@@ -3295,7 +3445,8 @@ cargo xtask golden [--update]                             # compare golden scree
   marks are toward the next, `Long blades 2 (40%)`; at rank 10 the rank alone), and `quests`
   (the quest log, active first: `Rats in the arena (active, from the old hermit): Kill 3 giant
   rats in the Arena. 0 / 3 killed.`) are built from the perception snapshot only;
-  `truth` (terrain, objects, and creatures) and `actors` (every actor on the level with its hit
+  `truth` (terrain, objects, traps hidden or known, and creatures) and `actors` (every actor on
+  the level with its hit
   points and Defence, `hp 8/12 dv 13`, its
   weight, base plus carried, what it carries and of that wears and wields, `equipped main_hand a
   spear` (magic items as they truly are, `an iron ring of the Bear (unidentified)`), what its
@@ -3320,7 +3471,8 @@ cargo xtask golden [--update]                             # compare golden scree
   sky; else null), the temperature where the player is (`temperature`, °C to a tenth), seen
   actors (each with how hurt it looks, `health`: `unhurt`,
   `lightly_wounded`, `wounded`, `badly_wounded`, `nearly_dead`, and the status effects that show
-  on it, `effects`, by id), heard sounds, the player's
+  on it, `effects`, by id), heard sounds, known traps (`known_traps: [{pos, trap, seen}]`), the
+  player's
   inventory (each stack's letter, object, count, weight, `name` as the player knows it, `rarity`,
   `identified`, and `magic`: `{level, name, affixes: [{id, tier, value}]}` once identified, else
   null), equipment (by slot id: letter, object, count), weight, burden (`burden: {level,
@@ -3332,8 +3484,9 @@ cargo xtask golden [--update]                             # compare golden scree
   progress}`, the progress a percent or null at rank 10), the quest log (`quests`: `[{id, name,
   kind, active, completed, giver, objective, status}]`), hit points (`hp: {current, max}`),
   Defence (`defence`, the total), hunger (`hunger`: `bloated` … `starving`, or null when nobody
-  hungers), how the run ended (`death: {turn, time, place, by, of, cause}` or null; `cause`
-  "Starved to death" and the like when neither a creature nor a status effect killed them),
+  hungers), how the run ended (`death: {turn, time, place, by, of, cause, trap}` or null;
+  `cause` "Starved to death", "Killed by a fireball trap", and the like when neither a creature
+  nor a status effect killed them; `trap` the id of the trap that did, else null),
   recent messages,
   and optionally the full world state; the ASCII header line has the turn, the time
   (`0001-01-01 08:00:00`), level, viewer, the player's hit points (`hp 17/17`, then `dead` once
@@ -3344,7 +3497,7 @@ cargo xtask golden [--update]                             # compare golden scree
 - `--fire` (dev) starts the run aiming the readied missile weapon, as `f` would, so captures show
   the targeting line (golden manifest entries pass it with `args`).
 - Dev builds add in-game commands: switch vision profile (`F3`), reveal map (`F2`, ground truth,
-  marked as dev-only on screen), toggle debug overlays (light values `F4`; line of sight and memory
+  hidden traps included, in view too; marked as dev-only on screen), toggle debug overlays (light values `F4`; line of sight and memory
   later), save and load named snapshots (`F5`/`F9`), skip an hour (`F6`, recorded as `skip:1h`),
   set the next weather for three hours (`F7`, recorded as `weather:overcast` and so on), identify
   everything carried (`F8`, recorded as `identify`; §8 "Magic items").
@@ -3449,6 +3602,11 @@ Each milestone ships a playable build.
 - **M17 Blood** — big hits and kills stain floors and the walls next to the victim (#127): how
   much by the victim's size, overkill, criticals, and missiles; spray away from the blow; blood
   colour per creature type; accumulating, drying, remembered; subtle on the map, with a switch.
+- **M18 Traps and spell effects** — traps (#128): arrow, spear, fireball, lightning bolt, pit,
+  alarm, and teleport traps in data, hidden until sprung in the player's sight and then known and
+  remembered, set off by creatures too, an ADOM-like confirmation before stepping onto a known
+  one, a few hidden on every generated Depths level, and a trap hall to try and watch them; spell
+  effect rendering (#129) draws their fireballs and lightning.
 - **M19 Doors and walls** — destructible walls (#131): terrain hardness, digging through walls
   with a pick-axe or a mattock in a new Tool slot, turn after turn by tool power and Strength,
   explosions that break the softer walls, rubble, and the quarry to dig in. Locked doors and keys

@@ -1,7 +1,7 @@
 //! Player actions and the events a turn produces.
 
 use crate::combat::Strike;
-use crate::content::{ActionKind, CombatStance, DiseaseId, ObjectId, StatusId};
+use crate::content::{ActionKind, CombatStance, DiseaseId, ObjectId, StatusId, TrapId};
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
 use crate::weather::Weather;
@@ -295,8 +295,8 @@ pub enum Event {
         path: Vec<Pos>,
         end: MissileEnd,
     },
-    /// An actor died where it stood, killed by the attack before it, or of status effect `of`
-    /// (it bled to death). Kept when the player saw it (their own death always).
+    /// An actor died where it stood, killed by the attack (or trap) before it, or of status
+    /// effect `of` (it bled to death). Kept when the player saw it (their own death always).
     Died {
         actor: ActorId,
         at: Pos,
@@ -318,6 +318,21 @@ pub enum Event {
         actor: ActorId,
         disease: DiseaseId,
         news: DiseaseNews,
+    },
+    /// A trap went off (spec §8 "Traps"): `victim` set off trap `trap` lying on `at`. Kept when
+    /// the player perceived it: they set it off, saw its cell, or saw any of its blast.
+    TrapSprung {
+        trap: TrapId,
+        at: Pos,
+        victim: ActorId,
+    },
+    /// What a trap did to `target`, standing on `to`: what came of its attack roll, or a hit for
+    /// what is not rolled (a blast, a fall). Kept when the player is the target or saw them.
+    TrapStruck {
+        trap: TrapId,
+        target: ActorId,
+        to: Pos,
+        strike: Strike,
     },
     /// A spell-like effect the player perceives (spec §4.8 "Spell effects"): traps now, spells
     /// later. As the player perceives it: it is light itself, so its cells are cut to those the

@@ -6,7 +6,7 @@ name = "Shrine"
 map = '''
 ####+####
 #t.....t#
-#.#...#.#
+#.#.^.#.#
 +..._...+
 #.#.m.#.#
 #t.....t#
@@ -15,10 +15,12 @@ map = '''
 
 [legend]
 "t" = "sconce"
+# Traps (spec §8 "Traps"): a hidden spear trap guards the offering.
+"^" = { terrain = "floor", trap = "spear" }
 # A reward (spec §8 "Magic items"): loot below the altar, rolled when the level is generated.
 "m" = { terrain = "floor", loot = "any" }
 
-# Objects (M11): an offering left before the altar.
+# Objects (M11): an offering left before the altar, on the trap.
 [[pile]]
 at = [4, 2]
 objects = ["jade_amulet"]

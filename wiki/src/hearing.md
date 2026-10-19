@@ -19,6 +19,9 @@ around you hear too.
   [Creatures](creatures.md).
 - **Digging.** Digging into a wall is loud, louder than fighting (see
   [Digging and walls](digging.md)).
+- **Traps.** Some traps are loud when they go off: an alarm's bell carries farther than anything,
+  a fireball explodes, lightning cracks like thunder, and an arrow trap twangs like a bowstring
+  ("You hear an explosion to the west."). See [Traps](traps.md).
 - **Voices.** People muttering to themselves can be heard a few cells away. If you hear one you
   cannot see, you hear a voice, and its words unless it was faint: "You hear a voice to the
   north: "Weeds. Always the weeds."" See [People and talk](npcs.md#muttering).

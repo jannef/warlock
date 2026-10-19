@@ -292,9 +292,13 @@ pub(super) fn track(
         let turn = game.world.turn();
         if motion.turn.replace(turn) != Some(turn) {
             let events = &game.last_outcome.events;
-            snap |= events
-                .iter()
-                .any(|e| matches!(e, Event::LevelChanged { .. }));
+            // A level change, or the player moved farther than a step (a teleport trap).
+            let player = game.world.player_id();
+            snap |= events.iter().any(|e| match *e {
+                Event::LevelChanged { .. } => true,
+                Event::ActorMoved { actor, from, to } => actor == player && from.chebyshev(to) > 1,
+                _ => false,
+            });
             if animate {
                 // Only creatures seen where their last step took them slide.
                 let standing = |id| view.actors().iter().find(|a| a.id == id).map(|a| a.pos);

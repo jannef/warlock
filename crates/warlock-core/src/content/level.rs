@@ -4,13 +4,14 @@
 //! placed on that terrain (player start, creatures with patrol routes, what they carry, and what
 //! of that they wield and wear (`wield = "spear"`, `wear = ["leather_jerkin"]`), the faction they
 //! are placed in, and the unique character they are (`npc = "hermit"`, whose dialogue they
-//! speak), stair links, lights, the flow of running water, objects, and locks on closed doors:
+//! speak), stair links, lights, the flow of running water, objects, locks on closed doors:
 //! `lock = "pantry"`, a lock its keys open, or `locked = true`, one only a skeleton key opens;
-//! spec §8 "Doors"). Characters not in the level's legend fall back to the shared default legend
-//! (`assets/data/legend.toml`, which has arrows for running water). Objects may also be placed
-//! without a legend character: `[[pile]]` tables with `at = [x, y]` and `objects`. Objects are
-//! written as ids with an optional count, top of the pile first: `objects = ["dagger",
-//! "arrow*12"]`. An optional
+//! spec §8 "Doors", and traps: `trap = "fireball"`, hidden unless `known = true`, a bolt trap's
+//! direction with `dir`; spec §8 "Traps"). Characters not in the level's legend fall back to the
+//! shared default legend (`assets/data/legend.toml`, which has arrows for running water). Objects
+//! may also be placed without a legend character: `[[pile]]` tables with `at = [x, y]` and
+//! `objects`. Objects are written as ids with an optional count, top of the pile first:
+//! `objects = ["dagger", "arrow*12"]`. An optional
 //! `ambient = [r, g, b, uv]` lights the whole level. `kind` (`dungeon`, the default, `outdoor`,
 //! or `overworld`) decides what a step there takes (spec §8 "Time"); outdoor levels and the
 //! overworld are lit by the sun and the sky by day (spec §5). Optional
@@ -26,6 +27,7 @@ use super::light::LightId;
 use super::object::parse_stacks;
 use super::room_effect::SpecialRoom;
 use super::terrain::{StairsDir, TerrainDef, TerrainId};
+use super::trap::{Trap, TrapEffect};
 use super::{ActionKind, Content, ContentError, MAX_ITEM_LEVEL, Rarity, Speaker};
 use crate::door::{Lock, check_lock_id};
 use crate::equipment::{self, Equipment};
@@ -214,6 +216,12 @@ pub(super) struct LegendDetail {
     wield: Option<OneOrMany>,
     /// Objects of what it carries that it wears (armor, rings, amulets), by object id.
     wear: Option<OneOrMany>,
+    /// A trap on this cell (spec §8 "Traps"): an id in `data/traps.toml`.
+    trap: Option<String>,
+    /// Whether the player knows the trap from the start (default: hidden).
+    known: Option<bool>,
+    /// The way a bolt trap's bolt runs (default: along the longest clear line from it).
+    dir: Option<Dir>,
     /// The closed door on this cell is locked (only a skeleton key opens it unless it has a
     /// `lock` id).
     locked: Option<bool>,
@@ -307,6 +315,8 @@ pub struct LevelTemplate {
     pub flow: BTreeMap<Pos, Flow>,
     /// Piles of objects, by position, each top first; only on walkable terrain.
     pub objects: BTreeMap<Pos, Vec<Stack>>,
+    /// Traps, by position; only on walkable terrain that is not stairs.
+    pub traps: BTreeMap<Pos, Trap>,
     /// Locks, by position: only on closed doors (spec §8 "Doors").
     pub locks: BTreeMap<Pos, Lock>,
     /// Named areas, first match wins.
@@ -400,6 +410,7 @@ pub(super) fn parse_level(
     let mut flow = BTreeMap::new();
     let mut ice = BTreeMap::new();
     let mut objects: BTreeMap<Pos, Vec<Stack>> = BTreeMap::new();
+    let mut traps = BTreeMap::new();
     let mut loot = Vec::new();
     let mut locks = BTreeMap::new();
 
@@ -473,6 +484,11 @@ pub(super) fn parse_level(
                 if !pile.is_empty() {
                     objects.insert(pos, pile);
                 }
+            }
+            if let Some(trap) = parse_trap(detail, terrain, content)
+                .map_err(|m| err(format!("legend `{ch}`: {m}")))?
+            {
+                traps.insert(pos, trap);
             }
             if let Some(grade) = detail.loot {
                 if !content.terrain(terrain).walkable {
@@ -651,6 +667,7 @@ pub(super) fn parse_level(
         lights,
         flow,
         objects,
+        traps,
         locks,
         regions,
         rooms,
@@ -676,6 +693,41 @@ pub(super) fn parse_level(
         }
     }
     Ok(template)
+}
+
+/// The trap a legend entry places on a cell of `terrain` (`trap = "fireball"`, optionally `known
+/// = true` and, for a bolt, `dir = "E"`): only on walkable terrain that is not stairs.
+fn parse_trap(
+    detail: &LegendDetail,
+    terrain: TerrainId,
+    content: &Content,
+) -> Result<Option<Trap>, String> {
+    let Some(id) = &detail.trap else {
+        if detail.known.is_some() || detail.dir.is_some() {
+            return Err("has `known` or `dir` but no `trap`".into());
+        }
+        return Ok(None);
+    };
+    let kind = (content.trap_id(id)).ok_or_else(|| format!("unknown trap `{id}`"))?;
+    let def = content.trap(kind);
+    let ground = content.terrain(terrain);
+    // Water that freezes is no place for a trap: ice may cover it, and a fall through the ice is
+    // its own (spec §5 "Ice").
+    if !ground.walkable || ground.stairs.is_some() || ground.freeze.is_some() {
+        return Err(format!(
+            "places a trap on terrain `{}`, which is not walkable floor",
+            ground.id
+        ));
+    }
+    if detail.dir.is_some() && !matches!(def.effect, TrapEffect::Bolt { .. }) {
+        return Err(format!("`dir` is only for bolt traps, not `{id}`"));
+    }
+    Ok(Some(Trap::new(
+        kind,
+        def,
+        detail.known.unwrap_or(false),
+        detail.dir,
+    )))
 }
 
 /// The flow a legend entry gives the cell at `pos`: required on running water, an error anywhere

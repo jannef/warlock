@@ -1,8 +1,8 @@
 //! Vaults (`assets/vaults/*.toml`): hand-made map pieces in the level-file format that generators
 //! stamp into generated levels where they fit (spec §7).
 //!
-//! A vault is a rectangle copied verbatim: terrain, placed lights, and creatures with their
-//! patrols. Its outer edge must be solid (non-walkable terrain such as walls) except for its
+//! A vault is a rectangle copied verbatim: terrain, placed lights, objects, traps, and creatures
+//! with their patrols. Its outer edge must be solid (non-walkable terrain such as walls) except for its
 //! **entrances**: doors on the edge, never on a corner. Generators join every entrance to the rest
 //! of the level. A vault has no stairs and no player start, and every walkable cell must be
 //! reachable from an entrance (doors count as passable), so stamping one never strands anything.
@@ -52,6 +52,9 @@ impl Vault {
         }
         if !template.rooms.is_empty() {
             return Err("a vault cannot mark special rooms".into());
+        }
+        if let (LevelKind::Outdoor, Some(at)) = (template.kind, template.traps.keys().next()) {
+            return Err(format!("an outdoor vault cannot have traps (at {at})"));
         }
         // The level it is stamped into decides its temperature, and so its ice.
         if let Some(at) = template.ice.keys().next() {

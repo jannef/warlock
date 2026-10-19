@@ -358,7 +358,7 @@ impl World {
 
     /// One `missile` comes down on cell `p` of the current level, on top of the pile there. If
     /// it burns, it starts a fire there, or the fire there burns on until it has burned out too.
-    fn come_down(&mut self, p: Pos, missile: Stack) {
+    pub(super) fn come_down(&mut self, p: Pos, missile: Stack) {
         let object = missile.object;
         let content = self.content.clone();
         let now = self.state.time;

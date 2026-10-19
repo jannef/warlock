@@ -58,7 +58,9 @@ const MAGIC: &str = "WARLOCK-SAVE";
 ///     affix by id with its tier and value, a rare item's name, whether it is identified).
 /// 27: quests: the player's quests (stage, completions, counted kills, reached) and the kills
 ///     they count, by level and creature type (`WorldState::quests`).
-pub const FORMAT_VERSION: u32 = 27;
+/// 28: traps: level states keep their traps (kind, known, charges left, a bolt's direction) and
+///     the traps the player remembers; the player's death records the trap that killed them.
+pub const FORMAT_VERSION: u32 = 28;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 

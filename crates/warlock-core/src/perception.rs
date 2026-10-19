@@ -14,7 +14,8 @@
 //!
 //! **Memory** (spec §5): terrain, piles of objects, and blood as last seen. Objects are seen where
 //! creatures are (cells in line of sight, never completed walls); a pile seen gone is forgotten,
-//! and one that changed out of sight is remembered as it was.
+//! and one that changed out of sight is remembered as it was. Known traps (spec §8 "Traps") are
+//! seen and remembered the same way; hidden ones never show.
 //!
 //! **Blood** (spec §8 "Blood", [`crate::blood`]): a stain on an open cell is seen where objects
 //! are; one on a wall only when a stained face is seen (a visible open cell next to the wall on
@@ -65,7 +66,7 @@ use crate::character::Character;
 use crate::combat::Health;
 use crate::content::{
     CombatStance, Content, CreatureId, DiseaseId, FactionId, Flow, LevelKind, LightId, ObjectId,
-    RoomEffectDef, SlotId, Stance, StatusId, TerrainId, VisionProfile,
+    RoomEffectDef, SlotId, Stance, StatusId, TerrainId, TrapId, VisionProfile,
 };
 use crate::daylight;
 use crate::equipment::Equipment;
@@ -620,8 +621,9 @@ impl Perception {
         self.blood.binary_search(&p).is_ok()
     }
 
-    /// Writes currently visible terrain, the piles on cells in sight, and the blood seen into
-    /// the level's memory. Blood on a wall seen only from its clean side is remembered as it was.
+    /// Writes currently visible terrain, the piles and known traps on cells in sight, and the
+    /// blood seen into the level's memory. Blood on a wall seen only from its clean side is
+    /// remembered as it was.
     pub(crate) fn remember(&self, level: &mut LevelState) {
         for &p in &self.blood {
             if let Some(stain) = level.blood.get(&p)
@@ -637,6 +639,14 @@ impl Perception {
             }
             if !self.sees_actors_at(p) {
                 continue;
+            }
+            match level.traps.get(&p).filter(|t| t.known) {
+                Some(trap) => {
+                    level.trap_memory.insert(p, trap.kind);
+                }
+                None => {
+                    level.trap_memory.remove(&p);
+                }
             }
             match level.objects.get(&p) {
                 Some(pile) if level.object_memory.get(&p) != Some(pile) => {
@@ -814,6 +824,29 @@ impl<'a> PerceptionView<'a> {
     /// Whether the pile at `p` is in sight now (rather than remembered or unknown).
     pub fn sees_objects_at(&self, p: Pos) -> bool {
         self.snapshot.sees_actors_at(p)
+    }
+
+    /// The trap the player knows at `p` (spec §8 "Traps"): on a cell in sight, a known trap lying
+    /// there now; anywhere else, the trap remembered there. Hidden traps are never here.
+    pub fn trap(&self, p: Pos) -> Option<TrapId> {
+        if self.snapshot.sees_actors_at(p) {
+            (self.level.traps.get(&p))
+                .filter(|t| t.known)
+                .map(|t| t.kind)
+        } else {
+            self.level.trap_memory.get(&p).copied()
+        }
+    }
+
+    /// Every trap the player knows on this level ([`PerceptionView::trap`]), by position.
+    pub fn known_traps(&self) -> Vec<(Pos, TrapId)> {
+        let cells = (self.level.traps.keys()).chain(self.level.trap_memory.keys());
+        let mut cells: Vec<Pos> = cells.copied().collect();
+        cells.sort_unstable();
+        cells.dedup();
+        (cells.into_iter())
+            .filter_map(|p| Some((p, self.trap(p)?)))
+            .collect()
     }
 
     /// What the player carries, letter `a` first.

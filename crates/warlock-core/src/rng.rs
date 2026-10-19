@@ -6,6 +6,7 @@
 //! | Stream | Label | Kept |
 //! |---|---|---|
 //! | Map generation, per level | `map/<level id>` (retry *k*: `map/<level id>/<k>`) | never; derived on demand |
+//! | Hidden traps, per generated level | `traps/<level id>` | never |
 //! | A generated level's loot | `loot/<level id>` | never; derived on demand |
 //! | What a creature drops when it dies | `drop/<actor id>` | never; derived on demand |
 //! | Gameplay | `gameplay` | in [`crate::WorldState`], so saves continue it |
@@ -54,6 +55,12 @@ impl Rng {
         } else {
             Self::stream(run_seed, &format!("map/{level}/{attempt}"))
         }
+    }
+
+    /// The stream that hides traps on generated level `level` (spec §8 "Traps"), apart from its
+    /// map's, so a level is the same with or without traps.
+    pub fn traps(run_seed: u64, level: &str) -> Self {
+        Self::stream(run_seed, &format!("traps/{level}"))
     }
 
     /// The loot stream of generated level `level` (spec §8 "Magic items"): what lies on its floor

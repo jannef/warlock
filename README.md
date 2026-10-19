@@ -51,8 +51,8 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
 - **Digging** — walls give way: ready a pick-axe or a mattock in the Tool slot and dig, turn after
   turn, through packed earth in a minute, a stone wall in a few, granite in half an hour or so
   (Strength helps, a heavy load slows you), until a creature comes into view or the wall crumbles
-  to rubble; light and sight spill through at once. Digging is loud. Big explosions (to come)
-  blow the softer walls apart. An old quarry below the hub is the place to try it.
+  to rubble; light and sight spill through at once. Digging is loud. A fireball blows the softer
+  walls apart. An old quarry below the hub is the place to try it.
 - **Combat** — D&D-style with two twelve-sided dice: every blow and shot is rolled against
   Defence (Dexterity, armour, shield, parry, a beetle's shell), misses say why ("You block the
   kobold's spear with your shield."), criticals threaten and confirm ("The kobold hits you
@@ -105,6 +105,11 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   a loss takes points off your stats (Toughness damage lowers your hit points), two wins in a
   row shake it off, and grave rot never goes by itself. The character screen names the disease
   once it has run a day; lost stat points mend a point a day once you are well.
+- **Traps** — arrow and spear traps, fireballs, lightning bolts, pits, alarms, and teleports lie
+  hidden until someone steps on them: you, or a creature you lure there. One you saw go off is
+  known from then on, shown as `^` and remembered, and stepping onto it asks first. The Depths
+  hide a few on every level; a trap hall beside the arena lets you try them and watch them catch
+  creatures.
 - **Burden** — everything you carry weighs on you: past a third of what your Strength and
   Toughness can bear you are burdened, then strained, then overloaded. Every action takes longer,
   armour-like caps keep your Dexterity from helping your Defence, and your footsteps get louder.
@@ -183,7 +188,7 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
 
   ![A forest clearing in Thornwood at noon](docs/screenshots/m9-forest-clearing.png)
 
-- **Levels** — the hub, a sunlit courtyard, the arena, the quarry, the Frost Grotto, a 420×300 cavern, and "The Depths": rooms-and-corridors
+- **Levels** — the hub, a sunlit courtyard, the arena, the quarry, the Frost Grotto, the trap hall, a 420×300 cavern, and "The Depths": rooms-and-corridors
   and cave levels generated from the run seed (numbers or words), with hand-made vaults stamped in.
 - **Special rooms** — ADOM-like, about one level of the Depths in three has a room that changes
   the rules inside it, announced the first time you step in: a shadowed room that drains every

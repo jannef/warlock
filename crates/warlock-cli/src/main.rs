@@ -222,9 +222,10 @@ fn replay_command(content: Arc<Content>, args: ReplayArgs) -> Result<(), String>
     Ok(())
 }
 
-/// Prints the level's name, stairs, special rooms, and map (`*` marks a light placed on floor, `&`
-/// a locked door; the walkable cells of a special room show its effect's letter). On a branch's
-/// first level the up staircase leads nowhere here: it depends on where the player came from.
+/// Prints the level's name, stairs, special rooms, traps (hidden ones too), and map (`*` marks a
+/// light placed on floor, `&` a locked door, `^` a trap; the walkable cells of a special room show
+/// its effect's letter). On a branch's first level the up staircase leads nowhere here: it
+/// depends on where the player came from.
 fn gen_command(content: &Content, args: &GenArgs) -> Result<(), String> {
     let level = mapgen::generate(content, args.seed, &args.level, None)
         .map_err(|e| format!("cannot generate `{}`: {e}", args.level))?;
@@ -249,6 +250,9 @@ fn gen_command(content: &Content, args: &GenArgs) -> Result<(), String> {
             "special room {} ({}) at {}-{}",
             effect.name, effect.mark, room.min, room.max
         );
+    }
+    for (p, trap) in &level.traps {
+        println!("{} at {p}", content.trap(trap.kind).name);
     }
     print!("{}", mapgen::ascii_with_rooms(&level, content));
     Ok(())

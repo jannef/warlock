@@ -66,6 +66,9 @@ direction? (Esc to cancel)` (see [People and talk](npcs.md)), and
 resting asks how long (see [Resting](resting.md)). Answer with a direction or the key shown, or
 press `Esc` to cancel. Pressing any other command cancels the prompt.
 
+Stepping onto a trap you know asks `Really step onto the fireball trap? (y/n)`: only `y` steps
+on (see [Traps](traps.md)).
+
 ## Look mode
 
 `x` puts a cursor on the map, on you. Move it with the movement keys, and the message line
@@ -78,6 +81,7 @@ describes what you know about the cell under it:
   the terrain, as in "A giant rat (hostile, unhurt), on stone floor." or "A kobold (hostile,
   badly wounded, bleeding), wielding a spear, on stone floor."; a wall you have started digging
   into is "partly dug";
+- a trap you know there, as part of the ground: "A pit, on stone floor." (see [Traps](traps.md));
 - what you remember there, if you cannot see it now: the terrain and the objects you saw on it;
 - for stairs and the places on the overworld, where they lead;
 - the [special room](special-rooms.md) the ground lies in, once you have been inside it, as in
