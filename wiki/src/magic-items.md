@@ -64,11 +64,17 @@ A few rules from elsewhere carry over:
 
 - **Stats** raised by an item count everywhere a stat does: Strength to hit and in your carrying
   limit, Toughness in your hit points, Dexterity in your Defence. The [character
-  screen](character.md) shows your stats with what you wear.
+  screen](character.md) shows your stats with what you wear. A [status effect](status-effects.md)
+  that lowers a stat lowers it from there: poisoned while wearing a ring of Strength, you are
+  still stronger than without the ring.
 - **Defence**: within Armour, Shield, Parry, Deflection, and natural armour only the best counts;
   Dodge adds up (see [Combat](combat.md)).
 - **Hit points**: putting on something that adds to them raises your maximum, not what you have;
   taking it off lowers both, if need be.
+- **Healing**: magic that speeds healing adds on top of everything else that changes its pace
+  (see [Healing](healing.md)); nothing heals you while you bleed, magic or not.
+- **Throwing**: a magic weapon readied in the Missile weapon slot keeps its magic when you throw
+  it, and still has it where it lands. Its Parry counts only while you hold it in a hand.
 - **Speed** is never a number in the game: things "attack faster" or make you "move faster".
   Attacks and steps are at most half again as quick.
 - **Light**: a glowing item makes its wearer carry a faint, steady light (the brightest one

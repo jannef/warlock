@@ -1,10 +1,12 @@
 //! The character screen (spec §6; `@`): who the player is, as far as they know it. Their name,
 //! their race, gender, and class, their age, birthday, and birth sign (spec §8 "Character
 //! creation"; when the run has a character), their score in each stat (spec §8 "Stats") with its
-//! abbreviation and full name, their hit points and Defence (spec §8 "Combat"; the total only),
-//! what they weigh and carry, their burden, and the weights at which it changes (spec §8
-//! "Burden": they follow from scores the player knows). Never a modifier, a potential, or a
-//! to-hit: perception has none of them.
+//! abbreviation and full name (as the rules read it: a score a status effect lowers is shown
+//! lowered, in a warning color), their hit points and Defence (spec §8 "Combat"; the total
+//! only), the status effects they suffer, by name (spec §8 "Status effects"), what they weigh and
+//! carry, their burden, and the weights at which it changes (spec §8 "Burden": they follow from
+//! scores the player knows). Never a modifier, a potential, a to-hit, or how severe an effect
+//! is: perception has none of them.
 //!
 //! Read-only: Esc, Enter, or its own key closes it; the Skills key opens the Skills screen over
 //! it (spec §8 "Skills"; Esc there comes back here). It is read from the perception snapshot when
@@ -17,6 +19,7 @@ use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
 use warlock_core::burden::{Burden, Load};
 use warlock_core::character::{Character, Gender};
+use warlock_core::color::Rgb;
 use warlock_core::content::Content;
 use warlock_core::object::{Weight, format_weight};
 use warlock_core::perception::{PerceptionView, Progress};
@@ -29,6 +32,9 @@ const NAME_W: i32 = 14;
 /// Width of the panel: the birth and the burden's thresholds fit on one line each.
 const WIDTH: i32 = 72;
 
+/// A score lowered by a status effect, and the status effects themselves: a muted red.
+const LOWERED: Rgb = Rgb::new(0xd0, 0x78, 0x68);
+
 #[derive(Debug)]
 pub struct CharacterScreen {
     name: String,
@@ -37,6 +43,10 @@ pub struct CharacterScreen {
     /// Age, birthday, and birth sign ([`birth_parts`]); empty without a character.
     birth: Vec<String>,
     scores: PerStat<u8>,
+    /// The scores without status effects: a score below its own is lowered.
+    base: PerStat<u8>,
+    /// The status effects they suffer, by name, the most important first.
+    effects: Vec<String>,
     weight: Weight,
     /// What they carry against what they can; `None` outside a run.
     load: Option<Load>,
@@ -60,6 +70,8 @@ impl CharacterScreen {
                 identity: Vec::new(),
                 birth: Vec::new(),
                 scores: PerStat::splat(warlock_core::stats::AVERAGE),
+                base: PerStat::splat(warlock_core::stats::AVERAGE),
+                effects: Vec::new(),
                 weight: Weight::default(),
                 load: None,
                 progress: Progress {
@@ -96,6 +108,10 @@ impl CharacterScreen {
             identity,
             birth,
             scores: view.own_scores(),
+            base: view.own_base_scores(),
+            effects: (view.own_effects())
+                .map(|s| content.status(s).name.clone())
+                .collect(),
             weight: view.own_weight(),
             load: Some(view.own_load()),
             progress: view.own_experience(),
@@ -119,8 +135,9 @@ impl CharacterScreen {
 
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         // Rows: margin, the name, a gap, race, gender, class, the birth, and a gap (with a
-        // character), the stats, a gap, level, experience, hit points, Defence, and stance, a gap, the weight, the burden's
-        // thresholds, a gap, the footer, frame.
+        // character), the stats, a gap, level, experience, hit points, Defence, and stance (and
+        // the status effects, if any), a gap, the weight, the burden's thresholds, a gap, the
+        // footer, frame.
         let width = WIDTH.min(console.cols() as i32) - 4;
         let birth = fit_parts(&self.birth, width);
         let identity_rows = match self.identity.len() {
@@ -128,7 +145,8 @@ impl CharacterScreen {
             n => (n + birth.len()) as i32 + 1,
         };
         let thresholds = (self.load.as_ref()).map_or(Vec::new(), |l| thresholds(l, width));
-        let h = Stat::COUNT as i32 + 15 + identity_rows + thresholds.len() as i32;
+        let status_rows = i32::from(!self.effects.is_empty());
+        let h = Stat::COUNT as i32 + 15 + identity_rows + thresholds.len() as i32 + status_rows;
         let panel = Panel::new(console, " Character ", WIDTH, h);
         super::info_tabs::draw_tabs(console, &panel, bindings, super::ScreenName::Character);
         let x = panel.inner_x();
@@ -157,9 +175,14 @@ impl CharacterScreen {
         for (stat, score) in self.scores.iter() {
             // `St  Strength      12`: the abbreviation, the name, the score right-aligned.
             if fits(y) {
+                let color = if score < self.base[stat] {
+                    LOWERED
+                } else {
+                    TEXT
+                };
                 console.print(x, y, stat.abbrev(), TEXT_DIM);
                 console.print(x + 4, y, stat.name(), TEXT);
-                console.print(x + 4 + NAME_W, y, &format!("{score:>2}"), TEXT);
+                console.print(x + 4 + NAME_W, y, &format!("{score:>2}"), color);
             }
             y += 1;
         }
@@ -178,6 +201,14 @@ impl CharacterScreen {
                 console.print(x, y, abbrev, TEXT_DIM);
                 console.print(x + 4, y, name, TEXT);
                 console.print(x + 4 + NAME_W, y, &value, TEXT);
+            }
+            y += 1;
+        }
+        // `    Status        Bleeding, Poisoned`: names only, never how bad.
+        if !self.effects.is_empty() {
+            if fits(y) {
+                console.print(x + 4, y, "Status", TEXT);
+                console.print(x + 4 + NAME_W, y, &self.effects.join(", "), LOWERED);
             }
             y += 1;
         }
@@ -407,6 +438,40 @@ mod tests {
         ] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }
+    }
+
+    #[test]
+    fn lists_status_effects_and_marks_the_scores_they_lower() {
+        let mut world = showcase();
+        assert!(!drawn(&world, 80, 30).join("\n").contains("Status"));
+        // Strong poison (four degrees) and a wound.
+        for status in ["poisoned", "poisoned", "poisoned", "poisoned", "bleeding"] {
+            world.apply(&Action::Afflict(status.into()));
+        }
+        let text = drawn(&world, 80, 30);
+        let joined = text.join("\n");
+        for expected in [
+            "St  Strength       8",
+            "Dx  Dexterity     12",
+            "To  Toughness     10",
+            "Status        Bleeding, Poisoned",
+        ] {
+            assert!(joined.contains(expected), "{expected:?} in\n{joined}");
+        }
+        // The lowered scores in their own color.
+        let screen = CharacterScreen::new(Some(&world.perception()));
+        let mut console = Console::default();
+        console.resize(80, 30);
+        screen.draw(&mut console, &Bindings::default());
+        let y = text
+            .iter()
+            .position(|l| l.contains("St  Strength"))
+            .expect("St");
+        let score = (0..80)
+            .filter_map(|x| console.get(x, y as i32))
+            .find(|c| c.ch == '8')
+            .expect("the score");
+        assert_eq!(score.fg, LOWERED);
     }
 
     #[test]

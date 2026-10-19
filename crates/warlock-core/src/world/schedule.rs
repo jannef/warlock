@@ -202,9 +202,10 @@ impl World {
     /// moment of each action, and ends at the moment the player is ready.
     ///
     /// While the turn runs, energies live in the turn's schedule; they are written back to the
-    /// actors when the player is ready. As the clock moves, every actor on the level regains
-    /// hit points ([`World::regenerate`]). A creature that dies leaves the schedule; the
-    /// player's death ends the turn there and then.
+    /// actors when the player is ready. As the clock moves, every actor on the level lives
+    /// through the time ([`World::pass_time`]: status effects tick and ease, hit points come
+    /// back). A creature that dies leaves the schedule; the player's death ends the turn there
+    /// and then.
     pub(super) fn run_turn(&mut self, price: i64, events: &mut Vec<Event>) {
         self.state.turn += 1;
         // The player has acted: what they heard before is spent, and they hear afresh.
@@ -233,13 +234,20 @@ impl World {
                 .min()
                 .expect("the player is scheduled");
             if seconds > 0 {
+                let (start, fallen) = (self.state.time, self.fallen.len());
                 self.state.time += Duration::seconds(seconds);
-                self.regenerate(schedule.iter().map(|s| s.id), seconds);
+                self.pass_time(schedule.iter().map(|s| s.id), start, seconds, events);
                 let seconds = i64::try_from(seconds).unwrap_or(i64::MAX);
                 for s in &mut schedule {
                     let gain = i64::from(s.speed).saturating_mul(seconds);
                     s.energy = s.energy.saturating_add(gain);
                 }
+                // Some may have died of their wounds meanwhile: whoever is ready now acts
+                // next (the same actor, unless it died).
+                if self.fallen.len() > fallen {
+                    schedule.retain(|s| self.state.actors.contains_key(&s.id));
+                }
+                continue;
             }
             if next == 0 {
                 break;

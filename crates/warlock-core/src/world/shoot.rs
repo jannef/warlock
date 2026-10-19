@@ -77,7 +77,7 @@ impl World {
         let me = self.state.player();
         let (Some((launcher, _)), Some(profile)) = (me.launcher(&content), me.ranged(&content))
         else {
-            self.say("You have no missile weapon ready.");
+            self.say("You have nothing ready to throw or shoot.");
             return Spent::Nothing;
         };
         let Some(item) = me.ammunition_item(&content) else {
@@ -110,7 +110,8 @@ impl World {
         price
     }
 
-    /// The player throws one of inventory stack `item`, a throwing weapon, at cell `at`.
+    /// The player throws one of inventory stack `item`, a throwing weapon, at cell `at`; any
+    /// other weapon is thrown whole, with a penalty to hit ([`Profile::improvised`]).
     pub(super) fn throw(&mut self, item: usize, at: Pos, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         if !self.can_loose_here() {

@@ -5,6 +5,8 @@ mod cli;
 mod game;
 mod input;
 mod logging;
+#[cfg(not(target_arch = "wasm32"))]
+mod move_data;
 mod paths;
 mod render;
 mod save;
@@ -19,8 +21,48 @@ use bevy::window::{ExitCondition, WindowResolution};
 use bevy::winit::WinitPlugin;
 use std::time::Duration;
 
+/// `--paths` and `--move-data`: print and exit, with no window and no log file.
+#[cfg(not(target_arch = "wasm32"))]
+fn file_command(args: &cli::Args) -> Option<AppExit> {
+    if args.paths {
+        print!("{}", paths::init(args, true).report());
+        return Some(AppExit::Success);
+    }
+    let words = args.move_data.as_ref()?;
+    let result = move_data::Target::parse(words).and_then(|target| {
+        let platform = paths::Inputs::standard()
+            .platform
+            .ok_or("No home directory was found.")?;
+        move_data::run(
+            &target,
+            args.dry_run,
+            paths::init(args, true),
+            &platform,
+            paths::exe_game_folder().as_deref(),
+            &logging::timestamp(),
+        )
+    });
+    Some(match result {
+        Ok(text) => {
+            print!("{text}");
+            AppExit::Success
+        }
+        Err(text) => {
+            eprintln!("warlock: {text}");
+            AppExit::error()
+        }
+    })
+}
+
 fn main() -> AppExit {
     let args = cli::Args::from_env();
+    #[cfg(not(target_arch = "wasm32"))]
+    if let Some(exit) = file_command(&args) {
+        return exit;
+    }
+    for warning in &paths::init(&args, false).warnings {
+        eprintln!("warlock: {warning}");
+    }
     logging::init();
     logging::maybe_crash_test();
     let content = match game::load_content(&args) {

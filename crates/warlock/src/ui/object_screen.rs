@@ -124,7 +124,7 @@ impl ObjectScreen {
             None => (&[], Weight::default()),
         };
         let shown = |i: usize| match (list, view) {
-            (ObjectList::Throw, Some(view)) => view.throw_range(i).is_some(),
+            (ObjectList::Throw, Some(view)) => view.is_throwing_weapon(i),
             _ => true,
         };
         let items: Vec<usize> = (0..stacks.len().min(Letters::COUNT))

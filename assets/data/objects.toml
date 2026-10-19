@@ -42,7 +42,7 @@
 #              for a missile weapon, the thrown skill for what is only thrown (a rock). Every
 #              throw trains the thrown skill, whatever is thrown
 #
-# Ranged combat (spec §8 "Ranged combat"; fire with `f`, throw with `t`):
+# Ranged combat (spec §8 "Ranged combat"; `t` shoots or throws what is in the missile weapon slot, `T` chooses):
 #   range      how far a missile weapon shoots, in cells (required for one); anything else with a
 #              range is a throwing weapon, thrown that far, with its own `damage` (it needs no
 #              slot: a rock). Ammunition takes its range from the missile weapon
@@ -985,7 +985,7 @@ weight = 150
 stackable = true
 
 # Stones and gems
-# Rocks are thrown (ready a few in the missiles slot to throw them with `t` at once).
+# Rocks are thrown (ready a few in the missile weapon slot to throw them with `t` at once).
 [[object]]
 id = "rock"
 name = "rock"
@@ -994,7 +994,6 @@ fg = "#a29c90"
 material = "stone"
 weight = 800
 stackable = true
-slot = "missiles"
 damage = "1d3"
 category = "thrown"
 range = 6

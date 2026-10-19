@@ -481,10 +481,10 @@ fn the_players_hit_points_come_from_toughness_race_and_class() {
         let toughness = i32::from(player.stats.score(crate::stats::Stat::Toughness));
         assert_eq!(
             player.hp,
-            player.max_hp(w.content()),
+            player.max_hp(&content),
             "{spec}: full at the start"
         );
-        (player.hp_base, player.max_hp(w.content()) - toughness)
+        (player.hp_base, player.max_hp(&content) - toughness)
     };
     // #113's tables: dwarf 6 + barbarian 8; human 4 + warrior 7; elf 2 + wizard 0.
     assert_eq!(hp("dwarf,male,barbarian"), (14, 14));
@@ -553,7 +553,7 @@ fn a_creature_killed_drops_what_it_carried_and_is_gone() {
     for _ in 0..20 {
         let out = w.apply(&Action::Wait);
         if let Some(at) = out.events.iter().find_map(|e| match *e {
-            Event::Died { actor, at } if actor == rat => Some(at),
+            Event::Died { actor, at, .. } if actor == rat => Some(at),
             _ => None,
         }) {
             died = Some(at);
@@ -631,14 +631,15 @@ fn hit_points_come_back_with_time_by_toughness() {
     let mut w = world_on("#####\n#@..#\n#####\n", "hp = 10");
     let player = w.state.player;
     w.state.actors.get_mut(&player).expect("player").hp = 5;
-    // 39 turns of 6 s: 234 s, not yet; the 40th makes 240 s.
+    // 39 turns of 6 s: 234 s, not yet (its progress counts hundredths of a second at the
+    // normal pace); the 40th makes 240 s.
     run(&mut w, "wait*39");
     assert_eq!(w.state().player().hp, 5);
-    assert_eq!(w.state().player().regen, 234);
+    assert_eq!(w.state().player().regen, 23_400);
     w.apply(&Action::Wait);
     assert_eq!(w.state().player().hp, 6);
     assert_eq!(w.state().player().regen, 0);
-    // An hour's rest: 15 more, up to the maximum of 20, and no more.
+    // An hour's rest (twice as fast as waiting: 30) fills them up to the maximum of 20.
     w.apply(&Action::Rest(Rest::For(Duration::hours(1))));
     assert_eq!(w.state().player().hp, 20);
     assert_eq!(w.state().player().regen, 0, "nothing banked at full health");
@@ -680,7 +681,8 @@ fn the_players_death_ends_the_run() {
     let last = outs.last().expect("a turn");
     assert!(last.events.contains(&Event::Died {
         actor: w.player_id(),
-        at: Pos::new(1, 1)
+        at: Pos::new(1, 1),
+        of: None
     }));
     assert_eq!(messages(&w).last().map(String::as_str), Some("You die..."));
     assert!(w.state().player().hp <= 0);
@@ -844,7 +846,7 @@ fn creatures_shoot_with_the_bow_they_have_ready() {
     let (level, _) = w.ground_truth();
     let arrow = content.object_id("arrow").expect("arrow");
     assert_eq!(level.objects_at(Pos::new(1, 1)), [Stack::new(arrow, 9)]);
-    let hurt = w.state().player().hp < w.state().player().max_hp(w.content());
+    let hurt = w.state().player().hp < w.state().player().max_hp(&content);
     assert!(hurt, "an arrow found its mark");
     let shown = messages(&w);
     assert!(

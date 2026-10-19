@@ -95,13 +95,29 @@ name = "arena-shot"
 scenario = "arena"
 actions = "wait*12"
 
+# Blood (spec §8 "Blood", #127): the arena after its brawl, seven dead around the fire pit and
+# subtle dark stains where they fell; and a kill against walls: on the first Depths level the
+# warrior opens the door, lights the lantern, waits at the corridor's bend for the patrolling rat,
+# backs off to draw it into the corridor, and punches it dead there: a pool on the floor and
+# blood on the corridor walls beside it.
+[[golden]]
+name = "arena-blood"
+scenario = "arena"
+actions = "wait*40"
+
+[[golden]]
+name = "blood-wall"
+scenario = "depths"
+actions = "move:SE move:E*5 open:E lantern move:E*6 wait*2 move:W*2 move:E*8"
+scale = 2.0
+
 # Combat (spec §8 "Combat"): the player lights the lantern in the arena's dark corner and the war
 # band's archer shoots them down from the dark. The death screen opens by itself over the run as
 # it ended. Every action must take a turn, so the walk ends with the killing one.
 [[golden]]
 name = "death-screen"
 scenario = "arena"
-actions = "lantern wait*16"
+actions = "lantern wait*17"
 
 # A generated level (rooms generator, The Depths 1) from the scenario's fixed seed.
 [[golden]]
@@ -180,6 +196,16 @@ screen = "character"
 name = "skills-screen"
 scenario = "showcase"
 screen = "skills"
+
+# Status effects (#138): four bites' worth of poison and a wound (the dev `afflict:` action), a
+# turn later. The character screen names them (never how bad) and shows Strength and Dexterity
+# lowered by the strong poison, in red; the status bar beneath names them after the hit points.
+[[golden]]
+name = "status-effects"
+scenario = "showcase"
+actions = "afflict:poisoned*4 afflict:bleeding wait"
+screen = "character"
+window = "960x600"
 
 # Character creation (#108, #111, #118), over New run on the main menu (no run; the replay goes
 # unused): the race step with the showcase's character's race preselected, and the summary of

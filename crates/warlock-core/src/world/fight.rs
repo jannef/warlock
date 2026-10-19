@@ -10,9 +10,11 @@
 //! the world and drops what it carried on its cell; the player's run ends ([`Death`]): every
 //! action after that is refused, and the app shows the death screen and deletes the save.
 //!
-//! Hit points come back with game time, one per [`combat::regen_seconds`] of it, for every actor
-//! on the current level ([`World::regenerate`], as the scheduler moves the clock), at the pace
-//! [`World::regen_rate`] decides (three times as fast in a sanctuary).
+//! A blow that hits and leaves its target alive may cause status effects (bleeding from a big
+//! hit or a critical, poison from a rat's bite; `status.rs`, [`World::after_blow`]). Hit points
+//! come back with game time, one per [`combat::regen_seconds`] of it at the normal pace, for
+//! every actor on the current level (`status.rs`, as the scheduler moves the clock), at the rate
+//! [`World::healing_rate`] decides (three times as fast in a sanctuary).
 //!
 //! Messages (spec §6 "Attacks") never carry numbers: "The kobold hits you.", "…hits you hard!" for
 //! a critical, "You block the kobold's spear with your shield.", "The giant rat dies." The
@@ -30,13 +32,13 @@
 use super::{Actor, ActorId, Spent, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Category, Profile, Strike};
-use crate::content::Effect as ItemEffect;
-use crate::content::{ActionKind, Content, CreatureId, ObjectId, Role, Stance, WeaponSkillId};
+use crate::content::{
+    ActionKind, Content, CreatureId, ObjectId, Role, Stance, StatusId, WeaponSkillId,
+};
 use crate::geom::Dir;
 use crate::noise::Act;
 use crate::object;
 use crate::skills::Use;
-use crate::stats::Stat;
 use crate::time::GameTime;
 use serde::{Deserialize, Serialize};
 
@@ -48,9 +50,12 @@ pub struct Death {
     pub time: GameTime,
     /// Where: the name of the level.
     pub place: String,
-    /// What killed them, if they saw it: a creature type. `None`: something unseen.
+    /// What killed them, if they saw it: a creature type. `None`: something unseen, or a status.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub by: Option<CreatureId>,
+    /// The status effect that killed them, if one did (they bled to death).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub of: Option<StatusId>,
 }
 
 /// What an attack is made with, in words: what it is called ("spear", "bite", "fist", "arrow",
@@ -402,7 +407,11 @@ impl World {
         if let Some(blow) = blow
             && blow.damage > 0
         {
-            self.hurt(target, blow.damage, attacker, events);
+            self.bleed((attacker, target), from, kind, blow);
+            let died = self.hurt(target, blow.damage, attacker, events);
+            if !died {
+                self.after_blow(attacker, target, kind, &blow, events);
+            }
         }
         blow
     }
@@ -437,27 +446,50 @@ impl World {
         }
     }
 
-    /// Actor `id` loses `damage` hit points to `by`; at 0 it dies.
-    fn hurt(&mut self, id: ActorId, damage: i32, by: ActorId, events: &mut Vec<Event>) {
+    /// Actor `id` loses `damage` hit points to `by`; at 0 it dies. Returns whether it died.
+    fn hurt(&mut self, id: ActorId, damage: i32, by: ActorId, events: &mut Vec<Event>) -> bool {
         let Some(actor) = self.state.actors.get_mut(&id) else {
-            return;
+            return false;
         };
         actor.hp -= damage;
         if actor.hp > 0 {
-            return;
+            return false;
         }
-        let (at, creature) = (actor.pos, actor.creature);
-        events.push(Event::Died { actor: id, at });
+        self.dies(id, Some(by), None, self.state.time, events);
+        true
+    }
+
+    /// Actor `id` dies at moment `when`: killed by actor `by` (if anyone), of status `of` (if
+    /// one did it). A creature leaves the world; the player's run ends. A creature killed by the
+    /// player earns them its experience (spec §8 "Experience"), and so does one that dies of a
+    /// status effect the player caused (`by`: a wound they dealt bleeds it to death).
+    pub(super) fn dies(
+        &mut self,
+        id: ActorId,
+        by: Option<ActorId>,
+        of: Option<StatusId>,
+        when: GameTime,
+        events: &mut Vec<Event>,
+    ) {
+        let Some((at, creature)) = self.state.actors.get(&id).map(|a| (a.pos, a.creature)) else {
+            return;
+        };
+        events.push(Event::Died { actor: id, at, of });
         if id == self.state.player {
-            let by = self.actor_or_fallen(by).map(|a| a.creature);
+            // A blow's dealer, if the player saw it (settled as the turn is perceived); a status
+            // names itself instead.
+            let by = (by.filter(|_| of.is_none()))
+                .and_then(|b| self.actor_or_fallen(b))
+                .map(|a| a.creature);
             self.state.death = Some(Death {
                 turn: self.state.turn,
-                time: self.state.time,
+                time: when,
                 place: self.state.current().name.clone(),
                 by,
+                of,
             });
         } else {
-            if by == self.state.player {
+            if by == Some(self.state.player) {
                 self.earn_kill(creature);
             }
             self.creature_dies(id);
@@ -480,52 +512,6 @@ impl World {
             level.set_pile(actor.pos, pile);
         }
         self.fallen.push(actor);
-    }
-
-    /// How fast actor `id` gets hit points back, in percent of the pace of its Toughness
-    /// ([`combat::regen_seconds`]): the one place that decides it. A special room it stands in
-    /// may speed it up (a sanctuary, spec §7 "Special rooms"); other effects on the actor will
-    /// scale it here too.
-    pub(super) fn regen_rate(&self, id: ActorId) -> u32 {
-        let Some(actor) = self.state.actors.get(&id) else {
-            return 100;
-        };
-        let room = (self.state.levels.get(&actor.level))
-            .and_then(|level| level.room_effect_at(&self.content, actor.pos));
-        room.map_or(100, |effect| u32::from(effect.regen))
-    }
-
-    /// `seconds` of game time pass for actors `ids` (on the current level, alive): each hurt one
-    /// gets a hit point back for every [`combat::regen_seconds`] of its Toughness (at its
-    /// [`World::regen_rate`]: three times as often in a sanctuary), the seconds left over
-    /// counting toward the next.
-    pub(super) fn regenerate(&mut self, ids: impl Iterator<Item = ActorId>, seconds: u64) {
-        let content = &self.content;
-        for id in ids {
-            let rate = u64::from(self.regen_rate(id).max(1));
-            let Some(actor) = self.state.actors.get_mut(&id) else {
-                continue;
-            };
-            let max = actor.max_hp(content);
-            if actor.hp <= 0 || actor.hp >= max {
-                actor.regen = 0;
-                continue;
-            }
-            // Its Toughness as it is now, and magic items make it faster (spec §8 "Magic items").
-            let toughness = actor.scores(content).score(Stat::Toughness);
-            let faster = actor.mods(content).get(ItemEffect::Regeneration);
-            let faster = u64::try_from(faster.max(0)).unwrap_or(0);
-            let pace = u64::from(combat::regen_seconds(toughness));
-            let every = (pace * 100 / rate * 100 / (100 + faster)).max(1);
-            let banked = u64::from(actor.regen).saturating_add(seconds);
-            let gained = i32::try_from(banked / every).unwrap_or(i32::MAX);
-            actor.hp = actor.hp.saturating_add(gained).min(max);
-            actor.regen = if actor.hp >= max {
-                0
-            } else {
-                u32::try_from(banked % every).unwrap_or(0)
-            };
-        }
     }
 
     /// The player attacks `target`, which they `seen` or not, in melee: the message is said at

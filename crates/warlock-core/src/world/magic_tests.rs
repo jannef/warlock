@@ -233,7 +233,7 @@ fn ranged_effects_change_shots_and_throws() {
             .object(w.content().object_id("dagger").expect("dagger"))
             .attack
             .expect("a weapon"),
-        &me(&w).scores(w.content()),
+        &me(&w).effective_stats(w.content()),
     );
     assert_eq!(
         me(&w).thrown(item, w.content()).map(|p| p.bonus),
@@ -296,7 +296,7 @@ fn life_stats_and_load_effects_apply_to_the_wearer() {
     let content = w.content().clone();
     let (max, scores, load) = (
         me(&w).max_hp(&content),
-        me(&w).scores(&content),
+        me(&w).effective_stats(&content),
         w.load_of(w.state.player),
     );
     let ring = magic(&w, "iron_ring", &[("hale", 4), ("of_the_bear", 1)], true);
@@ -304,7 +304,7 @@ fn life_stats_and_load_effects_apply_to_the_wearer() {
     let amulet = magic(&w, "bone_amulet", &[("of_the_mule", 5)], true);
     wear(&mut w, "neck", amulet);
     assert_eq!(me(&w).max_hp(&content), max + 4);
-    let now = me(&w).scores(&content);
+    let now = me(&w).effective_stats(&content);
     assert_eq!(now.score(Stat::Strength), scores.score(Stat::Strength) + 1);
     assert_eq!(
         now.potential(Stat::Strength),
@@ -341,7 +341,8 @@ fn regeneration_comes_faster() {
         }
         let player = w.state.player;
         w.state.actors.get_mut(&player).expect("player").hp = 1;
-        w.regenerate(std::iter::once(player), 600);
+        let now = w.state.time;
+        w.pass_time(std::iter::once(player), now, 600, &mut Vec::new());
         me(&w).hp
     };
     let w = world();
@@ -349,6 +350,64 @@ fn regeneration_comes_faster() {
     // Toughness 10: one every 240 s, 160 s with half again as fast.
     assert_eq!(hurt_and_wait(None), 1 + 600 / 240);
     assert_eq!(hurt_and_wait(Some(mending)), 1 + 600 / 160);
+}
+
+#[test]
+fn worn_magic_raises_the_scores_status_effects_lower() {
+    let mut w = world();
+    let content = w.content().clone();
+    let ring = magic(&w, "iron_ring", &[("of_the_bear", 2)], true);
+    wear(&mut w, "left_ring", ring);
+    let strength = |w: &World| me(w).effective_stats(&content).score(Stat::Strength);
+    assert_eq!(strength(&w), 12 + 2);
+    let to_hit = me(&w).melee(&content).to_hit;
+    // Four degrees of poison: a point of Strength off the raised score, for every rule.
+    run(&mut w, "afflict:poisoned*4");
+    assert_eq!(strength(&w), 12 + 2 - 1);
+    assert_eq!(me(&w).melee(&content).to_hit, to_hit - 1);
+    let view = w.perception();
+    assert_eq!(view.own_scores()[Stat::Strength], 13);
+    assert_eq!(
+        view.own_base_scores()[Stat::Strength],
+        14,
+        "the ring is no penalty"
+    );
+}
+
+#[test]
+fn a_magic_weapon_readied_to_throw_keeps_its_magic_but_parries_nothing() {
+    let mut w = world();
+    let content = w.content().clone();
+    let base = defence(&w).bonus(Category::Parry);
+    let sword = plain(&w, "long_sword");
+    let item = wear(&mut w, "missile_weapon", sword);
+    let plain_throw = me(&w).thrown(item, &content).expect("thrown whole");
+    let mut w = world();
+    let sword = magic(&w, "long_sword", &[("sharp", 2), ("guarding", 1)], true);
+    let item = wear(&mut w, "missile_weapon", sword.clone());
+    assert_eq!(
+        defence(&w).bonus(Category::Parry),
+        base,
+        "only what is held parries"
+    );
+    let range = me(&w).throw_range(item, &content);
+    assert_eq!(range, Some(combat::IMPROVISED_RANGE));
+    let throw = me(&w).thrown(item, &content).expect("thrown whole");
+    assert_eq!(throw.to_hit, plain_throw.to_hit);
+    assert_eq!(
+        throw.bonus,
+        plain_throw.bonus + 2,
+        "its own affixes ride along"
+    );
+    let letter = crate::action::letter(item).expect("a letter");
+    run(&mut w, &format!("throw:{letter}:4,1"));
+    assert!(me(&w).inventory.iter().all(|s| s.object != sword.object));
+    let level = w.state.current();
+    let landed: Vec<&Stack> = (1..8)
+        .flat_map(|x| (1..4).map(move |y| Pos::new(x, y)))
+        .flat_map(|p| level.objects_at(p))
+        .collect();
+    assert_eq!(landed, [&sword], "it lands with its magic");
 }
 
 #[test]
@@ -387,16 +446,16 @@ fn stealth_quiets_footsteps_and_light_shines_from_the_wearer() {
 fn effects_apply_only_while_worn_and_unidentified_ones_too() {
     let mut w = world();
     let content = w.content().clone();
-    let scores = me(&w).scores(&content);
+    let scores = me(&w).effective_stats(&content);
     let ring = magic(&w, "iron_ring", &[("of_the_bear", 1)], false);
     carry(&mut w, ring.clone());
     assert_eq!(
-        me(&w).scores(&content),
+        me(&w).effective_stats(&content),
         scores,
         "carried, not worn: nothing"
     );
     let item = wear(&mut w, "left_ring", ring);
-    let strength = me(&w).scores(&content).score(Stat::Strength);
+    let strength = me(&w).effective_stats(&content).score(Stat::Strength);
     assert_eq!(
         strength,
         scores.score(Stat::Strength) + 1,

@@ -75,11 +75,12 @@ impl World {
     }
 
     /// Keeps actor `id`'s hit points within its maximum, which falls when it takes off something
-    /// that raised it.
+    /// that raised it: its lasting maximum ([`Actor::lasting_max_hp`]), since what a status
+    /// effect takes off it comes back.
     pub(super) fn keep_hp_within_max(&mut self, id: ActorId) {
         let content = self.content.clone();
         if let Some(actor) = self.state.actors.get_mut(&id) {
-            let max = actor.max_hp(&content);
+            let max = actor.lasting_max_hp(&content);
             if actor.hp > max {
                 actor.hp = max;
             }

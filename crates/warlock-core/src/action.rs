@@ -1,7 +1,7 @@
 //! Player actions and the events a turn produces.
 
 use crate::combat::Strike;
-use crate::content::{ActionKind, CombatStance, ObjectId};
+use crate::content::{ActionKind, CombatStance, ObjectId, StatusId};
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
 use crate::weather::Weather;
@@ -88,6 +88,10 @@ pub enum Action {
     /// with no letters (spec §8 "Magic items"; the scroll of identify does it in play). Takes no
     /// game time; recorded in replays.
     Identify(Letters),
+    /// Dev command: the player suffers one degree more of a status effect (an id in
+    /// `data/status.toml`), as a wound or a bite would give it: for trying statuses out and for
+    /// captures. Takes no game time; recorded in replays.
+    Afflict(String),
 }
 
 /// How long to rest.
@@ -229,11 +233,21 @@ pub enum Event {
         path: Vec<Pos>,
         end: MissileEnd,
     },
-    /// An actor died where it stood, killed by the attack before it. Kept when the player saw
-    /// it (their own death always).
+    /// An actor died where it stood, killed by the attack before it, or of status effect `of`
+    /// (it bled to death). Kept when the player saw it (their own death always).
     Died {
         actor: ActorId,
         at: Pos,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        of: Option<StatusId>,
+    },
+    /// A status effect began (`began`) or ended on an actor (spec §8 "Status effects"). Only the
+    /// player's own, which they always perceive: said in the message line ("You are bleeding.",
+    /// "The bleeding stops.").
+    Status {
+        actor: ActorId,
+        status: StatusId,
+        began: bool,
     },
     /// A spell-like effect the player perceives (spec §4.8 "Spell effects"): traps now, spells
     /// later. As the player perceives it: it is light itself, so its cells are cut to those the
@@ -331,13 +345,13 @@ pub struct Outcome {
 /// Text syntax for scripting: `move:E wait open:E close:W ascend descend lantern rest:1h
 /// rest:dawn rest:dusk pickup pickup:ac drop:b equip:body:b remove:body bash:E fire:12,5
 /// throw:c:12,5 dig:E vision:ID skip:1h weather:rain effect:fireball@12,5
-/// effect:lightning_bolt@3,4>12,4 identify:a` (durations: `30s`, `10m`, `2h`; letters name
-/// stacks, `a` first; `pickup`, `drop`, and `identify` without letters take everything;
-/// `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT, `remove:SLOT` takes off what
-/// is there; `bash:DIR` bashes with the held shield; `dig:DIR` digs toward a wall; `fire:X,Y`
-/// shoots at the level cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack LETTER
-/// there; weather: `clear`, `overcast`, `rain`, `heavy`; `effect:ID@X,Y[>X,Y]` shows a spell
-/// effect at a cell, or from one cell toward another).
+/// effect:lightning_bolt@3,4>12,4 identify:a afflict:bleeding` (durations: `30s`, `10m`, `2h`;
+/// letters name stacks, `a` first; `pickup`, `drop`, and `identify` without letters take
+/// everything; `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT, `remove:SLOT`
+/// takes off what is there; `bash:DIR` bashes with the held shield; `dig:DIR` digs toward a
+/// wall; `fire:X,Y` shoots at the level cell (X, Y), `throw:LETTER:X,Y` throws one of inventory
+/// stack LETTER there; weather: `clear`, `overcast`, `rain`, `heavy`; `effect:ID@X,Y[>X,Y]`
+/// shows a spell effect at a cell, or from one cell toward another).
 ///
 /// `Display` and `FromStr` round-trip; action names are case-insensitive when parsing (vision
 /// profile, slot, and effect ids keep their case).
@@ -382,6 +396,7 @@ impl fmt::Display for Action {
             }
             Action::Identify(l) if l.is_empty() => f.write_str("identify"),
             Action::Identify(l) => write!(f, "identify:{l}"),
+            Action::Afflict(id) => write!(f, "afflict:{id}"),
         }
     }
 }
@@ -516,12 +531,18 @@ impl FromStr for Action {
                     to: to.map(parse_cell).transpose().map_err(|_| usage())?,
                 })
             }
+            "afflict" => match s.split_once(':').map(|(_, id)| id) {
+                Some(id) if !id.is_empty() && !id.contains(':') => {
+                    Ok(Action::Afflict(id.to_string()))
+                }
+                _ => Err("`afflict` needs a status id, e.g. `afflict:bleeding`".into()),
+            },
             _ => Err(format!(
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
                  descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
                  equip:SLOT:LETTER, remove:SLOT, bash:DIR, fire:X,Y, throw:LETTER:X,Y, dig:DIR, \
                  stance:NAME, vision:ID, skip:DURATION, weather:clear|overcast|rain|heavy, \
-                 effect:ID@X,Y[>X,Y], identify[:LETTERS])"
+                 effect:ID@X,Y[>X,Y], identify[:LETTERS], afflict:STATUS)"
             )),
         }
     }
@@ -628,6 +649,8 @@ mod tests {
             },
             Action::Identify(Letters::default()),
             Action::Identify(Letters::of([0, 3])),
+            Action::Afflict("bleeding".into()),
+            Action::Afflict("Odd_Case".into()),
         ];
         all.extend(Weather::ALL.map(Action::SetWeather));
         for d in Dir::ALL {
@@ -785,6 +808,9 @@ mod tests {
             "remove:a:b",
             "weather",
             "weather:snow",
+            "afflict",
+            "afflict:",
+            "afflict:a:b",
             "pickup:",
             "pickup:a1",
             "drop:A-",

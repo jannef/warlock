@@ -31,6 +31,6 @@
 | Crossbow | 1d10+1 | 20–24 | ×2 | - | - | missile weapon, shoots | - | Crossbows | - |
 | Heavy crossbow | 1d12+2 | 20–24 | ×2 | - | - | missile weapon, shoots | - | Crossbows | - |
 | Sling | 1d4 | 22–24 | ×2 | - | - | missile weapon, shoots | - | Slings | - |
-| Rock | 1d3 | 22–24 | ×2 | - | - | missiles | 6 cells | Thrown weapons | - |
+| Rock | 1d3 | 22–24 | ×2 | - | - | missile weapon | 6 cells | Thrown weapons | - |
 
 Bare hands: 1d3 (plus your Strength, as every blow), critical on 22–24, ×2.

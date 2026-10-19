@@ -86,13 +86,33 @@ pub struct Args {
     #[arg(long)]
     pub config_dir: Option<PathBuf>,
 
+    /// Run portable: keep settings, saves, and logs in a `warlock-data` folder next to the game
+    /// (made if missing), or in DIR. A `warlock-data` folder next to the game does the same
+    /// without this flag. `--config-dir` and `--save-dir` still win for their own folder.
+    #[arg(long, num_args = 0..=1, value_name = "DIR")]
+    pub portable: Option<Option<PathBuf>>,
+
+    /// Print where settings, saves, snapshots, and logs are for this launch, and why, then exit.
+    #[arg(long)]
+    pub paths: bool,
+
+    /// Move the game's files, then exit: `native` takes the portable folder's contents into the
+    /// platform's standard folders (and renames the emptied folder); `portable [DIR]` does the
+    /// reverse (DIR defaults to `warlock-data` next to the game). Nothing is overwritten.
+    #[arg(long, num_args = 1..=2, value_names = ["TARGET", "DIR"])]
+    pub move_data: Option<Vec<String>>,
+
+    /// With `--move-data`: print the plan and change nothing.
+    #[arg(long, requires = "move_data")]
+    pub dry_run: bool,
+
     /// Dev: open this screen at startup, even with `--capture`. `main` and `new-run` open on the
     /// main menu, and so do character creation's `race`, `gender`, `class`, and `summary` (over
     /// New run and the steps before them, each on its preselection: the scenario's character);
     /// `pause`, `help`, `inventory`, `equipment`, `character`, `pick-up`, and `drop` over a run,
     /// `equip-item` (choosing what goes in the first slot) over the equipment screen, and
-    /// `describe` (what the first stack carried is) over the inventory;
-    /// `settings` and `controls` over the main menu, or over the pause menu when `--scenario`,
+    /// `describe` (what the first stack carried is) over the inventory; `settings`, `files`
+    /// (over Settings), and `controls` over the main menu, or over the pause menu when `--scenario`,
     /// `--new`, `--replay`, or `--record` names a run.
     #[arg(long, value_enum)]
     pub screen: Option<ScreenName>,

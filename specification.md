@@ -37,14 +37,20 @@ Build the engine and framework, not the game. Everything built is production qua
   carry, the player's death ends the run for good (§8 "Combat"). Ranged combat (M16): bows, a
   crossbow, a sling, and throwing weapons, ammunition spent and picked up again, ADOM-like
   targeting, missiles flying on screen, and flaming arrows that light the dark where they land
-  (§8 "Ranged combat"). Spells stay announced only
+  (§8 "Ranged combat"). Blood (M17): big hits and kills stain floors and walls by the victim's
+  size and how the blow landed, subtly, adding up where many die (§8 "Blood"). Spells stay
+  announced only
+- Status effects and passive healing (M24): a data-driven framework of effects on actors that
+  tick and wear off in game time, stack, can be cured, lower stats, slow healing, and can kill;
+  bleeding from big hits and confirmed criticals, poison from a giant rat's bite; hit points come
+  back twice as fast while resting (§8 "Status effects", "Healing")
 - Moons with phases and moonlight, weather starting with rain (M12)
 - Action costs: what an actor does and its speed decide how long it takes (M13)
 - Stats (M14): Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
   D&D, with D&D 3.5 modifiers and ADOM-like potentials that the player never sees; every actor
   has them, and the player sees their own scores on a character screen (§8 "Stats"). Combat uses
-  Strength, Dexterity, and Toughness (§8 "Combat"), and so does burden; no other rule uses stats
-  yet
+  Strength, Dexterity, and Toughness (§8 "Combat"), and so does burden; status effects may lower
+  them (§8 "Status effects"); no other rule uses stats yet
 - Experience (M21): creatures have a level and an XP value; the player's own kills (melee,
   shots, throws) earn XP, scaled down for monsters below the player's level as in World of
   Warcraft, and levels (to 50) grow the hit points up to level 20 (§8 "Experience")
@@ -140,7 +146,8 @@ darkvision) turns them on the player. The brawl resolves (M16): melee pairs trad
 archer shoots and the shaman casts (its spells announced only) over them, the wounded look it,
 and the fallen drop their spears, bow, and amulet where they die (and now and then something
 magic: kobolds drop loot at the arena's item level 2, §8 "Magic items"); the rats, quicker and harder
-to hit, win within a few minutes of game time. Lighting the lantern there gets the
+to hit, win within a few minutes of game time, leaving blood around the fire pit where the
+fallen died (§8 "Blood"). Lighting the lantern there gets the
 player shot from the dark. The archer spends an arrow a shot (they lie where they fell) and,
 out of arrows, comes to fight with its fists. Beside the player's corner lie a short bow, arrows,
 and flaming arrows, to shoot into the pit from the dark. The `arena` scenario starts there.
@@ -235,7 +242,8 @@ Plains, Mirefen, Greyspine Mountains) show in the status bar.
 1. **Grid layer** — viewport-sized textures (glyph index, foreground, background, visual light,
    perception state) drawn as one quad with a custom 2D material. Terrain, remembered terrain,
    objects (the top object of each pile in place of the terrain's glyph, over its background, lit
-   like terrain; a cell with objects does not animate), and in-cell animation.
+   like terrain; a cell with objects does not animate), blood stains (§4.8), and in-cell
+   animation.
 2. **Free-glyph layer** — instanced glyph quads from the same atlas for actors, particles, and
    anything that moves between cells or grows beyond its cell. Lit by sampling the light texture.
 3. **UI layer** — panels, message log, and overlays, drawn in glyphs.
@@ -365,7 +373,8 @@ Water is calm by design; motion stays tasteful, never busy:
   off on its own (settings: glyph animation, light flicker, motion = slides, camera easing, and
   spell effects' motion, bloom and glow, distortion, particles, screen fades = fades, flashes,
   and spell effects darkening the view, screen shake, weather); an effect runs only when its
-  switch is on and reduced effects is off. Rain has a switch of its own rather than riding on particles: it moves
+  switch is on and reduced effects is off. Blood (§4.8) has a switch too, outside the
+  preset: reduced effects leaves it as it is. Rain has a switch of its own rather than riding on particles: it moves
   over the whole view, not around a few sources. The weather itself (its light, the status bar)
   never depends on it. No gameplay information may
   depend on an effect: heard sounds keep a still marker when their ripple (glyph animation) is
@@ -476,6 +485,15 @@ glow, barely perceptible distortion, short fades.
   particles, so they vanish in the dark and catch a lantern's light. At most 3000 rain particles
   are drawn a frame. The darker, cooler look of a rainy day is the gameplay light itself, not an
   effect. Off with the `weather` switch.
+- **Blood** (§8 "Blood"): a stained cell's colours shift toward the blood's by how much lies
+  there — a floor's dots and background give way to a muted red, a soaked cell is one dark pool
+  with its dots drowned, a wall's face is tinted more lightly, and an object lying in blood keeps
+  its own colour over a stained background — before the grid shader lights them like the
+  terrain they lie on, so stains fade into the dark, show in darkvision's monochrome, and dim
+  with the cell in memory. Old blood dries darker and browner over about six hours of game time
+  (fastest at first). A few drops are barely there; only many deaths in one place look gory. A
+  **Blood** switch in the settings (on by default) hides stains, in look mode too; it is a
+  content preference, not an effect, so reduced effects leaves it as it is.
 - With frozen visual time (`--freeze-time`) fades complete instantly and bursts show a fixed
   moment early in their life, so captures are reproducible; spell effects show the frozen moment
   after they began.
@@ -801,8 +819,9 @@ rate or animation.
 - **Pause menu**: Esc during a run (when no prompt is open) opens it, drawn in glyphs:
   Resume, Settings, Controls, Save and quit to menu, Quit (which saves). No game time passes while
   it is open; Esc or Back in Settings/Controls returns to it.
-- **Settings** (`settings.toml` in the platform config dir; on the web, browser `localStorage`, §7): font size (logical
-  px, 12 to 36), reduced effects and the per-effect switches, color palette, key bindings. A missing or damaged file means
+- **Settings** (`settings.toml` in the config dir, §7 "File locations"; on the web, browser `localStorage`): font size (logical
+  px, 12 to 36), reduced effects and the per-effect switches, blood (§4.8), color palette, key
+  bindings, and a Files screen (where the files are and why; Open folder). A missing or damaged file means
   defaults and a logged warning. Changes apply live (a font size change rebuilds the glyph atlas)
   and are written immediately.
 - **Rebinding**: in Controls, select a command and press a key; it becomes the command's primary
@@ -811,12 +830,18 @@ rate or animation.
   "Reset all keys" resets everything.
 - First-phase commands: move, wait, open/close door, ascend/descend, light/douse lantern (`L`),
   pick up (`,` or `g`), drop (`d`), inventory (`i`), equipment (`e`), character (`@`), skills
-  (`S`), weapon skills (`W`), rest (`R`), look, fire (`f`), throw (`t`), more aggressive / more
+  (`S`), weapon skills (`W`), rest (`R`), look, shoot or throw what is in the missile weapon slot
+  (`t`), throw from the pack (`T`), fire (`f`, unbound by default), more aggressive / more
   defensive combat stance (`+` / `-`; §8 "Stances"), bash with a shield (an ability, below: no
   key by default; bound in Controls, it asks for a direction, like opening a door), next target
-  (`Tab`, while aiming), use a tool (`U`, then a direction: dig), help, save and quit (`Q`). Free
-  actions (look, help, the inventory, looking at the equipment screen, the character screen, the
-  Skills screen, the weapon skills screen, menus, vision switch, a change of stance) do not
+  (`Tab`, while aiming), use a tool (`U`, then a direction: dig), help, save and quit
+  (rebindable, unbound by default: quitting is done from the pause menu). Every way to quit (the
+  pause menu's Save and quit to menu and Quit, the main menu's Quit, a bound quick key) asks
+  first, in a Yes/No dialog with No selected (`y` yes; `n`, Esc no; closing the window or the tab
+  does not ask). On the web Quit saves and reloads the page to a fresh main menu (a page cannot
+  close itself), which has no Quit item. Free actions (look, help, the inventory, looking at the
+  equipment screen, the character screen, the Skills screen, the weapon skills screen, menus,
+  vision switch, a change of stance) do not
   advance time.
 - **Objects** (M11) lie in piles on cells, the top first: the map shows the top object's glyph
   (§4.2), and dropped objects go on top. Stepping onto a pile says what lies there: `You see here
@@ -891,12 +916,14 @@ rate or animation.
   creature's, "You"), their race, gender, and class (`Race    Dwarf`; "other" with the stat it
   raised), their age today, birthday, and birth sign as on the summary (when the run has a
   character), their score in each stat (§8 "Stats") in display order with its abbreviation and
-  full name (`St  Strength  12`; as it is now, with what magic items they wear add), their level
-  and experience (`Lv  Level  3`, `XP  Experience
+  full name (`St  Strength  12`; as it is now, with what magic items they wear add; a score a
+  status effect lowers shows lowered, in a muted red; §8 "Status effects"), their level and
+  experience (`Lv  Level  3`, `XP  Experience
   85 / 120`, the total alone at the highest level; §8 "Experience"), their hit points (`HP  Hit
   points  18/24`) and Defence
   (`Dv  Defence  15`; the total only, as its Dexterity part would give away a modifier; §8
-  "Combat"), their combat stance by name (`Stance  Neutral`; §8 "Stances"), their weight (their own plus what they carry, and their burden when they have one:
+  "Combat"), their combat stance by name (`Stance  Neutral`; §8 "Stances"), the status effects they suffer, by name, when there are any (`Status  Bleeding,
+  Poisoned`; never how severe or for how long), their weight (their own plus what they carry, and their burden when they have one:
   `Weight 98.4 kg (you 70 kg, carrying 28.4 kg, burdened)`), and, dimmer, the weights at which
   their burden changes, as in the inventory (§8 "Burden"). The panel is 72 wide, so the birth and
   the thresholds take a line each. Never a modifier, a potential, or a to-hit, which the player
@@ -927,9 +954,10 @@ rate or animation.
 - **Death screen** (§8 "Combat"): when the player dies, the death screen opens over the run as it
   ended, in place of any other screen, and the run's save is deleted (permadeath): `Y O U   D I E
   D`, then who killed them ("Killed by a kobold", or "Killed by something you did not see" when
-  they did not see it), where (the level's name), when (the date and time), and after how many
-  turns, and the level they had reached ("You had reached level 3."). It takes every key press;
-  Enter or Esc returns to the main menu (no Continue: nothing is
+  they did not see it), or the status effect that did (its `death` line: "Bled to death"), where
+  (the level's name), when (the date and time), and after how many turns, and the level they
+  had reached ("You had reached level 3."). It takes every key press; Enter or Esc returns to
+  the main menu (no Continue: nothing is
   left to continue). A run that has ended is never saved again, by any trigger.
 - **Weight**: every object and every creature (the player included) has a weight in grams. An
   actor weighs its creature's base weight plus everything it carries; the rules know every
@@ -943,10 +971,13 @@ rate or animation.
   cancel)`. `h` rests an hour, `d` until 06:00, `n` until 18:00 (replay text `rest:1h`,
   `rest:dawn`, `rest:dusk`); any other command cancels. Resting is one action that passes turn
   after turn and stops early when a creature comes into view or a message is logged (§8 "Time"),
-  such as an attack the player perceives (§8 "Combat"), a sound that is news (§5 "Hearing"), or
-  rain starting or growing heavier (§5 "Weather"), and when the player dies;
+  such as an attack the player perceives (§8 "Combat"), a status effect beginning ("You feel
+  sick."), a sound that is news (§5 "Hearing"), or rain starting or growing heavier (§5
+  "Weather"), and when the player dies;
   a sound already known goes on without stopping it, and so does other news of the weather (the
-  rain easing or stopping, clouds gathering or parting), which is logged all the same.
+  rain easing or stopping, clouds gathering or parting) and a status effect ending ("The
+  bleeding stops."), which are logged all the same. Hit points come back twice as fast while
+  resting (§8 "Healing").
   It is a gameplay input mode like the open/close direction prompt, not a menu screen.
 - **Dig** (`U`, "use a tool", ADOM's use-item key, an item's use rather than an ability; §8
   "Digging") asks in the message line `Dig in which direction? (Esc to cancel)`; a direction
@@ -973,14 +1004,19 @@ rate or animation.
   message (and no event). A weapon skill rank gained is said after the attack that earned it
   ("You feel more skilled with long blades.", "You feel more skilled at blocking with a
   shield."; §8 "Weapon skills"), without a number. A shield bash is a blow ("You bash the
-  kobold.", "You miss the kobold.", "The kobold dodges your small shield."). Moving into a hostile creature attacks it in melee ("You hit the
+  kobold.", "You miss the kobold.", "The kobold dodges your small shield."). Status effects (§8)
+  are said as they begin and end for the player ("You are bleeding.", "The bleeding stops.", "You
+  feel sick.", "The poison wears off."), right after the attack that caused them; a creature the
+  player sees die of one dies in its words ("The giant rat bleeds to death."). Moving into a hostile creature attacks it in melee ("You hit the
   giant rat.", "You miss something."; it takes a turn); into a neutral one stops ("The deer is
   in the way.", "Something is in the way."; no time passes).
-- **Targeting** (ADOM-like; `ui/target.rs`): `f` aims the readied missile weapon (with nothing
-  to shoot, it is refused: "You have no missile weapon ready.", "You have no arrows ready."), `t`
-  aims the throwing weapon readied in a `ready` slot (rocks in the missiles slot), else opens the
-  choice of what to throw: the inventory's throwing weapons by their letters (a letter or Enter
-  chooses; "You have nothing to throw."). Aiming is an input mode like look mode: no time passes.
+- **Targeting** (ADOM-like; `ui/target.rs`): `t` aims what is in the Missile weapon slot: a launcher
+  shoots its readied ammunition, a throwing weapon or a stack (rocks) is thrown one at a time,
+  any other weapon is thrown whole (improvised: -4 to hit, `IMPROVISED_TO_HIT`, and
+  `IMPROVISED_RANGE` cells, in `combat.rs`); with nothing there, or no ammunition, it is refused
+  ("You have nothing ready to throw or shoot.", "You have no arrows ready."). `T` opens the choice
+  of what to throw: the inventory's throwing weapons by their letters (a letter or Enter
+  chooses; "You have nothing to throw."). `f` (no default key) aims the readied launcher only. Aiming is an input mode like look mode: no time passes.
   The cursor starts on the last target if the player still sees it (a creature) or it is on this
   level (a cell), else on the nearest hostile creature in view, else on the player; `Tab` and
   `Shift`+`Tab` cycle through the creatures in view, nearest first (ties: the lower id); the
@@ -991,26 +1027,31 @@ rate or animation.
   creature in view in the way is blocked, one beyond the range out of range, and both show on a
   muted red cursor and in the message line ("Out of range.", "The way is blocked.", after the
   target's description, as look mode gives it). No chance to hit is ever shown. `Enter` (or the
-  key that started it, `f` or `t`) looses the missile (replay text `fire:X,Y`,
-  `throw:LETTER:X,Y`) and remembers the target, so `f` then `Enter` shoots it again; `Esc`
+  key that started it, or `t`) looses the missile (replay text `fire:X,Y`,
+  `throw:LETTER:X,Y`) and remembers the target, so `t` then `Enter` shoots it again; `Esc`
   cancels. Out of range or at the player's own cell, the rules refuse it and no time passes.
 - **Look mode** describes what the player perceives at the cursor: a creature and its terrain,
   with how it stands toward the player and how hurt it looks ("A giant rat (hostile, unhurt), on
   stone floor."; its type tells the player its faction's stance toward them, the only faction
   information presentation gets; health in words, never hit points: unhurt, lightly wounded
   (above two thirds), wounded (above a third), badly wounded (above a sixth), or nearly dead),
+  the status effects that show on it ("A giant rat (hostile, wounded, bleeding), on stone
+  floor."; a status's `seen` word: bleeding shows, poison does not; §8 "Status effects"),
   what the creature wields, wears, and has ready, which is in plain sight ("A kobold (hostile,
   wounded), wielding a spear, on stone floor.", "A kobold shaman (hostile, unhurt), wearing a
   bone amulet, ...", "A kobold archer (hostile, unhurt), with a short bow and 20 arrows ready,
   ..."; never what else it carries), terrain (a wall in sight the player has dug into: "a stone
-  wall, partly dug"), remembered terrain, where stairs lead, the special room walkable ground
-  lies in once the player has been inside it ("A stone floor in an echoing hall.", "You remember
-  a stone floor here, in a sanctuary."; §7 "Special rooms"), and a sound heard there ("You hear
-  footsteps here.").
+  wall, partly dug"), remembered terrain, blood seen or remembered there ("on blood-stained stone
+  floor", "A blood-smeared stone wall."; §8 "Blood"; not with the blood switch off), where
+  stairs lead, the special room walkable ground lies in once the player has been inside it ("A
+  stone floor in an echoing hall.", "You remember a stone floor here, in a sanctuary."; §7
+  "Special rooms"), and a sound heard there ("You hear footsteps here.").
 - Screen layout: map viewport, message log, status panel (level, the player's hit points as
-  `HP 18/24` (never below 0), their burden when they have one (`Burdened`, `Strained`,
-  `Overloaded`; §8 "Burden"), their level as `Lv 3` (§8 "Experience"; it goes after the
-  burden and before the time and the date), region (on the overworld and in
+  `HP 18/24` (never below 0), the status effects they suffer by name, the most important first
+  (`Bleeding`, `Poisoned`; data order; §8 "Status effects"), their burden when they have one
+  (`Burdened`, `Strained`, `Overloaded`; §8 "Burden"), their level as `Lv 3` (§8
+  "Experience"; it goes after the burden and before the time and the date), region (on the
+  overworld and in
   its local areas), time of day and date as `14:32 · 12 Rainmoon, Year 1444`, the moon's phase as a
   glyph and its name (`◑ First quarter`; with several moons each moon's name and glyph, `Moon ●
   Ilse ☽`), the weather under the open sky (`Clear`, `Overcast`, `Rain`, `Heavy rain`; §5
@@ -1019,8 +1060,8 @@ rate or animation.
   `◑` first quarter and waxing gibbous, `●` full, `◐` waning gibbous and last quarter, `☾` waning
   crescent. When the window is narrow, segments give way in priority order — seed, position,
   lantern, vision, light, turn, then the moon's phase (first cut down to its glyph), region, date
-  (first cut down to day and month, `12 Rainmoon`), weather, time, burden, and hit points, the
-  level name last — and
+  (first cut down to day and month, `12 Rainmoon`), weather, time, burden, the status effects
+  (the least important first), and hit points, the level name last — and
   segments that fit again in the room left take it back, most important first. Outdoors the
   weather outranks the date: it changes the light and how far one sees.
 
@@ -1122,15 +1163,19 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   "Combat"; never shown but as words): `base_hp`, its hit points beyond its Toughness (0 to 1000,
   default 0; the player creature has none: race and class give the player's); `attack`, its
   natural attack, used when it wields no weapon (`{ damage = "1d4", name = "bite", verb = "bites"
-  }`, with optional `threat`, `crit`, and `to_hit` as for weapons; without one, bare hands:
-  1d3, "fist", "hits"); and `natural`, its natural armour (`{ defence = 3, name = "shell" }`, 1
-  to 20, the Natural category of Defence; the name is said when it turns a blow). For
-  experience (§8 "Experience"): `level` (1 to 99, default 1) and `xp` (0 to 100000, default 0; the
-  player creature has neither): the kobold 2/15, the kobold archer 3/25, the kobold shaman 4/40,
-  the giant rat 1/5, the cave bat 1/3, the cave beetle 2/8, the deer 1/2. For loot (§8 "Magic
+  }`, with optional `threat`, `crit`, and `to_hit` as for weapons, and `on_hit`, the status
+  effects a hit with it may cause if the target lives: `[{ status = "poisoned", chance = 10,
+  severity = 2 }]`, the chance in percent (1 to 100) and the severity in degrees (1 to the
+  status's `max`; §8 "Status effects"); without one, bare hands: 1d3, "fist", "hits"); and
+  `natural`, its natural armour (`{ defence = 3, name = "shell" }`, 1 to 20, the Natural
+  category of Defence; the name is said when it turns a blow). For experience (§8
+  "Experience"): `level` (1 to 99, default 1) and `xp` (0 to 100000, default 0; the player
+  creature has neither): the kobold 2/15, the kobold archer 3/25, the kobold shaman 4/40, the
+  giant rat 1/5, the cave bat 1/3, the cave beetle 2/8, the deer 1/2. For loot (§8 "Magic
   items"): `loot`, the chance in percent (0 to 100, default 0) that it drops a magic or rare item
-  where it dies: the kobold 25, the kobold archer 30, the kobold shaman 50. The giant rat
-  and the cave bat bite (1d4, 1d3), the deer kicks (1d4, "hoof"; `base_hp` 4), the cave beetle
+  where it dies: the kobold 25, the kobold archer 30, the kobold shaman 50. The giant rat and the
+  cave bat bite (1d4, 1d3; the rat's bite poisons one hit in ten, 2 degrees), the deer kicks
+  (1d4, "hoof"; `base_hp` 4), the cave beetle
   bites (1d3) and has a shell (3); kobolds fight with what they wield. Its weapon skills (§8
   "Weapon skills"): `weapon_skills`, its ranks by skill id (0 to 10; each raises the skills it
   defaults to; the player creature has none: race and class give the player's): the kobold
@@ -1140,13 +1185,18 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   player's size comes from their race when the run has a character). Skills (§8 "Skills"; never
   shown): `skills`, the skills it is trained in by skill id with fixed values (0 to 999); the
   rest untrained; the player creature lists none. The deer listens (30), the kobold shaman knows
-  concentration (20) and spellcraft (25). Creature particle emitters may
+  concentration (20) and spellcraft (25). For blood (§8 "Blood"; presentation only):
+  `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
+  bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). Creature particle
+  emitters may
   fire `on = "attack"`: a burst at the target of each attack the player sees (the shaman's
   violet sparkle). Terrain has a `move_cost`: what a step onto it costs in percent of a normal
   step (the `step` action; default 100; still and running water 200, shallow water 150; local
   levels only), a
   `bounce` tint for the light it reflects (§5), a `height` in cells for sun shadows (default 1 if opaque, else 0; at most 4),
-  `roofed` (never lit by the sun or the sky), and for hearing a `step_noise` (how loud steps onto
+  `roofed` (never lit by the sun or the sky), `stains` (whether blood stains it, §8 "Blood";
+  default true; false for water, running water, lava, fountains, braziers, wall torches, solid
+  rock, and the overworld's river and lake), and for hearing a `step_noise` (how loud steps onto
   it are, in percent of the walker's footsteps, 0 to 1000; default 100), a door's `toggle_noise`
   (how loud opening the closed door or closing the open one is, at most 300; default 0, silent;
   only doors), and a `muffle` (the loudness a sound loses entering the cell, at most 300; default
@@ -1469,8 +1519,31 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   Weapon skills (`weapon_skills`; §8 "Weapon skills"): elf long blades 1 and bows 1, half-elf
   bows `1d2-1`, dwarf axes 1 and crossbows 1, halfling slings 1, gnome crossbows 1, half-orc
   axes 1; humans none.
-- **Sizes** (`data/sizes.toml`, optional; §8 "Burden"), in file order: `id`, `name`, and `carry`
-  (what it carries in percent of a medium one, 10 to 1000): small 75, medium 100. `medium` is
+- **Status effects** (`data/status.toml`, optional; without it nothing ails anyone and resting
+  heals twice as fast; §8 "Status effects", "Healing"): `[healing] resting` (how fast hit points
+  come back while the player rests, in percent of the normal pace, 0 to 1000; 200), then the
+  `[[status]]`s in order of importance (the status bar shows the first first): `id`, `name`
+  (as the status bar and the character screen show it), `seen` (how look mode names it on a
+  creature the player sees; none: it does not show on others), `max` (the most degrees of
+  severity, 1 to 100), `stacking` (`add`, the default: a new dose's degrees add up, to `max`;
+  `highest`: the stronger of the two; `refresh`: the stronger, its easing starting over),
+  `tick` (seconds between ticks at one degree; `n` times as often at `n` degrees) and `damage`
+  (hit points a tick costs, default 0, needing a `tick`), `eases` (seconds for it to ease by a
+  degree; none: until cured), `regen` (how fast hit points come back while it lasts, in percent,
+  0 to 1000, default 100), `penalty` (`{ from = 4, strength = -1, dexterity = -1 }`: what it
+  does to scores from a severity on, each −10 to 10), `wound` (`{ big_hit = 1, critical = 2 }`:
+  the degrees a big hit and a confirmed critical cause), `cured_by` (the means that end it at
+  once: `bandage`), and the words: `start` and `end` (said to the player), `dies` (a creature
+  the player sees dying of it: "bleeds to death"), `death` (the death screen's line: "Bled to
+  death"). Built in: **bleeding** (`seen` "bleeding", max 5, a hit point every 40 s per degree,
+  a degree eased a minute, no healing while it lasts, a big hit 1 degree and a critical 2, cured
+  by a bandage) and **poisoned** (max 10, a hit point every 2 minutes per degree, a degree eased
+  every 2 minutes, healing at half the pace, Strength and Dexterity −1 from 4 degrees on; it does
+  not show on others).
+- **Sizes** (`data/sizes.toml`, optional; §8 "Burden"), in file order: `id`, `name`, `carry`
+  (what it carries in percent of a medium one, 10 to 1000): small 75, medium 100; and `blood`
+  (how much blood it spills in percent of a medium one, 0 to 1000, default 100; §8 "Blood"):
+  small 60. `medium` is
   required (the size of every race and creature type that names none); without the file there
   is only medium.
 - **Classes** (`data/classes.toml`, optional), in the order offered: `id`, `name`, a one-line
@@ -1537,7 +1610,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   from 1.0 on, saves are migrated. The web build keeps the same bytes in the browser's
   `localStorage` (below). The envelope also records a content fingerprint (hash of the ordered
   terrain, creature, level, light, dungeon-branch, object, equipment slot, skill, room effect,
-  and weapon skill
+  weapon skill, and status
   ids), because ids are indices; a save made with different content is rejected. Generated levels
   are saved with the run like visited hand-made ones (terrain, memory, stairs, lights, kind,
   arrival point,
@@ -1560,25 +1633,47 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   rooms and whether the player has been in each (§7 "Special rooms"; format version 15), every
   actor's weapon skills (its rank and marks in each, §8 "Weapon skills"; format version 16), the
   work done on walls dug into and still standing (§8 "Digging"; format version 17), every
-  actor's combat stance (§8 "Stances"; format version 18), every magic or rare item as it is (§8
-  "Magic items": on its stack wherever it lies or is carried, its rarity, item level, each affix
-  by id with its tier and rolled value, a rare item's name, and whether it is identified; format
-  version 19; absent on normal stacks; an affix this content does not have, a tier or value out
-  of range, or more affixes than the rarity allows makes the save inconsistent; affixes are
-  recorded by id, so adding affixes does not change the content fingerprint), and a dev weather
-  override while
+  actor's combat stance (§8 "Stances"; format version 18), the blood on each level and the blood
+  as last seen (§8 "Blood"; format version 19), every actor's status effects (each status with
+  its severity, its progress toward its next tick and easing, and who caused it), the progress
+  toward the next hit point back counted in hundredths of a second at the normal pace, and the
+  status effect that killed the player (§8 "Status effects", "Healing"; format version 20), every
+  magic or rare item as it is (§8 "Magic items": on its stack wherever it lies or is carried, its
+  rarity, item level, each affix by id with its tier and rolled value, a rare item's name, and
+  whether it is identified; format version 26; absent on normal stacks; an affix this content
+  does not have, a tier or value out of range, or more affixes than the rarity allows makes the
+  save inconsistent; affixes are recorded by id, so adding affixes does not change the content
+  fingerprint), and a dev weather override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
-  platform data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
+  platform data directory. quitting from the pause menu saves (closing the window saves too), autosave runs every 50 turns
   and on level change, and a save that cannot be read is renamed `run.sav.bad`, never deleted, while
   a new run starts. Starting resumes the save unless `--new` is given. **Permadeath**: when the
   player dies the save is deleted, and a run that has ended is never saved again (every trigger
   that would save it deletes the save instead; on the web nothing is kept for the page being
   hidden). Dev snapshots: `F5` saves and `F9` loads `snapshots/quick.sav` (debug builds or
   `--dev`).
+  **File locations and portable mode** (`paths.rs` decides them all): per folder, an explicit
+  `--config-dir` / `--save-dir` wins, then `--portable DIR`, then a `warlock-data` folder next to
+  the game (the executable's folder; on macOS, the folder holding `Warlock.app`, never inside the
+  bundle), then the platform's standard folders. A portable folder is laid out `config/`
+  (`settings.toml`, key bindings), `data/` (`run.sav`, `snapshots/`), `logs/` (logs, crash reports).
+  `--portable` alone uses (and creates) `warlock-data` next to the game. A portable folder that
+  cannot be written is reported on stderr and in Settings > Files, and the game runs on: what is
+  there is read, writes fail with their usual messages. `warlock --paths` prints each location with
+  the reason it was chosen, then exits; Settings > Files shows the same with an Open folder action
+  per location (the platform's opener: `open`, `xdg-open`, `explorer`; a failure is shown, never
+  fatal) and, on the web, says everything is in the browser's storage. `warlock --move-data native`
+  moves the portable folder's files into the standard folders and renames the emptied folder to
+  `warlock-data.moved-<date>`; `--move-data portable [DIR]` does the reverse (DIR defaults to
+  `warlock-data` next to the game). Each file is copied beside its destination, compared, renamed
+  into place, then removed from the source; a file already at the destination is kept as
+  `NAME.bak-<time>`, never overwritten; an error stops the move with every file complete in one
+  place; `--dry-run` prints the plan only. It refuses while another Warlock runs (every running game
+  holds a shared lock on `logs/.in-use`).
   On the web the files are `localStorage` keys `warlock/run.sav`, `warlock/run.sav.bad`,
   `warlock/snapshots/quick.sav`, and `warlock/settings.toml`, the save bytes base64-encoded, with the
-  same envelope and checks. The same triggers save (autosave, level change, `Q`), and so does the page
+  same envelope and checks. The same triggers save (autosave, level change, quit), and so does the page
   being hidden or closed (`visibilitychange` to hidden, `pagehide`); main menu Continue works after a
   reload. Storage that is unavailable (some privacy modes) turns saving off with a warning in the log;
   a write that fails (quota) shows a message in the message line; neither panics.
@@ -1593,7 +1688,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 crates/
   warlock-core/   plain Rust, no Bevy: map, actors, actions, turns, time, fov, light,
                   perception, rng, levels, mapgen, stats, skills, weapon skills, dice,
-                  character, burden, magic, save
+                  character, burden, status, magic, save
   warlock-cli/    no Bevy: scenarios, replay, dump, verify
   warlock/        Bevy app: render, input, UI, effects, platform (ECS lives here)
 xtask/            screenshot capture, golden-image diff, CI helpers
@@ -1703,7 +1798,9 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     gains until the goal; one hour, the next 06:00, or the next 18:00; at most a day). It stops after a turn in which a
     creature came into view (one not seen the turn before) or a message was logged that stops a
     rest (all but weather news other than rain starting or growing heavier, §5 "Weather"), and
-    logs how long the player rested. Digging ("Digging" below) runs through the same loop
+    logs how long the player rested. The player heals twice as fast all the while ("Healing"
+    below), and the player's status effects beginning and ending in the turns that pass without
+    perception are said all the same. Digging ("Digging" below) runs through the same loop
     (`World::keep_at`). Turns that end before any creature on the level could come
     within view, and in which the weather the player would see did not change, pass without
     perception: a creature is seen only within the view range, and before its
@@ -1802,40 +1899,51 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   - **Order of draws**: the two dice of the attack roll; on an attributable miss one draw for
     why; on a threat the two dice of the confirmation; then one draw per damage die each time the
     damage is rolled (the attack's own dice, then a magic weapon's extra die, "adds 1d4
-    damage").
+    damage"); then, if the target lives, one draw for each `on_hit` effect of the attack whose
+    chance is below 100 ("Status effects" below).
   - **Magic** (§8 "Magic items"): an attack is built from its weapon (or natural attack, or bare
-    hands) and the attacker's scores as they are now (raised by what it wears), then the weapon's
+    hands) and the attacker's scores as they are now (raised by what it wears, lowered by its
+    status effects: `Actor::effective_stats`), then its weapon skill's benefit, then the weapon's
     own attack affixes (its to-hit, damage, extra die, critical threat and multiplier; a shot's
     from the missile weapon and the ammunition, a bow's draw lowering the Strength it needs) and
-    the global ones of what the attacker wears and wields. A threat goes no lower than 2, a
-    multiplier no higher than 5.
+    the global ones of what the attacker wears and wields, then its combat stance. A threat goes
+    no lower than 2, a multiplier no higher than 5.
   - **Hit points** (ADOM-like, no hit dice, no levels): maximum = Toughness + race HP + class
     HP (§7 tables: e.g. a dwarf barbarian with To 16 has 6 + 8 + 16 = 30; a human warrior with
     To 12 has 23; an elf wizard with To 8 has 10), at least 1; a creature's = Toughness + its
     type's `base_hp` (a giant rat with To 12 and none has 12). Linear in Toughness: no runaway
     pools. Every actor starts at its maximum (`Actor::hp`, `hp_base`). Magic items add to the
     maximum (and Toughness affixes through the score; `Actor::max_hp(content)`), not to what it
-    has; when the maximum falls (taking one off), hit points above it are lost at once.
+    has; when the maximum falls (taking one off), hit points above it are lost at once (above
+    the maximum without its status effects, `Actor::lasting_max_hp`: what a status takes off the
+    maximum comes back, so the hit points kept under it stay; while it lasts the player is shown
+    no more than the lowered maximum).
   - **Regeneration**: a hurt actor on the current level gets 1 hit point back per
-    `max(60 s, 360 s − 12 s × Toughness)` of game time (To 10: 4 minutes; To 25 and up: 1
-    minute), counted as the scheduler moves the clock (resting included; the dev time skip and
-    other levels' frozen actors get none), at the pace `World::regen_rate` decides, in percent
-    (the one place for it: three times as fast standing in a sanctuary, §7 "Special rooms"), and
-    then that time × 100 / (100 + the regeneration percent of its magic items, §8 "Magic
-    items"), at least 1 s. Seconds toward the next point carry over (`Actor::regen`, saved) and
-    are dropped at full health.
-  - **Death**: at 0 hit points an actor dies (`Event::Died { actor, at }`, right after the
-    attack). A creature leaves the world, and what it carried, worn and wielded things too, falls
-    on its cell on top of the pile there, in inventory order. The player's death ends the run: it
-    is recorded (`World::death`: turn, time, the level's name, and the creature type that killed
-    them if they saw it), the turn stops there, every later action is refused, and presentation
-    shows the death screen and deletes the save (§6, §7 "Saves").
+    `max(60 s, 360 s − 12 s × Toughness)` of game time at the normal pace (To 10: 4 minutes; To
+    25 and up: 1 minute); resting, status effects, a sanctuary (§7 "Special rooms"), and the
+    regeneration affixes of magic items (§8 "Magic items") change the pace ("Healing" below).
+  - **Big hits and status effects**: a hit that takes at least a third of the target's maximum
+    hit points is a **big hit** (`combat::big_hit`). A blow that hits and leaves its target alive
+    may cause status effects: those whose `wound` it meets (bleeding: a big hit 1 degree, a
+    confirmed critical 2; every blow alike until weapons have categories), then each `on_hit`
+    effect of the attack (a creature's natural attack: the giant rat's bite poisons by its chance)
+    ("Status effects" below).
+  - **Death**: at 0 hit points an actor dies (`Event::Died { actor, at, of }`, right after the
+    attack, or at the moment a status effect takes the last hit point, `of` naming it). A
+    creature leaves the world, and what it carried, worn and wielded things too, falls on its
+    cell on top of the pile there, in inventory order. The player's death ends the run: it is
+    recorded (`World::death`: turn, time, the level's name, and the creature type that killed
+    them if they saw it, or the status effect that did), the turn stops there, every later
+    action is refused, and presentation shows the death screen and deletes the save (§6, §7
+    "Saves").
   - **What the player perceives**: their own hit points and Defence total (`PerceptionView::
     own_hp`, `own_defence`); how hurt each seen creature looks, in words (`SeenActor::health`:
     unhurt, lightly wounded, wounded, badly wounded, nearly dead); and the messages. Never a
     creature's hit points, a to-hit, a roll, a modifier, or the Defence breakdown (its Dexterity
     part would give a modifier away). Ground-truth dev dumps (`actors`) show every actor's hit
-    points and Defence.
+    points and Defence. The status effects the player suffers, by name
+    (`PerceptionView::own_effects`), and those that show on seen creatures
+    (`PerceptionView::effects_of`); never a severity or a timer.
 - **Experience** (`warlock-core/src/content/experience.rs`, the rules from
   `assets/data/experience.toml`; `world/experience.rs`, applying them; M21, #133). Creature types
   have a `level` (1 to 99) and an `xp` value (§7). The player has an experience total
@@ -1848,11 +1956,14 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   with `d` the levels below and `ZD` the "zero difference" for the player's level (5 at levels 1 to
   7, 6 at 8–9, 7 at 10–11, 8 at 12–15, 9 at 16–19, 11 at 20–29, 12 at 30–39, 13 at 40–44, 14 from
   45); a monster `d ≥ ZD` below is grey and gives 0, any other kill at least 1, and a creature worth
-  0 XP gives 0. Only kills by the player's own attacks count: `World::hurt` awards the XP when
-  the one who landed the killing blow is the player, whether by melee, a shot, or a throw
-  (`resolve` and `missile_hits`); traps (#128) and kills by other creatures give nothing. A level
+  0 XP gives 0. Only kills by the player count: `World::dies` awards the XP when the one who
+  landed the killing blow is the player, whether by melee, a shot, or a throw (`resolve` and
+  `missile_hits`), and when a creature dies of a status effect the player caused (a wound they
+  dealt bleeds it to death: the effect's `by`, "Status effects" below); traps (#128) and kills
+  by other creatures give nothing. A level
   gained says "You feel more experienced." and "Welcome to level N." (once per kill, naming the
-  last level; after the attack's own messages), and each level gained up to `hp_level` (20)
+  last level; after the attack's own messages, or as the turn is perceived for a creature that
+  bled to death), and each level gained up to `hp_level` (20)
   raises the player's maximum and current hit points (`Actor::hp_base`, `hp`) by `max(1, class
   hp ÷ 2 + the Toughness modifier)`; without a character the scenario's `hp` stands in for the
   class's. The player is shown their level, XP, and the XP of the next level
@@ -1882,10 +1993,14 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   - **Loosing**: the player fires (`Action::Fire(cell)`, `fire:X,Y`) with the missile weapon in a
     `ready` slot and the ammunition it shoots in a `ready` slot, or throws (`Action::Throw { item,
     at }`, `throw:LETTER:X,Y`) one of an inventory stack that is a throwing weapon (wielded or
-    not: the last one leaves the hand). Refused, taking no time: with nothing ready ("You have no
-    missile weapon ready.", "You have no arrows ready."), at the player's own cell, beyond the
+    not: the last one leaves the hand), or any other weapon that is no launcher or ammunition,
+    whole, with `IMPROVISED_TO_HIT` (-4) to hit and `IMPROVISED_RANGE` cells (`ObjectDef::
+    is_improvised`). The Missile weapon slot (`takes_weapons` in `slots.toml`) holds any weapon or
+    throwing weapon besides launchers, so `t` throws what is readied there (a weapon readied
+    there does not parry). Refused, taking no time: with nothing ready ("You have nothing ready
+    to throw or shoot.", "You have no arrows ready."), at the player's own cell, beyond the
     range (the rounded radius of the weapon's `range`: "That is out of range."), something that
-    is no throwing weapon ("You cannot throw a coil of rope."), and on the overworld. A shot takes
+    cannot be thrown ("You cannot throw a coil of rope."), and on the overworld. A shot takes
     `shoot` (plus `reload` for a missile weapon that `reloads`), a throw `throw` (less what the
     weapon skill's rank takes off, "Weapon skills" below); creatures shoot
     by the same rules (`World::creature_shoots`; the AI saw to it that they can).
@@ -1967,6 +2082,95 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     (`PerceptionView::ready_to_dig`) and which walls in sight they have dug into
     (`PerceptionView::is_dug`: look mode's "partly dug"); never the work done in numbers.
     Creatures do not dig, and no one digs down or up.
+- **Blood** (`warlock-core/src/blood.rs`, the pattern; `world/bleed.rs`, applying it; M17):
+  big hits and kills stain the floor and the walls around the victim. Presentation state the
+  rules keep, like the flow of water: no rule reads it.
+  - **When**: a blow that kills leaves a pool on the victim's cell and spray around it; a big hit
+    (damage of at least a third of the target's maximum hit points, or any confirmed critical) a
+    little spatter. Lesser blows leave nothing; spells, which do no harm, none.
+  - **How much**: a kill spills 30 (a stain amount; a cell holds at most 100, soaked), a big hit
+    10, scaled by the victim's size (`blood` in `data/sizes.toml`, percent of a medium one's:
+    small 60), then by overkill (damage past 0 hit points: up to twice as much for a whole
+    second life's worth), a confirmed critical (half again), and a missile (half: it pierces
+    rather than cleaves). A rat killed by an arrow leaves a few drops; a critical spear thrust
+    through a kobold, a pool and a fan of spatter behind it.
+  - **Where**: half of a kill's blood (a third of a big hit's) lands on the victim's cell; the
+    rest sprays away from whoever struck, in a fan along the blow (±45° in melee; ±30° along a
+    missile's flight, from the shooter), 1 to 3 cells by how much there is (a missile's at most
+    2): always on the cells right behind the victim, 60 % of the cells two away, 40 % three away,
+    each with a share falling off with distance (60 to 140 % of it). A kill also flecks each
+    other cell around the victim (35 %). Spray stops at opaque cells: a wall (or closed door)
+    next to the victim takes it on its face, the side facing the victim (twice the share a floor
+    cell there would get: the face catches the spray); walls farther away and
+    whatever lies behind a wall take none. Terrain without `stains` (water, lava, fire) takes
+    none, and nothing is spilled on the overworld (a map of the land).
+  - **Accumulation**: stains add up per cell to the cap; their colours mix by amount, and when
+    a stain was spilled is the mean of its spills weighted by amount. One kill is subtle; a room
+    where a dozen foes died is soaked.
+  - **Colour**: each creature type's `blood` (§7): dark red by default, greenish-black ichor for
+    the cave beetle; `none` bleeds nothing.
+  - **Deterministic, gameplay-neutral**: stains are level state (`LevelState::blood`, sparse by
+    cell: amount, colour, when spilled, stained wall faces), saved and covered by the state hash
+    (format version 19). Where drops land is a hash of the turn, the moment, the two actors, and
+    the cells, never the gameplay random stream: a fight goes exactly the same with or without
+    blood.
+  - **What the player perceives** (`PerceptionView::blood`): a stain on an open cell they see;
+    one on a wall only when they see a stained face (a visible open cell next to the wall on
+    that side), so blood on the far side of a wall stays hidden. Blood is remembered as last
+    seen, like piles (`LevelState::blood_memory`). Look mode names it before the terrain ("A
+    giant rat (hostile, unhurt), on blood-stained stone floor.", "A blood-spattered stone
+    wall."): blood-spattered, blood-stained, or blood-soaked by amount, a wall spattered or
+    smeared. The `blood` dump layer shows it as a digit, `1` a few drops to `9` soaked. Drawn
+    subtly (§4.8 "Blood").
+- **Status effects** (`warlock-core/src/status.rs`, the rules of one actor's effects;
+  `world/status.rs`, applying them; data `data/status.toml`, §7; M24, #138): what ails an actor.
+  Diseases (#139) build on it.
+  - **Effects**: an actor carries at most one effect of each status (`Actor::effects`, in status
+    order), each with a **severity** in degrees (1 to the status's `max`), its progress toward
+    its next tick and toward easing, and who caused it (the last to add to it). A new dose adds
+    by the status's `stacking`: `add` (degrees add up, to `max`), `highest`, or `refresh` (the
+    stronger, its easing starting over). The player is told when one begins (its `start`
+    message) and ends (`end`).
+  - **Time**: as the scheduler moves the clock, every actor on the current level lives through
+    it (`World::pass_time`, in schedule order): a status with a `tick` ticks once every `tick`
+    seconds at one degree and `n` times as often at `n` degrees (each second banks its severity
+    in degree-seconds; every `tick` of them is a tick), each tick costing `damage` hit points; a
+    status with `eases` loses a degree every `eases` seconds, and at none it is gone. Hit points
+    come back meanwhile ("Healing" below). Everything happens at its own moment, so it makes no
+    difference how time is cut up (many waits or one long journey); at one moment a hit point
+    back comes first, then the ticks, then the easing. Actors on other levels are frozen, and the
+    dev time skip passes no time for anyone.
+  - **Stats**: a status's `penalty` lowers scores from a severity on (several add up, kept
+    within 1 to 40); every rule reads the effective score (`Actor::effective_stats`): combat
+    (to-hit, damage, Defence, hit points), burden (the limit), and healing. The player sees their
+    scores lowered on the character screen.
+  - **Deaths**: a tick that takes the last hit point kills by the status, at that moment
+    (`Event::Died`'s `of`; the player's death records it, `Death::of`). A creature that dies of
+    a status counts as killed by whoever caused it (`Effect::by`): experience (#133) credits the
+    player for creatures bleeding to death from wounds they dealt.
+  - **Cures**: `World::cure(actor, means)` ends every status that lists the means in its
+    `cured_by` (a `bandage` stops the bleeding); the Heal skill (#132) will apply it.
+  - **Bleeding**: from big hits and confirmed criticals; it costs hit points, stops healing, and
+    eases by itself; it shows on creatures ("bleeding"). Blood dripping where the bleeder goes
+    (the stains of #127) hooks in where it ticks (`World::drip_blood`).
+  - **Poisoned**: from a giant rat's bite (one hit in ten, 2 degrees); it costs hit points
+    slowly, halves healing, and from 4 degrees lowers Strength and Dexterity by 1; stronger
+    poison lasts longer.
+  - **Shown**: the player's own by name (status bar, character screen, the `stats` dump layer),
+    those with a `seen` word on creatures the player sees (look mode); never a severity or a
+    timer. Effects are part of the world state (saved, covered by the state hash).
+  - **Dev**: the action `afflict:ID` gives the player one more degree of a status (no game
+    time; recorded in replays), for trying statuses out and for captures.
+- **Healing** (`world/status.rs`): a hurt actor's progress toward its next hit point back
+  (`Actor::regen`, in hundredths of a second at the normal pace, saved) grows each second by its
+  healing rate in percent: 100 normally, the slowest `regen` of its status effects (bleeding 0,
+  poison 50), times `[healing] resting` (200) while the player rests (creatures never rest);
+  every `regen_seconds(Toughness)` × 100 of it is a hit point ("Combat" above; the effective
+  Toughness). Standing in a special room multiplies the rate by its `regen` (a sanctuary three
+  times, §7 "Special rooms"), and the regeneration affixes of what the actor wears and wields
+  by (100 + their percent) / 100 (§8 "Magic items"); `World::healing_rate` is the one place
+  that decides it. Progress carries over and is dropped at full health. Hunger (#137) and
+  disease (#139) slow it through their own statuses' `regen`.
 - **Stats** (`warlock-core/src/stats.rs`; M14): six stats inspired by D&D, in display order
   Strength (St), Dexterity (Dx), Toughness (To; D&D's Constitution), Intelligence (In),
   Willpower (Wi; D&D's Wisdom), and Presence (Pr; D&D's Charisma). More will come (mostly
@@ -1988,13 +2192,16 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     (`actors`, the world state) show every actor's scores and potentials.
   - **What uses them**: combat (Strength to hit and to damage in melee, Dexterity to hit with
     shots and in Defence, Toughness in hit points and regeneration; "Combat" above) and burden
-    (Strength and Toughness scores, never modifiers, in the carrying limit; "Burden" below). No
+    (Strength and Toughness scores, never modifiers, in the carrying limit; "Burden" below), each
+    reading the effective score that status effects may lower ("Status effects" above). No
     other rule does yet, and no other D&D concept comes with them: no ability checks or saving
     throws. Stats and potentials are part of the world state (saved, covered by the state hash).
   - **Magic items** (§8 "Magic items") raise scores while worn or wielded: every rule reads the
-    scores as they are now (`Actor::scores(content)`: the stored scores plus what the actor wears
-    adds, within 1 to 40; potentials unchanged), and so does the player's character screen
-    (`PerceptionView::own_scores`). The stored scores are never changed by an item.
+    scores as they are now (`Actor::effective_stats(content)`: the stored scores plus what the
+    actor wears adds, within 1 to 40, then less what its status effects take; potentials
+    unchanged), and so does the player's character screen (`PerceptionView::own_scores`). The
+    stored scores are never changed by an item. Hit points gained at a level-up read Toughness
+    raised by items but not lowered by a status effect (`Actor::raised_stats`).
 - **Burden** (`warlock-core/src/burden.rs`; M16, #115), ADOM-like, with 3.5's thirds:
   - **Limit**: 1.5 kg × (2 × Strength + Toughness) × the actor's size's `carry` percent (§7
     `data/sizes.toml`: small 75 %, medium 100 %), from the scores, never the modifiers: a St 10
@@ -2076,9 +2283,9 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     a steady preset; `LightCache` adds it as a carried source, so creatures see by it too), and
     **skills** (§8 "Skills": a skill affix adds to that skill's value for what it gives,
     `Actor::skill_effect`, trained or not, an untrained one from 0; the Skills screen still lists
-    trained values). Each rule reads them in one place: `Actor::scores`, `max_hp`, `defence`,
-    `melee`, `ranged`, `thrown`, `launcher_range`, `throw_range`, `skill_effect`;
-    `World::cost_of` (speed); `burden::load`; `noise::noise`; `World::regenerate`;
+    trained values). Each rule reads them in one place: `Actor::effective_stats`, `max_hp`,
+    `defence`, `melee`, `ranged`, `thrown`, `launcher_range`, `throw_range`, `skill_effect`;
+    `World::cost_of` (speed); `burden::load`; `noise::noise`; `World::healing_rate`;
     `Stack::weight`. Speeds are at most 50 % off in all; an attack's weapon skill takes its
     `speed` off after them (`World::attack_price`, §8 "Weapon skills"). Pending hooks, added
     with the systems they need: affixes that raise a weapon skill's rank (#134's ranks exist;
@@ -2340,9 +2547,9 @@ cargo xtask golden [--update]                             # compare golden scree
   syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
   pickup pickup:ac drop drop:b equip:body:b remove:body bash:E fire:12,5 throw:c:12,5 dig:E
   vision:darkvision skip:1h weather:rain stance:coward effect:fireball@12,5
-  effect:lightning_bolt@3,4>12,4 identify:a`; `bash:DIR` bashes with the held shield that way,
-  `dig:DIR` digs toward a direction until the wall gives way or something interrupts; `fire:X,Y`
-  shoots at level cell (X, Y),
+  effect:lightning_bolt@3,4>12,4 identify:a afflict:bleeding`; `bash:DIR` bashes with the held
+  shield that way, `dig:DIR` digs toward a direction until the wall gives way or something
+  interrupts; `fire:X,Y` shoots at level cell (X, Y),
   `throw:LETTER:X,Y` throws one of inventory stack LETTER there; the dev action
   `effect:ID@X,Y[>X,Y]` shows spell effect ID (`data/effects.toml`) as the player perceives it, a
   burst around X,Y (around the second cell, flying there from the first) or a bolt from the first
@@ -2352,7 +2559,9 @@ cargo xtask golden [--update]                             # compare golden scree
   of the pile or the inventory, `a` first, and without letters `pickup`, `drop`, and the dev
   `identify` (§8 "Magic items") take everything; `equip:SLOT:LETTER` puts inventory stack LETTER
   on in slot SLOT (a slot id of `data/slots.toml`) and `remove:SLOT` takes off what is there;
-  the dev weather override takes `clear`, `overcast`, `rain`, or `heavy`; in scripts, `ACTION*N` repeats an
+  the dev weather override takes `clear`, `overcast`, `rain`, or `heavy`; the dev `afflict:ID`
+  gives the player a degree more of status ID (`data/status.toml`); in scripts, `ACTION*N`
+  repeats an
   action, e.g. `wait*10`); `hash` is the
   FNV-1a 64 hash of the
   canonical JSON encoding of `WorldState` after the step. Verification reports the first
@@ -2372,8 +2581,9 @@ cargo xtask golden [--update]                             # compare golden scree
   strained over 28 kg, overloaded over 42 kg), total weight 74.2 kg`),
   `equipment` (the player's slots by letter, `c Body: a leather jerkin (b)`, `-` when empty),
   `stats` (the player's race, gender, and class, `Race Dwarf`, their age, birthday, and
-  sign, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`, then their own scores,
-  `Strength 12`), `skills` (the player's trained skills in skill order, `Stealth 17`), and
+  sign, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`, then their own scores as the
+  rules read them, `Strength 12`, then their status effects by name, `Effects Bleeding,
+  Poisoned`), `skills` (the player's trained skills in skill order, `Stealth 17`), and
   `weapon_skills` (the player's weapon skills in file order with their rank and how far their
   marks are toward the next, `Long blades 2 (40%)`; at rank 10 the rank alone) are built from the
   perception snapshot only;
@@ -2383,24 +2593,27 @@ cargo xtask golden [--update]                             # compare golden scree
   spear` (magic items as they truly are, `an iron ring of the Bear (unidentified)`), what its
   magic items do to it by effect id, `magic strength +1 light item_glow`, its burden and carrying
   limit, `unburdened (limit 31.5 kg)`, its weapon skills with rank and marks, `weapon skills
-  spears 1 (0/30)`, its stats as score/potential, `St 12/15`, and its trained skills with their
-  marks toward the next point, `skills stealth 17 (2/5)`), and `rooms` (the level's special
+  spears 1 (0/30)`, its stats as score/potential, `St 12/15`, its trained skills with their
+  marks toward the next point, `skills stealth 17 (2/5)`, and its status effects with their
+  severities, `effects bleeding 2`), and `rooms` (the level's special
   rooms: the terrain with each room's plain ground drawn as its effect's `mark`, then a line per
   room, `s shadowed room at (34, 8)-(49, 13), entered`) show
   ground truth and are dev-only. JSON dumps
   carry turn, game time (seconds and calendar fields), level, viewer, the special room the
   player stands in if they know it (`room`, its effect id; else null), the weather (under the open
   sky; else null), seen actors (each with how hurt it looks, `health`: `unhurt`,
-  `lightly_wounded`, `wounded`, `badly_wounded`, `nearly_dead`), heard sounds, the player's
+  `lightly_wounded`, `wounded`, `badly_wounded`, `nearly_dead`, and the status effects that show
+  on it, `effects`, by id), heard sounds, the player's
   inventory (each stack's letter, object, count, weight, `name` as the player knows it, `rarity`,
   `identified`, and `magic`: `{level, name, affixes: [{id, tier, value}]}` once identified, else
   null), equipment (by slot id: letter, object, count), weight, burden (`burden: {level,
   limit}`, the limit in grams), character
   (`{race, gender, class, raised, age, born: {year, month, day}, sign: {animal, element}}` or
   null), scores (`stats`, by stat id), trained skills (`skills`, by skill id with their values),
-  weapon skills (`weapon_skills`, by skill id: `{rank, progress}`, the progress a percent or
-  null at rank 10), hit points (`hp: {current, max}`), Defence (`defence`, the
-  total), how the run ended (`death: {turn, time, place, by}` or null), recent messages,
+  status effects (`effects`, by id), weapon skills (`weapon_skills`, by skill id: `{rank,
+  progress}`, the progress a percent or null at rank 10), hit points (`hp: {current, max}`),
+  Defence (`defence`, the total), how the run ended (`death: {turn, time, place, by, of}` or
+  null), recent messages,
   and optionally the full world state; the ASCII header line has the turn, the time
   (`0001-01-01 08:00:00`), level, viewer, the player's hit points (`hp 17/17`, then `dead` once
   they have died), the weather under the open sky (`weather rain`), and hash.
@@ -2511,6 +2724,9 @@ Each milestone ships a playable build.
   race, and class, regeneration, death with drops and permadeath, health in words; ranged
   combat (#117): bows, a crossbow, a sling, and throwing weapons, ammunition spent and picked up
   again, ADOM-like targeting, missiles on screen, and flaming arrows that light the dark.
+- **M17 Blood** — big hits and kills stain floors and the walls next to the victim (#127): how
+  much by the victim's size, overkill, criticals, and missiles; spray away from the blow; blood
+  colour per creature type; accumulating, drying, remembered; subtle on the map, with a switch.
 - **M19 Doors and walls** — destructible walls (#131): terrain hardness, digging through walls
   with a pick-axe or a mattock in a new Tool slot, turn after turn by tool power and Strength,
   explosions that break the softer walls, rubble, and the quarry to dig in.
@@ -2539,6 +2755,12 @@ Each milestone ships a playable build.
   generated level in two or three and in areas hand-made levels mark (the hub's stairs nook is a
   sanctuary); one query for the rules (`World::room_effect_at`), a first-entry message, and look
   mode naming rooms the player has been in.
+
+- **M24 Status effects and diseases** — a data-driven status-effect framework (#138): effects
+  with severities that tick, ease, stack, and can be cured in game time, lower stats, slow
+  healing, and can kill; bleeding from big hits and criticals, poison from a giant rat's bite;
+  healing twice as fast while resting; shown by name in the status bar, on the character
+  screen, and on creatures in look mode. Diseases build on it (#139).
 
 ## 13. GitHub workflow
 

@@ -212,7 +212,9 @@ pub fn load(actor: &Actor, race: Option<&RaceDef>, content: &Content) -> Load {
         Some(race) => (race.size, race.ignores_burdened),
         None => (content.creature(actor.creature).size, false),
     };
-    let stats = actor.scores(content);
+    // Magic items that raise Strength or Toughness raise the limit, and a status effect that
+    // lowers either lowers it.
+    let stats = actor.effective_stats(content);
     let base = limit(
         stats.score(Stat::Strength),
         stats.score(Stat::Toughness),

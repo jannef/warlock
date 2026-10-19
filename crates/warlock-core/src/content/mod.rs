@@ -30,6 +30,7 @@ mod skill;
 mod sky;
 mod slot;
 mod stance;
+mod status;
 mod terrain;
 mod vault;
 mod vision;
@@ -73,6 +74,9 @@ pub use skill::{SkillBook, SkillDef};
 pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
+pub use status::{
+    Healing, MAX_REGEN, MAX_SEVERITY, OnHit, Penalty, Stacking, StatusDef, StatusId, Wound,
+};
 pub use terrain::{Breakable, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
 pub use vault::Vault;
 pub use vision::VisionProfile;
@@ -232,8 +236,8 @@ struct LegendFile {
 /// `data/calendar.toml`, `data/sky.toml`, `data/materials.toml`, `data/objects.toml`,
 /// `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
 /// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, `data/horoscope.toml`,
-/// `data/effects.toml`, `data/room_effects.toml`, `data/weapon_skills.toml`, and
-/// `data/stances.toml` are optional (without effects, spell effects
+/// `data/effects.toml`, `data/room_effects.toml`, `data/weapon_skills.toml`, `data/stances.toml`,
+/// and `data/status.toml` are optional (without effects, spell effects
 /// are not drawn). Without vision
 /// profiles, a single `normal` profile that needs no light is used, so content without lighting
 /// stays fully visible; without sizes, everything is medium; without factions, everyone is neutral; without a calendar, months are numbered;
@@ -243,7 +247,8 @@ struct LegendFile {
 /// character to choose, and scenarios give the player's eyes and stats themselves; without
 /// skills nobody is trained in anything; without a horoscope, characters are born under no sign;
 /// without room effects there are no special rooms; without weapon skills nobody has any, and
-/// weapons name no category.
+/// weapons name no category; without statuses nothing ails anyone, and resting heals twice as
+/// fast.
 #[derive(Debug)]
 pub struct Content {
     terrain: Vec<TerrainDef>,
@@ -286,6 +291,10 @@ pub struct Content {
     /// Prefixes, suffixes, and how loot rolls them (`data/affixes.toml`).
     affixes: Affixes,
     stances: Stances,
+    /// In `data/status.toml` order: most important first.
+    statuses: Vec<StatusDef>,
+    status_ids: BTreeMap<String, StatusId>,
+    healing: Healing,
 }
 
 impl Content {
@@ -329,6 +338,9 @@ impl Content {
             room_effects: RoomEffects::default(),
             affixes: Affixes::default(),
             stances: Stances::default(),
+            statuses: Vec::new(),
+            status_ids: BTreeMap::new(),
+            healing: Healing::default(),
         };
         let path = "data/calendar.toml";
         if let Some(text) = files.get_optional(path) {
@@ -392,6 +404,7 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.horoscope = Some(Horoscope::parse(path, text)?);
         }
+        content.load_statuses(files)?;
         content.load_terrain(files)?;
         let path = "data/room_effects.toml";
         if let Some(text) = files.get_optional(path) {
@@ -543,6 +556,7 @@ impl Content {
                 bounce: spec.bounce,
                 height,
                 roofed: spec.roofed,
+                stains: spec.stains,
                 step_noise: spec.step_noise,
                 toggle_noise: spec.toggle_noise,
                 // Solid terrain blocks sound unless it muffles it; everything else passes it.
@@ -680,8 +694,12 @@ impl Content {
                     object::MAX_BONUS
                 )));
             }
+            let status = |id: &str| {
+                let found = self.status_id(id)?;
+                Some((found, self.status(found).max))
+            };
             let attack = (spec.attack.clone())
-                .map(creature::NaturalAttackSpec::resolve)
+                .map(|a| a.resolve(status))
                 .transpose()
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let stats = Stats::from_data(&spec.stats, &spec.potential)
@@ -699,7 +717,10 @@ impl Content {
             let size_id = spec.size.as_deref().unwrap_or(MEDIUM);
             let size = (self.size_index(size_id))
                 .ok_or_else(|| err(format!("creature `{}`: unknown size `{size_id}`", spec.id)))?;
+            let blood = creature::blood(spec.blood.as_deref())
+                .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let resolved = creature::Resolved {
+                blood,
                 light,
                 size,
                 stats,
@@ -772,6 +793,22 @@ impl Content {
             .id(name)
             .map(Some)
             .ok_or_else(|| format!("creature `{}`: unknown faction `{name}`", spec.id))
+    }
+
+    /// Status effects and the healing rules (optional: none, and the default healing).
+    fn load_statuses(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
+        let path = "data/status.toml";
+        let Some(text) = files.get_optional(path) else {
+            return Ok(());
+        };
+        let (healing, list) = status::parse(path, text)?;
+        for (i, def) in list.iter().enumerate() {
+            let id = u16::try_from(i).map_err(|_| ContentError::new(path, "too many statuses"))?;
+            self.status_ids.insert(def.id.clone(), StatusId(id));
+        }
+        self.healing = healing;
+        self.statuses = list;
+        Ok(())
     }
 
     fn load_factions(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
@@ -1005,11 +1042,11 @@ impl Content {
     }
 
     /// A stable hash (64-bit FNV-1a) of the ordered terrain, creature, level, light, dungeon,
-    /// object, slot, skill, room effect, and weapon skill ids.
+    /// object, slot, skill, room effect, weapon skill, and status ids.
     ///
-    /// `TerrainId`, `CreatureId`, `LightId`, `ObjectId`, `SlotId`, `SkillId`, `RoomEffectId`, and
-    /// `WeaponSkillId` are indices, so a save is only meaningful for content with the same ids in
-    /// the same order;
+    /// `TerrainId`, `CreatureId`, `LightId`, `ObjectId`, `SlotId`, `SkillId`, `RoomEffectId`,
+    /// `WeaponSkillId`, and `StatusId` are indices, so a save is only meaningful for content with
+    /// the same ids in the same order;
     /// saves record this fingerprint to detect a mismatch.
     pub fn fingerprint(&self) -> u64 {
         let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
@@ -1018,7 +1055,7 @@ impl Content {
                 hash = (hash ^ u64::from(b)).wrapping_mul(0x0000_0100_0000_01b3);
             }
         };
-        let groups: [Vec<&str>; 10] = [
+        let groups: [Vec<&str>; 11] = [
             self.terrain.iter().map(|t| t.id.as_str()).collect(),
             self.creatures.iter().map(|c| c.id.as_str()).collect(),
             self.levels.keys().map(String::as_str).collect(),
@@ -1033,6 +1070,7 @@ impl Content {
             (self.weapon_skills.skills().iter())
                 .map(|s| s.id.as_str())
                 .collect(),
+            self.statuses.iter().map(|s| s.id.as_str()).collect(),
         ];
         for ids in groups {
             for id in ids {
@@ -1108,6 +1146,14 @@ impl Content {
 
     /// Whether `object` goes in `slot`: its `slot` is what the slot fits.
     pub fn fits(&self, object: ObjectId, slot: SlotId) -> bool {
+        let (def, slot) = (self.object(object), self.slot(slot));
+        def.slot.as_ref() == Some(&slot.fits)
+            || (slot.takes_weapons
+                && (def.can_throw() || (def.attack.is_some() && def.ammo.is_none())))
+    }
+
+    /// Whether `object` goes in `slot` by its own `slot`, not as a weapon some slot takes too.
+    pub fn fits_properly(&self, object: ObjectId, slot: SlotId) -> bool {
         self.object(object).slot.as_ref() == Some(&self.slot(slot).fits)
     }
 
@@ -1209,6 +1255,29 @@ impl Content {
     /// The index of size `id` in [`Content::sizes`].
     pub fn size_index(&self, id: &str) -> Option<usize> {
         self.sizes.iter().position(|s| s.id == id)
+    }
+
+    /// Status effects (`data/status.toml`), most important first; empty without the file.
+    pub fn status_defs(&self) -> &[StatusDef] {
+        &self.statuses
+    }
+
+    pub fn status(&self, id: StatusId) -> &StatusDef {
+        &self.statuses[usize::from(id.0)]
+    }
+
+    pub fn status_id(&self, name: &str) -> Option<StatusId> {
+        self.status_ids.get(name).copied()
+    }
+
+    /// Every status with its id, most important first.
+    pub fn status_ids(&self) -> impl Iterator<Item = (StatusId, &StatusDef)> {
+        (0u16..).map(StatusId).zip(&self.statuses)
+    }
+
+    /// The passive healing rules (`[healing]` in `data/status.toml`).
+    pub fn healing(&self) -> &Healing {
+        &self.healing
     }
 
     /// A hand-made level. Generated levels (`depths:3`, `local:12,30`) are not stored here; see

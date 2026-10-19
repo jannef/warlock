@@ -303,6 +303,17 @@ impl Stats {
     pub fn modifier(&self, stat: Stat) -> i32 {
         modifier(i32::from(self.score(stat)))
     }
+
+    /// These stats with every score adjusted by `by` (kept within [`SCORES`]; a potential below
+    /// its score is raised to it): the scores the rules read while a status effect lowers some
+    /// (spec §8 "Status effects").
+    pub fn adjusted_by(&self, by: &PerStat<i32>) -> Self {
+        let mut score = self.score;
+        for stat in Stat::ALL {
+            score[stat] = adjusted(score[stat], by[stat]);
+        }
+        Self::new(score, self.potential)
+    }
 }
 
 #[cfg(test)]

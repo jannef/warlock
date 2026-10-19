@@ -15,6 +15,7 @@ use crate::noise::Heard;
 use crate::object::{Stack, Weight, weight_of};
 use crate::skills::{Effect, Skills};
 use crate::stats::{Stat, Stats};
+use crate::status::Effects;
 use crate::weapon_skills::WeaponSkills;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -99,14 +100,18 @@ pub struct Actor {
     pub equipment: Equipment,
     /// Its scores and potentials (spec §8 "Stats"; [`crate::stats`]): from its creature type,
     /// the player's from the scenario. Known to the rules (and dev tools) for every actor; the
-    /// player is shown only their own scores.
+    /// player is shown only their own scores. Rules read them through
+    /// [`Actor::effective_stats`], which magic items raise and status effects may lower.
     pub stats: Stats,
     /// Hit points left (spec §8 "Combat"); at 0 or below it is dead.
     pub hp: i32,
     /// What its maximum hit points add to its Toughness: the creature type's `base_hp`, the
     /// player's race and class (the scenario's `hp`).
     pub hp_base: i32,
-    /// Seconds of game time toward its next hit point back, while it is hurt.
+    /// Progress toward its next hit point back, while it is hurt, in hundredths of a second of
+    /// game time at the normal pace (spec §8 "Healing"): each second adds its healing rate in
+    /// percent (100 normally, 200 resting, less or none while a status slows it), and every
+    /// [`combat::regen_seconds`] × 100 of it is a hit point.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub regen: u32,
     /// Its trained skills, with their values and training marks (spec §8 "Skills";
@@ -115,6 +120,9 @@ pub struct Actor {
     /// actor; the player is shown only their own trained skills' values.
     #[serde(default, skip_serializing_if = "Skills::is_empty")]
     pub skills: Skills,
+    /// The status effects it suffers (spec §8 "Status effects"; [`crate::status`]).
+    #[serde(default, skip_serializing_if = "Effects::is_empty")]
+    pub effects: Effects,
     /// Its rank and marks in every weapon skill (spec §8 "Weapon skills";
     /// [`crate::weapon_skills`]): a creature's from its type, the player's from their race and
     /// class. Only the player trains. The player is shown their own ranks; what a rank gives
@@ -147,14 +155,30 @@ impl Actor {
         Mods::worn(&self.inventory, &self.equipment, content)
     }
 
-    /// Its stats as they are now: its own, each score raised by what it wears and wields
-    /// (spec §8 "Magic items"). Every rule that reads a score reads these.
-    pub fn scores(&self, content: &Content) -> Stats {
-        self.stats_with(&self.mods(content))
+    /// Its stats as the rules read them: its own scores, each raised by what it wears and
+    /// wields (spec §8 "Magic items"), then less what its status effects take from them (spec
+    /// §8 "Status effects": strong poison lowers Strength and Dexterity). Every rule that reads
+    /// a score reads these.
+    pub fn effective_stats(&self, content: &Content) -> Stats {
+        self.stats_with(content, &self.mods(content))
     }
 
-    fn stats_with(&self, mods: &Mods) -> Stats {
+    /// Its own scores raised by what it wears and wields, before what its status effects take
+    /// (the character screen marks the scores those lower).
+    pub fn raised_stats(&self, content: &Content) -> Stats {
+        self.raised_with(&self.mods(content))
+    }
+
+    fn raised_with(&self, mods: &Mods) -> Stats {
         self.stats.raised(|stat| mods.stat(stat))
+    }
+
+    fn stats_with(&self, content: &Content, mods: &Mods) -> Stats {
+        let raised = self.raised_with(mods);
+        match self.effects.penalty(content) {
+            Some(by) => raised.adjusted_by(&by),
+            None => raised,
+        }
     }
 
     /// What its skills give of `effect` (spec §8 "Skills"), with what the skill affixes of what
@@ -167,11 +191,21 @@ impl Actor {
         (self.skills).effect_with(content, effect, self.mods(content).skills())
     }
 
-    /// Its maximum hit points: Toughness plus [`Actor::hp_base`] plus what it wears and wields
-    /// adds, at least 1.
+    /// Its maximum hit points: its (effective) Toughness plus [`Actor::hp_base`] plus what it
+    /// wears and wields adds, at least 1.
     pub fn max_hp(&self, content: &Content) -> i32 {
         let mods = self.mods(content);
-        let toughness = self.stats_with(&mods).score(Stat::Toughness);
+        let toughness = self.stats_with(content, &mods).score(Stat::Toughness);
+        combat::max_hp(toughness, self.hp_base + mods.get(ItemEffect::MaxHp))
+    }
+
+    /// Its maximum hit points as they will be once its status effects pass: its Toughness
+    /// raised by what it wears and wields, not lowered by its statuses. Taking off something
+    /// that raised them leaves it no more hit points than this (a status penalty passes; the hit
+    /// points it keeps under one stay, spec §8 "Status effects").
+    pub fn lasting_max_hp(&self, content: &Content) -> i32 {
+        let mods = self.mods(content);
+        let toughness = self.raised_with(&mods).score(Stat::Toughness);
         combat::max_hp(toughness, self.hp_base + mods.get(ItemEffect::MaxHp))
     }
 
@@ -193,19 +227,33 @@ impl Actor {
         let parry_skill = self.benefit(content, self.melee_skill(content)).parry;
         let block = (content.weapon_skills().of_role(Role::ShieldBlock))
             .map_or(0, |id| self.benefit(content, Some(id)).shield);
-        let equipped: Vec<(usize, &ObjectDef, Mods)> = (self.equipment.items().into_iter())
-            .filter_map(|(_, item)| Some((item, self.inventory.get(item)?)))
-            .map(|(item, s)| (item, content.object(s.object), Mods::local(s, content)))
+        let equipped: Vec<(usize, &ObjectDef, Mods, bool)> = (self.equipment.items().into_iter())
+            .filter_map(|(slot, item)| {
+                Some((item, content.slot(slot).hand, self.inventory.get(item)?))
+            })
+            .map(|(item, hand, s)| {
+                (
+                    item,
+                    content.object(s.object),
+                    Mods::local(s, content),
+                    hand,
+                )
+            })
             .collect();
-        let dexterity = self.stats_with(&mods).modifier(Stat::Dexterity);
-        let worn =
-            (equipped.iter()).filter_map(|(_, o, m)| Some(o.max_dex? + m.get(ItemEffect::MaxDex)));
+        let dexterity = self.stats_with(content, &mods).modifier(Stat::Dexterity);
+        let worn = (equipped.iter())
+            .filter_map(|(_, o, m, _)| Some(o.max_dex? + m.get(ItemEffect::MaxDex)));
         let cap = worn.chain(burden.max_dex()).min();
         let dexterity = cap.map_or(dexterity, |cap| dexterity.min(cap));
-        let worn = equipped.iter().flat_map(|(item, o, m)| {
+        // A weapon readied to throw does not parry: only what is held in a hand.
+        let worn = equipped.iter().flat_map(|(item, o, m, hand)| {
             let wielded = Some(*item) == weapon;
             let shield = o.shield + m.get(ItemEffect::Shield);
-            let parry = o.parry + m.get(ItemEffect::Parry);
+            let parry = if *hand {
+                o.parry + m.get(ItemEffect::Parry)
+            } else {
+                0
+            };
             [
                 (Category::Armour, o.armour + m.get(ItemEffect::Armour)),
                 (
@@ -340,12 +388,11 @@ impl Actor {
         Some(range + Mods::local(stack, content).get(ItemEffect::Range))
     }
 
-    /// How far it throws inventory stack `item`, if that is a throwing weapon: its `range`, and
-    /// what its affixes add.
+    /// How far it throws inventory stack `item`, if it can be thrown: a throwing weapon's
+    /// `range`, any other weapon's [`crate::combat::IMPROVISED_RANGE`], and what its affixes add.
     pub fn throw_range(&self, item: usize, content: &Content) -> Option<i32> {
         let stack = self.inventory.get(item)?;
-        let def = content.object(stack.object);
-        let range = def.range.filter(|_| def.is_thrown())?;
+        let range = content.object(stack.object).throw_range()?;
         Some(range + Mods::local(stack, content).get(ItemEffect::Range))
     }
 
@@ -369,8 +416,9 @@ impl Actor {
         })
     }
 
-    /// The throwing weapon it has ready, if any: the first stack in a `ready` slot (the
-    /// missiles) that is thrown (a quiver of rocks), and where in its inventory it is.
+    /// What it has ready to throw, if anything: the first stack in a `ready` slot (the missile
+    /// weapon slot) that can be thrown (a stack of rocks or daggers, or a sword), and where in
+    /// its inventory it is.
     pub fn ready_to_throw(&self, content: &Content) -> Option<usize> {
         content.slot_ids().find_map(|(slot, def)| {
             if def.action != ActionKind::Ready {
@@ -378,7 +426,7 @@ impl Actor {
             }
             let item = self.equipment.get(slot)?;
             let stack = self.inventory.get(item)?;
-            content.object(stack.object).is_thrown().then_some(item)
+            content.object(stack.object).can_throw().then_some(item)
         })
     }
 
@@ -408,8 +456,8 @@ impl Actor {
             (None, None) => (Attack::unarmed(), Mods::default()),
         };
         let skill = self.melee_skill(content);
-        let mut profile =
-            Profile::melee(&attack, &self.stats_with(&mods)).with(&self.benefit(content, skill));
+        let mut profile = Profile::melee(&attack, &self.stats_with(content, &mods))
+            .with(&self.benefit(content, skill));
         local.sharpen(&mut profile);
         mods.sharpen(&mut profile);
         self.stanced(content, profile)
@@ -433,7 +481,7 @@ impl Actor {
         let draw = local.get(ItemEffect::Draw);
         attack.strength =
             (attack.strength).map(|s| u8::try_from((i32::from(s) - draw).max(1)).unwrap_or(1));
-        let mut profile = Profile::ranged(&attack, &self.stats_with(&mods))
+        let mut profile = Profile::ranged(&attack, &self.stats_with(content, &mods))
             .with(&self.benefit(content, def.skill));
         local.sharpen(&mut profile);
         if let Some(ammo) = self.ammunition_item(content) {
@@ -443,17 +491,21 @@ impl Actor {
         Some(self.stanced(content, profile))
     }
 
-    /// What a throw of inventory stack `item` does (`None` if it is no throwing weapon):
-    /// Dexterity to hit, Strength to damage, what its skill at throwing gives, its own affixes,
-    /// those of everything it wears and wields, and its combat stance.
+    /// What a throw of inventory stack `item` does (`None` if it cannot be thrown): Dexterity
+    /// to hit, Strength to damage (a weapon not made for throwing thrown whole, at
+    /// [`Profile::improvised`]), what its skill at throwing gives, its own affixes, those of
+    /// everything it wears and wields, and its combat stance.
     pub fn thrown(&self, item: usize, content: &Content) -> Option<Profile> {
         let stack = self.inventory.get(item)?;
         let def = content.object(stack.object);
-        let attack = def.attack.filter(|_| def.is_thrown())?;
+        let attack = def.attack.filter(|_| def.can_throw())?;
         let mods = self.mods(content);
         let skill = content.weapon_skills().of_role(Role::Thrown);
-        let mut profile =
-            Profile::thrown(&attack, &self.stats_with(&mods)).with(&self.benefit(content, skill));
+        let mut profile = Profile::thrown(&attack, &self.stats_with(content, &mods));
+        if def.is_improvised() {
+            profile = profile.improvised();
+        }
+        let mut profile = profile.with(&self.benefit(content, skill));
         Mods::local(stack, content).sharpen(&mut profile);
         mods.sharpen(&mut profile);
         Some(self.stanced(content, profile))
@@ -466,8 +518,8 @@ impl Actor {
         let (shield, attack) = self.shield(content)?;
         let skill = content.weapon_skills().of_role(Role::ShieldBash);
         let mods = self.mods(content);
-        let mut profile =
-            Profile::melee(attack, &self.stats_with(&mods)).with(&self.benefit(content, skill));
+        let mut profile = Profile::melee(attack, &self.stats_with(content, &mods))
+            .with(&self.benefit(content, skill));
         mods.sharpen(&mut profile);
         Some((shield, self.stanced(content, profile)))
     }
