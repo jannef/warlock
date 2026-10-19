@@ -1005,6 +1005,17 @@ mod tests {
         }
     }
 
+    /// A dump with its state hash redacted, for the insta snapshots: the hash covers every
+    /// field of the state and changes with any content or rules change, so leaving it in would
+    /// churn the snapshots on every feature (determinism is `replay.rs`'s tests' job).
+    fn snapshot(world: &World, layers: &[Layer]) -> String {
+        let text = ascii(world, layers);
+        let (header, rest) = text.split_once('\n').expect("a header line");
+        let (before, hash) = header.rsplit_once(" hash ").expect("a hash in the header");
+        assert_eq!(hash.len(), 16, "{header}");
+        format!("{before} hash [redacted]\n{rest}")
+    }
+
     #[test]
     fn parses_layer_lists() {
         assert_eq!(
@@ -1106,12 +1117,15 @@ mod tests {
     fn showcase_snapshots() {
         let mut world = showcase();
         let layers = [Layer::View, Layer::Fov];
-        insta::assert_snapshot!("showcase_start", ascii(&world, &layers));
+        insta::assert_snapshot!("showcase_start", snapshot(&world, &layers));
         run(&mut world, &SHOWCASE_RUN[..SHOWCASE_RUN.len() / 2]);
-        insta::assert_snapshot!("showcase_mid", ascii(&world, &layers));
+        insta::assert_snapshot!("showcase_mid", snapshot(&world, &layers));
         let mut world = showcase();
         run(&mut world, SHOWCASE_RUN);
-        insta::assert_snapshot!("showcase_end", ascii(&world, &[Layer::View, Layer::Memory]));
+        insta::assert_snapshot!(
+            "showcase_end",
+            snapshot(&world, &[Layer::View, Layer::Memory])
+        );
     }
 
     #[test]
@@ -1235,7 +1249,7 @@ mod tests {
     #[test]
     fn light_layer_shows_visible_cells_only() {
         let world = showcase();
-        insta::assert_snapshot!("showcase_light", ascii(&world, &[Layer::Light]));
+        insta::assert_snapshot!("showcase_light", snapshot(&world, &[Layer::Light]));
         let rows = layer_rows(&world, Layer::Light);
         let fov = layer_rows(&world, Layer::Fov);
         for (light, fov) in rows.iter().zip(&fov) {
