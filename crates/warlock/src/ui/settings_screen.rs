@@ -76,7 +76,7 @@ enum Row {
     Back,
 }
 
-const ROWS: [Row; 14] = [
+const ROWS: [Row; 15] = [
     Row::FontSize,
     Row::ReducedEffects,
     Row::Effect(Effect::GlyphAnimation),
@@ -95,7 +95,7 @@ const ROWS: [Row; 14] = [
 ];
 
 /// Index of the first action row (Reset); a gap is drawn before it.
-const FIRST_ACTION: usize = 12;
+const FIRST_ACTION: usize = 13;
 
 /// Selection state of the settings screen.
 #[derive(Debug, Default)]
