@@ -1,8 +1,10 @@
 //! Per-level mutable state: terrain and piles of objects as they are now, and what the player
-//! remembers of them.
+//! remembers of them; fires, and the walls dug into; the level's special rooms (spec §7 "Special
+//! rooms") and whether the player has been inside each.
 
 use crate::content::{
-    Content, EdgeExit, Flow, LevelKind, LevelTemplate, LightId, StairsLink, TerrainDef, TerrainId,
+    Content, EdgeExit, Flow, LevelKind, LevelTemplate, LightId, RoomEffectDef, SpecialRoom,
+    StairsLink, TerrainDef, TerrainId,
 };
 use crate::geom::Pos;
 use crate::grid::Grid;
@@ -58,6 +60,14 @@ pub struct LevelState {
     /// burning objects themselves lie in the pile there.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) fires: BTreeMap<Pos, Fire>,
+    /// Walls dug into and still standing, by position (spec §8 "Digging"): the work done on each,
+    /// in [`super::dig::WORK_SCALE`]ths of the work its hardness counts.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) dug: BTreeMap<Pos, u32>,
+    /// Special rooms (spec §7 "Special rooms"), none overlapping another, each with whether the
+    /// player has been inside it.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) rooms: Vec<SpecialRoom>,
 }
 
 impl LevelState {
@@ -79,6 +89,8 @@ impl LevelState {
             objects: template.objects.clone(),
             object_memory: BTreeMap::new(),
             fires: BTreeMap::new(),
+            dug: BTreeMap::new(),
+            rooms: template.rooms.clone(),
         }
     }
 
@@ -133,6 +145,49 @@ impl LevelState {
         }
     }
 
+    /// The special rooms of the level as they are now (ground truth: whether the player has been
+    /// inside each). Only reachable through [`crate::World::ground_truth`], **for developer tools
+    /// only**; the player knows the rooms they have entered
+    /// ([`crate::perception::PerceptionView::room`]).
+    pub fn rooms(&self) -> &[SpecialRoom] {
+        &self.rooms
+    }
+
+    /// The special room at `p`, if any.
+    pub(crate) fn room_at(&self, p: Pos) -> Option<&SpecialRoom> {
+        self.rooms.iter().find(|r| r.contains(p))
+    }
+
+    /// The effect of the special room at `p`, if any (spec §7 "Special rooms"): the one question
+    /// the rules ask of special rooms (light, creature sight, noise, regeneration, creatures that
+    /// shun a sanctuary). [`crate::World::room_effect_at`] asks it of any level.
+    pub(crate) fn room_effect_at<'c>(
+        &self,
+        content: &'c Content,
+        p: Pos,
+    ) -> Option<&'c RoomEffectDef> {
+        if self.rooms.is_empty() {
+            return None;
+        }
+        self.room_at(p).map(|r| content.room_effect(r.effect))
+    }
+
+    /// `light` at `p` as a special room there leaves it: a shadowed room keeps only part of it
+    /// (spec §5 "Special rooms"). Every part of a cell's light goes through this: its base light
+    /// and each source's contribution, so they still add up to the whole.
+    pub(crate) fn room_shade(&self, content: &Content, p: Pos, light: Light) -> Light {
+        match self.room_effect_at(content, p) {
+            Some(effect) => effect.shade(light),
+            None => light,
+        }
+    }
+
+    /// The glow a special room adds at `p` (a sanctuary's), lighting it like ambient light.
+    pub(crate) fn room_glow(&self, content: &Content, p: Pos) -> Light {
+        self.room_effect_at(content, p)
+            .map_or(Light::DARK, |effect| effect.glow)
+    }
+
     /// Opaque cells block sight. Out-of-bounds counts as opaque.
     pub(crate) fn is_opaque(&self, content: &Content, p: Pos) -> bool {
         self.terrain
@@ -150,9 +205,15 @@ impl LevelState {
         self.stairs.iter().find(|s| s.pos == p)
     }
 
-    /// Whether every terrain, light, and object id is valid for `content` (a guard for loaded
-    /// saves).
+    /// Whether every terrain, light, object, and room effect id is valid for `content`, and the
+    /// special rooms are well formed and apart (a guard for loaded saves).
     pub(crate) fn ids_valid_for(&self, content: &Content) -> bool {
+        let effects = content.room_effects().defs().len();
+        let rooms_ok = self.rooms.iter().enumerate().all(|(i, r)| {
+            usize::from(r.effect.0) < effects
+                && r.is_valid_within(self.width(), self.height())
+                && self.rooms[..i].iter().all(|o| !o.overlaps(r))
+        });
         let terrain = content.terrain_defs().len();
         let lights = content.light_presets().len();
         let known = |t: &TerrainId| usize::from(t.0) < terrain;
@@ -162,6 +223,7 @@ impl LevelState {
             && self.lights.values().all(|l| usize::from(l.0) < lights)
             && self.fires.values().all(|f| usize::from(f.light.0) < lights)
             && piles.flatten().all(|s| s.is_valid_for(content))
+            && rooms_ok
     }
 }
 

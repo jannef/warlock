@@ -21,6 +21,7 @@
 //! shown to the player as a number but their own hit points and Defence: never a to-hit, a
 //! modifier, or a roll.
 
+use crate::content::Benefit;
 use crate::dice::Dice;
 use crate::rng::Rng;
 use crate::stats::{Stat, Stats};
@@ -292,12 +293,27 @@ impl Profile {
         Self::of(attack, attack.to_hit + dexterity - short, -short)
     }
 
-    /// The same, thrown whole though not made for throwing: [`IMPROVISED_TO_HIT`] to hit.
-    pub fn improvised(attack: &Attack, stats: &Stats) -> Self {
-        let thrown = Self::thrown(attack, stats);
+    /// This attack with what a weapon skill's rank gives (spec §8 "Weapon skills"): more to
+    /// hit, more to every roll of the damage, and a wider threat range (never past a natural
+    /// 2).
+    pub fn with(self, benefit: &Benefit) -> Self {
         Self {
-            to_hit: thrown.to_hit + IMPROVISED_TO_HIT,
-            ..thrown
+            to_hit: self.to_hit + benefit.to_hit,
+            bonus: self.bonus + benefit.damage,
+            threat: self
+                .threat
+                .saturating_sub(benefit.threat)
+                .max(*THREATS.start()),
+            ..self
+        }
+    }
+
+    /// This throw, of a weapon thrown whole though not made for throwing: [`IMPROVISED_TO_HIT`]
+    /// to hit.
+    pub fn improvised(self) -> Self {
+        Self {
+            to_hit: self.to_hit + IMPROVISED_TO_HIT,
+            ..self
         }
     }
 

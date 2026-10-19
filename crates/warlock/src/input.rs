@@ -3,8 +3,8 @@
 //! [`route_keys`] reads every key press exactly once. While a screen is open (the screen stack is
 //! not empty) the press goes to the top screen; otherwise it is a gameplay command, read through
 //! the bindings in the current [`InputMode`]. Prompts in the message line (the direction for
-//! open/close, how long to rest, look mode, aiming a shot or a throw) are input modes, not
-//! screens.
+//! open/close and for digging, how long to rest, look mode, aiming a shot or a throw) are input
+//! modes, not screens.
 //!
 //! Letter and symbol commands bind by *logical* key (the character the keyboard layout produces),
 //! so `<`, `>`, and `?` work on any layout. Arrows and the numpad bind by physical key code.
@@ -47,6 +47,8 @@ pub enum KeyCommand {
     Character,
     /// Show the player's trained skills and their values (no time passes).
     Skills,
+    /// Show the player's weapon skills: ranks and marks (no time passes).
+    WeaponSkills,
     /// Ask how long to rest (an hour, until dawn, until dusk).
     Rest,
     /// Move a cursor over the map to read what is there (no time passes).
@@ -58,8 +60,19 @@ pub enum KeyCommand {
     Fire,
     /// Choose something to throw from the pack, aim it, then throw.
     Throw,
+    /// Bash with the shield held, in a direction (asked for in the message line). An ability
+    /// (`warlock_core::ability`): unbound by default, for the abilities menu to come (#156).
+    Bash,
     /// While aiming: the cursor to the next creature in view (with Shift, the one before).
     NextTarget,
+    /// Take a more aggressive combat stance (Coward, Defensive, Neutral, Aggressive; no time
+    /// passes).
+    MoreAggressive,
+    /// Take a more defensive combat stance (the other way).
+    MoreDefensive,
+    /// Use the tool the player has ready toward a direction (ADOM's `U`): dig into a wall with a
+    /// pick-axe. An item's use, not an ability (abilities get a menu of their own).
+    UseTool,
     /// Dev: switch to the next vision profile.
     CycleVision,
     /// Dev: move the clock an hour ahead at once.
@@ -75,6 +88,31 @@ pub enum KeyCommand {
     Quit,
     Snapshot,
     LoadSnapshot,
+    /// On an info screen: switch to page `n` (1 to 9) of the info screens.
+    Page(u8),
+    /// On an info screen: the next page (with Shift, the one before).
+    NextPage,
+    /// On an info screen: the previous page.
+    PrevPage,
+}
+
+/// Where a command is read. Keys must be unique within a context, not across contexts, so a key
+/// can mean one thing in play and another on an info screen (Tab: next target, next page).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Context {
+    /// In play: the map, prompts, look mode, and aiming.
+    Play,
+    /// On an info screen ([`crate::ui`]'s numbered pages).
+    Pages,
+}
+
+impl KeyCommand {
+    pub fn context(self) -> Context {
+        match self {
+            KeyCommand::Page(_) | KeyCommand::NextPage | KeyCommand::PrevPage => Context::Pages,
+            _ => Context::Play,
+        }
+    }
 }
 
 impl KeyCommand {
@@ -94,12 +132,17 @@ impl KeyCommand {
             KeyCommand::Equipment => "Equipment",
             KeyCommand::Character => "Character",
             KeyCommand::Skills => "Skills",
+            KeyCommand::WeaponSkills => "Weapon skills",
             KeyCommand::Rest => "Rest",
             KeyCommand::Look => "Look around",
             KeyCommand::Missile => "Throw or shoot the missile weapon",
             KeyCommand::Fire => "Fire missile weapon",
             KeyCommand::Throw => "Throw from the pack",
+            KeyCommand::MoreAggressive => "More aggressive stance",
+            KeyCommand::MoreDefensive => "More defensive stance",
+            KeyCommand::Bash => "Bash with your shield",
             KeyCommand::NextTarget => "Next target (aiming; Shift: previous)",
+            KeyCommand::UseTool => "Use a tool (dig)",
             KeyCommand::CycleVision => "Next vision profile (dev)",
             KeyCommand::SkipHour => "Skip an hour (dev)",
             KeyCommand::NextWeather => "Next weather (dev)",
@@ -110,6 +153,9 @@ impl KeyCommand {
             KeyCommand::Quit => "Save and quit",
             KeyCommand::Snapshot => "Save snapshot (dev)",
             KeyCommand::LoadSnapshot => "Load snapshot (dev)",
+            KeyCommand::Page(_) => "Info page",
+            KeyCommand::NextPage => "Next info page (Shift: previous)",
+            KeyCommand::PrevPage => "Previous info page",
         }
     }
 }
@@ -203,15 +249,25 @@ impl Default for Bindings {
             (ch("e"), Equipment),
             (ch("@"), Character),
             (ch("S"), Skills),
+            (ch("W"), WeaponSkills),
             (ch("R"), Rest),
             (ch("x"), Look),
             (ch("t"), Missile),
             (ch("T"), Throw),
+            (ch("+"), MoreAggressive),
+            (ch("-"), MoreDefensive),
             (Code(KeyCode::Tab), NextTarget),
+            (ch("U"), UseTool),
             (ch("?"), Help),
             (Code(KeyCode::Escape), Cancel),
             (ch("Q"), Quit),
         ]);
+        for n in 1..=9u8 {
+            table.0.push((ch(&n.to_string()), Page(n)));
+        }
+        table.0.push((Code(KeyCode::Tab), NextPage));
+        table.0.push((Code(KeyCode::PageDown), NextPage));
+        table.0.push((Code(KeyCode::PageUp), PrevPage));
         if cfg!(debug_assertions) {
             table.add_dev_keys();
         }
@@ -234,20 +290,27 @@ impl Bindings {
         ];
         for entry in dev {
             // A key the player bound to something else stays theirs.
-            if !self.0.iter().any(|(k, _)| *k == entry.0) {
+            if self.owner(&entry.0).is_none() {
                 self.0.push(entry);
             }
         }
     }
 
+    /// The command a key press stands for in play.
     pub fn lookup(&self, input: &KeyboardInput) -> Option<KeyCommand> {
+        self.lookup_in(Context::Play, input)
+    }
+
+    fn lookup_in(&self, context: Context, input: &KeyboardInput) -> Option<KeyCommand> {
         // Physical bindings first: numpad keys also produce digit characters.
         self.0
             .iter()
+            .filter(|(_, c)| c.context() == context)
             .filter(|(k, _)| matches!(k, KeyBinding::Code(_)))
             .chain(
                 self.0
                     .iter()
+                    .filter(|(_, c)| c.context() == context)
                     .filter(|(k, _)| matches!(k, KeyBinding::Char(_))),
             )
             .find(|(k, _)| k.matches(input))
@@ -260,7 +323,7 @@ impl Bindings {
 pub enum InputMode {
     #[default]
     Normal,
-    /// Waiting for a direction for `Open` or `Close`.
+    /// Waiting for a direction for `Open`, `Close`, `Bash`, or `UseTool`.
     Direction(KeyCommand),
     /// Asking how long to rest ([`REST_CHOICES`]).
     Rest,
@@ -317,7 +380,10 @@ pub fn route_keys(
             // changed them.
             let (mut new_settings, mut new_bindings) = (settings.clone(), bindings.clone());
             let action = screens.stack.handle(
-                &Press::from_input(key),
+                &Press {
+                    shift: play.shift(),
+                    ..Press::from_input(key)
+                },
                 &mut new_settings,
                 &mut new_bindings,
             );
@@ -341,6 +407,7 @@ pub fn route_keys(
                 play.aim(AimKind::Throw(item));
             }
             ScreenAction::Open(name) => screens.open(name),
+            ScreenAction::Replace(name) => screens.replace(name),
             ScreenAction::Return(name) => screens.stack.return_to(name),
             ScreenAction::Choose(choice) => {
                 choices.write(choice);
@@ -363,6 +430,11 @@ pub struct Gameplay<'w> {
 }
 
 impl Gameplay<'_> {
+    /// Whether Shift is held.
+    fn shift(&self) -> bool {
+        self.held.pressed(KeyCode::ShiftLeft) || self.held.pressed(KeyCode::ShiftRight)
+    }
+
     /// Applies one key press in play. Returns the screen it opens: `?` help, or the pause menu
     /// on Esc when no prompt is open.
     fn press(&mut self, key: &KeyboardInput, bindings: &Bindings) -> Option<ScreenName> {
@@ -396,9 +468,7 @@ impl Gameplay<'_> {
                 InputMode::Aim(aim.step(dir, &game.world.perception()))
             }
             (InputMode::Aim(aim), KeyCommand::NextTarget) => {
-                let back =
-                    self.held.pressed(KeyCode::ShiftLeft) || self.held.pressed(KeyCode::ShiftRight);
-                InputMode::Aim(aim.cycle(&game.world.perception(), !back))
+                InputMode::Aim(aim.cycle(&game.world.perception(), !self.shift()))
             }
             (InputMode::Aim(aim), KeyCommand::Missile | KeyCommand::Fire | KeyCommand::Throw) => {
                 // The key that started the aim confirms it, and so does `t`, which starts both.
@@ -455,10 +525,11 @@ impl Gameplay<'_> {
             (InputMode::Look(at), _) => InputMode::Look(at),
             (InputMode::Normal, KeyCommand::Look) => InputMode::Look(game.world.player_pos()),
             (InputMode::Direction(cmd), KeyCommand::Move(dir)) => {
-                let action = if cmd == KeyCommand::Open {
-                    Action::Open(dir)
-                } else {
-                    Action::Close(dir)
+                let action = match cmd {
+                    KeyCommand::Open => Action::Open(dir),
+                    KeyCommand::Bash => Action::Bash(dir),
+                    KeyCommand::UseTool => Action::Dig(dir),
+                    _ => Action::Close(dir),
                 };
                 self.actions.write(PlayerAction(action));
                 InputMode::Normal
@@ -529,6 +600,20 @@ impl Gameplay<'_> {
                 open = Some(ScreenName::Skills);
                 InputMode::Normal
             }
+            (InputMode::Normal, KeyCommand::MoreAggressive | KeyCommand::MoreDefensive) => {
+                let now = game.world.perception().own_stance();
+                let next = if command == KeyCommand::MoreAggressive {
+                    now.more_aggressive()
+                } else {
+                    now.more_defensive()
+                };
+                self.actions.write(PlayerAction(Action::SetStance(next)));
+                InputMode::Normal
+            }
+            (InputMode::Normal, KeyCommand::WeaponSkills) => {
+                open = Some(ScreenName::WeaponSkills);
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::CycleVision) => {
                 let view = game.world.perception();
                 let next = next_vision(view.content().vision_profiles(), &view.vision().id);
@@ -554,8 +639,17 @@ impl Gameplay<'_> {
                 self.overlays.light_values = !self.overlays.light_values;
                 InputMode::Normal
             }
-            (InputMode::Normal, KeyCommand::Open | KeyCommand::Close) => {
+            (InputMode::Normal, KeyCommand::Open | KeyCommand::Close | KeyCommand::Bash) => {
                 InputMode::Direction(command)
+            }
+            (InputMode::Normal, KeyCommand::UseTool) => {
+                if game.world.perception().ready_to_dig().is_some() {
+                    InputMode::Direction(command)
+                } else {
+                    // Nothing to dig with: the rules say so ("You have no digging tool ready.").
+                    self.actions.write(PlayerAction(Action::Dig(Dir::N)));
+                    InputMode::Normal
+                }
             }
             (InputMode::Normal, KeyCommand::Help) => {
                 open = Some(ScreenName::Help);
@@ -577,6 +671,11 @@ impl Gameplay<'_> {
                 self.saves.write(SaveCommand::LoadSnapshot);
                 InputMode::Normal
             }
+            // Info screen keys: `lookup` never finds them in play.
+            (
+                InputMode::Normal,
+                KeyCommand::Page(_) | KeyCommand::NextPage | KeyCommand::PrevPage,
+            ) => InputMode::Normal,
         };
         if *self.mode != next {
             *self.mode = next;
@@ -679,7 +778,12 @@ mod tests {
             "f has no default key"
         );
         assert_eq!(keys(&b, KeyCommand::Throw), ["T"]);
+        assert_eq!(keys(&b, KeyCommand::WeaponSkills), ["W"]);
+        assert!(keys(&b, KeyCommand::Bash).is_empty(), "an ability: unbound");
+        assert_eq!(keys(&b, KeyCommand::MoreAggressive), ["+"]);
+        assert_eq!(keys(&b, KeyCommand::MoreDefensive), ["-"]);
         assert_eq!(keys(&b, KeyCommand::NextTarget), ["Tab"]);
+        assert_eq!(keys(&b, KeyCommand::UseTool), ["U"]);
     }
 
     #[test]

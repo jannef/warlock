@@ -796,7 +796,9 @@ fn a_melee_weapon_in_the_missile_slot_is_thrown_whole_with_a_penalty() {
     let attack = club.attack.as_ref().expect("a weapon");
     let stats = &w.state().player().stats;
     assert_eq!(
-        crate::combat::Profile::improvised(attack, stats).to_hit,
+        crate::combat::Profile::thrown(attack, stats)
+            .improvised()
+            .to_hit,
         crate::combat::Profile::thrown(attack, stats).to_hit + crate::combat::IMPROVISED_TO_HIT
     );
     // Beyond its short range: refused. Within it: thrown, leaves the slot, lands.

@@ -11,10 +11,12 @@
 //! 4. The up staircase goes in one room, the down staircase in a room far from it.
 //! 5. Wall torches (sconces) in room corners light most rooms, always the arrival room.
 //! 6. A few creatures walk laps or back and forth in rooms.
+//! 7. Now and then a room other than the arrival room is special (`special.rs`): the room with
+//!    its walls and doors.
 
 use super::connect::cheapest_path;
-use super::{Canvas, Needs, vault};
-use crate::content::StairsDir;
+use super::{Canvas, Needs, special, vault};
+use crate::content::{SpecialRoom, StairsDir};
 use crate::geom::{Dir, Pos};
 use crate::rng::Rng;
 use std::collections::BTreeMap;
@@ -131,7 +133,26 @@ pub(super) fn build(canvas: &mut Canvas, rng: &mut Rng, needs: Needs) -> Option<
     let up_room = place_stairs(canvas, rng, &rooms, needs)?;
     light_rooms(canvas, rng, &rooms, up_room);
     patrols(canvas, rng, &rooms, up_room, needs);
+    special_rooms(canvas, rng, &rooms, up_room);
     Some(())
+}
+
+/// Rooms but the arrival room and vaults may be special, each with the content's chance (spec §7
+/// "Special rooms"): the room with its walls and doors, its effect's floor over its own.
+fn special_rooms(canvas: &mut Canvas, rng: &mut Rng, rooms: &[Room], up_room: usize) {
+    for (i, room) in rooms.iter().enumerate() {
+        if room.vault || i == up_room {
+            continue;
+        }
+        let Some(effect) = special::roll(canvas, rng) else {
+            continue;
+        };
+        let (min, max) = (
+            Pos::new(room.x, room.y),
+            Pos::new(room.x + room.w - 1, room.y + room.h - 1),
+        );
+        special::make(canvas, SpecialRoom::rect(effect, min, max));
+    }
 }
 
 /// Stamps one vault at a random spot that leaves room for corridors to its entrances.

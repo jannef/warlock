@@ -166,7 +166,7 @@ mod tests {
         let ring = object(&c, "silver_ring");
         assert!(c.fits(ring, slot(&c, "left_ring")) && c.fits(ring, slot(&c, "right_ring")));
         assert!(!c.fits(object(&c, "apple"), slot(&c, "main_hand")));
-        // The slots come in ADOM's order, lettered a to l.
+        // The slots come in ADOM's order, lettered a to m.
         let names: Vec<&str> = c.slots().iter().map(|s| s.name.as_str()).collect();
         assert_eq!(
             names,
@@ -182,7 +182,8 @@ mod tests {
                 "Right ring",
                 "Feet",
                 "Missile weapon",
-                "Missiles"
+                "Missiles",
+                "Tool"
             ]
         );
         // A second ring goes on the other hand.

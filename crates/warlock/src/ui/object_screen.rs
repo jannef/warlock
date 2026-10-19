@@ -300,6 +300,9 @@ impl ObjectScreen {
             self.list.width(),
             count as i32 + extra,
         );
+        if self.list == ObjectList::Inventory {
+            super::info_tabs::draw_tabs(console, &panel, bindings, super::ScreenName::Inventory);
+        }
         let visible = (panel.body_rows() - (extra - 4)).max(1) as usize;
         let first = if read_only {
             self.cursor
@@ -471,6 +474,7 @@ mod tests {
             binding: Some(KeyBinding::Code(KeyCode::Space)),
             repeat: false,
             text: None,
+            shift: false,
         };
         screen.handle(&space, &b);
         assert_eq!(

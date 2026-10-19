@@ -17,7 +17,8 @@
 #
 # What is worn and wielded fights and protects (spec §8 "Combat": the weapon in the first hand
 # that holds one, the missile weapon in a `ready` slot, and every worn thing's armour, shield,
-# and parry in Defence); it also takes time to put on and off, and weighs what it weighs.
+# and parry in Defence), and a digging tool ready digs (spec §8 "Digging"); it also takes time to
+# put on and off, and weighs what it weighs.
 
 [[slot]]
 id = "head"
@@ -95,3 +96,10 @@ id = "missiles"
 name = "Missiles"
 action = "ready"
 mark = "quivered"
+
+# A tool ready to use: a pick-axe or a mattock to dig with (`U`, spec §8 "Digging").
+[[slot]]
+id = "tool"
+name = "Tool"
+action = "ready"
+mark = "in use"

@@ -29,7 +29,15 @@
 #   armour     Defence while worn (the Armour category); max_dex the most a worn armour lets
 #              Dexterity add to Defence
 #   shield     Defence while held (the Shield category)
-# Within a category only the best bonus counts.
+#   bash       a shield's damage dice when bashing with it (spec §8 "Weapon skills"); the
+#              wielder's Strength modifier adds to it, as to every melee blow
+# Within a category of Defence only the best bonus counts.
+#
+# Weapon skills (spec §8 "Weapon skills"):
+#   category   the weapon skill a weapon trains and draws on (an id in weapon_skills.toml; every
+#              weapon names one): a melee skill for what is wielded in a hand, a launcher skill
+#              for a missile weapon, the thrown skill for what is only thrown (a rock). Every
+#              throw trains the thrown skill, whatever is thrown
 #
 # Ranged combat (spec §8 "Ranged combat"; `t` shoots or throws what is in the missile weapon slot, `T` chooses):
 #   range      how far a missile weapon shoots, in cells (required for one); anything else with a
@@ -44,6 +52,10 @@
 #   light      the light preset (lights.toml) it gives while it burns where it lies, and
 #   burns      for how many seconds of game time it burns there; then it is gone. A burning
 #              object cannot be picked up
+# Digging (spec §8 "Digging"; ready a tool in the Tool slot, then use it with `U`):
+#   dig        a digging tool's power (1 to 100): each turn of digging does power × (Strength +
+#              10) / 20 work against a wall's hardness (terrain.toml), so a pick-axe (10) does 10
+#              at Strength 10. A tool goes in a `slot` (the Tool slot)
 # Presentation only (no rule reads them):
 #   missile    the glyph it flies as, drawn pointing right and turned along its flight (default:
 #              its own glyph, upright)
@@ -65,6 +77,7 @@ material = "steel"
 weight = 450
 slot = "main_hand"
 damage = "1d4"
+category = "daggers"
 threat = 20
 # Balanced for throwing: it tumbles end over end.
 range = 5
@@ -80,6 +93,7 @@ material = "steel"
 weight = 1100
 slot = "main_hand"
 damage = "1d6"
+category = "short_blades"
 threat = 20
 
 [[object]]
@@ -91,6 +105,7 @@ material = "wood"
 weight = 1800
 slot = "main_hand"
 damage = "1d8"
+category = "spears"
 crit = 3
 # Thrown point first.
 range = 6
@@ -105,6 +120,7 @@ material = "wood"
 weight = 1400
 slot = "main_hand"
 damage = "1d6"
+category = "maces"
 
 [[object]]
 id = "quarterstaff"
@@ -117,6 +133,7 @@ weight = 2000
 slot = "main_hand"
 two_handed = true
 damage = "1d6"
+category = "staves"
 # Held across the body: it turns blows aside.
 parry = 1
 
@@ -132,6 +149,7 @@ weight = 700
 slot = "missile_weapon"
 launches = "arrow"
 damage = "1d6"
+category = "bows"
 crit = 3
 strength = 10
 range = 10
@@ -146,6 +164,7 @@ weight = 1300
 slot = "missile_weapon"
 launches = "arrow"
 damage = "1d8+2"
+category = "bows"
 crit = 3
 strength = 14
 range = 15
@@ -160,6 +179,7 @@ weight = 3200
 slot = "missile_weapon"
 launches = "bolt"
 damage = "1d10+1"
+category = "crossbows"
 threat = 20
 range = 13
 reloads = true
@@ -174,6 +194,7 @@ weight = 100
 slot = "missile_weapon"
 launches = "stone"
 damage = "1d4"
+category = "slings"
 range = 9
 
 # Missiles, for the missile weapons that shoot them.
@@ -323,6 +344,7 @@ material = "wood"
 weight = 2500
 slot = "off_hand"
 shield = 1
+bash = "1d3"
 
 [[object]]
 id = "leather_gloves"
@@ -345,6 +367,28 @@ weight = 1000
 slot = "feet"
 
 # Tools
+# Digging tools go in the Tool slot. A pick-axe digs through a stone wall in six minutes at
+# Strength 10; the heavier mattock does it in four.
+[[object]]
+id = "pick_axe"
+name = "pick-axe"
+glyph = "("
+fg = "#b8b0a4"
+material = "iron"
+weight = 3000
+slot = "tool"
+dig = 10
+
+[[object]]
+id = "mattock"
+name = "mattock"
+glyph = "("
+fg = "#a49680"
+material = "iron"
+weight = 4500
+slot = "tool"
+dig = 15
+
 [[object]]
 id = "iron_key"
 name = "iron key"
@@ -432,6 +476,7 @@ material = "stone"
 weight = 800
 stackable = true
 damage = "1d3"
+category = "thrown"
 range = 6
 missile = "•"
 
