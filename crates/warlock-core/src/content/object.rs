@@ -15,7 +15,12 @@
 //! (a launcher's carry its draw weight, `1d8+2`), its critical (`threat`, the lowest natural roll
 //! that threatens, default 22; `crit`, the damage multiplier, default 2), an optional `to_hit`,
 //! a `parry` bonus to Defence while wielded, and for bows the `strength` they need; armour its
-//! `armour` bonus and the most Dexterity bonus it allows (`max_dex`); a shield its `shield` bonus.
+//! `armour` bonus and the most Dexterity bonus it allows (`max_dex`); a shield its `shield` bonus,
+//! and the `bash` dice of a blow with it (spec §8 "Weapon skills": the shield bash).
+//!
+//! Every weapon names its weapon skill (`category`, an id in `data/weapon_skills.toml`; spec §8
+//! "Weapon skills"): a skill of role `melee` for what is wielded in a hand, `launcher` for a
+//! missile weapon, `thrown` for what is only thrown (a rock).
 //!
 //! Ranged combat (spec §8 "Ranged combat"): a missile weapon shoots as far as its `range` (and
 //! one that `reloads`, a crossbow, takes the `reload` action after every shot); anything else
@@ -32,6 +37,9 @@
 //! one ([`ObjectDef::corpse_of`]): "kobold corpse", `%` in the creature's color, weighing what
 //! the creature does, feeding by its size. Level files cannot place them: they lie where
 //! creatures died, each with the moment it died ([`Stack::died`]), from which it rots.
+//!
+//! Digging tools (spec §8 "Digging") have a `dig` power: the work a dig with one does against a
+//! wall's hardness (a pick-axe 10, at Strength 10). They go in a slot (the Tool slot).
 
 use super::creature::CreatureDef;
 use super::hunger::Food;
@@ -39,6 +47,7 @@ use super::light::LightId;
 use super::material::MaterialId;
 use super::particles::ParticleEmitter;
 use super::slot::SlotDef;
+use super::weapon_skill::{Role, WeaponSkillId, WeaponSkillTable};
 use super::{Content, ContentError, CreatureId};
 use crate::color::Rgb;
 use crate::combat::{Attack, CRITS, DEFAULT_CRIT, DEFAULT_THREAT, THREATS};
@@ -53,6 +62,8 @@ pub const MAX_BONUS: i32 = 20;
 pub const MAX_RANGE: i32 = crate::perception::VIEW_RADIUS;
 /// The longest anything burns where it lies, in seconds: a day.
 pub const MAX_BURN: u32 = DAY as u32;
+/// The most power a digging tool may have (a pick-axe has 10).
+pub const MAX_DIG: u16 = 100;
 
 /// Index of an object definition in [`super::Content::object_defs`].
 ///
@@ -110,6 +121,10 @@ pub(super) struct ObjectSpec {
     /// Defence while held (the Shield category).
     #[serde(default)]
     pub shield: i32,
+    /// A shield's damage dice when bashing with it.
+    pub bash: Option<Dice>,
+    /// The weapon skill a weapon trains and draws on (`data/weapon_skills.toml`).
+    pub category: Option<String>,
     /// How far a missile weapon shoots, or a throwing weapon (anything else with a range) is
     /// thrown, in cells.
     pub range: Option<i32>,
@@ -125,6 +140,8 @@ pub(super) struct ObjectSpec {
     pub light: Option<String>,
     /// How long it burns where it lands, in seconds of game time; then it is gone.
     pub burns: Option<u32>,
+    /// A digging tool's power (spec §8 "Digging"): how much work a dig with it does.
+    pub dig: Option<u16>,
     /// Presentation: the glyph it flies as, drawn pointing right and turned along its flight
     /// (default: its own glyph, upright).
     pub missile: Option<char>,
@@ -176,6 +193,11 @@ pub struct ObjectDef {
     pub max_dex: Option<i32>,
     /// Defence while held: its Shield bonus.
     pub shield: i32,
+    /// What a bash with it does, if it is a shield one can bash with.
+    pub bash: Option<Attack>,
+    /// Its weapon skill: a weapon's `category` (`None` for anything else, and without
+    /// `data/weapon_skills.toml`).
+    pub skill: Option<WeaponSkillId>,
     /// How far it shoots (a missile weapon) or is thrown (a throwing weapon), in cells.
     pub range: Option<i32>,
     /// A missile weapon reloaded after every shot: a shot also takes the `reload` action.
@@ -186,6 +208,9 @@ pub struct ObjectDef {
     pub lit: Option<ObjectId>,
     /// The light it gives where it lies, while it burns, and for how long it burns.
     pub burning: Option<Burning>,
+    /// A digging tool's power (spec §8 "Digging"): a dig with it at Strength 10 does this much
+    /// work against a wall's hardness ([`crate::world::dig_work`]). `None`: it does not dig.
+    pub dig: Option<u16>,
     /// Presentation: the glyph it flies as, pointing right; `None`: its glyph, upright.
     pub missile: Option<char>,
     /// Presentation: it tumbles as it flies.
@@ -235,11 +260,14 @@ impl ObjectDef {
             armour: 0,
             max_dex: None,
             shield: 0,
+            bash: None,
+            skill: None,
             range: None,
             reloads: false,
             breaks: 0,
             lit: None,
             burning: None,
+            dig: None,
             missile: None,
             spins: false,
             glow: 0.0,
@@ -252,6 +280,31 @@ impl ObjectDef {
     /// Whether it is a throwing weapon: it has a range and is no missile weapon.
     pub fn is_thrown(&self) -> bool {
         self.range.is_some() && self.launches.is_none()
+    }
+
+    /// Whether it can be thrown at all: a throwing weapon, or any other weapon that is no
+    /// missile weapon or ammunition, thrown whole and badly ([`ObjectDef::is_improvised`]).
+    pub fn can_throw(&self) -> bool {
+        self.is_thrown() || self.is_improvised()
+    }
+
+    /// Whether it is a weapon not made for throwing (a sword, a club): thrown whole, with
+    /// [`crate::combat::IMPROVISED_TO_HIT`] to hit, [`crate::combat::IMPROVISED_RANGE`] cells.
+    pub fn is_improvised(&self) -> bool {
+        self.attack.is_some()
+            && self.range.is_none()
+            && self.launches.is_none()
+            && self.ammo.is_none()
+    }
+
+    /// How far it is thrown, if it can be.
+    pub fn throw_range(&self) -> Option<i32> {
+        if self.is_thrown() {
+            self.range
+        } else {
+            self.is_improvised()
+                .then_some(crate::combat::IMPROVISED_RANGE)
+        }
     }
 
     /// Whether it flies: ammunition, or a throwing weapon.
@@ -278,15 +331,17 @@ pub fn article(noun: &str) -> &'static str {
 }
 
 impl ObjectSpec {
-    /// Checks the definition and resolves its material and light; `slots` are where things may
-    /// be worn or wielded. Returns the object and the id of what it is `lit` as, which names
-    /// another object and is resolved once every object is known.
+    /// Checks the definition and resolves its material, light, and weapon skill; `slots` are
+    /// where things may be worn or wielded, `skills` the weapon skills. Returns the object and
+    /// the id of what it is `lit` as, which names another object and is resolved once every
+    /// object is known.
     pub(super) fn resolve(
         self,
         file: &str,
         material: impl Fn(&str) -> Option<MaterialId>,
         light: impl Fn(&str) -> Option<LightId>,
         slots: &[SlotDef],
+        skills: &WeaponSkillTable,
     ) -> Result<(ObjectDef, Option<String>), ContentError> {
         let err = |m: String| ContentError::new(file, format!("object `{}`: {m}", self.id));
         if self.name.trim().is_empty() || self.plural.as_ref().is_some_and(|p| p.trim().is_empty())
@@ -327,6 +382,15 @@ impl ObjectSpec {
         let attack = self.attack().map_err(err)?;
         self.check_defence().map_err(err)?;
         self.check_ranged().map_err(err)?;
+        let skill = self.skill(slots, skills).map_err(err)?;
+        let bash = match (self.bash, self.shield) {
+            (None, _) => None,
+            (Some(damage), shield) if shield > 0 => Some(Attack {
+                damage,
+                ..Attack::unarmed()
+            }),
+            (Some(_), _) => return Err(err("`bash` is for shields (`shield`)".into())),
+        };
         let burning = match (&self.light, self.burns) {
             (None, None) => None,
             (Some(id), Some(seconds)) => {
@@ -349,6 +413,13 @@ impl ObjectSpec {
                 ));
             }
         }
+        if let Some(power) = self.dig
+            && (!(1..=MAX_DIG).contains(&power) || self.slot.is_none())
+        {
+            return Err(err(format!(
+                "`dig` is a digging tool's power, 1 to {MAX_DIG}, and a tool goes in a `slot`"
+            )));
+        }
         let plural = self.plural.unwrap_or_else(|| format!("{}s", self.name));
         let def = ObjectDef {
             id: self.id,
@@ -368,11 +439,14 @@ impl ObjectSpec {
             armour: self.armour,
             max_dex: self.max_dex,
             shield: self.shield,
+            bash,
+            skill,
             range: self.range,
             reloads: self.reloads,
             breaks: self.breaks,
             lit: None,
             burning,
+            dig: self.dig,
             missile: self.missile,
             spins: self.spins,
             glow: self.glow,
@@ -481,6 +555,50 @@ impl ObjectSpec {
         }))
     }
 
+    /// The weapon skill a weapon names (`category`): every weapon names one when there are
+    /// weapon skills, nothing else does, and its role fits what the weapon is: a missile weapon
+    /// a `launcher`, what is wielded in a hand `melee`, anything else (only thrown) `thrown`.
+    fn skill(
+        &self,
+        slots: &[SlotDef],
+        skills: &WeaponSkillTable,
+    ) -> Result<Option<WeaponSkillId>, String> {
+        let Some(name) = &self.category else {
+            if self.damage.is_some() && !skills.is_empty() {
+                return Err(
+                    "a weapon (`damage`) names its weapon skill (`category`, an id in \
+                     data/weapon_skills.toml)"
+                        .into(),
+                );
+            }
+            return Ok(None);
+        };
+        if self.damage.is_none() {
+            return Err("`category` is for weapons, which have a `damage`".into());
+        }
+        let id = skills
+            .id(name)
+            .ok_or_else(|| format!("unknown weapon skill `{name}` (data/weapon_skills.toml)"))?;
+        let in_hand = (slots.iter()).any(|s| s.hand && Some(&s.fits) == self.slot.as_ref());
+        let role = if self.launches.is_some() {
+            Role::Launcher
+        } else if in_hand {
+            Role::Melee
+        } else {
+            Role::Thrown
+        };
+        let has = skills.skill(id).role;
+        if has != role {
+            return Err(format!(
+                "`category = \"{name}\"` is a skill of role `{}`, but this weapon needs one of \
+                 role `{}`",
+                has.id(),
+                role.id()
+            ));
+        }
+        Ok(Some(id))
+    }
+
     /// Defence bonuses are for things worn or wielded, 0 to [`MAX_BONUS`].
     fn check_defence(&self) -> Result<(), String> {
         let bonuses = [
@@ -568,11 +686,14 @@ mod tests {
             armour: 0,
             max_dex: None,
             shield: 0,
+            bash: None,
+            skill: None,
             range: None,
             reloads: false,
             breaks: 0,
             lit: None,
             burning: None,
+            dig: None,
             missile: None,
             spins: false,
             glow: 0.0,

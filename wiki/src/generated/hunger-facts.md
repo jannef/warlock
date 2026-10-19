@@ -9,4 +9,4 @@
 | Overeating (a meal past the most) | never chokes; a 50% chance to vomit; else what does not fit is lost |
 | Vomiting leaves you with at most | 1000 (hungry); what made you vomit feeds nothing |
 | Corpses | rotten 8 hours after the death, gone after 36 hours |
-| Eating a rotten corpse | a 50% chance to vomit; else 1d4 hit points of harm, and it feeds you |
+| Eating a rotten corpse | a 50% chance to vomit; else it makes you sick (poisoned), and it feeds you |

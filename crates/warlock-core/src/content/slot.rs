@@ -6,7 +6,8 @@
 //! it off (its cost: `wield`, `wear`, `body_armor`, or `ready` in `data/actions.toml`), and the
 //! `mark` the inventory gives a thing there ("being worn"). Slots may share what fits them
 //! (`fits`, default the id): a ring fits either ring slot. The two `hand` slots are the hands: a
-//! two-handed object takes both.
+//! two-handed object takes both. A slot that `takes_weapons` also holds any weapon or
+//! throwable (the missile weapon slot).
 
 use super::{ActionKind, ContentError};
 use serde::{Deserialize, Serialize};
@@ -36,6 +37,9 @@ struct SlotSpec {
     mark: String,
     #[serde(default)]
     hand: bool,
+    /// Any weapon and anything thrown fits, besides what `fits` names.
+    #[serde(default)]
+    takes_weapons: bool,
 }
 
 #[derive(Deserialize)]
@@ -58,6 +62,9 @@ pub struct SlotDef {
     pub mark: String,
     /// One of the hands: a two-handed object takes every hand slot.
     pub hand: bool,
+    /// Any weapon (no missile weapon's ammunition) and any throwing weapon fits here too, besides
+    /// what `fits` names: the missile weapon slot, whose contents `t` throws or shoots.
+    pub takes_weapons: bool,
 }
 
 /// Parses `data/slots.toml`.
@@ -100,6 +107,7 @@ pub(super) fn parse(file: &str, text: &str) -> Result<Vec<SlotDef>, ContentError
             action,
             mark: spec.mark,
             hand: spec.hand,
+            takes_weapons: spec.takes_weapons,
         });
     }
     Ok(slots)

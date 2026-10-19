@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 90ee87239f6ede3ba139eb0003807aac1280b7b2b6c9a4c658f07827449e7924 # shrinks to cells = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 54, 78, 88, 53, 44, 41, 32, 54, 33, 88, 13, 79, 32, 89, 45, 29, 37, 29, 93, 15, 1, 8, 29, 81, 47, 61, 96, 62, 69, 64, 72, 39, 19, 14, 60, 37, 34, 49, 39, 28, 92, 36, 46, 96, 33, 11, 7, 56, 80, 43, 46, 11, 47, 71, 9, 8, 23, 25, 36, 33, 39, 56, 36, 37, 92, 99, 32, 5, 19, 86, 66, 13, 25, 40, 56, 88, 85, 99, 45, 77, 74, 53, 37, 98, 40, 28, 64, 85, 7, 5, 34, 84, 18, 96, 40, 74, 31, 57, 89, 58, 38, 45, 35, 91, 59, 71, 31, 27, 60, 1, 96, 31, 25, 51, 71, 16, 2, 72, 39, 22, 63, 50, 31, 66, 53, 49, 40, 65, 73, 3, 95, 13, 77, 79, 96, 99, 41, 96, 41, 78, 29, 46, 84, 48, 48, 61, 28, 13, 40, 33, 21, 78, 90, 22, 48, 32, 92, 76, 63, 86, 46, 6, 67, 72, 50, 18, 30, 18, 63, 25, 16, 20, 93, 11, 51, 96, 71, 7, 81, 88], vision = "uv_sight", ambient = 255, steps = [8, 5, 5, 8, 2, 8, 6, 6, 0, 8, 0]

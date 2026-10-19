@@ -2,8 +2,9 @@
 //!
 //! **A meal** ([`Action::Eat`](crate::Action::Eat): one of a stack from the pack or the floor)
 //! takes as many turns as the food says, each the `eat` action, and passes them like a rest
-//! ([`World::dine`]): it stops early after a turn in which a creature came into view or a message
-//! was logged that stops a rest ("You stop eating."), and the food is left as it was. Only when
+//! ([`World::dine`], through [`World::keep_at`]): it stops early after a turn in which a creature
+//! came into view or a message was logged that stops a rest ("You stop eating."), and the food is
+//! left as it was. Only when
 //! the last turn is done is one eaten, and it feeds: "You eat the ration." Then come what a
 //! corpse does when eaten and the news of the player's hunger ("You feel satiated.").
 //!
@@ -15,17 +16,23 @@
 //! **Corpses**: a creature that dies leaves one on top of its pile ([`World::leave_corpse`]), its
 //! death time in the stack. A corpse rots: rotten after `rotten_hours`, gone after `gone_hours`
 //! ([`World::rot_away`], from the level the player is on and from their pack). Eating a rotten
-//! one is risky (vomiting, else harm, and then it feeds); a fresh one feeds by its creature's
-//! size and does what its creature's `on_eat` says, in this order, each draw from the gameplay
-//! stream: its message, a chance to vomit, a chance per stat to raise it (up to its potential),
-//! healing, harm, and extra nutrition. The player learns what a corpse does only by eating it.
+//! one is risky (vomiting, else sickness, and then it feeds); a fresh one feeds by its
+//! creature's size and does what its creature's `on_eat` says, in this order, each draw from the
+//! gameplay stream: its message, a chance to vomit, a chance per stat to raise it (up to its
+//! potential), healing, harm, and extra nutrition. The player learns what a corpse does only by
+//! eating it.
+//!
+//! **Sickness**: harm from what was eaten is degrees of the status `[corpses] sickness` names
+//! (poisoned: spec §8 "Status effects"), given through [`World::afflict`], the one way to give a
+//! status; it costs hit points as time passes and may kill ("Died of poison").
 
-use super::{Actor, Cause, Spent, World, article};
-use crate::action::{Letters, Meal, letter};
+use super::{Actor, Cause, Ended, Spent, World};
+use crate::action::{Event, Letters, Meal, letter};
 use crate::content::{ActionKind, ObjectId};
 use crate::object::{self, Stack};
 use crate::stats::Stat;
 use crate::time::GameTime;
+use std::cell::Cell;
 
 /// A meal under way: where the food is, one of it as it lay when the meal began, and the turns
 /// it takes.
@@ -98,45 +105,37 @@ impl World {
         })
     }
 
-    /// Eats `dish` turn after turn through the normal pipeline (the player eats, the others act,
-    /// perception), each turn the `eat` action, stopping early after a turn in which a creature
-    /// came into view or a message was logged that stops a rest, or the player died. The food is
-    /// eaten only when the last turn is done; only the last turn's events are kept.
-    pub(super) fn dine(&mut self, dish: Dish, events: &mut Vec<crate::Event>) {
-        let said = self.said;
-        let mut in_view = self.creatures_in_view();
-        for turn in 1..=dish.turns {
-            events.clear();
-            let price = self.price_of(self.state.player, ActionKind::Eat);
-            self.run_turn(price, events);
-            self.perceive(events);
-            if self.state.death.is_some() {
-                return;
-            }
-            let now = self.creatures_in_view();
-            let came = now.iter().find(|a| !in_view.contains(a)).copied();
-            in_view = now;
-            if turn == dish.turns {
-                break;
-            }
-            if let Some(id) = came {
-                let creature = self.state.actors[&id].creature;
-                let name = &self.content.creature(creature).name;
-                let text = format!("{} {name} comes into view; you stop eating.", article(name));
+    /// Eats `dish` turn after turn through the normal pipeline ([`World::keep_at`]: the player
+    /// eats, the others act, perception), each turn the `eat` action, stopping early after a turn
+    /// in which a creature came into view or a message was logged that stops a rest, or the
+    /// player died. The food is eaten only when the last turn is done.
+    pub(super) fn dine(&mut self, dish: Dish, events: &mut Vec<Event>) {
+        let left = Cell::new(dish.turns);
+        let ended = self.keep_at(
+            events,
+            |_| left.get() > 0,
+            |w, _| {
+                left.set(left.get() - 1);
+                w.price_of(w.state.player, ActionKind::Eat)
+            },
+        );
+        match ended {
+            Ended::Died => {}
+            _ if left.get() == 0 => self.finish(dish, events),
+            Ended::Came(id) => {
+                let text = format!(
+                    "{} comes into view; you stop eating.",
+                    self.creature_called(id)
+                );
                 self.say(text);
-                return;
             }
-            if self.said != said {
-                self.say("You stop eating.");
-                return;
-            }
+            Ended::Said | Ended::Done => self.say("You stop eating."),
         }
-        self.finish(dish);
     }
 
     /// The last turn of a meal is done: one of the food is eaten (from where it lay, or the first
     /// like it there if the pile changed meanwhile), and it feeds and does what it does.
-    fn finish(&mut self, dish: Dish) {
+    fn finish(&mut self, dish: Dish, events: &mut Vec<Event>) {
         let burden = self.load_of(self.state.player).burden();
         if !self.take_one(dish.meal, dish.food) {
             self.say("There is nothing left to eat.");
@@ -151,11 +150,12 @@ impl World {
         let nutrition = def.food.map_or(0, |f| f.nutrition) as i32;
         match (def.corpse, self.rot(&dish.food)) {
             (Some(_), Some(Rot::Rotten | Rot::Gone)) => {
-                self.eat_rotten(nutrition, dish.food.object);
+                self.eat_rotten(nutrition, dish.food.object, events);
             }
             (Some(creature), _) => {
                 let on_eat = content.creature(creature).on_eat.clone();
-                self.eat_fresh(nutrition, dish.food.object, on_eat.unwrap_or_default());
+                let on_eat = on_eat.unwrap_or_default();
+                self.eat_fresh(nutrition, dish.food.object, on_eat, events);
             }
             (None, _) => self.feed(nutrition, dish.food.object),
         }
@@ -204,7 +204,13 @@ impl World {
     }
 
     /// A fresh corpse feeds by its size and does what its creature's `on_eat` says (module docs).
-    fn eat_fresh(&mut self, nutrition: i32, what: ObjectId, on_eat: crate::content::OnEat) {
+    fn eat_fresh(
+        &mut self,
+        nutrition: i32,
+        what: ObjectId,
+        on_eat: crate::content::OnEat,
+        events: &mut Vec<Event>,
+    ) {
         if let Some(text) = on_eat.message {
             self.say(text);
         }
@@ -222,28 +228,23 @@ impl World {
         }
         if let Some(heal) = on_eat.heal {
             let points = heal.roll(&mut self.state.rng);
+            let max = self.state.player().max_hp(&self.content);
             let player = self.player_mut();
-            let max = player.max_hp();
             if points > 0 && player.hp < max {
                 player.hp = player.hp.saturating_add(points).min(max);
                 self.say("You feel better.");
             }
         }
         if let Some(harm) = on_eat.harm {
-            let points = harm.roll(&mut self.state.rng);
-            if points > 0 {
-                self.say("You feel sick.");
-                self.suffer(points, Cause::Ate(what));
-                if self.state.death.is_some() {
-                    return;
-                }
-            }
+            let degrees = harm.roll(&mut self.state.rng);
+            self.sicken(degrees, events);
         }
         self.feed(nutrition.saturating_add(on_eat.satiation).max(0), what);
     }
 
-    /// A rotten corpse: the player vomits (a chance), else it harms them and then feeds them.
-    fn eat_rotten(&mut self, nutrition: i32, what: ObjectId) {
+    /// A rotten corpse: the player vomits (a chance), else it makes them sick and then feeds
+    /// them.
+    fn eat_rotten(&mut self, nutrition: i32, what: ObjectId, events: &mut Vec<Event>) {
         let content = self.content.clone();
         let Some(corpses) = content.hunger().and_then(|h| h.corpses.as_ref()) else {
             return;
@@ -256,15 +257,38 @@ impl World {
             self.vomit();
             return;
         }
-        let harm = corpses.rotten_harm.roll(&mut self.state.rng);
-        if harm > 0 {
-            self.say("You feel sick.");
-            self.suffer(harm, Cause::Ate(what));
-            if self.state.death.is_some() {
-                return;
-            }
-        }
+        let degrees = corpses.rotten_harm.roll(&mut self.state.rng);
+        self.sicken(degrees, events);
+        // Diseases (#139) will expose the eater to rotten food here too
+        // (`World::expose_to(player, "rotten_food")`), once they land.
         self.feed(nutrition, what);
+    }
+
+    /// What the player ate makes them sick: `degrees` of the status `[corpses] sickness` names
+    /// (none for 0 or less), given through [`World::afflict`]. Its beginning is said at once ("You
+    /// feel sick."), in order with the meal's other messages.
+    fn sicken(&mut self, degrees: i32, events: &mut Vec<Event>) {
+        let sickness = (self.content.hunger())
+            .and_then(|h| h.corpses.as_ref())
+            .and_then(|c| self.content.status_id(c.sickness.as_deref()?));
+        let (Some(status), Ok(degrees @ 1..)) = (sickness, u16::try_from(degrees)) else {
+            return;
+        };
+        let from = events.len();
+        self.afflict(self.state.player, status, degrees, None, events);
+        let began: Vec<String> = (events[from..].iter())
+            .filter_map(|e| match *e {
+                Event::Status {
+                    status,
+                    began: true,
+                    ..
+                } => self.content.status(status).start.clone(),
+                _ => None,
+            })
+            .collect();
+        for text in began {
+            self.say(text);
+        }
     }
 
     /// The player gains `points` of nutrition from `what`. A meal that would go past the most
@@ -281,7 +305,7 @@ impl World {
         if nutrition.saturating_add(points) > def.max {
             let o = def.overeating;
             if o.choke > 0 && self.state.rng.chance(u32::from(o.choke)) {
-                self.suffer(i32::MAX, Cause::Choked(what));
+                self.die_of(Cause::Choked(what), self.state.time);
                 return;
             }
             if o.vomit > 0 && self.state.rng.chance(u32::from(o.vomit)) {

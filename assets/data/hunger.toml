@@ -61,14 +61,16 @@ vomit = 50
 # Corpses: a creature that dies leaves one (`corpse = false` in creatures.toml for none), made of
 # `material` and weighing what the creature did. It is fresh, then rotten `rotten_hours` after
 # the death, and gone `gone_hours` after it; it does not show its age. Eating a rotten one makes
-# you vomit with a `rotten_vomit` percent chance, else harms you (`rotten_harm`, dice of hit
-# points) and feeds you; its creature's `on_eat` effects are gone from it.
+# you vomit with a `rotten_vomit` percent chance, else makes you sick (`rotten_harm`, dice of
+# degrees of the `sickness` status, status.toml) and feeds you; its creature's `on_eat` effects
+# are gone from it. A creature's `on_eat` harm is degrees of the same sickness.
 [corpses]
 material = "flesh"
 rotten_hours = 8
 gone_hours = 36
 rotten_vomit = 50
 rotten_harm = "1d4"
+sickness = "poisoned"
 
 # What a corpse gives by its creature's size (sizes.toml; every size needs one): its nutrition,
 # and how many turns of eating (the `eat` action, actions.toml) it takes.

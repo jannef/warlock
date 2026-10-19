@@ -15,7 +15,8 @@ of 10 (see [Your character](character.md)). After that, nothing changes them yet
 
 Press `@` to open the **character screen**. It shows your name, your race, gender, and class,
 your age, birthday, and [birth sign](horoscope.md), your stats in the order above (with their
-short names), your hit points and Defence (see [Combat](combat.md)), your weight: your own,
+short names; a stat that a status effect lowers is shown lowered, in red), your hit points and
+Defence (see [Combat](combat.md)), your weight: your own,
 plus what you carry (see [Objects and your pack](objects.md)), and how much you can carry (see
 [Burden](burden.md)). Looking takes no time; press `@` or `Esc` to close it.
 
@@ -33,6 +34,8 @@ In a fight (see [Combat](combat.md)), and under a load (see [Burden](burden.md))
   you can carry.
 
 The other three do nothing yet. Stats do not change how far you see or how quietly you walk.
-Hunger saps them for a while (Weak lowers your Strength and Dexterity; see [Hunger](hunger.md)),
-and eating the corpse of some creatures may raise one for good, as far as it can grow (see
-[Food and corpses](food.md)); nothing else raises or lowers them.
+Strong poison lowers your Strength and Dexterity by one while it lasts, for everything they do
+(see [Status effects](status-effects.md)), and hunger saps them for a while (Weak lowers your
+Strength and Dexterity; see [Hunger](hunger.md)); eating the corpse of some creatures may raise
+one for good, as far as it can grow (see [Food and corpses](food.md)). Nothing else raises or
+lowers them.

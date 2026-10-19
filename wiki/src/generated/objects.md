@@ -23,6 +23,8 @@
 | Small shield | `[` | armor | wood | 2.5 kg | no | Off hand |
 | Pair of leather gloves | `[` | armor | leather | 250 g | no | Hands |
 | Pair of leather boots | `[` | armor | leather | 1 kg | no | Feet |
+| Pick-axe | `(` | tool | iron | 3 kg | no | Tool |
+| Mattock | `(` | tool | iron | 4.5 kg | no | Tool |
 | Iron key | `(` | tool | iron | 40 g | no | - |
 | Wax candle | `(` | tool | wax | 100 g | yes | - |
 | Coil of rope | `(` | tool | cloth | 1.5 kg | no | - |
@@ -33,7 +35,7 @@
 | Apple | `%` | food | plant matter | 150 g | yes | - |
 | Food ration | `%` | food | plant matter | 500 g | yes | - |
 | Loaf of bread | `%` | food | plant matter | 400 g | yes | - |
-| Rock | `*` | stone or gem | stone | 800 g | yes | Missiles |
+| Rock | `*` | stone or gem | stone | 800 g | yes | Missile weapon |
 | Ruby | `*` | stone or gem | gemstone | 5 g | yes | - |
 | Gold coin | `$` | coin | gold | 10 g | yes | - |
 | Copper coin | `$` | coin | copper | 8 g | yes | - |

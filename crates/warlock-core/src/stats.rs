@@ -5,8 +5,8 @@
 //! Every actor has a **score** in each stat, [`AVERAGE`] (10) unless its creature type (or, for
 //! the player, the scenario) says otherwise, and a **potential**: the natural ceiling the score
 //! could grow towards, ADOM-like. Only eating a corpse raises a score yet ([`Stats::raise`], up
-//! to the potential; spec §8 "Hunger"), and hunger lowers the scores the rules use for a while
-//! ([`Stats::adjusted`]: Weak).
+//! to the potential; spec §8 "Hunger"), and status effects and hunger lower the scores the rules
+//! use for a while ([`Stats::adjusted_by`]: strong poison, Weak).
 //!
 //! The **modifier** of a score follows D&D 3.5: `floor((score − 10) / 2)` ([`modifier`]). It is
 //! for the rules only. The player sees their own scores
@@ -307,14 +307,15 @@ impl Stats {
         rises
     }
 
-    /// These stats with each score adjusted by `by` (kept within [`SCORES`]) for as long as
-    /// something lasts: the effective scores (spec §8 "Hunger": Weak). Potentials stay.
-    pub fn adjusted(&self, by: &PerStat<i32>) -> Self {
-        let mut out = *self;
+    /// These stats with every score adjusted by `by` (kept within [`SCORES`]; a potential below
+    /// its score is raised to it): the scores the rules read while a status effect lowers some
+    /// (spec §8 "Status effects").
+    pub fn adjusted_by(&self, by: &PerStat<i32>) -> Self {
+        let mut score = self.score;
         for stat in Stat::ALL {
-            out.score[stat] = adjusted(self.score[stat], by[stat]);
+            score[stat] = adjusted(score[stat], by[stat]);
         }
-        out
+        Self::new(score, self.potential)
     }
 }
 

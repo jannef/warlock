@@ -130,6 +130,12 @@ fn hunger(w: &World) -> Hunger {
     w.perception().own_hunger().expect("the player hungers")
 }
 
+/// Whether the player is sick from what they ate: poisoned (`[corpses] sickness`).
+fn sick(w: &World) -> bool {
+    let poisoned = w.content().status_id("poisoned").expect("poison");
+    w.state.player().effects.get(poisoned).is_some()
+}
+
 fn object(w: &World, id: &str) -> ObjectId {
     w.content().object_id(id).unwrap_or_else(|| panic!("{id}"))
 }
@@ -305,6 +311,46 @@ fn starving_takes_hit_points_until_the_player_starves_to_death() {
     fed.state.actors.get_mut(&player).unwrap().hp = 30;
     run(&mut fed, "rest:1h");
     assert!(fed.state.player().hp > 30);
+}
+
+#[test]
+fn hunger_does_not_depend_on_how_time_is_cut() {
+    // Hurt, a few minutes short of starving: hours later it makes no difference whether the time
+    // passed at once or second by second. Healing stops exactly as starving begins, and the
+    // player starves to death at the same moment.
+    let content = content_with(&[("chance = 5", "chance = 0")]);
+    let hurt = || {
+        let mut w = world_in(&content, "pantry");
+        set_nutrition(&mut w, 3);
+        let player = w.state.player;
+        w.state.actors.get_mut(&player).unwrap().hp = 6;
+        w
+    };
+    let mut events = Vec::new();
+    let (mut at_once, mut cut) = (hurt(), hurt());
+    let (player, start) = (at_once.state.player, at_once.state.time);
+    let hours = 2 * 3600;
+    at_once.pass_time(std::iter::once(player), start, hours, &mut events);
+    for s in 0..hours {
+        cut.pass_time(
+            std::iter::once(player),
+            start + Duration::seconds(s),
+            1,
+            &mut events,
+        );
+    }
+    for w in [&at_once, &cut] {
+        assert_eq!(w.state.player().satiation, at_once.state.player().satiation);
+        assert_eq!(w.state.player().hp, at_once.state.player().hp);
+        assert_eq!(w.state.player().regen, at_once.state.player().regen);
+    }
+    let death = at_once.death().expect("starved");
+    assert_eq!(death.cause, Some(Cause::Starvation));
+    assert_eq!(cut.death().map(|d| d.time), Some(death.time));
+    assert!(
+        death.time > start + Duration::seconds(3600),
+        "after an hour of starving"
+    );
 }
 
 #[test]
@@ -496,7 +542,7 @@ fn a_fresh_corpse_feeds_by_size_and_does_what_its_creature_says() {
 }
 
 #[test]
-fn a_rotten_corpse_makes_you_vomit_or_harms_you() {
+fn a_rotten_corpse_makes_you_vomit_or_sick() {
     for (vomit, vomited) in [("rotten_vomit = 100", true), ("rotten_vomit = 0", false)] {
         let content = content_with(&[("rotten_vomit = 50", vomit)]);
         let mut w = world_in(&content, "pantry");
@@ -515,11 +561,31 @@ fn a_rotten_corpse_makes_you_vomit_or_harms_you() {
         if vomited {
             assert_eq!(nutrition(&w), 1000);
             assert_eq!(w.state.player().hp, hp);
+            assert!(!sick(&w));
         } else {
+            // Food poisoning: a status (spec §8 "Status effects") that costs hit points as time
+            // passes.
             assert!(said(&w, "You feel sick."));
-            assert!(w.state.player().hp < hp);
+            assert!(sick(&w));
             assert!(nutrition(&w) > 3900, "and it feeds");
+            run(&mut w, "wait*25");
+            assert!(w.state.player().hp < hp);
         }
+    }
+}
+
+#[test]
+fn harm_from_food_is_a_known_sickness() {
+    let sickness = "sickness = \"poisoned\"\n";
+    for (to, refused) in [
+        ("sickness = \"gout\"\n", "unknown sickness `gout`"),
+        ("", "need a `sickness`"),
+    ] {
+        let mut files = ContentFiles::builtin();
+        assert!(HUNGER.contains(sickness));
+        files.insert("data/hunger.toml", &HUNGER.replace(sickness, to));
+        let e = Content::load(&files).expect_err("refused").to_string();
+        assert!(e.contains(refused), "{e}");
     }
 }
 
@@ -556,12 +622,12 @@ fn eating_a_corpse_may_raise_a_stat_up_to_its_potential() {
         (s.score(Stat::Toughness), s.potential(Stat::Toughness))
     };
     assert!(score < potential);
-    let max_hp = w.state.player().max_hp();
+    let max_hp = w.state.player().max_hp(w.content());
     w.apply(&Action::Eat(Meal::Floor(0)));
     assert!(said(&w, "Crunchy."));
     assert!(said(&w, "You feel tougher!"));
     assert_eq!(w.state.player().stats.score(Stat::Toughness), score + 1);
-    assert_eq!(w.state.player().max_hp(), max_hp + 1);
+    assert_eq!(w.state.player().max_hp(w.content()), max_hp + 1);
     // At its potential, nothing rises (and nothing says so).
     let mut capped = with_corpse(&content, "beetle", None);
     let stats = capped.state.player().stats;
@@ -589,11 +655,13 @@ fn corpses_heal_harm_feed_more_or_come_back_up() {
     // 1000 for a medium corpse and 1000 more: bloated, past the satiated.
     assert!(nutrition(&w) >= 5590, "{}", nutrition(&w));
     assert_eq!(hunger(&w), Hunger::Bloated);
-    // The bat disagrees with the eater.
+    // The bat disagrees with the eater: it makes them sick, which costs hit points in time.
     let mut w = with_corpse(&content, "bat", None);
     let hp = w.state.player().hp;
     w.apply(&Action::Eat(Meal::Floor(0)));
     assert!(said(&w, "You feel sick."));
+    assert!(sick(&w));
+    run(&mut w, "wait*25");
     assert!(w.state.player().hp < hp);
     // The kobold may come back up: a sure thing here.
     let sure = {

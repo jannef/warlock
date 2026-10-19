@@ -100,6 +100,8 @@ struct CorpseSpec {
     gone_hours: u32,
     rotten_vomit: u8,
     rotten_harm: Dice,
+    #[serde(default)]
+    sickness: Option<String>,
     size: BTreeMap<String, Food>,
 }
 
@@ -137,8 +139,12 @@ pub struct Corpses {
     pub gone: Duration,
     /// The chance in percent that a rotten corpse makes the eater vomit.
     pub rotten_vomit: u8,
-    /// The hit points a rotten corpse that stays down costs.
+    /// The degrees of sickness a rotten corpse that stays down gives.
     pub rotten_harm: Dice,
+    /// What harm from eating is (spec §8 "Status effects"): a status id in `data/status.toml`
+    /// (checked when content loads), `poisoned`; `rotten_harm` and a creature's `on_eat` `harm`
+    /// are degrees of it. `None`: nothing eaten harms.
+    pub sickness: Option<String>,
     /// What a corpse gives, by the index of its creature's size in [`super::Content::sizes`].
     pub sizes: Vec<Food>,
 }
@@ -360,6 +366,7 @@ impl Corpses {
             gone: hours(spec.gone_hours),
             rotten_vomit: spec.rotten_vomit,
             rotten_harm: spec.rotten_harm,
+            sickness: spec.sickness,
             sizes,
         })
     }

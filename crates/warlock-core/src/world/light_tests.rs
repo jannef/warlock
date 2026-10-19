@@ -151,6 +151,26 @@ const LEGEND: &str = r##"
 "k" = { terrain = "floor", creature = "kobold" }
 "##;
 
+/// Special rooms (spec §7 "Special rooms"): a shadowed room keeping 30 % of the light, and a
+/// sanctuary with a glow (some of it UV, which only UV sight perceives).
+const ROOM_EFFECTS: &str = r##"
+[[effect]]
+id = "shadowed"
+name = "shadowed room"
+mark = "s"
+enter = "The light seems to drain away here."
+light = 30
+
+[[effect]]
+id = "sanctuary"
+name = "sanctuary"
+mark = "p"
+enter = "You feel at peace here."
+glow = [60, 44, 22, 8]
+regen = 300
+shunned = true
+"##;
+
 /// A world on a single level with `map`, `ambient` light, and the fixture definitions above. The
 /// player starts with `vision` and an unlit lantern.
 fn world_with(map: &str, ambient: [u16; 4], vision: &str) -> World {
@@ -158,16 +178,28 @@ fn world_with(map: &str, ambient: [u16; 4], vision: &str) -> World {
 }
 
 fn load(map: &str, ambient: [u16; 4], vision: &str, scenario_extra: &str) -> World {
+    load_rooms(map, ambient, vision, scenario_extra, "")
+}
+
+/// [`load`] with the special rooms `rooms` (`[[room]]` tables) marked on the level.
+fn load_rooms(
+    map: &str,
+    ambient: [u16; 4],
+    vision: &str,
+    scenario_extra: &str,
+    rooms: &str,
+) -> World {
     let mut files = ContentFiles::default();
     files.insert("data/terrain.toml", TERRAIN);
     files.insert("data/creatures.toml", CREATURES);
     files.insert("data/lights.toml", LIGHTS);
     files.insert("data/vision.toml", VISION);
     files.insert("data/legend.toml", LEGEND);
+    files.insert("data/room_effects.toml", ROOM_EFFECTS);
     let [r, g, b, uv] = ambient;
     files.insert(
         "levels/test.toml",
-        &format!("name = \"Test\"\nambient = [{r}, {g}, {b}, {uv}]\nmap = '''\n{map}'''\n"),
+        &format!("name = \"Test\"\nambient = [{r}, {g}, {b}, {uv}]\nmap = '''\n{map}'''\n{rooms}"),
     );
     files.insert(
         "scenarios/test.toml",
@@ -229,9 +261,22 @@ pub(super) fn check_invariants(world: &World) -> Result<(), TestCaseError> {
         if !view.vision().sees_uv {
             prop_assert_eq!(light.uv, 0, "UV is never exposed to eyes without UV sight");
         }
+        // A shadowed room keeps part of every bit of light, the ambient light too; a sanctuary's
+        // glow adds to it (on a wall, its neighbors' glow: check_wall_faces).
+        let kept = view.light_kept(p).expect("visible");
+        let ambient = view.ambient().percent(kept);
         let base = view.base_light(p).expect("visible");
-        prop_assert_eq!(base.uv, view.ambient().uv, "UV does not bounce");
-        prop_assert_eq!(base.max(view.ambient()), base, "bounce only adds light");
+        let glow = (world.room_effect_at(view.level_id(), p)).map_or(Light::DARK, |e| {
+            view.vision().perceive(e.glow.percent(kept))
+        });
+        if matches!(view.cell(p), CellView::Visible(t) if world.content().terrain(t).transparent) {
+            prop_assert_eq!(
+                base.uv,
+                ambient.uv.saturating_add(glow.uv),
+                "UV does not bounce"
+            );
+        }
+        prop_assert_eq!(base.max(ambient), base, "bounce only adds light");
     }
     check_wall_faces(&view)?;
     prop_assert!(
@@ -300,10 +345,11 @@ fn check_wall_faces(view: &PerceptionView<'_>) -> Result<(), TestCaseError> {
                 Emitter::Sun(sun) => sun.light,
                 Emitter::Moon(moon) => moon.light,
             };
+            let kept = view.light_kept(p).expect("visible");
             prop_assert_eq!(
                 c,
-                view.vision().perceive(own),
-                "wall {} at its own distance",
+                view.vision().perceive(own).percent(kept),
+                "wall {} at its own distance (as a special room there leaves it)",
                 p
             );
             prop_assert!(
@@ -313,14 +359,16 @@ fn check_wall_faces(view: &PerceptionView<'_>) -> Result<(), TestCaseError> {
             );
         }
     }
+    // Where no shadowed room dims them, a wall's bounce light (and a sanctuary's glow) is the
+    // brightest of its seen neighbors'.
+    let unshaded = |p: Pos| view.light_kept(p) == Some(100);
     for y in 0..view.height() {
         for x in 0..view.width() {
             let p = Pos::new(x, y);
-            if opaque(p) {
-                let brightest = Dir::ALL
-                    .iter()
-                    .map(|d| p.step(*d))
-                    .filter(|q| transparent(*q))
+            let neighbors = Dir::ALL.map(|d| p.step(d));
+            let seen = neighbors.into_iter().filter(|q| transparent(*q));
+            if opaque(p) && unshaded(p) && seen.clone().all(unshaded) {
+                let brightest = seen
                     .map(|q| indirect(view, q))
                     .fold([0; 3], |acc, i| std::array::from_fn(|c| acc[c].max(i[c])));
                 prop_assert_eq!(indirect(view, p), brightest, "bounce on wall {}", p);
@@ -1063,6 +1111,51 @@ proptest! {
         }
         prop_assert!(view.light_sources().is_empty());
         check_invariants(&w)?;
+    }
+
+    /// Random caves with a shadowed room and a sanctuary (spec §7 "Special rooms"), torches, and
+    /// a light-bearing kobold, any profile and ambient level, the player walking about: every
+    /// light invariant holds (contributions and base light add up, wall faces), and a creature
+    /// with the player's eyes finds the light the player perceives on every cell in sight.
+    #[test]
+    fn special_rooms_keep_the_light_invariants(
+        cells in prop::collection::vec(0u8..100, 22 * 9),
+        vision in prop::sample::select(vec!["normal", "low_light", "darkvision", "uv_sight"]),
+        ambient in prop::sample::select(vec![0u16, 20, 255]),
+        steps in prop::collection::vec(0usize..9, 0..12),
+    ) {
+        let mut map = format!("{}\n", "#".repeat(24));
+        for y in 0..9 {
+            map.push('#');
+            for x in 0..22 {
+                map.push(match (x, y, cells[y * 22 + x]) {
+                    (0..=2, 4, _) => '.',
+                    (11, 4, _) => '@',
+                    (_, _, 0..=29) => '#',
+                    (_, _, 30..=34) => 'T',
+                    (_, _, 35) => 'k',
+                    (_, _, 36) => 'G',
+                    (_, _, 37) => 'R',
+                    _ => '.',
+                });
+            }
+            map.push_str("#\n");
+        }
+        map.push_str(&"#".repeat(24));
+        map.push('\n');
+        let rooms = "[[room]]\neffect = \"shadowed\"\narea = [0, 0, 9, 10]\n\
+                     [[room]]\neffect = \"sanctuary\"\narea = [14, 0, 23, 10]\n";
+        let light = [ambient, ambient, ambient, 0];
+        let mut w = load_rooms(&map, light, vision, "lantern = \"lantern\"\n", rooms);
+        for step in steps {
+            let action = match step {
+                0..=7 => Action::Move(Dir::ALL[step]),
+                _ => Action::ToggleLantern,
+            };
+            w.apply(&action);
+        }
+        check_invariants(&w)?;
+        check_wall_completion(&w)?;
     }
 
     /// Random caves (walls, torches, a rat), any profile and ambient level: wall completion shows

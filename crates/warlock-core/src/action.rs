@@ -1,7 +1,7 @@
 //! Player actions and the events a turn produces.
 
 use crate::combat::Strike;
-use crate::content::{ActionKind, ObjectId};
+use crate::content::{ActionKind, CombatStance, ObjectId, StatusId};
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
 use crate::weather::Weather;
@@ -42,6 +42,10 @@ pub enum Action {
     },
     /// Take off what is in a slot (an id in `data/slots.toml`). Takes the time of its action.
     Remove(String),
+    /// Bash whoever stands in a direction with the shield the player holds (spec §8 "Weapon
+    /// skills"): a melee blow with the shield's own damage, drawing on and training shield
+    /// bashing. Takes the time of `melee`.
+    Bash(Dir),
     /// Shoot the readied missile weapon's ammunition at this cell (spec §8 "Ranged combat"):
     /// one shot flies along the line through it, as far as the weapon shoots. Takes the time of
     /// `shoot` (plus `reload` for a missile weapon that needs it).
@@ -59,6 +63,13 @@ pub enum Action {
     /// turns (each the `eat` action) as the food takes, stopping early like a rest; the food is
     /// eaten and feeds at the end.
     Eat(Meal),
+    /// Take a combat stance (spec §8 "Stances"). Takes no game time, but changes state, so
+    /// replays record it.
+    SetStance(CombatStance),
+    /// Dig into the wall in this direction with the digging tool the player has ready (spec §8
+    /// "Digging"): turn after turn (each the `dig` action's time) until the wall gives way,
+    /// stopping early like a rest. What was dug stays dug.
+    Dig(Dir),
     /// Dev command: switch the player's vision profile (an id in `data/vision.toml`). Takes no
     /// game time, but changes state and perception, so replays record it like any action.
     SetVision(String),
@@ -77,6 +88,10 @@ pub enum Action {
         at: Pos,
         to: Option<Pos>,
     },
+    /// Dev command: the player suffers one degree more of a status effect (an id in
+    /// `data/status.toml`), as a wound or a bite would give it: for trying statuses out and for
+    /// captures. Takes no game time; recorded in replays.
+    Afflict(String),
 }
 
 /// How long to rest.
@@ -214,7 +229,7 @@ pub enum Event {
         to: Pos,
         strike: Option<Strike>,
         /// What a shot or a throw was made with: the missile (the ammunition as it flew, the
-        /// thrown thing); `None` for blows and spells.
+        /// thrown thing); for a shield bash, the shield; `None` for other blows and spells.
         with: Option<ObjectId>,
     },
     /// A missile flew (spec §8 "Ranged combat"): a shot or a throw. As the player perceives it
@@ -229,11 +244,21 @@ pub enum Event {
         path: Vec<Pos>,
         end: MissileEnd,
     },
-    /// An actor died where it stood, killed by the attack before it. Kept when the player saw
-    /// it (their own death always).
+    /// An actor died where it stood, killed by the attack before it, or of status effect `of`
+    /// (it bled to death). Kept when the player saw it (their own death always).
     Died {
         actor: ActorId,
         at: Pos,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        of: Option<StatusId>,
+    },
+    /// A status effect began (`began`) or ended on an actor (spec §8 "Status effects"). Only the
+    /// player's own, which they always perceive: said in the message line ("You are bleeding.",
+    /// "The bleeding stops.").
+    Status {
+        actor: ActorId,
+        status: StatusId,
+        began: bool,
     },
     /// A spell-like effect the player perceives (spec §4.8 "Spell effects"): traps now, spells
     /// later. As the player perceives it: it is light itself, so its cells are cut to those the
@@ -248,6 +273,12 @@ pub enum Event {
         /// The affected cells the player can see; perception-filtered, never ground truth.
         cells: Vec<Pos>,
     },
+    /// A wall gave way (spec §8 "Digging") and is rubble now. Kept when the player sees the cell
+    /// afterwards.
+    WallBroken {
+        pos: Pos,
+        cause: Breach,
+    },
 }
 
 /// The shape of a spell effect ([`Event::Spell`]).
@@ -259,6 +290,16 @@ pub enum SpellShape {
     Burst { center: Pos, radius: i32 },
     /// A line along `path`, in order, from the cell next to its origin on.
     Bolt { path: Vec<Pos> },
+}
+
+/// What broke a wall.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Breach {
+    /// Dug through with a tool.
+    Dug,
+    /// Blasted open by an explosion.
+    Blast,
 }
 
 /// How a missile's flight ended, on the last cell of its path.
@@ -313,11 +354,12 @@ pub struct Outcome {
 }
 
 /// Text syntax for scripting: `move:E wait open:E close:W ascend descend lantern rest:1h
-/// rest:dawn rest:dusk pickup pickup:ac drop:b equip:body:b remove:body fire:12,5 throw:c:12,5
-/// eat:b eat:floor:a vision:ID skip:1h weather:rain effect:fireball@12,5
-/// effect:lightning_bolt@3,4>12,4` (durations: `30s`, `10m`, `2h`; letters name stacks, `a`
-/// first; `pickup` and `drop` without letters take everything; `equip:SLOT:LETTER` puts
-/// inventory stack LETTER on in slot SLOT, `remove:SLOT` takes off what is there; `fire:X,Y`
+/// rest:dawn rest:dusk pickup pickup:ac drop:b equip:body:b remove:body bash:E fire:12,5
+/// throw:c:12,5 dig:E eat:b eat:floor:a vision:ID skip:1h weather:rain effect:fireball@12,5
+/// effect:lightning_bolt@3,4>12,4 afflict:bleeding` (durations: `30s`, `10m`, `2h`; letters
+/// name stacks, `a` first; `pickup` and `drop` without letters take everything;
+/// `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT, `remove:SLOT` takes off what
+/// is there; `bash:DIR` bashes with the held shield; `dig:DIR` digs toward a wall; `fire:X,Y`
 /// shoots at the level cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack LETTER
 /// there; `eat:LETTER` eats one of inventory stack LETTER, `eat:floor:LETTER` one of the stack
 /// LETTER of the pile underfoot; weather: `clear`, `overcast`, `rain`, `heavy`;
@@ -343,6 +385,7 @@ impl fmt::Display for Action {
                 write!(f, "equip:{slot}:{}", letter(*item).unwrap_or('?'))
             }
             Action::Remove(slot) => write!(f, "remove:{slot}"),
+            Action::Bash(d) => write!(f, "bash:{d}"),
             Action::Fire(at) => write!(f, "fire:{},{}", at.x, at.y),
             Action::Throw { item, at } => {
                 let item = letter(*item).unwrap_or('?');
@@ -355,6 +398,8 @@ impl fmt::Display for Action {
             Action::Rest(Rest::For(d)) => write!(f, "rest:{d}"),
             Action::Rest(Rest::Dawn) => f.write_str("rest:dawn"),
             Action::Rest(Rest::Dusk) => f.write_str("rest:dusk"),
+            Action::SetStance(stance) => write!(f, "stance:{stance}"),
+            Action::Dig(d) => write!(f, "dig:{d}"),
             Action::SetVision(id) => write!(f, "vision:{id}"),
             Action::SkipTime(d) => write!(f, "skip:{d}"),
             Action::SetWeather(w) => write!(f, "weather:{}", w.id()),
@@ -365,6 +410,7 @@ impl fmt::Display for Action {
                     None => Ok(()),
                 }
             }
+            Action::Afflict(id) => write!(f, "afflict:{id}"),
         }
     }
 }
@@ -390,6 +436,8 @@ impl FromStr for Action {
             "move" => dir().map(Action::Move),
             "open" => dir().map(Action::Open),
             "close" => dir().map(Action::Close),
+            "bash" => dir().map(Action::Bash),
+            "dig" => dir().map(Action::Dig),
             "wait" => bare(Action::Wait),
             "ascend" => bare(Action::Ascend),
             "descend" => bare(Action::Descend),
@@ -485,6 +533,10 @@ impl FromStr for Action {
                     _ => Err(usage()),
                 }
             }
+            "stance" => arg
+                .ok_or_else(|| "`stance` needs a stance, e.g. `stance:coward`".to_string())?
+                .parse()
+                .map(Action::SetStance),
             "vision" => match s.split_once(':').map(|(_, id)| id) {
                 Some(id) if !id.is_empty() => Ok(Action::SetVision(id.to_string())),
                 _ => Err("`vision` needs a profile id, e.g. `vision:darkvision`".into()),
@@ -513,12 +565,18 @@ impl FromStr for Action {
                     to: to.map(parse_cell).transpose().map_err(|_| usage())?,
                 })
             }
+            "afflict" => match s.split_once(':').map(|(_, id)| id) {
+                Some(id) if !id.is_empty() && !id.contains(':') => {
+                    Ok(Action::Afflict(id.to_string()))
+                }
+                _ => Err("`afflict` needs a status id, e.g. `afflict:bleeding`".into()),
+            },
             _ => Err(format!(
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
                  descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
-                 equip:SLOT:LETTER, remove:SLOT, fire:X,Y, throw:LETTER:X,Y, eat:LETTER, \
-                 eat:floor:LETTER, vision:ID, skip:DURATION, weather:clear|overcast|rain|heavy, \
-                 effect:ID@X,Y[>X,Y])"
+                 equip:SLOT:LETTER, remove:SLOT, bash:DIR, fire:X,Y, throw:LETTER:X,Y, dig:DIR, \
+                 eat:LETTER, eat:floor:LETTER, stance:NAME, vision:ID, skip:DURATION, \
+                 weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y], afflict:STATUS)"
             )),
         }
     }
@@ -582,6 +640,8 @@ mod tests {
             Action::Ascend,
             Action::Descend,
             Action::ToggleLantern,
+            Action::SetStance(CombatStance::Aggressive),
+            Action::SetStance(CombatStance::Coward),
             Action::SetVision("low_light".into()),
             Action::SetVision("Mixed_Case".into()),
             Action::Rest(Rest::For(Duration::hours(1))),
@@ -624,10 +684,18 @@ mod tests {
             Action::Eat(Meal::Pack(1)),
             Action::Eat(Meal::Floor(0)),
             Action::Eat(Meal::Floor(25)),
+            Action::Afflict("bleeding".into()),
+            Action::Afflict("Odd_Case".into()),
         ];
         all.extend(Weather::ALL.map(Action::SetWeather));
         for d in Dir::ALL {
-            all.extend([Action::Move(d), Action::Open(d), Action::Close(d)]);
+            all.extend([
+                Action::Move(d),
+                Action::Open(d),
+                Action::Close(d),
+                Action::Bash(d),
+                Action::Dig(d),
+            ]);
         }
         assert_eq!(parse_actions(&format_actions(&all)), Ok(all));
     }
@@ -642,6 +710,8 @@ mod tests {
         assert!(parse_actions("move").is_err());
         assert!(parse_actions("move:up").is_err());
         assert!(parse_actions("wait:E").is_err());
+        assert_eq!(parse_actions("BASH:sw"), Ok(vec![Action::Bash(Dir::SW)]));
+        assert!(parse_actions("bash").is_err());
         assert!(parse_actions("dance").is_err());
         assert_eq!(
             parse_actions("move:N*3 wait*0 wait"),
@@ -792,6 +862,9 @@ mod tests {
             "remove:a:b",
             "weather",
             "weather:snow",
+            "afflict",
+            "afflict:",
+            "afflict:a:b",
             "pickup:",
             "pickup:a1",
             "drop:A-",
@@ -803,6 +876,9 @@ mod tests {
             "skip",
             "skip:0s",
             "skip:x",
+            "dig",
+            "dig:",
+            "dig:down",
         ] {
             assert!(parse_actions(bad).is_err(), "{bad}");
         }

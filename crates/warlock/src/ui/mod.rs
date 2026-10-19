@@ -6,26 +6,31 @@
 //! moves the camera and slides creatures between cells; [`effects`] adds particles, glow, heat
 //! haze, and fades; [`missiles`] flies shots and throws; [`rain`] lets it rain under the open
 //! sky; [`sounds`] marks where unseen sounds were heard; [`target`] aims shots and throws (the
-//! line of fire and its cursor). Terrain and objects are drawn
-//! in their base colors: the map grid's shader lights them with the visual light
+//! line of fire and its cursor); [`blood`] stains the cells blood lies on. Terrain and objects are
+//! drawn in their base colors: the map grid's shader lights them with the visual light
 //! (`render::lighting`), composited after the map is placed and before free glyphs are lit.
 //! [`dev`] adds the developer overlays (reveal mode is the one exception that reads ground truth).
 //!
 //! Menus, character creation ([`chargen_screen`]), settings, controls, the `?` help, the
 //! inventory, choosing what to pick up or drop ([`object_screen`]), the equipment screen and its
 //! choice of what goes in a slot ([`equipment_screen`]), the character screen
-//! ([`character_screen`]), and the death screen ([`death_screen`]) are screens on one stack
+//! ([`character_screen`]), the weapon skills screen ([`weapon_skills_screen`]), and the death
+//! screen ([`death_screen`]) are screens on one stack
 //! ([`screens`]): opened by [`Screens::open`], fed key presses by `input::route_keys`, and drawn
 //! by [`draw`], the one system that writes the UI console.
 
+mod blood;
 mod character_screen;
 mod chargen_screen;
+mod confirm_screen;
 mod controls_screen;
 mod death_screen;
 mod dev;
 mod effects;
 mod equipment_screen;
+mod files_screen;
 mod glyphs;
+mod info_tabs;
 mod look;
 mod menu;
 mod missiles;
@@ -39,6 +44,7 @@ mod skills_screen;
 mod sounds;
 mod spells;
 mod target;
+mod weapon_skills_screen;
 
 pub use menu::Press;
 pub use screens::{MenuChoice, ScreenAction, ScreenName, ScreenStack, Screens};
@@ -52,7 +58,7 @@ use crate::render::anim::{AnimTable, TerrainAnim};
 use crate::render::console::{Cell, Console};
 use crate::render::grid::MapGrid;
 use crate::render::{ConsoleLayout, Effects, VisualTime, lighting, shadows};
-use crate::settings::Settings;
+use crate::settings::{Clock, Settings};
 use bevy::prelude::*;
 use missiles::Missiles;
 use motion::Motion;
@@ -158,7 +164,17 @@ fn draw(
     }
     console.clear();
     if let Some(game) = &game {
-        draw_game(&mut console, game, *mode, &grid, *overlays, &bindings);
+        let blood = settings.effects.blood;
+        draw_game(
+            &mut console,
+            game,
+            *mode,
+            &grid,
+            *overlays,
+            &bindings,
+            blood,
+            settings.clock,
+        );
     }
     stack.draw(&mut console, &settings, &bindings);
 }
@@ -172,10 +188,12 @@ fn draw_game(
     grid: &MapGrid,
     overlays: DevOverlays,
     bindings: &Bindings,
+    blood: bool,
+    clock: Clock,
 ) {
     let rows = console.rows() as i32;
-    draw_messages(console, game, mode, bindings);
-    draw_status(console, game, rows - 1);
+    draw_messages(console, game, mode, bindings, blood);
+    draw_status(console, game, rows - 1, clock);
     dev::draw_indicator(console, overlays);
     let cursor = match mode {
         InputMode::Look(p) => Some(p),
@@ -288,7 +306,7 @@ fn draw_map_layer(
     // One margin cell right and below, so a sub-cell offset never shows a gap.
     grid.console.resize(area.w as u32 + 1, area.h as u32 + 1);
     grid.console.clear();
-    draw_map(&mut grid, &view, &anims, &key);
+    draw_map(&mut grid, &view, &anims, &key, effects.blood);
     if effects.glow || effects.distortion {
         effects::draw_cell_fx(&mut grid, &view, &key.arriving);
     }
@@ -312,8 +330,15 @@ fn camera_origin(view: i32, level: i32, viewer: i32) -> i32 {
 /// line of fire is drawn over while aiming (`path`, its dots are free glyphs too), unless an
 /// object lies there. What a missile still in flight lands as (`arriving`) is not drawn until it
 /// arrives. Only visible terrain without objects animates. Visible cells keep their base colors
-/// (the shader lights them); remembered ones, objects included, are dimmed here.
-fn draw_map(grid: &mut MapGrid, view: &PerceptionView<'_>, anims: &AnimTable, key: &MapKey) {
+/// (the shader lights them); remembered ones, objects included, are dimmed here. Blood the player
+/// knows of tints its cell first ([`blood::stained`]), unless `show_blood` is off.
+fn draw_map(
+    grid: &mut MapGrid,
+    view: &PerceptionView<'_>,
+    anims: &AnimTable,
+    key: &MapKey,
+    show_blood: bool,
+) {
     let covered = &key.covered;
     let content = view.content();
     let (ox, oy) = (grid.level_origin.x, grid.level_origin.y);
@@ -329,10 +354,18 @@ fn draw_map(grid: &mut MapGrid, view: &PerceptionView<'_>, anims: &AnimTable, ke
                 pile => pile,
             };
             let top = pile.first().map(|s| content.object(s.object));
+            let stain = view.blood(p).filter(|_| show_blood);
             let glyph = |t| {
                 let def = content.terrain(t);
                 let (ch, fg) = top.map_or((def.glyph, def.fg), |o| (o.glyph, o.fg));
-                (ch, fg, def.bg)
+                let (fg, bg) = match stain {
+                    Some(stain) => {
+                        let wall = !def.transparent;
+                        blood::stained((fg, def.bg), stain, view.time(), wall, top.is_some())
+                    }
+                    None => (fg, def.bg),
+                };
+                (ch, fg, bg)
             };
             let cell = match seen {
                 CellView::Unknown => continue,
@@ -388,9 +421,21 @@ fn remembered(c: Rgb) -> Rgb {
     Rgb::new(f(c.r), f(c.g), f(c.b))
 }
 
-fn draw_messages(console: &mut Console, game: &Game, mode: InputMode, bindings: &Bindings) {
-    if let InputMode::Direction(_) = mode {
-        console.print(1, 0, "In which direction? (Esc to cancel)", ACCENT);
+/// The message line, or the prompt of the input mode; look mode and aiming describe the cell
+/// under the cursor (its blood only if `blood` is shown).
+fn draw_messages(
+    console: &mut Console,
+    game: &Game,
+    mode: InputMode,
+    bindings: &Bindings,
+    blood: bool,
+) {
+    if let InputMode::Direction(command) = mode {
+        let prompt = match command {
+            crate::input::KeyCommand::UseTool => "Dig in which direction? (Esc to cancel)",
+            _ => "In which direction? (Esc to cancel)",
+        };
+        console.print(1, 0, prompt, ACCENT);
         return;
     }
     if mode == InputMode::Rest {
@@ -400,7 +445,7 @@ fn draw_messages(console: &mut Console, game: &Game, mode: InputMode, bindings: 
     if let InputMode::Aim(aim) = mode {
         let view = game.world.perception();
         let line = target::line(&view, view.viewer(), aim.at, aim.range(&view));
-        let mut about = look::describe(&view, aim.at);
+        let mut about = look::describe(&view, aim.at, blood);
         if let Some(status) = line.status() {
             about = format!("{about} {status}");
         }
@@ -411,9 +456,9 @@ fn draw_messages(console: &mut Console, game: &Game, mode: InputMode, bindings: 
         let (confirm, missile) = match aim.kind {
             AimKind::Fire => {
                 let ammo = view.ready_to_fire().map(|(_, item, _)| item);
-                (crate::input::KeyCommand::Fire, ammo)
+                (crate::input::KeyCommand::Missile, ammo)
             }
-            AimKind::Throw(item) => (crate::input::KeyCommand::Throw, Some(item)),
+            AimKind::Throw(item) => (crate::input::KeyCommand::Missile, Some(item)),
         };
         let content = view.content();
         let ready = (missile.and_then(|i| view.inventory().get(i)))
@@ -424,7 +469,8 @@ fn draw_messages(console: &mut Console, game: &Game, mode: InputMode, bindings: 
         return;
     }
     if let InputMode::Look(p) = mode {
-        console.print(1, 0, &look::describe(&game.world.perception(), p), TEXT);
+        let about = look::describe(&game.world.perception(), p, blood);
+        console.print(1, 0, &about, TEXT);
         console.print(
             1,
             1,
@@ -450,7 +496,7 @@ fn draw_messages(console: &mut Console, game: &Game, mode: InputMode, bindings: 
 /// The rest prompt; its letters are [`crate::input::REST_CHOICES`].
 const REST_PROMPT: &str = "Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to cancel)";
 
-fn draw_status(console: &mut Console, game: &Game, y: i32) {
+fn draw_status(console: &mut Console, game: &Game, y: i32, clock: Clock) {
     let cols = console.cols() as i32;
     console.fill(
         0,
@@ -463,7 +509,7 @@ fn draw_status(console: &mut Console, game: &Game, y: i32) {
             bg: PANEL_BG,
         },
     );
-    let segments = status_segments(&game.world);
+    let segments = status_segments(&game.world, clock);
     // The controls hint matters most to new players, so it keeps its place unless the window is
     // very narrow; status segments give way around it.
     let hint = "? controls";
@@ -478,7 +524,7 @@ fn draw_status(console: &mut Console, game: &Game, y: i32) {
 }
 
 /// The status bar's segments for `world`, in display order.
-fn status_segments(world: &World) -> Vec<Segment> {
+fn status_segments(world: &World, clock: Clock) -> Vec<Segment> {
     let view = world.perception();
     let pos = world.player_pos();
     let time = world.time();
@@ -494,27 +540,30 @@ fn status_segments(world: &World) -> Vec<Segment> {
     // its day and month before they are dropped. The weather shows only under the open sky,
     // where the player knows it, and there it matters more than the date: it changes the light
     // and how far one sees. Hit points matter most after the level: they outlast the time, and
-    // so do the burden (shown when there is one), which slows everything the player does, and
-    // hunger (shown unless the player is Not hungry), which outlasts the burden. The character
-    // level (`Lv 3`) comes after them and goes before them, but after the time.
+    // so do the status effects the player suffers (by name, the most important first: the last
+    // gives way first), hunger (shown unless the player is Not hungry), and the burden (shown
+    // when there is one), which slows everything the player does; hunger outlasts the burden. The
+    // character level (`Lv 3`) comes after them and goes before them, but after the time.
     let calendar = content.calendar();
     let (hp, max_hp) = view.own_hp();
     let burden = view.own_load().burden();
     let hunger = view.own_hunger().filter(|h| *h != Hunger::NotHungry);
-    [
-        Some(Segment::new(0, view.level_name())),
-        Some(Segment::new(1, format!("HP {hp}/{max_hp}"))),
+    let effects = (view.own_effects()).map(|s| Segment::new(1, content.status(s).name.clone()));
+    let stance = view.own_stance();
+    let head = [
+        Segment::new(0, view.level_name()),
+        Segment::new(1, format!("HP {hp}/{max_hp}")),
+    ];
+    let rest = [
         hunger.map(|h| Segment::new(1, h.name())),
         (burden != Burden::Unburdened).then(|| Segment::new(1, burden.name())),
         Some(Segment::new(
             1,
             format!("Lv {}", view.own_experience().level),
         )),
+        (!stance.is_neutral()).then(|| Segment::new(1, content.stance_def(stance).name.clone())),
         view.region().map(|r| Segment::new(4, r)),
-        Some(Segment::new(
-            1,
-            format!("{:02}:{:02}", time.hour(), time.minute()),
-        )),
+        Some(Segment::new(1, clock.format(time))),
         Some(Segment::new(3, calendar.full_date(time)).or_short(calendar.date(time))),
         moon_status(content.moons(), time)
             .map(|(text, glyphs)| Segment::new(5, text).or_short(glyphs)),
@@ -525,10 +574,11 @@ fn status_segments(world: &World) -> Vec<Segment> {
         Some(Segment::new(8, format!("{} vision", view.vision().name))),
         lantern.map(|l| Segment::new(9, l)),
         Some(Segment::new(11, format!("Seed {}", world.seed()))),
-    ]
-    .into_iter()
-    .flatten()
-    .collect()
+    ];
+    (head.into_iter())
+        .chain(effects)
+        .chain(rest.into_iter().flatten())
+        .collect()
 }
 
 /// The moons' phases for the status bar, and just their glyphs for a narrow window: the glyph
@@ -672,20 +722,25 @@ mod tests {
     use super::*;
     use crate::render::console::CellAnim;
     use std::sync::Arc;
+    use warlock_core::content::CombatStance;
     use warlock_core::content::{Content, ContentFiles};
     use warlock_core::{Action, Dir, Letters, World};
 
     #[test]
     fn the_status_bar_shows_the_burden_after_the_hit_points_and_keeps_it_late() {
         let mut world = hoard();
-        let texts =
-            |w: &World| -> Vec<String> { status_segments(w).into_iter().map(|s| s.text).collect() };
+        let texts = |w: &World| -> Vec<String> {
+            status_segments(w, Clock::H24)
+                .into_iter()
+                .map(|s| s.text)
+                .collect()
+        };
         assert!(
             !texts(&world).iter().any(|t| t.contains("urdened")),
             "unburdened: nothing"
         );
         world.apply(&Action::PickUp(Letters::default()));
-        let segments = status_segments(&world);
+        let segments = status_segments(&world, Clock::H24);
         assert_eq!(segments[1].text, "HP 10/10");
         assert_eq!(segments[2].text, "Burdened", "right after the hit points");
         // Narrow: the time gives way first, then the burden, before the hit points.
@@ -718,8 +773,12 @@ mod tests {
             let content = Arc::new(Content::load(&files).expect("valid"));
             World::new(content, "hoard", None).expect("world")
         };
-        let texts =
-            |w: &World| -> Vec<String> { status_segments(w).into_iter().map(|s| s.text).collect() };
+        let texts = |w: &World| -> Vec<String> {
+            status_segments(w, Clock::H24)
+                .into_iter()
+                .map(|s| s.text)
+                .collect()
+        };
         assert!(
             !texts(&world_starting_at(3600))
                 .iter()
@@ -741,7 +800,7 @@ mod tests {
         }
         let mut world = world_starting_at(1000);
         world.apply(&Action::PickUp(Letters::default()));
-        let segments = status_segments(&world);
+        let segments = status_segments(&world, Clock::H24);
         assert_eq!(
             texts(&world)[..4],
             ["Hoard", "HP 10/10", "Hungry", "Burdened"]
@@ -754,6 +813,45 @@ mod tests {
             "Hoard  ·  HP 10/10  ·  Hungry"
         );
         assert_eq!(fit_segments(&segments, 25), "Hoard  ·  HP 10/10");
+    }
+
+    #[test]
+    fn the_status_bar_shows_status_effects_after_the_hit_points_most_important_first() {
+        let mut world = hoard();
+        world.apply(&Action::Afflict("poisoned".into()));
+        world.apply(&Action::Afflict("bleeding".into()));
+        let segments = status_segments(&world, Clock::H24);
+        let texts: Vec<&str> = segments.iter().map(|s| s.text.as_str()).collect();
+        assert_eq!(texts[..4], ["Hoard", "HP 10/10", "Bleeding", "Poisoned"]);
+        // They give way late, the least important first, but before the hit points.
+        let line = "Hoard  ·  HP 10/10  ·  Bleeding  ·  Poisoned";
+        assert_eq!(fit_segments(&segments, line.chars().count()), line);
+        let shorter = "Hoard  ·  HP 10/10  ·  Bleeding";
+        assert_eq!(fit_segments(&segments, line.chars().count() - 1), shorter);
+        assert_eq!(fit_segments(&segments, 20), "Hoard  ·  HP 10/10");
+        assert!(fit_segments(&segments, 200).contains("Poisoned  ·  "));
+    }
+
+    #[test]
+    fn the_status_bar_names_a_stance_that_is_not_neutral() {
+        let mut world = hoard();
+        let texts = |w: &World| -> Vec<String> {
+            status_segments(w, Clock::H24)
+                .into_iter()
+                .map(|s| s.text)
+                .collect()
+        };
+        assert!(!texts(&world).iter().any(|t| t.contains("Neutral")));
+        world.apply(&Action::SetStance(CombatStance::Defensive));
+        let segments = status_segments(&world, Clock::H24);
+        let at = |t: &str| segments.iter().position(|s| s.text == t);
+        assert_eq!(
+            at("Defensive"),
+            at("Lv 1").map(|i| i + 1),
+            "right after the level"
+        );
+        world.apply(&Action::SetStance(CombatStance::Neutral));
+        assert!(!texts(&world).iter().any(|t| t == "Neutral"));
     }
 
     #[test]
@@ -834,7 +932,10 @@ mod tests {
     fn the_status_bar_shows_the_weather_only_under_the_open_sky() {
         let content = Arc::new(Content::builtin().expect("content"));
         let texts = |world: &World| -> Vec<String> {
-            status_segments(world).into_iter().map(|s| s.text).collect()
+            status_segments(world, Clock::H24)
+                .into_iter()
+                .map(|s| s.text)
+                .collect()
         };
         let mut world = World::new(content.clone(), "showcase", None).expect("starts");
         world.apply(&Action::SetWeather(warlock_core::weather::Weather::Rain));
@@ -844,7 +945,7 @@ mod tests {
         world.apply(&Action::SetWeather(
             warlock_core::weather::Weather::HeavyRain,
         ));
-        let segments = status_segments(&world);
+        let segments = status_segments(&world, Clock::H24);
         let at = |text: &str| segments.iter().position(|s| s.text.contains(text));
         let (weather, moon, date) = (at("Heavy rain"), at("Waxing gibbous"), at("Darkening"));
         assert_eq!(weather, moon.map(|m| m + 1), "shown after the moon");
@@ -863,10 +964,29 @@ mod tests {
     }
 
     #[test]
+    fn the_twelve_hour_clock_is_longer_but_the_status_bar_still_fits() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let world = World::new(content, "showcase", None).expect("starts");
+        let segments = status_segments(&world, Clock::H12);
+        let time = (segments.iter())
+            .map(|s| &s.text)
+            .find(|t| t.ends_with(" AM") || t.ends_with(" PM"))
+            .expect("the time");
+        for width in [0, 10, 20, 25, 40, 55, 80, 120] {
+            let line = fit_segments(&segments, width);
+            assert!(line.chars().count() <= width, "{width}: {line}");
+        }
+        let line = fit_segments(&segments, 120);
+        assert!(line.contains(time.as_str()), "{line}");
+        // Narrow: the time gives way first, as in 24-hour form.
+        assert_eq!(fit_segments(&segments, 20), "The Hub  ·  HP 17/17");
+    }
+
+    #[test]
     fn the_status_bar_shows_hit_points_and_keeps_them_late() {
         let content = Arc::new(Content::builtin().expect("content"));
         let world = World::new(content, "showcase", None).expect("starts");
-        let segments = status_segments(&world);
+        let segments = status_segments(&world, Clock::H24);
         assert_eq!(segments[1].text, "HP 17/17", "right after the level");
         // Narrow: everything but the level gives way first, the time included.
         let line = fit_segments(&segments, 25);
@@ -951,7 +1071,7 @@ mod tests {
             arriving: Vec::new(),
             path: Vec::new(),
         };
-        draw_map(&mut grid, &view, &anims, &key);
+        draw_map(&mut grid, &view, &anims, &key, true);
 
         let at = |x: i32, y: i32| (y * 7 + x) as usize;
         let cell = |x, y| grid.console.cells()[at(x, y)];
@@ -969,7 +1089,7 @@ mod tests {
         let altar = content.terrain_id("altar").expect("altar exists");
         world.apply(&Action::Open(Dir::E));
         let view = world.perception();
-        draw_map(&mut grid, &view, &anims, &key);
+        draw_map(&mut grid, &view, &anims, &key, true);
         assert_eq!(grid.free_terrain, vec![(Pos::new(5, 1), altar)]);
         assert_eq!(grid.console.cells()[at(5, 1)].map(|c| c.ch), Some(' '));
     }

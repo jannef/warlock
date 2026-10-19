@@ -5,11 +5,13 @@ use super::faction::FactionId;
 use super::light::LightId;
 use super::object::MAX_BONUS;
 use super::particles::ParticleEmitter;
+use super::status::{OnHit, OnHitSpec, StatusId};
 use crate::color::Rgb;
 use crate::combat::{Attack, CRITS, DEFAULT_CRIT, DEFAULT_THREAT, THREATS};
 use crate::dice::Dice;
 use crate::skills::Skills;
 use crate::stats::{Stat, Stats};
+use crate::weapon_skills::WeaponSkills;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::ops::RangeInclusive;
@@ -124,6 +126,12 @@ pub(super) struct CreatureSpec {
     pub corpse: bool,
     /// What eating its corpse does, beyond feeding the eater.
     pub on_eat: Option<OnEat>,
+    /// The colour of its blood (`"#rrggbb"`), or `"none"` for a bloodless creature; none:
+    /// dark red ([`crate::blood::RED`]).
+    pub blood: Option<String>,
+    /// Its ranks in weapon skills (spec §8 "Weapon skills"), by skill id.
+    #[serde(default)]
+    pub weapon_skills: BTreeMap<String, u8>,
     pub anim: Option<GlyphAnim>,
     #[serde(default)]
     pub glow: f32,
@@ -178,7 +186,8 @@ impl OnEat {
 }
 
 /// A natural attack as written in content files: `attack = { damage = "1d4", name = "bite",
-/// verb = "bites" }`, with an optional `threat`, `crit`, and `to_hit` like a weapon's.
+/// verb = "bites" }`, with an optional `threat`, `crit`, and `to_hit` like a weapon's, and the
+/// status effects a hit may cause (`on_hit`, `data/status.toml`).
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct NaturalAttackSpec {
@@ -189,6 +198,8 @@ pub(super) struct NaturalAttackSpec {
     pub crit: Option<u8>,
     #[serde(default)]
     pub to_hit: i32,
+    #[serde(default)]
+    pub on_hit: Vec<OnHitSpec>,
 }
 
 /// A creature's natural attack (spec §8 "Combat"): what it does, and the words for it.
@@ -199,6 +210,9 @@ pub struct NaturalAttack {
     pub name: String,
     /// What it does to its target: "bites" ("The giant rat bites you.").
     pub verb: String,
+    /// The status effects a hit with it may cause, in data order (spec §8 "Status effects"): a
+    /// giant rat's bite may poison.
+    pub on_hit: Vec<OnHit>,
 }
 
 /// A creature's natural armour: `natural = { defence = 3, name = "shell" }`.
@@ -211,9 +225,25 @@ pub struct Hide {
     pub name: String,
 }
 
+/// What a creature type's `blood` says: its colour, or `None` for `"none"` (bloodless); dark
+/// red when it says nothing.
+pub(super) fn blood(spec: Option<&str>) -> Result<Option<Rgb>, String> {
+    match spec {
+        None => Ok(Some(crate::blood::RED)),
+        Some("none") => Ok(None),
+        Some(color) => color.parse().map(Some).map_err(|_| {
+            format!("blood: expected a color like \"#rrggbb\" or \"none\", got `{color}`")
+        }),
+    }
+}
+
 impl NaturalAttackSpec {
-    /// Checks the attack like a weapon's and resolves its defaults.
-    pub(super) fn resolve(self) -> Result<NaturalAttack, String> {
+    /// Checks the attack like a weapon's and resolves its defaults; `status` resolves a status
+    /// id to the status and its `max`.
+    pub(super) fn resolve(
+        self,
+        status: impl Fn(&str) -> Option<(StatusId, u16)>,
+    ) -> Result<NaturalAttack, String> {
         let threat = self.threat.unwrap_or(DEFAULT_THREAT);
         let crit = self.crit.unwrap_or(DEFAULT_CRIT);
         if !THREATS.contains(&threat) || !CRITS.contains(&crit) {
@@ -231,6 +261,9 @@ impl NaturalAttackSpec {
         if self.to_hit.abs() > MAX_BONUS {
             return Err(format!("attack: `to_hit` must be within ±{MAX_BONUS}"));
         }
+        let on_hit = (self.on_hit.iter())
+            .map(|o| o.resolve(&status).map_err(|m| format!("attack: {m}")))
+            .collect::<Result<Vec<_>, _>>()?;
         Ok(NaturalAttack {
             attack: Attack {
                 damage: self.damage,
@@ -241,12 +274,14 @@ impl NaturalAttackSpec {
             },
             name: self.name,
             verb: self.verb,
+            on_hit,
         })
     }
 }
 
 /// What a creature type's names resolve to when content loads.
 pub(super) struct Resolved {
+    pub blood: Option<Rgb>,
     pub light: Option<LightId>,
     pub faction: Option<FactionId>,
     pub vision: usize,
@@ -254,6 +289,7 @@ pub(super) struct Resolved {
     pub stats: Stats,
     pub skills: Skills,
     pub attack: Option<NaturalAttack>,
+    pub weapon_skills: WeaponSkills,
 }
 
 impl CreatureSpec {
@@ -285,6 +321,8 @@ impl CreatureSpec {
             natural: self.natural,
             corpse: self.corpse,
             on_eat: self.on_eat,
+            blood: r.blood,
+            weapon_skills: r.weapon_skills,
             anim: self.anim,
             glow: self.glow,
             particles: self.particles,
@@ -360,6 +398,12 @@ pub struct CreatureDef {
     /// Gameplay: what eating its fresh corpse does, beyond feeding the eater. Hidden from the
     /// player until they try.
     pub on_eat: Option<OnEat>,
+    /// Presentation-only: the colour of its blood (spec §8 "Blood"); `None`: it does not bleed.
+    pub blood: Option<Rgb>,
+    /// Gameplay: the ranks in weapon skills a creature of this type has (spec §8 "Weapon
+    /// skills"), defaults included. Rules only: never shown. The player's come from their race
+    /// and class.
+    pub weapon_skills: WeaponSkills,
     /// Presentation-only.
     pub anim: Option<GlyphAnim>,
     /// Presentation-only: how much the glyph glows (bloom), 0 to 1.
