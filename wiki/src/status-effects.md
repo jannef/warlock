@@ -3,6 +3,8 @@
 Some harm lasts longer than a blow. A deep wound keeps bleeding, and a bite can leave poison
 behind. These **status effects** cost hit points as time passes, slow your
 [healing](healing.md), sometimes weaken you, and wear off on their own. They can kill.
+**Diseased** is a status effect too, shown while any [disease](diseases.md) has broken out; it
+lasts as long as the diseases do.
 
 You always know what ails you: the [status bar](controls.md#the-screen) names it right after your
 hit points (`HP 12/17 · Bleeding · Poisoned`), the [character screen](character.md) lists it, and

@@ -222,6 +222,18 @@ actions = "afflict:poisoned*4 afflict:bleeding wait"
 screen = "character"
 window = "960x600"
 
+# Diseases (#139): the shakes caught (the dev `infect:` action), then rest. Hunger cuts the rests
+# short ("You are getting hungry."), so it takes three: two days on, the disease has shown and
+# progressed once, so the character screen names it on its own row below the status
+# (`Diseased  The shakes`); the status bar beneath says only `Diseased` (and `Weak`: hunger
+# lowers Strength and Dexterity, in red).
+[[golden]]
+name = "diseased"
+scenario = "showcase"
+actions = "infect:the_shakes rest:24h*3"
+screen = "character"
+window = "960x600"
+
 # Character creation (#108, #111, #118), over New run on the main menu (no run; the replay goes
 # unused): the race step with the showcase's character's race preselected, and the summary of
 # that character (race, gender, and class each preselected), with its age, birthday, and sign

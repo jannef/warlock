@@ -78,6 +78,7 @@ mod actor;
 mod ai;
 mod bleed;
 mod dig;
+mod disease;
 mod door;
 mod eat;
 mod equip;
@@ -104,7 +105,9 @@ pub(crate) use hash::fnv1a;
 pub use level::{Fire, LevelState};
 pub use talk::{Conversation, Talk, TopicView};
 
-use crate::action::{Action, Breach, Event, Letters, MAX_REST, MissileEnd, Outcome, Rest, letter};
+use crate::action::{
+    Action, Breach, DiseaseNews, Event, Letters, MAX_REST, MissileEnd, Outcome, Rest, letter,
+};
 use crate::burden::{self, Burden, Load};
 use crate::character::{Character, CharacterSpec};
 use crate::content::{
@@ -446,6 +449,8 @@ impl World {
             regen: 0,
             skills,
             effects: Default::default(),
+            diseases: Default::default(),
+            damage: Default::default(),
             weapon_skills,
             faction_override: None,
             npc: None,
@@ -512,6 +517,18 @@ impl World {
         {
             return Err(WorldError::InconsistentState(format!(
                 "actor {} suffers status effects this content does not have",
+                actor.id
+            )));
+        }
+        // Diseased exactly while a disease shows; stat damage no score could carry is refused.
+        let diseased = |a: &Actor| content.disease_status().is_some_and(|s| a.effects.has(s));
+        if let Some(actor) = state.actors.values().find(|a| {
+            !a.diseases.is_valid_for(&content)
+                || diseased(a) != a.diseases.shows()
+                || !a.damage.is_valid_for(&a.stats)
+        }) {
+            return Err(WorldError::InconsistentState(format!(
+                "actor {} carries diseases or stat damage this content does not allow",
                 actor.id
             )));
         }
@@ -734,10 +751,11 @@ impl World {
     /// view (one not seen the turn before; but for one who talks and fights no one,
     /// [`World::disturbs_rest`]: the player sees who it is) or a message was logged that stops a
     /// rest, and when the player dies. Turns that end before any creature that disturbs a rest
-    /// could come into view ([`World::out_of_view_for`]), in which the player heard nothing, and
-    /// in which the weather the player sees did not change pass without perception, which cannot
-    /// change the outcome; only the last turn's events are kept, and the player's status effects
-    /// beginning and ending in the others (so they are said).
+    /// could come into view ([`World::out_of_view_for`]), in which the player heard nothing, in
+    /// which the weather the player sees did not change, and in which none of the player's
+    /// diseases showed or went badly (news that stops a rest) pass without perception, which
+    /// cannot change the outcome; only the last turn's events are kept, and the player's status
+    /// effects beginning and ending in the others, and their diseases' news (so they are said).
     fn keep_at(
         &mut self,
         events: &mut Vec<Event>,
@@ -753,13 +771,17 @@ impl World {
             events.clear();
             let unseen_until = self.state.time + self.out_of_view_for();
             loop {
-                events.retain(|e| matches!(e, Event::Status { .. }));
+                events.retain(|e| matches!(e, Event::Status { .. } | Event::Disease { .. }));
                 let price = act(self, events);
                 self.run_turn(price, events);
                 let done = !more(self) || self.said != said || !alive(self);
-                // Something heard may be news (or someone muttering): perception says.
+                // Something heard may be news (or someone muttering): perception says. So does a
+                // disease showing or going badly (news that stops a rest).
                 let heard = !self.state.player().heard.is_empty();
-                if done || heard || self.state.time > unseen_until || self.weather_turned() {
+                let ill = events.iter().any(
+                    |e| matches!(e, Event::Disease { news, .. } if *news != DiseaseNews::Recovered),
+                );
+                if done || heard || ill || self.state.time > unseen_until || self.weather_turned() {
                     break;
                 }
             }
@@ -866,15 +888,16 @@ impl World {
     }
 
     /// Keeps the events the player perceived (dropping the rest) and returns the messages for
-    /// the attacks, deaths, and status effects among them, each with whether it stops a rest. A
-    /// creature's attack is said if the player saw the attacker or the target, or is the
-    /// target, and kept for presentation if they saw both (the player's own attacks were said,
-    /// and only seen ones recorded, when made); a death is said and kept with the attack that
-    /// caused it, if the player saw who died. The player's own death is always said, and
-    /// settles whether they saw what killed them. A death of a status effect is said if the
-    /// player sees where it happened ("The giant rat bleeds to death."). The player's own status
-    /// effects are said as they begin (stopping a rest) and end (not stopping one). A wall that
-    /// gave way is kept if the player sees its cell, and one blasted open is said ("The wall
+    /// the attacks, deaths, status effects, diseases, and walls giving way among them, each with
+    /// whether it stops a rest. A creature's attack is said if the player saw the attacker or
+    /// the target, or is the target, and kept for presentation if they saw both (the player's own
+    /// attacks were said, and only seen ones recorded, when made); a death is said and kept with
+    /// the attack that caused it, if the player saw who died. The player's own death is always
+    /// said, and settles whether they saw what killed them. A death of a status effect is said if
+    /// the player sees where it happened ("The giant rat bleeds to death."). The player's own
+    /// status effects are said as they begin (stopping a rest) and end (not stopping one); their
+    /// diseases as they show and worsen (stopping a rest) and leave (not stopping one). A wall
+    /// that gave way is kept if the player sees its cell, and one blasted open is said ("The wall
     /// collapses!"; digging says its own).
     fn perceive_events(&mut self, events: &mut Vec<Event>) -> Vec<(String, bool)> {
         use fight::{End, Words, attack_message, death_message};
@@ -1010,6 +1033,22 @@ impl World {
                 let text = if began { &def.start } else { &def.end };
                 if let Some(text) = text.clone().filter(|_| actor == player) {
                     reports.push((text, began));
+                }
+                actor == player
+            }
+            Event::Disease {
+                actor,
+                disease,
+                news,
+            } => {
+                let def = content.disease(disease);
+                let (text, stops) = match news {
+                    DiseaseNews::Onset => (def.onset.as_str(), true),
+                    DiseaseNews::Worse(n) => (def.symptom(n), true),
+                    DiseaseNews::Recovered => (def.recovered.as_str(), false),
+                };
+                if actor == player {
+                    reports.push((text.to_string(), stops));
                 }
                 actor == player
             }
@@ -1270,8 +1309,26 @@ impl World {
                     self.say(format!("There is no status `{id}`."));
                     return Spent::Nothing;
                 };
+                if self.content.disease_status() == Some(status) {
+                    self.say(format!("`{id}` comes of a disease: try `infect:DISEASE`."));
+                    return Spent::Nothing;
+                }
                 let player = self.state.player;
                 self.afflict(player, status, 1, None, events);
+                return Spent::NoTime;
+            }
+            Action::Infect(id) => {
+                let Some(disease) = self.content.disease_id(id) else {
+                    self.say(format!("There is no disease `{id}`."));
+                    return Spent::Nothing;
+                };
+                let player = self.state.player;
+                let name = self.content.disease(disease).name.clone();
+                if !self.infect(player, disease, None) {
+                    self.say(format!("You carry {name} already (dev)."));
+                    return Spent::Nothing;
+                }
+                self.say(format!("You catch {name} (dev)."));
                 return Spent::NoTime;
             }
         };
@@ -1512,6 +1569,12 @@ impl World {
         });
         self.after_tread(player, to, footing, events);
         self.make_step_noise(player, to, fleeing);
+        // Wading through a marsh may give a disease, by how long the step takes.
+        let speed = self.content.creature(self.state.player().creature).speed;
+        self.wade(
+            onto,
+            u64::try_from(step).unwrap_or(0) / u64::from(speed.max(1)),
+        );
         if let Some((other, seen)) = swap {
             self.swap_places(other, to, from, seen, events);
         }
@@ -1793,6 +1856,8 @@ fn instantiate_level(state: &mut WorldState, content: &Content, template: &Level
             regen: 0,
             skills: def.skills.clone(),
             effects: Default::default(),
+            diseases: Default::default(),
+            damage: Default::default(),
             weapon_skills: def.weapon_skills.clone(),
             faction_override: spawn.faction,
             npc: spawn.npc.clone(),
@@ -1819,6 +1884,8 @@ mod character_tests;
 mod cost_tests;
 #[cfg(test)]
 mod dig_tests;
+#[cfg(test)]
+mod disease_tests;
 #[cfg(test)]
 mod door_tests;
 #[cfg(test)]

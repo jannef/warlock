@@ -53,8 +53,9 @@ pub enum Layer {
     Equipment,
     /// Not a map: the player's character (`Race Dwarf`, `Gender Female`, `Class Warrior`), if
     /// any, then their own scores, one stat a line (`Strength 12`, lowered while a status effect
-    /// lowers it), then their status effects by name (`Effects Bleeding, Poisoned`) if any;
-    /// never potentials, modifiers, or how severe an effect is.
+    /// or stat damage lowers it), then their status effects by name (`Effects Bleeding,
+    /// Diseased`) and the diseases they know they have (`Diseases filth fever`) if any; never
+    /// potentials, modifiers, how severe an effect is, or a disease's timers.
     Stats,
     /// Not a map: the player's own trained skills, one a line in skill order (`Stealth 17`);
     /// never an untrained skill, a mark, or a benefit.
@@ -65,9 +66,10 @@ pub enum Layer {
     /// Ground truth: all terrain, objects, and actors on the level. **Dev-only.**
     Truth,
     /// Not a map: every actor on the level with its weight, what it carries (and of that wears
-    /// and wields), its stats (scores and potentials), its trained skills with their marks, and
-    /// its status effects with their severities, the player's nutrition, then every corpse on
-    /// the level and in the player's pack with its age (ground truth). **Dev-only.**
+    /// and wields), its stats (scores and potentials), its trained skills with their marks, its
+    /// status effects with their severities, and its diseases and stat damage, the player's
+    /// nutrition, then every corpse on the level and in the player's pack with its age (ground
+    /// truth). **Dev-only.**
     Actors,
     /// The level's special rooms (spec §7 "Special rooms"; ground truth): the terrain, with the
     /// plain ground of each special room drawn as its effect's `mark`, then a line per room
@@ -413,6 +415,12 @@ fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
     if !effects.is_empty() {
         rows.push(format!("Effects {}", effects.join(", ")));
     }
+    let diseases: Vec<&str> = (view.own_diseases())
+        .map(|d| content.disease(d).name.as_str())
+        .collect();
+    if !diseases.is_empty() {
+        rows.push(format!("Diseases {}", diseases.join(", ")));
+    }
     rows
 }
 
@@ -549,6 +557,7 @@ fn actor_rows(world: &World) -> Vec<String> {
             } else {
                 format!("; effects {}", effects.join(", "))
             };
+            let diseases = disease_text(a, content);
             let weapons = actor_weapon_skills(content, a)
                 .map_or(String::new(), |s| format!("; weapon skills {s}"));
             // Who it is and how far its talk has got (spec §8 "Dialogue"), if anything.
@@ -562,7 +571,8 @@ fn actor_rows(world: &World) -> Vec<String> {
             };
             format!(
                 "{} {} at {}: hp {}/{} dv {}; weight {} (base {} + carried {}: {carried})\
-                 {equipped}; {} (limit {}){weapons}; stats {}{skills}{effects}{hunger}{npc}{talk}",
+                 {equipped}; {} (limit {}){weapons}; stats {}{skills}{effects}{diseases}{hunger}{npc}\
+                 {talk}",
                 a.id,
                 content.creature(a.creature).id,
                 a.pos,
@@ -579,6 +589,42 @@ fn actor_rows(world: &World) -> Vec<String> {
         })
         .collect();
     rows.into_iter().chain(corpses).collect()
+}
+
+/// An actor's diseases and stat damage, as the `actors` dump shows them (ground truth):
+/// `; diseases filth_fever incubating 2d, red_ache 3 (1 won) 1d; damage St 2`, each infection
+/// with its progressions so far (and checks won in a row) and the time to its next turn, in
+/// days and hours; empty without any.
+fn disease_text(a: &crate::world::Actor, content: &crate::content::Content) -> String {
+    let mut out = String::new();
+    let infections: Vec<String> = (a.diseases.iter())
+        .map(|i| {
+            let id = &content.disease(i.disease).id;
+            let left = u64::from(i.left);
+            let (days, hours) = (left / crate::time::DAY, left % crate::time::DAY / 3600);
+            let stage = if i.shown {
+                let won = match i.streak {
+                    0 => String::new(),
+                    n => format!(" ({n} won)"),
+                };
+                format!("{}{won}", i.progressions)
+            } else {
+                "incubating".to_string()
+            };
+            format!("{id} {stage} {days}d{hours}h")
+        })
+        .collect();
+    if !infections.is_empty() {
+        let _ = write!(out, "; diseases {}", infections.join(", "));
+    }
+    let damaged: Vec<String> = (Stat::ALL.iter())
+        .filter(|&&s| a.damage.get(s) > 0)
+        .map(|&s| format!("{} {}", s.abbrev(), a.damage.get(s)))
+        .collect();
+    if !damaged.is_empty() {
+        let _ = write!(out, "; damage {}", damaged.join(" "));
+    }
+    out
 }
 
 fn rows(width: i32, height: i32, glyph: impl Fn(Pos) -> char) -> Vec<String> {
@@ -639,8 +685,9 @@ pub fn ascii(world: &World, layers: &[Layer]) -> String {
 /// Structured dump: turn, game time, level, viewer, the special room the player stands in if they
 /// know it (its effect id; else null), the weather (under the open sky; else null), the
 /// temperature (°C, to a tenth), seen actors (with the status effects that show on them), heard
-/// sounds, the player's inventory, equipment (by slot id), weight, scores (by stat id), and status
-/// effects (by id), recent messages, the requested layers as arrays of rows, and optionally the full
+/// sounds, the player's inventory, equipment (by slot id), weight, scores (by stat id), status
+/// effects (by id), the diseases they know (by id), recent messages, the requested layers as
+/// arrays of rows, and optionally the full
 /// [`crate::WorldState`] under `state`.
 pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     let view = world.perception();
@@ -703,6 +750,9 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     let effects: Vec<&str> = (view.own_effects())
         .map(|s| content.status(s).id.as_str())
         .collect();
+    let diseases: Vec<&str> = (view.own_diseases())
+        .map(|d| content.disease(d).id.as_str())
+        .collect();
     let weapon_skills: serde_json::Map<String, Value> = (content.weapon_skills().ids())
         .map(|(id, def)| {
             let rank = view.own_weapon_skills().rank(id);
@@ -748,6 +798,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "stats": view.own_scores(),
         "skills": skills_json(&view),
         "effects": effects,
+        "diseases": diseases,
         "weapon_skills": weapon_skills,
         "hp": { "current": hp, "max": max_hp },
         "experience": view.own_experience(),

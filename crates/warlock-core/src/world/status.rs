@@ -4,19 +4,23 @@
 //!
 //! - **Causes**: a blow that hits and leaves its target alive ([`World::after_blow`]) causes
 //!   every status whose `wound` it meets (bleeding: a big hit or a confirmed critical), then each
-//!   `on_hit` effect of the attack (a giant rat's bite may poison), each with one draw of the
-//!   gameplay stream for its chance (none at 100 %). Other rules call [`World::afflict`].
+//!   `on_hit` effect of the attack (a giant rat's bite may poison, or expose its target to filth
+//!   fever: `world/disease.rs`), each with one draw of the gameplay stream for its chance (none
+//!   at 100 %). Other rules call [`World::afflict`].
 //! - **Time**: as the scheduler moves the clock, every actor on the current level lives through
 //!   it ([`World::pass_time`]): its effects tick (costing hit points) and ease, and it gets hit
 //!   points back at its healing rate, in time order, so it makes no difference how the time is
-//!   cut up (by a long journey or many short actions). At one moment a hit point back comes
-//!   first, then the ticks, then the easing. Actors on other levels are frozen, as with energy,
-//!   and the dev time skip passes no time for anyone.
+//!   cut up (by a long journey or many short actions). Diseases take their turns and stat damage
+//!   mends at their own moments too (`world/disease.rs`). At one moment a hit point back comes
+//!   first, then the ticks, then the easing, then the player's hunger, then a point of stat
+//!   damage mending, then the diseases' turns. Actors on other levels are frozen, as with energy, and the dev time skip
+//!   passes no time for anyone.
 //! - **Healing** ([`World::healing_rate`]): normally one hit point per
 //!   [`combat::regen_seconds`] of the actor's (effective) Toughness; twice as fast while the
-//!   player rests (`[healing] resting`); slowed or stopped by the slowest `regen` of its statuses
-//!   (bleeding stops it, poison halves it), and stopped while the player is Starving (spec §8
-//!   "Hunger").
+//!   player rests (`[healing] resting`) and three times as fast in a sanctuary (a special
+//!   room's `regen`); slowed or stopped by the slowest `regen` of its statuses (bleeding stops
+//!   it, poison and disease halve it) and of the diseases that show (marsh ague slows it more),
+//!   and stopped while the player is Starving (spec §8 "Hunger").
 //! - **Hunger**: the player's nutrition burns as they live through the time, and starving costs
 //!   them hit points ([`World::digest`], `hunger.rs`); each change of their hunger state is a
 //!   moment of its own, so healing stops exactly when they start to starve.
@@ -30,12 +34,12 @@
 //!   only logged and lets a rest go on. Nothing is said of a creature's statuses but its death
 //!   ("The giant rat bleeds to death."); look mode shows those that show.
 //! - **Cures**: [`World::cure`] ends what a named means cures (`cured_by`: a bandage stops the
-//!   bleeding), for the Heal skill (#132) to use.
+//!   bleeding; diseases list their own), for the Heal skill (#132), potions, and priests to use.
 
-use super::{ActorId, Cause, World};
+use super::{ActorId, Cause, World, disease};
 use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Strike};
-use crate::content::{Content, OnHit, StatusId};
+use crate::content::{Affliction, Content, DiseaseId, OnHit, StatusId};
 use crate::hunger::Hunger;
 use crate::stats::Stat;
 use crate::status::Added;
@@ -77,22 +81,29 @@ impl World {
         }
     }
 
-    /// Cures actor `id` with `cure`, a means named in the statuses' `cured_by` (`bandage`): every
-    /// status of its that the means cures ends. Returns whether any did. Nothing applies a cure
-    /// yet: the Heal skill's bandaging (#132) will.
+    /// Cures actor `id` with `cure`, a means named in the statuses' and diseases' `cured_by`
+    /// (`bandage`, `remove_disease`): every status of its that the means cures ends, and every
+    /// disease (showing or not). Returns whether any did. Nothing applies a cure yet: the Heal
+    /// skill's bandaging (#132), potions, and priests will.
     #[cfg_attr(not(test), allow(dead_code))]
     pub(crate) fn cure(&mut self, id: ActorId, cure: &str, events: &mut Vec<Event>) -> bool {
-        let content = &self.content;
+        let content = self.content.clone();
+        let player = self.state.player;
         let Some(actor) = self.state.actors.get_mut(&id) else {
             return false;
         };
+        let cures = |by: &[String]| by.iter().any(|c| c == cure);
         let cured: Vec<StatusId> = (actor.effects.iter())
             .map(|e| e.status)
-            .filter(|&s| content.status(s).cured_by.iter().any(|c| c == cure))
+            .filter(|&s| cures(&content.status(s).cured_by))
+            .collect();
+        let healed: Vec<DiseaseId> = (actor.diseases.iter())
+            .map(|i| i.disease)
+            .filter(|&d| cures(&content.disease(d).cured_by))
             .collect();
         for &status in &cured {
             actor.effects.remove(status);
-            if id == self.state.player {
+            if id == player {
                 events.push(Event::Status {
                     actor: id,
                     status,
@@ -100,7 +111,10 @@ impl World {
                 });
             }
         }
-        !cured.is_empty()
+        for &disease in &healed {
+            self.end_disease(id, disease, events);
+        }
+        !cured.is_empty() || !healed.is_empty()
     }
 
     /// A blow by `attacker` with an attack of `kind` hit `target` and left it alive: the
@@ -130,8 +144,16 @@ impl World {
         }
         for hit in self.on_hit_of(attacker, kind) {
             let lands = hit.chance >= 100 || self.state.rng.chance(u32::from(hit.chance));
-            if lands {
-                self.afflict(target, hit.status, hit.severity, Some(attacker), events);
+            if !lands {
+                continue;
+            }
+            match hit.what {
+                Affliction::Status { status, severity } => {
+                    self.afflict(target, status, severity, Some(attacker), events);
+                }
+                Affliction::Disease(disease) => {
+                    self.expose(target, disease, Some(attacker));
+                }
             }
         }
     }
@@ -153,11 +175,11 @@ impl World {
     }
 
     /// How fast actor `id` gets hit points back now, in percent of the normal pace (spec §8
-    /// "Healing"): the slowest `regen` of its statuses (100 without any), times the resting
-    /// bonus while the player rests, times the `regen` of a special room it stands in (a
-    /// sanctuary: three times; spec §7 "Special rooms"). The one place that decides it. A
-    /// Starving player gets none back (spec §8 "Hunger"); disease (#139) slows it through its
-    /// statuses' `regen`.
+    /// "Healing"): the slowest `regen` of its statuses and of the diseases that show (100
+    /// without any), times the resting bonus while the player rests, times the `regen` of a
+    /// special room it stands in (a sanctuary: three times; spec §7 "Special rooms"). The one
+    /// place that decides it. A Starving player gets none back (spec §8 "Hunger"); disease
+    /// (#139) slows it through Diseased's `regen` and its own.
     pub(crate) fn healing_rate(&self, id: ActorId) -> u32 {
         let Some(actor) = self.state.actors.get(&id) else {
             return 0;
@@ -165,7 +187,8 @@ impl World {
         if actor.hunger(&self.content) == Some(Hunger::Starving) {
             return 0;
         }
-        let mut rate = u32::from(actor.effects.regen(&self.content));
+        let statuses = actor.effects.regen(&self.content);
+        let mut rate = u32::from(statuses.min(actor.diseases.regen(&self.content)));
         if self.resting && id == self.state.player {
             rate = rate * u32::from(self.content.healing().resting) / 100;
         }
@@ -189,8 +212,8 @@ impl World {
     }
 
     /// `seconds` of game time from `start` pass for actor `id`: its effects tick and ease, it
-    /// heals, and (the player) hungers, each at the moment it happens, until the time is up or
-    /// it dies.
+    /// heals, (the player) hungers, its stat damage mends, and its diseases take their turns,
+    /// each at the moment it happens, until the time is up or it dies.
     fn live(&mut self, id: ActorId, start: GameTime, seconds: u64, events: &mut Vec<Event>) {
         let content = self.content.clone();
         let mut passed = 0;
@@ -204,13 +227,21 @@ impl World {
                 return;
             }
             let left = seconds - passed;
-            if actor.effects.is_empty() && hungrier.is_none() {
+            if actor.effects.is_empty()
+                && hungrier.is_none()
+                && actor.diseases.is_empty()
+                && actor.damage.is_none()
+            {
                 heal(actor, &content, left, rate);
                 return;
             }
-            // Up to the next moment something happens: a tick, an easing, a hit point back, or a
-            // change in its hunger (a new state, a hit point lost to starving).
+            // Up to the next moment something happens: a tick, an easing, a hit point back, a
+            // change in its hunger (a new state, a hit point lost to starving), a disease's
+            // turn, or a point of stat damage mended.
             let mut step = hungrier.map_or(left, |h| h.min(left));
+            if let Some(next) = disease::until_next(actor) {
+                step = step.min(next);
+            }
             for e in actor.effects.iter() {
                 let def = content.status(e.status);
                 step = (e.until_tick(def).into_iter())
@@ -251,6 +282,7 @@ impl World {
             };
             actor.hp -= starved;
             let dead = actor.hp <= 0;
+            let due = disease::pass(actor, step);
             if moment.bled {
                 self.drip_blood(id);
             }
@@ -272,6 +304,11 @@ impl World {
             }
             if let Some(before) = hunger {
                 self.hunger_news(before);
+            }
+            for disease in due {
+                if !self.disease_turn(id, disease, when, events) {
+                    return;
+                }
             }
         }
     }

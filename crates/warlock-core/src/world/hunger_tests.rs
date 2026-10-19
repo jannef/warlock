@@ -575,6 +575,35 @@ fn a_rotten_corpse_makes_you_vomit_or_sick() {
 }
 
 #[test]
+fn a_rotten_corpse_kept_down_may_give_grave_rot() {
+    // Rotten food carries grave rot (spec §8 "Diseases"): kept down, the eater makes a check to
+    // resist it; vomited, it never comes to that.
+    for (vomit, vomited) in [("rotten_vomit = 100", true), ("rotten_vomit = 0", false)] {
+        let content = content_with(&[("rotten_vomit = 50", vomit)]);
+        let rot = content.disease_id("grave_rot").expect("grave rot");
+        let caught = (0..20u64).filter(|&seed| {
+            let mut w = World::new(content.clone(), "pantry", Some(seed)).expect("world");
+            let corpse = object(&w, "kobold_corpse");
+            let died = GameTime::from_seconds(w.time().seconds() - 10 * 3600);
+            let here = w.player_pos();
+            w.state
+                .current_mut()
+                .set_pile(here, vec![Stack::corpse(corpse, died)]);
+            w.apply(&Action::Eat(Meal::Floor(0)));
+            assert!(said(&w, "Ugh! The kobold corpse was rotten."));
+            w.state.player().diseases.has(rot)
+        });
+        let caught = caught.count();
+        if vomited {
+            assert_eq!(caught, 0, "vomited: no exposure");
+        } else {
+            // Toughness 10 against 15: resisted about two times in five.
+            assert!((1..20).contains(&caught), "caught {caught} times in 20");
+        }
+    }
+}
+
+#[test]
 fn harm_from_food_is_a_known_sickness() {
     let sickness = "sickness = \"poisoned\"\n";
     for (to, refused) in [

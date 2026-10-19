@@ -10,6 +10,7 @@ mod calendar;
 mod class;
 mod creature;
 mod dialogue;
+mod disease;
 mod dungeon;
 mod effect;
 mod experience;
@@ -49,6 +50,7 @@ pub use creature::{
 pub use dialogue::{
     Dialogue, DialogueId, MAX_LINE, MAX_REPLY, MAX_TOPICS, MUTTER_CHANCES, Mutter, Speaker, Topic,
 };
+pub use disease::{DIFFICULTIES, DiseaseDef, DiseaseId, SOURCES, Wading};
 pub use dungeon::{DungeonDef, Generator, LevelPlan, parse_branch_level};
 pub use effect::{
     Darken, EffectDef, EffectLight, EffectShape, FILL_GLYPH, MAX_BURST_RADIUS, MAX_DARKEN,
@@ -79,7 +81,8 @@ pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use status::{
-    Healing, MAX_REGEN, MAX_SEVERITY, OnHit, Penalty, Stacking, StatusDef, StatusId, Wound,
+    Affliction, Healing, MAX_REGEN, MAX_SEVERITY, OnHit, Penalty, Stacking, StatusDef, StatusId,
+    Wound,
 };
 pub use terrain::{Breakable, Freeze, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
 pub use vault::Vault;
@@ -243,8 +246,8 @@ struct LegendFile {
 /// `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
 /// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, `data/horoscope.toml`,
 /// `data/effects.toml`, `data/room_effects.toml`, `data/weapon_skills.toml`, `data/stances.toml`,
-/// `data/status.toml`, and `data/dialogue.toml` are optional (without effects, spell effects
-/// are not drawn). Without vision
+/// `data/status.toml`, `data/diseases.toml`, and `data/dialogue.toml` are optional (without
+/// effects, spell effects are not drawn). Without vision
 /// profiles, a single `normal` profile that needs no light is used, so content without lighting
 /// stays fully visible; without sizes, everything is medium; without factions, everyone is neutral; without a calendar, months are numbered;
 /// without a sky file there are no moons; without an objects file there are no objects; without a
@@ -254,8 +257,8 @@ struct LegendFile {
 /// skills nobody is trained in anything; without a horoscope, characters are born under no sign;
 /// without room effects there are no special rooms; without weapon skills nobody has any, and
 /// weapons name no category; without statuses nothing ails anyone, and resting heals twice as
-/// fast; without dialogue, nobody talks; without `data/hunger.toml` nobody hungers, nothing is
-/// eaten, and creatures leave no corpses.
+/// fast; without diseases nobody falls ill; without dialogue, nobody talks; without
+/// `data/hunger.toml` nobody hungers, nothing is eaten, and creatures leave no corpses.
 #[derive(Debug)]
 pub struct Content {
     terrain: Vec<TerrainDef>,
@@ -305,6 +308,11 @@ pub struct Content {
     statuses: Vec<StatusDef>,
     status_ids: BTreeMap<String, StatusId>,
     healing: Healing,
+    /// In `data/diseases.toml` order.
+    diseases: Vec<DiseaseDef>,
+    disease_ids: BTreeMap<String, DiseaseId>,
+    /// The status diseases show as ("Diseased"), with any disease.
+    disease_status: Option<StatusId>,
     /// What creatures say (`data/dialogue.toml`), in file order.
     dialogues: Vec<Dialogue>,
 }
@@ -355,6 +363,9 @@ impl Content {
             statuses: Vec::new(),
             status_ids: BTreeMap::new(),
             healing: Healing::default(),
+            diseases: Vec::new(),
+            disease_ids: BTreeMap::new(),
+            disease_status: None,
             dialogues: Vec::new(),
         };
         let path = "data/calendar.toml";
@@ -414,6 +425,7 @@ impl Content {
         }
         content.load_statuses(files)?;
         content.load_terrain(files)?;
+        content.load_diseases(files)?;
         let path = "data/room_effects.toml";
         if let Some(text) = files.get_optional(path) {
             let terrain = |name: &str| {
@@ -751,12 +763,15 @@ impl Content {
                     object::MAX_BONUS
                 )));
             }
+            // The status diseases show as comes of a disease, never of a blow.
             let status = |id: &str| {
-                let found = self.status_id(id)?;
+                let found = self
+                    .status_id(id)
+                    .filter(|&s| Some(s) != self.disease_status)?;
                 Some((found, self.status(found).max))
             };
             let attack = (spec.attack.clone())
-                .map(|a| a.resolve(status))
+                .map(|a| a.resolve(status, |id| self.disease_id(id)))
                 .transpose()
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let stats = Stats::from_data(&spec.stats, &spec.potential)
@@ -870,6 +885,45 @@ impl Content {
         }
         self.healing = healing;
         self.statuses = list;
+        Ok(())
+    }
+
+    /// Diseases (optional: none). Their status must be one that nothing but diseases gives or
+    /// takes away: no ticks, no easing, no wounds, no cures of its own.
+    fn load_diseases(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
+        let path = "data/diseases.toml";
+        let Some(text) = files.get_optional(path) else {
+            return Ok(());
+        };
+        let (status, list) = disease::parse(
+            path,
+            text,
+            |id| self.status_id(id),
+            |id| self.terrain_id(id),
+        )?;
+        if let Some(status) = status {
+            let def = self.status(status);
+            if def.tick.is_some()
+                || def.eases.is_some()
+                || def.wound.is_some()
+                || !def.cured_by.is_empty()
+            {
+                return Err(ContentError::new(
+                    path,
+                    format!(
+                        "status `{}`: the status diseases show as lasts while they do: no \
+                         `tick`, `eases`, `wound`, or `cured_by` (cure the diseases instead)",
+                        def.id
+                    ),
+                ));
+            }
+        }
+        for (i, def) in list.iter().enumerate() {
+            let id = u16::try_from(i).map_err(|_| ContentError::new(path, "too many diseases"))?;
+            self.disease_ids.insert(def.id.clone(), DiseaseId(id));
+        }
+        self.disease_status = status;
+        self.diseases = list;
         Ok(())
     }
 
@@ -1171,11 +1225,11 @@ impl Content {
     }
 
     /// A stable hash (64-bit FNV-1a) of the ordered terrain, creature, level, light, dungeon,
-    /// object, slot, skill, room effect, weapon skill, and status ids.
+    /// object, slot, skill, room effect, weapon skill, status, and disease ids.
     ///
     /// `TerrainId`, `CreatureId`, `LightId`, `ObjectId`, `SlotId`, `SkillId`, `RoomEffectId`,
-    /// `WeaponSkillId`, and `StatusId` are indices, so a save is only meaningful for content with
-    /// the same ids in the same order;
+    /// `WeaponSkillId`, `StatusId`, and `DiseaseId` are indices, so a save is only meaningful for
+    /// content with the same ids in the same order;
     /// saves record this fingerprint to detect a mismatch.
     pub fn fingerprint(&self) -> u64 {
         let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
@@ -1184,7 +1238,7 @@ impl Content {
                 hash = (hash ^ u64::from(b)).wrapping_mul(0x0000_0100_0000_01b3);
             }
         };
-        let groups: [Vec<&str>; 11] = [
+        let groups: [Vec<&str>; 12] = [
             self.terrain.iter().map(|t| t.id.as_str()).collect(),
             self.creatures.iter().map(|c| c.id.as_str()).collect(),
             self.levels.keys().map(String::as_str).collect(),
@@ -1200,6 +1254,7 @@ impl Content {
                 .map(|s| s.id.as_str())
                 .collect(),
             self.statuses.iter().map(|s| s.id.as_str()).collect(),
+            self.diseases.iter().map(|d| d.id.as_str()).collect(),
         ];
         for ids in groups {
             for id in ids {
@@ -1421,6 +1476,29 @@ impl Content {
     /// The passive healing rules (`[healing]` in `data/status.toml`).
     pub fn healing(&self) -> &Healing {
         &self.healing
+    }
+
+    /// Diseases (`data/diseases.toml`), in file order; empty without the file.
+    pub fn disease_defs(&self) -> &[DiseaseDef] {
+        &self.diseases
+    }
+
+    pub fn disease(&self, id: DiseaseId) -> &DiseaseDef {
+        &self.diseases[usize::from(id.0)]
+    }
+
+    pub fn disease_id(&self, name: &str) -> Option<DiseaseId> {
+        self.disease_ids.get(name).copied()
+    }
+
+    /// Every disease with its id, in file order.
+    pub fn disease_ids(&self) -> impl Iterator<Item = (DiseaseId, &DiseaseDef)> {
+        (0u16..).map(DiseaseId).zip(&self.diseases)
+    }
+
+    /// The status diseases show as ("Diseased"); `None` without diseases.
+    pub fn disease_status(&self) -> Option<StatusId> {
+        self.disease_status
     }
 
     /// A hand-made level. Generated levels (`depths:3`, `local:12,30`) are not stored here; see

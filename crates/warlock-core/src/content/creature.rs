@@ -1,6 +1,7 @@
 //! Creature definitions (`assets/data/creatures.toml`).
 
 use super::anim::GlyphAnim;
+use super::disease::DiseaseId;
 use super::faction::FactionId;
 use super::light::LightId;
 use super::object::MAX_BONUS;
@@ -205,7 +206,8 @@ impl OnEat {
 
 /// A natural attack as written in content files: `attack = { damage = "1d4", name = "bite",
 /// verb = "bites" }`, with an optional `threat`, `crit`, and `to_hit` like a weapon's, and the
-/// status effects a hit may cause (`on_hit`, `data/status.toml`).
+/// status effects and diseases a hit may cause (`on_hit`, `data/status.toml`,
+/// `data/diseases.toml`).
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct NaturalAttackSpec {
@@ -228,8 +230,8 @@ pub struct NaturalAttack {
     pub name: String,
     /// What it does to its target: "bites" ("The giant rat bites you.").
     pub verb: String,
-    /// The status effects a hit with it may cause, in data order (spec §8 "Status effects"): a
-    /// giant rat's bite may poison.
+    /// The status effects and diseases a hit with it may cause, in data order (spec §8 "Status
+    /// effects", "Diseases"): a giant rat's bite may poison, and give filth fever.
     pub on_hit: Vec<OnHit>,
 }
 
@@ -257,10 +259,11 @@ pub(super) fn blood(spec: Option<&str>) -> Result<Option<Rgb>, String> {
 
 impl NaturalAttackSpec {
     /// Checks the attack like a weapon's and resolves its defaults; `status` resolves a status
-    /// id to the status and its `max`.
+    /// id to the status and its `max`, `disease` a disease id.
     pub(super) fn resolve(
         self,
         status: impl Fn(&str) -> Option<(StatusId, u16)>,
+        disease: impl Fn(&str) -> Option<DiseaseId>,
     ) -> Result<NaturalAttack, String> {
         let threat = self.threat.unwrap_or(DEFAULT_THREAT);
         let crit = self.crit.unwrap_or(DEFAULT_CRIT);
@@ -280,7 +283,10 @@ impl NaturalAttackSpec {
             return Err(format!("attack: `to_hit` must be within ±{MAX_BONUS}"));
         }
         let on_hit = (self.on_hit.iter())
-            .map(|o| o.resolve(&status).map_err(|m| format!("attack: {m}")))
+            .map(|o| {
+                o.resolve(&status, &disease)
+                    .map_err(|m| format!("attack: {m}"))
+            })
             .collect::<Result<Vec<_>, _>>()?;
         Ok(NaturalAttack {
             attack: Attack {

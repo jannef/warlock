@@ -16,7 +16,8 @@
 //! **Corpses**: a creature that dies leaves one on top of its pile ([`World::leave_corpse`]), its
 //! death time in the stack. A corpse rots: rotten after `rotten_hours`, gone after `gone_hours`
 //! ([`World::rot_away`], from the level the player is on and from their pack). Eating a rotten
-//! one is risky (vomiting, else sickness, and then it feeds); a fresh one feeds by its
+//! one is risky (vomiting, else sickness and exposure to the diseases rotten food carries,
+//! [`World::expose_to`], and then it feeds); a fresh one feeds by its
 //! creature's size and does what its creature's `on_eat` says, in this order, each draw from the
 //! gameplay stream: its message, a chance to vomit, a chance per stat to raise it (up to its
 //! potential), healing, harm, and extra nutrition. The player learns what a corpse does only by
@@ -242,8 +243,8 @@ impl World {
         self.feed(nutrition.saturating_add(on_eat.satiation).max(0), what);
     }
 
-    /// A rotten corpse: the player vomits (a chance), else it makes them sick and then feeds
-    /// them.
+    /// A rotten corpse: the player vomits (a chance), else it makes them sick, exposes them to
+    /// the diseases rotten food carries (grave rot), and then feeds them.
     fn eat_rotten(&mut self, nutrition: i32, what: ObjectId, events: &mut Vec<Event>) {
         let content = self.content.clone();
         let Some(corpses) = content.hunger().and_then(|h| h.corpses.as_ref()) else {
@@ -259,8 +260,8 @@ impl World {
         }
         let degrees = corpses.rotten_harm.roll(&mut self.state.rng);
         self.sicken(degrees, events);
-        // Diseases (#139) will expose the eater to rotten food here too
-        // (`World::expose_to(player, "rotten_food")`), once they land.
+        // Rotten food may carry a disease (grave rot): a check to resist it (spec §8 "Diseases").
+        self.expose_to(self.state.player, "rotten_food");
         self.feed(nutrition, what);
     }
 

@@ -36,7 +36,8 @@ altogether, from the floor and from your pack alike ("Your giant rat corpse rots
 corpse does not show how old it is: remember when it fell. Eating a rotten one is a bad idea:
 "Ugh! The kobold corpse was rotten." You may vomit, and if it stays down it makes you sick ("You
 feel sick."): food poisoning, which costs hit points for a while until it wears off (see
-[Status effects](status-effects.md#poisoned)), though it still feeds you.
+[Status effects](status-effects.md#poisoned)), though it still feeds you. Rotten flesh may also
+give you grave rot (see [Diseases](diseases.md)).
 
 Eating a fresh corpse may do more than feed you. Some taste terrible and may come back up, some
 make you sick, some do you good, and a rare few may make you a little stronger in some way, as

@@ -98,7 +98,8 @@ Messages never give numbers: "The kobold hits you.", "The giant rat bites the ko
 the giant rat hard!"
 
 A **big hit**, one that takes at least a third of the target's hit points at once, makes it
-bleed, and some creatures' attacks can poison: see [Status effects](status-effects.md).
+bleed, and some creatures' attacks can poison: see [Status effects](status-effects.md). Some bites
+carry a disease: see [Diseases](diseases.md).
 
 ## Stances
 
@@ -140,9 +141,11 @@ hurt a creature looks: unhurt, lightly wounded, wounded, badly wounded, or nearl
 ### Getting better
 
 Hit points come back with time, faster the tougher you are, twice as fast while you
-[rest](resting.md), and slower or not at all while you bleed or are poisoned: see
-[Healing](healing.md). Creatures heal the same way, while you are on their level. In a sanctuary
-(a [special room](special-rooms.md)) wounds heal three times as fast, yours and anyone's.
+[rest](resting.md), and slower or not at all while you bleed, are poisoned, or are diseased: see
+[Healing](healing.md). A disease that lowers your Toughness lowers your most hit points too (see
+[Diseases](diseases.md)). Creatures heal the same way, while you are on their level. In a
+sanctuary (a [special room](special-rooms.md)) wounds heal three times as fast, yours and
+anyone's.
 
 ## Death
 

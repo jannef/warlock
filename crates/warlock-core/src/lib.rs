@@ -12,11 +12,13 @@ pub mod action;
 pub mod blood;
 pub mod burden;
 pub mod character;
+pub mod check;
 pub mod color;
 pub mod combat;
 pub mod content;
 pub mod daylight;
 pub mod dice;
+pub mod disease;
 pub mod door;
 pub mod dump;
 pub mod equipment;
@@ -45,7 +47,8 @@ pub mod weather;
 pub mod world;
 
 pub use action::{
-    Action, AttackKind, Breach, Event, Letters, Meal, MissileEnd, Outcome, Rest, SpellShape,
+    Action, AttackKind, Breach, DiseaseNews, Event, Letters, Meal, MissileEnd, Outcome, Rest,
+    SpellShape,
 };
 pub use geom::{Dir, Pos};
 pub use world::{World, WorldError, WorldState};

@@ -14,7 +14,8 @@ pace:
 
 {{#include generated/healing.md}}
 
-When several status effects slow your healing, the slowest counts. Resting makes up for some of
+When several status effects slow your healing, the slowest counts; a disease that slows it more
+than being Diseased does counts too (see [Diseases](diseases.md)). Resting makes up for some of
 it: resting while poisoned heals at the usual pace. While you bleed or starve, nothing heals you,
 rest or not. In a sanctuary (a [special room](special-rooms.md)) wounds heal three times as fast, on top
 of all that, yours and anyone's.

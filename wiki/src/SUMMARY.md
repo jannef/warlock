@@ -36,6 +36,7 @@
   - [Ammunition](ammunition.md)
   - [Weapon skills](weapon-skills.md)
   - [Status effects](status-effects.md)
+  - [Diseases](diseases.md)
   - [Healing](healing.md)
 - [Creatures](creatures.md)
   - [People and talk](npcs.md)

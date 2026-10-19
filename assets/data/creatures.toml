@@ -50,9 +50,10 @@
 #   attack    its natural attack, used when it wields no weapon (without one: bare hands, 1d3):
 #             { damage = "1d4", name = "bite", verb = "bites" } and optionally threat, crit,
 #             and to_hit as for weapons (objects.toml); Strength adds to hit and to damage.
-#             on_hit lists the status effects (status.toml) a hit with it may cause, if the
-#             target lives: [{ status = "poisoned", chance = 10, severity = 2 }] (chance in
-#             percent, 1 to 100; severity in degrees, up to the status's max)
+#             on_hit lists the status effects (status.toml) and diseases (diseases.toml) a hit
+#             with it may cause, if the target lives: [{ status = "poisoned", chance = 10,
+#             severity = 2 }] (chance in percent, 1 to 100; severity in degrees, up to the
+#             status's max), { disease = "filth_fever", chance = 10 } (then a check to resist it)
 #   natural   its natural armour: { defence = 3, name = "shell" } (the Natural category of
 #             Defence; "Your sword glances off the cave beetle's shell.")
 #   weapon_skills  its ranks in weapon skills (spec §8 "Weapon skills"), by skill id in
@@ -103,12 +104,15 @@ stats = { strength = 10, dexterity = 17, toughness = 12, intelligence = 1, willp
 # Nothing special, slightly gross.
 on_eat = { message = "Gamey and stringy, but it stays down." }
 
-# Its bite is filthy: now and then it poisons.
+# Its bite is filthy: now and then it poisons, or gives filth fever (unless resisted).
 [creature.attack]
 damage = "1d4"
 name = "bite"
 verb = "bites"
-on_hit = [{ status = "poisoned", chance = 10, severity = 2 }]
+on_hit = [
+    { status = "poisoned", chance = 10, severity = 2 },
+    { disease = "filth_fever", chance = 10 },
+]
 
 # Bats fly: no footsteps, and the keenest ears.
 [[creature]]

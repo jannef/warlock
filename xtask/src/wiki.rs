@@ -5,13 +5,13 @@
 //! vision profiles, light presets, creatures, factions, objects and materials, equipment slots,
 //! scenarios, action costs, races and classes, their sizes and carrying limits, the horoscope,
 //! skills: what each does, how it trains, what it gives by value, who trains it, and the increase
-//! curve, status effects and how fast hit points come back, special rooms; the walls that break
-//! and how long digging takes; weapon skills: `wiki/weapon_skills.rs`) and a few constants of the
-//! rules (sight radii, the pack's size, the stats' names, what each gender raises, what ice holds
-//! and how fast it grows). Those are written to `wiki/src/generated/*.md` from the built-in
-//! content, and the pages pull them in with `{{#include generated/NAME.md}}`, so they cannot
-//! drift. Output is deterministic. `--check` fails when a file is stale; `--build` also runs
-//! `mdbook build wiki`.
+//! curve, status effects, diseases, and how fast hit points come back, special rooms; the walls
+//! that break and how long digging takes; weapon skills: `wiki/weapon_skills.rs`) and a few
+//! constants of the rules (sight radii, the pack's size, the stats' names, what each gender
+//! raises, what ice holds and how fast it grows). Those are written to `wiki/src/generated/*.md`
+//! from the built-in content, and the pages pull them in with `{{#include generated/NAME.md}}`,
+//! so they cannot drift. Output is deterministic. `--check` fails when a file is stale; `--build`
+//! also runs `mdbook build wiki`.
 
 mod weapon_skills;
 
@@ -24,8 +24,9 @@ use warlock_core::burden::{self, Burden, Load};
 use warlock_core::character::Gender;
 use warlock_core::combat;
 use warlock_core::content::{
-    ActionKind, BASE_TURN, Combat, Content, CreatureId, FactionId, HungerDef, LevelKind, LightId,
-    NORMAL_SPEED, ObjectDef, ObjectId, Speaker, Stance, StatusDef, TerrainDef, price,
+    ActionKind, Affliction, BASE_TURN, Combat, Content, CreatureId, DiseaseDef, DiseaseId,
+    FactionId, HungerDef, LevelKind, LightId, NORMAL_SPEED, ObjectDef, ObjectId, Speaker, Stance,
+    StatusDef, TerrainDef, price,
 };
 use warlock_core::daylight::{
     MOONLIGHT_PER_CELL, SIGHT_DAY, SIGHT_MOONLIT, SIGHT_NIGHT, SIGHT_TWILIGHT, overworld_sight,
@@ -174,6 +175,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("regeneration.md".to_string(), regeneration()),
         ("healing.md".to_string(), healing(content)),
         ("status-effects.md".to_string(), status_effects(content)),
+        ("diseases.md".to_string(), diseases(content)),
         (
             "experience-levels.md".to_string(),
             experience_levels(content),
@@ -2082,7 +2084,8 @@ fn pace(percent: u32) -> String {
     }
 }
 
-/// How fast hit points come back (spec §8 "Healing"): resting, and each status that changes it.
+/// How fast hit points come back (spec §8 "Healing"): resting, each status that changes it,
+/// and each disease that slows it more than Diseased does.
 fn healing(content: &Content) -> String {
     let mut out = String::from("| While | Hit points come back |\n|---|---|\n");
     let resting = u32::from(content.healing().resting);
@@ -2090,10 +2093,34 @@ fn healing(content: &Content) -> String {
     for def in content.status_defs().iter().filter(|s| s.regen != 100) {
         let _ = writeln!(out, "| {} | {} |", def.name, pace(u32::from(def.regen)));
     }
+    for (_, def) in content.disease_ids() {
+        if def.regen.is_some_and(|r| r < diseased_regen(content)) {
+            let _ = writeln!(
+                out,
+                "| Diseased with {} | {} |",
+                def.name,
+                pace(u32::from(disease_regen(content, def)))
+            );
+        }
+    }
     if content.hunger().is_some() {
         let _ = writeln!(out, "| {} | {} |", Hunger::Starving.name(), pace(0));
     }
     out
+}
+
+/// How fast hit points come back while Diseased (its status's `regen`), in percent.
+fn diseased_regen(content: &Content) -> u16 {
+    content
+        .disease_status()
+        .map_or(100, |s| content.status(s).regen)
+}
+
+/// How fast hit points come back while disease `def` shows: the slower of Diseased's pace and
+/// its own.
+fn disease_regen(content: &Content, def: &DiseaseDef) -> u16 {
+    def.regen
+        .map_or(diseased_regen(content), |r| r.min(diseased_regen(content)))
 }
 
 /// How often, in words: `a minute`, `every 40 seconds`, `every 2 minutes`.
@@ -2104,11 +2131,17 @@ fn every(seconds: u32) -> String {
     }
 }
 
-/// What causes a status, in words: wounds, the attacks whose `on_hit` names it (without saying
-/// which creatures or how often: their natural attacks are hidden), and rotten corpses when it is
-/// the sickness of food (spec §8 "Hunger"; what fresh ones do stays hidden too).
+/// What causes a status, in words: wounds, diseases, the attacks whose `on_hit` names it (without
+/// saying which creatures or how often: their natural attacks are hidden), and rotten corpses
+/// when it is the sickness of food (spec §8 "Hunger"; what fresh ones do stays hidden too).
 fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
     let mut causes = Vec::new();
+    if content
+        .disease_status()
+        .is_some_and(|s| usize::from(s.0) == status)
+    {
+        causes.push("any disease, once it shows");
+    }
     if let Some(w) = def.wound {
         match (w.big_hit > 0, w.critical > 0) {
             (true, true) => causes.push("big hits and confirmed criticals"),
@@ -2118,7 +2151,11 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
     }
     let by_attack = (content.creature_defs().iter())
         .filter_map(|c| c.attack.as_ref())
-        .any(|a| a.on_hit.iter().any(|o| usize::from(o.status.0) == status));
+        .any(|a| {
+            (a.on_hit.iter()).any(|o| {
+                matches!(o.what, Affliction::Status { status: s, .. } if usize::from(s.0) == status)
+            })
+        });
     if by_attack {
         causes.push("some creatures' attacks");
     }
@@ -2163,10 +2200,14 @@ fn status_effects(content: &Content) -> String {
             }
             _ => "nothing".into(),
         };
-        let eases = def.eases.map_or_else(
-            || "only when cured".to_string(),
-            |e| format!("a degree {}", every(e)),
-        );
+        let diseased = content
+            .disease_status()
+            .is_some_and(|s| usize::from(s.0) == i);
+        let eases = match def.eases {
+            Some(e) => format!("a degree {}", every(e)),
+            None if diseased => "when the diseases are gone".to_string(),
+            None => "only when cured".to_string(),
+        };
         let stats = def.penalty.as_ref().map_or_else(
             || "—".to_string(),
             |p| {
@@ -2258,6 +2299,92 @@ fn special_rooms(content: &Content) -> String {
             capital(&e.name),
             e.enter,
             does.join(" ")
+        );
+    }
+    out
+}
+
+/// Days, as dice or a number: `1d3 days`, `1 day`.
+fn days(dice: Dice) -> String {
+    if dice.is_fixed() && dice.min() == 1 {
+        "1 day".into()
+    } else {
+        format!("{dice} days")
+    }
+}
+
+/// How a disease is caught, in words (without saying which creatures or how often: their
+/// natural attacks are hidden).
+fn caught_by(content: &Content, disease: DiseaseId, def: &DiseaseDef) -> String {
+    let mut ways: Vec<String> = Vec::new();
+    let by_attack = (content.creature_defs().iter())
+        .filter_map(|c| c.attack.as_ref())
+        .any(|a| {
+            (a.on_hit.iter()).any(|o| matches!(o.what, Affliction::Disease(d) if d == disease))
+        });
+    if by_attack {
+        ways.push("some creatures' bites".into());
+    }
+    if let Some(wading) = &def.wading {
+        let lands: Vec<String> = (wading.terrain.iter())
+            .map(|&t| content.terrain(t).name.clone())
+            .collect();
+        ways.push(format!("crossing {}", lands.join(" or ")));
+    }
+    for source in &def.caught {
+        ways.push(match source.as_str() {
+            "rotten_food" => "eating rotten food".into(),
+            other => other.replace('_', " "),
+        });
+    }
+    if ways.is_empty() {
+        "—".into()
+    } else {
+        capital(&ways.join("; "))
+    }
+}
+
+/// The diseases (spec §8 "Diseases"): how they are caught and resisted (the stat, and how often
+/// an average one makes the check), how long they incubate, how often they progress, what a
+/// failed check does, how they are shaken off, whether they kill, and healing meanwhile. Never
+/// a creature's chance.
+fn diseases(content: &Content) -> String {
+    let mut out = String::from(
+        "| Disease | Caught by | Resisted with (an average score) | Incubation | Progresses | \
+         A failed check costs | Shaken off | Can kill | Healing |\n|---|---|---|---|---|---|---|:---:|---|\n",
+    );
+    for (disease, def) in content.disease_ids() {
+        let resisted = format!(
+            "{}, {}",
+            def.check.name(),
+            percent(warlock_core::check::ways(0, def.difficulty), 144)
+        );
+        let progresses = match def.interval {
+            1 => "Every day".to_string(),
+            n => format!("Every {n} days"),
+        };
+        let mut costs: Vec<String> = (def.damage.iter())
+            .filter(|(_, d)| !d.is_zero())
+            .map(|(stat, d)| format!("{d} {}", stat.name()))
+            .collect();
+        if let Some(hp) = def.hp {
+            costs.push(format!("{hp} hit points"));
+        }
+        let shaken = match def.recovery {
+            0 => "Never by itself".to_string(),
+            1 => "A check won".to_string(),
+            2 => "Two checks won in a row".to_string(),
+            n => format!("{n} checks won in a row"),
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {resisted} | {} | {progresses} | {} | {shaken} | {} | {} |",
+            capital(&def.name),
+            caught_by(content, disease, def),
+            capital(&days(def.incubation)),
+            costs.join(", "),
+            yes(def.kills),
+            capital(&pace(u32::from(disease_regen(content, def)))),
         );
     }
     out
@@ -2885,6 +3012,23 @@ mod tests {
             !statuses.contains("iant rat"),
             "which creatures poison stays hidden"
         );
+        assert!(statuses.contains("| Diseased | no | Any disease, once it shows | Nothing |"));
+        let diseases = text("diseases.md");
+        for row in [
+            "| Filth fever | Some creatures' bites | Toughness, 54% | 1d3 days | Every day | \
+             1d3 Dexterity, 1d3 Toughness | Two checks won in a row | no | Half as fast |",
+            "| Marsh ague | Crossing marsh or swamp |",
+            "| Grave rot | Eating rotten food |",
+            "| Never by itself | yes |",
+            "| Brain fever | — | Willpower, 54% |",
+        ] {
+            assert!(diseases.contains(row), "{row} in {diseases}");
+        }
+        assert!(
+            !diseases.contains("iant rat"),
+            "which creatures stays hidden"
+        );
+        assert!(healing.contains("| Diseased with marsh ague | a quarter as fast |"));
         // Potentials stay hidden: the human's rolled potentials are nowhere.
         assert!(!text("races.md").contains("otential"));
         let horoscope = text("horoscope.md");

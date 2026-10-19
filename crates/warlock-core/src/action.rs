@@ -1,7 +1,7 @@
 //! Player actions and the events a turn produces.
 
 use crate::combat::Strike;
-use crate::content::{ActionKind, CombatStance, ObjectId, StatusId};
+use crate::content::{ActionKind, CombatStance, DiseaseId, ObjectId, StatusId};
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
 use crate::weather::Weather;
@@ -108,6 +108,10 @@ pub enum Action {
     /// `data/status.toml`), as a wound or a bite would give it: for trying statuses out and for
     /// captures. Takes no game time; recorded in replays.
     Afflict(String),
+    /// Dev command: the player catches a disease (an id in `data/diseases.toml`) as if they
+    /// had failed to resist it: it incubates, then shows. Takes no game time; recorded in
+    /// replays.
+    Infect(String),
     /// Dev command: an instant frost (spec §5 "Ice"): the water within `radius` of cell `at`, in
     /// its line of sight, freezes at once to ice that holds a laden person
     /// ([`crate::ice::FROST`]). Takes no game time; recorded in replays.
@@ -301,6 +305,14 @@ pub enum Event {
         status: StatusId,
         began: bool,
     },
+    /// A disease of the player's showed itself, went badly at a progression, or left them (spec
+    /// §8 "Diseases"). Only the player's own, which they always perceive: said in the message
+    /// line in the disease's own words (its `onset`, a symptom, `recovered`).
+    Disease {
+        actor: ActorId,
+        disease: DiseaseId,
+        news: DiseaseNews,
+    },
     /// A spell-like effect the player perceives (spec §4.8 "Spell effects"): traps now, spells
     /// later. As the player perceives it: it is light itself, so its cells are cut to those the
     /// player sees or has in line of sight (in the dark too), and a bolt's path to the stretch
@@ -330,6 +342,18 @@ pub enum Event {
         actor: ActorId,
         at: Pos,
     },
+}
+
+/// What became of a disease ([`Event::Disease`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DiseaseNews {
+    /// Its incubation is over: it shows.
+    Onset,
+    /// Its progression number `n` (1 for the first) went badly: a symptom.
+    Worse(u16),
+    /// It is gone.
+    Recovered,
 }
 
 /// The shape of a spell effect ([`Event::Spell`]).
@@ -407,17 +431,17 @@ pub struct Outcome {
 /// Text syntax for scripting: `move:E wait open:E close:W kick:N ascend descend lantern rest:1h
 /// rest:dawn rest:dusk pickup pickup:ac drop:b equip:body:b remove:body bash:E fire:12,5
 /// throw:c:12,5 dig:E eat:b eat:floor:a chat:E ask:E:TOPIC vision:ID skip:1h weather:rain
-/// effect:fireball@12,5 effect:lightning_bolt@3,4>12,4 afflict:bleeding freeze:12,5,3
-/// thaw:12,5,3` (durations: `30s`, `10m`, `2h`; letters name stacks, `a` first; `pickup` and
-/// `drop` without letters take everything; `equip:SLOT:LETTER` puts inventory stack LETTER on in
-/// slot SLOT, `remove:SLOT` takes off what is there; `bash:DIR` bashes with the held shield;
-/// `dig:DIR` digs toward a wall; `fire:X,Y` shoots at the level cell (X, Y), `throw:LETTER:X,Y`
-/// throws one of inventory stack LETTER there; `eat:LETTER` eats one of inventory stack LETTER,
-/// `eat:floor:LETTER` one of the stack LETTER of the pile underfoot; `chat:DIR` talks to the
-/// creature that way, `ask:DIR:TOPIC` asks it about a topic by id; weather: `clear`, `overcast`,
-/// `rain`, `heavy`; `effect:ID@X,Y[>X,Y]` shows a spell effect at a cell, or from one cell toward
-/// another; the dev bursts `freeze:X,Y,R` and `thaw:X,Y,R` freeze the water and melt the ice
-/// within radius R, 0 to [`MAX_BURST`], of cell (X, Y)).
+/// effect:fireball@12,5 effect:lightning_bolt@3,4>12,4 afflict:bleeding infect:filth_fever
+/// freeze:12,5,3 thaw:12,5,3` (durations: `30s`, `10m`, `2h`; letters name stacks, `a` first;
+/// `pickup` and `drop` without letters take everything; `equip:SLOT:LETTER` puts inventory stack
+/// LETTER on in slot SLOT, `remove:SLOT` takes off what is there; `bash:DIR` bashes with the held
+/// shield; `dig:DIR` digs toward a wall; `fire:X,Y` shoots at the level cell (X, Y),
+/// `throw:LETTER:X,Y` throws one of inventory stack LETTER there; `eat:LETTER` eats one of
+/// inventory stack LETTER, `eat:floor:LETTER` one of the stack LETTER of the pile underfoot;
+/// `chat:DIR` talks to the creature that way, `ask:DIR:TOPIC` asks it about a topic by id; weather:
+/// `clear`, `overcast`, `rain`, `heavy`; `effect:ID@X,Y[>X,Y]` shows a spell effect at a cell, or
+/// from one cell toward another; the dev bursts `freeze:X,Y,R` and `thaw:X,Y,R` freeze the water
+/// and melt the ice within radius R, 0 to [`MAX_BURST`], of cell (X, Y)).
 ///
 /// `Display` and `FromStr` round-trip; action names are case-insensitive when parsing (vision
 /// profile, slot, and effect ids keep their case).
@@ -468,6 +492,7 @@ impl fmt::Display for Action {
                 }
             }
             Action::Afflict(id) => write!(f, "afflict:{id}"),
+            Action::Infect(id) => write!(f, "infect:{id}"),
             Action::Freeze { at, radius } => write!(f, "freeze:{},{},{radius}", at.x, at.y),
             Action::Thaw { at, radius } => write!(f, "thaw:{},{},{radius}", at.x, at.y),
         }
@@ -644,6 +669,12 @@ impl FromStr for Action {
                 }
                 _ => Err("`afflict` needs a status id, e.g. `afflict:bleeding`".into()),
             },
+            "infect" => match s.split_once(':').map(|(_, id)| id) {
+                Some(id) if !id.is_empty() && !id.contains(':') => {
+                    Ok(Action::Infect(id.to_string()))
+                }
+                _ => Err("`infect` needs a disease id, e.g. `infect:filth_fever`".into()),
+            },
             "freeze" | "thaw" => {
                 let usage = || format!("`{verb}` needs a cell and a radius, e.g. `{verb}:12,5,3`");
                 let (cell, radius) = arg.and_then(|a| a.rsplit_once(',')).ok_or_else(usage)?;
@@ -664,7 +695,7 @@ impl FromStr for Action {
                  equip:SLOT:LETTER, remove:SLOT, bash:DIR, fire:X,Y, throw:LETTER:X,Y, dig:DIR, \
                  eat:LETTER, eat:floor:LETTER, chat:DIR, ask:DIR:TOPIC, stance:NAME, vision:ID, \
                  skip:DURATION, weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y], \
-                 afflict:STATUS, freeze:X,Y,R, thaw:X,Y,R)"
+                 afflict:STATUS, infect:DISEASE, freeze:X,Y,R, thaw:X,Y,R)"
             )),
         }
     }
@@ -778,6 +809,8 @@ mod tests {
             Action::Eat(Meal::Floor(25)),
             Action::Afflict("bleeding".into()),
             Action::Afflict("Odd_Case".into()),
+            Action::Infect("filth_fever".into()),
+            Action::Infect("Odd_Case".into()),
             Action::Freeze {
                 at: Pos::new(40, 12),
                 radius: 3,
@@ -1001,6 +1034,9 @@ mod tests {
             "afflict",
             "afflict:",
             "afflict:a:b",
+            "infect",
+            "infect:",
+            "infect:a:b",
             "pickup:",
             "pickup:a1",
             "drop:A-",

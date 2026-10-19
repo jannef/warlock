@@ -8,6 +8,7 @@ use crate::content::{
     ActionKind, Benefit, CombatStance, Content, CreatureId, FactionId, ObjectDef, ObjectId, Role,
     WeaponSkillId,
 };
+use crate::disease::Diseases;
 use crate::door::{Key, Lock};
 use crate::equipment::Equipment;
 use crate::geom::{Dir, Pos};
@@ -15,7 +16,7 @@ use crate::hunger::{Hunger, Satiation};
 use crate::noise::Heard;
 use crate::object::{Stack, Weight, weight_of};
 use crate::skills::{Effect, Skills};
-use crate::stats::{PerStat, Stat, Stats};
+use crate::stats::{PerStat, Stat, StatDamage, Stats};
 use crate::status::Effects;
 use crate::weapon_skills::WeaponSkills;
 use serde::{Deserialize, Serialize};
@@ -102,7 +103,7 @@ pub struct Actor {
     /// Its scores and potentials (spec §8 "Stats"; [`crate::stats`]): from its creature type,
     /// the player's from the scenario. Known to the rules (and dev tools) for every actor; the
     /// player is shown only their own scores. Rules read them through
-    /// [`Actor::effective_stats`], which status effects may lower.
+    /// [`Actor::effective_stats`], which status effects and stat damage may lower.
     pub stats: Stats,
     /// Hit points left (spec §8 "Combat"); at 0 or below it is dead.
     pub hp: i32,
@@ -124,6 +125,14 @@ pub struct Actor {
     /// The status effects it suffers (spec §8 "Status effects"; [`crate::status`]).
     #[serde(default, skip_serializing_if = "Effects::is_empty")]
     pub effects: Effects,
+    /// The diseases it carries, incubating or showing (spec §8 "Diseases";
+    /// [`crate::disease`]).
+    #[serde(default, skip_serializing_if = "Diseases::is_empty")]
+    pub diseases: Diseases,
+    /// The points its diseases took off its scores, mending once none shows (spec §8 "Stats";
+    /// [`StatDamage`]).
+    #[serde(default, skip_serializing_if = "StatDamage::is_none")]
+    pub damage: StatDamage,
     /// Its rank and marks in every weapon skill (spec §8 "Weapon skills";
     /// [`crate::weapon_skills`]): a creature's from its type, the player's from their race and
     /// class. Only the player trains. The player is shown their own ranks; what a rank gives
@@ -169,9 +178,10 @@ impl Actor {
     }
 
     /// Its stats as the rules read them: its scores less what its status effects take from
-    /// them (spec §8 "Status effects": strong poison lowers Strength and Dexterity) and what
+    /// them (spec §8 "Status effects": strong poison lowers Strength and Dexterity), what
     /// hunger takes while it is Weak or worse (spec §8 "Hunger": `[weak]` in `data/hunger.toml`,
-    /// Strength and Dexterity). The penalties add up.
+    /// Strength and Dexterity), and its stat damage (spec §8 "Diseases"). The penalties add up;
+    /// no score goes below 1.
     pub fn effective_stats(&self, content: &Content) -> Stats {
         let mut by = self.effects.penalty(content);
         if let (Some(def), Some(hunger)) = (content.hunger(), self.hunger(content))
@@ -182,6 +192,12 @@ impl Actor {
                 by[stat] += def.weak[stat];
             }
         }
+        if self.damage.is_damaged() {
+            let sum = by.get_or_insert_with(|| PerStat::splat(0));
+            for (stat, points) in self.damage.by().iter() {
+                sum[stat] += points;
+            }
+        }
         match by {
             Some(by) => self.stats.adjusted_by(&by),
             None => self.stats,
@@ -189,6 +205,7 @@ impl Actor {
     }
 
     /// Its maximum hit points: its (effective) Toughness plus [`Actor::hp_base`], at least 1.
+    /// Toughness damage lowers it, as in D&D 3.5 (spec §8 "Diseases").
     pub fn max_hp(&self, content: &Content) -> i32 {
         let toughness = self.effective_stats(content).score(Stat::Toughness);
         combat::max_hp(toughness, self.hp_base)

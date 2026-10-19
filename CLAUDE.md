@@ -88,7 +88,7 @@ load, stats, and skills with their marks).
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
 eat:LETTER eat:floor:LETTER dig:DIR chat:DIR ask:DIR:TOPIC rest:GOAL stance:NAME vision:PROFILE
-skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] afflict:STATUS` (`DIR` = N
+skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] afflict:STATUS infect:DISEASE` (`DIR` = N
 NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
 player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `SLOT` = a slot id in
 `assets/data/slots.toml`, e.g. `equip:body:b` (put inventory stack `b` on), `remove:body`;
@@ -106,9 +106,11 @@ effect, `ID` an id in `assets/data/effects.toml`: `effect:fireball@30,14` (a bur
 `effect:fireball@20,10>30,14` (flying there first), `effect:lightning_bolt@21,17>58,17` (a bolt
 toward the second cell), no time and no rules effect, for captures; `afflict` is the dev status
 effect: one degree more of `STATUS`, an id in `assets/data/status.toml`, e.g.
-`afflict:poisoned*4 afflict:bleeding`, no game time; `freeze:X,Y,R` and `thaw:X,Y,R` are the dev
-frost and heat bursts (radius 0 to 20 around level cell (X, Y), in its line of sight; no time);
-`ACTION*N` repeats one, e.g.
+`afflict:poisoned*4 afflict:bleeding`, no game time (not `diseased`: that comes of a disease);
+`infect` is the dev disease: the player catches `DISEASE`, an id in `assets/data/diseases.toml`,
+as if they had lost the check (it incubates, then shows), e.g. `infect:the_shakes rest:24h*3`,
+no game time; `freeze:X,Y,R` and `thaw:X,Y,R` are the dev frost and heat bursts (radius 0 to 20
+around level cell (X, Y), in its line of sight; no time); `ACTION*N` repeats one, e.g.
 `wait*10`). Dump layers: `view` (what the player sees), `fov` (`*` visible),
 `memory` (seen terrain and remembered objects), `light` (perceived brightness of visible cells as a
 digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places over the view: `f`
@@ -119,21 +121,24 @@ player sees or remembers as a digit over the view, `1` a few drops to `9` soaked
 carries and weighs, worn and wielded things marked, their burden and its thresholds),
 `equipment` (the player's slots), `stats`
 (the player's race, gender, and class, then their own scores as the rules read them, then
-`Effects Bleeding, Poisoned` when they suffer any), `weapon_skills` (the player's
+`Effects Bleeding, Diseased` when they suffer any, then `Diseases filth fever`, the diseases they
+know they have), `weapon_skills` (the player's
 ranks and progress toward the next, `Long blades 2 (40%)`), `truth`
 (ground truth, **dev-only**), `actors` (every actor on the level with its hit points and
 Defence, its weight, what it carries and of that wears and wields, its burden and carrying
 limit, its weapon skills with marks, its stats as score/potential, its status effects with
-severities, the player's nutrition, and its npc id and talk counts, if any; then every corpse on
+severities, its diseases (progressions, checks won in a row, time to their next turn) and stat
+damage, the player's nutrition, and its npc id and talk counts, if any; then every corpse on
 the level and in the pack with its death time and rot, **dev-only**), `rooms` (the level's
 special rooms: their plain ground as the effect's `mark`, then a line per room, **dev-only**),
 `ice` (the level's temperature and the thickness of the ice on its water in cm, `0`-`9`, `a`-`z`
 for 10-35, `#` beyond, **dev-only**). The header line has the player's `hp 17/17` (and `dead`
 once the run has ended), `hunger hungry` unless Not hungry, and the `temperature`; JSON dumps add
-`hp`, `defence`, `burden` (`level`, `limit`), `hunger`, `effects` (status ids), `death` (with
-`of`, the status that killed, and `cause`, starving or choking), `temperature` (°C to a tenth),
-`weapon_skills` (by skill id: `rank`, `progress`), each seen actor's `health` and `effects`
-(those that show), and `room` (the special room the player stands in, if they know it). Replay
+`hp`, `defence`, `burden` (`level`, `limit`), `hunger`, `effects` (status ids), `diseases` (the
+known ones' ids), `death` (with `of`, the status that killed, and `cause`, starving or choking),
+`temperature` (°C to a tenth), `weapon_skills` (by skill id: `rank`, `progress`), each seen
+actor's `health` and `effects` (those that show), and `room` (the special room the player stands
+in, if they know it). Replay
 files are JSON
 `{game_version, scenario, seed, character, steps:[{action, hash}]}` (`character` =
 `{race, gender, class}`, left out for a run without one; a replay without it starts as the
@@ -165,7 +170,7 @@ level change to `run.sav` in the data dir (see "File locations" below). On start
 `--replay`, or `--record` (replays and recordings always start a fresh run). F5 / F9 write / load `snapshots/quick.sav`. An unreadable save is renamed `run.sav.bad`,
 never deleted. Format and `Content::fingerprint` live in `warlock-core/src/save.rs`: bump
 `FORMAT_VERSION` on any incompatible `WorldState` change; adding or reordering terrain, creatures,
-lights, levels, objects, equipment slots, skills, weapon skills, statuses, or dungeon branches invalidates
+lights, levels, objects, equipment slots, skills, weapon skills, statuses, diseases, or dungeon branches invalidates
 existing saves.
 **Permadeath**: when the player dies, `screens::on_death` deletes `run.sav`
 (`SaveStore::delete_run`) and opens the death screen; `SaveStore::save_run` never writes a dead
@@ -678,7 +683,7 @@ files mark them (`[[room]] effect area`; the hub's stairs nook is a sanctuary). 
 question, `LevelState::room_effect_at` (public: `World::room_effect_at`): perception light and
 creature sight (`room_shade` on every part of a cell's light, `room_glow` in the base light —
 change `perception.rs` and `sight.rs` together; `special_rooms_keep_the_light_invariants` checks
-they agree), noise (`noise::noise`), regeneration (`World::regen_rate`, the one pace hook), and
+they agree), noise (`noise::noise`), regeneration (the room's `regen` in `World::healing_rate`, the one pace hook), and
 hostile creatures shunning a sanctuary (`World::shuns` in `ai.rs`). A flooded room's slower,
 louder steps come from its floor terrain (`shallow_water`). `enter_room` (world/mod.rs) says the
 first-entry message; `PerceptionView::room` gives look mode the rooms the player knows;
@@ -819,6 +824,40 @@ the rest loop keeps them from the turns it does not perceive). Presentation read
 (`FORMAT_VERSION` 20; `Actor::regen` counts hundredths of a second at the normal pace). The dev
 action `afflict:ID` (`Action::Afflict`) gives the player a degree, for tests and captures. Tests:
 `status.rs`, `content/status.rs`, `world/status_tests.rs`.
+
+Diseases (spec §8 "Checks", "Diseases"; M24, #139) build on status effects: every disease shows
+as one umbrella status, Diseased (`data/diseases.toml`'s `status`, `Content::disease_status`; it
+may have no `tick`/`eases`/`wound`/`cured_by`, no `on_hit` names it, and `afflict:diseased` is
+refused), present exactly while a disease shows (`from_state` checks it). **Checks** are
+`crate::check` (`check(rng, modifier, difficulty)`: `combat::roll_natural` + the effective
+stat's modifier, natural 2 fails, 24 succeeds; `ways` for the odds): use it for any future
+stat check. Data: `content/disease.rs` (`DiseaseDef`: `difficulty`, `check` stat, `incubation`
+dice in days, `interval`, `damage: PerStat<Dice>`, `hp`, `recovery` (0 = never), `kills`,
+`regen`, `caught` (named `SOURCES`: `rotten_food`), `wading` (`Wading { terrain, per_hour }`),
+`cured_by`, words `onset`/`symptoms`/`recovered`; `DiseaseId` an index, in the fingerprint);
+`on_hit` entries are `OnHit { what: Affliction::Status { .. } | Affliction::Disease(id),
+chance }`. `crate::disease` holds one actor's infections (`Actor::diseases: Diseases`, at most
+one `Infection { disease, left, shown, progressions, streak, by }` per disease: `left` counts
+down to its onset, then each progression; known by name once `progressions > 0`).
+`crate::stats::StatDamage` (`Actor::damage`: points off scores, capped so a score stays ≥ 1,
+`take` says when it would not have; `mend` seconds) is read by `Actor::effective_stats` with the
+status penalties, so every rule (and max HP through Toughness) sees it. `world/disease.rs`:
+`World::expose(actor, disease, by)` (**the one way to expose**: a check, then `infect`),
+`World::infect` (rolls the incubation; the dev `infect:ID`), `World::expose_to(actor, source)`
+(eating a rotten corpse calls `expose_to(player, "rotten_food")`, `world/eat.rs`),
+`World::wade` (called from `player_moves` with the step's seconds: one draw out of 360 000
+unless sure), `World::disease_turn` (onset: `afflict` Diseased; progression: a check, damage in
+stat order then `hp`, hp cut to the new max, death by Diseased for a disease that `kills`),
+`World::end_disease` (recovery and cures; Diseased ends with the last showing one). `live` steps
+to `disease::until_next` (disease turns and mending a point a day while none shows) and runs
+`disease::pass` then the due turns after the effects at each moment. `World::healing_rate` takes
+the min with `Diseases::regen`; `World::cure` also ends diseases by their `cured_by`. Messages
+are `Event::Disease { actor, disease, news: DiseaseNews::{Onset, Worse(n), Recovered} }` (onset
+and symptoms `say`, recovery `note`s; a batched rest turn with an onset or symptom stops the
+batch). Presentation: Diseased via `own_effects`, `PerceptionView::own_diseases` (known ones:
+the character screen's `Diseased` row, the `stats` dump layer). Saved and hashed
+(`FORMAT_VERSION` 25). Tests: `check.rs`, `disease.rs`, `content/disease.rs`,
+`world/disease_tests.rs` (custom content with extreme stats, mirrored draws).
 
 Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebuffer pixels:
 1. **Map grid** (`render/grid.rs`): a `Console` (`render/console.rs`) drawn by one quad with the
@@ -1054,7 +1093,9 @@ size, the stats' names, races (stat adjustments as written, dice included, visio
 ages, hit points), classes (stat adjustments, hit points), what each gender raises, the horoscope
 (animals, elements, and the great cycle's signs and years), combat (weapons, armour and shields,
 the 2d12 hit chances and threat ranges, regeneration by Toughness), status effects (what causes
-them, what they cost, how they wear off, healing and stats) and healing paces, burden (its levels
+them, what they cost, how they wear off, healing and stats) and healing paces, diseases (how
+they are caught, the stat and the chance an average score resists, incubation, progression,
+damage, recovery, whether they kill, healing), burden (its levels
 and what each costs, the races' sizes, sample carrying limits); never hidden rules such as
 speed, hearing thresholds, creature sight, creature weights, stat modifiers and potentials, a
 to-hit, or creatures' stats, hit points, and natural attacks and armour) are tables

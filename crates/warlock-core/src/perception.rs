@@ -64,7 +64,7 @@ use crate::burden::{self, Load};
 use crate::character::Character;
 use crate::combat::Health;
 use crate::content::{
-    CombatStance, Content, CreatureId, FactionId, Flow, LevelKind, LightId, ObjectId,
+    CombatStance, Content, CreatureId, DiseaseId, FactionId, Flow, LevelKind, LightId, ObjectId,
     RoomEffectDef, SlotId, Stance, StatusId, TerrainId, VisionProfile,
 };
 use crate::daylight;
@@ -888,9 +888,9 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// The player's own scores, by stat (spec §8 "Stats"), as the rules read them: lowered
-    /// while a status effect lowers them (spec §8 "Status effects") and while hunger leaves them
-    /// Weak or worse (spec §8 "Hunger"). That is all the player knows of stats: never their
-    /// potentials or modifiers, and nothing of a creature's.
+    /// while a status effect or stat damage lowers them (spec §8 "Status effects", "Diseases")
+    /// and while hunger leaves them Weak or worse (spec §8 "Hunger"). That is all the player
+    /// knows of stats: never their potentials or modifiers, and nothing of a creature's.
     pub fn own_scores(&self) -> PerStat<u8> {
         self.player.effective_stats(self.content).scores()
     }
@@ -901,8 +901,8 @@ impl<'a> PerceptionView<'a> {
         self.player.hunger(self.content)
     }
 
-    /// The player's scores as they are without their status effects and hunger: what
-    /// [`PerceptionView::own_scores`] would be with neither (the character screen marks the
+    /// The player's scores as they are without their status effects, hunger, or stat damage:
+    /// what [`PerceptionView::own_scores`] would be with none (the character screen marks the
     /// lowered ones).
     pub fn own_base_scores(&self) -> PerStat<u8> {
         self.player.stats.scores()
@@ -934,6 +934,13 @@ impl<'a> PerceptionView<'a> {
     /// what they suffer, never how badly or for how long.
     pub fn own_effects(&self) -> impl Iterator<Item = StatusId> + 'a {
         self.player.effects.iter().map(|e| e.status)
+    }
+
+    /// The diseases the player knows they have, in disease order (spec §8 "Diseases"): those
+    /// that have progressed at least once. One that incubates, or has only just shown, is not
+    /// here (a showing one makes the player Diseased, [`PerceptionView::own_effects`]).
+    pub fn own_diseases(&self) -> impl Iterator<Item = DiseaseId> + 'a {
+        self.player.diseases.known()
     }
 
     /// The status effects that show on seen creature `actor` (`seen` in `data/status.toml`:

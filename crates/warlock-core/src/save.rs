@@ -51,7 +51,10 @@ const MAGIC: &str = "WARLOCK-SAVE";
 ///     muttered, met) and the unique character a level made them (`Actor::npc`).
 /// 24: temperature and ice: level states keep their temperature (underground), the ice on their
 ///     water, and when it was last brought up to date.
-pub const FORMAT_VERSION: u32 = 24;
+/// 25: diseases: actors carry them (`Actor::diseases`: each infection's timer, stage,
+///     progressions, recovery streak, and who gave it) and stat damage (`Actor::damage`, with
+///     its mending progress); disease ids are in the content fingerprint.
+pub const FORMAT_VERSION: u32 = 25;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 

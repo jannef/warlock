@@ -87,6 +87,12 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   stop healing, and can kill (creatures bleed to death too); strong poison saps Strength and
   Dexterity. The status bar names what ails you, look mode shows a creature bleeding; never a
   number. Hit points come back twice as fast while you rest.
+- **Diseases** — filth fever from a rat's bite, marsh ague from the swamps, grave rot from
+  rotten food, and more, in the spirit of D&D 3.5: caught unseen when a hidden check fails, they
+  incubate for days, then you are Diseased. Each day your body fights back with another check;
+  a loss takes points off your stats (Toughness damage lowers your hit points), two wins in a
+  row shake it off, and grave rot never goes by itself. The character screen names the disease
+  once it has run a day; lost stat points mend a point a day once you are well.
 - **Burden** — everything you carry weighs on you: past a third of what your Strength and
   Toughness can bear you are burdened, then strained, then overloaded. Every action takes longer,
   armour-like caps keep your Dexterity from helping your Defence, and your footsteps get louder.
@@ -202,7 +208,7 @@ cargo run --release -p warlock
 | `d` | Drop something |
 | `i` | Inventory: what you carry, by letter, and what it all weighs |
 | `e` | Equipment: wear and wield things, slot by slot (head, body, hands, rings, missiles, a tool, …), as in ADOM |
-| `@` | Character: your race, gender, class, age, birth sign, stats, hit points, Defence, status effects, and weight |
+| `@` | Character: your race, gender, class, age, birth sign, stats, hit points, Defence, status effects, known diseases, and weight |
 | `W` | Weapon skills: your rank in each, and how far to the next |
 | `C` | Chat with someone next to you (asks for a direction if there are several) |
 | `R` | Rest an hour, until dawn, or until nightfall (stops when something comes into view) |

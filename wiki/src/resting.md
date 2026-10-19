@@ -29,8 +29,8 @@ A rest stops early when:
 - a message is written to the message line, such as a new sound you hear ("You hear footsteps to
   the north-east.") or an attack you notice ("The kobold hits you."). A sound you have already
   been hearing does not stop you; see [Hearing](hearing.md). A status effect wearing off ("The
-  bleeding stops.", "The poison wears off.") does not stop you either; see
-  [Status effects](status-effects.md),
+  bleeding stops.", "The poison wears off.") or a disease leaving you ("Your fever breaks.") does
+  not stop you either; see [Status effects](status-effects.md) and [Diseases](diseases.md),
 - under the open sky, rain starts or grows heavier ("It starts to rain.", "It starts to pour.",
   "The rain grows heavy."). Other news of the [weather](weather.md), such as the rain stopping,
   and someone muttering to themselves, is written to the message line but lets you rest on, or
