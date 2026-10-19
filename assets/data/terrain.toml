@@ -7,6 +7,8 @@
 # light the surface bounces, "#rrggbb", default white = neutral), height (gameplay, spec §5
 # "Sunlight": how many cells tall it stands for sun shadows, 0 to 4; default 1 if opaque, else 0),
 # roofed (gameplay: under a roof, never lit by the sun or the sky; default false),
+# stains (presentation-only, spec §8 "Blood": whether blood stains it; default true; water, lava,
+# and fire hold none),
 # anim (presentation-only, §4.3).
 # Noise (gameplay, spec §5 "Hearing"): step_noise (how loud steps onto it are, in percent of the
 # walker's footsteps, 0 to 1000; default 100), toggle_noise (doors only: how loud opening the
@@ -43,6 +45,7 @@ glyph = " "
 fg = "#000000"
 walkable = false
 transparent = false
+stains = false
 
 [[terrain]]
 id = "floor"
@@ -138,6 +141,7 @@ move_cost = 200
 step_noise = 200
 bounce = "#a8c8ff"
 anim = { kind = "wave", speed = 0.16, amount = 0.05, glint = 0.5 }
+stains = false
 
 # A splash when something wades in.
 [[terrain.particles]]
@@ -167,6 +171,7 @@ move_cost = 200
 step_noise = 200
 bounce = "#a8c8ff"
 anim = { kind = "flow", speed = 0.5, glint = 0.4 }
+stains = false
 
 [[terrain.particles]]
 on = "step"
@@ -219,6 +224,7 @@ bg = "#0d0d10"
 walkable = false
 light = "sconce"
 glow = 0.4
+stains = false
 
 # An occasional spark.
 [[terrain.particles]]
@@ -245,6 +251,7 @@ walkable = false
 light = "brazier"
 glow = 0.6
 haze = 1.0
+stains = false
 
 # Sparks rising from the coals.
 [[terrain.particles]]
@@ -304,6 +311,7 @@ bounce = "#ffb070"
 anim = { kind = "shimmer", color = "#ffd060", speed = 0.35 }
 glow = 0.5
 haze = 0.6
+stains = false
 
 # Embers drifting up from the surface.
 [[terrain.particles]]
@@ -326,6 +334,7 @@ glyph = "{"
 fg = "#8fd0ff"
 bg = "#0a1a30"
 walkable = false
+stains = false
 
 # Spray arcing up and falling back into the basin.
 [[terrain.particles]]
@@ -673,6 +682,7 @@ walkable = false
 landscape = "river"
 # Flowing, at map scale: the ripples run downstream along the legend arrows.
 anim = { kind = "flow", speed = 0.35, glint = 0.3 }
+stains = false
 
 [[terrain]]
 id = "lake"
@@ -683,6 +693,7 @@ bg = "#061226"
 walkable = false
 landscape = "lake"
 anim = { kind = "wave", speed = 0.15, amount = 0.06 }
+stains = false
 
 [[terrain]]
 id = "road"

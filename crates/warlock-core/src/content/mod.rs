@@ -461,6 +461,7 @@ impl Content {
                 bounce: spec.bounce,
                 height,
                 roofed: spec.roofed,
+                stains: spec.stains,
                 step_noise: spec.step_noise,
                 toggle_noise: spec.toggle_noise,
                 // Solid terrain blocks sound unless it muffles it; everything else passes it.
@@ -593,7 +594,10 @@ impl Content {
             let size_id = spec.size.as_deref().unwrap_or(MEDIUM);
             let size = (self.size_index(size_id))
                 .ok_or_else(|| err(format!("creature `{}`: unknown size `{size_id}`", spec.id)))?;
+            let blood = creature::blood(spec.blood.as_deref())
+                .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let resolved = creature::Resolved {
+                blood,
                 light,
                 size,
                 stats,

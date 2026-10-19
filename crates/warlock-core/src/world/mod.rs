@@ -47,9 +47,13 @@
 //! Ranged combat (`shoot.rs`): shots and throws fly along a line, attack whoever stands in their
 //! way, and come down to be picked up again; burning missiles are fires that light the level
 //! until they burn out.
+//!
+//! Blood (`bleed.rs`, [`crate::blood`]): big hits and kills stain the floor and the walls around
+//! the victim. Presentation state kept with the level; no rule reads it.
 
 mod actor;
 mod ai;
+mod bleed;
 mod equip;
 mod experience;
 mod fight;
@@ -187,6 +191,15 @@ impl WorldState {
             .filter(|_| actor.kind == ActorKind::Player)
             .and_then(|c| c.spec.race(content).ok());
         burden::load(actor, race, content)
+    }
+
+    /// The size of `actor`, an index into [`Content::sizes`]: the player's race's when the run
+    /// has a character, else its creature type's.
+    pub(crate) fn size_of(&self, content: &Content, actor: &Actor) -> usize {
+        let race = (self.character.as_ref())
+            .filter(|_| actor.kind == ActorKind::Player)
+            .and_then(|c| c.spec.race(content).ok());
+        race.map_or(content.creature(actor.creature).size, |r| r.size)
     }
 
     fn current_mut(&mut self) -> &mut LevelState {
@@ -1530,6 +1543,8 @@ fn instantiate_level(state: &mut WorldState, content: &Content, template: &Level
 
 #[cfg(test)]
 mod ai_tests;
+#[cfg(test)]
+mod blood_tests;
 #[cfg(test)]
 mod branch_tests;
 #[cfg(test)]

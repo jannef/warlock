@@ -8,6 +8,7 @@
 //! the player perceives through [`World::perception`].
 
 pub mod action;
+pub mod blood;
 pub mod burden;
 pub mod character;
 pub mod color;

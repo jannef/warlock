@@ -37,7 +37,9 @@ Build the engine and framework, not the game. Everything built is production qua
   carry, the player's death ends the run for good (§8 "Combat"). Ranged combat (M16): bows, a
   crossbow, a sling, and throwing weapons, ammunition spent and picked up again, ADOM-like
   targeting, missiles flying on screen, and flaming arrows that light the dark where they land
-  (§8 "Ranged combat"). Spells stay announced only
+  (§8 "Ranged combat"). Blood (M17): big hits and kills stain floors and walls by the victim's
+  size and how the blow landed, subtly, adding up where many die (§8 "Blood"). Spells stay
+  announced only
 - Moons with phases and moonlight, weather starting with rain (M12)
 - Action costs: what an actor does and its speed decide how long it takes (M13)
 - Stats (M14): Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
@@ -118,7 +120,8 @@ each creature fights the nearest foe it sees, so coming close (lit, or within a 
 darkvision) turns them on the player. The brawl resolves (M16): melee pairs trade blows, the
 archer shoots and the shaman casts (its spells announced only) over them, the wounded look it,
 and the fallen drop their spears, bow, and amulet where they die; the rats, quicker and harder
-to hit, win within a few minutes of game time. Lighting the lantern there gets the
+to hit, win within a few minutes of game time, leaving blood around the fire pit where the
+fallen died (§8 "Blood"). Lighting the lantern there gets the
 player shot from the dark. The archer spends an arrow a shot (they lie where they fell) and,
 out of arrows, comes to fight with its fists. Beside the player's corner lie a short bow, arrows,
 and flaming arrows, to shoot into the pit from the dark. The `arena` scenario starts there.
@@ -202,7 +205,8 @@ Plains, Mirefen, Greyspine Mountains) show in the status bar.
 1. **Grid layer** — viewport-sized textures (glyph index, foreground, background, visual light,
    perception state) drawn as one quad with a custom 2D material. Terrain, remembered terrain,
    objects (the top object of each pile in place of the terrain's glyph, over its background, lit
-   like terrain; a cell with objects does not animate), and in-cell animation.
+   like terrain; a cell with objects does not animate), blood stains (§4.8), and in-cell
+   animation.
 2. **Free-glyph layer** — instanced glyph quads from the same atlas for actors, particles, and
    anything that moves between cells or grows beyond its cell. Lit by sampling the light texture.
 3. **UI layer** — panels, message log, and overlays, drawn in glyphs.
@@ -332,7 +336,8 @@ Water is calm by design; motion stays tasteful, never busy:
   off on its own (settings: glyph animation, light flicker, motion = slides, camera easing, and
   spell effects' motion, bloom and glow, distortion, particles, screen fades = fades, flashes,
   and spell effects darkening the view, screen shake, weather); an effect runs only when its
-  switch is on and reduced effects is off. Rain has a switch of its own rather than riding on particles: it moves
+  switch is on and reduced effects is off. Blood (§4.8) has a switch too, outside the
+  preset: reduced effects leaves it as it is. Rain has a switch of its own rather than riding on particles: it moves
   over the whole view, not around a few sources. The weather itself (its light, the status bar)
   never depends on it. No gameplay information may
   depend on an effect: heard sounds keep a still marker when their ripple (glyph animation) is
@@ -442,6 +447,15 @@ glow, barely perceptible distortion, short fades.
   particles, so they vanish in the dark and catch a lantern's light. At most 3000 rain particles
   are drawn a frame. The darker, cooler look of a rainy day is the gameplay light itself, not an
   effect. Off with the `weather` switch.
+- **Blood** (§8 "Blood"): a stained cell's colours shift toward the blood's by how much lies
+  there — a floor's dots and background give way to a muted red, a soaked cell is one dark pool
+  with its dots drowned, a wall's face is tinted more lightly, and an object lying in blood keeps
+  its own colour over a stained background — before the grid shader lights them like the
+  terrain they lie on, so stains fade into the dark, show in darkvision's monochrome, and dim
+  with the cell in memory. Old blood dries darker and browner over about six hours of game time
+  (fastest at first). A few drops are barely there; only many deaths in one place look gory. A
+  **Blood** switch in the settings (on by default) hides stains, in look mode too; it is a
+  content preference, not an effect, so reduced effects leaves it as it is.
 - With frozen visual time (`--freeze-time`) fades complete instantly and bursts show a fixed
   moment early in their life, so captures are reproducible; spell effects show the frozen moment
   after they began.
@@ -749,7 +763,8 @@ rate or animation.
   Resume, Settings, Controls, Save and quit to menu, Quit (which saves). No game time passes while
   it is open; Esc or Back in Settings/Controls returns to it.
 - **Settings** (`settings.toml` in the platform config dir; on the web, browser `localStorage`, §7): font size (logical
-  px, 12 to 36), reduced effects and the per-effect switches, color palette, key bindings. A missing or damaged file means
+  px, 12 to 36), reduced effects and the per-effect switches, blood (§4.8), color palette, key
+  bindings. A missing or damaged file means
   defaults and a logged warning. Changes apply live (a font size change rebuilds the glyph atlas)
   and are written immediately.
 - **Rebinding**: in Controls, select a command and press a key; it becomes the command's primary
@@ -905,8 +920,9 @@ rate or animation.
   what the creature wields, wears, and has ready, which is in plain sight ("A kobold (hostile,
   wounded), wielding a spear, on stone floor.", "A kobold shaman (hostile, unhurt), wearing a
   bone amulet, ...", "A kobold archer (hostile, unhurt), with a short bow and 20 arrows ready,
-  ..."; never what else it carries), terrain, remembered terrain, where stairs lead, and a sound
-  heard there ("You hear footsteps here.").
+  ..."; never what else it carries), terrain, remembered terrain, blood seen or remembered
+  there ("on blood-stained stone floor", "A blood-smeared stone wall."; §8 "Blood"; not with the
+  blood switch off), where stairs lead, and a sound heard there ("You hear footsteps here.").
 - Screen layout: map viewport, message log, status panel (level, the player's hit points as
   `HP 18/24` (never below 0), their burden when they have one (`Burdened`, `Strained`,
   `Overloaded`; §8 "Burden"), their level as `Lv 3` (§8 "Experience"; it goes after the
@@ -1022,12 +1038,17 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   player's size comes from their race when the run has a character). Skills (§8 "Skills"; never
   shown): `skills`, the skills it is trained in by skill id with fixed values (0 to 999); the
   rest untrained; the player creature lists none. The deer listens (30), the kobold shaman knows
-  concentration (20) and spellcraft (25). Creature particle emitters may
+  concentration (20) and spellcraft (25). For blood (§8 "Blood"; presentation only):
+  `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
+  bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). Creature particle
+  emitters may
   fire `on = "attack"`: a burst at the target of each attack the player sees (the shaman's
   violet sparkle). Terrain has a `move_cost`: what a step onto it costs in percent of a normal
   step (the `step` action; default 100; still and running water 200; local levels only), a
   `bounce` tint for the light it reflects (§5), a `height` in cells for sun shadows (default 1 if opaque, else 0; at most 4),
-  `roofed` (never lit by the sun or the sky), and for hearing a `step_noise` (how loud steps onto
+  `roofed` (never lit by the sun or the sky), `stains` (whether blood stains it, §8 "Blood";
+  default true; false for water, running water, lava, fountains, braziers, wall torches, solid
+  rock, and the overworld's river and lake), and for hearing a `step_noise` (how loud steps onto
   it are, in percent of the walker's footsteps, 0 to 1000; default 100), a door's `toggle_noise`
   (how loud opening the closed door or closing the open one is, at most 300; default 0, silent;
   only doors), and a `muffle` (the loudness a sound loses entering the cell, at most 300; default
@@ -1213,8 +1234,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   listen and spot, half-elves bluff and spot (`1d4+2`), dwarves metalcraft and search
   (stonecunning), halflings listen and stealth, gnomes appraise and listen, half-orcs intimidate;
   humans none, but one extra class skill (`class_skill = "2d4+4"`).
-- **Sizes** (`data/sizes.toml`, optional; §8 "Burden"), in file order: `id`, `name`, and `carry`
-  (what it carries in percent of a medium one, 10 to 1000): small 75, medium 100. `medium` is
+- **Sizes** (`data/sizes.toml`, optional; §8 "Burden"), in file order: `id`, `name`, `carry`
+  (what it carries in percent of a medium one, 10 to 1000): small 75, medium 100; and `blood`
+  (how much blood it spills in percent of a medium one, 0 to 1000, default 100; §8 "Blood"):
+  small 60. `medium` is
   required (the size of every race and creature type that names none); without the file there
   is only medium.
 - **Classes** (`data/classes.toml`, optional), in the order offered: `id`, `name`, a one-line
@@ -1291,8 +1314,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   "Combat"; format version 11), the fires burning on each level (§8 "Ranged combat"; format
   version 12), the player's experience total (§8 "Experience"; format version 13; absent while
   0, so a run without kills hashes as before), every actor's trained skills (value and training
-  marks) and the training random stream (§8 "Skills"; format version 14), and a dev weather
-  override while
+  marks) and the training random stream (§8 "Skills"; format version 14), the blood on each
+  level and the blood as last seen (§8 "Blood"; format version 15), and a dev weather override
+  while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
   platform data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
@@ -1600,6 +1624,46 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     `Fell`, or `Unseen` when the last cell seen is not where it ended. Dropped if none of it was
     seen. The player's own readied missile weapon, its ammunition, and ranges are in the snapshot
     (`PerceptionView::ready_to_fire`, `ready_to_throw`, `throw_range`) for the targeting UI.
+- **Blood** (`warlock-core/src/blood.rs`, the pattern; `world/bleed.rs`, applying it; M17):
+  big hits and kills stain the floor and the walls around the victim. Presentation state the
+  rules keep, like the flow of water: no rule reads it.
+  - **When**: a blow that kills leaves a pool on the victim's cell and spray around it; a big hit
+    (damage of at least a third of the target's maximum hit points, or any confirmed critical) a
+    little spatter. Lesser blows leave nothing; spells, which do no harm, none.
+  - **How much**: a kill spills 30 (a stain amount; a cell holds at most 100, soaked), a big hit
+    10, scaled by the victim's size (`blood` in `data/sizes.toml`, percent of a medium one's:
+    small 60), then by overkill (damage past 0 hit points: up to twice as much for a whole
+    second life's worth), a confirmed critical (half again), and a missile (half: it pierces
+    rather than cleaves). A rat killed by an arrow leaves a few drops; a critical spear thrust
+    through a kobold, a pool and a fan of spatter behind it.
+  - **Where**: half of a kill's blood (a third of a big hit's) lands on the victim's cell; the
+    rest sprays away from whoever struck, in a fan along the blow (±45° in melee; ±30° along a
+    missile's flight, from the shooter), 1 to 3 cells by how much there is (a missile's at most
+    2): always on the cells right behind the victim, 60 % of the cells two away, 40 % three away,
+    each with a share falling off with distance (60 to 140 % of it). A kill also flecks each
+    other cell around the victim (35 %). Spray stops at opaque cells: a wall (or closed door)
+    next to the victim takes it on its face, the side facing the victim (twice the share a floor
+    cell there would get: the face catches the spray); walls farther away and
+    whatever lies behind a wall take none. Terrain without `stains` (water, lava, fire) takes
+    none, and nothing is spilled on the overworld (a map of the land).
+  - **Accumulation**: stains add up per cell to the cap; their colours mix by amount, and when
+    a stain was spilled is the mean of its spills weighted by amount. One kill is subtle; a room
+    where a dozen foes died is soaked.
+  - **Colour**: each creature type's `blood` (§7): dark red by default, greenish-black ichor for
+    the cave beetle; `none` bleeds nothing.
+  - **Deterministic, gameplay-neutral**: stains are level state (`LevelState::blood`, sparse by
+    cell: amount, colour, when spilled, stained wall faces), saved and covered by the state hash
+    (format version 15). Where drops land is a hash of the turn, the moment, the two actors, and
+    the cells, never the gameplay random stream: a fight goes exactly the same with or without
+    blood.
+  - **What the player perceives** (`PerceptionView::blood`): a stain on an open cell they see;
+    one on a wall only when they see a stained face (a visible open cell next to the wall on
+    that side), so blood on the far side of a wall stays hidden. Blood is remembered as last
+    seen, like piles (`LevelState::blood_memory`). Look mode names it before the terrain ("A
+    giant rat (hostile, unhurt), on blood-stained stone floor.", "A blood-spattered stone
+    wall."): blood-spattered, blood-stained, or blood-soaked by amount, a wall spattered or
+    smeared. The `blood` dump layer shows it as a digit, `1` a few drops to `9` soaked. Drawn
+    subtly (§4.8 "Blood").
 - **Stats** (`warlock-core/src/stats.rs`; M14): six stats inspired by D&D, in display order
   Strength (St), Dexterity (Dx), Toughness (To; D&D's Constitution), Intelligence (In),
   Willpower (Wi; D&D's Wisdom), and Presence (Pr; D&D's Charisma). More will come (mostly
@@ -1975,6 +2039,9 @@ Each milestone ships a playable build.
   race, and class, regeneration, death with drops and permadeath, health in words; ranged
   combat (#117): bows, a crossbow, a sling, and throwing weapons, ammunition spent and picked up
   again, ADOM-like targeting, missiles on screen, and flaming arrows that light the dark.
+- **M17 Blood** — big hits and kills stain floors and the walls next to the victim (#127): how
+  much by the victim's size, overkill, criticals, and missiles; spray away from the blow; blood
+  colour per creature type; accumulating, drying, remembered; subtle on the map, with a switch.
 - **M20 Skills** — 26 skills in data (#132): trained or untrained (never shown, gives nothing),
   values from race and class dice and creature data, training marks on meaningful use with a
   provisional increase rule (gentle to 100, slow past it), passive benefits for tumble, stealth,

@@ -361,6 +361,7 @@ impl World {
         if let Some(blow) = blow
             && blow.damage > 0
         {
+            self.bleed((attacker, target), from, kind, blow);
             self.hurt(target, blow.damage, attacker, events);
         }
         blow

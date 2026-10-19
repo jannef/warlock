@@ -1,6 +1,8 @@
-//! Per-level mutable state: terrain and piles of objects as they are now, and what the player
-//! remembers of them.
+//! Per-level mutable state: terrain, piles of objects, and blood as they are now, and what the
+//! player remembers of them.
 
+use crate::blood::{Spatter, Stain};
+use crate::color::Rgb;
 use crate::content::{
     Content, EdgeExit, Flow, LevelKind, LevelTemplate, LightId, StairsLink, TerrainDef, TerrainId,
 };
@@ -58,6 +60,12 @@ pub struct LevelState {
     /// burning objects themselves lie in the pile there.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) fires: BTreeMap<Pos, Fire>,
+    /// Blood on cells, by position (spec §8 "Blood"). Presentation-only: no rule reads it.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) blood: BTreeMap<Pos, Stain>,
+    /// Blood as the player last saw it, by position (like remembered piles).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) blood_memory: BTreeMap<Pos, Stain>,
 }
 
 impl LevelState {
@@ -79,6 +87,8 @@ impl LevelState {
             objects: template.objects.clone(),
             object_memory: BTreeMap::new(),
             fires: BTreeMap::new(),
+            blood: BTreeMap::new(),
+            blood_memory: BTreeMap::new(),
         }
     }
 
@@ -122,6 +132,20 @@ impl LevelState {
     /// reachable through [`crate::World::ground_truth`], **for developer tools only**.
     pub fn objects_at(&self, p: Pos) -> &[Stack] {
         self.objects.get(&p).map_or(&[], Vec::as_slice)
+    }
+
+    /// Blood of `color` lands here at `now`: on a cell whose terrain holds it, it adds to the
+    /// stain there (spec §8 "Blood"); water, lava, and the like take none.
+    pub(crate) fn stain(&mut self, content: &Content, spatter: Spatter, color: Rgb, now: GameTime) {
+        let holds = (self.terrain.get(spatter.at)).is_some_and(|t| content.terrain(*t).stains);
+        if !holds || spatter.amount == 0 {
+            return;
+        }
+        let Spatter { at, amount, face } = spatter;
+        self.blood
+            .entry(at)
+            .and_modify(|s| s.add(amount, color, now, face))
+            .or_insert_with(|| Stain::new(amount, color, now, face));
     }
 
     /// Replaces the pile at `p`; an empty pile removes it.

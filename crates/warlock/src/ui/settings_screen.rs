@@ -1,5 +1,5 @@
-//! The settings screen: font size, reduced effects and its per-effect switches, color palette
-//! (spec §4.7). Changes apply
+//! The settings screen: font size, reduced effects and its per-effect switches, blood, color
+//! palette (spec §4.7). Changes apply
 //! live, because the screen edits the [`Settings`] resource that rendering reads.
 
 use super::menu::{Nav, Panel, Press};
@@ -19,6 +19,8 @@ enum Effect {
     ScreenFades,
     ScreenShake,
     Weather,
+    /// Not an effect of the preset: reduced effects leaves it as it is.
+    Blood,
 }
 
 impl Effect {
@@ -33,6 +35,7 @@ impl Effect {
             Effect::ScreenFades => "Screen fades",
             Effect::ScreenShake => "Screen shake",
             Effect::Weather => "Weather",
+            Effect::Blood => "Blood",
         }
     }
 
@@ -47,6 +50,7 @@ impl Effect {
             Effect::ScreenFades => "Level fades, flashes, bright spells darkening the view.",
             Effect::ScreenShake => "The view shakes when a spell lands near you.",
             Effect::Weather => "Rain falling, splashing, and rings on water.",
+            Effect::Blood => "Blood stains from big hits and kills (not part of the preset).",
         }
     }
 
@@ -61,7 +65,13 @@ impl Effect {
             Effect::ScreenFades => &mut e.screen_fades,
             Effect::ScreenShake => &mut e.screen_shake,
             Effect::Weather => &mut e.weather,
+            Effect::Blood => &mut e.blood,
         }
+    }
+
+    /// Whether the reduced-effects preset turns it off.
+    fn in_preset(self) -> bool {
+        self != Effect::Blood
     }
 }
 
@@ -75,7 +85,7 @@ enum Row {
     Back,
 }
 
-const ROWS: [Row; 14] = [
+const ROWS: [Row; 15] = [
     Row::FontSize,
     Row::ReducedEffects,
     Row::Effect(Effect::GlyphAnimation),
@@ -87,13 +97,14 @@ const ROWS: [Row; 14] = [
     Row::Effect(Effect::ScreenFades),
     Row::Effect(Effect::ScreenShake),
     Row::Effect(Effect::Weather),
+    Row::Effect(Effect::Blood),
     Row::Palette,
     Row::Reset,
     Row::Back,
 ];
 
 /// Index of the first action row (Reset); a gap is drawn before it.
-const FIRST_ACTION: usize = 12;
+const FIRST_ACTION: usize = 13;
 
 /// Selection state of the settings screen.
 #[derive(Debug, Default)]
@@ -158,12 +169,14 @@ impl SettingsScreen {
                 Row::Effect(e) => {
                     let own = *e.switch(&mut switches);
                     // The preset overrides every switch; say so rather than show a lie.
-                    let value = if own && settings.reduced_effects {
+                    let value = if own && settings.reduced_effects && e.in_preset() {
                         "Off (preset)".to_string()
                     } else {
                         on_off(own)
                     };
-                    (format!("  {}", e.label()), value)
+                    // The preset's switches sit under it; blood is a setting of its own.
+                    let indent = if e.in_preset() { "  " } else { "" };
+                    (format!("{indent}{}", e.label()), value)
                 }
                 Row::Palette => (
                     "Color palette".to_string(),
@@ -192,7 +205,9 @@ impl SettingsScreen {
             Row::Reset => "Restores these settings (not the key bindings).",
             Row::Back => "Settings are saved as you change them.",
         };
-        let help_y = panel.y + 18;
+        // Below the rows (and the gap before the actions) and a blank line: the selected row's
+        // help, then the samples.
+        let help_y = panel.y + 4 + ROWS.len() as i32;
         console.print(panel.inner_x(), help_y, help, TEXT_DIM);
         console.print(
             panel.inner_x(),
@@ -233,7 +248,7 @@ mod tests {
         press(&mut screen, &mut s, Nav::Down);
         press(&mut screen, &mut s, Nav::Enter);
         assert!(s.reduced_effects);
-        for _ in 0..10 {
+        for _ in 0..11 {
             press(&mut screen, &mut s, Nav::Down);
         }
         press(&mut screen, &mut s, Nav::Right);
@@ -269,6 +284,10 @@ mod tests {
         press(&mut screen, &mut s, Nav::Down);
         press(&mut screen, &mut s, Nav::Enter);
         assert!(!s.effects.weather);
+        // Then blood.
+        press(&mut screen, &mut s, Nav::Down);
+        press(&mut screen, &mut s, Nav::Enter);
+        assert!(!s.effects.blood && s.effects.flicker);
         assert!(!s.reduced_effects, "the preset is untouched");
     }
 }

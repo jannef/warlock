@@ -5,6 +5,7 @@
 //! ground truth and are dev-only.
 
 use crate::action::letter;
+use crate::blood::{self, Stain};
 use crate::character::Gender;
 use crate::equipment;
 use crate::geom::Pos;
@@ -37,6 +38,9 @@ pub enum Layer {
     /// Sounds the player heard from unseen sources, at their rough places ([`sound_char`]: `f`
     /// footsteps, `o` a door opening, `c` a door closing; upper case when loud), over the view.
     Sound,
+    /// Blood the player sees or remembers ([`blood_digit`]: `1` a few drops to `9` soaked), over
+    /// the view.
+    Blood,
     /// Not a map: the player's inventory, one line per stack (marked when worn or wielded), then
     /// what they carry and weigh.
     Inventory,
@@ -58,12 +62,13 @@ pub enum Layer {
 }
 
 impl Layer {
-    const ALL: [Layer; 11] = [
+    const ALL: [Layer; 12] = [
         Layer::View,
         Layer::Fov,
         Layer::Memory,
         Layer::Light,
         Layer::Sound,
+        Layer::Blood,
         Layer::Inventory,
         Layer::Equipment,
         Layer::Stats,
@@ -80,6 +85,7 @@ impl Layer {
             Layer::Memory => "memory",
             Layer::Light => "light",
             Layer::Sound => "sound",
+            Layer::Blood => "blood",
             Layer::Inventory => "inventory",
             Layer::Equipment => "equipment",
             Layer::Stats => "stats",
@@ -104,8 +110,8 @@ impl FromStr for Layer {
             .find(|l| l.name() == s)
             .ok_or_else(|| {
                 format!(
-                    "unknown layer `{s}` (expected view, fov, memory, light, sound, inventory, \
-                     equipment, stats, skills, truth, actors)"
+                    "unknown layer `{s}` (expected view, fov, memory, light, sound, blood, \
+                     inventory, equipment, stats, skills, truth, actors)"
                 )
             })
     }
@@ -163,6 +169,10 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
             Some(sound) => sound_char(sound),
             None => perceived_glyph(view, Layer::View, p),
         },
+        Layer::Blood => match view.blood(p) {
+            Some(stain) => blood_digit(stain),
+            None => perceived_glyph(view, Layer::View, p),
+        },
         Layer::Inventory
         | Layer::Equipment
         | Layer::Stats
@@ -190,6 +200,13 @@ pub fn sound_char(sound: &PerceivedSound) -> char {
     } else {
         c
     }
+}
+
+/// A stain in the `blood` layer: its amount in ninths of [`blood::CAP`], rounded up, `1` (a few
+/// drops) to `9` (soaked).
+pub fn blood_digit(stain: &Stain) -> char {
+    let ninths = (u32::from(stain.amount) * 9).div_ceil(u32::from(blood::CAP));
+    char::from_digit(ninths.clamp(1, 9), 10).unwrap_or('9')
 }
 
 /// Perceived brightness ([`PerceivedLight::brightness`]: luma, plus UV for eyes that see it) in

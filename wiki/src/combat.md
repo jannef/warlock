@@ -124,3 +124,21 @@ When **you** reach 0 hit points, you die: "You die..." The run is over, and a sc
 what killed you (if you saw it), where, when, and after how many turns. There is no going back:
 your save is deleted at once (see [Saving](saving.md)). Press `Enter` or `Esc` to return to the
 main menu and start a new run.
+
+## Blood
+
+Big hits and kills leave blood where they land. A blow that takes at least a third of its
+target's hit points, or any critical ("hits you hard!"), leaves a little spatter; a kill leaves a
+pool where the victim fell and a spray behind it, away from whoever struck the blow. How much
+depends on how big the victim was and how it died: a blow far past what killed it, or a critical,
+spills more; an arrow or a thrown weapon less, sprayed along its flight. Blood that sprays into
+a wall right beside the victim stains that wall on the side facing it.
+
+Blood adds up: one kill is easy to miss, but where many died the floor is soaked. Fresh blood is
+red, and it dries darker and browner over a few hours; the cave beetle bleeds a greenish-black
+ichor. Water, lava, and fire take no stains. You see blood where you see the floor (on a wall,
+only from the side that was splattered), remember it as you last saw it, and look mode mentions
+it: "on blood-stained stone floor".
+
+Blood is only for show: it never changes a fight, and the Blood switch in the
+[settings](settings.md) hides it.

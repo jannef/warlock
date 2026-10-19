@@ -95,6 +95,22 @@ name = "arena-shot"
 scenario = "arena"
 actions = "wait*12"
 
+# Blood (spec §8 "Blood", #127): the arena after its brawl, seven dead around the fire pit and
+# subtle dark stains where they fell; and a kill against walls: on the first Depths level the
+# warrior opens the door, lights the lantern, waits at the corridor's bend for the patrolling rat,
+# backs off to draw it into the corridor, and punches it dead there: a pool on the floor and
+# blood on the corridor walls beside it.
+[[golden]]
+name = "arena-blood"
+scenario = "arena"
+actions = "wait*40"
+
+[[golden]]
+name = "blood-wall"
+scenario = "depths"
+actions = "move:SE move:E*5 open:E lantern move:E*6 wait*2 move:W*2 move:E*8"
+scale = 2.0
+
 # Combat (spec §8 "Combat"): the player lights the lantern in the arena's dark corner and the war
 # band's archer shoots them down from the dark. The death screen opens by itself over the run as
 # it ended. Every action must take a turn, so the walk ends with the killing one.
