@@ -10,6 +10,7 @@ mod calendar;
 mod class;
 mod creature;
 mod dungeon;
+mod experience;
 mod faction;
 mod flow;
 mod horoscope;
@@ -37,6 +38,7 @@ pub use creature::{
     Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, NORMAL_SPEED, NaturalAttack, SPEEDS,
 };
 pub use dungeon::{DungeonDef, Generator, LevelPlan, parse_branch_level};
+pub use experience::{Experience, MAX_LEVEL, MAX_XP};
 pub use faction::{FactionDef, FactionId, Factions, PLAYER_FACTION, Stance};
 pub use flow::{FLOW_SPEEDS, Flow};
 pub use horoscope::{Horoscope, Sign, SignPart};
@@ -244,6 +246,7 @@ pub struct Content {
     actions: ActionCosts,
     races: Races,
     classes: Vec<ClassDef>,
+    experience: Experience,
     horoscope: Option<Horoscope>,
 }
 
@@ -280,6 +283,7 @@ impl Content {
             actions: ActionCosts::default(),
             races: Races::default(),
             classes: Vec::new(),
+            experience: Experience::default(),
             horoscope: None,
         };
         let path = "data/calendar.toml";
@@ -313,6 +317,10 @@ impl Content {
         let path = "data/classes.toml";
         if let Some(text) = files.get_optional(path) {
             content.classes = ClassDef::parse(path, text)?;
+        }
+        let path = "data/experience.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.experience = Experience::parse(path, text)?;
         }
         let path = "data/horoscope.toml";
         if let Some(text) = files.get_optional(path) {
@@ -513,6 +521,12 @@ impl Content {
             if spec.weight == 0 {
                 return Err(err(format!(
                     "creature `{}`: `weight` is in grams and must be at least 1",
+                    spec.id
+                )));
+            }
+            if !(1..=MAX_LEVEL).contains(&spec.level) || spec.xp > MAX_XP {
+                return Err(err(format!(
+                    "creature `{}`: `level` must be 1 to {MAX_LEVEL} and `xp` at most {MAX_XP}",
                     spec.id
                 )));
             }
@@ -1097,6 +1111,11 @@ impl Content {
     /// The class with id `id`.
     pub fn class(&self, id: &str) -> Option<&ClassDef> {
         self.classes.iter().find(|c| c.id == id)
+    }
+
+    /// The experience rules of `data/experience.toml` (spec §8 "Experience").
+    pub fn experience(&self) -> &Experience {
+        &self.experience
     }
 
     /// The horoscope of `data/horoscope.toml` (none without the file).
@@ -2194,6 +2213,9 @@ mod tests {
                 "come from the scenario",
             ),
             ("player", "base_hp = 3", "come from the scenario"),
+            ("rat", "level = 0", "`level` must be 1 to 99"),
+            ("rat", "level = 100", "`level` must be 1 to 99"),
+            ("rat", "xp = 100001", "`xp` at most 100000"),
             (
                 "rat",
                 "attack = { damage = \"1d4\", name = \"bite\", verb = \"bites\", threat = 25 }",

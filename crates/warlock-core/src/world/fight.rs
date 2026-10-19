@@ -362,7 +362,7 @@ impl World {
         if actor.hp > 0 {
             return;
         }
-        let at = actor.pos;
+        let (at, creature) = (actor.pos, actor.creature);
         events.push(Event::Died { actor: id, at });
         if id == self.state.player {
             let by = self.actor_or_fallen(by).map(|a| a.creature);
@@ -373,6 +373,9 @@ impl World {
                 by,
             });
         } else {
+            if by == self.state.player {
+                self.earn_kill(creature);
+            }
             self.creature_dies(id);
         }
     }
@@ -456,6 +459,7 @@ impl World {
         for text in said {
             self.say(text);
         }
+        self.say_news();
         if seen {
             events.extend(made);
         }

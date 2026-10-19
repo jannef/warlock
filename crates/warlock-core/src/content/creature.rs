@@ -24,6 +24,10 @@ fn normal_speed() -> u32 {
     NORMAL_SPEED
 }
 
+fn first_level() -> u8 {
+    1
+}
+
 fn default_sight() -> i32 {
     DEFAULT_SIGHT
 }
@@ -97,6 +101,12 @@ pub(super) struct CreatureSpec {
     /// Hit points beyond its Toughness (spec §8 "Combat").
     #[serde(default)]
     pub base_hp: u16,
+    /// Its level (spec §8 "Experience"), 1 unless it says otherwise.
+    #[serde(default = "first_level")]
+    pub level: u8,
+    /// The experience a kill of it is worth at its own level; none: nothing.
+    #[serde(default)]
+    pub xp: u32,
     /// Its natural attack, used when it wields no weapon.
     pub attack: Option<NaturalAttackSpec>,
     /// Its natural armour: hide, shell, or scales.
@@ -208,6 +218,8 @@ impl CreatureSpec {
             hearing: self.hearing,
             stats: r.stats,
             base_hp: i32::from(self.base_hp),
+            level: self.level,
+            xp: self.xp,
             attack: r.attack,
             natural: self.natural,
             anim: self.anim,
@@ -267,6 +279,10 @@ pub struct CreatureDef {
     /// Gameplay: hit points beyond its Toughness (spec §8 "Combat"); the player's come from the
     /// scenario instead.
     pub base_hp: i32,
+    /// Gameplay: its level (spec §8 "Experience"); the player's own is their experience's.
+    pub level: u8,
+    /// Gameplay: the experience a kill of it is worth at its own level.
+    pub xp: u32,
     /// Gameplay: its natural attack, used when it wields no weapon; `None`: bare hands (1d3).
     pub attack: Option<NaturalAttack>,
     /// Gameplay: its natural armour, if any.

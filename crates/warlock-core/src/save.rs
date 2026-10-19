@@ -30,7 +30,9 @@ const MAGIC: &str = "WARLOCK-SAVE";
 /// 11: combat: actors have hit points (`Actor::hp`, `hp_base`, `regen`); the world records the
 ///     player's death.
 /// 12: ranged combat: level states keep their fires (burning missiles and when they burn out).
-pub const FORMAT_VERSION: u32 = 12;
+/// 13: experience: the player's XP total in the world state (`WorldState::experience`); creature
+///     types have levels and XP.
+pub const FORMAT_VERSION: u32 = 13;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 

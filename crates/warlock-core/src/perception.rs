@@ -549,6 +549,16 @@ impl Perception {
     }
 }
 
+/// The player's experience (spec §8 "Experience"), all of which they are shown.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+pub struct Progress {
+    pub level: u8,
+    /// The experience total.
+    pub xp: u32,
+    /// The total at which the next level comes; none at the highest level.
+    pub next: Option<u32>,
+}
+
 /// Read-only view of what the player perceives. Obtain one with [`crate::World::perception`].
 #[derive(Clone, Copy, Debug)]
 pub struct PerceptionView<'a> {
@@ -562,6 +572,8 @@ pub struct PerceptionView<'a> {
     pub(crate) time: GameTime,
     /// How the run ended, once the player has died.
     pub(crate) death: Option<&'a Death>,
+    /// The player's experience total.
+    pub(crate) experience: u32,
     pub(crate) snapshot: &'a Perception,
 }
 
@@ -730,6 +742,18 @@ impl<'a> PerceptionView<'a> {
     pub fn own_hp(&self) -> (i32, i32) {
         let max = self.player.max_hp();
         (self.player.hp.clamp(0, max), max)
+    }
+
+    /// The player's level, experience total, and the total at which the next level comes (none
+    /// at the highest level) (spec §8 "Experience"). All of it is shown to the player.
+    pub fn own_experience(&self) -> Progress {
+        let rules = self.content.experience();
+        let level = rules.level_for(self.experience);
+        Progress {
+            level,
+            xp: self.experience,
+            next: (level < rules.max_level()).then(|| rules.threshold(level + 1)),
+        }
     }
 
     /// What the player carries against what they can (spec §8 "Burden"): their burden, and the

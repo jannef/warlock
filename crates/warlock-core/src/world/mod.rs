@@ -51,6 +51,7 @@
 mod actor;
 mod ai;
 mod equip;
+mod experience;
 mod fight;
 mod hash;
 mod level;
@@ -143,6 +144,13 @@ pub struct WorldState {
     /// How the run ended, once the player has died: nothing more happens.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) death: Option<Death>,
+    /// The player's experience total (spec §8 "Experience"); their level follows from it.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub(crate) experience: u32,
+}
+
+fn is_zero(n: &u32) -> bool {
+    *n == 0
 }
 
 impl WorldState {
@@ -241,6 +249,9 @@ pub struct World {
     /// Creatures that died during the current action, as they were (not saved): what they did
     /// that turn is said when it is perceived.
     fallen: Vec<Actor>,
+    /// What the player's kills earned them during the current action (not saved): said after
+    /// the attack's own messages.
+    news: Vec<String>,
 }
 
 /// How much time an action took.
@@ -325,6 +336,7 @@ impl World {
             recent_sounds: Vec::new(),
             weather_override: None,
             death: None,
+            experience: 0,
         };
         let mut player = Actor {
             id: ActorId(0),
@@ -404,6 +416,7 @@ impl World {
             lights,
             said: 0,
             fallen: Vec::new(),
+            news: Vec::new(),
         }
     }
 
@@ -477,6 +490,7 @@ impl World {
             character: self.state.character.as_ref(),
             time: self.state.time,
             death: self.state.death.as_ref(),
+            experience: self.state.experience,
             snapshot: &self.perception,
         }
     }
@@ -1473,6 +1487,8 @@ mod character_tests;
 mod cost_tests;
 #[cfg(test)]
 mod equip_tests;
+#[cfg(test)]
+mod experience_tests;
 #[cfg(test)]
 mod fight_tests;
 #[cfg(test)]

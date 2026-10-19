@@ -45,6 +45,9 @@ Build the engine and framework, not the game. Everything built is production qua
   has them, and the player sees their own scores on a character screen (§8 "Stats"). Combat uses
   Strength, Dexterity, and Toughness (§8 "Combat"), and so does burden; no other rule uses stats
   yet
+- Experience (M21): creatures have a level and an XP value; the player's own kills (melee,
+  shots, throws) earn XP, scaled down for monsters below the player's level as in World of
+  Warcraft, and levels (to 50) grow the hit points up to level 20 (§8 "Experience")
 - Burden (M16): a carrying limit from Strength, Toughness, and size; carrying more than a third,
   two thirds, or all of it slows every action, caps Dexterity in Defence, makes steps louder, and
   overloaded, keeps the actor from moving (§8 "Burden")
@@ -753,7 +756,9 @@ rate or animation.
   creature's, "You"), their race, gender, and class (`Race    Dwarf`; "other" with the stat it
   raised), their age today, birthday, and birth sign as on the summary (when the run has a
   character), their score in each stat (§8 "Stats") in display order with its abbreviation and
-  full name (`St  Strength  12`), their hit points (`HP  Hit points  18/24`) and Defence
+  full name (`St  Strength  12`), their level and experience (`Lv  Level  3`, `XP  Experience
+  85 / 120`, the total alone at the highest level; §8 "Experience"), their hit points (`HP  Hit
+  points  18/24`) and Defence
   (`Dv  Defence  15`; the total only, as its Dexterity part would give away a modifier; §8
   "Combat"), their weight (their own plus what they carry, and their burden when they have one:
   `Weight 98.4 kg (you 70 kg, carrying 28.4 kg, burdened)`), and, dimmer, the weights at which
@@ -765,7 +770,8 @@ rate or animation.
   ended, in place of any other screen, and the run's save is deleted (permadeath): `Y O U   D I E
   D`, then who killed them ("Killed by a kobold", or "Killed by something you did not see" when
   they did not see it), where (the level's name), when (the date and time), and after how many
-  turns. It takes every key press; Enter or Esc returns to the main menu (no Continue: nothing is
+  turns, and the level they had reached ("You had reached level 3."). It takes every key press;
+  Enter or Esc returns to the main menu (no Continue: nothing is
   left to continue). A run that has ended is never saved again, by any trigger.
 - **Weight**: every object and every creature (the player included) has a weight in grams. An
   actor weighs its creature's base weight plus everything it carries; the rules know every
@@ -834,7 +840,8 @@ rate or animation.
   heard there ("You hear footsteps here.").
 - Screen layout: map viewport, message log, status panel (level, the player's hit points as
   `HP 18/24` (never below 0), their burden when they have one (`Burdened`, `Strained`,
-  `Overloaded`; §8 "Burden"), region (on the overworld and in
+  `Overloaded`; §8 "Burden"), their level as `Lv 3` (§8 "Experience"; it goes after the
+  burden and before the time and the date), region (on the overworld and in
   its local areas), time of day and date as `14:32 · 12 Rainmoon, Year 1444`, the moon's phase as a
   glyph and its name (`◑ First quarter`; with several moons each moon's name and glyph, `Moon ●
   Ilse ☽`), the weather under the open sky (`Clear`, `Overcast`, `Rain`, `Heavy rain`; §5
@@ -935,7 +942,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   natural attack, used when it wields no weapon (`{ damage = "1d4", name = "bite", verb = "bites"
   }`, with optional `threat`, `crit`, and `to_hit` as for weapons; without one, bare hands:
   1d3, "fist", "hits"); and `natural`, its natural armour (`{ defence = 3, name = "shell" }`, 1
-  to 20, the Natural category of Defence; the name is said when it turns a blow). The giant rat
+  to 20, the Natural category of Defence; the name is said when it turns a blow). For
+  experience (§8 "Experience"): `level` (1 to 99, default 1) and `xp` (0 to 100000, default 0; the
+  player creature has neither): the kobold 2/15, the kobold archer 3/25, the kobold shaman 4/40,
+  the giant rat 1/5, the cave bat 1/3, the cave beetle 2/8, the deer 1/2. The giant rat
   and the cave bat bite (1d4, 1d3), the deer kicks (1d4, "hoof"; `base_hp` 4), the cave beetle
   bites (1d3) and has a shell (3); kobolds fight with what they wield. For burden (§8
   "Burden"): `size`, a size in `data/sizes.toml` (default `medium`); the kobolds, the giant rat,
@@ -1169,7 +1179,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   "Equipment"; format version 10), every actor's hit points (what it has left, what its race and
   class or its type add to its Toughness, and the seconds banked toward the next one back; §8
   "Combat"; format version 11), the fires burning on each level (§8 "Ranged combat"; format
-  version 12), and a dev weather override while
+  version 12), the player's experience total (§8 "Experience"; format version 13; absent while
+  0, so a run without kills hashes as before), and a dev weather override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
   platform data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
@@ -1406,6 +1417,27 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     creature's hit points, a to-hit, a roll, a modifier, or the Defence breakdown (its Dexterity
     part would give a modifier away). Ground-truth dev dumps (`actors`) show every actor's hit
     points and Defence.
+- **Experience** (`warlock-core/src/content/experience.rs`, the rules from
+  `assets/data/experience.toml`; `world/experience.rs`, applying them; M21, #133). Creature types
+  have a `level` (1 to 99) and an `xp` value (§7). The player has an experience total
+  (`WorldState::experience`, saved; zero is not serialized) and their level follows from it:
+  the XP needed for level n is `linear × (n − 1) + quadratic × (n − 1)²` (10 and 10: 20 for
+  level 2, 60, 120, 200, ..., 900 for level 10, 24500 for the cap, level 50; XP beyond the cap
+  counts but buys nothing). A kill is worth `Experience::kill_xp(xp, monster level, player
+  level)`, in integers (classic World of Warcraft): at or above the player's level the XP plus 5
+  % for each level of difference up to 4 (+20 %), rounded; below it `xp × (ZD − d) ÷ ZD` rounded,
+  with `d` the levels below and `ZD` the "zero difference" for the player's level (5 at levels 1 to
+  7, 6 at 8–9, 7 at 10–11, 8 at 12–15, 9 at 16–19, 11 at 20–29, 12 at 30–39, 13 at 40–44, 14 from
+  45); a monster `d ≥ ZD` below is grey and gives 0, any other kill at least 1, and a creature worth
+  0 XP gives 0. Only kills by the player's own attacks count: `World::hurt` awards the XP when
+  the one who landed the killing blow is the player, whether by melee, a shot, or a throw
+  (`resolve` and `missile_hits`); traps (#128) and kills by other creatures give nothing. A level
+  gained says "You feel more experienced." and "Welcome to level N." (once per kill, naming the
+  last level; after the attack's own messages), and each level gained up to `hp_level` (20)
+  raises the player's maximum and current hit points (`Actor::hp_base`, `hp`) by `max(1, class
+  hp ÷ 2 + the Toughness modifier)`; without a character the scenario's `hp` stands in for the
+  class's. The player is shown their level, XP, and the XP of the next level
+  (`PerceptionView::own_experience`), and nothing else about the rules.
 - **Ranged combat** (`warlock-core/src/world/shoot.rs`; M16): shots and throws.
   - **Loosing**: the player fires (`Action::Fire(cell)`, `fire:X,Y`) with the missile weapon in a
     `ready` slot and the ammunition it shoots in a `ready` slot, or throws (`Action::Throw { item,
@@ -1758,6 +1790,10 @@ Each milestone ships a playable build.
   race, and class, regeneration, death with drops and permadeath, health in words; ranged
   combat (#117): bows, a crossbow, a sling, and throwing weapons, ammunition spent and picked up
   again, ADOM-like targeting, missiles on screen, and flaming arrows that light the dark.
+- **M21 Experience** — creatures have levels and XP values; the player's own kills earn XP, with
+  World of Warcraft scaling for monsters below (down to grey, worth nothing) and above the
+  player's level, a quadratic level curve to 50 in data, and hit point growth up to level 20;
+  level and XP on the status bar, the character screen, and the death screen (#133).
 
 ## 13. GitHub workflow
 

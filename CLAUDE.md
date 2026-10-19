@@ -223,6 +223,15 @@ file's optional `arrival = "..."` line is said when the player arrives by stairs
 Flow is presentation data carried by `LevelTemplate::flow` / `LevelState::flow` and read by the
 renderer through `PerceptionView::flow` (visible cells only); no rule reads it.
 
+Experience (spec §8 "Experience", M21): `content/experience.rs` holds the rules from
+`data/experience.toml` (level curve, `hp_level`, the WoW-style `kill_xp` scaling with its zero
+difference bands), `world/experience.rs` applies them (`earn_kill` from `fight.rs::hurt` when the
+player lands the killing blow, `grant_xp`, level-up messages queued in `World::news` and said
+after the attack's own). Creatures carry `level` and `xp` in `creatures.toml`. The saved state is
+only `WorldState::experience` (the level follows from it); the UI reads
+`PerceptionView::own_experience()`. Other kills (traps, creatures) give nothing: keep it that way
+by awarding only where the attacker is the player.
+
 Time (spec §8 "Time") lives in `warlock-core`: `time.rs` (`GameTime` = seconds since the
 calendar epoch with calendar fields, minute of day, and 16-bit day fraction; `Duration`; 12×30-day
 calendar math; `DAWN`/`DUSK`), `content/calendar.rs` (month names from `data/calendar.toml`),

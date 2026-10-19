@@ -58,7 +58,7 @@ fun.
 ## Seeing who you are
 
 The character screen (`@`) shows your race, gender, and class, your age, birthday, and sign,
-your stats, and your hit points (your Toughness plus what your race and class give; see
+your stats, your level and experience (see [Experience](experience.md)), and your hit points (your Toughness plus what your race and class give; see
 [Combat](combat.md#hit-points)) and Defence, and what you weigh and carry against what you can
 (see [Burden](burden.md)). The game does not change your race, gender, class, or sign once a run
 has started; you get a year older on every birthday.

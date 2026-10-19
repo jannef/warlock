@@ -51,6 +51,7 @@ impl DeathScreen {
                     death.time.minute()
                 ),
                 format!("{turns}."),
+                format!("You had reached level {}.", view.own_experience().level),
             ],
         }
     }
@@ -134,6 +135,7 @@ mod tests {
         assert!(shown.contains("in The Arena,"), "{shown}");
         assert!(shown.contains("Darkening, Year 1444, at 08:"), "{shown}");
         assert!(shown.contains("turns."), "{shown}");
+        assert!(shown.contains("You had reached level 1."), "{shown}");
         // The archer shot from the dark: the player never saw it.
         assert!(
             shown.contains("Killed by something you did not see,"),
