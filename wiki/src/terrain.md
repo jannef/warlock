@@ -41,6 +41,13 @@ Shallow water, ankle-deep over a stone floor, covers the floor of a flooded room
 [Special rooms](special-rooms.md)). It is paler than a pool. Wading through it is slower than
 walking, though quicker than wading a pool, and it splashes just as loudly.
 
+## Ice
+
+Below freezing, water grows ice: thin ice, ice, and thick ice, by how thick it is. You walk on it
+like dry ground, a little more carefully, but it holds only so much weight: thin ice gives way
+under a person, and ice may under a heavy pack. Falling through hurts a little, and climbing back
+out takes a few turns. See [Temperature and ice](temperature.md).
+
 ## Plants and rock outdoors
 
 Trees, pines, dead trees, boulders, crags (rock outcrops), and standing stones block your way,

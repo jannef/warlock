@@ -11,6 +11,7 @@ use crate::content::WeaponSkillId;
 use crate::equipment;
 use crate::geom::Pos;
 use crate::hunger::Hunger;
+use crate::ice::Ice;
 use crate::noise::{PerceivedSound, SoundKind, Volume};
 use crate::object::format_weight;
 use crate::perception::{CellView, PerceivedLight, PerceptionView};
@@ -72,6 +73,10 @@ pub enum Layer {
     /// plain ground of each special room drawn as its effect's `mark`, then a line per room
     /// (`s shadowed room at (12, 3)-(20, 9), entered`). **Dev-only.**
     Rooms,
+    /// Ground truth: the ice on the level's water, its thickness in whole centimetres as a
+    /// character ([`ice_char`]), over the terrain; first a line with the temperature there and
+    /// when the ice was last brought up to date. **Dev-only.**
+    Ice,
 }
 
 impl Layer {
@@ -91,6 +96,7 @@ impl Layer {
         Layer::Truth,
         Layer::Actors,
         Layer::Rooms,
+        Layer::Ice,
     ];
 
     /// Layer name as used on the command line and in JSON.
@@ -110,12 +116,16 @@ impl Layer {
             Layer::Truth => "truth",
             Layer::Actors => "actors",
             Layer::Rooms => "rooms",
+            Layer::Ice => "ice",
         }
     }
 
     /// Whether the layer reads ground truth.
     pub const fn is_dev_only(self) -> bool {
-        matches!(self, Layer::Truth | Layer::Actors | Layer::Rooms)
+        matches!(
+            self,
+            Layer::Truth | Layer::Actors | Layer::Rooms | Layer::Ice
+        )
     }
 }
 
@@ -130,7 +140,8 @@ impl FromStr for Layer {
             .ok_or_else(|| {
                 format!(
                     "unknown layer `{s}` (expected view, fov, memory, light, sound, blood, \
-                     inventory, equipment, stats, skills, weapon_skills, truth, actors, rooms)"
+                     inventory, equipment, stats, skills, weapon_skills, truth, actors, rooms, \
+                     ice)"
                 )
             })
     }
@@ -147,6 +158,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
         Layer::Truth => truth_rows(world),
         Layer::Actors => actor_rows(world),
         Layer::Rooms => room_rows(world),
+        Layer::Ice => ice_rows(world),
         Layer::Inventory => inventory_rows(&world.perception()),
         Layer::Equipment => equipment_rows(&world.perception()),
         Layer::Stats => stat_rows(&world.perception()),
@@ -201,9 +213,8 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
         | Layer::WeaponSkills
         | Layer::Truth
         | Layer::Actors
-        | Layer::Rooms => {
-            unreachable!("not a map built from perception")
-        }
+        | Layer::Rooms
+        | Layer::Ice => unreachable!("not a map built from perception"),
     }
 }
 
@@ -287,6 +298,38 @@ fn room_rows(world: &World) -> Vec<String> {
             effect.mark, effect.name, room.min, room.max
         ));
     }
+    out
+}
+
+/// Ice of `ice` in the `ice` layer: its thickness in whole centimetres, `0` to `9`, then `a` for
+/// 10 cm to `z` for 35 cm, `#` for more.
+pub fn ice_char(ice: Ice) -> char {
+    let cm = ice.um / 10_000;
+    match cm {
+        0..=9 => char::from_digit(cm, 10).unwrap_or('#'),
+        10..=35 => char::from(b'a' + (cm - 10) as u8),
+        _ => '#',
+    }
+}
+
+/// The ice on the level (ground truth): a line with the temperature there and when the ice was
+/// brought up to date, then the map, each iced cell's thickness ([`ice_char`]) over the terrain.
+fn ice_rows(world: &World) -> Vec<String> {
+    let content = world.content();
+    let (level, _) = world.ground_truth();
+    let mut out = vec![format!(
+        "temperature {}, ice as of {}",
+        world.temperature(),
+        level.ice_until()
+    )];
+    out.extend(rows(level.width(), level.height(), |p| {
+        match level.ice_at(p) {
+            Some(ice) => ice_char(ice),
+            None => level
+                .terrain_at(p)
+                .map_or(' ', |t| content.terrain(t).glyph),
+        }
+    }));
     out
 }
 
@@ -547,7 +590,8 @@ fn rows(width: i32, height: i32, glyph: impl Fn(Pos) -> char) -> Vec<String> {
         .collect()
 }
 
-/// One-line summary used as the dump header; under the open sky it names the weather.
+/// One-line summary used as the dump header; under the open sky it names the weather, and it
+/// has the temperature where the player is.
 fn summary(world: &World) -> String {
     let view = world.perception();
     // Spelled as in the JSON dump (`heavy_rain`).
@@ -555,6 +599,7 @@ fn summary(world: &World) -> String {
         .and_then(|w| serde_json::to_value(w).ok())
         .and_then(|v| v.as_str().map(|w| format!(" weather {w}")))
         .unwrap_or_default();
+    let temperature = view.temperature();
     let (hp, max) = view.own_hp();
     let dead = if world.death().is_some() { " dead" } else { "" };
     // As the status bar shows it: only when it is not Not hungry.
@@ -562,7 +607,8 @@ fn summary(world: &World) -> String {
         .filter(|h| *h != Hunger::NotHungry)
         .map_or(String::new(), |h| format!(" hunger {}", h.id()));
     format!(
-        "turn {} time {} level {} viewer {} hp {hp}/{max}{dead}{hunger}{weather} hash {:016x}",
+        "turn {} time {} level {} viewer {} hp {hp}/{max}{dead}{hunger}{weather} temperature \
+         {temperature} hash {:016x}",
         world.turn(),
         world.time(),
         view.level_id(),
@@ -591,10 +637,10 @@ pub fn ascii(world: &World, layers: &[Layer]) -> String {
 }
 
 /// Structured dump: turn, game time, level, viewer, the special room the player stands in if they
-/// know it (its effect id; else null), the weather (under the open sky; else null), seen actors
-/// (with the status effects that show on them), heard sounds, the player's inventory, equipment
-/// (by slot id), weight, scores (by stat id), and status effects (by id),
-/// recent messages, the requested layers as arrays of rows, and optionally the full
+/// know it (its effect id; else null), the weather (under the open sky; else null), the
+/// temperature (°C, to a tenth), seen actors (with the status effects that show on them), heard
+/// sounds, the player's inventory, equipment (by slot id), weight, scores (by stat id), and status
+/// effects (by id), recent messages, the requested layers as arrays of rows, and optionally the full
 /// [`crate::WorldState`] under `state`.
 pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     let view = world.perception();
@@ -681,6 +727,8 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "viewer": view.viewer(),
         "room": view.room(view.viewer()).map(|e| e.id.as_str()),
         "weather": view.weather(),
+        // In °C, to a tenth of a degree.
+        "temperature": f64::from(view.temperature().tenths()) / 10.0,
         "hash": format!("{:016x}", world.state_hash()),
         "seen_actors": seen,
         "heard_sounds": view.sounds(),

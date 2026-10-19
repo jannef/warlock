@@ -1,16 +1,17 @@
 //! `cargo xtask wiki [--check | --build]`: the player wiki's generated tables.
 //!
 //! The wiki (`wiki/`, built with mdBook) is written by hand except for facts that live in data
-//! (month names, moons, weather, terrain, vision profiles, light presets, creatures, factions,
-//! objects and materials, equipment slots, scenarios, action costs, races and classes, their sizes
-//! and carrying limits, the horoscope, skills: what each does, how it trains, what it gives by
-//! value, who trains it, and the increase curve, status effects and how fast hit points come
-//! back, special rooms; the walls that break and how long digging takes; weapon skills:
-//! `wiki/weapon_skills.rs`) and a few constants of the rules (sight radii, the pack's size, the
-//! stats' names, what each gender raises). Those are written to `wiki/src/generated/*.md` from the
-//! built-in content, and the pages pull them in with `{{#include generated/NAME.md}}`, so they
-//! cannot drift. Output is deterministic. `--check` fails when a file is stale; `--build` also
-//! runs `mdbook build wiki`.
+//! (month names, moons, weather, temperatures, terrain, water that freezes and the ice on it,
+//! vision profiles, light presets, creatures, factions, objects and materials, equipment slots,
+//! scenarios, action costs, races and classes, their sizes and carrying limits, the horoscope,
+//! skills: what each does, how it trains, what it gives by value, who trains it, and the increase
+//! curve, status effects and how fast hit points come back, special rooms; the walls that break
+//! and how long digging takes; weapon skills: `wiki/weapon_skills.rs`) and a few constants of the
+//! rules (sight radii, the pack's size, the stats' names, what each gender raises, what ice holds
+//! and how fast it grows). Those are written to `wiki/src/generated/*.md` from the built-in
+//! content, and the pages pull them in with `{{#include generated/NAME.md}}`, so they cannot
+//! drift. Output is deterministic. `--check` fails when a file is stale; `--build` also runs
+//! `mdbook build wiki`.
 
 mod weapon_skills;
 
@@ -32,11 +33,13 @@ use warlock_core::daylight::{
 use warlock_core::dice::Dice;
 use warlock_core::door;
 use warlock_core::hunger::Hunger;
+use warlock_core::ice;
 use warlock_core::light::{Light, Moon, Sky, Sun};
 use warlock_core::object::{INVENTORY_SLOTS, format_weight};
 use warlock_core::perception::VIEW_RADIUS;
 use warlock_core::skills::{Effect, SkillId};
 use warlock_core::stats::{AVERAGE, PerStat, Stat};
+use warlock_core::temperature::{self, Temperature};
 use warlock_core::time::{DAY, Duration, GameTime};
 use warlock_core::weather::{Clouds, Conditions, Weather};
 use warlock_core::world::digs_to_break;
@@ -132,6 +135,14 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("moons.md".to_string(), moons(content)),
         ("weather.md".to_string(), weather_chances(content)),
         ("weather-effects.md".to_string(), weather_effects(content)),
+        ("temperature.md".to_string(), temperatures(content)),
+        (
+            "temperature-weather.md".to_string(),
+            temperature_weather(content),
+        ),
+        ("freezing.md".to_string(), freezing(content)),
+        ("ice.md".to_string(), ice_thickness(content)),
+        ("ice-growth.md".to_string(), ice_growth(content)),
         ("vision.md".to_string(), vision(content)),
         ("lights.md".to_string(), lights(content)),
         ("creatures.md".to_string(), creatures(content)),
@@ -302,6 +313,9 @@ fn action_costs(content: &Content) -> String {
             ActionKind::Eat => "A turn of eating (a meal takes several: see Food and corpses)",
             ActionKind::Dig => "A turn of digging (digging through a wall takes many)",
             ActionKind::Chat => "Chatting with someone (asking about a topic takes no time)",
+            ActionKind::Climb => {
+                "Climbing out of the water onto ice (on top of the step onto the ice)"
+            }
         };
         // Equipment actions say which slots take them (data/slots.toml); a kind no slot uses
         // is left out.
@@ -458,6 +472,12 @@ fn local_terrain(content: &Content) -> String {
         }
         if t.roofed {
             notes.push("roofed: no sun or sky light".into());
+        }
+        if let Some(f) = t.freeze {
+            notes.push(format!("freezes below {} °C", f.below));
+        }
+        if t.ice.is_some() {
+            notes.push("ice on water: holds by its thickness".into());
         }
         match t.muffle {
             None => {}
@@ -786,6 +806,169 @@ fn weather_effects(content: &Content) -> String {
          on the overworld; at night its clouds also dim the moon, and with it how far you see \
          by moonlight (see [the overworld](overworld.md))."
     );
+    out
+}
+
+/// A temperature in whole degrees, both ways: `-7 °C (19 °F)`.
+fn degrees(t: Temperature) -> String {
+    format!("{} °C ({} °F)", t.celsius(), t.fahrenheit())
+}
+
+/// Each month's mean temperature under the open sky, and how cold a clear night and how warm a
+/// clear afternoon get in the middle of it (spec §5 "Temperature").
+fn temperatures(content: &Content) -> String {
+    let climate = content.climate();
+    let half_swing = i32::from(climate.swing()) * 5;
+    let mut out = String::from(
+        "| Month | Mean | A clear night | A clear afternoon |\n|---|---:|---:|---:|\n",
+    );
+    for month in 1..=12 {
+        let mid = GameTime::from_calendar(1, month, 16, 0, 0).expect("a valid date");
+        let mean = temperature::mean(mid, climate) as i32;
+        let at = |offset: i32| degrees(Temperature::from_tenths(mean + offset));
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} |",
+            content.calendar().month_name(mid),
+            at(0),
+            at(-half_swing),
+            at(half_swing),
+        );
+    }
+    out
+}
+
+/// What each weather does to the day's swing of temperature, and how much it cools the air.
+fn temperature_weather(content: &Content) -> String {
+    let climate = content.climate();
+    let mut out = String::from(
+        "| Weather | Coldest night to warmest afternoon | Cooler by |\n|---|---:|---:|\n",
+    );
+    for w in Weather::ALL {
+        let def = climate.def(w);
+        let swing =
+            Temperature::from_tenths(i32::from(climate.swing()) * i32::from(def.swing) / 10);
+        let chill = match def.chill {
+            0 => "-".to_string(),
+            c => format!("{c} °C"),
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {}.{} °C | {chill} |",
+            w.name(),
+            swing.tenths() / 10,
+            swing.tenths() % 10
+        );
+    }
+    out
+}
+
+/// What water freezes and how (spec §5 "Ice").
+fn freezing(content: &Content) -> String {
+    let mut out = String::from(
+        "| Water | Ice grows below | How fast | A fall through the ice |\n|---|---:|---:|---|\n",
+    );
+    for t in content.terrain_defs() {
+        if let Some(f) = t.freeze {
+            // A fixed number reads as a number, dice as written.
+            let hurt = match (f.plunge.is_fixed(), f.plunge.min()) {
+                (true, 1) => "1 hit point".to_string(),
+                (true, n) => format!("{n} hit points"),
+                (false, _) => format!("{} hit points", f.plunge),
+            };
+            let _ = writeln!(
+                out,
+                "| {} | {} | {} | {hurt} (never your last) |",
+                capital(&t.name),
+                degrees(Temperature::degrees(f.below.into())),
+                if f.rate == 100 {
+                    "full pace".to_string()
+                } else {
+                    format!("{}% of still water's pace", f.rate)
+                },
+            );
+        }
+    }
+    out
+}
+
+/// What ice looks like by its thickness, and what it holds (spec §5 "Ice").
+fn ice_thickness(content: &Content) -> String {
+    let step = content.action_costs().cost(ActionKind::Step);
+    let tiers = content.ice_terrain();
+    let mut out =
+        String::from("| Looks like | Thickness | Holds | Step takes |\n|---|---|---|---:|\n");
+    let cm = |mm: u16| {
+        if mm.is_multiple_of(10) {
+            format!("{} cm", mm / 10)
+        } else {
+            format!("{}.{} cm", mm / 10, mm % 10)
+        }
+    };
+    for (i, &(mm, id)) in tiers.iter().enumerate() {
+        let def = content.terrain(id);
+        let holds = |mm: u16| format_weight(ice::holds(u32::from(mm) * 1000));
+        let (thickness, weight) = match tiers.get(i + 1) {
+            Some(&(next, _)) => (
+                format!("{} to {}", cm(mm), cm(next)),
+                format!("{} to {}", holds(mm), holds(next)),
+            ),
+            None => (
+                format!("{} and more", cm(mm)),
+                format!("{} and more", holds(mm)),
+            ),
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {thickness} | {weight} | {} |",
+            capital(&def.name),
+            at_normal_pace(def.step_price(step, LevelKind::Dungeon)),
+        );
+    }
+    out
+}
+
+/// How long still water takes to freeze over to each thickness of ice at a few steady
+/// temperatures (spec §5 "Ice").
+fn ice_growth(content: &Content) -> String {
+    let Some(still) = content
+        .terrain_defs()
+        .iter()
+        .find_map(|t| t.freeze.filter(|f| f.below == 0 && f.rate == 100))
+    else {
+        return String::new();
+    };
+    let tiers = content.ice_terrain();
+    let mut out = String::from("| Steady at |");
+    for &(_, id) in tiers {
+        let _ = write!(out, " {} |", capital(&content.terrain(id).name));
+    }
+    out.push_str("\n|---|");
+    out.push_str(&"---:|".repeat(tiers.len()));
+    out.push('\n');
+    let ticks_per_hour = 3600 / ice::TICK;
+    for c in [-2, -5, -10, -20] {
+        let t = Temperature::degrees(c);
+        let _ = write!(out, "| {} |", degrees(t));
+        for &(mm, _) in tiers {
+            let mut um = 0;
+            let mut ticks = 0u64;
+            while um < u32::from(mm) * 1000 && ticks < 1000 * 144 {
+                um = ice::tick(um, t, &still);
+                ticks += 1;
+            }
+            let hours = ticks.div_ceil(ticks_per_hour);
+            let took = if hours == 1 {
+                "an hour".to_string()
+            } else if hours < 48 {
+                format!("{hours} hours")
+            } else {
+                format!("{} days", (hours + 12) / 24)
+            };
+            let _ = write!(out, " {took} |");
+        }
+        out.push('\n');
+    }
     out
 }
 

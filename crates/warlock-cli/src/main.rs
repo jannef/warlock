@@ -82,7 +82,8 @@ struct DumpArgs {
     /// the level with its weight, what it carries, its weapon skills with marks, its stats as
     /// score/potential, and its trained skills with their marks), rooms (dev-only: the level's
     /// special rooms, their plain ground marked with their effect's letter, then one line per
-    /// room).
+    /// room), ice (dev-only: the temperature and the ice on the level's water, its thickness in
+    /// cm: 0-9, a-z for 10-35, # beyond).
     #[arg(long, default_value = "view")]
     layers: String,
     /// With `--format json`, include the full world state.

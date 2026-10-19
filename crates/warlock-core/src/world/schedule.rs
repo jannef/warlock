@@ -200,6 +200,8 @@ impl World {
             if seconds > 0 {
                 let (start, fallen) = (self.state.time, self.fallen.len());
                 self.state.time += Duration::seconds(seconds);
+                // Whoever steps onto the ice next meets the ice of the moment.
+                self.update_ice();
                 self.pass_time(schedule.iter().map(|s| s.id), start, seconds, events);
                 let seconds = i64::try_from(seconds).unwrap_or(i64::MAX);
                 for s in &mut schedule {

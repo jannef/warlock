@@ -53,6 +53,13 @@ impl Vault {
         if !template.rooms.is_empty() {
             return Err("a vault cannot mark special rooms".into());
         }
+        // The level it is stamped into decides its temperature, and so its ice.
+        if let Some(at) = template.ice.keys().next() {
+            return Err(format!("a vault cannot lay ice (at {at})"));
+        }
+        if template.temperature.is_some() {
+            return Err("a vault has no temperature of its own".into());
+        }
         let is_door = |p: Pos| {
             let def = content.terrain(terrain[p]);
             def.is_closed_door() || def.is_open_door()

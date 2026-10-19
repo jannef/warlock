@@ -187,6 +187,9 @@ pub(super) fn generate(content: &Content, seed: u64, id: &str) -> Result<LevelTe
                 to: area.overworld.id.clone(),
                 pos: area.pos,
             }),
+            // Under the open sky: the weather's temperature, and ice as it brings.
+            temperature: None,
+            ice: Default::default(),
         };
         if reach::validate(&template, content).is_ok() {
             return Ok(template);

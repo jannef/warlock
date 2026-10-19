@@ -49,7 +49,9 @@ const MAGIC: &str = "WARLOCK-SAVE";
 /// 22: doors: level states keep the locks on their doors (`LevelState::locks`).
 /// 23: NPCs and dialogue: actors keep how far their talk has got (`Actor::talk`: lines said and
 ///     muttered, met) and the unique character a level made them (`Actor::npc`).
-pub const FORMAT_VERSION: u32 = 23;
+/// 24: temperature and ice: level states keep their temperature (underground), the ice on their
+///     water, and when it was last brought up to date.
+pub const FORMAT_VERSION: u32 = 24;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 

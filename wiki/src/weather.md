@@ -35,6 +35,11 @@ By day you still see well enough in any weather. At night clouds hide the moon: 
 sky even a full moon is too faint for normal eyes, so outdoor areas are dark unless you bring a
 [lantern](lantern.md). See [Sun, moon, and sky](sun.md).
 
+## Clouds and warmth
+
+The weather also changes the temperature: clear nights are colder, overcast ones milder, and rain
+cools the air (see [Temperature and ice](temperature.md)).
+
 ## Rain and sight
 
 On the [overworld](overworld.md), rain shortens how far you see, by the cells in the last column

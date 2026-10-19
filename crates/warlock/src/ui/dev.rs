@@ -69,7 +69,7 @@ pub(super) fn draw_map_overlays(grid: &mut MapGrid, world: &World, overlays: Dev
                         let object = content.object(top.object);
                         (object.glyph, object.fg)
                     }
-                    None => (def.glyph, def.fg),
+                    None => (def.glyph_at(p), def.fg),
                 };
                 grid.console.put(
                     x,

@@ -205,12 +205,14 @@ pub(super) fn track(
             }
             // A death shows as the creature gone (and what it dropped) and in the message line;
             // a missile flies in `missiles`, a spell effect plays in `spells`; a status effect
-            // shows in the status bar; talk is in the message line (and the dialogue screen).
+            // shows in the status bar; talk is in the message line (and the dialogue screen). A
+            // fall through the ice splashes as the step into the water there (the ice is gone).
             Event::Died { .. }
             | Event::Missile { .. }
             | Event::Spell { .. }
             | Event::Status { .. }
-            | Event::Talked(_) => {}
+            | Event::Talked(_)
+            | Event::FellThroughIce { .. } => {}
             Event::LevelChanged { .. } => {
                 bursts.list.clear();
                 tints.clear();

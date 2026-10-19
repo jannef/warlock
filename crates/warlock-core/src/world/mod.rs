@@ -69,6 +69,10 @@
 //! Hunger (spec §8 "Hunger", `hunger.rs`, `eat.rs`): game time burns the player's nutrition, and
 //! the state it leaves them in takes effect (Weak, Fainting, Starving, Bloated); meals pass turns
 //! like a rest and feed at their end. Creatures that die leave corpses, which rot away.
+//! Temperature and ice (spec §5 "Temperature", "Ice"; `ice.rs`): water freezes in the cold and
+//! thaws in the warmth, brought up to the clock as it moves on the player's level (and on
+//! arrival), never ticking while nobody is there. Ice holds actors by their weight; one that
+//! breaks through plunges into the freezing water and climbs out onto the ice in a few turns.
 
 mod actor;
 mod ai;
@@ -81,6 +85,7 @@ mod experience;
 mod fight;
 mod hash;
 mod hunger;
+mod ice;
 mod level;
 mod path;
 mod schedule;
@@ -826,6 +831,8 @@ impl World {
     /// the attacks they perceived, and drops events they did not see.
     fn perceive(&mut self, events: &mut Vec<Event>) {
         let now = self.state.time;
+        // The ice of the moment (after a skip or on arrival), under the weather it had.
+        self.update_ice();
         if self.state.weather_override.is_some_and(|o| o.until <= now) {
             self.state.weather_override = None;
         }
@@ -981,6 +988,18 @@ impl World {
                     reports.extend(said.map(|text| (text, true)));
                 }
                 sees_attacker && sees_target
+            }
+            Event::FellThroughIce { actor, at } => {
+                // The player's own fall was said as it happened.
+                if actor == player {
+                    return true;
+                }
+                let seen = perception.sees_actors_at(at);
+                if let Some(me) = self.actor_or_fallen(actor).filter(|_| seen) {
+                    let name = &content.creature(me.creature).name;
+                    reports.push((format!("The {name} falls through the ice!"), true));
+                }
+                seen
             }
             Event::Status {
                 actor,
@@ -1229,6 +1248,23 @@ impl World {
             Action::Effect { effect, at, to } => {
                 return self.show_effect(effect, *at, *to, events);
             }
+            Action::Freeze { at, radius } => {
+                let froze = self.frost(*at, *radius, crate::ice::FROST);
+                self.say(format!(
+                    "Frost seizes the water around {},{} ({froze} cells, dev).",
+                    at.x, at.y
+                ));
+                self.frost_look(*at, *radius, events);
+                return Spent::NoTime;
+            }
+            Action::Thaw { at, radius } => {
+                self.say(format!(
+                    "Heat melts the ice around {},{} (dev).",
+                    at.x, at.y
+                ));
+                self.shock(*at, *radius, crate::ice::Shock::Heat, events);
+                return Spent::NoTime;
+            }
             Action::Afflict(id) => {
                 let Some(status) = self.content.status_id(id) else {
                     self.say(format!("There is no status `{id}`."));
@@ -1458,7 +1494,12 @@ impl World {
         }
         let player = self.state.player;
         let fleeing = self.flees(player, to);
-        let step = self.step_price(player, self.content.terrain(terrain), fleeing);
+        // Ice there may give way (then it is a step into the water); climbing out onto it from
+        // the water takes longer.
+        let footing = self.tread(player, from, to);
+        let onto = self.state.current().terrain[to];
+        let step = self.step_price(player, self.content.terrain(onto), fleeing)
+            + self.tread_price(player, footing);
         let overworld = self.state.current().kind == LevelKind::Overworld;
         self.state.overworld_step = overworld.then_some(dir);
         if let Some(actor) = self.state.actors.get_mut(&player) {
@@ -1469,6 +1510,7 @@ impl World {
             from,
             to,
         });
+        self.after_tread(player, to, footing, events);
         self.make_step_noise(player, to, fleeing);
         if let Some((other, seen)) = swap {
             self.swap_places(other, to, from, seen, events);
@@ -1722,9 +1764,10 @@ fn level_template<'a>(
 /// carrying, wearing, and wielding what the level gives it.
 fn instantiate_level(state: &mut WorldState, content: &Content, template: &LevelTemplate) {
     let id = template.id.as_str();
-    state
-        .levels
-        .insert(id.to_string(), LevelState::from_template(template));
+    let level = LevelState::from_template(template, content, state.time);
+    state.levels.insert(id.to_string(), level);
+    // Under the open sky its water has frozen and thawed with the weather of the last weeks.
+    state.pre_roll_ice(content, id);
     for spawn in &template.creatures {
         let actor_id = ActorId(state.next_actor_id);
         state.next_actor_id += 1;
@@ -1788,6 +1831,8 @@ mod fight_tests;
 mod hearing_tests;
 #[cfg(test)]
 mod hunger_tests;
+#[cfg(test)]
+mod ice_tests;
 #[cfg(test)]
 mod light_tests;
 #[cfg(test)]

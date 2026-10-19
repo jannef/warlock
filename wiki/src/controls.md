@@ -147,6 +147,8 @@ Below the map, the **status bar** shows, from left to right:
   [Burden](burden.md));
 - the time, the date, and the phase of the moon (see [Time and the calendar](time.md));
 - the weather, while you are under the open sky (see [Weather](weather.md));
+- the temperature where you are, as `4 °C` (or °F), cool blue below freezing and warm orange
+  from 30 °C (see [Temperature and ice](temperature.md));
 - the turn count and your position (column, row);
 - `Light`: how brightly your own cell is lit, where 255 is full light (see [Light](light.md));
 - your vision type, whether your lantern is lit, and the run's seed.
@@ -155,10 +157,10 @@ At its right end, `? controls` reminds you where the keys are.
 
 When the window is too narrow for everything, the status bar leaves out the least important parts
 first: the seed, your position, your lantern, your vision, the light at your feet, and the turn
-count; then it shortens the moon's phase to its picture, and only then drops it; then the region,
-then the year of the date, then the date. The weather, the time, your burden, your hunger, your
-status effects (the least urgent first), your hit points, and the name of the level stay longest.
-Parts come back as soon as there is room.
+count; then it shortens the moon's phase to its picture, and only then drops it; then the
+temperature, the region, then the year of the date, then the date. The weather, the time, your
+burden, your hunger, your status effects (the least urgent first), your hit points, and the name
+of the level stay longest. Parts come back as soon as there is room.
 
 ## Character
 

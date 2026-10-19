@@ -106,7 +106,9 @@ effect, `ID` an id in `assets/data/effects.toml`: `effect:fireball@30,14` (a bur
 `effect:fireball@20,10>30,14` (flying there first), `effect:lightning_bolt@21,17>58,17` (a bolt
 toward the second cell), no time and no rules effect, for captures; `afflict` is the dev status
 effect: one degree more of `STATUS`, an id in `assets/data/status.toml`, e.g.
-`afflict:poisoned*4 afflict:bleeding`, no game time; `ACTION*N` repeats one, e.g.
+`afflict:poisoned*4 afflict:bleeding`, no game time; `freeze:X,Y,R` and `thaw:X,Y,R` are the dev
+frost and heat bursts (radius 0 to 20 around level cell (X, Y), in its line of sight; no time);
+`ACTION*N` repeats one, e.g.
 `wait*10`). Dump layers: `view` (what the player sees), `fov` (`*` visible),
 `memory` (seen terrain and remembered objects), `light` (perceived brightness of visible cells as a
 digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places over the view: `f`
@@ -124,13 +126,14 @@ Defence, its weight, what it carries and of that wears and wields, its burden an
 limit, its weapon skills with marks, its stats as score/potential, its status effects with
 severities, the player's nutrition, and its npc id and talk counts, if any; then every corpse on
 the level and in the pack with its death time and rot, **dev-only**), `rooms` (the level's
-special rooms: their plain ground as the effect's `mark`, then a line per room, **dev-only**).
-The header line has the player's `hp
-17/17` (and `dead` once the run has ended) and `hunger hungry` unless Not hungry; JSON dumps add
+special rooms: their plain ground as the effect's `mark`, then a line per room, **dev-only**),
+`ice` (the level's temperature and the thickness of the ice on its water in cm, `0`-`9`, `a`-`z`
+for 10-35, `#` beyond, **dev-only**). The header line has the player's `hp 17/17` (and `dead`
+once the run has ended), `hunger hungry` unless Not hungry, and the `temperature`; JSON dumps add
 `hp`, `defence`, `burden` (`level`, `limit`), `hunger`, `effects` (status ids), `death` (with
-`of`, the status that killed, and `cause`, starving or choking), `weapon_skills` (by skill id:
-`rank`, `progress`), each seen actor's `health` and `effects` (those that show), and `room` (the
-special room the player stands in, if they know it). Replay
+`of`, the status that killed, and `cause`, starving or choking), `temperature` (°C to a tenth),
+`weapon_skills` (by skill id: `rank`, `progress`), each seen actor's `health` and `effects`
+(those that show), and `room` (the special room the player stands in, if they know it). Replay
 files are JSON
 `{game_version, scenario, seed, character, steps:[{action, hash}]}` (`character` =
 `{race, gender, class}`, left out for a run without one; a replay without it starts as the
@@ -185,7 +188,9 @@ holds the shared lock on `logs/.in-use`) moves files between the two layouts. Se
 (`ui/files_screen.rs`, `ScreenName::Files`, `--screen files`) shows the report with Open folder.
 
 Settings (`crates/warlock/src/settings/`): `settings.toml` in the config dir, schema in the `settings/mod.rs` module docs. Changes
-apply live and are written at once; a bad file means defaults plus a warning, per value. Effects:
+apply live and are written at once; a bad file means defaults plus a warning, per value. The
+temperature unit (`temperature = "celsius"`/`"fahrenheit"`, `settings::TemperatureUnit`) is
+applied only where the status bar shows the temperature (`TemperatureUnit::show`). Effects:
 `reduced_effects` is a preset over the `[effects]` switches (`EffectSwitches`: glyph_animation,
 flicker, motion, glow, distortion, particles, screen_fades, screen_shake, weather; all on by default), all but
 `blood` (on by default too), a content preference the preset leaves as set
@@ -924,6 +929,46 @@ overcast, `r` rain, `R` heavy). Tune the clouds and the rain with captures of th
 `forest` scenarios after `skip:330m weather:rain` (noon) and `skip:353h skip:30m weather:heavy`
 (full-moon midnight) with `--content-dir assets`; the wiki's weather tables come from the file.
 
+**Temperature** (spec §5 "Temperature", `temperature.rs`; M26): `Temperature` is tenths of a
+degree Celsius (`celsius()`/`fahrenheit()` round to whole degrees for display). Underground it is
+fixed per level (`LevelState::temperature`, from the level file's `temperature`, else the
+branch plan's in `data/dungeons.toml`, else `UNDERGROUND` 10 °C; refused on sky-exposed
+levels); under the open sky `temperature::outdoors(seed, time, climate, override)` is stateless
+like the weather: the month means (`temperature` per `[[month]]` in `data/weather.toml`,
+interpolated between mid-months) plus a cosine day swing (coldest 04:00; `swing` at the top of the
+file, times each weather's `swing` percent) less the weather's `chill`, blended across weather
+changes by `weather::blend` (the one place the clouds' and the temperature's hour-long
+transition is decided). `WorldState::temperature_on(level, ..)` is the one place a level's
+temperature is decided; `World::temperature()` (ground truth) and `PerceptionView::temperature()`
+(the player feels it, anywhere) read it. The status bar always shows it (`ui::status_segments`,
+priority 4, after the weather; cool tint below 0, warm from 30 °C), in the settings' unit.
+Nothing feels the cold yet.
+
+**Ice** (spec §5 "Ice", `ice.rs` the model, `world/ice.rs` the rules; M26): water terrain with a
+`freeze` table grows ice; terrain with `ice = MM` is what ice of at least that thickness looks
+like (`Content::ice_terrain`, `ice_look`). Ice is kept per level, sparsely, in µm
+(`LevelState::ice`: `Ice { water, um }`), and the terrain grid shows its look (the water when
+too thin), so sight, memory, look mode, and noise just follow; ice and freezing water are
+transparent and lightless (validated), so light masks never need invalidating. **Never tick
+ice per cell per second**: `LevelState::advance_ice` brings a level up to a time in fixed
+10-minute ticks of the clock (`ice::ticks`, each at its middle's temperature; `ice_until` the
+last tick done), grouping cells by (water, thickness), so it is exact however time passed (rests,
+skips, journeys) and a year away is cheap. It runs on the current level as the clock moves
+(`run_turn`) and as perception begins, and for a new sky-exposed level over `ice::PRE_ROLL` (30
+days) on instantiation. Stepping onto ice goes through `World::tread` (player and creatures
+alike; weight from `Actor::weight`, `ice::gives_way`: no draw up to what it holds, a gameplay draw
+up to twice that), then `tread_price` (the `climb` action from water onto ice) and `after_tread`
+(the plunge: `freeze.plunge` dice, never the last hit point, `Event::FellThroughIce`). Bursts:
+`World::frost` (instant freeze; dev `freeze:x,y,r`, which also shows the `frost_burst` effect of
+`data/effects.toml` through `World::frost_look`) and `World::shock` (`Shock::Heat` melts,
+`Shock::Blast(um)` shatters thinner ice; dev `thaw:x,y,r`) are the hooks fireballs, frost traps,
+blasts, and spells call. Saves: `FORMAT_VERSION` 24. Tests: `ice.rs`, `temperature.rs`,
+`world/ice_tests.rs` (growth/melt over rests, weight, falling in, climbing out, sinking objects,
+creatures, bursts, saves, replays, a year's catch-up). Tune the look with captures of the Frost
+Grotto (hub stairs nook, the `>` below the first) and the courtyard in winter (`skip:` into
+Deepwinter) with `--content-dir assets`. Terrain `variants` (presentation-only:
+`TerrainDef::glyph_at`, a glyph per cell by position) draw thin ice's hairline cracks.
+
 Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distortion`,
 `screen_fades`, `screen_shake`, `weather`) and all off with reduced effects:
 - **Particles** (`render/particles.rs`): stateless, a pure function of visual time and a seed via
@@ -1001,7 +1046,8 @@ notes, and no locations or level walkthroughs yet), built with [mdBook](https://
 (`wiki/book.toml`, table of contents in `wiki/src/SUMMARY.md`, default theme `coal`). It is
 published at https://jannef.github.io/warlock/wiki/ by the release workflow's web job, which
 builds it into `pages/wiki/` beside the game. Facts that live in data (months, moons, weather,
-terrain, footstep loudness in words, vision profiles, light presets (named as the player sees
+temperatures by month and weather, water that freezes, ice by thickness and what it holds, how
+long water takes to freeze, terrain, footstep loudness in words, vision profiles, light presets (named as the player sees
 them), creatures, factions, objects, materials, equipment slots and what fits them, scenarios,
 action costs, sight radii, the pack's
 size, the stats' names, races (stat adjustments as written, dice included, vision, starting
