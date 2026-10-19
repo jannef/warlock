@@ -21,7 +21,7 @@ pub(super) fn at_normal_pace(price: i64) -> String {
 /// creature types whose attacks cost something else.
 pub(super) fn action_costs(content: &Content) -> String {
     let mut out = String::from("| Action | Cost | Takes at a normal pace |\n|---|---:|---:|\n");
-    for kind in ActionKind::ALL {
+    for &kind in ActionKind::ALL {
         let what = match kind {
             ActionKind::Step => "A step onto normal ground (other ground: see Terrain)",
             ActionKind::Wait => "Waiting",

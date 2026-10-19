@@ -28,7 +28,7 @@ pub enum Aim {
 
 impl Ability {
     /// Every ability, in menu order.
-    pub const ALL: [Ability; 1] = [Ability::ShieldBash];
+    pub const ALL: &[Ability] = &[Ability::ShieldBash];
 
     /// Its name in the menu.
     pub const fn name(self) -> &'static str {

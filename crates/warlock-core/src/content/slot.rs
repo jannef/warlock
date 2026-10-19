@@ -91,7 +91,8 @@ pub(super) fn parse(file: &str, text: &str) -> Result<Vec<SlotDef>, ContentError
             return Err(bad("`name` and `mark` must not be empty"));
         }
         let action = ActionKind::ALL
-            .into_iter()
+            .iter()
+            .copied()
             .find(|k| k.is_equipment() && k.id() == spec.action)
             .ok_or_else(|| {
                 bad("`action` must be `wield`, `wear`, `body_armor`, or `ready` (actions.toml)")
