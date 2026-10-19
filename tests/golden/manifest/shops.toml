@@ -13,3 +13,12 @@ scenario = "courtyard"
 actions = "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 move:S*5 move:E*5 move:E move:NE pickup move:E move:E pickup"
 freeze_time = 1.0
 screen = "inventory"
+
+# The dialog (spec §6, §7 "Shops"): with the goods still unpaid, a step out of the shop's
+# door (`h`, as typed) asks first: what the player owes the keeper, pay and leave, or not.
+[[golden]]
+name = "shop-leaving"
+scenario = "courtyard"
+actions = "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 move:S*5 move:E*5 move:E move:NE pickup move:E move:E pickup move:W*3 move:SW"
+freeze_time = 1.0
+args = ["--keys", "h"]

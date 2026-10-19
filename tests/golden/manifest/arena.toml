@@ -14,11 +14,13 @@ name = "arena-shot"
 scenario = "arena"
 actions = "wait*12"
 
-# Blood (spec §8 "Blood", #127): the arena after its brawl, seven dead around the fire pit and
-# subtle dark stains where they fell; and a kill against walls: on the first Depths level the
-# warrior opens the door, lights the lantern, waits at the corridor's bend for the patrolling rat,
-# backs off to draw it into the corridor, and punches it dead there: a pool on the floor and
-# blood on the corridor walls beside it.
+# Blood (spec §8 "Blood", #127): the arena after its brawl, the dead and their corpses around the
+# fire pit and subtle dark stains where they fell; and a kill against walls, on a hand-made level
+# so that no change to the generators can move it: in the hub's patrol gallery the player lights
+# the lantern and stands in the peaceful kobold's way at the gallery's north-west corner, where it
+# waits for them to move, and kicks it dead there (it never fights back): its corpse in the
+# corner, a pool under it, and blood on the walls beside it (the three to the north, flecks on
+# the west wall).
 [[golden]]
 name = "arena-blood"
 scenario = "arena"
@@ -26,14 +28,15 @@ actions = "wait*40"
 
 [[golden]]
 name = "blood-wall"
-scenario = "depths"
-actions = "move:SE move:E*5 open:E lantern move:E*6 wait*2 move:W*2 move:E*8"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*36 open:S move:S*3 move:SW move:W*9 move:NW lantern kick:N*18"
 scale = 2.0
 
 # Combat (spec §8 "Combat"): the player lights the lantern in the arena's dark corner and the war
-# band's archer shoots them down from the dark. The death screen opens by itself over the run as
-# it ended. Every action must take a turn, so the walk ends with the killing one.
+# band's archer shoots them down from the dark ("Something shoots you."). The death screen opens
+# by itself over the run as it ended. Every action must take a turn, so the walk ends with the
+# killing one.
 [[golden]]
 name = "death-screen"
 scenario = "arena"
-actions = "lantern wait*17"
+actions = "lantern wait*14"

@@ -57,12 +57,8 @@ jobs:
         env:
           WGPU_BACKEND: vulkan
         run: cargo xtask smoke
-      # Advisory for now (#166): a wave of visual changes is landing, so the comparison runs and
-      # uploads its diffs but doesn't fail the job. Remove `continue-on-error` when #166 restores
-      # the references.
-      - name: Golden screenshots (advisory, #166)
+      - name: Golden screenshots
         if: hashFiles('tests/golden/*.png') != ''
-        continue-on-error: true
         env:
           WGPU_BACKEND: vulkan
         run: cargo xtask golden
@@ -162,7 +158,10 @@ jobs:
         env:
           WGPU_BACKEND: vulkan
         run: cargo xtask golden --update
+      # Uploaded even when an entry failed (the job still fails and names it), so the rest can
+      # be reviewed while the broken entry is fixed.
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: golden-references
           path: tests/golden/

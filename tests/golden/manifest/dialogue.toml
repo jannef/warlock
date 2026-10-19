@@ -1,7 +1,7 @@
 # NPCs, dialogue, and quests.
 
 # NPCs and dialogue (#146): the old hermit in the stairs nook, chatted with and asked about the
-# hall's rooms: his name, his answer, and his topics on the dialogue screen. (Reference: #166.)
+# hall's rooms: his name, his answer, and his topics on the dialogue screen.
 [[golden]]
 name = "dialogue-screen"
 scenario = "showcase"
@@ -9,7 +9,7 @@ actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:SE*3 chat:SE 
 screen = "dialogue"
 
 # Quests (#148): the old hermit's offer on the dialogue screen (Accept and Decline first), then the
-# quest log (info page 5) once it is taken up. (Reference: #166.)
+# quest log (info page 5) once it is taken up.
 [[golden]]
 name = "quest-offer"
 scenario = "showcase"

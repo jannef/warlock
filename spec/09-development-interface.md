@@ -22,7 +22,7 @@ warlock-cli gen --level depths:3 --seed warlock           # print a generated le
                                                           # also local areas: local:49,23;
                                                           # `*` a placed light, `&` a lock,
                                                           # special rooms by their letter)
-cargo xtask golden [--update]                             # compare golden screenshots
+cargo xtask golden [--update | --local]                   # compare golden screenshots
 ```
 
 - Replays are JSON: `{game_version, scenario, seed, character, steps: [{action, hash}]}`, the
