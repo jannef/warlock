@@ -82,7 +82,8 @@ pub enum ActionKind {
 }
 
 impl ActionKind {
-    pub const ALL: [ActionKind; 23] = [
+    /// Every kind, in `data/actions.toml` order (a slice: a new kind goes next to its group).
+    pub const ALL: &[ActionKind] = &[
         ActionKind::Step,
         ActionKind::Wait,
         ActionKind::OpenDoor,
@@ -177,7 +178,8 @@ impl ActionCosts {
         let mut costs = Self::default();
         for (id, cost) in parsed {
             let kind = ActionKind::ALL
-                .into_iter()
+                .iter()
+                .copied()
                 .find(|k| k.id() == id)
                 .ok_or_else(|| err(format!("unknown action `{id}`")))?;
             check_cost(cost).map_err(|m| err(format!("action `{id}`: {m}")))?;

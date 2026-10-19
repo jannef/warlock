@@ -1,0 +1,12 @@
+[[object]]
+id = "buckler"
+name = "buckler"
+glyph = "["
+fg = "#b09070"
+material = "iron"
+weight = 1500
+value = 20
+slot = "off_hand"
+shield = 1
+bash = "1d2"
+kind = "shield"

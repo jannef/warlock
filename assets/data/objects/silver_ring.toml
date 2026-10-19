@@ -1,0 +1,11 @@
+[[object]]
+id = "silver_ring"
+name = "silver ring"
+glyph = "="
+fg = "#d4dce4"
+material = "silver"
+weight = 10
+value = 100
+slot = "ring"
+kind = "ring"
+frequency = 50

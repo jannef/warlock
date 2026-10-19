@@ -27,9 +27,9 @@
 //! shown but as gold.
 
 use super::{ActorId, Spent, World};
-use crate::action::{Letters, letter};
+use crate::action::{Event, Letters, letter};
 use crate::content::{ActionKind, Content, MAX_FAVOUR, ShopId, ShopPlan, Shops, TerrainId};
-use crate::geom::Pos;
+use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use crate::object::{self, Stack};
 use crate::skills::Effect;
@@ -588,6 +588,19 @@ impl World {
         for shop in level.shops.iter_mut().filter(|s| s.keeper == id) {
             shop.status = ShopStatus::Abandoned;
             shop.unpaid.clear();
+        }
+    }
+
+    /// [`crate::action::Action::Pay`]: pays ([`World::pay`]) and, with a direction, steps that
+    /// way at once. Paid, the player steps out at once; a step that fails leaves them paid.
+    pub(super) fn pay_then(&mut self, then: Option<Dir>, events: &mut Vec<Event>) -> Spent {
+        let paid = self.pay();
+        match (paid, then) {
+            (Spent::NoTime, Some(dir)) => match self.player_moves(dir, events) {
+                Spent::Nothing => Spent::NoTime,
+                spent => spent,
+            },
+            _ => paid,
         }
     }
 }

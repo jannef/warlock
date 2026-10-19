@@ -1,0 +1,9 @@
+[[object]]
+id = "red_potion"
+name = "red potion"
+glyph = "!"
+fg = "#e04848"
+material = "glass"
+weight = 250
+value = 60
+stackable = true

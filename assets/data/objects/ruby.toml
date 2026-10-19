@@ -1,0 +1,10 @@
+[[object]]
+id = "ruby"
+name = "ruby"
+plural = "rubies"
+glyph = "*"
+fg = "#f03858"
+material = "gemstone"
+weight = 5
+value = 400
+stackable = true

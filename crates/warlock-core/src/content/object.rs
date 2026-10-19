@@ -1,4 +1,5 @@
-//! Object definitions (`assets/data/objects.toml`, spec §7): the things that lie on the floor and
+//! Object definitions (`assets/data/objects/`, one file per object, docs/dev/content.md; spec
+//! §7): the things that lie on the floor and
 //! are picked up and carried.
 //!
 //! Every object defines the glyph it is drawn with, its color, its material, and its weight in

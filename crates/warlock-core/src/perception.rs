@@ -993,7 +993,7 @@ impl<'a> PerceptionView<'a> {
     /// The abilities the player can use now, in menu order ([`crate::ability`]): for the
     /// abilities menu (#156) to list.
     pub fn abilities(&self) -> Vec<Ability> {
-        (Ability::ALL.into_iter())
+        (Ability::ALL.iter().copied())
             .filter(|a| a.usable(self.player, self.content))
             .collect()
     }

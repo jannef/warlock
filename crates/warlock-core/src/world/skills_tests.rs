@@ -5,7 +5,7 @@
 use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
-use crate::noise::{Noise, SoundKind};
+use crate::noise::{self, Act, Noise, SoundKind};
 use crate::object::Stack;
 use crate::replay::Replay;
 use crate::skills::{MAX_VALUE, SkillId, Trained};

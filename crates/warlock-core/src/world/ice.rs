@@ -23,7 +23,7 @@
 //! whoever stood on it falls in. A burst reaches the cells within its radius in line of sight of
 //! its centre.
 
-use super::{ActorId, LevelState, World, WorldState};
+use super::{ActorId, LevelState, Spent, World, WorldState};
 use crate::action::{Event, SpellShape};
 use crate::content::{ActionKind, Content, TerrainId};
 use crate::fov::compute_fov;
@@ -425,6 +425,29 @@ impl World {
             }
         });
         cells
+    }
+
+    /// The dev action `freeze:x,y,r` ([`crate::action::Action::Freeze`]): a frost burst at `at`
+    /// within `radius`, said and shown. Takes no time.
+    pub(super) fn freeze_dev(&mut self, at: Pos, radius: i32, events: &mut Vec<Event>) -> Spent {
+        let froze = self.frost(at, radius, crate::ice::FROST);
+        self.say(format!(
+            "Frost seizes the water around {},{} ({froze} cells, dev).",
+            at.x, at.y
+        ));
+        self.frost_look(at, radius, events);
+        Spent::NoTime
+    }
+
+    /// The dev action `thaw:x,y,r` ([`crate::action::Action::Thaw`]): a burst of heat at `at`
+    /// within `radius`, said. Takes no time.
+    pub(super) fn thaw_dev(&mut self, at: Pos, radius: i32, events: &mut Vec<Event>) -> Spent {
+        self.say(format!(
+            "Heat melts the ice around {},{} (dev).",
+            at.x, at.y
+        ));
+        self.shock(at, radius, crate::ice::Shock::Heat, events);
+        Spent::NoTime
     }
 }
 

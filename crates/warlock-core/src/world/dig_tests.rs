@@ -4,9 +4,9 @@
 //! its face; explosions and their blast; noise; saves and replays mid-dig.
 
 use super::*;
-use crate::action::parse_actions;
+use crate::action::{Breach, parse_actions};
 use crate::content::ContentFiles;
-use crate::noise::SoundKind;
+use crate::noise::{self, Act, SoundKind};
 use crate::perception::CellView;
 use crate::replay::Replay;
 
@@ -466,7 +466,7 @@ fn digging_survives_saves_and_replays() {
 #[test]
 fn breaking_terrain_and_digging_tools_are_validated() {
     const TERRAIN: &str = include_str!("../../../../assets/data/terrain.toml");
-    const OBJECTS: &str = include_str!("../../../../assets/data/objects.toml");
+    const PICK_AXE: &str = include_str!("../../../../assets/data/objects/pick_axe.toml");
     let load = |path: &str, text: String| {
         let mut files = ContentFiles::builtin();
         files.insert(path, &text);
@@ -514,8 +514,9 @@ fn breaking_terrain_and_digging_tools_are_validated() {
         ("dig = 10", "a tool goes in a `slot`"),
         ("slot = \"tool\"\ndig = 0", "power, 1 to 100"),
     ] {
-        assert!(OBJECTS.contains(pick));
-        let err = load("data/objects.toml", OBJECTS.replacen(pick, with, 1)).unwrap_err();
+        assert!(PICK_AXE.contains(pick));
+        let path = "data/objects/pick_axe.toml";
+        let err = load(path, PICK_AXE.replacen(pick, with, 1)).unwrap_err();
         assert!(err.contains(message), "{with}: {err}");
     }
 }

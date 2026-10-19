@@ -1,0 +1,144 @@
+# Objects, one file per object, named by its id (`dagger.toml`); only a tight set of variants that
+# are always edited together shares a file, named after the family (`arrows.toml`: the arrow, the
+# flaming arrow, and the burning arrow it flies as). This file holds only the notes below: a file
+# of comments defines nothing. The game numbers the objects in path order, so a new object is a
+# new file (never edited into another's), a renamed id is a renamed file, and the same id in two
+# files is a load error naming both (docs/dev/content.md).
+#
+# Objects: things that lie on the floor and are picked up and carried (spec §7).
+#
+# Every object defines:
+#   id        stable name used by level files (`objects = ["dagger", "arrow*12"]`)
+#   name      singular, without an article ("dagger"); `plural` defaults to the name plus "s"
+#   glyph     the character it is drawn with; fg its color
+#   material  an id in materials.toml
+#   weight    grams for one, at least 1
+#   value     what one is worth, in gold coins (required; 0 to 1000000): shops price their
+#             goods from it and pay part of it for what they buy (shops.toml). Junk is worth 0,
+#             and nobody buys or sells it; so are keys and quest letters, which are never traded.
+#             A magic or rare item is priced as its base item, identified or not
+#   stackable several lie in one stack (coins, arrows); default false: a stack of one each
+#   key       a key (spec §8 "Doors"): the lock id it opens (levels lock doors with `lock =
+#             "id"`), or "*" for a skeleton key, which opens every lock
+#
+# Things that can be worn or wielded also say where they go (equipment, slots.toml):
+#   slot       the slot it goes in, by id (`slot = "body"`), or what a slot fits (`slot = "ring"`
+#              goes on either hand); none: it cannot be worn or wielded
+#   two_handed takes both hands (main and off hand); default false
+#   light_weapon  a light one-handed weapon (a dagger, a short sword): it goes in either hand, so
+#              a second one in the off hand fights with two weapons (spec §8 "Fighting styles");
+#              default false. Only the off hand's own things (a shield) and light weapons go
+#              there
+#   ammo       the kind of ammunition it is (`ammo = "arrow"`)
+#   launches   the kind of ammunition a missile weapon shoots (`launches = "arrow"`); launchers
+#              and ammunition pair by that kind, and some object must be that kind of ammunition
+#
+# Weapons and armour say what they do in a fight (spec §8 "Combat"; only for things with a slot):
+#   damage     a weapon's damage dice (`1d8`); a launcher's are those of its shots and carry its
+#              draw weight (`1d8+2`). Melee blows add the wielder's Strength modifier; shots add
+#              nothing. A missile weapon must have them
+#   threat     the lowest natural roll (2d12, 2 to 24) that threatens a critical: 22 (the
+#              default) for most weapons, 20 for swords and daggers, 19 for the keenest
+#   crit       how many times a confirmed critical rolls the damage: 2 (default) to 5
+#   to_hit     a weapon's own bonus to hit (default 0)
+#   strength   the Strength a bow needs: each point short is -1 to hit and -1 damage
+#   attack_cost what an attack with it costs instead of the `melee` action's (a missile weapon:
+#              the `shoot` action's), 100 to 10000 (actions.toml): light weapons are quicker,
+#              great ones slower; its weapon skill's `speed` takes its percent off this
+#   parry      Defence while wielded (the Parry category)
+#   armour     Defence while worn (the Armour category); max_dex the most a worn armour lets
+#              Dexterity add to Defence
+#   shield     Defence while held (the Shield category)
+#   bash       a shield's damage dice when bashing with it (spec §8 "Weapon skills"); the
+#              wielder's Strength modifier adds to it, as to every melee blow
+# Within a category of Defence only the best bonus counts.
+#
+# Weapon skills (spec §8 "Weapon skills"):
+#   category   the weapon skill a weapon trains and draws on (an id in weapon_skills.toml; every
+#              weapon names one): a melee skill for what is wielded in a hand, a launcher skill
+#              for a missile weapon, the thrown skill for what is only thrown (a rock). Every
+#              throw trains the thrown skill, whatever is thrown
+#
+# Ranged combat (spec §8 "Ranged combat"; `t` shoots or throws what is in the missile weapon slot, `T` chooses):
+#   range      how far a missile weapon shoots, in cells (required for one); anything else with a
+#              range is a throwing weapon, thrown that far, with its own `damage` (it needs no
+#              slot: a rock). Ammunition takes its range from the missile weapon
+#   reloads    a missile weapon reloaded after every shot (a crossbow): each shot takes the
+#              `reload` action too (actions.toml)
+#   breaks     the chance in percent that a missile (ammunition, a throwing weapon) breaks when it
+#              hits; one that does not comes down where it stopped, to be picked up again
+#   lit        lit as it is loosed: it flies and comes down as this object (a flaming arrow flies
+#              as a burning arrow)
+#   light      the light preset (lights.toml) it gives while it burns where it lies, and
+#   burns      for how many seconds of game time it burns there; then it is gone. A burning
+#              object cannot be picked up
+#
+# Base items (spec §8 "Magic items"; affixes in affixes.toml): what may be found magic or rare,
+# and lies about as loot, says what kind of item it is:
+#   kind       weapon, launcher (missile weapons), ammo, body (body armour), helmet, cloak,
+#              gloves, boots, shield, ring, or amulet: the affixes it may roll
+#   level      the lowest item level (dungeon depth) loot holds it at; default 1
+#   frequency  how often loot holds it, relative to the rest; default 100, 0 never
+# Things without a kind are never magic and never loot.
+#
+# Digging (spec §8 "Digging"; ready a tool in the Tool slot, then use it with `U`):
+#   dig        a digging tool's power (1 to 100): each turn of digging does power × (Strength +
+#              10) / 20 work against a wall's hardness (terrain.toml), so a pick-axe (10) does 10
+#              at Strength 10. A tool goes in a `slot` (the Tool slot)
+#
+# Presentation only (no rule reads them):
+#   missile    the glyph it flies as, drawn pointing right and turned along its flight (default:
+#              its own glyph, upright)
+#   spins      it tumbles as it flies (a thrown dagger)
+#   glow       how much its glyph glows where it lies (0 to 1)
+#   [[object.particles]] emitters (terrain.toml has the fields): `ambient` while it lies in view
+#              on top of its pile, `flight` while it flies
+#
+# Food (spec §8 "Hunger"; eat with `E`):
+#   food       { nutrition = N, turns = T }: the nutrition points it gives (1 to 100000; a human
+#              burns 1440 a day, hunger.toml) and the turns of eating it takes (1 to 100, each the
+#              `eat` action); never on things worn, wielded, shot, thrown, or burned
+# Corpses are not listed here: every creature that leaves one has its own (`kobold_corpse`), made
+# from creatures.toml and hunger.toml, and only creatures that die leave them.
+#
+# Glyphs follow ADOM loosely: ) weapons, } missile weapons, / missiles, [ armor, ( tools,
+# ! potions, ? scrolls, % food, * stones and gems, $ coins, = rings, " amulets. As in ADOM, the
+# glyph is the object's class: shops (shops.toml) sell and buy by class.
+
+# Notes on the groups, in the order they were kept in:
+#
+# Weapons
+#
+# Missile weapons. A bow's damage carries its draw weight, and it needs Strength to draw; a
+# crossbow needs none, but is reloaded after every shot.
+#
+# Missiles, for the missile weapons that shoot them. Loot holds them in stacks.
+#
+# Armor: body armour, from padding to plate (Armour, and the most Dexterity it lets add to
+# Defence).
+#
+# Helmets, cloaks, gloves, and boots give no Defence of their own (only the best Armour counts):
+# they are worn for what magic they hold.
+#
+# Tools
+# Digging tools go in the Tool slot. A pick-axe digs through a stone wall in six minutes at
+# Strength 10; the heavier mattock does it in four.
+#
+# Keys (spec §8 "Doors"): `key` is the lock id it opens; opening a door locked with that id
+# while carrying it unlocks the door. A skeleton key (`key = "*"`) opens every lock.
+#
+# Potions
+#
+# Scrolls
+#
+# Food: a ration feeds a human for about a day.
+#
+# Stones and gems
+#
+# Coins
+#
+# Rings: no powers of their own; they are worn for their magic.
+#
+# Amulets, the same.
+#
+# Quest items (data/quests.toml): given by one person to carry to another.

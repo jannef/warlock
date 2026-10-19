@@ -1,0 +1,35 @@
+[[creature]]
+id = "kobold"
+level = 2
+xp = 15
+loot = 25
+name = "kobold"
+glyph = "k"
+fg = "#7cb85a"
+speed = 900
+weight = 25000
+size = "small"
+light = "torch"
+faction = "kobolds"
+vision = "darkvision"
+opens_doors = true
+# Clumsy and loud, and not the best listener.
+footsteps = 80
+hearing = 15
+stats = { strength = 9, dexterity = 13, toughness = 10, intelligence = 10, willpower = 9, presence = 8 }
+on_eat = { message = "This kobold meat tastes terrible!", vomit = 40 }
+weapon_skills = { spears = 1 }
+
+# Sparks from the torch it carries.
+[[creature.particles]]
+glyphs = "'`·"
+colors = ["#ffe8a0", "#ff9030", "#802008"]
+rate = 0.8
+life = 0.5
+velocity = [0.15, -1.2]
+spread = [0.25, 0.3]
+gravity = 0.4
+offset = [0.2, -0.4]
+area = [0.15, 0.0]
+scale = 0.5
+glow = 0.5

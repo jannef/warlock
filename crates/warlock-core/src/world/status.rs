@@ -37,7 +37,7 @@
 //! - **Cures**: [`World::cure`] ends what a named means cures (`cured_by`: a bandage stops the
 //!   bleeding; diseases list their own), for the Heal skill (#132), potions, and priests to use.
 
-use super::{ActorId, Cause, World, disease};
+use super::{ActorId, Cause, Spent, World, disease};
 use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Strike};
 use crate::content::Effect as ItemEffect;
@@ -338,6 +338,23 @@ impl World {
     /// there. Nothing is stained yet.
     fn drip_blood(&mut self, id: ActorId) {
         let _ = id;
+    }
+
+    /// The dev action `afflict:STATUS` ([`crate::action::Action::Afflict`]): the player suffers
+    /// status `id` at severity 1. Refused for an unknown status, and for the one diseases show
+    /// as. Takes no time.
+    pub(super) fn afflict_dev(&mut self, id: &str, events: &mut Vec<Event>) -> Spent {
+        let Some(status) = self.content.status_id(id) else {
+            self.say(format!("There is no status `{id}`."));
+            return Spent::Nothing;
+        };
+        if self.content.disease_status() == Some(status) {
+            self.say(format!("`{id}` comes of a disease: try `infect:DISEASE`."));
+            return Spent::Nothing;
+        }
+        let player = self.state.player;
+        self.afflict(player, status, 1, None, events);
+        Spent::NoTime
     }
 }
 

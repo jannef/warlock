@@ -89,7 +89,8 @@ enum Row {
     Back,
 }
 
-const ROWS: [Row; 18] = [
+/// The rows in screen order (a slice: a new row goes next to its group, never at the end).
+const ROWS: &[Row] = &[
     Row::FontSize,
     Row::ReducedEffects,
     Row::Effect(Effect::GlyphAnimation),

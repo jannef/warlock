@@ -1,8 +1,8 @@
 ---
 source: crates/warlock-core/src/dump.rs
-expression: "ascii(&world, &[Layer::Light])"
+expression: "snapshot(&world, &[Layer::Light])"
 ---
-turn 0 time 1444-11-11 08:00:00 level hub viewer (7, 15) hp 17/17 temperature 10.0 °C hash 2d6629458f35bbd3
+turn 0 time 1444-11-11 08:00:00 level hub viewer (7, 15) hp 17/17 temperature 10.0 °C hash [redacted]
 == light ==
 
 

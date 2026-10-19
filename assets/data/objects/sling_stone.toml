@@ -1,0 +1,14 @@
+[[object]]
+id = "sling_stone"
+name = "sling stone"
+glyph = "*"
+fg = "#9c968c"
+material = "stone"
+weight = 40
+value = 0
+stackable = true
+slot = "missiles"
+ammo = "stone"
+missile = "•"
+kind = "ammo"
+frequency = 30

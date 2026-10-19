@@ -71,10 +71,13 @@ pub(super) fn place(canvas: &mut Canvas, rng: &mut Rng, candidates: &[Candidate]
     };
     light(canvas, room, front, post);
     let content = canvas.content;
-    let goods: Vec<ObjectId> = (0..content.object_defs().len())
+    // The stock to draw from, by object id (the string): the same draw lays out the same stock
+    // however the object files are ordered (docs/dev/content.md).
+    let mut goods: Vec<ObjectId> = (0..content.object_defs().len())
         .map(|o| ObjectId(o as u16))
         .filter(|&o| shops.stocks(content, kind, o))
         .collect();
+    goods.sort_by(|a, b| content.object(*a).id.cmp(&content.object(*b).id));
     let mut cells: Vec<Pos> = (room.cells())
         .filter(|&p| p != front && p != post && canvas.is_free_floor(p))
         .filter(|p| !canvas.objects.contains_key(p))

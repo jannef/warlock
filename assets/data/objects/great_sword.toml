@@ -1,0 +1,16 @@
+[[object]]
+id = "great_sword"
+name = "great sword"
+glyph = ")"
+fg = "#d0d8e4"
+material = "steel"
+weight = 3500
+value = 160
+slot = "main_hand"
+two_handed = true
+damage = "2d6"
+threat = 20
+category = "great_blades"
+attack_cost = 1200
+kind = "weapon"
+level = 3

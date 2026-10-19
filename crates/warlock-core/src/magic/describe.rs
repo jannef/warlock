@@ -235,8 +235,8 @@ fn how_held(def: &ObjectDef, content: &Content) -> Option<String> {
         (Some(c), ActionKind::Wield) if def.two_handed => format!("{c}, for both hands"),
         (Some(c), ActionKind::Wield) => format!("{c}, for the {place}"),
         (Some(c), _) if def.launches.is_some() => {
-            let ammo = (content.object_defs().iter())
-                .find(|o| o.ammo.is_some() && o.ammo == def.launches)
+            let ammo = (def.launches.as_deref())
+                .and_then(|kind| content.ammunition(kind))
                 .map_or("ammunition".to_string(), |o| o.plural.clone());
             format!("{c}, readied as a missile weapon; shoots {ammo}")
         }

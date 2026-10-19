@@ -1,0 +1,11 @@
+[[object]]
+id = "travelling_cloak"
+name = "travelling cloak"
+glyph = "["
+fg = "#7c6a52"
+material = "leather"
+weight = 1800
+value = 30
+slot = "cloak"
+kind = "cloak"
+level = 2

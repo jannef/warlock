@@ -1,0 +1,12 @@
+[[object]]
+id = "gauntlets"
+name = "pair of gauntlets"
+plural = "pairs of gauntlets"
+glyph = "["
+fg = "#9aa0a6"
+material = "iron"
+weight = 1000
+value = 40
+slot = "hands"
+kind = "gloves"
+level = 3

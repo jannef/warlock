@@ -1,0 +1,41 @@
+# The overworld and local areas
+
+Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185); the
+rules it implements are in spec/07c-generation.md. Keep it current with the code, as CLAUDE.md says.
+
+The overworld (spec §3, §5, §7) is `assets/levels/overworld.toml`, the one level of kind
+`overworld` (`LevelKind::Overworld`: a step's base time is the terrain's `travel_minutes`; every
+other action, waiting and `>` included, the usual 6 s).
+Its locations are stairs-down terrain (`hall`, `cave_mouth`, `dungeon_entrance`) whose legend `to`
+names the level; the level's `<` with `to = "overworld"` leads back to the location (`World::travel`
+arrives on the stairs leading back). `>` on any other cell enters the local area `local:x,y`
+(`content/overworld.rs`: `local_area_id`, `parse_local_area`, `Content::local_area`, valid where
+the terrain has a `local` ground and a land or road `landscape`), generated on the first visit by
+the outdoor generator (`mapgen/local/`, below); the edge exit (`exit` in `LevelState`) makes
+walking off any edge return to the cell. `>` arrives on the side the player walked onto the cell
+from: `WorldState::overworld_step` (the last overworld step, cleared by any level change) picks
+the side and `mapgen::local::arrival` the edge cell (road first, then dry, open ground near the
+middle of the side); without a step, at the level's start (the middle). Sight on the overworld is line
+of sight within `daylight::overworld_sight` (day 9, twilight 5, night 2 plus one per
+`MOONLIGHT_PER_CELL` of `Sky::moonlight`, at most `SIGHT_MOONLIT` 4), ignoring light. The
+overworld is sky-exposed (sun, moons, and sky, like outdoor levels); `daylight::overworld_night`
+tops its ambient light up to the faint `OVERWORLD_NIGHT` where the sun's sky falls short
+(moonlight comes on top), so cells in sight stand apart from memory at night (local areas get
+none). Regions (`[[region]]` in level
+files, `LevelTemplate::region_at`, `PerceptionView::region`) show in the status bar. Unlike
+`vast.toml`, the overworld map is hand-authored: edit the file directly (keep every walkable cell
+inside a region; a test checks).
+
+Local areas (spec §3, §7) are generated in `mapgen/local/`: `mod.rs` (`Setting`: the cell's
+landscape and its neighbors' roads, rivers, lakes, and land, read from the overworld; per-landscape
+feature chances; the attempt loop, glade, ruins, deer), `kit.rs` (the terrain and creature ids it
+builds with, checked when content with an overworld loads), `noise.rs` (integer value noise and
+quantiles: "this share of the area"), `land.rs` (the canvas with per-cell `Claim`s: `Fixed` water,
+roads, ruins; `Clear` glade, banks, roadsides, no obstacles; `Free`), `water.rs` (river and lake
+bands, ponds, brooks, winding courses), `road.rs`, `cover.rs` (one function per landscape; wood
+share blends towards the neighbors), and `reach.rs` (trails, joining pockets, ways out,
+validation, `arrival`). Overworld terrain picks its generator with `landscape` in
+`data/terrain.toml`; outdoor vaults are vault files with `kind = "outdoor"`. Tune by eye:
+`WARLOCK_AREAS="25,20 60,44" cargo test -p warlock-core --lib print_areas -- --ignored
+--nocapture` prints areas with one character per terrain (`WARLOCK_SEED` for the seed), and the
+`forest` scenario or `--content-dir` scenarios with `start_level = "local:x,y"` capture them.

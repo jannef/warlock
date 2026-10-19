@@ -2,6 +2,7 @@
 
 [Introduction](introduction.md)
 
+- [What's in the game](features.md)
 - [Controls](controls.md)
 - [Settings](settings.md)
 - [Time and the calendar](time.md)

@@ -1,0 +1,10 @@
+# The hub's pantry.
+[[object]]
+id = "iron_key"
+name = "iron key"
+glyph = "("
+fg = "#b4b8bc"
+material = "iron"
+weight = 40
+value = 0
+key = "pantry"

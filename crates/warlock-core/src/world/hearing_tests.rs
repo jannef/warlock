@@ -4,7 +4,7 @@
 use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
-use crate::noise::{Heard, RECALL_TURNS, SoundKind};
+use crate::noise::{Act, Heard, RECALL_TURNS, SoundKind};
 use crate::replay::Replay;
 
 const TERRAIN: &str = r##"

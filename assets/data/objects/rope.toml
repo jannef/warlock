@@ -1,0 +1,9 @@
+[[object]]
+id = "rope"
+name = "coil of rope"
+plural = "coils of rope"
+glyph = "("
+fg = "#c8b080"
+material = "cloth"
+weight = 1500
+value = 10

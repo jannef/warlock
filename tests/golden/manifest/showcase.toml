@@ -1,0 +1,58 @@
+# The showcase's rooms (spec §3): the start room, the corridor and its doors, and each room from
+# its doorway; then the darkness chamber's inner room under each vision profile.
+
+[[golden]]
+name = "start-room"
+scenario = "showcase"
+actions = "wait"
+
+[[golden]]
+name = "door-corridor"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2"
+
+[[golden]]
+name = "patrol-gallery"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*36 open:S move:S*4"
+
+[[golden]]
+name = "light-hall"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*6 open:N move:N*2"
+
+[[golden]]
+name = "darkness-chamber"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3"
+
+[[golden]]
+name = "water-garden"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*56 open:N move:N*4"
+
+[[golden]]
+name = "effects-room"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*56 open:S move:S*3"
+
+[[golden]]
+name = "stairs-nook"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4"
+
+# Inside the darkness chamber's inner room (entered from the north), next to the UV rune.
+[[golden]]
+name = "darkness-chamber-uv"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 move:E*6 move:S*2 vision:uv_sight"
+
+[[golden]]
+name = "darkness-chamber-low-light"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 move:E*6 move:S*2 vision:low_light"
+
+[[golden]]
+name = "darkness-chamber-darkvision"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 move:E*6 move:S*2 vision:darkvision"

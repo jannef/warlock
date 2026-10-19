@@ -1,0 +1,12 @@
+[[suffix]]
+id = "of_the_wanderer"
+name = "of the Wanderer"
+effect = "skill"
+skill = "survival"
+bases = ["cloak", "boots"]
+weight = 60
+tiers = [
+  { level = 1, min = 10, max = 20 },
+  { level = 4, min = 20, max = 35 },
+  { level = 7, min = 35, max = 50 },
+]

@@ -1,0 +1,11 @@
+[[object]]
+id = "fur_cloak"
+name = "fur cloak"
+glyph = "["
+fg = "#a08868"
+material = "leather"
+weight = 2500
+value = 60
+slot = "cloak"
+kind = "cloak"
+level = 4

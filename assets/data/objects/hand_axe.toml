@@ -1,0 +1,16 @@
+[[object]]
+id = "hand_axe"
+name = "hand axe"
+glyph = ")"
+fg = "#b4a48c"
+material = "iron"
+weight = 1300
+value = 25
+slot = "main_hand"
+damage = "1d6"
+crit = 3
+category = "axes"
+kind = "weapon"
+# Thrown end over end.
+range = 4
+spins = true

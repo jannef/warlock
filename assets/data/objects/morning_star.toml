@@ -1,0 +1,13 @@
+[[object]]
+id = "morning_star"
+name = "morning star"
+glyph = ")"
+fg = "#9ca0a8"
+material = "iron"
+weight = 3000
+value = 50
+slot = "main_hand"
+damage = "2d4"
+category = "maces"
+kind = "weapon"
+level = 3

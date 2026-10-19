@@ -1,0 +1,22 @@
+# The kobold war band's archer: keeps its distance and shoots.
+[[creature]]
+id = "kobold_archer"
+level = 3
+xp = 25
+loot = 30
+name = "kobold archer"
+glyph = "k"
+fg = "#c8b45a"
+faction = "kobolds"
+vision = "darkvision"
+sight = 12
+combat = "ranged"
+range = 7
+opens_doors = true
+footsteps = 70
+hearing = 12
+weight = 22000
+size = "small"
+stats = { strength = 8, dexterity = 15, toughness = 10, intelligence = 10, willpower = 10, presence = 8 }
+on_eat = { message = "This kobold meat tastes terrible!", vomit = 40 }
+weapon_skills = { bows = 1 }

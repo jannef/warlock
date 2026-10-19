@@ -10,7 +10,7 @@ use crate::fov::radius2;
 use crate::light::Sun;
 use crate::perception::Emitter;
 use crate::replay::Replay;
-use crate::weather::{Clouds, weather_at};
+use crate::weather::{Clouds, Weather, weather_at};
 use std::sync::LazyLock;
 
 static CONTENT: LazyLock<Arc<Content>> =

@@ -25,7 +25,7 @@
 //! - **Cures**: [`World::cure`] ends the diseases that list the means in their `cured_by`,
 //!   showing or not; nothing applies one yet (potions and priests will).
 
-use super::{Actor, ActorId, World};
+use super::{Actor, ActorId, Spent, World};
 use crate::action::{DiseaseNews, Event};
 use crate::check::check;
 use crate::content::{DiseaseId, TerrainId};
@@ -212,6 +212,23 @@ impl World {
                 began: false,
             });
         }
+    }
+
+    /// The dev action `infect:DISEASE` ([`crate::action::Action::Infect`]): the player catches
+    /// disease `id`. Refused for an unknown disease, or one they carry already. Takes no time.
+    pub(super) fn infect_dev(&mut self, id: &str) -> Spent {
+        let Some(disease) = self.content.disease_id(id) else {
+            self.say(format!("There is no disease `{id}`."));
+            return Spent::Nothing;
+        };
+        let player = self.state.player;
+        let name = self.content.disease(disease).name.clone();
+        if !self.infect(player, disease, None) {
+            self.say(format!("You carry {name} already (dev)."));
+            return Spent::Nothing;
+        }
+        self.say(format!("You catch {name} (dev)."));
+        Spent::NoTime
     }
 }
 

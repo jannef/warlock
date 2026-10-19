@@ -1,0 +1,11 @@
+[[suffix]]
+id = "of_light"
+name = "of Light"
+effect = "light"
+bases = ["cloak", "ring", "amulet"]
+weight = 60
+tiers = [
+  { level = 1, light = "item_glow_faint" },
+  { level = 4, light = "item_glow" },
+  { level = 7, light = "item_glow_bright" },
+]

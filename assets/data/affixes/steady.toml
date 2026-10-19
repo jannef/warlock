@@ -1,0 +1,11 @@
+[[prefix]]
+id = "steady"
+name = "Steady"
+effect = "draw"
+bases = ["launcher"]
+weight = 60
+tiers = [
+  { level = 1, min = 1, max = 2 },
+  { level = 4, min = 2, max = 3 },
+  { level = 7, min = 3, max = 4 },
+]

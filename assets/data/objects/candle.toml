@@ -1,0 +1,9 @@
+[[object]]
+id = "candle"
+name = "wax candle"
+glyph = "("
+fg = "#f0e6c8"
+material = "wax"
+weight = 100
+value = 2
+stackable = true

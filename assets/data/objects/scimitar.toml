@@ -1,0 +1,14 @@
+[[object]]
+id = "scimitar"
+name = "scimitar"
+glyph = ")"
+fg = "#e0d8c8"
+material = "steel"
+weight = 1500
+value = 60
+slot = "main_hand"
+damage = "1d6"
+threat = 19
+category = "short_blades"
+kind = "weapon"
+level = 2

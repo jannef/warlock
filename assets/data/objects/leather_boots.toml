@@ -1,0 +1,11 @@
+[[object]]
+id = "leather_boots"
+name = "pair of leather boots"
+plural = "pairs of leather boots"
+glyph = "["
+fg = "#7a5434"
+material = "leather"
+weight = 1000
+value = 20
+slot = "feet"
+kind = "boots"

@@ -1,0 +1,11 @@
+[[prefix]]
+id = "featherweight"
+name = "Featherweight"
+effect = "weight"
+bases = ["weapon", "launcher", "body", "helmet", "cloak", "gloves", "boots", "shield"]
+weight = 60
+tiers = [
+  { level = 1, min = 10, max = 20 },
+  { level = 4, min = 20, max = 35 },
+  { level = 7, min = 35, max = 50 },
+]

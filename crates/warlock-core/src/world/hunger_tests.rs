@@ -640,9 +640,9 @@ fn eating_a_corpse_may_raise_a_stat_up_to_its_potential() {
         "name = \"pantry\"\nstart_level = \"pantry\"\nhp = 1000\n",
     );
     // A sure thing for the test: the beetle always toughens.
-    let creatures = include_str!("../../../../assets/data/creatures.toml")
-        .replace("stat = { toughness = 10 }", "stat = { toughness = 100 }");
-    files.insert("data/creatures.toml", &creatures);
+    files.edit_table("creatures", |t| {
+        t.replace("stat = { toughness = 10 }", "stat = { toughness = 100 }")
+    });
     let content = Arc::new(Content::load(&files).expect("valid"));
     // A human's potentials are above the starting scores.
     let mut w = with_corpse(&content, "beetle", Some("human,female,thief"));
@@ -700,11 +700,12 @@ fn corpses_heal_harm_feed_more_or_come_back_up() {
             "scenarios/pantry.toml",
             "name = \"pantry\"\nstart_level = \"pantry\"\nhp = 1000\n",
         );
-        let creatures = include_str!("../../../../assets/data/creatures.toml").replace(
-            "on_eat = { message = \"This kobold meat tastes terrible!\", vomit = 40 }",
-            "on_eat = { message = \"This kobold meat tastes terrible!\", vomit = 100 }",
-        );
-        files.insert("data/creatures.toml", &creatures);
+        files.edit_table("creatures", |t| {
+            t.replace(
+                "on_eat = { message = \"This kobold meat tastes terrible!\", vomit = 40 }",
+                "on_eat = { message = \"This kobold meat tastes terrible!\", vomit = 100 }",
+            )
+        });
         Arc::new(Content::load(&files).expect("valid"))
     };
     let mut w = with_corpse(&sure, "kobold", None);

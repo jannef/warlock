@@ -1,0 +1,11 @@
+[[suffix]]
+id = "of_the_hare"
+name = "of the Hare"
+effect = "skill"
+skill = "tumble"
+bases = ["body", "cloak", "boots", "amulet"]
+tiers = [
+  { level = 1, min = 10, max = 15 },
+  { level = 4, min = 15, max = 25 },
+  { level = 7, min = 25, max = 40 },
+]

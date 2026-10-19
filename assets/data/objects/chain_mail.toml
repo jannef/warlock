@@ -1,0 +1,13 @@
+[[object]]
+id = "chain_mail"
+name = "chain mail shirt"
+glyph = "["
+fg = "#aab2ba"
+material = "iron"
+weight = 11000
+value = 250
+slot = "body"
+armour = 4
+max_dex = 4
+kind = "body"
+level = 3

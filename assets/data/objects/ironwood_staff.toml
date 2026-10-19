@@ -1,0 +1,16 @@
+[[object]]
+id = "ironwood_staff"
+name = "ironwood staff"
+plural = "ironwood staves"
+glyph = ")"
+fg = "#7c6448"
+material = "wood"
+weight = 2500
+value = 60
+slot = "main_hand"
+two_handed = true
+damage = "1d8"
+category = "staves"
+parry = 1
+kind = "weapon"
+level = 4

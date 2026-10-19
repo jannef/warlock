@@ -1,6 +1,8 @@
-//! Magic item content (`assets/data/affixes.toml`, spec §7 "Magic items"): the prefixes and
-//! suffixes magic and rare items roll, how often loot is normal, magic, or rare, how many affixes
-//! each rolls, and the words rare names are made of.
+//! Magic item content (spec §7 "Magic items"): the prefixes and suffixes magic and rare items
+//! roll, how often loot is normal, magic, or rare, how many affixes each rolls, and the words
+//! rare names are made of. The table is a directory (docs/dev/content.md): the settings
+//! (`[rarity]`, `[magic]`, `[rare]`, `[names]`) in `assets/data/affixes.toml`, one `[[prefix]]`
+//! or `[[suffix]]` per file under `assets/data/affixes/`, numbered in path order.
 //!
 //! Every object that may be found magic says what kind of item it is (`kind` in
 //! `data/objects.toml`, [`ItemKind`]): a weapon, a missile weapon, ammunition, body armour, a
@@ -474,17 +476,51 @@ impl Affixes {
     }
 }
 
+/// One file of the affix table: the settings, each set in exactly one file of the table (the
+/// settings file, `data/affixes.toml`), and any number of entries (none in a file of comments).
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct AffixFile {
-    rarity: RaritySpec,
-    magic: MagicSpec,
-    rare: RareSpec,
-    names: NamesSpec,
+    rarity: Option<RaritySpec>,
+    magic: Option<MagicSpec>,
+    rare: Option<RareSpec>,
+    names: Option<NamesSpec>,
     #[serde(default)]
     prefix: Vec<AffixSpec>,
     #[serde(default)]
     suffix: Vec<AffixSpec>,
+}
+
+/// A settings table of the affix files, set once: in `file`.
+struct Once<'a, T> {
+    name: &'static str,
+    set: Option<(&'a str, T)>,
+}
+
+impl<'a, T> Once<'a, T> {
+    fn new(name: &'static str) -> Self {
+        Self { name, set: None }
+    }
+
+    /// Takes the table from `file`, if it has one; a second file setting it is an error naming
+    /// both.
+    fn take(&mut self, file: &'a str, value: Option<T>) -> Result<(), ContentError> {
+        let Some(value) = value else { return Ok(()) };
+        if let Some((first, _)) = &self.set {
+            return Err(ContentError::new(
+                file,
+                format!("`[{}]` is set here and in {first}", self.name),
+            ));
+        }
+        self.set = Some((file, value));
+        Ok(())
+    }
+
+    /// The table and the file it is in; missing from every file is an error naming `first`.
+    fn get(self, first: &str) -> Result<(&'a str, T), ContentError> {
+        self.set
+            .ok_or_else(|| ContentError::new(first, format!("`[{}]` is missing", self.name)))
+    }
 }
 
 #[derive(Deserialize)]
@@ -537,30 +573,50 @@ struct TierSpec {
     light: Option<String>,
 }
 
-/// Parses `data/affixes.toml`; `light` resolves light preset ids and `skill` skill ids
-/// (`has_skills`: whether content has any; without, skill affixes are left out).
-pub(super) fn parse(
-    file: &str,
-    text: &str,
+/// Parses the affix table: `files` is `ContentFiles::table("affixes")` (`data/affixes.toml`,
+/// then `data/affixes/*.toml` in path order; at least one file), each of the settings tables set
+/// in exactly one of them, the entries numbered in the order read. `light` resolves light preset
+/// ids and `skill` skill ids (`has_skills`: whether content has any; without, skill affixes are
+/// left out).
+pub(super) fn parse<'a>(
+    files: impl IntoIterator<Item = (&'a str, &'a str)>,
     light: impl Fn(&str) -> Option<LightId>,
     (skill, has_skills): (impl Fn(&str) -> Option<SkillId>, bool),
 ) -> Result<Affixes, ContentError> {
+    let mut rarity_spec = Once::new("rarity");
+    let mut magic_spec = Once::new("magic");
+    let mut rare_spec = Once::new("rare");
+    let mut names_spec = Once::new("names");
+    let mut first_file = None;
+    let mut specs = Vec::new();
+    for (file, text) in files {
+        first_file.get_or_insert(file);
+        let parsed: AffixFile =
+            toml::from_str(text).map_err(|e| ContentError::new(file, e.to_string()))?;
+        rarity_spec.take(file, parsed.rarity)?;
+        magic_spec.take(file, parsed.magic)?;
+        rare_spec.take(file, parsed.rare)?;
+        names_spec.take(file, parsed.names)?;
+        specs.extend((parsed.prefix.into_iter()).map(|s| (file, AffixKind::Prefix, s)));
+        specs.extend((parsed.suffix.into_iter()).map(|s| (file, AffixKind::Suffix, s)));
+    }
+    let first_file = first_file.unwrap_or("data/affixes.toml");
+    let (file, rarity_spec) = rarity_spec.get(first_file)?;
     let err = |m: String| ContentError::new(file, m);
-    let parsed: AffixFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-    let rarity = [
-        parsed.rarity.normal,
-        parsed.rarity.magic,
-        parsed.rarity.rare,
-    ];
+    let rarity = [rarity_spec.normal, rarity_spec.magic, rarity_spec.rare];
     if rarity.iter().sum::<u32>() == 0 {
         return Err(err("`rarity`: the weights may not all be 0".into()));
     }
-    if parsed.magic.both > 100 {
+    let (file, magic_spec) = magic_spec.get(first_file)?;
+    let err = |m: String| ContentError::new(file, m);
+    if magic_spec.both > 100 {
         return Err(err("`magic.both` is a chance in percent, 0 to 100".into()));
     }
+    let (file, rare_spec) = rare_spec.get(first_file)?;
+    let err = |m: String| ContentError::new(file, m);
     let most = 2 * MAX_PER_KIND as u32;
     let mut rare_counts = Vec::new();
-    for [count, weight] in parsed.rare.affixes {
+    for [count, weight] in rare_spec.affixes {
         if !(1..=most).contains(&count) {
             return Err(err(format!(
                 "`rare.affixes`: a rare item rolls 1 to {most} affixes, not {count}"
@@ -573,12 +629,14 @@ pub(super) fn parse(
             "`rare.affixes` needs a count with a weight above 0 while rares are found".into(),
         ));
     }
+    let (file, names_spec) = names_spec.get(first_file)?;
+    let err = |m: String| ContentError::new(file, m);
     let names = |list: &[String]| list.iter().all(|n| !n.trim().is_empty()) && !list.is_empty();
-    if !names(&parsed.names.first) {
+    if !names(&names_spec.first) {
         return Err(err("`names.first` needs words, none of them empty".into()));
     }
     let mut second_names = BTreeMap::new();
-    for (kind, words) in parsed.names.second {
+    for (kind, words) in names_spec.second {
         let kind = ItemKind::from_id(&kind)
             .ok_or_else(|| err(format!("`names.second`: unknown kind of item `{kind}`")))?;
         if !names(&words) {
@@ -601,26 +659,26 @@ pub(super) fn parse(
 
     let mut affixes = Affixes {
         rarity,
-        magic_both: parsed.magic.both,
+        magic_both: magic_spec.both,
         rare_counts,
-        first_names: parsed.names.first,
+        first_names: names_spec.first,
         second_names,
         ..Affixes::default()
     };
-    let specs = (parsed.prefix.into_iter().map(|s| (AffixKind::Prefix, s)))
-        .chain(parsed.suffix.into_iter().map(|s| (AffixKind::Suffix, s)));
-    for (kind, spec) in specs {
+    let mut seen: BTreeMap<String, &str> = BTreeMap::new();
+    for (file, kind, spec) in specs {
         // Without skills (no `data/skills.toml`) skill affixes have nothing to raise: left out.
         if spec.effect == Effect::Skill.id() && !has_skills {
             continue;
         }
         let id = spec.id.clone();
-        let def = spec
-            .resolve(kind, &light, &skill)
-            .map_err(|m| err(format!("{} `{id}`: {m}", kind.name().to_lowercase())))?;
-        if affixes.ids.insert(id.clone(), affixes.defs.len()).is_some() {
-            return Err(err(format!("duplicate affix id `{id}`")));
+        let def = spec.resolve(kind, &light, &skill).map_err(|m| {
+            ContentError::new(file, format!("{} `{id}`: {m}", kind.name().to_lowercase()))
+        })?;
+        if let Some(first) = seen.insert(id.clone(), file) {
+            return Err(super::duplicate_id("affix", &id, file, first));
         }
+        affixes.ids.insert(id, affixes.defs.len());
         affixes.defs.push(def);
     }
     Ok(affixes)
@@ -752,12 +810,63 @@ amulet = ["Charm"]
 
     fn parse_with(affixes: &str) -> Result<Affixes, ContentError> {
         let text = format!("{HEAD}\n{affixes}");
+        parse_files([("data/affixes.toml", text.as_str())])
+    }
+
+    /// Parses `files` as the affix table, with a light `glow` and a skill `stealth`.
+    fn parse_files<'a>(
+        files: impl IntoIterator<Item = (&'a str, &'a str)>,
+    ) -> Result<Affixes, ContentError> {
         parse(
-            "data/affixes.toml",
-            &text,
+            files,
             |id| (id == "glow").then_some(LightId(0)),
             (|id: &str| (id == "stealth").then_some(SkillId(0)), true),
         )
+    }
+
+    /// The table split over files: the settings in one, an entry a file in path order; a
+    /// settings table in two files, no settings at all, and an id in two files are refused.
+    #[test]
+    fn affix_files_hold_the_settings_once_and_the_entries_in_path_order() {
+        let sharp = "[[prefix]]\nid = \"sharp\"\nname = \"Sharp\"\neffect = \"damage\"\n\
+                     bases = [\"weapon\"]\ntiers = [{ level = 1, min = 1, max = 1 }]\n";
+        let keen = sharp.replace("sharp", "keen").replace("Sharp", "Keen");
+        let a = parse_files([
+            ("data/affixes.toml", HEAD),
+            ("data/affixes/README.toml", "# Notes only.\n"),
+            ("data/affixes/keen.toml", keen.as_str()),
+            ("data/affixes/sharp.toml", sharp),
+        ])
+        .expect("valid");
+        let ids: Vec<&str> = a.all().iter().map(|d| d.id.as_str()).collect();
+        assert_eq!(ids, ["keen", "sharp"]);
+        let err = parse_files([
+            ("data/affixes.toml", HEAD),
+            (
+                "data/affixes/more.toml",
+                "[rarity]\nnormal = 1\nmagic = 1\nrare = 1\n",
+            ),
+        ])
+        .unwrap_err();
+        assert_eq!(err.file, "data/affixes/more.toml");
+        assert_eq!(
+            err.message,
+            "`[rarity]` is set here and in data/affixes.toml"
+        );
+        let err = parse_files([("data/affixes/sharp.toml", sharp)]).unwrap_err();
+        assert_eq!(err.file, "data/affixes/sharp.toml");
+        assert_eq!(err.message, "`[rarity]` is missing");
+        let err = parse_files([
+            ("data/affixes.toml", HEAD),
+            ("data/affixes/a.toml", sharp),
+            ("data/affixes/b.toml", sharp),
+        ])
+        .unwrap_err();
+        assert_eq!(err.file, "data/affixes/b.toml");
+        assert_eq!(
+            err.message,
+            "duplicate affix id `sharp` (also in data/affixes/a.toml)"
+        );
     }
 
     #[test]

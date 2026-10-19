@@ -2,7 +2,7 @@
 //! spears, fireballs, lightning, pits, alarms, and teleports; charges; deaths; saves; replays.
 
 use super::*;
-use crate::action::{SpellShape, parse_actions};
+use crate::action::{MissileEnd, SpellShape, parse_actions};
 use crate::content::{ContentFiles, TrapId};
 use crate::replay::Replay;
 

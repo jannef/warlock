@@ -1,0 +1,13 @@
+[[object]]
+id = "long_sword"
+name = "long sword"
+glyph = ")"
+fg = "#e4e8f0"
+material = "steel"
+weight = 1800
+value = 80
+slot = "main_hand"
+damage = "1d8"
+threat = 20
+category = "long_blades"
+kind = "weapon"

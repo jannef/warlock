@@ -1,0 +1,14 @@
+# Rocks are thrown (ready a few in the missile weapon slot to throw them with `t` at once).
+[[object]]
+id = "rock"
+name = "rock"
+glyph = "*"
+fg = "#a29c90"
+material = "stone"
+weight = 800
+value = 0
+stackable = true
+damage = "1d3"
+category = "thrown"
+range = 6
+missile = "•"

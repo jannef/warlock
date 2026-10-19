@@ -752,6 +752,12 @@ mod tests {
     fn skill_free_content() -> Content {
         let mut files = ContentFiles::builtin();
         files.remove("data/skills.toml");
+        let untrained = |text: &str| -> String {
+            let kept: Vec<&str> = (text.lines())
+                .filter(|l| !l.starts_with("skills = ") && !l.starts_with("class_skill = "))
+                .collect();
+            kept.join("\n")
+        };
         for (path, text) in [
             (
                 "data/races.toml",
@@ -761,16 +767,10 @@ mod tests {
                 "data/classes.toml",
                 include_str!("../../../assets/data/classes.toml"),
             ),
-            (
-                "data/creatures.toml",
-                include_str!("../../../assets/data/creatures.toml"),
-            ),
         ] {
-            let kept: Vec<&str> = (text.lines())
-                .filter(|l| !l.starts_with("skills = ") && !l.starts_with("class_skill = "))
-                .collect();
-            files.insert(path, &kept.join("\n"));
+            files.insert(path, &untrained(text));
         }
+        files.edit_table("creatures", untrained);
         Content::load(&files).expect("valid content")
     }
 

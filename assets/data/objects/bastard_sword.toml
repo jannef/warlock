@@ -1,0 +1,14 @@
+[[object]]
+id = "bastard_sword"
+name = "bastard sword"
+glyph = ")"
+fg = "#c8d0dc"
+material = "steel"
+weight = 2800
+value = 120
+slot = "main_hand"
+damage = "1d10"
+threat = 20
+category = "long_blades"
+kind = "weapon"
+level = 4

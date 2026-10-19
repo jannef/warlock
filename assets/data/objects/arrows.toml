@@ -1,0 +1,75 @@
+[[object]]
+id = "arrow"
+name = "arrow"
+glyph = "/"
+fg = "#c8a878"
+material = "wood"
+weight = 30
+value = 1
+stackable = true
+slot = "missiles"
+ammo = "arrow"
+breaks = 30
+missile = "→"
+kind = "ammo"
+frequency = 60
+
+# Its head wrapped in pitch-soaked rag, lit as it is loosed: it flies and lands burning.
+[[object]]
+id = "flaming_arrow"
+name = "flaming arrow"
+glyph = "/"
+fg = "#c87850"
+material = "wood"
+weight = 40
+value = 4
+stackable = true
+slot = "missiles"
+ammo = "arrow"
+lit = "burning_arrow"
+
+# A flaming arrow as it flies and where it lands: it lights the dark around it for a minute, then
+# it has burned away.
+[[object]]
+id = "burning_arrow"
+name = "burning arrow"
+glyph = "/"
+fg = "#ffc070"
+material = "wood"
+weight = 30
+value = 0
+stackable = true
+light = "arrow_fire"
+burns = 60
+missile = "→"
+glow = 0.35
+
+# A few sparks off the flame where it lies...
+[[object.particles]]
+glyphs = "'`.·"
+colors = ["#ffe0a0", "#ff9040", "#a03010"]
+rate = 1.2
+life = 0.7
+velocity = [0.0, -1.0]
+spread = [0.3, 0.3]
+gravity = -0.3
+offset = [0.0, -0.2]
+area = [0.12, 0.05]
+sway = 0.08
+scale = 0.6
+glow = 0.5
+
+# ...and a thin trail of embers as it flies.
+[[object.particles]]
+on = "flight"
+glyphs = "·.'"
+colors = ["#ffe0a0", "#ff8838", "#802008"]
+rate = 22
+life = 0.32
+velocity = [0.0, -0.4]
+spread = [0.35, 0.35]
+gravity = -0.6
+area = [0.06, 0.06]
+scale = 0.55
+glow = 0.45
+opacity = 0.8

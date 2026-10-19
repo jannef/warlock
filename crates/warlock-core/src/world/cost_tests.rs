@@ -624,7 +624,7 @@ fn costs_come_from_data_and_are_validated() {
     // (500), and climbing out of the water onto ice (2000), and no creature with an attack of its
     // own cost (yet).
     let builtin = Content::builtin().expect("builtin content");
-    for kind in ActionKind::ALL {
+    for &kind in ActionKind::ALL {
         let expected = match kind {
             ActionKind::BodyArmor => 3 * NORMAL_COST,
             ActionKind::Chat => NORMAL_COST / 2,

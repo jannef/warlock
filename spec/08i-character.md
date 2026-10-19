@@ -1,0 +1,246 @@
+# Warlock specification — 8. Architecture (continued): the character
+
+Part of the specification, the source of truth for what to build; the index is
+[`specification.md`](../specification.md). Update it together with the code and the
+developer notes (CLAUDE.md, `docs/dev/`).
+
+- **Character creation** (`warlock-core/src/character.rs`; M15): a run starts as a character, a
+  race (`data/races.toml`), a gender (male, female, or other), and a class
+  (`data/classes.toml`), chosen on New run (§6) or given on the command line (`--character
+  dwarf,female,warrior`, §9); otherwise the scenario's character (§7). It decides:
+  - **Age and birthday**: the starting age is uniform within the race's `age` range, the
+    birthday (month, then day) uniform over the year, both from the stream
+    `character/birth/<race>` (so the class and gender never move a birthday). The birth date is
+    counted back from the run's start date (the scenario's `start_date`): the character is
+    exactly that old on it, so a birthday later in the year falls one year further back. Birth
+    years before the calendar's year 1 count on down through 0. The age on the character screen
+    is the age on the current date: one more on every birthday.
+  - **Birth sign** (the horoscope, `data/horoscope.toml`): every year has an animal and an
+    element; both advance one step a year, in data order, on the 1st of Frostmere (the new
+    year), so with 12 animals and 5 elements every pair comes exactly once in a **great cycle**
+    of 60 years. The anchor year 1 (the Great Race) is a Wood Salamander year, and so are 61,
+    …, 1381, and 1441 (1444 is Metal Unicorn). The sign is the birth year's; the player does
+    not choose it. A sign is said element first: "the Fire Manticore". Signs are **flags** for
+    later rules: `Character::born_of_element("fire")` ("is this character Fire-born?"),
+    `Character::born_in_year_of("manticore")`, and `Sign::is_element`/`is_animal`.
+  - **Starting scores**: 10 plus the race's adjustment, plus the gender's (male: Strength +1;
+    female: Dexterity +1; other: +1 to a stat picked uniformly from the run seed's
+    `character/gender` stream, so the same seed always raises the same stat), plus the class's,
+    plus the birth sign's animal's and element's, kept within 1 to 40.
+  - **Dice**: adjustments that are dice are rolled in the background, ADOM-like, from the stream
+    `character/rolls/<race>,<gender>,<class>`, in this order: the race's scores, the class's, the
+    animal's, the element's (each in stat order), then the race's potentials, then the skills
+    ("Skills" below: the race's, the class's, each in skill order, then the race's extra class
+    skill), so skills never move a score; fixed numbers draw nothing. The same seed, choices, and
+    start date always make the same character. The player sees only the final scores; the step
+    screens and the wiki show adjustments as written in data (`St 1d3+1`): they are rules, not
+    modifiers.
+  - **Potentials** (hidden): `base_potential` plus the race's potential adjustment (possibly
+    rolled), within 1 to 40 and never below the starting score. Classes, genders, and signs do
+    not change potentials.
+  - **Eyes**: the player's vision profile is the race's (the dev vision switch still works).
+  - **Hit points**: the race's and the class's `hp` add to Toughness for the maximum ("Combat"
+    below).
+  - **Weapon skills** ("Weapon skills" below): the race's starting ranks plus the class's, plus
+    one set of the class's `weapon_skill_choice` if it has one, at most 10 each; each then
+    raises the skills it defaults to. Dice among them roll from their own stream,
+    `character/weapon-skills/<race>,<gender>,<class>`: the race's (in skill order), the
+    class's, the pick of the choice (one draw), then the chosen set's; so they never move a
+    stat roll.
+  - **Fighting styles** ("Fighting styles" below): the class's `styles` plus one set of its
+    `style_choice` if it has one, from yet another stream,
+    `character/styles/<race>,<gender>,<class>`: the class's (in skill order), the pick of the
+    choice, then the chosen set's; so they never move a stat or a weapon skill roll. Each raises
+    the styles it defaults to.
+  - Balance is deliberately not a goal: some combinations are poor (a halfling commoner), and
+    classes do nothing but adjust starting scores, give hit points, train skills, and give
+    weapon skills and fighting styles. No other D&D concept comes with them (alignment, equipment, spells).
+  - The character (`Character`: the race, gender, and class ids, the stat the gender raised,
+    the birth date, and the birth sign) is part of the world state (saved, hashed) and shown on
+    the character screen; replays record the choice only, and since everything else follows
+    from the content, the choice, the seed, and the start date, a run is reproduced by its
+    scenario, seed, and character. `World::new` starts as the scenario's character,
+    `World::with_character` as a given one.
+- **Skills** (`warlock-core/src/skills.rs`, `content/skill.rs`, `world/train.rs`; M20, #132),
+  ADOM-like:
+  - **Trained or untrained**: every actor has a set of trained skills, each with a **value**
+    (`Actor::skills`). A skill not in it is **untrained**: it does not exist for that actor, is
+    never shown, earns no marks, and gives nothing; rules that read a skill get "untrained",
+    which is not a value of 0 (trained at 0 is shown and can grow). Magic items' skill affixes
+    (§8 "Magic items") add to a skill's value for what it gives while worn
+    (`Actor::skill_effect`, the one way rules read a benefit), an untrained skill's from 0; they
+    never train it or change the value shown.
+  - **From race and class** (§7): their `skills` are dice rolled when the character is made,
+    after every other roll ("Character creation" above); a skill both train sums the two; the
+    race's `class_skill` (humans, `2d4+4`) goes to one of the class's skills picked uniformly
+    from the same stream. A creature type's skills are fixed values. A scenario without a
+    character gives a player trained in nothing.
+  - **Values** run 0 to 999 (`MAX_VALUE`), 100 a master; there is no hard cap, but points come
+    slowly past the soft cap (100).
+  - **Training marks**: a meaningful use of a trained skill may earn it a mark, with its rule's
+    chance (§7), one draw of the run's **training stream** (`training`, kept in the world state;
+    never the gameplay stream, so training never changes a fight's rolls) per rule: a step of the
+    player's that some creature on the level would hear at its threshold but for their stealth
+    (`sneak`, through the same propagation as hearing; the overworld is silent), a perceived
+    sound that is news (`hear`, one draw per turn with news), an attack on the player that missed
+    because of their Dexterity or Dodge (`dodge`, the dodge messages), an action other than
+    waiting (not a rest's turns) taken while the player's burden slows them, as it began
+    (`burdened`; a dwarf's Burdened does not), a step on the overworld (`travel`). Only the
+    player trains for now; creatures keep their type's skills.
+  - **[provisional] Increases**: the owner has not decided how skills increase (alternatives for
+    later: ADOM's level-up dice per class once experience exists, or marks that count only once
+    the player rests). For now a skill gains a point when its marks reach
+    `need(value) = marks + value / per`, times `past_cap` from `soft_cap` on (`[increase]` in
+    `data/skills.toml`: 4, 10, 100, 3: 4 marks at 0, 13 at 99, 42 at 100, 48 at 120; the way
+    from 100 to 120 takes about as many marks as the whole way to 100); marks left over carry.
+    A point gained is said: "Your stealth improves." (the skill's name in lower case; never a
+    number). It stops a rest like any message.
+  - **Passive benefits** (data, §7; all integer), each read in one place:
+    - tumble: Dodge in Defence (the category whose bonuses add up), +1 at 20, 40, 60, 80, and
+      100, then +1 per 25 (`Actor::defence`);
+    - stealth: percent less noise from the actor's steps and doors, 0.6 % a point to 60 % at
+      100, then to 75 % at 150 (`noise::noise`; not attacks);
+    - listen: the hearing threshold lower by 1 per 10 points, never below 1 (`Actor::hearing`,
+      for creatures' hearing and the player's perceived sounds alike);
+    - balance: percent less of the burden's slowdown, 0.6 % a point to 60 % at 100 (Burdened
+      ×1.25 becomes ×1.10, Strained ×1.5 ×1.2), then to 80 % at 200 (`World::burdened`,
+      `Burden::slow_eased`; rounded up);
+    - survival: percent less time a journey on the overworld takes, 0.2 % a point to 20 % at 100
+      (`World::step_price`);
+    - appraise: percent better prices in shops (`bargain`), 0.2 % a point to 20 % at 100, then to
+      30 % at 200 (`world::favour`; with Presence at most 50 %; §7 "Shops");
+    - athletics (kicking doors, climbing out of pits) and escape artist (out of pits faster) wait
+      for those rules (#128, #130); swim for deep water; concentration, spellcraft, and use magic
+      device for magic; the other action skills (search, open lock, heal, …) for their
+      actions.
+  - **What the player sees**: their own trained skills' values and a coarse progress (quarters)
+    toward the next point (`PerceptionView::own_skills`), on the Skills screen (§6) and the
+    character creation summary; the `skills` dump layer.
+  - **Active uses**: skills get no keys of their own. Racial, class, skill, and style abilities
+    will be chosen from one abilities menu (#156), unlike ADOM; for it, perception says which of
+    the player's trained skills have an active use (`kind = "action"`) and whether it is
+    available now (`OwnSkill::active`, `available`; `PerceptionView::active_skills`). None is
+    available yet: the uses come with their actions. Never a benefit's number, a mark, a
+    chance, an untrained skill, or a creature's skills; ground-truth dev dumps (`actors`, the
+    world state) show every actor's skills with their marks. Skills and marks are part of the
+    world state (saved, hashed).
+- **Weapon skills** (`warlock-core/src/weapon_skills.rs`, training; `content/weapon_skill.rs`,
+  the data; M22, #134), ADOM-like, with *The Riddle of Steel*'s defaults:
+  - **Skills** (`data/weapon_skills.toml`, §7): the categories weapons belong to. A skill's
+    role says what uses it: `melee` and `launcher` skills are named by weapons (`category`), the
+    wielded weapon's for a blow, the readied missile weapon's for a shot; `thrown` is every
+    throw, whatever is thrown; `unarmed` bare hands, natural attacks, and kicks, whatever is
+    wielded (§8 "Doors"); `shield_block` and `shield_bash` a held shield's blocks and bashes
+    (`Actor::attack_skill`).
+  - **Ranks**: 0 (untrained: no benefits; marks still count) to 10, on every actor
+    (`Actor::weapon_skills`, a rank and marks per skill): the player's from race and class, a
+    creature's from its type (§7). Ranks are stored, not derived.
+  - **Marks**: only the player trains. Each attack the player makes on someone (a blow, a bash,
+    a kick, a shot or throw for each actor it reaches; hit or miss) earns `attempt` marks (1) in its
+    skill, a hit `hit` more (2); a blow the player's shield blocks (a miss credited to the
+    Shield category, "Combat" above) earns `attempt + hit` in shield blocking. The marks scale
+    by `100 + per_level × (the opponent's level − the rank)` percent (20 a level), kept within 0
+    and `most` (200), rounded to the nearest mark (halves up): more against stronger
+    opponents, fewer as the rank rises. The opponent's level is its creature type's `level`
+    (§8 "Experience"; the one attacked, or for a block the attacker): a level-1 giant rat
+    teaches nothing past rank 5, a level-4 kobold shaman nothing past rank 8.
+    A missile that reaches no one, and spells, earn nothing; nothing rolls for marks.
+  - **Curve**: the marks to go from a rank to the next grow exponentially, by the skill's
+    `curve`: melee 15, 30, 60, … 7680 (rank 10 at 15 345 in all), missile 10, 20, … 5120. Marks
+    past the need count toward the next rank (one rank at a time); rank 10 earns no more.
+  - **Defaults** (The Riddle of Steel): a symmetric table of penalties between related skills
+    (§7; long blades 8 gives short blades 6). When skill A gains a rank, every skill B with
+    `rank(A) − penalty(A, B) > rank(B)` rises to that rank and its marks start again from 0
+    (`WeaponSkills::raise`); defaults do not chain within one gain. Starting ranks raise their
+    defaults the same way, whatever their order (`WeaponSkills::from_ranks`).
+  - **Benefits** (per skill and rank, data; never shown): to-hit and damage (to every roll of
+    the dice) on attacks with the skill, a wider threat range (lower natural rolls threaten,
+    never below 2), and a lower cost (`speed`, percent off `melee`, `shoot`, or `throw`;
+    `reload` off reloading), all in the attack's `Profile` (`Profile::with`; `Actor::melee`,
+    `ranged`, `thrown`, `bash`) and price (`World::attack_price`); Parry added to the wielded
+    weapon's own while it is wielded, Shield (shield blocking) added to a held shield's own
+    (`Actor::defence`). Benefits of several skills add up (`Benefit::plus`), so a later kind of
+    skill (fighting styles, #135) can stack on a weapon's: another role, with the same ranks,
+    marks, curve, and benefits.
+  - **Shield bash** (`Action::Bash(dir)`, replay text `bash:DIR`; an ability, §6 "Abilities":
+    unbound by default, a direction once bound): a melee blow at whoever stands that way with
+    the held shield's `bash` dice (§7; the small shield 1d3) plus the Strength modifier to hit
+    and to damage, drawing on and training shield
+    bashing; it costs `melee` (less shield bashing's `speed`) and makes a blow's noise. Refused,
+    taking no time: without a shield to bash with ("You have no shield to bash with."), with
+    nobody there ("There is nothing there to bash."), or at someone not hostile ("You have no
+    quarrel with the deer."; unseen: "Something is in the way."). Its event is an attack of
+    kind `Melee` made `with` the shield; creatures do not bash.
+  - **Messages**: each skill that rose, its own rank or by default, is said after the attack
+    that earned it (and before the experience a kill earned), by its `phrase`: "You feel more
+    skilled with long blades." No numbers.
+  - **What the player perceives**: their own ranks and marks
+    (`PerceptionView::own_weapon_skills`), shown as ranks and a bar on the weapon skills screen
+    (§6) and in the `weapon_skills` dump layer; never a benefit or a creature's ranks (the
+    `actors` dev layer shows every actor's). Ranks and marks are part of the world state
+    (saved, hashed).
+- **Fighting styles** (#135; `content/weapon_skill.rs`: `Role::Style`, `Grip`, `Style`,
+  `TwoWeapons`; `world/actor.rs`: `Actor::grip`, `style`, `styles_in_use`, `attack_skills`
+  (`AttackSkills`: an attack's weapon skill and style), `attack_benefit`, `off_hand`,
+  `off_hand_blow`), after AD&D 2e's *Complete Fighter's Handbook*: how weapons are
+  held and used, as skills with the weapon skills' ranks (0 to 10), marks, curves, defaults, and
+  benefits ("Weapon skills" above), in `data/weapon_skills.toml` (§7).
+  - **Configurations** (`grip`): for blows, what the hands hold (`Actor::grip`, which counts for
+    Defence too): nothing (`unarmed`), one one-handed weapon and every other hand empty
+    (`one_weapon`), a weapon in each of two hands (`two_weapons`), a two-handed weapon
+    (`two_handed`), a one-handed weapon and a shield (`weapon_and_shield`); any other hold (a
+    shield alone) is no style. A shot is `launcher` (whatever the hands hold), a throw `thrown`.
+    A kick (§8 "Doors") is made whatever the hands hold: it draws on unarmed fighting alone and
+    is fought in no style, so Brawler gives it nothing and its price is a kick's (decided: a
+    style is how the hands are used).
+    A style may name the weapon skills it is fought with; the style of a grip that names none
+    takes every other weapon (`WeaponSkillTable::style_for`), so one configuration is always at
+    most one style. A spell has none.
+  - **The eight** (data): **Duelist** (`one_weapon`: to-hit, Parry), **Twin Blades**
+    (`two_weapons`: eases both two-weapon penalties, none left at rank 10), **Great Weapon**
+    (`two_handed`, any weapon but a staff: damage, from rank 8 a critical rolls its damage once
+    more, cheaper blows), **Sword and Board** (`weapon_and_shield`: Shield, from rank 3 a chance
+    of a shield bash after a blow that hits), **Marksman** (`launcher`, bows, crossbows, and
+    slings: to-hit, cheaper shots and reloading), **Skirmisher** (`thrown`, anything thrown:
+    to-hit, damage, cheaper throws; decided as throwing only: "a light weapon and light armour"
+    would have overlapped Duelist and Twin Blades, and the issue's benefits are all throws'),
+    **Brawler** (`unarmed`: to-hit and damage), **Staff Fighter** (`two_handed`, staves: to-hit,
+    Parry). Defaults: duelist ↔ sword and board −3, duelist ↔ twin blades −3, great weapon ↔ staff
+    fighter −3, marksman ↔ skirmisher −4; never to a weapon skill.
+  - **Benefits** (never shown) add to the weapon skill's (`Benefit::plus`;
+    `Actor::attack_benefit`): to-hit, damage, threat, and the critical multiplier (`crit`) in the
+    attack's `Profile` (`Actor::melee`, `off_hand_blow`, `ranged`, `thrown`, `bash`), right after
+    the weapon skill's: the effective stats (§8 "Magic items", "Status effects", "Hunger",
+    "Diseases"), the weapon skill's benefit, the style's (with the two-weapon penalty it eases),
+    the affixes, then the combat stance; `speed` and `reload` in its price (`World::attack_price`,
+    which takes the attack's weapon skill and style: `World::cost_of`, the weapon's `attack_cost`
+    and magic attack speed, less the speed of both together, then the stance and the burden), Parry
+    added to the wielded weapon's and Shield to a held shield's while the hands are in the
+    style's grip (`Actor::defence`). A style's rank never helps another configuration.
+  - **Training**: every attack the player makes (a blow, an off-hand blow, a bash, a shot or a
+    throw for each actor it reaches) earns marks in its style as in its weapon skill, by the same
+    rules (`World::resolve`: the weapon skill first, then the style, so their messages come in
+    that order: "You feel more skilled at dueling."). Rank 0 trains like any other.
+  - **Two weapons**: the off hand takes a shield or a light weapon (`light_weapon`, §7: the
+    dagger, the stiletto, the short sword; `Content::fits`). With a weapon in each hand, every melee attack (the
+    player's move into a hostile, a creature's) is two blows, the main hand's then the off hand's
+    (`World::second_blow`), each at its penalty (`[two_weapons]`: main −4, off −8) less what
+    Twin Blades eases (`TwoWeapons::eased`, never past 0). The off hand's blow is an attack made
+    `with` its weapon (`Event::Attacked`), draws on and trains that weapon's skill, and is
+    worded with it ("You parry the kobold's dagger."); it makes no noise of its own (the attack
+    made one) and comes only if the target still stands. Each blow is resolved on its own: its
+    own weapon's skill and affixes (§8 "Magic items"; the affixes of everything worn and wielded
+    count for both), its own blood, and the bleeding of a big hit or a critical. Both are one
+    action at the main hand's price, and hunger's exertion is counted once. Creatures that wield
+    two weapons fight with both.
+  - **Shield bash after a hit**: in the `weapon_and_shield` grip, a blow that hits a target that
+    still stands is followed, by the style's `bash` chance (one gameplay draw, only when the
+    chance is above 0), by a shield bash at it, free and silent, drawing on and training shield
+    bashing and the style.
+  - **Rank 10** is where a style's later active or triggered abilities will hang (a duelist's
+    riposte, a staff fighter's trip); they will go into the one abilities menu (§6 "Abilities"),
+    with no key of their own.
+  - **What the player perceives**: their own ranks and marks (as weapon skills), and which
+    styles they fight in now (`PerceptionView::own_styles_in_use`), on the weapon skills screen
+    (§6) and in the `weapon_skills` dump layer (`Duelist 1 (0%), in use`; JSON `styles_in_use`).
+    Never a benefit, a penalty, a chance, or a creature's ranks.

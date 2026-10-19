@@ -1,0 +1,10 @@
+[[suffix]]
+id = "of_the_wind"
+name = "of the Wind"
+effect = "move_speed"
+bases = ["cloak", "amulet"]
+weight = 60
+tiers = [
+  { level = 2, min = 4, max = 6 },
+  { level = 6, min = 6, max = 10 },
+]

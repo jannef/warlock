@@ -1,0 +1,14 @@
+[[object]]
+id = "scale_mail"
+name = "suit of scale mail"
+plural = "suits of scale mail"
+glyph = "["
+fg = "#a0a8a4"
+material = "iron"
+weight = 14000
+value = 300
+slot = "body"
+armour = 5
+max_dex = 3
+kind = "body"
+level = 4

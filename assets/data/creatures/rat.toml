@@ -1,0 +1,29 @@
+[[creature]]
+id = "rat"
+level = 1
+xp = 5
+name = "giant rat"
+glyph = "r"
+fg = "#b08458"
+speed = 1200
+faction = "vermin"
+vision = "low_light"
+sight = 8
+# Light on its feet, sharp of ear.
+footsteps = 50
+hearing = 5
+weight = 4000
+size = "small"
+stats = { strength = 10, dexterity = 17, toughness = 12, intelligence = 1, willpower = 12, presence = 4 }
+# Nothing special, slightly gross.
+on_eat = { message = "Gamey and stringy, but it stays down." }
+
+# Its bite is filthy: now and then it poisons, or gives filth fever (unless resisted).
+[creature.attack]
+damage = "1d4"
+name = "bite"
+verb = "bites"
+on_hit = [
+    { status = "poisoned", chance = 10, severity = 2 },
+    { disease = "filth_fever", chance = 10 },
+]

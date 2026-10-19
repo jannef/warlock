@@ -1,0 +1,91 @@
+# Creature types, one file per creature, named by its id (`kobold.toml`). This file holds only the
+# notes below: a file of comments defines nothing. The game numbers the creatures in path order,
+# so a new creature is a new file (never edited into another's), a renamed id is a renamed file,
+# and the same id in two files is a load error naming both (docs/dev/content.md).
+#
+# Creature types. The player is the creature with id "player".
+# Fields: id, name (without an article: "giant rat"), plural (its name for more than one, for
+# quest messages; default the name plus "s"), glyph, fg, speed (how quickly it acts: 1000 is normal and the default, 2000
+# twice as many actions in the same game time; 100 to 10000; never shown to the player), weight
+# (the creature's own weight in grams, required; what it carries adds to it), size (a size in
+# sizes.toml, default "medium": how much it can carry, 1.5 kg × (2 × Strength + Toughness) scaled
+# by the size's carry, before it is burdened, spec §8 "Burden"; the player's comes from their
+# race when the run has a character), light (a preset in
+# lights.toml the creature carries), anim, and the presentation-only effects glow and
+# [[creature.particles]] (see terrain.toml; they move with the creature; `on = "attack"` bursts
+# at the target of each attack the player sees, e.g. a spell's sparkle).
+# Hearing (gameplay, spec §5 "Hearing"): footsteps (how loud its steps are on terrain with a
+# step_noise of 100; a sound loses 10 a cell, 14 diagonally, and a closed door muffles 30; at most
+# 300; default 0: it moves silently) and hearing (the faintest loudness it hears, 1 to 300; default
+# none: it is deaf).
+#
+# Behavior (spec §8 "Creature behavior"; nothing here is shown to the player but the faction's
+# stance toward them):
+#   faction      a faction id in factions.toml (required; the player's is "player")
+#   vision       its eyes: a profile in vision.toml (default "normal"); it sees by the same rules
+#                as the player, under the same light
+#   sight        how far it sees, in cells (default 10, at most 40)
+#   combat       "melee" (default: closes in and attacks from next to its target), "ranged"
+#                (shoots with the missile weapon it has ready), or "caster" (casts spells, which
+#                are announced only: nothing is damaged until magic is designed)
+#   range        how far a ranged or caster creature reaches, in cells (2 up to its sight; it
+#                needs a clear line of fire)
+#   opens_doors  whether it opens closed doors in its way (default false)
+#   budge        whether you can swap places with it when it is not hostile to you (spec §8
+#                "Displacement"): "always" (default), "off_post" (not while it keeps its post,
+#                going about its routine: a shopkeeper at its counter), or "never" (rooted)
+#   attack_cost  what its attacks cost in energy (100 to 10000), instead of the attack's cost in
+#                actions.toml (melee, shoot, or cast; 1000 is a normal action)
+#
+# Experience (spec §8 "Experience"; the player sees only the XP and level they earn): level (1 to 99,
+# default 1) and xp (what a kill by the player is worth when the player is at that level, default 0;
+# the player's own entry has neither). Kills of lower-level monsters give less and less
+# (data/experience.toml).
+#
+# Skills (spec §8 "Skills"; never shown to the player): skills, the skills it is trained in, by
+# skill id (skills.toml), with fixed values (0 to 999); every other skill is untrained. The player's
+# come from their race and class, not from here. Creatures do not train (yet).
+#
+# Loot (spec §8 "Magic items"): loot, the chance in percent (default 0) that it drops a magic or
+# rare item where it dies, besides what it carried; the item level is the level's.
+#
+# Stats (spec §8 "Stats"; never shown to the player; combat and burden use them): stats, its scores
+# by stat (strength, dexterity, toughness, intelligence, willpower, presence; 1 to 40, default 10,
+# the average), and potential, how far each score could grow (default: the score; never below
+# it). The player's stats come from the scenario, not from here.
+#
+# Combat (spec §8 "Combat"; never shown to the player but as words):
+#   base_hp   hit points beyond its Toughness (default 0); the player's come from the scenario
+#   attack    its natural attack, used when it wields no weapon (without one: bare hands, 1d3):
+#             { damage = "1d4", name = "bite", verb = "bites" } and optionally threat, crit,
+#             and to_hit as for weapons (objects.toml); Strength adds to hit and to damage.
+#             on_hit lists the status effects (status.toml) and diseases (diseases.toml) a hit
+#             with it may cause, if the target lives: [{ status = "poisoned", chance = 10,
+#             severity = 2 }] (chance in percent, 1 to 100; severity in degrees, up to the
+#             status's max), { disease = "filth_fever", chance = 10 } (then a check to resist it)
+#   natural   its natural armour: { defence = 3, name = "shell" } (the Natural category of
+#             Defence; "Your sword glances off the cave beetle's shell.")
+#   weapon_skills  its ranks in weapon skills (spec §8 "Weapon skills"), by skill id in
+#             weapon_skills.toml, 0 to 10: { spears = 1 }; fighting styles too ({ duelist = 2 },
+#             spec §8 "Fighting styles"); each raises the skills it defaults to. Creatures do not
+#             train (yet); the player's come from their race and class
+#
+# Corpses (spec §8 "Hunger"; with hunger.toml; never shown to the player before they try):
+#   corpse    whether it leaves a corpse when it dies (default true): a "kobold corpse" (`%` in its
+#             color) weighing what it does, feeding by its size (hunger.toml)
+#   on_eat    what eating its fresh corpse does besides feeding, in this order: { message = "..."
+#             (said once eaten), vomit = 25 (percent chance it comes back up and feeds nothing),
+#             stat = { toughness = 5 } (percent chance per stat to raise it by 1, up to its
+#             hidden potential), heal = "1d4" (hit points), harm = "1d2" (degrees of sickness:
+#             hunger.toml's `sickness`, poison), satiation = 500 (nutrition beyond its size's;
+#             less if negative) }. A rotten corpse does none of it
+#
+# Blood (spec §8 "Blood"; presentation only, no rule reads it): blood, the colour of the stains it
+# leaves when hurt badly or killed ("#rrggbb"; default dark red, "#6e0e0c"), or "none" for a
+# bloodless creature. How much it spills goes by its size's `blood` in sizes.toml.
+
+# Notes on the groups, in the order they were kept in:
+#
+# The showcase's people (spec §3): folk who talk (data/dialogue.toml, `C` to chat) and mutter to
+# themselves now and then. Peaceful by type: they never fight, and you swap places with them
+# when they are in your way.

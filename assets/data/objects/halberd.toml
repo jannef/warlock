@@ -1,0 +1,16 @@
+[[object]]
+id = "halberd"
+name = "halberd"
+glyph = ")"
+fg = "#a49c8c"
+material = "iron"
+weight = 5500
+value = 100
+slot = "main_hand"
+two_handed = true
+damage = "1d10"
+crit = 3
+category = "polearms"
+attack_cost = 1100
+kind = "weapon"
+level = 3

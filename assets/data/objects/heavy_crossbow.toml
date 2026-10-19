@@ -1,0 +1,17 @@
+[[object]]
+id = "heavy_crossbow"
+name = "heavy crossbow"
+glyph = "}"
+fg = "#988f86"
+material = "wood"
+weight = 4500
+value = 300
+slot = "missile_weapon"
+launches = "bolt"
+damage = "1d12+2"
+threat = 20
+range = 15
+reloads = true
+category = "crossbows"
+kind = "launcher"
+level = 5

@@ -8,6 +8,7 @@ use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::ContentFiles;
+use crate::noise::Act;
 use crate::replay::Replay;
 
 const TERRAIN: &str = r##"

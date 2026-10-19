@@ -170,20 +170,28 @@ impl ContentFiles {
         files
     }
 
-    /// Reads `data/`, `levels/`, `scenarios/`, and `vaults/` TOML files under `root`.
+    /// Reads the `data/`, `levels/`, `scenarios/`, and `vaults/` TOML files under `root`,
+    /// subdirectories included (`data/creatures/kobold.toml`): the same set, under the same
+    /// paths, as `build.rs` embeds.
     pub fn from_dir(root: &Path) -> std::io::Result<Self> {
-        let mut files = Self::default();
-        for dir in ["data", "levels", "scenarios", "vaults"] {
-            let Ok(entries) = std::fs::read_dir(root.join(dir)) else {
-                continue;
+        fn collect(dir: &Path, rel: &str, files: &mut ContentFiles) -> std::io::Result<()> {
+            let Ok(entries) = std::fs::read_dir(dir) else {
+                return Ok(());
             };
             for entry in entries {
                 let path = entry?.path();
-                if path.extension().is_some_and(|e| e == "toml") {
-                    let name = path.file_name().unwrap_or_default().to_string_lossy();
-                    files.insert(&format!("{dir}/{name}"), &std::fs::read_to_string(&path)?);
+                let name = path.file_name().unwrap_or_default().to_string_lossy();
+                if path.is_dir() {
+                    collect(&path, &format!("{rel}/{name}"), files)?;
+                } else if path.extension().is_some_and(|e| e == "toml") {
+                    files.insert(&format!("{rel}/{name}"), &std::fs::read_to_string(&path)?);
                 }
             }
+            Ok(())
+        }
+        let mut files = Self::default();
+        for dir in ["data", "levels", "scenarios", "vaults"] {
+            collect(&root.join(dir), dir, &mut files)?;
         }
         Ok(files)
     }
@@ -192,9 +200,38 @@ impl ContentFiles {
         self.files.insert(path.to_string(), text.to_string());
     }
 
-    /// Leaves a file out, e.g. `data/weather.toml` for an always clear sky.
+    /// Leaves a file out, e.g. `data/weather.toml` for an always clear sky, or a whole directory
+    /// (`data/creatures/`, with or without the slash) for a test that brings its own table.
     pub fn remove(&mut self, path: &str) {
         self.files.remove(path);
+        let dir = format!("{}/", path.trim_end_matches('/'));
+        self.files.retain(|p, _| !p.starts_with(&dir));
+    }
+
+    /// The files of the content table `name`, in the order its entries are numbered:
+    /// `data/<name>.toml` first, if there is one, then every file under `data/<name>/`
+    /// (subdirectories included) in path order. Each is `(path, text)`.
+    pub fn table<'a>(&'a self, name: &str) -> impl Iterator<Item = (&'a str, &'a str)> {
+        let single = format!("data/{name}.toml");
+        let dir = format!("data/{name}/");
+        let first = self.files.get_key_value(&single);
+        let rest = self
+            .files
+            .range(dir.clone()..)
+            .take_while(move |(p, _)| p.starts_with(&dir))
+            .filter(|(p, _)| p.ends_with(".toml"));
+        (first.into_iter().chain(rest)).map(|(p, t)| (p.as_str(), t.as_str()))
+    }
+
+    /// Rewrites every file of table `name` with `edit` (tests: a built-in creature with a line
+    /// changed, whichever file it is in).
+    pub fn edit_table(&mut self, name: &str, mut edit: impl FnMut(&str) -> String) {
+        let edited: Vec<(String, String)> = (self.table(name))
+            .map(|(p, t)| (p.to_string(), edit(t)))
+            .collect();
+        for (path, text) in edited {
+            self.insert(&path, &text);
+        }
     }
 
     fn get(&self, path: &str) -> Result<&str, ContentError> {
@@ -222,22 +259,56 @@ struct TerrainFile {
     terrain: Vec<terrain::TerrainSpec>,
 }
 
+/// One file of the creature table (`data/creatures.toml` or `data/creatures/*.toml`): any number
+/// of entries, none in a file of comments only (`README.toml`).
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct CreatureFile {
+    #[serde(default)]
     creature: Vec<creature::CreatureSpec>,
 }
 
+/// One file of the material table.
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct MaterialFile {
+    #[serde(default)]
     material: Vec<MaterialDef>,
 }
 
+/// One file of the object table.
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct ObjectFile {
+    #[serde(default)]
     object: Vec<object::ObjectSpec>,
+}
+
+/// The entries of content table `name` (`data/<name>.toml`, then `data/<name>/**/*.toml` in path
+/// order; `ContentFiles::table`), each with the file it came from, so an error names it. A file
+/// that does not parse is an error naming it; `entries` takes a parsed file apart.
+fn load_table<'a, F: serde::de::DeserializeOwned, T>(
+    files: &'a ContentFiles,
+    name: &str,
+    entries: impl Fn(F) -> Vec<T>,
+) -> Result<Vec<(&'a str, T)>, ContentError> {
+    let mut all = Vec::new();
+    for (path, text) in files.table(name) {
+        let parsed: F = toml::from_str(text).map_err(|e| ContentError::new(path, e.to_string()))?;
+        all.extend(entries(parsed).into_iter().map(|e| (path, e)));
+    }
+    Ok(all)
+}
+
+/// The error for an id defined twice in a table: in `path`, and before that in `first` (another
+/// file of the table, or the same one).
+fn duplicate_id(kind: &str, id: &str, path: &str, first: &str) -> ContentError {
+    let also = if first == path {
+        String::new()
+    } else {
+        format!(" (also in {first})")
+    };
+    ContentError::new(path, format!("duplicate {kind} id `{id}`{also}"))
 }
 
 #[derive(Deserialize)]
@@ -261,7 +332,7 @@ struct LegendFile {
 /// All loaded and cross-validated content.
 ///
 /// `data/lights.toml`, `data/vision.toml`, `data/factions.toml`, `data/dungeons.toml`,
-/// `data/calendar.toml`, `data/sky.toml`, `data/materials.toml`, `data/objects.toml`,
+/// `data/calendar.toml`, `data/sky.toml`, `data/materials/`, `data/objects/`,
 /// `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
 /// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, `data/horoscope.toml`,
 /// `data/effects.toml`, `data/room_effects.toml`, `data/weapon_skills.toml`, `data/stances.toml`,
@@ -433,12 +504,13 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.skills = SkillBook::parse(path, text)?;
         }
-        let path = "data/affixes.toml";
-        if let Some(text) = files.get_optional(path) {
+        // The affix table: optional, so loot without it is always normal.
+        if files.table("affixes").next().is_some() {
             let light = |id: &str| content.light_id(id);
             let skill = |id: &str| content.skill_id(id);
             let has_skills = !content.skills().is_empty();
-            content.affixes = affix::parse(path, text, light, (skill, has_skills))?;
+            let table = files.table("affixes");
+            content.affixes = affix::parse(table, light, (skill, has_skills))?;
         }
         let path = "data/stances.toml";
         if let Some(text) = files.get_optional(path) {
@@ -728,16 +800,21 @@ impl Content {
         Ok(())
     }
 
+    /// The creature table: `data/creatures.toml` and `data/creatures/*.toml`, numbered in path
+    /// order (the single file first); required, with a `player`.
     fn load_creatures(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
-        let path = "data/creatures.toml";
-        let err = |m: String| ContentError::new(path, m);
-        let parsed: CreatureFile =
-            toml::from_str(files.get(path)?).map_err(|e| err(e.to_string()))?;
-        for (i, spec) in parsed.creature.into_iter().enumerate() {
+        let Some((first_file, _)) = files.table("creatures").next() else {
+            return Err(ContentError::new("data/creatures.toml", "file is missing"));
+        };
+        let specs = load_table(files, "creatures", |f: CreatureFile| f.creature)?;
+        let mut seen: BTreeMap<String, &str> = BTreeMap::new();
+        for (i, (path, spec)) in specs.into_iter().enumerate() {
+            let err = |m: String| ContentError::new(path, m);
             let id = CreatureId(u16::try_from(i).map_err(|_| err("too many creatures".into()))?);
-            if self.creature_ids.insert(spec.id.clone(), id).is_some() {
-                return Err(err(format!("duplicate creature id `{}`", spec.id)));
+            if let Some(first) = seen.insert(spec.id.clone(), path) {
+                return Err(duplicate_id("creature", &spec.id, path, first));
             }
+            self.creature_ids.insert(spec.id.clone(), id);
             if !SPEEDS.contains(&spec.speed) {
                 return Err(err(format!(
                     "creature `{}`: speed {} is out of range ({} to {})",
@@ -885,7 +962,10 @@ impl Content {
             self.creatures.push(spec.resolve(resolved));
         }
         if !self.creature_ids.contains_key("player") {
-            return Err(err("a creature with id `player` is required".into()));
+            return Err(ContentError::new(
+                first_file,
+                "a creature with id `player` is required",
+            ));
         }
         Ok(())
     }
@@ -1008,36 +1088,41 @@ impl Content {
     }
 
     /// Materials, then the objects made of them.
+    /// The material and object tables (`data/materials.toml` and `data/materials/*.toml`,
+    /// `data/objects.toml` and `data/objects/*.toml`; both optional), numbered in path order
+    /// (the single file first), with `data/slots.toml` between them.
     fn load_objects(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
-        let path = "data/materials.toml";
-        if let Some(text) = files.get_optional(path) {
-            let err = |m: String| ContentError::new(path, m);
-            let parsed: MaterialFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-            for (i, def) in parsed.material.into_iter().enumerate() {
-                let id =
-                    MaterialId(u16::try_from(i).map_err(|_| err("too many materials".into()))?);
-                if self.material_ids.insert(def.id.clone(), id).is_some() {
-                    return Err(err(format!("duplicate material id `{}`", def.id)));
-                }
-                self.materials.push(def);
+        let mut seen: BTreeMap<String, &str> = BTreeMap::new();
+        for (i, (path, def)) in (load_table(files, "materials", |f: MaterialFile| f.material)?)
+            .into_iter()
+            .enumerate()
+        {
+            let id = MaterialId(
+                u16::try_from(i).map_err(|_| ContentError::new(path, "too many materials"))?,
+            );
+            if let Some(first) = seen.insert(def.id.clone(), path) {
+                return Err(duplicate_id("material", &def.id, path, first));
             }
+            self.material_ids.insert(def.id.clone(), id);
+            self.materials.push(def);
         }
         let path = "data/slots.toml";
         if let Some(text) = files.get_optional(path) {
             self.slots = slot::parse(path, text)?;
         }
-        let path = "data/objects.toml";
-        let Some(text) = files.get_optional(path) else {
-            return Ok(());
-        };
-        let err = |m: String| ContentError::new(path, m);
-        let parsed: ObjectFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        let mut lit = Vec::new();
-        for (i, spec) in parsed.object.into_iter().enumerate() {
-            let id = ObjectId(u16::try_from(i).map_err(|_| err("too many objects".into()))?);
-            if self.object_ids.insert(spec.id.clone(), id).is_some() {
-                return Err(err(format!("duplicate object id `{}`", spec.id)));
+        let specs = load_table(files, "objects", |f: ObjectFile| f.object)?;
+        let mut seen: BTreeMap<String, &str> = BTreeMap::new();
+        // Each object's file, for the errors found once every object is known.
+        let mut paths = Vec::with_capacity(specs.len());
+        let mut lit = Vec::with_capacity(specs.len());
+        for (i, (path, spec)) in specs.into_iter().enumerate() {
+            let id = ObjectId(
+                u16::try_from(i).map_err(|_| ContentError::new(path, "too many objects"))?,
+            );
+            if let Some(first) = seen.insert(spec.id.clone(), path) {
+                return Err(duplicate_id("object", &spec.id, path, first));
             }
+            self.object_ids.insert(spec.id.clone(), id);
             let (def, lit_as) = spec.resolve(
                 path,
                 |m| self.material_ids.get(m).copied(),
@@ -1047,6 +1132,7 @@ impl Content {
             )?;
             check_effects(path, "object", &def.id, None, def.glow, 0.0, &def.particles)?;
             lit.push(lit_as);
+            paths.push(path);
             self.objects.push(def);
         }
         // What is lit as it is loosed flies as an object that burns.
@@ -1056,23 +1142,29 @@ impl Content {
             let def = &self.objects[i];
             let Some(target) = target.filter(|t| self.objects[usize::from(t.0)].burning.is_some())
             else {
-                return Err(err(format!(
-                    "object `{}`: `lit = \"{name}\"` must name an object that burns (`light` and \
-                     `burns`)",
-                    def.id
-                )));
+                return Err(ContentError::new(
+                    paths[i],
+                    format!(
+                        "object `{}`: `lit = \"{name}\"` must name an object that burns (`light` \
+                         and `burns`)",
+                        def.id
+                    ),
+                ));
             };
             self.objects[i].lit = Some(target);
         }
         // Launchers and ammunition pair by kind: a launcher shoots something there is.
-        for o in &self.objects {
+        for (o, path) in self.objects.iter().zip(&paths) {
             if let Some(kind) = &o.launches
                 && !self.objects.iter().any(|a| a.ammo.as_ref() == Some(kind))
             {
-                return Err(err(format!(
-                    "object `{}` launches `{kind}`, but no object has `ammo = \"{kind}\"`",
-                    o.id
-                )));
+                return Err(ContentError::new(
+                    path,
+                    format!(
+                        "object `{}` launches `{kind}`, but no object has `ammo = \"{kind}\"`",
+                        o.id
+                    ),
+                ));
             }
         }
         Ok(())
@@ -1448,6 +1540,14 @@ impl Content {
     pub fn fires(&self, launcher: ObjectId, ammo: ObjectId) -> bool {
         let kind = &self.object(launcher).launches;
         kind.is_some() && *kind == self.object(ammo).ammo
+    }
+
+    /// The plain ammunition of `kind` (`ammo = "arrow"`): the first by object id, so "shoots
+    /// arrows" names the arrow before the flaming arrow whatever order the files load in.
+    pub fn ammunition(&self, kind: &str) -> Option<&ObjectDef> {
+        (self.objects.iter())
+            .filter(|o| o.ammo.as_deref() == Some(kind))
+            .min_by(|a, b| a.id.cmp(&b.id))
     }
 
     pub fn trap(&self, id: TrapId) -> &TrapDef {
@@ -2137,6 +2237,150 @@ mod tests {
         files
     }
 
+    /// A creature entry of nothing but the required fields.
+    fn creature_entry(id: &str, glyph: char) -> String {
+        format!(
+            "[[creature]]\nid = \"{id}\"\nname = \"{id}\"\nglyph = \"{glyph}\"\nfg = \"#ffffff\"\n\
+             weight = 1000\n"
+        )
+    }
+
+    /// A table split over its single file and a directory: the single file's entries come
+    /// first, then the directory's files in path order (subdirectories included), a file of
+    /// comments only adds nothing, and `remove` drops a directory whole.
+    #[test]
+    fn a_table_directory_loads_in_path_order_after_the_single_file() {
+        let mut files = minimal_files("#@#\n", "");
+        files.insert("data/creatures/README.toml", "# Notes only.\n");
+        files.insert(
+            "data/creatures/b/kobold.toml",
+            &creature_entry("kobold", 'k'),
+        );
+        files.insert("data/creatures/a.toml", &creature_entry("bat", 'b'));
+        files.insert(
+            "data/creatures/c.toml",
+            &format!(
+                "{}{}",
+                creature_entry("deer", 'd'),
+                creature_entry("beetle", 'a')
+            ),
+        );
+        let table: Vec<&str> = files.table("creatures").map(|(p, _)| p).collect();
+        assert_eq!(
+            table,
+            [
+                "data/creatures.toml",
+                "data/creatures/README.toml",
+                "data/creatures/a.toml",
+                "data/creatures/b/kobold.toml",
+                "data/creatures/c.toml",
+            ]
+        );
+        let content = Content::load(&files).expect("valid");
+        let ids: Vec<&str> = (content.creature_defs().iter())
+            .map(|c| c.id.as_str())
+            .collect();
+        assert_eq!(ids, ["player", "rat", "bat", "kobold", "deer", "beetle"]);
+        assert_eq!(content.creature_id("deer"), Some(CreatureId(4)));
+        // Without the single file, the directory alone is the table.
+        files.remove("data/creatures.toml");
+        files.insert("data/creatures/player.toml", &creature_entry("player", '@'));
+        let content = Content::load(&files).expect("valid");
+        let ids: Vec<&str> = (content.creature_defs().iter())
+            .map(|c| c.id.as_str())
+            .collect();
+        assert_eq!(ids, ["bat", "kobold", "deer", "beetle", "player"]);
+        // `edit_table` rewrites every file of the table.
+        files.edit_table("creatures", |t| t.replace("weight = 1000", "weight = 2000"));
+        let content = Content::load(&files).expect("valid");
+        assert!(content.creature_defs().iter().all(|c| c.weight == 2000));
+        // Removing the directory leaves no creature file at all.
+        files.remove("data/creatures");
+        assert_eq!(files.table("creatures").count(), 0);
+        let err = Content::load(&files).unwrap_err();
+        assert_eq!(err.file, "data/creatures.toml");
+        assert!(err.message.contains("missing"), "{err}");
+    }
+
+    /// An id in two files of a table is an error naming both files; a file that does not parse
+    /// is an error naming it.
+    #[test]
+    fn a_duplicate_id_across_table_files_names_both_files() {
+        let mut files = minimal_files("#@#\n", "");
+        files.insert("data/creatures/rat.toml", &creature_entry("rat", 'r'));
+        let err = Content::load(&files).unwrap_err();
+        assert_eq!(err.file, "data/creatures/rat.toml");
+        assert_eq!(
+            err.message,
+            "duplicate creature id `rat` (also in data/creatures.toml)"
+        );
+        files.remove("data/creatures/");
+        let iron = "[[material]]\nid = \"iron\"\nname = \"iron\"\n";
+        files.insert("data/materials.toml", iron);
+        files.insert("data/materials/iron.toml", iron);
+        let err = Content::load(&files).unwrap_err();
+        assert_eq!(err.file, "data/materials/iron.toml");
+        assert_eq!(
+            err.message,
+            "duplicate material id `iron` (also in data/materials.toml)"
+        );
+        files.remove("data/materials/");
+        let nail = "[[object]]\nid = \"nail\"\nname = \"nail\"\nglyph = \"(\"\nfg = \"#ffffff\"\n\
+                    material = \"iron\"\nweight = 5\nvalue = 1\n";
+        files.insert("data/objects/a.toml", nail);
+        files.insert("data/objects/b.toml", nail);
+        let err = Content::load(&files).unwrap_err();
+        assert_eq!(err.file, "data/objects/b.toml");
+        assert_eq!(
+            err.message,
+            "duplicate object id `nail` (also in data/objects/a.toml)"
+        );
+        files.insert("data/objects/b.toml", "[[object]\n");
+        let err = Content::load(&files).unwrap_err();
+        assert_eq!(err.file, "data/objects/b.toml");
+        files.remove("data/objects/b.toml");
+        let content = Content::load(&files).expect("valid");
+        assert_eq!(content.object_id("nail"), Some(ObjectId(0)));
+    }
+
+    /// `from_dir` reads subdirectories like `build.rs` embeds them: the same paths, the built-in
+    /// set being exactly what is on disk under `assets/`.
+    #[test]
+    fn from_dir_reads_nested_directories_like_the_build() {
+        let root = std::env::temp_dir().join(format!("warlock-content-{}", std::process::id()));
+        let deep = root.join("data/creatures/deep");
+        std::fs::create_dir_all(&deep).expect("temp dir");
+        std::fs::create_dir_all(root.join("levels")).expect("temp dir");
+        std::fs::write(root.join("data/legend.toml"), "x = 1\n").expect("write");
+        std::fs::write(root.join("data/creatures/rat.toml"), "a = 1\n").expect("write");
+        std::fs::write(deep.join("bat.toml"), "b = 2\n").expect("write");
+        std::fs::write(deep.join("notes.txt"), "not content\n").expect("write");
+        std::fs::write(root.join("levels/hub.toml"), "c = 3\n").expect("write");
+        let files = ContentFiles::from_dir(&root).expect("readable");
+        std::fs::remove_dir_all(&root).expect("cleanup");
+        let paths: Vec<&str> = files.files.keys().map(String::as_str).collect();
+        assert_eq!(
+            paths,
+            [
+                "data/creatures/deep/bat.toml",
+                "data/creatures/rat.toml",
+                "data/legend.toml",
+                "levels/hub.toml",
+            ]
+        );
+        let table: Vec<(&str, &str)> = files.table("creatures").collect();
+        assert_eq!(
+            table,
+            [
+                ("data/creatures/deep/bat.toml", "b = 2\n"),
+                ("data/creatures/rat.toml", "a = 1\n"),
+            ]
+        );
+        let assets = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../assets");
+        let on_disk = ContentFiles::from_dir(&assets).expect("assets");
+        assert_eq!(on_disk.files, ContentFiles::builtin().files);
+    }
+
     #[test]
     fn short_rows_are_padded_with_void() {
         let content = Content::load(&minimal_files("####\n#@.\n####\n", "")).unwrap();
@@ -2333,7 +2577,11 @@ mod tests {
 
     #[test]
     fn creature_skills_must_exist_and_the_player_lists_none() {
-        let creatures = include_str!("../../../../assets/data/creatures.toml");
+        // The built-in creature table as one text, for the checks that an edit applies.
+        let creatures: String = (ContentFiles::builtin().table("creatures"))
+            .map(|(_, t)| t.to_string())
+            .collect::<Vec<_>>()
+            .join("\n");
         for (from, to, why) in [
             (
                 "skills = { listen = 30 }",
@@ -2353,7 +2601,7 @@ mod tests {
         ] {
             assert!(creatures.contains(from), "{from}");
             let mut files = ContentFiles::builtin();
-            files.insert("data/creatures.toml", &creatures.replacen(from, to, 1));
+            files.edit_table("creatures", |t| t.replacen(from, to, 1));
             let err = Content::load(&files).unwrap_err();
             assert!(err.message.contains(why), "{why}: {err}");
         }

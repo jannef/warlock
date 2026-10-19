@@ -1,0 +1,9 @@
+[[object]]
+id = "skeleton_key"
+name = "skeleton key"
+glyph = "("
+fg = "#e0dccc"
+material = "iron"
+weight = 30
+value = 0
+key = "*"

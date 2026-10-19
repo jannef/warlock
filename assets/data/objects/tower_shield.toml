@@ -1,0 +1,15 @@
+# So big it keeps one from ducking and weaving.
+[[object]]
+id = "tower_shield"
+name = "tower shield"
+glyph = "["
+fg = "#867a68"
+material = "iron"
+weight = 12000
+value = 120
+slot = "off_hand"
+shield = 3
+bash = "1d6"
+max_dex = 2
+kind = "shield"
+level = 6

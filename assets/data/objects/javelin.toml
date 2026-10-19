@@ -1,0 +1,15 @@
+[[object]]
+id = "javelin"
+name = "javelin"
+glyph = ")"
+fg = "#c4a46c"
+material = "wood"
+weight = 1000
+value = 10
+slot = "main_hand"
+damage = "1d6"
+category = "spears"
+kind = "weapon"
+# Made to be thrown.
+range = 8
+missile = "⟶"

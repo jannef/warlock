@@ -1,0 +1,10 @@
+[[suffix]]
+id = "of_stealth"
+name = "of Stealth"
+effect = "stealth"
+bases = ["body", "cloak", "gloves", "boots", "amulet"]
+tiers = [
+  { level = 1, min = 10, max = 15 },
+  { level = 4, min = 15, max = 25 },
+  { level = 7, min = 25, max = 40 },
+]

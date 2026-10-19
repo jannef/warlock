@@ -1,4 +1,5 @@
-//! Materials (`assets/data/materials.toml`): what objects are made of. Only a name for now;
+//! Materials (`assets/data/materials/`, one file each; docs/dev/content.md): what objects are
+//! made of. Only a name for now;
 //! properties (hardness, burning, rusting) come later.
 
 use serde::{Deserialize, Serialize};

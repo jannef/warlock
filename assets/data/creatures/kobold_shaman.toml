@@ -1,0 +1,36 @@
+# The war band's shaman, slow and frail: casts from a few cells away. A faint violet sparkle
+# where its spells land.
+[[creature]]
+id = "kobold_shaman"
+level = 4
+xp = 40
+loot = 50
+name = "kobold shaman"
+glyph = "k"
+fg = "#b080d8"
+speed = 800
+faction = "kobolds"
+vision = "darkvision"
+combat = "caster"
+range = 5
+opens_doors = true
+footsteps = 60
+hearing = 10
+weight = 18000
+size = "small"
+stats = { strength = 7, dexterity = 11, toughness = 8, intelligence = 12, willpower = 14, presence = 10 }
+skills = { concentration = 20, spellcraft = 25 }
+# A tiny chance to take in some of its will.
+on_eat = { message = "It tastes terrible, and of bitter herbs.", vomit = 40, stat = { willpower = 3 } }
+
+[[creature.particles]]
+on = "attack"
+glyphs = "·*+"
+colors = ["#e0c8ff", "#a080f0", "#5040a0"]
+count = 5
+life = 0.4
+spread = [0.9, 0.9]
+area = [0.15, 0.15]
+scale = 0.5
+fade = 0.6
+glow = 0.5

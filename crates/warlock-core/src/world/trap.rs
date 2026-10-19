@@ -416,4 +416,20 @@ impl World {
             to,
         });
     }
+
+    /// Traps the player saw go off are known from now on (spec §8 "Traps"): those they set off
+    /// themselves, and those set off where they see (a creature they see stepping onto one).
+    pub(super) fn learn_traps(&mut self, events: &[Event]) {
+        let player = self.state.player;
+        let current = self.state.current_level.clone();
+        for event in events {
+            if let Event::TrapSprung { at, victim, .. } = *event
+                && (victim == player || self.perception.sees_actors_at(at))
+                && let Some(trap) =
+                    (self.state.levels.get_mut(&current)).and_then(|l| l.traps.get_mut(&at))
+            {
+                trap.known = true;
+            }
+        }
+    }
 }

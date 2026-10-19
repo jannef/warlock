@@ -1,0 +1,12 @@
+[[object]]
+id = "club"
+name = "club"
+glyph = ")"
+fg = "#946a42"
+material = "wood"
+weight = 1400
+value = 8
+slot = "main_hand"
+damage = "1d6"
+category = "maces"
+kind = "weapon"

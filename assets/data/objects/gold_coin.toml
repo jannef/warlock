@@ -1,0 +1,9 @@
+[[object]]
+id = "gold_coin"
+name = "gold coin"
+glyph = "$"
+fg = "#f0cc40"
+material = "gold"
+weight = 10
+value = 1
+stackable = true

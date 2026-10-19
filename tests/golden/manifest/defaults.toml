@@ -1,0 +1,21 @@
+# Golden screenshots (spec §3, §10). `cargo xtask golden` reads every `*.toml` in this directory in
+# file-name order (this file holds the defaults; the others hold the entries, one file per showcase
+# room or feature), renders each entry headlessly, and compares it with `tests/golden/<name>.png`.
+# References are produced on Linux CI only (workflow "Golden references"); see CLAUDE.md, "Golden
+# screenshots".
+#
+# `actions` uses the replay text syntax; `ACTION*N` repeats an action. All walks start at the
+# showcase spawn (7,15) in the start room. Corridor: row y=10; its doors are at x=13 (light hall),
+# 37 (darkness chamber), 43 (patrol gallery), 63 (water garden north / effects room south) and
+# 74 (stairs nook). `[defaults]` may be set in one file only; entry names are unique across files.
+
+[defaults]
+window = "960x540"
+scale = 1.0
+freeze_time = 1.0
+# Frames rendered before the capture; software Vulkan needs time to finish pipelines and lighting.
+capture_after_frames = 60
+# Largest per-channel difference (0-255) that still counts as equal.
+tolerance = 2
+# Largest fraction of pixels allowed to differ by more than the tolerance.
+max_diff_ratio = 0.0005

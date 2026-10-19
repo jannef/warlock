@@ -1,0 +1,10 @@
+[[suffix]]
+id = "of_durability"
+name = "of Durability"
+effect = "durability"
+bases = ["ammo"]
+tiers = [
+  { level = 1, min = 20, max = 30 },
+  { level = 4, min = 30, max = 50 },
+  { level = 7, min = 50, max = 70 },
+]

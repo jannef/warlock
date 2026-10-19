@@ -1,0 +1,53 @@
+# The character: its screen, skills, status effects and diseases, and character creation.
+
+# The character screen (#107, #108, #111): the player's name, race, gender, and class, their
+# age, birthday, and birth sign, their score in each stat (never a modifier or a potential), and
+# what they weigh, carrying the start room's pile.
+[[golden]]
+name = "character-screen"
+scenario = "showcase"
+actions = "move:SW*2 pickup"
+screen = "character"
+
+# The Skills screen (#132): the showcase's thief's trained skills (never an untrained one) with
+# their values and, dimmer, how near each is to its next point; the first one's description.
+[[golden]]
+name = "skills-screen"
+scenario = "showcase"
+screen = "skills"
+
+# Status effects (#138): four bites' worth of poison and a wound (the dev `afflict:` action), a
+# turn later. The character screen names them (never how bad) and shows Strength and Dexterity
+# lowered by the strong poison, in red; the status bar beneath names them after the hit points.
+[[golden]]
+name = "status-effects"
+scenario = "showcase"
+actions = "afflict:poisoned*4 afflict:bleeding wait"
+screen = "character"
+window = "960x600"
+
+# Diseases (#139): the shakes caught (the dev `infect:` action), then rest. Hunger cuts the rests
+# short ("You are getting hungry."), so it takes three: two days on, the disease has shown and
+# progressed once, so the character screen names it on its own row below the status
+# (`Diseased  The shakes`); the status bar beneath says only `Diseased` (and `Weak`: hunger
+# lowers Strength and Dexterity, in red).
+[[golden]]
+name = "diseased"
+scenario = "showcase"
+actions = "infect:the_shakes rest:24h*3"
+screen = "character"
+window = "960x600"
+
+# Character creation (#108, #111, #118), over New run on the main menu (no run; the replay goes
+# unused): the race step with the showcase's character's race preselected, and the summary of
+# that character (race, gender, and class each preselected), with its age, birthday, and sign
+# and its final scores (the dice rolled from the seed).
+[[golden]]
+name = "race-screen"
+scenario = "showcase"
+screen = "race"
+
+[[golden]]
+name = "character-summary"
+scenario = "showcase"
+screen = "summary"

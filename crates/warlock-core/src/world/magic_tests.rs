@@ -4,7 +4,7 @@
 //! it, deterministically.
 
 use super::*;
-use crate::action::parse_actions;
+use crate::action::{Letters, parse_actions};
 use crate::combat::{self, Category, Profile};
 use crate::content::{ContentFiles, Effect};
 use crate::magic::{Affix, Magic, Rarity};

@@ -1,0 +1,12 @@
+[[object]]
+id = "gold_ring"
+name = "gold ring"
+glyph = "="
+fg = "#f0d060"
+material = "gold"
+weight = 10
+value = 150
+slot = "ring"
+kind = "ring"
+level = 3
+frequency = 50
