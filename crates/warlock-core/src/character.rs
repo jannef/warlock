@@ -27,6 +27,12 @@
 //!   one of the class's skills picked uniformly, then its dice. A skill both train sums the two.
 //!   Every other skill is untrained.
 //! - **Eyes**: the player's vision profile is the race's.
+//! - **Weapon skills** (spec §8 "Weapon skills"): the race's starting ranks plus the class's,
+//!   and one set of the class's `weapon_skill_choice` if it has one, at most 10 each; each
+//!   then raises the skills it defaults to. Dice among them are rolled from their own stream,
+//!   `character/weapon-skills/<race>,<gender>,<class>`, in this order: the race's (in skill
+//!   order), the class's, the pick of the choice (one draw), then the chosen set's; so the
+//!   stat rolls above never move.
 //!
 //! Everything follows from the content, the spec, the run seed, and the start date, so a run
 //! (and its replay) is reproduced by its scenario, seed, and character.
@@ -36,6 +42,7 @@ use crate::rng::Rng;
 use crate::skills::{self, Skills};
 use crate::stats::{self, AVERAGE, PerStat, Stat, Stats, adjusted};
 use crate::time::{DAYS_PER_MONTH, GameTime, MONTHS_PER_YEAR};
+use crate::weapon_skills::{self, WeaponSkills};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
@@ -206,6 +213,8 @@ pub struct Start {
     pub hp: i32,
     /// The trained skills, with their starting values (spec §8 "Skills").
     pub skills: Skills,
+    /// Starting ranks in weapon skills, defaults included (spec §8 "Weapon skills").
+    pub weapon_skills: WeaponSkills,
     pub character: Character,
 }
 
@@ -259,6 +268,7 @@ impl CharacterSpec {
             vision: race.vision.clone(),
             hp: race.hp + class.hp,
             skills,
+            weapon_skills: self.weapon_skills(content, seed),
             character: Character {
                 spec: self.clone(),
                 raised,
@@ -266,6 +276,29 @@ impl CharacterSpec {
                 sign,
             },
         })
+    }
+}
+
+impl CharacterSpec {
+    /// The starting ranks in weapon skills of this character in a run with `seed`: see the
+    /// module docs. Content without races or classes gives none.
+    fn weapon_skills(&self, content: &Content, seed: u64) -> WeaponSkills {
+        let (Ok(race), Ok(class)) = (self.race(content), self.class(content)) else {
+            return WeaponSkills::default();
+        };
+        let mut rng = Rng::stream(seed, &format!("character/weapon-skills/{self}"));
+        let mut ranks = Vec::new();
+        weapon_skills::roll_ranks(&race.weapon_skills, &mut rng, &mut ranks);
+        weapon_skills::roll_ranks(&class.weapon_skills, &mut rng, &mut ranks);
+        let choice = &class.weapon_skill_choice;
+        if !choice.is_empty() {
+            let picked = &choice[rng.index(choice.len())];
+            weapon_skills::roll_ranks(picked, &mut rng, &mut ranks);
+        }
+        let ranks = ranks
+            .into_iter()
+            .map(|(id, rank)| (id, rank.clamp(0, i32::from(crate::content::MAX_RANK)) as u8));
+        WeaponSkills::from_ranks(content.weapon_skills(), ranks)
     }
 }
 

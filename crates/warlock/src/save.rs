@@ -189,7 +189,11 @@ impl Plugin for SavePlugin {
             )
             .add_systems(Last, save_on_exit.after(ExitSystems));
         #[cfg(target_arch = "wasm32")]
-        web_hooks::build(app);
+        {
+            web_hooks::build(app);
+            // Safety net: an exit would freeze the page, so reload it instead.
+            app.add_systems(Last, reload_on_exit.after(save_on_exit));
+        }
     }
 }
 
@@ -231,6 +235,8 @@ mod web_hooks {
     }
 }
 
+// On the web, quitting reloads the page, so `exit` goes unused.
+#[cfg_attr(target_arch = "wasm32", allow(unused_variables, unused_mut))]
 fn handle_commands(
     mut commands: MessageReader<SaveCommand>,
     store: Res<SaveStore>,
@@ -244,9 +250,13 @@ fn handle_commands(
                 Ok(()) => {
                     game.world.notice("Game saved.");
                     quit_saved.0 = true;
+                    // A web page cannot close itself: reload to a fresh main menu instead.
+                    #[cfg(target_arch = "wasm32")]
+                    crate::storage::web::reload();
+                    #[cfg(not(target_arch = "wasm32"))]
                     exit.write(AppExit::Success);
                 }
-                Err(e) => game.world.notice(format!("{e} Press Q to try again.")),
+                Err(e) => game.world.notice(format!("{e} Try again.")),
             },
             SaveCommand::Snapshot => match store.save_snapshot(&game.world) {
                 Ok(true) => game.world.notice("Snapshot saved."),
@@ -296,6 +306,14 @@ fn save_on_exit(
         && let Err(e) = store.save_run(&game.world)
     {
         eprintln!("warlock: {e}");
+    }
+}
+
+/// Web: any [`AppExit`] reloads the page (to the main menu) rather than freezing it.
+#[cfg(target_arch = "wasm32")]
+fn reload_on_exit(mut exits: MessageReader<AppExit>) {
+    if exits.read().count() > 0 {
+        crate::storage::web::reload();
     }
 }
 
