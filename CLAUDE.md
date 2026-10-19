@@ -577,7 +577,8 @@ and returns the extra energy a pit costs. Knowledge is decided as the turn is pe
 `perceive_events` (`Event::TrapSprung`, `TrapStruck`). Bursts and bolts emit the full
 `Event::Spell { effect, origin, shape: SpellShape, cells }` (`spell::burst_cells`, so what is drawn
 is what is hit; a bolt's path starts after the trap's cell; the trap's `spell` must be an effect of
-its shape), which `spell::perceive_spell` cuts and `ui/spells.rs` draws. A teleport's destination is an
+its shape), which `spell::perceive_spell` cuts and `ui/spells.rs` draws; a burst with a `blast`
+then calls `World::blast` (walls, below). A teleport's destination is an
 FNV-1a hash, never the gameplay stream. A rest perceives every turn in which a trap went off
 (`World::sprung`).
 
@@ -608,8 +609,8 @@ abilities menu, #156) needs `Actor::dig_tool`; `start_dig` refuses (no time) or 
 `WORK_SCALE` = 20ths of a hardness point) to `LevelState::dug` (saved, by position); at hardness ×
 20 `break_wall` sets the `becomes` terrain through `set_terrain` (light masks), clears the
 progress, bares `face`s around, and pushes `Event::WallBroken { pos, cause: Breach::Dug }`.
-Explosions (none yet; the fireball trap, #128, is to be the first) call
-`World::blast(center, radius, blast, events)`: every breakable wall in the burst
+Explosions call `World::blast(center, radius, blast, events)` (a burst trap with a data `blast`,
+after its damage: the fireball's 1000): every breakable wall in the burst
 (line of sight from the center, computed before anything breaks) with hardness below the blast
 breaks (`Breach::Blast`; `perceive_events` says "The wall collapses!" for those the player sees).
 Perception sees and remembers the rubble like any terrain; `PerceptionView::ready_to_dig` and

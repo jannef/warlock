@@ -124,7 +124,7 @@ a tree, and a candle and a scroll in the gazebo (M11).
 
 **Safety**: the hand-made showcase (the hub, Level 2, the courtyard) is safe. Creatures that would hunt the player by type (the hub's kobold, Level 2's kobolds and rats) are placed in the `peaceful` faction by their level (§7 "Factions"): they keep their types, patrols, speeds, footsteps, and looks, and attack no one. The showcase has no traps (§8 "Traps"). Fighting happens in the arena, and in the generated Depths (the real dungeon), which hide traps too. Arriving in the arena says "The clash of arms echoes off the stone." (a level's `arrival` line).
 
-**Trap hall (72×21, M18)**: down the stairs nook's third `>`: the place to learn traps (§8
+**Trap hall (72×21, M18)**: down the stairs nook's fourth `>`: the place to learn traps (§8
 "Traps"), lit dimly throughout. The `traps` scenario starts there, in the middle of its south wall
 (beside the `<` back up), where the whole hall is in view; arriving by stairs says "Scorch marks
 and old arrows litter the flagstones." North, the proving row: seven bays, each with a known trap
@@ -133,8 +133,10 @@ across the hall, and fireball). South, the crossing: creatures go their rounds a
 traps, so within fifteen turns the player watches a giant rat run onto spears, a cave beetle onto
 a lightning trap whose bolt runs west along its lane (killing it), a torch-bearing kobold into a
 fireball, and a second kobold shot from the south wall by an arrow trap, and from then on knows
-those traps. The rat and the kobolds are among the peaceful folk and the beetle is wildlife, so
-nobody attacks the player; the traps attack everybody.
+those traps. Three pillars stand by that fireball, packed earth and stone north of it and granite
+south: its blast breaks the two softer ones into rubble and the granite holds (§8 "Digging").
+The rat and the kobolds are among the peaceful folk and the beetle is wildlife, so nobody attacks
+the player; the traps attack everybody.
 
 **Arena (72×21, M10)**: down the stairs nook's second `>`: the place to fight; factions at war. A kobold war band
 (three torch-bearing kobolds wielding spears, an archer with a short bow and arrows ready, a slow
@@ -1088,12 +1090,14 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   kind of §5 "Hearing" and its loudness on the trap's cell, 1 to 300), and its `kind`, with the
   fields each kind needs (any other is a content error): `shot` (`object`, the missile, which
   lands as that object; `damage`, `to_hit`), `strike` (`noun`, `damage`, `to_hit`), `burst`
-  (`radius` 1 to 5, `damage`, `spell`, `noun`), `bolt` (`length` 1 to 40, `damage`, `spell`,
-  `noun`), `pit` (`damage`), `alarm` (needs a `noise`), `teleport`. `noun` and `verb` (default
-  "hits") make the messages ("The fireball burns you."); `spell` names the effect presentation
-  shows (`data/effects.toml`; §4.8). `to_hit` is within ±20 and never shown; `damage` is dice
-  that can do harm. The built-in traps: arrow (`shot`, an arrow, 1d6, a bowstring 40), spear
-  (`strike`, 1d8), fireball (`burst` radius 2, 3d6, once, an explosion 150), lightning bolt
+  (`radius` 1 to 5, `damage`, `spell`, `noun`, an optional `blast` 0 to 10000: the walls it
+  reaches whose hardness is below it break, §8 "Digging"), `bolt` (`length` 1 to 40, `damage`,
+  `spell`, `noun`), `pit` (`damage`), `alarm` (needs a `noise`), `teleport`. `noun` and `verb`
+  (default "hits") make the messages ("The fireball burns you."); `spell` names the effect
+  presentation shows (`data/effects.toml`; §4.8). `to_hit` is within ±20 and never shown;
+  `damage` is dice that can do harm. The built-in traps: arrow (`shot`, an arrow, 1d6, a
+  bowstring 40), spear (`strike`, 1d8), fireball (`burst` radius 2, 3d6, a blast of 1000, once,
+  an explosion 150), lightning bolt
   (`bolt` 12 cells, 4d6, twice, a thunderclap 120), pit (1d6), alarm (a bell 300), and teleport.
   The wiki shows them in a generated table.
 - **Water**: `~` is still water (`water`); `shallow_water` (ankle-deep over a stone floor, paler,
@@ -1527,7 +1531,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   work done on walls dug into and still standing (§8 "Digging"; format version 17), every
   actor's combat stance (§8 "Stances"; format version 18), the traps on each level (kind, whether
   the player knows it, charges left, a bolt's direction), the known traps as the player remembers
-  them, and the trap that killed the player (§8 "Traps"; format version 19), and a dev weather
+  them, and the trap that killed the player (§8 "Traps"; format version 28), and a dev weather
   override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
@@ -1901,7 +1905,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     - **burst** (the fireball): every actor on the transparent cells within the radius that a
       shadowcast from the trap reaches (walls stop it) takes one roll of the damage, half of it
       (at least 1) beyond radius − 1; no roll to hit, no saving throw. In ascending actor id
-      order.
+      order. Then, with a `blast`, the walls it reaches whose hardness is below it break (§8
+      "Digging": the fireball's 1000 breaks earth and stone, not granite).
     - **bolt** (lightning): a line from the trap's cell in its direction (the level's `dir`,
       else the longest clear line from it, ties to the earlier of N, NE, … NW) until an opaque
       cell, at most its `length` cells in all: every actor on it, from the trap outward, takes
@@ -1970,7 +1975,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     in line of sight of its centre within its radius, the walls bounding them included, taken
     before anything breaks, so a blast never reaches through a wall it breaks. Walls on the edge
     never break. "The wall collapses!" ("The walls collapse!") when the player sees one fall.
-    Nothing explodes yet: the fireball trap (#128) is to be the first explosion to call it.
+    A burst trap with a `blast` (§7) calls it after its damage, with its own radius: the fireball
+    trap's 1000 breaks packed earth and stone walls, never granite.
   - **What follows**: a broken wall is its rubble at once and the light masks it could change are
     dropped (`World::set_terrain`, as for a door), so light, the player's sight, and creature
     sight pass the gap from the next perception, and memory keeps the rubble like any terrain.

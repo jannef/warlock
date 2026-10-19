@@ -12,7 +12,8 @@
 //! - `strike`: blades or spears from the floor: an attack roll (`to_hit`, `damage`) against the
 //!   Defence of whoever stands on the trap, made with what `noun` names;
 //! - `burst`: a blast of `radius` cells around the trap (a fireball): everyone in it takes
-//!   `damage`, no roll to hit, half of it (at least 1) beyond the inner cells;
+//!   `damage`, no roll to hit, half of it (at least 1) beyond the inner cells; with a `blast`, it
+//!   breaks every wall in it whose hardness is below that (spec §8 "Digging");
 //! - `bolt`: a line from the trap in one direction, up to `length` cells or the first wall (a
 //!   lightning bolt): everyone on it takes `damage`;
 //! - `pit`: whoever steps on it falls in, takes `damage`, and loses their next action climbing
@@ -29,6 +30,7 @@
 
 use super::effect::EffectShape;
 use super::object::{MAX_BONUS, ObjectDef, ObjectId};
+use super::terrain::MAX_HARDNESS;
 use super::{Content, ContentError};
 use crate::color::Rgb;
 use crate::combat::{Attack, DEFAULT_CRIT, DEFAULT_THREAT};
@@ -125,6 +127,8 @@ pub(super) struct TrapSpec {
     to_hit: i32,
     /// `burst`.
     radius: Option<i32>,
+    /// `burst`: how strong the explosion is against walls (spec §8 "Digging"); none breaks none.
+    blast: Option<u16>,
     /// `bolt`.
     length: Option<i32>,
     /// `burst`, `bolt`: the effect presentation shows (`data/effects.toml`).
@@ -148,6 +152,9 @@ pub enum TrapEffect {
         spell: String,
         radius: i32,
         damage: Dice,
+        /// What it does to walls (spec §8 "Digging"): it breaks those in the blast whose hardness
+        /// is below this; 0 breaks none.
+        blast: u16,
     },
     /// A line from the trap until a wall, at most `length` cells: `damage` to everyone on it.
     Bolt {
@@ -233,6 +240,7 @@ impl TrapSpec {
         allowed("object", self.object.is_some(), &[Shot])?;
         allowed("to_hit", self.to_hit != 0, &[Shot, Strike])?;
         allowed("radius", self.radius.is_some(), &[Burst])?;
+        allowed("blast", self.blast.is_some(), &[Burst])?;
         allowed("length", self.length.is_some(), &[Bolt])?;
         allowed("spell", self.spell.is_some(), &[Burst, Bolt])?;
         allowed("noun", self.noun.is_some(), &[Strike, Burst, Bolt])?;
@@ -311,10 +319,15 @@ impl TrapSpec {
                         BURST_RADII.end()
                     )));
                 }
+                let blast = self.blast.unwrap_or(0);
+                if blast > MAX_HARDNESS {
+                    return Err(err(format!("`blast` must be 0 to {MAX_HARDNESS}")));
+                }
                 let effect = TrapEffect::Burst {
                     spell: spell()?,
                     radius,
                     damage: damage()?,
+                    blast,
                 };
                 (effect, noun()?)
             }

@@ -1,4 +1,4 @@
-# The trap hall (spec §3, §8 "Traps"): down the hub stairs nook's third staircase down (`T` in
+# The trap hall (spec §3, §8 "Traps"): down the hub stairs nook's fourth staircase down (`T` in
 # the hub's map), a lit hall to try traps in and to watch them catch creatures. The showcase
 # itself has no traps. `<` leads back up to the hub. The `traps` scenario starts here.
 #
@@ -14,6 +14,10 @@
 # from the south wall by an arrow trap (A). The rat and the kobolds are among the peaceful folk
 # here and the beetle is wildlife, so nobody attacks you; the traps attack everybody. You arrive
 # in the middle of the south wall, where the whole hall is in view: wait (`.`) and watch.
+#
+# Walls (spec §8 "Digging"): three pillars stand by the hidden fireball: packed earth (E) and
+# stone (#) north of it, granite (G) south. Its blast breaks the two softer ones into rubble ("The
+# walls collapse!"); the granite holds.
 arrival = "Scorch marks and old arrows litter the flagstones."
 name = "The Trap Hall"
 ambient = [48, 46, 42, 0]
@@ -27,11 +31,11 @@ map = '''
 #......................................................................#
 #......................................................................#
 #.......................1...........S..................................#
-#......................................................................#
+#.........................E.#..........................................#
 #......................................................................#
 #.............2............F...........................................#
 #......................................................................#
-#......................................................................#
+#..........................G...........................................#
 #......................................................................#
 #.......................................L...........3..................#
 #......................................................................#
@@ -61,4 +65,7 @@ map = '''
 "S" = { terrain = "floor", trap = "spear" }
 "F" = { terrain = "floor", trap = "fireball" }
 "L" = { terrain = "floor", trap = "lightning_bolt", dir = "W" }
+# Pillars by the fireball: what its blast breaks and what it does not.
+"E" = "packed_earth"
+"G" = "granite"
 "A" = { terrain = "floor", trap = "arrow" }

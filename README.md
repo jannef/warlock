@@ -51,8 +51,8 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
 - **Digging** — walls give way: ready a pick-axe or a mattock in the Tool slot and dig, turn after
   turn, through packed earth in a minute, a stone wall in a few, granite in half an hour or so
   (Strength helps, a heavy load slows you), until a creature comes into view or the wall crumbles
-  to rubble; light and sight spill through at once. Digging is loud. Big explosions (to come)
-  blow the softer walls apart. An old quarry below the hub is the place to try it.
+  to rubble; light and sight spill through at once. Digging is loud. A fireball blows the softer
+  walls apart. An old quarry below the hub is the place to try it.
 - **Combat** — D&D-style with two twelve-sided dice: every blow and shot is rolled against
   Defence (Dexterity, armour, shield, parry, a beetle's shell), misses say why ("You block the
   kobold's spear with your shield."), criticals threaten and confirm ("The kobold hits you

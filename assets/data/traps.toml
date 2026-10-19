@@ -17,7 +17,9 @@
 #                an attack roll (`to_hit`, `damage`) against their Defence; it lands as an object
 #     strike     an attack roll (`to_hit`, `damage`) with `noun` against whoever stands on it
 #     burst      everyone within `radius` the blast reaches (walls stop it) takes `damage`, half
-#                beyond radius - 1; no roll to hit; presentation shows the `spell` effect
+#                beyond radius - 1; no roll to hit; presentation shows the `spell` effect. With a
+#                `blast` (0 to 10000), the walls it reaches whose hardness (terrain.toml) is
+#                below that break into rubble (spec §8 "Digging")
 #     bolt       a line from the trap until a wall, at most `length` cells: everyone on it takes
 #                `damage`; presentation shows the `spell` effect
 #     pit        `damage`, and the next action is lost climbing out
@@ -59,6 +61,8 @@ noun = "fireball"
 verb = "burns"
 radius = 2
 damage = "3d6"
+# Blows stone walls and packed earth apart; granite holds.
+blast = 1000
 noise = { sound = "explosion", loudness = 150 }
 
 [[trap]]
