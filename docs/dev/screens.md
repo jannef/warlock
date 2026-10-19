@@ -67,7 +67,10 @@ to open, read keys for, or draw one:
   `--screen dialog` shows the quit dialog. On wasm, quit saves then reloads the page
   (`storage::web::reload`; `AppExit` also reloads), and the main menu has no Quit.
 - **Info pages** (`ui/info_tabs.rs`): the screens about the player (Character, Inventory,
-  Equipment, Skills, Quests, Weapon skills) are an ordered group, `PAGES`. While one is the top screen, the page keys replace
+  Equipment, Skills, Weapon skills, Quests) are an ordered group, `PAGES`, each with its name and
+  a short name for the tab line ("Inv"). The tab line takes the first of these that fits the
+  panel: every name; the current page's name and the others' short names; every short name; the
+  current page's name and the others' keys; bare keys. While one is the top screen, the page keys replace
   it (`ScreenAction::Replace` -> `Screens::replace`: the stack depth is unchanged, so Esc still
   returns to where the first was opened) and each draws its tab line on the bottom border with
   `info_tabs::draw_tabs`. **A new info screen joins the group**: one entry in `PAGES` (its

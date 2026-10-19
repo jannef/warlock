@@ -13,19 +13,31 @@ use super::{ACCENT, TEXT_DIM};
 use crate::input::{Bindings, Context, KeyCommand};
 use crate::render::console::Console;
 
-/// The pages, in number order, with their tab labels. Only screens that exist are listed.
-const PAGES: &[(ScreenName, &str)] = &[
-    (ScreenName::Character, "Character"),
-    (ScreenName::Inventory, "Inventory"),
-    (ScreenName::Equipment, "Equipment"),
-    (ScreenName::Skills, "Skills"),
-    (ScreenName::Quests, "Quests"),
-    (ScreenName::WeaponSkills, "Weapon skills"),
+/// The pages, in number order, with their tab labels: the screen's name, and a short one for a
+/// panel too narrow for every name. Only screens that exist are listed.
+const PAGES: &[(ScreenName, &str, &str)] = &[
+    (ScreenName::Character, "Character", "Char"),
+    (ScreenName::Inventory, "Inventory", "Inv"),
+    (ScreenName::Equipment, "Equipment", "Equip"),
+    (ScreenName::Skills, "Skills", "Skills"),
+    (ScreenName::WeaponSkills, "Weapon skills", "Weapons"),
+    (ScreenName::Quests, "Quests", "Quests"),
 ];
+
+/// How a page is named on the tab line.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Label {
+    /// By its name ("Inventory").
+    Name,
+    /// By its short name ("Inv").
+    Short,
+    /// By its key alone.
+    Key,
+}
 
 /// Whether `name` is one of the pages.
 pub fn is_page(name: ScreenName) -> bool {
-    PAGES.iter().any(|(n, _)| *n == name)
+    PAGES.iter().any(|(n, _, _)| *n == name)
 }
 
 /// What a press does on page `current`: replace it with the page the press names, if that is
@@ -34,7 +46,7 @@ pub fn is_page(name: ScreenName) -> bool {
 /// player binds them.
 pub fn switch(current: ScreenName, press: &Press, bindings: &Bindings) -> Option<ScreenAction> {
     let command = bindings.owner_in(Context::Pages, press.binding.as_ref()?)?;
-    let here = PAGES.iter().position(|(n, _)| *n == current)?;
+    let here = PAGES.iter().position(|(n, _, _)| *n == current)?;
     let step = |forward: bool| {
         let (len, forward) = (PAGES.len(), forward != press.shift);
         if forward {
@@ -49,36 +61,51 @@ pub fn switch(current: ScreenName, press: &Press, bindings: &Bindings) -> Option
         KeyCommand::PrevPage => step(false),
         _ => return None,
     };
-    let (name, _) = PAGES.get(to)?;
+    let (name, _, _) = PAGES.get(to)?;
     (*name != current).then_some(ScreenAction::Replace(*name))
 }
 
-/// The tab line that fits in `width` cells: every page named, else keys with only the current
-/// page named, else bare keys, else nothing. Pairs of (text, is the current page).
+/// The tab line that fits in `width` cells, the first of: every page by its name; the current
+/// page by its name and the others by their short names; every page by its short name; the
+/// current page by its name and the others by their keys alone; bare keys; nothing. Each page
+/// named has its key before its name. Pairs of (text, is the current page).
 fn tabs(current: ScreenName, bindings: &Bindings, width: usize) -> Vec<(String, bool)> {
-    let make = |named: &dyn Fn(ScreenName) -> bool| -> Vec<(String, bool)> {
+    let make = |label: &dyn Fn(bool) -> Label| -> Vec<(String, bool)> {
         let mut parts = Vec::new();
-        for (i, (name, label)) in PAGES.iter().enumerate() {
+        for (i, (name, full, short)) in PAGES.iter().enumerate() {
             let key = u8::try_from(i + 1)
                 .ok()
                 .and_then(|n| (bindings.keys_of(KeyCommand::Page(n)).first()).map(|k| k.display()))
                 .unwrap_or_default();
-            let text = match (named(*name), key.is_empty()) {
-                (true, true) => (*label).to_string(),
-                (true, false) => format!("{key} {label}"),
-                (false, _) => key,
+            let here = *name == current;
+            let named = match label(here) {
+                Label::Name => *full,
+                Label::Short => *short,
+                Label::Key => "",
             };
-            parts.push((text, *name == current));
+            let text = match (named.is_empty(), key.is_empty()) {
+                (true, _) => key,
+                (false, true) => named.to_string(),
+                (false, false) => format!("{key} {named}"),
+            };
+            parts.push((text, here));
         }
         parts
     };
     let len = |parts: &[(String, bool)]| {
         parts.iter().map(|(t, _)| t.chars().count()).sum::<usize>() + 3 * (parts.len() - 1)
     };
-    [make(&|_| true), make(&|n| n == current), make(&|_| false)]
-        .into_iter()
-        .find(|parts| len(parts) <= width)
-        .unwrap_or_default()
+    let others = |other: Label| move |here: bool| if here { Label::Name } else { other };
+    [
+        make(&|_| Label::Name),
+        make(&others(Label::Short)),
+        make(&|_| Label::Short),
+        make(&others(Label::Key)),
+        make(&|_| Label::Key),
+    ]
+    .into_iter()
+    .find(|parts| len(parts) <= width)
+    .unwrap_or_default()
 }
 
 /// Draws the tab line on the panel's bottom border, as the title sits on the top one:
@@ -125,8 +152,8 @@ mod tests {
         let replace = |name| Some(ScreenAction::Replace(name));
         assert_eq!(switch(Character, &top_row("2"), &b), replace(Inventory));
         assert_eq!(switch(Inventory, &top_row("2"), &b), None, "already there");
-        assert_eq!(switch(Skills, &top_row("5"), &b), replace(Quests));
-        assert_eq!(switch(Quests, &top_row("6"), &b), replace(WeaponSkills));
+        assert_eq!(switch(Skills, &top_row("5"), &b), replace(WeaponSkills));
+        assert_eq!(switch(WeaponSkills, &top_row("6"), &b), replace(Quests));
         assert_eq!(
             switch(Character, &top_row("9"), &b),
             None,
@@ -144,10 +171,10 @@ mod tests {
         let tab = |shift| press(KeyBinding::Code(KeyCode::Tab), shift);
         let replace = |name| Some(ScreenAction::Replace(name));
         assert_eq!(switch(Character, &tab(false), &b), replace(Inventory));
-        assert_eq!(switch(Skills, &tab(false), &b), replace(Quests));
-        assert_eq!(switch(Quests, &tab(false), &b), replace(WeaponSkills));
-        assert_eq!(switch(WeaponSkills, &tab(false), &b), replace(Character));
-        assert_eq!(switch(Character, &tab(true), &b), replace(WeaponSkills));
+        assert_eq!(switch(Skills, &tab(false), &b), replace(WeaponSkills));
+        assert_eq!(switch(WeaponSkills, &tab(false), &b), replace(Quests));
+        assert_eq!(switch(Quests, &tab(false), &b), replace(Character));
+        assert_eq!(switch(Character, &tab(true), &b), replace(Quests));
         let up = press(KeyBinding::Code(KeyCode::PageUp), false);
         assert_eq!(switch(Inventory, &up, &b), replace(Character));
     }
@@ -181,17 +208,31 @@ mod tests {
     #[test]
     fn the_tab_line_shortens_to_fit() {
         let b = Bindings::default();
-        let line = |w| {
-            let parts = tabs(ScreenName::Inventory, &b, w);
+        let line = |current, w| {
+            let parts = tabs(current, &b, w);
             (parts.iter().map(|(t, _)| t.as_str()).collect::<Vec<_>>()).join(" · ")
         };
+        let inventory = |w| line(ScreenName::Inventory, w);
         assert_eq!(
-            line(79),
-            "1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Quests · 6 Weapon skills"
+            inventory(79),
+            "1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapon skills · 6 Quests"
         );
-        assert_eq!(line(78), "1 · 2 Inventory · 3 · 4 · 5 · 6");
-        assert_eq!(line(31), "1 · 2 Inventory · 3 · 4 · 5 · 6");
-        assert_eq!(line(30), "1 · 2 · 3 · 4 · 5 · 6");
-        assert_eq!(line(20), "");
+        // The 72-wide panels (68 cells for tabs): the current page by its name, the others by
+        // their short names.
+        let short = "1 Char · 2 Inventory · 3 Equip · 4 Skills · 5 Weapons · 6 Quests";
+        assert_eq!((inventory(78), inventory(64)), (short.into(), short.into()));
+        assert_eq!(
+            line(ScreenName::WeaponSkills, 68),
+            "1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weapon skills · 6 Quests"
+        );
+        let shortest = "1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weapons · 6 Quests";
+        assert_eq!(
+            (inventory(63), inventory(58)),
+            (shortest.into(), shortest.into())
+        );
+        assert_eq!(inventory(57), "1 · 2 Inventory · 3 · 4 · 5 · 6");
+        assert_eq!(inventory(31), "1 · 2 Inventory · 3 · 4 · 5 · 6");
+        assert_eq!(inventory(30), "1 · 2 · 3 · 4 · 5 · 6");
+        assert_eq!(inventory(20), "");
     }
 }
