@@ -58,7 +58,9 @@ you may also hear fighting, a bowstring, or chanting out of sight.
 
 A creature that dies is gone, and what it carried lies where it fell. Creatures do not flee or
 fight any differently when they are hurt, but [look mode](controls.md#look-mode) shows how hurt
-they look.
+they look, and whether they bleed. Big hits and criticals make creatures bleed as they make you
+bleed, and a badly wounded one may bleed to death after the fight; a giant rat's bite may poison
+whatever it bites (see [Status effects](status-effects.md)).
 
 When you see both ends of an attack, you also see it happen: a creature fighting up close (you
 too) lunges at its target, an arrow flies from the archer to its target, and a spell lands with a

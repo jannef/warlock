@@ -182,6 +182,7 @@ pub(super) fn generate(content: &Content, seed: u64, id: &str) -> Result<LevelTe
             objects: land.objects,
             locks: land.locks,
             regions: Vec::new(),
+            rooms: Vec::new(),
             exit: Some(EdgeExit {
                 to: area.overworld.id.clone(),
                 pos: area.pos,

@@ -9,13 +9,14 @@
 //! - **Kicking** (`kick`): at a closed door (locked or not), a banging noise on the door and one
 //!   draw of the gameplay stream: with a chance of the kicker's Strength score in the door's
 //!   sturdiness it breaks ("The door crashes open!", the terrain's `breaks_to`, its lock gone),
-//!   else "WHAMM!". At a creature, an unarmed blow ([`World::player_kicks`]). At anything else
-//!   it is refused and takes no time: "You kick at empty space." where one could walk, else
-//!   "Kicking the stone wall would only hurt your foot."
+//!   else "WHAMM!". At a creature, an unarmed blow ([`World::player_kicks`]; it draws on unarmed
+//!   fighting, spec §8 "Weapon skills"). At anything else it is refused and takes no time:
+//!   "You kick at empty space." where one could walk, else "Kicking the stone wall would only
+//!   hurt your foot."
 
 use super::{ActorId, Spent, World};
 use crate::action::Event;
-use crate::content::ActionKind;
+use crate::content::{ActionKind, Role};
 use crate::door::kick_breaks;
 use crate::geom::{Dir, Pos};
 use crate::noise::Act;
@@ -108,7 +109,8 @@ impl World {
         if let Some(other) = self.state.actor_at(&level.id, at) {
             let target = other.id;
             let seen = self.perception.sees_actors_at(at);
-            let price = self.price_of(player, ActionKind::Kick);
+            let unarmed = self.content.weapon_skills().of_role(Role::Unarmed);
+            let price = self.attack_price(player, ActionKind::Kick, unarmed);
             self.player_kicks(target, seen, events);
             return Spent::Turn(price);
         }
@@ -135,7 +137,7 @@ impl World {
         let price = self.price_of(player, ActionKind::Kick);
         let def = self.content.terrain(self.state.current().terrain[p]);
         let strength = self.state.player().stats.score(Stat::Strength);
-        let broken = def.breaks.and_then(|(to, sturdiness)| {
+        let broken = def.kicked_in.and_then(|(to, sturdiness)| {
             kick_breaks(strength, sturdiness, &mut self.state.rng).then_some(to)
         });
         self.make_noise(player, Act::Kick(p));

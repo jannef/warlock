@@ -46,8 +46,9 @@ Press `K` and a direction to kick. A kick takes a normal action (6 seconds).
 - **Every kick at a door is loud.** It bangs on the door itself, so it is heard on both sides,
   and creatures that hear it come to look (see [Hearing](hearing.md)).
 - **A creature** you kick takes an unarmed blow, whatever you wield: your bare foot hits like a
-  fist, with your Strength (see [Combat](combat.md)). "You kick the giant rat." Kicking a
-  creature that is not hostile attacks it all the same.
+  fist, with your Strength (see [Combat](combat.md)), and draws on and trains your **Unarmed**
+  skill (see [Weapon skills](weapon-skills.md)). "You kick the giant rat." Kicking a creature
+  that is not hostile attacks it all the same.
 - **Anything else** takes no time: `You kick at empty space.` where you could walk (an open or
   broken door too), and kicking a wall would only hurt your foot.
 

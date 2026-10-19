@@ -46,8 +46,13 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   each with its own glyph, color, material, and weight, lie in piles to pick up and drop; an
   ADOM-style inventory lettered a–z shows what you carry and what it weighs, and an ADOM-style
   equipment screen puts it on: helm, amulet, armor, cloak, weapons and shield (or a two-handed
-  staff), gloves, rings, boots, a bow and arrows. Creatures wield and wear what they carry, and
-  you see it.
+  staff), gloves, rings, boots, a bow and arrows, and a tool. Creatures wield and wear what they
+  carry, and you see it.
+- **Digging** — walls give way: ready a pick-axe or a mattock in the Tool slot and dig, turn after
+  turn, through packed earth in a minute, a stone wall in a few, granite in half an hour or so
+  (Strength helps, a heavy load slows you), until a creature comes into view or the wall crumbles
+  to rubble; light and sight spill through at once. Digging is loud. Big explosions (to come)
+  blow the softer walls apart. An old quarry below the hub is the place to try it.
 - **Combat** — D&D-style with two twelve-sided dice: every blow and shot is rolled against
   Defence (Dexterity, armour, shield, parry, a beetle's shell), misses say why ("You block the
   kobold's spear with your shield."), criticals threaten and confirm ("The kobold hits you
@@ -63,6 +68,19 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   ADOM-style with a cursor and a faint line of fire, watch the arrow fly, and pick it up where it
   fell. A flaming arrow flies burning and lights the dark where it lands until it burns out:
   shoot one into the dark to see what waits there (and be seen).
+- **Blood** — big hits and kills stain the floor and the walls beside the victim, by its size and
+  how the blow landed; subtle for one kill, a slaughterhouse where many fell (a setting hides it).
+- **Weapon skills** — ADOM-style: every blow, shot, and throw earns marks in its weapon's skill
+  (daggers, long blades, axes, bows, …, sixteen in all, shield blocking and shield bashing among
+  them), and ranks 0 to 10 come slower and slower; each rank makes you hit, hurt, parry, or
+  block a little better ("You feel more skilled with long blades."). Skill carries over to
+  related weapons, as in *The Riddle of Steel*: long blades 8 makes short blades 6. Your race and
+  class start you off, a weapon skills screen shows your ranks, and a shield can bash too.
+- **Status effects and healing** — big hits and criticals open bleeding wounds, a giant rat's
+  bite may leave poison behind; they cost hit points as time passes, stack, wear off, slow or
+  stop healing, and can kill (creatures bleed to death too); strong poison saps Strength and
+  Dexterity. The status bar names what ails you, look mode shows a creature bleeding; never a
+  number. Hit points come back twice as fast while you rest.
 - **Burden** — everything you carry weighs on you: past a third of what your Strength and
   Toughness can bear you are burdened, then strained, then overloaded. Every action takes longer,
   armour-like caps keep your Dexterity from helping your Defence, and your footsteps get louder.
@@ -125,8 +143,13 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
 
   ![A forest clearing in Thornwood at noon](docs/screenshots/m9-forest-clearing.png)
 
-- **Levels** — the hub, a sunlit courtyard, the arena, a 420×300 cavern, and "The Depths": rooms-and-corridors
+- **Levels** — the hub, a sunlit courtyard, the arena, the quarry, a 420×300 cavern, and "The Depths": rooms-and-corridors
   and cave levels generated from the run seed (numbers or words), with hand-made vaults stamped in.
+- **Special rooms** — ADOM-like, about one level of the Depths in three has a room that changes
+  the rules inside it, announced the first time you step in: a shadowed room that drains every
+  light, an echoing hall that makes every sound loud, a hushed chamber for sneaking, a softly
+  glowing sanctuary where wounds heal fast and nothing hostile follows you in (the showcase's
+  stairs nook is one), and a flooded room of splashing shallow water.
 
   ![A generated level in The Depths](docs/screenshots/m6-depths-rooms.png)
 
@@ -156,18 +179,19 @@ cargo run --release -p warlock
 | `,` or `g` | Pick up what lies here (choose by letter where several things lie) |
 | `d` | Drop something |
 | `i` | Inventory: what you carry, by letter, and what it all weighs |
-| `e` | Equipment: wear and wield things, slot by slot (head, body, hands, rings, missiles, …), as in ADOM |
-| `@` | Character: your race, gender, class, age, birth sign, stats, hit points, Defence, and weight |
+| `e` | Equipment: wear and wield things, slot by slot (head, body, hands, rings, missiles, a tool, …), as in ADOM |
+| `@` | Character: your race, gender, class, age, birth sign, stats, hit points, Defence, status effects, and weight |
+| `W` | Weapon skills: your rank in each, and how far to the next |
 | `R` | Rest an hour, until dawn, or until nightfall (stops when something comes into view) |
 | `x` | Look around: move a cursor to read what is there (takes no time) |
-| `f` | Fire your missile weapon: aim (Tab cycles targets), then Enter |
-| `t` | Throw something: choose it, aim, then Enter |
+| `t` | Shoot or throw what is in your Missile weapon slot: aim (Tab cycles targets), then Enter |
+| `T` | Throw something from your pack: choose it, aim, then Enter |
+| `U` + direction | Use your tool: dig into a wall with a pick-axe ready in the Tool slot (goes on until the wall gives way) |
 | `?` | Show all controls |
-| `Esc` | Pause menu: settings, controls, save and quit |
-| `Q` | Save and quit |
+| `Esc` | Pause menu: settings, controls, save and quit (asks to confirm) |
 
 Symbol keys follow your keyboard layout, so `<`, `>` and `?` work on non-US keyboards. Every key
-can be rebound in the Controls screen. The [wiki](https://jannef.github.io/warlock/wiki/) explains the rules.
+can be rebound (including a quick Save and quit key, unbound by default) in the Controls screen. The [wiki](https://jannef.github.io/warlock/wiki/) explains the rules.
 
 ## Develop
 

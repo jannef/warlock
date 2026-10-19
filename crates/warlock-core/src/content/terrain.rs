@@ -12,6 +12,9 @@ use serde::{Deserialize, Serialize};
 
 /// Tallest terrain for sun shadows, in cells: it bounds how far a shadow can reach.
 pub const MAX_HEIGHT: u8 = 4;
+/// The hardest a wall may be (spec §8 "Digging"): a thousand digs with a pick-axe at Strength
+/// 10.
+pub const MAX_HARDNESS: u16 = 10_000;
 
 /// Index of a terrain definition in [`super::Content::terrain`].
 ///
@@ -75,6 +78,9 @@ pub(super) struct TerrainSpec {
     /// Under a roof: never lit by the sun or the sky (indoor floors on outdoor levels).
     #[serde(default)]
     pub roofed: bool,
+    /// Whether blood stains it (spec §8 "Blood"); water, lava, and fire do not hold it.
+    #[serde(default = "yes")]
+    pub stains: bool,
     /// How loud steps onto it are, in percent of the walker's footsteps (spec §5 "Hearing").
     #[serde(default = "full_noise")]
     pub step_noise: u16,
@@ -84,6 +90,14 @@ pub(super) struct TerrainSpec {
     /// Loudness a sound loses entering the cell; none: 0, or for solid terrain (neither walkable
     /// nor transparent) blocking sound.
     pub muffle: Option<u16>,
+    /// How hard it is to break (spec §8 "Digging"): a wall that can be dug through or blasted
+    /// open, taking this much work; none: it never breaks. Goes with `becomes`.
+    pub hardness: Option<u16>,
+    /// What a broken wall becomes (rubble): a walkable, transparent terrain.
+    pub becomes: Option<String>,
+    /// Solid rock deep in the ground: the terrain it shows as once a cell next to it is broken
+    /// open (its wall face).
+    pub face: Option<String>,
     pub anim: Option<GlyphAnim>,
     #[serde(default)]
     pub glow: f32,
@@ -136,8 +150,9 @@ pub struct TerrainDef {
     pub closes_to: Option<TerrainId>,
     /// Gameplay: a closed door a kick can break, the terrain it becomes then (a broken door) and
     /// its sturdiness: a kick breaks it with a chance of the kicker's Strength score in this
-    /// ([`crate::door::kick_breaks`]). `None`: kicks never break it.
-    pub breaks: Option<(TerrainId, u8)>,
+    /// ([`crate::door::kick_breaks`]). `None`: kicks never break it. (Digging and blasts break
+    /// walls, `breaks`, never doors.)
+    pub kicked_in: Option<(TerrainId, u8)>,
     pub stairs: Option<StairsDir>,
     /// Light this terrain emits, if any.
     pub light: Option<LightId>,
@@ -149,6 +164,9 @@ pub struct TerrainDef {
     pub height: u8,
     /// Gameplay: under a roof, so never lit by the sun or the sky.
     pub roofed: bool,
+    /// Presentation-only: whether blood stains it (spec §8 "Blood"); water, lava, and fire do
+    /// not hold it.
+    pub stains: bool,
     /// Gameplay: how loud steps onto it are, in percent of the walker's footsteps
     /// ([`crate::noise::noise`]): water splashes (200), grass is soft (70).
     pub step_noise: u16,
@@ -159,6 +177,14 @@ pub struct TerrainDef {
     /// `None` blocks sound (solid terrain without a `muffle`: walls, rock, trees). A closed door
     /// muffles.
     pub muffle: Option<u16>,
+    /// Gameplay: whether it breaks (dug through with a tool, blasted open by an explosion), how
+    /// hard it is, and what it becomes; `None`: it never breaks (doors, trees, mountains). Cells
+    /// on a level's edge never break, whatever their terrain.
+    pub breaks: Option<Breakable>,
+    /// Gameplay: solid rock that shows as this terrain once a cell next to it is broken open
+    /// (rock bared by a dig shows its face, a wall), as generated levels turn rock that touches
+    /// open ground into walls.
+    pub face: Option<TerrainId>,
     /// Presentation-only.
     pub anim: Option<GlyphAnim>,
     /// Presentation-only: how much the glyph glows (bloom), 0 to 1.
@@ -167,6 +193,18 @@ pub struct TerrainDef {
     pub haze: f32,
     /// Presentation-only: glyph particle emitters.
     pub particles: Vec<ParticleEmitter>,
+}
+
+/// How a wall breaks (spec §8 "Digging"): dug through with a tool, or blasted open by an
+/// explosion whose blast is greater than its hardness.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Breakable {
+    /// The work it takes to dig through ([`crate::world::dig_work`]: a pick-axe at Strength 10
+    /// does 10 a dig), so a wall of hardness 600 takes a pick-axe 60 digs at Strength 10. An
+    /// explosion breaks it when its blast is greater.
+    pub hardness: u16,
+    /// What it becomes: walkable, transparent rubble.
+    pub becomes: TerrainId,
 }
 
 impl TerrainDef {
@@ -195,5 +233,15 @@ impl TerrainDef {
     /// Running water: every cell of it has a [`super::Flow`] (presentation-only).
     pub fn flows(&self) -> bool {
         self.anim.as_ref().is_some_and(GlyphAnim::is_flow)
+    }
+
+    /// Ground one simply walks on: walkable, and neither stairs, a door, nor giving light (dev
+    /// views mark such cells of a special room).
+    pub fn is_plain_ground(&self) -> bool {
+        self.walkable
+            && self.stairs.is_none()
+            && self.light.is_none()
+            && !self.is_closed_door()
+            && !self.is_open_door()
     }
 }

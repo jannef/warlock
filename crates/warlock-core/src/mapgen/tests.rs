@@ -37,7 +37,15 @@ fn describe(level: &LevelTemplate) -> String {
         let _ = writeln!(out, "{name} at {} route {}", c.pos, route.join(" "));
     }
     let _ = writeln!(out, "{} placed lights", level.lights.len());
-    out + &ascii(level, &CONTENT)
+    for room in &level.rooms {
+        let effect = CONTENT.room_effect(room.effect);
+        let _ = writeln!(
+            out,
+            "special room {} at {}-{}",
+            effect.id, room.min, room.max
+        );
+    }
+    out + &ascii_with_rooms(level, &CONTENT)
 }
 
 #[test]
@@ -48,6 +56,24 @@ fn rooms_snapshot() {
 #[test]
 fn caves_snapshot() {
     insta::assert_snapshot!("caves_seed_1_depth_3", describe(&level(1, 3)));
+}
+
+/// A rooms level with a flooded room and a caves level with a shadowed chamber (spec §7 "Special
+/// rooms"), their plain ground drawn as the effect's mark.
+#[test]
+fn special_room_snapshots() {
+    let flooded = level(4, 2);
+    assert_eq!(flooded.rooms.len(), 1);
+    insta::assert_snapshot!("rooms_seed_4_depth_2_flooded", describe(&flooded));
+    let shadowed = level(6, 4);
+    assert_eq!(shadowed.rooms.len(), 1);
+    insta::assert_snapshot!("caves_seed_6_depth_4_shadowed", describe(&shadowed));
+    // Without the marks, the flooded room shows its water.
+    let map = ascii(&flooded, &CONTENT);
+    let water = CONTENT
+        .terrain(CONTENT.terrain_id("shallow_water").expect("terrain"))
+        .glyph;
+    assert!(map.contains(&water.to_string().repeat(5)), "{map}");
 }
 
 #[test]
@@ -132,6 +158,44 @@ fn check(level: &LevelTemplate, depth: u32) -> Result<(), TestCaseError> {
     // Patrols loop over walkable terrain.
     for spawn in &level.creatures {
         crate::content::validate_route(level, content, spawn).map_err(TestCaseError::fail)?;
+    }
+
+    // Special rooms (spec §7 "Special rooms"): at most `per_level`, apart, never where the
+    // player arrives; a room's floor is its effect's floor, and creatures do not patrol through
+    // one they shun.
+    let effects = content.room_effects();
+    prop_assert!(level.rooms.len() <= usize::from(effects.per_level));
+    for (i, room) in level.rooms.iter().enumerate() {
+        prop_assert!(room.is_valid_within(terrain.width(), terrain.height()));
+        prop_assert!(level.rooms[..i].iter().all(|o| !o.overlaps(room)));
+        prop_assert!(
+            !room.contains(level.stairs[0].pos),
+            "arrival in a special room"
+        );
+        let effect = content.room_effect(room.effect);
+        let floor = content.terrain_id("floor");
+        if let Some(own) = effect.floor {
+            let cells = room.cells();
+            prop_assert!(
+                cells.iter().any(|p| terrain[*p] == own),
+                "no {} floor",
+                effect.id
+            );
+            prop_assert!(
+                cells.iter().all(|p| Some(terrain[*p]) != floor),
+                "plain floor left"
+            );
+        }
+        if effect.shunned {
+            for spawn in &level.creatures {
+                let mut p = spawn.pos;
+                prop_assert!(!room.contains(p));
+                for dir in &spawn.route {
+                    p = p.step(*dir);
+                    prop_assert!(!room.contains(p), "a patrol through a {}", effect.id);
+                }
+            }
+        }
     }
 
     // Objects stamped from vaults lie on walkable terrain, in piles that are never empty.
@@ -234,6 +298,35 @@ proptest! {
             prop_assert!(visible > 9, "{scenario} seed {seed}: only {visible} cells visible");
         }
     }
+}
+
+/// "Not terribly common, but not too uncommon either": about one generated level in two or three
+/// has a special room, every effect turns up, and rooms levels and caves levels both get them.
+#[test]
+fn special_rooms_come_about_one_level_in_three() {
+    let seeds = 0..150;
+    let mut levels = 0;
+    let mut special = 0;
+    let mut by_effect = vec![0; CONTENT.room_effects().defs().len()];
+    let mut by_generator = [0; 2];
+    for seed in seeds {
+        for depth in 1..=8 {
+            let level = level(seed, depth);
+            levels += 1;
+            if let Some(room) = level.rooms.first() {
+                special += 1;
+                by_effect[usize::from(room.effect.0)] += 1;
+                by_generator[usize::from((3..=5).contains(&depth))] += 1;
+            }
+        }
+    }
+    let percent = special * 100 / levels;
+    assert!(
+        (33..=50).contains(&percent),
+        "{special} of {levels} levels ({percent} %) have a special room"
+    );
+    assert!(by_effect.iter().all(|n| *n > 10), "{by_effect:?}");
+    assert!(by_generator.iter().all(|n| *n > 30), "{by_generator:?}");
 }
 
 #[test]

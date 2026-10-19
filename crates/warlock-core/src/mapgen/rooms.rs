@@ -13,10 +13,12 @@
 //! 6. A few creatures walk laps or back and forth in rooms.
 //! 7. With the branch's key, up to two rooms with a single door get it locked, and the key
 //!    lies in a room that is not locked.
+//! 8. Now and then a room other than the arrival room is special (`special.rs`): the room with
+//!    its walls and doors.
 
 use super::connect::cheapest_path;
-use super::{Canvas, Needs, vault};
-use crate::content::{ObjectId, StairsDir};
+use super::{Canvas, Needs, special, vault};
+use crate::content::{ObjectId, SpecialRoom, StairsDir};
 use crate::door::{Key, Lock};
 use crate::geom::{Dir, Pos};
 use crate::object::Stack;
@@ -140,6 +142,7 @@ pub(super) fn build(canvas: &mut Canvas, rng: &mut Rng, needs: Needs) -> Option<
     if let Some(key) = needs.key {
         lock_rooms(canvas, rng, &rooms, up_room, key);
     }
+    special_rooms(canvas, rng, &rooms, up_room);
     Some(())
 }
 
@@ -189,6 +192,24 @@ fn lock_rooms(canvas: &mut Canvas, rng: &mut Rng, rooms: &[Room], up_room: usize
         let (door, _) = rooms[i].doors[0];
         canvas.set(door, canvas.pal.door_closed);
         canvas.locks.insert(door, lock.clone());
+    }
+}
+
+/// Rooms but the arrival room and vaults may be special, each with the content's chance (spec §7
+/// "Special rooms"): the room with its walls and doors, its effect's floor over its own.
+fn special_rooms(canvas: &mut Canvas, rng: &mut Rng, rooms: &[Room], up_room: usize) {
+    for (i, room) in rooms.iter().enumerate() {
+        if room.vault || i == up_room {
+            continue;
+        }
+        let Some(effect) = special::roll(canvas, rng) else {
+            continue;
+        };
+        let (min, max) = (
+            Pos::new(room.x, room.y),
+            Pos::new(room.x + room.w - 1, room.y + room.h - 1),
+        );
+        special::make(canvas, SpecialRoom::rect(effect, min, max));
     }
 }
 

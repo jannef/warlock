@@ -189,12 +189,14 @@ pub(super) fn track(
             Event::ActorMoved { to, .. } => {
                 bursts.trigger(&view, *to, ParticleTrigger::Step, seed, start);
             }
-            // A kick that breaks a door throws the broken door's splinters; one that holds
-            // shakes dust off the closed door.
+            // A door's dust as it swings, a wall's as it gives way: the toggle burst of the
+            // terrain the cell turned into. A kick that breaks a door throws the broken door's
+            // splinters; one that holds shakes dust off the closed door.
             Event::DoorOpened { pos }
             | Event::DoorClosed { pos }
             | Event::DoorKicked { pos }
-            | Event::DoorBroken { pos } => {
+            | Event::DoorBroken { pos }
+            | Event::WallBroken { pos, .. } => {
                 bursts.trigger(&view, *pos, ParticleTrigger::Toggle, seed, start);
             }
             &Event::Attacked { attacker, to, .. } => {
@@ -202,8 +204,12 @@ pub(super) fn track(
                 bursts.attack(&view, creature.map(|a| a.creature), to, seed, start);
             }
             // A death shows as the creature gone (and what it dropped) and in the message line;
-            // a missile flies in `missiles`.
-            Event::Died { .. } | Event::Missile { .. } => {}
+            // a missile flies in `missiles`, a spell effect plays in `spells`; a status effect
+            // shows in the status bar.
+            Event::Died { .. }
+            | Event::Missile { .. }
+            | Event::Spell { .. }
+            | Event::Status { .. } => {}
             Event::LevelChanged { .. } => {
                 bursts.list.clear();
                 tints.clear();
@@ -413,11 +419,12 @@ fn blocked_flows(
     cells
 }
 
-/// A particle's color on screen: glowing particles are light themselves; the rest are lit like
-/// free glyphs (sampled at the particle, else at its cell `home`) and kept within display range.
+/// A particle's color on screen: glowing particles are light themselves (darkened only while a
+/// spell effect darkens the view); the rest are lit like free glyphs (sampled at the particle,
+/// else at its cell `home`) and kept within display range.
 pub(super) fn particle_color(p: &Particle, home: Pos, light: &VisualLight) -> LinearRgba {
     if p.emissive {
-        return p.color;
+        return glyphs::darkened(p.color, light.keep());
     }
     let home = cell(home);
     in_range(glyphs::lit(p.color, light, p.pos, home, TERRAIN_FLOOR))

@@ -1,0 +1,69 @@
+# Status effects and passive healing (spec §8 "Status effects", "Healing").
+#
+# [healing]
+#   resting   how fast hit points come back while you rest (R), in percent of the normal pace
+#             (one hit point per max(60 s, 360 s - 12 s x Toughness) of game time)
+#
+# [[status]], in order of importance: the status bar shows the first first, and gives way from
+# the last. A status has a severity in degrees (never shown to the player) and lives in game time:
+#   id         stable id, used by `on_hit` (creatures.toml) and saves
+#   name       how the status bar and the character screen show it
+#   seen       how look mode names it on a creature you see ("A kobold (hostile, wounded,
+#              bleeding)"); none: it does not show on others
+#   max        the most degrees it reaches (1 to 100)
+#   stacking   how a new dose adds to one the actor has: "add" (the degrees add up, to max; the
+#              default), "highest" (the stronger of the two), "refresh" (the stronger of the two,
+#              and its easing starts over)
+#   tick       seconds between its ticks at one degree; at n degrees it ticks n times as often
+#   damage     hit points each tick costs (default 0; needs a tick)
+#   eases      seconds for it to ease by one degree; at none it is gone. None: until cured
+#   regen      how fast hit points come back while it lasts, in percent of the normal pace
+#              (default 100; 0 none). With several statuses the slowest counts
+#   penalty    what it does to stats from a severity on: { from = 4, strength = -1 }; every rule
+#              reads the stat that much lower (combat, burden, hit points); several add up
+#   wound      the blows that cause it: { big_hit = 1, critical = 2 } degrees for a hit that takes
+#              at least a third of the target's hit points, and for a confirmed critical (a
+#              blow that is both: the more of the two)
+#   cured_by   what cures it at once (a bandage: the Heal skill, later)
+#   start, end what the player is told as it begins and ends ("end" lets a rest go on)
+#   dies       what a creature you see does when it kills it ("The giant rat bleeds to death.")
+#   death      the death screen's line when it kills you
+# Creatures' attacks may cause statuses too: `on_hit` in creatures.toml.
+
+[healing]
+resting = 200
+
+# Wounds bleed: a hit point every 40 seconds for each degree, easing a degree a minute.
+[[status]]
+id = "bleeding"
+name = "Bleeding"
+seen = "bleeding"
+max = 5
+stacking = "add"
+tick = 40
+damage = 1
+eases = 60
+regen = 0
+wound = { big_hit = 1, critical = 2 }
+cured_by = ["bandage"]
+start = "You are bleeding."
+end = "The bleeding stops."
+dies = "bleeds to death"
+death = "Bled to death"
+
+# Poison works slowly: a hit point every two minutes for each degree, easing a degree every two
+# minutes, so a stronger dose lasts longer; strong poison weakens.
+[[status]]
+id = "poisoned"
+name = "Poisoned"
+max = 10
+stacking = "add"
+tick = 120
+damage = 1
+eases = 120
+regen = 50
+penalty = { from = 4, strength = -1, dexterity = -1 }
+start = "You feel sick."
+end = "The poison wears off."
+dies = "succumbs to poison"
+death = "Died of poison"

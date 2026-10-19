@@ -11,7 +11,8 @@
 //!    key left where the player can reach it) or `caves` (cellular automata). Both stamp
 //!    [vaults](crate::content::Vault) where they fit (with their locks and keys), place the
 //!    stairs, light sources (torches in rooms; lamps and glowing fungus in caves), and a few
-//!    patrolling creatures.
+//!    patrolling creatures, and last now and then make a room (a cave chamber) special
+//!    (`special.rs`, spec §7 "Special rooms").
 //! 3. Turn rock that touches open ground into walls.
 //! 4. Validate (`connect::validate`): every stair, door, and walkable cell is reachable from the
 //!    up staircase (flood fill), the stairs and a key to every lock without unlocking a door,
@@ -25,11 +26,12 @@ mod caves;
 mod connect;
 pub mod local;
 mod rooms;
+mod special;
 mod vault;
 
 use crate::content::{
     Content, CreatureId, CreatureSpawn, Flow, Generator, LevelKind, LevelTemplate, LightId,
-    ObjectId, StairsDir, StairsLink, TerrainId,
+    ObjectId, SpecialRoom, StairsDir, StairsLink, TerrainId,
 };
 use crate::door::Lock;
 use crate::geom::{Dir, Pos};
@@ -158,6 +160,8 @@ pub(crate) struct Canvas<'a> {
     /// Locks on closed doors: stamped from vaults, and on locked rooms (spec §8 "Doors").
     pub locks: BTreeMap<Pos, Lock>,
     pub creatures: Vec<CreatureSpawn>,
+    /// Special rooms (spec §7 "Special rooms"; `special.rs`).
+    pub rooms: Vec<SpecialRoom>,
     /// Cells stamped from vaults; later passes leave them alone.
     pub stamped: Grid<bool>,
     pub up: Option<Pos>,
@@ -175,6 +179,7 @@ impl<'a> Canvas<'a> {
             objects: BTreeMap::new(),
             locks: BTreeMap::new(),
             creatures: Vec::new(),
+            rooms: Vec::new(),
             stamped: Grid::new(width, height, false),
             up: None,
             down: None,
@@ -376,6 +381,7 @@ pub fn generate(
             objects: canvas.objects,
             locks: canvas.locks,
             regions: Vec::new(),
+            rooms: canvas.rooms,
             exit: None,
         };
         if connect::validate(&template, content).is_ok() {
@@ -387,8 +393,18 @@ pub fn generate(
 
 /// The template as text: terrain glyphs, the top object of each pile over them, creatures on top,
 /// `*` for a light placed on floor, and `&` for a locked door. Trailing spaces are trimmed. Used
-/// by snapshot tests and `warlock-cli gen`.
+/// by snapshot tests.
 pub fn ascii(template: &LevelTemplate, content: &Content) -> String {
+    draw(template, content, false)
+}
+
+/// [`ascii`] with the plain ground of each special room (spec §7 "Special rooms") drawn as its
+/// effect's mark, under creatures, objects, and lights. Used by `warlock-cli gen`.
+pub fn ascii_with_rooms(template: &LevelTemplate, content: &Content) -> String {
+    draw(template, content, true)
+}
+
+fn draw(template: &LevelTemplate, content: &Content, rooms: bool) -> String {
     let floor = content.terrain_id("floor");
     let mut out = String::new();
     for y in 0..template.terrain.height() {
@@ -396,6 +412,8 @@ pub fn ascii(template: &LevelTemplate, content: &Content) -> String {
             .map(|x| {
                 let p = Pos::new(x, y);
                 let t = template.terrain[p];
+                let room = (template.rooms.iter())
+                    .find(|r| rooms && r.contains(p) && content.terrain(t).is_plain_ground());
                 if let Some(c) = template.creatures.iter().find(|c| c.pos == p) {
                     content.creature(c.creature).glyph
                 } else if let Some(top) = template.objects.get(&p).and_then(|o| o.first()) {
@@ -404,6 +422,8 @@ pub fn ascii(template: &LevelTemplate, content: &Content) -> String {
                     '*'
                 } else if template.locks.contains_key(&p) {
                     '&'
+                } else if let Some(room) = room {
+                    content.room_effect(room.effect).mark
                 } else {
                     content.terrain(t).glyph
                 }

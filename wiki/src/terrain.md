@@ -24,12 +24,22 @@ Stairs (`>` down, `<` up) join levels. Step onto them, then press `>` or `<` to 
 stairs is a normal action (6 seconds). Each level you visit is kept as you left it, and dungeon levels are generated
 on your first visit from the run's seed. Levels you leave and return to are exactly as they were.
 
+## Walls
+
+Walls block movement, sight, light, and sound. Most of them can be dug through with a pick-axe,
+slowly, and a big explosion blows the softer ones apart; a broken wall becomes rubble. The edge of
+a level never breaks. See [Digging and walls](digging.md).
+
 ## Water
 
 Still water (ponds and pools) and running water (streams) are both wadeable but slow: a step into
 either takes twice as long as a step on dry ground, and splashes loudly. Running water flows in a
 direction you can see in the ripples, and foams where it meets a bank or rock. The current does
 not push you yet. Water glints with nearby light.
+
+Shallow water, ankle-deep over a stone floor, covers the floor of a flooded room (see
+[Special rooms](special-rooms.md)). It is paler than a pool. Wading through it is slower than
+walking, though quicker than wading a pool, and it splashes just as loudly.
 
 ## Plants and rock outdoors
 

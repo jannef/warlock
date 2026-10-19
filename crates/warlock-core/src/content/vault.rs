@@ -43,6 +43,9 @@ impl Vault {
         if let Some(stairs) = template.stairs.first() {
             return Err(format!("a vault cannot have stairs (at {})", stairs.pos));
         }
+        if !template.rooms.is_empty() {
+            return Err("a vault cannot mark special rooms".into());
+        }
         let is_door = |p: Pos| {
             let def = content.terrain(terrain[p]);
             def.is_closed_door() || def.is_open_door()

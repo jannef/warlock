@@ -46,9 +46,19 @@
 #   base_hp   hit points beyond its Toughness (default 0); the player's come from the scenario
 #   attack    its natural attack, used when it wields no weapon (without one: bare hands, 1d3):
 #             { damage = "1d4", name = "bite", verb = "bites" } and optionally threat, crit,
-#             and to_hit as for weapons (objects.toml); Strength adds to hit and to damage
+#             and to_hit as for weapons (objects.toml); Strength adds to hit and to damage.
+#             on_hit lists the status effects (status.toml) a hit with it may cause, if the
+#             target lives: [{ status = "poisoned", chance = 10, severity = 2 }] (chance in
+#             percent, 1 to 100; severity in degrees, up to the status's max)
 #   natural   its natural armour: { defence = 3, name = "shell" } (the Natural category of
 #             Defence; "Your sword glances off the cave beetle's shell.")
+#   weapon_skills  its ranks in weapon skills (spec §8 "Weapon skills"), by skill id in
+#             weapon_skills.toml, 0 to 10: { spears = 1 }; each raises the skills it defaults
+#             to. Creatures do not train (yet); the player's come from their race and class
+#
+# Blood (spec §8 "Blood"; presentation only, no rule reads it): blood, the colour of the stains it
+# leaves when hurt badly or killed ("#rrggbb"; default dark red, "#6e0e0c"), or "none" for a
+# bloodless creature. How much it spills goes by its size's `blood` in sizes.toml.
 
 [[creature]]
 id = "player"
@@ -77,7 +87,13 @@ hearing = 5
 weight = 4000
 size = "small"
 stats = { strength = 10, dexterity = 17, toughness = 12, intelligence = 1, willpower = 12, presence = 4 }
-attack = { damage = "1d4", name = "bite", verb = "bites" }
+
+# Its bite is filthy: now and then it poisons.
+[creature.attack]
+damage = "1d4"
+name = "bite"
+verb = "bites"
+on_hit = [{ status = "poisoned", chance = 10, severity = 2 }]
 
 # Bats fly: no footsteps, and the keenest ears.
 [[creature]]
@@ -115,6 +131,7 @@ opens_doors = true
 footsteps = 80
 hearing = 15
 stats = { strength = 9, dexterity = 13, toughness = 10, intelligence = 10, willpower = 9, presence = 8 }
+weapon_skills = { spears = 1 }
 
 # Sparks from the torch it carries.
 [[creature.particles]]
@@ -169,6 +186,7 @@ hearing = 12
 weight = 22000
 size = "small"
 stats = { strength = 8, dexterity = 15, toughness = 10, intelligence = 10, willpower = 10, presence = 8 }
+weapon_skills = { bows = 1 }
 
 # The war band's shaman, slow and frail: casts from a few cells away. A faint violet sparkle
 # where its spells land.
@@ -223,3 +241,5 @@ size = "small"
 stats = { strength = 10, dexterity = 11, toughness = 11, intelligence = 1, willpower = 10, presence = 7 }
 attack = { damage = "1d3", name = "bite", verb = "bites" }
 natural = { defence = 3, name = "shell" }
+# Greenish-black ichor.
+blood = "#38461a"
