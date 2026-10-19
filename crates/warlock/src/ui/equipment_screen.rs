@@ -1,5 +1,5 @@
-//! The equipment screen (spec §6; `e`), as in ADOM: every slot by its letter (`a` Head to `l`
-//! Missiles, from `data/slots.toml`) with what is in it, or `—`.
+//! The equipment screen (spec §6; `e`), as in ADOM: every slot by its letter (`a` Head to `m`
+//! Tool, from `data/slots.toml`) with what is in it, or `—`.
 //!
 //! A slot's letter, or Enter on the `>` row, opens the choice of what goes there
 //! ([`ItemScreen`]): the inventory stacks that fit the slot, by their inventory letters. Choosing
@@ -439,8 +439,9 @@ mod tests {
         assert!(row(&text, "e  Main hand").contains(") a quarterstaff (both hands)"));
         assert!(row(&text, "f  Off hand").contains(") a quarterstaff (both hands)"));
         assert!(row(&text, "l  Missiles").contains('—'));
+        assert!(row(&text, "m  Tool").contains('—'));
         assert!(row(&text, "Carrying").contains("Your weight 90.9 kg (you 70 kg)"));
-        row(&text, "a-l choose a slot");
+        row(&text, "a-m choose a slot");
         // The `>` marks the first slot, without color.
         assert!(row(&text, "a  Head").contains("> a"));
     }

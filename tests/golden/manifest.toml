@@ -323,3 +323,17 @@ actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 mo
 name = "ranged-burning-arrow"
 scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:S pickup move:W pickup equip:missile_weapon:a equip:missiles:c move:NE move:E*2 move:N*4 move:E*20 open:S move:S fire:45,17 wait"
+
+# Digging (spec §8 "Digging"): in the quarry, the pick-axe beside the start picked up and readied
+# in the Tool slot, at the sealed chamber's west wall (quarry); then after digging through it,
+# turn after turn until it crumbled: the chamber's lamplight spills into the pit through the
+# rubble, where the dust of the fallen wall rises (quarry-dug).
+[[golden]]
+name = "quarry"
+scenario = "quarry"
+actions = "move:E pickup equip:tool:a move:E*35"
+
+[[golden]]
+name = "quarry-dug"
+scenario = "quarry"
+actions = "move:E pickup equip:tool:a move:E*35 dig:E"

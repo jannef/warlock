@@ -3,8 +3,8 @@
 //! [`route_keys`] reads every key press exactly once. While a screen is open (the screen stack is
 //! not empty) the press goes to the top screen; otherwise it is a gameplay command, read through
 //! the bindings in the current [`InputMode`]. Prompts in the message line (the direction for
-//! open/close, how long to rest, look mode, aiming a shot or a throw, whether to step onto a
-//! known trap) are input modes, not screens.
+//! open/close and for digging, how long to rest, look mode, aiming a shot or a throw, whether to
+//! step onto a known trap) are input modes, not screens.
 //!
 //! Letter and symbol commands bind by *logical* key (the character the keyboard layout produces),
 //! so `<`, `>`, and `?` work on any layout. Arrows and the numpad bind by physical key code.
@@ -57,6 +57,8 @@ pub enum KeyCommand {
     Throw,
     /// While aiming: the cursor to the next creature in view (with Shift, the one before).
     NextTarget,
+    /// Apply the tool the player has ready toward a direction: dig into a wall with a pick-axe.
+    Apply,
     /// Dev: switch to the next vision profile.
     CycleVision,
     /// Dev: move the clock an hour ahead at once.
@@ -95,6 +97,7 @@ impl KeyCommand {
             KeyCommand::Fire => "Fire missile weapon",
             KeyCommand::Throw => "Throw",
             KeyCommand::NextTarget => "Next target (aiming; Shift: previous)",
+            KeyCommand::Apply => "Apply a tool (dig)",
             KeyCommand::CycleVision => "Next vision profile (dev)",
             KeyCommand::SkipHour => "Skip an hour (dev)",
             KeyCommand::NextWeather => "Next weather (dev)",
@@ -202,6 +205,7 @@ impl Default for Bindings {
             (ch("f"), Fire),
             (ch("t"), Throw),
             (Code(KeyCode::Tab), NextTarget),
+            (ch("a"), Apply),
             (ch("?"), Help),
             (Code(KeyCode::Escape), Cancel),
             (ch("Q"), Quit),
@@ -254,7 +258,7 @@ impl Bindings {
 pub enum InputMode {
     #[default]
     Normal,
-    /// Waiting for a direction for `Open` or `Close`.
+    /// Waiting for a direction for `Open`, `Close`, or `Apply`.
     Direction(KeyCommand),
     /// Asking how long to rest ([`REST_CHOICES`]).
     Rest,
@@ -458,10 +462,10 @@ impl Gameplay<'_> {
             (InputMode::Look(at), _) => InputMode::Look(at),
             (InputMode::Normal, KeyCommand::Look) => InputMode::Look(game.world.player_pos()),
             (InputMode::Direction(cmd), KeyCommand::Move(dir)) => {
-                let action = if cmd == KeyCommand::Open {
-                    Action::Open(dir)
-                } else {
-                    Action::Close(dir)
+                let action = match cmd {
+                    KeyCommand::Open => Action::Open(dir),
+                    KeyCommand::Apply => Action::Dig(dir),
+                    _ => Action::Close(dir),
                 };
                 self.actions.write(PlayerAction(action));
                 InputMode::Normal
@@ -561,6 +565,15 @@ impl Gameplay<'_> {
             }
             (InputMode::Normal, KeyCommand::Open | KeyCommand::Close) => {
                 InputMode::Direction(command)
+            }
+            (InputMode::Normal, KeyCommand::Apply) => {
+                if game.world.perception().ready_to_dig().is_some() {
+                    InputMode::Direction(command)
+                } else {
+                    // Nothing to dig with: the rules say so ("You have no digging tool ready.").
+                    self.actions.write(PlayerAction(Action::Dig(Dir::N)));
+                    InputMode::Normal
+                }
             }
             (InputMode::Normal, KeyCommand::Help) => {
                 open = Some(ScreenName::Help);
@@ -699,6 +712,7 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Fire), ["f"]);
         assert_eq!(keys(&b, KeyCommand::Throw), ["t"]);
         assert_eq!(keys(&b, KeyCommand::NextTarget), ["Tab"]);
+        assert_eq!(keys(&b, KeyCommand::Apply), ["a"]);
     }
 
     #[test]

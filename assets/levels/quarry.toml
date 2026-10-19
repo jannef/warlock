@@ -1,0 +1,68 @@
+# The quarry (spec §3, §8 "Digging"; M19): an old stone quarry under the hub, down the stairs
+# nook's `Q`. The place to dig, outside the safe showcase (nothing lives here, so nothing stops
+# a dig but you).
+#
+# West: the arrival room, with the stairs (<) back up to the hub, a pick-axe beside where you
+# start and a mattock below it. Ready one in the Tool slot (`e`), then dig with `a` and a
+# direction: digging goes on turn after turn until the wall gives way.
+#
+# East: the quarry pit, lit by wall torches (t). Its north face is granite (G): half an hour of
+# work with a pick-axe at Strength 10. Its south side is a bank of packed earth (E): a minute.
+# A block of stone (#) stands in the pit, and old digging left rubble (,) about; a cut runs into
+# the granite. Beyond the pit's east wall lies a sealed chamber with a lamp and a little treasure:
+# no door leads in, so dig through the wall (six minutes with a pick-axe), and its light spills
+# into the pit. Rock (spaces) bared by a dig shows as stone walls; the level's edge never breaks.
+arrival = "Chisel marks score the walls of the old quarry."
+name = "The Quarry"
+ambient = [0, 0, 0, 0]
+map = '''
+################################################################
+#                                                              #
+#              GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG                 #
+# #############GGGGGGGG,GGGGGGGGGGGGGGGGGGGGGG                 #
+# #.........t.##....t.,,,.......t.........t..#                 #
+# #.l.........##......,......................#                 #
+# #...........##.............................###########       #
+# #...........##.............................#.........#       #
+# #..<..@....................................#......l..#       #
+# #...........##...........###...............#.........#       #
+# #...........##...........###.,.............#.........#       #
+# #...........##...........###,..............###########       #
+# #...........##....................,,.......#                 #
+# ##############........t.............,.t....#                 #
+#              EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE                 #
+#              EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE                 #
+#              EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE                 #
+#                                                              #
+#                                                              #
+#                                                              #
+################################################################
+'''
+
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"<" = { terrain = "stairs_up", to = "hub" }
+"G" = "granite"
+"E" = "packed_earth"
+"," = "rubble"
+"t" = "sconce"
+"l" = { terrain = "floor", light = "lamp" }
+
+# The tools: a pick-axe beside the start, a mattock below it.
+[[pile]]
+at = [9, 8]
+objects = ["pick_axe"]
+
+[[pile]]
+at = [9, 10]
+objects = ["mattock"]
+
+# Stones from the old digging, to throw.
+[[pile]]
+at = [23, 4]
+objects = ["rock*4"]
+
+# What the sealed chamber keeps.
+[[pile]]
+at = [48, 8]
+objects = ["ruby*3", "gold_coin*25"]

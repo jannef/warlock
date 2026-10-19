@@ -48,8 +48,8 @@ they match the version of the game this wiki was published with.
 The Showcase is a safe place: its creatures keep to their rounds and leave you alone, and it has
 no traps. The **Arena**, reached by the stairs down from the showcase hub's stairs nook, is the
 place to watch and join fights; the **Trap hall**, down another staircase there, the place to
-learn [traps](traps.md); and the generated **Depths** are the real dungeon, where creatures hunt
-you and traps lie hidden.
+learn [traps](traps.md); the **Quarry**, down a third, the place to [dig](digging.md); and the
+generated **Depths** are the real dungeon, where creatures hunt you and traps lie hidden.
 
 Apart from where the scenarios start, this wiki does not describe places or walk you through
 levels: the game's world is still being built.

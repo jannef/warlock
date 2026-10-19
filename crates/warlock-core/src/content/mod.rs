@@ -49,7 +49,7 @@ pub use level::{
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
 pub use material::{MaterialDef, MaterialId};
-pub use object::{MAX_BONUS, MAX_PLACED, ObjectDef, ObjectId, article};
+pub use object::{MAX_BONUS, MAX_DIG, MAX_PLACED, ObjectDef, ObjectId, article};
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use race::{RaceDef, Races};
@@ -57,7 +57,7 @@ pub use scenario::ScenarioDef;
 pub use size::{CARRY, MEDIUM, SizeDef};
 pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
-pub use terrain::{MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
+pub use terrain::{Breakable, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
 pub use trap::{
     BOLT_LENGTHS, BURST_RADII, MAX_CHARGES, Trap, TrapDef, TrapEffect, TrapId, TrapNoise,
 };
@@ -425,6 +425,27 @@ impl Content {
                 )));
             }
             check_terrain_noise(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
+            let breaks = match (spec.hardness, &spec.becomes) {
+                (None, None) => None,
+                (Some(hardness), Some(_)) if (1..=MAX_HARDNESS).contains(&hardness) => {
+                    Some(Breakable {
+                        hardness,
+                        becomes: resolve(&spec.becomes)?.expect("given"),
+                    })
+                }
+                (Some(_), Some(_)) => {
+                    return Err(err(format!(
+                        "terrain `{}`: hardness must be 1 to {MAX_HARDNESS}",
+                        spec.id
+                    )));
+                }
+                _ => {
+                    return Err(err(format!(
+                        "terrain `{}`: `hardness` and `becomes` go together",
+                        spec.id
+                    )));
+                }
+            };
             check_effects(
                 path,
                 "terrain",
@@ -459,11 +480,16 @@ impl Content {
                 muffle: spec
                     .muffle
                     .or((spec.walkable || spec.transparent).then_some(0)),
+                breaks,
+                face: resolve(&spec.face)?,
                 anim: spec.anim.clone(),
                 glow: spec.glow,
                 haze: spec.haze,
                 particles: spec.particles.clone(),
             });
+        }
+        for def in &defs {
+            check_breaking(def, &defs).map_err(|m| err(format!("terrain `{}`: {m}", def.id)))?;
         }
         if let Some(def) = defs
             .iter()
@@ -1238,6 +1264,41 @@ fn check_terrain_noise(spec: &terrain::TerrainSpec) -> Result<(), String> {
     }
     if spec.toggle_noise > 0 && spec.opens_to.is_none() && spec.closes_to.is_none() {
         return Err("only doors have a `toggle_noise`".into());
+    }
+    Ok(())
+}
+
+/// Checks how a terrain type breaks (spec §8 "Digging"): only solid terrain (neither walkable
+/// nor a door, stairs, or a light) breaks, into plain open ground (walkable and transparent,
+/// that does not break itself); solid rock shows a solid face.
+fn check_breaking(def: &TerrainDef, defs: &[TerrainDef]) -> Result<(), String> {
+    let plain = |t: &TerrainDef| t.stairs.is_none() && !t.is_closed_door() && !t.is_open_door();
+    if let Some(breaks) = def.breaks {
+        if def.walkable || !plain(def) || def.light.is_some() {
+            return Err(
+                "only solid terrain breaks (`hardness`): not walkable, no door, stairs, or light"
+                    .into(),
+            );
+        }
+        let becomes = &defs[usize::from(breaks.becomes.0)];
+        if !becomes.walkable || !becomes.transparent || becomes.breaks.is_some() || !plain(becomes)
+        {
+            return Err(format!(
+                "it `becomes` `{}`, which must be open ground: walkable, transparent, no door or \
+                 stairs, and not breaking itself",
+                becomes.id
+            ));
+        }
+    }
+    if let Some(face) = def.face {
+        let face = &defs[usize::from(face.0)];
+        let solid = |t: &TerrainDef| !t.walkable && !t.transparent;
+        if !solid(def) || !solid(face) || face.face.is_some() {
+            return Err(format!(
+                "only solid rock has a `face`, and its face `{}` must be solid with none of its own",
+                face.id
+            ));
+        }
     }
     Ok(())
 }

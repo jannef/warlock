@@ -226,6 +226,7 @@ mod tests {
             "courtyard",
             "depths",
             "forest",
+            "quarry",
             "showcase",
             "traps",
             "vast",

@@ -1,5 +1,5 @@
 //! Per-level mutable state: terrain, piles of objects, and traps as they are now, and what the
-//! player remembers of them.
+//! player remembers of them; fires, and the walls dug into.
 
 use crate::content::{
     Content, EdgeExit, Flow, LevelKind, LevelTemplate, LightId, StairsLink, TerrainDef, TerrainId,
@@ -65,6 +65,10 @@ pub struct LevelState {
     /// Known traps as the player last saw them, by position: a trap seen gone is forgotten.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) trap_memory: BTreeMap<Pos, TrapId>,
+    /// Walls dug into and still standing, by position (spec §8 "Digging"): the work done on each,
+    /// in [`super::dig::WORK_SCALE`]ths of the work its hardness counts.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) dug: BTreeMap<Pos, u32>,
 }
 
 impl LevelState {
@@ -88,6 +92,7 @@ impl LevelState {
             fires: BTreeMap::new(),
             traps: template.traps.clone(),
             trap_memory: BTreeMap::new(),
+            dug: BTreeMap::new(),
         }
     }
 

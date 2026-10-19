@@ -18,9 +18,11 @@ pub const CURSOR_BG: Rgb = Rgb::new(0xe0, 0xc0, 0x70);
 /// heard there.
 pub fn describe(view: &PerceptionView<'_>, p: Pos) -> String {
     let content = view.content();
-    // Stairs and locations name where they lead: "a staircase down, leading to The Depths 1".
+    // Stairs and locations name where they lead: "a staircase down, leading to The Depths 1";
+    // a wall in sight that was dug into says so: "a stone wall, partly dug".
     let ground = |t| match view.leads_to(p) {
         Some(to) => format!("{}, leading to {to}", content.terrain(t).name),
+        None if view.is_dug(p) => format!("{}, partly dug", content.terrain(t).name),
         None => content.terrain(t).name.clone(),
     };
     // A known trap is part of the ground: "a fireball trap on stone floor".

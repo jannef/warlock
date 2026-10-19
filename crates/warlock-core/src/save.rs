@@ -34,7 +34,8 @@ const MAGIC: &str = "WARLOCK-SAVE";
 ///     types have levels and XP.
 /// 14: traps: level states keep their traps (kind, known, charges left, a bolt's direction) and
 ///     the traps the player remembers; the player's death records the trap that killed them.
-pub const FORMAT_VERSION: u32 = 14;
+/// 15: digging: level states keep the work done on walls dug into (`LevelState::dug`).
+pub const FORMAT_VERSION: u32 = 15;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 

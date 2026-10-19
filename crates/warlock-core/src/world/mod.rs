@@ -52,9 +52,13 @@
 //! creatures alike: arrows, spears, fireballs, lightning, pits, alarms, and teleports. Traps are
 //! hidden until the player sets one off or sees a creature do it; then they are known and
 //! remembered.
+//!
+//! Digging (`dig.rs`): walls that break give way to a digging tool, turn after turn like a rest,
+//! and to explosions stronger than they are hard; they become rubble.
 
 mod actor;
 mod ai;
+mod dig;
 mod equip;
 mod experience;
 mod fight;
@@ -66,12 +70,14 @@ mod shoot;
 mod trap;
 
 pub use actor::{Actor, ActorId, ActorKind, Mind, Patrol};
+pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
 pub use fight::Death;
 pub(crate) use hash::fnv1a;
 pub use level::{Fire, LevelState};
 
 use crate::action::{
-    Action, AttackKind, Event, Letters, MAX_REST, MissileEnd, Outcome, Rest, SpellShape, letter,
+    Action, AttackKind, Breach, Event, Letters, MAX_REST, MissileEnd, Outcome, Rest, SpellShape,
+    letter,
 };
 use crate::burden::{self, Burden, Load};
 use crate::character::{Character, CharacterSpec};
@@ -265,6 +271,19 @@ pub struct World {
     sprung: u64,
 }
 
+/// How a long action (a rest, digging; [`World::keep_at`]) ended.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Ended {
+    /// There was nothing more to do.
+    Done,
+    /// This creature came into view.
+    Came(ActorId),
+    /// A message was logged that stops it.
+    Said,
+    /// The player died.
+    Died,
+}
+
 /// How much time an action took.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Spent {
@@ -277,6 +296,8 @@ enum Spent {
     Turn(i64),
     /// A rest until this moment (see [`World::rest`]).
     Rest(GameTime, Rest),
+    /// Digging into the wall at this cell (see [`World::dig`]).
+    Dig(Pos),
     /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
     Skip(Duration),
 }
@@ -557,6 +578,7 @@ impl World {
                 self.perceive(&mut events);
             }
             Spent::Rest(until, goal) => self.rest(until, goal, &mut events),
+            Spent::Dig(at) => self.dig(at, &mut events),
             Spent::Skip(duration) => {
                 // Nobody acts or gains energy.
                 self.state.time += duration;
@@ -571,28 +593,58 @@ impl World {
         }
     }
 
-    /// Rests until `until`: turn after turn through the normal pipeline (the player waits, the
-    /// others act, perception), stopping after a turn in which a creature came into view or a
-    /// message was logged that stops a rest. The last turn is cut short to end exactly at
-    /// `until`, whatever the player's speed ([`World::price_until`]). Turns that end before any
-    /// creature could come into view ([`World::out_of_view_for`]), in which the weather the
-    /// player sees did not change, and in which no trap went off (a teleport moves a creature
-    /// farther than its steps) pass without perception, which cannot change the outcome; only
-    /// the last turn's events are kept.
+    /// Rests until `until`: turn after turn of waiting ([`World::keep_at`]), the last cut short to
+    /// end exactly at `until`, whatever the player's speed ([`World::price_until`]); then says
+    /// how long the player rested.
     fn rest(&mut self, until: GameTime, goal: Rest, events: &mut Vec<Event>) {
         let start = self.state.time;
         let wait = self.price_of(self.state.player, ActionKind::Wait);
+        let ended = self.keep_at(
+            events,
+            |w| w.state.time < until,
+            |w, _| wait.min(w.price_until(until)),
+        );
+        let rested = self.state.time.since(start).spoken();
+        let text = match (ended, goal) {
+            (Ended::Died, _) => return,
+            (Ended::Came(id), _) => format!(
+                "{} comes into view; you stop resting after {rested}.",
+                self.creature_called(id)
+            ),
+            (Ended::Said, _) => format!("You stop resting after {rested}."),
+            (Ended::Done, Rest::For(_)) => format!("You rest for {rested}."),
+            (Ended::Done, Rest::Dawn) => "You rest until dawn.".into(),
+            (Ended::Done, Rest::Dusk) => "You rest until dusk.".into(),
+        };
+        self.say(text);
+    }
+
+    /// Passes turn after turn of a long action (a rest, digging) through the normal pipeline
+    /// while `more` says there is more to do: the player does `act` (which returns what it
+    /// costs), the others act, perception. It stops after a turn in which a creature came into
+    /// view (one not seen the turn before) or a message was logged that stops a rest, and when the
+    /// player dies. Turns that end before any creature could come into view
+    /// ([`World::out_of_view_for`]), in which the weather the player sees did not change, and in
+    /// which no trap went off (a teleport moves a creature farther than its steps) pass without
+    /// perception, which cannot change the outcome; only the last turn's events are kept.
+    fn keep_at(
+        &mut self,
+        events: &mut Vec<Event>,
+        more: impl Fn(&Self) -> bool,
+        mut act: impl FnMut(&mut Self, &mut Vec<Event>) -> i64,
+    ) -> Ended {
         let said = self.said;
         let mut in_view = self.creatures_in_view();
         let mut came = None;
         let alive = |w: &Self| w.state.death.is_none();
-        while self.state.time < until && came.is_none() && self.said == said && alive(self) {
+        while more(self) && came.is_none() && self.said == said && alive(self) {
             let unseen_until = self.state.time + self.out_of_view_for();
             let sprung = self.sprung;
             loop {
                 events.clear();
-                self.run_turn(wait.min(self.price_until(until)), events);
-                let done = self.state.time >= until || self.said != said || !alive(self);
+                let price = act(self, events);
+                self.run_turn(price, events);
+                let done = !more(self) || self.said != said || !alive(self);
                 let trapped = self.sprung != sprung;
                 if done || trapped || self.state.time > unseen_until || self.weather_turned() {
                     break;
@@ -603,25 +655,12 @@ impl World {
             came = now_in_view.iter().find(|a| !in_view.contains(a)).copied();
             in_view = now_in_view;
         }
-        if !alive(self) {
-            return;
+        match came {
+            _ if !alive(self) => Ended::Died,
+            Some(id) => Ended::Came(id),
+            None if self.said != said => Ended::Said,
+            None => Ended::Done,
         }
-        let rested = self.state.time.since(start).spoken();
-        let text = match (came, self.said != said, goal) {
-            (Some(id), _, _) => {
-                let creature = self.state.actors[&id].creature;
-                let name = &self.content.creature(creature).name;
-                format!(
-                    "{} {name} comes into view; you stop resting after {rested}.",
-                    article(name)
-                )
-            }
-            (None, true, _) => format!("You stop resting after {rested}."),
-            (None, false, Rest::For(_)) => format!("You rest for {rested}."),
-            (None, false, Rest::Dawn) => "You rest until dawn.".into(),
-            (None, false, Rest::Dusk) => "You rest until dusk.".into(),
-        };
-        self.say(text);
     }
 
     /// A message when the player's burden is no longer `before` (spec §8 "Burden"): picking
@@ -716,7 +755,9 @@ impl World {
     /// said and kept with the attack that caused it, if the player saw who died. The player's
     /// own death is always said, and settles whether they saw what killed them. A trap going off
     /// is said and kept if the player set it off, saw its cell, or saw any of its blast; what it
-    /// did to someone if they are the player or the player saw them.
+    /// did to someone if they are the player or the player saw them. A wall that gave way is kept
+    /// if the player sees its cell, and one blasted open is said ("The wall collapses!"; digging
+    /// says its own).
     fn perceive_events(&mut self, events: &mut Vec<Event>) -> Vec<String> {
         use fight::{End, Words, attack_message, death_message};
         let player = self.state.player;
@@ -731,6 +772,7 @@ impl World {
         }
         let mut last: Option<Last> = None;
         let mut killer_seen: Option<Option<CreatureId>> = None;
+        let mut collapsed = 0;
         let perception = &self.perception;
         let end = |id: ActorId, seen: bool| match self.actor_or_fallen(id) {
             _ if id == player => End::You,
@@ -808,6 +850,13 @@ impl World {
                 actor == player || perception.sees_actors_at(from) || perception.sees_actors_at(to)
             }
             Event::DoorOpened { pos } | Event::DoorClosed { pos } => perception.is_visible(pos),
+            Event::WallBroken { pos, cause } => {
+                let seen = perception.is_visible(pos);
+                if seen && cause == Breach::Blast {
+                    collapsed += 1;
+                }
+                seen
+            }
             Event::LevelChanged { .. } => true,
             Event::Missile { ref path, .. } => !path.is_empty(),
             Event::Attacked {
@@ -916,6 +965,11 @@ impl World {
         });
         if let (Some(by), Some(death)) = (killer_seen, self.state.death.as_mut()) {
             death.by = by;
+        }
+        match collapsed {
+            0 => {}
+            1 => reports.push("The wall collapses!".into()),
+            _ => reports.push("The walls collapse!".into()),
         }
         reports
     }
@@ -1047,6 +1101,7 @@ impl World {
             Action::Fire(at) => return self.fire(*at, events),
             Action::Throw { item, at } => return self.throw(*item, *at, events),
             Action::Rest(goal) => return self.start_rest(*goal),
+            Action::Dig(dir) => return self.start_dig(*dir),
             Action::SetVision(id) => return self.set_vision(id),
             Action::SetWeather(weather) => {
                 let over = weather::Override::new(*weather, self.state.time);
@@ -1609,6 +1664,8 @@ mod burden_tests;
 mod character_tests;
 #[cfg(test)]
 mod cost_tests;
+#[cfg(test)]
+mod dig_tests;
 #[cfg(test)]
 mod equip_tests;
 #[cfg(test)]

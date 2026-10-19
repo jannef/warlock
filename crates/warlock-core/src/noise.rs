@@ -5,7 +5,8 @@
 //! burden (×1.25 Burdened, ×1.5 Strained; spec §8 "Burden": a heavy load is noisy); opening or
 //! closing a door makes the door's `toggle_noise` (terrain data); an attack (spec §8 "Combat")
 //! makes fighting, a bowstring, fighting more quietly (a throw), or chanting where the attacker
-//! stands ([`MELEE_NOISE`], [`SHOT_NOISE`], [`THROW_NOISE`], [`SPELL_NOISE`]). [`noise`] is the
+//! stands ([`MELEE_NOISE`], [`SHOT_NOISE`], [`THROW_NOISE`], [`SPELL_NOISE`]); a turn of
+//! digging makes digging where the digger stands ([`DIG_NOISE`]). [`noise`] is the
 //! one function that decides how loud an action is, so skills such as moving silently can change
 //! it there. A trap going off (spec §8 "Traps") makes its own noise on its cell, as its data says
 //! (an alarm's bell, a fireball's explosion, a lightning bolt's thunderclap), heard by everyone in
@@ -85,6 +86,8 @@ pub enum SoundKind {
     Explosion,
     /// A thunderclap: a lightning trap.
     Thunder,
+    /// Digging into a wall (spec §8 "Digging").
+    Digging,
 }
 
 impl SoundKind {
@@ -100,6 +103,7 @@ impl SoundKind {
             SoundKind::Bell => "bell",
             SoundKind::Explosion => "explosion",
             SoundKind::Thunder => "thunder",
+            SoundKind::Digging => "digging",
         }
     }
 
@@ -115,6 +119,7 @@ impl SoundKind {
             SoundKind::Bell => "a bell ring",
             SoundKind::Explosion => "an explosion",
             SoundKind::Thunder => "a thunderclap",
+            SoundKind::Digging => "digging",
         }
     }
 }
@@ -125,6 +130,8 @@ pub const MELEE_NOISE: u16 = 60;
 pub const SHOT_NOISE: u16 = 40;
 pub const THROW_NOISE: u16 = 30;
 pub const SPELL_NOISE: u16 = 50;
+/// How loud a turn of digging is where the digger stands (spec §8 "Digging"): iron on stone.
+pub const DIG_NOISE: u16 = 80;
 
 /// Something an actor does that makes noise.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -137,6 +144,8 @@ pub enum Act {
     CloseDoor(Pos),
     /// Attacks someone, from where it stands.
     Attack(AttackKind),
+    /// Digs into a wall, from where it stands.
+    Dig,
 }
 
 /// A noise made by an actor, or by a trap going off.
@@ -254,6 +263,7 @@ pub fn noise(
             };
             (sound, actor.pos, u32::from(loudness))
         }
+        Act::Dig => (SoundKind::Digging, actor.pos, u32::from(DIG_NOISE)),
     };
     let loudness = loudness.min(u32::from(MAX_LOUDNESS)) as u16;
     (loudness > 0).then_some(Noise {

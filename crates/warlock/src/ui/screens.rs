@@ -902,6 +902,36 @@ mod tests {
     }
 
     #[test]
+    fn apply_asks_which_way_to_dig_only_with_a_tool_ready() {
+        const APPLY: (KeyCode, &str) = (KeyCode::KeyA, "a");
+        // Nothing to dig with: the rules say so at once, and no prompt opens.
+        let mut app = app(true);
+        frame(&mut app, &[APPLY]);
+        assert_eq!(actions(&app), [Action::Dig(Dir::N)]);
+        assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
+        // In the quarry with the pick-axe ready: `a` asks for a direction, Esc cancels it, and a
+        // direction digs.
+        let content = content();
+        let mut world = warlock_core::World::new(content.clone(), "quarry", None).expect("run");
+        for action in
+            warlock_core::action::parse_actions("move:E pickup equip:tool:a").expect("actions")
+        {
+            world.apply(&action);
+        }
+        let mut app = app_with(content, Some(Game::from_world(world)));
+        frame(&mut app, &[APPLY]);
+        assert_eq!(
+            app.world().resource::<InputMode>(),
+            &InputMode::Direction(crate::input::KeyCommand::Apply)
+        );
+        frame(&mut app, &[ESC]);
+        assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
+        assert!(names(&app).is_empty() && actions(&app).is_empty());
+        frame(&mut app, &[APPLY, (KeyCode::KeyL, "l")]);
+        assert_eq!(actions(&app), [Action::Dig(Dir::E)]);
+    }
+
+    #[test]
     fn aiming_fires_at_the_cursor_cycles_targets_and_remembers_the_last() {
         use crate::ui::{Aim, AimKind, LastTarget};
         // In the arena, with the bow and arrows lying beside the player readied.
