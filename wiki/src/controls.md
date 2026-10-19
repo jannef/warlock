@@ -29,7 +29,7 @@ authoritative: it is generated from your current key bindings.
 | Fire your missile weapon | `f`, then aim (see below) |
 | Throw something | `t`, then aim |
 | Next target while aiming (with Shift: the one before) | `Tab` |
-| Apply a tool: dig into a wall with a pick-axe | `a`, then a direction |
+| Use a tool: dig into a wall with a pick-axe | `U`, then a direction |
 | Show or hide the controls | `?` |
 | Pause menu | `Esc` |
 | Save and quit | `Q` |

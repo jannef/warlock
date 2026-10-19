@@ -94,7 +94,7 @@ name = "Missiles"
 action = "ready"
 mark = "quivered"
 
-# A tool ready to use: a pick-axe or a mattock to dig with (`a`, spec §8 "Digging").
+# A tool ready to use: a pick-axe or a mattock to dig with (`U`, spec §8 "Digging").
 [[slot]]
 id = "tool"
 name = "Tool"

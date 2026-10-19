@@ -522,8 +522,9 @@ breaks has `hardness` and `becomes` (`TerrainDef::breaks: Option<Breakable>`, va
 solid terrain breaks, into walkable, transparent, plain ground); `void` (solid rock) has a `face`
 (`wall`) it turns into when a cell next to it opens, as mapgen walls open ground. Cells on a
 level's edge never break (`LevelState::on_edge`, `breaks_at`). `Action::Dig(Dir)` (`dig:DIR`,
-key `a` = `KeyCommand::Apply`, a direction prompt) needs `Actor::dig_tool`; `start_dig` refuses
-(no time) or returns `Spent::Dig(at)`, and `dig` runs `keep_at` with a `dig` action per turn
+key `U` = `KeyCommand::UseTool`, ADOM's use-item key, a direction prompt; `a` is left for the
+abilities menu, #156) needs `Actor::dig_tool`; `start_dig` refuses (no time) or returns
+`Spent::Dig(at)`, and `dig` runs `keep_at` with a `dig` action per turn
 (priced by `price_of`, so burden slows it): `dig_turn` makes `Act::Dig` noise (`DIG_NOISE` 80,
 `SoundKind::Digging`) and adds `dig_work(power, strength)` (power × (Strength score + 10), in
 `WORK_SCALE` = 20ths of a hardness point) to `LevelState::dug` (saved, by position); at hardness ×
