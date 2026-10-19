@@ -5,8 +5,9 @@
 //! ([`World::dine`], through [`World::keep_at`]): it stops early after a turn in which a creature
 //! came into view or a message was logged that stops a rest ("You stop eating."), and the food is
 //! left as it was. Only when
-//! the last turn is done is one eaten, and it feeds: "You eat the ration." Then come what a
-//! corpse does when eaten and the news of the player's hunger ("You feel satiated.").
+//! the last turn is done is one eaten, and it feeds: "You eat the ration." In a shop, what is
+//! eaten is bought ([`World::ate_goods`], spec §7 "Shops"). Then come what a corpse does when
+//! eaten and the news of the player's hunger ("You feel satiated.").
 //!
 //! **What food does**: its nutrition, up to the most there can be. A meal that would go past it
 //! is overeating: the player may choke to death on it (a chance, 0 by default: off), else vomit
@@ -162,6 +163,7 @@ impl World {
         };
         let def = content.object(food.object);
         self.say(format!("You eat the {}.", def.name));
+        self.ate_goods(dish.meal, &food);
         let nutrition = def.food.map_or(0, |f| f.nutrition) as i32;
         match (def.corpse, self.rot(&food)) {
             (Some(_), Some(Rot::Rotten | Rot::Gone)) => {

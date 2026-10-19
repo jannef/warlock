@@ -10,6 +10,9 @@
 //!   says the price; the player **pays** with [`crate::Action::Pay`] (no time), from the gold
 //!   they carry into the keeper's purse. Without enough gold they put things back by dropping
 //!   them, which takes the drop's time.
+//! - **Using up** goods is buying them: the bill counts by object, so unpaid goods eaten (or used
+//!   up any other way) stay owed, and food eaten off the shop floor is owed for
+//!   ([`World::ate_goods`]).
 //! - **Dropping** in the shop puts back what is unpaid; of the player's own things it offers a
 //!   price for what it buys ([`crate::Action::Drop`] says the offer and keeps them;
 //!   [`crate::Action::Sell`] takes it, from the keeper's purse), and has no use for the rest.
@@ -27,7 +30,7 @@
 //! shown but as gold.
 
 use super::{ActorId, Spent, World};
-use crate::action::{Event, Letters, letter};
+use crate::action::{Event, Letters, Meal, letter};
 use crate::content::{ActionKind, Content, MAX_FAVOUR, ShopId, ShopPlan, Shops, TerrainId};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
@@ -290,6 +293,39 @@ impl World {
                 })
             })
             .collect()
+    }
+
+    /// The player ate `food` (one of it), from the pack or the floor as `meal` says, in the open
+    /// shop they stand in: eaten goods are bought (spec §7 "Shops"). Food that lay there for sale
+    /// is now owed for; unpaid food from the pack stays owed, as the bill counts by object and
+    /// nothing that uses goods up takes them off it. The keeper says so.
+    pub(super) fn ate_goods(&mut self, meal: Meal, food: &Stack) {
+        let Some(i) = self.shop_here() else {
+            return;
+        };
+        let Some(price) = self.asking_price(self.player_pos(), food) else {
+            return;
+        };
+        let what = &self.content.object(food.object).name;
+        let line = match meal {
+            Meal::Floor(_) => {
+                self.state.current_mut().shops[i].owe(food);
+                format!("You eat it, you buy it: {price} gold for the {what}.")
+            }
+            Meal::Pack(_) => {
+                let unpaid = count_of(&self.state.current().shops[i].unpaid, food.object);
+                if count_of(&self.state.player().inventory, food.object) >= unpaid {
+                    return;
+                }
+                format!("Eaten or not, the {what} is still {price} gold.")
+            }
+        };
+        let (name, owed) = self.owing().expect("eaten goods are owed for");
+        let mut text = format!("{name} says: \"{line}\"");
+        if owed != price {
+            text.push_str(&format!(" You owe {name} {owed} gold."));
+        }
+        self.say(text);
     }
 
     /// Whom the player owes how much in the open shop they stand in, if anything.

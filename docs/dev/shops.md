@@ -16,13 +16,18 @@ rooms, rooms levels only, from the map stream) whose keeper is spawned at its po
 instantiation it becomes a `world::Shop` in `LevelState::shops` (saved, hashed; format 30): the
 keeper's actor id, its `exits` (the cells around the floor that could be walked onto or were
 doors when the level was made: the door), `unpaid` (what the player owes, counted by object;
-`unpaid_parts` assigns the counts to the last stacks of each object), and `ShopStatus` (Open,
-Outraged, Abandoned). The rules are `world/shop.rs`: `turned_back` from `player_moves` (a step
-onto an exit owing anything: the keeper steps into the way and the step lands one cell back
-into the shop, priced as a step; walking out of the door never steals), `shop_step` (greeting,
-theft: leaving owing any other way, such as a wall dug open) from `player_moves`,
-`picked_up_goods` from `pick_up`, `trade` (drop and `Action::Sell`) from `drop_objects`, `pay`
-(`Action::Pay(None)`, no time; `Action::Pay(Some(dir))`, `pay:W`, pays and steps out at once),
+`unpaid_parts` assigns the counts to the last stacks of each object; only `pay`, `put_back`,
+`outrage`, and `keeper_died` take anything off it, so whatever uses unpaid goods up (eating,
+a quest hand-in, rotting away) leaves their price on the bill with no hook of its own; it may
+hold more of an object than the pack does), and `ShopStatus` (Open, Outraged, Abandoned). The
+rules are `world/shop.rs`: `turned_back` from `player_moves` (a step onto an exit owing
+anything: the keeper steps into the way and the step lands one cell back into the shop, priced
+as a step; walking out of the door never steals), `shop_step` (greeting, theft: leaving owing
+any other way, such as a wall dug open) from `player_moves`, `picked_up_goods` from `pick_up`,
+`ate_goods` from `eat.rs::finish` (food eaten off the shop floor is owed for; unpaid food from
+the pack stays owed, and the keeper says so), `trade` (drop and `Action::Sell`) from
+`drop_objects`, `pay` (`Action::Pay(None)`, no time; `Action::Pay(Some(dir))`, `pay:W`, pays and
+steps out at once),
 `provoke` from `fight.rs::resolve` (the player attacking a keeper), `keeper_died` from
 `creature_dies`, `may_loose` in `shoot.rs` (unpaid goods are not shot or thrown). An outraged
 keeper gets the `outraged` faction as its `faction_override`, so the AI and stance need nothing
