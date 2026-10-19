@@ -3,8 +3,8 @@
 //! [`route_keys`] reads every key press exactly once. While a screen is open (the screen stack is
 //! not empty) the press goes to the top screen; otherwise it is a gameplay command, read through
 //! the bindings in the current [`InputMode`]. Prompts in the message line (the direction for
-//! open/close or a chat, how long to rest, look mode, aiming a shot or a throw) are input modes,
-//! not screens.
+//! open/close, a chat, or digging, how long to rest, look mode, aiming a shot or a throw) are
+//! input modes, not screens.
 //!
 //! Letter and symbol commands bind by *logical* key (the character the keyboard layout produces),
 //! so `<`, `>`, and `?` work on any layout. Arrows and the numpad bind by physical key code.
@@ -51,6 +51,8 @@ pub enum KeyCommand {
     Skills,
     /// Show the player's quests, active and done (no time passes).
     Quests,
+    /// Show the player's weapon skills: ranks and marks (no time passes).
+    WeaponSkills,
     /// Ask how long to rest (an hour, until dawn, until dusk).
     Rest,
     /// Move a cursor over the map to read what is there (no time passes).
@@ -60,11 +62,17 @@ pub enum KeyCommand {
     /// Choose something to throw (what is readied in the missiles slot, else from the pack),
     /// aim it, then throw.
     Throw,
+    /// Bash with the shield held, in a direction (asked for in the message line). An ability
+    /// (`warlock_core::ability`): unbound by default, for the abilities menu to come (#156).
+    Bash,
     /// While aiming: the cursor to the next creature in view (with Shift, the one before).
     NextTarget,
     /// Chat with someone next to you: the one in view if there is only one, else in a
     /// direction.
     Chat,
+    /// Use the tool the player has ready toward a direction (ADOM's `U`): dig into a wall with a
+    /// pick-axe. An item's use, not an ability (abilities get a menu of their own).
+    UseTool,
     /// Dev: switch to the next vision profile.
     CycleVision,
     /// Dev: move the clock an hour ahead at once.
@@ -130,12 +138,15 @@ impl KeyCommand {
             KeyCommand::Character => "Character",
             KeyCommand::Skills => "Skills",
             KeyCommand::Quests => "Quest log",
+            KeyCommand::WeaponSkills => "Weapon skills",
             KeyCommand::Rest => "Rest",
             KeyCommand::Look => "Look around",
             KeyCommand::Fire => "Fire missile weapon",
             KeyCommand::Throw => "Throw",
+            KeyCommand::Bash => "Bash with your shield",
             KeyCommand::NextTarget => "Next target (aiming; Shift: previous)",
             KeyCommand::Chat => "Chat",
+            KeyCommand::UseTool => "Use a tool (dig)",
             KeyCommand::CycleVision => "Next vision profile (dev)",
             KeyCommand::SkipHour => "Skip an hour (dev)",
             KeyCommand::NextWeather => "Next weather (dev)",
@@ -244,12 +255,14 @@ impl Default for Bindings {
             (ch("@"), Character),
             (ch("S"), Skills),
             (ch("q"), Quests),
+            (ch("W"), WeaponSkills),
             (ch("R"), Rest),
             (ch("x"), Look),
             (ch("f"), Fire),
             (ch("t"), Throw),
             (ch("C"), Chat),
             (Code(KeyCode::Tab), NextTarget),
+            (ch("U"), UseTool),
             (ch("?"), Help),
             (Code(KeyCode::Escape), Cancel),
             (ch("Q"), Quit),
@@ -316,7 +329,7 @@ impl Bindings {
 pub enum InputMode {
     #[default]
     Normal,
-    /// Waiting for a direction for `Open`, `Close`, or `Chat`.
+    /// Waiting for a direction for `Open`, `Close`, `Chat`, `Bash`, or `UseTool`.
     Direction(KeyCommand),
     /// Asking how long to rest ([`REST_CHOICES`]).
     Rest,
@@ -515,6 +528,8 @@ impl Gameplay<'_> {
                 let action = match cmd {
                     KeyCommand::Open => Action::Open(dir),
                     KeyCommand::Chat => Action::Chat(dir),
+                    KeyCommand::Bash => Action::Bash(dir),
+                    KeyCommand::UseTool => Action::Dig(dir),
                     _ => Action::Close(dir),
                 };
                 self.actions.write(PlayerAction(action));
@@ -590,6 +605,10 @@ impl Gameplay<'_> {
                 open = Some(ScreenName::Quests);
                 InputMode::Normal
             }
+            (InputMode::Normal, KeyCommand::WeaponSkills) => {
+                open = Some(ScreenName::WeaponSkills);
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::CycleVision) => {
                 let view = game.world.perception();
                 let next = next_vision(view.content().vision_profiles(), &view.vision().id);
@@ -615,7 +634,7 @@ impl Gameplay<'_> {
                 self.overlays.light_values = !self.overlays.light_values;
                 InputMode::Normal
             }
-            (InputMode::Normal, KeyCommand::Open | KeyCommand::Close) => {
+            (InputMode::Normal, KeyCommand::Open | KeyCommand::Close | KeyCommand::Bash) => {
                 InputMode::Direction(command)
             }
             // The one creature in view next to the player, at once; else ask which way.
@@ -626,6 +645,15 @@ impl Gameplay<'_> {
                 }
                 None => InputMode::Direction(command),
             },
+            (InputMode::Normal, KeyCommand::UseTool) => {
+                if game.world.perception().ready_to_dig().is_some() {
+                    InputMode::Direction(command)
+                } else {
+                    // Nothing to dig with: the rules say so ("You have no digging tool ready.").
+                    self.actions.write(PlayerAction(Action::Dig(Dir::N)));
+                    InputMode::Normal
+                }
+            }
             (InputMode::Normal, KeyCommand::Help) => {
                 open = Some(ScreenName::Help);
                 InputMode::Normal
@@ -763,10 +791,13 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Inventory), ["i"]);
         assert_eq!(keys(&b, KeyCommand::Equipment), ["e"]);
         assert_eq!(keys(&b, KeyCommand::Character), ["@"]);
+        assert_eq!(keys(&b, KeyCommand::WeaponSkills), ["W"]);
+        assert!(keys(&b, KeyCommand::Bash).is_empty(), "an ability: unbound");
         assert_eq!(keys(&b, KeyCommand::Fire), ["f"]);
         assert_eq!(keys(&b, KeyCommand::Throw), ["t"]);
         assert_eq!(keys(&b, KeyCommand::NextTarget), ["Tab"]);
         assert_eq!(keys(&b, KeyCommand::Chat), ["C"]);
+        assert_eq!(keys(&b, KeyCommand::UseTool), ["U"]);
     }
 
     #[test]

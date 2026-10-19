@@ -1,11 +1,12 @@
 //! Text and JSON dumps of the simulation for developers and agents (spec §9).
 //!
-//! Every layer except [`Layer::Truth`] and [`Layer::Actors`] is built from [`World::perception`]
-//! only, so dumps cannot leak information the player does not have. `Truth` and `Actors` read
-//! ground truth and are dev-only.
+//! Every layer except [`Layer::Truth`], [`Layer::Actors`], and [`Layer::Rooms`] is built from
+//! [`World::perception`] only, so dumps cannot leak information the player does not have.
+//! `Truth`, `Actors`, and `Rooms` read ground truth and are dev-only.
 
 use crate::action::letter;
 use crate::character::Gender;
+use crate::content::WeaponSkillId;
 use crate::equipment;
 use crate::geom::Pos;
 use crate::noise::{PerceivedSound, SoundKind, Volume};
@@ -53,16 +54,24 @@ pub enum Layer {
     /// Not a map: the player's quest log, one quest a line, active first (`Rats in the arena
     /// (active, from the old hermit): Kill 3 giant rats in the Arena. 2 / 3 killed.`).
     Quests,
+    /// Not a map: the player's weapon skills, one a line with its rank and how far its marks
+    /// are toward the next (`Long blades 2 (40%)`); never what a rank gives.
+    WeaponSkills,
     /// Ground truth: all terrain, objects, and actors on the level. **Dev-only.**
     Truth,
     /// Not a map: every actor on the level with its weight, what it carries (and of that wears
     /// and wields), its stats (scores and potentials), and its trained skills with their marks
     /// (ground truth). **Dev-only.**
     Actors,
+    /// The level's special rooms (spec §7 "Special rooms"; ground truth): the terrain, with the
+    /// plain ground of each special room drawn as its effect's `mark`, then a line per room
+    /// (`s shadowed room at (12, 3)-(20, 9), entered`). **Dev-only.**
+    Rooms,
 }
 
 impl Layer {
-    const ALL: [Layer; 12] = [
+    /// A slice, not a fixed-size array, so features adding layers don't collide on the length.
+    const ALL: &[Layer] = &[
         Layer::View,
         Layer::Fov,
         Layer::Memory,
@@ -73,8 +82,10 @@ impl Layer {
         Layer::Stats,
         Layer::Skills,
         Layer::Quests,
+        Layer::WeaponSkills,
         Layer::Truth,
         Layer::Actors,
+        Layer::Rooms,
     ];
 
     /// Layer name as used on the command line and in JSON.
@@ -90,14 +101,16 @@ impl Layer {
             Layer::Stats => "stats",
             Layer::Skills => "skills",
             Layer::Quests => "quests",
+            Layer::WeaponSkills => "weapon_skills",
             Layer::Truth => "truth",
             Layer::Actors => "actors",
+            Layer::Rooms => "rooms",
         }
     }
 
     /// Whether the layer reads ground truth.
     pub const fn is_dev_only(self) -> bool {
-        matches!(self, Layer::Truth | Layer::Actors)
+        matches!(self, Layer::Truth | Layer::Actors | Layer::Rooms)
     }
 }
 
@@ -106,12 +119,13 @@ impl FromStr for Layer {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Layer::ALL
-            .into_iter()
+            .iter()
+            .copied()
             .find(|l| l.name() == s)
             .ok_or_else(|| {
                 format!(
                     "unknown layer `{s}` (expected view, fov, memory, light, sound, inventory, \
-                     equipment, stats, skills, quests, truth, actors)"
+                     equipment, stats, skills, quests, weapon_skills, truth, actors, rooms)"
                 )
             })
     }
@@ -127,11 +141,13 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
     match layer {
         Layer::Truth => truth_rows(world),
         Layer::Actors => actor_rows(world),
+        Layer::Rooms => room_rows(world),
         Layer::Inventory => inventory_rows(&world.perception()),
         Layer::Equipment => equipment_rows(&world.perception()),
         Layer::Stats => stat_rows(&world.perception()),
         Layer::Skills => skill_rows(&world.perception()),
         Layer::Quests => quest_rows(&world.perception()),
+        Layer::WeaponSkills => weapon_skill_rows(&world.perception()),
         _ => {
             let view = world.perception();
             rows(view.width(), view.height(), |p| {
@@ -175,15 +191,18 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
         | Layer::Stats
         | Layer::Skills
         | Layer::Quests
+        | Layer::WeaponSkills
         | Layer::Truth
-        | Layer::Actors => {
+        | Layer::Actors
+        | Layer::Rooms => {
             unreachable!("not a map built from perception")
         }
     }
 }
 
 /// A heard sound in the `sound` layer: `f` footsteps, `o` a door opening, `c` a door closing,
-/// `x` fighting, `b` a bowstring, `m` chanting (magic), `v` a voice; upper case when loud.
+/// `x` fighting, `b` a bowstring, `m` chanting (magic), `v` a voice, `d` digging; upper case when
+/// loud.
 pub fn sound_char(sound: &PerceivedSound) -> char {
     let c = match sound.kind {
         SoundKind::Footsteps => 'f',
@@ -193,6 +212,7 @@ pub fn sound_char(sound: &PerceivedSound) -> char {
         SoundKind::Bowstring => 'b',
         SoundKind::Chanting => 'm',
         SoundKind::Voice => 'v',
+        SoundKind::Digging => 'd',
     };
     if sound.volume == Volume::Loud {
         c.to_ascii_uppercase()
@@ -224,6 +244,35 @@ fn truth_rows(world: &World) -> Vec<String> {
                 .map_or(' ', |t| content.terrain(t).glyph),
         }
     })
+}
+
+/// The level's special rooms (ground truth): the terrain with each special room's plain ground
+/// ([`crate::content::TerrainDef::is_plain_ground`]) drawn as its effect's mark, then one line
+/// per room.
+fn room_rows(world: &World) -> Vec<String> {
+    let content = world.content();
+    let (level, _) = world.ground_truth();
+    let mut out = rows(level.width(), level.height(), |p| {
+        let Some(t) = level.terrain_at(p) else {
+            return ' ';
+        };
+        let room = level.rooms().iter().find(|r| r.contains(p));
+        match room {
+            Some(room) if content.terrain(t).is_plain_ground() => {
+                content.room_effect(room.effect).mark
+            }
+            _ => content.terrain(t).glyph,
+        }
+    });
+    for room in level.rooms() {
+        let effect = content.room_effect(room.effect);
+        let entered = if room.entered { ", entered" } else { "" };
+        out.push(format!(
+            "{} {} at {}-{}{entered}",
+            effect.mark, effect.name, room.min, room.max
+        ));
+    }
+    out
 }
 
 /// The player's inventory (`a - a dagger (450 g)`, `b - a leather jerkin (being worn) (3.5
@@ -330,6 +379,44 @@ fn quest_rows(view: &PerceptionView<'_>) -> Vec<String> {
         .collect()
 }
 
+/// How far the marks are toward the next rank, in whole percent; `None` at the last rank.
+fn progress_percent(view: &PerceptionView<'_>, id: WeaponSkillId) -> Option<u32> {
+    let table = view.content().weapon_skills();
+    let (marks, need) = view.own_weapon_skills().progress(table, id)?;
+    Some(marks * 100 / need.max(1))
+}
+
+/// The player's weapon skills, in file order, with their ranks and how far toward the next
+/// (`Long blades 2 (40%)`, `Daggers and knives 10` at the last rank).
+fn weapon_skill_rows(view: &PerceptionView<'_>) -> Vec<String> {
+    let skills = view.own_weapon_skills();
+    (view.content().weapon_skills().ids())
+        .map(|(id, def)| {
+            let rank = skills.rank(id);
+            match progress_percent(view, id) {
+                Some(percent) => format!("{} {rank} ({percent}%)", def.name),
+                None => format!("{} {rank}", def.name),
+            }
+        })
+        .collect()
+}
+
+/// An actor's weapon skills (ground truth): `daggers 2 (13/30), thrown 1 (0/10)`, the trained
+/// ones only; `None` without any.
+fn actor_weapon_skills(
+    content: &crate::content::Content,
+    a: &crate::world::Actor,
+) -> Option<String> {
+    let table = content.weapon_skills();
+    let skills: Vec<String> = (a.weapon_skills.trained())
+        .map(|(id, t)| match table.need(id, t.rank) {
+            Some(need) => format!("{} {} ({}/{need})", table.skill(id).id, t.rank, t.marks),
+            None => format!("{} {}", table.skill(id).id, t.rank),
+        })
+        .collect();
+    (!skills.is_empty()).then(|| skills.join(", "))
+}
+
 /// Every actor on the level (ground truth): id, creature, position, hit points and Defence,
 /// weight, what it carries, its burden and carrying limit, its stats as score/potential
 /// (`St 12/15`), its trained skills with their marks toward the next point
@@ -390,9 +477,11 @@ fn actor_rows(world: &World) -> Vec<String> {
                 let (said, muttered) = (a.talk.said, a.talk.muttered);
                 format!("; talk said {said}, muttered {muttered}{met}")
             };
+            let weapons = actor_weapon_skills(content, a)
+                .map_or(String::new(), |s| format!("; weapon skills {s}"));
             format!(
                 "{} {} at {}: hp {}/{} dv {}; weight {} (base {} + carried {}: {carried})\
-                 {equipped}; {} (limit {}); stats {}{skills}{npc}{talk}",
+                 {equipped}; {} (limit {}){weapons}; stats {}{skills}{npc}{talk}",
                 a.id,
                 content.creature(a.creature).id,
                 a.pos,
@@ -458,9 +547,9 @@ pub fn ascii(world: &World, layers: &[Layer]) -> String {
     out
 }
 
-/// Structured dump: turn, game time, level, viewer, the weather (under the open sky; else
-/// null), seen actors, heard sounds, the player's inventory, equipment (by slot id), weight, and
-/// scores (by stat id),
+/// Structured dump: turn, game time, level, viewer, the special room the player stands in if they
+/// know it (its effect id; else null), the weather (under the open sky; else null), seen actors,
+/// heard sounds, the player's inventory, equipment (by slot id), weight, and scores (by stat id),
 /// recent messages, the requested layers as arrays of rows, and optionally the full
 /// [`crate::WorldState`] under `state`.
 pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
@@ -516,6 +605,16 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             "by": d.by.map(|c| content.creature(c).id.clone()),
         })
     });
+    let weapon_skills: serde_json::Map<String, Value> = (content.weapon_skills().ids())
+        .map(|(id, def)| {
+            let rank = view.own_weapon_skills().rank(id);
+            let progress = progress_percent(&view, id);
+            (
+                def.id.clone(),
+                json!({ "rank": rank, "progress": progress }),
+            )
+        })
+        .collect();
     let layer_map: serde_json::Map<String, Value> = layers
         .iter()
         .map(|&l| (l.name().to_string(), json!(layer_rows(world, l))))
@@ -528,6 +627,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "time": time_json(world),
         "level": view.level_id(),
         "viewer": view.viewer(),
+        "room": view.room(view.viewer()).map(|e| e.id.as_str()),
         "weather": view.weather(),
         "hash": format!("{:016x}", world.state_hash()),
         "seen_actors": seen,
@@ -548,6 +648,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "stats": view.own_scores(),
         "skills": skills_json(&view),
         "quests": quests_json(&view),
+        "weapon_skills": weapon_skills,
         "hp": { "current": hp, "max": max_hp },
         "experience": view.own_experience(),
         "defence": view.own_defence(),
@@ -658,6 +759,7 @@ mod tests {
         assert_eq!(value["layers"]["fov"].as_array().map(Vec::len), Some(21));
         assert!(value["layers"].get("memory").is_none());
         assert_eq!(value["state"]["turn"], 1);
+        assert!(value["room"].is_null(), "not in a special room");
         assert!(value["seen_actors"][0]["kind"] == "player");
         // The player's character, and their own scores by stat id; nothing else about stats.
         assert_eq!(
@@ -781,6 +883,45 @@ mod tests {
             "{actors:#?}"
         );
         assert!(Layer::Actors.is_dev_only() && !Layer::Stats.is_dev_only());
+    }
+
+    #[test]
+    fn weapon_skills_show_the_players_ranks_and_progress_and_actors_show_everyones() {
+        // The showcase thief: daggers 2 and thrown 1 from the class.
+        let mut world = showcase();
+        let rows = layer_rows(&world, Layer::WeaponSkills);
+        assert_eq!(rows.len(), 16);
+        assert_eq!(rows[0], "Daggers and knives 2 (0%)");
+        assert!(
+            rows.contains(&"Thrown weapons 1 (0%)".to_string()),
+            "{rows:#?}"
+        );
+        assert!(rows.contains(&"Long blades 0 (0%)".to_string()));
+        let actors = layer_rows(&world, Layer::Actors);
+        assert!(
+            actors[0].contains("; weapon skills daggers 2 (0/60), thrown 1 (0/20); stats"),
+            "{}",
+            actors[0]
+        );
+        let kobold = actors.iter().find(|a| a.contains(" kobold at "));
+        assert!(kobold.is_some_and(|k| k.contains("weapon skills spears 1 (0/30)")));
+        // Marks show as a share of the next rank.
+        let content = world.content().clone();
+        let table = content.weapon_skills();
+        let daggers = table.id("daggers").expect("daggers");
+        let mut state = world.state().clone();
+        let me = state.actors.get_mut(&world.player_id()).expect("player");
+        me.weapon_skills.train(table, daggers, 24);
+        world = World::from_state(content.clone(), state).expect("valid");
+        assert_eq!(
+            layer_rows(&world, Layer::WeaponSkills)[0],
+            "Daggers and knives 2 (40%)"
+        );
+        let value = json(&world, &[], false);
+        assert_eq!(value["weapon_skills"]["daggers"]["rank"], 2);
+        assert_eq!(value["weapon_skills"]["daggers"]["progress"], 40);
+        assert_eq!(value["weapon_skills"]["bows"]["rank"], 0);
+        assert!(!Layer::WeaponSkills.is_dev_only());
     }
 
     #[test]

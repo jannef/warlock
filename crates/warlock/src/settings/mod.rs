@@ -9,6 +9,7 @@
 //! font_px = 18            # logical pixels, 12 to 36
 //! reduced_effects = false # preset: forces every effect below off
 //! palette = "default"     # "default", "high-contrast", "colorblind"
+//! clock = "24h"           # "24h" (14:32) or "12h" (2:32 PM)
 //!
 //! [effects]               # per-effect switches, all on by default
 //! glyph_animation = true  # wave, pulse, shimmer, cycle; heard sounds ripple in
@@ -25,6 +26,7 @@
 //! move_n = ["k", "Numpad8", "ArrowUp"]
 //! ```
 
+pub mod clock;
 pub mod keys;
 pub mod palette;
 
@@ -32,6 +34,7 @@ use crate::cli::Args;
 use crate::input::Bindings;
 use crate::storage::Backend;
 use bevy::prelude::*;
+pub use clock::Clock;
 pub use palette::{Palette, Role};
 
 pub const MIN_FONT_PX: u32 = 12;
@@ -50,6 +53,8 @@ pub struct Settings {
     /// Per-effect switches; an effect runs only when its switch is on and reduced effects is off.
     pub effects: EffectSwitches,
     pub palette: Palette,
+    /// How times of day are written (status bar, death screen).
+    pub clock: Clock,
 }
 
 /// Which visual effects run (spec §4.7). In [`Settings`] these are the player's per-effect
@@ -166,6 +171,7 @@ impl Default for Settings {
             reduced_effects: false,
             effects: EffectSwitches::ALL_ON,
             palette: Palette::Default,
+            clock: Clock::H24,
         }
     }
 }
@@ -207,6 +213,7 @@ pub fn parse(text: &str) -> Loaded {
             "reduced_effects",
             "effects",
             "palette",
+            "clock",
             "bindings",
         ]
         .contains(&key.as_str())
@@ -256,6 +263,12 @@ pub fn parse(text: &str) -> Loaded {
             None => warnings.push(format!("unknown palette {value}; using the default")),
         }
     }
+    if let Some(value) = table.get("clock") {
+        match value.as_str().and_then(Clock::from_id) {
+            Some(clock) => settings.clock = clock,
+            None => warnings.push(format!("unknown clock {value}; using the default")),
+        }
+    }
     let bindings = match table.get("bindings") {
         Some(toml::Value::Table(t)) => Bindings::from_table(t, &mut warnings),
         Some(_) => {
@@ -276,6 +289,7 @@ struct FileOut<'a> {
     font_px: u32,
     reduced_effects: bool,
     palette: &'a str,
+    clock: &'a str,
     effects: std::collections::BTreeMap<&'static str, bool>,
     bindings: std::collections::BTreeMap<String, Vec<String>>,
 }
@@ -286,6 +300,7 @@ pub fn to_toml(settings: &Settings, bindings: &Bindings) -> String {
         font_px: settings.font_px,
         reduced_effects: settings.reduced_effects,
         palette: settings.palette.id(),
+        clock: settings.clock.id(),
         effects: settings.effects.to_map(),
         bindings: bindings.to_map(),
     };
@@ -429,6 +444,7 @@ mod tests {
                 ..EffectSwitches::ALL_ON
             },
             palette: Palette::Colorblind,
+            clock: Clock::H12,
         };
         let mut bindings = Bindings::default();
         bindings
@@ -473,6 +489,16 @@ mod tests {
         assert_eq!(s.effective_effects(true), EffectSwitches::ALL_OFF);
         // Turning the preset off again restores the individual switches.
         assert!(s.effective_effects(false).glow);
+    }
+
+    #[test]
+    fn the_clock_setting_parses_and_a_bad_value_costs_only_itself() {
+        assert_eq!(parse("clock = \"12h\"\n").settings.clock, Clock::H12);
+        let loaded = parse("clock = \"noon\"\nfont_px = 20\n");
+        assert_eq!(loaded.settings.clock, Clock::H24);
+        assert_eq!(loaded.settings.font_px, 20);
+        assert_eq!(loaded.warnings.len(), 1, "{:?}", loaded.warnings);
+        assert_eq!(parse("font_px = 20\n").settings.clock, Clock::H24);
     }
 
     #[test]

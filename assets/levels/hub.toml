@@ -1,7 +1,8 @@
 # The showcase hub (spec §3). Each room demonstrates one engine capability:
 # top row: light hall (M3), darkness chamber (M3), water garden (M4);
 # bottom row: start room, door corridor, patrol gallery, effects room (M4), stairs nook (> down to
-# the Vast Caverns, v down to the arena, < up and out to the overworld, ^ up to the courtyard).
+# the Vast Caverns, v down to the arena, Q down to the quarry, < up and out to the overworld, ^ up
+# to the courtyard).
 #
 # Lighting (M3): no ambient light. Rooms are lit by wall torches (t), lamps (l), and a brazier (B);
 # the light hall has colored crystals (R G U A) between pillars that cast colored shadows; the
@@ -30,6 +31,9 @@
 # NPCs (#146): an old hermit (H) sits in the stairs nook's lamplit corner. Chat with him (`C`):
 # he knows the hall's rooms and tells you about them. He is peaceful, and walking into him (or
 # any creature that is not hostile) swaps places with him (#147).
+# Special rooms (M25): the stairs nook is a sanctuary (the [[room]] table at the end): a faint warm
+# glow, wounds heal three times as fast, and nothing hostile to you steps in. You are told the
+# first time you enter it ("You feel at peace here."), and look mode names it from then on.
 #
 # Objects (M11): gold and a small pile in the start room to pick up (`,` or `g`); the door
 # corridor's west room is a storeroom of arms and armor and its east room a pantry; an amulet lies
@@ -45,6 +49,9 @@
 # stones, rocks to throw, and flaming arrows beside the short bow's arrows. Ready a bow and arrows
 # with `e`, then fire with `f` (throw with `t`): a flaming arrow shot into the patrol gallery's
 # dark middle lights it where it lands until it burns out.
+#
+# Digging (M19): the storeroom has a pick-axe for the Tool slot; use it with `U` toward a wall.
+# The stairs nook's Q leads down to the quarry, the place to dig.
 name = "The Hub"
 ambient = [0, 0, 0, 0]
 map = '''
@@ -66,7 +73,7 @@ map = '''
 #......@.......##.....#.#.....##3........................#......B......#.......#
 #..............####+###.###+####..#...#...#...#...#...#..#.............#.<.>.v.#
 #..............##.............##2........................#.===.....::::#.......#
-#..............##......t......##.........................#.===.....::::#......H#
+#..............##......t......##.........................#.===.....::::#.....QH#
 #..t.......t...#################t.......................t#.........::::#.......#
 ################################################################################
 '''
@@ -98,6 +105,13 @@ map = '''
 "v" = { terrain = "stairs_down", to = "arena" }
 # The old hermit, by the stairs.
 "H" = { terrain = "floor", creature = "hermit" }
+# Stairs down (drawn `>`) to the quarry, the place to dig.
+"Q" = { terrain = "stairs_down", to = "quarry" }
+
+# Special rooms (data/room_effects.toml): the stairs nook, walls and door included, is a sanctuary.
+[[room]]
+effect = "sanctuary"
+area = [71, 11, 79, 20]
 
 # Objects, top of each pile first.
 # The start room.
@@ -155,6 +169,12 @@ objects = ["small_shield", "quarterstaff"]
 [[pile]]
 at = [17, 14]
 objects = ["wool_cloak", "leather_gloves", "leather_boots"]
+
+# Digging (M19): a pick-axe for the Tool slot. The hub's walls give way to it like any stone
+# wall (its outer walls, the level's edge, never do); the quarry is the place to dig.
+[[pile]]
+at = [18, 14]
+objects = ["pick_axe"]
 
 # The pantry (the door corridor's east room).
 [[pile]]

@@ -25,7 +25,7 @@
 
 use super::{Actor, ActorId, World};
 use crate::action::Event;
-use crate::content::{ActionKind, BASE_TURN, LevelKind, TerrainDef, price};
+use crate::content::{ActionKind, BASE_TURN, Benefit, LevelKind, TerrainDef, WeaponSkillId, price};
 use crate::perception::VIEW_RADIUS;
 use crate::skills::Effect;
 use crate::time::{Duration, GameTime};
@@ -62,6 +62,26 @@ impl World {
             id,
             price(self.content.action_cost(creature, kind), BASE_TURN),
         )
+    }
+
+    /// The energy price of attack action `kind` (`melee`, `shoot`, `throw`, `reload`) for actor
+    /// `id` drawing on weapon skill `skill` (spec §8 "Weapon skills"): its cost less what its
+    /// rank takes off (`speed`; `reload` for reloading), then priced like any action
+    /// ([`World::price_of`]).
+    pub(super) fn attack_price(
+        &self,
+        id: ActorId,
+        kind: ActionKind,
+        skill: Option<WeaponSkillId>,
+    ) -> i64 {
+        let actor = &self.state.actors[&id];
+        let benefit = actor.benefit(&self.content, skill);
+        let saving = match kind {
+            ActionKind::Reload => benefit.reload,
+            _ => benefit.speed,
+        };
+        let cost = self.content.action_cost(actor.creature, kind);
+        self.burdened(id, price(Benefit::saving(cost, saving), BASE_TURN))
     }
 
     /// The energy price of actor `id` stepping onto terrain `to` on the current level, slowed by

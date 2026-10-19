@@ -5,8 +5,9 @@ one twenty-sided die, and with ADOM's kind of hit points. Every blow is rolled, 
 hard, and hurts; what loses all its hit points dies. That goes for you too, and death is final.
 
 You attack by moving into a hostile creature (see [Controls](controls.md)), which takes a turn,
-or from afar: you shoot with a missile weapon (`f`) and throw (`t`), see
-[Ranged combat](ranged.md).
+by bashing it with your shield, or from afar: you shoot with a missile weapon (`f`) and
+throw (`t`), see [Ranged combat](ranged.md). Each attack trains the
+[weapon skill](weapon-skills.md) it uses, and your rank in it helps you hit, hurt, and defend.
 Creatures fight each other and you by the same rules (see [Creatures](creatures.md)). Spells are
 the exception: casters only announce them for now, and nothing is hurt by a spell.
 
@@ -16,7 +17,8 @@ An attack rolls two twelve-sided dice and adds them: 2 to 24, most often around 
 that roll, plus the attacker's bonus to hit, reaches the target's **Defence**.
 
 - Fighting up close, your **Strength** helps you hit; shooting, your **Dexterity** does. Some
-  weapons are easier to hit with than others.
+  weapons are easier to hit with than others, and your rank in the weapon's
+  [skill](weapon-skills.md) helps the more you have trained.
 - **Two ones always miss, two twelves always hit**, whatever the odds.
 - Because the sum of two dice gathers around the middle, each point of bonus or Defence matters
   most when the odds are close, and little when they are long either way:
@@ -38,8 +40,9 @@ protects you, in kinds:
   you are burdened, +1 when strained, nothing when overloaded (see [Burden](burden.md)). The
   lower limit counts.
 - **Armour**: what you wear on your body.
-- **Shield**: a shield held in your off hand.
-- **Parry**: a weapon that turns blows aside, such as the quarterstaff.
+- **Shield**: a shield held in your off hand, and more with your rank in shield blocking.
+- **Parry**: a weapon that turns blows aside, such as the quarterstaff, and your rank with the
+  weapon you wield (blades, spears, and staves).
 - **Natural**: a creature's hide, shell, or scales. You have none.
 - **Dodge**: training. The [tumble](skills.md#what-skills-give) skill adds to it, more the
   higher it is.
@@ -85,6 +88,9 @@ A hit does the weapon's damage dice, at least 1:
   is drawn by strength, though: each point of Strength you lack of what the bow needs costs you
   a point to hit and a point of damage.
 - Creatures without a weapon bite, claw, or kick, each in its own way.
+- Your rank in the weapon's [skill](weapon-skills.md) adds to the damage, and at higher ranks
+  widens the critical range.
+- A **shield bash** does the shield's own damage (below), plus your Strength.
 
 {{#include generated/weapons.md}}
 
@@ -113,7 +119,8 @@ the time pass (a rest stops when something attacks you).
 
 {{#include generated/regeneration.md}}
 
-Creatures heal the same way, while you are on their level.
+Creatures heal the same way, while you are on their level. In a sanctuary (a
+[special room](special-rooms.md)) wounds heal three times as fast, yours and anyone's.
 
 ## Death
 

@@ -12,7 +12,8 @@ use warlock_core::Dir;
 /// The commands the player may rebind, in the order the controls screen lists them. `Cancel`
 /// (Esc) is fixed so a rebinding can always be cancelled, and the dev snapshot keys are not
 /// player commands.
-pub const REBINDABLE: [KeyCommand; 41] = [
+/// A slice, not a fixed-size array, so features adding commands don't collide on the length.
+pub const REBINDABLE: &[KeyCommand] = &[
     KeyCommand::Move(Dir::N),
     KeyCommand::Move(Dir::NE),
     KeyCommand::Move(Dir::E),
@@ -34,12 +35,15 @@ pub const REBINDABLE: [KeyCommand; 41] = [
     KeyCommand::Character,
     KeyCommand::Skills,
     KeyCommand::Quests,
+    KeyCommand::WeaponSkills,
     KeyCommand::Rest,
     KeyCommand::Look,
     KeyCommand::Fire,
     KeyCommand::Throw,
+    KeyCommand::Bash,
     KeyCommand::NextTarget,
     KeyCommand::Chat,
+    KeyCommand::UseTool,
     KeyCommand::Help,
     KeyCommand::Quit,
     KeyCommand::Page(1),
@@ -60,6 +64,10 @@ pub const REBINDABLE: [KeyCommand; 41] = [
 const PAGE_IDS: [&str; 9] = [
     "page_1", "page_2", "page_3", "page_4", "page_5", "page_6", "page_7", "page_8", "page_9",
 ];
+
+/// Rebindable commands with no key by default: abilities (`warlock_core::ability`), which the
+/// abilities menu (#156) lists instead of a key each. The player may bind one in Controls.
+pub const UNBOUND: [KeyCommand; 1] = [KeyCommand::Bash];
 
 /// Physical keys a command may be bound to.
 const CODES: &[KeyCode] = &[
@@ -130,12 +138,15 @@ impl KeyCommand {
             Character => "character",
             Skills => "skills",
             Quests => "quests",
+            WeaponSkills => "weapon_skills",
             Rest => "rest",
             Look => "look",
             Fire => "fire",
             Throw => "throw",
+            Bash => "bash",
             NextTarget => "next_target",
             Chat => "chat",
+            UseTool => "use_tool",
             Help => "help",
             Quit => "quit",
             Page(n) => PAGE_IDS.get(usize::from(n).checked_sub(1)?)?,
@@ -150,7 +161,7 @@ impl KeyCommand {
     }
 
     pub fn from_id(id: &str) -> Option<Self> {
-        REBINDABLE.into_iter().find(|c| c.id() == Some(id))
+        REBINDABLE.iter().copied().find(|c| c.id() == Some(id))
     }
 
     /// Name for the controls screen; unlike [`KeyCommand::label`] it tells directions apart.
@@ -309,7 +320,7 @@ impl Bindings {
     pub fn reset_all(&mut self) {
         // Twice, so keys that swapped between commands end up home.
         for _ in 0..2 {
-            for command in REBINDABLE {
+            for &command in REBINDABLE {
                 self.reset_command(command);
             }
         }
@@ -318,11 +329,13 @@ impl Bindings {
     /// The settings-file form: command id to key spellings.
     pub fn to_map(&self) -> BTreeMap<String, Vec<String>> {
         REBINDABLE
-            .into_iter()
+            .iter()
+            .copied()
             .filter_map(|c| {
                 let id = c.id()?;
-                let keys = self.keys_of(c).iter().map(|k| k.to_text()).collect();
-                Some((id.to_string(), keys))
+                let keys: Vec<String> = self.keys_of(c).iter().map(|k| k.to_text()).collect();
+                // An unbound ability is left out, as it is by default.
+                (!keys.is_empty()).then(|| (id.to_string(), keys))
             })
             .collect()
     }
@@ -336,7 +349,7 @@ impl Bindings {
                 warnings.push(format!("bindings: unknown command `{id}` ignored"));
             }
         }
-        for command in REBINDABLE {
+        for &command in REBINDABLE {
             let Some(id) = command.id() else { continue };
             let Some(value) = table.get(id) else { continue };
             let Some(items) = value.as_array() else {
@@ -352,7 +365,10 @@ impl Bindings {
                 }
             }
             if keys.is_empty() {
-                warnings.push(format!("bindings.{id}: no usable keys; using the defaults"));
+                // An ability may be left without a key, as it is by default.
+                if !UNBOUND.contains(&command) || !items.is_empty() {
+                    warnings.push(format!("bindings.{id}: no usable keys; using the defaults"));
+                }
             } else {
                 bindings.set_keys(command, keys);
             }
@@ -372,7 +388,7 @@ impl Bindings {
             seen.push((c.context(), k.clone()));
             fresh
         });
-        for command in REBINDABLE {
+        for &command in REBINDABLE {
             if bindings.keys_of(command).is_empty() {
                 bindings.reset_command(command);
             }
@@ -391,14 +407,19 @@ mod tests {
 
     #[test]
     fn every_rebindable_command_has_a_unique_id_that_round_trips() {
-        for c in REBINDABLE {
+        for &c in REBINDABLE {
             let id = c.id().expect("rebindable commands have ids");
             assert_eq!(KeyCommand::from_id(id), Some(c));
         }
         assert_eq!(KeyCommand::Cancel.id(), None);
         let defaults = Bindings::default();
-        for c in REBINDABLE {
-            assert!(!defaults.keys_of(c).is_empty(), "{c:?} has a default key");
+        for &c in REBINDABLE {
+            let unbound = UNBOUND.contains(&c);
+            assert_eq!(
+                defaults.keys_of(c).is_empty(),
+                unbound,
+                "{c:?}: a default key"
+            );
         }
     }
 

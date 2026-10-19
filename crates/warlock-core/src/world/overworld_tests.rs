@@ -283,7 +283,15 @@ fn locations_lead_into_their_levels_and_back_out_to_the_location() {
         assert!(world.apply(&Action::Descend).took_turn);
         assert_eq!(world.time().since(before), Duration::seconds(6));
         assert_eq!(world.perception().level_id(), to);
-        assert_eq!(last_message(&world), format!("You enter {name}."));
+        // The Hall's stairs nook is a sanctuary (a special room): the player is told so after.
+        let said: Vec<&str> = (world.messages().iter().rev().take(2))
+            .map(|m| m.text.as_str())
+            .collect();
+        let entered = format!("You enter {name}.");
+        match to {
+            "hub" => assert_eq!(said, ["You feel at peace here.", entered.as_str()]),
+            _ => assert_eq!(said[0], entered),
+        }
         let up = world
             .state
             .current()

@@ -162,7 +162,7 @@ impl Quests {
 
 /// How far active quest `def` has got: what counts toward it, at most what it needs, and what
 /// it needs. `inventory` is the player's.
-pub fn progress(
+pub(crate) fn progress(
     content: &Content,
     quests: &Quests,
     inventory: &[Stack],

@@ -1,8 +1,10 @@
 //! Classes (`assets/data/classes.toml`, spec §8 "Character creation"): the third choice of a new
-//! run. A class adjusts the starting scores, by fixed numbers or dice, adds hit points, and
-//! trains the character in skills (spec §8 "Skills"), by dice.
+//! run. A class adjusts the starting scores, by fixed numbers or dice, adds hit points, trains
+//! the character in skills (spec §8 "Skills"), by dice, and gives starting ranks in weapon skills
+//! (spec §8 "Weapon skills"): some always, and perhaps one set of a choice, rolled when the
+//! character is made.
 
-use super::ContentError;
+use super::{ContentError, WeaponSkillId, WeaponSkillTable};
 use crate::combat::MAX_BASE_HP;
 use crate::dice::Dice;
 use crate::skills::{self, SkillId};
@@ -28,6 +30,10 @@ struct ClassSpec {
     hp: u16,
     #[serde(default)]
     skills: BTreeMap<String, Dice>,
+    #[serde(default)]
+    weapon_skills: BTreeMap<String, Dice>,
+    #[serde(default)]
+    weapon_skill_choice: Vec<BTreeMap<String, Dice>>,
 }
 
 /// A class, in the order offered.
@@ -44,15 +50,22 @@ pub struct ClassDef {
     /// The skills it trains (spec §8 "Skills"), each by dice rolled when the character is made,
     /// in skill order; added to the race's.
     pub skills: Vec<(SkillId, Dice)>,
+    /// Starting ranks in weapon skills (spec §8 "Weapon skills"), in skill order: added to the
+    /// race's.
+    pub weapon_skills: Vec<(WeaponSkillId, Dice)>,
+    /// Sets of starting ranks of which one is picked at random (the barbarian: axes or great
+    /// blades); empty for none.
+    pub weapon_skill_choice: Vec<Vec<(WeaponSkillId, Dice)>>,
 }
 
 impl ClassDef {
     /// Parses `data/classes.toml`: the classes in file order; `skill_id` says which skill a
-    /// skill id is.
+    /// skill id is, and `weapon_table` holds the weapon skills starting ranks may name.
     pub(super) fn parse(
         file: &str,
         text: &str,
         skill_id: impl Fn(&str) -> Option<SkillId>,
+        weapon_table: &WeaponSkillTable,
     ) -> Result<Vec<Self>, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: ClassFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
@@ -75,6 +88,18 @@ impl ClassDef {
             }
             let skills = skills::grants(&spec.skills, &skill_id)
                 .map_err(|m| err(format!("class `{id}`: skills: {m}")))?;
+            let ranks = |data| {
+                (weapon_table.starting_ranks(data)).map_err(|m| err(format!("class `{id}`: {m}")))
+            };
+            let weapon_skills = ranks(&spec.weapon_skills)?;
+            let weapon_skill_choice = (spec.weapon_skill_choice.iter())
+                .map(ranks)
+                .collect::<Result<Vec<_>, _>>()?;
+            if weapon_skill_choice.len() == 1 || weapon_skill_choice.iter().any(Vec::is_empty) {
+                return Err(err(format!(
+                    "class `{id}`: `weapon_skill_choice` is a choice of two or more sets of ranks"
+                )));
+            }
             list.push(ClassDef {
                 id: spec.id,
                 name: spec.name,
@@ -82,6 +107,8 @@ impl ClassDef {
                 stats,
                 hp: i32::from(spec.hp),
                 skills,
+                weapon_skills,
+                weapon_skill_choice,
             });
         }
         Ok(list)
@@ -94,16 +121,22 @@ mod tests {
 
     const ONE: &str = "[[class]]\nid = \"wizard\"\nname = \"Wizard\"\ndescription = \"Books.\"\n";
 
+    /// Parses `text` with the built-in weapon skills and one skill, `spellcraft`.
+    fn parse(text: &str) -> Result<Vec<ClassDef>, ContentError> {
+        let content = super::super::Content::builtin().expect("content");
+        let skill = |k: &str| (k == "spellcraft").then_some(SkillId(0));
+        ClassDef::parse("c", text, skill, content.weapon_skills())
+    }
+
     #[test]
     fn classes_read_adjustments_and_refuse_bad_ones() {
         let text = format!(
             "{ONE}stats = {{ intelligence = \"2d2+1\", toughness = \"-1d2\", willpower = 1 }}\n"
         );
-        let skill = |k: &str| (k == "spellcraft").then_some(SkillId(0));
-        let classes = ClassDef::parse("c", &text, skill).expect("valid");
+        let classes = parse(&text).expect("valid");
         assert!(classes[0].skills.is_empty());
         let text = format!("{ONE}skills = {{ spellcraft = \"2d6+10\" }}\n");
-        let wizard = ClassDef::parse("c", &text, skill).expect("valid");
+        let wizard = parse(&text).expect("valid");
         assert_eq!(
             wizard[0].skills,
             [(SkillId(0), "2d6+10".parse().expect("dice"))]
@@ -112,6 +145,15 @@ mod tests {
         assert_eq!(classes[0].stats[Stat::Toughness].to_string(), "-1d2");
         assert_eq!(classes[0].stats[Stat::Willpower], Dice::fixed(1));
         assert!(classes[0].stats[Stat::Strength].is_zero());
+        assert!(classes[0].weapon_skills.is_empty() && classes[0].weapon_skill_choice.is_empty());
+        let text = format!(
+            "{ONE}weapon_skills = {{ staves = 1 }}\n\
+             weapon_skill_choice = [{{ daggers = \"1d2\" }}, {{ slings = 1, thrown = 1 }}]\n"
+        );
+        let wizard = &parse(&text).expect("valid")[0];
+        assert_eq!(wizard.weapon_skills.len(), 1);
+        assert_eq!(wizard.weapon_skill_choice.len(), 2);
+        assert_eq!(wizard.weapon_skill_choice[1].len(), 2);
         for (text, why) in [
             (
                 format!("{ONE}stats = {{ cunning = 1 }}\n"),
@@ -131,8 +173,20 @@ mod tests {
                 format!("{ONE}skills = {{ necromancy = 5 }}\n"),
                 "class `wizard`: skills: unknown skill `necromancy`",
             ),
+            (
+                format!("{ONE}weapon_skills = {{ wands = 1 }}\n"),
+                "class `wizard`: unknown weapon skill `wands`",
+            ),
+            (
+                format!("{ONE}weapon_skill_choice = [{{ staves = 1 }}]\n"),
+                "a choice of two or more",
+            ),
+            (
+                format!("{ONE}weapon_skill_choice = [{{ staves = 1 }}, {{}}]\n"),
+                "a choice of two or more",
+            ),
         ] {
-            let e = ClassDef::parse("c", &text, skill).unwrap_err();
+            let e = parse(&text).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
     }

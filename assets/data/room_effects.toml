@@ -1,0 +1,67 @@
+# Special rooms (spec §7 "Special rooms"), ADOM-like: a room of a generated level, or an area a
+# hand-made level marks with `[[room]]`, can carry an effect that changes the rules while one is
+# inside it. The first time the player enters one they are told (`enter`), and from then on look
+# mode names the room ("in an echoing hall"). Numbers never reach the player.
+#
+# Generation: every room of a rooms level but the arrival room (and vaults), and each of eight
+# chambers a cave level tries, is special with `chance` percent; at most `per_level` special
+# rooms a level. The effect is picked uniformly. With 7 % and one a level, about one level in
+# three has one. A cave's special room is a blob of its floor, away from the arrival.
+#
+# Fields of an effect:
+#   id       the effect's id (level files name it: `[[room]] effect = "hushed"`)
+#   name     what it is called, without an article ("echoing hall"), in look mode and the wiki
+#   mark     one character marking its cells in the `rooms` dev dump layer
+#   enter    the message the first time the player enters such a room
+#   light    percent of all light kept inside (ambient, sky, bounce, every source: placed lights,
+#            carried ones, fires, the sun and the moons), 0 to 100; default 100
+#   glow     light added over the room, [r, g, b, uv] (it lights the room like ambient light);
+#            default none
+#   noise    percent of the loudness of every noise made inside (steps, doors, attacks), 1 to
+#            1000; default 100. Louder noises carry farther; at most 300 still.
+#   regen    percent of the usual pace at which hit points come back inside, 1 to 1000;
+#            default 100
+#   shunned  creatures hostile to the player do not step into the room (they may still reach in
+#            with a blow from its edge, or shoot into it); default false
+#   floor    terrain generators lay over the room's floor (walkable, not stairs, doors, or
+#            running water); a hand-made level draws its own
+
+chance = 7
+per_level = 1
+
+[[effect]]
+id = "shadowed"
+name = "shadowed room"
+mark = "s"
+enter = "The light seems to drain away here."
+light = 30
+
+[[effect]]
+id = "echoing"
+name = "echoing hall"
+mark = "e"
+enter = "Your footsteps echo loudly."
+noise = 200
+
+[[effect]]
+id = "hushed"
+name = "hushed chamber"
+mark = "h"
+enter = "A deep hush fills this room."
+noise = 40
+
+[[effect]]
+id = "sanctuary"
+name = "sanctuary"
+mark = "p"
+enter = "You feel at peace here."
+regen = 300
+glow = [60, 44, 22, 0]
+shunned = true
+
+[[effect]]
+id = "flooded"
+name = "flooded room"
+mark = "f"
+enter = "The floor here is flooded."
+floor = "shallow_water"
