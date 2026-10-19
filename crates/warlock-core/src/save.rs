@@ -39,6 +39,25 @@ const MAGIC: &str = "WARLOCK-SAVE";
 /// 16: weapon skills: actors have a rank and marks in each (`Actor::weapon_skills`).
 /// 17: digging: level states keep the work done on walls dug into (`LevelState::dug`).
 /// 18: combat stances (`Actor::stance`).
+/// 19: blood: level states keep their stains and the stains as last seen.
+/// 20: status effects: actors have them (`Actor::effects`), their healing progress counts
+///     hundredths of a second (`Actor::regen`), and the player's death records the status that
+///     killed them (`Death::of`).
+/// 21: hunger: the player's satiation (`Actor::satiation`: nutrition and what time has banked),
+///     corpses' death times (`Stack::died`), and what killed the player when neither a creature
+///     nor a status did (`Death::cause`: starving, choking).
+/// 22: doors: level states keep the locks on their doors (`LevelState::locks`).
+/// 23: NPCs and dialogue: actors keep how far their talk has got (`Actor::talk`: lines said and
+///     muttered, met) and the unique character a level made them (`Actor::npc`).
+/// 24: temperature and ice: level states keep their temperature (underground), the ice on their
+///     water, and when it was last brought up to date.
+/// 25: diseases: actors carry them (`Actor::diseases`: each infection's timer, stage,
+///     progressions, recovery streak, and who gave it) and stat damage (`Actor::damage`, with
+///     its mending progress); disease ids are in the content fingerprint.
+/// 26: magic items: a stack may carry what it rolled (`Stack::magic`: rarity, item level, each
+///     affix by id with its tier and value, a rare item's name, whether it is identified).
+/// 27: quests: the player's quests (stage, completions, counted kills, reached) and the kills
+///     they count, by level and creature type (`WorldState::quests`).
 /// 28: traps: level states keep their traps (kind, known, charges left, a bolt's direction) and
 ///     the traps the player remembers; the player's death records the trap that killed them.
 pub const FORMAT_VERSION: u32 = 28;

@@ -1,0 +1,38 @@
+# The Frost Grotto (spec §3): a cold cave below the hub's stairs nook, outside the safe hub, where
+# a frozen pool shows ice (spec §5 "Ice"). It is a little below freezing here, so the ice keeps
+# and slowly thickens, and a hole refreezes over some hours (first a skin too thin to see, then
+# thin ice).
+#
+# The pool, west to east: thick ice (T) that holds anything that walks, ice (i) that holds a
+# person but may give way under a heavy pack, thin ice (t) that only a rat could cross, and open
+# water (~) where a spring (←, running water, which needs a harder frost to freeze) runs in from
+# the east wall and keeps a hole open. A silver ring lies out on the thin ice (*); fall through and
+# it sinks to the bottom, where wading in fishes it out. By the stairs lies a heap of rocks (r) to
+# load up with and try the ice heavily laden. Breaking through hurts a little (never the last hit
+# point) and climbing back out onto the ice takes a few turns.
+name = "The Frost Grotto"
+arrival = "Your breath mists in the cold air."
+temperature = -2
+ambient = [36, 42, 58, 0]
+map = '''
+############################################
+#<....l.........l.........l.........l......#
+#..........................................#
+#.r...TTTTTTTTTTTiiiiiiiiitttttttt~~.......#
+#....TTTTTTTTTTTTiiiiiiiiittttttt~~~~←←←←←←#
+#....TTTTTTTTTTTTiiiiiiiiitttt*tttt~~......#
+#.....TTTTTTTTTTTiiiiiiiiittttttttt........#
+#.......TTTTTTTTTiiiiiiiitttttt............#
+#..........................................#
+#.....l.........l.........l.........l......#
+############################################
+'''
+
+[legend]
+"<" = { terrain = "stairs_up", to = "hub" }
+"l" = { terrain = "floor", light = "lamp" }
+"r" = { terrain = "floor", objects = ["rock*40"] }
+"T" = { terrain = "water", ice = 200 }
+"i" = { terrain = "water", ice = 55 }
+"t" = { terrain = "water", ice = 25 }
+"*" = { terrain = "water", ice = 25, objects = ["silver_ring"] }

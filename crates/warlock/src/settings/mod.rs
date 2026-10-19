@@ -10,6 +10,7 @@
 //! reduced_effects = false # preset: forces every effect below off
 //! palette = "default"     # "default", "high-contrast", "colorblind"
 //! clock = "24h"           # "24h" (14:32) or "12h" (2:32 PM)
+//! temperature = "celsius" # the status bar's unit: "celsius" (°C) or "fahrenheit" (°F)
 //!
 //! [effects]               # per-effect switches, all on by default
 //! glyph_animation = true  # wave, pulse, shimmer, cycle; heard sounds ripple in
@@ -21,6 +22,7 @@
 //! screen_fades = true     # level-change fade, flashes, and spell effects darkening the view
 //! screen_shake = true     # the view shakes when a spell effect lands near the player
 //! weather = true          # rain falling, splashing, and rings on water
+//! blood = true            # blood stains; not part of reduced effects
 //!
 //! [bindings]              # command id -> keys; a character, or a key name like "ArrowUp"
 //! move_n = ["k", "Numpad8", "ArrowUp"]
@@ -36,6 +38,7 @@ use crate::storage::Backend;
 use bevy::prelude::*;
 pub use clock::Clock;
 pub use palette::{Palette, Role};
+use warlock_core::temperature::Temperature;
 
 pub const MIN_FONT_PX: u32 = 12;
 pub const MAX_FONT_PX: u32 = 36;
@@ -55,6 +58,57 @@ pub struct Settings {
     pub palette: Palette,
     /// How times of day are written (status bar, death screen).
     pub clock: Clock,
+    /// The unit the status bar shows the temperature in (applied only when it is shown).
+    pub temperature: TemperatureUnit,
+}
+
+/// How temperatures are shown (spec §6 "Settings"): degrees Celsius (the default) or
+/// Fahrenheit, whole degrees.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum TemperatureUnit {
+    #[default]
+    Celsius,
+    Fahrenheit,
+}
+
+impl TemperatureUnit {
+    pub const ALL: [TemperatureUnit; 2] = [TemperatureUnit::Celsius, TemperatureUnit::Fahrenheit];
+
+    /// Name in the settings file.
+    pub fn id(self) -> &'static str {
+        match self {
+            TemperatureUnit::Celsius => "celsius",
+            TemperatureUnit::Fahrenheit => "fahrenheit",
+        }
+    }
+
+    pub fn from_id(id: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|u| u.id() == id)
+    }
+
+    /// Name shown in the settings screen.
+    pub fn label(self) -> &'static str {
+        match self {
+            TemperatureUnit::Celsius => "°C (Celsius)",
+            TemperatureUnit::Fahrenheit => "°F (Fahrenheit)",
+        }
+    }
+
+    /// The other unit.
+    pub fn toggled(self) -> Self {
+        match self {
+            TemperatureUnit::Celsius => TemperatureUnit::Fahrenheit,
+            TemperatureUnit::Fahrenheit => TemperatureUnit::Celsius,
+        }
+    }
+
+    /// `t` as the status bar shows it, in whole degrees: `4 °C`, `-3 °C`, `39 °F`.
+    pub fn show(self, t: Temperature) -> String {
+        match self {
+            TemperatureUnit::Celsius => format!("{} °C", t.celsius()),
+            TemperatureUnit::Fahrenheit => format!("{} °F", t.fahrenheit()),
+        }
+    }
 }
 
 /// Which visual effects run (spec §4.7). In [`Settings`] these are the player's per-effect
@@ -82,6 +136,9 @@ pub struct EffectSwitches {
     /// its own (not `particles`): it moves over the whole view, not around a few sources. The
     /// weather itself (its light, the status bar) does not depend on it.
     pub weather: bool,
+    /// Blood stains on floors and walls (spec §8 "Blood"). A content preference rather than an
+    /// effect: reduced effects leaves it as it is.
+    pub blood: bool,
 }
 
 impl EffectSwitches {
@@ -95,6 +152,7 @@ impl EffectSwitches {
         screen_fades: true,
         screen_shake: true,
         weather: true,
+        blood: true,
     };
     pub const ALL_OFF: Self = Self {
         glyph_animation: false,
@@ -106,15 +164,24 @@ impl EffectSwitches {
         screen_fades: false,
         screen_shake: false,
         weather: false,
+        blood: false,
     };
 
-    /// The effective switches: each as set, and everything off when `reduced`.
+    /// The effective switches: each as set, and when `reduced` every effect off; blood stays
+    /// as set (it is a content preference, not an effect).
     pub fn effective(self, reduced: bool) -> Self {
-        if reduced { Self::ALL_OFF } else { self }
+        if reduced {
+            Self {
+                blood: self.blood,
+                ..Self::ALL_OFF
+            }
+        } else {
+            self
+        }
     }
 
     /// The setting names, for the file.
-    const KEYS: [&'static str; 9] = [
+    const KEYS: [&'static str; 10] = [
         "glyph_animation",
         "flicker",
         "motion",
@@ -124,6 +191,7 @@ impl EffectSwitches {
         "screen_fades",
         "screen_shake",
         "weather",
+        "blood",
     ];
 
     fn to_map(self) -> std::collections::BTreeMap<&'static str, bool> {
@@ -145,6 +213,7 @@ impl EffectSwitches {
             "screen_fades" => &mut self.screen_fades,
             "screen_shake" => &mut self.screen_shake,
             "weather" => &mut self.weather,
+            "blood" => &mut self.blood,
             _ => return None,
         })
     }
@@ -172,6 +241,7 @@ impl Default for Settings {
             effects: EffectSwitches::ALL_ON,
             palette: Palette::Default,
             clock: Clock::H24,
+            temperature: TemperatureUnit::Celsius,
         }
     }
 }
@@ -214,6 +284,7 @@ pub fn parse(text: &str) -> Loaded {
             "effects",
             "palette",
             "clock",
+            "temperature",
             "bindings",
         ]
         .contains(&key.as_str())
@@ -269,6 +340,14 @@ pub fn parse(text: &str) -> Loaded {
             None => warnings.push(format!("unknown clock {value}; using the default")),
         }
     }
+    if let Some(value) = table.get("temperature") {
+        match value.as_str().and_then(TemperatureUnit::from_id) {
+            Some(unit) => settings.temperature = unit,
+            None => warnings.push(format!(
+                "unknown temperature unit {value} (\"celsius\" or \"fahrenheit\"); using °C"
+            )),
+        }
+    }
     let bindings = match table.get("bindings") {
         Some(toml::Value::Table(t)) => Bindings::from_table(t, &mut warnings),
         Some(_) => {
@@ -290,6 +369,7 @@ struct FileOut<'a> {
     reduced_effects: bool,
     palette: &'a str,
     clock: &'a str,
+    temperature: &'a str,
     effects: std::collections::BTreeMap<&'static str, bool>,
     bindings: std::collections::BTreeMap<String, Vec<String>>,
 }
@@ -301,6 +381,7 @@ pub fn to_toml(settings: &Settings, bindings: &Bindings) -> String {
         reduced_effects: settings.reduced_effects,
         palette: settings.palette.id(),
         clock: settings.clock.id(),
+        temperature: settings.temperature.id(),
         effects: settings.effects.to_map(),
         bindings: bindings.to_map(),
     };
@@ -370,7 +451,11 @@ impl SettingsStore {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn default_backend() -> Option<Backend> {
-    crate::paths::project_dirs().map(|d| Backend::Dir(d.config_dir().to_path_buf()))
+    crate::paths::locations()
+        .config
+        .dir
+        .clone()
+        .map(Backend::Dir)
 }
 
 /// Browser storage; without it (some privacy modes) settings last for the session only.
@@ -441,10 +526,12 @@ mod tests {
                 flicker: false,
                 screen_shake: false,
                 weather: false,
+                blood: false,
                 ..EffectSwitches::ALL_ON
             },
             palette: Palette::Colorblind,
             clock: Clock::H12,
+            temperature: TemperatureUnit::Fahrenheit,
         };
         let mut bindings = Bindings::default();
         bindings
@@ -462,6 +549,30 @@ mod tests {
         let loaded = parse("font_px = 20\nreduced_effects = false\npalette = \"default\"\n");
         assert!(loaded.warnings.is_empty(), "{:?}", loaded.warnings);
         assert_eq!(loaded.settings.effects, EffectSwitches::ALL_ON);
+        assert_eq!(loaded.settings.temperature, TemperatureUnit::Celsius);
+    }
+
+    #[test]
+    fn the_temperature_unit_reads_and_shows_whole_degrees() {
+        let loaded = parse("temperature = \"fahrenheit\"\n");
+        assert!(loaded.warnings.is_empty(), "{:?}", loaded.warnings);
+        assert_eq!(loaded.settings.temperature, TemperatureUnit::Fahrenheit);
+        let loaded = parse("temperature = \"kelvin\"\n");
+        assert_eq!(loaded.settings.temperature, TemperatureUnit::Celsius);
+        assert_eq!(loaded.warnings.len(), 1);
+        // Whole degrees, rounded half away from zero; never "-0".
+        let show = |unit: TemperatureUnit, tenths| unit.show(Temperature::from_tenths(tenths));
+        use TemperatureUnit::{Celsius, Fahrenheit};
+        assert_eq!(show(Celsius, 44), "4 °C");
+        assert_eq!(show(Celsius, 45), "5 °C");
+        assert_eq!(show(Celsius, -4), "0 °C");
+        assert_eq!(show(Celsius, -35), "-4 °C");
+        assert_eq!(show(Fahrenheit, 0), "32 °F");
+        assert_eq!(show(Fahrenheit, 44), "40 °F");
+        assert_eq!(show(Fahrenheit, -35), "26 °F");
+        assert_eq!(show(Fahrenheit, -178), "0 °F");
+        assert_eq!(Celsius.toggled(), Fahrenheit);
+        assert_eq!(Fahrenheit.toggled(), Celsius);
     }
 
     #[test]
@@ -483,10 +594,17 @@ mod tests {
         s.effects.particles = false;
         let e = s.effective_effects(false);
         assert!(!e.particles && e.glow && e.flicker);
+        // Reduced effects turns every effect off, but blood stays as set.
+        let reduced = EffectSwitches {
+            blood: true,
+            ..EffectSwitches::ALL_OFF
+        };
         s.reduced_effects = true;
-        assert_eq!(s.effective_effects(false), EffectSwitches::ALL_OFF);
+        assert_eq!(s.effective_effects(false), reduced);
         s.reduced_effects = false;
-        assert_eq!(s.effective_effects(true), EffectSwitches::ALL_OFF);
+        assert_eq!(s.effective_effects(true), reduced);
+        s.effects.blood = false;
+        assert!(!s.effective_effects(true).blood && !s.effective_effects(false).blood);
         // Turning the preset off again restores the individual switches.
         assert!(s.effective_effects(false).glow);
     }

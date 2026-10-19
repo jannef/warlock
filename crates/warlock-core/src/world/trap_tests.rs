@@ -238,7 +238,7 @@ fn trap_id(world: &World, id: &str) -> TrapId {
 /// Hit points actor `id` has lost.
 fn lost(world: &World, id: ActorId) -> i32 {
     let a = &world.state.actors[&id];
-    a.max_hp() - a.hp
+    a.max_hp(&world.content) - a.hp
 }
 
 fn creature_at(world: &World, p: Pos) -> ActorId {
@@ -617,8 +617,12 @@ fn a_trap_can_kill_and_the_death_names_it() {
     w.apply(&Action::Move(Dir::E));
     let death = w.death().expect("dead");
     assert_eq!(
-        (death.trap, death.by),
-        (Some(trap_id(&w, "fireball")), None)
+        (death.cause, death.by, death.of),
+        (Some(Cause::Trap(trap_id(&w, "fireball"))), None, None)
+    );
+    assert_eq!(
+        death.cause.map(|c| c.epitaph(w.content())).as_deref(),
+        Some("Killed by a fireball trap")
     );
     assert!(texts(&w).contains(&"You die...".to_string()));
 }

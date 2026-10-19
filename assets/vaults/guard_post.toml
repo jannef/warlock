@@ -1,18 +1,25 @@
-# Vault: a guard post. A kobold paces the front room; a closed door hides a lamp-lit store room.
+# Vault: a guard post. A kobold paces the front room; a locked door hides a lamp-lit store room.
+# The guard carries the brass key to it (spec §8 "Doors"): kobolds open doors, and a locked one
+# only with its key. Take the key from the guard, or kick the door in.
 name = "Guard post"
 map = '''
 ###########
 #....#....#
-#.k..+..*.#
-#....#....#
+#.k..L..*.#
+#....#.m..#
 ###+#######
 '''
 
 [legend]
-"k" = { terrain = "floor", creature = "kobold", route = "E2 W2" }
+"k" = { terrain = "floor", creature = "kobold", route = "E2 W2", carry = ["brass_key"] }
 "*" = { terrain = "floor", light = "lamp" }
+# A reward (spec §8 "Magic items"): something magic or rare left in the store room, rolled when
+# the level is generated.
+"m" = { terrain = "floor", loot = "magic" }
+"L" = { terrain = "door_closed", lock = "guard_post" }
 
-# Objects (M11): the store room holds spare arms and food.
+# Objects (M11): the store room holds spare arms and food, and a skeleton key, which opens every
+# lock.
 [[pile]]
 at = [7, 1]
 objects = ["spear", "leather_jerkin"]
@@ -20,3 +27,7 @@ objects = ["spear", "leather_jerkin"]
 [[pile]]
 at = [8, 3]
 objects = ["dried_meat*4"]
+
+[[pile]]
+at = [6, 3]
+objects = ["skeleton_key"]

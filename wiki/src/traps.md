@@ -43,9 +43,13 @@ a movement key never answers it.
   have seen ("You are wrenched elsewhere.").
 - **Charges**: some traps go off only once or twice; then they are spent and gone.
 
-Traps can kill, you as well as creatures. Creatures killed by a trap drop what they carried, as
-from any death, but a trap's kill earns you no [experience](experience.md), even if you lured the
-creature there; if a trap kills you, the death screen names it ("Killed by a fireball trap").
+A trap's blow wounds like any other: a big one spills blood and can leave you
+[bleeding](status-effects.md#bleeding). Traps can kill, you as well as creatures. Creatures
+killed by a trap drop what they carried, as from any death, but a trap's kill earns you no
+[experience](experience.md) and counts for no [quest](quests.md), even if you lured the creature
+there; if a trap kills you, the death screen names it ("Killed by a fireball trap").
+
+No trap lies on water that can freeze, and a teleport never sets you down on ice.
 
 ## Where traps are
 

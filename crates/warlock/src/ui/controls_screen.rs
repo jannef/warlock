@@ -13,7 +13,7 @@ use super::menu::{Nav, Panel, Press};
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
-use crate::settings::keys::REBINDABLE;
+use crate::settings::keys::{Bound, REBINDABLE};
 
 /// What the screen is doing.
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -155,9 +155,21 @@ impl ControlsScreen {
         let shown = key.display();
         self.mode = Mode::Browse;
         self.message = Some(match bindings.bind_primary(command, key) {
-            Ok(()) => format!("{} is now {shown}.", command.name()),
+            Ok(Bound::Free) => format!("{} is now {shown}.", command.name()),
+            Ok(Bound::Moved {
+                from,
+                keyless: true,
+                ..
+            }) => format!(
+                "{shown} moved to {}; {} has no key.",
+                command.name(),
+                from.name()
+            ),
+            Ok(Bound::Moved { from, .. }) => {
+                format!("{shown} moved to {} (was {}).", command.name(), from.name())
+            }
             Err(conflict) => format!(
-                "! {shown} is already used by {}. Rebind that first.",
+                "! {shown} is the only key for {} and cannot be taken.",
                 conflict.owner.name()
             ),
         });
@@ -297,15 +309,46 @@ mod tests {
     }
 
     #[test]
-    fn a_used_key_is_refused_and_names_its_owner() {
+    fn a_used_key_moves_and_the_message_says_what_moved() {
+        let (mut screen, mut b) = (ControlsScreen::default(), Bindings::default());
+        nav(&mut screen, &mut b, Nav::Enter);
+        key(&mut screen, &mut b, "j");
+        let message = screen.message.clone().expect("a message");
+        assert_eq!(message, "j moved to Move north (was Move south).");
+        let j = KeyBinding::from_text("j").unwrap();
+        assert_eq!(b.owner(&j), Some(KeyCommand::Move(Dir::N)));
+        // Kick has one key: it is left with none, and the table shows that.
+        let old = b.keys_of(KeyCommand::Kick)[0].display();
+        screen.selected = REBINDABLE
+            .iter()
+            .position(|&c| c == KeyCommand::Wait)
+            .unwrap();
+        nav(&mut screen, &mut b, Nav::Enter);
+        key(&mut screen, &mut b, &old);
+        assert_eq!(
+            screen.message.as_deref(),
+            Some(format!("{old} moved to Wait a turn; Kick has no key.").as_str())
+        );
+        assert_eq!(key_list(&b, KeyCommand::Kick), "(none)");
+    }
+
+    #[test]
+    fn a_fixed_commands_key_is_refused() {
         let (mut screen, mut b) = (ControlsScreen::default(), Bindings::default());
         let before = b.0.clone();
         nav(&mut screen, &mut b, Nav::Enter);
-        key(&mut screen, &mut b, "j");
+        let press = Press {
+            nav: Nav::Other,
+            binding: Some(KeyBinding::Code(bevy::prelude::KeyCode::Escape)),
+            repeat: false,
+            text: None,
+            shift: false,
+        };
+        screen.handle(&press, &mut b);
         assert_eq!(b.0, before);
         let message = screen.message.expect("a message");
         assert!(
-            message.starts_with('!') && message.contains("Move south"),
+            message.starts_with('!') && message.contains("Cancel"),
             "{message}"
         );
     }

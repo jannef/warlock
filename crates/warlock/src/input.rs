@@ -3,8 +3,8 @@
 //! [`route_keys`] reads every key press exactly once. While a screen is open (the screen stack is
 //! not empty) the press goes to the top screen; otherwise it is a gameplay command, read through
 //! the bindings in the current [`InputMode`]. Prompts in the message line (the direction for
-//! open/close and for digging, how long to rest, look mode, aiming a shot or a throw, whether
-//! to step onto a known trap) are input modes, not screens.
+//! open/close/kick, for digging, or for a chat, how long to rest, look mode, aiming a shot or a
+//! throw, whether to step onto a known trap) are input modes, not screens.
 //!
 //! Letter and symbol commands bind by *logical* key (the character the keyboard layout produces),
 //! so `<`, `>`, and `?` work on any layout. Arrows and the numpad bind by physical key code.
@@ -24,6 +24,7 @@ use warlock_core::content::VisionProfile;
 use warlock_core::perception::PerceptionView;
 use warlock_core::time::Duration;
 use warlock_core::weather::Weather;
+use warlock_core::world::ActorKind;
 use warlock_core::{Action, Dir, Letters, Pos, Rest};
 
 /// What a key does.
@@ -33,6 +34,8 @@ pub enum KeyCommand {
     Wait,
     Open,
     Close,
+    /// Kick in a direction: a door (to break it in), or a creature.
+    Kick,
     Descend,
     Ascend,
     Lantern,
@@ -50,8 +53,12 @@ pub enum KeyCommand {
     Skills,
     /// Show the player's weapon skills: ranks and marks (no time passes).
     WeaponSkills,
+    /// Show the player's quests, active and done (no time passes).
+    Quests,
     /// Ask how long to rest (an hour, until dawn, until dusk).
     Rest,
+    /// Choose something to eat, from the floor or the pack.
+    Eat,
     /// Move a cursor over the map to read what is there (no time passes).
     Look,
     /// Shoot or throw what is in the missile weapon slot (a cursor on the map): a launcher
@@ -74,12 +81,18 @@ pub enum KeyCommand {
     /// Use the tool the player has ready toward a direction (ADOM's `U`): dig into a wall with a
     /// pick-axe. An item's use, not an ability (abilities get a menu of their own).
     UseTool,
+    /// Chat with someone next to you: the one in view if there is only one, else in a
+    /// direction.
+    Chat,
     /// Dev: switch to the next vision profile.
     CycleVision,
     /// Dev: move the clock an hour ahead at once.
     SkipHour,
     /// Dev: set the next weather (clear, overcast, rain, heavy rain) for three hours.
     NextWeather,
+    /// Dev: identify everything the player carries (magic items' affixes; the scroll of identify
+    /// does it in play).
+    IdentifyAll,
     /// Dev: show ground truth where the player does not see.
     RevealMap,
     /// Dev: show perceived light values on visible cells.
@@ -124,6 +137,7 @@ impl KeyCommand {
             KeyCommand::Wait => "Wait a turn",
             KeyCommand::Open => "Open a door",
             KeyCommand::Close => "Close a door",
+            KeyCommand::Kick => "Kick",
             KeyCommand::Descend => "Go down stairs",
             KeyCommand::Ascend => "Go up stairs",
             KeyCommand::Lantern => "Light / douse lantern",
@@ -134,7 +148,9 @@ impl KeyCommand {
             KeyCommand::Character => "Character",
             KeyCommand::Skills => "Skills",
             KeyCommand::WeaponSkills => "Weapon skills",
+            KeyCommand::Quests => "Quest log",
             KeyCommand::Rest => "Rest",
+            KeyCommand::Eat => "Eat",
             KeyCommand::Look => "Look around",
             KeyCommand::Missile => "Throw or shoot the missile weapon",
             KeyCommand::Fire => "Fire missile weapon",
@@ -144,9 +160,11 @@ impl KeyCommand {
             KeyCommand::Bash => "Bash with your shield",
             KeyCommand::NextTarget => "Next target (aiming; Shift: previous)",
             KeyCommand::UseTool => "Use a tool (dig)",
+            KeyCommand::Chat => "Chat",
             KeyCommand::CycleVision => "Next vision profile (dev)",
             KeyCommand::SkipHour => "Skip an hour (dev)",
             KeyCommand::NextWeather => "Next weather (dev)",
+            KeyCommand::IdentifyAll => "Identify what you carry (dev)",
             KeyCommand::RevealMap => "Reveal map (dev)",
             KeyCommand::LightValues => "Light values (dev)",
             KeyCommand::Help => "Show / hide controls",
@@ -240,6 +258,7 @@ impl Default for Bindings {
             (Code(KeyCode::Numpad5), Wait),
             (ch("o"), Open),
             (ch("c"), Close),
+            (ch("K"), Kick),
             (ch(">"), Descend),
             (ch("<"), Ascend),
             (ch("L"), Lantern),
@@ -251,17 +270,19 @@ impl Default for Bindings {
             (ch("@"), Character),
             (ch("S"), Skills),
             (ch("W"), WeaponSkills),
+            (ch("q"), Quests),
             (ch("R"), Rest),
+            (ch("E"), Eat),
             (ch("x"), Look),
             (ch("t"), Missile),
             (ch("T"), Throw),
             (ch("+"), MoreAggressive),
             (ch("-"), MoreDefensive),
+            (ch("C"), Chat),
             (Code(KeyCode::Tab), NextTarget),
             (ch("U"), UseTool),
             (ch("?"), Help),
             (Code(KeyCode::Escape), Cancel),
-            (ch("Q"), Quit),
         ]);
         for n in 1..=9u8 {
             table.0.push((ch(&n.to_string()), Page(n)));
@@ -287,6 +308,7 @@ impl Bindings {
             (KeyBinding::Code(KeyCode::F5), KeyCommand::Snapshot),
             (KeyBinding::Code(KeyCode::F6), KeyCommand::SkipHour),
             (KeyBinding::Code(KeyCode::F7), KeyCommand::NextWeather),
+            (KeyBinding::Code(KeyCode::F8), KeyCommand::IdentifyAll),
             (KeyBinding::Code(KeyCode::F9), KeyCommand::LoadSnapshot),
         ];
         for entry in dev {
@@ -324,7 +346,7 @@ impl Bindings {
 pub enum InputMode {
     #[default]
     Normal,
-    /// Waiting for a direction for `Open`, `Close`, `Bash`, or `UseTool`.
+    /// Waiting for a direction for `Open`, `Close`, `Kick`, `Bash`, `UseTool`, or `Chat`.
     Direction(KeyCommand),
     /// Asking how long to rest ([`REST_CHOICES`]).
     Rest,
@@ -377,8 +399,7 @@ pub fn route_keys(
             continue;
         }
         let action = if screens.stack.is_empty() {
-            play.press(key, &bindings)
-                .map_or(ScreenAction::Stay, ScreenAction::Open)
+            play.press(key, &bindings).unwrap_or(ScreenAction::Stay)
         } else {
             // Screens edit copies, so the resources only change (and are saved) when a press
             // changed them.
@@ -413,6 +434,7 @@ pub fn route_keys(
             ScreenAction::Open(name) => screens.open(name),
             ScreenAction::Replace(name) => screens.replace(name),
             ScreenAction::Return(name) => screens.stack.return_to(name),
+            ScreenAction::Confirm(question, choice) => screens.confirm(question, choice),
             ScreenAction::Choose(choice) => {
                 choices.write(choice);
                 chosen = true;
@@ -441,7 +463,7 @@ impl Gameplay<'_> {
 
     /// Applies one key press in play. Returns the screen it opens: `?` help, or the pause menu
     /// on Esc when no prompt is open.
-    fn press(&mut self, key: &KeyboardInput, bindings: &Bindings) -> Option<ScreenName> {
+    fn press(&mut self, key: &KeyboardInput, bindings: &Bindings) -> Option<ScreenAction> {
         let game = self.game.as_ref()?;
         // The rest prompt answers by letter, whatever those letters are bound to.
         if *self.mode == InputMode::Rest
@@ -478,7 +500,7 @@ impl Gameplay<'_> {
         if key.repeat && !moves {
             return None;
         }
-        let mut open = None;
+        let mut open: Option<ScreenAction> = None;
         let next = match (*self.mode, command) {
             (InputMode::Aim(aim), KeyCommand::Move(dir)) => {
                 InputMode::Aim(aim.step(dir, &game.world.perception()))
@@ -525,7 +547,7 @@ impl Gameplay<'_> {
                 }
             }
             (InputMode::Normal, KeyCommand::Throw) => {
-                open = Some(ScreenName::Throw);
+                open = Some(ScreenAction::Open(ScreenName::Throw));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::NextTarget) => InputMode::Normal,
@@ -543,8 +565,10 @@ impl Gameplay<'_> {
             (InputMode::Direction(cmd), KeyCommand::Move(dir)) => {
                 let action = match cmd {
                     KeyCommand::Open => Action::Open(dir),
+                    KeyCommand::Kick => Action::Kick(dir),
                     KeyCommand::Bash => Action::Bash(dir),
                     KeyCommand::UseTool => Action::Dig(dir),
+                    KeyCommand::Chat => Action::Chat(dir),
                     _ => Action::Close(dir),
                 };
                 self.actions.write(PlayerAction(action));
@@ -593,7 +617,7 @@ impl Gameplay<'_> {
                     Some(letters) => {
                         self.actions.write(PlayerAction(Action::PickUp(letters)));
                     }
-                    None => open = Some(ScreenName::PickUp),
+                    None => open = Some(ScreenAction::Open(ScreenName::PickUp)),
                 }
                 InputMode::Normal
             }
@@ -602,24 +626,24 @@ impl Gameplay<'_> {
                     self.actions
                         .write(PlayerAction(Action::Drop(Letters::default())));
                 } else {
-                    open = Some(ScreenName::Drop);
+                    open = Some(ScreenAction::Open(ScreenName::Drop));
                 }
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Inventory) => {
-                open = Some(ScreenName::Inventory);
+                open = Some(ScreenAction::Open(ScreenName::Inventory));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Equipment) => {
-                open = Some(ScreenName::Equipment);
+                open = Some(ScreenAction::Open(ScreenName::Equipment));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Character) => {
-                open = Some(ScreenName::Character);
+                open = Some(ScreenAction::Open(ScreenName::Character));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Skills) => {
-                open = Some(ScreenName::Skills);
+                open = Some(ScreenAction::Open(ScreenName::Skills));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::MoreAggressive | KeyCommand::MoreDefensive) => {
@@ -633,7 +657,15 @@ impl Gameplay<'_> {
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::WeaponSkills) => {
-                open = Some(ScreenName::WeaponSkills);
+                open = Some(ScreenAction::Open(ScreenName::WeaponSkills));
+                InputMode::Normal
+            }
+            (InputMode::Normal, KeyCommand::Eat) => {
+                open = Some(ScreenAction::Open(ScreenName::Eat));
+                InputMode::Normal
+            }
+            (InputMode::Normal, KeyCommand::Quests) => {
+                open = Some(ScreenAction::Open(ScreenName::Quests));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::CycleVision) => {
@@ -653,6 +685,11 @@ impl Gameplay<'_> {
                     .write(PlayerAction(Action::SetWeather(next_weather(now))));
                 InputMode::Normal
             }
+            (InputMode::Normal, KeyCommand::IdentifyAll) => {
+                self.actions
+                    .write(PlayerAction(Action::Identify(Letters::default())));
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::RevealMap) => {
                 self.overlays.reveal = !self.overlays.reveal;
                 InputMode::Normal
@@ -661,9 +698,18 @@ impl Gameplay<'_> {
                 self.overlays.light_values = !self.overlays.light_values;
                 InputMode::Normal
             }
-            (InputMode::Normal, KeyCommand::Open | KeyCommand::Close | KeyCommand::Bash) => {
-                InputMode::Direction(command)
-            }
+            (
+                InputMode::Normal,
+                KeyCommand::Open | KeyCommand::Close | KeyCommand::Kick | KeyCommand::Bash,
+            ) => InputMode::Direction(command),
+            // The one creature in view next to the player, at once; else ask which way.
+            (InputMode::Normal, KeyCommand::Chat) => match chat_partner(&game.world.perception()) {
+                Some(dir) => {
+                    self.actions.write(PlayerAction(Action::Chat(dir)));
+                    InputMode::Normal
+                }
+                None => InputMode::Direction(command),
+            },
             (InputMode::Normal, KeyCommand::UseTool) => {
                 if game.world.perception().ready_to_dig().is_some() {
                     InputMode::Direction(command)
@@ -674,15 +720,15 @@ impl Gameplay<'_> {
                 }
             }
             (InputMode::Normal, KeyCommand::Help) => {
-                open = Some(ScreenName::Help);
+                open = Some(ScreenAction::Open(ScreenName::Help));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Cancel) => {
-                open = Some(ScreenName::Pause);
+                open = Some(ScreenAction::Open(ScreenName::Pause));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Quit) => {
-                self.saves.write(SaveCommand::SaveAndQuit);
+                open = Some(ScreenAction::Confirm("Save and quit?", MenuChoice::Quit));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Snapshot) => {
@@ -725,6 +771,19 @@ impl Gameplay<'_> {
         }
         self.actions.write(PlayerAction(aim.action()));
         *self.mode = InputMode::Normal;
+    }
+}
+
+/// The way to the one creature the player sees next to them, if there is exactly one (whom `C`
+/// talks to without asking).
+fn chat_partner(view: &PerceptionView<'_>) -> Option<Dir> {
+    let me = view.viewer();
+    let mut near = (view.actors().iter())
+        .filter(|a| a.kind == ActorKind::Creature && a.pos.chebyshev(me) == 1)
+        .map(|a| Dir::from_delta(a.pos.x - me.x, a.pos.y - me.y));
+    match (near.next(), near.next()) {
+        (Some(dir), None) => dir,
+        _ => None,
     }
 }
 
@@ -802,8 +861,9 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Move(Dir::N)), ["k", "Num8", "↑"]);
         assert_eq!(keys(&b, KeyCommand::Move(Dir::NE)), ["u", "Num9"]);
         assert_eq!(keys(&b, KeyCommand::Descend), [">"]);
-        assert_eq!(keys(&b, KeyCommand::Quit), ["Q"]);
+        assert!(keys(&b, KeyCommand::Quit).is_empty(), "unbound by default");
         assert_eq!(keys(&b, KeyCommand::Lantern), ["L"]);
+        assert_eq!(keys(&b, KeyCommand::Kick), ["K"]);
         assert_eq!(keys(&b, KeyCommand::Help), ["?"]);
         assert_eq!(keys(&b, KeyCommand::Cancel), ["Esc"]);
         assert_eq!(keys(&b, KeyCommand::Rest), ["R"]);
@@ -822,8 +882,10 @@ mod tests {
         assert!(keys(&b, KeyCommand::Bash).is_empty(), "an ability: unbound");
         assert_eq!(keys(&b, KeyCommand::MoreAggressive), ["+"]);
         assert_eq!(keys(&b, KeyCommand::MoreDefensive), ["-"]);
+        assert_eq!(keys(&b, KeyCommand::Eat), ["E"]);
         assert_eq!(keys(&b, KeyCommand::NextTarget), ["Tab"]);
         assert_eq!(keys(&b, KeyCommand::UseTool), ["U"]);
+        assert_eq!(keys(&b, KeyCommand::Chat), ["C"]);
     }
 
     #[test]
@@ -838,6 +900,7 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::LightValues), ["F4"]);
         assert_eq!(keys(&b, KeyCommand::SkipHour), ["F6"]);
         assert_eq!(keys(&b, KeyCommand::NextWeather), ["F7"]);
+        assert_eq!(keys(&b, KeyCommand::IdentifyAll), ["F8"]);
     }
 
     #[test]

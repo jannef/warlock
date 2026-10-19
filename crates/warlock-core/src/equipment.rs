@@ -246,7 +246,7 @@ mod tests {
         let text = serde_json::to_string(&worn).expect("serializes");
         let back: Equipment = serde_json::from_str(&text).expect("deserializes");
         assert_eq!(back, worn);
-        assert!(worn.is_valid_for(&[jerkin], &c));
+        assert!(worn.is_valid_for(std::slice::from_ref(&jerkin), &c));
         assert!(!worn.is_valid_for(&[], &c), "nothing to wear");
         let mut wrong = Equipment::default();
         wrong.put(&[slot(&c, "head")], 0);

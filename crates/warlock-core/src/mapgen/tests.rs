@@ -65,9 +65,9 @@ fn caves_snapshot() {
 /// rooms"), their plain ground drawn as the effect's mark.
 #[test]
 fn special_room_snapshots() {
-    let flooded = level(7, 2);
+    let flooded = level(4, 2);
     assert_eq!(flooded.rooms.len(), 1);
-    insta::assert_snapshot!("rooms_seed_7_depth_2_flooded", describe(&flooded));
+    insta::assert_snapshot!("rooms_seed_4_depth_2_flooded", describe(&flooded));
     let shadowed = level(6, 4);
     assert_eq!(shadowed.rooms.len(), 1);
     insta::assert_snapshot!("caves_seed_6_depth_4_shadowed", describe(&shadowed));
@@ -227,7 +227,7 @@ fn check(level: &LevelTemplate, depth: u32) -> Result<(), TestCaseError> {
         let ground = content.terrain(terrain[*p]);
         prop_assert!(!trap.known, "a known trap at {}", p);
         prop_assert!(
-            ground.walkable && ground.stairs.is_none(),
+            ground.walkable && ground.stairs.is_none() && ground.freeze.is_none(),
             "trap on {}",
             ground.id
         );
@@ -238,7 +238,68 @@ fn check(level: &LevelTemplate, depth: u32) -> Result<(), TestCaseError> {
         );
         prop_assert!(!patrolled.contains(p), "trap at {} on a patrol", p);
     }
+    // Locks (spec §8 "Doors"): only on closed doors, and never in the way of the stairs or of a
+    // key to every lock, which the player reaches without unlocking anything (the level is
+    // solvable without kicking a door in).
+    let unlocked = player_reach_unlocked(level, level.stairs[0].pos);
+    for (p, lock) in &level.locks {
+        prop_assert!(
+            content.terrain(terrain[*p]).is_closed_door(),
+            "lock at {}",
+            p
+        );
+        prop_assert!(
+            level.has_key_for(content, lock, |q| unlocked[q]),
+            "no key to the lock at {} in {}",
+            p,
+            level.id
+        );
+    }
+    for s in &level.stairs {
+        prop_assert!(unlocked[s.pos], "stairs at {} locked away", s.pos);
+    }
     Ok(())
+}
+
+/// Cells the player can walk to from `from` without unlocking a door (8-way moves).
+fn player_reach_unlocked(level: &LevelTemplate, from: Pos) -> Grid<bool> {
+    let mut open = level.clone();
+    for p in level.locks.keys() {
+        open.terrain
+            .set(*p, CONTENT.terrain_id("wall").expect("wall"));
+    }
+    player_reach(&open, from)
+}
+
+#[test]
+fn rooms_levels_lock_a_few_rooms_and_leave_their_keys_in_reach() {
+    let key = CONTENT.object_id("rusty_key").expect("rusty key");
+    let (mut levels, mut locks, mut keys) = (0, 0, 0);
+    for seed in 0..40 {
+        for depth in [1, 2, 6, 7, 8] {
+            let level = level(seed, depth);
+            let generated = (level.locks.iter())
+                .filter(|(_, l)| l.id.as_deref() == Some("depths"))
+                .count();
+            let lying = (level.objects.values().flatten())
+                .filter(|s| s.object == key)
+                .count();
+            assert!(generated <= 2, "{} locks {generated} rooms", level.id);
+            assert_eq!(
+                lying,
+                usize::from(generated > 0),
+                "one key per level that locks"
+            );
+            levels += usize::from(generated > 0);
+            locks += generated;
+            keys += lying;
+        }
+    }
+    assert!(
+        levels > 50 && locks > levels,
+        "{levels} levels, {locks} locks"
+    );
+    assert_eq!(keys, levels);
 }
 
 proptest! {

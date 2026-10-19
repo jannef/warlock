@@ -7,6 +7,8 @@
 //! |---|---|---|
 //! | Map generation, per level | `map/<level id>` (retry *k*: `map/<level id>/<k>`) | never; derived on demand |
 //! | Hidden traps, per generated level | `traps/<level id>` | never |
+//! | A generated level's loot | `loot/<level id>` | never; derived on demand |
+//! | What a creature drops when it dies | `drop/<actor id>` | never; derived on demand |
 //! | Gameplay | `gameplay` | in [`crate::WorldState`], so saves continue it |
 //! | Training marks' chances (skills) | `training` | in [`crate::WorldState`] |
 //! | The stat gender "other" raises | `character/gender` | never; derived on demand |
@@ -59,6 +61,12 @@ impl Rng {
     /// map's, so a level is the same with or without traps.
     pub fn traps(run_seed: u64, level: &str) -> Self {
         Self::stream(run_seed, &format!("traps/{level}"))
+    }
+
+    /// The loot stream of generated level `level` (spec §8 "Magic items"): what lies on its floor
+    /// and in its vaults, rolled once the map is built, so the map is the same without it.
+    pub fn loot(run_seed: u64, level: &str) -> Self {
+        Self::stream(run_seed, &format!("loot/{level}"))
     }
 
     pub fn next_u32(&mut self) -> u32 {

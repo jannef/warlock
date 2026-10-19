@@ -1,8 +1,11 @@
 # The showcase hub (spec §3). Each room demonstrates one engine capability:
 # top row: light hall (M3), darkness chamber (M3), water garden (M4);
 # bottom row: start room, door corridor, patrol gallery, effects room (M4), stairs nook (> down to
-# the Vast Caverns, v down to the arena, Q down to the quarry, T down to the trap hall, < up and
-# out to the overworld, ^ up to the courtyard).
+# the Vast Caverns, v down to the arena, Q down to the quarry, g down to the Frost Grotto, T down
+# to the trap hall, < up and out to the overworld, ^ up to the courtyard).
+#
+# Temperature and ice (M26): the hub is a mild 10 °C, like every dungeon by default, so its water
+# never freezes; the Frost Grotto (g, down) is below freezing, with a frozen pool to walk on.
 #
 # Lighting (M3): no ambient light. Rooms are lit by wall torches (t), lamps (l), and a brazier (B);
 # the light hall has colored crystals (R G U A) between pillars that cast colored shadows; the
@@ -32,6 +35,10 @@
 # glow, wounds heal three times as fast, and nothing hostile to you steps in. You are told the
 # first time you enter it ("You feel at peace here."), and look mode names it from then on.
 #
+# NPCs (#146): an old hermit (H) sits in the stairs nook's corner, beside the quarry stairs. Chat
+# with him (`C`): he knows the hall's rooms and tells you about them. He is peaceful, and walking
+# into him (or any creature that is not hostile) swaps places with him (#147).
+#
 # Objects (M11): gold and a small pile in the start room to pick up (`,` or `g`); the door
 # corridor's west room is a storeroom of arms and armor and its east room a pantry; an amulet lies
 # in the dark of the darkness chamber, and a ring before the water garden's altar. The patrolling
@@ -42,11 +49,19 @@
 # ring and the amulets lie elsewhere): a helm, mail, a cloak, weapons (a quarterstaff for both
 # hands), a shield, gloves, boots, and a bow with arrows. Wear and wield them with `e`.
 #
+# Doors (M19): the pantry's west door (P) is locked; the iron key to it lies in the storeroom.
+# Unlock it by opening it with the key, or kick it in (`K`): a broken door stays open for good.
+# Hunger (M23): the pantry keeps food: food rations, loaves of bread, dried meat, and apples. Eat
+# with `E`.
+#
 # Ranged combat (M16): the storeroom also has a long war bow, a crossbow with bolts, a sling with
 # stones, rocks to throw, and flaming arrows beside the short bow's arrows. Ready a bow and arrows
 # with `e`, then shoot with `t` (`T` throws from the pack): a flaming arrow shot into the patrol gallery's
 # dark middle lights it where it lands until it burns out.
 #
+# Magic items (#149): two piles in the middle of the storeroom hold magic and rare arms ([[item]]
+# tables at the end): a Sharp long sword of the Bear and a rare helm, Dread Visage, both
+# identified (the helm glows when worn), and an unidentified rare bow and magic ring.
 # Digging (M19): the storeroom has a pick-axe for the Tool slot; use it with `U` toward a wall.
 # The stairs nook's Q leads down to the quarry, the place to dig.
 name = "The Hub"
@@ -66,11 +81,11 @@ map = '''
 #######+###############+###################+###################+##########+#####
 #..t.......t...########.########.........................#..........~~~#.......#
 #..............##t....#l#....t##..#...#...#...#...#...#..#..........~F~#...l.^.#
-#..............##.....+.+.....##1........................#..........~~~#.......#
+#..............##.....+.P.....##1........................#..........~~~#.......#
 #......@.......##.....#.#.....##3........................#......B......#.......#
 #..............####+###.###+####..#...#...#...#...#...#..#.............#.<.>.v.#
 #..............##.............##2........................#.===.....::::#.......#
-#..............##......t......##.........................#.===.....::::#...T.Q.#
+#..............##......t......##.........................#.===.....::::#.T.g.QH#
 #..t.......t...#################t.......................t#.........::::#.......#
 ################################################################################
 '''
@@ -100,10 +115,17 @@ map = '''
 "^" = { terrain = "stairs_up", to = "courtyard" }
 # Stairs down (drawn `>`) to the arena.
 "v" = { terrain = "stairs_down", to = "arena" }
+# The pantry's west door is locked (spec §8 "Doors"); its key, the iron key, lies in the storeroom
+# across the corridor. Open it with the key, or kick it in (`K`).
+"P" = { terrain = "door_closed", lock = "pantry" }
 # Stairs down (drawn `>`) to the quarry, the place to dig.
 "Q" = { terrain = "stairs_down", to = "quarry" }
+# Stairs down (drawn `>`) to the Frost Grotto, where the cold has frozen a pool.
+"g" = { terrain = "stairs_down", to = "frost_grotto" }
 # Stairs down (drawn `>`) to the trap hall (spec §8 "Traps"): the showcase has no traps.
 "T" = { terrain = "stairs_down", to = "trap_hall" }
+# The old hermit, by the stairs.
+"H" = { terrain = "floor", creature = "hermit" }
 
 # Special rooms (data/room_effects.toml): the stairs nook, walls and door included, is a sanctuary.
 [[room]]
@@ -167,11 +189,39 @@ objects = ["small_shield", "quarterstaff"]
 at = [17, 14]
 objects = ["wool_cloak", "leather_gloves", "leather_boots"]
 
-# Digging (M19): a pick-axe for the Tool slot. The hub's walls give way to it like any stone
-# wall (its outer walls, the level's edge, never do); the quarry is the place to dig.
-[[pile]]
+# Magic items (#149): a rack of magic arms in the storeroom. Identified, a magic sword and a rare
+# helm that glows when worn; not yet identified, a rare bow and a magic ring (their rarity shows,
+# their affixes do not, yet their effects apply). Look at them in the inventory (a letter).
+[[item]]
+at = [19, 14]
+object = "long_sword"
+affixes = ["sharp:2", "of_the_bear:2"]
+identified = true
+
+[[item]]
+at = [19, 14]
+object = "iron_helm"
+name = "Dread Visage"
+affixes = ["hale:2", "accurate:1", "radiant:2", "of_the_owl:1"]
+identified = true
+
+[[item]]
 at = [18, 14]
-objects = ["pick_axe"]
+object = "short_bow"
+name = "Storm Song"
+affixes = ["hunters:1", "glinting:2", "of_celerity:1"]
+
+[[item]]
+at = [18, 14]
+object = "silver_ring"
+affixes = ["of_the_mule:1"]
+
+# Just inside the storeroom's door: the key to the pantry's locked west door, and (digging, M19) a
+# pick-axe for the Tool slot. The hub's walls give way to it like any stone wall (its outer walls,
+# the level's edge, never do); the quarry is the place to dig.
+[[pile]]
+at = [21, 14]
+objects = ["iron_key", "pick_axe"]
 
 # The pantry (the door corridor's east room).
 [[pile]]
@@ -181,6 +231,14 @@ objects = ["dried_meat*6"]
 [[pile]]
 at = [26, 15]
 objects = ["apple*4"]
+
+[[pile]]
+at = [27, 13]
+objects = ["ration*4"]
+
+[[pile]]
+at = [29, 14]
+objects = ["bread*2"]
 
 [[pile]]
 at = [28, 15]

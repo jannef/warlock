@@ -2,16 +2,16 @@
 
 | Letter | Slot | What goes there | On or off takes |
 |:---:|---|---|---:|
-| `a` | Head | Iron helm | 6 seconds |
-| `b` | Neck | Bone amulet, jade amulet | 6 seconds |
-| `c` | Body | Leather jerkin, chain mail shirt | 18 seconds |
-| `d` | Cloak | Wool cloak | 6 seconds |
-| `e` | Main hand | Dagger, short sword, spear, club, quarterstaff (both hands) | 6 seconds |
-| `f` | Off hand | Small shield | 6 seconds |
-| `g` | Hands | Pair of leather gloves | 6 seconds |
-| `h` | Left ring | Silver ring | 6 seconds |
-| `i` | Right ring | Silver ring | 6 seconds |
-| `j` | Feet | Pair of leather boots | 6 seconds |
-| `k` | Missile weapon | Short bow (shoots arrows), long war bow (shoots arrows), crossbow (shoots crossbow bolts), sling (shoots sling stones), any other weapon, and anything made for throwing | 6 seconds |
+| `a` | Head | Leather cap, iron helm, great helm | 6 seconds |
+| `b` | Neck | Bone amulet, jade amulet, amber amulet, gold amulet | 6 seconds |
+| `c` | Body | Padded coat, leather jerkin, studded leather jerkin, chain mail shirt, suit of scale mail, suit of banded mail, suit of plate armour | 18 seconds |
+| `d` | Cloak | Wool cloak, travelling cloak, fur cloak | 6 seconds |
+| `e` | Main hand | Dagger, stiletto, short sword, scimitar, long sword, rapier, bastard sword, great sword (both hands), hand axe, battle axe, great axe (both hands), spear, javelin, trident, club, mace, morning star, war hammer, maul (both hands), halberd (both hands), glaive (both hands), quarterstaff (both hands), ironwood staff (both hands) | 6 seconds |
+| `f` | Off hand | Small shield, buckler, large shield, tower shield | 6 seconds |
+| `g` | Hands | Pair of leather gloves, pair of gauntlets | 6 seconds |
+| `h` | Left ring | Iron ring, silver ring, gold ring | 6 seconds |
+| `i` | Right ring | Iron ring, silver ring, gold ring | 6 seconds |
+| `j` | Feet | Pair of leather boots, pair of iron-shod boots | 6 seconds |
+| `k` | Missile weapon | Short bow (shoots arrows), long war bow (shoots arrows), composite bow (shoots arrows), crossbow (shoots crossbow bolts), heavy crossbow (shoots crossbow bolts), sling (shoots sling stones), any other weapon, and anything made for throwing | 6 seconds |
 | `l` | Missiles | Arrow, flaming arrow, crossbow bolt, sling stone | 6 seconds |
 | `m` | Tool | Pick-axe, mattock | 6 seconds |

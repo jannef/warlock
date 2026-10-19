@@ -34,16 +34,20 @@ impl DeathScreen {
         };
         let content = view.content();
         let calendar = content.calendar();
-        let by = match (death.trap, death.by) {
-            (Some(trap), _) => {
-                let name = &content.trap(trap).name;
-                format!("Killed by {} {name}", article(name))
+        let by = match (death.of, death.cause, death.by) {
+            // A status effect killed them: "Bled to death".
+            (Some(status), _, _) => {
+                let def = content.status(status);
+                (def.death.clone())
+                    .unwrap_or_else(|| format!("Died of {}", def.name.to_lowercase()))
             }
-            (None, Some(creature)) => {
+            // Hunger, overeating (spec §8 "Hunger"), or a trap: "Killed by a fireball trap".
+            (None, Some(cause), _) => cause.epitaph(content),
+            (None, None, Some(creature)) => {
                 let name = &content.creature(creature).name;
                 format!("Killed by {} {name}", article(name))
             }
-            (None, None) => "Killed by something you did not see".into(),
+            (None, None, None) => "Killed by something you did not see".into(),
         };
         let turns = match death.turn {
             1 => "after 1 turn".to_string(),
@@ -130,6 +134,31 @@ mod tests {
     }
 
     #[test]
+    fn a_death_by_a_status_effect_says_so() {
+        // One hit point (Toughness 1), and a bad wound.
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        files.insert(
+            "scenarios/frail.toml",
+            "name = \"Frail\"\nstart_level = \"hub\"\nstats = { toughness = 1 }\n",
+        );
+        let content = Arc::new(Content::load(&files).expect("content"));
+        let mut w = World::new(content, "frail", None).expect("world");
+        for _ in 0..5 {
+            w.apply(&Action::Afflict("bleeding".into()));
+        }
+        while w.death().is_none() {
+            w.apply(&Action::Wait);
+        }
+        let screen = DeathScreen::new(Some(&w.perception()));
+        let mut console = Console::default();
+        console.resize(80, 30);
+        screen.draw(&mut console, Clock::H24);
+        let shown = text(&console);
+        assert!(shown.contains("Bled to death,"), "{shown}");
+        assert!(!shown.contains("Killed by"), "{shown}");
+    }
+
+    #[test]
     fn it_says_who_died_where_when_and_by_what() {
         let content = Arc::new(Content::builtin().expect("content"));
         let mut w = World::new(content, "arena", None).expect("world");
@@ -163,5 +192,30 @@ mod tests {
             screen.handle(&Press::nav(Nav::Back)),
             ScreenAction::Choose(MenuChoice::LeaveRun)
         );
+    }
+
+    #[test]
+    fn it_says_when_hunger_killed_the_player() {
+        // Starting with nothing to eat, never fainting, starving a hit point a second.
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        let hunger = include_str!("../../../../assets/data/hunger.toml")
+            .replace("start = 3600", "start = 0")
+            .replace("chance = 5", "chance = 0")
+            .replace("seconds = 600", "seconds = 1");
+        files.insert("data/hunger.toml", &hunger);
+        let content = Arc::new(Content::load(&files).expect("content"));
+        let mut w = World::new(content, "showcase", None).expect("world");
+        // Starving stops the first rest; the next lasts until the end.
+        for _ in 0..3 {
+            w.apply(&Action::Rest(warlock_core::Rest::Dusk));
+        }
+        assert!(w.death().is_some(), "starved");
+        let screen = DeathScreen::new(Some(&w.perception()));
+        let mut console = Console::default();
+        console.resize(80, 30);
+        screen.draw(&mut console, Clock::H24);
+        let shown = text(&console);
+        assert!(shown.contains("Starved to death,"), "{shown}");
+        assert!(shown.contains("in The Hub,"), "{shown}");
     }
 }

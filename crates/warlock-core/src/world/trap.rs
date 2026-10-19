@@ -25,14 +25,14 @@
 //!   price is a `wait` more);
 //! - **alarm**: only its noise;
 //! - **teleport**: the victim is moved to a free cell of the level (walkable, no one there, no
-//!   trap), picked by a hash of the seed, the level, the turn, the victim, and the trap's cell,
+//!   trap, no ice: spec §5 "Ice"), picked by a hash of the seed, the level, the turn, the victim, and the trap's cell,
 //!   never by the gameplay random stream. A creature goes on from where it lands.
 //!
 //! Every roll comes from the gameplay random stream. Events say what happened
 //! ([`Event::TrapSprung`], then a missile, a spell, what the trap did to whom, and deaths), and
 //! perception decides what the player perceived of it and says so.
 
-use super::fight::Cause;
+use super::fight::Harm;
 use super::{ActorId, World, fnv1a, spell};
 use crate::action::{Event, MissileEnd, SpellShape};
 use crate::combat::{self, Blow, Profile, Strike};
@@ -41,6 +41,7 @@ use crate::dice::Dice;
 use crate::fov::radius2;
 use crate::geom::{Dir, Pos};
 use crate::noise::{self, Noise};
+use crate::object::Stack;
 use crate::perception::VIEW_RADIUS;
 use std::collections::BTreeSet;
 
@@ -93,7 +94,8 @@ impl World {
                 self.trap_shot(kind, at, victim, *object, Profile::bare(attack), events);
             }
             TrapEffect::Strike { attack } => {
-                self.trap_strikes(kind, victim, &Profile::bare(attack), events);
+                let profile = Profile::bare(attack);
+                self.trap_strikes(kind, victim, (at, false), &profile, events);
             }
             TrapEffect::Burst {
                 spell,
@@ -117,7 +119,8 @@ impl World {
                 }
                 let climb = self.price_of(victim, ActionKind::Wait);
                 let fall = damage.roll(&mut self.state.rng);
-                self.trap_hurts(kind, victim, fall, events);
+                let from = self.state.actors.get(&victim).map_or(at, |a| a.pos);
+                self.trap_hurts(kind, victim, (from, false), fall, events);
                 return climb;
             }
             TrapEffect::Alarm => {}
@@ -126,12 +129,13 @@ impl World {
         0
     }
 
-    /// Trap `trap` attacks `target` with `profile`, rolled against its Defence: the event and the
-    /// damage, which may kill.
+    /// Trap `trap` attacks `target` with `profile` from `source` (a cell, and whether a missile
+    /// flew from it), rolled against its Defence: the event and the blow ([`World::trap_deals`]).
     fn trap_strikes(
         &mut self,
         trap: TrapId,
         target: ActorId,
+        source: (Pos, bool),
         profile: &Profile,
         events: &mut Vec<Event>,
     ) -> Option<Blow> {
@@ -144,14 +148,20 @@ impl World {
             to,
             strike: blow.strike,
         });
-        if blow.damage > 0 {
-            self.hurt(target, blow.damage, Cause::Trap(trap), events);
-        }
+        self.trap_deals(trap, target, source, blow, events);
         Some(blow)
     }
 
-    /// Trap `trap` does `damage` to `target` with no roll to hit (a blast, a fall).
-    fn trap_hurts(&mut self, trap: TrapId, target: ActorId, damage: i32, events: &mut Vec<Event>) {
+    /// Trap `trap` does `damage` to `target` from `source` with no roll to hit (a blast, a bolt,
+    /// a fall).
+    fn trap_hurts(
+        &mut self,
+        trap: TrapId,
+        target: ActorId,
+        source: (Pos, bool),
+        damage: i32,
+        events: &mut Vec<Event>,
+    ) {
         let Some(to) = self.state.actors.get(&target).map(|a| a.pos) else {
             return;
         };
@@ -161,8 +171,30 @@ impl World {
             to,
             strike: Strike::Hit { critical: false },
         });
-        if damage > 0 {
-            self.hurt(target, damage, Cause::Trap(trap), events);
+        let blow = Blow {
+            strike: Strike::Hit { critical: false },
+            damage,
+        };
+        self.trap_deals(trap, target, source, blow, events);
+    }
+
+    /// Trap `trap` deals `blow` to `target`, from `source`, the way every blow is dealt (spec
+    /// §8 "Blood", "Status effects"): a big hit's blood, the damage, which may kill (a trap's
+    /// kill earns no one anything), and if it lives the statuses its wound causes.
+    fn trap_deals(
+        &mut self,
+        trap: TrapId,
+        target: ActorId,
+        source: (Pos, bool),
+        blow: Blow,
+        events: &mut Vec<Event>,
+    ) {
+        if blow.damage <= 0 {
+            return;
+        }
+        self.spill(u32::from(trap.0), target, source, blow);
+        if !self.hurt(target, blow.damage, Harm::Trap(trap), events) {
+            self.wounded(target, &blow, None, events);
         }
     }
 
@@ -191,7 +223,8 @@ impl World {
             path.push(cell);
             let someone = self.state.actor_at(&level.id, cell).map(|a| a.id);
             if let Some(someone) = someone {
-                let blow = self.trap_strikes(trap, someone, &profile, &mut struck_events);
+                let source = (slit, true);
+                let blow = self.trap_strikes(trap, someone, source, &profile, &mut struck_events);
                 if blow.is_some_and(|b| b.strike.is_hit()) {
                     struck = true;
                     break;
@@ -202,7 +235,7 @@ impl World {
         let breaks = content.object(object).breaks;
         let broke = struck && breaks > 0 && self.state.rng.chance(u32::from(breaks));
         if !broke && self.state.current().is_walkable(&content, end) {
-            self.come_down(end, object);
+            self.come_down(end, Stack::one(object));
         }
         events.push(Event::Missile {
             object,
@@ -278,7 +311,7 @@ impl World {
         for (id, p) in caught {
             let edge = p.dist2(at) > inner;
             let damage = if edge { (roll / 2).max(1) } else { roll };
-            self.trap_hurts(trap, id, damage, events);
+            self.trap_hurts(trap, id, (at, false), damage, events);
         }
     }
 
@@ -339,7 +372,7 @@ impl World {
             caught.extend(self.state.actor_at(&level, *p).map(|a| a.id));
         }
         for id in caught {
-            self.trap_hurts(trap, id, roll, events);
+            self.trap_hurts(trap, id, (at, true), roll, events);
         }
     }
 
@@ -359,6 +392,7 @@ impl World {
             .filter(|p| {
                 level.is_walkable(&self.content, *p)
                     && !level.traps.contains_key(p)
+                    && level.ice_at(*p).is_none()
                     && !taken.contains(p)
             })
             .collect();

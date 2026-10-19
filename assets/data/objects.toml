@@ -7,6 +7,8 @@
 #   material  an id in materials.toml
 #   weight    grams for one, at least 1
 #   stackable several lie in one stack (coins, arrows); default false: a stack of one each
+#   key       a key (spec §8 "Doors"): the lock id it opens (levels lock doors with `lock =
+#             "id"`), or "*" for a skeleton key, which opens every lock
 #
 # Things that can be worn or wielded also say where they go (equipment, slots.toml):
 #   slot       the slot it goes in, by id (`slot = "body"`), or what a slot fits (`slot = "ring"`
@@ -25,6 +27,9 @@
 #   crit       how many times a confirmed critical rolls the damage: 2 (default) to 5
 #   to_hit     a weapon's own bonus to hit (default 0)
 #   strength   the Strength a bow needs: each point short is -1 to hit and -1 damage
+#   attack_cost what an attack with it costs instead of the `melee` action's (a missile weapon:
+#              the `shoot` action's), 100 to 10000 (actions.toml): light weapons are quicker,
+#              great ones slower; its weapon skill's `speed` takes its percent off this
 #   parry      Defence while wielded (the Parry category)
 #   armour     Defence while worn (the Armour category); max_dex the most a worn armour lets
 #              Dexterity add to Defence
@@ -52,10 +57,20 @@
 #   light      the light preset (lights.toml) it gives while it burns where it lies, and
 #   burns      for how many seconds of game time it burns there; then it is gone. A burning
 #              object cannot be picked up
+#
+# Base items (spec §8 "Magic items"; affixes in affixes.toml): what may be found magic or rare,
+# and lies about as loot, says what kind of item it is:
+#   kind       weapon, launcher (missile weapons), ammo, body (body armour), helmet, cloak,
+#              gloves, boots, shield, ring, or amulet: the affixes it may roll
+#   level      the lowest item level (dungeon depth) loot holds it at; default 1
+#   frequency  how often loot holds it, relative to the rest; default 100, 0 never
+# Things without a kind are never magic and never loot.
+#
 # Digging (spec §8 "Digging"; ready a tool in the Tool slot, then use it with `U`):
 #   dig        a digging tool's power (1 to 100): each turn of digging does power × (Strength +
 #              10) / 20 work against a wall's hardness (terrain.toml), so a pick-axe (10) does 10
 #              at Strength 10. A tool goes in a `slot` (the Tool slot)
+#
 # Presentation only (no rule reads them):
 #   missile    the glyph it flies as, drawn pointing right and turned along its flight (default:
 #              its own glyph, upright)
@@ -63,6 +78,13 @@
 #   glow       how much its glyph glows where it lies (0 to 1)
 #   [[object.particles]] emitters (terrain.toml has the fields): `ambient` while it lies in view
 #              on top of its pile, `flight` while it flies
+#
+# Food (spec §8 "Hunger"; eat with `E`):
+#   food       { nutrition = N, turns = T }: the nutrition points it gives (1 to 100000; a human
+#              burns 1440 a day, hunger.toml) and the turns of eating it takes (1 to 100, each the
+#              `eat` action); never on things worn, wielded, shot, thrown, or burned
+# Corpses are not listed here: every creature that leaves one has its own (`kobold_corpse`), made
+# from creatures.toml and hunger.toml, and only creatures that die leave them.
 #
 # Glyphs follow ADOM loosely: ) weapons, } missile weapons, / missiles, [ armor, ( tools,
 # ! potions, ? scrolls, % food, * stones and gems, $ coins, = rings, " amulets.
@@ -79,10 +101,27 @@ slot = "main_hand"
 damage = "1d4"
 category = "daggers"
 threat = 20
+kind = "weapon"
 # Balanced for throwing: it tumbles end over end.
 range = 5
 missile = "†"
 spins = true
+
+# A thin blade for the gaps in armour: quick, and keen.
+[[object]]
+id = "stiletto"
+name = "stiletto"
+glyph = ")"
+fg = "#d8dce4"
+material = "steel"
+weight = 300
+slot = "main_hand"
+damage = "1d4"
+threat = 19
+category = "daggers"
+attack_cost = 900
+kind = "weapon"
+level = 3
 
 [[object]]
 id = "short_sword"
@@ -95,6 +134,125 @@ slot = "main_hand"
 damage = "1d6"
 category = "short_blades"
 threat = 20
+kind = "weapon"
+
+[[object]]
+id = "scimitar"
+name = "scimitar"
+glyph = ")"
+fg = "#e0d8c8"
+material = "steel"
+weight = 1500
+slot = "main_hand"
+damage = "1d6"
+threat = 19
+category = "short_blades"
+kind = "weapon"
+level = 2
+
+[[object]]
+id = "long_sword"
+name = "long sword"
+glyph = ")"
+fg = "#e4e8f0"
+material = "steel"
+weight = 1800
+slot = "main_hand"
+damage = "1d8"
+threat = 20
+category = "long_blades"
+kind = "weapon"
+
+[[object]]
+id = "rapier"
+name = "rapier"
+glyph = ")"
+fg = "#f0f0f4"
+material = "steel"
+weight = 1100
+slot = "main_hand"
+damage = "1d6"
+threat = 19
+category = "long_blades"
+attack_cost = 900
+kind = "weapon"
+level = 2
+
+[[object]]
+id = "bastard_sword"
+name = "bastard sword"
+glyph = ")"
+fg = "#c8d0dc"
+material = "steel"
+weight = 2800
+slot = "main_hand"
+damage = "1d10"
+threat = 20
+category = "long_blades"
+kind = "weapon"
+level = 4
+
+[[object]]
+id = "great_sword"
+name = "great sword"
+glyph = ")"
+fg = "#d0d8e4"
+material = "steel"
+weight = 3500
+slot = "main_hand"
+two_handed = true
+damage = "2d6"
+threat = 20
+category = "great_blades"
+attack_cost = 1200
+kind = "weapon"
+level = 3
+
+[[object]]
+id = "hand_axe"
+name = "hand axe"
+glyph = ")"
+fg = "#b4a48c"
+material = "iron"
+weight = 1300
+slot = "main_hand"
+damage = "1d6"
+crit = 3
+category = "axes"
+kind = "weapon"
+# Thrown end over end.
+range = 4
+spins = true
+
+[[object]]
+id = "battle_axe"
+name = "battle axe"
+glyph = ")"
+fg = "#a8a090"
+material = "iron"
+weight = 2600
+slot = "main_hand"
+damage = "1d8"
+crit = 3
+category = "axes"
+kind = "weapon"
+level = 2
+
+[[object]]
+id = "great_axe"
+name = "great axe"
+glyph = ")"
+fg = "#9c9488"
+material = "iron"
+weight = 5000
+slot = "main_hand"
+two_handed = true
+damage = "1d12"
+crit = 3
+category = "axes"
+attack_cost = 1200
+kind = "weapon"
+level = 4
 
 [[object]]
 id = "spear"
@@ -107,9 +265,40 @@ slot = "main_hand"
 damage = "1d8"
 category = "spears"
 crit = 3
+kind = "weapon"
 # Thrown point first.
 range = 6
 missile = "⟶"
+
+[[object]]
+id = "javelin"
+name = "javelin"
+glyph = ")"
+fg = "#c4a46c"
+material = "wood"
+weight = 1000
+slot = "main_hand"
+damage = "1d6"
+category = "spears"
+kind = "weapon"
+# Made to be thrown.
+range = 8
+missile = "⟶"
+
+[[object]]
+id = "trident"
+name = "trident"
+glyph = ")"
+fg = "#a8b4b8"
+material = "iron"
+weight = 2000
+slot = "main_hand"
+damage = "1d8"
+category = "spears"
+# Its tines catch blows.
+parry = 1
+kind = "weapon"
+level = 3
 
 [[object]]
 id = "club"
@@ -121,6 +310,96 @@ weight = 1400
 slot = "main_hand"
 damage = "1d6"
 category = "maces"
+kind = "weapon"
+
+[[object]]
+id = "mace"
+name = "mace"
+glyph = ")"
+fg = "#a4a8ac"
+material = "iron"
+weight = 2700
+slot = "main_hand"
+damage = "1d8"
+category = "maces"
+kind = "weapon"
+
+[[object]]
+id = "morning_star"
+name = "morning star"
+glyph = ")"
+fg = "#9ca0a8"
+material = "iron"
+weight = 3000
+slot = "main_hand"
+damage = "2d4"
+category = "maces"
+kind = "weapon"
+level = 3
+
+[[object]]
+id = "war_hammer"
+name = "war hammer"
+glyph = ")"
+fg = "#8c949c"
+material = "iron"
+weight = 2300
+slot = "main_hand"
+damage = "1d8"
+crit = 3
+category = "maces"
+kind = "weapon"
+level = 3
+
+[[object]]
+id = "maul"
+name = "maul"
+glyph = ")"
+fg = "#848a90"
+material = "iron"
+weight = 6000
+slot = "main_hand"
+two_handed = true
+damage = "2d6"
+crit = 3
+category = "maces"
+attack_cost = 1200
+kind = "weapon"
+level = 5
+
+[[object]]
+id = "halberd"
+name = "halberd"
+glyph = ")"
+fg = "#a49c8c"
+material = "iron"
+weight = 5500
+slot = "main_hand"
+two_handed = true
+damage = "1d10"
+crit = 3
+category = "polearms"
+attack_cost = 1100
+kind = "weapon"
+level = 3
+
+[[object]]
+id = "glaive"
+name = "glaive"
+glyph = ")"
+fg = "#b0a898"
+material = "iron"
+weight = 5000
+slot = "main_hand"
+two_handed = true
+damage = "1d10"
+threat = 20
+category = "polearms"
+attack_cost = 1100
+# Its long haft keeps foes at bay.
+parry = 1
+kind = "weapon"
+level = 5
 
 [[object]]
 id = "quarterstaff"
@@ -134,8 +413,25 @@ slot = "main_hand"
 two_handed = true
 damage = "1d6"
 category = "staves"
+kind = "weapon"
 # Held across the body: it turns blows aside.
 parry = 1
+
+[[object]]
+id = "ironwood_staff"
+name = "ironwood staff"
+plural = "ironwood staves"
+glyph = ")"
+fg = "#7c6448"
+material = "wood"
+weight = 2500
+slot = "main_hand"
+two_handed = true
+damage = "1d8"
+category = "staves"
+parry = 1
+kind = "weapon"
+level = 4
 
 # Missile weapons. A bow's damage carries its draw weight, and it needs Strength to draw; a
 # crossbow needs none, but is reloaded after every shot.
@@ -153,6 +449,7 @@ category = "bows"
 crit = 3
 strength = 10
 range = 10
+kind = "launcher"
 
 [[object]]
 id = "long_bow"
@@ -168,6 +465,25 @@ category = "bows"
 crit = 3
 strength = 14
 range = 15
+kind = "launcher"
+level = 3
+
+[[object]]
+id = "composite_bow"
+name = "composite bow"
+glyph = "}"
+fg = "#a06c40"
+material = "wood"
+weight = 1000
+slot = "missile_weapon"
+launches = "arrow"
+damage = "1d8+1"
+crit = 3
+strength = 12
+range = 13
+category = "bows"
+kind = "launcher"
+level = 5
 
 [[object]]
 id = "crossbow"
@@ -183,6 +499,25 @@ category = "crossbows"
 threat = 20
 range = 13
 reloads = true
+kind = "launcher"
+level = 2
+
+[[object]]
+id = "heavy_crossbow"
+name = "heavy crossbow"
+glyph = "}"
+fg = "#988f86"
+material = "wood"
+weight = 4500
+slot = "missile_weapon"
+launches = "bolt"
+damage = "1d12+2"
+threat = 20
+range = 15
+reloads = true
+category = "crossbows"
+kind = "launcher"
+level = 5
 
 [[object]]
 id = "sling"
@@ -196,8 +531,9 @@ launches = "stone"
 damage = "1d4"
 category = "slings"
 range = 9
+kind = "launcher"
 
-# Missiles, for the missile weapons that shoot them.
+# Missiles, for the missile weapons that shoot them. Loot holds them in stacks.
 [[object]]
 id = "arrow"
 name = "arrow"
@@ -210,6 +546,8 @@ slot = "missiles"
 ammo = "arrow"
 breaks = 30
 missile = "→"
+kind = "ammo"
+frequency = 60
 
 # Its head wrapped in pitch-soaked rag, lit as it is loosed: it flies and lands burning.
 [[object]]
@@ -281,6 +619,9 @@ slot = "missiles"
 ammo = "bolt"
 breaks = 20
 missile = "➔"
+kind = "ammo"
+level = 2
+frequency = 40
 
 [[object]]
 id = "sling_stone"
@@ -293,8 +634,23 @@ stackable = true
 slot = "missiles"
 ammo = "stone"
 missile = "•"
+kind = "ammo"
+frequency = 30
 
-# Armor
+# Armor: body armour, from padding to plate (Armour, and the most Dexterity it lets add to
+# Defence).
+[[object]]
+id = "padded_coat"
+name = "padded coat"
+glyph = "["
+fg = "#b0a080"
+material = "cloth"
+weight = 4000
+slot = "body"
+armour = 1
+max_dex = 8
+kind = "body"
+
 [[object]]
 id = "leather_jerkin"
 name = "leather jerkin"
@@ -305,6 +661,20 @@ weight = 3500
 slot = "body"
 armour = 2
 max_dex = 6
+kind = "body"
+
+[[object]]
+id = "studded_leather"
+name = "studded leather jerkin"
+glyph = "["
+fg = "#8c6a48"
+material = "leather"
+weight = 6500
+slot = "body"
+armour = 3
+max_dex = 5
+kind = "body"
+level = 2
 
 [[object]]
 id = "chain_mail"
@@ -316,6 +686,62 @@ weight = 11000
 slot = "body"
 armour = 4
 max_dex = 4
+kind = "body"
+level = 3
+
+[[object]]
+id = "scale_mail"
+name = "suit of scale mail"
+plural = "suits of scale mail"
+glyph = "["
+fg = "#a0a8a4"
+material = "iron"
+weight = 14000
+slot = "body"
+armour = 5
+max_dex = 3
+kind = "body"
+level = 4
+
+[[object]]
+id = "banded_mail"
+name = "suit of banded mail"
+plural = "suits of banded mail"
+glyph = "["
+fg = "#a4acb4"
+material = "steel"
+weight = 17000
+slot = "body"
+armour = 6
+max_dex = 1
+kind = "body"
+level = 6
+
+[[object]]
+id = "plate_armour"
+name = "suit of plate armour"
+plural = "suits of plate armour"
+glyph = "["
+fg = "#c4ccd4"
+material = "steel"
+weight = 22000
+slot = "body"
+armour = 7
+max_dex = 1
+kind = "body"
+level = 7
+
+# Helmets, cloaks, gloves, and boots give no Defence of their own (only the best Armour counts):
+# they are worn for what magic they hold.
+[[object]]
+id = "leather_cap"
+name = "leather cap"
+glyph = "["
+fg = "#8e6640"
+material = "leather"
+weight = 600
+slot = "head"
+kind = "helmet"
 
 [[object]]
 id = "iron_helm"
@@ -325,6 +751,18 @@ fg = "#9ea4aa"
 material = "iron"
 weight = 1500
 slot = "head"
+kind = "helmet"
+
+[[object]]
+id = "great_helm"
+name = "great helm"
+glyph = "["
+fg = "#b4bac0"
+material = "steel"
+weight = 3000
+slot = "head"
+kind = "helmet"
+level = 4
 
 [[object]]
 id = "wool_cloak"
@@ -334,6 +772,29 @@ fg = "#6e7c5a"
 material = "cloth"
 weight = 1200
 slot = "cloak"
+kind = "cloak"
+
+[[object]]
+id = "travelling_cloak"
+name = "travelling cloak"
+glyph = "["
+fg = "#7c6a52"
+material = "leather"
+weight = 1800
+slot = "cloak"
+kind = "cloak"
+level = 2
+
+[[object]]
+id = "fur_cloak"
+name = "fur cloak"
+glyph = "["
+fg = "#a08868"
+material = "leather"
+weight = 2500
+slot = "cloak"
+kind = "cloak"
+level = 4
 
 [[object]]
 id = "small_shield"
@@ -345,6 +806,47 @@ weight = 2500
 slot = "off_hand"
 shield = 1
 bash = "1d3"
+kind = "shield"
+
+[[object]]
+id = "buckler"
+name = "buckler"
+glyph = "["
+fg = "#b09070"
+material = "iron"
+weight = 1500
+slot = "off_hand"
+shield = 1
+bash = "1d2"
+kind = "shield"
+
+[[object]]
+id = "large_shield"
+name = "large shield"
+glyph = "["
+fg = "#90724c"
+material = "wood"
+weight = 6000
+slot = "off_hand"
+shield = 2
+bash = "1d4"
+kind = "shield"
+level = 3
+
+# So big it keeps one from ducking and weaving.
+[[object]]
+id = "tower_shield"
+name = "tower shield"
+glyph = "["
+fg = "#867a68"
+material = "iron"
+weight = 12000
+slot = "off_hand"
+shield = 3
+bash = "1d6"
+max_dex = 2
+kind = "shield"
+level = 6
 
 [[object]]
 id = "leather_gloves"
@@ -355,6 +857,19 @@ fg = "#8a6040"
 material = "leather"
 weight = 250
 slot = "hands"
+kind = "gloves"
+
+[[object]]
+id = "gauntlets"
+name = "pair of gauntlets"
+plural = "pairs of gauntlets"
+glyph = "["
+fg = "#9aa0a6"
+material = "iron"
+weight = 1000
+slot = "hands"
+kind = "gloves"
+level = 3
 
 [[object]]
 id = "leather_boots"
@@ -365,6 +880,19 @@ fg = "#7a5434"
 material = "leather"
 weight = 1000
 slot = "feet"
+kind = "boots"
+
+[[object]]
+id = "iron_shod_boots"
+name = "pair of iron-shod boots"
+plural = "pairs of iron-shod boots"
+glyph = "["
+fg = "#8a8278"
+material = "iron"
+weight = 2000
+slot = "feet"
+kind = "boots"
+level = 3
 
 # Tools
 # Digging tools go in the Tool slot. A pick-axe digs through a stone wall in six minutes at
@@ -389,6 +917,9 @@ weight = 4500
 slot = "tool"
 dig = 15
 
+# Keys (spec §8 "Doors"): `key` is the lock id it opens; opening a door locked with that id
+# while carrying it unlocks the door. A skeleton key (`key = "*"`) opens every lock.
+# The hub's pantry.
 [[object]]
 id = "iron_key"
 name = "iron key"
@@ -396,6 +927,36 @@ glyph = "("
 fg = "#b4b8bc"
 material = "iron"
 weight = 40
+key = "pantry"
+
+# The guard post's store room (vaults/guard_post.toml); its guard carries it.
+[[object]]
+id = "brass_key"
+name = "brass key"
+glyph = "("
+fg = "#d8b048"
+material = "brass"
+weight = 40
+key = "guard_post"
+
+# The rooms locked in the Depths (dungeons.toml).
+[[object]]
+id = "rusty_key"
+name = "rusty key"
+glyph = "("
+fg = "#a86a40"
+material = "iron"
+weight = 50
+key = "depths"
+
+[[object]]
+id = "skeleton_key"
+name = "skeleton key"
+glyph = "("
+fg = "#e0dccc"
+material = "iron"
+weight = 30
+key = "*"
 
 [[object]]
 id = "candle"
@@ -445,7 +1006,7 @@ material = "paper"
 weight = 50
 stackable = true
 
-# Food
+# Food: a ration feeds a human for about a day.
 [[object]]
 id = "dried_meat"
 name = "strip of dried meat"
@@ -455,6 +1016,7 @@ fg = "#b06848"
 material = "flesh"
 weight = 150
 stackable = true
+food = { nutrition = 600, turns = 2 }
 
 [[object]]
 id = "apple"
@@ -464,6 +1026,28 @@ fg = "#d84838"
 material = "plant"
 weight = 150
 stackable = true
+food = { nutrition = 150, turns = 1 }
+
+[[object]]
+id = "ration"
+name = "food ration"
+glyph = "%"
+fg = "#c8a878"
+material = "plant"
+weight = 500
+stackable = true
+food = { nutrition = 1500, turns = 4 }
+
+[[object]]
+id = "bread"
+name = "loaf of bread"
+plural = "loaves of bread"
+glyph = "%"
+fg = "#d8b070"
+material = "plant"
+weight = 400
+stackable = true
+food = { nutrition = 800, turns = 3 }
 
 # Stones and gems
 # Rocks are thrown (ready a few in the missile weapon slot to throw them with `t` at once).
@@ -509,7 +1093,18 @@ material = "copper"
 weight = 8
 stackable = true
 
-# Rings
+# Rings: no powers of their own; they are worn for their magic.
+[[object]]
+id = "iron_ring"
+name = "iron ring"
+glyph = "="
+fg = "#a8acb0"
+material = "iron"
+weight = 10
+slot = "ring"
+kind = "ring"
+frequency = 50
+
 [[object]]
 id = "silver_ring"
 name = "silver ring"
@@ -518,8 +1113,22 @@ fg = "#d4dce4"
 material = "silver"
 weight = 10
 slot = "ring"
+kind = "ring"
+frequency = 50
 
-# Amulets
+[[object]]
+id = "gold_ring"
+name = "gold ring"
+glyph = "="
+fg = "#f0d060"
+material = "gold"
+weight = 10
+slot = "ring"
+kind = "ring"
+level = 3
+frequency = 50
+
+# Amulets, the same.
 [[object]]
 id = "bone_amulet"
 name = "bone amulet"
@@ -528,6 +1137,8 @@ fg = "#e8e0c8"
 material = "bone"
 weight = 60
 slot = "neck"
+kind = "amulet"
+frequency = 50
 
 [[object]]
 id = "jade_amulet"
@@ -537,3 +1148,38 @@ fg = "#68c090"
 material = "stone"
 weight = 80
 slot = "neck"
+kind = "amulet"
+frequency = 50
+
+[[object]]
+id = "amber_amulet"
+name = "amber amulet"
+glyph = '"'
+fg = "#e0a040"
+material = "gemstone"
+weight = 60
+slot = "neck"
+kind = "amulet"
+level = 2
+frequency = 50
+
+[[object]]
+id = "gold_amulet"
+name = "gold amulet"
+glyph = '"'
+fg = "#f0cc50"
+material = "gold"
+weight = 90
+slot = "neck"
+kind = "amulet"
+level = 4
+frequency = 50
+
+# Quest items (data/quests.toml): given by one person to carry to another.
+[[object]]
+id = "sealed_letter"
+name = "sealed letter"
+glyph = "?"
+fg = "#e0d2a8"
+material = "paper"
+weight = 20

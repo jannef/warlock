@@ -15,15 +15,23 @@ pub const CURSOR_BG: Rgb = Rgb::new(0xe0, 0xc0, 0x70);
 
 /// One line describing what the player knows about `p`: who is there, what lies there (as seen
 /// or remembered), on what (a known trap on its terrain: "on a pit on stone floor"), in which
-/// special room (once they have been in it), and what was heard there.
-pub fn describe(view: &PerceptionView<'_>, p: Pos) -> String {
+/// special room (once they have been in it), and what was heard there. Blood they know of there
+/// reads before the terrain ("on blood-stained stone floor") if `blood` is shown.
+pub fn describe(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
     let content = view.content();
     // Stairs and locations name where they lead: "a staircase down, leading to The Depths 1";
     // a wall in sight that was dug into says so: "a stone wall, partly dug".
-    let named = |t| match view.leads_to(p) {
-        Some(to) => format!("{}, leading to {to}", content.terrain(t).name),
-        None if view.is_dug(p) => format!("{}, partly dug", content.terrain(t).name),
-        None => content.terrain(t).name.clone(),
+    let named = |t| {
+        let def = content.terrain(t);
+        let name = match view.blood(p).filter(|_| blood) {
+            Some(stain) => format!("{} {}", stain.word(!def.transparent), def.name),
+            None => def.name.clone(),
+        };
+        match view.leads_to(p) {
+            Some(to) => format!("{name}, leading to {to}"),
+            None if view.is_dug(p) => format!("{name}, partly dug"),
+            None => name,
+        }
     };
     // A special room the player has been in names the ground in it: "in an echoing hall".
     let walkable = match view.cell(p) {
@@ -89,9 +97,14 @@ pub fn describe(view: &PerceptionView<'_>, p: Pos) -> String {
                     Stance::Neutral => "",
                 };
                 let health = actor.health.word();
+                // The status effects that show on it: ", bleeding".
+                let effects: String = (view.effects_of(actor.id))
+                    .filter_map(|s| content.status(s).seen.as_deref())
+                    .map(|word| format!(", {word}"))
+                    .collect();
                 let gear = gear(view, actor.id);
                 format!(
-                    "{} {name} ({stance}{health}){gear}, on {}{here}.",
+                    "{} {name} ({stance}{health}{effects}){gear}, on {}{here}.",
                     article(name),
                     terrain(t)
                 )
@@ -127,7 +140,7 @@ fn gear(view: &PerceptionView<'_>, actor: ActorId) -> String {
             ActionKind::Ready => 2,
             _ => 1,
         };
-        groups[group].2.push(g.stack);
+        groups[group].2.push(g.stack.clone());
     }
     groups
         .iter()
@@ -210,13 +223,13 @@ mod tests {
     fn describes_the_player_terrain_memory_and_the_unknown() {
         let mut w = world();
         let me = w.player_pos();
-        assert_eq!(describe(&w.perception(), me), "You, on stone floor.");
+        assert_eq!(describe(&w.perception(), me, true), "You, on stone floor.");
         let wall = Pos::new(0, me.y);
-        assert_eq!(describe(&w.perception(), wall), "A stone wall.");
+        assert_eq!(describe(&w.perception(), wall, true), "A stone wall.");
         let door = Pos::new(me.x, me.y - 4);
-        assert_eq!(describe(&w.perception(), door), "A closed door.");
+        assert_eq!(describe(&w.perception(), door, true), "A closed door.");
         assert_eq!(
-            describe(&w.perception(), Pos::new(70, 3)),
+            describe(&w.perception(), Pos::new(70, 3), true),
             "You don't know what is there."
         );
         // Walk out of the start room: the room's floor is remembered, not seen.
@@ -229,7 +242,7 @@ mod tests {
         for _ in 0..8 {
             w.apply(&Action::Move(Dir::E));
         }
-        let text = describe(&w.perception(), me);
+        let text = describe(&w.perception(), me, true);
         assert!(text.starts_with("You remember"), "{text}");
     }
 
@@ -254,16 +267,20 @@ mod tests {
             .flat_map(|y| (0..level.width()).map(move |x| Pos::new(x, y)))
             .find(|&p| view.leads_to(p).as_deref() == Some("The Vast Caverns"))
             .expect("the staircase to the vast level is in view");
-        let text = describe(&view, down);
+        let text = describe(&view, down, true);
         // The stairs nook is a sanctuary, which the player knows once they have been in it.
         assert_eq!(
             text,
             "A staircase down, leading to The Vast Caverns, in a sanctuary."
         );
-        let here = describe(&view, w.player_pos());
+        let here = describe(&view, w.player_pos(), true);
         assert_eq!(here, "You, on stone floor in a sanctuary.");
         let wall = Pos::new(79, 15);
-        assert_eq!(describe(&view, wall), "A stone wall.", "walls name no room");
+        assert_eq!(
+            describe(&view, wall, true),
+            "A stone wall.",
+            "walls name no room"
+        );
         // Walking back out, the nook is remembered as a sanctuary.
         for action in [Action::Move(Dir::N), Action::Move(Dir::N)] {
             w.apply(&action);
@@ -275,7 +292,7 @@ mod tests {
         w.apply(&Action::Move(Dir::W));
         let view = w.perception();
         let floor = Pos::new(76, 18);
-        let text = describe(&view, floor);
+        let text = describe(&view, floor, true);
         assert_eq!(text, "You remember a stone floor here, in a sanctuary.");
     }
 
@@ -296,11 +313,11 @@ mod tests {
         let inside = Pos::new(74, 13);
         let view = w.perception();
         assert!(view.is_visible(inside));
-        assert_eq!(describe(&view, inside), "A stone floor.");
+        assert_eq!(describe(&view, inside, true), "A stone floor.");
         w.apply(&Action::Move(Dir::S));
         w.apply(&Action::Move(Dir::S));
         assert_eq!(
-            describe(&w.perception(), inside),
+            describe(&w.perception(), inside, true),
             "A stone floor in a sanctuary."
         );
     }
@@ -323,7 +340,7 @@ mod tests {
         }
         let view = w.perception();
         let sound = view.sounds().first().expect("footsteps behind the door");
-        let text = describe(&view, sound.pos);
+        let text = describe(&view, sound.pos, true);
         assert!(
             text == "You hear footsteps here." || text == "You faintly hear footsteps here.",
             "{text}"
@@ -336,17 +353,17 @@ mod tests {
         let gold = Pos::new(10, 14);
         let pile = Pos::new(5, 17);
         assert_eq!(
-            describe(&w.perception(), gold),
+            describe(&w.perception(), gold, true),
             "12 gold coins, on stone floor."
         );
         assert_eq!(
-            describe(&w.perception(), pile),
+            describe(&w.perception(), pile, true),
             "A leather jerkin, a dagger, and 2 wax candles, on stone floor."
         );
         w.apply(&Action::Move(Dir::SW));
         w.apply(&Action::Move(Dir::SW));
         assert_eq!(
-            describe(&w.perception(), pile),
+            describe(&w.perception(), pile, true),
             "You, on stone floor; here: a leather jerkin, a dagger, and 2 wax candles."
         );
         // Out of the room, the gold is remembered.
@@ -361,7 +378,7 @@ mod tests {
         for _ in 0..8 {
             w.apply(&Action::Move(Dir::E));
         }
-        let text = describe(&w.perception(), gold);
+        let text = describe(&w.perception(), gold, true);
         assert_eq!(text, "You remember 12 gold coins here, on stone floor.");
         let mut console = Console::default();
         console.resize(3, 1);
@@ -382,7 +399,7 @@ mod tests {
             .filter(|a| a.pos != view.viewer())
             .map(|a| {
                 let id = content.creature(a.creature).id.clone();
-                (id, describe(&view, a.pos))
+                (id, describe(&view, a.pos, true))
             })
             .collect();
         let of = |id: &str| described.iter().find(|(c, _)| c == id).map(|(_, d)| d);
@@ -406,12 +423,48 @@ mod tests {
             let actor = view.actors().iter().find(|a| {
                 a.pos != view.viewer() && a.health != warlock_core::combat::Health::Unhurt
             })?;
-            Some((actor.health, describe(&view, actor.pos)))
+            Some((actor.health, describe(&view, actor.pos, true)))
         });
         let (health, text) = hurt.expect("someone in view was hurt");
         assert!(text.contains(&format!(", {})", health.word())), "{text}");
         // Never a number of hit points.
         assert!(!text.chars().any(|c| c.is_ascii_digit()), "{text}");
+    }
+
+    #[test]
+    fn a_bleeding_creature_looks_it() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let mut w = World::new(content, "arena", None).expect("arena");
+        // The brawl at the fire pit wounds someone in view before long.
+        let bleeding = (0..60).find_map(|_| {
+            w.apply(&Action::Wait);
+            let view = w.perception();
+            let actor = (view.actors().iter()).find(|a| view.effects_of(a.id).next().is_some())?;
+            Some(describe(&view, actor.pos, true))
+        });
+        let text = bleeding.expect("someone in view bled");
+        assert!(text.contains(", bleeding)"), "{text}");
+        assert!(!text.chars().any(|c| c.is_ascii_digit()), "{text}");
+    }
+
+    #[test]
+    fn blood_is_named_before_the_terrain_unless_hidden() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let mut w = World::new(content, "arena", None).expect("arena");
+        for _ in 0..40 {
+            w.apply(&Action::Wait);
+        }
+        let view = w.perception();
+        let stained = (0..view.height())
+            .flat_map(|y| (0..view.width()).map(move |x| Pos::new(x, y)))
+            .find(|&p| {
+                view.blood(p).is_some() && view.actor_at(p).is_none() && view.objects(p).is_empty()
+            })
+            .expect("the brawl left blood in view");
+        let text = describe(&view, stained, true);
+        let word = view.blood(stained).expect("blood").word(false);
+        assert_eq!(text, format!("A {word} stone floor."));
+        assert_eq!(describe(&view, stained, false), "A stone floor.");
     }
 
     #[test]
@@ -427,7 +480,7 @@ mod tests {
         let described: Vec<(String, String)> = (view.actors().iter())
             .map(|a| {
                 let id = content.creature(a.creature).id.clone();
-                (id, describe(&view, a.pos))
+                (id, describe(&view, a.pos, true))
             })
             .collect();
         let of = |id: &str| {
@@ -468,7 +521,7 @@ mod tests {
         let mut w = World::new(content, "traps", None).expect("the trap hall");
         // A hidden trap (the fireball in the crossing) is just floor.
         assert_eq!(
-            describe(&w.perception(), Pos::new(27, 11)),
+            describe(&w.perception(), Pos::new(27, 11), true),
             "A stone floor."
         );
         let actions = warlock_core::action::parse_actions("move:NW*14 move:W*7 move:N*2").unwrap();
@@ -476,14 +529,14 @@ mod tests {
             w.apply(&action);
         }
         assert_eq!(
-            describe(&w.perception(), Pos::new(16, 2)),
+            describe(&w.perception(), Pos::new(16, 2), true),
             "An arrow trap, on stone floor."
         );
         // On the trap with the player: part of the ground they stand on.
         w.apply(&Action::Move(Dir::N));
         let view = w.perception();
         let here = view.viewer();
-        assert!(describe(&view, here).starts_with("You, on an arrow trap on stone floor"));
+        assert!(describe(&view, here, true).starts_with("You, on an arrow trap on stone floor"));
     }
 
     #[test]
