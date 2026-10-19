@@ -748,8 +748,9 @@ rate or animation.
 - **Pause menu**: Esc during a run (when no prompt is open) opens it, drawn in glyphs:
   Resume, Settings, Controls, Save and quit to menu, Quit (which saves). No game time passes while
   it is open; Esc or Back in Settings/Controls returns to it.
-- **Settings** (`settings.toml` in the platform config dir; on the web, browser `localStorage`, §7): font size (logical
-  px, 12 to 36), reduced effects and the per-effect switches, color palette, key bindings. A missing or damaged file means
+- **Settings** (`settings.toml` in the config dir, §7 "File locations"; on the web, browser `localStorage`): font size (logical
+  px, 12 to 36), reduced effects and the per-effect switches, color palette, key bindings, and a
+  Files screen (where the files are and why; Open folder). A missing or damaged file means
   defaults and a logged warning. Changes apply live (a font size change rebuilds the glyph atlas)
   and are written immediately.
 - **Rebinding**: in Controls, select a command and press a key; it becomes the command's primary
@@ -1302,6 +1303,24 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   that would save it deletes the save instead; on the web nothing is kept for the page being
   hidden). Dev snapshots: `F5` saves and `F9` loads `snapshots/quick.sav` (debug builds or
   `--dev`).
+  **File locations and portable mode** (`paths.rs` decides them all): per folder, an explicit
+  `--config-dir` / `--save-dir` wins, then `--portable DIR`, then a `warlock-data` folder next to
+  the game (the executable's folder; on macOS, the folder holding `Warlock.app`, never inside the
+  bundle), then the platform's standard folders. A portable folder is laid out `config/`
+  (`settings.toml`, key bindings), `data/` (`run.sav`, `snapshots/`), `logs/` (logs, crash reports).
+  `--portable` alone uses (and creates) `warlock-data` next to the game. A portable folder that
+  cannot be written is reported on stderr and in Settings > Files, and the game runs on: what is
+  there is read, writes fail with their usual messages. `warlock --paths` prints each location with
+  the reason it was chosen, then exits; Settings > Files shows the same with an Open folder action
+  per location (the platform's opener: `open`, `xdg-open`, `explorer`; a failure is shown, never
+  fatal) and, on the web, says everything is in the browser's storage. `warlock --move-data native`
+  moves the portable folder's files into the standard folders and renames the emptied folder to
+  `warlock-data.moved-<date>`; `--move-data portable [DIR]` does the reverse (DIR defaults to
+  `warlock-data` next to the game). Each file is copied beside its destination, compared, renamed
+  into place, then removed from the source; a file already at the destination is kept as
+  `NAME.bak-<time>`, never overwritten; an error stops the move with every file complete in one
+  place; `--dry-run` prints the plan only. It refuses while another Warlock runs (every running game
+  holds a shared lock on `logs/.in-use`).
   On the web the files are `localStorage` keys `warlock/run.sav`, `warlock/run.sav.bad`,
   `warlock/snapshots/quick.sav`, and `warlock/settings.toml`, the save bytes base64-encoded, with the
   same envelope and checks. The same triggers save (autosave, level change, `Q`), and so does the page

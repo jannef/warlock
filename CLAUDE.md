@@ -117,6 +117,10 @@ files are JSON
 scenario's, so old replays load); `hash` is the FNV-1a 64 state hash (`World::state_hash`) after
 the step, as 16 hex digits.
 
+- `--portable [DIR]` keep everything in `warlock-data` next to the game (or DIR); a `warlock-data`
+  folder there does it without the flag. `--paths` prints the locations and why, then exits.
+  `--move-data native|portable [DIR]` (`--dry-run` to preview) moves files between portable and
+  the platform folders.
 - `--new` start a fresh run instead of resuming the save; `--dev` enables the dev keys in release
   builds (always on in debug: F2 reveal map (ground truth), F3 next vision profile, F4 light-value
   overlay, F5/F9 snapshots, F6 skip an hour (recorded as `skip:1h`), F7 next weather (recorded as
@@ -134,8 +138,7 @@ warning; failed writes (quota) are messages, never panics. Only the `web-sys` fe
 `crates/warlock/Cargo.toml` are enabled (size).
 
 Saves: `Q` saves and quits (closing the window saves too); the game autosaves every 50 turns and on
-level change to `run.sav` in the platform data dir (`paths.rs`, app name "warlock"; macOS
-`~/Library/Application Support/warlock`). On startup an existing save is resumed unless `--new`, `--capture`,
+level change to `run.sav` in the data dir (see "File locations" below). On startup an existing save is resumed unless `--new`, `--capture`,
 `--replay`, or `--record` (replays and recordings always start a fresh run). F5 / F9 write / load `snapshots/quick.sav`. An unreadable save is renamed `run.sav.bad`,
 never deleted. Format and `Content::fingerprint` live in `warlock-core/src/save.rs`: bump
 `FORMAT_VERSION` on any incompatible `WorldState` change; adding or reordering terrain, creatures,
@@ -145,8 +148,22 @@ lights, levels, objects, equipment slots, skills, or dungeon branches invalidate
 run (it deletes instead), so autosave, `Q`, and closing the window cannot bring it back, and the
 web build parks no state for the page being hidden.
 
-Settings (`crates/warlock/src/settings/`): `settings.toml` in the platform config dir (macOS
-`~/Library/Application Support/warlock`), schema in the `settings/mod.rs` module docs. Changes
+**File locations** (`crates/warlock/src/paths.rs`, the one place that decides; never call
+`ProjectDirs` elsewhere): `paths::init(&args, check_only)` runs first in `main`, before logging,
+and `paths::locations()` is what stores, logging, and the Files screen ask (it carries each
+folder's `Reason`, shown by `--paths`). Precedence per folder: `--config-dir` / `--save-dir`, then
+`--portable [DIR]`, then a `warlock-data` folder next to the game (`paths::game_folder`: the
+executable's folder; on macOS next to the `.app`, never inside it), then the platform dirs
+(`directories`, app name "warlock"; macOS `~/Library/Application Support/warlock`). Portable
+layout `warlock-data/{config,data,logs}`; `Locations::prepare` creates it and warns (never
+fails) when it is unwritable. `resolve` is pure over `Inputs` and tested without a filesystem; new
+files go in the folder `Locations` gives (`keymaps_dir()` for key map files). `warlock --paths`
+prints the report and exits; `warlock --move-data native|portable [DIR] [--dry-run]`
+(`move_data.rs`: copy, compare, rename, remove; `*.bak-<time>` for conflicts; refuses while a game
+holds the shared lock on `logs/.in-use`) moves files between the two layouts. Settings > Files
+(`ui/files_screen.rs`, `ScreenName::Files`, `--screen files`) shows the report with Open folder.
+
+Settings (`crates/warlock/src/settings/`): `settings.toml` in the config dir, schema in the `settings/mod.rs` module docs. Changes
 apply live and are written at once; a bad file means defaults plus a warning, per value. Effects:
 `reduced_effects` is a preset over the `[effects]` switches (`EffectSwitches`: glyph_animation,
 flicker, motion, glow, distortion, particles, screen_fades, screen_shake, weather; all on by default). Each consumer reads

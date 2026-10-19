@@ -25,6 +25,7 @@ mod death_screen;
 mod dev;
 mod effects;
 mod equipment_screen;
+mod files_screen;
 mod glyphs;
 mod look;
 mod menu;

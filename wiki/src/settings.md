@@ -20,6 +20,7 @@ screen instead; see [Controls](controls.md#rebinding-keys).
 | Screen shake | The view shakes for a moment when a fireball or a lightning bolt goes off near you; the nearer, the harder. |
 | Weather | Rain falling, splashing, and ringing on water. |
 | Color palette | The colors: Default, High contrast, or Colorblind (red-green). See below. |
+| Where are my files? | Opens a screen showing where your settings, save, and logs are, and why, with **Open folder** for each. See [Saving](saving.md#portable-mode). |
 | Reset to defaults | Puts every setting above back to its default. Your keys stay as they are. |
 
 ## Effects never hide anything

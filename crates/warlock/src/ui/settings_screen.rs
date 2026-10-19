@@ -3,6 +3,7 @@
 //! live, because the screen edits the [`Settings`] resource that rendering reads.
 
 use super::menu::{Nav, Panel, Press};
+use super::screens::{ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::render::console::Console;
 use crate::settings::{EffectSwitches, MAX_FONT_PX, MIN_FONT_PX, Settings};
@@ -71,11 +72,12 @@ enum Row {
     ReducedEffects,
     Effect(Effect),
     Palette,
+    Files,
     Reset,
     Back,
 }
 
-const ROWS: [Row; 14] = [
+const ROWS: [Row; 15] = [
     Row::FontSize,
     Row::ReducedEffects,
     Row::Effect(Effect::GlyphAnimation),
@@ -88,11 +90,12 @@ const ROWS: [Row; 14] = [
     Row::Effect(Effect::ScreenShake),
     Row::Effect(Effect::Weather),
     Row::Palette,
+    Row::Files,
     Row::Reset,
     Row::Back,
 ];
 
-/// Index of the first action row (Reset); a gap is drawn before it.
+/// Index of the first action row (Files); a gap is drawn before it.
 const FIRST_ACTION: usize = 12;
 
 /// Selection state of the settings screen.
@@ -102,8 +105,8 @@ pub struct SettingsScreen {
 }
 
 impl SettingsScreen {
-    /// Applies a key press to `settings`. Returns true when the player leaves the screen.
-    pub fn handle(&mut self, press: &Press, settings: &mut Settings) -> bool {
+    /// Applies a key press to `settings`. Returns what the press asks of the screen stack.
+    pub fn handle(&mut self, press: &Press, settings: &mut Settings) -> ScreenAction {
         let row = ROWS[self.selected];
         let step: i32 = match press.nav {
             Nav::Left => -1,
@@ -111,7 +114,7 @@ impl SettingsScreen {
             _ => 0,
         };
         match press.nav {
-            Nav::Back => return true,
+            Nav::Back => return ScreenAction::Close,
             Nav::Up => self.selected = (self.selected + ROWS.len() - 1) % ROWS.len(),
             Nav::Down => self.selected = (self.selected + 1) % ROWS.len(),
             Nav::Left | Nav::Right => match row {
@@ -125,7 +128,7 @@ impl SettingsScreen {
                     *on = !*on;
                 }
                 Row::Palette => settings.palette = settings.palette.cycle(step < 0),
-                Row::Reset | Row::Back => {}
+                Row::Files | Row::Reset | Row::Back => {}
             },
             Nav::Enter if !press.repeat => match row {
                 Row::FontSize => {}
@@ -135,16 +138,17 @@ impl SettingsScreen {
                     *on = !*on;
                 }
                 Row::Palette => settings.palette = settings.palette.cycle(false),
+                Row::Files => return ScreenAction::Open(ScreenName::Files),
                 Row::Reset => *settings = Settings::default(),
-                Row::Back => return true,
+                Row::Back => return ScreenAction::Close,
             },
             _ => {}
         }
-        false
+        ScreenAction::Stay
     }
 
     pub fn draw(&self, console: &mut Console, settings: &Settings) {
-        let panel = Panel::new(console, " Settings ", 60, 24);
+        let panel = Panel::new(console, " Settings ", 60, 27);
         let label_w = 18;
         let mut switches = settings.effects;
         for (i, row) in ROWS.iter().enumerate() {
@@ -169,6 +173,7 @@ impl SettingsScreen {
                     "Color palette".to_string(),
                     settings.palette.label().to_string(),
                 ),
+                Row::Files => ("Where are my files?".to_string(), String::new()),
                 Row::Reset => ("Reset to defaults".to_string(), String::new()),
                 Row::Back => ("Back".to_string(), String::new()),
             };
@@ -189,10 +194,11 @@ impl SettingsScreen {
             Row::ReducedEffects => "Preset: turns every effect below off.",
             Row::Effect(e) => e.help(),
             Row::Palette => "Recolors everything on screen; game data is unchanged.",
+            Row::Files => "Where settings and saves are, and open the folder.",
             Row::Reset => "Restores these settings (not the key bindings).",
             Row::Back => "Settings are saved as you change them.",
         };
-        let help_y = panel.y + 18;
+        let help_y = panel.y + 19;
         console.print(panel.inner_x(), help_y, help, TEXT_DIM);
         console.print(
             panel.inner_x(),
@@ -210,8 +216,9 @@ mod tests {
     use super::*;
     use crate::settings::Palette;
 
+    /// Whether the press closes the screen.
     fn press(screen: &mut SettingsScreen, settings: &mut Settings, nav: Nav) -> bool {
-        screen.handle(&Press::nav(nav), settings)
+        screen.handle(&Press::nav(nav), settings) == ScreenAction::Close
     }
 
     #[test]
@@ -238,6 +245,11 @@ mod tests {
         }
         press(&mut screen, &mut s, Nav::Right);
         assert_eq!(s.palette, Palette::HighContrast);
+        press(&mut screen, &mut s, Nav::Down);
+        assert_eq!(
+            screen.handle(&Press::nav(Nav::Enter), &mut s),
+            ScreenAction::Open(ScreenName::Files)
+        );
         press(&mut screen, &mut s, Nav::Down);
         press(&mut screen, &mut s, Nav::Enter);
         assert_eq!(s, Settings::default());
