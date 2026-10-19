@@ -26,6 +26,7 @@ authoritative: it is generated from your current key bindings.
 | Character (your stats and weight) | `@` |
 | Skills | `S` |
 | Weapon skills | `W` |
+| Quest log | `q` |
 | Info page 1 to 9 (while an info screen is open) | `1` to `9` |
 | Next / previous info page (wraps) | `Tab` or `PageDown` / `Shift`+`Tab` or `PageUp` |
 | Rest | `R` |

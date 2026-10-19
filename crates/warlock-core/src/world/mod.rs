@@ -90,6 +90,7 @@ mod ice;
 mod level;
 mod loot;
 mod path;
+mod quest;
 mod schedule;
 mod shoot;
 mod spell;
@@ -105,6 +106,7 @@ pub use fight::{Cause, Death};
 pub(crate) use hash::fnv1a;
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
+pub use quest::{QuestRecord, QuestView, Quests, Stage};
 pub use talk::{Conversation, Talk, TopicView};
 
 use crate::action::{
@@ -198,6 +200,9 @@ pub struct WorldState {
     /// The player's experience total (spec §8 "Experience"); their level follows from it.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub(crate) experience: u32,
+    /// The player's quests and the kills they count (spec §8 "Quests").
+    #[serde(default, skip_serializing_if = "Quests::is_empty")]
+    pub(crate) quests: Quests,
 }
 
 fn is_zero(n: &u32) -> bool {
@@ -432,6 +437,7 @@ impl World {
             weather_override: None,
             death: None,
             experience: 0,
+            quests: Quests::default(),
         };
         let mut player = Actor {
             id: ActorId(0),
@@ -489,6 +495,11 @@ impl World {
             character
                 .check(&content)
                 .map_err(|m| WorldError::InconsistentState(format!("character: {m}")))?;
+        }
+        if let Some(id) = state.quests.unknown_to(&content) {
+            return Err(WorldError::InconsistentState(format!(
+                "the quests know `{id}`, which this content does not have"
+            )));
         }
         if let Some(level) = state.levels.values().find(|l| !l.ids_valid_for(&content)) {
             return Err(WorldError::InconsistentState(format!(
@@ -570,6 +581,12 @@ impl World {
         self.state.seed
     }
 
+    /// The player's quests and the kills they count (spec §8 "Quests"). For dev tools; the
+    /// player's quest log reads [`PerceptionView::quests`].
+    pub fn quests(&self) -> &Quests {
+        &self.state.quests
+    }
+
     /// The player's character, if the run has one (spec §8 "Character creation").
     pub fn character(&self) -> Option<&Character> {
         self.state.character.as_ref()
@@ -625,6 +642,7 @@ impl World {
             time: self.state.time,
             death: self.state.death.as_ref(),
             experience: self.state.experience,
+            quests: &self.state.quests,
             snapshot: &self.perception,
         }
     }
@@ -679,17 +697,21 @@ impl World {
         let mut events = Vec::new();
         let load = self.load_of(self.state.player);
         let (burden, slowed) = (load.burden(), load.penalty() != Burden::Unburdened);
+        let quests = self.quest_progress();
         let spent = self.player_acts(action, &mut events);
         // Taking off what raised them lowers the player's maximum hit points.
         self.keep_hp_within_max(self.state.player);
         self.burden_news(burden);
+        self.quest_news(&quests);
         // Acting (not waiting) under a load that slows the player trains balance.
         let acted = matches!(spent, Spent::Turn(_)) && !matches!(action, Action::Wait);
         if acted && slowed && self.trains(Use::Burdened) {
             self.train(Use::Burdened);
         }
-        // A status effect that lowers Strength during the turn may change it too.
+        // A status effect that lowers Strength during the turn may change it too, and a wound
+        // the player gave may kill what a quest asks for.
         let burden = self.load_of(self.state.player).burden();
+        let quests = self.quest_progress();
         match spent {
             Spent::Nothing => {}
             Spent::NoTime => self.perceive(&mut events),
@@ -709,6 +731,7 @@ impl World {
         }
         if self.state.death.is_none() {
             self.burden_news(burden);
+            self.quest_news(&quests);
         }
         Outcome {
             took_turn: self.state.turn != turn,
@@ -1738,6 +1761,7 @@ impl World {
         }
         self.state.current_level = to.to_string();
         self.state.overworld_step = None;
+        self.reach(to);
         // Sounds remembered on the level left say nothing about this one.
         self.state.recent_sounds.clear();
         if let Some(line) = self.content.level(to).and_then(|t| t.arrival.clone()) {
@@ -1915,6 +1939,8 @@ mod moon_tests;
 mod object_tests;
 #[cfg(test)]
 mod overworld_tests;
+#[cfg(test)]
+mod quest_tests;
 #[cfg(test)]
 mod room_tests;
 #[cfg(test)]

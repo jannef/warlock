@@ -83,3 +83,4 @@
 | Jade amulet | `"` | amulet | stone | 80 g | no | Neck |
 | Amber amulet | `"` | amulet | gemstone | 60 g | no | Neck |
 | Gold amulet | `"` | amulet | gold | 90 g | no | Neck |
+| Sealed letter | `?` | scroll | paper | 20 g | no | - |

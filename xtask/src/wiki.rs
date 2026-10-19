@@ -151,6 +151,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("creatures.md".to_string(), creatures(content)),
         ("factions.md".to_string(), factions(content)),
         ("dialogue.md".to_string(), dialogue(content)),
+        ("quests.md".to_string(), quests(content)),
         ("footsteps.md".to_string(), footsteps(content)),
         ("objects.md".to_string(), objects(content)),
         ("equipment.md".to_string(), equipment(content)),
@@ -1505,6 +1506,28 @@ fn dialogue(content: &Content) -> String {
             "| {who} | {} | {} | {topics} | {mutters} |",
             yes(d.greet.is_some()),
             d.lines.len()
+        );
+    }
+    out
+}
+
+/// Who gives quests (`data/quests.toml`): each quest's name, its giver, its kind, and what must
+/// be done first. What it asks exactly and what it pays are left to the game.
+fn quests(content: &Content) -> String {
+    let mut out = String::from(
+        "| Quest | Given by | Kind | Offered after | Repeatable |\n|---|---|---|---|:---:|\n",
+    );
+    for q in content.quests() {
+        let after = q
+            .requires
+            .map_or_else(|| "—".to_string(), |r| content.quest(r).name.clone());
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {after} | {} |",
+            q.name,
+            capital(&content.speaker_name(q.giver)),
+            q.kind().id(),
+            yes(q.repeatable)
         );
     }
     out

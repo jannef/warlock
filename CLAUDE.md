@@ -56,7 +56,7 @@ Game flags (`cargo run -p warlock -- --help`):
   `new-run` on the main menu (e.g. `--scale 1 --screen new-run --capture target/menu.png`), and
   character creation's `race`, `gender`, `class`, and `summary` over New run and the steps
   before them (each on its preselection: the showcase's character);
-  `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `pick-up` (the pile on the player's cell), `drop`, and `eat` over a run
+  `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `quests`, `pick-up` (the pile on the player's cell), `drop`, and `eat` over a run
   (e.g. after a `--replay` that walks onto a pile), `dialogue` over a run whose last action was
   talk with topics (a `--replay` ending in `chat:SE` or `ask:SE:rooms` next to the hub's hermit),
   `equip-item` (the choice for the first slot, Head) over the equipment screen; `settings` and `controls` over the main menu, or over the pause
@@ -81,9 +81,9 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 | Verify a replay | `... replay --verify runs/x.json` (exit 1 and first diverging step on mismatch) |
 | Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor, `&` = locked door; a special room's floor by its effect's letter; also local areas, `--level local:49,23`) |
 
-Dump layers beyond the map ones: `inventory`, `equipment`, `stats`, and `skills` (the player's
-trained skills, `Stealth 17`) from perception; `actors` (dev-only: every actor's hit points,
-load, stats, and skills with their marks).
+Dump layers beyond the map ones: `inventory`, `equipment`, `stats`, `skills` (the player's
+trained skills, `Stealth 17`), and `quests` (the quest log, active first) from perception;
+`actors` (dev-only: every actor's hit points, load, stats, and skills with their marks).
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
@@ -98,7 +98,8 @@ cell (X, Y), `throw:c:X,Y` throws one of
 inventory stack `c` there (any weapon is thrown whole, badly: `t` in the game sends `fire` for a launcher, else `throw` for what the Missile weapon slot holds); `eat:b` eats one of inventory stack `b`, `eat:floor:a` one of the top
 stack underfoot; `dig:E` digs into the wall east with the tool in the Tool slot, turn
 after turn until it gives way or something interrupts; `chat:E` talks to the creature east of
-the player, `ask:E:rooms` asks it about topic `rooms` (an id in `assets/data/dialogue.toml`);
+the player, `ask:E:rooms` asks it about topic `rooms` (an id in `assets/data/dialogue.toml`;
+quest topics are `quest-ID`, `accept-ID`, `decline-ID`, ids in `assets/data/quests.toml`);
 `PROFILE` = an id in
 `assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are
 `30s`, `10m`, `2h`; `skip` is the dev hour skip; `weather` is the dev weather override, `KIND` =
@@ -125,7 +126,8 @@ carries and weighs, worn and wielded things marked, their burden and its thresho
 (the player's race, gender, and class, then their own scores as the rules read them, then
 `Effects Bleeding, Diseased` when they suffer any, then `Diseases filth fever`, the diseases they
 know they have), `weapon_skills` (the player's
-ranks and progress toward the next, `Long blades 2 (40%)`), `truth`
+ranks and progress toward the next, `Long blades 2 (40%)`), `quests` (the quest log, active
+first: name, stage, giver, objective, and status), `truth`
 (ground truth, **dev-only**), `actors` (every actor on the level with its hit points and
 Defence, its weight, what it carries and of that wears and wields (magic items as they truly
 are, "(unidentified)" marked), what its magic items do to it (`magic strength +1`), its burden
@@ -140,7 +142,8 @@ every corpse on the level and in the pack with its death time and rot, **dev-onl
 `temperature`; JSON dumps add `hp`, `defence`, `burden` (`level`, `limit`), `hunger`, `effects`
 (status ids), `diseases` (the known ones' ids), `death` (with `of`, the status that killed, and
 `cause`, starving or choking), `temperature` (°C to a tenth), `weapon_skills` (by skill id:
-`rank`, `progress`), each seen actor's `health` and `effects` (those that show), `room` (the
+`rank`, `progress`), `quests` (the log: `id`, `name`, `kind`, `active`, `completed`, `giver`,
+`objective`, `status`), each seen actor's `health` and `effects` (those that show), `room` (the
 special room the player stands in, if they know it), and per inventory stack its `name`,
 `rarity`, `identified`, and `magic` (affixes only once identified). Replay
 files are JSON
@@ -223,11 +226,11 @@ Modal screens (spec §6) — main menu, new run and character creation (race, ge
 summary), pause, settings, controls, the `?` help, the inventory (`i`), the equipment screen
 (`e`) and its choice of what goes in a slot, an item's description (a letter in the inventory,
 an upper-case slot letter on the equipment screen), the character screen (`@`), the weapon skills
-screen (`W`), choosing what to
+screen (`W`), the quest log (`q`), choosing what to
 pick up (`,`/`g` on several stacks), drop (`d`), or eat (`E`), the dialogue screen (opened by
 `screens::converse` after an action this frame whose outcome is talk with topics,
 `Event::Talked`; asking is `ScreenAction::Act(Action::Ask)`, which closes it, and the answer
-reopens it on the topic asked), and the death screen (opened by
+reopens it on the topic asked, also when no topics are left), and the death screen (opened by
 `screens::on_death` when `World::death` is set; Enter/Esc is `MenuChoice::LeaveRun`, back to the
 main menu without saving; no `--screen`: capture a dead replay instead) — are one
 screen stack (`ui/screens.rs`, the `ScreenStack` resource); add a screen there, never a second way
@@ -265,7 +268,7 @@ to open, read keys for, or draw one:
   wasm, quit saves then reloads the page (`storage::web::reload`; `AppExit` also reloads), and the
   main menu has no Quit.
 - **Info pages** (`ui/info_tabs.rs`): the screens about the player (Character, Inventory,
-  Equipment, Skills) are an ordered group, `PAGES`. While one is the top screen, the page keys replace
+  Equipment, Skills, Quests) are an ordered group, `PAGES`. While one is the top screen, the page keys replace
   it (`ScreenAction::Replace` -> `Screens::replace`: the stack depth is unchanged, so Esc still
   returns to where the first was opened) and each draws its tab line on the bottom border with
   `info_tabs::draw_tabs`. **A new info screen joins the group**: one entry in `PAGES` (its
@@ -294,7 +297,9 @@ to open, read keys for, or draw one:
   and Defence total, weight and burden thresholds; 72 wide like the summary),
   `ui/weapon_skills_screen.rs` (sections, ranks, and a faint ten-cell marks bar; never a
   benefit), `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per
-  step with a Random row rolled from the seed, `SummaryScreen`, `Draft`), `ui/dialogue_screen.rs`
+  step with a Random row rolled from the seed, `SummaryScreen`, `Draft`), `ui/quest_screen.rs`
+  (the quest log from `PerceptionView::quests`: active then done, the selected one's objective,
+  status, and the giver's offer; read-only), `ui/dialogue_screen.rs`
   (the speaker, their last line, numbered topics; built from the last `Event::Talked`, so it never
   shows more than the player was told), `ui/death_screen.rs`
   (who or what killed the player, where, when, after how many turns).
@@ -342,6 +347,23 @@ mind is calm, ready for shopkeepers, #145; it cannot move; or it is two sizes or
 sizes are listed smallest first). What an actor is called in messages comes from
 `World::called` ("the gardener"): named shopkeepers go there. Creatures that talk and fight no one
 never stop a rest by coming into view (`World::disturbs_rest`).
+
+Quests (spec §8 "Quests", #148): `content/quest.rs` loads `data/quests.toml` after levels and
+dungeons (`QuestDef`: `giver` a `DialogueId`, `Goal::{Kill, Bring, Reach, Deliver}`, `Reward`,
+`QuestTexts`, `requires`, `repeatable`; validation including everyone's topic budget of nine;
+`Content::speaker_name` names a giver without an actor). `world/quest.rs` is the rules: quest
+topics come first in `World::topics` (`quest_topics`: `quest-ID`, `accept-ID`, `decline-ID`) and
+are answered in `World::ask` (`ask_quest`, `Spent::NoTime` when state changes); `Quests` in
+`WorldState` (records by quest id: stage, completed, counted, reached; the kill tally by level
+and creature id, only for types a kill quest asks for), left out of the JSON while empty so runs
+without quests hash as before (`FORMAT_VERSION` 27). Hooks: `fight.rs::dies` tallies the
+player's kills (`tally_kill`, beside `earn_kill`, so a creature bled to death by the player's
+wound counts too), `travel` marks reach quests (`reach`), and `World::apply` snapshots active
+quests' `progress` before the player acts and says what rose after it, and again after the
+turn (`quest_progress`/`quest_news`), so pick-ups, kills, and arrivals all report through one
+place. No abandoning and no cap on active quests (the owner's decision): don't add either.
+Presentation reads `PerceptionView::quests()` (`QuestView` strings, shared by the log and the
+`quests` dump layer). Creature types have a `plural` for the messages ("3 / 3 giant rats").
 
 Experience (spec §8 "Experience", M21): `content/experience.rs` holds the rules from
 `data/experience.toml` (level curve, `hp_level`, the WoW-style `kill_xp` scaling with its zero

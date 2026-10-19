@@ -216,9 +216,11 @@ mod tests {
         let shown = text(&console);
         assert!(shown.contains(" The old hermit "), "{shown}");
         assert!(shown.contains("\"Hm? A visitor."), "{shown}");
-        assert!(shown.contains("> 1  This hall"), "{shown}");
-        assert!(shown.contains("  5  These stairs"), "{shown}");
-        assert!(shown.contains("1-5 or Enter  ask"), "{shown}");
+        // His quest first, then his own topics.
+        assert!(shown.contains("> 1  Rats in the arena"), "{shown}");
+        assert!(shown.contains("  2  This hall"), "{shown}");
+        assert!(shown.contains("  6  These stairs"), "{shown}");
+        assert!(shown.contains("1-6 or Enter  ask"), "{shown}");
     }
 
     #[test]
@@ -234,10 +236,12 @@ mod tests {
             })
         };
         let mut press = |p: Press| screen.handle(&p, &bindings);
-        assert_eq!(press(Press::typed('2')), ask("dark"));
+        assert_eq!(press(Press::typed('3')), ask("dark"));
         assert_eq!(press(Press::typed('9')), ScreenAction::Stay);
         assert_eq!(press(Press::nav(Nav::Up)), ScreenAction::Stay);
         assert_eq!(press(Press::nav(Nav::Enter)), ask("rooms"));
+        assert_eq!(press(Press::nav(Nav::Up)), ScreenAction::Stay);
+        assert_eq!(press(Press::nav(Nav::Enter)), ask("quest-rats"));
         assert_eq!(press(Press::nav(Nav::Up)), ScreenAction::Stay);
         assert_eq!(press(Press::nav(Nav::Enter)), ask("stairs"));
         assert_eq!(press(Press::nav(Nav::Back)), ScreenAction::Close);
@@ -260,7 +264,7 @@ mod tests {
             shown.contains("\"A spring runs out of the east wall"),
             "{shown}"
         );
-        assert!(shown.contains("> 4  The water garden"), "{shown}");
+        assert!(shown.contains("> 5  The water garden"), "{shown}");
     }
 
     #[test]

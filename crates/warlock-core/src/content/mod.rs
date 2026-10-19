@@ -25,6 +25,7 @@ mod material;
 mod object;
 mod overworld;
 mod particles;
+mod quest;
 mod race;
 mod room_effect;
 mod scenario;
@@ -77,6 +78,10 @@ pub use material::{MaterialDef, MaterialId};
 pub use object::{MAX_BONUS, MAX_DIG, MAX_PLACED, ObjectDef, ObjectId, article, weapon_noun};
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use particles::{ParticleEmitter, ParticleTrigger};
+pub use quest::{
+    DEFAULT_DECLINE, GOLD, Goal, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, QuestDef, QuestId, QuestKind,
+    QuestTexts, Reward,
+};
 pub use race::{HUNGER, RaceDef, Races};
 pub use room_effect::{RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom};
 pub use scenario::ScenarioDef;
@@ -251,8 +256,8 @@ struct LegendFile {
 /// `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
 /// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, `data/horoscope.toml`,
 /// `data/effects.toml`, `data/room_effects.toml`, `data/weapon_skills.toml`, `data/stances.toml`,
-/// `data/status.toml`, `data/diseases.toml`, and `data/dialogue.toml` are optional (without
-/// effects, spell effects are not drawn). Without vision
+/// `data/status.toml`, `data/diseases.toml`, `data/dialogue.toml`, and `data/quests.toml` are
+/// optional (without effects, spell effects are not drawn). Without vision
 /// profiles, a single `normal` profile that needs no light is used, so content without lighting
 /// stays fully visible; without sizes, everything is medium; without factions, everyone is neutral; without a calendar, months are numbered;
 /// without a sky file there are no moons; without an objects file there are no objects; without a
@@ -262,8 +267,9 @@ struct LegendFile {
 /// skills nobody is trained in anything; without a horoscope, characters are born under no sign;
 /// without room effects there are no special rooms; without weapon skills nobody has any, and
 /// weapons name no category; without statuses nothing ails anyone, and resting heals twice as
-/// fast; without diseases nobody falls ill; without dialogue, nobody talks; without
-/// `data/hunger.toml` nobody hungers, nothing is eaten, and creatures leave no corpses.
+/// fast; without diseases nobody falls ill; without dialogue, nobody talks; without quests,
+/// nobody asks anything of the player; without `data/hunger.toml` nobody hungers, nothing is
+/// eaten, and creatures leave no corpses.
 #[derive(Debug)]
 pub struct Content {
     terrain: Vec<TerrainDef>,
@@ -322,6 +328,8 @@ pub struct Content {
     disease_status: Option<StatusId>,
     /// What creatures say (`data/dialogue.toml`), in file order.
     dialogues: Vec<Dialogue>,
+    /// What people ask of the player (`data/quests.toml`), in file order.
+    quests: Vec<QuestDef>,
 }
 
 impl Content {
@@ -375,6 +383,7 @@ impl Content {
             disease_ids: BTreeMap::new(),
             disease_status: None,
             dialogues: Vec::new(),
+            quests: Vec::new(),
         };
         let path = "data/calendar.toml";
         if let Some(text) = files.get_optional(path) {
@@ -498,6 +507,10 @@ impl Content {
             content.vaults.push(vault);
         }
         content.load_dungeons(files)?;
+        let path = "data/quests.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.quests = quest::parse(path, text, &content)?;
+        }
         content.validate()?;
         Ok(content)
     }

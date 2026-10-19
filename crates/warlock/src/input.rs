@@ -53,6 +53,8 @@ pub enum KeyCommand {
     Skills,
     /// Show the player's weapon skills: ranks and marks (no time passes).
     WeaponSkills,
+    /// Show the player's quests, active and done (no time passes).
+    Quests,
     /// Ask how long to rest (an hour, until dawn, until dusk).
     Rest,
     /// Choose something to eat, from the floor or the pack.
@@ -146,6 +148,7 @@ impl KeyCommand {
             KeyCommand::Character => "Character",
             KeyCommand::Skills => "Skills",
             KeyCommand::WeaponSkills => "Weapon skills",
+            KeyCommand::Quests => "Quest log",
             KeyCommand::Rest => "Rest",
             KeyCommand::Eat => "Eat",
             KeyCommand::Look => "Look around",
@@ -267,6 +270,7 @@ impl Default for Bindings {
             (ch("@"), Character),
             (ch("S"), Skills),
             (ch("W"), WeaponSkills),
+            (ch("q"), Quests),
             (ch("R"), Rest),
             (ch("E"), Eat),
             (ch("x"), Look),
@@ -637,6 +641,10 @@ impl Gameplay<'_> {
             }
             (InputMode::Normal, KeyCommand::Eat) => {
                 open = Some(ScreenAction::Open(ScreenName::Eat));
+                InputMode::Normal
+            }
+            (InputMode::Normal, KeyCommand::Quests) => {
+                open = Some(ScreenAction::Open(ScreenName::Quests));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::CycleVision) => {

@@ -70,7 +70,9 @@ pub enum Action {
     /// one that has topics opens the dialogue screen. Takes the time of `chat`; refused (no
     /// time) when the player sees no one there.
     Chat(Dir),
-    /// Ask the creature in a direction about one of its topics, by id. Takes no time.
+    /// Ask the creature in a direction about one of its topics, by id. Takes no time. Quests
+    /// (spec §8 "Quests") are asked about with topics of their own: `quest-ID` (hear the offer,
+    /// be reminded, or hand it in), `accept-ID`, and `decline-ID`.
     Ask {
         dir: Dir,
         topic: String,
@@ -827,6 +829,10 @@ mod tests {
             Action::Thaw {
                 at: Pos::new(0, 7),
                 radius: 0,
+            },
+            Action::Ask {
+                dir: Dir::S,
+                topic: "accept-rats".into(),
             },
         ];
         all.extend(Weather::ALL.map(Action::SetWeather));

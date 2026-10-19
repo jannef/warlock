@@ -38,6 +38,7 @@ use super::menu::{MainMenu, Press};
 use super::motion::Motion;
 use super::new_run_screen::NewRunScreen;
 use super::object_screen::{ObjectList, ObjectScreen};
+use super::quest_screen::QuestScreen;
 use super::settings_screen::SettingsScreen;
 use super::skills_screen::SkillsScreen;
 use super::weapon_skills_screen::WeaponSkillsScreen;
@@ -96,6 +97,8 @@ pub enum ScreenName {
     Skills,
     /// The player's weapon skills: ranks and marks (`W` in play).
     WeaponSkills,
+    /// The player's quests, active and done (`q` in play).
+    Quests,
     /// Choose what to pick up from the pile here (`,` or `g` where several objects lie).
     PickUp,
     /// Choose what to drop (`d` in play).
@@ -130,6 +133,7 @@ impl ScreenName {
                 | ScreenName::Character
                 | ScreenName::Skills
                 | ScreenName::WeaponSkills
+                | ScreenName::Quests
                 | ScreenName::PickUp
                 | ScreenName::Drop
                 | ScreenName::Throw
@@ -205,6 +209,7 @@ enum Screen {
     Character(CharacterScreen),
     Skills(SkillsScreen),
     WeaponSkills(WeaponSkillsScreen),
+    Quests(QuestScreen),
     Dialogue(DialogueScreen),
     Death(DeathScreen),
     /// The confirmation dialog.
@@ -251,6 +256,7 @@ impl Screen {
             ScreenName::Character => Screen::Character(CharacterScreen::new(run)),
             ScreenName::Skills => Screen::Skills(SkillsScreen::new(run)),
             ScreenName::WeaponSkills => Screen::WeaponSkills(WeaponSkillsScreen::new(run)),
+            ScreenName::Quests => Screen::Quests(QuestScreen::new(run)),
             ScreenName::PickUp => objects(ObjectList::PickUp),
             ScreenName::Drop => objects(ObjectList::Drop),
             ScreenName::Throw => objects(ObjectList::Throw),
@@ -287,6 +293,7 @@ impl Screen {
             Screen::Character(_) => ScreenName::Character,
             Screen::Skills(_) => ScreenName::Skills,
             Screen::WeaponSkills(_) => ScreenName::WeaponSkills,
+            Screen::Quests(_) => ScreenName::Quests,
             Screen::Dialogue(_) => ScreenName::Dialogue,
             Screen::Death(_) => ScreenName::Death,
             Screen::Confirm(_) => ScreenName::Confirm,
@@ -438,6 +445,7 @@ impl ScreenStack {
             Some(Screen::Character(screen)) => screen.handle(press, bindings),
             Some(Screen::Skills(screen)) => screen.handle(press, bindings),
             Some(Screen::WeaponSkills(screen)) => screen.handle(press, bindings),
+            Some(Screen::Quests(screen)) => screen.handle(press, bindings),
             Some(Screen::Dialogue(screen)) => screen.handle(press, bindings),
             Some(Screen::Death(screen)) => screen.handle(press),
             Some(Screen::Confirm(screen)) => screen.handle(press),
@@ -489,6 +497,7 @@ impl ScreenStack {
             Some(Screen::Character(screen)) => screen.draw(console, bindings),
             Some(Screen::Skills(screen)) => screen.draw(console, bindings),
             Some(Screen::WeaponSkills(screen)) => screen.draw(console, bindings),
+            Some(Screen::Quests(screen)) => screen.draw(console, bindings),
             Some(Screen::Dialogue(screen)) => screen.draw(console),
             Some(Screen::Death(screen)) => screen.draw(console, settings.clock),
             Some(Screen::Confirm(screen)) => screen.draw(console),
@@ -559,7 +568,10 @@ pub(super) fn converse(
     if actions.read().count() == 0 || !screens.stack.is_empty() {
         return;
     }
-    if last_talk(&game.last_outcome).is_some_and(|talk| !talk.topics.is_empty()) {
+    // An answer to a topic shows there even when nothing is left to ask (a quest handed in to
+    // someone with no other topics).
+    let shown = |talk: &Conversation| !talk.topics.is_empty() || talk.asked.is_some();
+    if last_talk(&game.last_outcome).is_some_and(shown) {
         screens.open(ScreenName::Dialogue);
     }
 }
@@ -1513,7 +1525,7 @@ mod tests {
         assert_eq!(names(&app), [ScreenName::Dialogue]);
         // A topic's number asks (no time passes); the answer reopens the screen.
         let turn = app.world().resource::<Game>().world.turn();
-        frame(&mut app, &[(KeyCode::Digit5, "5")]);
+        frame(&mut app, &[(KeyCode::Digit6, "6")]);
         let ask = Action::Ask {
             dir: Dir::SE,
             topic: "stairs".into(),
@@ -1524,6 +1536,28 @@ mod tests {
         assert_eq!(game.world.turn(), turn);
         let last = game.world.messages().iter().last().map(|m| m.text.clone());
         assert!(last.is_some_and(|m| m.contains("Three stairs")));
+        // His quest comes first: asking hears the offer, and the screen reopens on accepting it.
+        frame(&mut app, &[(KeyCode::Digit1, "1")]);
+        let topics = |app: &App| {
+            let game = app.world().resource::<Game>();
+            let talk = last_talk(&game.last_outcome).expect("talk");
+            (talk.topics.iter().map(|t| t.name.clone()).take(2)).collect::<Vec<_>>()
+        };
+        assert_eq!(names(&app), [ScreenName::Dialogue]);
+        assert_eq!(
+            topics(&app),
+            ["Accept: Rats in the arena", "Decline: Rats in the arena"]
+        );
+        frame(&mut app, &[(KeyCode::Digit1, "1")]);
+        let accept = Action::Ask {
+            dir: Dir::SE,
+            topic: "accept-rats".into(),
+        };
+        assert_eq!(actions(&app).last(), Some(&accept));
+        assert_eq!(names(&app), [ScreenName::Dialogue]);
+        assert_eq!(topics(&app)[0], "Rats in the arena");
+        let game = app.world().resource::<Game>();
+        assert_eq!(game.world.perception().quests().len(), 1);
         // Esc leaves; the next press is gameplay again.
         frame(&mut app, &[ESC, WAIT]);
         assert!(names(&app).is_empty());

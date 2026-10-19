@@ -6,8 +6,8 @@
 //! ([`rotation`]): `The gardener says: "…"`. One with topics opens the dialogue screen
 //! ([`Event::Talked`] carries what it said and its topics), where asking about a topic
 //! ([`Action::Ask`](crate::Action::Ask)) takes no time. A creature with nothing to say, or one
-//! hostile to the player, gives a non-answer. Quests (#148) add topics of their own in
-//! [`World::topics`] and answer them in [`World::ask`].
+//! hostile to the player, gives a non-answer. Quests (#148, `quest.rs`) add topics of their own
+//! in [`World::topics`], answered in [`World::ask`].
 //!
 //! **Muttering**: a creature whose dialogue has a `mutter` may mutter one of its lines (in turn,
 //! like the one-liners) with each action, by its `chance`, while it goes about its routine and
@@ -168,8 +168,8 @@ impl World {
         actor.kind == ActorKind::Creature && (fights || self.dialogue_of(actor).is_none())
     }
 
-    /// What the player may ask `actor` about: its dialogue's topics. The one place topics come
-    /// from, so quests can add theirs.
+    /// What the player may ask `actor` about: its quest topics first (`quest.rs`), then its
+    /// dialogue's topics. The one place topics come from.
     pub fn topics(&self, actor: ActorId) -> Vec<TopicView> {
         let Some(actor) = self.state.actors.get(&actor) else {
             return Vec::new();
@@ -177,12 +177,12 @@ impl World {
         let Some(id) = self.dialogue_of(actor) else {
             return Vec::new();
         };
-        (self.content.dialogue(id).topics.iter())
-            .map(|t| TopicView {
-                id: t.id.clone(),
-                name: t.name.clone(),
-            })
-            .collect()
+        let mut topics = self.quest_topics(id);
+        topics.extend(self.content.dialogue(id).topics.iter().map(|t| TopicView {
+            id: t.id.clone(),
+            name: t.name.clone(),
+        }));
+        topics
     }
 
     /// Chats with the creature in `dir` (see the module docs). Refused, taking no time, when the
@@ -214,8 +214,9 @@ impl World {
         Spent::Turn(price)
     }
 
-    /// Asks the creature in `dir` about `topic` (see the module docs). Takes no time; refused
-    /// when the player sees no one there or it knows nothing of the topic.
+    /// Asks the creature in `dir` about `topic` (see the module docs; quest topics are answered
+    /// in `quest.rs`). Takes no time; refused when the player sees no one there or it knows
+    /// nothing of the topic.
     pub(super) fn ask(&mut self, dir: Dir, topic: &str, events: &mut Vec<Event>) -> Spent {
         let at = self.player_pos().step(dir);
         let Some(id) = self.seen_creature_at(at) else {
@@ -225,6 +226,9 @@ impl World {
         let Some(dialogue) = self.listens(id) else {
             return Spent::Nothing;
         };
+        if let Some(spent) = self.ask_quest(id, dialogue, topic, events) {
+            return spent;
+        }
         let reply = (self.content.dialogue(dialogue).topic(topic)).map(|t| t.reply.clone());
         match reply {
             Some(reply) => self.answer(id, reply, Some(topic.to_string()), events),
@@ -252,7 +256,7 @@ impl World {
     }
 
     /// Says what creature `id` answered and records the conversation for presentation.
-    fn answer(
+    pub(super) fn answer(
         &mut self,
         id: ActorId,
         line: String,
@@ -419,7 +423,7 @@ impl World {
 }
 
 /// `text` with its first letter in upper case.
-fn capitalized(text: &str) -> String {
+pub(super) fn capitalized(text: &str) -> String {
     let mut chars = text.chars();
     match chars.next() {
         Some(first) => first.to_uppercase().chain(chars).collect(),

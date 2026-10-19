@@ -1174,3 +1174,12 @@ slot = "neck"
 kind = "amulet"
 level = 4
 frequency = 50
+
+# Quest items (data/quests.toml): given by one person to carry to another.
+[[object]]
+id = "sealed_letter"
+name = "sealed letter"
+glyph = "?"
+fg = "#e0d2a8"
+material = "paper"
+weight = 20

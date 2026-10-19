@@ -541,6 +541,8 @@ impl World {
         } else {
             if by == Some(self.state.player) {
                 self.earn_kill(creature);
+                let level = self.state.current_level.clone();
+                self.tally_kill(creature, &level);
             }
             self.creature_dies(id);
         }

@@ -77,6 +77,11 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   hall's rooms, the bard the moon, the year 1444, and the Great Race). They mutter to themselves
   now and then, which you may overhear through a wall. Walking into anyone who is not hostile
   swaps places with them, so nobody blocks a corridor (a few will not budge).
+- **Quests** — simple, ADOM-like errands from the people you meet, offered through their topics:
+  kill something, bring something, go somewhere, or carry something to someone else. Accept or
+  decline, follow them in the quest log (`q`), and come back for gold, things, and experience. In
+  the showcase the hermit wants the arena's rats thinned (and then more), the gardener wants
+  apples, and the bard has a letter for the hermit.
 - **Ranged combat** — bows (drawn by Strength), a crossbow, a sling, and throwing weapons; aim
   ADOM-style with a cursor and a faint line of fire, watch the arrow fly, and pick it up where it
   fell. A flaming arrow flies burning and lights the dark where it lands until it burns out:
@@ -217,7 +222,8 @@ cargo run --release -p warlock
 | `e` | Equipment: wear and wield things, slot by slot (head, body, hands, rings, missiles, a tool, …), as in ADOM; an upper-case slot letter describes what is there |
 | `@` | Character: your race, gender, class, age, birth sign, stats, hit points, Defence, status effects, known diseases, and weight |
 | `W` | Weapon skills: your rank in each, and how far to the next |
-| `C` | Chat with someone next to you (asks for a direction if there are several) |
+| `C` | Chat with someone next to you (asks for a direction if there are several); quests are offered and handed in on its topics |
+| `q` | Quest log: the quests you took up and those you have done |
 | `R` | Rest an hour, until dawn, or until nightfall (stops when something comes into view) |
 | `E` | Eat: food lying here, or from your pack (a meal takes a few turns) |
 | `x` | Look around: move a cursor to read what is there (takes no time) |

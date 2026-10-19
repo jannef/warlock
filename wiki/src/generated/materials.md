@@ -11,7 +11,7 @@
 | Leather | slings, leather jerkins, studded leather jerkins, leather caps, travelling cloaks, fur cloaks, pairs of leather gloves, pairs of leather boots |
 | Cloth | padded coats, wool cloaks, coils of rope |
 | Glass | red potions, blue potions |
-| Paper | scrolls of light |
+| Paper | scrolls of light, sealed letters |
 | Wax | wax candles |
 | Bone | bone amulets |
 | Stone | sling stones, rocks, jade amulets |
