@@ -16,11 +16,46 @@ its own switch from the `render::Effects` resource (the effective values, synced
 `EffectSwitches`, the file, and a row in `ui/settings_screen.rs`. `clock` (`settings/clock.rs`, `"24h"`/`"12h"`) is the one way a time of day is written
 in the UI (`Clock::format`: status bar, death screen); dumps stay 24-hour. Palettes
 (`settings/palette.rs`) are applied only when cells are uploaded to the GPU (`render::upload`) and
-in `ui/glyphs.rs`, never to content colors. Binding a key another command of the same context uses moves it
-(`Bindings::bind_primary` returns `Bound::Moved`; fixed commands outside `REBINDABLE`, Esc's Cancel,
-are refused with `Conflict`); a command left keyless is saved as an empty list and loads unbound.
-Rebindable commands have stable ids in
-`settings/keys.rs` (`KeyCommand::id`): **a new `KeyCommand` variant must be added there**
-(`REBINDABLE` or the non-rebindable arm). `Game` exists only during a run (the menu runs without
+in `ui/glyphs.rs`, never to content colors.
+
+Key bindings (spec §6 "Rebinding", #159) are the `Bindings` resource (`input.rs`; text forms,
+ids, and the rules in `settings/keys.rs`). **Every key the game reads is a `KeyCommand` in its
+`input::Context`**: `Play` (the map, direction prompts, look mode), `Aim` (`NextTarget`,
+`PrevTarget`, `Loose`), `Prompt` (the rest choices), `Menu` (`MenuUp`/`Down`/`Left`/`Right`,
+`Confirm`, `Back`, `Erase`, `Mark`, `MarkAll`: `Press::from_input` turns them into `Nav`, so
+screens read `press.nav`, never a key), `Pages`, `Dialog` (`Yes`, `No`), and `Dev` (the developer
+keys: in every table, read by `input::command_in` and listed by Controls only where
+`input::dev_keys` is true). Keys are unique within a context; a mode with its own context reads it
+before play's (`command_in`). Nothing matches a `KeyCode` or a character directly but Esc (fixed:
+Cancel in play, `Nav::Back` on every screen) and the letters and digits that name list rows.
+Hints name keys through `Bindings::key_name` and `ui::menu::Hints` (footers), never a literal key.
+Binding a key another command of the same context uses moves it
+(`Bindings::bind_primary` returns `Bound::Moved`); refused with `Conflict` are the keys of fixed
+commands outside `REBINDABLE` (Esc's Cancel) and the last key of a `VITAL` command (`MenuUp`,
+`MenuDown`, `Confirm`: what reaches Controls and its Reset all keys from anywhere). `reset_command`
+keeps a vital command's keys rather than leave it keyless, and `ensure_vital` runs after a
+settings file or a keymap is read, so nothing can lock the player out; `--reset-keys`
+(`settings::load_for`) puts the defaults back and saves them. A command left keyless is saved as
+an empty list and loads unbound. Rebindable commands have stable ids, unique across contexts, in
+`settings/keys.rs` (`KeyCommand::id`): **a new `KeyCommand` variant must be added there** (in
+`REBINDABLE` next to its group, its `Context` in `KeyCommand::context`, a default key in
+`Bindings::default` or an entry in `UNBOUND`), never a key read of its own.
+
+The keymap file (`settings/keymap.rs`, #159): `export` writes every rebindable command by context
+(`[play]`, `[aim]`, ... from `Context::id`, `version = 1`); `import` applies a file to the live
+bindings the way rebinding does (only the listed commands change, keys move within a context, the
+first listed in `REBINDABLE` order wins a key, unknown ids and keys are warnings, the lockout rules
+hold) and returns a `Report`; version 0 is a flat table of ids or a settings file's `[bindings]`.
+`KeymapFile` (from `SettingsStore::keymap`) is where Controls' Export keys and Import keys go:
+`warlock-keys.toml` beside `settings.toml` (desktop), the browser (a blob download; a file input
+whose file arrives through `keymap::take_picked`, applied by `controls_screen::receive_keymap`),
+or nowhere (captures). `--export-keys FILE` / `--import-keys FILE` are file commands
+(`keymap::command`, from `main.rs::file_command`). The web build's `web-sys` features for them:
+`Blob`, `BlobPropertyBag`, `Element`, `File`, `FileList`, `HtmlAnchorElement`, `HtmlElement`,
+`HtmlInputElement`, `Url`. `assets/keymaps/default.toml` is the defaults as a file (shipped in the
+desktop archives); after changing a default key, regenerate it with
+`WARLOCK_UPDATE_KEYMAPS=1 cargo test -p warlock keymap` (a test fails until then).
+
+`Game` exists only during a run (the menu runs without
 it): gate systems that read it with `run_if(resource_exists::<Game>)`; content is the
 `GameContent` resource.

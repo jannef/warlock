@@ -1,0 +1,92 @@
+# Warlock keymap: every command's keys, by where they are read. A key is the character it
+# types ("k", ">", "?") or a key name ("ArrowUp", "Numpad8", "Enter", "F5"); an empty
+# list leaves a command without a key. Import it in Controls or with
+# `warlock --import-keys FILE`: commands it does not list keep their keys. Esc is fixed.
+version = 1
+
+[play] # In play
+move_n = ["k", "Numpad8", "ArrowUp"]
+move_ne = ["u", "Numpad9"]
+move_e = ["l", "Numpad6", "ArrowRight"]
+move_se = ["n", "Numpad3"]
+move_s = ["j", "Numpad2", "ArrowDown"]
+move_sw = ["b", "Numpad1"]
+move_w = ["h", "Numpad4", "ArrowLeft"]
+move_nw = ["y", "Numpad7"]
+wait = [".", "Numpad5"]
+open = ["o"]
+close = ["c"]
+kick = ["K"]
+descend = [">"]
+ascend = ["<"]
+lantern = ["L"]
+pick_up = [",", "g"]
+drop = ["d"]
+inventory = ["i"]
+equipment = ["e"]
+character = ["@"]
+skills = ["S"]
+weapon_skills = ["W"]
+quests = ["q"]
+rest = ["R"]
+eat = ["E"]
+look = ["x"]
+missile = ["t"]
+fire = []
+throw = ["T"]
+more_aggressive = ["+"]
+more_defensive = ["-"]
+bash = []
+pay = ["p"]
+use_tool = ["U"]
+chat = ["C"]
+help = ["?"]
+quit = []
+
+[aim] # Aiming
+next_target = ["Tab"]
+prev_target = []
+loose = ["Enter", "NumpadEnter"]
+
+[prompt] # Rest prompt
+rest_hour = ["h"]
+rest_dawn = ["d"]
+rest_dusk = ["n"]
+
+[menu] # Menus and screens
+menu_up = ["ArrowUp", "k"]
+menu_down = ["ArrowDown", "j"]
+menu_left = ["ArrowLeft", "h"]
+menu_right = ["ArrowRight", "l"]
+confirm = ["Enter", "NumpadEnter"]
+back = []
+erase = ["Delete", "Backspace"]
+mark = ["Space"]
+mark_all = [","]
+
+[pages] # Info pages
+page_1 = ["1"]
+page_2 = ["2"]
+page_3 = ["3"]
+page_4 = ["4"]
+page_5 = ["5"]
+page_6 = ["6"]
+page_7 = ["7"]
+page_8 = ["8"]
+page_9 = ["9"]
+next_page = ["Tab", "PageDown"]
+prev_page = ["PageUp"]
+
+[dialog] # Dialogs
+yes = ["y"]
+no = ["n"]
+
+[dev] # Developer
+dev_reveal_map = ["F2"]
+dev_next_vision = ["F3"]
+dev_light_values = ["F4"]
+dev_snapshot = ["F5"]
+dev_skip_hour = ["F6"]
+dev_next_weather = ["F7"]
+dev_identify_all = ["F8"]
+dev_load_snapshot = ["F9"]

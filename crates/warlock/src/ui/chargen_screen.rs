@@ -14,9 +14,10 @@
 //! Like every screen these are plain state machines, testable without a window.
 
 use super::character_screen::{birth_parts, fit_parts, gender_text};
-use super::menu::{Nav, Panel, Press, wrap};
+use super::menu::{Hints, Nav, Panel, Press, wrap};
 use super::screens::{MenuChoice, ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
+use crate::input::Bindings;
 use crate::render::console::Console;
 use warlock_core::character::{CharacterSpec, Gender, Start, other_stat};
 use warlock_core::content::Content;
@@ -295,7 +296,7 @@ impl ChoiceScreen {
         Rng::stream(self.seed, &label).index(self.choices.len())
     }
 
-    pub fn draw(&self, console: &mut Console) {
+    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         // Rows: margin, the list (options and Random), a gap, the description (up to three
         // lines), the details (up to two), a gap, the footer, the frame.
         let rows = self.choices.len() as i32 + 1;
@@ -330,7 +331,13 @@ impl ChoiceScreen {
                 console.print(x + 2, y, &line, color);
             }
         }
-        panel.footer(console, "↑↓ choose   Enter next   Esc back");
+        let keys = Hints::of(bindings);
+        let footer = format!(
+            "{} choose   {} next   Esc back",
+            keys.up_down(),
+            keys.confirm
+        );
+        panel.footer(console, &footer);
     }
 }
 
@@ -476,7 +483,7 @@ impl SummaryScreen {
         ScreenAction::Stay
     }
 
-    pub fn draw(&self, console: &mut Console) {
+    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         // Rows: margin, start and the three choices, a gap, the birth and a gap (if any), the
         // stats with the skills beside them (or the skills below them, and a gap), a gap, eyes
         // and scenario, a gap, the footer, the frame.
@@ -563,7 +570,10 @@ impl SummaryScreen {
             }
             y += 1;
         }
-        panel.footer(console, "↑↓ choose   Enter start or change   Esc back");
+        let keys = Hints::of(bindings);
+        let (up_down, confirm) = (keys.up_down(), keys.confirm);
+        let footer = format!("{up_down} choose   {confirm} start or change   Esc back");
+        panel.footer(console, &footer);
     }
 }
 
@@ -693,7 +703,7 @@ mod tests {
         press(&mut race, Nav::Down);
         let mut console = Console::default();
         console.resize(80, 32);
-        race.draw(&mut console);
+        race.draw(&mut console, &Bindings::default());
         let text = text(&console);
         assert!(text.contains("Choose your race (1 of 3)"), "{text}");
         assert!(text.contains("> Dwarf"), "{text}");
@@ -717,7 +727,7 @@ mod tests {
                 press(&mut class, Nav::Down);
                 let mut console = Console::default();
                 console.resize(cols, rows);
-                class.draw(&mut console);
+                class.draw(&mut console, &Bindings::default());
                 if rows >= 20 {
                     // The selected row is always in view.
                     let name = class.chosen().map_or("Random".to_string(), |id| {
@@ -741,7 +751,7 @@ mod tests {
     fn drawn(screen: &SummaryScreen) -> String {
         let mut console = Console::default();
         console.resize(80, 30);
-        screen.draw(&mut console);
+        screen.draw(&mut console, &Bindings::default());
         text(&console)
     }
 
@@ -779,7 +789,7 @@ mod tests {
         }
         let mut console = Console::default();
         console.resize(44, 40);
-        summary("halfling,male,thief", 2).draw(&mut console);
+        summary("halfling,male,thief", 2).draw(&mut console, &Bindings::default());
         let narrow = super::tests::text(&console);
         assert!(narrow.contains("Appraise "), "{narrow}");
         assert!(narrow.contains(" · "), "{narrow}");
@@ -800,7 +810,7 @@ mod tests {
         // In a narrow console the sign goes on the next line.
         let mut console = Console::default();
         console.resize(60, 30);
-        summary("dwarf,female,warrior", 1).draw(&mut console);
+        summary("dwarf,female,warrior", 1).draw(&mut console, &Bindings::default());
         let narrow = super::tests::text(&console);
         assert!(
             narrow.contains("Age 101 · born 23 Rainmoon 1343  "),

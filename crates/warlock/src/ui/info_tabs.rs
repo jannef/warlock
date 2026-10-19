@@ -183,9 +183,9 @@ mod tests {
     fn page_keys_are_rebindable_and_independent_of_play() {
         use ScreenName::*;
         let mut b = Bindings::default();
-        // Tab means next target in play and next page here, at once.
+        // Tab means next target while aiming and next page here, at once.
         assert_eq!(
-            b.owner(&KeyBinding::Code(KeyCode::Tab)),
+            b.owner_in(Context::Aim, &KeyBinding::Code(KeyCode::Tab)),
             Some(KeyCommand::NextTarget)
         );
         assert!(b.conflicts().is_empty());
@@ -202,7 +202,7 @@ mod tests {
         assert_eq!(b.owner_in(Context::Pages, &two), Some(KeyCommand::Page(2)));
         b.bind_primary(KeyCommand::Page(3), two.clone()).unwrap();
         assert_eq!(b.owner_in(Context::Pages, &two), Some(KeyCommand::Page(3)));
-        assert_eq!(b.owner(&two), Some(KeyCommand::NextTarget));
+        assert_eq!(b.owner_in(Context::Aim, &two), Some(KeyCommand::NextTarget));
     }
 
     #[test]

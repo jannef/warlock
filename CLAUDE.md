@@ -172,6 +172,10 @@ the step, as 16 hex digits.
   folder there does it without the flag. `--paths` prints the locations and why, then exits.
   `--move-data native|portable [DIR]` (`--dry-run` to preview) moves files between portable and
   the platform folders.
+- `--reset-keys` puts every key back to its default (saved at once), then starts as usual.
+  `--export-keys FILE` writes the keymap (every command's keys by context, the format of
+  Controls' Export keys, `warlock-keys.toml`) to FILE; `--import-keys FILE` reads one into the
+  settings (the commands it lists only) and says what changed; both then exit.
 - `--new` start a fresh run instead of resuming the save; `--dev` enables the dev keys in release
   builds (always on in debug: F2 reveal map (ground truth), F3 next vision profile, F4 light-value
   overlay, F5/F9 snapshots, F6 skip an hour (recorded as `skip:1h`), F7 next weather (recorded as
@@ -238,6 +242,10 @@ Hard rules:
 - Rendering, UI, and dumps read the per-turn **perception snapshot** only — never ground truth —
   so hidden information cannot leak. The only exception is an explicit dev "reveal" mode.
 - Gameplay outcomes never depend on frame rate, animation, or visual randomness.
+- Every key the game reads goes through the binding system: a `KeyCommand` in its
+  `input::Context`, rebindable in Controls and listed by `?`. Never match a `KeyCode` or a typed
+  character in a screen or an input mode (only Esc and the letters and digits naming list rows
+  are fixed); hints name keys as bound (`docs/dev/settings.md`).
 - Keep modules small with clear responsibilities. No speculative abstractions, no premature
   optimization.
 

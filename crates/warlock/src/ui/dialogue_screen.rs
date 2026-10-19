@@ -8,7 +8,7 @@
 //! simulation ([`ScreenAction::Act`]); the answer reopens it (`screens::converse`) with the
 //! reply, on the topic just asked.
 
-use super::menu::{Nav, Panel, Press, wrap};
+use super::menu::{Hints, Nav, Panel, Press, wrap};
 use super::screens::ScreenAction;
 use super::{ACCENT, TEXT};
 use crate::input::{Bindings, KeyCommand};
@@ -111,7 +111,7 @@ impl DialogueScreen {
         }
     }
 
-    pub fn draw(&self, console: &mut Console) {
+    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         let width = WIDTH.min(console.cols() as i32) - 4;
         let said = wrap(&format!("\"{}\"", self.line), width);
         // Rows: margin, what was said, a gap, the topics (and a gap), the footer, the frame.
@@ -148,10 +148,11 @@ impl DialogueScreen {
             }
             y += 1;
         }
+        let confirm = Hints::of(bindings).confirm;
         let footer = match self.topics.len() {
             0 => "Esc  leave".to_string(),
-            1 => "1 or Enter  ask    Esc  leave".to_string(),
-            n => format!("1-{n} or Enter  ask    Esc  leave"),
+            1 => format!("1 or {confirm}  ask    Esc  leave"),
+            n => format!("1-{n} or {confirm}  ask    Esc  leave"),
         };
         panel.footer(console, &footer);
     }
@@ -212,7 +213,7 @@ mod tests {
         let screen = DialogueScreen::new(last_talk(&outcome), Some(&view));
         let mut console = Console::default();
         console.resize(80, 30);
-        screen.draw(&mut console);
+        screen.draw(&mut console, &Bindings::default());
         let shown = text(&console);
         assert!(shown.contains(" The old hermit "), "{shown}");
         assert!(shown.contains("\"Hm? A visitor."), "{shown}");
@@ -258,7 +259,7 @@ mod tests {
         let screen = DialogueScreen::new(last_talk(&outcome), Some(&view));
         let mut console = Console::default();
         console.resize(80, 30);
-        screen.draw(&mut console);
+        screen.draw(&mut console, &Bindings::default());
         let shown = text(&console);
         assert!(
             shown.contains("\"A spring runs out of the east wall"),
@@ -272,7 +273,7 @@ mod tests {
         let mut screen = DialogueScreen::new(None, None);
         let mut console = Console::default();
         console.resize(80, 30);
-        screen.draw(&mut console);
+        screen.draw(&mut console, &Bindings::default());
         assert!(text(&console).contains("There is no one to talk to."));
         let bindings = Bindings::default();
         let action = screen.handle(&Press::nav(Nav::Enter), &bindings);

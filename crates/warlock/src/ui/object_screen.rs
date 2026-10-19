@@ -20,12 +20,11 @@
 //! the player carries, by inventory letter. A letter or Enter on the `>` row eats it.
 
 use super::character_screen::{fit_joined, thresholds};
-use super::menu::{Nav, Panel, Press};
+use super::menu::{Hints, Nav, Panel, Press};
 use super::screens::ScreenAction;
 use super::{ACCENT, TEXT, TEXT_DIM, rarity_color};
-use crate::input::{Bindings, KeyBinding, KeyCommand};
+use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
-use bevy::input::keyboard::KeyCode;
 use warlock_core::action::letter;
 use warlock_core::burden::{Burden, Load};
 use warlock_core::color::Rgb;
@@ -279,35 +278,27 @@ impl ObjectScreen {
             }
             return ScreenAction::Stay;
         }
-        // Space is a named key, not a typed character.
-        let space = press.binding == Some(KeyBinding::Code(KeyCode::Space));
-        // Letters name stacks (even `j` and `k`, which move selections elsewhere).
-        match press.text.or(space.then_some(' ')) {
-            Some(c @ 'a'..='z') => {
-                let i = usize::from(c as u8 - b'a');
-                if i < self.entries.len() {
-                    self.toggle(i);
-                    self.cursor = i;
-                }
-                return ScreenAction::Stay;
+        // Letters name stacks (even `j` and `k`, which move selections elsewhere), before any
+        // key bound to marking.
+        if let Some(c @ 'a'..='z') = press.text {
+            let i = usize::from(c as u8 - b'a');
+            if i < self.entries.len() {
+                self.toggle(i);
+                self.cursor = i;
             }
-            Some(',') => {
+            return ScreenAction::Stay;
+        }
+        let rows = self.entries.len().max(1);
+        match press.nav {
+            Nav::MarkAll => {
                 let all = Letters::of(0..self.entries.len());
                 self.marked = if self.marked == all {
                     Letters::default()
                 } else {
                     all
                 };
-                return ScreenAction::Stay;
             }
-            Some(' ') => {
-                self.toggle(self.cursor);
-                return ScreenAction::Stay;
-            }
-            _ => {}
-        }
-        let rows = self.entries.len().max(1);
-        match press.nav {
+            Nav::Mark => self.toggle(self.cursor),
             Nav::Up => self.cursor = (self.cursor + rows - 1) % rows,
             Nav::Down => self.cursor = (self.cursor + 1) % rows,
             Nav::Enter => {
@@ -444,9 +435,9 @@ impl ObjectScreen {
         };
         let footer = if read_only {
             let scroll = if first > 0 || more {
-                "↑↓ scroll   "
+                format!("{} scroll   ", Hints::of(bindings).up_down())
             } else {
-                ""
+                String::new()
             };
             let close = match bindings.keys_of(KeyCommand::Inventory).first() {
                 Some(key) => format!("{} or Esc close", key.display()),
@@ -457,12 +448,17 @@ impl ObjectScreen {
                 None => String::new(),
             };
             format!("{scroll}{look}{close}")
-        } else if self.list == ObjectList::Eat {
-            "a-z or Enter eat   Esc cancel".to_string()
-        } else if self.list == ObjectList::Throw {
-            "a-z or Enter choose   Esc cancel".to_string()
         } else {
-            format!("a-z mark   , all   Enter {verb}   Esc cancel")
+            let keys = Hints::of(bindings);
+            let confirm = &keys.confirm;
+            match self.list {
+                ObjectList::Eat => format!("a-z or {confirm} eat   Esc cancel"),
+                ObjectList::Throw => format!("a-z or {confirm} choose   Esc cancel"),
+                _ => format!(
+                    "a-z mark   {} all   {confirm} {verb}   Esc cancel",
+                    keys.mark_all
+                ),
+            }
         };
         panel.footer(console, &footer);
     }
@@ -471,6 +467,8 @@ impl ObjectScreen {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::input::KeyBinding;
+    use bevy::input::keyboard::KeyCode;
     use std::sync::Arc;
     use warlock_core::content::Content;
     use warlock_core::{Dir, World};
@@ -635,9 +633,9 @@ mod tests {
             ScreenAction::Act(Action::PickUp(Letters::of([0])))
         );
         screen.handle(&Press::nav(Nav::Down), &b);
-        // Space, as the keyboard reports it: a named key that types nothing.
+        // Space (the Mark key), as the keyboard reports it: a named key that types nothing.
         let space = Press {
-            nav: Nav::Other,
+            nav: Nav::Mark,
             binding: Some(KeyBinding::Code(KeyCode::Space)),
             repeat: false,
             text: None,
@@ -655,11 +653,16 @@ mod tests {
         let world = on_the_pile();
         let b = Bindings::default();
         let mut screen = ObjectScreen::new(ObjectList::PickUp, Some(&world.perception()));
-        screen.handle(&typed(','), &b);
+        // `,` (the Mark everything key) as the router reads it.
+        let comma = Press {
+            nav: Nav::MarkAll,
+            ..typed(',')
+        };
+        screen.handle(&comma, &b);
         assert_eq!(screen.marked, Letters::of(0..3));
-        screen.handle(&typed(','), &b);
+        screen.handle(&comma, &b);
         assert!(screen.marked.is_empty());
-        screen.handle(&typed(','), &b);
+        screen.handle(&comma, &b);
         assert_eq!(
             screen.handle(&Press::nav(Nav::Back), &b),
             ScreenAction::Close

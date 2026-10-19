@@ -9,7 +9,7 @@
 //! stale.
 
 use super::character_screen::fit_joined;
-use super::menu::{Nav, Panel, Press};
+use super::menu::{Hints, Nav, Panel, Press};
 use super::screens::ScreenAction;
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::{Bindings, KeyCommand};
@@ -114,9 +114,10 @@ impl SkillsScreen {
                 y += 1;
             }
         }
+        let up_down = Hints::of(bindings).up_down();
         let footer = match bindings.keys_of(KeyCommand::Skills).first() {
-            Some(key) => format!("↑↓ choose   {} or Esc close", key.display()),
-            None => "↑↓ choose   Esc close".to_string(),
+            Some(key) => format!("{up_down} choose   {} or Esc close", key.display()),
+            None => format!("{up_down} choose   Esc close"),
         };
         panel.footer(console, &footer);
     }
