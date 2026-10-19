@@ -14,12 +14,19 @@ use std::str::FromStr;
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Action {
-    /// Step in a direction; bumping a closed door opens it.
+    /// Step in a direction; bumping a closed door opens it (unlocking it first with a key that
+    /// fits, if it is locked).
     Move(Dir),
     /// Let a turn pass.
     Wait,
+    /// Open the door in a direction; a locked one only with a key that fits, which unlocks it
+    /// first (spec §8 "Doors").
     Open(Dir),
     Close(Dir),
+    /// Kick in a direction (spec §8 "Doors"): a closed door, to break it (a chance of Strength in
+    /// its sturdiness), or a creature, an unarmed blow. Takes the time of `kick`; kicking at
+    /// empty space or something solid takes none.
+    Kick(Dir),
     /// Take stairs up.
     Ascend,
     /// Take stairs down.
@@ -172,6 +179,14 @@ pub enum Event {
     DoorClosed {
         pos: Pos,
     },
+    /// A kick at a closed door that held: "WHAMM!" (spec §8 "Doors").
+    DoorKicked {
+        pos: Pos,
+    },
+    /// A door kicked in: it broke, and is open for good.
+    DoorBroken {
+        pos: Pos,
+    },
     LevelChanged {
         from: String,
         to: String,
@@ -263,7 +278,7 @@ pub struct Outcome {
     pub events: Vec<Event>,
 }
 
-/// Text syntax for scripting: `move:E wait open:E close:W ascend descend lantern rest:1h
+/// Text syntax for scripting: `move:E wait open:E close:W kick:N ascend descend lantern rest:1h
 /// rest:dawn rest:dusk pickup pickup:ac drop:b equip:body:b remove:body fire:12,5 throw:c:12,5
 /// vision:ID skip:1h weather:rain` (durations: `30s`, `10m`, `2h`; letters name stacks, `a`
 /// first; `pickup` and `drop` without letters take everything; `equip:SLOT:LETTER` puts
@@ -280,6 +295,7 @@ impl fmt::Display for Action {
             Action::Wait => f.write_str("wait"),
             Action::Open(d) => write!(f, "open:{d}"),
             Action::Close(d) => write!(f, "close:{d}"),
+            Action::Kick(d) => write!(f, "kick:{d}"),
             Action::Ascend => f.write_str("ascend"),
             Action::Descend => f.write_str("descend"),
             Action::ToggleLantern => f.write_str("lantern"),
@@ -327,6 +343,7 @@ impl FromStr for Action {
             "move" => dir().map(Action::Move),
             "open" => dir().map(Action::Open),
             "close" => dir().map(Action::Close),
+            "kick" => dir().map(Action::Kick),
             "wait" => bare(Action::Wait),
             "ascend" => bare(Action::Ascend),
             "descend" => bare(Action::Descend),
@@ -407,8 +424,8 @@ impl FromStr for Action {
                 _ => Err("`vision` needs a profile id, e.g. `vision:darkvision`".into()),
             },
             _ => Err(format!(
-                "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
-                 descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
+                "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, kick:DIR, \
+                 ascend, descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
                  equip:SLOT:LETTER, remove:SLOT, fire:X,Y, throw:LETTER:X,Y, vision:ID, \
                  skip:DURATION, weather:clear|overcast|rain|heavy)"
             )),
@@ -506,7 +523,12 @@ mod tests {
         ];
         all.extend(Weather::ALL.map(Action::SetWeather));
         for d in Dir::ALL {
-            all.extend([Action::Move(d), Action::Open(d), Action::Close(d)]);
+            all.extend([
+                Action::Move(d),
+                Action::Open(d),
+                Action::Close(d),
+                Action::Kick(d),
+            ]);
         }
         assert_eq!(parse_actions(&format_actions(&all)), Ok(all));
     }
@@ -520,6 +542,8 @@ mod tests {
         assert_eq!(parse_actions(""), Ok(vec![]));
         assert!(parse_actions("move").is_err());
         assert!(parse_actions("move:up").is_err());
+        assert_eq!(parse_actions("KICK:sw"), Ok(vec![Action::Kick(Dir::SW)]));
+        assert!(parse_actions("kick").is_err());
         assert!(parse_actions("wait:E").is_err());
         assert!(parse_actions("dance").is_err());
         assert_eq!(

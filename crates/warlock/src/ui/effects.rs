@@ -189,7 +189,12 @@ pub(super) fn track(
             Event::ActorMoved { to, .. } => {
                 bursts.trigger(&view, *to, ParticleTrigger::Step, seed, start);
             }
-            Event::DoorOpened { pos } | Event::DoorClosed { pos } => {
+            // A kick that breaks a door throws the broken door's splinters; one that holds
+            // shakes dust off the closed door.
+            Event::DoorOpened { pos }
+            | Event::DoorClosed { pos }
+            | Event::DoorKicked { pos }
+            | Event::DoorBroken { pos } => {
                 bursts.trigger(&view, *pos, ParticleTrigger::Toggle, seed, start);
             }
             &Event::Attacked { attacker, to, .. } => {

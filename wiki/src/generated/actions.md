@@ -6,6 +6,8 @@
 | Waiting | 1000 | 6 seconds |
 | Opening a door | 1000 | 6 seconds |
 | Closing a door | 1000 | 6 seconds |
+| Unlocking a door with a key (on top of opening it) | 1000 | 6 seconds |
+| Kicking (a door, or a creature) | 1000 | 6 seconds |
 | Lighting or dousing the lantern | 1000 | 6 seconds |
 | Taking stairs, entering a place from the overworld, or walking off an area's edge | 1000 | 6 seconds |
 | Picking up (however many stacks) | 1000 | 6 seconds |

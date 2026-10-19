@@ -17,6 +17,9 @@
 //! a `parry` bonus to Defence while wielded, and for bows the `strength` they need; armour its
 //! `armour` bonus and the most Dexterity bonus it allows (`max_dex`); a shield its `shield` bonus.
 //!
+//! Keys (spec §8 "Doors") say which locks they open: `key = "pantry"` opens the locks with that
+//! lock id, `key = "*"` (a skeleton key) every lock.
+//!
 //! Ranged combat (spec §8 "Ranged combat"): a missile weapon shoots as far as its `range` (and
 //! one that `reloads`, a crossbow, takes the `reload` action after every shot); anything else
 //! with a `range` is a throwing weapon, thrown that far, its `damage` its own (a rock needs no
@@ -35,6 +38,7 @@ use super::{Content, ContentError};
 use crate::color::Rgb;
 use crate::combat::{Attack, CRITS, DEFAULT_CRIT, DEFAULT_THREAT, THREATS};
 use crate::dice::Dice;
+use crate::door::Key;
 use crate::object::Stack;
 use crate::time::{DAY, Duration};
 use serde::{Deserialize, Serialize};
@@ -113,6 +117,8 @@ pub(super) struct ObjectSpec {
     pub breaks: u8,
     /// Lit as it is shot or thrown: it flies and lands as this object (an object id).
     pub lit: Option<String>,
+    /// A key: the lock id it opens, or `*` for a skeleton key (every lock).
+    pub key: Option<String>,
     /// The light it gives while it burns where it lies (a light preset id); with `burns`.
     pub light: Option<String>,
     /// How long it burns where it lands, in seconds of game time; then it is gone.
@@ -176,6 +182,8 @@ pub struct ObjectDef {
     pub lit: Option<ObjectId>,
     /// The light it gives where it lies, while it burns, and for how long it burns.
     pub burning: Option<Burning>,
+    /// A key: what locks it opens (spec §8 "Doors").
+    pub key: Option<Key>,
     /// Presentation: the glyph it flies as, pointing right; `None`: its glyph, upright.
     pub missile: Option<char>,
     /// Presentation: it tumbles as it flies.
@@ -286,6 +294,12 @@ impl ObjectSpec {
         if !(0.0..=1.0).contains(&self.glow) {
             return Err(err("`glow` must be between 0 and 1".into()));
         }
+        let key = self
+            .key
+            .as_deref()
+            .map(Key::parse)
+            .transpose()
+            .map_err(err)?;
         let plural = self.plural.unwrap_or_else(|| format!("{}s", self.name));
         let def = ObjectDef {
             id: self.id,
@@ -310,6 +324,7 @@ impl ObjectSpec {
             breaks: self.breaks,
             lit: None,
             burning,
+            key,
             missile: self.missile,
             spins: self.spins,
             glow: self.glow,
@@ -498,6 +513,7 @@ mod tests {
             breaks: 0,
             lit: None,
             burning: None,
+            key: None,
             missile: None,
             spins: false,
             glow: 0.0,

@@ -1,9 +1,10 @@
-//! Per-level mutable state: terrain and piles of objects as they are now, and what the player
-//! remembers of them.
+//! Per-level mutable state: terrain, locks, and piles of objects as they are now, and what the
+//! player remembers of them.
 
 use crate::content::{
     Content, EdgeExit, Flow, LevelKind, LevelTemplate, LightId, StairsLink, TerrainDef, TerrainId,
 };
+use crate::door::Lock;
 use crate::geom::Pos;
 use crate::grid::Grid;
 use crate::light::Light;
@@ -58,6 +59,10 @@ pub struct LevelState {
     /// burning objects themselves lie in the pile there.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) fires: BTreeMap<Pos, Fire>,
+    /// Locks on closed doors, by position (spec §8 "Doors"): gone once the door is unlocked or
+    /// broken. Ground truth: a locked door looks like any closed door.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) locks: BTreeMap<Pos, Lock>,
 }
 
 impl LevelState {
@@ -79,6 +84,7 @@ impl LevelState {
             objects: template.objects.clone(),
             object_memory: BTreeMap::new(),
             fires: BTreeMap::new(),
+            locks: template.locks.clone(),
         }
     }
 
@@ -122,6 +128,13 @@ impl LevelState {
     /// reachable through [`crate::World::ground_truth`], **for developer tools only**.
     pub fn objects_at(&self, p: Pos) -> &[Stack] {
         self.objects.get(&p).map_or(&[], Vec::as_slice)
+    }
+
+    /// The lock on the door at `p`, if it is locked (ground truth, `None` for any other cell).
+    /// Only reachable through [`crate::World::ground_truth`] outside the rules, **for developer
+    /// tools only**: the player learns a door is locked by trying it.
+    pub fn lock_at(&self, p: Pos) -> Option<&Lock> {
+        self.locks.get(&p)
     }
 
     /// Replaces the pile at `p`; an empty pile removes it.

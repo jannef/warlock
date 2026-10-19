@@ -16,8 +16,10 @@
 //! 5. **Return**: then back to its post, and carries on with its patrol route (or waits).
 //!
 //! Paths (`path.rs`) go over walkable cells and, for creatures that open doors, closed doors (it
-//! opens the door, then steps in). Other actors block: a path may lead through one only when the
-//! way around is much longer, and then the creature waits behind it. Melee attacks and shots are
+//! opens the door, then steps in); a locked door only for one carrying a key that fits it (it
+//! unlocks the door as it opens it; spec §8 "Doors"), else it is a wall to it. Other actors
+//! block: a path may lead through one only when the way around is much longer, and then the
+//! creature waits behind it. Melee attacks and shots are
 //! real (`fight.rs`, `shoot.rs`: rolled against Defence, they hurt and kill; a shot spends an
 //! arrow, which flies and comes down to lie where it fell); a ranged creature with nothing left
 //! to shoot fights in melee. Spells stay intents until magic is designed. Each is an [`Event::Attacked`], a noise, and, if the player perceives it, a
@@ -38,6 +40,8 @@ use crate::sight::{self, LineOfSight};
 const CROWD: u32 = 4;
 /// Extra cost of a closed door on a path: opening it takes an action.
 const DOOR: u32 = 1;
+/// Extra cost of a locked door on top of [`DOOR`], for a creature with the key: unlocking it.
+const UNLOCK: u32 = 1;
 /// Path searches look this many cells beyond the distance to their target...
 const SEARCH_MARGIN: i32 = 12;
 /// ...and at most this far from the creature.
@@ -71,6 +75,8 @@ enum Stepped {
     Moved(i64),
     /// Opened the closed door in the way instead.
     Opened,
+    /// Unlocked the locked door in the way with its key, and opened it.
+    Unlocked,
     Blocked,
 }
 
@@ -111,6 +117,9 @@ impl World {
         let price = match stepped {
             Stepped::Moved(price) => price,
             Stepped::Opened => self.price_of(id, ActionKind::OpenDoor),
+            Stepped::Unlocked => {
+                self.price_of(id, ActionKind::Unlock) + self.price_of(id, ActionKind::OpenDoor)
+            }
             Stepped::Blocked => self.price_of(id, ActionKind::Wait),
         };
         (stepped, price)
@@ -263,11 +272,12 @@ impl World {
     }
 
     /// The way to cell `spot`, to look there; `None` once there, or if it cannot get there.
-    /// When someone it cannot see stands on the spot (perhaps the one it lost in the dark), next
-    /// to it will do.
+    /// When someone it cannot see stands on the spot (perhaps the one it lost in the dark), or
+    /// no one can stand there (a door shut or kicked at), next to it will do.
     fn go_look(&self, id: ActorId, spot: Pos) -> Option<Plan> {
         let taken = self.state.actor_at(&self.state.current_level, spot);
-        let reach = i32::from(taken.is_some_and(|a| a.id != id));
+        let solid = !self.state.current().is_walkable(&self.content, spot);
+        let reach = i32::from(solid || taken.is_some_and(|a| a.id != id));
         match self.route(id, spot, reach, |q| q.chebyshev(spot) <= reach) {
             Route::Step(dir) => Some(Plan::Step(dir)),
             Route::Wait => Some(Plan::Wait),
@@ -309,7 +319,11 @@ impl World {
             let enter = if def.walkable {
                 1
             } else if opens_doors && def.is_closed_door() {
-                1 + DOOR
+                match level.locks.get(&p) {
+                    None => 1 + DOOR,
+                    Some(lock) if me.key_for(&self.content, lock).is_some() => 1 + DOOR + UNLOCK,
+                    Some(_) => return Cost::Impassable,
+                }
             } else {
                 return Cost::Impassable;
             };
@@ -330,8 +344,9 @@ impl World {
     }
 
     /// Creature `id` steps in `dir`: onto a walkable cell no one stands on, or, for a creature
-    /// that opens doors, opening a closed door there. Either makes noise. An overloaded creature
-    /// opens doors but does not step.
+    /// that opens doors, opening a closed door there (unlocking it first if it is locked and the
+    /// creature carries a key that fits; else it is blocked). Either makes noise. An overloaded
+    /// creature opens doors but does not step.
     fn creature_steps(&mut self, id: ActorId, dir: Dir, events: &mut Vec<Event>) -> Stepped {
         let level = self.state.current();
         let actor = &self.state.actors[&id];
@@ -340,11 +355,14 @@ impl World {
             return Stepped::Blocked;
         };
         if def.is_closed_door() && self.content.creature(actor.creature).opens_doors {
-            let opened = def.opens_to.expect("closed doors have opens_to");
-            self.make_noise(id, Act::OpenDoor(to));
-            self.set_terrain(to, opened);
-            events.push(Event::DoorOpened { pos: to });
-            return Stepped::Opened;
+            let stepped = match level.locks.get(&to) {
+                None => Stepped::Opened,
+                Some(lock) if actor.key_for(&self.content, lock).is_some() => Stepped::Unlocked,
+                Some(_) => return Stepped::Blocked,
+            };
+            self.state.current_mut().locks.remove(&to);
+            self.swing_open(id, to, events);
+            return stepped;
         }
         // An overloaded creature cannot move (spec §8 "Burden"): it waits.
         let overloaded = !self.load_of(id).penalty().can_move();

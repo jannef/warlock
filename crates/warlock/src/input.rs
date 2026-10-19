@@ -3,8 +3,8 @@
 //! [`route_keys`] reads every key press exactly once. While a screen is open (the screen stack is
 //! not empty) the press goes to the top screen; otherwise it is a gameplay command, read through
 //! the bindings in the current [`InputMode`]. Prompts in the message line (the direction for
-//! open/close, how long to rest, look mode, aiming a shot or a throw) are input modes, not
-//! screens.
+//! open/close/kick, how long to rest, look mode, aiming a shot or a throw) are input modes,
+//! not screens.
 //!
 //! Letter and symbol commands bind by *logical* key (the character the keyboard layout produces),
 //! so `<`, `>`, and `?` work on any layout. Arrows and the numpad bind by physical key code.
@@ -32,6 +32,8 @@ pub enum KeyCommand {
     Wait,
     Open,
     Close,
+    /// Kick in a direction: a door (to break it in), or a creature.
+    Kick,
     Descend,
     Ascend,
     Lantern,
@@ -83,6 +85,7 @@ impl KeyCommand {
             KeyCommand::Wait => "Wait a turn",
             KeyCommand::Open => "Open a door",
             KeyCommand::Close => "Close a door",
+            KeyCommand::Kick => "Kick",
             KeyCommand::Descend => "Go down stairs",
             KeyCommand::Ascend => "Go up stairs",
             KeyCommand::Lantern => "Light / douse lantern",
@@ -190,6 +193,7 @@ impl Default for Bindings {
             (Code(KeyCode::Numpad5), Wait),
             (ch("o"), Open),
             (ch("c"), Close),
+            (ch("K"), Kick),
             (ch(">"), Descend),
             (ch("<"), Ascend),
             (ch("L"), Lantern),
@@ -257,7 +261,7 @@ impl Bindings {
 pub enum InputMode {
     #[default]
     Normal,
-    /// Waiting for a direction for `Open` or `Close`.
+    /// Waiting for a direction for `Open`, `Close`, or `Kick`.
     Direction(KeyCommand),
     /// Asking how long to rest ([`REST_CHOICES`]).
     Rest,
@@ -446,10 +450,10 @@ impl Gameplay<'_> {
             (InputMode::Look(at), _) => InputMode::Look(at),
             (InputMode::Normal, KeyCommand::Look) => InputMode::Look(game.world.player_pos()),
             (InputMode::Direction(cmd), KeyCommand::Move(dir)) => {
-                let action = if cmd == KeyCommand::Open {
-                    Action::Open(dir)
-                } else {
-                    Action::Close(dir)
+                let action = match cmd {
+                    KeyCommand::Open => Action::Open(dir),
+                    KeyCommand::Kick => Action::Kick(dir),
+                    _ => Action::Close(dir),
                 };
                 self.actions.write(PlayerAction(action));
                 InputMode::Normal
@@ -545,7 +549,7 @@ impl Gameplay<'_> {
                 self.overlays.light_values = !self.overlays.light_values;
                 InputMode::Normal
             }
-            (InputMode::Normal, KeyCommand::Open | KeyCommand::Close) => {
+            (InputMode::Normal, KeyCommand::Open | KeyCommand::Close | KeyCommand::Kick) => {
                 InputMode::Direction(command)
             }
             (InputMode::Normal, KeyCommand::Help) => {
@@ -656,6 +660,7 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Descend), [">"]);
         assert_eq!(keys(&b, KeyCommand::Quit), ["Q"]);
         assert_eq!(keys(&b, KeyCommand::Lantern), ["L"]);
+        assert_eq!(keys(&b, KeyCommand::Kick), ["K"]);
         assert_eq!(keys(&b, KeyCommand::Help), ["?"]);
         assert_eq!(keys(&b, KeyCommand::Cancel), ["Esc"]);
         assert_eq!(keys(&b, KeyCommand::Rest), ["R"]);

@@ -421,6 +421,7 @@ impl Content {
                 )));
             }
             check_terrain_noise(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
+            check_breaking(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
             check_effects(
                 path,
                 "terrain",
@@ -444,6 +445,10 @@ impl Content {
                 landscape: spec.landscape,
                 opens_to: resolve(&spec.opens_to)?,
                 closes_to: resolve(&spec.closes_to)?,
+                breaks: match (resolve(&spec.breaks_to)?, spec.sturdiness) {
+                    (Some(to), Some(sturdiness)) => Some((to, sturdiness)),
+                    _ => None,
+                },
                 stairs: spec.stairs,
                 light,
                 bounce: spec.bounce,
@@ -460,6 +465,18 @@ impl Content {
                 haze: spec.haze,
                 particles: spec.particles.clone(),
             });
+        }
+        // A broken door is open for good: walkable, and no door to open or close.
+        if let Some(def) = defs.iter().find(|d| {
+            d.breaks.is_some_and(|(to, _)| {
+                let to = &defs[usize::from(to.0)];
+                !to.walkable || to.opens_to.is_some() || to.closes_to.is_some()
+            })
+        }) {
+            return Err(err(format!(
+                "terrain `{}`: what it `breaks_to` must be walkable and no door",
+                def.id
+            )));
         }
         if let Some(def) = defs
             .iter()
@@ -770,7 +787,11 @@ impl Content {
         };
         let parsed: dungeon::DungeonFile =
             toml::from_str(text).map_err(|e| ContentError::new(path, e.to_string()))?;
-        for def in parsed.resolve(path, |name| self.creature_id(name))? {
+        let key_id = |name: &str| {
+            self.object_id(name)
+                .filter(|o| self.object(*o).key.is_some())
+        };
+        for def in parsed.resolve(path, |name| self.creature_id(name), key_id)? {
             if self.levels.contains_key(&def.id) {
                 return Err(ContentError::new(
                     path,
@@ -1266,6 +1287,24 @@ fn check_terrain_noise(spec: &terrain::TerrainSpec) -> Result<(), String> {
         return Err("only doors have a `toggle_noise`".into());
     }
     Ok(())
+}
+
+/// Checks a terrain type's kicking fields (spec §8 "Doors"): only a closed door breaks, and
+/// `breaks_to` and `sturdiness` go together.
+fn check_breaking(spec: &terrain::TerrainSpec) -> Result<(), String> {
+    match (&spec.breaks_to, spec.sturdiness) {
+        (None, None) => Ok(()),
+        (Some(_), Some(_)) if spec.opens_to.is_none() => {
+            Err("only closed doors (`opens_to`) break when kicked".into())
+        }
+        (Some(_), Some(s)) if !crate::door::STURDINESS.contains(&s) => Err(format!(
+            "`sturdiness` must be {} to {}",
+            crate::door::STURDINESS.start(),
+            crate::door::STURDINESS.end()
+        )),
+        (Some(_), Some(_)) => Ok(()),
+        _ => Err("`breaks_to` and `sturdiness` go together".into()),
+    }
 }
 
 /// Checks a creature type's sight and combat: it sees 1 to [`VIEW_RADIUS`] cells; `ranged` and

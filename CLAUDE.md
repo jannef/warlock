@@ -77,13 +77,13 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 | Dump a replay's end state | `... dump --replay runs/x.json [--actions "wait"] --format ascii\|json [--state]` |
 | Create a replay | `... replay --create --scenario showcase --actions "move:N wait" -o runs/x.json` |
 | Verify a replay | `... replay --verify runs/x.json` (exit 1 and first diverging step on mismatch) |
-| Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor; also local areas, `--level local:49,23`) |
+| Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor, `&` = locked door; also local areas, `--level local:49,23`) |
 
 Dump layers beyond the map ones: `inventory`, `equipment`, `stats`, and `skills` (the player's
 trained skills, `Stealth 17`) from perception; `actors` (dev-only: every actor's hit points,
 load, stats, and skills with their marks).
 
-Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascend descend lantern
+Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] equip:SLOT:LETTER remove:SLOT fire:X,Y throw:LETTER:X,Y
 rest:GOAL vision:PROFILE skip:DURATION weather:KIND` (`DIR` = N
 NE E SE S SW W NW; `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
@@ -97,8 +97,8 @@ inventory stack `c` there; `PROFILE` = an id in
 `wait*10`). Dump layers: `view` (what the player sees), `fov` (`*` visible),
 `memory` (seen terrain and remembered objects), `light` (perceived brightness of visible cells as a
 digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places over the view: `f`
-footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m` chanting, upper case
-when loud), `inventory` (what the player
+footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m` chanting, `k`
+banging (a door kicked), upper case when loud), `inventory` (what the player
 carries and weighs, worn and wielded things marked, their burden and its thresholds),
 `equipment` (the player's slots), `stats`
 (the player's race, gender, and class, then their own scores), `truth`
@@ -530,6 +530,25 @@ benefit numbers. Skills get no keys of their own: active uses will be chosen fro
 abilities menu (#156), which reads `PerceptionView::active_skills` (`OwnSkill::active`: the
 skill's kind is `action`; `available`: usable now, false until the uses exist). Pending hooks: athletics (kicking doors, #130; climbing out of pits, #128) and
 escape artist (pits, #128).
+
+Doors (spec §8 "Doors"; M19, #130): the rules are `warlock-core/src/door.rs` (`Lock`, `Key`,
+`kick_breaks`/`break_chance`: `1d(sturdiness) ≤ Strength`, one gameplay draw), applied in
+`world/door.rs` (`open_door` unlocks with `Actor::key_for` and costs `unlock` + `open_door`,
+`swing_open`, `close_door`, `kick`/`kick_door`; kicking a creature is `World::player_kicks`, the
+bare-hands profile with `Words::kick`). Locks are per-cell state, never terrain: `locks` on
+`LevelTemplate` and `LevelState` (by position, saved, hashed; ground truth only, so perception,
+memory, look mode, and dumps show a locked door as any closed door); `World::set_terrain` drops a
+lock whenever the cell stops being a closed door. Level legends lock with `lock = "id"` or
+`locked = true`; objects are keys with `key = "id"` (`"*"`: skeleton); closed doors break with
+`breaks_to` + `sturdiness`. The AI (`world/ai.rs`) paths through a locked door, and opens it, only
+with a key (`Stepped::Unlocked`); `go_look` stops next to a spot no one can stand on (a door kicked
+at). Generated levels: `Needs::key` (the branch's `key` in `dungeons.toml`) makes `rooms.rs`'s
+`lock_rooms` lock up to two single-door rooms and drop the key in an unlocked room;
+`connect::validate` checks locks sit on closed doors and that the stairs and a key to each lock
+(`LevelTemplate::has_key_for`, lying or carried) are reachable without unlocking anything; vaults
+must hold their own keys (`content/vault.rs`, `check_keys`). The app binds `K` (`KeyCommand::Kick`,
+a direction prompt like open/close) and bursts the door terrain's `toggle` particles on
+`Event::DoorKicked`/`DoorBroken`.
 
 Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebuffer pixels:
 1. **Map grid** (`render/grid.rs`): a `Console` (`render/console.rs`) drawn by one quad with the

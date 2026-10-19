@@ -1,0 +1,73 @@
+# Doors
+
+A closed door (`+`) blocks your way, your sight, and light, and muffles sound. Walk into it, or
+press `o` and a direction, to open it; `c` and a direction closes an open door (`'`) again. See
+[Terrain](terrain.md#doors) for how doors block and are remembered.
+
+## Locked doors
+
+Some doors are **locked**. A locked door looks exactly like any other closed door, and you only
+find out when you try to open it:
+
+```
+The door is locked.
+```
+
+Trying takes no time. To get through, you need its key, or a strong leg (below).
+
+## Keys
+
+Keys are tools (`(`) you carry. Each key is made for one kind of lock, and a **skeleton key**
+opens every lock. Some locks take no key at all: only a skeleton key opens them.
+
+When you open a locked door (`o`, or walking into it) while you carry a key that fits, you unlock
+it and open it in one go:
+
+```
+You unlock the door with your iron key and open it.
+```
+
+That takes as long as unlocking and opening together, 12 seconds at a normal pace (see
+[Turns and movement](turns.md)). You keep the key, and the door stays unlocked: close it again
+and it opens like any door. If you carry both the key made for a lock and a skeleton key, you use
+the one made for it.
+
+{{#include generated/keys.md}}
+
+## Kicking
+
+Press `K` and a direction to kick. A kick takes a normal action (6 seconds).
+
+- **A closed door**, locked or not, may break. The chance is your Strength in the door's
+  sturdiness: against a sturdiness of 30, Strength 9 breaks it three kicks in ten, Strength 15
+  one in two, and Strength 30 every time. A door that holds says `WHAMM!`; one that breaks says
+  `The door crashes open!` and stays a **broken door** (`,`, splinters in the doorway) for good:
+  you walk and see through it, and it can never be closed or locked again.
+- **Every kick at a door is loud.** It bangs on the door itself, so it is heard on both sides,
+  and creatures that hear it come to look (see [Hearing](hearing.md)).
+- **A creature** you kick takes an unarmed blow, whatever you wield: your bare foot hits like a
+  fist, with your Strength (see [Combat](combat.md)). "You kick the giant rat." Kicking a
+  creature that is not hostile attacks it all the same.
+- **Anything else** takes no time: `You kick at empty space.` where you could walk (an open or
+  broken door too), and kicking a wall would only hurt your foot.
+
+{{#include generated/doors.md}}
+
+Your Strength never shows as a bonus anywhere in the game: these chances follow your Strength
+score itself (see [Stats](stats.md)).
+
+## Creatures and doors
+
+Some creatures open closed doors (kobolds do; rats do not). A locked door stops them unless they
+carry a key that fits it: then they unlock it as they open it, as you do. A kobold guard carrying
+the key to the room it guards will walk right through. No creature kicks doors (yet).
+
+## Where you find them
+
+- In the hub, the pantry off the door corridor has a locked west door; its iron key lies in the
+  storeroom across the corridor. (Its south door is not locked.)
+- In the Depths, a few rooms with a single door are locked. The level's rusty key always lies
+  somewhere you can reach without opening a locked door, and you never need one to find the
+  stairs.
+- A guard post in the Depths keeps its store room locked; the kobold on guard carries the brass
+  key. A skeleton key lies in the store room.

@@ -15,6 +15,7 @@
 - [Weather](weather.md)
 - [The overworld](overworld.md)
 - [Terrain](terrain.md)
+- [Doors](doors.md)
 - [Objects and your pack](objects.md)
 - [Equipment](equipment.md)
 - [Burden](burden.md)

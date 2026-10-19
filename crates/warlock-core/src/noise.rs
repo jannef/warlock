@@ -5,7 +5,8 @@
 //! burden (×1.25 Burdened, ×1.5 Strained; spec §8 "Burden": a heavy load is noisy); opening or
 //! closing a door makes the door's `toggle_noise` (terrain data); an attack (spec §8 "Combat")
 //! makes fighting, a bowstring, fighting more quietly (a throw), or chanting where the attacker
-//! stands ([`MELEE_NOISE`], [`SHOT_NOISE`], [`THROW_NOISE`], [`SPELL_NOISE`]). [`noise`] is the
+//! stands ([`MELEE_NOISE`], [`SHOT_NOISE`], [`THROW_NOISE`], [`SPELL_NOISE`]); a kick at a door
+//! is a loud banging on the door ([`KICK_NOISE`], spec §8 "Doors"). [`noise`] is the
 //! one function that decides how loud an action is: the actor's skills (stealth; spec §8
 //! "Skills") make its steps and doors quieter there ([`plain_noise`] is the noise without them).
 //! Loudness is an integer, at most [`MAX_LOUDNESS`]; a creature or door without the field is
@@ -79,6 +80,8 @@ pub enum SoundKind {
     Bowstring,
     /// A spell cast.
     Chanting,
+    /// A door kicked.
+    Banging,
 }
 
 impl SoundKind {
@@ -91,6 +94,7 @@ impl SoundKind {
             SoundKind::Fighting => "fighting",
             SoundKind::Bowstring => "bowstring",
             SoundKind::Chanting => "chanting",
+            SoundKind::Banging => "banging",
         }
     }
 
@@ -103,6 +107,7 @@ impl SoundKind {
             SoundKind::Fighting => "fighting",
             SoundKind::Bowstring => "a bowstring",
             SoundKind::Chanting => "chanting",
+            SoundKind::Banging => "banging",
         }
     }
 }
@@ -113,6 +118,8 @@ pub const MELEE_NOISE: u16 = 60;
 pub const SHOT_NOISE: u16 = 40;
 pub const THROW_NOISE: u16 = 30;
 pub const SPELL_NOISE: u16 = 50;
+/// How loud a kick at a door is on the door, whether it breaks or holds: loud.
+pub const KICK_NOISE: u16 = 100;
 
 /// Something an actor does that makes noise.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -125,6 +132,8 @@ pub enum Act {
     CloseDoor(Pos),
     /// Attacks someone, from where it stands.
     Attack(AttackKind),
+    /// Kicks the closed door on this cell.
+    Kick(Pos),
 }
 
 /// A noise made by an actor.
@@ -261,6 +270,7 @@ pub fn plain_noise(
             };
             (sound, actor.pos, u32::from(loudness))
         }
+        Act::Kick(p) => (SoundKind::Banging, p, u32::from(KICK_NOISE)),
     };
     let loudness = loudness.min(u32::from(MAX_LOUDNESS)) as u16;
     (loudness > 0).then_some(Noise {

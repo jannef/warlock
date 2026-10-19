@@ -151,11 +151,11 @@ fn place_vaults(canvas: &mut Canvas, rng: &mut Rng, count: usize) {
 }
 
 /// The cells from `start` through rock to the nearest open cave cell (at most `MAX_TUNNEL` long),
-/// never entering cells `avoid` accepts or locked ones.
+/// never entering cells `avoid` accepts or stamped ones.
 fn tunnel(canvas: &Canvas, start: Pos, avoid: impl Fn(Pos) -> bool) -> Option<Vec<Pos>> {
-    let open = |p: Pos| canvas.is_walkable(p) && !canvas.is_locked(p);
+    let open = |p: Pos| canvas.is_walkable(p) && !canvas.is_stamped(p);
     let cost = |p: Pos| {
-        if !canvas.is_inner(p) || canvas.is_locked(p) || avoid(p) {
+        if !canvas.is_inner(p) || canvas.is_stamped(p) || avoid(p) {
             None
         } else if canvas.is_rock(p) {
             Some(2)

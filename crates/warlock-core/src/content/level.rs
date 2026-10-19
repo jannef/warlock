@@ -3,11 +3,13 @@
 //! A level is a multiline ASCII `map` plus a `legend` mapping characters to terrain and to things
 //! placed on that terrain (player start, creatures with patrol routes, what they carry, and what
 //! of that they wield and wear (`wield = "spear"`, `wear = ["leather_jerkin"]`), stair links,
-//! lights, the flow of running water, objects). Characters not in the level's legend fall
-//! back to the shared default legend (`assets/data/legend.toml`, which has arrows for running
-//! water). Objects may also be placed without a legend character: `[[pile]]` tables with `at =
-//! [x, y]` and `objects`. Objects are written as ids with an optional count, top of the pile
-//! first: `objects = ["dagger", "arrow*12"]`. An optional
+//! lights, the flow of running water, objects, and locks on closed doors: `lock = "pantry"`, a
+//! lock its keys open, or `locked = true`, one only a skeleton key opens; spec §8 "Doors").
+//! Characters not in the level's legend fall back to the shared default legend
+//! (`assets/data/legend.toml`, which has arrows for running water). Objects may also be placed
+//! without a legend character: `[[pile]]` tables with `at = [x, y]` and `objects`. Objects are
+//! written as ids with an optional count, top of the pile first: `objects = ["dagger",
+//! "arrow*12"]`. An optional
 //! `ambient = [r, g, b, uv]` lights the whole level. `kind` (`dungeon`, the default, `outdoor`,
 //! or `overworld`) decides what a step there takes (spec §8 "Time"); outdoor levels and the
 //! overworld are lit by the sun and the sky by day (spec §5). Optional
@@ -21,6 +23,7 @@ use super::light::LightId;
 use super::object::parse_stacks;
 use super::terrain::{StairsDir, TerrainId};
 use super::{ActionKind, Content, ContentError};
+use crate::door::{Lock, check_lock_id};
 use crate::equipment::{self, Equipment};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
@@ -157,6 +160,11 @@ pub(super) struct LegendDetail {
     wield: Option<OneOrMany>,
     /// Objects of what it carries that it wears (armor, rings, amulets), by object id.
     wear: Option<OneOrMany>,
+    /// The closed door on this cell is locked (only a skeleton key opens it unless it has a
+    /// `lock` id).
+    locked: Option<bool>,
+    /// The closed door on this cell is locked, with this lock id: keys of that id open it.
+    lock: Option<String>,
 }
 
 /// One object id or a list of them.
@@ -243,6 +251,8 @@ pub struct LevelTemplate {
     pub flow: BTreeMap<Pos, Flow>,
     /// Piles of objects, by position, each top first; only on walkable terrain.
     pub objects: BTreeMap<Pos, Vec<Stack>>,
+    /// Locks, by position: only on closed doors (spec §8 "Doors").
+    pub locks: BTreeMap<Pos, Lock>,
     /// Named areas, first match wins.
     pub regions: Vec<Region>,
     /// Where walking off the edge leads (local areas); `None`: the edge cannot be crossed.
@@ -250,6 +260,20 @@ pub struct LevelTemplate {
 }
 
 impl LevelTemplate {
+    /// Whether a key that opens `lock` lies in a pile, or is carried by a creature placed, on a
+    /// cell `within` accepts (spec §8 "Doors").
+    pub fn has_key_for(
+        &self,
+        content: &Content,
+        lock: &Lock,
+        within: impl Fn(Pos) -> bool,
+    ) -> bool {
+        let fits =
+            |s: &Stack| (content.object(s.object).key.as_ref()).is_some_and(|k| k.opens(lock));
+        let lying = (self.objects.iter()).any(|(p, pile)| within(*p) && pile.iter().any(fits));
+        lying || (self.creatures.iter()).any(|c| within(c.pos) && c.carry.iter().any(fits))
+    }
+
     /// The name of the first region containing `p`.
     pub fn region_at(&self, p: Pos) -> Option<&str> {
         self.regions
@@ -306,6 +330,7 @@ pub(super) fn parse_level(
     let mut lights = BTreeMap::new();
     let mut flow = BTreeMap::new();
     let mut objects: BTreeMap<Pos, Vec<Stack>> = BTreeMap::new();
+    let mut locks = BTreeMap::new();
 
     for (y, row) in rows.iter().enumerate() {
         for x in 0..width as usize {
@@ -340,6 +365,17 @@ pub(super) fn parse_level(
                 )));
             }
             let Some(detail) = detail else { continue };
+            if let Some(lock) =
+                parse_lock(detail).map_err(|m| err(format!("legend `{ch}`: {m}")))?
+            {
+                if !content.terrain(terrain).is_closed_door() {
+                    return Err(err(format!(
+                        "legend `{ch}` locks terrain `{}`, which is no closed door",
+                        entry.terrain()
+                    )));
+                }
+                locks.insert(pos, lock);
+            }
             if let Some(light) = &detail.light {
                 let id = content
                     .light_id(light)
@@ -465,6 +501,7 @@ pub(super) fn parse_level(
         lights,
         flow,
         objects,
+        locks,
         regions,
         exit: None,
     };
@@ -521,6 +558,20 @@ fn parse_flow(
             }
             Ok(Some(Flow::new(dir, speed)))
         }
+    }
+}
+
+/// The lock a legend entry puts on its cell: `lock = "id"` (a lock of that id) or `locked =
+/// true` (a lock only a skeleton key opens); none for neither or `locked = false` alone.
+fn parse_lock(detail: &LegendDetail) -> Result<Option<Lock>, String> {
+    match (detail.locked, &detail.lock) {
+        (Some(false), Some(_)) => Err("has a `lock` but `locked = false`".into()),
+        (_, Some(id)) => {
+            check_lock_id(id)?;
+            Ok(Some(Lock::new(Some(id))))
+        }
+        (Some(true), None) => Ok(Some(Lock::new(None))),
+        (Some(false) | None, None) => Ok(None),
     }
 }
 

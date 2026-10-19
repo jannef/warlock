@@ -9,7 +9,9 @@ around you hear too.
   their feet than others, and some (bats, which fly) make no sound at all. A heavy load makes
   steps louder: a quarter louder when burdened, half again as loud when strained (see
   [Burden](burden.md)).
-- **Doors.** Opening a door makes noise, and closing one is louder still.
+- **Doors.** Opening a door makes noise, and closing one is louder still. Kicking a door is
+  louder than anything: it bangs on the door itself, heard on both sides as banging, whether the
+  door holds or breaks (see [Doors](doors.md)).
 - **Stealth.** The [stealth](skills.md#what-skills-give) skill makes your footsteps and the doors
   you open and close quieter, more the higher it is; your attacks are as loud as ever.
 - **Fighting.** Attacks are noisy: you may hear fighting, a bowstring, or chanting (a spell)

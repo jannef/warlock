@@ -3,6 +3,7 @@
 use crate::burden::Burden;
 use crate::combat::{self, Attack, Category, Defence, Health, Profile};
 use crate::content::{ActionKind, Content, CreatureId, FactionId, ObjectDef, ObjectId};
+use crate::door::{Key, Lock};
 use crate::equipment::Equipment;
 use crate::geom::{Dir, Pos};
 use crate::noise::Heard;
@@ -231,6 +232,25 @@ impl Actor {
             let stack = self.inventory.get(item)?;
             content.object(stack.object).is_thrown().then_some(item)
         })
+    }
+
+    /// The key it carries that opens `lock` (spec §8 "Doors"): the first one made for it, else
+    /// the first skeleton key; `None` if it carries none that fits.
+    pub fn key_for(&self, content: &Content, lock: &Lock) -> Option<ObjectId> {
+        let fitting = (self.inventory.iter())
+            .map(|s| s.object)
+            .filter_map(|o| Some((o, content.object(o).key.as_ref()?)))
+            .filter(|(_, key)| key.opens(lock));
+        let mut skeleton = None;
+        for (object, key) in fitting {
+            match key {
+                Key::Lock(_) => return Some(object),
+                Key::Skeleton => {
+                    skeleton.get_or_insert(object);
+                }
+            }
+        }
+        skeleton
     }
 
     /// What its melee attacks do: with the weapon it wields, else its natural attack, else its

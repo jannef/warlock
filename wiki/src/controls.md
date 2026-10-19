@@ -13,6 +13,7 @@ authoritative: it is generated from your current key bindings.
 | Wait a turn | `.` or numpad `5` |
 | Open a door | `o`, then a direction (or walk into the door) |
 | Close a door | `c`, then a direction |
+| Kick (a door, to break it in, or a creature) | `K`, then a direction (see [Doors](doors.md)) |
 | Go down stairs, or enter a place on the overworld | `>` |
 | Go up stairs | `<` |
 | Light or douse the lantern | `L` |
@@ -46,7 +47,7 @@ kept with your [settings](settings.md).
 
 ## Prompts
 
-Opening and closing a door ask `In which direction? (Esc to cancel)` on the message line, and
+Opening, closing, and kicking ask `In which direction? (Esc to cancel)` on the message line, and
 resting asks how long (see [Resting](resting.md)). Answer with a direction or the key shown, or
 press `Esc` to cancel. Pressing any other command cancels the prompt.
 

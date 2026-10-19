@@ -7,6 +7,8 @@
 #   material  an id in materials.toml
 #   weight    grams for one, at least 1
 #   stackable several lie in one stack (coins, arrows); default false: a stack of one each
+#   key       a key (spec §8 "Doors"): the lock id it opens (levels lock doors with `lock =
+#             "id"`), or "*" for a skeleton key, which opens every lock
 #
 # Things that can be worn or wielded also say where they go (equipment, slots.toml):
 #   slot       the slot it goes in, by id (`slot = "body"`), or what a slot fits (`slot = "ring"`
@@ -345,6 +347,9 @@ weight = 1000
 slot = "feet"
 
 # Tools
+# Keys (spec §8 "Doors"): `key` is the lock id it opens; opening a door locked with that id
+# while carrying it unlocks the door. A skeleton key (`key = "*"`) opens every lock.
+# The hub's pantry.
 [[object]]
 id = "iron_key"
 name = "iron key"
@@ -352,6 +357,36 @@ glyph = "("
 fg = "#b4b8bc"
 material = "iron"
 weight = 40
+key = "pantry"
+
+# The guard post's store room (vaults/guard_post.toml); its guard carries it.
+[[object]]
+id = "brass_key"
+name = "brass key"
+glyph = "("
+fg = "#d8b048"
+material = "brass"
+weight = 40
+key = "guard_post"
+
+# The rooms locked in the Depths (dungeons.toml).
+[[object]]
+id = "rusty_key"
+name = "rusty key"
+glyph = "("
+fg = "#a86a40"
+material = "iron"
+weight = 50
+key = "depths"
+
+[[object]]
+id = "skeleton_key"
+name = "skeleton key"
+glyph = "("
+fg = "#e0dccc"
+material = "iron"
+weight = 30
+key = "*"
 
 [[object]]
 id = "candle"

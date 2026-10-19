@@ -12,6 +12,9 @@
 #   size       [width, height]
 #   creatures  creature ids generators may place on patrol (default none)
 #   ambient    [r, g, b, uv] light everywhere (default none)
+#   key        a key (objects.toml, spec §8 "Doors"): the rooms generator locks the door of up to
+#              two rooms that have only one, with the lock this key opens, and leaves the key
+#              where the player reaches it without unlocking anything (default none: no locks)
 #   [[dungeon.levels]]  per-depth overrides, first match wins:
 #              from, to (inclusive; default `from`), generator, size (default the branch's)
 #
@@ -25,6 +28,7 @@ generator = "rooms"
 depth = 8
 size = [80, 21]
 creatures = ["rat", "bat", "kobold"]
+key = "rusty_key"
 
 # Depths 3 to 5 are caverns.
 [[dungeon.levels]]

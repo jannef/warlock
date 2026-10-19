@@ -67,6 +67,10 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   Toughness can bear you are burdened, then strained, then overloaded. Every action takes longer,
   armour-like caps keep your Dexterity from helping your Defence, and your footsteps get louder.
   Dwarves shrug off the first level. The inventory shows where the thresholds lie.
+- **Doors** — some are locked, and look like any other until you try them: a key made for the
+  lock, or a skeleton key, opens it. Or kick it in (`K`): the stronger you are, the sooner it
+  breaks, and every kick bangs through the halls. Kobolds open doors, but a locked one only with
+  its key; the dungeon's locked rooms always leave their key within reach.
 - **Stats** — Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
   D&D, for you and every creature; a character screen shows your own. Strength, Dexterity, and
   Toughness count in a fight; the rest do nothing yet.
@@ -145,7 +149,8 @@ cargo run --release -p warlock
 |---|---|
 | `h j k l y u b n`, numpad, arrows | Move (8 directions; arrows move orthogonally); moving into a hostile creature attacks it |
 | `.` or numpad 5 | Wait a turn |
-| `o` / `c` + direction | Open / close a door (walking into a closed door opens it) |
+| `o` / `c` + direction | Open / close a door (walking into a closed door opens it; a locked one opens only with its key, which unlocks it) |
+| `K` + direction | Kick: a door, to break it in, or a creature |
 | `>` / `<` | Go down / up stairs |
 | `L` | Light or douse your lantern |
 | `,` or `g` | Pick up what lies here (choose by letter where several things lie) |

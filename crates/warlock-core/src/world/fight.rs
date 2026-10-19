@@ -43,11 +43,13 @@ pub struct Death {
 }
 
 /// What an attack is made with, in words: what it is called ("spear", "bite", "fist", "arrow")
-/// and what it does to its target ("hits", "bites", "shoots").
+/// and what it does to its target ("hits", "bites", "shoots"), and when the player makes it, if
+/// not "hit" (or "shoot" for a shot): "kick".
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) struct Words {
     noun: String,
     verb: String,
+    you: Option<&'static str>,
 }
 
 impl Words {
@@ -56,6 +58,16 @@ impl Words {
         Self {
             noun: noun.into(),
             verb: verb.into(),
+            you: None,
+        }
+    }
+
+    /// A kick (spec §8 "Doors"): "You kick the giant rat.", "The giant rat dodges your kick."
+    pub(super) fn kick() -> Self {
+        Self {
+            noun: "kick".into(),
+            verb: "kicks".into(),
+            you: Some("kick"),
         }
     }
 
@@ -69,6 +81,7 @@ impl Words {
         let words = |noun: &str, verb: &str| Self {
             noun: noun.into(),
             verb: verb.into(),
+            you: None,
         };
         match kind {
             AttackKind::Melee => {
@@ -176,9 +189,10 @@ pub(super) fn attack_message(
     let both_seen = attacker != End::Unseen && target != End::Unseen;
     let text = match strike {
         Strike::Hit { critical } => {
-            let verb = match (attacker, kind) {
-                (End::You, AttackKind::Ranged) => "shoot",
-                (End::You, _) => "hit",
+            let verb = match (attacker, kind, words.you) {
+                (End::You, _, Some(you)) => you,
+                (End::You, AttackKind::Ranged, None) => "shoot",
+                (End::You, _, None) => "hit",
                 _ => words.verb.as_str(),
             };
             let end = if critical { " hard!" } else { "." };
@@ -438,11 +452,30 @@ impl World {
     /// once, by what the player knows as they strike; events reach presentation only if they
     /// saw the target.
     pub(super) fn player_attacks(&mut self, target: ActorId, seen: bool, events: &mut Vec<Event>) {
+        let words = Words::of(self.state.player(), AttackKind::Melee, None, &self.content);
+        let profile = self.state.player().melee(&self.content);
+        self.player_strikes(target, seen, (profile, words), events);
+    }
+
+    /// The player kicks `target` (spec §8 "Doors"): an unarmed blow in melee, whatever they
+    /// wield (bare hands' damage, Strength to hit and to damage), said and shown like any blow.
+    pub(super) fn player_kicks(&mut self, target: ActorId, seen: bool, events: &mut Vec<Event>) {
+        let profile = Profile::melee(&combat::Attack::unarmed(), &self.state.player().stats);
+        self.player_strikes(target, seen, (profile, Words::kick()), events);
+    }
+
+    /// The player strikes `target` in melee with `profile`, said in `words`.
+    fn player_strikes(
+        &mut self,
+        target: ActorId,
+        seen: bool,
+        (profile, words): (Profile, Words),
+        events: &mut Vec<Event>,
+    ) {
         let player = self.state.player;
         let mut made = Vec::new();
-        self.attack(player, target, AttackKind::Melee, &mut made);
+        self.attack_with(player, target, AttackKind::Melee, Some(profile), &mut made);
         let content = self.content.clone();
-        let words = Words::of(self.state.player(), AttackKind::Melee, None, &content);
         let target_actor = self.actor_or_fallen(target);
         let name = target_actor.map(|a| content.creature(a.creature).name.as_str());
         let hide = (target_actor)

@@ -37,6 +37,9 @@
 # ring and the amulets lie elsewhere): a helm, mail, a cloak, weapons (a quarterstaff for both
 # hands), a shield, gloves, boots, and a bow with arrows. Wear and wield them with `e`.
 #
+# Doors (M19): the pantry's west door (P) is locked; the iron key to it lies in the storeroom.
+# Unlock it by opening it with the key, or kick it in (`K`): a broken door stays open for good.
+#
 # Ranged combat (M16): the storeroom also has a long war bow, a crossbow with bolts, a sling with
 # stones, rocks to throw, and flaming arrows beside the short bow's arrows. Ready a bow and arrows
 # with `e`, then fire with `f` (throw with `t`): a flaming arrow shot into the patrol gallery's
@@ -58,7 +61,7 @@ map = '''
 #######+###############+###################+###################+##########+#####
 #..t.......t...########.########.........................#..........~~~#.......#
 #..............##t....#l#....t##..#...#...#...#...#...#..#..........~F~#...l.^.#
-#..............##.....+.+.....##1........................#..........~~~#.......#
+#..............##.....+.P.....##1........................#..........~~~#.......#
 #......@.......##.....#.#.....##3........................#......B......#.......#
 #..............####+###.###+####..#...#...#...#...#...#..#.............#.<.>.v.#
 #..............##.............##2........................#.===.....::::#.......#
@@ -92,6 +95,9 @@ map = '''
 "^" = { terrain = "stairs_up", to = "courtyard" }
 # Stairs down (drawn `>`) to the arena.
 "v" = { terrain = "stairs_down", to = "arena" }
+# The pantry's west door is locked (spec §8 "Doors"); its key, the iron key, lies in the storeroom
+# across the corridor. Open it with the key, or kick it in (`K`).
+"P" = { terrain = "door_closed", lock = "pantry" }
 
 # Objects, top of each pile first.
 # The start room.
@@ -149,6 +155,11 @@ objects = ["small_shield", "quarterstaff"]
 [[pile]]
 at = [17, 14]
 objects = ["wool_cloak", "leather_gloves", "leather_boots"]
+
+# The key to the pantry's locked west door.
+[[pile]]
+at = [19, 14]
+objects = ["iron_key"]
 
 # The pantry (the door corridor's east room).
 [[pile]]
