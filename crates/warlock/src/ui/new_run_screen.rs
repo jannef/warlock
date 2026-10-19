@@ -228,6 +228,7 @@ mod tests {
             "forest",
             "quarry",
             "showcase",
+            "traps",
             "vast",
             "world",
         ] {

@@ -7,14 +7,19 @@
 //!
 //! 1. Draw from the level's own stream, [`Rng::map`]`(seed, id, attempt)`.
 //! 2. Build the map with the branch's generator for that depth: `rooms` (rooms joined by
-//!    corridors, doors at room entrances) or `caves` (cellular automata). Both stamp
-//!    [vaults](crate::content::Vault) where they fit, place the stairs, light sources (torches in
-//!    rooms; lamps and glowing fungus in caves), and a few patrolling creatures, and last now and
-//!    then make a room (a cave chamber) special (`special.rs`, spec §7 "Special rooms").
+//!    corridors, doors at room entrances; with the branch's `key`, a few rooms locked and the
+//!    key left where the player can reach it) or `caves` (cellular automata). Both stamp
+//!    [vaults](crate::content::Vault) where they fit (with their locks and keys), place the
+//!    stairs, light sources (torches in rooms; lamps and glowing fungus in caves), and a few
+//!    patrolling creatures, and last now and then make a room (a cave chamber) special
+//!    (`special.rs`, spec §7 "Special rooms").
 //! 3. Turn rock that touches open ground into walls.
 //! 4. Validate (`connect::validate`): every stair, door, and walkable cell is reachable from the
-//!    up staircase (flood fill), patrols are valid, and something emits light. A failed attempt is
-//!    discarded and the next attempt's stream is used, so retries are deterministic too.
+//!    up staircase (flood fill), the stairs and a key to every lock without unlocking a door,
+//!    patrols are valid, and something emits light. A failed attempt is discarded and the next
+//!    attempt's stream is used, so retries are deterministic too.
+//! 5. Hide the branch's traps (spec §8 "Traps") from the level's trap stream ([`Rng::traps`]),
+//!    then roll its loot from its loot stream ([`Rng::loot`]).
 //!
 //! Generation is integer-only and never iterates a hash map. Seeds are stable within a game
 //! version; the snapshot tests in this module flag any change in generator output.
@@ -28,11 +33,13 @@ mod vault;
 
 use crate::content::{
     Content, CreatureId, CreatureSpawn, Flow, Generator, LevelKind, LevelTemplate, LightId,
-    SpecialRoom, StairsDir, StairsLink, TerrainId,
+    ObjectId, SpecialRoom, StairsDir, StairsLink, TerrainId, Trap,
 };
+use crate::door::Lock;
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
-use crate::object::Stack;
+use crate::magic::{LootGrade, loot};
+use crate::object::{Stack, add_to_pile};
 use crate::rng::Rng;
 use std::collections::BTreeMap;
 
@@ -138,6 +145,8 @@ pub(crate) struct Needs<'a> {
     pub down: bool,
     /// Creatures that may patrol the level.
     pub creatures: &'a [CreatureId],
+    /// The key to the rooms the level locks (the branch's); `None`: it locks none.
+    pub key: Option<ObjectId>,
 }
 
 /// A level under construction.
@@ -149,13 +158,19 @@ pub(crate) struct Canvas<'a> {
     pub lights: BTreeMap<Pos, LightId>,
     /// Flow of running water stamped from vaults (generators make none of their own).
     pub flow: BTreeMap<Pos, Flow>,
-    /// Objects stamped from vaults.
+    /// Objects stamped from vaults, and keys to locked rooms.
     pub objects: BTreeMap<Pos, Vec<Stack>>,
+    /// Traps stamped from vaults.
+    pub traps: BTreeMap<Pos, Trap>,
+    /// Where vaults stamped loot to roll, and the least it may be.
+    pub loot: Vec<(Pos, LootGrade)>,
+    /// Locks on closed doors: stamped from vaults, and on locked rooms (spec §8 "Doors").
+    pub locks: BTreeMap<Pos, Lock>,
     pub creatures: Vec<CreatureSpawn>,
     /// Special rooms (spec §7 "Special rooms"; `special.rs`).
     pub rooms: Vec<SpecialRoom>,
     /// Cells stamped from vaults; later passes leave them alone.
-    pub locked: Grid<bool>,
+    pub stamped: Grid<bool>,
     pub up: Option<Pos>,
     pub down: Option<Pos>,
 }
@@ -169,9 +184,12 @@ impl<'a> Canvas<'a> {
             lights: BTreeMap::new(),
             flow: BTreeMap::new(),
             objects: BTreeMap::new(),
+            traps: BTreeMap::new(),
+            loot: Vec::new(),
+            locks: BTreeMap::new(),
             creatures: Vec::new(),
             rooms: Vec::new(),
-            locked: Grid::new(width, height, false),
+            stamped: Grid::new(width, height, false),
             up: None,
             down: None,
         }
@@ -200,8 +218,9 @@ impl<'a> Canvas<'a> {
         t == self.pal.void || t == self.pal.wall
     }
 
-    pub fn is_locked(&self, p: Pos) -> bool {
-        self.locked.get(p).copied().unwrap_or(false)
+    /// Whether a vault was stamped on `p`.
+    pub fn is_stamped(&self, p: Pos) -> bool {
+        self.stamped.get(p).copied().unwrap_or(false)
     }
 
     /// Walkable, or a door the player can open.
@@ -221,7 +240,7 @@ impl<'a> Canvas<'a> {
     /// Plain floor nothing has claimed yet: no vault, stairs, light, or creature.
     pub fn is_free_floor(&self, p: Pos) -> bool {
         self.get(p) == self.pal.floor
-            && !self.is_locked(p)
+            && !self.is_stamped(p)
             && !self.lights.contains_key(&p)
             && !self.creatures.iter().any(|c| c.pos == p)
     }
@@ -271,6 +290,7 @@ impl<'a> Canvas<'a> {
         self.creatures.push(CreatureSpawn {
             creature,
             faction: None,
+            npc: None,
             pos: start,
             route,
             carry: Vec::new(),
@@ -283,7 +303,7 @@ impl<'a> Canvas<'a> {
     fn build_walls(&mut self) {
         let mut walls = Vec::new();
         for p in self.cells() {
-            if self.get(p) != self.pal.void || self.is_locked(p) {
+            if self.get(p) != self.pal.void || self.is_stamped(p) {
                 continue;
             }
             if Dir::ALL.iter().any(|d| !self.is_rock(p.step(*d))) {
@@ -318,6 +338,7 @@ pub fn generate(
     let needs = Needs {
         down: depth < def.depth,
         creatures: &def.creatures,
+        key: def.key,
     };
     let up_to = if depth > 1 {
         Some(def.level_id(depth - 1))
@@ -355,7 +376,8 @@ pub fn generate(
                 to: down_to.clone(),
             });
         }
-        let template = LevelTemplate {
+        let item_level = content.item_level(id);
+        let mut template = LevelTemplate {
             id: id.to_string(),
             name: def.level_name(depth),
             arrival: None,
@@ -368,25 +390,141 @@ pub fn generate(
             lights: canvas.lights,
             flow: canvas.flow,
             objects: canvas.objects,
+            traps: canvas.traps,
+            locks: canvas.locks,
             regions: Vec::new(),
             rooms: canvas.rooms,
             exit: None,
+            item_level,
+            loot: Vec::new(),
+            temperature: plan.temperature,
+            ice: Default::default(),
         };
         if connect::validate(&template, content).is_ok() {
+            hide_traps(&mut template, content, pal, seed, def);
+            let floor = Floor {
+                terrain: pal.floor,
+                count: def.loot,
+            };
+            place_loot(&mut template, content, seed, &canvas.loot, Some(floor));
             return Ok(template);
         }
     }
     Err(GenError::Exhausted(MAX_ATTEMPTS))
 }
 
-/// The template as text: terrain glyphs, the top object of each pile over them, creatures on top,
-/// and `*` for a light placed on floor. Trailing spaces are trimmed. Used by snapshot tests.
+/// Hides the branch's traps on a generated level (spec §8 "Traps"): `traps_per_level` of them,
+/// each of a kind from the branch's list, all hidden. They are drawn from the level's own trap
+/// stream ([`Rng::traps`]), so the rest of the level is the same with or without them. A trap
+/// lies on plain floor that nothing else claims: never on or next to a staircase (the player
+/// arrives there), never on a creature's patrol (creatures do not know where traps are, and
+/// would spring one every round), nor where objects lie or a light stands.
+fn hide_traps(
+    template: &mut LevelTemplate,
+    content: &Content,
+    pal: Palette,
+    seed: u64,
+    def: &crate::content::DungeonDef,
+) {
+    if def.traps.is_empty() {
+        return;
+    }
+    let mut rng = Rng::traps(seed, &template.id);
+    let [least, most] = def.traps_per_level;
+    let count = least + rng.below(most - least + 1);
+    let mut patrolled = std::collections::BTreeSet::new();
+    for spawn in &template.creatures {
+        let mut p = spawn.pos;
+        patrolled.insert(p);
+        for dir in &spawn.route {
+            p = p.step(*dir);
+            patrolled.insert(p);
+        }
+    }
+    let near_stairs = |p: Pos| template.stairs.iter().any(|s| s.pos.chebyshev(p) <= 1);
+    let mut free: Vec<Pos> = (template.terrain.iter())
+        .filter(|&(p, t)| {
+            *t == pal.floor
+                && !near_stairs(p)
+                && !patrolled.contains(&p)
+                && !template.objects.contains_key(&p)
+                && !template.lights.contains_key(&p)
+                && !template.traps.contains_key(&p)
+        })
+        .map(|(p, _)| p)
+        .collect();
+    for _ in 0..count {
+        if free.is_empty() {
+            break;
+        }
+        let at = free.swap_remove(rng.index(free.len()));
+        let kind = def.traps[rng.index(def.traps.len())];
+        (template.traps).insert(at, Trap::new(kind, content.trap(kind), false, None));
+    }
+}
+
+/// The floor loot of a generated level: how many items, and the terrain they lie on.
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct Floor {
+    pub terrain: TerrainId,
+    /// Fewest and most.
+    pub count: [u8; 2],
+}
+
+/// Rolls a generated level's loot (spec §8 "Magic items") at its item level, from its own
+/// stream `loot/<level id>` so that the map is the same with or without it: first an item on
+/// each of `markers` (vaults' loot cells, at least of their grade), then the floor loot, one draw
+/// for how many (between the fewest and the most) and, for each, one for a cell of `floor`
+/// terrain where nothing lies, stands, shines, or leads away (in row order), then the item.
+pub(crate) fn place_loot(
+    template: &mut LevelTemplate,
+    content: &Content,
+    seed: u64,
+    markers: &[(Pos, LootGrade)],
+    floor: Option<Floor>,
+) {
+    let mut rng = Rng::loot(seed, &template.id);
+    let level = template.item_level;
+    let place = |template: &mut LevelTemplate, rng: &mut Rng, p: Pos, grade: LootGrade| {
+        if let Some(stack) = loot::roll(content, rng, level, grade) {
+            add_to_pile(template.objects.entry(p).or_default(), &[stack], content);
+        }
+    };
+    for &(p, grade) in markers {
+        place(template, &mut rng, p, grade);
+    }
+    let Some(floor) = floor else { return };
+    let [fewest, most] = floor.count.map(i32::from);
+    let count = rng.range(fewest, most);
+    let mut free: Vec<Pos> = (template.terrain.iter())
+        .map(|(p, _)| p)
+        .filter(|&p| {
+            template.terrain[p] == floor.terrain
+                && !template.objects.contains_key(&p)
+                && !template.lights.contains_key(&p)
+                && !template.stairs.iter().any(|s| s.pos == p)
+                && !template.creatures.iter().any(|c| c.pos == p)
+                && template.player_start != Some(p)
+        })
+        .collect();
+    for _ in 0..count {
+        if free.is_empty() {
+            break;
+        }
+        let p = free.remove(rng.index(free.len()));
+        place(template, &mut rng, p, LootGrade::Any);
+    }
+}
+
+/// The template as text: terrain glyphs, the top object of each pile over them, traps (hidden
+/// ones too) over those, creatures on top, `*` for a light placed on floor, and `&` for a locked
+/// door. Trailing spaces are trimmed. Used by snapshot tests.
 pub fn ascii(template: &LevelTemplate, content: &Content) -> String {
     draw(template, content, false)
 }
 
 /// [`ascii`] with the plain ground of each special room (spec §7 "Special rooms") drawn as its
-/// effect's mark, under creatures, objects, and lights. Used by `warlock-cli gen`.
+/// effect's mark, under creatures, traps, objects, and lights. Used by `warlock-cli gen`.
 pub fn ascii_with_rooms(template: &LevelTemplate, content: &Content) -> String {
     draw(template, content, true)
 }
@@ -403,10 +541,14 @@ fn draw(template: &LevelTemplate, content: &Content, rooms: bool) -> String {
                     .find(|r| rooms && r.contains(p) && content.terrain(t).is_plain_ground());
                 if let Some(c) = template.creatures.iter().find(|c| c.pos == p) {
                     content.creature(c.creature).glyph
+                } else if let Some(trap) = template.traps.get(&p) {
+                    content.trap(trap.kind).glyph
                 } else if let Some(top) = template.objects.get(&p).and_then(|o| o.first()) {
                     content.object(top.object).glyph
                 } else if template.lights.contains_key(&p) && Some(t) == floor {
                     '*'
+                } else if template.locks.contains_key(&p) {
+                    '&'
                 } else if let Some(room) = room {
                     content.room_effect(room.effect).mark
                 } else {

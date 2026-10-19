@@ -138,7 +138,8 @@ impl World {
         let Some((_, power)) = player.dig_tool(&self.content) else {
             return;
         };
-        let work = dig_work(power, player.stats.score(Stat::Strength));
+        let strength = player.effective_stats(&self.content).score(Stat::Strength);
+        let work = dig_work(power, strength);
         self.make_noise(self.state.player, Act::Dig);
         let level = self.state.current();
         let Some(breaks) = (level.terrain.get(at)).and_then(|t| self.content.terrain(*t).breaks)
@@ -157,7 +158,6 @@ impl World {
     /// line of sight of `center` within `radius`, the walls bounding it included) whose hardness
     /// is below `blast` breaks, all at once, so a blast never reaches through a wall it breaks.
     /// Walls on the level's edge never break. Returns the cells that broke, in order.
-    #[cfg_attr(not(test), allow(dead_code))]
     pub(crate) fn blast(
         &mut self,
         center: Pos,

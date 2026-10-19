@@ -16,3 +16,6 @@
 | Glowing fungus | 3 cells | visible |
 | Faint rune | 4 cells | UV only: invisible without UV sight |
 | Lava | 4 cells | visible |
+| Faintly glowing magic item (Radiant, of Light) | 2 cells | visible |
+| Glowing magic item (Radiant, of Light) | 3 cells | visible |
+| Brightly glowing magic item (Radiant, of Light) | 4 cells | visible |

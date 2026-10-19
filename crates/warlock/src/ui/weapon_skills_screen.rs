@@ -170,6 +170,7 @@ impl WeaponSkillsScreen {
         let body = tallest(&columns).max(1) as i32;
         let width = if two { WIDTH_TWO } else { WIDTH };
         let panel = Panel::new(console, " Weapon skills ", width, body + around);
+        super::info_tabs::draw_tabs(console, &panel, bindings, super::ScreenName::WeaponSkills);
         let room = (panel.h - around).max(0);
         let most = (body - room).max(0) as usize;
         self.most.store(most, Ordering::Relaxed);

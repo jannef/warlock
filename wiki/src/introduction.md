@@ -7,7 +7,7 @@ real shadows, and gently animated terrain.
 This wiki explains how the game works: the rules you play by and the facts about its world. It is
 for players. It describes the game as it is today, which is an early build. You can walk and
 explore, travel the overworld, watch the days, the moon, and the weather change, hear what you
-cannot see, and pick up, carry, wear, and wield objects. Creatures go about their business,
+cannot see, talk to the people you meet, and pick up, carry, wear, and wield objects. Creatures go about their business,
 notice you, and fight each other and you: blows and arrows are rolled against your Defence, hurt,
 and kill, and death is final (spells are only announced so far). Your stats, your weapon, and
 your armour decide how well you fight.
@@ -30,8 +30,8 @@ your armour decide how well you fight.
   [Horoscope](horoscope.md), and [Stats](stats.md) explain who you are; [Combat](combat.md) how
   fights go, and how you die.
 - [Terrain](terrain.md), [Special rooms](special-rooms.md), [Objects and your
-  pack](objects.md), [Creatures](creatures.md), [Your lantern](lantern.md), and
-  [Saving](saving.md) cover the rest.
+  pack](objects.md), [Creatures](creatures.md), [People and talk](npcs.md), [Your
+  lantern](lantern.md), and [Saving](saving.md) cover the rest.
 
 ## Starting a run
 
@@ -46,10 +46,11 @@ its own time of day:
 Tables in this wiki that list names, times, or numbers are generated from the game's own data, so
 they match the version of the game this wiki was published with.
 
-The Showcase is a safe place: its creatures keep to their rounds and leave you alone. The
-**Arena**, reached by the stairs down from the showcase hub's stairs nook, is the place to watch
-and join fights, the **Quarry**, down another staircase there, the place to
-[dig](digging.md), and the generated **Depths** are the real dungeon, where creatures hunt you.
+The Showcase is a safe place: its creatures keep to their rounds and leave you alone, and it has
+no traps. The **Arena**, reached by the stairs down from the showcase hub's stairs nook, is the
+place to watch and join fights; the **Quarry**, down another staircase there, the place to
+[dig](digging.md); the **Trap hall**, down a third, the place to learn [traps](traps.md); and the
+generated **Depths** are the real dungeon, where creatures hunt you and traps lie hidden.
 
 Apart from where the scenarios start, this wiki does not describe places or walk you through
 levels: the game's world is still being built.

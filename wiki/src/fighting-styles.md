@@ -21,8 +21,8 @@ hand.
 - **Duelist**: one one-handed weapon and nothing in the other hand. It parries better and hits
   more often.
 - **Twin Blades**: a weapon in each hand. See below.
-- **Great Weapon**: any two-handed weapon but a staff: the greatsword. It hits harder, its
-  criticals more so, and it swings faster.
+- **Great Weapon**: any two-handed weapon but a staff, such as the great sword or the great axe.
+  It hits harder, its criticals more so, and it swings faster.
 - **Sword and Board**: a one-handed weapon and a shield. The shield protects better, and a blow
   that hits may be followed by a shield bash for free (it trains
   [shield bashing](weapon-skills.md#the-skills)).
@@ -35,14 +35,17 @@ hand.
 - **Staff Fighter**: a staff in both hands. It parries better and hits more often.
 
 Shooting and throwing are styles of their own, so a marksman with a sword at their side trains
-both Marksman (shots) and Duelist (blows).
+both Marksman (shots) and Duelist (blows). A kick is no style: you kick whatever your hands hold,
+so it trains only [unarmed fighting](weapon-skills.md#the-skills), and Brawler does not help it.
 
 ## Two weapons
 
-Your off hand takes a shield, or a **light** weapon: a dagger or a short sword (see the
+Your off hand takes a shield, or a **light** weapon: a dagger, a stiletto, or a short sword (see the
 [weapons](combat.md#damage) table; "main hand or off hand"). With a weapon in each hand, every
 attack you make up close is two blows: the main hand's first, then the off hand's, each at a
-penalty to hit. The off hand's blow is made with its own weapon and trains that weapon's skill.
+penalty to hit. The off hand's blow is made with its own weapon and trains that weapon's skill;
+a magic weapon's own powers (see [Magic items](magic-items.md)) go with its own blow, while what
+your other gear gives helps both. Each blow can draw blood and open a bleeding wound on its own.
 Both blows are one attack, in the time of one. If the first blow kills, there is no second.
 
 Twin Blades eases both penalties, and at rank 10 neither hand has any: a full attack with each.

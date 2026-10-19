@@ -1,15 +1,17 @@
 //! `cargo xtask wiki [--check | --build]`: the player wiki's generated tables.
 //!
 //! The wiki (`wiki/`, built with mdBook) is written by hand except for facts that live in data
-//! (month names, moons, weather, terrain, vision profiles, light presets, creatures, factions,
-//! objects and materials, equipment slots, scenarios, action costs, races and classes, their sizes
-//! and carrying limits, the horoscope, skills: what each does, how it trains, what it gives by
-//! value, who trains it, and the increase curve, special rooms; the walls that break and how
-//! long digging takes; weapon skills and fighting styles: `wiki/weapon_skills.rs`) and a few
-//! constants of the rules (sight radii, the pack's size, the stats' names, what each gender
-//! raises). Those are written to `wiki/src/generated/*.md` from the built-in content, and the
-//! pages pull them in with `{{#include generated/NAME.md}}`, so they cannot drift. Output is
-//! deterministic. `--check` fails when a file is stale; `--build` also runs `mdbook build wiki`.
+//! (month names, moons, weather, temperatures, terrain, water that freezes and the ice on it,
+//! vision profiles, light presets, creatures, factions, objects and materials, equipment slots,
+//! scenarios, action costs, races and classes, their sizes and carrying limits, the horoscope,
+//! skills: what each does, how it trains, what it gives by value, who trains it, and the increase
+//! curve, status effects, diseases, and how fast hit points come back, special rooms; the walls
+//! that break and how long digging takes; weapon skills and fighting styles:
+//! `wiki/weapon_skills.rs`) and a few constants of the rules (sight radii, the pack's size, the
+//! stats' names, what each gender raises, what ice holds and how fast it grows). Those are
+//! written to `wiki/src/generated/*.md` from the built-in content, and the pages pull them in
+//! with `{{#include generated/NAME.md}}`, so they cannot drift. Output is deterministic.
+//! `--check` fails when a file is stale; `--build` also runs `mdbook build wiki`.
 
 mod weapon_skills;
 
@@ -21,19 +23,26 @@ use std::process::Command;
 use warlock_core::burden::{self, Burden, Load};
 use warlock_core::character::Gender;
 use warlock_core::combat;
+use warlock_core::content::Effect as ItemEffect;
 use warlock_core::content::{
-    ActionKind, BASE_TURN, Combat, Content, CreatureId, FactionId, LevelKind, LightId,
-    NORMAL_SPEED, ObjectId, Stance, TerrainDef, price,
+    ActionKind, AffixDef, AffixKind, Affliction, BASE_TURN, Combat, Content, CreatureId,
+    DiseaseDef, DiseaseId, FactionId, HungerDef, ItemKind, LevelKind, LightId, NORMAL_SPEED,
+    ObjectDef, ObjectId, Rarity, Speaker, Stance, StatusDef, TerrainDef, TrapEffect, price,
 };
 use warlock_core::daylight::{
     MOONLIGHT_PER_CELL, SIGHT_DAY, SIGHT_MOONLIT, SIGHT_NIGHT, SIGHT_TWILIGHT, overworld_sight,
 };
 use warlock_core::dice::Dice;
+use warlock_core::door;
+use warlock_core::hunger::Hunger;
+use warlock_core::ice;
 use warlock_core::light::{Light, Moon, Sky, Sun};
+use warlock_core::magic::describe;
 use warlock_core::object::{INVENTORY_SLOTS, format_weight};
 use warlock_core::perception::VIEW_RADIUS;
 use warlock_core::skills::{Effect, SkillId};
 use warlock_core::stats::{AVERAGE, PerStat, Stat};
+use warlock_core::temperature::{self, Temperature};
 use warlock_core::time::{DAY, Duration, GameTime};
 use warlock_core::weather::{Clouds, Conditions, Weather};
 use warlock_core::world::digs_to_break;
@@ -129,10 +138,20 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("moons.md".to_string(), moons(content)),
         ("weather.md".to_string(), weather_chances(content)),
         ("weather-effects.md".to_string(), weather_effects(content)),
+        ("temperature.md".to_string(), temperatures(content)),
+        (
+            "temperature-weather.md".to_string(),
+            temperature_weather(content),
+        ),
+        ("freezing.md".to_string(), freezing(content)),
+        ("ice.md".to_string(), ice_thickness(content)),
+        ("ice-growth.md".to_string(), ice_growth(content)),
         ("vision.md".to_string(), vision(content)),
         ("lights.md".to_string(), lights(content)),
         ("creatures.md".to_string(), creatures(content)),
         ("factions.md".to_string(), factions(content)),
+        ("dialogue.md".to_string(), dialogue(content)),
+        ("quests.md".to_string(), quests(content)),
         ("footsteps.md".to_string(), footsteps(content)),
         ("objects.md".to_string(), objects(content)),
         ("equipment.md".to_string(), equipment(content)),
@@ -157,6 +176,9 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("threats.md".to_string(), threats()),
         ("hit-points.md".to_string(), hit_points(content)),
         ("regeneration.md".to_string(), regeneration()),
+        ("healing.md".to_string(), healing(content)),
+        ("status-effects.md".to_string(), status_effects(content)),
+        ("diseases.md".to_string(), diseases(content)),
         (
             "experience-levels.md".to_string(),
             experience_levels(content),
@@ -180,9 +202,27 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("burden.md".to_string(), burden_levels()),
         ("burden-races.md".to_string(), burden_races(content)),
         ("burden-examples.md".to_string(), burden_examples(content)),
+        ("doors.md".to_string(), doors(content)),
+        ("keys.md".to_string(), keys(content)),
+        ("hunger-states.md".to_string(), hunger_states(content)),
+        ("hunger-facts.md".to_string(), hunger_facts(content)),
+        ("hunger-races.md".to_string(), hunger_races(content)),
+        ("food.md".to_string(), food(content)),
+        ("corpses.md".to_string(), corpses(content)),
         ("digging.md".to_string(), digging(content)),
         ("digging-strength.md".to_string(), digging_strength(content)),
         ("special-rooms.md".to_string(), special_rooms(content)),
+        ("magic-rarity.md".to_string(), magic_rarity(content)),
+        ("magic-bases.md".to_string(), magic_bases(content)),
+        (
+            "magic-prefixes.md".to_string(),
+            affix_table(content, AffixKind::Prefix),
+        ),
+        (
+            "magic-suffixes.md".to_string(),
+            affix_table(content, AffixKind::Suffix),
+        ),
+        ("magic-names.md".to_string(), rare_names(content)),
         (
             "weapon-skills.md".to_string(),
             weapon_skills::skills(content),
@@ -205,6 +245,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
             "style-benefits.md".to_string(),
             weapon_skills::style_benefits(content),
         ),
+        ("traps.md".to_string(), traps(content)),
     ];
     for (_, text) in &mut files {
         *text = format!(
@@ -279,6 +320,8 @@ fn action_costs(content: &Content) -> String {
             ActionKind::Wait => "Waiting",
             ActionKind::OpenDoor => "Opening a door",
             ActionKind::CloseDoor => "Closing a door",
+            ActionKind::Unlock => "Unlocking a door with a key (on top of opening it)",
+            ActionKind::Kick => "Kicking (a door, or a creature)",
             ActionKind::Lantern => "Lighting or dousing the lantern",
             ActionKind::Stairs => {
                 "Taking stairs, entering a place from the overworld, or walking off an area's edge"
@@ -293,7 +336,12 @@ fn action_costs(content: &Content) -> String {
             ActionKind::Wield => "Wielding something, or putting it away",
             ActionKind::Wear | ActionKind::BodyArmor => "Putting something on, or taking it off",
             ActionKind::Ready => "Readying something, or putting it away",
+            ActionKind::Eat => "A turn of eating (a meal takes several: see Food and corpses)",
             ActionKind::Dig => "A turn of digging (digging through a wall takes many)",
+            ActionKind::Chat => "Chatting with someone (asking about a topic takes no time)",
+            ActionKind::Climb => {
+                "Climbing out of the water onto ice (on top of the step onto the ice)"
+            }
         };
         // Equipment actions say which slots take them (data/slots.toml); a kind no slot uses
         // is left out.
@@ -428,6 +476,12 @@ fn local_terrain(content: &Content) -> String {
         if t.is_closed_door() {
             notes.push("door: walking into it opens it".to_string());
         }
+        if let Some((to, sturdiness)) = t.kicked_in {
+            let broken = content.terrain(to).name.to_lowercase();
+            notes.push(format!(
+                "kicked in, it breaks into a {broken} (sturdiness {sturdiness})"
+            ));
+        }
         if t.is_open_door() {
             notes.push("door: can be closed".to_string());
         }
@@ -444,6 +498,12 @@ fn local_terrain(content: &Content) -> String {
         }
         if t.roofed {
             notes.push("roofed: no sun or sky light".into());
+        }
+        if let Some(f) = t.freeze {
+            notes.push(format!("freezes below {} °C", f.below));
+        }
+        if t.ice.is_some() {
+            notes.push("ice on water: holds by its thickness".into());
         }
         match t.muffle {
             None => {}
@@ -564,12 +624,22 @@ fn digging(content: &Content) -> String {
     let tools: Vec<(&str, u16)> = (content.object_defs().iter())
         .filter_map(|o| o.dig.map(|power| (o.name.as_str(), power)))
         .collect();
+    let blasts: Vec<(&str, u16)> = (content.trap_defs().iter())
+        .filter_map(|t| match t.effect {
+            TrapEffect::Burst { blast, .. } if blast > 0 => Some((t.noun.as_str(), blast)),
+            _ => None,
+        })
+        .collect();
     let mut out = String::from("| Wall | Glyph | Hardness |");
     for (name, _) in &tools {
         let _ = write!(out, " With {} {name} |", article(name));
     }
+    for (name, _) in &blasts {
+        let _ = write!(out, " {} {name} breaks it |", capital(article(name)));
+    }
     out.push_str(" Becomes |\n|---|:---:|---:|");
     out.push_str(&"---:|".repeat(tools.len()));
+    out.push_str(&":---:|".repeat(blasts.len()));
     out.push_str("---|\n");
     for t in content.terrain_defs() {
         let Some(breaks) = t.breaks else { continue };
@@ -586,6 +656,9 @@ fn digging(content: &Content) -> String {
                 " {} |",
                 dig_time(content, breaks.hardness, *power, AVERAGE)
             );
+        }
+        for (_, blast) in &blasts {
+            let _ = write!(out, " {} |", yes(breaks.hardness < *blast));
         }
         let _ = writeln!(out, " {} |", content.terrain(breaks.becomes).name);
     }
@@ -775,6 +848,169 @@ fn weather_effects(content: &Content) -> String {
     out
 }
 
+/// A temperature in whole degrees, both ways: `-7 °C (19 °F)`.
+fn degrees(t: Temperature) -> String {
+    format!("{} °C ({} °F)", t.celsius(), t.fahrenheit())
+}
+
+/// Each month's mean temperature under the open sky, and how cold a clear night and how warm a
+/// clear afternoon get in the middle of it (spec §5 "Temperature").
+fn temperatures(content: &Content) -> String {
+    let climate = content.climate();
+    let half_swing = i32::from(climate.swing()) * 5;
+    let mut out = String::from(
+        "| Month | Mean | A clear night | A clear afternoon |\n|---|---:|---:|---:|\n",
+    );
+    for month in 1..=12 {
+        let mid = GameTime::from_calendar(1, month, 16, 0, 0).expect("a valid date");
+        let mean = temperature::mean(mid, climate) as i32;
+        let at = |offset: i32| degrees(Temperature::from_tenths(mean + offset));
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} |",
+            content.calendar().month_name(mid),
+            at(0),
+            at(-half_swing),
+            at(half_swing),
+        );
+    }
+    out
+}
+
+/// What each weather does to the day's swing of temperature, and how much it cools the air.
+fn temperature_weather(content: &Content) -> String {
+    let climate = content.climate();
+    let mut out = String::from(
+        "| Weather | Coldest night to warmest afternoon | Cooler by |\n|---|---:|---:|\n",
+    );
+    for w in Weather::ALL {
+        let def = climate.def(w);
+        let swing =
+            Temperature::from_tenths(i32::from(climate.swing()) * i32::from(def.swing) / 10);
+        let chill = match def.chill {
+            0 => "-".to_string(),
+            c => format!("{c} °C"),
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {}.{} °C | {chill} |",
+            w.name(),
+            swing.tenths() / 10,
+            swing.tenths() % 10
+        );
+    }
+    out
+}
+
+/// What water freezes and how (spec §5 "Ice").
+fn freezing(content: &Content) -> String {
+    let mut out = String::from(
+        "| Water | Ice grows below | How fast | A fall through the ice |\n|---|---:|---:|---|\n",
+    );
+    for t in content.terrain_defs() {
+        if let Some(f) = t.freeze {
+            // A fixed number reads as a number, dice as written.
+            let hurt = match (f.plunge.is_fixed(), f.plunge.min()) {
+                (true, 1) => "1 hit point".to_string(),
+                (true, n) => format!("{n} hit points"),
+                (false, _) => format!("{} hit points", f.plunge),
+            };
+            let _ = writeln!(
+                out,
+                "| {} | {} | {} | {hurt} (never your last) |",
+                capital(&t.name),
+                degrees(Temperature::degrees(f.below.into())),
+                if f.rate == 100 {
+                    "full pace".to_string()
+                } else {
+                    format!("{}% of still water's pace", f.rate)
+                },
+            );
+        }
+    }
+    out
+}
+
+/// What ice looks like by its thickness, and what it holds (spec §5 "Ice").
+fn ice_thickness(content: &Content) -> String {
+    let step = content.action_costs().cost(ActionKind::Step);
+    let tiers = content.ice_terrain();
+    let mut out =
+        String::from("| Looks like | Thickness | Holds | Step takes |\n|---|---|---|---:|\n");
+    let cm = |mm: u16| {
+        if mm.is_multiple_of(10) {
+            format!("{} cm", mm / 10)
+        } else {
+            format!("{}.{} cm", mm / 10, mm % 10)
+        }
+    };
+    for (i, &(mm, id)) in tiers.iter().enumerate() {
+        let def = content.terrain(id);
+        let holds = |mm: u16| format_weight(ice::holds(u32::from(mm) * 1000));
+        let (thickness, weight) = match tiers.get(i + 1) {
+            Some(&(next, _)) => (
+                format!("{} to {}", cm(mm), cm(next)),
+                format!("{} to {}", holds(mm), holds(next)),
+            ),
+            None => (
+                format!("{} and more", cm(mm)),
+                format!("{} and more", holds(mm)),
+            ),
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {thickness} | {weight} | {} |",
+            capital(&def.name),
+            at_normal_pace(def.step_price(step, LevelKind::Dungeon)),
+        );
+    }
+    out
+}
+
+/// How long still water takes to freeze over to each thickness of ice at a few steady
+/// temperatures (spec §5 "Ice").
+fn ice_growth(content: &Content) -> String {
+    let Some(still) = content
+        .terrain_defs()
+        .iter()
+        .find_map(|t| t.freeze.filter(|f| f.below == 0 && f.rate == 100))
+    else {
+        return String::new();
+    };
+    let tiers = content.ice_terrain();
+    let mut out = String::from("| Steady at |");
+    for &(_, id) in tiers {
+        let _ = write!(out, " {} |", capital(&content.terrain(id).name));
+    }
+    out.push_str("\n|---|");
+    out.push_str(&"---:|".repeat(tiers.len()));
+    out.push('\n');
+    let ticks_per_hour = 3600 / ice::TICK;
+    for c in [-2, -5, -10, -20] {
+        let t = Temperature::degrees(c);
+        let _ = write!(out, "| {} |", degrees(t));
+        for &(mm, _) in tiers {
+            let mut um = 0;
+            let mut ticks = 0u64;
+            while um < u32::from(mm) * 1000 && ticks < 1000 * 144 {
+                um = ice::tick(um, t, &still);
+                ticks += 1;
+            }
+            let hours = ticks.div_ceil(ticks_per_hour);
+            let took = if hours == 1 {
+                "an hour".to_string()
+            } else if hours < 48 {
+                format!("{hours} hours")
+            } else {
+                format!("{} days", (hours + 12) / 24)
+            };
+            let _ = write!(out, " {took} |");
+        }
+        out.push('\n');
+    }
+    out
+}
+
 fn moons(content: &Content) -> String {
     if content.moons().is_empty() {
         return "There are no moons: nights are dark.\n".into();
@@ -876,6 +1112,17 @@ fn light_name(content: &Content, id: LightId) -> String {
     {
         return "Your lantern".into();
     }
+    let affixes: Vec<&str> = (content.affixes().all().iter())
+        .filter(|a| a.tiers.iter().any(|t| t.light == Some(id)))
+        .map(|a| a.name.as_str())
+        .collect();
+    if !affixes.is_empty() {
+        return format!(
+            "{} magic item ({})",
+            capital(glow_word(preset.radius)),
+            affixes.join(", ")
+        );
+    }
     let pedestal = (content.terrain_defs().iter())
         .filter(|t| !t.walkable && t.light.is_none())
         .find_map(|t| Some((t, preset.id.strip_prefix(&format!("{}_", t.id))?)));
@@ -883,6 +1130,214 @@ fn light_name(content: &Content, id: LightId) -> String {
         Some((t, kind)) => format!("{} ({})", capital(&t.name), words(kind)),
         None => capital(&words(&preset.id)),
     }
+}
+
+/// How a light of `radius` glows, in words: `faintly glowing`, `glowing`, `brightly glowing`.
+fn glow_word(radius: i32) -> &'static str {
+    match radius {
+        ..=2 => "faintly glowing",
+        3 => "glowing",
+        _ => "brightly glowing",
+    }
+}
+
+/// How often loot is normal, magic, or rare, and how many affixes magic and rare items roll
+/// (spec §8 "Magic items").
+fn magic_rarity(content: &Content) -> String {
+    let affixes = content.affixes();
+    let total: u32 = Rarity::ALL.iter().map(|&r| affixes.rarity_weight(r)).sum();
+    let mut out = String::from("| Loot is | How often |\n|---|---:|\n");
+    for rarity in Rarity::ALL {
+        let _ = writeln!(
+            out,
+            "| {} | {} |",
+            capital(rarity.word()),
+            percent(affixes.rarity_weight(rarity), total.max(1))
+        );
+    }
+    let both = affixes.magic_both;
+    let _ = writeln!(
+        out,
+        "\n| A magic item has | How often |\n|---|---:|\n\
+         | a prefix | {} |\n| a suffix | {} |\n| a prefix and a suffix | {} |",
+        percent(100 - both, 200),
+        percent(100 - both, 200),
+        percent(both, 100)
+    );
+    let counts: u32 = affixes.rare_counts.iter().map(|(_, w)| *w).sum();
+    out.push_str("\n| A rare item has | How often |\n|---|---:|\n");
+    for (count, weight) in &affixes.rare_counts {
+        let _ = writeln!(
+            out,
+            "| {count} affixes | {} |",
+            percent(*weight, counts.max(1))
+        );
+    }
+    out
+}
+
+/// The base items magic items are made of, by kind: what they do, from which item level loot
+/// holds them, and how often.
+fn magic_bases(content: &Content) -> String {
+    let mut out = String::from(
+        "| Base item | Kind | Stats | Weight | From item level | How often |\n\
+         |---|---|---|---:|:---:|:---:|\n",
+    );
+    for kind in ItemKind::ALL {
+        let bases: Vec<_> = (content.object_defs().iter())
+            .filter(|o| o.kind == Some(kind))
+            .collect();
+        let total: u32 = bases.iter().map(|o| o.frequency).sum();
+        for o in bases {
+            let stats = describe::base_stats(o, content)
+                .into_iter()
+                .filter(|s| !s.starts_with("Worn") && !s.starts_with("Held"))
+                .collect::<Vec<_>>();
+            let stats = if stats.is_empty() {
+                "-".to_string()
+            } else {
+                stats.join("; ")
+            };
+            let often = if o.frequency == 0 {
+                "never".to_string()
+            } else {
+                percent(o.frequency, total.max(1))
+            };
+            let _ = writeln!(
+                out,
+                "| {} | {} | {stats} | {} | {} | {often} |",
+                capital(&o.name),
+                kind.plural(),
+                format_weight(u64::from(o.weight)),
+                o.level,
+            );
+        }
+    }
+    out.push_str(
+        "\n\"How often\" is the base's share among the bases of its kind; every kind weighs the \
+         sum of its bases' frequencies when loot picks a base.\n",
+    );
+    out
+}
+
+/// Every affix of `kind`: what it does, what it rolls on, and its tiers (from which item level,
+/// and the values they roll).
+fn affix_table(content: &Content, kind: AffixKind) -> String {
+    let what = kind.name();
+    let mut out = format!(
+        "| {what} | Effect | Rolls on | Tiers (item level: value) | Weight |\n\
+         |---|---|---|---|:---:|\n"
+    );
+    let all: Vec<&AffixDef> = (content.affixes().all().iter())
+        .filter(|a| a.kind == kind)
+        .collect();
+    for a in all {
+        let bases: Vec<&str> = a.bases.iter().map(|k| k.plural()).collect();
+        let tiers: Vec<String> = (a.tiers.iter())
+            .map(|t| format!("{}: {}", t.level, tier_value(a.effect, t, content)))
+            .collect();
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} | {} |",
+            a.name,
+            effect_text(content, a),
+            bases.join(", "),
+            tiers.join(" · "),
+            a.weight
+        );
+    }
+    out
+}
+
+/// What affix `a` does, in words, without its value: its effect's words, or the skill it adds to.
+fn effect_text(content: &Content, a: &AffixDef) -> String {
+    match a.skill {
+        Some(id) => format!("{} (a skill)", content.skill(id).name),
+        None => effect_words(a.effect),
+    }
+}
+
+/// What an effect does, in words, without its value.
+fn effect_words(effect: ItemEffect) -> String {
+    match effect {
+        ItemEffect::ToHit => "to hit".into(),
+        ItemEffect::Damage => "damage, added to every roll".into(),
+        ItemEffect::ExtraDamage => "adds a die of damage".into(),
+        ItemEffect::Threat => "criticals threaten on more rolls".into(),
+        ItemEffect::Crit => "critical damage multiplier".into(),
+        ItemEffect::AttackSpeed => "attacks faster".into(),
+        ItemEffect::Range => "range, in cells".into(),
+        ItemEffect::Draw => "less Strength needed to draw".into(),
+        ItemEffect::Durability => "breaks less often".into(),
+        ItemEffect::Parry => "Parry".into(),
+        ItemEffect::Armour => "Armour".into(),
+        ItemEffect::Shield => "Shield".into(),
+        ItemEffect::MaxDex => "Dexterity may add more to Defence".into(),
+        ItemEffect::Weight => "lighter".into(),
+        ItemEffect::Dodge => "Dodge".into(),
+        ItemEffect::Deflection => "Deflection".into(),
+        ItemEffect::Natural => "natural armour".into(),
+        ItemEffect::MaxHp => "maximum hit points".into(),
+        ItemEffect::Regeneration => "hit points come back faster".into(),
+        ItemEffect::Stat(stat) => stat.name().into(),
+        ItemEffect::MoveSpeed => "you move faster".into(),
+        ItemEffect::Carry => "carrying capacity".into(),
+        ItemEffect::Stealth => "quieter footsteps".into(),
+        ItemEffect::Light => "the wearer glows".into(),
+        ItemEffect::Skill => "a skill".into(),
+    }
+}
+
+/// What a tier rolls, in words: `+1–2`, `1d3–1d4`, `20–35%`; speed in words only.
+fn tier_value(effect: ItemEffect, tier: &warlock_core::content::Tier, content: &Content) -> String {
+    let range = |prefix: &str, suffix: &str| {
+        if tier.min == tier.max {
+            format!("{prefix}{}{suffix}", tier.min)
+        } else {
+            format!("{prefix}{}–{}{suffix}", tier.min, tier.max)
+        }
+    };
+    let faster = |p: i32| match p {
+        ..=7 => "a little faster",
+        8..=12 => "faster",
+        _ => "much faster",
+    };
+    match effect {
+        ItemEffect::ExtraDamage if tier.min == tier.max => format!("1d{}", tier.min),
+        ItemEffect::ExtraDamage => format!("1d{}–1d{}", tier.min, tier.max),
+        ItemEffect::Draw => range("", " less"),
+        ItemEffect::AttackSpeed | ItemEffect::MoveSpeed => {
+            let (lo, hi) = (faster(tier.min), faster(tier.max));
+            if lo == hi {
+                lo.to_string()
+            } else {
+                format!("{lo} to {hi}")
+            }
+        }
+        ItemEffect::Durability
+        | ItemEffect::Weight
+        | ItemEffect::Stealth
+        | ItemEffect::Regeneration => range("", "%"),
+        ItemEffect::Carry => range("+", " kg"),
+        ItemEffect::Light => {
+            let radius = tier.light.map_or(0, |id| content.light(id).radius);
+            format!("{} ({radius} cells)", glow_word(radius))
+        }
+        _ => range("+", ""),
+    }
+}
+
+/// The words rare items are named with: the first words, and the second words by kind.
+fn rare_names(content: &Content) -> String {
+    let affixes = content.affixes();
+    let mut out = format!(
+        "First words: {}.\n\n| Kind | Second words |\n|---|---|\n",
+        affixes.first_names.join(", ")
+    );
+    for (kind, words) in &affixes.second_names {
+        let _ = writeln!(out, "| {} | {} |", capital(kind.plural()), words.join(", "));
+    }
+    out
 }
 
 /// `a` or `an` for a noun.
@@ -929,8 +1384,8 @@ fn table_text(text: &str) -> String {
 /// §8 "Speed"); how a creature stands toward the player and how it attacks are seen in play.
 fn creatures(content: &Content) -> String {
     let mut out = String::from(
-        "| Creature | Glyph | Faction | Toward you | Attacks | Opens doors | Carries a light |\n\
-         |---|:---:|---|---|---|:---:|:---:|\n",
+        "| Creature | Glyph | Faction | Toward you | Attacks | Opens doors | Carries a light | \
+         Drops magic |\n|---|:---:|---|---|---|:---:|:---:|:---:|\n",
     );
     let player = content.creature_id("player");
     for (i, c) in content.creature_defs().iter().enumerate() {
@@ -957,9 +1412,16 @@ fn creatures(content: &Content) -> String {
         if let (true, Some(cost)) = (fights, c.attack_cost) {
             let _ = write!(attacks, " (cost {cost})");
         }
+        // How often it drops a magic or rare item where it dies, in words.
+        let drops = match c.loot {
+            0 => "-",
+            1..=29 => "now and then",
+            30..=49 => "sometimes",
+            _ => "often",
+        };
         let _ = writeln!(
             out,
-            "| {} | {} | {faction} | {stance} | {attacks} | {} | {} |",
+            "| {} | {} | {faction} | {stance} | {attacks} | {} | {} | {drops} |",
             capital(&c.name),
             glyph(c.glyph),
             yes(c.opens_doors),
@@ -988,12 +1450,16 @@ fn object_class(glyph: char) -> Option<&'static str> {
     })
 }
 
+/// Every object but corpses (Food and corpses has those).
 fn objects(content: &Content) -> String {
     let mut out = String::from(
         "| Object | Glyph | Kind | Material | Weight (each) | Stacks | Worn or wielded on |\n\
          |---|:---:|---|---|---:|:---:|---|\n",
     );
     for (i, o) in content.object_defs().iter().enumerate() {
+        if o.corpse.is_some() {
+            continue;
+        }
         let _ = writeln!(
             out,
             "| {} | {} | {} | {} | {} | {} | {} |",
@@ -1012,18 +1478,80 @@ fn objects(content: &Content) -> String {
 fn materials(content: &Content) -> String {
     let mut out = String::from("| Material | Objects made of it |\n|---|---|\n");
     for (i, m) in content.materials().iter().enumerate() {
-        let made: Vec<&str> = content
-            .object_defs()
-            .iter()
-            .filter(|o| usize::from(o.material.0) == i)
+        let of_it = |o: &&ObjectDef| usize::from(o.material.0) == i;
+        let objects = content.object_defs().iter().filter(of_it);
+        let mut made: Vec<&str> = (objects.clone())
+            .filter(|o| o.corpse.is_none())
             .map(|o| o.plural.as_str())
             .collect();
+        if objects.clone().any(|o| o.corpse.is_some()) {
+            made.push("corpses");
+        }
         let made = if made.is_empty() {
             "-".to_string()
         } else {
             made.join(", ")
         };
         let _ = writeln!(out, "| {} | {made} |", capital(&m.name));
+    }
+    out
+}
+
+/// Who talks (`data/dialogue.toml`): each speaker, whether they greet you, how many one-liners
+/// they take turns with, what you may ask them about, and how they mutter. The lines themselves
+/// are left to the game.
+fn dialogue(content: &Content) -> String {
+    let mut out = String::from(
+        "| Who | Greets you | One-liners | Topics | Mutters |\n|---|:---:|---:|---|---|\n",
+    );
+    for d in content.dialogues() {
+        let who = match &d.speaker {
+            Speaker::Creature(c) => capital(&content.creature(*c).name),
+            Speaker::Npc(npc) => format!("`{npc}` (a unique character)"),
+        };
+        let topics: Vec<&str> = d.topics.iter().map(|t| t.name.as_str()).collect();
+        let topics = if topics.is_empty() {
+            "—".to_string()
+        } else {
+            topics.join(", ")
+        };
+        let mutters = d.mutter.as_ref().map_or_else(
+            || "—".to_string(),
+            |m| {
+                format!(
+                    "{} ({} % of its actions, when you are near)",
+                    m.verb, m.chance
+                )
+            },
+        );
+        let _ = writeln!(
+            out,
+            "| {who} | {} | {} | {topics} | {mutters} |",
+            yes(d.greet.is_some()),
+            d.lines.len()
+        );
+    }
+    out
+}
+
+/// Who gives quests (`data/quests.toml`): each quest's name, its giver, its kind, and what must
+/// be done first. What it asks exactly and what it pays are left to the game.
+fn quests(content: &Content) -> String {
+    let mut out = String::from(
+        "| Quest | Given by | Kind | Offered after | Repeatable |\n|---|---|---|---|:---:|\n",
+    );
+    for q in content.quests() {
+        let after = q
+            .requires
+            .map_or_else(|| "—".to_string(), |r| content.quest(r).name.clone());
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {after} | {} |",
+            q.name,
+            capital(&content.speaker_name(q.giver)),
+            q.kind().id(),
+            yes(q.repeatable)
+        );
     }
     out
 }
@@ -1400,10 +1928,17 @@ fn percent(part: u32, of: u32) -> String {
 fn weapons(content: &Content) -> String {
     let mut out = String::from(
         "| Weapon | Damage | Critical on | Critical damage | Parry | Needs Strength | Held | \
-         Thrown | Weapon skill |\n|---|:---:|:---:|:---:|:---:|:---:|---|:---:|---|\n",
+         Thrown | Weapon skill | A blow takes |\n|---|:---:|:---:|:---:|:---:|:---:|---|:---:|---|---:|\n",
     );
+    let melee = content.action_costs().cost(ActionKind::Melee);
     for (i, o) in content.object_defs().iter().enumerate() {
         let Some(attack) = &o.attack else { continue };
+        let in_hand = (content.slots().iter()).any(|s| s.hand && o.slot.as_ref() == Some(&s.fits));
+        let blow = if in_hand {
+            at_normal_pace(price(o.attack_cost.unwrap_or(melee), BASE_TURN))
+        } else {
+            "-".to_string()
+        };
         let parry = if o.parry > 0 {
             format!("+{}", o.parry)
         } else {
@@ -1424,7 +1959,7 @@ fn weapons(content: &Content) -> String {
         });
         let _ = writeln!(
             out,
-            "| {} | {} | {} | ×{} | {parry} | {strength} | {held} | {thrown} | {skill} |",
+            "| {} | {} | {} | ×{} | {parry} | {strength} | {held} | {thrown} | {skill} | {blow} |",
             capital(&o.name),
             attack.damage,
             threat_range(attack.threat),
@@ -1576,6 +2111,51 @@ fn armour(content: &Content) -> String {
     out
 }
 
+/// The Strength scores the door table shows, and the last column's "and up".
+const KICK_STRENGTHS: [u8; 8] = [3, 6, 9, 10, 12, 15, 18, 20];
+
+/// How often a kick breaks each door that can break, by the kicker's Strength score
+/// (spec §8 "Doors").
+fn doors(content: &Content) -> String {
+    let mut out = String::from("| Door | Sturdiness |");
+    let mut rule = String::from("|---|:---:|");
+    for st in KICK_STRENGTHS {
+        let _ = write!(out, " Strength {st} |");
+        rule.push_str(":---:|");
+    }
+    let _ = writeln!(out, "\n{rule}");
+    for t in content.terrain_defs() {
+        let Some((_, sturdiness)) = t.kicked_in else {
+            continue;
+        };
+        let _ = write!(out, "| {} | {sturdiness} |", capital(&t.name));
+        for st in KICK_STRENGTHS {
+            let _ = write!(out, " {}% |", door::break_chance(st, sturdiness));
+        }
+        out.push('\n');
+    }
+    out
+}
+
+/// The keys and the locks they open (spec §8 "Doors").
+fn keys(content: &Content) -> String {
+    let mut out = String::from("| Key | Glyph | Opens |\n|---|:---:|---|\n");
+    for o in content.object_defs() {
+        let opens = match &o.key {
+            Some(door::Key::Skeleton) => "every lock".to_string(),
+            Some(door::Key::Lock(id)) => format!("locks named `{id}`"),
+            None => continue,
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {opens} |",
+            capital(&o.name),
+            glyph(o.glyph)
+        );
+    }
+    out
+}
+
 /// The combat stances: what each does to the player's attacks, Defence, and speed (percent for
 /// costs and noise; "-" for no change).
 fn stances(content: &Content) -> String {
@@ -1612,6 +2192,70 @@ fn stances(content: &Content) -> String {
         );
     }
     out
+}
+
+/// The traps (spec §8 "Traps"): what each does, its damage dice, how often it goes off, and what
+/// it sounds like. Never a to-hit, which the player does not know.
+fn traps(content: &Content) -> String {
+    let mut out = String::from(
+        "| Trap | What it does | Damage | Goes off | Sound |\n|---|---|:---:|---|---|\n",
+    );
+    for t in content.trap_defs() {
+        let what = match &t.effect {
+            TrapEffect::Shot { object, .. } => format!(
+                "{} shoots out of a hidden slit in the nearest wall at whoever steps on it: an \
+                 attack against their Defence; it lands where it falls",
+                capital(&article_noun(&content.object(*object).name))
+            ),
+            TrapEffect::Strike { .. } => format!(
+                "{}s spring from the floor: an attack against the Defence of whoever steps on it",
+                capital(&t.noun)
+            ),
+            TrapEffect::Burst { radius, .. } => format!(
+                "A blast {radius} cells around it (walls stop it): everyone in it takes the \
+                 damage, half at the edge; no roll to hit"
+            ),
+            TrapEffect::Bolt { length, .. } => format!(
+                "A bolt from it along a line until a wall, up to {length} cells: everyone on it \
+                 takes the damage; no roll to hit"
+            ),
+            TrapEffect::Pit { .. } => {
+                "Whoever steps on it falls in and loses their next action climbing out".into()
+            }
+            TrapEffect::Alarm => "Only its noise: creatures that hear it come to look".into(),
+            TrapEffect::Teleport => {
+                "Whoever steps on it is moved to a free place on the level".into()
+            }
+        };
+        let damage = t.effect.damage().map_or("—".to_string(), |d| d.to_string());
+        let goes_off = match t.charges {
+            None => "every time".to_string(),
+            Some(1) => "once".to_string(),
+            Some(2) => "twice".to_string(),
+            Some(n) => format!("{n} times"),
+        };
+        let sound = t.noise.map_or("Silent".to_string(), |n| {
+            let loud = match n.loudness {
+                0..50 => "quiet",
+                50..150 => "loud",
+                150..250 => "very loud",
+                _ => "deafening",
+            };
+            format!("{}, {loud}", capital(&n.sound.name().replace('_', " ")))
+        });
+        let _ = writeln!(
+            out,
+            "| {} `{}` | {what} | {damage} | {goes_off} | {sound} |",
+            capital(&t.name),
+            t.glyph
+        );
+    }
+    out
+}
+
+/// A noun with its article: "an arrow".
+fn article_noun(noun: &str) -> String {
+    format!("{} {noun}", article(noun))
 }
 
 /// How often an attack hits by what its roll needs (Defence minus to-hit): the 2d12 bell.
@@ -1784,6 +2428,174 @@ fn regeneration() -> String {
     out
 }
 
+/// A pace of healing in percent of normal, in words: `twice as fast`, `half as fast`, `not at
+/// all`.
+fn pace(percent: u32) -> String {
+    match percent {
+        0 => "not at all".into(),
+        100 => "as usual".into(),
+        200 => "twice as fast".into(),
+        300 => "three times as fast".into(),
+        50 => "half as fast".into(),
+        25 => "a quarter as fast".into(),
+        p if p % 100 == 0 => format!("{} times as fast", p / 100),
+        p => format!("at {p}% of the usual pace"),
+    }
+}
+
+/// How fast hit points come back (spec §8 "Healing"): resting, each status that changes it,
+/// and each disease that slows it more than Diseased does.
+fn healing(content: &Content) -> String {
+    let mut out = String::from("| While | Hit points come back |\n|---|---|\n");
+    let resting = u32::from(content.healing().resting);
+    let _ = writeln!(out, "| Resting (`R`) | {} |", pace(resting));
+    for def in content.status_defs().iter().filter(|s| s.regen != 100) {
+        let _ = writeln!(out, "| {} | {} |", def.name, pace(u32::from(def.regen)));
+    }
+    for (_, def) in content.disease_ids() {
+        if def.regen.is_some_and(|r| r < diseased_regen(content)) {
+            let _ = writeln!(
+                out,
+                "| Diseased with {} | {} |",
+                def.name,
+                pace(u32::from(disease_regen(content, def)))
+            );
+        }
+    }
+    if content.hunger().is_some() {
+        let _ = writeln!(out, "| {} | {} |", Hunger::Starving.name(), pace(0));
+    }
+    out
+}
+
+/// How fast hit points come back while Diseased (its status's `regen`), in percent.
+fn diseased_regen(content: &Content) -> u16 {
+    content
+        .disease_status()
+        .map_or(100, |s| content.status(s).regen)
+}
+
+/// How fast hit points come back while disease `def` shows: the slower of Diseased's pace and
+/// its own.
+fn disease_regen(content: &Content, def: &DiseaseDef) -> u16 {
+    def.regen
+        .map_or(diseased_regen(content), |r| r.min(diseased_regen(content)))
+}
+
+/// How often, in words: `a minute`, `every 40 seconds`, `every 2 minutes`.
+fn every(seconds: u32) -> String {
+    match seconds {
+        60 => "a minute".into(),
+        s => format!("every {}", Duration::seconds(u64::from(s)).spoken()),
+    }
+}
+
+/// What causes a status, in words: wounds, diseases, the attacks whose `on_hit` names it (without
+/// saying which creatures or how often: their natural attacks are hidden), and rotten corpses
+/// when it is the sickness of food (spec §8 "Hunger"; what fresh ones do stays hidden too).
+fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
+    let mut causes = Vec::new();
+    if content
+        .disease_status()
+        .is_some_and(|s| usize::from(s.0) == status)
+    {
+        causes.push("any disease, once it shows");
+    }
+    if let Some(w) = def.wound {
+        match (w.big_hit > 0, w.critical > 0) {
+            (true, true) => causes.push("big hits and confirmed criticals"),
+            (true, false) => causes.push("big hits"),
+            (false, _) => causes.push("confirmed criticals"),
+        }
+    }
+    let by_attack = (content.creature_defs().iter())
+        .filter_map(|c| c.attack.as_ref())
+        .any(|a| {
+            (a.on_hit.iter()).any(|o| {
+                matches!(o.what, Affliction::Status { status: s, .. } if usize::from(s.0) == status)
+            })
+        });
+    if by_attack {
+        causes.push("some creatures' attacks");
+    }
+    let sickness = (content.hunger())
+        .and_then(|h| h.corpses.as_ref())
+        .and_then(|c| content.status_id(c.sickness.as_deref()?));
+    if sickness.is_some_and(|s| usize::from(s.0) == status) {
+        causes.push("eating rotten corpses");
+    }
+    if causes.is_empty() {
+        "—".into()
+    } else {
+        capital(&causes.join("; "))
+    }
+}
+
+/// The status effects (spec §8 "Status effects"): how they show, what causes them, what they
+/// cost, how they wear off, and what they do to healing and stats. Never a creature's chance.
+fn status_effects(content: &Content) -> String {
+    let mut out = String::from(
+        "| Status | Seen on others | Caused by | Costs | Wears off | Healing | Stats | Cured by |\n\
+         |---|---|---|---|---|---|---|---|\n",
+    );
+    for (i, def) in content.status_defs().iter().enumerate() {
+        let seen = def
+            .seen
+            .as_ref()
+            .map_or_else(|| "no".to_string(), |s| format!("yes, \"{s}\""));
+        let costs = match def.tick {
+            Some(tick) if def.damage > 0 => {
+                let hp = if def.damage == 1 {
+                    "a hit point".to_string()
+                } else {
+                    format!("{} hit points", def.damage)
+                };
+                let faster = if def.max > 1 {
+                    ", faster the worse it is"
+                } else {
+                    ""
+                };
+                format!("{hp} {}{faster}", every(tick))
+            }
+            _ => "nothing".into(),
+        };
+        let diseased = content
+            .disease_status()
+            .is_some_and(|s| usize::from(s.0) == i);
+        let eases = match def.eases {
+            Some(e) => format!("a degree {}", every(e)),
+            None if diseased => "when the diseases are gone".to_string(),
+            None => "only when cured".to_string(),
+        };
+        let stats = def.penalty.as_ref().map_or_else(
+            || "—".to_string(),
+            |p| {
+                let lowered: Vec<String> = (p.by.iter())
+                    .filter(|(_, by)| *by != 0)
+                    .map(|(stat, by)| format!("{} {}", stat.name(), signed(i32::from(by))))
+                    .collect();
+                let when = if p.from > 1 { " when strong" } else { "" };
+                format!("{}{when}", lowered.join(", "))
+            },
+        );
+        let cured = if def.cured_by.is_empty() {
+            "—".to_string()
+        } else {
+            capital(&def.cured_by.join(", "))
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {seen} | {} | {} | {} | {} | {stats} | {cured} |",
+            def.name,
+            causes(content, i, def),
+            capital(&costs),
+            capital(&eases),
+            capital(&pace(u32::from(def.regen))),
+        );
+    }
+    out
+}
+
 /// How many times as much `percent` is, in words: "twice", "two fifths", "30% of".
 fn times(percent: u16) -> String {
     match percent {
@@ -1849,6 +2661,101 @@ fn special_rooms(content: &Content) -> String {
         );
     }
     out
+}
+
+/// Days, as dice or a number: `1d3 days`, `1 day`.
+fn days(dice: Dice) -> String {
+    if dice.is_fixed() && dice.min() == 1 {
+        "1 day".into()
+    } else {
+        format!("{dice} days")
+    }
+}
+
+/// How a disease is caught, in words (without saying which creatures or how often: their
+/// natural attacks are hidden).
+fn caught_by(content: &Content, disease: DiseaseId, def: &DiseaseDef) -> String {
+    let mut ways: Vec<String> = Vec::new();
+    let by_attack = (content.creature_defs().iter())
+        .filter_map(|c| c.attack.as_ref())
+        .any(|a| {
+            (a.on_hit.iter()).any(|o| matches!(o.what, Affliction::Disease(d) if d == disease))
+        });
+    if by_attack {
+        ways.push("some creatures' bites".into());
+    }
+    if let Some(wading) = &def.wading {
+        let lands: Vec<String> = (wading.terrain.iter())
+            .map(|&t| content.terrain(t).name.clone())
+            .collect();
+        ways.push(format!("crossing {}", lands.join(" or ")));
+    }
+    for source in &def.caught {
+        ways.push(match source.as_str() {
+            "rotten_food" => "eating rotten food".into(),
+            other => other.replace('_', " "),
+        });
+    }
+    if ways.is_empty() {
+        "—".into()
+    } else {
+        capital(&ways.join("; "))
+    }
+}
+
+/// The diseases (spec §8 "Diseases"): how they are caught and resisted (the stat, and how often
+/// an average one makes the check), how long they incubate, how often they progress, what a
+/// failed check does, how they are shaken off, whether they kill, and healing meanwhile. Never
+/// a creature's chance.
+fn diseases(content: &Content) -> String {
+    let mut out = String::from(
+        "| Disease | Caught by | Resisted with (an average score) | Incubation | Progresses | \
+         A failed check costs | Shaken off | Can kill | Healing |\n|---|---|---|---|---|---|---|:---:|---|\n",
+    );
+    for (disease, def) in content.disease_ids() {
+        let resisted = format!(
+            "{}, {}",
+            def.check.name(),
+            percent(warlock_core::check::ways(0, def.difficulty), 144)
+        );
+        let progresses = match def.interval {
+            1 => "Every day".to_string(),
+            n => format!("Every {n} days"),
+        };
+        let mut costs: Vec<String> = (def.damage.iter())
+            .filter(|(_, d)| !d.is_zero())
+            .map(|(stat, d)| format!("{d} {}", stat.name()))
+            .collect();
+        if let Some(hp) = def.hp {
+            costs.push(format!("{hp} hit points"));
+        }
+        let shaken = match def.recovery {
+            0 => "Never by itself".to_string(),
+            1 => "A check won".to_string(),
+            2 => "Two checks won in a row".to_string(),
+            n => format!("{n} checks won in a row"),
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {resisted} | {} | {progresses} | {} | {shaken} | {} | {} |",
+            capital(&def.name),
+            caught_by(content, disease, def),
+            capital(&days(def.incubation)),
+            costs.join(", "),
+            yes(def.kills),
+            capital(&pace(u32::from(disease_regen(content, def)))),
+        );
+    }
+    out
+}
+
+/// A signed number with a real minus sign: `+1`, `−1`.
+fn signed(n: i32) -> String {
+    if n < 0 {
+        format!("\u{2212}{}", -n)
+    } else {
+        format!("+{n}")
+    }
 }
 
 /// What each level of burden costs (spec §8 "Burden"), from the rules' own numbers.
@@ -1951,6 +2858,236 @@ fn burden_examples(content: &Content) -> String {
     out
 }
 
+/// How long `points` of nutrition last a race of hunger `percent`, in whole minutes: "36
+/// hours", "1 hour and 15 minutes".
+fn lasts(def: &HungerDef, points: i32, percent: u16) -> String {
+    let points = u64::try_from(points).unwrap_or(0);
+    let seconds = points * u64::from(def.burn_seconds) * 100 / u64::from(percent.max(1));
+    Duration::seconds(seconds / 60 * 60).spoken()
+}
+
+/// The states of hunger from the most fed down: the nutrition of each, when a human who eats
+/// nothing gets there from the start of a run, and what it does.
+fn hunger_states(content: &Content) -> String {
+    let Some(def) = content.hunger() else {
+        return "Nobody hungers.\n".into();
+    };
+    let mut out = String::from(
+        "| State | Nutrition | A human eating nothing gets there after | What it does |\n\
+         |---|---:|---:|---|\n",
+    );
+    let weak: Vec<String> = (Stat::ALL.iter())
+        .filter(|s| def.weak[**s] != 0)
+        .map(|s| format!("{} {}", s.name(), signed(def.weak[*s])))
+        .collect();
+    let weak = weak.join(", ");
+    let (faint, starve) = (def.faint, def.starve);
+    for (i, state) in Hunger::ALL.into_iter().enumerate() {
+        let range = match (def.least(state), i) {
+            (None, _) => format!("below {}", def.states.fainting),
+            (Some(n), 0) => format!("{n} and more"),
+            (Some(n), _) => {
+                let above = def.least(Hunger::ALL[i - 1]).unwrap_or(n);
+                format!("{n} to {}", above - 1)
+            }
+        };
+        // A state is reached by falling below the least nutrition of the one above it.
+        let after = match i
+            .checked_sub(1)
+            .and_then(|above| def.least(Hunger::ALL[above]))
+        {
+            _ if def.state(def.start) == state => "(you start here)".to_string(),
+            Some(above) if above <= def.start => lasts(def, def.start - above, 100),
+            _ => "-".to_string(),
+        };
+        let does = match state {
+            Hunger::Bloated => format!(
+                "everything you do takes ×{} as long",
+                factor(i64::from(def.bloated_slow))
+            ),
+            Hunger::Satiated => "nothing".into(),
+            Hunger::NotHungry => "nothing (the status bar shows nothing)".into(),
+            Hunger::Hungry => "a warning; becoming hungry stops a rest".into(),
+            Hunger::Weak => weak.clone(),
+            Hunger::Fainting => format!(
+                "as Weak, and a {}% chance each turn to faint, losing {} turns",
+                faint.chance, faint.turns
+            ),
+            Hunger::Starving => format!(
+                "as Fainting; no hit points come back, and you lose {} every {}, until you \
+                 starve to death",
+                starve.damage,
+                Duration::seconds(u64::from(starve.seconds)).spoken()
+            ),
+        };
+        let _ = writeln!(out, "| {} | {range} | {after} | {does} |", state.name());
+    }
+    out
+}
+
+/// How fast nutrition burns, where a run starts, the most there can be, exertion, overeating,
+/// vomiting, and how corpses rot.
+fn hunger_facts(content: &Content) -> String {
+    let Some(def) = content.hunger() else {
+        return "Nobody hungers.\n".into();
+    };
+    let day = DAY / u64::from(def.burn_seconds);
+    let mut out = String::from("| Fact | Value |\n|---|---|\n");
+    let mut row = |fact: &str, value: String| {
+        let _ = writeln!(out, "| {fact} | {value} |");
+    };
+    let every = match def.burn_seconds {
+        60 => "a point a minute".to_string(),
+        3600 => "a point an hour".to_string(),
+        s => format!("a point every {s} seconds"),
+    };
+    row(
+        "A human burns",
+        format!("{every}: {day} a day, resting, walking, or travelling the overworld alike"),
+    );
+    row(
+        "A run starts with",
+        format!(
+            "{} ({})",
+            def.start,
+            def.state(def.start).name().to_lowercase()
+        ),
+    );
+    row("The most there can be", def.max.to_string());
+    let exertion: Vec<String> = (warlock_core::content::EXERTIONS.iter())
+        .map(|k| format!("{} {}", def.exertion(*k), k.id()))
+        .collect();
+    row(
+        "Exertion burns more (points, at your race's need)",
+        exertion.join(", "),
+    );
+    let o = def.overeating;
+    let choke = if o.choke == 0 {
+        "never chokes".to_string()
+    } else {
+        format!("a {}% chance to choke to death", o.choke)
+    };
+    row(
+        "Overeating (a meal past the most)",
+        format!(
+            "{choke}; a {}% chance to vomit; else what does not fit is lost",
+            o.vomit
+        ),
+    );
+    row(
+        "Vomiting leaves you with at most",
+        format!(
+            "{} ({}); what made you vomit feeds nothing",
+            def.vomit_leaves,
+            def.state(def.vomit_leaves).name().to_lowercase()
+        ),
+    );
+    if let Some(c) = &def.corpses {
+        row(
+            "Corpses",
+            format!(
+                "rotten {} after the death, gone after {}",
+                c.rotten.spoken(),
+                c.gone.spoken()
+            ),
+        );
+        row(
+            "Eating a rotten corpse",
+            format!(
+                "a {}% chance to vomit; else it makes you sick{}, and it feeds you",
+                c.rotten_vomit,
+                (c.sickness.as_deref())
+                    .and_then(|s| content.status_id(s))
+                    .map_or(String::new(), |s| format!(
+                        " ({})",
+                        content.status(s).name.to_lowercase()
+                    ))
+            ),
+        );
+    }
+    out
+}
+
+/// What each race needs to eat next to a human, burns in a day, and how long it goes from the
+/// start of a run before it is hungry.
+fn hunger_races(content: &Content) -> String {
+    let Some(def) = content.hunger() else {
+        return "Nobody hungers.\n".into();
+    };
+    let mut out =
+        String::from("| Race | Needs | Burns a day | Hungry after |\n|---|:---:|---:|---:|\n");
+    let day = DAY / u64::from(def.burn_seconds);
+    for r in &content.races().list {
+        let _ = writeln!(
+            out,
+            "| {} | ×{} | {} | {} |",
+            r.name,
+            factor(i64::from(r.hunger)),
+            day * u64::from(r.hunger) / 100,
+            lasts(def, def.start - def.states.not_hungry, r.hunger)
+        );
+    }
+    out
+}
+
+/// The food objects: what each gives, how long that feeds a human, how many turns it takes to
+/// eat, and what it weighs.
+fn food(content: &Content) -> String {
+    let Some(def) = content.hunger() else {
+        return "Nobody hungers.\n".into();
+    };
+    let mut out = String::from(
+        "| Food | Nutrition | Feeds a human for | Turns to eat | Weight |\n\
+         |---|---:|---:|:---:|---:|\n",
+    );
+    for o in content.object_defs() {
+        let (Some(food), None) = (o.food, o.corpse) else {
+            continue;
+        };
+        let nutrition = i32::try_from(food.nutrition).unwrap_or(i32::MAX);
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} | {} |",
+            capital(&o.name),
+            food.nutrition,
+            lasts(def, nutrition, 100),
+            food.turns,
+            format_weight(u64::from(o.weight))
+        );
+    }
+    out
+}
+
+/// Every creature's corpse: what it weighs (the creature's weight) and what it gives (by size).
+/// What eating it does beyond that stays for the player to find out.
+fn corpses(content: &Content) -> String {
+    let Some(def) = content.hunger() else {
+        return "Nobody hungers.\n".into();
+    };
+    let mut out = String::from(
+        "| Corpse | Size | Weight | Nutrition | Feeds a human for | Turns to eat |\n\
+         |---|---|---:|---:|---:|:---:|\n",
+    );
+    for o in content.object_defs() {
+        let (Some(food), Some(creature)) = (o.food, o.corpse) else {
+            continue;
+        };
+        let size = content.size(content.creature(creature).size);
+        let nutrition = i32::try_from(food.nutrition).unwrap_or(i32::MAX);
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} | {} | {} |",
+            capital(&o.name),
+            size.name,
+            format_weight(u64::from(o.weight)),
+            food.nutrition,
+            lasts(def, nutrition, 100),
+            food.turns
+        );
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1962,6 +3099,16 @@ mod tests {
         assert_eq!(files, generate(&content));
         let text = |name: &str| &files.iter().find(|(n, _)| n == name).expect("file").1;
         assert!(text("calendar.md").contains("| 4 | Rainmoon |"));
+        let traps = text("traps.md");
+        assert!(
+            traps.contains("| Fireball trap `^` | A blast 2 cells around it"),
+            "{traps}"
+        );
+        assert!(
+            traps.contains("| 3d6 | once | Explosion, very loud |"),
+            "{traps}"
+        );
+        assert!(traps.contains("| Pit `^` |") && !traps.contains("to_hit"));
         assert!(
             text("moons.md").contains(
                 "| Moon | 30 days | standard | about 17% of full light | 1 Frostmere, Year 1 |"
@@ -1980,6 +3127,14 @@ mod tests {
         assert!(text("terrain-local.md").contains("| Still water | `~` | yes | no | 12 seconds |"));
         assert!(text("terrain-local.md").contains("| 12 seconds | very loud |"));
         assert!(text("terrain-local.md").contains("muffles sound"));
+        assert!(text("terrain-local.md").contains("breaks into a broken door (sturdiness 30)"));
+        assert!(
+            text("doors.md").contains("| Closed door | 30 | 10% | 20% | 30% | 33% |"),
+            "{}",
+            text("doors.md")
+        );
+        assert!(text("keys.md").contains("| Skeleton key | `(` | every lock |"));
+        assert!(text("keys.md").contains("| Iron key | `(` | locks named `pantry` |"));
         assert!(
             text("footsteps.md")
                 .contains("| Very loud | Still water, running water, shallow water |")
@@ -2038,17 +3193,20 @@ mod tests {
         );
         let equipment = text("equipment.md");
         assert!(
-            equipment.contains("| `a` | Head | Iron helm | 6 seconds |"),
+            equipment.contains("| `a` | Head | Leather cap, iron helm, great helm | 6 seconds |"),
             "{equipment}"
         );
-        assert!(
-            equipment.contains("| `c` | Body | Leather jerkin, chain mail shirt | 18 seconds |")
-        );
-        assert!(equipment.contains(", quarterstaff (both hands), greatsword (both hands) |"));
-        assert!(equipment.contains("| `f` | Off hand | Dagger, short sword, small shield |"));
+        assert!(equipment.contains(
+            "| `c` | Body | Padded coat, leather jerkin, studded leather jerkin, chain mail shirt, \
+             suit of scale mail, suit of banded mail, suit of plate armour | 18 seconds |"
+        ));
+        assert!(equipment.contains(", quarterstaff (both hands), ironwood staff (both hands) |"));
+        assert!(equipment.contains("| `f` | Off hand | Dagger, stiletto, short sword, "));
         assert!(equipment.contains(
             "| `k` | Missile weapon | Short bow (shoots arrows), long war bow (shoots arrows), \
-             crossbow (shoots crossbow bolts), sling (shoots sling stones), any other weapon, and anything made for throwing |"
+             composite bow (shoots arrows), crossbow (shoots crossbow bolts), heavy crossbow \
+             (shoots crossbow bolts), sling (shoots sling stones), any other weapon, and anything \
+             made for throwing |"
         ));
         assert!(equipment.contains(
             "| `l` | Missiles | Arrow, flaming arrow, crossbow bolt, sling stone | 6 seconds |"
@@ -2057,12 +3215,17 @@ mod tests {
         let digging = text("digging.md");
         assert!(
             digging.contains(
-                "| Wall | Glyph | Hardness | With a pick-axe | With a mattock | Becomes |"
+                "| Wall | Glyph | Hardness | With a pick-axe | With a mattock | A fireball breaks \
+                 it | Becomes |"
             ),
             "{digging}"
         );
-        assert!(digging.contains("| Stone wall | `#` | 600 | 6 minutes | 4 minutes | rubble |"));
-        assert!(digging.contains("| Granite | `#` | 3000 | 30 minutes | 20 minutes | rubble |"));
+        assert!(
+            digging.contains("| Stone wall | `#` | 600 | 6 minutes | 4 minutes | yes | rubble |")
+        );
+        assert!(
+            digging.contains("| Granite | `#` | 3000 | 30 minutes | 20 minutes | no | rubble |")
+        );
         let strength = text("digging-strength.md");
         assert!(strength.contains("| 18 |"), "{strength}");
         assert!(strength.contains("With a pick-axe, at a normal pace."));
@@ -2081,12 +3244,12 @@ mod tests {
         let ammunition = text("ammunition.md");
         assert!(
             ammunition.contains(
-                "| Flaming arrow | Short bow, long war bow | never | burns as a burning arrow for \
-                 1 minute, lighting 5 cells around |"
+                "| Flaming arrow | Short bow, long war bow, composite bow | never | burns as a \
+                 burning arrow for 1 minute, lighting 5 cells around |"
             ),
             "{ammunition}"
         );
-        assert!(ammunition.contains("| Arrow | Short bow, long war bow | 30% | lies there"));
+        assert!(ammunition.contains("| Arrow | Short bow, long war bow, composite bow | 30% |"));
         assert!(ammunition.contains("| Dagger | 1d4 | 20–24 | ×2 | 5 cells | never |"));
         assert!(ammunition.contains("| Rock | 1d3 |"));
         let actions = text("actions.md");
@@ -2100,7 +3263,7 @@ mod tests {
             actions
                 .contains("| Putting something on, or taking it off: Body | 3000 | 18 seconds |")
         );
-        assert!(text("materials.md").contains("| Steel | daggers, short swords, greatswords |"));
+        assert!(text("materials.md").contains("| Steel | daggers, stilettos, short swords,"));
         assert!(text("pack.md").contains("| Your own weight | 70 kg |"));
         let burden = text("burden.md");
         for row in [
@@ -2193,7 +3356,8 @@ mod tests {
         let weapons = text("weapons.md");
         assert!(
             weapons.contains(
-                "| Dagger | 1d4 | 20–24 | ×2 | - | - | main hand or off hand | 5 cells |"
+                "| Dagger | 1d4 | 20–24 | ×2 | - | - | main hand or off hand | 5 cells | Daggers and \
+                 knives | 6 seconds |"
             ),
             "{weapons}"
         );
@@ -2202,8 +3366,37 @@ mod tests {
             weapons
                 .contains("| Quarterstaff | 1d6 | 22–24 | ×2 | +1 | - | main hand (both hands) |")
         );
+        assert!(weapons.contains(
+            "| Short bow | 1d6 | 22–24 | ×3 | - | 10 | missile weapon, shoots | - | Bows | - |"
+        ));
+        assert!(weapons.contains("| Great sword | 2d6 |") && weapons.contains("| Great blades |"));
+        assert!(weapons.contains("| 7.2 seconds |"));
         assert!(
-            weapons.contains("| Short bow | 1d6 | 22–24 | ×3 | - | 10 | missile weapon, shoots |")
+            weapons.contains("| Rock | 1d3 |")
+                && weapons.contains("| 6 cells | Thrown weapons | - |")
+        );
+        // Magic items: rarity, bases, affixes with their tiers, and the words of rare names.
+        assert!(text("magic-rarity.md").contains("| Rare | 6% |"));
+        assert!(text("magic-bases.md").contains("| Long sword | weapons |"));
+        let prefixes = text("magic-prefixes.md");
+        assert!(prefixes.contains(
+            "| Sharp | damage, added to every roll | weapons, ammunition | 1: +1 · 3: +1–2"
+        ));
+        assert!(
+            prefixes.contains("| Fleet | you move faster | boots | 1: a little faster to faster")
+        );
+        // Speed stays in words: no row about it has a number of percent.
+        let suffixes = text("magic-suffixes.md");
+        for line in prefixes.lines().chain(suffixes.lines()) {
+            if line.contains("| you move faster |") || line.contains("| attacks faster |") {
+                assert!(!line.contains('%'), "{line}");
+            }
+        }
+        assert!(text("magic-suffixes.md").contains("| of the Bear | Strength |"));
+        assert!(text("magic-names.md").contains("| Weapons | Bite,"));
+        assert!(
+            text("lights.md")
+                .contains("| Faintly glowing magic item (Radiant, of Light) | 2 cells |")
         );
         assert!(weapons.contains("Bare hands: 1d3"));
         let armour = text("armour.md");
@@ -2231,6 +3424,46 @@ mod tests {
         assert!(text("regeneration.md").contains("| 10 | 4 minutes |"));
         assert!(text("regeneration.md").contains("| 3 | 5 minutes and 24 seconds |"));
         assert!(text("regeneration.md").contains("| 25 or more | 1 minute |"));
+        let healing = text("healing.md");
+        for row in [
+            "| Resting (`R`) | twice as fast |",
+            "| Bleeding | not at all |",
+            "| Poisoned | half as fast |",
+            "| Starving | not at all |",
+        ] {
+            assert!(healing.contains(row), "{row} in {healing}");
+        }
+        let statuses = text("status-effects.md");
+        for row in [
+            "| Bleeding | yes, \"bleeding\" | Big hits and confirmed criticals | A hit point every \
+             40 seconds, faster the worse it is | A degree a minute | Not at all | — | Bandage |",
+            "| A degree every 2 minutes | Half as fast |",
+            "| Poisoned | no | Some creatures' attacks; eating rotten corpses |",
+            "Strength \u{2212}1, Dexterity \u{2212}1 when strong",
+        ] {
+            assert!(statuses.contains(row), "{row} in {statuses}");
+        }
+        assert!(
+            !statuses.contains("iant rat"),
+            "which creatures poison stays hidden"
+        );
+        assert!(statuses.contains("| Diseased | no | Any disease, once it shows | Nothing |"));
+        let diseases = text("diseases.md");
+        for row in [
+            "| Filth fever | Some creatures' bites | Toughness, 54% | 1d3 days | Every day | \
+             1d3 Dexterity, 1d3 Toughness | Two checks won in a row | no | Half as fast |",
+            "| Marsh ague | Crossing marsh or swamp |",
+            "| Grave rot | Eating rotten food |",
+            "| Never by itself | yes |",
+            "| Brain fever | — | Willpower, 54% |",
+        ] {
+            assert!(diseases.contains(row), "{row} in {diseases}");
+        }
+        assert!(
+            !diseases.contains("iant rat"),
+            "which creatures stays hidden"
+        );
+        assert!(healing.contains("| Diseased with marsh ague | a quarter as fast |"));
         // Potentials stay hidden: the human's rolled potentials are nowhere.
         assert!(!text("races.md").contains("otential"));
         let horoscope = text("horoscope.md");
@@ -2297,5 +3530,18 @@ mod tests {
         assert!(scenarios.contains("| Showcase | 08:00, 11 Darkening, Year 1444 |"));
         assert!(scenarios.contains("| World | 08:00, 11 Darkening, Year 1444 |"));
         assert!(scenarios.find("| Showcase").unwrap() < scenarios.find("| Arena").unwrap());
+        // Hunger: the states by nutrition, each race's need, food, and corpses (their effects
+        // when eaten stay unsaid: the player finds them out).
+        let states = text("hunger-states.md");
+        assert!(
+            states.contains("| Hungry | 720 to 1439 | 36 hours |"),
+            "{states}"
+        );
+        assert!(states.contains("| Not hungry | 1440 to 3999 | (you start here) |"));
+        assert!(text("hunger-races.md").contains("| Halfling | ×1.25 | 1800 |"));
+        assert!(text("food.md").contains("| Food ration | 1500 | 25 hours | 4 | 500 g |"));
+        assert!(text("corpses.md").contains("| Kobold corpse | Small | 25 kg | 400 |"));
+        assert!(!text("objects.md").contains("corpse"));
+        assert!(!text("corpses.md").contains("terrible"));
     }
 }

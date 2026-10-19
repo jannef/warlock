@@ -1,0 +1,175 @@
+//! What magic items do (spec §8 "Magic items"): their affixes' effects, summed.
+//!
+//! [`Mods::local`] is what an item's affixes do to itself and to the attacks made with it;
+//! [`Mods::worn`] what everything an actor wears and wields does to the actor. Within one sum,
+//! values add up, except Deflection and natural armour, of which the best counts (as within
+//! their category of Defence), and light, of which the brightest (the largest radius) counts.
+//! An unidentified item's effects count all the same: identifying only tells the player what
+//! they are.
+//!
+//! The rules read them in one place each: combat (`Actor::melee`, `ranged`, `thrown`,
+//! `defence`, `max_hp`), stats (`Actor::effective_stats`), healing (`World::healing_rate`),
+//! prices (attack and step speed),
+//! burden (carrying limit and weight), noise (stealth), and light (a glowing item's wearer
+//! carries its light).
+
+use super::{Effect, Magic};
+use crate::combat::{CRITS, Profile, THREATS};
+use crate::content::{COSTS, Content, LightId, MAX_SPEED};
+use crate::dice::Dice;
+use crate::equipment::Equipment;
+use crate::object::Stack;
+use crate::skills::SkillId;
+use crate::stats::Stat;
+
+/// Effects summed: one value per effect, the light carried, and the bonuses to skills.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Mods {
+    values: [i32; Effect::COUNT],
+    /// The brightest light among them.
+    pub light: Option<LightId>,
+    /// What skill affixes add to each skill's value, by skill (spec §8 "Skills").
+    skills: Vec<(SkillId, i32)>,
+}
+
+impl Default for Mods {
+    fn default() -> Self {
+        Self {
+            values: [0; Effect::COUNT],
+            light: None,
+            skills: Vec::new(),
+        }
+    }
+}
+
+impl Mods {
+    /// The sum of `effect` (the best, for Deflection and natural armour).
+    pub fn get(&self, effect: Effect) -> i32 {
+        self.values[effect.index()]
+    }
+
+    /// The bonus to `stat`.
+    pub fn stat(&self, stat: Stat) -> i32 {
+        self.get(Effect::Stat(stat))
+    }
+
+    /// What skill affixes add to each skill's value, by skill.
+    pub fn skills(&self) -> &[(SkillId, i32)] {
+        &self.skills
+    }
+
+    /// Whether nothing is changed.
+    pub fn is_empty(&self) -> bool {
+        *self == Mods::default()
+    }
+
+    /// Adds `value` of `effect` (a light's `light`, a skill affix's `skill`).
+    fn add(
+        &mut self,
+        (effect, skill): (Effect, Option<SkillId>),
+        value: i32,
+        light: Option<LightId>,
+        content: &Content,
+    ) {
+        let slot = &mut self.values[effect.index()];
+        match effect {
+            Effect::Deflection | Effect::Natural => *slot = (*slot).max(value),
+            Effect::Light => {
+                let radius = |id: LightId| content.light(id).radius;
+                if let Some(id) = light
+                    && self.light.is_none_or(|best| radius(id) > radius(best))
+                {
+                    self.light = Some(id);
+                }
+            }
+            Effect::Skill => {
+                let Some(id) = skill else { return };
+                match self.skills.iter_mut().find(|(s, _)| *s == id) {
+                    Some((_, sum)) => *sum = sum.saturating_add(value),
+                    None => self.skills.push((id, value)),
+                }
+            }
+            _ => *slot = slot.saturating_add(value),
+        }
+    }
+
+    /// Adds the effects of `magic`'s affixes on an item of `kind` that are `local` (or not).
+    fn add_magic(&mut self, magic: &Magic, local: bool, stack: &Stack, content: &Content) {
+        let Some(kind) = content.object(stack.object).kind else {
+            return;
+        };
+        for rolled in magic.rolled(content) {
+            if rolled.def.effect.is_local_on(kind) == local {
+                let light = (rolled.def.tier(rolled.tier)).and_then(|t| t.light);
+                self.add(rolled.def.group(), rolled.value, light, content);
+            }
+        }
+    }
+
+    /// What `stack`'s affixes do to itself and to the attacks made with it (its local effects).
+    pub fn local(stack: &Stack, content: &Content) -> Mods {
+        let mut mods = Mods::default();
+        if let Some(magic) = stack.magic() {
+            mods.add_magic(magic, true, stack, content);
+        }
+        mods
+    }
+
+    /// What the things in `inventory` that `equipment` holds do to whoever wears and wields
+    /// them (their global effects).
+    pub fn worn(inventory: &[Stack], equipment: &Equipment, content: &Content) -> Mods {
+        let mut mods = Mods::default();
+        for (_, item) in equipment.items() {
+            if let Some(stack) = inventory.get(item)
+                && let Some(magic) = stack.magic()
+            {
+                mods.add_magic(magic, false, stack, content);
+            }
+        }
+        mods
+    }
+
+    /// Changes an attack by these effects: to-hit, damage (added to every roll), extra damage
+    /// dice, a wider critical threat range, and a larger critical multiplier.
+    pub fn sharpen(&self, profile: &mut Profile) {
+        profile.to_hit += self.get(Effect::ToHit);
+        profile.bonus += self.get(Effect::Damage);
+        let threat = i32::from(profile.threat) - self.get(Effect::Threat);
+        profile.threat = clamp_u8(threat, *THREATS.start(), *THREATS.end());
+        let crit = i32::from(profile.crit) + self.get(Effect::Crit);
+        profile.crit = clamp_u8(crit, *CRITS.start(), *CRITS.end());
+        let sides = self.get(Effect::ExtraDamage);
+        if sides >= 2 {
+            let sides = u32::try_from(sides).unwrap_or(2);
+            profile.extra = Some(match profile.extra {
+                Some(more) => Dice::of(1, sides + more.max().unsigned_abs()),
+                None => Dice::of(1, sides),
+            });
+        }
+    }
+
+    /// Every effect with a value, in [`Effect::all`] order, and the light.
+    pub fn iter(&self) -> impl Iterator<Item = (Effect, i32)> + '_ {
+        (Effect::all().into_iter())
+            .map(|e| (e, self.get(e)))
+            .filter(|&(_, v)| v != 0)
+    }
+}
+
+fn clamp_u8(value: i32, lo: u8, hi: u8) -> u8 {
+    value.clamp(i32::from(lo), i32::from(hi)) as u8
+}
+
+/// What an action of `cost` costs `percent` faster: that much off (at most [`MAX_SPEED`]),
+/// never below the cheapest action.
+pub fn faster(cost: u32, percent: i32) -> u32 {
+    let off = u32::try_from(percent.clamp(0, MAX_SPEED)).unwrap_or(0);
+    (cost * (100 - off) / 100).max(*COSTS.start())
+}
+
+/// `value` less by `percent` (at most 90 %), rounded down: a lighter weight, a smaller chance to
+/// break, quieter footsteps.
+pub fn less(value: u64, percent: i32) -> u64 {
+    let off = u64::try_from(percent.clamp(0, 90)).unwrap_or(0);
+    value * (100 - off) / 100
+}

@@ -274,7 +274,7 @@ fn arm(w: &mut World, objects: &[&str]) {
         } else {
             1
         };
-        me.inventory.push(crate::object::Stack { object, count });
+        me.inventory.push(crate::object::Stack::new(object, count));
         let item = me.inventory.len() - 1;
         let slot = equipment::free_slot(&content, &me.equipment, object).expect("a free slot");
         let slots = equipment::slots_taken(&content, object, slot);
@@ -465,11 +465,12 @@ fn style_ranks_add_to_attacks_defence_and_prices() {
     arm(&mut w, &["greatsword"]);
     let plain = player(&w).melee(&content);
     let me = w.player_id();
-    let price = w.attack_price(me, ActionKind::Melee, (AttackKind::Melee, None));
+    let blow = player(&w).attack_skills(&content, AttackKind::Melee, None);
+    let price = w.attack_price(me, ActionKind::Melee, blow);
     set(&mut w, "great_weapon", 10);
     let great = player(&w).melee(&content);
     assert_eq!((great.bonus, great.crit), (plain.bonus + 6, plain.crit + 1));
-    let quicker = w.attack_price(me, ActionKind::Melee, (AttackKind::Melee, None));
+    let quicker = w.attack_price(me, ActionKind::Melee, blow);
     assert_eq!((price, quicker), (6000, 5100));
     // Staff Fighter 10 with the staff: +4 to hit, +4 parry. Great Weapon 10 gives it nothing of
     // its own (no damage, no critical), only Staff Fighter 7 by default: +3 to hit.
@@ -503,20 +504,26 @@ fn style_ranks_add_to_attacks_defence_and_prices() {
     set(&mut w, "marksman", 10);
     let aimed = player(&w).ranged(&content).expect("a crossbow");
     assert_eq!(aimed.to_hit, shot.to_hit + 4);
-    let shoot = (AttackKind::Ranged, None);
+    let shoot = player(&w).attack_skills(&content, AttackKind::Ranged, None);
     assert_eq!(w.attack_price(me, ActionKind::Shoot, shoot), 5100);
     assert_eq!(w.attack_price(me, ActionKind::Reload, shoot), 4200);
     // Skirmisher 10: +3 to hit and damage on throws, 20 % quicker.
     let mut w = yard();
     arm(&mut w, &["rock"]);
     let rock = object(&w, "rock");
-    let attack = content.object(rock).attack.expect("a throwing weapon");
-    let throw = player(&w).thrown(&content, rock, &attack);
-    let thrown = (AttackKind::Thrown, Some(rock));
+    let item = (player(&w).inventory.iter())
+        .position(|s| s.object == rock)
+        .expect("the rocks");
+    let throw = player(&w)
+        .thrown(item, &content)
+        .expect("a throwing weapon");
+    let thrown = player(&w).attack_skills(&content, AttackKind::Thrown, Some(rock));
     // Twenty rocks are a burden: a throw takes 7.5 s.
     assert_eq!(w.attack_price(me, ActionKind::Throw, thrown), 7500);
     set(&mut w, "skirmisher", 10);
-    let skirmish = player(&w).thrown(&content, rock, &attack);
+    let skirmish = player(&w)
+        .thrown(item, &content)
+        .expect("a throwing weapon");
     assert_eq!(
         (skirmish.to_hit, skirmish.bonus),
         (throw.to_hit + 3, throw.bonus + 3)

@@ -1,0 +1,71 @@
+# The trap hall (spec §3, §8 "Traps"): down the hub stairs nook's fourth staircase down (`T` in
+# the hub's map), a lit hall to try traps in and to watch them catch creatures. The showcase
+# itself has no traps. `<` leads back up to the hub. The `traps` scenario starts here.
+#
+# The proving row (north): seven bays, each with a known trap to try: an arrow trap (a), a spear
+# trap (s), a pit (p), an alarm (b), a teleport trap (x), a lightning trap (l, its bolt runs south
+# out of its bay and across the hall), and a fireball trap (f). Stepping onto a known trap asks
+# first ("Really step onto the fireball trap?"); the fireball goes off once, the lightning twice.
+#
+# The crossing (south): creatures go their rounds across hidden traps, so within a few turns you
+# watch them set them off, and from then on you know those traps too: a giant rat (1) runs over a
+# spear trap (S), a torch-bearing kobold (2) walks into a fireball (F), a cave beetle (3) crawls
+# onto a lightning trap (L) whose bolt runs west along its lane, and a second kobold (4) is shot
+# from the south wall by an arrow trap (A). The rat and the kobolds are among the peaceful folk
+# here and the beetle is wildlife, so nobody attacks you; the traps attack everybody. You arrive
+# in the middle of the south wall, where the whole hall is in view: wait (`.`) and watch.
+#
+# Walls (spec §8 "Digging"): three pillars stand by the hidden fireball: packed earth (E) and
+# stone (#) north of it, granite (G) south. Its blast breaks the two softer ones into rubble ("The
+# walls collapse!"); the granite holds.
+arrival = "Scorch marks and old arrows litter the flagstones."
+name = "The Trap Hall"
+ambient = [48, 46, 42, 0]
+map = '''
+########################################################################
+#############.......#.......#.......#.......#.......#.......#.......####
+#############...a...#...s...#...p...#...b...#...x...#...l...#...f...####
+#############.......#.......#.......#.......#.......#.......#.......####
+#############.......#.......#.......#.......#.......#.......#.......####
+#t....................................................................t#
+#......................................................................#
+#......................................................................#
+#.......................1...........S..................................#
+#.........................E.#..........................................#
+#......................................................................#
+#.............2............F...........................................#
+#......................................................................#
+#..........................G...........................................#
+#......................................................................#
+#.......................................L...........3..................#
+#......................................................................#
+#......................................................................#
+#...................4.............A....................................#
+#t.................................<.@................................t#
+########################################################################
+'''
+
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"<" = { terrain = "stairs_up", to = "hub" }
+"t" = "sconce"
+# The proving row: known traps to try.
+"a" = { terrain = "floor", trap = "arrow", known = true }
+"s" = { terrain = "floor", trap = "spear", known = true }
+"p" = { terrain = "floor", trap = "pit", known = true }
+"b" = { terrain = "floor", trap = "alarm", known = true }
+"x" = { terrain = "floor", trap = "teleport", known = true }
+"l" = { terrain = "floor", trap = "lightning_bolt", known = true, dir = "S" }
+"f" = { terrain = "floor", trap = "fireball", known = true }
+# The crossing: creatures on their rounds, and the hidden traps across their way.
+"1" = { terrain = "floor", creature = "rat", faction = "peaceful", route = "E20 W20" }
+"2" = { terrain = "floor", creature = "kobold", faction = "peaceful", route = "E30 W30" }
+"3" = { terrain = "floor", creature = "beetle", route = "W30 E30" }
+"4" = { terrain = "floor", creature = "kobold", faction = "peaceful", route = "E24 W24" }
+"S" = { terrain = "floor", trap = "spear" }
+"F" = { terrain = "floor", trap = "fireball" }
+"L" = { terrain = "floor", trap = "lightning_bolt", dir = "W" }
+# Pillars by the fireball: what its blast breaks and what it does not.
+"E" = "packed_earth"
+"G" = "granite"
+"A" = { terrain = "floor", trap = "arrow" }

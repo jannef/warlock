@@ -196,8 +196,14 @@ impl Override {
         }
     }
 
+    /// The weather it sets at `time`: from when it was given (`until` less [`OVERRIDE`]) until
+    /// `until`. (Ice catching up with the past asks about moments before it was given.)
     fn at(over: Option<&Override>, time: GameTime) -> Option<Weather> {
-        over.filter(|o| time < o.until).map(|o| o.weather)
+        let given = |o: &Override| {
+            GameTime::from_seconds(o.until.seconds().saturating_sub(OVERRIDE.as_seconds()))
+        };
+        over.filter(|o| given(o) <= time && time < o.until)
+            .map(|o| o.weather)
     }
 }
 
@@ -223,31 +229,70 @@ pub fn conditions(
     over: Option<&Override>,
 ) -> Conditions {
     let clouds = |w: Weather| Clouds::of(climate.def(w));
+    let blend = blend(seed, time, climate, over);
+    Conditions {
+        weather: blend.weather,
+        clouds: clouds(blend.from).mix(clouds(blend.to), blend.w),
+    }
+}
+
+/// The weather at one moment, and the sky on its way between two weathers: `w` per mille of the
+/// way from `from` to `to` (the clouds, and the temperature, change over [`CHANGE`] centred on
+/// the moment the weather changes; away from a change both are the weather of the moment).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Blend {
+    pub weather: Weather,
+    pub from: Weather,
+    pub to: Weather,
+    pub w: u64,
+}
+
+impl Blend {
+    /// `of(from)` and `of(to)` mixed `w` per mille of the way, rounded down.
+    pub fn mix(&self, of: impl Fn(Weather) -> i64) -> i64 {
+        let w = self.w.min(1000) as i64;
+        (of(self.from) * (1000 - w) + of(self.to) * w).div_euclid(1000)
+    }
+}
+
+/// The weather at `time` and how the sky is changing then; see [`Blend`]. A dev override sets
+/// its weather at once, with nothing on its way.
+pub fn blend(seed: u64, time: GameTime, climate: &Climate, over: Option<&Override>) -> Blend {
+    let steady = |weather| Blend {
+        weather,
+        from: weather,
+        to: weather,
+        w: 0,
+    };
     if let Some(weather) = Override::at(over, time) {
-        return Conditions {
-            weather,
-            clouds: clouds(weather),
-        };
+        return steady(weather);
     }
     let t = time.seconds() as i64;
     let half = (CHANGE / 2) as i64;
     let block = Block::at(seed, time);
     let weather = block.weather(seed, climate);
-    let own = clouds(weather);
-    // Within half a change of either end, the clouds are on their way from or to the
-    // neighbor's.
-    let clouds = if t < block.start + half {
+    // Within half a change of either end, the sky is on its way from or to the neighbor's.
+    if t < block.start + half {
         let before = Block::nth(seed, block.k - 1).weather(seed, climate);
         let w = (t - (block.start - half)) as u64 * 1000 / CHANGE;
-        clouds(before).mix(own, w)
+        Blend {
+            weather,
+            from: before,
+            to: weather,
+            w,
+        }
     } else if t >= block.end - half {
         let after = Block::nth(seed, block.k + 1).weather(seed, climate);
         let w = (t - (block.end - half)) as u64 * 1000 / CHANGE;
-        own.mix(clouds(after), w)
+        Blend {
+            weather,
+            from: weather,
+            to: after,
+            w,
+        }
     } else {
-        own
-    };
-    Conditions { weather, clouds }
+        steady(weather)
+    }
 }
 
 /// The weather block `k`: from `start` (inclusive) to `end` (exclusive), in seconds since the
@@ -333,7 +378,7 @@ fn spread(draws: impl Iterator<Item = u64>) -> u32 {
 /// A 64-bit hash of the seed, a label, and a block number: FNV-1a over the seed's little-endian
 /// bytes, a `0xff` separator, the label, and `k`'s little-endian bytes, then SplitMix64's
 /// finalizer so every bit depends on every input bit.
-fn draw(seed: u64, label: &[u8], k: i64) -> u64 {
+pub(crate) fn draw(seed: u64, label: &[u8], k: i64) -> u64 {
     let bytes = (seed.to_le_bytes().into_iter())
         .chain([0xff])
         .chain(label.iter().copied())

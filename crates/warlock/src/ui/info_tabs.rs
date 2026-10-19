@@ -19,6 +19,8 @@ const PAGES: &[(ScreenName, &str)] = &[
     (ScreenName::Inventory, "Inventory"),
     (ScreenName::Equipment, "Equipment"),
     (ScreenName::Skills, "Skills"),
+    (ScreenName::Quests, "Quests"),
+    (ScreenName::WeaponSkills, "Weapon skills"),
 ];
 
 /// Whether `name` is one of the pages.
@@ -123,6 +125,8 @@ mod tests {
         let replace = |name| Some(ScreenAction::Replace(name));
         assert_eq!(switch(Character, &top_row("2"), &b), replace(Inventory));
         assert_eq!(switch(Inventory, &top_row("2"), &b), None, "already there");
+        assert_eq!(switch(Skills, &top_row("5"), &b), replace(Quests));
+        assert_eq!(switch(Quests, &top_row("6"), &b), replace(WeaponSkills));
         assert_eq!(
             switch(Character, &top_row("9"), &b),
             None,
@@ -140,8 +144,10 @@ mod tests {
         let tab = |shift| press(KeyBinding::Code(KeyCode::Tab), shift);
         let replace = |name| Some(ScreenAction::Replace(name));
         assert_eq!(switch(Character, &tab(false), &b), replace(Inventory));
-        assert_eq!(switch(Skills, &tab(false), &b), replace(Character));
-        assert_eq!(switch(Character, &tab(true), &b), replace(Skills));
+        assert_eq!(switch(Skills, &tab(false), &b), replace(Quests));
+        assert_eq!(switch(Quests, &tab(false), &b), replace(WeaponSkills));
+        assert_eq!(switch(WeaponSkills, &tab(false), &b), replace(Character));
+        assert_eq!(switch(Character, &tab(true), &b), replace(WeaponSkills));
         let up = press(KeyBinding::Code(KeyCode::PageUp), false);
         assert_eq!(switch(Inventory, &up, &b), replace(Character));
     }
@@ -163,10 +169,13 @@ mod tests {
             switch(Character, &top_row("w"), &b),
             Some(ScreenAction::Replace(Equipment))
         );
-        // Page keys are unique among themselves, but may be play keys too.
+        // Page keys are unique among themselves (a used one moves), but may be play keys too.
         let two = KeyBinding::Char("2".into());
-        assert!(b.bind_primary(KeyCommand::Page(3), two.clone()).is_err());
-        assert!(b.bind_primary(KeyCommand::NextTarget, two).is_ok());
+        b.bind_primary(KeyCommand::NextTarget, two.clone()).unwrap();
+        assert_eq!(b.owner_in(Context::Pages, &two), Some(KeyCommand::Page(2)));
+        b.bind_primary(KeyCommand::Page(3), two.clone()).unwrap();
+        assert_eq!(b.owner_in(Context::Pages, &two), Some(KeyCommand::Page(3)));
+        assert_eq!(b.owner(&two), Some(KeyCommand::NextTarget));
     }
 
     #[test]
@@ -177,11 +186,12 @@ mod tests {
             (parts.iter().map(|(t, _)| t.as_str()).collect::<Vec<_>>()).join(" · ")
         };
         assert_eq!(
-            line(60),
-            "1 Character · 2 Inventory · 3 Equipment · 4 Skills"
+            line(79),
+            "1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Quests · 6 Weapon skills"
         );
-        assert_eq!(line(24), "1 · 2 Inventory · 3 · 4");
-        assert_eq!(line(13), "1 · 2 · 3 · 4");
-        assert_eq!(line(12), "");
+        assert_eq!(line(78), "1 · 2 Inventory · 3 · 4 · 5 · 6");
+        assert_eq!(line(31), "1 · 2 Inventory · 3 · 4 · 5 · 6");
+        assert_eq!(line(30), "1 · 2 · 3 · 4 · 5 · 6");
+        assert_eq!(line(20), "");
     }
 }

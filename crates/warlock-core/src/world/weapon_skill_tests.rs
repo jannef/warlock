@@ -259,7 +259,7 @@ fn arm(w: &mut World, objects: &[&str]) {
         } else {
             1
         };
-        me.inventory.push(crate::object::Stack { object, count });
+        me.inventory.push(crate::object::Stack::new(object, count));
         let item = me.inventory.len() - 1;
         let slot = equipment::free_slot(&content, &me.equipment, object).expect("a free slot");
         let slots = equipment::slots_taken(&content, object, slot);
@@ -568,13 +568,13 @@ fn ranks_change_to_hit_damage_threat_defence_and_cost() {
     let trained_shot = me(&w).ranged(&content).expect("a crossbow");
     assert_eq!(trained_shot.to_hit, shot.to_hit + 1);
     let player = w.player_id();
-    let shot = (AttackKind::Ranged, None);
+    let shot = me(&w).attack_skills(&content, AttackKind::Ranged, None);
     assert_eq!(w.attack_price(player, ActionKind::Shoot, shot), 6000);
     assert_eq!(w.attack_price(player, ActionKind::Reload, shot), 5400);
     // Daggers 7: a blow takes a tenth less time.
     let mut w = world_on(YARD);
     arm(&mut w, &["dagger"]);
-    let blow = (AttackKind::Melee, None);
+    let blow = me(&w).attack_skills(&content, AttackKind::Melee, None);
     assert_eq!(w.attack_price(player, ActionKind::Melee, blow), 6000);
     set(&mut w, "daggers", 7, 0);
     assert_eq!(w.attack_price(player, ActionKind::Melee, blow), 5400);
@@ -585,24 +585,16 @@ fn ranks_change_to_hit_damage_threat_defence_and_cost() {
     assert_eq!(elapsed, Duration::seconds(27), "five blows of 5.4 s");
     // Throwing with the dagger draws on throwing, not on daggers.
     let dagger = content.object_id("dagger").expect("dagger");
-    let thrown = me(&w).thrown(
-        &content,
-        dagger,
-        &content
-            .object(content.object_id("dagger").expect("dagger"))
-            .attack
-            .expect("a weapon"),
-    );
+    let thrown_with = |w: &World| {
+        let item = (me(w).inventory.iter())
+            .position(|s| s.object == dagger)
+            .expect("the dagger");
+        me(w).thrown(item, &content).expect("a throwing weapon")
+    };
+    let thrown = thrown_with(&w);
     let mut fresh = world_on(YARD);
     arm(&mut fresh, &["dagger"]);
-    let untrained = me(&fresh).thrown(
-        &content,
-        dagger,
-        &content
-            .object(content.object_id("dagger").expect("dagger"))
-            .attack
-            .expect("a weapon"),
-    );
+    let untrained = thrown_with(&fresh);
     assert_eq!(
         thrown.to_hit,
         untrained.to_hit + 3,

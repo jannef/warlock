@@ -94,7 +94,8 @@ fn content(map: &str) -> Content {
 }
 
 fn level(content: &Content) -> LevelState {
-    LevelState::from_template(content.level("t").expect("level t"))
+    let template = content.level("t").expect("level t");
+    LevelState::from_template(template, content, crate::time::GameTime::EPOCH)
 }
 
 /// Loudness at `to` of a noise of `loudness` made at `from` on `map`.
@@ -123,8 +124,14 @@ fn actor(content: &Content, creature: &str) -> Actor {
         hp_base: 0,
         regen: 0,
         skills: Default::default(),
+        effects: Default::default(),
+        diseases: Default::default(),
+        damage: Default::default(),
         weapon_skills: Default::default(),
         faction_override: None,
+        npc: None,
+        talk: Default::default(),
+        satiation: None,
         stance: Default::default(),
     }
 }
@@ -204,7 +211,7 @@ fn an_action_s_noise_comes_from_the_actor_and_the_terrain() {
     let footsteps = step(1).expect("footsteps");
     assert_eq!(
         (footsteps.kind, footsteps.loudness, footsteps.maker),
-        (SoundKind::Footsteps, 50, ActorId(1))
+        (SoundKind::Footsteps, 50, Some(ActorId(1)))
     );
     assert_eq!(step(2).map(|n| n.loudness), Some(100), "water splashes");
     // A load makes steps louder (spec §8 "Burden"): ×1.25 burdened, ×1.5 strained; doors and

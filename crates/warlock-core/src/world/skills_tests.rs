@@ -268,7 +268,7 @@ fn listen_lowers_the_hearing_threshold() {
         kind: SoundKind::Footsteps,
         at: Pos::new(1, 1),
         loudness: 6,
-        maker: rat,
+        maker: Some(rat),
     };
     set(&mut w, "listen", None);
     noise::make(&mut w.state, &w.content, faint);
@@ -292,13 +292,7 @@ fn balance_eases_the_burdens_slowdown() {
     let player = w.state.player;
     let mail = w.content.object_id("chain_mail").expect("chain mail");
     // Two chain mail shirts: 22 kg on St 10 To 10, Burdened (over 15 kg).
-    w.state.actors.get_mut(&player).expect("player").inventory = vec![
-        Stack {
-            object: mail,
-            count: 1,
-        };
-        2
-    ];
+    w.state.actors.get_mut(&player).expect("player").inventory = vec![Stack::one(mail); 2];
     assert_eq!(w.load_of(player).burden(), Burden::Burdened);
     for (balance, price) in [
         (None, 7500),
@@ -314,13 +308,7 @@ fn balance_eases_the_burdens_slowdown() {
         );
     }
     // Strained (a third shirt and a fourth: 44 kg): ×1.5, and ×1.2 at balance 100.
-    w.state.actors.get_mut(&player).expect("player").inventory = vec![
-        Stack {
-            object: mail,
-            count: 1,
-        };
-        4
-    ];
+    w.state.actors.get_mut(&player).expect("player").inventory = vec![Stack::one(mail); 4];
     assert_eq!(w.load_of(player).burden(), Burden::Strained);
     set(&mut w, "balance", None);
     assert_eq!(w.price_of(player, ActionKind::Wait), 9000);
@@ -422,13 +410,7 @@ fn acting_under_a_load_trains_balance() {
     set(&mut w, "balance", Some(0));
     let player = w.state.player;
     let mail = w.content.object_id("chain_mail").expect("chain mail");
-    let pack = vec![
-        Stack {
-            object: mail,
-            count: 1,
-        };
-        2
-    ];
+    let pack = vec![Stack::one(mail); 2];
     w.state.actors.get_mut(&player).expect("player").inventory = pack.clone();
     w.apply(&Action::Wait);
     assert_eq!(value(&w, "balance"), Some(0), "waiting trains nothing");

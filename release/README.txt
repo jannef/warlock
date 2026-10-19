@@ -12,9 +12,16 @@ Run
 
 Run `warlock --help` for command-line options. `warlock-cli` is the headless development tool.
 
+Portable mode
+-------------
+To keep settings, saves, and logs with the game (a USB stick, say), create an empty folder named
+`warlock-data` next to the game (next to Warlock.app on macOS), or run `warlock --portable`.
+`warlock --paths` shows where your files are; `warlock --move-data native` moves them back out.
+
 Logs and crash reports
 ----------------------
-Each run writes a log file; if the game crashes it also writes a crash report next to the logs:
+Each run writes a log file; if the game crashes it also writes a crash report next to the logs
+(in `warlock-data/logs` when portable, else):
 - Linux:   ~/.local/share/warlock/logs
 - macOS:   ~/Library/Application Support/warlock/logs
 - Windows: %LOCALAPPDATA%\warlock\data\logs

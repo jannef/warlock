@@ -30,8 +30,8 @@ pub use bounce::{BOUNCE, BOUNCE_STEPS};
 pub(crate) use cache::Mask;
 pub(crate) use cache::{LightCache, SUN_KEY, moon_key};
 pub use moon::{DUSK_DEPTH, Moon, MoonPhase, Sky};
-pub(crate) use sun::Sunlight;
 pub use sun::{MAX_SHADOW, NOON_ELEVATION, SHADOW_ONE, ShadowSteps, Sun};
+pub(crate) use sun::{ONE, Sunlight, TURN, cos};
 
 use crate::fov::radius2;
 use crate::geom::{Dir, Pos};

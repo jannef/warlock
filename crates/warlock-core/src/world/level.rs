@@ -1,15 +1,20 @@
-//! Per-level mutable state: terrain and piles of objects as they are now, and what the player
-//! remembers of them; fires, and the walls dug into; the level's special rooms (spec §7 "Special
-//! rooms") and whether the player has been inside each.
+//! Per-level mutable state: terrain, locks, piles of objects, traps, and blood as they are now,
+//! and what the player remembers of them; fires, and the walls dug into; the level's special
+//! rooms (spec §7 "Special rooms") and whether the player has been inside each.
 
+use crate::blood::{Spatter, Stain};
+use crate::color::Rgb;
 use crate::content::{
     Content, EdgeExit, Flow, LevelKind, LevelTemplate, LightId, RoomEffectDef, SpecialRoom,
-    StairsLink, TerrainDef, TerrainId,
+    StairsLink, TerrainDef, TerrainId, Trap, TrapId,
 };
+use crate::door::Lock;
 use crate::geom::Pos;
 use crate::grid::Grid;
+use crate::ice::Ice;
 use crate::light::Light;
 use crate::object::Stack;
+use crate::temperature::{self, Temperature};
 use crate::time::GameTime;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -60,6 +65,16 @@ pub struct LevelState {
     /// burning objects themselves lie in the pile there.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) fires: BTreeMap<Pos, Fire>,
+    /// Locks on closed doors, by position (spec §8 "Doors"): gone once the door is unlocked or
+    /// broken. Ground truth: a locked door looks like any closed door.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) locks: BTreeMap<Pos, Lock>,
+    /// Blood on cells, by position (spec §8 "Blood"). Presentation-only: no rule reads it.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) blood: BTreeMap<Pos, Stain>,
+    /// Blood as the player last saw it, by position (like remembered piles).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) blood_memory: BTreeMap<Pos, Stain>,
     /// Walls dug into and still standing, by position (spec §8 "Digging"): the work done on each,
     /// in [`super::dig::WORK_SCALE`]ths of the work its hardness counts.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
@@ -68,13 +83,40 @@ pub struct LevelState {
     /// player has been inside it.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) rooms: Vec<SpecialRoom>,
+    /// Traps, by position (spec §8 "Traps"), hidden or known; a spent one is gone.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) traps: BTreeMap<Pos, Trap>,
+    /// Known traps as the player last saw them, by position: a trap seen gone is forgotten.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) trap_memory: BTreeMap<Pos, TrapId>,
+    /// The temperature here, underground: fixed. `None` under the open sky, where it follows
+    /// the month, the time of day, and the weather ([`crate::temperature`]).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) temperature: Option<Temperature>,
+    /// Ice on water, by position (spec §5 "Ice"; [`crate::ice`]): its thickness and the water
+    /// beneath. A cell shows the ice terrain its thickness reaches, else the water.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) ice: BTreeMap<Pos, Ice>,
+    /// When the ice was last brought up to date: a tick of the clock ([`crate::ice::TICK`]).
+    pub(crate) ice_until: GameTime,
 }
 
 impl LevelState {
-    pub(crate) fn from_template(template: &LevelTemplate) -> Self {
+    /// The level as it starts at `now`: its template's terrain, things, and ice.
+    pub(crate) fn from_template(
+        template: &LevelTemplate,
+        content: &Content,
+        now: GameTime,
+    ) -> Self {
         let terrain = template.terrain.clone();
         let memory = Grid::new(terrain.width(), terrain.height(), None);
-        Self {
+        let ice = (template.ice.iter())
+            .map(|(&p, &um)| {
+                let water = terrain[p];
+                (p, Ice { water, um })
+            })
+            .collect();
+        let mut level = Self {
             id: template.id.clone(),
             name: template.name.clone(),
             ambient: template.ambient,
@@ -89,9 +131,25 @@ impl LevelState {
             objects: template.objects.clone(),
             object_memory: BTreeMap::new(),
             fires: BTreeMap::new(),
+            locks: template.locks.clone(),
+            blood: BTreeMap::new(),
+            blood_memory: BTreeMap::new(),
             dug: BTreeMap::new(),
             rooms: template.rooms.clone(),
+            traps: template.traps.clone(),
+            trap_memory: BTreeMap::new(),
+            temperature: (!template.kind.is_sky_exposed()).then(|| {
+                (template.temperature)
+                    .unwrap_or(Temperature::degrees(temperature::UNDERGROUND.into()))
+            }),
+            ice,
+            ice_until: crate::ice::tick_floor(now),
+        };
+        let iced: Vec<Pos> = level.ice.keys().copied().collect();
+        for p in iced {
+            level.show_ice(content, p);
         }
+        level
     }
 
     pub fn id(&self) -> &str {
@@ -134,6 +192,33 @@ impl LevelState {
     /// reachable through [`crate::World::ground_truth`], **for developer tools only**.
     pub fn objects_at(&self, p: Pos) -> &[Stack] {
         self.objects.get(&p).map_or(&[], Vec::as_slice)
+    }
+
+    /// The trap at `p` as it is now, hidden or known (ground truth). Only reachable through
+    /// [`crate::World::ground_truth`], **for developer tools only**.
+    pub fn trap_at(&self, p: Pos) -> Option<&Trap> {
+        self.traps.get(&p)
+    }
+
+    /// The lock on the door at `p`, if it is locked (ground truth, `None` for any other cell).
+    /// Only reachable through [`crate::World::ground_truth`] outside the rules, **for developer
+    /// tools only**: the player learns a door is locked by trying it.
+    pub fn lock_at(&self, p: Pos) -> Option<&Lock> {
+        self.locks.get(&p)
+    }
+
+    /// Blood of `color` lands here at `now`: on a cell whose terrain holds it, it adds to the
+    /// stain there (spec §8 "Blood"); water, lava, and the like take none.
+    pub(crate) fn stain(&mut self, content: &Content, spatter: Spatter, color: Rgb, now: GameTime) {
+        let holds = (self.terrain.get(spatter.at)).is_some_and(|t| content.terrain(*t).stains);
+        if !holds || spatter.amount == 0 {
+            return;
+        }
+        let Spatter { at, amount, face } = spatter;
+        self.blood
+            .entry(at)
+            .and_modify(|s| s.add(amount, color, now, face))
+            .or_insert_with(|| Stain::new(amount, color, now, face));
     }
 
     /// Replaces the pile at `p`; an empty pile removes it.
@@ -205,8 +290,8 @@ impl LevelState {
         self.stairs.iter().find(|s| s.pos == p)
     }
 
-    /// Whether every terrain, light, object, and room effect id is valid for `content`, and the
-    /// special rooms are well formed and apart (a guard for loaded saves).
+    /// Whether every terrain, light, object, room effect, and trap id is valid for `content`,
+    /// and the special rooms are well formed and apart (a guard for loaded saves).
     pub(crate) fn ids_valid_for(&self, content: &Content) -> bool {
         let effects = content.room_effects().defs().len();
         let rooms_ok = self.rooms.iter().enumerate().all(|(i, r)| {
@@ -216,14 +301,20 @@ impl LevelState {
         });
         let terrain = content.terrain_defs().len();
         let lights = content.light_presets().len();
+        let traps = content.trap_defs().len();
         let known = |t: &TerrainId| usize::from(t.0) < terrain;
         let piles = self.objects.values().chain(self.object_memory.values());
+        let mut trap_kinds =
+            (self.traps.values().map(|t| t.kind)).chain(self.trap_memory.values().copied());
+        let water = |t: &TerrainId| known(t) && content.terrain(*t).freeze.is_some();
         self.terrain.cells().iter().all(known)
             && self.memory.cells().iter().flatten().all(known)
             && self.lights.values().all(|l| usize::from(l.0) < lights)
             && self.fires.values().all(|f| usize::from(f.light.0) < lights)
             && piles.flatten().all(|s| s.is_valid_for(content))
             && rooms_ok
+            && trap_kinds.all(|t| usize::from(t.0) < traps)
+            && (self.ice.iter()).all(|(p, i)| water(&i.water) && self.terrain.in_bounds(*p))
     }
 }
 

@@ -23,7 +23,7 @@ fn level(seed: u64, depth: u32) -> LevelTemplate {
     generate(&CONTENT, seed, &format!("depths:{depth}"), Some("vast")).expect("generates")
 }
 
-/// Header (name, stairs, creatures) plus the map, for snapshots.
+/// Header (name, stairs, creatures, traps) plus the map, for snapshots.
 fn describe(level: &LevelTemplate) -> String {
     let (w, h) = (level.terrain.width(), level.terrain.height());
     let mut out = format!("{} ({}) {w}x{h}\n", level.name, level.id);
@@ -35,6 +35,9 @@ fn describe(level: &LevelTemplate) -> String {
         let route: Vec<&str> = c.route.iter().map(|d| d.name()).collect();
         let name = &CONTENT.creature(c.creature).id;
         let _ = writeln!(out, "{name} at {} route {}", c.pos, route.join(" "));
+    }
+    for (p, trap) in &level.traps {
+        let _ = writeln!(out, "{} trap at {p}", CONTENT.trap(trap.kind).id);
     }
     let _ = writeln!(out, "{} placed lights", level.lights.len());
     for room in &level.rooms {
@@ -62,9 +65,9 @@ fn caves_snapshot() {
 /// rooms"), their plain ground drawn as the effect's mark.
 #[test]
 fn special_room_snapshots() {
-    let flooded = level(7, 2);
+    let flooded = level(4, 2);
     assert_eq!(flooded.rooms.len(), 1);
-    insta::assert_snapshot!("rooms_seed_7_depth_2_flooded", describe(&flooded));
+    insta::assert_snapshot!("rooms_seed_4_depth_2_flooded", describe(&flooded));
     let shadowed = level(6, 4);
     assert_eq!(shadowed.rooms.len(), 1);
     insta::assert_snapshot!("caves_seed_6_depth_4_shadowed", describe(&shadowed));
@@ -207,7 +210,96 @@ fn check(level: &LevelTemplate, depth: u32) -> Result<(), TestCaseError> {
         );
         prop_assert!(!pile.is_empty());
     }
+
+    // Traps (spec §8 "Traps") are hidden, on walkable ground that is not stairs, never next to
+    // stairs (the player arrives there), and never on a patrol (creatures would spring them
+    // every round).
+    let mut patrolled = Vec::new();
+    for spawn in &level.creatures {
+        let mut p = spawn.pos;
+        patrolled.push(p);
+        for dir in &spawn.route {
+            p = p.step(*dir);
+            patrolled.push(p);
+        }
+    }
+    for (p, trap) in &level.traps {
+        let ground = content.terrain(terrain[*p]);
+        prop_assert!(!trap.known, "a known trap at {}", p);
+        prop_assert!(
+            ground.walkable && ground.stairs.is_none() && ground.freeze.is_none(),
+            "trap on {}",
+            ground.id
+        );
+        prop_assert!(
+            level.stairs.iter().all(|s| s.pos.chebyshev(*p) > 1),
+            "trap at {} by the stairs",
+            p
+        );
+        prop_assert!(!patrolled.contains(p), "trap at {} on a patrol", p);
+    }
+    // Locks (spec §8 "Doors"): only on closed doors, and never in the way of the stairs or of a
+    // key to every lock, which the player reaches without unlocking anything (the level is
+    // solvable without kicking a door in).
+    let unlocked = player_reach_unlocked(level, level.stairs[0].pos);
+    for (p, lock) in &level.locks {
+        prop_assert!(
+            content.terrain(terrain[*p]).is_closed_door(),
+            "lock at {}",
+            p
+        );
+        prop_assert!(
+            level.has_key_for(content, lock, |q| unlocked[q]),
+            "no key to the lock at {} in {}",
+            p,
+            level.id
+        );
+    }
+    for s in &level.stairs {
+        prop_assert!(unlocked[s.pos], "stairs at {} locked away", s.pos);
+    }
     Ok(())
+}
+
+/// Cells the player can walk to from `from` without unlocking a door (8-way moves).
+fn player_reach_unlocked(level: &LevelTemplate, from: Pos) -> Grid<bool> {
+    let mut open = level.clone();
+    for p in level.locks.keys() {
+        open.terrain
+            .set(*p, CONTENT.terrain_id("wall").expect("wall"));
+    }
+    player_reach(&open, from)
+}
+
+#[test]
+fn rooms_levels_lock_a_few_rooms_and_leave_their_keys_in_reach() {
+    let key = CONTENT.object_id("rusty_key").expect("rusty key");
+    let (mut levels, mut locks, mut keys) = (0, 0, 0);
+    for seed in 0..40 {
+        for depth in [1, 2, 6, 7, 8] {
+            let level = level(seed, depth);
+            let generated = (level.locks.iter())
+                .filter(|(_, l)| l.id.as_deref() == Some("depths"))
+                .count();
+            let lying = (level.objects.values().flatten())
+                .filter(|s| s.object == key)
+                .count();
+            assert!(generated <= 2, "{} locks {generated} rooms", level.id);
+            assert_eq!(
+                lying,
+                usize::from(generated > 0),
+                "one key per level that locks"
+            );
+            levels += usize::from(generated > 0);
+            locks += generated;
+            keys += lying;
+        }
+    }
+    assert!(
+        levels > 50 && locks > levels,
+        "{levels} levels, {locks} locks"
+    );
+    assert_eq!(keys, levels);
 }
 
 proptest! {
@@ -280,6 +372,40 @@ fn seeds_and_levels_give_different_maps() {
     );
 }
 
+/// Each generated level hides its branch's few traps (vaults may bring more), from a stream of
+/// its own: the map is the same with or without them.
+#[test]
+fn generated_levels_hide_a_few_traps_of_their_own() {
+    let def = CONTENT.dungeon("depths").expect("depths");
+    let [least, most] = def.traps_per_level;
+    let mut kinds = std::collections::BTreeSet::new();
+    for seed in 0..10 {
+        for depth in 1..=8 {
+            let level = level(seed, depth);
+            let from_vaults: usize = (CONTENT.vaults().iter())
+                .map(|v| stamped_at(&level, v).len() * v.template.traps.len())
+                .sum();
+            let own = level.traps.len() - from_vaults;
+            assert!(
+                (least as usize..=most as usize).contains(&own),
+                "{} traps on depths:{depth}, seed {seed}",
+                own
+            );
+            kinds.extend(level.traps.values().map(|t| t.kind));
+        }
+    }
+    assert!(kinds.len() >= 5, "a mix of kinds: {kinds:?}");
+    // Without traps in the branch the map is the same.
+    let mut files = ContentFiles::builtin();
+    let dungeons =
+        include_str!("../../../../assets/data/dungeons.toml").replace("traps = [", "# traps = [");
+    files.insert("data/dungeons.toml", &dungeons);
+    let bare = Content::load(&files).expect("content");
+    let plain = generate(&bare, 1, "depths:1", Some("vast")).expect("generates");
+    assert_eq!(plain.terrain, level(1, 1).terrain);
+    assert!(plain.traps.is_empty());
+}
+
 #[test]
 fn only_branch_levels_generate() {
     let err = |id: &str| generate(&CONTENT, 1, id, None).unwrap_err();
@@ -320,6 +446,9 @@ fn vaults_are_stamped_verbatim_with_their_lights_and_creatures() {
                     let shift = |p: Pos| Pos::new(at.x + p.x, at.y + p.y);
                     for (p, light) in &vault.template.lights {
                         assert_eq!(level.lights.get(&shift(*p)), Some(light), "{}", vault.id());
+                    }
+                    for (p, trap) in &vault.template.traps {
+                        assert_eq!(level.traps.get(&shift(*p)), Some(trap), "{}", vault.id());
                     }
                     for spawn in &vault.template.creatures {
                         assert!(

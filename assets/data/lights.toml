@@ -125,3 +125,20 @@ radius = 4
 stability.intensity = { amount = 0.08, speed = 0.4 }
 stability.hue = { degrees = 6, speed = 0.2 }
 stability.dips = { depth = 0.08, every = 15, length = 1.6 }
+
+# Glowing magic items (affixes.toml: Radiant, of Light): their wearer carries a faint, cool,
+# steady light (magic, so it never flickers). Dimmer than a lantern: enough to see by up close.
+[[light]]
+id = "item_glow_faint"
+color = [70, 80, 105, 0]
+radius = 2
+
+[[light]]
+id = "item_glow"
+color = [95, 105, 140, 0]
+radius = 3
+
+[[light]]
+id = "item_glow_bright"
+color = [125, 135, 175, 0]
+radius = 4

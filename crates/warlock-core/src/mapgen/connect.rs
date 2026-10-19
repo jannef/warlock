@@ -140,13 +140,21 @@ pub(super) fn cheapest_path(
 pub(super) enum Invalid {
     NoUpStairs,
     Unreachable(Pos),
+    /// Reached only through a locked door.
+    LockedAway(Pos),
+    /// A lock on something other than a closed door.
+    BadLock(Pos),
+    /// No key to the lock here within reach.
+    NoKey(Pos),
     BadPatrol(String),
     Dark,
 }
 
 /// Checks a generated level: it has an up staircase (the arrival point and player start), and
-/// every stair, door, and walkable cell is reachable from it; every patrol stays on walkable
-/// terrain and loops; and at least one cell emits light.
+/// every stair, door, and walkable cell is reachable from it; locks lie only on closed doors,
+/// and the stairs and a key to every lock (lying, or carried by a creature) are reachable
+/// without unlocking any door (spec §8 "Doors"), so no level needs a key it does not give; every
+/// patrol stays on walkable terrain and loops; and at least one cell emits light.
 pub(super) fn validate(level: &LevelTemplate, content: &Content) -> Result<(), Invalid> {
     let terrain = &level.terrain;
     let up = level
@@ -168,6 +176,25 @@ pub(super) fn validate(level: &LevelTemplate, content: &Content) -> Result<(), I
     }
     if let Some(s) = level.stairs.iter().find(|s| !reached[s.pos]) {
         return Err(Invalid::Unreachable(s.pos));
+    }
+    if !level.locks.is_empty() {
+        let closed = |p: Pos| {
+            terrain
+                .get(p)
+                .is_some_and(|t| content.terrain(*t).is_closed_door())
+        };
+        if let Some(p) = level.locks.keys().find(|p| !closed(**p)) {
+            return Err(Invalid::BadLock(*p));
+        }
+        let unlocked = |p: Pos| passable(p) && !level.locks.contains_key(&p);
+        let open = flood(terrain.width(), terrain.height(), up, unlocked);
+        if let Some(s) = level.stairs.iter().find(|s| !open[s.pos]) {
+            return Err(Invalid::LockedAway(s.pos));
+        }
+        let keyless = |lock| !level.has_key_for(content, lock, |p| open[p]);
+        if let Some((p, _)) = level.locks.iter().find(|(_, lock)| keyless(*lock)) {
+            return Err(Invalid::NoKey(*p));
+        }
     }
     for spawn in &level.creatures {
         validate_route(level, content, spawn).map_err(Invalid::BadPatrol)?;
