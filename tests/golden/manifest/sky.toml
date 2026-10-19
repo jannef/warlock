@@ -21,14 +21,17 @@ actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:E*2 move:NE a
 name = "courtyard-full-moon"
 scenario = "courtyard"
 actions = "move:E*20 skip:113h skip:28m weather:clear"
+# Wide enough for the moon's glyph: at 960 the status bar drops it for the weather.
+window = "1280x720"
 
 # Weather (spec §5 "Weather", §4.8): the courtyard at noon in rain (duller, flatter light, faint
 # shadows, sparse slanted drops, splashes, rings on the pond) and the forest glade at noon in heavy
-# rain (darker, denser drops).
+# rain (darker, denser drops). The night's frost leaves the pond frozen in Darkening (spec §5
+# "Ice"), so the dev `thaw` melts it first: rings show only on open water.
 [[golden]]
 name = "courtyard-rain"
 scenario = "courtyard"
-actions = "move:E*20 skip:330m weather:rain"
+actions = "move:E*20 skip:330m thaw:21,14,6 weather:rain"
 
 [[golden]]
 name = "forest-heavy-rain"

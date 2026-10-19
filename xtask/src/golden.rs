@@ -181,14 +181,19 @@ fn make_replay(
     let count = actions.len();
     for (step, action) in actions.into_iter().enumerate() {
         let outcome = world.apply(&action);
-        // Switching vision, setting the weather, and the dev status effect and infection are free
-        // by design, and so are a spell effect the player sees and a question answered (asking
-        // takes no time); anything else that takes no time and no turn was refused. (A turn can
-        // pass in no time: a creature quick off the mark may kill the player at the very second
-        // they acted.)
+        // Switching vision, setting the weather, and the dev status effect, infection, frost,
+        // and thaw are free by design, and so are a spell effect the player sees and a question
+        // answered (asking takes no time); anything else that takes no time and no turn was
+        // refused. (A turn can pass in no time: a creature quick off the mark may kill the player
+        // at the very second they acted.)
         let free = matches!(
             action,
-            Action::SetVision(_) | Action::SetWeather(_) | Action::Afflict(_) | Action::Infect(_)
+            Action::SetVision(_)
+                | Action::SetWeather(_)
+                | Action::Afflict(_)
+                | Action::Infect(_)
+                | Action::Freeze { .. }
+                | Action::Thaw { .. }
         ) || matches!(action, Action::Effect { .. }) && !outcome.events.is_empty()
             || matches!(action, Action::Ask { .. })
                 && outcome.events.iter().any(|e| matches!(e, Event::Talked(_)));

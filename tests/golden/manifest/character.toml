@@ -1,13 +1,15 @@
 # The character: its screen, skills, status effects and diseases, and character creation.
 
 # The character screen (#107, #108, #111): the player's name, race, gender, and class, their
-# age, birthday, and birth sign, their score in each stat (never a modifier or a potential), and
-# what they weigh, carrying the start room's pile.
+# age, birthday, and birth sign, their score in each stat (never a modifier or a potential), level,
+# hit points, Defence, and stance, and what they weigh, carrying the start room's pile, with the
+# burden's thresholds. The character screens are 680 high: at 540 the panel cuts its last rows.
 [[golden]]
 name = "character-screen"
 scenario = "showcase"
 actions = "move:SW*2 pickup"
 screen = "character"
+window = "960x680"
 
 # The Skills screen (#132): the showcase's thief's trained skills (never an untrained one) with
 # their values and, dimmer, how near each is to its next point; the first one's description.
@@ -24,7 +26,7 @@ name = "status-effects"
 scenario = "showcase"
 actions = "afflict:poisoned*4 afflict:bleeding wait"
 screen = "character"
-window = "960x600"
+window = "960x680"
 
 # Diseases (#139): the shakes caught (the dev `infect:` action), then rest. Hunger cuts the rests
 # short ("You are getting hungry."), so it takes three: two days on, the disease has shown and
@@ -36,7 +38,7 @@ name = "diseased"
 scenario = "showcase"
 actions = "infect:the_shakes rest:24h*3"
 screen = "character"
-window = "960x600"
+window = "960x680"
 
 # Character creation (#108, #111, #118), over New run on the main menu (no run; the replay goes
 # unused): the race step with the showcase's character's race preselected, and the summary of

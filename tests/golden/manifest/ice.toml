@@ -1,12 +1,15 @@
 # Temperature and ice (spec §5 "Ice"; M26). The Frost Grotto, down the stairs nook's third `>`:
 # its frozen pool from thick ice to thin ice, and a spring keeping a hole open; the status bar
-# shows the cold. Then the player walks out on the ice and plunges through the thin ice.
+# shows the cold (1280 wide: at 960 the temperature gives way to the date). Then the player walks
+# out on the ice and plunges through the thin ice.
 [[golden]]
 name = "frost-grotto"
 scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*8 move:E descend move:SE move:E*2"
+window = "1280x720"
 
 [[golden]]
 name = "frost-grotto-hole"
 scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*8 move:E descend move:SE move:E*23 move:SE"
+window = "1280x720"
