@@ -348,7 +348,7 @@ fn survival_shortens_journeys_on_the_overworld_only() {
     let road = w.content.terrain(road).clone();
     for (survival, minutes) in [(None, 20 * 60), (Some(50), 18 * 60), (Some(100), 16 * 60)] {
         set(&mut w, "survival", survival);
-        let price = w.step_price(player, &road);
+        let price = w.step_price(player, &road, false);
         assert_eq!(price, i64::from(minutes) * 1000, "survival {survival:?}");
     }
     // Nothing off the overworld.
@@ -356,7 +356,7 @@ fn survival_shortens_journeys_on_the_overworld_only() {
     set(&mut yard, "survival", Some(100));
     let floor = yard.content.terrain_id("floor").expect("floor");
     let floor = yard.content.terrain(floor).clone();
-    assert_eq!(yard.step_price(yard.state.player, &floor), 6000);
+    assert_eq!(yard.step_price(yard.state.player, &floor, false), 6000);
 }
 
 #[test]

@@ -28,6 +28,7 @@ mod size;
 mod skill;
 mod sky;
 mod slot;
+mod stance;
 mod terrain;
 mod vault;
 mod vision;
@@ -66,6 +67,7 @@ pub use size::{CARRY, MEDIUM, SizeDef};
 pub use skill::{SkillBook, SkillDef};
 pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
+pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use terrain::{Breakable, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
 pub use vault::Vault;
 pub use vision::VisionProfile;
@@ -225,8 +227,8 @@ struct LegendFile {
 /// `data/calendar.toml`, `data/sky.toml`, `data/materials.toml`, `data/objects.toml`,
 /// `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
 /// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, `data/horoscope.toml`,
-/// `data/effects.toml`, `data/room_effects.toml`, and `data/weapon_skills.toml` are optional
-/// (without effects, spell effects
+/// `data/effects.toml`, `data/room_effects.toml`, `data/weapon_skills.toml`, and
+/// `data/stances.toml` are optional (without effects, spell effects
 /// are not drawn). Without vision
 /// profiles, a single `normal` profile that needs no light is used, so content without lighting
 /// stays fully visible; without sizes, everything is medium; without factions, everyone is neutral; without a calendar, months are numbered;
@@ -276,6 +278,7 @@ pub struct Content {
     weapon_skills: WeaponSkillTable,
     /// Special rooms' effects (`data/room_effects.toml`).
     room_effects: RoomEffects,
+    stances: Stances,
 }
 
 impl Content {
@@ -317,6 +320,7 @@ impl Content {
             effects: Vec::new(),
             weapon_skills: WeaponSkillTable::default(),
             room_effects: RoomEffects::default(),
+            stances: Stances::default(),
         };
         let path = "data/calendar.toml";
         if let Some(text) = files.get_optional(path) {
@@ -347,6 +351,10 @@ impl Content {
         let path = "data/skills.toml";
         if let Some(text) = files.get_optional(path) {
             content.skills = SkillBook::parse(path, text)?;
+        }
+        let path = "data/stances.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.stances = Stances::parse(path, text)?;
         }
         let path = "data/races.toml";
         if let Some(text) = files.get_optional(path) {
@@ -1149,6 +1157,16 @@ impl Content {
     /// Every vision profile in file order; never empty.
     pub fn vision_profiles(&self) -> &[VisionProfile] {
         &self.visions
+    }
+
+    /// The combat stances of `data/stances.toml` (all plain without the file).
+    pub fn stances(&self) -> &Stances {
+        &self.stances
+    }
+
+    /// What combat stance `stance` does.
+    pub fn stance_def(&self, stance: CombatStance) -> &StanceDef {
+        self.stances.get(stance)
     }
 
     /// The sizes of `data/sizes.toml`, in file order (only medium without the file).
