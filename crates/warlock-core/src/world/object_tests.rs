@@ -351,7 +351,7 @@ fn objects_and_inventories_survive_a_save() {
         .get_mut(&level)
         .unwrap()
         .objects
-        .insert(PILE, vec![bogus]);
+        .insert(PILE, vec![bogus.clone()]);
     assert!(World::from_state(w.content().clone(), state).is_err());
     let mut state = w.state().clone();
     let player = state.player;

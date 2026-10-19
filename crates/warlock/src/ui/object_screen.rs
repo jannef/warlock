@@ -5,8 +5,10 @@
 //!
 //! Each lists stacks by letter, `a` first, with their glyph, name, and weight; the inventory and
 //! the drop screen mark what is worn or wielded ("(being worn)", "(wielded)"; dropping it takes
-//! it off first). The inventory is read-only and also shows what the player carries and weighs,
-//! their burden when they have one, and the weights at which it changes (spec §8 "Burden"). In a
+//! it off first). Names are in their rarity's color (spec §8 "Magic items"): magic blue, rare
+//! yellow. The inventory takes no action and also shows what the player carries and weighs,
+//! their burden when they have one, and the weights at which it changes (spec §8 "Burden"); a
+//! stack's letter there opens its description (`describe_screen`). In a
 //! selection screen a letter marks or unmarks its stack (`+` marked, `-` not: never color
 //! alone), `,` marks everything (or, with everything marked, nothing), the arrows move the `>`
 //! cursor and Space marks its row, and Enter picks up or drops the marked stacks (the cursor's
@@ -20,13 +22,14 @@
 use super::character_screen::{fit_joined, thresholds};
 use super::menu::{Nav, Panel, Press};
 use super::screens::ScreenAction;
-use super::{ACCENT, TEXT, TEXT_DIM};
+use super::{ACCENT, TEXT, TEXT_DIM, rarity_color};
 use crate::input::{Bindings, KeyBinding, KeyCommand};
 use crate::render::console::Console;
 use bevy::input::keyboard::KeyCode;
 use warlock_core::action::letter;
 use warlock_core::burden::{Burden, Load};
 use warlock_core::color::Rgb;
+use warlock_core::content::Rarity;
 use warlock_core::equipment;
 use warlock_core::object::{Stack, Weight, format_weight};
 use warlock_core::perception::PerceptionView;
@@ -107,6 +110,8 @@ struct Entry {
     mark: Option<String>,
     /// Grams.
     weight: u64,
+    /// Its name's color: by its rarity (spec §8 "Magic items").
+    rarity: Rarity,
 }
 
 #[derive(Debug)]
@@ -125,6 +130,9 @@ pub struct ObjectScreen {
     /// What the player carries against what they can (shown in the inventory); `None` outside
     /// a run.
     load: Option<Load>,
+    /// The inventory stack the player last asked to look at (its letter): what the item
+    /// description opened from here describes.
+    looked: Option<usize>,
 }
 
 impl ObjectScreen {
@@ -140,6 +148,7 @@ impl ObjectScreen {
                 marked: Letters::default(),
                 weight: Weight::default(),
                 load: None,
+                looked: None,
             };
         };
         let content = view.content();
@@ -179,6 +188,7 @@ impl ObjectScreen {
                     name: s.describe(content),
                     mark,
                     weight: s.weight(content),
+                    rarity: s.rarity(),
                 }
             })
             .collect();
@@ -190,6 +200,7 @@ impl ObjectScreen {
             marked: Letters::default(),
             weight: view.own_weight(),
             load: Some(view.own_load()),
+            looked: None,
         }
     }
 
@@ -206,9 +217,22 @@ impl ObjectScreen {
         self.list
     }
 
-    /// Applies a key press. The inventory closes on Esc, Enter, or its own key.
+    /// The inventory stack the player asked to look at, if any.
+    pub fn looked(&self) -> Option<usize> {
+        self.looked
+    }
+
+    /// Applies a key press. In the inventory a stack's letter opens its description (spec §6
+    /// "Item description"); it closes on Esc, Enter, or its own key when that names no stack.
     pub fn handle(&mut self, press: &Press, bindings: &Bindings) -> ScreenAction {
         if self.list == ObjectList::Inventory {
+            if let Some(c @ 'a'..='z') = press.text {
+                let i = usize::from(c as u8 - b'a');
+                if self.items.contains(&Item::Pack(i)) {
+                    self.looked = Some(i);
+                    return ScreenAction::Open(super::ScreenName::Describe);
+                }
+            }
             let own_key = press
                 .binding
                 .as_ref()
@@ -384,7 +408,7 @@ impl ObjectScreen {
             let room = (weight_x - name_x - 1).max(0) as usize;
             let mark = (entry.mark.as_ref()).map_or(String::new(), |m| format!(" ({m})"));
             let name: String = format!("{}{mark}", entry.name).chars().take(room).collect();
-            console.print(name_x, y, &name, color);
+            console.print(name_x, y, &name, rarity_color(entry.rarity, color));
             console.print(weight_x, y, &weight, TEXT_DIM);
         }
         if first > 0 {
@@ -417,7 +441,11 @@ impl ObjectScreen {
                 Some(key) => format!("{} or Esc close", key.display()),
                 None => "Esc close".to_string(),
             };
-            format!("{scroll}{close}")
+            let look = match self.items.last().and_then(|item| letter(item.position())) {
+                Some(last) => format!("a-{last} look   "),
+                None => String::new(),
+            };
+            format!("{scroll}{look}{close}")
         } else if self.list == ObjectList::Eat {
             "a-z or Enter eat   Esc cancel".to_string()
         } else if self.list == ObjectList::Throw {
@@ -660,9 +688,14 @@ mod tests {
         assert!(row("c - ( 2 wax candles").contains("200 g"));
         assert!(row("Carrying").contains("Carrying 4.2 kg"));
         assert!(row("Carrying").contains("Your weight 74.2 kg (you 70 kg)"));
-        assert!(row("Esc close").contains("i or Esc close"));
-        // Letters do nothing here; `i` closes, like Esc.
-        assert_eq!(screen.handle(&typed('a'), &b), ScreenAction::Stay);
+        assert!(row("Esc close").contains("a-c look   i or Esc close"));
+        // A stack's letter opens its description; `i` (naming no stack here) closes, like Esc.
+        assert_eq!(
+            screen.handle(&typed('b'), &b),
+            ScreenAction::Open(crate::ui::ScreenName::Describe)
+        );
+        assert_eq!(screen.looked(), Some(1));
+        assert_eq!(screen.handle(&typed('e'), &b), ScreenAction::Stay);
         let i = Press {
             binding: crate::input::KeyBinding::from_text("i"),
             ..typed('i')

@@ -161,7 +161,7 @@ impl KeyCommand {
             NextPage => "next_page",
             PrevPage => "prev_page",
             Cancel | Snapshot | LoadSnapshot | CycleVision | RevealMap | LightValues | SkipHour
-            | NextWeather => {
+            | NextWeather | IdentifyAll => {
                 return None;
             }
         })

@@ -135,7 +135,7 @@ pub struct SeenActor {
 }
 
 /// Something a creature the player sees wears or wields: what is seen of what it carries.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SeenGear {
     pub actor: ActorId,
     /// The first slot it is in (a two-handed weapon is in both hands).
@@ -523,7 +523,7 @@ impl Perception {
             .filter(|a| a.kind == ActorKind::Creature)
             .flat_map(|a| {
                 (a.equipment.items().into_iter()).filter_map(|(slot, item)| {
-                    let stack = *a.inventory.get(item)?;
+                    let stack = a.inventory.get(item)?.clone();
                     Some(SeenGear {
                         actor: a.id,
                         slot,
@@ -848,7 +848,7 @@ impl<'a> PerceptionView<'a> {
     pub fn ready_to_fire(&self) -> Option<(ObjectId, usize, i32)> {
         let (launcher, _) = self.player.launcher(self.content)?;
         let item = self.player.ammunition_item(self.content)?;
-        Some((launcher, item, self.content.object(launcher).range?))
+        Some((launcher, item, self.player.launcher_range(self.content)?))
     }
 
     /// Where in their inventory what the player has ready to throw is (a stack of rocks, or a
@@ -870,9 +870,7 @@ impl<'a> PerceptionView<'a> {
     /// How far the player throws inventory stack `item`, if it can be thrown (a throwing
     /// weapon, or another weapon, badly).
     pub fn throw_range(&self, item: usize) -> Option<i32> {
-        self.content
-            .object(self.player.inventory.get(item)?.object)
-            .throw_range()
+        self.player.throw_range(item, self.content)
     }
 
     /// Whether inventory stack `item` is a throwing weapon, made for throwing (what the throw
@@ -887,9 +885,10 @@ impl<'a> PerceptionView<'a> {
         self.snapshot.gear.iter().filter(move |g| g.actor == actor)
     }
 
-    /// The player's own scores, by stat (spec §8 "Stats"), as the rules read them: lowered
-    /// while a status effect or stat damage lowers them (spec §8 "Status effects", "Diseases")
-    /// and while hunger leaves them Weak or worse (spec §8 "Hunger"). That is all the player
+    /// The player's own scores, by stat (spec §8 "Stats"), as the rules read them: raised by
+    /// what they wear and wield (spec §8 "Magic items"), lowered while a status effect or stat
+    /// damage lowers them (spec §8 "Status effects", "Diseases") and while hunger leaves them
+    /// Weak or worse (spec §8 "Hunger"). That is all the player
     /// knows of stats: never their potentials or modifiers, and nothing of a creature's.
     pub fn own_scores(&self) -> PerStat<u8> {
         self.player.effective_stats(self.content).scores()
@@ -901,11 +900,11 @@ impl<'a> PerceptionView<'a> {
         self.player.hunger(self.content)
     }
 
-    /// The player's scores as they are without their status effects, hunger, or stat damage:
-    /// what [`PerceptionView::own_scores`] would be with none (the character screen marks the
-    /// lowered ones).
+    /// The player's scores as they are without their status effects, hunger, or stat damage
+    /// (raised by what they wear and wield all the same): what [`PerceptionView::own_scores`]
+    /// would be with none (the character screen marks the lowered ones).
     pub fn own_base_scores(&self) -> PerStat<u8> {
-        self.player.stats.scores()
+        self.player.raised_stats(self.content).scores()
     }
 
     /// The player's own trained skills, in skill order (spec §8 "Skills"): each one's value and

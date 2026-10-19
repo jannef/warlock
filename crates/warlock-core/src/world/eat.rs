@@ -35,13 +35,24 @@ use crate::stats::Stat;
 use crate::time::GameTime;
 use std::cell::Cell;
 
-/// A meal under way: where the food is, one of it as it lay when the meal began, and the turns
-/// it takes.
+/// A meal under way: where the food is, one of it as it lay when the meal began (its object and,
+/// a corpse, when its creature died; food is never magic), and the turns it takes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct Dish {
     meal: Meal,
-    food: Stack,
+    object: ObjectId,
+    died: Option<GameTime>,
     turns: u32,
+}
+
+impl Dish {
+    /// One of the food, as it lay when the meal began.
+    fn food(&self) -> Stack {
+        match self.died {
+            Some(died) => Stack::corpse(self.object, died),
+            None => Stack::one(self.object),
+        }
+    }
 }
 
 /// How a corpse is, by its age.
@@ -80,10 +91,10 @@ impl World {
             return Spent::Nothing;
         }
         let (stack, i) = match meal {
-            Meal::Pack(i) => (self.state.player().inventory.get(i).copied(), i),
+            Meal::Pack(i) => (self.state.player().inventory.get(i).cloned(), i),
             Meal::Floor(i) => {
                 let here = self.player_pos();
-                (self.state.current().objects_at(here).get(i).copied(), i)
+                (self.state.current().objects_at(here).get(i).cloned(), i)
             }
         };
         let Some(stack) = stack else {
@@ -101,7 +112,8 @@ impl World {
         };
         Spent::Meal(Dish {
             meal,
-            food: Stack { count: 1, ..stack },
+            object: stack.object,
+            died: stack.died,
             turns: food.turns,
         })
     }
@@ -138,7 +150,8 @@ impl World {
     /// like it there if the pile changed meanwhile), and it feeds and does what it does.
     fn finish(&mut self, dish: Dish, events: &mut Vec<Event>) {
         let burden = self.load_of(self.state.player).burden();
-        if !self.take_one(dish.meal, dish.food) {
+        let food = dish.food();
+        if !self.take_one(dish.meal, &food) {
             self.say("There is nothing left to eat.");
             return;
         }
@@ -146,19 +159,19 @@ impl World {
         let Some(before) = self.player_hunger() else {
             return;
         };
-        let def = content.object(dish.food.object);
+        let def = content.object(food.object);
         self.say(format!("You eat the {}.", def.name));
         let nutrition = def.food.map_or(0, |f| f.nutrition) as i32;
-        match (def.corpse, self.rot(&dish.food)) {
+        match (def.corpse, self.rot(&food)) {
             (Some(_), Some(Rot::Rotten | Rot::Gone)) => {
-                self.eat_rotten(nutrition, dish.food.object, events);
+                self.eat_rotten(nutrition, food.object, events);
             }
             (Some(creature), _) => {
                 let on_eat = content.creature(creature).on_eat.clone();
                 let on_eat = on_eat.unwrap_or_default();
-                self.eat_fresh(nutrition, dish.food.object, on_eat, events);
+                self.eat_fresh(nutrition, food.object, on_eat, events);
             }
-            (None, _) => self.feed(nutrition, dish.food.object),
+            (None, _) => self.feed(nutrition, food.object),
         }
         if self.state.death.is_none() {
             self.hunger_news(before);
@@ -168,7 +181,7 @@ impl World {
 
     /// Takes one of `food` from where `meal` says: the stack there if it is still that food, else
     /// the first stack like it there. Returns whether there was one.
-    fn take_one(&mut self, meal: Meal, food: Stack) -> bool {
+    fn take_one(&mut self, meal: Meal, food: &Stack) -> bool {
         let same = |s: &Stack| s.object == food.object && s.died == food.died;
         let find = |stacks: &[Stack], i: usize| {
             (stacks.get(i).filter(|s| same(s)).map(|_| i)).or_else(|| stacks.iter().position(same))
@@ -368,7 +381,7 @@ impl World {
                 .objects_at(p)
                 .iter()
                 .filter(|s| !gone(s))
-                .copied()
+                .cloned()
                 .collect();
             level.set_pile(p, pile);
         }

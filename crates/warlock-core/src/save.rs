@@ -54,7 +54,9 @@ const MAGIC: &str = "WARLOCK-SAVE";
 /// 25: diseases: actors carry them (`Actor::diseases`: each infection's timer, stage,
 ///     progressions, recovery streak, and who gave it) and stat damage (`Actor::damage`, with
 ///     its mending progress); disease ids are in the content fingerprint.
-pub const FORMAT_VERSION: u32 = 25;
+/// 26: magic items: a stack may carry what it rolled (`Stack::magic`: rarity, item level, each
+///     affix by id with its tier and value, a rare item's name, whether it is identified).
+pub const FORMAT_VERSION: u32 = 26;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 

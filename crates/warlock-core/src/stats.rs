@@ -276,6 +276,16 @@ impl Stats {
         Self { score, potential }
     }
 
+    /// These stats with each score changed by `by` of its stat (what an actor wears and wields
+    /// adds, spec §8 "Magic items"), kept within [`SCORES`]; the potentials as they are.
+    pub fn raised(&self, by: impl Fn(Stat) -> i32) -> Self {
+        let mut out = *self;
+        for stat in Stat::ALL {
+            out.score[stat] = adjusted(self.score[stat], by(stat));
+        }
+        out
+    }
+
     /// The score in `stat`.
     pub fn score(&self, stat: Stat) -> u8 {
         self.score[stat]

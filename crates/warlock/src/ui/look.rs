@@ -115,7 +115,7 @@ fn gear(view: &PerceptionView<'_>, actor: ActorId) -> String {
             ActionKind::Ready => 2,
             _ => 1,
         };
-        groups[group].2.push(g.stack);
+        groups[group].2.push(g.stack.clone());
     }
     groups
         .iter()

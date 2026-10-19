@@ -604,10 +604,10 @@ fn the_hubs_pantry_is_locked_and_its_key_lies_in_the_storeroom() {
     assert_eq!(w.player_pos(), Pos::new(23, 14));
     w.apply(&Action::Open(Dir::E));
     assert_eq!(last_message(&w), "The door is locked.");
-    // The key lies in the storeroom across the corridor.
-    run(&mut w, "open:W move:W*4 pickup");
+    // The key lies just inside the storeroom across the corridor, on the pick-axe.
+    run(&mut w, "open:W move:W*2 pickup:a");
     assert_eq!(last_message(&w), "You pick up an iron key.");
-    run(&mut w, "move:E*4 open:E");
+    run(&mut w, "move:E*2 open:E");
     assert_eq!(
         last_message(&w),
         "You unlock the door with your iron key and open it."

@@ -104,6 +104,10 @@ pub enum Action {
         at: Pos,
         to: Option<Pos>,
     },
+    /// Dev command: identify the inventory stacks with these letters, or everything carried
+    /// with no letters (spec §8 "Magic items"; the scroll of identify does it in play). Takes no
+    /// game time; recorded in replays.
+    Identify(Letters),
     /// Dev command: the player suffers one degree more of a status effect (an id in
     /// `data/status.toml`), as a wound or a bite would give it: for trying statuses out and for
     /// captures. Takes no game time; recorded in replays.
@@ -431,17 +435,18 @@ pub struct Outcome {
 /// Text syntax for scripting: `move:E wait open:E close:W kick:N ascend descend lantern rest:1h
 /// rest:dawn rest:dusk pickup pickup:ac drop:b equip:body:b remove:body bash:E fire:12,5
 /// throw:c:12,5 dig:E eat:b eat:floor:a chat:E ask:E:TOPIC vision:ID skip:1h weather:rain
-/// effect:fireball@12,5 effect:lightning_bolt@3,4>12,4 afflict:bleeding infect:filth_fever
-/// freeze:12,5,3 thaw:12,5,3` (durations: `30s`, `10m`, `2h`; letters name stacks, `a` first;
-/// `pickup` and `drop` without letters take everything; `equip:SLOT:LETTER` puts inventory stack
-/// LETTER on in slot SLOT, `remove:SLOT` takes off what is there; `bash:DIR` bashes with the held
-/// shield; `dig:DIR` digs toward a wall; `fire:X,Y` shoots at the level cell (X, Y),
-/// `throw:LETTER:X,Y` throws one of inventory stack LETTER there; `eat:LETTER` eats one of
-/// inventory stack LETTER, `eat:floor:LETTER` one of the stack LETTER of the pile underfoot;
-/// `chat:DIR` talks to the creature that way, `ask:DIR:TOPIC` asks it about a topic by id; weather:
-/// `clear`, `overcast`, `rain`, `heavy`; `effect:ID@X,Y[>X,Y]` shows a spell effect at a cell, or
-/// from one cell toward another; the dev bursts `freeze:X,Y,R` and `thaw:X,Y,R` freeze the water
-/// and melt the ice within radius R, 0 to [`MAX_BURST`], of cell (X, Y)).
+/// effect:fireball@12,5 effect:lightning_bolt@3,4>12,4 identify:a afflict:bleeding
+/// infect:filth_fever freeze:12,5,3 thaw:12,5,3` (durations: `30s`, `10m`, `2h`; letters name
+/// stacks, `a` first; `pickup`, `drop`, and `identify` without letters take everything;
+/// `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT, `remove:SLOT` takes off what
+/// is there; `bash:DIR` bashes with the held shield; `dig:DIR` digs toward a wall; `fire:X,Y`
+/// shoots at the level cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack LETTER
+/// there; `eat:LETTER` eats one of inventory stack LETTER, `eat:floor:LETTER` one of the stack
+/// LETTER of the pile underfoot; `chat:DIR` talks to the creature that way, `ask:DIR:TOPIC` asks
+/// it about a topic by id; weather: `clear`, `overcast`, `rain`, `heavy`; `effect:ID@X,Y[>X,Y]`
+/// shows a spell effect at a cell, or from one cell toward another; the dev bursts
+/// `freeze:X,Y,R` and `thaw:X,Y,R` freeze the water and melt the ice within radius R, 0 to
+/// [`MAX_BURST`], of cell (X, Y)).
 ///
 /// `Display` and `FromStr` round-trip; action names are case-insensitive when parsing (vision
 /// profile, slot, and effect ids keep their case).
@@ -491,6 +496,8 @@ impl fmt::Display for Action {
                     None => Ok(()),
                 }
             }
+            Action::Identify(l) if l.is_empty() => f.write_str("identify"),
+            Action::Identify(l) => write!(f, "identify:{l}"),
             Action::Afflict(id) => write!(f, "afflict:{id}"),
             Action::Infect(id) => write!(f, "infect:{id}"),
             Action::Freeze { at, radius } => write!(f, "freeze:{},{},{radius}", at.x, at.y),
@@ -540,16 +547,16 @@ impl FromStr for Action {
             "ascend" => bare(Action::Ascend),
             "descend" => bare(Action::Descend),
             "lantern" => bare(Action::ToggleLantern),
-            "pickup" | "drop" => {
+            "pickup" | "drop" | "identify" => {
                 let letters = match arg {
                     None => Letters::default(),
                     Some("") => return Err(format!("`{verb}:` needs letters, e.g. `{verb}:ab`")),
                     Some(text) => text.parse().map_err(|e| format!("`{s}`: {e}"))?,
                 };
-                Ok(if verb == "pickup" {
-                    Action::PickUp(letters)
-                } else {
-                    Action::Drop(letters)
+                Ok(match verb {
+                    "pickup" => Action::PickUp(letters),
+                    "drop" => Action::Drop(letters),
+                    _ => Action::Identify(letters),
                 })
             }
             "rest" => match arg {
@@ -695,7 +702,7 @@ impl FromStr for Action {
                  equip:SLOT:LETTER, remove:SLOT, bash:DIR, fire:X,Y, throw:LETTER:X,Y, dig:DIR, \
                  eat:LETTER, eat:floor:LETTER, chat:DIR, ask:DIR:TOPIC, stance:NAME, vision:ID, \
                  skip:DURATION, weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y], \
-                 afflict:STATUS, infect:DISEASE, freeze:X,Y,R, thaw:X,Y,R)"
+                 identify[:LETTERS], afflict:STATUS, infect:DISEASE, freeze:X,Y,R, thaw:X,Y,R)"
             )),
         }
     }
@@ -800,6 +807,8 @@ mod tests {
                 at: Pos::new(-3, 4),
                 to: Some(Pos::new(12, 0)),
             },
+            Action::Identify(Letters::default()),
+            Action::Identify(Letters::of([0, 3])),
             Action::Ask {
                 dir: Dir::NW,
                 topic: "the_rooms".into(),

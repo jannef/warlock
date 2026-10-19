@@ -585,22 +585,17 @@ fn ranks_change_to_hit_damage_threat_defence_and_cost() {
     }
     assert_eq!(elapsed, Duration::seconds(27), "five blows of 5.4 s");
     // Throwing with the dagger draws on throwing, not on daggers.
-    let thrown = me(&w).thrown(
-        &content,
-        &content
-            .object(content.object_id("dagger").expect("dagger"))
-            .attack
-            .expect("a weapon"),
-    );
+    let dagger = content.object_id("dagger").expect("dagger");
+    let thrown_with = |w: &World| {
+        let item = (me(w).inventory.iter())
+            .position(|s| s.object == dagger)
+            .expect("the dagger");
+        me(w).thrown(item, &content).expect("a throwing weapon")
+    };
+    let thrown = thrown_with(&w);
     let mut fresh = world_on(YARD);
     arm(&mut fresh, &["dagger"]);
-    let untrained = me(&fresh).thrown(
-        &content,
-        &content
-            .object(content.object_id("dagger").expect("dagger"))
-            .attack
-            .expect("a weapon"),
-    );
+    let untrained = thrown_with(&fresh);
     assert_eq!(
         thrown.to_hit,
         untrained.to_hit + 3,

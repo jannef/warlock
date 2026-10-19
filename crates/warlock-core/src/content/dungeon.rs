@@ -14,6 +14,7 @@
 //! depth = 8
 //! size = [80, 21]
 //! creatures = ["rat", "kobold"] # patrolling creatures generators may place; default none
+//! loot = [2, 4]                 # items of loot on each level's floor; default none
 //! ambient = [0, 0, 0, 0]        # optional
 //! temperature = 9               # °C; default the dungeon default (10)
 //! key = "rusty_key"             # optional: rooms levels lock a few rooms with its lock
@@ -32,6 +33,9 @@ use super::object::ObjectId;
 use crate::light::Light;
 use crate::temperature::{LEVEL_TEMPERATURES, Temperature};
 use serde::Deserialize;
+
+/// The most items of loot a branch level's floor may hold.
+pub const MAX_LOOT: u8 = 50;
 
 /// Which generator builds a level.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
@@ -72,6 +76,9 @@ struct DungeonSpec {
     ambient: Light,
     #[serde(default)]
     creatures: Vec<String>,
+    /// How many items of loot lie on the floor of each level, `[fewest, most]`.
+    #[serde(default)]
+    loot: [u8; 2],
     /// The temperature on its levels, in °C; default the dungeon default.
     temperature: Option<i8>,
     /// The key (an object) to the rooms the generators lock; none: no locked rooms.
@@ -110,6 +117,9 @@ pub struct DungeonDef {
     pub ambient: Light,
     /// Creatures generators may place on patrol.
     pub creatures: Vec<CreatureId>,
+    /// How many items of loot lie on the floor of each level, fewest and most (spec §8 "Magic
+    /// items"; item level: the depth).
+    pub loot: [u8; 2],
     /// The key to the rooms the rooms generator locks (spec §8 "Doors"): it locks them with the
     /// lock this key opens and leaves one where the player can reach it. `None`: no locked rooms.
     pub key: Option<ObjectId>,
@@ -227,6 +237,11 @@ impl DungeonFile {
                         .ok_or_else(|| err(format!("dungeon `{id}` uses unknown creature `{c}`")))
                 })
                 .collect::<Result<Vec<_>, _>>()?;
+            if spec.loot[0] > spec.loot[1] || spec.loot[1] > MAX_LOOT {
+                return Err(err(format!(
+                    "dungeon `{id}`: `loot` is [fewest, most], at most {MAX_LOOT}"
+                )));
+            }
             let key = match &spec.key {
                 Some(k) => Some(key_id(k).ok_or_else(|| {
                     err(format!(
@@ -241,6 +256,7 @@ impl DungeonFile {
                 depth: spec.depth,
                 ambient: spec.ambient,
                 creatures,
+                loot: spec.loot,
                 key,
                 plans,
             });

@@ -272,6 +272,26 @@ equip:missile_weapon:c equip:missiles:d equip:feet:i
 '''
 screen = "equip-item"
 
+# Magic items (#149): the storeroom's magic arms picked up, names in their rarity's color (magic
+# blue, rare yellow): a magic ring and a rare bow not yet identified, Dread Visage (a rare helm,
+# worn), and a Sharp long sword of the Bear.
+[[golden]]
+name = "magic-inventory"
+scenario = "showcase"
+actions = '''
+move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*5 pickup move:E pickup
+equip:head:c
+'''
+screen = "inventory"
+
+# The item description (#149): Dread Visage, the rare helm, identified and worn: what it is, its
+# base stats in words, its item level, and each affix in plain words.
+[[golden]]
+name = "item-description"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*4 pickup equip:head:a"
+screen = "describe"
+
 [[golden]]
 name = "vast-level"
 scenario = "vast"

@@ -21,6 +21,7 @@
 - [Special rooms](special-rooms.md)
 - [Objects and your pack](objects.md)
 - [Equipment](equipment.md)
+  - [Magic items](magic-items.md)
 - [Burden](burden.md)
 - [Hunger](hunger.md)
   - [Food and corpses](food.md)

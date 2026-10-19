@@ -20,7 +20,8 @@
 //!   player rests (`[healing] resting`) and three times as fast in a sanctuary (a special
 //!   room's `regen`); slowed or stopped by the slowest `regen` of its statuses (bleeding stops
 //!   it, poison and disease halve it) and of the diseases that show (marsh ague slows it more),
-//!   and stopped while the player is Starving (spec §8 "Hunger").
+//!   and stopped while the player is Starving (spec §8 "Hunger"); faster with regeneration
+//!   affixes on what it wears and wields (spec §8 "Magic items").
 //! - **Hunger**: the player's nutrition burns as they live through the time, and starving costs
 //!   them hit points ([`World::digest`], `hunger.rs`); each change of their hunger state is a
 //!   moment of its own, so healing stops exactly when they start to starve.
@@ -39,6 +40,7 @@
 use super::{ActorId, Cause, World, disease};
 use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Strike};
+use crate::content::Effect as ItemEffect;
 use crate::content::{Affliction, Content, DiseaseId, OnHit, StatusId};
 use crate::hunger::Hunger;
 use crate::stats::Stat;
@@ -177,9 +179,10 @@ impl World {
     /// How fast actor `id` gets hit points back now, in percent of the normal pace (spec §8
     /// "Healing"): the slowest `regen` of its statuses and of the diseases that show (100
     /// without any), times the resting bonus while the player rests, times the `regen` of a
-    /// special room it stands in (a sanctuary: three times; spec §7 "Special rooms"). The one
-    /// place that decides it. A Starving player gets none back (spec §8 "Hunger"); disease
-    /// (#139) slows it through Diseased's `regen` and its own.
+    /// special room it stands in (a sanctuary: three times; spec §7 "Special rooms"), times what
+    /// the regeneration affixes of what it wears and wields add (spec §8 "Magic items": +50 % is
+    /// half again as fast). The one place that decides it. A Starving player gets none back
+    /// (spec §8 "Hunger"); disease (#139) slows it through Diseased's `regen` and its own.
     pub(crate) fn healing_rate(&self, id: ActorId) -> u32 {
         let Some(actor) = self.state.actors.get(&id) else {
             return 0;
@@ -194,7 +197,10 @@ impl World {
         }
         let room = (self.state.levels.get(&actor.level))
             .and_then(|level| level.room_effect_at(&self.content, actor.pos));
-        room.map_or(rate, |effect| rate * u32::from(effect.regen) / 100)
+        let rate = room.map_or(rate, |effect| rate * u32::from(effect.regen) / 100);
+        let faster = actor.mods(&self.content).get(ItemEffect::Regeneration);
+        let faster = u32::try_from(faster.max(0)).unwrap_or(0);
+        rate * (100 + faster) / 100
     }
 
     /// `seconds` of game time from `start` pass for actors `ids` (on the current level, in
@@ -343,8 +349,7 @@ fn heal(actor: &mut super::Actor, content: &Content, seconds: u64, rate: u32) {
 /// The progress `actor` needs for a hit point back ([`super::Actor::regen`]); `None` when it
 /// heals no more: at full health, or dead.
 fn need(actor: &super::Actor, content: &Content) -> Option<u64> {
-    let stats = actor.effective_stats(content);
-    let max = combat::max_hp(stats.score(Stat::Toughness), actor.hp_base);
-    (actor.hp > 0 && actor.hp < max)
-        .then(|| u64::from(combat::regen_seconds(stats.score(Stat::Toughness))) * 100)
+    let toughness = actor.effective_stats(content).score(Stat::Toughness);
+    (actor.hp > 0 && actor.hp < actor.max_hp(content))
+        .then(|| u64::from(combat::regen_seconds(toughness)) * 100)
 }

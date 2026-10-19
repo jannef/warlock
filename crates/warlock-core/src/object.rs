@@ -10,22 +10,33 @@
 //! Weights are integer grams. An actor weighs its creature's base weight plus everything it
 //! carries ([`Weight`]).
 //!
+//! A magic or rare item (spec §8 "Magic items", [`crate::magic`]) is a stack that carries what it
+//! rolled ([`Magic`]); it joins only a stack with the very same magic (arrows shot from a magic
+//! stack and picked up again). What the player is shown of it goes through
+//! [`Stack::describe`] and [`Stack::known_magic`], which keep an unidentified item's affixes
+//! hidden.
+//!
 //! A corpse (spec §8 "Hunger") is a stack of one that remembers when its creature died
 //! ([`Stack::died`]): it rots from then on, and is gone in the end.
 
-use crate::content::{Content, ObjectId};
+use crate::content::{Content, ObjectId, Rarity};
+use crate::magic::{Effect, Magic, Mods, name};
 use crate::time::GameTime;
 use serde::{Deserialize, Serialize};
 
 /// Most stacks an inventory holds: one per letter, `a` to `z`.
 pub const INVENTORY_SLOTS: usize = 26;
 
-/// Some number of one object.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+/// Some number of one object, and what it rolled if it is magic.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Stack {
     pub object: ObjectId,
     /// At least 1; always 1 for objects that do not stack.
     pub count: u32,
+    /// What a magic or rare item rolled (boxed: most stacks have none). Ground truth: the rules
+    /// read it, presentation only through [`Stack::known_magic`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    magic: Option<Box<Magic>>,
     /// A corpse: when its creature died, the moment it rots from (rules and dev tools only: a
     /// corpse does not show its age, so presentation cannot read it). `None` for everything else.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -33,44 +44,118 @@ pub struct Stack {
 }
 
 impl Stack {
-    pub fn one(object: ObjectId) -> Self {
-        Self::new(object, 1)
-    }
-
-    /// `count` of `object`, which is no corpse.
+    /// `count` of a normal `object`, which is no corpse.
     pub fn new(object: ObjectId, count: u32) -> Self {
         Self {
             object,
             count,
+            magic: None,
             died: None,
         }
+    }
+
+    pub fn one(object: ObjectId) -> Self {
+        Self::new(object, 1)
     }
 
     /// A corpse, `object`, of a creature that died at `died`.
     pub fn corpse(object: ObjectId, died: GameTime) -> Self {
         Self {
-            object,
-            count: 1,
             died: Some(died),
+            ..Self::new(object, 1)
         }
     }
 
-    /// Grams.
+    /// `count` of `object` that rolled `magic`.
+    pub(crate) fn with_magic(object: ObjectId, count: u32, magic: Magic) -> Self {
+        Self {
+            magic: Some(Box::new(magic)),
+            ..Self::new(object, count)
+        }
+    }
+
+    /// One of this stack: the same object and magic.
+    pub(crate) fn single(&self) -> Self {
+        Self {
+            count: 1,
+            ..self.clone()
+        }
+    }
+
+    /// What it rolled, identified or not: ground truth, for the rules and dev tools.
+    pub(crate) fn magic(&self) -> Option<&Magic> {
+        self.magic.as_deref()
+    }
+
+    /// Normal, magic, or rare: this the player sees at once.
+    pub fn rarity(&self) -> Rarity {
+        self.magic.as_ref().map_or(Rarity::Normal, |m| m.rarity)
+    }
+
+    /// Whether the player knows what it does: a normal item always, a magic or rare one once
+    /// identified.
+    pub fn is_identified(&self) -> bool {
+        self.magic.as_ref().is_none_or(|m| m.identified)
+    }
+
+    /// What it rolled, if the player has identified it: all presentation may know of its magic.
+    pub fn known_magic(&self) -> Option<&Magic> {
+        self.magic().filter(|m| m.identified)
+    }
+
+    /// Identifies it; returns whether there was anything to learn.
+    pub(crate) fn identify(&mut self) -> bool {
+        match self.magic.as_mut() {
+            Some(m) if !m.identified => {
+                m.identified = true;
+                true
+            }
+            _ => false,
+        }
+    }
+
+    /// Grams: its object's weight, less what a weight affix takes off, times the count.
     pub fn weight(&self, content: &Content) -> u64 {
-        u64::from(content.object(self.object).weight) * u64::from(self.count)
+        let each = u64::from(content.object(self.object).weight);
+        let lighter = match self.magic {
+            Some(_) => Mods::local(self, content).get(Effect::Weight),
+            None => 0,
+        };
+        crate::magic::mods::less(each, lighter).max(1) * u64::from(self.count)
     }
 
-    /// "a dagger", "12 arrows".
+    /// As the player knows it: "a dagger", "12 arrows", "a Sharp long sword of the Bear", "Grim
+    /// Bite, a long sword", unidentified "a long sword (magic)".
     pub fn describe(&self, content: &Content) -> String {
-        content.object(self.object).describe(self.count)
+        let def = content.object(self.object);
+        let known = self.is_identified();
+        name::describe(def, self.count, self.magic(), known, content)
     }
 
-    /// Whether the object exists in `content`, the count makes sense, and it knows when it died
-    /// if and only if it is a corpse (a guard for saves).
+    /// What it is called as the player knows it, without an article or count: "long sword",
+    /// "Sharp long sword of the Bear", "Grim Bite".
+    pub fn title(&self, content: &Content) -> String {
+        let def = content.object(self.object);
+        name::title(def, self.magic(), self.is_identified(), content)
+    }
+
+    /// As it truly is, identified or not: for dev tools only.
+    pub(crate) fn describe_truth(&self, content: &Content) -> String {
+        let def = content.object(self.object);
+        let text = name::describe(def, self.count, self.magic(), true, content);
+        match self.magic() {
+            Some(m) if !m.identified => format!("{text} (unidentified)"),
+            _ => text,
+        }
+    }
+
+    /// Whether the object exists in `content`, the count makes sense, its magic is valid for it,
+    /// and it knows when it died if and only if it is a corpse (a guard for saves).
     pub(crate) fn is_valid_for(&self, content: &Content) -> bool {
         usize::from(self.object.0) < content.object_defs().len()
             && self.count >= 1
             && (self.count == 1 || content.object(self.object).stackable)
+            && (self.magic()).is_none_or(|m| m.check(content.object(self.object), content).is_ok())
             && self.died.is_some() == content.object(self.object).corpse.is_some()
     }
 }
@@ -124,12 +209,13 @@ pub fn phrase(stacks: &[Stack], content: &Content) -> String {
     }
 }
 
-/// Joins `stack` to a stack of the same object in `stacks` if it stacks; returns whether it did.
-fn join(stacks: &mut [Stack], stack: Stack, content: &Content) -> bool {
+/// Joins `stack` to a stack of the same object (and the same magic, if any) in `stacks` if it
+/// stacks; returns whether it did.
+fn join(stacks: &mut [Stack], stack: &Stack, content: &Content) -> bool {
     if !content.object(stack.object).stackable {
         return false;
     }
-    match stacks.iter_mut().find(|s| s.object == stack.object) {
+    match (stacks.iter_mut()).find(|s| s.object == stack.object && s.magic == stack.magic) {
         Some(same) => {
             same.count += stack.count;
             true
@@ -142,8 +228,8 @@ fn join(stacks: &mut [Stack], stack: Stack, content: &Content) -> bool {
 /// objects join a stack of the same object already there.
 pub fn add_to_pile(pile: &mut Vec<Stack>, stacks: &[Stack], content: &Content) {
     for stack in stacks.iter().rev() {
-        if !join(pile, *stack, content) {
-            pile.insert(0, *stack);
+        if !join(pile, stack, content) {
+            pile.insert(0, stack.clone());
         }
     }
 }
@@ -151,7 +237,7 @@ pub fn add_to_pile(pile: &mut Vec<Stack>, stacks: &[Stack], content: &Content) {
 /// Adds `stack` to `inventory`: joins a stack of the same object if it stacks, else takes the
 /// next letter. Returns false (and changes nothing) when every letter is taken.
 pub fn add_to_inventory(inventory: &mut Vec<Stack>, stack: Stack, content: &Content) -> bool {
-    if join(inventory, stack, content) {
+    if join(inventory, &stack, content) {
         return true;
     }
     if inventory.len() >= INVENTORY_SLOTS {
@@ -251,18 +337,16 @@ mod tests {
         let arrows = stack(&c, "arrow", 12);
         let each = u64::from(c.object(arrows.object).weight);
         assert_eq!(arrows.weight(&c), 12 * each);
-        assert_eq!(
-            weight_of(&[dagger, arrows], &c),
-            dagger.weight(&c) + 12 * each
-        );
-        assert_eq!(phrase(&[dagger], &c), "a dagger");
-        assert_eq!(phrase(&[dagger, arrows], &c), "a dagger and 12 arrows");
+        let (d, a) = (|| dagger.clone(), || arrows.clone());
+        assert_eq!(weight_of(&[d(), a()], &c), dagger.weight(&c) + 12 * each);
+        assert_eq!(phrase(&[d()], &c), "a dagger");
+        assert_eq!(phrase(&[d(), a()], &c), "a dagger and 12 arrows");
         let ruby = stack(&c, "ruby", 1);
         assert_eq!(
-            phrase(&[dagger, arrows, ruby], &c),
+            phrase(&[d(), a(), ruby.clone()], &c),
             "a dagger, 12 arrows, and a ruby"
         );
-        assert_eq!(phrase(&[dagger, arrows, ruby, dagger], &c), "15 objects");
+        assert_eq!(phrase(&[d(), a(), ruby, d()], &c), "15 objects");
         let w = Weight {
             base: 70_000,
             carried: 1_500,

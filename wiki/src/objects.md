@@ -3,8 +3,9 @@
 Weapons, armor, tools, potions, scrolls, food, stones and gems, coins, rings, and amulets lie about
 the world. You can pick them up, carry them, and put them down again, and wear and wield weapons,
 armor, rings, and amulets (see [Equipment](equipment.md)). Weapons and armour fight and protect
-(see [Combat](combat.md)), and everything you carry weighs on you (see [Burden](burden.md)). Food
-can be eaten (see [Food and corpses](food.md)), but you cannot drink or read anything yet.
+(see [Combat](combat.md)), some of them are magic (see [Magic items](magic-items.md)), and
+everything you carry weighs on you (see [Burden](burden.md)). Food can be eaten (see [Food and
+corpses](food.md)), but you cannot drink or read anything yet.
 
 ## What an object is
 
@@ -85,9 +86,12 @@ You cannot close a door while objects lie in its doorway.
 
 ## Your pack
 
-Press `i` to see what you carry. Nothing changes and no time passes; `i` or `Esc` closes the
-screen. Stacks are lettered in the order you picked them up. Picking up a stackable object you
-already carry adds to that stack, and dropping a stack moves the later letters up.
+Press `i` to see what you carry. Nothing changes and no time passes; `Esc` closes the screen, and
+so does `i` unless it is the letter of something you carry. Press a stack's letter to look at it:
+its description says what it is and does (see [Magic items](magic-items.md#looking-at-an-item)).
+Stacks are lettered in the order you picked them up. Picking up a stackable object you already
+carry adds to that stack, and dropping a stack moves the later letters up. Magic and rare items
+show their names in blue and yellow; see [Magic items](magic-items.md).
 
 {{#include generated/pack.md}}
 

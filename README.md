@@ -64,6 +64,13 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   of Warcraft (nothing from grey ones, a little extra from tougher ones). Levels run to 50 and, up
   to level 20, make you hardier. Your level and XP show on the status bar, the character screen,
   and the death screen.
+- **Magic items** — after Path of Exile: sixty base items (daggers to great axes, bows and
+  crossbows, padded coats to plate, helms, cloaks, gloves, boots, shields, rings, amulets) roll
+  prefixes and suffixes from 47 affixes in tiers that deepen with the dungeon. A magic item has one
+  or two ("Sharp long sword of the Bear", in blue); a rare one up to six and a name ("Grim Bite,
+  long sword", in yellow). Found unidentified, they work all the same; each remembers what it
+  rolled. They lie in the Depths, in vaults, and fall from slain kobolds, and an item's
+  description says what it does in plain words. A glowing helm lights your way.
 - **People and talk** — the showcase has folk to talk to: a gardener and a wandering bard in the
   courtyard, an old hermit by the hub's stairs. Chat with `C`: most say a one-liner, a different
   one each time; some have topics to ask about on a small dialogue screen (the hermit knows the
@@ -206,8 +213,8 @@ cargo run --release -p warlock
 | `L` | Light or douse your lantern |
 | `,` or `g` | Pick up what lies here (choose by letter where several things lie) |
 | `d` | Drop something |
-| `i` | Inventory: what you carry, by letter, and what it all weighs |
-| `e` | Equipment: wear and wield things, slot by slot (head, body, hands, rings, missiles, a tool, …), as in ADOM |
+| `i` | Inventory: what you carry, by letter, and what it all weighs; a letter describes that item |
+| `e` | Equipment: wear and wield things, slot by slot (head, body, hands, rings, missiles, a tool, …), as in ADOM; an upper-case slot letter describes what is there |
 | `@` | Character: your race, gender, class, age, birth sign, stats, hit points, Defence, status effects, known diseases, and weight |
 | `W` | Weapon skills: your rank in each, and how far to the next |
 | `C` | Chat with someone next to you (asks for a direction if there are several) |

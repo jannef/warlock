@@ -167,7 +167,7 @@ pub(super) fn generate(content: &Content, seed: u64, id: &str) -> Result<LevelTe
         let Some((land, start)) = build(content, kit, &setting, &mut rng) else {
             continue;
         };
-        let template = LevelTemplate {
+        let mut template = LevelTemplate {
             id: id.to_string(),
             name: capitalize(&content.terrain(area.terrain).name),
             arrival: None,
@@ -187,11 +187,15 @@ pub(super) fn generate(content: &Content, seed: u64, id: &str) -> Result<LevelTe
                 to: area.overworld.id.clone(),
                 pos: area.pos,
             }),
+            item_level: content.item_level(id),
+            loot: Vec::new(),
             // Under the open sky: the weather's temperature, and ice as it brings.
             temperature: None,
             ice: Default::default(),
         };
         if reach::validate(&template, content).is_ok() {
+            // Ruins may hold loot (spec §8 "Magic items"); the land holds none of its own.
+            super::place_loot(&mut template, content, seed, &land.loot, None);
             return Ok(template);
         }
     }
@@ -289,6 +293,9 @@ fn ruins(land: &mut Land, rng: &mut Rng) {
             }
             for (p, pile) in &template.objects {
                 land.objects.insert(shift(*p), pile.clone());
+            }
+            for &(p, grade) in &template.loot {
+                land.loot.push((shift(p), grade));
             }
             for (p, lock) in &template.locks {
                 land.locks.insert(shift(*p), lock.clone());

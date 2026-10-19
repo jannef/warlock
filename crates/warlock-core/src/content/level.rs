@@ -26,12 +26,13 @@ use super::light::LightId;
 use super::object::parse_stacks;
 use super::room_effect::SpecialRoom;
 use super::terrain::{StairsDir, TerrainDef, TerrainId};
-use super::{ActionKind, Content, ContentError, Speaker};
+use super::{ActionKind, Content, ContentError, MAX_ITEM_LEVEL, Rarity, Speaker};
 use crate::door::{Lock, check_lock_id};
 use crate::equipment::{self, Equipment};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use crate::light::Light;
+use crate::magic::{Affix, LootGrade, Magic};
 use crate::object::{INVENTORY_SLOTS, Stack, add_to_pile};
 use crate::temperature::{LEVEL_TEMPERATURES, Temperature};
 use serde::{Deserialize, Serialize};
@@ -90,6 +91,11 @@ struct LevelFile {
     /// Objects placed by position rather than by a legend character.
     #[serde(default)]
     pile: Vec<PileSpec>,
+    /// Magic and rare items placed by position, each with its affixes (spec §8 "Magic items").
+    #[serde(default)]
+    item: Vec<ItemSpec>,
+    /// The item level of the creatures' drops here (default 1; spec §8 "Magic items").
+    item_level: Option<u8>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -98,6 +104,26 @@ struct PileSpec {
     at: [i32; 2],
     /// Top first, e.g. `["dagger", "arrow*12"]`.
     objects: Vec<String>,
+}
+
+/// A magic or rare item placed by hand: `[[item]] at = [x, y] object = "long_sword" affixes =
+/// ["sharp:2", "of_the_bear"]`, each affix an id with an optional tier (default 1) whose value is
+/// the top of the tier's range; a rare one has a `name`.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ItemSpec {
+    at: [i32; 2],
+    object: String,
+    affixes: Vec<String>,
+    /// A rare item's name; with a name it is rare, without magic.
+    name: Option<String>,
+    /// Whether the player knows its affixes from the start (default false).
+    #[serde(default)]
+    identified: bool,
+    /// Its item level (default: that of its highest tier).
+    level: Option<u8>,
+    /// How many (ammunition), default 1.
+    count: Option<u32>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -178,6 +204,9 @@ pub(super) struct LegendDetail {
     ice: Option<u16>,
     /// Objects lying on this cell, top first, e.g. `["dagger", "arrow*12"]`.
     objects: Option<Vec<String>>,
+    /// Vaults only: an item of loot rolled here when a level is generated, at least of this
+    /// grade (`any`, `magic`, `rare`; spec §8 "Magic items").
+    loot: Option<LootGrade>,
     /// Objects the creature on this cell carries.
     carry: Option<Vec<String>>,
     /// Objects of what it carries that it wields (weapons, shields, missile weapons and
@@ -286,6 +315,12 @@ pub struct LevelTemplate {
     pub rooms: Vec<SpecialRoom>,
     /// Where walking off the edge leads (local areas); `None`: the edge cannot be crossed.
     pub exit: Option<EdgeExit>,
+    /// The item level of loot here (spec §8 "Magic items"): a hand-made level's `item_level`
+    /// (default 1), a branch level's depth.
+    pub item_level: u8,
+    /// Vaults: cells where loot is rolled when they are stamped into a generated level, each
+    /// with the least it may be. Empty on levels.
+    pub loot: Vec<(Pos, LootGrade)>,
     /// The temperature underground (spec §5 "Temperature"); `None`: the dungeon default (or,
     /// under the open sky, the weather's).
     pub temperature: Option<Temperature>,
@@ -365,6 +400,7 @@ pub(super) fn parse_level(
     let mut flow = BTreeMap::new();
     let mut ice = BTreeMap::new();
     let mut objects: BTreeMap<Pos, Vec<Stack>> = BTreeMap::new();
+    let mut loot = Vec::new();
     let mut locks = BTreeMap::new();
 
     for (y, row) in rows.iter().enumerate() {
@@ -437,6 +473,15 @@ pub(super) fn parse_level(
                 if !pile.is_empty() {
                     objects.insert(pos, pile);
                 }
+            }
+            if let Some(grade) = detail.loot {
+                if !content.terrain(terrain).walkable {
+                    return Err(err(format!(
+                        "legend `{ch}` places loot on terrain `{}`, which is not walkable",
+                        entry.terrain()
+                    )));
+                }
+                loot.push((pos, grade));
             }
             if let Some(creature) = &detail.creature {
                 let id = content.creature_id(creature).ok_or_else(|| {
@@ -552,6 +597,20 @@ pub(super) fn parse_level(
         }
         add_to_pile(objects.entry(at).or_default(), &stacks, content);
     }
+    for spec in &parsed.item {
+        let at = Pos::new(spec.at[0], spec.at[1]);
+        if !terrain.in_bounds(at) {
+            return Err(err(format!(
+                "item at {at} is outside the {width}x{height} map"
+            )));
+        }
+        let stack = parse_item(spec, content).map_err(|m| err(format!("item at {at}: {m}")))?;
+        add_to_pile(objects.entry(at).or_default(), &[stack], content);
+    }
+    let item_level = parsed.item_level.unwrap_or(1);
+    if item_level == 0 || item_level > MAX_ITEM_LEVEL {
+        return Err(err(format!("`item_level` must be 1 to {MAX_ITEM_LEVEL}")));
+    }
     if let Some(at) = objects
         .keys()
         .find(|p| !content.terrain(terrain[**p]).walkable)
@@ -596,6 +655,8 @@ pub(super) fn parse_level(
         regions,
         rooms,
         exit: None,
+        item_level,
+        loot,
         temperature,
         ice,
     };
@@ -653,6 +714,60 @@ fn parse_flow(
             Ok(Some(Flow::new(dir, speed)))
         }
     }
+}
+
+/// The magic or rare item an `[[item]]` table places: rare with a `name`, else magic; each
+/// affix's value the top of its tier's range; its item level that of its highest tier unless
+/// given. It must be an item its affixes may roll on (spec §8 "Magic items").
+fn parse_item(spec: &ItemSpec, content: &Content) -> Result<Stack, String> {
+    let object = content
+        .object_id(&spec.object)
+        .ok_or_else(|| format!("unknown object `{}`", spec.object))?;
+    let def = content.object(object);
+    let mut affixes = Vec::new();
+    let mut highest = 1;
+    for text in &spec.affixes {
+        let (id, tier) = match text.split_once(':') {
+            Some((id, tier)) => {
+                let tier = tier
+                    .parse::<u8>()
+                    .map_err(|_| format!("`{text}`: the tier must be a number, e.g. `sharp:2`"))?;
+                (id, tier)
+            }
+            None => (text.as_str(), 1),
+        };
+        let a = (content.affixes().get(id)).ok_or_else(|| format!("unknown affix `{id}`"))?;
+        let t = a
+            .tier(tier)
+            .ok_or_else(|| format!("`{id}` has no tier {tier}"))?;
+        highest = highest.max(t.level);
+        affixes.push(Affix {
+            id: id.to_string(),
+            tier,
+            value: t.max,
+        });
+    }
+    let rarity = if spec.name.is_some() {
+        Rarity::Rare
+    } else {
+        Rarity::Magic
+    };
+    let magic = Magic {
+        rarity,
+        level: spec.level.unwrap_or(highest),
+        affixes,
+        name: spec.name.clone(),
+        identified: spec.identified,
+    };
+    magic.check(def, content)?;
+    let count = spec.count.unwrap_or(1);
+    if count == 0 || (count > 1 && !def.stackable) {
+        return Err(format!(
+            "`count` {count} of `{}`, which does not stack",
+            def.id
+        ));
+    }
+    Ok(Stack::with_magic(object, count, magic))
 }
 
 /// The ice a legend entry lays on the water of its cell, in µm (`ice = mm`): only on water that

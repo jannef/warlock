@@ -28,6 +28,7 @@ pub mod grid;
 pub mod hunger;
 pub mod ice;
 pub mod light;
+pub mod magic;
 pub mod mapgen;
 pub mod messages;
 pub mod noise;

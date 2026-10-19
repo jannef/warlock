@@ -136,7 +136,8 @@ impl World {
         let player = self.state.player;
         let price = self.price_of(player, ActionKind::Kick);
         let def = self.content.terrain(self.state.current().terrain[p]);
-        let strength = self.state.player().stats.score(Stat::Strength);
+        let me = self.state.player();
+        let strength = me.effective_stats(&self.content).score(Stat::Strength);
         let broken = def.kicked_in.and_then(|(to, sturdiness)| {
             kick_breaks(strength, sturdiness, &mut self.state.rng).then_some(to)
         });

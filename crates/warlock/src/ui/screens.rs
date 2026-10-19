@@ -29,6 +29,7 @@ use super::chargen_screen::{ChoiceScreen, Draft, Picks, Step, SummaryScreen};
 use super::confirm_screen::ConfirmScreen;
 use super::controls_screen::ControlsScreen;
 use super::death_screen::DeathScreen;
+use super::describe_screen::DescribeScreen;
 use super::dialogue_screen::{DialogueScreen, last_talk};
 use super::equipment_screen::{EquipmentScreen, ItemScreen};
 use super::files_screen::FilesScreen;
@@ -85,6 +86,9 @@ pub enum ScreenName {
     /// Choose what goes in the slot selected on the equipment screen beneath (a slot's letter
     /// there).
     EquipItem,
+    /// What one carried stack is, as the player knows it: the one looked at on the inventory or
+    /// the equipment screen beneath (a letter there), else the first.
+    Describe,
     /// The player's name, stats, and weight (`@` in play).
     Character,
     /// The player's trained skills and their values (`S` in play, or from the character
@@ -122,6 +126,7 @@ impl ScreenName {
                 | ScreenName::Inventory
                 | ScreenName::Equipment
                 | ScreenName::EquipItem
+                | ScreenName::Describe
                 | ScreenName::Character
                 | ScreenName::Skills
                 | ScreenName::WeaponSkills
@@ -195,6 +200,8 @@ enum Screen {
     Equipment(EquipmentScreen),
     /// Choosing what goes in a slot.
     EquipItem(ItemScreen),
+    /// What one carried stack is.
+    Describe(DescribeScreen),
     Character(CharacterScreen),
     Skills(SkillsScreen),
     WeaponSkills(WeaponSkillsScreen),
@@ -207,15 +214,16 @@ enum Screen {
 impl Screen {
     /// Screen `name`; `run` is what the player perceives in the run, if there is one, `draft`
     /// what New run has chosen on the screens below, `slot` the slot selected on the equipment
-    /// screen beneath, if any (the first slot if none), and `talk` the run's last conversation,
-    /// if its last action was talk.
+    /// screen beneath, if any (the first slot if none), `item` the carried stack looked at on a
+    /// screen beneath (the first if none), and `talk` the run's last conversation, if its last
+    /// action was talk.
     fn new(
         name: ScreenName,
         content: &Content,
         has_save: bool,
         run: Option<&PerceptionView<'_>>,
         draft: &Draft,
-        slot: Option<SlotId>,
+        (slot, item): (Option<SlotId>, Option<usize>),
         talk: Option<&Conversation>,
     ) -> Self {
         let objects = |list| Screen::Objects(ObjectScreen::new(list, run));
@@ -236,6 +244,9 @@ impl Screen {
             ScreenName::Equipment => Screen::Equipment(EquipmentScreen::new(run)),
             ScreenName::EquipItem => {
                 Screen::EquipItem(ItemScreen::new(run, slot.unwrap_or(SlotId(0))))
+            }
+            ScreenName::Describe => {
+                Screen::Describe(DescribeScreen::new(run, Some(item.unwrap_or(0))))
             }
             ScreenName::Character => Screen::Character(CharacterScreen::new(run)),
             ScreenName::Skills => Screen::Skills(SkillsScreen::new(run)),
@@ -272,6 +283,7 @@ impl Screen {
             },
             Screen::Equipment(_) => ScreenName::Equipment,
             Screen::EquipItem(_) => ScreenName::EquipItem,
+            Screen::Describe(_) => ScreenName::Describe,
             Screen::Character(_) => ScreenName::Character,
             Screen::Skills(_) => ScreenName::Skills,
             Screen::WeaponSkills(_) => ScreenName::WeaponSkills,
@@ -356,6 +368,16 @@ impl ScreenStack {
         })
     }
 
+    /// The carried stack looked at on the topmost inventory or equipment screen, if any: what a
+    /// description opened from it describes.
+    fn looked_item(&self) -> Option<usize> {
+        self.screens.iter().rev().find_map(|s| match s {
+            Screen::Objects(screen) if screen.list() == ObjectList::Inventory => screen.looked(),
+            Screen::Equipment(screen) => screen.selected_item(),
+            _ => None,
+        })
+    }
+
     /// Whether an equipment screen is open (it shows the run as it changes, [`refresh`]).
     fn shows_equipment(&self) -> bool {
         (self.screens.iter()).any(|s| matches!(s, Screen::Equipment(_)))
@@ -412,6 +434,7 @@ impl ScreenStack {
             Some(Screen::Objects(screen)) => screen.handle(press, bindings),
             Some(Screen::Equipment(screen)) => screen.handle(press, bindings),
             Some(Screen::EquipItem(screen)) => screen.handle(press, bindings),
+            Some(Screen::Describe(screen)) => screen.handle(press, bindings),
             Some(Screen::Character(screen)) => screen.handle(press, bindings),
             Some(Screen::Skills(screen)) => screen.handle(press, bindings),
             Some(Screen::WeaponSkills(screen)) => screen.handle(press, bindings),
@@ -462,6 +485,7 @@ impl ScreenStack {
             Some(Screen::Objects(screen)) => screen.draw(console, bindings),
             Some(Screen::Equipment(screen)) => screen.draw(console, bindings),
             Some(Screen::EquipItem(screen)) => screen.draw(console, bindings),
+            Some(Screen::Describe(screen)) => screen.draw(console, bindings),
             Some(Screen::Character(screen)) => screen.draw(console, bindings),
             Some(Screen::Skills(screen)) => screen.draw(console, bindings),
             Some(Screen::WeaponSkills(screen)) => screen.draw(console, bindings),
@@ -501,8 +525,10 @@ impl Screens<'_> {
         let view = self.game.as_ref().map(|game| game.world.perception());
         let talk = (self.game.as_ref()).and_then(|game| last_talk(&game.last_outcome));
         let (draft, slot) = (self.stack.draft(), self.stack.selected_slot());
+        let item = self.stack.looked_item();
         let (content, has_save) = (&self.content.0, self.store.has_save());
-        let screen = Screen::new(name, content, has_save, view.as_ref(), &draft, slot, talk);
+        let looked = (slot, item);
+        let screen = Screen::new(name, content, has_save, view.as_ref(), &draft, looked, talk);
         self.stack.screens.push(screen);
     }
 
@@ -567,6 +593,7 @@ fn startup_screens(screen: Option<ScreenName>, in_run: bool) -> Vec<ScreenName> 
         (true, Some(s @ (Settings | Controls | Confirm))) => vec![Pause, s],
         (true, Some(Files)) => vec![Pause, Settings, Files],
         (true, Some(EquipItem)) => vec![Equipment, EquipItem],
+        (true, Some(Describe)) => vec![Inventory, Describe],
         (true, Some(s)) if s.needs_run() => vec![s],
         (true, _) => Vec::new(),
     }
@@ -704,7 +731,8 @@ mod tests {
         for name in names {
             let run = name.needs_run().then_some(&view);
             let (draft, slot) = (stack.draft(), stack.selected_slot());
-            let screen = Screen::new(*name, &content, has_save, run, &draft, slot, None);
+            let looked = (slot, stack.looked_item());
+            let screen = Screen::new(*name, &content, has_save, run, &draft, looked, None);
             stack.screens.push(screen);
         }
         stack
@@ -726,7 +754,7 @@ mod tests {
             false,
             None,
             &Draft::default(),
-            None,
+            (None, None),
             None,
         ));
         assert_eq!(stack.names(), [Pause, Settings]);
@@ -802,6 +830,7 @@ mod tests {
             [Equipment, EquipItem]
         );
         assert_eq!(startup_screens(Some(EquipItem), false), [Main]);
+        assert_eq!(startup_screens(Some(Describe), true), [Inventory, Describe]);
         assert_eq!(startup_screens(Some(Drop), false), [Main]);
         assert_eq!(startup_screens(Some(Dialogue), true), [Dialogue]);
         assert_eq!(startup_screens(Some(Dialogue), false), [Main]);

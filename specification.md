@@ -71,6 +71,14 @@ Build the engine and framework, not the game. Everything built is production qua
 - Burden (M16): a carrying limit from Strength, Toughness, and size; carrying more than a third,
   two thirds, or all of it slows every action, caps Dexterity in Defence, makes steps louder, and
   overloaded, keeps the actor from moving (§8 "Burden")
+- Magic items (M29, #149), after Path of Exile: base items (weapons, missile weapons,
+  ammunition, armour, helmets, cloaks, gloves, boots, shields, rings, amulets) roll prefixes and
+  suffixes by rarity (normal, magic: one of each at most; rare: up to three of each and a name),
+  in tiers by item level (the depth); each item records its affixes (tier and rolled value) for
+  enchanting later. Their effects map onto rules that exist (to-hit, damage, criticals, Defence,
+  hit points, regeneration, stats, attack and moving speed, carrying, stealth, light). Loot on
+  generated levels' floors, in vaults, and dropped by creatures; found unidentified (rarity
+  known, affixes not, effects applying); an item description screen (§8 "Magic items")
 - Digging (M19): walls of terrain that breaks give way to a digging tool (a pick-axe, a mattock)
   ready in a new Tool equipment slot, turn after turn like a rest, by the tool's power and the
   digger's Strength against the wall's hardness, and to explosions stronger than they are hard;
@@ -115,7 +123,8 @@ flaming arrow does an arrow's damage), rules that use stats beyond combat, burde
 doors in (ability checks, saving throws, training stats), levels and experience, digging down or
 up, creatures that dig, what a class gives beyond starting stats, hit points, skills, and weapon
 skills (equipment, spells), active uses of skills (searching, picking locks, healing, and the
-like), item effects (but food's: §8 "Hunger"), audio, mouse input, infravision, localization.
+like), item effects beyond magic items' affixes and food's (§8 "Hunger"; no potions or scrolls to
+use yet, no unique items, no enchanting), audio, mouse input, infravision, localization.
 
 Vision types are in scope even though there are no other mechanics yet: they are part of perception,
 and the light data model must carry them from the start.
@@ -131,7 +140,7 @@ regression scene for golden screenshots, replays, and snapshot tests.
 | Room | Demonstrates | Milestone |
 |---|---|---|
 | Start room | movement, message line, `?` help; gold and a small pile to pick up | M1, M11 |
-| Door corridor | opening/closing doors, doors blocking sight; a storeroom of arms and armor (something for every equipment slot but the neck and the rings, a two-handed quarterstaff, a short bow and arrows, flaming arrows, a long war bow, a crossbow and bolts, a sling and stones, rocks to throw, a pick-axe for the Tool slot) and a pantry of food (food rations, loaves of bread, dried meat, apples; eat with `E`) and other objects, whose west door is locked, the iron key to it lying in the storeroom (open it with the key, or kick it in) | M1–M2, M11, M16, M19, M23 |
+| Door corridor | opening/closing doors, doors blocking sight; a storeroom of arms and armor (something for every equipment slot but the neck and the rings, a two-handed quarterstaff, a short bow and arrows, flaming arrows, a long war bow, a crossbow and bolts, a sling and stones, rocks to throw, a pick-axe for the Tool slot and the iron key to the pantry by its door; in its middle two piles of magic arms: a Sharp long sword of the Bear and Dread Visage, a rare iron helm that glows when worn, both identified, and a rare short bow and a magic silver ring, not) and a pantry of food (food rations, loaves of bread, dried meat, apples; eat with `E`) and other objects, whose west door is locked, the iron key to it lying in the storeroom (open it with the key, or kick it in) | M1–M2, M11, M16, M19, M23, M29 |
 | Patrol gallery | creatures moving in and out of view, never shown in memory; a cave beetle and a quicker cave bat (wildlife, so they keep to their lanes) on parallel lanes, a slower torch-bearing kobold circling them (wielding a sword, carrying coins), a kobold by type but placed among the peaceful folk (§7 "Factions"), so it walks its round and never attacks the player; heard from the corridor behind its closed door, and in its dark middle (the bat flies silently), which a flaming arrow shot from its door lights where it lands | M2, M10, M11, M16 |
 | Light hall | colored lights, falloff, pillar and creature shadows, steady magical light | M3, M8 |
 | Darkness chamber | vision types, a UV-only rune, darkvision fade; an amulet seen only by those who see in the dark | M3, M11 |
@@ -174,7 +183,8 @@ not), east the rat warren. The player arrives in the dark south-west corner and 
 each creature fights the nearest foe it sees, so coming close (lit, or within a kobold's
 darkvision) turns them on the player. The brawl resolves (M16): melee pairs trade blows, the
 archer shoots and the shaman casts (its spells announced only) over them, the wounded look it,
-and the fallen drop their spears, bow, and amulet where they die; the rats, quicker and harder
+and the fallen drop their spears, bow, and amulet where they die (and now and then something
+magic: kobolds drop loot at the arena's item level 2, §8 "Magic items"); the rats, quicker and harder
 to hit, win within a few minutes of game time, leaving blood around the fire pit where the
 fallen died (§8 "Blood"). Lighting the lantern there gets the
 player shot from the dark. The archer spends an arrow a shot (they lie where they fell) and,
@@ -197,10 +207,11 @@ from north to south, foaming against a few boulders.
 
 **The Depths (generated, M6)**: a dungeon branch of eight procedurally generated levels
 (`depths:1` to `depths:8`; rooms and corridors at 80×21, caverns at 120×60 on depths 3–5) built
-from the run seed, with vaults stamped in; about one level in two or three has a special room
-(§7 "Special rooms"). On its rooms levels a few rooms are locked, their rusty key lying where the
-player reaches it, and the guard post vault's store room is locked, its brass key carried by the
-kobold on guard (M19). The `depths` scenario starts on its first level.
+from the run seed, with vaults stamped in and a few items of loot on every floor, at the depth's
+item level (§8 "Magic items"); about one level in two or three has a special room (§7 "Special
+rooms"). On its rooms levels a few rooms are locked, their rusty key lying where the player
+reaches it, and the guard post vault's store room is locked, its brass key carried by the kobold
+on guard (M19). The `depths` scenario starts on its first level.
 
 **The Overworld (M9)**: *The Wildlands*, a hand-authored 100×50 map of the land at large
 (`levels/overworld.toml`, level kind `overworld`), ADOM-like. Overworld terrain: plains,
@@ -547,8 +558,10 @@ rate or animation.
 - **Light sources** come from light presets (`color = [r, g, b, uv]`, which is also the intensity,
   and `radius`): terrain that emits light, lights placed on cells by the level legend (overriding
   the terrain's own), fires (a burning object lying on a cell, such as a flaming arrow that has
-  landed, until it has burned out; §8 "Ranged combat"), creatures that carry light, and the
-  player's lantern (from the scenario, toggled by the player; takes a turn). Emitters must be transparent; a source in an opaque cell
+  landed, until it has burned out; §8 "Ranged combat"), creatures that carry light, the
+  player's lantern (from the scenario, toggled by the player; takes a turn), and the glow of a
+  magic item an actor wears or wields (its brightest; a steady preset, §8 "Magic items").
+  Emitters must be transparent; a source in an opaque cell
   (e.g. on a closed door) gives no light. Presets also carry visual-only stability (§4.4), never
   read by rules.
 - **Falloff and shadows**: a source shadowcasts with the same shadowcasting within its radius and
@@ -807,7 +820,8 @@ rate or animation.
     150, reeds 130, gazebo boards and dry grass 120, tall grass and rocky ground 110, dirt road
     90, forest floor 80, grass, flowers, and dusty floor 70; default 100), and by the walker's
     burden (§8 "Burden": ×1.25 Burdened, ×1.5 Strained; a dwarf's steps are not louder while
-    Burdened), rounded down. Opening a door makes
+    Burdened), rounded down, less what the stealth affixes of what it wears take off (§8 "Magic
+    items": "footsteps 20 % quieter"), rounded down. Opening a door makes
     the closed door's `toggle_noise` (60), closing one the open door's (70). A special room
     (§7) scales every noise made inside it (where the step lands, the door, where an attacker
     stands) by its effect's `noise` percent, rounded down: an echoing hall doubles it (so it
@@ -892,9 +906,10 @@ rate or animation.
 - Bindings live in the settings file. The `?` help (the controls list, read-only) is generated from
   the binding table, so it is always accurate.
 - **Screens**: the main menu, New run and its character creation steps, pause menu, Settings,
-  Controls, help, the inventory, the equipment screen and its choice of what goes in a slot, the
-  character screen, the Skills screen, the weapon skills screen, choosing what to pick up, drop,
-  throw, or eat, the dialogue screen, and the death screen are modal screens on one stack. Opening
+  Controls, help, the inventory, the equipment screen and its choice of what goes in a slot, an
+  item's description, the character screen, the Skills screen, the weapon skills screen, choosing
+  what to pick up, drop, throw, or eat, the dialogue screen, and the death screen are modal
+  screens on one stack. Opening
   a screen puts it on top; Esc or Back closes it and returns to the screen below as it was left.
   While any screen is open it receives every key press, the run (if any) stays visible beneath
   it, and no game time passes but for what is chosen on a screen (picking up, dropping, wearing,
@@ -985,9 +1000,23 @@ rate or animation.
   kg, overloaded over 45 kg` (from scores the player knows, never a modifier; lines wrap at part
   boundaries in a narrow window). What is worn or wielded is marked with its slot's mark: "(being
   worn)", "(wielded)", "(in off hand)", "(on left hand)", "(readied)", "(quivered)", "(in use)"
-  (a tool), and a
-  two-handed weapon "(wielded in both hands)"; the drop screen marks it the same way. Read-only;
-  `i` or Esc closes it.
+  (a tool), and a two-handed weapon "(wielded in both hands)"; the drop screen marks it the same
+  way. Names are in their rarity's color (§8 "Magic items": magic a soft blue, rare a pale
+  yellow; normal as ever; palettes apply as to all UI text); the glyph keeps its own. It takes no
+  action: a stack's letter opens its **description** (below); `i` (when it is no stack's letter)
+  or Esc closes it.
+- **Item description** (#149): one carried stack as the player knows it, opened by its letter in
+  the inventory or by a slot's upper-case letter (`A` to `M`) on the equipment screen, over the
+  screen it came from: its glyph and name (in its rarity's color, with its mark if worn or
+  wielded), what it is (`Magic long sword · steel · 1.8 kg`), its base stats in words
+  (`magic::describe`: "Long blade, for the main hand", "Damage 1d8; criticals on 20–24, ×2
+  damage", "Shoots up to 15 cells", "Needs Strength 14 to draw", "Quick to strike", "Armour +4",
+  "Dexterity adds at most +4 to Defence while worn", "Breaks on a hit 30% of the time"), and for
+  a magic or rare item either "Unidentified: what its magic does is unknown, though it works all
+  the same." or its item level and each affix, "Prefix  Sharp: +2 damage", "Suffix  of Celerity:
+  attacks faster" (affix magnitudes are item properties and shown; speed only in words; global
+  attack effects say "with every attack"). Never the player's own to-hit or a modifier.
+  Read-only; Esc, Back, or Enter closes it.
 - **Equipment** (`e`; M16), as in ADOM: the slots, lettered `a` to `m` in this order — Head, Neck,
   Body, Cloak, Main hand, Off hand, Hands, Left ring, Right ring, Feet, Missile weapon, Missiles,
   Tool (data, `data/slots.toml`, §7, so more can be added; the Tool slot came with M19) — each with
@@ -1002,21 +1031,25 @@ rate or animation.
   and missiles slots, digging tools in the Tool slot. That is one action (replay text
   `equip:body:b`, `remove:body`): it is done at once and takes its time, the choice closes, and the
   equipment screen beneath shows the result, as in ADOM; Esc goes back to it, and Esc there returns
-  to play (its own key too, when that is not a slot's letter). Each thing put on or taken off takes
-  the time of its slot's action (§8 "Time": wielding, wearing, body armor, readying; taking off
-  costs what putting on does), so a swap takes both, and a refused one (the wrong slot, nothing
-  there) takes none. Messages say it: "You put on a leather jerkin.", "You wield a quarterstaff in
-  both hands.", "You ready 24 arrows.", "You take off an iron helm.", "You put away a short bow."
-  Equipped things stay in the inventory and still count toward the player's weight and burden (§8
-  "Burden"). What is worn and wielded fights and protects (§8 "Combat": the wielded weapon's blows,
-  the readied missile weapon's shots, armour, shield, and parry in Defence); being worn changes
-  neither sight, noise, nor speed (its weight does, as part of the load).
+  to play (its own key too, when that is not a slot's letter). A slot's upper-case letter opens the
+  description of what is in it (above). Names show in their rarity's color, as in the inventory.
+  Each thing put on or taken off takes the time of its slot's action (§8 "Time": wielding,
+  wearing, body armor, readying; taking off costs what putting on does), so a swap takes both, and
+  a refused one (the wrong slot, nothing there) takes none. Messages say it: "You put on a leather
+  jerkin.", "You wield a quarterstaff in both hands.", "You ready 24 arrows.", "You take off an
+  iron helm.", "You put away a short bow." Equipped things stay in the inventory and still count
+  toward the player's weight and burden (§8 "Burden"). What is worn and wielded fights and protects
+  (§8 "Combat": the wielded weapon's blows, the readied missile weapon's shots, armour, shield, and
+  parry in Defence; a weapon's `attack_cost` how long a blow takes); being worn changes neither
+  sight, noise, nor speed (its weight does, as part of the load), but for what a magic item's
+  affixes do while it is worn or wielded (§8 "Magic items").
 - **Character** (`@`): who the player is, as far as they know it: their name (the player
   creature's, "You"), their race, gender, and class (`Race    Dwarf`; "other" with the stat it
   raised), their age today, birthday, and birth sign as on the summary (when the run has a
   character), their score in each stat (§8 "Stats") in display order with its abbreviation and
-  full name (`St  Strength  12`; a score a status effect or stat damage lowers shows lowered, in
-  a muted red; §8 "Status effects", "Diseases"), their level and experience (`Lv  Level  3`, `XP  Experience
+  full name (`St  Strength  12`; as it is now, with what magic items they wear add; a score a
+  status effect or stat damage lowers shows lowered, in a muted red; §8 "Status effects",
+  "Diseases"), their level and experience (`Lv  Level  3`, `XP  Experience
   85 / 120`, the total alone at the highest level; §8 "Experience"), their hit points (`HP  Hit
   points  18/24`) and Defence
   (`Dv  Defence  15`; the total only, as its Dexterity part would give away a modifier; §8
@@ -1253,6 +1286,17 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   [...]` places a pile without a legend character (on top of the legend's there, if any).
   Objects lie only on walkable terrain. Vaults place objects the same way, and generators stamp
   them with the vault.
+  Magic items (M29, #149; §8 "Magic items") are placed by `[[item]]` tables, on top of the pile
+  at `at = [x, y]` after the `[[pile]]`s: `object` (a base item), `affixes` (affix ids, each with
+  an optional tier, `"sharp:2"`, default 1; its value the top of the tier's range), `name` (a
+  rare item's: with a name it is rare, without magic), `identified` (default false), `level`
+  (the item level, default that of its highest tier), and `count` (stackable ones, default 1).
+  The item must be one its affixes may roll on (§8 "Magic items"), else a content error. A
+  level's `item_level` (1 to 99, default 1) is the item level of what creatures drop there (the
+  arena's is 2); a branch level's is its depth. A vault's legend entry may give `loot = "any"`,
+  `"magic"`, or `"rare"`: a cell where an item of loot at least that good is rolled when the
+  vault is stamped into a generated level (only vaults: in a level file it is a content error);
+  the guard post's store room holds a magic one, the shrine and the roofless chapel any.
 - **Locks in level files** (M19, §8 "Doors"): a legend entry on a closed door locks it with
   `lock = "pantry"` (a lock id: keys with that id open it, and skeleton keys) or `locked = true`
   (a lock without an id: only a skeleton key opens it). A lock on anything but a closed door, an
@@ -1316,7 +1360,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   category of Defence; the name is said when it turns a blow). For experience (§8
   "Experience"): `level` (1 to 99, default 1) and `xp` (0 to 100000, default 0; the player
   creature has neither): the kobold 2/15, the kobold archer 3/25, the kobold shaman 4/40, the
-  giant rat 1/5, the cave bat 1/3, the cave beetle 2/8, the deer 1/2. The giant rat and the
+  giant rat 1/5, the cave bat 1/3, the cave beetle 2/8, the deer 1/2. For loot (§8 "Magic
+  items"): `loot`, the chance in percent (0 to 100, default 0) that it drops a magic or rare item
+  where it dies: the kobold 25, the kobold archer 30, the kobold shaman 50. The giant rat and the
   cave bat bite (1d4, 1d3; the rat's bite poisons one hit in ten, 2 degrees, and exposes to
   filth fever one hit in ten), the deer kicks
   (1d4, "hoof"; `base_hp` 4), the cave beetle
@@ -1468,8 +1514,57 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   war bow (1d8+2 ×3, Strength 14, range 15), a crossbow (1d10+1, threat 20, no Strength, range 13,
   reloads), a sling (1d4, range 9) (of the bows, crossbows, and slings skills); ammunition: arrows (break 30 %), flaming arrows (lit as burning
   arrows: light `arrow_fire`, burning 60 s), crossbow bolts (break 20 %), sling stones; rocks
-  (thrown 1d3, 6 cells, readied in the missiles slot; the thrown skill); digging tools for the Tool slot: a
-  pick-axe (power 10, 3 kg) and a mattock (power 15, 4.5 kg).
+  (thrown 1d3, 6 cells, readied in the missiles slot; the thrown skill); digging tools for the
+  Tool slot: a pick-axe (power 10, 3 kg) and a mattock (power 15, 4.5 kg), never magic (no
+  `kind`).
+  **Base items** (M29, #149; §8 "Magic items"): `kind`, what kind of item it is for magic
+  (`weapon`: has `damage` and a hand `slot`; `launcher`: `launches`; `ammo`: `ammo` and a `slot`;
+  `shield`: `shield`; `body`, `helmet`, `cloak`, `gloves`, `boots`, `ring`, `amulet`: worn, no
+  `damage`; anything else is a content error): only things with a kind are ever magic or loot;
+  `level`, the lowest item level loot holds it at (1 to 99, default 1), and `frequency`, how often
+  (default 100, 0 never), both only with a kind. Weapons (things with `damage`) may have an
+  `attack_cost` (100 to 10 000; worn or wielded weapons only), what a blow with it (a missile
+  weapon: a shot) costs instead of the `melee` (`shoot`) action, before its weapon skill's
+  `speed` (a shield bash costs what a blow does). The built-in base items, folding in the test
+  objects (every weapon names its weapon skill `category`, which also names it in item
+  descriptions: "Long blade, for the main hand"; rocks are `thrown`): daggers and stilettos (threat
+  19, quick, 900), short swords and scimitars (threat 19), long swords (1d8, threat 20), rapiers
+  (1d6, threat 19, 900), bastard swords (1d10), great swords (2d6, both hands, 1200), hand axes
+  (thrown 4), battle axes, great axes (1d12 ×3, both hands, 1200), spears, javelins (thrown 8),
+  tridents (parry 1), clubs, maces, morning stars (2d4), war hammers (×3), mauls (2d6 ×3, both
+  hands, 1200), halberds and glaives (1d10, both hands, 1100), quarterstaves and ironwood staves;
+  short, composite, and long war bows, crossbows and heavy crossbows (1d12+2), slings; arrows,
+  crossbow bolts, sling stones (flaming arrows are never magic); body armour from a padded coat
+  (Armour 1, Dexterity 8) through a leather jerkin, studded leather (3/5), chain mail (4/4), scale
+  mail (5/3), and banded mail (6/1) to plate armour (7/1); leather caps, iron helms, great helms;
+  wool, travelling, and fur cloaks; leather gloves and gauntlets; leather and iron-shod boots;
+  bucklers and small shields (1), large shields (2), tower shields (3, Dexterity 2); iron,
+  silver, and gold rings; bone, jade, amber, and gold amulets. Helmets, cloaks, gloves, boots,
+  rings, and amulets have no stats of their own (no implicits yet): they are worn for their magic.
+  The wiki lists them all in a generated table.
+- **Magic items** (`data/affixes.toml`, optional; without it loot is always normal; M29, #149;
+  §8 "Magic items"): `[rarity]` the weights of normal, magic, and rare loot (70, 24, 6, not all
+  0); `[magic] both`, the chance in percent that a magic item has a prefix and a suffix (25; else
+  one of either, evenly); `[rare] affixes`, `[count, weight]` pairs for how many affixes a rare
+  item rolls (1 to 6; built in: 3 40, 4 35, 5 17, 6 8); `[names] first` (words, none empty) and
+  `[names.second]`, words for every kind of item (rare names: one of each, "Grim Bite"). Then
+  `[[prefix]]`s and `[[suffix]]`es (ids unique across both): `id`, `name` ("Sharp", "of the
+  Bear"), `effect` (one of `to_hit`, `damage`, `extra_damage` (adds 1dN), `threat`, `crit`,
+  `attack_speed`, `range`, `draw`, `durability`, `parry`, `armour`, `shield`, `max_dex`,
+  `weight`, `dodge`, `deflection`, `natural`, `max_hp`, `regeneration`, a stat id, `move_speed`,
+  `carry`, `stealth`, `light`, `skill` with a `skill`, an id in `data/skills.toml`, whose value
+  it raises; without skills content, skill affixes are left out), `bases` (kinds of item it
+  rolls on, at least one; an effect only
+  attacks can use, `extra_damage`, `range`, `draw`, `durability`, needs weapons, missile weapons,
+  or ammunition, `parry` weapons, `armour` body armour, `shield` shields, `max_dex` body armour or
+  shields; else a content error), `weight` (default 100), and `tiers`, at least one, item levels
+  rising: `{ level, min, max }` (values within the effect's range: 1 to 10 for most, dice sides 2
+  to 20 for `extra_damage`, 1 to 3 for `threat` and `crit`, percent 1 to 50 for speeds, 1 to 90
+  for `durability`, `weight`, `stealth`, 1 to 100 for `max_hp`, `carry` (kg), and `skill`, 1 to
+  300 for `regeneration`), or for `light` `{ level, light }` naming a light preset. The built-in
+  affixes: 21 prefixes and 26 suffixes in up to four tiers (item levels 1, 3, 5, 7 for most); the wiki
+  lists them in generated tables. The light presets `item_glow_faint`, `item_glow`, and
+  `item_glow_bright` (radius 2, 3, 4; steady, cool) are the glowing tiers'.
 - **Weapon skills** (`data/weapon_skills.toml`, optional; without it nobody has weapon skills and
   weapons name none; M22, §8 "Weapon skills"): `[marks]` (`attempt`, `hit`, `per_level`, at most
   1000, and `most`, a percent 100 to 1000), `[curves]` (named lists of the marks each rank asks
@@ -1568,10 +1663,11 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   `projectile`) `flight`. Every glyph joins the atlas. §4.8 "Spell effects".
 - **Dungeon branches** (`data/dungeons.toml`): stacks of generated levels, e.g.
   `{ id = "depths", generator = "rooms", depth = 8, size = [80, 21] }`, plus optional name,
-  patrolling creature kinds, ambient light, `temperature` (°C, −40 to 40; default 10; §5
-  "Temperature"), a `key` (a key object: its rooms levels lock a few rooms with the lock it
-  opens, §8 "Doors"; the Depths' is the rusty key), and per-depth overrides of generator, size,
-  and temperature (each default the branch's). Stairs
+  patrolling creature kinds, ambient light, `loot = [fewest, most]` (items of loot on each
+  level's floor, at most 50; the Depths 2 to 4; §8 "Magic items"), `temperature` (°C, −40 to 40;
+  default 10; §5 "Temperature"), a `key` (a key object: its rooms levels lock a few rooms with
+  the lock it opens, §8 "Doors"; the Depths' is the rusty key), and per-depth overrides of
+  generator, size, and temperature (each default the branch's). Stairs
   (and scenarios) may target `depths:N`; content validation accepts such ids when the branch has
   that depth. A branch level is generated on its first visit from its own random stream (§8) and
   then persists like a hand-made level. Its `<` leads to `depths:N-1` (on depth 1, back to the
@@ -1881,7 +1977,12 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   "Temperature", "Ice"; format version 24), every actor's diseases (each with the seconds to
   its next turn, whether it shows, its progressions so far, its checks won in a row, and who gave
   it) and stat damage (with the seconds banked toward mending it; §8 "Diseases"; format version
-  25), and a dev weather override while
+  25), every magic or rare item as it is (§8 "Magic items": on its stack wherever it lies or is
+  carried, its rarity, item level, each affix by id with its tier and rolled value, a rare item's
+  name, and whether it is identified; format version 26; absent on normal stacks; an affix this
+  content does not have, a tier or value out of range, or more affixes than the rarity allows
+  makes the save inconsistent; affixes are recorded by id, so adding affixes does not change the
+  content fingerprint), and a dev weather override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved, nor the temperature under the open sky: they follow from the seed and the
   clock. The save is `run.sav` in the
@@ -1927,7 +2028,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 crates/
   warlock-core/   plain Rust, no Bevy: map, actors, actions, turns, time, fov, light,
                   perception, rng, levels, mapgen, stats, skills, weapon skills, dice,
-                  character, burden, hunger, status, checks, diseases, save
+                  character, burden, hunger, status, checks, diseases, magic, save
   warlock-cli/    no Bevy: scenarios, replay, dump, verify
   warlock/        Bevy app: render, input, UI, effects, platform (ECS lives here)
 xtask/            screenshot capture, golden-image diff, CI helpers
@@ -1937,7 +2038,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
 - **Pure core**: `warlock-core` has no Bevy dependency, no platform I/O inside the rules, and no
   wall-clock time. It builds and tests in seconds and is insulated from Bevy upgrades.
 - **Data layout**: dense grids for terrain, light, and memory; a simple entity store with stable ids
-  for actors; objects as stacks (object id and count) in sparse piles by position, remembered
+  for actors; objects as stacks (object id and count, and what a magic item rolled) in sparse
+  piles by position, remembered
   piles beside them, and an inventory, its equipment (slot → inventory stack;
   `warlock-core/src/equipment.rs`), and stats on each actor. ECS is used in the presentation
   layer, where it helps with effects, particles, and animation.
@@ -1995,6 +2097,14 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
       locked door it has the key to), `wait` when it waits or is blocked). Chatting costs `chat`;
       swapping places with someone costs the player's step (§8 "Displacement"). A creature type may give its attacks their own `attack_cost` (§7), so a future
       attack or ability is one more entry. Free and refused actions take no time.
+    - Weapons (M29, #149): a blow with a wielded weapon that has an `attack_cost` (§7) costs that
+      instead of `melee` (a shot from a missile weapon with one, instead of `shoot`), unless the
+      creature type gives its attacks a cost of its own: a great sword 1200 (7.2 s), a stiletto
+      900 (5.4 s). Then magic items (§8 "Magic items") take a percent off: attacks (`melee`,
+      `shoot`, `throw`) by the attack speed of the weapon's own affixes (a blow: the wielded
+      weapon's; a shot: the missile weapon's) and of what the actor wears and wields (global),
+      steps by its moving speed, together at most 50 % off and never below 100. One function,
+      `World::cost_of`, decides an action's cost; burden then slows the price as below.
     - The scheduler (below) prices an action at its cost × its base in seconds; an actor gains its
       speed in energy per second, so it takes cost × base / speed seconds. The clock keeps whole
       seconds and leftover energy carries, so a run of actions takes exactly its total time up to
@@ -2168,10 +2278,11 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     by the lowest `max_dex` of what the actor wears and by its burden, +3 Burdened, +1 Strained,
     0 Overloaded ("Burden" below), the lowest cap winning; a penalty counts in full), **Armour** (worn
     `armour`), **Shield** (held `shield`), **Parry** (a wielded weapon's `parry`), **Natural** (the
-    creature type's `natural` armour), **Dodge** (the tumble skill's bonus, "Skills" below;
-    effects later), and
-    **Deflection** (none yet: magic). Within a category only the highest bonus counts, except
-    Dodge, whose bonuses add up.
+    creature type's `natural` armour, or a magic item's), **Dodge** (the tumble skill's bonus,
+    "Skills" below, and magic items), and **Deflection** (magic items). Within a category only
+    the highest bonus counts, except Dodge, whose bonuses add up. A magic item's own Armour,
+    Shield, Parry, and `max_dex` affixes add to that item's; its Dexterity affixes raise the
+    score (§8 "Magic items").
   - **Why it missed**: a miss whose natural roll plus to-hit is below 10 would have missed an
     unarmoured, motionless target: a plain miss. Otherwise one category with a positive bonus
     made the difference, picked by one draw weighted by its bonus (in category order); a
@@ -2182,19 +2293,33 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     turns aside. Later rules hook in there (dodges training Dexterity, shield and parry effects).
   - **Order of draws**: the two dice of the attack roll; on an attributable miss one draw for
     why; on a threat the two dice of the confirmation; then one draw per damage die each time the
-    damage is rolled; then, if the target lives, one draw for each `on_hit` effect of the attack
-    whose chance is below 100 ("Status effects" below), and for a disease that lands on a target
-    that does not carry it yet, the two dice of its check and, if it is caught, one draw per
+    damage is rolled (the attack's own dice, then a magic weapon's extra die, "adds 1d4
+    damage"); then, if the target lives, one draw for each `on_hit` effect of the attack whose
+    chance is below 100 ("Status effects" below), and for a disease that lands on a target that
+    does not carry it yet, the two dice of its check and, if it is caught, one draw per
     incubation die ("Diseases" below).
+  - **Magic** (§8 "Magic items"): an attack is built from its weapon (or natural attack, or bare
+    hands; a kick is bare hands) and the attacker's scores as they are now (raised by what it
+    wears, lowered by its status effects, hunger, and stat damage: `Actor::effective_stats`), then
+    its weapon skill's benefit, then the weapon's own attack affixes (its to-hit, damage, extra
+    die, critical threat and multiplier; a shot's from the missile weapon and the ammunition, a
+    bow's draw lowering the Strength it needs) and the global ones of what the attacker wears and
+    wields, then its combat stance. A threat goes no lower than 2, a multiplier no higher than 5.
   - **Hit points** (ADOM-like, no hit dice, no levels): maximum = Toughness + race HP + class
     HP (§7 tables: e.g. a dwarf barbarian with To 16 has 6 + 8 + 16 = 30; a human warrior with
     To 12 has 23; an elf wizard with To 8 has 10), at least 1; a creature's = Toughness + its
     type's `base_hp` (a giant rat with To 12 and none has 12). Linear in Toughness: no runaway
-    pools. Every actor starts at its maximum (`Actor::hp`, `hp_base`).
+    pools. Every actor starts at its maximum (`Actor::hp`, `hp_base`). Magic items add to the
+    maximum (and Toughness affixes through the score; `Actor::max_hp(content)`), not to what it
+    has; when the maximum falls (taking one off), hit points above it are lost at once (above
+    the maximum without its status effects, `Actor::lasting_max_hp`: what a status takes off the
+    maximum comes back, so the hit points kept under it stay; while it lasts the player is shown
+    no more than the lowered maximum).
   - **Regeneration**: a hurt actor on the current level gets 1 hit point back per
     `max(60 s, 360 s − 12 s × Toughness)` of game time at the normal pace (To 10: 4 minutes; To
     25 and up: 1 minute); resting, status effects, diseases, a sanctuary (§7 "Special rooms"),
-    and starving (§8 "Hunger") change the pace ("Healing" below).
+    starving (§8 "Hunger"), and the regeneration affixes of magic items (§8 "Magic items") change
+    the pace ("Healing" below).
   - **Big hits and status effects**: a hit that takes at least a third of the target's maximum
     hit points is a **big hit** (`combat::big_hit`). A blow that hits and leaves its target alive
     may cause status effects: those whose `wound` it meets (bleeding: a big hit 1 degree, a
@@ -2496,8 +2621,9 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   resting` (200) while the player rests (creatures never rest), times the `regen` of a special
   room it stands in (a sanctuary 300, §7 "Special rooms"); every `regen_seconds(Toughness)` ×
   100 of it is a hit point ("Combat" above; the effective Toughness). Progress carries over and
-  is dropped at full health. A Starving player gets none back (§8 "Hunger").
-  `World::healing_rate` is the one place that decides the pace.
+  is dropped at full health. A Starving player gets none back (§8 "Hunger"). The regeneration
+  affixes of what the actor wears and wields multiply the rate by (100 + their percent) / 100 (§8
+  "Magic items"). `World::healing_rate` is the one place that decides the pace.
 - **Checks** (`warlock-core/src/check.rs`; M24, #139): a stat put to the test, rolled like an
   attack: 2d12 (the natural roll, `combat::roll_natural`, two draws of the gameplay stream) plus
   the modifier of the stat tested (the effective score's) succeeds at the **difficulty** or
@@ -2588,7 +2714,15 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     reading the effective score that status effects and stat damage may lower ("Status effects",
     "Diseases" above); and checks (Toughness, Willpower) resist diseases ("Checks" above). No
     other rule does yet, and no other D&D concept comes with them: no ability checks or saving
-    throws beyond the disease checks. Stats and potentials are part of the world state (saved, covered by the state hash).
+    throws beyond the disease checks. Stats and potentials are part of the world state (saved,
+    covered by the state hash).
+  - **Magic items** (§8 "Magic items") raise scores while worn or wielded: every rule reads the
+    scores as they are now (`Actor::effective_stats(content)`: the stored scores plus what the
+    actor wears adds, within 1 to 40, then less what its status effects, hunger, and stat damage
+    take; potentials unchanged), and so does the player's character screen
+    (`PerceptionView::own_scores`). The stored scores are never changed by an item. Hit points
+    gained at a level-up read Toughness raised by items but not lowered by a penalty
+    (`Actor::raised_stats`).
 - **Burden** (`warlock-core/src/burden.rs`; M16, #115), ADOM-like, with 3.5's thirds:
   - **Limit**: 1.5 kg × (2 × Strength + Toughness) × the actor's size's `carry` percent (§7
     `data/sizes.toml`: small 75 %, medium 100 %), from the scores, never the modifiers: a St 10
@@ -2596,7 +2730,9 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     St 8 To 12 31.5 kg, an elf St 6 To 8 30 kg. In grams it is always a multiple of 3, so the
     thirds are exact. The player's size is their race's when the run has a character, else the
     player creature type's; a creature's is its type's. Everything an actor carries counts, worn
-    and wielded things included; its own body weight does not.
+    and wielded things included; its own body weight does not. Magic items (§8 "Magic items")
+    count by the scores they raise, their carrying affixes (+N kg to the limit, which is then
+    rounded down to a multiple of 3 g), and their weight affixes (that much lighter each).
   - **Levels**: Unburdened up to a third of the limit, Burdened up to two thirds, Strained up to
     the limit, Overloaded beyond it (`Burden`, `Load::burden`).
   - **Effects**: every action's price ×1.25 Burdened and ×1.5 Strained or Overloaded ("Costs" above;
@@ -2625,6 +2761,85 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     `limit`), and the `actors` layer every actor's burden and limit.
   - Nothing is stored: the burden follows from the inventory, the stats, and the content, so
     saves and the state hash are unchanged.
+- **Magic items** (`warlock-core/src/magic/`, `content/affix.rs`; M29, #149), after Path of
+  Exile. A first pass: the lists and numbers are to be tuned after playtesting.
+  - **Base items** are objects with a `kind` (§7): weapon, missile weapon (`launcher`),
+    ammunition, body armour, helmet, cloak, gloves, boots, shield, ring, amulet. Only they are
+    loot or magic.
+  - **Rarity**: *normal* (no affixes), *magic* (a prefix, a suffix, or one of each; most have
+    one), *rare* (up to three prefixes and three suffixes, usually three or four affixes in all,
+    and a two-word name: a first word and a second for its kind, "Grim Bite"). Unique items
+    later. An item never has two affixes of the same effect.
+  - **Instances**: a magic or rare stack records what it rolled (`magic::Magic` on
+    `object::Stack`): its rarity, its **item level**, each affix by id with its tier (1 first)
+    and rolled value, a rare item's name, and whether the player has identified it, for an
+    enchanting system later. It goes with the stack everywhere: piles, inventories, missiles in
+    flight (an arrow shot from a magic stack lands as one of it, and joins it again when picked
+    up: stacks join only with the very same magic; a flaming arrow is never magic), saves.
+  - **Names** (`Stack::describe`, the one name presentation uses): normal "a long sword"; magic
+    its prefix and suffix around the base, "a Sharp long sword of the Bear" ("12 Sharp arrows of
+    Durability"); rare its name then the base, "Grim Bite, a long sword"; unidentified the base
+    and its rarity, "a long sword (magic)", "12 arrows (rare)". Rarity colors the name (§6).
+    Combat messages name the base ("The kobold's spear glances off your armour.").
+  - **Unidentified**: magic and rare items are found unidentified. The rarity shows, the affixes
+    and a rare name do not, and their effects apply all the same while worn or wielded (as in
+    ADOM and Path of Exile; so an attentive player may notice them: a stat on the character
+    screen, a glow). Wearing or wielding an item for a while does not identify it. The core API
+    `World::identify(item)` (`world/loot.rs`; crate-internal, for actions: the scroll of identify,
+    #150, calls it from its read action) identifies the player's inventory stack `item` and says
+    "This is a Sharp long sword of the Bear!", returning `Identified::Now(name)`, `Known`
+    (already identified, or normal), or `NoSuchItem`. Presentation reaches affixes only through
+    `Stack::known_magic` (nothing until identified), so neither perception, the UI, nor
+    player-facing dumps can leak them; dev dumps show the truth.
+  - **Effects** (`magic::mods`) apply while the item is worn or wielded (equipped), never while
+    merely carried. Attack effects (to-hit, damage, extra damage die, critical threat and
+    multiplier, attack speed, range, a bow's draw, durability) on a weapon, missile weapon, or
+    ammunition are **local**: they change attacks made with that item (a shot: the missile
+    weapon's and the ammunition's together; a throw: the thrown weapon's); on anything else
+    (gloves, rings, amulets, helmets) they are **global**: every attack. Effects on the item itself
+    (Armour, Shield, Parry, `max_dex`, weight) are local. The rest are global: the six stats,
+    maximum hit points, regeneration, Dodge (stacks), Deflection and natural armour (the best
+    counts, with the creature's own), moving speed, carrying limit, stealth (quieter footsteps,
+    §5 "Hearing"), **light** (the wearer carries the brightest light among its glowing items,
+    a steady preset; `LightCache` adds it as a carried source, so creatures see by it too), and
+    **skills** (§8 "Skills": a skill affix adds to that skill's value for what it gives,
+    `Actor::skill_effect`, trained or not, an untrained one from 0; the Skills screen still lists
+    trained values). Each rule reads them in one place: `Actor::effective_stats`, `max_hp`,
+    `defence`, `melee`, `ranged`, `thrown`, `launcher_range`, `throw_range`, `skill_effect`;
+    `World::cost_of` (speed); `burden::load`; `noise::noise`; `World::healing_rate`;
+    `Stack::weight`. Speeds are at most 50 % off in all; an attack's weapon skill takes its
+    `speed` off after them (`World::attack_price`, §8 "Weapon skills"). Pending hooks, added
+    with the systems they need: affixes that raise a weapon skill's rank (#134's ranks exist;
+    none roll yet), hunger (#137), and value (#145, a base `value` times rarity and affixes).
+  - **Affixes** (`data/affixes.toml`, §7): 21 prefixes (mostly offensive, flat Defence, and
+    life: Sharp, Heavy, Glinting, Keen, Brutal, Guarding, Reinforced, Sturdy, Supple,
+    Featherweight, Nimble, Shimmering, Oaken, Hale, Vicious, Accurate, Fleet, Hunter's, Steady,
+    Radiant, Burly) and 26 suffixes (stats, speed, criticals, utility, skills: of the Bear, Lynx,
+    Ox, Owl, Sage, Lion; of Celerity, Precision, Slaying, Ruin, Mending, Stealth, Light, the
+    Mule, Evasion, Warding, the Wind, Reach, Durability, the Tortoise, Vitality; of Shadows
+    (stealth), the Hare (tumble), the Fox (listen), the Wanderer (survival), Balance (balance)),
+    each with the kinds of item it rolls on and up to four tiers by item level; an item has at
+    most one affix of each effect (of each skill, for skill affixes).
+  - **Loot** (`magic::loot::roll`): the item level is the depth (a branch level's depth, a
+    hand-made level's `item_level`, 1 elsewhere). One roll draws, in order: the base (among
+    those with `level` at most the item level, by `frequency`); a stack's count (ammunition 8 to
+    20); the rarity (by weight, those below the grade asked for left out); how many affixes
+    (magic: both by `magic.both`, else prefix or suffix evenly; rare: the count by weight, then
+    how many are prefixes, evenly within at most three of each); each affix, prefixes first (by
+    weight among those that may roll: the item's kind in its bases, something for its effect to
+    change, a tier at the item level, an effect not yet on the item), its tier (evenly among
+    those at the item level), and its value (evenly in the tier's range); a rare item's name (two
+    draws). With nothing left to roll an item has fewer affixes, with none it is normal. Loot is
+    found unidentified.
+  - **Where**: generated branch levels' floors hold `loot` items (the Depths 2 to 4) on plain
+    floor where nothing lies, stands, shines, or leads away, and vault `loot` cells an item at
+    least of their grade; outdoor ruins' loot cells too (local areas have no floor loot); all
+    from the level's `loot/<level id>` stream once its map is valid (the map is the same as
+    without loot). Creatures with `loot` drop a magic or rare item (grade magic) where they die,
+    besides what they carried, by their chance, from the stream `drop/<actor id>`, at their
+    level's item level.
+  - **Dev**: replay text `identify` / `identify:LETTERS` (`Action::Identify`, `F8` in dev
+    builds: everything carried) identifies without time passing, recorded in replays.
 - **Hunger** (`warlock-core/src/hunger.rs`, the rules; `world/hunger.rs` and `world/eat.rs`,
   applying them; `data/hunger.toml`, §7; M23, #137), ADOM-like:
   - **Nutrition**: the player has a counter of nutrition points (`Actor::satiation`; creatures
@@ -2768,7 +2983,10 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   - **Trained or untrained**: every actor has a set of trained skills, each with a **value**
     (`Actor::skills`). A skill not in it is **untrained**: it does not exist for that actor, is
     never shown, earns no marks, and gives nothing; rules that read a skill get "untrained",
-    which is not a value of 0 (trained at 0 is shown and can grow).
+    which is not a value of 0 (trained at 0 is shown and can grow). Magic items' skill affixes
+    (§8 "Magic items") add to a skill's value for what it gives while worn
+    (`Actor::skill_effect`, the one way rules read a benefit), an untrained skill's from 0; they
+    never train it or change the value shown.
   - **From race and class** (§7): their `skills` are dice rolled when the character is made,
     after every other roll ("Character creation" above); a skill both train sums the two; the
     race's `class_skill` (humans, `2d4+4`) goes to one of the class's skills picked uniformly
@@ -2895,6 +3113,9 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   the run seed (little-endian) and a label: map generation per level (`map/<level id>`, retry *k*
   `map/<level id>/<k>`), so a level depends only on the seed and its id, never on visiting order
   (its special room is drawn last, so a level without one is the map it would be without them);
+  a generated level's loot (`loot/<level id>`, drawn once its map is valid, so the map is the
+  same with or without it); what a creature drops when it dies (`drop/<actor id>`, so a kill never
+  changes a later roll of the gameplay stream; actor ids are never reused);
   gameplay (`gameplay`, kept in the world state and saved); character creation (derived on
   demand: `character/gender` for the stat "other" raises, `character/birth/<race>` for the age
   and birthday, `character/rolls/<race>,<gender>,<class>` for the dice,
@@ -2938,11 +3159,10 @@ cargo xtask golden [--update]                             # compare golden scree
   syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
   pickup pickup:ac drop drop:b equip:body:b remove:body bash:E fire:12,5 throw:c:12,5 eat:b
   eat:floor:a dig:E chat:E ask:E:rooms vision:darkvision skip:1h weather:rain stance:coward
-  effect:fireball@12,5
-  effect:lightning_bolt@3,4>12,4 afflict:bleeding infect:filth_fever freeze:12,5,3 thaw:12,5,3`;
-  `bash:DIR` bashes
-  with the held shield that way, `dig:DIR` digs toward a direction until the wall gives way or something interrupts;
-  `fire:X,Y` shoots at level cell (X, Y),
+  effect:fireball@12,5 effect:lightning_bolt@3,4>12,4 identify:a afflict:bleeding
+  infect:filth_fever freeze:12,5,3 thaw:12,5,3`; `bash:DIR` bashes with the held shield that way,
+  `dig:DIR` digs toward a direction until the wall gives way or something interrupts; `fire:X,Y`
+  shoots at level cell (X, Y),
   `throw:LETTER:X,Y` throws one of inventory stack LETTER there; `eat:LETTER` eats one of
   inventory stack LETTER, `eat:floor:LETTER` one of stack LETTER of the pile underfoot;
   `chat:DIR` talks to the creature that way, `ask:DIR:TOPIC` asks it about a topic by id; the dev
@@ -2954,12 +3174,12 @@ cargo xtask golden [--update]                             # compare golden scree
   and `thaw:X,Y,R` (a burst of heat: the ice there melts, and whoever stood on it falls in) take
   no time (§5 "Ice");
   durations are a whole number with `s`, `m`, or `h`, a rest at most `24h`; letters name stacks
-  of the pile or the inventory, `a` first, and without letters `pickup` and `drop` take
-  everything; `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT (a slot id of
-  `data/slots.toml`) and `remove:SLOT` takes off what is there; the dev weather
-  override takes `clear`, `overcast`, `rain`, or `heavy`; the dev `afflict:ID` gives the player a
-  degree more of status ID (`data/status.toml`), and `infect:ID` makes them catch disease ID
-  (`data/diseases.toml`); in scripts, `ACTION*N` repeats an
+  of the pile or the inventory, `a` first, and without letters `pickup`, `drop`, and the dev
+  `identify` (§8 "Magic items") take everything; `equip:SLOT:LETTER` puts inventory stack LETTER
+  on in slot SLOT (a slot id of `data/slots.toml`) and `remove:SLOT` takes off what is there;
+  the dev weather override takes `clear`, `overcast`, `rain`, or `heavy`; the dev `afflict:ID`
+  gives the player a degree more of status ID (`data/status.toml`), and `infect:ID` makes them
+  catch disease ID (`data/diseases.toml`); in scripts, `ACTION*N` repeats an
   action, e.g. `wait*10`); `hash` is the
   FNV-1a 64 hash of the
   canonical JSON encoding of `WorldState` after the step. Verification reports the first
@@ -2988,20 +3208,22 @@ cargo xtask golden [--update]                             # compare golden scree
   `truth` (terrain, objects, and creatures) and `actors` (every actor on the level with its hit
   points and Defence, `hp 8/12 dv 13`, its
   weight, base plus carried, what it carries and of that wears and wields, `equipped main_hand a
-  spear`, its burden and carrying limit, `unburdened (limit 31.5 kg)`, its weapon skills with
-  rank and marks, `weapon skills spears 1 (0/30)`, its stats as score/potential, `St 12/15`, its
-  trained skills with their marks toward the next point, `skills stealth 17 (2/5)`, its status
-  effects with their severities, `effects bleeding 2`, its diseases with their progressions
-  (checks won in a row) or `incubating` and the time to their next turn, `diseases filth_fever 2
-  (1 won) 0d17h`, and its stat damage, `damage Dx 2 To 1`, the player's nutrition and hunger,
-  `nutrition 3540 (not_hungry)`, and the unique character it is and how far its talk has got,
-  `npc elder; talk said 3, muttered 1, met`, if any; then every corpse on the level and in the
-  player's pack with when it died and how it has rotted, `corpse rat_corpse at (2, 1): died
-  1444-11-11 08:01:12, 2 hours ago, fresh`), `rooms` (the level's special rooms: the terrain
-  with each room's plain ground drawn as its effect's `mark`, then a line per room, `s shadowed
-  room at (34, 8)-(49, 13), entered`), and `ice` (a line with the temperature on the level and
-  when its ice was last brought up to date, then the map with each iced cell's thickness in whole
-  centimetres, `0`–`9`, `a`–`z` for 10–35, `#` beyond, over the terrain) show
+  spear` (magic items as they truly are, `an iron ring of the Bear (unidentified)`), what its
+  magic items do to it by effect id, `magic strength +1 light item_glow`, its burden and carrying
+  limit, `unburdened (limit 31.5 kg)`, its weapon skills with rank and marks, `weapon skills
+  spears 1 (0/30)`, its stats as score/potential, `St 12/15`, its trained skills with their
+  marks toward the next point, `skills stealth 17 (2/5)`, its status effects with their
+  severities, `effects bleeding 2`, its diseases with their progressions (checks won in a row)
+  or `incubating` and the time to their next turn, `diseases filth_fever 2 (1 won) 0d17h`, and
+  its stat damage, `damage Dx 2 To 1`, the player's nutrition and hunger, `nutrition 3540
+  (not_hungry)`, and the unique character it is and how far its talk has got, `npc elder; talk
+  said 3, muttered 1, met`, if any; then every corpse on the level and in the player's pack with
+  when it died and how it has rotted, `corpse rat_corpse at (2, 1): died 1444-11-11 08:01:12, 2
+  hours ago, fresh`), `rooms` (the level's special rooms: the terrain with each room's plain
+  ground drawn as its effect's `mark`, then a line per room, `s shadowed room at (34, 8)-(49,
+  13), entered`), and `ice` (a line with the temperature on the level and when its ice was last
+  brought up to date, then the map with each iced cell's thickness in whole centimetres, `0`–`9`,
+  `a`–`z` for 10–35, `#` beyond, over the terrain) show
   ground truth and are dev-only. JSON dumps
   carry turn, game time (seconds and calendar fields), level, viewer, the special room the
   player stands in if they know it (`room`, its effect id; else null), the weather (under the open
@@ -3009,7 +3231,9 @@ cargo xtask golden [--update]                             # compare golden scree
   actors (each with how hurt it looks, `health`: `unhurt`,
   `lightly_wounded`, `wounded`, `badly_wounded`, `nearly_dead`, and the status effects that show
   on it, `effects`, by id), heard sounds, the player's
-  inventory, equipment (by slot id: letter, object, count), weight, burden (`burden: {level,
+  inventory (each stack's letter, object, count, weight, `name` as the player knows it, `rarity`,
+  `identified`, and `magic`: `{level, name, affixes: [{id, tier, value}]}` once identified, else
+  null), equipment (by slot id: letter, object, count), weight, burden (`burden: {level,
   limit}`, the limit in grams), character
   (`{race, gender, class, raised, age, born: {year, month, day}, sign: {animal, element}}` or
   null), scores (`stats`, by stat id), trained skills (`skills`, by skill id with their values),
@@ -3031,7 +3255,8 @@ cargo xtask golden [--update]                             # compare golden scree
 - Dev builds add in-game commands: switch vision profile (`F3`), reveal map (`F2`, ground truth,
   marked as dev-only on screen), toggle debug overlays (light values `F4`; line of sight and memory
   later), save and load named snapshots (`F5`/`F9`), skip an hour (`F6`, recorded as `skip:1h`),
-  set the next weather for three hours (`F7`, recorded as `weather:overcast` and so on).
+  set the next weather for three hours (`F7`, recorded as `weather:overcast` and so on), identify
+  everything carried (`F8`, recorded as `identify`; §8 "Magic items").
   They are in the bindings table, so the `?` help lists them.
 - CLAUDE.md documents build commands, architecture notes, pinned documentation references, and
   verification procedures, including the agent workflow guidance from the original brief.
@@ -3153,6 +3378,12 @@ Each milestone ships a playable build.
   10 in sixteen categories with per-category passive benefits, The Riddle of Steel's defaults
   between related categories, shield blocking and a shield bash, starting ranks from race and
   class, and a weapon skills screen (`W`).
+- **M29 Magic items and scrolls** — magic items after Path of Exile (#149): a broad set of base
+  items with stats, 21 prefixes and 26 suffixes in tiers by item level, normal, magic, and rare
+  items (up to three prefixes and three suffixes, generated names), each recording its affixes;
+  loot on generated levels, in vaults, and dropped by creatures; unidentified until identified
+  (the `identify` API), effects applying all the same; rarity colors and an item description
+  screen. Scrolls, the scroll of identify among them, follow (#150).
 
 
 - **M23 Hunger and food** (#137) — ADOM-like hunger: a nutrition counter that game time burns by

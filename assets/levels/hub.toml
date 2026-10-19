@@ -59,6 +59,9 @@
 # with `e`, then shoot with `t` (`T` throws from the pack): a flaming arrow shot into the patrol gallery's
 # dark middle lights it where it lands until it burns out.
 #
+# Magic items (#149): two piles in the middle of the storeroom hold magic and rare arms ([[item]]
+# tables at the end): a Sharp long sword of the Bear and a rare helm, Dread Visage, both
+# identified (the helm glows when worn), and an unidentified rare bow and magic ring.
 # Digging (M19): the storeroom has a pick-axe for the Tool slot; use it with `U` toward a wall.
 # The stairs nook's Q leads down to the quarry, the place to dig.
 name = "The Hub"
@@ -184,15 +187,39 @@ objects = ["small_shield", "quarterstaff"]
 at = [17, 14]
 objects = ["wool_cloak", "leather_gloves", "leather_boots"]
 
-# The key to the pantry's locked west door.
-[[pile]]
+# Magic items (#149): a rack of magic arms in the storeroom. Identified, a magic sword and a rare
+# helm that glows when worn; not yet identified, a rare bow and a magic ring (their rarity shows,
+# their affixes do not, yet their effects apply). Look at them in the inventory (a letter).
+[[item]]
 at = [19, 14]
-objects = ["iron_key"]
-# Digging (M19): a pick-axe for the Tool slot. The hub's walls give way to it like any stone
-# wall (its outer walls, the level's edge, never do); the quarry is the place to dig.
-[[pile]]
+object = "long_sword"
+affixes = ["sharp:2", "of_the_bear:2"]
+identified = true
+
+[[item]]
+at = [19, 14]
+object = "iron_helm"
+name = "Dread Visage"
+affixes = ["hale:2", "accurate:1", "radiant:2", "of_the_owl:1"]
+identified = true
+
+[[item]]
 at = [18, 14]
-objects = ["pick_axe"]
+object = "short_bow"
+name = "Storm Song"
+affixes = ["hunters:1", "glinting:2", "of_celerity:1"]
+
+[[item]]
+at = [18, 14]
+object = "silver_ring"
+affixes = ["of_the_mule:1"]
+
+# Just inside the storeroom's door: the key to the pantry's locked west door, and (digging, M19) a
+# pick-axe for the Tool slot. The hub's walls give way to it like any stone wall (its outer walls,
+# the level's edge, never do); the quarry is the place to dig.
+[[pile]]
+at = [21, 14]
+objects = ["iron_key", "pick_axe"]
 
 # The pantry (the door corridor's east room).
 [[pile]]

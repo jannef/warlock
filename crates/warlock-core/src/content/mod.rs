@@ -5,6 +5,7 @@
 //! build, including the web build, is self-contained) or a directory on disk for development.
 
 mod action;
+mod affix;
 mod anim;
 mod calendar;
 mod class;
@@ -40,6 +41,10 @@ mod weapon_skill;
 mod weather;
 
 pub use action::{ActionCosts, ActionKind, BASE_TURN, COSTS, NORMAL_COST, price};
+pub use affix::{
+    AffixDef, AffixKind, Affixes, Effect, ItemKind, MAX_ITEM_LEVEL, MAX_PER_KIND, MAX_SPEED,
+    Rarity, Tier,
+};
 pub use anim::GlyphAnim;
 pub use calendar::Calendar;
 pub use class::ClassDef;
@@ -69,7 +74,7 @@ pub use level::{
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
 pub use material::{MaterialDef, MaterialId};
-pub use object::{MAX_BONUS, MAX_DIG, MAX_PLACED, ObjectDef, ObjectId, article};
+pub use object::{MAX_BONUS, MAX_DIG, MAX_PLACED, ObjectDef, ObjectId, article, weapon_noun};
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use race::{HUNGER, RaceDef, Races};
@@ -303,6 +308,8 @@ pub struct Content {
     weapon_skills: WeaponSkillTable,
     /// Special rooms' effects (`data/room_effects.toml`).
     room_effects: RoomEffects,
+    /// Prefixes, suffixes, and how loot rolls them (`data/affixes.toml`).
+    affixes: Affixes,
     stances: Stances,
     /// In `data/status.toml` order: most important first.
     statuses: Vec<StatusDef>,
@@ -359,6 +366,7 @@ impl Content {
             corpses: Vec::new(),
             weapon_skills: WeaponSkillTable::default(),
             room_effects: RoomEffects::default(),
+            affixes: Affixes::default(),
             stances: Stances::default(),
             statuses: Vec::new(),
             status_ids: BTreeMap::new(),
@@ -397,6 +405,13 @@ impl Content {
         let path = "data/skills.toml";
         if let Some(text) = files.get_optional(path) {
             content.skills = SkillBook::parse(path, text)?;
+        }
+        let path = "data/affixes.toml";
+        if let Some(text) = files.get_optional(path) {
+            let light = |id: &str| content.light_id(id);
+            let skill = |id: &str| content.skill_id(id);
+            let has_skills = !content.skills().is_empty();
+            content.affixes = affix::parse(path, text, light, (skill, has_skills))?;
         }
         let path = "data/stances.toml";
         if let Some(text) = files.get_optional(path) {
@@ -457,6 +472,12 @@ impl Content {
 
         for (path, id, text) in files.in_dir("levels") {
             let level = level::parse_level(path, id, text, &content, &default_legend)?;
+            if let Some((at, _)) = level.loot.first() {
+                return Err(ContentError::new(
+                    path,
+                    format!("`loot` at {at}: loot is rolled only in vaults"),
+                ));
+            }
             content.levels.insert(id.to_string(), level);
         }
         for (path, id, text) in files.in_dir("scenarios") {
@@ -779,6 +800,12 @@ impl Content {
             if let Some(cost) = spec.attack_cost {
                 action::check_cost(cost)
                     .map_err(|m| err(format!("creature `{}`: attack_cost: {m}", spec.id)))?;
+            }
+            if spec.loot > 100 {
+                return Err(err(format!(
+                    "creature `{}`: `loot` is a chance in percent, 0 to 100",
+                    spec.id
+                )));
             }
             let size_id = spec.size.as_deref().unwrap_or(MEDIUM);
             let size = (self.size_index(size_id))
@@ -1605,6 +1632,26 @@ impl Content {
     /// **[provisional]** How training marks become points (`[increase]` in `data/skills.toml`).
     pub fn increase(&self) -> &Increase {
         &self.skills.increase
+    }
+
+    /// Prefixes and suffixes, and how loot rolls them (spec §8 "Magic items"); empty without
+    /// `data/affixes.toml`.
+    pub fn affixes(&self) -> &Affixes {
+        &self.affixes
+    }
+
+    /// The item level of loot on level `id` (spec §8 "Magic items"): a dungeon branch level's
+    /// depth, a hand-made level's `item_level` (default 1), else 1.
+    pub fn item_level(&self, id: &str) -> u8 {
+        if let Some(template) = self.levels.get(id) {
+            return template.item_level;
+        }
+        match self.branch_level(id) {
+            Some((_, depth)) => u8::try_from(depth)
+                .unwrap_or(MAX_ITEM_LEVEL)
+                .clamp(1, MAX_ITEM_LEVEL),
+            None => 1,
+        }
     }
 
     /// The horoscope of `data/horoscope.toml` (none without the file).
@@ -2745,8 +2792,8 @@ mod tests {
     fn every_object_has_a_glyph_color_material_and_weight() {
         let content = Content::builtin().unwrap();
         let objects = content.object_defs();
-        // With a corpse for every creature type but the player.
-        assert!((15..=60).contains(&objects.len()), "{}", objects.len());
+        // With a corpse for every creature type but the player, and the magic base items.
+        assert!((15..=150).contains(&objects.len()), "{}", objects.len());
         let glyphs = content.glyphs();
         for def in objects {
             assert!(def.weight > 0 && glyphs.contains(&def.glyph), "{}", def.id);

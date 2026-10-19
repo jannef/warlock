@@ -46,6 +46,16 @@ impl Dice {
         }
     }
 
+    /// `count` dice of `sides` sides each (`1d4`): at least 1 die of at least 2 sides.
+    pub const fn of(count: u32, sides: u32) -> Self {
+        Self {
+            count: if count == 0 { 1 } else { count },
+            sides: if sides < 2 { 2 } else { sides },
+            negative: false,
+            bonus: 0,
+        }
+    }
+
     /// Whether it rolls no dice.
     pub const fn is_fixed(&self) -> bool {
         self.count == 0

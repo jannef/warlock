@@ -6,13 +6,16 @@ map = '''
 ###########
 #....#....#
 #.k..L..*.#
-#....#....#
+#....#.m..#
 ###+#######
 '''
 
 [legend]
 "k" = { terrain = "floor", creature = "kobold", route = "E2 W2", carry = ["brass_key"] }
 "*" = { terrain = "floor", light = "lamp" }
+# A reward (spec §8 "Magic items"): something magic or rare left in the store room, rolled when
+# the level is generated.
+"m" = { terrain = "floor", loot = "magic" }
 "L" = { terrain = "door_closed", lock = "guard_post" }
 
 # Objects (M11): the store room holds spare arms and food, and a skeleton key, which opens every

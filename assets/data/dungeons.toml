@@ -11,6 +11,8 @@
 #   depth      number of levels
 #   size       [width, height]
 #   creatures  creature ids generators may place on patrol (default none)
+#   loot       [fewest, most] items of loot on the floor of each level, rolled at the depth as
+#              item level (spec §8 "Magic items"; default none)
 #   ambient    [r, g, b, uv] light everywhere (default none)
 #   temperature  °C on its levels (spec §5 "Temperature"; -40 to 40, default 10, the dungeon
 #              default): water there freezes below 0
@@ -31,6 +33,8 @@ generator = "rooms"
 depth = 8
 size = [80, 21]
 creatures = ["rat", "bat", "kobold"]
+# Loot on the floor of each level (spec §8 "Magic items"): its item level is the depth.
+loot = [2, 4]
 key = "rusty_key"
 # Cool, as cellars are, and colder deeper down (never freezing).
 temperature = 10

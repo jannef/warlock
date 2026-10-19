@@ -553,11 +553,13 @@ impl World {
         let Some(actor) = self.state.actors.remove(&id) else {
             return;
         };
-        if !actor.inventory.is_empty()
+        let mut dropped = actor.inventory.clone();
+        dropped.extend(self.loot_of(&actor));
+        if !dropped.is_empty()
             && let Some(level) = self.state.levels.get_mut(&actor.level)
         {
             let mut pile = level.objects_at(actor.pos).to_vec();
-            object::add_to_pile(&mut pile, &actor.inventory, &self.content);
+            object::add_to_pile(&mut pile, &dropped, &self.content);
             level.set_pile(actor.pos, pile);
         }
         self.leave_corpse(&actor);

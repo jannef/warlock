@@ -88,7 +88,8 @@ load, stats, and skills with their marks).
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
 eat:LETTER eat:floor:LETTER dig:DIR chat:DIR ask:DIR:TOPIC rest:GOAL stance:NAME vision:PROFILE
-skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] afflict:STATUS infect:DISEASE` (`DIR` = N
+skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS infect:DISEASE`
+(`DIR` = N
 NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
 player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `SLOT` = a slot id in
 `assets/data/slots.toml`, e.g. `equip:body:b` (put inventory stack `b` on), `remove:body`;
@@ -104,7 +105,8 @@ the player, `ask:E:rooms` asks it about topic `rooms` (an id in `assets/data/dia
 `clear`, `overcast`, `rain`, `heavy`, for three hours of game time; `effect` is the dev spell
 effect, `ID` an id in `assets/data/effects.toml`: `effect:fireball@30,14` (a burst there),
 `effect:fireball@20,10>30,14` (flying there first), `effect:lightning_bolt@21,17>58,17` (a bolt
-toward the second cell), no time and no rules effect, for captures; `afflict` is the dev status
+toward the second cell), no time and no rules effect, for captures; `identify` is the dev
+identify (magic items, no time; without letters everything carried); `afflict` is the dev status
 effect: one degree more of `STATUS`, an id in `assets/data/status.toml`, e.g.
 `afflict:poisoned*4 afflict:bleeding`, no game time (not `diseased`: that comes of a disease);
 `infect` is the dev disease: the player catches `DISEASE`, an id in `assets/data/diseases.toml`,
@@ -125,20 +127,22 @@ carries and weighs, worn and wielded things marked, their burden and its thresho
 know they have), `weapon_skills` (the player's
 ranks and progress toward the next, `Long blades 2 (40%)`), `truth`
 (ground truth, **dev-only**), `actors` (every actor on the level with its hit points and
-Defence, its weight, what it carries and of that wears and wields, its burden and carrying
-limit, its weapon skills with marks, its stats as score/potential, its status effects with
-severities, its diseases (progressions, checks won in a row, time to their next turn) and stat
-damage, the player's nutrition, and its npc id and talk counts, if any; then every corpse on
-the level and in the pack with its death time and rot, **dev-only**), `rooms` (the level's
-special rooms: their plain ground as the effect's `mark`, then a line per room, **dev-only**),
-`ice` (the level's temperature and the thickness of the ice on its water in cm, `0`-`9`, `a`-`z`
-for 10-35, `#` beyond, **dev-only**). The header line has the player's `hp 17/17` (and `dead`
-once the run has ended), `hunger hungry` unless Not hungry, and the `temperature`; JSON dumps add
-`hp`, `defence`, `burden` (`level`, `limit`), `hunger`, `effects` (status ids), `diseases` (the
-known ones' ids), `death` (with `of`, the status that killed, and `cause`, starving or choking),
-`temperature` (°C to a tenth), `weapon_skills` (by skill id: `rank`, `progress`), each seen
-actor's `health` and `effects` (those that show), and `room` (the special room the player stands
-in, if they know it). Replay
+Defence, its weight, what it carries and of that wears and wields (magic items as they truly
+are, "(unidentified)" marked), what its magic items do to it (`magic strength +1`), its burden
+and carrying limit, its weapon skills with marks, its stats as score/potential, its status
+effects with severities, its diseases (progressions, checks won in a row, time to their next
+turn) and stat damage, the player's nutrition, and its npc id and talk counts, if any; then
+every corpse on the level and in the pack with its death time and rot, **dev-only**), `rooms`
+(the level's special rooms: their plain ground as the effect's `mark`, then a line per room,
+**dev-only**), `ice` (the level's temperature and the thickness of the ice on its water in cm,
+`0`-`9`, `a`-`z` for 10-35, `#` beyond, **dev-only**). The header line has the player's `hp
+17/17` (and `dead` once the run has ended), `hunger hungry` unless Not hungry, and the
+`temperature`; JSON dumps add `hp`, `defence`, `burden` (`level`, `limit`), `hunger`, `effects`
+(status ids), `diseases` (the known ones' ids), `death` (with `of`, the status that killed, and
+`cause`, starving or choking), `temperature` (°C to a tenth), `weapon_skills` (by skill id:
+`rank`, `progress`), each seen actor's `health` and `effects` (those that show), `room` (the
+special room the player stands in, if they know it), and per inventory stack its `name`,
+`rarity`, `identified`, and `magic` (affixes only once identified). Replay
 files are JSON
 `{game_version, scenario, seed, character, steps:[{action, hash}]}` (`character` =
 `{race, gender, class}`, left out for a run without one; a replay without it starts as the
@@ -152,7 +156,7 @@ the step, as 16 hex digits.
 - `--new` start a fresh run instead of resuming the save; `--dev` enables the dev keys in release
   builds (always on in debug: F2 reveal map (ground truth), F3 next vision profile, F4 light-value
   overlay, F5/F9 snapshots, F6 skip an hour (recorded as `skip:1h`), F7 next weather (recorded as
-  `weather:KIND`); all listed by `?`);
+  `weather:KIND`), F8 identify everything carried (recorded as `identify`); all listed by `?`);
   `--save-dir DIR` keeps saves in DIR instead of the platform data dir.
 
 Storage backends (`crates/warlock/src/storage.rs`): `Backend::Dir` (native files, atomic writes) or
@@ -170,8 +174,9 @@ level change to `run.sav` in the data dir (see "File locations" below). On start
 `--replay`, or `--record` (replays and recordings always start a fresh run). F5 / F9 write / load `snapshots/quick.sav`. An unreadable save is renamed `run.sav.bad`,
 never deleted. Format and `Content::fingerprint` live in `warlock-core/src/save.rs`: bump
 `FORMAT_VERSION` on any incompatible `WorldState` change; adding or reordering terrain, creatures,
-lights, levels, objects, equipment slots, skills, weapon skills, statuses, diseases, or dungeon branches invalidates
-existing saves.
+lights, levels, objects, equipment slots, skills, weapon skills, statuses, diseases, or dungeon
+branches invalidates existing saves (affixes are saved by id: adding them does not, removing one
+a save uses does).
 **Permadeath**: when the player dies, `screens::on_death` deletes `run.sav`
 (`SaveStore::delete_run`) and opens the death screen; `SaveStore::save_run` never writes a dead
 run (it deletes instead), so autosave, quitting, and closing the window cannot bring it back, and the
@@ -216,7 +221,8 @@ it): gate systems that read it with `run_if(resource_exists::<Game>)`; content i
 
 Modal screens (spec §6) — main menu, new run and character creation (race, gender, class,
 summary), pause, settings, controls, the `?` help, the inventory (`i`), the equipment screen
-(`e`) and its choice of what goes in a slot, the character screen (`@`), the weapon skills
+(`e`) and its choice of what goes in a slot, an item's description (a letter in the inventory,
+an upper-case slot letter on the equipment screen), the character screen (`@`), the weapon skills
 screen (`W`), choosing what to
 pick up (`,`/`g` on several stacks), drop (`d`), or eat (`E`), the dialogue screen (opened by
 `screens::converse` after an action this frame whose outcome is talk with topics,
@@ -237,7 +243,9 @@ to open, read keys for, or draw one:
   and seed, each step's selection) preselect what was chosen before going back
   (`ScreenStack::picks`), else the scenario's character, and the summary's Start is
   `MenuChoice::NewRun { scenario, seed, character }`; `EquipItem` takes the slot selected on the
-  equipment screen beneath (`ScreenStack::selected_slot`).
+  equipment screen beneath (`ScreenStack::selected_slot`), and `Describe` the stack looked at
+  on the inventory or equipment screen beneath (`ScreenStack::looked_item`; the first stack
+  without one, as `--screen describe` opens it over the inventory).
 - **Input**: `input::route_keys` is the one reader of `KeyboardInput`. Stack not empty: the press
   goes to the top screen (`ScreenStack::handle` → `ScreenAction`: stay, close, open, a
   `MenuChoice`, or `Act(Action)`: close and apply a gameplay action, e.g. `pickup:ac`,
@@ -275,7 +283,10 @@ to open, read keys for, or draw one:
   and pause menu), `ui/new_run_screen.rs`, `ui/settings_screen.rs`, `ui/controls_screen.rs` (also
   the `?` help: the same binding list, read-only), `ui/object_screen.rs` (inventory, pick up,
   drop, throw, eat: stacks by letter; in the choices letters always name stacks, even `h j k l`;
-  the eat choice lists food lying here first, without letters, then the pack's by letter),
+  the eat choice lists food lying here first, without letters, then the pack's by letter; in the
+  inventory a letter opens the stack's description, and `i` closes it only when it names none),
+  `ui/describe_screen.rs` (`DescribeScreen`: one stack as the player knows it, from
+  `magic::describe`; names everywhere in their rarity's color, `ui::rarity_color`),
   `ui/equipment_screen.rs` (`EquipmentScreen`: slots by letter, which always name slots, so its
   own key `e` closes it only when it names none; `ItemScreen`: the stacks that fit one slot, by
   their inventory letters), `ui/character_screen.rs` (name, race, gender, class, age, birthday,
@@ -484,7 +495,8 @@ shield: shield bashing; a shot: the launcher's; a throw: thrown; a kick, spec §
 whatever is wielded, `World::player_kicks`), and `fight.rs::resolve` takes the skill its caller
 picked; `Profile::with(&Benefit)` and
 `Actor::melee`/`ranged`/`thrown`/`bash`/`kick` apply to-hit, damage, and threat; `Actor::defence` adds
-parry and shield blocking; `World::attack_price` takes `speed`/`reload` off the cost;
+parry and shield blocking; `World::attack_price` takes `speed`/`reload` off the cost
+(`World::cost_of`: with a weapon's `attack_cost` and magic items' speed);
 `World::resolve` (`fight.rs`) earns the player's marks (`practise`; a Shield-credited miss on
 the player trains shield blocking; `World::level_of` weighs the opponent by its creature type's
 `level`, spec §8 "Experience") and pushes "You feel more skilled ..." into the unsaved
@@ -515,13 +527,17 @@ and potentials (`Actor::stats`, saved and hashed), and `modifier(score)` /
 score, never below it; `Stats::from_data` validates) on creature types in `data/creatures.toml`;
 the player's come from their character (below), or from a scenario without one
 (`ScenarioDef::player_stats`; the `player` creature may not set any). **Never show a modifier, a potential, or a creature's stats**: presentation reads only
-`PerceptionView::own_scores` (the player's scores as the rules read them, lowered by status
-effects; `own_base_scores` without them, so the character screen can mark the lowered ones) — the
-character screen and the `stats` dump layer; only the dev `actors` layer and `--state` dumps show
-the rest. Only combat (Strength, Dexterity, Toughness) and burden (Strength and Toughness scores)
-use stats, **always through `Actor::effective_stats(content)`** (status penalties applied; never
-`actor.stats` directly in a rule, but for the hit points a level adds, `World::level_hp`, so a
-passing penalty never costs them for good), and no other D&D concept (checks, saves) comes with them. The status bar has no stats segment: it is already
+`PerceptionView::own_scores` (the player's scores as the rules read them, raised by magic items
+and lowered by status effects, hunger, and stat damage; `own_base_scores` without those
+penalties, so the character screen can mark the lowered ones) — the character screen and the `stats` dump layer; only the dev
+`actors` layer and `--state` dumps show the rest. Only combat (Strength, Dexterity, Toughness),
+burden (Strength and Toughness scores), digging and kicking doors in (Strength), and disease
+checks use stats, **always through
+`Actor::effective_stats(content)`** (worn magic raising them, then status penalties, Weak, and
+stat damage; never `actor.stats` directly in a rule; the hit points a level adds,
+`World::level_hp`, read `Actor::raised_stats`, before the penalties, so a passing penalty never
+costs them for good), and
+no other D&D concept (checks, saves) comes with them. The status bar has no stats segment: it is already
 full at common window sizes (it shows `HP 17/17` right after the level name, dropping only
 before it, and the burden right after that when there is one).
 
@@ -672,7 +688,33 @@ stamping, `connect.rs` flood fill / corridor digging / validation). A branch lev
 states carry their own ambient and placed lights). Generation is integer-only; a level that fails
 validation is regenerated from the next derived stream. The insta snapshots in
 `src/mapgen/snapshots/` and `src/mapgen/local/snapshots/` flag any change in generator output:
-review the maps in the diff, then accept them deliberately.
+review the maps in the diff, then accept them deliberately. Loot (`mapgen::place_loot`: floor
+items by the branch's `loot`, vault `loot` cells) is rolled once a map is valid, from its own
+stream `loot/<level id>`, so adding loot never changes the terrain of a generated level.
+
+Magic items (spec §8 "Magic items", #149) live in `warlock-core`: `content/affix.rs`
+(`data/affixes.toml`: `ItemKind`, `Effect`, `AffixDef` with tiers, `Rarity`, rarity weights,
+rare names), base item fields in `content/object.rs` (`kind`, `level`, `frequency`,
+`attack_cost`; the weapon skill `category` names the item in descriptions, `weapon_noun`), and
+`magic/` (`mod.rs`: `Magic`/`Affix`, the instance on a `Stack` (saved, hashed; `FORMAT_VERSION`
+26), `check`;
+`mods.rs`: `Mods::local` (an item's own and its attacks') and `Mods::worn` (what an actor wears
+and wields, global), the one aggregation every rule reads; `loot.rs`: `roll`, its draw order;
+`name.rs`; `describe.rs`: base stats and affixes in words for the item description screen).
+`world/loot.rs` has `World::identify` (the API the scroll of identify calls from its action),
+creature drops (`drop/<actor id>` stream), and the hit-point clamp after equipment changes
+(to `Actor::lasting_max_hp`: a penalty's lower maximum passes). Stats raised by magic are
+`Actor::effective_stats` (the stored scores, raised by `Mods::worn`, then lowered by status
+effects, Weak, and stat damage; `raised_stats` is before those, for the character screen's marks
+and level-up hit points), the one source every rule reads; an attack profile is built as those stats, the
+weapon skill's benefit, the affixes, then the combat stance. The regeneration affix goes
+through `World::healing_rate` like every other pace change. Hard
+rule: presentation reads an item's affixes only through `Stack::known_magic` (none until
+identified; `Stack::magic` is crate-private), and names only through `Stack::describe` /
+`title`, so unidentified affixes cannot leak; dev dumps use `describe_truth`. A new effect is a
+variant of `Effect` (id, value range, local/global, `allowed_on`), its reader in one rule, a
+phrase in `describe.rs`, and a wiki word in `xtask/src/wiki.rs`. Affixes are saved by id, so
+adding affixes keeps saves; their values and tiers are checked on load.
 
 Special rooms (spec §7 "Special rooms", M25) are data: `data/room_effects.toml`
 (`content/room_effect.rs`: effects, the per-room `chance`, `per_level`). Generators make them last
@@ -683,7 +725,8 @@ files mark them (`[[room]] effect area`; the hub's stairs nook is a sanctuary). 
 question, `LevelState::room_effect_at` (public: `World::room_effect_at`): perception light and
 creature sight (`room_shade` on every part of a cell's light, `room_glow` in the base light —
 change `perception.rs` and `sight.rs` together; `special_rooms_keep_the_light_invariants` checks
-they agree), noise (`noise::noise`), regeneration (the room's `regen` in `World::healing_rate`, the one pace hook), and
+they agree), noise (`noise::noise`), healing (the room's `regen` in `World::healing_rate`, the one
+pace hook), and
 hostile creatures shunning a sanctuary (`World::shuns` in `ai.rs`). A flooded room's slower,
 louder steps come from its floor terrain (`shallow_water`). `enter_room` (world/mod.rs) says the
 first-entry message; `PerceptionView::room` gives look mode the rooms the player knows;
@@ -748,7 +791,9 @@ and training-mark hooks; `Benefit` growth by `steps` or a `curve`; the **provisi
 `Increase` curve), `content/skill.rs` (`data/skills.toml`; adding a skill is one entry), and
 `world/train.rs` (marks for the player only, drawn from the `training` stream in `WorldState`,
 never the gameplay stream). Race and class grants are dice rolled in `character.rs` after every
-other roll, so they never move a score. Each effect is read in one place: Dodge in
+other roll, so they never move a score. Rules read a benefit through `Actor::skill_effect`
+(the actor's skills plus what magic items' skill affixes add, `Skills::effect_with`), never
+`Skills::effect` directly. Each effect is read in one place: Dodge in
 `Actor::defence`, quiet in `noise::noise`, hearing in `Actor::hearing`, burden in
 `World::burdened` (`Burden::slow_eased`), travel in `World::step_price`; each use is reported
 where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`, `player_moves`). A new
@@ -811,7 +856,8 @@ status, severity, by, events)` (**the one way to give an actor a status**: food 
 from what the player eats (#137), traps, diseases call it), `World::cure(actor, means, events)` (the Heal skill's
 bandage, #132), `World::after_blow` (wounds by `combat::big_hit` and criticals, then `on_hit`
 with one gameplay draw per chance below 100), `World::healing_rate` (min of the statuses'
-`regen`, × resting for the player while `World::resting`, none for a Starving player),
+`regen`, × resting for the player while `World::resting`, none for a Starving player, × a
+special room's `regen`, × (100 + the regeneration affixes of what the actor wears and wields) %),
 and `World::pass_time` → `live`, called by `run_turn` for every scheduled actor as the clock
 moves: an event loop over the next tick, easing, hit point back, or change in the player's
 hunger (Hunger above), so splitting time never
@@ -1169,8 +1215,9 @@ A successful compile does not verify anything visual. Before opening a PR:
 `tests/golden/manifest.toml` lists one entry per showcase room plus the vast level (its start and
 its river): a scenario and text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file,
 and optional `window`, `scale`, `freeze_time`, `screen` (`--screen` over the run: `pause`,
-`help`, `settings`, `controls`, `inventory`, `equipment`, `equip-item`, `character`, `pick-up`,
-`drop`, `eat`; or over the main menu, the replay then unused: `race`, `summary`), `args` (more game
+`help`, `settings`, `controls`, `inventory`, `equipment`, `equip-item`, `describe`, `character`,
+`pick-up`, `drop`, `eat`; or over the main menu, the replay then unused: `race`, `summary`), `args`
+(more game
 flags, e.g. `["--fire"]`), `tolerance` (per-channel, default 2) and `max_diff_ratio`
 (default 0.05% of pixels).
 `cargo xtask golden` builds a replay per entry with `warlock-core`, runs the game with
