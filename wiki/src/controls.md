@@ -50,7 +50,9 @@ layouts.
 You can rebind every command in the table above but `Esc` in the Controls screen (main menu or
 pause menu, then Controls): select a command, press `Enter`, then press the new key. It becomes
 the command's main key, and its other keys (such as the numpad) stay. A key another command
-already uses is refused, and the screen tells you which command has it. `Delete` resets the
+already uses (in the same set of screens) moves to the new command, and the screen says what
+moved; the old command keeps its other keys, or shows `(none)` if that was its only one. `Esc`
+cannot be taken. `Delete` resets the
 selected command to its default keys, and **Reset all keys** resets every command. Your keys are
 kept with your [settings](settings.md).
 

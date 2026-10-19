@@ -200,7 +200,10 @@ its own switch from the `render::Effects` resource (the effective values, synced
 `EffectSwitches`, the file, and a row in `ui/settings_screen.rs`. `clock` (`settings/clock.rs`, `"24h"`/`"12h"`) is the one way a time of day is written
 in the UI (`Clock::format`: status bar, death screen); dumps stay 24-hour. Palettes
 (`settings/palette.rs`) are applied only when cells are uploaded to the GPU (`render::upload`) and
-in `ui/glyphs.rs`, never to content colors. Rebindable commands have stable ids in
+in `ui/glyphs.rs`, never to content colors. Binding a key another command of the same context uses moves it
+(`Bindings::bind_primary` returns `Bound::Moved`; fixed commands outside `REBINDABLE`, Esc's Cancel,
+are refused with `Conflict`); a command left keyless is saved as an empty list and loads unbound.
+Rebindable commands have stable ids in
 `settings/keys.rs` (`KeyCommand::id`): **a new `KeyCommand` variant must be added there**
 (`REBINDABLE` or the non-rebindable arm). `Game` exists only during a run (the menu runs without
 it): gate systems that read it with `run_if(resource_exists::<Game>)`; content is the
