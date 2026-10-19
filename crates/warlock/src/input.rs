@@ -73,6 +73,31 @@ pub enum KeyCommand {
     Quit,
     Snapshot,
     LoadSnapshot,
+    /// On an info screen: switch to page `n` (1 to 9) of the info screens.
+    Page(u8),
+    /// On an info screen: the next page (with Shift, the one before).
+    NextPage,
+    /// On an info screen: the previous page.
+    PrevPage,
+}
+
+/// Where a command is read. Keys must be unique within a context, not across contexts, so a key
+/// can mean one thing in play and another on an info screen (Tab: next target, next page).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Context {
+    /// In play: the map, prompts, look mode, and aiming.
+    Play,
+    /// On an info screen ([`crate::ui`]'s numbered pages).
+    Pages,
+}
+
+impl KeyCommand {
+    pub fn context(self) -> Context {
+        match self {
+            KeyCommand::Page(_) | KeyCommand::NextPage | KeyCommand::PrevPage => Context::Pages,
+            _ => Context::Play,
+        }
+    }
 }
 
 impl KeyCommand {
@@ -107,6 +132,9 @@ impl KeyCommand {
             KeyCommand::Quit => "Save and quit",
             KeyCommand::Snapshot => "Save snapshot (dev)",
             KeyCommand::LoadSnapshot => "Load snapshot (dev)",
+            KeyCommand::Page(_) => "Info page",
+            KeyCommand::NextPage => "Next info page (Shift: previous)",
+            KeyCommand::PrevPage => "Previous info page",
         }
     }
 }
@@ -209,6 +237,12 @@ impl Default for Bindings {
             (Code(KeyCode::Escape), Cancel),
             (ch("Q"), Quit),
         ]);
+        for n in 1..=9u8 {
+            table.0.push((ch(&n.to_string()), Page(n)));
+        }
+        table.0.push((Code(KeyCode::Tab), NextPage));
+        table.0.push((Code(KeyCode::PageDown), NextPage));
+        table.0.push((Code(KeyCode::PageUp), PrevPage));
         if cfg!(debug_assertions) {
             table.add_dev_keys();
         }
@@ -231,20 +265,27 @@ impl Bindings {
         ];
         for entry in dev {
             // A key the player bound to something else stays theirs.
-            if !self.0.iter().any(|(k, _)| *k == entry.0) {
+            if self.owner(&entry.0).is_none() {
                 self.0.push(entry);
             }
         }
     }
 
+    /// The command a key press stands for in play.
     pub fn lookup(&self, input: &KeyboardInput) -> Option<KeyCommand> {
+        self.lookup_in(Context::Play, input)
+    }
+
+    fn lookup_in(&self, context: Context, input: &KeyboardInput) -> Option<KeyCommand> {
         // Physical bindings first: numpad keys also produce digit characters.
         self.0
             .iter()
+            .filter(|(_, c)| c.context() == context)
             .filter(|(k, _)| matches!(k, KeyBinding::Code(_)))
             .chain(
                 self.0
                     .iter()
+                    .filter(|(_, c)| c.context() == context)
                     .filter(|(k, _)| matches!(k, KeyBinding::Char(_))),
             )
             .find(|(k, _)| k.matches(input))
@@ -314,7 +355,10 @@ pub fn route_keys(
             // changed them.
             let (mut new_settings, mut new_bindings) = (settings.clone(), bindings.clone());
             let action = screens.stack.handle(
-                &Press::from_input(key),
+                &Press {
+                    shift: play.shift(),
+                    ..Press::from_input(key)
+                },
                 &mut new_settings,
                 &mut new_bindings,
             );
@@ -338,6 +382,7 @@ pub fn route_keys(
                 play.aim(AimKind::Throw(item));
             }
             ScreenAction::Open(name) => screens.open(name),
+            ScreenAction::Replace(name) => screens.replace(name),
             ScreenAction::Return(name) => screens.stack.return_to(name),
             ScreenAction::Choose(choice) => {
                 choices.write(choice);
@@ -360,6 +405,11 @@ pub struct Gameplay<'w> {
 }
 
 impl Gameplay<'_> {
+    /// Whether Shift is held.
+    fn shift(&self) -> bool {
+        self.held.pressed(KeyCode::ShiftLeft) || self.held.pressed(KeyCode::ShiftRight)
+    }
+
     /// Applies one key press in play. Returns the screen it opens: `?` help, or the pause menu
     /// on Esc when no prompt is open.
     fn press(&mut self, key: &KeyboardInput, bindings: &Bindings) -> Option<ScreenName> {
@@ -393,9 +443,7 @@ impl Gameplay<'_> {
                 InputMode::Aim(aim.step(dir, &game.world.perception()))
             }
             (InputMode::Aim(aim), KeyCommand::NextTarget) => {
-                let back =
-                    self.held.pressed(KeyCode::ShiftLeft) || self.held.pressed(KeyCode::ShiftRight);
-                InputMode::Aim(aim.cycle(&game.world.perception(), !back))
+                InputMode::Aim(aim.cycle(&game.world.perception(), !self.shift()))
             }
             (InputMode::Aim(aim), KeyCommand::Fire | KeyCommand::Throw) => {
                 let confirm = match aim.kind {
@@ -568,6 +616,11 @@ impl Gameplay<'_> {
                 self.saves.write(SaveCommand::LoadSnapshot);
                 InputMode::Normal
             }
+            // Info screen keys: `lookup` never finds them in play.
+            (
+                InputMode::Normal,
+                KeyCommand::Page(_) | KeyCommand::NextPage | KeyCommand::PrevPage,
+            ) => InputMode::Normal,
         };
         if *self.mode != next {
             *self.mode = next;

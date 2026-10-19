@@ -275,6 +275,7 @@ mod tests {
             binding: KeyBinding::from_text(text),
             repeat: false,
             text: None,
+            shift: false,
         };
         screen.handle(&press, b);
     }
@@ -381,10 +382,10 @@ mod tests {
         assert_eq!(help.mode, Mode::ReadOnly);
 
         let mut console = Console::default();
-        console.resize(80, 40);
+        console.resize(80, 70);
         help.selected = 0;
         help.draw(&mut console, &b);
-        let text: Vec<String> = (0..40).map(|y| line(&console, y)).collect();
+        let text: Vec<String> = (0..70).map(|y| line(&console, y)).collect();
         assert!(
             text.iter()
                 .any(|l| l.contains("Move north") && l.contains("k Num8 ↑"))
@@ -408,6 +409,7 @@ mod tests {
             binding: KeyBinding::from_text("?"),
             repeat: false,
             text: Some('?'),
+            shift: false,
         };
         assert!(ControlsScreen::help().handle(&question, &mut b));
         assert!(ControlsScreen::help().handle(&Press::nav(Nav::Back), &mut b));
