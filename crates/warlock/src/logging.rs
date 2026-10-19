@@ -1,6 +1,6 @@
 //! Desktop logging and crash reports (spec §10).
 //!
-//! Every run writes `warlock-<UTC timestamp>.log` into `<platform data dir>/logs`, keeping the
+//! Every run writes `warlock-<UTC timestamp>.log` into the logs folder (`paths.rs`: `<platform data dir>/logs`, or `logs/` of a portable folder), keeping the
 //! most recent few. A panic hook writes `crash-<UTC timestamp>.txt` next to them (version, OS,
 //! panic message, backtrace, last log lines) and tells the player where it is. The web build has
 //! no filesystem, so none of this exists there: logs go to the browser console.
@@ -22,7 +22,13 @@ pub fn log_plugin() -> LogPlugin {
 /// Creates the log file and installs the panic hook. Call once, first thing in `main`.
 pub fn init() {
     #[cfg(not(target_arch = "wasm32"))]
-    desktop::init();
+    desktop::init(crate::paths::locations().logs.dir.clone());
+}
+
+/// The current UTC time as `YYYYMMDD-HHMMSS`.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn timestamp() -> String {
+    desktop::timestamp()
 }
 
 /// Dev aid: panics on purpose when `WARLOCK_CRASH_TEST` is set, to exercise the crash report.
@@ -57,11 +63,12 @@ mod desktop {
 
     static PATHS: OnceLock<Paths> = OnceLock::new();
 
-    pub fn init() {
-        let Some(dir) = log_dir() else { return };
+    pub fn init(dir: Option<PathBuf>) {
+        let Some(dir) = dir else { return };
         if fs::create_dir_all(&dir).is_err() {
             return;
         }
+        crate::move_data::mark_in_use(&dir);
         let log = dir.join(format!("warlock-{}.log", timestamp()));
         prune(&dir, "warlock-", ".log", KEEP_LOGS.saturating_sub(1));
         prune(&dir, "crash-", ".txt", KEEP_CRASHES);
@@ -85,11 +92,6 @@ mod desktop {
                 .with_writer(Mutex::new(file))
                 .boxed(),
         )
-    }
-
-    fn log_dir() -> Option<PathBuf> {
-        let dirs = crate::paths::project_dirs()?;
-        Some(dirs.data_local_dir().join("logs"))
     }
 
     fn install_panic_hook() {
@@ -158,7 +160,7 @@ mod desktop {
     }
 
     /// `YYYYMMDD-HHMMSS` in UTC.
-    fn timestamp() -> String {
+    pub fn timestamp() -> String {
         let secs = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .map_or(0, |d| d.as_secs());

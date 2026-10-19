@@ -68,6 +68,14 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   ADOM-style with a cursor and a faint line of fire, watch the arrow fly, and pick it up where it
   fell. A flaming arrow flies burning and lights the dark where it lands until it burns out:
   shoot one into the dark to see what waits there (and be seen).
+- **Blood** — big hits and kills stain the floor and the walls beside the victim, by its size and
+  how the blow landed; subtle for one kill, a slaughterhouse where many fell (a setting hides it).
+- **Weapon skills** — ADOM-style: every blow, shot, and throw earns marks in its weapon's skill
+  (daggers, long blades, axes, bows, …, sixteen in all, shield blocking and shield bashing among
+  them), and ranks 0 to 10 come slower and slower; each rank makes you hit, hurt, parry, or
+  block a little better ("You feel more skilled with long blades."). Skill carries over to
+  related weapons, as in *The Riddle of Steel*: long blades 8 makes short blades 6. Your race and
+  class start you off, a weapon skills screen shows your ranks, and a shield can bash too.
 - **Status effects and healing** — big hits and criticals open bleeding wounds, a giant rat's
   bite may leave poison behind; they cost hit points as time passes, stack, wear off, slow or
   stop healing, and can kill (creatures bleed to death too); strong poison saps Strength and
@@ -79,12 +87,6 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   a loss takes points off your stats (Toughness damage lowers your hit points), two wins in a
   row shake it off, and grave rot never goes by itself. The character screen names the disease
   once it has run a day; lost stat points mend a point a day once you are well.
-- **Weapon skills** — ADOM-style: every blow, shot, and throw earns marks in its weapon's skill
-  (daggers, long blades, axes, bows, …, sixteen in all, shield blocking and shield bashing among
-  them), and ranks 0 to 10 come slower and slower; each rank makes you hit, hurt, parry, or
-  block a little better ("You feel more skilled with long blades."). Skill carries over to
-  related weapons, as in *The Riddle of Steel*: long blades 8 makes short blades 6. Your race and
-  class start you off, a weapon skills screen shows your ranks, and a shield can bash too.
 - **Burden** — everything you carry weighs on you: past a third of what your Strength and
   Toughness can bear you are burdened, then strained, then overloaded. Every action takes longer,
   armour-like caps keep your Dexterity from helping your Defence, and your footsteps get louder.
@@ -183,15 +185,14 @@ cargo run --release -p warlock
 | `W` | Weapon skills: your rank in each, and how far to the next |
 | `R` | Rest an hour, until dawn, or until nightfall (stops when something comes into view) |
 | `x` | Look around: move a cursor to read what is there (takes no time) |
-| `f` | Fire your missile weapon: aim (Tab cycles targets), then Enter |
-| `t` | Throw something: choose it, aim, then Enter |
+| `t` | Shoot or throw what is in your Missile weapon slot: aim (Tab cycles targets), then Enter |
+| `T` | Throw something from your pack: choose it, aim, then Enter |
 | `U` + direction | Use your tool: dig into a wall with a pick-axe ready in the Tool slot (goes on until the wall gives way) |
 | `?` | Show all controls |
-| `Esc` | Pause menu: settings, controls, save and quit |
-| `Q` | Save and quit |
+| `Esc` | Pause menu: settings, controls, save and quit (asks to confirm) |
 
 Symbol keys follow your keyboard layout, so `<`, `>` and `?` work on non-US keyboards. Every key
-can be rebound in the Controls screen. The [wiki](https://jannef.github.io/warlock/wiki/) explains the rules.
+can be rebound (including a quick Save and quit key, unbound by default) in the Controls screen. The [wiki](https://jannef.github.io/warlock/wiki/) explains the rules.
 
 ## Develop
 

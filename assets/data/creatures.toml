@@ -56,6 +56,10 @@
 #   weapon_skills  its ranks in weapon skills (spec §8 "Weapon skills"), by skill id in
 #             weapon_skills.toml, 0 to 10: { spears = 1 }; each raises the skills it defaults
 #             to. Creatures do not train (yet); the player's come from their race and class
+#
+# Blood (spec §8 "Blood"; presentation only, no rule reads it): blood, the colour of the stains it
+# leaves when hurt badly or killed ("#rrggbb"; default dark red, "#6e0e0c"), or "none" for a
+# bloodless creature. How much it spills goes by its size's `blood` in sizes.toml.
 
 [[creature]]
 id = "player"
@@ -241,3 +245,5 @@ size = "small"
 stats = { strength = 10, dexterity = 11, toughness = 11, intelligence = 1, willpower = 10, presence = 7 }
 attack = { damage = "1d3", name = "bite", verb = "bites" }
 natural = { defence = 3, name = "shell" }
+# Greenish-black ichor.
+blood = "#38461a"

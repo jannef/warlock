@@ -13,9 +13,8 @@
 //! A blow that hits and leaves its target alive may cause status effects (bleeding from a big
 //! hit or a critical, poison from a rat's bite; `status.rs`, [`World::after_blow`]). Hit points
 //! come back with game time, one per [`combat::regen_seconds`] of it at the normal pace, for
-//! every actor on the current level (`status.rs`, as the scheduler moves the clock), at the
-//! pace [`World::healing_rate`] decides (three times as fast in a sanctuary, [`World::
-//! room_regen`]).
+//! every actor on the current level (`status.rs`, as the scheduler moves the clock), at the rate
+//! [`World::healing_rate`] decides (three times as fast in a sanctuary).
 //!
 //! Messages (spec §6 "Attacks") never carry numbers: "The kobold hits you.", "…hits you hard!" for
 //! a critical, "You block the kobold's spear with your shield.", "The giant rat dies." The
@@ -408,6 +407,7 @@ impl World {
         if let Some(blow) = blow
             && blow.damage > 0
         {
+            self.bleed((attacker, target), from, kind, blow);
             let died = self.hurt(target, blow.damage, attacker, events);
             if !died {
                 self.after_blow(attacker, target, kind, &blow, events);
@@ -510,18 +510,6 @@ impl World {
             level.set_pile(actor.pos, pile);
         }
         self.fallen.push(actor);
-    }
-
-    /// How a special room that actor `id` stands in changes how fast it heals, in percent (spec
-    /// §7 "Special rooms": three times as fast in a sanctuary); 100 elsewhere.
-    /// [`World::healing_rate`], the one place that decides the pace, applies it.
-    pub(super) fn room_regen(&self, id: ActorId) -> u32 {
-        let Some(actor) = self.state.actors.get(&id) else {
-            return 100;
-        };
-        let room = (self.state.levels.get(&actor.level))
-            .and_then(|level| level.room_effect_at(&self.content, actor.pos));
-        room.map_or(100, |effect| u32::from(effect.regen))
     }
 
     /// The player attacks `target`, which they `seen` or not, in melee: the message is said at

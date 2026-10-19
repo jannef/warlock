@@ -9,6 +9,7 @@
 
 pub mod ability;
 pub mod action;
+pub mod blood;
 pub mod burden;
 pub mod character;
 pub mod check;

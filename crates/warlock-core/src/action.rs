@@ -74,14 +74,6 @@ pub enum Action {
     /// Dev command: set the weather for three hours of game time ([`crate::weather::OVERRIDE`]),
     /// then the weather of the day returns. Takes no game time; recorded in replays.
     SetWeather(Weather),
-    /// Dev command: the player suffers one degree more of a status effect (an id in
-    /// `data/status.toml`), as a wound or a bite would give it: for trying statuses out and for
-    /// captures. Takes no game time; recorded in replays.
-    Afflict(String),
-    /// Dev command: the player catches a disease (an id in `data/diseases.toml`) as if they
-    /// had failed to resist it: it incubates, then shows. Takes no game time; recorded in
-    /// replays.
-    Infect(String),
     /// Dev command: show spell effect `effect` (an id in `data/effects.toml`) at level cell `at`,
     /// or from `at` toward `to`: a burst around `at` (around `to`, flying there from `at`), or a
     /// bolt from `at` to `to` (cut short by the first opaque cell). It only shows: it hurts no
@@ -92,6 +84,14 @@ pub enum Action {
         at: Pos,
         to: Option<Pos>,
     },
+    /// Dev command: the player suffers one degree more of a status effect (an id in
+    /// `data/status.toml`), as a wound or a bite would give it: for trying statuses out and for
+    /// captures. Takes no game time; recorded in replays.
+    Afflict(String),
+    /// Dev command: the player catches a disease (an id in `data/diseases.toml`) as if they
+    /// had failed to resist it: it incubates, then shows. Takes no game time; recorded in
+    /// replays.
+    Infect(String),
 }
 
 /// How long to rest.
@@ -362,17 +362,16 @@ pub struct Outcome {
     pub events: Vec<Event>,
 }
 
-/// Text syntax for scripting: `move:E wait open:E close:W ascend descend lantern rest:1h
-/// rest:dawn rest:dusk pickup pickup:ac drop:b equip:body:b remove:body bash:E fire:12,5
-/// throw:c:12,5 dig:E vision:ID skip:1h weather:rain afflict:bleeding infect:filth_fever
-/// effect:fireball@12,5 effect:lightning_bolt@3,4>12,4` (durations: `30s`, `10m`, `2h`; letters
-/// name stacks, `a`
-/// first; `pickup` and `drop` without letters take everything; `equip:SLOT:LETTER` puts
-/// inventory stack LETTER on in slot SLOT, `remove:SLOT` takes off what is there; `bash:DIR`
-/// bashes with the held shield; `dig:DIR` digs toward a wall; `fire:X,Y` shoots at the level
-/// cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack LETTER there; weather: `clear`,
-/// `overcast`, `rain`, `heavy`; `effect:ID@X,Y[>X,Y]` shows a spell effect at a cell, or from
-/// one cell toward another).
+/// Text syntax for scripting: `move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn
+/// rest:dusk pickup pickup:ac drop:b equip:body:b remove:body bash:E fire:12,5 throw:c:12,5 dig:E
+/// vision:ID skip:1h weather:rain effect:fireball@12,5 effect:lightning_bolt@3,4>12,4
+/// afflict:bleeding infect:filth_fever` (durations: `30s`, `10m`, `2h`; letters name stacks, `a`
+/// first; `pickup` and `drop` without letters take everything; `equip:SLOT:LETTER` puts inventory
+/// stack LETTER on in slot SLOT, `remove:SLOT` takes off what is there; `bash:DIR` bashes with the
+/// held shield; `dig:DIR` digs toward a wall; `fire:X,Y` shoots at the level cell (X, Y),
+/// `throw:LETTER:X,Y` throws one of inventory stack LETTER there; weather: `clear`, `overcast`,
+/// `rain`, `heavy`; `effect:ID@X,Y[>X,Y]` shows a spell effect at a cell, or from one cell toward
+/// another).
 ///
 /// `Display` and `FromStr` round-trip; action names are case-insensitive when parsing (vision
 /// profile, slot, and effect ids keep their case).
@@ -408,8 +407,6 @@ impl fmt::Display for Action {
             Action::SetVision(id) => write!(f, "vision:{id}"),
             Action::SkipTime(d) => write!(f, "skip:{d}"),
             Action::SetWeather(w) => write!(f, "weather:{}", w.id()),
-            Action::Afflict(id) => write!(f, "afflict:{id}"),
-            Action::Infect(id) => write!(f, "infect:{id}"),
             Action::Effect { effect, at, to } => {
                 write!(f, "effect:{effect}@{},{}", at.x, at.y)?;
                 match to {
@@ -417,6 +414,8 @@ impl fmt::Display for Action {
                     None => Ok(()),
                 }
             }
+            Action::Afflict(id) => write!(f, "afflict:{id}"),
+            Action::Infect(id) => write!(f, "infect:{id}"),
         }
     }
 }
@@ -527,18 +526,6 @@ impl FromStr for Action {
                 Some(id) if !id.is_empty() => Ok(Action::SetVision(id.to_string())),
                 _ => Err("`vision` needs a profile id, e.g. `vision:darkvision`".into()),
             },
-            "afflict" => match s.split_once(':').map(|(_, id)| id) {
-                Some(id) if !id.is_empty() && !id.contains(':') => {
-                    Ok(Action::Afflict(id.to_string()))
-                }
-                _ => Err("`afflict` needs a status id, e.g. `afflict:bleeding`".into()),
-            },
-            "infect" => match s.split_once(':').map(|(_, id)| id) {
-                Some(id) if !id.is_empty() && !id.contains(':') => {
-                    Ok(Action::Infect(id.to_string()))
-                }
-                _ => Err("`infect` needs a disease id, e.g. `infect:filth_fever`".into()),
-            },
             "effect" => {
                 // The effect id keeps its case.
                 let usage = || {
@@ -563,12 +550,24 @@ impl FromStr for Action {
                     to: to.map(parse_cell).transpose().map_err(|_| usage())?,
                 })
             }
+            "afflict" => match s.split_once(':').map(|(_, id)| id) {
+                Some(id) if !id.is_empty() && !id.contains(':') => {
+                    Ok(Action::Afflict(id.to_string()))
+                }
+                _ => Err("`afflict` needs a status id, e.g. `afflict:bleeding`".into()),
+            },
+            "infect" => match s.split_once(':').map(|(_, id)| id) {
+                Some(id) if !id.is_empty() && !id.contains(':') => {
+                    Ok(Action::Infect(id.to_string()))
+                }
+                _ => Err("`infect` needs a disease id, e.g. `infect:filth_fever`".into()),
+            },
             _ => Err(format!(
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
                  descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
                  equip:SLOT:LETTER, remove:SLOT, bash:DIR, fire:X,Y, throw:LETTER:X,Y, dig:DIR, \
                  stance:NAME, vision:ID, skip:DURATION, weather:clear|overcast|rain|heavy, \
-                 afflict:STATUS, infect:DISEASE, effect:ID@X,Y[>X,Y])"
+                 effect:ID@X,Y[>X,Y], afflict:STATUS, infect:DISEASE)"
             )),
         }
     }
@@ -663,10 +662,6 @@ mod tests {
                 item: 2,
                 at: Pos::new(7, 3),
             },
-            Action::Afflict("bleeding".into()),
-            Action::Afflict("Odd_Case".into()),
-            Action::Infect("filth_fever".into()),
-            Action::Infect("Odd_Case".into()),
             Action::Effect {
                 effect: "fireball".into(),
                 at: Pos::new(12, 5),
@@ -677,6 +672,10 @@ mod tests {
                 at: Pos::new(-3, 4),
                 to: Some(Pos::new(12, 0)),
             },
+            Action::Afflict("bleeding".into()),
+            Action::Afflict("Odd_Case".into()),
+            Action::Infect("filth_fever".into()),
+            Action::Infect("Odd_Case".into()),
         ];
         all.extend(Weather::ALL.map(Action::SetWeather));
         for d in Dir::ALL {

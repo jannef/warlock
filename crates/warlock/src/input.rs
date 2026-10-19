@@ -53,10 +53,12 @@ pub enum KeyCommand {
     Rest,
     /// Move a cursor over the map to read what is there (no time passes).
     Look,
-    /// Aim the readied missile weapon (a cursor on the map), then shoot.
+    /// Shoot or throw what is in the missile weapon slot (a cursor on the map): a launcher
+    /// shoots its ammunition, anything else is thrown.
+    Missile,
+    /// Aim the readied missile weapon, then shoot (no default key; `Missile` does this too).
     Fire,
-    /// Choose something to throw (what is readied in the missiles slot, else from the pack),
-    /// aim it, then throw.
+    /// Choose something to throw from the pack, aim it, then throw.
     Throw,
     /// Bash with the shield held, in a direction (asked for in the message line). An ability
     /// (`warlock_core::ability`): unbound by default, for the abilities menu to come (#156).
@@ -133,8 +135,9 @@ impl KeyCommand {
             KeyCommand::WeaponSkills => "Weapon skills",
             KeyCommand::Rest => "Rest",
             KeyCommand::Look => "Look around",
+            KeyCommand::Missile => "Throw or shoot the missile weapon",
             KeyCommand::Fire => "Fire missile weapon",
-            KeyCommand::Throw => "Throw",
+            KeyCommand::Throw => "Throw from the pack",
             KeyCommand::MoreAggressive => "More aggressive stance",
             KeyCommand::MoreDefensive => "More defensive stance",
             KeyCommand::Bash => "Bash with your shield",
@@ -249,15 +252,14 @@ impl Default for Bindings {
             (ch("W"), WeaponSkills),
             (ch("R"), Rest),
             (ch("x"), Look),
-            (ch("f"), Fire),
-            (ch("t"), Throw),
+            (ch("t"), Missile),
+            (ch("T"), Throw),
             (ch("+"), MoreAggressive),
             (ch("-"), MoreDefensive),
             (Code(KeyCode::Tab), NextTarget),
             (ch("U"), UseTool),
             (ch("?"), Help),
             (Code(KeyCode::Escape), Cancel),
-            (ch("Q"), Quit),
         ]);
         for n in 1..=9u8 {
             table.0.push((ch(&n.to_string()), Page(n)));
@@ -370,8 +372,7 @@ pub fn route_keys(
             continue;
         }
         let action = if screens.stack.is_empty() {
-            play.press(key, &bindings)
-                .map_or(ScreenAction::Stay, ScreenAction::Open)
+            play.press(key, &bindings).unwrap_or(ScreenAction::Stay)
         } else {
             // Screens edit copies, so the resources only change (and are saved) when a press
             // changed them.
@@ -406,6 +407,7 @@ pub fn route_keys(
             ScreenAction::Open(name) => screens.open(name),
             ScreenAction::Replace(name) => screens.replace(name),
             ScreenAction::Return(name) => screens.stack.return_to(name),
+            ScreenAction::Confirm(question, choice) => screens.confirm(question, choice),
             ScreenAction::Choose(choice) => {
                 choices.write(choice);
                 chosen = true;
@@ -434,7 +436,7 @@ impl Gameplay<'_> {
 
     /// Applies one key press in play. Returns the screen it opens: `?` help, or the pause menu
     /// on Esc when no prompt is open.
-    fn press(&mut self, key: &KeyboardInput, bindings: &Bindings) -> Option<ScreenName> {
+    fn press(&mut self, key: &KeyboardInput, bindings: &Bindings) -> Option<ScreenAction> {
         let game = self.game.as_ref()?;
         // The rest prompt answers by letter, whatever those letters are bound to.
         if *self.mode == InputMode::Rest
@@ -459,7 +461,7 @@ impl Gameplay<'_> {
         if key.repeat && !moves {
             return None;
         }
-        let mut open = None;
+        let mut open: Option<ScreenAction> = None;
         let next = match (*self.mode, command) {
             (InputMode::Aim(aim), KeyCommand::Move(dir)) => {
                 InputMode::Aim(aim.step(dir, &game.world.perception()))
@@ -467,12 +469,13 @@ impl Gameplay<'_> {
             (InputMode::Aim(aim), KeyCommand::NextTarget) => {
                 InputMode::Aim(aim.cycle(&game.world.perception(), !self.shift()))
             }
-            (InputMode::Aim(aim), KeyCommand::Fire | KeyCommand::Throw) => {
+            (InputMode::Aim(aim), KeyCommand::Missile | KeyCommand::Fire | KeyCommand::Throw) => {
+                // The key that started the aim confirms it, and so does `t`, which starts both.
                 let confirm = match aim.kind {
                     AimKind::Fire => KeyCommand::Fire,
                     AimKind::Throw(_) => KeyCommand::Throw,
                 };
-                if command == confirm {
+                if command == confirm || command == KeyCommand::Missile {
                     self.loose(aim);
                     return None;
                 }
@@ -485,23 +488,28 @@ impl Gameplay<'_> {
                 if view.ready_to_fire().is_some() {
                     InputMode::Aim(Aim::start(AimKind::Fire, &view, &self.last))
                 } else {
-                    // Nothing to shoot: the rules say why ("You have no missile weapon ready.").
+                    // Nothing to shoot: the rules say why.
+                    let here = view.viewer();
+                    self.actions.write(PlayerAction(Action::Fire(here)));
+                    InputMode::Normal
+                }
+            }
+            (InputMode::Normal, KeyCommand::Missile) => {
+                let view = game.world.perception();
+                if view.ready_to_fire().is_some() {
+                    InputMode::Aim(Aim::start(AimKind::Fire, &view, &self.last))
+                } else if let Some(item) = view.ready_to_throw() {
+                    InputMode::Aim(Aim::start(AimKind::Throw(item), &view, &self.last))
+                } else {
+                    // Nothing ready (or no ammunition): the rules say so, and take no time.
                     let here = view.viewer();
                     self.actions.write(PlayerAction(Action::Fire(here)));
                     InputMode::Normal
                 }
             }
             (InputMode::Normal, KeyCommand::Throw) => {
-                let view = game.world.perception();
-                match view.ready_to_throw() {
-                    Some(item) => {
-                        InputMode::Aim(Aim::start(AimKind::Throw(item), &view, &self.last))
-                    }
-                    None => {
-                        open = Some(ScreenName::Throw);
-                        InputMode::Normal
-                    }
-                }
+                open = Some(ScreenAction::Open(ScreenName::Throw));
+                InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::NextTarget) => InputMode::Normal,
             (InputMode::Look(_), KeyCommand::Look | KeyCommand::Cancel) => InputMode::Normal,
@@ -562,7 +570,7 @@ impl Gameplay<'_> {
                     Some(letters) => {
                         self.actions.write(PlayerAction(Action::PickUp(letters)));
                     }
-                    None => open = Some(ScreenName::PickUp),
+                    None => open = Some(ScreenAction::Open(ScreenName::PickUp)),
                 }
                 InputMode::Normal
             }
@@ -571,24 +579,24 @@ impl Gameplay<'_> {
                     self.actions
                         .write(PlayerAction(Action::Drop(Letters::default())));
                 } else {
-                    open = Some(ScreenName::Drop);
+                    open = Some(ScreenAction::Open(ScreenName::Drop));
                 }
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Inventory) => {
-                open = Some(ScreenName::Inventory);
+                open = Some(ScreenAction::Open(ScreenName::Inventory));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Equipment) => {
-                open = Some(ScreenName::Equipment);
+                open = Some(ScreenAction::Open(ScreenName::Equipment));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Character) => {
-                open = Some(ScreenName::Character);
+                open = Some(ScreenAction::Open(ScreenName::Character));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Skills) => {
-                open = Some(ScreenName::Skills);
+                open = Some(ScreenAction::Open(ScreenName::Skills));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::MoreAggressive | KeyCommand::MoreDefensive) => {
@@ -602,7 +610,7 @@ impl Gameplay<'_> {
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::WeaponSkills) => {
-                open = Some(ScreenName::WeaponSkills);
+                open = Some(ScreenAction::Open(ScreenName::WeaponSkills));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::CycleVision) => {
@@ -643,15 +651,15 @@ impl Gameplay<'_> {
                 }
             }
             (InputMode::Normal, KeyCommand::Help) => {
-                open = Some(ScreenName::Help);
+                open = Some(ScreenAction::Open(ScreenName::Help));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Cancel) => {
-                open = Some(ScreenName::Pause);
+                open = Some(ScreenAction::Open(ScreenName::Pause));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Quit) => {
-                self.saves.write(SaveCommand::SaveAndQuit);
+                open = Some(ScreenAction::Confirm("Save and quit?", MenuChoice::Quit));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Snapshot) => {
@@ -753,7 +761,7 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Move(Dir::N)), ["k", "Num8", "↑"]);
         assert_eq!(keys(&b, KeyCommand::Move(Dir::NE)), ["u", "Num9"]);
         assert_eq!(keys(&b, KeyCommand::Descend), [">"]);
-        assert_eq!(keys(&b, KeyCommand::Quit), ["Q"]);
+        assert!(keys(&b, KeyCommand::Quit).is_empty(), "unbound by default");
         assert_eq!(keys(&b, KeyCommand::Lantern), ["L"]);
         assert_eq!(keys(&b, KeyCommand::Help), ["?"]);
         assert_eq!(keys(&b, KeyCommand::Cancel), ["Esc"]);
@@ -763,10 +771,14 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Inventory), ["i"]);
         assert_eq!(keys(&b, KeyCommand::Equipment), ["e"]);
         assert_eq!(keys(&b, KeyCommand::Character), ["@"]);
+        assert_eq!(keys(&b, KeyCommand::Missile), ["t"]);
+        assert!(
+            keys(&b, KeyCommand::Fire).is_empty(),
+            "f has no default key"
+        );
+        assert_eq!(keys(&b, KeyCommand::Throw), ["T"]);
         assert_eq!(keys(&b, KeyCommand::WeaponSkills), ["W"]);
         assert!(keys(&b, KeyCommand::Bash).is_empty(), "an ability: unbound");
-        assert_eq!(keys(&b, KeyCommand::Fire), ["f"]);
-        assert_eq!(keys(&b, KeyCommand::Throw), ["t"]);
         assert_eq!(keys(&b, KeyCommand::MoreAggressive), ["+"]);
         assert_eq!(keys(&b, KeyCommand::MoreDefensive), ["-"]);
         assert_eq!(keys(&b, KeyCommand::NextTarget), ["Tab"]);

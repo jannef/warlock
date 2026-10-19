@@ -11,9 +11,13 @@
 //! benefits, an untrained skill, a creature's stats, a to-hit, how severe a status effect is or
 //! how long it lasts, or light the player's eyes cannot perceive.
 //!
-//! **Memory** (spec §5): terrain and piles of objects as last seen. Objects are seen where
+//! **Memory** (spec §5): terrain, piles of objects, and blood as last seen. Objects are seen where
 //! creatures are (cells in line of sight, never completed walls); a pile seen gone is forgotten,
 //! and one that changed out of sight is remembered as it was.
+//!
+//! **Blood** (spec §8 "Blood", [`crate::blood`]): a stain on an open cell is seen where objects
+//! are; one on a wall only when a stained face is seen (a visible open cell next to the wall on
+//! that side), so blood on the far side of a wall stays hidden. Blood is remembered like piles.
 //!
 //! A cell is **visible** iff it is in line of sight within [`VIEW_RADIUS`] **and** its perceived
 //! light is at least the vision profile's threshold or it lies within the darkvision radius. The
@@ -54,6 +58,7 @@
 //! does not see, near the source); never with who made them.
 
 use crate::ability::Ability;
+use crate::blood::Stain;
 use crate::burden::{self, Load};
 use crate::character::Character;
 use crate::combat::Health;
@@ -263,6 +268,8 @@ pub(crate) struct Perception {
     effects: Vec<(ActorId, StatusId)>,
     /// Sounds heard during the last turn from sources the player does not see.
     sounds: Vec<PerceivedSound>,
+    /// Cells whose blood the player sees, in position order.
+    blood: Vec<Pos>,
 }
 
 impl Perception {
@@ -530,6 +537,23 @@ impl Perception {
             })
             .collect();
 
+        // Blood: on an open cell in sight; on a wall, where a stained face is seen.
+        let blood = (level.blood.iter())
+            .filter(|(p, stain)| {
+                let p = **p;
+                if !is_opaque(p) {
+                    return sight.get(p) == Some(&Sight::Seen);
+                }
+                let faces = |d: Dir| stain.faces == 0 || stain.on_face(d);
+                sight.get(p).is_some_and(|s| *s != Sight::Hidden)
+                    && Dir::ALL.into_iter().filter(|d| faces(*d)).any(|d| {
+                        let q = p.step(d);
+                        sight.get(q) == Some(&Sight::Seen) && !is_opaque(q)
+                    })
+            })
+            .map(|(p, _)| *p)
+            .collect();
+
         // Sounds the player heard whose source they do not see, placed roughly.
         let player = state.player();
         let sounds = match player.hearing(content) {
@@ -553,6 +577,7 @@ impl Perception {
             gear,
             effects,
             sounds,
+            blood,
         }
     }
 
@@ -576,11 +601,26 @@ impl Perception {
         self.sight.get(p) == Some(&Sight::Seen)
     }
 
-    /// Writes currently visible terrain, and the piles on cells in sight, into the level's
-    /// memory.
+    /// Whether the player sees the blood at `p` (module docs).
+    pub(crate) fn sees_blood_at(&self, p: Pos) -> bool {
+        self.blood.binary_search(&p).is_ok()
+    }
+
+    /// Writes currently visible terrain, the piles on cells in sight, and the blood seen into
+    /// the level's memory. Blood on a wall seen only from its clean side is remembered as it was.
     pub(crate) fn remember(&self, level: &mut LevelState) {
+        for &p in &self.blood {
+            if let Some(stain) = level.blood.get(&p)
+                && level.blood_memory.get(&p) != Some(stain)
+            {
+                level.blood_memory.insert(p, *stain);
+            }
+        }
         for &p in &self.visible_cells {
             level.memory.set(p, Some(level.terrain[p]));
+            if !level.blood.contains_key(&p) {
+                level.blood_memory.remove(&p);
+            }
             if !self.sees_actors_at(p) {
                 continue;
             }
@@ -741,6 +781,20 @@ impl<'a> PerceptionView<'a> {
         pile.map_or(&[], Vec::as_slice)
     }
 
+    /// The blood at `p` as the player knows it (spec §8 "Blood"): what is there now where they
+    /// see it (an open cell in sight, a wall's stained face), as last seen on a cell out of
+    /// sight; `None` where they know of none (a visible wall seen only from its clean side
+    /// shows none).
+    pub fn blood(&self, p: Pos) -> Option<&'a Stain> {
+        if self.snapshot.sees_blood_at(p) {
+            self.level.blood.get(&p)
+        } else if self.snapshot.is_visible(p) {
+            None
+        } else {
+            self.level.blood_memory.get(&p)
+        }
+    }
+
     /// Whether the pile at `p` is in sight now (rather than remembered or unknown).
     pub fn sees_objects_at(&self, p: Pos) -> bool {
         self.snapshot.sees_actors_at(p)
@@ -783,7 +837,8 @@ impl<'a> PerceptionView<'a> {
         Some((launcher, item, self.content.object(launcher).range?))
     }
 
-    /// Where in their inventory the throwing weapon the player has ready is (a quiver of rocks).
+    /// Where in their inventory what the player has ready to throw is (a stack of rocks, or a
+    /// sword in the missile weapon slot).
     pub fn ready_to_throw(&self) -> Option<usize> {
         self.player.ready_to_throw(self.content)
     }
@@ -798,10 +853,18 @@ impl<'a> PerceptionView<'a> {
         self.is_visible(p) && self.level.dug.contains_key(&p)
     }
 
-    /// How far the player throws inventory stack `item`, if it is a throwing weapon.
+    /// How far the player throws inventory stack `item`, if it can be thrown (a throwing
+    /// weapon, or another weapon, badly).
     pub fn throw_range(&self, item: usize) -> Option<i32> {
-        let def = self.content.object(self.player.inventory.get(item)?.object);
-        def.range.filter(|_| def.is_thrown())
+        self.content
+            .object(self.player.inventory.get(item)?.object)
+            .throw_range()
+    }
+
+    /// Whether inventory stack `item` is a throwing weapon, made for throwing (what the throw
+    /// choice lists).
+    pub fn is_throwing_weapon(&self, item: usize) -> bool {
+        (self.player.inventory.get(item)).is_some_and(|s| self.content.object(s.object).is_thrown())
     }
 
     /// What seen creature `actor` wears and wields, each thing once, in slot order: all the

@@ -25,9 +25,11 @@
 
 use super::character_screen::CharacterScreen;
 use super::chargen_screen::{ChoiceScreen, Draft, Picks, Step, SummaryScreen};
+use super::confirm_screen::ConfirmScreen;
 use super::controls_screen::ControlsScreen;
 use super::death_screen::DeathScreen;
 use super::equipment_screen::{EquipmentScreen, ItemScreen};
+use super::files_screen::FilesScreen;
 use super::info_tabs;
 use super::menu::{MainMenu, Press};
 use super::motion::Motion;
@@ -66,6 +68,8 @@ pub enum ScreenName {
     /// The character before the run starts: start, or go back to a step.
     Summary,
     Settings,
+    /// Where the settings, saves, and logs are, over Settings.
+    Files,
     Controls,
     /// The pause menu over a run (Esc in play).
     Pause,
@@ -95,6 +99,9 @@ pub enum ScreenName {
     /// dies, so it is no `--screen`.
     #[value(skip)]
     Death,
+    /// The confirmation dialog (dev: asks "Quit Warlock?"). Screens ask with
+    /// [`ScreenAction::Confirm`].
+    Confirm,
 }
 
 impl ScreenName {
@@ -150,6 +157,9 @@ pub enum ScreenAction {
     /// Close screens until this one is on top (as it was left).
     Return(ScreenName),
     Choose(MenuChoice),
+    /// Ask first: open the confirmation dialog with this question; on Yes it closes and applies
+    /// the choice.
+    Confirm(&'static str, MenuChoice),
     /// Close this screen and apply a gameplay action (what to pick up, drop, wear, or wield).
     Act(Action),
     /// Close this screen and aim inventory stack `usize` to throw it (what to throw).
@@ -167,6 +177,7 @@ enum Screen {
     /// Boxed: it holds the whole character.
     Summary(Box<SummaryScreen>),
     Settings(SettingsScreen),
+    Files(FilesScreen),
     /// The controls screen, or the read-only `?` help.
     Controls(ControlsScreen),
     /// The inventory, or choosing what to pick up or drop.
@@ -178,6 +189,8 @@ enum Screen {
     Skills(SkillsScreen),
     WeaponSkills(WeaponSkillsScreen),
     Death(DeathScreen),
+    /// The confirmation dialog.
+    Confirm(ConfirmScreen),
 }
 
 impl Screen {
@@ -203,6 +216,7 @@ impl Screen {
             ScreenName::Class => choice(Step::Class),
             ScreenName::Summary => Screen::Summary(Box::new(SummaryScreen::new(content, draft))),
             ScreenName::Settings => Screen::Settings(SettingsScreen::default()),
+            ScreenName::Files => Screen::Files(FilesScreen::new(crate::paths::locations())),
             ScreenName::Controls => Screen::Controls(ControlsScreen::default()),
             ScreenName::Help => Screen::Controls(ControlsScreen::help()),
             ScreenName::Inventory => objects(ObjectList::Inventory),
@@ -217,6 +231,9 @@ impl Screen {
             ScreenName::Drop => objects(ObjectList::Drop),
             ScreenName::Throw => objects(ObjectList::Throw),
             ScreenName::Death => Screen::Death(DeathScreen::new(run)),
+            ScreenName::Confirm => {
+                Screen::Confirm(ConfirmScreen::new("Quit Warlock?", MenuChoice::Quit))
+            }
         }
     }
 
@@ -228,6 +245,7 @@ impl Screen {
             Screen::Choice(screen) => screen.step().screen(),
             Screen::Summary(_) => ScreenName::Summary,
             Screen::Settings(_) => ScreenName::Settings,
+            Screen::Files(_) => ScreenName::Files,
             Screen::Controls(screen) if screen.is_help() => ScreenName::Help,
             Screen::Controls(_) => ScreenName::Controls,
             Screen::Objects(screen) => match screen.list() {
@@ -242,6 +260,7 @@ impl Screen {
             Screen::Skills(_) => ScreenName::Skills,
             Screen::WeaponSkills(_) => ScreenName::WeaponSkills,
             Screen::Death(_) => ScreenName::Death,
+            Screen::Confirm(_) => ScreenName::Confirm,
         }
     }
 }
@@ -370,7 +389,8 @@ impl ScreenStack {
                 action
             }
             Some(Screen::Summary(screen)) => screen.handle(press),
-            Some(Screen::Settings(screen)) => leave(screen.handle(press, settings)),
+            Some(Screen::Settings(screen)) => screen.handle(press, settings),
+            Some(Screen::Files(screen)) => screen.handle(press),
             Some(Screen::Controls(screen)) => leave(screen.handle(press, bindings)),
             Some(Screen::Objects(screen)) => screen.handle(press, bindings),
             Some(Screen::Equipment(screen)) => screen.handle(press, bindings),
@@ -379,6 +399,7 @@ impl ScreenStack {
             Some(Screen::Skills(screen)) => screen.handle(press, bindings),
             Some(Screen::WeaponSkills(screen)) => screen.handle(press, bindings),
             Some(Screen::Death(screen)) => screen.handle(press),
+            Some(Screen::Confirm(screen)) => screen.handle(press),
         };
         if action == ScreenAction::Stay {
             return action;
@@ -387,6 +408,12 @@ impl ScreenStack {
             return ScreenAction::Stay;
         }
         self.notice = None;
+        // The dialog is done once it has answered Yes (a failed choice then shows on the menu).
+        if matches!(action, ScreenAction::Choose(_))
+            && matches!(self.screens.last(), Some(Screen::Confirm(_)))
+        {
+            self.screens.pop();
+        }
         action
     }
 
@@ -412,6 +439,7 @@ impl ScreenStack {
             Some(Screen::Choice(screen)) => screen.draw(console),
             Some(Screen::Summary(screen)) => screen.draw(console),
             Some(Screen::Settings(screen)) => screen.draw(console, settings),
+            Some(Screen::Files(screen)) => screen.draw(console),
             Some(Screen::Controls(screen)) => screen.draw(console, bindings),
             Some(Screen::Objects(screen)) => screen.draw(console, bindings),
             Some(Screen::Equipment(screen)) => screen.draw(console, bindings),
@@ -420,6 +448,7 @@ impl ScreenStack {
             Some(Screen::Skills(screen)) => screen.draw(console, bindings),
             Some(Screen::WeaponSkills(screen)) => screen.draw(console, bindings),
             Some(Screen::Death(screen)) => screen.draw(console, settings.clock),
+            Some(Screen::Confirm(screen)) => screen.draw(console),
         }
     }
 
@@ -441,6 +470,13 @@ pub struct Screens<'w> {
 }
 
 impl Screens<'_> {
+    /// Opens the confirmation dialog asking `question`, which on Yes applies `choice`.
+    pub fn confirm(&mut self, question: &'static str, choice: MenuChoice) {
+        self.stack
+            .screens
+            .push(Screen::Confirm(ConfirmScreen::new(question, choice)));
+    }
+
     /// Opens screen `name` on top of the stack. The one way screens open.
     pub fn open(&mut self, name: ScreenName) {
         let view = self.game.as_ref().map(|game| game.world.perception());
@@ -489,9 +525,11 @@ fn startup_screens(screen: Option<ScreenName>, in_run: bool) -> Vec<ScreenName> 
                 .chain([s])
                 .collect()
         }
-        (false, Some(s @ (NewRun | Settings | Controls))) => vec![Main, s],
+        (false, Some(s @ (NewRun | Settings | Controls | Confirm))) => vec![Main, s],
+        (false, Some(Files)) => vec![Main, Settings, Files],
         (false, _) => vec![Main],
-        (true, Some(s @ (Settings | Controls))) => vec![Pause, s],
+        (true, Some(s @ (Settings | Controls | Confirm))) => vec![Pause, s],
+        (true, Some(Files)) => vec![Pause, Settings, Files],
         (true, Some(EquipItem)) => vec![Equipment, EquipItem],
         (true, Some(s)) if s.needs_run() => vec![s],
         (true, _) => Vec::new(),
@@ -986,8 +1024,8 @@ mod tests {
             InputMode::Aim(aim) => Some(aim),
             _ => None,
         };
-        let (fire, tab) = ((KeyCode::KeyF, "f"), (KeyCode::Tab, ""));
-        // `f` aims at the nearest hostile creature in view.
+        let (fire, tab) = ((KeyCode::KeyT, "t"), (KeyCode::Tab, ""));
+        // `t` aims at the nearest hostile creature in view.
         frame(&mut app, &[fire]);
         let first = aim(&app).expect("aiming");
         assert_eq!(first.kind, AimKind::Fire);
@@ -1012,13 +1050,13 @@ mod tests {
         frame(&mut app, &[fire, tab, ENTER]);
         assert_eq!(aim(&app), None);
         assert_eq!(actions(&app)[before..], [Action::Fire(second.at)]);
-        // The next `f` starts on that creature again: `f`, Enter shoots it once more.
+        // The next `t` starts on that creature again: `t`, Enter shoots it once more.
         frame(&mut app, &[fire]);
         assert_eq!(aim(&app).map(|a| a.at), Some(second.at));
-        frame(&mut app, &[(KeyCode::KeyF, "f")]);
+        frame(&mut app, &[ENTER]);
         assert_eq!(actions(&app).last(), Some(&Action::Fire(second.at)));
-        // `t` with nothing to throw ready opens the choice of what to throw.
-        frame(&mut app, &[(KeyCode::KeyT, "t")]);
+        // `T` opens the choice of what to throw.
+        frame(&mut app, &[(KeyCode::KeyT, "T")]);
         assert_eq!(names(&app), [ScreenName::Throw]);
         frame(&mut app, &[ESC]);
         assert!(names(&app).is_empty());
@@ -1385,12 +1423,83 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    #[test]
-    fn quit_from_pause_saves_the_run() {
-        let mut app = app(true);
-        frame(&mut app, &[ESC, (KeyCode::ArrowUp, ""), ENTER]);
+    const UP: (KeyCode, &str) = (KeyCode::ArrowUp, "");
+    const YES: (KeyCode, &str) = (KeyCode::KeyY, "y");
+    const NO: (KeyCode, &str) = (KeyCode::KeyN, "n");
+
+    fn saves_sent(app: &App) -> Vec<SaveCommand> {
         let saves = app.world().resource::<Messages<SaveCommand>>();
-        let sent: Vec<_> = saves.iter_current_update_messages().copied().collect();
-        assert_eq!(sent, [SaveCommand::SaveAndQuit]);
+        saves.iter_current_update_messages().copied().collect()
+    }
+
+    #[test]
+    fn quit_from_pause_asks_first_and_saves_on_yes() {
+        let mut app = app(true);
+        // Quit is the last row: Esc, Up (wraps to Quit), Enter opens the dialog, nothing is saved.
+        frame(&mut app, &[ESC, UP, ENTER]);
+        assert_eq!(names(&app), [ScreenName::Pause, ScreenName::Confirm]);
+        frame(&mut app, &[]);
+        assert!(saves_sent(&app).is_empty());
+        // Enter takes the default, No; Esc and n cancel too. The pause menu is as it was.
+        for answer in [ENTER, ESC, NO] {
+            frame(&mut app, &[answer]);
+            assert_eq!(names(&app), [ScreenName::Pause]);
+            assert!(saves_sent(&app).is_empty());
+            frame(&mut app, &[ENTER]);
+            assert_eq!(names(&app), [ScreenName::Pause, ScreenName::Confirm]);
+        }
+        frame(&mut app, &[YES]);
+        assert_eq!(saves_sent(&app), [SaveCommand::SaveAndQuit]);
+        assert_eq!(names(&app), [ScreenName::Pause]);
+    }
+
+    #[test]
+    fn held_keys_never_confirm() {
+        let mut app = app(true);
+        frame(&mut app, &[ESC, UP, ENTER]);
+        assert_eq!(names(&app), [ScreenName::Pause, ScreenName::Confirm]);
+        let mut held = key(YES.0, YES.1);
+        held.repeat = true;
+        app.world_mut().write_message(held);
+        app.update();
+        assert_eq!(names(&app), [ScreenName::Pause, ScreenName::Confirm]);
+        assert!(saves_sent(&app).is_empty());
+    }
+
+    #[test]
+    fn q_does_nothing_unless_bound_and_then_asks() {
+        const Q: (KeyCode, &str) = (KeyCode::KeyQ, "Q");
+        let mut app = app(true);
+        frame(&mut app, &[Q]);
+        assert!(names(&app).is_empty());
+        assert!(saves_sent(&app).is_empty());
+        app.world_mut().resource_mut::<Bindings>().0.push((
+            crate::input::KeyBinding::Char("Q".into()),
+            crate::input::KeyCommand::Quit,
+        ));
+        frame(&mut app, &[Q]);
+        assert_eq!(names(&app), [ScreenName::Confirm]);
+        frame(&mut app, &[NO]);
+        assert!(names(&app).is_empty());
+        assert!(saves_sent(&app).is_empty());
+        frame(&mut app, &[Q]);
+        frame(&mut app, &[YES]);
+        assert!(names(&app).is_empty());
+        assert_eq!(saves_sent(&app), [SaveCommand::SaveAndQuit]);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn main_menu_quit_asks_first() {
+        let mut app = app(false);
+        // Quit is the last row of the main menu.
+        frame(&mut app, &[UP, ENTER]);
+        assert_eq!(names(&app), [ScreenName::Main, ScreenName::Confirm]);
+        frame(&mut app, &[ESC]);
+        assert_eq!(names(&app), [ScreenName::Main]);
+        frame(&mut app, &[ENTER]);
+        frame(&mut app, &[YES]);
+        let exits = app.world().resource::<Messages<AppExit>>();
+        assert_eq!(exits.iter_current_update_messages().count(), 1);
     }
 }

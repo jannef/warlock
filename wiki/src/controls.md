@@ -27,15 +27,15 @@ authoritative: it is generated from your current key bindings.
 | Next / previous info page (wraps) | `Tab` or `PageDown` / `Shift`+`Tab` or `PageUp` |
 | Rest | `R` |
 | Look around | `x` |
-| Fire your missile weapon | `f`, then aim (see below) |
-| Throw something | `t`, then aim |
+| Shoot or throw what is in your Missile weapon slot | `t`, then aim (see below) |
+| Throw something from your pack | `T`, choose it, then aim |
 | More aggressive combat stance, more defensive (no time passes) | `+`, `-` |
 | Bash with your shield | no key until you bind one, then a direction |
 | Next target while aiming (with Shift: the one before) | `Tab` |
 | Use a tool: dig into a wall with a pick-axe | `U`, then a direction |
 | Show or hide the controls | `?` |
 | Pause menu | `Esc` |
-| Save and quit | `Q` |
+| Save and quit (unbound by default; use the pause menu) | none |
 
 The movement keys are the vi keys (`hjklyubn`), the numpad, and the arrows. Symbol keys such as
 `<`, `>`, and `?` are matched by the character they produce, so they work on other keyboard
@@ -81,9 +81,11 @@ Looking takes no time. Press `x` or `Esc` to leave.
 
 ## Aiming
 
-`f` fires the missile weapon you have ready (a bow, a crossbow, a sling: ready it and its
-ammunition with `e`), `t` throws something (a throwing weapon you have ready in the missiles slot,
-or one you choose from a list of what you can throw). Both put a cursor on the map:
+`t` shoots or throws whatever is in your Missile weapon slot: a bow, a crossbow, or a sling
+shoots its ammunition from the Missiles slot (ready both with `e`); a throwing weapon (a dagger,
+a spear, rocks) or any other weapon is thrown. `T` instead lists what you carry that can be
+thrown, to choose one. (`f`, firing the missile weapon, has no key by default; bind it in the
+controls screen.) Either puts a cursor on the map:
 
 - it starts on your last target, if you still see it (or on the same spot), else on the nearest
   hostile creature you see, else on you;
@@ -94,8 +96,8 @@ or one you choose from a list of what you can throw). Both put a cursor on the m
   marked on the cursor and in the message line: "Out of range." or "The way is blocked." (a
   wall, or a creature in the way, which the missile would reach first);
 - the message line describes the target as look mode does. It never shows a chance to hit;
-- `Enter` (or `f` again, or `t` again when throwing) shoots, `Esc` cancels. Shooting again later
-  starts on the same target, so `f` `Enter` shoots it again.
+- `Enter` (or `t` again) shoots or throws, `Esc` cancels. Doing it again later starts on the same
+  target, so `t` `Enter` shoots it again.
 
 See [Ranged combat](ranged.md).
 
@@ -108,8 +110,8 @@ everything, the arrows and Space work too, `Enter` confirms, and `Esc` cancels. 
 pack, what it weighs, and how much more you can carry before your [burden](burden.md) grows; it
 takes no time. See [Objects and your pack](objects.md).
 
-`t` with nothing throwable ready opens a list of what you carry that can be thrown, by its pack
-letter: choose one and aim it.
+`T` opens a list of what you carry that can be thrown, by its pack letter: choose one and aim
+it.
 
 `e` shows what you wear and wield, slot by slot. A slot's letter (on this screen every letter
 names a slot) opens a list of what you carry that fits there: its letter puts it on, swapping

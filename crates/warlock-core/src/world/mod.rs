@@ -48,10 +48,6 @@
 //! way, and come down to be picked up again; burning missiles are fires that light the level
 //! until they burn out.
 //!
-//! Status effects and healing (spec §8 "Status effects", "Healing", `status.rs`): big hits and
-//! criticals make their targets bleed, a giant rat's bite may poison; effects cost hit points
-//! and ease as the clock moves, slow healing, and can kill. Hit points come back with game
-//! time, twice as fast while the player rests.
 //! Special rooms (spec §7 "Special rooms", [`crate::content::RoomEffectDef`]): a level's special
 //! rooms change the rules inside them, through one question, [`World::room_effect_at`]: the
 //! light (and so what the player and creatures see), the noise made there, regeneration, and
@@ -64,9 +60,16 @@
 //! held shield.
 //! Digging (`dig.rs`): walls that break give way to a digging tool, turn after turn like a rest,
 //! and to explosions stronger than they are hard; they become rubble.
+//! Blood (`bleed.rs`, [`crate::blood`]): big hits and kills stain the floor and the walls around
+//! the victim. Presentation state kept with the level; no rule reads it.
+//! Status effects and healing (spec §8 "Status effects", "Healing", `status.rs`): big hits and
+//! criticals make their targets bleed, a giant rat's bite may poison; effects cost hit points
+//! and ease as the clock moves, slow healing, and can kill. Hit points come back with game
+//! time, twice as fast while the player rests.
 
 mod actor;
 mod ai;
+mod bleed;
 mod dig;
 mod disease;
 mod equip;
@@ -211,6 +214,15 @@ impl WorldState {
             .filter(|_| actor.kind == ActorKind::Player)
             .and_then(|c| c.spec.race(content).ok());
         burden::load(actor, race, content)
+    }
+
+    /// The size of `actor`, an index into [`Content::sizes`]: the player's race's when the run
+    /// has a character, else its creature type's.
+    pub(crate) fn size_of(&self, content: &Content, actor: &Actor) -> usize {
+        let race = (self.character.as_ref())
+            .filter(|_| actor.kind == ActorKind::Player)
+            .and_then(|c| c.spec.race(content).ok());
+        race.map_or(content.creature(actor.creature).size, |r| r.size)
     }
 
     fn current_mut(&mut self) -> &mut LevelState {
@@ -1212,6 +1224,9 @@ impl World {
                 self.say(format!("Time skips ahead {} (dev).", duration.spoken()));
                 return Spent::Skip(*duration);
             }
+            Action::Effect { effect, at, to } => {
+                return self.show_effect(effect, *at, *to, events);
+            }
             Action::Afflict(id) => {
                 let Some(status) = self.content.status_id(id) else {
                     self.say(format!("There is no status `{id}`."));
@@ -1238,9 +1253,6 @@ impl World {
                 }
                 self.say(format!("You catch {name} (dev)."));
                 return Spent::NoTime;
-            }
-            Action::Effect { effect, at, to } => {
-                return self.show_effect(effect, *at, *to, events);
             }
         };
         self.took(done, kind)
@@ -1816,6 +1828,8 @@ fn instantiate_level(state: &mut WorldState, content: &Content, template: &Level
 
 #[cfg(test)]
 mod ai_tests;
+#[cfg(test)]
+mod blood_tests;
 #[cfg(test)]
 mod branch_tests;
 #[cfg(test)]
