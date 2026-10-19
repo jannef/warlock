@@ -1,10 +1,10 @@
-//! `cargo xtask wiki [--check | --build]`: the player wiki's generated tables.
+//! `cargo xtask wiki [--build]`: the player wiki's generated tables.
 //!
 //! The wiki (`wiki/`, built with mdBook) is written by hand except for facts that live in data
 //! or in a few constants of the rules. Those are written to `wiki/src/generated/*.md` from the
 //! built-in content, and the pages pull them in with `{{#include generated/NAME.md}}`, so they
-//! cannot drift. Output is deterministic. `--check` fails when a file is stale; `--build` also
-//! runs `mdbook build wiki`.
+//! cannot drift. Output is deterministic. The generated files are not committed (CI and the
+//! release workflow run this before `mdbook build wiki`); `--build` also runs `mdbook build wiki`.
 //!
 //! Layout: one module per wiki topic (`calendar`, `terrain`, `combat`, ...), each a set of
 //! `pub(super) fn table(content: &Content) -> String`; `text` holds the helpers two or more of
@@ -46,16 +46,14 @@ use warlock_core::content::Content;
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Mode {
     Write,
-    Check,
     Build,
 }
 
 pub fn parse_mode(args: &[String]) -> Result<Mode, String> {
     match args {
         [] => Ok(Mode::Write),
-        [a] if a == "--check" => Ok(Mode::Check),
         [a] if a == "--build" => Ok(Mode::Build),
-        _ => Err("usage: cargo xtask wiki [--check | --build]".into()),
+        _ => Err("usage: cargo xtask wiki [--build]".into()),
     }
 }
 
@@ -67,38 +65,16 @@ pub fn run(mode: Mode) -> Result<(), String> {
     let content = Content::builtin().map_err(|e| format!("cannot load content: {e}"))?;
     let files = generate(&content);
     let dir = generated_dir();
-    match mode {
-        Mode::Check => {
-            let stale: Vec<&str> = files
-                .iter()
-                .filter(|(name, text)| {
-                    std::fs::read_to_string(dir.join(name)).ok().as_deref() != Some(text.as_str())
-                })
-                .map(|(name, _)| name.as_str())
-                .collect();
-            if stale.is_empty() {
-                println!("wiki: generated tables are up to date");
-                Ok(())
-            } else {
-                Err(format!(
-                    "wiki/src/generated is stale ({}); run `cargo xtask wiki` and commit",
-                    stale.join(", ")
-                ))
-            }
-        }
-        Mode::Write | Mode::Build => {
-            std::fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
-            for (name, text) in &files {
-                let path = dir.join(name);
-                std::fs::write(&path, text).map_err(|e| format!("{}: {e}", path.display()))?;
-            }
-            println!("wiki: wrote {} files to {}", files.len(), dir.display());
-            if mode == Mode::Build {
-                build_book()?;
-            }
-            Ok(())
-        }
+    std::fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+    for (name, text) in &files {
+        let path = dir.join(name);
+        std::fs::write(&path, text).map_err(|e| format!("{}: {e}", path.display()))?;
     }
+    println!("wiki: wrote {} files to {}", files.len(), dir.display());
+    if mode == Mode::Build {
+        build_book()?;
+    }
+    Ok(())
 }
 
 fn build_book() -> Result<(), String> {
