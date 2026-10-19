@@ -176,7 +176,10 @@ mod tests {
             let parts = tabs(ScreenName::Inventory, &b, w);
             (parts.iter().map(|(t, _)| t.as_str()).collect::<Vec<_>>()).join(" · ")
         };
-        assert_eq!(line(60), "1 Character · 2 Inventory · 3 Equipment · 4 Skills");
+        assert_eq!(
+            line(60),
+            "1 Character · 2 Inventory · 3 Equipment · 4 Skills"
+        );
         assert_eq!(line(24), "1 · 2 Inventory · 3 · 4");
         assert_eq!(line(13), "1 · 2 · 3 · 4");
         assert_eq!(line(12), "");

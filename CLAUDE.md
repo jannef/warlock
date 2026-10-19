@@ -188,7 +188,7 @@ to open, read keys for, or draw one:
 - **Draw**: `ui::draw` is the one system that writes the UI console: when anything it shows
   changed, it clears the console, draws the gameplay UI if a run exists, then the top screen.
 - **Info pages** (`ui/info_tabs.rs`): the screens about the player (Character, Inventory,
-  Equipment) are an ordered group, `PAGES`. While one is the top screen, the page keys replace
+  Equipment, Skills) are an ordered group, `PAGES`. While one is the top screen, the page keys replace
   it (`ScreenAction::Replace` -> `Screens::replace`: the stack depth is unchanged, so Esc still
   returns to where the first was opened) and each draws its tab line on the bottom border with
   `info_tabs::draw_tabs`. **A new info screen joins the group**: one entry in `PAGES` (its
