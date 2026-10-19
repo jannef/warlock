@@ -9,7 +9,7 @@ actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:SE*3 chat:SE 
 screen = "dialogue"
 
 # Quests (#148): the old hermit's offer on the dialogue screen (Accept and Decline first), then the
-# quest log (info page 5) once it is taken up.
+# quest log (info page 6) once it is taken up.
 [[golden]]
 name = "quest-offer"
 scenario = "showcase"
