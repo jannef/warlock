@@ -75,14 +75,21 @@ use serde::Serialize;
 /// Maximum sight distance, however bright the light.
 pub const VIEW_RADIUS: i32 = 40;
 
-/// One of the player's own trained skills, as they know it (spec §8 "Skills"): its value and a
-/// coarse sense of how near its next point is. Never its marks or what it gives.
+/// One of the player's own trained skills, as they know it (spec §8 "Skills"): its value, a
+/// coarse sense of how near its next point is, and for the abilities menu (#156) whether it has
+/// an active use and whether that is available now. Never its marks or what it gives.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 pub struct OwnSkill {
     pub skill: SkillId,
     pub value: u16,
     /// Toward the next point, in quarters: 0 (just gained one) to 3 (nearly there).
     pub progress: u8,
+    /// Whether it has an active use: it is used as an action (`kind = "action"` in data), which
+    /// the abilities menu lists.
+    pub active: bool,
+    /// Whether its active use can be used now. No active use exists yet (they come with their
+    /// actions), so this is always false for now.
+    pub available: bool,
 }
 
 /// What the player knows about one cell.
@@ -759,8 +766,16 @@ impl<'a> PerceptionView<'a> {
                 skill,
                 value: trained.value,
                 progress: skills::progress(trained, increase),
+                active: self.content.skill(skill).is_active(),
+                available: false,
             })
             .collect()
+    }
+
+    /// The player's own trained skills that have an active use, in skill order, each with
+    /// whether that use is available now: what the abilities menu (#156) lists of skills.
+    pub fn active_skills(&self) -> Vec<OwnSkill> {
+        self.own_skills().into_iter().filter(|s| s.active).collect()
     }
 
     /// The player's hit points: what they have left (at most their maximum, never below 0) and

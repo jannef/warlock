@@ -1695,7 +1695,12 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
       actions.
   - **What the player sees**: their own trained skills' values and a coarse progress (quarters)
     toward the next point (`PerceptionView::own_skills`), on the Skills screen (§6) and the
-    character creation summary; the `skills` dump layer. Never a benefit's number, a mark, a
+    character creation summary; the `skills` dump layer.
+  - **Active uses**: skills get no keys of their own. Racial, class, skill, and style abilities
+    will be chosen from one abilities menu (#156), unlike ADOM; for it, perception says which of
+    the player's trained skills have an active use (`kind = "action"`) and whether it is
+    available now (`OwnSkill::active`, `available`; `PerceptionView::active_skills`). None is
+    available yet: the uses come with their actions. Never a benefit's number, a mark, a
     chance, an untrained skill, or a creature's skills; ground-truth dev dumps (`actors`, the
     world state) show every actor's skills with their marks. Skills and marks are part of the
     world state (saved, hashed).

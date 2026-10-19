@@ -45,6 +45,14 @@ pub struct SkillDef {
     pub benefits: Vec<Benefit>,
 }
 
+impl SkillDef {
+    /// Whether it has an active use: it is used as an action (`kind = "action"`), so the
+    /// abilities menu (#156) lists it. Passive skills and those rules read have none.
+    pub fn is_active(&self) -> bool {
+        self.kind == SkillKind::Action
+    }
+}
+
 /// Every skill, and the increase curve.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct SkillBook {

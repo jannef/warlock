@@ -135,6 +135,15 @@ fn the_player_perceives_only_their_own_trained_skills() {
         .collect();
     // Trained at 0 is shown (it is not untrained); in skill order.
     assert_eq!(own, [("stealth".into(), 0), ("tumble".into(), 42)]);
+    // For the abilities menu: passive skills have no active use; action skills have one, not
+    // available yet (no active use exists).
+    assert!(w.perception().active_skills().is_empty());
+    set(&mut w, "open_lock", Some(18));
+    let active = w.perception().active_skills();
+    assert_eq!(active.len(), 1);
+    assert_eq!(active[0].skill, skill(&w, "open_lock"));
+    assert!(active[0].active && !active[0].available);
+    assert!(w.perception().own_skills().iter().all(|s| !s.available));
     // A creature's skills are never perceived: the arena's shaman has some, the player none of
     // its.
     let arena = World::new(content(false), "arena", None).expect("world");

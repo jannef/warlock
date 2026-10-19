@@ -526,7 +526,9 @@ other roll, so they never move a score. Each effect is read in one place: Dodge 
 where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`, `player_moves`). A new
 effect or use is a variant there plus its one hook. The player sees values only
 (`PerceptionView::own_skills`, the Skills screen `ui/skills_screen.rs`, `S`); never marks or
-benefit numbers. Pending hooks: athletics (kicking doors, #130; climbing out of pits, #128) and
+benefit numbers. Skills get no keys of their own: active uses will be chosen from the one
+abilities menu (#156), which reads `PerceptionView::active_skills` (`OwnSkill::active`: the
+skill's kind is `action`; `available`: usable now, false until the uses exist). Pending hooks: athletics (kicking doors, #130; climbing out of pits, #128) and
 escape artist (pits, #128).
 
 Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebuffer pixels:
