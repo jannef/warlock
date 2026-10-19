@@ -26,7 +26,16 @@
 //! presentation only: the `missile` glyph it flies as (pointing right, turned along its flight),
 //! whether it `spins`, how much it `glow`s where it lies, and its `particles` (`ambient` while
 //! it lies in view on top of its pile, `flight` while it flies).
+//!
+//! Base items (spec §8 "Magic items"): an object that may be found magic says what `kind` of
+//! item it is ([`ItemKind`]: a weapon, a missile weapon, ammunition, body armour, a helmet, a
+//! cloak, gloves, boots, a shield, a ring, or an amulet), the item `level` from which loot holds
+//! it (default 1), and how often (`frequency`, default 100; 0: never). Weapons name their weapon
+//! skill `category` ([`WEAPON_CATEGORIES`]) and may cost more or less than a normal attack
+//! (`attack_cost`, instead of the `melee` or `shoot` action's).
 
+use super::action::check_cost;
+use super::affix::{ItemKind, MAX_ITEM_LEVEL};
 use super::light::LightId;
 use super::material::MaterialId;
 use super::particles::ParticleEmitter;
@@ -55,6 +64,31 @@ pub struct ObjectId(pub u16);
 
 /// Most of one object a level file may place with `"id*N"`.
 pub const MAX_PLACED: u32 = 9999;
+
+/// The weapon skill categories weapons name (`category`): their ids and what one of each is
+/// called. The list of #134's weapon skills, which will come from `data/weapon_skills.toml`.
+pub const WEAPON_CATEGORIES: [(&str, &str); 13] = [
+    ("daggers", "dagger"),
+    ("short_blades", "short blade"),
+    ("long_blades", "long blade"),
+    ("great_blades", "great blade"),
+    ("axes", "axe"),
+    ("maces", "mace or club"),
+    ("spears", "spear"),
+    ("polearms", "polearm"),
+    ("staves", "staff"),
+    ("bows", "bow"),
+    ("crossbows", "crossbow"),
+    ("slings", "sling"),
+    ("thrown", "thrown weapon"),
+];
+
+/// What one weapon of weapon skill category `id` is called: "long blade".
+pub fn category_name(id: &str) -> Option<&'static str> {
+    (WEAPON_CATEGORIES.iter())
+        .find(|(c, _)| *c == id)
+        .map(|(_, name)| *name)
+}
 
 /// An object type as written in content files.
 #[derive(Clone, Debug, Deserialize)]
@@ -130,6 +164,18 @@ pub(super) struct ObjectSpec {
     /// `flight` (while it flies).
     #[serde(default)]
     pub particles: Vec<ParticleEmitter>,
+    /// The kind of item it is for magic: what affixes it may roll. None: never magic, never
+    /// loot.
+    pub kind: Option<ItemKind>,
+    /// A weapon's weapon skill category (an id of [`WEAPON_CATEGORIES`]).
+    pub category: Option<String>,
+    /// What an attack with it costs, instead of the `melee` action's (a missile weapon: the
+    /// `shoot` action's).
+    pub attack_cost: Option<u32>,
+    /// The lowest item level loot holds it at (default 1).
+    pub level: Option<u8>,
+    /// How often loot holds it among what may be there (default 100; 0: never).
+    pub frequency: Option<u32>,
 }
 
 /// A resolved object type.
@@ -184,6 +230,17 @@ pub struct ObjectDef {
     pub glow: f32,
     /// Presentation: its particle emitters.
     pub particles: Vec<ParticleEmitter>,
+    /// The kind of item it is for magic; `None`: never magic, never loot.
+    pub kind: Option<ItemKind>,
+    /// A weapon's weapon skill category ([`WEAPON_CATEGORIES`]).
+    pub category: Option<String>,
+    /// What an attack with it costs instead of the action's (`melee`, or `shoot` for a missile
+    /// weapon).
+    pub attack_cost: Option<u32>,
+    /// The lowest item level loot holds it at.
+    pub level: u8,
+    /// How often loot holds it, relative to the rest (0 for what has no `kind`).
+    pub frequency: u32,
 }
 
 /// How a burning object burns where it lies: the light it gives, and for how long.
@@ -286,6 +343,7 @@ impl ObjectSpec {
         if !(0.0..=1.0).contains(&self.glow) {
             return Err(err("`glow` must be between 0 and 1".into()));
         }
+        self.check_base(attack.is_some()).map_err(err)?;
         let plural = self.plural.unwrap_or_else(|| format!("{}s", self.name));
         let def = ObjectDef {
             id: self.id,
@@ -314,8 +372,66 @@ impl ObjectSpec {
             spins: self.spins,
             glow: self.glow,
             particles: self.particles,
+            kind: self.kind,
+            category: self.category,
+            attack_cost: self.attack_cost,
+            level: self.level.unwrap_or(1),
+            frequency: match self.kind {
+                Some(_) => self.frequency.unwrap_or(100),
+                None => 0,
+            },
         };
         Ok((def, self.lit))
+    }
+
+    /// The fields of a base item: its `kind` fits what it is (a weapon has an attack and goes in
+    /// a hand, ...), weapons name a weapon skill `category`, and `level` and `frequency` are for
+    /// things with a kind.
+    fn check_base(&self, weapon: bool) -> Result<(), String> {
+        if let Some(kind) = self.kind {
+            let fits = match kind {
+                ItemKind::Weapon => {
+                    weapon && self.slot.is_some() && self.launches.is_none() && self.ammo.is_none()
+                }
+                ItemKind::Launcher => self.launches.is_some(),
+                ItemKind::Ammo => self.ammo.is_some() && self.slot.is_some(),
+                ItemKind::Shield => self.shield > 0,
+                _ => self.slot.is_some() && !weapon,
+            };
+            if !fits {
+                return Err(format!(
+                    "`kind = \"{}\"` does not fit it: a weapon has `damage` and a `slot`, a \
+                     missile weapon `launches`, ammunition `ammo`, a shield `shield`, and the \
+                     rest are worn (`slot`)",
+                    kind.id()
+                ));
+            }
+        } else if self.level.is_some() || self.frequency.is_some() {
+            return Err("`level` and `frequency` are for base items, which have a `kind`".into());
+        }
+        if self.level.is_some_and(|l| l == 0 || l > MAX_ITEM_LEVEL) {
+            return Err(format!("`level` must be 1 to {MAX_ITEM_LEVEL}"));
+        }
+        match (&self.category, weapon) {
+            (Some(c), true) if category_name(c).is_none() => {
+                let known: Vec<&str> = WEAPON_CATEGORIES.iter().map(|(id, _)| *id).collect();
+                return Err(format!(
+                    "unknown weapon `category` `{c}` (expected one of {})",
+                    known.join(", ")
+                ));
+            }
+            (Some(_), false) => return Err("`category` is for weapons (`damage`)".into()),
+            _ => {}
+        }
+        if let Some(cost) = self.attack_cost {
+            if !weapon || self.slot.is_none() {
+                return Err(
+                    "`attack_cost` is for weapons worn or wielded (`damage`, `slot`)".into(),
+                );
+            }
+            check_cost(cost).map_err(|m| format!("`attack_cost`: {m}"))?;
+        }
+        Ok(())
     }
 
     /// The fields of ranged combat: a missile weapon needs a range and may reload; a throwing
@@ -460,10 +576,10 @@ pub(super) fn parse_stacks(specs: &[String], content: &Content) -> Result<Vec<St
         if content.object(object).stackable {
             match stacks.iter_mut().find(|s| s.object == object) {
                 Some(stack) => stack.count += count,
-                None => stacks.push(Stack { object, count }),
+                None => stacks.push(Stack::new(object, count)),
             }
         } else {
-            stacks.extend((0..count).map(|_| Stack { object, count: 1 }));
+            stacks.extend((0..count).map(|_| Stack::one(object)));
         }
     }
     Ok(stacks)
@@ -502,6 +618,11 @@ mod tests {
             spins: false,
             glow: 0.0,
             particles: Vec::new(),
+            kind: None,
+            category: None,
+            attack_cost: None,
+            level: 1,
+            frequency: 0,
         };
         assert_eq!(def("dagger", "daggers").describe(1), "a dagger");
         assert_eq!(def("iron key", "iron keys").describe(1), "an iron key");

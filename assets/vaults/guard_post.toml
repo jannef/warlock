@@ -4,13 +4,16 @@ map = '''
 ###########
 #....#....#
 #.k..+..*.#
-#....#....#
+#....#m...#
 ###+#######
 '''
 
 [legend]
 "k" = { terrain = "floor", creature = "kobold", route = "E2 W2" }
 "*" = { terrain = "floor", light = "lamp" }
+# A reward (spec §8 "Magic items"): something magic or rare left in the store room, rolled when
+# the level is generated.
+"m" = { terrain = "floor", loot = "magic" }
 
 # Objects (M11): the store room holds spare arms and food.
 [[pile]]

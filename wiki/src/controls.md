@@ -195,3 +195,4 @@ them, marked "(dev)":
 | `F5` / `F9` | Save / load a snapshot of the run |
 | `F6` | Skip an hour: the clock jumps ahead, and nobody acts meanwhile |
 | `F7` | Set the next [weather](weather.md) for three hours, after which the usual weather returns |
+| `F8` | Identify everything you carry: [magic items](magic-items.md) show what they are |

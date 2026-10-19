@@ -21,6 +21,7 @@ pub mod fov;
 pub mod geom;
 pub mod grid;
 pub mod light;
+pub mod magic;
 pub mod mapgen;
 pub mod messages;
 pub mod noise;

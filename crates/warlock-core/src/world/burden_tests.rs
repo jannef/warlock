@@ -335,10 +335,7 @@ fn carry(w: &mut World, id: ActorId, kg: u32) {
     actor.inventory = if kg == 0 {
         Vec::new()
     } else {
-        vec![Stack {
-            object: ingot,
-            count: kg,
-        }]
+        vec![Stack::new(ingot, kg)]
     };
     actor.equipment = Default::default();
 }

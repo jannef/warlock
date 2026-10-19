@@ -64,6 +64,9 @@ pub enum KeyCommand {
     SkipHour,
     /// Dev: set the next weather (clear, overcast, rain, heavy rain) for three hours.
     NextWeather,
+    /// Dev: identify everything the player carries (magic items' affixes; the scroll of identify
+    /// does it in play).
+    IdentifyAll,
     /// Dev: show ground truth where the player does not see.
     RevealMap,
     /// Dev: show perceived light values on visible cells.
@@ -125,6 +128,7 @@ impl KeyCommand {
             KeyCommand::CycleVision => "Next vision profile (dev)",
             KeyCommand::SkipHour => "Skip an hour (dev)",
             KeyCommand::NextWeather => "Next weather (dev)",
+            KeyCommand::IdentifyAll => "Identify what you carry (dev)",
             KeyCommand::RevealMap => "Reveal map (dev)",
             KeyCommand::LightValues => "Light values (dev)",
             KeyCommand::Help => "Show / hide controls",
@@ -261,6 +265,7 @@ impl Bindings {
             (KeyBinding::Code(KeyCode::F5), KeyCommand::Snapshot),
             (KeyBinding::Code(KeyCode::F6), KeyCommand::SkipHour),
             (KeyBinding::Code(KeyCode::F7), KeyCommand::NextWeather),
+            (KeyBinding::Code(KeyCode::F8), KeyCommand::IdentifyAll),
             (KeyBinding::Code(KeyCode::F9), KeyCommand::LoadSnapshot),
         ];
         for entry in dev {
@@ -585,6 +590,11 @@ impl Gameplay<'_> {
                     .write(PlayerAction(Action::SetWeather(next_weather(now))));
                 InputMode::Normal
             }
+            (InputMode::Normal, KeyCommand::IdentifyAll) => {
+                self.actions
+                    .write(PlayerAction(Action::Identify(Letters::default())));
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::RevealMap) => {
                 self.overlays.reveal = !self.overlays.reveal;
                 InputMode::Normal
@@ -734,6 +744,7 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::LightValues), ["F4"]);
         assert_eq!(keys(&b, KeyCommand::SkipHour), ["F6"]);
         assert_eq!(keys(&b, KeyCommand::NextWeather), ["F7"]);
+        assert_eq!(keys(&b, KeyCommand::IdentifyAll), ["F8"]);
     }
 
     #[test]

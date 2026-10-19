@@ -2,7 +2,8 @@
 //!
 //! **Noise**: actions make noise. A step makes the walker's `footsteps` (creature data) scaled by
 //! the `step_noise` percent of the terrain stepped onto (water splashes, grass is soft) and by its
-//! burden (×1.25 Burdened, ×1.5 Strained; spec §8 "Burden": a heavy load is noisy); opening or
+//! burden (×1.25 Burdened, ×1.5 Strained; spec §8 "Burden": a heavy load is noisy), less what a
+//! stealth affix takes off (spec §8 "Magic items"); opening or
 //! closing a door makes the door's `toggle_noise` (terrain data); an attack (spec §8 "Combat")
 //! makes fighting, a bowstring, fighting more quietly (a throw), or chanting where the attacker
 //! stands ([`MELEE_NOISE`], [`SHOT_NOISE`], [`THROW_NOISE`], [`SPELL_NOISE`]). A special room
@@ -39,6 +40,7 @@
 use crate::action::AttackKind;
 use crate::burden::Burden;
 use crate::content::Content;
+use crate::content::Effect as ItemEffect;
 use crate::geom::{Dir, Pos};
 use crate::skills::Effect;
 use crate::world::{Actor, ActorId, LevelState, WorldState, fnv1a};
@@ -206,7 +208,8 @@ pub struct Recent {
 /// How loud `act` by `actor` is on `level`, `burden` being the burden it suffers
 /// ([`crate::burden::Load::penalty`]), in the special room where it is made, if any
 /// ([`plain_noise`]): the one place an action's noise is decided. The actor's skills (stealth,
-/// [`Effect::Quiet`]) take their percent off its steps and doors (not its attacks), rounded down.
+/// [`Effect::Quiet`]) take their percent off its steps and doors (not its attacks), rounded down,
+/// and the stealth affixes of what it wears off its steps (spec §8 "Magic items"), rounded down.
 /// `None` if it is silent.
 pub fn noise(
     content: &Content,
@@ -219,8 +222,15 @@ pub fn noise(
     if matches!(act, Act::Attack(_)) {
         return Some(plain);
     }
-    let quiet = actor.skills.effect(content, Effect::Quiet).clamp(0, 100) as u16;
-    let loudness = (u32::from(plain.loudness) * u32::from(100 - quiet) / 100) as u16;
+    let quiet = actor.skill_effect(content, Effect::Quiet).clamp(0, 100) as u16;
+    let loudness = u32::from(plain.loudness) * u32::from(100 - quiet) / 100;
+    let loudness = match act {
+        Act::Step(_) => {
+            let quieter = actor.mods(content).get(ItemEffect::Stealth);
+            crate::magic::mods::less(u64::from(loudness), quieter) as u32
+        }
+        _ => loudness,
+    } as u16;
     (loudness > 0).then_some(Noise { loudness, ..plain })
 }
 

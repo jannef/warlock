@@ -22,6 +22,7 @@ mod character_screen;
 mod chargen_screen;
 mod controls_screen;
 mod death_screen;
+mod describe_screen;
 mod dev;
 mod effects;
 mod equipment_screen;
@@ -75,6 +76,20 @@ const TEXT: Rgb = Rgb::new(0xd8, 0xd4, 0xc8);
 const TEXT_DIM: Rgb = Rgb::new(0x8e, 0x8a, 0x82);
 const ACCENT: Rgb = Rgb::new(0xe0, 0xb0, 0x50);
 const PANEL_BG: Rgb = Rgb::new(0x12, 0x12, 0x18);
+/// The names of magic items (spec §8 "Magic items"): a soft blue, as in Path of Exile...
+const MAGIC: Rgb = Rgb::new(0x96, 0xaa, 0xe6);
+/// ...and of rare ones, a pale yellow (paler than the accent, so a selection still stands out).
+const RARE: Rgb = Rgb::new(0xe6, 0xd8, 0x8c);
+
+/// The color of an item's name by its rarity, which the player always sees: `normal` for a
+/// normal one. The object's glyph keeps its own color.
+fn rarity_color(rarity: warlock_core::content::Rarity, normal: Rgb) -> Rgb {
+    match rarity {
+        warlock_core::content::Rarity::Normal => normal,
+        warlock_core::content::Rarity::Magic => MAGIC,
+        warlock_core::content::Rarity::Rare => RARE,
+    }
+}
 
 pub struct UiPlugin;
 

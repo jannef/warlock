@@ -124,7 +124,7 @@ pub struct SeenActor {
 }
 
 /// Something a creature the player sees wears or wields: what is seen of what it carries.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SeenGear {
     pub actor: ActorId,
     /// The first slot it is in (a two-handed weapon is in both hands).
@@ -497,7 +497,7 @@ impl Perception {
                 creature: a.creature,
                 faction: a.faction(content),
                 pos: a.pos,
-                health: a.health(),
+                health: a.health(content),
             })
             .collect();
         // What creatures wear and wield is in plain sight; the rest of what they carry is not.
@@ -505,7 +505,7 @@ impl Perception {
             .filter(|a| a.kind == ActorKind::Creature)
             .flat_map(|a| {
                 (a.equipment.items().into_iter()).filter_map(|(slot, item)| {
-                    let stack = *a.inventory.get(item)?;
+                    let stack = a.inventory.get(item)?.clone();
                     Some(SeenGear {
                         actor: a.id,
                         slot,
@@ -764,7 +764,7 @@ impl<'a> PerceptionView<'a> {
     pub fn ready_to_fire(&self) -> Option<(ObjectId, usize, i32)> {
         let (launcher, _) = self.player.launcher(self.content)?;
         let item = self.player.ammunition_item(self.content)?;
-        Some((launcher, item, self.content.object(launcher).range?))
+        Some((launcher, item, self.player.launcher_range(self.content)?))
     }
 
     /// Where in their inventory the throwing weapon the player has ready is (a quiver of rocks).
@@ -774,8 +774,7 @@ impl<'a> PerceptionView<'a> {
 
     /// How far the player throws inventory stack `item`, if it is a throwing weapon.
     pub fn throw_range(&self, item: usize) -> Option<i32> {
-        let def = self.content.object(self.player.inventory.get(item)?.object);
-        def.range.filter(|_| def.is_thrown())
+        self.player.throw_range(item, self.content)
     }
 
     /// What seen creature `actor` wears and wields, each thing once, in slot order: all the
@@ -787,7 +786,7 @@ impl<'a> PerceptionView<'a> {
     /// The player's own scores, by stat (spec §8 "Stats"). That is all the player knows of
     /// stats: never their potentials or modifiers, and nothing of a creature's.
     pub fn own_scores(&self) -> PerStat<u8> {
-        self.player.stats.scores()
+        self.player.scores(self.content).scores()
     }
 
     /// The player's own trained skills, in skill order (spec §8 "Skills"): each one's value and
@@ -815,7 +814,7 @@ impl<'a> PerceptionView<'a> {
     /// The player's hit points: what they have left (at most their maximum, never below 0) and
     /// their maximum (spec §8 "Combat").
     pub fn own_hp(&self) -> (i32, i32) {
-        let max = self.player.max_hp();
+        let max = self.player.max_hp(self.content);
         (self.player.hp.clamp(0, max), max)
     }
 

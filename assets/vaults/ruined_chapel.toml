@@ -6,7 +6,7 @@ kind = "outdoor"
 map = '''
  ####  ### ###
  #,.."...,...##
-   #...#...#..#
+   #...#...#m.#
 .........".._.#
    #...#...#..#
  #,..."..,...##
@@ -17,6 +17,8 @@ map = '''
 "." = "flagstones"
 "," = "rubble"
 '"' = "tall_grass"
+# A reward (spec §8 "Magic items"): something left by the altar, rolled when the area is made.
+"m" = { terrain = "flagstones", loot = "any" }
 
 # Objects (M11): a scroll left on the steps of the altar.
 [[pile]]

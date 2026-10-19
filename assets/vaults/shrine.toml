@@ -8,13 +8,15 @@ map = '''
 #t.....t#
 #.#...#.#
 +..._...+
-#.#...#.#
+#.#.m.#.#
 #t.....t#
 #########
 '''
 
 [legend]
 "t" = "sconce"
+# A reward (spec §8 "Magic items"): loot below the altar, rolled when the level is generated.
+"m" = { terrain = "floor", loot = "any" }
 
 # Objects (M11): an offering left before the altar.
 [[pile]]

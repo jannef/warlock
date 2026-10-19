@@ -22,6 +22,7 @@
 use super::{Actor, ActorId, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Category, Profile, Strike};
+use crate::content::Effect as ItemEffect;
 use crate::content::{Content, CreatureId, ObjectId};
 use crate::noise::Act;
 use crate::object;
@@ -400,11 +401,13 @@ impl World {
         let Some(actor) = self.state.actors.remove(&id) else {
             return;
         };
-        if !actor.inventory.is_empty()
+        let mut dropped = actor.inventory.clone();
+        dropped.extend(self.loot_of(&actor));
+        if !dropped.is_empty()
             && let Some(level) = self.state.levels.get_mut(&actor.level)
         {
             let mut pile = level.objects_at(actor.pos).to_vec();
-            object::add_to_pile(&mut pile, &actor.inventory, &self.content);
+            object::add_to_pile(&mut pile, &dropped, &self.content);
             level.set_pile(actor.pos, pile);
         }
         self.fallen.push(actor);
@@ -428,18 +431,23 @@ impl World {
     /// [`World::regen_rate`]: three times as often in a sanctuary), the seconds left over
     /// counting toward the next.
     pub(super) fn regenerate(&mut self, ids: impl Iterator<Item = ActorId>, seconds: u64) {
+        let content = &self.content;
         for id in ids {
             let rate = u64::from(self.regen_rate(id).max(1));
             let Some(actor) = self.state.actors.get_mut(&id) else {
                 continue;
             };
-            let max = actor.max_hp();
+            let max = actor.max_hp(content);
             if actor.hp <= 0 || actor.hp >= max {
                 actor.regen = 0;
                 continue;
             }
-            let pace = u64::from(combat::regen_seconds(actor.stats.score(Stat::Toughness)));
-            let every = (pace * 100 / rate).max(1);
+            // Its Toughness as it is now, and magic items make it faster (spec §8 "Magic items").
+            let toughness = actor.scores(content).score(Stat::Toughness);
+            let faster = actor.mods(content).get(ItemEffect::Regeneration);
+            let faster = u64::try_from(faster.max(0)).unwrap_or(0);
+            let pace = u64::from(combat::regen_seconds(toughness));
+            let every = (pace * 100 / rate * 100 / (100 + faster)).max(1);
             let banked = u64::from(actor.regen).saturating_add(seconds);
             let gained = i32::try_from(banked / every).unwrap_or(i32::MAX);
             actor.hp = actor.hp.saturating_add(gained).min(max);

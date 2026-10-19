@@ -47,6 +47,9 @@ pub(super) fn stamp(canvas: &mut Canvas, vault: &Vault, at: Pos) -> Vec<(Pos, Di
     for (p, pile) in &template.objects {
         canvas.objects.insert(offset(*p), pile.clone());
     }
+    for &(p, grade) in &template.loot {
+        canvas.loot.push((offset(p), grade));
+    }
     for spawn in &template.creatures {
         canvas.creatures.push(CreatureSpawn {
             pos: offset(spawn.pos),

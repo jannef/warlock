@@ -5,6 +5,7 @@ use super::kit::Kit;
 use crate::content::{Content, CreatureSpawn, Flow, LightId, TerrainId};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
+use crate::magic::LootGrade;
 use crate::object::Stack;
 use crate::rng::Rng;
 use std::collections::BTreeMap;
@@ -34,6 +35,8 @@ pub(super) struct Land<'a> {
     pub lights: BTreeMap<Pos, LightId>,
     /// Objects stamped from ruins.
     pub objects: BTreeMap<Pos, Vec<Stack>>,
+    /// Where ruins stamped loot to roll, and the least it may be.
+    pub loot: Vec<(Pos, LootGrade)>,
     pub creatures: Vec<CreatureSpawn>,
 }
 
@@ -48,6 +51,7 @@ impl<'a> Land<'a> {
             flow: BTreeMap::new(),
             lights: BTreeMap::new(),
             objects: BTreeMap::new(),
+            loot: Vec::new(),
             creatures: Vec::new(),
         }
     }

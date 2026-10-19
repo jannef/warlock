@@ -73,6 +73,10 @@ pub enum Action {
         at: Pos,
         to: Option<Pos>,
     },
+    /// Dev command: identify the inventory stacks with these letters, or everything carried
+    /// with no letters (spec §8 "Magic items"; the scroll of identify does it in play). Takes no
+    /// game time; recorded in replays.
+    Identify(Letters),
 }
 
 /// How long to rest.
@@ -299,13 +303,13 @@ pub struct Outcome {
 
 /// Text syntax for scripting: `move:E wait open:E close:W ascend descend lantern rest:1h
 /// rest:dawn rest:dusk pickup pickup:ac drop:b equip:body:b remove:body fire:12,5 throw:c:12,5
-/// vision:ID skip:1h weather:rain effect:fireball@12,5 effect:lightning_bolt@3,4>12,4`
-/// (durations: `30s`, `10m`, `2h`; letters name stacks, `a` first; `pickup` and `drop` without
-/// letters take everything; `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT,
-/// `remove:SLOT` takes off what is there; `fire:X,Y` shoots at the level cell (X, Y),
-/// `throw:LETTER:X,Y` throws one of inventory stack LETTER there; weather: `clear`, `overcast`,
-/// `rain`, `heavy`; `effect:ID@X,Y[>X,Y]` shows a spell effect at a cell, or from one cell
-/// toward another).
+/// vision:ID skip:1h weather:rain effect:fireball@12,5 effect:lightning_bolt@3,4>12,4
+/// identify:a` (durations: `30s`, `10m`, `2h`; letters name stacks, `a` first; `pickup`, `drop`,
+/// and `identify` without letters take everything; `equip:SLOT:LETTER` puts inventory stack
+/// LETTER on in slot SLOT, `remove:SLOT` takes off what is there; `fire:X,Y` shoots at the level
+/// cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack LETTER there; weather: `clear`,
+/// `overcast`, `rain`, `heavy`; `effect:ID@X,Y[>X,Y]` shows a spell effect at a cell, or from one
+/// cell toward another).
 ///
 /// `Display` and `FromStr` round-trip; action names are case-insensitive when parsing (vision
 /// profile, slot, and effect ids keep their case).
@@ -345,6 +349,8 @@ impl fmt::Display for Action {
                     None => Ok(()),
                 }
             }
+            Action::Identify(l) if l.is_empty() => f.write_str("identify"),
+            Action::Identify(l) => write!(f, "identify:{l}"),
         }
     }
 }
@@ -374,16 +380,16 @@ impl FromStr for Action {
             "ascend" => bare(Action::Ascend),
             "descend" => bare(Action::Descend),
             "lantern" => bare(Action::ToggleLantern),
-            "pickup" | "drop" => {
+            "pickup" | "drop" | "identify" => {
                 let letters = match arg {
                     None => Letters::default(),
                     Some("") => return Err(format!("`{verb}:` needs letters, e.g. `{verb}:ab`")),
                     Some(text) => text.parse().map_err(|e| format!("`{s}`: {e}"))?,
                 };
-                Ok(if verb == "pickup" {
-                    Action::PickUp(letters)
-                } else {
-                    Action::Drop(letters)
+                Ok(match verb {
+                    "pickup" => Action::PickUp(letters),
+                    "drop" => Action::Drop(letters),
+                    _ => Action::Identify(letters),
                 })
             }
             "rest" => match arg {
@@ -477,7 +483,8 @@ impl FromStr for Action {
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
                  descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
                  equip:SLOT:LETTER, remove:SLOT, fire:X,Y, throw:LETTER:X,Y, vision:ID, \
-                 skip:DURATION, weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y])"
+                 skip:DURATION, weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y], \
+                 identify[:LETTERS])"
             )),
         }
     }
@@ -580,6 +587,8 @@ mod tests {
                 at: Pos::new(-3, 4),
                 to: Some(Pos::new(12, 0)),
             },
+            Action::Identify(Letters::default()),
+            Action::Identify(Letters::of([0, 3])),
         ];
         all.extend(Weather::ALL.map(Action::SetWeather));
         for d in Dir::ALL {

@@ -37,6 +37,9 @@
 # skill id (skills.toml), with fixed values (0 to 999); every other skill is untrained. The player's
 # come from their race and class, not from here. Creatures do not train (yet).
 #
+# Loot (spec §8 "Magic items"): loot, the chance in percent (default 0) that it drops a magic or
+# rare item where it dies, besides what it carried; the item level is the level's.
+#
 # Stats (spec §8 "Stats"; never shown to the player; combat and burden use them): stats, its scores
 # by stat (strength, dexterity, toughness, intelligence, willpower, presence; 1 to 40, default 10,
 # the average), and potential, how far each score could grow (default: the score; never below
@@ -101,6 +104,7 @@ attack = { damage = "1d3", name = "bite", verb = "bites" }
 id = "kobold"
 level = 2
 xp = 15
+loot = 25
 name = "kobold"
 glyph = "k"
 fg = "#7cb85a"
@@ -155,6 +159,7 @@ skills = { listen = 30 }
 id = "kobold_archer"
 level = 3
 xp = 25
+loot = 30
 name = "kobold archer"
 glyph = "k"
 fg = "#c8b45a"
@@ -176,6 +181,7 @@ stats = { strength = 8, dexterity = 15, toughness = 10, intelligence = 10, willp
 id = "kobold_shaman"
 level = 4
 xp = 40
+loot = 50
 name = "kobold shaman"
 glyph = "k"
 fg = "#b080d8"

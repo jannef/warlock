@@ -45,6 +45,10 @@
 # stones, rocks to throw, and flaming arrows beside the short bow's arrows. Ready a bow and arrows
 # with `e`, then fire with `f` (throw with `t`): a flaming arrow shot into the patrol gallery's
 # dark middle lights it where it lands until it burns out.
+#
+# Magic items (#149): two piles in the middle of the storeroom hold magic and rare arms ([[item]]
+# tables at the end): a Sharp long sword of the Bear and a rare helm, Dread Visage, both
+# identified (the helm glows when worn), and an unidentified rare bow and magic ring.
 name = "The Hub"
 ambient = [0, 0, 0, 0]
 map = '''
@@ -158,6 +162,33 @@ objects = ["small_shield", "quarterstaff"]
 [[pile]]
 at = [17, 14]
 objects = ["wool_cloak", "leather_gloves", "leather_boots"]
+
+# Magic items (#149): a rack of magic arms in the storeroom. Identified, a magic sword and a rare
+# helm that glows when worn; not yet identified, a rare bow and a magic ring (their rarity shows,
+# their affixes do not, yet their effects apply). Look at them in the inventory (a letter).
+[[item]]
+at = [19, 14]
+object = "long_sword"
+affixes = ["sharp:2", "of_the_bear:2"]
+identified = true
+
+[[item]]
+at = [19, 14]
+object = "iron_helm"
+name = "Dread Visage"
+affixes = ["hale:2", "accurate:1", "radiant:2", "of_the_owl:1"]
+identified = true
+
+[[item]]
+at = [18, 14]
+object = "short_bow"
+name = "Storm Song"
+affixes = ["hunters:1", "glinting:2", "of_celerity:1"]
+
+[[item]]
+at = [18, 14]
+object = "silver_ring"
+affixes = ["of_the_mule:1"]
 
 # The pantry (the door corridor's east room).
 [[pile]]

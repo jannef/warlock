@@ -65,7 +65,7 @@ impl World {
                 .scenario(&self.state.scenario)
                 .map_or(0, |s| i32::from(s.hp)),
         };
-        let toughness = self.state.player().stats.modifier(Stat::Toughness);
+        let toughness = (self.state.player().scores(content)).modifier(Stat::Toughness);
         (class_hp / 2 + toughness).max(1)
     }
 

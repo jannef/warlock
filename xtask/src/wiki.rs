@@ -18,15 +18,17 @@ use std::process::Command;
 use warlock_core::burden::{self, Burden, Load};
 use warlock_core::character::Gender;
 use warlock_core::combat;
+use warlock_core::content::Effect as ItemEffect;
 use warlock_core::content::{
-    ActionKind, BASE_TURN, Combat, Content, CreatureId, FactionId, LevelKind, LightId,
-    NORMAL_SPEED, ObjectId, Stance, TerrainDef, price,
+    ActionKind, AffixDef, AffixKind, BASE_TURN, Combat, Content, CreatureId, FactionId, ItemKind,
+    LevelKind, LightId, NORMAL_SPEED, ObjectId, Rarity, Stance, TerrainDef, category_name, price,
 };
 use warlock_core::daylight::{
     MOONLIGHT_PER_CELL, SIGHT_DAY, SIGHT_MOONLIT, SIGHT_NIGHT, SIGHT_TWILIGHT, overworld_sight,
 };
 use warlock_core::dice::Dice;
 use warlock_core::light::{Light, Moon, Sky, Sun};
+use warlock_core::magic::describe;
 use warlock_core::object::{INVENTORY_SLOTS, format_weight};
 use warlock_core::perception::VIEW_RADIUS;
 use warlock_core::skills::{Effect, SkillId};
@@ -176,6 +178,17 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("burden-races.md".to_string(), burden_races(content)),
         ("burden-examples.md".to_string(), burden_examples(content)),
         ("special-rooms.md".to_string(), special_rooms(content)),
+        ("magic-rarity.md".to_string(), magic_rarity(content)),
+        ("magic-bases.md".to_string(), magic_bases(content)),
+        (
+            "magic-prefixes.md".to_string(),
+            affix_table(content, AffixKind::Prefix),
+        ),
+        (
+            "magic-suffixes.md".to_string(),
+            affix_table(content, AffixKind::Suffix),
+        ),
+        ("magic-names.md".to_string(), rare_names(content)),
     ];
     for (_, text) in &mut files {
         *text = format!(
@@ -746,6 +759,17 @@ fn light_name(content: &Content, id: LightId) -> String {
     {
         return "Your lantern".into();
     }
+    let affixes: Vec<&str> = (content.affixes().all().iter())
+        .filter(|a| a.tiers.iter().any(|t| t.light == Some(id)))
+        .map(|a| a.name.as_str())
+        .collect();
+    if !affixes.is_empty() {
+        return format!(
+            "{} magic item ({})",
+            capital(glow_word(preset.radius)),
+            affixes.join(", ")
+        );
+    }
     let pedestal = (content.terrain_defs().iter())
         .filter(|t| !t.walkable && t.light.is_none())
         .find_map(|t| Some((t, preset.id.strip_prefix(&format!("{}_", t.id))?)));
@@ -753,6 +777,214 @@ fn light_name(content: &Content, id: LightId) -> String {
         Some((t, kind)) => format!("{} ({})", capital(&t.name), words(kind)),
         None => capital(&words(&preset.id)),
     }
+}
+
+/// How a light of `radius` glows, in words: `faintly glowing`, `glowing`, `brightly glowing`.
+fn glow_word(radius: i32) -> &'static str {
+    match radius {
+        ..=2 => "faintly glowing",
+        3 => "glowing",
+        _ => "brightly glowing",
+    }
+}
+
+/// How often loot is normal, magic, or rare, and how many affixes magic and rare items roll
+/// (spec §8 "Magic items").
+fn magic_rarity(content: &Content) -> String {
+    let affixes = content.affixes();
+    let total: u32 = Rarity::ALL.iter().map(|&r| affixes.rarity_weight(r)).sum();
+    let mut out = String::from("| Loot is | How often |\n|---|---:|\n");
+    for rarity in Rarity::ALL {
+        let _ = writeln!(
+            out,
+            "| {} | {} |",
+            capital(rarity.word()),
+            percent(affixes.rarity_weight(rarity), total.max(1))
+        );
+    }
+    let both = affixes.magic_both;
+    let _ = writeln!(
+        out,
+        "\n| A magic item has | How often |\n|---|---:|\n\
+         | a prefix | {} |\n| a suffix | {} |\n| a prefix and a suffix | {} |",
+        percent(100 - both, 200),
+        percent(100 - both, 200),
+        percent(both, 100)
+    );
+    let counts: u32 = affixes.rare_counts.iter().map(|(_, w)| *w).sum();
+    out.push_str("\n| A rare item has | How often |\n|---|---:|\n");
+    for (count, weight) in &affixes.rare_counts {
+        let _ = writeln!(
+            out,
+            "| {count} affixes | {} |",
+            percent(*weight, counts.max(1))
+        );
+    }
+    out
+}
+
+/// The base items magic items are made of, by kind: what they do, from which item level loot
+/// holds them, and how often.
+fn magic_bases(content: &Content) -> String {
+    let mut out = String::from(
+        "| Base item | Kind | Stats | Weight | From item level | How often |\n\
+         |---|---|---|---:|:---:|:---:|\n",
+    );
+    for kind in ItemKind::ALL {
+        let bases: Vec<_> = (content.object_defs().iter())
+            .filter(|o| o.kind == Some(kind))
+            .collect();
+        let total: u32 = bases.iter().map(|o| o.frequency).sum();
+        for o in bases {
+            let stats = describe::base_stats(o, content)
+                .into_iter()
+                .filter(|s| !s.starts_with("Worn") && !s.starts_with("Held"))
+                .collect::<Vec<_>>();
+            let stats = if stats.is_empty() {
+                "-".to_string()
+            } else {
+                stats.join("; ")
+            };
+            let often = if o.frequency == 0 {
+                "never".to_string()
+            } else {
+                percent(o.frequency, total.max(1))
+            };
+            let _ = writeln!(
+                out,
+                "| {} | {} | {stats} | {} | {} | {often} |",
+                capital(&o.name),
+                kind.plural(),
+                format_weight(u64::from(o.weight)),
+                o.level,
+            );
+        }
+    }
+    out.push_str(
+        "\n\"How often\" is the base's share among the bases of its kind; every kind weighs the \
+         sum of its bases' frequencies when loot picks a base.\n",
+    );
+    out
+}
+
+/// Every affix of `kind`: what it does, what it rolls on, and its tiers (from which item level,
+/// and the values they roll).
+fn affix_table(content: &Content, kind: AffixKind) -> String {
+    let what = kind.name();
+    let mut out = format!(
+        "| {what} | Effect | Rolls on | Tiers (item level: value) | Weight |\n\
+         |---|---|---|---|:---:|\n"
+    );
+    let all: Vec<&AffixDef> = (content.affixes().all().iter())
+        .filter(|a| a.kind == kind)
+        .collect();
+    for a in all {
+        let bases: Vec<&str> = a.bases.iter().map(|k| k.plural()).collect();
+        let tiers: Vec<String> = (a.tiers.iter())
+            .map(|t| format!("{}: {}", t.level, tier_value(a.effect, t, content)))
+            .collect();
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} | {} |",
+            a.name,
+            effect_text(content, a),
+            bases.join(", "),
+            tiers.join(" · "),
+            a.weight
+        );
+    }
+    out
+}
+
+/// What affix `a` does, in words, without its value: its effect's words, or the skill it adds to.
+fn effect_text(content: &Content, a: &AffixDef) -> String {
+    match a.skill {
+        Some(id) => format!("{} (a skill)", content.skill(id).name),
+        None => effect_words(a.effect),
+    }
+}
+
+/// What an effect does, in words, without its value.
+fn effect_words(effect: ItemEffect) -> String {
+    match effect {
+        ItemEffect::ToHit => "to hit".into(),
+        ItemEffect::Damage => "damage, added to every roll".into(),
+        ItemEffect::ExtraDamage => "adds a die of damage".into(),
+        ItemEffect::Threat => "criticals threaten on more rolls".into(),
+        ItemEffect::Crit => "critical damage multiplier".into(),
+        ItemEffect::AttackSpeed => "attacks faster".into(),
+        ItemEffect::Range => "range, in cells".into(),
+        ItemEffect::Draw => "less Strength needed to draw".into(),
+        ItemEffect::Durability => "breaks less often".into(),
+        ItemEffect::Parry => "Parry".into(),
+        ItemEffect::Armour => "Armour".into(),
+        ItemEffect::Shield => "Shield".into(),
+        ItemEffect::MaxDex => "Dexterity may add more to Defence".into(),
+        ItemEffect::Weight => "lighter".into(),
+        ItemEffect::Dodge => "Dodge".into(),
+        ItemEffect::Deflection => "Deflection".into(),
+        ItemEffect::Natural => "natural armour".into(),
+        ItemEffect::MaxHp => "maximum hit points".into(),
+        ItemEffect::Regeneration => "hit points come back faster".into(),
+        ItemEffect::Stat(stat) => stat.name().into(),
+        ItemEffect::MoveSpeed => "you move faster".into(),
+        ItemEffect::Carry => "carrying capacity".into(),
+        ItemEffect::Stealth => "quieter footsteps".into(),
+        ItemEffect::Light => "the wearer glows".into(),
+        ItemEffect::Skill => "a skill".into(),
+    }
+}
+
+/// What a tier rolls, in words: `+1–2`, `1d3–1d4`, `20–35%`; speed in words only.
+fn tier_value(effect: ItemEffect, tier: &warlock_core::content::Tier, content: &Content) -> String {
+    let range = |prefix: &str, suffix: &str| {
+        if tier.min == tier.max {
+            format!("{prefix}{}{suffix}", tier.min)
+        } else {
+            format!("{prefix}{}–{}{suffix}", tier.min, tier.max)
+        }
+    };
+    let faster = |p: i32| match p {
+        ..=7 => "a little faster",
+        8..=12 => "faster",
+        _ => "much faster",
+    };
+    match effect {
+        ItemEffect::ExtraDamage if tier.min == tier.max => format!("1d{}", tier.min),
+        ItemEffect::ExtraDamage => format!("1d{}–1d{}", tier.min, tier.max),
+        ItemEffect::Draw => range("", " less"),
+        ItemEffect::AttackSpeed | ItemEffect::MoveSpeed => {
+            let (lo, hi) = (faster(tier.min), faster(tier.max));
+            if lo == hi {
+                lo.to_string()
+            } else {
+                format!("{lo} to {hi}")
+            }
+        }
+        ItemEffect::Durability
+        | ItemEffect::Weight
+        | ItemEffect::Stealth
+        | ItemEffect::Regeneration => range("", "%"),
+        ItemEffect::Carry => range("+", " kg"),
+        ItemEffect::Light => {
+            let radius = tier.light.map_or(0, |id| content.light(id).radius);
+            format!("{} ({radius} cells)", glow_word(radius))
+        }
+        _ => range("+", ""),
+    }
+}
+
+/// The words rare items are named with: the first words, and the second words by kind.
+fn rare_names(content: &Content) -> String {
+    let affixes = content.affixes();
+    let mut out = format!(
+        "First words: {}.\n\n| Kind | Second words |\n|---|---|\n",
+        affixes.first_names.join(", ")
+    );
+    for (kind, words) in &affixes.second_names {
+        let _ = writeln!(out, "| {} | {} |", capital(kind.plural()), words.join(", "));
+    }
+    out
 }
 
 /// `a` or `an` for a noun.
@@ -799,8 +1031,8 @@ fn table_text(text: &str) -> String {
 /// §8 "Speed"); how a creature stands toward the player and how it attacks are seen in play.
 fn creatures(content: &Content) -> String {
     let mut out = String::from(
-        "| Creature | Glyph | Faction | Toward you | Attacks | Opens doors | Carries a light |\n\
-         |---|:---:|---|---|---|:---:|:---:|\n",
+        "| Creature | Glyph | Faction | Toward you | Attacks | Opens doors | Carries a light | \
+         Drops magic |\n|---|:---:|---|---|---|:---:|:---:|:---:|\n",
     );
     let player = content.creature_id("player");
     for (i, c) in content.creature_defs().iter().enumerate() {
@@ -827,9 +1059,16 @@ fn creatures(content: &Content) -> String {
         if let (true, Some(cost)) = (fights, c.attack_cost) {
             let _ = write!(attacks, " (cost {cost})");
         }
+        // How often it drops a magic or rare item where it dies, in words.
+        let drops = match c.loot {
+            0 => "-",
+            1..=29 => "now and then",
+            30..=49 => "sometimes",
+            _ => "often",
+        };
         let _ = writeln!(
             out,
-            "| {} | {} | {faction} | {stance} | {attacks} | {} | {} |",
+            "| {} | {} | {faction} | {stance} | {attacks} | {} | {} | {drops} |",
             capital(&c.name),
             glyph(c.glyph),
             yes(c.opens_doors),
@@ -1256,11 +1495,21 @@ fn percent(part: u32, of: u32) -> String {
 /// wields them.
 fn weapons(content: &Content) -> String {
     let mut out = String::from(
-        "| Weapon | Damage | Critical on | Critical damage | Parry | Needs Strength | Held | \
-         Thrown |\n|---|:---:|:---:|:---:|:---:|:---:|---|:---:|\n",
+        "| Weapon | Skill | Damage | Critical on | Critical damage | Parry | Needs Strength | \
+         Held | Thrown | A blow takes |\n|---|---|:---:|:---:|:---:|:---:|:---:|---|:---:|---:|\n",
     );
+    let melee = content.action_costs().cost(ActionKind::Melee);
     for (i, o) in content.object_defs().iter().enumerate() {
         let Some(attack) = &o.attack else { continue };
+        let skill = (o.category.as_deref())
+            .and_then(category_name)
+            .map_or("-".to_string(), capital);
+        let in_hand = (content.slots().iter()).any(|s| s.hand && o.slot.as_ref() == Some(&s.fits));
+        let blow = if in_hand {
+            at_normal_pace(price(o.attack_cost.unwrap_or(melee), BASE_TURN))
+        } else {
+            "-".to_string()
+        };
         let parry = if o.parry > 0 {
             format!("+{}", o.parry)
         } else {
@@ -1278,7 +1527,7 @@ fn weapons(content: &Content) -> String {
         };
         let _ = writeln!(
             out,
-            "| {} | {} | {} | ×{} | {parry} | {strength} | {held} | {thrown} |",
+            "| {} | {skill} | {} | {} | ×{} | {parry} | {strength} | {held} | {thrown} | {blow} |",
             capital(&o.name),
             attack.damage,
             threat_range(attack.threat),
@@ -1828,16 +2077,18 @@ mod tests {
         );
         let equipment = text("equipment.md");
         assert!(
-            equipment.contains("| `a` | Head | Iron helm | 6 seconds |"),
+            equipment.contains("| `a` | Head | Leather cap, iron helm, great helm | 6 seconds |"),
             "{equipment}"
         );
-        assert!(
-            equipment.contains("| `c` | Body | Leather jerkin, chain mail shirt | 18 seconds |")
-        );
-        assert!(equipment.contains(", quarterstaff (both hands) |"));
+        assert!(equipment.contains(
+            "| `c` | Body | Padded coat, leather jerkin, studded leather jerkin, chain mail shirt, \
+             suit of scale mail, suit of banded mail, suit of plate armour | 18 seconds |"
+        ));
+        assert!(equipment.contains(", quarterstaff (both hands), ironwood staff (both hands) |"));
         assert!(equipment.contains(
             "| `k` | Missile weapon | Short bow (shoots arrows), long war bow (shoots arrows), \
-             crossbow (shoots crossbow bolts), sling (shoots sling stones) |"
+             composite bow (shoots arrows), crossbow (shoots crossbow bolts), heavy crossbow \
+             (shoots crossbow bolts), sling (shoots sling stones) |"
         ));
         assert!(equipment.contains(
             "| `l` | Missiles | Arrow, flaming arrow, crossbow bolt, sling stone, rock | 6 seconds |"
@@ -1857,12 +2108,12 @@ mod tests {
         let ammunition = text("ammunition.md");
         assert!(
             ammunition.contains(
-                "| Flaming arrow | Short bow, long war bow | never | burns as a burning arrow for \
-                 1 minute, lighting 5 cells around |"
+                "| Flaming arrow | Short bow, long war bow, composite bow | never | burns as a \
+                 burning arrow for 1 minute, lighting 5 cells around |"
             ),
             "{ammunition}"
         );
-        assert!(ammunition.contains("| Arrow | Short bow, long war bow | 30% | lies there"));
+        assert!(ammunition.contains("| Arrow | Short bow, long war bow, composite bow | 30% |"));
         assert!(ammunition.contains("| Dagger | 1d4 | 20–24 | ×2 | 5 cells | never |"));
         assert!(ammunition.contains("| Rock | 1d3 |"));
         let actions = text("actions.md");
@@ -1876,7 +2127,7 @@ mod tests {
             actions
                 .contains("| Putting something on, or taking it off: Body | 3000 | 18 seconds |")
         );
-        assert!(text("materials.md").contains("| Steel | daggers, short swords |"));
+        assert!(text("materials.md").contains("| Steel | daggers, stilettos, short swords,"));
         assert!(text("pack.md").contains("| Your own weight | 70 kg |"));
         let burden = text("burden.md");
         for row in [
@@ -1968,16 +2219,46 @@ mod tests {
         assert!(text("hit-points.md").contains("| Wizard | 0 |"));
         let weapons = text("weapons.md");
         assert!(
-            weapons.contains("| Dagger | 1d4 | 20–24 | ×2 | - | - | main hand | 5 cells |"),
+            weapons.contains(
+                "| Dagger | Dagger | 1d4 | 20–24 | ×2 | - | - | main hand | 5 cells | 6 seconds |"
+            ),
             "{weapons}"
         );
-        assert!(weapons.contains("| Spear | 1d8 | 22–24 | ×3 |"));
+        assert!(weapons.contains("| Spear | Spear | 1d8 | 22–24 | ×3 |"));
+        assert!(weapons.contains(
+            "| Quarterstaff | Staff | 1d6 | 22–24 | ×2 | +1 | - | main hand (both hands) |"
+        ));
+        assert!(weapons.contains(
+            "| Short bow | Bow | 1d6 | 22–24 | ×3 | - | 10 | missile weapon, shoots | - | - |"
+        ));
+        assert!(weapons.contains("| Great sword | Great blade |"));
+        assert!(weapons.contains("| 7.2 seconds |"));
         assert!(
-            weapons
-                .contains("| Quarterstaff | 1d6 | 22–24 | ×2 | +1 | - | main hand (both hands) |")
+            weapons.contains("| Rock | Thrown weapon | 1d3 |")
+                && weapons.contains("| 6 cells | - |")
         );
+        // Magic items: rarity, bases, affixes with their tiers, and the words of rare names.
+        assert!(text("magic-rarity.md").contains("| Rare | 6% |"));
+        assert!(text("magic-bases.md").contains("| Long sword | weapons |"));
+        let prefixes = text("magic-prefixes.md");
+        assert!(prefixes.contains(
+            "| Sharp | damage, added to every roll | weapons, ammunition | 1: +1 · 3: +1–2"
+        ));
         assert!(
-            weapons.contains("| Short bow | 1d6 | 22–24 | ×3 | - | 10 | missile weapon, shoots |")
+            prefixes.contains("| Fleet | you move faster | boots | 1: a little faster to faster")
+        );
+        // Speed stays in words: no row about it has a number of percent.
+        let suffixes = text("magic-suffixes.md");
+        for line in prefixes.lines().chain(suffixes.lines()) {
+            if line.contains("| you move faster |") || line.contains("| attacks faster |") {
+                assert!(!line.contains('%'), "{line}");
+            }
+        }
+        assert!(text("magic-suffixes.md").contains("| of the Bear | Strength |"));
+        assert!(text("magic-names.md").contains("| Weapons | Bite,"));
+        assert!(
+            text("lights.md")
+                .contains("| Faintly glowing magic item (Radiant, of Light) | 2 cells |")
         );
         assert!(weapons.contains("Bare hands: 1d3"));
         let armour = text("armour.md");

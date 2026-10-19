@@ -111,6 +111,10 @@ pub(super) struct CreatureSpec {
     /// Its trained skills by skill id, with their values (spec §8 "Skills"); the rest untrained.
     #[serde(default)]
     pub skills: BTreeMap<String, u16>,
+    /// The chance in percent that it drops a magic or rare item where it dies (spec §8 "Magic
+    /// items"); default 0.
+    #[serde(default)]
+    pub loot: u8,
     /// Its natural attack, used when it wields no weapon.
     pub attack: Option<NaturalAttackSpec>,
     /// Its natural armour: hide, shell, or scales.
@@ -226,6 +230,7 @@ impl CreatureSpec {
             base_hp: i32::from(self.base_hp),
             level: self.level,
             xp: self.xp,
+            loot: self.loot,
             attack: r.attack,
             natural: self.natural,
             anim: self.anim,
@@ -293,6 +298,8 @@ pub struct CreatureDef {
     pub level: u8,
     /// Gameplay: the experience a kill of it is worth at its own level.
     pub xp: u32,
+    /// Gameplay: the chance in percent that it drops a magic or rare item where it dies.
+    pub loot: u8,
     /// Gameplay: its natural attack, used when it wields no weapon; `None`: bare hands (1d3).
     pub attack: Option<NaturalAttack>,
     /// Gameplay: its natural armour, if any.

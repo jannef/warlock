@@ -86,7 +86,8 @@ load, stats, and skills with their marks).
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] equip:SLOT:LETTER remove:SLOT fire:X,Y throw:LETTER:X,Y
-rest:GOAL vision:PROFILE skip:DURATION weather:KIND effect:ID@X,Y[>X,Y]` (`DIR` = N
+rest:GOAL vision:PROFILE skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] identify[:LETTERS]`
+(`DIR` = N
 NE E SE S SW W NW; `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
 player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `SLOT` = a slot id in
 `assets/data/slots.toml`, e.g. `equip:body:b` (put inventory stack `b` on), `remove:body`;
@@ -97,7 +98,8 @@ inventory stack `c` there; `PROFILE` = an id in
 `clear`, `overcast`, `rain`, `heavy`, for three hours of game time; `effect` is the dev spell
 effect, `ID` an id in `assets/data/effects.toml`: `effect:fireball@30,14` (a burst there),
 `effect:fireball@20,10>30,14` (flying there first), `effect:lightning_bolt@21,17>58,17` (a bolt
-toward the second cell), no time and no rules effect, for captures; `ACTION*N` repeats one, e.g.
+toward the second cell), no time and no rules effect, for captures; `identify` is the dev
+identify (magic items, no time; without letters everything carried); `ACTION*N` repeats one, e.g.
 `wait*10`). Dump layers: `view` (what the player sees), `fov` (`*` visible),
 `memory` (seen terrain and remembered objects), `light` (perceived brightness of visible cells as a
 digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places over the view: `f`
@@ -107,13 +109,14 @@ carries and weighs, worn and wielded things marked, their burden and its thresho
 `equipment` (the player's slots), `stats`
 (the player's race, gender, and class, then their own scores), `truth`
 (ground truth, **dev-only**), `actors` (every actor on the level with its hit points and
-Defence, its weight, what it carries and of that wears and wields, its burden and carrying
-limit, and its stats as score/potential, **dev-only**), `rooms` (the level's special rooms:
-their plain ground as the effect's `mark`, then a line per room, **dev-only**). The header line
-has the player's `hp
-17/17` (and `dead` once the run has ended); JSON dumps add `hp`, `defence`, `burden` (`level`,
-`limit`), `death`, each seen actor's `health`, and `room` (the special room the player stands in,
-if they know it). Replay
+Defence, its weight, what it carries and of that wears and wields (magic items as they truly
+are, "(unidentified)" marked), what its magic items do to it (`magic strength +1`), its burden
+and carrying limit, and its stats as score/potential, **dev-only**), `rooms` (the level's
+special rooms: their plain ground as the effect's `mark`, then a line per room, **dev-only**).
+The header line has the player's `hp 17/17` (and `dead` once the run has ended); JSON dumps add
+`hp`, `defence`, `burden` (`level`, `limit`), `death`, each seen actor's `health`, `room` (the
+special room the player stands in, if they know it), and per inventory stack its `name`,
+`rarity`, `identified`, and `magic` (affixes only once identified). Replay
 files are JSON
 `{game_version, scenario, seed, character, steps:[{action, hash}]}` (`character` =
 `{race, gender, class}`, left out for a run without one; a replay without it starts as the
@@ -123,7 +126,7 @@ the step, as 16 hex digits.
 - `--new` start a fresh run instead of resuming the save; `--dev` enables the dev keys in release
   builds (always on in debug: F2 reveal map (ground truth), F3 next vision profile, F4 light-value
   overlay, F5/F9 snapshots, F6 skip an hour (recorded as `skip:1h`), F7 next weather (recorded as
-  `weather:KIND`); all listed by `?`);
+  `weather:KIND`), F8 identify everything carried (recorded as `identify`); all listed by `?`);
   `--save-dir DIR` keeps saves in DIR instead of the platform data dir.
 
 Storage backends (`crates/warlock/src/storage.rs`): `Backend::Dir` (native files, atomic writes) or
@@ -142,7 +145,8 @@ level change to `run.sav` in the platform data dir (`paths.rs`, app name "warloc
 `--replay`, or `--record` (replays and recordings always start a fresh run). F5 / F9 write / load `snapshots/quick.sav`. An unreadable save is renamed `run.sav.bad`,
 never deleted. Format and `Content::fingerprint` live in `warlock-core/src/save.rs`: bump
 `FORMAT_VERSION` on any incompatible `WorldState` change; adding or reordering terrain, creatures,
-lights, levels, objects, equipment slots, skills, or dungeon branches invalidates existing saves.
+lights, levels, objects, equipment slots, skills, or dungeon branches invalidates existing saves
+(affixes are saved by id: adding them does not, removing one a save uses does).
 **Permadeath**: when the player dies, `screens::on_death` deletes `run.sav`
 (`SaveStore::delete_run`) and opens the death screen; `SaveStore::save_run` never writes a dead
 run (it deletes instead), so autosave, `Q`, and closing the window cannot bring it back, and the
@@ -165,7 +169,8 @@ it): gate systems that read it with `run_if(resource_exists::<Game>)`; content i
 
 Modal screens (spec §6) — main menu, new run and character creation (race, gender, class,
 summary), pause, settings, controls, the `?` help, the inventory (`i`), the equipment screen
-(`e`) and its choice of what goes in a slot, the character screen (`@`), choosing what to
+(`e`) and its choice of what goes in a slot, an item's description (a letter in the inventory,
+an upper-case slot letter on the equipment screen), the character screen (`@`), choosing what to
 pick up (`,`/`g` on several stacks) or drop (`d`), and the death screen (opened by
 `screens::on_death` when `World::death` is set; Enter/Esc is `MenuChoice::LeaveRun`, back to the
 main menu without saving; no `--screen`: capture a dead replay instead) — are one
@@ -182,7 +187,9 @@ to open, read keys for, or draw one:
   and seed, each step's selection) preselect what was chosen before going back
   (`ScreenStack::picks`), else the scenario's character, and the summary's Start is
   `MenuChoice::NewRun { scenario, seed, character }`; `EquipItem` takes the slot selected on the
-  equipment screen beneath (`ScreenStack::selected_slot`).
+  equipment screen beneath (`ScreenStack::selected_slot`), and `Describe` the stack looked at
+  on the inventory or equipment screen beneath (`ScreenStack::looked_item`; the first stack
+  without one, as `--screen describe` opens it over the inventory).
 - **Input**: `input::route_keys` is the one reader of `KeyboardInput`. Stack not empty: the press
   goes to the top screen (`ScreenStack::handle` → `ScreenAction`: stay, close, open, a
   `MenuChoice`, or `Act(Action)`: close and apply a gameplay action, e.g. `pickup:ac`,
@@ -210,7 +217,10 @@ to open, read keys for, or draw one:
 - Screens are plain state machines tested without a window: `ui/menu.rs` (`Press`, `Panel`, main
   and pause menu), `ui/new_run_screen.rs`, `ui/settings_screen.rs`, `ui/controls_screen.rs` (also
   the `?` help: the same binding list, read-only), `ui/object_screen.rs` (inventory, pick up,
-  drop: stacks by letter; in the choices letters always name stacks, even `h j k l`),
+  drop: stacks by letter; in the choices letters always name stacks, even `h j k l`; in the
+  inventory a letter opens the stack's description, and `i` closes it only when it names none),
+  `ui/describe_screen.rs` (`DescribeScreen`: one stack as the player knows it, from
+  `magic::describe`; names everywhere in their rarity's color, `ui::rarity_color`),
   `ui/equipment_screen.rs` (`EquipmentScreen`: slots by letter, which always name slots, so its
   own key `e` closes it only when it names none; `ItemScreen`: the stacks that fit one slot, by
   their inventory letters), `ui/character_screen.rs` (name, race, gender, class, age, birthday,
@@ -499,7 +509,25 @@ stamping, `connect.rs` flood fill / corridor digging / validation). A branch lev
 states carry their own ambient and placed lights). Generation is integer-only; a level that fails
 validation is regenerated from the next derived stream. The insta snapshots in
 `src/mapgen/snapshots/` and `src/mapgen/local/snapshots/` flag any change in generator output:
-review the maps in the diff, then accept them deliberately.
+review the maps in the diff, then accept them deliberately. Loot (`mapgen::place_loot`: floor
+items by the branch's `loot`, vault `loot` cells) is rolled once a map is valid, from its own
+stream `loot/<level id>`, so adding loot never changes the terrain of a generated level.
+
+Magic items (spec §8 "Magic items", #149) live in `warlock-core`: `content/affix.rs`
+(`data/affixes.toml`: `ItemKind`, `Effect`, `AffixDef` with tiers, `Rarity`, rarity weights,
+rare names), base item fields in `content/object.rs` (`kind`, `level`, `frequency`, `category`,
+`attack_cost`), and `magic/` (`mod.rs`: `Magic`/`Affix`, the instance on a `Stack`, `check`;
+`mods.rs`: `Mods::local` (an item's own and its attacks') and `Mods::worn` (what an actor wears
+and wields, global), the one aggregation every rule reads; `loot.rs`: `roll`, its draw order;
+`name.rs`; `describe.rs`: base stats and affixes in words for the item description screen).
+`world/loot.rs` has `World::identify` (the API the scroll of identify calls from its action),
+creature drops (`drop/<actor id>` stream), and the hit-point clamp after equipment changes. Hard
+rule: presentation reads an item's affixes only through `Stack::known_magic` (none until
+identified; `Stack::magic` is crate-private), and names only through `Stack::describe` /
+`title`, so unidentified affixes cannot leak; dev dumps use `describe_truth`. A new effect is a
+variant of `Effect` (id, value range, local/global, `allowed_on`), its reader in one rule, a
+phrase in `describe.rs`, and a wiki word in `xtask/src/wiki.rs`. Affixes are saved by id, so
+adding affixes keeps saves; their values and tiers are checked on load.
 
 Special rooms (spec §7 "Special rooms", M25) are data: `data/room_effects.toml`
 (`content/room_effect.rs`: effects, the per-room `chance`, `per_level`). Generators make them last
@@ -553,7 +581,9 @@ and training-mark hooks; `Benefit` growth by `steps` or a `curve`; the **provisi
 `Increase` curve), `content/skill.rs` (`data/skills.toml`; adding a skill is one entry), and
 `world/train.rs` (marks for the player only, drawn from the `training` stream in `WorldState`,
 never the gameplay stream). Race and class grants are dice rolled in `character.rs` after every
-other roll, so they never move a score. Each effect is read in one place: Dodge in
+other roll, so they never move a score. Rules read a benefit through `Actor::skill_effect`
+(the actor's skills plus what magic items' skill affixes add, `Skills::effect_with`), never
+`Skills::effect` directly. Each effect is read in one place: Dodge in
 `Actor::defence`, quiet in `noise::noise`, hearing in `Actor::hearing`, burden in
 `World::burdened` (`Burden::slow_eased`), travel in `World::step_price`; each use is reported
 where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`, `player_moves`). A new
@@ -830,7 +860,7 @@ A successful compile does not verify anything visual. Before opening a PR:
 `tests/golden/manifest.toml` lists one entry per showcase room plus the vast level (its start and
 its river): a scenario and text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file,
 and optional `window`, `scale`, `freeze_time`, `screen` (`--screen` over the run: `pause`,
-`help`, `settings`, `controls`, `inventory`, `equipment`, `equip-item`, `character`, `pick-up`,
+`help`, `settings`, `controls`, `inventory`, `equipment`, `equip-item`, `describe`, `character`, `pick-up`,
 `drop`; or over the main menu, the replay then unused: `race`, `summary`), `args` (more game
 flags, e.g. `["--fire"]`), `tolerance` (per-channel, default 2) and `max_diff_ratio`
 (default 0.05% of pixels).

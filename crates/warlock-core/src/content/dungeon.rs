@@ -14,6 +14,7 @@
 //! depth = 8
 //! size = [80, 21]
 //! creatures = ["rat", "kobold"] # patrolling creatures generators may place; default none
+//! loot = [2, 4]                 # items of loot on each level's floor; default none
 //! ambient = [0, 0, 0, 0]        # optional
 //!
 //! [[dungeon.levels]]            # optional per-depth overrides, first match wins
@@ -27,6 +28,9 @@ use super::ContentError;
 use super::creature::CreatureId;
 use crate::light::Light;
 use serde::Deserialize;
+
+/// The most items of loot a branch level's floor may hold.
+pub const MAX_LOOT: u8 = 50;
 
 /// Which generator builds a level.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
@@ -67,6 +71,9 @@ struct DungeonSpec {
     ambient: Light,
     #[serde(default)]
     creatures: Vec<String>,
+    /// How many items of loot lie on the floor of each level, `[fewest, most]`.
+    #[serde(default)]
+    loot: [u8; 2],
     #[serde(default)]
     levels: Vec<LevelsSpec>,
 }
@@ -98,6 +105,9 @@ pub struct DungeonDef {
     pub ambient: Light,
     /// Creatures generators may place on patrol.
     pub creatures: Vec<CreatureId>,
+    /// How many items of loot lie on the floor of each level, fewest and most (spec §8 "Magic
+    /// items"; item level: the depth).
+    pub loot: [u8; 2],
     /// One plan per depth, index `depth - 1`.
     plans: Vec<LevelPlan>,
 }
@@ -198,12 +208,18 @@ impl DungeonFile {
                         .ok_or_else(|| err(format!("dungeon `{id}` uses unknown creature `{c}`")))
                 })
                 .collect::<Result<Vec<_>, _>>()?;
+            if spec.loot[0] > spec.loot[1] || spec.loot[1] > MAX_LOOT {
+                return Err(err(format!(
+                    "dungeon `{id}`: `loot` is [fewest, most], at most {MAX_LOOT}"
+                )));
+            }
             defs.push(DungeonDef {
                 name: spec.name.unwrap_or_else(|| id.clone()),
                 id,
                 depth: spec.depth,
                 ambient: spec.ambient,
                 creatures,
+                loot: spec.loot,
                 plans,
             });
         }

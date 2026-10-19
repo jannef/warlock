@@ -16,6 +16,9 @@
 //! - **moving**: Overloaded, it cannot move at all ("You carry too much to move."); it can do
 //!   anything else (drop things, pick things up, fight, wait), as slowly as when Strained.
 //!
+//! Magic items (spec §8 "Magic items") count by their scores and weight: a Strength affix raises
+//! the limit with the score, a carrying affix adds its kilograms, and a lighter item weighs less.
+//!
 //! A race may shrug off Burdened (dwarves, `ignores_burdened`): Burdened costs it nothing, and
 //! from Strained on it is treated like everyone else ([`Load::penalty`]). Creatures follow the
 //! same rules from their stats and their type's size.
@@ -23,7 +26,7 @@
 //! The player sees their burden in words and their own load in weights (the limit and its thirds
 //! follow from scores they know): never a modifier, never a creature's load.
 
-use crate::content::{Content, RaceDef};
+use crate::content::{Content, Effect, RaceDef};
 use crate::object::{format_weight, weight_of};
 use crate::stats::Stat;
 use crate::world::Actor;
@@ -209,16 +212,24 @@ pub fn load(actor: &Actor, race: Option<&RaceDef>, content: &Content) -> Load {
         Some(race) => (race.size, race.ignores_burdened),
         None => (content.creature(actor.creature).size, false),
     };
-    let stats = &actor.stats;
+    let stats = actor.scores(content);
+    let base = limit(
+        stats.score(Stat::Strength),
+        stats.score(Stat::Toughness),
+        content.size(size).carry,
+    );
     Load {
         carried: weight_of(&actor.inventory, content),
-        limit: limit(
-            stats.score(Stat::Strength),
-            stats.score(Stat::Toughness),
-            content.size(size).carry,
-        ),
+        limit: with_carry(base, actor.mods(content).get(Effect::Carry)),
         ignores_burdened,
     }
+}
+
+/// `limit` raised by `kg` kilograms that magic items add (spec §8 "Magic items"), kept a multiple
+/// of 3 grams so the thirds stay exact.
+pub fn with_carry(limit: u64, kg: i32) -> u64 {
+    let more = u64::try_from(kg.max(0)).unwrap_or(0) * 1000;
+    (limit + more) / 3 * 3
 }
 
 #[cfg(test)]

@@ -2,6 +2,14 @@
 
 | Armour or shield | Worn on | Defence | Category | Most Dexterity adds |
 |---|---|:---:|---|:---:|
+| Padded coat | body | +1 | Armour | +8 |
 | Leather jerkin | body | +2 | Armour | +6 |
+| Studded leather jerkin | body | +3 | Armour | +5 |
 | Chain mail shirt | body | +4 | Armour | +4 |
+| Suit of scale mail | body | +5 | Armour | +3 |
+| Suit of banded mail | body | +6 | Armour | +1 |
+| Suit of plate armour | body | +7 | Armour | +1 |
 | Small shield | off hand | +1 | Shield | no limit |
+| Buckler | off hand | +1 | Shield | no limit |
+| Large shield | off hand | +2 | Shield | no limit |
+| Tower shield | off hand | +3 | Shield | +2 |

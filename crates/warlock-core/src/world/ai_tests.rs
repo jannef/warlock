@@ -1086,7 +1086,7 @@ fn a_level_can_place_a_creature_among_the_peaceful_folk() {
     }
     assert_eq!(pos(&w, rat), Pos::new(7, 1), "it stays where it is");
     let me = &w.state().actors[&PLAYER];
-    assert_eq!(me.hp, me.max_hp());
+    assert_eq!(me.hp, me.max_hp(w.content()));
     // Bumping into the rat is "in the way", never an attack.
     run(&mut w, "move:E*5");
     assert_eq!(w.player_pos(), Pos::new(6, 1));

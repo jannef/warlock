@@ -420,6 +420,34 @@ impl Skills {
             })
             .sum()
     }
+
+    /// What its skills give of `effect` with `bonus` added to some skills' values (what magic
+    /// items add, spec §8 "Magic items"; `Actor::skill_effect`): a skill with a bonus gives as if
+    /// its value were that much higher, and so does an untrained one, from 0. Values stay
+    /// within 0 to [`MAX_VALUE`].
+    pub fn effect_with(&self, content: &Content, effect: Effect, bonus: &[(SkillId, i32)]) -> i32 {
+        if bonus.is_empty() {
+            return self.effect(content, effect);
+        }
+        let mut ids: Vec<SkillId> = self.0.keys().copied().collect();
+        ids.extend(bonus.iter().map(|&(id, _)| id));
+        ids.sort();
+        ids.dedup();
+        (ids.into_iter())
+            .map(|id| {
+                let base = self.value(id).map_or(0, i32::from);
+                let more: i32 = (bonus.iter())
+                    .filter(|(s, _)| *s == id)
+                    .map(|(_, v)| v)
+                    .sum();
+                let value = (base + more).clamp(0, i32::from(MAX_VALUE)) as u16;
+                (content.skill(id).benefits.iter())
+                    .filter(|b| b.effect == effect)
+                    .map(|b| b.at(value))
+                    .sum::<i32>()
+            })
+            .sum()
+    }
 }
 
 impl FromIterator<(SkillId, Trained)> for Skills {

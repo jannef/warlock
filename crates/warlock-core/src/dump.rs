@@ -350,7 +350,9 @@ fn actor_rows(world: &World) -> Vec<String> {
         .map(|a| {
             let w = a.weight(content);
             let load = world.actor_load(a.id).expect("the actor exists");
-            let carried: Vec<String> = a.inventory.iter().map(|s| s.describe(content)).collect();
+            let carried: Vec<String> = (a.inventory.iter())
+                .map(|s| s.describe_truth(content))
+                .collect();
             let carried = if carried.is_empty() {
                 "nothing".to_string()
             } else {
@@ -362,7 +364,7 @@ fn actor_rows(world: &World) -> Vec<String> {
                     Some(format!(
                         "{} {}",
                         content.slot(slot).id,
-                        stack.describe(content)
+                        stack.describe_truth(content)
                     ))
                 })
                 .collect();
@@ -370,6 +372,22 @@ fn actor_rows(world: &World) -> Vec<String> {
                 String::new()
             } else {
                 format!("; equipped {}", equipped.join(", "))
+            };
+            // What its magic items do to it (spec §8 "Magic items"), by effect id.
+            let mods = a.mods(content);
+            let mut magic: Vec<String> = (mods.iter())
+                .map(|(effect, value)| format!("{} {value:+}", effect.id()))
+                .collect();
+            if let Some(light) = mods.light {
+                magic.push(format!("light {}", content.light(light).id));
+            }
+            for &(skill, value) in mods.skills() {
+                magic.push(format!("skill {} {value:+}", content.skill(skill).id));
+            }
+            let equipped = if magic.is_empty() {
+                equipped
+            } else {
+                format!("{equipped}; magic {}", magic.join(" "))
             };
             let stats: Vec<String> = Stat::ALL
                 .iter()
@@ -396,7 +414,7 @@ fn actor_rows(world: &World) -> Vec<String> {
                 content.creature(a.creature).id,
                 a.pos,
                 a.hp,
-                a.max_hp(),
+                a.max_hp(content),
                 a.defence(content, load.penalty()).total(),
                 format_weight(w.total()),
                 format_weight(w.base),
@@ -485,11 +503,19 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         .iter()
         .enumerate()
         .map(|(i, s)| {
+            // An item's affixes only once the player has identified it.
+            let magic = s
+                .known_magic()
+                .map(|m| json!({ "level": m.level, "name": m.name, "affixes": m.affixes }));
             json!({
                 "letter": letter(i).map(String::from),
                 "object": content.object(s.object).id,
                 "count": s.count,
                 "weight": s.weight(content),
+                "name": s.describe(content),
+                "rarity": s.rarity(),
+                "identified": s.is_identified(),
+                "magic": magic,
             })
         })
         .collect();

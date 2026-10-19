@@ -59,6 +59,13 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   of Warcraft (nothing from grey ones, a little extra from tougher ones). Levels run to 50 and, up
   to level 20, make you hardier. Your level and XP show on the status bar, the character screen,
   and the death screen.
+- **Magic items** — after Path of Exile: sixty base items (daggers to great axes, bows and
+  crossbows, padded coats to plate, helms, cloaks, gloves, boots, shields, rings, amulets) roll
+  prefixes and suffixes from 47 affixes in tiers that deepen with the dungeon. A magic item has one
+  or two ("Sharp long sword of the Bear", in blue); a rare one up to six and a name ("Grim Bite,
+  long sword", in yellow). Found unidentified, they work all the same; each remembers what it
+  rolled. They lie in the Depths, in vaults, and fall from slain kobolds, and an item's
+  description says what it does in plain words. A glowing helm lights your way.
 - **Ranged combat** — bows (drawn by Strength), a crossbow, a sling, and throwing weapons; aim
   ADOM-style with a cursor and a faint line of fire, watch the arrow fly, and pick it up where it
   fell. A flaming arrow flies burning and lights the dark where it lands until it burns out:
@@ -155,8 +162,8 @@ cargo run --release -p warlock
 | `L` | Light or douse your lantern |
 | `,` or `g` | Pick up what lies here (choose by letter where several things lie) |
 | `d` | Drop something |
-| `i` | Inventory: what you carry, by letter, and what it all weighs |
-| `e` | Equipment: wear and wield things, slot by slot (head, body, hands, rings, missiles, …), as in ADOM |
+| `i` | Inventory: what you carry, by letter, and what it all weighs; a letter describes that item |
+| `e` | Equipment: wear and wield things, slot by slot (head, body, hands, rings, missiles, …), as in ADOM; an upper-case slot letter describes what is there |
 | `@` | Character: your race, gender, class, age, birth sign, stats, hit points, Defence, and weight |
 | `R` | Rest an hour, until dawn, or until nightfall (stops when something comes into view) |
 | `x` | Look around: move a cursor to read what is there (takes no time) |

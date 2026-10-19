@@ -61,6 +61,7 @@ mod experience;
 mod fight;
 mod hash;
 mod level;
+mod loot;
 mod path;
 mod schedule;
 mod shoot;
@@ -71,6 +72,7 @@ pub use actor::{Actor, ActorId, ActorKind, Mind, Patrol};
 pub use fight::Death;
 pub(crate) use hash::fnv1a;
 pub use level::{Fire, LevelState};
+pub use loot::Identified;
 
 use crate::action::{Action, Event, Letters, MAX_REST, MissileEnd, Outcome, Rest, letter};
 use crate::burden::{self, Burden, Load};
@@ -372,7 +374,7 @@ impl World {
             skills,
             faction_override: None,
         };
-        player.hp = player.max_hp();
+        player.hp = player.max_hp(&content);
         state.actors.insert(ActorId(0), player);
         instantiate_level(&mut state, &content, &start);
         drop(start); // It may borrow `content`, which `assemble` takes.
@@ -567,6 +569,8 @@ impl World {
         let load = self.load_of(self.state.player);
         let (burden, slowed) = (load.burden(), load.penalty() != Burden::Unburdened);
         let spent = self.player_acts(action, &mut events);
+        // Taking off what raised them lowers the player's maximum hit points.
+        self.keep_hp_within_max(self.state.player);
         self.burden_news(burden);
         // Acting (not waiting) under a load that slows the player trains balance.
         let acted = matches!(spent, Spent::Turn(_)) && !matches!(action, Action::Wait);
@@ -1009,6 +1013,7 @@ impl World {
             Action::Effect { effect, at, to } => {
                 return self.show_effect(effect, *at, *to, events);
             }
+            Action::Identify(letters) => return self.identify_dev(*letters),
         };
         self.took(done, kind)
     }
@@ -1076,7 +1081,7 @@ impl World {
         let inventory = self.state.inventory_mut();
         let mut taken = Letters::default();
         for i in chosen.iter() {
-            if object::add_to_inventory(inventory, pile[i], &content) {
+            if object::add_to_inventory(inventory, pile[i].clone(), &content) {
                 taken.insert(i);
             }
         }
@@ -1479,7 +1484,7 @@ fn split(stacks: &[Stack], chosen: Letters) -> (Vec<Stack>, Vec<Stack>) {
         .iter()
         .enumerate()
         .partition(|(i, _)| chosen.contains(*i));
-    let unzip = |v: Vec<(usize, &Stack)>| v.into_iter().map(|(_, s)| *s).collect();
+    let unzip = |v: Vec<(usize, &Stack)>| v.into_iter().map(|(_, s)| s.clone()).collect();
     (unzip(picked), unzip(rest))
 }
 
@@ -1556,7 +1561,7 @@ fn instantiate_level(state: &mut WorldState, content: &Content, template: &Level
             skills: def.skills.clone(),
             faction_override: spawn.faction,
         };
-        actor.hp = actor.max_hp();
+        actor.hp = actor.max_hp(content);
         state.actors.insert(actor_id, actor);
     }
 }
@@ -1581,6 +1586,8 @@ mod fight_tests;
 mod hearing_tests;
 #[cfg(test)]
 mod light_tests;
+#[cfg(test)]
+mod magic_tests;
 #[cfg(test)]
 mod moon_tests;
 #[cfg(test)]

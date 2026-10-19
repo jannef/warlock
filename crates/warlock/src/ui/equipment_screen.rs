@@ -7,19 +7,21 @@
 //! there takes it off. That is one action, recorded like any other, and it takes its time; the
 //! choice closes and the equipment screen, still open beneath it, shows the result
 //! ([`EquipmentScreen::refresh`]), as in ADOM. Esc closes either screen; on the equipment screen
-//! letters name slots, so its own key closes it only when it is not a slot's letter.
+//! letters name slots, so its own key closes it only when it is not a slot's letter. A slot's
+//! upper-case letter (`A` to `L`) opens the description of what is in it (`describe_screen`).
+//! Names are in their rarity's color (spec §8 "Magic items").
 //!
 //! Both are read from the perception snapshot: the player's own inventory and equipment.
 
 use super::menu::{Nav, Panel, Press};
 use super::screens::ScreenAction;
-use super::{ACCENT, TEXT, TEXT_DIM};
+use super::{ACCENT, TEXT, TEXT_DIM, rarity_color};
 use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
 use warlock_core::Action;
 use warlock_core::action::letter;
 use warlock_core::color::Rgb;
-use warlock_core::content::{ActionKind, Content, SlotId};
+use warlock_core::content::{ActionKind, Content, Rarity, SlotId};
 use warlock_core::equipment::{self, verbs};
 use warlock_core::object::{Stack, Weight, format_weight};
 use warlock_core::perception::PerceptionView;
@@ -37,6 +39,8 @@ struct Item {
     name: String,
     /// Grams.
     weight: u64,
+    /// Its name's color: by its rarity.
+    rarity: Rarity,
 }
 
 impl Item {
@@ -47,6 +51,7 @@ impl Item {
             fg: def.fg,
             name: stack.describe(content),
             weight: stack.weight(content),
+            rarity: stack.rarity(),
         }
     }
 
@@ -62,7 +67,7 @@ impl Item {
             .chars()
             .take(room)
             .collect();
-        console.print(x + 2, y, &name, text.color);
+        console.print(x + 2, y, &name, rarity_color(self.rarity, text.color));
         if weighed {
             console.print(weight_x, y, &weight, TEXT_DIM);
         }
@@ -80,6 +85,8 @@ struct Text<'a> {
 struct SlotRow {
     name: String,
     item: Option<Item>,
+    /// Where in the inventory what it holds is.
+    held: Option<usize>,
     /// It holds a two-handed thing, which is in both hands.
     both_hands: bool,
     /// What it holds was listed in a slot above (the second hand of a two-handed thing): its
@@ -124,6 +131,7 @@ impl EquipmentScreen {
                     name: def.name.clone(),
                     item: (item.and_then(|i| view.inventory().get(i)))
                         .map(|s| Item::of(s, content)),
+                    held: item,
                     both_hands: slots.len() > 1,
                     listed: slots.first().is_some_and(|&first| first != slot),
                 }
@@ -138,14 +146,28 @@ impl EquipmentScreen {
         SlotId(u8::try_from(self.cursor).unwrap_or(0))
     }
 
-    /// Applies a key press: a slot's letter (or Enter) chooses what goes there; Esc, or the
-    /// screen's own key when it names no slot, closes it.
+    /// Where in the inventory what the `>` row's slot holds is: what a description opened from
+    /// here describes.
+    pub fn selected_item(&self) -> Option<usize> {
+        self.rows.get(self.cursor).and_then(|r| r.held)
+    }
+
+    /// Applies a key press: a slot's letter (or Enter) chooses what goes there, its upper-case
+    /// letter describes what is in it; Esc, or the screen's own key when it names no slot,
+    /// closes it.
     pub fn handle(&mut self, press: &Press, bindings: &Bindings) -> ScreenAction {
         if let Some(c @ 'a'..='z') = press.text {
             let i = usize::from(c as u8 - b'a');
             if i < self.rows.len() {
                 self.cursor = i;
                 return ScreenAction::Open(super::ScreenName::EquipItem);
+            }
+        }
+        if let Some(c @ 'A'..='Z') = press.text {
+            let i = usize::from(c as u8 - b'A');
+            if self.rows.get(i).is_some_and(|r| r.held.is_some()) {
+                self.cursor = i;
+                return ScreenAction::Open(super::ScreenName::Describe);
             }
         }
         let own_key = press
@@ -213,9 +235,10 @@ impl EquipmentScreen {
             console.print(x, y, &summary, TEXT);
         }
         let last = letter(self.rows.len().saturating_sub(1)).unwrap_or('a');
+        let upper = format!("A-{}", last.to_ascii_uppercase());
         panel.footer(
             console,
-            &format!("a-{last} choose a slot   ↑↓ Enter choose   Esc close"),
+            &format!("a-{last} choose a slot   {upper} look   Esc close"),
         );
     }
 }

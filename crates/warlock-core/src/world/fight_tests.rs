@@ -420,13 +420,20 @@ fn hit_points_are_toughness_plus_race_and_class_or_the_creatures_base() {
         "hp = 7\nstats = { toughness = 14 }",
     );
     let player = w.state().player();
-    assert_eq!((player.hp, player.max_hp(), player.hp_base), (21, 21, 7));
+    assert_eq!(
+        (player.hp, player.max_hp(w.content()), player.hp_base),
+        (21, 21, 7)
+    );
     assert_eq!(w.perception().own_hp(), (21, 21));
     let rat = actor(&w, 1).expect("rat");
-    assert_eq!((rat.hp, rat.max_hp()), (4, 4), "Toughness 4, no base");
+    assert_eq!(
+        (rat.hp, rat.max_hp(w.content())),
+        (4, 4),
+        "Toughness 4, no base"
+    );
     let brute = actor(&w, 2).expect("brute");
-    assert_eq!((brute.hp, brute.max_hp()), (40, 40));
-    assert_eq!(rat.health(), Health::Unhurt);
+    assert_eq!((brute.hp, brute.max_hp(w.content())), (40, 40));
+    assert_eq!(rat.health(w.content()), Health::Unhurt);
 }
 
 #[test]
@@ -438,8 +445,12 @@ fn the_players_hit_points_come_from_toughness_race_and_class() {
             World::with_character(content.clone(), "showcase", None, Some(&spec)).expect("world");
         let player = w.state().player();
         let toughness = i32::from(player.stats.score(crate::stats::Stat::Toughness));
-        assert_eq!(player.hp, player.max_hp(), "{spec}: full at the start");
-        (player.hp_base, player.max_hp() - toughness)
+        assert_eq!(
+            player.hp,
+            player.max_hp(w.content()),
+            "{spec}: full at the start"
+        );
+        (player.hp_base, player.max_hp(w.content()) - toughness)
     };
     // #113's tables: dwarf 6 + barbarian 8; human 4 + warrior 7; elf 2 + wizard 0.
     assert_eq!(hp("dwarf,male,barbarian"), (14, 14));
@@ -798,14 +809,8 @@ fn creatures_shoot_with_the_bow_they_have_ready() {
     // Every arrow came down where the player stands, hit or miss (the wall is behind them).
     let (level, _) = w.ground_truth();
     let arrow = content.object_id("arrow").expect("arrow");
-    assert_eq!(
-        level.objects_at(Pos::new(1, 1)),
-        [Stack {
-            object: arrow,
-            count: 9
-        }]
-    );
-    let hurt = w.state().player().hp < w.state().player().max_hp();
+    assert_eq!(level.objects_at(Pos::new(1, 1)), [Stack::new(arrow, 9)]);
+    let hurt = w.state().player().hp < w.state().player().max_hp(w.content());
     assert!(hurt, "an arrow found its mark");
     let shown = messages(&w);
     assert!(

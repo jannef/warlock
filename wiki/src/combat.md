@@ -40,17 +40,20 @@ protects you, in kinds:
 - **Armour**: what you wear on your body.
 - **Shield**: a shield held in your off hand.
 - **Parry**: a weapon that turns blows aside, such as the quarterstaff.
-- **Natural**: a creature's hide, shell, or scales. You have none.
-- **Dodge**: training. The [tumble](skills.md#what-skills-give) skill adds to it, more the
-  higher it is.
-- **Deflection** comes later (magic).
+- **Natural**: a creature's hide, shell, or scales. You have none, unless a magic item gives you
+  some.
+- **Dodge**: training and magic. The [tumble](skills.md#what-skills-give) skill adds to it, more
+  the higher it is, and so do magic items that make you nimble.
+- **Deflection**: magic items that turn blows aside.
 
 Within each kind only the best counts: two pieces of armour do not add up. Dodge is the one kind
 that does.
 
 {{#include generated/armour.md}}
 
-Helms, cloaks, gloves, boots, rings, and amulets do not add to Defence (yet).
+Helms, cloaks, gloves, boots, rings, and amulets do not add to Defence by themselves, only by
+their magic (see [Magic items](magic-items.md)), and magic armour or a magic shield may add more
+than its base.
 
 ### Why an attack missed
 
