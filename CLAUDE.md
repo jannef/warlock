@@ -764,6 +764,11 @@ A successful compile does not verify anything visual. Before opening a PR:
 
 ## Golden screenshots
 
+> **Temporarily advisory (#166).** While the current wave of visual changes lands, CI's golden
+> comparison doesn't fail the build, and feature PRs don't regenerate or commit reference images
+> (adding manifest entries is fine). #166 regenerates and reviews everything, then makes it
+> blocking again; until then, ignore the procedure below.
+
 `tests/golden/manifest.toml` lists one entry per showcase room plus the vast level (its start and
 its river): a scenario and text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file,
 and optional `window`, `scale`, `freeze_time`, `screen` (`--screen` over the run: `pause`,
