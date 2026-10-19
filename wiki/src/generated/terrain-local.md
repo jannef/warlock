@@ -45,3 +45,5 @@
 | Reeds | `¦` | yes | no | 9 seconds | loud | 1 |  |
 | Dirt road | `.` | yes | no | 6 seconds | quiet | 0 |  |
 | Rubble | `,` | yes | no | 9 seconds | loud | 0 |  |
+| Plank floor | `.` | yes | no | 6 seconds | loud | 2 | roofed: no sun or sky light |
+| Timber wall | `#` | no | yes | - | - | 2 | roofed: no sun or sky light |

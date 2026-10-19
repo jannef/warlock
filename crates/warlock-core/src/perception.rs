@@ -58,10 +58,12 @@
 //! does not see, near the source); never with who made them.
 
 use crate::ability::Ability;
+use crate::action::Letters;
 use crate::blood::Stain;
 use crate::burden::{self, Load};
 use crate::character::Character;
 use crate::combat::Health;
+use crate::content::Shops;
 use crate::content::{
     CombatStance, Content, CreatureId, FactionId, Flow, LevelKind, LightId, ObjectId,
     RoomEffectDef, SlotId, Stance, StatusId, TerrainId, VisionProfile,
@@ -82,7 +84,9 @@ use crate::stats::PerStat;
 use crate::time::GameTime;
 use crate::weapon_skills::WeaponSkills;
 use crate::weather::Weather;
-use crate::world::{Actor, ActorId, ActorKind, Death, LevelState, WorldState};
+use crate::world::{
+    Actor, ActorId, ActorKind, Death, LevelState, Shop, WorldState, count_of, favour, unpaid_parts,
+};
 use serde::Serialize;
 
 /// Maximum sight distance, however bright the light.
@@ -1064,5 +1068,159 @@ impl<'a> PerceptionView<'a> {
             .iter()
             .filter(|s| s.pos == p)
             .max_by_key(|s| s.volume)
+    }
+}
+
+/// A shop as the player knows it (spec §7 "Shops"): its sign, its keeper's name, and its prices
+/// for them, in gold. Never the value, the markup, or how their Presence or skills move the
+/// prices.
+#[derive(Clone, Copy, Debug)]
+pub struct ShopView<'a> {
+    shop: &'a Shop,
+    shops: &'a Shops,
+    content: &'a Content,
+    /// The player's favour (`world::favour`), hidden: only prices come of it.
+    favour: i32,
+}
+
+impl<'a> ShopView<'a> {
+    /// Its sign: "Grimbold's General Store".
+    pub fn sign(&self) -> String {
+        self.shop.sign(self.content)
+    }
+
+    /// Its keeper's name.
+    pub fn keeper(&self) -> &'a str {
+        &self.shop.name
+    }
+
+    /// Whether `p` is on its floor.
+    pub fn contains(&self, p: Pos) -> bool {
+        self.shop.contains(p)
+    }
+
+    /// What it asks for `stack`, if it is for sale (worth something, not the currency).
+    pub fn price(&self, stack: Stack) -> Option<u32> {
+        let price = (self.shops).price(self.content, self.shop.kind, stack, self.favour);
+        (price > 0).then_some(price)
+    }
+
+    /// What it offers for `stack`, if it buys it.
+    pub fn offer(&self, stack: Stack) -> Option<u32> {
+        let offer = (self.shops).offer(self.content, self.shop.kind, stack, self.favour);
+        (offer > 0).then_some(offer)
+    }
+
+    /// What the player owes it.
+    pub fn owed(&self) -> u32 {
+        self.shop.owed(self.shops, self.content, self.favour)
+    }
+}
+
+/// What a shop would pay for the player's own things among the stacks they chose to drop there
+/// (spec §7 "Shops"): the offer and what it is for.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Sale {
+    pub offer: u32,
+    pub stacks: Vec<Stack>,
+}
+
+impl<'a> PerceptionView<'a> {
+    /// The open shop whose floor `p` is, if the player sees or remembers `p` (its sign and goods
+    /// are in plain sight) and its keeper still trades with them.
+    pub fn shop_at(&self, p: Pos) -> Option<ShopView<'a>> {
+        if matches!(self.cell(p), CellView::Unknown) {
+            return None;
+        }
+        let shops = self.content.shops()?;
+        let shop = (self.level.shops.iter()).find(|s| s.is_open() && s.contains(p))?;
+        Some(ShopView {
+            shop,
+            shops,
+            content: self.content,
+            favour: favour(self.content, shops, self.player),
+        })
+    }
+
+    /// The open shop the player stands in.
+    pub fn shop_here(&self) -> Option<ShopView<'a>> {
+        self.shop_at(self.snapshot.viewer)
+    }
+
+    /// The price of `stack` lying at `p`, a cell in sight, if it is for sale there (look mode:
+    /// "a dagger (for sale, 45 gold)").
+    pub fn price_tag(&self, p: Pos, stack: Stack) -> Option<u32> {
+        if !self.snapshot.sees_actors_at(p) {
+            return None;
+        }
+        self.shop_at(p)?.price(stack)
+    }
+
+    /// What the player has not paid for of each inventory stack, priced, in the shop they stand
+    /// in (`None` for what is theirs; spec §7 "Shops").
+    pub fn unpaid(&self) -> Vec<Option<u32>> {
+        let inventory = &self.player.inventory;
+        let Some(view) = self.shop_here() else {
+            return vec![None; inventory.len()];
+        };
+        let parts = unpaid_parts(inventory, &view.shop.unpaid);
+        (inventory.iter().zip(parts))
+            .map(|(s, n)| {
+                let part = Stack {
+                    object: s.object,
+                    count: n,
+                };
+                (n > 0).then(|| view.price(part).unwrap_or(0))
+            })
+            .collect()
+    }
+
+    /// What the player owes, and to whom, if a step onto `to` leaves the open shop they stand in
+    /// (onto ground they know is walkable): leaving then is theft, so presentation asks first.
+    pub fn owed_on_leaving(&self, to: Pos) -> Option<(ShopView<'a>, u32)> {
+        let view = self.shop_here()?;
+        let walkable = match self.cell(to) {
+            CellView::Visible(t) | CellView::Remembered(t) => self.content.terrain(t).walkable,
+            CellView::Unknown => false,
+        };
+        let owed = view.owed();
+        (!view.contains(to) && walkable && owed > 0).then_some((view, owed))
+    }
+
+    /// What the shop the player stands in offers for their own things among the inventory stacks
+    /// `letters` names (all of them for none), if it buys any: what dropping them there would
+    /// sell ([`crate::Action::Sell`]).
+    pub fn sale(&self, letters: Letters) -> Option<Sale> {
+        let view = self.shop_here()?;
+        let inventory = &self.player.inventory;
+        let parts = unpaid_parts(inventory, &view.shop.unpaid);
+        let chosen = if letters.is_empty() {
+            Letters::of(0..inventory.len())
+        } else {
+            letters
+        };
+        let mut sale = Sale {
+            offer: 0,
+            stacks: Vec::new(),
+        };
+        for (i, stack) in inventory.iter().enumerate() {
+            let own = Stack {
+                object: stack.object,
+                count: stack.count - parts[i],
+            };
+            if !chosen.contains(i) || own.count == 0 {
+                continue;
+            }
+            if let Some(offer) = view.offer(own) {
+                sale.offer += offer;
+                sale.stacks.push(own);
+            }
+        }
+        (!sale.stacks.is_empty()).then_some(sale)
+    }
+
+    /// How much gold the player carries (the shops' currency; none without shops).
+    pub fn own_gold(&self) -> u32 {
+        (self.content.shops()).map_or(0, |s| count_of(&self.player.inventory, s.currency))
     }
 }

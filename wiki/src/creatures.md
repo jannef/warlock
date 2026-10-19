@@ -73,6 +73,9 @@ Some creatures are hostile by nature but placed among the **peaceful folk** by t
 live in: the kobold in the showcase hub and the kobolds and rats of the Vast Caverns walk their
 rounds and never attack you. The showcase is safe. Fighting happens in the arena and in the Depths.
 
+**Shopkeepers** are **merchants**, who trade with everyone and fight no one, until you rob or
+attack one: then it joins the outraged shopkeepers and comes after you (see [Shops](shops.md)).
+
 The **Arena** scenario (see [Starting a run](introduction.md#starting-a-run)) is the place to watch
 this: a kobold war band and a pack of giant rats fight to the death there, and turn on you when
 they see you. Light your lantern there and the war band's archer will find you.

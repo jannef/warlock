@@ -8,6 +8,7 @@
 //! [`ScreenAction`], so it is testable without a window. Selection is always shown by text (a `>`
 //! marker), never by color alone.
 
+use super::confirm_screen::Question;
 use super::screens::{MenuChoice, ScreenAction, ScreenName};
 use super::{ACCENT, PANEL_BG, TEXT, TEXT_DIM};
 use crate::input::KeyBinding;
@@ -202,17 +203,18 @@ impl MainMenu {
                 return match items[self.selected] {
                     MainItem::Resume => ScreenAction::Close,
                     MainItem::Continue => ScreenAction::Choose(MenuChoice::Continue),
-                    MainItem::SaveToMenu => ScreenAction::Confirm(
-                        "Save and return to the main menu?",
-                        MenuChoice::SaveToMenu,
-                    ),
+                    MainItem::SaveToMenu => {
+                        Question::new("Save and return to the main menu?", MenuChoice::SaveToMenu)
+                            .into()
+                    }
                     MainItem::NewRun => ScreenAction::Open(ScreenName::NewRun),
                     MainItem::Settings => ScreenAction::Open(ScreenName::Settings),
                     MainItem::Controls => ScreenAction::Open(ScreenName::Controls),
-                    MainItem::Quit if self.pause => {
-                        ScreenAction::Confirm("Save and quit Warlock?", MenuChoice::Quit)
-                    }
-                    MainItem::Quit => ScreenAction::Confirm("Quit Warlock?", MenuChoice::Quit),
+                    MainItem::Quit if self.pause => ScreenAction::from(Question::new(
+                        "Save and quit Warlock?",
+                        MenuChoice::Quit,
+                    )),
+                    MainItem::Quit => Question::new("Quit Warlock?", MenuChoice::Quit).into(),
                 };
             }
             _ => {}
@@ -470,12 +472,15 @@ mod tests {
         press(&mut m, Nav::Down);
         assert_eq!(
             press(&mut m, Nav::Enter),
-            ScreenAction::Confirm("Save and return to the main menu?", MenuChoice::SaveToMenu)
+            ScreenAction::from(Question::new(
+                "Save and return to the main menu?",
+                MenuChoice::SaveToMenu
+            ))
         );
         press(&mut m, Nav::Down);
         assert_eq!(
             press(&mut m, Nav::Enter),
-            ScreenAction::Confirm("Save and quit Warlock?", MenuChoice::Quit)
+            ScreenAction::from(Question::new("Save and quit Warlock?", MenuChoice::Quit))
         );
     }
 
@@ -485,7 +490,7 @@ mod tests {
         press(&mut m, Nav::Up);
         assert_eq!(
             press(&mut m, Nav::Enter),
-            ScreenAction::Confirm("Quit Warlock?", MenuChoice::Quit)
+            ScreenAction::from(Question::new("Quit Warlock?", MenuChoice::Quit))
         );
     }
 

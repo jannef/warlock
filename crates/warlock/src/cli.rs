@@ -121,6 +121,11 @@ pub struct Args {
     #[arg(long)]
     pub fire: bool,
 
+    /// Dev: start the run in look mode with the cursor on level cell `X,Y` (e.g. `--look 56,13`),
+    /// so `--capture` shows what look mode says there.
+    #[arg(long, value_name = "X,Y", value_parser = parse_cell)]
+    pub look: Option<warlock_core::Pos>,
+
     /// Number of frames to render before taking the `--capture` screenshot.
     #[arg(long, default_value_t = 10)]
     pub capture_after_frames: u32,
@@ -175,6 +180,19 @@ fn parse_size(s: &str) -> Result<UVec2, String> {
         return Err("window size must be non-zero".into());
     }
     Ok(UVec2::new(w, h))
+}
+
+/// A level cell written `X,Y` (`56,13`).
+fn parse_cell(s: &str) -> Result<warlock_core::Pos, String> {
+    let (x, y) = s
+        .split_once(',')
+        .ok_or_else(|| format!("expected X,Y, got `{s}`"))?;
+    let coord = |v: &str| {
+        v.trim()
+            .parse::<i32>()
+            .map_err(|e| format!("bad `{v}`: {e}"))
+    };
+    Ok(warlock_core::Pos::new(coord(x)?, coord(y)?))
 }
 
 #[cfg(test)]

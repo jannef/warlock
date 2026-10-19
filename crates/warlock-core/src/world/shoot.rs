@@ -75,6 +75,9 @@ impl World {
             self.say(format!("You have no {what} ready."));
             return Spent::Nothing;
         };
+        if !self.may_loose(item) {
+            return Spent::Nothing;
+        }
         let def = content.object(launcher);
         let range = def.range.unwrap_or(1);
         if !self.within_reach(at, range, "shoot") {
@@ -125,7 +128,7 @@ impl World {
         } else {
             profile
         };
-        if !self.within_reach(at, range, "throw") {
+        if !self.may_loose(item) || !self.within_reach(at, range, "throw") {
             return Spent::Nothing;
         }
         let loose = Loose {

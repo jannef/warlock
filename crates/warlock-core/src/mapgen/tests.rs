@@ -45,6 +45,14 @@ fn describe(level: &LevelTemplate) -> String {
             effect.id, room.min, room.max
         );
     }
+    for shop in &level.shops {
+        let def = CONTENT.shops().expect("shops").get(shop.kind);
+        let _ = writeln!(
+            out,
+            "shop {} kept by {} at {}-{}, post {}",
+            def.id, shop.keeper, shop.min, shop.max, shop.post
+        );
+    }
     out + &ascii_with_rooms(level, &CONTENT)
 }
 
@@ -265,6 +273,86 @@ fn special_rooms_come_about_one_level_in_three() {
     );
     assert!(by_effect.iter().all(|n| *n > 10), "{by_effect:?}");
     assert!(by_generator.iter().all(|n| *n > 30), "{by_generator:?}");
+}
+
+/// Shops are rare: about one generated level in seven (rooms levels only), every kind turns up,
+/// and each is a lit room with one door, its keeper beside the way in, and its floor laid with
+/// what its kind stocks.
+#[test]
+fn shops_come_about_one_level_in_seven() {
+    let shops = CONTENT.shops().expect("shops");
+    let mut levels = 0;
+    let mut with_shop = 0;
+    let mut by_kind = vec![0; shops.defs().len()];
+    for seed in 0..150 {
+        for depth in 1..=8 {
+            let level = level(seed, depth);
+            levels += 1;
+            assert!(level.shops.len() <= 1, "seed {seed} depth {depth}");
+            let Some(shop) = level.shops.first() else {
+                continue;
+            };
+            with_shop += 1;
+            by_kind[usize::from(shop.kind.0)] += 1;
+            assert!(!(3..=5).contains(&depth), "caverns have no shops");
+            check_shop(&level, shop);
+        }
+    }
+    let percent = with_shop * 100 / levels;
+    assert!(
+        (11..=20).contains(&percent),
+        "{with_shop} of {levels} levels ({percent} %) have a shop"
+    );
+    assert!(by_kind.iter().all(|n| *n > 5), "{by_kind:?}");
+}
+
+/// What a generated shop promises (see `shop.rs`).
+fn check_shop(level: &LevelTemplate, shop: &ShopPlan) {
+    let shops = CONTENT.shops().expect("shops");
+    let keeper = (level.creatures.iter())
+        .find(|c| c.pos == shop.post)
+        .expect("a keeper at the post");
+    assert_eq!(keeper.creature, shops.keeper.creature);
+    assert!(keeper.route.is_empty(), "the keeper stays at its post");
+    assert!(shop.contains(shop.post));
+    // Its walls have one way in, next to the keeper.
+    let ring: Vec<Pos> = (shop.min.x - 1..=shop.max.x + 1)
+        .flat_map(|x| (shop.min.y - 1..=shop.max.y + 1).map(move |y| Pos::new(x, y)))
+        .filter(|p| !shop.contains(*p))
+        .collect();
+    let doors: Vec<Pos> = (ring.iter().copied())
+        .filter(|p| CONTENT.terrain(level.terrain[*p]).walkable || is_door(level, *p))
+        .collect();
+    assert_eq!(doors.len(), 1, "one door: {doors:?}");
+    assert_eq!(
+        shop.post.chebyshev(doors[0]),
+        1,
+        "the keeper stands by the door"
+    );
+    // Goods of its kind lie on its floor, one stack a cell, and no creature but the keeper.
+    let goods: Vec<&Stack> = (level.objects.iter())
+        .filter(|(p, _)| shop.contains(**p))
+        .flat_map(|(_, pile)| pile)
+        .collect();
+    let (least, _) = shops.get(shop.kind).items;
+    assert!(goods.len() >= usize::from(least).min(4), "{goods:?}");
+    for stack in goods {
+        assert!(shops.stocks(&CONTENT, shop.kind, stack.object), "{stack:?}");
+    }
+    let others = (level.creatures.iter()).filter(|c| shop.contains(c.pos) && c.pos != shop.post);
+    assert_eq!(others.count(), 0);
+    // It is lit.
+    let lit = (shop.min.x..=shop.max.x)
+        .flat_map(|x| (shop.min.y..=shop.max.y).map(move |y| Pos::new(x, y)))
+        .any(|p| {
+            level.lights.contains_key(&p) || CONTENT.terrain(level.terrain[p]).light.is_some()
+        });
+    assert!(lit, "a shop is lit");
+}
+
+fn is_door(level: &LevelTemplate, p: Pos) -> bool {
+    let def = CONTENT.terrain(level.terrain[p]);
+    def.is_closed_door() || def.is_open_door()
 }
 
 #[test]

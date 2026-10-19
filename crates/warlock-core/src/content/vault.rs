@@ -44,6 +44,9 @@ impl Vault {
         if !template.rooms.is_empty() {
             return Err("a vault cannot mark special rooms".into());
         }
+        if !template.shops.is_empty() {
+            return Err("a vault cannot have shops".into());
+        }
         let is_door = |p: Pos| {
             let def = content.terrain(terrain[p]);
             def.is_closed_door() || def.is_open_door()

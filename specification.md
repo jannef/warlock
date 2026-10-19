@@ -86,6 +86,8 @@ Build the engine and framework, not the game. Everything built is production qua
   hand-made level marks) carries an effect that changes the rules inside it — a shadowed room, an
   echoing hall, a hushed chamber, a sanctuary, a flooded room — told the first time the player
   enters (§7 "Special rooms")
+- Shops (M27), ADOM-like: a general store and specialty shops with named shopkeepers, buying,
+  paying, selling, and theft; one in the courtyard, now and then one in the Depths (§7 "Shops")
 
 **Out of scope for now**: magic (spells are announced, nothing is damaged), damage types (a
 flaming arrow does an arrow's damage), rules that use stats beyond combat and burden (ability
@@ -121,7 +123,10 @@ trees, a ruined wall, a pond, standing stones, flower beds, and a roofed gazebo 
 sunlight, sky light, and shadows turn and stretch with the time of day (§5 "Sunlight"; M9), and the
 moon lights it faintly by night, waxing and waning with the month (§5 "Moonlight"; M12). The
 `courtyard` scenario starts there at 06:30, while the shadows are long. Windfall apples lie under
-a tree, and a candle and a scroll in the gazebo (M11).
+a tree, and a candle and a scroll in the gazebo (M11), with a purse of 60 gold coins. East of the
+gazebo a flagstone path leads to a small roofed timber hut with a door and a hanging lamp:
+Grimbold's General Store (§7 "Shops"; M27), Grimbold by the door and a bit of everything on the
+plank floor. A merchant fights no one, so the courtyard stays safe unless the player steals.
 
 **Safety**: the hand-made showcase (the hub, Level 2, the courtyard) is safe. Creatures that would hunt the player by type (the hub's kobold, Level 2's kobolds and rats) are placed in the `peaceful` faction by their level (§7 "Factions"): they keep their types, patrols, speeds, footsteps, and looks, and attack no one. Fighting happens in the arena, and in the generated Depths (the real dungeon). Arriving in the arena says "The clash of arms echoes off the stone." (a level's `arrival` line).
 
@@ -159,7 +164,8 @@ from north to south, foaming against a few boulders.
 **The Depths (generated, M6)**: a dungeon branch of eight procedurally generated levels
 (`depths:1` to `depths:8`; rooms and corridors at 80×21, caverns at 120×60 on depths 3–5) built
 from the run seed, with vaults stamped in; about one level in two or three has a special room
-(§7 "Special rooms"). The `depths` scenario starts on its first level.
+(§7 "Special rooms"), and about one in seven a shop (§7 "Shops"; with the `depths` scenario's
+seed 1, a fletcher's on the first level). The `depths` scenario starts on its first level.
 
 **The Overworld (M9)**: *The Wildlands*, a hand-authored 100×50 map of the land at large
 (`levels/overworld.toml`, level kind `overworld`), ADOM-like. Overworld terrain: plains,
@@ -819,14 +825,18 @@ rate or animation.
   (`t`), throw from the pack (`T`), fire (`f`, unbound by default), more aggressive / more
   defensive combat stance (`+` / `-`; §8 "Stances"), bash with a shield (an ability, below: no
   key by default; bound in Controls, it asks for a direction, like opening a door), next target
-  (`Tab`, while aiming), use a tool (`U`, then a direction: dig), help, save and quit
+  (`Tab`, while aiming), use a tool (`U`, then a direction: dig), pay (`p`, in a shop; §7
+  "Shops"), help, save and quit
   (rebindable, unbound by default: quitting is done from the pause menu). Every way to quit (the
   pause menu's Save and quit to menu and Quit, the main menu's Quit, a bound quick key) asks
-  first, in a Yes/No dialog with No selected (`y` yes; `n`, Esc no; closing the window or the tab
-  does not ask). On the web Quit saves and reloads the page to a fresh main menu (a page cannot
-  close itself), which has no Quit item. Free actions (look, help, the inventory, looking at the
+  first, in a Yes/No dialog with No selected (`y` yes; `n` no; Esc cancels; ←/→ and Enter choose;
+  closing the window or the tab does not ask). The same dialog asks before the player leaves a
+  shop owing anything and before they sell (§7 "Shops"); there No may ask a further question in
+  its place. Its Yes and No keys (`y` and `n` by default) are rebindable, in a context of their
+  own, as `y` and `n` move the player in play. On the web Quit saves and reloads the page to a
+  fresh main menu (a page cannot close itself), which has no Quit item. Free actions (look, help, the inventory, looking at the
   equipment screen, the character screen, the Skills screen, the weapon skills screen, menus,
-  vision switch, a change of stance) do not
+  vision switch, a change of stance, paying in a shop) do not
   advance time.
 - **Objects** (M11) lie in piles on cells, the top first: the map shows the top object's glyph
   (§4.2), and dropped objects go on top. Stepping onto a pile says what lies there: `You see here
@@ -845,7 +855,10 @@ rate or animation.
   nothing there or nothing carried, they are refused and take none. Picking up is allowed
   however much the player carries, even into Overloaded. Dropping something worn or wielded
   takes it off first ("You take off a leather jerkin."), which takes its time too, and the stacks
-  after a dropped one move up a letter (worn things keep being worn).
+  after a dropped one move up a letter (worn things keep being worn). In a shop, picking up goods
+  adds them to what the player owes, and dropping puts back what is unpaid and offers to buy the
+  player's own things (§7 "Shops"); the inventory and drop screens mark what is unpaid
+  ("(unpaid, 45 gold)"), the pick-up screen what is for sale.
 - **Inventory** (`i`): what the player carries, ADOM-like: stacks lettered `a` to `z` in the order
   they were picked up (at most 26; a pile with more stacks keeps what does not fit), each with its
   glyph, name, and weight, then what the player carries (with their burden when they have one,
@@ -1012,7 +1025,9 @@ rate or animation.
   floor", "A blood-smeared stone wall."; §8 "Blood"; not with the blood switch off), where
   stairs lead, the special room walkable ground lies in once the player has been inside it ("A
   stone floor in an echoing hall.", "You remember a stone floor here, in a sanctuary."; §7
-  "Special rooms"), and a sound heard there ("You hear footsteps here.").
+  "Special rooms"), the price of goods for sale in a shop on a cell in sight ("A dagger (for
+  sale, 45 gold), on plank floor."; §7 "Shops"), and a sound heard there ("You hear footsteps
+  here.").
 - Screen layout: map viewport, message log, status panel (level, the player's hit points as
   `HP 18/24` (never below 0), the status effects they suffer by name, the most important first
   (`Bleeding`, `Poisoned`; data order; §8 "Status effects"), their burden when they have one
@@ -1190,9 +1205,11 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   symbol it renders with and its color, material, and weight: `id`, `name` (singular, without an
   article; `plural` defaults to the name plus `s`), `glyph`, `fg`, `material` (an id in
   `data/materials.toml`, whose `[[material]]` entries have an `id` and a `name`; properties come
-  later), `weight` (integer grams, at least 1), and `stackable` (default false). Glyphs follow
-  ADOM loosely: `)` weapons, `}` missile weapons, `/` missiles, `[` armor, `(` tools, `!`
-  potions, `?` scrolls, `%` food, `*` stones and gems, `$` coins, `=` rings, `"` amulets.
+  later), `weight` (integer grams, at least 1), `value` (what one is worth in gold coins,
+  required, 0 to 1 000 000; shops price their goods from it, §7 "Shops"), and `stackable`
+  (default false). Glyphs follow ADOM loosely, and are an object's class (shops trade by class):
+  `)` weapons, `}` missile weapons, `/` missiles, `[` armor, `(` tools, `!` potions, `?`
+  scrolls, `%` food, `*` stones and gems, `$` coins, `=` rings, `"` amulets.
   Every creature in `data/creatures.toml` has a base `weight` in grams (required, at least 1).
   Things that can be worn or wielded (M16) say where they go: `slot`, a slot's id or what it
   `fits` (`slot = "body"`, `slot = "ring"` for either ring slot; an unknown one is a content
@@ -1276,7 +1293,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   gives the stance (`Hostile` or `Neutral`) of two factions, creature types, or actors. Test
   factions: `vermin` (giant rats; hostile to the player), `kobolds` (the war band; hostile to the
   player and the vermin), `wildlife` (deer, cave bats, the cave beetle; neutral to everyone), and
-  `peaceful` ("peaceful folk", hostile to no one), which only levels place creatures in. A level
+  `peaceful` ("peaceful folk", hostile to no one), which only levels place creatures in;
+  `merchants` (shopkeepers; hostile to no one) and `outraged` ("outraged shopkeepers", hostile to
+  the player), which a robbed or attacked shopkeeper joins (§7 "Shops"). A level
   legend entry with a `creature` may name a `faction` (a known faction id; an unknown one is a
   content error) that replaces its type's for that creature: it is stored on the actor
   (`faction_override`, saved and hashed only when set), used wherever stance is computed (AI
@@ -1352,6 +1371,96 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   around them: their spaces (`void`) keep the area's own ground, every open cell on their edge is
   a way in, and their walkable cells are reachable from the edge. Dungeon generators use only
   dungeon vaults, local areas only outdoor ones.
+- **Shops** (`data/shops.toml`, optional; without it there are none and level files may mark
+  none; M27, #145), ADOM-like: a room with goods on its floor and a named shopkeeper by its
+  door. A **general store** sells a bit of everything, **specialty shops** one kind of thing.
+  - **Money and worth**: gold coins (`$`, stackable) are the currency (`currency`). Every object
+    has a `value` in gold (§7 "Objects and materials"); what is worth 0 (junk: rocks, sling
+    stones, copper coins, a burning arrow) and the currency are never traded.
+  - **The file**: `currency` (a stackable object), `outraged` (the faction a robbed or attacked
+    keeper joins; it must be hostile to the player), `presence` (percent better prices per point
+    of the Presence modifier, 0 to 10; 3), `chance` (percent of generated rooms levels with a
+    shop; 35), `names` (keepers' names for generated shops), `bundle` (`[least, most]` of a
+    stackable object in one stack of generated stock; `[6, 15]`), `[keeper]` (every keeper:
+    `creature`, `carry`, `wield`, `wear`, as in level legends; the `shopkeeper` creature, level
+    18, quick (1200), tough, in the `merchants` faction, carrying a spear, a small shield, a chain
+    mail shirt, an iron helm, and a purse of 300 gold coins), and `[[shop]]`s (at most 32; ids are
+    indices, in the save fingerprint): `id`, `name` ("general store"), `title` (its sign, with
+    `{keeper}` for the keeper's name: "{keeper}'s General Store"), `stock` and `buys` (object
+    classes), `items` (`[least, most]` stacks of generated stock), `markup` (what it asks, percent
+    of the value, 100 to 1000), and `pays` (what it pays for what it buys, 0 to 100). Objects
+    are traded by **class**, which is their glyph as in ADOM (`weapons` `)`, `missile_weapons`
+    `}`, `missiles` `/`, `armour` `[`, `tools` `(`, `potions` `!`, `scrolls` `?`, `food` `%`,
+    `stones` `*`, `coins` `$`, `rings` `=`, `amulets` `"`; `ObjectClass`). The kinds: a general
+    store (weapons, missile weapons, missiles, armour, tools, potions, scrolls, food; asks 150 %,
+    pays 30 %), a weaponsmith ("{keeper}'s Forge": weapons and missiles; 130 %, 40 %), an
+    armourer ("{keeper}'s Armoury": armour), a provisioner ("{keeper}'s Provisions": food and
+    tools; 120 %, 30 %), and a fletcher ("{keeper}'s Fletchery": missile weapons and missiles;
+    125 %, 40 %). Alchemists and scribes wait for potions and scrolls that do something.
+  - **Prices** (`Shops::price`, `Shops::offer`; integers): a stack's value (each one's times the
+    count) times the markup, less the player's **favour**, rounded up and at least 1; an offer is
+    the value times `pays`, plus the favour, rounded down, never more than the shop asks for the
+    same. The favour (`world::favour`) is `presence` percent for each point of the Presence
+    modifier plus the Appraise skill's `bargain` benefit (§8 "Skills": 20 % at 100), together at
+    most 50 % either way. Only the prices are ever shown.
+  - **Buying**: stepping onto the shop floor from outside the keeper greets the player
+    ("Welcome to Grimbold's General Store!"). While the keeper trades (`ShopStatus::Open`),
+    everything traded lying on the shop floor is for sale: stepping onto it says the price ("You
+    see here a dagger (for sale, 45 gold)."), and so do look mode and the pick-up screen.
+    Picking it up adds it to what the player owes (`Shop::unpaid`, counted by object) and says
+    the price ("You pick up a dagger (unpaid, 45 gold).", with "You owe Grimbold 63 gold." when
+    more is owed). **Paying** (`p`, `Action::Pay`, replay text `pay`) pays everything owed, from
+    the gold the player carries into the keeper's purse, and takes no time; refused outside a
+    shop, owing nothing, or without enough gold ("You owe Grimbold 75 gold, but you have only
+    60."). Without enough gold the player **puts it back**: dropping unpaid goods in the shop
+    returns them to the floor (and off the debt), taking a drop's time. Which stacks are unpaid
+    follows from the counts: of an object's stacks, the last ones in the pack.
+  - **Selling**: dropping the player's own things in the shop keeps them and says the offer
+    ("Grimbold offers 15 gold for a scroll of light."), or that the shop has no use for them;
+    **selling** (`Action::Sell`, replay text `sell:b`, `sell` for everything) takes the offer
+    from the keeper's purse ("You sell a scroll of light to Grimbold for 15 gold."; "Grimbold
+    cannot afford ..." when the purse is short) and leaves the thing on the floor, for sale.
+    Presentation asks first, in the confirmation dialog (§6): dropping in a shop what it buys
+    asks `Grimbold offers 15 gold for a scroll of light. Sell?` (yes sells, no drops nothing).
+  - **Theft**: a step from the shop floor to outside it while owing anything is theft ("You
+    leave without paying. \"Stop, thief!\" shouts Grimbold."): the keeper joins the `outraged`
+    faction (its `faction_override`, hostile to the player; ADOM-like, it comes after them), the
+    shop trades no more (`ShopStatus::Outraged`), and what was owed is the player's, stolen. A
+    keeper the player attacks (any attack, melee, shot, or throw, hit or miss) turns the same way
+    ("\"You will pay for that!\" shouts Grimbold."). Presentation asks before a step out owing
+    anything, in the confirmation dialog (§6): `You owe Grimbold 45 gold. Pay before you leave?`
+    (yes pays, and the player is free to go; no asks the next question), or without the gold
+    `You owe Grimbold 78 gold and cannot pay it.` and then `Leave without paying? Grimbold will
+    call it theft.` (yes steps out, stealing; no stays). Esc stays, and a held movement key
+    stops at the shop's edge, so theft is always the player's choice. Unpaid goods cannot be shot or thrown ("You have not paid
+    for a dagger (c)."). A keeper's death abandons its shop (`ShopStatus::Abandoned`): what lies
+    there is free to take, and its purse falls with it. Witnesses, pacifying a keeper, and the
+    steal skill come later.
+  - **The keeper** stays at its post (a merchant has no enemies, so it neither hunts nor looks
+    into noises) until outraged; then it fights and chases like any hostile creature and goes back
+    to its post when it has lost the player.
+  - **Generation** (`mapgen/shop.rs`): after special rooms, last of all, with `chance` a rooms
+    level picks one of its rooms (not the arrival room, not a vault) with a single door, no
+    stairs, no special room, and no patrol in it, uniformly, and makes it a shop of a kind drawn
+    uniformly, kept by a name drawn from `names`: the keeper stands beside the cell inside the
+    door (the way in stays free), a lamp hangs over the middle of the room, and the floor is laid
+    with `items` stacks (as many as there are free cells, one a cell), each drawn uniformly from
+    what the kind stocks (traded, not burning), a stackable one a `bundle`. All from the level's
+    map stream, so a level without a shop is the map it would be without them. Caverns get none.
+    About one level of the Depths in seven gets one (a test keeps it between 11 and 20 % over
+    1200 levels; 15 % now).
+  - **Level files** mark shops with `[[shop]] kind = "general_store" keeper = "Grimbold" area =
+    [x0, y0, x1, y1] post = [x, y]` (the shop floor, inclusive, inside the map, not overlapping
+    another shop; the post walkable, on it, and where no creature or the player starts); the
+    keeper is spawned there from `[keeper]`, and the level places the goods like any objects.
+    Vaults have none.
+  - **State**: each level state keeps its shops (`LevelState::shops`: the kind, the keeper's
+    actor id and name, the floor, the post, what the player owes, and the status; saved and
+    hashed, format version 30). Prices are not saved: they follow from the data and the player.
+  - **What the player perceives** (`PerceptionView::shop_at`, `shop_here`, `price_tag`,
+    `unpaid`, `owed_on_leaving`, `sale`, `own_gold`): an open shop's sign, its keeper's name, its
+    prices for them, what they owe, and their own gold; never a value, a markup, or how their
+    Presence and skills move the prices.
 - **Special rooms** (`data/room_effects.toml`, optional; without it there are none; M25),
   ADOM-like: a room of a generated level, or an area a hand-made level marks, carries an
   **effect** that changes the rules while one is inside it. Top level: `chance` (percent, 0 to
@@ -1513,7 +1622,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   from 1.0 on, saves are migrated. The web build keeps the same bytes in the browser's
   `localStorage` (below). The envelope also records a content fingerprint (hash of the ordered
   terrain, creature, level, light, dungeon-branch, object, equipment slot, skill, room effect,
-  weapon skill, and status
+  weapon skill, status, and shop
   ids), because ids are indices; a save made with different content is rejected. Generated levels
   are saved with the run like visited hand-made ones (terrain, memory, stairs, lights, kind,
   arrival point,
@@ -1540,8 +1649,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   as last seen (§8 "Blood"; format version 19), every actor's status effects (each status with
   its severity, its progress toward its next tick and easing, and who caused it), the progress
   toward the next hit point back counted in hundredths of a second at the normal pace, and the
-  status effect that killed the player (§8 "Status effects", "Healing"; format version 20), and
-  a dev weather override while
+  status effect that killed the player (§8 "Status effects", "Healing"; format version 20), each
+  level's shops (the keeper, what the player owes, and how the keeper stands; §7 "Shops"; format
+  version 30), and a dev weather override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
   platform data directory. quitting from the pause menu saves (closing the window saves too), autosave runs every 50 turns
@@ -2199,9 +2309,11 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
       `Burden::slow_eased`; rounded up);
     - survival: percent less time a journey on the overworld takes, 0.2 % a point to 20 % at 100
       (`World::step_price`);
+    - appraise: percent better prices in shops (`bargain`), 0.2 % a point to 20 % at 100, then to
+      30 % at 200 (`world::favour`; with Presence at most 50 %; §7 "Shops");
     - athletics (kicking doors, climbing out of pits) and escape artist (out of pits faster) wait
       for those rules (#128, #130); swim for deep water; concentration, spellcraft, and use magic
-      device for magic; the action skills (appraise, search, open lock, heal, …) for their
+      device for magic; the other action skills (search, open lock, heal, …) for their
       actions.
   - **What the player sees**: their own trained skills' values and a coarse progress (quarters)
     toward the next point (`PerceptionView::own_skills`), on the Skills screen (§6) and the
@@ -2285,7 +2397,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
 - **Determinism**: ChaCha8 RNG (`rand_chacha`) with separate streams, each seeded with FNV-1a 64 of
   the run seed (little-endian) and a label: map generation per level (`map/<level id>`, retry *k*
   `map/<level id>/<k>`), so a level depends only on the seed and its id, never on visiting order
-  (its special room is drawn last, so a level without one is the map it would be without them);
+  (its special room and then its shop are drawn last, so a level without them is the map it
+  would be without them);
   gameplay (`gameplay`, kept in the world state and saved); character creation (derived on
   demand: `character/gender` for the stat "other" raises, `character/birth/<race>` for the age
   and birthday, `character/rolls/<race>,<gender>,<class>` for the dice,
@@ -2324,8 +2437,8 @@ cargo xtask golden [--update]                             # compare golden scree
   character `{race, gender, class}` (left out for a run without one; a replay without it starts
   as the scenario's character, so older replays still load). Actions use a text
   syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
-  pickup pickup:ac drop drop:b equip:body:b remove:body bash:E fire:12,5 throw:c:12,5 dig:E
-  vision:darkvision skip:1h weather:rain stance:coward effect:fireball@12,5
+  pickup pickup:ac drop drop:b sell:b pay equip:body:b remove:body bash:E fire:12,5
+  throw:c:12,5 dig:E vision:darkvision skip:1h weather:rain stance:coward effect:fireball@12,5
   effect:lightning_bolt@3,4>12,4 afflict:bleeding`; `bash:DIR` bashes with the held shield that
   way, `dig:DIR` digs toward a direction until the wall gives way or something interrupts;
   `fire:X,Y` shoots at level cell (X, Y),
@@ -2335,8 +2448,8 @@ cargo xtask golden [--update]                             # compare golden scree
   cell toward the second (cut short by the first opaque cell); it hurts no one, takes no time,
   and only says so in the message log;
   durations are a whole number with `s`, `m`, or `h`, a rest at most `24h`; letters name stacks
-  of the pile or the inventory, `a` first, and without letters `pickup` and `drop` take
-  everything; `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT (a slot id of
+  of the pile or the inventory, `a` first, and without letters `pickup`, `drop`, and `sell`
+  take everything; `sell` sells to the shop the player stands in, `pay` pays it (§7 "Shops"); `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT (a slot id of
   `data/slots.toml`) and `remove:SLOT` takes off what is there; the dev weather
   override takes `clear`, `overcast`, `rain`, or `heavy`; the dev `afflict:ID` gives the player a
   degree more of status ID (`data/status.toml`); in scripts, `ACTION*N` repeats an
@@ -2354,7 +2467,8 @@ cargo xtask golden [--update]                             # compare golden scree
   `c` a door closing, `x` fighting, `b` a bowstring, `m` chanting, `d` digging, upper case when
   loud),
   `inventory` (what the player carries, by letter with weights and what is worn or wielded
-  marked, `b - a leather jerkin (being worn) (3.5 kg)`, then what they carry, their burden and
+  marked, `b - a leather jerkin (being worn) (3.5 kg)`, and in a shop what is unpaid, `c - a
+  dagger (unpaid, 45 gold) (450 g)`, then what they carry, their burden and
   its thresholds, and what they weigh, `carried 4.2 kg (unburdened: burdened over 14 kg,
   strained over 28 kg, overloaded over 42 kg), total weight 74.2 kg`),
   `equipment` (the player's slots by letter, `c Body: a leather jerkin (b)`, `-` when empty),
@@ -2376,11 +2490,13 @@ cargo xtask golden [--update]                             # compare golden scree
   room, `s shadowed room at (34, 8)-(49, 13), entered`) show
   ground truth and are dev-only. JSON dumps
   carry turn, game time (seconds and calendar fields), level, viewer, the special room the
-  player stands in if they know it (`room`, its effect id; else null), the weather (under the open
+  player stands in if they know it (`room`, its effect id; else null), the open shop they stand
+  in (`shop: {sign, keeper, owed}`; else null; §7 "Shops"), the weather (under the open
   sky; else null), seen actors (each with how hurt it looks, `health`: `unhurt`,
   `lightly_wounded`, `wounded`, `badly_wounded`, `nearly_dead`, and the status effects that show
   on it, `effects`, by id), heard sounds, the player's
-  inventory, equipment (by slot id: letter, object, count), weight, burden (`burden: {level,
+  inventory (an unpaid stack with its price, `unpaid`), equipment (by slot id: letter, object,
+  count), weight, burden (`burden: {level,
   limit}`, the limit in grams), character
   (`{race, gender, class, raised, age, born: {year, month, day}, sign: {animal, element}}` or
   null), scores (`stats`, by stat id), trained skills (`skills`, by skill id with their values),
@@ -2394,7 +2510,8 @@ cargo xtask golden [--update]                             # compare golden scree
 - Freezing visual time and fixing window size and scale make screenshots reproducible. With frozen
   time, glyph animations show that moment and motion (slides, camera) completes instantly.
 - `--fire` (dev) starts the run aiming the readied missile weapon, as `f` would, so captures show
-  the targeting line (golden manifest entries pass it with `args`).
+  the targeting line (golden manifest entries pass it with `args`); `--look X,Y` (dev) starts in
+  look mode with the cursor on level cell (X, Y), so captures show what look mode says there.
 - Dev builds add in-game commands: switch vision profile (`F3`), reveal map (`F2`, ground truth,
   marked as dev-only on screen), toggle debug overlays (light values `F4`; line of sight and memory
   later), save and load named snapshots (`F5`/`F9`), skip an hour (`F6`, recorded as `skip:1h`),
@@ -2522,6 +2639,12 @@ Each milestone ships a playable build.
   generated level in two or three and in areas hand-made levels mark (the hub's stairs nook is a
   sanctuary); one query for the rules (`World::room_effect_at`), a first-entry message, and look
   mode naming rooms the player has been in.
+- **M27 Merchants and shops** — ADOM-like shops (#145): a value in gold on every object, a
+  general store and four specialty shops in data (`data/shops.toml`), named shopkeepers in a
+  merchants faction, buying (prices in look mode and on pick-up, a debt, paying with `p` or when
+  leaving), selling (offers for dropped goods), prices moved by Presence and Appraise (never
+  shown), theft that turns the keeper hostile, free goods once it is dead; Grimbold's General
+  Store in the courtyard and a shop in about one generated level in seven.
 
 - **M24 Status effects and diseases** — a data-driven status-effect framework (#138): effects
   with severities that tick, ease, stack, and can be cured in game time, lower stats, slow

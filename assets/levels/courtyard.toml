@@ -7,6 +7,11 @@
 # Heights (data/terrain.toml): the walls 1, trees (T) 2, the gazebo roof (=, o) 2, standing
 # stones (O) 3. The gazebo floor is roofed: no sun or sky reaches it, only its lamp and a little
 # bounce light from the sunlit grass around it.
+#
+# East of the gazebo a flagstone path leads to a small timber hut (W, roof 2 tall) with a door in
+# its west wall: Grimbold's General Store (spec §7 "Shops"), lit by a hanging lamp. Grimbold stands
+# by the door; everything on the plank floor (p) is for sale. A merchant fights no one, so the
+# courtyard stays safe unless the player steals. A purse of gold lies in the gazebo.
 name = "The Courtyard"
 kind = "outdoor"
 map = '''
@@ -19,14 +24,14 @@ map = '''
 #..............................#........................O........#
 #.......................................o=====o.*............T...#
 #..........................T............=======.*................#
-#...>:@:::::::::::::::::::::::::::::::::===L===.......T..........#
-#.......................................=======.*................#
-#...........T...........................o=====o.*................#
-#.............**...~~~~~~........................................#
-#.............*.~~~~~~~~~~~.*.............................T......#
-#.......T......~~~~~~~~~~~~~*.O..................................#
-#................~~~~~~~~~...*....T..............................#
-#.**................~~~~.........................T...............#
+#...>:@:::::::::::::::::::::::::::::::::===L===::::...T..........#
+#.......................................=======.*.:..............#
+#...........T...........................o=====o.*.:..............#
+#.............**...~~~~~~.........................:..WWWWWWWWWWW.#
+#.............*.~~~~~~~~~~~.*.....................:..WpppppppppW.#
+#.......T......~~~~~~~~~~~~~*.O...................:::+pppplppppW.#
+#................~~~~~~~~~...*....T..................WpppppppppW.#
+#.**................~~~~.........................T...WWWWWWWWWWW.#
 #.**.............................................................#
 ##################################################################
 '''
@@ -40,6 +45,9 @@ map = '''
 "=" = "gazebo_floor"
 "o" = "gazebo_post"
 "L" = { terrain = "gazebo_floor", light = "lamp" }
+"W" = "timber_wall"
+"p" = "plank_floor"
+"l" = { terrain = "plank_floor", light = "lamp" }
 ">" = { terrain = "stairs_down", to = "hub" }
 "@" = { terrain = "flagstones", spawn = "player" }
 
@@ -51,3 +59,56 @@ objects = ["apple*3"]
 [[pile]]
 at = [44, 8]
 objects = ["candle*2", "scroll_of_light"]
+
+# Someone's purse, dropped in the gazebo: enough to buy a thing or two.
+[[pile]]
+at = [42, 10]
+objects = ["gold_coin*60"]
+
+# Grimbold's General Store: a bit of everything, laid out on the plank floor. Grimbold (the keeper
+# of data/shops.toml) stands at the post, beside the cell inside the door.
+[[shop]]
+kind = "general_store"
+keeper = "Grimbold"
+area = [54, 13, 62, 15]
+post = [54, 13]
+
+[[pile]]
+at = [56, 13]
+objects = ["dagger"]
+
+[[pile]]
+at = [58, 13]
+objects = ["short_sword"]
+
+[[pile]]
+at = [60, 13]
+objects = ["leather_jerkin"]
+
+[[pile]]
+at = [62, 13]
+objects = ["small_shield"]
+
+[[pile]]
+at = [56, 14]
+objects = ["red_potion"]
+
+[[pile]]
+at = [62, 14]
+objects = ["wool_cloak"]
+
+[[pile]]
+at = [56, 15]
+objects = ["arrow*20"]
+
+[[pile]]
+at = [58, 15]
+objects = ["short_bow"]
+
+[[pile]]
+at = [60, 15]
+objects = ["rope"]
+
+[[pile]]
+at = [62, 15]
+objects = ["dried_meat*6"]

@@ -125,19 +125,31 @@ impl ObjectScreen {
         let entries = match view {
             Some(view) => {
                 let content = view.content();
-                // The inventory marks what is worn or wielded; a pile has nothing worn.
+                // The inventory marks what is worn or wielded, and in a shop what is unpaid; a
+                // pile has nothing worn, but in a shop its price (spec §7 "Shops").
                 let carried = list != ObjectList::PickUp;
+                let unpaid = view.unpaid();
                 (items.iter())
                     .map(|&i| (i, &stacks[i]))
                     .map(|(i, s)| {
                         let def = content.object(s.object);
+                        let price = match carried {
+                            true => unpaid.get(i).copied().flatten(),
+                            false => view.price_tag(view.viewer(), *s),
+                        };
+                        let worn = carried
+                            .then(|| equipment::mark(content, view.equipment(), i))
+                            .flatten();
+                        let sale = price.map(|g| match carried {
+                            true => format!("unpaid, {g} gold"),
+                            false => format!("for sale, {g} gold"),
+                        });
+                        let marks: Vec<String> = worn.into_iter().chain(sale).collect();
                         Entry {
                             glyph: def.glyph,
                             fg: def.fg,
                             name: s.describe(content),
-                            mark: carried
-                                .then(|| equipment::mark(content, view.equipment(), i))
-                                .flatten(),
+                            mark: (!marks.is_empty()).then(|| marks.join(") (")),
                             weight: s.weight(content),
                         }
                     })

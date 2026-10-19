@@ -46,6 +46,7 @@ mod spells;
 mod target;
 mod weapon_skills_screen;
 
+pub use confirm_screen::Question;
 pub use menu::Press;
 pub use screens::{MenuChoice, ScreenAction, ScreenName, ScreenStack, Screens};
 

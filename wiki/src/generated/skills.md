@@ -2,7 +2,7 @@
 
 | Skill | Kind | What it is about | Gives | Trains on |
 |---|---|---|---|---|
-| Appraise | action | Judging what a thing is worth and what it is made of. | nothing yet | nothing yet |
+| Appraise | action | Judging what a thing is worth and what it is made of. | better prices in shops | nothing yet |
 | Athletics | read by rules | Running, jumping, climbing, and kicking: strength put to use. | nothing yet | nothing yet |
 | Balance | passive | Sure footing under a heavy load or on bad ground. | less slowdown from your load | acting (not waiting) while your load slows you (5%) |
 | Bluff | action | Lying with a straight face, feinting, and talking your way out. | nothing yet | nothing yet |

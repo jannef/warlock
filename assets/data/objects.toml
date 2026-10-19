@@ -6,6 +6,9 @@
 #   glyph     the character it is drawn with; fg its color
 #   material  an id in materials.toml
 #   weight    grams for one, at least 1
+#   value     what one is worth, in gold coins (required; 0 to 1000000): shops price their
+#             goods from it and pay part of it for what they buy (shops.toml). Junk is worth 0,
+#             and nobody buys or sells it
 #   stackable several lie in one stack (coins, arrows); default false: a stack of one each
 #
 # Things that can be worn or wielded also say where they go (equipment, slots.toml):
@@ -65,7 +68,8 @@
 #              on top of its pile, `flight` while it flies
 #
 # Glyphs follow ADOM loosely: ) weapons, } missile weapons, / missiles, [ armor, ( tools,
-# ! potions, ? scrolls, % food, * stones and gems, $ coins, = rings, " amulets.
+# ! potions, ? scrolls, % food, * stones and gems, $ coins, = rings, " amulets. As in ADOM, the
+# glyph is the object's class: shops (shops.toml) sell and buy by class.
 
 # Weapons
 [[object]]
@@ -75,6 +79,7 @@ glyph = ")"
 fg = "#c8ccd4"
 material = "steel"
 weight = 450
+value = 30
 slot = "main_hand"
 damage = "1d4"
 category = "daggers"
@@ -91,6 +96,7 @@ glyph = ")"
 fg = "#dce0e8"
 material = "steel"
 weight = 1100
+value = 50
 slot = "main_hand"
 damage = "1d6"
 category = "short_blades"
@@ -103,6 +109,7 @@ glyph = ")"
 fg = "#b8955a"
 material = "wood"
 weight = 1800
+value = 35
 slot = "main_hand"
 damage = "1d8"
 category = "spears"
@@ -118,6 +125,7 @@ glyph = ")"
 fg = "#946a42"
 material = "wood"
 weight = 1400
+value = 8
 slot = "main_hand"
 damage = "1d6"
 category = "maces"
@@ -130,6 +138,7 @@ glyph = ")"
 fg = "#a87c4c"
 material = "wood"
 weight = 2000
+value = 15
 slot = "main_hand"
 two_handed = true
 damage = "1d6"
@@ -146,6 +155,7 @@ glyph = "}"
 fg = "#b08048"
 material = "wood"
 weight = 700
+value = 60
 slot = "missile_weapon"
 launches = "arrow"
 damage = "1d6"
@@ -161,6 +171,7 @@ glyph = "}"
 fg = "#8c6236"
 material = "wood"
 weight = 1300
+value = 200
 slot = "missile_weapon"
 launches = "arrow"
 damage = "1d8+2"
@@ -176,6 +187,7 @@ glyph = "}"
 fg = "#a8a098"
 material = "wood"
 weight = 3200
+value = 150
 slot = "missile_weapon"
 launches = "bolt"
 damage = "1d10+1"
@@ -191,6 +203,7 @@ glyph = "}"
 fg = "#9a7450"
 material = "leather"
 weight = 100
+value = 10
 slot = "missile_weapon"
 launches = "stone"
 damage = "1d4"
@@ -205,6 +218,7 @@ glyph = "/"
 fg = "#c8a878"
 material = "wood"
 weight = 30
+value = 1
 stackable = true
 slot = "missiles"
 ammo = "arrow"
@@ -219,6 +233,7 @@ glyph = "/"
 fg = "#c87850"
 material = "wood"
 weight = 40
+value = 4
 stackable = true
 slot = "missiles"
 ammo = "arrow"
@@ -233,6 +248,7 @@ glyph = "/"
 fg = "#ffc070"
 material = "wood"
 weight = 30
+value = 0
 stackable = true
 light = "arrow_fire"
 burns = 60
@@ -276,6 +292,7 @@ glyph = "/"
 fg = "#b4aca0"
 material = "wood"
 weight = 60
+value = 2
 stackable = true
 slot = "missiles"
 ammo = "bolt"
@@ -289,6 +306,7 @@ glyph = "*"
 fg = "#9c968c"
 material = "stone"
 weight = 40
+value = 0
 stackable = true
 slot = "missiles"
 ammo = "stone"
@@ -302,6 +320,7 @@ glyph = "["
 fg = "#9a6838"
 material = "leather"
 weight = 3500
+value = 40
 slot = "body"
 armour = 2
 max_dex = 6
@@ -313,6 +332,7 @@ glyph = "["
 fg = "#aab2ba"
 material = "iron"
 weight = 11000
+value = 250
 slot = "body"
 armour = 4
 max_dex = 4
@@ -324,6 +344,7 @@ glyph = "["
 fg = "#9ea4aa"
 material = "iron"
 weight = 1500
+value = 50
 slot = "head"
 
 [[object]]
@@ -333,6 +354,7 @@ glyph = "["
 fg = "#6e7c5a"
 material = "cloth"
 weight = 1200
+value = 20
 slot = "cloak"
 
 [[object]]
@@ -342,6 +364,7 @@ glyph = "["
 fg = "#a07a4a"
 material = "wood"
 weight = 2500
+value = 30
 slot = "off_hand"
 shield = 1
 bash = "1d3"
@@ -354,6 +377,7 @@ glyph = "["
 fg = "#8a6040"
 material = "leather"
 weight = 250
+value = 10
 slot = "hands"
 
 [[object]]
@@ -364,6 +388,7 @@ glyph = "["
 fg = "#7a5434"
 material = "leather"
 weight = 1000
+value = 20
 slot = "feet"
 
 # Tools
@@ -376,6 +401,7 @@ glyph = "("
 fg = "#b8b0a4"
 material = "iron"
 weight = 3000
+value = 50
 slot = "tool"
 dig = 10
 
@@ -386,6 +412,7 @@ glyph = "("
 fg = "#a49680"
 material = "iron"
 weight = 4500
+value = 70
 slot = "tool"
 dig = 15
 
@@ -396,6 +423,7 @@ glyph = "("
 fg = "#b4b8bc"
 material = "iron"
 weight = 40
+value = 5
 
 [[object]]
 id = "candle"
@@ -404,6 +432,7 @@ glyph = "("
 fg = "#f0e6c8"
 material = "wax"
 weight = 100
+value = 2
 stackable = true
 
 [[object]]
@@ -414,6 +443,7 @@ glyph = "("
 fg = "#c8b080"
 material = "cloth"
 weight = 1500
+value = 10
 
 # Potions
 [[object]]
@@ -423,6 +453,7 @@ glyph = "!"
 fg = "#e04848"
 material = "glass"
 weight = 250
+value = 60
 stackable = true
 
 [[object]]
@@ -432,6 +463,7 @@ glyph = "!"
 fg = "#5888f0"
 material = "glass"
 weight = 250
+value = 60
 stackable = true
 
 # Scrolls
@@ -443,6 +475,7 @@ glyph = "?"
 fg = "#ece4cc"
 material = "paper"
 weight = 50
+value = 50
 stackable = true
 
 # Food
@@ -454,6 +487,7 @@ glyph = "%"
 fg = "#b06848"
 material = "flesh"
 weight = 150
+value = 3
 stackable = true
 
 [[object]]
@@ -463,6 +497,7 @@ glyph = "%"
 fg = "#d84838"
 material = "plant"
 weight = 150
+value = 1
 stackable = true
 
 # Stones and gems
@@ -474,6 +509,7 @@ glyph = "*"
 fg = "#a29c90"
 material = "stone"
 weight = 800
+value = 0
 stackable = true
 damage = "1d3"
 category = "thrown"
@@ -488,6 +524,7 @@ glyph = "*"
 fg = "#f03858"
 material = "gemstone"
 weight = 5
+value = 400
 stackable = true
 
 # Coins
@@ -498,6 +535,7 @@ glyph = "$"
 fg = "#f0cc40"
 material = "gold"
 weight = 10
+value = 1
 stackable = true
 
 [[object]]
@@ -507,6 +545,7 @@ glyph = "$"
 fg = "#d08448"
 material = "copper"
 weight = 8
+value = 0
 stackable = true
 
 # Rings
@@ -517,6 +556,7 @@ glyph = "="
 fg = "#d4dce4"
 material = "silver"
 weight = 10
+value = 100
 slot = "ring"
 
 # Amulets
@@ -527,6 +567,7 @@ glyph = '"'
 fg = "#e8e0c8"
 material = "bone"
 weight = 60
+value = 25
 slot = "neck"
 
 [[object]]
@@ -536,4 +577,5 @@ glyph = '"'
 fg = "#68c090"
 material = "stone"
 weight = 80
+value = 120
 slot = "neck"

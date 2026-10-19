@@ -31,8 +31,16 @@ pub enum Action {
     PickUp(Letters),
     /// Drop the inventory stacks with these letters onto the player's cell, or everything
     /// carried with no letters. Takes a turn (its cost: `drop`, plus taking off what of it is
-    /// worn or wielded).
+    /// worn or wielded). In a shop (spec §7 "Shops") what of them is unpaid goes back; the
+    /// player's own things stay, and the shop says what it would pay for those it buys.
     Drop(Letters),
+    /// Sell the inventory stacks with these letters (everything with no letters) to the shop the
+    /// player stands in, for what it offers (spec §7 "Shops"): like [`Action::Drop`] there, but
+    /// what the shop buys is sold, paid from the keeper's purse. Takes the time of `drop`.
+    Sell(Letters),
+    /// Pay for everything unpaid in the shop the player stands in (spec §7 "Shops"), from the
+    /// gold they carry. Takes no game time; recorded in replays.
+    Pay,
     /// Wear or wield inventory stack `item` (a position, `a` = 0) in `slot` (an id in
     /// `data/slots.toml`), taking off what is there first (a swap). Takes the time of the slot's
     /// action (`wield`, `wear`, `body_armor`, `ready`) for each thing put on or taken off.
@@ -339,16 +347,15 @@ pub struct Outcome {
 }
 
 /// Text syntax for scripting: `move:E wait open:E close:W ascend descend lantern rest:1h
-/// rest:dawn rest:dusk pickup pickup:ac drop:b equip:body:b remove:body bash:E fire:12,5
-/// throw:c:12,5 dig:E vision:ID skip:1h weather:rain effect:fireball@12,5
+/// rest:dawn rest:dusk pickup pickup:ac drop:b sell:b pay equip:body:b remove:body bash:E
+/// fire:12,5 throw:c:12,5 dig:E vision:ID skip:1h weather:rain effect:fireball@12,5
 /// effect:lightning_bolt@3,4>12,4 afflict:bleeding` (durations: `30s`, `10m`, `2h`; letters
-/// name stacks, `a`
-/// first; `pickup` and `drop` without letters take everything; `equip:SLOT:LETTER` puts
-/// inventory stack LETTER on in slot SLOT, `remove:SLOT` takes off what is there; `bash:DIR`
-/// bashes with the held shield; `dig:DIR` digs toward a wall; `fire:X,Y` shoots at the level
-/// cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack LETTER there; weather: `clear`,
-/// `overcast`, `rain`, `heavy`; `effect:ID@X,Y[>X,Y]` shows a spell effect at a cell, or from
-/// one cell toward another).
+/// name stacks, `a` first; `pickup`, `drop`, and `sell` without letters take everything;
+/// `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT, `remove:SLOT` takes off what
+/// is there; `bash:DIR` bashes with the held shield; `dig:DIR` digs toward a wall; `fire:X,Y`
+/// shoots at the level cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack LETTER
+/// there; weather: `clear`, `overcast`, `rain`, `heavy`; `effect:ID@X,Y[>X,Y]` shows a spell
+/// effect at a cell, or from one cell toward another).
 ///
 /// `Display` and `FromStr` round-trip; action names are case-insensitive when parsing (vision
 /// profile, slot, and effect ids keep their case).
@@ -366,6 +373,9 @@ impl fmt::Display for Action {
             Action::PickUp(l) => write!(f, "pickup:{l}"),
             Action::Drop(l) if l.is_empty() => f.write_str("drop"),
             Action::Drop(l) => write!(f, "drop:{l}"),
+            Action::Sell(l) if l.is_empty() => f.write_str("sell"),
+            Action::Sell(l) => write!(f, "sell:{l}"),
+            Action::Pay => f.write_str("pay"),
             Action::Equip { slot, item } => {
                 write!(f, "equip:{slot}:{}", letter(*item).unwrap_or('?'))
             }
@@ -423,16 +433,17 @@ impl FromStr for Action {
             "ascend" => bare(Action::Ascend),
             "descend" => bare(Action::Descend),
             "lantern" => bare(Action::ToggleLantern),
-            "pickup" | "drop" => {
+            "pay" => bare(Action::Pay),
+            "pickup" | "drop" | "sell" => {
                 let letters = match arg {
                     None => Letters::default(),
                     Some("") => return Err(format!("`{verb}:` needs letters, e.g. `{verb}:ab`")),
                     Some(text) => text.parse().map_err(|e| format!("`{s}`: {e}"))?,
                 };
-                Ok(if verb == "pickup" {
-                    Action::PickUp(letters)
-                } else {
-                    Action::Drop(letters)
+                Ok(match verb {
+                    "pickup" => Action::PickUp(letters),
+                    "drop" => Action::Drop(letters),
+                    _ => Action::Sell(letters),
                 })
             }
             "rest" => match arg {
@@ -535,9 +546,9 @@ impl FromStr for Action {
             _ => Err(format!(
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
                  descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
-                 equip:SLOT:LETTER, remove:SLOT, bash:DIR, fire:X,Y, throw:LETTER:X,Y, dig:DIR, \
-                 stance:NAME, vision:ID, skip:DURATION, weather:clear|overcast|rain|heavy, \
-                 effect:ID@X,Y[>X,Y], afflict:STATUS)"
+                 sell[:LETTERS], pay, equip:SLOT:LETTER, remove:SLOT, bash:DIR, fire:X,Y, \
+                 throw:LETTER:X,Y, dig:DIR, stance:NAME, vision:ID, skip:DURATION, \
+                 weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y], afflict:STATUS)"
             )),
         }
     }
@@ -617,6 +628,9 @@ mod tests {
             Action::Drop(Letters::default()),
             Action::Drop(Letters::of([1])),
             Action::Drop(Letters::of(0..Letters::COUNT)),
+            Action::Sell(Letters::default()),
+            Action::Sell(Letters::of([0, 3])),
+            Action::Pay,
             Action::Equip {
                 slot: "body".into(),
                 item: 1,
@@ -806,6 +820,9 @@ mod tests {
             "afflict:a:b",
             "pickup:",
             "pickup:a1",
+            "pay:E",
+            "sell:",
+            "sell:A1",
             "drop:A-",
             "drop:",
             "rest",

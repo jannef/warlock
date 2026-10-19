@@ -13,9 +13,10 @@
 //! 6. A few creatures walk laps or back and forth in rooms.
 //! 7. Now and then a room other than the arrival room is special (`special.rs`): the room with
 //!    its walls and doors.
+//! 8. Rarely, a room with a single door becomes a shop (`shop.rs`).
 
 use super::connect::cheapest_path;
-use super::{Canvas, Needs, special, vault};
+use super::{Canvas, Needs, shop, special, vault};
 use crate::content::{SpecialRoom, StairsDir};
 use crate::geom::{Dir, Pos};
 use crate::rng::Rng;
@@ -134,7 +135,27 @@ pub(super) fn build(canvas: &mut Canvas, rng: &mut Rng, needs: Needs) -> Option<
     light_rooms(canvas, rng, &rooms, up_room);
     patrols(canvas, rng, &rooms, up_room, needs);
     special_rooms(canvas, rng, &rooms, up_room);
+    shops(canvas, rng, &rooms, up_room);
     Some(())
+}
+
+/// Rooms but the arrival room and vaults with a single door may become a shop, rarely and last of
+/// all (spec §7 "Shops"; `shop.rs`).
+fn shops(canvas: &mut Canvas, rng: &mut Rng, rooms: &[Room], up_room: usize) {
+    let candidates: Vec<shop::Candidate> = (rooms.iter().enumerate())
+        .filter(|(i, r)| !r.vault && *i != up_room && r.doors.len() == 1)
+        .map(|(_, r)| {
+            let (x0, y0, x1, y1) = r.interior();
+            let (door, out) = r.doors[0];
+            shop::Candidate {
+                min: Pos::new(x0, y0),
+                max: Pos::new(x1, y1),
+                door,
+                out,
+            }
+        })
+        .collect();
+    shop::place(canvas, rng, &candidates);
 }
 
 /// Rooms but the arrival room and vaults may be special, each with the content's chance (spec §7

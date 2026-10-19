@@ -119,6 +119,7 @@ glyph = "&"
 fg = "#808080"
 material = "iron"
 weight = 10000
+value = 0
 
 [[object]]
 id = "ingot"
@@ -127,6 +128,7 @@ glyph = "="
 fg = "#808080"
 material = "iron"
 weight = 1000
+value = 0
 stackable = true
 
 [[object]]
@@ -136,6 +138,7 @@ glyph = "["
 fg = "#c0c0c0"
 material = "iron"
 weight = 9000
+value = 0
 slot = "body"
 armour = 5
 max_dex = 2

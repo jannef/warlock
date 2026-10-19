@@ -8,8 +8,9 @@ you cannot drink, read, or eat anything yet.
 
 ## What an object is
 
-Every object has its own glyph and color, a material, and a weight. The glyph tells you what kind
-of thing it is, as in ADOM:
+Every object has its own glyph and color, a material, a weight, and a worth in gold (what
+[shops](shops.md) price it from). The glyph tells you what kind of thing it is, as in ADOM, and
+shops sell and buy by these kinds:
 
 | Glyph | Kind |
 |:---:|---|
@@ -72,14 +73,16 @@ screen lists them:
 On this screen every letter names a stack, even `h`, `j`, `k`, and `l`.
 
 Picking up is one action (6 seconds), however many stacks you take. With nothing here, you are told so and no
-time passes.
+time passes. In a [shop](shops.md), what you pick up is not yours until you pay for it.
 
 ## Dropping
 
 Press `d` to choose what to drop. The screen works like the pick-up screen and lists what you
 carry. Dropped objects go on top of the pile where you stand, and stackable ones join a stack of
 the same object already there. Dropping is one action too. Something you wear or wield is taken
-off first, which takes its own time as well (see [Equipment](equipment.md)).
+off first, which takes its own time as well (see [Equipment](equipment.md)). In a
+[shop](shops.md), dropping puts back what you have not paid for and offers to buy your own
+things.
 
 You cannot close a door while objects lie in its doorway.
 

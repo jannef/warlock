@@ -14,13 +14,15 @@ use crate::game::{Game, PlayerAction, SimSet};
 use crate::save::SaveCommand;
 use crate::settings::Settings;
 use crate::ui::{
-    Aim, AimKind, DevOverlays, LastTarget, MenuChoice, Press, ScreenAction, ScreenName, Screens,
+    Aim, AimKind, DevOverlays, LastTarget, MenuChoice, Press, Question, ScreenAction, ScreenName,
+    Screens,
 };
 use bevy::ecs::system::SystemParam;
 use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
 use warlock_core::content::VisionProfile;
+use warlock_core::perception::PerceptionView;
 use warlock_core::time::Duration;
 use warlock_core::weather::Weather;
 use warlock_core::{Action, Dir, Letters, Pos, Rest};
@@ -73,6 +75,12 @@ pub enum KeyCommand {
     /// Use the tool the player has ready toward a direction (ADOM's `U`): dig into a wall with a
     /// pick-axe. An item's use, not an ability (abilities get a menu of their own).
     UseTool,
+    /// Pay for what the player took in the shop they stand in (spec §7 "Shops"; no time passes).
+    Pay,
+    /// In the confirmation dialog (quitting; paying before leaving a shop, selling): yes.
+    Yes,
+    /// In the confirmation dialog: no.
+    No,
     /// Dev: switch to the next vision profile.
     CycleVision,
     /// Dev: move the clock an hour ahead at once.
@@ -97,19 +105,23 @@ pub enum KeyCommand {
 }
 
 /// Where a command is read. Keys must be unique within a context, not across contexts, so a key
-/// can mean one thing in play and another on an info screen (Tab: next target, next page).
+/// can mean one thing in play and another on an info screen (Tab: next target, next page), or in
+/// the confirmation dialog (`y` and `n`, which move the player in play).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Context {
     /// In play: the map, prompts, look mode, and aiming.
     Play,
     /// On an info screen ([`crate::ui`]'s numbered pages).
     Pages,
+    /// The confirmation dialog's answers (`ui/confirm_screen.rs`).
+    Confirm,
 }
 
 impl KeyCommand {
     pub fn context(self) -> Context {
         match self {
             KeyCommand::Page(_) | KeyCommand::NextPage | KeyCommand::PrevPage => Context::Pages,
+            KeyCommand::Yes | KeyCommand::No => Context::Confirm,
             _ => Context::Play,
         }
     }
@@ -143,6 +155,9 @@ impl KeyCommand {
             KeyCommand::Bash => "Bash with your shield",
             KeyCommand::NextTarget => "Next target (aiming; Shift: previous)",
             KeyCommand::UseTool => "Use a tool (dig)",
+            KeyCommand::Pay => "Pay the shopkeeper",
+            KeyCommand::Yes => "Yes (in a question)",
+            KeyCommand::No => "No (in a question)",
             KeyCommand::CycleVision => "Next vision profile (dev)",
             KeyCommand::SkipHour => "Skip an hour (dev)",
             KeyCommand::NextWeather => "Next weather (dev)",
@@ -258,6 +273,9 @@ impl Default for Bindings {
             (ch("-"), MoreDefensive),
             (Code(KeyCode::Tab), NextTarget),
             (ch("U"), UseTool),
+            (ch("p"), Pay),
+            (ch("y"), Yes),
+            (ch("n"), No),
             (ch("?"), Help),
             (Code(KeyCode::Escape), Cancel),
         ]);
@@ -332,6 +350,35 @@ pub enum InputMode {
     Aim(Aim),
 }
 
+/// The question a step in `dir` asks first, if it leaves the shop the player stands in owing
+/// anything (spec §7 "Shops"): with the gold, whether to pay (no asks the next question);
+/// whether to leave without paying, which is theft (yes steps out). Paying leaves the player in
+/// the shop, free to go.
+fn leaving_question(view: &PerceptionView<'_>, dir: Dir) -> Option<Question> {
+    let (shop, owed) = view.owed_on_leaving(view.viewer().step(dir))?;
+    let keeper = shop.keeper();
+    let steal = |why: &str| {
+        let text = format!("{why}Leave without paying? {keeper} will call it theft.");
+        Question::new(text, Action::Move(dir))
+    };
+    Some(if view.own_gold() >= owed {
+        let text = format!("You owe {keeper} {owed} gold. Pay before you leave?");
+        Question::new(text, Action::Pay).or(steal(""))
+    } else {
+        steal(&format!("You owe {keeper} {owed} gold and cannot pay it. "))
+    })
+}
+
+/// The question dropping the inventory stacks `letters` asks first, if the shop the player
+/// stands in would buy some of them (spec §7 "Shops"): yes sells, no drops nothing.
+fn sale_question(view: &PerceptionView<'_>, letters: Letters) -> Option<Question> {
+    let sale = view.sale(letters)?;
+    let keeper = view.shop_here()?.keeper().to_string();
+    let what = warlock_core::object::phrase(&sale.stacks, view.content());
+    let text = format!("{keeper} offers {} gold for {what}. Sell?", sale.offer);
+    Some(Question::new(text, Action::Sell(letters)))
+}
+
 pub struct InputPlugin;
 
 impl Plugin for InputPlugin {
@@ -398,7 +445,9 @@ pub fn route_keys(
             ScreenAction::Close => screens.stack.close(),
             ScreenAction::Act(action) => {
                 screens.stack.close();
-                play.act(action);
+                if let Some(question) = play.act(action) {
+                    screens.confirm(question);
+                }
             }
             ScreenAction::Aim(item) => {
                 screens.stack.close();
@@ -407,7 +456,7 @@ pub fn route_keys(
             ScreenAction::Open(name) => screens.open(name),
             ScreenAction::Replace(name) => screens.replace(name),
             ScreenAction::Return(name) => screens.stack.return_to(name),
-            ScreenAction::Confirm(question, choice) => screens.confirm(question, choice),
+            ScreenAction::Confirm(question) => screens.confirm(*question),
             ScreenAction::Choose(choice) => {
                 choices.write(choice);
                 chosen = true;
@@ -538,7 +587,19 @@ impl Gameplay<'_> {
             (InputMode::Rest, _) => InputMode::Normal,
             (InputMode::Normal, KeyCommand::Rest) => InputMode::Rest,
             (InputMode::Normal, KeyCommand::Move(dir)) => {
-                self.actions.write(PlayerAction(Action::Move(dir)));
+                // Leaving a shop owing anything is theft: ask first (spec §7 "Shops"). A held
+                // key stops at the shop's edge (repeats never open the dialog).
+                match leaving_question(&game.world.perception(), dir) {
+                    Some(question) if !key.repeat => open = Some(question.into()),
+                    Some(_) => {}
+                    None => {
+                        self.actions.write(PlayerAction(Action::Move(dir)));
+                    }
+                }
+                InputMode::Normal
+            }
+            (InputMode::Normal, KeyCommand::Pay) => {
+                self.actions.write(PlayerAction(Action::Pay));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Wait) => {
@@ -659,7 +720,7 @@ impl Gameplay<'_> {
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Quit) => {
-                open = Some(ScreenAction::Confirm("Save and quit?", MenuChoice::Quit));
+                open = Some(Question::new("Save and quit?", MenuChoice::Quit).into());
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Snapshot) => {
@@ -675,6 +736,8 @@ impl Gameplay<'_> {
                 InputMode::Normal,
                 KeyCommand::Page(_) | KeyCommand::NextPage | KeyCommand::PrevPage,
             ) => InputMode::Normal,
+            // The dialog's answers: `lookup` never finds them in play.
+            (InputMode::Normal, KeyCommand::Yes | KeyCommand::No) => InputMode::Normal,
         };
         if *self.mode != next {
             *self.mode = next;
@@ -682,9 +745,16 @@ impl Gameplay<'_> {
         open
     }
 
-    /// Asks the simulation to apply `action`, chosen on a screen.
-    fn act(&mut self, action: Action) {
+    /// Asks the simulation to apply `action`, chosen on a screen. Dropping in a shop what it
+    /// would buy asks first whether to sell (spec §7 "Shops"): the question is returned instead.
+    fn act(&mut self, action: Action) -> Option<Question> {
+        if let (Action::Drop(letters), Some(game)) = (&action, &self.game)
+            && let Some(question) = sale_question(&game.world.perception(), *letters)
+        {
+            return Some(question);
+        }
         self.actions.write(PlayerAction(action));
+        None
     }
 
     /// Starts aiming `kind` (a throw chosen on a screen).
@@ -706,11 +776,14 @@ impl Gameplay<'_> {
 }
 
 /// Dev (`--fire`): starts the run aiming the readied missile weapon, as `f` would, so captures
-/// show the targeting line.
+/// show the targeting line; (`--look X,Y`) in look mode with the cursor there.
 fn aim_at_startup(args: Res<Args>, game: Option<Res<Game>>, mut mode: ResMut<InputMode>) {
-    if let (true, Some(game)) = (args.fire, game) {
+    if let (true, Some(game)) = (args.fire, &game) {
         let view = game.world.perception();
         *mode = InputMode::Aim(Aim::start(AimKind::Fire, &view, &LastTarget::default()));
+    }
+    if let (Some(at), Some(_)) = (args.look, &game) {
+        *mode = InputMode::Look(at);
     }
 }
 
@@ -783,6 +856,10 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::MoreDefensive), ["-"]);
         assert_eq!(keys(&b, KeyCommand::NextTarget), ["Tab"]);
         assert_eq!(keys(&b, KeyCommand::UseTool), ["U"]);
+        assert_eq!(keys(&b, KeyCommand::Pay), ["p"]);
+        // The dialog's answers are their own context: `y` and `n` move the player in play.
+        assert_eq!(keys(&b, KeyCommand::Yes), ["y"]);
+        assert_eq!(keys(&b, KeyCommand::No), ["n"]);
     }
 
     #[test]
@@ -805,6 +882,75 @@ mod tests {
         assert_eq!(next_weather(Some(Weather::Clear)), Weather::Overcast);
         assert_eq!(next_weather(Some(Weather::Rain)), Weather::HeavyRain);
         assert_eq!(next_weather(Some(Weather::HeavyRain)), Weather::Clear);
+    }
+
+    #[test]
+    fn leaving_a_shop_owing_and_selling_ask_first() {
+        let content = std::sync::Arc::new(warlock_core::content::Content::builtin().unwrap());
+        let mut world = warlock_core::World::new(content, "courtyard", None).expect("run");
+        let walk = |world: &mut warlock_core::World, actions: &str| {
+            for action in warlock_core::action::parse_actions(actions).expect("actions") {
+                world.apply(&action);
+            }
+        };
+        // Into Grimbold's store with the purse (a) and the scroll of light (b), on the cell
+        // inside the door (to the west).
+        walk(
+            &mut world,
+            "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 move:S*5 move:E*5",
+        );
+        assert!(
+            leaving_question(&world.perception(), Dir::W).is_none(),
+            "owing nothing"
+        );
+        // With an unpaid dagger (c): pay first? No asks whether to steal.
+        walk(&mut world, "move:E move:NE pickup move:SW move:W");
+        let view = world.perception();
+        let owed = view.shop_here().map(|s| s.owed()).expect("owing");
+        assert!(owed <= view.own_gold());
+        let steal = Question::new(
+            "Leave without paying? Grimbold will call it theft.",
+            Action::Move(Dir::W),
+        );
+        assert_eq!(
+            leaving_question(&view, Dir::W),
+            Some(
+                Question::new(
+                    format!("You owe Grimbold {owed} gold. Pay before you leave?"),
+                    Action::Pay
+                )
+                .or(steal)
+            )
+        );
+        assert!(leaving_question(&view, Dir::E).is_none(), "a step inside");
+        // Selling the scroll is asked; putting back the dagger is not.
+        let offer = view.sale(Letters::of([1])).expect("an offer").offer;
+        assert_eq!(
+            sale_question(&view, Letters::of([1])),
+            Some(Question::new(
+                format!("Grimbold offers {offer} gold for a scroll of light. Sell?"),
+                Action::Sell(Letters::of([1]))
+            ))
+        );
+        assert!(sale_question(&view, Letters::of([2])).is_none());
+        // With the short sword too, more than the purse holds: only whether to steal.
+        walk(
+            &mut world,
+            "move:E move:NE move:E*2 pickup move:W*3 move:SW",
+        );
+        let view = world.perception();
+        let owed = view.shop_here().map(|s| s.owed()).expect("owing");
+        assert!(owed > view.own_gold());
+        assert_eq!(
+            leaving_question(&view, Dir::W),
+            Some(Question::new(
+                format!(
+                    "You owe Grimbold {owed} gold and cannot pay it. Leave without paying? \
+                     Grimbold will call it theft."
+                ),
+                Action::Move(Dir::W)
+            ))
+        );
     }
 
     #[test]

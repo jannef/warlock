@@ -25,7 +25,7 @@
 
 use super::character_screen::CharacterScreen;
 use super::chargen_screen::{ChoiceScreen, Draft, Picks, Step, SummaryScreen};
-use super::confirm_screen::ConfirmScreen;
+use super::confirm_screen::{ConfirmScreen, Question};
 use super::controls_screen::ControlsScreen;
 use super::death_screen::DeathScreen;
 use super::equipment_screen::{EquipmentScreen, ItemScreen};
@@ -157,13 +157,26 @@ pub enum ScreenAction {
     /// Close screens until this one is on top (as it was left).
     Return(ScreenName),
     Choose(MenuChoice),
-    /// Ask first: open the confirmation dialog with this question; on Yes it closes and applies
-    /// the choice.
-    Confirm(&'static str, MenuChoice),
+    /// Ask first: open the confirmation dialog with this question, which hands on what the
+    /// answer does (on top of the screen that asked; a question asked by the dialog takes its
+    /// place).
+    Confirm(Box<Question>),
     /// Close this screen and apply a gameplay action (what to pick up, drop, wear, or wield).
     Act(Action),
     /// Close this screen and aim inventory stack `usize` to throw it (what to throw).
     Aim(usize),
+}
+
+impl From<MenuChoice> for ScreenAction {
+    fn from(choice: MenuChoice) -> Self {
+        ScreenAction::Choose(choice)
+    }
+}
+
+impl From<Action> for ScreenAction {
+    fn from(action: Action) -> Self {
+        ScreenAction::Act(action)
+    }
 }
 
 /// A modal screen.
@@ -231,9 +244,10 @@ impl Screen {
             ScreenName::Drop => objects(ObjectList::Drop),
             ScreenName::Throw => objects(ObjectList::Throw),
             ScreenName::Death => Screen::Death(DeathScreen::new(run)),
-            ScreenName::Confirm => {
-                Screen::Confirm(ConfirmScreen::new("Quit Warlock?", MenuChoice::Quit))
-            }
+            ScreenName::Confirm => Screen::Confirm(ConfirmScreen::new(Question::new(
+                "Quit Warlock?",
+                MenuChoice::Quit,
+            ))),
         }
     }
 
@@ -399,7 +413,7 @@ impl ScreenStack {
             Some(Screen::Skills(screen)) => screen.handle(press, bindings),
             Some(Screen::WeaponSkills(screen)) => screen.handle(press, bindings),
             Some(Screen::Death(screen)) => screen.handle(press),
-            Some(Screen::Confirm(screen)) => screen.handle(press),
+            Some(Screen::Confirm(screen)) => screen.handle(press, bindings),
         };
         if action == ScreenAction::Stay {
             return action;
@@ -408,8 +422,9 @@ impl ScreenStack {
             return ScreenAction::Stay;
         }
         self.notice = None;
-        // The dialog is done once it has answered Yes (a failed choice then shows on the menu).
-        if matches!(action, ScreenAction::Choose(_))
+        // The dialog is done once it has made a choice (a failed one then shows on the menu) or
+        // asked the next question, which takes its place. A gameplay action closes it as usual.
+        if matches!(action, ScreenAction::Choose(_) | ScreenAction::Confirm(_))
             && matches!(self.screens.last(), Some(Screen::Confirm(_)))
         {
             self.screens.pop();
@@ -448,7 +463,7 @@ impl ScreenStack {
             Some(Screen::Skills(screen)) => screen.draw(console, bindings),
             Some(Screen::WeaponSkills(screen)) => screen.draw(console, bindings),
             Some(Screen::Death(screen)) => screen.draw(console, settings.clock),
-            Some(Screen::Confirm(screen)) => screen.draw(console),
+            Some(Screen::Confirm(screen)) => screen.draw(console, bindings),
         }
     }
 
@@ -470,11 +485,11 @@ pub struct Screens<'w> {
 }
 
 impl Screens<'_> {
-    /// Opens the confirmation dialog asking `question`, which on Yes applies `choice`.
-    pub fn confirm(&mut self, question: &'static str, choice: MenuChoice) {
+    /// Opens the confirmation dialog asking `question`.
+    pub fn confirm(&mut self, question: Question) {
         self.stack
             .screens
-            .push(Screen::Confirm(ConfirmScreen::new(question, choice)));
+            .push(Screen::Confirm(ConfirmScreen::new(question)));
     }
 
     /// Opens screen `name` on top of the stack. The one way screens open.
@@ -1144,6 +1159,93 @@ mod tests {
             Some("halfling,other,ranger"),
             "the choices are remembered until the run starts"
         );
+    }
+
+    /// In Grimbold's store in the courtyard (spec §7 "Shops") with 60 gold (a), a scroll of light
+    /// (b), and an unpaid dagger (c), on the cell inside the door (to the west).
+    fn in_the_shop(content: Arc<Content>) -> warlock_core::World {
+        let mut world = warlock_core::World::new(content, "courtyard", None).expect("run");
+        let walk = "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 \
+                    move:S*5 move:E*5 move:E move:NE pickup move:SW move:W";
+        for action in warlock_core::action::parse_actions(walk).expect("actions") {
+            world.apply(&action);
+        }
+        assert_eq!(world.player_pos(), warlock_core::Pos::new(54, 14));
+        world
+    }
+
+    #[test]
+    fn leaving_a_shop_owing_asks_to_pay_then_whether_to_steal() {
+        let content = content();
+        let world = in_the_shop(content.clone());
+        let mut app = app_with(content, Some(Game::from_world(world)));
+        let (west, yes, no) = (
+            (KeyCode::KeyH, "h"),
+            (KeyCode::KeyY, "y"),
+            (KeyCode::KeyN, "n"),
+        );
+        let nothing: (Vec<ScreenName>, Vec<Action>) = (vec![], vec![]);
+        frame(&mut app, &[west]);
+        assert_eq!(names(&app), [ScreenName::Confirm], "pay before you leave?");
+        assert!(
+            actions(&app).is_empty(),
+            "nothing happens before the answer"
+        );
+        // No: is it theft, then? That question takes the first one's place; Esc stays.
+        frame(&mut app, &[no]);
+        assert_eq!(names(&app), [ScreenName::Confirm], "leave without paying?");
+        frame(&mut app, &[ESC]);
+        assert_eq!((names(&app), actions(&app)), nothing);
+        // No, then yes steps out: theft.
+        frame(&mut app, &[west, no, yes]);
+        assert_eq!(
+            (names(&app), actions(&app)),
+            (vec![], vec![Action::Move(Dir::W)])
+        );
+        // Yes pays (the player is still in the shop, free to go).
+        frame(&mut app, &[west, yes]);
+        assert!(names(&app).is_empty());
+        assert_eq!(actions(&app).last(), Some(&Action::Pay));
+        // `p` pays without asking.
+        let paid = actions(&app).len();
+        frame(&mut app, &[(KeyCode::KeyP, "p")]);
+        assert!(names(&app).is_empty());
+        assert_eq!(actions(&app).len(), paid + 1);
+        assert_eq!(actions(&app).last(), Some(&Action::Pay));
+        // A held key stops at the shop's edge: repeats never open the dialog.
+        let mut held = key(west.0, west.1);
+        held.repeat = true;
+        app.world_mut().write_message(held);
+        app.update();
+        assert!(names(&app).is_empty());
+        assert_eq!(actions(&app).len(), paid + 1);
+    }
+
+    #[test]
+    fn dropping_what_a_shop_buys_asks_whether_to_sell() {
+        use warlock_core::Letters;
+        let content = content();
+        let world = in_the_shop(content.clone());
+        let mut app = app_with(content, Some(Game::from_world(world)));
+        let (d, b, yes, no) = (
+            (KeyCode::KeyD, "d"),
+            (KeyCode::KeyB, "b"),
+            (KeyCode::KeyY, "y"),
+            (KeyCode::KeyN, "n"),
+        );
+        frame(&mut app, &[d, b, ENTER]);
+        assert_eq!(names(&app), [ScreenName::Confirm], "sell?");
+        assert!(actions(&app).is_empty());
+        // No drops nothing; yes sells.
+        frame(&mut app, &[no]);
+        assert_eq!((names(&app), actions(&app)), (vec![], vec![]));
+        frame(&mut app, &[d, b, ENTER, yes]);
+        assert!(names(&app).is_empty());
+        assert_eq!(actions(&app), [Action::Sell(Letters::of([1]))]);
+        // Putting back the unpaid dagger is a plain drop: nothing to sell.
+        frame(&mut app, &[d, (KeyCode::KeyC, "c"), ENTER]);
+        assert!(names(&app).is_empty());
+        assert_eq!(actions(&app).last(), Some(&Action::Drop(Letters::of([2]))));
     }
 
     #[test]

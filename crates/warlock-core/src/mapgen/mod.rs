@@ -10,7 +10,8 @@
 //!    corridors, doors at room entrances) or `caves` (cellular automata). Both stamp
 //!    [vaults](crate::content::Vault) where they fit, place the stairs, light sources (torches in
 //!    rooms; lamps and glowing fungus in caves), and a few patrolling creatures, and last now and
-//!    then make a room (a cave chamber) special (`special.rs`, spec §7 "Special rooms").
+//!    then make a room (a cave chamber) special (`special.rs`, spec §7 "Special rooms") and,
+//!    rarer, a room of a rooms level a shop (`shop.rs`, spec §7 "Shops").
 //! 3. Turn rock that touches open ground into walls.
 //! 4. Validate (`connect::validate`): every stair, door, and walkable cell is reachable from the
 //!    up staircase (flood fill), patrols are valid, and something emits light. A failed attempt is
@@ -23,12 +24,13 @@ mod caves;
 mod connect;
 pub mod local;
 mod rooms;
+mod shop;
 mod special;
 mod vault;
 
 use crate::content::{
     Content, CreatureId, CreatureSpawn, Flow, Generator, LevelKind, LevelTemplate, LightId,
-    SpecialRoom, StairsDir, StairsLink, TerrainId,
+    ShopPlan, SpecialRoom, StairsDir, StairsLink, TerrainId,
 };
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
@@ -154,6 +156,8 @@ pub(crate) struct Canvas<'a> {
     pub creatures: Vec<CreatureSpawn>,
     /// Special rooms (spec §7 "Special rooms"; `special.rs`).
     pub rooms: Vec<SpecialRoom>,
+    /// Shops (spec §7 "Shops"; `shop.rs`), their keepers among `creatures`.
+    pub shops: Vec<ShopPlan>,
     /// Cells stamped from vaults; later passes leave them alone.
     pub locked: Grid<bool>,
     pub up: Option<Pos>,
@@ -171,6 +175,7 @@ impl<'a> Canvas<'a> {
             objects: BTreeMap::new(),
             creatures: Vec::new(),
             rooms: Vec::new(),
+            shops: Vec::new(),
             locked: Grid::new(width, height, false),
             up: None,
             down: None,
@@ -370,6 +375,7 @@ pub fn generate(
             objects: canvas.objects,
             regions: Vec::new(),
             rooms: canvas.rooms,
+            shops: canvas.shops,
             exit: None,
         };
         if connect::validate(&template, content).is_ok() {

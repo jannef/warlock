@@ -1,0 +1,110 @@
+# Shops (spec §7 "Shops"; #145), ADOM-like: a room with goods on its floor and a named shopkeeper
+# by its door. Everything lying in a shop is for sale while its keeper lives and is not angry:
+# look mode and stepping onto it show the price, picking it up adds the price to what you owe,
+# and you pay with `p` (or when you leave: "Pay 40 gold?"). Dropping something the shop buys gets
+# an offer; dropping something you have not paid for puts it back. Leaving with unpaid goods is
+# theft: the keeper turns hostile and comes after you, and so does one you attack. A dead keeper's
+# goods are free to take.
+#
+# Prices: an object's `value` (objects.toml) times the shop's `markup`, and for what it buys its
+# `pays`, both in percent; your Presence moves both in your favour or against you (`presence`
+# percent for each point of its hidden modifier) and so does the Appraise skill, if you are
+# trained in it (its `bargain` benefit, skills.toml), together at most half. A shop never pays
+# more for something than it asks for it. Only gold prices are ever shown.
+#
+# Shops sell and buy by object class, which is the object's glyph as in ADOM: "weapons" ")",
+# "missile_weapons" "}", "missiles" "/", "armour" "[", "tools" "(", "potions" "!", "scrolls" "?",
+# "food" "%", "stones" "*", "coins" "$", "rings" "=", "amulets" '"'. Nothing worth nothing
+# (value 0) and never the currency is traded.
+#
+# Top-level fields:
+#   currency  the object shops are paid in (stackable): gold coins
+#   outraged  the faction a robbed or attacked shopkeeper joins (factions.toml; it must be hostile
+#             to the player)
+#   presence  percent better (or worse) prices for each point of the Presence modifier, 0 to 10
+#   chance    percent of generated rooms-and-corridors levels with a shop (at most one a level):
+#             a room with a single door, not the arrival room, no stairs, no special room, and no
+#             patrol through it. Caverns have none. Its kind is picked uniformly
+#   names     shopkeepers' names for generated shops, picked uniformly
+#   bundle    [least, most]: how many of a stackable object lie in one stack of generated stock
+#   [keeper]  every shopkeeper: `creature` (creatures.toml), what it carries (`carry`, as in level
+#             legends: `"gold_coin*250"` is its purse, which pays for what it buys), and what of
+#             that it wields and wears (`wield`, `wear`)
+#
+# Each [[shop]]:
+#   id        the kind's id (level files name it: `[[shop]] kind = "general_store"`)
+#   name      what it is, without an article ("general store"), for the wiki
+#   title     its sign, with the keeper's name for `{keeper}` ("{keeper}'s General Store")
+#   stock     the classes generated shops stock (each item drawn uniformly from those objects)
+#   buys      the classes it buys from you
+#   items     [least, most]: how many stacks of goods a generated shop lays out
+#   markup    its prices, in percent of the value (100 to 1000)
+#   pays      what it pays for what it buys, in percent of the value (0 to 100)
+
+currency = "gold_coin"
+outraged = "outraged"
+presence = 3
+# Rooms levels are five of the Depths' eight, and not every one has a room that suits a shop, so
+# about one level in seven has one.
+chance = 35
+names = [
+    "Grimbold", "Hilda", "Orvald", "Berengar", "Mirelle", "Tobias", "Ysolde", "Dunstan",
+    "Gerda", "Aldric", "Brannoc", "Wilhelmina", "Corwin", "Ottilie", "Fenwick", "Isolde",
+]
+bundle = [6, 15]
+
+[keeper]
+creature = "shopkeeper"
+carry = ["spear", "small_shield", "chain_mail", "iron_helm", "gold_coin*300"]
+wield = ["spear", "small_shield"]
+wear = ["chain_mail", "iron_helm"]
+
+[[shop]]
+id = "general_store"
+name = "general store"
+title = "{keeper}'s General Store"
+stock = ["weapons", "missile_weapons", "missiles", "armour", "tools", "potions", "scrolls", "food"]
+buys = ["weapons", "missile_weapons", "missiles", "armour", "tools", "potions", "scrolls", "food"]
+items = [6, 10]
+markup = 150
+pays = 30
+
+[[shop]]
+id = "weaponsmith"
+name = "weaponsmith"
+title = "{keeper}'s Forge"
+stock = ["weapons", "missiles"]
+buys = ["weapons", "missiles"]
+items = [5, 9]
+markup = 130
+pays = 40
+
+[[shop]]
+id = "armourer"
+name = "armourer"
+title = "{keeper}'s Armoury"
+stock = ["armour"]
+buys = ["armour"]
+items = [5, 9]
+markup = 130
+pays = 40
+
+[[shop]]
+id = "provisioner"
+name = "provisioner"
+title = "{keeper}'s Provisions"
+stock = ["food", "tools"]
+buys = ["food", "tools"]
+items = [6, 10]
+markup = 120
+pays = 30
+
+[[shop]]
+id = "fletcher"
+name = "fletcher"
+title = "{keeper}'s Fletchery"
+stock = ["missile_weapons", "missiles"]
+buys = ["missile_weapons", "missiles"]
+items = [5, 8]
+markup = 125
+pays = 40

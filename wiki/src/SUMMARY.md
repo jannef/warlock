@@ -20,6 +20,7 @@
 - [Objects and your pack](objects.md)
 - [Equipment](equipment.md)
 - [Burden](burden.md)
+- [Shops](shops.md)
 - [Your character](character.md)
   - [Races](races.md)
   - [Classes](classes.md)

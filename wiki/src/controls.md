@@ -18,6 +18,7 @@ authoritative: it is generated from your current key bindings.
 | Light or douse the lantern | `L` |
 | Pick up | `,` or `g` |
 | Drop | `d` |
+| Pay the shopkeeper | `p` |
 | Inventory | `i` |
 | Equipment (wear and wield) | `e` |
 | Character (your stats and weight) | `@` |
@@ -34,6 +35,7 @@ authoritative: it is generated from your current key bindings.
 | Next target while aiming (with Shift: the one before) | `Tab` |
 | Use a tool: dig into a wall with a pick-axe | `U`, then a direction |
 | Show or hide the controls | `?` |
+| Yes / no, when a question asks | `y` / `n` |
 | Pause menu | `Esc` |
 | Save and quit (unbound by default; use the pause menu) | none |
 
@@ -57,6 +59,12 @@ cancel)` on the message line, digging asks `Dig in which direction? (Esc to canc
 [Digging and walls](digging.md)), and
 resting asks how long (see [Resting](resting.md)). Answer with a direction or the key shown, or
 press `Esc` to cancel. Pressing any other command cancels the prompt.
+
+A few things ask a yes-or-no question first, in a small window over the map: quitting, leaving
+a shop owing money, and dropping something a shop would buy (see [Shops](shops.md)). Answer `y`
+or `n`, or choose with the arrow keys and `Enter`; `Esc` cancels. No is chosen at first, so
+`Enter` alone never does what you might regret. The yes and no keys are their own: in a question
+`y` and `n` do not move you, and you can rebind them without touching movement.
 
 ## Look mode
 

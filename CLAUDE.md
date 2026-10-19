@@ -65,7 +65,9 @@ Game flags (`cargo run -p warlock -- --help`):
   settings and never write the file.
 
 - `--fire` (dev) — start the run aiming the readied missile weapon, as `f` (unbound by default) would (captures of the
-  targeting line; golden entries pass it with `args = ["--fire"]`).
+  targeting line; golden entries pass it with `args = ["--fire"]`). `--look X,Y` (dev) — start
+  in look mode with the cursor on level cell (X, Y) (captures of what look mode says, e.g. a
+  shop's price).
 - `--replay FILE` — apply a replay at startup (its scenario/seed/character win; a hash divergence
   is logged as a warning), so `--capture` can screenshot any state. `--record FILE` — write every applied
   action (with state hashes) to a replay, rewritten after each action.
@@ -85,11 +87,12 @@ trained skills, `Stealth 17`) from perception; `actors` (dev-only: every actor's
 load, stats, and skills with their marks).
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascend descend lantern
-pickup[:LETTERS] drop[:LETTERS] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-dig:DIR rest:GOAL stance:NAME vision:PROFILE skip:DURATION weather:KIND effect:ID@X,Y[>X,Y]
+pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y
+throw:LETTER:X,Y dig:DIR rest:GOAL stance:NAME vision:PROFILE skip:DURATION weather:KIND effect:ID@X,Y[>X,Y]
 afflict:STATUS` (`DIR` = N
 NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
-player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `SLOT` = a slot id in
+player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `sell:b` sells to
+the shop the player stands in and `pay` pays it (spec §7 "Shops"); `SLOT` = a slot id in
 `assets/data/slots.toml`, e.g. `equip:body:b` (put inventory stack `b` on), `remove:body`;
 `bash:DIR` bashes with the held shield, `fire:X,Y` shoots the readied missile weapon at level
 cell (X, Y), `throw:c:X,Y` throws one of
@@ -225,13 +228,18 @@ to open, read keys for, or draw one:
   dropped. Held-key repeats never open, close, choose, or act.
 - **Draw**: `ui::draw` is the one system that writes the UI console: when anything it shows
   changed, it clears the console, draws the gameplay UI if a run exists, then the top screen.
-- **Confirm** (`ui/confirm_screen.rs`): a reusable Yes/No dialog, No selected. A screen (or gameplay)
-  answers `ScreenAction::Confirm(question, MenuChoice)`; the dialog pops itself on Yes and the
-  choice is applied as usual, `n`/Esc/Enter-on-No close it. Every quit path (pause Quit and Save and
-  quit to menu, main menu Quit, a bound `KeyCommand::Quit`) goes through it. `y`/`n` are fixed (they
-  are movement keys in play), like the rest prompt's letters. `--screen confirm` shows it. On
-  wasm, quit saves then reloads the page (`storage::web::reload`; `AppExit` also reloads), and the
-  main menu has no Quit.
+- **Confirm** (`ui/confirm_screen.rs`): the one reusable Yes/No dialog, No selected. A screen or
+  gameplay answers `ScreenAction::Confirm(Box<Question>)`: a `Question` is its text, what Yes
+  does, and what No does (`Question::new(text, yes)`, No closes; `.or(no)`), each a
+  `ScreenAction` (`From<MenuChoice>` is `Choose`, `From<Action>` is `Act`): a menu choice pops
+  the dialog and is applied as usual, an action closes it and is applied, and a follow-up
+  question takes its place (`ScreenStack::handle`); Esc closes it. Every quit path (pause Quit
+  and Save and quit to menu, main menu Quit, a bound `KeyCommand::Quit`) and the shop's
+  questions (`input.rs`: `leaving_question`, `sale_question`; spec §7 "Shops") go through it.
+  Its answers are the `Context::Confirm` commands `KeyCommand::Yes`/`No` (`y`/`n` by default,
+  rebindable; their own context because `y`/`n` move the player in play). `--screen confirm`
+  shows it. On wasm, quit saves then reloads the page (`storage::web::reload`; `AppExit` also
+  reloads), and the main menu has no Quit.
 - **Info pages** (`ui/info_tabs.rs`): the screens about the player (Character, Inventory,
   Equipment, Skills) are an ordered group, `PAGES`. While one is the top screen, the page keys replace
   it (`ScreenAction::Replace` -> `Screens::replace`: the stack depth is unchanged, so Esc still
@@ -244,7 +252,7 @@ to open, read keys for, or draw one:
   per context, so Tab is `NextTarget` in play and `NextPage` here; `Bindings::owner_in` and
   `lookup` read one context). `Press::shift` carries Shift from the router.
 - Prompts in the message line (open/close/bash direction, rest, look mode) are `InputMode`s,
-  not screens.
+  not screens; a yes/no question is the confirmation dialog (above).
 - Screens are plain state machines tested without a window: `ui/menu.rs` (`Press`, `Panel`, main
   and pause menu), `ui/new_run_screen.rs`, `ui/settings_screen.rs`, `ui/controls_screen.rs` (also
   the `?` help: the same binding list, read-only), `ui/object_screen.rs` (inventory, pick up,
@@ -445,7 +453,8 @@ are `xtask/src/wiki/weapon_skills.rs`.
 
 Key commands `,`/`g` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop` screen),
 `i` (`Inventory` screen), `e` (`Equipment` screen), `@` (`Character` screen), `W` (`WeaponSkills`
-screen), and bash (`KeyCommand::Bash`: a direction prompt, `InputMode::Direction`) are in
+screen), `p` (`KeyCommand::Pay`), and bash (`KeyCommand::Bash`: a direction prompt,
+`InputMode::Direction`) are in
 `input.rs` and `settings/keys.rs`. **Abilities** (racial, class, skill, style; the owner's rule,
 #156) get no key of their own: they go into one abilities menu (to come). Each is a core
 `Action` with replay text, an entry in `warlock_core::ability` (`Ability`, listed by
@@ -596,6 +605,29 @@ hostile creatures shunning a sanctuary (`World::shuns` in `ai.rs`). A flooded ro
 louder steps come from its floor terrain (`shallow_water`). `enter_room` (world/mod.rs) says the
 first-entry message; `PerceptionView::room` gives look mode the rooms the player knows;
 `PerceptionView::light_kept` lets the renderer dim its own transient light in a shadowed room.
+
+Shops (spec §7 "Shops", M27, #145) are data: `data/shops.toml` (`content/shop.rs`: `Shops` with
+the currency, the outraged faction, `presence`, the generation `chance`, keeper `names`, the
+`[keeper]` template, and the kinds, `ShopDef`: `stock`/`buys` by `ObjectClass` (the object's
+glyph, `content/object.rs`), `items`, `markup`, `pays`; `Shops::price`/`offer` are the one place
+prices are made). Every object has a `value` (required; test fixtures with their own objects need
+`value = 0`; fixtures that replace `factions.toml` but keep the built-in creatures need the
+`merchants` and `outraged` factions, and fixtures that replace creatures or objects start from
+`ContentFiles::default()` or drop `data/shops.toml`). A shop is a `ShopPlan` in the template
+(level files: `[[shop]] kind keeper area post`; generated: `mapgen/shop.rs`, last after special
+rooms, rooms levels only, from the map stream) whose keeper is spawned at its post; at
+instantiation it becomes a `world::Shop` in `LevelState::shops` (saved, hashed; format 30): the
+keeper's actor id, `unpaid` (what the player owes, counted by object; `unpaid_parts` assigns the
+counts to the last stacks of each object), and `ShopStatus` (Open, Outraged, Abandoned). The rules
+are `world/shop.rs`: `shop_step` (greeting, theft) from `player_moves`, `picked_up_goods` from
+`pick_up`, `trade` (drop and `Action::Sell`) from `drop_objects`, `pay` (`Action::Pay`, no time),
+`provoke` from `fight.rs::resolve` (the player attacking a keeper), `keeper_died` from
+`creature_dies`, `may_loose` in `shoot.rs` (unpaid goods are not shot or thrown). An outraged
+keeper gets the `outraged` faction as its `faction_override`, so the AI and stance need nothing
+new. The player's `favour` (Presence modifier × `presence` + the Appraise `Effect::Bargain`,
+at most `MAX_FAVOUR`) is never shown: presentation reads only prices
+(`PerceptionView::shop_at`/`shop_here`, `price_tag`, `unpaid`, `owed_on_leaving`, `sale`,
+`own_gold`; look mode, the object screens, and the shop's questions in `input.rs`).
 
 Local areas (spec §3, §7) are generated in `mapgen/local/`: `mod.rs` (`Setting`: the cell's
 landscape and its neighbors' roads, rivers, lakes, and land, read from the overworld; per-landscape

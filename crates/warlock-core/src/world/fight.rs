@@ -374,6 +374,10 @@ impl World {
         if noisy {
             self.make_noise(attacker, Act::Attack(kind));
         }
+        // A shopkeeper the player attacks turns on them (spec §7 "Shops").
+        if attacker == self.state.player {
+            self.provoke(target);
+        }
         // An attack the player dodged (Dexterity or Dodge made it miss) trains tumbling.
         let dodged = blow.is_some_and(|b| {
             matches!(
@@ -509,6 +513,8 @@ impl World {
             object::add_to_pile(&mut pile, &actor.inventory, &self.content);
             level.set_pile(actor.pos, pile);
         }
+        // A dead shopkeeper's goods are free to take (spec §7 "Shops").
+        self.keeper_died(id, &actor.level);
         self.fallen.push(actor);
     }
 

@@ -9,3 +9,4 @@
 | Kobold archer | `k` | Kobolds | hostile | shoots from afar | yes | no |
 | Kobold shaman | `k` | Kobolds | hostile | casts spells from afar | yes | no |
 | Cave beetle | `a` | Wildlife | neutral | never | no | no |
+| Shopkeeper | `@` | Merchants | neutral | never | yes | no |

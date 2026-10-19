@@ -1,7 +1,8 @@
 //! Per-level mutable state: terrain, piles of objects, and blood as they are now, and what the
 //! player remembers of them; fires, and the walls dug into; the level's special rooms (spec §7
-//! "Special rooms") and whether the player has been inside each.
+//! "Special rooms") and whether the player has been inside each; its shops (spec §7 "Shops").
 
+use super::shop::Shop;
 use crate::blood::{Spatter, Stain};
 use crate::color::Rgb;
 use crate::content::{
@@ -76,6 +77,10 @@ pub struct LevelState {
     /// player has been inside it.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) rooms: Vec<SpecialRoom>,
+    /// Shops (spec §7 "Shops"), none overlapping another: who keeps each, what the player owes
+    /// there, and how its keeper stands toward them.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) shops: Vec<Shop>,
 }
 
 impl LevelState {
@@ -101,6 +106,7 @@ impl LevelState {
             blood_memory: BTreeMap::new(),
             dug: BTreeMap::new(),
             rooms: template.rooms.clone(),
+            shops: Vec::new(),
         }
     }
 
@@ -177,6 +183,14 @@ impl LevelState {
         &self.rooms
     }
 
+    /// The shops of the level as they are now (ground truth: what the player owes, how each
+    /// keeper stands). Only reachable through [`crate::World::ground_truth`], **for developer
+    /// tools only**; the player knows a shop by what they see of it
+    /// ([`crate::perception::PerceptionView::shop_at`]).
+    pub fn shops(&self) -> &[Shop] {
+        &self.shops
+    }
+
     /// The special room at `p`, if any.
     pub(crate) fn room_at(&self, p: Pos) -> Option<&SpecialRoom> {
         self.rooms.iter().find(|r| r.contains(p))
@@ -248,6 +262,7 @@ impl LevelState {
             && self.fires.values().all(|f| usize::from(f.light.0) < lights)
             && piles.flatten().all(|s| s.is_valid_for(content))
             && rooms_ok
+            && (self.shops.iter()).all(|s| s.is_valid_for(content, self.width(), self.height()))
     }
 }
 

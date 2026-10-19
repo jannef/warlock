@@ -24,6 +24,7 @@ mod particles;
 mod race;
 mod room_effect;
 mod scenario;
+mod shop;
 mod size;
 mod skill;
 mod sky;
@@ -58,12 +59,15 @@ pub use level::{
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
 pub use material::{MaterialDef, MaterialId};
-pub use object::{MAX_BONUS, MAX_DIG, MAX_PLACED, ObjectDef, ObjectId, article};
+pub use object::{
+    MAX_BONUS, MAX_DIG, MAX_PLACED, MAX_VALUE, ObjectClass, ObjectDef, ObjectId, article,
+};
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use race::{RaceDef, Races};
 pub use room_effect::{RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom};
 pub use scenario::ScenarioDef;
+pub use shop::{KEEPER, Keeper, MAX_FAVOUR, MAX_SHOPS, ShopDef, ShopId, ShopPlan, Shops};
 pub use size::{CARRY, MEDIUM, SizeDef};
 pub use skill::{SkillBook, SkillDef};
 pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
@@ -232,8 +236,8 @@ struct LegendFile {
 /// `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
 /// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, `data/horoscope.toml`,
 /// `data/effects.toml`, `data/room_effects.toml`, `data/weapon_skills.toml`, `data/stances.toml`,
-/// and `data/status.toml` are optional (without effects, spell effects
-/// are not drawn). Without vision
+/// `data/status.toml`, and `data/shops.toml` are optional (without shops there are none; without
+/// effects, spell effects are not drawn). Without vision
 /// profiles, a single `normal` profile that needs no light is used, so content without lighting
 /// stays fully visible; without sizes, everything is medium; without factions, everyone is neutral; without a calendar, months are numbered;
 /// without a sky file there are no moons; without an objects file there are no objects; without a
@@ -288,6 +292,8 @@ pub struct Content {
     statuses: Vec<StatusDef>,
     status_ids: BTreeMap<String, StatusId>,
     healing: Healing,
+    /// Shops (`data/shops.toml`); none without the file.
+    shops: Option<Shops>,
 }
 
 impl Content {
@@ -333,6 +339,7 @@ impl Content {
             statuses: Vec::new(),
             status_ids: BTreeMap::new(),
             healing: Healing::default(),
+            shops: None,
         };
         let path = "data/calendar.toml";
         if let Some(text) = files.get_optional(path) {
@@ -402,6 +409,10 @@ impl Content {
         content.load_factions(files)?;
         content.load_creatures(files)?;
         content.load_objects(files)?;
+        let path = "data/shops.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.shops = Some(Shops::parse(path, text, &content)?);
+        }
         let path = "data/effects.toml";
         if let Some(text) = files.get_optional(path) {
             content.effects = effect::parse(path, text)?;
@@ -1015,12 +1026,12 @@ impl Content {
     }
 
     /// A stable hash (64-bit FNV-1a) of the ordered terrain, creature, level, light, dungeon,
-    /// object, slot, skill, room effect, weapon skill, and status ids.
+    /// object, slot, skill, room effect, weapon skill, status, and shop ids.
     ///
     /// `TerrainId`, `CreatureId`, `LightId`, `ObjectId`, `SlotId`, `SkillId`, `RoomEffectId`,
-    /// `WeaponSkillId`, and `StatusId` are indices, so a save is only meaningful for content with
-    /// the same ids in the same order;
-    /// saves record this fingerprint to detect a mismatch.
+    /// `WeaponSkillId`, `StatusId`, and `ShopId` are indices, so a save is only meaningful for
+    /// content with the same ids in the same order; saves record this fingerprint to detect a
+    /// mismatch.
     pub fn fingerprint(&self) -> u64 {
         let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
         let mut feed = |bytes: &[u8]| {
@@ -1028,7 +1039,7 @@ impl Content {
                 hash = (hash ^ u64::from(b)).wrapping_mul(0x0000_0100_0000_01b3);
             }
         };
-        let groups: [Vec<&str>; 11] = [
+        let groups: [Vec<&str>; 12] = [
             self.terrain.iter().map(|t| t.id.as_str()).collect(),
             self.creatures.iter().map(|c| c.id.as_str()).collect(),
             self.levels.keys().map(String::as_str).collect(),
@@ -1044,6 +1055,9 @@ impl Content {
                 .map(|s| s.id.as_str())
                 .collect(),
             self.statuses.iter().map(|s| s.id.as_str()).collect(),
+            (self.shops.iter().flat_map(|s| s.defs()))
+                .map(|d| d.id.as_str())
+                .collect(),
         ];
         for ids in groups {
             for id in ids {
@@ -1402,6 +1416,11 @@ impl Content {
     }
 
     /// The effect `id` of a special room.
+    /// The shops of `data/shops.toml` (spec §7 "Shops"); `None` without the file.
+    pub fn shops(&self) -> Option<&Shops> {
+        self.shops.as_ref()
+    }
+
     pub fn room_effect(&self, id: RoomEffectId) -> &RoomEffectDef {
         self.room_effects.get(id)
     }
@@ -2424,19 +2443,39 @@ mod tests {
             )
         };
         let cases = [
-            (object("material = \"iron\"\nweight = 0\n"), "at least 1"),
             (
-                object("material = \"bronze\"\nweight = 5\n"),
+                object("material = \"iron\"\nweight = 0\nvalue = 1\n"),
+                "at least 1",
+            ),
+            (
+                object("material = \"iron\"\nweight = 5\nvalue = 1000001\n"),
+                "`value` is in gold coins",
+            ),
+            (
+                object("material = \"iron\"\nweight = 5\n"),
+                "missing field `value`",
+            ),
+            (
+                object("material = \"bronze\"\nweight = 5\nvalue = 1\n"),
                 "unknown material `bronze`",
             ),
-            (object("material = \"iron\"\n"), "missing field `weight`"),
-            (object("weight = 5\n"), "missing field `material`"),
             (
-                object("material = \"iron\"\nweight = 5\n").replace("\"(\"", "\" \""),
+                object("material = \"iron\"\nvalue = 1\n"),
+                "missing field `weight`",
+            ),
+            (
+                object("weight = 5\nvalue = 1\n"),
+                "missing field `material`",
+            ),
+            (
+                object("material = \"iron\"\nweight = 5\nvalue = 1\n").replace("\"(\"", "\" \""),
                 "visible character",
             ),
             (
-                format!("{0}\n{0}", object("material = \"iron\"\nweight = 5\n")),
+                format!(
+                    "{0}\n{0}",
+                    object("material = \"iron\"\nweight = 5\nvalue = 1\n")
+                ),
                 "duplicate object id `key`",
             ),
         ];
@@ -2476,7 +2515,7 @@ mod tests {
         let object = |fields: &str| {
             format!(
                 "[[object]]\nid = \"key\"\nname = \"key\"\nglyph = \"(\"\nfg = \"#ffffff\"\n\
-                 material = \"iron\"\nweight = 5\n{fields}\n"
+                 material = \"iron\"\nweight = 5\nvalue = 1\n{fields}\n"
             )
         };
         let load = |slots: &str, objects: &str| {

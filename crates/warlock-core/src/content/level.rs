@@ -14,7 +14,10 @@
 //! `[[region]]` tables name areas of the level (`name`, `area = [x0, y0, x1, y1]`, inclusive; the
 //! first match wins), shown in the status bar. Optional `[[room]]` tables mark special rooms
 //! (spec §7 "Special rooms"): `effect` (an id in `data/room_effects.toml`) over `area = [x0, y0,
-//! x1, y1]` (inclusive, walls and doors included); rooms do not overlap.
+//! x1, y1]` (inclusive, walls and doors included); rooms do not overlap. Optional `[[shop]]`
+//! tables mark shops (spec §7 "Shops"): `kind` (an id in `data/shops.toml`), the `keeper`'s
+//! name, the shop floor's `area` (inclusive: everything lying there is for sale), and the
+//! keeper's `post` on it, where the keeper (`data/shops.toml`'s `[keeper]`) is spawned.
 
 use super::creature::CreatureId;
 use super::faction::FactionId;
@@ -22,6 +25,7 @@ use super::flow::{FLOW_SPEEDS, Flow};
 use super::light::LightId;
 use super::object::parse_stacks;
 use super::room_effect::SpecialRoom;
+use super::shop::ShopPlan;
 use super::terrain::{StairsDir, TerrainId};
 use super::{ActionKind, Content, ContentError};
 use crate::equipment::{self, Equipment};
@@ -82,6 +86,22 @@ struct LevelFile {
     /// Objects placed by position rather than by a legend character.
     #[serde(default)]
     pile: Vec<PileSpec>,
+    /// Shops (spec §7 "Shops").
+    #[serde(default)]
+    shop: Vec<ShopSpec>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ShopSpec {
+    /// A kind of shop in `data/shops.toml`.
+    kind: String,
+    /// The keeper's name.
+    keeper: String,
+    /// `[x0, y0, x1, y1]`, inclusive: the shop floor, where everything lying is for sale.
+    area: [i32; 4],
+    /// `[x, y]`: where the keeper stands, on the shop floor beside the way in.
+    post: [i32; 2],
 }
 
 #[derive(Debug, Deserialize)]
@@ -177,13 +197,13 @@ pub(super) struct LegendDetail {
 /// One object id or a list of them.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(untagged)]
-enum OneOrMany {
+pub(super) enum OneOrMany {
     One(String),
     Many(Vec<String>),
 }
 
 impl OneOrMany {
-    fn ids(&self) -> &[String] {
+    pub(super) fn ids(&self) -> &[String] {
         match self {
             OneOrMany::One(id) => std::slice::from_ref(id),
             OneOrMany::Many(ids) => ids,
@@ -262,6 +282,9 @@ pub struct LevelTemplate {
     pub regions: Vec<Region>,
     /// Special rooms (spec §7 "Special rooms"), none overlapping another.
     pub rooms: Vec<SpecialRoom>,
+    /// Shops (spec §7 "Shops"), none overlapping another; each keeper is among `creatures`, at
+    /// the shop's post.
+    pub shops: Vec<ShopPlan>,
     /// Where walking off the edge leads (local areas); `None`: the edge cannot be crossed.
     pub exit: Option<EdgeExit>,
 }
@@ -493,6 +516,8 @@ pub(super) fn parse_level(
             content.terrain(terrain[*at]).id
         )));
     }
+    let shops =
+        parse_shops(parsed.shop, &terrain, player_start, &mut creatures, content).map_err(err)?;
 
     let template = LevelTemplate {
         id: id.to_string(),
@@ -509,6 +534,7 @@ pub(super) fn parse_level(
         objects,
         regions,
         rooms,
+        shops,
         exit: None,
     };
     for spawn in &template.creatures {
@@ -527,6 +553,54 @@ pub(super) fn parse_level(
         }
     }
     Ok(template)
+}
+
+/// A level file's shops (spec §7 "Shops"): each of a kind `data/shops.toml` has, over an area
+/// inside the map that overlaps no other shop, with a named keeper, spawned into `creatures` at
+/// its post (walkable, on the shop floor, where no other creature, nor the player, starts).
+fn parse_shops(
+    specs: Vec<ShopSpec>,
+    terrain: &Grid<TerrainId>,
+    player_start: Option<Pos>,
+    creatures: &mut Vec<CreatureSpawn>,
+    content: &Content,
+) -> Result<Vec<ShopPlan>, String> {
+    let mut plans: Vec<ShopPlan> = Vec::new();
+    for spec in specs {
+        let Some(shops) = content.shops() else {
+            return Err("levels mark shops only when there is a data/shops.toml".into());
+        };
+        let kind = (shops.id(&spec.kind))
+            .ok_or_else(|| format!("shop at {:?} is of unknown kind `{}`", spec.area, spec.kind))?;
+        let bad = |m: &str| format!("shop `{}` at {:?}: {m}", spec.kind, spec.area);
+        if spec.keeper.trim().is_empty() {
+            return Err(bad("its `keeper` needs a name"));
+        }
+        let [x0, y0, x1, y1] = spec.area;
+        let plan = ShopPlan {
+            kind,
+            keeper: spec.keeper.clone(),
+            min: Pos::new(x0, y0),
+            max: Pos::new(x1, y1),
+            post: Pos::new(spec.post[0], spec.post[1]),
+        };
+        if !(x0 <= x1 && y0 <= y1 && terrain.in_bounds(plan.min) && terrain.in_bounds(plan.max)) {
+            return Err(bad("the area is not a rectangle inside the map"));
+        }
+        if plans.iter().any(|p| p.overlaps(&plan)) {
+            return Err(bad("it overlaps another shop"));
+        }
+        let walkable = content.terrain(terrain[plan.post]).walkable;
+        let taken = player_start == Some(plan.post) || creatures.iter().any(|c| c.pos == plan.post);
+        if !plan.contains(plan.post) || !walkable || taken {
+            return Err(bad(
+                "the keeper's `post` must be walkable, on the shop floor, and free",
+            ));
+        }
+        creatures.push(shops.keeper_spawn(plan.post));
+        plans.push(plan);
+    }
+    Ok(plans)
 }
 
 /// The flow a legend entry gives the cell at `pos`: required on running water, an error anywhere
@@ -595,10 +669,22 @@ pub fn parse_route(route: &str) -> Result<Vec<Dir>, String> {
 /// `wear` ones, each the first carried stack of it not yet equipped, in the first free slot it
 /// fits (a second ring on the other hand).
 fn equip(detail: &LegendDetail, carry: &[Stack], content: &Content) -> Result<Equipment, String> {
+    let ids = |list: &Option<OneOrMany>| list.as_ref().map_or(&[][..], OneOrMany::ids).to_vec();
+    equip_ids(&ids(&detail.wield), &ids(&detail.wear), carry, content)
+}
+
+/// What a creature spawned carrying `carry` wears and wields, by object id: the `wield` objects,
+/// then the `wear` ones (see `equip`). Shopkeepers (`data/shops.toml`) are equipped the same way.
+pub(super) fn equip_ids(
+    wield: &[String],
+    wear: &[String],
+    carry: &[Stack],
+    content: &Content,
+) -> Result<Equipment, String> {
     let mut equipment = Equipment::default();
-    for (wields, list) in [(true, &detail.wield), (false, &detail.wear)] {
+    for (wields, list) in [(true, wield), (false, wear)] {
         let verb = if wields { "wield" } else { "wear" };
-        for id in list.iter().flat_map(OneOrMany::ids) {
+        for id in list {
             let object = content
                 .object_id(id)
                 .ok_or_else(|| format!("{verb}: unknown object `{id}`"))?;

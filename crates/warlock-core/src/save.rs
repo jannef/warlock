@@ -43,7 +43,10 @@ const MAGIC: &str = "WARLOCK-SAVE";
 /// 20: status effects: actors have them (`Actor::effects`), their healing progress counts
 ///     hundredths of a second (`Actor::regen`), and the player's death records the status that
 ///     killed them (`Death::of`).
-pub const FORMAT_VERSION: u32 = 20;
+/// 30: shops (21 to 29 go to features landing before it): level states keep their shops
+///     (`LevelState::shops`: the keeper, what the player owes, how the keeper stands); content
+///     fingerprints cover shop ids, and objects have values.
+pub const FORMAT_VERSION: u32 = 30;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 
