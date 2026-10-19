@@ -12,9 +12,10 @@
 //! 6. Light: a lamp beside the up staircase, lamps scattered over about half of the 16×16 blocks,
 //!    and patches of faintly glowing fungus.
 //! 7. A few creatures patrolling out and back along random walks.
+//! 8. Now and then a chamber away from the arrival is special (`special.rs`): a blob of floor.
 
 use super::connect::{cheapest_path, distances, flood};
-use super::{Canvas, Needs, out_and_back, vault};
+use super::{Canvas, Needs, out_and_back, special, vault};
 use crate::content::StairsDir;
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
@@ -42,6 +43,7 @@ pub(super) fn build(canvas: &mut Canvas, rng: &mut Rng, needs: Needs) -> Option<
     let up = place_stairs(canvas, rng, needs)?;
     light(canvas, rng, up);
     patrols(canvas, rng, up, needs);
+    special::cave_rooms(canvas, rng, up);
     Some(())
 }
 

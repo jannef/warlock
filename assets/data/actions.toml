@@ -19,7 +19,7 @@ stairs = 1000
 pick_up = 1000
 drop = 1000
 # Attacks: the player moving into a hostile creature, and creatures' attacks; a shot from a
-# missile weapon (the player's `f`, a creature's), a throw (`t`), a spell.
+# missile weapon (the player's `t`, a creature's), a throw (`T`), a spell.
 melee = 1000
 shoot = 1000
 throw = 1000
@@ -35,8 +35,11 @@ wield = 1000
 wear = 1000
 # Putting on or taking off body armor: it takes a while to strap on.
 body_armor = 3000
-# Readying a missile weapon or missiles, or putting them away.
+# Readying a missile weapon, missiles, or a tool (a pick-axe), or putting them away.
 ready = 1000
+# A turn of digging into a wall with a digging tool ready (spec §8 "Digging"): digging goes on
+# turn after turn until the wall gives way or something interrupts it.
+dig = 1000
 # Chatting with someone (`C`): a few words. Asking about a topic on the dialogue screen takes no
 # time.
 chat = 500

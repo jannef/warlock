@@ -5,8 +5,11 @@
 //! burden (×1.25 Burdened, ×1.5 Strained; spec §8 "Burden": a heavy load is noisy); opening or
 //! closing a door makes the door's `toggle_noise` (terrain data); an attack (spec §8 "Combat")
 //! makes fighting, a bowstring, fighting more quietly (a throw), or chanting where the attacker
-//! stands ([`MELEE_NOISE`], [`SHOT_NOISE`], [`THROW_NOISE`], [`SPELL_NOISE`]); a creature muttering
-//! to itself (spec §8 "Dialogue") is a voice ([`VOICE_NOISE`]). [`noise`] is the one function that
+//! stands ([`MELEE_NOISE`], [`SHOT_NOISE`], [`THROW_NOISE`], [`SPELL_NOISE`]); a turn of
+//! digging makes digging where the digger stands ([`DIG_NOISE`]); a creature muttering to itself
+//! (spec §8 "Dialogue") is a voice ([`VOICE_NOISE`]). A special room scales every noise made
+//! inside it by its effect's `noise` percent (spec §7 "Special rooms": an echoing hall doubles
+//! it, a hushed chamber takes it down to two fifths). [`noise`] is the one function that
 //! decides how loud an action is: the actor's skills (stealth; spec §8 "Skills") make its steps
 //! and doors quieter there ([`plain_noise`] is the noise without them).
 //! Loudness is an integer, at most [`MAX_LOUDNESS`]; a creature or door without the field is
@@ -80,6 +83,8 @@ pub enum SoundKind {
     Bowstring,
     /// A spell cast.
     Chanting,
+    /// Digging into a wall (spec §8 "Digging").
+    Digging,
     /// Someone muttering to themselves (spec §8 "Dialogue").
     Voice,
 }
@@ -94,6 +99,7 @@ impl SoundKind {
             SoundKind::Fighting => "fighting",
             SoundKind::Bowstring => "bowstring",
             SoundKind::Chanting => "chanting",
+            SoundKind::Digging => "digging",
             SoundKind::Voice => "voice",
         }
     }
@@ -107,6 +113,7 @@ impl SoundKind {
             SoundKind::Fighting => "fighting",
             SoundKind::Bowstring => "a bowstring",
             SoundKind::Chanting => "chanting",
+            SoundKind::Digging => "digging",
             SoundKind::Voice => "a voice",
         }
     }
@@ -118,6 +125,8 @@ pub const MELEE_NOISE: u16 = 60;
 pub const SHOT_NOISE: u16 = 40;
 pub const THROW_NOISE: u16 = 30;
 pub const SPELL_NOISE: u16 = 50;
+/// How loud a turn of digging is where the digger stands (spec §8 "Digging"): iron on stone.
+pub const DIG_NOISE: u16 = 80;
 /// How loud a creature muttering to itself is where it stands (spec §8 "Dialogue"): heard a few
 /// cells away, by those who listen.
 pub const VOICE_NOISE: u16 = 50;
@@ -133,6 +142,8 @@ pub enum Act {
     CloseDoor(Pos),
     /// Attacks someone, from where it stands.
     Attack(AttackKind),
+    /// Digs into a wall, from where it stands.
+    Dig,
     /// Mutters to itself, where it stands.
     Mutter,
 }
@@ -212,9 +223,10 @@ pub struct Recent {
 }
 
 /// How loud `act` by `actor` is on `level`, `burden` being the burden it suffers
-/// ([`crate::burden::Load::penalty`]): the one place an action's noise is decided. The actor's
-/// skills (stealth, [`Effect::Quiet`]) take their percent off its steps and doors (not its
-/// attacks or its voice), rounded down. `None` if it is silent.
+/// ([`crate::burden::Load::penalty`]), in the special room where it is made, if any
+/// ([`plain_noise`]): the one place an action's noise is decided. The actor's skills (stealth,
+/// [`Effect::Quiet`]) take their percent off its steps and doors (not its attacks or its voice),
+/// rounded down. `None` if it is silent.
 pub fn noise(
     content: &Content,
     level: &LevelState,
@@ -232,7 +244,8 @@ pub fn noise(
 }
 
 /// How loud `act` by `actor` would be without its skills: what [`noise`] makes of it before
-/// stealth. Training reads it (a creature that could hear the step).
+/// stealth, a special room's effect included. Training reads it (a creature that could hear the
+/// step).
 pub fn plain_noise(
     content: &Content,
     level: &LevelState,
@@ -272,6 +285,13 @@ pub fn plain_noise(
             (sound, actor.pos, u32::from(loudness))
         }
         Act::Mutter => (SoundKind::Voice, actor.pos, u32::from(VOICE_NOISE)),
+        Act::Dig => (SoundKind::Digging, actor.pos, u32::from(DIG_NOISE)),
+    };
+    // A special room scales every noise made inside it (spec §7 "Special rooms"): an echoing
+    // hall makes it louder, so it carries farther; a hushed chamber quieter.
+    let loudness = match level.room_effect_at(content, at) {
+        Some(room) => loudness * u32::from(room.noise) / 100,
+        None => loudness,
     };
     let loudness = loudness.min(u32::from(MAX_LOUDNESS)) as u16;
     (loudness > 0).then_some(Noise {

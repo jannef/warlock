@@ -303,7 +303,9 @@ impl VisualLight {
                 if let Some(i) = index(p)
                     && flags[i] & LIT != 0
                 {
-                    let light = color * share;
+                    // A shadowed room keeps only part of this light too, as of all gameplay light.
+                    let kept = f32::from(view.light_kept(p).unwrap_or(100)) / 100.0;
+                    let light = color * share * kept;
                     let draw = modulation.color(light);
                     sums[i] += light;
                     drawn[i] += draw;

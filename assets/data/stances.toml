@@ -1,0 +1,45 @@
+# Combat stances (spec §8 "Stances"): how the player holds themselves in a fight, as in ADOM.
+# The numbers are first guesses, kept here to tune after playtesting. None is shown in the game:
+# only the stance's name is. Creatures stay neutral. Exactly one entry per stance is required.
+#
+# Fields (all but id and name optional):
+#   id           aggressive, neutral, defensive, or coward
+#   name         shown in the status bar and the wiki
+#   to_hit       added to the to-hit of the player's attacks (-20 to 20)
+#   damage       added to every roll of their damage (-20 to 20; a blow still does at least 1)
+#   dodge        added to their Defence in the Dodge category, where bonuses stack (may be negative)
+#   parry        added to their Defence in the Parry category, where only the highest bonus counts
+#   attack_cost  what their attacks (melee, shots, throws) cost, in percent (10 to 1000; 100)
+#   flee_cost    what a step costs while fleeing: stepping away from an adjacent hostile (percent)
+#   flee_noise   how loud such a step is (percent)
+#   weapon_mark  weapon skill marks count this much (percent): used once weapon skills exist
+
+[[stance]]
+id = "aggressive"
+name = "Aggressive"
+to_hit = 1
+damage = 2
+dodge = -3
+weapon_mark = 125
+
+[[stance]]
+id = "neutral"
+name = "Neutral"
+
+[[stance]]
+id = "defensive"
+name = "Defensive"
+to_hit = -2
+damage = -1
+dodge = 2
+parry = 1
+
+[[stance]]
+id = "coward"
+name = "Coward"
+to_hit = -4
+damage = -3
+dodge = 4
+attack_cost = 125
+flee_cost = 85
+flee_noise = 50

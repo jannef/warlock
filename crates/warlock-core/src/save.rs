@@ -34,9 +34,18 @@ const MAGIC: &str = "WARLOCK-SAVE";
 ///     types have levels and XP.
 /// 14: skills: actors' trained skills (`Actor::skills`: value and training marks by skill) and the
 ///     training random stream (`WorldState::training`).
-/// 15: NPCs and dialogue: actors keep how far their talk has got (`Actor::talk`: lines said and
+/// 15: special rooms: level states keep their special rooms and whether the player has been in
+///     each (`LevelState::rooms`); content fingerprints cover room effect ids.
+/// 16: weapon skills: actors have a rank and marks in each (`Actor::weapon_skills`).
+/// 17: digging: level states keep the work done on walls dug into (`LevelState::dug`).
+/// 18: combat stances (`Actor::stance`).
+/// 19: blood: level states keep their stains and the stains as last seen.
+/// 20: status effects: actors have them (`Actor::effects`), their healing progress counts
+///     hundredths of a second (`Actor::regen`), and the player's death records the status that
+///     killed them (`Death::of`).
+/// 23: NPCs and dialogue: actors keep how far their talk has got (`Actor::talk`: lines said and
 ///     muttered, met) and the unique character a level made them (`Actor::npc`).
-pub const FORMAT_VERSION: u32 = 15;
+pub const FORMAT_VERSION: u32 = 23;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 

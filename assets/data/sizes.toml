@@ -7,6 +7,8 @@
 #   name    its name, as the wiki shows it
 #   carry   how much it carries, in percent of what a medium one does (10 to 1000): the carrying
 #           limit, 1.5 kg × (2 × Strength + Toughness), is scaled by it
+#   blood   how much blood it spills when hurt badly or killed, in percent of what a medium one
+#           does (0 to 1000, default 100; presentation only, spec §8 "Blood")
 #
 # `medium` is required: it is the size of every race and creature type that names none.
 
@@ -14,6 +16,7 @@
 id = "small"
 name = "Small"
 carry = 75
+blood = 60
 
 [[size]]
 id = "medium"
