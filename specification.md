@@ -23,6 +23,8 @@ Build the engine and framework, not the game. Everything built is production qua
 - GPU glyph renderer with lighting, glyph animation, and effects
 - Hand-authored levels from text files; multiple levels joined by stairs, each persistent
 - Player movement (8 directions), doors (open/close), stairs
+- Doors (M19): locked doors opened with keys (a key for one lock, or a skeleton key for every
+  lock), and kicking doors in, by Strength against the door's sturdiness (§8 "Doors")
 - Line of sight, terrain memory, gameplay lighting, vision types
 - Test creatures walking fixed patrol routes; from M10 they act at their own hidden speed (§8
   "Speed"), belong to factions (§7 "Factions") that are hostile or neutral to the player and to
@@ -43,14 +45,26 @@ Build the engine and framework, not the game. Everything built is production qua
 - Status effects and passive healing (M24): a data-driven framework of effects on actors that
   tick and wear off in game time, stack, can be cured, lower stats, slow healing, and can kill;
   bleeding from big hits and confirmed criticals, poison from a giant rat's bite; hit points come
-  back twice as fast while resting (§8 "Status effects", "Healing")
+  back twice as fast while resting (§8 "Status effects", "Healing"). Diseases (M24, #139): one
+  umbrella status, Diseased, over six pathologies in the D&D 3.5 spirit that are caught by a
+  failed check, incubate unseen, progress daily with a check each (a loss costs stat damage),
+  are shaken off by two checks won in a row (grave rot never, and it can kill), and slow healing;
+  stat damage mends a point a day once they are gone (§8 "Checks", "Diseases")
 - Moons with phases and moonlight, weather starting with rain (M12)
+- Temperature and ice (M26): a fixed temperature underground, under the open sky one that follows
+  the month, the time of day, and the weather, always shown in the status bar; water that freezes
+  slowly in the cold and thaws in the warmth, ice of tracked thickness that holds actors by their
+  weight (what they carry included) and gives way under the heavy, falling in and climbing out,
+  and bursts of frost, heat, and blasts as hooks for spells and explosions (§5 "Temperature",
+  "Ice"). Nothing feels the cold yet (no hypothermia, warmth, or clothing)
 - Action costs: what an actor does and its speed decide how long it takes (M13)
 - Stats (M14): Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
   D&D, with D&D 3.5 modifiers and ADOM-like potentials that the player never sees; every actor
   has them, and the player sees their own scores on a character screen (§8 "Stats"). Combat uses
-  Strength, Dexterity, and Toughness (§8 "Combat"), and so does burden; status effects may lower
-  them (§8 "Status effects"); no other rule uses stats yet
+  Strength, Dexterity, and Toughness (§8 "Combat"), and so do burden and kicking doors in
+  (Strength, §8 "Doors"); status effects and stat damage may lower them (§8 "Status effects",
+  "Diseases"); diseases are resisted with checks of Toughness or Willpower (§8 "Checks"); no
+  other rule uses stats yet
 - Experience (M21): creatures have a level and an XP value; the player's own kills (melee,
   shots, throws) earn XP, scaled down for monsters below the player's level as in World of
   Warcraft, and levels (to 50) grow the hit points up to level 20 (§8 "Experience")
@@ -69,6 +83,10 @@ Build the engine and framework, not the game. Everything built is production qua
   ready in a new Tool equipment slot, turn after turn like a rest, by the tool's power and the
   digger's Strength against the wall's hardness, and to explosions stronger than they are hard;
   they become rubble (§8 "Digging")
+- NPCs and dialogue (M28): creatures who talk (data, `data/dialogue.toml`): chatting (`C`) gets
+  a rotating one-liner, or opens a small dialogue screen of topics; some mutter to themselves,
+  overheard through hearing. Moving into a creature that is not hostile swaps places with it,
+  unless it will not make way (§8 "Dialogue", "Displacement")
 - Character creation (M15): every new run chooses a race, a gender, and a class, which set the
   player's starting stats (partly rolled with dice, ADOM-like) and eyes; a random age by race
   and a random birthday give the birth year, whose horoscope sign (12 mythological animals × 5
@@ -84,6 +102,11 @@ Build the engine and framework, not the game. Everything built is production qua
   blocking and shield bashing among them) with per-category passive benefits, and *The Riddle of
   Steel*'s defaults between related categories; a weapon skills screen and a shield bash
   (§8 "Weapon skills")
+- Hunger (M23), ADOM-like: a nutrition counter that game time burns (resting and overworld
+  journeys too) by the race's need; Hungry, Weak, Fainting, and Starving, and Satiated and
+  Bloated, with their effects; food to eat from the pack or the floor in meals of several turns;
+  creatures leave corpses that weigh what they did, rot, and may do something when eaten (§8
+  "Hunger")
 - Save and resume an unfinished run
 - Keyboard controls with an in-game controls reference
 - Development interface (§9)
@@ -96,12 +119,12 @@ Build the engine and framework, not the game. Everything built is production qua
   enters (§7 "Special rooms")
 
 **Out of scope for now**: magic (spells are announced, nothing is damaged), damage types (a
-flaming arrow does an arrow's damage), rules that use stats beyond combat and burden (ability
-checks, saving throws, training stats), levels and experience, digging down or up, creatures
-that dig, what a class gives beyond starting stats, hit points, skills, and weapon skills
-(equipment, spells), active uses of skills (searching, picking locks, healing, and the like),
-item effects beyond magic items' affixes (no potions or scrolls to use yet, no unique items, no
-enchanting), audio, mouse input, infravision, localization.
+flaming arrow does an arrow's damage), rules that use stats beyond combat, burden, and kicking
+doors in (ability checks, saving throws, training stats), levels and experience, digging down or
+up, creatures that dig, what a class gives beyond starting stats, hit points, skills, and weapon
+skills (equipment, spells), active uses of skills (searching, picking locks, healing, and the
+like), item effects beyond magic items' affixes and food's (§8 "Hunger"; no potions or scrolls to
+use yet, no unique items, no enchanting), audio, mouse input, infravision, localization.
 
 Vision types are in scope even though there are no other mechanics yet: they are part of perception,
 and the light data model must carry them from the start.
@@ -117,22 +140,38 @@ regression scene for golden screenshots, replays, and snapshot tests.
 | Room | Demonstrates | Milestone |
 |---|---|---|
 | Start room | movement, message line, `?` help; gold and a small pile to pick up | M1, M11 |
-| Door corridor | opening/closing doors, doors blocking sight; a storeroom of arms and armor (something for every equipment slot but the neck and the rings, a two-handed quarterstaff, a short bow and arrows, flaming arrows, a long war bow, a crossbow and bolts, a sling and stones, rocks to throw, a pick-axe for the Tool slot by its door; in its middle two piles of magic arms: a Sharp long sword of the Bear and Dread Visage, a rare iron helm that glows when worn, both identified, and a rare short bow and a magic silver ring, not) and a pantry of objects | M1–M2, M11, M16, M19, M29 |
+| Door corridor | opening/closing doors, doors blocking sight; a storeroom of arms and armor (something for every equipment slot but the neck and the rings, a two-handed quarterstaff, a short bow and arrows, flaming arrows, a long war bow, a crossbow and bolts, a sling and stones, rocks to throw, a pick-axe for the Tool slot and the iron key to the pantry by its door; in its middle two piles of magic arms: a Sharp long sword of the Bear and Dread Visage, a rare iron helm that glows when worn, both identified, and a rare short bow and a magic silver ring, not) and a pantry of food (food rations, loaves of bread, dried meat, apples; eat with `E`) and other objects, whose west door is locked, the iron key to it lying in the storeroom (open it with the key, or kick it in) | M1–M2, M11, M16, M19, M23, M29 |
 | Patrol gallery | creatures moving in and out of view, never shown in memory; a cave beetle and a quicker cave bat (wildlife, so they keep to their lanes) on parallel lanes, a slower torch-bearing kobold circling them (wielding a sword, carrying coins), a kobold by type but placed among the peaceful folk (§7 "Factions"), so it walks its round and never attacks the player; heard from the corridor behind its closed door, and in its dark middle (the bat flies silently), which a flaming arrow shot from its door lights where it lands | M2, M10, M11, M16 |
 | Light hall | colored lights, falloff, pillar and creature shadows, steady magical light | M3, M8 |
 | Darkness chamber | vision types, a UV-only rune, darkvision fade; an amulet seen only by those who see in the dark | M3, M11 |
 | Water garden | still ponds and running rills (flow, glints, foam), pulsing altar with a ring before it | M4, M8, M11 |
 | Effects room | glyph particles, glow, fades, distortion | M4 |
-| Stairs | connection to Level 2, the arena, and the quarry (down), the courtyard and the overworld (up); the nook is a sanctuary (§7 "Special rooms") | M2, M9, M10, M19, M25 |
+| Stairs | connection to Level 2, the arena, the quarry, and the Frost Grotto (down), the courtyard and the overworld (up); the nook is a sanctuary (§7 "Special rooms"); an old hermit sits in its corner beside the quarry stairs and tells of the hall's rooms (topics, §8 "Dialogue") | M2, M9, M10, M19, M25, M26, M28 |
 
 **Courtyard (66×19, outdoor)**: up the stairs nook's `<`, a walled garden under the open sky —
 trees, a ruined wall, a pond, standing stones, flower beds, and a roofed gazebo with a lamp — where
 sunlight, sky light, and shadows turn and stretch with the time of day (§5 "Sunlight"; M9), and the
 moon lights it faintly by night, waxing and waning with the month (§5 "Moonlight"; M12). The
 `courtyard` scenario starts there at 06:30, while the shadows are long. Windfall apples lie under
-a tree, and a candle and a scroll in the gazebo (M11).
+a tree, and a candle and a scroll in the gazebo (M11). A gardener paces beside the flower bed by
+the ruined wall (one-liners, grumbling now and then), and a wandering bard walks a round of the
+meadow east of the gazebo, singing (one-liners and topics: the moon, the year 1444, the Great Race,
+the Wildlands; M28). Its pond freezes with the season (§5 "Ice"; M26): on 11 Darkening, the default
+start, the clear night has left thin ice on it at dawn, which the afternoon thins again; in
+Deepwinter and Frostmere it freezes thick.
 
-**Safety**: the hand-made showcase (the hub, Level 2, the courtyard) is safe. Creatures that would hunt the player by type (the hub's kobold, Level 2's kobolds and rats) are placed in the `peaceful` faction by their level (§7 "Factions"): they keep their types, patrols, speeds, footsteps, and looks, and attack no one. Fighting happens in the arena, and in the generated Depths (the real dungeon). Arriving in the arena says "The clash of arms echoes off the stone." (a level's `arrival` line).
+**Frost Grotto (44×11, M26)**: down the stairs nook's third `>` (below the first), outside the
+safe hub: a cave a little below freezing (−2 °C) with a frozen pool to walk on (§5 "Ice"). West
+to east: thick ice (20 cm) that holds anything that walks, ice (5.5 cm) that holds a person but
+may give way under a heavy pack, thin ice (2.5 cm) that gives way under anyone but a rat, and open
+water where a spring of running water (which needs a harder frost) runs in from the east wall.
+A silver ring lies out on the thin ice (it sinks to the bottom of the hole when the ice gives
+way, where wading in fishes it out), and a heap of rocks by the stairs lets the player load up
+and try the ice heavily laden. Arriving says "Your breath mists in the cold air."; lamps and a
+faint cold ambient light the pool. The ice keeps and slowly thickens; a hole refreezes in a few
+hours.
+
+**Safety**: the hand-made showcase (the hub, Level 2, the courtyard) is safe. Its people (the hermit, the gardener, the bard) are peaceful folk by type. Creatures that would hunt the player by type (the hub's kobold, Level 2's kobolds and rats) are placed in the `peaceful` faction by their level (§7 "Factions"): they keep their types, patrols, speeds, footsteps, and looks, and attack no one. Fighting happens in the arena, and in the generated Depths (the real dungeon). Arriving in the arena says "The clash of arms echoes off the stone." (a level's `arrival` line).
 
 **Arena (72×21, M10)**: down the stairs nook's second `>`: the place to fight; factions at war. A kobold war band
 (three torch-bearing kobolds wielding spears, an archer with a short bow and arrows ready, a slow
@@ -170,7 +209,9 @@ from north to south, foaming against a few boulders.
 (`depths:1` to `depths:8`; rooms and corridors at 80×21, caverns at 120×60 on depths 3–5) built
 from the run seed, with vaults stamped in and a few items of loot on every floor, at the depth's
 item level (§8 "Magic items"); about one level in two or three has a special room (§7 "Special
-rooms"). The `depths` scenario starts on its first level.
+rooms"). On its rooms levels a few rooms are locked, their rusty key lying where the player
+reaches it, and the guard post vault's store room is locked, its brass key carried by the kobold
+on guard (M19). The `depths` scenario starts on its first level.
 
 **The Overworld (M9)**: *The Wildlands*, a hand-authored 100×50 map of the land at large
 (`levels/overworld.toml`, level kind `overworld`), ADOM-like. Overworld terrain: plains,
@@ -452,7 +493,11 @@ glow, barely perceptible distortion, short fades.
     each, the corners pushed sideways by a slow wander and a sharp jitter) that takes a new shape
     with every flash and flicker and forks now and then into the cells the player sees, very
     bright blue-white, then a violet afterglow.
-  - Both are light themselves (drawn unlit and glowing, on top of everything else on the map)
+  - A **frost burst** (`frost_burst`, a burst; §5 "Ice") is the quiet one: a cold flash of rime
+    (`✳*·`, white to deep blue, a thin glowing body, a little cold light) over the cells it
+    reached, with a few frost crystals drifting down as it fades; no darkening and no shake. The
+    dev action `freeze:x,y,r` shows it over the water it froze.
+  - All are light themselves (drawn unlit and glowing, on top of everything else on the map)
     and light the scene with their own light (§4.4): from a burst's center, along a bolt every
     other cell.
   - **Darkening**: while a bright effect peaks, everything that is not its light (base light,
@@ -640,6 +685,82 @@ rate or animation.
     (saved, hashed) until it runs out. Captures and tests use it.
   - Weather is the same over the whole land for now; snow, fog, and rain masking sounds (hearing)
     may come later.
+- **Temperature** (`warlock-core/src/temperature.rs`; M26): the air on every level has a
+  temperature, in tenths of a degree Celsius, integer math only.
+  - **Underground** (dungeon levels) it is fixed: the level file's `temperature`, else its
+    dungeon branch's for that depth (`data/dungeons.toml`; the Depths 10 °C, its caverns 8 °C,
+    its deepest levels 6 °C), else 10 °C. It is kept with the level (saved).
+  - **Under the open sky** (outdoor levels and the overworld) it is a pure function of the run
+    seed and the time, like the weather, so long rests and journeys need no history: the
+    month's mean (`temperature` per `[[month]]` in `data/weather.toml`; the middle of each month
+    has its mean, and the days between two middles go linearly from one to the next: Frostmere
+    −7 °C, Thawmonth −3, Seedtide 3, Rainmoon 8, Greenleaf 13, Highsun 18, Emberheat 22,
+    Harvestide 18, Leaffall 12, Mistmoon 6, Darkening 1, Deepwinter −4), plus the day's swing
+    around it, a cosine (the sun's fixed-point one) coldest at 04:00 and warmest at 16:00: a clear
+    day's `swing` (10 °C from the coldest to the warmest) times the weather's `swing` percent
+    (overcast 40, rain 30, heavy rain 25: clouds keep nights milder and days cooler), less the
+    weather's `chill` (rain 1 °C, heavy rain 2 °C). Where the weather changes, its swing and chill
+    change with the clouds, over the same hour (`weather::Blend`). The dev weather override sets
+    them too, from the moment it is given. A clear night on 11 Darkening falls to about −3 °C.
+  - **Shown**: the status bar always shows the temperature where the player is, in dungeons and
+    outdoors alike, in whole degrees (`4 °C`; °F with the setting, §6), with a subtle cool tint
+    below freezing and a warm one from 30 °C. The number is the one exception to numbers being
+    hidden: the player feels the air. Nothing else feels it yet: no hypothermia, warmth, or
+    clothing; it freezes water ("Ice" below). Special rooms and ice do not change the air.
+- **Ice** (`warlock-core/src/ice.rs`, rules in `world/ice.rs`; M26):
+  - **Freezing**: every cell of water that freezes (terrain with a `freeze` table, §7: still
+    water below 0 °C at full pace; running water only below −6 °C, at 40 %) has an ice
+    thickness, kept sparsely with its level (only cells with ice; in micrometres, so slow
+    growth is not lost to rounding; saved, hashed). Growth follows Stefan's law: each tick (10
+    minutes) the square of the thickness grows by 400 000 µm² per tenth of a degree below the
+    water's freezing point, times its rate (2.4 cm per √(°C·day): about 5 cm in a day at −5 °C,
+    13 cm in three days at −10 °C), quickly at first and ever more slowly; above 0 °C it melts 5
+    µm a tick per tenth of a degree (7.2 mm a day per degree); between the two it keeps. At most
+    1 m.
+  - **Lazily**: nothing ticks while nobody looks. A level's ice is brought up to the clock when
+    the rules may meet it (as the clock moves on the player's level, during rests too, and when
+    the player arrives), tick by tick from where it was left (`LevelState::ice_until`). Ticks fall
+    on fixed moments of the clock (every 10 minutes since the epoch), each at the temperature of
+    its middle, so the ice at a moment is the same however the time passed: by turns, rests,
+    overworld journeys, or the dev skip. Cells that start alike stay alike, so catching up works
+    through the thicknesses there are (and each kind of open water), not the cells: a year away is
+    52 000 ticks of a few groups. A level under the open sky seen for the first time has had 30
+    days of its weather already (a pond is frozen when first come upon in deep winter);
+    underground levels start with the ice their file lays.
+  - **Looks**: a cell shows the thickest ice terrain its ice reaches (`ice` in
+    `data/terrain.toml`: thin ice from 1 cm, ice from 5 cm, thick ice from 15 cm), else the water
+    beneath; the terrain grid holds that, so memory, sight, and look mode follow ("thin ice",
+    "ice", "thick ice"). Ice is still: no waves, glints, or rain ripples. The player never learns
+    a thickness, only how it looks.
+  - **What it holds**: Gold's formula with `A` = 3.5 kg/cm²: 35 g per mm² of thickness squared,
+    so 5 cm holds 87.5 kg (a person with a pack), 15 cm 787.5 kg. An actor stepping onto ice
+    whose weight (its creature's base weight plus everything it carries, worn and wielded things
+    included) is at most that crosses safely, with no draw. Above that the ice gives way with a
+    chance rising evenly to certain at twice that (one draw of the gameplay stream, made only
+    between the two); ice that held by luck creaks under the player ("The ice creaks under your
+    weight."). A step onto ice costs its terrain's `move_cost` (120: careful steps). Wading into
+    water whose ice is too thin to look like ice breaks that skin.
+  - **Breaking through**: the cell is open water again (its ice gone; it refreezes from
+    nothing), and what lay on the ice sinks to the bottom: it stays in the cell's pile, under the
+    shallow water, where wading in picks it up. An actor that broke through from firm footing
+    plunges in: "The ice cracks beneath you and you plunge into the freezing water!" (a creature
+    the player sees: "The kobold falls through the ice!", `Event::FellThroughIce`), and loses the
+    water's `plunge` hit points (1d3; never the last one: the cold does not kill yet). The step
+    was a step into the water. From the water, ice that cannot hold the actor breaks ahead of it
+    ("You break through the ice."), without another plunge.
+  - **Climbing out**: a step from open water onto ice that holds the actor also costs `climb`
+    (`data/actions.toml`, 2000: 12 s at a normal pace), a few turns of hauling oneself up ("You
+    climb out onto the ice."). Wading out onto the shore is an ordinary step.
+  - **Bursts** (hooks for spells, traps, and explosions): `World::frost(center, radius,
+    thickness)` freezes the water within the radius in line of sight of the centre to at least
+    that thickness at once; `World::shock(center, radius, Shock)` breaks the ice it reaches: heat
+    (a fireball) melts all of it, a blast without heat shatters ice thinner than its strength,
+    and whoever stood on ice that broke falls in. The dev actions `freeze:x,y,r` (10 cm, shown
+    as the `frost_burst` spell effect, §4.8) and `thaw:x,y,r` (heat) use them; trapped fireballs
+    and a frost trap (#128) and blasts (#131) will.
+  - Creatures follow the same rules: they step onto ice, fall through, and climb out. The
+    overworld's rivers and lakes do not freeze (map scale; crossing a frozen river may come
+    later).
 - **Brightness** is the integer luma of RGB, `(54·r + 183·g + 19·b) / 256`, plus UV for eyes that
   see UV. Eyes without UV sight do not perceive UV at all (perception reports it as 0).
 - **Visibility**: a cell is visible iff it is in line of sight within the maximum view range **and**
@@ -711,7 +832,9 @@ rate or animation.
     is silent. Attacks
     (§8 "Combat"; hit or miss) are heard where the attacker stands: fighting (melee, 60), a
     bowstring (a shot, 40), chanting (a spell, 50); a turn of digging where the digger stands
-    (digging, 80; §8 "Digging").
+    (digging, 80; §8 "Digging"). A kick at a door (§8 "Doors"), whether it holds or breaks, bangs
+    on the door: banging, 100, made on the door's cell, so both sides hear it. A creature
+    muttering to itself (§8 "Dialogue") is a voice (50) where it stands.
   - **Propagation**: a noise spreads from its cell through the 8 neighbors, losing 10 loudness
     per orthogonal step and 14 per diagonal one, plus the `muffle` of every cell it enters (a
     closed door 30). Solid terrain (neither walkable nor transparent: walls, rock, trees,
@@ -732,7 +855,7 @@ rate or animation.
   - **The player** perceives the sounds they heard during the turn that just passed whose source
     cell they do not see (a creature in darkness or out of sight, a door around the corner),
     never who or what made them: the kind (footsteps, a door opening, a door closing, fighting, a
-    bowstring, chanting, digging), how loud
+    bowstring, chanting, banging, digging, a voice), how loud
     (faint, clear, or loud: under 10, under 30, or at least 30 above their threshold), and
     roughly where: a cell up to 2 (faint), 1 (clear), or 0 (loud) steps from the source through
     cells that pass sound unmuffled, which the player does not see, picked by a hash of the
@@ -744,7 +867,8 @@ rate or animation.
     hear a door close to the west." (the direction of the rough place, of eight). A perceived
     sound is no news if one of the same kind was perceived within 4 cells plus 2 per turn since,
     in the last 10 turns (a creature takes up to two steps a turn), so a patrol heard turn after
-    turn is said once per pass, not every turn. Like any message they stop a rest.
+    turn is said once per pass, not every turn. Like any message they stop a rest. A voice is
+    said with its words instead (§8 "Dialogue"), and never stops a rest.
   - **On the map**, each perceived sound is a faint, still marker (`◌`, pale grey, fainter for
     fainter sounds, never lit) at its rough place until the next turn; with glyph animation on
     it ripples in, a ring growing out of it and fading within a second. Look mode describes it
@@ -771,7 +895,8 @@ rate or animation.
   position and preset, or the sun or a moon with its shadow direction; and per-cell
   contributions; contributions plus the cell's base light sum to the cell's light), the base light
   of visible cells, the active vision profile, the ambient light, on a level under the sky the
-  sun, the moons, the sky, and the weather of the moment, and the perceived sounds (kind, volume, rough place;
+  sun, the moons, the sky, and the weather of the moment, the temperature where the player is (§5
+  "Temperature"), and the perceived sounds (kind, volume, rough place;
   "Hearing" above). Visual lighting (§4.4) is derived from this.
 
 ## 6. Input and UI
@@ -783,14 +908,14 @@ rate or animation.
 - **Screens**: the main menu, New run and its character creation steps, pause menu, Settings,
   Controls, help, the inventory, the equipment screen and its choice of what goes in a slot, an
   item's description, the character screen, the Skills screen, the weapon skills screen, choosing
-  what to pick up, drop,
-  or throw, and the death screen are modal screens on one stack. Opening
+  what to pick up, drop, throw, or eat, the dialogue screen, and the death screen are modal
+  screens on one stack. Opening
   a screen puts it on top; Esc or Back closes it and returns to the screen below as it was left.
   While any screen is open it receives every key press, the run (if any) stays visible beneath
   it, and no game time passes but for what is chosen on a screen (picking up, dropping, wearing,
-  wielding), which is done as it is chosen and takes its time. Prompts in the message line (a
-  direction to open, close, or bash, or to dig, how long to rest, look mode, aiming a shot or a
-  throw) are not screens.
+  wielding, eating), which is done as it is chosen and takes its time. Prompts in the message
+  line (a direction to open, close, kick, or bash, to dig, or to chat, how long to rest, look
+  mode, aiming a shot or a throw) are not screens.
 - **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
   `--record`, or `--capture` name what to run): Continue (only if a save exists), New run
   (scenario list from content, optional seed, then character creation), Settings, Controls,
@@ -820,28 +945,34 @@ rate or animation.
   Resume, Settings, Controls, Save and quit to menu, Quit (which saves). No game time passes while
   it is open; Esc or Back in Settings/Controls returns to it.
 - **Settings** (`settings.toml` in the config dir, §7 "File locations"; on the web, browser `localStorage`): font size (logical
-  px, 12 to 36), reduced effects and the per-effect switches, blood (§4.8), color palette, key
-  bindings, and a Files screen (where the files are and why; Open folder). A missing or damaged file means
+  px, 12 to 36), reduced effects and the per-effect switches, blood (§4.8), color palette, the
+  temperature unit (`temperature = "celsius"` (the default) or `"fahrenheit"`: how the status bar
+  shows the temperature, whole degrees, applied only when it is shown), key bindings, and a Files
+  screen (where the files are and why; Open folder). A missing or damaged file means
   defaults and a logged warning. Changes apply live (a font size change rebuilds the glyph atlas)
   and are written immediately.
 - **Rebinding**: in Controls, select a command and press a key; it becomes the command's primary
-  key (alternates such as the numpad stay). A key another command uses is refused and the owner
-  is named, so the table never holds a conflict. Esc (cancel) is fixed. Delete resets a command,
+  key (alternates such as the numpad stay). A key another command of the same context uses is taken
+  from it and bound to the new command, and the screen says so ("K moved to Wait; Kick has no
+  key." or "... (was Kick)."), so the table never holds a conflict; a command left without a key
+  shows as none and is saved as an empty list. Fixed commands never lose their key: Esc (cancel,
+  which opens the pause menu) is refused with a reason. Delete resets a command,
   "Reset all keys" resets everything.
-- First-phase commands: move, wait, open/close door, ascend/descend, light/douse lantern (`L`),
+- First-phase commands: move, wait, open/close door, kick (`K`, then a direction; §8 "Doors"),
+  ascend/descend, light/douse lantern (`L`),
   pick up (`,` or `g`), drop (`d`), inventory (`i`), equipment (`e`), character (`@`), skills
-  (`S`), weapon skills (`W`), rest (`R`), look, shoot or throw what is in the missile weapon slot
+  (`S`), weapon skills (`W`), rest (`R`), eat (`E`), look, shoot or throw what is in the missile weapon slot
   (`t`), throw from the pack (`T`), fire (`f`, unbound by default), more aggressive / more
   defensive combat stance (`+` / `-`; §8 "Stances"), bash with a shield (an ability, below: no
   key by default; bound in Controls, it asks for a direction, like opening a door), next target
-  (`Tab`, while aiming), use a tool (`U`, then a direction: dig), help, save and quit
+  (`Tab`, while aiming), use a tool (`U`, then a direction: dig), chat (`C`), help, save and quit
   (rebindable, unbound by default: quitting is done from the pause menu). Every way to quit (the
   pause menu's Save and quit to menu and Quit, the main menu's Quit, a bound quick key) asks
   first, in a Yes/No dialog with No selected (`y` yes; `n`, Esc no; closing the window or the tab
   does not ask). On the web Quit saves and reloads the page to a fresh main menu (a page cannot
   close itself), which has no Quit item. Free actions (look, help, the inventory, looking at the
-  equipment screen, the character screen, the Skills screen, the weapon skills screen, menus,
-  vision switch, a change of stance) do not
+  equipment screen, the character screen, the Skills screen, the weapon skills screen, asking
+  about a topic, menus, vision switch, a change of stance) do not
   advance time.
 - **Objects** (M11) lie in piles on cells, the top first: the map shows the top object's glyph
   (§4.2), and dropped objects go on top. Stepping onto a pile says what lies there: `You see here
@@ -917,13 +1048,16 @@ rate or animation.
   raised), their age today, birthday, and birth sign as on the summary (when the run has a
   character), their score in each stat (§8 "Stats") in display order with its abbreviation and
   full name (`St  Strength  12`; as it is now, with what magic items they wear add; a score a
-  status effect lowers shows lowered, in a muted red; §8 "Status effects"), their level and
-  experience (`Lv  Level  3`, `XP  Experience
+  status effect or stat damage lowers shows lowered, in a muted red; §8 "Status effects",
+  "Diseases"), their level and experience (`Lv  Level  3`, `XP  Experience
   85 / 120`, the total alone at the highest level; §8 "Experience"), their hit points (`HP  Hit
   points  18/24`) and Defence
   (`Dv  Defence  15`; the total only, as its Dexterity part would give away a modifier; §8
-  "Combat"), their combat stance by name (`Stance  Neutral`; §8 "Stances"), the status effects they suffer, by name, when there are any (`Status  Bleeding,
-  Poisoned`; never how severe or for how long), their weight (their own plus what they carry, and their burden when they have one:
+  "Combat"), their combat stance by name (`Stance  Neutral`; §8 "Stances"), the status effects
+  they suffer, by name, when there are any (`Status  Bleeding, Poisoned`; never how severe or for
+  how long), the diseases they know they have, by name, on a row of their own below (`Diseased
+  Filth fever, red ache`; one that has not progressed yet is only "Diseased"; never a timer or a
+  check; §8 "Diseases"), their weight (their own plus what they carry, and their burden when they have one:
   `Weight 98.4 kg (you 70 kg, carrying 28.4 kg, burdened)`), and, dimmer, the weights at which
   their burden changes, as in the inventory (§8 "Burden"). The panel is 72 wide, so the birth and
   the thresholds take a line each. Never a modifier, a potential, or a to-hit, which the player
@@ -954,7 +1088,9 @@ rate or animation.
 - **Death screen** (§8 "Combat"): when the player dies, the death screen opens over the run as it
   ended, in place of any other screen, and the run's save is deleted (permadeath): `Y O U   D I E
   D`, then who killed them ("Killed by a kobold", or "Killed by something you did not see" when
-  they did not see it), or the status effect that did (its `death` line: "Bled to death"), where
+  they did not see it), the status effect that did (its `death` line: "Bled to death"; a
+  disease kills by Diseased: "Died of disease"), or what, when neither did (§8 "Hunger":
+  "Starved to death", "Choked to death on a food ration"), where
   (the level's name), when (the date and time), and after how many turns, and the level they
   had reached ("You had reached level 3."). It takes every key press; Enter or Esc returns to
   the main menu (no Continue: nothing is
@@ -964,21 +1100,45 @@ rate or animation.
   actor's weight (what it carries decides its burden, §8 "Burden"), but the player is shown only
   their own.
   Creatures carry objects from their spawn (`carry`, §7), and wield and wear some of them
-  (`wield`, `wear`); they drop everything when they die (§8 "Combat"), and nothing else makes
-  them drop or change anything yet. Worn and wielded things weigh what they weigh.
+  (`wield`, `wear`); they drop everything when they die (§8 "Combat"), and their corpse on top
+  (§8 "Hunger"), and nothing else makes them drop or change anything yet. Worn and wielded things weigh what they weigh.
   Weights read `450 g` below a kilogram and `3.5 kg` above.
+- **Chat** (`C`; §8 "Dialogue"): with exactly one creature in view next to the player, it talks
+  to that one at once; otherwise it asks for a direction in the message line ("Talk in which
+  direction? (Esc to cancel)"), like opening a door. The answer is a message: `The gardener says:
+  "Mind the beds. Flowers bruise if you so much as look at them."` A creature with topics also
+  opens the **dialogue screen**: its name as the title, what it said (wrapped), and its topics
+  numbered 1 to 9 with a `>` marker on the selected one; a topic's number, or Enter on the
+  selected one (the arrows move it), asks about it, which takes no time: the screen closes, the
+  answer is said, and the screen opens again with it, on the topic asked. Esc (or `C`) leaves.
+  Chatting takes the time of `chat` (§7 "Action costs"); with no creature the player sees there,
+  it is refused ("You see no one there to talk to.") and takes none.
 - **Rest** (`R`) asks in the message line: `Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to
   cancel)`. `h` rests an hour, `d` until 06:00, `n` until 18:00 (replay text `rest:1h`,
   `rest:dawn`, `rest:dusk`); any other command cancels. Resting is one action that passes turn
-  after turn and stops early when a creature comes into view or a message is logged (§8 "Time"),
+  after turn and stops early when a creature comes into view (not one who talks and fights no
+  one, such as the showcase's people: the player sees who it is) or a message is logged (§8
+  "Time"),
   such as an attack the player perceives (§8 "Combat"), a status effect beginning ("You feel
-  sick."), a sound that is news (§5 "Hearing"), or rain starting or growing heavier (§5
-  "Weather"), and when the player dies;
+  sick."), a disease showing or worsening ("You feel feverish.", "Fever wracks you."; §8
+  "Diseases"), a sound that is news (§5 "Hearing"), or rain starting or growing heavier (§5
+  "Weather"), the player getting hungrier (into Hungry or worse) or fainting from hunger (§8
+  "Hunger"), and when the player dies;
   a sound already known goes on without stopping it, and so does other news of the weather (the
-  rain easing or stopping, clouds gathering or parting) and a status effect ending ("The
-  bleeding stops."), which are logged all the same. Hit points come back twice as fast while
-  resting (§8 "Healing").
-  It is a gameplay input mode like the open/close direction prompt, not a menu screen.
+  rain easing or stopping, clouds gathering or parting), a status effect ending ("The bleeding
+  stops."), a disease leaving ("Your fever breaks."), a full stomach settling ("You no longer
+  feel satiated."), and someone muttering (§8 "Dialogue"), which are logged all the same. Hit points come back twice as fast while resting
+  (§8 "Healing").
+  It is a gameplay input mode like the open/close/kick direction prompt, not a menu screen.
+- **Eat** (`E`; §8 "Hunger") opens the choice of what to eat: the food lying on the player's
+  cell first (no letter, marked "lying here"; the `>` cursor starts on it, as ADOM asks about
+  the floor first), then the food in the inventory by its letters; with nothing, "You have
+  nothing to eat." A pack letter, or Enter on the `>` row, eats it (replay text `eat:b` for
+  inventory stack `b`, `eat:floor:a` for the top stack of the pile underfoot); Esc cancels. A
+  meal is one action of several turns, stopped early like a rest; "You eat the food ration. You
+  feel satiated." when it is done, "You stop eating." (or "A kobold comes into view; you stop
+  eating.") when not, the food left as it was. What is no food is refused and takes no time
+  ("You cannot eat a dagger.").
 - **Dig** (`U`, "use a tool", ADOM's use-item key, an item's use rather than an ability; §8
   "Digging") asks in the message line `Dig in which direction? (Esc to cancel)`; a direction
   digs (replay text `dig:E`), any other command cancels. With no digging tool ready nothing is
@@ -1007,9 +1167,16 @@ rate or animation.
   kobold.", "You miss the kobold.", "The kobold dodges your small shield."). Status effects (§8)
   are said as they begin and end for the player ("You are bleeding.", "The bleeding stops.", "You
   feel sick.", "The poison wears off."), right after the attack that caused them; a creature the
-  player sees die of one dies in its words ("The giant rat bleeds to death."). Moving into a hostile creature attacks it in melee ("You hit the
-  giant rat.", "You miss something."; it takes a turn); into a neutral one stops ("The deer is
-  in the way.", "Something is in the way."; no time passes).
+  player sees die of one dies in its words ("The giant rat bleeds to death."). The player's
+  diseases speak for themselves (§8 "Diseases"): nothing is said as one is caught or incubates;
+  its `onset` as it shows ("You feel feverish."), a symptom at each progression that goes badly
+  ("Fever wracks you."), and its `recovered` as it leaves ("Your fever breaks."); Diseased itself
+  says nothing. Moving into a
+  hostile creature attacks it in melee ("You hit the giant rat.", "You miss something."; it
+  takes a turn); into any other one swaps places with it ("You swap places with the deer.", "You
+  swap places with something."; the player's step), or, if it will not make way, stops ("The
+  sentry doesn't budge.", "The giant is too big to squeeze past.", "Something is in the way.";
+  no time passes; §8 "Displacement").
 - **Targeting** (ADOM-like; `ui/target.rs`): `t` aims what is in the Missile weapon slot: a launcher
   shoots its readied ammunition, a throwing weapon or a stack (rocks) is thrown one at a time,
   any other weapon is thrown whole (improvised: -4 to hit, `IMPROVISED_TO_HIT`, and
@@ -1048,20 +1215,25 @@ rate or animation.
   "Special rooms"), and a sound heard there ("You hear footsteps here.").
 - Screen layout: map viewport, message log, status panel (level, the player's hit points as
   `HP 18/24` (never below 0), the status effects they suffer by name, the most important first
-  (`Bleeding`, `Poisoned`; data order; §8 "Status effects"), their burden when they have one
-  (`Burdened`, `Strained`, `Overloaded`; §8 "Burden"), their level as `Lv 3` (§8
-  "Experience"; it goes after the burden and before the time and the date), region (on the
-  overworld and in
+  (`Bleeding`, `Poisoned`, `Diseased`; data order; §8 "Status effects"; never which disease, §8
+  "Diseases"), their hunger unless they are Not hungry (`Hungry`, `Weak`, `Fainting`, `Starving`,
+  `Satiated`, `Bloated`; §8 "Hunger"), their burden when they have one (`Burdened`, `Strained`,
+  `Overloaded`; §8 "Burden"), their level as `Lv 3` (§8 "Experience"; it goes after the burden
+  and before the time and the date), region (on the overworld and in
   its local areas), time of day and date as `14:32 · 12 Rainmoon, Year 1444`, the moon's phase as a
   glyph and its name (`◑ First quarter`; with several moons each moon's name and glyph, `Moon ●
   Ilse ☽`), the weather under the open sky (`Clear`, `Overcast`, `Rain`, `Heavy rain`; §5
-  "Weather"), turn, position, light at the player, vision profile, lantern, seed). The phase glyph
+  "Weather"), the temperature where the player is, always (`4 °C`, or `39 °F` with the setting:
+  whole degrees, rounded half away from zero; tinted a subtle cool blue below freezing and warm
+  from 30 °C, the number saying it all; §5 "Temperature"), turn, position, light at the player,
+  vision profile, lantern, seed). The phase glyph
   shows the lit part of the disc, lit on the right while waxing: `○` new, `☽` waxing crescent,
   `◑` first quarter and waxing gibbous, `●` full, `◐` waning gibbous and last quarter, `☾` waning
   crescent. When the window is narrow, segments give way in priority order — seed, position,
-  lantern, vision, light, turn, then the moon's phase (first cut down to its glyph), region, date
-  (first cut down to day and month, `12 Rainmoon`), weather, time, burden, the status effects
-  (the least important first), and hit points, the level name last — and
+  lantern, vision, light, turn, then the moon's phase (first cut down to its glyph), the
+  temperature, region, date (first cut down to day and month, `12 Rainmoon`), weather, time,
+  burden, hunger, the status effects (the least important first), and hit points, the level name
+  last — and
   segments that fit again in the room left take it back, most important first. Outdoors the
   weather outranks the date: it changes the light and how far one sees.
 
@@ -1125,6 +1297,11 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   `"magic"`, or `"rare"`: a cell where an item of loot at least that good is rolled when the
   vault is stamped into a generated level (only vaults: in a level file it is a content error);
   the guard post's store room holds a magic one, the shrine and the roofless chapel any.
+- **Locks in level files** (M19, §8 "Doors"): a legend entry on a closed door locks it with
+  `lock = "pantry"` (a lock id: keys with that id open it, and skeleton keys) or `locked = true`
+  (a lock without an id: only a skeleton key opens it). A lock on anything but a closed door, an
+  empty lock id or `*`, or a `lock` with `locked = false` is a content error. Hand-made levels
+  need not give a lock's key (a door may be meant to be kicked in); vaults must (below).
 - **Water**: `~` is still water (`water`); `shallow_water` (ankle-deep over a stone floor, paler,
   a flooded room's floor, §7 "Special rooms") steps at 150 and splashes like water. Running
   water (`running_water`, terrain with a `flow`
@@ -1139,6 +1316,13 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   runs toward where the channel continues in the next row, edge cells turn toward water below them
   where the channel narrows, and a few boulders (from their own random stream, so the rest of the
   level is unchanged) stand in the wide stretches for the water to foam against.
+- **Temperature and ice in level files** (M26; §5 "Temperature", "Ice"): a level under no sky
+  may set its `temperature` (°C, −40 to 40; default its branch's, else 10); under the open sky
+  it follows the weather, so an outdoor or overworld level giving one is a content error. A
+  legend entry on water that freezes may lay ice on it, `{ terrain = "water", ice = 25 }` (mm, 1
+  to 1000): the cell shows the ice terrain that thickness reaches. Ice terrain is never placed by
+  itself (a content error): it lies on water, which it thaws back into. Vaults lay no ice and
+  have no temperature (the level they are stamped into decides).
 - **Definitions** (TOML): terrain types, creature types, light presets, vision profiles, glyph
   animations, and effects (glow, heat haze, particle emitters; §4.8). Creature types have a
   `speed` (100 to 10 000, default 1000, the player's; never shown to the player; §8 "Speed"): the
@@ -1148,7 +1332,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   `faction` (below; required when factions exist, the player's is `player`), its eyes `vision`
   (a profile; default `normal`) and `sight` (radius, 1 to 40, default 10), how it fights:
   `combat = "melee"` (default), `"ranged"`, or `"caster"`, the latter two with a `range` (2 to its
-  sight), `opens_doors` (default false), and optionally `attack_cost`, what its attacks cost
+  sight), `opens_doors` (default false), `budge` (whether the player may swap places with it
+  when it is not hostile, §8 "Displacement": `always`, the default; `off_post`, not while it keeps
+  its post, going about its routine, as a shopkeeper at its counter will; `never`), and
+  optionally `attack_cost`, what its attacks cost
   instead of the attack's cost in `data/actions.toml` (100 to 10 000; §8 "Time"; none of the
   built-in creatures has one yet). The kobold: darkvision, sight 10, melee, opens doors;
   the kobold archer: darkvision, sight 12, ranged 7; the kobold shaman (speed 800): darkvision,
@@ -1164,9 +1351,11 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   default 0; the player creature has none: race and class give the player's); `attack`, its
   natural attack, used when it wields no weapon (`{ damage = "1d4", name = "bite", verb = "bites"
   }`, with optional `threat`, `crit`, and `to_hit` as for weapons, and `on_hit`, the status
-  effects a hit with it may cause if the target lives: `[{ status = "poisoned", chance = 10,
-  severity = 2 }]`, the chance in percent (1 to 100) and the severity in degrees (1 to the
-  status's `max`; §8 "Status effects"); without one, bare hands: 1d3, "fist", "hits"); and
+  effects and diseases a hit with it may cause if the target lives: `[{ status = "poisoned",
+  chance = 10, severity = 2 }]`, the chance in percent (1 to 100) and the severity in degrees (1
+  to the status's `max`; §8 "Status effects"), or `{ disease = "filth_fever", chance = 10 }`
+  (exposure to the disease, which the target then resists with a check; §8 "Diseases"; never the
+  status diseases show as); without one, bare hands: 1d3, "fist", "hits"); and
   `natural`, its natural armour (`{ defence = 3, name = "shell" }`, 1 to 20, the Natural
   category of Defence; the name is said when it turns a blow). For experience (§8
   "Experience"): `level` (1 to 99, default 1) and `xp` (0 to 100000, default 0; the player
@@ -1174,7 +1363,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   giant rat 1/5, the cave bat 1/3, the cave beetle 2/8, the deer 1/2. For loot (§8 "Magic
   items"): `loot`, the chance in percent (0 to 100, default 0) that it drops a magic or rare item
   where it dies: the kobold 25, the kobold archer 30, the kobold shaman 50. The giant rat and the
-  cave bat bite (1d4, 1d3; the rat's bite poisons one hit in ten, 2 degrees), the deer kicks
+  cave bat bite (1d4, 1d3; the rat's bite poisons one hit in ten, 2 degrees, and exposes to
+  filth fever one hit in ten), the deer kicks
   (1d4, "hoof"; `base_hp` 4), the cave beetle
   bites (1d3) and has a shell (3); kobolds fight with what they wield. Its weapon skills (§8
   "Weapon skills"): `weapon_skills`, its ranks by skill id (0 to 10; each raises the skills it
@@ -1185,10 +1375,23 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   player's size comes from their race when the run has a character). Skills (§8 "Skills"; never
   shown): `skills`, the skills it is trained in by skill id with fixed values (0 to 999); the
   rest untrained; the player creature lists none. The deer listens (30), the kobold shaman knows
-  concentration (20) and spellcraft (25). For blood (§8 "Blood"; presentation only):
+  concentration (20) and spellcraft (25). The showcase's people (M28): the gardener, the
+  wandering bard, and the old hermit (speed 800), glyph `@`, of the peaceful folk by type, level
+  1 and worth no experience. For blood (§8 "Blood"; presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
-  bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). Creature particle
-  emitters may
+  bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8
+  "Hunger"): `corpse` (default true: it leaves a corpse when it dies; with `data/hunger.toml`),
+  and `on_eat`, what eating its fresh corpse does besides feeding, never shown before the player
+  tries (`{ message = "...", vomit = 25, stat = { toughness = 5 }, heal = "1d4", harm = "1d2",
+  satiation = 500 }`: the message said once it is eaten, a percent chance it comes back up, a
+  percent chance per stat to raise it by 1 up to its potential, dice of hit points healed, dice
+  of degrees of sickness given (the status `[corpses] sickness` names, poisoned; §8 "Status
+  effects"), nutrition beyond its size's; chances 0 to 100, dice rolling 0 to 1000; only on a
+  creature that leaves a corpse). The built-in ones: the giant rat "Gamey and stringy, but it
+  stays down."; the cave bat leathery and sickening (1d2); the kobold and the kobold archer
+  "This kobold meat tastes terrible!" (vomit 40); the kobold shaman the same (vomit 40) and
+  Willpower 3 %; the deer "Venison! It does you good." (satiation 1000, heal 1d6); the cave
+  beetle "Crunchy." and Toughness 10 %. Creature particle emitters may
   fire `on = "attack"`: a burst at the target of each attack the player sees (the shaman's
   violet sparkle). Terrain has a `move_cost`: what a step onto it costs in percent of a normal
   step (the `step` action; default 100; still and running water 200, shallow water 150; local
@@ -1200,31 +1403,52 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   it are, in percent of the walker's footsteps, 0 to 1000; default 100), a door's `toggle_noise`
   (how loud opening the closed door or closing the open one is, at most 300; default 0, silent;
   only doors), and a `muffle` (the loudness a sound loses entering the cell, at most 300; default
-  0, but solid terrain blocks sound unless it has one). For digging (§8 "Digging"), terrain that
-  breaks has a `hardness` (1 to 10 000, the work it takes: a pick-axe at Strength 10 does 10 a
-  turn) and what it `becomes` (walkable, transparent open ground that does not break, no door or
-  stairs: rubble), together; only solid terrain (not walkable, no door, stairs, or light) breaks.
-  Stone walls 600, packed earth 100, granite 3000. Solid rock may have a `face`, the solid terrain
-  it shows as once a cell next to it is broken open (`void`: `wall`). Overworld terrain has
+  0, but solid terrain blocks sound unless it has one). A closed door may break when kicked
+  (§8 "Doors"): `breaks_to`, the terrain it becomes (walkable and no door: the broken door), and
+  `sturdiness` (1 to 100: a kick breaks it with a chance of the kicker's Strength score in it;
+  the closed door's is 30), both or neither, and only on closed doors. For digging (§8
+  "Digging"), terrain that breaks has a `hardness` (1 to 10 000, the work it takes: a pick-axe at
+  Strength 10 does 10 a turn) and what it `becomes` (walkable, transparent open ground that does
+  not break, no door or stairs: rubble), together; only solid terrain (not walkable, no door,
+  stairs, or light) breaks, so digging and blasts never break a door. Stone walls 600, packed
+  earth 100, granite 3000. Solid rock may have a `face`, the solid terrain it shows as once a cell
+  next to it is broken open (`void`: `wall`). Overworld terrain has
   `travel_minutes` (1 to 1440; required for every walkable terrain on the overworld),
   optionally `local`, the ground terrain of the local area entered from a cell of it (none:
   nothing to explore there; locations never have one), and `landscape`, what its land is like in
   local areas (required with `local`): `plains`, `grassland`, `forest`, `dense_forest`, `hills`,
   or `swamp` pick the generator of its own areas; `road` runs a road through them amid the
   neighbors' land; `river` and `lake` put running or still water along that side of the
-  neighboring areas (§3). The calendar's month names are
+  neighboring areas (§3). Water that freezes (§5 "Ice") has a `freeze` table: `below` (ice grows
+  while the air is colder than this, °C, 0 down to −30; it melts above 0), `rate` (percent of
+  still water's pace, 1 to 100, default 100), and `plunge` (dice: the hit points a fall through
+  the ice into it takes, never the last one); still water `{ below = 0, plunge = "1d3" }`,
+  running water `{ below = -6, rate = 40, plunge = "1d3" }`, a flooded room's shallow water
+  `{ below = 0, plunge = 1 }`. Ice is terrain with `ice`, the
+  thinnest ice in mm that looks like it (1 to 1000, distinct; the next one's takes over from
+  its thickness): thin ice (10, hairline cracks `⁄ ∖ ·` over dark water), ice (50, a grey-blue
+  sheet, a dot here and there), thick ice (150, pale and frosted all over), each `move_cost`
+  120. Water that freezes and ice are walkable and transparent, give no light, and are neither
+  doors, stairs, nor overworld terrain; ice does not flow; if any water freezes, some terrain
+  must be ice. Presentation-only, any terrain may have `variants`: glyphs the map draws in place
+  of its `glyph`, one per cell picked by a hash of its position (a space for none; look mode
+  and dumps use `glyph`). The calendar's month names are
   `data/calendar.toml` (exactly 12; without the file months are numbered).
 - **Action costs** (`data/actions.toml`, optional): action ids mapped to their cost in energy,
   e.g. `wait = 1000`, 1000 being a normal action (6 s at normal speed; §8 "Time"), 100 to
   10 000. The ids are `step` (onto terrain of `move_cost` 100), `wait`, `open_door`,
-  `close_door`, `lantern`, `stairs` (also entering a location or local area and walking off an
+  `close_door`, `unlock` (unlocking a door with a key, on top of opening it), `kick`, `lantern`,
+  `stairs` (also entering a location or local area and walking off an
   area's edge), `pick_up`, `drop`, `melee` (a shield bash too), `shoot`, `throw`, `reload` (a
   missile weapon that `reloads`: a crossbow shot costs `shoot` plus `reload`, 2000), `cast`,
   `dig` (a turn of digging), and for equipment (each slot names
   one, below) `wield` (1000), `wear` (1000: helmets, cloaks, gloves, boots, rings, amulets),
-  `body_armor` (3000: it takes a while to strap on), and `ready` (1000: a missile weapon,
-  missiles, a tool). An action left out, or every action without the file, costs 1000; an unknown id
-  or a cost out of range is a content error. The wiki shows them in a generated table.
+  `body_armor` (3000: it takes a while to strap on), `ready` (1000: a missile weapon, missiles,
+  a tool), `eat` (1000: a turn of eating; a meal takes the food's `turns`, §8 "Hunger"), `chat`
+  (500: a few words, §8 "Dialogue"), and `climb` (2000: climbing out of the water onto ice, on
+  top of the step onto it; §5 "Ice"). An action left out, or every action without the file,
+  costs 1000; an unknown id or a cost out of range is a content error. The wiki shows them in a
+  generated table.
 - **The sky** (`data/sky.toml`, optional; without it there are no moons): up to 8 `[[moon]]`s,
   each with `name` (shown in the status bar when there are several), `color` (`[r, g, b, uv]`,
   the direct light of the moon when full and high in the night sky), `sky` (the same for the
@@ -1245,7 +1469,16 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   error), `two_handed` (default false; only with a hand slot's `slot`, and there must be two
   hand slots: it takes both), `ammo` (the kind of ammunition it is, `ammo = "arrow"`), and
   `launches` (the kind a missile weapon shoots, `launches = "arrow"`; some object must be that
-  ammunition). Launchers and ammunition pair by that kind (`Content::fires`). What they do in a
+  ammunition). Launchers and ammunition pair by that kind (`Content::fires`). Food (§8
+  "Hunger") has `food = { nutrition = 1500, turns = 4 }`: the nutrition points it gives (1 to
+  100 000) and the turns of eating it takes (1 to 100; never on things worn, wielded, shot,
+  thrown, or burned): strips of dried meat (600, 2 turns), apples (150, 1), food rations (1500,
+  4), loaves of bread (800, 3). **Corpses** are objects too, one made for every creature type
+  that leaves one (not the player) when content loads, after the objects of the file in creature
+  order, with the id `<creature>_corpse`: "kobold corpse", `%` in the creature's color, made of
+  the corpses' material (`data/hunger.toml`), weighing the creature's weight, not stackable, and
+  feeding by the creature's size. Level files and `carry` cannot place them (a content error):
+  only creatures that die leave them, each knowing when it died. What they do in a
   fight (§8 "Combat"; only for things with a `slot`): a weapon's `damage` dice (`"1d8"`; a
   launcher's, required for one, are its shots' and carry its draw weight, `"1d8+2"`), `threat`
   (the lowest natural roll that threatens a critical, 2 to 24, default 22), `crit` (the damage
@@ -1268,6 +1501,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   presentation only: `missile` (the glyph it flies as, drawn pointing right; default its own,
   upright), `spins` (it tumbles in flight), `glow` (0 to 1, where it lies), and particle
   `particles` (`ambient`: while it lies in view on top of its pile; `flight`: while it flies).
+  Keys (M19, §8 "Doors"): `key`, the lock id it opens, or `*` for a skeleton key, which opens
+  every lock. The keys: an iron key (`pantry`, the hub's pantry), a brass key (`guard_post`, the
+  guard post vault's store room), a rusty key (`depths`, the rooms locked in the Depths), and a
+  skeleton key (in the guard post's store room).
   Test objects: weapons for the main hand (dagger 1d4 and short sword 1d6, threat 20; spear 1d8
   ×3; club 1d6; a two-handed quarterstaff 1d6 with parry 1; the dagger thrown 5 cells, the spear
   6; of the daggers, short blades, spears, maces, and staves skills), a small shield (off hand,
@@ -1371,20 +1608,43 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   gives the stance (`Hostile` or `Neutral`) of two factions, creature types, or actors. Test
   factions: `vermin` (giant rats; hostile to the player), `kobolds` (the war band; hostile to the
   player and the vermin), `wildlife` (deer, cave bats, the cave beetle; neutral to everyone), and
-  `peaceful` ("peaceful folk", hostile to no one), which only levels place creatures in. A level
+  `peaceful` ("peaceful folk", hostile to no one: the showcase's people by type, and creatures
+  levels place in it). A level
   legend entry with a `creature` may name a `faction` (a known faction id; an unknown one is a
   content error) that replaces its type's for that creature: it is stored on the actor
   (`faction_override`, saved and hashed only when set), used wherever stance is computed (AI
   targeting and noise, look mode "(hostile)", bump-to-attack vs "in the way"), and so can make a
-  hostile type harmless in the showcase. Level files may also have an `arrival` line, said each
-  time the player arrives by stairs.
-- **The weather** (`data/weather.toml`, optional; without it the sky is always clear): exactly 12
+  hostile type harmless in the showcase. The showcase's people belong to `peaceful` by type. A
+  legend entry with a `creature` may also name an `npc` (an npc id of `data/dialogue.toml`; one
+  without a dialogue there is a content error): the unique character that creature is, which
+  speaks the npc's dialogue rather than its type's (stored on the actor, saved and hashed only
+  when set). Level files may also have an `arrival` line, said each time the player arrives by
+  stairs.
+- **Dialogue** (`data/dialogue.toml`, optional; without it nobody talks; §8 "Dialogue"): each
+  `[[dialogue]]` names exactly one of `creature` (a creature type, not the player) or `npc` (an
+  npc id: lower-case letters, digits, and underscores), at most one dialogue each, and has `lines`
+  (at least one one-liner), an optional `greet`, optional `[[dialogue.topic]]`s (at most 9, each
+  with a unique `id` in lower-case letters, digits, and underscores, a `name`, and a `reply`), and
+  an optional `mutter = { chance, verb, lines }` (`chance` in percent per action, 1 to 100; `verb`
+  one lower-case word, default "mutters"; at least one line). Lines, greetings, topic names, and
+  muttered lines are one line of at most 72 characters (they fit the message line with the
+  speaker's name), replies at most 280 (the dialogue screen wraps them); none is empty or padded.
+  Built in: the gardener (one-liners; grumbles), the wandering bard (one-liners and topics: the
+  moon, the Great Race, this year, the Wildlands; sings), and the old hermit (a greeting,
+  one-liners, and topics: this hall, the dark chamber, the gallery, the water garden, these
+  stairs; mutters).
+- **The weather** (`data/weather.toml`, optional; without it the sky is always clear and every
+  month a mild 10 °C with a swing of 8): `swing` at the top (a clear day's swing of temperature
+  from the coldest hour to the warmest, °C, 0 to 30), exactly 12
   `[[month]]`s in calendar order, each with the chance in percent of `clear`, `overcast`, `rain`,
-  and `heavy_rain` (adding up to 100), and a table for each of `overcast`, `rain`, and
+  and `heavy_rain` (adding up to 100) and its mean `temperature` (°C, −40 to 40; §5
+  "Temperature"), and a table for each of `overcast`, `rain`, and
   `heavy_rain` (clear is the sky as it is): `direct` and `sky` (percent of the direct light of the
   sun and the moons, and of the sky light, that gets through; 1 to 100), `scatter` (percent of the
   direct light the clouds spread over the sky as sky light, 0 to 100, default 0), `sight` (cells
-  of overworld sight lost, 0 to 8, default 0), and presentation-only `ambient` particle emitters
+  of overworld sight lost, 0 to 8, default 0), `swing` (percent of a clear day's swing of
+  temperature left under it, 0 to 100, default 100), `chill` (how much cooler it is, °C, 0 to
+  15, default 0), and presentation-only `ambient` particle emitters
   (§4.8; `rate` per cell and second): `drops` (on every visible cell under the sky), `splash` (on
   open ground: walkable, transparent, not running water), and `ripples` (on still water, terrain
   with a `wave` animation). §5 "Weather".
@@ -1404,8 +1664,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 - **Dungeon branches** (`data/dungeons.toml`): stacks of generated levels, e.g.
   `{ id = "depths", generator = "rooms", depth = 8, size = [80, 21] }`, plus optional name,
   patrolling creature kinds, ambient light, `loot = [fewest, most]` (items of loot on each
-  level's floor, at most 50; the Depths 2 to 4; §8 "Magic items"), and per-depth overrides of
-  generator and size. Stairs
+  level's floor, at most 50; the Depths 2 to 4; §8 "Magic items"), `temperature` (°C, −40 to 40;
+  default 10; §5 "Temperature"), a `key` (a key object: its rooms levels lock a few rooms with
+  the lock it opens, §8 "Doors"; the Depths' is the rusty key), and per-depth overrides of
+  generator, size, and temperature (each default the branch's). Stairs
   (and scenarios) may target `depths:N`; content validation accepts such ids when the branch has
   that depth. A branch level is generated on its first visit from its own random stream (§8) and
   then persists like a hand-made level. Its `<` leads to `depths:N-1` (on depth 1, back to the
@@ -1422,13 +1684,19 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   it; with no such step, at the area's start in the middle.
 - **Generators** (`warlock-core`, integer-only): *rooms* — walled rooms joined along a minimum
   spanning tree plus a few loops by corridors dug as cheapest paths (bends cost extra), with closed
-  doors, open doors, or doorways where corridors enter, and wall torches in most rooms; *caves* —
+  doors, open doors, or doorways where corridors enter, and wall torches in most rooms; with the
+  branch's `key`, last, up to two rooms with a single door (not the arrival room, no room with
+  stairs, no vault) get that door locked with the key's lock (a doorway or open door there
+  becomes a closed door), and the key lies on a free spot in a room that is not locked (what
+  lies or walks in a locked room stays there); *caves* —
   cellular automata (45 % rock, five 4-5 smoothing passes, largest cave kept), pools of still water,
   lamps and glowing fungus. Both place the up staircase (the arrival point) and the down staircase
   far from it, a few creatures on looping patrols, and last, now and then, a special room
   (below). Every level is validated by flood fill —
-  every stair, door, and walkable cell reachable from the up staircase, patrols valid, some light
-  — and a level that fails is regenerated from the next derived stream. *outdoor* (the local
+  every stair, door, and walkable cell reachable from the up staircase; locks only on closed
+  doors, and the stairs and a key to every lock (lying, or carried by a creature) reachable from
+  it without unlocking a door, so no level needs a key it does not give; patrols valid, some
+  light — and a level that fails is regenerated from the next derived stream. *outdoor* (the local
   areas of the overworld, §3): smooth integer value noise (random values on a coarse lattice,
   eased between) sized as a share of the area lays everything in natural blobs — woods, clearings,
   meadows of flowers, pools, crags; the share of woods blends towards each neighboring cell's
@@ -1442,9 +1710,13 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   cell is reachable from it (4-connected), every side has at least 3 walkable cells, running water
   and only running water has a flow, and patrols are valid.
 - **Vaults** (`assets/vaults/*.toml`): hand-made pieces in the level-file format, stamped verbatim
-  (terrain, lights, objects, creatures) where they fit — into rock with room for corridors or tunnels to
+  (terrain, lights, objects, locks, creatures) where they fit — into rock with room for corridors or tunnels to
   every entrance. A vault's edge is solid except for its entrances (doors, not on a corner); it has
-  no stairs or player start, and all its walkable cells are reachable from an entrance. Vaults of
+  no stairs, player start, or unique character (`npc`), and all its walkable cells are reachable
+  from an entrance. Its locks
+  come with their keys: a key to every lock lies, or is carried by a creature, within reach of an
+  unlocked entrance without unlocking a door (the guard post: its store room locked, the brass
+  key carried by its kobold). Vaults of
   `kind = "outdoor"` are ruins for local areas, stamped on open land with a ring of open ground
   around them: their spaces (`void`) keep the area's own ground, every open cell on their edge is
   a way in, and their walkable cells are reachable from the edge. Dungeon generators use only
@@ -1504,7 +1776,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   in `data/sizes.toml`, default `medium`; §8 "Burden"), `ignores_burdened` (default false: whether
   Burdened, the first level of burden, costs the character nothing), `skills` (the skills it trains,
   by skill id: dice or a number, every result 0 to 100; §8 "Skills"), `class_skill` (dice added
-  to one of the class's skills, picked when the character is made; default none), and
+  to one of the class's skills, picked when the character is made; default none), `hunger` (how
+  much the character needs to eat, in percent of a human, 10 to 1000, default 100; §8 "Hunger":
+  elf 80, half-elf 90, human 100, dwarf 110, halfling 125, gnome 90, half-orc 120), and
   `weapon_skills` (starting ranks by weapon skill id, a fixed number or dice, every result 0 to
   10; §8 "Weapon skills"); and at the top
   `base_potential` (1 to 40), what every potential is before the race adjusts it (15). Races are
@@ -1537,15 +1811,67 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   the player sees dying of it: "bleeds to death"), `death` (the death screen's line: "Bled to
   death"). Built in: **bleeding** (`seen` "bleeding", max 5, a hit point every 40 s per degree,
   a degree eased a minute, no healing while it lasts, a big hit 1 degree and a critical 2, cured
-  by a bandage) and **poisoned** (max 10, a hit point every 2 minutes per degree, a degree eased
+  by a bandage), **poisoned** (max 10, a hit point every 2 minutes per degree, a degree eased
   every 2 minutes, healing at half the pace, Strength and Dexterity −1 from 4 degrees on; it does
-  not show on others).
-- **Sizes** (`data/sizes.toml`, optional; §8 "Burden"), in file order: `id`, `name`, `carry`
+  not show on others), and **diseased** (what every disease shows as, `data/diseases.toml`'s
+  `status`: max 1, healing at half the pace, no words of its own, "succumbs to disease", "Died of
+  disease"). The status diseases show as may have no `tick`, `eases`, `wound`, or `cured_by`
+  (diseases give it and take it away), and no `on_hit` names it.
+- **Diseases** (`data/diseases.toml`, optional; without it nobody falls ill; §8 "Checks",
+  "Diseases"): `status` (the status every disease shows as, required with any disease:
+  `diseased`), then the `[[disease]]`s in file order: `id`, `name` (as the character screen
+  names it once known: `filth fever`), `difficulty` (what a check must reach to resist it, 1 to
+  50), `check` (the stat whose modifier the checks add, default `toughness`), `incubation` (days
+  from catching it to its onset: dice or a number, at least 1, at most 365, whatever it rolls),
+  `interval` (days between progressions, default 1, 1 to 365), `damage` (stat damage a failed
+  check does: `{ dexterity = "1d3", toughness = "1d3" }`, each 1 to 40 whatever it rolls), `hp`
+  (hit points a failed check costs: dice, 1 to 1000; none by default; a failed check must do
+  one or the other), `recovery` (checks won in a row that shake it off, default 2; 0: never by
+  itself), `kills` (default false: whether its damage may take Toughness to 0 or the last hit
+  point, which kills), `regen` (how fast hit points come back while it shows, in percent, when
+  slower than its status's; 0 to 1000), `caught` (the sources rules expose to it by name:
+  `rotten_food`), `wading` (`{ terrain = ["marsh", "swamp"], per_hour = 4 }`: the terrain the
+  player catches it in, a chance in percent for each hour spent crossing it, 1 to 100),
+  `cured_by` (the means that cure it at once: `remove_disease`; nothing applies one yet), and the
+  words, all required: `onset` (said as it shows), `symptoms` (said at the progressions that go
+  badly, in turn, the first again after the last), `recovered` (said as it leaves). Built in, our
+  own in the D&D 3.5 spirit (a check of 2d12 + modifier against the difficulty): **filth fever**
+  (difficulty 13, `1d3` days, `1d3` Dexterity and `1d3` Toughness; from the giant rat's bite),
+  **red ache** (16, `1d3` days, `1d6` Strength), **the shakes** (14, 1 day, `1d6` Dexterity),
+  **marsh ague** (14, `1d4` days, `1d3` Toughness, healing at a quarter of the pace; caught
+  crossing marsh (the ground of swamp areas) and the overworld's swamp, 4 % an hour), **grave
+  rot** (15, 1 day, `1d4` Toughness and `1d4` Presence, never by itself, kills; from rotten food,
+  later the undead), and **brain fever** (Willpower against 13, `1d3` days, `1d3` Intelligence
+  and `1d3` Willpower); all recover after two checks won in a row but grave rot, and all are
+  cured by `remove_disease`. Red ache, the shakes, and brain fever have no source yet.
+- **Sizes** (`data/sizes.toml`, optional; §8 "Burden"), in file order, smallest first (§8
+  "Displacement" compares them): `id`, `name`, `carry`
   (what it carries in percent of a medium one, 10 to 1000): small 75, medium 100; and `blood`
   (how much blood it spills in percent of a medium one, 0 to 1000, default 100; §8 "Blood"):
   small 60. `medium` is
   required (the size of every race and creature type that names none); without the file there
   is only medium.
+- **Hunger** (`data/hunger.toml`, optional; §8 "Hunger"; without it nobody hungers, nothing can
+  be eaten, and creatures leave no corpses): `burn_seconds` (game seconds per nutrition point
+  burned at 100 % hunger, 1 to 86 400: 60), `start` (nutrition at the start of a run: 3600),
+  `max` (the most there can be: 6500), `vomit_leaves` (the most left after vomiting: 1000),
+  `[states]` (the least nutrition of `bloated` 5500, `satiated` 4000, `not_hungry` 1440,
+  `hungry` 720, `weak` 240, and `fainting` 0, strictly falling and below `max`; below
+  `fainting` the player is Starving; `start` and `vomit_leaves` lie from `fainting` to `max`),
+  `[bloated] slow` (percent of an action's price while Bloated, 100 to 1000: 125), `[weak]
+  stats` (what Weak, Fainting, and Starving take from Strength and Dexterity, only those two,
+  −10 to 10: −1 each), `[fainting]` (`chance`, percent each turn, 0 to 100: 5; `turns` lost, 1
+  to 100: 5), `[starving]` (`damage` hit points, 1 to 1000: 1, every `seconds` of game time, 1
+  to 86 400: 600), `[exertion]` (extra points the player's `melee`, `shoot`, and `throw` burn,
+  0 to 1000: 2, 1, 1; no other action), `[overeating]` (`choke`, the percent chance a meal past
+  `max` chokes the eater to death: 0, off; `vomit`, else the chance they vomit: 50), and
+  `[corpses]` (optional; without it creatures leave none: `material` (`flesh`),
+  `rotten_hours` (8) and `gone_hours` (36; more than `rotten_hours`, at most a month),
+  `rotten_vomit` (percent: 50), `rotten_harm` (dice of degrees of sickness, 0 to 1000: `1d4`),
+  `sickness` (the status id, `data/status.toml`, that harm from eating gives: `poisoned`; needed
+  when anything eaten harms), and `[corpses.size]` with every size of `data/sizes.toml` and what its corpses give, `{ nutrition,
+  turns }`: small 400 and 3, medium 1000 and 6). The wiki shows its tables (the states, the
+  races' needs, food, corpses) generated.
 - **Classes** (`data/classes.toml`, optional), in the order offered: `id`, `name`, a one-line
   `description`, `stats` (adjustments as for races), `hp` (as for races), `skills` (as for
   races), `weapon_skills` (starting ranks as for races), and `weapon_skill_choice` (two or more
@@ -1599,7 +1925,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   races or classes) gives them itself: `vision` (default `normal`), `stats` and `potential` as for
   creature types (default 10 each, the potential the score), and `hp` (the hit points beyond
   Toughness a race and a class would give, 0 to 1000, default 0); with a character these four are
-  refused; such a player is trained in no skill (§8 "Skills"). Every built-in scenario has a
+  refused; such a player is trained in no skill (§8 "Skills"). A scenario may give the player a
+  starting pack, `carry = ["ration*3"]` (as level files place objects; at most 26 stacks; no
+  corpses): the depths three food rations, the world three food rations and two strips of dried
+  meat, the forest two food rations and three apples (§8 "Hunger"). Every built-in scenario has a
   character with normal eyes: the showcase a human female thief, the arena a halfling male thief,
   the courtyard a human female druid, the depths and the vast level a human male warrior, the forest
   a human female ranger, the world a human male ranger.
@@ -1610,7 +1939,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   from 1.0 on, saves are migrated. The web build keeps the same bytes in the browser's
   `localStorage` (below). The envelope also records a content fingerprint (hash of the ordered
   terrain, creature, level, light, dungeon-branch, object, equipment slot, skill, room effect,
-  weapon skill, and status
+  weapon skill, status, and disease
   ids), because ids are indices; a save made with different content is rejected. Generated levels
   are saved with the run like visited hand-made ones (terrain, memory, stairs, lights, kind,
   arrival point,
@@ -1637,15 +1966,26 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   as last seen (§8 "Blood"; format version 19), every actor's status effects (each status with
   its severity, its progress toward its next tick and easing, and who caused it), the progress
   toward the next hit point back counted in hundredths of a second at the normal pace, and the
-  status effect that killed the player (§8 "Status effects", "Healing"; format version 20), every
-  magic or rare item as it is (§8 "Magic items": on its stack wherever it lies or is carried, its
-  rarity, item level, each affix by id with its tier and rolled value, a rare item's name, and
-  whether it is identified; format version 26; absent on normal stacks; an affix this content
-  does not have, a tier or value out of range, or more affixes than the rarity allows makes the
-  save inconsistent; affixes are recorded by id, so adding affixes does not change the content
-  fingerprint), and a dev weather override while
+  status effect that killed the player (§8 "Status effects", "Healing"; format version 20), the
+  player's satiation (their nutrition, the burn banked toward the next point, and the seconds
+  toward the next hit point lost while starving), every corpse's death time, and what killed the
+  player when neither a creature nor a status effect did (§8 "Hunger"; format version 21), the
+  locks on each level's doors (§8 "Doors"; format version 22), how far each actor's talk has got
+  and the unique character a level made it (§8 "Dialogue"; format version 23; left out while
+  nothing has been said, or none), each level's temperature underground, the ice on its water
+  (thickness and the water beneath), and when its ice was last brought up to date (§5
+  "Temperature", "Ice"; format version 24), every actor's diseases (each with the seconds to
+  its next turn, whether it shows, its progressions so far, its checks won in a row, and who gave
+  it) and stat damage (with the seconds banked toward mending it; §8 "Diseases"; format version
+  25), every magic or rare item as it is (§8 "Magic items": on its stack wherever it lies or is
+  carried, its rarity, item level, each affix by id with its tier and rolled value, a rare item's
+  name, and whether it is identified; format version 26; absent on normal stacks; an affix this
+  content does not have, a tier or value out of range, or more affixes than the rarity allows
+  makes the save inconsistent; affixes are recorded by id, so adding affixes does not change the
+  content fingerprint), and a dev weather override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
-  itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
+  itself is not saved, nor the temperature under the open sky: they follow from the seed and the
+  clock. The save is `run.sav` in the
   platform data directory. quitting from the pause menu saves (closing the window saves too), autosave runs every 50 turns
   and on level change, and a save that cannot be read is renamed `run.sav.bad`, never deleted, while
   a new run starts. Starting resumes the save unless `--new` is given. **Permadeath**: when the
@@ -1688,7 +2028,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 crates/
   warlock-core/   plain Rust, no Bevy: map, actors, actions, turns, time, fov, light,
                   perception, rng, levels, mapgen, stats, skills, weapon skills, dice,
-                  character, burden, status, magic, save
+                  character, burden, hunger, status, checks, diseases, magic, save
   warlock-cli/    no Bevy: scenarios, replay, dump, verify
   warlock/        Bevy app: render, input, UI, effects, platform (ECS lives here)
 xtask/            screenshot capture, golden-image diff, CI helpers
@@ -1711,7 +2051,9 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   scheduler, "Speed" below) → environment → perception (line of sight, light, memory, heard
   sounds and their messages) → emit presentation events. An action that makes noise is heard by
   every actor in earshot as it happens (§5 "Hearing"); a creature drops what it heard as it
-  acts, the player once they have acted.
+  acts, the player once they have acted. As the clock moves (and as perception begins, after a
+  skip or an arrival), the ice on the player's level is brought up to it (§5 "Ice"), so whoever
+  steps next meets the ice of the moment.
 - **Time** (`warlock-core/src/time.rs`): world time is whole seconds since the calendar epoch
   (year 1, day 1 of the first month, 00:00), kept in the world state (saved, covered by the state
   hash). The calendar has 12 months of 30 days (a 360-day year) and 24-hour days; month names are
@@ -1723,16 +2065,17 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   integer arithmetic; no wall-clock time.
   - **Costs** (M13): the action decides how long it takes, and the actor's speed scales
     it. Every action that takes time has a **cost** in energy, 1000 for a normal action, given in
-    `data/actions.toml` (`step`, `wait`, `open_door`, `close_door`, `lantern`, `stairs`,
-    `pick_up`, `drop`, `melee`, `shoot`, `throw`, `reload`, `cast`, `wield`, `wear`,
-    `body_armor`, `ready`, `dig`; 100 to
+    `data/actions.toml` (`step`, `wait`, `open_door`, `close_door`, `unlock`, `kick`, `lantern`,
+    `stairs`, `pick_up`, `drop`, `melee`, `shoot`, `throw`, `reload`, `cast`, `wield`, `wear`,
+    `body_armor`, `ready`, `eat`, `dig`; 100 to
     10 000; an action left out, or every action without the file, costs 1000; unknown ids are
     errors), and a **base time**: 6 s
     (`BASE_TURN`) for every action but a step on the overworld. An action of cost *c* takes an
     actor of speed *v* `c / 1000 × 1000 / v × 6 s`: a normal action takes 6 s at normal speed
     (the player's), one of cost 1400 (two-weapon fighting, say) 8.4 s, and a normal action at
     speed 1111 about 5.4 s, at speed 900 about 6.7 s. All built-in actions cost 1000 for now but
-    `body_armor` (3000: 18 s); a crossbow shot takes `shoot` and `reload` (12 s).
+    `body_armor` (3000: 18 s); a crossbow shot takes `shoot` and `reload` (12 s), and opening a
+    locked door with its key `unlock` and `open_door` (12 s).
     - Equipment (§6 "Equipment"): every thing put on or taken off costs the action of the slot it
       goes in or comes out of (a two-handed weapon: the first hand's), taking off what putting on
       does, and one action pays for all of them: a swap costs both, a quarterstaff that puts away
@@ -1746,11 +2089,13 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
       is decided.
     - `stairs` covers taking stairs, entering a location or a local area from the overworld, and
       walking off a local area's edge: 6 s each at normal speed, on the overworld too, where
-      waiting and the lantern take 6 s as well. Bumping a closed door costs `open_door`; moving
-      into a hostile creature, `melee`.
+      waiting and the lantern take 6 s as well. Bumping a closed door costs `open_door` (a locked
+      one, with its key, `unlock` as well); moving into a hostile creature, `melee`; a kick,
+      `kick`.
     - A creature's action costs the same: a step onto the destination terrain, else its action's
-      cost (`melee`, `shoot` (and `reload`), `cast` for attacks, `open_door`, `wait` when it waits
-      or is blocked). A creature type may give its attacks their own `attack_cost` (§7), so a future
+      cost (`melee`, `shoot` (and `reload`), `cast` for attacks, `open_door` (and `unlock` for a
+      locked door it has the key to), `wait` when it waits or is blocked). Chatting costs `chat`;
+      swapping places with someone costs the player's step (§8 "Displacement"). A creature type may give its attacks their own `attack_cost` (§7), so a future
       attack or ability is one more entry. Free and refused actions take no time.
     - Weapons (M29, #149): a blow with a wielded weapon that has an `attack_cost` (§7) costs that
       instead of `melee` (a shot from a missile weapon with one, instead of `shoot`), unless the
@@ -1774,7 +2119,9 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
       prices (`World::price_of`, `World::step_price`), at the burden the actor has as the
       action begins (picking up and dropping are priced before the load changes). A burdened
       normal action takes 7.5 s, so eight take exactly 60 s; a rest still ends exactly at its
-      goal.
+      goal. Being Bloated (§8 "Hunger") raises them again the same way, after the burden: ×1.25
+      (`[bloated] slow`), so four normal actions take 30 s (`World::bloated`).
+    - A meal (§8 "Hunger") is several turns of `eat`, one per turn of the food's `turns`.
   - **Speed** (`warlock-core/src/world/schedule.rs`), ADOM-like: every creature type has a
     `speed` (§7), 1000 being normal and the player's; twice the speed is twice as many actions in
     the same game time. An energy scheduler, integer only: each actor on the current level gains
@@ -1796,13 +2143,17 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     each turn), the others act, perception runs; the last turn is cut short so the rest ends
     exactly at its goal at any speed of the player (it costs all the energy the player has and
     gains until the goal; one hour, the next 06:00, or the next 18:00; at most a day). It stops after a turn in which a
-    creature came into view (one not seen the turn before) or a message was logged that stops a
-    rest (all but weather news other than rain starting or growing heavier, §5 "Weather"), and
+    creature came into view (one not seen the turn before; never one who talks and fights no one,
+    a creature with a dialogue whose faction is hostile to nobody, as the showcase's people: the
+    player sees who it is) or a message was logged that stops a
+    rest (all but weather news other than rain starting or growing heavier, §5 "Weather", and
+    muttering, "Dialogue" below), and
     logs how long the player rested. The player heals twice as fast all the while ("Healing"
     below), and the player's status effects beginning and ending in the turns that pass without
     perception are said all the same. Digging ("Digging" below) runs through the same loop
-    (`World::keep_at`). Turns that end before any creature on the level could come
-    within view, and in which the weather the player would see did not change, pass without
+    (`World::keep_at`). Turns that end before any creature on the level that could stop the rest
+    could come within view, in which the player heard nothing, and in which the weather the
+    player would see did not change, pass without
     perception: a creature is seen only within the view range, and before its
     first step that could bring it there it needs the energy for every step that cannot (each at
     least the level's cheapest step), so a fast creature shortens the stretch. Those turns cannot
@@ -1826,16 +2177,21 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
      as a `melee` one.
      Leaving its routine it remembers where it was (its post) and where it saw the target.
   3. **Search**: with no hostile in sight, it goes to where it last saw one (next to the spot if
-     someone it cannot see stands there).
+     someone it cannot see stands there, or no one can stand there: a door shut or kicked at).
   4. **Listen**: failing that, to where it last heard a noise (§5 "Hearing"; the newest it heard
-     since it last acted) whose source cell it does not see. Only creatures whose faction is
-     hostile to someone go to look; wildlife does not care.
-  5. **Return**: then back to its post, and on along its patrol route from where it left it (or
-     it waits there).
+     since it last acted) whose source cell it does not see (next to it, as above, when someone
+     stands there or no one can). Only creatures whose faction is hostile to someone go to look;
+     wildlife does not care.
+  5. **Return**: then back to its post (waiting beside it while someone else stands on it), and
+     on along its patrol route from where it left it (or it waits there). A creature the player
+     swapped places with has its old cell as its post ("Displacement" below), so it steps back
+     and carries on.
 
   Paths are A* over king's moves within a bounded box (12 cells beyond the target, at most 64
   from the creature), each step costing 1: walkable cells, and closed doors for creatures that
-  open them (1 more: it opens the door, a turn and a noise, then steps in). Another actor's cell
+  open them (1 more: it opens the door, a turn and a noise, then steps in); a locked door only
+  for one carrying a key that fits it (1 more again: it unlocks the door as it opens it, §8
+  "Doors"), to every other creature a wall. Another actor's cell
   costs 4 more, so a creature walks a short detour around someone in its way but waits behind
   them rather than take a long one. Ties go to cells nearer the target, then to the earlier
   direction (N, NE, E, … NW). A spot it cannot reach is given up. A creature hostile to the
@@ -1850,9 +2206,48 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   `with` the missile of a shot or throw), a noise (§5), and a message when the player perceives
   it (§6). The event reaches presentation only
   when the player sees both ends (or made the attack and saw the target). The player moving into
-  a hostile creature is a melee attack; into a neutral one it stops. Creatures neither flee nor
+  a hostile creature is a melee attack; into any other one it swaps places with it
+  ("Displacement" below). Creatures neither flee nor
   fight differently when hurt. What a creature has in mind (last seen, noise to look into, post)
   is part of the world state.
+- **Dialogue** (`warlock-core/src/content/dialogue.rs`, the data; `world/talk.rs`, the rules;
+  M28, #146): NPCs are creatures with a dialogue (§7), by their type or by the unique `npc` id
+  their level gave them (which wins).
+  - **Chatting** (`Action::Chat(dir)`, replay text `chat:E`; §6 "Chat") with a creature the player
+    sees on that cell takes the time of `chat`. One without a dialogue does not answer ("The
+    giant rat doesn't answer."), one hostile to the player is in no mood ("The brigand is in no
+    mood to talk."); either still takes the time. Otherwise it answers (`The old hermit says:
+    "…"`): its `greet` the first time the player chats with it (it is then *met*), else its next
+    one-liner.
+  - **Rotation**: the one-liners come in rounds, each line once a round, every round in an order
+    of the speaker's own (a Fisher–Yates shuffle drawn from FNV-1a and SplitMix64's finalizer
+    over the run seed, the actor, and the round), and a round never starts with the line the last
+    one ended on, so the same line never comes twice in a row. Each actor counts the lines it has
+    said (`Actor::talk`, saved and hashed once it has said something).
+  - **Topics**: the answer is an event (`Event::Talked`: who, what they said, the topics the
+    player may ask about, and the topic it answers); one with topics opens the dialogue screen
+    (§6). Asking (`Action::Ask { dir, topic }`, replay text `ask:E:rooms`) takes no time and gets
+    the topic's reply; an unknown topic is "The sage knows nothing about that." `World::topics`
+    is the one place topics come from, so quests (#148) add theirs there.
+  - **Muttering**: after each of its actions, a creature whose dialogue has a `mutter`, that goes
+    about its routine (its mind calm) within 5 cells of the player (as far as a voice carries), mutters
+    with its `chance` (a hash of the run seed, the actor, and the moment: the gameplay stream is
+    untouched) one of its muttered lines, in rounds like the one-liners. It is a noise, a voice
+    (50; §5 "Hearing"), and the player gets the words only if they hear it: with the speaker's
+    name if they see it (`The bard sings: "Over the Wendle and under the moon..."`), else from
+    where they place the sound (`You hear a voice to the north: "…"`, or, faint, `You faintly
+    hear a voice to the north.`, without the words). Mutters are logged without stopping a rest.
+- **Displacement** (`world/talk.rs`; M28, #147): the player moving into a creature that is not
+  hostile to them (neutral or peaceful) swaps places with it: the player steps onto its cell (the
+  step's time and noise) and it onto the player's (its footsteps), its own turn unaffected; "You
+  swap places with the deer." ("…with something." if unseen). It remembers the cell it stood on
+  as its post (unless it already had one), walks back there once the player has moved off it, and
+  carries on with its routine ("Creature behavior", Return). It refuses, and the move takes no
+  time, when its type's `budge` is `never`, or `off_post` while its mind is calm (keeping its
+  post: shopkeepers, #145); when it cannot move (overloaded): "The sentry doesn't budge."; or
+  when it is two sizes or more larger than the player (sizes in `data/sizes.toml` order; none of
+  the built-in sizes is): "The giant is too big to squeeze past." A refusal the player does not
+  see the creature for is "Something is in the way."
 - **Combat** (`warlock-core/src/combat.rs`, the rules; `world/fight.rs`, applying them; M16),
   after D&D 3rd edition with 2d12 and ADOM-like hit points. Every roll comes from the gameplay
   random stream.
@@ -1900,14 +2295,16 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     why; on a threat the two dice of the confirmation; then one draw per damage die each time the
     damage is rolled (the attack's own dice, then a magic weapon's extra die, "adds 1d4
     damage"); then, if the target lives, one draw for each `on_hit` effect of the attack whose
-    chance is below 100 ("Status effects" below).
+    chance is below 100 ("Status effects" below), and for a disease that lands on a target that
+    does not carry it yet, the two dice of its check and, if it is caught, one draw per
+    incubation die ("Diseases" below).
   - **Magic** (§8 "Magic items"): an attack is built from its weapon (or natural attack, or bare
-    hands) and the attacker's scores as they are now (raised by what it wears, lowered by its
-    status effects: `Actor::effective_stats`), then its weapon skill's benefit, then the weapon's
-    own attack affixes (its to-hit, damage, extra die, critical threat and multiplier; a shot's
-    from the missile weapon and the ammunition, a bow's draw lowering the Strength it needs) and
-    the global ones of what the attacker wears and wields, then its combat stance. A threat goes
-    no lower than 2, a multiplier no higher than 5.
+    hands; a kick is bare hands) and the attacker's scores as they are now (raised by what it
+    wears, lowered by its status effects, hunger, and stat damage: `Actor::effective_stats`), then
+    its weapon skill's benefit, then the weapon's own attack affixes (its to-hit, damage, extra
+    die, critical threat and multiplier; a shot's from the missile weapon and the ammunition, a
+    bow's draw lowering the Strength it needs) and the global ones of what the attacker wears and
+    wields, then its combat stance. A threat goes no lower than 2, a multiplier no higher than 5.
   - **Hit points** (ADOM-like, no hit dice, no levels): maximum = Toughness + race HP + class
     HP (§7 tables: e.g. a dwarf barbarian with To 16 has 6 + 8 + 16 = 30; a human warrior with
     To 12 has 23; an elf wizard with To 8 has 10), at least 1; a creature's = Toughness + its
@@ -1920,22 +2317,24 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     no more than the lowered maximum).
   - **Regeneration**: a hurt actor on the current level gets 1 hit point back per
     `max(60 s, 360 s − 12 s × Toughness)` of game time at the normal pace (To 10: 4 minutes; To
-    25 and up: 1 minute); resting, status effects, a sanctuary (§7 "Special rooms"), and the
-    regeneration affixes of magic items (§8 "Magic items") change the pace ("Healing" below).
+    25 and up: 1 minute); resting, status effects, diseases, a sanctuary (§7 "Special rooms"),
+    starving (§8 "Hunger"), and the regeneration affixes of magic items (§8 "Magic items") change
+    the pace ("Healing" below).
   - **Big hits and status effects**: a hit that takes at least a third of the target's maximum
     hit points is a **big hit** (`combat::big_hit`). A blow that hits and leaves its target alive
     may cause status effects: those whose `wound` it meets (bleeding: a big hit 1 degree, a
     confirmed critical 2; every blow alike until weapons have categories), then each `on_hit`
-    effect of the attack (a creature's natural attack: the giant rat's bite poisons by its chance)
-    ("Status effects" below).
+    effect of the attack (a creature's natural attack: the giant rat's bite poisons, or exposes to
+    filth fever, by its chance) ("Status effects", "Diseases" below).
   - **Death**: at 0 hit points an actor dies (`Event::Died { actor, at, of }`, right after the
     attack, or at the moment a status effect takes the last hit point, `of` naming it). A
     creature leaves the world, and what it carried, worn and wielded things too, falls on its
-    cell on top of the pile there, in inventory order. The player's death ends the run: it is
-    recorded (`World::death`: turn, time, the level's name, and the creature type that killed
-    them if they saw it, or the status effect that did), the turn stops there, every later
-    action is refused, and presentation shows the death screen and deletes the save (§6, §7
-    "Saves").
+    cell on top of the pile there, in inventory order, with its corpse on top of all (§8
+    "Hunger"). The player's death ends the run: it is recorded (`World::death`: turn, time, the
+    level's name, and the creature type that killed them if they saw it, or the status effect
+    that did, or the `cause` when neither did: starving or choking, §8 "Hunger"), the turn stops
+    there, every later action is refused, and presentation shows the death screen and deletes
+    the save (§6, §7 "Saves").
   - **What the player perceives**: their own hit points and Defence total (`PerceptionView::
     own_hp`, `own_defence`); how hurt each seen creature looks, in words (`SeenActor::health`:
     unhurt, lightly wounded, wounded, badly wounded, nearly dead); and the messages. Never a
@@ -2040,6 +2439,54 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     `Fell`, or `Unseen` when the last cell seen is not where it ended. Dropped if none of it was
     seen. The player's own readied missile weapon, its ammunition, and ranges are in the snapshot
     (`PerceptionView::ready_to_fire`, `ready_to_throw`, `throw_range`) for the targeting UI.
+- **Doors** (`warlock-core/src/door.rs`, the rules; `world/door.rs`, applying them; M19, #130):
+  locked doors and keys, and kicking doors in.
+  - **Locks** are per-cell state of a level, not terrain of their own: a locked door is the
+    closed door's terrain with a lock on its cell (`LevelState::locks`, saved and hashed). So it
+    looks, blocks sight and sound, and is remembered exactly like any closed door, and the player
+    cannot tell it is locked until they try it (perception never carries locks); every door
+    property stays in one terrain definition; and a lock carries what a terrain id cannot: its
+    optional **lock id** (§7 "Locks in level files"). A lock lies only on a closed door:
+    unlocking it or breaking the door takes it away. Locking a door again is later work.
+  - **Keys** are objects with a `key` (§7): the lock id they open, or `*` for a **skeleton key**,
+    which opens every lock; a lock without an id opens only to a skeleton key. Opening a locked
+    door (`o`, or walking into it) while carrying a key that fits unlocks it and opens it in one
+    action, ADOM-like: `unlock` plus `open_door` (12 s at normal speed), "You unlock the door with
+    your iron key and open it." The key made for the lock is used before a skeleton key; keys are
+    kept. Without one: "The door is locked.", refused, no time.
+  - **Kicking** (`K`, then a direction; `Action::Kick`, replay text `kick:DIR`; the `kick` action,
+    6 s), ADOM-like:
+    - **A closed door**, locked or not, breaks with a chance of the kicker's Strength **score**
+      (never the modifier) in the door's `sturdiness` (§7): one draw of the gameplay stream,
+      `1d(sturdiness) ≤ Strength`. The closed door's sturdiness is 30: Strength 9 breaks it 30 %
+      of the time, 10 33 %, 15 50 %, 18 60 %, 30 and up always. A door without a sturdiness never
+      breaks, and no die is rolled. A broken door becomes its `breaks_to`, the **broken door**
+      (`,`, splinters in the doorway): walkable and see-through for good (it cannot be closed),
+      its lock gone: "The door crashes open!" A door that holds: "WHAMM!" Either way the kick bangs
+      on the door, a noise of 100 made on the door's cell (§5 "Hearing", heard as banging), and
+      creatures that hear it and have enemies come to look (next to the door, §8 "Creature
+      behavior").
+    - **A creature** (seen or not, hostile or not) is an unarmed melee attack, whatever the
+      player wields: bare hands (1d3) with Strength to hit and to damage (§8 "Combat"), what
+      their unarmed fighting gives, and their combat stance (§8 "Weapon skills", "Stances"); it
+      trains unarmed fighting, and its speed takes off the `kick`'s cost. Rolled, heard, and
+      shown like any blow and said as a kick: "You kick the giant rat.", "You miss the giant
+      rat.", "The giant rat dodges your kick."
+    - **Anything else** is refused and takes no time: "You kick at empty space." where one could
+      walk (an open or broken door too), else "Kicking the stone wall would only hurt your
+      foot."
+    - Creatures do not kick (yet).
+  - **Creatures** that open doors (`opens_doors`) open a locked door only while they carry a key
+    that fits: they unlock and open it in one action (`unlock` plus `open_door`). To every other
+    creature a locked door is a wall (§8 "Creature behavior").
+  - **Events**: a kick at a door the player sees is `Event::DoorKicked` (it held: dust shaken off
+    it, the closed door's `toggle` particles) or `Event::DoorBroken` (splinters, the broken
+    door's); unlocking a door is seen as its opening (`DoorOpened`).
+  - **Where locks are**: hand-made levels lock doors in their legend (the hub's pantry, its
+    iron key in the storeroom); vaults bring their locks and keys (the guard post's store room,
+    its brass key carried by the kobold on guard, a skeleton key inside); a dungeon branch with a
+    `key` gets a few locked rooms on its rooms levels, its key always within reach (§7
+    "Generators", validated). The showcase's locked door is harmless.
 - **Digging** (`warlock-core/src/world/dig.rs`; M19, #131): walls give way to digging and to
   explosions, ADOM-like.
   - **Walls that break**: terrain with a `hardness` and what it `becomes` (§7): stone walls 600,
@@ -2124,7 +2571,7 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     subtly (§4.8 "Blood").
 - **Status effects** (`warlock-core/src/status.rs`, the rules of one actor's effects;
   `world/status.rs`, applying them; data `data/status.toml`, §7; M24, #138): what ails an actor.
-  Diseases (#139) build on it.
+  Diseases ("Diseases" below) build on it: they show as one status, Diseased.
   - **Effects**: an actor carries at most one effect of each status (`Actor::effects`, in status
     order), each with a **severity** in degrees (1 to the status's `max`), its progress toward
     its next tick and toward easing, and who caused it (the last to add to it). A new dose adds
@@ -2138,8 +2585,10 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     status with `eases` loses a degree every `eases` seconds, and at none it is gone. Hit points
     come back meanwhile ("Healing" below). Everything happens at its own moment, so it makes no
     difference how time is cut up (many waits or one long journey); at one moment a hit point
-    back comes first, then the ticks, then the easing. Actors on other levels are frozen, and the
-    dev time skip passes no time for anyone.
+    back comes first, then the ticks, then the easing, then the player's hunger (§8 "Hunger": its
+    burn, each change of state, and each hit point lost to starving are moments too), then a
+    point of stat damage mending, then the diseases' turns ("Diseases" below). Actors on other
+    levels are frozen, and the dev time skip passes no time for anyone.
   - **Stats**: a status's `penalty` lowers scores from a severity on (several add up, kept
     within 1 to 40); every rule reads the effective score (`Actor::effective_stats`): combat
     (to-hit, damage, Defence, hit points), burden (the limit), and healing. The player sees their
@@ -2150,10 +2599,14 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     player for creatures bleeding to death from wounds they dealt.
   - **Cures**: `World::cure(actor, means)` ends every status that lists the means in its
     `cured_by` (a `bandage` stops the bleeding); the Heal skill (#132) will apply it.
+  - **Causes**: `World::afflict(actor, status, severity, by)` is the one way to give an actor a
+    status: wounds and `on_hit` (below), sickness from what the player eats (§8 "Hunger"), and
+    later traps and diseases.
   - **Bleeding**: from big hits and confirmed criticals; it costs hit points, stops healing, and
     eases by itself; it shows on creatures ("bleeding"). Blood dripping where the bleeder goes
     (the stains of #127) hooks in where it ticks (`World::drip_blood`).
-  - **Poisoned**: from a giant rat's bite (one hit in ten, 2 degrees); it costs hit points
+  - **Poisoned**: from a giant rat's bite (one hit in ten, 2 degrees) and bad food (§8
+    "Hunger": the sickness of a rotten corpse, or of some creatures' flesh); it costs hit points
     slowly, halves healing, and from 4 degrees lowers Strength and Dexterity by 1; stronger
     poison lasts longer.
   - **Shown**: the player's own by name (status bar, character screen, the `stats` dump layer),
@@ -2164,13 +2617,71 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
 - **Healing** (`world/status.rs`): a hurt actor's progress toward its next hit point back
   (`Actor::regen`, in hundredths of a second at the normal pace, saved) grows each second by its
   healing rate in percent: 100 normally, the slowest `regen` of its status effects (bleeding 0,
-  poison 50), times `[healing] resting` (200) while the player rests (creatures never rest);
-  every `regen_seconds(Toughness)` × 100 of it is a hit point ("Combat" above; the effective
-  Toughness). Standing in a special room multiplies the rate by its `regen` (a sanctuary three
-  times, §7 "Special rooms"), and the regeneration affixes of what the actor wears and wields
-  by (100 + their percent) / 100 (§8 "Magic items"); `World::healing_rate` is the one place
-  that decides it. Progress carries over and is dropped at full health. Hunger (#137) and
-  disease (#139) slow it through their own statuses' `regen`.
+  poison 50, Diseased 50) and of the diseases that show (marsh ague 25), times `[healing]
+  resting` (200) while the player rests (creatures never rest), times the `regen` of a special
+  room it stands in (a sanctuary 300, §7 "Special rooms"); every `regen_seconds(Toughness)` ×
+  100 of it is a hit point ("Combat" above; the effective Toughness). Progress carries over and
+  is dropped at full health. A Starving player gets none back (§8 "Hunger"). The regeneration
+  affixes of what the actor wears and wields multiply the rate by (100 + their percent) / 100 (§8
+  "Magic items"). `World::healing_rate` is the one place that decides the pace.
+- **Checks** (`warlock-core/src/check.rs`; M24, #139): a stat put to the test, rolled like an
+  attack: 2d12 (the natural roll, `combat::roll_natural`, two draws of the gameplay stream) plus
+  the modifier of the stat tested (the effective score's) succeeds at the **difficulty** or
+  more; a natural 2 always fails and a natural 24 always succeeds (`check::check`,
+  `check::ways` for the odds: against 13 at +0, 78 of 144). Diseases are resisted and fought off
+  with them (Toughness, brain fever Willpower). The player never sees a difficulty, a modifier,
+  or a roll; they see what comes of it. Nothing limits retrying: the time a disease takes is its
+  cost.
+- **Diseases** (`warlock-core/src/disease.rs`, the rules of one actor's infections;
+  `world/disease.rs`, applying them; data `data/diseases.toml`, §7; M24, #139), modelled on D&D
+  3.5's: the pathologies behind one umbrella status, **Diseased** (the file's `status`).
+  - **Infections**: an actor carries at most one of each disease (`Actor::diseases`, in disease
+    order), each with the seconds to its next turn (`Infection::left`), whether it shows, its
+    progressions so far, its checks won in a row, and who gave it.
+  - **Exposure** (`World::expose`): an `on_hit` entry naming a disease (its chance drawn first;
+    the giant rat's bite, filth fever one hit in ten), terrain the player steps onto
+    (`World::wade`: a disease's `wading` terrain, a chance of `per_hour` percent for each hour of
+    the step's length (its price over the player's speed), one draw out of 360 000 unless it is
+    sure; creatures do not catch diseases from the land), and named sources a rule exposes an
+    actor to (`World::expose_to`: `rotten_food`, when the player eats a rotten corpse and keeps
+    it down, after the sickness; §8 "Hunger").
+    An actor that does not carry the disease makes a check against its difficulty; losing it, it
+    catches it (`World::infect`), silently: it **incubates** for its `incubation`, rolled in days.
+  - **Turns** (`World::disease_turn`, as the clock moves, in `World::live` like the status
+    effects, so it makes no difference how time is cut up): when its incubation is over it
+    **shows**: its `onset` is said, and the actor is Diseased (the status, `World::afflict`);
+    then every `interval` days it **progresses**: a check. A loss costs its `damage` (stat
+    damage, stat by stat in display order, then `hp`), says its next symptom, and starts the
+    count of wins over; a win counts, and `recovery` wins in a row shake it off: its `recovered`
+    is said, and with no disease left showing, Diseased ends (`World::end_disease`). A disease
+    with `recovery = 0` never goes by itself (grave rot).
+  - **Stat damage** (`stats::StatDamage`, `Actor::damage`): points off the scores, which every
+    rule reads (`Actor::effective_stats`, with the status penalties); never below 1. Toughness
+    damage lowers the most hit points through the hit point formula, as in 3.5, and what is left
+    is cut down to them. Damage alone never kills (stats stop at 1, `hp` damage at the last hit
+    point) unless the disease `kills`: then a progression whose Toughness damage reaches the
+    score (Toughness 0) or whose `hp` takes the last hit point kills, by Diseased (`Event::Died`'s
+    `of`, `Death::of`: "Died of disease"; a creature "succumbs to disease"), credited to whoever
+    gave it. Once no disease shows, a point of each damaged stat mends every day (the seconds
+    toward it banked in `StatDamage::mend`, dropped while a disease shows).
+  - **Healing**: while a disease shows, hit points come back at the slowest of Diseased's `regen`
+    and the showing diseases' own (marsh ague).
+  - **Knowing it**: the player knows a disease by name after its first progression (whatever
+    came of it; `Infection::is_known`); Heal or Knowledge (#132) could tell it sooner later.
+    Until then it is only Diseased; while it incubates, nothing of it can be perceived.
+  - **Shown**: Diseased in the status bar and on the character screen like any status, the known
+    diseases by name on the character screen (`Diseased  Filth fever`) and in the `stats` dump
+    layer (`Diseases filth fever`), the scores with the damage taken off (lowered, in red), and
+    the words; never a difficulty, a timer, or a check. Diseased does not show on others.
+  - **Messages** (`Event::Disease { actor, disease, news }`, the player's own: `Onset`,
+    `Worse(n)`, `Recovered`): an onset and a symptom are news that stop a rest (a batched rest
+    turn in which one comes is perceived at once), a recovery is only logged.
+  - **Cures**: `World::cure(actor, means)` also ends every disease, showing or incubating, that
+    lists the means in its `cured_by` (`remove_disease`); potions and priests will apply it.
+  - **Dev**: the action `infect:ID` makes the player catch a disease as if they had lost the
+    check (it incubates; no game time; recorded in replays; "You catch filth fever (dev)."), for
+    tests and captures. `afflict:diseased` is refused: Diseased comes of a disease.
+  - Infections and stat damage are part of the world state (saved, covered by the state hash).
 - **Stats** (`warlock-core/src/stats.rs`; M14): six stats inspired by D&D, in display order
   Strength (St), Dexterity (Dx), Toughness (To; D&D's Constitution), Intelligence (In),
   Willpower (Wi; D&D's Wisdom), and Presence (Pr; D&D's Charisma). More will come (mostly
@@ -2184,24 +2695,34 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     for the rules (`stats::modifier`, `Stats::modifier`) and is **never shown**: not in the UI,
     messages, look mode, player-facing dumps, or the wiki.
   - **Potential** (ADOM-like): each stat's natural ceiling, the score it could grow towards.
-    Stored and saved, **hidden from the player** like the modifiers. Nothing raises a score
-    yet (training comes later).
-  - **What the player sees**: their own scores, on the character screen (§6) and in the
-    `stats` dump layer; the perception snapshot carries those and nothing else of stats
+    Stored and saved, **hidden from the player** like the modifiers. Only eating a corpse raises
+    a score yet (§8 "Hunger": by 1, never past the potential, `Stats::raise`); training comes
+    later. Hunger lowers the **effective** scores for a while (Weak: Strength and Dexterity;
+    `Actor::effective_stats`, which combat and burden read; `Stats::adjusted`).
+  - **What the player sees**: their own scores as they are now (effective, so lowered while
+    Weak), on the character screen (§6) and in the `stats` dump layer; the perception snapshot carries those and nothing else of stats
     (`PerceptionView::own_scores`). A creature's stats are never shown; ground-truth dev dumps
     (`actors`, the world state) show every actor's scores and potentials.
+  - **Stat damage** (`StatDamage`, `Actor::damage`; saved, hashed): points a disease's failed
+    checks take off the scores for a while; the rules read the scores less them, never below 1,
+    and they mend a point a day each once no disease shows ("Diseases" below). The player sees
+    their scores lowered, never the damage as a number apart.
   - **What uses them**: combat (Strength to hit and to damage in melee, Dexterity to hit with
     shots and in Defence, Toughness in hit points and regeneration; "Combat" above) and burden
-    (Strength and Toughness scores, never modifiers, in the carrying limit; "Burden" below), each
-    reading the effective score that status effects may lower ("Status effects" above). No
+    (Strength and Toughness scores, never modifiers, in the carrying limit; "Burden" below), and
+    kicking doors in (the Strength score against the door's sturdiness; "Doors" above), each
+    reading the effective score that status effects and stat damage may lower ("Status effects",
+    "Diseases" above); and checks (Toughness, Willpower) resist diseases ("Checks" above). No
     other rule does yet, and no other D&D concept comes with them: no ability checks or saving
-    throws. Stats and potentials are part of the world state (saved, covered by the state hash).
+    throws beyond the disease checks. Stats and potentials are part of the world state (saved,
+    covered by the state hash).
   - **Magic items** (§8 "Magic items") raise scores while worn or wielded: every rule reads the
     scores as they are now (`Actor::effective_stats(content)`: the stored scores plus what the
-    actor wears adds, within 1 to 40, then less what its status effects take; potentials
-    unchanged), and so does the player's character screen (`PerceptionView::own_scores`). The
-    stored scores are never changed by an item. Hit points gained at a level-up read Toughness
-    raised by items but not lowered by a status effect (`Actor::raised_stats`).
+    actor wears adds, within 1 to 40, then less what its status effects, hunger, and stat damage
+    take; potentials unchanged), and so does the player's character screen
+    (`PerceptionView::own_scores`). The stored scores are never changed by an item. Hit points
+    gained at a level-up read Toughness raised by items but not lowered by a penalty
+    (`Actor::raised_stats`).
 - **Burden** (`warlock-core/src/burden.rs`; M16, #115), ADOM-like, with 3.5's thirds:
   - **Limit**: 1.5 kg × (2 × Strength + Toughness) × the actor's size's `carry` percent (§7
     `data/sizes.toml`: small 75 %, medium 100 %), from the scores, never the modifiers: a St 10
@@ -2319,6 +2840,92 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     level's item level.
   - **Dev**: replay text `identify` / `identify:LETTERS` (`Action::Identify`, `F8` in dev
     builds: everything carried) identifies without time passing, recorded in replays.
+- **Hunger** (`warlock-core/src/hunger.rs`, the rules; `world/hunger.rs` and `world/eat.rs`,
+  applying them; `data/hunger.toml`, §7; M23, #137), ADOM-like:
+  - **Nutrition**: the player has a counter of nutrition points (`Actor::satiation`; creatures
+    do not hunger). Game time burns it as the scheduler moves the clock, so long actions,
+    rests, and overworld journeys burn it too: a point every `burn_seconds` (60) at the race's
+    `hunger` percent (§7; a human 1440 a day, a halfling 1800), the seconds that do not make a
+    whole point banked (`Satiation::banked`, saved). The dev time skip burns nothing (nobody
+    acts). The player's exertions burn extra points at their race's percent: a blow in melee 2,
+    a shot 1, a throw 1 (`[exertion]`; `World::exert`). A run starts at `start` (3600: Not
+    hungry, Hungry after 36 hours for a human); the counter never rises above `max` (6500) and
+    may fall below 0. The burn is one of the things that happen while the player lives through
+    the time (`World::live`, "Status effects" above: `World::digest`), each change of state and
+    each hit point lost to starving a moment of its own (`World::until_hungrier`), so it makes no
+    difference how the time is cut up.
+  - **States** (`Hunger`), by the least nutrition of each (`[states]`): Bloated (5500),
+    Satiated (4000), Not hungry (1440), Hungry (720), Weak (240), Fainting (0), and below that
+    Starving. **Hungry**: a warning only. **Weak** (and Fainting and Starving): Strength and
+    Dexterity −1 (`[weak] stats`) in the effective scores combat and burden read (§8 "Stats";
+    hit points go by the actor's own Toughness). **Fainting** (and Starving): as each turn
+    begins (`World::run_turn`), one draw of the gameplay stream with `[fainting] chance` (5 %;
+    none drawn otherwise): "You faint from hunger." and the player loses `turns` (5) turns, a
+    wait's price each added to their action's, while the others act (`World::faint`).
+    **Starving**: no hit points come back (`World::healing_rate`, "Healing" above), and
+    `[starving] damage` (1) are lost every `seconds` (600) of game time (banked,
+    `Satiation::starving`), until the player starves to death at that moment ("You starve to
+    death...", `Cause::Starvation`; no creature killed them, so no `Event::Died`). **Bloated**: every price the player pays is raised by `[bloated] slow`
+    (×1.25), after the burden ("Costs" above). Satiated and Not hungry do nothing.
+  - **Messages** on each change (`Hunger::news`): getting hungrier, "You no longer feel
+    bloated.", "You no longer feel satiated.", "You are getting hungry.", "You feel weak from
+    hunger.", "You feel faint from hunger.", "You are starving!"; fed, "You are no longer
+    starving.", "You feel less faint.", "You feel less weak.", "You are no longer hungry.", "You
+    feel satiated.", "You feel bloated." Getting hungrier into Hungry or worse is a message that
+    stops a rest (§6 "Rest"); the rest are only logged.
+  - **Meals** (`Action::Eat(Meal)`: one of an inventory stack, `Meal::Pack`, or of a stack of
+    the pile on the player's cell, `Meal::Floor`; §6 "Eat"): refused, taking no time, without
+    `data/hunger.toml` ("You feel no need to eat."), for a stack that is not there ("You carry
+    no f.", "There is no c here."), or for what has no `food` ("You cannot eat a dagger."). A
+    meal passes the food's `turns` turns through the normal pipeline like a rest (`World::dine`
+    through `World::keep_at`; each the `eat` action's price, so speed, burden, and Bloated
+    count), and stops early after a turn in which a creature came into view or a message was logged that
+    stops a rest (hunger news and fainting included), or the player died: "You stop eating." or
+    "A kobold comes into view; you stop eating.", and nothing is eaten. Only when the last turn
+    is done is one of the food taken (from where it lay, or the first stack like it there if a
+    missile landed on the pile meanwhile; "There is nothing left to eat." if it is gone) and does
+    it feed: "You eat the food ration.", then what it does, then the hunger news ("You feel
+    satiated.") and the burden news if its weight changed that.
+  - **Food** feeds its `nutrition`. A meal that would bring the counter past `max` is
+    **overeating**: one draw with `[overeating] choke` (0, off by default: none drawn) to choke
+    to death ("You choke to death on the food ration...", `Cause::Choked`), else one with
+    `vomit` (50 %) to vomit ("You vomit!": it feeds nothing, and the counter falls to at most
+    `vomit_leaves`, 1000, Hungry), else "You have a hard time getting it all down." and what
+    does not fit is lost.
+  - **Corpses**: a creature that dies leaves its corpse (§7 "Objects": the creature's
+    `<creature>_corpse` object, weighing the creature's weight, so a heavy one burdens) on top of
+    the pile where it fell, after what it carried, whatever killed it (`World::leave_corpse`, in
+    `creature_dies`), bloodless creatures too unless their type says `corpse = false`. The stack
+    keeps the moment it died (`Stack::died`, saved; never shown: presentation cannot read it). A
+    corpse is fresh, then rotten `rotten_hours` (8) after the death, then gone `gone_hours` (36)
+    after it (`rot_at`): checked as perception runs, rotted-away corpses leave the piles of the
+    level the player is on and their pack ("Your giant rat corpse rots away.", logged without
+    stopping a rest); corpses on other levels go when the player comes back.
+  - **Eating a corpse** feeds by its creature's size (`[corpses.size]`; small 400 in 3 turns,
+    medium 1000 in 6). A rotten one: "Ugh! The kobold corpse was rotten.", one draw with
+    `rotten_vomit` (50 %) to vomit, else it makes them sick and feeds them; its creature's
+    `on_eat` does nothing. **Sickness** is a status effect ("Status effects" above), given
+    through `World::afflict`: `rotten_harm` (1d4) degrees of `[corpses] sickness` (poisoned),
+    "You feel sick." said at once (when it begins); it costs hit points as time passes and may
+    kill (`Death::of`, "Died of poison"). A fresh one does what
+    its creature's `on_eat` says (§7), in this order, each draw from the gameplay stream and none
+    for a chance of 0: its `message`; a draw with `vomit` (it comes back up: no food, no more
+    effects); per stat in display order, a draw with its chance to raise it by 1 up to its
+    potential ("You feel tougher!"; nothing at the potential; raising Toughness raises the most
+    hit points); `heal` ("You feel better." when it healed any); `harm` (degrees of sickness, as
+    a rotten corpse's); then it feeds its size's nutrition plus `satiation` (at least 0), overeating as food
+    does. The effects are never shown before the player tries; the wiki keeps to the general
+    rule.
+  - **What the player perceives** (`PerceptionView::own_hunger`): their state, never the counter
+    or a corpse's age; the status bar shows it unless it is Not hungry (`Hungry`, `Weak`,
+    `Fainting`, `Starving`, `Satiated`, `Bloated`; after the hit points and before the burden,
+    giving way after the burden), and the character screen shows the effective scores. Dev
+    dumps: the ASCII header has `hunger hungry` unless Not hungry, JSON dumps `hunger` (the state
+    id, or null without hunger), and the `actors` layer the player's nutrition and every corpse
+    on the level and in the pack with when it died and how it has rotted.
+  - Showcase: the hub's pantry keeps food rations, loaves of bread, dried meat, and apples; the
+    depths, world, and forest scenarios give starting food (§7 "Scenarios"). The thresholds are
+    generous, so the showcase is no race against the clock.
 - **Character creation** (`warlock-core/src/character.rs`; M15): a run starts as a character, a
   race (`data/races.toml`), a gender (male, female, or other), and a class
   (`data/classes.toml`), chosen on New run (§6) or given on the command line (`--character
@@ -2437,13 +3044,14 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   - **Skills** (`data/weapon_skills.toml`, §7): the categories weapons belong to. A skill's
     role says what uses it: `melee` and `launcher` skills are named by weapons (`category`), the
     wielded weapon's for a blow, the readied missile weapon's for a shot; `thrown` is every
-    throw, whatever is thrown; `unarmed` bare hands and natural attacks; `shield_block` and
-    `shield_bash` a held shield's blocks and bashes (`Actor::attack_skill`).
+    throw, whatever is thrown; `unarmed` bare hands, natural attacks, and kicks, whatever is
+    wielded (§8 "Doors"); `shield_block` and `shield_bash` a held shield's blocks and bashes
+    (`Actor::attack_skill`).
   - **Ranks**: 0 (untrained: no benefits; marks still count) to 10, on every actor
     (`Actor::weapon_skills`, a rank and marks per skill): the player's from race and class, a
     creature's from its type (§7). Ranks are stored, not derived.
   - **Marks**: only the player trains. Each attack the player makes on someone (a blow, a bash,
-    a shot or throw for each actor it reaches; hit or miss) earns `attempt` marks (1) in its
+    a kick, a shot or throw for each actor it reaches; hit or miss) earns `attempt` marks (1) in its
     skill, a hit `hit` more (2); a blow the player's shield blocks (a miss credited to the
     Shield category, "Combat" above) earns `attempt + hit` in shield blocking. The marks scale
     by `100 + per_level × (the opponent's level − the rank)` percent (20 a level), kept within 0
@@ -2493,7 +3101,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   `Dice` parses, prints its canonical text, gives its `min` and `max`, and rolls from a
   deterministic stream: one uniform draw per die, none for a fixed number. Data files may give
   a fixed number as a TOML integer.
-- **Events to effects**: the core emits events (door opened, actor moved, attacked, died); the
+- **Events to effects**: the core emits events (door opened, door kicked or broken, actor moved,
+  attacked, died); the
   presentation layer turns them into animations: slides, a short lunge toward the target for a
   melee attack (motion), missiles flying (§4.8) and a creature's `attack`
   particles where its attack lands, e.g. the shaman's violet sparkle (particles); dust where a
@@ -2515,7 +3124,9 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   (`training`, kept in the world state and saved; §8 "Skills"); the weather, which keeps no
   stream at
   all: each weather block hashes the seed, a label, and its number (FNV-1a, then SplitMix64's
-  finalizer; §5 "Weather"); and visual-only randomness in the app, which never uses either. No hash-order iteration and no floating point in the core's decisions.
+  finalizer; §5 "Weather"), nor the temperature and the ice, which follow from the weather, the
+  clock, and the levels (only ice giving way under a weight between what it holds and twice that
+  draws from the gameplay stream; §5 "Ice"); and visual-only randomness in the app, which never uses either. No hash-order iteration and no floating point in the core's decisions.
   The same seed and actions produce the same result within a game version; seeds are not
   guaranteed stable across versions, and snapshot tests flag when generator output changes. A seed
   is a number or a word (`--seed warlock`, hashed with FNV-1a 64).
@@ -2537,6 +3148,7 @@ warlock-cli replay --create --scenario showcase --actions "move:N wait" -o runs/
 warlock-cli replay --verify runs/doors.json               # check per-turn state hashes
 warlock-cli gen --level depths:3 --seed warlock           # print a generated level (dev-only;
                                                           # also local areas: local:49,23;
+                                                          # `*` a placed light, `&` a lock,
                                                           # special rooms by their letter)
 cargo xtask golden [--update]                             # compare golden screenshots
 ```
@@ -2545,23 +3157,29 @@ cargo xtask golden [--update]                             # compare golden scree
   character `{race, gender, class}` (left out for a run without one; a replay without it starts
   as the scenario's character, so older replays still load). Actions use a text
   syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
-  pickup pickup:ac drop drop:b equip:body:b remove:body bash:E fire:12,5 throw:c:12,5 dig:E
-  vision:darkvision skip:1h weather:rain stance:coward effect:fireball@12,5
-  effect:lightning_bolt@3,4>12,4 identify:a afflict:bleeding`; `bash:DIR` bashes with the held
-  shield that way, `dig:DIR` digs toward a direction until the wall gives way or something
-  interrupts; `fire:X,Y` shoots at level cell (X, Y),
-  `throw:LETTER:X,Y` throws one of inventory stack LETTER there; the dev action
-  `effect:ID@X,Y[>X,Y]` shows spell effect ID (`data/effects.toml`) as the player perceives it, a
+  pickup pickup:ac drop drop:b equip:body:b remove:body bash:E fire:12,5 throw:c:12,5 eat:b
+  eat:floor:a dig:E chat:E ask:E:rooms vision:darkvision skip:1h weather:rain stance:coward
+  effect:fireball@12,5 effect:lightning_bolt@3,4>12,4 identify:a afflict:bleeding
+  infect:filth_fever freeze:12,5,3 thaw:12,5,3`; `bash:DIR` bashes with the held shield that way,
+  `dig:DIR` digs toward a direction until the wall gives way or something interrupts; `fire:X,Y`
+  shoots at level cell (X, Y),
+  `throw:LETTER:X,Y` throws one of inventory stack LETTER there; `eat:LETTER` eats one of
+  inventory stack LETTER, `eat:floor:LETTER` one of stack LETTER of the pile underfoot;
+  `chat:DIR` talks to the creature that way, `ask:DIR:TOPIC` asks it about a topic by id; the dev
+  action `effect:ID@X,Y[>X,Y]` shows spell effect ID (`data/effects.toml`) as the player perceives it, a
   burst around X,Y (around the second cell, flying there from the first) or a bolt from the first
   cell toward the second (cut short by the first opaque cell); it hurts no one, takes no time,
-  and only says so in the message log;
+  and only says so in the message log; the dev bursts `freeze:X,Y,R` (an instant frost: the
+  water within radius R, 0 to 20, of cell (X, Y), in its line of sight, freezes to 10 cm of ice)
+  and `thaw:X,Y,R` (a burst of heat: the ice there melts, and whoever stood on it falls in) take
+  no time (§5 "Ice");
   durations are a whole number with `s`, `m`, or `h`, a rest at most `24h`; letters name stacks
   of the pile or the inventory, `a` first, and without letters `pickup`, `drop`, and the dev
   `identify` (§8 "Magic items") take everything; `equip:SLOT:LETTER` puts inventory stack LETTER
   on in slot SLOT (a slot id of `data/slots.toml`) and `remove:SLOT` takes off what is there;
   the dev weather override takes `clear`, `overcast`, `rain`, or `heavy`; the dev `afflict:ID`
-  gives the player a degree more of status ID (`data/status.toml`); in scripts, `ACTION*N`
-  repeats an
+  gives the player a degree more of status ID (`data/status.toml`), and `infect:ID` makes them
+  catch disease ID (`data/diseases.toml`); in scripts, `ACTION*N` repeats an
   action, e.g. `wait*10`); `hash` is the
   FNV-1a 64 hash of the
   canonical JSON encoding of `WorldState` after the step. Verification reports the first
@@ -2573,17 +3191,17 @@ cargo xtask golden [--update]                             # compare golden scree
 - Dump layers: `view`, `fov`, `memory` (terrain and the top object of each known pile), `light`
   (perceived brightness of each visible cell as a digit, `0` dark to `9` fully lit or brighter),
   `sound` (the view with each heard sound at its rough place: `f` footsteps, `o` a door opening,
-  `c` a door closing, `x` fighting, `b` a bowstring, `m` chanting, `d` digging, upper case when
-  loud),
+  `c` a door closing, `x` fighting, `b` a bowstring, `m` chanting, `k` banging (a door kicked),
+  `d` digging, `v` a voice, upper case when loud),
   `inventory` (what the player carries, by letter with weights and what is worn or wielded
   marked, `b - a leather jerkin (being worn) (3.5 kg)`, then what they carry, their burden and
   its thresholds, and what they weigh, `carried 4.2 kg (unburdened: burdened over 14 kg,
   strained over 28 kg, overloaded over 42 kg), total weight 74.2 kg`),
   `equipment` (the player's slots by letter, `c Body: a leather jerkin (b)`, `-` when empty),
   `stats` (the player's race, gender, and class, `Race Dwarf`, their age, birthday, and
-  sign, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`, then their own scores as the
-  rules read them, `Strength 12`, then their status effects by name, `Effects Bleeding,
-  Poisoned`), `skills` (the player's trained skills in skill order, `Stealth 17`), and
+  sign, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`, then their own scores as
+  the rules read them, `Strength 12`, then their status effects by name, `Effects Bleeding,
+  Diseased`, then the diseases they know they have, `Diseases filth fever`), `skills` (the player's trained skills in skill order, `Stealth 17`), and
   `weapon_skills` (the player's weapon skills in file order with their rank and how far their
   marks are toward the next, `Long blades 2 (40%)`; at rank 10 the rank alone) are built from the
   perception snapshot only;
@@ -2594,14 +3212,23 @@ cargo xtask golden [--update]                             # compare golden scree
   magic items do to it by effect id, `magic strength +1 light item_glow`, its burden and carrying
   limit, `unburdened (limit 31.5 kg)`, its weapon skills with rank and marks, `weapon skills
   spears 1 (0/30)`, its stats as score/potential, `St 12/15`, its trained skills with their
-  marks toward the next point, `skills stealth 17 (2/5)`, and its status effects with their
-  severities, `effects bleeding 2`), and `rooms` (the level's special
-  rooms: the terrain with each room's plain ground drawn as its effect's `mark`, then a line per
-  room, `s shadowed room at (34, 8)-(49, 13), entered`) show
+  marks toward the next point, `skills stealth 17 (2/5)`, its status effects with their
+  severities, `effects bleeding 2`, its diseases with their progressions (checks won in a row)
+  or `incubating` and the time to their next turn, `diseases filth_fever 2 (1 won) 0d17h`, and
+  its stat damage, `damage Dx 2 To 1`, the player's nutrition and hunger, `nutrition 3540
+  (not_hungry)`, and the unique character it is and how far its talk has got, `npc elder; talk
+  said 3, muttered 1, met`, if any; then every corpse on the level and in the player's pack with
+  when it died and how it has rotted, `corpse rat_corpse at (2, 1): died 1444-11-11 08:01:12, 2
+  hours ago, fresh`), `rooms` (the level's special rooms: the terrain with each room's plain
+  ground drawn as its effect's `mark`, then a line per room, `s shadowed room at (34, 8)-(49,
+  13), entered`), and `ice` (a line with the temperature on the level and when its ice was last
+  brought up to date, then the map with each iced cell's thickness in whole centimetres, `0`–`9`,
+  `a`–`z` for 10–35, `#` beyond, over the terrain) show
   ground truth and are dev-only. JSON dumps
   carry turn, game time (seconds and calendar fields), level, viewer, the special room the
   player stands in if they know it (`room`, its effect id; else null), the weather (under the open
-  sky; else null), seen actors (each with how hurt it looks, `health`: `unhurt`,
+  sky; else null), the temperature where the player is (`temperature`, °C to a tenth), seen
+  actors (each with how hurt it looks, `health`: `unhurt`,
   `lightly_wounded`, `wounded`, `badly_wounded`, `nearly_dead`, and the status effects that show
   on it, `effects`, by id), heard sounds, the player's
   inventory (each stack's letter, object, count, weight, `name` as the player knows it, `rarity`,
@@ -2610,13 +3237,17 @@ cargo xtask golden [--update]                             # compare golden scree
   limit}`, the limit in grams), character
   (`{race, gender, class, raised, age, born: {year, month, day}, sign: {animal, element}}` or
   null), scores (`stats`, by stat id), trained skills (`skills`, by skill id with their values),
-  status effects (`effects`, by id), weapon skills (`weapon_skills`, by skill id: `{rank,
+  status effects (`effects`, by id), the diseases they know they have (`diseases`, by id),
+  weapon skills (`weapon_skills`, by skill id: `{rank,
   progress}`, the progress a percent or null at rank 10), hit points (`hp: {current, max}`),
-  Defence (`defence`, the total), how the run ended (`death: {turn, time, place, by, of}` or
-  null), recent messages,
+  Defence (`defence`, the total), hunger (`hunger`: `bloated` … `starving`, or null when nobody
+  hungers), how the run ended (`death: {turn, time, place, by, of, cause}` or null; `cause`
+  "Starved to death" and the like when neither a creature nor a status effect killed them),
+  recent messages,
   and optionally the full world state; the ASCII header line has the turn, the time
   (`0001-01-01 08:00:00`), level, viewer, the player's hit points (`hp 17/17`, then `dead` once
-  they have died), the weather under the open sky (`weather rain`), and hash.
+  they have died), their hunger unless Not hungry (`hunger hungry`), the weather under the open
+  sky (`weather rain`), the temperature (`temperature -3.5 °C`), and hash.
 - Freezing visual time and fixing window size and scale make screenshots reproducible. With frozen
   time, glyph animations show that moment and motion (slides, camera) completes instantly.
 - `--fire` (dev) starts the run aiming the readied missile weapon, as `f` would, so captures show
@@ -2729,7 +3360,11 @@ Each milestone ships a playable build.
   colour per creature type; accumulating, drying, remembered; subtle on the map, with a switch.
 - **M19 Doors and walls** — destructible walls (#131): terrain hardness, digging through walls
   with a pick-axe or a mattock in a new Tool slot, turn after turn by tool power and Strength,
-  explosions that break the softer walls, rubble, and the quarry to dig in.
+  explosions that break the softer walls, rubble, and the quarry to dig in. Locked doors and keys
+  (a key for its lock, a skeleton key for every lock; creatures that open doors need the key
+  too), kicking doors in by Strength against sturdiness and kicking creatures (#130); locked rooms
+  with reachable keys in the generated Depths, a locked store room in a vault, a locked pantry in
+  the hub.
 - **M20 Skills** — 26 skills in data (#132): trained or untrained (never shown, gives nothing),
   values from race and class dice and creature data, training marks on meaningful use with a
   provisional increase rule (gentle to 100, slow past it), passive benefits for tumble, stealth,
@@ -2750,6 +3385,13 @@ Each milestone ships a playable build.
   (the `identify` API), effects applying all the same; rarity colors and an item description
   screen. Scrolls, the scroll of identify among them, follow (#150).
 
+
+- **M23 Hunger and food** (#137) — ADOM-like hunger: a nutrition counter that game time burns by
+  the race's need (data, `data/hunger.toml`), the states from Bloated to Starving with their
+  effects, food eaten from the pack or the floor in meals of several turns (`E`), overeating,
+  corpses dropped by every creature that dies, rotting, and doing what their creature's
+  `on_eat` says; starting food and a pantry in the showcase.
+
 - **M25 Special rooms** — ADOM-like special rooms (data, `data/room_effects.toml`): a
   shadowed room, an echoing hall, a hushed chamber, a sanctuary, and a flooded room, in about one
   generated level in two or three and in areas hand-made levels mark (the hub's stairs nook is a
@@ -2760,7 +3402,25 @@ Each milestone ships a playable build.
   with severities that tick, ease, stack, and can be cured in game time, lower stats, slow
   healing, and can kill; bleeding from big hits and criticals, poison from a giant rat's bite;
   healing twice as fast while resting; shown by name in the status bar, on the character
-  screen, and on creatures in look mode. Diseases build on it (#139).
+  screen, and on creatures in look mode. Diseases (#139): one umbrella status, Diseased, over six
+  pathologies (filth fever, red ache, the shakes, marsh ague, grave rot, brain fever) with
+  incubation, daily progression, checks (2d12 + a stat modifier against a difficulty, hidden),
+  stat damage that mends a point a day once they are gone (Toughness damage lowers the most hit
+  points), recovery by two checks won in a row (grave rot never; it can kill); caught from the
+  giant rat's bite, the marshes and swamps, and rotten food; named on the character screen
+  after their first progression.
+
+- **M26 Temperature and ice** (#142) — a temperature on every level, fixed underground and
+  following the month, the time of day, and the weather outdoors, always in the status bar (°C
+  or °F); water that freezes and thaws lazily with game time, ice of tracked thickness that
+  holds by weight and gives way under the heavy, falling in and climbing out, the Frost Grotto,
+  and bursts of frost and heat for spells and explosions to come.
+
+- **M28 NPCs and quests** — NPCs and dialogue (#146): creatures who talk, by type or as unique
+  characters, with rotating one-liners, a greeting, topics on a dialogue screen (`C`), and
+  mutters overheard through hearing; a gardener and a wandering bard in the courtyard and an old
+  hermit by the hub's stairs. Displacement (#147): swapping places with anyone who is not
+  hostile, unless they will not make way. Quests (#148) follow.
 
 ## 13. GitHub workflow
 

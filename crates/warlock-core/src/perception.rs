@@ -5,11 +5,12 @@
 //! wear and wield, how hurt they look, in words, and the status effects that show on them, such
 //! as bleeding), objects, and light, remembered terrain and objects, and what the player carries,
 //! wears, weighs, and scores in each stat, their trained skills' values, their burden and
-//! carrying limit, their hit points and Defence, and their own status effects by name; it never
-//! exposes unseen terrain or objects, hidden creatures, what else creatures carry, their burden,
-//! their skills, or their hit points, any stat's modifier or potential, a skill's marks or
-//! benefits, an untrained skill, a creature's stats, a to-hit, how severe a status effect is or
-//! how long it lasts, or light the player's eyes cannot perceive.
+//! carrying limit, their hit points and Defence, their own status effects by name, and how
+//! hungry they are; it never exposes unseen terrain or objects, hidden creatures, what else
+//! creatures carry, their burden, their skills, or their hit points, any stat's modifier or
+//! potential, a skill's marks or benefits, an untrained skill, a creature's stats, a to-hit, how
+//! severe a status effect is or how long it lasts, the nutrition counter, a corpse's age, or
+//! light the player's eyes cannot perceive.
 //!
 //! **Memory** (spec §5): terrain, piles of objects, and blood as last seen. Objects are seen where
 //! creatures are (cells in line of sight, never completed walls); a pile seen gone is forgotten,
@@ -63,7 +64,7 @@ use crate::burden::{self, Load};
 use crate::character::Character;
 use crate::combat::Health;
 use crate::content::{
-    CombatStance, Content, CreatureId, FactionId, Flow, LevelKind, LightId, ObjectId,
+    CombatStance, Content, CreatureId, DiseaseId, FactionId, Flow, LevelKind, LightId, ObjectId,
     RoomEffectDef, SlotId, Stance, StatusId, TerrainId, VisionProfile,
 };
 use crate::daylight;
@@ -71,6 +72,7 @@ use crate::equipment::Equipment;
 use crate::fov::{compute_fov, radius2};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
+use crate::hunger::Hunger;
 use crate::light::{
     Area, BOUNCE_STEPS, Bounce, Light, LightCache, Moon, SUN_KEY, ShadowSteps, Sky, Sun, Sunlight,
     falloff, lit_in_sight, moon_key, wall_faces,
@@ -79,6 +81,7 @@ use crate::noise::{self, PerceivedSound};
 use crate::object::{Stack, Weight};
 use crate::skills::{self, SkillId};
 use crate::stats::PerStat;
+use crate::temperature::Temperature;
 use crate::time::GameTime;
 use crate::weapon_skills::WeaponSkills;
 use crate::weather::Weather;
@@ -252,6 +255,8 @@ pub(crate) struct Perception {
     ambient: Light,
     /// The sun, the moons, and the sky over a level under the open sky.
     sky: Option<Sky>,
+    /// The temperature of the air where the player is (spec §5 "Temperature").
+    temperature: Temperature,
     /// Ambient plus sky plus bounce light; meaningful on visible cells only.
     base: Grid<Light>,
     sight: Grid<Sight>,
@@ -563,11 +568,14 @@ impl Perception {
             }
             None => Vec::new(),
         };
+        // The player feels the air: fixed underground, the weather's under the open sky.
+        let temperature = state.temperature_on(level, content, state.time);
         Self {
             viewer,
             vision,
             ambient,
             sky,
+            temperature,
             base,
             sight,
             visible_cells,
@@ -594,6 +602,12 @@ impl Perception {
     /// Whether the cell's terrain is visible (in sight, or a completed wall).
     pub(crate) fn is_visible(&self, p: Pos) -> bool {
         self.sight.get(p).is_some_and(|s| *s != Sight::Hidden)
+    }
+
+    /// Whether the player does not see `p`, a cell of the level that is not their own: where
+    /// they may place a sound they hear ([`noise::rough_place`]).
+    pub(crate) fn hides(&self, p: Pos) -> bool {
+        self.sight.get(p) == Some(&Sight::Hidden) && p != self.viewer
     }
 
     /// Whether creatures at `p` can be seen: only in line of sight, never on completed walls.
@@ -872,16 +886,23 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// The player's own scores, by stat (spec §8 "Stats"), as the rules read them: raised by
-    /// what they wear and wield (spec §8 "Magic items") and lowered while a status effect lowers
-    /// them (spec §8 "Status effects"). That is all the player
+    /// what they wear and wield (spec §8 "Magic items"), lowered while a status effect or stat
+    /// damage lowers them (spec §8 "Status effects", "Diseases") and while hunger leaves them
+    /// Weak or worse (spec §8 "Hunger"). That is all the player
     /// knows of stats: never their potentials or modifiers, and nothing of a creature's.
     pub fn own_scores(&self) -> PerStat<u8> {
         self.player.effective_stats(self.content).scores()
     }
 
-    /// The player's scores as they are without their status effects (raised by what they wear
-    /// and wield all the same): what [`PerceptionView::own_scores`] would be with none (the
-    /// character screen marks the lowered ones).
+    /// How hungry the player is (spec §8 "Hunger"): the state, never the nutrition counter;
+    /// `None` when nobody hungers.
+    pub fn own_hunger(&self) -> Option<Hunger> {
+        self.player.hunger(self.content)
+    }
+
+    /// The player's scores as they are without their status effects, hunger, or stat damage
+    /// (raised by what they wear and wield all the same): what [`PerceptionView::own_scores`]
+    /// would be with none (the character screen marks the lowered ones).
     pub fn own_base_scores(&self) -> PerStat<u8> {
         self.player.raised_stats(self.content).scores()
     }
@@ -912,6 +933,13 @@ impl<'a> PerceptionView<'a> {
     /// what they suffer, never how badly or for how long.
     pub fn own_effects(&self) -> impl Iterator<Item = StatusId> + 'a {
         self.player.effects.iter().map(|e| e.status)
+    }
+
+    /// The diseases the player knows they have, in disease order (spec §8 "Diseases"): those
+    /// that have progressed at least once. One that incubates, or has only just shown, is not
+    /// here (a showing one makes the player Diseased, [`PerceptionView::own_effects`]).
+    pub fn own_diseases(&self) -> impl Iterator<Item = DiseaseId> + 'a {
+        self.player.diseases.known()
     }
 
     /// The status effects that show on seen creature `actor` (`seen` in `data/status.toml`:
@@ -1039,6 +1067,12 @@ impl<'a> PerceptionView<'a> {
     /// The weather, which the player knows only under the open sky; `None` elsewhere.
     pub fn weather(&self) -> Option<Weather> {
         self.snapshot.weather()
+    }
+
+    /// The temperature of the air where the player is (spec §5 "Temperature"), which they feel,
+    /// in dungeons and under the open sky alike (the status bar shows it).
+    pub fn temperature(&self) -> Temperature {
+        self.snapshot.temperature
     }
 
     /// Steady light at a visible cell that no single source gives: ambient light plus sky light

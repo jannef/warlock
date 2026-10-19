@@ -3,8 +3,8 @@
 //! [`route_keys`] reads every key press exactly once. While a screen is open (the screen stack is
 //! not empty) the press goes to the top screen; otherwise it is a gameplay command, read through
 //! the bindings in the current [`InputMode`]. Prompts in the message line (the direction for
-//! open/close and for digging, how long to rest, look mode, aiming a shot or a throw) are input
-//! modes, not screens.
+//! open/close/kick, for digging, or for a chat, how long to rest, look mode, aiming a shot or a
+//! throw) are input modes, not screens.
 //!
 //! Letter and symbol commands bind by *logical* key (the character the keyboard layout produces),
 //! so `<`, `>`, and `?` work on any layout. Arrows and the numpad bind by physical key code.
@@ -21,8 +21,10 @@ use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
 use warlock_core::content::VisionProfile;
+use warlock_core::perception::PerceptionView;
 use warlock_core::time::Duration;
 use warlock_core::weather::Weather;
+use warlock_core::world::ActorKind;
 use warlock_core::{Action, Dir, Letters, Pos, Rest};
 
 /// What a key does.
@@ -32,6 +34,8 @@ pub enum KeyCommand {
     Wait,
     Open,
     Close,
+    /// Kick in a direction: a door (to break it in), or a creature.
+    Kick,
     Descend,
     Ascend,
     Lantern,
@@ -51,6 +55,8 @@ pub enum KeyCommand {
     WeaponSkills,
     /// Ask how long to rest (an hour, until dawn, until dusk).
     Rest,
+    /// Choose something to eat, from the floor or the pack.
+    Eat,
     /// Move a cursor over the map to read what is there (no time passes).
     Look,
     /// Shoot or throw what is in the missile weapon slot (a cursor on the map): a launcher
@@ -73,6 +79,9 @@ pub enum KeyCommand {
     /// Use the tool the player has ready toward a direction (ADOM's `U`): dig into a wall with a
     /// pick-axe. An item's use, not an ability (abilities get a menu of their own).
     UseTool,
+    /// Chat with someone next to you: the one in view if there is only one, else in a
+    /// direction.
+    Chat,
     /// Dev: switch to the next vision profile.
     CycleVision,
     /// Dev: move the clock an hour ahead at once.
@@ -126,6 +135,7 @@ impl KeyCommand {
             KeyCommand::Wait => "Wait a turn",
             KeyCommand::Open => "Open a door",
             KeyCommand::Close => "Close a door",
+            KeyCommand::Kick => "Kick",
             KeyCommand::Descend => "Go down stairs",
             KeyCommand::Ascend => "Go up stairs",
             KeyCommand::Lantern => "Light / douse lantern",
@@ -137,6 +147,7 @@ impl KeyCommand {
             KeyCommand::Skills => "Skills",
             KeyCommand::WeaponSkills => "Weapon skills",
             KeyCommand::Rest => "Rest",
+            KeyCommand::Eat => "Eat",
             KeyCommand::Look => "Look around",
             KeyCommand::Missile => "Throw or shoot the missile weapon",
             KeyCommand::Fire => "Fire missile weapon",
@@ -146,6 +157,7 @@ impl KeyCommand {
             KeyCommand::Bash => "Bash with your shield",
             KeyCommand::NextTarget => "Next target (aiming; Shift: previous)",
             KeyCommand::UseTool => "Use a tool (dig)",
+            KeyCommand::Chat => "Chat",
             KeyCommand::CycleVision => "Next vision profile (dev)",
             KeyCommand::SkipHour => "Skip an hour (dev)",
             KeyCommand::NextWeather => "Next weather (dev)",
@@ -243,6 +255,7 @@ impl Default for Bindings {
             (Code(KeyCode::Numpad5), Wait),
             (ch("o"), Open),
             (ch("c"), Close),
+            (ch("K"), Kick),
             (ch(">"), Descend),
             (ch("<"), Ascend),
             (ch("L"), Lantern),
@@ -255,11 +268,13 @@ impl Default for Bindings {
             (ch("S"), Skills),
             (ch("W"), WeaponSkills),
             (ch("R"), Rest),
+            (ch("E"), Eat),
             (ch("x"), Look),
             (ch("t"), Missile),
             (ch("T"), Throw),
             (ch("+"), MoreAggressive),
             (ch("-"), MoreDefensive),
+            (ch("C"), Chat),
             (Code(KeyCode::Tab), NextTarget),
             (ch("U"), UseTool),
             (ch("?"), Help),
@@ -327,7 +342,7 @@ impl Bindings {
 pub enum InputMode {
     #[default]
     Normal,
-    /// Waiting for a direction for `Open`, `Close`, `Bash`, or `UseTool`.
+    /// Waiting for a direction for `Open`, `Close`, `Kick`, `Bash`, `UseTool`, or `Chat`.
     Direction(KeyCommand),
     /// Asking how long to rest ([`REST_CHOICES`]).
     Rest,
@@ -531,8 +546,10 @@ impl Gameplay<'_> {
             (InputMode::Direction(cmd), KeyCommand::Move(dir)) => {
                 let action = match cmd {
                     KeyCommand::Open => Action::Open(dir),
+                    KeyCommand::Kick => Action::Kick(dir),
                     KeyCommand::Bash => Action::Bash(dir),
                     KeyCommand::UseTool => Action::Dig(dir),
+                    KeyCommand::Chat => Action::Chat(dir),
                     _ => Action::Close(dir),
                 };
                 self.actions.write(PlayerAction(action));
@@ -618,6 +635,10 @@ impl Gameplay<'_> {
                 open = Some(ScreenAction::Open(ScreenName::WeaponSkills));
                 InputMode::Normal
             }
+            (InputMode::Normal, KeyCommand::Eat) => {
+                open = Some(ScreenAction::Open(ScreenName::Eat));
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::CycleVision) => {
                 let view = game.world.perception();
                 let next = next_vision(view.content().vision_profiles(), &view.vision().id);
@@ -648,9 +669,18 @@ impl Gameplay<'_> {
                 self.overlays.light_values = !self.overlays.light_values;
                 InputMode::Normal
             }
-            (InputMode::Normal, KeyCommand::Open | KeyCommand::Close | KeyCommand::Bash) => {
-                InputMode::Direction(command)
-            }
+            (
+                InputMode::Normal,
+                KeyCommand::Open | KeyCommand::Close | KeyCommand::Kick | KeyCommand::Bash,
+            ) => InputMode::Direction(command),
+            // The one creature in view next to the player, at once; else ask which way.
+            (InputMode::Normal, KeyCommand::Chat) => match chat_partner(&game.world.perception()) {
+                Some(dir) => {
+                    self.actions.write(PlayerAction(Action::Chat(dir)));
+                    InputMode::Normal
+                }
+                None => InputMode::Direction(command),
+            },
             (InputMode::Normal, KeyCommand::UseTool) => {
                 if game.world.perception().ready_to_dig().is_some() {
                     InputMode::Direction(command)
@@ -715,6 +745,19 @@ impl Gameplay<'_> {
     }
 }
 
+/// The way to the one creature the player sees next to them, if there is exactly one (whom `C`
+/// talks to without asking).
+fn chat_partner(view: &PerceptionView<'_>) -> Option<Dir> {
+    let me = view.viewer();
+    let mut near = (view.actors().iter())
+        .filter(|a| a.kind == ActorKind::Creature && a.pos.chebyshev(me) == 1)
+        .map(|a| Dir::from_delta(a.pos.x - me.x, a.pos.y - me.y));
+    match (near.next(), near.next()) {
+        (Some(dir), None) => dir,
+        _ => None,
+    }
+}
+
 /// Dev (`--fire`): starts the run aiming the readied missile weapon, as `f` would, so captures
 /// show the targeting line.
 fn aim_at_startup(args: Res<Args>, game: Option<Res<Game>>, mut mode: ResMut<InputMode>) {
@@ -773,6 +816,7 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Descend), [">"]);
         assert!(keys(&b, KeyCommand::Quit).is_empty(), "unbound by default");
         assert_eq!(keys(&b, KeyCommand::Lantern), ["L"]);
+        assert_eq!(keys(&b, KeyCommand::Kick), ["K"]);
         assert_eq!(keys(&b, KeyCommand::Help), ["?"]);
         assert_eq!(keys(&b, KeyCommand::Cancel), ["Esc"]);
         assert_eq!(keys(&b, KeyCommand::Rest), ["R"]);
@@ -791,8 +835,10 @@ mod tests {
         assert!(keys(&b, KeyCommand::Bash).is_empty(), "an ability: unbound");
         assert_eq!(keys(&b, KeyCommand::MoreAggressive), ["+"]);
         assert_eq!(keys(&b, KeyCommand::MoreDefensive), ["-"]);
+        assert_eq!(keys(&b, KeyCommand::Eat), ["E"]);
         assert_eq!(keys(&b, KeyCommand::NextTarget), ["Tab"]);
         assert_eq!(keys(&b, KeyCommand::UseTool), ["U"]);
+        assert_eq!(keys(&b, KeyCommand::Chat), ["C"]);
     }
 
     #[test]

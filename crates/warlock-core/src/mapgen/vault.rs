@@ -23,20 +23,20 @@ pub(super) fn fits(canvas: &Canvas, vault: &Vault, at: Pos) -> bool {
     (at.y - 1..=at.y + vault.height()).all(|y| {
         (at.x - 1..=at.x + vault.width()).all(|x| {
             let p = Pos::new(x, y);
-            canvas.is_inner(p) && canvas.get(p) == canvas.pal.void && !canvas.is_locked(p)
+            canvas.is_inner(p) && canvas.get(p) == canvas.pal.void && !canvas.is_stamped(p)
         })
     })
 }
 
 /// Copies `vault` with its top-left corner at `at` (terrain, placed lights, the flow of running
-/// water, objects, and creatures with their patrols) and locks its cells. Returns its entrances in level
-/// coordinates, each with the direction leading out.
+/// water, objects, locks on doors, and creatures with their patrols) and marks its cells
+/// stamped. Returns its entrances in level coordinates, each with the direction leading out.
 pub(super) fn stamp(canvas: &mut Canvas, vault: &Vault, at: Pos) -> Vec<(Pos, Dir)> {
     let offset = |p: Pos| Pos::new(at.x + p.x, at.y + p.y);
     let template = &vault.template;
     for (p, t) in template.terrain.iter() {
         canvas.set(offset(p), *t);
-        canvas.locked.set(offset(p), true);
+        canvas.stamped.set(offset(p), true);
     }
     for (p, light) in &template.lights {
         canvas.lights.insert(offset(*p), *light);
@@ -49,6 +49,9 @@ pub(super) fn stamp(canvas: &mut Canvas, vault: &Vault, at: Pos) -> Vec<(Pos, Di
     }
     for &(p, grade) in &template.loot {
         canvas.loot.push((offset(p), grade));
+    }
+    for (p, lock) in &template.locks {
+        canvas.locks.insert(offset(*p), lock.clone());
     }
     for spawn in &template.creatures {
         canvas.creatures.push(CreatureSpawn {

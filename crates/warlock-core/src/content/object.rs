@@ -22,6 +22,9 @@
 //! "Weapon skills"): a skill of role `melee` for what is wielded in a hand, `launcher` for a
 //! missile weapon, `thrown` for what is only thrown (a rock).
 //!
+//! Keys (spec §8 "Doors") say which locks they open: `key = "pantry"` opens the locks with that
+//! lock id, `key = "*"` (a skeleton key) every lock.
+//!
 //! Ranged combat (spec §8 "Ranged combat"): a missile weapon shoots as far as its `range` (and
 //! one that `reloads`, a crossbow, takes the `reload` action after every shot); anything else
 //! with a `range` is a throwing weapon, thrown that far, its `damage` its own (a rock needs no
@@ -38,20 +41,29 @@
 //! it (default 1), and how often (`frequency`, default 100; 0: never). Weapons may cost more or
 //! less than a normal attack (`attack_cost`, instead of the `melee` or `shoot` action's).
 //!
+//! Food (spec §8 "Hunger") says what it gives and how long it takes to eat: `food = { nutrition
+//! = 1500, turns = 4 }`. Corpses are objects too, one made for each creature type that leaves
+//! one ([`ObjectDef::corpse_of`]): "kobold corpse", `%` in the creature's color, weighing what
+//! the creature does, feeding by its size. Level files cannot place them: they lie where
+//! creatures died, each with the moment it died ([`Stack::died`]), from which it rots.
+//!
 //! Digging tools (spec §8 "Digging") have a `dig` power: the work a dig with one does against a
 //! wall's hardness (a pick-axe 10, at Strength 10). They go in a slot (the Tool slot).
 
 use super::action::check_cost;
 use super::affix::{ItemKind, MAX_ITEM_LEVEL};
+use super::creature::CreatureDef;
+use super::hunger::Food;
 use super::light::LightId;
 use super::material::MaterialId;
 use super::particles::ParticleEmitter;
 use super::slot::SlotDef;
 use super::weapon_skill::{Role, WeaponSkillId, WeaponSkillTable};
-use super::{Content, ContentError};
+use super::{Content, ContentError, CreatureId};
 use crate::color::Rgb;
 use crate::combat::{Attack, CRITS, DEFAULT_CRIT, DEFAULT_THREAT, THREATS};
 use crate::dice::Dice;
+use crate::door::Key;
 use crate::object::Stack;
 use crate::time::{DAY, Duration};
 use serde::{Deserialize, Serialize};
@@ -169,6 +181,8 @@ pub(super) struct ObjectSpec {
     pub breaks: u8,
     /// Lit as it is shot or thrown: it flies and lands as this object (an object id).
     pub lit: Option<String>,
+    /// A key: the lock id it opens, or `*` for a skeleton key (every lock).
+    pub key: Option<String>,
     /// The light it gives while it burns where it lies (a light preset id); with `burns`.
     pub light: Option<String>,
     /// How long it burns where it lands, in seconds of game time; then it is gone.
@@ -198,6 +212,8 @@ pub(super) struct ObjectSpec {
     pub level: Option<u8>,
     /// How often loot holds it among what may be there (default 100; 0: never).
     pub frequency: Option<u32>,
+    /// What eating it gives (spec §8 "Hunger"): its nutrition and the turns it takes.
+    pub food: Option<Food>,
 }
 
 /// A resolved object type.
@@ -249,6 +265,8 @@ pub struct ObjectDef {
     pub lit: Option<ObjectId>,
     /// The light it gives where it lies, while it burns, and for how long it burns.
     pub burning: Option<Burning>,
+    /// A key: what locks it opens (spec §8 "Doors").
+    pub key: Option<Key>,
     /// A digging tool's power (spec §8 "Digging"): a dig with it at Strength 10 does this much
     /// work against a wall's hardness ([`crate::world::dig_work`]). `None`: it does not dig.
     pub dig: Option<u16>,
@@ -269,6 +287,11 @@ pub struct ObjectDef {
     pub level: u8,
     /// How often loot holds it, relative to the rest (0 for what has no `kind`).
     pub frequency: u32,
+    /// What eating it gives, if it is food or a corpse (spec §8 "Hunger").
+    pub food: Option<Food>,
+    /// The creature type it is the corpse of, if it is a corpse: it rots from the moment its
+    /// creature died ([`Stack::died`]).
+    pub corpse: Option<CreatureId>,
 }
 
 /// How a burning object burns where it lies: the light it gives, and for how long.
@@ -279,6 +302,54 @@ pub struct Burning {
 }
 
 impl ObjectDef {
+    /// The corpse of creature type `creature` (id `id`): "kobold corpse", `%` in its color, made
+    /// of `material` and weighing what it does, feeding as `food` (its size's).
+    pub(super) fn corpse_of(
+        id: CreatureId,
+        creature: &CreatureDef,
+        material: MaterialId,
+        food: Food,
+    ) -> Self {
+        Self {
+            id: format!("{}_corpse", creature.id),
+            name: format!("{} corpse", creature.name),
+            plural: format!("{} corpses", creature.name),
+            glyph: '%',
+            fg: creature.fg,
+            material,
+            weight: creature.weight,
+            stackable: false,
+            slot: None,
+            two_handed: false,
+            ammo: None,
+            launches: None,
+            attack: None,
+            parry: 0,
+            armour: 0,
+            max_dex: None,
+            shield: 0,
+            bash: None,
+            skill: None,
+            range: None,
+            reloads: false,
+            breaks: 0,
+            lit: None,
+            burning: None,
+            dig: None,
+            missile: None,
+            spins: false,
+            glow: 0.0,
+            particles: Vec::new(),
+            food: Some(food),
+            corpse: Some(id),
+            key: None,
+            kind: None,
+            attack_cost: None,
+            level: 1,
+            frequency: 0,
+        }
+    }
+
     /// Whether it is a throwing weapon: it has a range and is no missile weapon.
     pub fn is_thrown(&self) -> bool {
         self.range.is_some() && self.launches.is_none()
@@ -408,6 +479,20 @@ impl ObjectSpec {
             return Err(err("`glow` must be between 0 and 1".into()));
         }
         self.check_base(attack.is_some()).map_err(err)?;
+        if let Some(food) = &self.food {
+            food.check().map_err(|m| err(format!("food: {m}")))?;
+            if self.slot.is_some() || self.flies() || self.burns.is_some() {
+                return Err(err(
+                    "`food` is for things eaten, not worn, wielded, shot, thrown, or burned".into(),
+                ));
+            }
+        }
+        let key = self
+            .key
+            .as_deref()
+            .map(Key::parse)
+            .transpose()
+            .map_err(err)?;
         if let Some(power) = self.dig
             && (!(1..=MAX_DIG).contains(&power) || self.slot.is_none())
         {
@@ -441,6 +526,7 @@ impl ObjectSpec {
             breaks: self.breaks,
             lit: None,
             burning,
+            key,
             dig: self.dig,
             missile: self.missile,
             spins: self.spins,
@@ -453,6 +539,8 @@ impl ObjectSpec {
                 Some(_) => self.frequency.unwrap_or(100),
                 None => 0,
             },
+            food: self.food,
+            corpse: None,
         };
         Ok((def, self.lit))
     }
@@ -494,6 +582,11 @@ impl ObjectSpec {
             check_cost(cost).map_err(|m| format!("`attack_cost`: {m}"))?;
         }
         Ok(())
+    }
+
+    /// Whether it flies: ammunition, or a throwing weapon (a range without `launches`).
+    fn flies(&self) -> bool {
+        self.ammo.is_some() || (self.range.is_some() && self.launches.is_none())
     }
 
     /// The fields of ranged combat: a missile weapon needs a range and may reload; a throwing
@@ -679,6 +772,11 @@ pub(super) fn parse_stacks(specs: &[String], content: &Content) -> Result<Vec<St
         let object = content
             .object_id(id)
             .ok_or_else(|| format!("unknown object `{id}`"))?;
+        if content.object(object).corpse.is_some() {
+            return Err(format!(
+                "`{id}` is a corpse: corpses lie only where creatures died"
+            ));
+        }
         if content.object(object).stackable {
             match stacks.iter_mut().find(|s| s.object == object) {
                 Some(stack) => stack.count += count,
@@ -722,6 +820,7 @@ mod tests {
             breaks: 0,
             lit: None,
             burning: None,
+            key: None,
             dig: None,
             missile: None,
             spins: false,
@@ -731,6 +830,8 @@ mod tests {
             attack_cost: None,
             level: 1,
             frequency: 0,
+            food: None,
+            corpse: None,
         };
         assert_eq!(def("dagger", "daggers").describe(1), "a dagger");
         assert_eq!(def("iron key", "iron keys").describe(1), "an iron key");

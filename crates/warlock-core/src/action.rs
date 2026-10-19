@@ -1,11 +1,11 @@
 //! Player actions and the events a turn produces.
 
 use crate::combat::Strike;
-use crate::content::{ActionKind, CombatStance, ObjectId, StatusId};
+use crate::content::{ActionKind, CombatStance, DiseaseId, ObjectId, StatusId};
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
 use crate::weather::Weather;
-use crate::world::ActorId;
+use crate::world::{ActorId, Conversation};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
@@ -14,12 +14,19 @@ use std::str::FromStr;
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Action {
-    /// Step in a direction; bumping a closed door opens it.
+    /// Step in a direction; bumping a closed door opens it (unlocking it first with a key that
+    /// fits, if it is locked).
     Move(Dir),
     /// Let a turn pass.
     Wait,
+    /// Open the door in a direction; a locked one only with a key that fits, which unlocks it
+    /// first (spec §8 "Doors").
     Open(Dir),
     Close(Dir),
+    /// Kick in a direction (spec §8 "Doors"): a closed door, to break it (a chance of Strength in
+    /// its sturdiness), or a creature, an unarmed blow. Takes the time of `kick`; kicking at
+    /// empty space or something solid takes none.
+    Kick(Dir),
     /// Take stairs up.
     Ascend,
     /// Take stairs down.
@@ -59,6 +66,19 @@ pub enum Action {
     /// Wait turn after turn (creatures act) until the goal, stopping early when a creature comes
     /// into view or a message is logged.
     Rest(Rest),
+    /// Chat with the creature in a direction (spec §8 "Dialogue"): it answers with a line, and
+    /// one that has topics opens the dialogue screen. Takes the time of `chat`; refused (no
+    /// time) when the player sees no one there.
+    Chat(Dir),
+    /// Ask the creature in a direction about one of its topics, by id. Takes no time.
+    Ask {
+        dir: Dir,
+        topic: String,
+    },
+    /// Eat one of a stack, from the pack or the floor (spec §8 "Hunger"): a meal of as many
+    /// turns (each the `eat` action) as the food takes, stopping early like a rest; the food is
+    /// eaten and feeds at the end.
+    Eat(Meal),
     /// Take a combat stance (spec §8 "Stances"). Takes no game time, but changes state, so
     /// replays record it.
     SetStance(CombatStance),
@@ -92,7 +112,28 @@ pub enum Action {
     /// `data/status.toml`), as a wound or a bite would give it: for trying statuses out and for
     /// captures. Takes no game time; recorded in replays.
     Afflict(String),
+    /// Dev command: the player catches a disease (an id in `data/diseases.toml`) as if they
+    /// had failed to resist it: it incubates, then shows. Takes no game time; recorded in
+    /// replays.
+    Infect(String),
+    /// Dev command: an instant frost (spec §5 "Ice"): the water within `radius` of cell `at`, in
+    /// its line of sight, freezes at once to ice that holds a laden person
+    /// ([`crate::ice::FROST`]). Takes no game time; recorded in replays.
+    Freeze {
+        at: Pos,
+        radius: i32,
+    },
+    /// Dev command: a burst of heat (standing in for a fireball): the ice within `radius` of
+    /// cell `at`, in its line of sight, melts at once, and whoever stood on it falls in. Takes no
+    /// game time; recorded in replays.
+    Thaw {
+        at: Pos,
+        radius: i32,
+    },
 }
+
+/// The largest radius of the dev frost and heat bursts.
+pub const MAX_BURST: i32 = 20;
 
 /// How long to rest.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -108,6 +149,17 @@ pub enum Rest {
 
 /// The longest rest; resting until dawn or dusk is never longer either.
 pub const MAX_REST: Duration = Duration::seconds(DAY);
+
+/// Where the food of a meal is.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Meal {
+    /// Inventory stack at this position (`a` = 0): `eat:b`.
+    Pack(usize),
+    /// The stack at this position in the pile on the player's cell (`a` = the top):
+    /// `eat:floor:a`.
+    Floor(usize),
+}
 
 /// A set of letters `a` to `z` naming stacks of a list the player sees (a pile, the inventory)
 /// by position: `a` is the first. Written as the letters in order, e.g. `ac`.
@@ -201,6 +253,14 @@ pub enum Event {
     DoorClosed {
         pos: Pos,
     },
+    /// A kick at a closed door that held: "WHAMM!" (spec §8 "Doors").
+    DoorKicked {
+        pos: Pos,
+    },
+    /// A door kicked in: it broke, and is open for good.
+    DoorBroken {
+        pos: Pos,
+    },
     LevelChanged {
         from: String,
         to: String,
@@ -249,6 +309,14 @@ pub enum Event {
         status: StatusId,
         began: bool,
     },
+    /// A disease of the player's showed itself, went badly at a progression, or left them (spec
+    /// §8 "Diseases"). Only the player's own, which they always perceive: said in the message
+    /// line in the disease's own words (its `onset`, a symptom, `recovered`).
+    Disease {
+        actor: ActorId,
+        disease: DiseaseId,
+        news: DiseaseNews,
+    },
     /// A spell-like effect the player perceives (spec §4.8 "Spell effects"): traps now, spells
     /// later. As the player perceives it: it is light itself, so its cells are cut to those the
     /// player sees or has in line of sight (in the dark too), and a bolt's path to the stretch
@@ -262,12 +330,34 @@ pub enum Event {
         /// The affected cells the player can see; perception-filtered, never ground truth.
         cells: Vec<Pos>,
     },
+    /// The player chatted with a creature, or asked it about a topic, and it answered (spec §8
+    /// "Dialogue"): what it said and what the player may ask it about. One with topics opens
+    /// the dialogue screen.
+    Talked(Conversation),
     /// A wall gave way (spec §8 "Digging") and is rubble now. Kept when the player sees the cell
     /// afterwards.
     WallBroken {
         pos: Pos,
         cause: Breach,
     },
+    /// An actor broke through the ice and plunged into the water at `at` (spec §5 "Ice"). Kept
+    /// when the player saw it (their own always).
+    FellThroughIce {
+        actor: ActorId,
+        at: Pos,
+    },
+}
+
+/// What became of a disease ([`Event::Disease`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DiseaseNews {
+    /// Its incubation is over: it shows.
+    Onset,
+    /// Its progression number `n` (1 for the first) went badly: a symptom.
+    Worse(u16),
+    /// It is gone.
+    Recovered,
 }
 
 /// The shape of a spell effect ([`Event::Spell`]).
@@ -342,16 +432,21 @@ pub struct Outcome {
     pub events: Vec<Event>,
 }
 
-/// Text syntax for scripting: `move:E wait open:E close:W ascend descend lantern rest:1h
+/// Text syntax for scripting: `move:E wait open:E close:W kick:N ascend descend lantern rest:1h
 /// rest:dawn rest:dusk pickup pickup:ac drop:b equip:body:b remove:body bash:E fire:12,5
-/// throw:c:12,5 dig:E vision:ID skip:1h weather:rain effect:fireball@12,5
-/// effect:lightning_bolt@3,4>12,4 identify:a afflict:bleeding` (durations: `30s`, `10m`, `2h`;
-/// letters name stacks, `a` first; `pickup`, `drop`, and `identify` without letters take
-/// everything; `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT, `remove:SLOT`
-/// takes off what is there; `bash:DIR` bashes with the held shield; `dig:DIR` digs toward a
-/// wall; `fire:X,Y` shoots at the level cell (X, Y), `throw:LETTER:X,Y` throws one of inventory
-/// stack LETTER there; weather: `clear`, `overcast`, `rain`, `heavy`; `effect:ID@X,Y[>X,Y]`
-/// shows a spell effect at a cell, or from one cell toward another).
+/// throw:c:12,5 dig:E eat:b eat:floor:a chat:E ask:E:TOPIC vision:ID skip:1h weather:rain
+/// effect:fireball@12,5 effect:lightning_bolt@3,4>12,4 identify:a afflict:bleeding
+/// infect:filth_fever freeze:12,5,3 thaw:12,5,3` (durations: `30s`, `10m`, `2h`; letters name
+/// stacks, `a` first; `pickup`, `drop`, and `identify` without letters take everything;
+/// `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT, `remove:SLOT` takes off what
+/// is there; `bash:DIR` bashes with the held shield; `dig:DIR` digs toward a wall; `fire:X,Y`
+/// shoots at the level cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack LETTER
+/// there; `eat:LETTER` eats one of inventory stack LETTER, `eat:floor:LETTER` one of the stack
+/// LETTER of the pile underfoot; `chat:DIR` talks to the creature that way, `ask:DIR:TOPIC` asks
+/// it about a topic by id; weather: `clear`, `overcast`, `rain`, `heavy`; `effect:ID@X,Y[>X,Y]`
+/// shows a spell effect at a cell, or from one cell toward another; the dev bursts
+/// `freeze:X,Y,R` and `thaw:X,Y,R` freeze the water and melt the ice within radius R, 0 to
+/// [`MAX_BURST`], of cell (X, Y)).
 ///
 /// `Display` and `FromStr` round-trip; action names are case-insensitive when parsing (vision
 /// profile, slot, and effect ids keep their case).
@@ -362,6 +457,7 @@ impl fmt::Display for Action {
             Action::Wait => f.write_str("wait"),
             Action::Open(d) => write!(f, "open:{d}"),
             Action::Close(d) => write!(f, "close:{d}"),
+            Action::Kick(d) => write!(f, "kick:{d}"),
             Action::Ascend => f.write_str("ascend"),
             Action::Descend => f.write_str("descend"),
             Action::ToggleLantern => f.write_str("lantern"),
@@ -379,9 +475,15 @@ impl fmt::Display for Action {
                 let item = letter(*item).unwrap_or('?');
                 write!(f, "throw:{item}:{},{}", at.x, at.y)
             }
+            Action::Eat(Meal::Pack(item)) => write!(f, "eat:{}", letter(*item).unwrap_or('?')),
+            Action::Eat(Meal::Floor(item)) => {
+                write!(f, "eat:floor:{}", letter(*item).unwrap_or('?'))
+            }
             Action::Rest(Rest::For(d)) => write!(f, "rest:{d}"),
             Action::Rest(Rest::Dawn) => f.write_str("rest:dawn"),
             Action::Rest(Rest::Dusk) => f.write_str("rest:dusk"),
+            Action::Chat(d) => write!(f, "chat:{d}"),
+            Action::Ask { dir, topic } => write!(f, "ask:{dir}:{topic}"),
             Action::SetStance(stance) => write!(f, "stance:{stance}"),
             Action::Dig(d) => write!(f, "dig:{d}"),
             Action::SetVision(id) => write!(f, "vision:{id}"),
@@ -397,6 +499,9 @@ impl fmt::Display for Action {
             Action::Identify(l) if l.is_empty() => f.write_str("identify"),
             Action::Identify(l) => write!(f, "identify:{l}"),
             Action::Afflict(id) => write!(f, "afflict:{id}"),
+            Action::Infect(id) => write!(f, "infect:{id}"),
+            Action::Freeze { at, radius } => write!(f, "freeze:{},{},{radius}", at.x, at.y),
+            Action::Thaw { at, radius } => write!(f, "thaw:{},{},{radius}", at.x, at.y),
         }
     }
 }
@@ -422,6 +527,20 @@ impl FromStr for Action {
             "move" => dir().map(Action::Move),
             "open" => dir().map(Action::Open),
             "close" => dir().map(Action::Close),
+            "chat" => dir().map(Action::Chat),
+            "ask" => {
+                let usage =
+                    || "`ask` needs a direction and a topic, e.g. `ask:E:rooms`".to_string();
+                let (dir, topic) = arg.and_then(|a| a.split_once(':')).ok_or_else(usage)?;
+                if topic.is_empty() || topic.contains(':') {
+                    return Err(usage());
+                }
+                Ok(Action::Ask {
+                    dir: dir.parse().map_err(|_| usage())?,
+                    topic: topic.to_string(),
+                })
+            }
+            "kick" => dir().map(Action::Kick),
             "bash" => dir().map(Action::Bash),
             "dig" => dir().map(Action::Dig),
             "wait" => bare(Action::Wait),
@@ -487,6 +606,26 @@ impl FromStr for Action {
                 let at = arg.ok_or_else(|| "`fire` needs a cell, e.g. `fire:12,5`".to_string())?;
                 parse_cell(at).map(Action::Fire)
             }
+            "eat" => {
+                let usage = || "`eat` needs a letter, e.g. `eat:b` or `eat:floor:a`".to_string();
+                let (floor, item) = match arg.map(|a| a.split_once(':')) {
+                    Some(Some(("floor", item))) => (true, item),
+                    Some(None) => (false, arg.unwrap_or_default()),
+                    _ => return Err(usage()),
+                };
+                let mut chars = item.chars();
+                match (chars.next(), chars.next()) {
+                    (Some(c @ 'a'..='z'), None) => {
+                        let i = usize::from(c as u8 - b'a');
+                        Ok(Action::Eat(if floor {
+                            Meal::Floor(i)
+                        } else {
+                            Meal::Pack(i)
+                        }))
+                    }
+                    _ => Err(usage()),
+                }
+            }
             "throw" => {
                 let usage = || "`throw` needs a letter and a cell, e.g. `throw:c:12,5`".to_string();
                 let (item, at) = arg.and_then(|a| a.split_once(':')).ok_or_else(usage)?;
@@ -537,12 +676,33 @@ impl FromStr for Action {
                 }
                 _ => Err("`afflict` needs a status id, e.g. `afflict:bleeding`".into()),
             },
+            "infect" => match s.split_once(':').map(|(_, id)| id) {
+                Some(id) if !id.is_empty() && !id.contains(':') => {
+                    Ok(Action::Infect(id.to_string()))
+                }
+                _ => Err("`infect` needs a disease id, e.g. `infect:filth_fever`".into()),
+            },
+            "freeze" | "thaw" => {
+                let usage = || format!("`{verb}` needs a cell and a radius, e.g. `{verb}:12,5,3`");
+                let (cell, radius) = arg.and_then(|a| a.rsplit_once(',')).ok_or_else(usage)?;
+                let at = parse_cell(cell).map_err(|_| usage())?;
+                let radius = match radius.trim().parse::<i32>() {
+                    Ok(r) if (0..=MAX_BURST).contains(&r) => r,
+                    _ => return Err(format!("`{s}`: the radius is 0 to {MAX_BURST}")),
+                };
+                Ok(if verb == "freeze" {
+                    Action::Freeze { at, radius }
+                } else {
+                    Action::Thaw { at, radius }
+                })
+            }
             _ => Err(format!(
-                "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
-                 descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
+                "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, kick:DIR, \
+                 ascend, descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
                  equip:SLOT:LETTER, remove:SLOT, bash:DIR, fire:X,Y, throw:LETTER:X,Y, dig:DIR, \
-                 stance:NAME, vision:ID, skip:DURATION, weather:clear|overcast|rain|heavy, \
-                 effect:ID@X,Y[>X,Y], identify[:LETTERS], afflict:STATUS)"
+                 eat:LETTER, eat:floor:LETTER, chat:DIR, ask:DIR:TOPIC, stance:NAME, vision:ID, \
+                 skip:DURATION, weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y], \
+                 identify[:LETTERS], afflict:STATUS, infect:DISEASE, freeze:X,Y,R, thaw:X,Y,R)"
             )),
         }
     }
@@ -649,8 +809,25 @@ mod tests {
             },
             Action::Identify(Letters::default()),
             Action::Identify(Letters::of([0, 3])),
+            Action::Ask {
+                dir: Dir::NW,
+                topic: "the_rooms".into(),
+            },
+            Action::Eat(Meal::Pack(1)),
+            Action::Eat(Meal::Floor(0)),
+            Action::Eat(Meal::Floor(25)),
             Action::Afflict("bleeding".into()),
             Action::Afflict("Odd_Case".into()),
+            Action::Infect("filth_fever".into()),
+            Action::Infect("Odd_Case".into()),
+            Action::Freeze {
+                at: Pos::new(40, 12),
+                radius: 3,
+            },
+            Action::Thaw {
+                at: Pos::new(0, 7),
+                radius: 0,
+            },
         ];
         all.extend(Weather::ALL.map(Action::SetWeather));
         for d in Dir::ALL {
@@ -658,6 +835,8 @@ mod tests {
                 Action::Move(d),
                 Action::Open(d),
                 Action::Close(d),
+                Action::Chat(d),
+                Action::Kick(d),
                 Action::Bash(d),
                 Action::Dig(d),
             ]);
@@ -674,6 +853,8 @@ mod tests {
         assert_eq!(parse_actions(""), Ok(vec![]));
         assert!(parse_actions("move").is_err());
         assert!(parse_actions("move:up").is_err());
+        assert_eq!(parse_actions("KICK:sw"), Ok(vec![Action::Kick(Dir::SW)]));
+        assert!(parse_actions("kick").is_err());
         assert!(parse_actions("wait:E").is_err());
         assert_eq!(parse_actions("BASH:sw"), Ok(vec![Action::Bash(Dir::SW)]));
         assert!(parse_actions("bash").is_err());
@@ -699,6 +880,28 @@ mod tests {
         assert!(parse_actions("vision").is_err());
         assert!(parse_actions("vision:").is_err());
         assert!(parse_actions("lantern:E").is_err());
+        assert_eq!(
+            parse_actions("FREEZE:12,5,4 thaw:3,4,0"),
+            Ok(vec![
+                Action::Freeze {
+                    at: Pos::new(12, 5),
+                    radius: 4
+                },
+                Action::Thaw {
+                    at: Pos::new(3, 4),
+                    radius: 0
+                },
+            ])
+        );
+        for bad in [
+            "freeze",
+            "freeze:12,5",
+            "freeze:12,5,21",
+            "thaw:1,2,-1",
+            "thaw:a,b,c",
+        ] {
+            assert!(parse_actions(bad).is_err(), "{bad}");
+        }
         assert_eq!(
             parse_actions("REST:Dawn rest:1h skip:2H"),
             Ok(vec![
@@ -741,6 +944,16 @@ mod tests {
             }
             .to_string(),
             "equip:head:c"
+        );
+        assert_eq!(
+            parse_actions("CHAT:ne ask:E:Rooms"),
+            Ok(vec![
+                Action::Chat(Dir::NE),
+                Action::Ask {
+                    dir: Dir::E,
+                    topic: "rooms".into()
+                }
+            ])
         );
         assert_eq!(
             parse_actions("FIRE:3,4 throw:B:10,2"),
@@ -787,6 +1000,25 @@ mod tests {
             "effect:fireball@3,4>5",
             "effect:fire:ball@3,4",
             "effect:fireball@3,4>5,6>7,8",
+        ] {
+            assert!(parse_actions(bad).is_err(), "{bad}");
+        }
+        assert_eq!(
+            parse_actions("EAT:B eat:Floor:a"),
+            Ok(vec![
+                Action::Eat(Meal::Pack(1)),
+                Action::Eat(Meal::Floor(0))
+            ])
+        );
+        for bad in [
+            "eat",
+            "eat:",
+            "eat:ab",
+            "eat:1",
+            "eat:floor",
+            "eat:floor:",
+            "eat:floor:ab",
+            "eat:pack:a",
             "fire",
             "fire:",
             "fire:3",
@@ -811,6 +1043,9 @@ mod tests {
             "afflict",
             "afflict:",
             "afflict:a:b",
+            "infect",
+            "infect:",
+            "infect:a:b",
             "pickup:",
             "pickup:a1",
             "drop:A-",
@@ -822,6 +1057,13 @@ mod tests {
             "skip",
             "skip:0s",
             "skip:x",
+            "chat",
+            "chat:up",
+            "ask",
+            "ask:E",
+            "ask:E:",
+            "ask:up:rooms",
+            "ask:E:a:b",
             "dig",
             "dig:",
             "dig:down",

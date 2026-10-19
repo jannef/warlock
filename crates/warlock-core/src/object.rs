@@ -15,9 +15,13 @@
 //! stack and picked up again). What the player is shown of it goes through
 //! [`Stack::describe`] and [`Stack::known_magic`], which keep an unidentified item's affixes
 //! hidden.
+//!
+//! A corpse (spec §8 "Hunger") is a stack of one that remembers when its creature died
+//! ([`Stack::died`]): it rots from then on, and is gone in the end.
 
 use crate::content::{Content, ObjectId, Rarity};
 use crate::magic::{Effect, Magic, Mods, name};
+use crate::time::GameTime;
 use serde::{Deserialize, Serialize};
 
 /// Most stacks an inventory holds: one per letter, `a` to `z`.
@@ -33,15 +37,20 @@ pub struct Stack {
     /// read it, presentation only through [`Stack::known_magic`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     magic: Option<Box<Magic>>,
+    /// A corpse: when its creature died, the moment it rots from (rules and dev tools only: a
+    /// corpse does not show its age, so presentation cannot read it). `None` for everything else.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) died: Option<GameTime>,
 }
 
 impl Stack {
-    /// `count` of a normal `object`.
+    /// `count` of a normal `object`, which is no corpse.
     pub fn new(object: ObjectId, count: u32) -> Self {
         Self {
             object,
             count,
             magic: None,
+            died: None,
         }
     }
 
@@ -49,12 +58,19 @@ impl Stack {
         Self::new(object, 1)
     }
 
+    /// A corpse, `object`, of a creature that died at `died`.
+    pub fn corpse(object: ObjectId, died: GameTime) -> Self {
+        Self {
+            died: Some(died),
+            ..Self::new(object, 1)
+        }
+    }
+
     /// `count` of `object` that rolled `magic`.
     pub(crate) fn with_magic(object: ObjectId, count: u32, magic: Magic) -> Self {
         Self {
-            object,
-            count,
             magic: Some(Box::new(magic)),
+            ..Self::new(object, count)
         }
     }
 
@@ -133,13 +149,14 @@ impl Stack {
         }
     }
 
-    /// Whether the object exists in `content`, the count makes sense, and its magic is valid for
-    /// it (a guard for saves).
+    /// Whether the object exists in `content`, the count makes sense, its magic is valid for it,
+    /// and it knows when it died if and only if it is a corpse (a guard for saves).
     pub(crate) fn is_valid_for(&self, content: &Content) -> bool {
         usize::from(self.object.0) < content.object_defs().len()
             && self.count >= 1
             && (self.count == 1 || content.object(self.object).stackable)
             && (self.magic()).is_none_or(|m| m.check(content.object(self.object), content).is_ok())
+            && self.died.is_some() == content.object(self.object).corpse.is_some()
     }
 }
 

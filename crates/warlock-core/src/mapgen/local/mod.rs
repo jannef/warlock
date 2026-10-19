@@ -180,6 +180,7 @@ pub(super) fn generate(content: &Content, seed: u64, id: &str) -> Result<LevelTe
             lights: land.lights,
             flow: land.flow,
             objects: land.objects,
+            locks: land.locks,
             regions: Vec::new(),
             rooms: Vec::new(),
             exit: Some(EdgeExit {
@@ -188,6 +189,9 @@ pub(super) fn generate(content: &Content, seed: u64, id: &str) -> Result<LevelTe
             }),
             item_level: content.item_level(id),
             loot: Vec::new(),
+            // Under the open sky: the weather's temperature, and ice as it brings.
+            temperature: None,
+            ice: Default::default(),
         };
         if reach::validate(&template, content).is_ok() {
             // Ruins may hold loot (spec §8 "Magic items"); the land holds none of its own.
@@ -293,6 +297,9 @@ fn ruins(land: &mut Land, rng: &mut Rng) {
             for &(p, grade) in &template.loot {
                 land.loot.push((shift(p), grade));
             }
+            for (p, lock) in &template.locks {
+                land.locks.insert(shift(*p), lock.clone());
+            }
             for spawn in &template.creatures {
                 land.creatures.push(CreatureSpawn {
                     pos: shift(spawn.pos),
@@ -323,6 +330,7 @@ fn graze(land: &mut Land, rng: &mut Rng, count: i32, start: Pos) {
             land.creatures.push(CreatureSpawn {
                 creature: land.kit.deer,
                 faction: None,
+                npc: None,
                 pos: p,
                 route,
                 carry: Vec::new(),

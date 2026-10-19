@@ -1,5 +1,6 @@
 //! Actors: the player and creatures.
 
+use super::Talk;
 use crate::action::AttackKind;
 use crate::burden::Burden;
 use crate::combat::{self, Attack, Category, Defence, Health, Profile};
@@ -8,13 +9,16 @@ use crate::content::{
     ActionKind, Benefit, CombatStance, Content, CreatureId, FactionId, ObjectDef, ObjectId, Role,
     WeaponSkillId,
 };
+use crate::disease::Diseases;
+use crate::door::{Key, Lock};
 use crate::equipment::Equipment;
 use crate::geom::{Dir, Pos};
+use crate::hunger::{Hunger, Satiation};
 use crate::magic::Mods;
 use crate::noise::Heard;
 use crate::object::{Stack, Weight, weight_of};
 use crate::skills::{Effect, Skills};
-use crate::stats::{Stat, Stats};
+use crate::stats::{PerStat, Stat, StatDamage, Stats};
 use crate::status::Effects;
 use crate::weapon_skills::WeaponSkills;
 use serde::{Deserialize, Serialize};
@@ -101,7 +105,8 @@ pub struct Actor {
     /// Its scores and potentials (spec §8 "Stats"; [`crate::stats`]): from its creature type,
     /// the player's from the scenario. Known to the rules (and dev tools) for every actor; the
     /// player is shown only their own scores. Rules read them through
-    /// [`Actor::effective_stats`], which magic items raise and status effects may lower.
+    /// [`Actor::effective_stats`], which magic items raise and status effects and stat damage
+    /// may lower.
     pub stats: Stats,
     /// Hit points left (spec §8 "Combat"); at 0 or below it is dead.
     pub hp: i32,
@@ -123,6 +128,14 @@ pub struct Actor {
     /// The status effects it suffers (spec §8 "Status effects"; [`crate::status`]).
     #[serde(default, skip_serializing_if = "Effects::is_empty")]
     pub effects: Effects,
+    /// The diseases it carries, incubating or showing (spec §8 "Diseases";
+    /// [`crate::disease`]).
+    #[serde(default, skip_serializing_if = "Diseases::is_empty")]
+    pub diseases: Diseases,
+    /// The points its diseases took off its scores, mending once none shows (spec §8 "Stats";
+    /// [`StatDamage`]).
+    #[serde(default, skip_serializing_if = "StatDamage::is_none")]
+    pub damage: StatDamage,
     /// Its rank and marks in every weapon skill (spec §8 "Weapon skills";
     /// [`crate::weapon_skills`]): a creature's from its type, the player's from their race and
     /// class. Only the player trains. The player is shown their own ranks; what a rank gives
@@ -133,9 +146,21 @@ pub struct Actor {
     /// peaceful creatures in the showcase). Read the one that counts with [`Actor::faction`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub faction_override: Option<FactionId>,
+    /// How fed it is (spec §8 "Hunger"): the player's, when the content has hunger; creatures
+    /// do not hunger (`None`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub satiation: Option<Satiation>,
     /// Its combat stance (spec §8 "Stances"): the player chooses theirs; creatures stay neutral.
     #[serde(default, skip_serializing_if = "CombatStance::is_neutral")]
     pub stance: CombatStance,
+    /// The unique character its level made it (`npc` in a level legend entry), whose dialogue it
+    /// speaks rather than its type's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub npc: Option<String>,
+    /// How far its talk has got (spec §8 "Dialogue"): which line comes next, which mutter, and
+    /// whether the player has met it.
+    #[serde(default, skip_serializing_if = "Talk::is_new")]
+    pub talk: Talk,
 }
 
 fn is_zero(n: &u32) -> bool {
@@ -155,16 +180,24 @@ impl Actor {
         Mods::worn(&self.inventory, &self.equipment, content)
     }
 
+    /// How hungry it is (spec §8 "Hunger"); `None` for an actor that does not hunger.
+    pub fn hunger(&self, content: &Content) -> Option<Hunger> {
+        let def = content.hunger()?;
+        self.satiation.map(|s| def.state(s.nutrition))
+    }
+
     /// Its stats as the rules read them: its own scores, each raised by what it wears and
     /// wields (spec §8 "Magic items"), then less what its status effects take from them (spec
-    /// §8 "Status effects": strong poison lowers Strength and Dexterity). Every rule that reads
-    /// a score reads these.
+    /// §8 "Status effects": strong poison lowers Strength and Dexterity), what hunger takes
+    /// while it is Weak or worse (spec §8 "Hunger": `[weak]` in `data/hunger.toml`, Strength and
+    /// Dexterity), and its stat damage (spec §8 "Diseases"). The penalties add up; no score goes
+    /// below 1. Every rule that reads a score reads these.
     pub fn effective_stats(&self, content: &Content) -> Stats {
         self.stats_with(content, &self.mods(content))
     }
 
-    /// Its own scores raised by what it wears and wields, before what its status effects take
-    /// (the character screen marks the scores those lower).
+    /// Its own scores raised by what it wears and wields, before what its status effects,
+    /// hunger, and stat damage take (the character screen marks the scores those lower).
     pub fn raised_stats(&self, content: &Content) -> Stats {
         self.raised_with(&self.mods(content))
     }
@@ -175,10 +208,31 @@ impl Actor {
 
     fn stats_with(&self, content: &Content, mods: &Mods) -> Stats {
         let raised = self.raised_with(mods);
-        match self.effects.penalty(content) {
+        match self.penalty(content) {
             Some(by) => raised.adjusted_by(&by),
             None => raised,
         }
+    }
+
+    /// What its status effects, hunger (Weak or worse), and stat damage take off its scores, if
+    /// anything.
+    fn penalty(&self, content: &Content) -> Option<PerStat<i32>> {
+        let mut by = self.effects.penalty(content);
+        if let (Some(def), Some(hunger)) = (content.hunger(), self.hunger(content))
+            && hunger.is_weak()
+        {
+            let by = by.get_or_insert_with(|| PerStat::splat(0));
+            for stat in Stat::ALL {
+                by[stat] += def.weak[stat];
+            }
+        }
+        if self.damage.is_damaged() {
+            let sum = by.get_or_insert_with(|| PerStat::splat(0));
+            for (stat, points) in self.damage.by().iter() {
+                sum[stat] += points;
+            }
+        }
+        by
     }
 
     /// What its skills give of `effect` (spec §8 "Skills"), with what the skill affixes of what
@@ -192,17 +246,18 @@ impl Actor {
     }
 
     /// Its maximum hit points: its (effective) Toughness plus [`Actor::hp_base`] plus what it
-    /// wears and wields adds, at least 1.
+    /// wears and wields adds, at least 1. Toughness damage lowers it, as in D&D 3.5 (spec §8
+    /// "Diseases").
     pub fn max_hp(&self, content: &Content) -> i32 {
         let mods = self.mods(content);
         let toughness = self.stats_with(content, &mods).score(Stat::Toughness);
         combat::max_hp(toughness, self.hp_base + mods.get(ItemEffect::MaxHp))
     }
 
-    /// Its maximum hit points as they will be once its status effects pass: its Toughness
-    /// raised by what it wears and wields, not lowered by its statuses. Taking off something
-    /// that raised them leaves it no more hit points than this (a status penalty passes; the hit
-    /// points it keeps under one stay, spec §8 "Status effects").
+    /// Its maximum hit points as they will be once its penalties pass: its Toughness raised by
+    /// what it wears and wields, not lowered by its statuses, hunger, or stat damage. Taking off
+    /// something that raised them leaves it no more hit points than this (a penalty passes; the
+    /// hit points it keeps under one stay, spec §8 "Status effects").
     pub fn lasting_max_hp(&self, content: &Content) -> i32 {
         let mods = self.mods(content);
         let toughness = self.raised_with(&mods).score(Stat::Toughness);
@@ -439,6 +494,25 @@ impl Actor {
         })
     }
 
+    /// The key it carries that opens `lock` (spec §8 "Doors"): the first one made for it, else
+    /// the first skeleton key; `None` if it carries none that fits.
+    pub fn key_for(&self, content: &Content, lock: &Lock) -> Option<ObjectId> {
+        let fitting = (self.inventory.iter())
+            .map(|s| s.object)
+            .filter_map(|o| Some((o, content.object(o).key.as_ref()?)))
+            .filter(|(_, key)| key.opens(lock));
+        let mut skeleton = None;
+        for (object, key) in fitting {
+            match key {
+                Key::Lock(_) => return Some(object),
+                Key::Skeleton => {
+                    skeleton.get_or_insert(object);
+                }
+            }
+        }
+        skeleton
+    }
+
     /// What its melee attacks do: with the weapon it wields, else its natural attack, else its
     /// bare hands; Strength to hit and to damage, and what its weapon skill gives; then the
     /// weapon's own affixes and those of everything it wears and wields (spec §8 "Magic items");
@@ -522,6 +596,19 @@ impl Actor {
             .with(&self.benefit(content, skill));
         mods.sharpen(&mut profile);
         Some((shield, self.stanced(content, profile)))
+    }
+
+    /// What its kicks at a creature do (spec §8 "Doors"): an unarmed blow whatever it wields
+    /// (bare hands' damage, Strength to hit and to damage), with what its unarmed fighting gives,
+    /// the affixes of everything it wears and wields (spec §8 "Magic items"), and its combat
+    /// stance.
+    pub fn kick(&self, content: &Content) -> Profile {
+        let skill = content.weapon_skills().of_role(Role::Unarmed);
+        let mods = self.mods(content);
+        let mut profile = Profile::melee(&Attack::unarmed(), &self.stats_with(content, &mods))
+            .with(&self.benefit(content, skill));
+        mods.sharpen(&mut profile);
+        self.stanced(content, profile)
     }
 }
 

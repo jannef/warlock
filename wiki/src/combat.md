@@ -101,7 +101,8 @@ Messages never give numbers: "The kobold hits you.", "The giant rat bites the ko
 the giant rat hard!"
 
 A **big hit**, one that takes at least a third of the target's hit points at once, makes it
-bleed, and some creatures' attacks can poison: see [Status effects](status-effects.md).
+bleed, and some creatures' attacks can poison: see [Status effects](status-effects.md). Some bites
+carry a disease: see [Diseases](diseases.md).
 
 ## Stances
 
@@ -143,19 +144,22 @@ hurt a creature looks: unhurt, lightly wounded, wounded, badly wounded, or nearl
 ### Getting better
 
 Hit points come back with time, faster the tougher you are, twice as fast while you
-[rest](resting.md), and slower or not at all while you bleed or are poisoned: see
-[Healing](healing.md). Creatures heal the same way, while you are on their level. In a sanctuary
-(a [special room](special-rooms.md)) wounds heal three times as fast, yours and anyone's.
+[rest](resting.md), and slower or not at all while you bleed, are poisoned, or are diseased: see
+[Healing](healing.md). A disease that lowers your Toughness lowers your most hit points too (see
+[Diseases](diseases.md)). Creatures heal the same way, while you are on their level. In a
+sanctuary (a [special room](special-rooms.md)) wounds heal three times as fast, yours and
+anyone's.
 
 ## Death
 
 A creature at 0 hit points dies: "The giant rat dies." It is gone, and everything it carried,
-what it wore and wielded too, falls where it stood, for you to pick up. A wounded creature may
-also die later of its wounds: "The giant rat bleeds to death."
+what it wore and wielded too, falls where it stood, for you to pick up, with its corpse on top
+(see [Food and corpses](food.md)). A wounded creature may also die later of its wounds: "The
+giant rat bleeds to death."
 
 When **you** reach 0 hit points, you die: "You die..." The run is over, and a screen tells you
-what killed you (if you saw it, or "Bled to death" when your wounds did), where, when, and after
-how many turns. There is no going back:
+what killed you (if you saw it, or "Bled to death" when your wounds did, or that you starved; see
+[Hunger](hunger.md)), where, when, and after how many turns. There is no going back:
 your save is deleted at once (see [Saving](saving.md)). Press `Enter` or `Esc` to return to the
 main menu and start a new run.
 

@@ -4,8 +4,8 @@ Weapons, armor, tools, potions, scrolls, food, stones and gems, coins, rings, an
 the world. You can pick them up, carry them, and put them down again, and wear and wield weapons,
 armor, rings, and amulets (see [Equipment](equipment.md)). Weapons and armour fight and protect
 (see [Combat](combat.md)), some of them are magic (see [Magic items](magic-items.md)), and
-everything you carry weighs on you (see [Burden](burden.md)), but you cannot drink, read, or eat
-anything yet.
+everything you carry weighs on you (see [Burden](burden.md)). Food can be eaten (see [Food and
+corpses](food.md)), but you cannot drink or read anything yet.
 
 ## What an object is
 

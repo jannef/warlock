@@ -13,6 +13,7 @@
 //! ([`Healing::default`]).
 
 use super::ContentError;
+use super::disease::DiseaseId;
 use crate::stats::{ADJUSTMENTS, PerStat, Stat};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -86,51 +87,85 @@ impl Wound {
     }
 }
 
-/// A status an attack may cause when it hits and the target lives (`on_hit` on a creature's
-/// natural attack): `{ status = "poisoned", chance = 10, severity = 2 }`.
+/// What an attack may cause when it hits and the target lives (`on_hit` on a creature's natural
+/// attack): a status, `{ status = "poisoned", chance = 10, severity = 2 }`, or exposure to a
+/// disease, `{ disease = "filth_fever", chance = 10 }` (spec §8 "Diseases").
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct OnHit {
-    pub status: StatusId,
+    pub what: Affliction,
     /// The chance in percent (1 to 100) that a hit causes it: one draw of the gameplay stream,
     /// made only when it is below 100.
     pub chance: u8,
-    /// How many degrees it causes.
-    pub severity: u16,
 }
 
-/// An `on_hit` entry as written in content files, before its status is resolved.
+/// What an `on_hit` entry causes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Affliction {
+    /// So many degrees of a status.
+    Status { status: StatusId, severity: u16 },
+    /// Exposure to a disease: the target resists it with a check, or catches it.
+    Disease(DiseaseId),
+}
+
+/// An `on_hit` entry as written in content files, before its status or disease is resolved.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct OnHitSpec {
-    pub status: String,
+    pub status: Option<String>,
+    pub disease: Option<String>,
     pub chance: u8,
-    pub severity: u16,
+    pub severity: Option<u16>,
 }
 
 impl OnHitSpec {
-    /// Resolves the status by id and checks the chance and the severity against it.
+    /// Resolves its status by id (to the status and its `max`; `None`: unknown, or one only a
+    /// disease causes) or its disease, and checks the chance and the severity.
     pub(super) fn resolve(
         &self,
         status: impl Fn(&str) -> Option<(StatusId, u16)>,
+        disease: impl Fn(&str) -> Option<DiseaseId>,
     ) -> Result<OnHit, String> {
-        let (id, max) = status(&self.status)
-            .ok_or_else(|| format!("on_hit: unknown status `{}`", self.status))?;
+        let name = self.status.as_ref().or(self.disease.as_ref());
+        let name = name.map_or("", String::as_str);
         if !(1..=100).contains(&self.chance) {
             return Err(format!(
-                "on_hit `{}`: chance must be 1 to 100 (percent)",
-                self.status
+                "on_hit `{name}`: chance must be 1 to 100 (percent)"
             ));
         }
-        if !(1..=max).contains(&self.severity) {
-            return Err(format!(
-                "on_hit `{}`: severity must be 1 to {max} (the status's max)",
-                self.status
-            ));
-        }
+        let what = match (&self.status, &self.disease, self.severity) {
+            (Some(id), None, Some(severity)) => {
+                let (found, max) =
+                    status(id).ok_or_else(|| format!("on_hit: unknown status `{id}`"))?;
+                if !(1..=max).contains(&severity) {
+                    return Err(format!(
+                        "on_hit `{id}`: severity must be 1 to {max} (the status's max)"
+                    ));
+                }
+                Affliction::Status {
+                    status: found,
+                    severity,
+                }
+            }
+            (Some(id), None, None) => {
+                return Err(format!("on_hit `{id}`: a status needs a `severity`"));
+            }
+            (None, Some(id), None) => Affliction::Disease(
+                disease(id).ok_or_else(|| format!("on_hit: unknown disease `{id}`"))?,
+            ),
+            (None, Some(id), Some(_)) => {
+                return Err(format!(
+                    "on_hit `{id}`: a disease has no `severity` (it is caught or resisted)"
+                ));
+            }
+            _ => {
+                return Err(
+                    "on_hit: name either a `status` (with a `severity`) or a `disease`".into(),
+                );
+            }
+        };
         Ok(OnHit {
-            status: id,
+            what,
             chance: self.chance,
-            severity: self.severity,
         })
     }
 }
@@ -459,28 +494,59 @@ mod tests {
     }
 
     #[test]
-    fn on_hit_entries_name_a_status_within_its_max() {
+    fn on_hit_entries_name_a_status_within_its_max_or_a_disease() {
         let known = |id: &str| (id == "poisoned").then_some((StatusId(1), 10));
-        let spec = |status: &str, chance, severity| OnHitSpec {
-            status: status.into(),
+        let disease = |id: &str| (id == "fever").then_some(DiseaseId(0));
+        let spec = |status: Option<&str>, disease: Option<&str>, chance, severity| OnHitSpec {
+            status: status.map(String::from),
+            disease: disease.map(String::from),
             chance,
             severity,
         };
         assert_eq!(
-            spec("poisoned", 10, 2).resolve(known),
+            spec(Some("poisoned"), None, 10, Some(2)).resolve(known, disease),
             Ok(OnHit {
-                status: StatusId(1),
+                what: Affliction::Status {
+                    status: StatusId(1),
+                    severity: 2
+                },
                 chance: 10,
-                severity: 2
+            })
+        );
+        assert_eq!(
+            spec(None, Some("fever"), 25, None).resolve(known, disease),
+            Ok(OnHit {
+                what: Affliction::Disease(DiseaseId(0)),
+                chance: 25,
             })
         );
         for (bad, why) in [
-            (spec("rotten", 10, 2), "unknown status `rotten`"),
-            (spec("poisoned", 0, 2), "chance must be 1 to 100"),
-            (spec("poisoned", 101, 2), "chance must be 1 to 100"),
-            (spec("poisoned", 10, 11), "severity must be 1 to 10"),
+            (
+                spec(Some("rotten"), None, 10, Some(2)),
+                "unknown status `rotten`",
+            ),
+            (
+                spec(Some("poisoned"), None, 0, Some(2)),
+                "chance must be 1 to 100",
+            ),
+            (
+                spec(Some("poisoned"), None, 101, Some(2)),
+                "chance must be 1 to 100",
+            ),
+            (
+                spec(Some("poisoned"), None, 10, Some(11)),
+                "severity must be 1 to 10",
+            ),
+            (spec(Some("poisoned"), None, 10, None), "needs a `severity`"),
+            (spec(None, Some("pox"), 10, None), "unknown disease `pox`"),
+            (spec(None, Some("fever"), 10, Some(1)), "has no `severity`"),
+            (spec(None, None, 10, None), "name either"),
+            (
+                spec(Some("poisoned"), Some("fever"), 10, Some(1)),
+                "name either",
+            ),
         ] {
-            let e = bad.resolve(known).unwrap_err();
+            let e = bad.resolve(known, disease).unwrap_err();
             assert!(e.contains(why), "{why}: {e}");
         }
     }

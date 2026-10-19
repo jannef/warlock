@@ -19,3 +19,6 @@ others trade one strength for one weakness, or for two.
 
 Halflings and gnomes are small, and carry three quarters of what the others do; dwarves are not
 slowed or hindered by a load until they strain under it. See [Burden](burden.md).
+
+Races need different amounts of food: elves least, halflings (second breakfast) most. See
+[Hunger](hunger.md).

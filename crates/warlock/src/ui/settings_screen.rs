@@ -1,5 +1,5 @@
 //! The settings screen: font size, reduced effects and its per-effect switches, blood, color
-//! palette (spec §4.7). Changes apply
+//! palette (spec §4.7), the clock, and the temperature unit (°C or °F, spec §6). Changes apply
 //! live, because the screen edits the [`Settings`] resource that rendering reads.
 
 use super::menu::{Nav, Panel, Press};
@@ -83,12 +83,13 @@ enum Row {
     Effect(Effect),
     Palette,
     Clock,
+    Temperature,
     Files,
     Reset,
     Back,
 }
 
-const ROWS: [Row; 17] = [
+const ROWS: [Row; 18] = [
     Row::FontSize,
     Row::ReducedEffects,
     Row::Effect(Effect::GlyphAnimation),
@@ -103,13 +104,14 @@ const ROWS: [Row; 17] = [
     Row::Effect(Effect::Blood),
     Row::Palette,
     Row::Clock,
+    Row::Temperature,
     Row::Files,
     Row::Reset,
     Row::Back,
 ];
 
 /// Index of the first action row (Files); a gap is drawn before it.
-const FIRST_ACTION: usize = 14;
+const FIRST_ACTION: usize = 15;
 
 /// Selection state of the settings screen.
 #[derive(Debug, Default)]
@@ -142,6 +144,7 @@ impl SettingsScreen {
                 }
                 Row::Palette => settings.palette = settings.palette.cycle(step < 0),
                 Row::Clock => settings.clock = settings.clock.toggle(),
+                Row::Temperature => settings.temperature = settings.temperature.toggled(),
                 Row::Files | Row::Reset | Row::Back => {}
             },
             Nav::Enter if !press.repeat => match row {
@@ -153,6 +156,7 @@ impl SettingsScreen {
                 }
                 Row::Palette => settings.palette = settings.palette.cycle(false),
                 Row::Clock => settings.clock = settings.clock.toggle(),
+                Row::Temperature => settings.temperature = settings.temperature.toggled(),
                 Row::Files => return ScreenAction::Open(ScreenName::Files),
                 Row::Reset => *settings = Settings::default(),
                 Row::Back => return ScreenAction::Close,
@@ -191,6 +195,10 @@ impl SettingsScreen {
                     settings.palette.label().to_string(),
                 ),
                 Row::Clock => ("Clock".to_string(), settings.clock.label().to_string()),
+                Row::Temperature => (
+                    "Temperature".to_string(),
+                    settings.temperature.label().to_string(),
+                ),
                 Row::Files => ("Where are my files?".to_string(), String::new()),
                 Row::Reset => ("Reset to defaults".to_string(), String::new()),
                 Row::Back => ("Back".to_string(), String::new()),
@@ -213,6 +221,7 @@ impl SettingsScreen {
             Row::Effect(e) => e.help(),
             Row::Palette => "Recolors everything on screen; game data is unchanged.",
             Row::Clock => "How the time of day is written: 14:32 or 2:32 PM.",
+            Row::Temperature => "The unit the status bar shows the temperature in.",
             Row::Files => "Where settings and saves are, and open the folder.",
             Row::Reset => "Restores these settings (not the key bindings).",
             Row::Back => "Settings are saved as you change them.",
@@ -234,7 +243,7 @@ impl SettingsScreen {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::settings::Palette;
+    use crate::settings::{Palette, TemperatureUnit};
 
     /// Whether the press closes the screen.
     fn press(screen: &mut SettingsScreen, settings: &mut Settings, nav: Nav) -> bool {
@@ -268,6 +277,13 @@ mod tests {
         press(&mut screen, &mut s, Nav::Down);
         press(&mut screen, &mut s, Nav::Right);
         assert_eq!(s.clock, crate::settings::Clock::H12);
+        // The temperature unit: °C by default, °F the other way.
+        press(&mut screen, &mut s, Nav::Down);
+        press(&mut screen, &mut s, Nav::Enter);
+        assert_eq!(s.temperature, TemperatureUnit::Fahrenheit);
+        press(&mut screen, &mut s, Nav::Left);
+        assert_eq!(s.temperature, TemperatureUnit::Celsius);
+        press(&mut screen, &mut s, Nav::Right);
         press(&mut screen, &mut s, Nav::Down);
         assert_eq!(
             screen.handle(&Press::nav(Nav::Enter), &mut s),

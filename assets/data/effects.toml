@@ -119,3 +119,37 @@ branches = 0.08
 light = { color = [520, 620, 1000], radius = 5 }
 darken = { amount = 0.7, seconds = 0.45 }
 shake = { pixels = 3, radius = 5, seconds = 0.22 }
+
+# A frost burst (spec §5 "Ice"): a quiet, cold flash of rime over the cells it reaches, which
+# freezes the water there (the dev action `freeze:X,Y,R` shows it with its own radius; frost
+# traps and spells will). No shake and no darkening: a breath of cold light and a few crystals.
+[[effect]]
+id = "frost_burst"
+shape = "burst"
+radius = 2
+speed = 18
+grow = 0.15
+impact = 0.15
+linger = 0.6
+flicker = 0.08
+glyphs = "✳*·"
+fill = 0.3
+projectile = "*"
+colors = ["#ffffff", "#e4f2ff", "#b0d4f4", "#78a4d8", "#46689e", "#1c2c48"]
+glow = 0.5
+light = { color = [300, 420, 640], radius = 5 }
+
+# Frost crystals drifting down as it fades.
+[[effect.particles]]
+on = "linger"
+glyphs = "·*'"
+colors = ["#f0f8ff", "#a8d0f4", "#5a80b8"]
+count = 1
+life = 0.8
+velocity = [0.0, 0.3]
+spread = [0.8, 0.4]
+gravity = 0.3
+area = [0.4, 0.4]
+scale = 0.6
+fade = 0.7
+glow = 0.3

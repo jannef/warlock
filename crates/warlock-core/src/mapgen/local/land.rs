@@ -3,6 +3,7 @@
 
 use super::kit::Kit;
 use crate::content::{Content, CreatureSpawn, Flow, LightId, TerrainId};
+use crate::door::Lock;
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use crate::magic::LootGrade;
@@ -37,6 +38,8 @@ pub(super) struct Land<'a> {
     pub objects: BTreeMap<Pos, Vec<Stack>>,
     /// Where ruins stamped loot to roll, and the least it may be.
     pub loot: Vec<(Pos, LootGrade)>,
+    /// Locks on doors stamped from ruins.
+    pub locks: BTreeMap<Pos, Lock>,
     pub creatures: Vec<CreatureSpawn>,
 }
 
@@ -52,6 +55,7 @@ impl<'a> Land<'a> {
             lights: BTreeMap::new(),
             objects: BTreeMap::new(),
             loot: Vec::new(),
+            locks: BTreeMap::new(),
             creatures: Vec::new(),
         }
     }

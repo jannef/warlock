@@ -9,15 +9,17 @@ At the usual pace, a hit point comes back every so often, faster the tougher you
 
 {{#include generated/regeneration.md}}
 
-Resting, status effects, and later other things change the pace:
+Resting, status effects, starving (see [Hunger](hunger.md)), and later other things change the
+pace:
 
 {{#include generated/healing.md}}
 
-When several status effects slow your healing, the slowest counts. Resting makes up for some of
-it: resting while poisoned heals at the usual pace. While you bleed, nothing heals you, rest or
-not. In a sanctuary (a [special room](special-rooms.md)) wounds heal three times as fast, on top
-of all that, yours and anyone's, and [magic items](magic-items.md) that speed healing ("hit points
-come back 50% faster") add on top again.
+When several status effects slow your healing, the slowest counts; a disease that slows it more
+than being Diseased does counts too (see [Diseases](diseases.md)). Resting makes up for some of
+it: resting while poisoned heals at the usual pace. While you bleed or starve, nothing heals you,
+rest or not. In a sanctuary (a [special room](special-rooms.md)) wounds heal three times as fast,
+on top of all that, yours and anyone's, and [magic items](magic-items.md) that speed healing
+("hit points come back 50% faster") add on top again.
 
 ## The fine print
 

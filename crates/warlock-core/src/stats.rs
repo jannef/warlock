@@ -4,12 +4,15 @@
 //!
 //! Every actor has a **score** in each stat, [`AVERAGE`] (10) unless its creature type (or, for
 //! the player, the scenario) says otherwise, and a **potential**: the natural ceiling the score
-//! could grow towards, ADOM-like. Nothing raises a score yet.
+//! could grow towards, ADOM-like. Only eating a corpse raises a score yet ([`Stats::raise`], up
+//! to the potential; spec §8 "Hunger"), and status effects and hunger lower the scores the rules
+//! use for a while ([`Stats::adjusted_by`]: strong poison, Weak).
 //!
 //! The **modifier** of a score follows D&D 3.5: `floor((score − 10) / 2)` ([`modifier`]). It is
 //! for the rules only. The player sees their own scores
 //! ([`PerceptionView::own_scores`](crate::perception::PerceptionView::own_scores)) and nothing
-//! else: never a modifier, never a potential, never a creature's stats. No rule uses stats yet.
+//! else: never a modifier, never a potential, never a creature's stats. Combat and burden use
+//! them (spec §8 "Combat", "Burden").
 //!
 //! Adding a stat is one entry in the `stats!` list below; saves then need a new format version.
 
@@ -304,6 +307,16 @@ impl Stats {
         modifier(i32::from(self.score(stat)))
     }
 
+    /// Raises the score in `stat` by 1 if it is below its potential (spec §8 "Hunger": a corpse
+    /// eaten may do it). Returns whether it rose.
+    pub fn raise(&mut self, stat: Stat) -> bool {
+        let rises = self.score[stat] < self.potential[stat];
+        if rises {
+            self.score[stat] += 1;
+        }
+        rises
+    }
+
     /// These stats with every score adjusted by `by` (kept within [`SCORES`]; a potential below
     /// its score is raised to it): the scores the rules read while a status effect lowers some
     /// (spec §8 "Status effects").
@@ -316,9 +329,118 @@ impl Stats {
     }
 }
 
+fn is_zero(n: &u32) -> bool {
+    *n == 0
+}
+
+/// **Stat damage** (spec §8 "Stats"): points taken off an actor's scores for a while, by a
+/// disease's failed checks (spec §8 "Diseases"). Every rule reads the scores less it
+/// ([`crate::world::Actor::effective_stats`]): Toughness damage lowers the most hit points, as
+/// in D&D 3.5. It never takes a score below 1 ([`StatDamage::take`] says when it would have:
+/// a disease that kills, kills then). Once no disease shows, a point of each damaged stat mends
+/// every day (`mend` banks the seconds toward it).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct StatDamage {
+    /// Points off each score.
+    points: PerStat<u8>,
+    /// Seconds toward the next mending, while it mends; always below a day.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub mend: u32,
+}
+
+impl<T: Copy + Default> Default for PerStat<T> {
+    fn default() -> Self {
+        Self::splat(T::default())
+    }
+}
+
+impl StatDamage {
+    /// Whether there is none (and nothing toward mending).
+    pub fn is_none(&self) -> bool {
+        self.mend == 0 && !self.is_damaged()
+    }
+
+    /// Whether any score is damaged.
+    pub fn is_damaged(&self) -> bool {
+        self.points.iter().any(|(_, p)| p > 0)
+    }
+
+    /// The points off `stat`.
+    pub fn get(&self, stat: Stat) -> u8 {
+        self.points[stat]
+    }
+
+    /// What it does to each score: its points, taken off.
+    pub fn by(&self) -> PerStat<i32> {
+        let mut by = PerStat::splat(0);
+        for (stat, points) in self.points.iter() {
+            by[stat] = -i32::from(points);
+        }
+        by
+    }
+
+    /// `points` more off `stat`, whose score is `score`, but never so many that it would be
+    /// below 1. Returns whether it would have been: the damage reached the score.
+    pub fn take(&mut self, stat: Stat, points: i32, score: u8) -> bool {
+        let total = i32::from(self.points[stat]) + points.max(0);
+        let most = i32::from(score) - 1;
+        self.points[stat] = total.clamp(0, most.max(0)) as u8;
+        total > most
+    }
+
+    /// A point of every damaged score mends.
+    pub fn mend_point(&mut self) {
+        for stat in Stat::ALL {
+            self.points[stat] = self.points[stat].saturating_sub(1);
+        }
+    }
+
+    /// Whether it makes sense for an actor with `stats`: no score damaged to below 1, and less
+    /// than a day toward mending.
+    pub fn is_valid_for(&self, stats: &Stats) -> bool {
+        u64::from(self.mend) < crate::time::DAY
+            && (self.points.iter()).all(|(stat, p)| p < stats.score(stat).max(1))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn stat_damage_never_takes_a_score_below_one_and_mends_a_point_each() {
+        let mut damage = StatDamage::default();
+        assert!(damage.is_none() && !damage.is_damaged());
+        assert!(!damage.take(Stat::Toughness, 3, 10));
+        assert!(!damage.take(Stat::Dexterity, 2, 10));
+        assert_eq!(damage.get(Stat::Toughness), 3);
+        assert_eq!(damage.by()[Stat::Toughness], -3);
+        let stats = Stats::default();
+        assert_eq!(stats.adjusted_by(&damage.by()).score(Stat::Toughness), 7);
+        // To 9 off a 10: 1 left. One more would leave none: it says so, and leaves 1.
+        assert!(!damage.take(Stat::Toughness, 6, 10));
+        assert!(damage.take(Stat::Toughness, 1, 10));
+        assert_eq!(damage.get(Stat::Toughness), 9);
+        assert!(damage.take(Stat::Toughness, 4, 10));
+        assert!(damage.is_valid_for(&stats));
+        damage.mend_point();
+        assert_eq!(
+            (damage.get(Stat::Toughness), damage.get(Stat::Dexterity)),
+            (8, 1)
+        );
+        damage.mend_point();
+        damage.mend_point();
+        assert!(damage.is_damaged() && damage.get(Stat::Dexterity) == 0);
+        for _ in 0..6 {
+            damage.mend_point();
+        }
+        assert!(damage.is_none());
+        // Damage a weaker score could not carry is refused in a save.
+        let mut bad = StatDamage::default();
+        bad.take(Stat::Strength, 5, 20);
+        let weak = Stats::new(PerStat::splat(5), PerStat::splat(5));
+        assert!(!bad.is_valid_for(&weak) && bad.is_valid_for(&stats));
+    }
 
     #[test]
     fn the_six_stats_in_order() {

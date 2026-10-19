@@ -3,6 +3,8 @@
 Some harm lasts longer than a blow. A deep wound keeps bleeding, and a bite can leave poison
 behind. These **status effects** cost hit points as time passes, slow your
 [healing](healing.md), sometimes weaken you, and wear off on their own. They can kill.
+**Diseased** is a status effect too, shown while any [disease](diseases.md) has broken out; it
+lasts as long as the diseases do.
 
 You always know what ails you: the [status bar](controls.md#the-screen) names it right after your
 hit points (`HP 12/17 · Bleeding · Poisoned`), the [character screen](character.md) lists it, and
@@ -42,7 +44,8 @@ bleeds to death."
 ## Poisoned
 
 Some creatures' attacks carry poison: now and then a giant rat's filthy bite leaves you sick.
-"You feel sick."
+"You feel sick." So does bad food: a rotten corpse that stays down, and the flesh of some
+creatures (see [Food and corpses](food.md)).
 
 Poison works slowly: a hit point every couple of minutes, faster the stronger it is, and your hit
 points come back only half as fast. **Strong poison** (a few doses at once) also makes you

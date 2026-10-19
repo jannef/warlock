@@ -14,8 +14,8 @@
 //! Menus, character creation ([`chargen_screen`]), settings, controls, the `?` help, the
 //! inventory, choosing what to pick up or drop ([`object_screen`]), the equipment screen and its
 //! choice of what goes in a slot ([`equipment_screen`]), the character screen
-//! ([`character_screen`]), the weapon skills screen ([`weapon_skills_screen`]), and the death
-//! screen ([`death_screen`]) are screens on one stack
+//! ([`character_screen`]), the weapon skills screen ([`weapon_skills_screen`]), the dialogue
+//! screen ([`dialogue_screen`]), and the death screen ([`death_screen`]) are screens on one stack
 //! ([`screens`]): opened by [`Screens::open`], fed key presses by `input::route_keys`, and drawn
 //! by [`draw`], the one system that writes the UI console.
 
@@ -27,6 +27,7 @@ mod controls_screen;
 mod death_screen;
 mod describe_screen;
 mod dev;
+mod dialogue_screen;
 mod effects;
 mod equipment_screen;
 mod files_screen;
@@ -59,7 +60,7 @@ use crate::render::anim::{AnimTable, TerrainAnim};
 use crate::render::console::{Cell, Console};
 use crate::render::grid::MapGrid;
 use crate::render::{ConsoleLayout, Effects, VisualTime, lighting, shadows};
-use crate::settings::{Clock, Settings};
+use crate::settings::{Clock, Settings, TemperatureUnit};
 use bevy::prelude::*;
 use missiles::Missiles;
 use motion::Motion;
@@ -69,6 +70,7 @@ use warlock_core::World;
 use warlock_core::burden::Burden;
 use warlock_core::color::Rgb;
 use warlock_core::content::{MoonDef, ObjectId};
+use warlock_core::hunger::Hunger;
 use warlock_core::light::MoonPhase;
 use warlock_core::perception::{CellView, PerceptionView};
 use warlock_core::time::GameTime;
@@ -95,6 +97,12 @@ fn rarity_color(rarity: warlock_core::content::Rarity, normal: Rgb) -> Rgb {
         warlock_core::content::Rarity::Rare => RARE,
     }
 }
+/// The status bar's temperature below freezing: a cool hint (the number says it all).
+const COLD: Rgb = Rgb::new(0xa8, 0xc8, 0xe8);
+/// The status bar's temperature from [`HOT_TENTHS`] up: a warm hint.
+const HOT: Rgb = Rgb::new(0xe8, 0xb8, 0x94);
+/// Hot enough for the warm hint: 30 °C, in tenths.
+const HOT_TENTHS: i32 = 300;
 
 pub struct UiPlugin;
 
@@ -136,7 +144,8 @@ impl Plugin for UiPlugin {
                         .chain()
                         .after(SimSet)
                         .run_if(resource_exists::<Game>),
-                    (screens::refresh, screens::on_death)
+                    (screens::refresh, screens::converse, screens::on_death)
+                        .chain()
                         .after(SimSet)
                         .before(draw)
                         .run_if(resource_exists::<Game>),
@@ -178,7 +187,6 @@ fn draw(
     }
     console.clear();
     if let Some(game) = &game {
-        let blood = settings.effects.blood;
         draw_game(
             &mut console,
             game,
@@ -186,15 +194,14 @@ fn draw(
             &grid,
             *overlays,
             &bindings,
-            blood,
-            settings.clock,
+            &settings,
         );
     }
     stack.draw(&mut console, &settings, &bindings);
 }
 
-/// The gameplay UI: message line (or the current prompt), status bar, dev indicator, and the
-/// look cursor.
+/// The gameplay UI: message line (or the current prompt), status bar (the time on the
+/// settings' clock, the temperature in their unit), dev indicator, and the look cursor.
 fn draw_game(
     console: &mut Console,
     game: &Game,
@@ -202,12 +209,17 @@ fn draw_game(
     grid: &MapGrid,
     overlays: DevOverlays,
     bindings: &Bindings,
-    blood: bool,
-    clock: Clock,
+    settings: &Settings,
 ) {
     let rows = console.rows() as i32;
-    draw_messages(console, game, mode, bindings, blood);
-    draw_status(console, game, rows - 1, clock);
+    draw_messages(console, game, mode, bindings, settings.effects.blood);
+    draw_status(
+        console,
+        game,
+        rows - 1,
+        settings.clock,
+        settings.temperature,
+    );
     dev::draw_indicator(console, overlays);
     let cursor = match mode {
         InputMode::Look(p) => Some(p),
@@ -371,7 +383,7 @@ fn draw_map(
             let stain = view.blood(p).filter(|_| show_blood);
             let glyph = |t| {
                 let def = content.terrain(t);
-                let (ch, fg) = top.map_or((def.glyph, def.fg), |o| (o.glyph, o.fg));
+                let (ch, fg) = top.map_or((def.glyph_at(p), def.fg), |o| (o.glyph, o.fg));
                 let (fg, bg) = match stain {
                     Some(stain) => {
                         let wall = !def.transparent;
@@ -447,6 +459,7 @@ fn draw_messages(
     if let InputMode::Direction(command) = mode {
         let prompt = match command {
             crate::input::KeyCommand::UseTool => "Dig in which direction? (Esc to cancel)",
+            crate::input::KeyCommand::Chat => "Talk in which direction? (Esc to cancel)",
             _ => "In which direction? (Esc to cancel)",
         };
         console.print(1, 0, prompt, ACCENT);
@@ -510,7 +523,7 @@ fn draw_messages(
 /// The rest prompt; its letters are [`crate::input::REST_CHOICES`].
 const REST_PROMPT: &str = "Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to cancel)";
 
-fn draw_status(console: &mut Console, game: &Game, y: i32, clock: Clock) {
+fn draw_status(console: &mut Console, game: &Game, y: i32, clock: Clock, unit: TemperatureUnit) {
     let cols = console.cols() as i32;
     console.fill(
         0,
@@ -523,7 +536,7 @@ fn draw_status(console: &mut Console, game: &Game, y: i32, clock: Clock) {
             bg: PANEL_BG,
         },
     );
-    let segments = status_segments(&game.world, clock);
+    let segments = status_segments(&game.world, clock, unit);
     // The controls hint matters most to new players, so it keeps its place unless the window is
     // very narrow; status segments give way around it.
     let hint = "? controls";
@@ -531,14 +544,28 @@ fn draw_status(console: &mut Console, game: &Game, y: i32, clock: Clock) {
     let show_hint = cols >= 50;
     let reserved = if show_hint { hint_w + 3 } else { 0 };
     let width = (cols - 2 - reserved).max(0) as usize;
-    console.print(1, y, &fit_segments(&segments, width), TEXT);
+    let line = fit_segments(&segments, width);
+    console.print(1, y, &line, TEXT);
+    // A subtle hint of cold or heat on the temperature, when it is shown: the number says it.
+    let temperature = game.world.perception().temperature();
+    let tint = match temperature.tenths() {
+        t if t < 0 => Some(COLD),
+        t if t >= HOT_TENTHS => Some(HOT),
+        _ => None,
+    };
+    let text = unit.show(temperature);
+    if let (Some(tint), Some(at)) = (tint, line.find(&text)) {
+        let x = line[..at].chars().count() as i32;
+        console.print(1 + x, y, &text, tint);
+    }
     if show_hint {
         console.print(cols - hint_w - 1, y, hint, TEXT_DIM);
     }
 }
 
-/// The status bar's segments for `world`, in display order.
-fn status_segments(world: &World, clock: Clock) -> Vec<Segment> {
+/// The status bar's segments for `world`, in display order, the time on `clock` and the
+/// temperature in `unit`.
+fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Segment> {
     let view = world.perception();
     let pos = world.player_pos();
     let time = world.time();
@@ -555,12 +582,15 @@ fn status_segments(world: &World, clock: Clock) -> Vec<Segment> {
     // where the player knows it, and there it matters more than the date: it changes the light
     // and how far one sees. Hit points matter most after the level: they outlast the time, and
     // so do the status effects the player suffers (by name, the most important first: the last
-    // gives way first) and the burden (shown when there is one), which slows everything the
-    // player does. The character level (`Lv 3`) comes after them and goes before them, but
-    // after the time.
+    // gives way first), hunger (shown unless the player is Not hungry), and the burden (shown
+    // when there is one), which slows everything the player does; hunger outlasts the burden. The
+    // character level (`Lv 3`) comes after them and goes before them, but after the time. The
+    // temperature where the player is (always, underground too) sits after the weather; it
+    // outlasts the turn, the position, the seed, and the moon, and gives way before the date.
     let calendar = content.calendar();
     let (hp, max_hp) = view.own_hp();
     let burden = view.own_load().burden();
+    let hunger = view.own_hunger().filter(|h| *h != Hunger::NotHungry);
     let effects = (view.own_effects()).map(|s| Segment::new(1, content.status(s).name.clone()));
     let stance = view.own_stance();
     let head = [
@@ -568,6 +598,7 @@ fn status_segments(world: &World, clock: Clock) -> Vec<Segment> {
         Segment::new(1, format!("HP {hp}/{max_hp}")),
     ];
     let rest = [
+        hunger.map(|h| Segment::new(1, h.name())),
         (burden != Burden::Unburdened).then(|| Segment::new(1, burden.name())),
         Some(Segment::new(
             1,
@@ -580,6 +611,7 @@ fn status_segments(world: &World, clock: Clock) -> Vec<Segment> {
         moon_status(content.moons(), time)
             .map(|(text, glyphs)| Segment::new(5, text).or_short(glyphs)),
         view.weather().map(|w| Segment::new(2, w.name())),
+        Some(Segment::new(4, unit.show(view.temperature()))),
         Some(Segment::new(6, format!("Turn {}", world.turn()))),
         Some(Segment::new(10, format!("{},{}", pos.x, pos.y))),
         Some(Segment::new(7, format!("Light {light}"))),
@@ -742,7 +774,7 @@ mod tests {
     fn the_status_bar_shows_the_burden_after_the_hit_points_and_keeps_it_late() {
         let mut world = hoard();
         let texts = |w: &World| -> Vec<String> {
-            status_segments(w, Clock::H24)
+            status_segments(w, Clock::H24, TemperatureUnit::Celsius)
                 .into_iter()
                 .map(|s| s.text)
                 .collect()
@@ -752,7 +784,7 @@ mod tests {
             "unburdened: nothing"
         );
         world.apply(&Action::PickUp(Letters::default()));
-        let segments = status_segments(&world, Clock::H24);
+        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
         assert_eq!(segments[1].text, "HP 10/10");
         assert_eq!(segments[2].text, "Burdened", "right after the hit points");
         // Narrow: the time gives way first, then the burden, before the hit points.
@@ -766,11 +798,73 @@ mod tests {
     }
 
     #[test]
+    fn the_status_bar_shows_hunger_unless_not_hungry_and_keeps_it_later_than_the_burden() {
+        let world_starting_at = |nutrition: i32| {
+            let mut files = ContentFiles::builtin();
+            let hunger = include_str!("../../../../assets/data/hunger.toml")
+                .replace("start = 3600", &format!("start = {nutrition}"));
+            files.insert("data/hunger.toml", &hunger);
+            files.insert(
+                "levels/hoard.toml",
+                "name = \"Hoard\"\nmap = '''\n#####\n#@..#\n#####\n'''\n[legend]\n\
+                 \"@\" = { terrain = \"floor\", spawn = \"player\", \
+                 objects = [\"chain_mail\", \"chain_mail\"] }\n",
+            );
+            files.insert(
+                "scenarios/hoard.toml",
+                "name = \"Hoard\"\nstart_level = \"hoard\"\n",
+            );
+            let content = Arc::new(Content::load(&files).expect("valid"));
+            World::new(content, "hoard", None).expect("world")
+        };
+        let texts = |w: &World| -> Vec<String> {
+            status_segments(w, Clock::H24, TemperatureUnit::Celsius)
+                .into_iter()
+                .map(|s| s.text)
+                .collect()
+        };
+        assert!(
+            !texts(&world_starting_at(3600))
+                .iter()
+                .any(|t| t.contains("ungry")),
+            "not hungry: nothing"
+        );
+        for (nutrition, shown) in [
+            (6000, "Bloated"),
+            (5000, "Satiated"),
+            (1000, "Hungry"),
+            (500, "Weak"),
+            (100, "Fainting"),
+        ] {
+            assert_eq!(
+                texts(&world_starting_at(nutrition))[2],
+                shown,
+                "{nutrition}"
+            );
+        }
+        let mut world = world_starting_at(1000);
+        world.apply(&Action::PickUp(Letters::default()));
+        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
+        assert_eq!(
+            texts(&world)[..4],
+            ["Hoard", "HP 10/10", "Hungry", "Burdened"]
+        );
+        // Narrow: the time gives way first, then the burden, then hunger, before the hit points.
+        let line = "Hoard  ·  HP 10/10  ·  Hungry  ·  Burdened";
+        assert_eq!(fit_segments(&segments, line.chars().count()), line);
+        assert_eq!(
+            fit_segments(&segments, line.chars().count() - 1),
+            "Hoard  ·  HP 10/10  ·  Hungry"
+        );
+        assert_eq!(fit_segments(&segments, 25), "Hoard  ·  HP 10/10");
+    }
+
+    #[test]
     fn the_status_bar_shows_status_effects_after_the_hit_points_most_important_first() {
         let mut world = hoard();
         world.apply(&Action::Afflict("poisoned".into()));
         world.apply(&Action::Afflict("bleeding".into()));
-        let segments = status_segments(&world, Clock::H24);
+        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
         let texts: Vec<&str> = segments.iter().map(|s| s.text.as_str()).collect();
         assert_eq!(texts[..4], ["Hoard", "HP 10/10", "Bleeding", "Poisoned"]);
         // They give way late, the least important first, but before the hit points.
@@ -783,17 +877,41 @@ mod tests {
     }
 
     #[test]
+    fn the_status_bar_shows_diseased_once_a_disease_shows_never_which() {
+        let mut world = hoard();
+        world.apply(&Action::Infect("the_shakes".into()));
+        let texts = |w: &World| -> Vec<String> {
+            status_segments(w, Clock::H24, TemperatureUnit::Celsius)
+                .into_iter()
+                .map(|s| s.text)
+                .collect()
+        };
+        assert!(
+            !texts(&world).iter().any(|t| t.contains("isease")),
+            "incubating"
+        );
+        // The shakes show within a day, and are known a day later: still just "Diseased".
+        for _ in 0..2 {
+            world.apply(&Action::Rest(warlock_core::Rest::For(
+                warlock_core::time::Duration::hours(24),
+            )));
+            assert_eq!(texts(&world)[..3], ["Hoard", "HP 10/10", "Diseased"]);
+        }
+        assert!(!texts(&world).iter().any(|t| t.contains("shakes")));
+    }
+
+    #[test]
     fn the_status_bar_names_a_stance_that_is_not_neutral() {
         let mut world = hoard();
         let texts = |w: &World| -> Vec<String> {
-            status_segments(w, Clock::H24)
+            status_segments(w, Clock::H24, TemperatureUnit::Celsius)
                 .into_iter()
                 .map(|s| s.text)
                 .collect()
         };
         assert!(!texts(&world).iter().any(|t| t.contains("Neutral")));
         world.apply(&Action::SetStance(CombatStance::Defensive));
-        let segments = status_segments(&world, Clock::H24);
+        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
         let at = |t: &str| segments.iter().position(|s| s.text == t);
         assert_eq!(
             at("Defensive"),
@@ -882,7 +1000,7 @@ mod tests {
     fn the_status_bar_shows_the_weather_only_under_the_open_sky() {
         let content = Arc::new(Content::builtin().expect("content"));
         let texts = |world: &World| -> Vec<String> {
-            status_segments(world, Clock::H24)
+            status_segments(world, Clock::H24, TemperatureUnit::Celsius)
                 .into_iter()
                 .map(|s| s.text)
                 .collect()
@@ -895,7 +1013,7 @@ mod tests {
         world.apply(&Action::SetWeather(
             warlock_core::weather::Weather::HeavyRain,
         ));
-        let segments = status_segments(&world, Clock::H24);
+        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
         let at = |text: &str| segments.iter().position(|s| s.text.contains(text));
         let (weather, moon, date) = (at("Heavy rain"), at("Waxing gibbous"), at("Darkening"));
         assert_eq!(weather, moon.map(|m| m + 1), "shown after the moon");
@@ -914,10 +1032,61 @@ mod tests {
     }
 
     #[test]
+    fn the_status_bar_always_shows_the_temperature_in_the_chosen_unit() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        // Underground too: the hub is 10 °C, after the moon (there is no weather there).
+        let hub = World::new(content.clone(), "showcase", None).expect("starts");
+        let segments = status_segments(&hub, Clock::H24, TemperatureUnit::Celsius);
+        let at = |segments: &[Segment], text: &str| segments.iter().position(|s| s.text == text);
+        let moon = segments.iter().position(|s| s.text.contains("gibbous"));
+        assert_eq!(at(&segments, "10 °C"), moon.map(|m| m + 1));
+        let fahrenheit = status_segments(&hub, Clock::H24, TemperatureUnit::Fahrenheit);
+        assert!(at(&fahrenheit, "50 °F").is_some());
+        // Outdoors, the weather's, right after the weather.
+        let yard = World::new(content, "courtyard", None).expect("starts");
+        let segments = status_segments(&yard, Clock::H24, TemperatureUnit::Celsius);
+        let shown = TemperatureUnit::Celsius.show(yard.perception().temperature());
+        let weather = segments.iter().position(|s| s.text == "Clear");
+        assert_eq!(at(&segments, &shown), weather.map(|w| w + 1));
+        // It outlasts the seed, the position, the turn, and the moon, and gives way before the
+        // date, the time, the hit points, and the level.
+        let priority = |text: &str| segments[at(&segments, text).expect(text)].priority;
+        let temperature = priority(&shown);
+        for later in ["Turn 0", "6,9", "Seed 1"] {
+            assert!(priority(later) > temperature, "{later}");
+        }
+        let moon = segments
+            .iter()
+            .find(|s| s.text.contains("gibbous"))
+            .expect("moon");
+        assert!(moon.priority > temperature);
+        let date = segments
+            .iter()
+            .find(|s| s.text.contains("Darkening"))
+            .expect("date");
+        assert!(date.priority < temperature);
+        assert!(priority("06:30") < temperature && priority("HP 19/19") < temperature);
+        // Narrow: the moon is gone before the temperature, the temperature before the date.
+        let full = fit_segments(&segments, 200);
+        let without = |gone: &str| {
+            let width = full.chars().count() - 1;
+            (5..=width)
+                .rev()
+                .map(|w| fit_segments(&segments, w))
+                .find(|line| !line.contains(gone))
+                .expect("it drops at some width")
+        };
+        let moonless = without("gibbous");
+        assert!(moonless.contains(&shown), "{moonless}");
+        let cold = without(&shown);
+        assert!(cold.contains("Darkening"), "{cold}");
+    }
+
+    #[test]
     fn the_twelve_hour_clock_is_longer_but_the_status_bar_still_fits() {
         let content = Arc::new(Content::builtin().expect("content"));
         let world = World::new(content, "showcase", None).expect("starts");
-        let segments = status_segments(&world, Clock::H12);
+        let segments = status_segments(&world, Clock::H12, TemperatureUnit::Celsius);
         let time = (segments.iter())
             .map(|s| &s.text)
             .find(|t| t.ends_with(" AM") || t.ends_with(" PM"))
@@ -936,7 +1105,7 @@ mod tests {
     fn the_status_bar_shows_hit_points_and_keeps_them_late() {
         let content = Arc::new(Content::builtin().expect("content"));
         let world = World::new(content, "showcase", None).expect("starts");
-        let segments = status_segments(&world, Clock::H24);
+        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
         assert_eq!(segments[1].text, "HP 17/17", "right after the level");
         // Narrow: everything but the level gives way first, the time included.
         let line = fit_segments(&segments, 25);

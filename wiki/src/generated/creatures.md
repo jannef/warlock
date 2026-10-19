@@ -9,3 +9,6 @@
 | Kobold archer | `k` | Kobolds | hostile | shoots from afar | yes | no | sometimes |
 | Kobold shaman | `k` | Kobolds | hostile | casts spells from afar | yes | no | often |
 | Cave beetle | `a` | Wildlife | neutral | never | no | no | - |
+| Gardener | `@` | Peaceful folk | neutral | never | no | no | - |
+| Wandering bard | `@` | Peaceful folk | neutral | never | no | no | - |
+| Old hermit | `@` | Peaceful folk | neutral | never | no | no | - |

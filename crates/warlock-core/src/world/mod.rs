@@ -66,15 +66,27 @@
 //! criticals make their targets bleed, a giant rat's bite may poison; effects cost hit points
 //! and ease as the clock moves, slow healing, and can kill. Hit points come back with game
 //! time, twice as fast while the player rests.
+//! Hunger (spec §8 "Hunger", `hunger.rs`, `eat.rs`): game time burns the player's nutrition, and
+//! the state it leaves them in takes effect (Weak, Fainting, Starving, Bloated); meals pass turns
+//! like a rest and feed at their end. Creatures that die leave corpses, which rot away.
+//! Temperature and ice (spec §5 "Temperature", "Ice"; `ice.rs`): water freezes in the cold and
+//! thaws in the warmth, brought up to the clock as it moves on the player's level (and on
+//! arrival), never ticking while nobody is there. Ice holds actors by their weight; one that
+//! breaks through plunges into the freezing water and climbs out onto the ice in a few turns.
 
 mod actor;
 mod ai;
 mod bleed;
 mod dig;
+mod disease;
+mod door;
+mod eat;
 mod equip;
 mod experience;
 mod fight;
 mod hash;
+mod hunger;
+mod ice;
 mod level;
 mod loot;
 mod path;
@@ -82,16 +94,22 @@ mod schedule;
 mod shoot;
 mod spell;
 mod status;
+mod talk;
 mod train;
 
 pub use actor::{Actor, ActorId, ActorKind, Mind, Patrol};
 pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
-pub use fight::Death;
+pub use eat::Rot;
+pub(crate) use eat::rot_at;
+pub use fight::{Cause, Death};
 pub(crate) use hash::fnv1a;
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
+pub use talk::{Conversation, Talk, TopicView};
 
-use crate::action::{Action, Breach, Event, Letters, MAX_REST, MissileEnd, Outcome, Rest, letter};
+use crate::action::{
+    Action, Breach, DiseaseNews, Event, Letters, MAX_REST, MissileEnd, Outcome, Rest, letter,
+};
 use crate::burden::{self, Burden, Load};
 use crate::character::{Character, CharacterSpec};
 use crate::content::{
@@ -99,6 +117,7 @@ use crate::content::{
     RoomEffectDef, StairsDir, Stance, TerrainId, local_area_id,
 };
 use crate::geom::{Dir, Pos};
+use crate::hunger::Satiation;
 use crate::light::{LightCache, Sky};
 use crate::mapgen::local::arrival;
 use crate::messages::MessageLog;
@@ -293,6 +312,9 @@ pub struct World {
     /// What the player's kills earned them during the current action (not saved): said after
     /// the attack's own messages.
     news: Vec<String>,
+    /// Lines muttered during the current turn (not saved): said when perception runs, if the
+    /// player heard them.
+    mutters: Vec<talk::Mutter>,
     /// Whether the player is resting ([`World::rest`]; not saved: a rest is one action): they
     /// heal faster.
     resting: bool,
@@ -323,6 +345,8 @@ enum Spent {
     Turn(i64),
     /// A rest until this moment (see [`World::rest`]).
     Rest(GameTime, Rest),
+    /// A meal (see [`World::dine`]).
+    Meal(eat::Dish),
     /// Digging into the wall at this cell (see [`World::dig`]).
     Dig(Pos),
     /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
@@ -419,7 +443,7 @@ impl World {
             energy: 0,
             heard: Vec::new(),
             mind: Mind::default(),
-            inventory: Vec::new(),
+            inventory: def.carry.clone(),
             equipment: Default::default(),
             stats,
             hp: 0,
@@ -427,8 +451,13 @@ impl World {
             regen: 0,
             skills,
             effects: Default::default(),
+            diseases: Default::default(),
+            damage: Default::default(),
             weapon_skills,
             faction_override: None,
+            npc: None,
+            talk: Talk::default(),
+            satiation: content.hunger().map(|h| Satiation::new(h.start)),
             stance: CombatStance::Neutral,
         };
         player.hp = player.max_hp(&content);
@@ -493,6 +522,18 @@ impl World {
                 actor.id
             )));
         }
+        // Diseased exactly while a disease shows; stat damage no score could carry is refused.
+        let diseased = |a: &Actor| content.disease_status().is_some_and(|s| a.effects.has(s));
+        if let Some(actor) = state.actors.values().find(|a| {
+            !a.diseases.is_valid_for(&content)
+                || diseased(a) != a.diseases.shows()
+                || !a.damage.is_valid_for(&a.stats)
+        }) {
+            return Err(WorldError::InconsistentState(format!(
+                "actor {} carries diseases or stat damage this content does not allow",
+                actor.id
+            )));
+        }
         Ok(Self::assemble(content, state))
     }
 
@@ -508,6 +549,7 @@ impl World {
             said: 0,
             fallen: Vec::new(),
             news: Vec::new(),
+            mutters: Vec::new(),
             resting: false,
         }
     }
@@ -656,6 +698,7 @@ impl World {
                 self.perceive(&mut events);
             }
             Spent::Rest(until, goal) => self.rest(until, goal, &mut events),
+            Spent::Meal(dish) => self.dine(dish, &mut events),
             Spent::Dig(at) => self.dig(at, &mut events),
             Spent::Skip(duration) => {
                 // Nobody acts or gains energy.
@@ -709,12 +752,14 @@ impl World {
     /// Passes turn after turn of a long action (a rest, digging) through the normal pipeline
     /// while `more` says there is more to do: the player does `act` (which returns what it
     /// costs), the others act, perception. It stops after a turn in which a creature came into
-    /// view (one not seen the turn before) or a message was logged that stops a rest, and when the
-    /// player dies. Turns that end before any creature could come into view
-    /// ([`World::out_of_view_for`]) and in which the weather the player sees did not change pass
-    /// without perception, which cannot change the outcome; only the last turn's events are
-    /// kept, and the player's status effects beginning and ending in the others (so they are
-    /// said).
+    /// view (one not seen the turn before; but for one who talks and fights no one,
+    /// [`World::disturbs_rest`]: the player sees who it is) or a message was logged that stops a
+    /// rest, and when the player dies. Turns that end before any creature that disturbs a rest
+    /// could come into view ([`World::out_of_view_for`]), in which the player heard nothing, in
+    /// which the weather the player sees did not change, and in which none of the player's
+    /// diseases showed or went badly (news that stops a rest) pass without perception, which
+    /// cannot change the outcome; only the last turn's events are kept, and the player's status
+    /// effects beginning and ending in the others, and their diseases' news (so they are said).
     fn keep_at(
         &mut self,
         events: &mut Vec<Event>,
@@ -722,7 +767,7 @@ impl World {
         mut act: impl FnMut(&mut Self, &mut Vec<Event>) -> i64,
     ) -> Ended {
         let said = self.said;
-        let mut in_view = self.creatures_in_view();
+        let mut in_view = self.watched_in_view();
         let mut came = None;
         let alive = |w: &Self| w.state.death.is_none();
         while more(self) && came.is_none() && self.said == said && alive(self) {
@@ -730,16 +775,22 @@ impl World {
             events.clear();
             let unseen_until = self.state.time + self.out_of_view_for();
             loop {
-                events.retain(|e| matches!(e, Event::Status { .. }));
+                events.retain(|e| matches!(e, Event::Status { .. } | Event::Disease { .. }));
                 let price = act(self, events);
                 self.run_turn(price, events);
                 let done = !more(self) || self.said != said || !alive(self);
-                if done || self.state.time > unseen_until || self.weather_turned() {
+                // Something heard may be news (or someone muttering): perception says. So does a
+                // disease showing or going badly (news that stops a rest).
+                let heard = !self.state.player().heard.is_empty();
+                let ill = events.iter().any(
+                    |e| matches!(e, Event::Disease { news, .. } if *news != DiseaseNews::Recovered),
+                );
+                if done || heard || ill || self.state.time > unseen_until || self.weather_turned() {
                     break;
                 }
             }
             self.perceive(events);
-            let now_in_view = self.creatures_in_view();
+            let now_in_view = self.watched_in_view();
             came = now_in_view.iter().find(|a| !in_view.contains(a)).copied();
             in_view = now_in_view;
         }
@@ -794,15 +845,25 @@ impl World {
             .collect()
     }
 
+    /// Creatures the player sees whose coming into view stops a rest ([`World::disturbs_rest`]).
+    fn watched_in_view(&self) -> Vec<ActorId> {
+        let mut seen = self.creatures_in_view();
+        seen.retain(|id| self.disturbs_rest(&self.state.actors[id]));
+        seen
+    }
+
     /// Phase 4: recomputes perception, updates memory, tells the player about a special room they
     /// are in for the first time, says what news they heard and how the weather changed, reports
     /// the attacks they perceived, and drops events they did not see.
     fn perceive(&mut self, events: &mut Vec<Event>) {
         let now = self.state.time;
+        // The ice of the moment (after a skip or on arrival), under the weather it had.
+        self.update_ice();
         if self.state.weather_override.is_some_and(|o| o.until <= now) {
             self.state.weather_override = None;
         }
         self.burn_out();
+        self.rot_away();
         let before = self.perception.weather();
         *self.perception = Perception::compute(&self.state, &self.content, &mut self.lights);
         let current = self.state.current_level.clone();
@@ -813,6 +874,7 @@ impl World {
             self.say(text);
         }
         self.hear();
+        self.say_mutters();
         if let (Some(from), Some(to)) = (before, self.perception.weather()) {
             self.weather_news(from, to);
         }
@@ -830,15 +892,16 @@ impl World {
     }
 
     /// Keeps the events the player perceived (dropping the rest) and returns the messages for
-    /// the attacks, deaths, and status effects among them, each with whether it stops a rest. A
-    /// creature's attack is said if the player saw the attacker or the target, or is the
-    /// target, and kept for presentation if they saw both (the player's own attacks were said,
-    /// and only seen ones recorded, when made); a death is said and kept with the attack that
-    /// caused it, if the player saw who died. The player's own death is always said, and
-    /// settles whether they saw what killed them. A death of a status effect is said if the
-    /// player sees where it happened ("The giant rat bleeds to death."). The player's own status
-    /// effects are said as they begin (stopping a rest) and end (not stopping one). A wall that
-    /// gave way is kept if the player sees its cell, and one blasted open is said ("The wall
+    /// the attacks, deaths, status effects, diseases, and walls giving way among them, each with
+    /// whether it stops a rest. A creature's attack is said if the player saw the attacker or
+    /// the target, or is the target, and kept for presentation if they saw both (the player's own
+    /// attacks were said, and only seen ones recorded, when made); a death is said and kept with
+    /// the attack that caused it, if the player saw who died. The player's own death is always
+    /// said, and settles whether they saw what killed them. A death of a status effect is said if
+    /// the player sees where it happened ("The giant rat bleeds to death."). The player's own
+    /// status effects are said as they begin (stopping a rest) and end (not stopping one); their
+    /// diseases as they show and worsen (stopping a rest) and leave (not stopping one). A wall
+    /// that gave way is kept if the player sees its cell, and one blasted open is said ("The wall
     /// collapses!"; digging says its own).
     fn perceive_events(&mut self, events: &mut Vec<Event>) -> Vec<(String, bool)> {
         use fight::{End, Words, attack_message, death_message};
@@ -911,7 +974,10 @@ impl World {
             Event::ActorMoved { actor, from, to } => {
                 actor == player || perception.sees_actors_at(from) || perception.sees_actors_at(to)
             }
-            Event::DoorOpened { pos } | Event::DoorClosed { pos } => perception.is_visible(pos),
+            Event::DoorOpened { pos }
+            | Event::DoorClosed { pos }
+            | Event::DoorKicked { pos }
+            | Event::DoorBroken { pos } => perception.is_visible(pos),
             Event::WallBroken { pos, cause } => {
                 let seen = perception.is_visible(pos);
                 if seen && cause == Breach::Blast {
@@ -919,7 +985,7 @@ impl World {
                 }
                 seen
             }
-            Event::LevelChanged { .. } => true,
+            Event::LevelChanged { .. } | Event::Talked(_) => true,
             Event::Missile { ref path, .. } => !path.is_empty(),
             Event::Spell { ref cells, .. } => !cells.is_empty(),
             Event::Attacked {
@@ -950,6 +1016,18 @@ impl World {
                 }
                 sees_attacker && sees_target
             }
+            Event::FellThroughIce { actor, at } => {
+                // The player's own fall was said as it happened.
+                if actor == player {
+                    return true;
+                }
+                let seen = perception.sees_actors_at(at);
+                if let Some(me) = self.actor_or_fallen(actor).filter(|_| seen) {
+                    let name = &content.creature(me.creature).name;
+                    reports.push((format!("The {name} falls through the ice!"), true));
+                }
+                seen
+            }
             Event::Status {
                 actor,
                 status,
@@ -959,6 +1037,22 @@ impl World {
                 let text = if began { &def.start } else { &def.end };
                 if let Some(text) = text.clone().filter(|_| actor == player) {
                     reports.push((text, began));
+                }
+                actor == player
+            }
+            Event::Disease {
+                actor,
+                disease,
+                news,
+            } => {
+                let def = content.disease(disease);
+                let (text, stops) = match news {
+                    DiseaseNews::Onset => (def.onset.as_str(), true),
+                    DiseaseNews::Worse(n) => (def.symptom(n), true),
+                    DiseaseNews::Recovered => (def.recovered.as_str(), false),
+                };
+                if actor == player {
+                    reports.push((text.to_string(), stops));
                 }
                 actor == player
             }
@@ -1000,7 +1094,9 @@ impl World {
                 seen
             }
         });
-        if let (Some(by), Some(death)) = (killer_seen, self.state.death.as_mut()) {
+        if let (Some(by), Some(death)) = (killer_seen, self.state.death.as_mut())
+            && death.cause.is_none()
+        {
             death.by = by;
         }
         match collapsed {
@@ -1012,7 +1108,8 @@ impl World {
     }
 
     /// A message for each sound the player perceives that is news ([`noise::news`]): a patrol
-    /// heard turn after turn is said once, not every turn. Messages stop a rest.
+    /// heard turn after turn is said once, not every turn. Messages stop a rest. A voice is said
+    /// with its words, if any ([`World::say_mutters`]).
     fn hear(&mut self) {
         let turn = self.state.turn;
         let news = noise::news(
@@ -1022,7 +1119,7 @@ impl World {
         );
         let viewer = self.player_pos();
         let mut said: Vec<String> = Vec::new();
-        for sound in &news {
+        for sound in news.iter().filter(|s| s.kind != noise::SoundKind::Voice) {
             let text = sound.message(viewer);
             if !said.contains(&text) {
                 self.say(text.clone());
@@ -1143,10 +1240,8 @@ impl World {
         let (done, kind) = match action {
             Action::Move(dir) => return self.player_moves(*dir, events),
             Action::Wait => (true, ActionKind::Wait),
-            Action::Open(dir) => (
-                self.open_door(here.step(*dir), events),
-                ActionKind::OpenDoor,
-            ),
+            Action::Open(dir) => return self.open_door(here.step(*dir), events),
+            Action::Kick(dir) => return self.kick(*dir, events),
             Action::Close(dir) => (
                 self.close_door(here.step(*dir), events),
                 ActionKind::CloseDoor,
@@ -1173,6 +1268,9 @@ impl World {
             Action::Fire(at) => return self.fire(*at, events),
             Action::Throw { item, at } => return self.throw(*item, *at, events),
             Action::Rest(goal) => return self.start_rest(*goal),
+            Action::Chat(dir) => return self.chat(*dir, events),
+            Action::Ask { dir, topic } => return self.ask(*dir, topic, events),
+            Action::Eat(meal) => return self.eat(*meal),
             Action::Dig(dir) => return self.start_dig(*dir),
             Action::SetVision(id) => return self.set_vision(id),
             Action::SetStance(stance) => return self.set_stance(*stance),
@@ -1194,13 +1292,48 @@ impl World {
                 return self.show_effect(effect, *at, *to, events);
             }
             Action::Identify(letters) => return self.identify_dev(*letters),
+            Action::Freeze { at, radius } => {
+                let froze = self.frost(*at, *radius, crate::ice::FROST);
+                self.say(format!(
+                    "Frost seizes the water around {},{} ({froze} cells, dev).",
+                    at.x, at.y
+                ));
+                self.frost_look(*at, *radius, events);
+                return Spent::NoTime;
+            }
+            Action::Thaw { at, radius } => {
+                self.say(format!(
+                    "Heat melts the ice around {},{} (dev).",
+                    at.x, at.y
+                ));
+                self.shock(*at, *radius, crate::ice::Shock::Heat, events);
+                return Spent::NoTime;
+            }
             Action::Afflict(id) => {
                 let Some(status) = self.content.status_id(id) else {
                     self.say(format!("There is no status `{id}`."));
                     return Spent::Nothing;
                 };
+                if self.content.disease_status() == Some(status) {
+                    self.say(format!("`{id}` comes of a disease: try `infect:DISEASE`."));
+                    return Spent::Nothing;
+                }
                 let player = self.state.player;
                 self.afflict(player, status, 1, None, events);
+                return Spent::NoTime;
+            }
+            Action::Infect(id) => {
+                let Some(disease) = self.content.disease_id(id) else {
+                    self.say(format!("There is no disease `{id}`."));
+                    return Spent::Nothing;
+                };
+                let player = self.state.player;
+                let name = self.content.disease(disease).name.clone();
+                if !self.infect(player, disease, None) {
+                    self.say(format!("You carry {name} already (dev)."));
+                    return Spent::Nothing;
+                }
+                self.say(format!("You catch {name} (dev)."));
                 return Spent::NoTime;
             }
         };
@@ -1359,10 +1492,15 @@ impl World {
         Spent::NoTime
     }
 
-    /// Changes terrain on the current level and invalidates light masks it may affect.
+    /// Changes terrain on the current level and invalidates light masks it may affect. A lock
+    /// stays only on a closed door.
     fn set_terrain(&mut self, p: Pos, terrain: TerrainId) {
+        let closed_door = self.content.terrain(terrain).is_closed_door();
         let level = self.state.current_mut();
         level.terrain.set(p, terrain);
+        if !closed_door {
+            level.locks.remove(&p);
+        }
         let level = self.state.current();
         self.lights.terrain_changed(level, &self.content, p);
     }
@@ -1383,41 +1521,47 @@ impl World {
         };
         let def = self.content.terrain(terrain);
         if def.is_closed_door() {
-            let opened = self.open_door(to, events);
-            return self.took(opened, ActionKind::OpenDoor);
+            return self.open_door(to, events);
         }
         if !def.walkable {
             let name = def.name.clone();
             self.say(format!("The {name} blocks your way."));
             return Spent::Nothing;
         }
+        // Someone there: the player attacks them if they are hostile (by their stance toward the
+        // player, which the player knows from what they are), else swaps places with them
+        // unless they will not make way. Only what the player sees of them is said.
+        let mut swap = None;
         if let Some(other) = self.state.actor_at(&level.id, to) {
-            // What the player knows of it: its name if they see it, else just that something is
-            // there; and its stance toward them (from its type), which decides between attacking
-            // and stopping.
             let target = other.id;
             let seen = self.perception.sees_actors_at(to);
-            let name = self.content.creature(other.creature).name.clone();
             let player = self.state.player;
             if self.stance(player, target) == Stance::Hostile {
                 let skill = self.state.player().melee_skill(&self.content);
                 self.player_attacks(target, seen, events);
-                return Spent::Turn(self.attack_price(player, ActionKind::Melee, skill));
+                // Priced before the exertion, which may burn enough to leave the player
+                // hungrier (no longer Bloated).
+                let price = self.attack_price(player, ActionKind::Melee, skill);
+                self.exert(ActionKind::Melee);
+                return Spent::Turn(price);
             }
-            let what = if seen {
-                format!("The {name}")
-            } else {
-                "Something".into()
-            };
-            self.say(format!("{what} is in the way."));
-            return Spent::Nothing;
+            if let Some(why) = self.refusal(target) {
+                self.refused(target, why, seen);
+                return Spent::Nothing;
+            }
+            swap = Some((target, seen));
         }
         if !self.can_move() {
             return Spent::Nothing;
         }
         let player = self.state.player;
         let fleeing = self.flees(player, to);
-        let step = self.step_price(player, self.content.terrain(terrain), fleeing);
+        // Ice there may give way (then it is a step into the water); climbing out onto it from
+        // the water takes longer.
+        let footing = self.tread(player, from, to);
+        let onto = self.state.current().terrain[to];
+        let step = self.step_price(player, self.content.terrain(onto), fleeing)
+            + self.tread_price(player, footing);
         let overworld = self.state.current().kind == LevelKind::Overworld;
         self.state.overworld_step = overworld.then_some(dir);
         if let Some(actor) = self.state.actors.get_mut(&player) {
@@ -1428,7 +1572,17 @@ impl World {
             from,
             to,
         });
+        self.after_tread(player, to, footing, events);
         self.make_step_noise(player, to, fleeing);
+        // Wading through a marsh may give a disease, by how long the step takes.
+        let speed = self.content.creature(self.state.player().creature).speed;
+        self.wade(
+            onto,
+            u64::try_from(step).unwrap_or(0) / u64::from(speed.max(1)),
+        );
+        if let Some((other, seen)) = swap {
+            self.swap_places(other, to, from, seen, events);
+        }
         // A journey on the overworld trains survival.
         if overworld && self.trains(Use::Travel) {
             self.train(Use::Travel);
@@ -1511,58 +1665,6 @@ impl World {
         events.push(Event::LevelChanged { from, to: id });
         self.say(format!("You explore the {what}."));
         true
-    }
-
-    fn open_door(&mut self, p: Pos, events: &mut Vec<Event>) -> bool {
-        let terrain = self.state.current().terrain.get(p).copied();
-        let def = terrain.map(|t| self.content.terrain(t));
-        match def {
-            Some(def) if def.is_closed_door() => {
-                let opened = def.opens_to.expect("closed doors have opens_to");
-                self.make_noise(self.state.player, Act::OpenDoor(p));
-                self.set_terrain(p, opened);
-                events.push(Event::DoorOpened { pos: p });
-                self.say("You open the door.");
-                true
-            }
-            Some(def) if def.is_open_door() => {
-                self.say("That door is already open.");
-                false
-            }
-            _ => {
-                self.say("There is nothing to open there.");
-                false
-            }
-        }
-    }
-
-    fn close_door(&mut self, p: Pos, events: &mut Vec<Event>) -> bool {
-        let terrain = self.state.current().terrain.get(p).copied();
-        let def = terrain.map(|t| self.content.terrain(t));
-        match def {
-            Some(def) if def.is_open_door() => {
-                let closed = def.closes_to.expect("open doors have closes_to");
-                if self.state.actor_at(&self.state.current_level, p).is_some()
-                    || !self.state.current().objects_at(p).is_empty()
-                {
-                    self.say("Something is in the way.");
-                    return false;
-                }
-                self.make_noise(self.state.player, Act::CloseDoor(p));
-                self.set_terrain(p, closed);
-                events.push(Event::DoorClosed { pos: p });
-                self.say("You close the door.");
-                true
-            }
-            Some(def) if def.is_closed_door() => {
-                self.say("That door is already closed.");
-                false
-            }
-            _ => {
-                self.say("There is nothing to close there.");
-                false
-            }
-        }
     }
 
     fn take_stairs(&mut self, dir: StairsDir, events: &mut Vec<Event>) -> bool {
@@ -1730,9 +1832,10 @@ fn level_template<'a>(
 /// carrying, wearing, and wielding what the level gives it.
 fn instantiate_level(state: &mut WorldState, content: &Content, template: &LevelTemplate) {
     let id = template.id.as_str();
-    state
-        .levels
-        .insert(id.to_string(), LevelState::from_template(template));
+    let level = LevelState::from_template(template, content, state.time);
+    state.levels.insert(id.to_string(), level);
+    // Under the open sky its water has frozen and thawed with the weather of the last weeks.
+    state.pre_roll_ice(content, id);
     for spawn in &template.creatures {
         let actor_id = ActorId(state.next_actor_id);
         state.next_actor_id += 1;
@@ -1758,8 +1861,13 @@ fn instantiate_level(state: &mut WorldState, content: &Content, template: &Level
             regen: 0,
             skills: def.skills.clone(),
             effects: Default::default(),
+            diseases: Default::default(),
+            damage: Default::default(),
             weapon_skills: def.weapon_skills.clone(),
             faction_override: spawn.faction,
+            npc: spawn.npc.clone(),
+            talk: Talk::default(),
+            satiation: None,
             stance: CombatStance::Neutral,
         };
         actor.hp = actor.max_hp(content);
@@ -1782,6 +1890,10 @@ mod cost_tests;
 #[cfg(test)]
 mod dig_tests;
 #[cfg(test)]
+mod disease_tests;
+#[cfg(test)]
+mod door_tests;
+#[cfg(test)]
 mod equip_tests;
 #[cfg(test)]
 mod experience_tests;
@@ -1789,6 +1901,10 @@ mod experience_tests;
 mod fight_tests;
 #[cfg(test)]
 mod hearing_tests;
+#[cfg(test)]
+mod hunger_tests;
+#[cfg(test)]
+mod ice_tests;
 #[cfg(test)]
 mod light_tests;
 #[cfg(test)]
@@ -1813,6 +1929,8 @@ mod stats_tests;
 mod status_tests;
 #[cfg(test)]
 mod sun_tests;
+#[cfg(test)]
+mod talk_tests;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

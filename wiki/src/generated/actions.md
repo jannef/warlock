@@ -6,6 +6,8 @@
 | Waiting | 1000 | 6 seconds |
 | Opening a door | 1000 | 6 seconds |
 | Closing a door | 1000 | 6 seconds |
+| Unlocking a door with a key (on top of opening it) | 1000 | 6 seconds |
+| Kicking (a door, or a creature) | 1000 | 6 seconds |
 | Lighting or dousing the lantern | 1000 | 6 seconds |
 | Taking stairs, entering a place from the overworld, or walking off an area's edge | 1000 | 6 seconds |
 | Picking up (however many stacks) | 1000 | 6 seconds |
@@ -19,4 +21,7 @@
 | Putting something on, or taking it off: Head, neck, cloak, hands, left ring, right ring, feet | 1000 | 6 seconds |
 | Putting something on, or taking it off: Body | 3000 | 18 seconds |
 | Readying something, or putting it away: Missile weapon, missiles, tool | 1000 | 6 seconds |
+| A turn of eating (a meal takes several: see Food and corpses) | 1000 | 6 seconds |
 | A turn of digging (digging through a wall takes many) | 1000 | 6 seconds |
+| Chatting with someone (asking about a topic takes no time) | 500 | 3 seconds |
+| Climbing out of the water onto ice (on top of the step onto the ice) | 2000 | 12 seconds |

@@ -7,6 +7,8 @@
 #   material  an id in materials.toml
 #   weight    grams for one, at least 1
 #   stackable several lie in one stack (coins, arrows); default false: a stack of one each
+#   key       a key (spec §8 "Doors"): the lock id it opens (levels lock doors with `lock =
+#             "id"`), or "*" for a skeleton key, which opens every lock
 #
 # Things that can be worn or wielded also say where they go (equipment, slots.toml):
 #   slot       the slot it goes in, by id (`slot = "body"`), or what a slot fits (`slot = "ring"`
@@ -76,6 +78,13 @@
 #   glow       how much its glyph glows where it lies (0 to 1)
 #   [[object.particles]] emitters (terrain.toml has the fields): `ambient` while it lies in view
 #              on top of its pile, `flight` while it flies
+#
+# Food (spec §8 "Hunger"; eat with `E`):
+#   food       { nutrition = N, turns = T }: the nutrition points it gives (1 to 100000; a human
+#              burns 1440 a day, hunger.toml) and the turns of eating it takes (1 to 100, each the
+#              `eat` action); never on things worn, wielded, shot, thrown, or burned
+# Corpses are not listed here: every creature that leaves one has its own (`kobold_corpse`), made
+# from creatures.toml and hunger.toml, and only creatures that die leave them.
 #
 # Glyphs follow ADOM loosely: ) weapons, } missile weapons, / missiles, [ armor, ( tools,
 # ! potions, ? scrolls, % food, * stones and gems, $ coins, = rings, " amulets.
@@ -908,6 +917,9 @@ weight = 4500
 slot = "tool"
 dig = 15
 
+# Keys (spec §8 "Doors"): `key` is the lock id it opens; opening a door locked with that id
+# while carrying it unlocks the door. A skeleton key (`key = "*"`) opens every lock.
+# The hub's pantry.
 [[object]]
 id = "iron_key"
 name = "iron key"
@@ -915,6 +927,36 @@ glyph = "("
 fg = "#b4b8bc"
 material = "iron"
 weight = 40
+key = "pantry"
+
+# The guard post's store room (vaults/guard_post.toml); its guard carries it.
+[[object]]
+id = "brass_key"
+name = "brass key"
+glyph = "("
+fg = "#d8b048"
+material = "brass"
+weight = 40
+key = "guard_post"
+
+# The rooms locked in the Depths (dungeons.toml).
+[[object]]
+id = "rusty_key"
+name = "rusty key"
+glyph = "("
+fg = "#a86a40"
+material = "iron"
+weight = 50
+key = "depths"
+
+[[object]]
+id = "skeleton_key"
+name = "skeleton key"
+glyph = "("
+fg = "#e0dccc"
+material = "iron"
+weight = 30
+key = "*"
 
 [[object]]
 id = "candle"
@@ -964,7 +1006,7 @@ material = "paper"
 weight = 50
 stackable = true
 
-# Food
+# Food: a ration feeds a human for about a day.
 [[object]]
 id = "dried_meat"
 name = "strip of dried meat"
@@ -974,6 +1016,7 @@ fg = "#b06848"
 material = "flesh"
 weight = 150
 stackable = true
+food = { nutrition = 600, turns = 2 }
 
 [[object]]
 id = "apple"
@@ -983,6 +1026,28 @@ fg = "#d84838"
 material = "plant"
 weight = 150
 stackable = true
+food = { nutrition = 150, turns = 1 }
+
+[[object]]
+id = "ration"
+name = "food ration"
+glyph = "%"
+fg = "#c8a878"
+material = "plant"
+weight = 500
+stackable = true
+food = { nutrition = 1500, turns = 4 }
+
+[[object]]
+id = "bread"
+name = "loaf of bread"
+plural = "loaves of bread"
+glyph = "%"
+fg = "#d8b070"
+material = "plant"
+weight = 400
+stackable = true
+food = { nutrition = 800, turns = 3 }
 
 # Stones and gems
 # Rocks are thrown (ready a few in the missile weapon slot to throw them with `t` at once).

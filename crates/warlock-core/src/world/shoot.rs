@@ -96,7 +96,10 @@ impl World {
             range,
         };
         self.player_looses(at, loose, events);
-        Spent::Turn(self.shot_price(self.state.player, launcher))
+        // Priced before the exertion, which may leave the player hungrier (no longer Bloated).
+        let price = self.shot_price(self.state.player, launcher);
+        self.exert(ActionKind::Shoot);
+        Spent::Turn(price)
     }
 
     /// What a shot from missile weapon `launcher` costs actor `id`: `shoot`, and `reload` too
@@ -141,7 +144,9 @@ impl World {
         };
         self.player_looses(at, loose, events);
         let throwing = content.weapon_skills().of_role(Role::Thrown);
-        Spent::Turn(self.attack_price(self.state.player, ActionKind::Throw, throwing))
+        let price = self.attack_price(self.state.player, ActionKind::Throw, throwing);
+        self.exert(ActionKind::Throw);
+        Spent::Turn(price)
     }
 
     /// Whether missiles fly here: not on the overworld, a map of the land.

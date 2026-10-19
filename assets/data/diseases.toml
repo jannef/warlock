@@ -1,0 +1,144 @@
+# Diseases (spec §8 "Diseases"), modelled on D&D 3.5's: caught, they incubate unseen, then show,
+# and progress day by day until they are shaken off (or kill). Whatever the disease, the
+# sufferer shows one status, `status` below ("Diseased"); which disease it is shows through its
+# symptoms, and the character screen names it once it has progressed once.
+#
+# A check is 2d12 (the attack roll's dice) plus the modifier of the disease's `check` stat; it
+# succeeds at the disease's `difficulty` or more (a natural 2 always fails, a natural 24 always
+# succeeds). Never shown in the game: no difficulty, modifier, or roll.
+#
+#   status      the status every disease shows as (status.toml)
+#
+# [[disease]], in order:
+#   id          stable id, used by `on_hit` (creatures.toml) and saves
+#   name        how the character screen names it once it is known
+#   difficulty  what a check must reach to resist it, as it is caught and at each progression
+#               (1 to 50)
+#   check       the stat whose modifier the checks add: "toughness" (the default), or any stat
+#   incubation  days from catching it to its onset: dice ("1d3") or a number, at least 1
+#   interval    days between its progressions (default 1)
+#   damage      what a failed check takes off the stats, in points of stat damage:
+#               { dexterity = "1d3", toughness = "1d3" }. It never takes a score below 1 unless
+#               the disease kills, and mends a point a day in each stat once no disease shows.
+#               Toughness damage lowers the most hit points.
+#   hp          hit points a failed check costs: dice (default none; never the last one unless
+#               the disease kills)
+#   recovery    checks won in a row that shake it off (default 2; 0: never by itself, only a cure)
+#   kills       whether it can kill (default false): a progression that takes Toughness to 0, or
+#               the last hit point, kills ("Died of disease")
+#   regen       how fast hit points come back while it shows, in percent of the normal pace, when
+#               slower than its status's (default: as the status says)
+#   caught      ways to catch it that rules name: "rotten_food" (eating a rotten corpse)
+#   wading      terrain it is caught in: { terrain = ["marsh"], per_hour = 4 }, a chance in
+#               percent for each hour spent crossing it (drawn as you step onto it, by how long
+#               the step takes), then a check to resist it
+#   cured_by    the means that cure it at once (nothing applies them yet: potions, priests)
+#   onset       said when it shows (stops a rest)
+#   symptoms    said when a progression goes badly, in turn (each stops a rest)
+#   recovered   said when it is gone (lets a rest go on)
+# Creatures' bites may give a disease too: `on_hit = [{ disease = "filth_fever", chance = 10 }]`
+# in creatures.toml (then a check to resist it).
+
+status = "diseased"
+
+# From filthy bites (giant rats).
+[[disease]]
+id = "filth_fever"
+name = "filth fever"
+difficulty = 13
+incubation = "1d3"
+damage = { dexterity = "1d3", toughness = "1d3" }
+cured_by = ["remove_disease"]
+onset = "You feel feverish."
+symptoms = [
+    "Fever wracks you.",
+    "Your wounds fester and burn.",
+    "You sweat and shiver by turns.",
+]
+recovered = "Your fever breaks."
+
+[[disease]]
+id = "red_ache"
+name = "red ache"
+difficulty = 16
+incubation = "1d3"
+damage = { strength = "1d6" }
+cured_by = ["remove_disease"]
+onset = "Your skin flushes red, and your muscles ache."
+symptoms = [
+    "Your muscles burn with a deep ache.",
+    "Your skin is red and swollen.",
+    "Your limbs feel weak and sore.",
+]
+recovered = "The ache in your muscles fades."
+
+[[disease]]
+id = "the_shakes"
+name = "the shakes"
+difficulty = 14
+incubation = 1
+damage = { dexterity = "1d6" }
+cured_by = ["remove_disease"]
+onset = "Your hands begin to tremble."
+symptoms = [
+    "You shake uncontrollably.",
+    "Your hands tremble and twitch.",
+    "Spasms run through your limbs.",
+]
+recovered = "Your hands are steady again."
+
+# Caught in the marshes of swamp areas and crossing the swamps of the overworld. It slows
+# healing more than other diseases.
+[[disease]]
+id = "marsh_ague"
+name = "marsh ague"
+difficulty = 14
+incubation = "1d4"
+damage = { toughness = "1d3" }
+regen = 25
+wading = { terrain = ["marsh", "swamp"], per_hour = 4 }
+cured_by = ["remove_disease"]
+onset = "A chill settles into your bones."
+symptoms = [
+    "You shiver with marsh fever.",
+    "Chills and fever come and go.",
+    "A damp cough rattles your chest.",
+]
+recovered = "The ague leaves you."
+
+# Like mummy rot: it never goes by itself, and it kills. From rotten corpses for now (#137);
+# later the undead.
+[[disease]]
+id = "grave_rot"
+name = "grave rot"
+difficulty = 15
+incubation = 1
+damage = { toughness = "1d4", presence = "1d4" }
+recovery = 0
+kills = true
+caught = ["rotten_food"]
+cured_by = ["remove_disease"]
+onset = "Your skin turns grey and clammy."
+symptoms = [
+    "Your flesh rots.",
+    "Patches of your skin slough away.",
+    "The stench of the grave clings to you.",
+]
+recovered = "The rot is gone from your flesh."
+
+# A fever of the mind: Willpower fights it.
+[[disease]]
+id = "brain_fever"
+name = "brain fever"
+difficulty = 13
+check = "willpower"
+incubation = "1d3"
+damage = { intelligence = "1d3", willpower = "1d3" }
+cured_by = ["remove_disease"]
+onset = "Your head throbs."
+symptoms = [
+    "Your thoughts swim in a fever.",
+    "You cannot hold a thought.",
+    "Strange visions flit before your eyes.",
+]
+recovered = "Your mind clears."
