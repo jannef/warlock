@@ -18,12 +18,21 @@
 //! a critical, "You block the kobold's spear with your shield.", "The giant rat dies." The
 //! player's own attacks are said as they are made, a creature's when the turn is perceived (it is
 //! said if the player saw either end of it, or was its target).
+//!
+//! Weapon skills (spec §8 "Weapon skills"): every attack draws on a skill ([`Actor::attack_skill`];
+//! its profile and price carry what the rank gives), and each attack the player makes earns
+//! marks in it, more for a hit, more against a stronger opponent (by level, spec §8
+//! "Experience"); a blow the player's shield blocks earns marks in shield blocking
+//! ([`World::practise`]). A rank gained is said after the attack that earned it: "You feel more
+//! skilled with daggers." A shield bash ([`World::bash`]) is a blow with a held shield, its own
+//! damage, and its own skill.
 
-use super::{Actor, ActorId, World};
+use super::{Actor, ActorId, Spent, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Category, Profile, Strike};
 use crate::content::Effect as ItemEffect;
-use crate::content::{Content, CreatureId, ObjectId};
+use crate::content::{ActionKind, Content, CreatureId, ObjectId, Role, Stance, WeaponSkillId};
+use crate::geom::Dir;
 use crate::noise::Act;
 use crate::object;
 use crate::skills::Use;
@@ -44,12 +53,14 @@ pub struct Death {
     pub by: Option<CreatureId>,
 }
 
-/// What an attack is made with, in words: what it is called ("spear", "bite", "fist", "arrow")
-/// and what it does to its target ("hits", "bites", "shoots").
+/// What an attack is made with, in words: what it is called ("spear", "bite", "fist", "arrow",
+/// "small shield"), what it does to its target ("hits", "bites", "shoots", "bashes"), and what
+/// the player does with it ("hit", "bash").
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) struct Words {
     noun: String,
     verb: String,
+    you: &'static str,
 }
 
 impl Words {
@@ -58,10 +69,12 @@ impl Words {
         Self {
             noun: noun.into(),
             verb: verb.into(),
+            you: if verb == "bashes" { "bash" } else { "hit" },
         }
     }
 
-    /// What `actor` attacks with, by `kind`; a shot or a throw is made `with` its missile.
+    /// What `actor` attacks with, by `kind`; a shot or a throw is made `with` its missile, a
+    /// bash with a shield.
     pub(super) fn of(
         actor: &Actor,
         kind: AttackKind,
@@ -71,8 +84,13 @@ impl Words {
         let words = |noun: &str, verb: &str| Self {
             noun: noun.into(),
             verb: verb.into(),
+            you: "hit",
         };
         match kind {
+            AttackKind::Melee if let Some(shield) = with => Self {
+                you: "bash",
+                ..words(&content.object(shield).name, "bashes")
+            },
             AttackKind::Melee => {
                 let natural = content.creature(actor.creature).attack.as_ref();
                 match (actor.weapon(content), natural) {
@@ -180,7 +198,7 @@ pub(super) fn attack_message(
         Strike::Hit { critical } => {
             let verb = match (attacker, kind) {
                 (End::You, AttackKind::Ranged) => "shoot",
-                (End::You, _) => "hit",
+                (End::You, _) => words.you,
                 _ => words.verb.as_str(),
             };
             let end = if critical { " hard!" } else { "." };
@@ -335,6 +353,9 @@ impl World {
             return None;
         };
         let defence = self.defence_of(target);
+        let skill = (self.state.actors.get(&attacker))
+            .and_then(|a| a.attack_skill(&self.content, kind, with));
+        let levels = (self.level_of(attacker), self.level_of(target));
         let blow = profile.map(|profile| combat::strike(&profile, &defence, &mut self.state.rng));
         events.push(Event::Attacked {
             attacker,
@@ -360,12 +381,60 @@ impl World {
         if dodged && target == self.state.player && self.trains(Use::Dodge) {
             self.train(Use::Dodge);
         }
+        let player = self.state.player;
+        if let Some(blow) = blow {
+            if attacker == player
+                && let Some(skill) = skill
+            {
+                self.practise(skill, blow.strike.is_hit(), levels.1);
+            }
+            let blocked = Strike::Missed {
+                by: Some(Category::Shield),
+            };
+            let block = self.content.weapon_skills().of_role(Role::ShieldBlock);
+            if target == player
+                && blow.strike == blocked
+                && let Some(block) = block
+            {
+                self.practise(block, true, levels.0);
+            }
+        }
         if let Some(blow) = blow
             && blow.damage > 0
         {
             self.hurt(target, blow.damage, attacker, events);
         }
         blow
+    }
+
+    /// The level of actor `id` as weapon marks weigh it (spec §8 "Weapon skills"): a
+    /// creature's type's (spec §8 "Experience"), the player's own.
+    fn level_of(&self, id: ActorId) -> u32 {
+        if id == self.state.player {
+            return u32::from(self.player_level());
+        }
+        let creature = self.actor_or_fallen(id).map(|a| a.creature);
+        creature.map_or(1, |c| u32::from(self.content.creature(c).level))
+    }
+
+    /// The player used weapon skill `skill` against an opponent of `level`: a `success` (a hit,
+    /// a blow blocked) or not. It earns its marks ([`crate::content::MarkRules`]), and each skill
+    /// a rank gained raised (with the skills it defaults to) waits in `news` to be said after the
+    /// attack's own messages: "You feel more skilled with long blades." No numbers.
+    fn practise(&mut self, skill: WeaponSkillId, success: bool, level: u32) {
+        let content = self.content.clone();
+        let table = content.weapon_skills();
+        let Some(rules) = table.marks() else {
+            return;
+        };
+        let me = self.player_mut();
+        let marks = rules.earned(success, level, me.weapon_skills.rank(skill));
+        if marks > 0 {
+            for id in me.weapon_skills.train(table, skill, marks) {
+                let phrase = &table.skill(id).phrase;
+                self.news.push(format!("You feel more skilled {phrase}."));
+            }
+        }
     }
 
     /// Actor `id` loses `damage` hit points to `by`; at 0 it dies.
@@ -463,11 +532,58 @@ impl World {
     /// once, by what the player knows as they strike; events reach presentation only if they
     /// saw the target.
     pub(super) fn player_attacks(&mut self, target: ActorId, seen: bool, events: &mut Vec<Event>) {
+        let profile = self.state.player().melee(&self.content);
+        self.player_strikes(target, seen, (None, profile), events);
+    }
+
+    /// The player bashes whoever stands in `dir` with the shield they hold (spec §8 "Weapon
+    /// skills"): a blow like any other ([`World::player_attacks`]), with the shield's `bash`
+    /// dice and shield bashing's benefits, for the price of `melee`. Refused (no time) without a
+    /// shield to bash with, with nobody there, and against someone not hostile.
+    pub(super) fn bash(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
+        let content = self.content.clone();
+        let player = self.state.player;
+        let Some((shield, profile)) = self.state.player().bash(&content) else {
+            self.say("You have no shield to bash with.");
+            return Spent::Nothing;
+        };
+        let to = self.player_pos().step(dir);
+        let level = &self.state.current().id;
+        let Some((target, creature)) = (self.state.actor_at(level, to)).map(|a| (a.id, a.creature))
+        else {
+            self.say("There is nothing there to bash.");
+            return Spent::Nothing;
+        };
+        let seen = self.perception.sees_actors_at(to);
+        if self.stance(player, target) != Stance::Hostile {
+            self.say(if seen {
+                let name = &content.creature(creature).name;
+                format!("You have no quarrel with the {name}.")
+            } else {
+                "Something is in the way.".into()
+            });
+            return Spent::Nothing;
+        }
+        self.player_strikes(target, seen, (Some(shield), profile), events);
+        let skill = content.weapon_skills().of_role(Role::ShieldBash);
+        Spent::Turn(self.attack_price(player, ActionKind::Melee, skill))
+    }
+
+    /// The player strikes `target` in melee with `profile`, made `with` a shield (a bash) or
+    /// not (a blow): see [`World::player_attacks`].
+    fn player_strikes(
+        &mut self,
+        target: ActorId,
+        seen: bool,
+        (with, profile): (Option<ObjectId>, Profile),
+        events: &mut Vec<Event>,
+    ) {
         let player = self.state.player;
         let mut made = Vec::new();
-        self.attack(player, target, AttackKind::Melee, &mut made);
+        let kind = (AttackKind::Melee, with);
+        self.resolve(player, target, kind, Some(profile), true, &mut made);
         let content = self.content.clone();
-        let words = Words::of(self.state.player(), AttackKind::Melee, None, &content);
+        let words = Words::of(self.state.player(), AttackKind::Melee, with, &content);
         let target_actor = self.actor_or_fallen(target);
         let name = target_actor.map(|a| content.creature(a.creature).name.as_str());
         let hide = (target_actor)

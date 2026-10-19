@@ -25,17 +25,22 @@
 #   crit       how many times a confirmed critical rolls the damage: 2 (default) to 5
 #   to_hit     a weapon's own bonus to hit (default 0)
 #   strength   the Strength a bow needs: each point short is -1 to hit and -1 damage
-#   category   the weapon skill it belongs to (every weapon names one): daggers, short_blades,
-#              long_blades, great_blades, axes, maces, spears, polearms, staves, bows, crossbows,
-#              slings, thrown (#134's weapon skills)
 #   attack_cost what an attack with it costs instead of the `melee` action's (a missile weapon:
 #              the `shoot` action's), 100 to 10000 (actions.toml): light weapons are quicker,
-#              great ones slower
+#              great ones slower; its weapon skill's `speed` takes its percent off this
 #   parry      Defence while wielded (the Parry category)
 #   armour     Defence while worn (the Armour category); max_dex the most a worn armour lets
 #              Dexterity add to Defence
 #   shield     Defence while held (the Shield category)
-# Within a category only the best bonus counts.
+#   bash       a shield's damage dice when bashing with it (spec §8 "Weapon skills"); the
+#              wielder's Strength modifier adds to it, as to every melee blow
+# Within a category of Defence only the best bonus counts.
+#
+# Weapon skills (spec §8 "Weapon skills"):
+#   category   the weapon skill a weapon trains and draws on (an id in weapon_skills.toml; every
+#              weapon names one): a melee skill for what is wielded in a hand, a launcher skill
+#              for a missile weapon, the thrown skill for what is only thrown (a rock). Every
+#              throw trains the thrown skill, whatever is thrown
 #
 # Ranged combat (spec §8 "Ranged combat"; fire with `f`, throw with `t`):
 #   range      how far a missile weapon shoots, in cells (required for one); anything else with a
@@ -80,8 +85,8 @@ material = "steel"
 weight = 450
 slot = "main_hand"
 damage = "1d4"
-threat = 20
 category = "daggers"
+threat = 20
 kind = "weapon"
 # Balanced for throwing: it tumbles end over end.
 range = 5
@@ -113,8 +118,8 @@ material = "steel"
 weight = 1100
 slot = "main_hand"
 damage = "1d6"
-threat = 20
 category = "short_blades"
+threat = 20
 kind = "weapon"
 
 [[object]]
@@ -244,8 +249,8 @@ material = "wood"
 weight = 1800
 slot = "main_hand"
 damage = "1d8"
-crit = 3
 category = "spears"
+crit = 3
 kind = "weapon"
 # Thrown point first.
 range = 6
@@ -426,10 +431,10 @@ weight = 700
 slot = "missile_weapon"
 launches = "arrow"
 damage = "1d6"
+category = "bows"
 crit = 3
 strength = 10
 range = 10
-category = "bows"
 kind = "launcher"
 
 [[object]]
@@ -442,10 +447,10 @@ weight = 1300
 slot = "missile_weapon"
 launches = "arrow"
 damage = "1d8+2"
+category = "bows"
 crit = 3
 strength = 14
 range = 15
-category = "bows"
 kind = "launcher"
 level = 3
 
@@ -476,10 +481,10 @@ weight = 3200
 slot = "missile_weapon"
 launches = "bolt"
 damage = "1d10+1"
+category = "crossbows"
 threat = 20
 range = 13
 reloads = true
-category = "crossbows"
 kind = "launcher"
 level = 2
 
@@ -510,8 +515,8 @@ weight = 100
 slot = "missile_weapon"
 launches = "stone"
 damage = "1d4"
-range = 9
 category = "slings"
+range = 9
 kind = "launcher"
 
 # Missiles, for the missile weapons that shoot them. Loot holds them in stacks.
@@ -786,6 +791,7 @@ material = "wood"
 weight = 2500
 slot = "off_hand"
 shield = 1
+bash = "1d3"
 kind = "shield"
 
 [[object]]
@@ -797,6 +803,7 @@ material = "iron"
 weight = 1500
 slot = "off_hand"
 shield = 1
+bash = "1d2"
 kind = "shield"
 
 [[object]]
@@ -808,6 +815,7 @@ material = "wood"
 weight = 6000
 slot = "off_hand"
 shield = 2
+bash = "1d4"
 kind = "shield"
 level = 3
 
@@ -821,6 +829,7 @@ material = "iron"
 weight = 12000
 slot = "off_hand"
 shield = 3
+bash = "1d6"
 max_dex = 2
 kind = "shield"
 level = 6
@@ -960,9 +969,9 @@ weight = 800
 stackable = true
 slot = "missiles"
 damage = "1d3"
+category = "thrown"
 range = 6
 missile = "•"
-category = "thrown"
 
 [[object]]
 id = "ruby"

@@ -1,6 +1,7 @@
 //! The screen stack (spec §6): every modal screen — main menu, new run and character creation,
 //! pause, settings, controls, the `?` help, the inventory, the equipment screen and its choice of
-//! what goes in a slot, the character screen, and choosing what to pick up, drop, or throw —
+//! what goes in a slot, the character screen, the weapon skills screen, and choosing what to pick
+//! up, drop, or throw —
 //! lives on one stack, bottom to top.
 //!
 //! - **Open**: [`Screens::open`] is the one way to open a screen, by [`ScreenName`]: `?` and Esc
@@ -35,6 +36,7 @@ use super::new_run_screen::NewRunScreen;
 use super::object_screen::{ObjectList, ObjectScreen};
 use super::settings_screen::SettingsScreen;
 use super::skills_screen::SkillsScreen;
+use super::weapon_skills_screen::WeaponSkillsScreen;
 use crate::cli::Args;
 use crate::game::{Game, GameContent};
 use crate::input::{Bindings, InputMode};
@@ -85,6 +87,8 @@ pub enum ScreenName {
     /// The player's trained skills and their values (`S` in play, or from the character
     /// screen).
     Skills,
+    /// The player's weapon skills: ranks and marks (`W` in play).
+    WeaponSkills,
     /// Choose what to pick up from the pile here (`,` or `g` where several objects lie).
     PickUp,
     /// Choose what to drop (`d` in play).
@@ -110,6 +114,7 @@ impl ScreenName {
                 | ScreenName::Describe
                 | ScreenName::Character
                 | ScreenName::Skills
+                | ScreenName::WeaponSkills
                 | ScreenName::PickUp
                 | ScreenName::Drop
                 | ScreenName::Throw
@@ -178,6 +183,7 @@ enum Screen {
     Describe(DescribeScreen),
     Character(CharacterScreen),
     Skills(SkillsScreen),
+    WeaponSkills(WeaponSkillsScreen),
     Death(DeathScreen),
 }
 
@@ -217,6 +223,7 @@ impl Screen {
             }
             ScreenName::Character => Screen::Character(CharacterScreen::new(run)),
             ScreenName::Skills => Screen::Skills(SkillsScreen::new(run)),
+            ScreenName::WeaponSkills => Screen::WeaponSkills(WeaponSkillsScreen::new(run)),
             ScreenName::PickUp => objects(ObjectList::PickUp),
             ScreenName::Drop => objects(ObjectList::Drop),
             ScreenName::Throw => objects(ObjectList::Throw),
@@ -245,6 +252,7 @@ impl Screen {
             Screen::Describe(_) => ScreenName::Describe,
             Screen::Character(_) => ScreenName::Character,
             Screen::Skills(_) => ScreenName::Skills,
+            Screen::WeaponSkills(_) => ScreenName::WeaponSkills,
             Screen::Death(_) => ScreenName::Death,
         }
     }
@@ -392,6 +400,7 @@ impl ScreenStack {
             Some(Screen::Describe(screen)) => screen.handle(press, bindings),
             Some(Screen::Character(screen)) => screen.handle(press, bindings),
             Some(Screen::Skills(screen)) => screen.handle(press, bindings),
+            Some(Screen::WeaponSkills(screen)) => screen.handle(press, bindings),
             Some(Screen::Death(screen)) => screen.handle(press),
         };
         if action == ScreenAction::Stay {
@@ -433,7 +442,8 @@ impl ScreenStack {
             Some(Screen::Describe(screen)) => screen.draw(console, bindings),
             Some(Screen::Character(screen)) => screen.draw(console, bindings),
             Some(Screen::Skills(screen)) => screen.draw(console, bindings),
-            Some(Screen::Death(screen)) => screen.draw(console),
+            Some(Screen::WeaponSkills(screen)) => screen.draw(console, bindings),
+            Some(Screen::Death(screen)) => screen.draw(console, settings.clock),
         }
     }
 
@@ -735,6 +745,8 @@ mod tests {
         assert_eq!(startup_screens(Some(Inventory), true), [Inventory]);
         assert_eq!(startup_screens(Some(Character), true), [Character]);
         assert_eq!(startup_screens(Some(Character), false), [Main]);
+        assert_eq!(startup_screens(Some(WeaponSkills), true), [WeaponSkills]);
+        assert_eq!(startup_screens(Some(WeaponSkills), false), [Main]);
         assert_eq!(startup_screens(Some(PickUp), true), [PickUp]);
         assert_eq!(startup_screens(Some(Equipment), true), [Equipment]);
         assert_eq!(
@@ -1267,6 +1279,34 @@ mod tests {
             "Esc returns to where the first was opened"
         );
         assert!(actions(&app).is_empty());
+    }
+
+    #[test]
+    fn the_weapon_skills_screen_opens_on_w_and_a_bash_asks_for_a_direction() {
+        let mut app = app(true);
+        let skills = (KeyCode::KeyW, "W");
+        frame(&mut app, &[skills]);
+        assert_eq!(names(&app), [ScreenName::WeaponSkills]);
+        frame(&mut app, &[WAIT]);
+        assert_eq!(names(&app), [ScreenName::WeaponSkills]);
+        frame(&mut app, &[skills]);
+        assert!(names(&app).is_empty());
+        assert!(actions(&app).is_empty(), "no time passes");
+        // Bash is an ability: unbound by default. Bound (here to `B`), it asks for a direction
+        // in the message line, like opening a door.
+        let mut bindings = app.world_mut().resource_mut::<Bindings>();
+        let bash = crate::input::KeyCommand::Bash;
+        assert!(bindings.keys_of(bash).is_empty());
+        let key = crate::input::KeyBinding::from_text("B").expect("a key");
+        bindings.0.push((key, bash));
+        frame(&mut app, &[(KeyCode::KeyB, "B")]);
+        assert_eq!(
+            app.world().resource::<InputMode>(),
+            &InputMode::Direction(crate::input::KeyCommand::Bash)
+        );
+        frame(&mut app, &[(KeyCode::KeyL, "l")]);
+        assert_eq!(actions(&app), [Action::Bash(Dir::E)]);
+        assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
     }
 
     #[test]

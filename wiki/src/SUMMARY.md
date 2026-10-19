@@ -30,6 +30,7 @@
   - [Experience](experience.md)
   - [Ranged combat](ranged.md)
   - [Ammunition](ammunition.md)
+  - [Weapon skills](weapon-skills.md)
 - [Creatures](creatures.md)
 - [Your lantern](lantern.md)
 - [Saving](saving.md)

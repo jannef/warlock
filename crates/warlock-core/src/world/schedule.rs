@@ -26,7 +26,7 @@
 use super::{Actor, ActorId, ActorKind, World};
 use crate::action::Event;
 use crate::content::Effect as ItemEffect;
-use crate::content::{ActionKind, BASE_TURN, LevelKind, TerrainDef, price};
+use crate::content::{ActionKind, BASE_TURN, Benefit, LevelKind, TerrainDef, WeaponSkillId, price};
 use crate::magic::Mods;
 use crate::magic::mods::faster;
 use crate::perception::VIEW_RADIUS;
@@ -100,6 +100,27 @@ impl World {
         } else {
             faster(cost, speed)
         }
+    }
+
+    /// The energy price of attack action `kind` (`melee`, `shoot`, `throw`, `reload`) for actor
+    /// `id` drawing on weapon skill `skill` (spec §8 "Weapon skills"): its cost with its weapon's
+    /// and its magic items' (`World::cost_of`; a shield bash costs what a blow does) less what
+    /// its rank takes off (`speed`; `reload` for reloading), then priced like any action
+    /// ([`World::price_of`]).
+    pub(super) fn attack_price(
+        &self,
+        id: ActorId,
+        kind: ActionKind,
+        skill: Option<WeaponSkillId>,
+    ) -> i64 {
+        let actor = &self.state.actors[&id];
+        let benefit = actor.benefit(&self.content, skill);
+        let saving = match kind {
+            ActionKind::Reload => benefit.reload,
+            _ => benefit.speed,
+        };
+        let cost = self.cost_of(id, kind);
+        self.burdened(id, price(Benefit::saving(cost, saving), BASE_TURN))
     }
 
     /// The energy price of actor `id` stepping onto terrain `to` on the current level, slowed by

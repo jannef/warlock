@@ -1,9 +1,12 @@
 //! Actors: the player and creatures.
 
+use crate::action::AttackKind;
 use crate::burden::Burden;
 use crate::combat::{self, Attack, Category, Defence, Health, Profile};
 use crate::content::Effect as ItemEffect;
-use crate::content::{ActionKind, Content, CreatureId, FactionId, ObjectDef, ObjectId};
+use crate::content::{
+    ActionKind, Benefit, Content, CreatureId, FactionId, ObjectDef, ObjectId, Role, WeaponSkillId,
+};
 use crate::equipment::Equipment;
 use crate::geom::{Dir, Pos};
 use crate::magic::Mods;
@@ -11,6 +14,7 @@ use crate::noise::Heard;
 use crate::object::{Stack, Weight, weight_of};
 use crate::skills::{Effect, Skills};
 use crate::stats::{Stat, Stats};
+use crate::weapon_skills::WeaponSkills;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -110,6 +114,12 @@ pub struct Actor {
     /// actor; the player is shown only their own trained skills' values.
     #[serde(default, skip_serializing_if = "Skills::is_empty")]
     pub skills: Skills,
+    /// Its rank and marks in every weapon skill (spec §8 "Weapon skills";
+    /// [`crate::weapon_skills`]): a creature's from its type, the player's from their race and
+    /// class. Only the player trains. The player is shown their own ranks; what a rank gives
+    /// stays hidden.
+    #[serde(default, skip_serializing_if = "WeaponSkills::is_empty")]
+    pub weapon_skills: WeaponSkills,
     /// The faction its level placed it in, if not its type's (`faction` in a level legend entry:
     /// peaceful creatures in the showcase). Read the one that counts with [`Actor::faction`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -171,23 +181,37 @@ impl Actor {
     /// "Burden": the lowest cap wins), the best armour, shield, and parry of what it wears and
     /// wields (each with what its own affixes add), its creature type's natural armour, the Dodge
     /// its skills give (tumble; spec §8 "Skills"), and the Dodge, Deflection, and natural armour
-    /// its magic items give (spec §8 "Magic items").
+    /// its magic items give (spec §8 "Magic items"). Weapon skills add (spec §8 "Weapon skills"):
+    /// the wielded weapon's skill to its parry, shield blocking to a held shield's.
     pub fn defence(&self, content: &Content, burden: Burden) -> Defence {
         let mods = self.mods(content);
-        let equipped: Vec<(&ObjectDef, Mods)> = (self.equipment.items().into_iter())
-            .filter_map(|(_, item)| self.inventory.get(item))
-            .map(|s| (content.object(s.object), Mods::local(s, content)))
+        let weapon = self.weapon_item(content);
+        let parry_skill = self.benefit(content, self.melee_skill(content)).parry;
+        let block = (content.weapon_skills().of_role(Role::ShieldBlock))
+            .map_or(0, |id| self.benefit(content, Some(id)).shield);
+        let equipped: Vec<(usize, &ObjectDef, Mods)> = (self.equipment.items().into_iter())
+            .filter_map(|(_, item)| Some((item, self.inventory.get(item)?)))
+            .map(|(item, s)| (item, content.object(s.object), Mods::local(s, content)))
             .collect();
         let dexterity = self.stats_with(&mods).modifier(Stat::Dexterity);
         let worn =
-            (equipped.iter()).filter_map(|(o, m)| Some(o.max_dex? + m.get(ItemEffect::MaxDex)));
+            (equipped.iter()).filter_map(|(_, o, m)| Some(o.max_dex? + m.get(ItemEffect::MaxDex)));
         let cap = worn.chain(burden.max_dex()).min();
         let dexterity = cap.map_or(dexterity, |cap| dexterity.min(cap));
-        let worn = equipped.iter().flat_map(|(o, m)| {
+        let worn = equipped.iter().flat_map(|(item, o, m)| {
+            let wielded = Some(*item) == weapon;
+            let shield = o.shield + m.get(ItemEffect::Shield);
+            let parry = o.parry + m.get(ItemEffect::Parry);
             [
                 (Category::Armour, o.armour + m.get(ItemEffect::Armour)),
-                (Category::Shield, o.shield + m.get(ItemEffect::Shield)),
-                (Category::Parry, o.parry + m.get(ItemEffect::Parry)),
+                (
+                    Category::Shield,
+                    shield + if o.shield > 0 { block } else { 0 },
+                ),
+                (
+                    Category::Parry,
+                    parry + if wielded { parry_skill } else { 0 },
+                ),
             ]
         });
         let natural = (content.creature(self.creature).natural.as_ref())
@@ -231,6 +255,55 @@ impl Actor {
         let stack = self.inventory.get(self.weapon_item(content)?)?;
         let def = content.object(stack.object);
         def.attack.as_ref().map(|a| (stack.object, a))
+    }
+
+    /// The shield it holds that it can bash with, and what a bash with it does (spec §8
+    /// "Weapon skills"): the first hand that holds one.
+    pub fn shield<'c>(&self, content: &'c Content) -> Option<(ObjectId, &'c Attack)> {
+        content.hand_slots().find_map(|slot| {
+            let stack = self.inventory.get(self.equipment.get(slot)?)?;
+            let def = content.object(stack.object);
+            def.bash.as_ref().map(|a| (stack.object, a))
+        })
+    }
+
+    /// What its rank in weapon skill `skill` gives (nothing for no skill).
+    pub fn benefit(&self, content: &Content, skill: Option<WeaponSkillId>) -> Benefit {
+        skill.map_or_else(Benefit::default, |id| {
+            content
+                .weapon_skills()
+                .benefit(id, self.weapon_skills.rank(id))
+        })
+    }
+
+    /// The weapon skill of its melee blows: the wielded weapon's, else unarmed (bare hands and
+    /// natural attacks alike).
+    pub fn melee_skill(&self, content: &Content) -> Option<WeaponSkillId> {
+        match self.weapon(content) {
+            Some((weapon, _)) => content.object(weapon).skill,
+            None => content.weapon_skills().of_role(Role::Unarmed),
+        }
+    }
+
+    /// The weapon skill an attack of `kind` made `with` (a missile, a shield for a bash, or
+    /// nothing for a blow) draws on and trains: a blow's ([`Actor::melee_skill`]), a bash's
+    /// shield bashing, a shot's the launcher's, a throw's thrown; a spell none.
+    pub fn attack_skill(
+        &self,
+        content: &Content,
+        kind: AttackKind,
+        with: Option<ObjectId>,
+    ) -> Option<WeaponSkillId> {
+        let skills = content.weapon_skills();
+        match (kind, with) {
+            (AttackKind::Melee, None) => self.melee_skill(content),
+            (AttackKind::Melee, Some(_)) => skills.of_role(Role::ShieldBash),
+            (AttackKind::Ranged, _) => self
+                .launcher(content)
+                .and_then(|(launcher, _)| content.object(launcher).skill),
+            (AttackKind::Thrown, _) => skills.of_role(Role::Thrown),
+            (AttackKind::Spell, _) => None,
+        }
     }
 
     /// Where in its inventory the missile weapon it has ready is: the object in a slot of
@@ -304,8 +377,8 @@ impl Actor {
     }
 
     /// What its melee attacks do: with the weapon it wields, else its natural attack, else its
-    /// bare hands; Strength to hit and to damage; then the weapon's own affixes and those of
-    /// everything it wears and wields (spec §8 "Magic items").
+    /// bare hands; Strength to hit and to damage, and what its weapon skill gives; then the
+    /// weapon's own affixes and those of everything it wears and wields (spec §8 "Magic items").
     pub fn melee(&self, content: &Content) -> Profile {
         let mods = self.mods(content);
         let natural = content.creature(self.creature).attack.as_ref();
@@ -318,7 +391,9 @@ impl Actor {
             (None, Some(natural)) => (natural.attack, Mods::default()),
             (None, None) => (Attack::unarmed(), Mods::default()),
         };
-        let mut profile = Profile::melee(&attack, &self.stats_with(&mods));
+        let skill = self.melee_skill(content);
+        let mut profile =
+            Profile::melee(&attack, &self.stats_with(&mods)).with(&self.benefit(content, skill));
         local.sharpen(&mut profile);
         mods.sharpen(&mut profile);
         profile
@@ -326,17 +401,19 @@ impl Actor {
 
     /// What its shots do, with the missile weapon it has ready (`None` without one): Dexterity to
     /// hit, the launcher's own damage, and less of both for each point of Strength below what a
-    /// bow needs; then the affixes of the launcher, of its ammunition, and of everything it wears
-    /// and wields.
+    /// bow needs; what its skill with the launcher gives; then the affixes of the launcher, of
+    /// its ammunition, and of everything it wears and wields.
     pub fn ranged(&self, content: &Content) -> Option<Profile> {
         let mods = self.mods(content);
         let launcher = &self.inventory[self.launcher_item(content)?];
-        let mut attack = content.object(launcher.object).attack?;
+        let def = content.object(launcher.object);
+        let mut attack = def.attack?;
         let local = Mods::local(launcher, content);
         let draw = local.get(ItemEffect::Draw);
         attack.strength =
             (attack.strength).map(|s| u8::try_from((i32::from(s) - draw).max(1)).unwrap_or(1));
-        let mut profile = Profile::ranged(&attack, &self.stats_with(&mods));
+        let mut profile = Profile::ranged(&attack, &self.stats_with(&mods))
+            .with(&self.benefit(content, def.skill));
         local.sharpen(&mut profile);
         if let Some(ammo) = self.ammunition_item(content) {
             Mods::local(&self.inventory[ammo], content).sharpen(&mut profile);
@@ -346,17 +423,32 @@ impl Actor {
     }
 
     /// What a throw of inventory stack `item` does (`None` if it is no throwing weapon):
-    /// Dexterity to hit, Strength to damage, its own affixes, and those of everything it wears
-    /// and wields.
+    /// Dexterity to hit, Strength to damage, what its skill at throwing gives, its own affixes,
+    /// and those of everything it wears and wields.
     pub fn thrown(&self, item: usize, content: &Content) -> Option<Profile> {
         let stack = self.inventory.get(item)?;
         let def = content.object(stack.object);
         let attack = def.attack.filter(|_| def.is_thrown())?;
         let mods = self.mods(content);
-        let mut profile = Profile::thrown(&attack, &self.stats_with(&mods));
+        let skill = content.weapon_skills().of_role(Role::Thrown);
+        let mut profile =
+            Profile::thrown(&attack, &self.stats_with(&mods)).with(&self.benefit(content, skill));
         Mods::local(stack, content).sharpen(&mut profile);
         mods.sharpen(&mut profile);
         Some(profile)
+    }
+
+    /// What a bash with the shield it holds does (`None` without one it can bash with): the
+    /// shield's `bash` dice, Strength to hit and to damage as for any blow, what its skill at
+    /// shield bashing gives, and the affixes of everything it wears and wields.
+    pub fn bash(&self, content: &Content) -> Option<(ObjectId, Profile)> {
+        let (shield, attack) = self.shield(content)?;
+        let skill = content.weapon_skills().of_role(Role::ShieldBash);
+        let mods = self.mods(content);
+        let mut profile =
+            Profile::melee(attack, &self.stats_with(&mods)).with(&self.benefit(content, skill));
+        mods.sharpen(&mut profile);
+        Some((shield, profile))
     }
 }
 

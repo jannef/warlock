@@ -32,6 +32,7 @@ mod slot;
 mod terrain;
 mod vault;
 mod vision;
+mod weapon_skill;
 mod weather;
 
 pub use action::{ActionCosts, ActionKind, BASE_TURN, COSTS, NORMAL_COST, price};
@@ -60,9 +61,7 @@ pub use level::{
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
 pub use material::{MaterialDef, MaterialId};
-pub use object::{
-    MAX_BONUS, MAX_PLACED, ObjectDef, ObjectId, WEAPON_CATEGORIES, article, category_name,
-};
+pub use object::{MAX_BONUS, MAX_PLACED, ObjectDef, ObjectId, article, weapon_noun};
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use race::{RaceDef, Races};
@@ -75,12 +74,18 @@ pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use terrain::{MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
 pub use vault::Vault;
 pub use vision::VisionProfile;
+pub use weapon_skill::{
+    Benefit, MAX_RANK, MarkRules, RANKS, Role, Section, WeaponSkillDef, WeaponSkillId,
+    WeaponSkillTable,
+};
 pub use weather::{Climate, MAX_SIGHT_LOSS, WeatherDef};
 
+use crate::dice::Dice;
 use crate::noise::MAX_LOUDNESS;
 use crate::perception::VIEW_RADIUS;
 use crate::skills::{Increase, SkillId, Skills};
 use crate::stats::Stats;
+use crate::weapon_skills::WeaponSkills;
 use level::{LegendEntry, legend_char};
 use serde::Deserialize;
 use std::collections::{BTreeMap, BTreeSet};
@@ -225,7 +230,8 @@ struct LegendFile {
 /// `data/calendar.toml`, `data/sky.toml`, `data/materials.toml`, `data/objects.toml`,
 /// `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
 /// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, `data/horoscope.toml`,
-/// `data/effects.toml`, and `data/room_effects.toml` are optional (without effects, spell effects
+/// `data/effects.toml`, `data/room_effects.toml`, and `data/weapon_skills.toml` are optional
+/// (without effects, spell effects
 /// are not drawn). Without vision
 /// profiles, a single `normal` profile that needs no light is used, so content without lighting
 /// stays fully visible; without sizes, everything is medium; without factions, everyone is neutral; without a calendar, months are numbered;
@@ -234,7 +240,8 @@ struct LegendFile {
 /// without a slots file nothing can be worn or wielded; without races or classes there is no
 /// character to choose, and scenarios give the player's eyes and stats themselves; without
 /// skills nobody is trained in anything; without a horoscope, characters are born under no sign;
-/// without room effects there are no special rooms.
+/// without room effects there are no special rooms; without weapon skills nobody has any, and
+/// weapons name no category.
 #[derive(Debug)]
 pub struct Content {
     terrain: Vec<TerrainDef>,
@@ -271,6 +278,7 @@ pub struct Content {
     horoscope: Option<Horoscope>,
     /// Spell effects, in `data/effects.toml` order: presentation only.
     effects: Vec<EffectDef>,
+    weapon_skills: WeaponSkillTable,
     /// Special rooms' effects (`data/room_effects.toml`).
     room_effects: RoomEffects,
     /// Prefixes, suffixes, and how loot rolls them (`data/affixes.toml`).
@@ -314,6 +322,7 @@ impl Content {
             experience: Experience::default(),
             horoscope: None,
             effects: Vec::new(),
+            weapon_skills: WeaponSkillTable::default(),
             room_effects: RoomEffects::default(),
             affixes: Affixes::default(),
         };
@@ -332,6 +341,10 @@ impl Content {
         let path = "data/actions.toml";
         if let Some(text) = files.get_optional(path) {
             content.actions = ActionCosts::parse(path, text)?;
+        }
+        let path = "data/weapon_skills.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.weapon_skills = WeaponSkillTable::parse(path, text)?;
         }
         content.load_lights(files)?;
         content.load_vision(files)?;
@@ -355,11 +368,13 @@ impl Content {
             let has_vision = |id: &str| content.vision(id).is_some();
             let size_index = |id: &str| content.size_index(id);
             let skill_id = |id: &str| content.skill_id(id);
-            content.races = Races::parse(path, text, has_vision, size_index, skill_id)?;
+            let weapons = &content.weapon_skills;
+            content.races = Races::parse(path, text, has_vision, size_index, skill_id, weapons)?;
         }
         let path = "data/classes.toml";
         if let Some(text) = files.get_optional(path) {
-            content.classes = ClassDef::parse(path, text, |id| content.skill_id(id))?;
+            let skill_id = |id: &str| content.skill_id(id);
+            content.classes = ClassDef::parse(path, text, skill_id, &content.weapon_skills)?;
         }
         let path = "data/experience.toml";
         if let Some(text) = files.get_optional(path) {
@@ -607,6 +622,19 @@ impl Content {
             let skills = self
                 .creature_skills(&spec.skills)
                 .map_err(|m| err(format!("creature `{}`: skills: {m}", spec.id)))?;
+            if spec.id == "player" && !spec.weapon_skills.is_empty() {
+                return Err(err(
+                    "creature `player`: the player's weapon skills come from their race and class"
+                        .into(),
+                ));
+            }
+            let ranks: BTreeMap<String, Dice> = (spec.weapon_skills.iter())
+                .map(|(id, &rank)| (id.clone(), Dice::fixed(i32::from(rank))))
+                .collect();
+            let ranks = (self.weapon_skills.starting_ranks(&ranks))
+                .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
+            let ranks = ranks.iter().map(|&(id, rank)| (id, rank.max() as u8));
+            let weapon_skills = WeaponSkills::from_ranks(&self.weapon_skills, ranks);
             if spec
                 .natural
                 .as_ref()
@@ -643,6 +671,7 @@ impl Content {
                 stats,
                 skills,
                 attack,
+                weapon_skills,
                 faction: self.creature_faction(&spec).map_err(err)?,
                 vision: self.vision_index(&spec.vision).ok_or_else(|| {
                     err(format!(
@@ -758,6 +787,7 @@ impl Content {
                 |m| self.material_ids.get(m).copied(),
                 |l| self.light_ids.get(l).copied(),
                 &self.slots,
+                &self.weapon_skills,
             )?;
             check_effects(path, "object", &def.id, None, def.glow, 0.0, &def.particles)?;
             lit.push(lit_as);
@@ -941,10 +971,11 @@ impl Content {
     }
 
     /// A stable hash (64-bit FNV-1a) of the ordered terrain, creature, level, light, dungeon,
-    /// object, slot, skill, and room effect ids.
+    /// object, slot, skill, room effect, and weapon skill ids.
     ///
-    /// `TerrainId`, `CreatureId`, `LightId`, `ObjectId`, `SlotId`, `SkillId`, and `RoomEffectId`
-    /// are indices, so a save is only meaningful for content with the same ids in the same order;
+    /// `TerrainId`, `CreatureId`, `LightId`, `ObjectId`, `SlotId`, `SkillId`, `RoomEffectId`, and
+    /// `WeaponSkillId` are indices, so a save is only meaningful for content with the same ids in
+    /// the same order;
     /// saves record this fingerprint to detect a mismatch.
     pub fn fingerprint(&self) -> u64 {
         let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
@@ -953,7 +984,7 @@ impl Content {
                 hash = (hash ^ u64::from(b)).wrapping_mul(0x0000_0100_0000_01b3);
             }
         };
-        let groups: [Vec<&str>; 9] = [
+        let groups: [Vec<&str>; 10] = [
             self.terrain.iter().map(|t| t.id.as_str()).collect(),
             self.creatures.iter().map(|c| c.id.as_str()).collect(),
             self.levels.keys().map(String::as_str).collect(),
@@ -964,6 +995,9 @@ impl Content {
             self.skills.list.iter().map(|s| s.id.as_str()).collect(),
             (self.room_effects.defs().iter())
                 .map(|e| e.id.as_str())
+                .collect(),
+            (self.weapon_skills.skills().iter())
+                .map(|s| s.id.as_str())
                 .collect(),
         ];
         for ids in groups {
@@ -1273,6 +1307,11 @@ impl Content {
     /// The spell effect with id `id`.
     pub fn effect(&self, id: &str) -> Option<&EffectDef> {
         self.effects.iter().find(|e| e.id == id)
+    }
+
+    /// The weapon skills (`data/weapon_skills.toml`; empty without the file).
+    pub fn weapon_skills(&self) -> &WeaponSkillTable {
+        &self.weapon_skills
     }
 
     /// Month names for showing dates.

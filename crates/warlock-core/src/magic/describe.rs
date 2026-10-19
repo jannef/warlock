@@ -9,7 +9,7 @@
 
 use super::{AffixKind, Effect, Rolled};
 use crate::combat::SURE_HIT;
-use crate::content::{ActionKind, Content, ItemKind, ObjectDef, Rarity, category_name};
+use crate::content::{ActionKind, Content, ItemKind, ObjectDef, Rarity, weapon_noun};
 use crate::object::{Stack, format_weight};
 
 /// What a line of a description is, for how it is shown.
@@ -229,9 +229,7 @@ pub fn base_stats(def: &ObjectDef, content: &Content) -> Vec<String> {
 fn how_held(def: &ObjectDef, content: &Content) -> Option<String> {
     let slot = def.slot.as_ref()?;
     let slot = content.slots().iter().find(|s| &s.fits == slot)?;
-    let category = (def.category.as_deref())
-        .and_then(category_name)
-        .map(capitalized);
+    let category = weapon_noun(def, content).map(|c| capitalized(&c));
     let place = slot.name.to_lowercase();
     Some(match (category, slot.action) {
         (Some(c), ActionKind::Wield) if def.two_handed => format!("{c}, for both hands"),
@@ -245,7 +243,7 @@ fn how_held(def: &ObjectDef, content: &Content) -> Option<String> {
         (_, _) if def.ammo.is_some() => {
             let from: Vec<String> = (content.object_defs().iter())
                 .filter(|o| o.launches.is_some() && o.launches == def.ammo)
-                .filter_map(|o| o.category.as_deref().and_then(category_name))
+                .filter_map(|o| weapon_noun(o, content))
                 .map(|c| format!("{c}s"))
                 .fold(Vec::new(), |mut all, c| {
                     if !all.contains(&c) {

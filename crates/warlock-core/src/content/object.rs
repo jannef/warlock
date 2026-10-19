@@ -15,7 +15,12 @@
 //! (a launcher's carry its draw weight, `1d8+2`), its critical (`threat`, the lowest natural roll
 //! that threatens, default 22; `crit`, the damage multiplier, default 2), an optional `to_hit`,
 //! a `parry` bonus to Defence while wielded, and for bows the `strength` they need; armour its
-//! `armour` bonus and the most Dexterity bonus it allows (`max_dex`); a shield its `shield` bonus.
+//! `armour` bonus and the most Dexterity bonus it allows (`max_dex`); a shield its `shield` bonus,
+//! and the `bash` dice of a blow with it (spec §8 "Weapon skills": the shield bash).
+//!
+//! Every weapon names its weapon skill (`category`, an id in `data/weapon_skills.toml`; spec §8
+//! "Weapon skills"): a skill of role `melee` for what is wielded in a hand, `launcher` for a
+//! missile weapon, `thrown` for what is only thrown (a rock).
 //!
 //! Ranged combat (spec §8 "Ranged combat"): a missile weapon shoots as far as its `range` (and
 //! one that `reloads`, a crossbow, takes the `reload` action after every shot); anything else
@@ -30,9 +35,8 @@
 //! Base items (spec §8 "Magic items"): an object that may be found magic says what `kind` of
 //! item it is ([`ItemKind`]: a weapon, a missile weapon, ammunition, body armour, a helmet, a
 //! cloak, gloves, boots, a shield, a ring, or an amulet), the item `level` from which loot holds
-//! it (default 1), and how often (`frequency`, default 100; 0: never). Weapons name their weapon
-//! skill `category` ([`WEAPON_CATEGORIES`]) and may cost more or less than a normal attack
-//! (`attack_cost`, instead of the `melee` or `shoot` action's).
+//! it (default 1), and how often (`frequency`, default 100; 0: never). Weapons may cost more or
+//! less than a normal attack (`attack_cost`, instead of the `melee` or `shoot` action's).
 
 use super::action::check_cost;
 use super::affix::{ItemKind, MAX_ITEM_LEVEL};
@@ -40,6 +44,7 @@ use super::light::LightId;
 use super::material::MaterialId;
 use super::particles::ParticleEmitter;
 use super::slot::SlotDef;
+use super::weapon_skill::{Role, WeaponSkillId, WeaponSkillTable};
 use super::{Content, ContentError};
 use crate::color::Rgb;
 use crate::combat::{Attack, CRITS, DEFAULT_CRIT, DEFAULT_THREAT, THREATS};
@@ -65,9 +70,10 @@ pub struct ObjectId(pub u16);
 /// Most of one object a level file may place with `"id*N"`.
 pub const MAX_PLACED: u32 = 9999;
 
-/// The weapon skill categories weapons name (`category`): their ids and what one of each is
-/// called. The list of #134's weapon skills, which will come from `data/weapon_skills.toml`.
-pub const WEAPON_CATEGORIES: [(&str, &str); 13] = [
+/// What one weapon of each weapon skill (`category`, an id in `data/weapon_skills.toml`) is
+/// called, for item descriptions (spec §8 "Magic items"): a skill not listed is called by its
+/// name.
+pub const WEAPON_NOUNS: [(&str, &str); 13] = [
     ("daggers", "dagger"),
     ("short_blades", "short blade"),
     ("long_blades", "long blade"),
@@ -83,11 +89,18 @@ pub const WEAPON_CATEGORIES: [(&str, &str); 13] = [
     ("thrown", "thrown weapon"),
 ];
 
-/// What one weapon of weapon skill category `id` is called: "long blade".
+/// What one weapon of the weapon skill with id `id` is called: "long blade".
 pub fn category_name(id: &str) -> Option<&'static str> {
-    (WEAPON_CATEGORIES.iter())
+    (WEAPON_NOUNS.iter())
         .find(|(c, _)| *c == id)
         .map(|(_, name)| *name)
+}
+
+/// What one weapon like `def` is called by its weapon skill ([`WEAPON_NOUNS`], else the skill's
+/// name): "long blade". `None` for what names no weapon skill.
+pub fn weapon_noun(def: &ObjectDef, content: &Content) -> Option<String> {
+    let skill = content.weapon_skills().skill(def.skill?);
+    Some(category_name(&skill.id).map_or_else(|| skill.name.to_lowercase(), str::to_string))
 }
 
 /// An object type as written in content files.
@@ -136,6 +149,10 @@ pub(super) struct ObjectSpec {
     /// Defence while held (the Shield category).
     #[serde(default)]
     pub shield: i32,
+    /// A shield's damage dice when bashing with it.
+    pub bash: Option<Dice>,
+    /// The weapon skill a weapon trains and draws on (`data/weapon_skills.toml`).
+    pub category: Option<String>,
     /// How far a missile weapon shoots, or a throwing weapon (anything else with a range) is
     /// thrown, in cells.
     pub range: Option<i32>,
@@ -167,8 +184,6 @@ pub(super) struct ObjectSpec {
     /// The kind of item it is for magic: what affixes it may roll. None: never magic, never
     /// loot.
     pub kind: Option<ItemKind>,
-    /// A weapon's weapon skill category (an id of [`WEAPON_CATEGORIES`]).
-    pub category: Option<String>,
     /// What an attack with it costs, instead of the `melee` action's (a missile weapon: the
     /// `shoot` action's).
     pub attack_cost: Option<u32>,
@@ -212,6 +227,11 @@ pub struct ObjectDef {
     pub max_dex: Option<i32>,
     /// Defence while held: its Shield bonus.
     pub shield: i32,
+    /// What a bash with it does, if it is a shield one can bash with.
+    pub bash: Option<Attack>,
+    /// Its weapon skill: a weapon's `category` (`None` for anything else, and without
+    /// `data/weapon_skills.toml`).
+    pub skill: Option<WeaponSkillId>,
     /// How far it shoots (a missile weapon) or is thrown (a throwing weapon), in cells.
     pub range: Option<i32>,
     /// A missile weapon reloaded after every shot: a shot also takes the `reload` action.
@@ -232,8 +252,6 @@ pub struct ObjectDef {
     pub particles: Vec<ParticleEmitter>,
     /// The kind of item it is for magic; `None`: never magic, never loot.
     pub kind: Option<ItemKind>,
-    /// A weapon's weapon skill category ([`WEAPON_CATEGORIES`]).
-    pub category: Option<String>,
     /// What an attack with it costs instead of the action's (`melee`, or `shoot` for a missile
     /// weapon).
     pub attack_cost: Option<u32>,
@@ -280,15 +298,17 @@ pub fn article(noun: &str) -> &'static str {
 }
 
 impl ObjectSpec {
-    /// Checks the definition and resolves its material and light; `slots` are where things may
-    /// be worn or wielded. Returns the object and the id of what it is `lit` as, which names
-    /// another object and is resolved once every object is known.
+    /// Checks the definition and resolves its material, light, and weapon skill; `slots` are
+    /// where things may be worn or wielded, `skills` the weapon skills. Returns the object and
+    /// the id of what it is `lit` as, which names another object and is resolved once every
+    /// object is known.
     pub(super) fn resolve(
         self,
         file: &str,
         material: impl Fn(&str) -> Option<MaterialId>,
         light: impl Fn(&str) -> Option<LightId>,
         slots: &[SlotDef],
+        skills: &WeaponSkillTable,
     ) -> Result<(ObjectDef, Option<String>), ContentError> {
         let err = |m: String| ContentError::new(file, format!("object `{}`: {m}", self.id));
         if self.name.trim().is_empty() || self.plural.as_ref().is_some_and(|p| p.trim().is_empty())
@@ -329,6 +349,15 @@ impl ObjectSpec {
         let attack = self.attack().map_err(err)?;
         self.check_defence().map_err(err)?;
         self.check_ranged().map_err(err)?;
+        let skill = self.skill(slots, skills).map_err(err)?;
+        let bash = match (self.bash, self.shield) {
+            (None, _) => None,
+            (Some(damage), shield) if shield > 0 => Some(Attack {
+                damage,
+                ..Attack::unarmed()
+            }),
+            (Some(_), _) => return Err(err("`bash` is for shields (`shield`)".into())),
+        };
         let burning = match (&self.light, self.burns) {
             (None, None) => None,
             (Some(id), Some(seconds)) => {
@@ -363,6 +392,8 @@ impl ObjectSpec {
             armour: self.armour,
             max_dex: self.max_dex,
             shield: self.shield,
+            bash,
+            skill,
             range: self.range,
             reloads: self.reloads,
             breaks: self.breaks,
@@ -373,7 +404,6 @@ impl ObjectSpec {
             glow: self.glow,
             particles: self.particles,
             kind: self.kind,
-            category: self.category,
             attack_cost: self.attack_cost,
             level: self.level.unwrap_or(1),
             frequency: match self.kind {
@@ -385,7 +415,7 @@ impl ObjectSpec {
     }
 
     /// The fields of a base item: its `kind` fits what it is (a weapon has an attack and goes in
-    /// a hand, ...), weapons name a weapon skill `category`, and `level` and `frequency` are for
+    /// a hand, ...), and `level` and `frequency` are for
     /// things with a kind.
     fn check_base(&self, weapon: bool) -> Result<(), String> {
         if let Some(kind) = self.kind {
@@ -411,17 +441,6 @@ impl ObjectSpec {
         }
         if self.level.is_some_and(|l| l == 0 || l > MAX_ITEM_LEVEL) {
             return Err(format!("`level` must be 1 to {MAX_ITEM_LEVEL}"));
-        }
-        match (&self.category, weapon) {
-            (Some(c), true) if category_name(c).is_none() => {
-                let known: Vec<&str> = WEAPON_CATEGORIES.iter().map(|(id, _)| *id).collect();
-                return Err(format!(
-                    "unknown weapon `category` `{c}` (expected one of {})",
-                    known.join(", ")
-                ));
-            }
-            (Some(_), false) => return Err("`category` is for weapons (`damage`)".into()),
-            _ => {}
         }
         if let Some(cost) = self.attack_cost {
             if !weapon || self.slot.is_none() {
@@ -527,6 +546,50 @@ impl ObjectSpec {
         }))
     }
 
+    /// The weapon skill a weapon names (`category`): every weapon names one when there are
+    /// weapon skills, nothing else does, and its role fits what the weapon is: a missile weapon
+    /// a `launcher`, what is wielded in a hand `melee`, anything else (only thrown) `thrown`.
+    fn skill(
+        &self,
+        slots: &[SlotDef],
+        skills: &WeaponSkillTable,
+    ) -> Result<Option<WeaponSkillId>, String> {
+        let Some(name) = &self.category else {
+            if self.damage.is_some() && !skills.is_empty() {
+                return Err(
+                    "a weapon (`damage`) names its weapon skill (`category`, an id in \
+                     data/weapon_skills.toml)"
+                        .into(),
+                );
+            }
+            return Ok(None);
+        };
+        if self.damage.is_none() {
+            return Err("`category` is for weapons, which have a `damage`".into());
+        }
+        let id = skills
+            .id(name)
+            .ok_or_else(|| format!("unknown weapon skill `{name}` (data/weapon_skills.toml)"))?;
+        let in_hand = (slots.iter()).any(|s| s.hand && Some(&s.fits) == self.slot.as_ref());
+        let role = if self.launches.is_some() {
+            Role::Launcher
+        } else if in_hand {
+            Role::Melee
+        } else {
+            Role::Thrown
+        };
+        let has = skills.skill(id).role;
+        if has != role {
+            return Err(format!(
+                "`category = \"{name}\"` is a skill of role `{}`, but this weapon needs one of \
+                 role `{}`",
+                has.id(),
+                role.id()
+            ));
+        }
+        Ok(Some(id))
+    }
+
     /// Defence bonuses are for things worn or wielded, 0 to [`MAX_BONUS`].
     fn check_defence(&self) -> Result<(), String> {
         let bonuses = [
@@ -609,6 +672,8 @@ mod tests {
             armour: 0,
             max_dex: None,
             shield: 0,
+            bash: None,
+            skill: None,
             range: None,
             reloads: false,
             breaks: 0,
@@ -619,7 +684,6 @@ mod tests {
             glow: 0.0,
             particles: Vec::new(),
             kind: None,
-            category: None,
             attack_cost: None,
             level: 1,
             frequency: 0,
