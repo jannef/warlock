@@ -5,7 +5,7 @@ use super::fight::{End, Words, attack_message, death_message};
 use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::combat::{Category, Health, Strike};
-use crate::content::ContentFiles;
+use crate::content::{ContentFiles, Role};
 use crate::replay::Replay;
 
 #[test]
@@ -925,45 +925,37 @@ fn creatures_stay_neutral_and_the_stance_is_the_players() {
 #[test]
 fn a_coward_s_attacks_cost_more_and_other_actions_do_not() {
     let mut w = world_on("#####\n#@r.#\n#####\n", "");
-    let price = |w: &World, kind| w.price_of(ActorId(0), kind);
-    let base = [
-        ActionKind::Melee,
-        ActionKind::Shoot,
-        ActionKind::Throw,
-        ActionKind::Wait,
-    ]
-    .map(|k| price(&w, k));
+    let me = ActorId(0);
+    // Every attack: a blow, a kick, a shot, a throw (priced alike when nothing is wielded or
+    // readied); then what is no attack: waiting, reloading, and kicking a door.
+    let prices = |w: &World| {
+        let attack = |kind, attack_kind| {
+            let skills = w.skills_of(me, attack_kind, None);
+            w.attack_price(me, kind, None, skills)
+        };
+        let unarmed = w.content().weapon_skills().of_role(Role::Unarmed);
+        let shot = w.skills_of(me, AttackKind::Ranged, None);
+        [
+            attack(ActionKind::Melee, AttackKind::Melee),
+            w.attack_price(me, ActionKind::Kick, None, AttackSkills::only(unarmed)),
+            attack(ActionKind::Shoot, AttackKind::Ranged),
+            attack(ActionKind::Throw, AttackKind::Thrown),
+            w.price_of(me, ActionKind::Wait),
+            w.reload_price(me, shot),
+            w.price_of(me, ActionKind::Kick),
+        ]
+    };
+    let base = prices(&w);
     for stance in [CombatStance::Aggressive, CombatStance::Defensive] {
         take(&mut w, stance);
-        let same = [
-            ActionKind::Melee,
-            ActionKind::Shoot,
-            ActionKind::Throw,
-            ActionKind::Wait,
-        ]
-        .map(|k| price(&w, k));
-        assert_eq!(same, base, "{stance}");
+        assert_eq!(prices(&w), base, "{stance}");
     }
     take(&mut w, CombatStance::Coward);
-    let [melee, shoot, throw, wait] = [
-        ActionKind::Melee,
-        ActionKind::Shoot,
-        ActionKind::Throw,
-        ActionKind::Wait,
-    ]
-    .map(|k| price(&w, k));
-    assert_eq!(melee, base[0] * 5 / 4);
-    assert_eq!(shoot, base[1] * 5 / 4);
-    assert_eq!(throw, base[2] * 5 / 4);
-    assert_eq!(wait, base[3]);
-    // Attacks drawing on a weapon skill are priced by `attack_price`, which applies it too.
-    let blow = w.skills_of(ActorId(0), AttackKind::Melee, None);
-    assert_eq!(w.attack_price(ActorId(0), ActionKind::Melee, blow), melee);
-    assert_eq!(
-        w.price_of(ActorId(0), ActionKind::Reload),
-        price(&world_on("#####\n#@r.#\n#####\n", ""), ActionKind::Reload),
-        "reloading is not an attack"
-    );
+    let coward = prices(&w);
+    for (i, (now, was)) in coward.iter().zip(base).enumerate() {
+        let dearer = if i < 4 { was * 5 / 4 } else { was };
+        assert_eq!(*now, dearer, "price {i}: attacks only");
+    }
 }
 
 #[test]

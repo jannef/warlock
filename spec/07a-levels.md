@@ -84,13 +84,16 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   fields each kind needs (any other is a content error): `shot` (`object`, the missile, which
   lands as that object; `damage`, `to_hit`), `strike` (`noun`, `damage`, `to_hit`), `burst`
   (`radius` 1 to 5, `damage`, `spell`, `noun`, an optional `blast` 0 to 10000: the walls it
-  reaches whose hardness is below it break, §8 "Digging"), `bolt` (`length` 1 to 40, `damage`,
+  reaches whose hardness is below it break, §8 "Digging"; and either `heat = true`, it melts the
+  ice it reaches, or `frost` 1 to 1000, the water it reaches freezes to at least that many mm of
+  ice, §5 "Ice"), `bolt` (`length` 1 to 40, `damage`,
   `spell`, `noun`), `pit` (`damage`), `alarm` (needs a `noise`), `teleport`. `noun` and `verb`
   (default "hits") make the messages ("The fireball burns you."); `spell` names the effect
   presentation shows (`data/effects.toml`; §4.8). `to_hit` is within ±20 and never shown;
   `damage` is dice that can do harm. The built-in traps: arrow (`shot`, an arrow, 1d6, a
-  bowstring 40), spear (`strike`, 1d8), fireball (`burst` radius 2, 3d6, a blast of 1000, once,
-  an explosion 150), lightning bolt
+  bowstring 40), spear (`strike`, 1d8), fireball (`burst` radius 2, 3d6, a blast of 1000, heat,
+  once, an explosion 150), frost (`burst` radius 2, 2d6, frost 100 mm, once, silent), lightning
+  bolt
   (`bolt` 12 cells, 4d6, twice, a thunderclap 120), pit (1d6), alarm (a bell 300), and teleport.
   The wiki shows them in a generated table.
 - **Water**: `~` is still water (`water`); `shallow_water` (ankle-deep over a stone floor, paler,

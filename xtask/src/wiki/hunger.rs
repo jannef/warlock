@@ -189,8 +189,8 @@ pub(super) fn food(content: &Content) -> String {
         return "Nobody hungers.\n".into();
     };
     let mut out = String::from(
-        "| Food | Nutrition | Feeds a human for | Turns to eat | Weight |\n\
-         |---|---:|---:|:---:|---:|\n",
+        "| Food | Nutrition | Feeds a human for | Turns to eat | Weight | Cures |\n\
+         |---|---:|---:|:---:|---:|---|\n",
     );
     for (_, o) in order::objects(content) {
         let (Some(food), None) = (o.food, o.corpse) else {
@@ -199,15 +199,44 @@ pub(super) fn food(content: &Content) -> String {
         let nutrition = i32::try_from(food.nutrition).unwrap_or(i32::MAX);
         let _ = writeln!(
             out,
-            "| {} | {} | {} | {} | {} |",
+            "| {} | {} | {} | {} | {} | {} |",
             capital(&o.name),
             food.nutrition,
             lasts(def, nutrition, 100),
             food.turns,
-            format_weight(u64::from(o.weight))
+            format_weight(u64::from(o.weight)),
+            cures(content, &o.cures)
         );
     }
     out
+}
+
+/// What a remedy's `cures` end, in words: "every disease" when every disease lists one of
+/// them, else the diseases and statuses that do, by name; "-" for none.
+fn cures(content: &Content, means: &[String]) -> String {
+    let cured = |by: &[String]| by.iter().any(|c| means.contains(c));
+    let diseases = content.disease_defs();
+    let mut names: Vec<String> = Vec::new();
+    if !diseases.is_empty() && diseases.iter().all(|d| cured(&d.cured_by)) {
+        names.push("every disease".into());
+    } else {
+        names.extend(
+            (diseases.iter())
+                .filter(|d| cured(&d.cured_by))
+                .map(|d| d.name.clone()),
+        );
+    }
+    let statuses = content.status_defs().iter();
+    names.extend(
+        statuses
+            .filter(|s| cured(&s.cured_by))
+            .map(|s| s.name.to_lowercase()),
+    );
+    if names.is_empty() {
+        "-".into()
+    } else {
+        names.join(", ")
+    }
 }
 
 /// Every creature's corpse: what it weighs (the creature's weight) and what it gives (by size).

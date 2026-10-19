@@ -33,7 +33,17 @@ there,
 asked through `price_of`/`step_price`/`price_for`: those apply the actor's burden (`docs/dev/burden.md`,
 `World::burdened`), so a price taken anywhere else would escape it (`price_until`, the rest's
 last turn, deliberately does). Price an action that changes the load before it does (pick up,
-drop).
+drop). **Every attack** (a blow, a bash, a kick at a creature, a shot, a throw, a creature's
+attack or spell) is priced by `World::attack_price(id, kind, with, skills)`: `World::attack_cost`
+(the creature type's cost, or the `with` object's own `attack_cost`; the attack speed of what the
+actor wears and wields plus the `with` object's own affixes), less the ranks' `speed`, the combat
+stance's `attack_cost`, the burden. `with` is the inventory position of what the attack is made
+with: the wielded weapon for a blow, the shield for a bash (never the weapon's cost or affixes),
+the missile weapon for a shot, none for a kick or a throw. Reloading is `World::reload_price`
+(not an attack: no attack speed, no stance); `price_of` applies no stance (a door kick is the
+plain `kick`). An attack is priced **as it begins**, before it is made: a rank its marks raise, a
+load it lightens (a throw), or a kill changes the next attack's price, never its own
+(`weapon_skill_tests::an_attack_is_priced_as_it_begins...`).
 `creature_turn` is one creature's action and returns its price: the one place creature behavior
 lives (AI decisions, the noise and events an action makes; the AI is `world/ai.rs`, `docs/dev/creatures.md`).
 Speed (`speed` in `data/creatures.toml`, default 1000 = the player's; any player speed works)

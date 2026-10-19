@@ -456,6 +456,40 @@ fn the_chance_to_break_a_door_is_strength_in_sturdiness() {
 }
 
 #[test]
+fn athletics_helps_kick_a_door_in_and_kicking_doors_trains_it() {
+    let mut files = files();
+    files.insert(
+        "data/skills.toml",
+        include_str!("../../../../assets/data/skills.toml"),
+    );
+    let content = Arc::new(Content::load(&files).expect("test content is valid"));
+    let athletics = content.skill_id("athletics").expect("athletics");
+    // Strength 10 and athletics 100 (+8 Strength) against sturdiness 30: 60 % of first kicks
+    // break the door, not a third.
+    let seeds = 600;
+    let broke = (0..seeds)
+        .filter(|&seed| {
+            let mut w = World::new(content.clone(), "average", Some(seed)).expect("world");
+            w.player_mut().skills.add(athletics, 100);
+            w.apply(&Action::Kick(Dir::E));
+            terrain(&w, EAST) == "door_broken"
+        })
+        .count();
+    assert!((310..=410).contains(&broke), "{broke} of {seeds}");
+    // Kicking at a door that holds earns athletics marks; kicking a creature trains unarmed
+    // fighting instead.
+    let mut w = World::new(content.clone(), "iron", None).expect("world");
+    w.player_mut().skills.add(athletics, 0);
+    run(&mut w, "kick:E*20");
+    let marks = |w: &World| w.state.player().skills.get(athletics).map(|t| t.marks);
+    assert!(marks(&w) > Some(0), "{:?}", marks(&w));
+    let mut w = World::new(content.clone(), "brawl", None).expect("world");
+    w.player_mut().skills.add(athletics, 0);
+    run(&mut w, "kick:E*20");
+    assert_eq!(marks(&w), Some(0));
+}
+
+#[test]
 fn kicks_are_loud() {
     // The rat round the corner hears the banging on the iron door and comes to look.
     let mut w = world("iron");

@@ -32,7 +32,8 @@
 #   wading      terrain it is caught in: { terrain = ["marsh"], per_hour = 4 }, a chance in
 #               percent for each hour spent crossing it (drawn as you step onto it, by how long
 #               the step takes), then a check to resist it
-#   cured_by    the means that cure it at once (nothing applies them yet: potions, priests)
+#   cured_by    the means that cure it at once: eating a remedy that `cures` it (objects: the
+#               angelica root cures `remove_disease`), later potions and priests
 #   onset       said when it shows (stops a rest)
 #   symptoms    said when a progression goes badly, in turn (each stops a rest)
 #   recovered   said when it is gone (lets a rest go on)
@@ -106,8 +107,8 @@ symptoms = [
 ]
 recovered = "The ague leaves you."
 
-# Like mummy rot: it never goes by itself, and it kills. From rotten corpses for now (#137);
-# later the undead.
+# Like mummy rot: it never goes by itself, and it kills, unless cured (an angelica root). From
+# rotten corpses for now (#137); later the undead.
 [[disease]]
 id = "grave_rot"
 name = "grave rot"

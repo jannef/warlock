@@ -11,8 +11,9 @@ one is hit, and comes down (`come_down`) on top of the pile, unless it broke (`b
 gameplay draw on a hit) or the cell is not walkable. What is `lit` flies as its burning object and
 starts a fire (`LevelState::fires`, saved): a light source in `LightCache::sources` while the clock
 is before its end, cleaned up by `World::burn_out` at the start of `perceive`. Prices go through
-`price_of`/`price_for` (shoot, plus `reload` for a launcher that `reloads`; throw), so burden
-slows them too. `Event::Missile` carries the path; `perceive_events` cuts it to what the player
+`attack_price` (shoot with the missile weapon, throw with nothing; priced as the shot begins, so
+the missile leaving and the marks it earns change only the next) plus `reload_price` for a
+launcher that `reloads`, so the stance and burden change them too. `Event::Missile` carries the path; `perceive_events` cuts it to what the player
 saw (a burning missile: everything in their line of sight). In the app, `ui/target.rs` is the
 aiming input mode (`InputMode::Aim`: cursor start, Tab cycling, the line of fire as the player
 knows it, `LastTarget`), `ui/missiles.rs` flies missiles on the free-glyph layer (glyphs turned

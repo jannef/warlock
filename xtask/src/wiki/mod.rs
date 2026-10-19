@@ -138,6 +138,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("skill-grants.md", skills::skill_grants),
         ("skill-increase.md", skills::skill_increase),
         ("weapons.md", combat::weapons),
+        ("light-weapons.md", combat::light_weapons),
         ("launchers.md", combat::launchers),
         ("ammunition.md", combat::ammunition),
         ("armour.md", combat::armour),
@@ -319,7 +320,10 @@ mod tests {
         ));
         // Weapons by skill, then value, then name (the staves last among the melee skills).
         assert!(equipment.contains(", quarterstaff (both hands), ironwood staff (both hands) |"));
-        assert!(equipment.contains("| `f` | Off hand | Stiletto, dagger, short sword, buckler, "));
+        assert!(
+            equipment
+                .contains("| `f` | Off hand | Stiletto, dagger, short sword, hand axe, buckler, ")
+        );
         assert!(equipment.contains(
             "| `k` | Missile weapon | Short bow (shoots arrows), long war bow (shoots arrows), \
              composite bow (shoots arrows), crossbow (shoots crossbow bolts), heavy crossbow \
@@ -422,18 +426,19 @@ mod tests {
         let benefits = text("skill-benefits.md");
         assert!(
             benefits.contains(
-                "| Value | Appraise: prices | Balance: Burdened / Strained | Listen: hears fainter \
-                 by | Stealth: noise | Survival: journeys | Tumble: Dodge |"
+                "| Value | Appraise: prices | Athletics: kicking doors in | Balance: Burdened / \
+                 Strained | Listen: hears fainter by | Stealth: noise | Survival: journeys | \
+                 Tumble: Dodge |"
             ),
             "{benefits}"
         );
-        assert!(
-            benefits.contains(
-                "| 100 | 20% better | ×1.1 / ×1.2 | 10 | \u{2212}60% | \u{2212}20% | +5 |"
-            )
-        );
         assert!(benefits.contains(
-            "| 150 | 25% better | ×1.08 / ×1.15 | 15 | \u{2212}75% | \u{2212}20% | +7 |"
+            "| 100 | 20% better | +8 Strength | ×1.1 / ×1.2 | 10 | \u{2212}60% | \u{2212}20% \
+                 | +5 |"
+        ));
+        assert!(benefits.contains(
+            "| 150 | 25% better | +10 Strength | ×1.08 / ×1.15 | 15 | \u{2212}75% | \u{2212}20% \
+             | +7 |"
         ));
         let grants = text("skill-grants.md");
         assert!(grants.contains("| Halfling | Listen `1d6+4`, Stealth `1d6+4` |"));

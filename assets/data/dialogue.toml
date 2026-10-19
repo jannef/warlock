@@ -129,7 +129,7 @@ reply = "A spring runs out of the east wall into the ponds, and a rill carries t
 [[dialogue.topic]]
 id = "stairs"
 name = "These stairs"
-reply = "Three stairs down, two up. Down: the Vast Caverns, the quarry, where they dig, and the arena, where the fighting is. Up: the courtyard garden, and the road out into the Wildlands. Everything in this hall is safe. The arena is not."
+reply = "Five stairs down, two up. Down: the Vast Caverns, the quarry where they dig, the Frost Grotto, the trap hall, and the arena, where the fighting is. Up: the courtyard garden, and the road out into the Wildlands. Everything in this hall is safe. Down there, not everything is."
 
 # Every shopkeeper (shops.toml): one-liners about trade, no topics. An outraged one, hostile to
 # you, is in no mood to talk.

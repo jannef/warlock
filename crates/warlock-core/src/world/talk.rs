@@ -399,7 +399,10 @@ impl World {
 
     /// Creature `id` steps from `from` onto `to`, where the player stood, making way for them:
     /// it remembers where it stood (unless it already has a post to return to), which it walks
-    /// back to before it carries on. Its own turn is unaffected. Says so, and makes its noise.
+    /// back to before it carries on. Says so, and makes its noise. It lands there as any step
+    /// lands: ice there may give way under it (spec §5 "Ice"), and a trap there goes off (spec §8
+    /// "Traps"). Its own turn is unaffected but for what that costs it on top (climbing out of a
+    /// pit or onto the ice), which comes off its energy.
     pub(super) fn swap_places(
         &mut self,
         id: ActorId,
@@ -408,6 +411,10 @@ impl World {
         seen: bool,
         events: &mut Vec<Event>,
     ) {
+        if !self.state.actors.contains_key(&id) {
+            return;
+        }
+        let footing = self.tread(id, from, to);
         let Some(actor) = self.state.actors.get_mut(&id) else {
             return;
         };
@@ -423,8 +430,13 @@ impl World {
             from,
             to,
         });
+        self.after_tread(id, to, footing, events);
         self.make_noise(id, Act::Step(to));
         self.say(format!("You swap places with {who}."));
+        let extra = self.tread_price(id, footing) + self.spring_trap(to, id, events);
+        if let Some(actor) = self.state.actors.get_mut(&id) {
+            actor.energy = actor.energy.saturating_sub(extra);
+        }
     }
 }
 

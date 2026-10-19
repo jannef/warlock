@@ -14,15 +14,18 @@ status in status order; `Effects::add` applies the stacking rule, `penalty`, `re
 `is_valid_for`; `Effect::until_tick`/`until_eases`/`advance` are the timer math: ticks bank
 `seconds × severity` degree-seconds). `world/status.rs` applies them: `World::afflict(actor,
 status, severity, by, events)` (**the one way to give an actor a status**: food poisoning
-from what the player eats (#137), traps, diseases call it), `World::cure(actor, means, events)` (the Heal skill's
-bandage, #132), `World::after_blow` (wounds by `combat::big_hit` and criticals, then `on_hit`
+from what the player eats (#137), traps, diseases call it), `World::cure(actor, means, events)` (eating
+a remedy, an object with `cures`, `world/eat.rs::remedy`, which says what ended at once; the Heal
+skill's bandage, #132), `World::after_blow` (wounds by `combat::big_hit` and criticals, then `on_hit`
 with one gameplay draw per chance below 100), `World::healing_rate` (min of the statuses'
 `regen`, × resting for the player while `World::resting`, none for a Starving player, × a
 special room's `regen`, × (100 + the regeneration affixes of what the actor wears and wields) %),
 and `World::pass_time` → `live`, called by `run_turn` for every scheduled actor as the clock
 moves: an event loop over the next tick, easing, hit point back, or change in the player's
 hunger (`docs/dev/hunger.md`), so splitting time never
-changes the result, deaths at their exact moment (`dies(.., Some(status), when)`), the blood
+changes the result, the ticks' damage and then starving's through `hurt` (`Harm::Status`,
+`Harm::Starving`: whichever takes the last hit point kills), deaths at their exact moment
+(`dies(.., Some(status), when)`), the blood
 drip hook `drip_blood` (#127's stains go there). The player's statuses beginning and ending are
 `Event::Status` (said by `perceive_events`: begin = `say`, stops a rest; end = `note`, does not;
 the rest loop keeps them from the turns it does not perceive). Presentation reads
@@ -54,7 +57,8 @@ status penalties, so every rule (and max HP through Toughness) sees it. `world/d
 (eating a rotten corpse calls `expose_to(player, "rotten_food")`, `world/eat.rs`),
 `World::wade` (called from `player_moves` with the step's seconds: one draw out of 360 000
 unless sure), `World::disease_turn` (onset: `afflict` Diseased; progression: a check, damage in
-stat order then `hp`, hp cut to the new max, death by Diseased for a disease that `kills`),
+stat order then `hp` through `hurt` (`Harm::Spared` unless it `kills`), hp cut to the new
+max, death by Diseased for a disease that `kills`),
 `World::end_disease` (recovery and cures; Diseased ends with the last showing one). `live` steps
 to `disease::until_next` (disease turns and mending a point a day while none shows) and runs
 `disease::pass` then the due turns after the effects at each moment. `World::healing_rate` takes

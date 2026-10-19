@@ -37,7 +37,8 @@
 //! - **Cures**: [`World::cure`] ends what a named means cures (`cured_by`: a bandage stops the
 //!   bleeding; diseases list their own), for the Heal skill (#132), potions, and priests to use.
 
-use super::{ActorId, Cause, Spent, World, disease};
+use super::fight::Harm;
+use super::{ActorId, Spent, World, disease};
 use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Strike};
 use crate::content::Effect as ItemEffect;
@@ -85,9 +86,8 @@ impl World {
 
     /// Cures actor `id` with `cure`, a means named in the statuses' and diseases' `cured_by`
     /// (`bandage`, `remove_disease`): every status of its that the means cures ends, and every
-    /// disease (showing or not). Returns whether any did. Nothing applies a cure yet: the Heal
-    /// skill's bandaging (#132), potions, and priests will.
-    #[cfg_attr(not(test), allow(dead_code))]
+    /// disease (showing or not). Returns whether any did. Eating a remedy applies its cures
+    /// (`world/eat.rs`); the Heal skill's bandaging (#132), potions, and priests will too.
     pub(crate) fn cure(&mut self, id: ActorId, cure: &str, events: &mut Vec<Event>) -> bool {
         let content = self.content.clone();
         let player = self.state.player;
@@ -296,24 +296,20 @@ impl World {
                     .saturating_sub(u16::try_from(eased).unwrap_or(u16::MAX));
             }
             let spent = actor.effects.drop_spent();
-            actor.hp -= moment.damage;
-            let (starved, hunger) = self.digest(id, step);
-            let Some(actor) = self.state.actors.get_mut(&id) else {
-                return;
-            };
-            actor.hp -= starved;
-            let dead = actor.hp <= 0;
             let due = disease::pass(actor, step);
             if moment.bled {
                 self.drip_blood(id);
             }
+            // The ticks' harm first, then starving's: whichever takes the last hit point kills.
             let when = start + Duration::seconds(passed);
-            if dead && let Some((status, by)) = moment.by {
-                self.dies(id, by, Some(status), when, events);
-                return;
+            if let Some((status, by)) = moment.by {
+                let of = Some(status);
+                if self.hurt(id, moment.damage, Harm::Status { of, by, when }, events) {
+                    return;
+                }
             }
-            if dead && starved > 0 {
-                self.die_of(Cause::Starvation, when);
+            let (starved, hunger) = self.digest(id, step);
+            if starved > 0 && self.hurt(id, starved, Harm::Starving(when), events) {
                 return;
             }
             if id == self.state.player {

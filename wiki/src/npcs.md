@@ -49,7 +49,8 @@ and if it was faint, without the words. Muttering never wakes you from a [rest](
 You never have to wait for someone to move out of your way. Walking into a creature that is not
 hostile to you swaps places with it: you step onto its cell, it steps onto yours ("You swap
 places with the deer."). That takes your step's time, and it does not cost the creature its own
-turn. Afterwards it walks back to where it stood (waiting beside the spot while you are on it)
+turn. It lands on your cell as any step lands: a trap you stood on goes off at it, and ice that
+held you may not hold something heavier. Afterwards it walks back to where it stood (waiting beside the spot while you are on it)
 and carries on with whatever it was doing.
 
 A few will not make way, and then the move takes no time and the message says why:

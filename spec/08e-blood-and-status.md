@@ -152,7 +152,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `Worse(n)`, `Recovered`): an onset and a symptom are news that stop a rest (a batched rest
     turn in which one comes is perceived at once), a recovery is only logged.
   - **Cures**: `World::cure(actor, means)` also ends every disease, showing or incubating, that
-    lists the means in its `cured_by` (`remove_disease`); potions and priests will apply it.
+    lists the means in its `cured_by` (`remove_disease`). A **remedy** applies it: food whose
+    `cures` names means (§7: objects), cured as it is eaten (`E`, §8 "Hunger"), what ended said at
+    once ("The rot is gone from your flesh."; an incubating disease ends unseen, as it came).
+    The built-in one is the **angelica root** (`%`, worth 30 gold; nutrition 20, one turn), which
+    cures every disease, grave rot too, so a caught grave rot is no certain death: Grimbold's
+    General Store in the courtyard has one (the purse in the gazebo pays for it), and general
+    stores and provisioners stock it among their food. Potions and priests will apply cures too.
   - **Dev**: the action `infect:ID` makes the player catch a disease as if they had lost the
     check (it incubates; no game time; recorded in replays; "You catch filth fever (dev)."), for
     tests and captures. `afflict:diseased` is refused: Diseased comes of a disease.

@@ -391,14 +391,21 @@ impl Actor {
         def.attack.as_ref().map(|a| (stack.object, a))
     }
 
+    /// Where in its inventory the shield it can bash with lies: the first hand that holds one.
+    pub fn shield_item(&self, content: &Content) -> Option<usize> {
+        content.hand_slots().find_map(|slot| {
+            let item = self.equipment.get(slot)?;
+            let stack = self.inventory.get(item)?;
+            content.object(stack.object).bash.as_ref().map(|_| item)
+        })
+    }
+
     /// The shield it holds that it can bash with, and what a bash with it does (spec §8
     /// "Weapon skills"): the first hand that holds one.
     pub fn shield<'c>(&self, content: &'c Content) -> Option<(ObjectId, &'c Attack)> {
-        content.hand_slots().find_map(|slot| {
-            let stack = self.inventory.get(self.equipment.get(slot)?)?;
-            let def = content.object(stack.object);
-            def.bash.as_ref().map(|a| (stack.object, a))
-        })
+        let stack = self.inventory.get(self.shield_item(content)?)?;
+        let def = content.object(stack.object);
+        def.bash.as_ref().map(|a| (stack.object, a))
     }
 
     /// What its rank in weapon skill `skill` gives (nothing for no skill).

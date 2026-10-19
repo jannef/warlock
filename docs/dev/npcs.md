@@ -14,7 +14,9 @@ line once a round in a per-speaker shuffled order, never twice in a row; `Actor:
 was said; with `Actor::npc` saved and hashed), mutters (`World::mutter` after each `creature_turn`, a hash roll that never
 draws on the gameplay stream; `Act::Mutter` noise; `say_mutters` logs what the player heard, with
 the words, only as notes that never stop a rest), and making way: moving into a creature that is
-not hostile swaps places (`swap_places`; the creature takes its old cell as its `Mind::post` and
+not hostile swaps places (`swap_places`; the creature lands on the player's old cell as any
+step lands: `World::tread` on ice and `World::spring_trap`, what that costs it on top taken off
+its energy; it takes its old cell as its `Mind::post` and
 `ai.rs` walks it back, waiting beside the post while someone stands on it, then on with its
 route) unless `World::refusal` says why not (the type's `budge`: `never`, or `off_post` while its
 mind is calm, ready for shopkeepers, #145; it cannot move; or it is two sizes or more larger:

@@ -102,7 +102,7 @@ pub use status::{
 };
 pub use terrain::{Breakable, Freeze, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
 pub use trap::{
-    BOLT_LENGTHS, BURST_RADII, MAX_CHARGES, Trap, TrapDef, TrapEffect, TrapId, TrapNoise,
+    BOLT_LENGTHS, BURST_RADII, BurstIce, MAX_CHARGES, Trap, TrapDef, TrapEffect, TrapId, TrapNoise,
 };
 pub use vault::Vault;
 pub use vision::VisionProfile;
@@ -1152,6 +1152,23 @@ impl Content {
                 ));
             };
             self.objects[i].lit = Some(target);
+        }
+        // A remedy cures what some status or disease names as its cure.
+        for (o, path) in self.objects.iter().zip(&paths) {
+            let named = |cure: &String| {
+                (self.statuses.iter().any(|s| s.cured_by.contains(cure)))
+                    || (self.diseases.iter().any(|d| d.cured_by.contains(cure)))
+            };
+            if let Some(cure) = o.cures.iter().find(|c| !named(c)) {
+                return Err(ContentError::new(
+                    path,
+                    format!(
+                        "object `{}` cures `{cure}`, but no status or disease names it in \
+                         `cured_by`",
+                        o.id
+                    ),
+                ));
+            }
         }
         // Launchers and ammunition pair by kind: a launcher shoots something there is.
         for (o, path) in self.objects.iter().zip(&paths) {

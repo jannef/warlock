@@ -1632,7 +1632,7 @@ mod tests {
         let game = app.world().resource::<Game>();
         assert_eq!(game.world.turn(), turn);
         let last = game.world.messages().iter().last().map(|m| m.text.clone());
-        assert!(last.is_some_and(|m| m.contains("Three stairs")));
+        assert!(last.is_some_and(|m| m.contains("Five stairs")));
         // His quest comes first: asking hears the offer, and the screen reopens on accepting it.
         frame(&mut app, &[(KeyCode::Digit1, "1")]);
         let topics = |app: &App| {

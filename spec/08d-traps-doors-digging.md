@@ -16,7 +16,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Setting one off**: whoever steps onto a trap sets it off, the player (any `move` onto it:
     the rules never ask; the interface does, §6 "Known traps") and creatures alike: creatures
     know nothing of traps, hidden or known, and walk onto them on their rounds or chasing someone,
-    so luring them is a tactic. `World::spring_trap(at, victim)` is the one way a trap goes off
+    so luring them is a tactic; so does one who makes way for the player onto the cell they
+    stood on (§8 "Displacement"), its pit's climb taken off its next action.
+    `World::spring_trap(at, victim)` is the one way a trap goes off
     (a trapped door, later, calls it too): it spends a charge (the last leaves the trap spent and
     gone), makes the trap's noise on its cell (no actor made it, so everyone in earshot hears it,
     §5 "Hearing"; an alarm's bell draws every creature with enemies to look), and does what the
@@ -34,7 +36,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
       shadowcast from the trap reaches (walls stop it) takes one roll of the damage, half of it
       (at least 1) beyond radius − 1; no roll to hit, no saving throw. In ascending actor id
       order. Then, with a `blast`, the walls it reaches whose hardness is below it break (§8
-      "Digging": the fireball's 1000 breaks earth and stone, not granite).
+      "Digging": the fireball's 1000 breaks earth and stone, not granite). Then a hot burst (the
+      fireball) melts all the ice on the cells it reaches, and whoever stood on that ice falls
+      in (§5 "Ice", `World::shock`); a cold one (the frost trap) freezes the water on them at once
+      to at least its `frost` thick (`World::frost`: 10 cm, ice that holds a laden person).
     - **bolt** (lightning): a line from the trap's cell in its direction (the level's `dir`,
       else the longest clear line from it, ties to the earlier of N, NE, … NW) until an opaque
       cell, at most its `length` cells in all: every actor on it, from the trap outward, takes
@@ -99,7 +104,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
       (never the modifier) in the door's `sturdiness` (§7): one draw of the gameplay stream,
       `1d(sturdiness) ≤ Strength`. The closed door's sturdiness is 30: Strength 9 breaks it 30 %
       of the time, 10 33 %, 15 50 %, 18 60 %, 30 and up always. A door without a sturdiness never
-      breaks, and no die is rolled. A broken door becomes its `breaks_to`, the **broken door**
+      breaks, and no die is rolled. The kicker's athletics (§8 "Skills") adds to the Strength:
+      +8 at 100 (Strength 10 then breaks the closed door 60 % of the time), and every kick at a
+      door may earn it a training mark. Kicking a door is no attack: it takes the plain `kick`,
+      whatever the stance. A broken door becomes its `breaks_to`, the **broken door**
       (`,`, splinters in the doorway): walkable and see-through for good (it cannot be closed),
       its lock gone: "The door crashes open!" A door that holds: "WHAMM!" Either way the kick bangs
       on the door, a noise of 100 made on the door's cell (§5 "Hearing", heard as banging), and
@@ -108,7 +116,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     - **A creature** (seen or not, hostile or not) is an unarmed melee attack, whatever the
       player wields: bare hands (1d3) with Strength to hit and to damage (§8 "Combat"), what
       their unarmed fighting gives, and their combat stance (§8 "Weapon skills", "Stances"); it
-      trains unarmed fighting, and its speed takes off the `kick`'s cost. Rolled, heard, and
+      trains unarmed fighting, and its speed takes off the `kick`'s cost. Priced like every attack
+      (§8 "Time"): the stance's `attack_cost` and the attack speed of what the player wears change
+      its time too. Rolled, heard, and
       shown like any blow and said as a kick: "You kick the giant rat.", "You miss the giant
       rat.", "The giant rat dodges your kick."
     - **Anything else** is refused and takes no time: "You kick at empty space." where one could

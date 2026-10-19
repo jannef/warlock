@@ -20,7 +20,8 @@
 #                 before stealth made it quieter), "hear" (hearing something new: a sound that is
 #                 news), "dodge" (an attack that missed because you dodged it), "burdened" (an
 #                 action, not waiting, while your load slows you), "travel" (a journey: a step on
-#                 the overworld). Only the player trains, for now.
+#                 the overworld), "kick" (a kick at a closed door). Only the player trains, for
+#                 now.
 #   benefit       what it gives, by its value: a list of { effect = EFFECT, ... } growing either
 #                 by `steps` (one for each value reached, then one more for every `every` points
 #                 past the last) or by a `curve` of [value, effect] points from value 0 (straight
@@ -29,8 +30,9 @@
 #                 steps and doors), "hearing" (you hear sounds this much fainter: your hearing
 #                 threshold, lower), "burden" (percent less of your burden's slowdown), "travel"
 #                 (percent less time a journey on the overworld takes), "bargain" (percent better
-#                 prices in shops, together with Presence at most half; shops.toml). The percent
-#                 effects stay within 0 to 100.
+#                 prices in shops, together with Presence at most half; shops.toml), "kick"
+#                 (points added to the Strength a kick at a closed door is rolled against, at most
+#                 40). The percent effects stay within 0 to 100.
 #
 # The player sees their own trained skills and their values, never a benefit's number, a mark, or
 # a chance (the wiki describes them as rules).
@@ -61,8 +63,11 @@ id = "athletics"
 name = "Athletics"
 description = "Running, jumping, climbing, and kicking: strength put to use."
 kind = "rules"
-# Pending: kicking doors in (#130) and climbing out of pits (#128) will read it (a benefit and a
-# mark rule here then).
+mark = [{ on = "kick", chance = 20 }]
+# Kicking a door in (spec §8 "Doors"): added to the Strength the kick is rolled against, +8 at 100
+# (a closed door: 33 % at Strength 10 becomes 60 %), +12 at 200. Pending: climbing out of pits
+# (#128) will read it too.
+benefit = [{ effect = "kick", curve = [[0, 0], [100, 8], [200, 12]] }]
 
 [[skill]]
 id = "balance"

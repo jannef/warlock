@@ -54,6 +54,7 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Burden => "less slowdown from your load",
         Effect::Travel => "quicker journeys on the overworld",
         Effect::Bargain => "better prices in shops",
+        Effect::Kick => "more Strength for kicking doors in",
     }
 }
 
@@ -74,6 +75,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Burden => "Burdened / Strained",
             Effect::Travel => "journeys",
             Effect::Bargain => "prices",
+            Effect::Kick => "kicking doors in",
         };
         let _ = write!(out, " {name}: {what} |");
     }
@@ -87,6 +89,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             let cell = match b.effect {
                 _ if n == 0 => "—".to_string(),
                 Effect::Dodge => format!("+{n}"),
+                Effect::Kick => format!("+{n} Strength"),
                 Effect::Quiet | Effect::Travel => format!("\u{2212}{n}%"),
                 Effect::Bargain => format!("{n}% better"),
                 Effect::Hearing => n.to_string(),
