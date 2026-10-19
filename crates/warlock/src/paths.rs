@@ -115,6 +115,7 @@ pub struct Locations {
 
 /// The folder `warlock-data` belongs in, for the executable at `exe`: its own folder, or, for the
 /// executable inside a macOS `Something.app/Contents/MacOS/`, the folder holding the bundle.
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))] // No executable on the web.
 pub fn game_folder(exe: &Path) -> Option<PathBuf> {
     let dir = exe.parent()?;
     let bundle = (dir.file_name().is_some_and(|n| n == "MacOS"))
@@ -253,6 +254,7 @@ impl Locations {
     }
 
     /// The text of `warlock --paths`.
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))] // `--paths` has no web form.
     pub fn report(&self) -> String {
         let mut out = format!("{}\n", self.mode_line());
         for e in self.entries() {

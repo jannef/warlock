@@ -78,7 +78,7 @@ impl FilesScreen {
         let (x, w) = (panel.inner_x(), panel.inner_w());
         let mut y = panel.y + 2;
         let text = |console: &mut Console, y: &mut i32, s: &str, color| {
-            for line in wrap(s, w) {
+            for line in fit(s, w) {
                 console.print(x, *y, &line, color);
                 *y += 1;
             }
@@ -128,6 +128,17 @@ impl FilesScreen {
         };
         panel.footer(console, footer);
     }
+}
+
+/// `text` wrapped to `width` cells; a word longer than that (a path) is broken.
+fn fit(text: &str, width: i32) -> Vec<String> {
+    let width = width.max(1) as usize;
+    let mut lines = Vec::new();
+    for line in wrap(text, width as i32) {
+        let chars: Vec<char> = line.chars().collect();
+        lines.extend(chars.chunks(width).map(|c| c.iter().collect::<String>()));
+    }
+    lines
 }
 
 /// `text` cut to `width` cells, keeping its end (the interesting part of a path).
@@ -216,6 +227,11 @@ mod tests {
         let mut screen = FilesScreen::with_opener(&resolve(&inputs, &|_| false), refuse);
         assert!(screen.browser && screen.entries.is_empty());
         assert_eq!(press(&mut screen, Nav::Enter), ScreenAction::Close);
+    }
+
+    #[test]
+    fn long_words_are_broken_to_fit() {
+        assert_eq!(fit("ab /abcdefgh", 5), ["ab", "/abcd", "efgh"]);
     }
 
     #[test]
