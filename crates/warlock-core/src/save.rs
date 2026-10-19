@@ -34,7 +34,10 @@ const MAGIC: &str = "WARLOCK-SAVE";
 ///     types have levels and XP.
 /// 14: skills: actors' trained skills (`Actor::skills`: value and training marks by skill) and the
 ///     training random stream (`WorldState::training`).
-pub const FORMAT_VERSION: u32 = 14;
+/// 15: status effects: actors have them (`Actor::effects`), their healing progress counts
+///     hundredths of a second (`Actor::regen`), and the player's death records the status that
+///     killed them (`Death::of`).
+pub const FORMAT_VERSION: u32 = 15;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 

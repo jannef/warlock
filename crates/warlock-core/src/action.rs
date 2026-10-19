@@ -1,7 +1,7 @@
 //! Player actions and the events a turn produces.
 
 use crate::combat::Strike;
-use crate::content::{ActionKind, ObjectId};
+use crate::content::{ActionKind, ObjectId, StatusId};
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
 use crate::weather::Weather;
@@ -63,6 +63,10 @@ pub enum Action {
     /// Dev command: set the weather for three hours of game time ([`crate::weather::OVERRIDE`]),
     /// then the weather of the day returns. Takes no game time; recorded in replays.
     SetWeather(Weather),
+    /// Dev command: the player suffers one degree more of a status effect (an id in
+    /// `data/status.toml`), as a wound or a bite would give it: for trying statuses out and for
+    /// captures. Takes no game time; recorded in replays.
+    Afflict(String),
 }
 
 /// How long to rest.
@@ -204,11 +208,21 @@ pub enum Event {
         path: Vec<Pos>,
         end: MissileEnd,
     },
-    /// An actor died where it stood, killed by the attack before it. Kept when the player saw
-    /// it (their own death always).
+    /// An actor died where it stood, killed by the attack before it, or of status effect `of`
+    /// (it bled to death). Kept when the player saw it (their own death always).
     Died {
         actor: ActorId,
         at: Pos,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        of: Option<StatusId>,
+    },
+    /// A status effect began (`began`) or ended on an actor (spec §8 "Status effects"). Only the
+    /// player's own, which they always perceive: said in the message line ("You are bleeding.",
+    /// "The bleeding stops.").
+    Status {
+        actor: ActorId,
+        status: StatusId,
+        began: bool,
     },
 }
 
@@ -265,7 +279,8 @@ pub struct Outcome {
 
 /// Text syntax for scripting: `move:E wait open:E close:W ascend descend lantern rest:1h
 /// rest:dawn rest:dusk pickup pickup:ac drop:b equip:body:b remove:body fire:12,5 throw:c:12,5
-/// vision:ID skip:1h weather:rain` (durations: `30s`, `10m`, `2h`; letters name stacks, `a`
+/// vision:ID skip:1h weather:rain afflict:bleeding` (durations: `30s`, `10m`, `2h`; letters
+/// name stacks, `a`
 /// first; `pickup` and `drop` without letters take everything; `equip:SLOT:LETTER` puts
 /// inventory stack LETTER on in slot SLOT, `remove:SLOT` takes off what is there; `fire:X,Y`
 /// shoots at the level cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack LETTER
@@ -302,6 +317,7 @@ impl fmt::Display for Action {
             Action::SetVision(id) => write!(f, "vision:{id}"),
             Action::SkipTime(d) => write!(f, "skip:{d}"),
             Action::SetWeather(w) => write!(f, "weather:{}", w.id()),
+            Action::Afflict(id) => write!(f, "afflict:{id}"),
         }
     }
 }
@@ -406,11 +422,17 @@ impl FromStr for Action {
                 Some(id) if !id.is_empty() => Ok(Action::SetVision(id.to_string())),
                 _ => Err("`vision` needs a profile id, e.g. `vision:darkvision`".into()),
             },
+            "afflict" => match s.split_once(':').map(|(_, id)| id) {
+                Some(id) if !id.is_empty() && !id.contains(':') => {
+                    Ok(Action::Afflict(id.to_string()))
+                }
+                _ => Err("`afflict` needs a status id, e.g. `afflict:bleeding`".into()),
+            },
             _ => Err(format!(
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
                  descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
                  equip:SLOT:LETTER, remove:SLOT, fire:X,Y, throw:LETTER:X,Y, vision:ID, \
-                 skip:DURATION, weather:clear|overcast|rain|heavy)"
+                 skip:DURATION, weather:clear|overcast|rain|heavy, afflict:STATUS)"
             )),
         }
     }
@@ -503,6 +525,8 @@ mod tests {
                 item: 2,
                 at: Pos::new(7, 3),
             },
+            Action::Afflict("bleeding".into()),
+            Action::Afflict("Odd_Case".into()),
         ];
         all.extend(Weather::ALL.map(Action::SetWeather));
         for d in Dir::ALL {
@@ -618,6 +642,9 @@ mod tests {
             "remove:a:b",
             "weather",
             "weather:snow",
+            "afflict",
+            "afflict:",
+            "afflict:a:b",
             "pickup:",
             "pickup:a1",
             "drop:A-",

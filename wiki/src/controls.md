@@ -57,9 +57,10 @@ describes what you know about the cell under it:
 
 - what you see there: a creature, marked "hostile" if it is hostile to you (see
   [Creatures](creatures.md)), with how hurt it looks (unhurt, lightly wounded, wounded, badly
-  wounded, or nearly dead; see [Combat](combat.md)), what it wields and wears, the objects lying
-  there, and the terrain, as in "A giant rat (hostile, unhurt), on stone floor." or "A kobold
-  (hostile, badly wounded), wielding a spear, on stone floor.";
+  wounded, or nearly dead; see [Combat](combat.md)) and whether it bleeds (see
+  [Status effects](status-effects.md)), what it wields and wears, the objects lying there, and
+  the terrain, as in "A giant rat (hostile, unhurt), on stone floor." or "A kobold (hostile,
+  badly wounded, bleeding), wielding a spear, on stone floor.";
 - what you remember there, if you cannot see it now: the terrain and the objects you saw on it;
 - for stairs and the places on the overworld, where they lead;
 - a sound you heard there this turn ([Hearing](hearing.md));
@@ -114,6 +115,8 @@ Below the map, the **status bar** shows, from left to right:
 
 - the name of the level, and on the overworld and in its local areas the region you are in;
 - your hit points, as `HP 18/24`: what you have left of your most (see [Combat](combat.md));
+- what ails you, if anything, the most urgent first: `Bleeding`, `Poisoned` (see
+  [Status effects](status-effects.md));
 - your burden, when you have one: `Burdened`, `Strained`, or `Overloaded` (see
   [Burden](burden.md));
 - the time, the date, and the phase of the moon (see [Time and the calendar](time.md));
@@ -127,16 +130,18 @@ At its right end, `? controls` reminds you where the keys are.
 When the window is too narrow for everything, the status bar leaves out the least important parts
 first: the seed, your position, your lantern, your vision, the light at your feet, and the turn
 count; then it shortens the moon's phase to its picture, and only then drops it; then the region,
-then the year of the date, then the date. The weather, the time, your burden, your hit points,
-and the name of the level stay longest. Parts come back as soon as there is room.
+then the year of the date, then the date. The weather, the time, your burden, your status
+effects (the least urgent first), your hit points, and the name of the level stay longest. Parts
+come back as soon as there is room.
 
 ## Character
 
 `@` shows your name, your race, gender, and class, your age, birthday, and
-[birth sign](horoscope.md), your [stats](stats.md), your hit points and Defence (`Dv`; see
-[Combat](combat.md)), your weight and what you carry, and the weights at which your
-[burden](burden.md) changes. It takes no time; press `@` or `Esc` to close it, or `S` for your
-skills.
+[birth sign](horoscope.md), your [stats](stats.md) (one that a status effect lowers is shown
+lowered, in red), your hit points and Defence (`Dv`; see [Combat](combat.md)), what ails you
+(`Status  Bleeding, Poisoned`; see [Status effects](status-effects.md)), your weight and what you
+carry, and the weights at which your [burden](burden.md) changes. It takes no time; press `@` or
+`Esc` to close it, or `S` for your skills.
 
 ## Skills
 

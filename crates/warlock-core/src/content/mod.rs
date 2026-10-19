@@ -26,6 +26,7 @@ mod size;
 mod skill;
 mod sky;
 mod slot;
+mod status;
 mod terrain;
 mod vault;
 mod vision;
@@ -58,6 +59,9 @@ pub use size::{CARRY, MEDIUM, SizeDef};
 pub use skill::{SkillBook, SkillDef};
 pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
+pub use status::{
+    Healing, MAX_REGEN, MAX_SEVERITY, OnHit, Penalty, Stacking, StatusDef, StatusId, Wound,
+};
 pub use terrain::{MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
 pub use vault::Vault;
 pub use vision::VisionProfile;
@@ -210,7 +214,8 @@ struct LegendFile {
 /// `data/lights.toml`, `data/vision.toml`, `data/factions.toml`, `data/dungeons.toml`,
 /// `data/calendar.toml`, `data/sky.toml`, `data/materials.toml`, `data/objects.toml`,
 /// `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
-/// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, and `data/horoscope.toml` are
+/// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, `data/horoscope.toml`, and
+/// `data/status.toml` are
 /// optional. Without vision
 /// profiles, a single `normal` profile that needs no light is used, so content without lighting
 /// stays fully visible; without sizes, everything is medium; without factions, everyone is neutral; without a calendar, months are numbered;
@@ -218,7 +223,8 @@ struct LegendFile {
 /// weather file the sky is always clear; without an actions file every action costs 1000;
 /// without a slots file nothing can be worn or wielded; without races or classes there is no
 /// character to choose, and scenarios give the player's eyes and stats themselves; without
-/// skills nobody is trained in anything; without a horoscope, characters are born under no sign.
+/// skills nobody is trained in anything; without a horoscope, characters are born under no sign;
+/// without statuses nothing ails anyone, and resting heals twice as fast.
 #[derive(Debug)]
 pub struct Content {
     terrain: Vec<TerrainDef>,
@@ -253,6 +259,10 @@ pub struct Content {
     classes: Vec<ClassDef>,
     experience: Experience,
     horoscope: Option<Horoscope>,
+    /// In `data/status.toml` order: most important first.
+    statuses: Vec<StatusDef>,
+    status_ids: BTreeMap<String, StatusId>,
+    healing: Healing,
 }
 
 impl Content {
@@ -291,6 +301,9 @@ impl Content {
             classes: Vec::new(),
             experience: Experience::default(),
             horoscope: None,
+            statuses: Vec::new(),
+            status_ids: BTreeMap::new(),
+            healing: Healing::default(),
         };
         let path = "data/calendar.toml";
         if let Some(text) = files.get_optional(path) {
@@ -337,6 +350,7 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.horoscope = Some(Horoscope::parse(path, text)?);
         }
+        content.load_statuses(files)?;
         content.load_terrain(files)?;
         content.load_factions(files)?;
         content.load_creatures(files)?;
@@ -568,8 +582,12 @@ impl Content {
                     object::MAX_BONUS
                 )));
             }
+            let status = |id: &str| {
+                let found = self.status_id(id)?;
+                Some((found, self.status(found).max))
+            };
             let attack = (spec.attack.clone())
-                .map(creature::NaturalAttackSpec::resolve)
+                .map(|a| a.resolve(status))
                 .transpose()
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let stats = Stats::from_data(&spec.stats, &spec.potential)
@@ -653,6 +671,22 @@ impl Content {
             .id(name)
             .map(Some)
             .ok_or_else(|| format!("creature `{}`: unknown faction `{name}`", spec.id))
+    }
+
+    /// Status effects and the healing rules (optional: none, and the default healing).
+    fn load_statuses(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
+        let path = "data/status.toml";
+        let Some(text) = files.get_optional(path) else {
+            return Ok(());
+        };
+        let (healing, list) = status::parse(path, text)?;
+        for (i, def) in list.iter().enumerate() {
+            let id = u16::try_from(i).map_err(|_| ContentError::new(path, "too many statuses"))?;
+            self.status_ids.insert(def.id.clone(), StatusId(id));
+        }
+        self.healing = healing;
+        self.statuses = list;
+        Ok(())
     }
 
     fn load_factions(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
@@ -885,11 +919,11 @@ impl Content {
     }
 
     /// A stable hash (64-bit FNV-1a) of the ordered terrain, creature, level, light, dungeon,
-    /// object, slot, and skill ids.
+    /// object, slot, skill, and status ids.
     ///
-    /// `TerrainId`, `CreatureId`, `LightId`, `ObjectId`, `SlotId`, and `SkillId` are indices, so a
-    /// save is only meaningful for content with the same ids in the same order; saves record this
-    /// fingerprint to detect a mismatch.
+    /// `TerrainId`, `CreatureId`, `LightId`, `ObjectId`, `SlotId`, `SkillId`, and `StatusId` are
+    /// indices, so a save is only meaningful for content with the same ids in the same order;
+    /// saves record this fingerprint to detect a mismatch.
     pub fn fingerprint(&self) -> u64 {
         let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
         let mut feed = |bytes: &[u8]| {
@@ -897,7 +931,7 @@ impl Content {
                 hash = (hash ^ u64::from(b)).wrapping_mul(0x0000_0100_0000_01b3);
             }
         };
-        let groups: [Vec<&str>; 8] = [
+        let groups: [Vec<&str>; 9] = [
             self.terrain.iter().map(|t| t.id.as_str()).collect(),
             self.creatures.iter().map(|c| c.id.as_str()).collect(),
             self.levels.keys().map(String::as_str).collect(),
@@ -906,6 +940,7 @@ impl Content {
             self.objects.iter().map(|o| o.id.as_str()).collect(),
             self.slots.iter().map(|s| s.id.as_str()).collect(),
             self.skills.list.iter().map(|s| s.id.as_str()).collect(),
+            self.statuses.iter().map(|s| s.id.as_str()).collect(),
         ];
         for ids in groups {
             for id in ids {
@@ -1072,6 +1107,29 @@ impl Content {
     /// The index of size `id` in [`Content::sizes`].
     pub fn size_index(&self, id: &str) -> Option<usize> {
         self.sizes.iter().position(|s| s.id == id)
+    }
+
+    /// Status effects (`data/status.toml`), most important first; empty without the file.
+    pub fn status_defs(&self) -> &[StatusDef] {
+        &self.statuses
+    }
+
+    pub fn status(&self, id: StatusId) -> &StatusDef {
+        &self.statuses[usize::from(id.0)]
+    }
+
+    pub fn status_id(&self, name: &str) -> Option<StatusId> {
+        self.status_ids.get(name).copied()
+    }
+
+    /// Every status with its id, most important first.
+    pub fn status_ids(&self) -> impl Iterator<Item = (StatusId, &StatusDef)> {
+        (0u16..).map(StatusId).zip(&self.statuses)
+    }
+
+    /// The passive healing rules (`[healing]` in `data/status.toml`).
+    pub fn healing(&self) -> &Healing {
+        &self.healing
     }
 
     /// A hand-made level. Generated levels (`depths:3`, `local:12,30`) are not stored here; see

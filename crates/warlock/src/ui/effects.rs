@@ -197,8 +197,8 @@ pub(super) fn track(
                 bursts.attack(&view, creature.map(|a| a.creature), to, seed, start);
             }
             // A death shows as the creature gone (and what it dropped) and in the message line;
-            // a missile flies in `missiles`.
-            Event::Died { .. } | Event::Missile { .. } => {}
+            // a missile flies in `missiles`; a status effect shows in the status bar.
+            Event::Died { .. } | Event::Missile { .. } | Event::Status { .. } => {}
             Event::LevelChanged { .. } => {
                 bursts.list.clear();
                 tints.clear();

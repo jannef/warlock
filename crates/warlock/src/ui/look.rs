@@ -47,9 +47,14 @@ pub fn describe(view: &PerceptionView<'_>, p: Pos) -> String {
                     Stance::Neutral => "",
                 };
                 let health = actor.health.word();
+                // The status effects that show on it: ", bleeding".
+                let effects: String = (view.effects_of(actor.id))
+                    .filter_map(|s| content.status(s).seen.as_deref())
+                    .map(|word| format!(", {word}"))
+                    .collect();
                 let gear = gear(view, actor.id);
                 format!(
-                    "{} {name} ({stance}{health}){gear}, on {}{here}.",
+                    "{} {name} ({stance}{health}{effects}){gear}, on {}{here}.",
                     article(name),
                     terrain(t)
                 )
@@ -318,6 +323,22 @@ mod tests {
         let (health, text) = hurt.expect("someone in view was hurt");
         assert!(text.contains(&format!(", {})", health.word())), "{text}");
         // Never a number of hit points.
+        assert!(!text.chars().any(|c| c.is_ascii_digit()), "{text}");
+    }
+
+    #[test]
+    fn a_bleeding_creature_looks_it() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let mut w = World::new(content, "arena", None).expect("arena");
+        // The brawl at the fire pit wounds someone in view before long.
+        let bleeding = (0..60).find_map(|_| {
+            w.apply(&Action::Wait);
+            let view = w.perception();
+            let actor = (view.actors().iter()).find(|a| view.effects_of(a.id).next().is_some())?;
+            Some(describe(&view, actor.pos))
+        });
+        let text = bleeding.expect("someone in view bled");
+        assert!(text.contains(", bleeding)"), "{text}");
         assert!(!text.chars().any(|c| c.is_ascii_digit()), "{text}");
     }
 

@@ -32,6 +32,7 @@ pub mod save;
 mod sight;
 pub mod skills;
 pub mod stats;
+pub mod status;
 pub mod time;
 pub mod weather;
 pub mod world;

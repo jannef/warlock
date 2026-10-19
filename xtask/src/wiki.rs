@@ -4,11 +4,12 @@
 //! (month names, moons, weather, terrain, vision profiles, light presets, creatures, factions,
 //! objects and materials, equipment slots, scenarios, action costs, races and classes, their sizes
 //! and carrying limits, the horoscope, skills: what each does, how it trains, what it gives by
-//! value, who trains it, and the increase curve) and a few constants of the rules (sight radii, the
-//! pack's size, the stats' names, what each gender raises). Those are written to
-//! `wiki/src/generated/*.md` from the built-in content, and the pages pull them in with
-//! `{{#include generated/NAME.md}}`, so they cannot drift. Output is deterministic. `--check`
-//! fails when a file is stale; `--build` also runs `mdbook build wiki`.
+//! value, who trains it, and the increase curve, status effects and how fast hit points come
+//! back) and a few constants of the rules (sight radii, the pack's size, the stats' names, what
+//! each gender raises). Those are written to `wiki/src/generated/*.md` from the built-in content,
+//! and the pages pull them in with `{{#include generated/NAME.md}}`, so they cannot drift. Output
+//! is deterministic. `--check` fails when a file is stale; `--build` also runs `mdbook build
+//! wiki`.
 
 use crate::workspace_root;
 use std::collections::BTreeSet;
@@ -20,7 +21,7 @@ use warlock_core::character::Gender;
 use warlock_core::combat;
 use warlock_core::content::{
     ActionKind, BASE_TURN, Combat, Content, CreatureId, FactionId, LevelKind, LightId,
-    NORMAL_SPEED, ObjectId, Stance, TerrainDef, price,
+    NORMAL_SPEED, ObjectId, Stance, StatusDef, TerrainDef, price,
 };
 use warlock_core::daylight::{
     MOONLIGHT_PER_CELL, SIGHT_DAY, SIGHT_MOONLIT, SIGHT_NIGHT, SIGHT_TWILIGHT, overworld_sight,
@@ -152,6 +153,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("threats.md".to_string(), threats()),
         ("hit-points.md".to_string(), hit_points(content)),
         ("regeneration.md".to_string(), regeneration()),
+        ("healing.md".to_string(), healing(content)),
+        ("status-effects.md".to_string(), status_effects(content)),
         (
             "experience-levels.md".to_string(),
             experience_levels(content),
@@ -1598,6 +1601,134 @@ fn regeneration() -> String {
     out
 }
 
+/// A pace of healing in percent of normal, in words: `twice as fast`, `half as fast`, `not at
+/// all`.
+fn pace(percent: u32) -> String {
+    match percent {
+        0 => "not at all".into(),
+        100 => "as usual".into(),
+        200 => "twice as fast".into(),
+        300 => "three times as fast".into(),
+        50 => "half as fast".into(),
+        25 => "a quarter as fast".into(),
+        p if p % 100 == 0 => format!("{} times as fast", p / 100),
+        p => format!("at {p}% of the usual pace"),
+    }
+}
+
+/// How fast hit points come back (spec §8 "Healing"): resting, and each status that changes it.
+fn healing(content: &Content) -> String {
+    let mut out = String::from("| While | Hit points come back |\n|---|---|\n");
+    let resting = u32::from(content.healing().resting);
+    let _ = writeln!(out, "| Resting (`R`) | {} |", pace(resting));
+    for def in content.status_defs().iter().filter(|s| s.regen != 100) {
+        let _ = writeln!(out, "| {} | {} |", def.name, pace(u32::from(def.regen)));
+    }
+    out
+}
+
+/// How often, in words: `a minute`, `every 40 seconds`, `every 2 minutes`.
+fn every(seconds: u32) -> String {
+    match seconds {
+        60 => "a minute".into(),
+        s => format!("every {}", Duration::seconds(u64::from(s)).spoken()),
+    }
+}
+
+/// What causes a status, in words: wounds, and the attacks whose `on_hit` names it (without
+/// saying which creatures or how often: their natural attacks are hidden).
+fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
+    let mut causes = Vec::new();
+    if let Some(w) = def.wound {
+        match (w.big_hit > 0, w.critical > 0) {
+            (true, true) => causes.push("big hits and confirmed criticals"),
+            (true, false) => causes.push("big hits"),
+            (false, _) => causes.push("confirmed criticals"),
+        }
+    }
+    let by_attack = (content.creature_defs().iter())
+        .filter_map(|c| c.attack.as_ref())
+        .any(|a| a.on_hit.iter().any(|o| usize::from(o.status.0) == status));
+    if by_attack {
+        causes.push("some creatures' attacks");
+    }
+    if causes.is_empty() {
+        "—".into()
+    } else {
+        capital(&causes.join("; "))
+    }
+}
+
+/// The status effects (spec §8 "Status effects"): how they show, what causes them, what they
+/// cost, how they wear off, and what they do to healing and stats. Never a creature's chance.
+fn status_effects(content: &Content) -> String {
+    let mut out = String::from(
+        "| Status | Seen on others | Caused by | Costs | Wears off | Healing | Stats | Cured by |\n\
+         |---|---|---|---|---|---|---|---|\n",
+    );
+    for (i, def) in content.status_defs().iter().enumerate() {
+        let seen = def
+            .seen
+            .as_ref()
+            .map_or_else(|| "no".to_string(), |s| format!("yes, \"{s}\""));
+        let costs = match def.tick {
+            Some(tick) if def.damage > 0 => {
+                let hp = if def.damage == 1 {
+                    "a hit point".to_string()
+                } else {
+                    format!("{} hit points", def.damage)
+                };
+                let faster = if def.max > 1 {
+                    ", faster the worse it is"
+                } else {
+                    ""
+                };
+                format!("{hp} {}{faster}", every(tick))
+            }
+            _ => "nothing".into(),
+        };
+        let eases = def.eases.map_or_else(
+            || "only when cured".to_string(),
+            |e| format!("a degree {}", every(e)),
+        );
+        let stats = def.penalty.as_ref().map_or_else(
+            || "—".to_string(),
+            |p| {
+                let lowered: Vec<String> = (p.by.iter())
+                    .filter(|(_, by)| *by != 0)
+                    .map(|(stat, by)| format!("{} {}", stat.name(), signed(i32::from(by))))
+                    .collect();
+                let when = if p.from > 1 { " when strong" } else { "" };
+                format!("{}{when}", lowered.join(", "))
+            },
+        );
+        let cured = if def.cured_by.is_empty() {
+            "—".to_string()
+        } else {
+            capital(&def.cured_by.join(", "))
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {seen} | {} | {} | {} | {} | {stats} | {cured} |",
+            def.name,
+            causes(content, i, def),
+            capital(&costs),
+            capital(&eases),
+            capital(&pace(u32::from(def.regen))),
+        );
+    }
+    out
+}
+
+/// A signed number with a real minus sign: `+1`, `−1`.
+fn signed(n: i32) -> String {
+    if n < 0 {
+        format!("\u{2212}{}", -n)
+    } else {
+        format!("+{n}")
+    }
+}
+
 /// What each level of burden costs (spec §8 "Burden"), from the rules' own numbers.
 fn burden_levels() -> String {
     let mut out = String::from(
@@ -1912,6 +2043,28 @@ mod tests {
         assert!(text("regeneration.md").contains("| 10 | 4 minutes |"));
         assert!(text("regeneration.md").contains("| 3 | 5 minutes and 24 seconds |"));
         assert!(text("regeneration.md").contains("| 25 or more | 1 minute |"));
+        let healing = text("healing.md");
+        for row in [
+            "| Resting (`R`) | twice as fast |",
+            "| Bleeding | not at all |",
+            "| Poisoned | half as fast |",
+        ] {
+            assert!(healing.contains(row), "{row} in {healing}");
+        }
+        let statuses = text("status-effects.md");
+        for row in [
+            "| Bleeding | yes, \"bleeding\" | Big hits and confirmed criticals | A hit point every \
+             40 seconds, faster the worse it is | A degree a minute | Not at all | — | Bandage |",
+            "| A degree every 2 minutes | Half as fast |",
+            "| Poisoned | no | Some creatures' attacks |",
+            "Strength \u{2212}1, Dexterity \u{2212}1 when strong",
+        ] {
+            assert!(statuses.contains(row), "{row} in {statuses}");
+        }
+        assert!(
+            !statuses.contains("iant rat"),
+            "which creatures poison stays hidden"
+        );
         // Potentials stay hidden: the human's rolled potentials are nowhere.
         assert!(!text("races.md").contains("otential"));
         let horoscope = text("horoscope.md");

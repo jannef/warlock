@@ -63,6 +63,11 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   ADOM-style with a cursor and a faint line of fire, watch the arrow fly, and pick it up where it
   fell. A flaming arrow flies burning and lights the dark where it lands until it burns out:
   shoot one into the dark to see what waits there (and be seen).
+- **Status effects and healing** — big hits and criticals open bleeding wounds, a giant rat's
+  bite may leave poison behind; they cost hit points as time passes, stack, wear off, slow or
+  stop healing, and can kill (creatures bleed to death too); strong poison saps Strength and
+  Dexterity. The status bar names what ails you, look mode shows a creature bleeding; never a
+  number. Hit points come back twice as fast while you rest.
 - **Burden** — everything you carry weighs on you: past a third of what your Strength and
   Toughness can bear you are burdened, then strained, then overloaded. Every action takes longer,
   armour-like caps keep your Dexterity from helping your Defence, and your footsteps get louder.
@@ -152,7 +157,7 @@ cargo run --release -p warlock
 | `d` | Drop something |
 | `i` | Inventory: what you carry, by letter, and what it all weighs |
 | `e` | Equipment: wear and wield things, slot by slot (head, body, hands, rings, missiles, …), as in ADOM |
-| `@` | Character: your race, gender, class, age, birth sign, stats, hit points, Defence, and weight |
+| `@` | Character: your race, gender, class, age, birth sign, stats, hit points, Defence, status effects, and weight |
 | `R` | Rest an hour, until dawn, or until nightfall (stops when something comes into view) |
 | `x` | Look around: move a cursor to read what is there (takes no time) |
 | `f` | Fire your missile weapon: aim (Tab cycles targets), then Enter |

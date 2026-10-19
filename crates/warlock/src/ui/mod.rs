@@ -479,14 +479,19 @@ fn status_segments(world: &World) -> Vec<Segment> {
     // its day and month before they are dropped. The weather shows only under the open sky,
     // where the player knows it, and there it matters more than the date: it changes the light
     // and how far one sees. Hit points matter most after the level: they outlast the time, and
-    // so does the burden (shown when there is one), which slows everything the player does.
-    // The character level (`Lv 3`) comes after them and goes before them, but after the time.
+    // so do the status effects the player suffers (by name, the most important first: the last
+    // gives way first) and the burden (shown when there is one), which slows everything the
+    // player does. The character level (`Lv 3`) comes after them and goes before them, but
+    // after the time.
     let calendar = content.calendar();
     let (hp, max_hp) = view.own_hp();
     let burden = view.own_load().burden();
-    [
-        Some(Segment::new(0, view.level_name())),
-        Some(Segment::new(1, format!("HP {hp}/{max_hp}"))),
+    let effects = (view.own_effects()).map(|s| Segment::new(1, content.status(s).name.clone()));
+    let head = [
+        Segment::new(0, view.level_name()),
+        Segment::new(1, format!("HP {hp}/{max_hp}")),
+    ];
+    let rest = [
         (burden != Burden::Unburdened).then(|| Segment::new(1, burden.name())),
         Some(Segment::new(
             1,
@@ -507,10 +512,11 @@ fn status_segments(world: &World) -> Vec<Segment> {
         Some(Segment::new(8, format!("{} vision", view.vision().name))),
         lantern.map(|l| Segment::new(9, l)),
         Some(Segment::new(11, format!("Seed {}", world.seed()))),
-    ]
-    .into_iter()
-    .flatten()
-    .collect()
+    ];
+    (head.into_iter())
+        .chain(effects)
+        .chain(rest.into_iter().flatten())
+        .collect()
 }
 
 /// The moons' phases for the status bar, and just their glyphs for a narrow window: the glyph
@@ -678,6 +684,23 @@ mod tests {
             "Hoard  ·  HP 10/10"
         );
         assert!(fit_segments(&segments, 55).contains("Burdened  ·  Lv 1  ·  08:"));
+    }
+
+    #[test]
+    fn the_status_bar_shows_status_effects_after_the_hit_points_most_important_first() {
+        let mut world = hoard();
+        world.apply(&Action::Afflict("poisoned".into()));
+        world.apply(&Action::Afflict("bleeding".into()));
+        let segments = status_segments(&world);
+        let texts: Vec<&str> = segments.iter().map(|s| s.text.as_str()).collect();
+        assert_eq!(texts[..4], ["Hoard", "HP 10/10", "Bleeding", "Poisoned"]);
+        // They give way late, the least important first, but before the hit points.
+        let line = "Hoard  ·  HP 10/10  ·  Bleeding  ·  Poisoned";
+        assert_eq!(fit_segments(&segments, line.chars().count()), line);
+        let shorter = "Hoard  ·  HP 10/10  ·  Bleeding";
+        assert_eq!(fit_segments(&segments, line.chars().count() - 1), shorter);
+        assert_eq!(fit_segments(&segments, 20), "Hoard  ·  HP 10/10");
+        assert!(fit_segments(&segments, 200).contains("Poisoned  ·  "));
     }
 
     #[test]
