@@ -47,13 +47,19 @@
 //! Ranged combat (`shoot.rs`): shots and throws fly along a line, attack whoever stands in their
 //! way, and come down to be picked up again; burning missiles are fires that light the level
 //! until they burn out.
+//!
+//! Hunger (spec §8 "Hunger", `hunger.rs`, `eat.rs`): game time burns the player's nutrition, and
+//! the state it leaves them in takes effect (Weak, Fainting, Starving, Bloated); meals pass turns
+//! like a rest and feed at their end. Creatures that die leave corpses, which rot away.
 
 mod actor;
 mod ai;
+mod eat;
 mod equip;
 mod experience;
 mod fight;
 mod hash;
+mod hunger;
 mod level;
 mod path;
 mod schedule;
@@ -62,7 +68,9 @@ mod spell;
 mod train;
 
 pub use actor::{Actor, ActorId, ActorKind, Mind, Patrol};
-pub use fight::Death;
+pub use eat::Rot;
+pub(crate) use eat::rot_at;
+pub use fight::{Cause, Death};
 pub(crate) use hash::fnv1a;
 pub use level::{Fire, LevelState};
 
@@ -74,6 +82,7 @@ use crate::content::{
     TerrainId, local_area_id,
 };
 use crate::geom::{Dir, Pos};
+use crate::hunger::Satiation;
 use crate::light::{LightCache, Sky};
 use crate::mapgen::local::arrival;
 use crate::messages::MessageLog;
@@ -272,6 +281,8 @@ enum Spent {
     Turn(i64),
     /// A rest until this moment (see [`World::rest`]).
     Rest(GameTime, Rest),
+    /// A meal (see [`World::dine`]).
+    Meal(eat::Dish),
     /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
     Skip(Duration),
 }
@@ -357,7 +368,7 @@ impl World {
             energy: 0,
             heard: Vec::new(),
             mind: Mind::default(),
-            inventory: Vec::new(),
+            inventory: def.carry.clone(),
             equipment: Default::default(),
             stats,
             hp: 0,
@@ -365,6 +376,7 @@ impl World {
             regen: 0,
             skills,
             faction_override: None,
+            satiation: content.hunger().map(|h| Satiation::new(h.start)),
         };
         player.hp = player.max_hp();
         state.actors.insert(ActorId(0), player);
@@ -563,6 +575,7 @@ impl World {
                 self.perceive(&mut events);
             }
             Spent::Rest(until, goal) => self.rest(until, goal, &mut events),
+            Spent::Meal(dish) => self.dine(dish, &mut events),
             Spent::Skip(duration) => {
                 // Nobody acts or gains energy.
                 self.state.time += duration;
@@ -679,6 +692,7 @@ impl World {
             self.state.weather_override = None;
         }
         self.burn_out();
+        self.rot_away();
         let before = self.perception.weather();
         *self.perception = Perception::compute(&self.state, &self.content, &mut self.lights);
         let current = self.state.current_level.clone();
@@ -823,7 +837,9 @@ impl World {
                 seen
             }
         });
-        if let (Some(by), Some(death)) = (killer_seen, self.state.death.as_mut()) {
+        if let (Some(by), Some(death)) = (killer_seen, self.state.death.as_mut())
+            && death.cause.is_none()
+        {
             death.by = by;
         }
         reports
@@ -970,6 +986,7 @@ impl World {
             Action::Fire(at) => return self.fire(*at, events),
             Action::Throw { item, at } => return self.throw(*item, *at, events),
             Action::Rest(goal) => return self.start_rest(*goal),
+            Action::Eat(meal) => return self.eat(*meal),
             Action::SetVision(id) => return self.set_vision(id),
             Action::SetWeather(weather) => {
                 let over = weather::Override::new(*weather, self.state.time);
@@ -1178,8 +1195,11 @@ impl World {
             let name = self.content.creature(other.creature).name.clone();
             let player = self.state.player;
             if self.stance(player, target) == Stance::Hostile {
+                // Priced before the blow, which may burn enough to leave the player hungrier.
+                let spent = self.took(true, ActionKind::Melee);
                 self.player_attacks(target, seen, events);
-                return self.took(true, ActionKind::Melee);
+                self.exert(ActionKind::Melee);
+                return spent;
             }
             let what = if seen {
                 format!("The {name}")
@@ -1522,6 +1542,7 @@ fn instantiate_level(state: &mut WorldState, content: &Content, template: &Level
             regen: 0,
             skills: def.skills.clone(),
             faction_override: spawn.faction,
+            satiation: None,
         };
         actor.hp = actor.max_hp();
         state.actors.insert(actor_id, actor);
@@ -1546,6 +1567,8 @@ mod experience_tests;
 mod fight_tests;
 #[cfg(test)]
 mod hearing_tests;
+#[cfg(test)]
+mod hunger_tests;
 #[cfg(test)]
 mod light_tests;
 #[cfg(test)]

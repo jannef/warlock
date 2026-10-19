@@ -67,6 +67,11 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   Toughness can bear you are burdened, then strained, then overloaded. Every action takes longer,
   armour-like caps keep your Dexterity from helping your Defence, and your footsteps get louder.
   Dwarves shrug off the first level. The inventory shows where the thresholds lie.
+- **Hunger** — ADOM-style: time empties your stomach (resting and long journeys too), faster for
+  a halfling than an elf. Hungry, then weak, fainting, and starving to death; eat too much and
+  you are bloated and slow, or vomit. Eat rations, bread, and apples, or the corpses creatures
+  leave behind: they weigh what the creature did, rot within a day or two, and some do more than
+  feed you (a kobold tastes terrible; a beetle might toughen you). The hub's pantry has food.
 - **Stats** — Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
   D&D, for you and every creature; a character screen shows your own. Strength, Dexterity, and
   Toughness count in a fight; the rest do nothing yet.
@@ -154,6 +159,7 @@ cargo run --release -p warlock
 | `e` | Equipment: wear and wield things, slot by slot (head, body, hands, rings, missiles, …), as in ADOM |
 | `@` | Character: your race, gender, class, age, birth sign, stats, hit points, Defence, and weight |
 | `R` | Rest an hour, until dawn, or until nightfall (stops when something comes into view) |
+| `E` | Eat: food lying here, or from your pack (a meal takes a few turns) |
 | `x` | Look around: move a cursor to read what is there (takes no time) |
 | `f` | Fire your missile weapon: aim (Tab cycles targets), then Enter |
 | `t` | Throw something: choose it, aim, then Enter |

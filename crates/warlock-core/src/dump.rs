@@ -8,11 +8,12 @@ use crate::action::letter;
 use crate::character::Gender;
 use crate::equipment;
 use crate::geom::Pos;
+use crate::hunger::Hunger;
 use crate::noise::{PerceivedSound, SoundKind, Volume};
 use crate::object::format_weight;
 use crate::perception::{CellView, PerceivedLight, PerceptionView};
 use crate::stats::Stat;
-use crate::world::World;
+use crate::world::{Rot, World, rot_at};
 use serde_json::{Value, json};
 use std::fmt::Write;
 use std::str::FromStr;
@@ -52,8 +53,9 @@ pub enum Layer {
     /// Ground truth: all terrain, objects, and actors on the level. **Dev-only.**
     Truth,
     /// Not a map: every actor on the level with its weight, what it carries (and of that wears
-    /// and wields), its stats (scores and potentials), and its trained skills with their marks
-    /// (ground truth). **Dev-only.**
+    /// and wields), its stats (scores and potentials), its trained skills with their marks, and
+    /// the player's nutrition, then every corpse on the level and in the player's pack with its
+    /// age (ground truth). **Dev-only.**
     Actors,
 }
 
@@ -304,12 +306,36 @@ fn skill_rows(view: &PerceptionView<'_>) -> Vec<String> {
 
 /// Every actor on the level (ground truth): id, creature, position, hit points and Defence,
 /// weight, what it carries, its burden and carrying limit, its stats as score/potential
-/// (`St 12/15`), and its trained skills with their marks toward the next point
-/// (`stealth 17 (2/5)`).
+/// (`St 12/15`), its trained skills with their marks toward the next point
+/// (`stealth 17 (2/5)`), and the player's nutrition and hunger (`nutrition 3540
+/// (not_hungry)`); then every corpse on the level and in the player's pack with when it died and
+/// how it has rotted (`corpse kobold_corpse at (12, 5): died 1444-11-11 08:12:00, 2 hours ago,
+/// fresh`).
 fn actor_rows(world: &World) -> Vec<String> {
     let content = world.content();
-    let (_, actors) = world.ground_truth();
-    actors
+    let (level, actors) = world.ground_truth();
+    let now = world.time();
+    let corpse = |where_: String, s: &crate::object::Stack| {
+        let died = s.died?;
+        let rot = match rot_at(content, s, now)? {
+            Rot::Fresh => "fresh",
+            Rot::Rotten => "rotten",
+            Rot::Gone => "gone",
+        };
+        Some(format!(
+            "corpse {} {where_}: died {died}, {} ago, {rot}",
+            content.object(s.object).id,
+            now.since(died).spoken()
+        ))
+    };
+    let on_level = (level.objects.iter())
+        .flat_map(|(p, pile)| pile.iter().map(move |s| (*p, s)))
+        .filter_map(|(p, s)| corpse(format!("at {p}"), s));
+    let carried = (world.state().player().inventory.iter())
+        .filter_map(|s| corpse("carried".into(), s))
+        .collect::<Vec<_>>();
+    let corpses: Vec<String> = on_level.chain(carried).collect();
+    let rows: Vec<String> = actors
         .map(|a| {
             let w = a.weight(content);
             let load = world.actor_load(a.id).expect("the actor exists");
@@ -352,9 +378,13 @@ fn actor_rows(world: &World) -> Vec<String> {
             } else {
                 format!("; skills {}", skills.join(", "))
             };
+            let hunger = match (a.satiation, a.hunger(content)) {
+                (Some(s), Some(h)) => format!("; nutrition {} ({})", s.nutrition, h.id()),
+                _ => String::new(),
+            };
             format!(
                 "{} {} at {}: hp {}/{} dv {}; weight {} (base {} + carried {}: {carried})\
-                 {equipped}; {} (limit {}); stats {}{skills}",
+                 {equipped}; {} (limit {}); stats {}{skills}{hunger}",
                 a.id,
                 content.creature(a.creature).id,
                 a.pos,
@@ -369,7 +399,8 @@ fn actor_rows(world: &World) -> Vec<String> {
                 stats.join(" "),
             )
         })
-        .collect()
+        .collect();
+    rows.into_iter().chain(corpses).collect()
 }
 
 fn rows(width: i32, height: i32, glyph: impl Fn(Pos) -> char) -> Vec<String> {
@@ -391,8 +422,12 @@ fn summary(world: &World) -> String {
         .unwrap_or_default();
     let (hp, max) = view.own_hp();
     let dead = if world.death().is_some() { " dead" } else { "" };
+    // As the status bar shows it: only when it is not Not hungry.
+    let hunger = (view.own_hunger())
+        .filter(|h| *h != Hunger::NotHungry)
+        .map_or(String::new(), |h| format!(" hunger {}", h.id()));
     format!(
-        "turn {} time {} level {} viewer {} hp {hp}/{max}{dead}{weather} hash {:016x}",
+        "turn {} time {} level {} viewer {} hp {hp}/{max}{dead}{hunger}{weather} hash {:016x}",
         world.turn(),
         world.time(),
         view.level_id(),
@@ -476,6 +511,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             "time": d.time.to_string(),
             "place": d.place,
             "by": d.by.map(|c| content.creature(c).id.clone()),
+            "cause": d.cause.map(|c| c.epitaph(content)),
         })
     });
     let layer_map: serde_json::Map<String, Value> = layers
@@ -512,6 +548,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "hp": { "current": hp, "max": max_hp },
         "experience": view.own_experience(),
         "defence": view.own_defence(),
+        "hunger": view.own_hunger(),
         "death": death,
         "messages": messages,
         "layers": layer_map,
@@ -712,7 +749,8 @@ mod tests {
             actors[0].contains(
                 "stats St 9/16 Dx 13/16 To 10/16 In 12/16 Wi 11/16 Pr 9/16; skills appraise 11 \
                  (0/5), disable_device 16 (0/5), escape_artist 7 (0/4), open_lock 18 (0/5), \
-                 search 9 (0/4), spot 10 (0/5), steal 17 (0/5), stealth 16 (0/5), tumble 16 (0/5)"
+                 search 9 (0/4), spot 10 (0/5), steal 17 (0/5), stealth 16 (0/5), tumble 16 (0/5); \
+                 nutrition 3600 (not_hungry)"
             ),
             "{}",
             actors[0]

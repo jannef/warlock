@@ -1,8 +1,9 @@
 //! Races (`assets/data/races.toml`, spec §8 "Character creation"): the first choice of a new
 //! run. A race adjusts the starting scores and the potentials (fixed numbers or dice), gives the
 //! player their eyes, sets the range of their starting age, gives the player their size
-//! (spec §8 "Burden": how much they can carry) and whether being Burdened costs them nothing, and
-//! trains them in skills (spec §8 "Skills"; dice, and humans' extra class skill).
+//! (spec §8 "Burden": how much they can carry), whether being Burdened costs them nothing, and
+//! how much they need to eat (spec §8 "Hunger"), and trains them in skills (spec §8 "Skills";
+//! dice, and humans' extra class skill).
 
 use super::ContentError;
 use crate::combat::MAX_BASE_HP;
@@ -12,6 +13,13 @@ use crate::stats::{PerStat, SCORES, Stat, adjustments};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::ops::RangeInclusive;
+
+/// How much a race may need to eat, in percent of a human: a tenth to ten times as much.
+pub const HUNGER: RangeInclusive<u16> = 10..=1000;
+
+fn normal_hunger() -> u16 {
+    100
+}
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -41,6 +49,8 @@ struct RaceSpec {
     skills: BTreeMap<String, Dice>,
     #[serde(default)]
     class_skill: Dice,
+    #[serde(default = "normal_hunger")]
+    hunger: u16,
 }
 
 /// The oldest a character may start, in years.
@@ -78,6 +88,9 @@ pub struct RaceDef {
     /// Dice added to one of the class's skills, picked when the character is made (0: none).
     /// Humans: one extra class skill.
     pub class_skill: Dice,
+    /// How much the player needs to eat, in percent of a human (spec §8 "Hunger"): game time
+    /// burns their nutrition this much faster (a halfling, 125) or slower (an elf, 80).
+    pub hunger: u16,
 }
 
 /// Every race, and the base every potential starts from.
@@ -155,6 +168,14 @@ impl Races {
                     GRANTS.end()
                 )));
             }
+            if !HUNGER.contains(&spec.hunger) {
+                return Err(err(format!(
+                    "race `{id}`: hunger {} is out of range ({} to {} percent)",
+                    spec.hunger,
+                    HUNGER.start(),
+                    HUNGER.end()
+                )));
+            }
             list.push(RaceDef {
                 id: spec.id,
                 name: spec.name,
@@ -168,6 +189,7 @@ impl Races {
                 ignores_burdened: spec.ignores_burdened,
                 skills,
                 class_skill: extra,
+                hunger: spec.hunger,
             });
         }
         Ok(Self {
@@ -215,10 +237,14 @@ mod tests {
         assert_eq!(human.size, 1, "medium unless named");
         assert!(!human.ignores_burdened);
         assert!(human.skills.is_empty() && human.class_skill.is_zero());
-        let dwarf =
-            parse(&format!("{ONE}size = \"small\"\nignores_burdened = true\n")).expect("valid");
+        assert_eq!(human.hunger, 100, "a human's hunger unless named");
+        let dwarf = parse(&format!(
+            "{ONE}size = \"small\"\nignores_burdened = true\nhunger = 110\n"
+        ))
+        .expect("valid");
         assert_eq!(dwarf.list[0].size, 0);
         assert!(dwarf.list[0].ignores_burdened);
+        assert_eq!(dwarf.list[0].hunger, 110);
         let elf = parse(&format!(
             "{ONE}skills = {{ spot = \"1d6+4\", listen = 3 }}\nclass_skill = \"1d4\"\n"
         ))
@@ -268,6 +294,7 @@ mod tests {
             ),
             (ONE.replace("15", "0"), "base_potential 0"),
             (format!("{ONE}size = \"huge\"\n"), "unknown size `huge`"),
+            (format!("{ONE}hunger = 5\n"), "hunger 5 is out of range"),
             (
                 format!("{ONE}skills = {{ luck = 5 }}\n"),
                 "race `human`: skills: unknown skill `luck`",

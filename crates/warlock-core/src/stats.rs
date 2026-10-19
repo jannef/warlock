@@ -4,12 +4,15 @@
 //!
 //! Every actor has a **score** in each stat, [`AVERAGE`] (10) unless its creature type (or, for
 //! the player, the scenario) says otherwise, and a **potential**: the natural ceiling the score
-//! could grow towards, ADOM-like. Nothing raises a score yet.
+//! could grow towards, ADOM-like. Only eating a corpse raises a score yet ([`Stats::raise`], up
+//! to the potential; spec §8 "Hunger"), and hunger lowers the scores the rules use for a while
+//! ([`Stats::adjusted`]: Weak).
 //!
 //! The **modifier** of a score follows D&D 3.5: `floor((score − 10) / 2)` ([`modifier`]). It is
 //! for the rules only. The player sees their own scores
 //! ([`PerceptionView::own_scores`](crate::perception::PerceptionView::own_scores)) and nothing
-//! else: never a modifier, never a potential, never a creature's stats. No rule uses stats yet.
+//! else: never a modifier, never a potential, never a creature's stats. Combat and burden use
+//! them (spec §8 "Combat", "Burden").
 //!
 //! Adding a stat is one entry in the `stats!` list below; saves then need a new format version.
 
@@ -292,6 +295,26 @@ impl Stats {
     /// The modifier of the score in `stat` ([`modifier`]). Rules only: never shown.
     pub fn modifier(&self, stat: Stat) -> i32 {
         modifier(i32::from(self.score(stat)))
+    }
+
+    /// Raises the score in `stat` by 1 if it is below its potential (spec §8 "Hunger": a corpse
+    /// eaten may do it). Returns whether it rose.
+    pub fn raise(&mut self, stat: Stat) -> bool {
+        let rises = self.score[stat] < self.potential[stat];
+        if rises {
+            self.score[stat] += 1;
+        }
+        rises
+    }
+
+    /// These stats with each score adjusted by `by` (kept within [`SCORES`]) for as long as
+    /// something lasts: the effective scores (spec §8 "Hunger": Weak). Potentials stay.
+    pub fn adjusted(&self, by: &PerStat<i32>) -> Self {
+        let mut out = *self;
+        for stat in Stat::ALL {
+            out.score[stat] = adjusted(self.score[stat], by[stat]);
+        }
+        out
     }
 }
 

@@ -9,8 +9,12 @@
 //!
 //! Weights are integer grams. An actor weighs its creature's base weight plus everything it
 //! carries ([`Weight`]).
+//!
+//! A corpse (spec §8 "Hunger") is a stack of one that remembers when its creature died
+//! ([`Stack::died`]): it rots from then on, and is gone in the end.
 
 use crate::content::{Content, ObjectId};
+use crate::time::GameTime;
 use serde::{Deserialize, Serialize};
 
 /// Most stacks an inventory holds: one per letter, `a` to `z`.
@@ -22,11 +26,33 @@ pub struct Stack {
     pub object: ObjectId,
     /// At least 1; always 1 for objects that do not stack.
     pub count: u32,
+    /// A corpse: when its creature died, the moment it rots from (rules and dev tools only: a
+    /// corpse does not show its age, so presentation cannot read it). `None` for everything else.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) died: Option<GameTime>,
 }
 
 impl Stack {
     pub fn one(object: ObjectId) -> Self {
-        Self { object, count: 1 }
+        Self::new(object, 1)
+    }
+
+    /// `count` of `object`, which is no corpse.
+    pub fn new(object: ObjectId, count: u32) -> Self {
+        Self {
+            object,
+            count,
+            died: None,
+        }
+    }
+
+    /// A corpse, `object`, of a creature that died at `died`.
+    pub fn corpse(object: ObjectId, died: GameTime) -> Self {
+        Self {
+            object,
+            count: 1,
+            died: Some(died),
+        }
     }
 
     /// Grams.
@@ -39,11 +65,13 @@ impl Stack {
         content.object(self.object).describe(self.count)
     }
 
-    /// Whether the object exists in `content` and the count makes sense (a guard for saves).
+    /// Whether the object exists in `content`, the count makes sense, and it knows when it died
+    /// if and only if it is a corpse (a guard for saves).
     pub(crate) fn is_valid_for(&self, content: &Content) -> bool {
         usize::from(self.object.0) < content.object_defs().len()
             && self.count >= 1
             && (self.count == 1 || content.object(self.object).stackable)
+            && self.died.is_some() == content.object(self.object).corpse.is_some()
     }
 }
 
@@ -143,7 +171,7 @@ mod tests {
 
     fn stack(content: &Content, id: &str, count: u32) -> Stack {
         let object = content.object_id(id).unwrap_or_else(|| panic!("{id}"));
-        Stack { object, count }
+        Stack::new(object, count)
     }
 
     #[test]

@@ -37,3 +37,6 @@ wear = 1000
 body_armor = 3000
 # Readying a missile weapon or missiles, or putting them away.
 ready = 1000
+# A turn of eating (spec §8 "Hunger"): a meal takes as many turns as the food says (`food` in
+# objects.toml; corpses by their creature's size, hunger.toml).
+eat = 1000

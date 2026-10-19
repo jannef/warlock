@@ -23,6 +23,7 @@ authoritative: it is generated from your current key bindings.
 | Character (your stats and weight) | `@` |
 | Skills | `S` |
 | Rest | `R` |
+| Eat | `E` |
 | Look around | `x` |
 | Fire your missile weapon | `f`, then aim (see below) |
 | Throw something | `t`, then aim |
@@ -99,6 +100,10 @@ takes no time. See [Objects and your pack](objects.md).
 `t` with nothing throwable ready opens a list of what you carry that can be thrown, by its pack
 letter: choose one and aim it.
 
+`E` opens a list of what you can eat: food lying where you stand first, then the food you carry,
+by its pack letter. A letter, or `Enter` on the marked row, eats it. See
+[Food and corpses](food.md).
+
 `e` shows what you wear and wield, slot by slot. A slot's letter (on this screen every letter
 names a slot) opens a list of what you carry that fits there: its letter puts it on, swapping
 out what was there, and choosing what is there takes it off. Each change takes its time; you
@@ -114,6 +119,8 @@ Below the map, the **status bar** shows, from left to right:
 
 - the name of the level, and on the overworld and in its local areas the region you are in;
 - your hit points, as `HP 18/24`: what you have left of your most (see [Combat](combat.md));
+- how hungry you are, unless you are not hungry: `Hungry`, `Weak`, `Fainting`, `Starving`,
+  `Satiated`, or `Bloated` (see [Hunger](hunger.md));
 - your burden, when you have one: `Burdened`, `Strained`, or `Overloaded` (see
   [Burden](burden.md));
 - the time, the date, and the phase of the moon (see [Time and the calendar](time.md));
@@ -127,8 +134,8 @@ At its right end, `? controls` reminds you where the keys are.
 When the window is too narrow for everything, the status bar leaves out the least important parts
 first: the seed, your position, your lantern, your vision, the light at your feet, and the turn
 count; then it shortens the moon's phase to its picture, and only then drops it; then the region,
-then the year of the date, then the date. The weather, the time, your burden, your hit points,
-and the name of the level stay longest. Parts come back as soon as there is room.
+then the year of the date, then the date. The weather, the time, your burden, your hunger, your
+hit points, and the name of the level stay longest. Parts come back as soon as there is room.
 
 ## Character
 

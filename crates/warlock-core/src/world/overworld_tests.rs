@@ -13,15 +13,17 @@ use crate::replay::Replay;
 use std::collections::VecDeque;
 use std::sync::LazyLock;
 
-/// Built-in content under an always clear sky: these tests are about travel, daylight, and
-/// moonlight; `weather_tests.rs` has the weather.
+/// Built-in content under an always clear sky, and with nobody hungering: these tests are about
+/// travel, daylight, and moonlight (journeys of days would starve the player); `weather_tests.rs`
+/// has the weather, `hunger_tests.rs` hunger on the overworld.
 static CONTENT: LazyLock<Arc<Content>> =
     LazyLock::new(|| Arc::new(Content::load(&clear_files()).expect("builtin content")));
 
-/// The built-in content files without the weather.
+/// The built-in content files without the weather and hunger.
 fn clear_files() -> ContentFiles {
     let mut files = ContentFiles::builtin();
     files.remove("data/weather.toml");
+    files.remove("data/hunger.toml");
     files
 }
 

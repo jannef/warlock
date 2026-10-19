@@ -32,5 +32,7 @@ In a fight (see [Combat](combat.md)), and under a load (see [Burden](burden.md))
 - **Toughness** gives you hit points, and makes them come back sooner. It counts toward how much
   you can carry.
 
-The other three do nothing yet. Stats do not change how far you see or how quietly you walk, and
-nothing raises or lowers them.
+The other three do nothing yet. Stats do not change how far you see or how quietly you walk.
+Hunger saps them for a while (Weak lowers your Strength and Dexterity; see [Hunger](hunger.md)),
+and eating the corpse of some creatures may raise one for good, as far as it can grow (see
+[Food and corpses](food.md)); nothing else raises or lowers them.

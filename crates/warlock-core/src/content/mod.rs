@@ -15,6 +15,7 @@ mod experience;
 mod faction;
 mod flow;
 mod horoscope;
+mod hunger;
 mod level;
 mod light;
 mod material;
@@ -37,7 +38,8 @@ pub use anim::GlyphAnim;
 pub use calendar::Calendar;
 pub use class::ClassDef;
 pub use creature::{
-    Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, NORMAL_SPEED, NaturalAttack, SPEEDS,
+    Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, NORMAL_SPEED, NaturalAttack, OnEat,
+    SPEEDS,
 };
 pub use dungeon::{DungeonDef, Generator, LevelPlan, parse_branch_level};
 pub use effect::{
@@ -48,6 +50,9 @@ pub use experience::{Experience, MAX_LEVEL, MAX_XP};
 pub use faction::{FactionDef, FactionId, Factions, PLAYER_FACTION, Stance};
 pub use flow::{FLOW_SPEEDS, Flow};
 pub use horoscope::{Horoscope, Sign, SignPart};
+pub use hunger::{
+    Corpses, EXERTIONS, Faint, Food, HungerDef, MAX_MEAL, MAX_NUTRITION, Overeating, Starve, States,
+};
 pub(crate) use level::validate_route;
 pub use level::{
     CreatureSpawn, EdgeExit, LevelKind, LevelTemplate, Region, StairsLink, parse_route,
@@ -57,7 +62,7 @@ pub use material::{MaterialDef, MaterialId};
 pub use object::{MAX_BONUS, MAX_PLACED, ObjectDef, ObjectId, article};
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use particles::{ParticleEmitter, ParticleTrigger};
-pub use race::{RaceDef, Races};
+pub use race::{HUNGER, RaceDef, Races};
 pub use scenario::ScenarioDef;
 pub use size::{CARRY, MEDIUM, SizeDef};
 pub use skill::{SkillBook, SkillDef};
@@ -223,7 +228,8 @@ struct LegendFile {
 /// weather file the sky is always clear; without an actions file every action costs 1000;
 /// without a slots file nothing can be worn or wielded; without races or classes there is no
 /// character to choose, and scenarios give the player's eyes and stats themselves; without
-/// skills nobody is trained in anything; without a horoscope, characters are born under no sign.
+/// skills nobody is trained in anything; without a horoscope, characters are born under no sign;
+/// without `data/hunger.toml` nobody hungers, nothing is eaten, and creatures leave no corpses.
 #[derive(Debug)]
 pub struct Content {
     terrain: Vec<TerrainDef>,
@@ -260,6 +266,9 @@ pub struct Content {
     horoscope: Option<Horoscope>,
     /// Spell effects, in `data/effects.toml` order: presentation only.
     effects: Vec<EffectDef>,
+    hunger: Option<HungerDef>,
+    /// The corpse object of each creature type, by creature id (`None`: it leaves none).
+    corpses: Vec<Option<ObjectId>>,
 }
 
 impl Content {
@@ -299,6 +308,8 @@ impl Content {
             experience: Experience::default(),
             horoscope: None,
             effects: Vec::new(),
+            hunger: None,
+            corpses: Vec::new(),
         };
         let path = "data/calendar.toml";
         if let Some(text) = files.get_optional(path) {
@@ -353,6 +364,7 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.effects = effect::parse(path, text)?;
         }
+        content.load_hunger(files)?;
 
         let path = "data/legend.toml";
         let legend_file: LegendFile =
@@ -367,7 +379,15 @@ impl Content {
             content.levels.insert(id.to_string(), level);
         }
         for (path, id, text) in files.in_dir("scenarios") {
-            let scenario = ScenarioDef::parse(path, id, text)?;
+            let mut scenario = ScenarioDef::parse(path, id, text)?;
+            let err = |m: String| ContentError::new(path, format!("carry: {m}"));
+            scenario.carry = object::parse_stacks(&scenario.carry_spec, &content).map_err(err)?;
+            if scenario.carry.len() > crate::object::INVENTORY_SLOTS {
+                return Err(err(format!(
+                    "at most {} stacks fit in a pack",
+                    crate::object::INVENTORY_SLOTS
+                )));
+            }
             content.scenarios.insert(id.to_string(), scenario);
         }
         for (path, id, text) in files.in_dir("vaults") {
@@ -608,6 +628,17 @@ impl Content {
                 })?,
             };
             check_combat(&spec).map_err(err)?;
+            if let Some(on_eat) = &spec.on_eat {
+                on_eat
+                    .check()
+                    .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
+                if !spec.corpse || spec.id == "player" {
+                    return Err(err(format!(
+                        "creature `{}`: `on_eat` is for creatures that leave a corpse",
+                        spec.id
+                    )));
+                }
+            }
             self.creatures.push(spec.resolve(resolved));
         }
         if !self.creature_ids.contains_key("player") {
@@ -745,6 +776,50 @@ impl Content {
                 )));
             }
         }
+        Ok(())
+    }
+
+    /// `data/hunger.toml` (spec §8 "Hunger"), then a corpse object for each creature type that
+    /// leaves one (not the player), after the objects of `data/objects.toml`, in creature order.
+    fn load_hunger(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
+        self.corpses = vec![None; self.creatures.len()];
+        let path = "data/hunger.toml";
+        let Some(text) = files.get_optional(path) else {
+            return Ok(());
+        };
+        let err = |m: String| ContentError::new(path, m);
+        let size_index = |id: &str| self.size_index(id);
+        let def = HungerDef::parse(path, text, self.sizes.len(), size_index)?;
+        if let Some(corpses) = &def.corpses {
+            let material =
+                (self.material_ids.get(&corpses.material).copied()).ok_or_else(|| {
+                    err(format!(
+                        "corpses: unknown material `{}` (data/materials.toml)",
+                        corpses.material
+                    ))
+                })?;
+            for (i, creature) in self.creatures.iter().enumerate() {
+                if creature.id == "player" || !creature.corpse {
+                    continue;
+                }
+                let id = ObjectId(
+                    u16::try_from(self.objects.len())
+                        .map_err(|_| err("too many objects".into()))?,
+                );
+                let creature_id = CreatureId(i as u16);
+                let food = corpses.sizes[creature.size];
+                let def = ObjectDef::corpse_of(creature_id, creature, material, food);
+                if self.object_ids.insert(def.id.clone(), id).is_some() {
+                    return Err(err(format!(
+                        "the corpse of `{}` would be object `{}`, which data/objects.toml has",
+                        creature.id, def.id
+                    )));
+                }
+                self.corpses[i] = Some(id);
+                self.objects.push(def);
+            }
+        }
+        self.hunger = Some(def);
         Ok(())
     }
 
@@ -1206,6 +1281,17 @@ impl Content {
     /// The spell effect with id `id`.
     pub fn effect(&self, id: &str) -> Option<&EffectDef> {
         self.effects.iter().find(|e| e.id == id)
+    }
+
+    /// How the player hungers, `data/hunger.toml` (spec §8 "Hunger"); `None` without the file:
+    /// nobody hungers and nothing is eaten.
+    pub fn hunger(&self) -> Option<&HungerDef> {
+        self.hunger.as_ref()
+    }
+
+    /// The corpse a creature of type `creature` leaves when it dies, if any.
+    pub fn corpse_of(&self, creature: CreatureId) -> Option<ObjectId> {
+        self.corpses.get(usize::from(creature.0)).copied().flatten()
     }
 
     /// Month names for showing dates.
@@ -2167,7 +2253,8 @@ mod tests {
     fn every_object_has_a_glyph_color_material_and_weight() {
         let content = Content::builtin().unwrap();
         let objects = content.object_defs();
-        assert!((15..=40).contains(&objects.len()), "{}", objects.len());
+        // With a corpse for every creature type but the player.
+        assert!((15..=60).contains(&objects.len()), "{}", objects.len());
         let glyphs = content.glyphs();
         for def in objects {
             assert!(def.weight > 0 && glyphs.contains(&def.glyph), "{}", def.id);
@@ -2495,10 +2582,7 @@ mod tests {
         let content = stream(map, legend).unwrap();
         let level = content.level("stream").unwrap();
         let id = |name: &str| content.object_id(name).unwrap();
-        let stack = |name: &str, count| crate::object::Stack {
-            object: id(name),
-            count,
-        };
+        let stack = |name: &str, count| crate::object::Stack::new(id(name), count);
         assert_eq!(
             level.objects[&Pos::new(2, 1)],
             [

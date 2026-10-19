@@ -4,11 +4,11 @@
 //! goes through [`PerceptionView`]. It exposes currently visible cells, creatures (what they
 //! wear and wield, and how hurt they look, in words), objects, and light, remembered terrain and
 //! objects, and what the player carries, wears, weighs, and scores in each stat, their trained
-//! skills' values, their burden and carrying limit, and their hit points and Defence; it never
-//! exposes unseen terrain or objects, hidden creatures, what else creatures carry, their burden,
-//! their skills, or their hit points, any stat's modifier or potential, a skill's marks or
-//! benefits, an untrained skill, a creature's stats, a to-hit, or light the player's eyes cannot
-//! perceive.
+//! skills' values, their burden and carrying limit, their hit points and Defence, and how hungry
+//! they are; it never exposes unseen terrain or objects, hidden creatures, what else creatures
+//! carry, their burden, their skills, or their hit points, any stat's modifier or potential, a
+//! skill's marks or benefits, an untrained skill, a creature's stats, a to-hit, the nutrition
+//! counter, a corpse's age, or light the player's eyes cannot perceive.
 //!
 //! **Memory** (spec §5): terrain and piles of objects as last seen. Objects are seen where
 //! creatures are (cells in line of sight, never completed walls); a pile seen gone is forgotten,
@@ -59,6 +59,7 @@ use crate::equipment::Equipment;
 use crate::fov::{compute_fov, radius2};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
+use crate::hunger::Hunger;
 use crate::light::{
     Area, BOUNCE_STEPS, Bounce, Light, LightCache, Moon, SUN_KEY, ShadowSteps, Sky, Sun, Sunlight,
     falloff, lit_in_sight, moon_key, wall_faces,
@@ -750,10 +751,17 @@ impl<'a> PerceptionView<'a> {
         self.snapshot.gear.iter().filter(move |g| g.actor == actor)
     }
 
-    /// The player's own scores, by stat (spec §8 "Stats"). That is all the player knows of
+    /// The player's own scores, by stat (spec §8 "Stats"), as they are now: less what hunger
+    /// takes while they are Weak or worse (spec §8 "Hunger"). That is all the player knows of
     /// stats: never their potentials or modifiers, and nothing of a creature's.
     pub fn own_scores(&self) -> PerStat<u8> {
-        self.player.stats.scores()
+        self.player.effective_stats(self.content).scores()
+    }
+
+    /// How hungry the player is (spec §8 "Hunger"): the state, never the nutrition counter;
+    /// `None` when nobody hungers.
+    pub fn own_hunger(&self) -> Option<Hunger> {
+        self.player.hunger(self.content)
     }
 
     /// The player's own trained skills, in skill order (spec §8 "Skills"): each one's value and

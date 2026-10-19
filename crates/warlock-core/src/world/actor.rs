@@ -5,6 +5,7 @@ use crate::combat::{self, Attack, Category, Defence, Health, Profile};
 use crate::content::{ActionKind, Content, CreatureId, FactionId, ObjectDef, ObjectId};
 use crate::equipment::Equipment;
 use crate::geom::{Dir, Pos};
+use crate::hunger::{Hunger, Satiation};
 use crate::noise::Heard;
 use crate::object::{Stack, Weight, weight_of};
 use crate::skills::{Effect, Skills};
@@ -112,6 +113,10 @@ pub struct Actor {
     /// peaceful creatures in the showcase). Read the one that counts with [`Actor::faction`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub faction_override: Option<FactionId>,
+    /// How fed it is (spec §8 "Hunger"): the player's, when the content has hunger; creatures
+    /// do not hunger (`None`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub satiation: Option<Satiation>,
 }
 
 fn is_zero(n: &u32) -> bool {
@@ -123,6 +128,22 @@ impl Actor {
     pub fn faction(&self, content: &Content) -> Option<FactionId> {
         self.faction_override
             .or(content.creature(self.creature).faction)
+    }
+
+    /// How hungry it is (spec §8 "Hunger"); `None` for an actor that does not hunger.
+    pub fn hunger(&self, content: &Content) -> Option<Hunger> {
+        let def = content.hunger()?;
+        self.satiation.map(|s| def.state(s.nutrition))
+    }
+
+    /// Its stats as the rules use them now: its scores, less what hunger takes while it is Weak
+    /// or worse (`[weak]` in `data/hunger.toml`: Strength and Dexterity). Combat and burden read
+    /// these; hit points go by its own Toughness.
+    pub fn effective_stats(&self, content: &Content) -> Stats {
+        match (content.hunger(), self.hunger(content)) {
+            (Some(def), Some(h)) if h.is_weak() => self.stats.adjusted(&def.weak),
+            _ => self.stats,
+        }
     }
 
     /// Its maximum hit points: Toughness plus [`Actor::hp_base`], at least 1.
@@ -145,7 +166,7 @@ impl Actor {
             .filter_map(|(_, item)| self.inventory.get(item))
             .map(|s| content.object(s.object))
             .collect();
-        let dexterity = self.stats.modifier(Stat::Dexterity);
+        let dexterity = self.effective_stats(content).modifier(Stat::Dexterity);
         let worn = equipped.iter().filter_map(|o| o.max_dex);
         let cap = worn.chain(burden.max_dex()).min();
         let dexterity = cap.map_or(dexterity, |cap| dexterity.min(cap));
@@ -242,7 +263,7 @@ impl Actor {
             (None, Some(natural)) => natural.attack,
             (None, None) => Attack::unarmed(),
         };
-        Profile::melee(&attack, &self.stats)
+        Profile::melee(&attack, &self.effective_stats(content))
     }
 
     /// What its shots do, with the missile weapon it has ready (`None` without one): Dexterity to
@@ -250,7 +271,7 @@ impl Actor {
     /// bow needs.
     pub fn ranged(&self, content: &Content) -> Option<Profile> {
         let (_, launcher) = self.launcher(content)?;
-        Some(Profile::ranged(launcher, &self.stats))
+        Some(Profile::ranged(launcher, &self.effective_stats(content)))
     }
 }
 

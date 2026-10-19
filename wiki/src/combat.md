@@ -118,9 +118,11 @@ Creatures heal the same way, while you are on their level.
 ## Death
 
 A creature at 0 hit points dies: "The giant rat dies." It is gone, and everything it carried,
-what it wore and wielded too, falls where it stood, for you to pick up.
+what it wore and wielded too, falls where it stood, for you to pick up, with its corpse on top
+(see [Food and corpses](food.md)).
 
 When **you** reach 0 hit points, you die: "You die..." The run is over, and a screen tells you
-what killed you (if you saw it), where, when, and after how many turns. There is no going back:
+what killed you (if you saw it, or that you starved or died of what you ate; see
+[Hunger](hunger.md)), where, when, and after how many turns. There is no going back:
 your save is deleted at once (see [Saving](saving.md)). Press `Enter` or `Esc` to return to the
 main menu and start a new run.

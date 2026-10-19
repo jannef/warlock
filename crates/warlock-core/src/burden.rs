@@ -209,7 +209,8 @@ pub fn load(actor: &Actor, race: Option<&RaceDef>, content: &Content) -> Load {
         Some(race) => (race.size, race.ignores_burdened),
         None => (content.creature(actor.creature).size, false),
     };
-    let stats = &actor.stats;
+    // Hunger may sap Strength (Weak, spec §8 "Hunger").
+    let stats = &actor.effective_stats(content);
     Load {
         carried: weight_of(&actor.inventory, content),
         limit: limit(

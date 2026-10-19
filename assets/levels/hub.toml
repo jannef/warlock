@@ -37,6 +37,9 @@
 # ring and the amulets lie elsewhere): a helm, mail, a cloak, weapons (a quarterstaff for both
 # hands), a shield, gloves, boots, and a bow with arrows. Wear and wield them with `e`.
 #
+# Hunger (M23): the pantry keeps food: food rations, loaves of bread, dried meat, and apples. Eat
+# with `E`.
+#
 # Ranged combat (M16): the storeroom also has a long war bow, a crossbow with bolts, a sling with
 # stones, rocks to throw, and flaming arrows beside the short bow's arrows. Ready a bow and arrows
 # with `e`, then fire with `f` (throw with `t`): a flaming arrow shot into the patrol gallery's
@@ -158,6 +161,14 @@ objects = ["dried_meat*6"]
 [[pile]]
 at = [26, 15]
 objects = ["apple*4"]
+
+[[pile]]
+at = [27, 13]
+objects = ["ration*4"]
+
+[[pile]]
+at = [29, 14]
+objects = ["bread*2"]
 
 [[pile]]
 at = [28, 15]

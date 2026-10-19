@@ -29,12 +29,14 @@ impl DeathScreen {
         };
         let content = view.content();
         let calendar = content.calendar();
-        let by = match death.by {
-            Some(creature) => {
+        let by = match (death.cause, death.by) {
+            // Hunger, or what they ate (spec §8 "Hunger").
+            (Some(cause), _) => cause.epitaph(content),
+            (None, Some(creature)) => {
                 let name = &content.creature(creature).name;
                 format!("Killed by {} {name}", article(name))
             }
-            None => "Killed by something you did not see".into(),
+            (None, None) => "Killed by something you did not see".into(),
         };
         let turns = match death.turn {
             1 => "after 1 turn".to_string(),
@@ -152,5 +154,30 @@ mod tests {
             screen.handle(&Press::nav(Nav::Back)),
             ScreenAction::Choose(MenuChoice::LeaveRun)
         );
+    }
+
+    #[test]
+    fn it_says_when_hunger_killed_the_player() {
+        // Starting with nothing to eat, never fainting, starving a hit point a second.
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        let hunger = include_str!("../../../../assets/data/hunger.toml")
+            .replace("start = 3600", "start = 0")
+            .replace("chance = 5", "chance = 0")
+            .replace("seconds = 600", "seconds = 1");
+        files.insert("data/hunger.toml", &hunger);
+        let content = Arc::new(Content::load(&files).expect("content"));
+        let mut w = World::new(content, "showcase", None).expect("world");
+        // Starving stops the first rest; the next lasts until the end.
+        for _ in 0..3 {
+            w.apply(&Action::Rest(warlock_core::Rest::Dusk));
+        }
+        assert!(w.death().is_some(), "starved");
+        let screen = DeathScreen::new(Some(&w.perception()));
+        let mut console = Console::default();
+        console.resize(80, 30);
+        screen.draw(&mut console);
+        let shown = text(&console);
+        assert!(shown.contains("Starved to death,"), "{shown}");
+        assert!(shown.contains("in The Hub,"), "{shown}");
     }
 }

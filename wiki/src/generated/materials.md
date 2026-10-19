@@ -16,5 +16,5 @@
 | Bone | bone amulets |
 | Stone | sling stones, rocks, jade amulets |
 | Gemstone | rubies |
-| Flesh | strips of dried meat |
-| Plant matter | apples |
+| Flesh | strips of dried meat, corpses |
+| Plant matter | apples, food rations, loaves of bread |

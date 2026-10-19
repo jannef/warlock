@@ -18,6 +18,8 @@
 - [Objects and your pack](objects.md)
 - [Equipment](equipment.md)
 - [Burden](burden.md)
+- [Hunger](hunger.md)
+  - [Food and corpses](food.md)
 - [Your character](character.md)
   - [Races](races.md)
   - [Classes](classes.md)

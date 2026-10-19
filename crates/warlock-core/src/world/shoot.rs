@@ -75,7 +75,7 @@ impl World {
         };
         let def = content.object(launcher);
         let range = def.range.unwrap_or(1);
-        let profile = Profile::ranged(attack, &me.stats);
+        let profile = Profile::ranged(attack, &me.effective_stats(&content));
         if !self.within_reach(at, range, "shoot") {
             return Spent::Nothing;
         }
@@ -90,7 +90,9 @@ impl World {
             range,
         };
         self.player_looses(at, loose, events);
-        self.price_for(&kinds)
+        let spent = self.price_for(&kinds);
+        self.exert(ActionKind::Shoot);
+        spent
     }
 
     /// The player throws one of inventory stack `item`, a throwing weapon, at cell `at`.
@@ -111,7 +113,7 @@ impl World {
             self.say(format!("You cannot throw {}.", def.describe(1)));
             return Spent::Nothing;
         };
-        let profile = Profile::thrown(&attack, &me.stats);
+        let profile = Profile::thrown(&attack, &me.effective_stats(&content));
         if !self.within_reach(at, range, "throw") {
             return Spent::Nothing;
         }
@@ -122,7 +124,9 @@ impl World {
             range,
         };
         self.player_looses(at, loose, events);
-        self.price_for(&[ActionKind::Throw])
+        let spent = self.price_for(&[ActionKind::Throw]);
+        self.exert(ActionKind::Throw);
+        spent
     }
 
     /// Whether missiles fly here: not on the overworld, a map of the land.
@@ -245,7 +249,7 @@ impl World {
         let loose = Loose {
             kind: AttackKind::Ranged,
             item,
-            profile: Profile::ranged(attack, &me.stats),
+            profile: Profile::ranged(attack, &me.effective_stats(&content)),
             range: def.range.unwrap_or(1),
         };
         self.loose(id, at, loose, events);

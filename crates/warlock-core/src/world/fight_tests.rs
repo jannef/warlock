@@ -798,13 +798,7 @@ fn creatures_shoot_with_the_bow_they_have_ready() {
     // Every arrow came down where the player stands, hit or miss (the wall is behind them).
     let (level, _) = w.ground_truth();
     let arrow = content.object_id("arrow").expect("arrow");
-    assert_eq!(
-        level.objects_at(Pos::new(1, 1)),
-        [Stack {
-            object: arrow,
-            count: 9
-        }]
-    );
+    assert_eq!(level.objects_at(Pos::new(1, 1)), [Stack::new(arrow, 9)]);
     let hurt = w.state().player().hp < w.state().player().max_hp();
     assert!(hurt, "an arrow found its mark");
     let shown = messages(&w);
