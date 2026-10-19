@@ -137,8 +137,9 @@ jobs:
           mkdir -p pages
           cp -r target/web/. pages/
           cp LICENSE pages/
-          # The player wiki, at https://jannef.github.io/warlock/wiki/ (its tables are committed;
-          # CI checks they are fresh).
+          # The player wiki, at https://jannef.github.io/warlock/wiki/ (its tables are generated
+          # from the game data; they are not committed).
+          cargo xtask wiki
           mdbook build wiki
           cp -r wiki/book pages/wiki
       - uses: actions/upload-pages-artifact@v4

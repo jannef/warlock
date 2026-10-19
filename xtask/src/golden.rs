@@ -1,14 +1,19 @@
 //! `cargo xtask golden [--update | --local]`: golden screenshots per showcase room (spec §10).
 //!
-//! Each entry of `tests/golden/manifest.toml` names a scenario plus either a text action sequence
-//! (turned into a replay with `warlock-core`) or an existing replay file. The game renders it
-//! headlessly (`--replay … --capture …`) and the result is compared with `tests/golden/<name>.png`.
+//! The manifest is the directory `tests/golden/manifest/`: every `*.toml` directly in it, read in
+//! file-name order (one file per showcase room or feature, so feature branches add entries without
+//! conflicting). Exactly one file may set `[defaults]` (`defaults.toml`); each `[[golden]]` entry
+//! names a scenario plus either a text action sequence (turned into a replay with `warlock-core`)
+//! or an existing replay file, and its name is unique across the files. The game renders each
+//! entry headlessly (`--replay … --capture …`) and the result is compared with
+//! `tests/golden/<name>.png`.
 //!
 //! References are authoritative only when produced on Linux CI (Mesa lavapipe); other GPUs and
 //! drivers rasterize slightly differently. On other platforms use `--local` to just capture.
 
 use crate::{run_game, workspace_root};
 use serde::Deserialize;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use warlock_core::action::parse_actions;
@@ -16,13 +21,73 @@ use warlock_core::content::Content;
 use warlock_core::replay::Replay;
 use warlock_core::{Action, World};
 
+/// One manifest file: optional defaults and any number of entries.
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-struct Manifest {
-    #[serde(default)]
-    defaults: Defaults,
+struct ManifestFile {
+    defaults: Option<Defaults>,
     #[serde(default, rename = "golden")]
     entries: Vec<Entry>,
+}
+
+/// The manifest directory merged: the `[defaults]`, if a file set them, and the entries in file
+/// order.
+struct Manifest {
+    defaults: Option<Defaults>,
+    entries: Vec<Entry>,
+}
+
+/// Reads every `*.toml` directly under `dir` in file-name order and merges them.
+///
+/// Errors name the file: a file that does not parse, a second file setting `[defaults]`, or an
+/// entry name used twice. Without any `[defaults]` the built-in defaults apply.
+fn load_manifest(dir: &Path) -> Result<Manifest, String> {
+    let entries = std::fs::read_dir(dir)
+        .map_err(|e| format!("cannot read manifest directory {}: {e}", dir.display()))?;
+    let mut paths: Vec<PathBuf> = entries
+        .filter_map(|entry| entry.ok().map(|entry| entry.path()))
+        .filter(|path| path.is_file() && path.extension().is_some_and(|ext| ext == "toml"))
+        .collect();
+    paths.sort();
+    if paths.is_empty() {
+        return Err(format!("no manifest files (*.toml) in {}", dir.display()));
+    }
+
+    let mut defaults: Option<(Defaults, PathBuf)> = None;
+    let mut manifest = Vec::new();
+    let mut names: HashMap<String, PathBuf> = HashMap::new();
+    for path in paths {
+        let text = std::fs::read_to_string(&path)
+            .map_err(|e| format!("cannot read {}: {e}", path.display()))?;
+        let file: ManifestFile =
+            toml::from_str(&text).map_err(|e| format!("{}: {e}", path.display()))?;
+        if let Some(found) = file.defaults {
+            if let Some((_, first)) = &defaults {
+                return Err(format!(
+                    "[defaults] is set in both {} and {}; keep it in one file",
+                    first.display(),
+                    path.display()
+                ));
+            }
+            defaults = Some((found, path.clone()));
+        }
+        for entry in file.entries {
+            if let Some(first) = names.get(&entry.name) {
+                return Err(format!(
+                    "golden entry `{}` is defined in both {} and {}",
+                    entry.name,
+                    first.display(),
+                    path.display()
+                ));
+            }
+            names.insert(entry.name.clone(), path.clone());
+            manifest.push(entry);
+        }
+    }
+    Ok(Manifest {
+        defaults: defaults.map(|(d, _)| d),
+        entries: manifest,
+    })
 }
 
 /// Values used by entries that do not set their own.
@@ -169,12 +234,8 @@ pub fn run(mode: Mode) -> Result<(), String> {
     let golden_dir = root.join("tests/golden");
     let out_dir = root.join("target/xtask/golden");
     std::fs::create_dir_all(&out_dir).map_err(|e| format!("cannot create out dir: {e}"))?;
-    let manifest_path = golden_dir.join("manifest.toml");
-    let text = std::fs::read_to_string(&manifest_path)
-        .map_err(|e| format!("cannot read {}: {e}", manifest_path.display()))?;
-    let manifest: Manifest =
-        toml::from_str(&text).map_err(|e| format!("{}: {e}", manifest_path.display()))?;
-    let d = &manifest.defaults;
+    let manifest = load_manifest(&golden_dir.join("manifest"))?;
+    let d = &manifest.defaults.unwrap_or_default();
     let content = Arc::new(Content::builtin().map_err(|e| e.to_string())?);
 
     if !cfg!(target_os = "linux") && mode == Mode::Compare {
@@ -323,6 +384,41 @@ mod tests {
         assert!(parse_mode(&[]).unwrap() == Mode::Compare);
         assert!(parse_mode(&["--update".into()]).unwrap() == Mode::Update);
         assert!(parse_mode(&["--bogus".into()]).is_err());
+    }
+
+    /// The checked-in manifest directory loads: every file parses, the names are unique, and
+    /// `defaults.toml` sets the defaults.
+    #[test]
+    fn manifest_directory_loads() {
+        let manifest = load_manifest(&workspace_root().join("tests/golden/manifest")).unwrap();
+        assert_eq!(manifest.entries.len(), 66);
+        let mut names: Vec<&str> = manifest.entries.iter().map(|e| e.name.as_str()).collect();
+        names.sort_unstable();
+        names.dedup();
+        assert_eq!(names.len(), manifest.entries.len());
+        assert!(manifest.defaults.is_some(), "defaults.toml sets [defaults]");
+    }
+
+    #[test]
+    fn manifest_rejects_duplicates() {
+        let dir = std::env::temp_dir().join(format!("wp185-golden-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let entry = "[[golden]]\nname = \"same\"\nactions = \"wait\"\n";
+        std::fs::write(dir.join("a.toml"), format!("[defaults]\n{entry}")).unwrap();
+        std::fs::write(dir.join("b.toml"), entry).unwrap();
+        let err = load_manifest(&dir)
+            .err()
+            .expect("duplicate names are refused");
+        assert!(err.contains("`same`") && err.contains("a.toml") && err.contains("b.toml"));
+        std::fs::write(dir.join("b.toml"), "[defaults]\n").unwrap();
+        let err = load_manifest(&dir)
+            .err()
+            .expect("two [defaults] are refused");
+        assert!(err.contains("[defaults]") && err.contains("a.toml") && err.contains("b.toml"));
+        std::fs::remove_file(dir.join("a.toml")).unwrap();
+        assert!(load_manifest(&dir).unwrap().entries.is_empty());
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]

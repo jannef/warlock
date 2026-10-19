@@ -1,0 +1,23 @@
+# Menu screens over a run.
+
+# The pause menu over a running game: guards against overlays being wiped (#56).
+[[golden]]
+name = "pause-menu"
+scenario = "showcase"
+actions = "wait"
+screen = "pause"
+
+# The `?` help over a run: the controls list, read-only (#57). Tall enough for the whole list.
+[[golden]]
+name = "help-screen"
+scenario = "showcase"
+actions = "wait"
+screen = "help"
+window = "1280x912"
+
+# Settings over a run, opened over the pause menu (#57).
+[[golden]]
+name = "settings-screen"
+scenario = "showcase"
+actions = "wait"
+screen = "settings"
