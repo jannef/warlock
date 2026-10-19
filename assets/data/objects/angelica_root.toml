@@ -1,0 +1,13 @@
+# A remedy against disease (spec §8 "Diseases"): eaten, it cures every disease, even grave rot,
+# which never goes by itself. Shops that sell food sell it.
+[[object]]
+id = "angelica_root"
+name = "angelica root"
+glyph = "%"
+fg = "#9cc65a"
+material = "plant"
+weight = 40
+value = 30
+stackable = true
+food = { nutrition = 20, turns = 1 }
+cures = ["remove_disease"]

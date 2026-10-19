@@ -33,9 +33,11 @@ to stay where you are. Holding a movement key stops you short of the trap instea
   be picked up.
 - **Blasts**: a fireball burns everyone around the trap and a lightning bolt strikes everyone
   along its line, you included if you are there, with no roll to hit. Walls stop both, but a
-  fireball blows the softer walls it reaches apart (see [Digging and walls](digging.md)). The
-  lightning runs one way, along the longest clear line from the trap unless the place says
-  otherwise.
+  fireball blows the softer walls it reaches apart (see [Digging and walls](digging.md)) and melts
+  the ice it reaches, and whoever stands on that ice falls in. A frost trap bites everyone around
+  it with cold and freezes the water it reaches at once, into ice that holds a laden person (see
+  [Temperature and ice](temperature.md)). The lightning runs one way, along the longest clear
+  line from the trap unless the place says otherwise.
 - **A pit** costs you your next action as you climb out, as well as the fall.
 - **An alarm** rings a bell that every creature within earshot hears; the ones who have enemies
   come to look (see [Hearing](hearing.md)).
@@ -47,7 +49,8 @@ A trap's blow wounds like any other: a big one spills blood and can leave you
 [bleeding](status-effects.md#bleeding). Traps can kill, you as well as creatures. Creatures
 killed by a trap drop what they carried, as from any death, but a trap's kill earns you no
 [experience](experience.md) and counts for no [quest](quests.md), even if you lured the creature
-there; if a trap kills you, the death screen names it ("Killed by a fireball trap").
+there; if a trap kills you, the death screen names it ("Killed by a fireball trap"). Someone who
+makes way for you onto a trap you stood on sets it off too.
 
 No trap lies on water that can freeze, and a teleport never sets you down on ice.
 

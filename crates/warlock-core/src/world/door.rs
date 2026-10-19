@@ -20,6 +20,7 @@ use crate::content::{ActionKind, Role};
 use crate::door::kick_breaks;
 use crate::geom::{Dir, Pos};
 use crate::noise::Act;
+use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 
 impl World {
@@ -110,7 +111,8 @@ impl World {
             let target = other.id;
             let seen = self.perception.sees_actors_at(at);
             let unarmed = self.content.weapon_skills().of_role(Role::Unarmed);
-            let price = self.attack_price(player, ActionKind::Kick, AttackSkills::only(unarmed));
+            let skills = AttackSkills::only(unarmed);
+            let price = self.attack_price(player, ActionKind::Kick, None, skills);
             self.player_kicks(target, seen, events);
             return Spent::Turn(price);
         }
@@ -131,16 +133,23 @@ impl World {
 
     /// The player kicks the closed door at `p`: a banging noise, and with a chance of their
     /// Strength in its sturdiness it breaks for good (one draw of the gameplay stream; a door
-    /// that cannot break draws nothing).
+    /// that cannot break draws nothing). Their athletics adds to the Strength (spec §8
+    /// "Skills"), and the kick trains it. Kicking a door is no attack: neither the combat stance
+    /// nor attack speed changes its time.
     fn kick_door(&mut self, p: Pos, events: &mut Vec<Event>) -> Spent {
         let player = self.state.player;
         let price = self.price_of(player, ActionKind::Kick);
         let def = self.content.terrain(self.state.current().terrain[p]);
         let me = self.state.player();
         let strength = me.effective_stats(&self.content).score(Stat::Strength);
+        let athletics = me.skill_effect(&self.content, Effect::Kick);
+        let force = u8::try_from(i32::from(strength) + athletics).unwrap_or(u8::MAX);
         let broken = def.kicked_in.and_then(|(to, sturdiness)| {
-            kick_breaks(strength, sturdiness, &mut self.state.rng).then_some(to)
+            kick_breaks(force, sturdiness, &mut self.state.rng).then_some(to)
         });
+        if self.trains(Use::Kick) {
+            self.train(Use::Kick);
+        }
         self.make_noise(player, Act::Kick(p));
         match broken {
             Some(to) => {

@@ -97,9 +97,10 @@ impl World {
             profile,
             range,
         };
-        self.player_looses(at, loose, events);
-        // Priced before the exertion, which may leave the player hungrier (no longer Bloated).
+        // Priced as the shot begins (every attack is), before the missile leaves and the
+        // exertion, which may leave the player hungrier (no longer Bloated).
         let price = self.shot_price(self.state.player, launcher);
+        self.player_looses(at, loose, events);
         self.exert(ActionKind::Shoot);
         Spent::Turn(price)
     }
@@ -109,9 +110,10 @@ impl World {
     /// take off.
     fn shot_price(&self, id: ActorId, launcher: ObjectId) -> i64 {
         let shot = self.skills_of(id, AttackKind::Ranged, None);
-        let mut price = self.attack_price(id, ActionKind::Shoot, shot);
+        let with = self.state.actors[&id].launcher_item(&self.content);
+        let mut price = self.attack_price(id, ActionKind::Shoot, with, shot);
         if self.content.object(launcher).reloads {
-            price += self.attack_price(id, ActionKind::Reload, shot);
+            price += self.reload_price(id, shot);
         }
         price
     }
@@ -146,8 +148,9 @@ impl World {
             profile,
             range,
         };
+        // Priced as the throw begins, with what is thrown still in the pack.
+        let price = self.attack_price(self.state.player, ActionKind::Throw, None, throwing);
         self.player_looses(at, loose, events);
-        let price = self.attack_price(self.state.player, ActionKind::Throw, throwing);
         self.exert(ActionKind::Throw);
         Spent::Turn(price)
     }
@@ -278,8 +281,9 @@ impl World {
             profile,
             range: me.launcher_range(&content).unwrap_or(1),
         };
+        let price = self.shot_price(id, launcher);
         self.loose(id, at, loose, events);
-        self.shot_price(id, launcher)
+        price
     }
 
     /// Actor `shooter` looses one missile of `loose` at cell `at` (module docs): it leaves the

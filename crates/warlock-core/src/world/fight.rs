@@ -111,11 +111,28 @@ impl Cause {
     }
 }
 
-/// What hurt an actor: another actor's attack, or a trap (spec §8 "Traps").
+/// What hurt an actor, and so what a death by it is put down to ([`World::hurt`], the one way
+/// hit points go down).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum Harm {
+    /// Another actor's blow, shot, or kick: it killed, and a kill by the player earns them its
+    /// experience (spec §8 "Experience").
     Actor(ActorId),
+    /// A trap (spec §8 "Traps"): no one killed, and no one earns anything.
     Trap(TrapId),
+    /// A status effect's ticks or a disease (spec §8 "Status effects", "Diseases"): a death is
+    /// of status `of`, caused by `by` if anyone (a wound they dealt bled it to death), at the
+    /// moment `when` of the time passing.
+    Status {
+        of: Option<StatusId>,
+        by: Option<ActorId>,
+        when: GameTime,
+    },
+    /// Starving at the moment `when` (spec §8 "Hunger").
+    Starving(GameTime),
+    /// What never kills: it leaves the last hit point (the plunge into freezing water, spec §5
+    /// "Ice"; a disease that does not kill).
+    Spared,
 }
 
 /// What an attack is made with, in words: what it is called ("spear", "bite", "fist", "arrow",
@@ -584,7 +601,9 @@ impl World {
         }
     }
 
-    /// Actor `id` loses `damage` hit points to `harm`; at 0 it dies. Returns whether it died.
+    /// Actor `id` loses `damage` hit points to `harm`, the one way hit points go down (blows,
+    /// traps, status effects, diseases, starving, the plunge through the ice); at 0 it dies of
+    /// it, unless the harm spares the last hit point. Returns whether it died.
     pub(super) fn hurt(
         &mut self,
         id: ActorId,
@@ -595,12 +614,22 @@ impl World {
         let Some(actor) = self.state.actors.get_mut(&id) else {
             return false;
         };
+        if harm == Harm::Spared {
+            actor.hp = (actor.hp - damage).max(actor.hp.min(1));
+            return false;
+        }
         actor.hp -= damage;
         if actor.hp > 0 {
             return false;
         }
         match harm {
+            Harm::Spared => {}
             Harm::Actor(by) => self.dies(id, Some(by), None, self.state.time, events),
+            Harm::Status { of, by, when } => self.dies(id, by, of, when, events),
+            Harm::Starving(when) if id == self.state.player => {
+                self.die_of(Cause::Starvation, when);
+            }
+            Harm::Starving(when) => self.dies(id, None, None, when, events),
             Harm::Trap(trap) => {
                 // No creature and no status: the trap is what killed them (spec §8 "Traps"),
                 // and a trap's kill earns no one anything.
@@ -725,7 +754,9 @@ impl World {
 
     /// The player bashes whoever stands in `dir` with the shield they hold (spec §8 "Weapon
     /// skills"): a blow like any other ([`World::player_attacks`]), with the shield's `bash`
-    /// dice and shield bashing's benefits, for the price of `melee`. Refused (no time) without a
+    /// dice and shield bashing's benefits, for the price of a blow with the shield (`melee`, its
+    /// own affixes and what the player wears, never the wielded weapon's cost or affixes:
+    /// [`World::attack_cost`]). Refused (no time) without a
     /// shield to bash with, with nobody there, and against someone not hostile.
     pub(super) fn bash(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
@@ -754,7 +785,8 @@ impl World {
         let me = self.state.player();
         let skills = me.attack_skills(&content, AttackKind::Melee, Some(shield));
         let words = Words::of(me, AttackKind::Melee, Some(shield), &content);
-        let price = self.attack_price(player, ActionKind::Melee, skills);
+        let with = me.shield_item(&content);
+        let price = self.attack_price(player, ActionKind::Melee, with, skills);
         let blow = (Some(shield), profile, skills);
         self.player_strikes(target, seen, blow, (words, true), events);
         Spent::Turn(price)

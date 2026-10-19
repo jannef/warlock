@@ -475,11 +475,12 @@ fn style_ranks_add_to_attacks_defence_and_prices() {
     let plain = player(&w).melee(&content);
     let me = w.player_id();
     let blow = player(&w).attack_skills(&content, AttackKind::Melee, None);
-    let price = w.attack_price(me, ActionKind::Melee, blow);
+    let sword = player(&w).weapon_item(&content);
+    let price = w.attack_price(me, ActionKind::Melee, sword, blow);
     set(&mut w, "great_weapon", 10);
     let great = player(&w).melee(&content);
     assert_eq!((great.bonus, great.crit), (plain.bonus + 6, plain.crit + 1));
-    let quicker = w.attack_price(me, ActionKind::Melee, blow);
+    let quicker = w.attack_price(me, ActionKind::Melee, sword, blow);
     assert_eq!((price, quicker), (6000, 5100));
     // Staff Fighter 10 with the staff: +4 to hit, +4 parry. Great Weapon 10 gives it nothing of
     // its own (no damage, no critical), only Staff Fighter 7 by default: +3 to hit.
@@ -514,8 +515,9 @@ fn style_ranks_add_to_attacks_defence_and_prices() {
     let aimed = player(&w).ranged(&content).expect("a crossbow");
     assert_eq!(aimed.to_hit, shot.to_hit + 4);
     let shoot = player(&w).attack_skills(&content, AttackKind::Ranged, None);
-    assert_eq!(w.attack_price(me, ActionKind::Shoot, shoot), 5100);
-    assert_eq!(w.attack_price(me, ActionKind::Reload, shoot), 4200);
+    let crossbow = player(&w).launcher_item(&content);
+    assert_eq!(w.attack_price(me, ActionKind::Shoot, crossbow, shoot), 5100);
+    assert_eq!(w.reload_price(me, shoot), 4200);
     // Skirmisher 10: +3 to hit and damage on throws, 20 % quicker.
     let mut w = yard();
     arm(&mut w, &["rock"]);
@@ -528,7 +530,7 @@ fn style_ranks_add_to_attacks_defence_and_prices() {
         .expect("a throwing weapon");
     let thrown = player(&w).attack_skills(&content, AttackKind::Thrown, Some(rock));
     // Twenty rocks are a burden: a throw takes 7.5 s.
-    assert_eq!(w.attack_price(me, ActionKind::Throw, thrown), 7500);
+    assert_eq!(w.attack_price(me, ActionKind::Throw, None, thrown), 7500);
     set(&mut w, "skirmisher", 10);
     let skirmish = player(&w)
         .thrown(item, &content)
@@ -537,7 +539,7 @@ fn style_ranks_add_to_attacks_defence_and_prices() {
         (skirmish.to_hit, skirmish.bonus),
         (throw.to_hit + 3, throw.bonus + 3)
     );
-    assert_eq!(w.attack_price(me, ActionKind::Throw, thrown), 6000);
+    assert_eq!(w.attack_price(me, ActionKind::Throw, None, thrown), 6000);
     // A style's rank never helps another configuration: Duelist 10 with nothing in hand.
     let mut w = yard();
     let plain = player(&w).melee(&content);

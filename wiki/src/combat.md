@@ -96,7 +96,9 @@ A hit does the weapon's damage dice, at least 1:
 - Creatures without a weapon bite, claw, or kick, each in its own way.
 - Your rank in the weapon's [skill](weapon-skills.md) adds to the damage, and at higher ranks
   widens the critical range.
-- A **shield bash** does the shield's own damage (below), plus your Strength.
+- A **shield bash** does the shield's own damage (below), plus your Strength, and takes the time
+  of a plain blow: neither a slow great weapon's time nor a quick one's (nor its magic) changes
+  it.
 
 {{#include generated/weapons.md}}
 
@@ -122,6 +124,10 @@ always does. The game never shows what a stance adds: you feel it in the fight.
   your weapon does not already turn blows aside as well.
 - **Coward**: you hit much less often and softer, and your attacks take longer, but you dodge
   best, and stepping away from a hostile creature next to you is quicker and quieter.
+
+A stance changes how long every attack takes: a blow, a shield bash, a kick, a shot, or a throw;
+never reloading or kicking a door. Each attack takes the time it would as you begin it: a rank of
+skill it earns you makes the next one quicker, not that one.
 
 The numbers are first guesses, tuned by playtesting:
 

@@ -85,8 +85,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     sound that is news (`hear`, one draw per turn with news), an attack on the player that missed
     because of their Dexterity or Dodge (`dodge`, the dodge messages), an action other than
     waiting (not a rest's turns) taken while the player's burden slows them, as it began
-    (`burdened`; a dwarf's Burdened does not), a step on the overworld (`travel`). Only the
-    player trains for now; creatures keep their type's skills.
+    (`burdened`; a dwarf's Burdened does not), a step on the overworld (`travel`), a kick at a
+    closed door (`kick`). Only the player trains for now; creatures keep their type's skills.
   - **[provisional] Increases**: the owner has not decided how skills increase (alternatives for
     later: ADOM's level-up dice per class once experience exists, or marks that count only once
     the player rests). For now a skill gains a point when its marks reach
@@ -109,8 +109,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
       (`World::step_price`);
     - appraise: percent better prices in shops (`bargain`), 0.2 % a point to 20 % at 100, then to
       30 % at 200 (`world::favour`; with Presence at most 50 %; §7 "Shops");
-    - athletics (kicking doors, climbing out of pits) and escape artist (out of pits faster) wait
-      for those rules (#128, #130); swim for deep water; concentration, spellcraft, and use magic
+    - athletics: points added to the Strength a kick at a closed door is rolled against (§8
+      "Doors"), +8 at 100 and +12 at 200 (`kick`; `World::kick_door`), and a mark (20 %) for
+      every kick at a door;
+    - athletics' climbing out of pits and escape artist (out of pits faster) wait for that rule
+      (#128); swim for deep water; concentration, spellcraft, and use magic
       device for magic; the other action skills (search, open lock, heal, …) for their
       actions.
   - **What the player sees**: their own trained skills' values and a coarse progress (quarters)
@@ -166,7 +169,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     unbound by default, a direction once bound): a melee blow at whoever stands that way with
     the held shield's `bash` dice (§7; the small shield 1d3) plus the Strength modifier to hit
     and to damage, drawing on and training shield
-    bashing; it costs `melee` (less shield bashing's `speed`) and makes a blow's noise. Refused,
+    bashing; it costs a blow with the shield: `melee` (faster by the shield's own attack speed
+    and what the player wears, never the wielded weapon's `attack_cost` or affixes; less shield
+    bashing's `speed`), and makes a blow's noise. Refused,
     taking no time: without a shield to bash with ("You have no shield to bash with."), with
     nobody there ("There is nothing there to bash."), or at someone not hostile ("You have no
     quarrel with the deer."; unseen: "Something is in the way."). Its event is an attack of
@@ -213,8 +218,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the weapon skill's: the effective stats (§8 "Magic items", "Status effects", "Hunger",
     "Diseases"), the weapon skill's benefit, the style's (with the two-weapon penalty it eases),
     the affixes, then the combat stance; `speed` and `reload` in its price (`World::attack_price`,
-    which takes the attack's weapon skill and style: `World::cost_of`, the weapon's `attack_cost`
-    and magic attack speed, less the speed of both together, then the stance and the burden), Parry
+    which takes the attack's weapon skill and style: `World::attack_cost`, the weapon's
+    `attack_cost` and magic attack speed, less the speed of both together, then the stance and
+    the burden; priced as the attack begins, so a rank it earns quickens only the next, §8
+    "Time"), Parry
     added to the wielded weapon's and Shield to a held shield's while the hands are in the
     style's grip (`Actor::defence`). A style's rank never helps another configuration.
   - **Training**: every attack the player makes (a blow, an off-hand blow, a bash, a shot or a

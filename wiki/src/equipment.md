@@ -40,10 +40,9 @@ do it: creatures act meanwhile, just as when you wait. Looking at the screens ta
 
 - **Rings** fit either ring slot. Choosing a ring for the right hand while it is on your left
   moves it over.
-- **Light weapons**, the dagger, the stiletto, and the short sword, fit either hand: one in your off hand
-  beside a weapon in your main hand is fighting with two weapons (see
-  [Fighting styles](fighting-styles.md#two-weapons)). Nothing else but a shield goes in the off
-  hand.
+- **Light weapons** (listed below) fit either hand: one in your off hand beside a weapon in your
+  main hand is fighting with two weapons (see [Fighting styles](fighting-styles.md#two-weapons)).
+  Nothing else but a shield goes in the off hand.
 - **Two-handed weapons**, such as the quarterstaff and the great sword, take both hands. The screen shows them in
   the main hand and the off hand, "(both hands)". Wielding one puts away whatever your hands
   held; a shield in your off hand puts a two-handed weapon away.
@@ -55,6 +54,8 @@ do it: creatures act meanwhile, just as when you wait. Looking at the screens ta
   see [Digging and walls](digging.md)). Other tools, such as keys, rope, and candles, fit nowhere
   yet.
 - Things that are not equipment (potions, food, coins) fit nowhere.
+
+{{#include generated/light-weapons.md}}
 
 ## How long it takes
 

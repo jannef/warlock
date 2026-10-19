@@ -13,11 +13,13 @@ other roll, so they never move a score. Rules read a benefit through `Actor::ski
 (the actor's skills plus what magic items' skill affixes add, `Skills::effect_with`), never
 `Skills::effect` directly. Each effect is read in one place: Dodge in
 `Actor::defence`, quiet in `noise::noise`, hearing in `Actor::hearing`, burden in
-`World::burdened` (`Burden::slow_eased`), travel in `World::step_price`; each use is reported
-where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`, `player_moves`). A new
+`World::burdened` (`Burden::slow_eased`), travel in `World::step_price`, bargain in
+`world/shop.rs`, kick (athletics: Strength for kicking a door in) in `World::kick_door`; each use
+is reported where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`, `player_moves`,
+`kick_door`). A new
 effect or use is a variant there plus its one hook. The player sees values only
 (`PerceptionView::own_skills`, the Skills screen `ui/skills_screen.rs`, `S`); never marks or
 benefit numbers. Skills get no keys of their own: active uses will be chosen from the one
 abilities menu (#156), which reads `PerceptionView::active_skills` (`OwnSkill::active`: the
-skill's kind is `action`; `available`: usable now, false until the uses exist). Pending hooks: athletics (kicking doors, #130; climbing out of pits, #128) and
-escape artist (pits, #128).
+skill's kind is `action`; `available`: usable now, false until the uses exist). Pending hooks:
+athletics (climbing out of pits, #128) and escape artist (pits, #128).

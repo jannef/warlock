@@ -256,9 +256,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   old hermit."; "Done." for a done one), and who gave it, in their words (the offer, wrapped, at
   most six lines). Read-only: quests are not abandoned (the owner's decision). `q`, Enter, or Esc
   closes it.
-  The character screen, the inventory, the equipment screen, the Skills screen, the quest log,
-  and the weapon skills screen are the numbered info pages 1 to 6: on one of them, a digit, Tab, or Shift+Tab (PageDown,
-  PageUp) replaces it with another, and the tab line on its bottom border names them.
+  The character screen, the inventory, the equipment screen, the Skills screen, the weapon
+  skills screen, and the quest log are the numbered info pages 1 to 6: on one of them, a digit,
+  Tab, or Shift+Tab (PageDown, PageUp) replaces it with another, and the tab line on its bottom
+  border names them, each after its key: by their names where the panel is wide enough
+  (`1 Character · 2 Inventory · …`), else the current page by its name and the others by short
+  names (`1 Char · 2 Inventory · 3 Equip · 4 Skills · 5 Weapons · 6 Quests`), else all by their
+  short names, else the current page by its name and the others by their keys alone.
 - **Death screen** (§8 "Combat"): when the player dies, the death screen opens over the run as it
   ended, in place of any other screen, and the run's save is deleted (permadeath): `Y O U   D I E
   D`, then who killed them ("Killed by a kobold", or "Killed by something you did not see" when

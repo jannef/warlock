@@ -2,7 +2,7 @@
 
 use super::text::{article, capital};
 use std::fmt::Write as _;
-use warlock_core::content::{Content, TrapEffect};
+use warlock_core::content::{BurstIce, Content, TrapEffect};
 
 /// The traps (spec §8 "Traps"): what each does, its damage dice, how often it goes off, and what
 /// it sounds like. Never a to-hit, which the player does not know.
@@ -21,10 +21,23 @@ pub(super) fn traps(content: &Content) -> String {
                 "{}s spring from the floor: an attack against the Defence of whoever steps on it",
                 capital(&t.noun)
             ),
-            TrapEffect::Burst { radius, .. } => format!(
-                "A blast {radius} cells around it (walls stop it): everyone in it takes the \
-                 damage, half at the edge; no roll to hit"
-            ),
+            TrapEffect::Burst { radius, ice, .. } => {
+                let ice = match ice {
+                    Some(BurstIce::Melts) => {
+                        "; it melts the ice it reaches, and whoever stands on it falls in"
+                            .to_string()
+                    }
+                    Some(BurstIce::Freezes(um)) => format!(
+                        "; it freezes the water it reaches into ice {} cm thick",
+                        um / 10_000
+                    ),
+                    None => String::new(),
+                };
+                format!(
+                    "A blast {radius} cells around it (walls stop it): everyone in it takes the \
+                     damage, half at the edge; no roll to hit{ice}"
+                )
+            }
             TrapEffect::Bolt { length, .. } => format!(
                 "A bolt from it along a line until a wall, up to {length} cells: everyone on it \
                  takes the damage; no roll to hit"

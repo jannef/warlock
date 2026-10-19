@@ -8,7 +8,10 @@ Doors (spec §8 "Doors"; M19, #130): the rules are `warlock-core/src/door.rs` (`
 `world/door.rs` (`open_door` unlocks with `Actor::key_for` and costs `unlock` + `open_door`,
 `swing_open`, `close_door`, `kick`/`kick_door`; kicking a creature is `World::player_kicks`, an
 unarmed blow whatever is wielded: `Actor::kick` (bare hands with unarmed fighting's benefits and
-the stance), training unarmed fighting, priced `kick` by `attack_price`, said with `Words::kick`). Locks are per-cell state, never terrain: `locks` on
+the stance), training unarmed fighting, priced `kick` by `attack_price` (so the stance and
+attack speed change its time), said with `Words::kick`). A kick at a door is no attack
+(`price_of`: the plain `kick`); the player's athletics (`skills::Effect::Kick`) adds to the
+Strength it is rolled against, and the kick earns athletics marks (`Use::Kick`). Locks are per-cell state, never terrain: `locks` on
 `LevelTemplate` and `LevelState` (by position, saved, hashed; ground truth only, so perception,
 memory, look mode, and dumps show a locked door as any closed door); `World::set_terrain` drops a
 lock whenever the cell stops being a closed door. Level legends lock with `lock = "id"` or

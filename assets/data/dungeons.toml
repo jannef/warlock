@@ -37,7 +37,7 @@ generator = "rooms"
 depth = 8
 size = [80, 21]
 creatures = ["rat", "bat", "kobold"]
-traps = ["arrow", "arrow", "spear", "spear", "pit", "pit", "alarm", "teleport", "fireball", "lightning_bolt"]
+traps = ["arrow", "arrow", "spear", "spear", "pit", "pit", "alarm", "teleport", "fireball", "frost", "lightning_bolt"]
 # Loot on the floor of each level (spec §8 "Magic items"): its item level is the depth.
 loot = [2, 4]
 key = "rusty_key"

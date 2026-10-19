@@ -20,8 +20,9 @@ shield: shield bashing; a shot: the launcher's; a throw: thrown; a kick, spec §
 whatever is wielded, `World::player_kicks`), and `fight.rs::resolve` takes the skills its caller
 picked (`AttackSkills`: the weapon skill and the fighting style); `Profile::with(&Benefit)` and
 `Actor::melee`/`ranged`/`thrown`/`bash`/`kick` apply to-hit, damage, and threat; `Actor::defence` adds
-parry and shield blocking; `World::attack_price` takes `speed`/`reload` off the cost
-(`World::cost_of`: with a weapon's `attack_cost` and magic items' speed);
+parry and shield blocking; `World::attack_price` takes `speed` off the cost and
+`World::reload_price` `reload` (`World::attack_cost`: with the weapon's `attack_cost` and magic
+items' speed; a shield bash costs a blow with the shield, never the wielded weapon's cost);
 `World::resolve` (`fight.rs`) earns the player's marks (`practise`; a Shield-credited miss on
 the player trains shield blocking; `World::level_of` weighs the opponent by its creature type's
 `level`, spec §8 "Experience") and pushes "You feel more skilled ..." into the unsaved
@@ -43,8 +44,9 @@ style, `Actor::style(kind, with)`: blows by `Actor::grip`, the hands' hold; shot
 throws `thrown`), and `Actor::attack_benefit(kind, with)` / `benefit_of(skills)` the weapon
 skill's benefit `plus` the style's, read by `Actor::melee`/`off_hand_blow`/`ranged`/
 `thrown(item)`/`bash`, `Actor::defence` (the hands' style's parry and shield), and
-`World::attack_price(id, action, skills)` (`World::cost_of`, then the speed of the weapon skill
-and the style together, then the stance and the burden); `World::resolve` practises the style
+`World::attack_price(id, action, with, skills)` (`World::attack_cost` of what the attack is made
+`with`, then the speed of the weapon skill and the style together, then the stance and the
+burden; priced as the attack begins, `docs/dev/time.md`); `World::resolve` practises the style
 after the weapon skill. A profile adds the style's benefit right after the weapon skill's, before
 the affixes and the stance. A kick (`World::player_kicks`, `door.rs`) is made whatever the hands
 hold: unarmed fighting alone (`AttackSkills::only`), in no style, so no style speeds it either. Two weapons: a

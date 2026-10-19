@@ -220,7 +220,7 @@ mod tests {
             "0 / 3 killed.",
             "The old hermit: \"Here we don't fight.",
             "↑↓ choose   q or Esc close",
-            "5 Quests",
+            "6 Quests",
         ] {
             assert!(shown.contains(expected), "{expected:?} in\n{shown}");
         }

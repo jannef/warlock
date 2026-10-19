@@ -14,7 +14,12 @@ the gameplay stream; `max_hp`, `regen_seconds`, `Health` words). `world/fight.rs
 launcher for a shot, none for a spell) → `attack_with(attacker, target, kind, Option<Profile>)`
 (**the entry point for ranged combat, #117**) → `Event::Attacked { .., strike }`, noise, damage
 (`hurt`), `Event::Died`, then for a target left alive `World::after_blow` (status effects:
-wounds and `on_hit`, `world/status.rs`); `dies` is the one way an actor dies (a blow or a status,
+wounds and `on_hit`, `world/status.rs`). **`hurt(id, damage, Harm)` is the one way hit points go
+down**: blows (`Harm::Actor`), traps (`Harm::Trap`), status ticks and diseases (`Harm::Status {
+of, by, when }`), starving (`Harm::Starving(when)`, `die_of`), and what never kills
+(`Harm::Spared`: the plunge through the ice, a disease that does not kill; it leaves the last hit
+point); the `Harm` says what a death by it is put down to. A new source of damage is a `Harm`
+variant, never a direct `hp -=`. `dies` is the one way an actor dies (a blow or a status,
 `Event::Died { of }`): `creature_dies` removes the actor and piles its inventory on its cell,
 the player's death sets `WorldState::death` (`Death`: turn, time, place, `by` the creature type
 if seen, `of` the status that killed) and `run_turn` stops; `World::apply` refuses everything

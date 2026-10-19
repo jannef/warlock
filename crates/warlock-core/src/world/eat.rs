@@ -11,7 +11,8 @@
 //! **What food does**: its nutrition, up to the most there can be. A meal that would go past it
 //! is overeating: the player may choke to death on it (a chance, 0 by default: off), else vomit
 //! (a chance), else what does not fit is lost. Vomiting leaves at most `vomit_leaves` nutrition
-//! and feeds nothing.
+//! and feeds nothing. A remedy (food with `cures`, `data/objects.toml`) then cures what it
+//! names, as [`World::cure`] does (a disease remedy ends every disease, spec §8 "Diseases").
 //!
 //! **Corpses**: a creature that dies leaves one on top of its pile ([`World::leave_corpse`]), its
 //! death time in the stack. A corpse rots: rotten after `rotten_hours`, gone after `gone_hours`
@@ -28,7 +29,7 @@
 //! status; it costs hit points as time passes and may kill ("Died of poison").
 
 use super::{Actor, Cause, Ended, Spent, World};
-use crate::action::{Event, Letters, Meal, letter};
+use crate::action::{DiseaseNews, Event, Letters, Meal, letter};
 use crate::content::{ActionKind, ObjectId};
 use crate::object::{self, Stack};
 use crate::stats::Stat;
@@ -173,6 +174,7 @@ impl World {
             }
             (None, _) => self.feed(nutrition, food.object),
         }
+        self.remedy(&def.cures, events);
         if self.state.death.is_none() {
             self.hunger_news(before);
             self.burden_news(burden);
@@ -276,6 +278,35 @@ impl World {
         // Rotten food may carry a disease (grave rot): a check to resist it (spec §8 "Diseases").
         self.expose_to(self.state.player, "rotten_food");
         self.feed(nutrition, what);
+    }
+
+    /// What the player ate cures what `cures` names ([`World::cure`]): each disease it ends
+    /// and each status it ends is said at once, in order with the meal's other messages
+    /// ("The rot is gone from your flesh.").
+    fn remedy(&mut self, cures: &[String], events: &mut Vec<Event>) {
+        let from = events.len();
+        for cure in cures {
+            self.cure(self.state.player, cure, events);
+        }
+        let content = &self.content;
+        let ended: Vec<String> = (events[from..].iter())
+            .filter_map(|e| match *e {
+                Event::Disease {
+                    disease,
+                    news: DiseaseNews::Recovered,
+                    ..
+                } => Some(content.disease(disease).recovered.clone()),
+                Event::Status {
+                    status,
+                    began: false,
+                    ..
+                } => content.status(status).end.clone(),
+                _ => None,
+            })
+            .collect();
+        for text in ended {
+            self.say(text);
+        }
     }
 
     /// What the player ate makes them sick: `degrees` of the status `[corpses] sickness` names

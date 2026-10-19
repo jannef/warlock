@@ -13,7 +13,9 @@
 //!   Defence of whoever stands on the trap, made with what `noun` names;
 //! - `burst`: a blast of `radius` cells around the trap (a fireball): everyone in it takes
 //!   `damage`, no roll to hit, half of it (at least 1) beyond the inner cells; with a `blast`, it
-//!   breaks every wall in it whose hardness is below that (spec §8 "Digging");
+//!   breaks every wall in it whose hardness is below that (spec §8 "Digging"); with `heat`, it
+//!   melts all the ice in it, and with `frost` (mm) it freezes the water in it at once to at
+//!   least that thick (spec §5 "Ice");
 //! - `bolt`: a line from the trap in one direction, up to `length` cells or the first wall (a
 //!   lightning bolt): everyone on it takes `damage`;
 //! - `pit`: whoever steps on it falls in, takes `damage`, and loses their next action climbing
@@ -36,6 +38,7 @@ use crate::color::Rgb;
 use crate::combat::{Attack, DEFAULT_CRIT, DEFAULT_THREAT};
 use crate::dice::Dice;
 use crate::geom::Dir;
+use crate::ice;
 use crate::noise::{MAX_LOUDNESS, SoundKind};
 use crate::perception::VIEW_RADIUS;
 use serde::{Deserialize, Serialize};
@@ -129,6 +132,11 @@ pub(super) struct TrapSpec {
     radius: Option<i32>,
     /// `burst`: how strong the explosion is against walls (spec §8 "Digging"); none breaks none.
     blast: Option<u16>,
+    /// `burst`: it is hot, and melts the ice it reaches (spec §5 "Ice").
+    #[serde(default)]
+    heat: bool,
+    /// `burst`: it is cold, and freezes the water it reaches to at least this many mm of ice.
+    frost: Option<u16>,
     /// `bolt`.
     length: Option<i32>,
     /// `burst`, `bolt`: the effect presentation shows (`data/effects.toml`).
@@ -155,6 +163,8 @@ pub enum TrapEffect {
         /// What it does to walls (spec §8 "Digging"): it breaks those in the blast whose hardness
         /// is below this; 0 breaks none.
         blast: u16,
+        /// What it does to the ice and water it reaches (spec §5 "Ice"), if anything.
+        ice: Option<BurstIce>,
     },
     /// A line from the trap until a wall, at most `length` cells: `damage` to everyone on it.
     Bolt {
@@ -194,6 +204,15 @@ impl TrapEffect {
             TrapEffect::Alarm | TrapEffect::Teleport => None,
         }
     }
+}
+
+/// What a burst does to the ice and the water it reaches (spec §5 "Ice").
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BurstIce {
+    /// Heat (a fireball): it melts all the ice, and whoever stood on it falls in.
+    Melts,
+    /// Frost: the water freezes at once to at least this many µm of ice.
+    Freezes(u32),
 }
 
 /// A trap type.
@@ -241,6 +260,8 @@ impl TrapSpec {
         allowed("to_hit", self.to_hit != 0, &[Shot, Strike])?;
         allowed("radius", self.radius.is_some(), &[Burst])?;
         allowed("blast", self.blast.is_some(), &[Burst])?;
+        allowed("heat", self.heat, &[Burst])?;
+        allowed("frost", self.frost.is_some(), &[Burst])?;
         allowed("length", self.length.is_some(), &[Bolt])?;
         allowed("spell", self.spell.is_some(), &[Burst, Bolt])?;
         allowed("noun", self.noun.is_some(), &[Strike, Burst, Bolt])?;
@@ -323,11 +344,25 @@ impl TrapSpec {
                 if blast > MAX_HARDNESS {
                     return Err(err(format!("`blast` must be 0 to {MAX_HARDNESS}")));
                 }
+                let ice = match (self.heat, self.frost) {
+                    (true, Some(_)) => {
+                        return Err(err("a burst has `heat` or `frost`, not both".into()));
+                    }
+                    (true, None) => Some(BurstIce::Melts),
+                    (false, Some(mm)) if (1..=ice::MAX_MM).contains(&mm) => {
+                        Some(BurstIce::Freezes(u32::from(mm) * 1000))
+                    }
+                    (false, Some(_)) => {
+                        return Err(err(format!("`frost` must be 1 to {} mm", ice::MAX_MM)));
+                    }
+                    (false, None) => None,
+                };
                 let effect = TrapEffect::Burst {
                     spell: spell()?,
                     radius,
                     damage: damage()?,
                     blast,
+                    ice,
                 };
                 (effect, noun()?)
             }

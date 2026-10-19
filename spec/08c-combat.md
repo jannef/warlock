@@ -135,7 +135,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `damage` (added to the stanced actor's melee, shot, and thrown attacks: `StanceDef::apply`,
   through `Actor::stanced`), `dodge` and `parry` (added to its Defence in those categories, so
   Dodge stacks and Parry only counts above the weapon's own; a stance may make Defence worse),
-  `attack_cost` (percent of the price of a melee attack, shot, or throw: `World::price_of`),
+  `attack_cost` (percent of the price of every attack: a blow, a bash, a kick at a creature, a
+  shot, a throw; `World::attack_price`; never a door kick or a reload),
   `flee_cost` and `flee_noise` (percent of the price and the loudness of a step that **flees**:
   the actor has a hostile next to it and the step ends out of that creature's reach,
   `World::flees`), and `weapon_mark` (percent: the multiplier for weapon skill marks, the hook

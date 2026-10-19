@@ -25,6 +25,7 @@
 //! - **Cures**: [`World::cure`] ends the diseases that list the means in their `cured_by`,
 //!   showing or not; nothing applies one yet (potions and priests will).
 
+use super::fight::Harm;
 use super::{Actor, ActorId, Spent, World};
 use crate::action::{DiseaseNews, Event};
 use crate::check::check;
@@ -158,15 +159,7 @@ impl World {
             let gone = actor.damage.take(stat, points, actor.stats.score(stat));
             no_toughness |= gone && stat == Stat::Toughness;
         }
-        if let Some(hp) = def.hp {
-            actor.hp -= hp.roll(&mut self.state.rng);
-            if !def.kills {
-                actor.hp = actor.hp.max(1);
-            }
-        }
-        // Toughness damage lowers the most hit points: what is left is cut down to them.
-        actor.hp = actor.hp.min(actor.max_hp(&content));
-        let dead = def.kills && (no_toughness || actor.hp <= 0);
+        let lost = def.hp.map_or(0, |hp| hp.roll(&mut self.state.rng));
         if id == player {
             let news = DiseaseNews::Worse(n);
             events.push(Event::Disease {
@@ -175,8 +168,23 @@ impl World {
                 news,
             });
         }
-        if dead {
-            self.dies(id, by, content.disease_status(), when, events);
+        // Hit points (never the last one unless it kills), then the Toughness it took: that
+        // lowers the most hit points, and what is left is cut down to them; at none, it kills.
+        let of = content.disease_status();
+        let harm = if def.kills {
+            Harm::Status { of, by, when }
+        } else {
+            Harm::Spared
+        };
+        if self.hurt(id, lost, harm, events) {
+            return false;
+        }
+        let Some(actor) = self.state.actors.get_mut(&id) else {
+            return false;
+        };
+        actor.hp = actor.hp.min(actor.max_hp(&content));
+        if def.kills && no_toughness {
+            self.dies(id, by, of, when, events);
             return false;
         }
         true

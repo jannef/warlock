@@ -28,7 +28,7 @@ has run its course for a day, the character screen names it (`Diseased  Filth fe
 - **Shaking it off.** Win two checks in a row and the disease is gone ("Your fever breaks.").
   A loss starts the count over.
 - **Some never go.** Grave rot does not go by itself, whatever your checks; only a cure will end
-  it, and there are none yet (potions and priests will come).
+  it (below).
 
 You can carry several diseases at once. Each runs its own course; you are Diseased while any of
 them shows.
@@ -72,8 +72,15 @@ more (see [Healing](healing.md)). Resting still doubles the pace.
 ## Grave rot
 
 Grave rot never goes by itself, and it can kill: when its damage takes your Toughness to nothing,
-you die of it, and the death screen says "Died of disease". With no cures in the game yet, a
-grave rot caught is a race against the days.
+you die of it, and the death screen says "Died of disease". A grave rot caught is a race against
+the days: to a shop, for a cure.
+
+## Cures
+
+An **angelica root** (`%`) cures every disease you have the moment you eat it (`E`), grave rot
+too, and even one that has not broken out yet: "The rot is gone from your flesh." It feeds you a
+little, too. Shops that sell food sell it (a general store or a provisioner, found in the
+Depths), and Grimbold's General Store in the courtyard has one. Potions and priests will come.
 
 ## In the message line
 

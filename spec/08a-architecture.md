@@ -83,10 +83,19 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
       instead of `melee` (a shot from a missile weapon with one, instead of `shoot`), unless the
       creature type gives its attacks a cost of its own: a great sword 1200 (7.2 s), a stiletto
       900 (5.4 s). Then magic items (§8 "Magic items") take a percent off: attacks (`melee`,
-      `shoot`, `throw`) by the attack speed of the weapon's own affixes (a blow: the wielded
-      weapon's; a shot: the missile weapon's) and of what the actor wears and wields (global),
-      steps by its moving speed, together at most 50 % off and never below 100. One function,
-      `World::cost_of`, decides an action's cost; burden then slows the price as below.
+      `kick`, `shoot`, `throw`, `cast`) by the attack speed of the affixes of what the attack is
+      made with (a blow: the wielded weapon's; a bash: the shield's; a shot: the missile weapon's;
+      a kick or a throw: nothing's) and of what the actor wears and wields (global), steps by its
+      moving speed, together at most 50 % off and never below 100. A shield bash costs what a blow
+      with the shield costs (`melee`), never the wielded weapon's `attack_cost` or affixes. One
+      function decides an action's cost, `World::cost_of`, and one an attack's,
+      `World::attack_cost`; burden then slows the price as below.
+    - **Every attack is priced the same way** (`World::attack_price`): its cost, less its weapon
+      skill's and fighting style's `speed` (§8 "Weapon skills"), as dear as the attacker's combat
+      stance makes attacks (§8 "Stances"), slowed by its burden; reloading is no attack (its own
+      `reload` saving, no stance). And every attack is priced **as it begins**, before it is
+      made: a rank its marks raise, a load it lightens (a throw), or a kill it makes changes the
+      price of the next attack, never its own.
     - The scheduler (below) prices an action at its cost × its base in seconds; an actor gains its
       speed in energy per second, so it takes cost × base / speed seconds. The clock keeps whole
       seconds and leftover energy carries, so a run of actions takes exactly its total time up to
@@ -98,7 +107,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
       ×1.25 Burdened, ×1.5 Strained or Overloaded (rounded up to a whole unit of energy; every
       built-in price scales exactly), for every action alike, overworld journeys included (a
       20-minute road takes 25 minutes Burdened). It is applied in one place, the scheduler's
-      prices (`World::price_of`, `World::step_price`), at the burden the actor has as the
+      prices (`World::price_of`, `World::step_price`, `World::attack_price`), at the burden the
+      actor has as the
       action begins (picking up and dropping are priced before the load changes). A burdened
       normal action takes 7.5 s, so eight take exactly 60 s; a rest still ends exactly at its
       goal. Being Bloated (§8 "Hunger") raises them again the same way, after the burden: ×1.25
