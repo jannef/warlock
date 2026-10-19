@@ -2,7 +2,9 @@
 
 use crate::burden::Burden;
 use crate::combat::{self, Attack, Category, Defence, Health, Profile};
-use crate::content::{ActionKind, Content, CreatureId, FactionId, ObjectDef, ObjectId};
+use crate::content::{
+    ActionKind, CombatStance, Content, CreatureId, FactionId, ObjectDef, ObjectId,
+};
 use crate::equipment::Equipment;
 use crate::geom::{Dir, Pos};
 use crate::noise::Heard;
@@ -112,6 +114,9 @@ pub struct Actor {
     /// peaceful creatures in the showcase). Read the one that counts with [`Actor::faction`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub faction_override: Option<FactionId>,
+    /// Its combat stance (spec §8 "Stances"): the player chooses theirs; creatures stay neutral.
+    #[serde(default, skip_serializing_if = "CombatStance::is_neutral")]
+    pub stance: CombatStance,
 }
 
 fn is_zero(n: &u32) -> bool {
@@ -161,11 +166,13 @@ impl Actor {
         let dodge = Some(self.skills.effect(content, Effect::Dodge))
             .filter(|&d| d != 0)
             .map(|d| (Category::Dodge, d));
+        let stance = content.stance_def(self.stance).defence();
         Defence::from_bonuses(
             std::iter::once((Category::Dexterity, dexterity))
                 .chain(worn)
                 .chain(natural)
-                .chain(dodge),
+                .chain(dodge)
+                .chain(stance),
         )
     }
 
@@ -242,7 +249,12 @@ impl Actor {
             (None, Some(natural)) => natural.attack,
             (None, None) => Attack::unarmed(),
         };
-        Profile::melee(&attack, &self.stats)
+        self.stanced(content, Profile::melee(&attack, &self.stats))
+    }
+
+    /// `profile` with the to-hit and damage of its combat stance.
+    pub fn stanced(&self, content: &Content, profile: Profile) -> Profile {
+        content.stance_def(self.stance).apply(profile)
     }
 
     /// What its shots do, with the missile weapon it has ready (`None` without one): Dexterity to
@@ -250,7 +262,7 @@ impl Actor {
     /// bow needs.
     pub fn ranged(&self, content: &Content) -> Option<Profile> {
         let (_, launcher) = self.launcher(content)?;
-        Some(Profile::ranged(launcher, &self.stats))
+        Some(self.stanced(content, Profile::ranged(launcher, &self.stats)))
     }
 }
 

@@ -1,7 +1,7 @@
 //! Player actions and the events a turn produces.
 
 use crate::combat::Strike;
-use crate::content::{ActionKind, ObjectId};
+use crate::content::{ActionKind, CombatStance, ObjectId};
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
 use crate::weather::Weather;
@@ -55,6 +55,9 @@ pub enum Action {
     /// Wait turn after turn (creatures act) until the goal, stopping early when a creature comes
     /// into view or a message is logged.
     Rest(Rest),
+    /// Take a combat stance (spec §8 "Stances"). Takes no game time, but changes state, so
+    /// replays record it.
+    SetStance(CombatStance),
     /// Dev command: switch the player's vision profile (an id in `data/vision.toml`). Takes no
     /// game time, but changes state and perception, so replays record it like any action.
     SetVision(String),
@@ -335,6 +338,7 @@ impl fmt::Display for Action {
             Action::Rest(Rest::For(d)) => write!(f, "rest:{d}"),
             Action::Rest(Rest::Dawn) => f.write_str("rest:dawn"),
             Action::Rest(Rest::Dusk) => f.write_str("rest:dusk"),
+            Action::SetStance(stance) => write!(f, "stance:{stance}"),
             Action::SetVision(id) => write!(f, "vision:{id}"),
             Action::SkipTime(d) => write!(f, "skip:{d}"),
             Action::SetWeather(w) => write!(f, "weather:{}", w.id()),
@@ -445,6 +449,10 @@ impl FromStr for Action {
                     _ => Err(usage()),
                 }
             }
+            "stance" => arg
+                .ok_or_else(|| "`stance` needs a stance, e.g. `stance:coward`".to_string())?
+                .parse()
+                .map(Action::SetStance),
             "vision" => match s.split_once(':').map(|(_, id)| id) {
                 Some(id) if !id.is_empty() => Ok(Action::SetVision(id.to_string())),
                 _ => Err("`vision` needs a profile id, e.g. `vision:darkvision`".into()),
@@ -476,7 +484,7 @@ impl FromStr for Action {
             _ => Err(format!(
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
                  descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
-                 equip:SLOT:LETTER, remove:SLOT, fire:X,Y, throw:LETTER:X,Y, vision:ID, \
+                 equip:SLOT:LETTER, remove:SLOT, fire:X,Y, throw:LETTER:X,Y, stance:NAME, vision:ID, \
                  skip:DURATION, weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y])"
             )),
         }
@@ -541,6 +549,8 @@ mod tests {
             Action::Ascend,
             Action::Descend,
             Action::ToggleLantern,
+            Action::SetStance(CombatStance::Aggressive),
+            Action::SetStance(CombatStance::Coward),
             Action::SetVision("low_light".into()),
             Action::SetVision("Mixed_Case".into()),
             Action::Rest(Rest::For(Duration::hours(1))),

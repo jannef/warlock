@@ -25,7 +25,8 @@
 
 use super::{Actor, ActorId, ActorKind, World};
 use crate::action::Event;
-use crate::content::{ActionKind, BASE_TURN, LevelKind, TerrainDef, price};
+use crate::content::{ActionKind, BASE_TURN, LevelKind, Stance, TerrainDef, percent_of, price};
+use crate::geom::Pos;
 use crate::perception::VIEW_RADIUS;
 use crate::skills::Effect;
 use crate::time::{Duration, GameTime};
@@ -57,23 +58,54 @@ impl World {
     /// 6-second base, slowed by its burden ([`World::burdened`]). Steps are priced by the terrain
     /// instead ([`World::step_price`]).
     pub(super) fn price_of(&self, id: ActorId, kind: ActionKind) -> i64 {
-        let creature = self.state.actors[&id].creature;
-        self.burdened(
-            id,
-            price(self.content.action_cost(creature, kind), BASE_TURN),
-        )
+        let actor = &self.state.actors[&id];
+        let base = price(self.content.action_cost(actor.creature, kind), BASE_TURN);
+        let attacks = matches!(
+            kind,
+            ActionKind::Melee | ActionKind::Shoot | ActionKind::Throw
+        );
+        let base = if attacks {
+            percent_of(base, self.content.stance_def(actor.stance).attack_cost)
+        } else {
+            base
+        };
+        self.burdened(id, base)
+    }
+
+    /// Whether actor `id` stepping to `to` flees: some hostile creature stands next to it now and
+    /// the step takes it out of that creature's reach (spec §8 "Stances": a coward's flight is
+    /// cheaper and quieter).
+    pub(super) fn flees(&self, id: ActorId, to: Pos) -> bool {
+        let Some(me) = self.state.actors.get(&id) else {
+            return false;
+        };
+        let stance = self.content.stance_def(me.stance);
+        if stance.flee_cost == 100 && stance.flee_noise == 100 {
+            return false;
+        }
+        self.state.actors.values().any(|other| {
+            other.id != id
+                && other.level == me.level
+                && other.pos.chebyshev(me.pos) == 1
+                && other.pos.chebyshev(to) > 1
+                && self.stance(id, other.id) == Stance::Hostile
+        })
     }
 
     /// The energy price of actor `id` stepping onto terrain `to` on the current level, slowed by
-    /// its burden ([`World::burdened`]). On the overworld its skills (survival; spec §8
-    /// "Skills") take their percent off the journey, rounded up (at least 1).
-    pub(super) fn step_price(&self, id: ActorId, to: &TerrainDef) -> i64 {
+    /// its burden ([`World::burdened`]); `fleeing` ([`World::flees`]) makes it as dear as its
+    /// stance says. On the overworld its skills (survival; spec §8 "Skills") take their percent
+    /// off the journey, rounded up (at least 1).
+    pub(super) fn step_price(&self, id: ActorId, to: &TerrainDef, fleeing: bool) -> i64 {
         let actor = &self.state.actors[&id];
         let step = self.content.action_cost(actor.creature, ActionKind::Step);
         let level = self.state.current();
         let mut price = level.step_price(to, step);
         if level.kind == LevelKind::Overworld {
             price = shortened(price, actor.skills.effect(&self.content, Effect::Travel));
+        }
+        if fleeing {
+            price = percent_of(price, self.content.stance_def(actor.stance).flee_cost);
         }
         self.burdened(id, price)
     }

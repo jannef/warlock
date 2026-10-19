@@ -28,6 +28,7 @@ authoritative: it is generated from your current key bindings.
 | Look around | `x` |
 | Fire your missile weapon | `f`, then aim (see below) |
 | Throw something | `t`, then aim |
+| More aggressive combat stance, more defensive (no time passes) | `+`, `-` |
 | Next target while aiming (with Shift: the one before) | `Tab` |
 | Show or hide the controls | `?` |
 | Pause menu | `Esc` |

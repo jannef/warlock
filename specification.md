@@ -758,10 +758,11 @@ rate or animation.
   "Reset all keys" resets everything.
 - First-phase commands: move, wait, open/close door, ascend/descend, light/douse lantern (`L`),
   pick up (`,` or `g`), drop (`d`), inventory (`i`), equipment (`e`), character (`@`), skills
-  (`S`), rest (`R`), look, fire (`f`), throw (`t`), next target (`Tab`, while aiming), help, save
-  and quit (`Q`). Free actions (look, help, the inventory, looking at the
-  equipment screen, the character screen, the Skills screen, menus, vision switch) do not
-  advance time.
+  (`S`), rest (`R`), look, fire (`f`), throw (`t`), more aggressive / more defensive combat
+  stance (`+` / `-`; §8 "Stances"), next target (`Tab`, while aiming), help, save and quit
+  (`Q`). Free actions (look, help, the inventory, looking at the
+  equipment screen, the character screen, the Skills screen, menus, vision switch, a change of
+  stance) do not advance time.
 - **Objects** (M11) lie in piles on cells, the top first: the map shows the top object's glyph
   (§4.2), and dropped objects go on top. Stepping onto a pile says what lies there: `You see here
   a dagger.` for one stack, `There are several objects here.` for more. Look mode names what lies
@@ -822,7 +823,7 @@ rate or animation.
   85 / 120`, the total alone at the highest level; §8 "Experience"), their hit points (`HP  Hit
   points  18/24`) and Defence
   (`Dv  Defence  15`; the total only, as its Dexterity part would give away a modifier; §8
-  "Combat"), their weight (their own plus what they carry, and their burden when they have one:
+  "Combat"), their combat stance by name (`Stance  Neutral`; §8 "Stances"), their weight (their own plus what they carry, and their burden when they have one:
   `Weight 98.4 kg (you 70 kg, carrying 28.4 kg, burdened)`), and, dimmer, the weights at which
   their burden changes, as in the inventory (§8 "Burden"). The panel is 72 wide, so the birth and
   the thresholds take a line each. Never a modifier, a potential, or a to-hit, which the player
@@ -1291,7 +1292,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   "Combat"; format version 11), the fires burning on each level (§8 "Ranged combat"; format
   version 12), the player's experience total (§8 "Experience"; format version 13; absent while
   0, so a run without kills hashes as before), every actor's trained skills (value and training
-  marks) and the training random stream (§8 "Skills"; format version 14), and a dev weather
+  marks) and the training random stream (§8 "Skills"; format version 14), every actor's combat
+  stance (§8 "Stances"; format version 15), and a dev weather
   override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
@@ -1554,6 +1556,27 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   hp ÷ 2 + the Toughness modifier)`; without a character the scenario's `hp` stands in for the
   class's. The player is shown their level, XP, and the XP of the next level
   (`PerceptionView::own_experience`), and nothing else about the rules.
+- **Stances** (`content/stance.rs`, `data/stances.toml`; M22), after ADOM's combat tactics. The
+  player is in one of four **combat stances**, `CombatStance`: aggressive, neutral (the
+  default), defensive, coward. It is `Actor::stance` (saved, in the state hash; creatures stay
+  neutral for now, and the AI may pick one later). `Action::SetStance(stance)`, text
+  `stance:aggressive`, takes no game time (`Spent::NoTime`) and is recorded in replays; it says
+  "You take an aggressive stance." (a neutral, a defensive, a cowardly). `+` and `-` step towards aggressive and towards coward (`CombatStance::more_aggressive`, `more_defensive`; they stop at the ends).
+  The file has exactly one `[[stance]]` per stance (`id`, `name`) and, all optional: `to_hit` and
+  `damage` (added to the stanced actor's melee, shot, and thrown attacks: `StanceDef::apply`,
+  through `Actor::stanced`), `dodge` and `parry` (added to its Defence in those categories, so
+  Dodge stacks and Parry only counts above the weapon's own; a stance may make Defence worse),
+  `attack_cost` (percent of the price of a melee attack, shot, or throw: `World::price_of`),
+  `flee_cost` and `flee_noise` (percent of the price and the loudness of a step that **flees**:
+  the actor has a hostile next to it and the step ends out of that creature's reach,
+  `World::flees`), and `weapon_mark` (percent: the multiplier for weapon skill marks, the hook
+  for #134; nothing counts marks yet). Bonuses are -20 to 20, percentages 10 to 1000. Shipped
+  numbers (first guesses, tuned by playtesting; none is ever shown, only the stance's name):
+  aggressive +1 to hit, +2 damage, -3 Dodge, marks ×1.25; defensive -2 to hit, -1 damage, +2
+  Dodge, +1 Parry; coward -4 to hit, -3 damage, +4 Dodge, attacks ×1.25, fleeing steps ×0.85
+  and half as loud. The player perceives it (`PerceptionView::own_stance`): the status bar shows
+  it when it is not neutral, the character screen always (§6); the wiki's Combat page has the
+  generated table.
 - **Ranged combat** (`warlock-core/src/world/shoot.rs`; M16): shots and throws.
   - **Loosing**: the player fires (`Action::Fire(cell)`, `fire:X,Y`) with the missile weapon in a
     `ready` slot and the ammunition it shoots in a `ready` slot, or throws (`Action::Throw { item,
@@ -1817,7 +1840,7 @@ cargo xtask golden [--update]                             # compare golden scree
   as the scenario's character, so older replays still load). Actions use a text
   syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
   pickup pickup:ac drop drop:b equip:body:b remove:body fire:12,5 throw:c:12,5
-  vision:darkvision skip:1h weather:rain effect:fireball@12,5
+  vision:darkvision skip:1h weather:rain stance:coward effect:fireball@12,5
   effect:lightning_bolt@3,4>12,4`; `fire:X,Y` shoots at level cell (X, Y),
   `throw:LETTER:X,Y` throws one of inventory stack LETTER there; the dev action
   `effect:ID@X,Y[>X,Y]` shows spell effect ID (`data/effects.toml`) as the player perceives it, a

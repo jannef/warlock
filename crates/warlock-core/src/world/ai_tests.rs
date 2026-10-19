@@ -738,6 +738,7 @@ fn search_the_last_seen_spot_then_go_back_and_patrol_on() {
             regen: 0,
             skills: Default::default(),
             faction_override: None,
+            stance: Default::default(),
         },
     );
     assert_ne!(player, rat);

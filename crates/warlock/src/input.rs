@@ -58,6 +58,11 @@ pub enum KeyCommand {
     Throw,
     /// While aiming: the cursor to the next creature in view (with Shift, the one before).
     NextTarget,
+    /// Take a more aggressive combat stance (Coward, Defensive, Neutral, Aggressive; no time
+    /// passes).
+    MoreAggressive,
+    /// Take a more defensive combat stance (the other way).
+    MoreDefensive,
     /// Dev: switch to the next vision profile.
     CycleVision,
     /// Dev: move the clock an hour ahead at once.
@@ -121,6 +126,8 @@ impl KeyCommand {
             KeyCommand::Look => "Look around",
             KeyCommand::Fire => "Fire missile weapon",
             KeyCommand::Throw => "Throw",
+            KeyCommand::MoreAggressive => "More aggressive stance",
+            KeyCommand::MoreDefensive => "More defensive stance",
             KeyCommand::NextTarget => "Next target (aiming; Shift: previous)",
             KeyCommand::CycleVision => "Next vision profile (dev)",
             KeyCommand::SkipHour => "Skip an hour (dev)",
@@ -232,6 +239,8 @@ impl Default for Bindings {
             (ch("x"), Look),
             (ch("f"), Fire),
             (ch("t"), Throw),
+            (ch("+"), MoreAggressive),
+            (ch("-"), MoreDefensive),
             (Code(KeyCode::Tab), NextTarget),
             (ch("?"), Help),
             (Code(KeyCode::Escape), Cancel),
@@ -568,6 +577,16 @@ impl Gameplay<'_> {
                 open = Some(ScreenName::Skills);
                 InputMode::Normal
             }
+            (InputMode::Normal, KeyCommand::MoreAggressive | KeyCommand::MoreDefensive) => {
+                let now = game.world.perception().own_stance();
+                let next = if command == KeyCommand::MoreAggressive {
+                    now.more_aggressive()
+                } else {
+                    now.more_defensive()
+                };
+                self.actions.write(PlayerAction(Action::SetStance(next)));
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::CycleVision) => {
                 let view = game.world.perception();
                 let next = next_vision(view.content().vision_profiles(), &view.vision().id);
@@ -719,6 +738,8 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Character), ["@"]);
         assert_eq!(keys(&b, KeyCommand::Fire), ["f"]);
         assert_eq!(keys(&b, KeyCommand::Throw), ["t"]);
+        assert_eq!(keys(&b, KeyCommand::MoreAggressive), ["+"]);
+        assert_eq!(keys(&b, KeyCommand::MoreDefensive), ["-"]);
         assert_eq!(keys(&b, KeyCommand::NextTarget), ["Tab"]);
     }
 

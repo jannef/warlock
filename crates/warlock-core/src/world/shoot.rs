@@ -75,7 +75,7 @@ impl World {
         };
         let def = content.object(launcher);
         let range = def.range.unwrap_or(1);
-        let profile = Profile::ranged(attack, &me.stats);
+        let profile = me.stanced(&content, Profile::ranged(attack, &me.stats));
         if !self.within_reach(at, range, "shoot") {
             return Spent::Nothing;
         }
@@ -111,7 +111,7 @@ impl World {
             self.say(format!("You cannot throw {}.", def.describe(1)));
             return Spent::Nothing;
         };
-        let profile = Profile::thrown(&attack, &me.stats);
+        let profile = me.stanced(&content, Profile::thrown(&attack, &me.stats));
         if !self.within_reach(at, range, "throw") {
             return Spent::Nothing;
         }
@@ -245,7 +245,7 @@ impl World {
         let loose = Loose {
             kind: AttackKind::Ranged,
             item,
-            profile: Profile::ranged(attack, &me.stats),
+            profile: me.stanced(&content, Profile::ranged(attack, &me.stats)),
             range: def.range.unwrap_or(1),
         };
         self.loose(id, at, loose, events);

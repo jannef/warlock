@@ -86,8 +86,8 @@ load, stats, and skills with their marks).
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] equip:SLOT:LETTER remove:SLOT fire:X,Y throw:LETTER:X,Y
-rest:GOAL vision:PROFILE skip:DURATION weather:KIND effect:ID@X,Y[>X,Y]` (`DIR` = N
-NE E SE S SW W NW; `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
+rest:GOAL stance:NAME vision:PROFILE skip:DURATION weather:KIND effect:ID@X,Y[>X,Y]` (`DIR` = N
+NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
 player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `SLOT` = a slot id in
 `assets/data/slots.toml`, e.g. `equip:body:b` (put inventory stack `b` on), `remove:body`;
 `fire:X,Y` shoots the readied missile weapon at level cell (X, Y), `throw:c:X,Y` throws one of

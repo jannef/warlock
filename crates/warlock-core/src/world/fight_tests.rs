@@ -348,6 +348,39 @@ action = "ready"
 mark = "quivered"
 "##;
 
+// Distinct numbers, so the tests do not follow the tuned file.
+const STANCES: &str = r##"
+[[stance]]
+id = "aggressive"
+name = "Aggressive"
+to_hit = 1
+damage = 2
+dodge = -3
+weapon_mark = 125
+
+[[stance]]
+id = "neutral"
+name = "Neutral"
+
+[[stance]]
+id = "defensive"
+name = "Defensive"
+to_hit = -2
+damage = -1
+dodge = 2
+parry = 1
+
+[[stance]]
+id = "coward"
+name = "Coward"
+to_hit = -4
+damage = -3
+dodge = 4
+attack_cost = 125
+flee_cost = 80
+flee_noise = 50
+"##;
+
 const LEGEND: &str = r##"
 [legend]
 "." = "floor"
@@ -370,6 +403,7 @@ fn files(map: &str, level: &str, scenario: &str) -> ContentFiles {
         ("data/objects.toml", OBJECTS),
         ("data/slots.toml", SLOTS),
         ("data/vision.toml", VISION),
+        ("data/stances.toml", STANCES),
         (
             "data/materials.toml",
             "[[material]]\nid = \"steel\"\nname = \"steel\"\n",
@@ -814,5 +848,244 @@ fn creatures_shoot_with_the_bow_they_have_ready() {
             .any(|m| m == "The kobold archer shoots you."
                 || m == "The kobold archer shoots you hard!"),
         "{shown:?}"
+    );
+}
+
+fn take(world: &mut World, stance: CombatStance) {
+    world.apply(&Action::SetStance(stance));
+}
+
+#[test]
+fn each_stance_changes_to_hit_damage_and_defence_as_its_data_says() {
+    let mut w = world_on("#####\n#@..#\n#####\n", "");
+    let content = w.content().clone();
+    let neutral = w.state().player().melee(&content);
+    let dv = w.perception().own_defence();
+    for (stance, to_hit, damage, dodge) in [
+        (CombatStance::Aggressive, 1, 2, -3),
+        (CombatStance::Neutral, 0, 0, 0),
+        (CombatStance::Defensive, -2, -1, 2),
+        (CombatStance::Coward, -4, -3, 4),
+    ] {
+        take(&mut w, stance);
+        assert_eq!(w.perception().own_stance(), stance);
+        let profile = w.state().player().melee(&content);
+        assert_eq!(profile.to_hit - neutral.to_hit, to_hit, "{stance}");
+        assert_eq!(profile.bonus - neutral.bonus, damage, "{stance}");
+        assert_eq!(profile.damage, neutral.damage);
+        let shown = w.perception().own_defence();
+        assert_eq!(shown, w.defence_of(ActorId(0)).total());
+        // The Defence the attacks roll against: Dodge stacks, Parry only if it beats the weapon.
+        let parry = i32::from(stance == CombatStance::Defensive);
+        assert_eq!(shown - dv, dodge + parry, "{stance}");
+    }
+}
+
+#[test]
+fn stance_parry_counts_only_when_it_beats_the_weapons() {
+    let mut w = world_on("#####\n#@..#\n#####\n", "");
+    let content = w.content().clone();
+    let staff = content.object_id("staff").expect("staff");
+    let slot = content.slot_id("main_hand").expect("slot");
+    let me = w.state.actors.get_mut(&ActorId(0)).expect("player");
+    me.inventory = vec![crate::object::Stack::one(staff)];
+    me.equipment.put(&[slot], 0);
+    let dv = w.perception().own_defence();
+    take(&mut w, CombatStance::Defensive);
+    // Dodge +2; the staff's parry of 3 beats the stance's 1.
+    assert_eq!(w.perception().own_defence() - dv, 2);
+}
+
+#[test]
+fn creatures_stay_neutral_and_the_stance_is_the_players() {
+    let mut w = world_on("######\n#@.kr#\n######\n", "");
+    take(&mut w, CombatStance::Coward);
+    for id in [1, 2] {
+        assert_eq!(
+            actor(&w, id).expect("creature").stance,
+            CombatStance::Neutral
+        );
+    }
+}
+
+#[test]
+fn a_coward_s_attacks_cost_more_and_other_actions_do_not() {
+    let mut w = world_on("#####\n#@r.#\n#####\n", "");
+    let price = |w: &World, kind| w.price_of(ActorId(0), kind);
+    let base = [
+        ActionKind::Melee,
+        ActionKind::Shoot,
+        ActionKind::Throw,
+        ActionKind::Wait,
+    ]
+    .map(|k| price(&w, k));
+    for stance in [CombatStance::Aggressive, CombatStance::Defensive] {
+        take(&mut w, stance);
+        let same = [
+            ActionKind::Melee,
+            ActionKind::Shoot,
+            ActionKind::Throw,
+            ActionKind::Wait,
+        ]
+        .map(|k| price(&w, k));
+        assert_eq!(same, base, "{stance}");
+    }
+    take(&mut w, CombatStance::Coward);
+    let [melee, shoot, throw, wait] = [
+        ActionKind::Melee,
+        ActionKind::Shoot,
+        ActionKind::Throw,
+        ActionKind::Wait,
+    ]
+    .map(|k| price(&w, k));
+    assert_eq!(melee, base[0] * 5 / 4);
+    assert_eq!(shoot, base[1] * 5 / 4);
+    assert_eq!(throw, base[2] * 5 / 4);
+    assert_eq!(wait, base[3]);
+    assert_eq!(
+        w.price_of(ActorId(0), ActionKind::Reload),
+        price(&world_on("#####\n#@r.#\n#####\n", ""), ActionKind::Reload),
+        "reloading is not an attack"
+    );
+}
+
+#[test]
+fn a_cowards_flight_is_cheaper_and_quieter_only_away_from_adjacent_hostiles() {
+    // The brute (hostile) stands east of the player; the rat in the corner is out of reach.
+    let mut w = world_on("#######\n#.....#\n#..@k.#\n#.....#\n#######\n", "");
+    let step_to = |w: &World, to: Pos| {
+        let terrain = w.state.current().terrain.get(to).copied().expect("cell");
+        let def = w.content.terrain(terrain);
+        let fleeing = w.flees(ActorId(0), to);
+        (fleeing, w.step_price(ActorId(0), def, fleeing))
+    };
+    let (west, north, south_west) = (Pos::new(2, 2), Pos::new(3, 1), Pos::new(2, 3));
+    let (_, plain) = step_to(&w, west);
+    // Neutral never flees, whatever stands next to it.
+    assert_eq!(step_to(&w, west), (false, plain));
+    take(&mut w, CombatStance::Coward);
+    assert_eq!(step_to(&w, west), (true, plain * 4 / 5));
+    assert_eq!(step_to(&w, south_west), (true, plain * 4 / 5));
+    // Stepping to a cell still next to the brute is not a flight.
+    assert_eq!(step_to(&w, north), (false, plain));
+    // Nor is a step with no hostile beside the player.
+    let mut alone = world_on("#######\n#.....#\n#..@..#\n#.....#\n#######\n", "");
+    take(&mut alone, CombatStance::Coward);
+    assert_eq!(step_to(&alone, west), (false, plain));
+    // A defensive stance has no flight to speak of.
+    take(&mut w, CombatStance::Defensive);
+    assert_eq!(step_to(&w, west), (false, plain));
+}
+
+#[test]
+fn a_cowards_flight_makes_half_the_noise() {
+    let loudness = |stance, fleeing| {
+        // Footsteps are silent in the test creatures: give the player some, and the brute ears.
+        let creatures = CREATURES
+            .replace("weight = 70000", "weight = 70000\nfootsteps = 100")
+            .replace("base_hp = 20\n", "base_hp = 20\nhearing = 10\n");
+        let mut files = files(
+            "#######\n#.....#\n#..@k.#\n#.....#\n#######\n",
+            "ambient = [255, 255, 255, 0]",
+            "",
+        );
+        files.insert("data/creatures.toml", &creatures);
+        let content = Arc::new(Content::load(&files).expect("test content is valid"));
+        let mut w = World::new(content, "fight", None).expect("world");
+        take(&mut w, stance);
+        let to = Pos::new(2, 2);
+        w.state.actors.get_mut(&ActorId(0)).expect("player").pos = to;
+        w.state
+            .actors
+            .get_mut(&ActorId(1))
+            .expect("brute")
+            .heard
+            .clear();
+        w.make_step_noise(ActorId(0), to, fleeing);
+        let heard = &w.state.actors[&ActorId(1)].heard;
+        heard.first().map_or(0, |h| h.loudness)
+    };
+    let loud = loudness(CombatStance::Neutral, true);
+    assert!(loud > 0);
+    assert_eq!(loudness(CombatStance::Coward, false), loud, "not fleeing");
+    let quiet = loudness(CombatStance::Coward, true);
+    // Half as loud where it is made, so less where it is heard.
+    assert!(quiet > 0 && quiet < loud, "{quiet} {loud}");
+}
+
+#[test]
+fn taking_a_stance_takes_no_time_says_so_and_is_recorded_and_saved() {
+    let mut w = world_on("######\n#@.kr#\n######\n", "hp = 1000");
+    let (turn, time, energy) = (w.state.turn, w.state.time, w.state().player().energy);
+    let outcome = run(&mut w, "stance:aggressive").remove(0);
+    assert_eq!(
+        (w.state.turn, w.state.time, w.state().player().energy),
+        (turn, time, energy)
+    );
+    assert!(outcome.events.is_empty());
+    assert_eq!(
+        messages(&w).last().map(String::as_str),
+        Some("You take an aggressive stance.")
+    );
+    for (text, said) in [
+        ("stance:neutral", "You take a neutral stance."),
+        ("stance:defensive", "You take a defensive stance."),
+        ("stance:coward", "You take a cowardly stance."),
+    ] {
+        run(&mut w, text);
+        assert_eq!(messages(&w).last().map(String::as_str), Some(said));
+    }
+    assert!("stance:brave".parse::<Action>().is_err());
+    // Recorded in a replay, which verifies; and saved with the world.
+    let content = w.content().clone();
+    let mut fresh = World::new(content.clone(), "fight", None).expect("world");
+    let mut replay = Replay::new(&fresh);
+    for action in parse_actions("stance:aggressive wait stance:coward wait").expect("actions") {
+        fresh.apply(&action);
+        replay.push(&action, &fresh);
+    }
+    let verified = Replay::from_json(&replay.to_json())
+        .expect("json")
+        .run(content.clone())
+        .expect("the replay verifies");
+    assert_eq!(verified.state_hash(), fresh.state_hash());
+    assert_eq!(verified.state().player().stance, CombatStance::Coward);
+    let loaded = crate::save::decode(&crate::save::encode(&fresh), content).expect("loads");
+    assert_eq!(loaded.state(), fresh.state());
+    assert_eq!(loaded.perception().own_stance(), CombatStance::Coward);
+    // The stance is part of the hash: the same actions without it differ.
+    let mut other = World::new(fresh.content().clone(), "fight", None).expect("world");
+    run(&mut other, "wait wait");
+    assert_ne!(other.state_hash(), fresh.state_hash());
+}
+
+#[test]
+fn an_aggressive_player_hits_more_and_a_coward_less() {
+    // Over many blows at the same Defence, to-hit shows in the hit count.
+    let hits = |stance| {
+        let mut w = world_on(
+            "#####\n#@t.#\n#####\n",
+            "hp = 1000\nstats = { strength = 10 }",
+        );
+        take(&mut w, stance);
+        let mut hit = 0;
+        for _ in 0..150 {
+            let outcome = run(&mut w, "move:E").remove(0);
+            hit += outcome
+                .events
+                .iter()
+                .filter(|e| matches!(e, Event::Attacked { strike: Some(s), .. } if s.is_hit()))
+                .count();
+        }
+        hit
+    };
+    let (aggressive, neutral, coward) = (
+        hits(CombatStance::Aggressive),
+        hits(CombatStance::Neutral),
+        hits(CombatStance::Coward),
+    );
+    assert!(
+        aggressive > neutral && neutral > coward,
+        "{aggressive} {neutral} {coward}"
     );
 }
