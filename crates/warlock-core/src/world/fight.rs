@@ -50,12 +50,47 @@ pub struct Death {
     pub time: GameTime,
     /// Where: the name of the level.
     pub place: String,
-    /// What killed them, if they saw it: a creature type. `None`: something unseen, or a status.
+    /// What killed them, if they saw it: a creature type. `None`: something unseen, a status,
+    /// or no creature at all (see `cause`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub by: Option<CreatureId>,
     /// The status effect that killed them, if one did (they bled to death).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub of: Option<StatusId>,
+    /// What killed them when it was neither a creature's attack nor a status effect (spec §8
+    /// "Hunger"): starving, or choking on a meal.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cause: Option<Cause>,
+}
+
+/// A death that was neither a creature's doing nor a status effect's.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Cause {
+    /// They starved to death.
+    Starvation,
+    /// They choked to death on this, overeating.
+    Choked(ObjectId),
+}
+
+impl Cause {
+    /// How the death screen says it: "Starved to death", "Choked to death on a ration".
+    pub fn epitaph(self, content: &Content) -> String {
+        let what = |o: ObjectId| content.object(o).describe(1);
+        match self {
+            Cause::Starvation => "Starved to death".into(),
+            Cause::Choked(o) => format!("Choked to death on {}", what(o)),
+        }
+    }
+
+    /// What the player is told as it happens: "You starve to death...".
+    pub fn message(self, content: &Content) -> String {
+        let name = |o: ObjectId| content.object(o).name.clone();
+        match self {
+            Cause::Starvation => "You starve to death...".into(),
+            Cause::Choked(o) => format!("You choke to death on the {}...", name(o)),
+        }
+    }
 }
 
 /// What an attack is made with, in words: what it is called ("spear", "bite", "fist", "arrow",
@@ -487,6 +522,7 @@ impl World {
                 place: self.state.current().name.clone(),
                 by,
                 of,
+                cause: None,
             });
         } else {
             if by == Some(self.state.player) {
@@ -497,7 +533,8 @@ impl World {
     }
 
     /// Creature `id` dies: it leaves the world, and what it carried (worn and wielded things
-    /// too) falls on its cell, on top of what lies there, in the order it carried them.
+    /// too) falls on its cell, on top of what lies there, in the order it carried them, and its
+    /// corpse on top of that (spec §8 "Hunger").
     fn creature_dies(&mut self, id: ActorId) {
         let Some(actor) = self.state.actors.remove(&id) else {
             return;
@@ -509,6 +546,7 @@ impl World {
             object::add_to_pile(&mut pile, &actor.inventory, &self.content);
             level.set_pile(actor.pos, pile);
         }
+        self.leave_corpse(&actor);
         self.fallen.push(actor);
     }
 

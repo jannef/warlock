@@ -32,15 +32,23 @@
 //! whether it `spins`, how much it `glow`s where it lies, and its `particles` (`ambient` while
 //! it lies in view on top of its pile, `flight` while it flies).
 //!
+//! Food (spec §8 "Hunger") says what it gives and how long it takes to eat: `food = { nutrition
+//! = 1500, turns = 4 }`. Corpses are objects too, one made for each creature type that leaves
+//! one ([`ObjectDef::corpse_of`]): "kobold corpse", `%` in the creature's color, weighing what
+//! the creature does, feeding by its size. Level files cannot place them: they lie where
+//! creatures died, each with the moment it died ([`Stack::died`]), from which it rots.
+//!
 //! Digging tools (spec §8 "Digging") have a `dig` power: the work a dig with one does against a
 //! wall's hardness (a pick-axe 10, at Strength 10). They go in a slot (the Tool slot).
 
+use super::creature::CreatureDef;
+use super::hunger::Food;
 use super::light::LightId;
 use super::material::MaterialId;
 use super::particles::ParticleEmitter;
 use super::slot::SlotDef;
 use super::weapon_skill::{Role, WeaponSkillId, WeaponSkillTable};
-use super::{Content, ContentError};
+use super::{Content, ContentError, CreatureId};
 use crate::color::Rgb;
 use crate::combat::{Attack, CRITS, DEFAULT_CRIT, DEFAULT_THREAT, THREATS};
 use crate::dice::Dice;
@@ -147,6 +155,8 @@ pub(super) struct ObjectSpec {
     /// `flight` (while it flies).
     #[serde(default)]
     pub particles: Vec<ParticleEmitter>,
+    /// What eating it gives (spec §8 "Hunger"): its nutrition and the turns it takes.
+    pub food: Option<Food>,
 }
 
 /// A resolved object type.
@@ -209,6 +219,11 @@ pub struct ObjectDef {
     pub glow: f32,
     /// Presentation: its particle emitters.
     pub particles: Vec<ParticleEmitter>,
+    /// What eating it gives, if it is food or a corpse (spec §8 "Hunger").
+    pub food: Option<Food>,
+    /// The creature type it is the corpse of, if it is a corpse: it rots from the moment its
+    /// creature died ([`Stack::died`]).
+    pub corpse: Option<CreatureId>,
 }
 
 /// How a burning object burns where it lies: the light it gives, and for how long.
@@ -219,6 +234,49 @@ pub struct Burning {
 }
 
 impl ObjectDef {
+    /// The corpse of creature type `creature` (id `id`): "kobold corpse", `%` in its color, made
+    /// of `material` and weighing what it does, feeding as `food` (its size's).
+    pub(super) fn corpse_of(
+        id: CreatureId,
+        creature: &CreatureDef,
+        material: MaterialId,
+        food: Food,
+    ) -> Self {
+        Self {
+            id: format!("{}_corpse", creature.id),
+            name: format!("{} corpse", creature.name),
+            plural: format!("{} corpses", creature.name),
+            glyph: '%',
+            fg: creature.fg,
+            material,
+            weight: creature.weight,
+            stackable: false,
+            slot: None,
+            two_handed: false,
+            ammo: None,
+            launches: None,
+            attack: None,
+            parry: 0,
+            armour: 0,
+            max_dex: None,
+            shield: 0,
+            bash: None,
+            skill: None,
+            range: None,
+            reloads: false,
+            breaks: 0,
+            lit: None,
+            burning: None,
+            dig: None,
+            missile: None,
+            spins: false,
+            glow: 0.0,
+            particles: Vec::new(),
+            food: Some(food),
+            corpse: Some(id),
+        }
+    }
+
     /// Whether it is a throwing weapon: it has a range and is no missile weapon.
     pub fn is_thrown(&self) -> bool {
         self.range.is_some() && self.launches.is_none()
@@ -347,6 +405,14 @@ impl ObjectSpec {
         if !(0.0..=1.0).contains(&self.glow) {
             return Err(err("`glow` must be between 0 and 1".into()));
         }
+        if let Some(food) = &self.food {
+            food.check().map_err(|m| err(format!("food: {m}")))?;
+            if self.slot.is_some() || self.flies() || self.burns.is_some() {
+                return Err(err(
+                    "`food` is for things eaten, not worn, wielded, shot, thrown, or burned".into(),
+                ));
+            }
+        }
         if let Some(power) = self.dig
             && (!(1..=MAX_DIG).contains(&power) || self.slot.is_none())
         {
@@ -385,8 +451,15 @@ impl ObjectSpec {
             spins: self.spins,
             glow: self.glow,
             particles: self.particles,
+            food: self.food,
+            corpse: None,
         };
         Ok((def, self.lit))
+    }
+
+    /// Whether it flies: ammunition, or a throwing weapon (a range without `launches`).
+    fn flies(&self) -> bool {
+        self.ammo.is_some() || (self.range.is_some() && self.launches.is_none())
     }
 
     /// The fields of ranged combat: a missile weapon needs a range and may reload; a throwing
@@ -572,13 +645,18 @@ pub(super) fn parse_stacks(specs: &[String], content: &Content) -> Result<Vec<St
         let object = content
             .object_id(id)
             .ok_or_else(|| format!("unknown object `{id}`"))?;
+        if content.object(object).corpse.is_some() {
+            return Err(format!(
+                "`{id}` is a corpse: corpses lie only where creatures died"
+            ));
+        }
         if content.object(object).stackable {
             match stacks.iter_mut().find(|s| s.object == object) {
                 Some(stack) => stack.count += count,
-                None => stacks.push(Stack { object, count }),
+                None => stacks.push(Stack::new(object, count)),
             }
         } else {
-            stacks.extend((0..count).map(|_| Stack { object, count: 1 }));
+            stacks.extend((0..count).map(|_| Stack::one(object)));
         }
     }
     Ok(stacks)
@@ -620,6 +698,8 @@ mod tests {
             spins: false,
             glow: 0.0,
             particles: Vec::new(),
+            food: None,
+            corpse: None,
         };
         assert_eq!(def("dagger", "daggers").describe(1), "a dagger");
         assert_eq!(def("iron key", "iron keys").describe(1), "an iron key");

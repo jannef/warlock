@@ -33,6 +33,9 @@ In a fight (see [Combat](combat.md)), and under a load (see [Burden](burden.md))
 - **Toughness** gives you hit points, and makes them come back sooner. It counts toward how much
   you can carry.
 
-The other three do nothing yet. Stats do not change how far you see or how quietly you walk, and
-nothing raises them. Strong poison lowers your Strength and Dexterity by one while it lasts, for
-everything they do (see [Status effects](status-effects.md)); nothing lowers them for good.
+The other three do nothing yet. Stats do not change how far you see or how quietly you walk.
+Strong poison lowers your Strength and Dexterity by one while it lasts, for everything they do
+(see [Status effects](status-effects.md)), and hunger saps them for a while (Weak lowers your
+Strength and Dexterity; see [Hunger](hunger.md)); eating the corpse of some creatures may raise
+one for good, as far as it can grow (see [Food and corpses](food.md)). Nothing else raises or
+lowers them.

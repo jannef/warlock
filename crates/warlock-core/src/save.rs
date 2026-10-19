@@ -43,7 +43,10 @@ const MAGIC: &str = "WARLOCK-SAVE";
 /// 20: status effects: actors have them (`Actor::effects`), their healing progress counts
 ///     hundredths of a second (`Actor::regen`), and the player's death records the status that
 ///     killed them (`Death::of`).
-pub const FORMAT_VERSION: u32 = 20;
+/// 21: hunger: the player's satiation (`Actor::satiation`: nutrition and what time has banked),
+///     corpses' death times (`Stack::died`), and what killed the player when neither a creature
+///     nor a status did (`Death::cause`: starving, choking).
+pub const FORMAT_VERSION: u32 = 21;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 

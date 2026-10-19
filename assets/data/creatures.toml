@@ -56,6 +56,16 @@
 #             weapon_skills.toml, 0 to 10: { spears = 1 }; each raises the skills it defaults
 #             to. Creatures do not train (yet); the player's come from their race and class
 #
+# Corpses (spec §8 "Hunger"; with hunger.toml; never shown to the player before they try):
+#   corpse    whether it leaves a corpse when it dies (default true): a "kobold corpse" (`%` in its
+#             color) weighing what it does, feeding by its size (hunger.toml)
+#   on_eat    what eating its fresh corpse does besides feeding, in this order: { message = "..."
+#             (said once eaten), vomit = 25 (percent chance it comes back up and feeds nothing),
+#             stat = { toughness = 5 } (percent chance per stat to raise it by 1, up to its
+#             hidden potential), heal = "1d4" (hit points), harm = "1d2" (degrees of sickness:
+#             hunger.toml's `sickness`, poison), satiation = 500 (nutrition beyond its size's;
+#             less if negative) }. A rotten corpse does none of it
+#
 # Blood (spec §8 "Blood"; presentation only, no rule reads it): blood, the colour of the stains it
 # leaves when hurt badly or killed ("#rrggbb"; default dark red, "#6e0e0c"), or "none" for a
 # bloodless creature. How much it spills goes by its size's `blood` in sizes.toml.
@@ -87,6 +97,8 @@ hearing = 5
 weight = 4000
 size = "small"
 stats = { strength = 10, dexterity = 17, toughness = 12, intelligence = 1, willpower = 12, presence = 4 }
+# Nothing special, slightly gross.
+on_eat = { message = "Gamey and stringy, but it stays down." }
 
 # Its bite is filthy: now and then it poisons.
 [creature.attack]
@@ -112,6 +124,7 @@ weight = 500
 size = "small"
 stats = { strength = 1, dexterity = 15, toughness = 10, intelligence = 2, willpower = 14, presence = 4 }
 attack = { damage = "1d3", name = "bite", verb = "bites" }
+on_eat = { message = "Leathery wings, and they disagree with you.", harm = "1d2" }
 
 [[creature]]
 id = "kobold"
@@ -131,6 +144,7 @@ opens_doors = true
 footsteps = 80
 hearing = 15
 stats = { strength = 9, dexterity = 13, toughness = 10, intelligence = 10, willpower = 9, presence = 8 }
+on_eat = { message = "This kobold meat tastes terrible!", vomit = 40 }
 weapon_skills = { spears = 1 }
 
 # Sparks from the torch it carries.
@@ -166,6 +180,8 @@ base_hp = 4
 attack = { damage = "1d4", name = "hoof", verb = "kicks" }
 # Wary game: it hears what others miss.
 skills = { listen = 30 }
+# Very nourishing.
+on_eat = { message = "Venison! It does you good.", satiation = 1000, heal = "1d6" }
 
 # The kobold war band's archer: keeps its distance and shoots.
 [[creature]]
@@ -186,6 +202,7 @@ hearing = 12
 weight = 22000
 size = "small"
 stats = { strength = 8, dexterity = 15, toughness = 10, intelligence = 10, willpower = 10, presence = 8 }
+on_eat = { message = "This kobold meat tastes terrible!", vomit = 40 }
 weapon_skills = { bows = 1 }
 
 # The war band's shaman, slow and frail: casts from a few cells away. A faint violet sparkle
@@ -209,6 +226,8 @@ weight = 18000
 size = "small"
 stats = { strength = 7, dexterity = 11, toughness = 8, intelligence = 12, willpower = 14, presence = 10 }
 skills = { concentration = 20, spellcraft = 25 }
+# A tiny chance to take in some of its will.
+on_eat = { message = "It tastes terrible, and of bitter herbs.", vomit = 40, stat = { willpower = 3 } }
 
 [[creature.particles]]
 on = "attack"
@@ -241,5 +260,7 @@ size = "small"
 stats = { strength = 10, dexterity = 11, toughness = 11, intelligence = 1, willpower = 10, presence = 7 }
 attack = { damage = "1d3", name = "bite", verb = "bites" }
 natural = { defence = 3, name = "shell" }
+# A small chance to toughen the eater.
+on_eat = { message = "Crunchy.", stat = { toughness = 10 } }
 # Greenish-black ichor.
 blood = "#38461a"

@@ -15,7 +15,8 @@ Mountains and open water cannot be crossed; a river can only be crossed by a bri
 
 Roads and bridges are the fast way to travel, and swamp and dense forest the slow way. The
 [survival](skills.md#what-skills-give) skill makes every journey quicker, by up to a fifth. The
-status bar shows the name of the region you are in, here and in its local areas.
+status bar shows the name of the region you are in, here and in its local areas. A long journey
+takes days, and you get hungry on the way: take food (see [Hunger](hunger.md)).
 
 ## Sight by daylight and moonlight
 

@@ -51,6 +51,8 @@ pub enum KeyCommand {
     WeaponSkills,
     /// Ask how long to rest (an hour, until dawn, until dusk).
     Rest,
+    /// Choose something to eat, from the floor or the pack.
+    Eat,
     /// Move a cursor over the map to read what is there (no time passes).
     Look,
     /// Shoot or throw what is in the missile weapon slot (a cursor on the map): a launcher
@@ -134,6 +136,7 @@ impl KeyCommand {
             KeyCommand::Skills => "Skills",
             KeyCommand::WeaponSkills => "Weapon skills",
             KeyCommand::Rest => "Rest",
+            KeyCommand::Eat => "Eat",
             KeyCommand::Look => "Look around",
             KeyCommand::Missile => "Throw or shoot the missile weapon",
             KeyCommand::Fire => "Fire missile weapon",
@@ -251,6 +254,7 @@ impl Default for Bindings {
             (ch("S"), Skills),
             (ch("W"), WeaponSkills),
             (ch("R"), Rest),
+            (ch("E"), Eat),
             (ch("x"), Look),
             (ch("t"), Missile),
             (ch("T"), Throw),
@@ -613,6 +617,10 @@ impl Gameplay<'_> {
                 open = Some(ScreenAction::Open(ScreenName::WeaponSkills));
                 InputMode::Normal
             }
+            (InputMode::Normal, KeyCommand::Eat) => {
+                open = Some(ScreenAction::Open(ScreenName::Eat));
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::CycleVision) => {
                 let view = game.world.perception();
                 let next = next_vision(view.content().vision_profiles(), &view.vision().id);
@@ -781,6 +789,7 @@ mod tests {
         assert!(keys(&b, KeyCommand::Bash).is_empty(), "an ability: unbound");
         assert_eq!(keys(&b, KeyCommand::MoreAggressive), ["+"]);
         assert_eq!(keys(&b, KeyCommand::MoreDefensive), ["-"]);
+        assert_eq!(keys(&b, KeyCommand::Eat), ["E"]);
         assert_eq!(keys(&b, KeyCommand::NextTarget), ["Tab"]);
         assert_eq!(keys(&b, KeyCommand::UseTool), ["U"]);
     }

@@ -345,10 +345,7 @@ fn objects_and_inventories_survive_a_save() {
     // A save whose objects this content does not have is refused.
     let mut state = w.state().clone();
     let level = state.current_level.clone();
-    let bogus = Stack {
-        object: crate::content::ObjectId(9999),
-        count: 1,
-    };
+    let bogus = Stack::one(crate::content::ObjectId(9999));
     state
         .levels
         .get_mut(&level)
