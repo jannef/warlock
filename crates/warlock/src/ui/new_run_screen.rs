@@ -3,9 +3,10 @@
 //! classes, starts the run as the scenario's.
 
 use super::chargen_screen::ScenarioPick;
-use super::menu::{Nav, Panel, Press, wrap};
+use super::menu::{Hints, Nav, Panel, Press, wrap};
 use super::screens::{MenuChoice, ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
+use crate::input::Bindings;
 use crate::render::console::Console;
 use warlock_core::character::CharacterSpec;
 use warlock_core::content::Content;
@@ -101,7 +102,7 @@ impl NewRunScreen {
             Nav::Back => return ScreenAction::Close,
             Nav::Up if count > 0 => self.selected = (self.selected + count - 1) % count,
             Nav::Down if count > 0 => self.selected = (self.selected + 1) % count,
-            Nav::Backspace | Nav::Delete => {
+            Nav::Erase => {
                 self.seed.pop();
             }
             Nav::Enter if self.creates_characters && !self.scenarios.is_empty() => {
@@ -121,7 +122,7 @@ impl NewRunScreen {
         ScreenAction::Stay
     }
 
-    pub fn draw(&self, console: &mut Console) {
+    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         let h = 14 + self.scenarios.len() as i32;
         let panel = Panel::new(console, " New run ", 60, h);
         let x = panel.inner_x();
@@ -160,12 +161,18 @@ impl NewRunScreen {
             let warning = "! Starting a new run replaces your saved run.";
             console.print(x, panel.y + panel.h - 4, warning, ACCENT);
         }
-        let footer = if self.creates_characters {
-            "↑↓ scenario   Enter next   Esc back"
+        let keys = Hints::of(bindings);
+        let next = if self.creates_characters {
+            "next"
         } else {
-            "↑↓ scenario   Enter start   Esc back"
+            "start"
         };
-        panel.footer(console, footer);
+        let footer = format!(
+            "{} scenario   {} {next}   Esc back",
+            keys.up_down(),
+            keys.confirm
+        );
+        panel.footer(console, &footer);
     }
 }
 
@@ -183,7 +190,7 @@ mod tests {
         for d in ['4', '2'] {
             s.handle(&Press::typed(d));
         }
-        s.handle(&Press::nav(Nav::Backspace));
+        s.handle(&Press::nav(Nav::Erase));
         s.handle(&Press::typed('7'));
         assert_eq!(
             s.handle(&Press::nav(Nav::Enter)),

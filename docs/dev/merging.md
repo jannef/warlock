@@ -44,6 +44,7 @@ Take one side and regenerate; never resolve hunks in these by hand:
 | `THIRD_PARTY_LICENSES.html` | take either side, `cargo xtask licenses` after `Cargo.lock` is settled |
 | `Cargo.lock` | take `main`'s, then `cargo build --workspace` re-resolves your additions |
 | `tests/golden/*.png` | take `main`'s; references come only from the Linux CI workflow |
+| `assets/keymaps/default.toml` | take either side, `WARLOCK_UPDATE_KEYMAPS=1 cargo test -p warlock keymap` (only a changed default key makes it stale) |
 
 **Reading an insta diff.** `INSTA_UPDATE=always cargo test -p warlock-core` rewrites the `.snap`
 files in place (`cargo insta review` walks them one by one); then `git diff` them. The showcase

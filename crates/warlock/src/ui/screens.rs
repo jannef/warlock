@@ -44,11 +44,12 @@ use super::skills_screen::SkillsScreen;
 use super::weapon_skills_screen::WeaponSkillsScreen;
 use crate::cli::Args;
 use crate::game::{Game, GameContent, PlayerAction};
-use crate::input::{Bindings, InputMode};
+use crate::input::{Bindings, InputMode, dev_keys};
 use crate::render::console::Console;
 use crate::render::grid::MapGrid;
 use crate::save::{Resume, SaveCommand, SaveStore};
-use crate::settings::Settings;
+use crate::settings::keymap::KeymapFile;
+use crate::settings::{Settings, SettingsStore};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use clap::ValueEnum;
@@ -197,6 +198,17 @@ impl From<Action> for ScreenAction {
     }
 }
 
+/// What screens may need to know of this launch.
+#[derive(Clone, Debug, Default)]
+struct Launch {
+    /// A saved run exists (the main menu offers Continue; New run warns).
+    has_save: bool,
+    /// The developer keys work (the controls and the help list them).
+    dev: bool,
+    /// Where the controls' Export keys and Import keys go.
+    keymap: KeymapFile,
+}
+
 /// A modal screen.
 #[derive(Debug)]
 enum Screen {
@@ -232,12 +244,13 @@ impl Screen {
     /// Screen `name`; `run` is what the player perceives in the run, if there is one, `draft`
     /// what New run has chosen on the screens below, `slot` the slot selected on the equipment
     /// screen beneath, if any (the first slot if none), `item` the carried stack looked at on a
-    /// screen beneath (the first if none), and `talk` the run's last conversation, if its last
-    /// action was talk.
+    /// screen beneath (the first if none), `talk` the run's last conversation, if its last
+    /// action was talk, and `launch` what this launch has (a save, the developer keys, where
+    /// keymaps go).
     fn new(
         name: ScreenName,
         content: &Content,
-        has_save: bool,
+        launch: &Launch,
         run: Option<&PerceptionView<'_>>,
         draft: &Draft,
         (slot, item): (Option<SlotId>, Option<usize>),
@@ -246,17 +259,19 @@ impl Screen {
         let objects = |list| Screen::Objects(ObjectScreen::new(list, run));
         let choice = |step| Screen::Choice(ChoiceScreen::new(step, content, draft));
         match name {
-            ScreenName::Main => Screen::Menu(MainMenu::main(has_save)),
+            ScreenName::Main => Screen::Menu(MainMenu::main(launch.has_save)),
             ScreenName::Pause => Screen::Menu(MainMenu::pause()),
-            ScreenName::NewRun => Screen::NewRun(NewRunScreen::new(content, has_save)),
+            ScreenName::NewRun => Screen::NewRun(NewRunScreen::new(content, launch.has_save)),
             ScreenName::Race => choice(Step::Race),
             ScreenName::Gender => choice(Step::Gender),
             ScreenName::Class => choice(Step::Class),
             ScreenName::Summary => Screen::Summary(Box::new(SummaryScreen::new(content, draft))),
             ScreenName::Settings => Screen::Settings(SettingsScreen::default()),
             ScreenName::Files => Screen::Files(FilesScreen::new(crate::paths::locations())),
-            ScreenName::Controls => Screen::Controls(ControlsScreen::default()),
-            ScreenName::Help => Screen::Controls(ControlsScreen::help()),
+            ScreenName::Controls => {
+                Screen::Controls(ControlsScreen::new(launch.dev, launch.keymap.clone()))
+            }
+            ScreenName::Help => Screen::Controls(ControlsScreen::help(launch.dev)),
             ScreenName::Inventory => objects(ObjectList::Inventory),
             ScreenName::Equipment => Screen::Equipment(EquipmentScreen::new(run)),
             ScreenName::EquipItem => {
@@ -396,6 +411,16 @@ impl ScreenStack {
     }
 
     /// Whether an equipment screen is open (it shows the run as it changes, [`refresh`]).
+    /// Shows what an import from the browser's file picker did on the controls screen, if it
+    /// is open.
+    pub(super) fn keymap_imported(&mut self, lines: Vec<String>) {
+        for screen in &mut self.screens {
+            if let Screen::Controls(screen) = screen {
+                screen.imported(lines.clone());
+            }
+        }
+    }
+
     fn shows_equipment(&self) -> bool {
         (self.screens.iter()).any(|s| matches!(s, Screen::Equipment(_)))
     }
@@ -494,12 +519,12 @@ impl ScreenStack {
     pub fn draw(&self, console: &mut Console, settings: &Settings, bindings: &Bindings) {
         match self.screens.last() {
             None => {}
-            Some(Screen::Menu(menu)) => menu.draw(console, self.notice.as_deref()),
-            Some(Screen::NewRun(screen)) => screen.draw(console),
-            Some(Screen::Choice(screen)) => screen.draw(console),
-            Some(Screen::Summary(screen)) => screen.draw(console),
-            Some(Screen::Settings(screen)) => screen.draw(console, settings),
-            Some(Screen::Files(screen)) => screen.draw(console),
+            Some(Screen::Menu(menu)) => menu.draw(console, self.notice.as_deref(), bindings),
+            Some(Screen::NewRun(screen)) => screen.draw(console, bindings),
+            Some(Screen::Choice(screen)) => screen.draw(console, bindings),
+            Some(Screen::Summary(screen)) => screen.draw(console, bindings),
+            Some(Screen::Settings(screen)) => screen.draw(console, settings, bindings),
+            Some(Screen::Files(screen)) => screen.draw(console, bindings),
             Some(Screen::Controls(screen)) => screen.draw(console, bindings),
             Some(Screen::Objects(screen)) => screen.draw(console, bindings),
             Some(Screen::Equipment(screen)) => screen.draw(console, bindings),
@@ -509,8 +534,8 @@ impl ScreenStack {
             Some(Screen::Skills(screen)) => screen.draw(console, bindings),
             Some(Screen::WeaponSkills(screen)) => screen.draw(console, bindings),
             Some(Screen::Quests(screen)) => screen.draw(console, bindings),
-            Some(Screen::Dialogue(screen)) => screen.draw(console),
-            Some(Screen::Death(screen)) => screen.draw(console, settings.clock),
+            Some(Screen::Dialogue(screen)) => screen.draw(console, bindings),
+            Some(Screen::Death(screen)) => screen.draw(console, settings.clock, bindings),
             Some(Screen::Dialog(screen)) => screen.draw(console, bindings),
         }
     }
@@ -527,6 +552,8 @@ pub struct Screens<'w> {
     pub stack: ResMut<'w, ScreenStack>,
     content: Res<'w, GameContent>,
     store: Res<'w, SaveStore>,
+    settings: Res<'w, SettingsStore>,
+    args: Res<'w, Args>,
     /// The run, for screens that show what the player perceives (the inventory, a pile, the
     /// character screen).
     game: Option<Res<'w, Game>>,
@@ -546,9 +573,13 @@ impl Screens<'_> {
         let talk = (self.game.as_ref()).and_then(|game| last_talk(&game.last_outcome));
         let (draft, slot) = (self.stack.draft(), self.stack.selected_slot());
         let item = self.stack.looked_item();
-        let (content, has_save) = (&self.content.0, self.store.has_save());
-        let looked = (slot, item);
-        let screen = Screen::new(name, content, has_save, view.as_ref(), &draft, looked, talk);
+        let launch = Launch {
+            has_save: self.store.has_save(),
+            dev: dev_keys(&self.args),
+            keymap: self.settings.keymap(),
+        };
+        let (content, looked) = (&self.content.0, (slot, item));
+        let screen = Screen::new(name, content, &launch, view.as_ref(), &draft, looked, talk);
         self.stack.screens.push(screen);
     }
 
@@ -755,7 +786,12 @@ mod tests {
             let run = name.needs_run().then_some(&view);
             let (draft, slot) = (stack.draft(), stack.selected_slot());
             let looked = (slot, stack.looked_item());
-            let screen = Screen::new(*name, &content, has_save, run, &draft, looked, None);
+            let launch = Launch {
+                has_save,
+                dev: true,
+                keymap: KeymapFile::Nowhere,
+            };
+            let screen = Screen::new(*name, &content, &launch, run, &draft, looked, None);
             stack.screens.push(screen);
         }
         stack
@@ -774,7 +810,7 @@ mod tests {
         stack.screens.push(Screen::new(
             Settings,
             &content(),
-            false,
+            &Launch::default(),
             None,
             &Draft::default(),
             (None, None),
@@ -927,6 +963,7 @@ mod tests {
             .insert_resource(GameContent(content.clone()))
             .init_resource::<ScreenStack>()
             .init_resource::<Settings>()
+            .init_resource::<crate::settings::SettingsStore>()
             .init_resource::<Bindings>()
             .init_resource::<InputMode>()
             .init_resource::<crate::ui::LastTarget>()
@@ -1568,6 +1605,7 @@ mod tests {
             .insert_resource(Game::from_world(world))
             .init_resource::<ScreenStack>()
             .init_resource::<Settings>()
+            .init_resource::<crate::settings::SettingsStore>()
             .init_resource::<Bindings>()
             .init_resource::<InputMode>()
             .init_resource::<crate::ui::LastTarget>()

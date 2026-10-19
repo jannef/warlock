@@ -57,7 +57,7 @@ pub use dev::DevOverlays;
 pub use target::{Aim, AimKind, LastTarget};
 
 use crate::game::{Game, SimSet};
-use crate::input::{Bindings, InputMode, route_keys};
+use crate::input::{Bindings, InputMode, KeyCommand, route_keys};
 use crate::render::anim::{AnimTable, TerrainAnim};
 use crate::render::console::{Cell, Console};
 use crate::render::grid::MapGrid;
@@ -123,6 +123,7 @@ impl Plugin for UiPlugin {
                 Update,
                 (
                     screens::apply_choice.after(route_keys).before(SimSet),
+                    controls_screen::receive_keymap.before(draw),
                     (
                         (
                             motion::track,
@@ -215,13 +216,9 @@ fn draw_game(
 ) {
     let rows = console.rows() as i32;
     draw_messages(console, game, mode, bindings, settings.effects.blood);
-    draw_status(
-        console,
-        game,
-        rows - 1,
-        settings.clock,
-        settings.temperature,
-    );
+    let hint = controls_hint(bindings);
+    let (clock, unit) = (settings.clock, settings.temperature);
+    draw_status(console, game, rows - 1, (clock, unit), &hint);
     dev::draw_indicator(console, overlays);
     let cursor = match mode {
         InputMode::Look(p) => Some(p),
@@ -470,15 +467,15 @@ fn draw_messages(
 ) {
     if let InputMode::Direction(command) = mode {
         let prompt = match command {
-            crate::input::KeyCommand::UseTool => "Dig in which direction? (Esc to cancel)",
-            crate::input::KeyCommand::Chat => "Talk in which direction? (Esc to cancel)",
+            KeyCommand::UseTool => "Dig in which direction? (Esc to cancel)",
+            KeyCommand::Chat => "Talk in which direction? (Esc to cancel)",
             _ => "In which direction? (Esc to cancel)",
         };
         console.print(1, 0, prompt, ACCENT);
         return;
     }
     if mode == InputMode::Rest {
-        console.print(1, 0, REST_PROMPT, ACCENT);
+        console.print(1, 0, &rest_prompt(bindings), ACCENT);
         return;
     }
     if let InputMode::Aim(aim) = mode {
@@ -495,27 +492,27 @@ fn draw_messages(
         let (confirm, missile) = match aim.kind {
             AimKind::Fire => {
                 let ammo = view.ready_to_fire().map(|(_, item, _)| item);
-                (crate::input::KeyCommand::Missile, ammo)
+                (KeyCommand::Missile, ammo)
             }
-            AimKind::Throw(item) => (crate::input::KeyCommand::Missile, Some(item)),
+            AimKind::Throw(item) => (KeyCommand::Missile, Some(item)),
         };
         let content = view.content();
         let ready = (missile.and_then(|i| view.inventory().get(i)))
             .map_or_else(String::new, |s| content.object(s.object).describe(1));
-        let next = key(crate::input::KeyCommand::NextTarget);
-        let prompt = aim.prompt(&ready, (&key(confirm), &next));
+        let next = key(KeyCommand::NextTarget);
+        let prompt = aim.prompt(&ready, (&key(KeyCommand::Loose), &key(confirm), &next));
         console.print(1, 1, &prompt, ACCENT);
         return;
     }
     if let InputMode::Look(p) = mode {
         let about = look::describe(&game.world.perception(), p, blood);
         console.print(1, 0, &about, TEXT);
-        console.print(
-            1,
-            1,
-            "Looking: direction keys move, Esc or x to stop.",
-            TEXT_DIM,
-        );
+        let stop = match bindings.key_name(KeyCommand::Look) {
+            Some(key) => format!("Esc or {key}"),
+            None => "Esc".to_string(),
+        };
+        let prompt = format!("Looking: direction keys move, {stop} to stop.");
+        console.print(1, 1, &prompt, TEXT_DIM);
         return;
     }
     let turn = game.world.turn();
@@ -532,10 +529,48 @@ fn draw_messages(
     }
 }
 
-/// The rest prompt; its letters are [`crate::input::REST_CHOICES`].
-const REST_PROMPT: &str = "Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to cancel)";
+/// The rest prompt, naming each choice's key as bound ([`crate::input::REST_CHOICES`]):
+/// `Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to cancel)` with the default keys, the
+/// key in parentheses where a word starts with it, else after the words (`hour (F1)`). A choice
+/// without a key is left out.
+fn rest_prompt(bindings: &Bindings) -> String {
+    let choices: Vec<String> = crate::input::REST_CHOICES
+        .iter()
+        .filter_map(|(command, _, words)| {
+            let key = bindings.key_name(*command)?;
+            let starts = std::iter::once(0).chain(words.match_indices(' ').map(|(i, _)| i + 1));
+            let single = key.chars().count() == 1;
+            let start = starts
+                .filter(|_| single)
+                .find(|&at| words[at..].starts_with(&key));
+            Some(match start {
+                Some(at) => {
+                    let rest = &words[at + key.len()..];
+                    format!("{}({key}){rest}", &words[..at])
+                }
+                None => format!("{words} ({key})"),
+            })
+        })
+        .collect();
+    format!("Rest: {}? (Esc to cancel)", choices.join(", "))
+}
 
-fn draw_status(console: &mut Console, game: &Game, y: i32, clock: Clock, unit: TemperatureUnit) {
+/// The status bar's reminder of where the keys are: the help key, else the pause menu (which
+/// holds Controls).
+fn controls_hint(bindings: &Bindings) -> String {
+    match bindings.key_name(KeyCommand::Help) {
+        Some(key) => format!("{key} controls"),
+        None => "Esc menu".to_string(),
+    }
+}
+
+fn draw_status(
+    console: &mut Console,
+    game: &Game,
+    y: i32,
+    (clock, unit): (Clock, TemperatureUnit),
+    hint: &str,
+) {
     let cols = console.cols() as i32;
     console.fill(
         0,
@@ -551,7 +586,6 @@ fn draw_status(console: &mut Console, game: &Game, y: i32, clock: Clock, unit: T
     let segments = status_segments(&game.world, clock, unit);
     // The controls hint matters most to new players, so it keeps its place unless the window is
     // very narrow; status segments give way around it.
-    let hint = "? controls";
     let hint_w = hint.chars().count() as i32;
     let show_hint = cols >= 50;
     let reserved = if show_hint { hint_w + 3 } else { 0 };
@@ -1127,10 +1161,23 @@ mod tests {
     }
 
     #[test]
-    fn rest_prompt_names_every_choice() {
-        for (key, _) in crate::input::REST_CHOICES {
-            assert!(REST_PROMPT.contains(&format!("({key})")), "{key}");
-        }
+    fn prompts_name_the_keys_as_bound() {
+        let mut b = Bindings::default();
+        assert_eq!(
+            rest_prompt(&b),
+            "Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to cancel)"
+        );
+        assert_eq!(controls_hint(&b), "? controls");
+        let key = |text: &str| crate::input::KeyBinding::from_text(text).unwrap();
+        b.bind_primary(KeyCommand::RestHour, key("F1")).unwrap();
+        b.bind_primary(KeyCommand::RestDusk, key("i")).unwrap();
+        b.bind_primary(KeyCommand::RestDawn, key("u")).unwrap();
+        assert_eq!(
+            rest_prompt(&b),
+            "Rest: hour (F1), (u)ntil dawn, until nightfall (i)? (Esc to cancel)"
+        );
+        b.0.retain(|(_, c)| *c != KeyCommand::Help);
+        assert_eq!(controls_hint(&b), "Esc menu");
     }
 
     #[test]

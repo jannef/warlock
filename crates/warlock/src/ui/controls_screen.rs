@@ -1,26 +1,34 @@
 //! The controls screen and rebinding UI (spec §6): select a command, press a key to bind it.
 //!
-//! Enter on a command waits for a key, which becomes the command's primary key (its other keys,
-//! such as the numpad, stay). A key another command uses is refused and the owner is named, so
-//! the table never holds a conflict. Esc cancels, Delete resets one command, and "Reset all
-//! keys" restores the defaults.
+//! Commands are listed by context (`input::Context`: in play, aiming, the rest prompt, menus
+//! and screens, info pages, dialogs, and in builds that have them the developer keys); a key is
+//! unique within its context only. Enter on a command waits for a key, which becomes the
+//! command's primary key (its other keys, such as the numpad, stay). A key another command of the
+//! same context uses moves to this one, and the message says so; Esc (fixed) and the last key of
+//! a vital command (`settings::keys::VITAL`) are refused, so the player cannot lock themselves
+//! out. Esc cancels, Delete resets one command, and "Reset all keys" restores the defaults.
+//! "Export keys" and "Import keys" write and read the keymap file (`settings::keymap`): in the
+//! config folder on the desktop, a download and a file picker on the web (whose file arrives a
+//! few frames later: [`receive_keymap`]).
 //!
-//! The `?` help is the same screen, read-only ([`ControlsScreen::help`]): it lists every command
-//! in the binding table, including Esc and the dev keys, and closes on `?` or Esc. The list is
-//! drawn by one piece of code for both, so help always matches the bindings.
+//! The `?` help is the same screen, read-only ([`ControlsScreen::help`]): it lists every
+//! command by context, including Esc, and closes on `?` or Esc. The list is drawn by one piece
+//! of code for both, so help always matches the bindings.
 
-use super::menu::{Nav, Panel, Press};
+use super::menu::{Hints, Nav, Panel, Press, wrap};
 use super::{ACCENT, TEXT, TEXT_DIM};
-use crate::input::{Bindings, KeyCommand};
+use crate::input::{Bindings, Context, KeyCommand};
 use crate::render::console::Console;
+use crate::settings::keymap::{self, KeymapFile};
 use crate::settings::keys::{Bound, REBINDABLE};
+use bevy::prelude::*;
 
 /// What the screen is doing.
 #[derive(Debug, Default, PartialEq, Eq)]
 enum Mode {
     #[default]
     Browse,
-    /// Waiting for a key for the command at this row.
+    /// Waiting for a key for the command at the selected row.
     Capture,
     /// The `?` help: nothing can be changed; `selected` is the first row shown.
     ReadOnly,
@@ -29,31 +37,85 @@ enum Mode {
 /// One row of the list.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Row {
+    /// A line of text about keys in general.
+    Note(&'static str),
+    /// The space before a group.
+    Blank,
+    /// The heading of a context's group.
+    Header(Context),
     Command(KeyCommand),
     Reset,
+    Export,
+    Import,
     Back,
 }
 
-/// Selection state of the controls screen. Rows are the rebindable commands, then "Reset all
-/// keys", then "Back"; in help, every bound command (see [`ControlsScreen::rows`]).
-#[derive(Debug, Default)]
-pub struct ControlsScreen {
-    selected: usize,
-    mode: Mode,
-    /// Result of the last action; a leading `!` marks a refusal (never color alone).
-    message: Option<String>,
+impl Row {
+    fn selectable(self) -> bool {
+        matches!(
+            self,
+            Row::Command(_) | Row::Reset | Row::Export | Row::Import | Row::Back
+        )
+    }
+
+    /// The label of an action row.
+    fn action(self) -> Option<&'static str> {
+        match self {
+            Row::Reset => Some("Reset all keys"),
+            Row::Export => Some("Export keys…"),
+            Row::Import => Some("Import keys…"),
+            Row::Back => Some("Back"),
+            Row::Note(_) | Row::Blank | Row::Header(_) | Row::Command(_) => None,
+        }
+    }
 }
 
-const RESET_ROW: usize = REBINDABLE.len();
-const BACK_ROW: usize = REBINDABLE.len() + 1;
-const ROW_COUNT: usize = REBINDABLE.len() + 2;
+/// What the list says first: the keys no binding changes.
+const NOTES: [&str; 2] = [
+    "Esc always backs out and cancels; it cannot be rebound.",
+    "Letters (a-z) and digits that pick list rows are fixed.",
+];
+
+/// Selection state of the controls screen. Rows are the notes, then each context's commands
+/// under its heading, then "Reset all keys", "Export keys…", "Import keys…", and "Back"; in
+/// help, the notes and every command.
+#[derive(Debug)]
+pub struct ControlsScreen {
+    /// The selected row; in help, the first row shown.
+    selected: usize,
+    mode: Mode,
+    /// Whether the developer keys are listed (they work in this launch).
+    dev: bool,
+    /// Result of the last action, a line or a few; a leading `!` marks a refusal (never color
+    /// alone).
+    message: Vec<String>,
+    /// Where Export keys and Import keys go.
+    keymap: KeymapFile,
+}
 
 impl ControlsScreen {
-    /// The `?` help: every bound command, read-only.
-    pub fn help() -> Self {
+    /// The rebinding screen; `dev`: list the developer keys too; `keymap`: where Export keys and
+    /// Import keys go.
+    pub fn new(dev: bool, keymap: KeymapFile) -> Self {
+        let mut screen = Self {
+            selected: 0,
+            mode: Mode::Browse,
+            dev,
+            message: Vec::new(),
+            keymap,
+        };
+        screen.selected = screen.next_selectable(0, 1);
+        screen
+    }
+
+    /// The `?` help: every command, read-only.
+    pub fn help(dev: bool) -> Self {
         Self {
+            selected: 0,
             mode: Mode::ReadOnly,
-            ..Self::default()
+            dev,
+            message: Vec::new(),
+            keymap: KeymapFile::Nowhere,
         }
     }
 
@@ -61,20 +123,45 @@ impl ControlsScreen {
         self.mode == Mode::ReadOnly
     }
 
-    /// The rows shown. Help lists every command in the table: the rebindable ones in their usual
-    /// order, then the fixed and dev keys.
-    fn rows(&self, bindings: &Bindings) -> Vec<Row> {
-        if self.mode != Mode::ReadOnly {
-            let commands = REBINDABLE.iter().copied().map(Row::Command);
-            return commands.chain([Row::Reset, Row::Back]).collect();
-        }
-        let mut commands = REBINDABLE.to_vec();
-        for (_, command) in &bindings.0 {
-            if !commands.contains(command) {
-                commands.push(*command);
+    /// The rows shown: the notes, then every context's commands in [`REBINDABLE`] order under
+    /// its heading (help adds Esc's Cancel to play's); the rebinding screen ends with its
+    /// actions.
+    fn rows(&self) -> Vec<Row> {
+        let read_only = self.mode == Mode::ReadOnly;
+        let mut rows: Vec<Row> = NOTES.iter().map(|note| Row::Note(note)).collect();
+        for &context in Context::ALL {
+            if context == Context::Dev && !self.dev {
+                continue;
+            }
+            rows.extend([Row::Blank, Row::Header(context)]);
+            let commands = REBINDABLE.iter().filter(|c| c.context() == context);
+            rows.extend(commands.copied().map(Row::Command));
+            if read_only && context == Context::Play {
+                rows.push(Row::Command(KeyCommand::Cancel));
             }
         }
-        commands.into_iter().map(Row::Command).collect()
+        if !read_only {
+            rows.extend([Row::Blank, Row::Reset, Row::Export, Row::Import, Row::Back]);
+        }
+        rows
+    }
+
+    /// The first selectable row from `from` on in direction `step` (wrapping around).
+    fn next_selectable(&self, from: usize, step: isize) -> usize {
+        let rows = self.rows();
+        let n = rows.len() as isize;
+        (0..n)
+            .map(|i| (from as isize + step * i).rem_euclid(n) as usize)
+            .find(|&i| rows[i].selectable())
+            .unwrap_or(0)
+    }
+
+    /// The command at the selected row, if it is one.
+    fn selected_command(&self) -> Option<KeyCommand> {
+        match self.rows().get(self.selected) {
+            Some(Row::Command(command)) => Some(*command),
+            _ => None,
+        }
     }
 
     /// Applies a key press to `bindings`. Returns true when the player leaves the screen.
@@ -87,38 +174,55 @@ impl ControlsScreen {
             Mode::ReadOnly => return self.read_only(press, bindings),
             Mode::Browse => {}
         }
+        let row = self.rows().get(self.selected).copied();
         match press.nav {
             Nav::Back => return true,
             Nav::Up => {
-                self.selected = (self.selected + ROW_COUNT - 1) % ROW_COUNT;
-                self.message = None;
+                self.selected = self.next_selectable(self.selected + self.rows().len() - 1, -1);
+                self.message.clear();
             }
             Nav::Down => {
-                self.selected = (self.selected + 1) % ROW_COUNT;
-                self.message = None;
+                self.selected = self.next_selectable(self.selected + 1, 1);
+                self.message.clear();
             }
-            Nav::Enter if !press.repeat => match self.selected {
-                RESET_ROW => {
+            Nav::Enter if !press.repeat => match row {
+                Some(Row::Reset) => {
                     bindings.reset_all();
-                    self.message = Some("All keys are back to their defaults.".into());
+                    self.message = vec!["All keys are back to their defaults.".into()];
                 }
-                BACK_ROW => return true,
-                _ => {
+                Some(Row::Export) => {
+                    self.message = vec![match self.keymap.export(bindings) {
+                        Ok(said) => said,
+                        Err(why) => format!("! {why}"),
+                    }];
+                }
+                Some(Row::Import) => {
+                    self.message = match self.keymap.import(bindings) {
+                        Ok(Some(report)) => report,
+                        Ok(None) => vec!["Choose a keymap file to import.".into()],
+                        Err(why) => vec![format!("! {why}")],
+                    };
+                }
+                Some(Row::Back) => return true,
+                Some(Row::Command(_)) => {
                     self.mode = Mode::Capture;
-                    self.message = None;
+                    self.message.clear();
                 }
+                _ => {}
             },
-            Nav::Delete | Nav::Backspace if self.selected < REBINDABLE.len() => {
-                let command = REBINDABLE[self.selected];
-                bindings.reset_command(command);
-                self.message = Some(format!("{} is back to its default keys.", command.name()));
+            Nav::Erase if !press.repeat => {
+                if let Some(command) = self.selected_command() {
+                    bindings.reset_command(command);
+                    let name = command.name();
+                    self.message = vec![format!("{name} is back to its default keys.")];
+                }
             }
             _ => {}
         }
         false
     }
 
-    /// Help: the arrows scroll; Esc or the help key (`?`) closes.
+    /// Help: the menu keys scroll; Esc or the help key (`?`) closes.
     fn read_only(&mut self, press: &Press, bindings: &Bindings) -> bool {
         let help_key = press
             .binding
@@ -129,7 +233,7 @@ impl ControlsScreen {
             Nav::Back => return true,
             Nav::Up => self.selected = self.selected.saturating_sub(1),
             Nav::Down => {
-                let last = self.rows(bindings).len().saturating_sub(1);
+                let last = self.rows().len().saturating_sub(1);
                 self.selected = (self.selected + 1).min(last);
             }
             _ => {}
@@ -143,18 +247,21 @@ impl ControlsScreen {
         }
         if press.nav == Nav::Back {
             self.mode = Mode::Browse;
-            self.message = Some("Cancelled.".into());
+            self.message = vec!["Cancelled.".into()];
             return;
         }
         let Some(key) = press.binding.clone() else {
-            self.message =
-                Some("! That key cannot be bound. Try another, or Esc to cancel.".into());
+            let refusal = "! That key cannot be bound. Try another, or Esc to cancel.";
+            self.message = vec![refusal.into()];
             return;
         };
-        let command = REBINDABLE[self.selected];
+        let Some(command) = self.selected_command() else {
+            self.mode = Mode::Browse;
+            return;
+        };
         let shown = key.display();
         self.mode = Mode::Browse;
-        self.message = Some(match bindings.bind_primary(command, key) {
+        self.message = vec![match bindings.bind_primary(command, key) {
             Ok(Bound::Free) => format!("{} is now {shown}.", command.name()),
             Ok(Bound::Moved {
                 from,
@@ -172,18 +279,19 @@ impl ControlsScreen {
                 "! {shown} is the only key for {} and cannot be taken.",
                 conflict.owner.name()
             ),
-        });
+        }];
     }
 
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
-        let rows = self.rows(bindings);
+        let rows = self.rows();
         let count = rows.len();
         let read_only = self.mode == Mode::ReadOnly;
-        // Help has no messages, so it needs fewer spare rows.
-        let spare = if read_only { 6 } else { 8 };
+        // Room below the list for the message (up to four lines) and the footer; help has no
+        // messages.
+        let spare = if read_only { 6 } else { 12 };
         let panel = Panel::new(console, " Controls ", 60, count as i32 + spare);
-        // Leave room for the message and footer below the list.
-        let visible = (panel.body_rows() - 2).max(1) as usize;
+        let message_rows = if read_only { 0 } else { 6 };
+        let visible = (panel.body_rows() - message_rows).max(1) as usize;
         let first = if read_only {
             self.selected
         } else {
@@ -194,7 +302,7 @@ impl ControlsScreen {
             .iter()
             .filter_map(|row| match row {
                 Row::Command(c) => Some(c.name().chars().count()),
-                Row::Reset | Row::Back => None,
+                _ => None,
             })
             .max()
             .unwrap_or(0) as i32;
@@ -203,6 +311,13 @@ impl ControlsScreen {
             // Help has nothing to select.
             let selected = !read_only && i == self.selected;
             match row {
+                Row::Note(note) => {
+                    console.print(panel.inner_x(), y, note, TEXT_DIM);
+                }
+                Row::Blank => {}
+                Row::Header(context) => {
+                    console.print(panel.inner_x(), y, context.title(), ACCENT);
+                }
                 Row::Command(command) => {
                     let value = if selected && self.mode == Mode::Capture {
                         "press a key...".to_string()
@@ -211,8 +326,10 @@ impl ControlsScreen {
                     };
                     panel.row(console, y, selected, &command.name(), &value, label_w);
                 }
-                Row::Reset => panel.row(console, y, selected, "Reset all keys", "", label_w),
-                Row::Back => panel.row(console, y, selected, "Back", "", label_w),
+                Row::Reset | Row::Export | Row::Import | Row::Back => {
+                    let label = row.action().unwrap_or_default();
+                    panel.row(console, y, selected, label, "", label_w);
+                }
             }
         }
         if first > 0 {
@@ -222,39 +339,110 @@ impl ControlsScreen {
         if more {
             console.print(panel.x + panel.w - 3, panel.y + panel.h - 2, "↓", TEXT_DIM);
         }
-        let status_y = panel.y + panel.h - 3;
-        if self.mode == Mode::Capture {
-            let name = REBINDABLE[self.selected].name();
-            console.print(
-                panel.inner_x(),
-                status_y,
-                &format!("Press a key for \"{name}\". Esc cancels."),
-                ACCENT,
-            );
-        } else if let Some(message) = &self.message {
-            let color = if message.starts_with('!') {
+        if !read_only {
+            self.draw_message(console, &panel, bindings);
+        }
+        let keys = Hints::of(bindings);
+        let footer = if read_only {
+            let close = match bindings.key_name(KeyCommand::Help) {
+                Some(key) => format!("{key} or Esc close"),
+                None => "Esc close".to_string(),
+            };
+            let scroll = if first > 0 || more {
+                format!("{} scroll   ", keys.up_down())
+            } else {
+                String::new()
+            };
+            format!("{scroll}{close}")
+        } else {
+            format!("{} rebind   {} reset   Esc back", keys.confirm, keys.erase)
+        };
+        panel.footer(console, &footer);
+    }
+
+    /// The lines under the list: the capture prompt, the last action's message, or a warning
+    /// that a context holds a key twice (which loading resolves, so never for long).
+    fn draw_message(&self, console: &mut Console, panel: &Panel, bindings: &Bindings) {
+        let lines: Vec<String> = if self.mode == Mode::Capture {
+            let name = self
+                .selected_command()
+                .map_or_else(String::new, |c| c.name());
+            vec![format!("Press a key for \"{name}\". Esc cancels.")]
+        } else if !self.message.is_empty() {
+            self.message.clone()
+        } else if let Some((key, first, second)) = bindings.conflicts().first() {
+            vec![format!(
+                "! {} is bound to both {} and {} ({}).",
+                key.display(),
+                first.name(),
+                second.name(),
+                first.context().title()
+            )]
+        } else {
+            Vec::new()
+        };
+        // Each line in its own color: an import's summary, then its first problem.
+        let capture = self.mode == Mode::Capture;
+        let wrapped = lines.iter().flat_map(|l| {
+            let color = if capture || l.starts_with('!') {
                 ACCENT
             } else {
                 TEXT
             };
-            console.print(panel.inner_x(), status_y, message, color);
+            wrap_hard(l, panel.inner_w())
+                .into_iter()
+                .map(move |w| (w, color))
+        });
+        let top = panel.y + panel.h - 7;
+        for (i, (line, color)) in wrapped.take(4).enumerate() {
+            console.print(panel.inner_x(), top + i as i32, &line, color);
         }
-        let footer = if read_only {
-            let close = match bindings.keys_of(KeyCommand::Help).first() {
-                Some(key) => format!("{} or Esc close", key.display()),
-                None => "Esc close".to_string(),
-            };
-            let scroll = if first > 0 || more {
-                "↑↓ scroll   "
-            } else {
-                ""
-            };
-            format!("{scroll}{close}")
-        } else {
-            "Enter rebind   Del reset   Esc back".to_string()
-        };
-        panel.footer(console, &footer);
     }
+
+    /// Shows what an import from the browser's file picker did.
+    pub fn imported(&mut self, lines: Vec<String>) {
+        self.message = lines;
+    }
+}
+
+/// Applies a keymap file the browser's picker delivered (Import keys on the web) and shows the
+/// result on the controls screen, if it is still open. A no-op on the desktop, which reads the
+/// file at once.
+pub(super) fn receive_keymap(
+    mut bindings: ResMut<Bindings>,
+    mut stack: ResMut<super::screens::ScreenStack>,
+) {
+    let Some(picked) = keymap::take_picked() else {
+        return;
+    };
+    let mut changed = bindings.clone();
+    let lines = match picked.and_then(|text| keymap::import(&mut changed, &text)) {
+        Ok(report) => {
+            for warning in &report.warnings {
+                warn!("keymap: {warning}");
+            }
+            report.summary("the keymap")
+        }
+        Err(why) => vec![format!("! {why}")],
+    };
+    if changed.0 != bindings.0 {
+        *bindings = changed;
+    }
+    stack.keymap_imported(lines);
+}
+
+/// `text` wrapped to `width` cells, breaking words longer than that (a file's path).
+fn wrap_hard(text: &str, width: i32) -> Vec<String> {
+    let width = width.max(1) as usize;
+    let chunks = |line: String| {
+        let chars: Vec<char> = line.chars().collect();
+        let pieces: Vec<String> = chars.chunks(width).map(|c| c.iter().collect()).collect();
+        pieces
+    };
+    wrap(text, width as i32)
+        .into_iter()
+        .flat_map(chunks)
+        .collect()
 }
 
 /// A command's keys, primary first, separated by spaces.
@@ -292,49 +480,77 @@ mod tests {
         screen.handle(&press, b);
     }
 
+    /// Selects the row of `row` (it must be on the screen).
+    fn select(screen: &mut ControlsScreen, row: Row) {
+        screen.selected = screen.rows().iter().position(|r| *r == row).expect("a row");
+    }
+
+    fn message(screen: &ControlsScreen) -> String {
+        screen.message.join(" ")
+    }
+
     #[test]
     fn rebinding_replaces_the_primary_key() {
-        let (mut screen, mut b) = (ControlsScreen::default(), Bindings::default());
+        let (mut screen, mut b) = (
+            ControlsScreen::new(false, KeymapFile::Nowhere),
+            Bindings::default(),
+        );
+        // The first row selected is the first command, under its heading.
+        assert_eq!(screen.selected_command(), Some(KeyCommand::Move(Dir::N)));
         nav(&mut screen, &mut b, Nav::Enter);
         assert_eq!(screen.mode, Mode::Capture);
         key(&mut screen, &mut b, "w");
         assert_eq!(screen.mode, Mode::Browse);
         assert_eq!(b.keys_of(KeyCommand::Move(Dir::N))[0].display(), "w");
-        assert!(
-            screen
-                .message
-                .as_deref()
-                .is_some_and(|m| m.contains("now w"))
-        );
+        assert!(message(&screen).contains("now w"));
     }
 
     #[test]
     fn a_used_key_moves_and_the_message_says_what_moved() {
-        let (mut screen, mut b) = (ControlsScreen::default(), Bindings::default());
+        let (mut screen, mut b) = (
+            ControlsScreen::new(false, KeymapFile::Nowhere),
+            Bindings::default(),
+        );
         nav(&mut screen, &mut b, Nav::Enter);
         key(&mut screen, &mut b, "j");
-        let message = screen.message.clone().expect("a message");
-        assert_eq!(message, "j moved to Move north (was Move south).");
+        assert_eq!(message(&screen), "j moved to Move north (was Move south).");
         let j = KeyBinding::from_text("j").unwrap();
         assert_eq!(b.owner(&j), Some(KeyCommand::Move(Dir::N)));
         // Kick has one key: it is left with none, and the table shows that.
         let old = b.keys_of(KeyCommand::Kick)[0].display();
-        screen.selected = REBINDABLE
-            .iter()
-            .position(|&c| c == KeyCommand::Wait)
-            .unwrap();
+        select(&mut screen, Row::Command(KeyCommand::Wait));
         nav(&mut screen, &mut b, Nav::Enter);
         key(&mut screen, &mut b, &old);
         assert_eq!(
-            screen.message.as_deref(),
-            Some(format!("{old} moved to Wait a turn; Kick has no key.").as_str())
+            message(&screen),
+            format!("{old} moved to Wait a turn; Kick has no key.")
         );
         assert_eq!(key_list(&b, KeyCommand::Kick), "(none)");
     }
 
     #[test]
+    fn a_key_moves_only_within_its_context() {
+        let (mut screen, mut b) = (
+            ControlsScreen::new(false, KeymapFile::Nowhere),
+            Bindings::default(),
+        );
+        // `w` for Up on the menus leaves play's keys alone, and `k` stays Move north in play.
+        select(&mut screen, Row::Command(KeyCommand::MenuUp));
+        nav(&mut screen, &mut b, Nav::Enter);
+        key(&mut screen, &mut b, "w");
+        assert_eq!(message(&screen), "Up is now w.");
+        let w = KeyBinding::from_text("w").unwrap();
+        assert_eq!(b.owner_in(Context::Menu, &w), Some(KeyCommand::MenuUp));
+        assert_eq!(b.owner(&w), None);
+        assert_eq!(b.keys_of(KeyCommand::MenuUp)[1].display(), "k");
+    }
+
+    #[test]
     fn a_fixed_commands_key_is_refused() {
-        let (mut screen, mut b) = (ControlsScreen::default(), Bindings::default());
+        let (mut screen, mut b) = (
+            ControlsScreen::new(false, KeymapFile::Nowhere),
+            Bindings::default(),
+        );
         let before = b.0.clone();
         nav(&mut screen, &mut b, Nav::Enter);
         let press = Press {
@@ -346,7 +562,7 @@ mod tests {
         };
         screen.handle(&press, &mut b);
         assert_eq!(b.0, before);
-        let message = screen.message.expect("a message");
+        let message = message(&screen);
         assert!(
             message.starts_with('!') && message.contains("Cancel"),
             "{message}"
@@ -355,7 +571,10 @@ mod tests {
 
     #[test]
     fn escape_cancels_a_capture_without_leaving() {
-        let (mut screen, mut b) = (ControlsScreen::default(), Bindings::default());
+        let (mut screen, mut b) = (
+            ControlsScreen::new(false, KeymapFile::Nowhere),
+            Bindings::default(),
+        );
         nav(&mut screen, &mut b, Nav::Enter);
         assert!(!nav(&mut screen, &mut b, Nav::Back));
         assert_eq!(screen.mode, Mode::Browse);
@@ -364,19 +583,114 @@ mod tests {
 
     #[test]
     fn delete_resets_one_command_and_reset_row_resets_all() {
-        let (mut screen, mut b) = (ControlsScreen::default(), Bindings::default());
+        let (mut screen, mut b) = (
+            ControlsScreen::new(false, KeymapFile::Nowhere),
+            Bindings::default(),
+        );
         let before = b.to_map();
         nav(&mut screen, &mut b, Nav::Enter);
         key(&mut screen, &mut b, "w");
-        nav(&mut screen, &mut b, Nav::Delete);
+        nav(&mut screen, &mut b, Nav::Erase);
         assert_eq!(b.to_map(), before);
         nav(&mut screen, &mut b, Nav::Enter);
         key(&mut screen, &mut b, "w");
-        screen.selected = RESET_ROW;
+        select(&mut screen, Row::Reset);
         nav(&mut screen, &mut b, Nav::Enter);
         assert_eq!(b.to_map(), before);
-        screen.selected = BACK_ROW;
+        select(&mut screen, Row::Back);
         assert!(nav(&mut screen, &mut b, Nav::Enter));
+    }
+
+    #[test]
+    fn export_and_import_write_and_read_the_keymap() {
+        let dir = std::env::temp_dir().join(format!("warlock-controls-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let path = dir.join(keymap::FILE_NAME);
+        let mut screen = ControlsScreen::new(false, KeymapFile::Path(path.clone()));
+        let mut b = Bindings::default();
+        // Nothing to import yet: said, nothing changes.
+        select(&mut screen, Row::Import);
+        nav(&mut screen, &mut b, Nav::Enter);
+        assert!(message(&screen).starts_with("! No keymap at"), "{screen:?}");
+        // Rebind, export, reset, import: the rebinding is back.
+        select(&mut screen, Row::Command(KeyCommand::Descend));
+        nav(&mut screen, &mut b, Nav::Enter);
+        key(&mut screen, &mut b, "D");
+        select(&mut screen, Row::Export);
+        nav(&mut screen, &mut b, Nav::Enter);
+        assert_eq!(
+            message(&screen),
+            format!("Keys exported to {}.", path.display())
+        );
+        let customized = b.to_map();
+        select(&mut screen, Row::Reset);
+        nav(&mut screen, &mut b, Nav::Enter);
+        assert_ne!(b.to_map(), customized);
+        select(&mut screen, Row::Import);
+        nav(&mut screen, &mut b, Nav::Enter);
+        assert_eq!(b.to_map(), customized);
+        assert_eq!(
+            message(&screen),
+            "Imported warlock-keys.toml: Go down stairs changed."
+        );
+        // Where keys are not stored, both say so.
+        let mut nowhere = ControlsScreen::new(false, KeymapFile::Nowhere);
+        select(&mut nowhere, Row::Export);
+        nav(&mut nowhere, &mut b, Nav::Enter);
+        assert!(message(&nowhere).starts_with('!'));
+    }
+
+    #[test]
+    fn the_selection_skips_headings_and_wraps_around() {
+        let (mut screen, mut b) = (
+            ControlsScreen::new(false, KeymapFile::Nowhere),
+            Bindings::default(),
+        );
+        let first = screen.selected;
+        // Up from the first command wraps to Back, the last row; down again comes back.
+        nav(&mut screen, &mut b, Nav::Up);
+        assert_eq!(screen.rows()[screen.selected], Row::Back);
+        nav(&mut screen, &mut b, Nav::Up);
+        assert_eq!(screen.rows()[screen.selected], Row::Import);
+        nav(&mut screen, &mut b, Nav::Down);
+        nav(&mut screen, &mut b, Nav::Down);
+        assert_eq!(screen.selected, first);
+        // Down through a whole context lands on the next one's first command.
+        select(&mut screen, Row::Command(KeyCommand::Quit));
+        nav(&mut screen, &mut b, Nav::Down);
+        assert_eq!(screen.selected_command(), Some(KeyCommand::NextTarget));
+        for _ in 0..500 {
+            nav(&mut screen, &mut b, Nav::Down);
+            assert!(screen.rows()[screen.selected].selectable());
+        }
+    }
+
+    #[test]
+    fn commands_are_grouped_by_context_and_dev_keys_only_where_they_work() {
+        let plain = ControlsScreen::new(false, KeymapFile::Nowhere).rows();
+        let headers: Vec<Context> = (plain.iter())
+            .filter_map(|r| match r {
+                Row::Header(c) => Some(*c),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(headers, Context::ALL[..Context::ALL.len() - 1]);
+        assert!(!plain.contains(&Row::Command(KeyCommand::RevealMap)));
+        // Every rebindable command but the developer keys, each under its context's heading.
+        let mut context = None;
+        for row in &plain {
+            match row {
+                Row::Header(c) => context = Some(*c),
+                Row::Command(command) => assert_eq!(Some(command.context()), context),
+                _ => {}
+            }
+        }
+        for command in REBINDABLE.iter().filter(|c| c.context() != Context::Dev) {
+            assert!(plain.contains(&Row::Command(*command)), "{command:?}");
+        }
+        let dev = ControlsScreen::new(true, KeymapFile::Nowhere).rows();
+        assert!(dev.contains(&Row::Header(Context::Dev)));
+        assert!(dev.contains(&Row::Command(KeyCommand::RevealMap)));
     }
 
     #[test]
@@ -385,8 +699,12 @@ mod tests {
         for rows in [40, 14, 6] {
             let mut console = Console::default();
             console.resize(70, rows);
-            for mut screen in [ControlsScreen::default(), ControlsScreen::help()] {
-                for selected in [0, 7, BACK_ROW, 40] {
+            for mut screen in [
+                ControlsScreen::new(true, KeymapFile::Nowhere),
+                ControlsScreen::help(true),
+            ] {
+                let last = screen.rows().len() - 1;
+                for selected in [0, 7, 40, last] {
                     screen.selected = selected;
                     screen.draw(&mut console, &b);
                 }
@@ -402,40 +720,34 @@ mod tests {
     }
 
     #[test]
-    fn help_lists_every_bound_command_and_changes_nothing() {
+    fn help_lists_every_command_by_context_and_changes_nothing() {
         let mut b = Bindings::default();
-        b.add_dev_keys();
-        let mut help = ControlsScreen::help();
-        let rows = help.rows(&b);
-        assert_eq!(
-            rows[..REBINDABLE.len()],
-            REBINDABLE
-                .iter()
-                .copied()
-                .map(Row::Command)
-                .collect::<Vec<_>>()[..]
-        );
+        let mut help = ControlsScreen::help(true);
+        let rows = help.rows();
         for extra in [
             KeyCommand::Cancel,
             KeyCommand::RevealMap,
             KeyCommand::Snapshot,
+            KeyCommand::MenuUp,
+            KeyCommand::Loose,
         ] {
             assert!(rows.contains(&Row::Command(extra)), "{extra:?}");
         }
         assert!(!rows.contains(&Row::Reset) && !rows.contains(&Row::Back));
 
         let before = b.0.clone();
-        for nav in [Nav::Enter, Nav::Delete, Nav::Down, Nav::Enter] {
+        for nav in [Nav::Enter, Nav::Erase, Nav::Down, Nav::Enter] {
             assert!(!help.handle(&Press::nav(nav), &mut b));
         }
         assert_eq!(b.0, before);
         assert_eq!(help.mode, Mode::ReadOnly);
 
         let mut console = Console::default();
-        console.resize(80, 70);
+        console.resize(80, 130);
         help.selected = 0;
         help.draw(&mut console, &b);
-        let text: Vec<String> = (0..70).map(|y| line(&console, y)).collect();
+        let text: Vec<String> = (0..130).map(|y| line(&console, y)).collect();
+        let has = |needle: &str| text.iter().any(|l| l.contains(needle));
         assert!(
             text.iter()
                 .any(|l| l.contains("Move north") && l.contains("k Num8 ↑"))
@@ -444,11 +756,16 @@ mod tests {
             text.iter()
                 .any(|l| l.contains("Cancel") && l.contains("Esc"))
         );
-        assert!(text.iter().any(|l| l.contains("? or Esc close")));
-        assert!(
-            !text.iter().any(|l| l.contains("│ >")),
-            "nothing is selected"
-        );
+        for needle in [
+            "? or Esc close",
+            "Esc always backs out",
+            "Letters (a-z)",
+            "Menus and screens",
+            "Aiming",
+        ] {
+            assert!(has(needle), "{needle}");
+        }
+        assert!(!has("│ >"), "nothing is selected");
     }
 
     #[test]
@@ -461,21 +778,21 @@ mod tests {
             text: Some('?'),
             shift: false,
         };
-        assert!(ControlsScreen::help().handle(&question, &mut b));
-        assert!(ControlsScreen::help().handle(&Press::nav(Nav::Back), &mut b));
+        assert!(ControlsScreen::help(false).handle(&question, &mut b));
+        assert!(ControlsScreen::help(false).handle(&Press::nav(Nav::Back), &mut b));
         // The rebinding screen takes `?` as an ordinary key.
-        assert!(!ControlsScreen::default().handle(&question, &mut b));
+        assert!(!ControlsScreen::new(false, KeymapFile::Nowhere).handle(&question, &mut b));
     }
 
     #[test]
     fn help_scrolls_within_the_list() {
         let mut b = Bindings::default();
-        let mut help = ControlsScreen::help();
+        let mut help = ControlsScreen::help(false);
         nav(&mut help, &mut b, Nav::Up);
         assert_eq!(help.selected, 0);
-        for _ in 0..100 {
+        for _ in 0..200 {
             nav(&mut help, &mut b, Nav::Down);
         }
-        assert_eq!(help.selected, help.rows(&b).len() - 1);
+        assert_eq!(help.selected, help.rows().len() - 1);
     }
 }

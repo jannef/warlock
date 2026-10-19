@@ -159,14 +159,14 @@ impl Aim {
     }
 
     /// The prompt in the message line: what is aimed, and how. `ready` names the missile ("an
-    /// arrow"); the keys are the bindings' (`f`, `t`, Tab).
-    pub fn prompt(&self, ready: &str, (confirm, next): (&str, &str)) -> String {
+    /// arrow"); the keys are the bindings' (Enter, `t`, Tab).
+    pub fn prompt(&self, ready: &str, (loose, confirm, next): (&str, &str, &str)) -> String {
         let (verb, does) = match self.kind {
             AimKind::Fire => ("Fire", "fires"),
             AimKind::Throw(_) => ("Throw", "throws"),
         };
         format!(
-            "{verb} {ready}: {next} or direction keys aim, Enter or {confirm} {does}, Esc cancels."
+            "{verb} {ready}: {next} or direction keys aim, {loose} or {confirm} {does}, Esc cancels."
         )
     }
 }
@@ -412,7 +412,7 @@ mod tests {
             kind: AimKind::Fire,
             at: Pos::new(1, 1),
         };
-        let text = aim.prompt("a flaming arrow", ("f", "Tab"));
+        let text = aim.prompt("a flaming arrow", ("Enter", "f", "Tab"));
         assert_eq!(
             text,
             "Fire a flaming arrow: Tab or direction keys aim, Enter or f fires, Esc cancels."
@@ -433,7 +433,7 @@ mod tests {
             kind: AimKind::Throw(0),
             ..aim
         };
-        let text = throw.prompt("a dagger", ("t", "Tab"));
+        let text = throw.prompt("a dagger", ("Enter", "t", "Tab"));
         assert!(text.starts_with("Throw a dagger:"), "{text}");
         assert!(text.contains("Enter or t throws"), "{text}");
         assert_eq!(
