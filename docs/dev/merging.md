@@ -79,7 +79,8 @@ conflict every time; two that insert at different places merge cleanly. So:
   and table order. Moving an existing entry is a deliberate change: say so in the PR.
 - **Content that churns is a directory**, one file per entity: `assets/data/creatures/`,
   `objects/`, `materials/`, `affixes/` (`docs/dev/content.md`). A new creature is a new file; a
-  renamed id is a renamed file; never put two unrelated entities in one file. A table's ids are
+  renamed id is a renamed file; never put two unrelated entities in one file; the affix settings
+  (`[rarity]`, `[magic]`, `[rare]`, `[names]`) live only in `data/affixes.toml`. A table's ids are
   indices in path order, so two PRs adding files both change the ids after theirs: that is the
   per-release save bump's business, not the PR's.
 - **A feature's dispatch lives in its own module**: one match arm in `world/mod.rs::player_acts`

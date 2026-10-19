@@ -26,5 +26,5 @@ rule: presentation reads an item's affixes only through `Stack::known_magic` (no
 identified; `Stack::magic` is crate-private), and names only through `Stack::describe` /
 `title`, so unidentified affixes cannot leak; dev dumps use `describe_truth`. A new effect is a
 variant of `Effect` (id, value range, local/global, `allowed_on`), its reader in one rule, a
-phrase in `describe.rs`, and a wiki word in `xtask/src/wiki.rs`. Affixes are saved by id, so
+phrase in `describe.rs`, and a wiki word in `xtask/src/wiki/magic.rs`. Affixes are saved by id, so
 adding affixes keeps saves; their values and tiers are checked on load.
