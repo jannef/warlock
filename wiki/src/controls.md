@@ -64,6 +64,8 @@ describes what you know about the cell under it:
   (hostile, badly wounded), wielding a spear, on stone floor.";
 - what you remember there, if you cannot see it now: the terrain and the objects you saw on it;
 - for stairs and the places on the overworld, where they lead;
+- the [special room](special-rooms.md) the ground lies in, once you have been inside it, as in
+  "A stone floor in an echoing hall.";
 - a sound you heard there this turn ([Hearing](hearing.md));
 - or "You don't know what is there."
 

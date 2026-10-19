@@ -78,7 +78,7 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 | Dump a replay's end state | `... dump --replay runs/x.json [--actions "wait"] --format ascii\|json [--state]` |
 | Create a replay | `... replay --create --scenario showcase --actions "move:N wait" -o runs/x.json` |
 | Verify a replay | `... replay --verify runs/x.json` (exit 1 and first diverging step on mismatch) |
-| Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor; also local areas, `--level local:49,23`) |
+| Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor; a special room's floor by its effect's letter; also local areas, `--level local:49,23`) |
 
 Dump layers beyond the map ones: `inventory`, `equipment`, `stats`, and `skills` (the player's
 trained skills, `Stealth 17`) from perception; `actors` (dev-only: every actor's hit points,
@@ -108,9 +108,12 @@ carries and weighs, worn and wielded things marked, their burden and its thresho
 (the player's race, gender, and class, then their own scores), `truth`
 (ground truth, **dev-only**), `actors` (every actor on the level with its hit points and
 Defence, its weight, what it carries and of that wears and wields, its burden and carrying
-limit, and its stats as score/potential, **dev-only**). The header line has the player's `hp
+limit, and its stats as score/potential, **dev-only**), `rooms` (the level's special rooms:
+their plain ground as the effect's `mark`, then a line per room, **dev-only**). The header line
+has the player's `hp
 17/17` (and `dead` once the run has ended); JSON dumps add `hp`, `defence`, `burden` (`level`,
-`limit`), `death`, and each seen actor's `health`. Replay
+`limit`), `death`, each seen actor's `health`, and `room` (the special room the player stands in,
+if they know it). Replay
 files are JSON
 `{game_version, scenario, seed, character, steps:[{action, hash}]}` (`character` =
 `{race, gender, class}`, left out for a run without one; a replay without it starts as the
@@ -497,6 +500,21 @@ states carry their own ambient and placed lights). Generation is integer-only; a
 validation is regenerated from the next derived stream. The insta snapshots in
 `src/mapgen/snapshots/` and `src/mapgen/local/snapshots/` flag any change in generator output:
 review the maps in the diff, then accept them deliberately.
+
+Special rooms (spec §7 "Special rooms", M25) are data: `data/room_effects.toml`
+(`content/room_effect.rs`: effects, the per-room `chance`, `per_level`). Generators make them last
+(`mapgen/special.rs`, from the level's map stream, so levels without one are unchanged; rooms
+levels: a room's rectangle, walls included; caves: a floor blob away from the arrival), and level
+files mark them (`[[room]] effect area`; the hub's stairs nook is a sanctuary). They live in
+`LevelState::rooms` (saved, with whether the player has been in each), and the rules ask one
+question, `LevelState::room_effect_at` (public: `World::room_effect_at`): perception light and
+creature sight (`room_shade` on every part of a cell's light, `room_glow` in the base light —
+change `perception.rs` and `sight.rs` together; `special_rooms_keep_the_light_invariants` checks
+they agree), noise (`noise::noise`), regeneration (`World::regen_rate`, the one pace hook), and
+hostile creatures shunning a sanctuary (`World::shuns` in `ai.rs`). A flooded room's slower,
+louder steps come from its floor terrain (`shallow_water`). `enter_room` (world/mod.rs) says the
+first-entry message; `PerceptionView::room` gives look mode the rooms the player knows;
+`PerceptionView::light_kept` lets the renderer dim its own transient light in a shadowed room.
 
 Local areas (spec §3, §7) are generated in `mapgen/local/`: `mod.rs` (`Setting`: the cell's
 landscape and its neighbors' roads, rivers, lakes, and land, read from the overworld; per-landscape

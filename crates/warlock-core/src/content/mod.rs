@@ -22,6 +22,7 @@ mod object;
 mod overworld;
 mod particles;
 mod race;
+mod room_effect;
 mod scenario;
 mod size;
 mod skill;
@@ -58,6 +59,7 @@ pub use object::{MAX_BONUS, MAX_PLACED, ObjectDef, ObjectId, article};
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use race::{RaceDef, Races};
+pub use room_effect::{RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom};
 pub use scenario::ScenarioDef;
 pub use size::{CARRY, MEDIUM, SizeDef};
 pub use skill::{SkillBook, SkillDef};
@@ -215,15 +217,17 @@ struct LegendFile {
 /// `data/lights.toml`, `data/vision.toml`, `data/factions.toml`, `data/dungeons.toml`,
 /// `data/calendar.toml`, `data/sky.toml`, `data/materials.toml`, `data/objects.toml`,
 /// `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
-/// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, `data/horoscope.toml`, and
-/// `data/effects.toml` are optional (without effects, spell effects are not drawn). Without vision
+/// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, `data/horoscope.toml`,
+/// `data/effects.toml`, and `data/room_effects.toml` are optional (without effects, spell effects
+/// are not drawn). Without vision
 /// profiles, a single `normal` profile that needs no light is used, so content without lighting
 /// stays fully visible; without sizes, everything is medium; without factions, everyone is neutral; without a calendar, months are numbered;
 /// without a sky file there are no moons; without an objects file there are no objects; without a
 /// weather file the sky is always clear; without an actions file every action costs 1000;
 /// without a slots file nothing can be worn or wielded; without races or classes there is no
 /// character to choose, and scenarios give the player's eyes and stats themselves; without
-/// skills nobody is trained in anything; without a horoscope, characters are born under no sign.
+/// skills nobody is trained in anything; without a horoscope, characters are born under no sign;
+/// without room effects there are no special rooms.
 #[derive(Debug)]
 pub struct Content {
     terrain: Vec<TerrainDef>,
@@ -260,6 +264,8 @@ pub struct Content {
     horoscope: Option<Horoscope>,
     /// Spell effects, in `data/effects.toml` order: presentation only.
     effects: Vec<EffectDef>,
+    /// Special rooms' effects (`data/room_effects.toml`).
+    room_effects: RoomEffects,
 }
 
 impl Content {
@@ -299,6 +305,7 @@ impl Content {
             experience: Experience::default(),
             horoscope: None,
             effects: Vec::new(),
+            room_effects: RoomEffects::default(),
         };
         let path = "data/calendar.toml";
         if let Some(text) = files.get_optional(path) {
@@ -346,6 +353,14 @@ impl Content {
             content.horoscope = Some(Horoscope::parse(path, text)?);
         }
         content.load_terrain(files)?;
+        let path = "data/room_effects.toml";
+        if let Some(text) = files.get_optional(path) {
+            let terrain = |name: &str| {
+                let id = content.terrain_id(name)?;
+                Some((id, content.terrain(id)))
+            };
+            content.room_effects = RoomEffects::parse(path, text, terrain)?;
+        }
         content.load_factions(files)?;
         content.load_creatures(files)?;
         content.load_objects(files)?;
@@ -897,11 +912,11 @@ impl Content {
     }
 
     /// A stable hash (64-bit FNV-1a) of the ordered terrain, creature, level, light, dungeon,
-    /// object, slot, and skill ids.
+    /// object, slot, skill, and room effect ids.
     ///
-    /// `TerrainId`, `CreatureId`, `LightId`, `ObjectId`, `SlotId`, and `SkillId` are indices, so a
-    /// save is only meaningful for content with the same ids in the same order; saves record this
-    /// fingerprint to detect a mismatch.
+    /// `TerrainId`, `CreatureId`, `LightId`, `ObjectId`, `SlotId`, `SkillId`, and `RoomEffectId`
+    /// are indices, so a save is only meaningful for content with the same ids in the same order;
+    /// saves record this fingerprint to detect a mismatch.
     pub fn fingerprint(&self) -> u64 {
         let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
         let mut feed = |bytes: &[u8]| {
@@ -909,7 +924,7 @@ impl Content {
                 hash = (hash ^ u64::from(b)).wrapping_mul(0x0000_0100_0000_01b3);
             }
         };
-        let groups: [Vec<&str>; 8] = [
+        let groups: [Vec<&str>; 9] = [
             self.terrain.iter().map(|t| t.id.as_str()).collect(),
             self.creatures.iter().map(|c| c.id.as_str()).collect(),
             self.levels.keys().map(String::as_str).collect(),
@@ -918,6 +933,9 @@ impl Content {
             self.objects.iter().map(|o| o.id.as_str()).collect(),
             self.slots.iter().map(|s| s.id.as_str()).collect(),
             self.skills.list.iter().map(|s| s.id.as_str()).collect(),
+            (self.room_effects.defs().iter())
+                .map(|e| e.id.as_str())
+                .collect(),
         ];
         for ids in groups {
             for id in ids {
@@ -1221,6 +1239,17 @@ impl Content {
     /// The weather's chances and effects (always clear without `data/weather.toml`).
     pub fn climate(&self) -> &Climate {
         &self.climate
+    }
+
+    /// The effects of special rooms and how often generated levels get them
+    /// (`data/room_effects.toml`; none without it).
+    pub fn room_effects(&self) -> &RoomEffects {
+        &self.room_effects
+    }
+
+    /// The effect `id` of a special room.
+    pub fn room_effect(&self, id: RoomEffectId) -> &RoomEffectDef {
+        self.room_effects.get(id)
     }
 
     /// What every action costs (`data/actions.toml`; 1000 each without it).
