@@ -21,6 +21,14 @@
 //! position, over the cells in its line of sight), and the light of a burning missile that has
 //! landed in the rules but is still flying on screen is held back until it arrives.
 //!
+//! Spell effects ([`SpellLights`], spec §4.8 "Spell effects") light the scene the same way, in
+//! any color, and may darken it: while a bright effect peaks, everything but its own light (base
+//! light, every source, transient lights, darkvision's glow) is scaled down by
+//! [`SpellLights::dim`], and so is the readability floor (here for free glyphs,
+//! [`VisualLight::keep`]; in the shader for the map, which also dims the cells it draws unlit,
+//! through the map's `dim` parameter). The effect's own light is left out of the dimming, so it
+//! dominates the view.
+//!
 //! Creature shadows ([`super::shadows`], visual only as well) take part of each source's
 //! contribution away behind the creatures it lights. The shaded light is left out of what is
 //! drawn but not out of what darkvision measures, so darkvision's glow never brightens a shadow.
@@ -41,7 +49,7 @@ use bevy::prelude::*;
 use bevy::render::render_resource::Extent3d;
 use bevy::shader::load_shader_library;
 use warlock_core::Pos;
-use warlock_core::content::LightId;
+use warlock_core::content::{LightId, MAX_DARKEN};
 use warlock_core::fov::radius2;
 use warlock_core::light::Light;
 use warlock_core::perception::{CellView, PerceptionView};
@@ -88,6 +96,7 @@ impl Plugin for LightingPlugin {
         app.init_resource::<VisualLight>()
             .init_resource::<Shadows>()
             .init_resource::<Transients>()
+            .init_resource::<SpellLights>()
             .add_systems(PostUpdate, upload.before(super::upload));
     }
 }
@@ -131,8 +140,43 @@ pub struct Transients {
     pub held: Vec<(Pos, LightId)>,
 }
 
+/// A spell effect's light this frame: a point light of any color. Visual only.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SpellLight {
+    /// Where it is, in level cells: a cell's center is its position plus one half.
+    pub at: Vec2,
+    /// Red, green, blue at full strength there: 1.0 = fully lit, more = overbright.
+    pub rgb: Vec3,
+    /// Reach in cells; it falls off like gameplay light.
+    pub radius: i32,
+}
+
+/// Spell effects' light this frame and how much they darken everything else (spec §4.8 "Spell
+/// effects"): `dim` 0 is none; 0.6 makes the rest of the view look 60 % darker. Written by the
+/// spell effects (`ui::spells`) every frame.
+#[derive(Resource, Debug, Default, Clone, PartialEq)]
+pub struct SpellLights {
+    pub lights: Vec<SpellLight>,
+    pub dim: f32,
+    /// The cells the playing effects were seen on, sorted: open, so their light shines through
+    /// them even where the player saw them only by that light (unknown, dark cells).
+    pub open: Vec<Pos>,
+}
+
+/// The gamma darkening works in: `dim` is how much darker things look on screen (sRGB-like), so
+/// the share of linear light kept is `(1 − dim)^DIM_GAMMA`.
+const DIM_GAMMA: f32 = 2.2;
+
+impl SpellLights {
+    /// The share of every other light (linear) kept: `(1 − dim)^2.2`, `dim` at most
+    /// [`MAX_DARKEN`].
+    pub fn keep(&self) -> f32 {
+        (1.0 - self.dim.clamp(0.0, MAX_DARKEN)).powf(DIM_GAMMA)
+    }
+}
+
 /// Visual light for the map grid, recomposited every frame.
-#[derive(Resource, Debug, Default)]
+#[derive(Resource, Debug)]
 pub struct VisualLight {
     /// Level position of the first cell: [`MARGIN`] cells up and left of the map grid's (0, 0).
     origin: IVec2,
@@ -141,8 +185,23 @@ pub struct VisualLight {
     /// Row-major; [`CellLight::DARK`] where not [`LIT`].
     cells: Vec<CellLight>,
     flags: Vec<u8>,
+    /// The share of light other than spell effects' kept while they darken the view.
+    keep: f32,
     /// Set when the light changed and needs uploading.
     dirty: bool,
+}
+
+impl Default for VisualLight {
+    fn default() -> Self {
+        Self {
+            origin: IVec2::ZERO,
+            size: UVec2::ZERO,
+            cells: Vec::new(),
+            flags: Vec::new(),
+            keep: 1.0,
+            dirty: false,
+        }
+    }
 }
 
 impl VisualLight {
@@ -159,16 +218,18 @@ impl VisualLight {
         time: Option<f32>,
     ) {
         let none = Transients::default();
-        self.composite_with(view, shadows, &none, origin, size, time);
+        let spells = SpellLights::default();
+        self.composite_with(view, shadows, (&none, &spells), origin, size, time);
     }
 
-    /// [`VisualLight::composite`] with this frame's `transients`: moving lights added, held
-    /// sources left out.
+    /// [`VisualLight::composite`] with this frame's transient lights (moving lights added, held
+    /// sources left out) and spell effects' lights (added, and everything else dimmed by their
+    /// darkening).
     pub fn composite_with(
         &mut self,
         view: &PerceptionView<'_>,
         shadows: &Shadows,
-        transients: &Transients,
+        (transients, spells): (&Transients, &SpellLights),
         origin: IVec2,
         size: UVec2,
         time: Option<f32>,
@@ -238,7 +299,7 @@ impl VisualLight {
                 None => Modulation::STEADY,
             };
             let color = light_vec(preset.color);
-            for (p, share) in transient_cells(view, light.at, preset.radius) {
+            for (p, share) in transient_cells(view, light.at, preset.radius, &[]) {
                 if let Some(i) = index(p)
                     && flags[i] & LIT != 0
                 {
@@ -251,6 +312,23 @@ impl VisualLight {
             }
         }
 
+        // Spell effects' light: steady, and never dimmed by their darkening. It is far brighter
+        // than any lamp, so it falls off more softly (the square of the gameplay falloff), or its
+        // reach would show as an edge.
+        let mut bright = vec![Vec3::ZERO; n];
+        for light in &spells.lights {
+            for (p, share) in transient_cells(view, light.at, light.radius, &spells.open) {
+                if let Some(i) = index(p)
+                    && flags[i] & LIT != 0
+                {
+                    let light = light.rgb * share * share;
+                    sums[i] += light.extend(0.0);
+                    bright[i] += light;
+                }
+            }
+        }
+        let keep = spells.keep();
+
         let vision = view.vision();
         let reach2 = radius2(vision.darkvision).max(1) as f32;
         let threshold = f32::from(vision.threshold);
@@ -261,8 +339,10 @@ impl VisualLight {
                 }
                 let sum = sums[i];
                 let rgb = drawn[i].truncate() + UV_TINT * drawn[i].w;
-                let gain = if gains[i].y > 0.0 {
-                    gains[i].x / gains[i].y
+                // Darkened light weighs less; a spell's light counts as steady.
+                let weight = gains[i] * keep + Vec2::splat(bright[i].element_sum());
+                let gain = if weight.y > 0.0 {
+                    weight.x / weight.y
                 } else {
                     1.0
                 };
@@ -281,9 +361,14 @@ impl VisualLight {
                         ..CellLight::DARK
                     },
                 };
-                CellLight { gain, ..light }
+                CellLight {
+                    rgb: light.rgb * keep + bright[i],
+                    gain,
+                    ..light
+                }
             })
             .collect();
+        self.keep = keep;
 
         if (origin, size) != (self.origin, self.size) || cells != self.cells || flags != self.flags
         {
@@ -292,9 +377,17 @@ impl VisualLight {
                 size,
                 cells,
                 flags,
+                keep,
                 dirty: true,
             };
         }
+    }
+
+    /// The share of light (and of the readability floor) kept while spell effects darken the
+    /// view; 1 when they do not. Free glyphs are lit with their floor scaled by it, as the map
+    /// shader does.
+    pub fn keep(&self) -> f32 {
+        self.keep
     }
 
     fn flags_at(&self, cell: IVec2) -> u8 {
@@ -341,14 +434,21 @@ impl VisualLight {
 /// The cells a light at `at` (level cells, fractional) of `radius` reaches, each with its share
 /// of the light: the gameplay falloff, `(R² − d²) / R²` with `R² = radius² + radius`, from the
 /// light to the cell's center, over the cells it has a line of sight to through terrain the
-/// player knows to be transparent (an opaque cell takes the light of its face, like a wall).
-fn transient_cells(view: &PerceptionView<'_>, at: Vec2, radius: i32) -> Vec<(Pos, f32)> {
+/// player knows to be transparent (an opaque cell takes the light of its face, like a wall), or
+/// that is among the `open` cells (sorted): cells the player saw a spell effect on, in the dark
+/// too, which are open by the rules.
+fn transient_cells(
+    view: &PerceptionView<'_>,
+    at: Vec2,
+    radius: i32,
+    open: &[Pos],
+) -> Vec<(Pos, f32)> {
     let content = view.content();
     let home = Pos::new(at.x.floor() as i32, at.y.floor() as i32);
     let r2 = radius2(radius) as f32;
     let clear = |p: Pos| match view.cell(p) {
         CellView::Visible(t) | CellView::Remembered(t) => content.terrain(t).transparent,
-        CellView::Unknown => false,
+        CellView::Unknown => open.binary_search(&p).is_ok(),
     };
     let mut cells = Vec::new();
     for y in home.y - radius..=home.y + radius {
@@ -472,13 +572,15 @@ pub fn update(
     effects: Res<Effects>,
     shadows: Res<Shadows>,
     transients: Res<Transients>,
+    spells: Res<SpellLights>,
     mut light: ResMut<VisualLight>,
 ) {
     let view = game.world.perception();
     let size = UVec2::new(grid.console.cols(), grid.console.rows()) + 2 * MARGIN as u32;
     let time = effects.flicker.then_some(visual.seconds);
     let origin = grid.level_origin - MARGIN;
-    light.composite_with(&view, &shadows, &transients, origin, size, time);
+    let extra = (&*transients, &*spells);
+    light.composite_with(&view, &shadows, extra, origin, size, time);
 }
 
 /// Writes the visual light into the map material's light textures when it changed.
@@ -825,6 +927,50 @@ mod tests {
         }
         assert!(darker > 0, "the player casts shadows");
         assert_eq!(shaded.sample(center(player)), plain.sample(center(player)));
+    }
+
+    #[test]
+    fn a_spell_lights_its_surroundings_and_darkens_everything_else() {
+        // The start room, lit by its sconces; a spell's light at (11, 13), darkening the rest.
+        let world = showcase(&[]);
+        let view = world.perception();
+        let size = UVec2::new(view.width() as u32, view.height() as u32);
+        let plain = composite_level(&view, &Shadows::default(), None);
+        let spells = SpellLights {
+            lights: vec![SpellLight {
+                at: Vec2::new(11.5, 13.5),
+                rgb: Vec3::new(4.0, 2.0, 0.5),
+                radius: 4,
+            }],
+            dim: 0.6,
+            open: Vec::new(),
+        };
+        let keep = spells.keep();
+        assert!(
+            (keep - 0.4f32.powf(2.2)).abs() < 1e-6,
+            "60 % darker on screen"
+        );
+        let mut lit = VisualLight::default();
+        let extra = (&Transients::default(), &spells);
+        lit.composite_with(&view, &Shadows::default(), extra, IVec2::ZERO, size, None);
+        assert_eq!(lit.keep(), keep);
+        let at = |l: &VisualLight, x: f32, y: f32| l.sample(Vec2::new(x, y)).expect("lit").rgb;
+        // Out of its reach, everything is darkened; at it, its own light dominates.
+        let far = (at(&lit, 2.5, 18.5), at(&plain, 2.5, 18.5));
+        assert!((far.0 - far.1 * keep).length() < 1e-4, "{far:?}");
+        let near = (at(&lit, 11.5, 13.5), at(&plain, 11.5, 13.5));
+        assert!(near.0.x > near.1.x * keep + 3.9, "{near:?}");
+        assert!(near.0.x > near.1.x, "brighter than without it");
+        // No darkening: nothing changes but where it shines.
+        let mut undimmed = VisualLight::default();
+        let calm = SpellLights {
+            dim: 0.0,
+            ..spells.clone()
+        };
+        let extra = (&Transients::default(), &calm);
+        undimmed.composite_with(&view, &Shadows::default(), extra, IVec2::ZERO, size, None);
+        assert_eq!(at(&undimmed, 2.5, 18.5), at(&plain, 2.5, 18.5));
+        assert_eq!(undimmed.keep(), 1.0);
     }
 
     #[test]

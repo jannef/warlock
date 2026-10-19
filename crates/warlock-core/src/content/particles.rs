@@ -29,8 +29,14 @@ pub enum ParticleTrigger {
     Attack,
     /// Objects only: continuously, `rate` particles per second, from the object while it flies
     /// (a burning arrow's embers). An object's `ambient` emitters run while it lies in view, on
-    /// top of its pile.
+    /// top of its pile. Spell effects too: from a burst's projectile while it flies.
     Flight,
+    /// Spell effects only: a burst of `count` particles from each affected cell as the effect
+    /// reaches it (a fireball's embers, a bolt's sparks).
+    Impact,
+    /// Spell effects only: a burst of `count` particles from each affected cell as the effect
+    /// starts to fade (a fireball's smoke).
+    Linger,
 }
 
 impl ParticleTrigger {
@@ -43,6 +49,8 @@ impl ParticleTrigger {
             ParticleTrigger::Obstacle => "obstacle",
             ParticleTrigger::Attack => "attack",
             ParticleTrigger::Flight => "flight",
+            ParticleTrigger::Impact => "impact",
+            ParticleTrigger::Linger => "linger",
         }
     }
 }
@@ -152,7 +160,11 @@ impl ParticleEmitter {
             ParticleTrigger::Obstacle | ParticleTrigger::Flight if self.rate <= 0.0 => Err(
                 format!("{} particles need a positive `rate`", self.on.name()),
             ),
-            ParticleTrigger::Step | ParticleTrigger::Toggle | ParticleTrigger::Attack
+            ParticleTrigger::Step
+            | ParticleTrigger::Toggle
+            | ParticleTrigger::Attack
+            | ParticleTrigger::Impact
+            | ParticleTrigger::Linger
                 if self.count == 0 =>
             {
                 Err("particle bursts need a positive `count`".into())

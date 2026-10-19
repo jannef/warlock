@@ -17,6 +17,7 @@ enum Effect {
     Distortion,
     Particles,
     ScreenFades,
+    ScreenShake,
     Weather,
 }
 
@@ -30,6 +31,7 @@ impl Effect {
             Effect::Distortion => "Heat haze",
             Effect::Particles => "Particles",
             Effect::ScreenFades => "Screen fades",
+            Effect::ScreenShake => "Screen shake",
             Effect::Weather => "Weather",
         }
     }
@@ -38,11 +40,12 @@ impl Effect {
         match self {
             Effect::GlyphAnimation => "Water waves, pulsing altars, sounds rippling in.",
             Effect::Flicker => "Firelight flickers and drifts in hue; steady when off.",
-            Effect::Motion => "Creatures slide between cells and the camera eases; off snaps.",
+            Effect::Motion => "Slides, the camera, and spell effects; off, they snap.",
             Effect::Glow => "Bloom around glowing glyphs such as lava and crystals.",
             Effect::Distortion => "Heat haze rising over lava and fires.",
             Effect::Particles => "Sparks, embers, splashes, and dust.",
-            Effect::ScreenFades => "The fade after changing level, and screen flashes.",
+            Effect::ScreenFades => "Level fades, flashes, bright spells darkening the view.",
+            Effect::ScreenShake => "The view shakes when a spell lands near you.",
             Effect::Weather => "Rain falling, splashing, and rings on water.",
         }
     }
@@ -56,6 +59,7 @@ impl Effect {
             Effect::Distortion => &mut e.distortion,
             Effect::Particles => &mut e.particles,
             Effect::ScreenFades => &mut e.screen_fades,
+            Effect::ScreenShake => &mut e.screen_shake,
             Effect::Weather => &mut e.weather,
         }
     }
@@ -71,7 +75,7 @@ enum Row {
     Back,
 }
 
-const ROWS: [Row; 13] = [
+const ROWS: [Row; 14] = [
     Row::FontSize,
     Row::ReducedEffects,
     Row::Effect(Effect::GlyphAnimation),
@@ -81,6 +85,7 @@ const ROWS: [Row; 13] = [
     Row::Effect(Effect::Distortion),
     Row::Effect(Effect::Particles),
     Row::Effect(Effect::ScreenFades),
+    Row::Effect(Effect::ScreenShake),
     Row::Effect(Effect::Weather),
     Row::Palette,
     Row::Reset,
@@ -88,7 +93,7 @@ const ROWS: [Row; 13] = [
 ];
 
 /// Index of the first action row (Reset); a gap is drawn before it.
-const FIRST_ACTION: usize = 11;
+const FIRST_ACTION: usize = 12;
 
 /// Selection state of the settings screen.
 #[derive(Debug, Default)]
@@ -187,15 +192,15 @@ impl SettingsScreen {
             Row::Reset => "Restores these settings (not the key bindings).",
             Row::Back => "Settings are saved as you change them.",
         };
-        let help_y = panel.y + 17;
+        let help_y = panel.y + 18;
         console.print(panel.inner_x(), help_y, help, TEXT_DIM);
         console.print(
             panel.inner_x(),
-            help_y + 2,
+            help_y + 1,
             "Sample: legible text, then  [ marked ]  and  * flagged *",
             TEXT,
         );
-        console.print(panel.inner_x(), help_y + 3, "Sample accent text", ACCENT);
+        console.print(panel.inner_x(), help_y + 2, "Sample accent text", ACCENT);
         panel.footer(console, "↑↓ select   ←→ change   Esc back");
     }
 }
@@ -228,7 +233,7 @@ mod tests {
         press(&mut screen, &mut s, Nav::Down);
         press(&mut screen, &mut s, Nav::Enter);
         assert!(s.reduced_effects);
-        for _ in 0..9 {
+        for _ in 0..10 {
             press(&mut screen, &mut s, Nav::Down);
         }
         press(&mut screen, &mut s, Nav::Right);
@@ -255,12 +260,15 @@ mod tests {
         }
         press(&mut screen, &mut s, Nav::Left);
         assert!(!s.effects.particles && s.effects.glow);
-        // Past the screen fades: the weather.
+        // Past the screen fades: the screen shake, then the weather.
         for _ in 0..2 {
             press(&mut screen, &mut s, Nav::Down);
         }
         press(&mut screen, &mut s, Nav::Enter);
-        assert!(!s.effects.weather && s.effects.screen_fades);
+        assert!(!s.effects.screen_shake && s.effects.screen_fades && s.effects.weather);
+        press(&mut screen, &mut s, Nav::Down);
+        press(&mut screen, &mut s, Nav::Enter);
+        assert!(!s.effects.weather);
         assert!(!s.reduced_effects, "the preset is untouched");
     }
 }

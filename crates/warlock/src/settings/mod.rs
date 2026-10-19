@@ -17,7 +17,8 @@
 //! glow = true             # bloom and glyph glow
 //! distortion = true       # heat haze
 //! particles = true
-//! screen_fades = true     # level-change fade and flashes
+//! screen_fades = true     # level-change fade, flashes, and spell effects darkening the view
+//! screen_shake = true     # the view shakes when a spell effect lands near the player
 //! weather = true          # rain falling, splashing, and rings on water
 //!
 //! [bindings]              # command id -> keys; a character, or a key name like "ArrowUp"
@@ -67,8 +68,11 @@ pub struct EffectSwitches {
     /// Heat haze.
     pub distortion: bool,
     pub particles: bool,
-    /// The level-change fade and screen flashes.
+    /// The level-change fade, screen flashes, and bright spell effects darkening the rest of the
+    /// view while they peak.
     pub screen_fades: bool,
+    /// The view shaking when a spell effect (a trap's fireball) lands near the player.
+    pub screen_shake: bool,
     /// Weather drawn over the map: rain falling, splashing, and rings on still water. A switch of
     /// its own (not `particles`): it moves over the whole view, not around a few sources. The
     /// weather itself (its light, the status bar) does not depend on it.
@@ -84,6 +88,7 @@ impl EffectSwitches {
         distortion: true,
         particles: true,
         screen_fades: true,
+        screen_shake: true,
         weather: true,
     };
     pub const ALL_OFF: Self = Self {
@@ -94,6 +99,7 @@ impl EffectSwitches {
         distortion: false,
         particles: false,
         screen_fades: false,
+        screen_shake: false,
         weather: false,
     };
 
@@ -103,7 +109,7 @@ impl EffectSwitches {
     }
 
     /// The setting names, for the file.
-    const KEYS: [&'static str; 8] = [
+    const KEYS: [&'static str; 9] = [
         "glyph_animation",
         "flicker",
         "motion",
@@ -111,6 +117,7 @@ impl EffectSwitches {
         "distortion",
         "particles",
         "screen_fades",
+        "screen_shake",
         "weather",
     ];
 
@@ -131,6 +138,7 @@ impl EffectSwitches {
             "distortion" => &mut self.distortion,
             "particles" => &mut self.particles,
             "screen_fades" => &mut self.screen_fades,
+            "screen_shake" => &mut self.screen_shake,
             "weather" => &mut self.weather,
             _ => return None,
         })
@@ -416,6 +424,7 @@ mod tests {
             effects: EffectSwitches {
                 particles: false,
                 flicker: false,
+                screen_shake: false,
                 weather: false,
                 ..EffectSwitches::ALL_ON
             },

@@ -72,6 +72,8 @@ fn through_palette(mut frame: AnimFrame, settings: &Settings) -> AnimFrame {
 /// `color` lit by the visual light at the center of the cell-sized glyph at `at` (level cells).
 /// Where that point is not lit (a creature sliding in from the dark), the light at the center of
 /// `home`, the cell the glyph belongs to, is used; with neither, the color is left as it is.
+/// While a spell effect darkens the view, the readability floor (or the unlit color) darkens
+/// with it, as on the map.
 pub(super) fn lit(
     color: LinearRgba,
     light: &VisualLight,
@@ -84,10 +86,22 @@ pub(super) fn lit(
         .sample(at + center)
         .or_else(|| light.sample(home + center))
     else {
-        return color;
+        return darkened(color, light.keep());
     };
+    let floor = floor * light.keep();
     let rgb = lighting::shade(Vec3::new(color.red, color.green, color.blue), cell, floor);
     LinearRgba::new(rgb.x, rgb.y, rgb.z, color.alpha)
+}
+
+/// `color` with its red, green, and blue scaled by `keep` (a spell effect's darkening), alpha
+/// kept: for glyphs that are light themselves (sparks, a burning missile) or unlit.
+pub(super) fn darkened(color: LinearRgba, keep: f32) -> LinearRgba {
+    LinearRgba::new(
+        color.red * keep,
+        color.green * keep,
+        color.blue * keep,
+        color.alpha,
+    )
 }
 
 /// With effects on, keeps a lit glyph within display range (bright light alone never blooms) and

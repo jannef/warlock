@@ -12,11 +12,12 @@ screen instead; see [Controls](controls.md#rebinding-keys).
 | Reduced effects | Turns every effect below off at once, whatever its own switch says. |
 | Glyph animation | Water waves and flows, the altar pulses, and a sound you hear ripples in on the map. |
 | Light flicker | Firelight flickers and drifts in color. Off, every light is steady. |
-| Slides, camera | Creatures slide from cell to cell, attackers lunge, and the view follows you smoothly. Off, they jump. |
+| Slides, camera | Creatures slide from cell to cell, attackers lunge, the view follows you smoothly, and a fireball or a lightning bolt plays out. Off, they jump, and a spell is a brief still flash of the cells it hits. |
 | Bloom and glow | A soft glow around glowing glyphs such as lava and crystals. |
 | Heat haze | The air shimmers above lava and fires. |
 | Particles | Sparks, embers, splashes, dust, foam, arrows in flight, and the sparkle of a spell. |
-| Screen fades | The fade in from black after you change level. |
+| Screen fades | The fade in from black after you change level, and the rest of the view darkening for a moment while a fireball or a lightning bolt flares. |
+| Screen shake | The view shakes for a moment when a fireball or a lightning bolt goes off near you; the nearer, the harder. |
 | Weather | Rain falling, splashing, and ringing on water. |
 | Color palette | The colors: Default, High contrast, or Colorblind (red-green). See below. |
 | Reset to defaults | Puts every setting above back to its default. Your keys stay as they are. |
@@ -29,6 +30,8 @@ Every effect is only for show, and no information depends on one:
 - With the Weather switch off, a rainy day is still as dark as it is; only the falling drops are
   gone (see [Weather](weather.md)).
 - With Light flicker off, lights are steady at the brightness the rules use for them.
+- A fireball or a lightning bolt always shows the cells it hits, if only as a brief still flash;
+  its light, the darkening, and the shake are only for show.
 - Creature shadows are always drawn, and they never change what you or anyone else can see (see
   [Light](light.md#what-is-only-for-show)).
 
