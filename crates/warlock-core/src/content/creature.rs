@@ -10,6 +10,7 @@ use crate::combat::{Attack, CRITS, DEFAULT_CRIT, DEFAULT_THREAT, THREATS};
 use crate::dice::Dice;
 use crate::skills::Skills;
 use crate::stats::{Stat, Stats};
+use crate::weapon_skills::WeaponSkills;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::ops::RangeInclusive;
@@ -118,6 +119,9 @@ pub(super) struct CreatureSpec {
     /// The colour of its blood (`"#rrggbb"`), or `"none"` for a bloodless creature; none:
     /// dark red ([`crate::blood::RED`]).
     pub blood: Option<String>,
+    /// Its ranks in weapon skills (spec §8 "Weapon skills"), by skill id.
+    #[serde(default)]
+    pub weapon_skills: BTreeMap<String, u8>,
     pub anim: Option<GlyphAnim>,
     #[serde(default)]
     pub glow: f32,
@@ -215,6 +219,7 @@ pub(super) struct Resolved {
     pub stats: Stats,
     pub skills: Skills,
     pub attack: Option<NaturalAttack>,
+    pub weapon_skills: WeaponSkills,
 }
 
 impl CreatureSpec {
@@ -245,6 +250,7 @@ impl CreatureSpec {
             attack: r.attack,
             natural: self.natural,
             blood: r.blood,
+            weapon_skills: r.weapon_skills,
             anim: self.anim,
             glow: self.glow,
             particles: self.particles,
@@ -316,6 +322,10 @@ pub struct CreatureDef {
     pub natural: Option<Hide>,
     /// Presentation-only: the colour of its blood (spec §8 "Blood"); `None`: it does not bleed.
     pub blood: Option<Rgb>,
+    /// Gameplay: the ranks in weapon skills a creature of this type has (spec §8 "Weapon
+    /// skills"), defaults included. Rules only: never shown. The player's come from their race
+    /// and class.
+    pub weapon_skills: WeaponSkills,
     /// Presentation-only.
     pub anim: Option<GlyphAnim>,
     /// Presentation-only: how much the glyph glows (bloom), 0 to 1.

@@ -7,6 +7,7 @@
 //! Entry points: load [`content::Content`], create a [`World`], feed it [`Action`]s, and read what
 //! the player perceives through [`World::perception`].
 
+pub mod ability;
 pub mod action;
 pub mod blood;
 pub mod burden;
@@ -34,10 +35,13 @@ mod sight;
 pub mod skills;
 pub mod stats;
 pub mod time;
+pub mod weapon_skills;
 pub mod weather;
 pub mod world;
 
-pub use action::{Action, AttackKind, Event, Letters, MissileEnd, Outcome, Rest, SpellShape};
+pub use action::{
+    Action, AttackKind, Breach, Event, Letters, MissileEnd, Outcome, Rest, SpellShape,
+};
 pub use geom::{Dir, Pos};
 pub use world::{World, WorldError, WorldState};
 

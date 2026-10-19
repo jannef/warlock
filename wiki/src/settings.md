@@ -21,6 +21,8 @@ screen instead; see [Controls](controls.md#rebinding-keys).
 | Weather | Rain falling, splashing, and ringing on water. |
 | Blood | The stains big hits and kills leave on floors and walls (see [Combat](combat.md#blood)). Not one of the effects: Reduced effects leaves it as it is. |
 | Color palette | The colors: Default, High contrast, or Colorblind (red-green). See below. |
+| Clock | How the time of day is written: 24-hour (`14:32`, the default) or 12-hour (`2:32 PM`). It changes the status bar and the death screen; the game itself keeps one clock. |
+| Where are my files? | Opens a screen showing where your settings, save, and logs are, and why, with **Open folder** for each. See [Saving](saving.md#portable-mode). |
 | Reset to defaults | Puts every setting above back to its default. Your keys stay as they are. |
 
 ## Effects never hide anything

@@ -189,7 +189,11 @@ pub(super) fn track(
             Event::ActorMoved { to, .. } => {
                 bursts.trigger(&view, *to, ParticleTrigger::Step, seed, start);
             }
-            Event::DoorOpened { pos } | Event::DoorClosed { pos } => {
+            // A door's dust as it swings, a wall's as it gives way: the toggle burst of the
+            // terrain the cell turned into.
+            Event::DoorOpened { pos }
+            | Event::DoorClosed { pos }
+            | Event::WallBroken { pos, .. } => {
                 bursts.trigger(&view, *pos, ParticleTrigger::Toggle, seed, start);
             }
             &Event::Attacked { attacker, to, .. } => {
