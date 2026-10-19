@@ -25,6 +25,9 @@ flagstones, and stairs, sound normal.
 
 {{#include generated/footsteps.md}}
 
+Where a noise is made matters too: everything is twice as loud in an echoing hall, and much
+quieter in a hushed chamber (see [Special rooms](special-rooms.md)).
+
 The overworld is silent: its steps are journeys, not footsteps.
 
 ## How sound travels

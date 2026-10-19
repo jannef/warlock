@@ -29,8 +29,9 @@ your armour decide how well you fight.
 - [Your character](character.md), with its [Races](races.md), [Classes](classes.md), and
   [Horoscope](horoscope.md), and [Stats](stats.md) explain who you are; [Combat](combat.md) how
   fights go, and how you die.
-- [Terrain](terrain.md), [Objects and your pack](objects.md), [Creatures](creatures.md),
-  [Your lantern](lantern.md), and [Saving](saving.md) cover the rest.
+- [Terrain](terrain.md), [Special rooms](special-rooms.md), [Objects and your
+  pack](objects.md), [Creatures](creatures.md), [Your lantern](lantern.md), and
+  [Saving](saving.md) cover the rest.
 
 ## Starting a run
 

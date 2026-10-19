@@ -59,26 +59,34 @@ Build the engine and framework, not the game. Everything built is production qua
   player's starting stats (partly rolled with dice, ADOM-like) and eyes; a random age by race
   and a random birthday give the birth year, whose horoscope sign (12 mythological animals × 5
   elements) adjusts the stats too (§8 "Character creation"); race and class also give hit points
-  (§8 "Combat") and trained skills (§8 "Skills")
+  (§8 "Combat"), trained skills (§8 "Skills"), and starting ranks in weapon skills
 - Skills (M20): 26 skills in data, ADOM-like; race and class train the player in some (dice),
   creatures may list theirs, and every other skill is untrained (never shown, gives nothing).
   Values grow without a hard cap (slowly past 100) from training marks earned by meaningful
   use (the increase rule is provisional), and the passive ones help: tumble (Dodge in Defence),
   stealth (quieter steps and doors), listen (hearing fainter sounds), balance (less burden
   slowdown), survival (quicker journeys); a Skills screen lists the player's (§8 "Skills")
+- Weapon skills (M22): ADOM-like marks and ranks 0 to 10 in sixteen weapon categories (shield
+  blocking and shield bashing among them) with per-category passive benefits, and *The Riddle of
+  Steel*'s defaults between related categories; a weapon skills screen and a shield bash
+  (§8 "Weapon skills")
 - Save and resume an unfinished run
 - Keyboard controls with an in-game controls reference
 - Development interface (§9)
 - Procedural generation with reproducible seeds (M6): dungeon branches of generated levels
   (rooms and corridors, caves) with hand-made vaults, joined to the hand-authored levels by stairs
 - An overworld with travel time, locations, local areas, and day and night (M9)
+- Special rooms (M25), ADOM-like: now and then a room of a generated level (or an area a
+  hand-made level marks) carries an effect that changes the rules inside it — a shadowed room, an
+  echoing hall, a hushed chamber, a sanctuary, a flooded room — told the first time the player
+  enters (§7 "Special rooms")
 
 **Out of scope for now**: magic (spells are announced, nothing is damaged), damage types (a
 flaming arrow does an arrow's damage), rules that use stats beyond combat and burden (ability
 checks, saving throws, training stats), levels and experience, digging down or up, creatures
-that dig, what a class gives beyond starting stats, hit points, and skills (equipment, spells),
-active uses of skills (searching, picking locks, healing, and the like) and weapon skills, item
-effects, audio, mouse input, infravision, localization.
+that dig, what a class gives beyond starting stats, hit points, skills, and weapon skills
+(equipment, spells), active uses of skills (searching, picking locks, healing, and the like),
+item effects, audio, mouse input, infravision, localization.
 
 Vision types are in scope even though there are no other mechanics yet: they are part of perception,
 and the light data model must carry them from the start.
@@ -100,7 +108,7 @@ regression scene for golden screenshots, replays, and snapshot tests.
 | Darkness chamber | vision types, a UV-only rune, darkvision fade; an amulet seen only by those who see in the dark | M3, M11 |
 | Water garden | still ponds and running rills (flow, glints, foam), pulsing altar with a ring before it | M4, M8, M11 |
 | Effects room | glyph particles, glow, fades, distortion | M4 |
-| Stairs | connection to Level 2, the arena, and the quarry (down), the courtyard and the overworld (up) | M2, M9, M10, M19 |
+| Stairs | connection to Level 2, the arena, and the quarry (down), the courtyard and the overworld (up); the nook is a sanctuary (§7 "Special rooms") | M2, M9, M10, M19, M25 |
 
 **Courtyard (66×19, outdoor)**: up the stairs nook's `<`, a walled garden under the open sky —
 trees, a ruined wall, a pond, standing stones, flower beds, and a roofed gazebo with a lamp — where
@@ -143,7 +151,8 @@ from north to south, foaming against a few boulders.
 
 **The Depths (generated, M6)**: a dungeon branch of eight procedurally generated levels
 (`depths:1` to `depths:8`; rooms and corridors at 80×21, caverns at 120×60 on depths 3–5) built
-from the run seed, with vaults stamped in. The `depths` scenario starts on its first level.
+from the run seed, with vaults stamped in; about one level in two or three has a special room
+(§7 "Special rooms"). The `depths` scenario starts on its first level.
 
 **The Overworld (M9)**: *The Wildlands*, a hand-authored 100×50 map of the land at large
 (`levels/overworld.toml`, level kind `overworld`), ADOM-like. Overworld terrain: plains,
@@ -499,6 +508,15 @@ rate or animation.
   its 8 neighbors is transparent, seen, and lit by the same source. This prevents light leaking
   through walls, and a wall is never brighter than the floor at the same distance. Its base light
   is ambient plus the brightest sky-plus-bounce light of its seen transparent neighbors.
+- **Special rooms** (§7): a special room changes the light inside it. A shadowed room keeps only
+  its effect's `light` percent of every part of a cell's light: the base light (ambient, sky,
+  bounce) and each source's contribution (placed lights, carried ones and the lantern, fires, the
+  sun and the moons; a wall's face light too), each rounded down on its own, so contributions plus
+  base light still add up. A sanctuary's `glow` adds to the base light of its transparent cells,
+  like ambient light, as the eye perceives it (its UV only for UV sight); walls take it by the
+  wall-face rule (the brightest of their seen transparent neighbors'), so it never shows through
+  a wall. Light outside a special room is never changed (bounce is computed from the unchanged
+  direct light). Creature sight finds the same light (a test checks it in rooms of both kinds).
 - **Sunlight**: levels under the open sky (`kind = "outdoor"` and the overworld; never
   dungeons) are lit by the sun and the sky by day. Terrain with `roofed = true` (indoor floors on
   an outdoor map) never receives either.
@@ -645,12 +663,16 @@ rate or animation.
   - **Noise**: actions make noise. A step makes the walker's `footsteps` (creature data: the
     player 60, kobold 80, kobold archer 70, kobold shaman 60, giant rat and deer 50, cave beetle
     30; bats fly silently) scaled by the `step_noise` of
-    the terrain stepped onto, in percent (water and running water 200, marsh, bushes, and rubble
+    the terrain stepped onto, in percent (water, running water, and shallow water 200, marsh,
+    bushes, and rubble
     150, reeds 130, gazebo boards and dry grass 120, tall grass and rocky ground 110, dirt road
     90, forest floor 80, grass, flowers, and dusty floor 70; default 100), and by the walker's
     burden (§8 "Burden": ×1.25 Burdened, ×1.5 Strained; a dwarf's steps are not louder while
     Burdened), rounded down. Opening a door makes
-    the closed door's `toggle_noise` (60), closing one the open door's (70). One function decides
+    the closed door's `toggle_noise` (60), closing one the open door's (70). A special room
+    (§7) scales every noise made inside it (where the step lands, the door, where an attacker
+    stands) by its effect's `noise` percent, rounded down: an echoing hall doubles it (so it
+    carries farther), a hushed chamber leaves two fifths. One function decides
     an action's loudness (`noise::noise`): the actor's skills take their percent off its steps
     and doors there, rounded down (stealth, §8 "Skills": 60 % at 100; not its attacks). Loudness
     is at most 300; a creature without `footsteps` moves silently, a door without `toggle_noise`
@@ -700,7 +722,8 @@ rate or animation.
   at most 40): an actor is seen iff its cell is in the creature's line of sight (the same
   symmetric shadowcasting) within its sight radius and lit at least to its eye's threshold by the
   same gameplay light the player sees (ambient, sky, every source, the sun and the moons through
-  the weather's clouds, bounce), or within its darkvision; on the overworld, line of sight within
+  the weather's clouds, bounce, as a special room leaves it: a shadowed room's darkness, a
+  sanctuary's glow), or within its darkvision; on the overworld, line of sight within
   its sight and the daylight radius (moonlight and rain included). (An actor
   on an opaque cell is seen only within darkvision; no such terrain exists off the overworld.)
   Creatures never read the player's perception: each computes its own, and only for the cells
@@ -727,15 +750,14 @@ rate or animation.
   the binding table, so it is always accurate.
 - **Screens**: the main menu, New run and its character creation steps, pause menu, Settings,
   Controls, help, the inventory, the equipment screen and its choice of what goes in a slot, the
-  character screen, the Skills screen, choosing what to pick up, drop, or throw, and the death
-  screen are modal
-  screens on one stack. Opening
+  character screen, the Skills screen, the weapon skills screen, choosing what to pick up, drop,
+  or throw, and the death screen are modal screens on one stack. Opening
   a screen puts it on top; Esc or Back closes it and returns to the screen below as it was left.
   While any screen is open it receives every key press, the run (if any) stays visible beneath
   it, and no game time passes but for what is chosen on a screen (picking up, dropping, wearing,
   wielding), which is done as it is chosen and takes its time. Prompts in the message line (a
-  direction to open or close, or to dig, how long to rest, look mode, aiming a shot or a throw)
-  are not screens.
+  direction to open, close, or bash, or to dig, how long to rest, look mode, aiming a shot or a
+  throw) are not screens.
 - **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
   `--record`, or `--capture` name what to run): Continue (only if a save exists), New run
   (scenario list from content, optional seed, then character creation), Settings, Controls,
@@ -774,10 +796,12 @@ rate or animation.
   "Reset all keys" resets everything.
 - First-phase commands: move, wait, open/close door, ascend/descend, light/douse lantern (`L`),
   pick up (`,` or `g`), drop (`d`), inventory (`i`), equipment (`e`), character (`@`), skills
-  (`S`), rest (`R`), look, fire (`f`), throw (`t`), next target (`Tab`, while aiming), use a tool
-  (`U`, then a direction: dig), help, save and quit (`Q`). Free actions (look, help, the
-  inventory, looking at the equipment screen, the character screen, the Skills screen, menus,
-  vision switch) do not advance time.
+  (`S`), weapon skills (`W`), rest (`R`), look, fire (`f`), throw (`t`), bash with a shield (an
+  ability, below: no key by default; bound in Controls, it asks for a direction, like opening a
+  door), next target (`Tab`, while aiming), use a tool (`U`, then a direction: dig), help, save
+  and quit (`Q`). Free actions (look, help, the inventory, looking at the equipment screen, the
+  character screen, the Skills screen, the weapon skills screen, menus, vision switch) do not
+  advance time.
 - **Objects** (M11) lie in piles on cells, the top first: the map shows the top object's glyph
   (§4.2), and dropped objects go on top. Stepping onto a pile says what lies there: `You see here
   a dagger.` for one stack, `There are several objects here.` for more. Look mode names what lies
@@ -851,6 +875,21 @@ rate or animation.
   ↑↓ choose a skill, whose one-line description shows below the list (a list taller than the
   panel scrolls). Never a benefit's number, a mark, or a chance. Read-only; `S`, Enter, or Esc
   closes it (back to the character screen when opened from there).
+- **Abilities** (the owner's rule; #156): racial, class, skill, and style abilities go into one
+  abilities menu (to come), not a key each, unlike ADOM. Each is a core `Action` with replay
+  text and a key command that is unbound by default (rebindable in Controls). The list the menu
+  will read is `warlock_core::ability` (`Ability`: name, what it asks for (`Aim`), the `Action`
+  it makes) and `PerceptionView::abilities` (those the player can use now). The first is the
+  shield bash (§8 "Weapon skills"), listed while the player holds a shield to bash with.
+- **Weapon skills** (`W`; M22, §8 "Weapon skills"), ADOM-like: the player's weapon skills in
+  three sections in data order — Melee (the `melee` and `unarmed` skills), Missile and thrown
+  (`launcher`, `thrown`), Shields (`shield_block`, `shield_bash`) — each with its name, its rank
+  (0 to 10; untrained skills dimmer, so what the player knows stands out), and a faint bar of
+  ten cells (`━` earned, `─` still to earn, muted colors) of their marks toward the next rank
+  (none at rank 10). Never what a rank gives, a mark count, or a creature's ranks. Read-only;
+  `W`, Enter, or Esc closes it; in a short window the gaps between sections give way first.
+  Without weapon skills in content it says "You know no weapon
+  skills."
 - **Death screen** (§8 "Combat"): when the player dies, the death screen opens over the run as it
   ended, in place of any other screen, and the run's save is deleted (permadeath): `Y O U   D I E
   D`, then who killed them ("Killed by a kobold", or "Killed by something you did not see" when
@@ -897,7 +936,10 @@ rate or animation.
   "something" ("Something hits you.", "The kobold misses something."), and a miss is then just
   a miss. A creature's attack is reported when the turn is perceived, the player's own as it is
   made (by what they see as they strike). Attacks the player perceives nothing of leave no
-  message (and no event). Moving into a hostile creature attacks it in melee ("You hit the
+  message (and no event). A weapon skill rank gained is said after the attack that earned it
+  ("You feel more skilled with long blades.", "You feel more skilled at blocking with a
+  shield."; §8 "Weapon skills"), without a number. A shield bash is a blow ("You bash the
+  kobold.", "You miss the kobold.", "The kobold dodges your small shield."). Moving into a hostile creature attacks it in melee ("You hit the
   giant rat.", "You miss something."; it takes a turn); into a neutral one stops ("The deer is
   in the way.", "Something is in the way."; no time passes).
 - **Targeting** (ADOM-like; `ui/target.rs`): `f` aims the readied missile weapon (with nothing
@@ -927,7 +969,9 @@ rate or animation.
   wounded), wielding a spear, on stone floor.", "A kobold shaman (hostile, unhurt), wearing a
   bone amulet, ...", "A kobold archer (hostile, unhurt), with a short bow and 20 arrows ready,
   ..."; never what else it carries), terrain (a wall in sight the player has dug into: "a stone
-  wall, partly dug"), remembered terrain, where stairs lead, and a sound heard there ("You hear
+  wall, partly dug"), remembered terrain, where stairs lead, the special room walkable ground
+  lies in once the player has been inside it ("A stone floor in an echoing hall.", "You remember
+  a stone floor here, in a sanctuary."; §7 "Special rooms"), and a sound heard there ("You hear
   footsteps here.").
 - Screen layout: map viewport, message log, status panel (level, the player's hit points as
   `HP 18/24` (never below 0), their burden when they have one (`Burdened`, `Strained`,
@@ -995,7 +1039,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   [...]` places a pile without a legend character (on top of the legend's there, if any).
   Objects lie only on walkable terrain. Vaults place objects the same way, and generators stamp
   them with the vault.
-- **Water**: `~` is still water (`water`). Running water (`running_water`, terrain with a `flow`
+- **Water**: `~` is still water (`water`); `shallow_water` (ankle-deep over a stone floor, paler,
+  a flooded room's floor, §7 "Special rooms") steps at 150 and splashes like water. Running
+  water (`running_water`, terrain with a `flow`
   animation) needs a flow on every cell, given by its legend entry: `flow` (the direction it runs,
   `N` … `NW`) and an optional `flow_speed` (percent of the terrain's animation speed, 10–300,
   default 100). The shared legend (`data/legend.toml`) draws running water as arrows pointing the
@@ -1038,7 +1084,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   player creature has neither): the kobold 2/15, the kobold archer 3/25, the kobold shaman 4/40,
   the giant rat 1/5, the cave bat 1/3, the cave beetle 2/8, the deer 1/2. The giant rat
   and the cave bat bite (1d4, 1d3), the deer kicks (1d4, "hoof"; `base_hp` 4), the cave beetle
-  bites (1d3) and has a shell (3); kobolds fight with what they wield. For burden (§8
+  bites (1d3) and has a shell (3); kobolds fight with what they wield. Its weapon skills (§8
+  "Weapon skills"): `weapon_skills`, its ranks by skill id (0 to 10; each raises the skills it
+  defaults to; the player creature has none: race and class give the player's): the kobold
+  spears 1, the kobold archer bows 1. For burden (§8
   "Burden"): `size`, a size in `data/sizes.toml` (default `medium`); the kobolds, the giant rat,
   the cave bat, and the cave beetle are small, the deer and the player creature medium (the
   player's size comes from their race when the run has a character). Skills (§8 "Skills"; never
@@ -1047,7 +1096,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   concentration (20) and spellcraft (25). Creature particle emitters may
   fire `on = "attack"`: a burst at the target of each attack the player sees (the shaman's
   violet sparkle). Terrain has a `move_cost`: what a step onto it costs in percent of a normal
-  step (the `step` action; default 100; still and running water 200; local levels only), a
+  step (the `step` action; default 100; still and running water 200, shallow water 150; local
+  levels only), a
   `bounce` tint for the light it reflects (§5), a `height` in cells for sun shadows (default 1 if opaque, else 0; at most 4),
   `roofed` (never lit by the sun or the sky), and for hearing a `step_noise` (how loud steps onto
   it are, in percent of the walker's footsteps, 0 to 1000; default 100), a door's `toggle_noise`
@@ -1071,9 +1121,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   e.g. `wait = 1000`, 1000 being a normal action (6 s at normal speed; §8 "Time"), 100 to
   10 000. The ids are `step` (onto terrain of `move_cost` 100), `wait`, `open_door`,
   `close_door`, `lantern`, `stairs` (also entering a location or local area and walking off an
-  area's edge), `pick_up`, `drop`, `melee`, `shoot`, `throw`, `reload` (a missile weapon that
-  `reloads`: a crossbow shot costs `shoot` plus `reload`, 2000), `cast`, `dig` (a turn of
-  digging), and for equipment (each slot names
+  area's edge), `pick_up`, `drop`, `melee` (a shield bash too), `shoot`, `throw`, `reload` (a
+  missile weapon that `reloads`: a crossbow shot costs `shoot` plus `reload`, 2000), `cast`,
+  `dig` (a turn of digging), and for equipment (each slot names
   one, below) `wield` (1000), `wear` (1000: helmets, cloaks, gloves, boots, rings, amulets),
   `body_armor` (3000: it takes a while to strap on), and `ready` (1000: a missile weapon,
   missiles, a tool). An action left out, or every action without the file, costs 1000; an unknown id
@@ -1105,7 +1155,11 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   multiplier, 2 to 5, default 2), `to_hit` (default 0, within ±20), and for bows `strength` (the
   Strength they need, 1 to 40), all four only with `damage`; `parry` (Defence while wielded),
   `armour` (while worn) and `max_dex` (the most Dexterity may add to Defence while it is worn),
-  and `shield` (while held), each 0 to 20. Ranged combat (§8 "Ranged combat"): `range` (1 to
+  and `shield` (while held), each 0 to 20; `bash` (a shield's damage dice when bashing with it,
+  only with `shield`; §8 "Weapon skills"); and `category`, the weapon skill a weapon draws on and
+  trains (an id in `data/weapon_skills.toml`; required for every weapon when there are weapon
+  skills, refused on anything else): a `melee` skill for what goes in a hand, a `launcher` one
+  for a missile weapon, the `thrown` one for what is only thrown (a rock). Ranged combat (§8 "Ranged combat"): `range` (1 to
   40 cells; required for a missile weapon: how far it shoots; on anything else it makes a
   throwing weapon, thrown that far with its own `damage`, which then needs no `slot`: a rock;
   ammunition has none), `reloads` (missile weapons: each shot also takes the `reload` action),
@@ -1119,14 +1173,38 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   `particles` (`ambient`: while it lies in view on top of its pile; `flight`: while it flies).
   Test objects: weapons for the main hand (dagger 1d4 and short sword 1d6, threat 20; spear 1d8
   ×3; club 1d6; a two-handed quarterstaff 1d6 with parry 1; the dagger thrown 5 cells, the spear
-  6), a small shield (off hand, shield 1), an iron helm, a wool cloak, leather gloves and boots,
+  6; of the daggers, short blades, spears, maces, and staves skills), a small shield (off hand,
+  shield 1, bash 1d3), an iron helm, a wool cloak, leather gloves and boots,
   body armor (leather jerkin armour 2, max Dexterity 6; chain mail shirt armour 4, max Dexterity
   4), a silver ring, amulets; missile weapons: a short bow (1d6 ×3, Strength 10, range 10), a long
   war bow (1d8+2 ×3, Strength 14, range 15), a crossbow (1d10+1, threat 20, no Strength, range 13,
-  reloads), a sling (1d4, range 9); ammunition: arrows (break 30 %), flaming arrows (lit as burning
+  reloads), a sling (1d4, range 9) (of the bows, crossbows, and slings skills); ammunition: arrows (break 30 %), flaming arrows (lit as burning
   arrows: light `arrow_fire`, burning 60 s), crossbow bolts (break 20 %), sling stones; rocks
-  (thrown 1d3, 6 cells, readied in the missiles slot); digging tools for the Tool slot: a
+  (thrown 1d3, 6 cells, readied in the missiles slot; the thrown skill); digging tools for the Tool slot: a
   pick-axe (power 10, 3 kg) and a mattock (power 15, 4.5 kg).
+- **Weapon skills** (`data/weapon_skills.toml`, optional; without it nobody has weapon skills and
+  weapons name none; M22, §8 "Weapon skills"): `[marks]` (`attempt`, `hit`, `per_level`, at most
+  1000, and `most`, a percent 100 to 1000), `[curves]` (named lists of the marks each rank asks
+  for, ranks 1 to 10: ten numbers, each more than the last, at most 1 000 000), `[[skill]]`s in
+  the order the weapon skills screen lists them (at most 255): `id`, `name` (`Long blades`),
+  `phrase` (the message's `with long blades`), `role` (`melee`, `launcher`, `thrown`, `unarmed`,
+  `shield_block`, `shield_bash`; the last four at most one skill each), `curve` (a key of
+  `curves`), and its benefits as eleven numbers, ranks 0 to 10 (0 at rank 0, never less at a
+  higher rank; a list left out is all 0): `to_hit` and `damage` (0 to 20), `threat` (0 to 10),
+  and `speed` (percent off the attack's cost, 0 to 50) for the roles that attack; `parry` (0 to
+  20) for `melee`, `reload` (0 to 50) for `launcher`, `shield` (0 to 20) for `shield_block` (a
+  benefit the role does not use is an error); and `[[default]]`s, `between = [a, b]` and
+  `penalty` (1 to 10), each pair once, symmetric. The built-in file: marks 1 an attempt, 2 more
+  a hit, 20 % a level, at most 200 %; curves melee 15, 30, 60, 120, 240, 480, 960, 1920, 3840,
+  7680 and missile 10, 20, … 5120; sixteen skills: daggers and knives, short blades, long
+  blades, great blades, axes, maces and clubs, spears, polearms, staves (`melee`), unarmed;
+  bows, crossbows, slings (`launcher`, missile curve), thrown weapons (missile curve); shield
+  blocking, shield bashing; defaults: long ↔ short blades −2, long ↔ great blades −2, short
+  blades ↔ daggers −2, long blades ↔ daggers −4, short blades ↔ thrown −4, daggers ↔ thrown −2,
+  axes ↔ maces −2, axes ↔ polearms −3, maces ↔ staves −3, spears ↔ polearms −2, spears ↔
+  staves −3, spears ↔ thrown −4, polearms ↔ great blades −4, bows ↔ crossbows −4, slings ↔
+  thrown −3, shield blocking ↔ shield bashing −3. The wiki shows the skills, the defaults, the
+  marks and curves, and the benefits per rank in generated tables.
 - **Equipment slots** (`data/slots.toml`, optional; without it nothing can be worn or wielded;
   M16): up to 26 `[[slot]]`s in the order the equipment screen lists them (lettered `a` on):
   `id` (objects name it in `slot`, replays in `equip:SLOT:LETTER`), `name`, `fits` (what objects
@@ -1199,7 +1277,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   doors, open doors, or doorways where corridors enter, and wall torches in most rooms; *caves* —
   cellular automata (45 % rock, five 4-5 smoothing passes, largest cave kept), pools of still water,
   lamps and glowing fungus. Both place the up staircase (the arrival point) and the down staircase
-  far from it, and a few creatures on looping patrols. Every level is validated by flood fill —
+  far from it, a few creatures on looping patrols, and last, now and then, a special room
+  (below). Every level is validated by flood fill —
   every stair, door, and walkable cell reachable from the up staircase, patrols valid, some light
   — and a level that fails is regenerated from the next derived stream. *outdoor* (the local
   areas of the overworld, §3): smooth integer value noise (random values on a coarse lattice,
@@ -1222,6 +1301,50 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   around them: their spaces (`void`) keep the area's own ground, every open cell on their edge is
   a way in, and their walkable cells are reachable from the edge. Dungeon generators use only
   dungeon vaults, local areas only outdoor ones.
+- **Special rooms** (`data/room_effects.toml`, optional; without it there are none; M25),
+  ADOM-like: a room of a generated level, or an area a hand-made level marks, carries an
+  **effect** that changes the rules while one is inside it. Top level: `chance` (percent, 0 to
+  100: how likely each candidate room is to be special) and `per_level` (at most this many special
+  rooms a generated level, default 1). Each `[[effect]]` (at most 32, in file order; ids are
+  indices, in the save fingerprint): `id`, `name` (without an article: "echoing hall"), `mark` (one
+  character, unique: the `rooms` dev layer), `enter` (the message the first time the player is
+  inside one), and what it does, each optional: `light` (percent of all light kept inside, 0 to
+  100, default 100; §5 "Special rooms"), `glow` (`[r, g, b, uv]` added over the room like ambient
+  light), `noise` (percent of the loudness of every noise made inside, 1 to 1000, default 100; §5
+  "Hearing"), `regen` (percent of the usual pace of regeneration inside, 1 to 1000, default 100;
+  §8 "Combat"), `shunned` (creatures hostile to the player do not step in; §8 "Creature
+  behavior"), and `floor` (terrain generators lay over the room's plain floor: walkable,
+  transparent, not stairs, a door, or running water).
+  - **The effects**: a *shadowed room* keeps 30 % of the light ("The light seems to drain away
+    here."); an *echoing hall* doubles noise ("Your footsteps echo loudly."); a *hushed chamber*
+    leaves two fifths of it ("A deep hush fills this room."); a *sanctuary* heals three times as
+    fast, glows faintly warm (`[60, 44, 22]`, about enough for normal eyes to see by), and keeps
+    hostile creatures out ("You feel at peace here."); a *flooded room* has a floor of shallow
+    water, slower (150) and loud (200) to wade ("The floor here is flooded."). Blood washing away
+    in a flooded room waits for blood (#127).
+  - **Generation** (`mapgen/special.rs`): last of all, each room of a rooms level but the arrival
+    room and vaults, and each of eight chambers a caves level tries, is special with `chance`
+    (7 %) until the level has `per_level` (1); the effect is drawn uniformly, from the level's
+    map stream. A rooms level's special room is the room's rectangle, walls and doors included;
+    a cave's is a blob: the floor 4-connected to a random free floor cell more than 10 cells
+    (Chebyshev) from the arrival, within radius 5 of it (at least 12 cells; vaults left out), plus
+    the rock around it. The effect's `floor` replaces plain floor in it (doorways too). A shunned
+    effect never goes where a creature patrols. About 40 % of generated levels get one (a test
+    keeps it between a third and a half over 1200 levels).
+  - **Level files** mark rooms with `[[room]] effect = "sanctuary" area = [x0, y0, x1, y1]`
+    (inclusive, walls and doors included; inside the map; rooms never overlap; vaults mark none).
+    A hand-made level draws its own floor (a flooded room's water). The hub's stairs nook is a
+    sanctuary.
+  - **State**: each level state keeps its special rooms (`LevelState::rooms`: the effect, its
+    box, a blob's cells, and whether the player has been inside; saved and hashed, format
+    version 15). The rules ask one question, `World::room_effect_at(level, pos)` (inside the core
+    the level state's `room_effect_at`): light and creature sight, noise, regeneration, and
+    creatures that shun a sanctuary. The first time the player's cell is in a special room
+    (after any action, or arriving there), the room is marked entered and its `enter` message is
+    said; never again for that room. Perception knows a room only once entered
+    (`PerceptionView::room`, on cells seen or remembered): look mode names it (§6). The light it
+    changes is seen like any light, before and after.
+
 - **Stat adjustments** (races, classes, the horoscope) are, per stat id, a fixed number (`2`,
   `-1`) or dice as text (`"2d3+1"`, `"1d4-1"`, `"-1d2"`; §8 "Dice"), rolled when the character
   is made; a missing stat is 0, and every result a roll can have must lie within −10 to 10.
@@ -1232,8 +1355,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   hidden from the player), `hp` (its hit points, 0 to 1000, default 0; §8 "Combat"), `size` (a size
   in `data/sizes.toml`, default `medium`; §8 "Burden"), `ignores_burdened` (default false: whether
   Burdened, the first level of burden, costs the character nothing), `skills` (the skills it trains,
-  by skill id: dice or a number, every result 0 to 100; §8 "Skills"), and `class_skill` (dice added
-  to one of the class's skills, picked when the character is made; default none); and at the top
+  by skill id: dice or a number, every result 0 to 100; §8 "Skills"), `class_skill` (dice added
+  to one of the class's skills, picked when the character is made; default none), and
+  `weapon_skills` (starting ranks by weapon skill id, a fixed number or dice, every result 0 to
+  10; §8 "Weapon skills"); and at the top
   `base_potential` (1 to 40), what every potential is before the race adjusts it (15). Races are
   mostly fixed numbers, their identity, with a little dice. The races, their eyes, ages, and hit
   points: elf (low-light, 90–300, 2), half-elf (low-light, 20–60, 3), human (normal, 16–35, 4),
@@ -1243,24 +1368,34 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   listen and spot, half-elves bluff and spot (`1d4+2`), dwarves metalcraft and search
   (stonecunning), halflings listen and stealth, gnomes appraise and listen, half-orcs intimidate;
   humans none, but one extra class skill (`class_skill = "2d4+4"`).
+  Weapon skills (`weapon_skills`; §8 "Weapon skills"): elf long blades 1 and bows 1, half-elf
+  bows `1d2-1`, dwarf axes 1 and crossbows 1, halfling slings 1, gnome crossbows 1, half-orc
+  axes 1; humans none.
 - **Sizes** (`data/sizes.toml`, optional; §8 "Burden"), in file order: `id`, `name`, and `carry`
   (what it carries in percent of a medium one, 10 to 1000): small 75, medium 100. `medium` is
   required (the size of every race and creature type that names none); without the file there
   is only medium.
 - **Classes** (`data/classes.toml`, optional), in the order offered: `id`, `name`, a one-line
-  `description`, `stats` (adjustments as for races), `hp` (as for races), and `skills` (as for
-  races). Each class rolls
+  `description`, `stats` (adjustments as for races), `hp` (as for races), `skills` (as for
+  races), `weapon_skills` (starting ranks as for races), and `weapon_skill_choice` (two or more
+  sets of such ranks, one picked at random when the character is made). Each class rolls
   its key stats (the warrior St `1d3+1` and To `1d3`, the wizard In `2d2+1` and To `-1d2`, the
   commoner To `1d3-1`); the rest are fixed. Adventurers: barbarian (8 hit points), bard (2),
   priest (4), druid (4), monk (5), paladin (6), ranger (5), thief (3), wizard (0), witch (1),
   warrior (7); everyday folk: aristocrat (1), commoner (3), craftsperson (3), merchant (2). A
-  class adjusts the starting scores, gives hit points, and trains skills, nothing more: a few it
+  class adjusts the starting scores, gives hit points, trains skills, and gives starting ranks in
+  weapon skills, nothing more. Skills: a few it
   is known for (`2d6+10`) and a few more (`2d4+4`); the full table is in the wiki (Skills), e.g.
   the thief open lock, steal, stealth, and tumble well, appraise, disable device, escape artist,
   search, and spot a little; the ranger spot, survival, and woodcraft well, athletics, handle
   animal, listen, and swim a little; the wizard concentration, knowledge, and spellcraft well,
   decipher script and use magic device a little; the commoner athletics and handle animal a
-  little.
+  little. Weapon skills: barbarian unarmed 1 and axes 2 or great blades 2, bard short blades 1
+  and daggers `1d2`, priest maces 2 and shield blocking 1, druid staves 2 and slings 1, monk
+  unarmed 2 and staves 1, paladin long blades 2, shield blocking `1d2`, and shield bashing 1,
+  ranger bows 2 and short blades 1, thief daggers 2 and thrown 1, wizard staves 1, witch daggers
+  1 and staves 1, warrior long blades 2 and shield blocking `1d2`, aristocrat long blades 1,
+  commoner maces 1, craftsperson axes 1, merchant daggers 1.
 - **Skills** (`data/skills.toml`, optional; without it nobody is trained in anything, and any
   `skills` elsewhere is an error; §8 "Skills"): `[[skill]]`s in the order the Skills screen lists
   them (alphabetical), each with `id`, `name`, a one-line `description`, `kind` (`passive`,
@@ -1303,9 +1438,11 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   atomically (temp file + rename). Before 1.0, incompatible saves are rejected with a clear message;
   from 1.0 on, saves are migrated. The web build keeps the same bytes in the browser's
   `localStorage` (below). The envelope also records a content fingerprint (hash of the ordered
-  terrain, creature, level, light, dungeon-branch, object, equipment slot, and skill ids), because
-  ids are indices; a save made with different content is rejected. Generated levels are saved with
-  the run like visited hand-made ones (terrain, memory, stairs, lights, kind, arrival point,
+  terrain, creature, level, light, dungeon-branch, object, equipment slot, skill, room effect,
+  and weapon skill
+  ids), because ids are indices; a save made with different content is rejected. Generated levels
+  are saved with the run like visited hand-made ones (terrain, memory, stairs, lights, kind,
+  arrival point,
   edge exit, piles of objects and the piles as remembered), together with the gameplay random
   stream, the game clock, every actor's scheduler energy (§8 "Speed"), the direction of the last
   overworld step (saves without the step load with none), what each actor heard and has not yet
@@ -1321,8 +1458,11 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   "Combat"; format version 11), the fires burning on each level (§8 "Ranged combat"; format
   version 12), the player's experience total (§8 "Experience"; format version 13; absent while
   0, so a run without kills hashes as before), every actor's trained skills (value and training
-  marks) and the training random stream (§8 "Skills"; format version 14), the work done on walls
-  dug into and still standing (§8 "Digging"; format version 15), and a dev weather override while
+  marks) and the training random stream (§8 "Skills"; format version 14), each level's special
+  rooms and whether the player has been in each (§7 "Special rooms"; format version 15), every
+  actor's weapon skills (its rank and marks in each, §8 "Weapon skills"; format version 16), the
+  work done on walls dug into and still standing (§8 "Digging"; format version 17), and a dev
+  weather override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
   platform data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
@@ -1348,8 +1488,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 ```
 crates/
   warlock-core/   plain Rust, no Bevy: map, actors, actions, turns, time, fov, light,
-                  perception, rng, levels, mapgen, stats, skills, dice, character,
-                  burden, save
+                  perception, rng, levels, mapgen, stats, skills, weapon skills, dice,
+                  character, burden, save
   warlock-cli/    no Bevy: scenarios, replay, dump, verify
   warlock/        Bevy app: render, input, UI, effects, platform (ECS lives here)
 xtask/            screenshot capture, golden-image diff, CI helpers
@@ -1488,7 +1628,10 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   open them (1 more: it opens the door, a turn and a noise, then steps in). Another actor's cell
   costs 4 more, so a creature walks a short detour around someone in its way but waits behind
   them rather than take a long one. Ties go to cells nearer the target, then to the earlier
-  direction (N, NE, E, … NW). A spot it cannot reach is given up.
+  direction (N, NE, E, … NW). A spot it cannot reach is given up. A creature hostile to the
+  player never steps into a sanctuary (§7 "Special rooms") from outside it, on a path or on its
+  patrol (it waits instead); one already inside may move about and leave. It may still strike
+  across the threshold or shoot in.
 
   **Attacks** are resolved by the rules of combat ("Combat" below): melee blows and shots hurt
   and kill (a shot is a missile, "Ranged combat" below); spells stay intents until magic is
@@ -1523,6 +1666,9 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     hand slot that holds one; a shot uses the missile weapon in a `ready` slot and the
     ammunition matched to it ("Ranged combat" below); a throw (`Profile::thrown`) its thrown
     weapon's own attack, Dexterity to hit and Strength to damage.
+  - **Weapon skills** ("Weapon skills" below): the rank in the skill an attack draws on adds to
+    its to-hit and damage and widens its threat range; the wielded weapon's skill adds to its
+    Parry and shield blocking to a held shield's Shield; a high rank makes an attack cheaper.
   - **Defence** = 10 + one bonus per category: **Dexterity** (the Dexterity modifier, capped
     by the lowest `max_dex` of what the actor wears and by its burden, +3 Burdened, +1 Strained,
     0 Overloaded ("Burden" below), the lowest cap winning; a penalty counts in full), **Armour** (worn
@@ -1550,8 +1696,10 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   - **Regeneration**: a hurt actor on the current level gets 1 hit point back per
     `max(60 s, 360 s − 12 s × Toughness)` of game time (To 10: 4 minutes; To 25 and up: 1
     minute), counted as the scheduler moves the clock (resting included; the dev time skip and
-    other levels' frozen actors get none). Seconds toward the next point carry over
-    (`Actor::regen`, saved) and are dropped at full health.
+    other levels' frozen actors get none), at the pace `World::regen_rate` decides, in percent
+    (the one place for it: three times as fast standing in a sanctuary, §7 "Special rooms").
+    Seconds toward the next point carry over (`Actor::regen`, saved) and are dropped at full
+    health.
   - **Death**: at 0 hit points an actor dies (`Event::Died { actor, at }`, right after the
     attack). A creature leaves the world, and what it carried, worn and wielded things too, falls
     on its cell on top of the pile there, in inventory order. The player's death ends the run: it
@@ -1593,7 +1741,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     missile weapon ready.", "You have no arrows ready."), at the player's own cell, beyond the
     range (the rounded radius of the weapon's `range`: "That is out of range."), something that
     is no throwing weapon ("You cannot throw a coil of rope."), and on the overworld. A shot takes
-    `shoot` (plus `reload` for a missile weapon that `reloads`), a throw `throw`; creatures shoot
+    `shoot` (plus `reload` for a missile weapon that `reloads`), a throw `throw` (less what the
+    weapon skill's rank takes off, "Weapon skills" below); creatures shoot
     by the same rules (`World::creature_shoots`; the AI saw to it that they can).
   - **One missile** leaves its stack (the last empties its slot: "You have no arrows left.") and
     makes its noise once, as it is loosed (a bowstring, 40; a throw, heard as fighting, 30).
@@ -1770,9 +1919,15 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   - **Eyes**: the player's vision profile is the race's (the dev vision switch still works).
   - **Hit points**: the race's and the class's `hp` add to Toughness for the maximum ("Combat"
     below).
+  - **Weapon skills** ("Weapon skills" below): the race's starting ranks plus the class's, plus
+    one set of the class's `weapon_skill_choice` if it has one, at most 10 each; each then
+    raises the skills it defaults to. Dice among them roll from their own stream,
+    `character/weapon-skills/<race>,<gender>,<class>`: the race's (in skill order), the
+    class's, the pick of the choice (one draw), then the chosen set's; so they never move a
+    stat roll.
   - Balance is deliberately not a goal: some combinations are poor (a halfling commoner), and
-    classes do nothing but adjust starting scores, give hit points, and train skills. No other
-    D&D concept comes with them (alignment, equipment, spells).
+    classes do nothing but adjust starting scores, give hit points, train skills, and give
+    weapon skills. No other D&D concept comes with them (alignment, equipment, spells).
   - The character (`Character`: the race, gender, and class ids, the stat the gender raised,
     the birth date, and the birth sign) is part of the world state (saved, hashed) and shown on
     the character screen; replays record the choice only, and since everything else follows
@@ -1837,6 +1992,60 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     chance, an untrained skill, or a creature's skills; ground-truth dev dumps (`actors`, the
     world state) show every actor's skills with their marks. Skills and marks are part of the
     world state (saved, hashed).
+- **Weapon skills** (`warlock-core/src/weapon_skills.rs`, training; `content/weapon_skill.rs`,
+  the data; M22, #134), ADOM-like, with *The Riddle of Steel*'s defaults:
+  - **Skills** (`data/weapon_skills.toml`, §7): the categories weapons belong to. A skill's
+    role says what uses it: `melee` and `launcher` skills are named by weapons (`category`), the
+    wielded weapon's for a blow, the readied missile weapon's for a shot; `thrown` is every
+    throw, whatever is thrown; `unarmed` bare hands and natural attacks; `shield_block` and
+    `shield_bash` a held shield's blocks and bashes (`Actor::attack_skill`).
+  - **Ranks**: 0 (untrained: no benefits; marks still count) to 10, on every actor
+    (`Actor::weapon_skills`, a rank and marks per skill): the player's from race and class, a
+    creature's from its type (§7). Ranks are stored, not derived.
+  - **Marks**: only the player trains. Each attack the player makes on someone (a blow, a bash,
+    a shot or throw for each actor it reaches; hit or miss) earns `attempt` marks (1) in its
+    skill, a hit `hit` more (2); a blow the player's shield blocks (a miss credited to the
+    Shield category, "Combat" above) earns `attempt + hit` in shield blocking. The marks scale
+    by `100 + per_level × (the opponent's level − the rank)` percent (20 a level), kept within 0
+    and `most` (200), rounded to the nearest mark (halves up): more against stronger
+    opponents, fewer as the rank rises. The opponent's level is its creature type's `level`
+    (§8 "Experience"; the one attacked, or for a block the attacker): a level-1 giant rat
+    teaches nothing past rank 5, a level-4 kobold shaman nothing past rank 8.
+    A missile that reaches no one, and spells, earn nothing; nothing rolls for marks.
+  - **Curve**: the marks to go from a rank to the next grow exponentially, by the skill's
+    `curve`: melee 15, 30, 60, … 7680 (rank 10 at 15 345 in all), missile 10, 20, … 5120. Marks
+    past the need count toward the next rank (one rank at a time); rank 10 earns no more.
+  - **Defaults** (The Riddle of Steel): a symmetric table of penalties between related skills
+    (§7; long blades 8 gives short blades 6). When skill A gains a rank, every skill B with
+    `rank(A) − penalty(A, B) > rank(B)` rises to that rank and its marks start again from 0
+    (`WeaponSkills::raise`); defaults do not chain within one gain. Starting ranks raise their
+    defaults the same way, whatever their order (`WeaponSkills::from_ranks`).
+  - **Benefits** (per skill and rank, data; never shown): to-hit and damage (to every roll of
+    the dice) on attacks with the skill, a wider threat range (lower natural rolls threaten,
+    never below 2), and a lower cost (`speed`, percent off `melee`, `shoot`, or `throw`;
+    `reload` off reloading), all in the attack's `Profile` (`Profile::with`; `Actor::melee`,
+    `ranged`, `thrown`, `bash`) and price (`World::attack_price`); Parry added to the wielded
+    weapon's own while it is wielded, Shield (shield blocking) added to a held shield's own
+    (`Actor::defence`). Benefits of several skills add up (`Benefit::plus`), so a later kind of
+    skill (fighting styles, #135) can stack on a weapon's: another role, with the same ranks,
+    marks, curve, and benefits.
+  - **Shield bash** (`Action::Bash(dir)`, replay text `bash:DIR`; an ability, §6 "Abilities":
+    unbound by default, a direction once bound): a melee blow at whoever stands that way with
+    the held shield's `bash` dice (§7; the small shield 1d3) plus the Strength modifier to hit
+    and to damage, drawing on and training shield
+    bashing; it costs `melee` (less shield bashing's `speed`) and makes a blow's noise. Refused,
+    taking no time: without a shield to bash with ("You have no shield to bash with."), with
+    nobody there ("There is nothing there to bash."), or at someone not hostile ("You have no
+    quarrel with the deer."; unseen: "Something is in the way."). Its event is an attack of
+    kind `Melee` made `with` the shield; creatures do not bash.
+  - **Messages**: each skill that rose, its own rank or by default, is said after the attack
+    that earned it (and before the experience a kill earned), by its `phrase`: "You feel more
+    skilled with long blades." No numbers.
+  - **What the player perceives**: their own ranks and marks
+    (`PerceptionView::own_weapon_skills`), shown as ranks and a bar on the weapon skills screen
+    (§6) and in the `weapon_skills` dump layer; never a benefit or a creature's ranks (the
+    `actors` dev layer shows every actor's). Ranks and marks are part of the world state
+    (saved, hashed; format version 16).
 - **Dice** (`warlock-core/src/dice.rs`): one type for every roll the rules make (character
   creation, weapon and natural attack damage). Text form: a fixed number (`+2`, `-1`, `0`) or `NdS`
   (`N` dice of `S` sides: 1 to 100 dice, 2 to 1000 sides), optionally negated (`-1d2`) and
@@ -1853,12 +2062,14 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   them.
 - **Determinism**: ChaCha8 RNG (`rand_chacha`) with separate streams, each seeded with FNV-1a 64 of
   the run seed (little-endian) and a label: map generation per level (`map/<level id>`, retry *k*
-  `map/<level id>/<k>`), so a level depends only on the seed and its id, never on visiting order;
+  `map/<level id>/<k>`), so a level depends only on the seed and its id, never on visiting order
+  (its special room is drawn last, so a level without one is the map it would be without them);
   gameplay (`gameplay`, kept in the world state and saved); character creation (derived on
   demand: `character/gender` for the stat "other" raises, `character/birth/<race>` for the age
-  and birthday, `character/rolls/<race>,<gender>,<class>` for the dice; New run's Random rows
-  roll `new-run/<step>/<n>` streams, which never touch a run); training marks (`training`, kept
-  in the world state and saved; §8 "Skills"); the weather, which keeps no
+  and birthday, `character/rolls/<race>,<gender>,<class>` for the dice,
+  `character/weapon-skills/<race>,<gender>,<class>` for the starting weapon skills; New run's
+  Random rows roll `new-run/<step>/<n>` streams, which never touch a run); training marks
+  (`training`, kept in the world state and saved; §8 "Skills"); the weather, which keeps no
   stream at
   all: each weather block hashes the seed, a label, and its number (FNV-1a, then SplitMix64's
   finalizer; §5 "Weather"); and visual-only randomness in the app, which never uses either. No hash-order iteration and no floating point in the core's decisions.
@@ -1882,7 +2093,8 @@ warlock-cli dump --replay runs/doors.json --format json --state   # structured d
 warlock-cli replay --create --scenario showcase --actions "move:N wait" -o runs/x.json
 warlock-cli replay --verify runs/doors.json               # check per-turn state hashes
 warlock-cli gen --level depths:3 --seed warlock           # print a generated level (dev-only;
-                                                          # also local areas: local:49,23)
+                                                          # also local areas: local:49,23;
+                                                          # special rooms by their letter)
 cargo xtask golden [--update]                             # compare golden screenshots
 ```
 
@@ -1890,10 +2102,11 @@ cargo xtask golden [--update]                             # compare golden scree
   character `{race, gender, class}` (left out for a run without one; a replay without it starts
   as the scenario's character, so older replays still load). Actions use a text
   syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
-  pickup pickup:ac drop drop:b equip:body:b remove:body fire:12,5 throw:c:12,5 dig:E
+  pickup pickup:ac drop drop:b equip:body:b remove:body bash:E fire:12,5 throw:c:12,5 dig:E
   vision:darkvision skip:1h weather:rain effect:fireball@12,5
-  effect:lightning_bolt@3,4>12,4`; `dig:DIR` digs toward a direction until the wall gives way or something interrupts; `fire:X,Y`
-  shoots at level cell (X, Y),
+  effect:lightning_bolt@3,4>12,4`; `bash:DIR` bashes with the held shield that way, `dig:DIR`
+  digs toward a direction until the wall gives way or something interrupts; `fire:X,Y` shoots
+  at level cell (X, Y),
   `throw:LETTER:X,Y` throws one of inventory stack LETTER there; the dev action
   `effect:ID@X,Y[>X,Y]` shows spell effect ID (`data/effects.toml`) as the player perceives it, a
   burst around X,Y (around the second cell, flying there from the first) or a bolt from the first
@@ -1924,23 +2137,29 @@ cargo xtask golden [--update]                             # compare golden scree
   `equipment` (the player's slots by letter, `c Body: a leather jerkin (b)`, `-` when empty),
   `stats` (the player's race, gender, and class, `Race Dwarf`, their age, birthday, and
   sign, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`, then their own scores,
-  `Strength 12`), and `skills` (the player's trained skills in skill order, `Stealth 17`) are
-  built from the perception snapshot only;
+  `Strength 12`), `skills` (the player's trained skills in skill order, `Stealth 17`), and
+  `weapon_skills` (the player's weapon skills in file order with their rank and how far their
+  marks are toward the next, `Long blades 2 (40%)`; at rank 10 the rank alone) are built from the
+  perception snapshot only;
   `truth` (terrain, objects, and creatures) and `actors` (every actor on the level with its hit
   points and Defence, `hp 8/12 dv 13`, its
   weight, base plus carried, what it carries and of that wears and wields, `equipped main_hand a
-  spear`, its burden and carrying limit, `unburdened (limit 31.5 kg)`, its stats as
-  score/potential, `St 12/15`, and its trained skills with their marks toward the next point,
-  `skills stealth 17 (2/5)`) show
+  spear`, its burden and carrying limit, `unburdened (limit 31.5 kg)`, its weapon skills with
+  rank and marks, `weapon skills spears 1 (0/30)`, its stats as score/potential, `St 12/15`, and
+  its trained skills with their marks toward the next point, `skills stealth 17 (2/5)`), and
+  `rooms` (the level's special rooms: the terrain with each room's plain ground drawn as its
+  effect's `mark`, then a line per room, `s shadowed room at (34, 8)-(49, 13), entered`) show
   ground truth and are dev-only. JSON dumps
-  carry turn, game time (seconds and calendar fields), level, viewer, the weather (under the open
+  carry turn, game time (seconds and calendar fields), level, viewer, the special room the
+  player stands in if they know it (`room`, its effect id; else null), the weather (under the open
   sky; else null), seen actors (each with how hurt it looks, `health`: `unhurt`,
   `lightly_wounded`, `wounded`, `badly_wounded`, `nearly_dead`), heard sounds, the player's
   inventory, equipment (by slot id: letter, object, count), weight, burden (`burden: {level,
   limit}`, the limit in grams), character
   (`{race, gender, class, raised, age, born: {year, month, day}, sign: {animal, element}}` or
   null), scores (`stats`, by stat id), trained skills (`skills`, by skill id with their values),
-  hit points (`hp: {current, max}`), Defence (`defence`, the
+  weapon skills (`weapon_skills`, by skill id: `{rank, progress}`, the progress a percent or
+  null at rank 10), hit points (`hp: {current, max}`), Defence (`defence`, the
   total), how the run ended (`death: {turn, time, place, by}` or null), recent messages,
   and optionally the full world state; the ASCII header line has the turn, the time
   (`0001-01-01 08:00:00`), level, viewer, the player's hit points (`hp 17/17`, then `dead` once
@@ -2063,6 +2282,16 @@ Each milestone ships a playable build.
   World of Warcraft scaling for monsters below (down to grey, worth nothing) and above the
   player's level, a quadratic level curve to 50 in data, and hit point growth up to level 20;
   level and XP on the status bar, the character screen, and the death screen (#133).
+- **M22 Weapon skills, styles, stances** — weapon skills (#134): ADOM-like marks and ranks 0 to
+  10 in sixteen categories with per-category passive benefits, The Riddle of Steel's defaults
+  between related categories, shield blocking and a shield bash, starting ranks from race and
+  class, and a weapon skills screen (`W`).
+
+- **M25 Special rooms** — ADOM-like special rooms (data, `data/room_effects.toml`): a
+  shadowed room, an echoing hall, a hushed chamber, a sanctuary, and a flooded room, in about one
+  generated level in two or three and in areas hand-made levels mark (the hub's stairs nook is a
+  sanctuary); one query for the rules (`World::room_effect_at`), a first-entry message, and look
+  mode naming rooms the player has been in.
 
 ## 13. GitHub workflow
 

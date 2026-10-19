@@ -61,6 +61,7 @@ fun.
 The character screen (`@`) shows your race, gender, and class, your age, birthday, and sign,
 your stats, your level and experience (see [Experience](experience.md)), and your hit points (your Toughness plus what your race and class give; see
 [Combat](combat.md#hit-points)) and Defence, and what you weigh and carry against what you can
-(see [Burden](burden.md)). `S` there, or anywhere in play, shows your [skills](skills.md). The
-game does not change your race, gender, class, or sign once a run has started; you get a year
-older on every birthday.
+(see [Burden](burden.md)). `S` there, or anywhere in play, shows your [skills](skills.md), and
+`W` your ranks in each [weapon skill](weapon-skills.md), which your race and class start you
+with. The game does not change your race, gender, class, or sign once a run has started; you get
+a year older on every birthday.

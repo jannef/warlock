@@ -239,6 +239,33 @@ sway = 0.08
 scale = 0.5
 fade = 0.6
 
+# Shallow water: ankle-deep over a stone floor (a flooded room, spec §7 "Special rooms"), paler
+# than a pool, its swell fainter. Slower than dry floor but quicker than wading a pool, and loud.
+[[terrain]]
+id = "shallow_water"
+name = "shallow water"
+glyph = "~"
+fg = "#7aa4c8"
+bg = "#0e1822"
+move_cost = 150
+step_noise = 200
+bounce = "#a8c8ff"
+anim = { kind = "wave", speed = 0.12, amount = 0.03, glint = 0.3 }
+
+[[terrain.particles]]
+on = "step"
+glyphs = "'`,."
+colors = ["#b8dcff", "#5f8fc0"]
+count = 4
+life = 0.4
+velocity = [0.0, -2.2]
+spread = [2.2, 0.7]
+gravity = 10.0
+offset = [0.0, -0.1]
+area = [0.35, 0.1]
+scale = 0.55
+fade = 0.4
+
 [[terrain]]
 id = "altar"
 name = "altar"

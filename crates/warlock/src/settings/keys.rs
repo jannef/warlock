@@ -34,10 +34,12 @@ pub const REBINDABLE: &[KeyCommand] = &[
     KeyCommand::Equipment,
     KeyCommand::Character,
     KeyCommand::Skills,
+    KeyCommand::WeaponSkills,
     KeyCommand::Rest,
     KeyCommand::Look,
     KeyCommand::Fire,
     KeyCommand::Throw,
+    KeyCommand::Bash,
     KeyCommand::NextTarget,
     KeyCommand::UseTool,
     KeyCommand::Help,
@@ -59,6 +61,10 @@ pub const REBINDABLE: &[KeyCommand] = &[
 const PAGE_IDS: [&str; 9] = [
     "page_1", "page_2", "page_3", "page_4", "page_5", "page_6", "page_7", "page_8", "page_9",
 ];
+
+/// Rebindable commands with no key by default: abilities (`warlock_core::ability`), which the
+/// abilities menu (#156) lists instead of a key each. The player may bind one in Controls.
+pub const UNBOUND: [KeyCommand; 1] = [KeyCommand::Bash];
 
 /// Physical keys a command may be bound to.
 const CODES: &[KeyCode] = &[
@@ -128,10 +134,12 @@ impl KeyCommand {
             Equipment => "equipment",
             Character => "character",
             Skills => "skills",
+            WeaponSkills => "weapon_skills",
             Rest => "rest",
             Look => "look",
             Fire => "fire",
             Throw => "throw",
+            Bash => "bash",
             NextTarget => "next_target",
             UseTool => "use_tool",
             Help => "help",
@@ -319,8 +327,9 @@ impl Bindings {
             .copied()
             .filter_map(|c| {
                 let id = c.id()?;
-                let keys = self.keys_of(c).iter().map(|k| k.to_text()).collect();
-                Some((id.to_string(), keys))
+                let keys: Vec<String> = self.keys_of(c).iter().map(|k| k.to_text()).collect();
+                // An unbound ability is left out, as it is by default.
+                (!keys.is_empty()).then(|| (id.to_string(), keys))
             })
             .collect()
     }
@@ -350,7 +359,10 @@ impl Bindings {
                 }
             }
             if keys.is_empty() {
-                warnings.push(format!("bindings.{id}: no usable keys; using the defaults"));
+                // An ability may be left without a key, as it is by default.
+                if !UNBOUND.contains(&command) || !items.is_empty() {
+                    warnings.push(format!("bindings.{id}: no usable keys; using the defaults"));
+                }
             } else {
                 bindings.set_keys(command, keys);
             }
@@ -396,7 +408,12 @@ mod tests {
         assert_eq!(KeyCommand::Cancel.id(), None);
         let defaults = Bindings::default();
         for &c in REBINDABLE {
-            assert!(!defaults.keys_of(c).is_empty(), "{c:?} has a default key");
+            let unbound = UNBOUND.contains(&c);
+            assert_eq!(
+                defaults.keys_of(c).is_empty(),
+                unbound,
+                "{c:?}: a default key"
+            );
         }
     }
 

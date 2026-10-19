@@ -18,6 +18,9 @@ A cell's light is the sum of:
 - every **light source** that reaches the cell, and
 - a little **bounced** light.
 
+A [special room](special-rooms.md) can change that: a shadowed room drains every part of it, and
+a sanctuary adds a faint warm glow of its own.
+
 ## Light sources
 
 Light comes from wall torches, braziers, lamps, magical crystals, glowing fungus, runes, lava, the

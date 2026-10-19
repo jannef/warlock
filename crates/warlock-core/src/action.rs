@@ -42,6 +42,10 @@ pub enum Action {
     },
     /// Take off what is in a slot (an id in `data/slots.toml`). Takes the time of its action.
     Remove(String),
+    /// Bash whoever stands in a direction with the shield the player holds (spec §8 "Weapon
+    /// skills"): a melee blow with the shield's own damage, drawing on and training shield
+    /// bashing. Takes the time of `melee`.
+    Bash(Dir),
     /// Shoot the readied missile weapon's ammunition at this cell (spec §8 "Ranged combat"):
     /// one shot flies along the line through it, as far as the weapon shoots. Takes the time of
     /// `shoot` (plus `reload` for a missile weapon that needs it).
@@ -203,7 +207,7 @@ pub enum Event {
         to: Pos,
         strike: Option<Strike>,
         /// What a shot or a throw was made with: the missile (the ammunition as it flew, the
-        /// thrown thing); `None` for blows and spells.
+        /// thrown thing); for a shield bash, the shield; `None` for other blows and spells.
         with: Option<ObjectId>,
     },
     /// A missile flew (spec §8 "Ranged combat"): a shot or a throw. As the player perceives it
@@ -318,14 +322,15 @@ pub struct Outcome {
 }
 
 /// Text syntax for scripting: `move:E wait open:E close:W ascend descend lantern rest:1h
-/// rest:dawn rest:dusk pickup pickup:ac drop:b equip:body:b remove:body fire:12,5 throw:c:12,5
-/// dig:E vision:ID skip:1h weather:rain effect:fireball@12,5 effect:lightning_bolt@3,4>12,4`
-/// (durations: `30s`, `10m`, `2h`; letters name stacks, `a` first; `pickup` and `drop` without
-/// letters take everything; `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT,
-/// `remove:SLOT` takes off what is there; `dig:DIR` digs toward a wall; `fire:X,Y` shoots at the level cell (X, Y),
-/// `throw:LETTER:X,Y` throws one of inventory stack LETTER there; weather: `clear`, `overcast`,
-/// `rain`, `heavy`; `effect:ID@X,Y[>X,Y]` shows a spell effect at a cell, or from one cell
-/// toward another).
+/// rest:dawn rest:dusk pickup pickup:ac drop:b equip:body:b remove:body bash:E fire:12,5
+/// throw:c:12,5 dig:E vision:ID skip:1h weather:rain effect:fireball@12,5
+/// effect:lightning_bolt@3,4>12,4` (durations: `30s`, `10m`, `2h`; letters name stacks, `a`
+/// first; `pickup` and `drop` without letters take everything; `equip:SLOT:LETTER` puts
+/// inventory stack LETTER on in slot SLOT, `remove:SLOT` takes off what is there; `bash:DIR`
+/// bashes with the held shield; `dig:DIR` digs toward a wall; `fire:X,Y` shoots at the level
+/// cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack LETTER there; weather: `clear`,
+/// `overcast`, `rain`, `heavy`; `effect:ID@X,Y[>X,Y]` shows a spell effect at a cell, or from
+/// one cell toward another).
 ///
 /// `Display` and `FromStr` round-trip; action names are case-insensitive when parsing (vision
 /// profile, slot, and effect ids keep their case).
@@ -347,6 +352,7 @@ impl fmt::Display for Action {
                 write!(f, "equip:{slot}:{}", letter(*item).unwrap_or('?'))
             }
             Action::Remove(slot) => write!(f, "remove:{slot}"),
+            Action::Bash(d) => write!(f, "bash:{d}"),
             Action::Fire(at) => write!(f, "fire:{},{}", at.x, at.y),
             Action::Throw { item, at } => {
                 let item = letter(*item).unwrap_or('?');
@@ -391,6 +397,7 @@ impl FromStr for Action {
             "move" => dir().map(Action::Move),
             "open" => dir().map(Action::Open),
             "close" => dir().map(Action::Close),
+            "bash" => dir().map(Action::Bash),
             "dig" => dir().map(Action::Dig),
             "wait" => bare(Action::Wait),
             "ascend" => bare(Action::Ascend),
@@ -498,8 +505,8 @@ impl FromStr for Action {
             _ => Err(format!(
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
                  descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
-                 equip:SLOT:LETTER, remove:SLOT, fire:X,Y, throw:LETTER:X,Y, dig:DIR, vision:ID, \
-                 skip:DURATION, weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y])"
+                 equip:SLOT:LETTER, remove:SLOT, bash:DIR, fire:X,Y, throw:LETTER:X,Y, dig:DIR, \
+                 vision:ID, skip:DURATION, weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y])"
             )),
         }
     }
@@ -609,6 +616,7 @@ mod tests {
                 Action::Move(d),
                 Action::Open(d),
                 Action::Close(d),
+                Action::Bash(d),
                 Action::Dig(d),
             ]);
         }
@@ -625,6 +633,8 @@ mod tests {
         assert!(parse_actions("move").is_err());
         assert!(parse_actions("move:up").is_err());
         assert!(parse_actions("wait:E").is_err());
+        assert_eq!(parse_actions("BASH:sw"), Ok(vec![Action::Bash(Dir::SW)]));
+        assert!(parse_actions("bash").is_err());
         assert!(parse_actions("dance").is_err());
         assert_eq!(
             parse_actions("move:N*3 wait*0 wait"),

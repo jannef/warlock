@@ -47,6 +47,8 @@ pub enum KeyCommand {
     Character,
     /// Show the player's trained skills and their values (no time passes).
     Skills,
+    /// Show the player's weapon skills: ranks and marks (no time passes).
+    WeaponSkills,
     /// Ask how long to rest (an hour, until dawn, until dusk).
     Rest,
     /// Move a cursor over the map to read what is there (no time passes).
@@ -56,6 +58,9 @@ pub enum KeyCommand {
     /// Choose something to throw (what is readied in the missiles slot, else from the pack),
     /// aim it, then throw.
     Throw,
+    /// Bash with the shield held, in a direction (asked for in the message line). An ability
+    /// (`warlock_core::ability`): unbound by default, for the abilities menu to come (#156).
+    Bash,
     /// While aiming: the cursor to the next creature in view (with Shift, the one before).
     NextTarget,
     /// Use the tool the player has ready toward a direction (ADOM's `U`): dig into a wall with a
@@ -120,10 +125,12 @@ impl KeyCommand {
             KeyCommand::Equipment => "Equipment",
             KeyCommand::Character => "Character",
             KeyCommand::Skills => "Skills",
+            KeyCommand::WeaponSkills => "Weapon skills",
             KeyCommand::Rest => "Rest",
             KeyCommand::Look => "Look around",
             KeyCommand::Fire => "Fire missile weapon",
             KeyCommand::Throw => "Throw",
+            KeyCommand::Bash => "Bash with your shield",
             KeyCommand::NextTarget => "Next target (aiming; Shift: previous)",
             KeyCommand::UseTool => "Use a tool (dig)",
             KeyCommand::CycleVision => "Next vision profile (dev)",
@@ -232,6 +239,7 @@ impl Default for Bindings {
             (ch("e"), Equipment),
             (ch("@"), Character),
             (ch("S"), Skills),
+            (ch("W"), WeaponSkills),
             (ch("R"), Rest),
             (ch("x"), Look),
             (ch("f"), Fire),
@@ -303,7 +311,7 @@ impl Bindings {
 pub enum InputMode {
     #[default]
     Normal,
-    /// Waiting for a direction for `Open`, `Close`, or `UseTool`.
+    /// Waiting for a direction for `Open`, `Close`, `Bash`, or `UseTool`.
     Direction(KeyCommand),
     /// Asking how long to rest ([`REST_CHOICES`]).
     Rest,
@@ -501,6 +509,7 @@ impl Gameplay<'_> {
             (InputMode::Direction(cmd), KeyCommand::Move(dir)) => {
                 let action = match cmd {
                     KeyCommand::Open => Action::Open(dir),
+                    KeyCommand::Bash => Action::Bash(dir),
                     KeyCommand::UseTool => Action::Dig(dir),
                     _ => Action::Close(dir),
                 };
@@ -573,6 +582,10 @@ impl Gameplay<'_> {
                 open = Some(ScreenName::Skills);
                 InputMode::Normal
             }
+            (InputMode::Normal, KeyCommand::WeaponSkills) => {
+                open = Some(ScreenName::WeaponSkills);
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::CycleVision) => {
                 let view = game.world.perception();
                 let next = next_vision(view.content().vision_profiles(), &view.vision().id);
@@ -598,7 +611,7 @@ impl Gameplay<'_> {
                 self.overlays.light_values = !self.overlays.light_values;
                 InputMode::Normal
             }
-            (InputMode::Normal, KeyCommand::Open | KeyCommand::Close) => {
+            (InputMode::Normal, KeyCommand::Open | KeyCommand::Close | KeyCommand::Bash) => {
                 InputMode::Direction(command)
             }
             (InputMode::Normal, KeyCommand::UseTool) => {
@@ -731,6 +744,8 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Inventory), ["i"]);
         assert_eq!(keys(&b, KeyCommand::Equipment), ["e"]);
         assert_eq!(keys(&b, KeyCommand::Character), ["@"]);
+        assert_eq!(keys(&b, KeyCommand::WeaponSkills), ["W"]);
+        assert!(keys(&b, KeyCommand::Bash).is_empty(), "an ability: unbound");
         assert_eq!(keys(&b, KeyCommand::Fire), ["f"]);
         assert_eq!(keys(&b, KeyCommand::Throw), ["t"]);
         assert_eq!(keys(&b, KeyCommand::NextTarget), ["Tab"]);

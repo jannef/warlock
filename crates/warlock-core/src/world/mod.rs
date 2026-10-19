@@ -48,6 +48,16 @@
 //! way, and come down to be picked up again; burning missiles are fires that light the level
 //! until they burn out.
 //!
+//! Special rooms (spec §7 "Special rooms", [`crate::content::RoomEffectDef`]): a level's special
+//! rooms change the rules inside them, through one question, [`World::room_effect_at`]: the
+//! light (and so what the player and creatures see), the noise made there, regeneration, and
+//! whether creatures hostile to the player step in. The first time the player is inside one they
+//! are told what it is.
+//! Weapon skills (spec §8 "Weapon skills", [`crate::weapon_skills`], `fight.rs`): every attack
+//! draws on a skill (the weapon's, unarmed, thrown, shield bashing) for its to-hit, damage,
+//! threat, and cost, and the player's attacks and shield blocks earn marks toward its next rank
+//! ("You feel more skilled with daggers."). A shield bash ([`Action::Bash`]) is a blow with a
+//! held shield.
 //! Digging (`dig.rs`): walls that break give way to a digging tool, turn after turn like a rest,
 //! and to explosions stronger than they are hard; they become rubble.
 
@@ -75,8 +85,8 @@ use crate::action::{Action, Breach, Event, Letters, MAX_REST, MissileEnd, Outcom
 use crate::burden::{self, Burden, Load};
 use crate::character::{Character, CharacterSpec};
 use crate::content::{
-    ActionKind, Content, CreatureId, EdgeExit, LevelKind, LevelTemplate, StairsDir, Stance,
-    TerrainId, local_area_id,
+    ActionKind, Content, CreatureId, EdgeExit, LevelKind, LevelTemplate, RoomEffectDef, StairsDir,
+    Stance, TerrainId, local_area_id,
 };
 use crate::geom::{Dir, Pos};
 use crate::light::{LightCache, Sky};
@@ -90,6 +100,7 @@ use crate::rng::Rng;
 use crate::sight::LineOfSight;
 use crate::skills::{Skills, Use};
 use crate::time::{self, Duration, GameTime};
+use crate::weapon_skills::WeaponSkills;
 use crate::weather::{self, Weather};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -322,12 +333,20 @@ impl World {
         let seed = seed.unwrap_or(def.seed);
         // The player's hit points beyond their Toughness: what their race and class give, or
         // without a character what the scenario gives. Without a character the player is trained
-        // in nothing.
+        // in nothing and has no weapon skills.
         let chosen = character.or(def.character.as_ref());
-        let (stats, vision, hp_base, skills, character) = match chosen {
+        let (stats, vision, hp_base, skills, character, weapon_skills) = match chosen {
             Some(spec) => {
                 let s = (spec.start(&content, seed, def.start)).map_err(WorldError::Character)?;
-                (s.stats, s.vision, s.hp, s.skills, Some(s.character))
+                let character = Some(s.character);
+                (
+                    s.stats,
+                    s.vision,
+                    s.hp,
+                    s.skills,
+                    character,
+                    s.weapon_skills,
+                )
             }
             None => (
                 def.player_stats,
@@ -335,6 +354,7 @@ impl World {
                 i32::from(def.hp),
                 Skills::default(),
                 None,
+                WeaponSkills::default(),
             ),
         };
         let start = level_template(&content, seed, &def.start_level, None)?;
@@ -384,6 +404,7 @@ impl World {
             hp_base,
             regen: 0,
             skills,
+            weapon_skills,
             faction_override: None,
         };
         player.hp = player.max_hp();
@@ -393,6 +414,9 @@ impl World {
         state
             .messages
             .push(0, format!("Welcome to {}. Press ? for controls.", def.name));
+        if let Some(text) = enter_room(&mut state, &content) {
+            state.messages.push(0, text);
+        }
         Ok(Self::assemble(content, state))
     }
 
@@ -427,10 +451,11 @@ impl World {
                 || a.inventory.len() > object::INVENTORY_SLOTS
                 || !a.equipment.is_valid_for(&a.inventory, &content)
                 || a.skills.iter().any(|(id, _)| usize::from(id.0) >= skills)
+                || !a.weapon_skills.is_valid_for(content.weapon_skills())
         }) {
             return Err(WorldError::InconsistentState(format!(
-                "actor {} is a creature, carries objects, wears them in slots, or knows skills \
-                 this content does not have",
+                "actor {} is a creature, carries objects, wears them in slots, or knows skills or \
+                 weapon skills this content does not have",
                 actor.id
             )));
         }
@@ -555,6 +580,15 @@ impl World {
             .values()
             .filter(move |a| a.level == level.id);
         (level, actors)
+    }
+
+    /// The effect of the special room at `pos` on level `level`, if that level has been visited
+    /// and a special room lies there (spec §7 "Special rooms"). This is the one question the rules
+    /// ask of special rooms (through the level's state inside the core); ground truth, **for the
+    /// rules, tests, and developer tools**: the player knows only the rooms they have been in
+    /// ([`PerceptionView::room`]).
+    pub fn room_effect_at(&self, level: &str, pos: Pos) -> Option<&RoomEffectDef> {
+        (self.state.levels.get(level)?).room_effect_at(&self.content, pos)
     }
 
     /// Applies one player action and runs the rest of the turn if it took time. Once the player
@@ -709,9 +743,9 @@ impl World {
             .collect()
     }
 
-    /// Phase 4: recomputes perception, updates memory, says what news the player heard and how
-    /// the weather changed, reports the attacks the player perceived, and drops events the player
-    /// did not see.
+    /// Phase 4: recomputes perception, updates memory, tells the player about a special room they
+    /// are in for the first time, says what news they heard and how the weather changed, reports
+    /// the attacks they perceived, and drops events they did not see.
     fn perceive(&mut self, events: &mut Vec<Event>) {
         let now = self.state.time;
         if self.state.weather_override.is_some_and(|o| o.until <= now) {
@@ -724,6 +758,9 @@ impl World {
         if let Some(level) = self.state.levels.get_mut(&current) {
             self.perception.remember(level);
         }
+        if let Some(text) = enter_room(&mut self.state, &self.content) {
+            self.say(text);
+        }
         self.hear();
         if let (Some(from), Some(to)) = (before, self.perception.weather()) {
             self.weather_news(from, to);
@@ -732,6 +769,8 @@ impl World {
         for text in reports {
             self.say(text);
         }
+        // A weapon skill a blocked blow raised (`fight.rs`).
+        self.say_news();
     }
 
     /// Keeps the events the player perceived (dropping the rest) and returns the messages for
@@ -1021,6 +1060,7 @@ impl World {
             Action::Drop(letters) => return self.drop_objects(*letters),
             Action::Equip { slot, item } => return self.equip(slot, *item),
             Action::Remove(slot) => return self.remove(slot),
+            Action::Bash(dir) => return self.bash(*dir, events),
             Action::Fire(at) => return self.fire(*at, events),
             Action::Throw { item, at } => return self.throw(*item, *at, events),
             Action::Rest(goal) => return self.start_rest(*goal),
@@ -1233,8 +1273,9 @@ impl World {
             let name = self.content.creature(other.creature).name.clone();
             let player = self.state.player;
             if self.stance(player, target) == Stance::Hostile {
+                let skill = self.state.player().melee_skill(&self.content);
                 self.player_attacks(target, seen, events);
-                return self.took(true, ActionKind::Melee);
+                return Spent::Turn(self.attack_price(player, ActionKind::Melee, skill));
             }
             let what = if seen {
                 format!("The {name}")
@@ -1517,6 +1558,18 @@ fn split(stacks: &[Stack], chosen: Letters) -> (Vec<Stack>, Vec<Stack>) {
     (unzip(picked), unzip(rest))
 }
 
+/// The first time the player is inside a special room (spec §7 "Special rooms"): marks it
+/// entered and returns what they are told; from then on they know it (look mode names it).
+fn enter_room(state: &mut WorldState, content: &Content) -> Option<String> {
+    let here = state.player().pos;
+    let room = (state.current_mut().rooms.iter_mut()).find(|r| r.contains(here))?;
+    if room.entered {
+        return None;
+    }
+    room.entered = true;
+    Some(content.room_effect(room.effect).enter.clone())
+}
+
 /// `A` or `An` for a noun.
 fn article(noun: &str) -> &'static str {
     match noun.chars().next() {
@@ -1576,6 +1629,7 @@ fn instantiate_level(state: &mut WorldState, content: &Content, template: &Level
             hp_base: def.base_hp,
             regen: 0,
             skills: def.skills.clone(),
+            weapon_skills: def.weapon_skills.clone(),
             faction_override: spawn.faction,
         };
         actor.hp = actor.max_hp();
@@ -1612,6 +1666,8 @@ mod object_tests;
 #[cfg(test)]
 mod overworld_tests;
 #[cfg(test)]
+mod room_tests;
+#[cfg(test)]
 mod shoot_tests;
 #[cfg(test)]
 mod skills_tests;
@@ -1625,5 +1681,7 @@ mod sun_tests;
 mod tests;
 #[cfg(test)]
 mod time_tests;
+#[cfg(test)]
+mod weapon_skill_tests;
 #[cfg(test)]
 mod weather_tests;

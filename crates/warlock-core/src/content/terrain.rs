@@ -217,4 +217,14 @@ impl TerrainDef {
     pub fn flows(&self) -> bool {
         self.anim.as_ref().is_some_and(GlyphAnim::is_flow)
     }
+
+    /// Ground one simply walks on: walkable, and neither stairs, a door, nor giving light (dev
+    /// views mark such cells of a special room).
+    pub fn is_plain_ground(&self) -> bool {
+        self.walkable
+            && self.stairs.is_none()
+            && self.light.is_none()
+            && !self.is_closed_door()
+            && !self.is_open_door()
+    }
 }

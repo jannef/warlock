@@ -28,6 +28,10 @@
 # Sunlight (M9): the stairs nook's staircase up (^ in the map, drawn `<`) climbs to the courtyard,
 # a garden under the open sky.
 #
+# Special rooms (M25): the stairs nook is a sanctuary (the [[room]] table at the end): a faint warm
+# glow, wounds heal three times as fast, and nothing hostile to you steps in. You are told the
+# first time you enter it ("You feel at peace here."), and look mode names it from then on.
+#
 # Objects (M11): gold and a small pile in the start room to pick up (`,` or `g`); the door
 # corridor's west room is a storeroom of arms and armor and its east room a pantry; an amulet lies
 # in the dark of the darkness chamber, and a ring before the water garden's altar. The patrolling
@@ -98,6 +102,11 @@ map = '''
 "v" = { terrain = "stairs_down", to = "arena" }
 # Stairs down (drawn `>`) to the quarry, the place to dig.
 "Q" = { terrain = "stairs_down", to = "quarry" }
+
+# Special rooms (data/room_effects.toml): the stairs nook, walls and door included, is a sanctuary.
+[[room]]
+effect = "sanctuary"
+area = [71, 11, 79, 20]
 
 # Objects, top of each pile first.
 # The start room.
