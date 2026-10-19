@@ -15,7 +15,12 @@
 //! (a launcher's carry its draw weight, `1d8+2`), its critical (`threat`, the lowest natural roll
 //! that threatens, default 22; `crit`, the damage multiplier, default 2), an optional `to_hit`,
 //! a `parry` bonus to Defence while wielded, and for bows the `strength` they need; armour its
-//! `armour` bonus and the most Dexterity bonus it allows (`max_dex`); a shield its `shield` bonus.
+//! `armour` bonus and the most Dexterity bonus it allows (`max_dex`); a shield its `shield` bonus,
+//! and the `bash` dice of a blow with it (spec §8 "Weapon skills": the shield bash).
+//!
+//! Every weapon names its weapon skill (`category`, an id in `data/weapon_skills.toml`; spec §8
+//! "Weapon skills"): a skill of role `melee` for what is wielded in a hand, `launcher` for a
+//! missile weapon, `thrown` for what is only thrown (a rock).
 //!
 //! Ranged combat (spec §8 "Ranged combat"): a missile weapon shoots as far as its `range` (and
 //! one that `reloads`, a crossbow, takes the `reload` action after every shot); anything else
@@ -31,6 +36,7 @@ use super::light::LightId;
 use super::material::MaterialId;
 use super::particles::ParticleEmitter;
 use super::slot::SlotDef;
+use super::weapon_skill::{Role, WeaponSkillId, WeaponSkillTable};
 use super::{Content, ContentError};
 use crate::color::Rgb;
 use crate::combat::{Attack, CRITS, DEFAULT_CRIT, DEFAULT_THREAT, THREATS};
@@ -102,6 +108,10 @@ pub(super) struct ObjectSpec {
     /// Defence while held (the Shield category).
     #[serde(default)]
     pub shield: i32,
+    /// A shield's damage dice when bashing with it.
+    pub bash: Option<Dice>,
+    /// The weapon skill a weapon trains and draws on (`data/weapon_skills.toml`).
+    pub category: Option<String>,
     /// How far a missile weapon shoots, or a throwing weapon (anything else with a range) is
     /// thrown, in cells.
     pub range: Option<i32>,
@@ -166,6 +176,11 @@ pub struct ObjectDef {
     pub max_dex: Option<i32>,
     /// Defence while held: its Shield bonus.
     pub shield: i32,
+    /// What a bash with it does, if it is a shield one can bash with.
+    pub bash: Option<Attack>,
+    /// Its weapon skill: a weapon's `category` (`None` for anything else, and without
+    /// `data/weapon_skills.toml`).
+    pub skill: Option<WeaponSkillId>,
     /// How far it shoots (a missile weapon) or is thrown (a throwing weapon), in cells.
     pub range: Option<i32>,
     /// A missile weapon reloaded after every shot: a shot also takes the `reload` action.
@@ -223,15 +238,17 @@ pub fn article(noun: &str) -> &'static str {
 }
 
 impl ObjectSpec {
-    /// Checks the definition and resolves its material and light; `slots` are where things may
-    /// be worn or wielded. Returns the object and the id of what it is `lit` as, which names
-    /// another object and is resolved once every object is known.
+    /// Checks the definition and resolves its material, light, and weapon skill; `slots` are
+    /// where things may be worn or wielded, `skills` the weapon skills. Returns the object and
+    /// the id of what it is `lit` as, which names another object and is resolved once every
+    /// object is known.
     pub(super) fn resolve(
         self,
         file: &str,
         material: impl Fn(&str) -> Option<MaterialId>,
         light: impl Fn(&str) -> Option<LightId>,
         slots: &[SlotDef],
+        skills: &WeaponSkillTable,
     ) -> Result<(ObjectDef, Option<String>), ContentError> {
         let err = |m: String| ContentError::new(file, format!("object `{}`: {m}", self.id));
         if self.name.trim().is_empty() || self.plural.as_ref().is_some_and(|p| p.trim().is_empty())
@@ -272,6 +289,15 @@ impl ObjectSpec {
         let attack = self.attack().map_err(err)?;
         self.check_defence().map_err(err)?;
         self.check_ranged().map_err(err)?;
+        let skill = self.skill(slots, skills).map_err(err)?;
+        let bash = match (self.bash, self.shield) {
+            (None, _) => None,
+            (Some(damage), shield) if shield > 0 => Some(Attack {
+                damage,
+                ..Attack::unarmed()
+            }),
+            (Some(_), _) => return Err(err("`bash` is for shields (`shield`)".into())),
+        };
         let burning = match (&self.light, self.burns) {
             (None, None) => None,
             (Some(id), Some(seconds)) => {
@@ -305,6 +331,8 @@ impl ObjectSpec {
             armour: self.armour,
             max_dex: self.max_dex,
             shield: self.shield,
+            bash,
+            skill,
             range: self.range,
             reloads: self.reloads,
             breaks: self.breaks,
@@ -411,6 +439,50 @@ impl ObjectSpec {
         }))
     }
 
+    /// The weapon skill a weapon names (`category`): every weapon names one when there are
+    /// weapon skills, nothing else does, and its role fits what the weapon is: a missile weapon
+    /// a `launcher`, what is wielded in a hand `melee`, anything else (only thrown) `thrown`.
+    fn skill(
+        &self,
+        slots: &[SlotDef],
+        skills: &WeaponSkillTable,
+    ) -> Result<Option<WeaponSkillId>, String> {
+        let Some(name) = &self.category else {
+            if self.damage.is_some() && !skills.is_empty() {
+                return Err(
+                    "a weapon (`damage`) names its weapon skill (`category`, an id in \
+                     data/weapon_skills.toml)"
+                        .into(),
+                );
+            }
+            return Ok(None);
+        };
+        if self.damage.is_none() {
+            return Err("`category` is for weapons, which have a `damage`".into());
+        }
+        let id = skills
+            .id(name)
+            .ok_or_else(|| format!("unknown weapon skill `{name}` (data/weapon_skills.toml)"))?;
+        let in_hand = (slots.iter()).any(|s| s.hand && Some(&s.fits) == self.slot.as_ref());
+        let role = if self.launches.is_some() {
+            Role::Launcher
+        } else if in_hand {
+            Role::Melee
+        } else {
+            Role::Thrown
+        };
+        let has = skills.skill(id).role;
+        if has != role {
+            return Err(format!(
+                "`category = \"{name}\"` is a skill of role `{}`, but this weapon needs one of \
+                 role `{}`",
+                has.id(),
+                role.id()
+            ));
+        }
+        Ok(Some(id))
+    }
+
     /// Defence bonuses are for things worn or wielded, 0 to [`MAX_BONUS`].
     fn check_defence(&self) -> Result<(), String> {
         let bonuses = [
@@ -493,6 +565,8 @@ mod tests {
             armour: 0,
             max_dex: None,
             shield: 0,
+            bash: None,
+            skill: None,
             range: None,
             reloads: false,
             breaks: 0,

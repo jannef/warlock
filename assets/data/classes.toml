@@ -1,6 +1,6 @@
 # Classes (spec §8 "Character creation"): the third choice of a new run, in the order offered.
 # A class adjusts the starting scores (see races.toml for how they add up), gives hit points, and
-# trains the character in skills: no equipment or spells come with it.
+# trains the character in skills and weapon skills: no equipment or spells come with it.
 #
 # Fields: id and name (the class's id, for the command line and saves, and its name), description
 # (one line, shown when choosing), and stats (adjustments to the starting scores by stat id:
@@ -12,7 +12,11 @@
 # and their class's. skills: the skills the class trains (spec §8 "Skills"; skills.toml), by skill
 # id: dice (`"2d6+10"`) or a number, rolled when the character is made, every result within 0 to
 # 100; added to the race's. Each class has a few skills it is known for (2d6+10) and a few more
-# (2d4+4); every other skill is untrained.
+# (2d4+4); every other skill is untrained. weapon_skills: starting ranks in weapon skills (spec §8
+# "Weapon skills"), by skill id in weapon_skills.toml, a number or dice (every result within 0 to
+# 10), added to the race's (at most 10); weapon_skill_choice: two or more such sets, of which one
+# is picked at random when the character is made (the barbarian's axes or great blades). Each
+# starting rank then raises the weapon skills it defaults to.
 #
 # The adventurers come first, then everyday folk. Balance is not a goal: some choices are poor on
 # purpose.
@@ -24,6 +28,8 @@ description = "A warrior of the wild lands, fueled by fury: mighty and hardy, wi
 stats = { strength = "1d3+1", dexterity = 1, toughness = "1d3", intelligence = "-1d2", presence = -1 }
 hp = 8
 skills = { athletics = "2d6+10", survival = "2d6+10", intimidate = "2d4+4", listen = "2d4+4", swim = "2d4+4" }
+weapon_skills = { unarmed = 1 }
+weapon_skill_choice = [{ axes = 2 }, { great_blades = 2 }]
 
 [[class]]
 id = "bard"
@@ -32,6 +38,7 @@ description = "A wandering singer and teller of tales who gets by on charm, quic
 stats = { strength = -1, dexterity = 1, toughness = -1, intelligence = "1d2", presence = "1d3+1" }
 hp = 2
 skills = { bluff = "2d6+10", music = "2d6+10", appraise = "2d4+4", decipher_script = "2d4+4", knowledge = "2d4+4", tumble = "2d4+4" }
+weapon_skills = { short_blades = 1, daggers = "1d2" }
 
 [[class]]
 id = "priest"
@@ -40,6 +47,7 @@ description = "A servant of a god, schooled in rite and scripture: strong of wil
 stats = { strength = -1, dexterity = -1, intelligence = 1, willpower = "1d3+1", presence = "1d2" }
 hp = 4
 skills = { heal = "2d6+10", knowledge = "2d6+10", concentration = "2d4+4", decipher_script = "2d4+4" }
+weapon_skills = { maces = 2, shield_block = 1 }
 
 [[class]]
 id = "druid"
@@ -48,6 +56,7 @@ description = "A keeper of the old ways who speaks for forest and beast: hardy a
 stats = { toughness = "1d2", willpower = "2d2", presence = -1 }
 hp = 4
 skills = { handle_animal = "2d6+10", survival = "2d6+10", concentration = "2d4+4", heal = "2d4+4", listen = "2d4+4" }
+weapon_skills = { staves = 2, slings = 1 }
 
 [[class]]
 id = "monk"
@@ -56,6 +65,7 @@ description = "A disciple of a cloister's discipline, body and mind trained as o
 stats = { dexterity = "1d3", toughness = 1, willpower = "1d3", presence = -1 }
 hp = 5
 skills = { balance = "2d6+10", tumble = "2d6+10", athletics = "2d4+4", concentration = "2d4+4", escape_artist = "2d4+4", listen = "2d4+4" }
+weapon_skills = { unarmed = 2, staves = 1 }
 
 [[class]]
 id = "paladin"
@@ -64,6 +74,7 @@ description = "A holy knight sworn to an oath: strong and commanding, steadfast 
 stats = { strength = "1d3", dexterity = -1, intelligence = -1, willpower = 1, presence = "1d3" }
 hp = 6
 skills = { intimidate = "2d6+10", concentration = "2d4+4", handle_animal = "2d4+4", heal = "2d4+4" }
+weapon_skills = { long_blades = 2, shield_block = "1d2", shield_bash = 1 }
 
 [[class]]
 id = "ranger"
@@ -72,6 +83,7 @@ description = "A hunter and tracker of the borderlands: sharp-eyed, sure-footed,
 stats = { dexterity = "1d3", toughness = 1, willpower = "1d2", presence = -1 }
 hp = 5
 skills = { spot = "2d6+10", survival = "2d6+10", woodcraft = "2d6+10", athletics = "2d4+4", handle_animal = "2d4+4", listen = "2d4+4", swim = "2d4+4" }
+weapon_skills = { bows = 2, short_blades = 1 }
 
 [[class]]
 id = "thief"
@@ -80,6 +92,7 @@ description = "A cutpurse, burglar, and picker of locks who lives by nimble fing
 stats = { strength = -1, dexterity = "1d3+1", intelligence = "1d2-1", willpower = -1 }
 hp = 3
 skills = { open_lock = "2d6+10", steal = "2d6+10", stealth = "2d6+10", tumble = "2d6+10", appraise = "2d4+4", disable_device = "2d4+4", escape_artist = "2d4+4", search = "2d4+4", spot = "2d4+4" }
+weapon_skills = { daggers = 2, thrown = 1 }
 
 [[class]]
 id = "wizard"
@@ -88,6 +101,7 @@ description = "A scholar of the arcane who traded sunlight for candlelight: bril
 stats = { strength = -2, toughness = "-1d2", intelligence = "2d2+1", willpower = 1 }
 hp = 0
 skills = { concentration = "2d6+10", knowledge = "2d6+10", spellcraft = "2d6+10", decipher_script = "2d4+4", use_magic_device = "2d4+4" }
+weapon_skills = { staves = 1 }
 
 [[class]]
 id = "witch"
@@ -96,6 +110,7 @@ description = "A hedge-magician of herbs, hexes, and old bargains: cunning, wise
 stats = { strength = -2, toughness = -1, intelligence = "1d3", willpower = "1d3", presence = "1d3-2" }
 hp = 1
 skills = { heal = "2d6+10", spellcraft = "2d6+10", concentration = "2d4+4", intimidate = "2d4+4", use_magic_device = "2d4+4" }
+weapon_skills = { daggers = 1, staves = 1 }
 
 [[class]]
 id = "warrior"
@@ -104,6 +119,7 @@ description = "A trained fighter of the shield wall and the dueling ground: stro
 stats = { strength = "1d3+1", dexterity = 1, toughness = "1d3", intelligence = -1 }
 hp = 7
 skills = { athletics = "2d6+10", balance = "2d4+4", intimidate = "2d4+4", swim = "2d4+4" }
+weapon_skills = { long_blades = 2, shield_block = "1d2" }
 
 [[class]]
 id = "aristocrat"
@@ -112,6 +128,7 @@ description = "Born to wealth and command and never asked to lift anything heavi
 stats = { strength = -2, toughness = "-1d2", intelligence = 1, willpower = -1, presence = "1d3+1" }
 hp = 1
 skills = { knowledge = "2d6+10", bluff = "2d4+4", intimidate = "2d4+4" }
+weapon_skills = { long_blades = 1 }
 
 [[class]]
 id = "commoner"
@@ -120,6 +137,7 @@ description = "A farmhand, laborer, or servant with no training to speak of: use
 stats = { toughness = "1d3-1", intelligence = -1, presence = -1 }
 hp = 3
 skills = { athletics = "2d4+4", handle_animal = "2d4+4" }
+weapon_skills = { maces = 1 }
 
 [[class]]
 id = "craftsperson"
@@ -128,6 +146,7 @@ description = "A smith, carpenter, or weaver who knows a trade inside out: sure 
 stats = { strength = 1, dexterity = "1d3", intelligence = 1, presence = "-1d2" }
 hp = 3
 skills = { metalcraft = "2d6+10", woodcraft = "2d6+10", appraise = "2d4+4" }
+weapon_skills = { axes = 1 }
 
 [[class]]
 id = "merchant"
@@ -136,3 +155,4 @@ description = "A trader who knows the price of everything: shrewd and persuasive
 stats = { strength = -1, dexterity = -1, toughness = -1, intelligence = "1d2", presence = "1d3" }
 hp = 2
 skills = { appraise = "2d6+10", bluff = "2d6+10", knowledge = "2d4+4" }
+weapon_skills = { daggers = 1 }

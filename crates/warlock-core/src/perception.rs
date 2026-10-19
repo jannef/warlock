@@ -47,6 +47,7 @@
 //! is not visible are perceived with their kind, volume, and a rough place (a cell the player
 //! does not see, near the source); never with who made them.
 
+use crate::ability::Ability;
 use crate::burden::{self, Load};
 use crate::character::Character;
 use crate::combat::Health;
@@ -68,6 +69,7 @@ use crate::object::{Stack, Weight};
 use crate::skills::{self, SkillId};
 use crate::stats::PerStat;
 use crate::time::GameTime;
+use crate::weapon_skills::WeaponSkills;
 use crate::weather::Weather;
 use crate::world::{Actor, ActorId, ActorKind, Death, LevelState, WorldState};
 use serde::Serialize;
@@ -776,6 +778,20 @@ impl<'a> PerceptionView<'a> {
     /// whether that use is available now: what the abilities menu (#156) lists of skills.
     pub fn active_skills(&self) -> Vec<OwnSkill> {
         self.own_skills().into_iter().filter(|s| s.active).collect()
+    }
+
+    /// The abilities the player can use now, in menu order ([`crate::ability`]): for the
+    /// abilities menu (#156) to list.
+    pub fn abilities(&self) -> Vec<Ability> {
+        (Ability::ALL.into_iter())
+            .filter(|a| a.usable(self.player, self.content))
+            .collect()
+    }
+
+    /// The player's ranks and marks in weapon skills (spec §8 "Weapon skills"): they know their
+    /// ranks, and see their marks as a bar toward the next. Never what a rank gives.
+    pub fn own_weapon_skills(&self) -> &'a WeaponSkills {
+        &self.player.weapon_skills
     }
 
     /// The player's hit points: what they have left (at most their maximum, never below 0) and

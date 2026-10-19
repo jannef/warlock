@@ -22,12 +22,14 @@ authoritative: it is generated from your current key bindings.
 | Equipment (wear and wield) | `e` |
 | Character (your stats and weight) | `@` |
 | Skills | `S` |
+| Weapon skills | `W` |
 | Info page 1 to 9 (while an info screen is open) | `1` to `9` |
 | Next / previous info page (wraps) | `Tab` or `PageDown` / `Shift`+`Tab` or `PageUp` |
 | Rest | `R` |
 | Look around | `x` |
 | Fire your missile weapon | `f`, then aim (see below) |
 | Throw something | `t`, then aim |
+| Bash with your shield | no key until you bind one, then a direction |
 | Next target while aiming (with Shift: the one before) | `Tab` |
 | Show or hide the controls | `?` |
 | Pause menu | `Esc` |
@@ -48,7 +50,8 @@ kept with your [settings](settings.md).
 
 ## Prompts
 
-Opening and closing a door ask `In which direction? (Esc to cancel)` on the message line, and
+Opening and closing a door, and bashing with your shield, ask `In which direction? (Esc to
+cancel)` on the message line, and
 resting asks how long (see [Resting](resting.md)). Answer with a direction or the key shown, or
 press `Esc` to cancel. Pressing any other command cancels the prompt.
 
