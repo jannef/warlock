@@ -198,6 +198,28 @@ weight = 450
 slot = "main_hand"
 damage = "1d4"
 range = 4
+
+[[object]]
+id = "club"
+name = "club"
+glyph = ")"
+fg = "#c0c0c0"
+material = "wood"
+weight = 1400
+slot = "main_hand"
+damage = "1d6"
+parry = 1
+
+[[object]]
+id = "rock"
+name = "rock"
+glyph = "*"
+fg = "#c0c0c0"
+material = "wood"
+weight = 800
+stackable = true
+damage = "1d3"
+range = 6
 "##;
 
 const SLOTS: &str = r##"
@@ -213,6 +235,7 @@ id = "missile_weapon"
 name = "Missile weapon"
 action = "ready"
 mark = "readied"
+takes_weapons = true
 
 [[slot]]
 id = "missiles"
@@ -383,7 +406,10 @@ fn shots_stop_at_walls_and_fly_no_farther_than_their_range() {
     let mut w = world_with(OPEN, "\"bow\", \"arrow*5\"", false, "");
     run(&mut w, "pickup");
     assert!(!w.apply(&Action::Fire(Pos::new(4, 1))).took_turn);
-    assert_eq!(last_message(&w), "You have no missile weapon ready.");
+    assert_eq!(
+        last_message(&w),
+        "You have nothing ready to throw or shoot."
+    );
     run(&mut w, "equip:missile_weapon:a");
     assert!(!w.apply(&Action::Fire(Pos::new(4, 1))).took_turn);
     assert_eq!(last_message(&w), "You have no arrows ready.");
@@ -730,4 +756,120 @@ fn ranged_fights_replay_exactly() {
     let (verified, divergence) = replay.play(content).expect("replays");
     assert_eq!(divergence, None);
     assert_eq!(verified.state_hash(), w.state_hash());
+}
+
+#[test]
+fn the_missile_weapon_slot_takes_any_weapon_and_throwable_but_not_ammunition() {
+    let w = world_with(
+        OPEN,
+        "\"club\", \"rock*3\", \"arrow*3\", \"bow\"",
+        false,
+        "",
+    );
+    let c = w.content();
+    let slot = c.slot_id("missile_weapon").expect("slot");
+    let fits = |id: &str| c.fits(c.object_id(id).expect(id), slot);
+    assert!(fits("club") && fits("rock") && fits("dagger") && fits("bow"));
+    assert!(!fits("arrow"), "ammunition stays in the missiles slot");
+    let hand = c.slot_id("main_hand").expect("slot");
+    assert!(!c.fits(c.object_id("rock").expect("rock"), hand));
+}
+
+#[test]
+fn a_melee_weapon_in_the_missile_slot_is_thrown_whole_with_a_penalty() {
+    let mut w = world_with(
+        OPEN,
+        "\"club\"",
+        false,
+        "stats = { strength = 12, dexterity = 12 }",
+    );
+    run(&mut w, "pickup equip:missile_weapon:a");
+    let view = w.perception();
+    assert_eq!(view.ready_to_throw(), Some(0));
+    assert_eq!(view.throw_range(0), Some(crate::combat::IMPROVISED_RANGE));
+    assert!(
+        !view.is_throwing_weapon(0),
+        "the throw choice lists made-for-throwing only"
+    );
+    let content = w.content().clone();
+    let club = content.object(content.object_id("club").expect("club"));
+    let attack = club.attack.as_ref().expect("a weapon");
+    let stats = &w.state().player().stats;
+    assert_eq!(
+        crate::combat::Profile::improvised(attack, stats).to_hit,
+        crate::combat::Profile::thrown(attack, stats).to_hit + crate::combat::IMPROVISED_TO_HIT
+    );
+    // Beyond its short range: refused. Within it: thrown, leaves the slot, lands.
+    assert!(
+        !w.apply(&Action::Throw {
+            item: 0,
+            at: Pos::new(5, 1)
+        })
+        .took_turn
+    );
+    assert_eq!(last_message(&w), "That is out of range.");
+    let out = w.apply(&Action::Throw {
+        item: 0,
+        at: Pos::new(3, 1),
+    });
+    assert!(out.took_turn);
+    assert_eq!(last_message(&w), "You throw a club.");
+    assert_eq!(pile(&w, Pos::new(3, 1)), [("club".to_string(), 1)]);
+    let view = w.perception();
+    assert!(view.inventory().is_empty() && view.equipment().is_empty());
+    assert_eq!(view.ready_to_throw(), None);
+}
+
+#[test]
+fn a_stack_of_rocks_readied_in_the_missile_slot_is_thrown_one_at_a_time() {
+    let mut w = world_with(OPEN, "\"rock*3\"", false, "");
+    run(&mut w, "pickup equip:missile_weapon:a");
+    assert_eq!(w.perception().ready_to_throw(), Some(0));
+    assert!(
+        w.apply(&Action::Throw {
+            item: 0,
+            at: Pos::new(4, 1)
+        })
+        .took_turn
+    );
+    assert_eq!(carried(&w, "rock"), 2);
+    assert_eq!(
+        w.perception().ready_to_throw(),
+        Some(0),
+        "the rest stay readied"
+    );
+}
+
+#[test]
+fn a_weapon_readied_to_throw_does_not_parry_and_nothing_readied_takes_no_time() {
+    let mut w = world_with(OPEN, "\"club\"", false, "");
+    let before = w
+        .state()
+        .player()
+        .defence(w.content(), crate::burden::Burden::Unburdened);
+    run(&mut w, "pickup equip:missile_weapon:a");
+    let readied = w
+        .state()
+        .player()
+        .defence(w.content(), crate::burden::Burden::Unburdened);
+    assert_eq!(readied.total(), before.total());
+    run(&mut w, "equip:main_hand:a");
+    let held = w
+        .state()
+        .player()
+        .defence(w.content(), crate::burden::Burden::Unburdened);
+    assert_eq!(
+        held.total(),
+        before.total() + 1,
+        "wielded, the club parries"
+    );
+    // Nothing readied: the rules say so.
+    let mut w = world_with(OPEN, "", false, "");
+    assert_eq!(w.perception().ready_to_throw(), None);
+    let out = w.apply(&Action::Fire(Pos::new(4, 1)));
+    assert!(!out.took_turn);
+    assert_eq!(
+        last_message(&w),
+        "You have nothing ready to throw or shoot."
+    );
 }

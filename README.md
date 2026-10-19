@@ -155,8 +155,8 @@ cargo run --release -p warlock
 | `@` | Character: your race, gender, class, age, birth sign, stats, hit points, Defence, and weight |
 | `R` | Rest an hour, until dawn, or until nightfall (stops when something comes into view) |
 | `x` | Look around: move a cursor to read what is there (takes no time) |
-| `f` | Fire your missile weapon: aim (Tab cycles targets), then Enter |
-| `t` | Throw something: choose it, aim, then Enter |
+| `t` | Shoot or throw what is in your Missile weapon slot: aim (Tab cycles targets), then Enter |
+| `T` | Throw something from your pack: choose it, aim, then Enter |
 | `?` | Show all controls |
 | `Esc` | Pause menu: settings, controls, save and quit |
 | `Q` | Save and quit |

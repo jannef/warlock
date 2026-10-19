@@ -5,7 +5,7 @@ one twenty-sided die, and with ADOM's kind of hit points. Every blow is rolled, 
 hard, and hurts; what loses all its hit points dies. That goes for you too, and death is final.
 
 You attack by moving into a hostile creature (see [Controls](controls.md)), which takes a turn,
-or from afar: you shoot with a missile weapon (`f`) and throw (`t`), see
+or from afar: you shoot or throw with `t` (or `T`), see
 [Ranged combat](ranged.md).
 Creatures fight each other and you by the same rules (see [Creatures](creatures.md)). Spells are
 the exception: casters only announce them for now, and nothing is hurt by a spell.

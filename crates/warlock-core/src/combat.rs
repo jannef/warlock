@@ -257,6 +257,12 @@ impl Attack {
     }
 }
 
+/// To hit with a weapon thrown that was not made for it (a sword, a club), as in D&D: -4.
+pub const IMPROVISED_TO_HIT: i32 = -4;
+
+/// How far such a weapon is thrown, in cells.
+pub const IMPROVISED_RANGE: i32 = 3;
+
 impl Profile {
     /// A melee attack with `attack` (a weapon, a natural attack, bare hands): to-hit and damage
     /// both add the Strength modifier.
@@ -284,6 +290,15 @@ impl Profile {
         });
         let dexterity = stats.modifier(Stat::Dexterity);
         Self::of(attack, attack.to_hit + dexterity - short, -short)
+    }
+
+    /// The same, thrown whole though not made for throwing: [`IMPROVISED_TO_HIT`] to hit.
+    pub fn improvised(attack: &Attack, stats: &Stats) -> Self {
+        let thrown = Self::thrown(attack, stats);
+        Self {
+            to_hit: thrown.to_hit + IMPROVISED_TO_HIT,
+            ..thrown
+        }
     }
 
     fn of(attack: &Attack, to_hit: i32, bonus: i32) -> Self {

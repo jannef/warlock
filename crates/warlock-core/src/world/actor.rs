@@ -141,19 +141,20 @@ impl Actor {
     /// wields, its creature type's natural armour, and the Dodge its skills give (tumble; spec
     /// §8 "Skills").
     pub fn defence(&self, content: &Content, burden: Burden) -> Defence {
-        let equipped: Vec<&ObjectDef> = (self.equipment.items().into_iter())
-            .filter_map(|(_, item)| self.inventory.get(item))
-            .map(|s| content.object(s.object))
+        let equipped: Vec<(&ObjectDef, bool)> = (self.equipment.items().into_iter())
+            .filter_map(|(slot, item)| Some((content.slot(slot).hand, self.inventory.get(item)?)))
+            .map(|(hand, s)| (content.object(s.object), hand))
             .collect();
         let dexterity = self.stats.modifier(Stat::Dexterity);
-        let worn = equipped.iter().filter_map(|o| o.max_dex);
+        let worn = equipped.iter().filter_map(|(o, _)| o.max_dex);
         let cap = worn.chain(burden.max_dex()).min();
         let dexterity = cap.map_or(dexterity, |cap| dexterity.min(cap));
-        let worn = equipped.iter().flat_map(|o| {
+        // A weapon readied to throw does not parry: only what is held in a hand.
+        let worn = equipped.iter().flat_map(|(o, hand)| {
             [
                 (Category::Armour, o.armour),
                 (Category::Shield, o.shield),
-                (Category::Parry, o.parry),
+                (Category::Parry, if *hand { o.parry } else { 0 }),
             ]
         });
         let natural = (content.creature(self.creature).natural.as_ref())
@@ -220,8 +221,9 @@ impl Actor {
         })
     }
 
-    /// The throwing weapon it has ready, if any: the first stack in a `ready` slot (the
-    /// missiles) that is thrown (a quiver of rocks), and where in its inventory it is.
+    /// What it has ready to throw, if anything: the first stack in a `ready` slot (the missile
+    /// weapon slot) that can be thrown (a stack of rocks or daggers, or a sword), and where in
+    /// its inventory it is.
     pub fn ready_to_throw(&self, content: &Content) -> Option<usize> {
         content.slot_ids().find_map(|(slot, def)| {
             if def.action != ActionKind::Ready {
@@ -229,7 +231,7 @@ impl Actor {
             }
             let item = self.equipment.get(slot)?;
             let stack = self.inventory.get(item)?;
-            content.object(stack.object).is_thrown().then_some(item)
+            content.object(stack.object).can_throw().then_some(item)
         })
     }
 

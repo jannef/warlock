@@ -40,8 +40,8 @@ do it: creatures act meanwhile, just as when you wait. Looking at the screens ta
   held; a shield in your off hand puts a two-handed weapon away.
 - **Missile weapons and missiles** have their own slots. A bow shoots arrows: each missile weapon
   shoots one kind of missile ("shoots arrows" in the table above). You can ready any missiles,
-  matching or not, but only the matching ones can be shot ([Ranged combat](ranged.md)); rocks
-  readied there are thrown with `t`.
+  matching or not, but only the matching ones can be shot ([Ranged combat](ranged.md)). The
+  Missile weapon slot also takes any weapon and rocks: `t` throws what is readied there.
 - Things that are not equipment (potions, food, coins, tools) fit nowhere.
 
 ## How long it takes

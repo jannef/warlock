@@ -733,15 +733,24 @@ impl<'a> PerceptionView<'a> {
         Some((launcher, item, self.content.object(launcher).range?))
     }
 
-    /// Where in their inventory the throwing weapon the player has ready is (a quiver of rocks).
+    /// Where in their inventory what the player has ready to throw is (a stack of rocks, or a
+    /// sword in the missile weapon slot).
     pub fn ready_to_throw(&self) -> Option<usize> {
         self.player.ready_to_throw(self.content)
     }
 
-    /// How far the player throws inventory stack `item`, if it is a throwing weapon.
+    /// How far the player throws inventory stack `item`, if it can be thrown (a throwing
+    /// weapon, or another weapon, badly).
     pub fn throw_range(&self, item: usize) -> Option<i32> {
-        let def = self.content.object(self.player.inventory.get(item)?.object);
-        def.range.filter(|_| def.is_thrown())
+        self.content
+            .object(self.player.inventory.get(item)?.object)
+            .throw_range()
+    }
+
+    /// Whether inventory stack `item` is a throwing weapon, made for throwing (what the throw
+    /// choice lists).
+    pub fn is_throwing_weapon(&self, item: usize) -> bool {
+        (self.player.inventory.get(item)).is_some_and(|s| self.content.object(s.object).is_thrown())
     }
 
     /// What seen creature `actor` wears and wields, each thing once, in slot order: all the

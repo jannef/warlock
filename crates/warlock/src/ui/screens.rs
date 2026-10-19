@@ -926,8 +926,8 @@ mod tests {
             InputMode::Aim(aim) => Some(aim),
             _ => None,
         };
-        let (fire, tab) = ((KeyCode::KeyF, "f"), (KeyCode::Tab, ""));
-        // `f` aims at the nearest hostile creature in view.
+        let (fire, tab) = ((KeyCode::KeyT, "t"), (KeyCode::Tab, ""));
+        // `t` aims at the nearest hostile creature in view.
         frame(&mut app, &[fire]);
         let first = aim(&app).expect("aiming");
         assert_eq!(first.kind, AimKind::Fire);
@@ -952,13 +952,13 @@ mod tests {
         frame(&mut app, &[fire, tab, ENTER]);
         assert_eq!(aim(&app), None);
         assert_eq!(actions(&app)[before..], [Action::Fire(second.at)]);
-        // The next `f` starts on that creature again: `f`, Enter shoots it once more.
+        // The next `t` starts on that creature again: `t`, Enter shoots it once more.
         frame(&mut app, &[fire]);
         assert_eq!(aim(&app).map(|a| a.at), Some(second.at));
-        frame(&mut app, &[(KeyCode::KeyF, "f")]);
+        frame(&mut app, &[ENTER]);
         assert_eq!(actions(&app).last(), Some(&Action::Fire(second.at)));
-        // `t` with nothing to throw ready opens the choice of what to throw.
-        frame(&mut app, &[(KeyCode::KeyT, "t")]);
+        // `T` opens the choice of what to throw.
+        frame(&mut app, &[(KeyCode::KeyT, "T")]);
         assert_eq!(names(&app), [ScreenName::Throw]);
         frame(&mut app, &[ESC]);
         assert!(names(&app).is_empty());

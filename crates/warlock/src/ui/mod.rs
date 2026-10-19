@@ -410,9 +410,9 @@ fn draw_messages(console: &mut Console, game: &Game, mode: InputMode, bindings: 
         let (confirm, missile) = match aim.kind {
             AimKind::Fire => {
                 let ammo = view.ready_to_fire().map(|(_, item, _)| item);
-                (crate::input::KeyCommand::Fire, ammo)
+                (crate::input::KeyCommand::Missile, ammo)
             }
-            AimKind::Throw(item) => (crate::input::KeyCommand::Throw, Some(item)),
+            AimKind::Throw(item) => (crate::input::KeyCommand::Missile, Some(item)),
         };
         let content = view.content();
         let ready = (missile.and_then(|i| view.inventory().get(i)))

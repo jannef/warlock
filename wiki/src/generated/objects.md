@@ -31,7 +31,7 @@
 | Scroll of light | `?` | scroll | paper | 50 g | yes | - |
 | Strip of dried meat | `%` | food | flesh | 150 g | yes | - |
 | Apple | `%` | food | plant matter | 150 g | yes | - |
-| Rock | `*` | stone or gem | stone | 800 g | yes | Missiles |
+| Rock | `*` | stone or gem | stone | 800 g | yes | Missile weapon |
 | Ruby | `*` | stone or gem | gemstone | 5 g | yes | - |
 | Gold coin | `$` | coin | gold | 10 g | yes | - |
 | Copper coin | `$` | coin | copper | 8 g | yes | - |

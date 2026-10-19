@@ -10,6 +10,8 @@
 #   action  the action that puts a thing on here or takes it off, and so its time: `wield`,
 #           `wear`, `body_armor`, or `ready` (costs in actions.toml)
 #   mark    what the inventory says of a thing here: "being worn" shows as "(being worn)"
+#   takes_weapons  any weapon and any throwing weapon fits here too, besides what `fits` names
+#           (default false): the missile weapon slot, whose contents `t` shoots or throws
 #   hand    one of the hands (default false): a two-handed object (`two_handed` in objects.toml)
 #           takes every hand slot
 #
@@ -86,6 +88,7 @@ id = "missile_weapon"
 name = "Missile weapon"
 action = "ready"
 mark = "readied"
+takes_weapons = true
 
 [[slot]]
 id = "missiles"

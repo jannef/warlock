@@ -39,7 +39,7 @@
 #
 # Ranged combat (M16): the storeroom also has a long war bow, a crossbow with bolts, a sling with
 # stones, rocks to throw, and flaming arrows beside the short bow's arrows. Ready a bow and arrows
-# with `e`, then fire with `f` (throw with `t`): a flaming arrow shot into the patrol gallery's
+# with `e`, then shoot with `t` (`T` throws from the pack): a flaming arrow shot into the patrol gallery's
 # dark middle lights it where it lands until it burns out.
 name = "The Hub"
 ambient = [0, 0, 0, 0]

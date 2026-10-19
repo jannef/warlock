@@ -199,6 +199,31 @@ impl ObjectDef {
         self.range.is_some() && self.launches.is_none()
     }
 
+    /// Whether it can be thrown at all: a throwing weapon, or any other weapon that is no
+    /// missile weapon or ammunition, thrown whole and badly ([`ObjectDef::is_improvised`]).
+    pub fn can_throw(&self) -> bool {
+        self.is_thrown() || self.is_improvised()
+    }
+
+    /// Whether it is a weapon not made for throwing (a sword, a club): thrown whole, with
+    /// [`crate::combat::IMPROVISED_TO_HIT`] to hit, [`crate::combat::IMPROVISED_RANGE`] cells.
+    pub fn is_improvised(&self) -> bool {
+        self.attack.is_some()
+            && self.range.is_none()
+            && self.launches.is_none()
+            && self.ammo.is_none()
+    }
+
+    /// How far it is thrown, if it can be.
+    pub fn throw_range(&self) -> Option<i32> {
+        if self.is_thrown() {
+            self.range
+        } else {
+            self.is_improvised()
+                .then_some(crate::combat::IMPROVISED_RANGE)
+        }
+    }
+
     /// Whether it flies: ammunition, or a throwing weapon.
     pub fn flies(&self) -> bool {
         self.ammo.is_some() || self.is_thrown()

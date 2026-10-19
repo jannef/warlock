@@ -65,7 +65,7 @@ impl World {
         }
         let me = self.state.player();
         let Some((launcher, attack)) = me.launcher(&content) else {
-            self.say("You have no missile weapon ready.");
+            self.say("You have nothing ready to throw or shoot.");
             return Spent::Nothing;
         };
         let Some(item) = me.ammunition_item(&content) else {
@@ -93,7 +93,8 @@ impl World {
         self.price_for(&kinds)
     }
 
-    /// The player throws one of inventory stack `item`, a throwing weapon, at cell `at`.
+    /// The player throws one of inventory stack `item`, a throwing weapon, at cell `at`; any
+    /// other weapon is thrown whole, with a penalty to hit ([`Profile::improvised`]).
     pub(super) fn throw(&mut self, item: usize, at: Pos, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         if !self.can_loose_here() {
@@ -106,12 +107,15 @@ impl World {
             return Spent::Nothing;
         };
         let def = content.object(stack.object);
-        let (Some(range), Some(attack)) = (def.range.filter(|_| def.is_thrown()), def.attack)
-        else {
+        let (Some(range), Some(attack)) = (def.throw_range(), def.attack) else {
             self.say(format!("You cannot throw {}.", def.describe(1)));
             return Spent::Nothing;
         };
-        let profile = Profile::thrown(&attack, &me.stats);
+        let profile = if def.is_improvised() {
+            Profile::improvised(&attack, &me.stats)
+        } else {
+            Profile::thrown(&attack, &me.stats)
+        };
         if !self.within_reach(at, range, "throw") {
             return Spent::Nothing;
         }

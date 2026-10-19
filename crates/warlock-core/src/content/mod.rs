@@ -993,6 +993,14 @@ impl Content {
 
     /// Whether `object` goes in `slot`: its `slot` is what the slot fits.
     pub fn fits(&self, object: ObjectId, slot: SlotId) -> bool {
+        let (def, slot) = (self.object(object), self.slot(slot));
+        def.slot.as_ref() == Some(&slot.fits)
+            || (slot.takes_weapons
+                && (def.can_throw() || (def.attack.is_some() && def.ammo.is_none())))
+    }
+
+    /// Whether `object` goes in `slot` by its own `slot`, not as a weapon some slot takes too.
+    pub fn fits_properly(&self, object: ObjectId, slot: SlotId) -> bool {
         self.object(object).slot.as_ref() == Some(&self.slot(slot).fits)
     }
 

@@ -35,6 +35,7 @@ pub const REBINDABLE: [KeyCommand; 27] = [
     KeyCommand::Skills,
     KeyCommand::Rest,
     KeyCommand::Look,
+    KeyCommand::Missile,
     KeyCommand::Fire,
     KeyCommand::Throw,
     KeyCommand::NextTarget,
@@ -112,6 +113,7 @@ impl KeyCommand {
             Skills => "skills",
             Rest => "rest",
             Look => "look",
+            Missile => "missile",
             Fire => "fire",
             Throw => "throw",
             NextTarget => "next_target",
@@ -311,7 +313,10 @@ impl Bindings {
                     None => warnings.push(format!("bindings.{id}: invalid key {item}")),
                 }
             }
-            if keys.is_empty() {
+            if keys.is_empty() && Bindings::default().keys_of(command).is_empty() {
+                // A command that has no key by default (`f`) may be left unbound.
+                bindings.set_keys(command, keys);
+            } else if keys.is_empty() {
                 warnings.push(format!("bindings.{id}: no usable keys; using the defaults"));
             } else {
                 bindings.set_keys(command, keys);
@@ -357,7 +362,7 @@ mod tests {
         }
         assert_eq!(KeyCommand::Cancel.id(), None);
         let defaults = Bindings::default();
-        for c in REBINDABLE {
+        for c in REBINDABLE.into_iter().filter(|&c| c != KeyCommand::Fire) {
             assert!(!defaults.keys_of(c).is_empty(), "{c:?} has a default key");
         }
     }
