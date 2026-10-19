@@ -464,12 +464,20 @@ fn default_backend() -> Option<Backend> {
     crate::storage::web::available().then_some(Backend::Browser)
 }
 
-/// Loads the settings for this run, logging what was wrong with the file (if anything).
+/// Loads the settings for this run, logging what was wrong with the file (if anything). With
+/// `--reset-keys` every key is put back to its default, and the file is written at once.
 pub fn load_for(args: &Args) -> (SettingsStore, Settings, Bindings) {
     let store = SettingsStore::from_args(args);
-    let loaded = store.load();
+    let mut loaded = store.load();
     for warning in &loaded.warnings {
         eprintln!("warlock: warning: {warning}");
+    }
+    if args.reset_keys {
+        loaded.bindings = Bindings::default();
+        match store.save(&loaded.settings, &loaded.bindings) {
+            Ok(()) => eprintln!("warlock: every key is back to its default"),
+            Err(e) => eprintln!("warlock: warning: keys reset for this launch only: {e}"),
+        }
     }
     (store, loaded.settings, loaded.bindings)
 }
@@ -664,5 +672,29 @@ mod tests {
             SettingsStore::from_args(&args).backend,
             Some(Backend::Dir(PathBuf::from("cfg")))
         );
+    }
+
+    #[test]
+    fn reset_keys_puts_the_defaults_back_and_saves_them() {
+        use clap::Parser;
+        let store = temp_store("reset-keys");
+        let Some(Backend::Dir(dir)) = store.backend.clone() else {
+            unreachable!()
+        };
+        let mut bindings = Bindings::default();
+        let w = KeyBinding::from_text("w").unwrap();
+        bindings.bind_primary(KeyCommand::MenuUp, w).unwrap();
+        let settings = Settings {
+            font_px: 20,
+            ..Settings::default()
+        };
+        store.save(&settings, &bindings).unwrap();
+        let dir = dir.to_str().unwrap();
+        let args = Args::parse_from(["warlock", "--config-dir", dir, "--reset-keys"]);
+        let (_, loaded, keys) = load_for(&args);
+        assert_eq!(keys.to_map(), Bindings::default().to_map());
+        assert_eq!(loaded.font_px, 20, "the other settings stay");
+        // Saved: the next launch without the flag has the defaults too.
+        assert_eq!(store.load().bindings.to_map(), Bindings::default().to_map());
     }
 }

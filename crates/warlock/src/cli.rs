@@ -106,6 +106,11 @@ pub struct Args {
     #[arg(long, requires = "move_data")]
     pub dry_run: bool,
 
+    /// Put every key back to its default and save that, then start as usual: the way back from
+    /// keys that cannot be used (spec §6 "Rebinding").
+    #[arg(long)]
+    pub reset_keys: bool,
+
     /// Dev: open this screen at startup, even with `--capture`. `main` and `new-run` open on the
     /// main menu, and so do character creation's `race`, `gender`, `class`, and `summary` (over
     /// New run and the steps before them, each on its preselection: the scenario's character);

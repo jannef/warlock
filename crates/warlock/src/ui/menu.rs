@@ -472,6 +472,53 @@ mod tests {
         menu.handle(&Press::nav(nav))
     }
 
+    fn key(code: KeyCode, logical: Key) -> KeyboardInput {
+        KeyboardInput {
+            key_code: code,
+            logical_key: logical,
+            state: bevy::input::ButtonState::Pressed,
+            text: None,
+            repeat: false,
+            window: bevy::prelude::Entity::PLACEHOLDER,
+        }
+    }
+
+    #[test]
+    fn menu_keys_come_from_the_bindings_and_esc_always_backs_out() {
+        let mut b = Bindings::default();
+        let nav = |b: &Bindings, input: &KeyboardInput| Press::from_input(input, b).nav;
+        let down = key(KeyCode::ArrowDown, Key::ArrowDown);
+        let s = key(KeyCode::KeyS, Key::Character("s".into()));
+        let esc = key(KeyCode::Escape, Key::Escape);
+        let enter = key(KeyCode::Enter, Key::Enter);
+        let space = key(KeyCode::Space, Key::Space);
+        let j = key(KeyCode::KeyJ, Key::Character("j".into()));
+        assert_eq!(nav(&b, &down), Nav::Down);
+        assert_eq!(nav(&b, &j), Nav::Down);
+        assert_eq!(nav(&b, &enter), Nav::Enter);
+        assert_eq!(nav(&b, &space), Nav::Mark);
+        assert_eq!(nav(&b, &s), Nav::Other);
+        assert_eq!(nav(&b, &esc), Nav::Back);
+        // Rebound: `s` moves down, the arrow it replaced does not, and `j` still does.
+        b.bind_primary(KeyCommand::MenuDown, KeyBinding::Char("s".into()))
+            .unwrap();
+        assert_eq!(nav(&b, &s), Nav::Down);
+        assert_eq!(nav(&b, &down), Nav::Other);
+        assert_eq!(nav(&b, &j), Nav::Down);
+        // Back on Space: Esc still backs out, and Space no longer marks.
+        b.bind_primary(KeyCommand::Back, KeyBinding::Code(KeyCode::Space))
+            .unwrap();
+        assert_eq!(nav(&b, &space), Nav::Back);
+        assert_eq!(nav(&b, &esc), Nav::Back);
+        // With the defaults the footers read as before; rebound, they name the new keys.
+        let hints = Hints::of(&Bindings::default());
+        assert_eq!(
+            (hints.up_down(), hints.confirm.as_str()),
+            ("↑↓".into(), "Enter")
+        );
+        assert_eq!(Hints::of(&b).up_down(), "↑/s");
+    }
+
     #[test]
     fn legal_notice_shortens_to_fit_and_always_names_the_license() {
         let long = legal_notice(200).expect("fits");

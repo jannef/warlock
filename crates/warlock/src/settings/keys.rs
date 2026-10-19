@@ -760,4 +760,106 @@ mod tests {
         assert!(warnings.is_empty(), "{warnings:?}");
         assert_eq!(back.to_map(), b.to_map());
     }
+
+    /// Every key some command has by default, and a few more.
+    fn some_keys() -> Vec<KeyBinding> {
+        let mut keys: Vec<KeyBinding> = Vec::new();
+        let defaults = Bindings::default().0.into_iter().map(|(k, _)| k);
+        for key in defaults.chain(["w", "s", "x", "Q"].map(ch)) {
+            if !keys.contains(&key) {
+                keys.push(key);
+            }
+        }
+        keys
+    }
+
+    #[test]
+    fn the_vital_commands_never_lose_their_last_key() {
+        // Binding every key to every command, one after another, never leaves a vital command
+        // without a key, and Esc stays Cancel's.
+        let keys = some_keys();
+        let mut b = Bindings::default();
+        for &command in REBINDABLE {
+            for key in &keys {
+                let _ = b.bind_primary(command, key.clone());
+                for &vital in VITAL {
+                    assert!(!b.keys_of(vital).is_empty(), "{vital:?} after {command:?}");
+                }
+            }
+        }
+        let esc = KeyBinding::Code(KeyCode::Escape);
+        assert_eq!(b.keys_of(KeyCommand::Cancel), vec![&esc]);
+        assert!(b.conflicts().is_empty());
+        // Reset all keys gets everything back.
+        b.reset_all();
+        assert_eq!(b.to_map(), Bindings::default().to_map());
+    }
+
+    #[test]
+    fn a_vital_commands_last_key_is_refused_with_its_owner() {
+        let mut b = Bindings::default();
+        let enter = KeyBinding::Code(KeyCode::Enter);
+        // Choose has Enter and NumEnter: Enter may move to Erase, then NumEnter may not.
+        assert!(matches!(
+            b.bind_primary(KeyCommand::Erase, enter.clone()),
+            Ok(Bound::Moved { keyless: false, .. })
+        ));
+        let numpad = KeyBinding::Code(KeyCode::NumpadEnter);
+        assert_eq!(
+            b.bind_primary(KeyCommand::Mark, numpad.clone()),
+            Err(Conflict {
+                key: numpad.clone(),
+                owner: KeyCommand::Confirm
+            })
+        );
+        // Resetting a vital command whose default keys are all taken keeps the keys it has.
+        b.bind_primary(KeyCommand::Confirm, ch("x")).unwrap();
+        assert_eq!(b.keys_of(KeyCommand::Confirm), vec![&ch("x")]);
+        b.bind_primary(KeyCommand::Mark, numpad).unwrap();
+        b.reset_command(KeyCommand::Confirm);
+        assert_eq!(b.keys_of(KeyCommand::Confirm), vec![&ch("x")]);
+    }
+
+    #[test]
+    fn a_settings_file_cannot_lock_the_player_out() {
+        let table: toml::Table = toml::from_str(
+            r#"
+            menu_up = []
+            confirm = ["Escape"]
+            mark = ["ArrowDown", "j"]
+            menu_down = ["ArrowDown"]
+            "#,
+        )
+        .unwrap();
+        let mut warnings = Vec::new();
+        let b = Bindings::from_table(&table, &mut warnings);
+        for &vital in VITAL {
+            assert!(!b.keys_of(vital).is_empty(), "{vital:?}");
+        }
+        assert_eq!(b.keys_of(KeyCommand::MenuUp).len(), 2, "its defaults");
+        assert_eq!(
+            b.keys_of(KeyCommand::Confirm)[0],
+            &KeyBinding::Code(KeyCode::Enter)
+        );
+        assert!(b.conflicts().is_empty());
+        for needle in ["bindings.menu_up", "bindings.confirm"] {
+            assert!(warnings.iter().any(|w| w.contains(needle)), "{needle}");
+        }
+    }
+
+    #[test]
+    fn ensure_vital_takes_defaults_back_from_other_commands() {
+        let mut b = Bindings::default();
+        // Menu down without a key, one of its keys held by Mark (as a hand-edited file might
+        // leave it).
+        b.0.retain(|(_, c)| *c != KeyCommand::MenuDown);
+        b.0.push((KeyBinding::Code(KeyCode::ArrowDown), KeyCommand::Mark));
+        b.ensure_vital();
+        assert_eq!(b.keys_of(KeyCommand::MenuDown).len(), 2);
+        assert_eq!(
+            b.keys_of(KeyCommand::Mark),
+            vec![&KeyBinding::Code(KeyCode::Space)]
+        );
+        assert!(b.conflicts().is_empty());
+    }
 }
