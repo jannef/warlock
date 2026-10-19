@@ -160,7 +160,8 @@ apply live and are written at once; a bad file means defaults plus a warning, pe
 flicker, motion, glow, distortion, particles, screen_fades, screen_shake, weather; all on by default). Each consumer reads
 its own switch from the `render::Effects` resource (the effective values, synced every frame from
 `Settings` + `--reduced-effects`), never the preset; a new effect needs a switch in
-`EffectSwitches`, the file, and a row in `ui/settings_screen.rs`. Palettes
+`EffectSwitches`, the file, and a row in `ui/settings_screen.rs`. `clock` (`settings/clock.rs`, `"24h"`/`"12h"`) is the one way a time of day is written
+in the UI (`Clock::format`: status bar, death screen); dumps stay 24-hour. Palettes
 (`settings/palette.rs`) are applied only when cells are uploaded to the GPU (`render::upload`) and
 in `ui/glyphs.rs`, never to content colors. Rebindable commands have stable ids in
 `settings/keys.rs` (`KeyCommand::id`): **a new `KeyCommand` variant must be added there**
