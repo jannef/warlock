@@ -1,10 +1,11 @@
 //! Races (`assets/data/races.toml`, spec §8 "Character creation"): the first choice of a new
 //! run. A race adjusts the starting scores and the potentials (fixed numbers or dice), gives the
 //! player their eyes, sets the range of their starting age, gives the player their size
-//! (spec §8 "Burden": how much they can carry) and whether being Burdened costs them nothing, and
-//! trains them in skills (spec §8 "Skills"; dice, and humans' extra class skill).
+//! (spec §8 "Burden": how much they can carry) and whether being Burdened costs them nothing,
+//! trains them in skills (spec §8 "Skills"; dice, and humans' extra class skill), and gives
+//! them starting ranks in weapon skills (spec §8 "Weapon skills"; fixed numbers or dice).
 
-use super::ContentError;
+use super::{ContentError, WeaponSkillId, WeaponSkillTable};
 use crate::combat::MAX_BASE_HP;
 use crate::dice::Dice;
 use crate::skills::{self, GRANTS, SkillId};
@@ -41,6 +42,8 @@ struct RaceSpec {
     skills: BTreeMap<String, Dice>,
     #[serde(default)]
     class_skill: Dice,
+    #[serde(default)]
+    weapon_skills: BTreeMap<String, Dice>,
 }
 
 /// The oldest a character may start, in years.
@@ -78,6 +81,9 @@ pub struct RaceDef {
     /// Dice added to one of the class's skills, picked when the character is made (0: none).
     /// Humans: one extra class skill.
     pub class_skill: Dice,
+    /// Starting ranks in weapon skills (spec §8 "Weapon skills"), in skill order: added to the
+    /// class's.
+    pub weapon_skills: Vec<(WeaponSkillId, Dice)>,
 }
 
 /// Every race, and the base every potential starts from.
@@ -91,14 +97,15 @@ pub struct Races {
 
 impl Races {
     /// Parses `data/races.toml`; `has_vision` says whether a vision profile id exists,
-    /// `size_index` where a size id is in [`super::Content::sizes`], and `skill_id` which skill a
-    /// skill id is.
+    /// `size_index` where a size id is in [`super::Content::sizes`], `skill_id` which skill a
+    /// skill id is, and `weapon_table` the weapon skills starting ranks may name.
     pub(super) fn parse(
         file: &str,
         text: &str,
         has_vision: impl Fn(&str) -> bool,
         size_index: impl Fn(&str) -> Option<usize>,
         skill_id: impl Fn(&str) -> Option<SkillId>,
+        weapon_table: &WeaponSkillTable,
     ) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: RaceFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
@@ -155,6 +162,8 @@ impl Races {
                     GRANTS.end()
                 )));
             }
+            let weapon_skills = (weapon_table.starting_ranks(&spec.weapon_skills))
+                .map_err(|m| err(format!("race `{id}`: {m}")))?;
             list.push(RaceDef {
                 id: spec.id,
                 name: spec.name,
@@ -168,6 +177,7 @@ impl Races {
                 ignores_burdened: spec.ignores_burdened,
                 skills,
                 class_skill: extra,
+                weapon_skills,
             });
         }
         Ok(Self {
@@ -184,12 +194,14 @@ mod tests {
     fn parse(text: &str) -> Result<Races, ContentError> {
         let sizes = ["small", "medium"];
         let skills = ["listen", "spot"];
+        let content = super::super::Content::builtin().expect("content");
         Races::parse(
             "races.toml",
             text,
             |v| v == "normal",
             |s| sizes.iter().position(|id| *id == s),
             |k| (skills.iter().position(|id| *id == k)).map(|i| SkillId(i as u8)),
+            content.weapon_skills(),
         )
     }
 
@@ -233,6 +245,16 @@ mod tests {
             "in skill order"
         );
         assert_eq!(elf.class_skill.to_string(), "1d4");
+        assert!(human.weapon_skills.is_empty());
+        let elf = parse(&format!(
+            "{ONE}weapon_skills = {{ long_blades = 1, bows = \"1d2\" }}\n"
+        ))
+        .expect("valid");
+        let ranks: Vec<String> = (elf.list[0].weapon_skills.iter())
+            .map(|(id, dice)| format!("{} {dice}", id.0))
+            .collect();
+        // In skill order: long blades (2) before bows (10).
+        assert_eq!(ranks, ["2 +1", "10 1d2"]);
     }
 
     #[test]
@@ -279,6 +301,18 @@ mod tests {
             (
                 format!("{ONE}class_skill = \"1d100+5\"\n"),
                 "class_skill 1d100+5 is out of range",
+            ),
+            (
+                format!("{ONE}weapon_skills = {{ whips = 1 }}\n"),
+                "race `human`: unknown weapon skill `whips`",
+            ),
+            (
+                format!("{ONE}weapon_skills = {{ bows = \"1d12\" }}\n"),
+                "must give a rank from 0 to 10",
+            ),
+            (
+                format!("{ONE}weapon_skills = {{ bows = -1 }}\n"),
+                "must give a rank from 0 to 10",
             ),
             (
                 format!("{ONE}{}", ONE.replace("base_potential = 15\n", "")),

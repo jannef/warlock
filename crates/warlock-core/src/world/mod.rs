@@ -53,6 +53,11 @@
 //! light (and so what the player and creatures see), the noise made there, regeneration, and
 //! whether creatures hostile to the player step in. The first time the player is inside one they
 //! are told what it is.
+//! Weapon skills (spec §8 "Weapon skills", [`crate::weapon_skills`], `fight.rs`): every attack
+//! draws on a skill (the weapon's, unarmed, thrown, shield bashing) for its to-hit, damage,
+//! threat, and cost, and the player's attacks and shield blocks earn marks toward its next rank
+//! ("You feel more skilled with daggers."). A shield bash ([`Action::Bash`]) is a blow with a
+//! held shield.
 
 mod actor;
 mod ai;
@@ -91,6 +96,7 @@ use crate::rng::Rng;
 use crate::sight::LineOfSight;
 use crate::skills::{Skills, Use};
 use crate::time::{self, Duration, GameTime};
+use crate::weapon_skills::WeaponSkills;
 use crate::weather::{self, Weather};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -308,12 +314,20 @@ impl World {
         let seed = seed.unwrap_or(def.seed);
         // The player's hit points beyond their Toughness: what their race and class give, or
         // without a character what the scenario gives. Without a character the player is trained
-        // in nothing.
+        // in nothing and has no weapon skills.
         let chosen = character.or(def.character.as_ref());
-        let (stats, vision, hp_base, skills, character) = match chosen {
+        let (stats, vision, hp_base, skills, character, weapon_skills) = match chosen {
             Some(spec) => {
                 let s = (spec.start(&content, seed, def.start)).map_err(WorldError::Character)?;
-                (s.stats, s.vision, s.hp, s.skills, Some(s.character))
+                let character = Some(s.character);
+                (
+                    s.stats,
+                    s.vision,
+                    s.hp,
+                    s.skills,
+                    character,
+                    s.weapon_skills,
+                )
             }
             None => (
                 def.player_stats,
@@ -321,6 +335,7 @@ impl World {
                 i32::from(def.hp),
                 Skills::default(),
                 None,
+                WeaponSkills::default(),
             ),
         };
         let start = level_template(&content, seed, &def.start_level, None)?;
@@ -370,6 +385,7 @@ impl World {
             hp_base,
             regen: 0,
             skills,
+            weapon_skills,
             faction_override: None,
         };
         player.hp = player.max_hp();
@@ -416,10 +432,11 @@ impl World {
                 || a.inventory.len() > object::INVENTORY_SLOTS
                 || !a.equipment.is_valid_for(&a.inventory, &content)
                 || a.skills.iter().any(|(id, _)| usize::from(id.0) >= skills)
+                || !a.weapon_skills.is_valid_for(content.weapon_skills())
         }) {
             return Err(WorldError::InconsistentState(format!(
-                "actor {} is a creature, carries objects, wears them in slots, or knows skills \
-                 this content does not have",
+                "actor {} is a creature, carries objects, wears them in slots, or knows skills or \
+                 weapon skills this content does not have",
                 actor.id
             )));
         }
@@ -714,6 +731,8 @@ impl World {
         for text in reports {
             self.say(text);
         }
+        // A weapon skill a blocked blow raised (`fight.rs`).
+        self.say_news();
     }
 
     /// Keeps the events the player perceived (dropping the rest) and returns the messages for
@@ -988,6 +1007,7 @@ impl World {
             Action::Drop(letters) => return self.drop_objects(*letters),
             Action::Equip { slot, item } => return self.equip(slot, *item),
             Action::Remove(slot) => return self.remove(slot),
+            Action::Bash(dir) => return self.bash(*dir, events),
             Action::Fire(at) => return self.fire(*at, events),
             Action::Throw { item, at } => return self.throw(*item, *at, events),
             Action::Rest(goal) => return self.start_rest(*goal),
@@ -1199,8 +1219,9 @@ impl World {
             let name = self.content.creature(other.creature).name.clone();
             let player = self.state.player;
             if self.stance(player, target) == Stance::Hostile {
+                let skill = self.state.player().melee_skill(&self.content);
                 self.player_attacks(target, seen, events);
-                return self.took(true, ActionKind::Melee);
+                return Spent::Turn(self.attack_price(player, ActionKind::Melee, skill));
             }
             let what = if seen {
                 format!("The {name}")
@@ -1554,6 +1575,7 @@ fn instantiate_level(state: &mut WorldState, content: &Content, template: &Level
             hp_base: def.base_hp,
             regen: 0,
             skills: def.skills.clone(),
+            weapon_skills: def.weapon_skills.clone(),
             faction_override: spawn.faction,
         };
         actor.hp = actor.max_hp();
@@ -1603,5 +1625,7 @@ mod sun_tests;
 mod tests;
 #[cfg(test)]
 mod time_tests;
+#[cfg(test)]
+mod weapon_skill_tests;
 #[cfg(test)]
 mod weather_tests;

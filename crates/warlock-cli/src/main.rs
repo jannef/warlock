@@ -58,7 +58,7 @@ struct RunArgs {
     #[arg(long)]
     character: Option<CharacterSpec>,
     /// Actions as text, e.g. "move:E move:SE wait open:E close:W descend ascend pickup:ab
-    /// drop:a".
+    /// drop:a bash:E".
     #[arg(long)]
     actions: Option<String>,
 }
@@ -77,10 +77,12 @@ struct DumpArgs {
     /// sound (heard sounds over the view: f footsteps, o/c a door opening/closing; upper case
     /// when loud), inventory (what the player carries and weighs), equipment (what they wear
     /// and wield), stats (the player's race, gender, class, and scores), skills (the player's
-    /// trained skills and their values), truth (dev-only ground truth), actors (dev-only: every
-    /// actor on the level with its weight, what it carries, its stats as score/potential, and
-    /// its trained skills with their marks), rooms (dev-only: the level's special rooms, their
-    /// plain ground marked with their effect's letter, then one line per room).
+    /// trained skills and their values), weapon_skills (the player's weapon skills: rank and
+    /// progress toward the next), truth (dev-only ground truth), actors (dev-only: every actor on
+    /// the level with its weight, what it carries, its weapon skills with marks, its stats as
+    /// score/potential, and its trained skills with their marks), rooms (dev-only: the level's
+    /// special rooms, their plain ground marked with their effect's letter, then one line per
+    /// room).
     #[arg(long, default_value = "view")]
     layers: String,
     /// With `--format json`, include the full world state.

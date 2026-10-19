@@ -4,11 +4,14 @@
 //! (month names, moons, weather, terrain, vision profiles, light presets, creatures, factions,
 //! objects and materials, equipment slots, scenarios, action costs, races and classes, their sizes
 //! and carrying limits, the horoscope, skills: what each does, how it trains, what it gives by
-//! value, who trains it, and the increase curve, special rooms) and a few constants of the rules
-//! (sight radii, the pack's size, the stats' names, what each gender raises). Those are written to
-//! `wiki/src/generated/*.md` from the built-in content, and the pages pull them in with
-//! `{{#include generated/NAME.md}}`, so they cannot drift. Output is deterministic. `--check`
-//! fails when a file is stale; `--build` also runs `mdbook build wiki`.
+//! value, who trains it, and the increase curve, special rooms; weapon skills:
+//! `wiki/weapon_skills.rs`) and a few constants of the rules (sight radii, the pack's size, the
+//! stats' names, what each gender raises). Those are written to `wiki/src/generated/*.md` from the
+//! built-in content, and the pages pull them in with `{{#include generated/NAME.md}}`, so they
+//! cannot drift. Output is deterministic. `--check` fails when a file is stale; `--build` also
+//! runs `mdbook build wiki`.
+
+mod weapon_skills;
 
 use crate::workspace_root;
 use std::collections::BTreeSet;
@@ -176,6 +179,19 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("burden-races.md".to_string(), burden_races(content)),
         ("burden-examples.md".to_string(), burden_examples(content)),
         ("special-rooms.md".to_string(), special_rooms(content)),
+        (
+            "weapon-skills.md".to_string(),
+            weapon_skills::skills(content),
+        ),
+        (
+            "weapon-defaults.md".to_string(),
+            weapon_skills::defaults(content),
+        ),
+        ("weapon-marks.md".to_string(), weapon_skills::marks(content)),
+        (
+            "weapon-benefits.md".to_string(),
+            weapon_skills::benefits(content),
+        ),
     ];
     for (_, text) in &mut files {
         *text = format!(
@@ -984,7 +1000,8 @@ fn stat_cells(by: &PerStat<Dice>) -> String {
 fn races(content: &Content) -> String {
     let (names, align) = stat_columns();
     let mut out = format!(
-        "| Race |{names} Vision | Starting age | Hit points |\n|---|{align}---|---|:---:|\n"
+        "| Race |{names} Vision | Starting age | Hit points | Weapon skills |\n\
+         |---|{align}---|---|:---:|---|\n"
     );
     for r in &content.races().list {
         let vision = content
@@ -992,12 +1009,13 @@ fn races(content: &Content) -> String {
             .map_or(r.vision.as_str(), |v| &v.name);
         let _ = writeln!(
             out,
-            "| {} |{} {vision} | {}–{} | {} |",
+            "| {} |{} {vision} | {}–{} | {} | {} |",
             r.name,
             stat_cells(&r.stats),
             r.age.start(),
             r.age.end(),
-            r.hp
+            r.hp,
+            weapon_skills::ranks_text(content, &r.weapon_skills),
         );
     }
     out.push('\n');
@@ -1010,9 +1028,17 @@ fn races(content: &Content) -> String {
 /// The classes in the order New run offers them: their stat adjustments, then what they are.
 fn classes(content: &Content) -> String {
     let (names, align) = stat_columns();
-    let mut out = format!("| Class |{names} Hit points |\n|---|{align}:---:|\n");
+    let mut out =
+        format!("| Class |{names} Hit points | Weapon skills |\n|---|{align}:---:|---|\n");
     for c in content.classes() {
-        let _ = writeln!(out, "| {} |{} {} |", c.name, stat_cells(&c.stats), c.hp);
+        let _ = writeln!(
+            out,
+            "| {} |{} {} | {} |",
+            c.name,
+            stat_cells(&c.stats),
+            c.hp,
+            weapon_skills::class_ranks(content, c)
+        );
     }
     out.push('\n');
     for c in content.classes() {
@@ -1257,7 +1283,7 @@ fn percent(part: u32, of: u32) -> String {
 fn weapons(content: &Content) -> String {
     let mut out = String::from(
         "| Weapon | Damage | Critical on | Critical damage | Parry | Needs Strength | Held | \
-         Thrown |\n|---|:---:|:---:|:---:|:---:|:---:|---|:---:|\n",
+         Thrown | Weapon skill |\n|---|:---:|:---:|:---:|:---:|:---:|---|:---:|---|\n",
     );
     for (i, o) in content.object_defs().iter().enumerate() {
         let Some(attack) = &o.attack else { continue };
@@ -1276,9 +1302,12 @@ fn weapons(content: &Content) -> String {
             Some(range) if o.is_thrown() => format!("{range} cells"),
             _ => "-".into(),
         };
+        let skill = (o.skill).map_or("-".to_string(), |id| {
+            content.weapon_skills().skill(id).name.clone()
+        });
         let _ = writeln!(
             out,
-            "| {} | {} | {} | ×{} | {parry} | {strength} | {held} | {thrown} |",
+            "| {} | {} | {} | ×{} | {parry} | {strength} | {held} | {thrown} | {skill} |",
             capital(&o.name),
             attack.damage,
             threat_range(attack.threat),
@@ -1407,8 +1436,8 @@ fn ammunition(content: &Content) -> String {
 /// may add while it is worn.
 fn armour(content: &Content) -> String {
     let mut out = String::from(
-        "| Armour or shield | Worn on | Defence | Category | Most Dexterity adds |\n\
-         |---|---|:---:|---|:---:|\n",
+        "| Armour or shield | Worn on | Defence | Category | Most Dexterity adds | Bash |\n\
+         |---|---|:---:|---|:---:|:---:|\n",
     );
     for (i, o) in content.object_defs().iter().enumerate() {
         let (bonus, category) = match (o.armour, o.shield) {
@@ -1419,9 +1448,10 @@ fn armour(content: &Content) -> String {
         let max_dex = o
             .max_dex
             .map_or("no limit".to_string(), |m| format!("+{m}"));
+        let bash = (o.bash).map_or("-".to_string(), |a| a.damage.to_string());
         let _ = writeln!(
             out,
-            "| {} | {} | +{bonus} | {category} | {max_dex} |",
+            "| {} | {} | +{bonus} | {category} | {max_dex} | {bash} |",
             capital(&o.name),
             goes_on(content, i).to_lowercase(),
         );

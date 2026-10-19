@@ -36,7 +36,8 @@ const MAGIC: &str = "WARLOCK-SAVE";
 ///     training random stream (`WorldState::training`).
 /// 15: special rooms: level states keep their special rooms and whether the player has been in
 ///     each (`LevelState::rooms`); content fingerprints cover room effect ids.
-pub const FORMAT_VERSION: u32 = 15;
+/// 16: weapon skills: actors have a rank and marks in each (`Actor::weapon_skills`).
+pub const FORMAT_VERSION: u32 = 16;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 
