@@ -75,10 +75,11 @@ struct DumpArgs {
     format: Format,
     /// Comma-separated layers: view, fov, memory, light (brightness digit 0-9 per visible cell),
     /// sound (heard sounds over the view: f footsteps, o/c a door opening/closing; upper case
-    /// when loud), inventory (what the player carries and weighs), stats (the player's race,
-    /// gender, class, and scores),
-    /// truth (dev-only ground truth), actors (dev-only: every actor on the level with its weight,
-    /// what it carries, and its stats as score/potential).
+    /// when loud), inventory (what the player carries and weighs), equipment (what they wear
+    /// and wield), stats (the player's race, gender, class, and scores), skills (the player's
+    /// trained skills and their values), truth (dev-only ground truth), actors (dev-only: every
+    /// actor on the level with its weight, what it carries, its stats as score/potential, and
+    /// its trained skills with their marks).
     #[arg(long, default_value = "view")]
     layers: String,
     /// With `--format json`, include the full world state.

@@ -41,10 +41,12 @@ protects you, in kinds:
 - **Shield**: a shield held in your off hand.
 - **Parry**: a weapon that turns blows aside, such as the quarterstaff.
 - **Natural**: a creature's hide, shell, or scales. You have none.
-- **Dodge** and **Deflection** come later (training, and magic).
+- **Dodge**: training. The [tumble](skills.md#what-skills-give) skill adds to it, more the
+  higher it is.
+- **Deflection** comes later (magic).
 
-Within each kind only the best counts: two pieces of armour do not add up. Dodge will be the one
-kind that does.
+Within each kind only the best counts: two pieces of armour do not add up. Dodge is the one kind
+that does.
 
 {{#include generated/armour.md}}
 

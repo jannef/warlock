@@ -24,6 +24,7 @@ use crate::combat::{self, Blow, Category, Profile, Strike};
 use crate::content::{Content, CreatureId, ObjectId};
 use crate::noise::Act;
 use crate::object;
+use crate::skills::Use;
 use crate::stats::Stat;
 use crate::time::GameTime;
 use serde::{Deserialize, Serialize};
@@ -344,6 +345,18 @@ impl World {
         });
         if noisy {
             self.make_noise(attacker, Act::Attack(kind));
+        }
+        // An attack the player dodged (Dexterity or Dodge made it miss) trains tumbling.
+        let dodged = blow.is_some_and(|b| {
+            matches!(
+                b.strike,
+                Strike::Missed {
+                    by: Some(Category::Dexterity | Category::Dodge)
+                }
+            )
+        });
+        if dodged && target == self.state.player && self.trains(Use::Dodge) {
+            self.train(Use::Dodge);
         }
         if let Some(blow) = blow
             && blow.damage > 0

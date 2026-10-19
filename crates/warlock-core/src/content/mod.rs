@@ -23,6 +23,7 @@ mod particles;
 mod race;
 mod scenario;
 mod size;
+mod skill;
 mod sky;
 mod slot;
 mod terrain;
@@ -54,6 +55,7 @@ pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use race::{RaceDef, Races};
 pub use scenario::ScenarioDef;
 pub use size::{CARRY, MEDIUM, SizeDef};
+pub use skill::{SkillBook, SkillDef};
 pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use terrain::{MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
@@ -63,6 +65,7 @@ pub use weather::{Climate, MAX_SIGHT_LOSS, WeatherDef};
 
 use crate::noise::MAX_LOUDNESS;
 use crate::perception::VIEW_RADIUS;
+use crate::skills::{Increase, SkillId, Skills};
 use crate::stats::Stats;
 use level::{LegendEntry, legend_char};
 use serde::Deserialize;
@@ -207,14 +210,15 @@ struct LegendFile {
 /// `data/lights.toml`, `data/vision.toml`, `data/factions.toml`, `data/dungeons.toml`,
 /// `data/calendar.toml`, `data/sky.toml`, `data/materials.toml`, `data/objects.toml`,
 /// `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
-/// `data/races.toml`, `data/classes.toml`, and `data/horoscope.toml` are optional. Without vision
+/// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, and `data/horoscope.toml` are
+/// optional. Without vision
 /// profiles, a single `normal` profile that needs no light is used, so content without lighting
 /// stays fully visible; without sizes, everything is medium; without factions, everyone is neutral; without a calendar, months are numbered;
 /// without a sky file there are no moons; without an objects file there are no objects; without a
 /// weather file the sky is always clear; without an actions file every action costs 1000;
 /// without a slots file nothing can be worn or wielded; without races or classes there is no
-/// character to choose, and scenarios give the player's eyes and stats themselves; without a
-/// horoscope, characters are born under no sign.
+/// character to choose, and scenarios give the player's eyes and stats themselves; without
+/// skills nobody is trained in anything; without a horoscope, characters are born under no sign.
 #[derive(Debug)]
 pub struct Content {
     terrain: Vec<TerrainDef>,
@@ -244,6 +248,7 @@ pub struct Content {
     moons: Vec<MoonDef>,
     climate: Climate,
     actions: ActionCosts,
+    skills: SkillBook,
     races: Races,
     classes: Vec<ClassDef>,
     experience: Experience,
@@ -281,6 +286,7 @@ impl Content {
             moons: Vec::new(),
             climate: Climate::default(),
             actions: ActionCosts::default(),
+            skills: SkillBook::default(),
             races: Races::default(),
             classes: Vec::new(),
             experience: Experience::default(),
@@ -308,15 +314,20 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.sizes = size::parse(path, text)?;
         }
+        let path = "data/skills.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.skills = SkillBook::parse(path, text)?;
+        }
         let path = "data/races.toml";
         if let Some(text) = files.get_optional(path) {
             let has_vision = |id: &str| content.vision(id).is_some();
             let size_index = |id: &str| content.size_index(id);
-            content.races = Races::parse(path, text, has_vision, size_index)?;
+            let skill_id = |id: &str| content.skill_id(id);
+            content.races = Races::parse(path, text, has_vision, size_index, skill_id)?;
         }
         let path = "data/classes.toml";
         if let Some(text) = files.get_optional(path) {
-            content.classes = ClassDef::parse(path, text)?;
+            content.classes = ClassDef::parse(path, text, |id| content.skill_id(id))?;
         }
         let path = "data/experience.toml";
         if let Some(text) = files.get_optional(path) {
@@ -538,6 +549,14 @@ impl Content {
                         .into(),
                 ));
             }
+            if spec.id == "player" && !spec.skills.is_empty() {
+                return Err(err(
+                    "creature `player`: the player's skills come from their race and class".into(),
+                ));
+            }
+            let skills = self
+                .creature_skills(&spec.skills)
+                .map_err(|m| err(format!("creature `{}`: skills: {m}", spec.id)))?;
             if spec
                 .natural
                 .as_ref()
@@ -566,6 +585,7 @@ impl Content {
                 light,
                 size,
                 stats,
+                skills,
                 attack,
                 faction: self.creature_faction(&spec).map_err(err)?,
                 vision: self.vision_index(&spec.vision).ok_or_else(|| {
@@ -582,6 +602,23 @@ impl Content {
             return Err(err("a creature with id `player` is required".into()));
         }
         Ok(())
+    }
+
+    /// A creature type's skills as data lists them (`skills = { listen = 30 }`): fixed values,
+    /// 0 to [`crate::skills::MAX_VALUE`], of skills `data/skills.toml` has.
+    fn creature_skills(&self, data: &BTreeMap<String, u16>) -> Result<Skills, String> {
+        let mut skills = Skills::default();
+        for (name, &value) in data {
+            let id = (self.skill_id(name)).ok_or_else(|| format!("unknown skill `{name}`"))?;
+            if value > crate::skills::MAX_VALUE {
+                return Err(format!(
+                    "{name} {value} is more than {}",
+                    crate::skills::MAX_VALUE
+                ));
+            }
+            skills.add(id, i32::from(value));
+        }
+        Ok(skills)
     }
 
     /// The faction a creature type names. With factions defined, every creature but the player
@@ -848,11 +885,11 @@ impl Content {
     }
 
     /// A stable hash (64-bit FNV-1a) of the ordered terrain, creature, level, light, dungeon,
-    /// object, and slot ids.
+    /// object, slot, and skill ids.
     ///
-    /// `TerrainId`, `CreatureId`, `LightId`, `ObjectId`, and `SlotId` are indices, so a save is only meaningful for
-    /// content with the same ids in the same order; saves record this fingerprint to detect a
-    /// mismatch.
+    /// `TerrainId`, `CreatureId`, `LightId`, `ObjectId`, `SlotId`, and `SkillId` are indices, so a
+    /// save is only meaningful for content with the same ids in the same order; saves record this
+    /// fingerprint to detect a mismatch.
     pub fn fingerprint(&self) -> u64 {
         let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
         let mut feed = |bytes: &[u8]| {
@@ -860,7 +897,7 @@ impl Content {
                 hash = (hash ^ u64::from(b)).wrapping_mul(0x0000_0100_0000_01b3);
             }
         };
-        let groups: [Vec<&str>; 7] = [
+        let groups: [Vec<&str>; 8] = [
             self.terrain.iter().map(|t| t.id.as_str()).collect(),
             self.creatures.iter().map(|c| c.id.as_str()).collect(),
             self.levels.keys().map(String::as_str).collect(),
@@ -868,6 +905,7 @@ impl Content {
             self.dungeons.keys().map(String::as_str).collect(),
             self.objects.iter().map(|o| o.id.as_str()).collect(),
             self.slots.iter().map(|s| s.id.as_str()).collect(),
+            self.skills.list.iter().map(|s| s.id.as_str()).collect(),
         ];
         for ids in groups {
             for id in ids {
@@ -1116,6 +1154,30 @@ impl Content {
     /// The experience rules of `data/experience.toml` (spec §8 "Experience").
     pub fn experience(&self) -> &Experience {
         &self.experience
+    }
+
+    /// The skills of `data/skills.toml`, in file order (by [`SkillId`]; none without the file).
+    pub fn skills(&self) -> &[SkillDef] {
+        &self.skills.list
+    }
+
+    pub fn skill(&self, id: SkillId) -> &SkillDef {
+        &self.skills.list[usize::from(id.0)]
+    }
+
+    /// The skill with data id `name`.
+    pub fn skill_id(&self, name: &str) -> Option<SkillId> {
+        self.skills.id(name)
+    }
+
+    /// Every skill, with its id, in file order.
+    pub fn skill_ids(&self) -> impl Iterator<Item = (SkillId, &SkillDef)> {
+        (0u8..).zip(&self.skills.list).map(|(i, s)| (SkillId(i), s))
+    }
+
+    /// **[provisional]** How training marks become points (`[increase]` in `data/skills.toml`).
+    pub fn increase(&self) -> &Increase {
+        &self.skills.increase
     }
 
     /// The horoscope of `data/horoscope.toml` (none without the file).
@@ -1453,6 +1515,139 @@ mod tests {
     const LIGHTS: &str = "[[light]]\nid = \"torch\"\ncolor = [300, 200, 100, 0]\nradius = 6\n\
                           stability.intensity = { amount = 0.2, speed = 1.5 }\n\
                           stability.hue = { degrees = 5, speed = 0.4 }\n";
+
+    #[test]
+    fn builtin_skills_and_who_trains_them() {
+        let content = Content::builtin().expect("content");
+        let ids: Vec<&str> = content.skills().iter().map(|s| s.id.as_str()).collect();
+        assert_eq!(
+            ids,
+            [
+                "appraise",
+                "athletics",
+                "balance",
+                "bluff",
+                "concentration",
+                "decipher_script",
+                "disable_device",
+                "escape_artist",
+                "handle_animal",
+                "heal",
+                "intimidate",
+                "knowledge",
+                "listen",
+                "metalcraft",
+                "music",
+                "open_lock",
+                "search",
+                "spellcraft",
+                "spot",
+                "steal",
+                "stealth",
+                "survival",
+                "swim",
+                "tumble",
+                "use_magic_device",
+                "woodcraft"
+            ]
+        );
+        for (id, skill) in content.skill_ids() {
+            assert_eq!(content.skill_id(&skill.id), Some(id));
+            assert!(!skill.name.is_empty() && !skill.description.is_empty());
+        }
+        let names = |grants: &[(SkillId, crate::dice::Dice)]| -> Vec<&str> {
+            grants
+                .iter()
+                .map(|&(id, _)| content.skill(id).id.as_str())
+                .collect()
+        };
+        let class = |id: &str| names(&content.class(id).expect("class").skills);
+        let race = |id: &str| names(&content.race(id).expect("race").skills);
+        assert_eq!(
+            class("thief"),
+            [
+                "appraise",
+                "disable_device",
+                "escape_artist",
+                "open_lock",
+                "search",
+                "spot",
+                "steal",
+                "stealth",
+                "tumble"
+            ]
+        );
+        assert_eq!(
+            class("ranger"),
+            [
+                "athletics",
+                "handle_animal",
+                "listen",
+                "spot",
+                "survival",
+                "swim",
+                "woodcraft"
+            ]
+        );
+        assert_eq!(
+            class("wizard"),
+            [
+                "concentration",
+                "decipher_script",
+                "knowledge",
+                "spellcraft",
+                "use_magic_device"
+            ]
+        );
+        assert_eq!(class("commoner"), ["athletics", "handle_animal"]);
+        assert!(content.classes().iter().all(|c| !c.skills.is_empty()));
+        assert_eq!(race("elf"), ["listen", "spot"]);
+        assert_eq!(race("dwarf"), ["metalcraft", "search"]);
+        assert_eq!(race("halfling"), ["listen", "stealth"]);
+        assert_eq!(race("gnome"), ["appraise", "listen"]);
+        assert_eq!(race("half_orc"), ["intimidate"]);
+        assert!(race("human").is_empty());
+        assert!(!content.race("human").expect("human").class_skill.is_zero());
+        // Creatures may list skills; the player's come from the character.
+        let deer = content.creature_id("deer").expect("deer");
+        let listen = content.skill_id("listen").expect("listen");
+        assert_eq!(content.creature(deer).skills.value(listen), Some(30));
+        let player = content.creature_id("player").expect("player");
+        assert!(content.creature(player).skills.is_empty());
+    }
+
+    #[test]
+    fn creature_skills_must_exist_and_the_player_lists_none() {
+        let creatures = include_str!("../../../../assets/data/creatures.toml");
+        for (from, to, why) in [
+            (
+                "skills = { listen = 30 }",
+                "skills = { tracking = 30 }",
+                "creature `deer`: skills: unknown skill `tracking`",
+            ),
+            (
+                "skills = { listen = 30 }",
+                "skills = { listen = 1000 }",
+                "listen 1000 is more than 999",
+            ),
+            (
+                "hearing = 10\nweight = 70000",
+                "hearing = 10\nweight = 70000\nskills = { stealth = 5 }",
+                "the player's skills come from their race and class",
+            ),
+        ] {
+            assert!(creatures.contains(from), "{from}");
+            let mut files = ContentFiles::builtin();
+            files.insert("data/creatures.toml", &creatures.replacen(from, to, 1));
+            let err = Content::load(&files).unwrap_err();
+            assert!(err.message.contains(why), "{why}: {err}");
+        }
+        // Without a skills file, nothing may name a skill.
+        let mut files = ContentFiles::builtin();
+        files.remove("data/skills.toml");
+        let err = Content::load(&files).unwrap_err();
+        assert!(err.message.contains("unknown skill"), "{err}");
+    }
 
     #[test]
     fn builtin_races_and_classes_load_in_the_order_offered() {

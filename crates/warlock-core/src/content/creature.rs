@@ -8,6 +8,7 @@ use super::particles::ParticleEmitter;
 use crate::color::Rgb;
 use crate::combat::{Attack, CRITS, DEFAULT_CRIT, DEFAULT_THREAT, THREATS};
 use crate::dice::Dice;
+use crate::skills::Skills;
 use crate::stats::{Stat, Stats};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -107,6 +108,9 @@ pub(super) struct CreatureSpec {
     /// The experience a kill of it is worth at its own level; none: nothing.
     #[serde(default)]
     pub xp: u32,
+    /// Its trained skills by skill id, with their values (spec §8 "Skills"); the rest untrained.
+    #[serde(default)]
+    pub skills: BTreeMap<String, u16>,
     /// Its natural attack, used when it wields no weapon.
     pub attack: Option<NaturalAttackSpec>,
     /// Its natural armour: hide, shell, or scales.
@@ -193,6 +197,7 @@ pub(super) struct Resolved {
     pub vision: usize,
     pub size: usize,
     pub stats: Stats,
+    pub skills: Skills,
     pub attack: Option<NaturalAttack>,
 }
 
@@ -217,6 +222,7 @@ impl CreatureSpec {
             footsteps: self.footsteps,
             hearing: self.hearing,
             stats: r.stats,
+            skills: r.skills,
             base_hp: i32::from(self.base_hp),
             level: self.level,
             xp: self.xp,
@@ -276,6 +282,10 @@ pub struct CreatureDef {
     /// "Stats"). Rules only: a creature's stats are never shown to the player. The player's
     /// come from the scenario instead ([`super::ScenarioDef::player_stats`]); theirs are average.
     pub stats: Stats,
+    /// Gameplay: the skills a creature of this type is trained in (spec §8 "Skills"); every
+    /// other skill is untrained. Rules only: a creature's skills are never shown to the player.
+    /// The player's come from their race and class.
+    pub skills: Skills,
     /// Gameplay: hit points beyond its Toughness (spec §8 "Combat"); the player's come from the
     /// scenario instead.
     pub base_hp: i32,

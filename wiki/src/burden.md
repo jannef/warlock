@@ -46,6 +46,9 @@ Your **burden** is what you carry against your limit, by thirds:
 **Dwarves** have carried loads all their lives: being burdened costs them nothing, no time, no
 Dexterity, no noise. From strained on, they suffer like everyone else.
 
+The [balance](skills.md#what-skills-give) skill takes some of the slowdown away: at 100, a burden
+slows you by a tenth instead of a quarter, and strained by a fifth instead of a half.
+
 Creatures carry by the same rules, from their own Strength, Toughness, and size.
 
 ## What you see

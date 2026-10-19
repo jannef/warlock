@@ -122,6 +122,7 @@ fn actor(content: &Content, creature: &str) -> Actor {
         hp: 10,
         hp_base: 0,
         regen: 0,
+        skills: Default::default(),
         faction_override: None,
     }
 }

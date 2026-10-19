@@ -736,6 +736,7 @@ fn search_the_last_seen_spot_then_go_back_and_patrol_on() {
             hp: 10,
             hp_base: 0,
             regen: 0,
+            skills: Default::default(),
             faction_override: None,
         },
     );

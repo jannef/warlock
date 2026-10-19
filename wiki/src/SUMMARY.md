@@ -23,6 +23,7 @@
   - [Classes](classes.md)
   - [Horoscope](horoscope.md)
 - [Stats](stats.md)
+- [Skills](skills.md)
 - [Combat](combat.md)
   - [Experience](experience.md)
   - [Ranged combat](ranged.md)

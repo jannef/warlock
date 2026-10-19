@@ -7,6 +7,7 @@ use crate::equipment::Equipment;
 use crate::geom::{Dir, Pos};
 use crate::noise::Heard;
 use crate::object::{Stack, Weight, weight_of};
+use crate::skills::{Effect, Skills};
 use crate::stats::{Stat, Stats};
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -101,6 +102,12 @@ pub struct Actor {
     /// Seconds of game time toward its next hit point back, while it is hurt.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub regen: u32,
+    /// Its trained skills, with their values and training marks (spec §8 "Skills";
+    /// [`crate::skills`]): its creature type's, the player's from their race and class. Every
+    /// other skill is untrained: it gives nothing. Known to the rules (and dev tools) for every
+    /// actor; the player is shown only their own trained skills' values.
+    #[serde(default, skip_serializing_if = "Skills::is_empty")]
+    pub skills: Skills,
     /// The faction its level placed it in, if not its type's (`faction` in a level legend entry:
     /// peaceful creatures in the showcase). Read the one that counts with [`Actor::faction`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -131,7 +138,8 @@ impl Actor {
     /// Its Defence (spec §8 "Combat"): 10 plus its Dexterity modifier (capped by the worn
     /// armour that allows the least and by its `burden`, the burden it suffers, spec §8
     /// "Burden": the lowest cap wins), the best armour, shield, and parry of what it wears and
-    /// wields, and its creature type's natural armour.
+    /// wields, its creature type's natural armour, and the Dodge its skills give (tumble; spec
+    /// §8 "Skills").
     pub fn defence(&self, content: &Content, burden: Burden) -> Defence {
         let equipped: Vec<&ObjectDef> = (self.equipment.items().into_iter())
             .filter_map(|(_, item)| self.inventory.get(item))
@@ -150,11 +158,23 @@ impl Actor {
         });
         let natural = (content.creature(self.creature).natural.as_ref())
             .map(|hide| (Category::Natural, hide.defence));
+        let dodge = Some(self.skills.effect(content, Effect::Dodge))
+            .filter(|&d| d != 0)
+            .map(|d| (Category::Dodge, d));
         Defence::from_bonuses(
             std::iter::once((Category::Dexterity, dexterity))
                 .chain(worn)
-                .chain(natural),
+                .chain(natural)
+                .chain(dodge),
         )
+    }
+
+    /// The faintest loudness it hears (spec §5 "Hearing"): its creature type's `hearing`, lower
+    /// by what its skills give (listen; spec §8 "Skills"), never below 1; `None`: deaf.
+    pub fn hearing(&self, content: &Content) -> Option<u16> {
+        let threshold = content.creature(self.creature).hearing?;
+        let keener = self.skills.effect(content, Effect::Hearing);
+        Some((i32::from(threshold) - keener).max(1) as u16)
     }
 
     /// The weapon it wields, if any: the first hand that holds one, and what it is.

@@ -33,6 +33,10 @@
 # the player's own entry has neither). Kills of lower-level monsters give less and less
 # (data/experience.toml).
 #
+# Skills (spec §8 "Skills"; never shown to the player): skills, the skills it is trained in, by
+# skill id (skills.toml), with fixed values (0 to 999); every other skill is untrained. The player's
+# come from their race and class, not from here. Creatures do not train (yet).
+#
 # Stats (spec §8 "Stats"; never shown to the player; combat and burden use them): stats, its scores
 # by stat (strength, dexterity, toughness, intelligence, willpower, presence; 1 to 40, default 10,
 # the average), and potential, how far each score could grow (default: the score; never below
@@ -143,6 +147,8 @@ weight = 80000
 stats = { strength = 14, dexterity = 15, toughness = 12, intelligence = 2, willpower = 12, presence = 5 }
 base_hp = 4
 attack = { damage = "1d4", name = "hoof", verb = "kicks" }
+# Wary game: it hears what others miss.
+skills = { listen = 30 }
 
 # The kobold war band's archer: keeps its distance and shoots.
 [[creature]]
@@ -184,6 +190,7 @@ hearing = 10
 weight = 18000
 size = "small"
 stats = { strength = 7, dexterity = 11, toughness = 8, intelligence = 12, willpower = 14, presence = 10 }
+skills = { concentration = 20, spellcraft = 25 }
 
 [[creature.particles]]
 on = "attack"

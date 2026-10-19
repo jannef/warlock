@@ -58,6 +58,7 @@ mod level;
 mod path;
 mod schedule;
 mod shoot;
+mod train;
 
 pub use actor::{Actor, ActorId, ActorKind, Mind, Patrol};
 pub use fight::Death;
@@ -81,6 +82,7 @@ use crate::perception::VIEW_RADIUS;
 use crate::perception::{Perception, PerceptionView};
 use crate::rng::Rng;
 use crate::sight::LineOfSight;
+use crate::skills::{Skills, Use};
 use crate::time::{self, Duration, GameTime};
 use crate::weather::{self, Weather};
 use serde::{Deserialize, Serialize};
@@ -138,6 +140,9 @@ pub struct WorldState {
     /// Sounds the player perceived lately: those like them are no news ([`noise::news`]).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) recent_sounds: Vec<Recent>,
+    /// The training random stream (spec §8 "Skills"): the chances of training marks, apart from
+    /// the gameplay stream so training never changes a fight's rolls.
+    pub(crate) training: Rng,
     /// Dev: the weather set by hand (`weather:rain`), until it runs out.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) weather_override: Option<weather::Override>,
@@ -295,17 +300,19 @@ impl World {
             .ok_or_else(|| WorldError::UnknownScenario(scenario.to_string()))?;
         let seed = seed.unwrap_or(def.seed);
         // The player's hit points beyond their Toughness: what their race and class give, or
-        // without a character what the scenario gives.
-        let (stats, vision, hp_base, character) = match character.or(def.character.as_ref()) {
+        // without a character what the scenario gives. Without a character the player is trained
+        // in nothing.
+        let chosen = character.or(def.character.as_ref());
+        let (stats, vision, hp_base, skills, character) = match chosen {
             Some(spec) => {
-                let start =
-                    (spec.start(&content, seed, def.start)).map_err(WorldError::Character)?;
-                (start.stats, start.vision, start.hp, Some(start.character))
+                let s = (spec.start(&content, seed, def.start)).map_err(WorldError::Character)?;
+                (s.stats, s.vision, s.hp, s.skills, Some(s.character))
             }
             None => (
                 def.player_stats,
                 def.vision().to_string(),
                 i32::from(def.hp),
+                Skills::default(),
                 None,
             ),
         };
@@ -321,6 +328,7 @@ impl World {
             scenario: def.id.clone(),
             seed,
             rng: Rng::gameplay(seed),
+            training: Rng::training(seed),
             turn: 0,
             time: def.start,
             current_level: start.id.clone(),
@@ -354,6 +362,7 @@ impl World {
             hp: 0,
             hp_base,
             regen: 0,
+            skills,
             faction_override: None,
         };
         player.hp = player.max_hp();
@@ -534,9 +543,15 @@ impl World {
         self.fallen.clear();
         let (turn, time) = (self.state.turn, self.state.time);
         let mut events = Vec::new();
-        let burden = self.load_of(self.state.player).burden();
+        let load = self.load_of(self.state.player);
+        let (burden, slowed) = (load.burden(), load.penalty() != Burden::Unburdened);
         let spent = self.player_acts(action, &mut events);
         self.burden_news(burden);
+        // Acting (not waiting) under a load that slows the player trains balance.
+        let acted = matches!(spent, Spent::Turn(_)) && !matches!(action, Action::Wait);
+        if acted && slowed && self.trains(Use::Burdened) {
+            self.train(Use::Burdened);
+        }
         match spent {
             Spent::Nothing => {}
             Spent::NoTime => self.perceive(&mut events),
@@ -809,12 +824,16 @@ impl World {
         );
         let viewer = self.player_pos();
         let mut said: Vec<String> = Vec::new();
-        for sound in news {
+        for sound in &news {
             let text = sound.message(viewer);
             if !said.contains(&text) {
                 self.say(text.clone());
                 said.push(text);
             }
+        }
+        // Hearing something new trains listening.
+        if !news.is_empty() && self.trains(Use::Hear) {
+            self.train(Use::Hear);
         }
     }
 
@@ -841,16 +860,26 @@ impl World {
         }
     }
 
-    /// The noise of `act` by `actor` on the current level (under its burden), heard by those it
-    /// reaches.
+    /// The noise of `act` by `actor` on the current level (under its burden and its skills),
+    /// heard by those it reaches. A step of the player's that a creature could have heard, but
+    /// for their stealth, trains stealth.
     fn make_noise(&mut self, actor: ActorId, act: Act) {
         let (state, content) = (&self.state, &self.content);
-        let made = state.actors.get(&actor).and_then(|a| {
-            let burden = state.load(content, a).penalty();
-            noise::noise(content, state.current(), a, burden, act)
-        });
+        let Some(a) = state.actors.get(&actor) else {
+            return;
+        };
+        let burden = state.load(content, a).penalty();
+        let made = noise::noise(content, state.current(), a, burden, act);
+        let sneaking = actor == state.player
+            && matches!(act, Act::Step(_))
+            && self.trains(Use::Sneak)
+            && noise::plain_noise(content, state.current(), a, burden, act)
+                .is_some_and(|plain| noise::heard_by_anyone(state, content, plain));
         if let Some(made) = made {
             noise::make(&mut self.state, &self.content, made);
+        }
+        if sneaking {
+            self.train(Use::Sneak);
         }
     }
 
@@ -1157,6 +1186,10 @@ impl World {
             to,
         });
         self.make_noise(player, Act::Step(to));
+        // A journey on the overworld trains survival.
+        if overworld && self.trains(Use::Travel) {
+            self.train(Use::Travel);
+        }
         let level = self.state.current();
         if let Some(stairs) = level.stairs_at(to) {
             let text = match (level.kind, stairs.dir, &stairs.to) {
@@ -1468,6 +1501,7 @@ fn instantiate_level(state: &mut WorldState, content: &Content, template: &Level
             hp: 0,
             hp_base: def.base_hp,
             regen: 0,
+            skills: def.skills.clone(),
             faction_override: spawn.faction,
         };
         actor.hp = actor.max_hp();
@@ -1503,6 +1537,8 @@ mod object_tests;
 mod overworld_tests;
 #[cfg(test)]
 mod shoot_tests;
+#[cfg(test)]
+mod skills_tests;
 #[cfg(test)]
 mod speed_tests;
 #[cfg(test)]

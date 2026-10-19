@@ -18,6 +18,11 @@
 #   ignores_burdened  whether being Burdened, the first level of burden, costs the character
 #                 nothing (no slowdown, no cap on Dexterity in Defence, no louder steps; default
 #                 false); from Strained on they are treated like everyone else
+#   skills        the skills the race trains (spec §8 "Skills"; skills.toml), by skill id: dice
+#                 (`"1d6+4"`) or a number, rolled when the character is made, every result within
+#                 0 to 100; added to the class's (a skill both train sums the two)
+#   class_skill   dice added to one of the class's skills, picked from the run seed when the
+#                 character is made (default none; humans: one extra class skill)
 #
 # A new character's score in each stat is 10 (the average), plus the race's adjustment, plus the
 # gender's (male: strength +1; female: dexterity +1; other: +1 to a stat picked from the run
@@ -41,6 +46,7 @@ stats = { strength = -1, dexterity = "1d2+1", toughness = -2, intelligence = 1, 
 potential = { strength = -2, dexterity = 3, toughness = -3, intelligence = 2, willpower = 1, presence = 1 }
 hp = 2
 size = "medium"
+skills = { listen = "1d6+4", spot = "1d6+4" }
 
 [[race]]
 id = "half_elf"
@@ -52,6 +58,7 @@ stats = { dexterity = 1, presence = "1d2" }
 potential = { dexterity = 1, toughness = -1, intelligence = 1, presence = 2 }
 hp = 3
 size = "medium"
+skills = { bluff = "1d4+2", spot = "1d4+2" }
 
 # No gift and no flaw, but the most room to grow (rolled).
 [[race]]
@@ -63,6 +70,8 @@ age = [16, 35]
 potential = { strength = "1d2", dexterity = "1d2", toughness = "1d2", intelligence = "1d2", willpower = "1d2", presence = "1d2" }
 hp = 4
 size = "medium"
+# One extra class skill: one of the class's skills, picked when the character is made.
+class_skill = "2d4+4"
 
 [[race]]
 id = "dwarf"
@@ -74,6 +83,7 @@ stats = { strength = 1, dexterity = -1, toughness = "1d2+2", willpower = 1, pres
 potential = { strength = 2, dexterity = -2, toughness = 4, willpower = 1, presence = -2 }
 hp = 6
 size = "medium"
+skills = { metalcraft = "1d6+4", search = "1d6+4" }
 # Dwarves carry loads all their lives: being Burdened costs them nothing.
 ignores_burdened = true
 
@@ -87,6 +97,7 @@ stats = { strength = -3, dexterity = 3, willpower = 1 }
 potential = { strength = -4, dexterity = 3, willpower = 1, presence = 1 }
 hp = 2
 size = "small"
+skills = { listen = "1d6+4", stealth = "1d6+4" }
 
 [[race]]
 id = "gnome"
@@ -98,6 +109,7 @@ stats = { strength = -2, toughness = 1, intelligence = "1d2+1", willpower = -1 }
 potential = { strength = -3, dexterity = 1, toughness = 1, intelligence = 3 }
 hp = 3
 size = "small"
+skills = { appraise = "1d6+4", listen = "1d6+4" }
 
 [[race]]
 id = "half_orc"
@@ -109,3 +121,4 @@ stats = { strength = "1d2+2", toughness = 1, intelligence = "-1d3", presence = -
 potential = { strength = 4, toughness = 2, intelligence = -3, presence = -3 }
 hp = 6
 size = "medium"
+skills = { intimidate = "1d6+4" }

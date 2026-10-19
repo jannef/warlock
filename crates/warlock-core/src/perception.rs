@@ -3,10 +3,11 @@
 //! Everything the player can know — and therefore everything rendering, UI, and dumps may show —
 //! goes through [`PerceptionView`]. It exposes currently visible cells, creatures (what they
 //! wear and wield, and how hurt they look, in words), objects, and light, remembered terrain and
-//! objects, and what the player carries, wears, weighs, and scores in each stat, their burden and
-//! carrying limit, and their hit points and Defence; it never exposes unseen terrain or objects,
-//! hidden creatures, what else creatures carry, their burden, or their hit points, any stat's
-//! modifier or potential, a creature's stats, a to-hit, or light the player's eyes cannot
+//! objects, and what the player carries, wears, weighs, and scores in each stat, their trained
+//! skills' values, their burden and carrying limit, and their hit points and Defence; it never
+//! exposes unseen terrain or objects, hidden creatures, what else creatures carry, their burden,
+//! their skills, or their hit points, any stat's modifier or potential, a skill's marks or
+//! benefits, an untrained skill, a creature's stats, a to-hit, or light the player's eyes cannot
 //! perceive.
 //!
 //! **Memory** (spec §5): terrain and piles of objects as last seen. Objects are seen where
@@ -64,6 +65,7 @@ use crate::light::{
 };
 use crate::noise::{self, PerceivedSound};
 use crate::object::{Stack, Weight};
+use crate::skills::{self, SkillId};
 use crate::stats::PerStat;
 use crate::time::GameTime;
 use crate::weather::Weather;
@@ -72,6 +74,16 @@ use serde::Serialize;
 
 /// Maximum sight distance, however bright the light.
 pub const VIEW_RADIUS: i32 = 40;
+
+/// One of the player's own trained skills, as they know it (spec §8 "Skills"): its value and a
+/// coarse sense of how near its next point is. Never its marks or what it gives.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+pub struct OwnSkill {
+    pub skill: SkillId,
+    pub value: u16,
+    /// Toward the next point, in quarters: 0 (just gained one) to 3 (nearly there).
+    pub progress: u8,
+}
 
 /// What the player knows about one cell.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
@@ -485,7 +497,7 @@ impl Perception {
 
         // Sounds the player heard whose source they do not see, placed roughly.
         let player = state.player();
-        let sounds = match content.creature(player.creature).hearing {
+        let sounds = match player.hearing(content) {
             Some(threshold) => {
                 let hidden = |p: Pos| sight.get(p) == Some(&Sight::Hidden) && p != viewer;
                 noise::perceive(level, content, &player.heard, threshold, state.turn, hidden)
@@ -735,6 +747,20 @@ impl<'a> PerceptionView<'a> {
     /// stats: never their potentials or modifiers, and nothing of a creature's.
     pub fn own_scores(&self) -> PerStat<u8> {
         self.player.stats.scores()
+    }
+
+    /// The player's own trained skills, in skill order (spec §8 "Skills"): each one's value and
+    /// how near its next point is, coarsely. Untrained skills are not here; nor is anything of a
+    /// creature's skills, a mark, or a benefit.
+    pub fn own_skills(&self) -> Vec<OwnSkill> {
+        let increase = self.content.increase();
+        (self.player.skills.iter())
+            .map(|(skill, trained)| OwnSkill {
+                skill,
+                value: trained.value,
+                progress: skills::progress(trained, increase),
+            })
+            .collect()
     }
 
     /// The player's hit points: what they have left (at most their maximum, never below 0) and

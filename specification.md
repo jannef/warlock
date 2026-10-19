@@ -55,7 +55,13 @@ Build the engine and framework, not the game. Everything built is production qua
   player's starting stats (partly rolled with dice, ADOM-like) and eyes; a random age by race
   and a random birthday give the birth year, whose horoscope sign (12 mythological animals × 5
   elements) adjusts the stats too (§8 "Character creation"); race and class also give hit points
-  (§8 "Combat"); classes do nothing else yet
+  (§8 "Combat") and trained skills (§8 "Skills")
+- Skills (M20): 26 skills in data, ADOM-like; race and class train the player in some (dice),
+  creatures may list theirs, and every other skill is untrained (never shown, gives nothing).
+  Values grow without a hard cap (slowly past 100) from training marks earned by meaningful
+  use (the increase rule is provisional), and the passive ones help: tumble (Dodge in Defence),
+  stealth (quieter steps and doors), listen (hearing fainter sounds), balance (less burden
+  slowdown), survival (quicker journeys); a Skills screen lists the player's (§8 "Skills")
 - Save and resume an unfinished run
 - Keyboard controls with an in-game controls reference
 - Development interface (§9)
@@ -65,8 +71,10 @@ Build the engine and framework, not the game. Everything built is production qua
 
 **Out of scope for now**: magic (spells are announced, nothing is damaged), damage types (a
 flaming arrow does an arrow's damage), rules that use stats beyond combat and burden (ability
-checks, saving throws, training), levels and experience, what a class gives beyond starting stats and hit
-points (skills, equipment, spells), item effects, audio, mouse input, infravision, localization.
+checks, saving throws, training stats), levels and experience, what a class gives beyond starting
+stats, hit points, and skills (equipment, spells), active uses of skills (searching, picking
+locks, healing, and the like) and weapon skills, item effects, audio, mouse input, infravision,
+localization.
 
 Vision types are in scope even though there are no other mechanics yet: they are part of perception,
 and the light data model must carry them from the start.
@@ -581,7 +589,8 @@ rate or animation.
     burden (§8 "Burden": ×1.25 Burdened, ×1.5 Strained; a dwarf's steps are not louder while
     Burdened), rounded down. Opening a door makes
     the closed door's `toggle_noise` (60), closing one the open door's (70). One function decides
-    an action's loudness, so skills such as moving silently can change it there later. Loudness
+    an action's loudness (`noise::noise`): the actor's skills take their percent off its steps
+    and doors there, rounded down (stealth, §8 "Skills": 60 % at 100; not its attacks). Loudness
     is at most 300; a creature without `footsteps` moves silently, a door without `toggle_noise`
     is silent. Attacks
     (§8 "Combat"; hit or miss) are heard where the attacker stands: fighting (melee, 60), a
@@ -597,7 +606,8 @@ rate or animation.
     are journeys).
   - **Listeners**: every creature type with `hearing` (the faintest loudness it hears: the
     player 10, kobold 15, kobold archer 12, kobold shaman 10, cave beetle 20, giant rat and deer 5,
-    bat 3; none is deaf) hears a noise another actor
+    bat 3; none is deaf; the listen skill lowers it, never below 1, §8 "Skills") hears a noise
+    another actor
     makes on its level when the loudness at its cell reaches that, at once, as the action
     happens. A creature keeps what it heard (kind, where it was made, how loud it was at the
     creature) until it next acts: the input its AI reads (§8 "Creature behavior": it goes to look
@@ -654,7 +664,8 @@ rate or animation.
   the binding table, so it is always accurate.
 - **Screens**: the main menu, New run and its character creation steps, pause menu, Settings,
   Controls, help, the inventory, the equipment screen and its choice of what goes in a slot, the
-  character screen, choosing what to pick up, drop, or throw, and the death screen are modal
+  character screen, the Skills screen, choosing what to pick up, drop, or throw, and the death
+  screen are modal
   screens on one stack. Opening
   a screen puts it on top; Esc or Back closes it and returns to the screen below as it was left.
   While any screen is open it receives every key press, the run (if any) stays visible beneath
@@ -681,7 +692,10 @@ rate or animation.
   birthday, and birth sign on one line (`Age 27 · born 3 Seedtide 1417 · year of the Fire
   Manticore`; the sign on a line of its own when the panel is too narrow), the six starting
   scores (the final scores only: the dice already rolled, no breakdown, never a potential or a
-  modifier), the vision, and the scenario and seed; "other" names the stat it raised. The
+  modifier) with the starting trained skills and their values beside them (§8 "Skills"; in two
+  columns when there are more than six, down the first, then the second; below the scores, as
+  `Appraise 11 · Disable device 16 · …`, when the panel is too narrow), the vision, and the
+  scenario and seed; "other" names the stat it raised. The
   player does not choose the age, the birthday, or the sign. Starting replaces any saved run. Content without races or classes skips
   character creation: New run starts the scenario as it is.
 - **Pause menu**: Esc during a run (when no prompt is open) opens it, drawn in glyphs:
@@ -696,10 +710,11 @@ rate or animation.
   is named, so the table never holds a conflict. Esc (cancel) is fixed. Delete resets a command,
   "Reset all keys" resets everything.
 - First-phase commands: move, wait, open/close door, ascend/descend, light/douse lantern (`L`),
-  pick up (`,` or `g`), drop (`d`), inventory (`i`), equipment (`e`), character (`@`), rest
-  (`R`), look, fire (`f`), throw (`t`), next target (`Tab`, while aiming), help, save and quit
-  (`Q`). Free actions (look, help, the inventory, looking at the
-  equipment screen, the character screen, menus, vision switch) do not advance time.
+  pick up (`,` or `g`), drop (`d`), inventory (`i`), equipment (`e`), character (`@`), skills
+  (`S`), rest (`R`), look, fire (`f`), throw (`t`), next target (`Tab`, while aiming), help, save
+  and quit (`Q`). Free actions (look, help, the inventory, looking at the
+  equipment screen, the character screen, the Skills screen, menus, vision switch) do not
+  advance time.
 - **Objects** (M11) lie in piles on cells, the top first: the map shows the top object's glyph
   (§4.2), and dropped objects go on top. Stepping onto a pile says what lies there: `You see here
   a dagger.` for one stack, `There are several objects here.` for more. Look mode names what lies
@@ -764,8 +779,15 @@ rate or animation.
   `Weight 98.4 kg (you 70 kg, carrying 28.4 kg, burdened)`), and, dimmer, the weights at which
   their burden changes, as in the inventory (§8 "Burden"). The panel is 72 wide, so the birth and
   the thresholds take a line each. Never a modifier, a potential, or a to-hit, which the player
-  does not know. Read-only; `@`, Enter, or Esc closes it. The status bar does not show stats: it
-  is full at common window sizes.
+  does not know. Read-only; `@`, Enter, or Esc closes it, and the Skills key (`S`) opens the
+  Skills screen over it. The status bar does not show stats: it is full at common window sizes.
+- **Skills** (`S`; §8 "Skills"): the player's trained skills, in skill order (data order), each
+  with its name, its value, and, dimmer, a four-cell meter of how near its next point is in
+  quarters (`━` for each quarter reached, `─` for the rest: `━━──`; shape, not color, tells them
+  apart); untrained skills are not there ("You are not trained in any skill." when none is).
+  ↑↓ choose a skill, whose one-line description shows below the list (a list taller than the
+  panel scrolls). Never a benefit's number, a mark, or a chance. Read-only; `S`, Enter, or Esc
+  closes it (back to the character screen when opened from there).
 - **Death screen** (§8 "Combat"): when the player dies, the death screen opens over the run as it
   ended, in place of any other screen, and the run's save is deleted (permadeath): `Y O U   D I E
   D`, then who killed them ("Killed by a kobold", or "Killed by something you did not see" when
@@ -950,7 +972,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   bites (1d3) and has a shell (3); kobolds fight with what they wield. For burden (§8
   "Burden"): `size`, a size in `data/sizes.toml` (default `medium`); the kobolds, the giant rat,
   the cave bat, and the cave beetle are small, the deer and the player creature medium (the
-  player's size comes from their race when the run has a character). Creature particle emitters may
+  player's size comes from their race when the run has a character). Skills (§8 "Skills"; never
+  shown): `skills`, the skills it is trained in by skill id with fixed values (0 to 999); the
+  rest untrained; the player creature lists none. The deer listens (30), the kobold shaman knows
+  concentration (20) and spellcraft (25). Creature particle emitters may
   fire `on = "attack"`: a burst at the target of each attack the player sees (the shaman's
   violet sparkle). Terrain has a `move_cost`: what a step onto it costs in percent of a normal
   step (the `step` action; default 100; still and running water 200; local levels only), a
@@ -1111,30 +1136,56 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   `-1`) or dice as text (`"2d3+1"`, `"1d4-1"`, `"-1d2"`; §8 "Dice"), rolled when the character
   is made; a missing stat is 0, and every result a roll can have must lie within −10 to 10.
 - **Races** (`data/races.toml`, optional; §8 "Character creation"), in the order New run offers
-  them: `id`, `name`, a one-line `description`, `vision` (a profile in `vision.toml`: the
-  player's eyes), `age = [youngest, oldest]` (a new character's age in years, 1 to 1000),
-  `stats` (adjustments to the starting scores), `potential` (adjustments to the potentials,
-  the same way; hidden from the player), `hp` (its hit points, 0 to 1000, default 0; §8
-  "Combat"), `size` (a size in `data/sizes.toml`, default `medium`; §8 "Burden"), and
-  `ignores_burdened` (default false: whether Burdened, the first level of burden, costs the
-  character nothing); and at the top `base_potential` (1 to 40), what every
-  potential is before the race adjusts it (15). Races are mostly fixed numbers, their identity,
-  with a little dice. The races, their eyes, ages, and hit points: elf (low-light, 90–300, 2),
-  half-elf (low-light, 20–60, 3), human (normal, 16–35, 4), dwarf (darkvision, 40–120, 6),
-  halfling (normal, 20–50, 2), gnome (low-light, 40–150, 3), half-orc (darkvision, 14–30, 6);
-  humans adjust no score but roll `1d2` on every potential. Halflings and gnomes are small, the
-  rest medium; dwarves ignore Burdened.
+  them: `id`, `name`, a one-line `description`, `vision` (a profile in `vision.toml`: the player's
+  eyes), `age = [youngest, oldest]` (a new character's age in years, 1 to 1000), `stats`
+  (adjustments to the starting scores), `potential` (adjustments to the potentials, the same way;
+  hidden from the player), `hp` (its hit points, 0 to 1000, default 0; §8 "Combat"), `size` (a size
+  in `data/sizes.toml`, default `medium`; §8 "Burden"), `ignores_burdened` (default false: whether
+  Burdened, the first level of burden, costs the character nothing), `skills` (the skills it trains,
+  by skill id: dice or a number, every result 0 to 100; §8 "Skills"), and `class_skill` (dice added
+  to one of the class's skills, picked when the character is made; default none); and at the top
+  `base_potential` (1 to 40), what every potential is before the race adjusts it (15). Races are
+  mostly fixed numbers, their identity, with a little dice. The races, their eyes, ages, and hit
+  points: elf (low-light, 90–300, 2), half-elf (low-light, 20–60, 3), human (normal, 16–35, 4),
+  dwarf (darkvision, 40–120, 6), halfling (normal, 20–50, 2), gnome (low-light, 40–150, 3), half-orc
+  (darkvision, 14–30, 6); humans adjust no score but roll `1d2` on every potential. Halflings and
+  gnomes are small, the rest medium; dwarves ignore Burdened. Their skills (`1d6+4` each): elves
+  listen and spot, half-elves bluff and spot (`1d4+2`), dwarves metalcraft and search
+  (stonecunning), halflings listen and stealth, gnomes appraise and listen, half-orcs intimidate;
+  humans none, but one extra class skill (`class_skill = "2d4+4"`).
 - **Sizes** (`data/sizes.toml`, optional; §8 "Burden"), in file order: `id`, `name`, and `carry`
   (what it carries in percent of a medium one, 10 to 1000): small 75, medium 100. `medium` is
   required (the size of every race and creature type that names none); without the file there
   is only medium.
 - **Classes** (`data/classes.toml`, optional), in the order offered: `id`, `name`, a one-line
-  `description`, `stats` (adjustments as for races), and `hp` (as for races). Each class rolls
+  `description`, `stats` (adjustments as for races), `hp` (as for races), and `skills` (as for
+  races). Each class rolls
   its key stats (the warrior St `1d3+1` and To `1d3`, the wizard In `2d2+1` and To `-1d2`, the
   commoner To `1d3-1`); the rest are fixed. Adventurers: barbarian (8 hit points), bard (2),
   priest (4), druid (4), monk (5), paladin (6), ranger (5), thief (3), wizard (0), witch (1),
   warrior (7); everyday folk: aristocrat (1), commoner (3), craftsperson (3), merchant (2). A
-  class adjusts the starting scores and gives hit points, nothing more.
+  class adjusts the starting scores, gives hit points, and trains skills, nothing more: a few it
+  is known for (`2d6+10`) and a few more (`2d4+4`); the full table is in the wiki (Skills), e.g.
+  the thief open lock, steal, stealth, and tumble well, appraise, disable device, escape artist,
+  search, and spot a little; the ranger spot, survival, and woodcraft well, athletics, handle
+  animal, listen, and swim a little; the wizard concentration, knowledge, and spellcraft well,
+  decipher script and use magic device a little; the commoner athletics and handle animal a
+  little.
+- **Skills** (`data/skills.toml`, optional; without it nobody is trained in anything, and any
+  `skills` elsewhere is an error; §8 "Skills"): `[[skill]]`s in the order the Skills screen lists
+  them (alphabetical), each with `id`, `name`, a one-line `description`, `kind` (`passive`,
+  `action`, or `rules`: what it is for; no rule reads it), `mark` (when it earns training marks:
+  `{ on = USE, chance = PERCENT }`, 1 to 100; uses `sneak`, `hear`, `dodge`, `burdened`,
+  `travel`), and `benefit` (what it gives by its value: `{ effect = EFFECT, steps = [20, 40],
+  every = 25 }`, one for each value reached and one more for every `every` points past the last,
+  or `{ effect = EFFECT, curve = [[0, 0], [100, 60]] }`, straight between points from value 0,
+  rounded down, level after the last; effects `dodge`, `quiet`, `hearing`, `burden`, `travel`,
+  the percent ones within 0 to 100). At the top, **[provisional]** `[increase]`: `marks`,
+  `per`, `soft_cap`, `past_cap` (each at least 1; default 4, 10, 100, 3). Adding a skill is one
+  entry (saves then change: skill ids are indices). The 26 skills: appraise, athletics,
+  balance, bluff, concentration, decipher script, disable device, escape artist, handle animal,
+  heal, intimidate, knowledge, listen, metalcraft, music, open lock, search, spellcraft, spot,
+  steal, stealth, survival, swim, tumble, use magic device, woodcraft.
 - **Horoscope** (`data/horoscope.toml`, optional; §8 "Character creation"): `anchor_year`, a
   year that starts a great cycle (1: the year of the Great Race, the first of the reckoning),
   then the `[[animal]]`s in the order of the Great Race and the `[[element]]`s, each with `id`,
@@ -1143,29 +1194,28 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   Salamander, Hydra, Manticore, Unicorn, Wyvern, Basilisk, Roc, Griffin, Sphinx, Phoenix,
   Kraken, Barghest; the five elements: Wood, Fire, Earth, Metal, Water. Without the file there
   are no signs.
-- **Scenarios** (`assets/scenarios/*.toml`): level set, start position, lantern, options, when
-  the run starts: `start_date = [year, month, day]` (all from 1; default `[1444, 11, 11]`, 11 Darkening,
-  Year 1444) and
-  `start_time = "hh:mm"` (default `"08:00"`), and the player's character when the run does not
-  choose one: `character = { race = "human", gender = "female", class = "thief" }` (ids in
+- **Scenarios** (`assets/scenarios/*.toml`): level set, start position, lantern, options, when the
+  run starts: `start_date = [year, month, day]` (all from 1; default `[1444, 11, 11]`, 11 Darkening,
+  Year 1444) and `start_time = "hh:mm"` (default `"08:00"`), and the player's character when the run
+  does not choose one: `character = { race = "human", gender = "female", class = "thief" }` (ids in
   `races.toml` and `classes.toml`; gender `male`, `female`, or `other`), from which the player's
-  eyes, stats, and hit points follow. A scenario without a character (test fixtures, content
-  without races or classes) gives them itself: `vision` (default `normal`), `stats` and
-  `potential` as for creature types (default 10 each, the potential the score), and `hp` (the hit
-  points beyond Toughness a race and a class would give, 0 to 1000, default 0); with a character
-  these four are refused. Every built-in scenario has a character with normal eyes: the showcase a human female
-  thief, the arena a halfling male thief, the courtyard a human female druid, the depths and the
-  vast level a human male warrior, the forest a human female ranger, the world a human male
-  ranger.
+  eyes, stats, and hit points follow. A scenario without a character (test fixtures, content without
+  races or classes) gives them itself: `vision` (default `normal`), `stats` and `potential` as for
+  creature types (default 10 each, the potential the score), and `hp` (the hit points beyond
+  Toughness a race and a class would give, 0 to 1000, default 0); with a character these four are
+  refused; such a player is trained in no skill (§8 "Skills"). Every built-in scenario has a
+  character with normal eyes: the showcase a human female thief, the arena a halfling male thief,
+  the courtyard a human female druid, the depths and the vast level a human male warrior, the forest
+  a human female ranger, the world a human male ranger.
 - **Saves**: suspend-only. One save per run, written on quit and by periodic autosave; loading
   continues the run. Dev builds add named snapshots. Format: a versioned envelope (magic, format
   version, game version) around a JSON payload, gzip-compressed with a pure-Rust backend, written
   atomically (temp file + rename). Before 1.0, incompatible saves are rejected with a clear message;
   from 1.0 on, saves are migrated. The web build keeps the same bytes in the browser's
   `localStorage` (below). The envelope also records a content fingerprint (hash of the ordered
-  terrain, creature, level, light, dungeon-branch, object, and equipment slot ids), because ids are indices; a
-  save made with different content is rejected. Generated levels are saved with the run like
-  visited hand-made ones (terrain, memory, stairs, lights, kind, arrival point,
+  terrain, creature, level, light, dungeon-branch, object, equipment slot, and skill ids), because
+  ids are indices; a save made with different content is rejected. Generated levels are saved with
+  the run like visited hand-made ones (terrain, memory, stairs, lights, kind, arrival point,
   edge exit, piles of objects and the piles as remembered), together with the gameplay random
   stream, the game clock, every actor's scheduler energy (§8 "Speed"), the direction of the last
   overworld step (saves without the step load with none), what each actor heard and has not yet
@@ -1180,7 +1230,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   class or its type add to its Toughness, and the seconds banked toward the next one back; §8
   "Combat"; format version 11), the fires burning on each level (§8 "Ranged combat"; format
   version 12), the player's experience total (§8 "Experience"; format version 13; absent while
-  0, so a run without kills hashes as before), and a dev weather override while
+  0, so a run without kills hashes as before), every actor's trained skills (value and training
+  marks) and the training random stream (§8 "Skills"; format version 14), and a dev weather
+  override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
   platform data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
@@ -1206,7 +1258,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 ```
 crates/
   warlock-core/   plain Rust, no Bevy: map, actors, actions, turns, time, fov, light,
-                  perception, rng, levels, mapgen, stats, dice, character, burden, save
+                  perception, rng, levels, mapgen, stats, skills, dice, character,
+                  burden, save
   warlock-cli/    no Bevy: scenarios, replay, dump, verify
   warlock/        Bevy app: render, input, UI, effects, platform (ECS lives here)
 xtask/            screenshot capture, golden-image diff, CI helpers
@@ -1256,7 +1309,9 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
       a sword and a shield three, dropping a worn jerkin `body_armor` plus `drop`.
     - A step costs `step` scaled by the destination terrain's `move_cost` percent (water 200: 12 s
       at normal speed); on the overworld its base is the destination terrain's `travel_minutes`
-      instead of 6 s (scaled by speed like everything else: twice the speed, half the journey).
+      instead of 6 s (scaled by speed like everything else: twice the speed, half the journey),
+      less the percent the actor's skills take off a journey (survival, "Skills" below; rounded
+      up), in `World::step_price`.
       `TerrainDef::step_price` (through `LevelState::step_price`) is the one place movement time
       is decided.
     - `stairs` covers taking stairs, entering a location or a local area from the overworld, and
@@ -1381,7 +1436,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     by the lowest `max_dex` of what the actor wears and by its burden, +3 Burdened, +1 Strained,
     0 Overloaded ("Burden" below), the lowest cap winning; a penalty counts in full), **Armour** (worn
     `armour`), **Shield** (held `shield`), **Parry** (a wielded weapon's `parry`), **Natural** (the
-    creature type's `natural` armour), **Dodge** (none yet: training and effects), and
+    creature type's `natural` armour), **Dodge** (the tumble skill's bonus, "Skills" below;
+    effects later), and
     **Deflection** (none yet: magic). Within a category only the highest bonus counts, except
     Dodge, whose bonuses add up.
   - **Why it missed**: a miss whose natural roll plus to-hit is below 10 would have missed an
@@ -1518,15 +1574,15 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     and wielded things included; its own body weight does not.
   - **Levels**: Unburdened up to a third of the limit, Burdened up to two thirds, Strained up to
     the limit, Overloaded beyond it (`Burden`, `Load::burden`).
-  - **Effects**: every action's price ×1.25 Burdened and ×1.5 Strained or Overloaded ("Costs"
-    above); the Dexterity bonus to Defence at most +3 Burdened, +1 Strained, 0 Overloaded, the
-    lower of that and worn armour's `max_dex` winning ("Combat" above); footsteps ×1.25 and ×1.5
-    as loud (§5 "Hearing"). Overloaded, the actor cannot move: no step, no walking off a local
-    area's edge, no stairs, no entering a location or local area ("You carry too much to move.",
-    refused, no time); everything else works (waiting, attacking, opening doors, picking up,
-    dropping, putting on and taking off), as slowly as Strained. Picking up is always allowed,
-    even into Overloaded, as in ADOM. An overloaded creature opens doors but waits instead of
-    stepping.
+  - **Effects**: every action's price ×1.25 Burdened and ×1.5 Strained or Overloaded ("Costs" above;
+    the balance skill takes a percent of the extra off, "Skills" below); the Dexterity bonus to
+    Defence at most +3 Burdened, +1 Strained, 0 Overloaded, the lower of that and worn armour's
+    `max_dex` winning ("Combat" above); footsteps ×1.25 and ×1.5 as loud (§5 "Hearing"). Overloaded,
+    the actor cannot move: no step, no walking off a local area's edge, no stairs, no entering a
+    location or local area ("You carry too much to move.", refused, no time); everything else works
+    (waiting, attacking, opening doors, picking up, dropping, putting on and taking off), as slowly
+    as Strained. Picking up is always allowed, even into Overloaded, as in ADOM. An overloaded
+    creature opens doors but waits instead of stepping.
   - **Dwarves** (the race's `ignores_burdened`): Burdened costs them nothing (no slowdown, no
     Dexterity cap, no louder steps; `Load::penalty`); from Strained on they are treated like
     everyone else. Their burden is still Burdened in words.
@@ -1568,11 +1624,13 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     `character/gender` stream, so the same seed always raises the same stat), plus the class's,
     plus the birth sign's animal's and element's, kept within 1 to 40.
   - **Dice**: adjustments that are dice are rolled in the background, ADOM-like, from the stream
-    `character/rolls/<race>,<gender>,<class>`, in this order: the race's scores, the class's,
-    the animal's, the element's (each in stat order), then the race's potentials; fixed numbers
-    draw nothing. The same seed, choices, and start date always make the same character. The
-    player sees only the final scores; the step screens and the wiki show adjustments as
-    written in data (`St 1d3+1`): they are rules, not modifiers.
+    `character/rolls/<race>,<gender>,<class>`, in this order: the race's scores, the class's, the
+    animal's, the element's (each in stat order), then the race's potentials, then the skills
+    ("Skills" below: the race's, the class's, each in skill order, then the race's extra class
+    skill), so skills never move a score; fixed numbers draw nothing. The same seed, choices, and
+    start date always make the same character. The player sees only the final scores; the step
+    screens and the wiki show adjustments as written in data (`St 1d3+1`): they are rules, not
+    modifiers.
   - **Potentials** (hidden): `base_potential` plus the race's potential adjustment (possibly
     rolled), within 1 to 40 and never below the starting score. Classes, genders, and signs do
     not change potentials.
@@ -1580,14 +1638,67 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   - **Hit points**: the race's and the class's `hp` add to Toughness for the maximum ("Combat"
     below).
   - Balance is deliberately not a goal: some combinations are poor (a halfling commoner), and
-    classes do nothing but adjust starting scores and give hit points. No other D&D concept
-    comes with them (alignment, skills, equipment, spells).
+    classes do nothing but adjust starting scores, give hit points, and train skills. No other
+    D&D concept comes with them (alignment, equipment, spells).
   - The character (`Character`: the race, gender, and class ids, the stat the gender raised,
     the birth date, and the birth sign) is part of the world state (saved, hashed) and shown on
     the character screen; replays record the choice only, and since everything else follows
     from the content, the choice, the seed, and the start date, a run is reproduced by its
     scenario, seed, and character. `World::new` starts as the scenario's character,
     `World::with_character` as a given one.
+- **Skills** (`warlock-core/src/skills.rs`, `content/skill.rs`, `world/train.rs`; M20, #132),
+  ADOM-like:
+  - **Trained or untrained**: every actor has a set of trained skills, each with a **value**
+    (`Actor::skills`). A skill not in it is **untrained**: it does not exist for that actor, is
+    never shown, earns no marks, and gives nothing; rules that read a skill get "untrained",
+    which is not a value of 0 (trained at 0 is shown and can grow).
+  - **From race and class** (§7): their `skills` are dice rolled when the character is made,
+    after every other roll ("Character creation" above); a skill both train sums the two; the
+    race's `class_skill` (humans, `2d4+4`) goes to one of the class's skills picked uniformly
+    from the same stream. A creature type's skills are fixed values. A scenario without a
+    character gives a player trained in nothing.
+  - **Values** run 0 to 999 (`MAX_VALUE`), 100 a master; there is no hard cap, but points come
+    slowly past the soft cap (100).
+  - **Training marks**: a meaningful use of a trained skill may earn it a mark, with its rule's
+    chance (§7), one draw of the run's **training stream** (`training`, kept in the world state;
+    never the gameplay stream, so training never changes a fight's rolls) per rule: a step of the
+    player's that some creature on the level would hear at its threshold but for their stealth
+    (`sneak`, through the same propagation as hearing; the overworld is silent), a perceived
+    sound that is news (`hear`, one draw per turn with news), an attack on the player that missed
+    because of their Dexterity or Dodge (`dodge`, the dodge messages), an action other than
+    waiting (not a rest's turns) taken while the player's burden slows them, as it began
+    (`burdened`; a dwarf's Burdened does not), a step on the overworld (`travel`). Only the
+    player trains for now; creatures keep their type's skills.
+  - **[provisional] Increases**: the owner has not decided how skills increase (alternatives for
+    later: ADOM's level-up dice per class once experience exists, or marks that count only once
+    the player rests). For now a skill gains a point when its marks reach
+    `need(value) = marks + value / per`, times `past_cap` from `soft_cap` on (`[increase]` in
+    `data/skills.toml`: 4, 10, 100, 3: 4 marks at 0, 13 at 99, 42 at 100, 48 at 120; the way
+    from 100 to 120 takes about as many marks as the whole way to 100); marks left over carry.
+    A point gained is said: "Your stealth improves." (the skill's name in lower case; never a
+    number). It stops a rest like any message.
+  - **Passive benefits** (data, §7; all integer), each read in one place:
+    - tumble: Dodge in Defence (the category whose bonuses add up), +1 at 20, 40, 60, 80, and
+      100, then +1 per 25 (`Actor::defence`);
+    - stealth: percent less noise from the actor's steps and doors, 0.6 % a point to 60 % at
+      100, then to 75 % at 150 (`noise::noise`; not attacks);
+    - listen: the hearing threshold lower by 1 per 10 points, never below 1 (`Actor::hearing`,
+      for creatures' hearing and the player's perceived sounds alike);
+    - balance: percent less of the burden's slowdown, 0.6 % a point to 60 % at 100 (Burdened
+      ×1.25 becomes ×1.10, Strained ×1.5 ×1.2), then to 80 % at 200 (`World::burdened`,
+      `Burden::slow_eased`; rounded up);
+    - survival: percent less time a journey on the overworld takes, 0.2 % a point to 20 % at 100
+      (`World::step_price`);
+    - athletics (kicking doors, climbing out of pits) and escape artist (out of pits faster) wait
+      for those rules (#128, #130); swim for deep water; concentration, spellcraft, and use magic
+      device for magic; the action skills (appraise, search, open lock, heal, …) for their
+      actions.
+  - **What the player sees**: their own trained skills' values and a coarse progress (quarters)
+    toward the next point (`PerceptionView::own_skills`), on the Skills screen (§6) and the
+    character creation summary; the `skills` dump layer. Never a benefit's number, a mark, a
+    chance, an untrained skill, or a creature's skills; ground-truth dev dumps (`actors`, the
+    world state) show every actor's skills with their marks. Skills and marks are part of the
+    world state (saved, hashed).
 - **Dice** (`warlock-core/src/dice.rs`): one type for every roll the rules make (character
   creation, weapon and natural attack damage). Text form: a fixed number (`+2`, `-1`, `0`) or `NdS`
   (`N` dice of `S` sides: 1 to 100 dice, 2 to 1000 sides), optionally negated (`-1d2`) and
@@ -1607,7 +1718,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   gameplay (`gameplay`, kept in the world state and saved); character creation (derived on
   demand: `character/gender` for the stat "other" raises, `character/birth/<race>` for the age
   and birthday, `character/rolls/<race>,<gender>,<class>` for the dice; New run's Random rows
-  roll `new-run/<step>/<n>` streams, which never touch a run); the weather, which keeps no
+  roll `new-run/<step>/<n>` streams, which never touch a run); training marks (`training`, kept
+  in the world state and saved; §8 "Skills"); the weather, which keeps no
   stream at
   all: each weather block hashes the seed, a label, and its number (FNV-1a, then SplitMix64's
   finalizer; §5 "Weather"); and visual-only randomness in the app, which never uses either. No hash-order iteration and no floating point in the core's decisions.
@@ -1664,14 +1776,16 @@ cargo xtask golden [--update]                             # compare golden scree
   its thresholds, and what they weigh, `carried 4.2 kg (unburdened: burdened over 14 kg,
   strained over 28 kg, overloaded over 42 kg), total weight 74.2 kg`),
   `equipment` (the player's slots by letter, `c Body: a leather jerkin (b)`, `-` when empty),
-  and `stats` (the player's race, gender, and class, `Race Dwarf`, their age, birthday, and
+  `stats` (the player's race, gender, and class, `Race Dwarf`, their age, birthday, and
   sign, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`, then their own scores,
-  `Strength 12`) are built from the perception snapshot only;
+  `Strength 12`), and `skills` (the player's trained skills in skill order, `Stealth 17`) are
+  built from the perception snapshot only;
   `truth` (terrain, objects, and creatures) and `actors` (every actor on the level with its hit
   points and Defence, `hp 8/12 dv 13`, its
   weight, base plus carried, what it carries and of that wears and wields, `equipped main_hand a
-  spear`, its burden and carrying limit, `unburdened (limit 31.5 kg)`, and its stats as
-  score/potential, `St 12/15`) show
+  spear`, its burden and carrying limit, `unburdened (limit 31.5 kg)`, its stats as
+  score/potential, `St 12/15`, and its trained skills with their marks toward the next point,
+  `skills stealth 17 (2/5)`) show
   ground truth and are dev-only. JSON dumps
   carry turn, game time (seconds and calendar fields), level, viewer, the weather (under the open
   sky; else null), seen actors (each with how hurt it looks, `health`: `unhurt`,
@@ -1679,7 +1793,8 @@ cargo xtask golden [--update]                             # compare golden scree
   inventory, equipment (by slot id: letter, object, count), weight, burden (`burden: {level,
   limit}`, the limit in grams), character
   (`{race, gender, class, raised, age, born: {year, month, day}, sign: {animal, element}}` or
-  null), scores (`stats`, by stat id), hit points (`hp: {current, max}`), Defence (`defence`, the
+  null), scores (`stats`, by stat id), trained skills (`skills`, by skill id with their values),
+  hit points (`hp: {current, max}`), Defence (`defence`, the
   total), how the run ended (`death: {turn, time, place, by}` or null), recent messages,
   and optionally the full world state; the ASCII header line has the turn, the time
   (`0001-01-01 08:00:00`), level, viewer, the player's hit points (`hp 17/17`, then `dead` once
@@ -1790,6 +1905,11 @@ Each milestone ships a playable build.
   race, and class, regeneration, death with drops and permadeath, health in words; ranged
   combat (#117): bows, a crossbow, a sling, and throwing weapons, ammunition spent and picked up
   again, ADOM-like targeting, missiles on screen, and flaming arrows that light the dark.
+- **M20 Skills** — 26 skills in data (#132): trained or untrained (never shown, gives nothing),
+  values from race and class dice and creature data, training marks on meaningful use with a
+  provisional increase rule (gentle to 100, slow past it), passive benefits for tumble, stealth,
+  listen, balance, and survival, a Skills screen (`S`), and the starting skills on the character
+  creation summary.
 - **M21 Experience** — creatures have levels and XP values; the player's own kills earn XP, with
   World of Warcraft scaling for monsters below (down to grey, worth nothing) and above the
   player's level, a quadratic level curve to 50 in data, and hit point growth up to level 20;

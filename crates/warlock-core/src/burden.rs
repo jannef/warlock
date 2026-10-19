@@ -89,8 +89,18 @@ impl Burden {
     /// speed; built-in prices scale exactly). Like any price it is paid from energy that carries
     /// over, so a run of slowed actions takes exactly its total time, without drift.
     pub fn slow(self, price: i64) -> i64 {
+        self.slow_eased(price, 0)
+    }
+
+    /// [`Burden::slow`] for an actor whose skills (balance; spec §8 "Skills") take `ease`
+    /// percent (0 to 100) off the slowdown: Burdened ×1.25 becomes ×1.10 with 60 off, Strained
+    /// ×1.5 becomes ×1.2. Rounded up like the rest.
+    pub fn slow_eased(self, price: i64, ease: i32) -> i64 {
         let (num, den) = self.slowdown();
-        price.saturating_mul(num).saturating_add(den - 1) / den
+        let keep = i64::from(100 - ease.clamp(0, 100));
+        let whole = 100 * den;
+        let factor = whole + (num - den) * keep;
+        price.saturating_mul(factor).saturating_add(whole - 1) / whole
     }
 
     /// The most its Dexterity modifier may add to Defence at this burden: +3 Burdened, +1
@@ -295,6 +305,29 @@ mod tests {
         assert_eq!(dwarf(50_000).penalty(), Burden::Strained);
         assert_eq!(dwarf(70_000).penalty(), Burden::Overloaded);
         assert_eq!(load(30_000, 66_000).penalty(), Burden::Burdened);
+    }
+
+    #[test]
+    fn balance_eases_the_slowdown_and_nothing_else() {
+        let eased = |b: Burden, ease| b.slow_eased(6000, ease);
+        // Burdened ×1.25 → ×1.10 with 60 off; Strained ×1.5 → ×1.2; all of it off: no slowdown.
+        assert_eq!(
+            [0, 30, 60, 100].map(|e| eased(Burden::Burdened, e)),
+            [7500, 7050, 6600, 6000]
+        );
+        assert_eq!(eased(Burden::Strained, 60), 7200);
+        assert_eq!(eased(Burden::Overloaded, 60), 7200);
+        assert_eq!(eased(Burden::Unburdened, 60), 6000);
+        // Out of range eases are kept within 0 to 100; no ease is the plain slowdown.
+        assert_eq!(eased(Burden::Burdened, -5), 7500);
+        assert_eq!(eased(Burden::Burdened, 500), 6000);
+        for price in [1, 999, 6000, 5_400_001] {
+            assert_eq!(Burden::Unburdened.slow_eased(price, 0), price);
+            assert_eq!(Burden::Burdened.slow_eased(price, 0), (price * 5 + 3) / 4);
+            assert_eq!(Burden::Strained.slow_eased(price, 0), (price * 3 + 1) / 2);
+        }
+        // Rounded up.
+        assert_eq!(Burden::Burdened.slow_eased(1, 60), 2);
     }
 
     #[test]

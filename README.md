@@ -11,7 +11,8 @@ and glyph-based effects — while every character stays crisp and readable.
 ![The light hall: colored crystals, pillar shadows, smooth falloff](docs/screenshots/m3-light-hall.png)
 
 This is the engine and framework phase: creatures hunt you, fight, shoot, and die (spells are only
-announced so far), death is permanent, and there is no character progression yet. You walk a hand-made
+announced so far), death is permanent, and the only character progression is skills that grow
+with use. You walk a hand-made
 **showcase world** where each room demonstrates one capability (its creatures are peaceful), an
 arena where kobolds and giant rats fight (and you can join in), an ADOM-like **overworld** with day and night and weather, outdoor areas generated
 from it, a vast lit cavern, and procedurally generated dungeon levels.
@@ -71,11 +72,17 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   Toughness count in a fight; the rest do nothing yet.
 - **Character creation** — ADOM-style, at the start of every run: seven races (elf, half-elf,
   human, dwarf, halfling, gnome, half-orc), each with its own eyes, three genders, and fifteen
-  classes from barbarian and wizard to merchant and commoner shape your starting stats, with
-  dice rolled in the background (a warrior's Strength is 1d3+1). Your age and birthday are
+  classes from barbarian and wizard to merchant and commoner shape your starting stats and
+  skills, with dice rolled in the background (a warrior's Strength is 1d3+1). Your age and birthday are
   random, and the year you were born gives you a horoscope sign: one of twelve mythological
   animals and five elements, sixty signs in a great cycle (the Fire Manticore, the Water
   Basilisk). Not balanced, on purpose: some characters are a challenge.
+- **Skills** — 26 ADOM-like skills, from stealth and tumble to open lock and spellcraft. Your race
+  and class train you in a few; the rest you simply do not have. Skills grow with use (each
+  meaningful use may earn a training mark; past 100 they grow slowly), and the passive ones help
+  already: tumbling adds to your Defence, stealth quiets your steps and doors, listening lets you
+  hear fainter sounds, balance eases a heavy load, and survival speeds your journeys. A Skills
+  screen (`S`) shows their values, never the numbers behind them.
 - **Living glyphs and effects** — still ponds that glint in the torchlight, streams and a river
   that visibly flow and foam against rocks, a pulsing altar, flickering torches, sparks and
   embers, a soft glow, heat haze over braziers, short fades. All of it is tunable per effect, and

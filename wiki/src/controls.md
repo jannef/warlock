@@ -21,6 +21,7 @@ authoritative: it is generated from your current key bindings.
 | Inventory | `i` |
 | Equipment (wear and wield) | `e` |
 | Character (your stats and weight) | `@` |
+| Skills | `S` |
 | Rest | `R` |
 | Look around | `x` |
 | Fire your missile weapon | `f`, then aim (see below) |
@@ -134,7 +135,14 @@ and the name of the level stay longest. Parts come back as soon as there is room
 `@` shows your name, your race, gender, and class, your age, birthday, and
 [birth sign](horoscope.md), your [stats](stats.md), your hit points and Defence (`Dv`; see
 [Combat](combat.md)), your weight and what you carry, and the weights at which your
-[burden](burden.md) changes. It takes no time; press `@` or `Esc` to close it.
+[burden](burden.md) changes. It takes no time; press `@` or `Esc` to close it, or `S` for your
+skills.
+
+## Skills
+
+`S` lists the [skills](skills.md) you are trained in, each with its value and a small meter of how
+near it is to its next point. The arrow keys pick a skill to read what it is about. It takes no
+time; press `S` or `Esc` to close it.
 
 ## Death
 

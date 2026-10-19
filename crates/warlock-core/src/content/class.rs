@@ -1,9 +1,11 @@
 //! Classes (`assets/data/classes.toml`, spec §8 "Character creation"): the third choice of a new
-//! run. A class adjusts the starting scores, by fixed numbers or dice, and adds hit points.
+//! run. A class adjusts the starting scores, by fixed numbers or dice, adds hit points, and
+//! trains the character in skills (spec §8 "Skills"), by dice.
 
 use super::ContentError;
 use crate::combat::MAX_BASE_HP;
 use crate::dice::Dice;
+use crate::skills::{self, SkillId};
 use crate::stats::{PerStat, Stat, adjustments};
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -24,6 +26,8 @@ struct ClassSpec {
     stats: BTreeMap<Stat, Dice>,
     #[serde(default)]
     hp: u16,
+    #[serde(default)]
+    skills: BTreeMap<String, Dice>,
 }
 
 /// A class, in the order offered.
@@ -37,11 +41,19 @@ pub struct ClassDef {
     pub stats: PerStat<Dice>,
     /// What the class adds to the hit points (spec §8 "Combat").
     pub hp: i32,
+    /// The skills it trains (spec §8 "Skills"), each by dice rolled when the character is made,
+    /// in skill order; added to the race's.
+    pub skills: Vec<(SkillId, Dice)>,
 }
 
 impl ClassDef {
-    /// Parses `data/classes.toml`: the classes in file order.
-    pub(super) fn parse(file: &str, text: &str) -> Result<Vec<Self>, ContentError> {
+    /// Parses `data/classes.toml`: the classes in file order; `skill_id` says which skill a
+    /// skill id is.
+    pub(super) fn parse(
+        file: &str,
+        text: &str,
+        skill_id: impl Fn(&str) -> Option<SkillId>,
+    ) -> Result<Vec<Self>, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: ClassFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
         if parsed.class.is_empty() {
@@ -61,12 +73,15 @@ impl ClassDef {
                     spec.hp
                 )));
             }
+            let skills = skills::grants(&spec.skills, &skill_id)
+                .map_err(|m| err(format!("class `{id}`: skills: {m}")))?;
             list.push(ClassDef {
                 id: spec.id,
                 name: spec.name,
                 description: spec.description,
                 stats,
                 hp: i32::from(spec.hp),
+                skills,
             });
         }
         Ok(list)
@@ -84,7 +99,15 @@ mod tests {
         let text = format!(
             "{ONE}stats = {{ intelligence = \"2d2+1\", toughness = \"-1d2\", willpower = 1 }}\n"
         );
-        let classes = ClassDef::parse("c", &text).expect("valid");
+        let skill = |k: &str| (k == "spellcraft").then_some(SkillId(0));
+        let classes = ClassDef::parse("c", &text, skill).expect("valid");
+        assert!(classes[0].skills.is_empty());
+        let text = format!("{ONE}skills = {{ spellcraft = \"2d6+10\" }}\n");
+        let wizard = ClassDef::parse("c", &text, skill).expect("valid");
+        assert_eq!(
+            wizard[0].skills,
+            [(SkillId(0), "2d6+10".parse().expect("dice"))]
+        );
         assert_eq!(classes[0].stats[Stat::Intelligence].to_string(), "2d2+1");
         assert_eq!(classes[0].stats[Stat::Toughness].to_string(), "-1d2");
         assert_eq!(classes[0].stats[Stat::Willpower], Dice::fixed(1));
@@ -104,8 +127,12 @@ mod tests {
             ),
             (format!("{ONE}{ONE}"), "duplicate class id `wizard`"),
             ("class = []\n".into(), "at least one class"),
+            (
+                format!("{ONE}skills = {{ necromancy = 5 }}\n"),
+                "class `wizard`: skills: unknown skill `necromancy`",
+            ),
         ] {
-            let e = ClassDef::parse("c", &text).unwrap_err();
+            let e = ClassDef::parse("c", &text, skill).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
     }

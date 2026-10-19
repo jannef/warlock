@@ -6,11 +6,12 @@
 //! "Burden": they follow from scores the player knows). Never a modifier, a potential, or a
 //! to-hit: perception has none of them.
 //!
-//! Read-only: Esc, Enter, or its own key closes it. It is read from the perception snapshot when
+//! Read-only: Esc, Enter, or its own key closes it; the Skills key opens the Skills screen over
+//! it (spec §8 "Skills"; Esc there comes back here). It is read from the perception snapshot when
 //! it opens; no game time passes while it is open, so it cannot go stale.
 
 use super::menu::{Nav, Panel, Press};
-use super::screens::ScreenAction;
+use super::screens::{ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
@@ -100,16 +101,15 @@ impl CharacterScreen {
         }
     }
 
-    /// Applies a key press: Esc, Enter, or the screen's own key closes it.
+    /// Applies a key press: Esc, Enter, or the screen's own key closes it; the Skills key opens
+    /// the Skills screen.
     pub fn handle(&mut self, press: &Press, bindings: &Bindings) -> ScreenAction {
-        let own_key = press
-            .binding
-            .as_ref()
-            .is_some_and(|key| bindings.owner(key) == Some(KeyCommand::Character));
-        if own_key || matches!(press.nav, Nav::Back | Nav::Enter) {
-            ScreenAction::Close
-        } else {
-            ScreenAction::Stay
+        let owner = (press.binding.as_ref()).and_then(|key| bindings.owner(key));
+        match owner {
+            Some(KeyCommand::Character) => ScreenAction::Close,
+            Some(KeyCommand::Skills) => ScreenAction::Open(ScreenName::Skills),
+            _ if matches!(press.nav, Nav::Back | Nav::Enter) => ScreenAction::Close,
+            _ => ScreenAction::Stay,
         }
     }
 
@@ -199,9 +199,13 @@ impl CharacterScreen {
                 console.print(x, y, line, TEXT_DIM);
             }
         }
-        let footer = match bindings.keys_of(KeyCommand::Character).first() {
+        let close = match bindings.keys_of(KeyCommand::Character).first() {
             Some(key) => format!("{} or Esc close", key.display()),
             None => "Esc close".to_string(),
+        };
+        let footer = match bindings.keys_of(KeyCommand::Skills).first() {
+            Some(key) => format!("{close}   {} skills", key.display()),
+            None => close,
         };
         panel.footer(console, &footer);
     }
@@ -357,7 +361,7 @@ mod tests {
         let at = |needle: &str| text.iter().position(|l| l.contains(needle));
         let thresholds = "Burdened over 14 kg, strained over 28 kg, overloaded over 42 kg";
         assert_eq!(at(thresholds), at("Weight 73.5 kg").map(|y| y + 1));
-        row("@ or Esc close");
+        row("@ or Esc close   S skills");
         let empty_handed = drawn(&showcase(), 80, 30);
         assert!(
             (empty_handed.iter()).any(|l| l.contains("Weight 70 kg, carrying nothing")),
@@ -483,6 +487,14 @@ mod tests {
         assert_eq!(
             screen.handle(&Press::nav(Nav::Enter), &b),
             ScreenAction::Close
+        );
+        let s = Press {
+            binding: KeyBinding::from_text("S"),
+            ..Press::typed('S')
+        };
+        assert_eq!(
+            screen.handle(&s, &b),
+            ScreenAction::Open(ScreenName::Skills)
         );
     }
 

@@ -1,7 +1,8 @@
 //! Character creation (spec §6 "New run", §8 "Character creation"): after the scenario and the
 //! seed, New run asks for a race, a gender, and a class, one screen each ([`ChoiceScreen`]), then
 //! shows the character ([`SummaryScreen`]): age, birthday, and birth sign, the final scores (the
-//! dice already rolled), and a way back to any step.
+//! dice already rolled), the starting trained skills with their values, and a way back to any
+//! step.
 //!
 //! The steps are screens on the stack, in order (New run, race, gender, class, summary), so Esc
 //! steps back one and the summary's "change" rows return to a step as it was left. What has been
@@ -353,8 +354,14 @@ const SUMMARY_ROWS: [(&str, Option<Step>); 4] = [
     ("Class", Some(Step::Class)),
 ];
 
+/// Where the starting skills' columns begin, beside the scores (from the panel's inner edge).
+const SKILLS_X: i32 = 26;
+/// The room between two columns of skills.
+const SKILL_GAP: i32 = 3;
+
 /// The character before the run starts: race, gender, and class (each a way back to its step),
-/// age, birthday, and birth sign, the final scores, the eyes, and the scenario and seed.
+/// age, birthday, and birth sign, the final scores, the starting trained skills, the eyes, and
+/// the scenario and seed.
 #[derive(Debug)]
 pub struct SummaryScreen {
     scenario: Option<ScenarioPick>,
@@ -365,6 +372,8 @@ pub struct SummaryScreen {
     names: [String; 3],
     /// Age, birthday, and birth sign, as shown.
     birth: Vec<String>,
+    /// The starting trained skills, by name, with their values, in skill order.
+    skills: Vec<(String, u16)>,
     eyes: String,
     selected: usize,
 }
@@ -397,14 +406,48 @@ impl SummaryScreen {
                 .vision(&s.vision)
                 .map_or(s.vision.clone(), |v| v.name.clone())
         });
+        let skills = start.as_ref().map_or(Vec::new(), |s| {
+            (s.skills.iter())
+                .map(|(id, t)| (content.skill(id).name.clone(), t.value))
+                .collect()
+        });
         Self {
             scenario: draft.scenario.clone(),
             spec,
             start,
             names,
             birth,
+            skills,
             eyes,
             selected: 0,
+        }
+    }
+
+    /// The width of a column of the starting skills: the longest name, a space, and a value.
+    fn skill_width(&self) -> i32 {
+        let longest = self.skills.iter().map(|(name, _)| name.chars().count());
+        longest.max().unwrap_or(0) as i32 + 4
+    }
+
+    /// How the starting skills are laid out in a panel `inner` cells wide: in two columns beside
+    /// the scores (more than there are scores), or one, or (too narrow for that) as lines of
+    /// `Name value` parts below them. Returns the columns' rows (0 when below) and the lines
+    /// below.
+    fn skill_layout(&self, inner: i32) -> (usize, Vec<String>) {
+        let n = self.skills.len();
+        let w = self.skill_width();
+        if n == 0 {
+            return (0, Vec::new());
+        }
+        if inner >= SKILLS_X + 2 * w + SKILL_GAP && n > Stat::COUNT {
+            (n.div_ceil(2), Vec::new())
+        } else if inner >= SKILLS_X + w {
+            (n, Vec::new())
+        } else {
+            let parts: Vec<String> = (self.skills.iter())
+                .map(|(name, value)| format!("{name} {value}"))
+                .collect();
+            (0, fit_parts(&parts, inner - 2))
         }
     }
 
@@ -435,13 +478,21 @@ impl SummaryScreen {
 
     pub fn draw(&self, console: &mut Console) {
         // Rows: margin, start and the three choices, a gap, the birth and a gap (if any), the
-        // stats, a gap, eyes and scenario, a gap, the footer, the frame.
+        // stats with the skills beside them (or the skills below them, and a gap), a gap, eyes
+        // and scenario, a gap, the footer, the frame.
         let birth = fit_parts(&self.birth, WIDTH.min(console.cols() as i32) - 6);
         let birth_rows = match birth.len() {
             0 => 0,
             n => n as i32 + 1,
         };
-        let h = SUMMARY_ROWS.len() as i32 + Stat::COUNT as i32 + 9 + birth_rows;
+        let inner = WIDTH.min(console.cols() as i32) - 4;
+        let (skill_rows, below) = self.skill_layout(inner);
+        let block = (Stat::COUNT.max(skill_rows)) as i32;
+        let below_rows = match below.len() {
+            0 => 0,
+            n => n as i32 + 1,
+        };
+        let h = SUMMARY_ROWS.len() as i32 + block + 9 + birth_rows + below_rows;
         let panel = Panel::new(console, " Your character ", WIDTH, h);
         let x = panel.inner_x();
         let fits = |y: i32| y < panel.y + panel.h - 2;
@@ -463,20 +514,41 @@ impl SummaryScreen {
         y += i32::from(!birth.is_empty());
         match &self.start {
             Ok(start) => {
-                for (stat, score) in start.stats.scores().iter() {
-                    if fits(y) {
-                        console.print(x + 2, y, stat.abbrev(), TEXT_DIM);
-                        console.print(x + 6, y, stat.name(), TEXT);
-                        console.print(x + 20, y, &format!("{score:>2}"), TEXT);
+                for (i, (stat, score)) in start.stats.scores().iter().enumerate() {
+                    let row = y + i as i32;
+                    if fits(row) {
+                        console.print(x + 2, row, stat.abbrev(), TEXT_DIM);
+                        console.print(x + 6, row, stat.name(), TEXT);
+                        console.print(x + 20, row, &format!("{score:>2}"), TEXT);
                     }
+                }
+                // The skills beside the scores, down the first column, then the second.
+                let beside = if skill_rows > 0 { self.skills.len() } else { 0 };
+                let w = self.skill_width();
+                for (i, (name, value)) in self.skills.iter().enumerate().take(beside) {
+                    let row = y + (i % skill_rows) as i32;
+                    let sx = x + SKILLS_X + (i / skill_rows) as i32 * (w + SKILL_GAP);
+                    if fits(row) {
+                        console.print(sx, row, name, TEXT);
+                        console.print(sx + w - 3, row, &format!("{value:>3}"), TEXT);
+                    }
+                }
+                y += block;
+                if !below.is_empty() {
                     y += 1;
+                    for line in &below {
+                        if fits(y) {
+                            console.print(x + 2, y, line, TEXT);
+                        }
+                        y += 1;
+                    }
                 }
             }
             Err(why) => {
                 if fits(y) {
                     console.print(x + 2, y, why, ACCENT);
                 }
-                y += Stat::COUNT as i32;
+                y += block;
             }
         }
         y += 1;
@@ -691,9 +763,26 @@ mod tests {
             "Pr  Presence       8",
             "Vision    Darkvision",
             "Scenario  Showcase, seed 1",
+            // The starting skills beside the scores: the dwarf's and the warrior's.
+            "St  Strength      15    Athletics   17",
+            "Pr  Presence       8    Swim         8",
         ] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }
+        for skill in ["Balance", "Intimidate", "Metalcraft", "Search"] {
+            assert!(text.contains(skill), "{skill:?} in\n{text}");
+        }
+        // More than six skills take two columns; a narrow panel lists them below the scores.
+        let thief = drawn(&summary("halfling,male,thief", 2));
+        for expected in ["Appraise", "Tumble", "Listen"] {
+            assert!(thief.contains(expected), "{expected:?} in\n{thief}");
+        }
+        let mut console = Console::default();
+        console.resize(44, 40);
+        summary("halfling,male,thief", 2).draw(&mut console);
+        let narrow = super::tests::text(&console);
+        assert!(narrow.contains("Appraise "), "{narrow}");
+        assert!(narrow.contains(" · "), "{narrow}");
         // Final scores only: no dice, no breakdown, never a potential or a modifier.
         for hidden in ["1d", "d2", "d3", "otential", "odifier", "+"] {
             assert!(!text.contains(hidden), "{hidden:?} in\n{text}");
