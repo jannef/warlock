@@ -1879,17 +1879,17 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     skill (fighting styles, #135) can stack on a weapon's: another role, with the same ranks,
     marks, curve, and benefits.
   - **Shield bash** (`Action::Bash(dir)`, replay text `bash:DIR`; an ability, §6 "Abilities":
-    unbound by default, a direction once bound): a melee
-    blow at whoever stands that way with the held shield's `bash` dice (§7; the small shield
-    1d3) plus the Strength modifier to hit and to damage, drawing on and training shield
+    unbound by default, a direction once bound): a melee blow at whoever stands that way with
+    the held shield's `bash` dice (§7; the small shield 1d3) plus the Strength modifier to hit
+    and to damage, drawing on and training shield
     bashing; it costs `melee` (less shield bashing's `speed`) and makes a blow's noise. Refused,
     taking no time: without a shield to bash with ("You have no shield to bash with."), with
     nobody there ("There is nothing there to bash."), or at someone not hostile ("You have no
     quarrel with the deer."; unseen: "Something is in the way."). Its event is an attack of
     kind `Melee` made `with` the shield; creatures do not bash.
-  - **Messages**: each skill that rose, its own rank or by default, is said once after the
-    attack that earned it, by its `phrase`: "You feel more skilled with long blades." No
-    numbers.
+  - **Messages**: each skill that rose, its own rank or by default, is said after the attack
+    that earned it (and before the experience a kill earned), by its `phrase`: "You feel more
+    skilled with long blades." No numbers.
   - **What the player perceives**: their own ranks and marks
     (`PerceptionView::own_weapon_skills`), shown as ranks and a bar on the weapon skills screen
     (§6) and in the `weapon_skills` dump layer; never a benefit or a creature's ranks (the
