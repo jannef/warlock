@@ -87,9 +87,9 @@ trained skills, `Stealth 17`), and `quests` (the quest log, active first) from p
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-dig:DIR chat:DIR ask:DIR:TOPIC abandon:QUEST
-rest:GOAL vision:PROFILE skip:DURATION weather:KIND effect:ID@X,Y[>X,Y]` (`DIR` = N
-NE E SE S SW W NW; `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
+dig:DIR chat:DIR ask:DIR:TOPIC abandon:QUEST rest:GOAL stance:NAME vision:PROFILE
+skip:DURATION weather:KIND effect:ID@X,Y[>X,Y]` (`DIR` = N
+NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
 player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `SLOT` = a slot id in
 `assets/data/slots.toml`, e.g. `equip:body:b` (put inventory stack `b` on), `remove:body`;
 `bash:DIR` bashes with the held shield, `fire:X,Y` shoots the readied missile weapon at level
@@ -295,7 +295,7 @@ topics come first in `World::topics` (`quest_topics`: `quest-ID`, `accept-ID`, `
 are answered in `World::ask` (`ask_quest`, `Spent::NoTime` when state changes); `Quests` in
 `WorldState` (records by quest id: stage, completed, counted, reached; the kill tally by level
 and creature id, only for types a kill quest asks for), left out of the JSON while empty so runs
-without quests hash as before (`FORMAT_VERSION` 18, with the NPCs' talk). Hooks: `fight.rs::hurt` tallies the
+without quests hash as before (`FORMAT_VERSION` 19, with the NPCs' talk). Hooks: `fight.rs::hurt` tallies the
 player's kills (`tally_kill`, beside `earn_kill`), `travel` marks reach quests (`reach`), and
 `World::apply` snapshots active quests' `progress` before the player acts and says what rose
 after (`quest_progress`/`quest_news`), so pick-ups, kills, and arrivals all report through one

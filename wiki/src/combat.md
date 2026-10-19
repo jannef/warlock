@@ -97,6 +97,29 @@ A hit does the weapon's damage dice, at least 1:
 Messages never give numbers: "The kobold hits you.", "The giant rat bites the kobold.", "You hit
 the giant rat hard!"
 
+## Stances
+
+Like ADOM's, your fighting **stance** trades attack for defence. Press `+` to take a more aggressive stance
+(coward, defensive, neutral, aggressive: it stops at the end) and `-` for a more defensive one; each takes no time, and you keep it
+until you change it, even across a save. "You take an aggressive stance." You start neutral. The
+status bar names your stance when it is not neutral, and the [character screen](character.md)
+always does. The game never shows what a stance adds: you feel it in the fight.
+
+- **Aggressive**: you hit more often and harder, but are easier to hit. (Weapon skill marks will
+  count for more: you swing harder.)
+- **Neutral**: no effect.
+- **Defensive**: you hit less often and softer, but dodge better, and parry a little better if
+  your weapon does not already turn blows aside as well.
+- **Coward**: you hit much less often and softer, and your attacks take longer, but you dodge
+  best, and stepping away from a hostile creature next to you is quicker and quieter.
+
+The numbers are first guesses, tuned by playtesting:
+
+{{#include generated/stances.md}}
+
+Dodge adds to your Defence on top of everything else; Parry only counts when it beats what your
+weapon already gives. Creatures do not take stances yet.
+
 ## Hit points
 
 Your **hit points** are your Toughness plus what your [race](races.md) and your

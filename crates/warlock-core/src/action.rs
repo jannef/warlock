@@ -1,7 +1,7 @@
 //! Player actions and the events a turn produces.
 
 use crate::combat::Strike;
-use crate::content::{ActionKind, ObjectId};
+use crate::content::{ActionKind, CombatStance, ObjectId};
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
 use crate::weather::Weather;
@@ -73,6 +73,9 @@ pub enum Action {
     /// Give up an active quest, by its id in `data/quests.toml` (from the quest log): its giver
     /// offers it again. Takes no time.
     Abandon(String),
+    /// Take a combat stance (spec §8 "Stances"). Takes no game time, but changes state, so
+    /// replays record it.
+    SetStance(CombatStance),
     /// Dig into the wall in this direction with the digging tool the player has ready (spec §8
     /// "Digging"): turn after turn (each the `dig` action's time) until the wall gives way,
     /// stopping early like a rest. What was dug stays dug.
@@ -383,6 +386,7 @@ impl fmt::Display for Action {
             Action::Chat(d) => write!(f, "chat:{d}"),
             Action::Ask { dir, topic } => write!(f, "ask:{dir}:{topic}"),
             Action::Abandon(quest) => write!(f, "abandon:{quest}"),
+            Action::SetStance(stance) => write!(f, "stance:{stance}"),
             Action::Dig(d) => write!(f, "dig:{d}"),
             Action::SetVision(id) => write!(f, "vision:{id}"),
             Action::SkipTime(d) => write!(f, "skip:{d}"),
@@ -515,6 +519,10 @@ impl FromStr for Action {
                     _ => Err(usage()),
                 }
             }
+            "stance" => arg
+                .ok_or_else(|| "`stance` needs a stance, e.g. `stance:coward`".to_string())?
+                .parse()
+                .map(Action::SetStance),
             "vision" => match s.split_once(':').map(|(_, id)| id) {
                 Some(id) if !id.is_empty() => Ok(Action::SetVision(id.to_string())),
                 _ => Err("`vision` needs a profile id, e.g. `vision:darkvision`".into()),
@@ -547,7 +555,7 @@ impl FromStr for Action {
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
                  descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
                  equip:SLOT:LETTER, remove:SLOT, bash:DIR, fire:X,Y, throw:LETTER:X,Y, dig:DIR, \
-                 chat:DIR, ask:DIR:TOPIC, abandon:QUEST, vision:ID, skip:DURATION, \
+                 chat:DIR, ask:DIR:TOPIC, abandon:QUEST, stance:NAME, vision:ID, skip:DURATION, \
                  weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y])"
             )),
         }
@@ -612,6 +620,8 @@ mod tests {
             Action::Ascend,
             Action::Descend,
             Action::ToggleLantern,
+            Action::SetStance(CombatStance::Aggressive),
+            Action::SetStance(CombatStance::Coward),
             Action::SetVision("low_light".into()),
             Action::SetVision("Mixed_Case".into()),
             Action::Rest(Rest::For(Duration::hours(1))),

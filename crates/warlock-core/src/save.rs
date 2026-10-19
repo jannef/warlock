@@ -38,11 +38,12 @@ const MAGIC: &str = "WARLOCK-SAVE";
 ///     each (`LevelState::rooms`); content fingerprints cover room effect ids.
 /// 16: weapon skills: actors have a rank and marks in each (`Actor::weapon_skills`).
 /// 17: digging: level states keep the work done on walls dug into (`LevelState::dug`).
-/// 18: NPCs and dialogue: actors keep how far their talk has got (`Actor::talk`: lines said and
+/// 18: combat stances (`Actor::stance`).
+/// 19: NPCs and dialogue: actors keep how far their talk has got (`Actor::talk`: lines said and
 ///     muttered, met) and the unique character a level made them (`Actor::npc`); quests: the
 ///     player's quests (stage, completions, counted kills, reached) and the kills they count, by
 ///     level and creature type (`WorldState::quests`).
-pub const FORMAT_VERSION: u32 = 18;
+pub const FORMAT_VERSION: u32 = 19;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 

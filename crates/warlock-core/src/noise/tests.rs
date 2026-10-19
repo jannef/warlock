@@ -127,6 +127,7 @@ fn actor(content: &Content, creature: &str) -> Actor {
         faction_override: None,
         npc: None,
         talk: Default::default(),
+        stance: Default::default(),
     }
 }
 

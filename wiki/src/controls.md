@@ -33,6 +33,7 @@ authoritative: it is generated from your current key bindings.
 | Look around | `x` |
 | Fire your missile weapon | `f`, then aim (see below) |
 | Throw something | `t`, then aim |
+| More aggressive combat stance, more defensive (no time passes) | `+`, `-` |
 | Bash with your shield | no key until you bind one, then a direction |
 | Next target while aiming (with Shift: the one before) | `Tab` |
 | Use a tool: dig into a wall with a pick-axe | `U`, then a direction |

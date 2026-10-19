@@ -70,6 +70,11 @@ pub enum KeyCommand {
     /// Chat with someone next to you: the one in view if there is only one, else in a
     /// direction.
     Chat,
+    /// Take a more aggressive combat stance (Coward, Defensive, Neutral, Aggressive; no time
+    /// passes).
+    MoreAggressive,
+    /// Take a more defensive combat stance (the other way).
+    MoreDefensive,
     /// Use the tool the player has ready toward a direction (ADOM's `U`): dig into a wall with a
     /// pick-axe. An item's use, not an ability (abilities get a menu of their own).
     UseTool,
@@ -143,6 +148,8 @@ impl KeyCommand {
             KeyCommand::Look => "Look around",
             KeyCommand::Fire => "Fire missile weapon",
             KeyCommand::Throw => "Throw",
+            KeyCommand::MoreAggressive => "More aggressive stance",
+            KeyCommand::MoreDefensive => "More defensive stance",
             KeyCommand::Bash => "Bash with your shield",
             KeyCommand::NextTarget => "Next target (aiming; Shift: previous)",
             KeyCommand::Chat => "Chat",
@@ -261,6 +268,8 @@ impl Default for Bindings {
             (ch("f"), Fire),
             (ch("t"), Throw),
             (ch("C"), Chat),
+            (ch("+"), MoreAggressive),
+            (ch("-"), MoreDefensive),
             (Code(KeyCode::Tab), NextTarget),
             (ch("U"), UseTool),
             (ch("?"), Help),
@@ -605,6 +614,16 @@ impl Gameplay<'_> {
                 open = Some(ScreenName::Quests);
                 InputMode::Normal
             }
+            (InputMode::Normal, KeyCommand::MoreAggressive | KeyCommand::MoreDefensive) => {
+                let now = game.world.perception().own_stance();
+                let next = if command == KeyCommand::MoreAggressive {
+                    now.more_aggressive()
+                } else {
+                    now.more_defensive()
+                };
+                self.actions.write(PlayerAction(Action::SetStance(next)));
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::WeaponSkills) => {
                 open = Some(ScreenName::WeaponSkills);
                 InputMode::Normal
@@ -795,6 +814,8 @@ mod tests {
         assert!(keys(&b, KeyCommand::Bash).is_empty(), "an ability: unbound");
         assert_eq!(keys(&b, KeyCommand::Fire), ["f"]);
         assert_eq!(keys(&b, KeyCommand::Throw), ["t"]);
+        assert_eq!(keys(&b, KeyCommand::MoreAggressive), ["+"]);
+        assert_eq!(keys(&b, KeyCommand::MoreDefensive), ["-"]);
         assert_eq!(keys(&b, KeyCommand::NextTarget), ["Tab"]);
         assert_eq!(keys(&b, KeyCommand::Chat), ["C"]);
         assert_eq!(keys(&b, KeyCommand::UseTool), ["U"]);

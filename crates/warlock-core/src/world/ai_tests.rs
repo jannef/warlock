@@ -748,6 +748,7 @@ fn search_the_last_seen_spot_then_go_back_and_patrol_on() {
             faction_override: None,
             npc: None,
             talk: Default::default(),
+            stance: Default::default(),
         },
     );
     assert_ne!(player, rat);
