@@ -21,4 +21,5 @@
 | Putting something on, or taking it off: Head, neck, cloak, hands, left ring, right ring, feet | 1000 | 6 seconds |
 | Putting something on, or taking it off: Body | 3000 | 18 seconds |
 | Readying something, or putting it away: Missile weapon, missiles, tool | 1000 | 6 seconds |
+| A turn of eating (a meal takes several: see Food and corpses) | 1000 | 6 seconds |
 | A turn of digging (digging through a wall takes many) | 1000 | 6 seconds |

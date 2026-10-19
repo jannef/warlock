@@ -29,10 +29,13 @@ A rest stops early when:
   the north-east.") or an attack you notice ("The kobold hits you."). A sound you have already
   been hearing does not stop you; see [Hearing](hearing.md). A status effect wearing off ("The
   bleeding stops.", "The poison wears off.") does not stop you either; see
-  [Status effects](status-effects.md), or
+  [Status effects](status-effects.md),
 - under the open sky, rain starts or grows heavier ("It starts to rain.", "It starts to pour.",
   "The rain grows heavy."). Other news of the [weather](weather.md), such as the rain stopping,
-  is written to the message line but lets you rest on.
+  is written to the message line but lets you rest on, or
+- you get hungrier: hungry, weak, fainting, or starving ("You are getting hungry."), or you faint
+  from hunger. Resting burns food like any other time (see [Hunger](hunger.md)); a full stomach
+  settling ("You no longer feel satiated.") lets you rest on.
 
 So resting next to a creature walking back and forth behind a door is interrupted each time it
 comes back into earshot. A creature already in view when you start does not stop the rest by

@@ -44,6 +44,8 @@
 #
 # Doors (M19): the pantry's west door (P) is locked; the iron key to it lies in the storeroom.
 # Unlock it by opening it with the key, or kick it in (`K`): a broken door stays open for good.
+# Hunger (M23): the pantry keeps food: food rations, loaves of bread, dried meat, and apples. Eat
+# with `E`.
 #
 # Ranged combat (M16): the storeroom also has a long war bow, a crossbow with bolts, a sling with
 # stones, rocks to throw, and flaming arrows beside the short bow's arrows. Ready a bow and arrows
@@ -189,6 +191,14 @@ objects = ["dried_meat*6"]
 [[pile]]
 at = [26, 15]
 objects = ["apple*4"]
+
+[[pile]]
+at = [27, 13]
+objects = ["ration*4"]
+
+[[pile]]
+at = [29, 14]
+objects = ["bread*2"]
 
 [[pile]]
 at = [28, 15]

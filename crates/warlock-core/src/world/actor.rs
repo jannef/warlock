@@ -10,10 +10,11 @@ use crate::content::{
 use crate::door::{Key, Lock};
 use crate::equipment::Equipment;
 use crate::geom::{Dir, Pos};
+use crate::hunger::{Hunger, Satiation};
 use crate::noise::Heard;
 use crate::object::{Stack, Weight, weight_of};
 use crate::skills::{Effect, Skills};
-use crate::stats::{Stat, Stats};
+use crate::stats::{PerStat, Stat, Stats};
 use crate::status::Effects;
 use crate::weapon_skills::WeaponSkills;
 use serde::{Deserialize, Serialize};
@@ -132,6 +133,10 @@ pub struct Actor {
     /// peaceful creatures in the showcase). Read the one that counts with [`Actor::faction`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub faction_override: Option<FactionId>,
+    /// How fed it is (spec §8 "Hunger"): the player's, when the content has hunger; creatures
+    /// do not hunger (`None`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub satiation: Option<Satiation>,
     /// Its combat stance (spec §8 "Stances"): the player chooses theirs; creatures stay neutral.
     #[serde(default, skip_serializing_if = "CombatStance::is_neutral")]
     pub stance: CombatStance,
@@ -148,10 +153,27 @@ impl Actor {
             .or(content.creature(self.creature).faction)
     }
 
+    /// How hungry it is (spec §8 "Hunger"); `None` for an actor that does not hunger.
+    pub fn hunger(&self, content: &Content) -> Option<Hunger> {
+        let def = content.hunger()?;
+        self.satiation.map(|s| def.state(s.nutrition))
+    }
+
     /// Its stats as the rules read them: its scores less what its status effects take from
-    /// them (spec §8 "Status effects": strong poison lowers Strength and Dexterity).
+    /// them (spec §8 "Status effects": strong poison lowers Strength and Dexterity) and what
+    /// hunger takes while it is Weak or worse (spec §8 "Hunger": `[weak]` in `data/hunger.toml`,
+    /// Strength and Dexterity). The penalties add up.
     pub fn effective_stats(&self, content: &Content) -> Stats {
-        match self.effects.penalty(content) {
+        let mut by = self.effects.penalty(content);
+        if let (Some(def), Some(hunger)) = (content.hunger(), self.hunger(content))
+            && hunger.is_weak()
+        {
+            let by = by.get_or_insert_with(|| PerStat::splat(0));
+            for stat in Stat::ALL {
+                by[stat] += def.weak[stat];
+            }
+        }
+        match by {
             Some(by) => self.stats.adjusted_by(&by),
             None => self.stats,
         }

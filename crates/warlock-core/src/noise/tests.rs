@@ -126,6 +126,7 @@ fn actor(content: &Content, creature: &str) -> Actor {
         effects: Default::default(),
         weapon_skills: Default::default(),
         faction_override: None,
+        satiation: None,
         stance: Default::default(),
     }
 }

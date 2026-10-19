@@ -56,7 +56,7 @@ Game flags (`cargo run -p warlock -- --help`):
   `new-run` on the main menu (e.g. `--scale 1 --screen new-run --capture target/menu.png`), and
   character creation's `race`, `gender`, `class`, and `summary` over New run and the steps
   before them (each on its preselection: the showcase's character);
-  `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `pick-up` (the pile on the player's cell), and `drop` over a run
+  `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `pick-up` (the pile on the player's cell), `drop`, and `eat` over a run
   (e.g. after a `--replay` that walks onto a pile), `equip-item` (the choice for the first slot,
   Head) over the equipment screen; `settings` and `controls` over the main menu, or over the pause
   menu when `--scenario`, `--new`, `--replay`, or `--record` names a run (`--capture` alone does
@@ -86,14 +86,15 @@ load, stats, and skills with their marks).
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-dig:DIR rest:GOAL stance:NAME vision:PROFILE skip:DURATION weather:KIND effect:ID@X,Y[>X,Y]
-afflict:STATUS` (`DIR` = N
+eat:LETTER eat:floor:LETTER dig:DIR rest:GOAL stance:NAME vision:PROFILE skip:DURATION weather:KIND
+effect:ID@X,Y[>X,Y] afflict:STATUS` (`DIR` = N
 NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
 player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `SLOT` = a slot id in
 `assets/data/slots.toml`, e.g. `equip:body:b` (put inventory stack `b` on), `remove:body`;
 `bash:DIR` bashes with the held shield, `fire:X,Y` shoots the readied missile weapon at level
 cell (X, Y), `throw:c:X,Y` throws one of
-inventory stack `c` there (any weapon is thrown whole, badly: `t` in the game sends `fire` for a launcher, else `throw` for what the Missile weapon slot holds); `dig:E` digs into the wall east with the tool in the Tool slot, turn
+inventory stack `c` there (any weapon is thrown whole, badly: `t` in the game sends `fire` for a launcher, else `throw` for what the Missile weapon slot holds); `eat:b` eats one of inventory stack `b`, `eat:floor:a` one of the top
+stack underfoot; `dig:E` digs into the wall east with the tool in the Tool slot, turn
 after turn until it gives way or something interrupts; `PROFILE` = an id in
 `assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are
 `30s`, `10m`, `2h`; `skip` is the dev hour skip; `weather` is the dev weather override, `KIND` =
@@ -116,13 +117,15 @@ carries and weighs, worn and wielded things marked, their burden and its thresho
 ranks and progress toward the next, `Long blades 2 (40%)`), `truth`
 (ground truth, **dev-only**), `actors` (every actor on the level with its hit points and
 Defence, its weight, what it carries and of that wears and wields, its burden and carrying
-limit, its weapon skills with marks, its stats as score/potential, and its status effects with
-severities, **dev-only**), `rooms` (the level's special rooms: their plain ground as the
+limit, its weapon skills with marks, its stats as score/potential, its status effects with
+severities, and the player's nutrition; then every corpse on the level and in the pack with its
+death time and rot, **dev-only**), `rooms` (the level's special rooms: their plain ground as the
 effect's `mark`, then a line per room, **dev-only**). The header line has the player's `hp
-17/17` (and `dead` once the run has ended); JSON dumps add `hp`, `defence`, `burden` (`level`,
-`limit`), `effects` (status ids), `death` (with `of`, the status that killed), `weapon_skills`
-(by skill id: `rank`, `progress`), each seen actor's `health` and `effects` (those that show),
-and `room` (the special room the player stands in, if they know it). Replay
+17/17` (and `dead` once the run has ended) and `hunger hungry` unless Not hungry; JSON dumps add
+`hp`, `defence`, `burden` (`level`, `limit`), `hunger`, `effects` (status ids), `death` (with
+`of`, the status that killed, and `cause`, starving or choking), `weapon_skills` (by skill id:
+`rank`, `progress`), each seen actor's `health` and `effects` (those that show), and `room` (the
+special room the player stands in, if they know it). Replay
 files are JSON
 `{game_version, scenario, seed, character, steps:[{action, hash}]}` (`character` =
 `{race, gender, class}`, left out for a run without one; a replay without it starts as the
@@ -197,7 +200,7 @@ Modal screens (spec §6) — main menu, new run and character creation (race, ge
 summary), pause, settings, controls, the `?` help, the inventory (`i`), the equipment screen
 (`e`) and its choice of what goes in a slot, the character screen (`@`), the weapon skills
 screen (`W`), choosing what to
-pick up (`,`/`g` on several stacks) or drop (`d`), and the death screen (opened by
+pick up (`,`/`g` on several stacks), drop (`d`), or eat (`E`), and the death screen (opened by
 `screens::on_death` when `World::death` is set; Enter/Esc is `MenuChoice::LeaveRun`, back to the
 main menu without saving; no `--screen`: capture a dead replay instead) — are one
 screen stack (`ui/screens.rs`, the `ScreenStack` resource); add a screen there, never a second way
@@ -248,7 +251,8 @@ to open, read keys for, or draw one:
 - Screens are plain state machines tested without a window: `ui/menu.rs` (`Press`, `Panel`, main
   and pause menu), `ui/new_run_screen.rs`, `ui/settings_screen.rs`, `ui/controls_screen.rs` (also
   the `?` help: the same binding list, read-only), `ui/object_screen.rs` (inventory, pick up,
-  drop: stacks by letter; in the choices letters always name stacks, even `h j k l`),
+  drop, throw, eat: stacks by letter; in the choices letters always name stacks, even `h j k l`;
+  the eat choice lists food lying here first, without letters, then the pack's by letter),
   `ui/equipment_screen.rs` (`EquipmentScreen`: slots by letter, which always name slots, so its
   own key `e` closes it only when it names none; `ItemScreen`: the stacks that fit one slot, by
   their inventory letters), `ui/character_screen.rs` (name, race, gender, class, age, birthday,
@@ -257,7 +261,7 @@ to open, read keys for, or draw one:
   `ui/weapon_skills_screen.rs` (sections, ranks, and a faint ten-cell marks bar; never a
   benefit), `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per
   step with a Random row rolled from the seed, `SummaryScreen`, `Draft`), `ui/death_screen.rs`
-  (who killed the player, where, when, after how many turns).
+  (who or what killed the player, where, when, after how many turns).
 
 Typical render check: `cargo run -p warlock -- --scale 1 --freeze-time 1 --capture target/shot.png`,
 then read the PNG.
@@ -496,6 +500,45 @@ the status bar (`Burdened`/`Strained`/`Overloaded` after the HP, priority 1), th
 (72 wide; `Carrying 28.4 kg (burdened)` and the thresholds line, `character_screen::thresholds`)
 and the character screen.
 
+Hunger (spec §8 "Hunger"; M23, #137): the rules are `warlock-core/src/hunger.rs` (`Hunger`, the
+seven states from `Starving` up to `Bloated`, ordered so `<` is hungrier; `news(from, to)`,
+`stops_rest`; `Satiation { nutrition, banked, starving }` on `Actor::satiation`, the player's
+only, with `burn`/`starve`/`feed`), data `data/hunger.toml` (`content/hunger.rs`, `HungerDef`:
+`burn_seconds`, `start`, `max`, `vomit_leaves`, `[states]` least nutrition, `bloated_slow`,
+`weak` stats, `faint`, `starve`, `exertion` (only `EXERTIONS`: melee, shoot, throw),
+`overeating`, optional `corpses` (material, rot hours, rotten vomit/harm, `sickness` (a status
+id: harm from food is degrees of it), `Food` per size);
+`Content::hunger()`; without the file nobody hungers and there are no corpses), races' `hunger`
+percent, objects' `food = { nutrition, turns }`, creatures' `corpse` (default true) and `on_eat`
+(`OnEat`), scenarios' `carry` (starting pack). Corpses are objects made at load
+(`Content::load_hunger`, after the file's objects, id `<creature>_corpse`, `ObjectDef::corpse`
+names the creature, `Content::corpse_of`); their stacks carry `Stack::died` (crate-private:
+presentation cannot read a corpse's age), `Stack::is_valid_for` checks it, and level files
+cannot place corpses. Hunger joins the status framework (`world/status.rs`) rather than running
+beside it: the player's nutrition burns inside `World::live` (status effects' event loop, called
+through `pass_time` by `run_turn`), each change of state and each hit point lost to starving a
+moment of its own (`World::until_hungrier`, `World::digest(id, seconds)` in `world/hunger.rs`),
+so splitting time never changes the result and the player starves to death at the exact moment;
+`World::healing_rate` (the one pace) gives a Starving player none; harm from food (a rotten
+corpse, `on_eat` `harm`) is `World::afflict` of the `sickness` status (poisoned: "You feel
+sick.", said at once by `sicken`). `run_turn` adds `faint()` to the player's price;
+`World::bloated` is inside `burdened`, so every price is slowed while Bloated; `exert(kind)`
+after the player's blow, shot, or throw (priced before it); `die_of(cause, when)` kills without
+an `Event::Died` (`Death::cause`: `Cause::Starvation`, `Choked`; a death by food poisoning is
+the status's, `Death::of`). Weak lowers `Actor::effective_stats(content)` (adding to the status
+effects' `penalty`, `Stats::adjusted_by`), which combat profiles, `Actor::defence`,
+`burden::load`, and `own_scores` read; never `actor.stats` directly in a rule that hunger
+should touch. Eating (`world/eat.rs`): `Action::Eat(Meal::Pack|Floor)` → `Spent::Meal(Dish)` →
+`dine` (turns of `eat` through `World::keep_at`, stopping like a rest; the food stays until the
+last turn) → `finish` (take one, then rotten / fresh corpse `on_eat` / plain food, `feed` with
+overeating, `vomit`, hunger and burden news). Saved and hashed (`FORMAT_VERSION` 21:
+`Actor::satiation`, `Stack::died`, `Death::cause`).
+`creature_dies` calls `leave_corpse` (corpse on top); `perceive` calls `rot_away` (current
+level's piles and the pack). Presentation: `PerceptionView::own_hunger` (the status bar segment
+after the HP, priority 1, hidden while Not hungry), `E` (`KeyCommand::Eat`, id `eat`) opens
+`ScreenName::Eat` (`ObjectList::Eat`). Long tests that rest or travel for days remove
+`data/hunger.toml` (or the player starves).
+
 Character creation (spec §8 "Character creation"; M15) lives in `warlock-core/src/character.rs`:
 `CharacterSpec` (race id, `Gender`, class id; `FromStr`/`Display` as `dwarf,female,warrior`;
 serialized as `{race, gender, class}`) and `CharacterSpec::start(content, seed, start_date)` →
@@ -717,13 +760,14 @@ effects (`Actor::effects: Effects`, at most one `Effect { status, severity, tick
 status in status order; `Effects::add` applies the stacking rule, `penalty`, `regen`,
 `is_valid_for`; `Effect::until_tick`/`until_eases`/`advance` are the timer math: ticks bank
 `seconds × severity` degree-seconds). `world/status.rs` applies them: `World::afflict(actor,
-status, severity, by, events)` (**the one way to give an actor a status**: hunger and rotten
-corpses (#137), traps, diseases call it), `World::cure(actor, means, events)` (the Heal skill's
+status, severity, by, events)` (**the one way to give an actor a status**: food poisoning
+from what the player eats (#137), traps, diseases call it), `World::cure(actor, means, events)` (the Heal skill's
 bandage, #132), `World::after_blow` (wounds by `combat::big_hit` and criticals, then `on_hit`
 with one gameplay draw per chance below 100), `World::healing_rate` (min of the statuses'
-`regen`, × resting for the player while `World::resting`; hook hunger's Weak here or as a status),
+`regen`, × resting for the player while `World::resting`, none for a Starving player),
 and `World::pass_time` → `live`, called by `run_turn` for every scheduled actor as the clock
-moves: an event loop over the next tick, easing, or hit point back, so splitting time never
+moves: an event loop over the next tick, easing, hit point back, or change in the player's
+hunger (Hunger above), so splitting time never
 changes the result, deaths at their exact moment (`dies(.., Some(status), when)`), the blood
 drip hook `drip_blood` (#127's stains go there). The player's statuses beginning and ending are
 `Event::Status` (said by `perceive_events`: begin = `say`, stops a rest; end = `note`, does not;
@@ -1002,7 +1046,7 @@ A successful compile does not verify anything visual. Before opening a PR:
 its river): a scenario and text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file,
 and optional `window`, `scale`, `freeze_time`, `screen` (`--screen` over the run: `pause`,
 `help`, `settings`, `controls`, `inventory`, `equipment`, `equip-item`, `character`, `pick-up`,
-`drop`; or over the main menu, the replay then unused: `race`, `summary`), `args` (more game
+`drop`, `eat`; or over the main menu, the replay then unused: `race`, `summary`), `args` (more game
 flags, e.g. `["--fire"]`), `tolerance` (per-channel, default 2) and `max_diff_ratio`
 (default 0.05% of pixels).
 `cargo xtask golden` builds a replay per entry with `warlock-core`, runs the game with

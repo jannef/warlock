@@ -95,6 +95,8 @@ pub enum ScreenName {
     Drop,
     /// Choose what to throw (`t` in play, with no throwing weapon readied).
     Throw,
+    /// Choose what to eat (`E` in play): food lying here, then food in the pack.
+    Eat,
     /// The run is over: who died, where, when, and of what. It opens by itself when the player
     /// dies, so it is no `--screen`.
     #[value(skip)]
@@ -120,6 +122,7 @@ impl ScreenName {
                 | ScreenName::PickUp
                 | ScreenName::Drop
                 | ScreenName::Throw
+                | ScreenName::Eat
                 | ScreenName::Death
         )
     }
@@ -230,6 +233,7 @@ impl Screen {
             ScreenName::PickUp => objects(ObjectList::PickUp),
             ScreenName::Drop => objects(ObjectList::Drop),
             ScreenName::Throw => objects(ObjectList::Throw),
+            ScreenName::Eat => objects(ObjectList::Eat),
             ScreenName::Death => Screen::Death(DeathScreen::new(run)),
             ScreenName::Confirm => {
                 Screen::Confirm(ConfirmScreen::new("Quit Warlock?", MenuChoice::Quit))
@@ -253,6 +257,7 @@ impl Screen {
                 ObjectList::PickUp => ScreenName::PickUp,
                 ObjectList::Drop => ScreenName::Drop,
                 ObjectList::Throw => ScreenName::Throw,
+                ObjectList::Eat => ScreenName::Eat,
             },
             Screen::Equipment(_) => ScreenName::Equipment,
             Screen::EquipItem(_) => ScreenName::EquipItem,

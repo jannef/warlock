@@ -181,13 +181,7 @@ fn lock_rooms(canvas: &mut Canvas, rng: &mut Rng, rooms: &[Room], up_room: usize
     else {
         return;
     };
-    canvas.objects.insert(
-        at,
-        vec![Stack {
-            object: key,
-            count: 1,
-        }],
-    );
+    canvas.objects.insert(at, vec![Stack::one(key)]);
     for i in locked {
         let (door, _) = rooms[i].doors[0];
         canvas.set(door, canvas.pal.door_closed);

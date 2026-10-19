@@ -288,10 +288,7 @@ fn lock(world: &World, p: Pos) -> Option<Option<String>> {
 /// Puts one `object` in the player's pack.
 fn give(world: &mut World, object: &str) {
     let object = world.content().object_id(object).expect(object);
-    world
-        .player_mut()
-        .inventory
-        .push(Stack { object, count: 1 });
+    world.player_mut().inventory.push(Stack::one(object));
 }
 
 const EAST: Pos = Pos::new(2, 1);

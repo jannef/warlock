@@ -259,7 +259,7 @@ fn arm(w: &mut World, objects: &[&str]) {
         } else {
             1
         };
-        me.inventory.push(crate::object::Stack { object, count });
+        me.inventory.push(crate::object::Stack::new(object, count));
         let item = me.inventory.len() - 1;
         let slot = equipment::free_slot(&content, &me.equipment, object).expect("a free slot");
         let slots = equipment::slots_taken(&content, object, slot);

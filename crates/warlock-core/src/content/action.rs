@@ -70,13 +70,15 @@ pub enum ActionKind {
     BodyArmor,
     /// Readying a missile weapon, missiles, or a tool, or putting them away.
     Ready,
+    /// A turn of eating (spec §8 "Hunger"): a meal takes as many as the food's `turns`.
+    Eat,
     /// A turn of digging into a wall with a digging tool (spec §8 "Digging"): a dig takes many
     /// of them.
     Dig,
 }
 
 impl ActionKind {
-    pub const ALL: [ActionKind; 20] = [
+    pub const ALL: [ActionKind; 21] = [
         ActionKind::Step,
         ActionKind::Wait,
         ActionKind::OpenDoor,
@@ -96,6 +98,7 @@ impl ActionKind {
         ActionKind::Wear,
         ActionKind::BodyArmor,
         ActionKind::Ready,
+        ActionKind::Eat,
         ActionKind::Dig,
     ];
 
@@ -121,6 +124,7 @@ impl ActionKind {
             ActionKind::Wear => "wear",
             ActionKind::BodyArmor => "body_armor",
             ActionKind::Ready => "ready",
+            ActionKind::Eat => "eat",
             ActionKind::Dig => "dig",
         }
     }

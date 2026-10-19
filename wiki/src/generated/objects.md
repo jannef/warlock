@@ -36,6 +36,8 @@
 | Scroll of light | `?` | scroll | paper | 50 g | yes | - |
 | Strip of dried meat | `%` | food | flesh | 150 g | yes | - |
 | Apple | `%` | food | plant matter | 150 g | yes | - |
+| Food ration | `%` | food | plant matter | 500 g | yes | - |
+| Loaf of bread | `%` | food | plant matter | 400 g | yes | - |
 | Rock | `*` | stone or gem | stone | 800 g | yes | Missile weapon |
 | Ruby | `*` | stone or gem | gemstone | 5 g | yes | - |
 | Gold coin | `$` | coin | gold | 10 g | yes | - |

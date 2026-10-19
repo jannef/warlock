@@ -89,6 +89,11 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   lock, or a skeleton key, opens it. Or kick it in (`K`): the stronger you are, the sooner it
   breaks, and every kick bangs through the halls. Kobolds open doors, but a locked one only with
   its key; the dungeon's locked rooms always leave their key within reach.
+- **Hunger** — ADOM-style: time empties your stomach (resting and long journeys too), faster for
+  a halfling than an elf. Hungry, then weak, fainting, and starving to death; eat too much and
+  you are bloated and slow, or vomit. Eat rations, bread, and apples, or the corpses creatures
+  leave behind: they weigh what the creature did, rot within a day or two, and some do more than
+  feed you (a kobold tastes terrible; a beetle might toughen you). The hub's pantry has food.
 - **Stats** — Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
   D&D, for you and every creature; a character screen shows your own. Strength, Dexterity, and
   Toughness count in a fight, and Strength kicks doors in; the rest do nothing yet.
@@ -183,6 +188,7 @@ cargo run --release -p warlock
 | `@` | Character: your race, gender, class, age, birth sign, stats, hit points, Defence, status effects, and weight |
 | `W` | Weapon skills: your rank in each, and how far to the next |
 | `R` | Rest an hour, until dawn, or until nightfall (stops when something comes into view) |
+| `E` | Eat: food lying here, or from your pack (a meal takes a few turns) |
 | `x` | Look around: move a cursor to read what is there (takes no time) |
 | `t` | Shoot or throw what is in your Missile weapon slot: aim (Tab cycles targets), then Enter |
 | `T` | Throw something from your pack: choose it, aim, then Enter |

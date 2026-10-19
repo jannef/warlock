@@ -79,6 +79,11 @@ Build the engine and framework, not the game. Everything built is production qua
   blocking and shield bashing among them) with per-category passive benefits, and *The Riddle of
   Steel*'s defaults between related categories; a weapon skills screen and a shield bash
   (§8 "Weapon skills")
+- Hunger (M23), ADOM-like: a nutrition counter that game time burns (resting and overworld
+  journeys too) by the race's need; Hungry, Weak, Fainting, and Starving, and Satiated and
+  Bloated, with their effects; food to eat from the pack or the floor in meals of several turns;
+  creatures leave corpses that weigh what they did, rot, and may do something when eaten (§8
+  "Hunger")
 - Save and resume an unfinished run
 - Keyboard controls with an in-game controls reference
 - Development interface (§9)
@@ -95,7 +100,7 @@ flaming arrow does an arrow's damage), rules that use stats beyond combat, burde
 doors in (ability checks, saving throws, training stats), levels and experience, digging down or
 up, creatures that dig, what a class gives beyond starting stats, hit points, skills, and weapon
 skills (equipment, spells), active uses of skills (searching, picking locks, healing, and the
-like), item effects, audio, mouse input, infravision, localization.
+like), item effects (but food's: §8 "Hunger"), audio, mouse input, infravision, localization.
 
 Vision types are in scope even though there are no other mechanics yet: they are part of perception,
 and the light data model must carry them from the start.
@@ -111,7 +116,7 @@ regression scene for golden screenshots, replays, and snapshot tests.
 | Room | Demonstrates | Milestone |
 |---|---|---|
 | Start room | movement, message line, `?` help; gold and a small pile to pick up | M1, M11 |
-| Door corridor | opening/closing doors, doors blocking sight; a storeroom of arms and armor (something for every equipment slot but the neck and the rings, a two-handed quarterstaff, a short bow and arrows, flaming arrows, a long war bow, a crossbow and bolts, a sling and stones, rocks to throw, a pick-axe for the Tool slot) and a pantry of objects, whose west door is locked, the iron key to it lying in the storeroom (open it with the key, or kick it in) | M1–M2, M11, M16, M19 |
+| Door corridor | opening/closing doors, doors blocking sight; a storeroom of arms and armor (something for every equipment slot but the neck and the rings, a two-handed quarterstaff, a short bow and arrows, flaming arrows, a long war bow, a crossbow and bolts, a sling and stones, rocks to throw, a pick-axe for the Tool slot) and a pantry of food (food rations, loaves of bread, dried meat, apples; eat with `E`) and other objects, whose west door is locked, the iron key to it lying in the storeroom (open it with the key, or kick it in) | M1–M2, M11, M16, M19, M23 |
 | Patrol gallery | creatures moving in and out of view, never shown in memory; a cave beetle and a quicker cave bat (wildlife, so they keep to their lanes) on parallel lanes, a slower torch-bearing kobold circling them (wielding a sword, carrying coins), a kobold by type but placed among the peaceful folk (§7 "Factions"), so it walks its round and never attacks the player; heard from the corridor behind its closed door, and in its dark middle (the bat flies silently), which a flaming arrow shot from its door lights where it lands | M2, M10, M11, M16 |
 | Light hall | colored lights, falloff, pillar and creature shadows, steady magical light | M3, M8 |
 | Darkness chamber | vision types, a UV-only rune, darkvision fade; an amulet seen only by those who see in the dark | M3, M11 |
@@ -775,13 +780,13 @@ rate or animation.
 - **Screens**: the main menu, New run and its character creation steps, pause menu, Settings,
   Controls, help, the inventory, the equipment screen and its choice of what goes in a slot, the
   character screen, the Skills screen, the weapon skills screen, choosing what to pick up, drop,
-  or throw, and the death screen are modal screens on one stack. Opening
+  throw, or eat, and the death screen are modal screens on one stack. Opening
   a screen puts it on top; Esc or Back closes it and returns to the screen below as it was left.
   While any screen is open it receives every key press, the run (if any) stays visible beneath
   it, and no game time passes but for what is chosen on a screen (picking up, dropping, wearing,
-  wielding), which is done as it is chosen and takes its time. Prompts in the message line (a
-  direction to open, close, kick, or bash, or to dig, how long to rest, look mode, aiming a shot
-  or a throw) are not screens.
+  wielding, eating), which is done as it is chosen and takes its time. Prompts in the message
+  line (a direction to open, close, kick, or bash, or to dig, how long to rest, look mode, aiming
+  a shot or a throw) are not screens.
 - **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
   `--record`, or `--capture` name what to run): Continue (only if a save exists), New run
   (scenario list from content, optional seed, then character creation), Settings, Controls,
@@ -822,7 +827,7 @@ rate or animation.
 - First-phase commands: move, wait, open/close door, kick (`K`, then a direction; §8 "Doors"),
   ascend/descend, light/douse lantern (`L`),
   pick up (`,` or `g`), drop (`d`), inventory (`i`), equipment (`e`), character (`@`), skills
-  (`S`), weapon skills (`W`), rest (`R`), look, shoot or throw what is in the missile weapon slot
+  (`S`), weapon skills (`W`), rest (`R`), eat (`E`), look, shoot or throw what is in the missile weapon slot
   (`t`), throw from the pack (`T`), fire (`f`, unbound by default), more aggressive / more
   defensive combat stance (`+` / `-`; §8 "Stances"), bash with a shield (an ability, below: no
   key by default; bound in Controls, it asks for a direction, like opening a door), next target
@@ -928,7 +933,8 @@ rate or animation.
 - **Death screen** (§8 "Combat"): when the player dies, the death screen opens over the run as it
   ended, in place of any other screen, and the run's save is deleted (permadeath): `Y O U   D I E
   D`, then who killed them ("Killed by a kobold", or "Killed by something you did not see" when
-  they did not see it), or the status effect that did (its `death` line: "Bled to death"), where
+  they did not see it), the status effect that did (its `death` line: "Bled to death"), or what,
+  when neither did (§8 "Hunger": "Starved to death", "Choked to death on a food ration"), where
   (the level's name), when (the date and time), and after how many turns, and the level they
   had reached ("You had reached level 3."). It takes every key press; Enter or Esc returns to
   the main menu (no Continue: nothing is
@@ -938,8 +944,8 @@ rate or animation.
   actor's weight (what it carries decides its burden, §8 "Burden"), but the player is shown only
   their own.
   Creatures carry objects from their spawn (`carry`, §7), and wield and wear some of them
-  (`wield`, `wear`); they drop everything when they die (§8 "Combat"), and nothing else makes
-  them drop or change anything yet. Worn and wielded things weigh what they weigh.
+  (`wield`, `wear`); they drop everything when they die (§8 "Combat"), and their corpse on top
+  (§8 "Hunger"), and nothing else makes them drop or change anything yet. Worn and wielded things weigh what they weigh.
   Weights read `450 g` below a kilogram and `3.5 kg` above.
 - **Rest** (`R`) asks in the message line: `Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to
   cancel)`. `h` rests an hour, `d` until 06:00, `n` until 18:00 (replay text `rest:1h`,
@@ -947,12 +953,22 @@ rate or animation.
   after turn and stops early when a creature comes into view or a message is logged (§8 "Time"),
   such as an attack the player perceives (§8 "Combat"), a status effect beginning ("You feel
   sick."), a sound that is news (§5 "Hearing"), or rain starting or growing heavier (§5
-  "Weather"), and when the player dies;
+  "Weather"), the player getting hungrier (into Hungry or worse) or fainting from hunger (§8
+  "Hunger"), and when the player dies;
   a sound already known goes on without stopping it, and so does other news of the weather (the
-  rain easing or stopping, clouds gathering or parting) and a status effect ending ("The
-  bleeding stops."), which are logged all the same. Hit points come back twice as fast while
-  resting (§8 "Healing").
+  rain easing or stopping, clouds gathering or parting), a status effect ending ("The bleeding
+  stops."), and a full stomach settling ("You no longer feel satiated."), which are logged all
+  the same. Hit points come back twice as fast while resting (§8 "Healing").
   It is a gameplay input mode like the open/close/kick direction prompt, not a menu screen.
+- **Eat** (`E`; §8 "Hunger") opens the choice of what to eat: the food lying on the player's
+  cell first (no letter, marked "lying here"; the `>` cursor starts on it, as ADOM asks about
+  the floor first), then the food in the inventory by its letters; with nothing, "You have
+  nothing to eat." A pack letter, or Enter on the `>` row, eats it (replay text `eat:b` for
+  inventory stack `b`, `eat:floor:a` for the top stack of the pile underfoot); Esc cancels. A
+  meal is one action of several turns, stopped early like a rest; "You eat the food ration. You
+  feel satiated." when it is done, "You stop eating." (or "A kobold comes into view; you stop
+  eating.") when not, the food left as it was. What is no food is refused and takes no time
+  ("You cannot eat a dagger.").
 - **Dig** (`U`, "use a tool", ADOM's use-item key, an item's use rather than an ability; §8
   "Digging") asks in the message line `Dig in which direction? (Esc to cancel)`; a direction
   digs (replay text `dig:E`), any other command cancels. With no digging tool ready nothing is
@@ -1022,10 +1038,11 @@ rate or animation.
   "Special rooms"), and a sound heard there ("You hear footsteps here.").
 - Screen layout: map viewport, message log, status panel (level, the player's hit points as
   `HP 18/24` (never below 0), the status effects they suffer by name, the most important first
-  (`Bleeding`, `Poisoned`; data order; §8 "Status effects"), their burden when they have one
-  (`Burdened`, `Strained`, `Overloaded`; §8 "Burden"), their level as `Lv 3` (§8
-  "Experience"; it goes after the burden and before the time and the date), region (on the
-  overworld and in
+  (`Bleeding`, `Poisoned`; data order; §8 "Status effects"), their hunger unless they are Not
+  hungry (`Hungry`, `Weak`, `Fainting`, `Starving`, `Satiated`, `Bloated`; §8 "Hunger"), their
+  burden when they have one (`Burdened`, `Strained`, `Overloaded`; §8 "Burden"), their level as
+  `Lv 3` (§8 "Experience"; it goes after the burden and before the time and the date), region
+  (on the overworld and in
   its local areas), time of day and date as `14:32 · 12 Rainmoon, Year 1444`, the moon's phase as a
   glyph and its name (`◑ First quarter`; with several moons each moon's name and glyph, `Moon ●
   Ilse ☽`), the weather under the open sky (`Clear`, `Overcast`, `Rain`, `Heavy rain`; §5
@@ -1034,8 +1051,8 @@ rate or animation.
   `◑` first quarter and waxing gibbous, `●` full, `◐` waning gibbous and last quarter, `☾` waning
   crescent. When the window is narrow, segments give way in priority order — seed, position,
   lantern, vision, light, turn, then the moon's phase (first cut down to its glyph), region, date
-  (first cut down to day and month, `12 Rainmoon`), weather, time, burden, the status effects
-  (the least important first), and hit points, the level name last — and
+  (first cut down to day and month, `12 Rainmoon`), weather, time, burden, hunger, the status
+  effects (the least important first), and hit points, the level name last — and
   segments that fit again in the room left take it back, most important first. Outdoors the
   weather outranks the date: it changes the light and how far one sees.
 
@@ -1153,8 +1170,19 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   rest untrained; the player creature lists none. The deer listens (30), the kobold shaman knows
   concentration (20) and spellcraft (25). For blood (§8 "Blood"; presentation only):
   `blood`, the colour of its stains (`"#rrggbb"`; default dark red, `#6e0e0c`) or `"none"` for a
-  bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). Creature particle
-  emitters may
+  bloodless creature; the cave beetle bleeds greenish-black ichor (`#38461a`). For hunger (§8
+  "Hunger"): `corpse` (default true: it leaves a corpse when it dies; with `data/hunger.toml`),
+  and `on_eat`, what eating its fresh corpse does besides feeding, never shown before the player
+  tries (`{ message = "...", vomit = 25, stat = { toughness = 5 }, heal = "1d4", harm = "1d2",
+  satiation = 500 }`: the message said once it is eaten, a percent chance it comes back up, a
+  percent chance per stat to raise it by 1 up to its potential, dice of hit points healed, dice
+  of degrees of sickness given (the status `[corpses] sickness` names, poisoned; §8 "Status
+  effects"), nutrition beyond its size's; chances 0 to 100, dice rolling 0 to 1000; only on a
+  creature that leaves a corpse). The built-in ones: the giant rat "Gamey and stringy, but it
+  stays down."; the cave bat leathery and sickening (1d2); the kobold and the kobold archer
+  "This kobold meat tastes terrible!" (vomit 40); the kobold shaman the same (vomit 40) and
+  Willpower 3 %; the deer "Venison! It does you good." (satiation 1000, heal 1d6); the cave
+  beetle "Crunchy." and Toughness 10 %. Creature particle emitters may
   fire `on = "attack"`: a burst at the target of each attack the player sees (the shaman's
   violet sparkle). Terrain has a `move_cost`: what a step onto it costs in percent of a normal
   step (the `step` action; default 100; still and running water 200, shallow water 150; local
@@ -1193,9 +1221,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   missile weapon that `reloads`: a crossbow shot costs `shoot` plus `reload`, 2000), `cast`,
   `dig` (a turn of digging), and for equipment (each slot names
   one, below) `wield` (1000), `wear` (1000: helmets, cloaks, gloves, boots, rings, amulets),
-  `body_armor` (3000: it takes a while to strap on), and `ready` (1000: a missile weapon,
-  missiles, a tool). An action left out, or every action without the file, costs 1000; an unknown id
-  or a cost out of range is a content error. The wiki shows them in a generated table.
+  `body_armor` (3000: it takes a while to strap on), `ready` (1000: a missile weapon, missiles,
+  a tool), and `eat` (1000: a turn of eating; a meal takes the food's `turns`, §8 "Hunger"). An
+  action left out, or every action without the file, costs 1000; an unknown id or a cost out of
+  range is a content error. The wiki shows them in a generated table.
 - **The sky** (`data/sky.toml`, optional; without it there are no moons): up to 8 `[[moon]]`s,
   each with `name` (shown in the status bar when there are several), `color` (`[r, g, b, uv]`,
   the direct light of the moon when full and high in the night sky), `sky` (the same for the
@@ -1216,7 +1245,16 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   error), `two_handed` (default false; only with a hand slot's `slot`, and there must be two
   hand slots: it takes both), `ammo` (the kind of ammunition it is, `ammo = "arrow"`), and
   `launches` (the kind a missile weapon shoots, `launches = "arrow"`; some object must be that
-  ammunition). Launchers and ammunition pair by that kind (`Content::fires`). What they do in a
+  ammunition). Launchers and ammunition pair by that kind (`Content::fires`). Food (§8
+  "Hunger") has `food = { nutrition = 1500, turns = 4 }`: the nutrition points it gives (1 to
+  100 000) and the turns of eating it takes (1 to 100; never on things worn, wielded, shot,
+  thrown, or burned): strips of dried meat (600, 2 turns), apples (150, 1), food rations (1500,
+  4), loaves of bread (800, 3). **Corpses** are objects too, one made for every creature type
+  that leaves one (not the player) when content loads, after the objects of the file in creature
+  order, with the id `<creature>_corpse`: "kobold corpse", `%` in the creature's color, made of
+  the corpses' material (`data/hunger.toml`), weighing the creature's weight, not stackable, and
+  feeding by the creature's size. Level files and `carry` cannot place them (a content error):
+  only creatures that die leave them, each knowing when it died. What they do in a
   fight (§8 "Combat"; only for things with a `slot`): a weapon's `damage` dice (`"1d8"`; a
   launcher's, required for one, are its shots' and carry its draw weight, `"1d8+2"`), `threat`
   (the lowest natural roll that threatens a critical, 2 to 24, default 22), `crit` (the damage
@@ -1439,7 +1477,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   in `data/sizes.toml`, default `medium`; §8 "Burden"), `ignores_burdened` (default false: whether
   Burdened, the first level of burden, costs the character nothing), `skills` (the skills it trains,
   by skill id: dice or a number, every result 0 to 100; §8 "Skills"), `class_skill` (dice added
-  to one of the class's skills, picked when the character is made; default none), and
+  to one of the class's skills, picked when the character is made; default none), `hunger` (how
+  much the character needs to eat, in percent of a human, 10 to 1000, default 100; §8 "Hunger":
+  elf 80, half-elf 90, human 100, dwarf 110, halfling 125, gnome 90, half-orc 120), and
   `weapon_skills` (starting ranks by weapon skill id, a fixed number or dice, every result 0 to
   10; §8 "Weapon skills"); and at the top
   `base_potential` (1 to 40), what every potential is before the race adjusts it (15). Races are
@@ -1481,6 +1521,27 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   small 60. `medium` is
   required (the size of every race and creature type that names none); without the file there
   is only medium.
+- **Hunger** (`data/hunger.toml`, optional; §8 "Hunger"; without it nobody hungers, nothing can
+  be eaten, and creatures leave no corpses): `burn_seconds` (game seconds per nutrition point
+  burned at 100 % hunger, 1 to 86 400: 60), `start` (nutrition at the start of a run: 3600),
+  `max` (the most there can be: 6500), `vomit_leaves` (the most left after vomiting: 1000),
+  `[states]` (the least nutrition of `bloated` 5500, `satiated` 4000, `not_hungry` 1440,
+  `hungry` 720, `weak` 240, and `fainting` 0, strictly falling and below `max`; below
+  `fainting` the player is Starving; `start` and `vomit_leaves` lie from `fainting` to `max`),
+  `[bloated] slow` (percent of an action's price while Bloated, 100 to 1000: 125), `[weak]
+  stats` (what Weak, Fainting, and Starving take from Strength and Dexterity, only those two,
+  −10 to 10: −1 each), `[fainting]` (`chance`, percent each turn, 0 to 100: 5; `turns` lost, 1
+  to 100: 5), `[starving]` (`damage` hit points, 1 to 1000: 1, every `seconds` of game time, 1
+  to 86 400: 600), `[exertion]` (extra points the player's `melee`, `shoot`, and `throw` burn,
+  0 to 1000: 2, 1, 1; no other action), `[overeating]` (`choke`, the percent chance a meal past
+  `max` chokes the eater to death: 0, off; `vomit`, else the chance they vomit: 50), and
+  `[corpses]` (optional; without it creatures leave none: `material` (`flesh`),
+  `rotten_hours` (8) and `gone_hours` (36; more than `rotten_hours`, at most a month),
+  `rotten_vomit` (percent: 50), `rotten_harm` (dice of degrees of sickness, 0 to 1000: `1d4`),
+  `sickness` (the status id, `data/status.toml`, that harm from eating gives: `poisoned`; needed
+  when anything eaten harms), and `[corpses.size]` with every size of `data/sizes.toml` and what its corpses give, `{ nutrition,
+  turns }`: small 400 and 3, medium 1000 and 6). The wiki shows its tables (the states, the
+  races' needs, food, corpses) generated.
 - **Classes** (`data/classes.toml`, optional), in the order offered: `id`, `name`, a one-line
   `description`, `stats` (adjustments as for races), `hp` (as for races), `skills` (as for
   races), `weapon_skills` (starting ranks as for races), and `weapon_skill_choice` (two or more
@@ -1534,7 +1595,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   races or classes) gives them itself: `vision` (default `normal`), `stats` and `potential` as for
   creature types (default 10 each, the potential the score), and `hp` (the hit points beyond
   Toughness a race and a class would give, 0 to 1000, default 0); with a character these four are
-  refused; such a player is trained in no skill (§8 "Skills"). Every built-in scenario has a
+  refused; such a player is trained in no skill (§8 "Skills"). A scenario may give the player a
+  starting pack, `carry = ["ration*3"]` (as level files place objects; at most 26 stacks; no
+  corpses): the depths three food rations, the world three food rations and two strips of dried
+  meat, the forest two food rations and three apples (§8 "Hunger"). Every built-in scenario has a
   character with normal eyes: the showcase a human female thief, the arena a halfling male thief,
   the courtyard a human female druid, the depths and the vast level a human male warrior, the forest
   a human female ranger, the world a human male ranger.
@@ -1573,6 +1637,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   its severity, its progress toward its next tick and easing, and who caused it), the progress
   toward the next hit point back counted in hundredths of a second at the normal pace, and the
   status effect that killed the player (§8 "Status effects", "Healing"; format version 20), the
+  player's satiation (their nutrition, the burn banked toward the next point, and the seconds
+  toward the next hit point lost while starving), every corpse's death time, and what killed the
+  player when neither a creature nor a status effect did (§8 "Hunger"; format version 21), the
   locks on each level's doors (§8 "Doors"; format version 22), and a dev weather override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
@@ -1618,7 +1685,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 crates/
   warlock-core/   plain Rust, no Bevy: map, actors, actions, turns, time, fov, light,
                   perception, rng, levels, mapgen, stats, skills, weapon skills, dice,
-                  character, burden, status, save
+                  character, burden, hunger, status, save
   warlock-cli/    no Bevy: scenarios, replay, dump, verify
   warlock/        Bevy app: render, input, UI, effects, platform (ECS lives here)
 xtask/            screenshot capture, golden-image diff, CI helpers
@@ -1654,7 +1721,7 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     it. Every action that takes time has a **cost** in energy, 1000 for a normal action, given in
     `data/actions.toml` (`step`, `wait`, `open_door`, `close_door`, `unlock`, `kick`, `lantern`,
     `stairs`, `pick_up`, `drop`, `melee`, `shoot`, `throw`, `reload`, `cast`, `wield`, `wear`,
-    `body_armor`, `ready`, `dig`; 100 to
+    `body_armor`, `ready`, `eat`, `dig`; 100 to
     10 000; an action left out, or every action without the file, costs 1000; unknown ids are
     errors), and a **base time**: 6 s
     (`BASE_TURN`) for every action but a step on the overworld. An action of cost *c* takes an
@@ -1697,7 +1764,9 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
       prices (`World::price_of`, `World::step_price`), at the burden the actor has as the
       action begins (picking up and dropping are priced before the load changes). A burdened
       normal action takes 7.5 s, so eight take exactly 60 s; a rest still ends exactly at its
-      goal.
+      goal. Being Bloated (§8 "Hunger") raises them again the same way, after the burden: ×1.25
+      (`[bloated] slow`), so four normal actions take 30 s (`World::bloated`).
+    - A meal (§8 "Hunger") is several turns of `eat`, one per turn of the food's `turns`.
   - **Speed** (`warlock-core/src/world/schedule.rs`), ADOM-like: every creature type has a
     `speed` (§7), 1000 being normal and the player's; twice the speed is twice as many actions in
     the same game time. An energy scheduler, integer only: each actor on the current level gains
@@ -1832,8 +1901,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     pools. Every actor starts at its maximum (`Actor::hp`, `hp_base`).
   - **Regeneration**: a hurt actor on the current level gets 1 hit point back per
     `max(60 s, 360 s − 12 s × Toughness)` of game time at the normal pace (To 10: 4 minutes; To
-    25 and up: 1 minute); resting, status effects, and a sanctuary (§7 "Special rooms") change the pace ("Healing"
-    below).
+    25 and up: 1 minute); resting, status effects, a sanctuary (§7 "Special rooms"), and
+    starving (§8 "Hunger") change the pace ("Healing" below).
   - **Big hits and status effects**: a hit that takes at least a third of the target's maximum
     hit points is a **big hit** (`combat::big_hit`). A blow that hits and leaves its target alive
     may cause status effects: those whose `wound` it meets (bleeding: a big hit 1 degree, a
@@ -1843,11 +1912,12 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   - **Death**: at 0 hit points an actor dies (`Event::Died { actor, at, of }`, right after the
     attack, or at the moment a status effect takes the last hit point, `of` naming it). A
     creature leaves the world, and what it carried, worn and wielded things too, falls on its
-    cell on top of the pile there, in inventory order. The player's death ends the run: it is
-    recorded (`World::death`: turn, time, the level's name, and the creature type that killed
-    them if they saw it, or the status effect that did), the turn stops there, every later
-    action is refused, and presentation shows the death screen and deletes the save (§6, §7
-    "Saves").
+    cell on top of the pile there, in inventory order, with its corpse on top of all (§8
+    "Hunger"). The player's death ends the run: it is recorded (`World::death`: turn, time, the
+    level's name, and the creature type that killed them if they saw it, or the status effect
+    that did, or the `cause` when neither did: starving or choking, §8 "Hunger"), the turn stops
+    there, every later action is refused, and presentation shows the death screen and deletes
+    the save (§6, §7 "Saves").
   - **What the player perceives**: their own hit points and Defence total (`PerceptionView::
     own_hp`, `own_defence`); how hurt each seen creature looks, in words (`SeenActor::health`:
     unhurt, lightly wounded, wounded, badly wounded, nearly dead); and the messages. Never a
@@ -2098,8 +2168,9 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     status with `eases` loses a degree every `eases` seconds, and at none it is gone. Hit points
     come back meanwhile ("Healing" below). Everything happens at its own moment, so it makes no
     difference how time is cut up (many waits or one long journey); at one moment a hit point
-    back comes first, then the ticks, then the easing. Actors on other levels are frozen, and the
-    dev time skip passes no time for anyone.
+    back comes first, then the ticks, then the easing, then the player's hunger (§8 "Hunger": its
+    burn, each change of state, and each hit point lost to starving are moments too). Actors on
+    other levels are frozen, and the dev time skip passes no time for anyone.
   - **Stats**: a status's `penalty` lowers scores from a severity on (several add up, kept
     within 1 to 40); every rule reads the effective score (`Actor::effective_stats`): combat
     (to-hit, damage, Defence, hit points), burden (the limit), and healing. The player sees their
@@ -2110,10 +2181,14 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     player for creatures bleeding to death from wounds they dealt.
   - **Cures**: `World::cure(actor, means)` ends every status that lists the means in its
     `cured_by` (a `bandage` stops the bleeding); the Heal skill (#132) will apply it.
+  - **Causes**: `World::afflict(actor, status, severity, by)` is the one way to give an actor a
+    status: wounds and `on_hit` (below), sickness from what the player eats (§8 "Hunger"), and
+    later traps and diseases.
   - **Bleeding**: from big hits and confirmed criticals; it costs hit points, stops healing, and
     eases by itself; it shows on creatures ("bleeding"). Blood dripping where the bleeder goes
     (the stains of #127) hooks in where it ticks (`World::drip_blood`).
-  - **Poisoned**: from a giant rat's bite (one hit in ten, 2 degrees); it costs hit points
+  - **Poisoned**: from a giant rat's bite (one hit in ten, 2 degrees) and bad food (§8
+    "Hunger": the sickness of a rotten corpse, or of some creatures' flesh); it costs hit points
     slowly, halves healing, and from 4 degrees lowers Strength and Dexterity by 1; stronger
     poison lasts longer.
   - **Shown**: the player's own by name (status bar, character screen, the `stats` dump layer),
@@ -2126,8 +2201,9 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   healing rate in percent: 100 normally, the slowest `regen` of its status effects (bleeding 0,
   poison 50), times `[healing] resting` (200) while the player rests (creatures never rest);
   every `regen_seconds(Toughness)` × 100 of it is a hit point ("Combat" above; the effective
-  Toughness). Progress carries over and is dropped at full health. Hunger (#137) and disease
-  (#139) slow it through their own statuses' `regen`.
+  Toughness). Progress carries over and is dropped at full health. A Starving player gets none
+  back (§8 "Hunger"); disease (#139) slows it through its statuses' `regen`. `World::healing_rate`
+  is the one place that decides the pace.
 - **Stats** (`warlock-core/src/stats.rs`; M14): six stats inspired by D&D, in display order
   Strength (St), Dexterity (Dx), Toughness (To; D&D's Constitution), Intelligence (In),
   Willpower (Wi; D&D's Wisdom), and Presence (Pr; D&D's Charisma). More will come (mostly
@@ -2141,10 +2217,12 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     for the rules (`stats::modifier`, `Stats::modifier`) and is **never shown**: not in the UI,
     messages, look mode, player-facing dumps, or the wiki.
   - **Potential** (ADOM-like): each stat's natural ceiling, the score it could grow towards.
-    Stored and saved, **hidden from the player** like the modifiers. Nothing raises a score
-    yet (training comes later).
-  - **What the player sees**: their own scores, on the character screen (§6) and in the
-    `stats` dump layer; the perception snapshot carries those and nothing else of stats
+    Stored and saved, **hidden from the player** like the modifiers. Only eating a corpse raises
+    a score yet (§8 "Hunger": by 1, never past the potential, `Stats::raise`); training comes
+    later. Hunger lowers the **effective** scores for a while (Weak: Strength and Dexterity;
+    `Actor::effective_stats`, which combat and burden read; `Stats::adjusted`).
+  - **What the player sees**: their own scores as they are now (effective, so lowered while
+    Weak), on the character screen (§6) and in the `stats` dump layer; the perception snapshot carries those and nothing else of stats
     (`PerceptionView::own_scores`). A creature's stats are never shown; ground-truth dev dumps
     (`actors`, the world state) show every actor's scores and potentials.
   - **What uses them**: combat (Strength to hit and to damage in melee, Dexterity to hit with
@@ -2190,6 +2268,92 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     `limit`), and the `actors` layer every actor's burden and limit.
   - Nothing is stored: the burden follows from the inventory, the stats, and the content, so
     saves and the state hash are unchanged.
+- **Hunger** (`warlock-core/src/hunger.rs`, the rules; `world/hunger.rs` and `world/eat.rs`,
+  applying them; `data/hunger.toml`, §7; M23, #137), ADOM-like:
+  - **Nutrition**: the player has a counter of nutrition points (`Actor::satiation`; creatures
+    do not hunger). Game time burns it as the scheduler moves the clock, so long actions,
+    rests, and overworld journeys burn it too: a point every `burn_seconds` (60) at the race's
+    `hunger` percent (§7; a human 1440 a day, a halfling 1800), the seconds that do not make a
+    whole point banked (`Satiation::banked`, saved). The dev time skip burns nothing (nobody
+    acts). The player's exertions burn extra points at their race's percent: a blow in melee 2,
+    a shot 1, a throw 1 (`[exertion]`; `World::exert`). A run starts at `start` (3600: Not
+    hungry, Hungry after 36 hours for a human); the counter never rises above `max` (6500) and
+    may fall below 0. The burn is one of the things that happen while the player lives through
+    the time (`World::live`, "Status effects" above: `World::digest`), each change of state and
+    each hit point lost to starving a moment of its own (`World::until_hungrier`), so it makes no
+    difference how the time is cut up.
+  - **States** (`Hunger`), by the least nutrition of each (`[states]`): Bloated (5500),
+    Satiated (4000), Not hungry (1440), Hungry (720), Weak (240), Fainting (0), and below that
+    Starving. **Hungry**: a warning only. **Weak** (and Fainting and Starving): Strength and
+    Dexterity −1 (`[weak] stats`) in the effective scores combat and burden read (§8 "Stats";
+    hit points go by the actor's own Toughness). **Fainting** (and Starving): as each turn
+    begins (`World::run_turn`), one draw of the gameplay stream with `[fainting] chance` (5 %;
+    none drawn otherwise): "You faint from hunger." and the player loses `turns` (5) turns, a
+    wait's price each added to their action's, while the others act (`World::faint`).
+    **Starving**: no hit points come back (`World::healing_rate`, "Healing" above), and
+    `[starving] damage` (1) are lost every `seconds` (600) of game time (banked,
+    `Satiation::starving`), until the player starves to death at that moment ("You starve to
+    death...", `Cause::Starvation`; no creature killed them, so no `Event::Died`). **Bloated**: every price the player pays is raised by `[bloated] slow`
+    (×1.25), after the burden ("Costs" above). Satiated and Not hungry do nothing.
+  - **Messages** on each change (`Hunger::news`): getting hungrier, "You no longer feel
+    bloated.", "You no longer feel satiated.", "You are getting hungry.", "You feel weak from
+    hunger.", "You feel faint from hunger.", "You are starving!"; fed, "You are no longer
+    starving.", "You feel less faint.", "You feel less weak.", "You are no longer hungry.", "You
+    feel satiated.", "You feel bloated." Getting hungrier into Hungry or worse is a message that
+    stops a rest (§6 "Rest"); the rest are only logged.
+  - **Meals** (`Action::Eat(Meal)`: one of an inventory stack, `Meal::Pack`, or of a stack of
+    the pile on the player's cell, `Meal::Floor`; §6 "Eat"): refused, taking no time, without
+    `data/hunger.toml` ("You feel no need to eat."), for a stack that is not there ("You carry
+    no f.", "There is no c here."), or for what has no `food` ("You cannot eat a dagger."). A
+    meal passes the food's `turns` turns through the normal pipeline like a rest (`World::dine`
+    through `World::keep_at`; each the `eat` action's price, so speed, burden, and Bloated
+    count), and stops early after a turn in which a creature came into view or a message was logged that
+    stops a rest (hunger news and fainting included), or the player died: "You stop eating." or
+    "A kobold comes into view; you stop eating.", and nothing is eaten. Only when the last turn
+    is done is one of the food taken (from where it lay, or the first stack like it there if a
+    missile landed on the pile meanwhile; "There is nothing left to eat." if it is gone) and does
+    it feed: "You eat the food ration.", then what it does, then the hunger news ("You feel
+    satiated.") and the burden news if its weight changed that.
+  - **Food** feeds its `nutrition`. A meal that would bring the counter past `max` is
+    **overeating**: one draw with `[overeating] choke` (0, off by default: none drawn) to choke
+    to death ("You choke to death on the food ration...", `Cause::Choked`), else one with
+    `vomit` (50 %) to vomit ("You vomit!": it feeds nothing, and the counter falls to at most
+    `vomit_leaves`, 1000, Hungry), else "You have a hard time getting it all down." and what
+    does not fit is lost.
+  - **Corpses**: a creature that dies leaves its corpse (§7 "Objects": the creature's
+    `<creature>_corpse` object, weighing the creature's weight, so a heavy one burdens) on top of
+    the pile where it fell, after what it carried, whatever killed it (`World::leave_corpse`, in
+    `creature_dies`), bloodless creatures too unless their type says `corpse = false`. The stack
+    keeps the moment it died (`Stack::died`, saved; never shown: presentation cannot read it). A
+    corpse is fresh, then rotten `rotten_hours` (8) after the death, then gone `gone_hours` (36)
+    after it (`rot_at`): checked as perception runs, rotted-away corpses leave the piles of the
+    level the player is on and their pack ("Your giant rat corpse rots away.", logged without
+    stopping a rest); corpses on other levels go when the player comes back.
+  - **Eating a corpse** feeds by its creature's size (`[corpses.size]`; small 400 in 3 turns,
+    medium 1000 in 6). A rotten one: "Ugh! The kobold corpse was rotten.", one draw with
+    `rotten_vomit` (50 %) to vomit, else it makes them sick and feeds them; its creature's
+    `on_eat` does nothing. **Sickness** is a status effect ("Status effects" above), given
+    through `World::afflict`: `rotten_harm` (1d4) degrees of `[corpses] sickness` (poisoned),
+    "You feel sick." said at once (when it begins); it costs hit points as time passes and may
+    kill (`Death::of`, "Died of poison"). A fresh one does what
+    its creature's `on_eat` says (§7), in this order, each draw from the gameplay stream and none
+    for a chance of 0: its `message`; a draw with `vomit` (it comes back up: no food, no more
+    effects); per stat in display order, a draw with its chance to raise it by 1 up to its
+    potential ("You feel tougher!"; nothing at the potential; raising Toughness raises the most
+    hit points); `heal` ("You feel better." when it healed any); `harm` (degrees of sickness, as
+    a rotten corpse's); then it feeds its size's nutrition plus `satiation` (at least 0), overeating as food
+    does. The effects are never shown before the player tries; the wiki keeps to the general
+    rule.
+  - **What the player perceives** (`PerceptionView::own_hunger`): their state, never the counter
+    or a corpse's age; the status bar shows it unless it is Not hungry (`Hungry`, `Weak`,
+    `Fainting`, `Starving`, `Satiated`, `Bloated`; after the hit points and before the burden,
+    giving way after the burden), and the character screen shows the effective scores. Dev
+    dumps: the ASCII header has `hunger hungry` unless Not hungry, JSON dumps `hunger` (the state
+    id, or null without hunger), and the `actors` layer the player's nutrition and every corpse
+    on the level and in the pack with when it died and how it has rotted.
+  - Showcase: the hub's pantry keeps food rations, loaves of bread, dried meat, and apples; the
+    depths, world, and forest scenarios give starting food (§7 "Scenarios"). The thresholds are
+    generous, so the showcase is no race against the clock.
 - **Character creation** (`warlock-core/src/character.rs`; M15): a run starts as a character, a
   race (`data/races.toml`), a gender (male, female, or other), and a class
   (`data/classes.toml`), chosen on New run (§6) or given on the command line (`--character
@@ -2413,13 +2577,15 @@ cargo xtask golden [--update]                             # compare golden scree
   character `{race, gender, class}` (left out for a run without one; a replay without it starts
   as the scenario's character, so older replays still load). Actions use a text
   syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
-  pickup pickup:ac drop drop:b equip:body:b remove:body bash:E fire:12,5 throw:c:12,5 dig:E
-  vision:darkvision skip:1h weather:rain stance:coward effect:fireball@12,5
+  pickup pickup:ac drop drop:b equip:body:b remove:body bash:E fire:12,5 throw:c:12,5 eat:b
+  eat:floor:a dig:E vision:darkvision skip:1h weather:rain stance:coward
+  effect:fireball@12,5
   effect:lightning_bolt@3,4>12,4 afflict:bleeding`; `bash:DIR` bashes with the held shield that
   way, `dig:DIR` digs toward a direction until the wall gives way or something interrupts;
   `fire:X,Y` shoots at level cell (X, Y),
-  `throw:LETTER:X,Y` throws one of inventory stack LETTER there; the dev action
-  `effect:ID@X,Y[>X,Y]` shows spell effect ID (`data/effects.toml`) as the player perceives it, a
+  `throw:LETTER:X,Y` throws one of inventory stack LETTER there; `eat:LETTER` eats one of
+  inventory stack LETTER, `eat:floor:LETTER` one of stack LETTER of the pile underfoot; the dev
+  action `effect:ID@X,Y[>X,Y]` shows spell effect ID (`data/effects.toml`) as the player perceives it, a
   burst around X,Y (around the second cell, flying there from the first) or a bolt from the first
   cell toward the second (cut short by the first opaque cell); it hurts no one, takes no time,
   and only says so in the message log;
@@ -2459,10 +2625,13 @@ cargo xtask golden [--update]                             # compare golden scree
   weight, base plus carried, what it carries and of that wears and wields, `equipped main_hand a
   spear`, its burden and carrying limit, `unburdened (limit 31.5 kg)`, its weapon skills with
   rank and marks, `weapon skills spears 1 (0/30)`, its stats as score/potential, `St 12/15`, its
-  trained skills with their marks toward the next point, `skills stealth 17 (2/5)`, and its
-  status effects with their severities, `effects bleeding 2`), and `rooms` (the level's special
-  rooms: the terrain with each room's plain ground drawn as its effect's `mark`, then a line per
-  room, `s shadowed room at (34, 8)-(49, 13), entered`) show
+  trained skills with their marks toward the next point, `skills stealth 17 (2/5)`, its status
+  effects with their severities, `effects bleeding 2`, and the player's nutrition and hunger,
+  `nutrition 3540 (not_hungry)`; then every corpse on the level and in the player's pack with
+  when it died and how it has rotted, `corpse rat_corpse at (2, 1): died 1444-11-11 08:01:12, 2
+  hours ago, fresh`), and `rooms` (the level's special rooms: the terrain with each room's plain
+  ground drawn as its effect's `mark`, then a line per room, `s shadowed room at (34, 8)-(49,
+  13), entered`) show
   ground truth and are dev-only. JSON dumps
   carry turn, game time (seconds and calendar fields), level, viewer, the special room the
   player stands in if they know it (`room`, its effect id; else null), the weather (under the open
@@ -2475,11 +2644,14 @@ cargo xtask golden [--update]                             # compare golden scree
   null), scores (`stats`, by stat id), trained skills (`skills`, by skill id with their values),
   status effects (`effects`, by id), weapon skills (`weapon_skills`, by skill id: `{rank,
   progress}`, the progress a percent or null at rank 10), hit points (`hp: {current, max}`),
-  Defence (`defence`, the total), how the run ended (`death: {turn, time, place, by, of}` or
-  null), recent messages,
+  Defence (`defence`, the total), hunger (`hunger`: `bloated` … `starving`, or null when nobody
+  hungers), how the run ended (`death: {turn, time, place, by, of, cause}` or null; `cause`
+  "Starved to death" and the like when neither a creature nor a status effect killed them),
+  recent messages,
   and optionally the full world state; the ASCII header line has the turn, the time
   (`0001-01-01 08:00:00`), level, viewer, the player's hit points (`hp 17/17`, then `dead` once
-  they have died), the weather under the open sky (`weather rain`), and hash.
+  they have died), their hunger unless Not hungry (`hunger hungry`), the weather under the open
+  sky (`weather rain`), and hash.
 - Freezing visual time and fixing window size and scale make screenshots reproducible. With frozen
   time, glyph animations show that moment and motion (slides, camera) completes instantly.
 - `--fire` (dev) starts the run aiming the readied missile weapon, as `f` would, so captures show
@@ -2609,6 +2781,13 @@ Each milestone ships a playable build.
   10 in sixteen categories with per-category passive benefits, The Riddle of Steel's defaults
   between related categories, shield blocking and a shield bash, starting ranks from race and
   class, and a weapon skills screen (`W`).
+
+
+- **M23 Hunger and food** (#137) — ADOM-like hunger: a nutrition counter that game time burns by
+  the race's need (data, `data/hunger.toml`), the states from Bloated to Starving with their
+  effects, food eaten from the pack or the floor in meals of several turns (`E`), overeating,
+  corpses dropped by every creature that dies, rotting, and doing what their creature's
+  `on_eat` says; starting food and a pantry in the showcase.
 
 - **M25 Special rooms** — ADOM-like special rooms (data, `data/room_effects.toml`): a
   shadowed room, an echoing hall, a hushed chamber, a sanctuary, and a flooded room, in about one
