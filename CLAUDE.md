@@ -86,10 +86,9 @@ load, stats, and skills with their marks).
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-dig:DIR
-rest:GOAL vision:PROFILE skip:DURATION weather:KIND afflict:STATUS infect:DISEASE
-effect:ID@X,Y[>X,Y]` (`DIR` = N
-NE E SE S SW W NW; `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
+dig:DIR rest:GOAL stance:NAME vision:PROFILE skip:DURATION weather:KIND afflict:STATUS
+infect:DISEASE effect:ID@X,Y[>X,Y]` (`DIR` = N
+NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
 player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `SLOT` = a slot id in
 `assets/data/slots.toml`, e.g. `equip:body:b` (put inventory stack `b` on), `remove:body`;
 `bash:DIR` bashes with the held shield, `fire:X,Y` shoots the readied missile weapon at level
@@ -672,7 +671,7 @@ drip hook `drip_blood` (#127's stains go there). The player's statuses beginning
 the rest loop keeps them from the turns it does not perceive). Presentation reads
 `PerceptionView::own_effects` (status bar after HP, character screen `Status` row) and
 `effects_of(actor)` (look mode; only statuses with `seen`), never severities. Saved and hashed
-(`FORMAT_VERSION` 18; `Actor::regen` counts hundredths of a second at the normal pace). The dev
+(`FORMAT_VERSION` 19; `Actor::regen` counts hundredths of a second at the normal pace). The dev
 action `afflict:ID` (`Action::Afflict`) gives the player a degree, for tests and captures. Tests:
 `status.rs`, `content/status.rs`, `world/status_tests.rs`.
 
@@ -707,7 +706,7 @@ are `Event::Disease { actor, disease, news: DiseaseNews::{Onset, Worse(n), Recov
 and symptoms `say`, recovery `note`s; a batched rest turn with an onset or symptom stops the
 batch). Presentation: Diseased via `own_effects`, `PerceptionView::own_diseases` (known ones:
 the character screen's `Diseased` row, the `stats` dump layer). Saved and hashed
-(`FORMAT_VERSION` 19). Tests: `check.rs`, `disease.rs`, `content/disease.rs`,
+(`FORMAT_VERSION` 20). Tests: `check.rs`, `disease.rs`, `content/disease.rs`,
 `world/disease_tests.rs` (custom content with extreme stats, mirrored draws).
 
 Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebuffer pixels:

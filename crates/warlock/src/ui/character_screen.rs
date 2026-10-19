@@ -62,6 +62,8 @@ pub struct CharacterScreen {
     hp: (i32, i32),
     /// Defence: the total only.
     defence: i32,
+    /// The combat stance's name.
+    stance: String,
 }
 
 impl CharacterScreen {
@@ -86,6 +88,7 @@ impl CharacterScreen {
                 },
                 hp: (0, 0),
                 defence: warlock_core::combat::BASE_DEFENCE,
+                stance: "Neutral".into(),
             };
         };
         let content = view.content();
@@ -124,6 +127,7 @@ impl CharacterScreen {
             progress: view.own_experience(),
             hp: view.own_hp(),
             defence: view.own_defence(),
+            stance: content.stance_def(view.own_stance()).name.clone(),
         }
     }
 
@@ -141,9 +145,9 @@ impl CharacterScreen {
 
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         // Rows: margin, the name, a gap, race, gender, class, the birth, and a gap (with a
-        // character), the stats, a gap, level, experience, hit points and Defence (and the status
-        // effects and known diseases, if any), a gap, the weight, the burden's thresholds, a gap,
-        // the footer, frame.
+        // character), the stats, a gap, level, experience, hit points, Defence, and stance (and
+        // the status effects and known diseases, if any), a gap, the weight, the burden's
+        // thresholds, a gap, the footer, frame.
         let width = WIDTH.min(console.cols() as i32) - 4;
         let birth = fit_parts(&self.birth, width);
         let identity_rows = match self.identity.len() {
@@ -153,7 +157,7 @@ impl CharacterScreen {
         let thresholds = (self.load.as_ref()).map_or(Vec::new(), |l| thresholds(l, width));
         let status_rows =
             i32::from(!self.effects.is_empty()) + i32::from(!self.diseases.is_empty());
-        let h = Stat::COUNT as i32 + 14 + identity_rows + thresholds.len() as i32 + status_rows;
+        let h = Stat::COUNT as i32 + 15 + identity_rows + thresholds.len() as i32 + status_rows;
         let panel = Panel::new(console, " Character ", WIDTH, h);
         super::info_tabs::draw_tabs(console, &panel, bindings, super::ScreenName::Character);
         let x = panel.inner_x();
@@ -202,6 +206,7 @@ impl CharacterScreen {
             ("XP", "Experience", experience_text(&self.progress)),
             ("HP", "Hit points", format!("{hp}/{max}")),
             ("Dv", "Defence", format!("{:>2}", self.defence)),
+            ("", "Stance", self.stance.clone()),
         ] {
             if fits(y) {
                 console.print(x, y, abbrev, TEXT_DIM);
@@ -343,7 +348,7 @@ mod tests {
     use super::*;
     use crate::input::KeyBinding;
     use std::sync::Arc;
-    use warlock_core::content::Content;
+    use warlock_core::content::{CombatStance, Content};
     use warlock_core::{Action, Dir, Letters, World};
 
     fn showcase() -> World {
@@ -408,6 +413,13 @@ mod tests {
         ] {
             row(expected);
         }
+        assert!(row("Stance").contains("Neutral"));
+        world.apply(&Action::SetStance(CombatStance::Aggressive));
+        let text = drawn(&world, 80, 30);
+        assert!(
+            (text.iter()).any(|l| l.contains("Stance") && l.contains("Aggressive")),
+            "{text:#?}"
+        );
         row("Weight 73.5 kg (you 70 kg, carrying 3.5 kg)");
         // St 9 To 10: a limit of 42 kg, by thirds; the line right below the weight.
         let at = |needle: &str| text.iter().position(|l| l.contains(needle));

@@ -4,7 +4,8 @@ use crate::action::AttackKind;
 use crate::burden::Burden;
 use crate::combat::{self, Attack, Category, Defence, Health, Profile};
 use crate::content::{
-    ActionKind, Benefit, Content, CreatureId, FactionId, ObjectDef, ObjectId, Role, WeaponSkillId,
+    ActionKind, Benefit, CombatStance, Content, CreatureId, FactionId, ObjectDef, ObjectId, Role,
+    WeaponSkillId,
 };
 use crate::disease::Diseases;
 use crate::equipment::Equipment;
@@ -139,6 +140,9 @@ pub struct Actor {
     /// peaceful creatures in the showcase). Read the one that counts with [`Actor::faction`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub faction_override: Option<FactionId>,
+    /// Its combat stance (spec §8 "Stances"): the player chooses theirs; creatures stay neutral.
+    #[serde(default, skip_serializing_if = "CombatStance::is_neutral")]
+    pub stance: CombatStance,
 }
 
 fn is_zero(n: &u32) -> bool {
@@ -216,11 +220,13 @@ impl Actor {
         let dodge = Some(self.skills.effect(content, Effect::Dodge))
             .filter(|&d| d != 0)
             .map(|d| (Category::Dodge, d));
+        let stance = content.stance_def(self.stance).defence();
         Defence::from_bonuses(
             std::iter::once((Category::Dexterity, dexterity))
                 .chain(worn)
                 .chain(natural)
-                .chain(dodge),
+                .chain(dodge)
+                .chain(stance),
         )
     }
 
@@ -363,7 +369,14 @@ impl Actor {
             (None, None) => Attack::unarmed(),
         };
         let skill = self.melee_skill(content);
-        Profile::melee(&attack, &self.effective_stats(content)).with(&self.benefit(content, skill))
+        let profile = Profile::melee(&attack, &self.effective_stats(content))
+            .with(&self.benefit(content, skill));
+        self.stanced(content, profile)
+    }
+
+    /// `profile` with the to-hit and damage of its combat stance.
+    pub fn stanced(&self, content: &Content, profile: Profile) -> Profile {
+        content.stance_def(self.stance).apply(profile)
     }
 
     /// What its shots do, with the missile weapon it has ready (`None` without one): Dexterity to
@@ -372,28 +385,29 @@ impl Actor {
     pub fn ranged(&self, content: &Content) -> Option<Profile> {
         let (launcher, attack) = self.launcher(content)?;
         let skill = content.object(launcher).skill;
-        Some(
-            Profile::ranged(attack, &self.effective_stats(content))
-                .with(&self.benefit(content, skill)),
-        )
+        let profile = Profile::ranged(attack, &self.effective_stats(content))
+            .with(&self.benefit(content, skill));
+        Some(self.stanced(content, profile))
     }
 
     /// What a throw of a throwing weapon making `attack` does: Dexterity to hit, Strength to
-    /// damage, and what its skill at throwing gives.
+    /// damage, what its skill at throwing gives, and its combat stance.
     pub fn thrown(&self, content: &Content, attack: &Attack) -> Profile {
         let skill = content.weapon_skills().of_role(Role::Thrown);
-        Profile::thrown(attack, &self.effective_stats(content)).with(&self.benefit(content, skill))
+        let profile = Profile::thrown(attack, &self.effective_stats(content))
+            .with(&self.benefit(content, skill));
+        self.stanced(content, profile)
     }
 
     /// What a bash with the shield it holds does (`None` without one it can bash with): the
-    /// shield's `bash` dice, Strength to hit and to damage as for any blow, and what its skill at
-    /// shield bashing gives.
+    /// shield's `bash` dice, Strength to hit and to damage as for any blow, what its skill at
+    /// shield bashing gives, and its combat stance.
     pub fn bash(&self, content: &Content) -> Option<(ObjectId, Profile)> {
         let (shield, attack) = self.shield(content)?;
         let skill = content.weapon_skills().of_role(Role::ShieldBash);
         let profile = Profile::melee(attack, &self.effective_stats(content))
             .with(&self.benefit(content, skill));
-        Some((shield, profile))
+        Some((shield, self.stanced(content, profile)))
     }
 }
 

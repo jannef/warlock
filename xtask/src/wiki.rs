@@ -153,6 +153,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("launchers.md".to_string(), launchers(content)),
         ("ammunition.md".to_string(), ammunition(content)),
         ("armour.md".to_string(), armour(content)),
+        ("stances.md".to_string(), stances(content)),
         ("hit-chances.md".to_string(), hit_chances()),
         ("threats.md".to_string(), threats()),
         ("hit-points.md".to_string(), hit_points(content)),
@@ -1552,6 +1553,44 @@ fn armour(content: &Content) -> String {
     out
 }
 
+/// The combat stances: what each does to the player's attacks, Defence, and speed (percent for
+/// costs and noise; "-" for no change).
+fn stances(content: &Content) -> String {
+    let bonus = |n: i32| match n {
+        0 => "-".to_string(),
+        n if n > 0 => format!("+{n}"),
+        n => format!("\u{2212}{}", -n),
+    };
+    let percent = |n: u32| {
+        if n == 100 {
+            "-".to_string()
+        } else {
+            format!("{n}%")
+        }
+    };
+    let mut out = String::from(
+        "| Stance | To hit | Damage | Dodge | Parry | Attacks cost | Fleeing steps cost | \
+         Fleeing steps' noise | Weapon marks count |\n\
+         |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n",
+    );
+    for s in content.stances().all() {
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} | {} | {} | {} | {} | {} |",
+            s.name,
+            bonus(s.to_hit),
+            bonus(s.damage),
+            bonus(s.dodge),
+            bonus(s.parry),
+            percent(s.attack_cost),
+            percent(s.flee_cost),
+            percent(s.flee_noise),
+            percent(s.weapon_mark),
+        );
+    }
+    out
+}
+
 /// How often an attack hits by what its roll needs (Defence minus to-hit): the 2d12 bell.
 fn hit_chances() -> String {
     let mut out = String::from("| The roll needs | Hits |\n|:---:|:---:|\n");
@@ -2375,6 +2414,14 @@ mod tests {
             "{armour}"
         );
         assert!(armour.contains("| Small shield | off hand | +1 | Shield | no limit |"));
+        let stances = text("stances.md");
+        assert!(
+            stances.contains("| Aggressive | +1 | +2 | \u{2212}3 | - | - | - | - | 125% |"),
+            "{stances}"
+        );
+        assert!(
+            stances.contains("| Coward | \u{2212}4 | \u{2212}3 | +4 | - | 125% | 85% | 50% | - |")
+        );
         assert!(text("hit-chances.md").contains("| 10 | 75% |"));
         assert!(text("hit-chances.md").contains("| 24 | 0.7% |"));
         assert!(

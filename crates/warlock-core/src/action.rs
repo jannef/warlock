@@ -1,7 +1,7 @@
 //! Player actions and the events a turn produces.
 
 use crate::combat::Strike;
-use crate::content::{ActionKind, DiseaseId, ObjectId, StatusId};
+use crate::content::{ActionKind, CombatStance, DiseaseId, ObjectId, StatusId};
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
 use crate::weather::Weather;
@@ -59,6 +59,9 @@ pub enum Action {
     /// Wait turn after turn (creatures act) until the goal, stopping early when a creature comes
     /// into view or a message is logged.
     Rest(Rest),
+    /// Take a combat stance (spec §8 "Stances"). Takes no game time, but changes state, so
+    /// replays record it.
+    SetStance(CombatStance),
     /// Dig into the wall in this direction with the digging tool the player has ready (spec §8
     /// "Digging"): turn after turn (each the `dig` action's time) until the wall gives way,
     /// stopping early like a rest. What was dug stays dug.
@@ -400,6 +403,7 @@ impl fmt::Display for Action {
             Action::Rest(Rest::For(d)) => write!(f, "rest:{d}"),
             Action::Rest(Rest::Dawn) => f.write_str("rest:dawn"),
             Action::Rest(Rest::Dusk) => f.write_str("rest:dusk"),
+            Action::SetStance(stance) => write!(f, "stance:{stance}"),
             Action::Dig(d) => write!(f, "dig:{d}"),
             Action::SetVision(id) => write!(f, "vision:{id}"),
             Action::SkipTime(d) => write!(f, "skip:{d}"),
@@ -515,6 +519,10 @@ impl FromStr for Action {
                     _ => Err(usage()),
                 }
             }
+            "stance" => arg
+                .ok_or_else(|| "`stance` needs a stance, e.g. `stance:coward`".to_string())?
+                .parse()
+                .map(Action::SetStance),
             "vision" => match s.split_once(':').map(|(_, id)| id) {
                 Some(id) if !id.is_empty() => Ok(Action::SetVision(id.to_string())),
                 _ => Err("`vision` needs a profile id, e.g. `vision:darkvision`".into()),
@@ -559,8 +567,8 @@ impl FromStr for Action {
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
                  descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
                  equip:SLOT:LETTER, remove:SLOT, bash:DIR, fire:X,Y, throw:LETTER:X,Y, dig:DIR, \
-                 vision:ID, skip:DURATION, weather:clear|overcast|rain|heavy, afflict:STATUS, \
-                 infect:DISEASE, effect:ID@X,Y[>X,Y])"
+                 stance:NAME, vision:ID, skip:DURATION, weather:clear|overcast|rain|heavy, \
+                 afflict:STATUS, infect:DISEASE, effect:ID@X,Y[>X,Y])"
             )),
         }
     }
@@ -624,6 +632,8 @@ mod tests {
             Action::Ascend,
             Action::Descend,
             Action::ToggleLantern,
+            Action::SetStance(CombatStance::Aggressive),
+            Action::SetStance(CombatStance::Coward),
             Action::SetVision("low_light".into()),
             Action::SetVision("Mixed_Case".into()),
             Action::Rest(Rest::For(Duration::hours(1))),

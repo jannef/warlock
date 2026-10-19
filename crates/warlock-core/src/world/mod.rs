@@ -93,8 +93,8 @@ use crate::action::{
 use crate::burden::{self, Burden, Load};
 use crate::character::{Character, CharacterSpec};
 use crate::content::{
-    ActionKind, Content, CreatureId, EdgeExit, LevelKind, LevelTemplate, RoomEffectDef, StairsDir,
-    Stance, TerrainId, local_area_id,
+    ActionKind, CombatStance, Content, CreatureId, EdgeExit, LevelKind, LevelTemplate,
+    RoomEffectDef, StairsDir, Stance, TerrainId, local_area_id,
 };
 use crate::geom::{Dir, Pos};
 use crate::light::{LightCache, Sky};
@@ -420,6 +420,7 @@ impl World {
             damage: Default::default(),
             weapon_skills,
             faction_override: None,
+            stance: CombatStance::Neutral,
         };
         player.hp = player.max_hp(&content);
         state.actors.insert(ActorId(0), player);
@@ -1083,12 +1084,32 @@ impl World {
     /// heard by those it reaches. A step of the player's that a creature could have heard, but
     /// for their stealth, trains stealth.
     fn make_noise(&mut self, actor: ActorId, act: Act) {
+        self.make_noise_at(actor, act, 100);
+    }
+
+    /// The noise of `actor` stepping onto `to` (it has just moved), `fleeing` or not
+    /// ([`World::flees`]): a stance may quieten a flight.
+    fn make_step_noise(&mut self, actor: ActorId, to: Pos, fleeing: bool) {
+        let percent = match self.state.actors.get(&actor) {
+            Some(a) if fleeing => self.content.stance_def(a.stance).flee_noise,
+            _ => 100,
+        };
+        self.make_noise_at(actor, Act::Step(to), percent);
+    }
+
+    /// [`World::make_noise`] with the noise's loudness scaled to `percent`.
+    fn make_noise_at(&mut self, actor: ActorId, act: Act, percent: u32) {
         let (state, content) = (&self.state, &self.content);
         let Some(a) = state.actors.get(&actor) else {
             return;
         };
         let burden = state.load(content, a).penalty();
         let made = noise::noise(content, state.current(), a, burden, act);
+        let made = made.map(|mut n| {
+            n.loudness = u16::try_from(u32::from(n.loudness) * percent / 100).unwrap_or(u16::MAX);
+            n
+        });
+        let made = made.filter(|n| n.loudness > 0);
         let sneaking = actor == state.player
             && matches!(act, Act::Step(_))
             && self.trains(Use::Sneak)
@@ -1176,6 +1197,7 @@ impl World {
             Action::Rest(goal) => return self.start_rest(*goal),
             Action::Dig(dir) => return self.start_dig(*dir),
             Action::SetVision(id) => return self.set_vision(id),
+            Action::SetStance(stance) => return self.set_stance(*stance),
             Action::SetWeather(weather) => {
                 let over = weather::Override::new(*weather, self.state.time);
                 self.state.weather_override = Some(over);
@@ -1358,6 +1380,13 @@ impl World {
         }
     }
 
+    /// The player takes combat stance `stance` (spec §8 "Stances"). Takes no time.
+    fn set_stance(&mut self, stance: CombatStance) -> Spent {
+        self.player_mut().stance = stance;
+        self.say(format!("You take {} stance.", stance.phrase()));
+        Spent::NoTime
+    }
+
     fn set_vision(&mut self, id: &str) -> Spent {
         let Some(profile) = self.content.vision(id) else {
             self.say(format!("There is no vision profile `{id}`."));
@@ -1426,7 +1455,8 @@ impl World {
             return Spent::Nothing;
         }
         let player = self.state.player;
-        let step = self.step_price(player, self.content.terrain(terrain));
+        let fleeing = self.flees(player, to);
+        let step = self.step_price(player, self.content.terrain(terrain), fleeing);
         let overworld = self.state.current().kind == LevelKind::Overworld;
         self.state.overworld_step = overworld.then_some(dir);
         if let Some(actor) = self.state.actors.get_mut(&player) {
@@ -1437,7 +1467,7 @@ impl World {
             from,
             to,
         });
-        self.make_noise(player, Act::Step(to));
+        self.make_step_noise(player, to, fleeing);
         // Wading through a marsh may give a disease, by how long the step takes.
         let speed = self.content.creature(self.state.player().creature).speed;
         self.wade(
@@ -1777,6 +1807,7 @@ fn instantiate_level(state: &mut WorldState, content: &Content, template: &Level
             damage: Default::default(),
             weapon_skills: def.weapon_skills.clone(),
             faction_override: spawn.faction,
+            stance: CombatStance::Neutral,
         };
         actor.hp = actor.max_hp(content);
         state.actors.insert(actor_id, actor);

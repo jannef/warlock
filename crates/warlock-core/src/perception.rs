@@ -58,8 +58,8 @@ use crate::burden::{self, Load};
 use crate::character::Character;
 use crate::combat::Health;
 use crate::content::{
-    Content, CreatureId, DiseaseId, FactionId, Flow, LevelKind, LightId, ObjectId, RoomEffectDef,
-    SlotId, Stance, StatusId, TerrainId, VisionProfile,
+    CombatStance, Content, CreatureId, DiseaseId, FactionId, Flow, LevelKind, LightId, ObjectId,
+    RoomEffectDef, SlotId, Stance, StatusId, TerrainId, VisionProfile,
 };
 use crate::daylight;
 use crate::equipment::Equipment;
@@ -906,6 +906,11 @@ impl<'a> PerceptionView<'a> {
     pub fn own_load(&self) -> Load {
         let race = self.character.and_then(|c| c.spec.race(self.content).ok());
         burden::load(self.player, race, self.content)
+    }
+
+    /// The player's combat stance (spec §8 "Stances"): only its name is ever shown.
+    pub fn own_stance(&self) -> CombatStance {
+        self.player.stance
     }
 
     /// The player's Defence ("Dv"): the total an attack roll must reach (their burden capping

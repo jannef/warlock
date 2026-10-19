@@ -128,6 +128,7 @@ fn actor(content: &Content, creature: &str) -> Actor {
         damage: Default::default(),
         weapon_skills: Default::default(),
         faction_override: None,
+        stance: Default::default(),
     }
 }
 

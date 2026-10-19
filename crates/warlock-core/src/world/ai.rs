@@ -378,7 +378,8 @@ impl World {
         if !def.walkable || overloaded || self.state.actor_at(&level.id, to).is_some() {
             return Stepped::Blocked;
         }
-        let price = self.step_price(id, def);
+        let fleeing = self.flees(id, to);
+        let price = self.step_price(id, def, fleeing);
         if let Some(actor) = self.state.actors.get_mut(&id) {
             actor.pos = to;
         }
@@ -387,7 +388,7 @@ impl World {
             from,
             to,
         });
-        self.make_noise(id, Act::Step(to));
+        self.make_step_noise(id, to, fleeing);
         Stepped::Moved(price)
     }
 
