@@ -821,8 +821,11 @@ rate or animation.
   defaults and a logged warning. Changes apply live (a font size change rebuilds the glyph atlas)
   and are written immediately.
 - **Rebinding**: in Controls, select a command and press a key; it becomes the command's primary
-  key (alternates such as the numpad stay). A key another command uses is refused and the owner
-  is named, so the table never holds a conflict. Esc (cancel) is fixed. Delete resets a command,
+  key (alternates such as the numpad stay). A key another command of the same context uses is taken
+  from it and bound to the new command, and the screen says so ("K moved to Wait; Kick has no
+  key." or "... (was Kick)."), so the table never holds a conflict; a command left without a key
+  shows as none and is saved as an empty list. Fixed commands never lose their key: Esc (cancel,
+  which opens the pause menu) is refused with a reason. Delete resets a command,
   "Reset all keys" resets everything.
 - First-phase commands: move, wait, open/close door, kick (`K`, then a direction; §8 "Doors"),
   ascend/descend, light/douse lantern (`L`),

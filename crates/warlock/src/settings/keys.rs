@@ -230,12 +230,27 @@ impl KeyBinding {
     }
 }
 
-/// Why a key could not be bound.
+/// Why a key could not be bound: it belongs to a fixed command (one the player cannot rebind,
+/// such as Cancel, which opens the pause menu and backs out of screens), which would be locked out.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Conflict {
     pub key: KeyBinding,
-    /// The command that already uses the key.
+    /// The command that uses the key.
     pub owner: KeyCommand,
+}
+
+/// What binding a key did besides making it the command's primary key.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Bound {
+    /// The key was free (or already the command's).
+    Free,
+    /// Another command of the same context had the key and lost it.
+    Moved {
+        key: KeyBinding,
+        from: KeyCommand,
+        /// `from` has no key left.
+        keyless: bool,
+    },
 }
 
 impl Bindings {
@@ -273,12 +288,27 @@ impl Bindings {
         found
     }
 
-    /// Makes `key` the primary (first) key of `command`. Refuses a key another command uses.
-    pub fn bind_primary(&mut self, command: KeyCommand, key: KeyBinding) -> Result<(), Conflict> {
+    /// Makes `key` the primary (first) key of `command`. A key another command of the same
+    /// context uses is taken from it ([`Bound::Moved`]), unless that command is fixed (not in
+    /// [`REBINDABLE`]): those are never touched, so the player cannot lock themselves out.
+    pub fn bind_primary(
+        &mut self,
+        command: KeyCommand,
+        key: KeyBinding,
+    ) -> Result<Bound, Conflict> {
+        let mut bound = Bound::Free;
         if let Some(owner) = self.owner_in(command.context(), &key)
             && owner != command
         {
-            return Err(Conflict { key, owner });
+            if !REBINDABLE.contains(&owner) {
+                return Err(Conflict { key, owner });
+            }
+            self.0.retain(|(k, c)| !(*c == owner && *k == key));
+            bound = Bound::Moved {
+                key: key.clone(),
+                from: owner,
+                keyless: self.keys_of(owner).is_empty(),
+            };
         }
         let first = self.0.iter().position(|(_, c)| *c == command);
         let same = self.0.iter().position(|(k, c)| *c == command && *k == key);
@@ -290,7 +320,7 @@ impl Bindings {
             (Some(first), None) => self.0[first].0 = key,
             (None, _) => self.0.push((key, command)),
         }
-        Ok(())
+        Ok(bound)
     }
 
     /// Replaces all keys of `command` with `keys`, at the place of its first entry.
@@ -331,8 +361,8 @@ impl Bindings {
         }
     }
 
-    /// The settings-file form: command id to key spellings (a command with no key, such as
-    /// Quit or an ability by default, is left out, and reads back as unbound).
+    /// The settings-file form: command id to key spellings. A command with no key is an empty
+    /// list, unless it has none by default ([`UNBOUND`]), when it is left out.
     pub fn to_map(&self) -> BTreeMap<String, Vec<String>> {
         REBINDABLE
             .iter()
@@ -340,13 +370,14 @@ impl Bindings {
             .filter_map(|c| {
                 let id = c.id()?;
                 let keys: Vec<String> = self.keys_of(c).iter().map(|k| k.to_text()).collect();
-                (!keys.is_empty()).then(|| (id.to_string(), keys))
+                (!keys.is_empty() || !UNBOUND.contains(&c)).then(|| (id.to_string(), keys))
             })
             .collect()
     }
 
     /// Starts from the defaults and applies the `[bindings]` table of a settings file. Anything
-    /// invalid is skipped with a warning, and a command never ends up without a key.
+    /// invalid is skipped with a warning. An empty list leaves a command unbound; a command whose
+    /// listed keys are all unusable gets its defaults back.
     pub fn from_table(table: &toml::Table, warnings: &mut Vec<String>) -> Self {
         let mut bindings = Bindings::default();
         for id in table.keys() {
@@ -354,6 +385,7 @@ impl Bindings {
                 warnings.push(format!("bindings: unknown command `{id}` ignored"));
             }
         }
+        let mut emptied: Vec<KeyCommand> = Vec::new();
         for &command in REBINDABLE {
             let Some(id) = command.id() else { continue };
             let Some(value) = table.get(id) else { continue };
@@ -370,8 +402,11 @@ impl Bindings {
                 }
             }
             if keys.is_empty() {
-                // A command without a default key (an ability, fire) may be left without one.
-                if !UNBOUND.contains(&command) || !items.is_empty() {
+                if items.is_empty() {
+                    // Left without a key on purpose (its key was moved to another command).
+                    bindings.set_keys(command, Vec::new());
+                    emptied.push(command);
+                } else {
                     warnings.push(format!("bindings.{id}: no usable keys; using the defaults"));
                 }
             } else {
@@ -394,7 +429,7 @@ impl Bindings {
             fresh
         });
         for &command in REBINDABLE {
-            if bindings.keys_of(command).is_empty() {
+            if bindings.keys_of(command).is_empty() && !emptied.contains(&command) {
                 bindings.reset_command(command);
             }
         }
@@ -453,15 +488,90 @@ mod tests {
     }
 
     #[test]
-    fn binding_a_used_key_is_a_conflict_and_changes_nothing() {
+    fn binding_a_used_key_moves_it_and_can_leave_the_old_command_keyless() {
+        let mut b = Bindings::default();
+        let kick = b.keys_of(KeyCommand::Kick)[0].clone();
+        assert_eq!(b.keys_of(KeyCommand::Kick).len(), 1);
+        let got = b.bind_primary(KeyCommand::Wait, kick.clone()).unwrap();
+        assert_eq!(
+            got,
+            Bound::Moved {
+                key: kick.clone(),
+                from: KeyCommand::Kick,
+                keyless: true
+            }
+        );
+        assert!(b.keys_of(KeyCommand::Kick).is_empty());
+        assert_eq!(b.keys_of(KeyCommand::Wait)[0], &kick);
+        assert!(b.conflicts().is_empty());
+    }
+
+    #[test]
+    fn moving_a_key_keeps_the_old_commands_other_keys() {
+        let mut b = Bindings::default();
+        let got = b.bind_primary(KeyCommand::Wait, ch("k")).unwrap();
+        assert_eq!(
+            got,
+            Bound::Moved {
+                key: ch("k"),
+                from: KeyCommand::Move(Dir::N),
+                keyless: false
+            }
+        );
+        assert_eq!(b.keys_of(KeyCommand::Move(Dir::N)).len(), 2);
+        assert_eq!(b.owner(&ch("k")), Some(KeyCommand::Wait));
+        assert!(b.conflicts().is_empty());
+    }
+
+    #[test]
+    fn moving_a_key_leaves_other_contexts_alone() {
+        let mut b = Bindings::default();
+        // `1` is Page 1 on the info screens; in play it is free.
+        assert_eq!(
+            b.owner_in(Context::Pages, &ch("1")),
+            Some(KeyCommand::Page(1))
+        );
+        assert_eq!(
+            b.bind_primary(KeyCommand::Wait, ch("1")).unwrap(),
+            Bound::Free
+        );
+        assert_eq!(
+            b.owner_in(Context::Pages, &ch("1")),
+            Some(KeyCommand::Page(1))
+        );
+        assert_eq!(b.owner(&ch("1")), Some(KeyCommand::Wait));
+    }
+
+    #[test]
+    fn a_fixed_command_never_loses_its_key() {
         let mut b = Bindings::default();
         let before = b.0.clone();
-        let err = b.bind_primary(KeyCommand::Wait, ch("k")).unwrap_err();
-        assert_eq!(err.owner, KeyCommand::Move(Dir::N));
-        assert_eq!(b.0, before);
-        // Esc belongs to Cancel as well.
         let esc = KeyBinding::Code(KeyCode::Escape);
-        assert!(b.bind_primary(KeyCommand::Wait, esc).is_err());
+        let err = b.bind_primary(KeyCommand::Wait, esc.clone()).unwrap_err();
+        assert_eq!(
+            err,
+            Conflict {
+                key: esc,
+                owner: KeyCommand::Cancel
+            }
+        );
+        assert_eq!(b.0, before);
+    }
+
+    #[test]
+    fn a_keyless_command_survives_a_save_and_load() {
+        let mut b = Bindings::default();
+        b.bind_primary(KeyCommand::Wait, ch("K")).unwrap();
+        assert!(b.keys_of(KeyCommand::Kick).is_empty());
+        let text = toml::to_string(&b.to_map()).unwrap();
+        let table: toml::Table = toml::from_str(&text).unwrap();
+        let mut warnings = Vec::new();
+        let back = Bindings::from_table(&table, &mut warnings);
+        assert!(warnings.is_empty(), "{warnings:?}");
+        assert!(back.keys_of(KeyCommand::Kick).is_empty());
+        assert_eq!(back.to_map(), b.to_map());
+        // Commands unbound by default stay out of the file.
+        assert!(!b.to_map().contains_key("quit"));
     }
 
     #[test]
