@@ -18,7 +18,8 @@ actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 mo
 
 # Weapon skills (#134): the arena's halfling thief readies the bow beside them and shoots into
 # the brawl until the arrows run out; the weapon skills screen shows the class's and the race's
-# ranks (daggers 2, thrown 1, slings 1) and half a bar of marks in bows.
+# ranks (daggers 2, thrown 1, slings 1), most of a bar of marks in bows (80%), and the fighting
+# styles starting below them (the list scrolls).
 [[golden]]
 name = "weapon-skills-screen"
 scenario = "arena"

@@ -8,6 +8,11 @@
 //! entry headlessly (`--replay … --capture …`) and the result is compared with
 //! `tests/golden/<name>.png`.
 //!
+//! Every entry is tried: one whose walk is blocked (an action that takes no turn), that the game
+//! fails to capture, that has no reference, or that differs is reported and the run goes on to
+//! the next; the run fails at the end, listing them all. A comparison also fails on a reference
+//! image that no entry names.
+//!
 //! References are authoritative only when produced on Linux CI (Mesa lavapipe); other GPUs and
 //! drivers rasterize slightly differently. On other platforms use `--local` to just capture.
 
@@ -19,7 +24,7 @@ use std::sync::Arc;
 use warlock_core::action::parse_actions;
 use warlock_core::content::Content;
 use warlock_core::replay::Replay;
-use warlock_core::{Action, World};
+use warlock_core::{Action, Event, World};
 
 /// One manifest file: optional defaults and any number of entries.
 #[derive(Deserialize)]
@@ -168,23 +173,36 @@ fn make_replay(
         return Ok(golden_dir.join(replay));
     }
     let scenario = entry.scenario.as_deref().unwrap_or("showcase");
-    let mut world = World::new(content.clone(), scenario, entry.seed).map_err(|e| e.to_string())?;
+    let mut world = World::new(content.clone(), scenario, entry.seed)
+        .map_err(|e| format!("{}: {e}", entry.name))?;
     let mut replay = Replay::new(&world);
     let text = entry.actions.as_deref().unwrap_or("");
-    for action in parse_actions(text)? {
+    let actions = parse_actions(text).map_err(|e| format!("{}: {e}", entry.name))?;
+    let count = actions.len();
+    for (step, action) in actions.into_iter().enumerate() {
         let outcome = world.apply(&action);
-        // Switching vision, setting the weather, and the dev status effect and infection are free
-        // by design, and so is a spell effect the player sees; anything else that takes no time
-        // and no turn was refused. (A turn can pass in no time: a creature quick off the mark may
-        // kill the player at the very second they acted.)
+        // Switching vision, setting the weather, and the dev status effect, infection, frost,
+        // and thaw are free by design, and so are a spell effect the player sees and a question
+        // answered (asking takes no time); anything else that takes no time and no turn was
+        // refused. (A turn can pass in no time: a creature quick off the mark may kill the player
+        // at the very second they acted.)
         let free = matches!(
             action,
-            Action::SetVision(_) | Action::SetWeather(_) | Action::Afflict(_) | Action::Infect(_)
-        ) || matches!(action, Action::Effect { .. }) && !outcome.events.is_empty();
+            Action::SetVision(_)
+                | Action::SetWeather(_)
+                | Action::Afflict(_)
+                | Action::Infect(_)
+                | Action::Freeze { .. }
+                | Action::Thaw { .. }
+        ) || matches!(action, Action::Effect { .. }) && !outcome.events.is_empty()
+            || matches!(action, Action::Ask { .. })
+                && outcome.events.iter().any(|e| matches!(e, Event::Talked(_)));
         if outcome.elapsed.is_zero() && !outcome.took_turn && !free {
             return Err(format!(
-                "{}: action `{action}` took no turn (blocked?); fix the action sequence",
-                entry.name
+                "{}: action `{action}` (step {} of {count}) took no turn (blocked?); fix the \
+                 action sequence",
+                entry.name,
+                step + 1
             ));
         }
         replay.push(&action, &world);
@@ -245,86 +263,126 @@ pub fn run(mode: Mode) -> Result<(), String> {
         );
     }
 
+    // Every entry is tried (see the module docs), so one broken entry never hides the others.
     let mut failures = Vec::new();
     for entry in &manifest.entries {
-        let replay = make_replay(entry, &content, &golden_dir, &out_dir)?;
-        let window = entry.window.as_deref().unwrap_or(&d.window);
-        let scale = entry.scale.unwrap_or(d.scale).to_string();
-        let freeze = entry.freeze_time.unwrap_or(d.freeze_time).to_string();
-        let frames = entry
-            .capture_after_frames
-            .unwrap_or(d.capture_after_frames)
-            .to_string();
-        let tolerance = entry.tolerance.unwrap_or(d.tolerance);
-        let max_ratio = entry.max_diff_ratio.unwrap_or(d.max_diff_ratio);
-
         let reference = golden_dir.join(format!("{}.png", entry.name));
         let actual_path = match mode {
             Mode::Update => reference.clone(),
             Mode::Local => out_dir.join(format!("{}.local.png", entry.name)),
             Mode::Compare => out_dir.join(format!("{}.actual.png", entry.name)),
         };
-        let _ = std::fs::remove_file(&actual_path);
-        let mut screen_args: Vec<&str> = match &entry.screen {
-            Some(screen) => vec!["--screen", screen.as_str()],
-            None => Vec::new(),
-        };
-        screen_args.extend(entry.args.iter().map(String::as_str));
-        run_game(
-            &[
-                &screen_args[..],
-                &[
-                    "--window",
-                    window,
-                    "--scale",
-                    &scale,
-                    "--freeze-time",
-                    &freeze,
-                    "--capture-after-frames",
-                    &frames,
-                    "--replay",
-                    replay.to_str().ok_or("non-UTF-8 path")?,
-                    "--capture",
-                    actual_path.to_str().ok_or("non-UTF-8 path")?,
-                ],
-            ]
-            .concat(),
-        )?;
-        if !actual_path.exists() {
-            return Err(format!("{}: game wrote no capture", entry.name));
+        let mut result = capture(entry, d, &content, &golden_dir, &out_dir, &actual_path);
+        if result.is_ok() && mode == Mode::Compare {
+            let tolerance = entry.tolerance.unwrap_or(d.tolerance);
+            let max_ratio = entry.max_diff_ratio.unwrap_or(d.max_diff_ratio);
+            result = check(
+                entry,
+                &reference,
+                &actual_path,
+                &out_dir,
+                tolerance,
+                max_ratio,
+            );
         }
-        match mode {
-            Mode::Update => println!("updated  {}", entry.name),
-            Mode::Local => println!("captured {} -> {}", entry.name, actual_path.display()),
-            Mode::Compare => {
-                if let Err(msg) = check(
-                    entry,
-                    &reference,
-                    &actual_path,
-                    &out_dir,
-                    tolerance,
-                    max_ratio,
-                ) {
-                    println!("FAIL     {msg}");
-                    failures.push(msg);
-                } else {
-                    println!("ok       {}", entry.name);
-                    let _ = std::fs::remove_file(&actual_path);
-                }
+        match (result, mode) {
+            (Ok(()), Mode::Update) => println!("updated  {}", entry.name),
+            (Ok(()), Mode::Local) => {
+                println!("captured {} -> {}", entry.name, actual_path.display());
+            }
+            (Ok(()), Mode::Compare) => {
+                println!("ok       {}", entry.name);
+                let _ = std::fs::remove_file(&actual_path);
+            }
+            (Err(msg), _) => {
+                println!("FAIL     {msg}");
+                failures.push(msg);
             }
         }
     }
+    if mode == Mode::Compare {
+        for name in orphans(&golden_dir, &manifest.entries)? {
+            let msg = format!("{name}: tests/golden/{name}.png has no manifest entry; remove it");
+            println!("FAIL     {msg}");
+            failures.push(msg);
+        }
+    }
     if failures.is_empty() {
+        return Ok(());
+    }
+    let what = match mode {
+        Mode::Compare => format!(
+            "differ or could not be captured (images in {}). If a change is intended, \
+             regenerate references on Linux CI; see CLAUDE.md \"Golden screenshots\"",
+            out_dir.display()
+        ),
+        Mode::Update | Mode::Local => "could not be captured".to_string(),
+    };
+    Err(format!(
+        "{} of {} golden screenshots {what}.\n  {}",
+        failures.len(),
+        manifest.entries.len(),
+        failures.join("\n  ")
+    ))
+}
+
+/// The reference images in `golden_dir` that no entry names (left behind by a renamed or removed
+/// entry), sorted.
+fn orphans(golden_dir: &Path, entries: &[Entry]) -> Result<Vec<String>, String> {
+    let dir = std::fs::read_dir(golden_dir)
+        .map_err(|e| format!("cannot read {}: {e}", golden_dir.display()))?;
+    let mut orphans: Vec<String> = dir
+        .filter_map(|entry| entry.ok().map(|entry| entry.path()))
+        .filter(|path| path.extension().is_some_and(|ext| ext == "png"))
+        .filter_map(|path| Some(path.file_stem()?.to_str()?.to_string()))
+        .filter(|name| !entries.iter().any(|entry| &entry.name == name))
+        .collect();
+    orphans.sort();
+    Ok(orphans)
+}
+
+/// Builds an entry's replay and renders it to `actual_path`.
+fn capture(
+    entry: &Entry,
+    d: &Defaults,
+    content: &Arc<Content>,
+    golden_dir: &Path,
+    out_dir: &Path,
+    actual_path: &Path,
+) -> Result<(), String> {
+    let replay = make_replay(entry, content, golden_dir, out_dir)?;
+    let window = entry.window.as_deref().unwrap_or(&d.window);
+    let scale = entry.scale.unwrap_or(d.scale).to_string();
+    let freeze = entry.freeze_time.unwrap_or(d.freeze_time).to_string();
+    let frames = entry
+        .capture_after_frames
+        .unwrap_or(d.capture_after_frames)
+        .to_string();
+    let _ = std::fs::remove_file(actual_path);
+    let mut args: Vec<&str> = match &entry.screen {
+        Some(screen) => vec!["--screen", screen.as_str()],
+        None => Vec::new(),
+    };
+    args.extend(entry.args.iter().map(String::as_str));
+    args.extend([
+        "--window",
+        window,
+        "--scale",
+        &scale,
+        "--freeze-time",
+        &freeze,
+        "--capture-after-frames",
+        &frames,
+        "--replay",
+        replay.to_str().ok_or("non-UTF-8 path")?,
+        "--capture",
+        actual_path.to_str().ok_or("non-UTF-8 path")?,
+    ]);
+    run_game(&args).map_err(|e| format!("{}: {e}", entry.name))?;
+    if actual_path.exists() {
         Ok(())
     } else {
-        Err(format!(
-            "{} of {} golden screenshots differ (images in {}). If the change is intended, \
-             regenerate references on Linux CI; see CLAUDE.md \"Golden screenshots\".\n  {}",
-            failures.len(),
-            manifest.entries.len(),
-            out_dir.display(),
-            failures.join("\n  ")
-        ))
+        Err(format!("{}: game wrote no capture", entry.name))
     }
 }
 
@@ -391,12 +449,23 @@ mod tests {
     #[test]
     fn manifest_directory_loads() {
         let manifest = load_manifest(&workspace_root().join("tests/golden/manifest")).unwrap();
-        assert_eq!(manifest.entries.len(), 66);
+        assert!(!manifest.entries.is_empty());
         let mut names: Vec<&str> = manifest.entries.iter().map(|e| e.name.as_str()).collect();
         names.sort_unstable();
         names.dedup();
         assert_eq!(names.len(), manifest.entries.len());
         assert!(manifest.defaults.is_some(), "defaults.toml sets [defaults]");
+    }
+
+    /// Every checked-in reference image belongs to an entry (none left behind by a rename).
+    #[test]
+    fn references_have_entries() {
+        let golden = workspace_root().join("tests/golden");
+        let manifest = load_manifest(&golden.join("manifest")).unwrap();
+        assert_eq!(
+            orphans(&golden, &manifest.entries).unwrap(),
+            Vec::<String>::new()
+        );
     }
 
     #[test]

@@ -1,4 +1,10 @@
-# Menu screens over a run.
+# Menu screens over a run, and the main menu.
+
+# The main menu (no run; the replay goes unused), its footer naming the menu keys as bound (#159).
+[[golden]]
+name = "main-menu"
+scenario = "showcase"
+screen = "main"
 
 # The pause menu over a running game: guards against overlays being wiped (#56).
 [[golden]]
@@ -7,7 +13,7 @@ scenario = "showcase"
 actions = "wait"
 screen = "pause"
 
-# The `?` help over a run: the controls list, read-only (#57). Tall enough for the whole list.
+# The `?` help over a run: the controls list by context, read-only (#57, #159); it scrolls.
 [[golden]]
 name = "help-screen"
 scenario = "showcase"
@@ -21,3 +27,12 @@ name = "settings-screen"
 scenario = "showcase"
 actions = "wait"
 screen = "settings"
+
+# Controls over a run, opened over the pause menu (#57, #159): every command by context with its
+# keys, to rebind, and the keymap's reset, export, and import.
+[[golden]]
+name = "controls-screen"
+scenario = "showcase"
+actions = "wait"
+screen = "controls"
+window = "1280x912"

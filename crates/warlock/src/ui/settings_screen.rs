@@ -115,6 +115,9 @@ const ROWS: &[Row] = &[
 /// Index of the first action row (Files); a gap is drawn before it.
 const FIRST_ACTION: usize = 15;
 
+/// The sample line under the help: how text and the marks read at this size and palette.
+const SAMPLE: &str = "Sample: legible text, then  [ marked ]  and  * flagged *";
+
 /// Selection state of the settings screen.
 #[derive(Debug, Default)]
 pub struct SettingsScreen {
@@ -228,16 +231,26 @@ impl SettingsScreen {
             Row::Reset => "Restores these settings (not the key bindings).",
             Row::Back => "Settings are saved as you change them.",
         };
-        // A blank line under the last row (rows start 2 down, plus the gap before the actions).
-        let help_y = panel.y + ROWS.len() as i32 + 4;
-        console.print(panel.inner_x(), help_y, help, TEXT_DIM);
-        console.print(
-            panel.inner_x(),
-            help_y + 1,
-            "Sample: legible text, then  [ marked ]  and  * flagged *",
-            TEXT,
-        );
-        console.print(panel.inner_x(), help_y + 2, "Sample accent text", ACCENT);
+        // Under the last row (rows start 2 down, plus the gap before the actions): a blank line,
+        // the help, and the samples, as many as fit above the footer. A panel cut short by a
+        // small window loses the blank line first, then the samples, never the frame or footer.
+        let below = [
+            (help, TEXT_DIM),
+            (SAMPLE, TEXT),
+            ("Sample accent text", ACCENT),
+        ];
+        let footer_y = panel.y + panel.h - 2;
+        let mut y = panel.y + ROWS.len() as i32 + 4;
+        if y + below.len() as i32 > footer_y {
+            y -= 1;
+        }
+        for (text, color) in below {
+            if y >= footer_y {
+                break;
+            }
+            console.print(panel.inner_x(), y, text, color);
+            y += 1;
+        }
         let keys = Hints::of(bindings);
         let footer = format!(
             "{} select   {} change   Esc back",
@@ -252,6 +265,40 @@ impl SettingsScreen {
 mod tests {
     use super::*;
     use crate::settings::{Palette, TemperatureUnit};
+
+    /// The console's rows as text.
+    fn text(console: &Console) -> Vec<String> {
+        (0..console.rows() as i32)
+            .map(|y| {
+                (0..console.cols() as i32)
+                    .map(|x| console.get(x, y).map_or(' ', |c| c.ch))
+                    .collect()
+            })
+            .collect()
+    }
+
+    /// In a window too short for the whole panel (24 rows: 960x540 at the default font size) the
+    /// help still shows, above the footer, and nothing runs into the footer or the frame; with
+    /// room, the samples show too.
+    #[test]
+    fn the_help_fits_above_the_footer() {
+        let (settings, bindings) = (Settings::default(), Bindings::default());
+        let mut console = Console::default();
+        for (rows, samples) in [(24, false), (40, true)] {
+            console.resize(80, rows);
+            SettingsScreen::default().draw(&mut console, &settings, &bindings);
+            let lines = text(&console);
+            let shown = lines.join("\n");
+            let at = |s: &str| lines.iter().position(|l| l.contains(s));
+            let help = at("Size of the glyphs, in logical pixels.").expect(&shown);
+            let footer = at("Esc back").expect(&shown);
+            assert!(help < footer, "{shown}");
+            assert!(lines[footer].contains("change   Esc back  "), "{shown}");
+            let bottom = (lines.iter()).rposition(|l| l.contains('└')).expect(&shown);
+            assert!(!lines[bottom].contains("Sample"), "{shown}");
+            assert_eq!(at("Sample accent text").is_some(), samples, "{shown}");
+        }
+    }
 
     /// Whether the press closes the screen.
     fn press(screen: &mut SettingsScreen, settings: &mut Settings, nav: Nav) -> bool {

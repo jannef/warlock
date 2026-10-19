@@ -350,25 +350,24 @@ A successful compile does not verify anything visual. Before opening a PR:
 
 ## Golden screenshots
 
-> **Temporarily advisory (#166).** While the current wave of visual changes lands, CI's golden
-> comparison doesn't fail the build, and feature PRs don't regenerate or commit reference images
-> (adding manifest entries is fine: an entry in the feature's file under
-> `tests/golden/manifest/`, or a new file). #166 regenerates and reviews everything, then makes it
-> blocking again; until then, ignore the procedure below.
-
 `tests/golden/manifest/` is the manifest: `defaults.toml` holds `[defaults]`, and the other
 `*.toml` files (one per showcase room or feature, read in file-name order; entry names are
 unique across files) list one entry per showcase room plus the vast level (its start and
 its river): a scenario and text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file,
-and optional `window`, `scale`, `freeze_time`, `screen` (`--screen` over the run: `pause`,
-`help`, `settings`, `controls`, `inventory`, `equipment`, `equip-item`, `describe`, `character`,
-`pick-up`, `drop`, `eat`; or over the main menu, the replay then unused: `race`, `summary`), `args`
-(more game
-flags, e.g. `["--fire"]`), `tolerance` (per-channel, default 2) and `max_diff_ratio`
-(default 0.05% of pixels).
+and optional `window`, `scale`, `freeze_time`, `screen` (a `--screen` value: over the run, e.g.
+`pause`, `help`, `settings`, `controls`, `inventory`, `equipment`, `equip-item`, `describe`,
+`character`, `skills`, `weapon-skills`, `quests`, `pick-up`, `drop`, `eat`, `dialogue`; or over
+the main menu, the replay then unused: `main`, `race`, `summary`), `args` (more game flags, e.g.
+`["--fire"]`, `["--keys", "h"]`), `tolerance` (per-channel, default 2) and `max_diff_ratio`
+(default 0.05% of pixels). Walks that fight or wait for creatures belong on hand-made levels
+(the showcase, the arena, the trap hall): a walk through a generated level breaks whenever the
+generator changes.
 `cargo xtask golden` builds a replay per entry with `warlock-core`, runs the game with
 `--replay ... --capture ...`, and compares with `tests/golden/<name>.png`. On a mismatch it writes
-`target/xtask/golden/<name>.{actual,diff}.png` (diff: red pixels are over tolerance) and fails.
+`target/xtask/golden/<name>.{actual,diff}.png` (diff: red pixels are over tolerance). Every entry
+is tried: a blocked walk (an action that takes no turn and is not free), a failed capture, a
+missing reference, or a mismatch is reported and the run goes on; it fails at the end, listing
+them all (and any reference that no entry names).
 
 References are produced on **Linux CI (Mesa lavapipe) only**; other GPUs and drivers rasterize
 differently, so on macOS `cargo xtask golden` is advisory and `--local` is the way to look at the
@@ -379,9 +378,9 @@ Deliberate update procedure (after an intended visual change, e.g. lighting or e
    (`gh workflow run ci.yml --ref <branch> -f update_golden=true`, then `gh run watch`).
 2. `gh run download <run-id> -n golden-references -D tests/golden`, review the images (look at them,
    and check the diff against the old ones makes sense), and commit them with the change.
-3. Adding a room or scenario: add an entry to the feature's manifest file (or a new file) and
-   generate its reference the same way. Never update references just to make a failing check
-   pass.
+3. Adding a room, scenario, or screen: add an entry to the feature's manifest file (or a new
+   file) and generate its reference the same way, in the same PR (CI fails on an entry without a
+   reference). Never update references just to make a failing check pass.
 
 ## Releases, web build, logs
 

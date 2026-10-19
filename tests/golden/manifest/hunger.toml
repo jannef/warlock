@@ -1,0 +1,8 @@
+# Hunger (spec §8 "Hunger"): in the hub's pantry, its locked door kicked in, with dried meat picked
+# up and standing on the food rations: the eat screen lists the food lying here, then the food in
+# the pack.
+[[golden]]
+name = "eat-screen"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 kick:E*4 move:E*2 move:N pickup move:E*2"
+screen = "eat"

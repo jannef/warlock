@@ -13,3 +13,13 @@ scenario = "courtyard"
 actions = "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 move:S*5 move:E*5 move:E move:NE pickup move:E move:E pickup"
 freeze_time = 1.0
 screen = "inventory"
+
+# The dialog (spec §6, §7 "Shops"): with the dagger unpaid (47 gold; the purse holds 60), a step
+# out of the shop's door (`h`, as typed) asks first: what the player owes the keeper, then "Pay 47
+# gold and leave" (y) or "Don't pay" (n, Esc), the safe option selected.
+[[golden]]
+name = "shop-leaving"
+scenario = "courtyard"
+actions = "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 move:S*5 move:E*5 move:E move:NE pickup move:W move:SW"
+freeze_time = 1.0
+args = ["--keys", "h"]
