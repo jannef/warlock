@@ -60,7 +60,7 @@
 //! does not see, near the source); never with who made them.
 
 use crate::ability::Ability;
-use crate::action::Letters;
+use crate::action::Positions;
 use crate::blood::Stain;
 use crate::burden::{self, Load};
 use crate::character::Character;
@@ -1268,22 +1268,18 @@ impl<'a> PerceptionView<'a> {
     /// What the shop the player stands in offers for their own things among the inventory stacks
     /// `letters` names (all of them for none), if it buys any: what dropping them there would
     /// sell ([`crate::Action::Sell`]).
-    pub fn sale(&self, letters: Letters) -> Option<Sale> {
+    pub fn sale(&self, letters: &Positions) -> Option<Sale> {
         let view = self.shop_here()?;
         let inventory = &self.player.inventory;
         let parts = unpaid_parts(inventory, &view.shop.unpaid);
-        let chosen = if letters.is_empty() {
-            Letters::of(0..inventory.len())
-        } else {
-            letters
-        };
+        let all = letters.is_empty();
         let mut sale = Sale {
             offer: 0,
             stacks: Vec::new(),
         };
         for (i, stack) in inventory.iter().enumerate() {
             let own = part_of(stack, stack.count - parts[i]);
-            if !chosen.contains(i) || own.count == 0 {
+            if !(all || letters.contains(i)) || own.count == 0 {
                 continue;
             }
             if let Some(offer) = view.offer(&own) {

@@ -20,7 +20,7 @@ use super::level::{CreatureSpawn, equip_ids};
 use super::object::{ObjectClass, ObjectId, parse_stacks};
 use super::{Content, ContentError, Stance};
 use crate::geom::Pos;
-use crate::object::{INVENTORY_SLOTS, Stack};
+use crate::object::Stack;
 use serde::{Deserialize, Serialize};
 
 /// Index of a kind of shop in [`Shops::defs`]; assigned in file order (in the save fingerprint).
@@ -29,6 +29,8 @@ pub struct ShopId(pub u8);
 
 /// The most kinds of shop there can be.
 pub const MAX_SHOPS: usize = 32;
+/// The most stacks of goods a generated shop lays out.
+pub const MAX_ITEMS: u8 = 52;
 /// The most the player's favour moves a price, in percent either way.
 pub const MAX_FAVOUR: i32 = 50;
 /// The placeholder for the keeper's name in a shop's `title`.
@@ -307,10 +309,9 @@ impl Shops {
                 return Err(bad("`stock` must name at least one class".into()));
             }
             let [least, most] = spec.items;
-            if least == 0 || least > most || usize::from(most) > INVENTORY_SLOTS * 2 {
+            if least == 0 || least > most || most > MAX_ITEMS {
                 return Err(bad(format!(
-                    "`items` must be [least, most] from 1 to {}",
-                    INVENTORY_SLOTS * 2
+                    "`items` must be [least, most] from 1 to {MAX_ITEMS}"
                 )));
             }
             if !(100..=1000).contains(&spec.markup) || spec.pays > 100 {
@@ -368,9 +369,6 @@ fn keeper(spec: &KeeperSpec, content: &Content) -> Result<Keeper, String> {
         .filter(|_| spec.creature != "player")
         .ok_or_else(|| format!("unknown creature `{}`", spec.creature))?;
     let carry = parse_stacks(&spec.carry, content).map_err(|m| format!("carry: {m}"))?;
-    if carry.len() > INVENTORY_SLOTS {
-        return Err(format!("carries at most {INVENTORY_SLOTS} stacks"));
-    }
     let equipment = equip_ids(&spec.wield, &spec.wear, &carry, content)?;
     Ok(Keeper {
         creature,

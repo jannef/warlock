@@ -4,7 +4,7 @@
 //! it, deterministically.
 
 use super::*;
-use crate::action::{AttackKind, Letters, parse_actions};
+use crate::action::{AttackKind, Positions, parse_actions};
 use crate::combat::{self, Category, Profile};
 use crate::content::{ContentFiles, Effect};
 use crate::magic::{Affix, Magic, Rarity};
@@ -554,11 +554,11 @@ fn identifying_is_a_dev_action_that_takes_no_time() {
     carry(&mut w, ring);
     carry(&mut w, dagger);
     let turn = w.turn();
-    let out = w.apply(&Action::Identify(Letters::default()));
+    let out = w.apply(&Action::Identify(Positions::default()));
     assert!(!out.took_turn && out.elapsed.is_zero());
     assert_eq!(w.turn(), turn);
     assert!(w.perception().inventory()[0].is_identified());
-    w.apply(&Action::Identify(Letters::default()));
+    w.apply(&Action::Identify(Positions::default()));
     let last = w.messages().iter().last().map(|m| m.display());
     assert_eq!(last.as_deref(), Some("There is nothing to identify (dev)."));
 }

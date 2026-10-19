@@ -30,7 +30,7 @@
 //! status; it costs hit points as time passes and may kill ("Died of poison").
 
 use super::{Actor, Cause, Ended, Spent, World};
-use crate::action::{DiseaseNews, Event, Letters, Meal, letter};
+use crate::action::{DiseaseNews, Event, Meal, Positions};
 use crate::content::{ActionKind, ObjectId};
 use crate::object::{self, Stack};
 use crate::stats::Stat;
@@ -92,18 +92,17 @@ impl World {
             self.say("You feel no need to eat.");
             return Spent::Nothing;
         }
-        let (stack, i) = match meal {
-            Meal::Pack(i) => (self.state.player().inventory.get(i).cloned(), i),
+        let stack = match meal {
+            Meal::Pack(i) => self.state.player().inventory.get(i).cloned(),
             Meal::Floor(i) => {
                 let here = self.player_pos();
-                (self.state.current().objects_at(here).get(i).cloned(), i)
+                self.state.current().objects_at(here).get(i).cloned()
             }
         };
         let Some(stack) = stack else {
-            let c = letter(i).unwrap_or('?');
             self.say(match meal {
-                Meal::Pack(_) => format!("You carry no {c}."),
-                Meal::Floor(_) => format!("There is no {c} here."),
+                Meal::Pack(_) => "You carry no such thing.",
+                Meal::Floor(_) => "There is no such thing here.",
             });
             return Spent::Nothing;
         };
@@ -200,7 +199,7 @@ impl World {
                     player.inventory[at].count -= 1;
                 } else {
                     player.inventory.remove(at);
-                    player.equipment.after_removal(Letters::of([at]));
+                    player.equipment.after_removal(&Positions::of([at]));
                 }
             }
             Meal::Floor(i) => {
@@ -420,7 +419,7 @@ impl World {
         }
         let inventory = &self.state.player().inventory;
         let rotted =
-            Letters::of((inventory.iter().enumerate()).filter_map(|(i, s)| gone(s).then_some(i)));
+            Positions::of((inventory.iter().enumerate()).filter_map(|(i, s)| gone(s).then_some(i)));
         if rotted.is_empty() {
             return;
         }
@@ -434,7 +433,7 @@ impl World {
             i += 1;
             keep
         });
-        player.equipment.after_removal(rotted);
+        player.equipment.after_removal(&rotted);
         for name in names {
             self.note(format!("Your {name} rots away."));
         }

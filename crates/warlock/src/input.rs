@@ -32,7 +32,7 @@ use warlock_core::perception::PerceptionView;
 use warlock_core::time::Duration;
 use warlock_core::weather::Weather;
 use warlock_core::world::ActorKind;
-use warlock_core::{Action, Dir, Letters, Pos, Rest};
+use warlock_core::{Action, Dir, Pos, Positions, Rest};
 
 /// What a key does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -541,7 +541,7 @@ fn leaving_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
 
 /// The dialog dropping the inventory stacks `letters` opens first, if the shop the player stands
 /// in would buy some of them (spec §7 "Shops"): sell them, or keep them (nothing is dropped).
-fn sale_dialog(view: &PerceptionView<'_>, letters: Letters) -> Option<Dialog> {
+fn sale_dialog(view: &PerceptionView<'_>, letters: &Positions) -> Option<Dialog> {
     let sale = view.sale(letters)?;
     let shop = view.shop_here()?;
     let what = warlock_core::object::phrase(&sale.stacks, view.content());
@@ -549,7 +549,7 @@ fn sale_dialog(view: &PerceptionView<'_>, letters: Letters) -> Option<Dialog> {
     let sell = format!("Sell for {} gold", sale.offer);
     Some(
         Dialog::new(shop.sign(), text)
-            .accept(sell, Action::Sell(letters))
+            .accept(sell, Action::Sell(letters.clone()))
             .cancel("Keep it", ScreenAction::Close),
     )
 }
@@ -796,8 +796,8 @@ impl Gameplay<'_> {
                 // nothing here, the core says so.
                 let view = game.world.perception();
                 let letters = match view.objects(view.viewer()).len() {
-                    0 => Some(Letters::default()),
-                    1 => Some(Letters::of([0])),
+                    0 => Some(Positions::default()),
+                    1 => Some(Positions::of([0])),
                     _ => None,
                 };
                 match letters {
@@ -811,7 +811,7 @@ impl Gameplay<'_> {
             (InputMode::Normal, KeyCommand::Drop) => {
                 if game.world.perception().inventory().is_empty() {
                     self.actions
-                        .write(PlayerAction(Action::Drop(Letters::default())));
+                        .write(PlayerAction(Action::Drop(Positions::default())));
                 } else {
                     open = Some(ScreenAction::Open(ScreenName::Drop));
                 }
@@ -874,7 +874,7 @@ impl Gameplay<'_> {
             }
             (InputMode::Normal, KeyCommand::IdentifyAll) => {
                 self.actions
-                    .write(PlayerAction(Action::Identify(Letters::default())));
+                    .write(PlayerAction(Action::Identify(Positions::default())));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::RevealMap) => {
@@ -962,7 +962,7 @@ impl Gameplay<'_> {
     /// would buy asks first whether to sell (spec §7 "Shops"): the dialog is returned instead.
     fn act(&mut self, action: Action) -> Option<Dialog> {
         if let (Action::Drop(letters), Some(game)) = (&action, &self.game)
-            && let Some(dialog) = sale_dialog(&game.world.perception(), *letters)
+            && let Some(dialog) = sale_dialog(&game.world.perception(), letters)
         {
             return Some(dialog);
         }
@@ -1299,9 +1299,9 @@ mod tests {
         );
         assert!(leaving_dialog(&view, Dir::E).is_none(), "a step inside");
         // Selling the scroll asks; putting back the dagger does not.
-        let offer = view.sale(Letters::of([1])).expect("an offer").offer;
+        let offer = view.sale(&Positions::of([1])).expect("an offer").offer;
         assert_eq!(
-            sale_dialog(&view, Letters::of([1])),
+            sale_dialog(&view, &Positions::of([1])),
             Some(
                 Dialog::new(
                     "Grimbold's General Store",
@@ -1309,12 +1309,12 @@ mod tests {
                 )
                 .accept(
                     format!("Sell for {offer} gold"),
-                    Action::Sell(Letters::of([1]))
+                    Action::Sell(Positions::of([1]))
                 )
                 .cancel("Keep it", ScreenAction::Close)
             )
         );
-        assert!(sale_dialog(&view, Letters::of([2])).is_none());
+        assert!(sale_dialog(&view, &Positions::of([2])).is_none());
         // With the short sword too, more than the purse holds: no way to pay, only back.
         walk(
             &mut world,

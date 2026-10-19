@@ -25,7 +25,7 @@
 
 use super::talk::capitalized;
 use super::{ActorId, Spent, TopicView, World};
-use crate::action::{Event, Letters};
+use crate::action::{Event, Positions};
 use crate::content::{Content, DialogueId, Goal, QuestDef, QuestId, QuestKind};
 use crate::object::{self, Stack};
 use crate::perception::PerceptionView;
@@ -482,23 +482,14 @@ impl World {
     }
 
     /// The player accepts quest `q` from creature `id`: it becomes active, the giver hands over
-    /// what is to be delivered (refused, taking no time, without room for it in the pack), and
-    /// if its goal is met already, the player is told.
+    /// what is to be delivered, and if its goal is met already, the player is told.
     fn accept(&mut self, id: ActorId, q: QuestId, topic: &str, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let def = content.quest(q);
         let given = match def.goal {
             Goal::Deliver { object, .. } => {
                 let letter = Stack::one(object);
-                let added =
-                    object::add_to_inventory(self.state.inventory_mut(), letter.clone(), &content);
-                if !added {
-                    self.say(format!(
-                        "You have no room for {}.",
-                        letter.describe(&content)
-                    ));
-                    return Spent::Nothing;
-                }
+                object::add_to_inventory(self.state.inventory_mut(), letter.clone(), &content);
                 Some(letter)
             }
             _ => None,
@@ -568,7 +559,7 @@ impl World {
             .filter(|&i| player.inventory[i].object == object)
             .collect();
         order.sort_by_key(|&i| (player.equipment.holds(i), std::cmp::Reverse(i)));
-        let (mut left, mut emptied) = (count, Letters::default());
+        let (mut left, mut emptied) = (count, Positions::default());
         for i in order {
             let stack = &mut player.inventory[i];
             let take = stack.count.min(left);
@@ -582,31 +573,16 @@ impl World {
             }
         }
         player.inventory.retain(|s| s.count > 0);
-        player.equipment.after_removal(emptied);
+        player.equipment.after_removal(&emptied);
         vec![Stack::new(object, count - left)]
     }
 
-    /// Puts `stacks` into the player's pack; what has no room there lies at their feet.
+    /// Puts `stacks` into the player's pack.
     fn give_player(&mut self, stacks: &[Stack]) {
         let content = self.content.clone();
-        let mut dropped = Vec::new();
         for stack in stacks {
-            if !object::add_to_inventory(self.state.inventory_mut(), stack.clone(), &content) {
-                dropped.push(stack.clone());
-            }
+            object::add_to_inventory(self.state.inventory_mut(), stack.clone(), &content);
         }
-        if dropped.is_empty() {
-            return;
-        }
-        let here = self.player_pos();
-        let level = self.state.current_mut();
-        let mut pile = level.objects_at(here).to_vec();
-        object::add_to_pile(&mut pile, &dropped, &content);
-        level.set_pile(here, pile);
-        self.say(format!(
-            "You have no room for {}; it lies at your feet.",
-            object::phrase(&dropped, &content)
-        ));
     }
 
     /// The player killed a creature of type `creature` on level `level`: tallied if some kill

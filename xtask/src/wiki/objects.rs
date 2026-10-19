@@ -5,7 +5,7 @@ use super::order;
 use super::text::{capital, glyph, yes};
 use std::fmt::Write as _;
 use warlock_core::content::{BASE_TURN, Content, ObjectClass, ObjectDef, ObjectId, price};
-use warlock_core::object::{INVENTORY_SLOTS, format_weight};
+use warlock_core::object::format_weight;
 
 /// The equipment slots in the order the screen lists them, with their letters, what goes in
 /// each, and how long putting a thing on there or taking it off takes.
@@ -182,16 +182,13 @@ pub(super) fn materials(content: &Content) -> String {
     out
 }
 
-/// The pack's size and the player's own weight.
+/// The player's own weight (the pack holds any number of stacks: weight is its only limit).
 pub(super) fn pack(content: &Content) -> String {
     let player = content
         .creature_id("player")
         .map_or(0, |id| content.creature(id).weight);
-    let last = char::from(b'a' + (INVENTORY_SLOTS - 1) as u8);
     format!(
-        "| Fact | Value |\n|---|---|\n\
-         | Stacks your pack holds | {INVENTORY_SLOTS}, lettered `a` to `{last}` |\n\
-         | Your own weight | {} |\n",
+        "| Fact | Value |\n|---|---|\n| Your own weight | {} |\n",
         format_weight(u64::from(player))
     )
 }

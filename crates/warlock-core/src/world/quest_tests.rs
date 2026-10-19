@@ -674,30 +674,25 @@ fn a_delivery_is_blocked_while_the_item_is_lost_and_handed_in_to_the_recipient()
 }
 
 #[test]
-fn a_full_pack_refuses_a_delivery_and_drops_a_reward_at_the_feet() {
-    // 26 stacks of one rock each fill the pack.
+fn a_pack_of_any_size_takes_a_delivery_and_a_reward() {
+    // No count limit on the pack (spec §6): 26 stacks of one rock each, and the letter and the
+    // reward still go into it.
     let mut w = world_on("#########\n#E@C....#\n#r......#\n#########\n");
     run(&mut w, "move:SW pickup move:NE");
-    assert_eq!(w.state.player().inventory.len(), object::INVENTORY_SLOTS);
+    assert_eq!(w.state.player().inventory.len(), 26);
     ask(&mut w, Dir::W, "quest-parcel");
-    let before = quiet_state(&w);
     ask(&mut w, Dir::W, "accept-parcel");
-    assert_eq!(last(&w, 1), ["You have no room for a letter."]);
-    assert!(quiet_state(&w) == before, "still on offer");
-    // The pups' reward: gold, at the player's feet.
+    assert_eq!(carried(&w, "letter"), 1);
+    assert_eq!(w.state.player().inventory.len(), 27);
+    // The pups' reward: gold, into the pack.
     w.state.quests = serde_json::from_str(
         r#"{"records": {"pups": {"stage": "active"}}, "kills": {"yard": {"pup": 2}}}"#,
     )
     .expect("quests");
     ask(&mut w, Dir::W, "quest-pups");
-    let log = said(&w);
-    assert!(
-        log.contains(&"You have no room for 5 gold coins; it lies at your feet.".to_string()),
-        "{log:?}"
-    );
+    assert_eq!(carried(&w, "gold_coin"), 5);
     let here = w.player_pos();
-    let gold = w.content().object_id("gold_coin").expect("gold");
-    assert_eq!(w.state.current().objects_at(here)[0].object, gold);
+    assert!(w.state.current().objects_at(here).is_empty());
 }
 
 #[test]

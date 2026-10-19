@@ -30,7 +30,7 @@
 //! shown but as gold.
 
 use super::{ActorId, Spent, World};
-use crate::action::{Event, Letters, Meal, letter};
+use crate::action::{Event, Meal, Positions};
 use crate::content::{ActionKind, Content, MAX_FAVOUR, ShopId, ShopPlan, Shops, TerrainId};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
@@ -215,7 +215,7 @@ pub fn count_of(stacks: &[Stack], object: crate::content::ObjectId) -> u32 {
 
 /// Takes `amount` of `object` out of `stacks`, from the last stack back. Returns the positions
 /// of the stacks that emptied and are gone (to follow with the equipment).
-fn take(stacks: &mut Vec<Stack>, object: crate::content::ObjectId, amount: u32) -> Letters {
+fn take(stacks: &mut Vec<Stack>, object: crate::content::ObjectId, amount: u32) -> Positions {
     let mut left = amount;
     for stack in stacks.iter_mut().rev() {
         if stack.object == object && left > 0 {
@@ -224,7 +224,7 @@ fn take(stacks: &mut Vec<Stack>, object: crate::content::ObjectId, amount: u32) 
             left -= taken;
         }
     }
-    let gone = Letters::of((0..stacks.len()).filter(|&i| stacks[i].count == 0));
+    let gone = Positions::of((0..stacks.len()).filter(|&i| stacks[i].count == 0));
     stacks.retain(|s| s.count > 0);
     gone
 }
@@ -374,7 +374,7 @@ impl World {
         let currency = self.shop_kinds().currency;
         if let Some(giver) = self.state.actors.get_mut(&from) {
             let gone = take(&mut giver.inventory, currency, amount);
-            giver.equipment.after_removal(gone);
+            giver.equipment.after_removal(&gone);
         }
         let content = self.content.clone();
         if let Some(taker) = self.state.actors.get_mut(&to) {
@@ -388,20 +388,19 @@ impl World {
     /// the player's own things, a drop says what the shop offers for what it buys and keeps
     /// them, a sale takes the offer from the keeper's purse. Returns `None` outside an open
     /// shop.
-    pub(super) fn trade(&mut self, letters: Letters, sell: bool) -> Option<Spent> {
+    pub(super) fn trade(&mut self, letters: &Positions, sell: bool) -> Option<Spent> {
         let i = self.shop_here()?;
         let inventory = self.state.player().inventory.clone();
         if inventory.is_empty() {
             self.say("You are not carrying anything.");
             return Some(Spent::Nothing);
         }
-        let missing = |c| format!("You carry no {c}.");
-        let Some(chosen) = self.chosen(letters, inventory.len(), missing) else {
+        let Some(chosen) = self.chosen(letters, inventory.len(), "You carry no such thing.") else {
             return Some(Spent::Nothing);
         };
         let content = self.content.clone();
         let shop = self.state.current().shops[i].clone();
-        let deal = self.deal(&shop, &inventory, chosen, sell);
+        let deal = self.deal(&shop, &inventory, &chosen, sell);
         let name = shop.name.as_str();
         if !deal.refused.is_empty() {
             let what = object::phrase(&deal.refused, &content);
@@ -416,7 +415,7 @@ impl World {
         }
         // What leaves whole is taken off first, if worn or wielded.
         let gone =
-            Letters::of((0..inventory.len()).filter(|&k| deal.leaving[k] == inventory[k].count));
+            Positions::of((0..inventory.len()).filter(|&k| deal.leaving[k] == inventory[k].count));
         let mut kinds = self.take_off_before_dropping(gone.iter());
         kinds.push(ActionKind::Drop);
         // Priced at the load the player has as they begin.
@@ -426,7 +425,7 @@ impl World {
             .filter(|s| s.count > 0)
             .collect();
         *self.state.inventory_mut() = kept;
-        self.player_mut().equipment.after_removal(gone);
+        self.player_mut().equipment.after_removal(&gone);
         let here = self.player_pos();
         let level = self.state.current_mut();
         let mut pile = level.objects_at(here).to_vec();
@@ -452,9 +451,8 @@ impl World {
     }
 
     /// What dropping (or selling) the stacks `chosen` of `inventory` in `shop` does (see
-    /// [`World::trade`]). A sale the keeper's purse cannot pay for, or whose gold the player has
-    /// no room for, does not happen.
-    fn deal(&mut self, shop: &Shop, inventory: &[Stack], chosen: Letters, sell: bool) -> Deal {
+    /// [`World::trade`]). A sale the keeper's purse cannot pay for does not happen.
+    fn deal(&mut self, shop: &Shop, inventory: &[Stack], chosen: &Positions, sell: bool) -> Deal {
         let content = self.content.clone();
         let shops = content.shops().expect("a shop is here");
         let favour = self.player_favour();
@@ -491,19 +489,9 @@ impl World {
         }
         let purse = (self.state.actors.get(&shop.keeper))
             .map_or(0, |k| count_of(&k.inventory, shops.currency));
-        // A stack sold leaves whole; the gold joins the player's or takes a letter of its own.
-        let left = (0..inventory.len())
-            .filter(|&k| !selling.contains(&k) && deal.leaving[k] < inventory[k].count)
-            .count();
-        let room = count_of(inventory, shops.currency) > 0 || left < object::INVENTORY_SLOTS;
-        if purse < deal.payment || !room {
+        if purse < deal.payment {
             let what = object::phrase(&deal.sold, &content);
-            let why = if room {
-                format!("{} cannot afford {what}.", shop.name)
-            } else {
-                "You have no room for the gold.".to_string()
-            };
-            self.say(why);
+            self.say(format!("{} cannot afford {what}.", shop.name));
             deal.sold.clear();
             deal.payment = 0;
             return deal;
@@ -526,8 +514,7 @@ impl World {
             return true;
         }
         let what = inventory[item].describe(&self.content);
-        let c = letter(item).unwrap_or('?');
-        self.say(format!("You have not paid for {what} ({c})."));
+        self.say(format!("You have not paid for {what}."));
         false
     }
 
@@ -658,7 +645,7 @@ mod tests {
         let mut pack = inventory.to_vec();
         let gone = take(&mut pack, b, 4);
         assert_eq!(pack, [s(a, 1), s(b, 4), s(a, 1)]);
-        assert_eq!(gone, Letters::of([3]));
+        assert_eq!(gone, Positions::of([3]));
         assert_eq!(count_of(&pack, b), 4);
     }
 }

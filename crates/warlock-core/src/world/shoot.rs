@@ -30,7 +30,7 @@
 
 use super::fight::{End, Words, attack_message, death_message};
 use super::{ActorId, Fire, Spent, World};
-use crate::action::{AttackKind, Event, Letters, MissileEnd, letter};
+use crate::action::{AttackKind, Event, MissileEnd, Positions};
 use crate::combat::Profile;
 use crate::content::{ActionKind, Content, Effect, LevelKind, ObjectId};
 use crate::fov::radius2;
@@ -127,8 +127,7 @@ impl World {
         }
         let me = self.state.player();
         let Some(stack) = me.inventory.get(item) else {
-            let c = letter(item).unwrap_or('?');
-            self.say(format!("You carry no {c}."));
+            self.say("You carry no such thing.");
             return Spent::Nothing;
         };
         let (Some(range), Some(profile)) =
@@ -304,7 +303,7 @@ impl World {
         stack.count -= 1;
         if stack.count == 0 {
             me.inventory.remove(loose.item);
-            me.equipment.after_removal(Letters::of([loose.item]));
+            me.equipment.after_removal(&Positions::of([loose.item]));
         }
         let def = content.object(ammo);
         let flies = def.lit.unwrap_or(ammo);

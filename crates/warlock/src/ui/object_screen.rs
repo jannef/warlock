@@ -32,7 +32,7 @@ use warlock_core::content::Rarity;
 use warlock_core::equipment;
 use warlock_core::object::{Stack, Weight, format_weight};
 use warlock_core::perception::PerceptionView;
-use warlock_core::{Action, Letters, Meal};
+use warlock_core::{Action, Meal, Positions};
 
 /// Which list the screen shows, and what choosing does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -123,7 +123,7 @@ pub struct ObjectScreen {
     items: Vec<Item>,
     /// The `>` row of a selection screen; the first row shown in the inventory.
     cursor: usize,
-    marked: Letters,
+    marked: Positions,
     /// The player's weight (shown in the inventory).
     weight: Weight,
     /// What the player carries against what they can (shown in the inventory); `None` outside
@@ -144,7 +144,7 @@ impl ObjectScreen {
                 entries: Vec::new(),
                 items: Vec::new(),
                 cursor: 0,
-                marked: Letters::default(),
+                marked: Positions::default(),
                 weight: Weight::default(),
                 load: None,
                 looked: None,
@@ -153,7 +153,7 @@ impl ObjectScreen {
         let content = view.content();
         let (pile, pack) = (view.objects(view.viewer()), view.inventory());
         let edible = |s: &Stack| content.object(s.object).food.is_some();
-        let lettered = |stacks: &[Stack]| 0..stacks.len().min(Letters::COUNT);
+        let lettered = |stacks: &[Stack]| 0..stacks.len();
         let items: Vec<Item> = match list {
             ObjectList::PickUp => lettered(pile).map(Item::Floor).collect(),
             ObjectList::Inventory | ObjectList::Drop => lettered(pack).map(Item::Pack).collect(),
@@ -207,7 +207,7 @@ impl ObjectScreen {
             entries,
             items,
             cursor: 0,
-            marked: Letters::default(),
+            marked: Positions::default(),
             weight: view.own_weight(),
             load: Some(view.own_load()),
             looked: None,
@@ -278,7 +278,7 @@ impl ObjectScreen {
             }
             return ScreenAction::Stay;
         }
-        // Letters name stacks (even `j` and `k`, which move selections elsewhere), before any
+        // Positions name stacks (even `j` and `k`, which move selections elsewhere), before any
         // key bound to marking.
         if let Some(c @ 'a'..='z') = press.text {
             let i = usize::from(c as u8 - b'a');
@@ -291,9 +291,9 @@ impl ObjectScreen {
         let rows = self.entries.len().max(1);
         match press.nav {
             Nav::MarkAll => {
-                let all = Letters::of(0..self.entries.len());
+                let all = Positions::of(0..self.entries.len());
                 self.marked = if self.marked == all {
-                    Letters::default()
+                    Positions::default()
                 } else {
                     all
                 };
@@ -303,9 +303,9 @@ impl ObjectScreen {
             Nav::Down => self.cursor = (self.cursor + 1) % rows,
             Nav::Enter => {
                 let chosen = if self.marked.is_empty() {
-                    Letters::of([self.cursor])
+                    Positions::of([self.cursor])
                 } else {
-                    self.marked
+                    self.marked.clone()
                 };
                 return ScreenAction::Act(match self.list {
                     ObjectList::PickUp => Action::PickUp(chosen),
@@ -515,7 +515,7 @@ mod tests {
         let content = Arc::new(Content::load(&files).expect("valid"));
         let mut world = World::new(content, "larder", None).expect("world");
         // Take the dagger and the apple (b, c), leaving the rations.
-        world.apply(&Action::PickUp(Letters::of([1, 2])));
+        world.apply(&Action::PickUp(Positions::of([1, 2])));
         world
     }
 
@@ -576,7 +576,7 @@ mod tests {
     #[test]
     fn the_throw_choice_lists_throwing_weapons_by_their_pack_letters() {
         let mut world = on_the_pile();
-        world.apply(&Action::PickUp(Letters::default()));
+        world.apply(&Action::PickUp(Positions::default()));
         // a leather jerkin, b dagger, c 2 wax candles: only the dagger is thrown.
         let b = Bindings::default();
         let mut screen = ObjectScreen::new(ObjectList::Throw, Some(&world.perception()));
@@ -622,7 +622,7 @@ mod tests {
         assert_eq!(screen.cursor, 0);
         assert_eq!(
             screen.handle(&Press::nav(Nav::Enter), &b),
-            ScreenAction::Act(Action::PickUp(Letters::of([0, 2])))
+            ScreenAction::Act(Action::PickUp(Positions::of([0, 2])))
         );
         // Unmarking everything, Enter takes the cursor's row.
         screen.handle(&typed('a'), &b);
@@ -630,7 +630,7 @@ mod tests {
         screen.handle(&Press::nav(Nav::Down), &b);
         assert_eq!(
             screen.handle(&Press::nav(Nav::Enter), &b),
-            ScreenAction::Act(Action::PickUp(Letters::of([0])))
+            ScreenAction::Act(Action::PickUp(Positions::of([0])))
         );
         screen.handle(&Press::nav(Nav::Down), &b);
         // Space (the Mark key), as the keyboard reports it: a named key that types nothing.
@@ -644,7 +644,7 @@ mod tests {
         screen.handle(&space, &b);
         assert_eq!(
             screen.handle(&Press::nav(Nav::Enter), &b),
-            ScreenAction::Act(Action::PickUp(Letters::of([1])))
+            ScreenAction::Act(Action::PickUp(Positions::of([1])))
         );
     }
 
@@ -659,7 +659,7 @@ mod tests {
             ..typed(',')
         };
         screen.handle(&comma, &b);
-        assert_eq!(screen.marked, Letters::of(0..3));
+        assert_eq!(screen.marked, Positions::of(0..3));
         screen.handle(&comma, &b);
         assert!(screen.marked.is_empty());
         screen.handle(&comma, &b);
@@ -672,21 +672,21 @@ mod tests {
     #[test]
     fn drop_chooses_from_the_inventory() {
         let mut world = on_the_pile();
-        world.apply(&Action::PickUp(Letters::default()));
+        world.apply(&Action::PickUp(Positions::default()));
         let b = Bindings::default();
         let mut screen = ObjectScreen::new(ObjectList::Drop, Some(&world.perception()));
         assert_eq!(screen.entries.len(), 3);
         screen.handle(&typed('b'), &b);
         assert_eq!(
             screen.handle(&Press::nav(Nav::Enter), &b),
-            ScreenAction::Act(Action::Drop(Letters::of([1])))
+            ScreenAction::Act(Action::Drop(Positions::of([1])))
         );
     }
 
     #[test]
     fn the_inventory_shows_weights_and_closes_on_its_key() {
         let mut world = on_the_pile();
-        world.apply(&Action::PickUp(Letters::default()));
+        world.apply(&Action::PickUp(Positions::default()));
         let b = Bindings::default();
         let mut screen = ObjectScreen::new(ObjectList::Inventory, Some(&world.perception()));
         let mut console = Console::default();
@@ -733,7 +733,7 @@ mod tests {
         };
         // The showcase's thief, St 9 To 10: a limit of 42 kg, by thirds.
         let mut world = on_the_pile();
-        world.apply(&Action::PickUp(Letters::default()));
+        world.apply(&Action::PickUp(Positions::default()));
         let text = draw(&world, 80);
         let at = |needle: &str| text.iter().position(|l| l.contains(needle));
         let thresholds = "Burdened over 14 kg, strained over 28 kg, overloaded over 42 kg";
@@ -741,7 +741,7 @@ mod tests {
         assert!(!text.iter().any(|l| l.contains("(burdened)")), "unburdened");
         // Two chain mails for average scores: burdened over 15 kg.
         let mut world = crate::ui::hoard();
-        world.apply(&Action::PickUp(Letters::default()));
+        world.apply(&Action::PickUp(Positions::default()));
         let text = draw(&world, 80);
         for expected in [
             "Carrying 22 kg (burdened)   ·   Your weight 92 kg (you 70 kg)",
@@ -772,7 +772,7 @@ mod tests {
     #[test]
     fn the_inventory_and_drop_screens_mark_what_is_worn_or_wielded() {
         let mut world = on_the_pile();
-        world.apply(&Action::PickUp(Letters::default()));
+        world.apply(&Action::PickUp(Positions::default()));
         for (slot, item) in [("body", 0), ("main_hand", 1)] {
             world.apply(&Action::Equip {
                 slot: slot.into(),

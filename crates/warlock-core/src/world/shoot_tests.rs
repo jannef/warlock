@@ -3,7 +3,7 @@
 //! picked up again; burning arrows light the level until they burn out.
 
 use super::*;
-use crate::action::{AttackKind, Letters, MissileEnd, parse_actions};
+use crate::action::{AttackKind, MissileEnd, Positions, parse_actions};
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::sight::{self, LineOfSight};
@@ -637,7 +637,7 @@ fn a_flaming_arrow_burns_where_it_lands_lighting_the_dark_for_a_minute() {
     assert!(view.light(spot).expect("lit").brightness() > 100);
     // It cannot be picked up while it burns.
     run(&mut w, "move:E*5");
-    assert!(!w.apply(&Action::PickUp(Letters::default())).took_turn);
+    assert!(!w.apply(&Action::PickUp(Positions::default())).took_turn);
     assert_eq!(
         last_message(&w),
         "You cannot pick up a burning arrow while it burns."

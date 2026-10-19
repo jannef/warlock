@@ -770,7 +770,7 @@ mod tests {
         for action in [
             Action::Move(Dir::SW),
             Action::Move(Dir::SW),
-            Action::PickUp(warlock_core::Letters::of([0])),
+            Action::PickUp(warlock_core::Positions::of([0])),
         ] {
             world.apply(&action);
         }
@@ -1335,7 +1335,7 @@ mod tests {
 
     #[test]
     fn dropping_what_a_shop_buys_asks_whether_to_sell() {
-        use warlock_core::Letters;
+        use warlock_core::Positions;
         let content = content();
         let world = in_the_shop(content.clone());
         let mut app = app_with(content, Some(Game::from_world(world)));
@@ -1353,16 +1353,19 @@ mod tests {
         assert_eq!((names(&app), actions(&app)), (vec![], vec![]));
         frame(&mut app, &[d, b, ENTER, yes]);
         assert!(names(&app).is_empty());
-        assert_eq!(actions(&app), [Action::Sell(Letters::of([1]))]);
+        assert_eq!(actions(&app), [Action::Sell(Positions::of([1]))]);
         // Putting back the unpaid dagger is a plain drop: nothing to sell.
         frame(&mut app, &[d, (KeyCode::KeyC, "c"), ENTER]);
         assert!(names(&app).is_empty());
-        assert_eq!(actions(&app).last(), Some(&Action::Drop(Letters::of([2]))));
+        assert_eq!(
+            actions(&app).last(),
+            Some(&Action::Drop(Positions::of([2])))
+        );
     }
 
     #[test]
     fn pick_up_drop_and_inventory_open_screens_that_choose_actions() {
-        use warlock_core::Letters;
+        use warlock_core::Positions;
         let content = content();
         let game = Game::from_world(on_the_pile(content.clone()));
         let mut app = app_with(content, Some(game));
@@ -1380,7 +1383,7 @@ mod tests {
         assert!(names(&app).is_empty());
         assert_eq!(
             actions(&app),
-            [Action::PickUp(Letters::of([1])), Action::Wait]
+            [Action::PickUp(Positions::of([1])), Action::Wait]
         );
         // `g` picks up too; Esc cancels without an action.
         frame(&mut app, &[(KeyCode::KeyG, "g"), ESC]);
@@ -1392,7 +1395,10 @@ mod tests {
         frame(&mut app, &[i]);
         assert!(names(&app).is_empty());
         frame(&mut app, &[d, ENTER]);
-        assert_eq!(actions(&app).last(), Some(&Action::Drop(Letters::of([0]))));
+        assert_eq!(
+            actions(&app).last(),
+            Some(&Action::Drop(Positions::of([0])))
+        );
         assert!(names(&app).is_empty());
     }
 
@@ -1565,7 +1571,7 @@ mod tests {
 
     #[test]
     fn single_stacks_and_empty_hands_need_no_screen() {
-        use warlock_core::Letters;
+        use warlock_core::Positions;
         let mut app = app(true);
         // Nothing here and nothing carried: the actions are refused by the core, no screen.
         frame(&mut app, &[(KeyCode::Comma, ","), (KeyCode::KeyD, "d")]);
@@ -1573,8 +1579,8 @@ mod tests {
         assert_eq!(
             actions(&app),
             [
-                Action::PickUp(Letters::default()),
-                Action::Drop(Letters::default())
+                Action::PickUp(Positions::default()),
+                Action::Drop(Positions::default())
             ]
         );
     }

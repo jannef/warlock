@@ -829,7 +829,7 @@ mod tests {
     use std::sync::Arc;
     use warlock_core::content::CombatStance;
     use warlock_core::content::{Content, ContentFiles};
-    use warlock_core::{Action, Dir, Letters, World};
+    use warlock_core::{Action, Dir, Positions, World};
 
     #[test]
     fn the_status_bar_shows_the_burden_after_the_hit_points_and_keeps_it_late() {
@@ -844,7 +844,7 @@ mod tests {
             !texts(&world).iter().any(|t| t.contains("urdened")),
             "unburdened: nothing"
         );
-        world.apply(&Action::PickUp(Letters::default()));
+        world.apply(&Action::PickUp(Positions::default()));
         let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
         assert_eq!(segments[1].text, "HP 10/10");
         assert_eq!(segments[2].text, "Burdened", "right after the hit points");
@@ -904,7 +904,7 @@ mod tests {
             );
         }
         let mut world = world_starting_at(1000);
-        world.apply(&Action::PickUp(Letters::default()));
+        world.apply(&Action::PickUp(Positions::default()));
         let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
         assert_eq!(
             texts(&world)[..4],

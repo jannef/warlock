@@ -2,7 +2,7 @@
 //! theft, an attacked or dead keeper, saves, replays, and generated shops.
 
 use super::*;
-use crate::action::{Letters, letter, parse_actions};
+use crate::action::{Positions, letter, parse_actions};
 use crate::content::{ContentFiles, Shops};
 use crate::geom::Dir;
 use crate::object::Stack;
@@ -222,7 +222,7 @@ fn dropping_ones_own_gets_an_offer_and_selling_takes_it() {
         "it pays less than it asks"
     );
     assert_eq!(
-        w.perception().sale(Letters::of([1])),
+        w.perception().sale(&Positions::of([1])),
         Some(Sale {
             offer,
             stacks: vec![scroll.clone()]
@@ -239,7 +239,7 @@ fn dropping_ones_own_gets_an_offer_and_selling_takes_it() {
     // Nobody buys the currency.
     apply(&mut w, "drop:a");
     assert_eq!(last(&w), "Grimbold has no use for 60 gold coins.");
-    assert_eq!(w.perception().sale(Letters::of([0])), None);
+    assert_eq!(w.perception().sale(&Positions::of([0])), None);
     let sold = apply(&mut w, "sell:b");
     assert!(sold.took_turn, "selling takes a drop's time");
     assert_eq!(
@@ -387,7 +387,7 @@ fn unpaid_goods_are_not_thrown_and_an_attacked_keeper_is_outraged() {
     let c = letter(dagger).expect("a letter");
     let thrown = apply(&mut w, &format!("throw:{c}:58,14"));
     assert!(!thrown.took_turn);
-    assert_eq!(last(&w), format!("You have not paid for a dagger ({c})."));
+    assert_eq!(last(&w), "You have not paid for a dagger.");
     // Paid for, it flies; at the keeper, it outrages him, hit or miss.
     apply(&mut w, "pay");
     apply(&mut w, &format!("throw:{c}:54,13"));
@@ -488,7 +488,7 @@ fn unpaid_missiles_are_not_shot_so_none_is_used_up() {
     apply(&mut w, "equip:missile_weapon:d equip:missiles:c");
     let shot = apply(&mut w, "fire:58,13");
     assert!(!shot.took_turn);
-    assert_eq!(last(&w), "You have not paid for 20 arrows (c).");
+    assert_eq!(last(&w), "You have not paid for 20 arrows.");
     assert_eq!(w.perception().inventory()[2].count, 20);
     assert_eq!(shop(&w).unpaid, owed);
 }

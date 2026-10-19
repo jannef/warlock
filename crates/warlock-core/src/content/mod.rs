@@ -592,12 +592,6 @@ impl Content {
             let mut scenario = ScenarioDef::parse(path, id, text)?;
             let err = |m: String| ContentError::new(path, format!("carry: {m}"));
             scenario.carry = object::parse_stacks(&scenario.carry_spec, &content).map_err(err)?;
-            if scenario.carry.len() > crate::object::INVENTORY_SLOTS {
-                return Err(err(format!(
-                    "at most {} stacks fit in a pack",
-                    crate::object::INVENTORY_SLOTS
-                )));
-            }
             content.scenarios.insert(id.to_string(), scenario);
         }
         for (path, id, text) in files.in_dir("vaults") {
@@ -3519,10 +3513,6 @@ mod tests {
             (
                 "\"x\" = { terrain = \"floor\", carry = [\"dagger\"] }",
                 "carry, wield, or wear but no creature",
-            ),
-            (
-                "\"x\" = { terrain = \"floor\", creature = \"kobold\", carry = [\"dagger*27\"] }",
-                "at most 26 stacks",
             ),
             (
                 "\"x\" = \"floor\"\n[[pile]]\nat = [9, 9]\nobjects = [\"dagger\"]",
