@@ -467,9 +467,9 @@ impl World {
         state.actors.insert(ActorId(0), player);
         instantiate_level(&mut state, &content, &start);
         drop(start); // It may borrow `content`, which `assemble` takes.
-        state
-            .messages
-            .push(0, format!("Welcome to {}. Press ? for controls.", def.name));
+        let help = crate::messages::key("help");
+        let welcome = format!("Welcome to {}. Press {help} for controls.", def.name);
+        state.messages.push(0, welcome);
         if let Some(text) = enter_room(&mut state, &content) {
             state.messages.push(0, text);
         }

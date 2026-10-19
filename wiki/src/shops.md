@@ -30,6 +30,15 @@ you owe ("You pick up a dagger (unpaid, 45 gold)."), and your pack marks it "(un
 Pay with `p`. Paying takes no time; it pays for everything you owe, from the gold you carry, and
 your goods are yours. If you do not have enough gold, put something back: drop it in the shop.
 
+What you use up, you have bought. Eat food you have not paid for and you still owe for it; eat
+food lying on a shop's floor and its price goes on what you owe:
+
+```
+Grimbold says: "You eat it, you buy it: 47 gold for the angelica root."
+```
+
+You cannot put back what you have eaten: pay for it, or sell the shopkeeper something first.
+
 ## Leaving
 
 A shopkeeper does not let you out of the door owing money. Step toward the door while you owe

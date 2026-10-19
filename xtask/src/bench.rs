@@ -190,7 +190,7 @@ fn fight_rest(content: &Arc<Content>) -> Result<(u64, f64), String> {
 /// `WARLOCK_UNPACED=1` removes the game's 60 Hz capture-mode pacing, so this measures CPU + GPU
 /// throughput per frame (offscreen render, no presentation).
 pub fn frames(window: &str) -> Result<(), String> {
-    use crate::workspace_root;
+    use crate::{target_dir, workspace_root};
     use std::process::Command;
 
     let root = workspace_root();
@@ -202,8 +202,9 @@ pub fn frames(window: &str) -> Result<(), String> {
     if !status.success() {
         return Err(format!("release build failed: {status}"));
     }
-    let exe = root.join("target/release/warlock");
-    let out = root.join("target/xtask/bench-frame.png");
+    let target = target_dir()?;
+    let exe = target.join("release/warlock");
+    let out = target.join("xtask/bench-frame.png");
     std::fs::create_dir_all(out.parent().expect("has parent")).map_err(|e| e.to_string())?;
     const LOW: u32 = 10;
     const HIGH: u32 = 2010;

@@ -16,7 +16,7 @@
 //! References are authoritative only when produced on Linux CI (Mesa lavapipe); other GPUs and
 //! drivers rasterize slightly differently. On other platforms use `--local` to just capture.
 
-use crate::{run_game, workspace_root};
+use crate::{run_game, target_dir, workspace_root};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -250,7 +250,7 @@ fn compare(
 pub fn run(mode: Mode) -> Result<(), String> {
     let root = workspace_root();
     let golden_dir = root.join("tests/golden");
-    let out_dir = root.join("target/xtask/golden");
+    let out_dir = target_dir()?.join("xtask/golden");
     std::fs::create_dir_all(&out_dir).map_err(|e| format!("cannot create out dir: {e}"))?;
     let manifest = load_manifest(&golden_dir.join("manifest"))?;
     let d = &manifest.defaults.unwrap_or_default();

@@ -49,6 +49,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     one action that takes the step's time; refused, with no step, if the player cannot pay. Without enough gold the player **puts it back**: dropping unpaid goods in the shop
     returns them to the floor (and off the debt), taking a drop's time. Which stacks are unpaid
     follows from the counts: of an object's stacks, the last ones in the pack.
+  - **Using up goods** is buying them. Only paying, putting back, theft, and the keeper's death
+    take anything off what the player owes, so unpaid goods eaten (or used up any other way)
+    stay owed, and leaving still asks first, is turned back at the door, and is theft any other
+    way ("Grimbold says: \"Eaten or not, the angelica root is still 47 gold.\"", said when what
+    is owed for an object is more than the pack holds of it). Food eaten off the shop floor
+    (`eat:floor:a`) is owed for as it is eaten ("Grimbold says: \"You eat it, you buy it: 47
+    gold for the angelica root.\"", with "You owe Grimbold 63 gold." when more is owed); a meal
+    stopped early eats nothing and owes nothing.
   - **Selling**: dropping the player's own things in the shop keeps them and says the offer
     ("Grimbold offers 15 gold for a scroll of light."), or that the shop has no use for them;
     **selling** (`Action::Sell`, replay text `sell:b`, `sell` for everything) takes the offer

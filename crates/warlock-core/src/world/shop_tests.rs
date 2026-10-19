@@ -396,6 +396,103 @@ fn unpaid_goods_are_not_thrown_and_an_attacked_keeper_is_outraged() {
     assert_eq!(w.stance(w.player_id(), keeper(&w)), Stance::Hostile);
 }
 
+/// The angelica root on the shop floor, and the strips of dried meat.
+const ROOT: Pos = Pos::new(60, 14);
+const MEAT: Pos = Pos::new(62, 15);
+
+#[test]
+fn unpaid_food_eaten_stays_owed_and_the_keeper_turns_the_player_back() {
+    let mut w = in_shop();
+    let root = object(&w, "angelica_root");
+    let asked = price(&w, &root);
+    apply(&mut w, "move:E*6 pickup");
+    assert_eq!(w.player_pos(), ROOT);
+    assert_eq!(
+        last(&w),
+        format!("You pick up an angelica root (unpaid, {asked} gold).")
+    );
+    apply(&mut w, "eat:c");
+    assert!(said(&w, "You eat the angelica root."));
+    assert!(said(
+        &w,
+        &format!("Grimbold says: \"Eaten or not, the angelica root is still {asked} gold.\"")
+    ));
+    // Gone from the pack, still on the bill: leaving asks first, and the door turns them back.
+    assert_eq!(shop(&w).unpaid, [root]);
+    assert!(w.perception().unpaid().iter().all(Option::is_none));
+    apply(&mut w, "move:W*6");
+    assert_eq!(
+        w.perception().owed_on_leaving(DOOR).map(|(_, o)| o),
+        Some(asked)
+    );
+    apply(&mut w, "move:W");
+    assert_eq!(w.player_pos(), Pos::new(55, 14), "turned back one step");
+    assert_eq!(last(&w), "Grimbold steps into your way: you haven't paid.");
+    apply(&mut w, "pay");
+    assert_eq!(last(&w), format!("You pay Grimbold {asked} gold."));
+    assert!(shop(&w).unpaid.is_empty());
+    apply(&mut w, "move:W*2");
+    assert_eq!(w.player_pos(), DOOR);
+    assert_eq!(shop(&w).status, ShopStatus::Open);
+}
+
+#[test]
+fn food_eaten_off_the_shop_floor_is_owed_for_and_walking_out_unpaid_is_theft() {
+    let mut w = in_shop();
+    let (root, rope) = (object(&w, "angelica_root"), object(&w, "rope"));
+    let meat = Stack::new(object(&w, "dried_meat").object, 6);
+    let (for_root, for_rope, for_meat) = (price(&w, &root), price(&w, &rope), price(&w, &meat));
+    // Food bought and paid for is the player's own: eating it owes nothing.
+    apply(&mut w, "move:SE move:E*7 pickup pay");
+    assert_eq!(w.player_pos(), MEAT);
+    assert_eq!(last(&w), format!("You pay Grimbold {for_meat} gold."));
+    apply(&mut w, "eat:c");
+    assert!(said(&w, "You eat the strip of dried meat."));
+    assert!(!said(&w, "Grimbold says"));
+    assert!(shop(&w).unpaid.is_empty());
+    // With a rope unpaid, the store's root eaten where it lies is bought too.
+    apply(&mut w, "move:W*2 pickup move:N");
+    assert_eq!(w.player_pos(), ROOT);
+    apply(&mut w, "eat:floor:a");
+    assert!(said(
+        &w,
+        &format!(
+            "Grimbold says: \"You eat it, you buy it: {for_root} gold for the angelica root.\" \
+             You owe Grimbold {} gold.",
+            for_rope + for_root
+        )
+    ));
+    assert!(w.state.current().objects_at(ROOT).is_empty());
+    assert_eq!(shop(&w).unpaid, [rope, root]);
+    // Out through a wall dug open owing for it, the player is a thief.
+    apply(&mut w, "move:E*2");
+    let hole = Pos::new(63, 14);
+    let floor = w.content().terrain_id("plank_floor").expect("plank floor");
+    w.set_terrain(hole, floor);
+    apply(&mut w, "move:E");
+    assert_eq!(w.player_pos(), hole);
+    assert!(said(
+        &w,
+        "You leave without paying. \"Stop, thief!\" shouts Grimbold."
+    ));
+    assert_eq!(shop(&w).status, ShopStatus::Outraged);
+}
+
+#[test]
+fn unpaid_missiles_are_not_shot_so_none_is_used_up() {
+    let mut w = in_shop();
+    apply(&mut w, "move:SE move:E pickup move:E*2 pickup");
+    let (arrows, bow) = (object(&w, "arrow"), object(&w, "short_bow"));
+    let owed = shop(&w).unpaid.clone();
+    assert_eq!(owed, [Stack::new(arrows.object, 20), bow]);
+    apply(&mut w, "equip:missile_weapon:d equip:missiles:c");
+    let shot = apply(&mut w, "fire:58,13");
+    assert!(!shot.took_turn);
+    assert_eq!(last(&w), "You have not paid for 20 arrows (c).");
+    assert_eq!(w.perception().inventory()[2].count, 20);
+    assert_eq!(shop(&w).unpaid, owed);
+}
+
 #[test]
 fn a_dead_keepers_goods_are_free_to_take() {
     let mut w = in_shop();

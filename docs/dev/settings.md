@@ -29,6 +29,9 @@ keys: in every table, read by `input::command_in` and listed by Controls only wh
 before play's (`command_in`). Nothing matches a `KeyCode` or a character directly but Esc (fixed:
 Cancel in play, `Nav::Back` on every screen) and the letters and digits that name list rows.
 Hints name keys through `Bindings::key_name` and `ui::menu::Hints` (footers), never a literal key.
+Core knows no bindings, so a message names a key by its command's id (`messages::key("help")`
+writes `{key:help}`, as the welcome line does) and the message line fills it in as bound
+(`Message::display_with` with `ui::message_key`; dumps show the token).
 Binding a key another command of the same context uses moves it
 (`Bindings::bind_primary` returns `Bound::Moved`); refused with `Conflict` are the keys of fixed
 commands outside `REBINDABLE` (Esc's Cancel) and the last key of a `VITAL` command (`MenuUp`,
