@@ -2,7 +2,7 @@
 
 use crate::burden::Burden;
 use crate::combat::{self, Attack, Category, Defence, Health, Profile};
-use crate::content::{ActionKind, Content, CreatureId, ObjectDef, ObjectId};
+use crate::content::{ActionKind, Content, CreatureId, FactionId, ObjectDef, ObjectId};
 use crate::equipment::Equipment;
 use crate::geom::{Dir, Pos};
 use crate::noise::Heard;
@@ -101,6 +101,10 @@ pub struct Actor {
     /// Seconds of game time toward its next hit point back, while it is hurt.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub regen: u32,
+    /// The faction its level placed it in, if not its type's (`faction` in a level legend entry:
+    /// peaceful creatures in the showcase). Read the one that counts with [`Actor::faction`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub faction_override: Option<FactionId>,
 }
 
 fn is_zero(n: &u32) -> bool {
@@ -108,6 +112,12 @@ fn is_zero(n: &u32) -> bool {
 }
 
 impl Actor {
+    /// The faction it fights for: the one its level placed it in, else its creature type's.
+    pub fn faction(&self, content: &Content) -> Option<FactionId> {
+        self.faction_override
+            .or(content.creature(self.creature).faction)
+    }
+
     /// Its maximum hit points: Toughness plus [`Actor::hp_base`], at least 1.
     pub fn max_hp(&self) -> i32 {
         combat::max_hp(self.stats.score(Stat::Toughness), self.hp_base)

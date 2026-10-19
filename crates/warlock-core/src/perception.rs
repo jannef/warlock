@@ -50,7 +50,7 @@ use crate::burden::{self, Load};
 use crate::character::Character;
 use crate::combat::Health;
 use crate::content::{
-    Content, CreatureId, Flow, LevelKind, LightId, ObjectId, SlotId, Stance, TerrainId,
+    Content, CreatureId, FactionId, Flow, LevelKind, LightId, ObjectId, SlotId, Stance, TerrainId,
     VisionProfile,
 };
 use crate::daylight;
@@ -91,6 +91,9 @@ pub struct SeenActor {
     pub id: ActorId,
     pub kind: ActorKind,
     pub creature: CreatureId,
+    /// The faction it fights for (its type's, or the one its level placed it in).
+    #[serde(skip)]
+    pub faction: Option<FactionId>,
     pub pos: Pos,
     /// How hurt it looks: words, never hit points (spec §8 "Combat").
     pub health: Health,
@@ -460,6 +463,7 @@ impl Perception {
                 id: a.id,
                 kind: a.kind,
                 creature: a.creature,
+                faction: a.faction(content),
                 pos: a.pos,
                 health: a.health(),
             })
@@ -751,7 +755,9 @@ impl<'a> PerceptionView<'a> {
     /// which the player knows from its type. Nothing else about factions is perceived.
     pub fn stance(&self, actor: &SeenActor) -> Stance {
         match self.content.creature_id("player") {
-            Some(player) => self.content.stance(player, actor.creature),
+            Some(player) => self
+                .content
+                .stance_of(self.content.creature(player).faction, actor.faction),
             None => Stance::Neutral,
         }
     }

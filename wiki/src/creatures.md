@@ -67,6 +67,10 @@ Moving into a hostile creature attacks it ("You hit the giant rat.", "You miss s
 you cannot see it), which takes a turn. Moving into a neutral one does not, and takes no time:
 "The deer is in the way." ("Something is in the way." if you cannot see it).
 
+Some creatures are hostile by nature but placed among the **peaceful folk** by the place they
+live in: the kobold in the showcase hub and the kobolds and rats of the Vast Caverns walk their
+rounds and never attack you. The showcase is safe. Fighting happens in the arena and in the Depths.
+
 The **Arena** scenario (see [Starting a run](introduction.md#starting-a-run)) is the place to watch
 this: a kobold war band and a pack of giant rats fight to the death there, and turn on you when
 they see you. Light your lantern there and the war band's archer will find you.

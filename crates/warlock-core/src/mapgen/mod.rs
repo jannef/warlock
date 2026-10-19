@@ -265,6 +265,7 @@ impl<'a> Canvas<'a> {
         }
         self.creatures.push(CreatureSpawn {
             creature,
+            faction: None,
             pos: start,
             route,
             carry: Vec::new(),
@@ -352,6 +353,7 @@ pub fn generate(
         let template = LevelTemplate {
             id: id.to_string(),
             name: def.level_name(depth),
+            arrival: None,
             ambient: def.ambient,
             kind: LevelKind::Dungeon,
             terrain: canvas.terrain,

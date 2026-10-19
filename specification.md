@@ -80,7 +80,7 @@ regression scene for golden screenshots, replays, and snapshot tests.
 |---|---|---|
 | Start room | movement, message line, `?` help; gold and a small pile to pick up | M1, M11 |
 | Door corridor | opening/closing doors, doors blocking sight; a storeroom of arms and armor (something for every equipment slot but the neck and the rings, a two-handed quarterstaff, a short bow and arrows, flaming arrows, a long war bow, a crossbow and bolts, a sling and stones, rocks to throw) and a pantry of objects | M1–M2, M11, M16 |
-| Patrol gallery | creatures moving in and out of view, never shown in memory; a cave beetle and a quicker cave bat (wildlife, so they keep to their lanes) on parallel lanes, a slower torch-bearing kobold circling them (wielding a sword, carrying coins), which comes for the player once it sees them, searches where it lost them, and returns to its round; heard from the corridor behind its closed door, and in its dark middle (the bat flies silently), which a flaming arrow shot from its door lights where it lands | M2, M10, M11, M16 |
+| Patrol gallery | creatures moving in and out of view, never shown in memory; a cave beetle and a quicker cave bat (wildlife, so they keep to their lanes) on parallel lanes, a slower torch-bearing kobold circling them (wielding a sword, carrying coins), a kobold by type but placed among the peaceful folk (§7 "Factions"), so it walks its round and never attacks the player; heard from the corridor behind its closed door, and in its dark middle (the bat flies silently), which a flaming arrow shot from its door lights where it lands | M2, M10, M11, M16 |
 | Light hall | colored lights, falloff, pillar and creature shadows, steady magical light | M3, M8 |
 | Darkness chamber | vision types, a UV-only rune, darkvision fade; an amulet seen only by those who see in the dark | M3, M11 |
 | Water garden | still ponds and running rills (flow, glints, foam), pulsing altar with a ring before it | M4, M8, M11 |
@@ -94,7 +94,9 @@ moon lights it faintly by night, waxing and waning with the month (§5 "Moonligh
 `courtyard` scenario starts there at 06:30, while the shadows are long. Windfall apples lie under
 a tree, and a candle and a scroll in the gazebo (M11).
 
-**Arena (72×21, M10)**: down the stairs nook's second `>`: factions at war. A kobold war band
+**Safety**: the hand-made showcase (the hub, Level 2, the courtyard) is safe. Creatures that would hunt the player by type (the hub's kobold, Level 2's kobolds and rats) are placed in the `peaceful` faction by their level (§7 "Factions"): they keep their types, patrols, speeds, footsteps, and looks, and attack no one. Fighting happens in the arena, and in the generated Depths (the real dungeon). Arriving in the arena says "The clash of arms echoes off the stone." (a level's `arrival` line).
+
+**Arena (72×21, M10)**: down the stairs nook's second `>`: the place to fight; factions at war. A kobold war band
 (three torch-bearing kobolds wielding spears, an archer with a short bow and arrows ready, a slow
 shaman wearing a bone amulet; look mode shows what each wields and wears, M16) and five giant
 rats meet at a fire pit in
@@ -1032,7 +1034,14 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   (the player's), and every creature type but the player naming a known faction. The core API
   gives the stance (`Hostile` or `Neutral`) of two factions, creature types, or actors. Test
   factions: `vermin` (giant rats; hostile to the player), `kobolds` (the war band; hostile to the
-  player and the vermin), `wildlife` (deer, cave bats, the cave beetle; neutral to everyone).
+  player and the vermin), `wildlife` (deer, cave bats, the cave beetle; neutral to everyone), and
+  `peaceful` ("peaceful folk", hostile to no one), which only levels place creatures in. A level
+  legend entry with a `creature` may name a `faction` (a known faction id; an unknown one is a
+  content error) that replaces its type's for that creature: it is stored on the actor
+  (`faction_override`, saved and hashed only when set), used wherever stance is computed (AI
+  targeting and noise, look mode "(hostile)", bump-to-attack vs "in the way"), and so can make a
+  hostile type harmless in the showcase. Level files may also have an `arrival` line, said each
+  time the player arrives by stairs.
 - **The weather** (`data/weather.toml`, optional; without it the sky is always clear): exactly 12
   `[[month]]`s in calendar order, each with the chance in percent of `clear`, `overcast`, `rain`,
   and `heavy_rain` (adding up to 100), and a table for each of `overcast`, `rain`, and

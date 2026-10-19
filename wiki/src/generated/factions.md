@@ -5,4 +5,5 @@
 | You | vermin, kobolds |
 | Vermin | you, kobolds |
 | Kobolds | you, vermin |
+| Peaceful folk | nobody |
 | Wildlife | nobody |

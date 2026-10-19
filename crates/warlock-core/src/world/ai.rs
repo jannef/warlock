@@ -154,8 +154,8 @@ impl World {
         } = self;
         let me = &state.actors[&id];
         let def = content.creature(me.creature);
-        let has_enemies = def
-            .faction
+        let has_enemies = me
+            .faction(content)
             .is_some_and(|f| content.factions().has_enemies(f));
         if heard.is_empty() || !has_enemies {
             return None;
@@ -185,7 +185,9 @@ impl World {
         let reach2 = radius2(radius);
         let mut hostiles: Vec<(i32, ActorId, Pos)> = (state.actors.values())
             .filter(|a| a.level == me.level && a.id != id && a.pos.dist2(me.pos) <= reach2)
-            .filter(|a| content.stance(me.creature, a.creature) == Stance::Hostile)
+            .filter(|a| {
+                content.stance_of(me.faction(content), a.faction(content)) == Stance::Hostile
+            })
             .map(|a| (a.pos.dist2(me.pos), a.id, a.pos))
             .collect();
         if hostiles.is_empty() {

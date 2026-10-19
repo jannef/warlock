@@ -170,6 +170,7 @@ pub(super) fn generate(content: &Content, seed: u64, id: &str) -> Result<LevelTe
         let template = LevelTemplate {
             id: id.to_string(),
             name: capitalize(&content.terrain(area.terrain).name),
+            arrival: None,
             ambient: crate::light::Light::DARK,
             kind: LevelKind::Outdoor,
             player_start: Some(start),
@@ -313,6 +314,7 @@ fn graze(land: &mut Land, rng: &mut Rng, count: i32, start: Pos) {
             };
             land.creatures.push(CreatureSpawn {
                 creature: land.kit.deer,
+                faction: None,
                 pos: p,
                 route,
                 carry: Vec::new(),

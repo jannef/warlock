@@ -13,6 +13,7 @@
 #
 # West: the kobolds' camp behind two doors, which kobolds open and rats do not. East: the rat
 # warren, open to the pit through three gaps. `<` leads back up to the hub's stairs nook.
+arrival = "The clash of arms echoes off the stone."
 name = "The Arena"
 ambient = [0, 0, 0, 0]
 map = '''

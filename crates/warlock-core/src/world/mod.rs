@@ -342,6 +342,7 @@ impl World {
             hp: 0,
             hp_base,
             regen: 0,
+            faction_override: None,
         };
         player.hp = player.max_hp();
         state.actors.insert(ActorId(0), player);
@@ -445,10 +446,12 @@ impl World {
     }
 
     /// How actors `a` and `b` stand toward each other: the stance of their factions (spec §7
-    /// "Factions"), so it follows from their types; [`Stance::Neutral`] if either is unknown.
+    /// "Factions"): their types' unless a level placed them elsewhere; [`Stance::Neutral`] if either is unknown.
     pub fn stance(&self, a: ActorId, b: ActorId) -> Stance {
         match (self.state.actors.get(&a), self.state.actors.get(&b)) {
-            (Some(a), Some(b)) => self.content.stance(a.creature, b.creature),
+            (Some(a), Some(b)) => self
+                .content
+                .stance_of(a.faction(&self.content), b.faction(&self.content)),
             _ => Stance::Neutral,
         }
     }
@@ -1345,6 +1348,9 @@ impl World {
         self.state.overworld_step = None;
         // Sounds remembered on the level left say nothing about this one.
         self.state.recent_sounds.clear();
+        if let Some(line) = self.content.level(to).and_then(|t| t.arrival.clone()) {
+            self.say(line);
+        }
         Ok(())
     }
 
@@ -1448,6 +1454,7 @@ fn instantiate_level(state: &mut WorldState, content: &Content, template: &Level
             hp: 0,
             hp_base: def.base_hp,
             regen: 0,
+            faction_override: spawn.faction,
         };
         actor.hp = actor.max_hp();
         state.actors.insert(actor_id, actor);

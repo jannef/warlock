@@ -15,6 +15,7 @@
 //! first match wins), shown in the status bar.
 
 use super::creature::CreatureId;
+use super::faction::FactionId;
 use super::flow::{FLOW_SPEEDS, Flow};
 use super::light::LightId;
 use super::object::parse_stacks;
@@ -60,6 +61,8 @@ impl LevelKind {
 #[serde(deny_unknown_fields)]
 struct LevelFile {
     name: String,
+    /// A line said each time the player arrives on the level by stairs; default none.
+    arrival: Option<String>,
     /// Light everywhere on the level, `[r, g, b, uv]`; default none.
     #[serde(default)]
     ambient: Light,
@@ -131,6 +134,9 @@ pub(super) struct LegendDetail {
     terrain: String,
     spawn: Option<Spawn>,
     creature: Option<String>,
+    /// Faction the creature on this cell belongs to instead of its type's (`faction =
+    /// "peaceful"`); an id in `data/factions.toml`.
+    faction: Option<String>,
     /// Patrol route, e.g. `"E4 S2 W4 N2"`; must return to its start.
     route: Option<String>,
     /// Level id the stairs on this cell lead to.
@@ -196,6 +202,8 @@ impl LegendEntry {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CreatureSpawn {
     pub creature: CreatureId,
+    /// The faction it is placed in when not its type's.
+    pub faction: Option<FactionId>,
     pub pos: Pos,
     /// Looping patrol route; empty means the creature stays put.
     pub route: Vec<Dir>,
@@ -220,6 +228,8 @@ pub struct StairsLink {
 pub struct LevelTemplate {
     pub id: String,
     pub name: String,
+    /// A message said when the player arrives on the level (hand-made levels only).
+    pub arrival: Option<String>,
     /// Light everywhere on the level.
     pub ambient: Light,
     pub kind: LevelKind,
@@ -358,6 +368,12 @@ pub(super) fn parse_level(
                 let id = content.creature_id(creature).ok_or_else(|| {
                     err(format!("legend `{ch}` uses unknown creature `{creature}`"))
                 })?;
+                let faction = match &detail.faction {
+                    Some(name) => Some(content.factions().id(name).ok_or_else(|| {
+                        err(format!("legend `{ch}` uses unknown faction `{name}`"))
+                    })?),
+                    None => None,
+                };
                 let route = match &detail.route {
                     Some(r) => parse_route(r).map_err(|m| err(format!("legend `{ch}`: {m}")))?,
                     None => Vec::new(),
@@ -376,18 +392,20 @@ pub(super) fn parse_level(
                     .map_err(|m| err(format!("legend `{ch}`: {m}")))?;
                 creatures.push(CreatureSpawn {
                     creature: id,
+                    faction,
                     pos,
                     route,
                     carry,
                     equipment,
                 });
             } else if detail.route.is_some()
+                || detail.faction.is_some()
                 || detail.carry.is_some()
                 || detail.wield.is_some()
                 || detail.wear.is_some()
             {
                 return Err(err(format!(
-                    "legend `{ch}` has a route, carry, wield, or wear but no creature"
+                    "legend `{ch}` has a faction, route, carry, wield, or wear but no creature"
                 )));
             }
         }
@@ -437,6 +455,7 @@ pub(super) fn parse_level(
     let template = LevelTemplate {
         id: id.to_string(),
         name: parsed.name,
+        arrival: parsed.arrival,
         ambient: parsed.ambient,
         kind: parsed.kind,
         terrain,

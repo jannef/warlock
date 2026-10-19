@@ -22,6 +22,13 @@ id = "kobolds"
 name = "kobolds"
 hostile = ["player", "vermin"]
 
+# Folk who mean the player no harm, whatever they are: levels place creatures here with
+# `faction = "peaceful"` in a legend entry (the showcase hub and caverns), overriding the
+# faction of the creature's type. Hostile to no one.
+[[faction]]
+id = "peaceful"
+name = "peaceful folk"
+
 # Deer, cave bats, and cave beetles: neutral to everyone.
 [[faction]]
 id = "wildlife"

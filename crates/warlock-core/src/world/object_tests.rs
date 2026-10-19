@@ -49,7 +49,8 @@ fn content() -> Arc<Content> {
         "[[faction]]\nid = \"player\"\nname = \"you\"\n\
          [[faction]]\nid = \"vermin\"\nname = \"vermin\"\n\
          [[faction]]\nid = \"kobolds\"\nname = \"kobolds\"\n\
-         [[faction]]\nid = \"wildlife\"\nname = \"wildlife\"\n",
+         [[faction]]\nid = \"wildlife\"\nname = \"wildlife\"\n\
+         [[faction]]\nid = \"peaceful\"\nname = \"peaceful folk\"\n",
     );
     files.insert("levels/store.toml", LEVEL);
     files.insert(

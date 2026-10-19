@@ -971,6 +971,15 @@ impl Content {
         }
     }
 
+    /// How two actors stand toward each other, given the factions they belong to (their type's,
+    /// or the one their level placed them in); neutral if either has none.
+    pub fn stance_of(&self, a: Option<FactionId>, b: Option<FactionId>) -> Stance {
+        match (a, b) {
+            (Some(a), Some(b)) => self.factions.stance(a, b),
+            _ => Stance::Neutral,
+        }
+    }
+
     pub fn light(&self, id: LightId) -> &LightPreset {
         &self.lights[usize::from(id.0)]
     }
