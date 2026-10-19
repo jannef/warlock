@@ -517,12 +517,22 @@ fn digging(content: &Content) -> String {
     let tools: Vec<(&str, u16)> = (content.object_defs().iter())
         .filter_map(|o| o.dig.map(|power| (o.name.as_str(), power)))
         .collect();
+    let blasts: Vec<(&str, u16)> = (content.trap_defs().iter())
+        .filter_map(|t| match t.effect {
+            TrapEffect::Burst { blast, .. } if blast > 0 => Some((t.noun.as_str(), blast)),
+            _ => None,
+        })
+        .collect();
     let mut out = String::from("| Wall | Glyph | Hardness |");
     for (name, _) in &tools {
         let _ = write!(out, " With {} {name} |", article(name));
     }
+    for (name, _) in &blasts {
+        let _ = write!(out, " {} {name} breaks it |", capital(article(name)));
+    }
     out.push_str(" Becomes |\n|---|:---:|---:|");
     out.push_str(&"---:|".repeat(tools.len()));
+    out.push_str(&":---:|".repeat(blasts.len()));
     out.push_str("---|\n");
     for t in content.terrain_defs() {
         let Some(breaks) = t.breaks else { continue };
@@ -539,6 +549,9 @@ fn digging(content: &Content) -> String {
                 " {} |",
                 dig_time(content, breaks.hardness, *power, AVERAGE)
             );
+        }
+        for (_, blast) in &blasts {
+            let _ = write!(out, " {} |", yes(breaks.hardness < *blast));
         }
         let _ = writeln!(out, " {} |", content.terrain(breaks.becomes).name);
     }
@@ -1769,12 +1782,17 @@ mod tests {
         let digging = text("digging.md");
         assert!(
             digging.contains(
-                "| Wall | Glyph | Hardness | With a pick-axe | With a mattock | Becomes |"
+                "| Wall | Glyph | Hardness | With a pick-axe | With a mattock | A fireball breaks \
+                 it | Becomes |"
             ),
             "{digging}"
         );
-        assert!(digging.contains("| Stone wall | `#` | 600 | 6 minutes | 4 minutes | rubble |"));
-        assert!(digging.contains("| Granite | `#` | 3000 | 30 minutes | 20 minutes | rubble |"));
+        assert!(
+            digging.contains("| Stone wall | `#` | 600 | 6 minutes | 4 minutes | yes | rubble |")
+        );
+        assert!(
+            digging.contains("| Granite | `#` | 3000 | 30 minutes | 20 minutes | no | rubble |")
+        );
         let strength = text("digging-strength.md");
         assert!(strength.contains("| 18 |"), "{strength}");
         assert!(strength.contains("With a pick-axe, at a normal pace."));

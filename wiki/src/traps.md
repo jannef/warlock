@@ -32,7 +32,8 @@ a movement key never answers it.
   [Ranged combat](ranged.md)): it attacks whoever stands in its way, and lands where it falls, to
   be picked up.
 - **Blasts**: a fireball burns everyone around the trap and a lightning bolt strikes everyone
-  along its line, you included if you are there, with no roll to hit. Walls stop both. The
+  along its line, you included if you are there, with no roll to hit. Walls stop both, but a
+  fireball blows the softer walls it reaches apart (see [Digging and walls](digging.md)). The
   lightning runs one way, along the longest clear line from the trap unless the place says
   otherwise.
 - **A pit** costs you your next action as you climb out, as well as the fall.

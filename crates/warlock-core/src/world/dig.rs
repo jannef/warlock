@@ -157,7 +157,6 @@ impl World {
     /// line of sight of `center` within `radius`, the walls bounding it included) whose hardness
     /// is below `blast` breaks, all at once, so a blast never reaches through a wall it breaks.
     /// Walls on the level's edge never break. Returns the cells that broke, in order.
-    #[cfg_attr(not(test), allow(dead_code))]
     pub(crate) fn blast(
         &mut self,
         center: Pos,

@@ -16,7 +16,8 @@
 //! - **strike**: an attack roll against the victim;
 //! - **burst**: everyone on the cells within the radius that the blast reaches from the trap
 //!   (shadowcast: walls stop it) takes one roll of the damage, half of it (at least 1) beyond
-//!   radius − 1; no roll to hit;
+//!   radius − 1; no roll to hit; then the walls it reaches that are softer than its `blast` break
+//!   ([`World::blast`], spec §8 "Digging");
 //! - **bolt**: a line from the trap in its direction (the level's `dir`, else the longest clear
 //!   line from it, ties to the earlier of N, NE, ... NW) until a wall, at most its length:
 //!   everyone on it takes one roll of the damage;
@@ -91,7 +92,13 @@ impl World {
                 spell,
                 radius,
                 damage,
-            } => self.trap_burst(kind, at, spell, *radius, *damage, events),
+                blast,
+            } => {
+                self.trap_burst(kind, at, spell, *radius, *damage, events);
+                if *blast > 0 {
+                    self.blast(at, *radius, *blast, events);
+                }
+            }
             TrapEffect::Bolt {
                 spell,
                 length,

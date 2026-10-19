@@ -532,8 +532,8 @@ key `a` = `KeyCommand::Apply`, a direction prompt) needs `Actor::dig_tool`; `sta
 `WORK_SCALE` = 20ths of a hardness point) to `LevelState::dug` (saved, by position); at hardness ×
 20 `break_wall` sets the `becomes` terrain through `set_terrain` (light masks), clears the
 progress, bares `face`s around, and pushes `Event::WallBroken { pos, cause: Breach::Dug }`.
-Explosions (none yet; the fireball trap, #128, is to be the first) call
-`World::blast(center, radius, blast, events)`: every breakable wall in the burst
+Explosions call `World::blast(center, radius, blast, events)` (a burst trap with a data `blast`,
+after its damage: the fireball's 1000): every breakable wall in the burst
 (line of sight from the center, computed before anything breaks) with hardness below the blast
 breaks (`Breach::Blast`; `perceive_events` says "The wall collapses!" for those the player sees).
 Perception sees and remembers the rubble like any terrain; `PerceptionView::ready_to_dig` and

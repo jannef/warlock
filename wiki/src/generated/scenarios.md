@@ -7,6 +7,7 @@
 | Courtyard | 06:30, 11 Darkening, Year 1444 | The walled garden at dawn: sunlight, sky light, and shadows that turn with the sun. |
 | Depths | 08:00, 11 Darkening, Year 1444 | Straight into the generated dungeon branch: eight levels of rooms and caverns built from the run seed (try `--seed` with a word). |
 | Forest | 06:30, 11 Darkening, Year 1444 | A glade deep in the Thornwood at dawn: a generated local area of the overworld, where the trees cast long shadows. Walk off any edge to reach the overworld. |
+| Quarry | 08:00, 11 Darkening, Year 1444 | An old stone quarry under the hub: pick up the pick-axe, ready it in the Tool slot, and dig through earth, stone, and granite. A sealed chamber waits behind the pit's east wall. |
 | Trap hall | 08:00, 11 Darkening, Year 1444 | Traps to try and traps to watch: a row of known traps, and creatures on their rounds across hidden ones (fireball, lightning, spears, arrows). |
 | Vast | 08:00, 11 Darkening, Year 1444 | The 420x300 cavern level: scrolling camera, river, rooms, peaceful patrols, many lights; used for captures and perf checks. |
 | World | 08:00, 11 Darkening, Year 1444 | The overworld: travel the Wildlands by road and wild, day and night; enter the Hall, the Vast Caverns, the Depths, or any cell's local area with >. |

@@ -33,7 +33,8 @@ fn files(map: &str, light: &str, scenario: &str) -> ContentFiles {
              \"E\" = \"packed_earth\"\n\"G\" = \"granite\"\n\
              \"l\" = {{ terrain = \"floor\", light = \"lamp\" }}\n\
              \"d\" = {{ terrain = \"floor\", creature = \"deer\", route = \"N4 S4\" }}\n\
-             \"k\" = {{ terrain = \"floor\", creature = \"kobold\" }}\n"
+             \"k\" = {{ terrain = \"floor\", creature = \"kobold\" }}\n\
+             \"F\" = {{ terrain = \"floor\", trap = \"fireball\" }}\n"
         ),
     );
     files.insert(
@@ -517,4 +518,42 @@ fn breaking_terrain_and_digging_tools_are_validated() {
         let err = load("data/objects.toml", OBJECTS.replacen(pick, with, 1)).unwrap_err();
         assert!(err.contains(message), "{with}: {err}");
     }
+}
+
+#[test]
+fn a_fireball_trap_blasts_the_softer_walls_open() {
+    // A hidden fireball beside packed earth, a stone wall, and granite: stepping onto it, the
+    // player (tough enough to live through it) sees the earth and the stone blown into rubble
+    // and the granite hold; the level's edge holds too.
+    const BLAST: &str = "
+#########
+#.E#G...#
+#.@F....#
+#.......#
+#########
+";
+    let content = content_of(BLAST, LIT, "hp = 100");
+    let mut w = World::new(content, "cellar", None).expect("world");
+    let out = run(&mut w, "move:E");
+    for (p, terrain) in [
+        (Pos::new(2, 1), "rubble"),
+        (Pos::new(3, 1), "rubble"),
+        (Pos::new(4, 1), "granite"),
+        (Pos::new(3, 0), "wall"),
+    ] {
+        assert_eq!(terrain_at(&w, p), terrain, "{p:?}");
+    }
+    let broken: Vec<Pos> = (out.events.iter())
+        .filter_map(|e| match e {
+            Event::WallBroken {
+                pos,
+                cause: Breach::Blast,
+            } => Some(*pos),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(broken, [Pos::new(2, 1), Pos::new(3, 1)]);
+    let said: Vec<&str> = (w.messages().iter()).map(|m| m.text.as_str()).collect();
+    assert!(said.contains(&"A fireball explodes!"), "{said:?}");
+    assert!(said.contains(&"The walls collapse!"), "{said:?}");
 }

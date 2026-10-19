@@ -118,7 +118,8 @@ across the hall, and fireball). South, the crossing: creatures go their rounds a
 traps, so within fifteen turns the player watches a giant rat run onto spears, a cave beetle onto
 a lightning trap whose bolt runs west along its lane (killing it), a torch-bearing kobold into a
 fireball, and a second kobold shot from the south wall by an arrow trap, and from then on knows
-those traps. The rat and the kobolds are among the peaceful folk and the beetle is wildlife, so
+those traps. Three pillars stand by that fireball, packed earth and stone north of it and granite
+south: its blast breaks the two softer ones into rubble and the granite holds (§8 "Digging"). The rat and the kobolds are among the peaceful folk and the beetle is wildlife, so
 nobody attacks the player; the traps attack everybody.
 
 **Arena (72×21, M10)**: down the stairs nook's second `>`: the place to fight; factions at war. A kobold war band
@@ -1611,7 +1612,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     - **burst** (the fireball): every actor on the transparent cells within the radius that a
       shadowcast from the trap reaches (walls stop it) takes one roll of the damage, half of it
       (at least 1) beyond radius − 1; no roll to hit, no saving throw. In ascending actor id
-      order.
+      order. Then, with a `blast`, the walls it reaches whose hardness is below it break (§8
+      "Digging": the fireball's 1000 breaks earth and stone, not granite).
     - **bolt** (lightning): a line from the trap's cell in its direction (the level's `dir`,
       else the longest clear line from it, ties to the earlier of N, NE, … NW) until an opaque
       cell, at most its `length` cells in all: every actor on it, from the trap outward, takes
@@ -1678,7 +1680,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     in line of sight of its centre within its radius, the walls bounding them included, taken
     before anything breaks, so a blast never reaches through a wall it breaks. Walls on the edge
     never break. "The wall collapses!" ("The walls collapse!") when the player sees one fall.
-    Nothing explodes yet: the fireball trap (#128) is to be the first explosion to call it.
+    A burst trap with a `blast` (§7) calls it after its damage, with its own radius: the fireball
+    trap's 1000 breaks packed earth and stone walls, never granite.
   - **What follows**: a broken wall is its rubble at once and the light masks it could change are
     dropped (`World::set_terrain`, as for a door), so light, the player's sight, and creature
     sight pass the gap from the next perception, and memory keeps the rubble like any terrain.
