@@ -14,7 +14,8 @@
 # East of the gazebo a flagstone path leads to a small timber hut (W, roof 2 tall) with a door in
 # its west wall: Grimbold's General Store (spec §7 "Shops"), lit by a hanging lamp. Grimbold stands
 # by the door; everything on the plank floor (p) is for sale. A merchant fights no one, so the
-# courtyard stays safe unless the player steals. A purse of gold lies in the gazebo.
+# courtyard stays safe unless the player steals. A purse of gold lies in the gazebo, enough for
+# the store's angelica root, the cure for diseases (spec §8 "Diseases").
 name = "The Courtyard"
 kind = "outdoor"
 map = '''
@@ -100,6 +101,10 @@ objects = ["small_shield"]
 [[pile]]
 at = [56, 14]
 objects = ["red_potion"]
+
+[[pile]]
+at = [60, 14]
+objects = ["angelica_root"]
 
 [[pile]]
 at = [62, 14]
