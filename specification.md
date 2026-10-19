@@ -39,6 +39,12 @@ Build the engine and framework, not the game. Everything built is production qua
   targeting, missiles flying on screen, and flaming arrows that light the dark where they land
   (§8 "Ranged combat"). Spells stay announced only
 - Moons with phases and moonlight, weather starting with rain (M12)
+- Temperature and ice (M26): a fixed temperature underground, under the open sky one that follows
+  the month, the time of day, and the weather, always shown in the status bar; water that freezes
+  slowly in the cold and thaws in the warmth, ice of tracked thickness that holds actors by their
+  weight (what they carry included) and gives way under the heavy, falling in and climbing out,
+  and bursts of frost, heat, and blasts as hooks for spells and explosions (§5 "Temperature",
+  "Ice"). Nothing feels the cold yet (no hypothermia, warmth, or clothing)
 - Action costs: what an actor does and its speed decide how long it takes (M13)
 - Stats (M14): Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
   D&D, with D&D 3.5 modifiers and ADOM-like potentials that the player never sees; every actor
@@ -100,14 +106,27 @@ regression scene for golden screenshots, replays, and snapshot tests.
 | Darkness chamber | vision types, a UV-only rune, darkvision fade; an amulet seen only by those who see in the dark | M3, M11 |
 | Water garden | still ponds and running rills (flow, glints, foam), pulsing altar with a ring before it | M4, M8, M11 |
 | Effects room | glyph particles, glow, fades, distortion | M4 |
-| Stairs | connection to Level 2 and the arena (down), the courtyard and the overworld (up); the nook is a sanctuary (§7 "Special rooms") | M2, M9, M10, M25 |
+| Stairs | connection to Level 2, the arena, and the Frost Grotto (down), the courtyard and the overworld (up); the nook is a sanctuary (§7 "Special rooms") | M2, M9, M10, M25, M26 |
 
 **Courtyard (66×19, outdoor)**: up the stairs nook's `<`, a walled garden under the open sky —
 trees, a ruined wall, a pond, standing stones, flower beds, and a roofed gazebo with a lamp — where
 sunlight, sky light, and shadows turn and stretch with the time of day (§5 "Sunlight"; M9), and the
 moon lights it faintly by night, waxing and waning with the month (§5 "Moonlight"; M12). The
 `courtyard` scenario starts there at 06:30, while the shadows are long. Windfall apples lie under
-a tree, and a candle and a scroll in the gazebo (M11).
+a tree, and a candle and a scroll in the gazebo (M11). Its pond freezes with the season (§5
+"Ice"; M26): on 11 Darkening, the default start, the clear night has left thin ice on it at
+dawn, which the afternoon thins again; in Deepwinter and Frostmere it freezes thick.
+
+**Frost Grotto (44×11, M26)**: down the stairs nook's third `>` (below the first), outside the
+safe hub: a cave a little below freezing (−2 °C) with a frozen pool to walk on (§5 "Ice"). West
+to east: thick ice (20 cm) that holds anything that walks, ice (5.5 cm) that holds a person but
+may give way under a heavy pack, thin ice (2.5 cm) that gives way under anyone but a rat, and open
+water where a spring of running water (which needs a harder frost) runs in from the east wall.
+A silver ring lies out on the thin ice (it sinks to the bottom of the hole when the ice gives
+way, where wading in fishes it out), and a heap of rocks by the stairs lets the player load up
+and try the ice heavily laden. Arriving says "Your breath mists in the cold air."; lamps and a
+faint cold ambient light the pool. The ice keeps and slowly thickens; a hole refreezes in a few
+hours.
 
 **Safety**: the hand-made showcase (the hub, Level 2, the courtyard) is safe. Creatures that would hunt the player by type (the hub's kobold, Level 2's kobolds and rats) are placed in the `peaceful` faction by their level (§7 "Factions"): they keep their types, patrols, speeds, footsteps, and looks, and attack no one. Fighting happens in the arena, and in the generated Depths (the real dungeon). Arriving in the arena says "The clash of arms echoes off the stone." (a level's `arrival` line).
 
@@ -414,7 +433,11 @@ glow, barely perceptible distortion, short fades.
     each, the corners pushed sideways by a slow wander and a sharp jitter) that takes a new shape
     with every flash and flicker and forks now and then into the cells the player sees, very
     bright blue-white, then a violet afterglow.
-  - Both are light themselves (drawn unlit and glowing, on top of everything else on the map)
+  - A **frost burst** (`frost_burst`, a burst; §5 "Ice") is the quiet one: a cold flash of rime
+    (`✳*·`, white to deep blue, a thin glowing body, a little cold light) over the cells it
+    reached, with a few frost crystals drifting down as it fades; no darkening and no shake. The
+    dev action `freeze:x,y,r` shows it over the water it froze.
+  - All are light themselves (drawn unlit and glowing, on top of everything else on the map)
     and light the scene with their own light (§4.4): from a burst's center, along a bolt every
     other cell.
   - **Darkening**: while a bright effect peaks, everything that is not its light (base light,
@@ -591,6 +614,82 @@ rate or animation.
     (saved, hashed) until it runs out. Captures and tests use it.
   - Weather is the same over the whole land for now; snow, fog, and rain masking sounds (hearing)
     may come later.
+- **Temperature** (`warlock-core/src/temperature.rs`; M26): the air on every level has a
+  temperature, in tenths of a degree Celsius, integer math only.
+  - **Underground** (dungeon levels) it is fixed: the level file's `temperature`, else its
+    dungeon branch's for that depth (`data/dungeons.toml`; the Depths 10 °C, its caverns 8 °C,
+    its deepest levels 6 °C), else 10 °C. It is kept with the level (saved).
+  - **Under the open sky** (outdoor levels and the overworld) it is a pure function of the run
+    seed and the time, like the weather, so long rests and journeys need no history: the
+    month's mean (`temperature` per `[[month]]` in `data/weather.toml`; the middle of each month
+    has its mean, and the days between two middles go linearly from one to the next: Frostmere
+    −7 °C, Thawmonth −3, Seedtide 3, Rainmoon 8, Greenleaf 13, Highsun 18, Emberheat 22,
+    Harvestide 18, Leaffall 12, Mistmoon 6, Darkening 1, Deepwinter −4), plus the day's swing
+    around it, a cosine (the sun's fixed-point one) coldest at 04:00 and warmest at 16:00: a clear
+    day's `swing` (10 °C from the coldest to the warmest) times the weather's `swing` percent
+    (overcast 40, rain 30, heavy rain 25: clouds keep nights milder and days cooler), less the
+    weather's `chill` (rain 1 °C, heavy rain 2 °C). Where the weather changes, its swing and chill
+    change with the clouds, over the same hour (`weather::Blend`). The dev weather override sets
+    them too, from the moment it is given. A clear night on 11 Darkening falls to about −3 °C.
+  - **Shown**: the status bar always shows the temperature where the player is, in dungeons and
+    outdoors alike, in whole degrees (`4 °C`; °F with the setting, §6), with a subtle cool tint
+    below freezing and a warm one from 30 °C. The number is the one exception to numbers being
+    hidden: the player feels the air. Nothing else feels it yet: no hypothermia, warmth, or
+    clothing; it freezes water ("Ice" below). Special rooms and ice do not change the air.
+- **Ice** (`warlock-core/src/ice.rs`, rules in `world/ice.rs`; M26):
+  - **Freezing**: every cell of water that freezes (terrain with a `freeze` table, §7: still
+    water below 0 °C at full pace; running water only below −6 °C, at 40 %) has an ice
+    thickness, kept sparsely with its level (only cells with ice; in micrometres, so slow
+    growth is not lost to rounding; saved, hashed). Growth follows Stefan's law: each tick (10
+    minutes) the square of the thickness grows by 400 000 µm² per tenth of a degree below the
+    water's freezing point, times its rate (2.4 cm per √(°C·day): about 5 cm in a day at −5 °C,
+    13 cm in three days at −10 °C), quickly at first and ever more slowly; above 0 °C it melts 5
+    µm a tick per tenth of a degree (7.2 mm a day per degree); between the two it keeps. At most
+    1 m.
+  - **Lazily**: nothing ticks while nobody looks. A level's ice is brought up to the clock when
+    the rules may meet it (as the clock moves on the player's level, during rests too, and when
+    the player arrives), tick by tick from where it was left (`LevelState::ice_until`). Ticks fall
+    on fixed moments of the clock (every 10 minutes since the epoch), each at the temperature of
+    its middle, so the ice at a moment is the same however the time passed: by turns, rests,
+    overworld journeys, or the dev skip. Cells that start alike stay alike, so catching up works
+    through the thicknesses there are (and each kind of open water), not the cells: a year away is
+    52 000 ticks of a few groups. A level under the open sky seen for the first time has had 30
+    days of its weather already (a pond is frozen when first come upon in deep winter);
+    underground levels start with the ice their file lays.
+  - **Looks**: a cell shows the thickest ice terrain its ice reaches (`ice` in
+    `data/terrain.toml`: thin ice from 1 cm, ice from 5 cm, thick ice from 15 cm), else the water
+    beneath; the terrain grid holds that, so memory, sight, and look mode follow ("thin ice",
+    "ice", "thick ice"). Ice is still: no waves, glints, or rain ripples. The player never learns
+    a thickness, only how it looks.
+  - **What it holds**: Gold's formula with `A` = 3.5 kg/cm²: 35 g per mm² of thickness squared,
+    so 5 cm holds 87.5 kg (a person with a pack), 15 cm 787.5 kg. An actor stepping onto ice
+    whose weight (its creature's base weight plus everything it carries, worn and wielded things
+    included) is at most that crosses safely, with no draw. Above that the ice gives way with a
+    chance rising evenly to certain at twice that (one draw of the gameplay stream, made only
+    between the two); ice that held by luck creaks under the player ("The ice creaks under your
+    weight."). A step onto ice costs its terrain's `move_cost` (120: careful steps). Wading into
+    water whose ice is too thin to look like ice breaks that skin.
+  - **Breaking through**: the cell is open water again (its ice gone; it refreezes from
+    nothing), and what lay on the ice sinks to the bottom: it stays in the cell's pile, under the
+    shallow water, where wading in picks it up. An actor that broke through from firm footing
+    plunges in: "The ice cracks beneath you and you plunge into the freezing water!" (a creature
+    the player sees: "The kobold falls through the ice!", `Event::FellThroughIce`), and loses the
+    water's `plunge` hit points (1d3; never the last one: the cold does not kill yet). The step
+    was a step into the water. From the water, ice that cannot hold the actor breaks ahead of it
+    ("You break through the ice."), without another plunge.
+  - **Climbing out**: a step from open water onto ice that holds the actor also costs `climb`
+    (`data/actions.toml`, 2000: 12 s at a normal pace), a few turns of hauling oneself up ("You
+    climb out onto the ice."). Wading out onto the shore is an ordinary step.
+  - **Bursts** (hooks for spells, traps, and explosions): `World::frost(center, radius,
+    thickness)` freezes the water within the radius in line of sight of the centre to at least
+    that thickness at once; `World::shock(center, radius, Shock)` breaks the ice it reaches: heat
+    (a fireball) melts all of it, a blast without heat shatters ice thinner than its strength,
+    and whoever stood on ice that broke falls in. The dev actions `freeze:x,y,r` (10 cm, shown
+    as the `frost_burst` spell effect, §4.8) and `thaw:x,y,r` (heat) use them; trapped fireballs
+    and a frost trap (#128) and blasts (#131) will.
+  - Creatures follow the same rules: they step onto ice, fall through, and climb out. The
+    overworld's rivers and lakes do not freeze (map scale; crossing a frozen river may come
+    later).
 - **Brightness** is the integer luma of RGB, `(54·r + 183·g + 19·b) / 256`, plus UV for eyes that
   see UV. Eyes without UV sight do not perceive UV at all (perception reports it as 0).
 - **Visibility**: a cell is visible iff it is in line of sight within the maximum view range **and**
@@ -719,7 +818,8 @@ rate or animation.
   position and preset, or the sun or a moon with its shadow direction; and per-cell
   contributions; contributions plus the cell's base light sum to the cell's light), the base light
   of visible cells, the active vision profile, the ambient light, on a level under the sky the
-  sun, the moons, the sky, and the weather of the moment, and the perceived sounds (kind, volume, rough place;
+  sun, the moons, the sky, and the weather of the moment, the temperature where the player is (§5
+  "Temperature"), and the perceived sounds (kind, volume, rough place;
   "Hearing" above). Visual lighting (§4.4) is derived from this.
 
 ## 6. Input and UI
@@ -768,7 +868,9 @@ rate or animation.
   Resume, Settings, Controls, Save and quit to menu, Quit (which saves). No game time passes while
   it is open; Esc or Back in Settings/Controls returns to it.
 - **Settings** (`settings.toml` in the platform config dir; on the web, browser `localStorage`, §7): font size (logical
-  px, 12 to 36), reduced effects and the per-effect switches, color palette, key bindings. A missing or damaged file means
+  px, 12 to 36), reduced effects and the per-effect switches, color palette, the temperature
+  unit (`temperature = "celsius"` (the default) or `"fahrenheit"`: how the status bar shows the
+  temperature, whole degrees, applied only when it is shown), key bindings. A missing or damaged file means
   defaults and a logged warning. Changes apply live (a font size change rebuilds the glyph atlas)
   and are written immediately.
 - **Rebinding**: in Controls, select a command and press a key; it becomes the command's primary
@@ -935,11 +1037,15 @@ rate or animation.
   its local areas), time of day and date as `14:32 · 12 Rainmoon, Year 1444`, the moon's phase as a
   glyph and its name (`◑ First quarter`; with several moons each moon's name and glyph, `Moon ●
   Ilse ☽`), the weather under the open sky (`Clear`, `Overcast`, `Rain`, `Heavy rain`; §5
-  "Weather"), turn, position, light at the player, vision profile, lantern, seed). The phase glyph
+  "Weather"), the temperature where the player is, always (`4 °C`, or `39 °F` with the setting:
+  whole degrees, rounded half away from zero; tinted a subtle cool blue below freezing and warm
+  from 30 °C, the number saying it all; §5 "Temperature"), turn, position, light at the player,
+  vision profile, lantern, seed). The phase glyph
   shows the lit part of the disc, lit on the right while waxing: `○` new, `☽` waxing crescent,
   `◑` first quarter and waxing gibbous, `●` full, `◐` waning gibbous and last quarter, `☾` waning
   crescent. When the window is narrow, segments give way in priority order — seed, position,
-  lantern, vision, light, turn, then the moon's phase (first cut down to its glyph), region, date
+  lantern, vision, light, turn, then the moon's phase (first cut down to its glyph), the
+  temperature, region, date
   (first cut down to day and month, `12 Rainmoon`), weather, time, burden, and hit points, the
   level name last — and
   segments that fit again in the room left take it back, most important first. Outdoors the
@@ -1008,6 +1114,13 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   runs toward where the channel continues in the next row, edge cells turn toward water below them
   where the channel narrows, and a few boulders (from their own random stream, so the rest of the
   level is unchanged) stand in the wide stretches for the water to foam against.
+- **Temperature and ice in level files** (M26; §5 "Temperature", "Ice"): a level under no sky
+  may set its `temperature` (°C, −40 to 40; default its branch's, else 10); under the open sky
+  it follows the weather, so an outdoor or overworld level giving one is a content error. A
+  legend entry on water that freezes may lay ice on it, `{ terrain = "water", ice = 25 }` (mm, 1
+  to 1000): the cell shows the ice terrain that thickness reaches. Ice terrain is never placed by
+  itself (a content error): it lies on water, which it thaws back into. Vaults lay no ice and
+  have no temperature (the level they are stamped into decides).
 - **Definitions** (TOML): terrain types, creature types, light presets, vision profiles, glyph
   animations, and effects (glow, heat haze, particle emitters; §4.8). Creature types have a
   `speed` (100 to 10 000, default 1000, the player's; never shown to the player; §8 "Speed"): the
@@ -1062,7 +1175,20 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   local areas (required with `local`): `plains`, `grassland`, `forest`, `dense_forest`, `hills`,
   or `swamp` pick the generator of its own areas; `road` runs a road through them amid the
   neighbors' land; `river` and `lake` put running or still water along that side of the
-  neighboring areas (§3). The calendar's month names are
+  neighboring areas (§3). Water that freezes (§5 "Ice") has a `freeze` table: `below` (ice grows
+  while the air is colder than this, °C, 0 down to −30; it melts above 0), `rate` (percent of
+  still water's pace, 1 to 100, default 100), and `plunge` (dice: the hit points a fall through
+  the ice into it takes, never the last one); still water `{ below = 0, plunge = "1d3" }`,
+  running water `{ below = -6, rate = 40, plunge = "1d3" }`, a flooded room's shallow water
+  `{ below = 0, plunge = 1 }`. Ice is terrain with `ice`, the
+  thinnest ice in mm that looks like it (1 to 1000, distinct; the next one's takes over from
+  its thickness): thin ice (10, hairline cracks `⁄ ∖ ·` over dark water), ice (50, a grey-blue
+  sheet, a dot here and there), thick ice (150, pale and frosted all over), each `move_cost`
+  120. Water that freezes and ice are walkable and transparent, give no light, and are neither
+  doors, stairs, nor overworld terrain; ice does not flow; if any water freezes, some terrain
+  must be ice. Presentation-only, any terrain may have `variants`: glyphs the map draws in place
+  of its `glyph`, one per cell picked by a hash of its position (a space for none; look mode
+  and dumps use `glyph`). The calendar's month names are
   `data/calendar.toml` (exactly 12; without the file months are numbered).
 - **Action costs** (`data/actions.toml`, optional): action ids mapped to their cost in energy,
   e.g. `wait = 1000`, 1000 being a normal action (6 s at normal speed; §8 "Time"), 100 to
@@ -1072,7 +1198,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   `reloads`: a crossbow shot costs `shoot` plus `reload`, 2000), `cast`, and for equipment (each slot names
   one, below) `wield` (1000), `wear` (1000: helmets, cloaks, gloves, boots, rings, amulets),
   `body_armor` (3000: it takes a while to strap on), and `ready` (1000: a missile weapon and
-  missiles). An action left out, or every action without the file, costs 1000; an unknown id or
+  missiles), and `climb` (2000: climbing out of the water onto ice, on top of the step onto it;
+  §5 "Ice"). An action left out, or every action without the file, costs 1000; an unknown id or
   a cost out of range is a content error. The wiki shows them in a generated table.
 - **The sky** (`data/sky.toml`, optional; without it there are no moons): up to 8 `[[moon]]`s,
   each with `name` (shown in the status bar when there are several), `color` (`[r, g, b, uv]`,
@@ -1148,13 +1275,18 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   targeting and noise, look mode "(hostile)", bump-to-attack vs "in the way"), and so can make a
   hostile type harmless in the showcase. Level files may also have an `arrival` line, said each
   time the player arrives by stairs.
-- **The weather** (`data/weather.toml`, optional; without it the sky is always clear): exactly 12
+- **The weather** (`data/weather.toml`, optional; without it the sky is always clear and every
+  month a mild 10 °C with a swing of 8): `swing` at the top (a clear day's swing of temperature
+  from the coldest hour to the warmest, °C, 0 to 30), exactly 12
   `[[month]]`s in calendar order, each with the chance in percent of `clear`, `overcast`, `rain`,
-  and `heavy_rain` (adding up to 100), and a table for each of `overcast`, `rain`, and
+  and `heavy_rain` (adding up to 100) and its mean `temperature` (°C, −40 to 40; §5
+  "Temperature"), and a table for each of `overcast`, `rain`, and
   `heavy_rain` (clear is the sky as it is): `direct` and `sky` (percent of the direct light of the
   sun and the moons, and of the sky light, that gets through; 1 to 100), `scatter` (percent of the
   direct light the clouds spread over the sky as sky light, 0 to 100, default 0), `sight` (cells
-  of overworld sight lost, 0 to 8, default 0), and presentation-only `ambient` particle emitters
+  of overworld sight lost, 0 to 8, default 0), `swing` (percent of a clear day's swing of
+  temperature left under it, 0 to 100, default 100), `chill` (how much cooler it is, °C, 0 to
+  15, default 0), and presentation-only `ambient` particle emitters
   (§4.8; `rate` per cell and second): `drops` (on every visible cell under the sky), `splash` (on
   open ground: walkable, transparent, not running water), and `ripples` (on still water, terrain
   with a `wave` animation). §5 "Weather".
@@ -1173,7 +1305,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   `projectile`) `flight`. Every glyph joins the atlas. §4.8 "Spell effects".
 - **Dungeon branches** (`data/dungeons.toml`): stacks of generated levels, e.g.
   `{ id = "depths", generator = "rooms", depth = 8, size = [80, 21] }`, plus optional name,
-  patrolling creature kinds, ambient light, and per-depth overrides of generator and size. Stairs
+  patrolling creature kinds, ambient light, `temperature` (°C, −40 to 40; default 10; §5
+  "Temperature"), and per-depth overrides of generator, size, and temperature (each default the
+  branch's). Stairs
   (and scenarios) may target `depths:N`; content validation accepts such ids when the branch has
   that depth. A branch level is generated on its first visit from its own random stream (§8) and
   then persists like a hand-made level. Its `<` leads to `depths:N-1` (on depth 1, back to the
@@ -1362,10 +1496,13 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   version 12), the player's experience total (§8 "Experience"; format version 13; absent while
   0, so a run without kills hashes as before), every actor's trained skills (value and training
   marks) and the training random stream (§8 "Skills"; format version 14), each level's special
-  rooms and whether the player has been in each (§7 "Special rooms"; format version 15), and a
+  rooms and whether the player has been in each (§7 "Special rooms"; format version 15), each
+  level's temperature underground, the ice on its water (thickness and the water beneath), and
+  when its ice was last brought up to date (§5 "Temperature", "Ice"; format version 16), and a
   dev weather override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
-  itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
+  itself is not saved, nor the temperature under the open sky: they follow from the seed and the
+  clock. The save is `run.sav` in the
   platform data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
   and on level change, and a save that cannot be read is renamed `run.sav.bad`, never deleted, while
   a new run starts. Starting resumes the save unless `--new` is given. **Permadeath**: when the
@@ -1412,7 +1549,9 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   scheduler, "Speed" below) → environment → perception (line of sight, light, memory, heard
   sounds and their messages) → emit presentation events. An action that makes noise is heard by
   every actor in earshot as it happens (§5 "Hearing"); a creature drops what it heard as it
-  acts, the player once they have acted.
+  acts, the player once they have acted. As the clock moves (and as perception begins, after a
+  skip or an arrival), the ice on the player's level is brought up to it (§5 "Ice"), so whoever
+  steps next meets the ice of the moment.
 - **Time** (`warlock-core/src/time.rs`): world time is whole seconds since the calendar epoch
   (year 1, day 1 of the first month, 00:00), kept in the world state (saved, covered by the state
   hash). The calendar has 12 months of 30 days (a 360-day year) and 24-hour days; month names are
@@ -1864,7 +2003,9 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   in the world state and saved; §8 "Skills"); the weather, which keeps no
   stream at
   all: each weather block hashes the seed, a label, and its number (FNV-1a, then SplitMix64's
-  finalizer; §5 "Weather"); and visual-only randomness in the app, which never uses either. No hash-order iteration and no floating point in the core's decisions.
+  finalizer; §5 "Weather"), nor the temperature and the ice, which follow from the weather, the
+  clock, and the levels (only ice giving way under a weight between what it holds and twice that
+  draws from the gameplay stream; §5 "Ice"); and visual-only randomness in the app, which never uses either. No hash-order iteration and no floating point in the core's decisions.
   The same seed and actions produce the same result within a game version; seeds are not
   guaranteed stable across versions, and snapshot tests flag when generator output changes. A seed
   is a number or a word (`--seed warlock`, hashed with FNV-1a 64).
@@ -1896,12 +2037,15 @@ cargo xtask golden [--update]                             # compare golden scree
   syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
   pickup pickup:ac drop drop:b equip:body:b remove:body fire:12,5 throw:c:12,5
   vision:darkvision skip:1h weather:rain effect:fireball@12,5
-  effect:lightning_bolt@3,4>12,4`; `fire:X,Y` shoots at level cell (X, Y),
-  `throw:LETTER:X,Y` throws one of inventory stack LETTER there; the dev action
+  effect:lightning_bolt@3,4>12,4 freeze:12,5,3 thaw:12,5,3`; `fire:X,Y` shoots at level cell
+  (X, Y), `throw:LETTER:X,Y` throws one of inventory stack LETTER there; the dev action
   `effect:ID@X,Y[>X,Y]` shows spell effect ID (`data/effects.toml`) as the player perceives it, a
   burst around X,Y (around the second cell, flying there from the first) or a bolt from the first
   cell toward the second (cut short by the first opaque cell); it hurts no one, takes no time,
-  and only says so in the message log;
+  and only says so in the message log; the dev bursts `freeze:X,Y,R` (an instant frost: the
+  water within radius R, 0 to 20, of cell (X, Y), in its line of sight, freezes to 10 cm of ice)
+  and `thaw:X,Y,R` (a burst of heat: the ice there melts, and whoever stood on it falls in) take
+  no time (§5 "Ice");
   durations are a whole number with `s`, `m`, or `h`, a rest at most `24h`; letters name stacks
   of the pile or the inventory, `a` first, and without letters `pickup` and `drop` take
   everything; `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT (a slot id of
@@ -1933,13 +2077,16 @@ cargo xtask golden [--update]                             # compare golden scree
   weight, base plus carried, what it carries and of that wears and wields, `equipped main_hand a
   spear`, its burden and carrying limit, `unburdened (limit 31.5 kg)`, its stats as
   score/potential, `St 12/15`, and its trained skills with their marks toward the next point,
-  `skills stealth 17 (2/5)`), and `rooms` (the level's special rooms: the terrain with each
+  `skills stealth 17 (2/5)`), `rooms` (the level's special rooms: the terrain with each
   room's plain ground drawn as its effect's `mark`, then a line per room, `s shadowed room at
-  (34, 8)-(49, 13), entered`) show
+  (34, 8)-(49, 13), entered`), and `ice` (a line with the temperature on the level and when its
+  ice was last brought up to date, then the map with each iced cell's thickness in whole
+  centimetres, `0`–`9`, `a`–`z` for 10–35, `#` beyond, over the terrain) show
   ground truth and are dev-only. JSON dumps
   carry turn, game time (seconds and calendar fields), level, viewer, the special room the
   player stands in if they know it (`room`, its effect id; else null), the weather (under the open
-  sky; else null), seen actors (each with how hurt it looks, `health`: `unhurt`,
+  sky; else null), the temperature where the player is (`temperature`, °C to a tenth), seen
+  actors (each with how hurt it looks, `health`: `unhurt`,
   `lightly_wounded`, `wounded`, `badly_wounded`, `nearly_dead`), heard sounds, the player's
   inventory, equipment (by slot id: letter, object, count), weight, burden (`burden: {level,
   limit}`, the limit in grams), character
@@ -1949,7 +2096,8 @@ cargo xtask golden [--update]                             # compare golden scree
   total), how the run ended (`death: {turn, time, place, by}` or null), recent messages,
   and optionally the full world state; the ASCII header line has the turn, the time
   (`0001-01-01 08:00:00`), level, viewer, the player's hit points (`hp 17/17`, then `dead` once
-  they have died), the weather under the open sky (`weather rain`), and hash.
+  they have died), the weather under the open sky (`weather rain`), the temperature
+  (`temperature -3.5 °C`), and hash.
 - Freezing visual time and fixing window size and scale make screenshots reproducible. With frozen
   time, glyph animations show that moment and motion (slides, camera) completes instantly.
 - `--fire` (dev) starts the run aiming the readied missile weapon, as `f` would, so captures show
@@ -2065,6 +2213,11 @@ Each milestone ships a playable build.
   World of Warcraft scaling for monsters below (down to grey, worth nothing) and above the
   player's level, a quadratic level curve to 50 in data, and hit point growth up to level 20;
   level and XP on the status bar, the character screen, and the death screen (#133).
+- **M26 Temperature and ice** (#142) — a temperature on every level, fixed underground and
+  following the month, the time of day, and the weather outdoors, always in the status bar (°C
+  or °F); water that freezes and thaws lazily with game time, ice of tracked thickness that
+  holds by weight and gives way under the heavy, falling in and climbing out, the Frost Grotto,
+  and bursts of frost and heat for spells and explosions to come.
 
 - **M25 Special rooms** — ADOM-like special rooms (data, `data/room_effects.toml`): a
   shadowed room, an echoing hall, a hushed chamber, a sanctuary, and a flooded room, in about one

@@ -9,9 +9,9 @@
 | Open door | `'` | yes | no | 6 seconds | normal | 0 | door: can be closed |
 | Staircase down | `>` | yes | no | 6 seconds | normal | 0 | stairs down |
 | Staircase up | `<` | yes | no | 6 seconds | normal | 0 | stairs up |
-| Still water | `~` | yes | no | 12 seconds | very loud | 0 |  |
-| Running water | `~` | yes | no | 12 seconds | very loud | 0 |  |
-| Shallow water | `~` | yes | no | 9 seconds | very loud | 0 |  |
+| Still water | `~` | yes | no | 12 seconds | very loud | 0 | freezes below 0 °C |
+| Running water | `~` | yes | no | 12 seconds | very loud | 0 | freezes below -6 °C |
+| Shallow water | `~` | yes | no | 9 seconds | very loud | 0 | freezes below 0 °C |
 | Altar | `_` | yes | no | 6 seconds | normal | 0 | gives light |
 | Wall torch | `¡` | no | no | - | - | 0 | gives light |
 | Brazier | `Ω` | no | no | - | - | 0 | gives light |
@@ -43,3 +43,6 @@
 | Reeds | `¦` | yes | no | 9 seconds | loud | 1 |  |
 | Dirt road | `.` | yes | no | 6 seconds | quiet | 0 |  |
 | Rubble | `,` | yes | no | 9 seconds | loud | 0 |  |
+| Thin ice | `⁄` | yes | no | 7.2 seconds | normal | 0 | ice on water: holds by its thickness |
+| Ice | `·` | yes | no | 7.2 seconds | normal | 0 | ice on water: holds by its thickness |
+| Thick ice | `·` | yes | no | 7.2 seconds | normal | 0 | ice on water: holds by its thickness |

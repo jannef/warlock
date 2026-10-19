@@ -53,7 +53,7 @@ use crate::render::anim::{AnimTable, TerrainAnim};
 use crate::render::console::{Cell, Console};
 use crate::render::grid::MapGrid;
 use crate::render::{ConsoleLayout, Effects, VisualTime, lighting, shadows};
-use crate::settings::Settings;
+use crate::settings::{Settings, TemperatureUnit};
 use bevy::prelude::*;
 use missiles::Missiles;
 use motion::Motion;
@@ -75,6 +75,12 @@ const TEXT: Rgb = Rgb::new(0xd8, 0xd4, 0xc8);
 const TEXT_DIM: Rgb = Rgb::new(0x8e, 0x8a, 0x82);
 const ACCENT: Rgb = Rgb::new(0xe0, 0xb0, 0x50);
 const PANEL_BG: Rgb = Rgb::new(0x12, 0x12, 0x18);
+/// The status bar's temperature below freezing: a cool hint (the number says it all).
+const COLD: Rgb = Rgb::new(0xa8, 0xc8, 0xe8);
+/// The status bar's temperature from [`HOT_TENTHS`] up: a warm hint.
+const HOT: Rgb = Rgb::new(0xe8, 0xb8, 0x94);
+/// Hot enough for the warm hint: 30 °C, in tenths.
+const HOT_TENTHS: i32 = 300;
 
 pub struct UiPlugin;
 
@@ -158,24 +164,24 @@ fn draw(
     }
     console.clear();
     if let Some(game) = &game {
-        draw_game(&mut console, game, *mode, &grid, *overlays, &bindings);
+        let shown = (*mode, *overlays, settings.temperature);
+        draw_game(&mut console, game, shown, &grid, &bindings);
     }
     stack.draw(&mut console, &settings, &bindings);
 }
 
-/// The gameplay UI: message line (or the current prompt), status bar, dev indicator, and the
-/// look cursor.
+/// The gameplay UI: message line (or the current prompt), status bar (the temperature in
+/// `unit`), dev indicator, and the look cursor.
 fn draw_game(
     console: &mut Console,
     game: &Game,
-    mode: InputMode,
+    (mode, overlays, unit): (InputMode, DevOverlays, TemperatureUnit),
     grid: &MapGrid,
-    overlays: DevOverlays,
     bindings: &Bindings,
 ) {
     let rows = console.rows() as i32;
     draw_messages(console, game, mode, bindings);
-    draw_status(console, game, rows - 1);
+    draw_status(console, game, rows - 1, unit);
     dev::draw_indicator(console, overlays);
     let cursor = match mode {
         InputMode::Look(p) => Some(p),
@@ -331,7 +337,7 @@ fn draw_map(grid: &mut MapGrid, view: &PerceptionView<'_>, anims: &AnimTable, ke
             let top = pile.first().map(|s| content.object(s.object));
             let glyph = |t| {
                 let def = content.terrain(t);
-                let (ch, fg) = top.map_or((def.glyph, def.fg), |o| (o.glyph, o.fg));
+                let (ch, fg) = top.map_or((def.glyph_at(p), def.fg), |o| (o.glyph, o.fg));
                 (ch, fg, def.bg)
             };
             let cell = match seen {
@@ -450,7 +456,7 @@ fn draw_messages(console: &mut Console, game: &Game, mode: InputMode, bindings: 
 /// The rest prompt; its letters are [`crate::input::REST_CHOICES`].
 const REST_PROMPT: &str = "Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to cancel)";
 
-fn draw_status(console: &mut Console, game: &Game, y: i32) {
+fn draw_status(console: &mut Console, game: &Game, y: i32, unit: TemperatureUnit) {
     let cols = console.cols() as i32;
     console.fill(
         0,
@@ -463,7 +469,7 @@ fn draw_status(console: &mut Console, game: &Game, y: i32) {
             bg: PANEL_BG,
         },
     );
-    let segments = status_segments(&game.world);
+    let segments = status_segments(&game.world, unit);
     // The controls hint matters most to new players, so it keeps its place unless the window is
     // very narrow; status segments give way around it.
     let hint = "? controls";
@@ -471,14 +477,27 @@ fn draw_status(console: &mut Console, game: &Game, y: i32) {
     let show_hint = cols >= 50;
     let reserved = if show_hint { hint_w + 3 } else { 0 };
     let width = (cols - 2 - reserved).max(0) as usize;
-    console.print(1, y, &fit_segments(&segments, width), TEXT);
+    let line = fit_segments(&segments, width);
+    console.print(1, y, &line, TEXT);
+    // A subtle hint of cold or heat on the temperature, when it is shown: the number says it.
+    let temperature = game.world.perception().temperature();
+    let tint = match temperature.tenths() {
+        t if t < 0 => Some(COLD),
+        t if t >= HOT_TENTHS => Some(HOT),
+        _ => None,
+    };
+    let text = unit.show(temperature);
+    if let (Some(tint), Some(at)) = (tint, line.find(&text)) {
+        let x = line[..at].chars().count() as i32;
+        console.print(1 + x, y, &text, tint);
+    }
     if show_hint {
         console.print(cols - hint_w - 1, y, hint, TEXT_DIM);
     }
 }
 
-/// The status bar's segments for `world`, in display order.
-fn status_segments(world: &World) -> Vec<Segment> {
+/// The status bar's segments for `world`, in display order, the temperature in `unit`.
+fn status_segments(world: &World, unit: TemperatureUnit) -> Vec<Segment> {
     let view = world.perception();
     let pos = world.player_pos();
     let time = world.time();
@@ -496,6 +515,8 @@ fn status_segments(world: &World) -> Vec<Segment> {
     // and how far one sees. Hit points matter most after the level: they outlast the time, and
     // so does the burden (shown when there is one), which slows everything the player does.
     // The character level (`Lv 3`) comes after them and goes before them, but after the time.
+    // The temperature where the player is (always, underground too) sits after the weather; it
+    // outlasts the turn, the position, the seed, and the moon, and gives way before the date.
     let calendar = content.calendar();
     let (hp, max_hp) = view.own_hp();
     let burden = view.own_load().burden();
@@ -516,6 +537,7 @@ fn status_segments(world: &World) -> Vec<Segment> {
         moon_status(content.moons(), time)
             .map(|(text, glyphs)| Segment::new(5, text).or_short(glyphs)),
         view.weather().map(|w| Segment::new(2, w.name())),
+        Some(Segment::new(4, unit.show(view.temperature()))),
         Some(Segment::new(6, format!("Turn {}", world.turn()))),
         Some(Segment::new(10, format!("{},{}", pos.x, pos.y))),
         Some(Segment::new(7, format!("Light {light}"))),
@@ -675,14 +697,18 @@ mod tests {
     #[test]
     fn the_status_bar_shows_the_burden_after_the_hit_points_and_keeps_it_late() {
         let mut world = hoard();
-        let texts =
-            |w: &World| -> Vec<String> { status_segments(w).into_iter().map(|s| s.text).collect() };
+        let texts = |w: &World| -> Vec<String> {
+            status_segments(w, TemperatureUnit::Celsius)
+                .into_iter()
+                .map(|s| s.text)
+                .collect()
+        };
         assert!(
             !texts(&world).iter().any(|t| t.contains("urdened")),
             "unburdened: nothing"
         );
         world.apply(&Action::PickUp(Letters::default()));
-        let segments = status_segments(&world);
+        let segments = status_segments(&world, TemperatureUnit::Celsius);
         assert_eq!(segments[1].text, "HP 10/10");
         assert_eq!(segments[2].text, "Burdened", "right after the hit points");
         // Narrow: the time gives way first, then the burden, before the hit points.
@@ -773,7 +799,10 @@ mod tests {
     fn the_status_bar_shows_the_weather_only_under_the_open_sky() {
         let content = Arc::new(Content::builtin().expect("content"));
         let texts = |world: &World| -> Vec<String> {
-            status_segments(world).into_iter().map(|s| s.text).collect()
+            status_segments(world, TemperatureUnit::Celsius)
+                .into_iter()
+                .map(|s| s.text)
+                .collect()
         };
         let mut world = World::new(content.clone(), "showcase", None).expect("starts");
         world.apply(&Action::SetWeather(warlock_core::weather::Weather::Rain));
@@ -783,7 +812,7 @@ mod tests {
         world.apply(&Action::SetWeather(
             warlock_core::weather::Weather::HeavyRain,
         ));
-        let segments = status_segments(&world);
+        let segments = status_segments(&world, TemperatureUnit::Celsius);
         let at = |text: &str| segments.iter().position(|s| s.text.contains(text));
         let (weather, moon, date) = (at("Heavy rain"), at("Waxing gibbous"), at("Darkening"));
         assert_eq!(weather, moon.map(|m| m + 1), "shown after the moon");
@@ -802,10 +831,61 @@ mod tests {
     }
 
     #[test]
+    fn the_status_bar_always_shows_the_temperature_in_the_chosen_unit() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        // Underground too: the hub is 10 °C, after the moon (there is no weather there).
+        let hub = World::new(content.clone(), "showcase", None).expect("starts");
+        let segments = status_segments(&hub, TemperatureUnit::Celsius);
+        let at = |segments: &[Segment], text: &str| segments.iter().position(|s| s.text == text);
+        let moon = segments.iter().position(|s| s.text.contains("gibbous"));
+        assert_eq!(at(&segments, "10 °C"), moon.map(|m| m + 1));
+        let fahrenheit = status_segments(&hub, TemperatureUnit::Fahrenheit);
+        assert!(at(&fahrenheit, "50 °F").is_some());
+        // Outdoors, the weather's, right after the weather.
+        let yard = World::new(content, "courtyard", None).expect("starts");
+        let segments = status_segments(&yard, TemperatureUnit::Celsius);
+        let shown = TemperatureUnit::Celsius.show(yard.perception().temperature());
+        let weather = segments.iter().position(|s| s.text == "Clear");
+        assert_eq!(at(&segments, &shown), weather.map(|w| w + 1));
+        // It outlasts the seed, the position, the turn, and the moon, and gives way before the
+        // date, the time, the hit points, and the level.
+        let priority = |text: &str| segments[at(&segments, text).expect(text)].priority;
+        let temperature = priority(&shown);
+        for later in ["Turn 0", "6,9", "Seed 1"] {
+            assert!(priority(later) > temperature, "{later}");
+        }
+        let moon = segments
+            .iter()
+            .find(|s| s.text.contains("gibbous"))
+            .expect("moon");
+        assert!(moon.priority > temperature);
+        let date = segments
+            .iter()
+            .find(|s| s.text.contains("Darkening"))
+            .expect("date");
+        assert!(date.priority < temperature);
+        assert!(priority("06:30") < temperature && priority("HP 19/19") < temperature);
+        // Narrow: the moon is gone before the temperature, the temperature before the date.
+        let full = fit_segments(&segments, 200);
+        let without = |gone: &str| {
+            let width = full.chars().count() - 1;
+            (5..=width)
+                .rev()
+                .map(|w| fit_segments(&segments, w))
+                .find(|line| !line.contains(gone))
+                .expect("it drops at some width")
+        };
+        let moonless = without("gibbous");
+        assert!(moonless.contains(&shown), "{moonless}");
+        let cold = without(&shown);
+        assert!(cold.contains("Darkening"), "{cold}");
+    }
+
+    #[test]
     fn the_status_bar_shows_hit_points_and_keeps_them_late() {
         let content = Arc::new(Content::builtin().expect("content"));
         let world = World::new(content, "showcase", None).expect("starts");
-        let segments = status_segments(&world);
+        let segments = status_segments(&world, TemperatureUnit::Celsius);
         assert_eq!(segments[1].text, "HP 17/17", "right after the level");
         // Narrow: everything but the level gives way first, the time included.
         let line = fit_segments(&segments, 25);

@@ -371,6 +371,8 @@ pub fn generate(
             regions: Vec::new(),
             rooms: canvas.rooms,
             exit: None,
+            temperature: plan.temperature,
+            ice: Default::default(),
         };
         if connect::validate(&template, content).is_ok() {
             return Ok(template);

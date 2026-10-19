@@ -15,17 +15,20 @@
 //! size = [80, 21]
 //! creatures = ["rat", "kobold"] # patrolling creatures generators may place; default none
 //! ambient = [0, 0, 0, 0]        # optional
+//! temperature = 9               # °C; default the dungeon default (10)
 //!
 //! [[dungeon.levels]]            # optional per-depth overrides, first match wins
 //! from = 3
 //! to = 5                        # inclusive; default: just `from`
-//! generator = "caves"
+//! generator = "caves"           # default: the branch's generator
 //! size = [120, 60]              # default: the branch's size
+//! temperature = 7               # default: the branch's temperature
 //! ```
 
 use super::ContentError;
 use super::creature::CreatureId;
 use crate::light::Light;
+use crate::temperature::{LEVEL_TEMPERATURES, Temperature};
 use serde::Deserialize;
 
 /// Which generator builds a level.
@@ -67,6 +70,8 @@ struct DungeonSpec {
     ambient: Light,
     #[serde(default)]
     creatures: Vec<String>,
+    /// The temperature on its levels, in °C; default the dungeon default.
+    temperature: Option<i8>,
     #[serde(default)]
     levels: Vec<LevelsSpec>,
 }
@@ -76,8 +81,9 @@ struct DungeonSpec {
 struct LevelsSpec {
     from: u32,
     to: Option<u32>,
-    generator: Generator,
+    generator: Option<Generator>,
     size: Option<[i32; 2]>,
+    temperature: Option<i8>,
 }
 
 /// How one level of a branch is generated.
@@ -86,6 +92,8 @@ pub struct LevelPlan {
     pub generator: Generator,
     pub width: i32,
     pub height: i32,
+    /// Its temperature (spec §5 "Temperature"); `None`: the dungeon default.
+    pub temperature: Option<Temperature>,
 }
 
 /// A validated dungeon branch.
@@ -170,15 +178,27 @@ impl DungeonFile {
                     .levels
                     .iter()
                     .find(|l| (l.from..=l.to.unwrap_or(l.from)).contains(&depth));
-                let (generator, [width, height]) = match over {
-                    Some(l) => (l.generator, l.size.unwrap_or(spec.size)),
-                    None => (spec.generator, spec.size),
+                let (generator, [width, height], temperature) = match over {
+                    Some(l) => (
+                        l.generator.unwrap_or(spec.generator),
+                        l.size.unwrap_or(spec.size),
+                        l.temperature.or(spec.temperature),
+                    ),
+                    None => (spec.generator, spec.size, spec.temperature),
                 };
                 check_size(generator, [width, height])?;
+                if let Some(c) = temperature.filter(|c| !LEVEL_TEMPERATURES.contains(c)) {
+                    return Err(err(format!(
+                        "dungeon `{id}`: temperature {c} is outside {} to {} (°C)",
+                        LEVEL_TEMPERATURES.start(),
+                        LEVEL_TEMPERATURES.end()
+                    )));
+                }
                 plans.push(LevelPlan {
                     generator,
                     width,
                     height,
+                    temperature: temperature.map(|c| Temperature::degrees(c.into())),
                 });
             }
             for l in &spec.levels {
@@ -247,13 +267,36 @@ mod tests {
             Some(LevelPlan {
                 generator: Generator::Caves,
                 width: 120,
-                height: 60
+                height: 60,
+                temperature: None,
             })
         );
         assert_eq!(d.plan(4).map(|p| p.width), Some(80));
         assert_eq!(d.plan(5), None);
         assert_eq!(d.plan(0), None);
         assert_eq!(d.level_id(2), "d:2");
+    }
+
+    #[test]
+    fn branches_and_depths_set_the_temperature() {
+        let defs = resolve(
+            "[[dungeon]]\nid = \"d\"\ngenerator = \"rooms\"\ndepth = 4\nsize = [80, 21]\n\
+             temperature = 9\n\
+             [[dungeon.levels]]\nfrom = 3\nto = 4\ntemperature = -2\n",
+        )
+        .unwrap();
+        let t = |depth| defs[0].plan(depth).and_then(|p| p.temperature);
+        assert_eq!(t(1), Some(Temperature::degrees(9)));
+        assert_eq!(t(3), Some(Temperature::degrees(-2)));
+        // The override keeps the branch's generator and size.
+        assert_eq!(defs[0].plan(4).map(|p| p.generator), Some(Generator::Rooms));
+        let plain = "[[dungeon]]\nid = \"d\"\ngenerator = \"rooms\"\ndepth = 1\nsize = [80, 21]\n";
+        assert_eq!(
+            resolve(plain).unwrap()[0].plan(1).unwrap().temperature,
+            None
+        );
+        let hot = format!("{plain}temperature = 41\n");
+        assert!(resolve(&hot).unwrap_err().message.contains("temperature"));
     }
 
     #[test]

@@ -12,8 +12,11 @@
 #   size       [width, height]
 #   creatures  creature ids generators may place on patrol (default none)
 #   ambient    [r, g, b, uv] light everywhere (default none)
+#   temperature  °C on its levels (spec §5 "Temperature"; -40 to 40, default 10, the dungeon
+#              default): water there freezes below 0
 #   [[dungeon.levels]]  per-depth overrides, first match wins:
-#              from, to (inclusive; default `from`), generator, size (default the branch's)
+#              from, to (inclusive; default `from`), generator, size, temperature (each default
+#              the branch's)
 #
 # Generators build with the terrain void, wall, floor, door_closed, door_open, stairs_up,
 # stairs_down, water, sconce, fungus and the light lamp, and stamp vaults (assets/vaults).
@@ -25,6 +28,8 @@ generator = "rooms"
 depth = 8
 size = [80, 21]
 creatures = ["rat", "bat", "kobold"]
+# Cool, as cellars are, and colder deeper down (never freezing).
+temperature = 10
 
 # Depths 3 to 5 are caverns.
 [[dungeon.levels]]
@@ -32,3 +37,9 @@ from = 3
 to = 5
 generator = "caves"
 size = [120, 60]
+temperature = 8
+
+[[dungeon.levels]]
+from = 6
+to = 8
+temperature = 6

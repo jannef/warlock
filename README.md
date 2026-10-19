@@ -111,6 +111,17 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
 
   ![The courtyard in rain at noon](docs/screenshots/m12-courtyard-rain.png)
 
+- **Temperature and ice** — every place has a temperature, shown in the status bar (°C or °F):
+  cool and steady underground, outdoors following the month, the hour, and the weather (clear
+  nights are cold). Water freezes slowly in the cold and thaws in the warmth, even while you are
+  away: thin ice with hairline cracks over dark water, then a grey-blue sheet, then thick white
+  ice. Ice holds by its thickness against your weight and everything you carry; a laden dwarf
+  breaks through where a light elf crosses, plunges into the freezing water, and climbs out in a
+  few turns, while what lay on the ice sinks to the bottom. The Frost Grotto, below the hub,
+  has a frozen pool to try.
+
+  ![The Frost Grotto: thick ice, ice, and thin ice with a fresh hole, at -2 °C](docs/screenshots/m26-frost-grotto.png)
+
 - **Overworld and time** — a 12-month, 30-day calendar and a clock that every action advances.
   "The Wildlands" overworld takes real travel time per step (a road is quick, a swamp slow,
   mountains impassable); how far you see follows the daylight and the moon. Its locations lead to the hub, the
@@ -121,7 +132,7 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
 
   ![A forest clearing in Thornwood at noon](docs/screenshots/m9-forest-clearing.png)
 
-- **Levels** — the hub, a sunlit courtyard, the arena, a 420×300 cavern, and "The Depths": rooms-and-corridors
+- **Levels** — the hub, a sunlit courtyard, the arena, the Frost Grotto, a 420×300 cavern, and "The Depths": rooms-and-corridors
   and cave levels generated from the run seed (numbers or words), with hand-made vaults stamped in.
 - **Special rooms** — ADOM-like, about one level of the Depths in three has a room that changes
   the rules inside it, announced the first time you step in: a shadowed room that drains every
@@ -134,7 +145,7 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
 - **Saves** — one save per run, written when you quit and autosaved as you play (in the browser
   too); when you die, it is deleted.
 - **Settings** — font size, color palettes (including high contrast and a colorblind-friendly
-  variant), per-effect switches, and fully rebindable keys.
+  variant), per-effect switches, °C or °F, and fully rebindable keys.
 - **Everywhere** — Windows, macOS, Linux, and the browser (WebGPU).
 
 ## Play

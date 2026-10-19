@@ -8,74 +8,97 @@
 # Chances of each weather in percent, one [[month]] per month in calendar order (exactly 12, see
 # calendar.toml); each month's chances add up to 100. Over many days each weather comes up exactly
 # as often as its chance says. (Snow may come later; for now winter rains too.)
+#
+# Temperature (spec §5 "Temperature"): under the open sky it follows the month, the time of day,
+# and the weather, from the seed and the time alone like the weather itself. Each [[month]] gives
+# its mean `temperature` in °C (-40 to 40; the middle of the month has it, the days between two
+# middles go from one to the other). Over the day it swings around the mean, coldest at 04:00 and
+# warmest at 16:00: `swing` (below, 0 to 30) °C from the coldest to the warmest under a clear sky,
+# less under clouds (each weather's `swing`, below). Without this file every month is a mild 10 °C
+# with a swing of 8.
+
+# A clear day's swing, in °C: clear nights are cold, clear afternoons warm.
+swing = 10
 
 [[month]] # Frostmere
+temperature = -7
 clear = 40
 overcast = 40
 rain = 15
 heavy_rain = 5
 
 [[month]] # Thawmonth
+temperature = -3
 clear = 35
 overcast = 35
 rain = 22
 heavy_rain = 8
 
 [[month]] # Seedtide
+temperature = 3
 clear = 40
 overcast = 30
 rain = 22
 heavy_rain = 8
 
 [[month]] # Rainmoon: the wettest month
+temperature = 8
 clear = 20
 overcast = 30
 rain = 35
 heavy_rain = 15
 
 [[month]] # Greenleaf
+temperature = 13
 clear = 40
 overcast = 30
 rain = 22
 heavy_rain = 8
 
 [[month]] # Highsun: the driest month
+temperature = 18
 clear = 70
 overcast = 18
 rain = 9
 heavy_rain = 3
 
 [[month]] # Emberheat: dry, with a rare downpour
+temperature = 22
 clear = 65
 overcast = 20
 rain = 10
 heavy_rain = 5
 
 [[month]] # Harvestide
+temperature = 18
 clear = 55
 overcast = 25
 rain = 14
 heavy_rain = 6
 
 [[month]] # Leaffall
+temperature = 12
 clear = 40
 overcast = 30
 rain = 22
 heavy_rain = 8
 
 [[month]] # Mistmoon
+temperature = 6
 clear = 30
 overcast = 45
 rain = 18
 heavy_rain = 7
 
 [[month]] # Darkening
+temperature = 1
 clear = 30
 overcast = 35
 rain = 25
 heavy_rain = 10
 
 [[month]] # Deepwinter
+temperature = -4
 clear = 35
 overcast = 45
 rain = 15
@@ -88,6 +111,9 @@ heavy_rain = 5
 #   scatter  percent of the direct light the clouds spread over the whole sky (0 to 100): soft
 #            sky light, in the shade too, so the light is flat and grey
 #   sight    cells of sight lost on the overworld (0 to 8; never below the 2 of a dark night)
+#   swing    percent of a clear day's swing of temperature left under it (0 to 100, default 100):
+#            clouds keep the day cooler and the night milder
+#   chill    how much cooler it is, in °C (0 to 15, default 0): rain cools the air
 # Presentation only (particle emitters as in terrain.toml, `ambient`, `rate` per cell and second;
 # off with the `weather` effect switch):
 #   drops    rain falling on every visible cell under the open sky (never under a roof)
@@ -99,12 +125,15 @@ heavy_rain = 5
 direct = 35
 sky = 85
 scatter = 15
+swing = 40
 
 [rain]
 direct = 22
 sky = 70
 scatter = 12
 sight = 2
+swing = 30
+chill = 1
 
 [rain.drops]
 glyphs = "│"
@@ -147,6 +176,8 @@ direct = 14
 sky = 55
 scatter = 8
 sight = 4
+swing = 25
+chill = 2
 
 [heavy_rain.drops]
 glyphs = "│"

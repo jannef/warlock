@@ -1,7 +1,11 @@
 # The showcase hub (spec §3). Each room demonstrates one engine capability:
 # top row: light hall (M3), darkness chamber (M3), water garden (M4);
 # bottom row: start room, door corridor, patrol gallery, effects room (M4), stairs nook (> down to
-# the Vast Caverns, v down to the arena, < up and out to the overworld, ^ up to the courtyard).
+# the Vast Caverns, v down to the arena, g down to the Frost Grotto, < up and out to the
+# overworld, ^ up to the courtyard).
+#
+# Temperature and ice (M26): the hub is a mild 10 °C, like every dungeon by default, so its water
+# never freezes; the Frost Grotto (g, down) is below freezing, with a frozen pool to walk on.
 #
 # Lighting (M3): no ambient light. Rooms are lit by wall torches (t), lamps (l), and a brazier (B);
 # the light hall has colored crystals (R G U A) between pillars that cast colored shadows; the
@@ -66,7 +70,7 @@ map = '''
 #......@.......##.....#.#.....##3........................#......B......#.......#
 #..............####+###.###+####..#...#...#...#...#...#..#.............#.<.>.v.#
 #..............##.............##2........................#.===.....::::#.......#
-#..............##......t......##.........................#.===.....::::#.......#
+#..............##......t......##.........................#.===.....::::#...g...#
 #..t.......t...#################t.......................t#.........::::#.......#
 ################################################################################
 '''
@@ -96,6 +100,8 @@ map = '''
 "^" = { terrain = "stairs_up", to = "courtyard" }
 # Stairs down (drawn `>`) to the arena.
 "v" = { terrain = "stairs_down", to = "arena" }
+# Stairs down (drawn `>`) to the Frost Grotto, where the cold has frozen a pool.
+"g" = { terrain = "stairs_down", to = "frost_grotto" }
 
 # Special rooms (data/room_effects.toml): the stairs nook, walls and door included, is a sanctuary.
 [[room]]

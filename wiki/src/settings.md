@@ -20,6 +20,7 @@ screen instead; see [Controls](controls.md#rebinding-keys).
 | Screen shake | The view shakes for a moment when a fireball or a lightning bolt goes off near you; the nearer, the harder. |
 | Weather | Rain falling, splashing, and ringing on water. |
 | Color palette | The colors: Default, High contrast, or Colorblind (red-green). See below. |
+| Temperature | The unit the status bar shows the temperature in: °C (Celsius, to start with) or °F (Fahrenheit). See [Temperature and ice](temperature.md). |
 | Reset to defaults | Puts every setting above back to its default. Your keys stay as they are. |
 
 ## Effects never hide anything

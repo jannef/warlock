@@ -1,15 +1,27 @@
-//! The climate (`assets/data/weather.toml`, spec §5 "Weather", §7): how likely each weather is in
-//! each month, how it changes the light from the sky and sight on the overworld, and how rain
-//! looks. What the weather is at a moment is [`crate::weather`]. Without the file the sky is
-//! always clear.
+//! The climate (`assets/data/weather.toml`, spec §5 "Weather", "Temperature", §7): how likely each
+//! weather is in each month, how warm each month is, how each weather changes the light from the
+//! sky, the temperature, and sight on the overworld, and how rain looks. What the weather is at a
+//! moment is [`crate::weather`], the temperature [`crate::temperature`]. Without the file the sky
+//! is always clear and every month mild ([`MILD`]).
 
 use super::{ContentError, ParticleEmitter, ParticleTrigger};
 use crate::time::MONTHS_PER_YEAR;
 use crate::weather::Weather;
 use serde::Deserialize;
+use std::ops::RangeInclusive;
 
 /// The most overworld sight a weather may take away, in cells.
 pub const MAX_SIGHT_LOSS: u8 = 8;
+/// Without a weather file, every month's mean temperature, in °C.
+pub const MILD: i8 = 10;
+/// Without a weather file, the day's swing of temperature under a clear sky, in °C.
+pub const MILD_SWING: u8 = 8;
+/// The coldest and warmest a month's mean temperature may be, in °C.
+pub const MONTH_TEMPERATURES: RangeInclusive<i8> = -40..=40;
+/// The largest daily swing of temperature under a clear sky, in °C.
+pub const MAX_SWING: u8 = 30;
+/// The most a weather may cool the air, in °C.
+pub const MAX_CHILL: i8 = 15;
 
 /// One weather's effects. Clear weather is the sky as it is: all of its light, no particles.
 #[derive(Clone, Debug, PartialEq, Deserialize)]
@@ -27,6 +39,13 @@ pub struct WeatherDef {
     /// Cells of overworld sight lost (0 to [`MAX_SIGHT_LOSS`]).
     #[serde(default)]
     pub sight: u8,
+    /// How much of a clear sky's daily swing of temperature is left under it, in percent (0 to
+    /// 100): clouds keep the day cooler and the night milder.
+    #[serde(default = "full_swing")]
+    pub swing: u8,
+    /// How much cooler the air is under it, in °C (0 to [`MAX_CHILL`]): rain cools it.
+    #[serde(default)]
+    pub chill: i8,
     /// Presentation only: drops falling on every visible cell under the open sky (an ambient
     /// emitter; `rate` per cell and second).
     #[serde(default)]
@@ -46,6 +65,8 @@ impl WeatherDef {
         sky: 100,
         scatter: 0,
         sight: 0,
+        swing: 100,
+        chill: 0,
         drops: None,
         splash: None,
         ripples: None,
@@ -68,6 +89,12 @@ impl WeatherDef {
         if self.sight > MAX_SIGHT_LOSS {
             return Err(format!("`sight` must be 0 to {MAX_SIGHT_LOSS} (cells)"));
         }
+        if self.swing > 100 {
+            return Err("`swing` must be 0 to 100 (percent)".into());
+        }
+        if !(0..=MAX_CHILL).contains(&self.chill) {
+            return Err(format!("`chill` must be 0 to {MAX_CHILL} (°C)"));
+        }
         for (name, emitter) in [
             ("drops", &self.drops),
             ("splash", &self.splash),
@@ -84,7 +111,12 @@ impl WeatherDef {
     }
 }
 
-/// The chances of each weather in one month, in percent; they add up to 100.
+fn full_swing() -> u8 {
+    100
+}
+
+/// One month: the chance of each weather in percent (they add up to 100), and its mean
+/// temperature in °C.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct MonthSpec {
@@ -92,23 +124,32 @@ struct MonthSpec {
     overcast: u8,
     rain: u8,
     heavy_rain: u8,
+    temperature: i8,
 }
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct WeatherFile {
+    /// The day's swing of temperature under a clear sky, in °C: from the coldest hour, before
+    /// dawn, to the warmest, in the afternoon.
+    swing: u8,
     month: Vec<MonthSpec>,
     overcast: WeatherDef,
     rain: WeatherDef,
     heavy_rain: WeatherDef,
 }
 
-/// How likely each weather is in each month, and what each one does.
+/// How likely each weather is in each month, how warm each month is, and what each weather
+/// does.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Climate {
     /// Per month (calendar order), the chance of each weather in percent, in [`Weather::ALL`]
     /// order.
     months: [[u8; 4]; MONTHS_PER_YEAR as usize],
+    /// Per month (calendar order), its mean temperature in °C.
+    temperatures: [i8; MONTHS_PER_YEAR as usize],
+    /// The day's swing of temperature under a clear sky, in °C.
+    swing: u8,
     /// In [`Weather::ALL`] order.
     defs: [WeatherDef; 4],
 }
@@ -118,6 +159,8 @@ impl Default for Climate {
     fn default() -> Self {
         Self {
             months: [[100, 0, 0, 0]; MONTHS_PER_YEAR as usize],
+            temperatures: [MILD; MONTHS_PER_YEAR as usize],
+            swing: MILD_SWING,
             defs: [
                 WeatherDef::CLEAR,
                 WeatherDef::CLEAR,
@@ -138,8 +181,21 @@ impl Climate {
                 parsed.month.len()
             )));
         }
+        if parsed.swing > MAX_SWING {
+            return Err(err(format!("`swing` must be 0 to {MAX_SWING} (°C)")));
+        }
         let mut months = [[0; 4]; MONTHS_PER_YEAR as usize];
+        let mut temperatures = [0; MONTHS_PER_YEAR as usize];
         for (i, m) in parsed.month.iter().enumerate() {
+            if !MONTH_TEMPERATURES.contains(&m.temperature) {
+                return Err(err(format!(
+                    "month {}: `temperature` must be {} to {} (°C)",
+                    i + 1,
+                    MONTH_TEMPERATURES.start(),
+                    MONTH_TEMPERATURES.end()
+                )));
+            }
+            temperatures[i] = m.temperature;
             let chances = [m.clear, m.overcast, m.rain, m.heavy_rain];
             let sum: u32 = chances.iter().map(|&c| u32::from(c)).sum();
             if sum != 100 {
@@ -159,6 +215,8 @@ impl Climate {
         }
         Ok(Self {
             months,
+            temperatures,
+            swing: parsed.swing,
             defs: [
                 WeatherDef::CLEAR,
                 parsed.overcast,
@@ -178,6 +236,17 @@ impl Climate {
     pub fn def(&self, weather: Weather) -> &WeatherDef {
         &self.defs[weather.index()]
     }
+
+    /// The mean temperature of the month with index `month` (0 to 11), in °C.
+    pub fn temperature(&self, month: usize) -> i8 {
+        self.temperatures[month % self.temperatures.len()]
+    }
+
+    /// The day's swing of temperature under a clear sky, in °C: from the coldest hour, before
+    /// dawn, to the warmest, in the afternoon.
+    pub fn swing(&self) -> u8 {
+        self.swing
+    }
 }
 
 #[cfg(test)]
@@ -186,9 +255,9 @@ mod tests {
 
     fn file(months: &str, extra: &str) -> String {
         format!(
-            "{months}\n[overcast]\ndirect = 40\nsky = 90\nscatter = 20\n\
+            "swing = 10\n{months}\n[overcast]\ndirect = 40\nsky = 90\nscatter = 20\nswing = 50\n\
              [rain]\ndirect = 25\nsky = 70\nsight = 2\n{extra}\n\
-             [heavy_rain]\ndirect = 10\nsky = 50\nsight = 4\n"
+             [heavy_rain]\ndirect = 10\nsky = 50\nsight = 4\nchill = 3\n"
         )
     }
 
@@ -198,7 +267,10 @@ mod tests {
 
     fn some_months(chances: [u8; 4], n: usize) -> String {
         let [c, o, r, h] = chances;
-        format!("[[month]]\nclear = {c}\novercast = {o}\nrain = {r}\nheavy_rain = {h}\n").repeat(n)
+        let month = format!(
+            "[[month]]\nclear = {c}\novercast = {o}\nrain = {r}\nheavy_rain = {h}\ntemperature = -4\n"
+        );
+        month.repeat(n)
     }
 
     #[test]
@@ -218,6 +290,13 @@ mod tests {
         assert_eq!(rain.emitters().count(), 1);
         assert_eq!(climate.def(Weather::Overcast).scatter, 20);
         assert_eq!(Climate::default().chances(5), [100, 0, 0, 0]);
+        // Temperature: the months' means, the clear sky's swing, and what each weather keeps of
+        // it and how much it cools the air.
+        assert_eq!((climate.temperature(11), climate.swing()), (-4, 10));
+        assert_eq!((rain.swing, rain.chill), (100, 0));
+        assert_eq!(climate.def(Weather::Overcast).swing, 50);
+        assert_eq!(climate.def(Weather::HeavyRain).chill, 3);
+        assert_eq!(Climate::default().temperature(0), MILD);
     }
 
     #[test]
@@ -228,6 +307,20 @@ mod tests {
             (file(&some_months([50, 25, 20, 5], 11), ""), "expected 12"),
             (file(&good, "scatter = 101"), "scatter"),
             (file(&good, "sight = 9"), "sight"),
+            (file(&good, "swing = 101"), "swing"),
+            (file(&good, "chill = -1"), "chill"),
+            (
+                file(&good, "").replace("swing = 10\n", "swing = 31\n"),
+                "swing",
+            ),
+            (
+                file(&good, "").replace("temperature = -4", "temperature = 41"),
+                "temperature",
+            ),
+            (
+                file(&good, "").replace("temperature = -4\n", ""),
+                "missing field `temperature`",
+            ),
             (
                 file(&good, "").replace("direct = 10", "direct = 0"),
                 "direct",

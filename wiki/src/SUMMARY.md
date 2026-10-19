@@ -13,6 +13,7 @@
 - [Hearing](hearing.md)
 - [Sun, moon, and sky](sun.md)
 - [Weather](weather.md)
+- [Temperature and ice](temperature.md)
 - [The overworld](overworld.md)
 - [Terrain](terrain.md)
 - [Special rooms](special-rooms.md)

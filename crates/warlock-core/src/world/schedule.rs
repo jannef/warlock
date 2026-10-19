@@ -134,6 +134,8 @@ impl World {
                 .expect("the player is scheduled");
             if seconds > 0 {
                 self.state.time += Duration::seconds(seconds);
+                // Whoever steps onto the ice next meets the ice of the moment.
+                self.update_ice();
                 self.regenerate(schedule.iter().map(|s| s.id), seconds);
                 let seconds = i64::try_from(seconds).unwrap_or(i64::MAX);
                 for s in &mut schedule {

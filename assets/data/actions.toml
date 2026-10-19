@@ -37,3 +37,6 @@ wear = 1000
 body_armor = 3000
 # Readying a missile weapon or missiles, or putting them away.
 ready = 1000
+# Climbing out of the water onto ice (spec §5 "Ice"), on top of the step onto the ice: hauling
+# oneself up out of a hole takes a few turns.
+climb = 2000

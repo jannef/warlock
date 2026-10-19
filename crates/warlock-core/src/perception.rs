@@ -72,6 +72,7 @@ use crate::noise::{self, PerceivedSound};
 use crate::object::{Stack, Weight};
 use crate::skills::{self, SkillId};
 use crate::stats::PerStat;
+use crate::temperature::Temperature;
 use crate::time::GameTime;
 use crate::weather::Weather;
 use crate::world::{Actor, ActorId, ActorKind, Death, LevelState, WorldState};
@@ -244,6 +245,8 @@ pub(crate) struct Perception {
     ambient: Light,
     /// The sun, the moons, and the sky over a level under the open sky.
     sky: Option<Sky>,
+    /// The temperature of the air where the player is (spec §5 "Temperature").
+    temperature: Temperature,
     /// Ambient plus sky plus bounce light; meaningful on visible cells only.
     base: Grid<Light>,
     sight: Grid<Sight>,
@@ -524,11 +527,14 @@ impl Perception {
             }
             None => Vec::new(),
         };
+        // The player feels the air: fixed underground, the weather's under the open sky.
+        let temperature = state.temperature_on(level, content, state.time);
         Self {
             viewer,
             vision,
             ambient,
             sky,
+            temperature,
             base,
             sight,
             visible_cells,
@@ -910,6 +916,12 @@ impl<'a> PerceptionView<'a> {
     /// The weather, which the player knows only under the open sky; `None` elsewhere.
     pub fn weather(&self) -> Option<Weather> {
         self.snapshot.weather()
+    }
+
+    /// The temperature of the air where the player is (spec §5 "Temperature"), which they feel,
+    /// in dungeons and under the open sky alike (the status bar shows it).
+    pub fn temperature(&self) -> Temperature {
+        self.snapshot.temperature
     }
 
     /// Steady light at a visible cell that no single source gives: ambient light plus sky light

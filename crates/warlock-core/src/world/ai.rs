@@ -376,7 +376,10 @@ impl World {
         if !def.walkable || overloaded || self.state.actor_at(&level.id, to).is_some() {
             return Stepped::Blocked;
         }
-        let price = self.step_price(id, def);
+        // Ice there may give way under it (spec §5 "Ice").
+        let footing = self.tread(id, from, to);
+        let onto = self.content.terrain(self.state.current().terrain[to]);
+        let price = self.step_price(id, onto) + self.tread_price(id, footing);
         if let Some(actor) = self.state.actors.get_mut(&id) {
             actor.pos = to;
         }
@@ -385,6 +388,7 @@ impl World {
             from,
             to,
         });
+        self.after_tread(id, to, footing, events);
         self.make_noise(id, Act::Step(to));
         Stepped::Moved(price)
     }

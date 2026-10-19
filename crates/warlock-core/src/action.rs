@@ -73,7 +73,24 @@ pub enum Action {
         at: Pos,
         to: Option<Pos>,
     },
+    /// Dev command: an instant frost (spec §5 "Ice"): the water within `radius` of cell `at`, in
+    /// its line of sight, freezes at once to ice that holds a laden person
+    /// ([`crate::ice::FROST`]). Takes no game time; recorded in replays.
+    Freeze {
+        at: Pos,
+        radius: i32,
+    },
+    /// Dev command: a burst of heat (standing in for a fireball): the ice within `radius` of
+    /// cell `at`, in its line of sight, melts at once, and whoever stood on it falls in. Takes no
+    /// game time; recorded in replays.
+    Thaw {
+        at: Pos,
+        radius: i32,
+    },
 }
+
+/// The largest radius of the dev frost and heat bursts.
+pub const MAX_BURST: i32 = 20;
 
 /// How long to rest.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -233,6 +250,12 @@ pub enum Event {
         /// The affected cells the player can see; perception-filtered, never ground truth.
         cells: Vec<Pos>,
     },
+    /// An actor broke through the ice and plunged into the water at `at` (spec §5 "Ice"). Kept
+    /// when the player saw it (their own always).
+    FellThroughIce {
+        actor: ActorId,
+        at: Pos,
+    },
 }
 
 /// The shape of a spell effect ([`Event::Spell`]).
@@ -299,13 +322,14 @@ pub struct Outcome {
 
 /// Text syntax for scripting: `move:E wait open:E close:W ascend descend lantern rest:1h
 /// rest:dawn rest:dusk pickup pickup:ac drop:b equip:body:b remove:body fire:12,5 throw:c:12,5
-/// vision:ID skip:1h weather:rain effect:fireball@12,5 effect:lightning_bolt@3,4>12,4`
-/// (durations: `30s`, `10m`, `2h`; letters name stacks, `a` first; `pickup` and `drop` without
-/// letters take everything; `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT,
-/// `remove:SLOT` takes off what is there; `fire:X,Y` shoots at the level cell (X, Y),
-/// `throw:LETTER:X,Y` throws one of inventory stack LETTER there; weather: `clear`, `overcast`,
-/// `rain`, `heavy`; `effect:ID@X,Y[>X,Y]` shows a spell effect at a cell, or from one cell
-/// toward another).
+/// vision:ID skip:1h weather:rain effect:fireball@12,5 effect:lightning_bolt@3,4>12,4
+/// freeze:12,5,3 thaw:12,5,3` (durations: `30s`, `10m`, `2h`; letters name stacks, `a` first;
+/// `pickup` and `drop` without letters take everything; `equip:SLOT:LETTER` puts inventory stack
+/// LETTER on in slot SLOT, `remove:SLOT` takes off what is there; `fire:X,Y` shoots at the level
+/// cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack LETTER there; weather: `clear`,
+/// `overcast`, `rain`, `heavy`; `effect:ID@X,Y[>X,Y]` shows a spell effect at a cell, or from one
+/// cell toward another; the dev bursts `freeze:X,Y,R` and `thaw:X,Y,R` freeze the water and melt
+/// the ice within radius R, 0 to [`MAX_BURST`], of cell (X, Y)).
 ///
 /// `Display` and `FromStr` round-trip; action names are case-insensitive when parsing (vision
 /// profile, slot, and effect ids keep their case).
@@ -345,6 +369,8 @@ impl fmt::Display for Action {
                     None => Ok(()),
                 }
             }
+            Action::Freeze { at, radius } => write!(f, "freeze:{},{},{radius}", at.x, at.y),
+            Action::Thaw { at, radius } => write!(f, "thaw:{},{},{radius}", at.x, at.y),
         }
     }
 }
@@ -473,11 +499,26 @@ impl FromStr for Action {
                     to: to.map(parse_cell).transpose().map_err(|_| usage())?,
                 })
             }
+            "freeze" | "thaw" => {
+                let usage = || format!("`{verb}` needs a cell and a radius, e.g. `{verb}:12,5,3`");
+                let (cell, radius) = arg.and_then(|a| a.rsplit_once(',')).ok_or_else(usage)?;
+                let at = parse_cell(cell).map_err(|_| usage())?;
+                let radius = match radius.trim().parse::<i32>() {
+                    Ok(r) if (0..=MAX_BURST).contains(&r) => r,
+                    _ => return Err(format!("`{s}`: the radius is 0 to {MAX_BURST}")),
+                };
+                Ok(if verb == "freeze" {
+                    Action::Freeze { at, radius }
+                } else {
+                    Action::Thaw { at, radius }
+                })
+            }
             _ => Err(format!(
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
                  descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
                  equip:SLOT:LETTER, remove:SLOT, fire:X,Y, throw:LETTER:X,Y, vision:ID, \
-                 skip:DURATION, weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y])"
+                 skip:DURATION, weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y], \
+                 freeze:X,Y,R, thaw:X,Y,R)"
             )),
         }
     }
@@ -580,6 +621,14 @@ mod tests {
                 at: Pos::new(-3, 4),
                 to: Some(Pos::new(12, 0)),
             },
+            Action::Freeze {
+                at: Pos::new(40, 12),
+                radius: 3,
+            },
+            Action::Thaw {
+                at: Pos::new(0, 7),
+                radius: 0,
+            },
         ];
         all.extend(Weather::ALL.map(Action::SetWeather));
         for d in Dir::ALL {
@@ -620,6 +669,28 @@ mod tests {
         assert!(parse_actions("vision").is_err());
         assert!(parse_actions("vision:").is_err());
         assert!(parse_actions("lantern:E").is_err());
+        assert_eq!(
+            parse_actions("FREEZE:12,5,4 thaw:3,4,0"),
+            Ok(vec![
+                Action::Freeze {
+                    at: Pos::new(12, 5),
+                    radius: 4
+                },
+                Action::Thaw {
+                    at: Pos::new(3, 4),
+                    radius: 0
+                },
+            ])
+        );
+        for bad in [
+            "freeze",
+            "freeze:12,5",
+            "freeze:12,5,21",
+            "thaw:1,2,-1",
+            "thaw:a,b,c",
+        ] {
+            assert!(parse_actions(bad).is_err(), "{bad}");
+        }
         assert_eq!(
             parse_actions("REST:Dawn rest:1h skip:2H"),
             Ok(vec![

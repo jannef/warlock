@@ -9,6 +9,7 @@
 //! font_px = 18            # logical pixels, 12 to 36
 //! reduced_effects = false # preset: forces every effect below off
 //! palette = "default"     # "default", "high-contrast", "colorblind"
+//! temperature = "celsius" # the status bar's unit: "celsius" (°C) or "fahrenheit" (°F)
 //!
 //! [effects]               # per-effect switches, all on by default
 //! glyph_animation = true  # wave, pulse, shimmer, cycle; heard sounds ripple in
@@ -33,6 +34,7 @@ use crate::input::Bindings;
 use crate::storage::Backend;
 use bevy::prelude::*;
 pub use palette::{Palette, Role};
+use warlock_core::temperature::Temperature;
 
 pub const MIN_FONT_PX: u32 = 12;
 pub const MAX_FONT_PX: u32 = 36;
@@ -50,6 +52,57 @@ pub struct Settings {
     /// Per-effect switches; an effect runs only when its switch is on and reduced effects is off.
     pub effects: EffectSwitches,
     pub palette: Palette,
+    /// The unit the status bar shows the temperature in (applied only when it is shown).
+    pub temperature: TemperatureUnit,
+}
+
+/// How temperatures are shown (spec §6 "Settings"): degrees Celsius (the default) or
+/// Fahrenheit, whole degrees.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum TemperatureUnit {
+    #[default]
+    Celsius,
+    Fahrenheit,
+}
+
+impl TemperatureUnit {
+    pub const ALL: [TemperatureUnit; 2] = [TemperatureUnit::Celsius, TemperatureUnit::Fahrenheit];
+
+    /// Name in the settings file.
+    pub fn id(self) -> &'static str {
+        match self {
+            TemperatureUnit::Celsius => "celsius",
+            TemperatureUnit::Fahrenheit => "fahrenheit",
+        }
+    }
+
+    pub fn from_id(id: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|u| u.id() == id)
+    }
+
+    /// Name shown in the settings screen.
+    pub fn label(self) -> &'static str {
+        match self {
+            TemperatureUnit::Celsius => "°C (Celsius)",
+            TemperatureUnit::Fahrenheit => "°F (Fahrenheit)",
+        }
+    }
+
+    /// The other unit.
+    pub fn toggled(self) -> Self {
+        match self {
+            TemperatureUnit::Celsius => TemperatureUnit::Fahrenheit,
+            TemperatureUnit::Fahrenheit => TemperatureUnit::Celsius,
+        }
+    }
+
+    /// `t` as the status bar shows it, in whole degrees: `4 °C`, `-3 °C`, `39 °F`.
+    pub fn show(self, t: Temperature) -> String {
+        match self {
+            TemperatureUnit::Celsius => format!("{} °C", t.celsius()),
+            TemperatureUnit::Fahrenheit => format!("{} °F", t.fahrenheit()),
+        }
+    }
 }
 
 /// Which visual effects run (spec §4.7). In [`Settings`] these are the player's per-effect
@@ -166,6 +219,7 @@ impl Default for Settings {
             reduced_effects: false,
             effects: EffectSwitches::ALL_ON,
             palette: Palette::Default,
+            temperature: TemperatureUnit::Celsius,
         }
     }
 }
@@ -207,6 +261,7 @@ pub fn parse(text: &str) -> Loaded {
             "reduced_effects",
             "effects",
             "palette",
+            "temperature",
             "bindings",
         ]
         .contains(&key.as_str())
@@ -256,6 +311,14 @@ pub fn parse(text: &str) -> Loaded {
             None => warnings.push(format!("unknown palette {value}; using the default")),
         }
     }
+    if let Some(value) = table.get("temperature") {
+        match value.as_str().and_then(TemperatureUnit::from_id) {
+            Some(unit) => settings.temperature = unit,
+            None => warnings.push(format!(
+                "unknown temperature unit {value} (\"celsius\" or \"fahrenheit\"); using °C"
+            )),
+        }
+    }
     let bindings = match table.get("bindings") {
         Some(toml::Value::Table(t)) => Bindings::from_table(t, &mut warnings),
         Some(_) => {
@@ -276,6 +339,7 @@ struct FileOut<'a> {
     font_px: u32,
     reduced_effects: bool,
     palette: &'a str,
+    temperature: &'a str,
     effects: std::collections::BTreeMap<&'static str, bool>,
     bindings: std::collections::BTreeMap<String, Vec<String>>,
 }
@@ -286,6 +350,7 @@ pub fn to_toml(settings: &Settings, bindings: &Bindings) -> String {
         font_px: settings.font_px,
         reduced_effects: settings.reduced_effects,
         palette: settings.palette.id(),
+        temperature: settings.temperature.id(),
         effects: settings.effects.to_map(),
         bindings: bindings.to_map(),
     };
@@ -429,6 +494,7 @@ mod tests {
                 ..EffectSwitches::ALL_ON
             },
             palette: Palette::Colorblind,
+            temperature: TemperatureUnit::Fahrenheit,
         };
         let mut bindings = Bindings::default();
         bindings
@@ -446,6 +512,30 @@ mod tests {
         let loaded = parse("font_px = 20\nreduced_effects = false\npalette = \"default\"\n");
         assert!(loaded.warnings.is_empty(), "{:?}", loaded.warnings);
         assert_eq!(loaded.settings.effects, EffectSwitches::ALL_ON);
+        assert_eq!(loaded.settings.temperature, TemperatureUnit::Celsius);
+    }
+
+    #[test]
+    fn the_temperature_unit_reads_and_shows_whole_degrees() {
+        let loaded = parse("temperature = \"fahrenheit\"\n");
+        assert!(loaded.warnings.is_empty(), "{:?}", loaded.warnings);
+        assert_eq!(loaded.settings.temperature, TemperatureUnit::Fahrenheit);
+        let loaded = parse("temperature = \"kelvin\"\n");
+        assert_eq!(loaded.settings.temperature, TemperatureUnit::Celsius);
+        assert_eq!(loaded.warnings.len(), 1);
+        // Whole degrees, rounded half away from zero; never "-0".
+        let show = |unit: TemperatureUnit, tenths| unit.show(Temperature::from_tenths(tenths));
+        use TemperatureUnit::{Celsius, Fahrenheit};
+        assert_eq!(show(Celsius, 44), "4 °C");
+        assert_eq!(show(Celsius, 45), "5 °C");
+        assert_eq!(show(Celsius, -4), "0 °C");
+        assert_eq!(show(Celsius, -35), "-4 °C");
+        assert_eq!(show(Fahrenheit, 0), "32 °F");
+        assert_eq!(show(Fahrenheit, 44), "40 °F");
+        assert_eq!(show(Fahrenheit, -35), "26 °F");
+        assert_eq!(show(Fahrenheit, -178), "0 °F");
+        assert_eq!(Celsius.toggled(), Fahrenheit);
+        assert_eq!(Fahrenheit.toggled(), Celsius);
     }
 
     #[test]

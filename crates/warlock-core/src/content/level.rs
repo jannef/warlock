@@ -22,13 +22,14 @@ use super::flow::{FLOW_SPEEDS, Flow};
 use super::light::LightId;
 use super::object::parse_stacks;
 use super::room_effect::SpecialRoom;
-use super::terrain::{StairsDir, TerrainId};
+use super::terrain::{StairsDir, TerrainDef, TerrainId};
 use super::{ActionKind, Content, ContentError};
 use crate::equipment::{self, Equipment};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use crate::light::Light;
 use crate::object::{INVENTORY_SLOTS, Stack, add_to_pile};
+use crate::temperature::{LEVEL_TEMPERATURES, Temperature};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -71,6 +72,9 @@ struct LevelFile {
     ambient: Light,
     #[serde(default)]
     kind: LevelKind,
+    /// The temperature underground, in °C (spec §5 "Temperature"); default the dungeon default.
+    /// Under the open sky it follows the weather, so outdoor levels have none.
+    temperature: Option<i8>,
     map: String,
     #[serde(default)]
     legend: BTreeMap<String, LegendEntry>,
@@ -163,6 +167,8 @@ pub(super) struct LegendDetail {
     flow: Option<Dir>,
     /// Flow speed in percent of the terrain's (default 100).
     flow_speed: Option<u16>,
+    /// Ice on the water of this cell, in mm (spec §5 "Ice"); only on water that freezes.
+    ice: Option<u16>,
     /// Objects lying on this cell, top first, e.g. `["dagger", "arrow*12"]`.
     objects: Option<Vec<String>>,
     /// Objects the creature on this cell carries.
@@ -264,6 +270,11 @@ pub struct LevelTemplate {
     pub rooms: Vec<SpecialRoom>,
     /// Where walking off the edge leads (local areas); `None`: the edge cannot be crossed.
     pub exit: Option<EdgeExit>,
+    /// The temperature underground (spec §5 "Temperature"); `None`: the dungeon default (or,
+    /// under the open sky, the weather's).
+    pub temperature: Option<Temperature>,
+    /// Ice on water, by position, in µm (spec §5 "Ice"); only on water that freezes.
+    pub ice: BTreeMap<Pos, u32>,
 }
 
 impl LevelTemplate {
@@ -322,6 +333,7 @@ pub(super) fn parse_level(
     let mut stairs = Vec::new();
     let mut lights = BTreeMap::new();
     let mut flow = BTreeMap::new();
+    let mut ice = BTreeMap::new();
     let mut objects: BTreeMap<Pos, Vec<Stack>> = BTreeMap::new();
 
     for (y, row) in rows.iter().enumerate() {
@@ -343,6 +355,9 @@ pub(super) fn parse_level(
             let running = content.terrain(terrain).flows();
             if let Some(f) = parse_flow(ch, entry, running, pos).map_err(err)? {
                 flow.insert(pos, f);
+            }
+            if let Some(um) = parse_ice(ch, entry, content.terrain(terrain)).map_err(err)? {
+                ice.insert(pos, um);
             }
             if let Some(dir) = content.terrain(terrain).stairs {
                 stairs.push(StairsLink {
@@ -494,6 +509,23 @@ pub(super) fn parse_level(
         )));
     }
 
+    let temperature = match parsed.temperature {
+        Some(_) if parsed.kind.is_sky_exposed() => {
+            return Err(err(
+                "only levels under no sky have a `temperature`: under the open sky it follows \
+                 the weather"
+                    .into(),
+            ));
+        }
+        Some(c) if !LEVEL_TEMPERATURES.contains(&c) => {
+            return Err(err(format!(
+                "`temperature` must be {} to {} (°C)",
+                LEVEL_TEMPERATURES.start(),
+                LEVEL_TEMPERATURES.end()
+            )));
+        }
+        c => c.map(|c| Temperature::degrees(c.into())),
+    };
     let template = LevelTemplate {
         id: id.to_string(),
         name: parsed.name,
@@ -510,6 +542,8 @@ pub(super) fn parse_level(
         regions,
         rooms,
         exit: None,
+        temperature,
+        ice,
     };
     for spawn in &template.creatures {
         validate_route(&template, content, spawn).map_err(err)?;
@@ -565,6 +599,35 @@ fn parse_flow(
             Ok(Some(Flow::new(dir, speed)))
         }
     }
+}
+
+/// The ice a legend entry lays on the water of its cell, in µm (`ice = mm`): only on water that
+/// freezes. Ice terrain is never placed by itself: it lies on water, which it needs to thaw back
+/// into.
+fn parse_ice(ch: char, entry: &LegendEntry, terrain: &TerrainDef) -> Result<Option<u32>, String> {
+    if terrain.ice.is_some() {
+        return Err(format!(
+            "legend `{ch}` places ice (`{}`) itself; lay it on water instead: \
+             `{{ terrain = \"water\", ice = MM }}`",
+            terrain.id
+        ));
+    }
+    let Some(mm) = entry.detail().and_then(|d| d.ice) else {
+        return Ok(None);
+    };
+    if terrain.freeze.is_none() {
+        return Err(format!(
+            "legend `{ch}` has `ice` but terrain `{}` is not water that freezes",
+            terrain.id
+        ));
+    }
+    if !(1..=crate::ice::MAX_MM).contains(&mm) {
+        return Err(format!(
+            "legend `{ch}` has `ice` {mm}; expected 1 to {} (mm)",
+            crate::ice::MAX_MM
+        ));
+    }
+    Ok(Some(u32::from(mm) * 1000))
 }
 
 /// Parses a route like `"E4 S2 W4 N2"` (count defaults to 1).

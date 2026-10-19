@@ -1,5 +1,5 @@
 //! The settings screen: font size, reduced effects and its per-effect switches, color palette
-//! (spec §4.7). Changes apply
+//! (spec §4.7), and the temperature unit (°C or °F, spec §6). Changes apply
 //! live, because the screen edits the [`Settings`] resource that rendering reads.
 
 use super::menu::{Nav, Panel, Press};
@@ -71,11 +71,12 @@ enum Row {
     ReducedEffects,
     Effect(Effect),
     Palette,
+    Temperature,
     Reset,
     Back,
 }
 
-const ROWS: [Row; 14] = [
+const ROWS: [Row; 15] = [
     Row::FontSize,
     Row::ReducedEffects,
     Row::Effect(Effect::GlyphAnimation),
@@ -88,12 +89,13 @@ const ROWS: [Row; 14] = [
     Row::Effect(Effect::ScreenShake),
     Row::Effect(Effect::Weather),
     Row::Palette,
+    Row::Temperature,
     Row::Reset,
     Row::Back,
 ];
 
 /// Index of the first action row (Reset); a gap is drawn before it.
-const FIRST_ACTION: usize = 12;
+const FIRST_ACTION: usize = 13;
 
 /// Selection state of the settings screen.
 #[derive(Debug, Default)]
@@ -125,6 +127,7 @@ impl SettingsScreen {
                     *on = !*on;
                 }
                 Row::Palette => settings.palette = settings.palette.cycle(step < 0),
+                Row::Temperature => settings.temperature = settings.temperature.toggled(),
                 Row::Reset | Row::Back => {}
             },
             Nav::Enter if !press.repeat => match row {
@@ -135,6 +138,7 @@ impl SettingsScreen {
                     *on = !*on;
                 }
                 Row::Palette => settings.palette = settings.palette.cycle(false),
+                Row::Temperature => settings.temperature = settings.temperature.toggled(),
                 Row::Reset => *settings = Settings::default(),
                 Row::Back => return true,
             },
@@ -169,6 +173,10 @@ impl SettingsScreen {
                     "Color palette".to_string(),
                     settings.palette.label().to_string(),
                 ),
+                Row::Temperature => (
+                    "Temperature".to_string(),
+                    settings.temperature.label().to_string(),
+                ),
                 Row::Reset => ("Reset to defaults".to_string(), String::new()),
                 Row::Back => ("Back".to_string(), String::new()),
             };
@@ -189,10 +197,11 @@ impl SettingsScreen {
             Row::ReducedEffects => "Preset: turns every effect below off.",
             Row::Effect(e) => e.help(),
             Row::Palette => "Recolors everything on screen; game data is unchanged.",
+            Row::Temperature => "The unit the status bar shows the temperature in.",
             Row::Reset => "Restores these settings (not the key bindings).",
             Row::Back => "Settings are saved as you change them.",
         };
-        let help_y = panel.y + 18;
+        let help_y = panel.y + 19;
         console.print(panel.inner_x(), help_y, help, TEXT_DIM);
         console.print(
             panel.inner_x(),
@@ -208,7 +217,7 @@ impl SettingsScreen {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::settings::Palette;
+    use crate::settings::{Palette, TemperatureUnit};
 
     fn press(screen: &mut SettingsScreen, settings: &mut Settings, nav: Nav) -> bool {
         screen.handle(&Press::nav(nav), settings)
@@ -238,6 +247,13 @@ mod tests {
         }
         press(&mut screen, &mut s, Nav::Right);
         assert_eq!(s.palette, Palette::HighContrast);
+        // The temperature unit: °C by default, °F the other way.
+        press(&mut screen, &mut s, Nav::Down);
+        press(&mut screen, &mut s, Nav::Enter);
+        assert_eq!(s.temperature, TemperatureUnit::Fahrenheit);
+        press(&mut screen, &mut s, Nav::Left);
+        assert_eq!(s.temperature, TemperatureUnit::Celsius);
+        press(&mut screen, &mut s, Nav::Right);
         press(&mut screen, &mut s, Nav::Down);
         press(&mut screen, &mut s, Nav::Enter);
         assert_eq!(s, Settings::default());

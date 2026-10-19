@@ -65,10 +65,12 @@ pub use size::{CARRY, MEDIUM, SizeDef};
 pub use skill::{SkillBook, SkillDef};
 pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
-pub use terrain::{MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
+pub use terrain::{Freeze, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
 pub use vault::Vault;
 pub use vision::VisionProfile;
-pub use weather::{Climate, MAX_SIGHT_LOSS, WeatherDef};
+pub use weather::{
+    Climate, MAX_CHILL, MAX_SIGHT_LOSS, MAX_SWING, MILD, MILD_SWING, MONTH_TEMPERATURES, WeatherDef,
+};
 
 use crate::noise::MAX_LOUDNESS;
 use crate::perception::VIEW_RADIUS;
@@ -232,6 +234,8 @@ struct LegendFile {
 pub struct Content {
     terrain: Vec<TerrainDef>,
     terrain_ids: BTreeMap<String, TerrainId>,
+    /// The terrain ice looks like, by the thinnest ice that looks like it (mm), thinnest first.
+    ice: Vec<(u16, TerrainId)>,
     creatures: Vec<CreatureDef>,
     creature_ids: BTreeMap<String, CreatureId>,
     materials: Vec<MaterialDef>,
@@ -278,6 +282,7 @@ impl Content {
         let mut content = Content {
             terrain: Vec::new(),
             terrain_ids: BTreeMap::new(),
+            ice: Vec::new(),
             creatures: Vec::new(),
             creature_ids: BTreeMap::new(),
             materials: Vec::new(),
@@ -448,6 +453,7 @@ impl Content {
                 )));
             }
             check_terrain_noise(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
+            check_terrain_ice(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
             check_effects(
                 path,
                 "terrain",
@@ -461,6 +467,7 @@ impl Content {
                 id: spec.id.clone(),
                 name: spec.name.clone(),
                 glyph: spec.glyph,
+                variants: spec.variants.chars().collect(),
                 fg: spec.fg,
                 bg: spec.bg,
                 walkable: spec.walkable,
@@ -482,6 +489,8 @@ impl Content {
                 muffle: spec
                     .muffle
                     .or((spec.walkable || spec.transparent).then_some(0)),
+                freeze: spec.freeze,
+                ice: spec.ice,
                 anim: spec.anim.clone(),
                 glow: spec.glow,
                 haze: spec.haze,
@@ -508,7 +517,28 @@ impl Content {
                 def.id
             )));
         }
+        let mut ice: Vec<(u16, TerrainId)> = (defs.iter().enumerate())
+            .filter_map(|(i, d)| d.ice.map(|mm| (mm, TerrainId(i as u16))))
+            .collect();
+        ice.sort();
+        if let Some(pair) = ice.windows(2).find(|w| w[0].0 == w[1].0) {
+            return Err(err(format!(
+                "terrain `{}` and `{}` both look like ice from {} mm",
+                defs[usize::from(pair[0].1.0)].id,
+                defs[usize::from(pair[1].1.0)].id,
+                pair[0].0
+            )));
+        }
+        if let Some(water) = defs.iter().find(|d| d.freeze.is_some())
+            && ice.is_empty()
+        {
+            return Err(err(format!(
+                "terrain `{}` freezes, but no terrain looks like ice (`ice`)",
+                water.id
+            )));
+        }
         self.terrain = defs;
+        self.ice = ice;
         Ok(())
     }
 
@@ -965,6 +995,20 @@ impl Content {
         &self.terrain
     }
 
+    /// The terrain ice looks like (thin ice, ice, thick ice; spec §5 "Ice"), each with the
+    /// thinnest ice that looks like it in mm, thinnest first; empty if nothing freezes.
+    pub fn ice_terrain(&self) -> &[(u16, TerrainId)] {
+        &self.ice
+    }
+
+    /// What ice `um` micrometres thick looks like; `None` when it is too thin to be more than
+    /// the water beneath (thinner than the thinnest ice terrain).
+    pub fn ice_look(&self, um: u32) -> Option<TerrainId> {
+        (self.ice.iter().rev())
+            .find(|(mm, _)| um >= u32::from(*mm) * 1000)
+            .map(|(_, t)| *t)
+    }
+
     pub fn creature(&self, id: CreatureId) -> &CreatureDef {
         &self.creatures[usize::from(id.0)]
     }
@@ -1273,6 +1317,7 @@ impl Content {
         };
         let terrain = self.terrain.iter().flat_map(|t| {
             std::iter::once(t.glyph)
+                .chain(t.variants.iter().copied())
                 .chain(t.anim.iter().flat_map(|a| a.extra_glyphs()))
                 .chain(particles(&t.particles))
         });
@@ -1318,6 +1363,58 @@ fn check_terrain_noise(spec: &terrain::TerrainSpec) -> Result<(), String> {
     }
     if spec.toggle_noise > 0 && spec.opens_to.is_none() && spec.closes_to.is_none() {
         return Err("only doors have a `toggle_noise`".into());
+    }
+    Ok(())
+}
+
+/// Checks a terrain type's ice fields (spec §5 "Ice"): water that freezes and the ice on it
+/// are walkable, transparent, give no light, and are neither doors nor stairs (ice and water
+/// trade places as it freezes and thaws, so nothing else may change with them); water freezes
+/// from 0 °C down to [`crate::ice::COLDEST_FREEZE`], at 1 to 100 percent of still water's
+/// pace, and a fall into it takes no hit points back; ice is 1 mm to [`crate::ice::MAX_MM`]
+/// thick and does not move like water.
+fn check_terrain_ice(spec: &terrain::TerrainSpec) -> Result<(), String> {
+    if spec.freeze.is_none() && spec.ice.is_none() {
+        return Ok(());
+    }
+    if spec.freeze.is_some() && spec.ice.is_some() {
+        return Err("terrain is water that freezes (`freeze`) or ice (`ice`), not both".into());
+    }
+    let plain = spec.walkable
+        && spec.transparent
+        && spec.light.is_none()
+        && spec.stairs.is_none()
+        && spec.opens_to.is_none()
+        && spec.closes_to.is_none()
+        && spec.travel_minutes.is_none();
+    if !plain {
+        return Err(
+            "water that freezes and ice must be walkable, transparent, without a light, \
+                    and neither a door nor stairs nor overworld terrain"
+                .into(),
+        );
+    }
+    if let Some(freeze) = &spec.freeze {
+        if !(crate::ice::COLDEST_FREEZE..=0).contains(&freeze.below) {
+            return Err(format!(
+                "`freeze.below` must be {} to 0 (°C)",
+                crate::ice::COLDEST_FREEZE
+            ));
+        }
+        if !(1..=100).contains(&freeze.rate) {
+            return Err("`freeze.rate` must be 1 to 100 (percent)".into());
+        }
+        if freeze.plunge.min() < 0 {
+            return Err("`freeze.plunge` must not heal".into());
+        }
+    }
+    if let Some(mm) = spec.ice {
+        if !(1..=crate::ice::MAX_MM).contains(&mm) {
+            return Err(format!("`ice` must be 1 to {} (mm)", crate::ice::MAX_MM));
+        }
+        if spec.anim.as_ref().is_some_and(GlyphAnim::is_flow) {
+            return Err("ice does not flow".into());
+        }
     }
     Ok(())
 }
