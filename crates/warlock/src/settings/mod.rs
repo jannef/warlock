@@ -29,6 +29,7 @@
 //! ```
 
 pub mod clock;
+pub mod keymap;
 pub mod keys;
 pub mod palette;
 
@@ -435,6 +436,25 @@ impl SettingsStore {
             },
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => Loaded::defaults(Vec::new()),
             Err(e) => Loaded::defaults(vec![format!("cannot read {place}: {e}; using defaults")]),
+        }
+    }
+
+    /// Where the settings file is, for messages; `None` where settings are not stored.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn place(&self) -> Option<String> {
+        (self.backend.as_ref()).map(|backend| backend.describe(FILE_NAME))
+    }
+
+    /// Where Controls' Export keys and Import keys go: `warlock-keys.toml` beside the settings
+    /// file on the desktop, the browser (a download, a file picker) on the web, nowhere where
+    /// settings are not stored.
+    pub fn keymap(&self) -> keymap::KeymapFile {
+        if cfg!(target_arch = "wasm32") {
+            return keymap::KeymapFile::Browser;
+        }
+        match &self.backend {
+            Some(Backend::Dir(dir)) => keymap::KeymapFile::Path(dir.join(keymap::FILE_NAME)),
+            _ => keymap::KeymapFile::Nowhere,
         }
     }
 

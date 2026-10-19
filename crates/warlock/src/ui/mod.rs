@@ -123,6 +123,7 @@ impl Plugin for UiPlugin {
                 Update,
                 (
                     screens::apply_choice.after(route_keys).before(SimSet),
+                    controls_screen::receive_keymap.before(draw),
                     (
                         (
                             motion::track,

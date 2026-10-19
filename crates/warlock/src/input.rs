@@ -200,6 +200,19 @@ impl Context {
             Context::Dev => "Developer",
         }
     }
+
+    /// Its table in the keymap file (`settings::keymap`).
+    pub fn id(self) -> &'static str {
+        match self {
+            Context::Play => "play",
+            Context::Aim => "aim",
+            Context::Prompt => "prompt",
+            Context::Menu => "menu",
+            Context::Pages => "pages",
+            Context::Dialog => "dialog",
+            Context::Dev => "dev",
+        }
+    }
 }
 
 impl KeyCommand {

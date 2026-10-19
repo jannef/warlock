@@ -357,7 +357,7 @@ impl Bindings {
     }
 
     /// Whether `owner` may not give up `key`: a fixed command's, or a vital command's last.
-    fn keeps(&self, owner: KeyCommand, key: &KeyBinding) -> bool {
+    pub(super) fn keeps(&self, owner: KeyCommand, key: &KeyBinding) -> bool {
         let last = self.keys_of(owner) == [key];
         !REBINDABLE.contains(&owner) || (VITAL.contains(&owner) && last)
     }
@@ -431,7 +431,7 @@ impl Bindings {
     }
 
     /// Replaces all keys of `command` with `keys`, at the place of its first entry.
-    fn set_keys(&mut self, command: KeyCommand, keys: Vec<KeyBinding>) {
+    pub(super) fn set_keys(&mut self, command: KeyCommand, keys: Vec<KeyBinding>) {
         let at = self
             .0
             .iter()

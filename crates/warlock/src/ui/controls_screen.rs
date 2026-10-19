@@ -7,6 +7,9 @@
 //! same context uses moves to this one, and the message says so; Esc (fixed) and the last key of
 //! a vital command (`settings::keys::VITAL`) are refused, so the player cannot lock themselves
 //! out. Esc cancels, Delete resets one command, and "Reset all keys" restores the defaults.
+//! "Export keys" and "Import keys" write and read the keymap file (`settings::keymap`): in the
+//! config folder on the desktop, a download and a file picker on the web (whose file arrives a
+//! few frames later: [`receive_keymap`]).
 //!
 //! The `?` help is the same screen, read-only ([`ControlsScreen::help`]): it lists every
 //! command by context, including Esc, and closes on `?` or Esc. The list is drawn by one piece
@@ -16,7 +19,9 @@ use super::menu::{Hints, Nav, Panel, Press, wrap};
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::{Bindings, Context, KeyCommand};
 use crate::render::console::Console;
+use crate::settings::keymap::{self, KeymapFile};
 use crate::settings::keys::{Bound, REBINDABLE};
+use bevy::prelude::*;
 
 /// What the screen is doing.
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -40,12 +45,28 @@ enum Row {
     Header(Context),
     Command(KeyCommand),
     Reset,
+    Export,
+    Import,
     Back,
 }
 
 impl Row {
     fn selectable(self) -> bool {
-        matches!(self, Row::Command(_) | Row::Reset | Row::Back)
+        matches!(
+            self,
+            Row::Command(_) | Row::Reset | Row::Export | Row::Import | Row::Back
+        )
+    }
+
+    /// The label of an action row.
+    fn action(self) -> Option<&'static str> {
+        match self {
+            Row::Reset => Some("Reset all keys"),
+            Row::Export => Some("Export keys…"),
+            Row::Import => Some("Import keys…"),
+            Row::Back => Some("Back"),
+            Row::Note(_) | Row::Blank | Row::Header(_) | Row::Command(_) => None,
+        }
     }
 }
 
@@ -56,7 +77,8 @@ const NOTES: [&str; 2] = [
 ];
 
 /// Selection state of the controls screen. Rows are the notes, then each context's commands
-/// under its heading, then "Reset all keys" and "Back"; in help, the notes and every command.
+/// under its heading, then "Reset all keys", "Export keys…", "Import keys…", and "Back"; in
+/// help, the notes and every command.
 #[derive(Debug)]
 pub struct ControlsScreen {
     /// The selected row; in help, the first row shown.
@@ -67,16 +89,20 @@ pub struct ControlsScreen {
     /// Result of the last action, a line or a few; a leading `!` marks a refusal (never color
     /// alone).
     message: Vec<String>,
+    /// Where Export keys and Import keys go.
+    keymap: KeymapFile,
 }
 
 impl ControlsScreen {
-    /// The rebinding screen; `dev`: list the developer keys too.
-    pub fn new(dev: bool) -> Self {
+    /// The rebinding screen; `dev`: list the developer keys too; `keymap`: where Export keys and
+    /// Import keys go.
+    pub fn new(dev: bool, keymap: KeymapFile) -> Self {
         let mut screen = Self {
             selected: 0,
             mode: Mode::Browse,
             dev,
             message: Vec::new(),
+            keymap,
         };
         screen.selected = screen.next_selectable(0, 1);
         screen
@@ -89,6 +115,7 @@ impl ControlsScreen {
             mode: Mode::ReadOnly,
             dev,
             message: Vec::new(),
+            keymap: KeymapFile::Nowhere,
         }
     }
 
@@ -114,7 +141,7 @@ impl ControlsScreen {
             }
         }
         if !read_only {
-            rows.extend([Row::Blank, Row::Reset, Row::Back]);
+            rows.extend([Row::Blank, Row::Reset, Row::Export, Row::Import, Row::Back]);
         }
         rows
     }
@@ -162,6 +189,19 @@ impl ControlsScreen {
                 Some(Row::Reset) => {
                     bindings.reset_all();
                     self.message = vec!["All keys are back to their defaults.".into()];
+                }
+                Some(Row::Export) => {
+                    self.message = vec![match self.keymap.export(bindings) {
+                        Ok(said) => said,
+                        Err(why) => format!("! {why}"),
+                    }];
+                }
+                Some(Row::Import) => {
+                    self.message = match self.keymap.import(bindings) {
+                        Ok(Some(report)) => report,
+                        Ok(None) => vec!["Choose a keymap file to import.".into()],
+                        Err(why) => vec![format!("! {why}")],
+                    };
                 }
                 Some(Row::Back) => return true,
                 Some(Row::Command(_)) => {
@@ -246,11 +286,11 @@ impl ControlsScreen {
         let rows = self.rows();
         let count = rows.len();
         let read_only = self.mode == Mode::ReadOnly;
-        // Room below the list for the message (up to three lines) and the footer; help has no
+        // Room below the list for the message (up to four lines) and the footer; help has no
         // messages.
-        let spare = if read_only { 6 } else { 10 };
+        let spare = if read_only { 6 } else { 12 };
         let panel = Panel::new(console, " Controls ", 60, count as i32 + spare);
-        let message_rows = if read_only { 0 } else { 4 };
+        let message_rows = if read_only { 0 } else { 6 };
         let visible = (panel.body_rows() - message_rows).max(1) as usize;
         let first = if read_only {
             self.selected
@@ -286,8 +326,10 @@ impl ControlsScreen {
                     };
                     panel.row(console, y, selected, &command.name(), &value, label_w);
                 }
-                Row::Reset => panel.row(console, y, selected, "Reset all keys", "", label_w),
-                Row::Back => panel.row(console, y, selected, "Back", "", label_w),
+                Row::Reset | Row::Export | Row::Import | Row::Back => {
+                    let label = row.action().unwrap_or_default();
+                    panel.row(console, y, selected, label, "", label_w);
+                }
             }
         }
         if first > 0 {
@@ -339,18 +381,68 @@ impl ControlsScreen {
         } else {
             Vec::new()
         };
-        let refusal = lines.first().is_some_and(|l| l.starts_with('!'));
-        let color = if refusal || self.mode == Mode::Capture {
-            ACCENT
-        } else {
-            TEXT
-        };
-        let wrapped = lines.iter().flat_map(|l| wrap(l, panel.inner_w()));
-        let top = panel.y + panel.h - 6;
-        for (i, line) in wrapped.take(3).enumerate() {
+        // Each line in its own color: an import's summary, then its first problem.
+        let capture = self.mode == Mode::Capture;
+        let wrapped = lines.iter().flat_map(|l| {
+            let color = if capture || l.starts_with('!') {
+                ACCENT
+            } else {
+                TEXT
+            };
+            wrap_hard(l, panel.inner_w())
+                .into_iter()
+                .map(move |w| (w, color))
+        });
+        let top = panel.y + panel.h - 7;
+        for (i, (line, color)) in wrapped.take(4).enumerate() {
             console.print(panel.inner_x(), top + i as i32, &line, color);
         }
     }
+
+    /// Shows what an import from the browser's file picker did.
+    pub fn imported(&mut self, lines: Vec<String>) {
+        self.message = lines;
+    }
+}
+
+/// Applies a keymap file the browser's picker delivered (Import keys on the web) and shows the
+/// result on the controls screen, if it is still open. A no-op on the desktop, which reads the
+/// file at once.
+pub(super) fn receive_keymap(
+    mut bindings: ResMut<Bindings>,
+    mut stack: ResMut<super::screens::ScreenStack>,
+) {
+    let Some(picked) = keymap::take_picked() else {
+        return;
+    };
+    let mut changed = bindings.clone();
+    let lines = match picked.and_then(|text| keymap::import(&mut changed, &text)) {
+        Ok(report) => {
+            for warning in &report.warnings {
+                warn!("keymap: {warning}");
+            }
+            report.summary("the keymap")
+        }
+        Err(why) => vec![format!("! {why}")],
+    };
+    if changed.0 != bindings.0 {
+        *bindings = changed;
+    }
+    stack.keymap_imported(lines);
+}
+
+/// `text` wrapped to `width` cells, breaking words longer than that (a file's path).
+fn wrap_hard(text: &str, width: i32) -> Vec<String> {
+    let width = width.max(1) as usize;
+    let chunks = |line: String| {
+        let chars: Vec<char> = line.chars().collect();
+        let pieces: Vec<String> = chars.chunks(width).map(|c| c.iter().collect()).collect();
+        pieces
+    };
+    wrap(text, width as i32)
+        .into_iter()
+        .flat_map(chunks)
+        .collect()
 }
 
 /// A command's keys, primary first, separated by spaces.
@@ -399,7 +491,10 @@ mod tests {
 
     #[test]
     fn rebinding_replaces_the_primary_key() {
-        let (mut screen, mut b) = (ControlsScreen::new(false), Bindings::default());
+        let (mut screen, mut b) = (
+            ControlsScreen::new(false, KeymapFile::Nowhere),
+            Bindings::default(),
+        );
         // The first row selected is the first command, under its heading.
         assert_eq!(screen.selected_command(), Some(KeyCommand::Move(Dir::N)));
         nav(&mut screen, &mut b, Nav::Enter);
@@ -412,7 +507,10 @@ mod tests {
 
     #[test]
     fn a_used_key_moves_and_the_message_says_what_moved() {
-        let (mut screen, mut b) = (ControlsScreen::new(false), Bindings::default());
+        let (mut screen, mut b) = (
+            ControlsScreen::new(false, KeymapFile::Nowhere),
+            Bindings::default(),
+        );
         nav(&mut screen, &mut b, Nav::Enter);
         key(&mut screen, &mut b, "j");
         assert_eq!(message(&screen), "j moved to Move north (was Move south).");
@@ -432,7 +530,10 @@ mod tests {
 
     #[test]
     fn a_key_moves_only_within_its_context() {
-        let (mut screen, mut b) = (ControlsScreen::new(false), Bindings::default());
+        let (mut screen, mut b) = (
+            ControlsScreen::new(false, KeymapFile::Nowhere),
+            Bindings::default(),
+        );
         // `w` for Up on the menus leaves play's keys alone, and `k` stays Move north in play.
         select(&mut screen, Row::Command(KeyCommand::MenuUp));
         nav(&mut screen, &mut b, Nav::Enter);
@@ -446,7 +547,10 @@ mod tests {
 
     #[test]
     fn a_fixed_commands_key_is_refused() {
-        let (mut screen, mut b) = (ControlsScreen::new(false), Bindings::default());
+        let (mut screen, mut b) = (
+            ControlsScreen::new(false, KeymapFile::Nowhere),
+            Bindings::default(),
+        );
         let before = b.0.clone();
         nav(&mut screen, &mut b, Nav::Enter);
         let press = Press {
@@ -467,7 +571,10 @@ mod tests {
 
     #[test]
     fn escape_cancels_a_capture_without_leaving() {
-        let (mut screen, mut b) = (ControlsScreen::new(false), Bindings::default());
+        let (mut screen, mut b) = (
+            ControlsScreen::new(false, KeymapFile::Nowhere),
+            Bindings::default(),
+        );
         nav(&mut screen, &mut b, Nav::Enter);
         assert!(!nav(&mut screen, &mut b, Nav::Back));
         assert_eq!(screen.mode, Mode::Browse);
@@ -476,7 +583,10 @@ mod tests {
 
     #[test]
     fn delete_resets_one_command_and_reset_row_resets_all() {
-        let (mut screen, mut b) = (ControlsScreen::new(false), Bindings::default());
+        let (mut screen, mut b) = (
+            ControlsScreen::new(false, KeymapFile::Nowhere),
+            Bindings::default(),
+        );
         let before = b.to_map();
         nav(&mut screen, &mut b, Nav::Enter);
         key(&mut screen, &mut b, "w");
@@ -492,14 +602,56 @@ mod tests {
     }
 
     #[test]
+    fn export_and_import_write_and_read_the_keymap() {
+        let dir = std::env::temp_dir().join(format!("warlock-controls-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let path = dir.join(keymap::FILE_NAME);
+        let mut screen = ControlsScreen::new(false, KeymapFile::Path(path.clone()));
+        let mut b = Bindings::default();
+        // Nothing to import yet: said, nothing changes.
+        select(&mut screen, Row::Import);
+        nav(&mut screen, &mut b, Nav::Enter);
+        assert!(message(&screen).starts_with("! No keymap at"), "{screen:?}");
+        // Rebind, export, reset, import: the rebinding is back.
+        select(&mut screen, Row::Command(KeyCommand::Descend));
+        nav(&mut screen, &mut b, Nav::Enter);
+        key(&mut screen, &mut b, "D");
+        select(&mut screen, Row::Export);
+        nav(&mut screen, &mut b, Nav::Enter);
+        assert_eq!(
+            message(&screen),
+            format!("Keys exported to {}.", path.display())
+        );
+        let customized = b.to_map();
+        select(&mut screen, Row::Reset);
+        nav(&mut screen, &mut b, Nav::Enter);
+        assert_ne!(b.to_map(), customized);
+        select(&mut screen, Row::Import);
+        nav(&mut screen, &mut b, Nav::Enter);
+        assert_eq!(b.to_map(), customized);
+        assert_eq!(
+            message(&screen),
+            "Imported warlock-keys.toml: Go down stairs changed."
+        );
+        // Where keys are not stored, both say so.
+        let mut nowhere = ControlsScreen::new(false, KeymapFile::Nowhere);
+        select(&mut nowhere, Row::Export);
+        nav(&mut nowhere, &mut b, Nav::Enter);
+        assert!(message(&nowhere).starts_with('!'));
+    }
+
+    #[test]
     fn the_selection_skips_headings_and_wraps_around() {
-        let (mut screen, mut b) = (ControlsScreen::new(false), Bindings::default());
+        let (mut screen, mut b) = (
+            ControlsScreen::new(false, KeymapFile::Nowhere),
+            Bindings::default(),
+        );
         let first = screen.selected;
         // Up from the first command wraps to Back, the last row; down again comes back.
         nav(&mut screen, &mut b, Nav::Up);
         assert_eq!(screen.rows()[screen.selected], Row::Back);
         nav(&mut screen, &mut b, Nav::Up);
-        assert_eq!(screen.rows()[screen.selected], Row::Reset);
+        assert_eq!(screen.rows()[screen.selected], Row::Import);
         nav(&mut screen, &mut b, Nav::Down);
         nav(&mut screen, &mut b, Nav::Down);
         assert_eq!(screen.selected, first);
@@ -515,7 +667,7 @@ mod tests {
 
     #[test]
     fn commands_are_grouped_by_context_and_dev_keys_only_where_they_work() {
-        let plain = ControlsScreen::new(false).rows();
+        let plain = ControlsScreen::new(false, KeymapFile::Nowhere).rows();
         let headers: Vec<Context> = (plain.iter())
             .filter_map(|r| match r {
                 Row::Header(c) => Some(*c),
@@ -536,7 +688,7 @@ mod tests {
         for command in REBINDABLE.iter().filter(|c| c.context() != Context::Dev) {
             assert!(plain.contains(&Row::Command(*command)), "{command:?}");
         }
-        let dev = ControlsScreen::new(true).rows();
+        let dev = ControlsScreen::new(true, KeymapFile::Nowhere).rows();
         assert!(dev.contains(&Row::Header(Context::Dev)));
         assert!(dev.contains(&Row::Command(KeyCommand::RevealMap)));
     }
@@ -547,7 +699,10 @@ mod tests {
         for rows in [40, 14, 6] {
             let mut console = Console::default();
             console.resize(70, rows);
-            for mut screen in [ControlsScreen::new(true), ControlsScreen::help(true)] {
+            for mut screen in [
+                ControlsScreen::new(true, KeymapFile::Nowhere),
+                ControlsScreen::help(true),
+            ] {
                 let last = screen.rows().len() - 1;
                 for selected in [0, 7, 40, last] {
                     screen.selected = selected;
@@ -626,7 +781,7 @@ mod tests {
         assert!(ControlsScreen::help(false).handle(&question, &mut b));
         assert!(ControlsScreen::help(false).handle(&Press::nav(Nav::Back), &mut b));
         // The rebinding screen takes `?` as an ordinary key.
-        assert!(!ControlsScreen::new(false).handle(&question, &mut b));
+        assert!(!ControlsScreen::new(false, KeymapFile::Nowhere).handle(&question, &mut b));
     }
 
     #[test]
