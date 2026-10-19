@@ -242,7 +242,11 @@ mod tests {
         let here = describe(&view, w.player_pos(), true);
         assert_eq!(here, "You, on stone floor in a sanctuary.");
         let wall = Pos::new(79, 15);
-        assert_eq!(describe(&view, wall, true), "A stone wall.", "walls name no room");
+        assert_eq!(
+            describe(&view, wall, true),
+            "A stone wall.",
+            "walls name no room"
+        );
         // Walking back out, the nook is remembered as a sanctuary.
         for action in [Action::Move(Dir::N), Action::Move(Dir::N)] {
             w.apply(&action);
