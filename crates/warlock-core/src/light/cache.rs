@@ -16,6 +16,8 @@ use std::collections::BTreeMap;
 const CARRIED: u64 = 1 << 63;
 /// Extra key tag for the player's lantern.
 const LANTERN: u64 = 1 << 62;
+/// Extra key tag for the light of a glowing magic item an actor wears or wields.
+const GLOW: u64 = 1 << 61;
 /// The sun's key: the lantern tag without the carried tag, which no other source has (static
 /// keys have both tags clear).
 pub(crate) const SUN_KEY: u64 = LANTERN;
@@ -242,6 +244,16 @@ impl LevelLights {
             {
                 sources.push(Source {
                     key: CARRIED | LANTERN | id,
+                    pos: actor.pos,
+                    preset,
+                });
+            }
+            // A glowing magic item it wears or wields (spec §8 "Magic items"): the brightest.
+            if !actor.equipment.is_empty()
+                && let Some(preset) = actor.mods(content).light
+            {
+                sources.push(Source {
+                    key: CARRIED | GLOW | id,
                     pos: actor.pos,
                     preset,
                 });

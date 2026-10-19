@@ -65,8 +65,9 @@ impl World {
                 .scenario(&self.state.scenario)
                 .map_or(0, |s| i32::from(s.hp)),
         };
-        // The base Toughness, not the effective one: a status penalty passes, these stay.
-        let toughness = self.state.player().stats.modifier(Stat::Toughness);
+        // Toughness as what the player wears raises it, but not as a status effect lowers it:
+        // the penalty passes, these hit points stay.
+        let toughness = (self.state.player().raised_stats(content)).modifier(Stat::Toughness);
         (class_hp / 2 + toughness).max(1)
     }
 

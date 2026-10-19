@@ -13,16 +13,20 @@
 //! 4. **Listen**: failing that, to where it last heard a noise whose source it could not see
 //!    ([`crate::noise`]; what it heard since it last acted, the newest first). Only creatures
 //!    with enemies (a faction hostile to someone) go to look; wildlife does not care.
-//! 5. **Return**: then back to its post, and carries on with its patrol route (or waits).
+//! 5. **Return**: then back to its post (waiting beside it while someone stands on it), and
+//!    carries on with its patrol route (or waits). A creature the player swapped places with
+//!    (`talk.rs`) has its old cell as its post, so it steps back onto its route.
 //!
 //! Paths (`path.rs`) go over walkable cells and, for creatures that open doors, closed doors (it
-//! opens the door, then steps in). Other actors block: a path may lead through one only when the
-//! way around is much longer, and then the creature waits behind it. A creature hostile to the
-//! player never steps into a sanctuary (a special room its effect makes creatures shun, spec §7
-//! "Special rooms"): its paths go around it, and it waits when the only way leads in. Melee
-//! attacks and shots are real (`fight.rs`, `shoot.rs`: rolled against Defence, they hurt and
-//! kill; a shot spends an arrow, which flies and comes down to lie where it fell); a ranged
-//! creature with nothing left to shoot fights in melee. Spells stay intents until magic is designed. Each is an [`Event::Attacked`], a noise, and, if the player perceives it, a
+//! opens the door, then steps in); a locked door only for one carrying a key that fits it (it
+//! unlocks the door as it opens it; spec §8 "Doors"), else it is a wall to it. Other actors
+//! block: a path may lead through one only when the way around is much longer, and then the
+//! creature waits behind it. A creature hostile to the player never steps into a sanctuary (a
+//! special room its effect makes creatures shun, spec §7 "Special rooms"): its paths go around
+//! it, and it waits when the only way leads in. Melee attacks and shots are real (`fight.rs`,
+//! `shoot.rs`: rolled against Defence, they hurt and kill; a shot spends an arrow, which flies
+//! and comes down to lie where it fell); a ranged creature with nothing left to shoot fights in
+//! melee. Spells stay intents until magic is designed. Each is an [`Event::Attacked`], a noise, and, if the player perceives it, a
 //! message. Steps and opened doors make noise too. Creatures neither flee nor change how they
 //! fight when hurt.
 
@@ -32,7 +36,7 @@ use crate::action::{AttackKind, Event};
 use crate::content::{ActionKind, Combat, Stance};
 use crate::fov::radius2;
 use crate::geom::{Dir, Pos};
-use crate::noise::{Act, Heard};
+use crate::noise::Heard;
 use crate::sight::{self, LineOfSight};
 
 /// Extra cost of a path through a cell another actor stands on, in steps: a creature walks a
@@ -40,6 +44,8 @@ use crate::sight::{self, LineOfSight};
 const CROWD: u32 = 4;
 /// Extra cost of a closed door on a path: opening it takes an action.
 const DOOR: u32 = 1;
+/// Extra cost of a locked door on top of [`DOOR`], for a creature with the key: unlocking it.
+const UNLOCK: u32 = 1;
 /// Path searches look this many cells beyond the distance to their target...
 const SEARCH_MARGIN: i32 = 12;
 /// ...and at most this far from the creature.
@@ -73,6 +79,8 @@ enum Stepped {
     Moved(i64),
     /// Opened the closed door in the way instead.
     Opened,
+    /// Unlocked the locked door in the way with its key, and opened it.
+    Unlocked,
     Blocked,
 }
 
@@ -91,21 +99,24 @@ impl World {
         let heard = (self.state.actors.get_mut(&id))
             .map(|a| std::mem::take(&mut a.heard))
             .unwrap_or_default();
-        match self.decide(id, &heard) {
+        let price = match self.decide(id, &heard) {
             Plan::Attack {
                 target,
                 kind: AttackKind::Ranged,
             } => self.creature_shoots(id, target, events),
             Plan::Attack { target, kind } => {
-                let skill = (self.state.actors.get(&id))
-                    .and_then(|a| a.attack_skill(&self.content, kind, None));
+                let skills = self.skills_of(id, kind, None);
+                let price = self.attack_price(id, kind.action(), skills);
                 self.attack(id, target, kind, events);
-                self.attack_price(id, kind.action(), skill)
+                price
             }
             Plan::Step(dir) => self.step_or_wait(id, dir, events).1,
             Plan::Patrol => self.patrol(id, events),
             Plan::Wait => self.price_of(id, ActionKind::Wait),
-        }
+        };
+        // Going about its routine, it may mutter to itself (`talk.rs`).
+        self.mutter(id);
+        price
     }
 
     /// Creature `id` steps in `dir` ([`World::creature_steps`]); returns what it did and its
@@ -115,6 +126,9 @@ impl World {
         let price = match stepped {
             Stepped::Moved(price) => price,
             Stepped::Opened => self.price_of(id, ActionKind::OpenDoor),
+            Stepped::Unlocked => {
+                self.price_of(id, ActionKind::Unlock) + self.price_of(id, ActionKind::OpenDoor)
+            }
             Stepped::Blocked => self.price_of(id, ActionKind::Wait),
         };
         (stepped, price)
@@ -257,9 +271,15 @@ impl World {
             }
         }
         if let Some(post) = mind.post {
-            match self.route(id, post, 0, |q| q == post) {
+            // Someone on it (the player who swapped places with it, perhaps): it waits beside
+            // it until they are gone.
+            let level = &self.state.current_level;
+            let taken = (self.state.actor_at(level, post)).is_some_and(|a| a.id != id);
+            let reach = i32::from(taken);
+            match self.route(id, post, reach, |q| q.chebyshev(post) <= reach) {
                 Route::Step(dir) => return Plan::Step(dir),
                 Route::Wait => return Plan::Wait,
+                Route::There if taken => return Plan::Wait,
                 Route::There | Route::Unreachable => mind.post = None,
             }
         }
@@ -267,11 +287,12 @@ impl World {
     }
 
     /// The way to cell `spot`, to look there; `None` once there, or if it cannot get there.
-    /// When someone it cannot see stands on the spot (perhaps the one it lost in the dark), next
-    /// to it will do.
+    /// When someone it cannot see stands on the spot (perhaps the one it lost in the dark), or
+    /// no one can stand there (a door shut or kicked at), next to it will do.
     fn go_look(&self, id: ActorId, spot: Pos) -> Option<Plan> {
         let taken = self.state.actor_at(&self.state.current_level, spot);
-        let reach = i32::from(taken.is_some_and(|a| a.id != id));
+        let solid = !self.state.current().is_walkable(&self.content, spot);
+        let reach = i32::from(solid || taken.is_some_and(|a| a.id != id));
         match self.route(id, spot, reach, |q| q.chebyshev(spot) <= reach) {
             Route::Step(dir) => Some(Plan::Step(dir)),
             Route::Wait => Some(Plan::Wait),
@@ -317,7 +338,11 @@ impl World {
             let enter = if def.walkable {
                 1
             } else if opens_doors && def.is_closed_door() {
-                1 + DOOR
+                match level.locks.get(&p) {
+                    None => 1 + DOOR,
+                    Some(lock) if me.key_for(&self.content, lock).is_some() => 1 + DOOR + UNLOCK,
+                    Some(_) => return Cost::Impassable,
+                }
             } else {
                 return Cost::Impassable;
             };
@@ -353,9 +378,10 @@ impl World {
     }
 
     /// Creature `id` steps in `dir`: onto a walkable cell no one stands on, or, for a creature
-    /// that opens doors, opening a closed door there. Either makes noise. An overloaded creature
-    /// opens doors but does not step. A creature hostile to the player does not step (or open a
-    /// door) into a sanctuary ([`World::shuns`]): it waits.
+    /// that opens doors, opening a closed door there (unlocking it first if it is locked and the
+    /// creature carries a key that fits; else it is blocked). Either makes noise. An overloaded
+    /// creature opens doors but does not step. A creature hostile to the player does not step
+    /// (or open a door) into a sanctuary ([`World::shuns`]): it waits.
     fn creature_steps(&mut self, id: ActorId, dir: Dir, events: &mut Vec<Event>) -> Stepped {
         let level = self.state.current();
         let actor = &self.state.actors[&id];
@@ -367,11 +393,14 @@ impl World {
             return Stepped::Blocked;
         }
         if def.is_closed_door() && self.content.creature(actor.creature).opens_doors {
-            let opened = def.opens_to.expect("closed doors have opens_to");
-            self.make_noise(id, Act::OpenDoor(to));
-            self.set_terrain(to, opened);
-            events.push(Event::DoorOpened { pos: to });
-            return Stepped::Opened;
+            let stepped = match level.locks.get(&to) {
+                None => Stepped::Opened,
+                Some(lock) if actor.key_for(&self.content, lock).is_some() => Stepped::Unlocked,
+                Some(_) => return Stepped::Blocked,
+            };
+            self.state.current_mut().locks.remove(&to);
+            self.swing_open(id, to, events);
+            return stepped;
         }
         // An overloaded creature cannot move (spec §8 "Burden"): it waits.
         let overloaded = !self.load_of(id).penalty().can_move();
@@ -379,7 +408,10 @@ impl World {
             return Stepped::Blocked;
         }
         let fleeing = self.flees(id, to);
-        let price = self.step_price(id, def, fleeing);
+        // Ice there may give way under it (spec §5 "Ice").
+        let footing = self.tread(id, from, to);
+        let onto = self.content.terrain(self.state.current().terrain[to]);
+        let price = self.step_price(id, onto, fleeing) + self.tread_price(id, footing);
         if let Some(actor) = self.state.actors.get_mut(&id) {
             actor.pos = to;
         }
@@ -388,8 +420,12 @@ impl World {
             from,
             to,
         });
+        self.after_tread(id, to, footing, events);
         self.make_step_noise(id, to, fleeing);
-        Stepped::Moved(price)
+        // It knows nothing of traps (spec §8 "Traps"): one there goes off; a pit costs it its
+        // next action.
+        let climb = self.spring_trap(to, id, events);
+        Stepped::Moved(price + climb)
     }
 
     /// The routine: the next step of the creature's patrol route; it waits when blocked (or

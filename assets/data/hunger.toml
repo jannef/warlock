@@ -1,0 +1,79 @@
+# Hunger and food (spec §8 "Hunger"), ADOM-like. Without this file nobody hungers, nothing can be
+# eaten, and creatures leave no corpses.
+#
+# Nutrition is counted in points. A race of hunger 100 % (`hunger` in races.toml: a human) burns
+# a point every `burn_seconds` of game time, whatever it does: resting and journeys over the
+# overworld burn it too. Food gives points (`food` in objects.toml), corpses by their creature's
+# size (below). The player knows how hungry they are (the states below), never the count.
+
+# Game seconds per point burned at 100 %: a point a minute, 1440 a day.
+burn_seconds = 60
+# Nutrition at the start of a run: hungry after a day and a half.
+start = 3600
+# The most nutrition there can be; eating past it is overeating (below).
+max = 6500
+# Vomiting (overeating, a rotten corpse, a corpse that disagrees) leaves at most this much: hungry.
+vomit_leaves = 1000
+
+# The least nutrition of each state, from the most fed down; below `fainting` the player is
+# Starving. Hungry is a warning only.
+[states]
+bloated = 5500
+satiated = 4000
+not_hungry = 1440
+hungry = 720
+weak = 240
+fainting = 0
+
+# Bloated: every action takes longer, this percent of its time (slowed as a burden slows).
+[bloated]
+slow = 125
+
+# Weak, Fainting, and Starving: Strength and Dexterity count for less (only these two), in
+# combat and in what the player can carry.
+[weak]
+stats = { strength = -1, dexterity = -1 }
+
+# Fainting and Starving: the chance in percent, each turn, to faint and lose `turns` turns.
+[fainting]
+chance = 5
+turns = 5
+
+# Starving: no hit points come back, and `damage` are lost every `seconds` of game time, until
+# the player starves to death.
+[starving]
+seconds = 600
+damage = 1
+
+# Extra points burned by the player's exertions, at their race's hunger: a blow in melee, a shot,
+# a throw.
+[exertion]
+melee = 2
+shoot = 1
+throw = 1
+
+# Overeating: a meal that would bring nutrition past `max`. The chance in percent to choke to
+# death on it (0: never, as here), else the chance to vomit; else what does not fit is lost.
+[overeating]
+choke = 0
+vomit = 50
+
+# Corpses: a creature that dies leaves one (`corpse = false` in creatures.toml for none), made of
+# `material` and weighing what the creature did. It is fresh, then rotten `rotten_hours` after
+# the death, and gone `gone_hours` after it; it does not show its age. Eating a rotten one makes
+# you vomit with a `rotten_vomit` percent chance, else makes you sick (`rotten_harm`, dice of
+# degrees of the `sickness` status, status.toml) and feeds you; its creature's `on_eat` effects
+# are gone from it. A creature's `on_eat` harm is degrees of the same sickness.
+[corpses]
+material = "flesh"
+rotten_hours = 8
+gone_hours = 36
+rotten_vomit = 50
+rotten_harm = "1d4"
+sickness = "poisoned"
+
+# What a corpse gives by its creature's size (sizes.toml; every size needs one): its nutrition,
+# and how many turns of eating (the `eat` action, actions.toml) it takes.
+[corpses.size]
+small = { nutrition = 400, turns = 3 }
+medium = { nutrition = 1000, turns = 6 }

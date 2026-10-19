@@ -3,8 +3,9 @@
 //! rooms it draws from the level's map stream after everything else, so a level without a shop is
 //! exactly the map it would be without them.
 //!
-//! The room is one with a single door (or doorway), not the arrival room or a vault (the rooms
-//! generator offers those, [`Candidate`]), with no stairs, no special room, and no patrol in it.
+//! The room is one with a single door (or doorway), not the arrival room, a vault, or a locked
+//! room (the rooms generator offers those, [`Candidate`]), with no stairs, nothing lying, no
+//! special room, and no patrol in it.
 //! Its kind and keeper's name are drawn uniformly; the keeper stands beside the cell inside the
 //! door, so the way in stays free; a lamp hangs in the middle of the room; and its floor
 //! is laid with stock: between the kind's least and most stacks (as many as there are free
@@ -91,7 +92,7 @@ pub(super) fn place(canvas: &mut Canvas, rng: &mut Rng, candidates: &[Candidate]
         } else {
             1
         };
-        canvas.objects.insert(p, vec![Stack { object, count }]);
+        canvas.objects.insert(p, vec![Stack::new(object, count)]);
     }
     canvas.creatures.push(shops.keeper_spawn(post));
     canvas.shops.push(ShopPlan {
@@ -103,13 +104,13 @@ pub(super) fn place(canvas: &mut Canvas, rng: &mut Rng, candidates: &[Candidate]
     });
 }
 
-/// Whether `room` may be a shop: no stairs or vault in it, no special room over it, and no
-/// creature starting or patrolling in it.
+/// Whether `room` may be a shop: no stairs or vault in it, nothing lying in it yet (a key left
+/// there), no special room over it, and no creature starting or patrolling in it.
 fn suits(canvas: &Canvas, room: &Candidate) -> bool {
     let (up, down) = (canvas.pal.stairs_up, canvas.pal.stairs_down);
     let plain = room.cells().all(|p| {
         let t = canvas.get(p);
-        t != up && t != down && !canvas.is_locked(p)
+        t != up && t != down && !canvas.is_stamped(p) && !canvas.objects.contains_key(&p)
     });
     let special = (canvas.rooms.iter()).any(|r| r.cells().into_iter().any(|p| room.walled(p)));
     let patrolled = canvas.creatures.iter().any(|c| {

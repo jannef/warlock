@@ -852,13 +852,7 @@ fn creatures_shoot_with_the_bow_they_have_ready() {
     // Every arrow came down where the player stands, hit or miss (the wall is behind them).
     let (level, _) = w.ground_truth();
     let arrow = content.object_id("arrow").expect("arrow");
-    assert_eq!(
-        level.objects_at(Pos::new(1, 1)),
-        [Stack {
-            object: arrow,
-            count: 9
-        }]
-    );
+    assert_eq!(level.objects_at(Pos::new(1, 1)), [Stack::new(arrow, 9)]);
     let hurt = w.state().player().hp < w.state().player().max_hp(&content);
     assert!(hurt, "an arrow found its mark");
     let shown = messages(&w);
@@ -963,7 +957,8 @@ fn a_coward_s_attacks_cost_more_and_other_actions_do_not() {
     assert_eq!(throw, base[2] * 5 / 4);
     assert_eq!(wait, base[3]);
     // Attacks drawing on a weapon skill are priced by `attack_price`, which applies it too.
-    assert_eq!(w.attack_price(ActorId(0), ActionKind::Melee, None), melee);
+    let blow = w.skills_of(ActorId(0), AttackKind::Melee, None);
+    assert_eq!(w.attack_price(ActorId(0), ActionKind::Melee, blow), melee);
     assert_eq!(
         w.price_of(ActorId(0), ActionKind::Reload),
         price(&world_on("#####\n#@r.#\n#####\n", ""), ActionKind::Reload),

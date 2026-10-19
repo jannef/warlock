@@ -45,9 +45,9 @@
 currency = "gold_coin"
 outraged = "outraged"
 presence = 3
-# Rooms levels are five of the Depths' eight, and not every one has a room that suits a shop, so
-# about one level in seven has one.
-chance = 35
+# Rooms levels are five of the Depths' eight, and not every one has a room that suits a shop (a
+# single door, not locked, nothing lying in it), so about one level in six has one.
+chance = 70
 names = [
     "Grimbold", "Hilda", "Orvald", "Berengar", "Mirelle", "Tobias", "Ysolde", "Dunstan",
     "Gerda", "Aldric", "Brannoc", "Wilhelmina", "Corwin", "Ottilie", "Fenwick", "Isolde",

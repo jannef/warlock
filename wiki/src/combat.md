@@ -6,8 +6,9 @@ hard, and hurts; what loses all its hit points dies. That goes for you too, and 
 
 You attack by moving into a hostile creature (see [Controls](controls.md)), which takes a turn,
 by bashing it with your shield, or from afar: you shoot or throw with `t` (or `T`), see
-[Ranged combat](ranged.md). Each attack trains the [weapon skill](weapon-skills.md) it uses, and
-your rank in it helps you hit, hurt, and defend.
+[Ranged combat](ranged.md). Each attack trains the [weapon skill](weapon-skills.md) it uses and
+the [fighting style](fighting-styles.md) you fight in, and your ranks in them help you hit, hurt,
+and defend. With a weapon in each hand, an attack up close is a blow with each.
 Creatures fight each other and you by the same rules (see [Creatures](creatures.md)). Spells are
 the exception: casters only announce them for now, and nothing is hurt by a spell.
 
@@ -40,20 +41,25 @@ protects you, in kinds:
   you are burdened, +1 when strained, nothing when overloaded (see [Burden](burden.md)). The
   lower limit counts.
 - **Armour**: what you wear on your body.
-- **Shield**: a shield held in your off hand, and more with your rank in shield blocking.
+- **Shield**: a shield held in your off hand, and more with your rank in shield blocking (and in
+  Sword and Board, with a weapon in the other hand).
 - **Parry**: a weapon that turns blows aside, such as the quarterstaff, and your rank with the
-  weapon you wield (blades, spears, and staves).
-- **Natural**: a creature's hide, shell, or scales. You have none.
-- **Dodge**: training. The [tumble](skills.md#what-skills-give) skill adds to it, more the
-  higher it is.
-- **Deflection** comes later (magic).
+  weapon you wield (blades, spears, and staves), and in Duelist or Staff Fighter while you fight
+  that way.
+- **Natural**: a creature's hide, shell, or scales. You have none, unless a magic item gives you
+  some.
+- **Dodge**: training and magic. The [tumble](skills.md#what-skills-give) skill adds to it, more
+  the higher it is, and so do magic items that make you nimble.
+- **Deflection**: magic items that turn blows aside.
 
 Within each kind only the best counts: two pieces of armour do not add up. Dodge is the one kind
 that does.
 
 {{#include generated/armour.md}}
 
-Helms, cloaks, gloves, boots, rings, and amulets do not add to Defence (yet).
+Helms, cloaks, gloves, boots, rings, and amulets do not add to Defence by themselves, only by
+their magic (see [Magic items](magic-items.md)), and magic armour or a magic shield may add more
+than its base.
 
 ### Why an attack missed
 
@@ -98,7 +104,8 @@ Messages never give numbers: "The kobold hits you.", "The giant rat bites the ko
 the giant rat hard!"
 
 A **big hit**, one that takes at least a third of the target's hit points at once, makes it
-bleed, and some creatures' attacks can poison: see [Status effects](status-effects.md).
+bleed, and some creatures' attacks can poison: see [Status effects](status-effects.md). Some bites
+carry a disease: see [Diseases](diseases.md).
 
 ## Stances
 
@@ -140,19 +147,22 @@ hurt a creature looks: unhurt, lightly wounded, wounded, badly wounded, or nearl
 ### Getting better
 
 Hit points come back with time, faster the tougher you are, twice as fast while you
-[rest](resting.md), and slower or not at all while you bleed or are poisoned: see
-[Healing](healing.md). Creatures heal the same way, while you are on their level. In a sanctuary
-(a [special room](special-rooms.md)) wounds heal three times as fast, yours and anyone's.
+[rest](resting.md), and slower or not at all while you bleed, are poisoned, or are diseased: see
+[Healing](healing.md). A disease that lowers your Toughness lowers your most hit points too (see
+[Diseases](diseases.md)). Creatures heal the same way, while you are on their level. In a
+sanctuary (a [special room](special-rooms.md)) wounds heal three times as fast, yours and
+anyone's.
 
 ## Death
 
 A creature at 0 hit points dies: "The giant rat dies." It is gone, and everything it carried,
-what it wore and wielded too, falls where it stood, for you to pick up. A wounded creature may
-also die later of its wounds: "The giant rat bleeds to death."
+what it wore and wielded too, falls where it stood, for you to pick up, with its corpse on top
+(see [Food and corpses](food.md)). A wounded creature may also die later of its wounds: "The
+giant rat bleeds to death."
 
 When **you** reach 0 hit points, you die: "You die..." The run is over, and a screen tells you
-what killed you (if you saw it, or "Bled to death" when your wounds did), where, when, and after
-how many turns. There is no going back:
+what killed you (if you saw it, or "Bled to death" when your wounds did, or that you starved; see
+[Hunger](hunger.md)), where, when, and after how many turns. There is no going back:
 your save is deleted at once (see [Saving](saving.md)). Press `Enter` or `Esc` to return to the
 main menu and start a new run.
 

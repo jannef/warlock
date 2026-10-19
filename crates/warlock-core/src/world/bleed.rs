@@ -23,6 +23,19 @@ impl World {
         kind: AttackKind,
         blow: Blow,
     ) {
+        self.spill(attacker.0, target, (from, kind != AttackKind::Melee), blow);
+    }
+
+    /// [`World::bleed`] for any blow: `source` only seeds where the blood lands (the attacker's
+    /// id; a trap's kind for a trap's blow, spec §8 "Traps"), and the blow came from `from`,
+    /// along a missile's flight or not.
+    pub(super) fn spill(
+        &mut self,
+        source: u32,
+        target: ActorId,
+        (from, missile): (Pos, bool),
+        blow: Blow,
+    ) {
         let Some(victim) = self.state.actors.get(&target) else {
             return;
         };
@@ -33,13 +46,13 @@ impl World {
         let wound = Wound {
             from,
             at: victim.pos,
-            missile: kind != AttackKind::Melee,
+            missile,
             damage: blow.damage,
             hp: victim.hp,
             max_hp: victim.max_hp(&self.content),
             critical: blow.strike == Strike::Hit { critical: true },
             size: self.content.size(size).blood,
-            seed: blood::seed(self.state.turn, self.state.time, attacker.0, target.0),
+            seed: blood::seed(self.state.turn, self.state.time, source, target.0),
         };
         let now = self.state.time;
         let content = &self.content;

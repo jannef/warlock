@@ -2,7 +2,9 @@
 # Fields: id, name, glyph, fg, bg (default black), walkable (default true),
 # transparent (default true), move_cost (what a step onto it costs, in percent of a normal step,
 # the `step` cost in actions.toml; default 100; local levels only), opens_to / closes_to (doors),
-# stairs ("up"/"down"),
+# breaks_to and sturdiness (closed doors, spec §8 "Doors": a kick breaks the door into this
+# terrain with a chance of the kicker's Strength score in its sturdiness, 1 to 100; both or
+# neither), stairs ("up"/"down"),
 # light (a preset in lights.toml the terrain emits), bounce (gameplay, spec §5: the tint of the
 # light the surface bounces, "#rrggbb", default white = neutral), height (gameplay, spec §5
 # "Sunlight": how many cells tall it stands for sun shadows, 0 to 4; default 1 if opaque, else 0),
@@ -24,6 +26,13 @@
 # next to it is broken open, its wall face).
 # Terrain with a "flow" anim is running water: every cell of it needs a flow direction from the
 # level legend (the arrows in legend.toml).
+# Ice (gameplay, spec §5 "Ice"): water that freezes has a `freeze` table: `below` (ice grows while
+# the air is colder than this, °C, 0 down to -30; it melts above 0), `rate` (how fast, in percent
+# of still water's pace, 1 to 100, default 100), and `plunge` (dice: the hit points a fall
+# through the ice into it takes; never the last one). Ice is terrain with `ice`, the thinnest ice
+# that looks like it in mm (1 to 1000; the next one's takes over from its thickness): it lies on
+# water, which it thaws back into, so levels lay it with `ice = MM` on a water cell, never by
+# itself. Both are walkable and transparent, without a light, and neither doors nor stairs.
 # Overworld terrain (spec §3, §7): travel_minutes (an overworld step onto it at normal speed: the
 # step's base time instead of 6 seconds; 1 to 1440; required for walkable terrain on the
 # overworld), local (the ground of the local area entered with `>` from a cell of it; none:
@@ -116,6 +125,9 @@ opens_to = "door_open"
 # It creaks open, and muffles what goes on behind it.
 toggle_noise = 60
 muffle = 30
+# Kicked in (`K`), it breaks with a chance of the kicker's Strength in 30.
+breaks_to = "door_broken"
+sturdiness = 30
 
 # Dust shaken loose when the door swings.
 [[terrain.particles]]
@@ -154,6 +166,28 @@ area = [0.35, 0.4]
 scale = 0.7
 fade = 0.6
 
+# What is left of a door kicked in (spec §8 "Doors"): splinters in the doorway, open for good.
+[[terrain]]
+id = "door_broken"
+name = "broken door"
+glyph = ","
+fg = "#a0703a"
+bg = "#1a120a"
+
+# Splinters fly when it breaks.
+[[terrain.particles]]
+on = "toggle"
+glyphs = "'`,."
+colors = ["#a87a48", "#4a3018"]
+count = 5
+life = 0.5
+velocity = [0.0, -0.3]
+spread = [1.4, 0.6]
+gravity = 1.2
+area = [0.3, 0.35]
+scale = 0.7
+fade = 0.5
+
 [[terrain]]
 id = "stairs_down"
 name = "staircase down"
@@ -182,6 +216,8 @@ move_cost = 200
 step_noise = 200
 bounce = "#a8c8ff"
 anim = { kind = "wave", speed = 0.16, amount = 0.05, glint = 0.5 }
+# It freezes below 0 °C, and a fall through the ice into it hurts a little.
+freeze = { below = 0, plunge = "1d3" }
 stains = false
 
 # A splash when something wades in.
@@ -212,6 +248,8 @@ move_cost = 200
 step_noise = 200
 bounce = "#a8c8ff"
 anim = { kind = "flow", speed = 0.5, glint = 0.4 }
+# The current keeps it open until a hard frost, and then it freezes slowly.
+freeze = { below = -6, rate = 40, plunge = "1d3" }
 stains = false
 
 [[terrain.particles]]
@@ -256,6 +294,9 @@ move_cost = 150
 step_noise = 200
 bounce = "#a8c8ff"
 anim = { kind = "wave", speed = 0.12, amount = 0.03, glint = 0.3 }
+# It freezes like a pool (a flooded room in a cold place), and a fall through into it, ankle-deep,
+# barely hurts.
+freeze = { below = 0, plunge = 1 }
 
 [[terrain.particles]]
 on = "step"
@@ -829,6 +870,47 @@ bg = "#120e0c"
 stairs = "down"
 glow = 0.2
 travel_minutes = 30
+
+# Ice (spec §5 "Ice"): what water that froze looks like, by how thick the ice is. Water freezes
+# slowly in the cold and thaws in the warmth; the ice holds by its thickness squared (5 cm holds a
+# person with a pack). It is still: no waves, no glints. Walking on it is a careful step.
+
+# Thin ice: dark water shows through, with pale hairline cracks here and there (`variants`: one
+# per cell, a space for none). It holds a rat, not a person.
+[[terrain]]
+id = "thin_ice"
+name = "thin ice"
+glyph = "⁄"
+variants = "⁄  ∖   ·  ⁄    ∖  "
+fg = "#6c86a2"
+bg = "#0e2135"
+ice = 10
+move_cost = 120
+bounce = "#b4ccf0"
+
+# Ice that holds a person (with a heavy pack, maybe not): a smooth grey-blue sheet, a glint of
+# frost here and there.
+[[terrain]]
+id = "ice"
+name = "ice"
+glyph = "·"
+variants = "·  ·   "
+fg = "#aec4da"
+bg = "#2a3e53"
+ice = 50
+move_cost = 120
+bounce = "#c8dcf4"
+
+# Thick ice: opaque and pale, frosted all over; it holds anything that walks.
+[[terrain]]
+id = "thick_ice"
+name = "thick ice"
+glyph = "·"
+fg = "#dce7f2"
+bg = "#44586e"
+ice = 150
+move_cost = 120
+bounce = "#d8e6f6"
 
 # A shop's timber hut in the courtyard (levels/courtyard.toml; spec §7 "Shops"): plank walls under
 # a roof, and a plank floor the roof shades from the sun and the sky. (Last in the file, so the

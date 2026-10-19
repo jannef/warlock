@@ -28,7 +28,8 @@
 #   start, end what the player is told as it begins and ends ("end" lets a rest go on)
 #   dies       what a creature you see does when it kills it ("The giant rat bleeds to death.")
 #   death      the death screen's line when it kills you
-# Creatures' attacks may cause statuses too: `on_hit` in creatures.toml.
+# Creatures' attacks may cause statuses too: `on_hit` in creatures.toml. Diseases (diseases.toml)
+# show as one status here, named by their `status`.
 
 [healing]
 resting = 200
@@ -67,3 +68,16 @@ start = "You feel sick."
 end = "The poison wears off."
 dies = "succumbs to poison"
 death = "Died of poison"
+
+# What every disease shows as (diseases.toml): one status for them all, while at least one of
+# them shows (its incubation over). Diseases give it and take it away, so it has no timers or
+# cures of its own; the diseases speak for themselves (onset, symptoms, recovery), so it says
+# nothing as it begins and ends. Hit points come back at half the pace; a disease may slow them
+# more (its own regen).
+[[status]]
+id = "diseased"
+name = "Diseased"
+max = 1
+regen = 50
+dies = "succumbs to disease"
+death = "Died of disease"

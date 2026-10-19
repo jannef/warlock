@@ -43,9 +43,28 @@ const MAGIC: &str = "WARLOCK-SAVE";
 /// 20: status effects: actors have them (`Actor::effects`), their healing progress counts
 ///     hundredths of a second (`Actor::regen`), and the player's death records the status that
 ///     killed them (`Death::of`).
-/// 30: shops (21 to 29 go to features landing before it): level states keep their shops
-///     (`LevelState::shops`: the keeper, what the player owes, how the keeper stands); content
-///     fingerprints cover shop ids, and objects have values.
+/// 21: hunger: the player's satiation (`Actor::satiation`: nutrition and what time has banked),
+///     corpses' death times (`Stack::died`), and what killed the player when neither a creature
+///     nor a status did (`Death::cause`: starving, choking).
+/// 22: doors: level states keep the locks on their doors (`LevelState::locks`).
+/// 23: NPCs and dialogue: actors keep how far their talk has got (`Actor::talk`: lines said and
+///     muttered, met) and the unique character a level made them (`Actor::npc`).
+/// 24: temperature and ice: level states keep their temperature (underground), the ice on their
+///     water, and when it was last brought up to date.
+/// 25: diseases: actors carry them (`Actor::diseases`: each infection's timer, stage,
+///     progressions, recovery streak, and who gave it) and stat damage (`Actor::damage`, with
+///     its mending progress); disease ids are in the content fingerprint.
+/// 26: magic items: a stack may carry what it rolled (`Stack::magic`: rarity, item level, each
+///     affix by id with its tier and value, a rare item's name, whether it is identified).
+/// 27: quests: the player's quests (stage, completions, counted kills, reached) and the kills
+///     they count, by level and creature type (`WorldState::quests`).
+/// 28: traps: level states keep their traps (kind, known, charges left, a bolt's direction) and
+///     the traps the player remembers; the player's death records the trap that killed them.
+/// 29: fighting styles: `Actor::weapon_skills` holds a rank and marks in each style too (after
+///     the weapon skills), and a light weapon may be in the off hand (two weapons).
+/// 30: shops: level states keep their shops (`LevelState::shops`: the keeper, the ways out,
+///     what the player owes, how the keeper stands); content fingerprints cover shop ids, and
+///     objects have values.
 pub const FORMAT_VERSION: u32 = 30;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;

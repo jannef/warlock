@@ -2,19 +2,19 @@
 
 | Skill | Trained by | Weapons | Marks |
 |---|---|---|---|
-| Daggers and knives | blows with its weapons | Dagger | melee |
-| Short blades | blows with its weapons | Short sword | melee |
-| Long blades | blows with its weapons | - | melee |
-| Great blades | blows with its weapons | - | melee |
-| Axes | blows with its weapons | - | melee |
-| Maces and clubs | blows with its weapons | Club | melee |
-| Spears | blows with its weapons | Spear | melee |
-| Polearms | blows with its weapons | - | melee |
-| Staves | blows with its weapons | Quarterstaff | melee |
+| Daggers and knives | blows with its weapons | Dagger, Stiletto | melee |
+| Short blades | blows with its weapons | Short sword, Scimitar | melee |
+| Long blades | blows with its weapons | Long sword, Rapier, Bastard sword | melee |
+| Great blades | blows with its weapons | Great sword | melee |
+| Axes | blows with its weapons | Hand axe, Battle axe, Great axe | melee |
+| Maces and clubs | blows with its weapons | Club, Mace, Morning star, War hammer, Maul | melee |
+| Spears | blows with its weapons | Spear, Javelin, Trident | melee |
+| Polearms | blows with its weapons | Halberd, Glaive | melee |
+| Staves | blows with its weapons | Quarterstaff, Ironwood staff | melee |
 | Unarmed | blows with bare hands | Fists, and creatures' natural attacks | melee |
-| Bows | shots with its weapons | Short bow, Long war bow | missile |
-| Crossbows | shots with its weapons | Crossbow | missile |
+| Bows | shots with its weapons | Short bow, Long war bow, Composite bow | missile |
+| Crossbows | shots with its weapons | Crossbow, Heavy crossbow | missile |
 | Slings | shots with its weapons | Sling | missile |
 | Thrown weapons | every throw | Rock; anything thrown | missile |
-| Shield blocking | blows your shield blocks | Small shield | melee |
-| Shield bashing | bashing with a shield | Small shield | melee |
+| Shield blocking | blows your shield blocks | Small shield, Buckler, Large shield, Tower shield | melee |
+| Shield bashing | bashing with a shield | Small shield, Buckler, Large shield, Tower shield | melee |

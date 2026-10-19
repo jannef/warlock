@@ -5,15 +5,17 @@
 //! wear and wield, how hurt they look, in words, and the status effects that show on them, such
 //! as bleeding), objects, and light, remembered terrain and objects, and what the player carries,
 //! wears, weighs, and scores in each stat, their trained skills' values, their burden and
-//! carrying limit, their hit points and Defence, and their own status effects by name; it never
-//! exposes unseen terrain or objects, hidden creatures, what else creatures carry, their burden,
-//! their skills, or their hit points, any stat's modifier or potential, a skill's marks or
-//! benefits, an untrained skill, a creature's stats, a to-hit, how severe a status effect is or
-//! how long it lasts, or light the player's eyes cannot perceive.
+//! carrying limit, their hit points and Defence, their own status effects by name, and how
+//! hungry they are; it never exposes unseen terrain or objects, hidden creatures, what else
+//! creatures carry, their burden, their skills, or their hit points, any stat's modifier or
+//! potential, a skill's marks or benefits, an untrained skill, a creature's stats, a to-hit, how
+//! severe a status effect is or how long it lasts, the nutrition counter, a corpse's age, or
+//! light the player's eyes cannot perceive.
 //!
 //! **Memory** (spec §5): terrain, piles of objects, and blood as last seen. Objects are seen where
 //! creatures are (cells in line of sight, never completed walls); a pile seen gone is forgotten,
-//! and one that changed out of sight is remembered as it was.
+//! and one that changed out of sight is remembered as it was. Known traps (spec §8 "Traps") are
+//! seen and remembered the same way; hidden ones never show.
 //!
 //! **Blood** (spec §8 "Blood", [`crate::blood`]): a stain on an open cell is seen where objects
 //! are; one on a wall only when a stained face is seen (a visible open cell next to the wall on
@@ -65,14 +67,15 @@ use crate::character::Character;
 use crate::combat::Health;
 use crate::content::Shops;
 use crate::content::{
-    CombatStance, Content, CreatureId, FactionId, Flow, LevelKind, LightId, ObjectId,
-    RoomEffectDef, SlotId, Stance, StatusId, TerrainId, VisionProfile,
+    CombatStance, Content, CreatureId, DiseaseId, FactionId, Flow, LevelKind, LightId, ObjectId,
+    RoomEffectDef, SlotId, Stance, StatusId, TerrainId, TrapId, VisionProfile, WeaponSkillId,
 };
 use crate::daylight;
 use crate::equipment::Equipment;
 use crate::fov::{compute_fov, radius2};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
+use crate::hunger::Hunger;
 use crate::light::{
     Area, BOUNCE_STEPS, Bounce, Light, LightCache, Moon, SUN_KEY, ShadowSteps, Sky, Sun, Sunlight,
     falloff, lit_in_sight, moon_key, wall_faces,
@@ -81,11 +84,13 @@ use crate::noise::{self, PerceivedSound};
 use crate::object::{Stack, Weight};
 use crate::skills::{self, SkillId};
 use crate::stats::PerStat;
+use crate::temperature::Temperature;
 use crate::time::GameTime;
 use crate::weapon_skills::WeaponSkills;
 use crate::weather::Weather;
 use crate::world::{
-    Actor, ActorId, ActorKind, Death, LevelState, Shop, WorldState, count_of, favour, unpaid_parts,
+    Actor, ActorId, ActorKind, Death, LevelState, Shop, WorldState, count_of, favour, part_of,
+    unpaid_parts,
 };
 use serde::Serialize;
 
@@ -136,7 +141,7 @@ pub struct SeenActor {
 }
 
 /// Something a creature the player sees wears or wields: what is seen of what it carries.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SeenGear {
     pub actor: ActorId,
     /// The first slot it is in (a two-handed weapon is in both hands).
@@ -256,6 +261,8 @@ pub(crate) struct Perception {
     ambient: Light,
     /// The sun, the moons, and the sky over a level under the open sky.
     sky: Option<Sky>,
+    /// The temperature of the air where the player is (spec §5 "Temperature").
+    temperature: Temperature,
     /// Ambient plus sky plus bounce light; meaningful on visible cells only.
     base: Grid<Light>,
     sight: Grid<Sight>,
@@ -522,7 +529,7 @@ impl Perception {
             .filter(|a| a.kind == ActorKind::Creature)
             .flat_map(|a| {
                 (a.equipment.items().into_iter()).filter_map(|(slot, item)| {
-                    let stack = *a.inventory.get(item)?;
+                    let stack = a.inventory.get(item)?.clone();
                     Some(SeenGear {
                         actor: a.id,
                         slot,
@@ -567,11 +574,14 @@ impl Perception {
             }
             None => Vec::new(),
         };
+        // The player feels the air: fixed underground, the weather's under the open sky.
+        let temperature = state.temperature_on(level, content, state.time);
         Self {
             viewer,
             vision,
             ambient,
             sky,
+            temperature,
             base,
             sight,
             visible_cells,
@@ -600,6 +610,12 @@ impl Perception {
         self.sight.get(p).is_some_and(|s| *s != Sight::Hidden)
     }
 
+    /// Whether the player does not see `p`, a cell of the level that is not their own: where
+    /// they may place a sound they hear ([`noise::rough_place`]).
+    pub(crate) fn hides(&self, p: Pos) -> bool {
+        self.sight.get(p) == Some(&Sight::Hidden) && p != self.viewer
+    }
+
     /// Whether creatures at `p` can be seen: only in line of sight, never on completed walls.
     pub(crate) fn sees_actors_at(&self, p: Pos) -> bool {
         self.sight.get(p) == Some(&Sight::Seen)
@@ -610,8 +626,9 @@ impl Perception {
         self.blood.binary_search(&p).is_ok()
     }
 
-    /// Writes currently visible terrain, the piles on cells in sight, and the blood seen into
-    /// the level's memory. Blood on a wall seen only from its clean side is remembered as it was.
+    /// Writes currently visible terrain, the piles and known traps on cells in sight, and the
+    /// blood seen into the level's memory. Blood on a wall seen only from its clean side is
+    /// remembered as it was.
     pub(crate) fn remember(&self, level: &mut LevelState) {
         for &p in &self.blood {
             if let Some(stain) = level.blood.get(&p)
@@ -627,6 +644,14 @@ impl Perception {
             }
             if !self.sees_actors_at(p) {
                 continue;
+            }
+            match level.traps.get(&p).filter(|t| t.known) {
+                Some(trap) => {
+                    level.trap_memory.insert(p, trap.kind);
+                }
+                None => {
+                    level.trap_memory.remove(&p);
+                }
             }
             match level.objects.get(&p) {
                 Some(pile) if level.object_memory.get(&p) != Some(pile) => {
@@ -666,6 +691,8 @@ pub struct PerceptionView<'a> {
     pub(crate) death: Option<&'a Death>,
     /// The player's experience total.
     pub(crate) experience: u32,
+    /// The player's quests, which they know.
+    pub(crate) quests: &'a crate::world::Quests,
     pub(crate) snapshot: &'a Perception,
 }
 
@@ -804,6 +831,29 @@ impl<'a> PerceptionView<'a> {
         self.snapshot.sees_actors_at(p)
     }
 
+    /// The trap the player knows at `p` (spec §8 "Traps"): on a cell in sight, a known trap lying
+    /// there now; anywhere else, the trap remembered there. Hidden traps are never here.
+    pub fn trap(&self, p: Pos) -> Option<TrapId> {
+        if self.snapshot.sees_actors_at(p) {
+            (self.level.traps.get(&p))
+                .filter(|t| t.known)
+                .map(|t| t.kind)
+        } else {
+            self.level.trap_memory.get(&p).copied()
+        }
+    }
+
+    /// Every trap the player knows on this level ([`PerceptionView::trap`]), by position.
+    pub fn known_traps(&self) -> Vec<(Pos, TrapId)> {
+        let cells = (self.level.traps.keys()).chain(self.level.trap_memory.keys());
+        let mut cells: Vec<Pos> = cells.copied().collect();
+        cells.sort_unstable();
+        cells.dedup();
+        (cells.into_iter())
+            .filter_map(|p| Some((p, self.trap(p)?)))
+            .collect()
+    }
+
     /// What the player carries, letter `a` first.
     pub fn inventory(&self) -> &'a [Stack] {
         &self.player.inventory
@@ -838,7 +888,7 @@ impl<'a> PerceptionView<'a> {
     pub fn ready_to_fire(&self) -> Option<(ObjectId, usize, i32)> {
         let (launcher, _) = self.player.launcher(self.content)?;
         let item = self.player.ammunition_item(self.content)?;
-        Some((launcher, item, self.content.object(launcher).range?))
+        Some((launcher, item, self.player.launcher_range(self.content)?))
     }
 
     /// Where in their inventory what the player has ready to throw is (a stack of rocks, or a
@@ -860,9 +910,7 @@ impl<'a> PerceptionView<'a> {
     /// How far the player throws inventory stack `item`, if it can be thrown (a throwing
     /// weapon, or another weapon, badly).
     pub fn throw_range(&self, item: usize) -> Option<i32> {
-        self.content
-            .object(self.player.inventory.get(item)?.object)
-            .throw_range()
+        self.player.throw_range(item, self.content)
     }
 
     /// Whether inventory stack `item` is a throwing weapon, made for throwing (what the throw
@@ -877,17 +925,26 @@ impl<'a> PerceptionView<'a> {
         self.snapshot.gear.iter().filter(move |g| g.actor == actor)
     }
 
-    /// The player's own scores, by stat (spec §8 "Stats"), as the rules read them: lowered
-    /// while a status effect lowers them (spec §8 "Status effects"). That is all the player
+    /// The player's own scores, by stat (spec §8 "Stats"), as the rules read them: raised by
+    /// what they wear and wield (spec §8 "Magic items"), lowered while a status effect or stat
+    /// damage lowers them (spec §8 "Status effects", "Diseases") and while hunger leaves them
+    /// Weak or worse (spec §8 "Hunger"). That is all the player
     /// knows of stats: never their potentials or modifiers, and nothing of a creature's.
     pub fn own_scores(&self) -> PerStat<u8> {
         self.player.effective_stats(self.content).scores()
     }
 
-    /// The player's scores as they are without their status effects: what [`PerceptionView::
-    /// own_scores`] would be with none (the character screen marks the lowered ones).
+    /// How hungry the player is (spec §8 "Hunger"): the state, never the nutrition counter;
+    /// `None` when nobody hungers.
+    pub fn own_hunger(&self) -> Option<Hunger> {
+        self.player.hunger(self.content)
+    }
+
+    /// The player's scores as they are without their status effects, hunger, or stat damage
+    /// (raised by what they wear and wield all the same): what [`PerceptionView::own_scores`]
+    /// would be with none (the character screen marks the lowered ones).
     pub fn own_base_scores(&self) -> PerStat<u8> {
-        self.player.stats.scores()
+        self.player.raised_stats(self.content).scores()
     }
 
     /// The player's own trained skills, in skill order (spec §8 "Skills"): each one's value and
@@ -918,6 +975,13 @@ impl<'a> PerceptionView<'a> {
         self.player.effects.iter().map(|e| e.status)
     }
 
+    /// The diseases the player knows they have, in disease order (spec §8 "Diseases"): those
+    /// that have progressed at least once. One that incubates, or has only just shown, is not
+    /// here (a showing one makes the player Diseased, [`PerceptionView::own_effects`]).
+    pub fn own_diseases(&self) -> impl Iterator<Item = DiseaseId> + 'a {
+        self.player.diseases.known()
+    }
+
     /// The status effects that show on seen creature `actor` (`seen` in `data/status.toml`:
     /// bleeding), the most important first; none for creatures not in view and the player.
     pub fn effects_of(&self, actor: ActorId) -> impl Iterator<Item = StatusId> + 'a {
@@ -938,6 +1002,13 @@ impl<'a> PerceptionView<'a> {
     /// ranks, and see their marks as a bar toward the next. Never what a rank gives.
     pub fn own_weapon_skills(&self) -> &'a WeaponSkills {
         &self.player.weapon_skills
+    }
+
+    /// The fighting styles the player fights in now (spec §8 "Fighting styles"), in skill
+    /// order: their hands', their readied missile weapon's, and throwing's while something is
+    /// ready to throw. They know how they hold their weapons.
+    pub fn own_styles_in_use(&self) -> Vec<WeaponSkillId> {
+        self.player.styles_in_use(self.content)
     }
 
     /// The player's hit points: what they have left (at most their maximum, never below 0) and
@@ -1045,6 +1116,12 @@ impl<'a> PerceptionView<'a> {
         self.snapshot.weather()
     }
 
+    /// The temperature of the air where the player is (spec §5 "Temperature"), which they feel,
+    /// in dungeons and under the open sky alike (the status bar shows it).
+    pub fn temperature(&self) -> Temperature {
+        self.snapshot.temperature
+    }
+
     /// Steady light at a visible cell that no single source gives: ambient light plus sky light
     /// (under the open sky: the sun's and the moons') plus bounce light; `None` for cells not in
     /// view. With every [`SeenLight`] contribution to the cell added, it is
@@ -1106,13 +1183,13 @@ impl<'a> ShopView<'a> {
     }
 
     /// What it asks for `stack`, if it is for sale (worth something, not the currency).
-    pub fn price(&self, stack: Stack) -> Option<u32> {
+    pub fn price(&self, stack: &Stack) -> Option<u32> {
         let price = (self.shops).price(self.content, self.shop.kind, stack, self.favour);
         (price > 0).then_some(price)
     }
 
     /// What it offers for `stack`, if it buys it.
-    pub fn offer(&self, stack: Stack) -> Option<u32> {
+    pub fn offer(&self, stack: &Stack) -> Option<u32> {
         let offer = (self.shops).offer(self.content, self.shop.kind, stack, self.favour);
         (offer > 0).then_some(offer)
     }
@@ -1155,7 +1232,7 @@ impl<'a> PerceptionView<'a> {
 
     /// The price of `stack` lying at `p`, a cell in sight, if it is for sale there (look mode:
     /// "a dagger (for sale, 45 gold)").
-    pub fn price_tag(&self, p: Pos, stack: Stack) -> Option<u32> {
+    pub fn price_tag(&self, p: Pos, stack: &Stack) -> Option<u32> {
         if !self.snapshot.sees_actors_at(p) {
             return None;
         }
@@ -1171,13 +1248,7 @@ impl<'a> PerceptionView<'a> {
         };
         let parts = unpaid_parts(inventory, &view.shop.unpaid);
         (inventory.iter().zip(parts))
-            .map(|(s, n)| {
-                let part = Stack {
-                    object: s.object,
-                    count: n,
-                };
-                (n > 0).then(|| view.price(part).unwrap_or(0))
-            })
+            .map(|(s, n)| (n > 0).then(|| view.price(&part_of(s, n)).unwrap_or(0)))
             .collect()
     }
 
@@ -1211,14 +1282,11 @@ impl<'a> PerceptionView<'a> {
             stacks: Vec::new(),
         };
         for (i, stack) in inventory.iter().enumerate() {
-            let own = Stack {
-                object: stack.object,
-                count: stack.count - parts[i],
-            };
+            let own = part_of(stack, stack.count - parts[i]);
             if !chosen.contains(i) || own.count == 0 {
                 continue;
             }
-            if let Some(offer) = view.offer(own) {
+            if let Some(offer) = view.offer(&own) {
                 sale.offer += offer;
                 sale.stacks.push(own);
             }

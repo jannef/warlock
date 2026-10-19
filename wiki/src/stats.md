@@ -15,24 +15,30 @@ of 10 (see [Your character](character.md)). After that, nothing changes them yet
 
 Press `@` to open the **character screen**. It shows your name, your race, gender, and class,
 your age, birthday, and [birth sign](horoscope.md), your stats in the order above (with their
-short names; a stat that a status effect lowers is shown lowered, in red), your hit points and
-Defence (see [Combat](combat.md)), your weight: your own,
-plus what you carry (see [Objects and your pack](objects.md)), and how much you can carry (see
+short names; a stat that a status effect or a disease lowers is shown lowered, in red), your hit
+points and Defence (see [Combat](combat.md)), your weight: your own, plus what you carry (see [Objects and your pack](objects.md)), and how much you can carry (see
 [Burden](burden.md)). Looking takes no time; press `@` or `Esc` to close it.
 
 Creatures have stats too, but you cannot see theirs.
 
 ## What they do
 
-In a fight (see [Combat](combat.md)), and under a load (see [Burden](burden.md)):
+In a fight (see [Combat](combat.md)), under a load (see [Burden](burden.md)), and at a door
+(see [Doors](doors.md)):
 
 - **Strength** helps you hit up close and adds to the damage of your blows, and draws a bow. It
-  counts double toward how much you can carry.
+  counts double toward how much you can carry, and the stronger you are, the sooner you kick a
+  door in.
 - **Dexterity** helps you aim a shot and dodge blows: it adds to your Defence (less under a heavy
   load or heavy armour).
 - **Toughness** gives you hit points, and makes them come back sooner. It counts toward how much
-  you can carry.
+  you can carry, and fights off most [diseases](diseases.md).
+- **Willpower** fights off a few diseases (brain fever).
 
-The other three do nothing yet. Stats do not change how far you see or how quietly you walk, and
-nothing raises them. Strong poison lowers your Strength and Dexterity by one while it lasts, for
-everything they do (see [Status effects](status-effects.md)); nothing lowers them for good.
+Intelligence and Presence do nothing yet. Stats do not change how far you see or how quietly you
+walk. Strong poison lowers your Strength and Dexterity by one while it lasts, for everything they
+do (see [Status effects](status-effects.md)), and hunger saps them for a while (Weak lowers your
+Strength and Dexterity; see [Hunger](hunger.md)). Diseases take points off your stats (**stat
+damage**), which come back a point a day once no disease shows (see [Diseases](diseases.md)).
+Eating the corpse of some creatures may raise one for good, as far as it can grow (see
+[Food and corpses](food.md)). Nothing else raises or lowers them for good.

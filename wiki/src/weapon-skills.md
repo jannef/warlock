@@ -15,7 +15,8 @@ Steel*: a swordsman who is good with a long sword is not a beginner with a short
 
 Every weapon belongs to one skill (see the weapon tables in [Combat](combat.md#damage) and
 [Ranged combat](ranged.md)). Every throw trains **thrown weapons**, whatever you throw: a dagger
-thrown is not a dagger held. **Unarmed** is fighting with your bare hands.
+thrown is not a dagger held. **Unarmed** is fighting with your bare hands, and every kick at a
+creature, whatever you wield (see [Doors](doors.md)).
 
 **Shield blocking** trains when your shield stops a blow: when the message says "You block the
 kobold's spear with your shield." It adds to the Shield part of your [Defence](combat.md#defence)
@@ -29,8 +30,11 @@ it and a direction.
 ## Seeing your skills
 
 `W` opens the **weapon skills screen**: every skill, by kind (melee, missile and thrown,
-shields), with your rank and a faint bar of your marks toward the next one. It takes no time.
-Skills you know stand out; untrained ones are dimmer.
+shields), then your [fighting styles](fighting-styles.md), each with your rank and a faint bar of
+your marks toward the next one; a `•` marks the styles you fight in now. It takes no time.
+Skills you know stand out; untrained ones are dimmer. In a wide window the list is in two
+columns; in a small one it scrolls (↑↓). It is page 6 of the
+[info pages](controls.md#info-pages).
 
 The game never tells you what a rank gives you, in numbers: you see your ranks, and you feel the
 difference in a fight. The tables below are the rules.

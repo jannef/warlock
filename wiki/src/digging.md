@@ -60,11 +60,11 @@ Only walls break. You cannot dig down or up, and digging does not work on the ov
 
 ## Explosions
 
-Nothing in the game explodes yet; fireball traps are on their way. A big explosion breaks every
-wall in its blast whose hardness is less than the explosion's strength, at once: "The wall
-collapses!" It reaches only the walls it can touch, the cells in line of sight of its centre
-within its reach, so a blast never goes through a wall it breaks. Nothing is left to chance.
-Granite and the edge of the level hold.
+A fireball trap's explosion (see [Traps](traps.md)) breaks every wall in its blast whose
+hardness is less than the explosion's strength, at once: "The walls collapse!" The table above
+says which walls a fireball breaks. It reaches only the walls it can touch, the cells in line of
+sight of its centre within its reach, so a blast never goes through a wall it breaks. Nothing is
+left to chance. Granite and the edge of the level hold.
 
 ## After a wall falls
 
@@ -75,6 +75,8 @@ you see into what was behind it, and you remember it as you remember everything 
 ## The quarry
 
 The stairs nook in the hub has a staircase down (`>`) to **the quarry**, an old stone quarry and
-the place to try all this: a pick-axe and a mattock lie by the stairs, the pit is walled by a
+the place to try digging: a pick-axe and a mattock lie by the stairs, the pit is walled by a
 granite face and a bank of packed earth, and a sealed chamber with a lamp and a little treasure
-lies behind its east wall, with no door in. The **Quarry** scenario starts there.
+lies behind its east wall, with no door in. The **Quarry** scenario starts there. In the
+[trap hall](traps.md), a hidden fireball blows apart the earth and stone pillars beside it, and
+the granite one holds.

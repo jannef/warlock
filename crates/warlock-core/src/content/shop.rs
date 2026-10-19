@@ -208,7 +208,7 @@ impl Shops {
     /// What a shop of kind `kind` asks for `stack`, in gold, from a buyer with `favour` (percent
     /// in their favour, [`MAX_FAVOUR`] at most either way): its value times the markup, less the
     /// favour, rounded up; at least 1 for anything traded, 0 for anything that is not.
-    pub fn price(&self, content: &Content, kind: ShopId, stack: Stack, favour: i32) -> u32 {
+    pub fn price(&self, content: &Content, kind: ShopId, stack: &Stack, favour: i32) -> u32 {
         if !self.trades(content, stack.object) {
             return 0;
         }
@@ -221,7 +221,7 @@ impl Shops {
     /// What a shop of kind `kind` offers for `stack`, in gold, to a seller with `favour`: its
     /// value times what the shop pays, plus the favour, rounded down; never more than it would
     /// ask for it, and 0 for anything it does not buy.
-    pub fn offer(&self, content: &Content, kind: ShopId, stack: Stack, favour: i32) -> u32 {
+    pub fn offer(&self, content: &Content, kind: ShopId, stack: &Stack, favour: i32) -> u32 {
         if !self.buys(content, kind, stack.object) {
             return 0;
         }
@@ -232,7 +232,7 @@ impl Shops {
     }
 
     /// The value of `stack`: each one's times how many.
-    fn base(&self, content: &Content, stack: Stack) -> u64 {
+    fn base(&self, content: &Content, stack: &Stack) -> u64 {
         u64::from(content.object(stack.object).value) * u64::from(stack.count)
     }
 
@@ -243,6 +243,7 @@ impl Shops {
             faction: None,
             pos: post,
             route: Vec::new(),
+            npc: None,
             carry: self.keeper.carry.clone(),
             equipment: self.keeper.equipment.clone(),
         }
@@ -442,30 +443,27 @@ mod tests {
         let store = shops.id("general_store").expect("store");
         let dagger = Stack::one(c.object_id("dagger").expect("dagger"));
         // A dagger is worth 30: the store asks 150 % and pays 30 %.
-        assert_eq!(shops.price(&c, store, dagger, 0), 45);
-        assert_eq!(shops.offer(&c, store, dagger, 0), 9);
+        assert_eq!(shops.price(&c, store, &dagger, 0), 45);
+        assert_eq!(shops.offer(&c, store, &dagger, 0), 9);
         // In the buyer's favour: less to pay, more offered; against them, the other way.
-        assert_eq!(shops.price(&c, store, dagger, 10), 41);
-        assert_eq!(shops.offer(&c, store, dagger, 10), 9);
-        assert_eq!(shops.price(&c, store, dagger, -10), 50);
+        assert_eq!(shops.price(&c, store, &dagger, 10), 41);
+        assert_eq!(shops.offer(&c, store, &dagger, 10), 9);
+        assert_eq!(shops.price(&c, store, &dagger, -10), 50);
         // The favour is at most half either way.
         assert_eq!(
-            shops.price(&c, store, dagger, 90),
-            shops.price(&c, store, dagger, MAX_FAVOUR)
+            shops.price(&c, store, &dagger, 90),
+            shops.price(&c, store, &dagger, MAX_FAVOUR)
         );
-        assert_eq!(shops.price(&c, store, dagger, MAX_FAVOUR), 23);
+        assert_eq!(shops.price(&c, store, &dagger, MAX_FAVOUR), 23);
         // A stack is priced whole, then rounded: 12 arrows worth 1 each.
-        let arrows = Stack {
-            object: c.object_id("arrow").expect("arrow"),
-            count: 12,
-        };
-        assert_eq!(shops.price(&c, store, arrows, 0), 18);
+        let arrows = Stack::new(c.object_id("arrow").expect("arrow"), 12);
+        assert_eq!(shops.price(&c, store, &arrows, 0), 18);
         // Anything traded costs at least 1; junk is not for sale.
         let apple = Stack::one(c.object_id("apple").expect("apple"));
-        assert_eq!(shops.price(&c, store, apple, MAX_FAVOUR), 1);
-        assert_eq!(shops.offer(&c, store, apple, 0), 0);
+        assert_eq!(shops.price(&c, store, &apple, MAX_FAVOUR), 1);
+        assert_eq!(shops.offer(&c, store, &apple, 0), 0);
         let rock = Stack::one(c.object_id("rock").expect("rock"));
-        assert_eq!(shops.price(&c, store, rock, 0), 0);
+        assert_eq!(shops.price(&c, store, &rock, 0), 0);
     }
 
     #[test]
@@ -475,14 +473,11 @@ mod tests {
         for k in 0..shops.defs().len() {
             let kind = ShopId(k as u8);
             for o in 0..c.object_defs().len() {
-                let stack = Stack {
-                    object: ObjectId(o as u16),
-                    count: 7,
-                };
+                let stack = Stack::new(ObjectId(o as u16), 7);
                 for favour in [-MAX_FAVOUR, -10, 0, 25, MAX_FAVOUR] {
                     let (ask, offer) = (
-                        shops.price(&c, kind, stack, favour),
-                        shops.offer(&c, kind, stack, favour),
+                        shops.price(&c, kind, &stack, favour),
+                        shops.offer(&c, kind, &stack, favour),
                     );
                     assert!(offer <= ask, "{kind:?} {o} {favour}: {offer} > {ask}");
                 }
@@ -510,7 +505,7 @@ mod tests {
                 "outraged = \"merchants\"",
                 "hostile to the player",
             ),
-            ("chance = 35", "chance = 101", "`chance`"),
+            ("chance = 70", "chance = 101", "`chance`"),
             ("bundle = [6, 15]", "bundle = [0, 15]", "`bundle`"),
             ("markup = 150", "markup = 50", "`markup`"),
             ("pays = 30", "pays = 101", "`pays`"),

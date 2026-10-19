@@ -367,8 +367,8 @@ fn spawn_equipment_is_checked() {
             "`spear` is wielded, not worn: use `wield`",
         ),
         (
-            r#"{ terrain = "floor", creature = "kobold", carry = ["spear", "dagger"], wield = ["spear", "dagger"] }"#,
-            "cannot wield `dagger`: no free slot fits it",
+            r#"{ terrain = "floor", creature = "kobold", carry = ["spear", "club"], wield = ["spear", "club"] }"#,
+            "cannot wield `club`: no free slot fits it",
         ),
         (
             r#"{ terrain = "floor", creature = "kobold", carry = ["apple"], wield = "apple" }"#,

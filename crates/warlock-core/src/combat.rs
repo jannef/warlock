@@ -231,6 +231,9 @@ pub struct Profile {
     pub threat: u8,
     /// How many times a confirmed critical rolls the damage.
     pub crit: u8,
+    /// Dice rolled with every roll of the damage, after its own (a magic weapon's "adds 1d4
+    /// damage"; spec §8 "Magic items").
+    pub extra: Option<Dice>,
 }
 
 /// What an attack is made with, as data gives it: a weapon (`data/objects.toml`) or a creature's
@@ -294,9 +297,9 @@ impl Profile {
         Self::of(attack, attack.to_hit + dexterity - short, -short)
     }
 
-    /// This attack with what a weapon skill's rank gives (spec §8 "Weapon skills"): more to
-    /// hit, more to every roll of the damage, and a wider threat range (never past a natural
-    /// 2).
+    /// This attack with what a weapon skill's rank gives (spec §8 "Weapon skills"; a fighting
+    /// style's adds to it): more to hit, more to every roll of the damage, a wider threat range
+    /// (never past a natural 2), and a bigger critical multiplier (never past ×5).
     pub fn with(self, benefit: &Benefit) -> Self {
         Self {
             to_hit: self.to_hit + benefit.to_hit,
@@ -305,6 +308,7 @@ impl Profile {
                 .threat
                 .saturating_sub(benefit.threat)
                 .max(*THREATS.start()),
+            crit: self.crit.saturating_add(benefit.crit).min(*CRITS.end()),
             ..self
         }
     }
@@ -318,6 +322,12 @@ impl Profile {
         }
     }
 
+    /// An attack with no one's stats behind it (a trap's, spec §8 "Traps"): its own to-hit and
+    /// damage, nothing added.
+    pub fn bare(attack: &Attack) -> Self {
+        Self::of(attack, attack.to_hit, 0)
+    }
+
     fn of(attack: &Attack, to_hit: i32, bonus: i32) -> Self {
         Self {
             to_hit,
@@ -325,13 +335,16 @@ impl Profile {
             bonus,
             threat: attack.threat,
             crit: attack.crit,
+            extra: None,
         }
     }
 
-    /// One roll of the damage: the dice plus the bonus (it may be below 1; a blow's total is
-    /// at least 1).
+    /// One roll of the damage: the dice, the extra dice if any, plus the bonus (it may be below
+    /// 1; a blow's total is at least 1).
     fn roll_damage(&self, rng: &mut Rng) -> i32 {
-        self.damage.roll(rng) + self.bonus
+        let dice = self.damage.roll(rng);
+        let extra = self.extra.map_or(0, |d| d.roll(rng));
+        dice + extra + self.bonus
     }
 }
 
@@ -475,7 +488,27 @@ mod tests {
             bonus: 0,
             threat,
             crit,
+            extra: None,
         }
+    }
+
+    #[test]
+    fn extra_dice_roll_after_the_weapons_own() {
+        let dv = Defence::from_bonuses([(Category::Dexterity, -10)]);
+        let p = Profile {
+            extra: Some(Dice::of(1, 4)),
+            ..profile(0, "1d6", 24, 2)
+        };
+        let mut rng = Rng::stream(5, "combat-test");
+        let mut seen = std::collections::BTreeSet::new();
+        for _ in 0..1000 {
+            let blow = strike(&p, &dv, &mut rng);
+            if blow.strike == (Strike::Hit { critical: false }) {
+                assert!((2..=10).contains(&blow.damage), "{}", blow.damage);
+                seen.insert(blow.damage);
+            }
+        }
+        assert_eq!(seen.len(), 9, "1d6 + 1d4 falls 2 to 10");
     }
 
     #[test]

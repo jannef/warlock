@@ -136,7 +136,7 @@ impl Shop {
     /// What the player owes for what they took, in gold, at `favour`.
     pub fn owed(&self, shops: &Shops, content: &Content, favour: i32) -> u32 {
         (self.unpaid.iter())
-            .map(|s| shops.price(content, self.kind, *s, favour))
+            .map(|s| shops.price(content, self.kind, s, favour))
             .sum()
     }
 
@@ -152,21 +152,29 @@ impl Shop {
             && self.unpaid.iter().all(|s| s.is_valid_for(content))
     }
 
-    /// Adds `stack` to what the player owes.
-    fn owe(&mut self, stack: Stack) {
+    /// Adds `stack` to what the player owes, counted by object (a magic item is priced as its
+    /// base item).
+    fn owe(&mut self, stack: &Stack) {
         match self.unpaid.iter_mut().find(|s| s.object == stack.object) {
             Some(same) => same.count += stack.count,
-            None => self.unpaid.push(stack),
+            None => self.unpaid.push(Stack::new(stack.object, stack.count)),
         }
     }
 
     /// Takes `stack` off what the player owes: they put it back.
-    fn put_back(&mut self, stack: Stack) {
+    fn put_back(&mut self, stack: &Stack) {
         if let Some(same) = self.unpaid.iter_mut().find(|s| s.object == stack.object) {
             same.count = same.count.saturating_sub(stack.count);
         }
         self.unpaid.retain(|s| s.count > 0);
     }
+}
+
+/// `count` of `stack`: the same object, with the same magic.
+pub fn part_of(stack: &Stack, count: u32) -> Stack {
+    let mut part = stack.clone();
+    part.count = count;
+    part
 }
 
 /// How much of each stack of `inventory` is unpaid: the count of each object `unpaid` names,
@@ -256,7 +264,7 @@ impl World {
     }
 
     /// What `stack` lying at `p` costs, if it is for sale there: in an open shop, and traded.
-    pub(super) fn asking_price(&self, p: Pos, stack: Stack) -> Option<u32> {
+    pub(super) fn asking_price(&self, p: Pos, stack: &Stack) -> Option<u32> {
         let shops = self.content.shops()?;
         let shop = (self.state.current().shops.iter()).find(|s| s.is_open() && s.contains(p))?;
         let price = shops.price(&self.content, shop.kind, stack, self.player_favour());
@@ -274,7 +282,7 @@ impl World {
         let level = self.state.current_mut();
         let shop = &mut level.shops[i];
         got.iter()
-            .map(|&stack| {
+            .map(|stack| {
                 let price = shops.price(&content, shop.kind, stack, favour);
                 (price > 0).then(|| {
                     shop.owe(stack);
@@ -334,10 +342,7 @@ impl World {
         }
         let content = self.content.clone();
         if let Some(taker) = self.state.actors.get_mut(&to) {
-            let gold = Stack {
-                object: currency,
-                count: amount,
-            };
+            let gold = Stack::new(currency, amount);
             object::add_to_inventory(&mut taker.inventory, gold, &content);
         }
     }
@@ -381,10 +386,7 @@ impl World {
         // Priced at the load the player has as they begin.
         let spent = self.price_for(&kinds);
         let kept: Vec<Stack> = (inventory.iter().zip(&deal.leaving))
-            .map(|(s, &n)| Stack {
-                object: s.object,
-                count: s.count - n,
-            })
+            .map(|(s, &n)| part_of(s, s.count - n))
             .filter(|s| s.count > 0)
             .collect();
         *self.state.inventory_mut() = kept;
@@ -392,11 +394,11 @@ impl World {
         let here = self.player_pos();
         let level = self.state.current_mut();
         let mut pile = level.objects_at(here).to_vec();
-        let laid: Vec<Stack> = deal.back.iter().chain(&deal.sold).copied().collect();
+        let laid: Vec<Stack> = deal.back.iter().chain(&deal.sold).cloned().collect();
         object::add_to_pile(&mut pile, &laid, &content);
         level.set_pile(here, pile);
         for stack in &deal.back {
-            level.shops[i].put_back(*stack);
+            level.shops[i].put_back(stack);
         }
         if !deal.back.is_empty() {
             let what = object::phrase(&deal.back, &content);
@@ -427,22 +429,16 @@ impl World {
         };
         let mut selling: Vec<usize> = Vec::new();
         for k in chosen.iter() {
-            let (stack, unpaid) = (inventory[k], parts[k]);
+            let (stack, unpaid) = (&inventory[k], parts[k]);
             if unpaid > 0 {
-                deal.back.push(Stack {
-                    object: stack.object,
-                    count: unpaid,
-                });
+                deal.back.push(part_of(stack, unpaid));
                 deal.leaving[k] += unpaid;
             }
-            let own = Stack {
-                object: stack.object,
-                count: stack.count - unpaid,
-            };
+            let own = part_of(stack, stack.count - unpaid);
             if own.count == 0 {
                 continue;
             }
-            let offer = shops.offer(&content, shop.kind, own, favour);
+            let offer = shops.offer(&content, shop.kind, &own, favour);
             if offer == 0 {
                 deal.refused.push(own);
             } else if sell {
@@ -603,7 +599,7 @@ mod tests {
     #[test]
     fn unpaid_goods_are_the_latest_stacks_of_their_object() {
         let (a, b) = (crate::content::ObjectId(1), crate::content::ObjectId(2));
-        let s = |object, count| Stack { object, count };
+        let s = Stack::new;
         let inventory = [s(a, 1), s(b, 5), s(a, 1), s(b, 3)];
         // Two daggers, one unpaid: the later one. Six arrows of eight unpaid: the later stack
         // whole, then three of the first.

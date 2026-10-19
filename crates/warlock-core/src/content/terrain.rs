@@ -7,6 +7,8 @@ use super::light::LightId;
 use super::overworld::Landscape;
 use super::particles::ParticleEmitter;
 use crate::color::Rgb;
+use crate::dice::Dice;
+use crate::geom::Pos;
 use crate::time::Duration;
 use serde::{Deserialize, Serialize};
 
@@ -38,6 +40,10 @@ pub(super) struct TerrainSpec {
     pub id: String,
     pub name: String,
     pub glyph: char,
+    /// Presentation-only: glyphs the map draws instead of `glyph`, one per cell picked by its
+    /// position (a space draws none), e.g. hairline cracks in thin ice.
+    #[serde(default)]
+    pub variants: String,
     pub fg: Rgb,
     #[serde(default)]
     pub bg: Rgb,
@@ -60,6 +66,12 @@ pub(super) struct TerrainSpec {
     pub opens_to: Option<String>,
     /// For an open door: the terrain it becomes when closed.
     pub closes_to: Option<String>,
+    /// For a closed door that can be kicked in: the terrain it becomes when broken (a broken
+    /// door, open for good); with `sturdiness`.
+    pub breaks_to: Option<String>,
+    /// For a closed door that can be kicked in: a kick breaks it with a chance of the kicker's
+    /// Strength in this (spec §8 "Doors"); with `breaks_to`.
+    pub sturdiness: Option<u8>,
     pub stairs: Option<StairsDir>,
     /// Light preset the terrain emits (torch sconce, glowing fungus, rune). Must be transparent.
     pub light: Option<String>,
@@ -92,6 +104,10 @@ pub(super) struct TerrainSpec {
     /// Solid rock deep in the ground: the terrain it shows as once a cell next to it is broken
     /// open (its wall face).
     pub face: Option<String>,
+    /// Water: how ice grows on it (spec §5 "Ice").
+    pub freeze: Option<Freeze>,
+    /// Ice: the thinnest ice that looks like this, in mm (spec §5 "Ice"); it lies on water.
+    pub ice: Option<u16>,
     pub anim: Option<GlyphAnim>,
     #[serde(default)]
     pub glow: f32,
@@ -103,6 +119,24 @@ pub(super) struct TerrainSpec {
 
 fn yes() -> bool {
     true
+}
+
+/// How water freezes (spec §5 "Ice"): the `freeze` table of a water terrain.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Freeze {
+    /// Ice grows on it while the air is colder than this, in °C: still water at 0, running water
+    /// only in a harder frost. It melts above 0.
+    pub below: i8,
+    /// How fast it grows, in percent of still water's pace (1 to 100).
+    #[serde(default = "full_rate")]
+    pub rate: u8,
+    /// The hit points a fall through the ice into it takes (dice; it never takes the last one).
+    pub plunge: Dice,
+}
+
+fn full_rate() -> u8 {
+    100
 }
 
 fn full_cost() -> u16 {
@@ -123,6 +157,9 @@ pub struct TerrainDef {
     pub id: String,
     pub name: String,
     pub glyph: char,
+    /// Presentation-only: glyphs the map draws in place of `glyph`, one per cell
+    /// ([`TerrainDef::glyph_at`]); empty: always `glyph`.
+    pub variants: Vec<char>,
     pub fg: Rgb,
     pub bg: Rgb,
     pub walkable: bool,
@@ -142,6 +179,11 @@ pub struct TerrainDef {
     pub landscape: Option<Landscape>,
     pub opens_to: Option<TerrainId>,
     pub closes_to: Option<TerrainId>,
+    /// Gameplay: a closed door a kick can break, the terrain it becomes then (a broken door) and
+    /// its sturdiness: a kick breaks it with a chance of the kicker's Strength score in this
+    /// ([`crate::door::kick_breaks`]). `None`: kicks never break it. (Digging and blasts break
+    /// walls, `breaks`, never doors.)
+    pub kicked_in: Option<(TerrainId, u8)>,
     pub stairs: Option<StairsDir>,
     /// Light this terrain emits, if any.
     pub light: Option<LightId>,
@@ -174,6 +216,11 @@ pub struct TerrainDef {
     /// (rock bared by a dig shows its face, a wall), as generated levels turn rock that touches
     /// open ground into walls.
     pub face: Option<TerrainId>,
+    /// Gameplay: water that freezes, and how ([`crate::ice`]).
+    pub freeze: Option<Freeze>,
+    /// Gameplay: ice of at least this many mm looks like this terrain (thin ice, ice, thick ice),
+    /// up to the next such terrain's; it covers water ([`crate::ice`]).
+    pub ice: Option<u16>,
     /// Presentation-only.
     pub anim: Option<GlyphAnim>,
     /// Presentation-only: how much the glyph glows (bloom), 0 to 1.
@@ -209,6 +256,18 @@ impl TerrainDef {
             }
             _ => (price(step, BASE_TURN) * i64::from(self.move_cost) / 100).max(1),
         }
+    }
+
+    /// Presentation-only: the glyph the map draws for this terrain at level cell `p`: one of its
+    /// `variants` picked by a hash of the position (so neighbors differ, and a cell keeps its
+    /// glyph), else its `glyph`. Look mode and dumps name it by `glyph`.
+    pub fn glyph_at(&self, p: Pos) -> char {
+        if self.variants.is_empty() {
+            return self.glyph;
+        }
+        let h = (p.x as u32).wrapping_mul(0x9e37_79b1) ^ (p.y as u32).wrapping_mul(0x85eb_ca77);
+        let h = (h ^ (h >> 15)).wrapping_mul(0x2c1b_3c6d);
+        self.variants[(h ^ (h >> 13)) as usize % self.variants.len()]
     }
 
     pub fn is_closed_door(&self) -> bool {

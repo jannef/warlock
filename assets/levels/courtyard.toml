@@ -8,6 +8,9 @@
 # stones (O) 3. The gazebo floor is roofed: no sun or sky reaches it, only its lamp and a little
 # bounce light from the sunlit grass around it.
 #
+# People (#146): a gardener (G) and a wandering bard (B), both peaceful: they talk (`C`), mutter
+# to themselves now and then, and swap places with you when they are in your way (#147).
+#
 # East of the gazebo a flagstone path leads to a small timber hut (W, roof 2 tall) with a door in
 # its west wall: Grimbold's General Store (spec §7 "Shops"), lit by a hanging lamp. Grimbold stands
 # by the door; everything on the plank floor (p) is for sale. A merchant fights no one, so the
@@ -17,9 +20,9 @@ kind = "outdoor"
 map = '''
 ##################################################################
 #.............................................................**.#
-#..T...........T....................T..........................*.#
+#..T...........T......G.............T..........................*.#
 #......................******.......................T............#
-#.....................##########.................................#
+#.....................##########.................B...............#
 #.........T....................#.................................#
 #..............................#........................O........#
 #.......................................o=====o.*............T...#
@@ -50,6 +53,11 @@ map = '''
 "l" = { terrain = "plank_floor", light = "lamp" }
 ">" = { terrain = "stairs_down", to = "hub" }
 "@" = { terrain = "flagstones", spawn = "player" }
+# The courtyard's people (#146): a gardener tending the flower bed by the ruined wall, and a
+# wandering bard walking round the meadow east of the gazebo (north of the shop's hut). Chat with
+# them (`C`).
+"G" = { terrain = "grass", creature = "gardener", route = "E7 W7" }
+"B" = { terrain = "grass", creature = "bard", route = "E6 SE2 S3 SW2 W6 NW2 N3 NE2" }
 
 # Objects (M11): windfall apples under a tree, and a candle and a scroll left in the gazebo.
 [[pile]]

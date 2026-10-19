@@ -3,8 +3,8 @@
 //! [`route_keys`] reads every key press exactly once. While a screen is open (the screen stack is
 //! not empty) the press goes to the top screen; otherwise it is a gameplay command, read through
 //! the bindings in the current [`InputMode`]. Prompts in the message line (the direction for
-//! open/close and for digging, how long to rest, look mode, aiming a shot or a throw) are input
-//! modes, not screens.
+//! open/close/kick, for digging, or for a chat, how long to rest, look mode, aiming a shot or a
+//! throw, whether to step onto a known trap) are input modes, not screens.
 //!
 //! Letter and symbol commands bind by *logical* key (the character the keyboard layout produces),
 //! so `<`, `>`, and `?` work on any layout. Arrows and the numpad bind by physical key code.
@@ -25,6 +25,7 @@ use warlock_core::content::VisionProfile;
 use warlock_core::perception::PerceptionView;
 use warlock_core::time::Duration;
 use warlock_core::weather::Weather;
+use warlock_core::world::ActorKind;
 use warlock_core::{Action, Dir, Letters, Pos, Rest};
 
 /// What a key does.
@@ -34,6 +35,8 @@ pub enum KeyCommand {
     Wait,
     Open,
     Close,
+    /// Kick in a direction: a door (to break it in), or a creature.
+    Kick,
     Descend,
     Ascend,
     Lantern,
@@ -51,8 +54,12 @@ pub enum KeyCommand {
     Skills,
     /// Show the player's weapon skills: ranks and marks (no time passes).
     WeaponSkills,
+    /// Show the player's quests, active and done (no time passes).
+    Quests,
     /// Ask how long to rest (an hour, until dawn, until dusk).
     Rest,
+    /// Choose something to eat, from the floor or the pack.
+    Eat,
     /// Move a cursor over the map to read what is there (no time passes).
     Look,
     /// Shoot or throw what is in the missile weapon slot (a cursor on the map): a launcher
@@ -75,6 +82,9 @@ pub enum KeyCommand {
     /// Use the tool the player has ready toward a direction (ADOM's `U`): dig into a wall with a
     /// pick-axe. An item's use, not an ability (abilities get a menu of their own).
     UseTool,
+    /// Chat with someone next to you: the one in view if there is only one, else in a
+    /// direction.
+    Chat,
     /// Pay for what the player took in the shop they stand in (spec §7 "Shops"; no time passes).
     Pay,
     /// In the confirmation dialog (quitting; paying before leaving a shop, selling): yes.
@@ -87,6 +97,9 @@ pub enum KeyCommand {
     SkipHour,
     /// Dev: set the next weather (clear, overcast, rain, heavy rain) for three hours.
     NextWeather,
+    /// Dev: identify everything the player carries (magic items' affixes; the scroll of identify
+    /// does it in play).
+    IdentifyAll,
     /// Dev: show ground truth where the player does not see.
     RevealMap,
     /// Dev: show perceived light values on visible cells.
@@ -135,6 +148,7 @@ impl KeyCommand {
             KeyCommand::Wait => "Wait a turn",
             KeyCommand::Open => "Open a door",
             KeyCommand::Close => "Close a door",
+            KeyCommand::Kick => "Kick",
             KeyCommand::Descend => "Go down stairs",
             KeyCommand::Ascend => "Go up stairs",
             KeyCommand::Lantern => "Light / douse lantern",
@@ -145,7 +159,9 @@ impl KeyCommand {
             KeyCommand::Character => "Character",
             KeyCommand::Skills => "Skills",
             KeyCommand::WeaponSkills => "Weapon skills",
+            KeyCommand::Quests => "Quest log",
             KeyCommand::Rest => "Rest",
+            KeyCommand::Eat => "Eat",
             KeyCommand::Look => "Look around",
             KeyCommand::Missile => "Throw or shoot the missile weapon",
             KeyCommand::Fire => "Fire missile weapon",
@@ -155,12 +171,14 @@ impl KeyCommand {
             KeyCommand::Bash => "Bash with your shield",
             KeyCommand::NextTarget => "Next target (aiming; Shift: previous)",
             KeyCommand::UseTool => "Use a tool (dig)",
+            KeyCommand::Chat => "Chat",
             KeyCommand::Pay => "Pay the shopkeeper",
             KeyCommand::Yes => "Yes (in a dialog)",
             KeyCommand::No => "No (in a dialog)",
             KeyCommand::CycleVision => "Next vision profile (dev)",
             KeyCommand::SkipHour => "Skip an hour (dev)",
             KeyCommand::NextWeather => "Next weather (dev)",
+            KeyCommand::IdentifyAll => "Identify what you carry (dev)",
             KeyCommand::RevealMap => "Reveal map (dev)",
             KeyCommand::LightValues => "Light values (dev)",
             KeyCommand::Help => "Show / hide controls",
@@ -254,6 +272,7 @@ impl Default for Bindings {
             (Code(KeyCode::Numpad5), Wait),
             (ch("o"), Open),
             (ch("c"), Close),
+            (ch("K"), Kick),
             (ch(">"), Descend),
             (ch("<"), Ascend),
             (ch("L"), Lantern),
@@ -265,12 +284,15 @@ impl Default for Bindings {
             (ch("@"), Character),
             (ch("S"), Skills),
             (ch("W"), WeaponSkills),
+            (ch("q"), Quests),
             (ch("R"), Rest),
+            (ch("E"), Eat),
             (ch("x"), Look),
             (ch("t"), Missile),
             (ch("T"), Throw),
             (ch("+"), MoreAggressive),
             (ch("-"), MoreDefensive),
+            (ch("C"), Chat),
             (Code(KeyCode::Tab), NextTarget),
             (ch("U"), UseTool),
             (ch("p"), Pay),
@@ -303,6 +325,7 @@ impl Bindings {
             (KeyBinding::Code(KeyCode::F5), KeyCommand::Snapshot),
             (KeyBinding::Code(KeyCode::F6), KeyCommand::SkipHour),
             (KeyBinding::Code(KeyCode::F7), KeyCommand::NextWeather),
+            (KeyBinding::Code(KeyCode::F8), KeyCommand::IdentifyAll),
             (KeyBinding::Code(KeyCode::F9), KeyCommand::LoadSnapshot),
         ];
         for entry in dev {
@@ -340,7 +363,7 @@ impl Bindings {
 pub enum InputMode {
     #[default]
     Normal,
-    /// Waiting for a direction for `Open`, `Close`, `Bash`, or `UseTool`.
+    /// Waiting for a direction for `Open`, `Close`, `Kick`, `Bash`, `UseTool`, or `Chat`.
     Direction(KeyCommand),
     /// Asking how long to rest ([`REST_CHOICES`]).
     Rest,
@@ -604,8 +627,10 @@ impl Gameplay<'_> {
             (InputMode::Direction(cmd), KeyCommand::Move(dir)) => {
                 let action = match cmd {
                     KeyCommand::Open => Action::Open(dir),
+                    KeyCommand::Kick => Action::Kick(dir),
                     KeyCommand::Bash => Action::Bash(dir),
                     KeyCommand::UseTool => Action::Dig(dir),
+                    KeyCommand::Chat => Action::Chat(dir),
                     _ => Action::Close(dir),
                 };
                 self.actions.write(PlayerAction(action));
@@ -616,9 +641,11 @@ impl Gameplay<'_> {
             (InputMode::Rest, _) => InputMode::Normal,
             (InputMode::Normal, KeyCommand::Rest) => InputMode::Rest,
             (InputMode::Normal, KeyCommand::Move(dir)) => {
-                // Leaving a shop owing anything is theft: ask first (spec §7 "Shops"). A held
-                // key stops at the shop's edge (repeats never open the dialog).
-                match leaving_dialog(&game.world.perception(), dir) {
+                // Leaving a shop owing anything (spec §7 "Shops") or stepping onto a known trap
+                // (spec §8 "Traps") asks first, in the dialog. A held key stops there (repeats
+                // never open the dialog).
+                let view = game.world.perception();
+                match leaving_dialog(&view, dir).or_else(|| trap_dialog(&view, dir)) {
                     Some(dialog) if !key.repeat => open = Some(dialog.into()),
                     Some(_) => {}
                     None => {
@@ -703,6 +730,14 @@ impl Gameplay<'_> {
                 open = Some(ScreenAction::Open(ScreenName::WeaponSkills));
                 InputMode::Normal
             }
+            (InputMode::Normal, KeyCommand::Eat) => {
+                open = Some(ScreenAction::Open(ScreenName::Eat));
+                InputMode::Normal
+            }
+            (InputMode::Normal, KeyCommand::Quests) => {
+                open = Some(ScreenAction::Open(ScreenName::Quests));
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::CycleVision) => {
                 let view = game.world.perception();
                 let next = next_vision(view.content().vision_profiles(), &view.vision().id);
@@ -720,6 +755,11 @@ impl Gameplay<'_> {
                     .write(PlayerAction(Action::SetWeather(next_weather(now))));
                 InputMode::Normal
             }
+            (InputMode::Normal, KeyCommand::IdentifyAll) => {
+                self.actions
+                    .write(PlayerAction(Action::Identify(Letters::default())));
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::RevealMap) => {
                 self.overlays.reveal = !self.overlays.reveal;
                 InputMode::Normal
@@ -728,9 +768,18 @@ impl Gameplay<'_> {
                 self.overlays.light_values = !self.overlays.light_values;
                 InputMode::Normal
             }
-            (InputMode::Normal, KeyCommand::Open | KeyCommand::Close | KeyCommand::Bash) => {
-                InputMode::Direction(command)
-            }
+            (
+                InputMode::Normal,
+                KeyCommand::Open | KeyCommand::Close | KeyCommand::Kick | KeyCommand::Bash,
+            ) => InputMode::Direction(command),
+            // The one creature in view next to the player, at once; else ask which way.
+            (InputMode::Normal, KeyCommand::Chat) => match chat_partner(&game.world.perception()) {
+                Some(dir) => {
+                    self.actions.write(PlayerAction(Action::Chat(dir)));
+                    InputMode::Normal
+                }
+                None => InputMode::Direction(command),
+            },
             (InputMode::Normal, KeyCommand::UseTool) => {
                 if game.world.perception().ready_to_dig().is_some() {
                     InputMode::Direction(command)
@@ -804,6 +853,19 @@ impl Gameplay<'_> {
     }
 }
 
+/// The way to the one creature the player sees next to them, if there is exactly one (whom `C`
+/// talks to without asking).
+fn chat_partner(view: &PerceptionView<'_>) -> Option<Dir> {
+    let me = view.viewer();
+    let mut near = (view.actors().iter())
+        .filter(|a| a.kind == ActorKind::Creature && a.pos.chebyshev(me) == 1)
+        .map(|a| Dir::from_delta(a.pos.x - me.x, a.pos.y - me.y));
+    match (near.next(), near.next()) {
+        (Some(dir), None) => dir,
+        _ => None,
+    }
+}
+
 /// Dev (`--fire`): starts the run aiming the readied missile weapon, as `f` would, so captures
 /// show the targeting line; (`--look X,Y`) in look mode with the cursor there.
 fn aim_at_startup(args: Res<Args>, game: Option<Res<Game>>, mut mode: ResMut<InputMode>) {
@@ -854,6 +916,20 @@ pub const REST_CHOICES: [(&str, Rest); 3] = [
     ("n", Rest::Dusk),
 ];
 
+/// The dialog a step in `dir` opens first, if it goes onto a trap the player knows, where no one
+/// they see stands (moving there would be an attack, or stop; spec §8 "Traps"): "Really step
+/// onto the fireball trap?", to step onto it or stay back (the safe answer, selected first).
+fn trap_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
+    let to = view.viewer().step(dir);
+    let trap = view.trap(to).filter(|_| view.actor_at(to).is_none())?;
+    let name = &view.content().trap(trap).name;
+    Some(
+        Dialog::new("Trap", format!("Really step onto the {name}?"))
+            .accept("Step onto it", Action::Move(dir))
+            .cancel("Stay back", ScreenAction::Close),
+    )
+}
+
 /// The rest a key press picks in the rest prompt, if any.
 fn rest_choice(key: &KeyboardInput) -> Option<Rest> {
     let Key::Character(c) = &key.logical_key else {
@@ -896,6 +972,7 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Descend), [">"]);
         assert!(keys(&b, KeyCommand::Quit).is_empty(), "unbound by default");
         assert_eq!(keys(&b, KeyCommand::Lantern), ["L"]);
+        assert_eq!(keys(&b, KeyCommand::Kick), ["K"]);
         assert_eq!(keys(&b, KeyCommand::Help), ["?"]);
         assert_eq!(keys(&b, KeyCommand::Cancel), ["Esc"]);
         assert_eq!(keys(&b, KeyCommand::Rest), ["R"]);
@@ -914,8 +991,10 @@ mod tests {
         assert!(keys(&b, KeyCommand::Bash).is_empty(), "an ability: unbound");
         assert_eq!(keys(&b, KeyCommand::MoreAggressive), ["+"]);
         assert_eq!(keys(&b, KeyCommand::MoreDefensive), ["-"]);
+        assert_eq!(keys(&b, KeyCommand::Eat), ["E"]);
         assert_eq!(keys(&b, KeyCommand::NextTarget), ["Tab"]);
         assert_eq!(keys(&b, KeyCommand::UseTool), ["U"]);
+        assert_eq!(keys(&b, KeyCommand::Chat), ["C"]);
         assert_eq!(keys(&b, KeyCommand::Pay), ["p"]);
         // The dialog's answers are their own context: `y` and `n` move the player in play.
         assert_eq!(keys(&b, KeyCommand::Yes), ["y"]);
@@ -934,6 +1013,7 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::LightValues), ["F4"]);
         assert_eq!(keys(&b, KeyCommand::SkipHour), ["F6"]);
         assert_eq!(keys(&b, KeyCommand::NextWeather), ["F7"]);
+        assert_eq!(keys(&b, KeyCommand::IdentifyAll), ["F8"]);
     }
 
     #[test]
@@ -1020,6 +1100,30 @@ mod tests {
                     )
                 )
                 .decline("Go back", Action::Move(Dir::W))
+            )
+        );
+    }
+
+    #[test]
+    fn stepping_onto_a_known_trap_asks_first() {
+        use std::sync::Arc;
+        use warlock_core::World;
+        use warlock_core::action::parse_actions;
+        let content = Arc::new(warlock_core::content::Content::builtin().unwrap());
+        let mut world = World::new(content, "traps", None).expect("the trap hall");
+        // Below the arrow trap at the west end of the proving row.
+        for action in parse_actions("move:NW*14 move:W*7 move:N*2").unwrap() {
+            world.apply(&action);
+        }
+        assert_eq!(world.player_pos(), Pos::new(16, 3));
+        let view = world.perception();
+        assert!(trap_dialog(&view, Dir::E).is_none());
+        assert_eq!(
+            trap_dialog(&view, Dir::N),
+            Some(
+                Dialog::new("Trap", "Really step onto the arrow trap?")
+                    .accept("Step onto it", Action::Move(Dir::N))
+                    .cancel("Stay back", ScreenAction::Close)
             )
         );
     }

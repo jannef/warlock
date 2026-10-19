@@ -72,7 +72,7 @@ fn keeper(w: &World) -> ActorId {
 }
 
 /// What the store asks the player for `stack` now.
-fn price(w: &World, stack: Stack) -> u32 {
+fn price(w: &World, stack: &Stack) -> u32 {
     let f = favour(w.content(), shops(w), w.state.player());
     shops(w).price(w.content(), shop(w).kind, stack, f)
 }
@@ -96,11 +96,27 @@ fn the_courtyard_has_a_general_store_kept_by_grimbold() {
 }
 
 #[test]
+fn the_keeper_keeps_its_post_and_talks_trade_by_its_name() {
+    let mut w = in_shop();
+    // Next to the door the keeper does not make way (as an NPC who keeps its post).
+    let out = apply(&mut w, "move:N");
+    assert!(!out.took_turn);
+    assert_eq!(w.player_pos(), FRONT);
+    assert_eq!(last(&w), "Grimbold doesn't budge.");
+    apply(&mut w, "chat:N");
+    assert!(
+        last(&w).starts_with("Grimbold says: \"Look around, take your time."),
+        "{}",
+        last(&w)
+    );
+}
+
+#[test]
 fn entering_greets_and_goods_show_their_prices() {
     let mut w = in_shop();
     assert!(said(&w, "Welcome to Grimbold's General Store!"));
     let dagger = object(&w, "dagger");
-    let asked = price(&w, dagger);
+    let asked = price(&w, &dagger);
     assert!(asked > 0);
     let view = w.perception();
     let here = view.shop_here().expect("in the shop");
@@ -108,9 +124,9 @@ fn entering_greets_and_goods_show_their_prices() {
         (here.sign(), here.keeper()),
         ("Grimbold's General Store".into(), "Grimbold")
     );
-    assert_eq!(view.price_tag(DAGGER, dagger), Some(asked));
+    assert_eq!(view.price_tag(DAGGER, &dagger), Some(asked));
     assert_eq!(
-        view.price_tag(DOOR, dagger),
+        view.price_tag(DOOR, &dagger),
         None,
         "outside the shop nothing is for sale"
     );
@@ -126,7 +142,7 @@ fn picking_up_adds_to_the_debt_and_paying_settles_it_at_no_time() {
     let mut w = in_shop();
     let (player, keeper) = (w.player_id(), keeper(&w));
     let (purse, till) = (gold(&w, player), gold(&w, keeper));
-    let asked = price(&w, object(&w, "dagger"));
+    let asked = price(&w, &object(&w, "dagger"));
     apply(&mut w, "move:E move:NE pickup");
     assert_eq!(
         last(&w),
@@ -168,7 +184,7 @@ fn picking_up_adds_to_the_debt_and_paying_settles_it_at_no_time() {
 #[test]
 fn without_enough_gold_the_player_puts_it_back() {
     let mut w = in_shop();
-    let asked = price(&w, object(&w, "short_sword"));
+    let asked = price(&w, &object(&w, "short_sword"));
     assert!(asked > 60, "the sword costs more than the purse holds");
     apply(&mut w, "move:E move:NE move:E move:E pickup pay");
     assert_eq!(
@@ -188,7 +204,7 @@ fn without_enough_gold_the_player_puts_it_back() {
     assert!(shop(&w).unpaid.is_empty());
     assert_eq!(w.perception().objects(SWORD), [object(&w, "short_sword")]);
     assert_eq!(
-        w.perception().price_tag(SWORD, object(&w, "short_sword")),
+        w.perception().price_tag(SWORD, &object(&w, "short_sword")),
         Some(asked)
     );
 }
@@ -200,16 +216,16 @@ fn dropping_ones_own_gets_an_offer_and_selling_takes_it() {
     let (purse, till) = (gold(&w, player), gold(&w, keeper));
     let scroll = object(&w, "scroll_of_light");
     let f = favour(w.content(), shops(&w), w.state.player());
-    let offer = shops(&w).offer(w.content(), shop(&w).kind, scroll, f);
+    let offer = shops(&w).offer(w.content(), shop(&w).kind, &scroll, f);
     assert!(
-        offer > 0 && offer < price(&w, scroll),
+        offer > 0 && offer < price(&w, &scroll),
         "it pays less than it asks"
     );
     assert_eq!(
         w.perception().sale(Letters::of([1])),
         Some(Sale {
             offer,
-            stacks: vec![scroll]
+            stacks: vec![scroll.clone()]
         })
     );
     // A drop only hears the offer: the scroll stays, and no time passes.
@@ -232,11 +248,11 @@ fn dropping_ones_own_gets_an_offer_and_selling_takes_it() {
     );
     assert_eq!(gold(&w, player), purse + offer);
     assert_eq!(gold(&w, keeper), till - offer);
-    assert_eq!(w.perception().objects(FRONT), [scroll]);
+    assert_eq!(w.perception().objects(FRONT), std::slice::from_ref(&scroll));
     // Now it is the shop's, for sale like the rest.
     assert_eq!(
-        w.perception().price_tag(FRONT, scroll),
-        Some(price(&w, scroll))
+        w.perception().price_tag(FRONT, &scroll),
+        Some(price(&w, &scroll))
     );
     let coins = gold(&w, player);
     apply(&mut w, "sell");
@@ -257,7 +273,7 @@ fn walking_out_of_the_door_owing_is_turned_back_one_step() {
     assert_eq!(shop(&w).exits, [DOOR], "the hut's one way out");
     apply(&mut w, "move:E move:NE pickup move:SW move:W");
     assert_eq!(w.player_pos(), FRONT);
-    let owed = price(&w, object(&w, "dagger"));
+    let owed = price(&w, &object(&w, "dagger"));
     let view = w.perception();
     let (seen, n) = view.owed_on_leaving(DOOR).expect("leaving owes");
     assert_eq!((seen.is_exit(DOOR), n), (true, owed));
@@ -408,7 +424,7 @@ fn a_dead_keepers_goods_are_free_to_take() {
     );
     // What lies there is free: no debt, no theft.
     let sword = object(&w, "short_sword");
-    assert_eq!(w.perception().price_tag(SWORD, sword), None);
+    assert_eq!(w.perception().price_tag(SWORD, &sword), None);
 }
 
 #[test]
@@ -423,25 +439,25 @@ fn prices_follow_presence_and_appraise() {
         me.stats = Stats::new(scores, scores);
     };
     set_presence(&mut w, 10);
-    let plain = price(&w, dagger);
+    let plain = price(&w, &dagger);
     set_presence(&mut w, 18);
-    let charming = price(&w, dagger);
+    let charming = price(&w, &dagger);
     set_presence(&mut w, 4);
-    let off_putting = price(&w, dagger);
+    let off_putting = price(&w, &dagger);
     assert!(
         charming < plain && plain < off_putting,
         "{charming} {plain} {off_putting}"
     );
     set_presence(&mut w, 10);
-    let presence_free = price(&w, dagger);
+    let presence_free = price(&w, &dagger);
     let appraise = w.content().skill_id("appraise").expect("appraise");
     let me = w.state.actors.get_mut(&player).expect("the player");
     me.skills = crate::skills::Skills::default();
     me.skills.add(appraise, 100);
-    let appraising = price(&w, dagger);
+    let appraising = price(&w, &dagger);
     assert!(appraising < presence_free, "{appraising} {presence_free}");
     // Perception asks the same.
-    assert_eq!(w.perception().price_tag(DAGGER, dagger), Some(appraising));
+    assert_eq!(w.perception().price_tag(DAGGER, &dagger), Some(appraising));
 }
 
 #[test]
@@ -523,11 +539,11 @@ fn level_files_mark_shops_with_known_kinds_and_posts() {
 
 #[test]
 fn generated_shops_are_kept_by_their_keepers() {
-    // The Depths of seed 1 have a fletcher's on their first level.
-    let w = World::new(content(), "depths", Some(1)).expect("depths");
+    // The Depths of seed 2 have a provisioner's on their first level.
+    let w = World::new(content(), "depths", Some(2)).expect("depths");
     let shop = shop(&w);
     let def = shops(&w).get(shop.kind);
-    assert_eq!(def.id, "fletcher");
+    assert_eq!(def.id, "provisioner");
     let keeper = &w.state.actors[&shop.keeper];
     assert_eq!((keeper.pos, keeper.level.as_str()), (shop.post, "depths:1"));
     assert_eq!(w.content().creature(keeper.creature).id, "shopkeeper");

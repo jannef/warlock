@@ -11,6 +11,11 @@ step = 1000
 wait = 1000
 open_door = 1000
 close_door = 1000
+# Unlocking a locked door with a key, on top of opening it: opening a locked door you have the
+# key for takes unlock + open_door.
+unlock = 1000
+# A kick (`K`): at a door, to break it in, or at a creature, an unarmed blow.
+kick = 1000
 # Lighting or dousing the lantern.
 lantern = 1000
 # Taking stairs, entering a location or a local area from the overworld, and walking off the
@@ -37,6 +42,15 @@ wear = 1000
 body_armor = 3000
 # Readying a missile weapon, missiles, or a tool (a pick-axe), or putting them away.
 ready = 1000
+# A turn of eating (spec §8 "Hunger"): a meal takes as many turns as the food says (`food` in
+# objects.toml; corpses by their creature's size, hunger.toml).
+eat = 1000
 # A turn of digging into a wall with a digging tool ready (spec §8 "Digging"): digging goes on
 # turn after turn until the wall gives way or something interrupts it.
 dig = 1000
+# Chatting with someone (`C`): a few words. Asking about a topic on the dialogue screen takes no
+# time.
+chat = 500
+# Climbing out of the water onto ice (spec §5 "Ice"), on top of the step onto the ice: hauling
+# oneself up out of a hole takes a few turns.
+climb = 2000

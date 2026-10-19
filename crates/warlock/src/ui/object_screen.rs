@@ -5,28 +5,35 @@
 //!
 //! Each lists stacks by letter, `a` first, with their glyph, name, and weight; the inventory and
 //! the drop screen mark what is worn or wielded ("(being worn)", "(wielded)"; dropping it takes
-//! it off first). The inventory is read-only and also shows what the player carries and weighs,
-//! their burden when they have one, and the weights at which it changes (spec §8 "Burden"). In a
+//! it off first). Names are in their rarity's color (spec §8 "Magic items"): magic blue, rare
+//! yellow. The inventory takes no action and also shows what the player carries and weighs,
+//! their burden when they have one, and the weights at which it changes (spec §8 "Burden"); a
+//! stack's letter there opens its description (`describe_screen`). In a
 //! selection screen a letter marks or unmarks its stack (`+` marked, `-` not: never color
 //! alone), `,` marks everything (or, with everything marked, nothing), the arrows move the `>`
 //! cursor and Space marks its row, and Enter picks up or drops the marked stacks (the cursor's
 //! row if none is marked); that is one action, recorded like any other. Esc cancels. The list is read from the perception snapshot
 //! when the screen opens; no game time passes while it is open, so it cannot go stale.
+//!
+//! The eat screen (`E`, spec §8 "Hunger") lists what can be eaten: first what lies here (no
+//! letter: "lying here"; the cursor starts on it, as ADOM asks about the floor first), then what
+//! the player carries, by inventory letter. A letter or Enter on the `>` row eats it.
 
 use super::character_screen::{fit_joined, thresholds};
 use super::menu::{Nav, Panel, Press};
 use super::screens::ScreenAction;
-use super::{ACCENT, TEXT, TEXT_DIM};
+use super::{ACCENT, TEXT, TEXT_DIM, rarity_color};
 use crate::input::{Bindings, KeyBinding, KeyCommand};
 use crate::render::console::Console;
 use bevy::input::keyboard::KeyCode;
 use warlock_core::action::letter;
 use warlock_core::burden::{Burden, Load};
 use warlock_core::color::Rgb;
+use warlock_core::content::Rarity;
 use warlock_core::equipment;
 use warlock_core::object::{Stack, Weight, format_weight};
 use warlock_core::perception::PerceptionView;
-use warlock_core::{Action, Letters};
+use warlock_core::{Action, Letters, Meal};
 
 /// Which list the screen shows, and what choosing does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -39,6 +46,8 @@ pub enum ObjectList {
     Drop,
     /// The throwing weapons in the inventory: choose one to throw.
     Throw,
+    /// Food lying here, then food in the pack: choose one to eat.
+    Eat,
 }
 
 impl ObjectList {
@@ -48,6 +57,7 @@ impl ObjectList {
             ObjectList::PickUp => " Pick up ",
             ObjectList::Drop => " Drop ",
             ObjectList::Throw => " Throw ",
+            ObjectList::Eat => " Eat ",
         }
     }
 
@@ -56,6 +66,7 @@ impl ObjectList {
             ObjectList::Inventory | ObjectList::Drop => "You are not carrying anything.",
             ObjectList::PickUp => "There is nothing here.",
             ObjectList::Throw => "You have nothing to throw.",
+            ObjectList::Eat => "You have nothing to eat.",
         }
     }
 
@@ -64,7 +75,27 @@ impl ObjectList {
     fn width(self) -> i32 {
         match self {
             ObjectList::Inventory => 72,
-            ObjectList::PickUp | ObjectList::Drop | ObjectList::Throw => 60,
+            ObjectList::PickUp | ObjectList::Drop | ObjectList::Throw | ObjectList::Eat => 60,
+        }
+    }
+
+    /// Whether choosing is one pick (a letter or Enter) rather than marking several.
+    fn picks_one(self) -> bool {
+        matches!(self, ObjectList::Throw | ObjectList::Eat)
+    }
+}
+
+/// Where a row's stack is: the pile on the player's cell, or the pack, by position (its letter).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Item {
+    Floor(usize),
+    Pack(usize),
+}
+
+impl Item {
+    fn position(self) -> usize {
+        match self {
+            Item::Floor(i) | Item::Pack(i) => i,
         }
     }
 }
@@ -79,6 +110,8 @@ struct Entry {
     mark: Option<String>,
     /// Grams.
     weight: u64,
+    /// Its name's color: by its rarity (spec §8 "Magic items").
+    rarity: Rarity,
 }
 
 #[derive(Debug)]
@@ -86,9 +119,9 @@ pub struct ObjectScreen {
     list: ObjectList,
     /// At most one per letter.
     entries: Vec<Entry>,
-    /// The position (letter) of each entry in its list: in the inventory for what to throw,
-    /// which lists only some of it.
-    items: Vec<usize>,
+    /// Where each entry's stack is, by its position (letter) in its list: in the inventory for
+    /// what to throw, which lists only some of it.
+    items: Vec<Item>,
     /// The `>` row of a selection screen; the first row shown in the inventory.
     cursor: usize,
     marked: Letters,
@@ -97,74 +130,97 @@ pub struct ObjectScreen {
     /// What the player carries against what they can (shown in the inventory); `None` outside
     /// a run.
     load: Option<Load>,
+    /// The inventory stack the player last asked to look at (its letter): what the item
+    /// description opened from here describes.
+    looked: Option<usize>,
 }
 
 impl ObjectScreen {
     /// The screen for `list`, read from what the player perceives (`None` outside a run: an
     /// empty list).
     pub fn new(list: ObjectList, view: Option<&PerceptionView<'_>>) -> Self {
-        let (stacks, weight): (&[Stack], Weight) = match view {
-            Some(view) => {
-                let stacks = match list {
-                    ObjectList::Inventory | ObjectList::Drop | ObjectList::Throw => {
-                        view.inventory()
-                    }
-                    ObjectList::PickUp => view.objects(view.viewer()),
+        let Some(view) = view else {
+            return Self {
+                list,
+                entries: Vec::new(),
+                items: Vec::new(),
+                cursor: 0,
+                marked: Letters::default(),
+                weight: Weight::default(),
+                load: None,
+                looked: None,
+            };
+        };
+        let content = view.content();
+        let (pile, pack) = (view.objects(view.viewer()), view.inventory());
+        let edible = |s: &Stack| content.object(s.object).food.is_some();
+        let lettered = |stacks: &[Stack]| 0..stacks.len().min(Letters::COUNT);
+        let items: Vec<Item> = match list {
+            ObjectList::PickUp => lettered(pile).map(Item::Floor).collect(),
+            ObjectList::Inventory | ObjectList::Drop => lettered(pack).map(Item::Pack).collect(),
+            ObjectList::Throw => (lettered(pack))
+                .filter(|&i| view.is_throwing_weapon(i))
+                .map(Item::Pack)
+                .collect(),
+            ObjectList::Eat => (lettered(pile)
+                .filter(|&i| edible(&pile[i]))
+                .map(Item::Floor))
+            .chain(lettered(pack).filter(|&i| edible(&pack[i])).map(Item::Pack))
+            .collect(),
+        };
+        let unpaid = view.unpaid();
+        let entries = (items.iter())
+            .map(|&item| {
+                let s = match item {
+                    Item::Floor(i) => &pile[i],
+                    Item::Pack(i) => &pack[i],
                 };
-                (stacks, view.own_weight())
-            }
-            None => (&[], Weight::default()),
-        };
-        let shown = |i: usize| match (list, view) {
-            (ObjectList::Throw, Some(view)) => view.is_throwing_weapon(i),
-            _ => true,
-        };
-        let items: Vec<usize> = (0..stacks.len().min(Letters::COUNT))
-            .filter(|&i| shown(i))
+                let def = content.object(s.object);
+                // The inventory marks what is worn or wielded; a pile has nothing worn, and
+                // what to eat says what lies here. In a shop (spec §7 "Shops") goods lying
+                // there say their price, and what the player has not paid for what they owe.
+                let mark = match (item, list) {
+                    (Item::Floor(_), ObjectList::Eat) => Some("lying here".to_string()),
+                    (Item::Floor(_), _) => None,
+                    (Item::Pack(i), _) => equipment::mark(content, view.equipment(), i),
+                };
+                let price = match item {
+                    Item::Floor(_) => {
+                        (view.price_tag(view.viewer(), s)).map(|g| format!("for sale, {g} gold"))
+                    }
+                    Item::Pack(i) => {
+                        (unpaid.get(i).copied().flatten()).map(|g| format!("unpaid, {g} gold"))
+                    }
+                };
+                let marks: Vec<String> = mark.into_iter().chain(price).collect();
+                Entry {
+                    glyph: def.glyph,
+                    fg: def.fg,
+                    name: s.describe(content),
+                    mark: (!marks.is_empty()).then(|| marks.join(") (")),
+                    weight: s.weight(content),
+                    rarity: s.rarity(),
+                }
+            })
             .collect();
-        let entries = match view {
-            Some(view) => {
-                let content = view.content();
-                // The inventory marks what is worn or wielded, and in a shop what is unpaid; a
-                // pile has nothing worn, but in a shop its price (spec §7 "Shops").
-                let carried = list != ObjectList::PickUp;
-                let unpaid = view.unpaid();
-                (items.iter())
-                    .map(|&i| (i, &stacks[i]))
-                    .map(|(i, s)| {
-                        let def = content.object(s.object);
-                        let price = match carried {
-                            true => unpaid.get(i).copied().flatten(),
-                            false => view.price_tag(view.viewer(), *s),
-                        };
-                        let worn = carried
-                            .then(|| equipment::mark(content, view.equipment(), i))
-                            .flatten();
-                        let sale = price.map(|g| match carried {
-                            true => format!("unpaid, {g} gold"),
-                            false => format!("for sale, {g} gold"),
-                        });
-                        let marks: Vec<String> = worn.into_iter().chain(sale).collect();
-                        Entry {
-                            glyph: def.glyph,
-                            fg: def.fg,
-                            name: s.describe(content),
-                            mark: (!marks.is_empty()).then(|| marks.join(") (")),
-                            weight: s.weight(content),
-                        }
-                    })
-                    .collect()
-            }
-            None => Vec::new(),
-        };
         Self {
             list,
             entries,
             items,
             cursor: 0,
             marked: Letters::default(),
-            weight,
-            load: view.map(PerceptionView::own_load),
+            weight: view.own_weight(),
+            load: Some(view.own_load()),
+            looked: None,
+        }
+    }
+
+    /// What choosing `item` does on a screen of one pick: aim it to throw, or eat it.
+    fn pick(&self, item: Item) -> ScreenAction {
+        match (self.list, item) {
+            (ObjectList::Eat, Item::Floor(i)) => ScreenAction::Act(Action::Eat(Meal::Floor(i))),
+            (ObjectList::Eat, Item::Pack(i)) => ScreenAction::Act(Action::Eat(Meal::Pack(i))),
+            (_, item) => ScreenAction::Aim(item.position()),
         }
     }
 
@@ -172,9 +228,22 @@ impl ObjectScreen {
         self.list
     }
 
-    /// Applies a key press. The inventory closes on Esc, Enter, or its own key.
+    /// The inventory stack the player asked to look at, if any.
+    pub fn looked(&self) -> Option<usize> {
+        self.looked
+    }
+
+    /// Applies a key press. In the inventory a stack's letter opens its description (spec §6
+    /// "Item description"); it closes on Esc, Enter, or its own key when that names no stack.
     pub fn handle(&mut self, press: &Press, bindings: &Bindings) -> ScreenAction {
         if self.list == ObjectList::Inventory {
+            if let Some(c @ 'a'..='z') = press.text {
+                let i = usize::from(c as u8 - b'a');
+                if self.items.contains(&Item::Pack(i)) {
+                    self.looked = Some(i);
+                    return ScreenAction::Open(super::ScreenName::Describe);
+                }
+            }
             let own_key = press
                 .binding
                 .as_ref()
@@ -193,19 +262,19 @@ impl ObjectScreen {
         if press.nav == Nav::Back || self.entries.is_empty() && press.nav == Nav::Enter {
             return ScreenAction::Close;
         }
-        if self.list == ObjectList::Throw {
-            // One choice: its letter, or Enter on the `>` row.
+        if self.list.picks_one() {
+            // One choice: its pack letter, or Enter on the `>` row.
             let rows = self.entries.len().max(1);
             match (press.text, press.nav) {
                 (Some(c @ 'a'..='z'), _) => {
-                    let i = usize::from(c as u8 - b'a');
-                    if self.items.contains(&i) {
-                        return ScreenAction::Aim(i);
+                    let item = Item::Pack(usize::from(c as u8 - b'a'));
+                    if self.items.contains(&item) {
+                        return self.pick(item);
                     }
                 }
                 (_, Nav::Up) => self.cursor = (self.cursor + rows - 1) % rows,
                 (_, Nav::Down) => self.cursor = (self.cursor + 1) % rows,
-                (_, Nav::Enter) => return ScreenAction::Aim(self.items[self.cursor]),
+                (_, Nav::Enter) => return self.pick(self.items[self.cursor]),
                 _ => {}
             }
             return ScreenAction::Stay;
@@ -249,9 +318,10 @@ impl ObjectScreen {
                 };
                 return ScreenAction::Act(match self.list {
                     ObjectList::PickUp => Action::PickUp(chosen),
-                    ObjectList::Drop | ObjectList::Inventory | ObjectList::Throw => {
-                        Action::Drop(chosen)
-                    }
+                    ObjectList::Drop
+                    | ObjectList::Inventory
+                    | ObjectList::Throw
+                    | ObjectList::Eat => Action::Drop(chosen),
                 });
             }
             _ => {}
@@ -333,9 +403,13 @@ impl ObjectScreen {
             if selected {
                 console.print(x, y, ">", ACCENT);
             }
-            // `a - ) a dagger`: letter, mark, the glyph in the object's color, the name.
+            // `a - ) a dagger`: letter, mark, the glyph in the object's color, the name. What
+            // lies here has no letter on a screen of the pack (what to eat).
             let mark = if self.marked.contains(i) { '+' } else { '-' };
-            let label = format!("{} {mark}", letter(self.items[i]).unwrap_or('?'));
+            let label = match (self.items[i], self.list) {
+                (Item::Floor(_), ObjectList::Eat) => "   ".to_string(),
+                (item, _) => format!("{} {mark}", letter(item.position()).unwrap_or('?')),
+            };
             console.print(x + 2, y, &label, color);
             let glyph_x = x + 3 + label.chars().count() as i32;
             console.print(glyph_x, y, &entry.glyph.to_string(), entry.fg);
@@ -345,7 +419,7 @@ impl ObjectScreen {
             let room = (weight_x - name_x - 1).max(0) as usize;
             let mark = (entry.mark.as_ref()).map_or(String::new(), |m| format!(" ({m})"));
             let name: String = format!("{}{mark}", entry.name).chars().take(room).collect();
-            console.print(name_x, y, &name, color);
+            console.print(name_x, y, &name, rarity_color(entry.rarity, color));
             console.print(weight_x, y, &weight, TEXT_DIM);
         }
         if first > 0 {
@@ -366,7 +440,7 @@ impl ObjectScreen {
         let verb = match self.list {
             ObjectList::PickUp => "pick up",
             ObjectList::Drop | ObjectList::Inventory => "drop",
-            ObjectList::Throw => "throw",
+            ObjectList::Throw | ObjectList::Eat => "choose",
         };
         let footer = if read_only {
             let scroll = if first > 0 || more {
@@ -378,7 +452,13 @@ impl ObjectScreen {
                 Some(key) => format!("{} or Esc close", key.display()),
                 None => "Esc close".to_string(),
             };
-            format!("{scroll}{close}")
+            let look = match self.items.last().and_then(|item| letter(item.position())) {
+                Some(last) => format!("a-{last} look   "),
+                None => String::new(),
+            };
+            format!("{scroll}{look}{close}")
+        } else if self.list == ObjectList::Eat {
+            "a-z or Enter eat   Esc cancel".to_string()
         } else if self.list == ObjectList::Throw {
             "a-z or Enter choose   Esc cancel".to_string()
         } else {
@@ -418,6 +498,81 @@ mod tests {
         (0..console.rows() as i32)
             .map(|y| line(console, y))
             .collect()
+    }
+
+    /// A larder: food underfoot (two rations on top of a dagger) and an apple and a dagger in
+    /// the pack.
+    fn in_the_larder() -> World {
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        files.insert(
+            "levels/larder.toml",
+            "name = \"Larder\"\nmap = '''\n#####\n#@..#\n#####\n'''\n[legend]\n\
+             \"@\" = { terrain = \"floor\", spawn = \"player\", \
+             objects = [\"ration*2\", \"dagger\", \"apple\"] }\n",
+        );
+        files.insert(
+            "scenarios/larder.toml",
+            "name = \"Larder\"\nstart_level = \"larder\"\n",
+        );
+        let content = Arc::new(Content::load(&files).expect("valid"));
+        let mut world = World::new(content, "larder", None).expect("world");
+        // Take the dagger and the apple (b, c), leaving the rations.
+        world.apply(&Action::PickUp(Letters::of([1, 2])));
+        world
+    }
+
+    #[test]
+    fn the_eat_choice_lists_food_here_first_then_in_the_pack() {
+        let world = in_the_larder();
+        let b = Bindings::default();
+        let mut screen = ObjectScreen::new(ObjectList::Eat, Some(&world.perception()));
+        let names: Vec<&str> = screen.entries.iter().map(|e| e.name.as_str()).collect();
+        assert_eq!(names, ["2 food rations", "an apple"], "no dagger");
+        let mut console = Console::default();
+        console.resize(80, 24);
+        screen.draw(&mut console, &b);
+        let shown = text(&console);
+        // What lies here has no letter; the pack's food has its inventory letter.
+        assert!(
+            shown
+                .iter()
+                .any(|l| l.contains(">     % 2 food rations (lying here)")),
+            "{shown:#?}"
+        );
+        assert!(shown.iter().any(|l| l.contains("b - % an apple")));
+        assert!(shown.iter().any(|l| l.contains("a-z or Enter eat")));
+        // Enter eats what lies here (the cursor starts on it); a pack letter eats from the pack.
+        assert_eq!(
+            screen.handle(&Press::nav(Nav::Enter), &b),
+            ScreenAction::Act(Action::Eat(Meal::Floor(0)))
+        );
+        assert_eq!(
+            screen.handle(&typed('a'), &b),
+            ScreenAction::Stay,
+            "a dagger"
+        );
+        assert_eq!(
+            screen.handle(&typed('b'), &b),
+            ScreenAction::Act(Action::Eat(Meal::Pack(1)))
+        );
+        screen.handle(&Press::nav(Nav::Down), &b);
+        assert_eq!(
+            screen.handle(&Press::nav(Nav::Enter), &b),
+            ScreenAction::Act(Action::Eat(Meal::Pack(1)))
+        );
+        // Nothing to eat: it says so, and Enter or Esc closes it.
+        let empty = on_the_pile();
+        let mut screen = ObjectScreen::new(ObjectList::Eat, Some(&empty.perception()));
+        screen.draw(&mut console, &b);
+        assert!(
+            text(&console)
+                .iter()
+                .any(|l| l.contains("You have nothing to eat."))
+        );
+        assert_eq!(
+            screen.handle(&Press::nav(Nav::Enter), &b),
+            ScreenAction::Close
+        );
     }
 
     #[test]
@@ -544,9 +699,14 @@ mod tests {
         assert!(row("c - ( 2 wax candles").contains("200 g"));
         assert!(row("Carrying").contains("Carrying 4.2 kg"));
         assert!(row("Carrying").contains("Your weight 74.2 kg (you 70 kg)"));
-        assert!(row("Esc close").contains("i or Esc close"));
-        // Letters do nothing here; `i` closes, like Esc.
-        assert_eq!(screen.handle(&typed('a'), &b), ScreenAction::Stay);
+        assert!(row("Esc close").contains("a-c look   i or Esc close"));
+        // A stack's letter opens its description; `i` (naming no stack here) closes, like Esc.
+        assert_eq!(
+            screen.handle(&typed('b'), &b),
+            ScreenAction::Open(crate::ui::ScreenName::Describe)
+        );
+        assert_eq!(screen.looked(), Some(1));
+        assert_eq!(screen.handle(&typed('e'), &b), ScreenAction::Stay);
         let i = Press {
             binding: crate::input::KeyBinding::from_text("i"),
             ..typed('i')

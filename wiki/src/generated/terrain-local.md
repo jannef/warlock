@@ -7,13 +7,14 @@
 | Stone wall | `#` | no | yes | - | - | 1 | can be dug through or blasted open |
 | Packed earth | `#` | no | yes | - | - | 1 | can be dug through or blasted open |
 | Granite | `#` | no | yes | - | - | 1 | can be dug through or blasted open |
-| Closed door | `+` | yes | yes | 6 seconds (opens it) | - | 1 | door: walking into it opens it; muffles sound |
+| Closed door | `+` | yes | yes | 6 seconds (opens it) | - | 1 | door: walking into it opens it; kicked in, it breaks into a broken door (sturdiness 30); muffles sound |
 | Open door | `'` | yes | no | 6 seconds | normal | 0 | door: can be closed |
+| Broken door | `,` | yes | no | 6 seconds | normal | 0 |  |
 | Staircase down | `>` | yes | no | 6 seconds | normal | 0 | stairs down |
 | Staircase up | `<` | yes | no | 6 seconds | normal | 0 | stairs up |
-| Still water | `~` | yes | no | 12 seconds | very loud | 0 |  |
-| Running water | `~` | yes | no | 12 seconds | very loud | 0 |  |
-| Shallow water | `~` | yes | no | 9 seconds | very loud | 0 |  |
+| Still water | `~` | yes | no | 12 seconds | very loud | 0 | freezes below 0 °C |
+| Running water | `~` | yes | no | 12 seconds | very loud | 0 | freezes below -6 °C |
+| Shallow water | `~` | yes | no | 9 seconds | very loud | 0 | freezes below 0 °C |
 | Altar | `_` | yes | no | 6 seconds | normal | 0 | gives light |
 | Wall torch | `¡` | no | no | - | - | 0 | gives light |
 | Brazier | `Ω` | no | no | - | - | 0 | gives light |
@@ -45,5 +46,8 @@
 | Reeds | `¦` | yes | no | 9 seconds | loud | 1 |  |
 | Dirt road | `.` | yes | no | 6 seconds | quiet | 0 |  |
 | Rubble | `,` | yes | no | 9 seconds | loud | 0 |  |
+| Thin ice | `⁄` | yes | no | 7.2 seconds | normal | 0 | ice on water: holds by its thickness |
+| Ice | `·` | yes | no | 7.2 seconds | normal | 0 | ice on water: holds by its thickness |
+| Thick ice | `·` | yes | no | 7.2 seconds | normal | 0 | ice on water: holds by its thickness |
 | Plank floor | `.` | yes | no | 6 seconds | loud | 2 | roofed: no sun or sky light |
 | Timber wall | `#` | no | yes | - | - | 2 | roofed: no sun or sky light |

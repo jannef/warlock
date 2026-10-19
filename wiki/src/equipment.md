@@ -1,13 +1,16 @@
 # Equipment
 
 You can wear and wield what you carry, as in ADOM: a helm on your head, an amulet around your
-neck, armor on your body, a cloak, a weapon in your main hand and a shield in your off hand,
-gloves, a ring on each hand, boots, a missile weapon with its missiles ready, and a tool.
+neck, armor on your body, a cloak, a weapon in your main hand and a shield (or a light weapon)
+in your off hand, gloves, a ring on each hand, boots, a missile weapon with its missiles ready,
+and a tool.
 
 What you wield and wear decides how you fight (see [Combat](combat.md)): the weapon in your
 hand does its damage, a bow shoots, body armour and a shield add to your Defence, and a
-quarterstaff parries. Nothing you wear slows you down. Putting things on and taking them off
-takes time, and what you wear still weighs what it weighs.
+quarterstaff parries. Nothing you wear slows you down by itself, though a great sword or an axe
+swings slower than a dagger. Magic items work while you wear or wield them (see
+[Magic items](magic-items.md)). Putting things on and taking them off takes time, and what you
+wear still weighs what it weighs.
 
 ## The equipment screen
 
@@ -21,6 +24,8 @@ long putting one on there, or taking it off, takes at a normal pace.
 
 - Press a slot's letter, or move the `>` with the arrow keys and press `Enter`, to choose what
   goes there. On this screen every letter names a slot, even `e`, `h`, `j`, `k`, `l`, and `m`.
+- Press a slot's letter in upper case (`A` to `M`) to look at what is in it (see
+  [Magic items](magic-items.md#looking-at-an-item)).
 - The next screen lists what you carry that fits the slot, with each object's letter from your
   [pack](objects.md#your-pack). Press its letter, or `Enter` on the `>` row, to put it on.
 - If the slot already holds something, it is taken off first: the two swap places. Choose what
@@ -35,7 +40,11 @@ do it: creatures act meanwhile, just as when you wait. Looking at the screens ta
 
 - **Rings** fit either ring slot. Choosing a ring for the right hand while it is on your left
   moves it over.
-- **Two-handed weapons**, such as the quarterstaff, take both hands. The screen shows them in
+- **Light weapons**, the dagger, the stiletto, and the short sword, fit either hand: one in your off hand
+  beside a weapon in your main hand is fighting with two weapons (see
+  [Fighting styles](fighting-styles.md#two-weapons)). Nothing else but a shield goes in the off
+  hand.
+- **Two-handed weapons**, such as the quarterstaff and the great sword, take both hands. The screen shows them in
   the main hand and the off hand, "(both hands)". Wielding one puts away whatever your hands
   held; a shield in your off hand puts a two-handed weapon away.
 - **Missile weapons and missiles** have their own slots. A bow shoots arrows: each missile weapon

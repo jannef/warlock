@@ -1,8 +1,7 @@
 //! The screen stack (spec §6): every modal screen — main menu, new run and character creation,
 //! pause, settings, controls, the `?` help, the inventory, the equipment screen and its choice of
-//! what goes in a slot, the character screen, the weapon skills screen, and choosing what to pick
-//! up, drop, or throw —
-//! lives on one stack, bottom to top.
+//! what goes in a slot, the character screen, the weapon skills screen, choosing what to pick up,
+//! drop, or throw, and the dialogue screen — lives on one stack, bottom to top.
 //!
 //! - **Open**: [`Screens::open`] is the one way to open a screen, by [`ScreenName`]: `?` and Esc
 //!   in play, screens opening sub-screens, the main menu at startup and after a run, and
@@ -16,7 +15,9 @@
 //!   Esc closes (pops) the top screen; choices that start, leave, or end a run ([`MenuChoice`])
 //!   are applied by [`apply_choice`]. A screen that chooses a gameplay action (what to pick up,
 //!   drop, wear, or wield) closes and hands the action to the simulation ([`ScreenAction::Act`]);
-//!   the equipment screen beneath a choice stays open and [`refresh`] shows it the result.
+//!   the equipment screen beneath a choice stays open and [`refresh`] shows it the result. Talk
+//!   that answers with topics opens the dialogue screen ([`converse`]), and so does each answer
+//!   to a topic asked on it.
 //! - **Draw**: `ui::draw` clears the UI console, draws the gameplay UI when a run exists, then
 //!   the top screen ([`ScreenStack::draw`]).
 //!
@@ -27,7 +28,9 @@ use super::character_screen::CharacterScreen;
 use super::chargen_screen::{ChoiceScreen, Draft, Picks, Step, SummaryScreen};
 use super::controls_screen::ControlsScreen;
 use super::death_screen::DeathScreen;
+use super::describe_screen::DescribeScreen;
 use super::dialog_screen::{Dialog, DialogScreen};
+use super::dialogue_screen::{DialogueScreen, last_talk};
 use super::equipment_screen::{EquipmentScreen, ItemScreen};
 use super::files_screen::FilesScreen;
 use super::info_tabs;
@@ -35,11 +38,12 @@ use super::menu::{MainMenu, Press, quit_dialog};
 use super::motion::Motion;
 use super::new_run_screen::NewRunScreen;
 use super::object_screen::{ObjectList, ObjectScreen};
+use super::quest_screen::QuestScreen;
 use super::settings_screen::SettingsScreen;
 use super::skills_screen::SkillsScreen;
 use super::weapon_skills_screen::WeaponSkillsScreen;
 use crate::cli::Args;
-use crate::game::{Game, GameContent};
+use crate::game::{Game, GameContent, PlayerAction};
 use crate::input::{Bindings, InputMode};
 use crate::render::console::Console;
 use crate::render::grid::MapGrid;
@@ -52,6 +56,7 @@ use warlock_core::Action;
 use warlock_core::character::CharacterSpec;
 use warlock_core::content::{Content, SlotId};
 use warlock_core::perception::PerceptionView;
+use warlock_core::world::Conversation;
 
 /// The screens that can be opened. Also the values of `--screen`, a dev flag for screenshots.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
@@ -82,6 +87,9 @@ pub enum ScreenName {
     /// Choose what goes in the slot selected on the equipment screen beneath (a slot's letter
     /// there).
     EquipItem,
+    /// What one carried stack is, as the player knows it: the one looked at on the inventory or
+    /// the equipment screen beneath (a letter there), else the first.
+    Describe,
     /// The player's name, stats, and weight (`@` in play).
     Character,
     /// The player's trained skills and their values (`S` in play, or from the character
@@ -89,12 +97,19 @@ pub enum ScreenName {
     Skills,
     /// The player's weapon skills: ranks and marks (`W` in play).
     WeaponSkills,
+    /// The player's quests, active and done (`q` in play).
+    Quests,
     /// Choose what to pick up from the pile here (`,` or `g` where several objects lie).
     PickUp,
     /// Choose what to drop (`d` in play).
     Drop,
     /// Choose what to throw (`t` in play, with no throwing weapon readied).
     Throw,
+    /// Choose what to eat (`E` in play): food lying here, then food in the pack.
+    Eat,
+    /// Talking with someone who has topics (`C` next to them): opens by itself when they answer;
+    /// as `--screen`, over a run whose last action was such a chat (a replay's last step).
+    Dialogue,
     /// The run is over: who died, where, when, and of what. It opens by itself when the player
     /// dies, so it is no `--screen`.
     #[value(skip)]
@@ -114,12 +129,16 @@ impl ScreenName {
                 | ScreenName::Inventory
                 | ScreenName::Equipment
                 | ScreenName::EquipItem
+                | ScreenName::Describe
                 | ScreenName::Character
                 | ScreenName::Skills
                 | ScreenName::WeaponSkills
+                | ScreenName::Quests
                 | ScreenName::PickUp
                 | ScreenName::Drop
                 | ScreenName::Throw
+                | ScreenName::Eat
+                | ScreenName::Dialogue
                 | ScreenName::Death
         )
     }
@@ -197,9 +216,13 @@ enum Screen {
     Equipment(EquipmentScreen),
     /// Choosing what goes in a slot.
     EquipItem(ItemScreen),
+    /// What one carried stack is.
+    Describe(DescribeScreen),
     Character(CharacterScreen),
     Skills(SkillsScreen),
     WeaponSkills(WeaponSkillsScreen),
+    Quests(QuestScreen),
+    Dialogue(DialogueScreen),
     Death(DeathScreen),
     /// The dialog.
     Dialog(DialogScreen),
@@ -207,15 +230,18 @@ enum Screen {
 
 impl Screen {
     /// Screen `name`; `run` is what the player perceives in the run, if there is one, `draft`
-    /// what New run has chosen on the screens below, and `slot` the slot selected on the
-    /// equipment screen beneath, if any (the first slot if none).
+    /// what New run has chosen on the screens below, `slot` the slot selected on the equipment
+    /// screen beneath, if any (the first slot if none), `item` the carried stack looked at on a
+    /// screen beneath (the first if none), and `talk` the run's last conversation, if its last
+    /// action was talk.
     fn new(
         name: ScreenName,
         content: &Content,
         has_save: bool,
         run: Option<&PerceptionView<'_>>,
         draft: &Draft,
-        slot: Option<SlotId>,
+        (slot, item): (Option<SlotId>, Option<usize>),
+        talk: Option<&Conversation>,
     ) -> Self {
         let objects = |list| Screen::Objects(ObjectScreen::new(list, run));
         let choice = |step| Screen::Choice(ChoiceScreen::new(step, content, draft));
@@ -236,12 +262,18 @@ impl Screen {
             ScreenName::EquipItem => {
                 Screen::EquipItem(ItemScreen::new(run, slot.unwrap_or(SlotId(0))))
             }
+            ScreenName::Describe => {
+                Screen::Describe(DescribeScreen::new(run, Some(item.unwrap_or(0))))
+            }
             ScreenName::Character => Screen::Character(CharacterScreen::new(run)),
             ScreenName::Skills => Screen::Skills(SkillsScreen::new(run)),
             ScreenName::WeaponSkills => Screen::WeaponSkills(WeaponSkillsScreen::new(run)),
+            ScreenName::Quests => Screen::Quests(QuestScreen::new(run)),
             ScreenName::PickUp => objects(ObjectList::PickUp),
             ScreenName::Drop => objects(ObjectList::Drop),
             ScreenName::Throw => objects(ObjectList::Throw),
+            ScreenName::Eat => objects(ObjectList::Eat),
+            ScreenName::Dialogue => Screen::Dialogue(DialogueScreen::new(talk, run)),
             ScreenName::Death => Screen::Death(DeathScreen::new(run)),
             ScreenName::Dialog => Screen::Dialog(DialogScreen::new(quit_dialog(run.is_some()))),
         }
@@ -263,12 +295,16 @@ impl Screen {
                 ObjectList::PickUp => ScreenName::PickUp,
                 ObjectList::Drop => ScreenName::Drop,
                 ObjectList::Throw => ScreenName::Throw,
+                ObjectList::Eat => ScreenName::Eat,
             },
             Screen::Equipment(_) => ScreenName::Equipment,
             Screen::EquipItem(_) => ScreenName::EquipItem,
+            Screen::Describe(_) => ScreenName::Describe,
             Screen::Character(_) => ScreenName::Character,
             Screen::Skills(_) => ScreenName::Skills,
             Screen::WeaponSkills(_) => ScreenName::WeaponSkills,
+            Screen::Quests(_) => ScreenName::Quests,
+            Screen::Dialogue(_) => ScreenName::Dialogue,
             Screen::Death(_) => ScreenName::Death,
             Screen::Dialog(_) => ScreenName::Dialog,
         }
@@ -349,6 +385,16 @@ impl ScreenStack {
         })
     }
 
+    /// The carried stack looked at on the topmost inventory or equipment screen, if any: what a
+    /// description opened from it describes.
+    fn looked_item(&self) -> Option<usize> {
+        self.screens.iter().rev().find_map(|s| match s {
+            Screen::Objects(screen) if screen.list() == ObjectList::Inventory => screen.looked(),
+            Screen::Equipment(screen) => screen.selected_item(),
+            _ => None,
+        })
+    }
+
     /// Whether an equipment screen is open (it shows the run as it changes, [`refresh`]).
     fn shows_equipment(&self) -> bool {
         (self.screens.iter()).any(|s| matches!(s, Screen::Equipment(_)))
@@ -405,9 +451,12 @@ impl ScreenStack {
             Some(Screen::Objects(screen)) => screen.handle(press, bindings),
             Some(Screen::Equipment(screen)) => screen.handle(press, bindings),
             Some(Screen::EquipItem(screen)) => screen.handle(press, bindings),
+            Some(Screen::Describe(screen)) => screen.handle(press, bindings),
             Some(Screen::Character(screen)) => screen.handle(press, bindings),
             Some(Screen::Skills(screen)) => screen.handle(press, bindings),
             Some(Screen::WeaponSkills(screen)) => screen.handle(press, bindings),
+            Some(Screen::Quests(screen)) => screen.handle(press, bindings),
+            Some(Screen::Dialogue(screen)) => screen.handle(press, bindings),
             Some(Screen::Death(screen)) => screen.handle(press),
             Some(Screen::Dialog(screen)) => screen.handle(press, bindings),
         };
@@ -455,9 +504,12 @@ impl ScreenStack {
             Some(Screen::Objects(screen)) => screen.draw(console, bindings),
             Some(Screen::Equipment(screen)) => screen.draw(console, bindings),
             Some(Screen::EquipItem(screen)) => screen.draw(console, bindings),
+            Some(Screen::Describe(screen)) => screen.draw(console, bindings),
             Some(Screen::Character(screen)) => screen.draw(console, bindings),
             Some(Screen::Skills(screen)) => screen.draw(console, bindings),
             Some(Screen::WeaponSkills(screen)) => screen.draw(console, bindings),
+            Some(Screen::Quests(screen)) => screen.draw(console, bindings),
+            Some(Screen::Dialogue(screen)) => screen.draw(console),
             Some(Screen::Death(screen)) => screen.draw(console, settings.clock),
             Some(Screen::Dialog(screen)) => screen.draw(console, bindings),
         }
@@ -491,9 +543,12 @@ impl Screens<'_> {
     /// Opens screen `name` on top of the stack. The one way screens open.
     pub fn open(&mut self, name: ScreenName) {
         let view = self.game.as_ref().map(|game| game.world.perception());
+        let talk = (self.game.as_ref()).and_then(|game| last_talk(&game.last_outcome));
         let (draft, slot) = (self.stack.draft(), self.stack.selected_slot());
+        let item = self.stack.looked_item();
         let (content, has_save) = (&self.content.0, self.store.has_save());
-        let screen = Screen::new(name, content, has_save, view.as_ref(), &draft, slot);
+        let looked = (slot, item);
+        let screen = Screen::new(name, content, has_save, view.as_ref(), &draft, looked, talk);
         self.stack.screens.push(screen);
     }
 
@@ -510,6 +565,25 @@ impl Screens<'_> {
 pub(super) fn refresh(game: Res<Game>, mut stack: ResMut<ScreenStack>) {
     if game.is_changed() && stack.shows_equipment() {
         stack.refresh(&game.world.perception());
+    }
+}
+
+/// Opens the dialogue screen when the player's action this frame was talk that answered with
+/// topics: a chat with someone who has them, or a topic asked on the dialogue screen (which
+/// closed to ask). Only then, so a run changed for other reasons never reopens it.
+pub(super) fn converse(
+    game: Res<Game>,
+    mut actions: MessageReader<PlayerAction>,
+    mut screens: Screens,
+) {
+    if actions.read().count() == 0 || !screens.stack.is_empty() {
+        return;
+    }
+    // An answer to a topic shows there even when nothing is left to ask (a quest handed in to
+    // someone with no other topics).
+    let shown = |talk: &Conversation| !talk.topics.is_empty() || talk.asked.is_some();
+    if last_talk(&game.last_outcome).is_some_and(shown) {
+        screens.open(ScreenName::Dialogue);
     }
 }
 
@@ -542,6 +616,7 @@ fn startup_screens(screen: Option<ScreenName>, in_run: bool) -> Vec<ScreenName> 
         (true, Some(s @ (Settings | Controls | Dialog))) => vec![Pause, s],
         (true, Some(Files)) => vec![Pause, Settings, Files],
         (true, Some(EquipItem)) => vec![Equipment, EquipItem],
+        (true, Some(Describe)) => vec![Inventory, Describe],
         (true, Some(s)) if s.needs_run() => vec![s],
         (true, _) => Vec::new(),
     }
@@ -679,7 +754,8 @@ mod tests {
         for name in names {
             let run = name.needs_run().then_some(&view);
             let (draft, slot) = (stack.draft(), stack.selected_slot());
-            let screen = Screen::new(*name, &content, has_save, run, &draft, slot);
+            let looked = (slot, stack.looked_item());
+            let screen = Screen::new(*name, &content, has_save, run, &draft, looked, None);
             stack.screens.push(screen);
         }
         stack
@@ -701,6 +777,7 @@ mod tests {
             false,
             None,
             &Draft::default(),
+            (None, None),
             None,
         ));
         assert_eq!(stack.names(), [Pause, Settings]);
@@ -776,7 +853,10 @@ mod tests {
             [Equipment, EquipItem]
         );
         assert_eq!(startup_screens(Some(EquipItem), false), [Main]);
+        assert_eq!(startup_screens(Some(Describe), true), [Inventory, Describe]);
         assert_eq!(startup_screens(Some(Drop), false), [Main]);
+        assert_eq!(startup_screens(Some(Dialogue), true), [Dialogue]);
+        assert_eq!(startup_screens(Some(Dialogue), false), [Main]);
         assert_eq!(startup_screens(Some(Race), false), [Main, NewRun, Race]);
         assert_eq!(
             startup_screens(Some(Class), false),
@@ -1518,6 +1598,81 @@ mod tests {
         assert_eq!(names(&app), [ScreenName::Main]);
         assert!(!store.has_save());
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn chat_talks_to_the_one_beside_and_the_dialogue_stays_open_while_asking() {
+        let content = content();
+        let mut world = warlock_core::World::new(content.clone(), "showcase", None).expect("run");
+        // Into the stairs nook, beside the old hermit.
+        let walk = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:SE*3";
+        for action in warlock_core::action::parse_actions(walk).expect("actions") {
+            world.apply(&action);
+        }
+        let mut app = app_with(content, Some(Game::from_world(world)));
+        fn apply(mut actions: MessageReader<PlayerAction>, mut game: ResMut<Game>) {
+            for PlayerAction(action) in actions.read() {
+                game.apply(action);
+            }
+        }
+        app.add_systems(Update, (apply, converse).chain().after(count_actions));
+        // `C` talks to the one creature beside the player at once; he has topics.
+        frame(&mut app, &[(KeyCode::KeyC, "C")]);
+        assert_eq!(actions(&app), [Action::Chat(Dir::SE)]);
+        assert_eq!(names(&app), [ScreenName::Dialogue]);
+        // A topic's number asks (no time passes); the answer reopens the screen.
+        let turn = app.world().resource::<Game>().world.turn();
+        frame(&mut app, &[(KeyCode::Digit6, "6")]);
+        let ask = Action::Ask {
+            dir: Dir::SE,
+            topic: "stairs".into(),
+        };
+        assert_eq!(actions(&app).last(), Some(&ask));
+        assert_eq!(names(&app), [ScreenName::Dialogue]);
+        let game = app.world().resource::<Game>();
+        assert_eq!(game.world.turn(), turn);
+        let last = game.world.messages().iter().last().map(|m| m.text.clone());
+        assert!(last.is_some_and(|m| m.contains("Three stairs")));
+        // His quest comes first: asking hears the offer, and the screen reopens on accepting it.
+        frame(&mut app, &[(KeyCode::Digit1, "1")]);
+        let topics = |app: &App| {
+            let game = app.world().resource::<Game>();
+            let talk = last_talk(&game.last_outcome).expect("talk");
+            (talk.topics.iter().map(|t| t.name.clone()).take(2)).collect::<Vec<_>>()
+        };
+        assert_eq!(names(&app), [ScreenName::Dialogue]);
+        assert_eq!(
+            topics(&app),
+            ["Accept: Rats in the arena", "Decline: Rats in the arena"]
+        );
+        frame(&mut app, &[(KeyCode::Digit1, "1")]);
+        let accept = Action::Ask {
+            dir: Dir::SE,
+            topic: "accept-rats".into(),
+        };
+        assert_eq!(actions(&app).last(), Some(&accept));
+        assert_eq!(names(&app), [ScreenName::Dialogue]);
+        assert_eq!(topics(&app)[0], "Rats in the arena");
+        let game = app.world().resource::<Game>();
+        assert_eq!(game.world.perception().quests().len(), 1);
+        // Esc leaves; the next press is gameplay again.
+        frame(&mut app, &[ESC, WAIT]);
+        assert!(names(&app).is_empty());
+        assert_eq!(actions(&app).last(), Some(&Action::Wait));
+        assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
+    }
+
+    #[test]
+    fn chat_asks_for_a_direction_with_no_one_beside() {
+        let mut app = app(true);
+        frame(&mut app, &[(KeyCode::KeyC, "C")]);
+        assert_eq!(
+            app.world().resource::<InputMode>(),
+            &InputMode::Direction(crate::input::KeyCommand::Chat)
+        );
+        frame(&mut app, &[(KeyCode::KeyL, "l")]);
+        assert_eq!(actions(&app), [Action::Chat(Dir::E)]);
+        assert!(names(&app).is_empty());
     }
 
     const UP: (KeyCode, &str) = (KeyCode::ArrowUp, "");
