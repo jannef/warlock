@@ -381,7 +381,7 @@ name theirs (`category` → `ObjectDef::skill`, its role checked against what th
 shields bash (`bash` → `ObjectDef::bash`), races and classes give starting ranks
 (`weapon_skills`, dice; classes `weapon_skill_choice`), creatures fixed ranks. The runtime side
 is `weapon_skills.rs`: `WeaponSkills` (a `Training { rank, marks }` per skill on
-`Actor::weapon_skills`, saved and hashed, `FORMAT_VERSION` 14), `train` (marks → a rank, then
+`Actor::weapon_skills`, saved and hashed, `FORMAT_VERSION` 15), `train` (marks → a rank, then
 `raise`: the defaults rise, their marks reset; no chaining), `from_ranks` (starting ranks,
 order-free), `progress`. The rules hook in at one place each: `Actor::attack_skill(kind, with)`
 picks the skill of an attack (a blow: the wielded weapon's, else unarmed; `Melee` `with` a
