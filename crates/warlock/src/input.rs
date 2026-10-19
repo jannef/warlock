@@ -3,8 +3,8 @@
 //! [`route_keys`] reads every key press exactly once. While a screen is open (the screen stack is
 //! not empty) the press goes to the top screen; otherwise it is a gameplay command, read through
 //! the bindings in the current [`InputMode`]. Prompts in the message line (the direction for
-//! open/close, how long to rest, look mode, aiming a shot or a throw) are input modes, not
-//! screens.
+//! open/close and for digging, how long to rest, look mode, aiming a shot or a throw) are input
+//! modes, not screens.
 //!
 //! Letter and symbol commands bind by *logical* key (the character the keyboard layout produces),
 //! so `<`, `>`, and `?` work on any layout. Arrows and the numpad bind by physical key code.
@@ -63,6 +63,9 @@ pub enum KeyCommand {
     Bash,
     /// While aiming: the cursor to the next creature in view (with Shift, the one before).
     NextTarget,
+    /// Use the tool the player has ready toward a direction (ADOM's `U`): dig into a wall with a
+    /// pick-axe. An item's use, not an ability (abilities get a menu of their own).
+    UseTool,
     /// Dev: switch to the next vision profile.
     CycleVision,
     /// Dev: move the clock an hour ahead at once.
@@ -129,6 +132,7 @@ impl KeyCommand {
             KeyCommand::Throw => "Throw",
             KeyCommand::Bash => "Bash with your shield",
             KeyCommand::NextTarget => "Next target (aiming; Shift: previous)",
+            KeyCommand::UseTool => "Use a tool (dig)",
             KeyCommand::CycleVision => "Next vision profile (dev)",
             KeyCommand::SkipHour => "Skip an hour (dev)",
             KeyCommand::NextWeather => "Next weather (dev)",
@@ -241,6 +245,7 @@ impl Default for Bindings {
             (ch("f"), Fire),
             (ch("t"), Throw),
             (Code(KeyCode::Tab), NextTarget),
+            (ch("U"), UseTool),
             (ch("?"), Help),
             (Code(KeyCode::Escape), Cancel),
             (ch("Q"), Quit),
@@ -306,7 +311,7 @@ impl Bindings {
 pub enum InputMode {
     #[default]
     Normal,
-    /// Waiting for a direction for `Open`, `Close`, or `Bash`.
+    /// Waiting for a direction for `Open`, `Close`, `Bash`, or `UseTool`.
     Direction(KeyCommand),
     /// Asking how long to rest ([`REST_CHOICES`]).
     Rest,
@@ -505,6 +510,7 @@ impl Gameplay<'_> {
                 let action = match cmd {
                     KeyCommand::Open => Action::Open(dir),
                     KeyCommand::Bash => Action::Bash(dir),
+                    KeyCommand::UseTool => Action::Dig(dir),
                     _ => Action::Close(dir),
                 };
                 self.actions.write(PlayerAction(action));
@@ -607,6 +613,15 @@ impl Gameplay<'_> {
             }
             (InputMode::Normal, KeyCommand::Open | KeyCommand::Close | KeyCommand::Bash) => {
                 InputMode::Direction(command)
+            }
+            (InputMode::Normal, KeyCommand::UseTool) => {
+                if game.world.perception().ready_to_dig().is_some() {
+                    InputMode::Direction(command)
+                } else {
+                    // Nothing to dig with: the rules say so ("You have no digging tool ready.").
+                    self.actions.write(PlayerAction(Action::Dig(Dir::N)));
+                    InputMode::Normal
+                }
             }
             (InputMode::Normal, KeyCommand::Help) => {
                 open = Some(ScreenName::Help);
@@ -734,6 +749,7 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Fire), ["f"]);
         assert_eq!(keys(&b, KeyCommand::Throw), ["t"]);
         assert_eq!(keys(&b, KeyCommand::NextTarget), ["Tab"]);
+        assert_eq!(keys(&b, KeyCommand::UseTool), ["U"]);
     }
 
     #[test]

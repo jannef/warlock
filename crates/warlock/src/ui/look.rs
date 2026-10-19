@@ -18,9 +18,11 @@ pub const CURSOR_BG: Rgb = Rgb::new(0xe0, 0xc0, 0x70);
 /// heard there.
 pub fn describe(view: &PerceptionView<'_>, p: Pos) -> String {
     let content = view.content();
-    // Stairs and locations name where they lead: "a staircase down, leading to The Depths 1".
+    // Stairs and locations name where they lead: "a staircase down, leading to The Depths 1";
+    // a wall in sight that was dug into says so: "a stone wall, partly dug".
     let named = |t| match view.leads_to(p) {
         Some(to) => format!("{}, leading to {to}", content.terrain(t).name),
+        None if view.is_dug(p) => format!("{}, partly dug", content.terrain(t).name),
         None => content.terrain(t).name.clone(),
     };
     // A special room the player has been in names the ground in it: "in an echoing hall".
@@ -243,7 +245,7 @@ mod tests {
         w.apply(&Action::Move(Dir::W));
         w.apply(&Action::Move(Dir::W));
         let view = w.perception();
-        let floor = Pos::new(77, 18);
+        let floor = Pos::new(76, 18);
         let text = describe(&view, floor);
         assert_eq!(text, "You remember a stone floor here, in a sanctuary.");
     }

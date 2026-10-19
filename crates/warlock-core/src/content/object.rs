@@ -31,6 +31,9 @@
 //! presentation only: the `missile` glyph it flies as (pointing right, turned along its flight),
 //! whether it `spins`, how much it `glow`s where it lies, and its `particles` (`ambient` while
 //! it lies in view on top of its pile, `flight` while it flies).
+//!
+//! Digging tools (spec §8 "Digging") have a `dig` power: the work a dig with one does against a
+//! wall's hardness (a pick-axe 10, at Strength 10). They go in a slot (the Tool slot).
 
 use super::light::LightId;
 use super::material::MaterialId;
@@ -51,6 +54,8 @@ pub const MAX_BONUS: i32 = 20;
 pub const MAX_RANGE: i32 = crate::perception::VIEW_RADIUS;
 /// The longest anything burns where it lies, in seconds: a day.
 pub const MAX_BURN: u32 = DAY as u32;
+/// The most power a digging tool may have (a pick-axe has 10).
+pub const MAX_DIG: u16 = 100;
 
 /// Index of an object definition in [`super::Content::object_defs`].
 ///
@@ -127,6 +132,8 @@ pub(super) struct ObjectSpec {
     pub light: Option<String>,
     /// How long it burns where it lands, in seconds of game time; then it is gone.
     pub burns: Option<u32>,
+    /// A digging tool's power (spec §8 "Digging"): how much work a dig with it does.
+    pub dig: Option<u16>,
     /// Presentation: the glyph it flies as, drawn pointing right and turned along its flight
     /// (default: its own glyph, upright).
     pub missile: Option<char>,
@@ -191,6 +198,9 @@ pub struct ObjectDef {
     pub lit: Option<ObjectId>,
     /// The light it gives where it lies, while it burns, and for how long it burns.
     pub burning: Option<Burning>,
+    /// A digging tool's power (spec §8 "Digging"): a dig with it at Strength 10 does this much
+    /// work against a wall's hardness ([`crate::world::dig_work`]). `None`: it does not dig.
+    pub dig: Option<u16>,
     /// Presentation: the glyph it flies as, pointing right; `None`: its glyph, upright.
     pub missile: Option<char>,
     /// Presentation: it tumbles as it flies.
@@ -312,6 +322,13 @@ impl ObjectSpec {
         if !(0.0..=1.0).contains(&self.glow) {
             return Err(err("`glow` must be between 0 and 1".into()));
         }
+        if let Some(power) = self.dig
+            && (!(1..=MAX_DIG).contains(&power) || self.slot.is_none())
+        {
+            return Err(err(format!(
+                "`dig` is a digging tool's power, 1 to {MAX_DIG}, and a tool goes in a `slot`"
+            )));
+        }
         let plural = self.plural.unwrap_or_else(|| format!("{}s", self.name));
         let def = ObjectDef {
             id: self.id,
@@ -338,6 +355,7 @@ impl ObjectSpec {
             breaks: self.breaks,
             lit: None,
             burning,
+            dig: self.dig,
             missile: self.missile,
             spins: self.spins,
             glow: self.glow,
@@ -572,6 +590,7 @@ mod tests {
             breaks: 0,
             lit: None,
             burning: None,
+            dig: None,
             missile: None,
             spins: false,
             glow: 0.0,

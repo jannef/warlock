@@ -52,6 +52,10 @@
 #   light      the light preset (lights.toml) it gives while it burns where it lies, and
 #   burns      for how many seconds of game time it burns there; then it is gone. A burning
 #              object cannot be picked up
+# Digging (spec §8 "Digging"; ready a tool in the Tool slot, then use it with `U`):
+#   dig        a digging tool's power (1 to 100): each turn of digging does power × (Strength +
+#              10) / 20 work against a wall's hardness (terrain.toml), so a pick-axe (10) does 10
+#              at Strength 10. A tool goes in a `slot` (the Tool slot)
 # Presentation only (no rule reads them):
 #   missile    the glyph it flies as, drawn pointing right and turned along its flight (default:
 #              its own glyph, upright)
@@ -363,6 +367,28 @@ weight = 1000
 slot = "feet"
 
 # Tools
+# Digging tools go in the Tool slot. A pick-axe digs through a stone wall in six minutes at
+# Strength 10; the heavier mattock does it in four.
+[[object]]
+id = "pick_axe"
+name = "pick-axe"
+glyph = "("
+fg = "#b8b0a4"
+material = "iron"
+weight = 3000
+slot = "tool"
+dig = 10
+
+[[object]]
+id = "mattock"
+name = "mattock"
+glyph = "("
+fg = "#a49680"
+material = "iron"
+weight = 4500
+slot = "tool"
+dig = 15
+
 [[object]]
 id = "iron_key"
 name = "iron key"

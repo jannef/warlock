@@ -364,3 +364,17 @@ scenario = "showcase"
 actions = "effect:fireball@11,13"
 freeze_time = 0.1
 args = ["--reduced-effects"]
+
+# Digging (spec §8 "Digging"): in the quarry, the pick-axe beside the start picked up and readied
+# in the Tool slot, at the sealed chamber's west wall (quarry); then after digging through it,
+# turn after turn until it crumbled: the chamber's lamplight spills into the pit through the
+# rubble, where the dust of the fallen wall rises (quarry-dug).
+[[golden]]
+name = "quarry"
+scenario = "quarry"
+actions = "move:E pickup equip:tool:a move:E*35"
+
+[[golden]]
+name = "quarry-dug"
+scenario = "quarry"
+actions = "move:E pickup equip:tool:a move:E*35 dig:E"

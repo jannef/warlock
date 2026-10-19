@@ -36,6 +36,9 @@ So resting next to a creature walking back and forth behind a door is interrupte
 comes back into earshot. A creature already in view when you start does not stop the rest by
 being there: only by leaving your sight and coming back, or by an attack you notice.
 
+[Digging](digging.md) goes on turn after turn the same way, and stops early for the same
+reasons.
+
 When it ends, the game tells you how long you rested ("You rest for 1 hour.", "You rest until
 dawn."). Resting is how you wait out the night, wait for the light to change, or let your
 wounds heal: hit points come back with time, faster the tougher you are (see
