@@ -55,6 +55,11 @@ Build the engine and framework, not the game. Everything built is production qua
   a rotating one-liner, or opens a small dialogue screen of topics; some mutter to themselves,
   overheard through hearing. Moving into a creature that is not hostile swaps places with it,
   unless it will not make way (§8 "Dialogue", "Displacement")
+- Quests (M28): simple, ADOM-like errands people give through their dialogue topics (data,
+  `data/quests.toml`): kill (creatures of a type, optionally on one level), bring (objects from
+  the pack), reach (a level), and deliver (an item the giver hands over, to someone else); offered,
+  accepted or declined, followed in a quest log (`q`), and rewarded with gold, items, and
+  experience (§8 "Quests")
 - Character creation (M15): every new run chooses a race, a gender, and a class, which set the
   player's starting stats (partly rolled with dice, ADOM-like) and eyes; a random age by race
   and a random birthday give the birth year, whose horoscope sign (12 mythological animals × 5
@@ -100,7 +105,7 @@ regression scene for golden screenshots, replays, and snapshot tests.
 | Darkness chamber | vision types, a UV-only rune, darkvision fade; an amulet seen only by those who see in the dark | M3, M11 |
 | Water garden | still ponds and running rills (flow, glints, foam), pulsing altar with a ring before it | M4, M8, M11 |
 | Effects room | glyph particles, glow, fades, distortion | M4 |
-| Stairs | connection to Level 2 and the arena (down), the courtyard and the overworld (up); an old hermit sits in the nook's lamplit corner and tells of the hall's rooms (topics, §8 "Dialogue") | M2, M9, M10, M28 |
+| Stairs | connection to Level 2 and the arena (down), the courtyard and the overworld (up); an old hermit sits in the nook's lamplit corner and tells of the hall's rooms (topics, §8 "Dialogue"); he wants three of the arena's giant rats killed, then a look three levels down into the Depths, and takes the bard's letter (§8 "Quests") | M2, M9, M10, M28 |
 
 **Courtyard (66×19, outdoor)**: up the stairs nook's `<`, a walled garden under the open sky —
 trees, a ruined wall, a pond, standing stones, flower beds, and a roofed gazebo with a lamp — where
@@ -108,9 +113,10 @@ sunlight, sky light, and shadows turn and stretch with the time of day (§5 "Sun
 moon lights it faintly by night, waxing and waning with the month (§5 "Moonlight"; M12). The
 `courtyard` scenario starts there at 06:30, while the shadows are long. Windfall apples lie under
 a tree, and a candle and a scroll in the gazebo (M11). A gardener paces beside the flower bed by
-the ruined wall (one-liners, grumbling now and then), and a wandering bard walks a round of the
-meadow east of the gazebo, singing (one-liners and topics: the moon, the year 1444, the Great
-Race, the Wildlands; M28).
+the ruined wall (one-liners, grumbling now and then; he asks for three apples), and a wandering
+bard walks a round of the meadow east of the gazebo, singing (one-liners and topics: the moon,
+the year 1444, the Great Race, the Wildlands; he gives a sealed letter to carry down to the old
+hermit; M28, §8 "Quests").
 
 **Safety**: the hand-made showcase (the hub, Level 2, the courtyard) is safe. Its people (the hermit, the gardener, the bard) are peaceful folk by type. Creatures that would hunt the player by type (the hub's kobold, Level 2's kobolds and rats) are placed in the `peaceful` faction by their level (§7 "Factions"): they keep their types, patrols, speeds, footsteps, and looks, and attack no one. Fighting happens in the arena, and in the generated Depths (the real dungeon). Arriving in the arena says "The clash of arms echoes off the stone." (a level's `arrival` line).
 
@@ -720,8 +726,8 @@ rate or animation.
   the binding table, so it is always accurate.
 - **Screens**: the main menu, New run and its character creation steps, pause menu, Settings,
   Controls, help, the inventory, the equipment screen and its choice of what goes in a slot, the
-  character screen, the Skills screen, choosing what to pick up, drop, or throw, the dialogue
-  screen, and the death screen are modal
+  character screen, the Skills screen, the quest log, choosing what to pick up, drop, or throw,
+  the dialogue screen, and the death screen are modal
   screens on one stack. Opening
   a screen puts it on top; Esc or Back closes it and returns to the screen below as it was left.
   While any screen is open it receives every key press, the run (if any) stays visible beneath
@@ -767,10 +773,10 @@ rate or animation.
   "Reset all keys" resets everything.
 - First-phase commands: move, wait, open/close door, ascend/descend, light/douse lantern (`L`),
   pick up (`,` or `g`), drop (`d`), inventory (`i`), equipment (`e`), character (`@`), skills
-  (`S`), rest (`R`), look, fire (`f`), throw (`t`), next target (`Tab`, while aiming), chat
-  (`C`), help, save and quit (`Q`). Free actions (look, help, the inventory, looking at the
-  equipment screen, the character screen, the Skills screen, asking about a topic, menus, vision
-  switch) do not
+  (`S`), quest log (`q`), rest (`R`), look, fire (`f`), throw (`t`), next target (`Tab`, while
+  aiming), chat (`C`), help, save and quit (`Q`). Free actions (look, help, the inventory, looking
+  at the equipment screen, the character screen, the Skills screen, the quest log and abandoning a
+  quest, asking about a topic, menus, vision switch) do not
   advance time.
 - **Objects** (M11) lie in piles on cells, the top first: the map shows the top object's glyph
   (§4.2), and dropped objects go on top. Stepping onto a pile says what lies there: `You see here
@@ -845,6 +851,19 @@ rate or animation.
   ↑↓ choose a skill, whose one-line description shows below the list (a list taller than the
   panel scrolls). Never a benefit's number, a mark, or a chance. Read-only; `S`, Enter, or Esc
   closes it (back to the character screen when opened from there).
+- **Quest log** (`q`; §8 "Quests"): the quests the player has taken up ("Active"), then those
+  they have done ("Done"), by name, each in the order of `data/quests.toml`; offers not yet
+  answered are not there ("You have taken up no quests." when there are none). ↑↓ choose one;
+  below the list it shows what it asks ("Kill 3 giant rats in the Arena."), how far it has got
+  ("2 / 3 killed.", "You carry 1 / 3.", "Not reached yet.", "You no longer carry the sealed
+  letter.", or once its goal is met "Return to the old hermit." / "Take the sealed letter to the
+  old hermit."; "Done." for a done one), and who gave it, in their words (the offer, wrapped, at
+  most six lines). The abandon key (`a`, rebindable) on an active quest asks on the footer
+  ("Abandon Rats in the arena?  Enter abandon   Esc keep"): Enter gives it up (replay text
+  `abandon:rats`; no time passes), anything else keeps it. `q`, Enter, or Esc closes it.
+  The character screen, the inventory, the equipment screen, the Skills screen, and the quest log
+  are the numbered info pages 1 to 5: on one of them, a digit, Tab, or Shift+Tab (PageDown,
+  PageUp) replaces it with another, and the tab line on its bottom border names them.
 - **Death screen** (§8 "Combat"): when the player dies, the death screen opens over the run as it
   ended, in place of any other screen, and the run's save is deleted (permadeath): `Y O U   D I E
   D`, then who killed them ("Killed by a kobold", or "Killed by something you did not see" when
@@ -867,7 +886,9 @@ rate or animation.
   opens the **dialogue screen**: its name as the title, what it said (wrapped), and its topics
   numbered 1 to 9 with a `>` marker on the selected one; a topic's number, or Enter on the
   selected one (the arrows move it), asks about it, which takes no time: the screen closes, the
-  answer is said, and the screen opens again with it, on the topic asked. Esc (or `C`) leaves.
+  answer is said, and the screen opens again with it, on the topic asked (also when nothing is
+  left to ask: a quest handed in to someone without other topics). Esc (or `C`) leaves. Quest
+  topics (§8 "Quests") come first.
   Chatting takes the time of `chat` (§7 "Action costs"); with no creature the player sees there,
   it is refused ("You see no one there to talk to.") and takes none.
 - **Rest** (`R`) asks in the message line: `Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to
@@ -1012,6 +1033,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   level is unchanged) stand in the wide stretches for the water to foam against.
 - **Definitions** (TOML): terrain types, creature types, light presets, vision profiles, glyph
   animations, and effects (glow, heat haze, particle emitters; §4.8). Creature types have a
+  `name` and a `plural` (default the name plus `s`; the deer's is "deer"; quest messages count
+  them), a
   `speed` (100 to 10 000, default 1000, the player's; never shown to the player; §8 "Speed"): the
   giant rat 1200, the cave bat 2000, the kobold 900, the deer 1300; and for hearing (§5)
   `footsteps` (at most 300; default 0, silent) and `hearing` (the faintest loudness heard, 1 to
@@ -1172,6 +1195,26 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   moon, the Great Race, this year, the Wildlands; sings), and the old hermit (a greeting,
   one-liners, and topics: this hall, the dark chamber, the gallery, the water garden, these
   stairs; mutters).
+- **Quests** (`data/quests.toml`, optional; without it nobody gives quests; §8 "Quests"): each
+  `[[quest]]` has a unique `id` (lower-case letters, digits, and underscores), a `name` (the log's
+  title and the topic, at most 32 characters), a `giver` (a creature type with a dialogue, or an
+  npc id with one), a `type` and a `target`: `kill` (a creature type, not the player; `count` 1 to
+  99, default 1; optional `level`, a level id or a dungeon branch id for any of its levels),
+  `bring` (an object type; `count`; optional `to`, someone else with a dialogue who takes it),
+  `reach` (a level id, a branch level such as `depths:3` included; never `repeatable`), or
+  `deliver` (an object type the giver hands over; `to` required, not the giver); a field another
+  type has is a content error. `reward = { gold, items, xp }` (each optional: gold coins, at most
+  9999, which needs the `gold_coin` object; objects as levels place them; experience, at most
+  1 000 000). Texts, one line each of at most 280 characters, neither empty nor padded: `offer`,
+  `accept`, optional `decline` (default "Another time, then."), `reminder` (the giver's), and
+  `done` (said by whoever it is handed in to). Optional `requires` (a quest earlier in the file,
+  done before this one is offered) and `repeatable` (default false). Everyone's topics must fit
+  the dialogue screen's nine: their dialogue's own, one per quest they give or take in, and one
+  more for an offer's accept and decline. Built in: the old hermit's "Rats in the arena" (kill 3
+  giant rats in the arena; 20 gold, 30 XP) and, after it, "Three levels down" (reach the Depths 3;
+  50 gold, a jade amulet, 100 XP), the gardener's "Three apples" (bring 3 apples; 10 gold, 15
+  XP), and the wandering bard's "The bard's letter" (deliver a sealed letter, a new object, to the
+  old hermit; 5 gold, 15 XP).
 - **The weather** (`data/weather.toml`, optional; without it the sky is always clear): exactly 12
   `[[month]]`s in calendar order, each with the chance in percent of `clear`, `overcast`, `rain`,
   and `heavy_rain` (adding up to 100), and a table for each of `overcast`, `rain`, and
@@ -1332,7 +1375,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   hostile or heard a noise to look into, and the post it left; §8 "Creature behavior"; saves
   without it load with every creature calm; format version 7), how far each actor's talk has got
   and the unique character a level made it (§8 "Dialogue"; format version 15; left out while
-  nothing has been said, or none), every actor's stats, scores and
+  nothing has been said, or none), the player's quests and the kills they count (§8 "Quests";
+  format version 16; left out while the player has heard of none and killed nothing a kill quest
+  asks for), every actor's stats, scores and
   potentials (§8 "Stats"; format version 8), the player's character (race, gender, and class,
   the stat the gender raised, birth date, and birth sign; §8 "Character creation"; format
   version 9), what every actor wears and wields (which inventory stack is in which slot, §6
@@ -1545,7 +1590,7 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     player may ask about, and the topic it answers); one with topics opens the dialogue screen
     (§6). Asking (`Action::Ask { dir, topic }`, replay text `ask:E:rooms`) takes no time and gets
     the topic's reply; an unknown topic is "The sage knows nothing about that." `World::topics`
-    is the one place topics come from, so quests (#148) add theirs there.
+    is the one place topics come from: quests ("Quests" below) add theirs there, first.
   - **Muttering**: after each of its actions, a creature whose dialogue has a `mutter`, that goes
     about its routine (its mind calm) within 5 cells of the player (as far as a voice carries), mutters
     with its `chance` (a hash of the run seed, the actor, and the moment: the gameplay stream is
@@ -1554,6 +1599,49 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     name if they see it (`The bard sings: "Over the Wendle and under the moon..."`), else from
     where they place the sound (`You hear a voice to the north: "…"`, or, faint, `You faintly
     hear a voice to the north.`, without the words). Mutters are logged without stopping a rest.
+- **Quests** (`warlock-core/src/content/quest.rs`, the data; `world/quest.rs`, the rules; M28,
+  #148): simple, ADOM-like errands people give through their dialogue topics. No escorts, timers,
+  or branching outcomes.
+  - **Topics** (first among a speaker's, in file order): a quest a giver may offer (what it
+    requires done; new to the player, or done and `repeatable`) is a topic named after it,
+    `quest-ID` (replay text `ask:E:quest-rats`). Asking hears the `offer`; it then waits for an
+    answer, as the topics `accept-ID` ("Accept: Rats in the arena") and `decline-ID` ("Decline:
+    …"), one offer per giver at a time (hearing another withdraws it). Declining says `decline`
+    and forgets the offer. Accepting says `accept` and makes the quest active; a delivery's giver
+    hands the item over ("The wandering bard gives you a sealed letter."; without room in the pack
+    the accept is refused, "You have no room for a sealed letter.", and the offer stands). An
+    active quest stays a topic of its giver, who says the `reminder` until its goal is met; it is
+    also a topic of whoever it is handed in to (the recipient of a delivery or of a bring with
+    `to`) while its goal is met. Asking the one it is handed in to once the goal is met completes
+    it: what it asks for leaves the pack ("You give the gardener 3 apples."; stacks not worn or
+    wielded first), they say `done`, "Quest complete: Three apples.", the reward goes into the
+    pack ("The gardener gives you 10 gold coins.", what has no room lies at the player's feet),
+    and the XP is gained ("You gain 15 experience.", with any levels it earns, §8 "Experience").
+    Topics the speaker does not have now are refused ("… knows nothing about that.") and change
+    nothing. Talk about quests takes no time.
+  - **Goals**: *kill* counts the player's own kills (§8 "Experience": melee, shots, throws; never
+    by others or traps) of the creature type, on its level or any level of its branch if it names
+    one. Kills are tallied per level and creature type for every type some kill quest asks for
+    (saved), so kills made before the quest was taken up count, and a repeat of a repeatable one
+    counts only the kills since it was taken up again. *Bring* counts what the player carries of
+    the object. *Reach* is met once the player has been on the level, before taking the quest
+    up too. *Deliver* is met while the player carries the item: dropping it (or losing it) blocks
+    the quest until they pick it up again (it cannot be handed in without it).
+  - **Progress** the player's action made is said right after it: "Quest updated: 2 / 3 giant
+    rats.", and once the goal is met "Quest updated: 3 / 3 giant rats. Return to the old hermit."
+    (bring: "… apples. Return to the gardener." or "Take them to …"; reach: "Quest updated: you
+    have reached the Depths 3. Return to the old hermit."; a delivery's item picked up again:
+    "Quest updated: take the sealed letter to the old hermit."); a quest whose goal is met as it
+    is taken up says so after the accept. Rewards and the XP gained are the only numbers said.
+  - **Abandoning** (`Action::Abandon(id)`, replay text `abandon:rats`, from the quest log, §6)
+    gives up an active quest: "You abandon the quest: Rats in the arena."; its giver offers it
+    again (a delivered item already handed over stays with the player). Anything else is "You
+    have no such quest." and changes nothing. No time passes.
+  - **State**: per quest the player has heard of, its stage (offered, active, done), how many
+    times it was completed, the kills counted before a repeat, and whether a reach quest's level
+    was reached; and the kill tally. Saved and hashed, left out of the state while empty, so runs
+    without quests hash as before. Presentation reads `PerceptionView::quests()` (the log: name,
+    giver, the offer, objective, status), never ground truth: the player knows their quests.
 - **Displacement** (`world/talk.rs`; M28, #147): the player moving into a creature that is not
   hostile to them (neutral or peaceful) swaps places with it: the player steps onto its cell (the
   step's time and noise) and it onto the player's (its footsteps), its own turn unaffected; "You
@@ -1913,10 +2001,12 @@ cargo xtask golden [--update]                             # compare golden scree
   as the scenario's character, so older replays still load). Actions use a text
   syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
   pickup pickup:ac drop drop:b equip:body:b remove:body fire:12,5 throw:c:12,5 chat:E
-  ask:E:rooms vision:darkvision skip:1h weather:rain effect:fireball@12,5
+  ask:E:rooms ask:E:quest-rats ask:E:accept-rats abandon:rats vision:darkvision skip:1h
+  weather:rain effect:fireball@12,5
   effect:lightning_bolt@3,4>12,4`; `fire:X,Y` shoots at level cell (X, Y),
   `throw:LETTER:X,Y` throws one of inventory stack LETTER there; `chat:DIR` talks to the
-  creature that way, `ask:DIR:TOPIC` asks it about a topic by id; the dev action
+  creature that way, `ask:DIR:TOPIC` asks it about a topic by id (a quest's: `quest-ID`,
+  `accept-ID`, `decline-ID`), `abandon:QUEST` gives up an active quest; the dev action
   `effect:ID@X,Y[>X,Y]` shows spell effect ID (`data/effects.toml`) as the player perceives it, a
   burst around X,Y (around the second cell, flying there from the first) or a bolt from the first
   cell toward the second (cut short by the first opaque cell); it hurts no one, takes no time,
@@ -1946,8 +2036,9 @@ cargo xtask golden [--update]                             # compare golden scree
   `equipment` (the player's slots by letter, `c Body: a leather jerkin (b)`, `-` when empty),
   `stats` (the player's race, gender, and class, `Race Dwarf`, their age, birthday, and
   sign, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`, then their own scores,
-  `Strength 12`), and `skills` (the player's trained skills in skill order, `Stealth 17`) are
-  built from the perception snapshot only;
+  `Strength 12`), `skills` (the player's trained skills in skill order, `Stealth 17`), and
+  `quests` (the quest log, active first: `Rats in the arena (active, from the old hermit): Kill 3
+  giant rats in the Arena. 0 / 3 killed.`) are built from the perception snapshot only;
   `truth` (terrain, objects, and creatures) and `actors` (every actor on the level with its hit
   points and Defence, `hp 8/12 dv 13`, its
   weight, base plus carried, what it carries and of that wears and wields, `equipped main_hand a
@@ -1963,6 +2054,7 @@ cargo xtask golden [--update]                             # compare golden scree
   limit}`, the limit in grams), character
   (`{race, gender, class, raised, age, born: {year, month, day}, sign: {animal, element}}` or
   null), scores (`stats`, by stat id), trained skills (`skills`, by skill id with their values),
+  the quest log (`quests`: `[{id, name, kind, active, completed, giver, objective, status}]`),
   hit points (`hp: {current, max}`), Defence (`defence`, the
   total), how the run ended (`death: {turn, time, place, by}` or null), recent messages,
   and optionally the full world state; the ASCII header line has the turn, the time
@@ -2087,7 +2179,10 @@ Each milestone ships a playable build.
   characters, with rotating one-liners, a greeting, topics on a dialogue screen (`C`), and
   mutters overheard through hearing; a gardener and a wandering bard in the courtyard and an old
   hermit by the hub's stairs. Displacement (#147): swapping places with anyone who is not
-  hostile, unless they will not make way. Quests (#148) follow.
+  hostile, unless they will not make way. Quests (#148): kill, bring, reach, and deliver quests
+  offered through dialogue topics, accepted or declined, followed in a quest log (`q`, info page
+  5), handed in for gold, items, and XP, optionally requiring another or repeatable; the hermit's
+  rats and then the Depths, the gardener's apples, the bard's letter.
 
 ## 13. GitHub workflow
 

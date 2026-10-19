@@ -32,6 +32,9 @@ Chatting takes a few words' time (half a normal action, 3 seconds; see
 
 {{#include generated/dialogue.md}}
 
+Some people have work for you: their quests are topics too, listed first. See
+[Quests](quests.md).
+
 ## Muttering
 
 Now and then, while they go about their business and you are within a few cells, people mutter

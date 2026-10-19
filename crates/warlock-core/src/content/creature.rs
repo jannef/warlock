@@ -76,6 +76,8 @@ pub enum Budge {
 pub(super) struct CreatureSpec {
     pub id: String,
     pub name: String,
+    /// Its name for more than one ("giant rats"); none: the name plus "s".
+    pub plural: Option<String>,
     pub glyph: char,
     pub fg: Rgb,
     #[serde(default = "normal_speed")]
@@ -222,6 +224,7 @@ pub(super) struct Resolved {
 impl CreatureSpec {
     pub(super) fn resolve(self, r: Resolved) -> CreatureDef {
         CreatureDef {
+            plural: self.plural.unwrap_or_else(|| format!("{}s", self.name)),
             id: self.id,
             name: self.name,
             glyph: self.glyph,
@@ -259,6 +262,8 @@ impl CreatureSpec {
 pub struct CreatureDef {
     pub id: String,
     pub name: String,
+    /// Its name for more than one ("giant rats", "deer"): quest messages count them.
+    pub plural: String,
     pub glyph: char,
     pub fg: Rgb,
     /// How quickly it acts ([`NORMAL_SPEED`] is normal; twice that, twice as many actions in the

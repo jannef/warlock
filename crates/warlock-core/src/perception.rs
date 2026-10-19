@@ -599,6 +599,8 @@ pub struct PerceptionView<'a> {
     pub(crate) death: Option<&'a Death>,
     /// The player's experience total.
     pub(crate) experience: u32,
+    /// The player's quests, which they know.
+    pub(crate) quests: &'a crate::world::Quests,
     pub(crate) snapshot: &'a Perception,
 }
 

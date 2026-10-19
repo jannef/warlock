@@ -50,6 +50,9 @@ pub enum Layer {
     /// Not a map: the player's own trained skills, one a line in skill order (`Stealth 17`);
     /// never an untrained skill, a mark, or a benefit.
     Skills,
+    /// Not a map: the player's quest log, one quest a line, active first (`Rats in the arena
+    /// (active, from the old hermit): Kill 3 giant rats in the Arena. 2 / 3 killed.`).
+    Quests,
     /// Ground truth: all terrain, objects, and actors on the level. **Dev-only.**
     Truth,
     /// Not a map: every actor on the level with its weight, what it carries (and of that wears
@@ -59,7 +62,7 @@ pub enum Layer {
 }
 
 impl Layer {
-    const ALL: [Layer; 11] = [
+    const ALL: [Layer; 12] = [
         Layer::View,
         Layer::Fov,
         Layer::Memory,
@@ -69,6 +72,7 @@ impl Layer {
         Layer::Equipment,
         Layer::Stats,
         Layer::Skills,
+        Layer::Quests,
         Layer::Truth,
         Layer::Actors,
     ];
@@ -85,6 +89,7 @@ impl Layer {
             Layer::Equipment => "equipment",
             Layer::Stats => "stats",
             Layer::Skills => "skills",
+            Layer::Quests => "quests",
             Layer::Truth => "truth",
             Layer::Actors => "actors",
         }
@@ -106,7 +111,7 @@ impl FromStr for Layer {
             .ok_or_else(|| {
                 format!(
                     "unknown layer `{s}` (expected view, fov, memory, light, sound, inventory, \
-                     equipment, stats, skills, truth, actors)"
+                     equipment, stats, skills, quests, truth, actors)"
                 )
             })
     }
@@ -126,6 +131,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
         Layer::Equipment => equipment_rows(&world.perception()),
         Layer::Stats => stat_rows(&world.perception()),
         Layer::Skills => skill_rows(&world.perception()),
+        Layer::Quests => quest_rows(&world.perception()),
         _ => {
             let view = world.perception();
             rows(view.width(), view.height(), |p| {
@@ -168,6 +174,7 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
         | Layer::Equipment
         | Layer::Stats
         | Layer::Skills
+        | Layer::Quests
         | Layer::Truth
         | Layer::Actors => {
             unreachable!("not a map built from perception")
@@ -301,6 +308,25 @@ fn skill_rows(view: &PerceptionView<'_>) -> Vec<String> {
     let content = view.content();
     (view.own_skills().iter())
         .map(|s| format!("{} {}", content.skill(s.skill).name, s.value))
+        .collect()
+}
+
+/// The player's quest log, one quest a line: its name, whether it is active or done, its giver,
+/// what it asks, and how far it has got.
+fn quest_rows(view: &PerceptionView<'_>) -> Vec<String> {
+    (view.quests().iter())
+        .map(|q| {
+            let stage = if q.active { "active" } else { "done" };
+            let status = if q.active {
+                format!(" {}", q.status)
+            } else {
+                String::new()
+            };
+            format!(
+                "{} ({stage}, from {}): {}{status}",
+                q.name, q.giver, q.objective
+            )
+        })
         .collect()
 }
 
@@ -521,6 +547,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         })),
         "stats": view.own_scores(),
         "skills": skills_json(&view),
+        "quests": quests_json(&view),
         "hp": { "current": hp, "max": max_hp },
         "experience": view.own_experience(),
         "defence": view.own_defence(),
@@ -541,6 +568,25 @@ fn skills_json(view: &PerceptionView<'_>) -> Value {
         .map(|s| (content.skill(s.skill).id.clone(), json!(s.value)))
         .collect();
     Value::Object(map)
+}
+
+/// The player's quest log: `[{"id", "name", "kind", "active", "completed", "giver",
+/// "objective", "status"}]`, active quests first.
+fn quests_json(view: &PerceptionView<'_>) -> Value {
+    (view.quests().iter())
+        .map(|q| {
+            json!({
+                "id": q.id,
+                "name": q.name,
+                "kind": q.kind.id(),
+                "active": q.active,
+                "completed": q.completed,
+                "giver": q.giver,
+                "objective": q.objective,
+                "status": q.status,
+            })
+        })
+        .collect()
 }
 
 /// The clock in seconds since the epoch, and as a calendar date and time of day.

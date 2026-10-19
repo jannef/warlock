@@ -38,3 +38,4 @@
 | Silver ring | `=` | ring | silver | 10 g | no | Left ring or right ring |
 | Bone amulet | `"` | amulet | bone | 60 g | no | Neck |
 | Jade amulet | `"` | amulet | stone | 80 g | no | Neck |
+| Sealed letter | `?` | scroll | paper | 20 g | no | - |

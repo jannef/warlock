@@ -77,7 +77,8 @@ struct DumpArgs {
     /// sound (heard sounds over the view: f footsteps, o/c a door opening/closing; upper case
     /// when loud), inventory (what the player carries and weighs), equipment (what they wear
     /// and wield), stats (the player's race, gender, class, and scores), skills (the player's
-    /// trained skills and their values), truth (dev-only ground truth), actors (dev-only: every
+    /// trained skills and their values), quests (the player's quest log: what each asks and how
+    /// far it has got), truth (dev-only ground truth), actors (dev-only: every
     /// actor on the level with its weight, what it carries, its stats as score/potential, and
     /// its trained skills with their marks).
     #[arg(long, default_value = "view")]

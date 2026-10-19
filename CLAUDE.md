@@ -56,7 +56,7 @@ Game flags (`cargo run -p warlock -- --help`):
   `new-run` on the main menu (e.g. `--scale 1 --screen new-run --capture target/menu.png`), and
   character creation's `race`, `gender`, `class`, and `summary` over New run and the steps
   before them (each on its preselection: the showcase's character);
-  `pause`, `help`, `inventory`, `equipment`, `character`, `pick-up` (the pile on the player's cell), and `drop` over a run
+  `pause`, `help`, `inventory`, `equipment`, `character`, `skills`, `quests`, `pick-up` (the pile on the player's cell), and `drop` over a run
   (e.g. after a `--replay` that walks onto a pile), `dialogue` over a run whose last action was
   talk with topics (a `--replay` ending in `chat:SE` or `ask:SE:rooms` next to the hub's hermit),
   `equip-item` (the choice for the first slot, Head) over the equipment screen; `settings` and `controls` over the main menu, or over the pause
@@ -81,20 +81,22 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 | Verify a replay | `... replay --verify runs/x.json` (exit 1 and first diverging step on mismatch) |
 | Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor; also local areas, `--level local:49,23`) |
 
-Dump layers beyond the map ones: `inventory`, `equipment`, `stats`, and `skills` (the player's
-trained skills, `Stealth 17`) from perception; `actors` (dev-only: every actor's hit points,
-load, stats, and skills with their marks).
+Dump layers beyond the map ones: `inventory`, `equipment`, `stats`, `skills` (the player's
+trained skills, `Stealth 17`), and `quests` (the quest log, active first) from perception;
+`actors` (dev-only: every actor's hit points, load, stats, and skills with their marks).
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] equip:SLOT:LETTER remove:SLOT fire:X,Y throw:LETTER:X,Y
-chat:DIR ask:DIR:TOPIC rest:GOAL vision:PROFILE skip:DURATION weather:KIND effect:ID@X,Y[>X,Y]`
+chat:DIR ask:DIR:TOPIC abandon:QUEST rest:GOAL vision:PROFILE skip:DURATION weather:KIND effect:ID@X,Y[>X,Y]`
 (`DIR` = N
 NE E SE S SW W NW; `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
 player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `SLOT` = a slot id in
 `assets/data/slots.toml`, e.g. `equip:body:b` (put inventory stack `b` on), `remove:body`;
 `fire:X,Y` shoots the readied missile weapon at level cell (X, Y), `throw:c:X,Y` throws one of
 inventory stack `c` there; `chat:E` talks to the creature east of the player, `ask:E:rooms` asks
-it about topic `rooms` (an id in `assets/data/dialogue.toml`); `PROFILE` = an id in
+it about topic `rooms` (an id in `assets/data/dialogue.toml`; quest topics are `quest-ID`,
+`accept-ID`, `decline-ID`, ids in `assets/data/quests.toml`), `abandon:rats` gives up an active
+quest; `PROFILE` = an id in
 `assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are
 `30s`, `10m`, `2h`; `skip` is the dev hour skip; `weather` is the dev weather override, `KIND` =
 `clear`, `overcast`, `rain`, `heavy`, for three hours of game time; `effect` is the dev spell
@@ -165,11 +167,12 @@ it): gate systems that read it with `run_if(resource_exists::<Game>)`; content i
 
 Modal screens (spec §6) — main menu, new run and character creation (race, gender, class,
 summary), pause, settings, controls, the `?` help, the inventory (`i`), the equipment screen
-(`e`) and its choice of what goes in a slot, the character screen (`@`), choosing what to
+(`e`) and its choice of what goes in a slot, the character screen (`@`), the Skills screen
+(`S`), the quest log (`q`), choosing what to
 pick up (`,`/`g` on several stacks) or drop (`d`), the dialogue screen (opened by
 `screens::converse` after an action this frame whose outcome is talk with topics,
 `Event::Talked`; asking is `ScreenAction::Act(Action::Ask)`, which closes it, and the answer
-reopens it on the topic asked), and the death screen (opened by
+reopens it on the topic asked, also when no topics are left), and the death screen (opened by
 `screens::on_death` when `World::death` is set; Enter/Esc is `MenuChoice::LeaveRun`, back to the
 main menu without saving; no `--screen`: capture a dead replay instead) — are one
 screen stack (`ui/screens.rs`, the `ScreenStack` resource); add a screen there, never a second way
@@ -198,7 +201,7 @@ to open, read keys for, or draw one:
 - **Draw**: `ui::draw` is the one system that writes the UI console: when anything it shows
   changed, it clears the console, draws the gameplay UI if a run exists, then the top screen.
 - **Info pages** (`ui/info_tabs.rs`): the screens about the player (Character, Inventory,
-  Equipment, Skills) are an ordered group, `PAGES`. While one is the top screen, the page keys replace
+  Equipment, Skills, Quests) are an ordered group, `PAGES`. While one is the top screen, the page keys replace
   it (`ScreenAction::Replace` -> `Screens::replace`: the stack depth is unchanged, so Esc still
   returns to where the first was opened) and each draws its tab line on the bottom border with
   `info_tabs::draw_tabs`. **A new info screen joins the group**: one entry in `PAGES` (its
@@ -222,7 +225,10 @@ to open, read keys for, or draw one:
   and sign (`birth_parts`/`fit_parts`, shared with the summary), the player's scores, hit points
   and Defence total, weight and burden thresholds; 72 wide like the summary),
   `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per
-  step with a Random row rolled from the seed, `SummaryScreen`, `Draft`), `ui/dialogue_screen.rs`
+  step with a Random row rolled from the seed, `SummaryScreen`, `Draft`), `ui/quest_screen.rs`
+  (the quest log from `PerceptionView::quests`: active then done, the selected one's objective,
+  status, and the giver's offer; the `AbandonQuest` key, a `Context::Pages` command, asks on the
+  footer and Enter acts `Action::Abandon`), `ui/dialogue_screen.rs`
   (the speaker, their last line, numbered topics; built from the last `Event::Talked`, so it never
   shows more than the player was told), `ui/death_screen.rs`
   (who killed the player, where, when, after how many turns).
@@ -270,6 +276,22 @@ mind is calm, ready for shopkeepers, #145; it cannot move; or it is two sizes or
 sizes are listed smallest first). What an actor is called in messages comes from
 `World::called` ("the gardener"): named shopkeepers go there. Creatures that talk and fight no one
 never stop a rest by coming into view (`World::disturbs_rest`).
+
+Quests (spec §8 "Quests", #148): `content/quest.rs` loads `data/quests.toml` after levels and
+dungeons (`QuestDef`: `giver` a `DialogueId`, `Goal::{Kill, Bring, Reach, Deliver}`, `Reward`,
+`QuestTexts`, `requires`, `repeatable`; validation including everyone's topic budget of nine;
+`Content::speaker_name` names a giver without an actor). `world/quest.rs` is the rules: quest
+topics come first in `World::topics` (`quest_topics`: `quest-ID`, `accept-ID`, `decline-ID`) and
+are answered in `World::ask` (`ask_quest`, `Spent::NoTime` when state changes); `Quests` in
+`WorldState` (records by quest id: stage, completed, counted, reached; the kill tally by level
+and creature id, only for types a kill quest asks for), left out of the JSON while empty so runs
+without quests hash as before (`FORMAT_VERSION` 16). Hooks: `fight.rs::hurt` tallies the
+player's kills (`tally_kill`, beside `earn_kill`), `travel` marks reach quests (`reach`), and
+`World::apply` snapshots active quests' `progress` before the player acts and says what rose
+after (`quest_progress`/`quest_news`), so pick-ups, kills, and arrivals all report through one
+place. `Action::Abandon` (`abandon:ID`). Presentation reads `PerceptionView::quests()`
+(`QuestView` strings, shared by the log and the `quests` dump layer). Creature types have a
+`plural` for the messages ("3 / 3 giant rats").
 
 Experience (spec §8 "Experience", M21): `content/experience.rs` holds the rules from
 `data/experience.toml` (level curve, `hp_level`, the WoW-style `kill_xp` scaling with its zero

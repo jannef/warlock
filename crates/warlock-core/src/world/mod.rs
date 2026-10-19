@@ -56,6 +56,7 @@ mod fight;
 mod hash;
 mod level;
 mod path;
+mod quest;
 mod schedule;
 mod shoot;
 mod spell;
@@ -66,6 +67,7 @@ pub use actor::{Actor, ActorId, ActorKind, Mind, Patrol};
 pub use fight::Death;
 pub(crate) use hash::fnv1a;
 pub use level::{Fire, LevelState};
+pub use quest::{QuestRecord, QuestView, Quests, Stage, progress};
 pub use talk::{Conversation, Talk, TopicView};
 
 use crate::action::{Action, Event, Letters, MAX_REST, MissileEnd, Outcome, Rest, letter};
@@ -155,6 +157,9 @@ pub struct WorldState {
     /// The player's experience total (spec §8 "Experience"); their level follows from it.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub(crate) experience: u32,
+    /// The player's quests and the kills they count (spec §8 "Quests").
+    #[serde(default, skip_serializing_if = "Quests::is_empty")]
+    pub(crate) quests: Quests,
 }
 
 fn is_zero(n: &u32) -> bool {
@@ -360,6 +365,7 @@ impl World {
             weather_override: None,
             death: None,
             experience: 0,
+            quests: Quests::default(),
         };
         let mut player = Actor {
             id: ActorId(0),
@@ -408,6 +414,11 @@ impl World {
             character
                 .check(&content)
                 .map_err(|m| WorldError::InconsistentState(format!("character: {m}")))?;
+        }
+        if let Some(id) = state.quests.unknown_to(&content) {
+            return Err(WorldError::InconsistentState(format!(
+                "the quests know `{id}`, which this content does not have"
+            )));
         }
         if let Some(level) = state.levels.values().find(|l| !l.ids_valid_for(&content)) {
             return Err(WorldError::InconsistentState(format!(
@@ -465,6 +476,12 @@ impl World {
         self.state.seed
     }
 
+    /// The player's quests and the kills they count (spec §8 "Quests"). For dev tools; the
+    /// player's quest log reads [`PerceptionView::quests`].
+    pub fn quests(&self) -> &Quests {
+        &self.state.quests
+    }
+
     /// The player's character, if the run has one (spec §8 "Character creation").
     pub fn character(&self) -> Option<&Character> {
         self.state.character.as_ref()
@@ -520,6 +537,7 @@ impl World {
             time: self.state.time,
             death: self.state.death.as_ref(),
             experience: self.state.experience,
+            quests: &self.state.quests,
             snapshot: &self.perception,
         }
     }
@@ -565,8 +583,10 @@ impl World {
         let mut events = Vec::new();
         let load = self.load_of(self.state.player);
         let (burden, slowed) = (load.burden(), load.penalty() != Burden::Unburdened);
+        let quests = self.quest_progress();
         let spent = self.player_acts(action, &mut events);
         self.burden_news(burden);
+        self.quest_news(&quests);
         // Acting (not waiting) under a load that slows the player trains balance.
         let acted = matches!(spent, Spent::Turn(_)) && !matches!(action, Action::Wait);
         if acted && slowed && self.trains(Use::Burdened) {
@@ -1002,6 +1022,7 @@ impl World {
             Action::Rest(goal) => return self.start_rest(*goal),
             Action::Chat(dir) => return self.chat(*dir, events),
             Action::Ask { dir, topic } => return self.ask(*dir, topic, events),
+            Action::Abandon(quest) => return self.abandon(quest),
             Action::SetVision(id) => return self.set_vision(id),
             Action::SetWeather(weather) => {
                 let over = weather::Override::new(*weather, self.state.time);
@@ -1445,6 +1466,7 @@ impl World {
         }
         self.state.current_level = to.to_string();
         self.state.overworld_step = None;
+        self.reach(to);
         // Sounds remembered on the level left say nothing about this one.
         self.state.recent_sounds.clear();
         if let Some(line) = self.content.level(to).and_then(|t| t.arrival.clone()) {
@@ -1589,6 +1611,8 @@ mod moon_tests;
 mod object_tests;
 #[cfg(test)]
 mod overworld_tests;
+#[cfg(test)]
+mod quest_tests;
 #[cfg(test)]
 mod shoot_tests;
 #[cfg(test)]

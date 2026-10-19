@@ -36,7 +36,9 @@ const MAGIC: &str = "WARLOCK-SAVE";
 ///     training random stream (`WorldState::training`).
 /// 15: NPCs and dialogue: actors keep how far their talk has got (`Actor::talk`: lines said and
 ///     muttered, met) and the unique character a level made them (`Actor::npc`).
-pub const FORMAT_VERSION: u32 = 15;
+/// 16: quests: the player's quests (stage, completions, counted kills, reached) and the kills
+///     they count, by level and creature type (`WorldState::quests`).
+pub const FORMAT_VERSION: u32 = 16;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 

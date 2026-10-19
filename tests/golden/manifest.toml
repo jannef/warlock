@@ -189,6 +189,20 @@ scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:SE*3 chat:SE ask:SE:rooms"
 screen = "dialogue"
 
+# Quests (#148): the old hermit's offer on the dialogue screen (Accept and Decline first), then the
+# quest log (info page 5) once it is taken up. (Reference: #166.)
+[[golden]]
+name = "quest-offer"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:SE*3 chat:SE ask:SE:quest-rats"
+screen = "dialogue"
+
+[[golden]]
+name = "quest-log"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:SE*3 ask:SE:quest-rats ask:SE:accept-rats"
+screen = "quests"
+
 # Character creation (#108, #111, #118), over New run on the main menu (no run; the replay goes
 # unused): the race step with the showcase's character's race preselected, and the summary of
 # that character (race, gender, and class each preselected), with its age, birthday, and sign

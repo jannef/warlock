@@ -59,11 +59,16 @@ pub enum Action {
     /// one that has topics opens the dialogue screen. Takes the time of `chat`; refused (no
     /// time) when the player sees no one there.
     Chat(Dir),
-    /// Ask the creature in a direction about one of its topics, by id. Takes no time.
+    /// Ask the creature in a direction about one of its topics, by id. Takes no time. Quests
+    /// (spec §8 "Quests") are asked about with topics of their own: `quest-ID` (hear the offer,
+    /// be reminded, or hand it in), `accept-ID`, and `decline-ID`.
     Ask {
         dir: Dir,
         topic: String,
     },
+    /// Give up an active quest, by its id in `data/quests.toml` (from the quest log): its giver
+    /// offers it again. Takes no time.
+    Abandon(String),
     /// Dev command: switch the player's vision profile (an id in `data/vision.toml`). Takes no
     /// game time, but changes state and perception, so replays record it like any action.
     SetVision(String),
@@ -351,6 +356,7 @@ impl fmt::Display for Action {
             Action::Rest(Rest::Dusk) => f.write_str("rest:dusk"),
             Action::Chat(d) => write!(f, "chat:{d}"),
             Action::Ask { dir, topic } => write!(f, "ask:{dir}:{topic}"),
+            Action::Abandon(quest) => write!(f, "abandon:{quest}"),
             Action::SetVision(id) => write!(f, "vision:{id}"),
             Action::SkipTime(d) => write!(f, "skip:{d}"),
             Action::SetWeather(w) => write!(f, "weather:{}", w.id()),
@@ -399,6 +405,12 @@ impl FromStr for Action {
                     topic: topic.to_string(),
                 })
             }
+            "abandon" => match arg {
+                Some(id) if !id.is_empty() && !id.contains(':') => {
+                    Ok(Action::Abandon(id.to_string()))
+                }
+                _ => Err("`abandon` needs a quest, e.g. `abandon:rats`".into()),
+            },
             "wait" => bare(Action::Wait),
             "ascend" => bare(Action::Ascend),
             "descend" => bare(Action::Descend),
@@ -506,7 +518,7 @@ impl FromStr for Action {
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
                  descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
                  equip:SLOT:LETTER, remove:SLOT, fire:X,Y, throw:LETTER:X,Y, chat:DIR, \
-                 ask:DIR:TOPIC, vision:ID, skip:DURATION, weather:clear|overcast|rain|heavy, \
+                 ask:DIR:TOPIC, abandon:QUEST, vision:ID, skip:DURATION, weather:clear|overcast|rain|heavy, \
                  effect:ID@X,Y[>X,Y])"
             )),
         }
@@ -614,6 +626,11 @@ mod tests {
                 dir: Dir::NW,
                 topic: "the_rooms".into(),
             },
+            Action::Ask {
+                dir: Dir::S,
+                topic: "accept-rats".into(),
+            },
+            Action::Abandon("rats".into()),
         ];
         all.extend(Weather::ALL.map(Action::SetWeather));
         for d in Dir::ALL {
@@ -796,6 +813,9 @@ mod tests {
             "ask:E:",
             "ask:up:rooms",
             "ask:E:a:b",
+            "abandon",
+            "abandon:",
+            "abandon:a:b",
         ] {
             assert!(parse_actions(bad).is_err(), "{bad}");
         }

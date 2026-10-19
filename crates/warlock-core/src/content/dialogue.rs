@@ -207,12 +207,15 @@ pub(super) fn parse(
 }
 
 /// Whether `id` is a topic or npc id: lower-case letters, digits, and underscores.
-fn is_id(id: &str) -> bool {
+pub(super) fn is_id(id: &str) -> bool {
     !id.is_empty() && (id.chars()).all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_')
 }
 
 /// Every line is said as it is written: not empty, one line, at most `max` characters.
-fn check_lines<'a>(lines: impl IntoIterator<Item = &'a String>, max: usize) -> Result<(), String> {
+pub(super) fn check_lines<'a>(
+    lines: impl IntoIterator<Item = &'a String>,
+    max: usize,
+) -> Result<(), String> {
     for line in lines {
         if line.trim().is_empty() || line.trim() != line {
             return Err(format!("`{line}`: lines are not empty nor padded"));

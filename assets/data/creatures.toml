@@ -1,5 +1,6 @@
 # Creature types. The player is the creature with id "player".
-# Fields: id, name, glyph, fg, speed (how quickly it acts: 1000 is normal and the default, 2000
+# Fields: id, name (without an article: "giant rat"), plural (its name for more than one, for
+# quest messages; default the name plus "s"), glyph, fg, speed (how quickly it acts: 1000 is normal and the default, 2000
 # twice as many actions in the same game time; 100 to 10000; never shown to the player), weight
 # (the creature's own weight in grams, required; what it carries adds to it), size (a size in
 # sizes.toml, default "medium": how much it can carry, 1.5 kg × (2 × Strength + Toughness) scaled
@@ -139,6 +140,7 @@ id = "deer"
 level = 1
 xp = 2
 name = "deer"
+plural = "deer"
 glyph = "d"
 fg = "#c89a64"
 speed = 1300

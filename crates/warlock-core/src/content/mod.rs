@@ -22,6 +22,7 @@ mod material;
 mod object;
 mod overworld;
 mod particles;
+mod quest;
 mod race;
 mod scenario;
 mod size;
@@ -62,6 +63,10 @@ pub use material::{MaterialDef, MaterialId};
 pub use object::{MAX_BONUS, MAX_PLACED, ObjectDef, ObjectId, article};
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use particles::{ParticleEmitter, ParticleTrigger};
+pub use quest::{
+    DEFAULT_DECLINE, GOLD, Goal, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, QuestDef, QuestId, QuestKind,
+    QuestTexts, Reward,
+};
 pub use race::{RaceDef, Races};
 pub use scenario::ScenarioDef;
 pub use size::{CARRY, MEDIUM, SizeDef};
@@ -221,8 +226,8 @@ struct LegendFile {
 /// `data/calendar.toml`, `data/sky.toml`, `data/materials.toml`, `data/objects.toml`,
 /// `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
 /// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, `data/horoscope.toml`,
-/// `data/effects.toml`, and `data/dialogue.toml` are optional (without effects, spell effects are
-/// not drawn). Without vision
+/// `data/effects.toml`, `data/dialogue.toml`, and `data/quests.toml` are optional (without
+/// effects, spell effects are not drawn). Without vision
 /// profiles, a single `normal` profile that needs no light is used, so content without lighting
 /// stays fully visible; without sizes, everything is medium; without factions, everyone is neutral; without a calendar, months are numbered;
 /// without a sky file there are no moons; without an objects file there are no objects; without a
@@ -230,7 +235,7 @@ struct LegendFile {
 /// without a slots file nothing can be worn or wielded; without races or classes there is no
 /// character to choose, and scenarios give the player's eyes and stats themselves; without
 /// skills nobody is trained in anything; without a horoscope, characters are born under no sign;
-/// without dialogue, nobody talks.
+/// without dialogue, nobody talks; without quests, nobody asks anything of the player.
 #[derive(Debug)]
 pub struct Content {
     terrain: Vec<TerrainDef>,
@@ -269,6 +274,8 @@ pub struct Content {
     effects: Vec<EffectDef>,
     /// What creatures say (`data/dialogue.toml`), in file order.
     dialogues: Vec<Dialogue>,
+    /// What people ask of the player (`data/quests.toml`), in file order.
+    quests: Vec<QuestDef>,
 }
 
 impl Content {
@@ -309,6 +316,7 @@ impl Content {
             horoscope: None,
             effects: Vec::new(),
             dialogues: Vec::new(),
+            quests: Vec::new(),
         };
         let path = "data/calendar.toml";
         if let Some(text) = files.get_optional(path) {
@@ -390,6 +398,10 @@ impl Content {
             content.vaults.push(vault);
         }
         content.load_dungeons(files)?;
+        let path = "data/quests.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.quests = quest::parse(path, text, &content)?;
+        }
         content.validate()?;
         Ok(content)
     }

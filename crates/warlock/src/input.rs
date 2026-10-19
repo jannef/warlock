@@ -49,6 +49,8 @@ pub enum KeyCommand {
     Character,
     /// Show the player's trained skills and their values (no time passes).
     Skills,
+    /// Show the player's quests, active and done (no time passes).
+    Quests,
     /// Ask how long to rest (an hour, until dawn, until dusk).
     Rest,
     /// Move a cursor over the map to read what is there (no time passes).
@@ -84,6 +86,8 @@ pub enum KeyCommand {
     NextPage,
     /// On an info screen: the previous page.
     PrevPage,
+    /// On the quest log: give up the selected quest (after asking).
+    AbandonQuest,
 }
 
 /// Where a command is read. Keys must be unique within a context, not across contexts, so a key
@@ -99,7 +103,10 @@ pub enum Context {
 impl KeyCommand {
     pub fn context(self) -> Context {
         match self {
-            KeyCommand::Page(_) | KeyCommand::NextPage | KeyCommand::PrevPage => Context::Pages,
+            KeyCommand::Page(_)
+            | KeyCommand::NextPage
+            | KeyCommand::PrevPage
+            | KeyCommand::AbandonQuest => Context::Pages,
             _ => Context::Play,
         }
     }
@@ -122,6 +129,7 @@ impl KeyCommand {
             KeyCommand::Equipment => "Equipment",
             KeyCommand::Character => "Character",
             KeyCommand::Skills => "Skills",
+            KeyCommand::Quests => "Quest log",
             KeyCommand::Rest => "Rest",
             KeyCommand::Look => "Look around",
             KeyCommand::Fire => "Fire missile weapon",
@@ -141,6 +149,7 @@ impl KeyCommand {
             KeyCommand::Page(_) => "Info page",
             KeyCommand::NextPage => "Next info page (Shift: previous)",
             KeyCommand::PrevPage => "Previous info page",
+            KeyCommand::AbandonQuest => "Abandon quest (quest log)",
         }
     }
 }
@@ -234,6 +243,7 @@ impl Default for Bindings {
             (ch("e"), Equipment),
             (ch("@"), Character),
             (ch("S"), Skills),
+            (ch("q"), Quests),
             (ch("R"), Rest),
             (ch("x"), Look),
             (ch("f"), Fire),
@@ -250,6 +260,7 @@ impl Default for Bindings {
         table.0.push((Code(KeyCode::Tab), NextPage));
         table.0.push((Code(KeyCode::PageDown), NextPage));
         table.0.push((Code(KeyCode::PageUp), PrevPage));
+        table.0.push((ch("a"), AbandonQuest));
         if cfg!(debug_assertions) {
             table.add_dev_keys();
         }
@@ -575,6 +586,10 @@ impl Gameplay<'_> {
                 open = Some(ScreenName::Skills);
                 InputMode::Normal
             }
+            (InputMode::Normal, KeyCommand::Quests) => {
+                open = Some(ScreenName::Quests);
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::CycleVision) => {
                 let view = game.world.perception();
                 let next = next_vision(view.content().vision_profiles(), &view.vision().id);
@@ -634,7 +649,10 @@ impl Gameplay<'_> {
             // Info screen keys: `lookup` never finds them in play.
             (
                 InputMode::Normal,
-                KeyCommand::Page(_) | KeyCommand::NextPage | KeyCommand::PrevPage,
+                KeyCommand::Page(_)
+                | KeyCommand::NextPage
+                | KeyCommand::PrevPage
+                | KeyCommand::AbandonQuest,
             ) => InputMode::Normal,
         };
         if *self.mode != next {

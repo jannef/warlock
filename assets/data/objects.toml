@@ -493,3 +493,12 @@ fg = "#68c090"
 material = "stone"
 weight = 80
 slot = "neck"
+
+# Quest items (data/quests.toml): given by one person to carry to another.
+[[object]]
+id = "sealed_letter"
+name = "sealed letter"
+glyph = "?"
+fg = "#e0d2a8"
+material = "paper"
+weight = 20
