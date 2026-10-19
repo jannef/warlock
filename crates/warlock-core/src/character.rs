@@ -33,6 +33,11 @@
 //!   `character/weapon-skills/<race>,<gender>,<class>`, in this order: the race's (in skill
 //!   order), the class's, the pick of the choice (one draw), then the chosen set's; so the
 //!   stat rolls above never move.
+//! - **Fighting styles** (spec §8 "Fighting styles"): the class's starting ranks in styles, and
+//!   one set of its `style_choice` if it has one, from yet another stream,
+//!   `character/styles/<race>,<gender>,<class>`: the class's (in skill order), the pick of the
+//!   choice, then the chosen set's; so neither the stats nor the weapon skills move. Styles
+//!   raise the styles they default to, like weapon skills.
 //!
 //! Everything follows from the content, the spec, the run seed, and the start date, so a run
 //! (and its replay) is reproduced by its scenario, seed, and character.
@@ -290,11 +295,16 @@ impl CharacterSpec {
         let mut ranks = Vec::new();
         weapon_skills::roll_ranks(&race.weapon_skills, &mut rng, &mut ranks);
         weapon_skills::roll_ranks(&class.weapon_skills, &mut rng, &mut ranks);
-        let choice = &class.weapon_skill_choice;
-        if !choice.is_empty() {
-            let picked = &choice[rng.index(choice.len())];
-            weapon_skills::roll_ranks(picked, &mut rng, &mut ranks);
-        }
+        let choose = |rng: &mut Rng, choice: &[weapon_skills::RankDice], ranks: &mut Vec<_>| {
+            if !choice.is_empty() {
+                let picked = &choice[rng.index(choice.len())];
+                weapon_skills::roll_ranks(picked, rng, ranks);
+            }
+        };
+        choose(&mut rng, &class.weapon_skill_choice, &mut ranks);
+        let mut rng = Rng::stream(seed, &format!("character/styles/{self}"));
+        weapon_skills::roll_ranks(&class.styles, &mut rng, &mut ranks);
+        choose(&mut rng, &class.style_choice, &mut ranks);
         let ranks = ranks
             .into_iter()
             .map(|(id, rank)| (id, rank.clamp(0, i32::from(crate::content::MAX_RANK)) as u8));

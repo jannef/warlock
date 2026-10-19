@@ -185,9 +185,10 @@ time; press `S` or `Esc` to close it.
 
 ## Info pages
 
-The character screen, the inventory, the equipment screen, and the skills screen are numbered pages of one set,
-shown on the bottom edge of each as `1 Character · 2 Inventory · 3 Equipment · 4 Skills`, the one you are on
-highlighted. While one of them is open, `1` to `9` switch to the page with that number (the row
+The character screen, the inventory, the equipment screen, the skills screen, the quest log, and
+the weapon skills screen are numbered pages of one set, shown on the bottom edge of each as
+`1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Quests · 6 Weapon skills` (only the
+numbers of the others where that does not fit), the one you are on highlighted. While one of them is open, `1` to `9` switch to the page with that number (the row
 of number keys above the letters; the numpad still moves), and `Tab` / `Shift`+`Tab` go to the
 next or previous page, wrapping around. The page replaces the one you were on, so `Esc` closes it
 and takes you back to where you opened the first one, as if you had only ever opened that one.

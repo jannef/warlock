@@ -1,18 +1,23 @@
 //! The weapon skills screen (spec §6; `W`): the player's weapon skills (spec §8 "Weapon
-//! skills"), ADOM-like: by section (melee, missile and thrown, shields), each with its rank, 0 to
-//! 10, and a faint bar of their marks toward the next rank. Never what a rank gives: perception
-//! has none of it, and the wiki documents the rules.
+//! skills") and fighting styles (spec §8 "Fighting styles"), ADOM-like: by section (melee,
+//! missile and thrown, shields, fighting styles), each with its rank, 0 to 10, and a faint bar of
+//! their marks toward the next rank; the styles the player fights in now are marked. Never what a
+//! rank gives: perception has none of it, and the wiki documents the rules.
 //!
-//! Read-only: Esc, Enter, or its own key closes it. It is read from the perception snapshot when
-//! it opens; no game time passes while it is open, so it cannot go stale.
+//! Two columns where the console is wide enough (the weapons on the left, shields and styles on
+//! the right), else one. In a console too short for every row the gaps and margins give way,
+//! then the list scrolls (↑↓). Read-only: Esc, Enter, or its own key closes it. It is read from
+//! the perception snapshot when it opens; no game time passes while it is open, so it cannot go
+//! stale.
 
 use super::menu::{Nav, Panel, Press};
 use super::screens::ScreenAction;
-use super::{TEXT, TEXT_DIM};
+use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use warlock_core::color::Rgb;
-use warlock_core::content::{Section, WeaponSkillTable};
+use warlock_core::content::{Section, WeaponSkillId, WeaponSkillTable};
 use warlock_core::perception::PerceptionView;
 use warlock_core::weapon_skills::WeaponSkills;
 
@@ -25,23 +30,32 @@ pub const BAR_LEFT: char = '─';
 /// purpose: it is a hint of progress, not a number).
 const BAR_DONE_FG: Rgb = Rgb::new(0x9a, 0x80, 0x48);
 const BAR_LEFT_FG: Rgb = Rgb::new(0x3c, 0x3a, 0x40);
+/// The mark of a fighting style in use, before its name.
+pub const IN_USE: char = '•';
 
-/// Width of the panel.
-const WIDTH: i32 = 46;
 /// Width of the name column.
 const NAME_W: i32 = 24;
+/// Width of a column of skills: indent, name, rank, bar.
+const COLUMN_W: i32 = 2 + NAME_W + 4 + BAR as i32;
+/// Cells between the two columns.
+const GUTTER: i32 = 4;
+/// Width of the panel with one column of skills, and with two.
+const WIDTH: i32 = COLUMN_W + 6;
+const WIDTH_TWO: i32 = 2 * COLUMN_W + GUTTER + 4;
 
 /// A row of the screen.
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum Row {
-    /// A section's heading: `Melee`.
-    Section(&'static str),
-    /// A skill: its name, its rank, and how many of the bar's cells its marks fill (`None` at
-    /// the last rank: nothing more to earn).
+    /// A section's heading (`Melee`), and the legend of the in-use mark for the styles' while
+    /// one is in use.
+    Section { name: &'static str, legend: bool },
+    /// A skill: its name, its rank, how many of the bar's cells its marks fill (`None` at the
+    /// last rank: nothing more to earn), and whether it is a fighting style in use.
     Skill {
         name: String,
         rank: u8,
         filled: Option<u32>,
+        in_use: bool,
     },
     /// A gap between sections.
     Gap,
@@ -49,7 +63,14 @@ enum Row {
 
 #[derive(Debug)]
 pub struct WeaponSkillsScreen {
-    rows: Vec<Row>,
+    /// The rows of the left column (melee, missile and thrown) and of the right one (shields,
+    /// fighting styles); one column stacks them.
+    columns: [Vec<Row>; 2],
+    /// The first row shown, scrolled with ↑↓ when the rows do not fit.
+    top: usize,
+    /// How far the list could scroll when it was last drawn (0: it all fits), so ↓ stops at the
+    /// end. Drawing knows the console; key presses do not.
+    most: AtomicUsize,
 }
 
 impl WeaponSkillsScreen {
@@ -57,14 +78,27 @@ impl WeaponSkillsScreen {
     /// no skills).
     pub fn new(view: Option<&PerceptionView<'_>>) -> Self {
         match view {
-            Some(view) => Self::of(view.content().weapon_skills(), view.own_weapon_skills()),
-            None => Self { rows: Vec::new() },
+            Some(view) => Self::of(
+                view.content().weapon_skills(),
+                view.own_weapon_skills(),
+                &view.own_styles_in_use(),
+            ),
+            None => Self::with([Vec::new(), Vec::new()]),
         }
     }
 
-    /// The screen for ranks and marks `own` in the skills of `table`.
-    fn of(table: &WeaponSkillTable, own: &WeaponSkills) -> Self {
-        let mut rows = Vec::new();
+    fn with(columns: [Vec<Row>; 2]) -> Self {
+        Self {
+            columns,
+            top: 0,
+            most: AtomicUsize::new(0),
+        }
+    }
+
+    /// The screen for ranks and marks `own` in the skills of `table`, the styles `in_use`
+    /// marked.
+    fn of(table: &WeaponSkillTable, own: &WeaponSkills, in_use: &[WeaponSkillId]) -> Self {
+        let mut columns: [Vec<Row>; 2] = [Vec::new(), Vec::new()];
         for section in Section::ALL {
             let skills: Vec<Row> = (table.ids())
                 .filter(|(_, def)| def.role.section() == section)
@@ -73,73 +107,135 @@ impl WeaponSkillsScreen {
                     rank: own.rank(id),
                     filled: (own.progress(table, id))
                         .map(|(marks, need)| marks * BAR / need.max(1)),
+                    in_use: in_use.contains(&id),
                 })
                 .collect();
             if skills.is_empty() {
                 continue;
             }
+            let rows = &mut columns[usize::from(section >= Section::Shields)];
             if !rows.is_empty() {
                 rows.push(Row::Gap);
             }
-            rows.push(Row::Section(section.name()));
+            let legend = (skills.iter()).any(|r| matches!(r, Row::Skill { in_use: true, .. }));
+            rows.push(Row::Section {
+                name: section.name(),
+                legend,
+            });
             rows.extend(skills);
         }
-        Self { rows }
+        Self::with(columns)
     }
 
-    /// Applies a key press: Esc, Enter, or the screen's own key closes it.
+    /// Applies a key press: ↑↓ scroll a list too long for the console; Esc, Enter, or the
+    /// screen's own key closes it.
     pub fn handle(&mut self, press: &Press, bindings: &Bindings) -> ScreenAction {
         let own_key = press
             .binding
             .as_ref()
             .is_some_and(|key| bindings.owner(key) == Some(KeyCommand::WeaponSkills));
-        if own_key || matches!(press.nav, Nav::Back | Nav::Enter) {
-            ScreenAction::Close
-        } else {
-            ScreenAction::Stay
+        match press.nav {
+            _ if own_key => return ScreenAction::Close,
+            Nav::Back | Nav::Enter => return ScreenAction::Close,
+            Nav::Up => self.top = self.top.saturating_sub(1),
+            Nav::Down => self.top = (self.top + 1).min(self.most.load(Ordering::Relaxed)),
+            _ => {}
         }
+        ScreenAction::Stay
     }
 
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
-        // Rows: margin, the rows (or a note when there are none), a gap, the footer, frame. In
-        // a console too short for them all, the gaps between sections go first.
-        let compact = self.rows.len() as i32 + 5 > console.rows() as i32;
-        let rows: Vec<&Row> = (self.rows.iter())
-            .filter(|r| !(compact && **r == Row::Gap))
+        // Two columns where they fit side by side, else one: the right column under the left.
+        let [left, right] = &self.columns;
+        let two = console.cols() as i32 >= WIDTH_TWO;
+        let columns: Vec<Vec<&Row>> = if two {
+            vec![left.iter().collect(), right.iter().collect()]
+        } else {
+            let gap = (!left.is_empty() && !right.is_empty()).then_some(&Row::Gap);
+            vec![left.iter().chain(gap).chain(right).collect()]
+        };
+        // Rows: frame, margin, the rows (or a note when there are none), a gap, the footer,
+        // frame. In a console too short for them all, the gaps between sections, the margin, and
+        // the gap above the footer give way; then the rows scroll.
+        let tallest = |columns: &[Vec<&Row>]| columns.iter().map(Vec::len).max().unwrap_or(0);
+        let compact = tallest(&columns) as i32 + 5 > console.rows() as i32;
+        let around = if compact { 3 } else { 5 };
+        let columns: Vec<Vec<&Row>> = (columns.into_iter())
+            .map(|rows| {
+                (rows.into_iter())
+                    .filter(|r| !(compact && **r == Row::Gap))
+                    .collect()
+            })
             .collect();
-        let body = rows.len().max(1) as i32;
-        let panel = Panel::new(console, " Weapon skills ", WIDTH, body + 5);
-        let x = panel.inner_x();
-        let fits = |y: i32| y < panel.y + panel.h - 2;
-        let top = panel.y + 2;
-        if self.rows.is_empty() && fits(top) {
-            console.print(x, top, "You know no weapon skills.", TEXT_DIM);
+        let body = tallest(&columns).max(1) as i32;
+        let width = if two { WIDTH_TWO } else { WIDTH };
+        let panel = Panel::new(console, " Weapon skills ", width, body + around);
+        super::info_tabs::draw_tabs(console, &panel, bindings, super::ScreenName::WeaponSkills);
+        let room = (panel.h - around).max(0);
+        let most = (body - room).max(0) as usize;
+        self.most.store(most, Ordering::Relaxed);
+        let first = self.top.min(most);
+        let top = panel.y + if compact { 1 } else { 2 };
+        if left.is_empty() && right.is_empty() && room > 0 {
+            console.print(panel.inner_x(), top, "You know no weapon skills.", TEXT_DIM);
         }
-        for (y, row) in (top..).zip(rows) {
-            if !fits(y) {
-                break;
-            }
-            match row {
-                Row::Section(name) => {
-                    console.print(x, y, name, TEXT_DIM);
-                }
-                Row::Skill { name, rank, filled } => {
-                    // Untrained skills read dimmer, so what the player knows stands out.
-                    let fg = if *rank == 0 { TEXT_DIM } else { TEXT };
-                    console.print(x + 2, y, name, fg);
-                    console.print(x + 2 + NAME_W, y, &format!("{rank:>2}"), fg);
-                    if let Some(filled) = filled {
-                        draw_bar(console, x + NAME_W + 6, y, *filled);
-                    }
-                }
-                Row::Gap => {}
+        for (i, rows) in columns.iter().enumerate() {
+            let x = panel.inner_x() + i as i32 * (COLUMN_W + GUTTER);
+            for (y, row) in (top..).zip(rows.iter().skip(first).take(room as usize)) {
+                draw_row(console, x, y, row);
             }
         }
-        let footer = match bindings.keys_of(KeyCommand::WeaponSkills).first() {
+        // Arrows on the frame where rows are hidden above or below.
+        let edge = panel.x + panel.w - 1;
+        if first > 0 && room > 0 {
+            console.print(edge, top, "↑", TEXT_DIM);
+        }
+        if first < most && room > 0 {
+            console.print(edge, top + room - 1, "↓", TEXT_DIM);
+        }
+        let close = match bindings.keys_of(KeyCommand::WeaponSkills).first() {
             Some(key) => format!("{} or Esc close", key.display()),
             None => "Esc close".to_string(),
         };
+        let footer = if most > 0 {
+            format!("↑↓ scroll   {close}")
+        } else {
+            close
+        };
         panel.footer(console, &footer);
+    }
+}
+
+/// One row of a column at (`x`, `y`).
+fn draw_row(console: &mut Console, x: i32, y: i32, row: &Row) {
+    match row {
+        Row::Section { name, legend } => {
+            console.print(x, y, name, TEXT_DIM);
+            if *legend {
+                let text = format!("{IN_USE} in use");
+                let at = x + COLUMN_W - text.chars().count() as i32;
+                console.print(at, y, &IN_USE.to_string(), ACCENT);
+                console.print(at + 1, y, " in use", TEXT_DIM);
+            }
+        }
+        Row::Skill {
+            name,
+            rank,
+            filled,
+            in_use,
+        } => {
+            // Untrained skills read dimmer, so what the player knows stands out.
+            let fg = if *rank == 0 { TEXT_DIM } else { TEXT };
+            if *in_use {
+                console.print(x, y, &IN_USE.to_string(), ACCENT);
+            }
+            console.print(x + 2, y, name, fg);
+            console.print(x + 2 + NAME_W, y, &format!("{rank:>2}"), fg);
+            if let Some(filled) = filled {
+                draw_bar(console, x + NAME_W + 6, y, *filled);
+            }
+        }
+        Row::Gap => {}
     }
 }
 
@@ -185,9 +281,16 @@ mod tests {
         text(&console)
     }
 
+    /// Every skill row of the screen, in both columns.
+    fn skill_rows(screen: &WeaponSkillsScreen) -> usize {
+        (screen.columns.iter().flatten())
+            .filter(|r| matches!(r, Row::Skill { .. }))
+            .count()
+    }
+
     #[test]
     fn lists_every_skill_by_section_with_its_rank_and_a_bar() {
-        // The showcase thief: daggers 2 and thrown 1.
+        // The showcase thief: daggers 2 and thrown 1, and Duelist 1. In one column (80 wide).
         let world = showcase();
         let screen = WeaponSkillsScreen::new(Some(&world.perception()));
         let text = drawn(&screen, 80, 40);
@@ -198,9 +301,10 @@ mod tests {
                 .clone()
         };
         assert!(row(" Weapon skills ").contains('─'));
-        for heading in ["Melee", "Missile and thrown", "Shields"] {
+        for heading in ["Melee", "Missile and thrown", "Shields", "Fighting styles"] {
             row(heading);
         }
+        assert!(row("Duelist").contains("Duelist                  1"));
         let daggers = row("Daggers and knives");
         assert!(daggers.contains("Daggers and knives       2"), "{daggers}");
         assert!(row("Thrown weapons").contains(" 1 "));
@@ -212,11 +316,34 @@ mod tests {
         // Sections in order, every skill once.
         let at = |needle: &str| text.iter().position(|l| l.contains(needle));
         assert!(at("Melee") < at("Missile and thrown") && at("Missile and thrown") < at("Shields"));
+        assert!(at("Shields") < at("Fighting styles") && at("Fighting styles") < at("Duelist"));
         let skills = world.content().weapon_skills().skills().len();
-        let listed = (screen.rows.iter())
-            .filter(|r| matches!(r, Row::Skill { .. }))
-            .count();
-        assert_eq!(listed, skills);
+        assert_eq!(skill_rows(&screen), skills);
+    }
+
+    #[test]
+    fn marks_the_fighting_styles_in_use() {
+        // Nothing in the showcase thief's hands: they fight as a brawler.
+        let world = showcase();
+        let screen = WeaponSkillsScreen::new(Some(&world.perception()));
+        let text = drawn(&screen, 80, 40);
+        let row = |needle: &str| {
+            text.iter()
+                .find(|l| l.contains(needle))
+                .unwrap_or_else(|| panic!("{needle} in {text:#?}"))
+                .clone()
+        };
+        assert!(row("Brawler").contains(&format!("{IN_USE} Brawler")));
+        assert!(!row("Duelist").contains(IN_USE));
+        assert!(row("Fighting styles").contains(&format!("{IN_USE} in use")));
+        // Only styles are ever marked, and no heading but the styles' has the legend.
+        let marked = text.iter().filter(|l| l.contains(IN_USE)).count();
+        assert_eq!(marked, 2, "{text:#?}");
+        // With none in use there is no legend.
+        let content = world.content();
+        let none = WeaponSkillsScreen::of(content.weapon_skills(), &WeaponSkills::default(), &[]);
+        let text = drawn(&none, 80, 40).join("\n");
+        assert!(!text.contains(IN_USE), "{text}");
     }
 
     #[test]
@@ -230,7 +357,7 @@ mod tests {
         let mut skills = WeaponSkills::from_ranks(table, [(daggers, 2), (bows, MAX_RANK)]);
         // Daggers 2 needs 60 for rank 3: 24 marks fill four cells of ten.
         skills.train(table, daggers, 24);
-        let screen = WeaponSkillsScreen::of(table, &skills);
+        let screen = WeaponSkillsScreen::of(table, &skills, &[]);
         let text = drawn(&screen, 80, 40).join("\n");
         let done = BAR_DONE.to_string().repeat(4);
         let left = BAR_LEFT.to_string().repeat(6);
@@ -280,11 +407,70 @@ mod tests {
         for (cols, rows) in [(48, 15), (30, 8), (5, 3), (0, 0)] {
             assert_eq!(drawn(&screen, cols, rows).len(), rows as usize);
         }
-        // 24 rows (960×540 at the default font): the section gaps give way, and everything fits.
+        // 96 by 24: two columns, the weapons on the left, shields and styles on the right, and
+        // everything fits, gaps and all.
         let text = drawn(&screen, 96, 24);
         let at = |needle: &str| text.iter().position(|l| l.contains(needle));
-        assert!(at("Shield bashing").is_some(), "{text:#?}");
+        for needle in ["Shield bashing", "Staff Fighter", "Slings"] {
+            assert!(at(needle) < at("W or Esc close"), "{needle}: {text:#?}");
+        }
+        assert_eq!(at("Melee"), at("Shields"), "side by side");
+        // A margin above the rows, a gap below them, then the footer.
+        assert_eq!(at("Melee"), at(" Weapon skills ").map(|y| y + 2));
+        assert_eq!(at("W or Esc close"), at("Thrown weapons").map(|y| y + 2));
+        assert_eq!(at("Missile and thrown"), at("Unarmed").map(|y| y + 2));
+        let (melee, shields) = (&text[at("Melee").expect("melee")], "Shields");
+        assert!(melee.find("Melee") < melee.find(shields));
+        // One column, tall enough: everything, the styles last.
+        let text = drawn(&screen, 60, 40);
+        let at = |needle: &str| text.iter().position(|l| l.contains(needle));
+        assert!(at("Shield bashing") < at("Fighting styles"));
+        assert!(at("Staff Fighter") < at("W or Esc close"));
+        // 64 by 32 (the default 1280×720 window at the default font): one column, the gaps and
+        // margins give way, and everything still fits: no scrolling.
+        let text = drawn(&screen, 64, 32);
+        let at = |needle: &str| text.iter().position(|l| l.contains(needle));
         assert_eq!(at("Missile and thrown"), at("Unarmed").map(|y| y + 1));
-        assert!(at("Shield bashing") < at("W or Esc close"));
+        assert_eq!(at("Daggers and knives"), at("Melee").map(|y| y + 1));
+        assert!(at("Staff Fighter") < at("W or Esc close"), "{text:#?}");
+        assert!(!text.iter().any(|l| l.contains("scroll")));
+    }
+
+    #[test]
+    fn a_list_too_long_for_the_console_scrolls() {
+        // 48 by 24 (960×540): the list is longer than the panel.
+        let world = showcase();
+        let b = Bindings::default();
+        let mut screen = WeaponSkillsScreen::new(Some(&world.perception()));
+        let text = drawn(&screen, 48, 24);
+        let has = |text: &[String], needle: &str| text.iter().any(|l| l.contains(needle));
+        assert!(has(&text, "Melee") && !has(&text, "Staff Fighter"));
+        assert!(has(&text, "↑↓ scroll") && has(&text, "↓") && has(&text, "Esc close"));
+        // ↑ at the top stays; ↓ scrolls a row at a time, down to the last row and no further.
+        assert_eq!(screen.handle(&Press::nav(Nav::Up), &b), ScreenAction::Stay);
+        for _ in 0..40 {
+            assert_eq!(
+                screen.handle(&Press::nav(Nav::Down), &b),
+                ScreenAction::Stay
+            );
+        }
+        let text = drawn(&screen, 48, 24);
+        assert!(
+            has(&text, "Staff Fighter") && !has(&text, "Melee"),
+            "{text:#?}"
+        );
+        let last = text.iter().position(|l| l.contains("Staff Fighter"));
+        let footer = text.iter().position(|l| l.contains("Esc close"));
+        assert_eq!(
+            last.map(|y| y + 1),
+            footer,
+            "the last row right above the footer"
+        );
+        // One ↑ shows one row more at the top.
+        screen.handle(&Press::nav(Nav::Up), &b);
+        let up = drawn(&screen, 48, 24);
+        assert!(!has(&up, "Staff Fighter"));
+        let at = |text: &[String]| text.iter().position(|l| l.contains("Shield bashing"));
+        assert_eq!(at(&up), at(&text).map(|y| y + 1));
     }
 }

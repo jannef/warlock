@@ -2,9 +2,9 @@
 
 | Weapon | Damage | Critical on | Critical damage | Parry | Needs Strength | Held | Thrown | Weapon skill | A blow takes |
 |---|:---:|:---:|:---:|:---:|:---:|---|:---:|---|---:|
-| Dagger | 1d4 | 20–24 | ×2 | - | - | main hand | 5 cells | Daggers and knives | 6 seconds |
-| Stiletto | 1d4 | 19–24 | ×2 | - | - | main hand | - | Daggers and knives | 5.4 seconds |
-| Short sword | 1d6 | 20–24 | ×2 | - | - | main hand | - | Short blades | 6 seconds |
+| Dagger | 1d4 | 20–24 | ×2 | - | - | main hand or off hand | 5 cells | Daggers and knives | 6 seconds |
+| Stiletto | 1d4 | 19–24 | ×2 | - | - | main hand or off hand | - | Daggers and knives | 5.4 seconds |
+| Short sword | 1d6 | 20–24 | ×2 | - | - | main hand or off hand | - | Short blades | 6 seconds |
 | Scimitar | 1d6 | 19–24 | ×2 | - | - | main hand | - | Short blades | 6 seconds |
 | Long sword | 1d8 | 20–24 | ×2 | - | - | main hand | - | Long blades | 6 seconds |
 | Rapier | 1d6 | 19–24 | ×2 | - | - | main hand | - | Long blades | 5.4 seconds |

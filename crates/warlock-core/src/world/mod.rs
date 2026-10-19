@@ -104,7 +104,7 @@ mod talk;
 mod train;
 mod trap;
 
-pub use actor::{Actor, ActorId, ActorKind, Mind, Patrol};
+pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
 pub use eat::Rot;
 pub(crate) use eat::rot_at;
@@ -1673,11 +1673,12 @@ impl World {
             let seen = self.perception.sees_actors_at(to);
             let player = self.state.player;
             if self.stance(player, target) == Stance::Hostile {
-                let skill = self.state.player().melee_skill(&self.content);
+                let me = self.state.player();
+                let melee = me.attack_skills(&self.content, AttackKind::Melee, None);
+                let price = self.attack_price(player, ActionKind::Melee, melee);
                 self.player_attacks(target, seen, events);
-                // Priced before the exertion, which may burn enough to leave the player
-                // hungrier (no longer Bloated).
-                let price = self.attack_price(player, ActionKind::Melee, skill);
+                // Priced as the attack begins, before the exertion, which may burn enough to
+                // leave the player hungrier (no longer Bloated).
                 self.exert(ActionKind::Melee);
                 return Spent::Turn(price);
             }
@@ -2068,6 +2069,8 @@ mod speed_tests;
 mod stats_tests;
 #[cfg(test)]
 mod status_tests;
+#[cfg(test)]
+mod style_tests;
 #[cfg(test)]
 mod sun_tests;
 #[cfg(test)]

@@ -24,11 +24,11 @@
 //!
 //! Speed is hidden from the player: it is in neither the perception snapshot nor any message.
 
-use super::{Actor, ActorId, World};
+use super::{Actor, ActorId, AttackSkills, World};
 use crate::action::Event;
 use crate::content::Effect as ItemEffect;
 use crate::content::{
-    ActionKind, BASE_TURN, Benefit, LevelKind, Stance, TerrainDef, WeaponSkillId, percent_of, price,
+    ActionKind, BASE_TURN, Benefit, LevelKind, Stance, TerrainDef, percent_of, price,
 };
 use crate::geom::Pos;
 use crate::magic::Mods;
@@ -140,18 +140,14 @@ impl World {
     }
 
     /// The energy price of attack action `kind` (`melee`, `shoot`, `throw`, `reload`) for actor
-    /// `id` drawing on weapon skill `skill` (spec §8 "Weapon skills"): its cost with its weapon's
-    /// and its magic items' (`World::cost_of`; a shield bash costs what a blow does) less what
-    /// its rank takes off (`speed`; `reload` for reloading), then priced like any action
-    /// ([`World::price_of`]), its combat stance included.
-    pub(super) fn attack_price(
-        &self,
-        id: ActorId,
-        kind: ActionKind,
-        skill: Option<WeaponSkillId>,
-    ) -> i64 {
+    /// `id` drawing on weapon skill and fighting style `skills` (spec §8 "Weapon skills",
+    /// "Fighting styles"): its cost with its weapon's and its magic items' (`World::cost_of`; a
+    /// shield bash costs what a blow does) less what the ranks of both take off (`speed`;
+    /// `reload` for reloading), then priced like any action ([`World::price_of`]), its combat
+    /// stance included.
+    pub(super) fn attack_price(&self, id: ActorId, kind: ActionKind, skills: AttackSkills) -> i64 {
         let actor = &self.state.actors[&id];
-        let benefit = actor.benefit(&self.content, skill);
+        let benefit = actor.benefit_of(&self.content, skills);
         let saving = match kind {
             ActionKind::Reload => benefit.reload,
             _ => benefit.speed,

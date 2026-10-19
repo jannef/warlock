@@ -102,8 +102,8 @@ pub use trap::{
 pub use vault::Vault;
 pub use vision::VisionProfile;
 pub use weapon_skill::{
-    Benefit, MAX_RANK, MarkRules, RANKS, Role, Section, WeaponSkillDef, WeaponSkillId,
-    WeaponSkillTable,
+    Benefit, Grip, MAX_RANK, MarkRules, RANKS, Role, Section, Style, TwoWeapons, WeaponSkillDef,
+    WeaponSkillId, WeaponSkillTable,
 };
 pub use weather::{
     Climate, MAX_CHILL, MAX_SIGHT_LOSS, MAX_SWING, MILD, MILD_SWING, MONTH_TEMPERATURES, WeatherDef,
@@ -797,8 +797,10 @@ impl Content {
             let ranks: BTreeMap<String, Dice> = (spec.weapon_skills.iter())
                 .map(|(id, &rank)| (id.clone(), Dice::fixed(i32::from(rank))))
                 .collect();
-            let ranks = (self.weapon_skills.starting_ranks(&ranks))
-                .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
+            let ranks = (self
+                .weapon_skills
+                .starting_ranks(&ranks, weapon_skill::Ranked::Any))
+            .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let ranks = ranks.iter().map(|&(id, rank)| (id, rank.max() as u8));
             let weapon_skills = WeaponSkills::from_ranks(&self.weapon_skills, ranks);
             if spec
@@ -1404,17 +1406,21 @@ impl Content {
         (0u8..).zip(&self.slots).map(|(i, s)| (SlotId(i), s))
     }
 
-    /// Whether `object` goes in `slot`: its `slot` is what the slot fits.
+    /// Whether `object` goes in `slot`: it fits there properly ([`Content::fits_properly`]), or
+    /// the slot takes weapons (the missile weapon slot) and it is one or can be thrown.
     pub fn fits(&self, object: ObjectId, slot: SlotId) -> bool {
-        let (def, slot) = (self.object(object), self.slot(slot));
-        def.slot.as_ref() == Some(&slot.fits)
-            || (slot.takes_weapons
+        let def = self.object(object);
+        self.fits_properly(object, slot)
+            || (self.slot(slot).takes_weapons
                 && (def.can_throw() || (def.attack.is_some() && def.ammo.is_none())))
     }
 
-    /// Whether `object` goes in `slot` by its own `slot`, not as a weapon some slot takes too.
+    /// Whether `object` goes in `slot` by its own `slot`, not as a weapon some slot takes too:
+    /// its `slot` is what the slot fits, or it is a light weapon and the slot is a hand (the off
+    /// hand: two-weapon fighting, spec §8 "Fighting styles").
     pub fn fits_properly(&self, object: ObjectId, slot: SlotId) -> bool {
-        self.object(object).slot.as_ref() == Some(&self.slot(slot).fits)
+        let (def, slot) = (self.object(object), self.slot(slot));
+        def.slot.as_ref() == Some(&slot.fits) || (def.light_weapon && slot.hand)
     }
 
     /// The hand slots (a two-handed object takes them all), in display order.

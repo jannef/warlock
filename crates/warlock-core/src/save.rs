@@ -60,7 +60,9 @@ const MAGIC: &str = "WARLOCK-SAVE";
 ///     they count, by level and creature type (`WorldState::quests`).
 /// 28: traps: level states keep their traps (kind, known, charges left, a bolt's direction) and
 ///     the traps the player remembers; the player's death records the trap that killed them.
-pub const FORMAT_VERSION: u32 = 28;
+/// 29: fighting styles: `Actor::weapon_skills` holds a rank and marks in each style too (after
+///     the weapon skills), and a light weapon may be in the off hand (two weapons).
+pub const FORMAT_VERSION: u32 = 29;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 

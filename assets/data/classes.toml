@@ -16,7 +16,9 @@
 # "Weapon skills"), by skill id in weapon_skills.toml, a number or dice (every result within 0 to
 # 10), added to the race's (at most 10); weapon_skill_choice: two or more such sets, of which one
 # is picked at random when the character is made (the barbarian's axes or great blades). Each
-# starting rank then raises the weapon skills it defaults to.
+# starting rank then raises the weapon skills it defaults to. styles and style_choice: the same
+# for fighting styles (spec §8 "Fighting styles"; the styles in weapon_skills.toml), rolled after
+# everything else (the thief's Twin Blades or Duelist).
 #
 # The adventurers come first, then everyday folk. Balance is not a goal: some choices are poor on
 # purpose.
@@ -30,6 +32,7 @@ hp = 8
 skills = { athletics = "2d6+10", survival = "2d6+10", intimidate = "2d4+4", listen = "2d4+4", swim = "2d4+4" }
 weapon_skills = { unarmed = 1 }
 weapon_skill_choice = [{ axes = 2 }, { great_blades = 2 }]
+styles = { great_weapon = 1 }
 
 [[class]]
 id = "bard"
@@ -39,6 +42,7 @@ stats = { strength = -1, dexterity = 1, toughness = -1, intelligence = "1d2", pr
 hp = 2
 skills = { bluff = "2d6+10", music = "2d6+10", appraise = "2d4+4", decipher_script = "2d4+4", knowledge = "2d4+4", tumble = "2d4+4" }
 weapon_skills = { short_blades = 1, daggers = "1d2" }
+styles = { duelist = 1 }
 
 [[class]]
 id = "priest"
@@ -48,6 +52,7 @@ stats = { strength = -1, dexterity = -1, intelligence = 1, willpower = "1d3+1", 
 hp = 4
 skills = { heal = "2d6+10", knowledge = "2d6+10", concentration = "2d4+4", decipher_script = "2d4+4" }
 weapon_skills = { maces = 2, shield_block = 1 }
+styles = { sword_and_board = 1 }
 
 [[class]]
 id = "druid"
@@ -57,6 +62,7 @@ stats = { toughness = "1d2", willpower = "2d2", presence = -1 }
 hp = 4
 skills = { handle_animal = "2d6+10", survival = "2d6+10", concentration = "2d4+4", heal = "2d4+4", listen = "2d4+4" }
 weapon_skills = { staves = 2, slings = 1 }
+styles = { staff_fighter = 1 }
 
 [[class]]
 id = "monk"
@@ -66,6 +72,7 @@ stats = { dexterity = "1d3", toughness = 1, willpower = "1d3", presence = -1 }
 hp = 5
 skills = { balance = "2d6+10", tumble = "2d6+10", athletics = "2d4+4", concentration = "2d4+4", escape_artist = "2d4+4", listen = "2d4+4" }
 weapon_skills = { unarmed = 2, staves = 1 }
+style_choice = [{ brawler = 1 }, { staff_fighter = 1 }]
 
 [[class]]
 id = "paladin"
@@ -75,6 +82,7 @@ stats = { strength = "1d3", dexterity = -1, intelligence = -1, willpower = 1, pr
 hp = 6
 skills = { intimidate = "2d6+10", concentration = "2d4+4", handle_animal = "2d4+4", heal = "2d4+4" }
 weapon_skills = { long_blades = 2, shield_block = "1d2", shield_bash = 1 }
+styles = { sword_and_board = 1 }
 
 [[class]]
 id = "ranger"
@@ -84,6 +92,7 @@ stats = { dexterity = "1d3", toughness = 1, willpower = "1d2", presence = -1 }
 hp = 5
 skills = { spot = "2d6+10", survival = "2d6+10", woodcraft = "2d6+10", athletics = "2d4+4", handle_animal = "2d4+4", listen = "2d4+4", swim = "2d4+4" }
 weapon_skills = { bows = 2, short_blades = 1 }
+styles = { marksman = 1 }
 
 [[class]]
 id = "thief"
@@ -93,6 +102,7 @@ stats = { strength = -1, dexterity = "1d3+1", intelligence = "1d2-1", willpower 
 hp = 3
 skills = { open_lock = "2d6+10", steal = "2d6+10", stealth = "2d6+10", tumble = "2d6+10", appraise = "2d4+4", disable_device = "2d4+4", escape_artist = "2d4+4", search = "2d4+4", spot = "2d4+4" }
 weapon_skills = { daggers = 2, thrown = 1 }
+style_choice = [{ twin_blades = 1 }, { duelist = 1 }]
 
 [[class]]
 id = "wizard"
@@ -120,6 +130,7 @@ stats = { strength = "1d3+1", dexterity = 1, toughness = "1d3", intelligence = -
 hp = 7
 skills = { athletics = "2d6+10", balance = "2d4+4", intimidate = "2d4+4", swim = "2d4+4" }
 weapon_skills = { long_blades = 2, shield_block = "1d2" }
+styles = { sword_and_board = 1 }
 
 [[class]]
 id = "aristocrat"
@@ -129,6 +140,7 @@ stats = { strength = -2, toughness = "-1d2", intelligence = 1, willpower = -1, p
 hp = 1
 skills = { knowledge = "2d6+10", bluff = "2d4+4", intimidate = "2d4+4" }
 weapon_skills = { long_blades = 1 }
+styles = { duelist = 1 }
 
 [[class]]
 id = "commoner"
@@ -138,6 +150,7 @@ stats = { toughness = "1d3-1", intelligence = -1, presence = -1 }
 hp = 3
 skills = { athletics = "2d4+4", handle_animal = "2d4+4" }
 weapon_skills = { maces = 1 }
+styles = { brawler = 1 }
 
 [[class]]
 id = "craftsperson"

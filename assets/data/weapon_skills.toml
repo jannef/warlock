@@ -1,5 +1,7 @@
 # Weapon skills (spec §8 "Weapon skills"): the categories of weapons the player and creatures
-# train with, ADOM-like, and how they default to each other, after The Riddle of Steel.
+# train with, ADOM-like, and how they default to each other, after The Riddle of Steel. And the
+# fighting styles (spec §8 "Fighting styles"), after AD&D 2e's Complete Fighter's Handbook: how
+# the weapons are held and used, skills with the same ranks, marks, and benefits (at the end).
 #
 # Ranks go from 0 (untrained: no benefits, but marks still count) to 10. The player sees their
 # ranks and a bar of their marks toward the next one (the weapon skills screen, `W`); the numbers
@@ -22,6 +24,14 @@ most = 200
 melee = [15, 30, 60, 120, 240, 480, 960, 1920, 3840, 7680]
 missile = [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120]
 
+# Fighting with a weapon in each hand (two-weapon fighting; the off hand holds only a light
+# weapon, `light_weapon` in objects.toml): both hands strike every melee attack, the main hand
+# at `main` to hit, the off hand at `off` (D&D's -4 and -8; -20 to 0). The Twin Blades style
+# eases both (`ease_main`, `ease_off` below), never past 0.
+[two_weapons]
+main = -4
+off = -8
+
 # Every skill defines:
 #   id      stable name: weapons name it (`category` in objects.toml), races, classes, and
 #           creatures give ranks in it, saves record ranks by its place in this file
@@ -36,6 +46,7 @@ missile = [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120]
 #             shield_block a blow blocked by a held shield trains it (a miss credited to the
 #                          Shield category of Defence); its `shield` adds to that category
 #             shield_bash  bashing with a held shield (an ability; spec §6 "Abilities")
+#             style        a fighting style (below)
 #           unarmed, thrown, shield_block, and shield_bash may have one skill each
 #   curve   the curve above it trains along
 # and what each rank gives, as 11 numbers for ranks 0 to 10 (rank 0 gives nothing; a higher rank
@@ -43,6 +54,7 @@ missile = [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120]
 #   to_hit  added to the to-hit of attacks with it
 #   damage  added to every roll of their damage dice
 #   threat  how many natural rolls lower a critical threatens from (19-24 instead of 20-24)
+#   crit    added to a confirmed critical's damage multiplier (0 to 3; never past x5)
 #   speed   percent off the attack's cost (melee, shoot, throw; actions.toml)
 #   parry   melee: added to the wielded weapon's Parry bonus to Defence
 #   reload  launcher: percent off the cost of reloading (a crossbow)
@@ -213,6 +225,118 @@ curve = "melee"
 to_hit = [0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5]
 damage = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4]
 
+# Fighting styles (spec §8 "Fighting styles"), after AD&D 2e's Complete Fighter's Handbook: skills
+# of how weapons are held and used, with the same ranks, marks, curves, and benefits as weapon
+# skills. Every attack the player makes in a style's configuration (a blow, a bash, a shot or a
+# throw at someone) earns marks in the style as well as in the weapon's skill, and the style's
+# benefits add to the weapon skill's. A style also defines:
+#   grip     the configuration it is fought in: for blows, what the hands hold (which counts for
+#            Defence too), else the kind of attack:
+#              one_weapon         one one-handed weapon, every other hand empty
+#              two_weapons        a weapon in each hand (both strike; see [two_weapons])
+#              two_handed         a two-handed weapon
+#              weapon_and_shield  a one-handed weapon and a shield
+#              unarmed            nothing in the hands
+#              launcher           a shot from a missile weapon
+#              thrown             a throw
+#   weapons  the weapon skills it is fought with (a launcher's for `launcher`, what is thrown for
+#            `thrown`); left out: every weapon of its grip that no other style of the grip names.
+#            One configuration is one style: at most one style of a grip leaves it out, and none
+#            names a weapon skill another of its grip names
+# and may give, beyond the benefits above (parry only for the grips that wield a weapon, shield
+# only for weapon_and_shield, reload only for launcher):
+#   ease_main  two_weapons: points off the main hand's penalty
+#   ease_off   two_weapons: points off the off hand's penalty
+#   bash       weapon_and_shield: the chance in percent of a free shield bash after a blow that
+#              hits (it draws on and trains shield bashing)
+# Styles default only to styles (below). Rank 10 is where a style's later active or triggered
+# abilities will hang (a duelist's riposte, a staff fighter's trip).
+[[skill]]
+id = "duelist"
+name = "Duelist"
+phrase = "at dueling"
+role = "style"
+grip = "one_weapon"
+curve = "melee"
+to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4]
+parry = [0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 5]
+
+[[skill]]
+id = "twin_blades"
+name = "Twin Blades"
+phrase = "at fighting with two weapons"
+role = "style"
+grip = "two_weapons"
+curve = "melee"
+# At rank 10 neither hand has a penalty: a full attack with each.
+ease_main = [0, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4]
+ease_off = [0, 1, 2, 2, 3, 4, 4, 5, 6, 7, 8]
+
+[[skill]]
+id = "great_weapon"
+name = "Great Weapon"
+phrase = "at fighting with great weapons"
+role = "style"
+grip = "two_handed"
+curve = "melee"
+damage = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
+crit = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+speed = [0, 0, 0, 0, 5, 5, 5, 10, 10, 10, 15]
+
+[[skill]]
+id = "sword_and_board"
+name = "Sword and Board"
+phrase = "at fighting with weapon and shield"
+role = "style"
+grip = "weapon_and_shield"
+curve = "melee"
+shield = [0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4]
+bash = [0, 0, 0, 5, 5, 10, 10, 15, 15, 20, 25]
+
+[[skill]]
+id = "marksman"
+name = "Marksman"
+phrase = "at marksmanship"
+role = "style"
+grip = "launcher"
+weapons = ["bows", "crossbows", "slings"]
+curve = "missile"
+to_hit = [0, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4]
+speed = [0, 0, 0, 5, 5, 5, 10, 10, 10, 15, 15]
+reload = [0, 0, 10, 10, 10, 20, 20, 20, 30, 30, 30]
+
+[[skill]]
+id = "skirmisher"
+name = "Skirmisher"
+phrase = "at skirmishing"
+role = "style"
+grip = "thrown"
+curve = "missile"
+to_hit = [0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3]
+damage = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
+speed = [0, 0, 0, 5, 5, 10, 10, 10, 15, 15, 20]
+
+[[skill]]
+id = "brawler"
+name = "Brawler"
+phrase = "at brawling"
+role = "style"
+grip = "unarmed"
+curve = "melee"
+to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4]
+damage = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
+
+[[skill]]
+id = "staff_fighter"
+name = "Staff Fighter"
+phrase = "at fighting with a staff"
+role = "style"
+grip = "two_handed"
+weapons = ["staves"]
+curve = "melee"
+to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4]
+parry = [0, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4]
+
 # Defaults (The Riddle of Steel): skill with one weapon carries over to related ones, less a
 # penalty, both ways. When a rank is gained in A, every B with rank(A) - penalty > rank(B) rises to
 # rank(A) - penalty, and its marks start again from 0. Long blades 8 gives short blades 6.
@@ -280,3 +404,21 @@ penalty = 3
 [[default]]
 between = ["shield_block", "shield_bash"]
 penalty = 3
+
+# Between fighting styles: a duelist is no beginner with a shield on the other arm, or a second
+# blade in the other hand; a staff is a great weapon; a marksman has an eye for a throw.
+[[default]]
+between = ["duelist", "sword_and_board"]
+penalty = 3
+
+[[default]]
+between = ["duelist", "twin_blades"]
+penalty = 3
+
+[[default]]
+between = ["great_weapon", "staff_fighter"]
+penalty = 3
+
+[[default]]
+between = ["marksman", "skirmisher"]
+penalty = 4

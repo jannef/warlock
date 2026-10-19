@@ -45,9 +45,9 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
 - **Objects** — weapons, armor, tools, potions, scrolls, food, gems, coins, rings, and amulets,
   each with its own glyph, color, material, and weight, lie in piles to pick up and drop; an
   ADOM-style inventory lettered a–z shows what you carry and what it weighs, and an ADOM-style
-  equipment screen puts it on: helm, amulet, armor, cloak, weapons and shield (or a two-handed
-  staff), gloves, rings, boots, a bow and arrows, and a tool. Creatures wield and wear what they
-  carry, and you see it.
+  equipment screen puts it on: helm, amulet, armor, cloak, weapons and shield (or a second, light
+  weapon, or a two-handed staff or great sword), gloves, rings, boots, a bow and arrows, and a
+  tool. Creatures wield and wear what they carry, and you see it.
 - **Digging** — walls give way: ready a pick-axe or a mattock in the Tool slot and dig, turn after
   turn, through packed earth in a minute, a stone wall in a few, granite in half an hour or so
   (Strength helps, a heavy load slows you), until a creature comes into view or the wall crumbles
@@ -94,6 +94,13 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   block a little better ("You feel more skilled with long blades."). Skill carries over to
   related weapons, as in *The Riddle of Steel*: long blades 8 makes short blades 6. Your race and
   class start you off, a weapon skills screen shows your ranks, and a shield can bash too.
+- **Fighting styles** — after AD&D's *Complete Fighter's Handbook*, how you hold your weapons is a
+  skill of its own: Duelist, Twin Blades, Great Weapon, Sword and Board, Marksman, Skirmisher,
+  Brawler, and Staff Fighter, each with ranks 0 to 10 trained by fighting that way and benefits
+  that add to your weapon's (a duelist parries, a great weapon hits harder, sword and board may
+  follow a hit with a free shield bash). A light weapon in your off hand strikes too, at a
+  penalty that Twin Blades trains away. Your class starts you off; the weapon skills screen
+  marks the styles you fight in.
 - **Status effects and healing** — big hits and criticals open bleeding wounds, a giant rat's
   bite may leave poison behind; they cost hit points as time passes, stack, wear off, slow or
   stop healing, and can kill (creatures bleed to death too); strong poison saps Strength and
@@ -226,7 +233,7 @@ cargo run --release -p warlock
 | `i` | Inventory: what you carry, by letter, and what it all weighs; a letter describes that item |
 | `e` | Equipment: wear and wield things, slot by slot (head, body, hands, rings, missiles, a tool, …), as in ADOM; an upper-case slot letter describes what is there |
 | `@` | Character: your race, gender, class, age, birth sign, stats, hit points, Defence, status effects, known diseases, and weight |
-| `W` | Weapon skills: your rank in each, and how far to the next |
+| `W` | Weapon skills and fighting styles: your rank in each, how far to the next, and the styles you fight in now |
 | `C` | Chat with someone next to you (asks for a direction if there are several); quests are offered and handed in on its topics |
 | `q` | Quest log: the quests you took up and those you have done |
 | `R` | Rest an hour, until dawn, or until nightfall (stops when something comes into view) |

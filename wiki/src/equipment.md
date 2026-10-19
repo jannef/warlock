@@ -1,8 +1,9 @@
 # Equipment
 
 You can wear and wield what you carry, as in ADOM: a helm on your head, an amulet around your
-neck, armor on your body, a cloak, a weapon in your main hand and a shield in your off hand,
-gloves, a ring on each hand, boots, a missile weapon with its missiles ready, and a tool.
+neck, armor on your body, a cloak, a weapon in your main hand and a shield (or a light weapon)
+in your off hand, gloves, a ring on each hand, boots, a missile weapon with its missiles ready,
+and a tool.
 
 What you wield and wear decides how you fight (see [Combat](combat.md)): the weapon in your
 hand does its damage, a bow shoots, body armour and a shield add to your Defence, and a
@@ -39,7 +40,11 @@ do it: creatures act meanwhile, just as when you wait. Looking at the screens ta
 
 - **Rings** fit either ring slot. Choosing a ring for the right hand while it is on your left
   moves it over.
-- **Two-handed weapons**, such as the quarterstaff, take both hands. The screen shows them in
+- **Light weapons**, the dagger, the stiletto, and the short sword, fit either hand: one in your off hand
+  beside a weapon in your main hand is fighting with two weapons (see
+  [Fighting styles](fighting-styles.md#two-weapons)). Nothing else but a shield goes in the off
+  hand.
+- **Two-handed weapons**, such as the quarterstaff and the great sword, take both hands. The screen shows them in
   the main hand and the off hand, "(both hands)". Wielding one puts away whatever your hands
   held; a shield in your off hand puts a two-handed weapon away.
 - **Missile weapons and missiles** have their own slots. A bow shoots arrows: each missile weapon

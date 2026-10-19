@@ -1,9 +1,15 @@
 //! The weapon skills tables (spec §8 "Weapon skills"), from `data/weapon_skills.toml`: the
 //! skills and what trains them, how they default to each other, the marks each rank asks for,
-//! and what each rank gives; and the starting ranks of races and classes, as data writes them.
+//! and what each rank gives; the fighting styles (spec §8 "Fighting styles"): their
+//! configurations, defaults, and what each rank gives (two-weapon penalties included); and the
+//! starting ranks of races and classes, as data writes them.
 
+use super::capital;
 use std::fmt::Write as _;
-use warlock_core::content::{Benefit, Content, MAX_RANK, Role, WeaponSkillId};
+use warlock_core::content::{
+    Benefit, ClassDef, Content, Grip, MAX_RANK, Role, TwoWeapons, WeaponSkillDef, WeaponSkillId,
+    WeaponSkillTable,
+};
 use warlock_core::dice::Dice;
 
 /// `n` with a real minus sign: `−2`.
@@ -20,7 +26,13 @@ fn trained_by(role: Role) -> &'static str {
         Role::Unarmed => "blows with bare hands",
         Role::ShieldBlock => "blows your shield blocks",
         Role::ShieldBash => "bashing with a shield",
+        Role::Style => "every attack in its configuration",
     }
+}
+
+/// The weapon skills, in file order, without the fighting styles.
+fn weapons(table: &WeaponSkillTable) -> impl Iterator<Item = (WeaponSkillId, &WeaponSkillDef)> {
+    table.ids().filter(|(_, s)| !s.is_style())
 }
 
 /// The objects that draw on skill `id`: the weapons that name it, or for the shield skills the
@@ -32,7 +44,7 @@ fn weapons_of(content: &Content, id: WeaponSkillId, role: Role) -> String {
             Role::ShieldBash => o.bash.is_some(),
             _ => o.skill == Some(id),
         })
-        .map(|o| super::capital(&o.name))
+        .map(|o| capital(&o.name))
         .collect();
     let mut text = names.join(", ");
     let more = match role {
@@ -42,7 +54,7 @@ fn weapons_of(content: &Content, id: WeaponSkillId, role: Role) -> String {
     };
     if let Some(more) = more {
         text = if text.is_empty() {
-            super::capital(more)
+            capital(more)
         } else {
             format!("{text}; {more}")
         };
@@ -55,7 +67,7 @@ fn weapons_of(content: &Content, id: WeaponSkillId, role: Role) -> String {
 pub fn skills(content: &Content) -> String {
     let table = content.weapon_skills();
     let mut out = String::from("| Skill | Trained by | Weapons | Marks |\n|---|---|---|---|\n");
-    for (id, s) in table.ids() {
+    for (id, s) in weapons(table) {
         let _ = writeln!(
             out,
             "| {} | {} | {} | {} |",
@@ -72,8 +84,37 @@ pub fn skills(content: &Content) -> String {
 /// as a matrix (rows and columns numbered alike).
 pub fn defaults(content: &Content) -> String {
     let table = content.weapon_skills();
-    let mut out = String::from("| Skill | Defaults to |\n|---|---|\n");
-    for (id, s) in table.ids() {
+    let mut out = default_list(table, false);
+    let n = weapons(table).count();
+    out.push_str("\n| |");
+    for i in 1..=n {
+        let _ = write!(out, " {i} |");
+    }
+    out.push_str("\n|---|");
+    out.push_str(&":---:|".repeat(n));
+    out.push('\n');
+    for (i, (a, s)) in weapons(table).enumerate() {
+        let _ = write!(out, "| {} {} |", i + 1, s.name);
+        for (b, _) in weapons(table) {
+            let cell = match table.penalty(a, b) {
+                _ if a == b => "·".to_string(),
+                Some(p) => minus(p),
+                None => String::new(),
+            };
+            let _ = write!(out, " {cell} |");
+        }
+        out.push('\n');
+    }
+    out
+}
+
+/// For each weapon skill (`styles`: each fighting style) the skills it raises, with the penalty.
+fn default_list(table: &WeaponSkillTable, styles: bool) -> String {
+    let mut out = format!(
+        "| {} | Defaults to |\n|---|---|\n",
+        if styles { "Style" } else { "Skill" }
+    );
+    for (id, s) in table.ids().filter(|(_, s)| s.is_style() == styles) {
         let to: Vec<String> = (table.defaults_of(id).into_iter())
             .map(|(other, p)| format!("{} {}", table.skill(other).name, minus(p)))
             .collect();
@@ -83,26 +124,6 @@ pub fn defaults(content: &Content) -> String {
             to.join(", ")
         };
         let _ = writeln!(out, "| {} | {to} |", s.name);
-    }
-    let n = table.skills().len();
-    out.push_str("\n| |");
-    for i in 1..=n {
-        let _ = write!(out, " {i} |");
-    }
-    out.push_str("\n|---|");
-    out.push_str(&":---:|".repeat(n));
-    out.push('\n');
-    for (a, s) in table.ids() {
-        let _ = write!(out, "| {} {} |", a.0 + 1, s.name);
-        for (b, _) in table.ids() {
-            let cell = match table.penalty(a, b) {
-                _ if a == b => "·".to_string(),
-                Some(p) => minus(p),
-                None => String::new(),
-            };
-            let _ = write!(out, " {cell} |");
-        }
-        out.push('\n');
     }
     out
 }
@@ -159,7 +180,7 @@ pub fn marks(content: &Content) -> String {
     let curves = table.curves();
     out.push_str("\n| Rank |");
     for name in curves.keys() {
-        let name = super::capital(name);
+        let name = capital(name);
         let _ = write!(out, " {name} marks | {name}, in all |");
     }
     out.push_str("\n|:---:|");
@@ -205,43 +226,156 @@ fn faster(v: i32) -> String {
     format!("{v}% less")
 }
 
-const COLUMNS: [Column; 7] = [
+fn rolls(v: i32) -> String {
+    format!("+{v} {}", if v == 1 { "roll" } else { "rolls" })
+}
+
+fn percent(v: i32) -> String {
+    format!("{v}%")
+}
+
+const COLUMNS: [Column; 9] = [
     ("To hit", |b| b.to_hit, plus),
     ("Damage", |b| b.damage, plus),
     ("Critical range", |b| i32::from(b.threat), wider),
+    ("Critical damage", |b| i32::from(b.crit), rolls),
     ("Time", |b| i32::from(b.speed), faster),
     ("Parry", |b| b.parry, plus),
     ("Shield", |b| b.shield, plus),
     ("Reload time", |b| i32::from(b.reload), faster),
+    ("Shield bash after a hit", |b| i32::from(b.bash), percent),
 ];
 
-/// What each rank of each skill gives: a table per skill, ranks 1 to 10, with the benefits it
-/// has.
+/// A two-weapon penalty as it reads: `−4`, or `none`.
+fn penalty(p: i32) -> String {
+    if p == 0 {
+        "none".into()
+    } else {
+        format!("\u{2212}{}", -p)
+    }
+}
+
+/// A table of ranks 1 to 10 of skill `id`: the [`COLUMNS`] it has, and for a style that eases
+/// the two-weapon penalties the penalty of each hand at each rank.
+fn rank_table(table: &WeaponSkillTable, id: WeaponSkillId) -> String {
+    let ranks: Vec<Benefit> = (1..=MAX_RANK).map(|r| table.benefit(id, r)).collect();
+    let mut columns: Vec<(&str, Vec<String>)> = (COLUMNS.iter())
+        .filter(|(_, get, _)| ranks.iter().any(|b| get(b) != 0))
+        .map(|(name, get, show)| {
+            let cells = (ranks.iter())
+                .map(|b| match get(b) {
+                    0 => "-".to_string(),
+                    v => show(v),
+                })
+                .collect();
+            (*name, cells)
+        })
+        .collect();
+    let two = table.two_weapons();
+    let hands: [(&str, i32, fn(&Benefit) -> u8); 2] = [
+        ("Main hand", two.main, |b| b.ease_main),
+        ("Off hand", two.off, |b| b.ease_off),
+    ];
+    for (name, base, ease) in hands {
+        if ranks.iter().any(|b| ease(b) != 0) {
+            let cells = (ranks.iter())
+                .map(|b| penalty(TwoWeapons::eased(base, ease(b))))
+                .collect();
+            columns.push((name, cells));
+        }
+    }
+    let mut out = String::from("| Rank |");
+    for (name, _) in &columns {
+        let _ = write!(out, " {name} |");
+    }
+    out.push_str("\n|:---:|");
+    out.push_str(&":---:|".repeat(columns.len()));
+    out.push('\n');
+    for r in 0..ranks.len() {
+        let _ = write!(out, "| {} |", r + 1);
+        for (_, cells) in &columns {
+            let _ = write!(out, " {} |", cells[r]);
+        }
+        out.push('\n');
+    }
+    out
+}
+
+/// What each rank of each weapon skill gives: a table per skill, ranks 1 to 10, with the
+/// benefits it has.
 pub fn benefits(content: &Content) -> String {
     let table = content.weapon_skills();
     let mut out = String::new();
-    for (id, s) in table.ids() {
-        let ranks: Vec<Benefit> = (1..=MAX_RANK).map(|r| table.benefit(id, r)).collect();
-        let columns: Vec<&Column> = (COLUMNS.iter())
-            .filter(|(_, get, _)| ranks.iter().any(|b| get(b) != 0))
-            .collect();
+    for (id, s) in weapons(table) {
         let _ = writeln!(out, "**{}**\n", s.name);
-        out.push_str("| Rank |");
-        for (name, ..) in &columns {
-            let _ = write!(out, " {name} |");
-        }
-        out.push_str("\n|:---:|");
-        out.push_str(&":---:|".repeat(columns.len()));
+        out.push_str(&rank_table(table, id));
         out.push('\n');
-        for (r, b) in ranks.iter().enumerate() {
-            let _ = write!(out, "| {} |", r + 1);
-            for (_, get, show) in &columns {
-                let v = get(b);
-                let cell = if v == 0 { "-".to_string() } else { show(v) };
-                let _ = write!(out, " {cell} |");
-            }
-            out.push('\n');
-        }
+    }
+    out
+}
+
+/// A grip in words: `a one-handed weapon and a shield`.
+fn grip_text(grip: Grip) -> &'static str {
+    match grip {
+        Grip::OneWeapon => "a one-handed weapon, the other hand empty",
+        Grip::TwoWeapons => "a weapon in each hand",
+        Grip::TwoHanded => "a two-handed weapon",
+        Grip::WeaponAndShield => "a one-handed weapon and a shield",
+        Grip::Unarmed => "nothing in your hands",
+        Grip::Launcher => "shooting a missile weapon",
+        Grip::Thrown => "throwing",
+    }
+}
+
+/// The fighting styles in file order: the configuration each is fought in, the weapon skills it
+/// is fought with, the curve it trains along, and the styles it defaults to.
+pub fn styles(content: &Content) -> String {
+    let table = content.weapon_skills();
+    let mut out = String::from("| Style | Fought with | Weapons | Marks |\n|---|---|---|---|\n");
+    for (_, s, style) in table.styles() {
+        let names = |ids: &[WeaponSkillId]| -> Vec<String> {
+            ids.iter().map(|&w| table.skill(w).name.clone()).collect()
+        };
+        let others: Vec<String> = (table.styles())
+            .filter(|(_, _, o)| o.grip == style.grip && !o.weapons.is_empty())
+            .flat_map(|(_, _, o)| names(&o.weapons))
+            .collect();
+        let weapons = match (style.grip, style.weapons.is_empty(), others.is_empty()) {
+            (Grip::Unarmed, ..) => "fists".to_string(),
+            (_, false, _) => names(&style.weapons).join(", "),
+            (_, true, true) => "any".to_string(),
+            (_, true, false) => format!("any but {}", others.join(", ").to_lowercase()),
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {weapons} | {} |",
+            s.name,
+            capital(grip_text(style.grip)),
+            s.curve
+        );
+    }
+    out
+}
+
+/// The defaults between fighting styles.
+pub fn style_defaults(content: &Content) -> String {
+    default_list(content.weapon_skills(), true)
+}
+
+/// What each rank of each fighting style gives, a table per style; Twin Blades' shows the
+/// two-weapon penalty of each hand at each rank.
+pub fn style_benefits(content: &Content) -> String {
+    let table = content.weapon_skills();
+    let two = table.two_weapons();
+    let mut out = format!(
+        "With a weapon in each hand and no rank in Twin Blades, the main hand strikes at **{}** \
+         to hit and the off hand at **{}**.\n\n",
+        penalty(two.main),
+        penalty(two.off)
+    );
+    for (id, s, _) in table.styles() {
+        let _ = writeln!(out, "**{}**\n", s.name);
+        out.push_str(&rank_table(table, id));
         out.push('\n');
     }
     out
@@ -267,10 +401,26 @@ pub fn ranks_text(content: &Content, ranks: &[(WeaponSkillId, Dice)]) -> String 
     }
 }
 
-/// A class's starting ranks: its own, then its choice (`Axes 2 or Great blades 2`).
-pub fn class_ranks(content: &Content, class: &warlock_core::content::ClassDef) -> String {
-    let own = ranks_text(content, &class.weapon_skills);
-    let choice: Vec<String> = (class.weapon_skill_choice.iter())
+/// A class's starting ranks in weapon skills: its own, then its choice (`Axes 2 or Great blades
+/// 2`).
+pub fn class_ranks(content: &Content, class: &ClassDef) -> String {
+    own_or_chosen(content, &class.weapon_skills, &class.weapon_skill_choice)
+}
+
+/// A class's starting ranks in fighting styles: its own, then its choice (`Twin Blades 1 or
+/// Duelist 1`).
+pub fn class_styles(content: &Content, class: &ClassDef) -> String {
+    own_or_chosen(content, &class.styles, &class.style_choice)
+}
+
+/// Ranks `own`, then one of `choice`.
+fn own_or_chosen(
+    content: &Content,
+    own: &[(WeaponSkillId, Dice)],
+    choice: &[Vec<(WeaponSkillId, Dice)>],
+) -> String {
+    let own = ranks_text(content, own);
+    let choice: Vec<String> = (choice.iter())
         .map(|set| ranks_text(content, set))
         .collect();
     match (own.as_str(), choice.is_empty()) {

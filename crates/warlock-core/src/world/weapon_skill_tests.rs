@@ -568,17 +568,16 @@ fn ranks_change_to_hit_damage_threat_defence_and_cost() {
     let trained_shot = me(&w).ranged(&content).expect("a crossbow");
     assert_eq!(trained_shot.to_hit, shot.to_hit + 1);
     let player = w.player_id();
-    let crossbows = Some(skill(&w, "crossbows"));
-    assert_eq!(w.attack_price(player, ActionKind::Shoot, crossbows), 6000);
-    assert_eq!(w.attack_price(player, ActionKind::Reload, crossbows), 5400);
+    let shot = me(&w).attack_skills(&content, AttackKind::Ranged, None);
+    assert_eq!(w.attack_price(player, ActionKind::Shoot, shot), 6000);
+    assert_eq!(w.attack_price(player, ActionKind::Reload, shot), 5400);
     // Daggers 7: a blow takes a tenth less time.
-    let daggers = Some(skill(&w, "daggers"));
-    assert_eq!(w.attack_price(player, ActionKind::Melee, daggers), 6000);
-    set(&mut w, "daggers", 7, 0);
-    assert_eq!(w.attack_price(player, ActionKind::Melee, daggers), 5400);
     let mut w = world_on(YARD);
     arm(&mut w, &["dagger"]);
+    let blow = me(&w).attack_skills(&content, AttackKind::Melee, None);
+    assert_eq!(w.attack_price(player, ActionKind::Melee, blow), 6000);
     set(&mut w, "daggers", 7, 0);
+    assert_eq!(w.attack_price(player, ActionKind::Melee, blow), 5400);
     let mut elapsed = Duration::ZERO;
     for _ in 0..5 {
         elapsed = elapsed + w.apply(&Action::Move(Dir::E)).elapsed;
@@ -681,7 +680,7 @@ fn starting_ranks_come_from_race_and_class_and_never_move_the_stats() {
             _ => include_str!("../../../../assets/data/classes.toml"),
         };
         let stripped: String = (text.lines())
-            .filter(|l| !l.starts_with("weapon_skill"))
+            .filter(|l| !l.starts_with("weapon_skill") && !l.starts_with("style"))
             .map(|l| format!("{l}\n"))
             .collect();
         files.insert(path, &stripped);

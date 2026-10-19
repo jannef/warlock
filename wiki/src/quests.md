@@ -44,9 +44,9 @@ your pack is put at your feet. A few quests can be done again once they are done
 
 `q` opens the **quest log**: the quests you have taken up, then the ones you have done. Choose
 one with the arrows to see what it asks, how far you have got ("2 / 3 killed.", "Return to the
-old hermit."), and who gave it, in their words. It is page 5 of the info screens: `1` to `5`,
+old hermit."), and who gave it, in their words. It is page 5 of the info screens: `1` to `6`,
 `Tab`, and `Shift`+`Tab` switch between it and the character screen, the inventory, the
-equipment, and your skills.
+equipment, your skills, and your weapon skills.
 
 A quest you take up stays in the log until you have done it: quests cannot be given up. There is
 no limit on how many you may be on at once. Opening the log takes no time.

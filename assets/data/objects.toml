@@ -14,6 +14,10 @@
 #   slot       the slot it goes in, by id (`slot = "body"`), or what a slot fits (`slot = "ring"`
 #              goes on either hand); none: it cannot be worn or wielded
 #   two_handed takes both hands (main and off hand); default false
+#   light_weapon  a light one-handed weapon (a dagger, a short sword): it goes in either hand, so
+#              a second one in the off hand fights with two weapons (spec §8 "Fighting styles");
+#              default false. Only the off hand's own things (a shield) and light weapons go
+#              there
 #   ammo       the kind of ammunition it is (`ammo = "arrow"`)
 #   launches   the kind of ammunition a missile weapon shoots (`launches = "arrow"`); launchers
 #              and ammunition pair by that kind, and some object must be that kind of ammunition
@@ -98,6 +102,7 @@ fg = "#c8ccd4"
 material = "steel"
 weight = 450
 slot = "main_hand"
+light_weapon = true
 damage = "1d4"
 category = "daggers"
 threat = 20
@@ -116,6 +121,7 @@ fg = "#d8dce4"
 material = "steel"
 weight = 300
 slot = "main_hand"
+light_weapon = true
 damage = "1d4"
 threat = 19
 category = "daggers"
@@ -131,6 +137,7 @@ fg = "#dce0e8"
 material = "steel"
 weight = 1100
 slot = "main_hand"
+light_weapon = true
 damage = "1d6"
 category = "short_blades"
 threat = 20

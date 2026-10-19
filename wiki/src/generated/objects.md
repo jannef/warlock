@@ -2,9 +2,9 @@
 
 | Object | Glyph | Kind | Material | Weight (each) | Stacks | Worn or wielded on |
 |---|:---:|---|---|---:|:---:|---|
-| Dagger | `)` | weapon | steel | 450 g | no | Main hand |
-| Stiletto | `)` | weapon | steel | 300 g | no | Main hand |
-| Short sword | `)` | weapon | steel | 1.1 kg | no | Main hand |
+| Dagger | `)` | weapon | steel | 450 g | no | Main hand or off hand |
+| Stiletto | `)` | weapon | steel | 300 g | no | Main hand or off hand |
+| Short sword | `)` | weapon | steel | 1.1 kg | no | Main hand or off hand |
 | Scimitar | `)` | weapon | steel | 1.5 kg | no | Main hand |
 | Long sword | `)` | weapon | steel | 1.8 kg | no | Main hand |
 | Rapier | `)` | weapon | steel | 1.1 kg | no | Main hand |

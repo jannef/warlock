@@ -6,6 +6,7 @@
 //! and humans' extra class skill), and gives them starting ranks in weapon skills (spec §8
 //! "Weapon skills"; fixed numbers or dice).
 
+use super::weapon_skill::Ranked;
 use super::{ContentError, WeaponSkillId, WeaponSkillTable};
 use crate::combat::MAX_BASE_HP;
 use crate::dice::Dice;
@@ -183,7 +184,7 @@ impl Races {
                     HUNGER.end()
                 )));
             }
-            let weapon_skills = (weapon_table.starting_ranks(&spec.weapon_skills))
+            let weapon_skills = (weapon_table.starting_ranks(&spec.weapon_skills, Ranked::Weapons))
                 .map_err(|m| err(format!("race `{id}`: {m}")))?;
             list.push(RaceDef {
                 id: spec.id,

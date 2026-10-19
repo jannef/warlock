@@ -20,6 +20,7 @@ const PAGES: &[(ScreenName, &str)] = &[
     (ScreenName::Equipment, "Equipment"),
     (ScreenName::Skills, "Skills"),
     (ScreenName::Quests, "Quests"),
+    (ScreenName::WeaponSkills, "Weapon skills"),
 ];
 
 /// Whether `name` is one of the pages.
@@ -125,6 +126,7 @@ mod tests {
         assert_eq!(switch(Character, &top_row("2"), &b), replace(Inventory));
         assert_eq!(switch(Inventory, &top_row("2"), &b), None, "already there");
         assert_eq!(switch(Skills, &top_row("5"), &b), replace(Quests));
+        assert_eq!(switch(Quests, &top_row("6"), &b), replace(WeaponSkills));
         assert_eq!(
             switch(Character, &top_row("9"), &b),
             None,
@@ -143,8 +145,9 @@ mod tests {
         let replace = |name| Some(ScreenAction::Replace(name));
         assert_eq!(switch(Character, &tab(false), &b), replace(Inventory));
         assert_eq!(switch(Skills, &tab(false), &b), replace(Quests));
-        assert_eq!(switch(Quests, &tab(false), &b), replace(Character));
-        assert_eq!(switch(Character, &tab(true), &b), replace(Quests));
+        assert_eq!(switch(Quests, &tab(false), &b), replace(WeaponSkills));
+        assert_eq!(switch(WeaponSkills, &tab(false), &b), replace(Character));
+        assert_eq!(switch(Character, &tab(true), &b), replace(WeaponSkills));
         let up = press(KeyBinding::Code(KeyCode::PageUp), false);
         assert_eq!(switch(Inventory, &up, &b), replace(Character));
     }
@@ -183,11 +186,12 @@ mod tests {
             (parts.iter().map(|(t, _)| t.as_str()).collect::<Vec<_>>()).join(" · ")
         };
         assert_eq!(
-            line(61),
-            "1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Quests"
+            line(79),
+            "1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Quests · 6 Weapon skills"
         );
-        assert_eq!(line(60), "1 · 2 Inventory · 3 · 4 · 5");
-        assert_eq!(line(26), "1 · 2 · 3 · 4 · 5");
-        assert_eq!(line(16), "");
+        assert_eq!(line(78), "1 · 2 Inventory · 3 · 4 · 5 · 6");
+        assert_eq!(line(31), "1 · 2 Inventory · 3 · 4 · 5 · 6");
+        assert_eq!(line(30), "1 · 2 · 3 · 4 · 5 · 6");
+        assert_eq!(line(20), "");
     }
 }

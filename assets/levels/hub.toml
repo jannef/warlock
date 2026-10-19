@@ -46,8 +46,10 @@
 # tables at the end.
 #
 # Equipment (M16): the storeroom has something for every slot but the rings and the neck (the
-# ring and the amulets lie elsewhere): a helm, mail, a cloak, weapons (a quarterstaff for both
-# hands), a shield, gloves, boots, and a bow with arrows. Wear and wield them with `e`.
+# ring and the amulets lie elsewhere): a helm, mail, a cloak, weapons (a quarterstaff and a
+# great sword for both hands), a shield, gloves, boots, and a bow with arrows. Wear and wield them
+# with `e`. The start room's dagger is light: it goes in the off hand beside the spear or the
+# club, for fighting with two weapons (spec §8 "Fighting styles").
 #
 # Doors (M19): the pantry's west door (P) is locked; the iron key to it lies in the storeroom.
 # Unlock it by opening it with the key, or kick it in (`K`): a broken door stays open for good.
@@ -149,7 +151,7 @@ objects = ["chain_mail", "iron_helm"]
 
 [[pile]]
 at = [20, 13]
-objects = ["spear"]
+objects = ["spear", "great_sword"]
 
 [[pile]]
 at = [21, 15]

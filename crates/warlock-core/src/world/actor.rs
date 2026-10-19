@@ -6,8 +6,8 @@ use crate::burden::Burden;
 use crate::combat::{self, Attack, Category, Defence, Health, Profile};
 use crate::content::Effect as ItemEffect;
 use crate::content::{
-    ActionKind, Benefit, CombatStance, Content, CreatureId, FactionId, ObjectDef, ObjectId, Role,
-    WeaponSkillId,
+    ActionKind, Benefit, CombatStance, Content, CreatureId, FactionId, Grip, ObjectDef, ObjectId,
+    Role, TwoWeapons, WeaponSkillId,
 };
 use crate::disease::Diseases;
 use crate::door::{Key, Lock};
@@ -70,6 +70,27 @@ impl Mind {
     /// Whether it is going about its routine.
     pub fn is_calm(&self) -> bool {
         *self == Mind::default()
+    }
+}
+
+/// What an attack draws on and trains (spec §8 "Weapon skills", "Fighting styles"): a weapon
+/// skill and a fighting style, each if any ([`Actor::attack_skills`]). A kick draws on unarmed
+/// fighting alone: it is made whatever the hands hold, so it is fought in no style.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct AttackSkills {
+    pub skill: Option<WeaponSkillId>,
+    pub style: Option<WeaponSkillId>,
+}
+
+impl AttackSkills {
+    /// A weapon skill alone, in no style.
+    pub fn only(skill: Option<WeaponSkillId>) -> Self {
+        Self { skill, style: None }
+    }
+
+    /// Both, in the order they train (and their news is said): the weapon skill, then the style.
+    pub fn trained(self) -> impl Iterator<Item = WeaponSkillId> {
+        [self.skill, self.style].into_iter().flatten()
     }
 }
 
@@ -275,13 +296,17 @@ impl Actor {
     /// wields (each with what its own affixes add), its creature type's natural armour, the Dodge
     /// its skills give (tumble; spec §8 "Skills"), and the Dodge, Deflection, and natural armour
     /// its magic items give (spec §8 "Magic items"). Weapon skills add (spec §8 "Weapon skills"):
-    /// the wielded weapon's skill to its parry, shield blocking to a held shield's.
+    /// the wielded weapon's skill to its parry, shield blocking to a held shield's; and so does
+    /// the fighting style its hands are in (spec §8 "Fighting styles": a duelist's parry, sword
+    /// and board's shield).
     pub fn defence(&self, content: &Content, burden: Burden) -> Defence {
         let mods = self.mods(content);
         let weapon = self.weapon_item(content);
-        let parry_skill = self.benefit(content, self.melee_skill(content)).parry;
+        let style = self.benefit(content, self.style(content, AttackKind::Melee, None));
+        let parry_skill = self.benefit(content, self.melee_skill(content)).parry + style.parry;
         let block = (content.weapon_skills().of_role(Role::ShieldBlock))
-            .map_or(0, |id| self.benefit(content, Some(id)).shield);
+            .map_or(0, |id| self.benefit(content, Some(id)).shield)
+            + style.shield;
         let equipped: Vec<(usize, &ObjectDef, Mods, bool)> = (self.equipment.items().into_iter())
             .filter_map(|(slot, item)| {
                 Some((item, content.slot(slot).hand, self.inventory.get(item)?))
@@ -394,9 +419,10 @@ impl Actor {
         }
     }
 
-    /// The weapon skill an attack of `kind` made `with` (a missile, a shield for a bash, or
-    /// nothing for a blow) draws on and trains: a blow's ([`Actor::melee_skill`]), a bash's
-    /// shield bashing, a shot's the launcher's, a throw's thrown; a spell none.
+    /// The weapon skill an attack of `kind` made `with` (a missile, a shield for a bash, the
+    /// off hand's weapon for its blow, or nothing for a blow) draws on and trains: a blow's
+    /// ([`Actor::melee_skill`]), a bash's shield bashing, an off-hand blow's its weapon's, a
+    /// shot's the launcher's, a throw's thrown; a spell none.
     pub fn attack_skill(
         &self,
         content: &Content,
@@ -406,12 +432,144 @@ impl Actor {
         let skills = content.weapon_skills();
         match (kind, with) {
             (AttackKind::Melee, None) => self.melee_skill(content),
-            (AttackKind::Melee, Some(_)) => skills.of_role(Role::ShieldBash),
+            (AttackKind::Melee, Some(with)) => match content.object(with) {
+                shield if shield.bash.is_some() => skills.of_role(Role::ShieldBash),
+                weapon => weapon.skill,
+            },
             (AttackKind::Ranged, _) => self
                 .launcher(content)
                 .and_then(|(launcher, _)| content.object(launcher).skill),
             (AttackKind::Thrown, _) => skills.of_role(Role::Thrown),
             (AttackKind::Spell, _) => None,
+        }
+    }
+
+    /// What is in its hands: each thing once (a two-handed weapon is in both), in hand order,
+    /// with where in its inventory it is.
+    fn in_hands<'c>(&self, content: &'c Content) -> Vec<(usize, &'c ObjectDef)> {
+        let mut held: Vec<usize> = Vec::new();
+        for slot in content.hand_slots() {
+            let Some(item) = self.equipment.get(slot) else {
+                continue;
+            };
+            if self.inventory.get(item).is_some() && !held.contains(&item) {
+                held.push(item);
+            }
+        }
+        (held.into_iter())
+            .map(|item| (item, content.object(self.inventory[item].object)))
+            .collect()
+    }
+
+    /// The grip its hands are in for a blow (spec §8 "Fighting styles"), and the weapon skills
+    /// of the weapons in them: nothing (unarmed), one one-handed weapon (the other hand empty),
+    /// a weapon in each hand, a two-handed weapon, or a one-handed weapon and a shield; `None`
+    /// for anything else (a shield alone).
+    pub fn grip(&self, content: &Content) -> Option<(Grip, Vec<WeaponSkillId>)> {
+        let held = self.in_hands(content);
+        let weapon = |o: &ObjectDef| o.attack.is_some();
+        let skills = held.iter().filter_map(|(_, o)| o.skill).collect();
+        let grip = match held.as_slice() {
+            [] => Grip::Unarmed,
+            [(_, w)] if weapon(w) && w.two_handed => Grip::TwoHanded,
+            [(_, w)] if weapon(w) => Grip::OneWeapon,
+            [(_, a), (_, b)] if weapon(a) && weapon(b) => Grip::TwoWeapons,
+            [(_, a), (_, b)] if (weapon(a) && b.shield > 0) || (a.shield > 0 && weapon(b)) => {
+                Grip::WeaponAndShield
+            }
+            _ => return None,
+        };
+        Some((grip, skills))
+    }
+
+    /// The fighting style an attack of `kind` made `with` (as for [`Actor::attack_skill`]) is
+    /// fought in, whatever its rank (spec §8 "Fighting styles"): a blow's, a bash's, or an
+    /// off-hand blow's by the grip of its hands; a shot's by its launcher; a throw's by what is
+    /// thrown. A spell has none.
+    pub fn style(
+        &self,
+        content: &Content,
+        kind: AttackKind,
+        with: Option<ObjectId>,
+    ) -> Option<WeaponSkillId> {
+        let table = content.weapon_skills();
+        let skill_of = |object: ObjectId| content.object(object).skill;
+        match kind {
+            AttackKind::Melee => {
+                let (grip, weapons) = self.grip(content)?;
+                table.style_for(grip, &weapons)
+            }
+            AttackKind::Ranged => {
+                let (launcher, _) = self.launcher(content)?;
+                let weapons: Vec<WeaponSkillId> = skill_of(launcher).into_iter().collect();
+                table.style_for(Grip::Launcher, &weapons)
+            }
+            AttackKind::Thrown => {
+                let weapons: Vec<WeaponSkillId> = with.and_then(skill_of).into_iter().collect();
+                table.style_for(Grip::Thrown, &weapons)
+            }
+            AttackKind::Spell => None,
+        }
+    }
+
+    /// The fighting styles it fights in now, in id order: its hands' (blows and Defence), its
+    /// readied missile weapon's, and throwing's while it has something ready to throw.
+    pub fn styles_in_use(&self, content: &Content) -> Vec<WeaponSkillId> {
+        let thrown = self
+            .ready_to_throw(content)
+            .map(|i| self.inventory[i].object);
+        let mut styles: Vec<WeaponSkillId> = [
+            self.style(content, AttackKind::Melee, None),
+            self.launcher(content)
+                .and_then(|_| self.style(content, AttackKind::Ranged, None)),
+            thrown.and_then(|t| self.style(content, AttackKind::Thrown, Some(t))),
+        ]
+        .into_iter()
+        .flatten()
+        .collect();
+        styles.sort_unstable();
+        styles.dedup();
+        styles
+    }
+
+    /// The weapon skill and the fighting style an attack of `kind` made `with` (as for
+    /// [`Actor::attack_skill`]) draws on and trains.
+    pub fn attack_skills(
+        &self,
+        content: &Content,
+        kind: AttackKind,
+        with: Option<ObjectId>,
+    ) -> AttackSkills {
+        AttackSkills {
+            skill: self.attack_skill(content, kind, with),
+            style: self.style(content, kind, with),
+        }
+    }
+
+    /// What its ranks in `skills` give: the weapon skill's benefit and the fighting style's,
+    /// together.
+    pub fn benefit_of(&self, content: &Content, skills: AttackSkills) -> Benefit {
+        (self.benefit(content, skills.skill)).plus(self.benefit(content, skills.style))
+    }
+
+    /// What its ranks give an attack of `kind` made `with` (as for [`Actor::attack_skill`]): its
+    /// weapon skill's benefit and its fighting style's, together.
+    pub fn attack_benefit(
+        &self,
+        content: &Content,
+        kind: AttackKind,
+        with: Option<ObjectId>,
+    ) -> Benefit {
+        self.benefit_of(content, self.attack_skills(content, kind, with))
+    }
+
+    /// The weapon in its off hand while it holds a weapon in each of two hands (spec §8
+    /// "Fighting styles"): the second, in hand order, where in its inventory it is, and what it
+    /// is.
+    pub fn off_hand<'c>(&self, content: &'c Content) -> Option<(usize, &'c Attack)> {
+        match self.in_hands(content).as_slice() {
+            [(_, main), (off, def)] if main.attack.is_some() => Some((*off, def.attack.as_ref()?)),
+            _ => None,
         }
     }
 
@@ -514,9 +672,11 @@ impl Actor {
     }
 
     /// What its melee attacks do: with the weapon it wields, else its natural attack, else its
-    /// bare hands; Strength to hit and to damage, and what its weapon skill gives; then the
-    /// weapon's own affixes and those of everything it wears and wields (spec §8 "Magic items");
-    /// and its combat stance.
+    /// bare hands; Strength to hit and to damage, and what its weapon skill and fighting style
+    /// give; then the weapon's own affixes and those of everything it wears and wields (spec §8
+    /// "Magic items"); and its combat stance. With a weapon in each hand this is the main hand's
+    /// blow, at the main hand's penalty, less what the style eases ([`Actor::off_hand_blow`] is
+    /// the other).
     pub fn melee(&self, content: &Content) -> Profile {
         let mods = self.mods(content);
         let natural = content.creature(self.creature).attack.as_ref();
@@ -529,9 +689,12 @@ impl Actor {
             (None, Some(natural)) => (natural.attack, Mods::default()),
             (None, None) => (Attack::unarmed(), Mods::default()),
         };
-        let skill = self.melee_skill(content);
-        let mut profile = Profile::melee(&attack, &self.stats_with(content, &mods))
-            .with(&self.benefit(content, skill));
+        let benefit = self.attack_benefit(content, AttackKind::Melee, None);
+        let mut profile = Profile::melee(&attack, &self.stats_with(content, &mods)).with(&benefit);
+        if self.off_hand(content).is_some() {
+            let main = content.weapon_skills().two_weapons().main;
+            profile.to_hit += TwoWeapons::eased(main, benefit.ease_main);
+        }
         local.sharpen(&mut profile);
         mods.sharpen(&mut profile);
         self.stanced(content, profile)
@@ -542,10 +705,29 @@ impl Actor {
         content.stance_def(self.stance).apply(profile)
     }
 
+    /// The off hand's blow while it holds a weapon in each hand (spec §8 "Fighting styles"):
+    /// that weapon, Strength to hit and to damage, what its own weapon skill and the fighting
+    /// style give, at the off hand's penalty less what the style eases; then that weapon's own
+    /// affixes and those of everything it wears and wields (spec §8 "Magic items"); and its
+    /// combat stance. `None` without one.
+    pub fn off_hand_blow(&self, content: &Content) -> Option<(ObjectId, Profile)> {
+        let (item, attack) = self.off_hand(content)?;
+        let stack = &self.inventory[item];
+        let mods = self.mods(content);
+        let benefit = self.attack_benefit(content, AttackKind::Melee, Some(stack.object));
+        let mut profile = Profile::melee(attack, &self.stats_with(content, &mods)).with(&benefit);
+        let penalty = content.weapon_skills().two_weapons().off;
+        profile.to_hit += TwoWeapons::eased(penalty, benefit.ease_off);
+        Mods::local(stack, content).sharpen(&mut profile);
+        mods.sharpen(&mut profile);
+        Some((stack.object, self.stanced(content, profile)))
+    }
+
     /// What its shots do, with the missile weapon it has ready (`None` without one): Dexterity to
     /// hit, the launcher's own damage, and less of both for each point of Strength below what a
-    /// bow needs; what its skill with the launcher gives; then the affixes of the launcher, of
-    /// its ammunition, and of everything it wears and wields; and its combat stance.
+    /// bow needs; what its skill with the launcher and its fighting style give; then the affixes
+    /// of the launcher, of its ammunition, and of everything it wears and wields; and its combat
+    /// stance.
     pub fn ranged(&self, content: &Content) -> Option<Profile> {
         let mods = self.mods(content);
         let launcher = &self.inventory[self.launcher_item(content)?];
@@ -555,8 +737,8 @@ impl Actor {
         let draw = local.get(ItemEffect::Draw);
         attack.strength =
             (attack.strength).map(|s| u8::try_from((i32::from(s) - draw).max(1)).unwrap_or(1));
-        let mut profile = Profile::ranged(&attack, &self.stats_with(content, &mods))
-            .with(&self.benefit(content, def.skill));
+        let benefit = self.attack_benefit(content, AttackKind::Ranged, None);
+        let mut profile = Profile::ranged(&attack, &self.stats_with(content, &mods)).with(&benefit);
         local.sharpen(&mut profile);
         if let Some(ammo) = self.ammunition_item(content) {
             Mods::local(&self.inventory[ammo], content).sharpen(&mut profile);
@@ -567,19 +749,19 @@ impl Actor {
 
     /// What a throw of inventory stack `item` does (`None` if it cannot be thrown): Dexterity
     /// to hit, Strength to damage (a weapon not made for throwing thrown whole, at
-    /// [`Profile::improvised`]), what its skill at throwing gives, its own affixes, those of
-    /// everything it wears and wields, and its combat stance.
+    /// [`Profile::improvised`]), what its skill at throwing and its fighting style give, its own
+    /// affixes, those of everything it wears and wields, and its combat stance.
     pub fn thrown(&self, item: usize, content: &Content) -> Option<Profile> {
         let stack = self.inventory.get(item)?;
         let def = content.object(stack.object);
         let attack = def.attack.filter(|_| def.can_throw())?;
         let mods = self.mods(content);
-        let skill = content.weapon_skills().of_role(Role::Thrown);
+        let benefit = self.attack_benefit(content, AttackKind::Thrown, Some(stack.object));
         let mut profile = Profile::thrown(&attack, &self.stats_with(content, &mods));
         if def.is_improvised() {
             profile = profile.improvised();
         }
-        let mut profile = profile.with(&self.benefit(content, skill));
+        let mut profile = profile.with(&benefit);
         Mods::local(stack, content).sharpen(&mut profile);
         mods.sharpen(&mut profile);
         Some(self.stanced(content, profile))
@@ -587,13 +769,13 @@ impl Actor {
 
     /// What a bash with the shield it holds does (`None` without one it can bash with): the
     /// shield's `bash` dice, Strength to hit and to damage as for any blow, what its skill at
-    /// shield bashing gives, the affixes of everything it wears and wields, and its combat stance.
+    /// shield bashing and its fighting style give, the affixes of everything it wears and
+    /// wields, and its combat stance.
     pub fn bash(&self, content: &Content) -> Option<(ObjectId, Profile)> {
         let (shield, attack) = self.shield(content)?;
-        let skill = content.weapon_skills().of_role(Role::ShieldBash);
+        let benefit = self.attack_benefit(content, AttackKind::Melee, Some(shield));
         let mods = self.mods(content);
-        let mut profile = Profile::melee(attack, &self.stats_with(content, &mods))
-            .with(&self.benefit(content, skill));
+        let mut profile = Profile::melee(attack, &self.stats_with(content, &mods)).with(&benefit);
         mods.sharpen(&mut profile);
         Some((shield, self.stanced(content, profile)))
     }

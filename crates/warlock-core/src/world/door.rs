@@ -14,7 +14,7 @@
 //!   "You kick at empty space." where one could walk, else "Kicking the stone wall would only
 //!   hurt your foot."
 
-use super::{ActorId, Spent, World};
+use super::{ActorId, AttackSkills, Spent, World};
 use crate::action::Event;
 use crate::content::{ActionKind, Role};
 use crate::door::kick_breaks;
@@ -110,7 +110,7 @@ impl World {
             let target = other.id;
             let seen = self.perception.sees_actors_at(at);
             let unarmed = self.content.weapon_skills().of_role(Role::Unarmed);
-            let price = self.attack_price(player, ActionKind::Kick, unarmed);
+            let price = self.attack_price(player, ActionKind::Kick, AttackSkills::only(unarmed));
             self.player_kicks(target, seen, events);
             return Spent::Turn(price);
         }

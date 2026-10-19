@@ -28,12 +28,20 @@
 //! ([`World::practise`]). A rank gained is said after the attack that earned it: "You feel more
 //! skilled with daggers." A shield bash ([`World::bash`]) is a blow with a held shield, its own
 //! damage, and its own skill.
+//!
+//! Fighting styles (spec §8 "Fighting styles"): every attack is also fought in a style
+//! ([`Actor::style`]) whose rank adds to the weapon skill's, and the player's attacks earn marks
+//! in it too. A melee attack is a round of blows ([`World::second_blow`]): with a weapon in each
+//! hand the off hand strikes after the main hand, both at a penalty; with a weapon and a shield
+//! a blow that hits may be followed by a free shield bash, by the style's chance. Each blow is
+//! resolved on its own: its weapon's skill and affixes, its blood, and the bleeding of a big hit.
+//! A kick is made whatever the hands hold: it draws on unarmed fighting and no style.
 
-use super::{Actor, ActorId, Spent, World};
+use super::{Actor, ActorId, AttackSkills, Spent, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Category, Profile, Strike};
 use crate::content::{
-    ActionKind, Content, CreatureId, ObjectId, Role, Stance, StatusId, TrapId, WeaponSkillId,
+    ActionKind, Content, CreatureId, Grip, ObjectId, Role, Stance, StatusId, TrapId, WeaponSkillId,
     article,
 };
 use crate::geom::Dir;
@@ -145,7 +153,7 @@ impl Words {
     }
 
     /// What `actor` attacks with, by `kind`; a shot or a throw is made `with` its missile, a
-    /// bash with a shield.
+    /// bash with a shield, an off-hand blow with the off hand's weapon.
     pub(super) fn of(
         actor: &Actor,
         kind: AttackKind,
@@ -158,9 +166,12 @@ impl Words {
             you: "hit",
         };
         match kind {
-            AttackKind::Melee if let Some(shield) = with => Self {
-                you: "bash",
-                ..words(&content.object(shield).name, "bashes")
+            AttackKind::Melee if let Some(with) = with => match content.object(with) {
+                shield if shield.bash.is_some() => Self {
+                    you: "bash",
+                    ..words(&shield.name, "bashes")
+                },
+                weapon => words(&weapon.name, "hits"),
             },
             AttackKind::Melee => {
                 let natural = content.creature(actor.creature).attack.as_ref();
@@ -346,8 +357,9 @@ impl World {
     }
 
     /// Actor `attacker` attacks actor `target`: a melee blow with what it wields (else its
-    /// natural attack, else its bare hands), a shot with the missile weapon it has ready (with
-    /// none, an intent only), or a spell (an intent only, until magic is designed). Returns the
+    /// natural attack, else its bare hands) and the blow that may follow it
+    /// ([`World::second_blow`]), a shot with the missile weapon it has ready (with none, an
+    /// intent only), or a spell (an intent only, until magic is designed). Returns the (first)
     /// blow, if one was struck.
     pub(super) fn attack(
         &mut self,
@@ -362,7 +374,43 @@ impl World {
             AttackKind::Ranged => me.ranged(&self.content),
             AttackKind::Thrown | AttackKind::Spell => None,
         };
-        self.attack_with(attacker, target, kind, profile, events)
+        let blow = self.attack_with(attacker, target, kind, profile, events);
+        if kind == AttackKind::Melee
+            && let Some((with, profile)) = self.second_blow(attacker, target, blow)
+        {
+            let skills = self.skills_of(attacker, AttackKind::Melee, Some(with));
+            let second = (AttackKind::Melee, Some(with), skills);
+            self.resolve(attacker, target, second, Some(profile), false, events);
+        }
+        blow
+    }
+
+    /// The blow after the first of actor `attacker`'s melee attack on `target` (spec §8
+    /// "Fighting styles"), if any, and what it is made with: with a weapon in each hand the off
+    /// hand's ([`Actor::off_hand_blow`]); with a weapon and a shield, after a `first` that hit, a
+    /// shield bash by the style's `bash` chance (one draw from the gameplay stream, only when
+    /// the chance is above 0). None once the target is gone.
+    fn second_blow(
+        &mut self,
+        attacker: ActorId,
+        target: ActorId,
+        first: Option<Blow>,
+    ) -> Option<(ObjectId, Profile)> {
+        if !self.state.actors.contains_key(&target) {
+            return None;
+        }
+        let content = self.content.clone();
+        let me = self.state.actors.get(&attacker)?;
+        if let Some(off) = me.off_hand_blow(&content) {
+            return Some(off);
+        }
+        let (Grip::WeaponAndShield, _) = me.grip(&content)? else {
+            return None;
+        };
+        let (shield, profile) = me.bash(&content)?;
+        let chance = me.attack_benefit(&content, AttackKind::Melee, None).bash;
+        let hit = first.is_some_and(|b| b.strike.is_hit());
+        (hit && chance > 0 && self.state.rng.chance(u32::from(chance))).then_some((shield, profile))
     }
 
     /// The Defence of actor `id`, its burden capping its Dexterity (spec §8 "Burden").
@@ -386,8 +434,15 @@ impl World {
         profile: Option<Profile>,
         events: &mut Vec<Event>,
     ) -> Option<Blow> {
-        let skill = self.skill_of(attacker, kind, None);
-        self.resolve(attacker, target, (kind, None, skill), profile, true, events)
+        let skills = self.skills_of(attacker, kind, None);
+        self.resolve(
+            attacker,
+            target,
+            (kind, None, skills),
+            profile,
+            true,
+            events,
+        )
     }
 
     /// A missile `with` loosed by `attacker` reaches actor `target`, attacking it with `profile`
@@ -401,29 +456,32 @@ impl World {
         profile: Profile,
         events: &mut Vec<Event>,
     ) -> Option<Blow> {
-        let skill = self.skill_of(attacker, kind, Some(with));
-        let kind = (kind, Some(with), skill);
+        let skills = self.skills_of(attacker, kind, Some(with));
+        let kind = (kind, Some(with), skills);
         self.resolve(attacker, target, kind, Some(profile), false, events)
     }
 
-    /// The weapon skill actor `id`'s attack of `kind` made `with` a missile or a shield (or
-    /// not) draws on ([`Actor::attack_skill`]).
-    fn skill_of(
+    /// The weapon skill and fighting style actor `id`'s attack of `kind` made `with` a missile,
+    /// a shield, or the off hand's weapon (or not) draws on ([`Actor::attack_skills`]).
+    pub(super) fn skills_of(
         &self,
         id: ActorId,
         kind: AttackKind,
         with: Option<ObjectId>,
-    ) -> Option<WeaponSkillId> {
-        (self.state.actors.get(&id)).and_then(|a| a.attack_skill(&self.content, kind, with))
+    ) -> AttackSkills {
+        (self.state.actors.get(&id))
+            .map(|a| a.attack_skills(&self.content, kind, with))
+            .unwrap_or_default()
     }
 
-    /// Rolls an attack of `kind` made `with` a missile or a shield (or not), drawing on weapon
-    /// skill `skill` (the player's earns its marks), and applies it, with its noise if `noisy`.
+    /// Rolls an attack of `kind` made `with` a missile, a shield, or the off hand's weapon (or
+    /// not), drawing on weapon skill and fighting style `skills` (the player's earn their
+    /// marks), and applies it, with its noise if `noisy`.
     fn resolve(
         &mut self,
         attacker: ActorId,
         target: ActorId,
-        (kind, with, skill): (AttackKind, Option<ObjectId>, Option<WeaponSkillId>),
+        (kind, with, skills): (AttackKind, Option<ObjectId>, AttackSkills),
         profile: Option<Profile>,
         noisy: bool,
         events: &mut Vec<Event>,
@@ -463,10 +521,11 @@ impl World {
         }
         let player = self.state.player;
         if let Some(blow) = blow {
-            if attacker == player
-                && let Some(skill) = skill
-            {
-                self.practise(skill, blow.strike.is_hit(), levels.1);
+            if attacker == player {
+                // The weapon skill first, then the style: their news is said in that order.
+                for skill in skills.trained() {
+                    self.practise(skill, blow.strike.is_hit(), levels.1);
+                }
             }
             let blocked = Strike::Missed {
                 by: Some(Category::Shield),
@@ -612,24 +671,50 @@ impl World {
         self.fallen.push(actor);
     }
 
-    /// The player attacks `target`, which they `seen` or not, in melee: the message is said at
-    /// once, by what the player knows as they strike; events reach presentation only if they
-    /// saw the target.
+    /// The player attacks `target`, which they `seen` or not, in melee: a blow, and the blow
+    /// that may follow it ([`World::second_blow`]: the off hand's, a shield bash). Each message
+    /// is said at once, by what the player knows as they strike; events reach presentation only
+    /// if they saw the target.
     pub(super) fn player_attacks(&mut self, target: ActorId, seen: bool, events: &mut Vec<Event>) {
+        let player = self.state.player;
+        let first = self.player_blow(target, seen, None, events);
+        if let Some((with, profile)) = self.second_blow(player, target, first) {
+            self.player_blow(target, seen, Some((with, profile)), events);
+        }
+    }
+
+    /// The player strikes `target` in melee: the first blow of an attack (`None`: with what
+    /// they wield, its noise made), or the blow that follows it, made with what and how.
+    fn player_blow(
+        &mut self,
+        target: ActorId,
+        seen: bool,
+        second: Option<(ObjectId, Profile)>,
+        events: &mut Vec<Event>,
+    ) -> Option<Blow> {
         let me = self.state.player();
-        let profile = me.melee(&self.content);
-        let skill = me.attack_skill(&self.content, AttackKind::Melee, None);
-        let words = Words::of(me, AttackKind::Melee, None, &self.content);
-        self.player_strikes(target, seen, (None, profile, skill), words, events);
+        let with = second.map(|(with, _)| with);
+        let profile = second.map_or_else(|| me.melee(&self.content), |(_, p)| p);
+        let skills = me.attack_skills(&self.content, AttackKind::Melee, with);
+        let words = Words::of(me, AttackKind::Melee, with, &self.content);
+        let noisy = second.is_none();
+        self.player_strikes(
+            target,
+            seen,
+            (with, profile, skills),
+            (words, noisy),
+            events,
+        )
     }
 
     /// The player kicks `target` (spec §8 "Doors"): an unarmed blow in melee, whatever they
-    /// wield ([`Actor::kick`]: it draws on and trains unarmed fighting), said and shown like any
-    /// blow.
+    /// wield ([`Actor::kick`]: it draws on and trains unarmed fighting, and no fighting style),
+    /// said and shown like any blow.
     pub(super) fn player_kicks(&mut self, target: ActorId, seen: bool, events: &mut Vec<Event>) {
         let profile = self.state.player().kick(&self.content);
-        let skill = self.content.weapon_skills().of_role(Role::Unarmed);
-        self.player_strikes(target, seen, (None, profile, skill), Words::kick(), events);
+        let skills = AttackSkills::only(self.content.weapon_skills().of_role(Role::Unarmed));
+        let blow = (None, profile, skills);
+        self.player_strikes(target, seen, blow, (Words::kick(), true), events);
     }
 
     /// The player bashes whoever stands in `dir` with the shield they hold (spec §8 "Weapon
@@ -661,27 +746,30 @@ impl World {
             return Spent::Nothing;
         }
         let me = self.state.player();
-        let skill = me.attack_skill(&content, AttackKind::Melee, Some(shield));
+        let skills = me.attack_skills(&content, AttackKind::Melee, Some(shield));
         let words = Words::of(me, AttackKind::Melee, Some(shield), &content);
-        self.player_strikes(target, seen, (Some(shield), profile, skill), words, events);
-        Spent::Turn(self.attack_price(player, ActionKind::Melee, skill))
+        let price = self.attack_price(player, ActionKind::Melee, skills);
+        let blow = (Some(shield), profile, skills);
+        self.player_strikes(target, seen, blow, (words, true), events);
+        Spent::Turn(price)
     }
 
-    /// The player strikes `target` in melee with `profile`, made `with` a shield (a bash) or
-    /// not (a blow, a kick), drawing on (and training) weapon skill `skill`, said in `words`:
-    /// see [`World::player_attacks`].
+    /// The player strikes `target` in melee with `profile`, made `with` a shield (a bash), the
+    /// off hand's weapon, or not (a blow, a kick), drawing on (and training) `skills`, said in
+    /// `words`, with its noise if `noisy` (the first blow of an attack): see
+    /// [`World::player_attacks`]. Returns the blow.
     fn player_strikes(
         &mut self,
         target: ActorId,
         seen: bool,
-        (with, profile, skill): (Option<ObjectId>, Profile, Option<WeaponSkillId>),
-        words: Words,
+        (with, profile, skills): (Option<ObjectId>, Profile, AttackSkills),
+        (words, noisy): (Words, bool),
         events: &mut Vec<Event>,
-    ) {
+    ) -> Option<Blow> {
         let player = self.state.player;
         let mut made = Vec::new();
-        let kind = (AttackKind::Melee, with, skill);
-        self.resolve(player, target, kind, Some(profile), true, &mut made);
+        let kind = (AttackKind::Melee, with, skills);
+        let blow = self.resolve(player, target, kind, Some(profile), noisy, &mut made);
         let content = self.content.clone();
         let target_actor = self.actor_or_fallen(target);
         let name = target_actor.map(|a| content.creature(a.creature).name.as_str());
@@ -716,5 +804,6 @@ impl World {
         if seen {
             events.extend(made);
         }
+        blow
     }
 }

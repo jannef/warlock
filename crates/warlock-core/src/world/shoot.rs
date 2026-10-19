@@ -32,7 +32,7 @@ use super::fight::{End, Words, attack_message, death_message};
 use super::{ActorId, Fire, Spent, World};
 use crate::action::{AttackKind, Event, Letters, MissileEnd, letter};
 use crate::combat::Profile;
-use crate::content::{ActionKind, Content, Effect, LevelKind, ObjectId, Role};
+use crate::content::{ActionKind, Content, Effect, LevelKind, ObjectId};
 use crate::fov::radius2;
 use crate::geom::Pos;
 use crate::magic::Mods;
@@ -103,12 +103,13 @@ impl World {
     }
 
     /// What a shot from missile weapon `launcher` costs actor `id`: `shoot`, and `reload` too
-    /// for one that needs it, less what its rank in the launcher's skill takes off.
+    /// for one that needs it, less what its ranks in the launcher's skill and its fighting style
+    /// take off.
     fn shot_price(&self, id: ActorId, launcher: ObjectId) -> i64 {
-        let def = self.content.object(launcher);
-        let mut price = self.attack_price(id, ActionKind::Shoot, def.skill);
-        if def.reloads {
-            price += self.attack_price(id, ActionKind::Reload, def.skill);
+        let shot = self.skills_of(id, AttackKind::Ranged, None);
+        let mut price = self.attack_price(id, ActionKind::Shoot, shot);
+        if self.content.object(launcher).reloads {
+            price += self.attack_price(id, ActionKind::Reload, shot);
         }
         price
     }
@@ -133,6 +134,7 @@ impl World {
             self.say(format!("You cannot throw {what}."));
             return Spent::Nothing;
         };
+        let throwing = me.attack_skills(&content, AttackKind::Thrown, Some(stack.object));
         if !self.within_reach(at, range, "throw") {
             return Spent::Nothing;
         }
@@ -143,7 +145,6 @@ impl World {
             range,
         };
         self.player_looses(at, loose, events);
-        let throwing = content.weapon_skills().of_role(Role::Thrown);
         let price = self.attack_price(self.state.player, ActionKind::Throw, throwing);
         self.exert(ActionKind::Throw);
         Spent::Turn(price)

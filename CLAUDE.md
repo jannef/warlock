@@ -128,7 +128,8 @@ carries and weighs, worn and wielded things marked, their burden and its thresho
 (the player's race, gender, and class, then their own scores as the rules read them, then
 `Effects Bleeding, Diseased` when they suffer any, then `Diseases filth fever`, the diseases they
 know they have), `weapon_skills` (the player's
-ranks and progress toward the next, `Long blades 2 (40%)`), `traps` (the traps the player knows,
+ranks and progress toward the next, `Long blades 2 (40%)`, fighting styles too, those in use
+marked `Duelist 1 (0%), in use`), `traps` (the traps the player knows,
 one a line), `quests` (the quest log, active
 first: name, stage, giver, objective, and status), `truth`
 (ground truth, hidden traps too, **dev-only**), `actors` (every actor on the level with its hit points and
@@ -146,7 +147,7 @@ every corpse on the level and in the pack with its death time and rot, **dev-onl
 (status ids), `diseases` (the known ones' ids), `death` (with `of`, the status that killed,
 `cause`, starving, choking, or a trap, and `trap`, the id of the trap that killed),
 `known_traps`, `temperature` (°C to a tenth), `weapon_skills` (by skill id:
-`rank`, `progress`), `quests` (the log: `id`, `name`, `kind`, `active`, `completed`, `giver`,
+`rank`, `progress`), `styles_in_use` (style ids), `quests` (the log: `id`, `name`, `kind`, `active`, `completed`, `giver`,
 `objective`, `status`), each seen actor's `health` and `effects` (those that show), `room` (the
 special room the player stands in, if they know it), and per inventory stack its `name`,
 `rarity`, `identified`, and `magic` (affixes only once identified). Replay
@@ -181,7 +182,7 @@ level change to `run.sav` in the data dir (see "File locations" below). On start
 `--replay`, or `--record` (replays and recordings always start a fresh run). F5 / F9 write / load `snapshots/quick.sav`. An unreadable save is renamed `run.sav.bad`,
 never deleted. Format and `Content::fingerprint` live in `warlock-core/src/save.rs`: bump
 `FORMAT_VERSION` on any incompatible `WorldState` change; adding or reordering terrain, creatures,
-lights, levels, objects, equipment slots, skills, weapon skills, statuses, diseases, traps, or
+lights, levels, objects, equipment slots, skills, weapon skills (fighting styles too), statuses, diseases, traps, or
 dungeon branches invalidates existing saves (affixes are saved by id: adding them does not,
 removing one a save uses does).
 **Permadeath**: when the player dies, `screens::on_death` deletes `run.sav`
@@ -272,7 +273,7 @@ to open, read keys for, or draw one:
   wasm, quit saves then reloads the page (`storage::web::reload`; `AppExit` also reloads), and the
   main menu has no Quit.
 - **Info pages** (`ui/info_tabs.rs`): the screens about the player (Character, Inventory,
-  Equipment, Skills, Quests) are an ordered group, `PAGES`. While one is the top screen, the page keys replace
+  Equipment, Skills, Quests, Weapon skills) are an ordered group, `PAGES`. While one is the top screen, the page keys replace
   it (`ScreenAction::Replace` -> `Screens::replace`: the stack depth is unchanged, so Esc still
   returns to where the first was opened) and each draws its tab line on the bottom border with
   `info_tabs::draw_tabs`. **A new info screen joins the group**: one entry in `PAGES` (its
@@ -301,8 +302,9 @@ to open, read keys for, or draw one:
   their inventory letters), `ui/character_screen.rs` (name, race, gender, class, age, birthday,
   and sign (`birth_parts`/`fit_parts`, shared with the summary), the player's scores, hit points
   and Defence total, weight and burden thresholds; 72 wide like the summary),
-  `ui/weapon_skills_screen.rs` (sections, ranks, and a faint ten-cell marks bar; never a
-  benefit), `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per
+  `ui/weapon_skills_screen.rs` (an info page: sections, ranks, and a faint ten-cell marks bar,
+  the fighting styles in use marked `•`; two columns from 88 wide, else one that drops its gaps
+  and margins and then scrolls with ↑↓; never a benefit), `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per
   step with a Random row rolled from the seed, `SummaryScreen`, `Draft`), `ui/quest_screen.rs`
   (the quest log from `PerceptionView::quests`: active then done, the selected one's objective,
   status, and the giver's offer; read-only), `ui/dialogue_screen.rs`
@@ -460,7 +462,7 @@ Equipment (spec §6 "Equipment", §7; M16): slots are data, `data/slots.toml`
 (`content/slot.rs`: `SlotDef` with `id`, `name`, `fits`, `action`, `mark`, `hand`; `SlotId` is an
 index in screen order, in the content fingerprint), so **a new slot is one entry there** (and a
 `FORMAT_VERSION` bump if saves change). Objects say where they go (`slot` = a slot's `fits`,
-`two_handed`, `ammo`, `launches`; `Content::fits`, `Content::fires`, `Content::hand_slots`).
+`two_handed`, `light_weapon` (any hand), `ammo`, `launches`; `Content::fits`, `Content::fires`, `Content::hand_slots`).
 `equipment.rs` holds the runtime side: `Equipment` (slot → inventory position, on
 `Actor::equipment`, saved and hashed; equipped stacks stay in the inventory and keep weighing),
 `slots_taken` (every hand for a two-handed object), `free_slot` (spawn data), `mark` ("being
@@ -515,13 +517,14 @@ name theirs (`category` → `ObjectDef::skill`, its role checked against what th
 shields bash (`bash` → `ObjectDef::bash`), races and classes give starting ranks
 (`weapon_skills`, dice; classes `weapon_skill_choice`), creatures fixed ranks. The runtime side
 is `weapon_skills.rs`: `WeaponSkills` (a `Training { rank, marks }` per skill on
-`Actor::weapon_skills`, saved and hashed, `FORMAT_VERSION` 16), `train` (marks → a rank, then
+`Actor::weapon_skills`, saved and hashed, `FORMAT_VERSION` 16; 29 with the styles), `train`
+(marks → a rank, then
 `raise`: the defaults rise, their marks reset; no chaining), `from_ranks` (starting ranks,
 order-free), `progress`. The rules hook in at one place each: `Actor::attack_skill(kind, with)`
 picks the skill of an attack (a blow: the wielded weapon's, else unarmed; `Melee` `with` a
 shield: shield bashing; a shot: the launcher's; a throw: thrown; a kick, spec §8 "Doors": unarmed
-whatever is wielded, `World::player_kicks`), and `fight.rs::resolve` takes the skill its caller
-picked; `Profile::with(&Benefit)` and
+whatever is wielded, `World::player_kicks`), and `fight.rs::resolve` takes the skills its caller
+picked (`AttackSkills`: the weapon skill and the fighting style); `Profile::with(&Benefit)` and
 `Actor::melee`/`ranged`/`thrown`/`bash`/`kick` apply to-hit, damage, and threat; `Actor::defence` adds
 parry and shield blocking; `World::attack_price` takes `speed`/`reload` off the cost
 (`World::cost_of`: with a weapon's `attack_cost` and magic items' speed);
@@ -529,12 +532,41 @@ parry and shield blocking; `World::attack_price` takes `speed`/`reload` off the 
 the player trains shield blocking; `World::level_of` weighs the opponent by its creature type's
 `level`, spec §8 "Experience") and pushes "You feel more skilled ..." into the unsaved
 `World::news`, said after the attack's own messages (`say_news`, also at the end of
-`perceive` for a block in a creature's turn). A later kind of skill (fighting styles, #135) is another `Role` with the
-same ranks, marks, curve, and `Benefit`s (`Benefit::plus` sums them). Starting ranks roll from
+`perceive` for a block in a creature's turn). Starting ranks roll from
 their own stream (`character/weapon-skills/...`), so stat rolls never move. Presentation reads
 `PerceptionView::own_weapon_skills` only: ranks and a bar, **never a benefit**. Tests:
 `content/weapon_skill.rs`, `weapon_skills.rs`, `world/weapon_skill_tests.rs`; the wiki's tables
 are `xtask/src/wiki/weapon_skills.rs`.
+
+Fighting styles (spec §8 "Fighting styles"; M22, #135) are weapon skills of `Role::Style`: rows
+after the weapon skills in `data/weapon_skills.toml` with a `grip` (`content/weapon_skill.rs`:
+`Grip`, `Style { grip, weapons }`; a style naming no `weapons` takes the rest of its grip,
+`WeaponSkillTable::style_for`, one configuration one style), the same ranks, marks, curves, and
+`Benefit`s (plus `crit`, `ease_main`/`ease_off`, `bash`; which a grip may use is checked), and
+defaults only among styles. **Every rule asks the attack, not a skill**:
+`Actor::attack_skills(kind, with)` is the `AttackSkills` of an attack (its weapon skill and its
+style, `Actor::style(kind, with)`: blows by `Actor::grip`, the hands' hold; shots `launcher`;
+throws `thrown`), and `Actor::attack_benefit(kind, with)` / `benefit_of(skills)` the weapon
+skill's benefit `plus` the style's, read by `Actor::melee`/`off_hand_blow`/`ranged`/
+`thrown(item)`/`bash`, `Actor::defence` (the hands' style's parry and shield), and
+`World::attack_price(id, action, skills)` (`World::cost_of`, then the speed of the weapon skill
+and the style together, then the stance and the burden); `World::resolve` practises the style
+after the weapon skill. A profile adds the style's benefit right after the weapon skill's, before
+the affixes and the stance. A kick (`World::player_kicks`, `door.rs`) is made whatever the hands
+hold: unarmed fighting alone (`AttackSkills::only`), in no style, so no style speeds it either. Two weapons: a
+`light_weapon` object fits every hand slot (`Content::fits`); `Actor::off_hand` is the second of
+two weapons in hand; `World::second_blow` (`fight.rs`) is the one place a melee attack's second
+blow is decided (the off hand's, `[two_weapons]` penalties eased by `TwoWeapons::eased`; else
+Sword and Board's chance of a shield bash after a hit, one gameplay draw only when the chance is
+above 0), for the player (`player_attacks`) and creatures (`World::attack`) alike; it is an
+attack `with` the off-hand weapon or the shield (`Actor::attack_skill` tells them apart by
+`ObjectDef::bash`), silent, and resolved like any blow: its own weapon's skill and affixes
+(`Actor::off_hand` gives its inventory position), its own blood, bleeding, and big hits; hunger's
+`exert` stays once per action. Classes give `styles`/`style_choice`, rolled from
+`character/styles/...` after everything else. Presentation: `PerceptionView::own_styles_in_use`
+(the screen's `•`, the dump's `, in use`), never a benefit or penalty. Tests:
+`content/weapon_skill.rs` (`styles_are_checked`), `world/style_tests.rs`; wiki tables
+`styles.md`, `style-defaults.md`, `style-benefits.md` and the classes' column.
 
 Key commands `,`/`g` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop` screen),
 `i` (`Inventory` screen), `e` (`Equipment` screen), `@` (`Character` screen), `W` (`WeaponSkills`
@@ -543,7 +575,8 @@ screen), and bash (`KeyCommand::Bash`: a direction prompt, `InputMode::Direction
 #156) get no key of their own: they go into one abilities menu (to come). Each is a core
 `Action` with replay text, an entry in `warlock_core::ability` (`Ability`, listed by
 `PerceptionView::abilities` when usable), and a rebindable `KeyCommand` left unbound by default
-(`settings/keys.rs::UNBOUND`). Shield bash is the first.
+(`settings/keys.rs::UNBOUND`). Shield bash is the first. A style's rank 10 abilities (later)
+go there too.
 
 Stats (spec §8 "Stats"; M14) live in `warlock-core/src/stats.rs`: `Stat` (Strength, Dexterity,
 Toughness, Intelligence, Willpower, Presence; id, abbreviation, name) is generated by the
@@ -737,7 +770,8 @@ creature drops (`drop/<actor id>` stream), and the hit-point clamp after equipme
 `Actor::effective_stats` (the stored scores, raised by `Mods::worn`, then lowered by status
 effects, Weak, and stat damage; `raised_stats` is before those, for the character screen's marks
 and level-up hit points), the one source every rule reads; an attack profile is built as those stats, the
-weapon skill's benefit, the affixes, then the combat stance. The regeneration affix goes
+weapon skill's benefit, the fighting style's (with the two-weapon penalty it eases), the
+affixes, then the combat stance. The regeneration affix goes
 through `World::healing_rate` like every other pace change. Hard
 rule: presentation reads an item's affixes only through `Stack::known_magic` (none until
 identified; `Stack::magic` is crate-private), and names only through `Stack::describe` /

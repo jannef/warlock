@@ -1,22 +1,27 @@
 //! Weapon skills (`assets/data/weapon_skills.toml`, spec §8 "Weapon skills"): the categories of
-//! weapons an actor trains with, ADOM-like, and how they relate, after *The Riddle of Steel*.
+//! weapons an actor trains with, ADOM-like, and how they relate, after *The Riddle of Steel*;
+//! and the fighting styles (spec §8 "Fighting styles"), after AD&D 2e's *Complete Fighter's
+//! Handbook*: skills of how weapons are held and used.
 //!
 //! - **Skills** come in file order, each with an `id`, a `name` for the weapon skills screen, a
 //!   `phrase` for the message of a rank gained ("You feel more skilled *with long blades*."), a
 //!   [`Role`] (what uses it), the need `curve` it trains along, and its benefits per rank, 0 to
 //!   [`MAX_RANK`] ([`Benefit`]). Rank 0 is untrained: no benefits.
+//! - **Fighting styles** are skills of role [`Role::Style`]: the same ranks, marks, curve, and
+//!   benefits, and a [`Style`]: the [`Grip`] they are fought in (what the hands hold for a blow,
+//!   or the kind of attack) and the weapon skills they are fought with. Fighting with two
+//!   weapons has its penalties here too ([`TwoWeapons`]).
 //! - **Marks** ([`MarkRules`]): every attempt earns some, a success more, scaled by how the
 //!   opponent's level compares with the rank. A rank is gained when its marks reach the need of
 //!   the next rank, which grows along an exponential **curve** (`curves.melee`: 15, 30, 60, ...).
 //! - **Defaults** (The Riddle of Steel): symmetric penalties between related skills. When a rank
 //!   is gained in A, every B with `rank(A) − penalty(A, B) > rank(B)` rises to that rank
-//!   (`crate::weapon_skills`).
+//!   (`crate::weapon_skills`). Styles default only to styles, weapon skills only to weapon skills.
 //!
-//! The numbers are rules, never shown in the game: the player sees ranks, and a marks bar. A
-//! skill is general enough for what comes next (fighting styles): another role with the same
-//! ranks, marks, curve, and benefits.
+//! The numbers are rules, never shown in the game: the player sees ranks, and a marks bar.
 
 use super::ContentError;
+use crate::combat::CRITS;
 use crate::content::object::MAX_BONUS;
 use crate::dice::Dice;
 use serde::{Deserialize, Serialize};
@@ -32,6 +37,9 @@ pub const MAX_NEED: u32 = 1_000_000;
 pub const MAX_THREAT_WIDENING: u8 = 10;
 /// The most a rank may take off an action's cost, in percent.
 pub const MAX_SAVING: u8 = 50;
+/// The most a rank may add to a critical's damage multiplier: from the least (×2) to the most
+/// (×5).
+pub const MAX_CRIT_BONUS: u8 = *CRITS.end() - *CRITS.start();
 /// The most marks one use may earn before scaling, and the most a percent may be.
 const MAX_MARKS: u32 = 1000;
 
@@ -42,9 +50,9 @@ const MAX_MARKS: u32 = 1000;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct WeaponSkillId(pub u8);
 
-/// What uses a skill: a weapon that names it (`melee`, `launcher`, `thrown`), or an attack or a
+/// What uses a skill: a weapon that names it (`melee`, `launcher`, `thrown`), an attack or a
 /// defence that implies it (`unarmed`, `thrown`, `shield_block`, `shield_bash`; at most one
-/// skill each).
+/// skill each), or a way of fighting (`style`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Role {
@@ -62,16 +70,20 @@ pub enum Role {
     ShieldBlock,
     /// Bashing with a held shield (the bash attack).
     ShieldBash,
+    /// A fighting style (spec §8 "Fighting styles"): every attack made in its configuration
+    /// ([`Style`]) trains it, and its benefits add to the weapon skill's.
+    Style,
 }
 
 impl Role {
-    pub const ALL: [Role; 6] = [
+    pub const ALL: [Role; 7] = [
         Role::Melee,
         Role::Launcher,
         Role::Thrown,
         Role::Unarmed,
         Role::ShieldBlock,
         Role::ShieldBash,
+        Role::Style,
     ];
 
     /// Its id in the data file: `shield_block`.
@@ -83,16 +95,17 @@ impl Role {
             Role::Unarmed => "unarmed",
             Role::ShieldBlock => "shield_block",
             Role::ShieldBash => "shield_bash",
+            Role::Style => "style",
         }
     }
 
-    /// Whether no weapon names it: it is used by an attack or a defence of its own, so there is
-    /// at most one skill of it.
+    /// Whether no weapon names it and it is used by an attack or a defence of its own, so there
+    /// is at most one skill of it.
     pub const fn is_implicit(self) -> bool {
-        !matches!(self, Role::Melee | Role::Launcher)
+        !matches!(self, Role::Melee | Role::Launcher | Role::Style)
     }
 
-    /// Whether it is used to attack (to-hit, damage, threat, and speed apply).
+    /// Whether it is used to attack (to-hit, damage, threat, crit, and speed apply).
     pub const fn attacks(self) -> bool {
         !matches!(self, Role::ShieldBlock)
     }
@@ -103,6 +116,7 @@ impl Role {
             Role::Melee | Role::Unarmed => Section::Melee,
             Role::Launcher | Role::Thrown => Section::Missile,
             Role::ShieldBlock | Role::ShieldBash => Section::Shields,
+            Role::Style => Section::Styles,
         }
     }
 }
@@ -113,10 +127,16 @@ pub enum Section {
     Melee,
     Missile,
     Shields,
+    Styles,
 }
 
 impl Section {
-    pub const ALL: [Section; 3] = [Section::Melee, Section::Missile, Section::Shields];
+    pub const ALL: [Section; 4] = [
+        Section::Melee,
+        Section::Missile,
+        Section::Shields,
+        Section::Styles,
+    ];
 
     /// `Missile and thrown`.
     pub const fn name(self) -> &'static str {
@@ -124,12 +144,112 @@ impl Section {
             Section::Melee => "Melee",
             Section::Missile => "Missile and thrown",
             Section::Shields => "Shields",
+            Section::Styles => "Fighting styles",
         }
     }
 }
 
+/// How a fighting style is fought (spec §8 "Fighting styles"): for blows, what the hands hold
+/// (which holds for Defence too); else the kind of attack.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Grip {
+    /// One one-handed weapon in a hand, every other hand empty (a duelist).
+    OneWeapon,
+    /// A weapon in each of two hands: both strike (two-weapon fighting).
+    TwoWeapons,
+    /// A two-handed weapon.
+    TwoHanded,
+    /// A one-handed weapon and a shield.
+    WeaponAndShield,
+    /// Nothing in the hands.
+    Unarmed,
+    /// Shooting a missile weapon.
+    Launcher,
+    /// Throwing.
+    Thrown,
+}
+
+impl Grip {
+    pub const ALL: [Grip; 7] = [
+        Grip::OneWeapon,
+        Grip::TwoWeapons,
+        Grip::TwoHanded,
+        Grip::WeaponAndShield,
+        Grip::Unarmed,
+        Grip::Launcher,
+        Grip::Thrown,
+    ];
+
+    /// Its id in the data file: `weapon_and_shield`.
+    pub const fn id(self) -> &'static str {
+        match self {
+            Grip::OneWeapon => "one_weapon",
+            Grip::TwoWeapons => "two_weapons",
+            Grip::TwoHanded => "two_handed",
+            Grip::WeaponAndShield => "weapon_and_shield",
+            Grip::Unarmed => "unarmed",
+            Grip::Launcher => "launcher",
+            Grip::Thrown => "thrown",
+        }
+    }
+
+    /// Whether a weapon is wielded in it (a Parry benefit adds to the wielded weapon's).
+    pub const fn wields(self) -> bool {
+        matches!(
+            self,
+            Grip::OneWeapon | Grip::TwoWeapons | Grip::TwoHanded | Grip::WeaponAndShield
+        )
+    }
+
+    /// The roles of the weapon skills a style of it may be fought with (`weapons`): none for
+    /// bare hands.
+    const fn weapon_roles(self) -> &'static [Role] {
+        match self {
+            Grip::Unarmed => &[],
+            Grip::Launcher => &[Role::Launcher],
+            Grip::Thrown => &[Role::Melee, Role::Thrown],
+            _ => &[Role::Melee],
+        }
+    }
+}
+
+/// A fighting style's configuration: the grip it is fought in, and the weapon skills it is
+/// fought with. Empty `weapons`: any weapon of its grip that no other style of the grip names.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Style {
+    pub grip: Grip,
+    pub weapons: Vec<WeaponSkillId>,
+}
+
+/// Fighting with a weapon in each hand (spec §8 "Fighting styles"): both hands strike each
+/// melee attack, the main hand's blow with `main` to hit and the off hand's with `off`. A style
+/// eases them (`ease_main`, `ease_off`), never past 0.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TwoWeapons {
+    pub main: i32,
+    pub off: i32,
+}
+
+impl TwoWeapons {
+    /// D&D's: −4 for the main hand, −8 for a light weapon in the off hand.
+    pub const DEFAULT: TwoWeapons = TwoWeapons { main: -4, off: -8 };
+
+    /// `penalty` (`main` or `off`) eased by `ease`, never past 0.
+    pub fn eased(penalty: i32, ease: u8) -> i32 {
+        (penalty + i32::from(ease)).min(0)
+    }
+}
+
+impl Default for TwoWeapons {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
+}
+
 /// What a rank in a skill gives (rules only, never shown). Benefits of several skills add up
-/// ([`Benefit::plus`]), so later skills (fighting styles) can stack on a weapon's.
+/// ([`Benefit::plus`]): a fighting style's stack on a weapon's.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Benefit {
     /// Added to the to-hit of attacks with it.
@@ -142,10 +262,18 @@ pub struct Benefit {
     pub shield: i32,
     /// How many natural rolls lower a critical threatens from.
     pub threat: u8,
+    /// Added to a confirmed critical's damage multiplier (never past ×5).
+    pub crit: u8,
     /// Percent off the attack's cost (`melee`, `shoot`, `throw`).
     pub speed: u8,
     /// Percent off the cost of reloading (`reload`).
     pub reload: u8,
+    /// Points off the main hand's penalty for fighting with two weapons ([`TwoWeapons`]).
+    pub ease_main: u8,
+    /// Points off the off hand's penalty for fighting with two weapons.
+    pub ease_off: u8,
+    /// The chance in percent of a shield bash after a blow that hits (weapon and shield).
+    pub bash: u8,
 }
 
 impl Benefit {
@@ -157,8 +285,12 @@ impl Benefit {
             parry: self.parry + other.parry,
             shield: self.shield + other.shield,
             threat: self.threat.saturating_add(other.threat),
+            crit: self.crit.saturating_add(other.crit),
             speed: self.speed.saturating_add(other.speed),
             reload: self.reload.saturating_add(other.reload),
+            ease_main: self.ease_main.saturating_add(other.ease_main),
+            ease_off: self.ease_off.saturating_add(other.ease_off),
+            bash: self.bash.saturating_add(other.bash).min(100),
         }
     }
 
@@ -207,12 +339,30 @@ pub struct WeaponSkillDef {
     /// What "You feel more skilled ..." says of it: `with long blades`.
     pub phrase: String,
     pub role: Role,
+    /// A fighting style's configuration (`Some` exactly for [`Role::Style`]).
+    pub style: Option<Style>,
     /// The curve it trains along (a key of the file's `curves`).
     pub curve: String,
     /// Marks to go from each rank to the next: `need[r]` takes rank `r` to `r + 1`.
     pub need: [u32; MAX_RANK as usize],
     /// What each rank gives, 0 (nothing) to [`MAX_RANK`].
     pub benefits: [Benefit; RANKS],
+}
+
+impl WeaponSkillDef {
+    /// Whether it is a fighting style.
+    pub fn is_style(&self) -> bool {
+        self.role == Role::Style
+    }
+}
+
+/// Which skills starting ranks may name: weapon skills (races, classes), fighting styles
+/// (classes' `styles`), or either (creatures).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum Ranked {
+    Weapons,
+    Styles,
+    Any,
 }
 
 /// Every skill, the defaults between them, and how marks are earned.
@@ -224,6 +374,7 @@ pub struct WeaponSkillTable {
     marks: Option<MarkRules>,
     /// The curves by name, as the file gives them.
     curves: BTreeMap<String, [u32; MAX_RANK as usize]>,
+    two_weapons: TwoWeapons,
 }
 
 #[derive(Deserialize)]
@@ -231,6 +382,8 @@ pub struct WeaponSkillTable {
 struct SkillFile {
     marks: MarkRules,
     curves: BTreeMap<String, Vec<u32>>,
+    #[serde(default)]
+    two_weapons: TwoWeapons,
     skill: Vec<SkillSpec>,
     #[serde(default)]
     default: Vec<DefaultSpec>,
@@ -243,14 +396,20 @@ struct SkillSpec {
     name: String,
     phrase: String,
     role: Role,
+    grip: Option<Grip>,
+    weapons: Option<Vec<String>>,
     curve: String,
     to_hit: Option<Vec<i32>>,
     damage: Option<Vec<i32>>,
     parry: Option<Vec<i32>>,
     shield: Option<Vec<i32>>,
     threat: Option<Vec<i32>>,
+    crit: Option<Vec<i32>>,
     speed: Option<Vec<i32>>,
     reload: Option<Vec<i32>>,
+    ease_main: Option<Vec<i32>>,
+    ease_off: Option<Vec<i32>>,
+    bash: Option<Vec<i32>>,
 }
 
 #[derive(Deserialize)]
@@ -285,36 +444,58 @@ fn ranks(field: &str, given: &Option<Vec<i32>>, max: i32) -> Result<[i32; RANKS]
 }
 
 impl SkillSpec {
-    /// The benefits per rank; a benefit the role does not use is refused.
+    /// The benefits per rank; a benefit the role (a style: its grip) does not use is refused.
     fn benefits(&self) -> Result<[Benefit; RANKS], String> {
         let bonus = MAX_BONUS;
+        let percent = i32::from(MAX_SAVING);
         let to_hit = ranks("to_hit", &self.to_hit, bonus)?;
         let damage = ranks("damage", &self.damage, bonus)?;
         let parry = ranks("parry", &self.parry, bonus)?;
         let shield = ranks("shield", &self.shield, bonus)?;
         let threat = ranks("threat", &self.threat, i32::from(MAX_THREAT_WIDENING))?;
-        let speed = ranks("speed", &self.speed, i32::from(MAX_SAVING))?;
-        let reload = ranks("reload", &self.reload, i32::from(MAX_SAVING))?;
-        let role = self.role;
+        let crit = ranks("crit", &self.crit, i32::from(MAX_CRIT_BONUS))?;
+        let speed = ranks("speed", &self.speed, percent)?;
+        let reload = ranks("reload", &self.reload, percent)?;
+        let ease_main = ranks("ease_main", &self.ease_main, bonus)?;
+        let ease_off = ranks("ease_off", &self.ease_off, bonus)?;
+        let bash = ranks("bash", &self.bash, 100)?;
+        let (role, grip) = (self.role, self.grip);
+        let is = |g: Grip| grip == Some(g);
         let unused = [
             ("to_hit", &self.to_hit, role.attacks()),
             ("damage", &self.damage, role.attacks()),
             ("threat", &self.threat, role.attacks()),
+            ("crit", &self.crit, role.attacks()),
             ("speed", &self.speed, role.attacks()),
-            ("parry", &self.parry, role == Role::Melee),
-            ("shield", &self.shield, role == Role::ShieldBlock),
-            ("reload", &self.reload, role == Role::Launcher),
+            (
+                "parry",
+                &self.parry,
+                role == Role::Melee || grip.is_some_and(Grip::wields),
+            ),
+            (
+                "shield",
+                &self.shield,
+                role == Role::ShieldBlock || is(Grip::WeaponAndShield),
+            ),
+            (
+                "reload",
+                &self.reload,
+                role == Role::Launcher || is(Grip::Launcher),
+            ),
+            ("ease_main", &self.ease_main, is(Grip::TwoWeapons)),
+            ("ease_off", &self.ease_off, is(Grip::TwoWeapons)),
+            ("bash", &self.bash, is(Grip::WeaponAndShield)),
         ];
         if let Some((field, ..)) = unused
             .iter()
             .find(|(_, given, used)| given.is_some() && !used)
         {
-            return Err(format!(
-                "`{field}` does nothing for a skill of role `{}`",
-                role.id()
-            ));
+            return Err(match grip {
+                Some(grip) => format!("`{field}` does nothing for a style of grip `{}`", grip.id()),
+                None => format!("`{field}` does nothing for a skill of role `{}`", role.id()),
+            });
         }
-        // The values are within u8 where they are percents or rolls (checked above).
+        // The values are within u8 where they are percents, rolls, or points (checked above).
         let small = |v: i32| v as u8;
         Ok(std::array::from_fn(|r| Benefit {
             to_hit: to_hit[r],
@@ -322,8 +503,12 @@ impl SkillSpec {
             parry: parry[r],
             shield: shield[r],
             threat: small(threat[r]),
+            crit: small(crit[r]),
             speed: small(speed[r]),
             reload: small(reload[r]),
+            ease_main: small(ease_main[r]),
+            ease_off: small(ease_off[r]),
+            bash: small(bash[r]),
         }))
     }
 }
@@ -342,6 +527,15 @@ impl WeaponSkillTable {
         if !(100..=MAX_MARKS).contains(&marks.most) {
             return Err(err(format!(
                 "marks: `most` is a percent, 100 to {MAX_MARKS}"
+            )));
+        }
+        let two = parsed.two_weapons;
+        if [two.main, two.off]
+            .iter()
+            .any(|p| !(-MAX_BONUS..=0).contains(p))
+        {
+            return Err(err(format!(
+                "two_weapons: `main` and `off` are penalties, -{MAX_BONUS} to 0"
             )));
         }
         let mut curves = BTreeMap::new();
@@ -368,6 +562,8 @@ impl WeaponSkillTable {
             return Err(err("too many skills".into()));
         }
         let mut skills: Vec<WeaponSkillDef> = Vec::new();
+        // Each style's weapons by name, resolved once every skill is known.
+        let mut weapons: Vec<Vec<String>> = Vec::new();
         for spec in parsed.skill {
             let id = &spec.id;
             let skill_err = |m: String| err(format!("skill `{id}`: {m}"));
@@ -383,15 +579,37 @@ impl WeaponSkillTable {
                     spec.role.id()
                 )));
             }
+            let style = match (spec.role, spec.grip) {
+                (Role::Style, Some(grip)) => Some(Style {
+                    grip,
+                    weapons: Vec::new(),
+                }),
+                (Role::Style, None) => {
+                    return Err(skill_err("a fighting style needs its `grip`".into()));
+                }
+                (_, Some(_)) => {
+                    return Err(skill_err(
+                        "`grip` is for fighting styles (`role = \"style\"`)".into(),
+                    ));
+                }
+                (_, None) if spec.weapons.is_some() => {
+                    return Err(skill_err(
+                        "`weapons` is for fighting styles (`role = \"style\"`)".into(),
+                    ));
+                }
+                (_, None) => None,
+            };
             let need = *curves
                 .get(&spec.curve)
                 .ok_or_else(|| skill_err(format!("unknown curve `{}`", spec.curve)))?;
             let benefits = spec.benefits().map_err(skill_err)?;
+            weapons.push(spec.weapons.unwrap_or_default());
             skills.push(WeaponSkillDef {
                 id: spec.id,
                 name: spec.name,
                 phrase: spec.phrase,
                 role: spec.role,
+                style,
                 curve: spec.curve,
                 need,
                 benefits,
@@ -402,7 +620,9 @@ impl WeaponSkillTable {
             defaults: BTreeMap::new(),
             marks: Some(marks),
             curves,
+            two_weapons: two,
         };
+        table.resolve_styles(&weapons).map_err(err)?;
         for spec in parsed.default {
             let [a, b] = &spec.between;
             let (Some(x), Some(y)) = (table.id(a), table.id(b)) else {
@@ -412,6 +632,12 @@ impl WeaponSkillTable {
             };
             if x == y {
                 return Err(err(format!("default between `{a}` and itself")));
+            }
+            if table.skill(x).is_style() != table.skill(y).is_style() {
+                return Err(err(format!(
+                    "default between `{a}` and `{b}`: fighting styles default only to fighting \
+                     styles, and weapon skills to weapon skills"
+                )));
             }
             if !(1..=MAX_RANK).contains(&spec.penalty) {
                 return Err(err(format!(
@@ -431,6 +657,57 @@ impl WeaponSkillTable {
         Ok(table)
     }
 
+    /// Resolves each style's `weapons` (by name, one list per skill in file order): weapon
+    /// skills of the roles its grip fights with, each once. Within a grip, at most one style
+    /// names none (it takes the rest), and no weapon skill is named by two.
+    fn resolve_styles(&mut self, weapons: &[Vec<String>]) -> Result<(), String> {
+        for (i, names) in weapons.iter().enumerate() {
+            let Some(grip) = self.skills[i].style.as_ref().map(|s| s.grip) else {
+                continue;
+            };
+            let style = self.skills[i].id.clone();
+            let mut ids = Vec::new();
+            for name in names {
+                let id = (self.id(name)).ok_or_else(|| {
+                    format!("style `{style}`: `weapons`: unknown weapon skill `{name}`")
+                })?;
+                if !grip.weapon_roles().contains(&self.skill(id).role) {
+                    return Err(format!(
+                        "style `{style}`: `weapons`: `{name}` is no weapon skill a style of \
+                         grip `{}` is fought with",
+                        grip.id()
+                    ));
+                }
+                if ids.contains(&id) {
+                    return Err(format!("style `{style}`: `weapons` names `{name}` twice"));
+                }
+                ids.push(id);
+            }
+            for other in &self.skills[..i] {
+                let Some(theirs) = other.style.as_ref().filter(|s| s.grip == grip) else {
+                    continue;
+                };
+                let clash = if ids.is_empty() {
+                    theirs.weapons.is_empty()
+                } else {
+                    ids.iter().any(|id| theirs.weapons.contains(id))
+                };
+                if clash {
+                    return Err(format!(
+                        "styles `{}` and `{style}` are both fought with the same weapons in \
+                         grip `{}`: one configuration, one style",
+                        other.id,
+                        grip.id()
+                    ));
+                }
+            }
+            if let Some(s) = self.skills[i].style.as_mut() {
+                s.weapons = ids;
+            }
+        }
+        Ok(())
+    }
+
     /// Whether there are no skills (content without the file).
     pub fn is_empty(&self) -> bool {
         self.skills.is_empty()
@@ -446,6 +723,12 @@ impl WeaponSkillTable {
         (self.skills.iter().enumerate()).map(|(i, s)| (WeaponSkillId(i as u8), s))
     }
 
+    /// Every fighting style with its id and configuration, in file order.
+    pub fn styles(&self) -> impl Iterator<Item = (WeaponSkillId, &WeaponSkillDef, &Style)> {
+        self.ids()
+            .filter_map(|(id, s)| s.style.as_ref().map(|style| (id, s, style)))
+    }
+
     pub fn skill(&self, id: WeaponSkillId) -> &WeaponSkillDef {
         &self.skills[usize::from(id.0)]
     }
@@ -458,6 +741,24 @@ impl WeaponSkillTable {
     /// The skill of an implicit role ([`Role::is_implicit`]): bare hands, throws, shields.
     pub fn of_role(&self, role: Role) -> Option<WeaponSkillId> {
         self.ids().find(|(_, s)| s.role == role).map(|(id, _)| id)
+    }
+
+    /// The fighting style of `grip` fought with weapons of skills `weapons` (those in the hands,
+    /// the launcher's, what is thrown): the style of the grip that names every one of them,
+    /// else the one that names none.
+    pub fn style_for(&self, grip: Grip, weapons: &[WeaponSkillId]) -> Option<WeaponSkillId> {
+        let of_grip = || self.styles().filter(move |(_, _, s)| s.grip == grip);
+        let named = of_grip().find(|(_, _, s)| {
+            !weapons.is_empty()
+                && !s.weapons.is_empty()
+                && weapons.iter().all(|w| s.weapons.contains(w))
+        });
+        (named.or_else(|| of_grip().find(|(_, _, s)| s.weapons.is_empty()))).map(|(id, ..)| id)
+    }
+
+    /// The penalties for fighting with two weapons.
+    pub fn two_weapons(&self) -> TwoWeapons {
+        self.two_weapons
     }
 
     /// How marks are earned; `None` without skills.
@@ -504,17 +805,32 @@ impl WeaponSkillTable {
     }
 
     /// Starting ranks as a race, a class, or a creature gives them (`{ long_blades = 2,
-    /// shield_block = "1d2" }`), in skill order: every skill known, every result a roll can
-    /// have within 0 to [`MAX_RANK`].
+    /// shield_block = "1d2" }`), in skill order: every skill known and of the kind `ranked`
+    /// allows, every result a roll can have within 0 to [`MAX_RANK`].
     pub(super) fn starting_ranks(
         &self,
         data: &BTreeMap<String, Dice>,
+        ranked: Ranked,
     ) -> Result<Vec<(WeaponSkillId, Dice)>, String> {
         let mut ranks = Vec::new();
         for (name, &dice) in data {
             let id = self.id(name).ok_or_else(|| {
                 format!("unknown weapon skill `{name}` (data/weapon_skills.toml)")
             })?;
+            match (ranked, self.skill(id).is_style()) {
+                (Ranked::Weapons, true) => {
+                    return Err(format!(
+                        "`{name}` is a fighting style: classes give styles in `styles`"
+                    ));
+                }
+                (Ranked::Styles, false) => {
+                    return Err(format!(
+                        "`{name}` is a weapon skill, not a fighting style: give it in \
+                         `weapon_skills`"
+                    ));
+                }
+                _ => {}
+            }
             if dice.min() < 0 || dice.max() > i32::from(MAX_RANK) {
                 return Err(format!(
                     "weapon skill `{name}`: {dice} must give a rank from 0 to {MAX_RANK}"
@@ -549,8 +865,10 @@ mod tests {
     fn the_builtin_table_loads() {
         let text = include_str!("../../../../assets/data/weapon_skills.toml");
         let table = parse(text).expect("valid");
-        assert_eq!(table.skills().len(), 16);
-        let id = |name| table.id(name).expect(name);
+        // Sixteen weapon skills and eight fighting styles.
+        assert_eq!(table.skills().len(), 24);
+        assert_eq!(table.styles().count(), 8);
+        let id = |name: &str| table.id(name).expect(name);
         // The owner's example: long blades 8 → short blades 6.
         assert_eq!(
             table.penalty(id("long_blades"), id("short_blades")),
@@ -570,6 +888,206 @@ mod tests {
         assert!(table.need(id("bows"), 0) < table.need(id("long_blades"), 0));
         for (skill, _) in table.ids() {
             assert_eq!(table.benefit(skill, 0), Benefit::default());
+        }
+        // Every configuration is one style: the staff its own, any other two-handed weapon a
+        // great weapon, every launcher a marksman's.
+        let style = |grip, weapons: &[&str]| {
+            let weapons: Vec<WeaponSkillId> = weapons.iter().map(|w| id(w)).collect();
+            table
+                .style_for(grip, &weapons)
+                .map(|s| table.skill(s).id.as_str())
+        };
+        assert_eq!(style(Grip::OneWeapon, &["daggers"]), Some("duelist"));
+        assert_eq!(
+            style(Grip::TwoWeapons, &["spears", "daggers"]),
+            Some("twin_blades")
+        );
+        assert_eq!(style(Grip::TwoHanded, &["staves"]), Some("staff_fighter"));
+        assert_eq!(
+            style(Grip::TwoHanded, &["great_blades"]),
+            Some("great_weapon")
+        );
+        assert_eq!(
+            style(Grip::WeaponAndShield, &["maces"]),
+            Some("sword_and_board")
+        );
+        assert_eq!(style(Grip::Unarmed, &[]), Some("brawler"));
+        for launcher in ["bows", "crossbows", "slings"] {
+            assert_eq!(style(Grip::Launcher, &[launcher]), Some("marksman"));
+        }
+        assert_eq!(style(Grip::Thrown, &["thrown"]), Some("skirmisher"));
+        assert_eq!(style(Grip::Thrown, &["daggers"]), Some("skirmisher"));
+        // Styles default to styles: duelist ↔ sword and board −3, never to a weapon skill.
+        assert_eq!(table.penalty(id("duelist"), id("sword_and_board")), Some(3));
+        for (s, ..) in table.styles() {
+            for (other, _) in table.defaults_of(s) {
+                assert!(table.skill(other).is_style());
+            }
+        }
+        assert_eq!(table.two_weapons(), TwoWeapons { main: -4, off: -8 });
+        // Twin Blades 10 eases both penalties away: a full attack with each hand.
+        let twin = table.benefit(id("twin_blades"), MAX_RANK);
+        assert_eq!(TwoWeapons::eased(-4, twin.ease_main), 0);
+        assert_eq!(TwoWeapons::eased(-8, twin.ease_off), 0);
+    }
+
+    #[test]
+    fn styles_are_checked() {
+        let style = |id: &str, grip: &str, extra: &str| {
+            format!(
+                "[[skill]]\nid = \"{id}\"\nname = \"{id}\"\nphrase = \"at {id}\"\nrole = \
+                 \"style\"\ngrip = \"{grip}\"\ncurve = \"melee\"\n{extra}\n"
+            )
+        };
+        let eleven = "[0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]";
+        let staves = skill("staves", "melee", "");
+        let bows = skill("bows", "launcher", "");
+        // A style of a grip that names no weapons takes every weapon the others do not.
+        let text = format!(
+            "{MARKS}{staves}{}{}{}",
+            skill("great_blades", "melee", ""),
+            style("great", "two_handed", ""),
+            style("staff", "two_handed", "weapons = [\"staves\"]")
+        );
+        let table = parse(&text).expect("valid");
+        let (staves_id, great_id) = (WeaponSkillId(0), WeaponSkillId(1));
+        assert_eq!(
+            table.style_for(Grip::TwoHanded, &[staves_id]),
+            Some(WeaponSkillId(3))
+        );
+        assert_eq!(
+            table.style_for(Grip::TwoHanded, &[great_id]),
+            Some(WeaponSkillId(2))
+        );
+        assert_eq!(table.style_for(Grip::OneWeapon, &[great_id]), None);
+        assert_eq!(table.two_weapons(), TwoWeapons::DEFAULT, "the default");
+        for (text, why) in [
+            (
+                format!(
+                    "{MARKS}{}",
+                    style("a", "one_weapon", "").replace("grip = \"one_weapon\"\n", "")
+                ),
+                "a fighting style needs its `grip`",
+            ),
+            (
+                format!("{MARKS}{}", skill("a", "melee", "grip = \"one_weapon\"")),
+                "`grip` is for fighting styles",
+            ),
+            (
+                format!("{MARKS}{}", skill("a", "melee", "weapons = []")),
+                "`weapons` is for fighting styles",
+            ),
+            (
+                format!(
+                    "{MARKS}{}",
+                    style("a", "one_weapon", "weapons = [\"spears\"]")
+                ),
+                "unknown weapon skill `spears`",
+            ),
+            (
+                format!(
+                    "{MARKS}{bows}{}",
+                    style("a", "one_weapon", "weapons = [\"bows\"]")
+                ),
+                "`bows` is no weapon skill a style of grip `one_weapon` is fought with",
+            ),
+            (
+                format!(
+                    "{MARKS}{staves}{}",
+                    style("a", "unarmed", "weapons = [\"staves\"]")
+                ),
+                "is no weapon skill a style of grip `unarmed`",
+            ),
+            (
+                format!(
+                    "{MARKS}{staves}{}",
+                    style("a", "two_handed", "weapons = [\"staves\", \"staves\"]")
+                ),
+                "names `staves` twice",
+            ),
+            (
+                format!(
+                    "{MARKS}{}{}",
+                    style("a", "one_weapon", ""),
+                    style("b", "one_weapon", "")
+                ),
+                "styles `a` and `b` are both fought with the same weapons",
+            ),
+            (
+                format!(
+                    "{MARKS}{staves}{}{}",
+                    style("a", "two_handed", "weapons = [\"staves\"]"),
+                    style("b", "two_handed", "weapons = [\"staves\"]")
+                ),
+                "one configuration, one style",
+            ),
+            (
+                format!(
+                    "{MARKS}{}",
+                    style("a", "unarmed", &format!("parry = {eleven}"))
+                ),
+                "`parry` does nothing for a style of grip `unarmed`",
+            ),
+            (
+                format!(
+                    "{MARKS}{}",
+                    style("a", "one_weapon", &format!("shield = {eleven}"))
+                ),
+                "`shield` does nothing for a style of grip `one_weapon`",
+            ),
+            (
+                format!(
+                    "{MARKS}{}",
+                    style("a", "one_weapon", &format!("ease_off = {eleven}"))
+                ),
+                "`ease_off` does nothing",
+            ),
+            (
+                format!(
+                    "{MARKS}{}",
+                    style("a", "two_handed", &format!("bash = {eleven}"))
+                ),
+                "`bash` does nothing",
+            ),
+            (
+                format!(
+                    "{MARKS}{}",
+                    style("a", "thrown", &format!("reload = {eleven}"))
+                ),
+                "`reload` does nothing",
+            ),
+            (
+                format!(
+                    "{MARKS}{}",
+                    skill("a", "melee", &format!("ease_main = {eleven}"))
+                ),
+                "`ease_main` does nothing for a skill of role `melee`",
+            ),
+            (
+                format!(
+                    "{MARKS}{}",
+                    style(
+                        "a",
+                        "two_handed",
+                        "crit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]"
+                    )
+                ),
+                "`crit`: each rank's value must be 0 to 3",
+            ),
+            (
+                format!(
+                    "{MARKS}{staves}{}[[default]]\nbetween = [\"a\", \"staves\"]\npenalty = 2\n",
+                    style("a", "two_handed", "")
+                ),
+                "fighting styles default only to fighting styles",
+            ),
+            (
+                format!("{MARKS}[two_weapons]\nmain = 2\noff = -8\n{staves}"),
+                "two_weapons: `main` and `off` are penalties",
+            ),
+        ] {
+            let e = parse(&text).unwrap_err();
+            assert!(e.contains(why), "{why}: {e}");
         }
     }
 

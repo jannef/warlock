@@ -297,9 +297,9 @@ impl Profile {
         Self::of(attack, attack.to_hit + dexterity - short, -short)
     }
 
-    /// This attack with what a weapon skill's rank gives (spec §8 "Weapon skills"): more to
-    /// hit, more to every roll of the damage, and a wider threat range (never past a natural
-    /// 2).
+    /// This attack with what a weapon skill's rank gives (spec §8 "Weapon skills"; a fighting
+    /// style's adds to it): more to hit, more to every roll of the damage, a wider threat range
+    /// (never past a natural 2), and a bigger critical multiplier (never past ×5).
     pub fn with(self, benefit: &Benefit) -> Self {
         Self {
             to_hit: self.to_hit + benefit.to_hit,
@@ -308,6 +308,7 @@ impl Profile {
                 .threat
                 .saturating_sub(benefit.threat)
                 .max(*THREATS.start()),
+            crit: self.crit.saturating_add(benefit.crit).min(*CRITS.end()),
             ..self
         }
     }

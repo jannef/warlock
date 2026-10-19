@@ -7,7 +7,7 @@
 | `c` | Body | Padded coat, leather jerkin, studded leather jerkin, chain mail shirt, suit of scale mail, suit of banded mail, suit of plate armour | 18 seconds |
 | `d` | Cloak | Wool cloak, travelling cloak, fur cloak | 6 seconds |
 | `e` | Main hand | Dagger, stiletto, short sword, scimitar, long sword, rapier, bastard sword, great sword (both hands), hand axe, battle axe, great axe (both hands), spear, javelin, trident, club, mace, morning star, war hammer, maul (both hands), halberd (both hands), glaive (both hands), quarterstaff (both hands), ironwood staff (both hands) | 6 seconds |
-| `f` | Off hand | Small shield, buckler, large shield, tower shield | 6 seconds |
+| `f` | Off hand | Dagger, stiletto, short sword, small shield, buckler, large shield, tower shield | 6 seconds |
 | `g` | Hands | Pair of leather gloves, pair of gauntlets | 6 seconds |
 | `h` | Left ring | Iron ring, silver ring, gold ring | 6 seconds |
 | `i` | Right ring | Iron ring, silver ring, gold ring | 6 seconds |

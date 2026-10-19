@@ -36,6 +36,7 @@
   - [Ranged combat](ranged.md)
   - [Ammunition](ammunition.md)
   - [Weapon skills](weapon-skills.md)
+  - [Fighting styles](fighting-styles.md)
   - [Status effects](status-effects.md)
   - [Diseases](diseases.md)
   - [Healing](healing.md)

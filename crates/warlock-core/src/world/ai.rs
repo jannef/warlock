@@ -105,10 +105,10 @@ impl World {
                 kind: AttackKind::Ranged,
             } => self.creature_shoots(id, target, events),
             Plan::Attack { target, kind } => {
-                let skill = (self.state.actors.get(&id))
-                    .and_then(|a| a.attack_skill(&self.content, kind, None));
+                let skills = self.skills_of(id, kind, None);
+                let price = self.attack_price(id, kind.action(), skills);
                 self.attack(id, target, kind, events);
-                self.attack_price(id, kind.action(), skill)
+                price
             }
             Plan::Step(dir) => self.step_or_wait(id, dir, events).1,
             Plan::Patrol => self.patrol(id, events),
