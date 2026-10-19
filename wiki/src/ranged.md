@@ -6,16 +6,24 @@ You can fight from a distance: shoot with a **missile weapon** (a bow, a crossbo
 
 ## Getting ready
 
-Ready a missile weapon and its ammunition on the [equipment](equipment.md) screen (`e`): the
-missile weapon goes in the Missile weapon slot, its ammunition in the Missiles slot. Each missile
-weapon shoots its own kind: bows shoot arrows, crossbows bolts, slings stones (see
-[Ammunition](ammunition.md)). A throwing weapon can be thrown from your hand or your pack; rocks
-can be readied in the Missiles slot, so `t` throws them at once.
+Ready what you will shoot or throw on the [equipment](equipment.md) screen (`e`). The **Missile
+weapon slot** takes a missile weapon, or any weapon, or anything made for throwing (a stack of
+rocks); the **Missiles slot** takes the ammunition. Each missile weapon shoots its own kind: bows
+shoot arrows, crossbows bolts, slings stones (see [Ammunition](ammunition.md)).
 
 ## Shooting and throwing
 
-`f` fires, `t` throws: aim with the cursor (see [Controls](controls.md), "Aiming") and press
-`Enter`. A shot takes a turn (a crossbow longer: it must be reloaded after every shot), and so
+`t` uses whatever is in the Missile weapon slot, and aims it with the cursor (see
+[Controls](controls.md), "Aiming"); press `Enter` (or `t` again) to loose it:
+
+- a **missile weapon** shoots a piece of its ammunition from the Missiles slot;
+- a **throwing weapon** (a dagger, a spear, a rock) is thrown, one of a stack;
+- **any other weapon** is thrown whole: it leaves the slot and lands like anything thrown. It was
+  not made for it, so it flies only 3 cells and you take a **-4 penalty to hit**;
+- with nothing there: "You have nothing ready to throw or shoot." No time passes.
+
+`T` opens a list of what you carry that is made for throwing, to throw any of it without readying
+it first. A shot takes a turn (a crossbow longer: it must be reloaded after every shot), and so
 does a throw; see [Turns and movement](turns.md) for the times.
 
 {{#include generated/launchers.md}}

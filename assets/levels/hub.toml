@@ -1,8 +1,8 @@
 # The showcase hub (spec §3). Each room demonstrates one engine capability:
 # top row: light hall (M3), darkness chamber (M3), water garden (M4);
 # bottom row: start room, door corridor, patrol gallery, effects room (M4), stairs nook (> down to
-# the Vast Caverns, v down to the arena, g down to the Frost Grotto, < up and out to the
-# overworld, ^ up to the courtyard).
+# the Vast Caverns, v down to the arena, Q down to the quarry, g down to the Frost Grotto, < up
+# and out to the overworld, ^ up to the courtyard).
 #
 # Temperature and ice (M26): the hub is a mild 10 °C, like every dungeon by default, so its water
 # never freezes; the Frost Grotto (g, down) is below freezing, with a frozen pool to walk on.
@@ -47,8 +47,11 @@
 #
 # Ranged combat (M16): the storeroom also has a long war bow, a crossbow with bolts, a sling with
 # stones, rocks to throw, and flaming arrows beside the short bow's arrows. Ready a bow and arrows
-# with `e`, then fire with `f` (throw with `t`): a flaming arrow shot into the patrol gallery's
+# with `e`, then shoot with `t` (`T` throws from the pack): a flaming arrow shot into the patrol gallery's
 # dark middle lights it where it lands until it burns out.
+#
+# Digging (M19): the storeroom has a pick-axe for the Tool slot; use it with `U` toward a wall.
+# The stairs nook's Q leads down to the quarry, the place to dig.
 name = "The Hub"
 ambient = [0, 0, 0, 0]
 map = '''
@@ -70,7 +73,7 @@ map = '''
 #......@.......##.....#.#.....##3........................#......B......#.......#
 #..............####+###.###+####..#...#...#...#...#...#..#.............#.<.>.v.#
 #..............##.............##2........................#.===.....::::#.......#
-#..............##......t......##.........................#.===.....::::#...g...#
+#..............##......t......##.........................#.===.....::::#...g.Q.#
 #..t.......t...#################t.......................t#.........::::#.......#
 ################################################################################
 '''
@@ -100,6 +103,8 @@ map = '''
 "^" = { terrain = "stairs_up", to = "courtyard" }
 # Stairs down (drawn `>`) to the arena.
 "v" = { terrain = "stairs_down", to = "arena" }
+# Stairs down (drawn `>`) to the quarry, the place to dig.
+"Q" = { terrain = "stairs_down", to = "quarry" }
 # Stairs down (drawn `>`) to the Frost Grotto, where the cold has frozen a pool.
 "g" = { terrain = "stairs_down", to = "frost_grotto" }
 
@@ -164,6 +169,12 @@ objects = ["small_shield", "quarterstaff"]
 [[pile]]
 at = [17, 14]
 objects = ["wool_cloak", "leather_gloves", "leather_boots"]
+
+# Digging (M19): a pick-axe for the Tool slot. The hub's walls give way to it like any stone
+# wall (its outer walls, the level's edge, never do); the quarry is the place to dig.
+[[pile]]
+at = [18, 14]
+objects = ["pick_axe"]
 
 # The pantry (the door corridor's east room).
 [[pile]]

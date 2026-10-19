@@ -25,7 +25,10 @@
 
 use super::{Actor, ActorId, ActorKind, World};
 use crate::action::Event;
-use crate::content::{ActionKind, BASE_TURN, LevelKind, TerrainDef, price};
+use crate::content::{
+    ActionKind, BASE_TURN, Benefit, LevelKind, Stance, TerrainDef, WeaponSkillId, percent_of, price,
+};
+use crate::geom::Pos;
 use crate::perception::VIEW_RADIUS;
 use crate::skills::Effect;
 use crate::time::{Duration, GameTime};
@@ -57,23 +60,77 @@ impl World {
     /// 6-second base, slowed by its burden ([`World::burdened`]). Steps are priced by the terrain
     /// instead ([`World::step_price`]).
     pub(super) fn price_of(&self, id: ActorId, kind: ActionKind) -> i64 {
-        let creature = self.state.actors[&id].creature;
-        self.burdened(
-            id,
-            price(self.content.action_cost(creature, kind), BASE_TURN),
-        )
+        let actor = &self.state.actors[&id];
+        let base = price(self.content.action_cost(actor.creature, kind), BASE_TURN);
+        self.burdened(id, self.stanced(actor, kind, base))
+    }
+
+    /// `base` as dear as `actor`'s combat stance makes its attacks (spec §8 "Stances"): melee,
+    /// shots, and throws; reloading is not an attack.
+    fn stanced(&self, actor: &Actor, kind: ActionKind, base: i64) -> i64 {
+        match kind {
+            ActionKind::Melee | ActionKind::Shoot | ActionKind::Throw => {
+                percent_of(base, self.content.stance_def(actor.stance).attack_cost)
+            }
+            _ => base,
+        }
+    }
+
+    /// Whether actor `id` stepping to `to` flees: some hostile creature stands next to it now and
+    /// the step takes it out of that creature's reach (spec §8 "Stances": a coward's flight is
+    /// cheaper and quieter).
+    pub(super) fn flees(&self, id: ActorId, to: Pos) -> bool {
+        let Some(me) = self.state.actors.get(&id) else {
+            return false;
+        };
+        let stance = self.content.stance_def(me.stance);
+        if stance.flee_cost == 100 && stance.flee_noise == 100 {
+            return false;
+        }
+        self.state.actors.values().any(|other| {
+            other.id != id
+                && other.level == me.level
+                && other.pos.chebyshev(me.pos) == 1
+                && other.pos.chebyshev(to) > 1
+                && self.stance(id, other.id) == Stance::Hostile
+        })
+    }
+
+    /// The energy price of attack action `kind` (`melee`, `shoot`, `throw`, `reload`) for actor
+    /// `id` drawing on weapon skill `skill` (spec §8 "Weapon skills"): its cost less what its
+    /// rank takes off (`speed`; `reload` for reloading), then priced like any action
+    /// ([`World::price_of`]), its combat stance included.
+    pub(super) fn attack_price(
+        &self,
+        id: ActorId,
+        kind: ActionKind,
+        skill: Option<WeaponSkillId>,
+    ) -> i64 {
+        let actor = &self.state.actors[&id];
+        let benefit = actor.benefit(&self.content, skill);
+        let saving = match kind {
+            ActionKind::Reload => benefit.reload,
+            _ => benefit.speed,
+        };
+        let cost = self.content.action_cost(actor.creature, kind);
+        let base = price(Benefit::saving(cost, saving), BASE_TURN);
+        self.burdened(id, self.stanced(actor, kind, base))
     }
 
     /// The energy price of actor `id` stepping onto terrain `to` on the current level, slowed by
-    /// its burden ([`World::burdened`]). On the overworld its skills (survival; spec §8
-    /// "Skills") take their percent off the journey, rounded up (at least 1).
-    pub(super) fn step_price(&self, id: ActorId, to: &TerrainDef) -> i64 {
+    /// its burden ([`World::burdened`]); `fleeing` ([`World::flees`]) makes it as dear as its
+    /// stance says. On the overworld its skills (survival; spec §8 "Skills") take their percent
+    /// off the journey, rounded up (at least 1).
+    pub(super) fn step_price(&self, id: ActorId, to: &TerrainDef, fleeing: bool) -> i64 {
         let actor = &self.state.actors[&id];
         let step = self.content.action_cost(actor.creature, ActionKind::Step);
         let level = self.state.current();
         let mut price = level.step_price(to, step);
         if level.kind == LevelKind::Overworld {
             price = shortened(price, actor.skills.effect(&self.content, Effect::Travel));
+        }
+        if fleeing {
+            price = percent_of(price, self.content.stance_def(actor.stance).flee_cost);
         }
         self.burdened(id, price)
     }
@@ -102,9 +159,10 @@ impl World {
     /// moment of each action, and ends at the moment the player is ready.
     ///
     /// While the turn runs, energies live in the turn's schedule; they are written back to the
-    /// actors when the player is ready. As the clock moves, every actor on the level regains
-    /// hit points ([`World::regenerate`]). A creature that dies leaves the schedule; the
-    /// player's death ends the turn there and then.
+    /// actors when the player is ready. As the clock moves, every actor on the level lives
+    /// through the time ([`World::pass_time`]: status effects tick and ease, hit points come
+    /// back). A creature that dies leaves the schedule; the player's death ends the turn there
+    /// and then.
     pub(super) fn run_turn(&mut self, price: i64, events: &mut Vec<Event>) {
         self.state.turn += 1;
         // The player has acted: what they heard before is spent, and they hear afresh.
@@ -133,15 +191,22 @@ impl World {
                 .min()
                 .expect("the player is scheduled");
             if seconds > 0 {
+                let (start, fallen) = (self.state.time, self.fallen.len());
                 self.state.time += Duration::seconds(seconds);
                 // Whoever steps onto the ice next meets the ice of the moment.
                 self.update_ice();
-                self.regenerate(schedule.iter().map(|s| s.id), seconds);
+                self.pass_time(schedule.iter().map(|s| s.id), start, seconds, events);
                 let seconds = i64::try_from(seconds).unwrap_or(i64::MAX);
                 for s in &mut schedule {
                     let gain = i64::from(s.speed).saturating_mul(seconds);
                     s.energy = s.energy.saturating_add(gain);
                 }
+                // Some may have died of their wounds meanwhile: whoever is ready now acts
+                // next (the same actor, unless it died).
+                if self.fallen.len() > fallen {
+                    schedule.retain(|s| self.state.actors.contains_key(&s.id));
+                }
+                continue;
             }
             if next == 0 {
                 break;

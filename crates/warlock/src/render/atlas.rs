@@ -285,8 +285,9 @@ mod tests {
     fn ui_text_glyphs_are_covered() {
         let font = Font::load().unwrap();
         let atlas = rasterize(&font.0, 18.0, &glyph_set([]), 1);
-        // `◌` is the heard-sound marker (`ui::sounds`), then the moon phase glyphs.
-        for c in "×—–…·•←↑→↓↔≈≠≤≥°±─│┌┐└┘█░♥♦♣♠☼◌○●◐◑☽☾".chars()
+        // `◌` is the heard-sound marker (`ui::sounds`), then the moon phase glyphs, then the
+        // weapon skills bar (`━`, `─`).
+        for c in "×—–…·•←↑→↓↔≈≠≤≥°±─│┌┐└┘█░♥♦♣♠☼◌○●◐◑☽☾━".chars()
         {
             assert!(
                 atlas.index.contains_key(&c),

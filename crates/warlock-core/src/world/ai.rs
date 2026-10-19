@@ -97,8 +97,10 @@ impl World {
                 kind: AttackKind::Ranged,
             } => self.creature_shoots(id, target, events),
             Plan::Attack { target, kind } => {
+                let skill = (self.state.actors.get(&id))
+                    .and_then(|a| a.attack_skill(&self.content, kind, None));
                 self.attack(id, target, kind, events);
-                self.price_of(id, kind.action())
+                self.attack_price(id, kind.action(), skill)
             }
             Plan::Step(dir) => self.step_or_wait(id, dir, events).1,
             Plan::Patrol => self.patrol(id, events),
@@ -376,10 +378,11 @@ impl World {
         if !def.walkable || overloaded || self.state.actor_at(&level.id, to).is_some() {
             return Stepped::Blocked;
         }
+        let fleeing = self.flees(id, to);
         // Ice there may give way under it (spec §5 "Ice").
         let footing = self.tread(id, from, to);
         let onto = self.content.terrain(self.state.current().terrain[to]);
-        let price = self.step_price(id, onto) + self.tread_price(id, footing);
+        let price = self.step_price(id, onto, fleeing) + self.tread_price(id, footing);
         if let Some(actor) = self.state.actors.get_mut(&id) {
             actor.pos = to;
         }
@@ -389,7 +392,7 @@ impl World {
             to,
         });
         self.after_tread(id, to, footing, events);
-        self.make_noise(id, Act::Step(to));
+        self.make_step_noise(id, to, fleeing);
         Stepped::Moved(price)
     }
 

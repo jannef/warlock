@@ -109,10 +109,11 @@ pub fn slots_taken(content: &Content, object: ObjectId, slot: SlotId) -> Vec<Slo
 /// The first slot `object` fits that is free (every hand free, for a two-handed object), in
 /// display order: where it goes when nobody says which slot (creatures' spawn data).
 pub fn free_slot(content: &Content, equipment: &Equipment, object: ObjectId) -> Option<SlotId> {
+    // Only where it belongs: not the missile weapon slot that takes any weapon too.
     content
         .slot_ids()
         .map(|(id, _)| id)
-        .filter(|&s| content.fits(object, s))
+        .filter(|&s| content.fits_properly(object, s))
         .find(|&s| {
             let taken = slots_taken(content, object, s);
             taken.iter().all(|&t| equipment.get(t).is_none())
@@ -165,7 +166,7 @@ mod tests {
         let ring = object(&c, "silver_ring");
         assert!(c.fits(ring, slot(&c, "left_ring")) && c.fits(ring, slot(&c, "right_ring")));
         assert!(!c.fits(object(&c, "apple"), slot(&c, "main_hand")));
-        // The slots come in ADOM's order, lettered a to l.
+        // The slots come in ADOM's order, lettered a to m.
         let names: Vec<&str> = c.slots().iter().map(|s| s.name.as_str()).collect();
         assert_eq!(
             names,
@@ -181,7 +182,8 @@ mod tests {
                 "Right ring",
                 "Feet",
                 "Missile weapon",
-                "Missiles"
+                "Missiles",
+                "Tool"
             ]
         );
         // A second ring goes on the other hand.

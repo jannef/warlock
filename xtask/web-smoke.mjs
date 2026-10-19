@@ -2,7 +2,8 @@
 // press Enter six times (main menu -> New run -> race -> gender -> class -> summary -> start, the
 // scenario's character preselected), wait five turns, reload the page (its pagehide
 // hook must write the run to localStorage), choose Continue and check the run resumed at turn 5;
-// screenshot, and fail if errors were logged.
+// then pause, Quit and confirm: the page must reload to the main menu (a web page cannot quit),
+// where Continue resumes the run again; screenshot, and fail if errors were logged.
 // Usage: node xtask/web-smoke.mjs <chrome-binary> <url> <out.png> <profile-dir>
 import { spawn } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
@@ -59,9 +60,22 @@ await send('Runtime.evaluate', { expression: "document.querySelector('canvas')?.
 await key('Enter', 'Enter', 13);   // Continue
 await sleep(3000);
 if (!logs.some((l) => /resumed the saved run at turn 5\b/.test(l))) failures.push('Continue did not resume at turn 5; logs: ' + logs.join(' | '));
+// Quit from the pause menu (Esc, Up wraps to Quit, Enter asks, y confirms): the page reloads.
+await send('Runtime.evaluate', { expression: 'window.__beforeQuit = 1' });
+await key('Escape', 'Escape', 27);
+await key('ArrowUp', 'ArrowUp', 38);
+await key('Enter', 'Enter', 13);
+await key('y', 'KeyY', 89);
+await sleep(12000);
+const alive = (await send('Runtime.evaluate', { expression: "String(window.__beforeQuit)", returnByValue: true })).result.result.value;
+if (alive !== 'undefined') failures.push('Quit did not reload the page');
+await send('Runtime.evaluate', { expression: "document.querySelector('canvas')?.focus()" });
+await key('Enter', 'Enter', 13);   // Continue
+await sleep(3000);
+if (logs.filter((l) => /resumed the saved run at turn 5\b/.test(l)).length < 2) failures.push('Continue after Quit did not resume at turn 5; logs: ' + logs.join(' | '));
 const shot = await send('Page.captureScreenshot', { format: 'png' });
 writeFileSync(out, Buffer.from(shot.result.data, 'base64'));
 const bad = [...failures, ...logs.filter((l) => /error|panic|EXCEPTION|warn/i.test(l))].slice(0, 15);
-console.log(bad.join('\n') || 'no errors logged; reload resumed the run');
+console.log(bad.join('\n') || 'no errors logged; reload and Quit both resumed the run');
 ws.close(); proc.kill();
 process.exit(bad.length ? 1 : 0);

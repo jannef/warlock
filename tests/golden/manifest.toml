@@ -95,13 +95,29 @@ name = "arena-shot"
 scenario = "arena"
 actions = "wait*12"
 
+# Blood (spec §8 "Blood", #127): the arena after its brawl, seven dead around the fire pit and
+# subtle dark stains where they fell; and a kill against walls: on the first Depths level the
+# warrior opens the door, lights the lantern, waits at the corridor's bend for the patrolling rat,
+# backs off to draw it into the corridor, and punches it dead there: a pool on the floor and
+# blood on the corridor walls beside it.
+[[golden]]
+name = "arena-blood"
+scenario = "arena"
+actions = "wait*40"
+
+[[golden]]
+name = "blood-wall"
+scenario = "depths"
+actions = "move:SE move:E*5 open:E lantern move:E*6 wait*2 move:W*2 move:E*8"
+scale = 2.0
+
 # Combat (spec §8 "Combat"): the player lights the lantern in the arena's dark corner and the war
 # band's archer shoots them down from the dark. The death screen opens by itself over the run as
 # it ended. Every action must take a turn, so the walk ends with the killing one.
 [[golden]]
 name = "death-screen"
 scenario = "arena"
-actions = "lantern wait*16"
+actions = "lantern wait*17"
 
 # A generated level (rooms generator, The Depths 1) from the scenario's fixed seed.
 [[golden]]
@@ -180,6 +196,16 @@ screen = "character"
 name = "skills-screen"
 scenario = "showcase"
 screen = "skills"
+
+# Status effects (#138): four bites' worth of poison and a wound (the dev `afflict:` action), a
+# turn later. The character screen names them (never how bad) and shows Strength and Dexterity
+# lowered by the strong poison, in red; the status bar beneath names them after the hit points.
+[[golden]]
+name = "status-effects"
+scenario = "showcase"
+actions = "afflict:poisoned*4 afflict:bleeding wait"
+screen = "character"
+window = "960x600"
 
 # Character creation (#108, #111, #118), over New run on the main menu (no run; the replay goes
 # unused): the race step with the showcase's character's race preselected, and the summary of
@@ -314,6 +340,15 @@ name = "ranged-flight"
 scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:S pickup move:W pickup equip:missile_weapon:a equip:missiles:c move:NE move:E*2 move:N*4 move:E*20 open:S move:S fire:45,17"
 
+# Weapon skills (#134): the arena's halfling thief readies the bow beside them and shoots into
+# the brawl until the arrows run out; the weapon skills screen shows the class's and the race's
+# ranks (daggers 2, thrown 1, slings 1) and half a bar of marks in bows.
+[[golden]]
+name = "weapon-skills-screen"
+scenario = "arena"
+actions = "move:E pickup equip:missile_weapon:a equip:missiles:b fire:30,16*12"
+screen = "weapon-skills"
+
 [[golden]]
 name = "ranged-burning-arrow"
 scenario = "showcase"
@@ -355,6 +390,20 @@ scenario = "showcase"
 actions = "effect:fireball@11,13"
 freeze_time = 0.1
 args = ["--reduced-effects"]
+
+# Digging (spec §8 "Digging"): in the quarry, the pick-axe beside the start picked up and readied
+# in the Tool slot, at the sealed chamber's west wall (quarry); then after digging through it,
+# turn after turn until it crumbled: the chamber's lamplight spills into the pit through the
+# rubble, where the dust of the fallen wall rises (quarry-dug).
+[[golden]]
+name = "quarry"
+scenario = "quarry"
+actions = "move:E pickup equip:tool:a move:E*35"
+
+[[golden]]
+name = "quarry-dug"
+scenario = "quarry"
+actions = "move:E pickup equip:tool:a move:E*35 dig:E"
 
 # Temperature and ice (spec §5 "Ice"; M26). The Frost Grotto, down the stairs nook's third `>`:
 # its frozen pool from thick ice to thin ice, and a spring keeping a hole open; the status bar

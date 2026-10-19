@@ -15,12 +15,14 @@
 //! - **Damage**: the attack's dice plus its bonus, at least 1 ([`Profile`]).
 //! - **Hit points**: Toughness plus what race and class (a creature: its type) give
 //!   ([`max_hp`]); one comes back every `max(60 s, 360 s − 12 s × Toughness)` of game time
-//!   ([`regen_seconds`]).
+//!   ([`regen_seconds`]) at the normal pace (resting and status effects change the pace,
+//!   `world/status.rs`). A **big hit** takes at least a third of them ([`big_hit`]).
 //!
 //! Every roll comes from the gameplay random stream, so fights replay exactly. Nothing here is
 //! shown to the player as a number but their own hit points and Defence: never a to-hit, a
 //! modifier, or a roll.
 
+use crate::content::Benefit;
 use crate::dice::Dice;
 use crate::rng::Rng;
 use crate::stats::{Stat, Stats};
@@ -257,6 +259,12 @@ impl Attack {
     }
 }
 
+/// To hit with a weapon thrown that was not made for it (a sword, a club), as in D&D: -4.
+pub const IMPROVISED_TO_HIT: i32 = -4;
+
+/// How far such a weapon is thrown, in cells.
+pub const IMPROVISED_RANGE: i32 = 3;
+
 impl Profile {
     /// A melee attack with `attack` (a weapon, a natural attack, bare hands): to-hit and damage
     /// both add the Strength modifier.
@@ -284,6 +292,30 @@ impl Profile {
         });
         let dexterity = stats.modifier(Stat::Dexterity);
         Self::of(attack, attack.to_hit + dexterity - short, -short)
+    }
+
+    /// This attack with what a weapon skill's rank gives (spec §8 "Weapon skills"): more to
+    /// hit, more to every roll of the damage, and a wider threat range (never past a natural
+    /// 2).
+    pub fn with(self, benefit: &Benefit) -> Self {
+        Self {
+            to_hit: self.to_hit + benefit.to_hit,
+            bonus: self.bonus + benefit.damage,
+            threat: self
+                .threat
+                .saturating_sub(benefit.threat)
+                .max(*THREATS.start()),
+            ..self
+        }
+    }
+
+    /// This throw, of a weapon thrown whole though not made for throwing: [`IMPROVISED_TO_HIT`]
+    /// to hit.
+    pub fn improvised(self) -> Self {
+        Self {
+            to_hit: self.to_hit + IMPROVISED_TO_HIT,
+            ..self
+        }
     }
 
     fn of(attack: &Attack, to_hit: i32, bonus: i32) -> Self {
@@ -360,6 +392,12 @@ pub fn strike(profile: &Profile, defence: &Defence, rng: &mut Rng) -> Blow {
     }
 }
 
+/// Whether a blow of `damage` against a target of `max` hit points is a **big hit**: at least a
+/// third of them (spec §8 "Status effects": it may make the target bleed).
+pub fn big_hit(damage: i32, max: i32) -> bool {
+    damage > 0 && 3 * i64::from(damage) >= i64::from(max.max(1))
+}
+
 /// Maximum hit points: Toughness plus `base` (race and class for the player, the creature
 /// type's `base_hp` for a creature), at least 1. Linear in Toughness: no runaway pools.
 pub fn max_hp(toughness: u8, base: i32) -> i32 {
@@ -372,7 +410,8 @@ pub const REGEN_FASTEST: u32 = 60;
 /// ...and how much each point of Toughness takes off.
 pub const REGEN_PER_TOUGHNESS: u32 = 12;
 
-/// Seconds of game time per regenerated hit point: `max(60, 360 − 12 × Toughness)`.
+/// Seconds of game time per regenerated hit point at the normal pace: `max(60, 360 − 12 ×
+/// Toughness)`.
 pub fn regen_seconds(toughness: u8) -> u32 {
     REGEN_SLOWEST
         .saturating_sub(REGEN_PER_TOUGHNESS * u32::from(toughness))

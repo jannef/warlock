@@ -53,7 +53,19 @@
 //! light (and so what the player and creatures see), the noise made there, regeneration, and
 //! whether creatures hostile to the player step in. The first time the player is inside one they
 //! are told what it is.
-//!
+//! Weapon skills (spec §8 "Weapon skills", [`crate::weapon_skills`], `fight.rs`): every attack
+//! draws on a skill (the weapon's, unarmed, thrown, shield bashing) for its to-hit, damage,
+//! threat, and cost, and the player's attacks and shield blocks earn marks toward its next rank
+//! ("You feel more skilled with daggers."). A shield bash ([`Action::Bash`]) is a blow with a
+//! held shield.
+//! Digging (`dig.rs`): walls that break give way to a digging tool, turn after turn like a rest,
+//! and to explosions stronger than they are hard; they become rubble.
+//! Blood (`bleed.rs`, [`crate::blood`]): big hits and kills stain the floor and the walls around
+//! the victim. Presentation state kept with the level; no rule reads it.
+//! Status effects and healing (spec §8 "Status effects", "Healing", `status.rs`): big hits and
+//! criticals make their targets bleed, a giant rat's bite may poison; effects cost hit points
+//! and ease as the clock moves, slow healing, and can kill. Hit points come back with game
+//! time, twice as fast while the player rests.
 //! Temperature and ice (spec §5 "Temperature", "Ice"; `ice.rs`): water freezes in the cold and
 //! thaws in the warmth, brought up to the clock as it moves on the player's level (and on
 //! arrival), never ticking while nobody is there. Ice holds actors by their weight; one that
@@ -61,6 +73,8 @@
 
 mod actor;
 mod ai;
+mod bleed;
+mod dig;
 mod equip;
 mod experience;
 mod fight;
@@ -71,19 +85,21 @@ mod path;
 mod schedule;
 mod shoot;
 mod spell;
+mod status;
 mod train;
 
 pub use actor::{Actor, ActorId, ActorKind, Mind, Patrol};
+pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
 pub use fight::Death;
 pub(crate) use hash::fnv1a;
 pub use level::{Fire, LevelState};
 
-use crate::action::{Action, Event, Letters, MAX_REST, MissileEnd, Outcome, Rest, letter};
+use crate::action::{Action, Breach, Event, Letters, MAX_REST, MissileEnd, Outcome, Rest, letter};
 use crate::burden::{self, Burden, Load};
 use crate::character::{Character, CharacterSpec};
 use crate::content::{
-    ActionKind, Content, CreatureId, EdgeExit, LevelKind, LevelTemplate, RoomEffectDef, StairsDir,
-    Stance, TerrainId, local_area_id,
+    ActionKind, CombatStance, Content, CreatureId, EdgeExit, LevelKind, LevelTemplate,
+    RoomEffectDef, StairsDir, Stance, TerrainId, local_area_id,
 };
 use crate::geom::{Dir, Pos};
 use crate::light::{LightCache, Sky};
@@ -97,6 +113,7 @@ use crate::rng::Rng;
 use crate::sight::LineOfSight;
 use crate::skills::{Skills, Use};
 use crate::time::{self, Duration, GameTime};
+use crate::weapon_skills::WeaponSkills;
 use crate::weather::{self, Weather};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -201,6 +218,15 @@ impl WorldState {
         burden::load(actor, race, content)
     }
 
+    /// The size of `actor`, an index into [`Content::sizes`]: the player's race's when the run
+    /// has a character, else its creature type's.
+    pub(crate) fn size_of(&self, content: &Content, actor: &Actor) -> usize {
+        let race = (self.character.as_ref())
+            .filter(|_| actor.kind == ActorKind::Player)
+            .and_then(|c| c.spec.race(content).ok());
+        race.map_or(content.creature(actor.creature).size, |r| r.size)
+    }
+
     fn current_mut(&mut self) -> &mut LevelState {
         self.levels
             .get_mut(&self.current_level)
@@ -270,6 +296,22 @@ pub struct World {
     /// What the player's kills earned them during the current action (not saved): said after
     /// the attack's own messages.
     news: Vec<String>,
+    /// Whether the player is resting ([`World::rest`]; not saved: a rest is one action): they
+    /// heal faster.
+    resting: bool,
+}
+
+/// How a long action (a rest, digging; [`World::keep_at`]) ended.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Ended {
+    /// There was nothing more to do.
+    Done,
+    /// This creature came into view.
+    Came(ActorId),
+    /// A message was logged that stops it.
+    Said,
+    /// The player died.
+    Died,
 }
 
 /// How much time an action took.
@@ -284,6 +326,8 @@ enum Spent {
     Turn(i64),
     /// A rest until this moment (see [`World::rest`]).
     Rest(GameTime, Rest),
+    /// Digging into the wall at this cell (see [`World::dig`]).
+    Dig(Pos),
     /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
     Skip(Duration),
 }
@@ -314,12 +358,20 @@ impl World {
         let seed = seed.unwrap_or(def.seed);
         // The player's hit points beyond their Toughness: what their race and class give, or
         // without a character what the scenario gives. Without a character the player is trained
-        // in nothing.
+        // in nothing and has no weapon skills.
         let chosen = character.or(def.character.as_ref());
-        let (stats, vision, hp_base, skills, character) = match chosen {
+        let (stats, vision, hp_base, skills, character, weapon_skills) = match chosen {
             Some(spec) => {
                 let s = (spec.start(&content, seed, def.start)).map_err(WorldError::Character)?;
-                (s.stats, s.vision, s.hp, s.skills, Some(s.character))
+                let character = Some(s.character);
+                (
+                    s.stats,
+                    s.vision,
+                    s.hp,
+                    s.skills,
+                    character,
+                    s.weapon_skills,
+                )
             }
             None => (
                 def.player_stats,
@@ -327,6 +379,7 @@ impl World {
                 i32::from(def.hp),
                 Skills::default(),
                 None,
+                WeaponSkills::default(),
             ),
         };
         let start = level_template(&content, seed, &def.start_level, None)?;
@@ -376,9 +429,12 @@ impl World {
             hp_base,
             regen: 0,
             skills,
+            effects: Default::default(),
+            weapon_skills,
             faction_override: None,
+            stance: CombatStance::Neutral,
         };
-        player.hp = player.max_hp();
+        player.hp = player.max_hp(&content);
         state.actors.insert(ActorId(0), player);
         instantiate_level(&mut state, &content, &start);
         drop(start); // It may borrow `content`, which `assemble` takes.
@@ -422,10 +478,21 @@ impl World {
                 || a.inventory.len() > object::INVENTORY_SLOTS
                 || !a.equipment.is_valid_for(&a.inventory, &content)
                 || a.skills.iter().any(|(id, _)| usize::from(id.0) >= skills)
+                || !a.weapon_skills.is_valid_for(content.weapon_skills())
         }) {
             return Err(WorldError::InconsistentState(format!(
-                "actor {} is a creature, carries objects, wears them in slots, or knows skills \
-                 this content does not have",
+                "actor {} is a creature, carries objects, wears them in slots, or knows skills or \
+                 weapon skills this content does not have",
+                actor.id
+            )));
+        }
+        if let Some(actor) = state
+            .actors
+            .values()
+            .find(|a| !a.effects.is_valid_for(&content))
+        {
+            return Err(WorldError::InconsistentState(format!(
+                "actor {} suffers status effects this content does not have",
                 actor.id
             )));
         }
@@ -444,6 +511,7 @@ impl World {
             said: 0,
             fallen: Vec::new(),
             news: Vec::new(),
+            resting: false,
         }
     }
 
@@ -579,6 +647,8 @@ impl World {
         if acted && slowed && self.trains(Use::Burdened) {
             self.train(Use::Burdened);
         }
+        // A status effect that lowers Strength during the turn may change it too.
+        let burden = self.load_of(self.state.player).burden();
         match spent {
             Spent::Nothing => {}
             Spent::NoTime => self.perceive(&mut events),
@@ -587,12 +657,16 @@ impl World {
                 self.perceive(&mut events);
             }
             Spent::Rest(until, goal) => self.rest(until, goal, &mut events),
+            Spent::Dig(at) => self.dig(at, &mut events),
             Spent::Skip(duration) => {
                 // Nobody acts or gains energy.
                 self.state.time += duration;
                 self.player_mut().heard.clear();
                 self.perceive(&mut events);
             }
+        }
+        if self.state.death.is_none() {
+            self.burden_news(burden);
         }
         Outcome {
             took_turn: self.state.turn != turn,
@@ -601,26 +675,66 @@ impl World {
         }
     }
 
-    /// Rests until `until`: turn after turn through the normal pipeline (the player waits, the
-    /// others act, perception), stopping after a turn in which a creature came into view or a
-    /// message was logged that stops a rest. The last turn is cut short to end exactly at
-    /// `until`, whatever the player's speed ([`World::price_until`]). Turns that end before any
-    /// creature could come into view ([`World::out_of_view_for`]) and in which the weather the
-    /// player sees did not change pass without perception, which cannot change the outcome; only
-    /// the last turn's events are kept.
+    /// Rests until `until`: turn after turn of waiting ([`World::keep_at`]), the last cut short to
+    /// end exactly at `until`, whatever the player's speed ([`World::price_until`]); then says
+    /// how long the player rested. The player heals faster all the while.
     fn rest(&mut self, until: GameTime, goal: Rest, events: &mut Vec<Event>) {
+        self.resting = true;
+        self.rest_until(until, goal, events);
+        self.resting = false;
+    }
+
+    fn rest_until(&mut self, until: GameTime, goal: Rest, events: &mut Vec<Event>) {
         let start = self.state.time;
         let wait = self.price_of(self.state.player, ActionKind::Wait);
+        let ended = self.keep_at(
+            events,
+            |w| w.state.time < until,
+            |w, _| wait.min(w.price_until(until)),
+        );
+        let rested = self.state.time.since(start).spoken();
+        let text = match (ended, goal) {
+            (Ended::Died, _) => return,
+            (Ended::Came(id), _) => format!(
+                "{} comes into view; you stop resting after {rested}.",
+                self.creature_called(id)
+            ),
+            (Ended::Said, _) => format!("You stop resting after {rested}."),
+            (Ended::Done, Rest::For(_)) => format!("You rest for {rested}."),
+            (Ended::Done, Rest::Dawn) => "You rest until dawn.".into(),
+            (Ended::Done, Rest::Dusk) => "You rest until dusk.".into(),
+        };
+        self.say(text);
+    }
+
+    /// Passes turn after turn of a long action (a rest, digging) through the normal pipeline
+    /// while `more` says there is more to do: the player does `act` (which returns what it
+    /// costs), the others act, perception. It stops after a turn in which a creature came into
+    /// view (one not seen the turn before) or a message was logged that stops a rest, and when the
+    /// player dies. Turns that end before any creature could come into view
+    /// ([`World::out_of_view_for`]) and in which the weather the player sees did not change pass
+    /// without perception, which cannot change the outcome; only the last turn's events are
+    /// kept, and the player's status effects beginning and ending in the others (so they are
+    /// said).
+    fn keep_at(
+        &mut self,
+        events: &mut Vec<Event>,
+        more: impl Fn(&Self) -> bool,
+        mut act: impl FnMut(&mut Self, &mut Vec<Event>) -> i64,
+    ) -> Ended {
         let said = self.said;
         let mut in_view = self.creatures_in_view();
         let mut came = None;
         let alive = |w: &Self| w.state.death.is_none();
-        while self.state.time < until && came.is_none() && self.said == said && alive(self) {
+        while more(self) && came.is_none() && self.said == said && alive(self) {
+            // What was perceived was said.
+            events.clear();
             let unseen_until = self.state.time + self.out_of_view_for();
             loop {
-                events.clear();
-                self.run_turn(wait.min(self.price_until(until)), events);
-                let done = self.state.time >= until || self.said != said || !alive(self);
+                events.retain(|e| matches!(e, Event::Status { .. }));
+                let price = act(self, events);
+                self.run_turn(price, events);
+                let done = !more(self) || self.said != said || !alive(self);
                 if done || self.state.time > unseen_until || self.weather_turned() {
                     break;
                 }
@@ -630,25 +744,12 @@ impl World {
             came = now_in_view.iter().find(|a| !in_view.contains(a)).copied();
             in_view = now_in_view;
         }
-        if !alive(self) {
-            return;
+        match came {
+            _ if !alive(self) => Ended::Died,
+            Some(id) => Ended::Came(id),
+            None if self.said != said => Ended::Said,
+            None => Ended::Done,
         }
-        let rested = self.state.time.since(start).spoken();
-        let text = match (came, self.said != said, goal) {
-            (Some(id), _, _) => {
-                let creature = self.state.actors[&id].creature;
-                let name = &self.content.creature(creature).name;
-                format!(
-                    "{} {name} comes into view; you stop resting after {rested}.",
-                    article(name)
-                )
-            }
-            (None, true, _) => format!("You stop resting after {rested}."),
-            (None, false, Rest::For(_)) => format!("You rest for {rested}."),
-            (None, false, Rest::Dawn) => "You rest until dawn.".into(),
-            (None, false, Rest::Dusk) => "You rest until dusk.".into(),
-        };
-        self.say(text);
     }
 
     /// A message when the player's burden is no longer `before` (spec §8 "Burden"): picking
@@ -719,26 +820,39 @@ impl World {
             self.weather_news(from, to);
         }
         let reports = self.perceive_events(events);
-        for text in reports {
-            self.say(text);
+        for (text, stops_rest) in reports {
+            if stops_rest {
+                self.say(text);
+            } else {
+                self.note(text);
+            }
         }
+        // What kills earned the player meanwhile (a creature their wound bled to death), and a
+        // weapon skill a blocked blow raised (`fight.rs`).
+        self.say_news();
     }
 
     /// Keeps the events the player perceived (dropping the rest) and returns the messages for
-    /// the attacks and deaths among them. A creature's attack is said if the player saw the
-    /// attacker or the target, or is the target, and kept for presentation if they saw both
-    /// (the player's own attacks were said, and only seen ones recorded, when made); a death is
-    /// said and kept with the attack that caused it, if the player saw who died. The player's
-    /// own death is always said, and settles whether they saw what killed them.
-    fn perceive_events(&mut self, events: &mut Vec<Event>) -> Vec<String> {
+    /// the attacks, deaths, and status effects among them, each with whether it stops a rest. A
+    /// creature's attack is said if the player saw the attacker or the target, or is the
+    /// target, and kept for presentation if they saw both (the player's own attacks were said,
+    /// and only seen ones recorded, when made); a death is said and kept with the attack that
+    /// caused it, if the player saw who died. The player's own death is always said, and
+    /// settles whether they saw what killed them. A death of a status effect is said if the
+    /// player sees where it happened ("The giant rat bleeds to death."). The player's own status
+    /// effects are said as they begin (stopping a rest) and end (not stopping one). A wall that
+    /// gave way is kept if the player sees its cell, and one blasted open is said ("The wall
+    /// collapses!"; digging says its own).
+    fn perceive_events(&mut self, events: &mut Vec<Event>) -> Vec<(String, bool)> {
         use fight::{End, Words, attack_message, death_message};
         let player = self.state.player;
         let content = self.content.clone();
-        let mut reports = Vec::new();
+        let mut reports: Vec<(String, bool)> = Vec::new();
         // The last attack: its attacker, its target, whether the player saw the target, and the
         // attacker's creature type if the player saw that.
         let mut last: Option<(ActorId, ActorId, bool, Option<CreatureId>)> = None;
         let mut killer_seen: Option<Option<CreatureId>> = None;
+        let mut collapsed = 0;
         let perception = &self.perception;
         let end = |id: ActorId, seen: bool| match self.actor_or_fallen(id) {
             _ if id == player => End::You,
@@ -801,6 +915,13 @@ impl World {
                 actor == player || perception.sees_actors_at(from) || perception.sees_actors_at(to)
             }
             Event::DoorOpened { pos } | Event::DoorClosed { pos } => perception.is_visible(pos),
+            Event::WallBroken { pos, cause } => {
+                let seen = perception.is_visible(pos);
+                if seen && cause == Breach::Blast {
+                    collapsed += 1;
+                }
+                seen
+            }
             Event::LevelChanged { .. } => true,
             Event::Missile { ref path, .. } => !path.is_empty(),
             Event::Spell { ref cells, .. } => !cells.is_empty(),
@@ -827,7 +948,8 @@ impl World {
                         .and_then(|t| content.creature(t.creature).natural.as_ref())
                         .map(|h| h.name.as_str());
                     let (a, t) = (end(attacker, sees_attacker), end(target, sees_target));
-                    reports.extend(attack_message(a, t, &words, kind, strike, hide));
+                    let said = attack_message(a, t, &words, kind, strike, hide);
+                    reports.extend(said.map(|text| (text, true)));
                 }
                 sees_attacker && sees_target
             }
@@ -839,7 +961,36 @@ impl World {
                 let seen = perception.sees_actors_at(at);
                 if let Some(me) = self.actor_or_fallen(actor).filter(|_| seen) {
                     let name = &content.creature(me.creature).name;
-                    reports.push(format!("The {name} falls through the ice!"));
+                    reports.push((format!("The {name} falls through the ice!"), true));
+                }
+                seen
+            }
+            Event::Status {
+                actor,
+                status,
+                began,
+            } => {
+                let def = content.status(status);
+                let text = if began { &def.start } else { &def.end };
+                if let Some(text) = text.clone().filter(|_| actor == player) {
+                    reports.push((text, began));
+                }
+                actor == player
+            }
+            Event::Died {
+                actor,
+                at,
+                of: Some(status),
+            } => {
+                if actor == player {
+                    reports.push((death_message(End::You), true));
+                    return true;
+                }
+                let seen = perception.sees_actors_at(at);
+                if let (true, Some(dead)) = (seen, self.actor_or_fallen(actor)) {
+                    let name = &content.creature(dead.creature).name;
+                    let dies = content.status(status).dies.as_deref().unwrap_or("dies");
+                    reports.push((format!("The {name} {dies}."), true));
                 }
                 seen
             }
@@ -849,7 +1000,7 @@ impl World {
                 };
                 if actor == player {
                     killer_seen = Some(by);
-                    reports.push(death_message(End::You));
+                    reports.push((death_message(End::You), true));
                     return true;
                 }
                 // A death by the player's hand was said with their blow, and recorded only if
@@ -859,13 +1010,18 @@ impl World {
                 }
                 let seen = seen && target == actor;
                 if seen {
-                    reports.push(death_message(end(actor, true)));
+                    reports.push((death_message(end(actor, true)), true));
                 }
                 seen
             }
         });
         if let (Some(by), Some(death)) = (killer_seen, self.state.death.as_mut()) {
             death.by = by;
+        }
+        match collapsed {
+            0 => {}
+            1 => reports.push(("The wall collapses!".into(), true)),
+            _ => reports.push(("The walls collapse!".into(), true)),
         }
         reports
     }
@@ -921,12 +1077,32 @@ impl World {
     /// heard by those it reaches. A step of the player's that a creature could have heard, but
     /// for their stealth, trains stealth.
     fn make_noise(&mut self, actor: ActorId, act: Act) {
+        self.make_noise_at(actor, act, 100);
+    }
+
+    /// The noise of `actor` stepping onto `to` (it has just moved), `fleeing` or not
+    /// ([`World::flees`]): a stance may quieten a flight.
+    fn make_step_noise(&mut self, actor: ActorId, to: Pos, fleeing: bool) {
+        let percent = match self.state.actors.get(&actor) {
+            Some(a) if fleeing => self.content.stance_def(a.stance).flee_noise,
+            _ => 100,
+        };
+        self.make_noise_at(actor, Act::Step(to), percent);
+    }
+
+    /// [`World::make_noise`] with the noise's loudness scaled to `percent`.
+    fn make_noise_at(&mut self, actor: ActorId, act: Act, percent: u32) {
         let (state, content) = (&self.state, &self.content);
         let Some(a) = state.actors.get(&actor) else {
             return;
         };
         let burden = state.load(content, a).penalty();
         let made = noise::noise(content, state.current(), a, burden, act);
+        let made = made.map(|mut n| {
+            n.loudness = u16::try_from(u32::from(n.loudness) * percent / 100).unwrap_or(u16::MAX);
+            n
+        });
+        let made = made.filter(|n| n.loudness > 0);
         let sneaking = actor == state.player
             && matches!(act, Act::Step(_))
             && self.trains(Use::Sneak)
@@ -1008,10 +1184,13 @@ impl World {
             Action::Drop(letters) => return self.drop_objects(*letters),
             Action::Equip { slot, item } => return self.equip(slot, *item),
             Action::Remove(slot) => return self.remove(slot),
+            Action::Bash(dir) => return self.bash(*dir, events),
             Action::Fire(at) => return self.fire(*at, events),
             Action::Throw { item, at } => return self.throw(*item, *at, events),
             Action::Rest(goal) => return self.start_rest(*goal),
+            Action::Dig(dir) => return self.start_dig(*dir),
             Action::SetVision(id) => return self.set_vision(id),
+            Action::SetStance(stance) => return self.set_stance(*stance),
             Action::SetWeather(weather) => {
                 let over = weather::Override::new(*weather, self.state.time);
                 self.state.weather_override = Some(over);
@@ -1044,6 +1223,15 @@ impl World {
                     at.x, at.y
                 ));
                 self.shock(*at, *radius, crate::ice::Shock::Heat, events);
+                return Spent::NoTime;
+            }
+            Action::Afflict(id) => {
+                let Some(status) = self.content.status_id(id) else {
+                    self.say(format!("There is no status `{id}`."));
+                    return Spent::Nothing;
+                };
+                let player = self.state.player;
+                self.afflict(player, status, 1, None, events);
                 return Spent::NoTime;
             }
         };
@@ -1184,6 +1372,13 @@ impl World {
         }
     }
 
+    /// The player takes combat stance `stance` (spec §8 "Stances"). Takes no time.
+    fn set_stance(&mut self, stance: CombatStance) -> Spent {
+        self.player_mut().stance = stance;
+        self.say(format!("You take {} stance.", stance.phrase()));
+        Spent::NoTime
+    }
+
     fn set_vision(&mut self, id: &str) -> Spent {
         let Some(profile) = self.content.vision(id) else {
             self.say(format!("There is no vision profile `{id}`."));
@@ -1236,8 +1431,9 @@ impl World {
             let name = self.content.creature(other.creature).name.clone();
             let player = self.state.player;
             if self.stance(player, target) == Stance::Hostile {
+                let skill = self.state.player().melee_skill(&self.content);
                 self.player_attacks(target, seen, events);
-                return self.took(true, ActionKind::Melee);
+                return Spent::Turn(self.attack_price(player, ActionKind::Melee, skill));
             }
             let what = if seen {
                 format!("The {name}")
@@ -1251,12 +1447,13 @@ impl World {
             return Spent::Nothing;
         }
         let player = self.state.player;
+        let fleeing = self.flees(player, to);
         // Ice there may give way (then it is a step into the water); climbing out onto it from
         // the water takes longer.
         let footing = self.tread(player, from, to);
         let onto = self.state.current().terrain[to];
-        let step =
-            self.step_price(player, self.content.terrain(onto)) + self.tread_price(player, footing);
+        let step = self.step_price(player, self.content.terrain(onto), fleeing)
+            + self.tread_price(player, footing);
         let overworld = self.state.current().kind == LevelKind::Overworld;
         self.state.overworld_step = overworld.then_some(dir);
         if let Some(actor) = self.state.actors.get_mut(&player) {
@@ -1268,7 +1465,7 @@ impl World {
             to,
         });
         self.after_tread(player, to, footing, events);
-        self.make_noise(player, Act::Step(to));
+        self.make_step_noise(player, to, fleeing);
         // A journey on the overworld trains survival.
         if overworld && self.trains(Use::Travel) {
             self.train(Use::Travel);
@@ -1598,15 +1795,20 @@ fn instantiate_level(state: &mut WorldState, content: &Content, template: &Level
             hp_base: def.base_hp,
             regen: 0,
             skills: def.skills.clone(),
+            effects: Default::default(),
+            weapon_skills: def.weapon_skills.clone(),
             faction_override: spawn.faction,
+            stance: CombatStance::Neutral,
         };
-        actor.hp = actor.max_hp();
+        actor.hp = actor.max_hp(content);
         state.actors.insert(actor_id, actor);
     }
 }
 
 #[cfg(test)]
 mod ai_tests;
+#[cfg(test)]
+mod blood_tests;
 #[cfg(test)]
 mod branch_tests;
 #[cfg(test)]
@@ -1615,6 +1817,8 @@ mod burden_tests;
 mod character_tests;
 #[cfg(test)]
 mod cost_tests;
+#[cfg(test)]
+mod dig_tests;
 #[cfg(test)]
 mod equip_tests;
 #[cfg(test)]
@@ -1644,10 +1848,14 @@ mod speed_tests;
 #[cfg(test)]
 mod stats_tests;
 #[cfg(test)]
+mod status_tests;
+#[cfg(test)]
 mod sun_tests;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
 mod time_tests;
+#[cfg(test)]
+mod weapon_skill_tests;
 #[cfg(test)]
 mod weather_tests;

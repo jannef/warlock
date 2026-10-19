@@ -189,7 +189,11 @@ pub(super) fn track(
             Event::ActorMoved { to, .. } => {
                 bursts.trigger(&view, *to, ParticleTrigger::Step, seed, start);
             }
-            Event::DoorOpened { pos } | Event::DoorClosed { pos } => {
+            // A door's dust as it swings, a wall's as it gives way: the toggle burst of the
+            // terrain the cell turned into.
+            Event::DoorOpened { pos }
+            | Event::DoorClosed { pos }
+            | Event::WallBroken { pos, .. } => {
                 bursts.trigger(&view, *pos, ParticleTrigger::Toggle, seed, start);
             }
             &Event::Attacked { attacker, to, .. } => {
@@ -197,11 +201,13 @@ pub(super) fn track(
                 bursts.attack(&view, creature.map(|a| a.creature), to, seed, start);
             }
             // A death shows as the creature gone (and what it dropped) and in the message line;
-            // a missile flies in `missiles`, a spell effect plays in `spells`. A fall through the
-            // ice splashes as the step into the water there (the ice is gone).
+            // a missile flies in `missiles`, a spell effect plays in `spells`; a status effect
+            // shows in the status bar. A fall through the ice splashes as the step into the water
+            // there (the ice is gone).
             Event::Died { .. }
             | Event::Missile { .. }
             | Event::Spell { .. }
+            | Event::Status { .. }
             | Event::FellThroughIce { .. } => {}
             Event::LevelChanged { .. } => {
                 bursts.list.clear();

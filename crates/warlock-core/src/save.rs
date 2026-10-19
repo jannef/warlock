@@ -36,9 +36,16 @@ const MAGIC: &str = "WARLOCK-SAVE";
 ///     training random stream (`WorldState::training`).
 /// 15: special rooms: level states keep their special rooms and whether the player has been in
 ///     each (`LevelState::rooms`); content fingerprints cover room effect ids.
-/// 16: temperature and ice: level states keep their temperature (underground), the ice on their
+/// 16: weapon skills: actors have a rank and marks in each (`Actor::weapon_skills`).
+/// 17: digging: level states keep the work done on walls dug into (`LevelState::dug`).
+/// 18: combat stances (`Actor::stance`).
+/// 19: blood: level states keep their stains and the stains as last seen.
+/// 20: status effects: actors have them (`Actor::effects`), their healing progress counts
+///     hundredths of a second (`Actor::regen`), and the player's death records the status that
+///     killed them (`Death::of`).
+/// 24: temperature and ice: level states keep their temperature (underground), the ice on their
 ///     water, and when it was last brought up to date.
-pub const FORMAT_VERSION: u32 = 16;
+pub const FORMAT_VERSION: u32 = 24;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 
