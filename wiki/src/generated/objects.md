@@ -57,6 +57,8 @@
 | Pair of gauntlets | `[` | armor | iron | 1 kg | no | Hands |
 | Pair of leather boots | `[` | armor | leather | 1 kg | no | Feet |
 | Pair of iron-shod boots | `[` | armor | iron | 2 kg | no | Feet |
+| Pick-axe | `(` | tool | iron | 3 kg | no | Tool |
+| Mattock | `(` | tool | iron | 4.5 kg | no | Tool |
 | Iron key | `(` | tool | iron | 40 g | no | - |
 | Wax candle | `(` | tool | wax | 100 g | yes | - |
 | Coil of rope | `(` | tool | cloth | 1.5 kg | no | - |

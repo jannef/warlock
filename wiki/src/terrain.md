@@ -22,6 +22,12 @@ Stairs (`>` down, `<` up) join levels. Step onto them, then press `>` or `<` to 
 stairs is a normal action (6 seconds). Each level you visit is kept as you left it, and dungeon levels are generated
 on your first visit from the run's seed. Levels you leave and return to are exactly as they were.
 
+## Walls
+
+Walls block movement, sight, light, and sound. Most of them can be dug through with a pick-axe,
+slowly, and a big explosion blows the softer ones apart; a broken wall becomes rubble. The edge of
+a level never breaks. See [Digging and walls](digging.md).
+
 ## Water
 
 Still water (ponds and pools) and running water (streams) are both wadeable but slow: a step into

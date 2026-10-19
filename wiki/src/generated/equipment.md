@@ -14,3 +14,4 @@
 | `j` | Feet | Pair of leather boots, pair of iron-shod boots | 6 seconds |
 | `k` | Missile weapon | Short bow (shoots arrows), long war bow (shoots arrows), composite bow (shoots arrows), crossbow (shoots crossbow bolts), heavy crossbow (shoots crossbow bolts), sling (shoots sling stones) | 6 seconds |
 | `l` | Missiles | Arrow, flaming arrow, crossbow bolt, sling stone, rock | 6 seconds |
+| `m` | Tool | Pick-axe, mattock | 6 seconds |

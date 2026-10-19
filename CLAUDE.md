@@ -37,7 +37,7 @@ Game flags (`cargo run -p warlock -- --help`):
 - `--scenario NAME` (default `showcase`; `depths` starts in the generated dungeon, `courtyard` in
   the sunlit courtyard at 06:30, `world` on the overworld beside the Hall, `forest` in the glade
   of a generated forest area of the overworld at 06:30, `arena` in the dark corner of the arena
-  where kobolds and giant rats fight), `--seed S`
+  where kobolds and giant rats fight, `quarry` in the quarry beside a pick-axe), `--seed S`
   (default: the scenario's seed; a number, or a word hashed with FNV-1a, e.g. `--seed warlock`),
   `--character RACE,GENDER,CLASS` (e.g. `dwarf,female,warrior`; default: the scenario's
   character; like `--seed` it shapes the run other flags start and alone does not skip the menu)
@@ -86,14 +86,15 @@ load, stats, and skills with their marks).
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-rest:GOAL vision:PROFILE skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] identify[:LETTERS]`
-(`DIR` = N
-NE E SE S SW W NW; `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
+dig:DIR rest:GOAL stance:NAME vision:PROFILE skip:DURATION weather:KIND effect:ID@X,Y[>X,Y]
+identify[:LETTERS]` (`DIR` = N
+NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
 player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `SLOT` = a slot id in
 `assets/data/slots.toml`, e.g. `equip:body:b` (put inventory stack `b` on), `remove:body`;
 `bash:DIR` bashes with the held shield, `fire:X,Y` shoots the readied missile weapon at level
 cell (X, Y), `throw:c:X,Y` throws one of
-inventory stack `c` there; `PROFILE` = an id in
+inventory stack `c` there; `dig:E` digs into the wall east with the tool in the Tool slot, turn
+after turn until it gives way or something interrupts; `PROFILE` = an id in
 `assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are
 `30s`, `10m`, `2h`; `skip` is the dev hour skip; `weather` is the dev weather override, `KIND` =
 `clear`, `overcast`, `rain`, `heavy`, for three hours of game time; `effect` is the dev spell
@@ -104,8 +105,8 @@ identify (magic items, no time; without letters everything carried); `ACTION*N` 
 `wait*10`). Dump layers: `view` (what the player sees), `fov` (`*` visible),
 `memory` (seen terrain and remembered objects), `light` (perceived brightness of visible cells as a
 digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places over the view: `f`
-footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m` chanting, upper case
-when loud), `inventory` (what the player
+footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m` chanting, `d`
+digging, upper case when loud), `inventory` (what the player
 carries and weighs, worn and wielded things marked, their burden and its thresholds),
 `equipment` (the player's slots), `stats`
 (the player's race, gender, and class, then their own scores), `weapon_skills` (the player's
@@ -288,10 +289,13 @@ and runs the other actors on the level in time order until the player may act ag
 the clock (whole seconds; leftover energy carries, so a run of actions takes its exact total time,
 up to the second the actor is ready, with no drift) to each action, and `rest` loops waits until
 the goal or an interruption, its last turn cut short with `price_until` so it ends exactly at the
-goal at any player speed (perceiving only after turns in which a creature could have come into
-view: `out_of_view_for`, which accounts for speed and the cheapest step, or in which the weather
-the player would see changed: `weather_turned`). A new action that takes time needs an
-`ActionKind` (with its id and a line in `data/actions.toml`) and must return its price there,
+goal at any player speed. Long actions (`rest`, `dig`) go through `World::keep_at(events, more,
+act)`: turn after turn of `act` while `more` holds, stopping on a creature coming into view, a
+message (`say`; `note` does not stop it), or death (`Ended`), perceiving only after turns in which
+a creature could have come into view (`out_of_view_for`, which accounts for speed and the cheapest
+step) or in which the weather the player would see changed (`weather_turned`). A new action that
+takes time needs an `ActionKind` (with its id and a line in `data/actions.toml`) and must return
+its price there,
 asked through `price_of`/`step_price`/`price_for`: those apply the actor's burden (below,
 `World::burdened`), so a price taken anywhere else would escape it (`price_until`, the rest's
 last turn, deliberately does). Price an action that changes the load before it does (pick up,
@@ -355,10 +359,11 @@ taken off (`World::price_for`); dropping takes off first (`take_off_before_dropp
 (`wield`/`wear` in a level legend, resolved in `content/level.rs::equip`). Presentation reads
 `PerceptionView::equipment` (the player's own) and `PerceptionView::gear(actor)` (what a seen
 creature wears and wields, all of what it carries that is seen; look mode, `ui/look.rs::gear`).
-Combat reads equipment (below): `Actor::weapon` (the first hand holding a weapon), `launcher` and
-`ammunition` (the `ready` slots), and `defence(content, burden)` (armour, shield, parry,
-Dexterity capped by worn `max_dex` and the burden's `max_dex`, the lower winning; the rules ask
-`World::defence_of(id)`, which passes the actor's `Load::penalty`).
+Digging reads it too: `Actor::dig_tool` (the first equipped thing with `dig` power: the Tool slot's
+pick-axe). Combat reads equipment (below): `Actor::weapon` (the first hand holding a weapon),
+`launcher` and `ammunition` (the `ready` slots), and `defence(content, burden)` (armour, shield,
+parry, Dexterity capped by worn `max_dex` and the burden's `max_dex`, the lower winning; the rules
+ask `World::defence_of(id)`, which passes the actor's `Load::penalty`).
 
 Combat (spec §8 "Combat"; M16, #116): the pure rules are `warlock-core/src/combat.rs` (2d12
 `roll_natural`, `hits`, `hit_ways`, `ways`; `Category` (Dexterity, Armour, Shield, Parry,
@@ -556,7 +561,7 @@ Magic items (spec §8 "Magic items", #149) live in `warlock-core`: `content/affi
 rare names), base item fields in `content/object.rs` (`kind`, `level`, `frequency`,
 `attack_cost`; the weapon skill `category` names the item in descriptions, `weapon_noun`), and
 `magic/` (`mod.rs`: `Magic`/`Affix`, the instance on a `Stack` (saved, hashed; `FORMAT_VERSION`
-17), `check`;
+19), `check`;
 `mods.rs`: `Mods::local` (an item's own and its attacks') and `Mods::worn` (what an actor wears
 and wields, global), the one aggregation every rule reads; `loot.rs`: `roll`, its draw order;
 `name.rs`; `describe.rs`: base stats and affixes in words for the item description screen).
@@ -597,6 +602,28 @@ validation, `arrival`). Overworld terrain picks its generator with `landscape` i
 `WARLOCK_AREAS="25,20 60,44" cargo test -p warlock-core --lib print_areas -- --ignored
 --nocapture` prints areas with one character per terrain (`WARLOCK_SEED` for the seed), and the
 `forest` scenario or `--content-dir` scenarios with `start_level = "local:x,y"` capture them.
+
+Digging (spec §8 "Digging"; M19, #131) lives in `warlock-core/src/world/dig.rs`. Terrain that
+breaks has `hardness` and `becomes` (`TerrainDef::breaks: Option<Breakable>`, validated: only
+solid terrain breaks, into walkable, transparent, plain ground); `void` (solid rock) has a `face`
+(`wall`) it turns into when a cell next to it opens, as mapgen walls open ground. Cells on a
+level's edge never break (`LevelState::on_edge`, `breaks_at`). `Action::Dig(Dir)` (`dig:DIR`,
+key `U` = `KeyCommand::UseTool`, ADOM's use-item key, a direction prompt; `a` is left for the
+abilities menu, #156) needs `Actor::dig_tool`; `start_dig` refuses (no time) or returns
+`Spent::Dig(at)`, and `dig` runs `keep_at` with a `dig` action per turn
+(priced by `price_of`, so burden slows it): `dig_turn` makes `Act::Dig` noise (`DIG_NOISE` 80,
+`SoundKind::Digging`) and adds `dig_work(power, strength)` (power × (Strength score + 10), in
+`WORK_SCALE` = 20ths of a hardness point) to `LevelState::dug` (saved, by position); at hardness ×
+20 `break_wall` sets the `becomes` terrain through `set_terrain` (light masks), clears the
+progress, bares `face`s around, and pushes `Event::WallBroken { pos, cause: Breach::Dug }`.
+Explosions (none yet; the fireball trap, #128, is to be the first) call
+`World::blast(center, radius, blast, events)`: every breakable wall in the burst
+(line of sight from the center, computed before anything breaks) with hardness below the blast
+breaks (`Breach::Blast`; `perceive_events` says "The wall collapses!" for those the player sees).
+Perception sees and remembers the rubble like any terrain; `PerceptionView::ready_to_dig` and
+`is_dug` (a visible wall with progress: look mode's "partly dug") are all presentation gets. The
+app bursts the new terrain's `toggle` particles (rubble's dust) on `WallBroken`, like a door's.
+Creatures do not dig. Times are in the wiki's generated `digging.md` tables.
 
 Ranged combat (spec §8 "Ranged combat") lives in `warlock-core/src/world/shoot.rs`: `fire`,
 `throw`, and `creature_shoots` loose one missile (`loose`): it leaves its stack, makes its noise

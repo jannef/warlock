@@ -48,7 +48,8 @@ they match the version of the game this wiki was published with.
 
 The Showcase is a safe place: its creatures keep to their rounds and leave you alone. The
 **Arena**, reached by the stairs down from the showcase hub's stairs nook, is the place to watch
-and join fights, and the generated **Depths** are the real dungeon, where creatures hunt you.
+and join fights, the **Quarry**, down another staircase there, the place to
+[dig](digging.md), and the generated **Depths** are the real dungeon, where creatures hunt you.
 
 Apart from where the scenarios start, this wiki does not describe places or walk you through
 levels: the game's world is still being built.

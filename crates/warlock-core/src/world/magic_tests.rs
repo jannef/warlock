@@ -183,13 +183,13 @@ fn speed_effects_make_attacks_and_steps_quicker() {
         .content()
         .terrain(w.content().terrain_id("floor").expect("floor"))
         .clone();
-    let step = w.step_price(player, &floor);
+    let step = w.step_price(player, &floor, false);
     let sword = magic(&w, "long_sword", &[("of_celerity", 8)], true);
     wear(&mut w, "main_hand", sword);
     assert_eq!(w.price_of(player, ActionKind::Melee), melee * 92 / 100);
     let boots = magic(&w, "leather_boots", &[("fleet", 8)], true);
     wear(&mut w, "feet", boots);
-    assert_eq!(w.step_price(player, &floor), step * 92 / 100);
+    assert_eq!(w.step_price(player, &floor, false), step * 92 / 100);
     // A great sword is slower, by its own attack cost.
     let great = plain(&w, "great_sword");
     wear(&mut w, "main_hand", great);

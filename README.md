@@ -46,8 +46,13 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   each with its own glyph, color, material, and weight, lie in piles to pick up and drop; an
   ADOM-style inventory lettered a–z shows what you carry and what it weighs, and an ADOM-style
   equipment screen puts it on: helm, amulet, armor, cloak, weapons and shield (or a two-handed
-  staff), gloves, rings, boots, a bow and arrows. Creatures wield and wear what they carry, and
-  you see it.
+  staff), gloves, rings, boots, a bow and arrows, and a tool. Creatures wield and wear what they
+  carry, and you see it.
+- **Digging** — walls give way: ready a pick-axe or a mattock in the Tool slot and dig, turn after
+  turn, through packed earth in a minute, a stone wall in a few, granite in half an hour or so
+  (Strength helps, a heavy load slows you), until a creature comes into view or the wall crumbles
+  to rubble; light and sight spill through at once. Digging is loud. Big explosions (to come)
+  blow the softer walls apart. An old quarry below the hub is the place to try it.
 - **Combat** — D&D-style with two twelve-sided dice: every blow and shot is rolled against
   Defence (Dexterity, armour, shield, parry, a beetle's shell), misses say why ("You block the
   kobold's spear with your shield."), criticals threaten and confirm ("The kobold hits you
@@ -134,7 +139,7 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
 
   ![A forest clearing in Thornwood at noon](docs/screenshots/m9-forest-clearing.png)
 
-- **Levels** — the hub, a sunlit courtyard, the arena, a 420×300 cavern, and "The Depths": rooms-and-corridors
+- **Levels** — the hub, a sunlit courtyard, the arena, the quarry, a 420×300 cavern, and "The Depths": rooms-and-corridors
   and cave levels generated from the run seed (numbers or words), with hand-made vaults stamped in.
 - **Special rooms** — ADOM-like, about one level of the Depths in three has a room that changes
   the rules inside it, announced the first time you step in: a shadowed room that drains every
@@ -169,13 +174,14 @@ cargo run --release -p warlock
 | `,` or `g` | Pick up what lies here (choose by letter where several things lie) |
 | `d` | Drop something |
 | `i` | Inventory: what you carry, by letter, and what it all weighs; a letter describes that item |
-| `e` | Equipment: wear and wield things, slot by slot (head, body, hands, rings, missiles, …), as in ADOM; an upper-case slot letter describes what is there |
+| `e` | Equipment: wear and wield things, slot by slot (head, body, hands, rings, missiles, a tool, …), as in ADOM; an upper-case slot letter describes what is there |
 | `@` | Character: your race, gender, class, age, birth sign, stats, hit points, Defence, and weight |
 | `W` | Weapon skills: your rank in each, and how far to the next |
 | `R` | Rest an hour, until dawn, or until nightfall (stops when something comes into view) |
 | `x` | Look around: move a cursor to read what is there (takes no time) |
 | `f` | Fire your missile weapon: aim (Tab cycles targets), then Enter |
 | `t` | Throw something: choose it, aim, then Enter |
+| `U` + direction | Use your tool: dig into a wall with a pick-axe ready in the Tool slot (goes on until the wall gives way) |
 | `?` | Show all controls |
 | `Esc` | Pause menu: settings, controls, save and quit |
 | `Q` | Save and quit |

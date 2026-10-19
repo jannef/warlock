@@ -415,8 +415,12 @@ fn remembered(c: Rgb) -> Rgb {
 }
 
 fn draw_messages(console: &mut Console, game: &Game, mode: InputMode, bindings: &Bindings) {
-    if let InputMode::Direction(_) = mode {
-        console.print(1, 0, "In which direction? (Esc to cancel)", ACCENT);
+    if let InputMode::Direction(command) = mode {
+        let prompt = match command {
+            crate::input::KeyCommand::UseTool => "Dig in which direction? (Esc to cancel)",
+            _ => "In which direction? (Esc to cancel)",
+        };
+        console.print(1, 0, prompt, ACCENT);
         return;
     }
     if mode == InputMode::Rest {
@@ -525,6 +529,7 @@ fn status_segments(world: &World, clock: Clock) -> Vec<Segment> {
     let calendar = content.calendar();
     let (hp, max_hp) = view.own_hp();
     let burden = view.own_load().burden();
+    let stance = view.own_stance();
     [
         Some(Segment::new(0, view.level_name())),
         Some(Segment::new(1, format!("HP {hp}/{max_hp}"))),
@@ -533,6 +538,7 @@ fn status_segments(world: &World, clock: Clock) -> Vec<Segment> {
             1,
             format!("Lv {}", view.own_experience().level),
         )),
+        (!stance.is_neutral()).then(|| Segment::new(1, content.stance_def(stance).name.clone())),
         view.region().map(|r| Segment::new(4, r)),
         Some(Segment::new(1, clock.format(time))),
         Some(Segment::new(3, calendar.full_date(time)).or_short(calendar.date(time))),
@@ -692,6 +698,7 @@ mod tests {
     use super::*;
     use crate::render::console::CellAnim;
     use std::sync::Arc;
+    use warlock_core::content::CombatStance;
     use warlock_core::content::{Content, ContentFiles};
     use warlock_core::{Action, Dir, Letters, World};
 
@@ -720,6 +727,28 @@ mod tests {
             "Hoard  ·  HP 10/10"
         );
         assert!(fit_segments(&segments, 55).contains("Burdened  ·  Lv 1  ·  08:"));
+    }
+
+    #[test]
+    fn the_status_bar_names_a_stance_that_is_not_neutral() {
+        let mut world = hoard();
+        let texts = |w: &World| -> Vec<String> {
+            status_segments(w, Clock::H24)
+                .into_iter()
+                .map(|s| s.text)
+                .collect()
+        };
+        assert!(!texts(&world).iter().any(|t| t.contains("Neutral")));
+        world.apply(&Action::SetStance(CombatStance::Defensive));
+        let segments = status_segments(&world, Clock::H24);
+        let at = |t: &str| segments.iter().position(|s| s.text == t);
+        assert_eq!(
+            at("Defensive"),
+            at("Lv 1").map(|i| i + 1),
+            "right after the level"
+        );
+        world.apply(&Action::SetStance(CombatStance::Neutral));
+        assert!(!texts(&world).iter().any(|t| t == "Neutral"));
     }
 
     #[test]

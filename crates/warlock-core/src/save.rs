@@ -37,9 +37,11 @@ const MAGIC: &str = "WARLOCK-SAVE";
 /// 15: special rooms: level states keep their special rooms and whether the player has been in
 ///     each (`LevelState::rooms`); content fingerprints cover room effect ids.
 /// 16: weapon skills: actors have a rank and marks in each (`Actor::weapon_skills`).
-/// 17: magic items: a stack may carry what it rolled (`Stack::magic`: rarity, item level, each
+/// 17: digging: level states keep the work done on walls dug into (`LevelState::dug`).
+/// 18: combat stances (`Actor::stance`).
+/// 19: magic items: a stack may carry what it rolled (`Stack::magic`: rarity, item level, each
 ///     affix by id with its tier and value, a rare item's name, whether it is identified).
-pub const FORMAT_VERSION: u32 = 17;
+pub const FORMAT_VERSION: u32 = 19;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 

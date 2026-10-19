@@ -4,12 +4,12 @@
 //! (month names, moons, weather, terrain, vision profiles, light presets, creatures, factions,
 //! objects and materials, equipment slots, scenarios, action costs, races and classes, their sizes
 //! and carrying limits, the horoscope, skills: what each does, how it trains, what it gives by
-//! value, who trains it, and the increase curve, special rooms; weapon skills:
-//! `wiki/weapon_skills.rs`) and a few constants of the rules (sight radii, the pack's size, the
-//! stats' names, what each gender raises). Those are written to `wiki/src/generated/*.md` from the
-//! built-in content, and the pages pull them in with `{{#include generated/NAME.md}}`, so they
-//! cannot drift. Output is deterministic. `--check` fails when a file is stale; `--build` also
-//! runs `mdbook build wiki`.
+//! value, who trains it, and the increase curve, special rooms; the walls that break and how
+//! long digging takes; weapon skills: `wiki/weapon_skills.rs`) and a few constants of the rules
+//! (sight radii, the pack's size, the stats' names, what each gender raises). Those are written
+//! to `wiki/src/generated/*.md` from the built-in content, and the pages pull them in with
+//! `{{#include generated/NAME.md}}`, so they cannot drift. Output is deterministic. `--check`
+//! fails when a file is stale; `--build` also runs `mdbook build wiki`.
 
 mod weapon_skills;
 
@@ -38,6 +38,7 @@ use warlock_core::skills::{Effect, SkillId};
 use warlock_core::stats::{AVERAGE, PerStat, Stat};
 use warlock_core::time::{DAY, Duration, GameTime};
 use warlock_core::weather::{Clouds, Conditions, Weather};
+use warlock_core::world::digs_to_break;
 
 /// What to do with the generated files.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -153,6 +154,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("launchers.md".to_string(), launchers(content)),
         ("ammunition.md".to_string(), ammunition(content)),
         ("armour.md".to_string(), armour(content)),
+        ("stances.md".to_string(), stances(content)),
         ("hit-chances.md".to_string(), hit_chances()),
         ("threats.md".to_string(), threats()),
         ("hit-points.md".to_string(), hit_points(content)),
@@ -180,6 +182,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("burden.md".to_string(), burden_levels()),
         ("burden-races.md".to_string(), burden_races(content)),
         ("burden-examples.md".to_string(), burden_examples(content)),
+        ("digging.md".to_string(), digging(content)),
+        ("digging-strength.md".to_string(), digging_strength(content)),
         ("special-rooms.md".to_string(), special_rooms(content)),
         ("magic-rarity.md".to_string(), magic_rarity(content)),
         ("magic-bases.md".to_string(), magic_bases(content)),
@@ -293,6 +297,7 @@ fn action_costs(content: &Content) -> String {
             ActionKind::Wield => "Wielding something, or putting it away",
             ActionKind::Wear | ActionKind::BodyArmor => "Putting something on, or taking it off",
             ActionKind::Ready => "Readying something, or putting it away",
+            ActionKind::Dig => "A turn of digging (digging through a wall takes many)",
         };
         // Equipment actions say which slots take them (data/slots.toml); a kind no slot uses
         // is left out.
@@ -423,6 +428,9 @@ fn local_terrain(content: &Content) -> String {
         if t.light.is_some() {
             notes.push("gives light".into());
         }
+        if t.breaks.is_some() {
+            notes.push("can be dug through or blasted open".into());
+        }
         if t.roofed {
             notes.push("roofed: no sun or sky light".into());
         }
@@ -518,6 +526,88 @@ fn overworld_terrain(content: &Content) -> String {
             local
         );
     }
+    out
+}
+
+/// How long digging through a wall of `hardness` takes with a tool of `power` at Strength
+/// `strength`, at a normal pace: to the second under ten minutes, else to the nearest minute.
+fn dig_time(content: &Content, hardness: u16, power: u16, strength: u8) -> String {
+    let turn = price(content.action_costs().cost(ActionKind::Dig), BASE_TURN);
+    let turns = i64::from(digs_to_break(hardness, power, strength));
+    let seconds = u64::try_from(turn * turns / i64::from(NORMAL_SPEED)).unwrap_or(0);
+    let (minutes, rest) = (seconds / 60, seconds % 60);
+    match (minutes, rest) {
+        (0, _) | (_, 0) => Duration::seconds(seconds).spoken(),
+        (1..10, _) => format!(
+            "{} {}",
+            Duration::minutes(minutes).spoken(),
+            Duration::seconds(rest).spoken()
+        ),
+        _ => Duration::minutes((seconds + 30) / 60).spoken(),
+    }
+}
+
+/// The walls that break (spec §8 "Digging"): how hard each is, how long each digging tool takes
+/// through it at average Strength, and what it becomes.
+fn digging(content: &Content) -> String {
+    let tools: Vec<(&str, u16)> = (content.object_defs().iter())
+        .filter_map(|o| o.dig.map(|power| (o.name.as_str(), power)))
+        .collect();
+    let mut out = String::from("| Wall | Glyph | Hardness |");
+    for (name, _) in &tools {
+        let _ = write!(out, " With {} {name} |", article(name));
+    }
+    out.push_str(" Becomes |\n|---|:---:|---:|");
+    out.push_str(&"---:|".repeat(tools.len()));
+    out.push_str("---|\n");
+    for t in content.terrain_defs() {
+        let Some(breaks) = t.breaks else { continue };
+        let _ = write!(
+            out,
+            "| {} | {} | {} |",
+            capital(&t.name),
+            glyph(t.glyph),
+            breaks.hardness
+        );
+        for (_, power) in &tools {
+            let _ = write!(
+                out,
+                " {} |",
+                dig_time(content, breaks.hardness, *power, AVERAGE)
+            );
+        }
+        let _ = writeln!(out, " {} |", content.terrain(breaks.becomes).name);
+    }
+    out
+}
+
+/// How Strength changes digging: the first digging tool through each wall that breaks, at a
+/// few Strength scores.
+fn digging_strength(content: &Content) -> String {
+    let Some((tool, power)) =
+        (content.object_defs().iter()).find_map(|o| o.dig.map(|power| (o.name.as_str(), power)))
+    else {
+        return String::new();
+    };
+    let walls: Vec<&TerrainDef> = (content.terrain_defs().iter())
+        .filter(|t| t.breaks.is_some())
+        .collect();
+    let mut out = String::from("| Strength |");
+    for t in &walls {
+        let _ = write!(out, " {} |", capital(&t.name));
+    }
+    out.push_str("\n|---:|");
+    out.push_str(&"---:|".repeat(walls.len()));
+    out.push('\n');
+    for strength in [3, 6, 10, 14, 18, 25] {
+        let _ = write!(out, "| {strength} |");
+        for t in &walls {
+            let hardness = t.breaks.map_or(0, |b| b.hardness);
+            let _ = write!(out, " {} |", dig_time(content, hardness, power, strength));
+        }
+        out.push('\n');
+    }
+    let _ = writeln!(out, "\nWith {} {tool}, at a normal pace.", article(tool));
     out
 }
 
@@ -1705,6 +1795,44 @@ fn armour(content: &Content) -> String {
     out
 }
 
+/// The combat stances: what each does to the player's attacks, Defence, and speed (percent for
+/// costs and noise; "-" for no change).
+fn stances(content: &Content) -> String {
+    let bonus = |n: i32| match n {
+        0 => "-".to_string(),
+        n if n > 0 => format!("+{n}"),
+        n => format!("\u{2212}{}", -n),
+    };
+    let percent = |n: u32| {
+        if n == 100 {
+            "-".to_string()
+        } else {
+            format!("{n}%")
+        }
+    };
+    let mut out = String::from(
+        "| Stance | To hit | Damage | Dodge | Parry | Attacks cost | Fleeing steps cost | \
+         Fleeing steps' noise | Weapon marks count |\n\
+         |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n",
+    );
+    for s in content.stances().all() {
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} | {} | {} | {} | {} | {} |",
+            s.name,
+            bonus(s.to_hit),
+            bonus(s.damage),
+            bonus(s.dodge),
+            bonus(s.parry),
+            percent(s.attack_cost),
+            percent(s.flee_cost),
+            percent(s.flee_noise),
+            percent(s.weapon_mark),
+        );
+    }
+    out
+}
+
 /// How often an attack hits by what its roll needs (Defence minus to-hit): the 2d12 bell.
 fn hit_chances() -> String {
     let mut out = String::from("| The roll needs | Hits |\n|:---:|:---:|\n");
@@ -2120,6 +2248,19 @@ mod tests {
         assert!(equipment.contains(
             "| `l` | Missiles | Arrow, flaming arrow, crossbow bolt, sling stone, rock | 6 seconds |"
         ));
+        assert!(equipment.contains("| `m` | Tool | Pick-axe, mattock | 6 seconds |"));
+        let digging = text("digging.md");
+        assert!(
+            digging.contains(
+                "| Wall | Glyph | Hardness | With a pick-axe | With a mattock | Becomes |"
+            ),
+            "{digging}"
+        );
+        assert!(digging.contains("| Stone wall | `#` | 600 | 6 minutes | 4 minutes | rubble |"));
+        assert!(digging.contains("| Granite | `#` | 3000 | 30 minutes | 20 minutes | rubble |"));
+        let strength = text("digging-strength.md");
+        assert!(strength.contains("| 18 |"), "{strength}");
+        assert!(strength.contains("With a pick-axe, at a normal pace."));
         let launchers = text("launchers.md");
         assert!(
             launchers.contains(
@@ -2296,6 +2437,14 @@ mod tests {
             "{armour}"
         );
         assert!(armour.contains("| Small shield | off hand | +1 | Shield | no limit |"));
+        let stances = text("stances.md");
+        assert!(
+            stances.contains("| Aggressive | +1 | +2 | \u{2212}3 | - | - | - | - | 125% |"),
+            "{stances}"
+        );
+        assert!(
+            stances.contains("| Coward | \u{2212}4 | \u{2212}3 | +4 | - | 125% | 85% | 50% | - |")
+        );
         assert!(text("hit-chances.md").contains("| 10 | 75% |"));
         assert!(text("hit-chances.md").contains("| 24 | 0.7% |"));
         assert!(

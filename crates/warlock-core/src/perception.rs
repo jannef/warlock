@@ -57,8 +57,8 @@ use crate::burden::{self, Load};
 use crate::character::Character;
 use crate::combat::Health;
 use crate::content::{
-    Content, CreatureId, FactionId, Flow, LevelKind, LightId, ObjectId, RoomEffectDef, SlotId,
-    Stance, TerrainId, VisionProfile,
+    CombatStance, Content, CreatureId, FactionId, Flow, LevelKind, LightId, ObjectId,
+    RoomEffectDef, SlotId, Stance, TerrainId, VisionProfile,
 };
 use crate::daylight;
 use crate::equipment::Equipment;
@@ -774,6 +774,16 @@ impl<'a> PerceptionView<'a> {
         self.player.ready_to_throw(self.content)
     }
 
+    /// The digging tool the player has ready (spec §8 "Digging"), if any.
+    pub fn ready_to_dig(&self) -> Option<ObjectId> {
+        self.player.dig_tool(self.content).map(|(tool, _)| tool)
+    }
+
+    /// Whether the wall at `p`, which the player sees, has been dug into and still stands.
+    pub fn is_dug(&self, p: Pos) -> bool {
+        self.is_visible(p) && self.level.dug.contains_key(&p)
+    }
+
     /// How far the player throws inventory stack `item`, if it is a throwing weapon.
     pub fn throw_range(&self, item: usize) -> Option<i32> {
         self.player.throw_range(item, self.content)
@@ -851,6 +861,11 @@ impl<'a> PerceptionView<'a> {
     pub fn own_load(&self) -> Load {
         let race = self.character.and_then(|c| c.spec.race(self.content).ok());
         burden::load(self.player, race, self.content)
+    }
+
+    /// The player's combat stance (spec §8 "Stances"): only its name is ever shown.
+    pub fn own_stance(&self) -> CombatStance {
+        self.player.stance
     }
 
     /// The player's Defence ("Dv"): the total an attack roll must reach (their burden capping

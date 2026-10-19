@@ -2,7 +2,7 @@
 
 | Material | Objects made of it |
 |---|---|
-| Iron | hand axes, battle axes, great axes, tridents, maces, morning stars, war hammers, mauls, halberds, glaives, chain mail shirts, suits of scale mail, iron helms, bucklers, tower shields, pairs of gauntlets, pairs of iron-shod boots, iron keys, iron rings |
+| Iron | hand axes, battle axes, great axes, tridents, maces, morning stars, war hammers, mauls, halberds, glaives, chain mail shirts, suits of scale mail, iron helms, bucklers, tower shields, pairs of gauntlets, pairs of iron-shod boots, pick-axes, mattocks, iron keys, iron rings |
 | Steel | daggers, stilettos, short swords, scimitars, long swords, rapiers, bastard swords, great swords, suits of banded mail, suits of plate armour, great helms |
 | Copper | copper coins |
 | Silver | silver rings |

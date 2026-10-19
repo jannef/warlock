@@ -5,7 +5,8 @@ use crate::burden::Burden;
 use crate::combat::{self, Attack, Category, Defence, Health, Profile};
 use crate::content::Effect as ItemEffect;
 use crate::content::{
-    ActionKind, Benefit, Content, CreatureId, FactionId, ObjectDef, ObjectId, Role, WeaponSkillId,
+    ActionKind, Benefit, CombatStance, Content, CreatureId, FactionId, ObjectDef, ObjectId, Role,
+    WeaponSkillId,
 };
 use crate::equipment::Equipment;
 use crate::geom::{Dir, Pos};
@@ -124,6 +125,9 @@ pub struct Actor {
     /// peaceful creatures in the showcase). Read the one that counts with [`Actor::faction`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub faction_override: Option<FactionId>,
+    /// Its combat stance (spec §8 "Stances"): the player chooses theirs; creatures stay neutral.
+    #[serde(default, skip_serializing_if = "CombatStance::is_neutral")]
+    pub stance: CombatStance,
 }
 
 fn is_zero(n: &u32) -> bool {
@@ -224,12 +228,14 @@ impl Actor {
             (Category::Dodge, mods.get(ItemEffect::Dodge)),
             (Category::Deflection, mods.get(ItemEffect::Deflection)),
         ];
+        let stance = content.stance_def(self.stance).defence();
         Defence::from_bonuses(
             std::iter::once((Category::Dexterity, dexterity))
                 .chain(worn)
                 .chain(natural)
                 .chain(dodge)
-                .chain(magic.into_iter().filter(|&(_, b)| b != 0)),
+                .chain(magic.into_iter().filter(|&(_, b)| b != 0))
+                .chain(stance),
         )
     }
 
@@ -376,9 +382,19 @@ impl Actor {
         })
     }
 
+    /// The digging tool it has ready (spec §8 "Digging"): the first thing it wears or wields, in
+    /// slot order, that digs (a pick-axe in the Tool slot), and its power.
+    pub fn dig_tool(&self, content: &Content) -> Option<(ObjectId, u16)> {
+        self.equipment.items().into_iter().find_map(|(_, item)| {
+            let stack = self.inventory.get(item)?;
+            (content.object(stack.object).dig).map(|power| (stack.object, power))
+        })
+    }
+
     /// What its melee attacks do: with the weapon it wields, else its natural attack, else its
     /// bare hands; Strength to hit and to damage, and what its weapon skill gives; then the
-    /// weapon's own affixes and those of everything it wears and wields (spec §8 "Magic items").
+    /// weapon's own affixes and those of everything it wears and wields (spec §8 "Magic items");
+    /// and its combat stance.
     pub fn melee(&self, content: &Content) -> Profile {
         let mods = self.mods(content);
         let natural = content.creature(self.creature).attack.as_ref();
@@ -396,13 +412,18 @@ impl Actor {
             Profile::melee(&attack, &self.stats_with(&mods)).with(&self.benefit(content, skill));
         local.sharpen(&mut profile);
         mods.sharpen(&mut profile);
-        profile
+        self.stanced(content, profile)
+    }
+
+    /// `profile` with the to-hit and damage of its combat stance.
+    pub fn stanced(&self, content: &Content, profile: Profile) -> Profile {
+        content.stance_def(self.stance).apply(profile)
     }
 
     /// What its shots do, with the missile weapon it has ready (`None` without one): Dexterity to
     /// hit, the launcher's own damage, and less of both for each point of Strength below what a
     /// bow needs; what its skill with the launcher gives; then the affixes of the launcher, of
-    /// its ammunition, and of everything it wears and wields.
+    /// its ammunition, and of everything it wears and wields; and its combat stance.
     pub fn ranged(&self, content: &Content) -> Option<Profile> {
         let mods = self.mods(content);
         let launcher = &self.inventory[self.launcher_item(content)?];
@@ -419,12 +440,12 @@ impl Actor {
             Mods::local(&self.inventory[ammo], content).sharpen(&mut profile);
         }
         mods.sharpen(&mut profile);
-        Some(profile)
+        Some(self.stanced(content, profile))
     }
 
     /// What a throw of inventory stack `item` does (`None` if it is no throwing weapon):
     /// Dexterity to hit, Strength to damage, what its skill at throwing gives, its own affixes,
-    /// and those of everything it wears and wields.
+    /// those of everything it wears and wields, and its combat stance.
     pub fn thrown(&self, item: usize, content: &Content) -> Option<Profile> {
         let stack = self.inventory.get(item)?;
         let def = content.object(stack.object);
@@ -435,12 +456,12 @@ impl Actor {
             Profile::thrown(&attack, &self.stats_with(&mods)).with(&self.benefit(content, skill));
         Mods::local(stack, content).sharpen(&mut profile);
         mods.sharpen(&mut profile);
-        Some(profile)
+        Some(self.stanced(content, profile))
     }
 
     /// What a bash with the shield it holds does (`None` without one it can bash with): the
     /// shield's `bash` dice, Strength to hit and to damage as for any blow, what its skill at
-    /// shield bashing gives, and the affixes of everything it wears and wields.
+    /// shield bashing gives, the affixes of everything it wears and wields, and its combat stance.
     pub fn bash(&self, content: &Content) -> Option<(ObjectId, Profile)> {
         let (shield, attack) = self.shield(content)?;
         let skill = content.weapon_skills().of_role(Role::ShieldBash);
@@ -448,7 +469,7 @@ impl Actor {
         let mut profile =
             Profile::melee(attack, &self.stats_with(&mods)).with(&self.benefit(content, skill));
         mods.sharpen(&mut profile);
-        Some((shield, profile))
+        Some((shield, self.stanced(content, profile)))
     }
 }
 

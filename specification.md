@@ -59,6 +59,10 @@ Build the engine and framework, not the game. Everything built is production qua
   hit points, regeneration, stats, attack and moving speed, carrying, stealth, light). Loot on
   generated levels' floors, in vaults, and dropped by creatures; found unidentified (rarity
   known, affixes not, effects applying); an item description screen (§8 "Magic items")
+- Digging (M19): walls of terrain that breaks give way to a digging tool (a pick-axe, a mattock)
+  ready in a new Tool equipment slot, turn after turn like a rest, by the tool's power and the
+  digger's Strength against the wall's hardness, and to explosions stronger than they are hard;
+  they become rubble (§8 "Digging")
 - Character creation (M15): every new run chooses a race, a gender, and a class, which set the
   player's starting stats (partly rolled with dice, ADOM-like) and eyes; a random age by race
   and a random birthday give the birth year, whose horoscope sign (12 mythological animals × 5
@@ -87,11 +91,11 @@ Build the engine and framework, not the game. Everything built is production qua
 
 **Out of scope for now**: magic (spells are announced, nothing is damaged), damage types (a
 flaming arrow does an arrow's damage), rules that use stats beyond combat and burden (ability
-checks, saving throws, training stats), levels and experience, what a class gives beyond starting
-stats, hit points, skills, and weapon skills (equipment, spells), active uses of skills
-(searching, picking locks, healing, and the like), item effects beyond magic items' affixes (no
-potions or scrolls to use yet, no unique items, no enchanting), audio, mouse input, infravision,
-localization.
+checks, saving throws, training stats), levels and experience, digging down or up, creatures
+that dig, what a class gives beyond starting stats, hit points, skills, and weapon skills
+(equipment, spells), active uses of skills (searching, picking locks, healing, and the like),
+item effects beyond magic items' affixes (no potions or scrolls to use yet, no unique items, no
+enchanting), audio, mouse input, infravision, localization.
 
 Vision types are in scope even though there are no other mechanics yet: they are part of perception,
 and the light data model must carry them from the start.
@@ -107,13 +111,13 @@ regression scene for golden screenshots, replays, and snapshot tests.
 | Room | Demonstrates | Milestone |
 |---|---|---|
 | Start room | movement, message line, `?` help; gold and a small pile to pick up | M1, M11 |
-| Door corridor | opening/closing doors, doors blocking sight; a storeroom of arms and armor (something for every equipment slot but the neck and the rings, a two-handed quarterstaff, a short bow and arrows, flaming arrows, a long war bow, a crossbow and bolts, a sling and stones, rocks to throw; in its middle two piles of magic arms: a Sharp long sword of the Bear and Dread Visage, a rare iron helm that glows when worn, both identified, and a rare short bow and a magic silver ring, not) and a pantry of objects | M1–M2, M11, M16, M29 |
+| Door corridor | opening/closing doors, doors blocking sight; a storeroom of arms and armor (something for every equipment slot but the neck and the rings, a two-handed quarterstaff, a short bow and arrows, flaming arrows, a long war bow, a crossbow and bolts, a sling and stones, rocks to throw, a pick-axe for the Tool slot by its door; in its middle two piles of magic arms: a Sharp long sword of the Bear and Dread Visage, a rare iron helm that glows when worn, both identified, and a rare short bow and a magic silver ring, not) and a pantry of objects | M1–M2, M11, M16, M19, M29 |
 | Patrol gallery | creatures moving in and out of view, never shown in memory; a cave beetle and a quicker cave bat (wildlife, so they keep to their lanes) on parallel lanes, a slower torch-bearing kobold circling them (wielding a sword, carrying coins), a kobold by type but placed among the peaceful folk (§7 "Factions"), so it walks its round and never attacks the player; heard from the corridor behind its closed door, and in its dark middle (the bat flies silently), which a flaming arrow shot from its door lights where it lands | M2, M10, M11, M16 |
 | Light hall | colored lights, falloff, pillar and creature shadows, steady magical light | M3, M8 |
 | Darkness chamber | vision types, a UV-only rune, darkvision fade; an amulet seen only by those who see in the dark | M3, M11 |
 | Water garden | still ponds and running rills (flow, glints, foam), pulsing altar with a ring before it | M4, M8, M11 |
 | Effects room | glyph particles, glow, fades, distortion | M4 |
-| Stairs | connection to Level 2 and the arena (down), the courtyard and the overworld (up); the nook is a sanctuary (§7 "Special rooms") | M2, M9, M10, M25 |
+| Stairs | connection to Level 2, the arena, and the quarry (down), the courtyard and the overworld (up); the nook is a sanctuary (§7 "Special rooms") | M2, M9, M10, M19, M25 |
 
 **Courtyard (66×19, outdoor)**: up the stairs nook's `<`, a walled garden under the open sky —
 trees, a ruined wall, a pond, standing stones, flower beds, and a roofed gazebo with a lamp — where
@@ -140,6 +144,15 @@ to hit, win within a few minutes of game time. Lighting the lantern there gets t
 player shot from the dark. The archer spends an arrow a shot (they lie where they fell) and,
 out of arrows, comes to fight with its fists. Beside the player's corner lie a short bow, arrows,
 and flaming arrows, to shoot into the pit from the dark. The `arena` scenario starts there.
+
+**Quarry (64×21, M19)**: down the stairs nook's third `>`: an old stone quarry, the place to dig
+(§8 "Digging"), and nothing lives there. The arrival room has the stairs back up, a pick-axe beside
+the player's start and a mattock below it, and a doorway into the pit: lit by wall torches,
+walled by a granite face to the north and a bank of packed earth to the south, with a block of
+stone and the rubble of old digging about and a cut into the granite. Behind the pit's east wall
+lies a sealed chamber with a lamp, rubies, and gold, and no way in but through a wall: its light
+spills into the pit once the wall gives way. The rock around (solid rock) shows as stone walls as
+it is bared. The `quarry` scenario starts there, beside the pick-axe.
 
 **Level 2 — Vast (≥ 400×300)**: scrolling camera, many light sources, performance budget check.
 Introduced in M2, lit in M3. Beside its stairs up to the hub, stairs down lead into the depths and
@@ -373,7 +386,8 @@ glow, barely perceptible distortion, short fades.
   sway, scale, fade-out, glow, and opacity (how opaque it is at most, default 1). Emitters fire `ambient` (a steady rate while the source is in
   view: sparks over braziers and torches, embers over lava, fountain spray, dust motes), on `step`
   (a burst when a creature is seen entering the cell: a splash in water), on `toggle` (a burst
-  when a door is seen opening or closing: dust), or at an `obstacle` (a steady rate from visible
+  when a cell is seen turning into the terrain: dust as a door opens or closes, or a wall gives way
+  to rubble), or at an `obstacle` (a steady rate from visible
   running water whose flow runs into a known cell that is not running water: foam at banks and
   boulders, ripples where a stream enters a pool; the emitter is turned with the flow, its `y`
   pointing downstream). Creature emitters move with the creature; a creature's `attack` emitters
@@ -649,8 +663,9 @@ rate or animation.
   them. What creatures carry is never seen; what a seen creature wears and wields is (look mode,
   §6).
 - **Memory**: per level, terrain and piles of objects, as last seen (a door is remembered open
-  until seen closed; a pile is remembered as it lay when last in sight, even if it changed out of
-  sight since, and is forgotten once seen gone). Never creatures.
+  until seen closed, a wall standing until seen broken (§8 "Digging"); a pile is remembered as it
+  lay when last in sight, even if it changed out of sight since, and is forgotten once seen gone).
+  Never creatures.
 - **Recomputation**: perception updates in the perception phase of every turn (and after
   `SetVision`). Per-light shadow masks are cached and invalidated when the light moves or opacity
   changes within its radius; only sources whose radius can reach the view range (or a surface whose
@@ -677,7 +692,8 @@ rate or animation.
     is at most 300; a creature without `footsteps` moves silently, a door without `toggle_noise`
     is silent. Attacks
     (§8 "Combat"; hit or miss) are heard where the attacker stands: fighting (melee, 60), a
-    bowstring (a shot, 40), chanting (a spell, 50).
+    bowstring (a shot, 40), chanting (a spell, 50); a turn of digging where the digger stands
+    (digging, 80; §8 "Digging").
   - **Propagation**: a noise spreads from its cell through the 8 neighbors, losing 10 loudness
     per orthogonal step and 14 per diagonal one, plus the `muffle` of every cell it enters (a
     closed door 30). Solid terrain (neither walkable nor transparent: walls, rock, trees,
@@ -698,7 +714,7 @@ rate or animation.
   - **The player** perceives the sounds they heard during the turn that just passed whose source
     cell they do not see (a creature in darkness or out of sight, a door around the corner),
     never who or what made them: the kind (footsteps, a door opening, a door closing, fighting, a
-    bowstring, chanting), how loud
+    bowstring, chanting, digging), how loud
     (faint, clear, or loud: under 10, under 30, or at least 30 above their threshold), and
     roughly where: a cell up to 2 (faint), 1 (clear), or 0 (loud) steps from the source through
     cells that pass sound unmuffled, which the player does not see, picked by a hash of the
@@ -755,8 +771,8 @@ rate or animation.
   While any screen is open it receives every key press, the run (if any) stays visible beneath
   it, and no game time passes but for what is chosen on a screen (picking up, dropping, wearing,
   wielding), which is done as it is chosen and takes its time. Prompts in the message line (a
-  direction to open, close, or bash, how long to rest, look mode, aiming a shot or a throw) are
-  not screens.
+  direction to open, close, or bash, or to dig, how long to rest, look mode, aiming a shot or a
+  throw) are not screens.
 - **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
   `--record`, or `--capture` name what to run): Continue (only if a save exists), New run
   (scenario list from content, optional seed, then character creation), Settings, Controls,
@@ -795,11 +811,13 @@ rate or animation.
   "Reset all keys" resets everything.
 - First-phase commands: move, wait, open/close door, ascend/descend, light/douse lantern (`L`),
   pick up (`,` or `g`), drop (`d`), inventory (`i`), equipment (`e`), character (`@`), skills
-  (`S`), weapon skills (`W`), rest (`R`), look, fire (`f`), throw (`t`), bash with a shield (an
-  ability, below: no key by default; bound in Controls, it asks for a direction, like opening a
-  door), next target (`Tab`, while aiming), help, save and quit (`Q`). Free actions (look, help,
-  the inventory, looking at the equipment screen, the character screen, the Skills screen, the
-  weapon skills screen, menus, vision switch) do not advance time.
+  (`S`), weapon skills (`W`), rest (`R`), look, fire (`f`), throw (`t`), more aggressive / more
+  defensive combat stance (`+` / `-`; §8 "Stances"), bash with a shield (an ability, below: no
+  key by default; bound in Controls, it asks for a direction, like opening a door), next target
+  (`Tab`, while aiming), use a tool (`U`, then a direction: dig), help, save and quit (`Q`). Free
+  actions (look, help, the inventory, looking at the equipment screen, the character screen, the
+  Skills screen, the weapon skills screen, menus, vision switch, a change of stance) do not
+  advance time.
 - **Objects** (M11) lie in piles on cells, the top first: the map shows the top object's glyph
   (§4.2), and dropped objects go on top. Stepping onto a pile says what lies there: `You see here
   a dagger.` for one stack, `There are several objects here.` for more. Look mode names what lies
@@ -825,13 +843,14 @@ rate or animation.
   and, dimmer, the weights at which their burden changes: `Burdened over 15 kg, strained over 30
   kg, overloaded over 45 kg` (from scores the player knows, never a modifier; lines wrap at part
   boundaries in a narrow window). What is worn or wielded is marked with its slot's mark: "(being
-  worn)", "(wielded)", "(in off hand)", "(on left hand)", "(readied)", "(quivered)", and a
-  two-handed weapon "(wielded in both hands)"; the drop screen marks it the same way. Names are
-  in their rarity's color (§8 "Magic items": magic a soft blue, rare a pale yellow; normal as
-  ever; palettes apply as to all UI text); the glyph keeps its own. It takes no action: a stack's
-  letter opens its **description** (below); `i` (when it is no stack's letter) or Esc closes it.
+  worn)", "(wielded)", "(in off hand)", "(on left hand)", "(readied)", "(quivered)", "(in use)"
+  (a tool), and a two-handed weapon "(wielded in both hands)"; the drop screen marks it the same
+  way. Names are in their rarity's color (§8 "Magic items": magic a soft blue, rare a pale
+  yellow; normal as ever; palettes apply as to all UI text); the glyph keeps its own. It takes no
+  action: a stack's letter opens its **description** (below); `i` (when it is no stack's letter)
+  or Esc closes it.
 - **Item description** (#149): one carried stack as the player knows it, opened by its letter in
-  the inventory or by a slot's upper-case letter (`A` to `L`) on the equipment screen, over the
+  the inventory or by a slot's upper-case letter (`A` to `M`) on the equipment screen, over the
   screen it came from: its glyph and name (in its rarity's color, with its mark if worn or
   wielded), what it is (`Magic long sword · steel · 1.8 kg`), its base stats in words
   (`magic::describe`: "Long blade, for the main hand", "Damage 1d8; criticals on 20–24, ×2
@@ -842,33 +861,32 @@ rate or animation.
   attacks faster" (affix magnitudes are item properties and shown; speed only in words; global
   attack effects say "with every attack"). Never the player's own to-hit or a modifier.
   Read-only; Esc, Back, or Enter closes it.
-- **Equipment** (`e`; M16), as in ADOM: the slots, lettered `a` to `l` in this order — Head, Neck,
-  Body, Cloak, Main hand, Off hand, Hands, Left ring, Right ring, Feet, Missile weapon, Missiles
-  (data, `data/slots.toml`, §7, so more can be added) — each with what is in it (glyph, name,
-  weight) or `—`, then what the player carries and weighs. A two-handed weapon shows in both
-  hands, "(both hands)". A slot's letter (or Enter on the `>` row; the arrows move it) opens the
-  choice of what goes there: the inventory stacks that fit the slot (and what it holds, such as a
-  two-handed weapon in the off hand), by their inventory letters, marked as in the inventory; the
-  stack already there is the `>` row. Choosing a stack (its
-  letter, or Enter) puts it on in the slot, taking off first what is there (a swap) and moving it
-  if it is in another slot; choosing what is already there takes it off. Rings fit either ring
-  slot, a two-handed weapon takes both hands (and puts away what they hold), launchers and their
-  ammunition go in the missile weapon and missiles slots. That is one action (replay text
-  `equip:body:b`, `remove:body`): it is done at once and takes its time, the choice closes, and
-  the equipment screen beneath shows the result, as in ADOM; Esc goes back to it, and Esc there
-  returns to play (its own key too, when that is not a slot's letter). A slot's upper-case
-  letter opens the description of what is in it (above). Names show in their rarity's color, as
-  in the inventory. Each thing put on or taken
-  off takes the time of its slot's action (§8 "Time": wielding, wearing, body armor, readying;
-  taking off costs what putting on does), so a swap takes both, and a refused one (the wrong
-  slot, nothing there) takes none. Messages say it: "You put on a leather jerkin.", "You wield a
-  quarterstaff in both hands.", "You ready 24 arrows.", "You take off an iron helm.", "You put
-  away a short bow." Equipped things stay in the inventory and still count toward the player's
-  weight and burden (§8 "Burden"). What is worn and wielded fights and protects (§8 "Combat": the
-  wielded weapon's blows, the readied missile weapon's shots, armour, shield, and parry in
-  Defence; a weapon's `attack_cost` how long a blow takes); being worn changes neither sight,
-  noise, nor speed (its weight does, as part of the load), but for what a magic item's affixes
-  do while it is worn or wielded (§8 "Magic items").
+- **Equipment** (`e`; M16), as in ADOM: the slots, lettered `a` to `m` in this order — Head, Neck,
+  Body, Cloak, Main hand, Off hand, Hands, Left ring, Right ring, Feet, Missile weapon, Missiles,
+  Tool (data, `data/slots.toml`, §7, so more can be added; the Tool slot came with M19) — each with
+  what is in it (glyph, name, weight) or `—`, then what the player carries and weighs. A two-handed
+  weapon shows in both hands, "(both hands)". A slot's letter (or Enter on the `>` row; the arrows
+  move it) opens the choice of what goes there: the inventory stacks that fit the slot (and what it
+  holds, such as a two-handed weapon in the off hand), by their inventory letters, marked as in the
+  inventory; the stack already there is the `>` row. Choosing a stack (its letter, or Enter) puts it
+  on in the slot, taking off first what is there (a swap) and moving it if it is in another slot;
+  choosing what is already there takes it off. Rings fit either ring slot, a two-handed weapon takes
+  both hands (and puts away what they hold), launchers and their ammunition go in the missile weapon
+  and missiles slots, digging tools in the Tool slot. That is one action (replay text
+  `equip:body:b`, `remove:body`): it is done at once and takes its time, the choice closes, and the
+  equipment screen beneath shows the result, as in ADOM; Esc goes back to it, and Esc there returns
+  to play (its own key too, when that is not a slot's letter). A slot's upper-case letter opens the
+  description of what is in it (above). Names show in their rarity's color, as in the inventory.
+  Each thing put on or taken off takes the time of its slot's action (§8 "Time": wielding,
+  wearing, body armor, readying; taking off costs what putting on does), so a swap takes both, and
+  a refused one (the wrong slot, nothing there) takes none. Messages say it: "You put on a leather
+  jerkin.", "You wield a quarterstaff in both hands.", "You ready 24 arrows.", "You take off an
+  iron helm.", "You put away a short bow." Equipped things stay in the inventory and still count
+  toward the player's weight and burden (§8 "Burden"). What is worn and wielded fights and protects
+  (§8 "Combat": the wielded weapon's blows, the readied missile weapon's shots, armour, shield, and
+  parry in Defence; a weapon's `attack_cost` how long a blow takes); being worn changes neither
+  sight, noise, nor speed (its weight does, as part of the load), but for what a magic item's
+  affixes do while it is worn or wielded (§8 "Magic items").
 - **Character** (`@`): who the player is, as far as they know it: their name (the player
   creature's, "You"), their race, gender, and class (`Race    Dwarf`; "other" with the stat it
   raised), their age today, birthday, and birth sign as on the summary (when the run has a
@@ -878,7 +896,7 @@ rate or animation.
   85 / 120`, the total alone at the highest level; §8 "Experience"), their hit points (`HP  Hit
   points  18/24`) and Defence
   (`Dv  Defence  15`; the total only, as its Dexterity part would give away a modifier; §8
-  "Combat"), their weight (their own plus what they carry, and their burden when they have one:
+  "Combat"), their combat stance by name (`Stance  Neutral`; §8 "Stances"), their weight (their own plus what they carry, and their burden when they have one:
   `Weight 98.4 kg (you 70 kg, carrying 28.4 kg, burdened)`), and, dimmer, the weights at which
   their burden changes, as in the inventory (§8 "Burden"). The panel is 72 wide, so the birth and
   the thresholds take a line each. Never a modifier, a potential, or a to-hit, which the player
@@ -930,6 +948,11 @@ rate or animation.
   a sound already known goes on without stopping it, and so does other news of the weather (the
   rain easing or stopping, clouds gathering or parting), which is logged all the same.
   It is a gameplay input mode like the open/close direction prompt, not a menu screen.
+- **Dig** (`U`, "use a tool", ADOM's use-item key, an item's use rather than an ability; §8
+  "Digging") asks in the message line `Dig in which direction? (Esc to cancel)`; a direction
+  digs (replay text `dig:E`), any other command cancels. With no digging tool ready nothing is
+  asked: the rules say so at once ("You have no digging tool ready."). Digging goes on turn
+  after turn like a rest and stops for the same reasons.
 - **Messages**: the last two show in the message line; the same text logged again in a row folds
   into one entry with a count (`You open the door. (×2)`). Heard sounds are logged only when they
   are news (§5 "Hearing"), so a patrol walking back and forth out of sight gives one message per
@@ -979,10 +1002,11 @@ rate or animation.
   what the creature wields, wears, and has ready, which is in plain sight ("A kobold (hostile,
   wounded), wielding a spear, on stone floor.", "A kobold shaman (hostile, unhurt), wearing a
   bone amulet, ...", "A kobold archer (hostile, unhurt), with a short bow and 20 arrows ready,
-  ..."; never what else it carries), terrain, remembered terrain, where stairs lead, the
-  special room walkable ground lies in once the player has been inside it ("A stone floor in an
-  echoing hall.", "You remember a stone floor here, in a sanctuary."; §7 "Special rooms"), and a
-  sound heard there ("You hear footsteps here.").
+  ..."; never what else it carries), terrain (a wall in sight the player has dug into: "a stone
+  wall, partly dug"), remembered terrain, where stairs lead, the special room walkable ground
+  lies in once the player has been inside it ("A stone floor in an echoing hall.", "You remember
+  a stone floor here, in a sanctuary."; §7 "Special rooms"), and a sound heard there ("You hear
+  footsteps here.").
 - Screen layout: map viewport, message log, status panel (level, the player's hit points as
   `HP 18/24` (never below 0), their burden when they have one (`Burdened`, `Strained`,
   `Overloaded`; §8 "Burden"), their level as `Lv 3` (§8 "Experience"; it goes after the
@@ -1126,7 +1150,12 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   it are, in percent of the walker's footsteps, 0 to 1000; default 100), a door's `toggle_noise`
   (how loud opening the closed door or closing the open one is, at most 300; default 0, silent;
   only doors), and a `muffle` (the loudness a sound loses entering the cell, at most 300; default
-  0, but solid terrain blocks sound unless it has one). Overworld terrain has
+  0, but solid terrain blocks sound unless it has one). For digging (§8 "Digging"), terrain that
+  breaks has a `hardness` (1 to 10 000, the work it takes: a pick-axe at Strength 10 does 10 a
+  turn) and what it `becomes` (walkable, transparent open ground that does not break, no door or
+  stairs: rubble), together; only solid terrain (not walkable, no door, stairs, or light) breaks.
+  Stone walls 600, packed earth 100, granite 3000. Solid rock may have a `face`, the solid terrain
+  it shows as once a cell next to it is broken open (`void`: `wall`). Overworld terrain has
   `travel_minutes` (1 to 1440; required for every walkable terrain on the overworld),
   optionally `local`, the ground terrain of the local area entered from a cell of it (none:
   nothing to explore there; locations never have one), and `landscape`, what its land is like in
@@ -1139,12 +1168,13 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   e.g. `wait = 1000`, 1000 being a normal action (6 s at normal speed; §8 "Time"), 100 to
   10 000. The ids are `step` (onto terrain of `move_cost` 100), `wait`, `open_door`,
   `close_door`, `lantern`, `stairs` (also entering a location or local area and walking off an
-  area's edge), `pick_up`, `drop`, `melee` (a shield bash too), `shoot`, `throw`, `reload` (a missile weapon that
-  `reloads`: a crossbow shot costs `shoot` plus `reload`, 2000), `cast`, and for equipment (each slot names
+  area's edge), `pick_up`, `drop`, `melee` (a shield bash too), `shoot`, `throw`, `reload` (a
+  missile weapon that `reloads`: a crossbow shot costs `shoot` plus `reload`, 2000), `cast`,
+  `dig` (a turn of digging), and for equipment (each slot names
   one, below) `wield` (1000), `wear` (1000: helmets, cloaks, gloves, boots, rings, amulets),
-  `body_armor` (3000: it takes a while to strap on), and `ready` (1000: a missile weapon and
-  missiles). An action left out, or every action without the file, costs 1000; an unknown id or
-  a cost out of range is a content error. The wiki shows them in a generated table.
+  `body_armor` (3000: it takes a while to strap on), and `ready` (1000: a missile weapon,
+  missiles, a tool). An action left out, or every action without the file, costs 1000; an unknown id
+  or a cost out of range is a content error. The wiki shows them in a generated table.
 - **The sky** (`data/sky.toml`, optional; without it there are no moons): up to 8 `[[moon]]`s,
   each with `name` (shown in the status bar when there are several), `color` (`[r, g, b, uv]`,
   the direct light of the moon when full and high in the night sky), `sky` (the same for the
@@ -1184,6 +1214,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   hit), `lit` (ammunition and throwing weapons: the object it flies and lands as, lit as it is
   loosed, which must burn), `light` and `burns` (together: the light preset it gives where it
   lies and for how many seconds, 1 to a day, it burns there before it is gone); and
+  for digging (§8 "Digging"): `dig`, a digging tool's power (1 to 100; it needs a `slot`); and
   presentation only: `missile` (the glyph it flies as, drawn pointing right; default its own,
   upright), `spins` (it tumbles in flight), `glow` (0 to 1, where it lies), and particle
   `particles` (`ambient`: while it lies in view on top of its pile; `flight`: while it flies).
@@ -1196,7 +1227,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   war bow (1d8+2 ×3, Strength 14, range 15), a crossbow (1d10+1, threat 20, no Strength, range 13,
   reloads), a sling (1d4, range 9) (of the bows, crossbows, and slings skills); ammunition: arrows (break 30 %), flaming arrows (lit as burning
   arrows: light `arrow_fire`, burning 60 s), crossbow bolts (break 20 %), sling stones; rocks
-  (thrown 1d3, 6 cells, readied in the missiles slot; the thrown skill).
+  (thrown 1d3, 6 cells, readied in the missiles slot; the thrown skill); digging tools for the
+  Tool slot: a pick-axe (power 10, 3 kg) and a mattock (power 15, 4.5 kg), never magic (no
+  `kind`).
   **Base items** (M29, #149; §8 "Magic items"): `kind`, what kind of item it is for magic
   (`weapon`: has `damage` and a hand `slot`; `launcher`: `launches`; `ammo`: `ammo` and a `slot`;
   `shield`: `shield`; `body`, `helmet`, `cloak`, `gloves`, `boots`, `ring`, `amulet`: worn, no
@@ -1278,8 +1311,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   object takes every hand slot). The built-in slots, ADOM's: Head, Neck, Body (`body_armor`),
   Cloak, Main hand and Off hand (`wield`, hands; "wielded", "in off hand"), Hands, Left ring
   and Right ring ("on left hand", "on right hand"), Feet, Missile weapon and Missiles (`ready`;
-  "readied", "quivered"); the rest `wear`, "being worn". The wiki shows them in a generated
-  table with what fits each.
+  "readied", "quivered"), Tool (`ready`, "in use"; M19); the rest `wear`, "being worn". The wiki
+  shows them in a generated table with what fits each.
 - **Factions** (`data/factions.toml`, optional; without it everyone is neutral): `[[faction]]`
   with `id`, `name`, and `hostile` (faction ids). Relations are pairwise and symmetric: if A lists
   B, A and B are hostile to each other; every pair not listed (a faction and itself too) is
@@ -1525,13 +1558,15 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   0, so a run without kills hashes as before), every actor's trained skills (value and training
   marks) and the training random stream (§8 "Skills"; format version 14), each level's special
   rooms and whether the player has been in each (§7 "Special rooms"; format version 15), every
-  actor's weapon skills (its rank and marks in each, §8 "Weapon skills"; format version 16), every
-  magic or rare item as it is (§8 "Magic items": on its stack wherever it lies or is carried, its
-  rarity, item level, each affix by id with its tier and rolled value, a rare item's name, and
-  whether it is identified; format version 17; absent on normal stacks; an affix this content
-  does not have, a tier or value out of range, or more affixes than the rarity allows makes the
-  save inconsistent; affixes are recorded by id, so adding affixes does not change the content
-  fingerprint), and a dev weather override while
+  actor's weapon skills (its rank and marks in each, §8 "Weapon skills"; format version 16), the
+  work done on walls dug into and still standing (§8 "Digging"; format version 17), every
+  actor's combat stance (§8 "Stances"; format version 18), every magic or rare item as it is (§8
+  "Magic items": on its stack wherever it lies or is carried, its rarity, item level, each affix
+  by id with its tier and rolled value, a rare item's name, and whether it is identified; format
+  version 19; absent on normal stacks; an affix this content does not have, a tier or value out
+  of range, or more affixes than the rarity allows makes the save inconsistent; affixes are
+  recorded by id, so adding affixes does not change the content fingerprint), and a dev weather
+  override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
   platform data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
@@ -1595,7 +1630,7 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     it. Every action that takes time has a **cost** in energy, 1000 for a normal action, given in
     `data/actions.toml` (`step`, `wait`, `open_door`, `close_door`, `lantern`, `stairs`,
     `pick_up`, `drop`, `melee`, `shoot`, `throw`, `reload`, `cast`, `wield`, `wear`,
-    `body_armor`, `ready`; 100 to
+    `body_armor`, `ready`, `dig`; 100 to
     10 000; an action left out, or every action without the file, costs 1000; unknown ids are
     errors), and a **base time**: 6 s
     (`BASE_TURN`) for every action but a step on the overworld. An action of cost *c* takes an
@@ -1668,7 +1703,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     gains until the goal; one hour, the next 06:00, or the next 18:00; at most a day). It stops after a turn in which a
     creature came into view (one not seen the turn before) or a message was logged that stops a
     rest (all but weather news other than rain starting or growing heavier, §5 "Weather"), and
-    logs how long the player rested. Turns that end before any creature on the level could come
+    logs how long the player rested. Digging ("Digging" below) runs through the same loop
+    (`World::keep_at`). Turns that end before any creature on the level could come
     within view, and in which the weather the player would see did not change, pass without
     perception: a creature is seen only within the view range, and before its
     first step that could bring it there it needs the energy for every step that cannot (each at
@@ -1821,6 +1857,27 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   hp ÷ 2 + the Toughness modifier)`; without a character the scenario's `hp` stands in for the
   class's. The player is shown their level, XP, and the XP of the next level
   (`PerceptionView::own_experience`), and nothing else about the rules.
+- **Stances** (`content/stance.rs`, `data/stances.toml`; M22), after ADOM's combat tactics. The
+  player is in one of four **combat stances**, `CombatStance`: aggressive, neutral (the
+  default), defensive, coward. It is `Actor::stance` (saved, in the state hash; creatures stay
+  neutral for now, and the AI may pick one later). `Action::SetStance(stance)`, text
+  `stance:aggressive`, takes no game time (`Spent::NoTime`) and is recorded in replays; it says
+  "You take an aggressive stance." (a neutral, a defensive, a cowardly). `+` and `-` step towards aggressive and towards coward (`CombatStance::more_aggressive`, `more_defensive`; they stop at the ends).
+  The file has exactly one `[[stance]]` per stance (`id`, `name`) and, all optional: `to_hit` and
+  `damage` (added to the stanced actor's melee, shot, and thrown attacks: `StanceDef::apply`,
+  through `Actor::stanced`), `dodge` and `parry` (added to its Defence in those categories, so
+  Dodge stacks and Parry only counts above the weapon's own; a stance may make Defence worse),
+  `attack_cost` (percent of the price of a melee attack, shot, or throw: `World::price_of`),
+  `flee_cost` and `flee_noise` (percent of the price and the loudness of a step that **flees**:
+  the actor has a hostile next to it and the step ends out of that creature's reach,
+  `World::flees`), and `weapon_mark` (percent: the multiplier for weapon skill marks, the hook
+  for #134; nothing counts marks yet). Bonuses are -20 to 20, percentages 10 to 1000. Shipped
+  numbers (first guesses, tuned by playtesting; none is ever shown, only the stance's name):
+  aggressive +1 to hit, +2 damage, -3 Dodge, marks ×1.25; defensive -2 to hit, -1 damage, +2
+  Dodge, +1 Parry; coward -4 to hit, -3 damage, +4 Dodge, attacks ×1.25, fleeing steps ×0.85
+  and half as loud. The player perceives it (`PerceptionView::own_stance`): the status bar shows
+  it when it is not neutral, the character screen always (§6); the wiki's Combat page has the
+  generated table.
 - **Ranged combat** (`warlock-core/src/world/shoot.rs`; M16): shots and throws.
   - **Loosing**: the player fires (`Action::Fire(cell)`, `fire:X,Y`) with the missile weapon in a
     `ready` slot and the ammunition it shoots in a `ready` slot, or throws (`Action::Throw { item,
@@ -1868,6 +1925,48 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     `Fell`, or `Unseen` when the last cell seen is not where it ended. Dropped if none of it was
     seen. The player's own readied missile weapon, its ammunition, and ranges are in the snapshot
     (`PerceptionView::ready_to_fire`, `ready_to_throw`, `throw_range`) for the targeting UI.
+- **Digging** (`warlock-core/src/world/dig.rs`; M19, #131): walls give way to digging and to
+  explosions, ADOM-like.
+  - **Walls that break**: terrain with a `hardness` and what it `becomes` (§7): stone walls 600,
+    packed earth 100, granite 3000, each becoming rubble (walkable at 150 %, loud underfoot).
+    Terrain without them never breaks (doors, torches, crystals, trees, boulders, mountains), and
+    neither does any cell on a level's edge, whatever its terrain, so no level is dug out of. Solid
+    rock (`void`) shows its `face`, a stone wall, once a cell next to it is broken open, as
+    generated levels wall their open ground, so a tunnel is walled like a corridor.
+  - **Digging** (`Action::Dig(dir)`, `dig:E`; key `U`): with a digging tool ready (the first thing
+    worn or wielded with `dig` power: a pick-axe, 10, or a mattock, 15, in the Tool slot), into the
+    wall next to the player in that direction. Refused, taking no time: without a tool ("You have
+    no digging tool ready."), toward open ground ("There is nothing to dig there."), toward
+    anything else that does not break ("You cannot dig through the closed door."), and on the
+    overworld ("You cannot dig here."). It says "You dig into the stone wall." ("You go on digging
+    at the stone wall." on a wall dug into before) and goes on turn after turn like a rest, through
+    the same loop (perception batched while no creature can come into view): each turn is a `dig`
+    action (1000: 6 s at normal speed, slowed by burden like every price), does work of the tool's
+    power × (Strength + 10) / 20 (the score, never the modifier: a pick-axe at Strength 10 does 10,
+    at 18 14), and makes the digging noise where the digger stands (80; §5 "Hearing"). The wall
+    gives way, as the player acts, once the work done on it reaches its hardness: a pick-axe at
+    Strength 10 digs through packed earth in 1 minute, a stone wall in 6, granite in 30; a mattock
+    in 42 s, 4, and 20 minutes. Integer math: the work is kept in twentieths. It stops, like a rest,
+    after a turn in which a creature came into view or a message that stops a rest was logged, when
+    the player dies, and at the latest after a day; the work done stays on the wall
+    (`LevelState::dug`, saved) for the next dig. Messages: "After 6 minutes, the stone wall
+    crumbles.", "A kobold comes into view; you stop digging after 3 minutes.", "You stop digging
+    after 3 minutes."
+  - **Explosions** (`World::blast(center, radius, blast)`): an explosion breaks every wall in its
+    burst whose hardness is below its blast, all at once and with no roll: the burst is the cells
+    in line of sight of its centre within its radius, the walls bounding them included, taken
+    before anything breaks, so a blast never reaches through a wall it breaks. Walls on the edge
+    never break. "The wall collapses!" ("The walls collapse!") when the player sees one fall.
+    Nothing explodes yet: the fireball trap (#128) is to be the first explosion to call it.
+  - **What follows**: a broken wall is its rubble at once and the light masks it could change are
+    dropped (`World::set_terrain`, as for a door), so light, the player's sight, and creature
+    sight pass the gap from the next perception, and memory keeps the rubble like any terrain.
+    `Event::WallBroken { pos, cause }` (`Dug` or `Blast`) reaches presentation when the player
+    sees the cell: dust rises there (the rubble's `toggle` particles, §4.8).
+  - **What the player perceives**: whether they have a digging tool ready
+    (`PerceptionView::ready_to_dig`) and which walls in sight they have dug into
+    (`PerceptionView::is_dug`: look mode's "partly dug"); never the work done in numbers.
+    Creatures do not dig, and no one digs down or up.
 - **Stats** (`warlock-core/src/stats.rs`; M14): six stats inspired by D&D, in display order
   Strength (St), Dexterity (Dx), Toughness (To; D&D's Constitution), Intelligence (In),
   Willpower (Wi; D&D's Wisdom), and Presence (Pr; D&D's Charisma). More will come (mostly
@@ -2190,7 +2289,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
 - **Events to effects**: the core emits events (door opened, actor moved, attacked, died); the
   presentation layer turns them into animations: slides, a short lunge toward the target for a
   melee attack (motion), missiles flying (§4.8) and a creature's `attack`
-  particles where its attack lands, e.g. the shaman's violet sparkle (particles); a death shows
+  particles where its attack lands, e.g. the shaman's violet sparkle (particles); dust where a
+  door swings or a wall gives way (the `toggle` particles of what the cell became); a death shows
   as the creature gone and what it dropped, and in the message line. Gameplay never waits for
   them.
 - **Determinism**: ChaCha8 RNG (`rand_chacha`) with separate streams, each seeded with FNV-1a 64 of
@@ -2238,10 +2338,11 @@ cargo xtask golden [--update]                             # compare golden scree
   character `{race, gender, class}` (left out for a run without one; a replay without it starts
   as the scenario's character, so older replays still load). Actions use a text
   syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
-  pickup pickup:ac drop drop:b equip:body:b remove:body bash:E fire:12,5 throw:c:12,5
-  vision:darkvision skip:1h weather:rain effect:fireball@12,5
+  pickup pickup:ac drop drop:b equip:body:b remove:body bash:E fire:12,5 throw:c:12,5 dig:E
+  vision:darkvision skip:1h weather:rain stance:coward effect:fireball@12,5
   effect:lightning_bolt@3,4>12,4 identify:a`; `bash:DIR` bashes with the held shield that way,
-  `fire:X,Y` shoots at level cell (X, Y),
+  `dig:DIR` digs toward a direction until the wall gives way or something interrupts; `fire:X,Y`
+  shoots at level cell (X, Y),
   `throw:LETTER:X,Y` throws one of inventory stack LETTER there; the dev action
   `effect:ID@X,Y[>X,Y]` shows spell effect ID (`data/effects.toml`) as the player perceives it, a
   burst around X,Y (around the second cell, flying there from the first) or a bolt from the first
@@ -2263,7 +2364,8 @@ cargo xtask golden [--update]                             # compare golden scree
 - Dump layers: `view`, `fov`, `memory` (terrain and the top object of each known pile), `light`
   (perceived brightness of each visible cell as a digit, `0` dark to `9` fully lit or brighter),
   `sound` (the view with each heard sound at its rough place: `f` footsteps, `o` a door opening,
-  `c` a door closing, `x` fighting, `b` a bowstring, `m` chanting, upper case when loud),
+  `c` a door closing, `x` fighting, `b` a bowstring, `m` chanting, `d` digging, upper case when
+  loud),
   `inventory` (what the player carries, by letter with weights and what is worn or wielded
   marked, `b - a leather jerkin (being worn) (3.5 kg)`, then what they carry, their burden and
   its thresholds, and what they weigh, `carried 4.2 kg (unburdened: burdened over 14 kg,
@@ -2409,6 +2511,9 @@ Each milestone ships a playable build.
   race, and class, regeneration, death with drops and permadeath, health in words; ranged
   combat (#117): bows, a crossbow, a sling, and throwing weapons, ammunition spent and picked up
   again, ADOM-like targeting, missiles on screen, and flaming arrows that light the dark.
+- **M19 Doors and walls** — destructible walls (#131): terrain hardness, digging through walls
+  with a pick-axe or a mattock in a new Tool slot, turn after turn by tool power and Strength,
+  explosions that break the softer walls, rubble, and the quarry to dig in.
 - **M20 Skills** — 26 skills in data (#132): trained or untrained (never shown, gives nothing),
   values from race and class dice and creature data, training marks on meaningful use with a
   provisional increase rule (gentle to 100, slow past it), passive benefits for tumble, stealth,

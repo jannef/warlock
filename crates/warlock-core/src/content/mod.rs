@@ -29,6 +29,7 @@ mod size;
 mod skill;
 mod sky;
 mod slot;
+mod stance;
 mod terrain;
 mod vault;
 mod vision;
@@ -61,7 +62,7 @@ pub use level::{
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
 pub use material::{MaterialDef, MaterialId};
-pub use object::{MAX_BONUS, MAX_PLACED, ObjectDef, ObjectId, article, weapon_noun};
+pub use object::{MAX_BONUS, MAX_DIG, MAX_PLACED, ObjectDef, ObjectId, article, weapon_noun};
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use race::{RaceDef, Races};
@@ -71,7 +72,8 @@ pub use size::{CARRY, MEDIUM, SizeDef};
 pub use skill::{SkillBook, SkillDef};
 pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
-pub use terrain::{MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
+pub use stance::{CombatStance, StanceDef, Stances, percent_of};
+pub use terrain::{Breakable, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
 pub use vault::Vault;
 pub use vision::VisionProfile;
 pub use weapon_skill::{
@@ -230,8 +232,8 @@ struct LegendFile {
 /// `data/calendar.toml`, `data/sky.toml`, `data/materials.toml`, `data/objects.toml`,
 /// `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
 /// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, `data/horoscope.toml`,
-/// `data/effects.toml`, `data/room_effects.toml`, and `data/weapon_skills.toml` are optional
-/// (without effects, spell effects
+/// `data/effects.toml`, `data/room_effects.toml`, `data/weapon_skills.toml`, and
+/// `data/stances.toml` are optional (without effects, spell effects
 /// are not drawn). Without vision
 /// profiles, a single `normal` profile that needs no light is used, so content without lighting
 /// stays fully visible; without sizes, everything is medium; without factions, everyone is neutral; without a calendar, months are numbered;
@@ -283,6 +285,7 @@ pub struct Content {
     room_effects: RoomEffects,
     /// Prefixes, suffixes, and how loot rolls them (`data/affixes.toml`).
     affixes: Affixes,
+    stances: Stances,
 }
 
 impl Content {
@@ -325,6 +328,7 @@ impl Content {
             weapon_skills: WeaponSkillTable::default(),
             room_effects: RoomEffects::default(),
             affixes: Affixes::default(),
+            stances: Stances::default(),
         };
         let path = "data/calendar.toml";
         if let Some(text) = files.get_optional(path) {
@@ -362,6 +366,10 @@ impl Content {
             let skill = |id: &str| content.skill_id(id);
             let has_skills = !content.skills().is_empty();
             content.affixes = affix::parse(path, text, light, (skill, has_skills))?;
+        }
+        let path = "data/stances.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.stances = Stances::parse(path, text)?;
         }
         let path = "data/races.toml";
         if let Some(text) = files.get_optional(path) {
@@ -486,6 +494,27 @@ impl Content {
                 )));
             }
             check_terrain_noise(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
+            let breaks = match (spec.hardness, &spec.becomes) {
+                (None, None) => None,
+                (Some(hardness), Some(_)) if (1..=MAX_HARDNESS).contains(&hardness) => {
+                    Some(Breakable {
+                        hardness,
+                        becomes: resolve(&spec.becomes)?.expect("given"),
+                    })
+                }
+                (Some(_), Some(_)) => {
+                    return Err(err(format!(
+                        "terrain `{}`: hardness must be 1 to {MAX_HARDNESS}",
+                        spec.id
+                    )));
+                }
+                _ => {
+                    return Err(err(format!(
+                        "terrain `{}`: `hardness` and `becomes` go together",
+                        spec.id
+                    )));
+                }
+            };
             check_effects(
                 path,
                 "terrain",
@@ -520,11 +549,16 @@ impl Content {
                 muffle: spec
                     .muffle
                     .or((spec.walkable || spec.transparent).then_some(0)),
+                breaks,
+                face: resolve(&spec.face)?,
                 anim: spec.anim.clone(),
                 glow: spec.glow,
                 haze: spec.haze,
                 particles: spec.particles.clone(),
             });
+        }
+        for def in &defs {
+            check_breaking(def, &defs).map_err(|m| err(format!("terrain `{}`: {m}", def.id)))?;
         }
         if let Some(def) = defs
             .iter()
@@ -1152,6 +1186,16 @@ impl Content {
         &self.visions
     }
 
+    /// The combat stances of `data/stances.toml` (all plain without the file).
+    pub fn stances(&self) -> &Stances {
+        &self.stances
+    }
+
+    /// What combat stance `stance` does.
+    pub fn stance_def(&self, stance: CombatStance) -> &StanceDef {
+        self.stances.get(stance)
+    }
+
     /// The sizes of `data/sizes.toml`, in file order (only medium without the file).
     pub fn sizes(&self) -> &[SizeDef] {
         &self.sizes
@@ -1406,6 +1450,41 @@ fn check_terrain_noise(spec: &terrain::TerrainSpec) -> Result<(), String> {
     }
     if spec.toggle_noise > 0 && spec.opens_to.is_none() && spec.closes_to.is_none() {
         return Err("only doors have a `toggle_noise`".into());
+    }
+    Ok(())
+}
+
+/// Checks how a terrain type breaks (spec §8 "Digging"): only solid terrain (neither walkable
+/// nor a door, stairs, or a light) breaks, into plain open ground (walkable and transparent,
+/// that does not break itself); solid rock shows a solid face.
+fn check_breaking(def: &TerrainDef, defs: &[TerrainDef]) -> Result<(), String> {
+    let plain = |t: &TerrainDef| t.stairs.is_none() && !t.is_closed_door() && !t.is_open_door();
+    if let Some(breaks) = def.breaks {
+        if def.walkable || !plain(def) || def.light.is_some() {
+            return Err(
+                "only solid terrain breaks (`hardness`): not walkable, no door, stairs, or light"
+                    .into(),
+            );
+        }
+        let becomes = &defs[usize::from(breaks.becomes.0)];
+        if !becomes.walkable || !becomes.transparent || becomes.breaks.is_some() || !plain(becomes)
+        {
+            return Err(format!(
+                "it `becomes` `{}`, which must be open ground: walkable, transparent, no door or \
+                 stairs, and not breaking itself",
+                becomes.id
+            ));
+        }
+    }
+    if let Some(face) = def.face {
+        let face = &defs[usize::from(face.0)];
+        let solid = |t: &TerrainDef| !t.walkable && !t.transparent;
+        if !solid(def) || !solid(face) || face.face.is_some() {
+            return Err(format!(
+                "only solid rock has a `face`, and its face `{}` must be solid with none of its own",
+                face.id
+            ));
+        }
     }
     Ok(())
 }

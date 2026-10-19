@@ -13,6 +13,13 @@
 # closed door or closing the open one is, at most 300; default 0, silent), and muffle (the
 # loudness a sound loses entering the cell, at most 300; default 0, but solid terrain, neither
 # walkable nor transparent, blocks sound unless it has a muffle).
+# Breaking walls (gameplay, spec §8 "Digging"): hardness (1 to 10000: the work it takes to dig
+# through; a pick-axe at Strength 10 does 10 a turn of digging, so hardness 600 takes it 60 turns,
+# 6 minutes; an explosion breaks it if its blast is greater) and becomes (what it turns into once
+# broken: walkable, transparent open ground, rubble) go together; terrain without them never
+# breaks, and neither does a cell on a level's edge. Only solid terrain breaks (not walkable, no
+# door, stairs, or light). face (solid rock deep in the ground: the terrain it shows as once a cell
+# next to it is broken open, its wall face).
 # Terrain with a "flow" anim is running water: every cell of it needs a flow direction from the
 # level legend (the arrows in legend.toml).
 # Overworld terrain (spec §3, §7): travel_minutes (an overworld step onto it at normal speed: the
@@ -26,8 +33,9 @@
 # Presentation-only effects (spec §4.8): glow (0-1, the glyph blooms), haze (0-1, heat haze rises
 # above the cell), and [[terrain.particles]] emitters:
 #   on        "ambient" (default; `rate` per second while in view), "step" (a burst of `count` when
-#             a creature is seen stepping in), "toggle" (a burst when a door is seen opening or
-#             closing into this terrain), or "obstacle" (running water only: `rate` per second
+#             a creature is seen stepping in), "toggle" (a burst when a cell is seen turning into
+#             this terrain: a door opening or closing, a wall giving way), or "obstacle" (running
+#             water only: `rate` per second
 #             where the flow runs into anything but running water; turned with the flow, so `y`
 #             points downstream)
 #   glyphs    glyphs to pick from; colors: color stops over the particle's life
@@ -36,6 +44,8 @@
 #   sway      sideways drift in cells; scale: glyph size
 #   fade      fraction of the life spent fading out (default 0.5); glow: 0-1
 
+# Rock deep in the ground, never seen: once a cell next to it is dug or blasted open, it shows
+# its face, a stone wall (generated levels wall their open ground the same way).
 [[terrain]]
 id = "void"
 name = "solid rock"
@@ -43,6 +53,7 @@ glyph = " "
 fg = "#000000"
 walkable = false
 transparent = false
+face = "wall"
 
 [[terrain]]
 id = "floor"
@@ -59,6 +70,36 @@ fg = "#958c80"
 bg = "#262220"
 walkable = false
 transparent = false
+# Six minutes with a pick-axe; a fireball blows it apart.
+hardness = 600
+becomes = "rubble"
+
+# Walls that dig easily or hardly at all (spec §8 "Digging"; the quarry shows them).
+[[terrain]]
+id = "packed_earth"
+name = "packed earth"
+glyph = "#"
+fg = "#9a6a40"
+bg = "#22160c"
+walkable = false
+transparent = false
+bounce = "#c8a888"
+# A minute with a pick-axe.
+hardness = 100
+becomes = "rubble"
+
+[[terrain]]
+id = "granite"
+name = "granite"
+glyph = "#"
+fg = "#d4c8d0"
+bg = "#302c34"
+walkable = false
+transparent = false
+bounce = "#e0d4d8"
+# Half an hour with a pick-axe, and no fireball breaks it.
+hardness = 3000
+becomes = "rubble"
 
 [[terrain]]
 id = "door_closed"
@@ -607,6 +648,7 @@ bg = "#4a3b20"
 bounce = "#e0c8a0"
 step_noise = 90
 
+# What a broken wall becomes (and what ruins are strewn with).
 [[terrain]]
 id = "rubble"
 name = "rubble"
@@ -616,6 +658,20 @@ bg = "#1c1a15"
 move_cost = 150
 # Loose stones clatter.
 step_noise = 150
+
+# Dust and grit thrown up where a wall gives way.
+[[terrain.particles]]
+on = "toggle"
+glyphs = "·.,'"
+colors = ["#b4aa96", "#5a5244"]
+count = 6
+life = 0.8
+velocity = [0.0, -0.5]
+spread = [1.1, 0.6]
+gravity = 0.9
+area = [0.45, 0.45]
+scale = 0.7
+fade = 0.6
 
 # The overworld (spec §3): the land at large, at map scale. A step takes `travel_minutes`.
 

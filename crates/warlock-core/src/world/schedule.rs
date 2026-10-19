@@ -26,7 +26,10 @@
 use super::{Actor, ActorId, ActorKind, World};
 use crate::action::Event;
 use crate::content::Effect as ItemEffect;
-use crate::content::{ActionKind, BASE_TURN, Benefit, LevelKind, TerrainDef, WeaponSkillId, price};
+use crate::content::{
+    ActionKind, BASE_TURN, Benefit, LevelKind, Stance, TerrainDef, WeaponSkillId, percent_of, price,
+};
+use crate::geom::Pos;
 use crate::magic::Mods;
 use crate::magic::mods::faster;
 use crate::perception::VIEW_RADIUS;
@@ -57,11 +60,13 @@ struct Scheduled {
 }
 
 impl World {
-    /// The energy price of action `kind` for actor `id`: its creature type's cost of it over the
-    /// 6-second base, slowed by its burden ([`World::burdened`]). Steps are priced by the terrain
-    /// instead ([`World::step_price`]).
+    /// The energy price of action `kind` for actor `id`: what it costs it ([`World::cost_of`])
+    /// over the 6-second base, as dear as its combat stance makes an attack, slowed by its burden
+    /// ([`World::burdened`]). Steps are priced by the terrain instead ([`World::step_price`]).
     pub(super) fn price_of(&self, id: ActorId, kind: ActionKind) -> i64 {
-        self.burdened(id, price(self.cost_of(id, kind), BASE_TURN))
+        let actor = &self.state.actors[&id];
+        let base = price(self.cost_of(id, kind), BASE_TURN);
+        self.burdened(id, self.stanced(actor, kind, base))
     }
 
     /// What action `kind` costs actor `id`: its creature type's cost of it (spec §8 "Time"),
@@ -102,11 +107,42 @@ impl World {
         }
     }
 
+    /// `base` as dear as `actor`'s combat stance makes its attacks (spec §8 "Stances"): melee,
+    /// shots, and throws; reloading is not an attack.
+    fn stanced(&self, actor: &Actor, kind: ActionKind, base: i64) -> i64 {
+        match kind {
+            ActionKind::Melee | ActionKind::Shoot | ActionKind::Throw => {
+                percent_of(base, self.content.stance_def(actor.stance).attack_cost)
+            }
+            _ => base,
+        }
+    }
+
+    /// Whether actor `id` stepping to `to` flees: some hostile creature stands next to it now and
+    /// the step takes it out of that creature's reach (spec §8 "Stances": a coward's flight is
+    /// cheaper and quieter).
+    pub(super) fn flees(&self, id: ActorId, to: Pos) -> bool {
+        let Some(me) = self.state.actors.get(&id) else {
+            return false;
+        };
+        let stance = self.content.stance_def(me.stance);
+        if stance.flee_cost == 100 && stance.flee_noise == 100 {
+            return false;
+        }
+        self.state.actors.values().any(|other| {
+            other.id != id
+                && other.level == me.level
+                && other.pos.chebyshev(me.pos) == 1
+                && other.pos.chebyshev(to) > 1
+                && self.stance(id, other.id) == Stance::Hostile
+        })
+    }
+
     /// The energy price of attack action `kind` (`melee`, `shoot`, `throw`, `reload`) for actor
     /// `id` drawing on weapon skill `skill` (spec §8 "Weapon skills"): its cost with its weapon's
     /// and its magic items' (`World::cost_of`; a shield bash costs what a blow does) less what
     /// its rank takes off (`speed`; `reload` for reloading), then priced like any action
-    /// ([`World::price_of`]).
+    /// ([`World::price_of`]), its combat stance included.
     pub(super) fn attack_price(
         &self,
         id: ActorId,
@@ -120,19 +156,24 @@ impl World {
             _ => benefit.speed,
         };
         let cost = self.cost_of(id, kind);
-        self.burdened(id, price(Benefit::saving(cost, saving), BASE_TURN))
+        let base = price(Benefit::saving(cost, saving), BASE_TURN);
+        self.burdened(id, self.stanced(actor, kind, base))
     }
 
     /// The energy price of actor `id` stepping onto terrain `to` on the current level, slowed by
-    /// its burden ([`World::burdened`]). On the overworld its skills (survival; spec §8
-    /// "Skills") take their percent off the journey, rounded up (at least 1).
-    pub(super) fn step_price(&self, id: ActorId, to: &TerrainDef) -> i64 {
+    /// its burden ([`World::burdened`]); `fleeing` ([`World::flees`]) makes it as dear as its
+    /// stance says. On the overworld its skills (survival; spec §8 "Skills") take their percent
+    /// off the journey, rounded up (at least 1).
+    pub(super) fn step_price(&self, id: ActorId, to: &TerrainDef, fleeing: bool) -> i64 {
         let actor = &self.state.actors[&id];
         let step = self.cost_of(id, ActionKind::Step);
         let level = self.state.current();
         let mut price = level.step_price(to, step);
         if level.kind == LevelKind::Overworld {
             price = shortened(price, actor.skill_effect(&self.content, Effect::Travel));
+        }
+        if fleeing {
+            price = percent_of(price, self.content.stance_def(actor.stance).flee_cost);
         }
         self.burdened(id, price)
     }
