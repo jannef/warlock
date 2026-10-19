@@ -2,11 +2,12 @@
 
 | Weapon | Damage | Critical on | Critical damage | Parry | Needs Strength | Held | Thrown | Weapon skill |
 |---|:---:|:---:|:---:|:---:|:---:|---|:---:|---|
-| Dagger | 1d4 | 20–24 | ×2 | - | - | main hand | 5 cells | Daggers and knives |
-| Short sword | 1d6 | 20–24 | ×2 | - | - | main hand | - | Short blades |
+| Dagger | 1d4 | 20–24 | ×2 | - | - | main hand or off hand | 5 cells | Daggers and knives |
+| Short sword | 1d6 | 20–24 | ×2 | - | - | main hand or off hand | - | Short blades |
 | Spear | 1d8 | 22–24 | ×3 | - | - | main hand | 6 cells | Spears |
 | Club | 1d6 | 22–24 | ×2 | - | - | main hand | - | Maces and clubs |
 | Quarterstaff | 1d6 | 22–24 | ×2 | +1 | - | main hand (both hands) | - | Staves |
+| Greatsword | 2d6 | 20–24 | ×2 | - | - | main hand (both hands) | - | Great blades |
 | Short bow | 1d6 | 22–24 | ×3 | - | 10 | missile weapon, shoots | - | Bows |
 | Long war bow | 1d8+2 | 22–24 | ×3 | - | 14 | missile weapon, shoots | - | Bows |
 | Crossbow | 1d10+1 | 20–24 | ×2 | - | - | missile weapon, shoots | - | Crossbows |

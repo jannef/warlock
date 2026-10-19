@@ -29,8 +29,10 @@ it and a direction.
 ## Seeing your skills
 
 `W` opens the **weapon skills screen**: every skill, by kind (melee, missile and thrown,
-shields), with your rank and a faint bar of your marks toward the next one. It takes no time.
-Skills you know stand out; untrained ones are dimmer.
+shields), then your [fighting styles](fighting-styles.md), each with your rank and a faint bar of
+your marks toward the next one; a `•` marks the styles you fight in now. It takes no time.
+Skills you know stand out; untrained ones are dimmer. In a wide window the list is in two
+columns; in a small one it scrolls (↑↓).
 
 The game never tells you what a rank gives you, in numbers: you see your ranks, and you feel the
 difference in a fight. The tables below are the rules.

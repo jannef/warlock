@@ -5,11 +5,11 @@
 //! objects and materials, equipment slots, scenarios, action costs, races and classes, their sizes
 //! and carrying limits, the horoscope, skills: what each does, how it trains, what it gives by
 //! value, who trains it, and the increase curve, special rooms; the walls that break and how
-//! long digging takes; weapon skills: `wiki/weapon_skills.rs`) and a few constants of the rules
-//! (sight radii, the pack's size, the stats' names, what each gender raises). Those are written
-//! to `wiki/src/generated/*.md` from the built-in content, and the pages pull them in with
-//! `{{#include generated/NAME.md}}`, so they cannot drift. Output is deterministic. `--check`
-//! fails when a file is stale; `--build` also runs `mdbook build wiki`.
+//! long digging takes; weapon skills and fighting styles: `wiki/weapon_skills.rs`) and a few
+//! constants of the rules (sight radii, the pack's size, the stats' names, what each gender
+//! raises). Those are written to `wiki/src/generated/*.md` from the built-in content, and the
+//! pages pull them in with `{{#include generated/NAME.md}}`, so they cannot drift. Output is
+//! deterministic. `--check` fails when a file is stale; `--build` also runs `mdbook build wiki`.
 
 mod weapon_skills;
 
@@ -195,6 +195,15 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         (
             "weapon-benefits.md".to_string(),
             weapon_skills::benefits(content),
+        ),
+        ("styles.md".to_string(), weapon_skills::styles(content)),
+        (
+            "style-defaults.md".to_string(),
+            weapon_skills::style_defaults(content),
+        ),
+        (
+            "style-benefits.md".to_string(),
+            weapon_skills::style_benefits(content),
         ),
     ];
     for (_, text) in &mut files {
@@ -1133,16 +1142,19 @@ fn races(content: &Content) -> String {
 /// The classes in the order New run offers them: their stat adjustments, then what they are.
 fn classes(content: &Content) -> String {
     let (names, align) = stat_columns();
-    let mut out =
-        format!("| Class |{names} Hit points | Weapon skills |\n|---|{align}:---:|---|\n");
+    let mut out = format!(
+        "| Class |{names} Hit points | Weapon skills | Fighting styles |\n\
+         |---|{align}:---:|---|---|\n"
+    );
     for c in content.classes() {
         let _ = writeln!(
             out,
-            "| {} |{} {} | {} |",
+            "| {} |{} {} | {} | {} |",
             c.name,
             stat_cells(&c.stats),
             c.hp,
-            weapon_skills::class_ranks(content, c)
+            weapon_skills::class_ranks(content, c),
+            weapon_skills::class_styles(content, c)
         );
     }
     out.push('\n');
@@ -1989,7 +2001,32 @@ mod tests {
         assert!(text("footsteps.md").contains("grass"));
         assert!(
             text("objects.md")
-                .contains("| Dagger | `)` | weapon | steel | 450 g | no | Main hand |")
+                .contains("| Dagger | `)` | weapon | steel | 450 g | no | Main hand or off hand |")
+        );
+        // Fighting styles: their configurations, defaults, ranks, and the classes' starting ones.
+        let styles = text("styles.md");
+        for row in [
+            "| Duelist | A one-handed weapon, the other hand empty | any | melee |",
+            "| Great Weapon | A two-handed weapon | any but staves | melee |",
+            "| Staff Fighter | A two-handed weapon | Staves | melee |",
+            "| Marksman | Shooting a missile weapon | Bows, Crossbows, Slings | missile |",
+        ] {
+            assert!(styles.contains(row), "{row}\n{styles}");
+        }
+        assert!(
+            text("style-defaults.md").contains("| Duelist | Twin Blades −3, Sword and Board −3 |")
+        );
+        let benefits = text("style-benefits.md");
+        assert!(benefits.contains("main hand strikes at **−4** to hit and the off hand at **−8**"));
+        assert!(benefits.contains("| 1 | −3 | −7 |") && benefits.contains("| 10 | none | none |"));
+        assert!(
+            benefits.contains("| 8 | +4 | +1 roll | 10% less |"),
+            "{benefits}"
+        );
+        assert!(text("classes.md").contains("| Twin Blades 1 or Duelist 1 |"));
+        assert!(
+            !text("weapon-skills.md").contains("Duelist"),
+            "styles have their own tables"
         );
         assert!(
             text("objects.md").contains("| Arrow | `/` | missile | wood | 30 g | yes | Missiles |")
@@ -2007,7 +2044,8 @@ mod tests {
         assert!(
             equipment.contains("| `c` | Body | Leather jerkin, chain mail shirt | 18 seconds |")
         );
-        assert!(equipment.contains(", quarterstaff (both hands) |"));
+        assert!(equipment.contains(", quarterstaff (both hands), greatsword (both hands) |"));
+        assert!(equipment.contains("| `f` | Off hand | Dagger, short sword, small shield |"));
         assert!(equipment.contains(
             "| `k` | Missile weapon | Short bow (shoots arrows), long war bow (shoots arrows), \
              crossbow (shoots crossbow bolts), sling (shoots sling stones), any other weapon, and anything made for throwing |"
@@ -2062,7 +2100,7 @@ mod tests {
             actions
                 .contains("| Putting something on, or taking it off: Body | 3000 | 18 seconds |")
         );
-        assert!(text("materials.md").contains("| Steel | daggers, short swords |"));
+        assert!(text("materials.md").contains("| Steel | daggers, short swords, greatswords |"));
         assert!(text("pack.md").contains("| Your own weight | 70 kg |"));
         let burden = text("burden.md");
         for row in [
@@ -2154,7 +2192,9 @@ mod tests {
         assert!(text("hit-points.md").contains("| Wizard | 0 |"));
         let weapons = text("weapons.md");
         assert!(
-            weapons.contains("| Dagger | 1d4 | 20–24 | ×2 | - | - | main hand | 5 cells |"),
+            weapons.contains(
+                "| Dagger | 1d4 | 20–24 | ×2 | - | - | main hand or off hand | 5 cells |"
+            ),
             "{weapons}"
         );
         assert!(weapons.contains("| Spear | 1d8 | 22–24 | ×3 |"));

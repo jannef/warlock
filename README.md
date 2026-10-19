@@ -45,9 +45,9 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
 - **Objects** — weapons, armor, tools, potions, scrolls, food, gems, coins, rings, and amulets,
   each with its own glyph, color, material, and weight, lie in piles to pick up and drop; an
   ADOM-style inventory lettered a–z shows what you carry and what it weighs, and an ADOM-style
-  equipment screen puts it on: helm, amulet, armor, cloak, weapons and shield (or a two-handed
-  staff), gloves, rings, boots, a bow and arrows, and a tool. Creatures wield and wear what they
-  carry, and you see it.
+  equipment screen puts it on: helm, amulet, armor, cloak, weapons and shield (or a second, light
+  weapon, or a two-handed staff or greatsword), gloves, rings, boots, a bow and arrows, and a
+  tool. Creatures wield and wear what they carry, and you see it.
 - **Digging** — walls give way: ready a pick-axe or a mattock in the Tool slot and dig, turn after
   turn, through packed earth in a minute, a stone wall in a few, granite in half an hour or so
   (Strength helps, a heavy load slows you), until a creature comes into view or the wall crumbles
@@ -74,6 +74,13 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   block a little better ("You feel more skilled with long blades."). Skill carries over to
   related weapons, as in *The Riddle of Steel*: long blades 8 makes short blades 6. Your race and
   class start you off, a weapon skills screen shows your ranks, and a shield can bash too.
+- **Fighting styles** — after AD&D's *Complete Fighter's Handbook*, how you hold your weapons is a
+  skill of its own: Duelist, Twin Blades, Great Weapon, Sword and Board, Marksman, Skirmisher,
+  Brawler, and Staff Fighter, each with ranks 0 to 10 trained by fighting that way and benefits
+  that add to your weapon's (a duelist parries, a great weapon hits harder, sword and board may
+  follow a hit with a free shield bash). A light weapon in your off hand strikes too, at a
+  penalty that Twin Blades trains away. Your class starts you off; the weapon skills screen
+  marks the styles you fight in.
 - **Burden** — everything you carry weighs on you: past a third of what your Strength and
   Toughness can bear you are burdened, then strained, then overloaded. Every action takes longer,
   armour-like caps keep your Dexterity from helping your Defence, and your footsteps get louder.
@@ -169,7 +176,7 @@ cargo run --release -p warlock
 | `i` | Inventory: what you carry, by letter, and what it all weighs |
 | `e` | Equipment: wear and wield things, slot by slot (head, body, hands, rings, missiles, a tool, …), as in ADOM |
 | `@` | Character: your race, gender, class, age, birth sign, stats, hit points, Defence, and weight |
-| `W` | Weapon skills: your rank in each, and how far to the next |
+| `W` | Weapon skills and fighting styles: your rank in each, how far to the next, and the styles you fight in now |
 | `R` | Rest an hour, until dawn, or until nightfall (stops when something comes into view) |
 | `x` | Look around: move a cursor to read what is there (takes no time) |
 | `t` | Shoot or throw what is in your Missile weapon slot: aim (Tab cycles targets), then Enter |

@@ -8,7 +8,8 @@
 //!
 //! Things that can be worn or wielded say where they go (`slot`, the id or `fits` of a slot in
 //! `data/slots.toml`: `slot = "body"`, `slot = "ring"` for either ring slot); a `two_handed` one
-//! takes both hands. Missiles say what kind of ammunition they are (`ammo = "arrow"`) and missile
+//! takes both hands, and a `light_weapon` (a dagger) goes in any hand: the off hand too, for
+//! fighting with two weapons (spec §8 "Fighting styles"). Missiles say what kind of ammunition they are (`ammo = "arrow"`) and missile
 //! weapons what they shoot (`launches = "arrow"`): launchers and ammunition pair by that kind.
 //!
 //! Weapons and armour say what they do in a fight (spec §8 "Combat"): a weapon its `damage` dice
@@ -88,6 +89,9 @@ pub(super) struct ObjectSpec {
     /// Takes both hands (only for things that go in a hand).
     #[serde(default)]
     pub two_handed: bool,
+    /// A light one-handed weapon: it goes in any hand, the off hand too (two-weapon fighting).
+    #[serde(default)]
+    pub light_weapon: bool,
     /// The kind of ammunition it is ("arrow"), for launchers of that kind.
     pub ammo: Option<String>,
     /// The kind of ammunition it shoots, if it is a missile weapon ("arrow").
@@ -168,6 +172,8 @@ pub struct ObjectDef {
     pub slot: Option<String>,
     /// Takes both hands: every hand slot.
     pub two_handed: bool,
+    /// A light one-handed weapon: it goes in any hand slot (the off hand too), not only its own.
+    pub light_weapon: bool,
     /// The kind of ammunition it is, if it is ammunition ("arrow").
     pub ammo: Option<String>,
     /// The kind of ammunition it shoots, if it is a missile weapon ("arrow").
@@ -316,6 +322,16 @@ impl ObjectSpec {
                 ));
             }
         }
+        if self.light_weapon {
+            let in_hand = (slots.iter()).any(|s| s.hand && Some(&s.fits) == self.slot.as_ref());
+            if !in_hand || self.two_handed || self.damage.is_none() || self.launches.is_some() {
+                return Err(err(
+                    "`light_weapon` is for one-handed weapons wielded in a hand (`damage`, a hand \
+                     `slot`, not `two_handed`)"
+                        .into(),
+                ));
+            }
+        }
         for (field, kind) in [("ammo", &self.ammo), ("launches", &self.launches)] {
             if kind.as_ref().is_some_and(|k| k.trim().is_empty()) {
                 return Err(err(format!("`{field}` must not be empty")));
@@ -366,6 +382,7 @@ impl ObjectSpec {
             stackable: self.stackable,
             slot: self.slot,
             two_handed: self.two_handed,
+            light_weapon: self.light_weapon,
             ammo: self.ammo,
             launches: self.launches,
             attack,
@@ -601,6 +618,7 @@ mod tests {
             stackable: false,
             slot: None,
             two_handed: false,
+            light_weapon: false,
             ammo: None,
             launches: None,
             attack: None,

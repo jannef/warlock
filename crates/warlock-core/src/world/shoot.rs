@@ -32,7 +32,7 @@ use super::fight::{End, Words, attack_message, death_message};
 use super::{ActorId, Fire, Spent, World};
 use crate::action::{AttackKind, Event, Letters, MissileEnd, letter};
 use crate::combat::Profile;
-use crate::content::{ActionKind, Content, LevelKind, ObjectId, Role};
+use crate::content::{ActionKind, Content, LevelKind, ObjectId};
 use crate::fov::radius2;
 use crate::geom::Pos;
 use crate::noise::Act;
@@ -91,12 +91,13 @@ impl World {
     }
 
     /// What a shot from missile weapon `launcher` costs actor `id`: `shoot`, and `reload` too
-    /// for one that needs it, less what its rank in the launcher's skill takes off.
+    /// for one that needs it, less what its ranks in the launcher's skill and its fighting style
+    /// take off.
     fn shot_price(&self, id: ActorId, launcher: ObjectId) -> i64 {
-        let def = self.content.object(launcher);
-        let mut price = self.attack_price(id, ActionKind::Shoot, def.skill);
-        if def.reloads {
-            price += self.attack_price(id, ActionKind::Reload, def.skill);
+        let shot = (AttackKind::Ranged, None);
+        let mut price = self.attack_price(id, ActionKind::Shoot, shot);
+        if self.content.object(launcher).reloads {
+            price += self.attack_price(id, ActionKind::Reload, shot);
         }
         price
     }
@@ -119,7 +120,7 @@ impl World {
             self.say(format!("You cannot throw {}.", def.describe(1)));
             return Spent::Nothing;
         };
-        let profile = me.thrown(&content, &attack);
+        let profile = me.thrown(&content, stack.object, &attack);
         let profile = if def.is_improvised() {
             profile.improvised()
         } else {
@@ -135,8 +136,8 @@ impl World {
             range,
         };
         self.player_looses(at, loose, events);
-        let throwing = content.weapon_skills().of_role(Role::Thrown);
-        Spent::Turn(self.attack_price(self.state.player, ActionKind::Throw, throwing))
+        let throw = (AttackKind::Thrown, Some(stack.object));
+        Spent::Turn(self.attack_price(self.state.player, ActionKind::Throw, throw))
     }
 
     /// Whether missiles fly here: not on the overworld, a map of the land.

@@ -39,8 +39,10 @@
 # tables at the end.
 #
 # Equipment (M16): the storeroom has something for every slot but the rings and the neck (the
-# ring and the amulets lie elsewhere): a helm, mail, a cloak, weapons (a quarterstaff for both
-# hands), a shield, gloves, boots, and a bow with arrows. Wear and wield them with `e`.
+# ring and the amulets lie elsewhere): a helm, mail, a cloak, weapons (a quarterstaff and a
+# greatsword for both hands), a shield, gloves, boots, and a bow with arrows. Wear and wield them
+# with `e`. The start room's dagger is light: it goes in the off hand beside the spear or the
+# club, for fighting with two weapons (spec §8 "Fighting styles").
 #
 # Ranged combat (M16): the storeroom also has a long war bow, a crossbow with bolts, a sling with
 # stones, rocks to throw, and flaming arrows beside the short bow's arrows. Ready a bow and arrows
@@ -125,7 +127,7 @@ objects = ["chain_mail", "iron_helm"]
 
 [[pile]]
 at = [20, 13]
-objects = ["spear"]
+objects = ["spear", "greatsword"]
 
 [[pile]]
 at = [21, 15]

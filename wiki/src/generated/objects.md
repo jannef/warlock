@@ -2,11 +2,12 @@
 
 | Object | Glyph | Kind | Material | Weight (each) | Stacks | Worn or wielded on |
 |---|:---:|---|---|---:|:---:|---|
-| Dagger | `)` | weapon | steel | 450 g | no | Main hand |
-| Short sword | `)` | weapon | steel | 1.1 kg | no | Main hand |
+| Dagger | `)` | weapon | steel | 450 g | no | Main hand or off hand |
+| Short sword | `)` | weapon | steel | 1.1 kg | no | Main hand or off hand |
 | Spear | `)` | weapon | wood | 1.8 kg | no | Main hand |
 | Club | `)` | weapon | wood | 1.4 kg | no | Main hand |
 | Quarterstaff | `)` | weapon | wood | 2 kg | no | Main hand (both hands) |
+| Greatsword | `)` | weapon | steel | 3.2 kg | no | Main hand (both hands) |
 | Short bow | `}` | missile weapon | wood | 700 g | no | Missile weapon |
 | Long war bow | `}` | missile weapon | wood | 1.3 kg | no | Missile weapon |
 | Crossbow | `}` | missile weapon | wood | 3.2 kg | no | Missile weapon |

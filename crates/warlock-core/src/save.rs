@@ -39,7 +39,10 @@ const MAGIC: &str = "WARLOCK-SAVE";
 /// 16: weapon skills: actors have a rank and marks in each (`Actor::weapon_skills`).
 /// 17: digging: level states keep the work done on walls dug into (`LevelState::dug`).
 /// 18: combat stances (`Actor::stance`).
-pub const FORMAT_VERSION: u32 = 18;
+/// 29: fighting styles: `Actor::weapon_skills` holds a rank and marks in each style too (after
+///     the weapon skills), and a light weapon may be in the off hand (two weapons). (20 to 28
+///     are assigned to work that lands before it.)
+pub const FORMAT_VERSION: u32 = 29;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 

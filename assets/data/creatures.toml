@@ -50,8 +50,9 @@
 #   natural   its natural armour: { defence = 3, name = "shell" } (the Natural category of
 #             Defence; "Your sword glances off the cave beetle's shell.")
 #   weapon_skills  its ranks in weapon skills (spec §8 "Weapon skills"), by skill id in
-#             weapon_skills.toml, 0 to 10: { spears = 1 }; each raises the skills it defaults
-#             to. Creatures do not train (yet); the player's come from their race and class
+#             weapon_skills.toml, 0 to 10: { spears = 1 }; fighting styles too ({ duelist = 2 },
+#             spec §8 "Fighting styles"); each raises the skills it defaults to. Creatures do not
+#             train (yet); the player's come from their race and class
 
 [[creature]]
 id = "player"

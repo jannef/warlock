@@ -6,8 +6,9 @@ hard, and hurts; what loses all its hit points dies. That goes for you too, and 
 
 You attack by moving into a hostile creature (see [Controls](controls.md)), which takes a turn,
 by bashing it with your shield, or from afar: you shoot or throw with `t` (or `T`), see
-[Ranged combat](ranged.md). Each attack trains the [weapon skill](weapon-skills.md) it uses, and
-your rank in it helps you hit, hurt, and defend.
+[Ranged combat](ranged.md). Each attack trains the [weapon skill](weapon-skills.md) it uses and
+the [fighting style](fighting-styles.md) you fight in, and your ranks in them help you hit, hurt,
+and defend. With a weapon in each hand, an attack up close is a blow with each.
 Creatures fight each other and you by the same rules (see [Creatures](creatures.md)). Spells are
 the exception: casters only announce them for now, and nothing is hurt by a spell.
 
@@ -40,9 +41,11 @@ protects you, in kinds:
   you are burdened, +1 when strained, nothing when overloaded (see [Burden](burden.md)). The
   lower limit counts.
 - **Armour**: what you wear on your body.
-- **Shield**: a shield held in your off hand, and more with your rank in shield blocking.
+- **Shield**: a shield held in your off hand, and more with your rank in shield blocking (and in
+  Sword and Board, with a weapon in the other hand).
 - **Parry**: a weapon that turns blows aside, such as the quarterstaff, and your rank with the
-  weapon you wield (blades, spears, and staves).
+  weapon you wield (blades, spears, and staves), and in Duelist or Staff Fighter while you fight
+  that way.
 - **Natural**: a creature's hide, shell, or scales. You have none.
 - **Dodge**: training. The [tumble](skills.md#what-skills-give) skill adds to it, more the
   higher it is.

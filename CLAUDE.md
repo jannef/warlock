@@ -108,14 +108,16 @@ digging, upper case when loud), `inventory` (what the player
 carries and weighs, worn and wielded things marked, their burden and its thresholds),
 `equipment` (the player's slots), `stats`
 (the player's race, gender, and class, then their own scores), `weapon_skills` (the player's
-ranks and progress toward the next, `Long blades 2 (40%)`), `truth`
+ranks and progress toward the next, `Long blades 2 (40%)`, fighting styles too, those in use
+marked `Duelist 1 (0%), in use`), `truth`
 (ground truth, **dev-only**), `actors` (every actor on the level with its hit points and
 Defence, its weight, what it carries and of that wears and wields, its burden and carrying
 limit, its weapon skills with marks, and its stats as score/potential, **dev-only**), `rooms` (the level's special rooms:
 their plain ground as the effect's `mark`, then a line per room, **dev-only**). The header line
 has the player's `hp
 17/17` (and `dead` once the run has ended); JSON dumps add `hp`, `defence`, `burden` (`level`,
-`limit`), `death`, `weapon_skills` (by skill id: `rank`, `progress`), each seen actor's `health`,
+`limit`), `death`, `weapon_skills` (by skill id: `rank`, `progress`), `styles_in_use` (style
+ids), each seen actor's `health`,
 and `room` (the special room the player stands in, if they know it). Replay
 files are JSON
 `{game_version, scenario, seed, character, steps:[{action, hash}]}` (`character` =
@@ -145,7 +147,7 @@ level change to `run.sav` in the platform data dir (`paths.rs`, app name "warloc
 `--replay`, or `--record` (replays and recordings always start a fresh run). F5 / F9 write / load `snapshots/quick.sav`. An unreadable save is renamed `run.sav.bad`,
 never deleted. Format and `Content::fingerprint` live in `warlock-core/src/save.rs`: bump
 `FORMAT_VERSION` on any incompatible `WorldState` change; adding or reordering terrain, creatures,
-lights, levels, objects, equipment slots, skills, weapon skills, or dungeon branches invalidates
+lights, levels, objects, equipment slots, skills, weapon skills (fighting styles too), or dungeon branches invalidates
 existing saves.
 **Permadeath**: when the player dies, `screens::on_death` deletes `run.sav`
 (`SaveStore::delete_run`) and opens the death screen; `SaveStore::save_run` never writes a dead
@@ -222,8 +224,9 @@ to open, read keys for, or draw one:
   their inventory letters), `ui/character_screen.rs` (name, race, gender, class, age, birthday,
   and sign (`birth_parts`/`fit_parts`, shared with the summary), the player's scores, hit points
   and Defence total, weight and burden thresholds; 72 wide like the summary),
-  `ui/weapon_skills_screen.rs` (sections, ranks, and a faint ten-cell marks bar; never a
-  benefit), `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per
+  `ui/weapon_skills_screen.rs` (sections, ranks, and a faint ten-cell marks bar, the fighting
+  styles in use marked `•`; two columns from 88 wide, else one that drops its gaps and margins
+  and then scrolls with ↑↓; never a benefit), `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per
   step with a Random row rolled from the seed, `SummaryScreen`, `Draft`), `ui/death_screen.rs`
   (who killed the player, where, when, after how many turns).
 
@@ -337,7 +340,7 @@ Equipment (spec §6 "Equipment", §7; M16): slots are data, `data/slots.toml`
 (`content/slot.rs`: `SlotDef` with `id`, `name`, `fits`, `action`, `mark`, `hand`; `SlotId` is an
 index in screen order, in the content fingerprint), so **a new slot is one entry there** (and a
 `FORMAT_VERSION` bump if saves change). Objects say where they go (`slot` = a slot's `fits`,
-`two_handed`, `ammo`, `launches`; `Content::fits`, `Content::fires`, `Content::hand_slots`).
+`two_handed`, `light_weapon` (any hand), `ammo`, `launches`; `Content::fits`, `Content::fires`, `Content::hand_slots`).
 `equipment.rs` holds the runtime side: `Equipment` (slot → inventory position, on
 `Actor::equipment`, saved and hashed; equipped stacks stay in the inventory and keep weighing),
 `slots_taken` (every hand for a two-handed object), `free_slot` (spawn data), `mark` ("being
@@ -389,7 +392,8 @@ name theirs (`category` → `ObjectDef::skill`, its role checked against what th
 shields bash (`bash` → `ObjectDef::bash`), races and classes give starting ranks
 (`weapon_skills`, dice; classes `weapon_skill_choice`), creatures fixed ranks. The runtime side
 is `weapon_skills.rs`: `WeaponSkills` (a `Training { rank, marks }` per skill on
-`Actor::weapon_skills`, saved and hashed, `FORMAT_VERSION` 16), `train` (marks → a rank, then
+`Actor::weapon_skills`, saved and hashed, `FORMAT_VERSION` 16; 29 with the styles), `train`
+(marks → a rank, then
 `raise`: the defaults rise, their marks reset; no chaining), `from_ranks` (starting ranks,
 order-free), `progress`. The rules hook in at one place each: `Actor::attack_skill(kind, with)`
 picks the skill of an attack (a blow: the wielded weapon's, else unarmed; `Melee` `with` a
@@ -400,12 +404,34 @@ parry and shield blocking; `World::attack_price` takes `speed`/`reload` off the 
 the player trains shield blocking; `World::level_of` weighs the opponent by its creature type's
 `level`, spec §8 "Experience") and pushes "You feel more skilled ..." into the unsaved
 `World::news`, said after the attack's own messages (`say_news`, also at the end of
-`perceive` for a block in a creature's turn). A later kind of skill (fighting styles, #135) is another `Role` with the
-same ranks, marks, curve, and `Benefit`s (`Benefit::plus` sums them). Starting ranks roll from
+`perceive` for a block in a creature's turn). Starting ranks roll from
 their own stream (`character/weapon-skills/...`), so stat rolls never move. Presentation reads
 `PerceptionView::own_weapon_skills` only: ranks and a bar, **never a benefit**. Tests:
 `content/weapon_skill.rs`, `weapon_skills.rs`, `world/weapon_skill_tests.rs`; the wiki's tables
 are `xtask/src/wiki/weapon_skills.rs`.
+
+Fighting styles (spec §8 "Fighting styles"; M22, #135) are weapon skills of `Role::Style`: rows
+after the weapon skills in `data/weapon_skills.toml` with a `grip` (`content/weapon_skill.rs`:
+`Grip`, `Style { grip, weapons }`; a style naming no `weapons` takes the rest of its grip,
+`WeaponSkillTable::style_for`, one configuration one style), the same ranks, marks, curves, and
+`Benefit`s (plus `crit`, `ease_main`/`ease_off`, `bash`; which a grip may use is checked), and
+defaults only among styles. **Every rule asks the attack, not a skill**:
+`Actor::attack_benefit(kind, with)` = the weapon skill's benefit `plus` the style's
+(`Actor::style(kind, with)`: blows by `Actor::grip`, the hands' hold; shots `launcher`; throws
+`thrown`), read by `Actor::melee`/`off_hand_blow`/`ranged`/`thrown(object)`/`bash`,
+`Actor::defence` (the hands' style's parry and shield), and `World::attack_price(id, action,
+(kind, with))`; `World::resolve` practises the style after the weapon skill. Two weapons: a
+`light_weapon` object fits every hand slot (`Content::fits`); `Actor::off_hand` is the second of
+two weapons in hand; `World::second_blow` (`fight.rs`) is the one place a melee attack's second
+blow is decided (the off hand's, `[two_weapons]` penalties eased by `TwoWeapons::eased`; else
+Sword and Board's chance of a shield bash after a hit, one gameplay draw only when the chance is
+above 0), for the player (`player_attacks`) and creatures (`World::attack`) alike; it is an
+attack `with` the off-hand weapon or the shield (`Actor::attack_skill` tells them apart by
+`ObjectDef::bash`), silent. Classes give `styles`/`style_choice`, rolled from
+`character/styles/...` after everything else. Presentation: `PerceptionView::own_styles_in_use`
+(the screen's `•`, the dump's `, in use`), never a benefit or penalty. Tests:
+`content/weapon_skill.rs` (`styles_are_checked`), `world/style_tests.rs`; wiki tables
+`styles.md`, `style-defaults.md`, `style-benefits.md` and the classes' column.
 
 Key commands `,`/`g` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop` screen),
 `i` (`Inventory` screen), `e` (`Equipment` screen), `@` (`Character` screen), `W` (`WeaponSkills`
@@ -414,7 +440,8 @@ screen), and bash (`KeyCommand::Bash`: a direction prompt, `InputMode::Direction
 #156) get no key of their own: they go into one abilities menu (to come). Each is a core
 `Action` with replay text, an entry in `warlock_core::ability` (`Ability`, listed by
 `PerceptionView::abilities` when usable), and a rebindable `KeyCommand` left unbound by default
-(`settings/keys.rs::UNBOUND`). Shield bash is the first.
+(`settings/keys.rs::UNBOUND`). Shield bash is the first. A style's rank 10 abilities (later)
+go there too.
 
 Stats (spec §8 "Stats"; M14) live in `warlock-core/src/stats.rs`: `Stat` (Strength, Dexterity,
 Toughness, Intelligence, Willpower, Presence; id, abbreviation, name) is generated by the

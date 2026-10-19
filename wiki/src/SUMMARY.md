@@ -31,6 +31,7 @@
   - [Ranged combat](ranged.md)
   - [Ammunition](ammunition.md)
   - [Weapon skills](weapon-skills.md)
+  - [Fighting styles](fighting-styles.md)
 - [Creatures](creatures.md)
 - [Your lantern](lantern.md)
 - [Saving](saving.md)

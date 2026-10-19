@@ -6,8 +6,8 @@
 | `b` | Neck | Bone amulet, jade amulet | 6 seconds |
 | `c` | Body | Leather jerkin, chain mail shirt | 18 seconds |
 | `d` | Cloak | Wool cloak | 6 seconds |
-| `e` | Main hand | Dagger, short sword, spear, club, quarterstaff (both hands) | 6 seconds |
-| `f` | Off hand | Small shield | 6 seconds |
+| `e` | Main hand | Dagger, short sword, spear, club, quarterstaff (both hands), greatsword (both hands) | 6 seconds |
+| `f` | Off hand | Dagger, short sword, small shield | 6 seconds |
 | `g` | Hands | Pair of leather gloves | 6 seconds |
 | `h` | Left ring | Silver ring | 6 seconds |
 | `i` | Right ring | Silver ring | 6 seconds |

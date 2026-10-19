@@ -5,7 +5,7 @@
 | Daggers and knives | blows with its weapons | Dagger | melee |
 | Short blades | blows with its weapons | Short sword | melee |
 | Long blades | blows with its weapons | - | melee |
-| Great blades | blows with its weapons | - | melee |
+| Great blades | blows with its weapons | Greatsword | melee |
 | Axes | blows with its weapons | - | melee |
 | Maces and clubs | blows with its weapons | Club | melee |
 | Spears | blows with its weapons | Spear | melee |

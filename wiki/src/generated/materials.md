@@ -3,7 +3,7 @@
 | Material | Objects made of it |
 |---|---|
 | Iron | chain mail shirts, iron helms, pick-axes, mattocks, iron keys |
-| Steel | daggers, short swords |
+| Steel | daggers, short swords, greatswords |
 | Copper | copper coins |
 | Silver | silver rings |
 | Gold | gold coins |

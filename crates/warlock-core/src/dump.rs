@@ -50,8 +50,9 @@ pub enum Layer {
     /// Not a map: the player's own trained skills, one a line in skill order (`Stealth 17`);
     /// never an untrained skill, a mark, or a benefit.
     Skills,
-    /// Not a map: the player's weapon skills, one a line with its rank and how far its marks
-    /// are toward the next (`Long blades 2 (40%)`); never what a rank gives.
+    /// Not a map: the player's weapon skills and fighting styles, one a line with its rank and
+    /// how far its marks are toward the next (`Long blades 2 (40%)`), the styles they fight in
+    /// now marked (`Duelist 1 (0%), in use`); never what a rank gives.
     WeaponSkills,
     /// Ground truth: all terrain, objects, and actors on the level. **Dev-only.**
     Truth,
@@ -357,16 +358,23 @@ fn progress_percent(view: &PerceptionView<'_>, id: WeaponSkillId) -> Option<u32>
     Some(marks * 100 / need.max(1))
 }
 
-/// The player's weapon skills, in file order, with their ranks and how far toward the next
-/// (`Long blades 2 (40%)`, `Daggers and knives 10` at the last rank).
+/// The player's weapon skills and fighting styles, in file order, with their ranks and how far
+/// toward the next (`Long blades 2 (40%)`, `Daggers and knives 10` at the last rank), and the
+/// styles they fight in now marked (`Duelist 1 (0%), in use`).
 fn weapon_skill_rows(view: &PerceptionView<'_>) -> Vec<String> {
     let skills = view.own_weapon_skills();
+    let in_use = view.own_styles_in_use();
     (view.content().weapon_skills().ids())
         .map(|(id, def)| {
             let rank = skills.rank(id);
-            match progress_percent(view, id) {
+            let row = match progress_percent(view, id) {
                 Some(percent) => format!("{} {rank} ({percent}%)", def.name),
                 None => format!("{} {rank}", def.name),
+            };
+            if in_use.contains(&id) {
+                format!("{row}, in use")
+            } else {
+                row
             }
         })
         .collect()
@@ -609,6 +617,9 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "stats": view.own_scores(),
         "skills": skills_json(&view),
         "weapon_skills": weapon_skills,
+        "styles_in_use": (view.own_styles_in_use().into_iter())
+            .map(|id| content.weapon_skills().skill(id).id.clone())
+            .collect::<Vec<_>>(),
         "hp": { "current": hp, "max": max_hp },
         "experience": view.own_experience(),
         "defence": view.own_defence(),
@@ -828,11 +839,14 @@ mod tests {
 
     #[test]
     fn weapon_skills_show_the_players_ranks_and_progress_and_actors_show_everyones() {
-        // The showcase thief: daggers 2 and thrown 1 from the class.
+        // The showcase thief: daggers 2 and thrown 1 from the class, and (the seed's pick)
+        // Duelist 1. With nothing in their hands they fight as a brawler.
         let mut world = showcase();
         let rows = layer_rows(&world, Layer::WeaponSkills);
-        assert_eq!(rows.len(), 16);
+        assert_eq!(rows.len(), 24);
         assert_eq!(rows[0], "Daggers and knives 2 (0%)");
+        assert_eq!(rows[16], "Duelist 1 (0%)");
+        assert_eq!(rows[22], "Brawler 0 (0%), in use");
         assert!(
             rows.contains(&"Thrown weapons 1 (0%)".to_string()),
             "{rows:#?}"
@@ -840,7 +854,9 @@ mod tests {
         assert!(rows.contains(&"Long blades 0 (0%)".to_string()));
         let actors = layer_rows(&world, Layer::Actors);
         assert!(
-            actors[0].contains("; weapon skills daggers 2 (0/60), thrown 1 (0/20); stats"),
+            actors[0].contains(
+                "; weapon skills daggers 2 (0/60), thrown 1 (0/20), duelist 1 (0/30); stats"
+            ),
             "{}",
             actors[0]
         );
@@ -862,6 +878,8 @@ mod tests {
         assert_eq!(value["weapon_skills"]["daggers"]["rank"], 2);
         assert_eq!(value["weapon_skills"]["daggers"]["progress"], 40);
         assert_eq!(value["weapon_skills"]["bows"]["rank"], 0);
+        assert_eq!(value["weapon_skills"]["duelist"]["rank"], 1);
+        assert_eq!(value["styles_in_use"], json!(["brawler"]));
         assert!(!Layer::WeaponSkills.is_dev_only());
     }
 

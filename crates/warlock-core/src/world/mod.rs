@@ -81,7 +81,9 @@ pub use fight::Death;
 pub(crate) use hash::fnv1a;
 pub use level::{Fire, LevelState};
 
-use crate::action::{Action, Breach, Event, Letters, MAX_REST, MissileEnd, Outcome, Rest, letter};
+use crate::action::{
+    Action, AttackKind, Breach, Event, Letters, MAX_REST, MissileEnd, Outcome, Rest, letter,
+};
 use crate::burden::{self, Burden, Load};
 use crate::character::{Character, CharacterSpec};
 use crate::content::{
@@ -1302,9 +1304,10 @@ impl World {
             let name = self.content.creature(other.creature).name.clone();
             let player = self.state.player;
             if self.stance(player, target) == Stance::Hostile {
-                let skill = self.state.player().melee_skill(&self.content);
+                let melee = (AttackKind::Melee, None);
+                let price = self.attack_price(player, ActionKind::Melee, melee);
                 self.player_attacks(target, seen, events);
-                return Spent::Turn(self.attack_price(player, ActionKind::Melee, skill));
+                return Spent::Turn(price);
             }
             let what = if seen {
                 format!("The {name}")
@@ -1706,6 +1709,8 @@ mod skills_tests;
 mod speed_tests;
 #[cfg(test)]
 mod stats_tests;
+#[cfg(test)]
+mod style_tests;
 #[cfg(test)]
 mod sun_tests;
 #[cfg(test)]

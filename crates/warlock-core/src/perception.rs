@@ -58,7 +58,7 @@ use crate::character::Character;
 use crate::combat::Health;
 use crate::content::{
     CombatStance, Content, CreatureId, FactionId, Flow, LevelKind, LightId, ObjectId,
-    RoomEffectDef, SlotId, Stance, TerrainId, VisionProfile,
+    RoomEffectDef, SlotId, Stance, TerrainId, VisionProfile, WeaponSkillId,
 };
 use crate::daylight;
 use crate::equipment::Equipment;
@@ -845,6 +845,13 @@ impl<'a> PerceptionView<'a> {
     /// ranks, and see their marks as a bar toward the next. Never what a rank gives.
     pub fn own_weapon_skills(&self) -> &'a WeaponSkills {
         &self.player.weapon_skills
+    }
+
+    /// The fighting styles the player fights in now (spec §8 "Fighting styles"), in skill
+    /// order: their hands', their readied missile weapon's, and throwing's while something is
+    /// ready to throw. They know how they hold their weapons.
+    pub fn own_styles_in_use(&self) -> Vec<WeaponSkillId> {
+        self.player.styles_in_use(self.content)
     }
 
     /// The player's hit points: what they have left (at most their maximum, never below 0) and

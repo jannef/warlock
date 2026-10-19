@@ -1,9 +1,10 @@
 //! Classes (`assets/data/classes.toml`, spec §8 "Character creation"): the third choice of a new
 //! run. A class adjusts the starting scores, by fixed numbers or dice, adds hit points, trains
 //! the character in skills (spec §8 "Skills"), by dice, and gives starting ranks in weapon skills
-//! (spec §8 "Weapon skills"): some always, and perhaps one set of a choice, rolled when the
-//! character is made.
+//! (spec §8 "Weapon skills") and fighting styles (spec §8 "Fighting styles"): some always, and
+//! perhaps one set of a choice, rolled when the character is made.
 
+use super::weapon_skill::Ranked;
 use super::{ContentError, WeaponSkillId, WeaponSkillTable};
 use crate::combat::MAX_BASE_HP;
 use crate::dice::Dice;
@@ -34,6 +35,10 @@ struct ClassSpec {
     weapon_skills: BTreeMap<String, Dice>,
     #[serde(default)]
     weapon_skill_choice: Vec<BTreeMap<String, Dice>>,
+    #[serde(default)]
+    styles: BTreeMap<String, Dice>,
+    #[serde(default)]
+    style_choice: Vec<BTreeMap<String, Dice>>,
 }
 
 /// A class, in the order offered.
@@ -56,6 +61,11 @@ pub struct ClassDef {
     /// Sets of starting ranks of which one is picked at random (the barbarian: axes or great
     /// blades); empty for none.
     pub weapon_skill_choice: Vec<Vec<(WeaponSkillId, Dice)>>,
+    /// Starting ranks in fighting styles (spec §8 "Fighting styles"), in skill order.
+    pub styles: Vec<(WeaponSkillId, Dice)>,
+    /// Sets of starting ranks in fighting styles of which one is picked at random (the thief:
+    /// Twin Blades or Duelist); empty for none.
+    pub style_choice: Vec<Vec<(WeaponSkillId, Dice)>>,
 }
 
 impl ClassDef {
@@ -88,18 +98,29 @@ impl ClassDef {
             }
             let skills = skills::grants(&spec.skills, &skill_id)
                 .map_err(|m| err(format!("class `{id}`: skills: {m}")))?;
-            let ranks = |data| {
-                (weapon_table.starting_ranks(data)).map_err(|m| err(format!("class `{id}`: {m}")))
+            let ranks = |data: &BTreeMap<String, Dice>, ranked| {
+                (weapon_table.starting_ranks(data, ranked))
+                    .map_err(|m| err(format!("class `{id}`: {m}")))
             };
-            let weapon_skills = ranks(&spec.weapon_skills)?;
-            let weapon_skill_choice = (spec.weapon_skill_choice.iter())
-                .map(ranks)
-                .collect::<Result<Vec<_>, _>>()?;
-            if weapon_skill_choice.len() == 1 || weapon_skill_choice.iter().any(Vec::is_empty) {
-                return Err(err(format!(
-                    "class `{id}`: `weapon_skill_choice` is a choice of two or more sets of ranks"
-                )));
-            }
+            let choice = |field: &str, sets: &[BTreeMap<String, Dice>], ranked| {
+                let sets = (sets.iter())
+                    .map(|set| ranks(set, ranked))
+                    .collect::<Result<Vec<_>, _>>()?;
+                if sets.len() == 1 || sets.iter().any(Vec::is_empty) {
+                    return Err(err(format!(
+                        "class `{id}`: `{field}` is a choice of two or more sets of ranks"
+                    )));
+                }
+                Ok(sets)
+            };
+            let weapon_skills = ranks(&spec.weapon_skills, Ranked::Weapons)?;
+            let weapon_skill_choice = choice(
+                "weapon_skill_choice",
+                &spec.weapon_skill_choice,
+                Ranked::Weapons,
+            )?;
+            let styles = ranks(&spec.styles, Ranked::Styles)?;
+            let style_choice = choice("style_choice", &spec.style_choice, Ranked::Styles)?;
             list.push(ClassDef {
                 id: spec.id,
                 name: spec.name,
@@ -109,6 +130,8 @@ impl ClassDef {
                 skills,
                 weapon_skills,
                 weapon_skill_choice,
+                styles,
+                style_choice,
             });
         }
         Ok(list)
@@ -154,6 +177,14 @@ mod tests {
         assert_eq!(wizard.weapon_skills.len(), 1);
         assert_eq!(wizard.weapon_skill_choice.len(), 2);
         assert_eq!(wizard.weapon_skill_choice[1].len(), 2);
+        assert!(wizard.styles.is_empty() && wizard.style_choice.is_empty());
+        let text = format!(
+            "{ONE}styles = {{ staff_fighter = 1 }}\n\
+             style_choice = [{{ duelist = \"1d2\" }}, {{ brawler = 1 }}]\n"
+        );
+        let wizard = &parse(&text).expect("valid")[0];
+        assert_eq!(wizard.styles.len(), 1);
+        assert_eq!(wizard.style_choice.len(), 2);
         for (text, why) in [
             (
                 format!("{ONE}stats = {{ cunning = 1 }}\n"),
@@ -184,6 +215,18 @@ mod tests {
             (
                 format!("{ONE}weapon_skill_choice = [{{ staves = 1 }}, {{}}]\n"),
                 "a choice of two or more",
+            ),
+            (
+                format!("{ONE}weapon_skills = {{ duelist = 1 }}\n"),
+                "`duelist` is a fighting style: classes give styles in `styles`",
+            ),
+            (
+                format!("{ONE}styles = {{ staves = 1 }}\n"),
+                "`staves` is a weapon skill, not a fighting style",
+            ),
+            (
+                format!("{ONE}style_choice = [{{ duelist = 1 }}]\n"),
+                "`style_choice` is a choice of two or more",
             ),
         ] {
             let e = parse(&text).unwrap_err();

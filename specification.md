@@ -59,7 +59,8 @@ Build the engine and framework, not the game. Everything built is production qua
   player's starting stats (partly rolled with dice, ADOM-like) and eyes; a random age by race
   and a random birthday give the birth year, whose horoscope sign (12 mythological animals × 5
   elements) adjusts the stats too (§8 "Character creation"); race and class also give hit points
-  (§8 "Combat"), trained skills (§8 "Skills"), and starting ranks in weapon skills
+  (§8 "Combat"), trained skills (§8 "Skills"), and starting ranks in weapon skills and fighting
+  styles
 - Skills (M20): 26 skills in data, ADOM-like; race and class train the player in some (dice),
   creatures may list theirs, and every other skill is untrained (never shown, gives nothing).
   Values grow without a hard cap (slowly past 100) from training marks earned by meaningful
@@ -70,6 +71,11 @@ Build the engine and framework, not the game. Everything built is production qua
   blocking and shield bashing among them) with per-category passive benefits, and *The Riddle of
   Steel*'s defaults between related categories; a weapon skills screen and a shield bash
   (§8 "Weapon skills")
+- Fighting styles (M22): eight styles after AD&D 2e's *Complete Fighter's Handbook* (Duelist,
+  Twin Blades, Great Weapon, Sword and Board, Marksman, Skirmisher, Brawler, Staff Fighter), each
+  a skill with the weapon skills' ranks, marks, and per-rank passive benefits, trained by fighting
+  in its configuration; fighting with a light weapon in the off hand: two blows an attack, at
+  penalties Twin Blades eases (§8 "Fighting styles")
 - Save and resume an unfinished run
 - Keyboard controls with an in-game controls reference
 - Development interface (§9)
@@ -84,8 +90,8 @@ Build the engine and framework, not the game. Everything built is production qua
 **Out of scope for now**: magic (spells are announced, nothing is damaged), damage types (a
 flaming arrow does an arrow's damage), rules that use stats beyond combat and burden (ability
 checks, saving throws, training stats), levels and experience, digging down or up, creatures
-that dig, what a class gives beyond starting stats, hit points, skills, and weapon skills
-(equipment, spells), active uses of skills (searching, picking locks, healing, and the like),
+that dig, what a class gives beyond starting stats, hit points, skills, weapon skills,
+and fighting styles (equipment, spells), active uses of skills (searching, picking locks, healing, and the like),
 item effects, audio, mouse input, infravision, localization.
 
 Vision types are in scope even though there are no other mechanics yet: they are part of perception,
@@ -102,7 +108,7 @@ regression scene for golden screenshots, replays, and snapshot tests.
 | Room | Demonstrates | Milestone |
 |---|---|---|
 | Start room | movement, message line, `?` help; gold and a small pile to pick up | M1, M11 |
-| Door corridor | opening/closing doors, doors blocking sight; a storeroom of arms and armor (something for every equipment slot but the neck and the rings, a two-handed quarterstaff, a short bow and arrows, flaming arrows, a long war bow, a crossbow and bolts, a sling and stones, rocks to throw, a pick-axe for the Tool slot) and a pantry of objects | M1–M2, M11, M16, M19 |
+| Door corridor | opening/closing doors, doors blocking sight; a storeroom of arms and armor (something for every equipment slot but the neck and the rings, a two-handed quarterstaff and greatsword, a short bow and arrows, flaming arrows, a long war bow, a crossbow and bolts, a sling and stones, rocks to throw, a pick-axe for the Tool slot) and a pantry of objects | M1–M2, M11, M16, M19 |
 | Patrol gallery | creatures moving in and out of view, never shown in memory; a cave beetle and a quicker cave bat (wildlife, so they keep to their lanes) on parallel lanes, a slower torch-bearing kobold circling them (wielding a sword, carrying coins), a kobold by type but placed among the peaceful folk (§7 "Factions"), so it walks its round and never attacks the player; heard from the corridor behind its closed door, and in its dark middle (the bat flies silently), which a flaming arrow shot from its door lights where it lands | M2, M10, M11, M16 |
 | Light hall | colored lights, falloff, pillar and creature shadows, steady magical light | M3, M8 |
 | Darkness chamber | vision types, a UV-only rune, darkvision fade; an amulet seen only by those who see in the dark | M3, M11 |
@@ -842,8 +848,9 @@ rate or animation.
   holds, such as a two-handed weapon in the off hand), by their inventory letters, marked as in the
   inventory; the stack already there is the `>` row. Choosing a stack (its letter, or Enter) puts it
   on in the slot, taking off first what is there (a swap) and moving it if it is in another slot;
-  choosing what is already there takes it off. Rings fit either ring slot, a two-handed weapon takes
-  both hands (and puts away what they hold), launchers and their ammunition go in the missile weapon
+  choosing what is already there takes it off. Rings fit either ring slot, a light weapon (`light_weapon`, §7: the
+  dagger, the short sword) either hand (the off hand too: two weapons, §8 "Fighting styles"), a
+  two-handed weapon takes both hands (and puts away what they hold), launchers and their ammunition go in the missile weapon
   and missiles slots, digging tools in the Tool slot. That is one action (replay text
   `equip:body:b`, `remove:body`): it is done at once and takes its time, the choice closes, and the
   equipment screen beneath shows the result, as in ADOM; Esc goes back to it, and Esc there returns
@@ -883,15 +890,22 @@ rate or animation.
   will read is `warlock_core::ability` (`Ability`: name, what it asks for (`Aim`), the `Action`
   it makes) and `PerceptionView::abilities` (those the player can use now). The first is the
   shield bash (§8 "Weapon skills"), listed while the player holds a shield to bash with.
-- **Weapon skills** (`W`; M22, §8 "Weapon skills"), ADOM-like: the player's weapon skills in
-  three sections in data order — Melee (the `melee` and `unarmed` skills), Missile and thrown
-  (`launcher`, `thrown`), Shields (`shield_block`, `shield_bash`) — each with its name, its rank
-  (0 to 10; untrained skills dimmer, so what the player knows stands out), and a faint bar of
-  ten cells (`━` earned, `─` still to earn, muted colors) of their marks toward the next rank
-  (none at rank 10). Never what a rank gives, a mark count, or a creature's ranks. Read-only;
-  `W`, Enter, or Esc closes it; in a short window the gaps between sections give way first.
-  Without weapon skills in content it says "You know no weapon
-  skills."
+- **Weapon skills** (`W`; M22, §8 "Weapon skills", "Fighting styles"), ADOM-like: the player's
+  weapon skills and fighting styles in four sections in data order — Melee (the `melee` and
+  `unarmed` skills), Missile and thrown (`launcher`, `thrown`), Shields (`shield_block`,
+  `shield_bash`), Fighting styles (`style`) — each with its name, its rank (0 to 10; untrained
+  skills dimmer, so what the player knows stands out), and a faint bar of ten cells (`━` earned,
+  `─` still to earn, muted colors) of their marks toward the next rank (none at rank 10). The
+  styles the player fights in now (`PerceptionView::own_styles_in_use`: their hands', their
+  readied missile weapon's, throwing's while something is ready to throw) are marked with an
+  accent `•` before the name, and the Fighting styles heading then has the legend `• in use`.
+  Where the console is wide enough (88 columns) the sections are in two columns, Melee and
+  Missile and thrown on the left, Shields and Fighting styles on the right; else one. Never what
+  a rank gives, a mark count, or a creature's ranks. Read-only; `W`, Enter, or Esc closes it; in
+  a short window the gaps between sections, the margin, and the gap above the footer give way
+  first (one column fits the default 1280×720 window), and a list still too long scrolls with
+  ↑↓ (`↑`/`↓` on the frame where rows are hidden, `↑↓ scroll` in the footer). Without weapon
+  skills in content it says "You know no weapon skills."
 - **Death screen** (§8 "Combat"): when the player dies, the death screen opens over the run as it
   ended, in place of any other screen, and the run's save is deleted (permadeath): `Y O U   D I E
   D`, then who killed them ("Killed by a kobold", or "Killed by something you did not see" when
@@ -1150,7 +1164,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   Things that can be worn or wielded (M16) say where they go: `slot`, a slot's id or what it
   `fits` (`slot = "body"`, `slot = "ring"` for either ring slot; an unknown one is a content
   error), `two_handed` (default false; only with a hand slot's `slot`, and there must be two
-  hand slots: it takes both), `ammo` (the kind of ammunition it is, `ammo = "arrow"`), and
+  hand slots: it takes both), `light_weapon` (default false; only for a one-handed weapon with a
+  hand slot's `slot`, not two-handed: it fits every hand slot, the off hand too, for fighting
+  with two weapons, §8 "Fighting styles"; `Content::fits`), `ammo` (the kind of ammunition it is, `ammo = "arrow"`), and
   `launches` (the kind a missile weapon shoots, `launches = "arrow"`; some object must be that
   ammunition). Launchers and ammunition pair by that kind (`Content::fires`). What they do in a
   fight (§8 "Combat"; only for things with a `slot`): a weapon's `damage` dice (`"1d8"`; a
@@ -1175,9 +1191,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   presentation only: `missile` (the glyph it flies as, drawn pointing right; default its own,
   upright), `spins` (it tumbles in flight), `glow` (0 to 1, where it lies), and particle
   `particles` (`ambient`: while it lies in view on top of its pile; `flight`: while it flies).
-  Test objects: weapons for the main hand (dagger 1d4 and short sword 1d6, threat 20; spear 1d8
-  ×3; club 1d6; a two-handed quarterstaff 1d6 with parry 1; the dagger thrown 5 cells, the spear
-  6; of the daggers, short blades, spears, maces, and staves skills), a small shield (off hand,
+  Test objects: weapons for the main hand (dagger 1d4 and short sword 1d6, threat 20, both
+  light, so either hand; spear 1d8 ×3; club 1d6; a two-handed quarterstaff 1d6 with parry 1; a
+  two-handed greatsword 2d6, threat 20; the dagger thrown 5 cells, the spear 6; of the daggers,
+  short blades, spears, maces, staves, and great blades skills), a small shield (off hand,
   shield 1, bash 1d3), an iron helm, a wool cloak, leather gloves and boots,
   body armor (leather jerkin armour 2, max Dexterity 6; chain mail shirt armour 4, max Dexterity
   4), a silver ring, amulets; missile weapons: a short bow (1d6 ×3, Strength 10, range 10), a long
@@ -1192,13 +1209,27 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   for, ranks 1 to 10: ten numbers, each more than the last, at most 1 000 000), `[[skill]]`s in
   the order the weapon skills screen lists them (at most 255): `id`, `name` (`Long blades`),
   `phrase` (the message's `with long blades`), `role` (`melee`, `launcher`, `thrown`, `unarmed`,
-  `shield_block`, `shield_bash`; the last four at most one skill each), `curve` (a key of
-  `curves`), and its benefits as eleven numbers, ranks 0 to 10 (0 at rank 0, never less at a
-  higher rank; a list left out is all 0): `to_hit` and `damage` (0 to 20), `threat` (0 to 10),
+  `shield_block`, `shield_bash`, `style`; `unarmed` to `shield_bash` at most one skill each),
+  `curve` (a key of `curves`), and its benefits as eleven numbers, ranks 0 to 10 (0 at rank 0,
+  never less at a higher rank; a list left out is all 0): `to_hit` and `damage` (0 to 20),
+  `threat` (0 to 10), `crit` (added to a confirmed critical's multiplier, 0 to 3, never past ×5),
   and `speed` (percent off the attack's cost, 0 to 50) for the roles that attack; `parry` (0 to
   20) for `melee`, `reload` (0 to 50) for `launcher`, `shield` (0 to 20) for `shield_block` (a
-  benefit the role does not use is an error); and `[[default]]`s, `between = [a, b]` and
-  `penalty` (1 to 10), each pair once, symmetric. The built-in file: marks 1 an attempt, 2 more
+  benefit the role does not use is an error). A fighting style (`role = "style"`, §8 "Fighting
+  styles") also has its `grip` (`one_weapon`, `two_weapons`, `two_handed`, `weapon_and_shield`,
+  `unarmed`, `launcher`, `thrown`) and may name `weapons` (weapon skill ids of the roles its
+  grip fights with: `melee` for the hand grips, `launcher` for `launcher`, `melee` or `thrown`
+  for `thrown`, none for `unarmed`; each once; left out: every weapon of its grip that no other
+  style of the grip names; within a grip at most one style leaves it out and no weapon skill is
+  named twice: one configuration, one style); its benefits may also be `parry` (grips that
+  wield a weapon), `shield` and `bash` (the chance in percent, 0 to 100, of a shield bash after
+  a blow that hits; `weapon_and_shield`), `reload` (`launcher`), `ease_main` and `ease_off`
+  (points off the two-weapon penalties, 0 to 20; `two_weapons`); `grip` and `weapons` on a
+  skill that is no style are errors. `[two_weapons]` (optional; default −4 and −8): `main` and
+  `off`, the to-hit penalties of the main hand's and the off hand's blows with a weapon in each
+  hand (−20 to 0). `[[default]]`s, `between = [a, b]` and `penalty` (1 to 10), each pair once,
+  symmetric; styles default only to styles, weapon skills only to weapon skills. The built-in
+  file: marks 1 an attempt, 2 more
   a hit, 20 % a level, at most 200 %; curves melee 15, 30, 60, 120, 240, 480, 960, 1920, 3840,
   7680 and missile 10, 20, … 5120; sixteen skills: daggers and knives, short blades, long
   blades, great blades, axes, maces and clubs, spears, polearms, staves (`melee`), unarmed;
@@ -1207,8 +1238,12 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   blades ↔ daggers −2, long blades ↔ daggers −4, short blades ↔ thrown −4, daggers ↔ thrown −2,
   axes ↔ maces −2, axes ↔ polearms −3, maces ↔ staves −3, spears ↔ polearms −2, spears ↔
   staves −3, spears ↔ thrown −4, polearms ↔ great blades −4, bows ↔ crossbows −4, slings ↔
-  thrown −3, shield blocking ↔ shield bashing −3. The wiki shows the skills, the defaults, the
-  marks and curves, and the benefits per rank in generated tables.
+  thrown −3, shield blocking ↔ shield bashing −3; two weapons −4 and −8; eight styles after the
+  sixteen skills (§8 "Fighting styles": Duelist, Twin Blades, Great Weapon, Sword and Board,
+  Marksman (bows, crossbows, slings; missile curve), Skirmisher (missile curve), Brawler, Staff
+  Fighter (staves)), with the defaults duelist ↔ sword and board −3, duelist ↔ twin blades −3,
+  great weapon ↔ staff fighter −3, marksman ↔ skirmisher −4. The wiki shows the skills, the
+  styles, the defaults, the marks and curves, and the benefits per rank in generated tables.
 - **Equipment slots** (`data/slots.toml`, optional; without it nothing can be worn or wielded;
   M16): up to 26 `[[slot]]`s in the order the equipment screen lists them (lettered `a` on):
   `id` (objects name it in `slot`, replays in `equip:SLOT:LETTER`), `name`, `fits` (what objects
@@ -1216,7 +1251,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   `right_ring` both fit `ring`), `action` (the action that puts a thing on here or takes it off,
   for its time: `wield`, `wear`, `body_armor`, or `ready` in `data/actions.toml`), `mark` (what
   the inventory says of a thing here: "being worn"), and `hand` (default false; a two-handed
-  object takes every hand slot). The built-in slots, ADOM's: Head, Neck, Body (`body_armor`),
+  object takes every hand slot, and a light weapon fits every one). The built-in slots, ADOM's: Head, Neck, Body (`body_armor`),
   Cloak, Main hand and Off hand (`wield`, hands; "wielded", "in off hand"), Hands, Left ring
   and Right ring ("on left hand", "on right hand"), Feet, Missile weapon and Missiles (`ready`;
   "readied", "quivered"), Tool (`ready`, "in use"; M19); the rest `wear`, "being worn". The wiki
@@ -1381,14 +1416,16 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   is only medium.
 - **Classes** (`data/classes.toml`, optional), in the order offered: `id`, `name`, a one-line
   `description`, `stats` (adjustments as for races), `hp` (as for races), `skills` (as for
-  races), `weapon_skills` (starting ranks as for races), and `weapon_skill_choice` (two or more
-  sets of such ranks, one picked at random when the character is made). Each class rolls
+  races), `weapon_skills` (starting ranks as for races), `weapon_skill_choice` (two or more
+  sets of such ranks, one picked at random when the character is made), and `styles` and
+  `style_choice` (the same for fighting styles, §8 "Fighting styles"; `weapon_skills` names no
+  style and `styles` nothing but styles). Each class rolls
   its key stats (the warrior St `1d3+1` and To `1d3`, the wizard In `2d2+1` and To `-1d2`, the
   commoner To `1d3-1`); the rest are fixed. Adventurers: barbarian (8 hit points), bard (2),
   priest (4), druid (4), monk (5), paladin (6), ranger (5), thief (3), wizard (0), witch (1),
   warrior (7); everyday folk: aristocrat (1), commoner (3), craftsperson (3), merchant (2). A
   class adjusts the starting scores, gives hit points, trains skills, and gives starting ranks in
-  weapon skills, nothing more. Skills: a few it
+  weapon skills and fighting styles, nothing more. Skills: a few it
   is known for (`2d6+10`) and a few more (`2d4+4`); the full table is in the wiki (Skills), e.g.
   the thief open lock, steal, stealth, and tumble well, appraise, disable device, escape artist,
   search, and spot a little; the ranger spot, survival, and woodcraft well, athletics, handle
@@ -1399,7 +1436,11 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   unarmed 2 and staves 1, paladin long blades 2, shield blocking `1d2`, and shield bashing 1,
   ranger bows 2 and short blades 1, thief daggers 2 and thrown 1, wizard staves 1, witch daggers
   1 and staves 1, warrior long blades 2 and shield blocking `1d2`, aristocrat long blades 1,
-  commoner maces 1, craftsperson axes 1, merchant daggers 1.
+  commoner maces 1, craftsperson axes 1, merchant daggers 1. Fighting styles: barbarian great
+  weapon 1, bard duelist 1, priest sword and board 1, druid staff fighter 1, monk brawler 1 or
+  staff fighter 1, paladin sword and board 1, ranger marksman 1, thief twin blades 1 or duelist
+  1, warrior sword and board 1, aristocrat duelist 1, commoner brawler 1; the wizard, witch,
+  craftsperson, and merchant none.
 - **Skills** (`data/skills.toml`, optional; without it nobody is trained in anything, and any
   `skills` elsewhere is an error; §8 "Skills"): `[[skill]]`s in the order the Skills screen lists
   them (alphabetical), each with `id`, `name`, a one-line `description`, `kind` (`passive`,
@@ -1466,7 +1507,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   rooms and whether the player has been in each (§7 "Special rooms"; format version 15), every
   actor's weapon skills (its rank and marks in each, §8 "Weapon skills"; format version 16), the
   work done on walls dug into and still standing (§8 "Digging"; format version 17), every
-  actor's combat stance (§8 "Stances"; format version 18), and a dev weather override while
+  actor's combat stance (§8 "Stances"; format version 18), every actor's fighting styles (after
+  its weapon skills, §8 "Fighting styles"; format version 29), and a dev weather override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
   platform data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
@@ -1667,12 +1709,14 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     launcher's own bonus is in its dice (its draw weight), and each point of Strength below what
     a bow needs costs 1 to hit and 1 damage. Bare hands are 1d3 plus Strength; a creature with
     no weapon uses its natural attack (§7), else bare hands. Melee uses the weapon in the first
-    hand slot that holds one; a shot uses the missile weapon in a `ready` slot and the
+    hand slot that holds one, and with a weapon in each hand the other strikes too ("Fighting
+    styles" below); a shot uses the missile weapon in a `ready` slot and the
     ammunition matched to it ("Ranged combat" below); a throw (`Profile::thrown`) its thrown
     weapon's own attack, Dexterity to hit and Strength to damage.
   - **Weapon skills** ("Weapon skills" below): the rank in the skill an attack draws on adds to
     its to-hit and damage and widens its threat range; the wielded weapon's skill adds to its
     Parry and shield blocking to a held shield's Shield; a high rank makes an attack cheaper.
+    The fighting style the attack is fought in adds its own ("Fighting styles" below).
   - **Defence** = 10 + one bonus per category: **Dexterity** (the Dexterity modifier, capped
     by the lowest `max_dex` of what the actor wears and by its burden, +3 Burdened, +1 Strained,
     0 Overloaded ("Burden" below), the lowest cap winning; a penalty counts in full), **Armour** (worn
@@ -1954,9 +1998,14 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     `character/weapon-skills/<race>,<gender>,<class>`: the race's (in skill order), the
     class's, the pick of the choice (one draw), then the chosen set's; so they never move a
     stat roll.
+  - **Fighting styles** ("Fighting styles" below): the class's `styles` plus one set of its
+    `style_choice` if it has one, from yet another stream,
+    `character/styles/<race>,<gender>,<class>`: the class's (in skill order), the pick of the
+    choice, then the chosen set's; so they never move a stat or a weapon skill roll. Each raises
+    the styles it defaults to.
   - Balance is deliberately not a goal: some combinations are poor (a halfling commoner), and
     classes do nothing but adjust starting scores, give hit points, train skills, and give
-    weapon skills. No other D&D concept comes with them (alignment, equipment, spells).
+    weapon skills and fighting styles. No other D&D concept comes with them (alignment, equipment, spells).
   - The character (`Character`: the race, gender, and class ids, the stat the gender raised,
     the birth date, and the birth sign) is part of the world state (saved, hashed) and shown on
     the character screen; replays record the choice only, and since everything else follows
@@ -2075,6 +2124,60 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     (§6) and in the `weapon_skills` dump layer; never a benefit or a creature's ranks (the
     `actors` dev layer shows every actor's). Ranks and marks are part of the world state
     (saved, hashed; format version 16).
+- **Fighting styles** (#135; `content/weapon_skill.rs`: `Role::Style`, `Grip`, `Style`,
+  `TwoWeapons`; `world/actor.rs`: `Actor::grip`, `style`, `styles_in_use`, `attack_benefit`,
+  `off_hand`, `off_hand_blow`), after AD&D 2e's *Complete Fighter's Handbook*: how weapons are
+  held and used, as skills with the weapon skills' ranks (0 to 10), marks, curves, defaults, and
+  benefits ("Weapon skills" above), in `data/weapon_skills.toml` (§7).
+  - **Configurations** (`grip`): for blows, what the hands hold (`Actor::grip`, which counts for
+    Defence too): nothing (`unarmed`), one one-handed weapon and every other hand empty
+    (`one_weapon`), a weapon in each of two hands (`two_weapons`), a two-handed weapon
+    (`two_handed`), a one-handed weapon and a shield (`weapon_and_shield`); any other hold (a
+    shield alone) is no style. A shot is `launcher` (whatever the hands hold), a throw `thrown`.
+    A style may name the weapon skills it is fought with; the style of a grip that names none
+    takes every other weapon (`WeaponSkillTable::style_for`), so one configuration is always at
+    most one style. A spell has none.
+  - **The eight** (data): **Duelist** (`one_weapon`: to-hit, Parry), **Twin Blades**
+    (`two_weapons`: eases both two-weapon penalties, none left at rank 10), **Great Weapon**
+    (`two_handed`, any weapon but a staff: damage, from rank 8 a critical rolls its damage once
+    more, cheaper blows), **Sword and Board** (`weapon_and_shield`: Shield, from rank 3 a chance
+    of a shield bash after a blow that hits), **Marksman** (`launcher`, bows, crossbows, and
+    slings: to-hit, cheaper shots and reloading), **Skirmisher** (`thrown`, anything thrown:
+    to-hit, damage, cheaper throws; decided as throwing only: "a light weapon and light armour"
+    would have overlapped Duelist and Twin Blades, and the issue's benefits are all throws'),
+    **Brawler** (`unarmed`: to-hit and damage), **Staff Fighter** (`two_handed`, staves: to-hit,
+    Parry). Defaults: duelist ↔ sword and board −3, duelist ↔ twin blades −3, great weapon ↔ staff
+    fighter −3, marksman ↔ skirmisher −4; never to a weapon skill.
+  - **Benefits** (never shown) add to the weapon skill's (`Benefit::plus`;
+    `Actor::attack_benefit`): to-hit, damage, threat, and the critical multiplier (`crit`) in the
+    attack's `Profile` (`Actor::melee`, `off_hand_blow`, `ranged`, `thrown`, `bash`), `speed` and
+    `reload` in its price (`World::attack_price`, which takes the attack, not a skill), Parry
+    added to the wielded weapon's and Shield to a held shield's while the hands are in the
+    style's grip (`Actor::defence`). A style's rank never helps another configuration.
+  - **Training**: every attack the player makes (a blow, an off-hand blow, a bash, a shot or a
+    throw for each actor it reaches) earns marks in its style as in its weapon skill, by the same
+    rules (`World::resolve`: the weapon skill first, then the style, so their messages come in
+    that order: "You feel more skilled at dueling."). Rank 0 trains like any other.
+  - **Two weapons**: the off hand takes a shield or a light weapon (`light_weapon`, §7: the
+    dagger, the short sword; `Content::fits`). With a weapon in each hand, every melee attack (the
+    player's move into a hostile, a creature's) is two blows, the main hand's then the off hand's
+    (`World::second_blow`), each at its penalty (`[two_weapons]`: main −4, off −8) less what
+    Twin Blades eases (`TwoWeapons::eased`, never past 0). The off hand's blow is an attack made
+    `with` its weapon (`Event::Attacked`), draws on and trains that weapon's skill, and is
+    worded with it ("You parry the kobold's dagger."); it makes no noise of its own (the attack
+    made one) and comes only if the target still stands. Both are one action at the main hand's
+    price. Creatures that wield two weapons fight with both.
+  - **Shield bash after a hit**: in the `weapon_and_shield` grip, a blow that hits a target that
+    still stands is followed, by the style's `bash` chance (one gameplay draw, only when the
+    chance is above 0), by a shield bash at it, free and silent, drawing on and training shield
+    bashing and the style.
+  - **Rank 10** is where a style's later active or triggered abilities will hang (a duelist's
+    riposte, a staff fighter's trip); they will go into the one abilities menu (§6 "Abilities"),
+    with no key of their own.
+  - **What the player perceives**: their own ranks and marks (as weapon skills), and which
+    styles they fight in now (`PerceptionView::own_styles_in_use`), on the weapon skills screen
+    (§6) and in the `weapon_skills` dump layer (`Duelist 1 (0%), in use`; JSON `styles_in_use`).
+    Never a benefit, a penalty, a chance, or a creature's ranks.
 - **Dice** (`warlock-core/src/dice.rs`): one type for every roll the rules make (character
   creation, weapon and natural attack damage). Text form: a fixed number (`+2`, `-1`, `0`) or `NdS`
   (`N` dice of `S` sides: 1 to 100 dice, 2 to 1000 sides), optionally negated (`-1d2`) and
@@ -2096,7 +2199,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   gameplay (`gameplay`, kept in the world state and saved); character creation (derived on
   demand: `character/gender` for the stat "other" raises, `character/birth/<race>` for the age
   and birthday, `character/rolls/<race>,<gender>,<class>` for the dice,
-  `character/weapon-skills/<race>,<gender>,<class>` for the starting weapon skills; New run's
+  `character/weapon-skills/<race>,<gender>,<class>` for the starting weapon skills,
+  `character/styles/<race>,<gender>,<class>` for the starting fighting styles; New run's
   Random rows roll `new-run/<step>/<n>` streams, which never touch a run); training marks
   (`training`, kept in the world state and saved; §8 "Skills"); the weather, which keeps no
   stream at
@@ -2167,9 +2271,10 @@ cargo xtask golden [--update]                             # compare golden scree
   `stats` (the player's race, gender, and class, `Race Dwarf`, their age, birthday, and
   sign, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`, then their own scores,
   `Strength 12`), `skills` (the player's trained skills in skill order, `Stealth 17`), and
-  `weapon_skills` (the player's weapon skills in file order with their rank and how far their
-  marks are toward the next, `Long blades 2 (40%)`; at rank 10 the rank alone) are built from the
-  perception snapshot only;
+  `weapon_skills` (the player's weapon skills and fighting styles in file order with their rank and
+  how far their marks are toward the next, `Long blades 2 (40%)`; at rank 10 the rank alone; the
+  styles they fight in now marked, `Duelist 1 (0%), in use`) are built from the perception
+  snapshot only;
   `truth` (terrain, objects, and creatures) and `actors` (every actor on the level with its hit
   points and Defence, `hp 8/12 dv 13`, its
   weight, base plus carried, what it carries and of that wears and wields, `equipped main_hand a
@@ -2187,8 +2292,9 @@ cargo xtask golden [--update]                             # compare golden scree
   limit}`, the limit in grams), character
   (`{race, gender, class, raised, age, born: {year, month, day}, sign: {animal, element}}` or
   null), scores (`stats`, by stat id), trained skills (`skills`, by skill id with their values),
-  weapon skills (`weapon_skills`, by skill id: `{rank, progress}`, the progress a percent or
-  null at rank 10), hit points (`hp: {current, max}`), Defence (`defence`, the
+  weapon skills and fighting styles (`weapon_skills`, by skill id: `{rank, progress}`, the
+  progress a percent or null at rank 10), the styles in use (`styles_in_use`, style ids), hit
+  points (`hp: {current, max}`), Defence (`defence`, the
   total), how the run ended (`death: {turn, time, place, by}` or null), recent messages,
   and optionally the full world state; the ASCII header line has the turn, the time
   (`0001-01-01 08:00:00`), level, viewer, the player's hit points (`hp 17/17`, then `dead` once
@@ -2314,7 +2420,10 @@ Each milestone ships a playable build.
 - **M22 Weapon skills, styles, stances** — weapon skills (#134): ADOM-like marks and ranks 0 to
   10 in sixteen categories with per-category passive benefits, The Riddle of Steel's defaults
   between related categories, shield blocking and a shield bash, starting ranks from race and
-  class, and a weapon skills screen (`W`).
+  class, and a weapon skills screen (`W`); fighting styles (#135): eight styles with the same
+  ranks, marks, and per-rank benefits, trained in their configuration, starting ranks from
+  class, light weapons in the off hand and two blows an attack with two weapons, a shield bash
+  after a hit, and a Fighting styles section on the weapon skills screen.
 
 - **M25 Special rooms** — ADOM-like special rooms (data, `data/room_effects.toml`): a
   shadowed room, an echoing hall, a hushed chamber, a sanctuary, and a flooded room, in about one
