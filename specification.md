@@ -45,8 +45,8 @@ Build the engine and framework, not the game. Everything built is production qua
 - Stats (M14): Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
   D&D, with D&D 3.5 modifiers and ADOM-like potentials that the player never sees; every actor
   has them, and the player sees their own scores on a character screen (§8 "Stats"). Combat uses
-  Strength, Dexterity, and Toughness (§8 "Combat"), and so does burden; no other rule uses stats
-  yet
+  Strength, Dexterity, and Toughness (§8 "Combat"), and so do burden and kicking doors in
+  (Strength, §8 "Doors"); no other rule uses stats yet
 - Experience (M21): creatures have a level and an XP value; the player's own kills (melee,
   shots, throws) earn XP, scaled down for monsters below the player's level as in World of
   Warcraft, and levels (to 50) grow the hit points up to level 20 (§8 "Experience")
@@ -72,11 +72,11 @@ Build the engine and framework, not the game. Everything built is production qua
 - An overworld with travel time, locations, local areas, and day and night (M9)
 
 **Out of scope for now**: magic (spells are announced, nothing is damaged), damage types (a
-flaming arrow does an arrow's damage), rules that use stats beyond combat and burden (ability
-checks, saving throws, training stats), levels and experience, what a class gives beyond starting
-stats, hit points, and skills (equipment, spells), active uses of skills (searching, picking
-locks, healing, and the like) and weapon skills, item effects, audio, mouse input, infravision,
-localization.
+flaming arrow does an arrow's damage), rules that use stats beyond combat, burden, and kicking
+doors in (ability checks, saving throws, training stats), levels and experience, what a class
+gives beyond starting stats, hit points, and skills (equipment, spells), active uses of skills
+(searching, picking locks, healing, and the like) and weapon skills, item effects, audio, mouse
+input, infravision, localization.
 
 Vision types are in scope even though there are no other mechanics yet: they are part of perception,
 and the light data model must carry them from the start.
@@ -1643,7 +1643,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     (`actors`, the world state) show every actor's scores and potentials.
   - **What uses them**: combat (Strength to hit and to damage in melee, Dexterity to hit with
     shots and in Defence, Toughness in hit points and regeneration; "Combat" above) and burden
-    (Strength and Toughness scores, never modifiers, in the carrying limit; "Burden" below). No
+    (Strength and Toughness scores, never modifiers, in the carrying limit; "Burden" below), and
+    kicking doors in (the Strength score against the door's sturdiness; "Doors" above). No
     other rule does yet, and no other D&D concept comes with them: no ability checks or saving
     throws. Stats and potentials are part of the world state (saved, covered by the state hash).
 - **Burden** (`warlock-core/src/burden.rs`; M16, #115), ADOM-like, with 3.5's thirds:

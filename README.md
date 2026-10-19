@@ -73,7 +73,7 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   its key; the dungeon's locked rooms always leave their key within reach.
 - **Stats** — Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
   D&D, for you and every creature; a character screen shows your own. Strength, Dexterity, and
-  Toughness count in a fight; the rest do nothing yet.
+  Toughness count in a fight, and Strength kicks doors in; the rest do nothing yet.
 - **Character creation** — ADOM-style, at the start of every run: seven races (elf, half-elf,
   human, dwarf, halfling, gnome, half-orc), each with its own eyes, three genders, and fifteen
   classes from barbarian and wizard to merchant and commoner shape your starting stats and
