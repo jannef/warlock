@@ -321,3 +321,26 @@ footsteps = 40
 hearing = 15
 weight = 55000
 stats = { strength = 8, dexterity = 8, toughness = 9, intelligence = 14, willpower = 15 }
+
+# Keeps a shop (shops.toml), and stays at its post beside the door. A merchant trades with all
+# and fights no one, until robbed or attacked: then it is outraged, and dangerous. Tough,
+# quick, and well armed (its gear and purse are in shops.toml), as in ADOM.
+[[creature]]
+id = "shopkeeper"
+level = 18
+xp = 400
+name = "shopkeeper"
+glyph = "@"
+fg = "#e0c070"
+speed = 1200
+faction = "merchants"
+# It keeps to its post by the door: it does not swap places with you there.
+budge = "off_post"
+sight = 12
+opens_doors = true
+footsteps = 60
+hearing = 8
+weight = 75000
+stats = { strength = 17, dexterity = 15, toughness = 18, intelligence = 13, willpower = 14, presence = 15 }
+base_hp = 60
+skills = { appraise = 60 }

@@ -127,6 +127,7 @@ glyph = "("
 fg = "#b4b8bc"
 material = "iron"
 weight = 40
+value = 0
 key = "pantry"
 
 [[object]]
@@ -136,6 +137,7 @@ glyph = "("
 fg = "#d8b048"
 material = "iron"
 weight = 40
+value = 0
 key = "cellar"
 
 [[object]]
@@ -145,6 +147,7 @@ glyph = "("
 fg = "#e0dccc"
 material = "iron"
 weight = 30
+value = 0
 key = "*"
 
 [[object]]
@@ -154,6 +157,7 @@ glyph = ")"
 fg = "#c0c0c0"
 material = "iron"
 weight = 5000
+value = 0
 slot = "main_hand"
 damage = "40"
 "##;

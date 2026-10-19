@@ -12,3 +12,4 @@
 | Kobold | 2 | 15 |
 | Kobold archer | 3 | 25 |
 | Kobold shaman | 4 | 40 |
+| Shopkeeper | 18 | 400 |

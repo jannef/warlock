@@ -86,6 +86,9 @@ impl World {
             return Spent::Nothing;
         };
         let range = me.launcher_range(&content).unwrap_or(1);
+        if !self.may_loose(item) {
+            return Spent::Nothing;
+        }
         if !self.within_reach(at, range, "shoot") {
             return Spent::Nothing;
         }
@@ -135,7 +138,7 @@ impl World {
             return Spent::Nothing;
         };
         let throwing = me.attack_skills(&content, AttackKind::Thrown, Some(stack.object));
-        if !self.within_reach(at, range, "throw") {
+        if !self.may_loose(item) || !self.within_reach(at, range, "throw") {
             return Spent::Nothing;
         }
         let loose = Loose {

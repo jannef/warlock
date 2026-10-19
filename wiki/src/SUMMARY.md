@@ -25,6 +25,7 @@
 - [Burden](burden.md)
 - [Hunger](hunger.md)
   - [Food and corpses](food.md)
+- [Shops](shops.md)
 - [Your character](character.md)
   - [Races](races.md)
   - [Classes](classes.md)

@@ -911,3 +911,29 @@ bg = "#44586e"
 ice = 150
 move_cost = 120
 bounce = "#d8e6f6"
+
+# A shop's timber hut in the courtyard (levels/courtyard.toml; spec §7 "Shops"): plank walls under
+# a roof, and a plank floor the roof shades from the sun and the sky. (Last in the file, so the
+# ids before them stay put.)
+[[terrain]]
+id = "plank_floor"
+name = "plank floor"
+glyph = "."
+fg = "#b48c5c"
+bg = "#2c1e10"
+roofed = true
+height = 2
+bounce = "#e0c098"
+# Boards creak.
+step_noise = 120
+
+[[terrain]]
+id = "timber_wall"
+name = "timber wall"
+glyph = "#"
+fg = "#a87c4c"
+bg = "#3a2814"
+walkable = false
+transparent = false
+roofed = true
+height = 2

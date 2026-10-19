@@ -83,6 +83,7 @@ glyph = "/"
 fg = "#c0c0c0"
 material = "wood"
 weight = 30
+value = 0
 stackable = true
 "##;
 

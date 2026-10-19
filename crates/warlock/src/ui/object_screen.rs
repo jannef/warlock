@@ -168,6 +168,7 @@ impl ObjectScreen {
             .chain(lettered(pack).filter(|&i| edible(&pack[i])).map(Item::Pack))
             .collect(),
         };
+        let unpaid = view.unpaid();
         let entries = (items.iter())
             .map(|&item| {
                 let s = match item {
@@ -176,17 +177,27 @@ impl ObjectScreen {
                 };
                 let def = content.object(s.object);
                 // The inventory marks what is worn or wielded; a pile has nothing worn, and
-                // what to eat says what lies here.
+                // what to eat says what lies here. In a shop (spec §7 "Shops") goods lying
+                // there say their price, and what the player has not paid for what they owe.
                 let mark = match (item, list) {
                     (Item::Floor(_), ObjectList::Eat) => Some("lying here".to_string()),
                     (Item::Floor(_), _) => None,
                     (Item::Pack(i), _) => equipment::mark(content, view.equipment(), i),
                 };
+                let price = match item {
+                    Item::Floor(_) => {
+                        (view.price_tag(view.viewer(), s)).map(|g| format!("for sale, {g} gold"))
+                    }
+                    Item::Pack(i) => {
+                        (unpaid.get(i).copied().flatten()).map(|g| format!("unpaid, {g} gold"))
+                    }
+                };
+                let marks: Vec<String> = mark.into_iter().chain(price).collect();
                 Entry {
                     glyph: def.glyph,
                     fg: def.fg,
                     name: s.describe(content),
-                    mark,
+                    mark: (!marks.is_empty()).then(|| marks.join(") (")),
                     weight: s.weight(content),
                     rarity: s.rarity(),
                 }

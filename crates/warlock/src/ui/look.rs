@@ -5,7 +5,7 @@ use crate::render::console::{Cell, Console};
 use warlock_core::Pos;
 use warlock_core::color::Rgb;
 use warlock_core::content::{ActionKind, Stance};
-use warlock_core::object::{Stack, phrase};
+use warlock_core::object::{Stack, phrase, phrase_with};
 use warlock_core::perception::{CellView, PerceptionView};
 use warlock_core::world::ActorId;
 
@@ -76,7 +76,9 @@ pub fn describe(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
     let heard = view.sound_at(p).map(|s| s.you_hear());
     // "a dagger", "a dagger and 12 arrows", "17 objects".
     let objects = view.objects(p);
-    let things = (!objects.is_empty()).then(|| phrase(objects, content));
+    // Goods for sale in a shop say their price (spec §7 "Shops"): "a dagger (for sale, 45 gold)".
+    let tag = |i: usize| (view.price_tag(p, &objects[i])).map(|g| format!("for sale, {g} gold"));
+    let things = (!objects.is_empty()).then(|| phrase_with(objects, content, tag));
     let here = things
         .as_ref()
         .map_or(String::new(), |o| format!("; here: {o}"));

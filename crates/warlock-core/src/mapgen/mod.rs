@@ -12,7 +12,8 @@
 //!    [vaults](crate::content::Vault) where they fit (with their locks and keys), place the
 //!    stairs, light sources (torches in rooms; lamps and glowing fungus in caves), and a few
 //!    patrolling creatures, and last now and then make a room (a cave chamber) special
-//!    (`special.rs`, spec §7 "Special rooms").
+//!    (`special.rs`, spec §7 "Special rooms") and, rarer, a room of a rooms level a shop
+//!    (`shop.rs`, spec §7 "Shops").
 //! 3. Turn rock that touches open ground into walls.
 //! 4. Validate (`connect::validate`): every stair, door, and walkable cell is reachable from the
 //!    up staircase (flood fill), the stairs and a key to every lock without unlocking a door,
@@ -28,12 +29,13 @@ mod caves;
 mod connect;
 pub mod local;
 mod rooms;
+mod shop;
 mod special;
 mod vault;
 
 use crate::content::{
     Content, CreatureId, CreatureSpawn, Flow, Generator, LevelKind, LevelTemplate, LightId,
-    ObjectId, SpecialRoom, StairsDir, StairsLink, TerrainId, Trap,
+    ObjectId, ShopPlan, SpecialRoom, StairsDir, StairsLink, TerrainId, Trap,
 };
 use crate::door::Lock;
 use crate::geom::{Dir, Pos};
@@ -169,6 +171,8 @@ pub(crate) struct Canvas<'a> {
     pub creatures: Vec<CreatureSpawn>,
     /// Special rooms (spec §7 "Special rooms"; `special.rs`).
     pub rooms: Vec<SpecialRoom>,
+    /// Shops (spec §7 "Shops"; `shop.rs`), their keepers among `creatures`.
+    pub shops: Vec<ShopPlan>,
     /// Cells stamped from vaults; later passes leave them alone.
     pub stamped: Grid<bool>,
     pub up: Option<Pos>,
@@ -189,6 +193,7 @@ impl<'a> Canvas<'a> {
             locks: BTreeMap::new(),
             creatures: Vec::new(),
             rooms: Vec::new(),
+            shops: Vec::new(),
             stamped: Grid::new(width, height, false),
             up: None,
             down: None,
@@ -394,6 +399,7 @@ pub fn generate(
             locks: canvas.locks,
             regions: Vec::new(),
             rooms: canvas.rooms,
+            shops: canvas.shops,
             exit: None,
             item_level,
             loot: Vec::new(),
@@ -418,7 +424,7 @@ pub fn generate(
 /// stream ([`Rng::traps`]), so the rest of the level is the same with or without them. A trap
 /// lies on plain floor that nothing else claims: never on or next to a staircase (the player
 /// arrives there), never on a creature's patrol (creatures do not know where traps are, and
-/// would spring one every round), nor where objects lie or a light stands.
+/// would spring one every round), nor where objects lie or a light stands, nor in a shop.
 fn hide_traps(
     template: &mut LevelTemplate,
     content: &Content,
@@ -450,6 +456,7 @@ fn hide_traps(
                 && !template.objects.contains_key(&p)
                 && !template.lights.contains_key(&p)
                 && !template.traps.contains_key(&p)
+                && !template.shops.iter().any(|s| s.contains(p))
         })
         .map(|(p, _)| p)
         .collect();
@@ -505,6 +512,7 @@ pub(crate) fn place_loot(
                 && !template.stairs.iter().any(|s| s.pos == p)
                 && !template.creatures.iter().any(|c| c.pos == p)
                 && template.player_start != Some(p)
+                && !template.shops.iter().any(|s| s.contains(p))
         })
         .collect();
     for _ in 0..count {

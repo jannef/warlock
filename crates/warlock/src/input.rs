@@ -14,7 +14,8 @@ use crate::game::{Game, PlayerAction, SimSet};
 use crate::save::SaveCommand;
 use crate::settings::Settings;
 use crate::ui::{
-    Aim, AimKind, DevOverlays, LastTarget, MenuChoice, Press, ScreenAction, ScreenName, Screens,
+    Aim, AimKind, DevOverlays, Dialog, LastTarget, MenuChoice, Press, ScreenAction, ScreenName,
+    Screens, quit_dialog,
 };
 use bevy::ecs::system::SystemParam;
 use bevy::input::ButtonState;
@@ -84,6 +85,12 @@ pub enum KeyCommand {
     /// Chat with someone next to you: the one in view if there is only one, else in a
     /// direction.
     Chat,
+    /// Pay for what the player took in the shop they stand in (spec §7 "Shops"; no time passes).
+    Pay,
+    /// In the confirmation dialog (quitting; paying before leaving a shop, selling): yes.
+    Yes,
+    /// In the confirmation dialog: no.
+    No,
     /// Dev: switch to the next vision profile.
     CycleVision,
     /// Dev: move the clock an hour ahead at once.
@@ -111,19 +118,23 @@ pub enum KeyCommand {
 }
 
 /// Where a command is read. Keys must be unique within a context, not across contexts, so a key
-/// can mean one thing in play and another on an info screen (Tab: next target, next page).
+/// can mean one thing in play and another on an info screen (Tab: next target, next page), or in
+/// the confirmation dialog (`y` and `n`, which move the player in play).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Context {
     /// In play: the map, prompts, look mode, and aiming.
     Play,
     /// On an info screen ([`crate::ui`]'s numbered pages).
     Pages,
+    /// The dialog's shortcuts (`ui/dialog_screen.rs`).
+    Dialog,
 }
 
 impl KeyCommand {
     pub fn context(self) -> Context {
         match self {
             KeyCommand::Page(_) | KeyCommand::NextPage | KeyCommand::PrevPage => Context::Pages,
+            KeyCommand::Yes | KeyCommand::No => Context::Dialog,
             _ => Context::Play,
         }
     }
@@ -161,6 +172,9 @@ impl KeyCommand {
             KeyCommand::NextTarget => "Next target (aiming; Shift: previous)",
             KeyCommand::UseTool => "Use a tool (dig)",
             KeyCommand::Chat => "Chat",
+            KeyCommand::Pay => "Pay the shopkeeper",
+            KeyCommand::Yes => "Yes (in a dialog)",
+            KeyCommand::No => "No (in a dialog)",
             KeyCommand::CycleVision => "Next vision profile (dev)",
             KeyCommand::SkipHour => "Skip an hour (dev)",
             KeyCommand::NextWeather => "Next weather (dev)",
@@ -281,6 +295,9 @@ impl Default for Bindings {
             (ch("C"), Chat),
             (Code(KeyCode::Tab), NextTarget),
             (ch("U"), UseTool),
+            (ch("p"), Pay),
+            (ch("y"), Yes),
+            (ch("n"), No),
             (ch("?"), Help),
             (Code(KeyCode::Escape), Cancel),
         ]);
@@ -350,13 +367,68 @@ pub enum InputMode {
     Direction(KeyCommand),
     /// Asking how long to rest ([`REST_CHOICES`]).
     Rest,
-    /// Asking whether to step in this direction onto a known trap (spec §8 "Traps"): `y` steps,
-    /// anything else does not.
-    ConfirmStep(Dir),
     /// Look mode: a cursor at this level position.
     Look(Pos),
     /// Aiming a shot or a throw (`ui::target`).
     Aim(Aim),
+}
+
+/// The dialog a step in `dir` opens first, if it leaves the shop the player stands in owing
+/// anything (spec §7 "Shops"). Out of its door: pay and leave in one action (offered only with
+/// the gold; else the dialog says what they owe and have), or not, and the keeper turns them
+/// back one step (declining and Esc send the step, which the rules turn back). Any other way
+/// out (a wall dug open): pay and leave, leave without paying (theft), or stay.
+fn leaving_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
+    let to = view.viewer().step(dir);
+    let (shop, owed) = view.owed_on_leaving(to)?;
+    let (keeper, gold) = (shop.keeper(), view.own_gold());
+    let pay = format!("Pay {owed} gold and leave");
+    let dialog = if shop.is_exit(to) {
+        if gold >= owed {
+            Dialog::new(shop.sign(), format!("You owe {keeper} {owed} gold."))
+                .accept(pay, Action::Pay(Some(dir)))
+                .decline("Don't pay", Action::Move(dir))
+        } else {
+            let have = match gold {
+                0 => "no gold".to_string(),
+                n => format!("only {n}"),
+            };
+            let text = format!(
+                "You owe {keeper} {owed} gold and have {have}. Put something back, or bring \
+                 more gold."
+            );
+            Dialog::new(shop.sign(), text).decline("Go back", Action::Move(dir))
+        }
+    } else {
+        let text = format!(
+            "You owe {keeper} {owed} gold. Leave this way without paying, and {keeper} will \
+             call it theft."
+        );
+        let dialog = Dialog::new(shop.sign(), text);
+        let dialog = match gold >= owed {
+            true => dialog.accept(pay, Action::Pay(Some(dir))),
+            false => dialog,
+        };
+        dialog
+            .plain("Leave without paying", Action::Move(dir))
+            .cancel("Stay", ScreenAction::Close)
+    };
+    Some(dialog)
+}
+
+/// The dialog dropping the inventory stacks `letters` opens first, if the shop the player stands
+/// in would buy some of them (spec §7 "Shops"): sell them, or keep them (nothing is dropped).
+fn sale_dialog(view: &PerceptionView<'_>, letters: Letters) -> Option<Dialog> {
+    let sale = view.sale(letters)?;
+    let shop = view.shop_here()?;
+    let what = warlock_core::object::phrase(&sale.stacks, view.content());
+    let text = format!("{} offers {} gold for {what}.", shop.keeper(), sale.offer);
+    let sell = format!("Sell for {} gold", sale.offer);
+    Some(
+        Dialog::new(shop.sign(), text)
+            .accept(sell, Action::Sell(letters))
+            .cancel("Keep it", ScreenAction::Close),
+    )
 }
 
 pub struct InputPlugin;
@@ -375,7 +447,7 @@ impl Plugin for InputPlugin {
         app.insert_resource(bindings)
             .init_resource::<InputMode>()
             .init_resource::<LastTarget>()
-            .add_systems(Startup, aim_at_startup)
+            .add_systems(Startup, (aim_at_startup, press_keys_at_startup))
             .add_systems(Update, route_keys.before(SimSet));
     }
 }
@@ -425,7 +497,9 @@ pub fn route_keys(
             ScreenAction::Close => screens.stack.close(),
             ScreenAction::Act(action) => {
                 screens.stack.close();
-                play.act(action);
+                if let Some(dialog) = play.act(action) {
+                    screens.ask(dialog);
+                }
             }
             ScreenAction::Aim(item) => {
                 screens.stack.close();
@@ -434,7 +508,7 @@ pub fn route_keys(
             ScreenAction::Open(name) => screens.open(name),
             ScreenAction::Replace(name) => screens.replace(name),
             ScreenAction::Return(name) => screens.stack.return_to(name),
-            ScreenAction::Confirm(question, choice) => screens.confirm(question, choice),
+            ScreenAction::Dialog(dialog) => screens.ask(*dialog),
             ScreenAction::Choose(choice) => {
                 choices.write(choice);
                 chosen = true;
@@ -470,18 +544,6 @@ impl Gameplay<'_> {
             && let Some(rest) = rest_choice(key)
         {
             self.actions.write(PlayerAction(Action::Rest(rest)));
-            *self.mode = InputMode::Normal;
-            return None;
-        }
-        // The trap prompt answers by letter: `y` steps on, anything else (Esc too) does not. A
-        // held key's repeats never answer it.
-        if let InputMode::ConfirmStep(dir) = *self.mode {
-            if key.repeat {
-                return None;
-            }
-            if is_yes(key) {
-                self.actions.write(PlayerAction(Action::Move(dir)));
-            }
             *self.mode = InputMode::Normal;
             return None;
         }
@@ -579,15 +641,23 @@ impl Gameplay<'_> {
             (InputMode::Rest, _) => InputMode::Normal,
             (InputMode::Normal, KeyCommand::Rest) => InputMode::Rest,
             (InputMode::Normal, KeyCommand::Move(dir)) => {
-                if asks_before_stepping(&game.world.perception(), dir) {
-                    InputMode::ConfirmStep(dir)
-                } else {
-                    self.actions.write(PlayerAction(Action::Move(dir)));
-                    InputMode::Normal
+                // Leaving a shop owing anything (spec §7 "Shops") or stepping onto a known trap
+                // (spec §8 "Traps") asks first, in the dialog. A held key stops there (repeats
+                // never open the dialog).
+                let view = game.world.perception();
+                match leaving_dialog(&view, dir).or_else(|| trap_dialog(&view, dir)) {
+                    Some(dialog) if !key.repeat => open = Some(dialog.into()),
+                    Some(_) => {}
+                    None => {
+                        self.actions.write(PlayerAction(Action::Move(dir)));
+                    }
                 }
+                InputMode::Normal
             }
-            // Answered above, by letter.
-            (InputMode::ConfirmStep(_), _) => InputMode::Normal,
+            (InputMode::Normal, KeyCommand::Pay) => {
+                self.actions.write(PlayerAction(Action::Pay(None)));
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::Wait) => {
                 self.actions.write(PlayerAction(Action::Wait));
                 InputMode::Normal
@@ -728,7 +798,7 @@ impl Gameplay<'_> {
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Quit) => {
-                open = Some(ScreenAction::Confirm("Save and quit?", MenuChoice::Quit));
+                open = Some(quit_dialog(true).into());
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Snapshot) => {
@@ -744,6 +814,8 @@ impl Gameplay<'_> {
                 InputMode::Normal,
                 KeyCommand::Page(_) | KeyCommand::NextPage | KeyCommand::PrevPage,
             ) => InputMode::Normal,
+            // The dialog's answers: `lookup` never finds them in play.
+            (InputMode::Normal, KeyCommand::Yes | KeyCommand::No) => InputMode::Normal,
         };
         if *self.mode != next {
             *self.mode = next;
@@ -751,9 +823,16 @@ impl Gameplay<'_> {
         open
     }
 
-    /// Asks the simulation to apply `action`, chosen on a screen.
-    fn act(&mut self, action: Action) {
+    /// Asks the simulation to apply `action`, chosen on a screen. Dropping in a shop what it
+    /// would buy asks first whether to sell (spec §7 "Shops"): the dialog is returned instead.
+    fn act(&mut self, action: Action) -> Option<Dialog> {
+        if let (Action::Drop(letters), Some(game)) = (&action, &self.game)
+            && let Some(dialog) = sale_dialog(&game.world.perception(), *letters)
+        {
+            return Some(dialog);
+        }
         self.actions.write(PlayerAction(action));
+        None
     }
 
     /// Starts aiming `kind` (a throw chosen on a screen).
@@ -788,11 +867,45 @@ fn chat_partner(view: &PerceptionView<'_>) -> Option<Dir> {
 }
 
 /// Dev (`--fire`): starts the run aiming the readied missile weapon, as `f` would, so captures
-/// show the targeting line.
+/// show the targeting line; (`--look X,Y`) in look mode with the cursor there.
 fn aim_at_startup(args: Res<Args>, game: Option<Res<Game>>, mut mode: ResMut<InputMode>) {
-    if let (true, Some(game)) = (args.fire, game) {
+    if let (true, Some(game)) = (args.fire, &game) {
         let view = game.world.perception();
         *mode = InputMode::Aim(Aim::start(AimKind::Fire, &view, &LastTarget::default()));
+    }
+    if let (Some(at), Some(_)) = (args.look, &game) {
+        *mode = InputMode::Look(at);
+    }
+}
+
+/// Dev (`--keys`): presses the keys as if typed, once the run (and the screens) have started, so
+/// captures show what they open.
+fn press_keys_at_startup(args: Res<Args>, mut presses: MessageWriter<KeyboardInput>) {
+    let Some(keys) = &args.keys else {
+        return;
+    };
+    for key in &keys.0 {
+        let (key_code, logical_key) = match key.as_str() {
+            "Enter" => (KeyCode::Enter, Key::Enter),
+            "Esc" => (KeyCode::Escape, Key::Escape),
+            "Tab" => (KeyCode::Tab, Key::Tab),
+            "Up" => (KeyCode::ArrowUp, Key::ArrowUp),
+            "Down" => (KeyCode::ArrowDown, Key::ArrowDown),
+            "Left" => (KeyCode::ArrowLeft, Key::ArrowLeft),
+            "Right" => (KeyCode::ArrowRight, Key::ArrowRight),
+            ch => (
+                KeyCode::Unidentified(bevy::input::keyboard::NativeKeyCode::Unidentified),
+                Key::Character(ch.into()),
+            ),
+        };
+        presses.write(KeyboardInput {
+            key_code,
+            logical_key,
+            state: ButtonState::Pressed,
+            text: None,
+            repeat: false,
+            window: Entity::PLACEHOLDER,
+        });
     }
 }
 
@@ -803,22 +916,18 @@ pub const REST_CHOICES: [(&str, Rest); 3] = [
     ("n", Rest::Dusk),
 ];
 
-/// Whether a step in `dir` asks first (spec §8 "Traps"): onto a trap the player knows, where no
-/// one they see stands (moving there would be an attack, or stop).
-pub fn asks_before_stepping(view: &PerceptionView<'_>, dir: Dir) -> bool {
+/// The dialog a step in `dir` opens first, if it goes onto a trap the player knows, where no one
+/// they see stands (moving there would be an attack, or stop; spec §8 "Traps"): "Really step
+/// onto the fireball trap?", to step onto it or stay back (the safe answer, selected first).
+fn trap_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
     let to = view.viewer().step(dir);
-    view.trap(to).is_some() && view.actor_at(to).is_none()
-}
-
-/// Whether a key press is `y` (yes), by the character it types.
-fn is_yes(key: &KeyboardInput) -> bool {
-    matches!(&key.logical_key, Key::Character(c) if c.as_str().eq_ignore_ascii_case("y"))
-}
-
-/// The prompt asking whether to step onto a known trap, by its name: "Really step onto the
-/// fireball trap? (y/n)". No is the default: any key but `y`.
-pub fn confirm_step_prompt(trap: &str) -> String {
-    format!("Really step onto the {trap}? (y/n)")
+    let trap = view.trap(to).filter(|_| view.actor_at(to).is_none())?;
+    let name = &view.content().trap(trap).name;
+    Some(
+        Dialog::new("Trap", format!("Really step onto the {name}?"))
+            .accept("Step onto it", Action::Move(dir))
+            .cancel("Stay back", ScreenAction::Close),
+    )
 }
 
 /// The rest a key press picks in the rest prompt, if any.
@@ -886,6 +995,10 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::NextTarget), ["Tab"]);
         assert_eq!(keys(&b, KeyCommand::UseTool), ["U"]);
         assert_eq!(keys(&b, KeyCommand::Chat), ["C"]);
+        assert_eq!(keys(&b, KeyCommand::Pay), ["p"]);
+        // The dialog's answers are their own context: `y` and `n` move the player in play.
+        assert_eq!(keys(&b, KeyCommand::Yes), ["y"]);
+        assert_eq!(keys(&b, KeyCommand::No), ["n"]);
     }
 
     #[test]
@@ -912,6 +1025,86 @@ mod tests {
     }
 
     #[test]
+    fn leaving_a_shop_owing_and_selling_open_dialogs() {
+        let content = std::sync::Arc::new(warlock_core::content::Content::builtin().unwrap());
+        let mut world = warlock_core::World::new(content, "courtyard", None).expect("run");
+        let walk = |world: &mut warlock_core::World, actions: &str| {
+            for action in warlock_core::action::parse_actions(actions).expect("actions") {
+                world.apply(&action);
+            }
+        };
+        // Into Grimbold's store with the purse (a) and the scroll of light (b), on the cell
+        // inside the door (to the west).
+        walk(
+            &mut world,
+            "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 move:S*5 move:E*5",
+        );
+        assert!(
+            leaving_dialog(&world.perception(), Dir::W).is_none(),
+            "owing nothing"
+        );
+        // With an unpaid dagger (c): pay and leave in one action, or not (the step, which the
+        // rules turn back).
+        walk(&mut world, "move:E move:NE pickup move:SW move:W");
+        let view = world.perception();
+        let owed = view.shop_here().map(|s| s.owed()).expect("owing");
+        assert!(owed <= view.own_gold());
+        assert_eq!(
+            leaving_dialog(&view, Dir::W),
+            Some(
+                Dialog::new(
+                    "Grimbold's General Store",
+                    format!("You owe Grimbold {owed} gold.")
+                )
+                .accept(
+                    format!("Pay {owed} gold and leave"),
+                    Action::Pay(Some(Dir::W))
+                )
+                .decline("Don't pay", Action::Move(Dir::W))
+            )
+        );
+        assert!(leaving_dialog(&view, Dir::E).is_none(), "a step inside");
+        // Selling the scroll asks; putting back the dagger does not.
+        let offer = view.sale(Letters::of([1])).expect("an offer").offer;
+        assert_eq!(
+            sale_dialog(&view, Letters::of([1])),
+            Some(
+                Dialog::new(
+                    "Grimbold's General Store",
+                    format!("Grimbold offers {offer} gold for a scroll of light.")
+                )
+                .accept(
+                    format!("Sell for {offer} gold"),
+                    Action::Sell(Letters::of([1]))
+                )
+                .cancel("Keep it", ScreenAction::Close)
+            )
+        );
+        assert!(sale_dialog(&view, Letters::of([2])).is_none());
+        // With the short sword too, more than the purse holds: no way to pay, only back.
+        walk(
+            &mut world,
+            "move:E move:NE move:E*2 pickup move:W*3 move:SW",
+        );
+        let view = world.perception();
+        let owed = view.shop_here().map(|s| s.owed()).expect("owing");
+        assert!(owed > view.own_gold());
+        assert_eq!(
+            leaving_dialog(&view, Dir::W),
+            Some(
+                Dialog::new(
+                    "Grimbold's General Store",
+                    format!(
+                        "You owe Grimbold {owed} gold and have only 60. Put something back, or \
+                         bring more gold."
+                    )
+                )
+                .decline("Go back", Action::Move(Dir::W))
+            )
+        );
+    }
+
+    #[test]
     fn stepping_onto_a_known_trap_asks_first() {
         use std::sync::Arc;
         use warlock_core::World;
@@ -924,12 +1117,14 @@ mod tests {
         }
         assert_eq!(world.player_pos(), Pos::new(16, 3));
         let view = world.perception();
-        assert!(asks_before_stepping(&view, Dir::N));
-        assert!(!asks_before_stepping(&view, Dir::E));
-        let trap = view.trap(Pos::new(16, 2)).expect("known");
+        assert!(trap_dialog(&view, Dir::E).is_none());
         assert_eq!(
-            confirm_step_prompt(&view.content().trap(trap).name),
-            "Really step onto the arrow trap? (y/n)"
+            trap_dialog(&view, Dir::N),
+            Some(
+                Dialog::new("Trap", "Really step onto the arrow trap?")
+                    .accept("Step onto it", Action::Move(Dir::N))
+                    .cancel("Stay back", ScreenAction::Close)
+            )
         );
     }
 

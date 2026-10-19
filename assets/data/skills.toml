@@ -28,8 +28,9 @@
 #                 the Dodge category, whose bonuses add up), "quiet" (percent less noise from your
 #                 steps and doors), "hearing" (you hear sounds this much fainter: your hearing
 #                 threshold, lower), "burden" (percent less of your burden's slowdown), "travel"
-#                 (percent less time a journey on the overworld takes). The percent effects stay
-#                 within 0 to 100.
+#                 (percent less time a journey on the overworld takes), "bargain" (percent better
+#                 prices in shops, together with Presence at most half; shops.toml). The percent
+#                 effects stay within 0 to 100.
 #
 # The player sees their own trained skills and their values, never a benefit's number, a mark, or
 # a chance (the wiki describes them as rules).
@@ -52,6 +53,8 @@ id = "appraise"
 name = "Appraise"
 description = "Judging what a thing is worth and what it is made of."
 kind = "action"
+# Knowing what things are worth gets better prices in shops (shops.toml), 20 % at 100.
+benefit = [{ effect = "bargain", curve = [[0, 0], [100, 20], [200, 30]] }]
 
 [[skill]]
 id = "athletics"

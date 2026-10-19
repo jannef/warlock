@@ -77,6 +77,98 @@ pub const MAX_RANGE: i32 = crate::perception::VIEW_RADIUS;
 pub const MAX_BURN: u32 = DAY as u32;
 /// The most power a digging tool may have (a pick-axe has 10).
 pub const MAX_DIG: u16 = 100;
+/// The most one object may be worth, in gold coins.
+pub const MAX_VALUE: u32 = 1_000_000;
+
+/// An object's class, ADOM-like: its glyph says what kind of thing it is (spec §7 "Objects and
+/// materials"). Shops sell and buy by class (spec §7 "Shops").
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ObjectClass {
+    /// `)`
+    Weapons,
+    /// `}`
+    MissileWeapons,
+    /// `/`
+    Missiles,
+    /// `[`
+    Armour,
+    /// `(`
+    Tools,
+    /// `!`
+    Potions,
+    /// `?`
+    Scrolls,
+    /// `%`
+    Food,
+    /// `*`: stones and gems.
+    Stones,
+    /// `$`
+    Coins,
+    /// `=`
+    Rings,
+    /// `"`
+    Amulets,
+}
+
+impl ObjectClass {
+    /// Every class, in glyph order of the ADOM list.
+    pub const ALL: [ObjectClass; 12] = [
+        ObjectClass::Weapons,
+        ObjectClass::MissileWeapons,
+        ObjectClass::Missiles,
+        ObjectClass::Armour,
+        ObjectClass::Tools,
+        ObjectClass::Potions,
+        ObjectClass::Scrolls,
+        ObjectClass::Food,
+        ObjectClass::Stones,
+        ObjectClass::Coins,
+        ObjectClass::Rings,
+        ObjectClass::Amulets,
+    ];
+
+    /// The class of objects drawn with `glyph`; `None` for a glyph no class uses.
+    pub fn of_glyph(glyph: char) -> Option<Self> {
+        Self::ALL.into_iter().find(|c| c.glyph() == glyph)
+    }
+
+    /// The glyph its objects are drawn with.
+    pub const fn glyph(self) -> char {
+        match self {
+            ObjectClass::Weapons => ')',
+            ObjectClass::MissileWeapons => '}',
+            ObjectClass::Missiles => '/',
+            ObjectClass::Armour => '[',
+            ObjectClass::Tools => '(',
+            ObjectClass::Potions => '!',
+            ObjectClass::Scrolls => '?',
+            ObjectClass::Food => '%',
+            ObjectClass::Stones => '*',
+            ObjectClass::Coins => '$',
+            ObjectClass::Rings => '=',
+            ObjectClass::Amulets => '"',
+        }
+    }
+
+    /// What the class is called, in the plural: "missile weapons".
+    pub const fn name(self) -> &'static str {
+        match self {
+            ObjectClass::Weapons => "weapons",
+            ObjectClass::MissileWeapons => "missile weapons",
+            ObjectClass::Missiles => "missiles",
+            ObjectClass::Armour => "armour",
+            ObjectClass::Tools => "tools",
+            ObjectClass::Potions => "potions",
+            ObjectClass::Scrolls => "scrolls",
+            ObjectClass::Food => "food",
+            ObjectClass::Stones => "stones and gems",
+            ObjectClass::Coins => "coins",
+            ObjectClass::Rings => "rings",
+            ObjectClass::Amulets => "amulets",
+        }
+    }
+}
 
 /// Index of an object definition in [`super::Content::object_defs`].
 ///
@@ -135,6 +227,8 @@ pub(super) struct ObjectSpec {
     pub material: String,
     /// Grams, at least 1.
     pub weight: u32,
+    /// What one is worth, in gold coins (shops; spec §7 "Shops").
+    pub value: u32,
     #[serde(default)]
     pub stackable: bool,
     /// Where it is worn or wielded: a slot's `fits` (its id unless it says otherwise).
@@ -233,6 +327,9 @@ pub struct ObjectDef {
     pub material: MaterialId,
     /// Weight of one, in grams; at least 1.
     pub weight: u32,
+    /// What one is worth, in gold coins, at most [`MAX_VALUE`]; 0 for junk (spec §7 "Shops":
+    /// nobody buys or sells it).
+    pub value: u32,
     /// Several lie in one stack (coins, arrows) instead of a stack each.
     pub stackable: bool,
     /// Where it is worn or wielded: the `fits` of the slots it goes in (`None`: nowhere).
@@ -324,6 +421,8 @@ impl ObjectDef {
             fg: creature.fg,
             material,
             weight: creature.weight,
+            // Nobody buys or sells a corpse (spec §7 "Shops").
+            value: 0,
             stackable: false,
             slot: None,
             two_handed: false,
@@ -392,6 +491,11 @@ impl ObjectDef {
         self.ammo.is_some() || self.is_thrown()
     }
 
+    /// Its class, from its glyph (ADOM-like); `None` for a glyph no class uses.
+    pub fn class(&self) -> Option<ObjectClass> {
+        ObjectClass::of_glyph(self.glyph)
+    }
+
     /// `count` of it in words: "a dagger", "an iron key", "12 arrows".
     pub fn describe(&self, count: u32) -> String {
         if count == 1 {
@@ -435,6 +539,9 @@ impl ObjectSpec {
             return Err(err(
                 "`weight` is in grams and must be at least 1; every object weighs something".into(),
             ));
+        }
+        if self.value > MAX_VALUE {
+            return Err(err(format!("`value` is in gold coins, 0 to {MAX_VALUE}")));
         }
         let material = material(&self.material)
             .ok_or_else(|| err(format!("unknown material `{}`", self.material)))?;
@@ -526,6 +633,7 @@ impl ObjectSpec {
             fg: self.fg,
             material,
             weight: self.weight,
+            value: self.value,
             stackable: self.stackable,
             slot: self.slot,
             two_handed: self.two_handed,
@@ -821,6 +929,7 @@ mod tests {
             fg: Rgb::WHITE,
             material: MaterialId(0),
             weight: 1,
+            value: 0,
             stackable: false,
             slot: None,
             two_handed: false,

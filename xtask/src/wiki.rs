@@ -27,7 +27,8 @@ use warlock_core::content::Effect as ItemEffect;
 use warlock_core::content::{
     ActionKind, AffixDef, AffixKind, Affliction, BASE_TURN, Combat, Content, CreatureId,
     DiseaseDef, DiseaseId, FactionId, HungerDef, ItemKind, LevelKind, LightId, NORMAL_SPEED,
-    ObjectDef, ObjectId, Rarity, Speaker, Stance, StatusDef, TerrainDef, TrapEffect, price,
+    ObjectClass, ObjectDef, ObjectId, Rarity, Speaker, Stance, StatusDef, TerrainDef, TrapEffect,
+    price,
 };
 use warlock_core::daylight::{
     MOONLIGHT_PER_CELL, SIGHT_DAY, SIGHT_MOONLIT, SIGHT_NIGHT, SIGHT_TWILIGHT, overworld_sight,
@@ -154,6 +155,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("quests.md".to_string(), quests(content)),
         ("footsteps.md".to_string(), footsteps(content)),
         ("objects.md".to_string(), objects(content)),
+        ("shops.md".to_string(), shops(content)),
         ("equipment.md".to_string(), equipment(content)),
         ("materials.md".to_string(), materials(content)),
         ("pack.md".to_string(), pack(content)),
@@ -1453,16 +1455,20 @@ fn object_class(glyph: char) -> Option<&'static str> {
 /// Every object but corpses (Food and corpses has those).
 fn objects(content: &Content) -> String {
     let mut out = String::from(
-        "| Object | Glyph | Kind | Material | Weight (each) | Stacks | Worn or wielded on |\n\
-         |---|:---:|---|---|---:|:---:|---|\n",
+        "| Object | Glyph | Kind | Material | Weight (each) | Worth (each) | Stacks | Worn or wielded on |\n\
+         |---|:---:|---|---|---:|---:|:---:|---|\n",
     );
     for (i, o) in content.object_defs().iter().enumerate() {
         if o.corpse.is_some() {
             continue;
         }
+        let worth = match o.value {
+            0 => "nothing".to_string(),
+            v => format!("{v} gold"),
+        };
         let _ = writeln!(
             out,
-            "| {} | {} | {} | {} | {} | {} | {} |",
+            "| {} | {} | {} | {} | {} | {worth} | {} | {} |",
             capital(&o.name),
             glyph(o.glyph),
             object_class(o.glyph).unwrap_or("-"),
@@ -1470,6 +1476,38 @@ fn objects(content: &Content) -> String {
             format_weight(u64::from(o.weight)),
             yes(o.stackable),
             goes_on(content, i)
+        );
+    }
+    out
+}
+
+/// The kinds of shop (spec §7 "Shops"): what each sells and buys, by class, and its prices in
+/// words of the value (an object's worth, in the objects table).
+fn shops(content: &Content) -> String {
+    let mut out =
+        String::from("| Shop | Sign | Sells | Buys | Asks | Pays |\n|---|---|---|---|---:|---:|\n");
+    let Some(shops) = content.shops() else {
+        return out;
+    };
+    let classes = |list: &[ObjectClass]| {
+        let names: Vec<&str> = list.iter().map(|c| c.name()).collect();
+        match names.as_slice() {
+            [] => "nothing".to_string(),
+            [one] => (*one).to_string(),
+            [a, b] => format!("{a} and {b}"),
+            [rest @ .., last] => format!("{}, and {last}", rest.join(", ")),
+        }
+    };
+    for def in shops.defs() {
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} | {}% of the worth | {}% of the worth |",
+            capital(&def.name),
+            def.sign("Grimbold"),
+            classes(&def.stock),
+            classes(&def.buys),
+            def.markup,
+            def.pays
         );
     }
     out
@@ -1737,6 +1775,7 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Hearing => "keener hearing",
         Effect::Burden => "less slowdown from your load",
         Effect::Travel => "quicker journeys on the overworld",
+        Effect::Bargain => "better prices in shops",
     }
 }
 
@@ -1756,6 +1795,7 @@ fn skill_benefits(content: &Content) -> String {
             Effect::Hearing => "hears fainter by",
             Effect::Burden => "Burdened / Strained",
             Effect::Travel => "journeys",
+            Effect::Bargain => "prices",
         };
         let _ = write!(out, " {name}: {what} |");
     }
@@ -1770,6 +1810,7 @@ fn skill_benefits(content: &Content) -> String {
                 _ if n == 0 => "—".to_string(),
                 Effect::Dodge => format!("+{n}"),
                 Effect::Quiet | Effect::Travel => format!("\u{2212}{n}%"),
+                Effect::Bargain => format!("{n}% better"),
                 Effect::Hearing => n.to_string(),
                 Effect::Burden => {
                     let slowed = |b: Burden| factor(b.slow_eased(100, n));
@@ -3154,10 +3195,9 @@ mod tests {
             assert!(rooms.contains(row), "{row}\n{rooms}");
         }
         assert!(text("footsteps.md").contains("grass"));
-        assert!(
-            text("objects.md")
-                .contains("| Dagger | `)` | weapon | steel | 450 g | no | Main hand or off hand |")
-        );
+        assert!(text("objects.md").contains(
+            "| Dagger | `)` | weapon | steel | 450 g | 30 gold | no | Main hand or off hand |"
+        ));
         // Fighting styles: their configurations, defaults, ranks, and the classes' starting ones.
         let styles = text("styles.md");
         for row in [
@@ -3184,12 +3224,25 @@ mod tests {
             "styles have their own tables"
         );
         assert!(
-            text("objects.md").contains("| Arrow | `/` | missile | wood | 30 g | yes | Missiles |")
+            text("objects.md")
+                .contains("| Arrow | `/` | missile | wood | 30 g | 1 gold | yes | Missiles |")
         );
         assert!(text("objects.md").contains("| Left ring or right ring |"));
         assert!(text("objects.md").contains("| Main hand (both hands) |"));
         assert!(
-            text("objects.md").contains("| Apple | `%` | food | plant matter | 150 g | yes | - |")
+            text("objects.md")
+                .contains("| Apple | `%` | food | plant matter | 150 g | 1 gold | yes | - |")
+        );
+        assert!(
+            text("objects.md").contains("| Rock | `*` | stone or gem | stone | 800 g | nothing |")
+        );
+        let shops = text("shops.md");
+        assert!(
+            shops.contains(
+                "| Armourer | Grimbold's Armoury | armour | armour | 130% of the worth | 40% of the \
+                 worth |"
+            ),
+            "{shops}"
         );
         let equipment = text("equipment.md");
         assert!(
@@ -3302,13 +3355,19 @@ mod tests {
         let benefits = text("skill-benefits.md");
         assert!(
             benefits.contains(
-                "| Value | Balance: Burdened / Strained | Listen: hears fainter by | Stealth: \
-                 noise | Survival: journeys | Tumble: Dodge |"
+                "| Value | Appraise: prices | Balance: Burdened / Strained | Listen: hears fainter \
+                 by | Stealth: noise | Survival: journeys | Tumble: Dodge |"
             ),
             "{benefits}"
         );
-        assert!(benefits.contains("| 100 | ×1.1 / ×1.2 | 10 | \u{2212}60% | \u{2212}20% | +5 |"));
-        assert!(benefits.contains("| 150 | ×1.08 / ×1.15 | 15 | \u{2212}75% | \u{2212}20% | +7 |"));
+        assert!(
+            benefits.contains(
+                "| 100 | 20% better | ×1.1 / ×1.2 | 10 | \u{2212}60% | \u{2212}20% | +5 |"
+            )
+        );
+        assert!(benefits.contains(
+            "| 150 | 25% better | ×1.08 / ×1.15 | 15 | \u{2212}75% | \u{2212}20% | +7 |"
+        ));
         let grants = text("skill-grants.md");
         assert!(grants.contains("| Halfling | Listen `1d6+4`, Stealth `1d6+4` |"));
         assert!(

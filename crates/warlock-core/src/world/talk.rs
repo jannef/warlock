@@ -140,9 +140,15 @@ impl World {
         crate::weather::draw(self.state.seed, &label, 0)
     }
 
-    /// What `actor` is called in messages: "the gardener". Shopkeepers (#145) will have names.
+    /// What `actor` is called in messages: "the gardener", or a shop's keeper by its name
+    /// ("Grimbold"; spec §7 "Shops").
     pub(super) fn called(&self, actor: &Actor) -> String {
-        format!("the {}", self.content.creature(actor.creature).name)
+        let keeper = (self.state.levels.get(&actor.level))
+            .and_then(|level| level.shops.iter().find(|s| s.keeper == actor.id));
+        match keeper {
+            Some(shop) => shop.name.clone(),
+            None => format!("the {}", self.content.creature(actor.creature).name),
+        }
     }
 
     /// The dialogue `actor` speaks: its npc's, else its type's.

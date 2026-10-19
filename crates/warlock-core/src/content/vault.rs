@@ -63,6 +63,9 @@ impl Vault {
         if template.temperature.is_some() {
             return Err("a vault has no temperature of its own".into());
         }
+        if !template.shops.is_empty() {
+            return Err("a vault cannot have shops".into());
+        }
         let is_door = |p: Pos| {
             let def = content.terrain(terrain[p]);
             def.is_closed_door() || def.is_open_door()

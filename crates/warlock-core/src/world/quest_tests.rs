@@ -127,6 +127,7 @@ glyph = "%"
 fg = "#d84838"
 material = "plant"
 weight = 150
+value = 0
 stackable = true
 
 [[object]]
@@ -136,6 +137,7 @@ glyph = "?"
 fg = "#e0d2a8"
 material = "paper"
 weight = 20
+value = 0
 
 [[object]]
 id = "gold_coin"
@@ -144,6 +146,7 @@ glyph = "$"
 fg = "#f0c040"
 material = "gold"
 weight = 10
+value = 0
 stackable = true
 
 [[object]]
@@ -153,6 +156,7 @@ glyph = '"'
 fg = "#c0c0ff"
 material = "gold"
 weight = 10
+value = 0
 
 [[object]]
 id = "rock"
@@ -161,6 +165,7 @@ glyph = "*"
 fg = "#808080"
 material = "plant"
 weight = 100
+value = 0
 "##;
 
 const DIALOGUE: &str = r##"

@@ -3,5 +3,5 @@
 | Footsteps | Terrain |
 |---|---|
 | Very loud | Still water, running water, shallow water |
-| Loud | Gazebo floor, rocky ground, marsh, dry grass, tall grass, bush, reeds, rubble |
+| Loud | Gazebo floor, rocky ground, marsh, dry grass, tall grass, bush, reeds, rubble, plank floor |
 | Quiet | Dusty floor, grass, wildflowers, forest floor, buttercups, bluebells, dirt road |

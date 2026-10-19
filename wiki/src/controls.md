@@ -21,6 +21,7 @@ authoritative: it is generated from your current key bindings.
 | Light or douse the lantern | `L` |
 | Pick up | `,` or `g` |
 | Drop | `d` |
+| Pay the shopkeeper | `p` |
 | Inventory | `i` |
 | Equipment (wear and wield) | `e` |
 | Character (your stats and weight) | `@` |
@@ -39,6 +40,7 @@ authoritative: it is generated from your current key bindings.
 | Next target while aiming (with Shift: the one before) | `Tab` |
 | Use a tool: dig into a wall with a pick-axe | `U`, then a direction |
 | Show or hide the controls | `?` |
+| Yes / no, when a question asks | `y` / `n` |
 | Pause menu | `Esc` |
 | Save and quit (unbound by default; use the pause menu) | none |
 
@@ -66,8 +68,13 @@ direction? (Esc to cancel)` (see [People and talk](npcs.md)), and
 resting asks how long (see [Resting](resting.md)). Answer with a direction or the key shown, or
 press `Esc` to cancel. Pressing any other command cancels the prompt.
 
-Stepping onto a trap you know asks `Really step onto the fireball trap? (y/n)`: only `y` steps
-on (see [Traps](traps.md)).
+A few things ask first, in a small window over the map: quitting, stepping onto a trap you know
+(see [Traps](traps.md)), leaving a shop owing money, and dropping something a shop would buy
+(see [Shops](shops.md)). The window lists its answers,
+each with the keys that choose it: `y` picks the yes answer, `n` the no answer, and `Esc` the
+one that backs out; or move with the arrow keys and press `Enter`. The safe answer is chosen at
+first, so `Enter` alone never does what you might regret. The yes and no keys are their own: in
+a question `y` and `n` do not move you, and you can rebind them without touching movement.
 
 ## Look mode
 

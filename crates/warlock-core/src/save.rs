@@ -62,7 +62,10 @@ const MAGIC: &str = "WARLOCK-SAVE";
 ///     the traps the player remembers; the player's death records the trap that killed them.
 /// 29: fighting styles: `Actor::weapon_skills` holds a rank and marks in each style too (after
 ///     the weapon skills), and a light weapon may be in the off hand (two weapons).
-pub const FORMAT_VERSION: u32 = 29;
+/// 30: shops: level states keep their shops (`LevelState::shops`: the keeper, the ways out,
+///     what the player owes, how the keeper stands); content fingerprints cover shop ids, and
+///     objects have values.
+pub const FORMAT_VERSION: u32 = 30;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 

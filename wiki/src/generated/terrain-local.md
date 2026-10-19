@@ -49,3 +49,5 @@
 | Thin ice | `⁄` | yes | no | 7.2 seconds | normal | 0 | ice on water: holds by its thickness |
 | Ice | `·` | yes | no | 7.2 seconds | normal | 0 | ice on water: holds by its thickness |
 | Thick ice | `·` | yes | no | 7.2 seconds | normal | 0 | ice on water: holds by its thickness |
+| Plank floor | `.` | yes | no | 6 seconds | loud | 2 | roofed: no sun or sky light |
+| Timber wall | `#` | no | yes | - | - | 2 | roofed: no sun or sky light |

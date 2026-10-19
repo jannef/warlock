@@ -12,3 +12,4 @@
 | Gardener | `@` | Peaceful folk | neutral | never | no | no | - |
 | Wandering bard | `@` | Peaceful folk | neutral | never | no | no | - |
 | Old hermit | `@` | Peaceful folk | neutral | never | no | no | - |
+| Shopkeeper | `@` | Merchants | neutral | never | yes | no | - |

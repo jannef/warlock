@@ -199,6 +199,7 @@ glyph = "*"
 fg = "#808080"
 material = "stone"
 weight = 100000
+value = 0
 "##;
 
 const LEGEND: &str = r##"

@@ -18,9 +18,9 @@ and you remember it like the terrain, even out of sight. Look mode names it: "A 
 stone floor.", or "A kobold (hostile, unhurt), on a pit on stone floor." Some places show you
 their traps from the start.
 
-Stepping onto a trap you know asks first, in the message line: `Really step onto the fireball
-trap? (y/n)`. Press `y` to step on; any other key, `Esc` too, and you stay where you are. Holding
-a movement key never answers it.
+Stepping onto a trap you know asks first, in a small window: `Really step onto the fireball
+trap?` Choose **Step onto it** (`y`) to step on, or **Stay back** (`n` or `Esc`, chosen at first)
+to stay where you are. Holding a movement key stops you short of the trap instead of asking.
 
 ## What traps do
 

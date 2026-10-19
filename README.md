@@ -202,6 +202,13 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   light, an echoing hall that makes every sound loud, a hushed chamber for sneaking, a softly
   glowing sanctuary where wounds heal fast and nothing hostile follows you in (the showcase's
   stairs nook is one), and a flooded room of splashing shallow water.
+- **Shops** — ADOM-like general stores and specialty shops (a weaponsmith, an armourer, a
+  provisioner, a fletcher), each kept by a named shopkeeper by the door: goods show their price
+  in gold, what you pick up you owe until you pay (`p`, or when you leave), the keeper makes an
+  offer for what you drop, and your Presence and the Appraise skill get you better prices.
+  The keeper won't let you out of the door owing money; leave another way (dig through the wall)
+  and the shopkeeper, tough and well armed, comes after you. Grimbold's
+  General Store stands in the courtyard; about one level of the Depths in six has a shop.
 
   ![A generated level in The Depths](docs/screenshots/m6-depths-rooms.png)
 
@@ -229,7 +236,8 @@ cargo run --release -p warlock
 | `>` / `<` | Go down / up stairs |
 | `L` | Light or douse your lantern |
 | `,` or `g` | Pick up what lies here (choose by letter where several things lie) |
-| `d` | Drop something |
+| `d` | Drop something (in a shop: put back what you have not paid for, or sell) |
+| `p` | Pay the shopkeeper for what you have picked up in a shop |
 | `i` | Inventory: what you carry, by letter, and what it all weighs; a letter describes that item |
 | `e` | Equipment: wear and wield things, slot by slot (head, body, hands, rings, missiles, a tool, …), as in ADOM; an upper-case slot letter describes what is there |
 | `@` | Character: your race, gender, class, age, birth sign, stats, hit points, Defence, status effects, known diseases, and weight |

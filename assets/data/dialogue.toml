@@ -130,3 +130,17 @@ reply = "A spring runs out of the east wall into the ponds, and a rill carries t
 id = "stairs"
 name = "These stairs"
 reply = "Three stairs down, two up. Down: the Vast Caverns, the quarry, where they dig, and the arena, where the fighting is. Up: the courtyard garden, and the road out into the Wildlands. Everything in this hall is safe. The arena is not."
+
+# Every shopkeeper (shops.toml): one-liners about trade, no topics. An outraged one, hostile to
+# you, is in no mood to talk.
+[[dialogue]]
+creature = "shopkeeper"
+greet = "Look around, take your time. What you pick up, you pay for at the door."
+lines = [
+    "Everything on the floor is for sale. Everything.",
+    "Pay at the door, and we stay friends.",
+    "Bring me what you find. I pay fair, for a shop.",
+    "Gold coins only. I don't take promises.",
+    "The last one who ran off without paying? I don't see him around, do you?",
+    "Prices are prices. A friendly face helps, mind.",
+]

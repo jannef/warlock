@@ -12,3 +12,4 @@
 | Gardener corpse | Medium | 72 kg | 1000 | 16 hours and 40 minutes | 6 |
 | Wandering bard corpse | Medium | 64 kg | 1000 | 16 hours and 40 minutes | 6 |
 | Old hermit corpse | Medium | 55 kg | 1000 | 16 hours and 40 minutes | 6 |
+| Shopkeeper corpse | Medium | 75 kg | 1000 | 16 hours and 40 minutes | 6 |

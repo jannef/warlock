@@ -98,6 +98,7 @@ mod path;
 mod quest;
 mod schedule;
 mod shoot;
+mod shop;
 mod spell;
 mod status;
 mod talk;
@@ -113,6 +114,7 @@ pub(crate) use hash::fnv1a;
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
 pub use quest::{QuestRecord, QuestView, Quests, Stage};
+pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
 pub use talk::{Conversation, Talk, TopicView};
 
 use crate::action::{
@@ -1398,6 +1400,23 @@ impl World {
                 };
             }
             Action::Drop(letters) => return self.drop_objects(*letters),
+            Action::Sell(letters) => {
+                return self.trade(*letters, true).unwrap_or_else(|| {
+                    self.say("There is nobody here to sell to.");
+                    Spent::Nothing
+                });
+            }
+            Action::Pay(then) => {
+                // Paid, the player steps out at once; a step that fails leaves them paid.
+                let paid = self.pay();
+                return match (paid, then) {
+                    (Spent::NoTime, Some(dir)) => match self.player_moves(*dir, events) {
+                        Spent::Nothing => Spent::NoTime,
+                        spent => spent,
+                    },
+                    _ => paid,
+                };
+            }
             Action::Equip { slot, item } => return self.equip(slot, *item),
             Action::Remove(slot) => return self.remove(slot),
             Action::Bash(dir) => return self.bash(*dir, events),
@@ -1552,7 +1571,18 @@ impl World {
         let full = taken != chosen || (more && inventory.len() >= object::INVENTORY_SLOTS);
         let (got, left) = split(&pile, taken);
         self.state.current_mut().set_pile(here, left);
-        let mut text = format!("You pick up {}.", object::phrase(&got, &content));
+        // In a shop, goods for sale are now owed for (spec §7 "Shops").
+        let prices = self.picked_up_goods(&got);
+        let tag = |i: usize| prices[i].map(|p| format!("unpaid, {p} gold"));
+        let mut text = format!("You pick up {}.", object::phrase_with(&got, &content, tag));
+        let shown: u32 = prices.iter().flatten().sum();
+        let priced = prices.iter().flatten().count();
+        if let Some((name, owed)) = self.owing()
+            && priced > 0
+            && (priced > 1 || owed != shown)
+        {
+            text.push_str(&format!(" You owe {name} {owed} gold."));
+        }
         if full {
             text.push_str(" You have no room for more.");
         }
@@ -1564,6 +1594,10 @@ impl World {
     /// on the player's cell, taking off first what of them is worn or wielded (which takes its
     /// time too).
     fn drop_objects(&mut self, letters: Letters) -> Spent {
+        // In an open shop, unpaid goods go back and the player's own are offered for.
+        if let Some(spent) = self.trade(letters, false) {
+            return spent;
+        }
         let inventory = self.state.player().inventory.clone();
         if inventory.is_empty() {
             self.say("You are not carrying anything.");
@@ -1643,7 +1677,7 @@ impl World {
 
     fn player_moves(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
         let from = self.player_pos();
-        let to = from.step(dir);
+        let mut to = from.step(dir);
         let level = self.state.current();
         let Some(&terrain) = level.terrain.get(to) else {
             if let Some(exit) = level.exit.clone() {
@@ -1691,6 +1725,13 @@ impl World {
         if !self.can_move() {
             return Spent::Nothing;
         }
+        // Out of a shop's door owing anything: the keeper turns the player back (spec §7
+        // "Shops"), a step the other way, or none at all if the shop floor is full; whoever
+        // stood in the door stays there.
+        if let Some(back) = self.turned_back(from, to) {
+            to = back;
+            swap = None;
+        }
         let player = self.state.player;
         let fleeing = self.flees(player, to);
         // Ice there may give way (then it is a step into the water); climbing out onto it from
@@ -1701,6 +1742,10 @@ impl World {
             + self.tread_price(player, footing);
         let overworld = self.state.current().kind == LevelKind::Overworld;
         self.state.overworld_step = overworld.then_some(dir);
+        if to == from {
+            // Turned back with nowhere to go: the step's time, spent at the door.
+            return Spent::Turn(step);
+        }
         if let Some(actor) = self.state.actors.get_mut(&player) {
             actor.pos = to;
         }
@@ -1724,6 +1769,8 @@ impl World {
         if overworld && self.trains(Use::Travel) {
             self.train(Use::Travel);
         }
+        // Entering a shop the keeper greets the player; leaving it owing is theft.
+        self.shop_step(from, to);
         let level = self.state.current();
         if let Some(stairs) = level.stairs_at(to) {
             let text = match (level.kind, stairs.dir, &stairs.to) {
@@ -1735,9 +1782,16 @@ impl World {
             };
             self.say(text);
         }
+        // Goods for sale say their price (spec §7 "Shops").
         let text = match self.state.current().objects_at(to) {
             [] => None,
-            [one] => Some(format!("You see here {}.", one.describe(&self.content))),
+            [one] => Some(match self.asking_price(to, one) {
+                Some(price) => format!(
+                    "You see here {} (for sale, {price} gold).",
+                    one.describe(&self.content)
+                ),
+                None => format!("You see here {}.", one.describe(&self.content)),
+            }),
             _ => Some("There are several objects here.".to_string()),
         };
         if let Some(text) = text {
@@ -1969,10 +2023,20 @@ fn level_template<'a>(
 }
 
 /// Creates the runtime state for a level and spawns its creatures, each with its type's stats,
-/// carrying, wearing, and wielding what the level gives it.
+/// carrying, wearing, and wielding what the level gives it; its shops are kept by the keepers
+/// spawned at their posts.
 fn instantiate_level(state: &mut WorldState, content: &Content, template: &LevelTemplate) {
     let id = template.id.as_str();
-    let level = LevelState::from_template(template, content, state.time);
+    let mut level = LevelState::from_template(template, content, state.time);
+    let first = state.next_actor_id;
+    for plan in &template.shops {
+        let spawned = (template.creatures.iter()).position(|c| c.pos == plan.post);
+        if let Some(k) = spawned {
+            let keeper = ActorId(first + u32::try_from(k).unwrap_or(u32::MAX));
+            let shop = Shop::from_plan(plan, keeper, &template.terrain, content);
+            level.shops.push(shop);
+        }
+    }
     state.levels.insert(id.to_string(), level);
     // Under the open sky its water has frozen and thawed with the weather of the last weeks.
     state.pre_roll_ice(content, id);
@@ -2061,6 +2125,8 @@ mod quest_tests;
 mod room_tests;
 #[cfg(test)]
 mod shoot_tests;
+#[cfg(test)]
+mod shop_tests;
 #[cfg(test)]
 mod skills_tests;
 #[cfg(test)]

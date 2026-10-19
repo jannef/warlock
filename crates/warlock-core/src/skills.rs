@@ -90,6 +90,9 @@ pub enum Effect {
     Burden,
     /// Percent less time a journey on the overworld takes (spec §8 "Time").
     Travel,
+    /// Percent better prices in shops (spec §7 "Shops"; `world/shop.rs`): less to pay and more
+    /// offered, together with Presence at most half.
+    Bargain,
 }
 
 impl Effect {
@@ -97,7 +100,7 @@ impl Effect {
     pub const fn max(self) -> i32 {
         match self {
             Effect::Dodge | Effect::Hearing => MAX_VALUE as i32,
-            Effect::Quiet | Effect::Burden | Effect::Travel => 100,
+            Effect::Quiet | Effect::Burden | Effect::Travel | Effect::Bargain => 100,
         }
     }
 }
@@ -238,6 +241,7 @@ impl Effect {
             Effect::Hearing => "hearing",
             Effect::Burden => "burden",
             Effect::Travel => "travel",
+            Effect::Bargain => "bargain",
         }
     }
 }

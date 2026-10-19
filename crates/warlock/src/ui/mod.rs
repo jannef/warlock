@@ -22,11 +22,11 @@
 mod blood;
 mod character_screen;
 mod chargen_screen;
-mod confirm_screen;
 mod controls_screen;
 mod death_screen;
 mod describe_screen;
 mod dev;
+mod dialog_screen;
 mod dialogue_screen;
 mod effects;
 mod equipment_screen;
@@ -49,7 +49,8 @@ mod spells;
 mod target;
 mod weapon_skills_screen;
 
-pub use menu::Press;
+pub use dialog_screen::Dialog;
+pub use menu::{Press, quit_dialog};
 pub use screens::{MenuChoice, ScreenAction, ScreenName, ScreenStack, Screens};
 
 pub use dev::DevOverlays;
@@ -478,13 +479,6 @@ fn draw_messages(
     }
     if mode == InputMode::Rest {
         console.print(1, 0, REST_PROMPT, ACCENT);
-        return;
-    }
-    if let InputMode::ConfirmStep(dir) = mode {
-        let view = game.world.perception();
-        let trap = view.trap(view.viewer().step(dir));
-        let name = trap.map_or("trap", |t| view.content().trap(t).name.as_str());
-        console.print(1, 0, &crate::input::confirm_step_prompt(name), ACCENT);
         return;
     }
     if let InputMode::Aim(aim) = mode {

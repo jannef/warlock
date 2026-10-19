@@ -382,6 +382,7 @@ fn ice_rows(world: &World) -> Vec<String> {
 /// kg)`), then what they carry and weigh.
 fn inventory_rows(view: &PerceptionView<'_>) -> Vec<String> {
     let content = view.content();
+    let unpaid = view.unpaid();
     let mut rows: Vec<String> = view
         .inventory()
         .iter()
@@ -391,7 +392,12 @@ fn inventory_rows(view: &PerceptionView<'_>) -> Vec<String> {
             let weight = format_weight(s.weight(content));
             let mark = equipment::mark(content, view.equipment(), i)
                 .map_or(String::new(), |m| format!(" ({m})"));
-            format!("{} - {name}{mark} ({weight})", letter(i).unwrap_or('?'))
+            let owed = (unpaid.get(i).copied().flatten())
+                .map_or(String::new(), |p| format!(" (unpaid, {p} gold)"));
+            format!(
+                "{} - {name}{mark}{owed} ({weight})",
+                letter(i).unwrap_or('?')
+            )
         })
         .collect();
     let weight = view.own_weight();
@@ -770,12 +776,13 @@ pub fn ascii(world: &World, layers: &[Layer]) -> String {
 }
 
 /// Structured dump: turn, game time, level, viewer, the special room the player stands in if they
-/// know it (its effect id; else null), the weather (under the open sky; else null), the
+/// know it (its effect id; else null), the open shop they stand in (`shop`: its sign, keeper,
+/// and what they owe there; else null), the weather (under the open sky; else null), the
 /// temperature (°C, to a tenth), seen actors (with the status effects that show on them), heard
 /// sounds, known traps (`known_traps`: position, trap id, and whether in sight), the player's
-/// inventory, equipment (by slot id), weight, scores (by stat id), status effects (by id), the
-/// diseases they know (by id), recent messages, the requested layers as arrays of rows, and
-/// optionally the full
+/// inventory (with what of each stack is unpaid, priced), equipment (by slot id), weight, scores
+/// (by stat id), status effects (by id), the diseases they know (by id), recent messages, the
+/// requested layers as arrays of rows, and optionally the full
 /// [`crate::WorldState`] under `state`.
 pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     let view = world.perception();
@@ -798,6 +805,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         let all: Vec<_> = world.messages().iter().collect();
         all[all.len().saturating_sub(RECENT_MESSAGES)..].to_vec()
     };
+    let unpaid = view.unpaid();
     let inventory: Vec<Value> = view
         .inventory()
         .iter()
@@ -807,7 +815,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             let magic = s
                 .known_magic()
                 .map(|m| json!({ "level": m.level, "name": m.name, "affixes": m.affixes }));
-            json!({
+            let mut entry = json!({
                 "letter": letter(i).map(String::from),
                 "object": content.object(s.object).id,
                 "count": s.count,
@@ -816,9 +824,16 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
                 "rarity": s.rarity(),
                 "identified": s.is_identified(),
                 "magic": magic,
-            })
+            });
+            if let Some(price) = unpaid.get(i).copied().flatten() {
+                entry["unpaid"] = json!(price);
+            }
+            entry
         })
         .collect();
+    let shop = view
+        .shop_here()
+        .map(|s| json!({ "sign": s.sign(), "keeper": s.keeper(), "owed": s.owed() }));
     let equipment: serde_json::Map<String, Value> = (view.equipment().iter())
         .filter_map(|(slot, item)| {
             let s = view.inventory().get(item)?;
@@ -881,6 +896,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "level": view.level_id(),
         "viewer": view.viewer(),
         "room": view.room(view.viewer()).map(|e| e.id.as_str()),
+        "shop": shop,
         "weather": view.weather(),
         // In °C, to a tenth of a degree.
         "temperature": f64::from(view.temperature().tenths()) / 10.0,
@@ -1022,6 +1038,7 @@ mod tests {
         assert!(value["layers"].get("memory").is_none());
         assert_eq!(value["state"]["turn"], 1);
         assert!(value["room"].is_null(), "not in a special room");
+        assert!(value["shop"].is_null(), "not in a shop");
         assert!(value["seen_actors"][0]["kind"] == "player");
         // The player's character, and their own scores by stat id; nothing else about stats.
         assert_eq!(

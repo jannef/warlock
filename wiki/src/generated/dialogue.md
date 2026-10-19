@@ -5,3 +5,4 @@
 | Gardener | yes | 8 | — | grumbles (3 % of its actions, when you are near) |
 | Wandering bard | yes | 8 | The moon, The Great Race, This year, The Wildlands | sings (4 % of its actions, when you are near) |
 | Old hermit | yes | 8 | This hall, The dark chamber, The gallery, The water garden, These stairs | mutters (3 % of its actions, when you are near) |
+| Shopkeeper | yes | 6 | — | — |

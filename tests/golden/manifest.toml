@@ -492,3 +492,19 @@ actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*8 move:E descend mov
 name = "frost-grotto-hole"
 scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*8 move:E descend move:SE move:E*23 move:SE"
+
+# Shops (spec §7 "Shops"): Grimbold's General Store in the courtyard, walked into with the purse from
+# the gazebo; look mode on the short sword says its price, and the inventory marks what is unpaid.
+[[golden]]
+name = "shop-look"
+scenario = "courtyard"
+actions = "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 move:S*5 move:E*5 move:E move:NE"
+freeze_time = 1.0
+args = ["--look", "58,13"]
+
+[[golden]]
+name = "shop-unpaid"
+scenario = "courtyard"
+actions = "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 move:S*5 move:E*5 move:E move:NE pickup move:E move:E pickup"
+freeze_time = 1.0
+screen = "inventory"

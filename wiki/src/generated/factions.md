@@ -2,8 +2,10 @@
 
 | Faction | Hostile to |
 |---|---|
-| You | vermin, kobolds |
+| You | vermin, kobolds, outraged shopkeepers |
 | Vermin | you, kobolds |
 | Kobolds | you, vermin |
 | Peaceful folk | nobody |
 | Wildlife | nobody |
+| Merchants | nobody |
+| Outraged shopkeepers | you |
