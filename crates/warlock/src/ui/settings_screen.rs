@@ -2,9 +2,10 @@
 //! palette (spec §4.7), the clock, and the temperature unit (°C or °F, spec §6). Changes apply
 //! live, because the screen edits the [`Settings`] resource that rendering reads.
 
-use super::menu::{Nav, Panel, Press};
+use super::menu::{Hints, Nav, Panel, Press};
 use super::screens::{ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
+use crate::input::Bindings;
 use crate::render::console::Console;
 use crate::settings::{EffectSwitches, MAX_FONT_PX, MIN_FONT_PX, Settings};
 
@@ -167,7 +168,7 @@ impl SettingsScreen {
         ScreenAction::Stay
     }
 
-    pub fn draw(&self, console: &mut Console, settings: &Settings) {
+    pub fn draw(&self, console: &mut Console, settings: &Settings, bindings: &Bindings) {
         let panel = Panel::new(console, " Settings ", 60, 28);
         let label_w = 18;
         let mut switches = settings.effects;
@@ -237,7 +238,13 @@ impl SettingsScreen {
             TEXT,
         );
         console.print(panel.inner_x(), help_y + 2, "Sample accent text", ACCENT);
-        panel.footer(console, "↑↓ select   ←→ change   Esc back");
+        let keys = Hints::of(bindings);
+        let footer = format!(
+            "{} select   {} change   Esc back",
+            keys.up_down(),
+            keys.left_right()
+        );
+        panel.footer(console, &footer);
     }
 }
 

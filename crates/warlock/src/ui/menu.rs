@@ -11,21 +11,28 @@
 use super::dialog_screen::Dialog;
 use super::screens::{MenuChoice, ScreenAction, ScreenName};
 use super::{ACCENT, PANEL_BG, TEXT, TEXT_DIM};
-use crate::input::KeyBinding;
+use crate::input::{Bindings, Context, KeyBinding, KeyCommand};
 use crate::render::console::Console;
 use bevy::input::keyboard::{Key, KeyCode, KeyboardInput};
 
-/// A key press reduced to what menus care about.
+/// A key press reduced to what menus care about: the `Context::Menu` command it is bound to, or
+/// Esc, which always backs out.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Nav {
     Up,
     Down,
     Left,
     Right,
+    /// Choose the selected row (`KeyCommand::Confirm`, Enter).
     Enter,
+    /// Back out: Esc, always, and `KeyCommand::Back`'s keys.
     Back,
-    Backspace,
-    Delete,
+    /// Erase a character typed, or reset a command's keys (`KeyCommand::Erase`).
+    Erase,
+    /// Mark the selected stack on a pick-up or drop list (`KeyCommand::Mark`, Space).
+    Mark,
+    /// Mark everything on a pick-up or drop list (`KeyCommand::MarkAll`, `,`).
+    MarkAll,
     Other,
 }
 
@@ -43,26 +50,24 @@ pub struct Press {
 }
 
 impl Press {
-    pub fn from_input(input: &KeyboardInput) -> Self {
-        let nav = match input.key_code {
-            KeyCode::ArrowUp => Nav::Up,
-            KeyCode::ArrowDown => Nav::Down,
-            KeyCode::ArrowLeft => Nav::Left,
-            KeyCode::ArrowRight => Nav::Right,
-            KeyCode::Enter | KeyCode::NumpadEnter => Nav::Enter,
-            KeyCode::Escape => Nav::Back,
-            KeyCode::Backspace => Nav::Backspace,
-            KeyCode::Delete => Nav::Delete,
-            _ => match &input.logical_key {
-                Key::Character(c) => match c.as_str() {
-                    "k" => Nav::Up,
-                    "j" => Nav::Down,
-                    "h" => Nav::Left,
-                    "l" => Nav::Right,
-                    _ => Nav::Other,
-                },
+    /// The press as screens see it: its menu meaning comes from the `Context::Menu` bindings,
+    /// and Esc always backs out, whatever is bound (it cannot be bound: no lockout).
+    pub fn from_input(input: &KeyboardInput, bindings: &Bindings) -> Self {
+        let nav = if input.key_code == KeyCode::Escape {
+            Nav::Back
+        } else {
+            match bindings.lookup_in(Context::Menu, input) {
+                Some(KeyCommand::MenuUp) => Nav::Up,
+                Some(KeyCommand::MenuDown) => Nav::Down,
+                Some(KeyCommand::MenuLeft) => Nav::Left,
+                Some(KeyCommand::MenuRight) => Nav::Right,
+                Some(KeyCommand::Confirm) => Nav::Enter,
+                Some(KeyCommand::Back) => Nav::Back,
+                Some(KeyCommand::Erase) => Nav::Erase,
+                Some(KeyCommand::Mark) => Nav::Mark,
+                Some(KeyCommand::MarkAll) => Nav::MarkAll,
                 _ => Nav::Other,
-            },
+            }
         };
         let text = match &input.logical_key {
             Key::Character(c) => {
@@ -105,6 +110,56 @@ impl Press {
             text: Some(ch),
             shift: false,
         }
+    }
+}
+
+/// The menu keys as footers name them: each command's first key as bound, so a footer never
+/// names a key that no longer does what it says (`?` for a command without a key).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Hints {
+    pub up: String,
+    pub down: String,
+    pub left: String,
+    pub right: String,
+    pub confirm: String,
+    pub erase: String,
+    pub mark: String,
+    pub mark_all: String,
+}
+
+impl Hints {
+    pub fn of(bindings: &Bindings) -> Self {
+        let key = |command| bindings.key_name(command).unwrap_or_else(|| "?".into());
+        Self {
+            up: key(KeyCommand::MenuUp),
+            down: key(KeyCommand::MenuDown),
+            left: key(KeyCommand::MenuLeft),
+            right: key(KeyCommand::MenuRight),
+            confirm: key(KeyCommand::Confirm),
+            erase: key(KeyCommand::Erase),
+            mark: key(KeyCommand::Mark),
+            mark_all: key(KeyCommand::MarkAll),
+        }
+    }
+
+    /// The up and down keys together: `↑↓`, or `w/s` when they are not arrows.
+    pub fn up_down(&self) -> String {
+        pair(&self.up, &self.down)
+    }
+
+    /// The left and right keys together: `←→`, or `a/d`.
+    pub fn left_right(&self) -> String {
+        pair(&self.left, &self.right)
+    }
+}
+
+/// Two keys side by side: arrows touch (`↑↓`), anything else is split by a slash (`w/s`).
+fn pair(a: &str, b: &str) -> String {
+    let arrow = |s: &str| matches!(s, "↑" | "↓" | "←" | "→");
+    if arrow(a) && arrow(b) {
+        format!("{a}{b}")
+    } else {
+        format!("{a}/{b}")
     }
 }
 
@@ -238,7 +293,7 @@ impl MainMenu {
     }
 
     /// Draws the menu, with `notice` (something the player should know) under the rows.
-    pub fn draw(&self, console: &mut Console, notice: Option<&str>) {
+    pub fn draw(&self, console: &mut Console, notice: Option<&str>, bindings: &Bindings) {
         let items = self.items();
         let notice_lines = notice.map_or(Vec::new(), |n| wrap(n, 44));
         let h = 12 + items.len() as i32 + notice_lines.len() as i32;
@@ -271,12 +326,14 @@ impl MainMenu {
                 ACCENT,
             );
         }
+        let keys = Hints::of(bindings);
+        let hint = format!("{} select   {} choose", keys.up_down(), keys.confirm);
         let hint = if self.pause {
-            "↑↓ select   Enter choose   Esc resume"
+            format!("{hint}   Esc resume")
         } else {
-            "↑↓ select   Enter choose"
+            hint
         };
-        panel.footer(console, hint);
+        panel.footer(console, &hint);
         if !self.pause {
             let cols = console.cols() as usize;
             if let Some(notice) = legal_notice(cols.saturating_sub(2)) {

@@ -1,10 +1,16 @@
 //! Keyboard input: bindings, input modes, and the one router of key presses (spec §6).
 //!
 //! [`route_keys`] reads every key press exactly once. While a screen is open (the screen stack is
-//! not empty) the press goes to the top screen; otherwise it is a gameplay command, read through
-//! the bindings in the current [`InputMode`]. Prompts in the message line (the direction for
-//! open/close/kick, for digging, or for a chat, how long to rest, look mode, aiming a shot or a
-//! throw, whether to step onto a known trap) are input modes, not screens.
+//! not empty) the press goes to the top screen, as a [`Press`] whose menu meaning comes from the
+//! [`Context::Menu`] bindings (Esc always backs out); otherwise it is a gameplay command, read
+//! through the bindings of the current [`InputMode`]'s contexts. Prompts in the message line (the
+//! direction for open/close/kick, for digging, or for a chat, how long to rest, look mode, aiming
+//! a shot or a throw) are input modes, not screens.
+//!
+//! **Every key the game reads is a [`KeyCommand`] in its [`Context`]** (#159), rebindable in
+//! Controls and listed by the `?` help; nothing matches a key code or a character itself, but for
+//! Esc (fixed: it always backs out and cancels, so no binding can lock the player out) and the
+//! letters and digits that name the rows of a list.
 //!
 //! Letter and symbol commands bind by *logical* key (the character the keyboard layout produces),
 //! so `<`, `>`, and `?` work on any layout. Arrows and the numpad bind by physical key code.
@@ -58,6 +64,12 @@ pub enum KeyCommand {
     Quests,
     /// Ask how long to rest (an hour, until dawn, until dusk).
     Rest,
+    /// In the rest prompt: rest an hour.
+    RestHour,
+    /// In the rest prompt: rest until dawn.
+    RestDawn,
+    /// In the rest prompt: rest until nightfall.
+    RestDusk,
     /// Choose something to eat, from the floor or the pack.
     Eat,
     /// Move a cursor over the map to read what is there (no time passes).
@@ -74,6 +86,11 @@ pub enum KeyCommand {
     Bash,
     /// While aiming: the cursor to the next creature in view (with Shift, the one before).
     NextTarget,
+    /// While aiming: the cursor to the creature in view before (no default key: Shift with
+    /// `NextTarget` does it).
+    PrevTarget,
+    /// While aiming: shoot or throw at the cursor (Enter).
+    Loose,
     /// Take a more aggressive combat stance (Coward, Defensive, Neutral, Aggressive; no time
     /// passes).
     MoreAggressive,
@@ -87,6 +104,25 @@ pub enum KeyCommand {
     Chat,
     /// Pay for what the player took in the shop they stand in (spec §7 "Shops"; no time passes).
     Pay,
+    /// On a menu or screen: move the selection up.
+    MenuUp,
+    /// On a menu or screen: move the selection down.
+    MenuDown,
+    /// On a menu or screen: change a value (a setting) one way.
+    MenuLeft,
+    /// On a menu or screen: change a value the other way.
+    MenuRight,
+    /// On a menu or screen: choose the selected row (Enter).
+    Confirm,
+    /// On a menu or screen: back out, as Esc always does (no default key of its own).
+    Back,
+    /// On a menu or screen: erase the last character typed (the seed), or reset the selected
+    /// command's keys (Controls).
+    Erase,
+    /// On the pick-up and drop lists: mark or unmark the selected stack.
+    Mark,
+    /// On the pick-up and drop lists: mark everything, or nothing if everything is marked.
+    MarkAll,
     /// In the confirmation dialog (quitting; paying before leaving a shop, selling): yes.
     Yes,
     /// In the confirmation dialog: no.
@@ -118,23 +154,67 @@ pub enum KeyCommand {
 }
 
 /// Where a command is read. Keys must be unique within a context, not across contexts, so a key
-/// can mean one thing in play and another on an info screen (Tab: next target, next page), or in
-/// the confirmation dialog (`y` and `n`, which move the player in play).
+/// can mean one thing in play and another on a screen (Tab: next target while aiming, next page
+/// on an info screen; `y` and `n`: moving in play, yes and no in the dialog). A mode or screen
+/// with a context of its own reads it first: the rest prompt and aiming before play's keys, an
+/// info screen's page keys and the dialog's answers before the menu keys.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Context {
-    /// In play: the map, prompts, look mode, and aiming.
+    /// In play: the map, the direction prompts, and look mode.
     Play,
+    /// While aiming a shot or a throw (`ui::target`).
+    Aim,
+    /// In the rest prompt.
+    Prompt,
+    /// On every menu and screen: moving the selection, choosing, backing out.
+    Menu,
     /// On an info screen ([`crate::ui`]'s numbered pages).
     Pages,
     /// The dialog's shortcuts (`ui/dialog_screen.rs`).
     Dialog,
+    /// The developer keys (debug builds, or `--dev`), read in play after play's own.
+    Dev,
+}
+
+impl Context {
+    /// Every context, in the order the controls screen and the keymap file list them.
+    pub const ALL: &[Context] = &[
+        Context::Play,
+        Context::Aim,
+        Context::Prompt,
+        Context::Menu,
+        Context::Pages,
+        Context::Dialog,
+        Context::Dev,
+    ];
+
+    /// The heading of its group on the controls screen.
+    pub fn title(self) -> &'static str {
+        match self {
+            Context::Play => "In play",
+            Context::Aim => "Aiming",
+            Context::Prompt => "Rest prompt",
+            Context::Menu => "Menus and screens",
+            Context::Pages => "Info pages",
+            Context::Dialog => "Dialogs",
+            Context::Dev => "Developer",
+        }
+    }
 }
 
 impl KeyCommand {
     pub fn context(self) -> Context {
+        use KeyCommand::*;
         match self {
-            KeyCommand::Page(_) | KeyCommand::NextPage | KeyCommand::PrevPage => Context::Pages,
-            KeyCommand::Yes | KeyCommand::No => Context::Dialog,
+            Page(_) | NextPage | PrevPage => Context::Pages,
+            Yes | No => Context::Dialog,
+            NextTarget | PrevTarget | Loose => Context::Aim,
+            RestHour | RestDawn | RestDusk => Context::Prompt,
+            MenuUp | MenuDown | MenuLeft | MenuRight | Confirm | Back | Erase | Mark | MarkAll => {
+                Context::Menu
+            }
+            CycleVision | SkipHour | NextWeather | IdentifyAll | RevealMap | LightValues
+            | Snapshot | LoadSnapshot => Context::Dev,
             _ => Context::Play,
         }
     }
@@ -161,6 +241,9 @@ impl KeyCommand {
             KeyCommand::WeaponSkills => "Weapon skills",
             KeyCommand::Quests => "Quest log",
             KeyCommand::Rest => "Rest",
+            KeyCommand::RestHour => "Rest an hour",
+            KeyCommand::RestDawn => "Rest until dawn",
+            KeyCommand::RestDusk => "Rest until nightfall",
             KeyCommand::Eat => "Eat",
             KeyCommand::Look => "Look around",
             KeyCommand::Missile => "Throw or shoot the missile weapon",
@@ -169,10 +252,21 @@ impl KeyCommand {
             KeyCommand::MoreAggressive => "More aggressive stance",
             KeyCommand::MoreDefensive => "More defensive stance",
             KeyCommand::Bash => "Bash with your shield",
-            KeyCommand::NextTarget => "Next target (aiming; Shift: previous)",
+            KeyCommand::NextTarget => "Next target (Shift: previous)",
+            KeyCommand::PrevTarget => "Previous target",
+            KeyCommand::Loose => "Shoot or throw",
             KeyCommand::UseTool => "Use a tool (dig)",
             KeyCommand::Chat => "Chat",
             KeyCommand::Pay => "Pay the shopkeeper",
+            KeyCommand::MenuUp => "Up",
+            KeyCommand::MenuDown => "Down",
+            KeyCommand::MenuLeft => "Left (change a setting)",
+            KeyCommand::MenuRight => "Right (change a setting)",
+            KeyCommand::Confirm => "Choose",
+            KeyCommand::Back => "Back (Esc always works)",
+            KeyCommand::Erase => "Erase a character / reset keys",
+            KeyCommand::Mark => "Mark a stack (pick up, drop)",
+            KeyCommand::MarkAll => "Mark everything (pick up, drop)",
             KeyCommand::Yes => "Yes (in a dialog)",
             KeyCommand::No => "No (in a dialog)",
             KeyCommand::CycleVision => "Next vision profile (dev)",
@@ -222,6 +316,8 @@ impl KeyBinding {
                 KeyCode::Numpad7 => "Num7".into(),
                 KeyCode::Numpad8 => "Num8".into(),
                 KeyCode::Numpad9 => "Num9".into(),
+                KeyCode::NumpadEnter => "NumEnter".into(),
+                KeyCode::Delete => "Del".into(),
                 other => format!("{other:?}"),
             },
         }
@@ -294,8 +390,27 @@ impl Default for Bindings {
             (ch("-"), MoreDefensive),
             (ch("C"), Chat),
             (Code(KeyCode::Tab), NextTarget),
+            (Code(KeyCode::Enter), Loose),
+            (Code(KeyCode::NumpadEnter), Loose),
+            (ch("h"), RestHour),
+            (ch("d"), RestDawn),
+            (ch("n"), RestDusk),
             (ch("U"), UseTool),
             (ch("p"), Pay),
+            (Code(KeyCode::ArrowUp), MenuUp),
+            (ch("k"), MenuUp),
+            (Code(KeyCode::ArrowDown), MenuDown),
+            (ch("j"), MenuDown),
+            (Code(KeyCode::ArrowLeft), MenuLeft),
+            (ch("h"), MenuLeft),
+            (Code(KeyCode::ArrowRight), MenuRight),
+            (ch("l"), MenuRight),
+            (Code(KeyCode::Enter), Confirm),
+            (Code(KeyCode::NumpadEnter), Confirm),
+            (Code(KeyCode::Delete), Erase),
+            (Code(KeyCode::Backspace), Erase),
+            (Code(KeyCode::Space), Mark),
+            (ch(","), MarkAll),
             (ch("y"), Yes),
             (ch("n"), No),
             (ch("?"), Help),
@@ -307,41 +422,36 @@ impl Default for Bindings {
         table.0.push((Code(KeyCode::Tab), NextPage));
         table.0.push((Code(KeyCode::PageDown), NextPage));
         table.0.push((Code(KeyCode::PageUp), PrevPage));
-        if cfg!(debug_assertions) {
-            table.add_dev_keys();
-        }
+        // The developer keys: in every build's table, read only where they are on (`dev_keys`).
+        table.0.extend([
+            (Code(KeyCode::F2), RevealMap),
+            (Code(KeyCode::F3), CycleVision),
+            (Code(KeyCode::F4), LightValues),
+            (Code(KeyCode::F5), Snapshot),
+            (Code(KeyCode::F6), SkipHour),
+            (Code(KeyCode::F7), NextWeather),
+            (Code(KeyCode::F8), IdentifyAll),
+            (Code(KeyCode::F9), LoadSnapshot),
+        ]);
         table
     }
 }
 
-impl Bindings {
-    /// Adds the developer keys — reveal map, vision profile switching, light values, snapshots,
-    /// skipping an hour, the next weather (always present in debug builds, `--dev` otherwise).
-    pub(crate) fn add_dev_keys(&mut self) {
-        let dev = [
-            (KeyBinding::Code(KeyCode::F2), KeyCommand::RevealMap),
-            (KeyBinding::Code(KeyCode::F3), KeyCommand::CycleVision),
-            (KeyBinding::Code(KeyCode::F4), KeyCommand::LightValues),
-            (KeyBinding::Code(KeyCode::F5), KeyCommand::Snapshot),
-            (KeyBinding::Code(KeyCode::F6), KeyCommand::SkipHour),
-            (KeyBinding::Code(KeyCode::F7), KeyCommand::NextWeather),
-            (KeyBinding::Code(KeyCode::F8), KeyCommand::IdentifyAll),
-            (KeyBinding::Code(KeyCode::F9), KeyCommand::LoadSnapshot),
-        ];
-        for entry in dev {
-            // A key the player bound to something else stays theirs.
-            if self.owner(&entry.0).is_none() {
-                self.0.push(entry);
-            }
-        }
-    }
+/// Whether the developer keys work in this launch: always in debug builds, with `--dev` in
+/// release builds (spec §9). Their bindings are in every table; only where this is false are
+/// they never read, nor listed by the controls screen and the `?` help.
+pub fn dev_keys(args: &Args) -> bool {
+    cfg!(debug_assertions) || args.dev
+}
 
+impl Bindings {
     /// The command a key press stands for in play.
     pub fn lookup(&self, input: &KeyboardInput) -> Option<KeyCommand> {
         self.lookup_in(Context::Play, input)
     }
 
-    fn lookup_in(&self, context: Context, input: &KeyboardInput) -> Option<KeyCommand> {
+    /// The command a key press stands for in `context`.
+    pub fn lookup_in(&self, context: Context, input: &KeyboardInput) -> Option<KeyCommand> {
         // Physical bindings first: numpad keys also produce digit characters.
         self.0
             .iter()
@@ -436,14 +546,11 @@ pub struct InputPlugin;
 impl Plugin for InputPlugin {
     fn build(&self, app: &mut App) {
         // The settings file's bindings, if `main` loaded them.
-        let mut bindings = app
+        let bindings = app
             .world()
             .get_resource::<Bindings>()
             .cloned()
             .unwrap_or_default();
-        if app.world().resource::<Args>().dev {
-            bindings.add_dev_keys();
-        }
         app.insert_resource(bindings)
             .init_resource::<InputMode>()
             .init_resource::<LastTarget>()
@@ -479,7 +586,7 @@ pub fn route_keys(
             let action = screens.stack.handle(
                 &Press {
                     shift: play.shift(),
-                    ..Press::from_input(key)
+                    ..Press::from_input(key, &bindings)
                 },
                 &mut new_settings,
                 &mut new_bindings,
@@ -520,6 +627,7 @@ pub fn route_keys(
 /// What gameplay input reads and writes.
 #[derive(SystemParam)]
 pub struct Gameplay<'w> {
+    args: Res<'w, Args>,
     game: Option<Res<'w, Game>>,
     mode: ResMut<'w, InputMode>,
     last: ResMut<'w, LastTarget>,
@@ -539,24 +647,7 @@ impl Gameplay<'_> {
     /// on Esc when no prompt is open.
     fn press(&mut self, key: &KeyboardInput, bindings: &Bindings) -> Option<ScreenAction> {
         let game = self.game.as_ref()?;
-        // The rest prompt answers by letter, whatever those letters are bound to.
-        if *self.mode == InputMode::Rest
-            && let Some(rest) = rest_choice(key)
-        {
-            self.actions.write(PlayerAction(Action::Rest(rest)));
-            *self.mode = InputMode::Normal;
-            return None;
-        }
-        // Enter looses an aimed missile, whatever it is bound to.
-        if let InputMode::Aim(aim) = *self.mode
-            && matches!(key.key_code, KeyCode::Enter | KeyCode::NumpadEnter)
-        {
-            if !key.repeat {
-                self.loose(aim);
-            }
-            return None;
-        }
-        let command = bindings.lookup(key)?;
+        let command = command_in(*self.mode, key, bindings, dev_keys(&self.args))?;
         // Held keys repeat only for movement and waiting, and the aiming cursor's moves.
         let moves = matches!(command, KeyCommand::Move(_) | KeyCommand::Wait);
         if key.repeat && !moves {
@@ -564,11 +655,25 @@ impl Gameplay<'_> {
         }
         let mut open: Option<ScreenAction> = None;
         let next = match (*self.mode, command) {
+            (
+                InputMode::Rest,
+                KeyCommand::RestHour | KeyCommand::RestDawn | KeyCommand::RestDusk,
+            ) => {
+                if let Some((_, rest, _)) = REST_CHOICES.iter().find(|(c, ..)| *c == command) {
+                    self.actions.write(PlayerAction(Action::Rest(*rest)));
+                }
+                InputMode::Normal
+            }
+            (InputMode::Aim(aim), KeyCommand::Loose) => {
+                self.loose(aim);
+                return None;
+            }
             (InputMode::Aim(aim), KeyCommand::Move(dir)) => {
                 InputMode::Aim(aim.step(dir, &game.world.perception()))
             }
-            (InputMode::Aim(aim), KeyCommand::NextTarget) => {
-                InputMode::Aim(aim.cycle(&game.world.perception(), !self.shift()))
+            (InputMode::Aim(aim), KeyCommand::NextTarget | KeyCommand::PrevTarget) => {
+                let forward = (command == KeyCommand::NextTarget) != self.shift();
+                InputMode::Aim(aim.cycle(&game.world.perception(), forward))
             }
             (InputMode::Aim(aim), KeyCommand::Missile | KeyCommand::Fire | KeyCommand::Throw) => {
                 // The key that started the aim confirms it, and so does `t`, which starts both.
@@ -612,7 +717,6 @@ impl Gameplay<'_> {
                 open = Some(ScreenAction::Open(ScreenName::Throw));
                 InputMode::Normal
             }
-            (InputMode::Normal, KeyCommand::NextTarget) => InputMode::Normal,
             (InputMode::Look(_), KeyCommand::Look | KeyCommand::Cancel) => InputMode::Normal,
             (InputMode::Look(at), KeyCommand::Move(dir)) => {
                 let view = game.world.perception();
@@ -809,13 +913,31 @@ impl Gameplay<'_> {
                 self.saves.write(SaveCommand::LoadSnapshot);
                 InputMode::Normal
             }
-            // Info screen keys: `lookup` never finds them in play.
+            // Other contexts' commands (aiming's, the rest prompt's, the screens'): `command_in`
+            // never finds them here.
             (
                 InputMode::Normal,
-                KeyCommand::Page(_) | KeyCommand::NextPage | KeyCommand::PrevPage,
+                KeyCommand::NextTarget
+                | KeyCommand::PrevTarget
+                | KeyCommand::Loose
+                | KeyCommand::RestHour
+                | KeyCommand::RestDawn
+                | KeyCommand::RestDusk
+                | KeyCommand::MenuUp
+                | KeyCommand::MenuDown
+                | KeyCommand::MenuLeft
+                | KeyCommand::MenuRight
+                | KeyCommand::Confirm
+                | KeyCommand::Back
+                | KeyCommand::Erase
+                | KeyCommand::Mark
+                | KeyCommand::MarkAll
+                | KeyCommand::Page(_)
+                | KeyCommand::NextPage
+                | KeyCommand::PrevPage
+                | KeyCommand::Yes
+                | KeyCommand::No,
             ) => InputMode::Normal,
-            // The dialog's answers: `lookup` never finds them in play.
-            (InputMode::Normal, KeyCommand::Yes | KeyCommand::No) => InputMode::Normal,
         };
         if *self.mode != next {
             *self.mode = next;
@@ -909,12 +1031,35 @@ fn press_keys_at_startup(args: Res<Args>, mut presses: MessageWriter<KeyboardInp
     }
 }
 
-/// The rest prompt's answers: the key (a character) and what it rests for.
-pub const REST_CHOICES: [(&str, Rest); 3] = [
-    ("h", Rest::For(Duration::hours(1))),
-    ("d", Rest::Dawn),
-    ("n", Rest::Dusk),
+/// The rest prompt's answers: the command (`Context::Prompt`), what it rests for, and how the
+/// prompt words it.
+pub const REST_CHOICES: [(KeyCommand, Rest, &str); 3] = [
+    (KeyCommand::RestHour, Rest::For(Duration::hours(1)), "hour"),
+    (KeyCommand::RestDawn, Rest::Dawn, "until dawn"),
+    (KeyCommand::RestDusk, Rest::Dusk, "until nightfall"),
 ];
+
+/// The command a key press stands for in input mode `mode`: the rest prompt's answers and
+/// aiming's keys before play's, which the other modes read alone; the developer keys last, in
+/// plain play, where they are on (`dev`).
+fn command_in(
+    mode: InputMode,
+    key: &KeyboardInput,
+    bindings: &Bindings,
+    dev: bool,
+) -> Option<KeyCommand> {
+    let own = match mode {
+        InputMode::Rest => Some(Context::Prompt),
+        InputMode::Aim(_) => Some(Context::Aim),
+        InputMode::Normal | InputMode::Direction(_) | InputMode::Look(_) => None,
+    };
+    (own.and_then(|context| bindings.lookup_in(context, key)))
+        .or_else(|| bindings.lookup(key))
+        .or_else(|| {
+            let dev = dev && mode == InputMode::Normal;
+            dev.then(|| bindings.lookup_in(Context::Dev, key)).flatten()
+        })
+}
 
 /// The dialog a step in `dir` opens first, if it goes onto a trap the player knows, where no one
 /// they see stands (moving there would be an attack, or stop; spec §8 "Traps"): "Really step
@@ -928,18 +1073,6 @@ fn trap_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
             .accept("Step onto it", Action::Move(dir))
             .cancel("Stay back", ScreenAction::Close),
     )
-}
-
-/// The rest a key press picks in the rest prompt, if any.
-fn rest_choice(key: &KeyboardInput) -> Option<Rest> {
-    let Key::Character(c) = &key.logical_key else {
-        return None;
-    };
-    let c = c.as_str().to_lowercase();
-    REST_CHOICES
-        .iter()
-        .find(|(k, _)| *k == c)
-        .map(|(_, rest)| *rest)
 }
 
 /// The id of the profile after `current` in `profiles`, wrapping around.
@@ -992,7 +1125,6 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::MoreAggressive), ["+"]);
         assert_eq!(keys(&b, KeyCommand::MoreDefensive), ["-"]);
         assert_eq!(keys(&b, KeyCommand::Eat), ["E"]);
-        assert_eq!(keys(&b, KeyCommand::NextTarget), ["Tab"]);
         assert_eq!(keys(&b, KeyCommand::UseTool), ["U"]);
         assert_eq!(keys(&b, KeyCommand::Chat), ["C"]);
         assert_eq!(keys(&b, KeyCommand::Pay), ["p"]);
@@ -1002,10 +1134,99 @@ mod tests {
     }
 
     #[test]
-    fn dev_keys_are_added_once() {
-        let mut b = Bindings::default();
-        b.add_dev_keys();
-        b.add_dev_keys();
+    fn every_context_has_its_own_keys() {
+        let b = Bindings::default();
+        // Aiming, the rest prompt, and the screens read keys of their own.
+        assert_eq!(keys(&b, KeyCommand::NextTarget), ["Tab"]);
+        assert!(
+            keys(&b, KeyCommand::PrevTarget).is_empty(),
+            "Shift+Tab does it"
+        );
+        assert_eq!(keys(&b, KeyCommand::Loose), ["Enter", "NumEnter"]);
+        assert_eq!(keys(&b, KeyCommand::RestHour), ["h"]);
+        assert_eq!(keys(&b, KeyCommand::RestDawn), ["d"]);
+        assert_eq!(keys(&b, KeyCommand::RestDusk), ["n"]);
+        assert_eq!(keys(&b, KeyCommand::MenuUp), ["↑", "k"]);
+        assert_eq!(keys(&b, KeyCommand::MenuDown), ["↓", "j"]);
+        assert_eq!(keys(&b, KeyCommand::MenuLeft), ["←", "h"]);
+        assert_eq!(keys(&b, KeyCommand::MenuRight), ["→", "l"]);
+        assert_eq!(keys(&b, KeyCommand::Confirm), ["Enter", "NumEnter"]);
+        assert!(
+            keys(&b, KeyCommand::Back).is_empty(),
+            "Esc always backs out"
+        );
+        assert_eq!(keys(&b, KeyCommand::Erase), ["Del", "Backspace"]);
+        assert_eq!(keys(&b, KeyCommand::Mark), ["Space"]);
+        assert_eq!(keys(&b, KeyCommand::MarkAll), [","]);
+        // Every command but Cancel belongs to one context, listed in `Context::ALL`.
+        for (_, command) in &b.0 {
+            assert!(Context::ALL.contains(&command.context()), "{command:?}");
+        }
+    }
+
+    fn press(code: KeyCode, text: &str) -> KeyboardInput {
+        KeyboardInput {
+            key_code: code,
+            logical_key: if text.is_empty() {
+                Key::Unidentified(bevy::input::keyboard::NativeKey::Unidentified)
+            } else {
+                Key::Character(text.into())
+            },
+            state: ButtonState::Pressed,
+            text: None,
+            repeat: false,
+            window: Entity::PLACEHOLDER,
+        }
+    }
+
+    #[test]
+    fn modes_read_their_own_context_first() {
+        let b = Bindings::default();
+        let (h, n, tab) = (
+            press(KeyCode::KeyH, "h"),
+            press(KeyCode::KeyN, "n"),
+            press(KeyCode::Tab, ""),
+        );
+        let enter = KeyboardInput {
+            logical_key: Key::Enter,
+            ..press(KeyCode::Enter, "")
+        };
+        let aim = InputMode::Aim(Aim::start(
+            AimKind::Fire,
+            &warlock_core::World::new(
+                std::sync::Arc::new(warlock_core::content::Content::builtin().unwrap()),
+                "showcase",
+                None,
+            )
+            .unwrap()
+            .perception(),
+            &LastTarget::default(),
+        ));
+        let read = |mode, key: &KeyboardInput, dev| command_in(mode, key, &b, dev);
+        assert_eq!(
+            read(InputMode::Normal, &h, false),
+            Some(KeyCommand::Move(Dir::W))
+        );
+        assert_eq!(read(InputMode::Rest, &h, false), Some(KeyCommand::RestHour));
+        assert_eq!(read(InputMode::Rest, &n, false), Some(KeyCommand::RestDusk));
+        assert_eq!(read(aim, &tab, false), Some(KeyCommand::NextTarget));
+        assert_eq!(read(aim, &enter, false), Some(KeyCommand::Loose));
+        assert_eq!(read(aim, &h, false), Some(KeyCommand::Move(Dir::W)));
+        assert_eq!(read(InputMode::Normal, &tab, false), None);
+        assert_eq!(read(InputMode::Normal, &enter, false), None);
+        // The developer keys only where they are on, and only in plain play.
+        let f2 = press(KeyCode::F2, "");
+        assert_eq!(read(InputMode::Normal, &f2, false), None);
+        assert_eq!(
+            read(InputMode::Normal, &f2, true),
+            Some(KeyCommand::RevealMap)
+        );
+        assert_eq!(read(InputMode::Rest, &f2, true), None);
+    }
+
+    #[test]
+    fn dev_keys_are_in_every_table() {
+        let b = Bindings::default();
         assert_eq!(keys(&b, KeyCommand::Snapshot), ["F5"]);
         assert_eq!(keys(&b, KeyCommand::LoadSnapshot), ["F9"]);
         assert_eq!(keys(&b, KeyCommand::CycleVision), ["F3"]);

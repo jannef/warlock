@@ -5,9 +5,10 @@
 //! takes every key press: Enter or Esc returns to the main menu. It is read from the perception
 //! snapshot, which carries the death once it has happened.
 
-use super::menu::{Nav, Panel, Press, wrap};
+use super::menu::{Hints, Nav, Panel, Press, wrap};
 use super::screens::{MenuChoice, ScreenAction};
 use super::{ACCENT, TEXT, TEXT_DIM};
+use crate::input::Bindings;
 use crate::render::console::Console;
 use crate::settings::Clock;
 use warlock_core::content::article;
@@ -73,7 +74,7 @@ impl DeathScreen {
         }
     }
 
-    pub fn draw(&self, console: &mut Console, clock: Clock) {
+    pub fn draw(&self, console: &mut Console, clock: Clock, bindings: &Bindings) {
         let w = 52;
         let lines = self.lines.iter().map(|line| match &self.when {
             Some((date, time)) if line.is_empty() => {
@@ -111,7 +112,8 @@ impl DeathScreen {
         if fits(y) {
             console.print(cx(gone), y, gone, TEXT_DIM);
         }
-        panel.footer(console, "Enter or Esc  main menu");
+        let footer = format!("{} or Esc  main menu", Hints::of(bindings).confirm);
+        panel.footer(console, &footer);
     }
 }
 
@@ -152,7 +154,7 @@ mod tests {
         let screen = DeathScreen::new(Some(&w.perception()));
         let mut console = Console::default();
         console.resize(80, 30);
-        screen.draw(&mut console, Clock::H24);
+        screen.draw(&mut console, Clock::H24, &Bindings::default());
         let shown = text(&console);
         assert!(shown.contains("Bled to death,"), "{shown}");
         assert!(!shown.contains("Killed by"), "{shown}");
@@ -169,7 +171,7 @@ mod tests {
         let screen = DeathScreen::new(Some(&w.perception()));
         let mut console = Console::default();
         console.resize(80, 30);
-        screen.draw(&mut console, Clock::H24);
+        screen.draw(&mut console, Clock::H24, &Bindings::default());
         let shown = text(&console);
         assert!(shown.contains("Y O U   D I E D"), "{shown}");
         assert!(shown.contains("in The Arena,"), "{shown}");
@@ -213,7 +215,7 @@ mod tests {
         let screen = DeathScreen::new(Some(&w.perception()));
         let mut console = Console::default();
         console.resize(80, 30);
-        screen.draw(&mut console, Clock::H24);
+        screen.draw(&mut console, Clock::H24, &Bindings::default());
         let shown = text(&console);
         assert!(shown.contains("Starved to death,"), "{shown}");
         assert!(shown.contains("in The Hub,"), "{shown}");

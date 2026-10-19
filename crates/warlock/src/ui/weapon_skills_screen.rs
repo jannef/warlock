@@ -10,7 +10,7 @@
 //! the perception snapshot when it opens; no game time passes while it is open, so it cannot go
 //! stale.
 
-use super::menu::{Nav, Panel, Press};
+use super::menu::{Hints, Nav, Panel, Press};
 use super::screens::ScreenAction;
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::{Bindings, KeyCommand};
@@ -198,7 +198,7 @@ impl WeaponSkillsScreen {
             None => "Esc close".to_string(),
         };
         let footer = if most > 0 {
-            format!("↑↓ scroll   {close}")
+            format!("{} scroll   {close}", Hints::of(bindings).up_down())
         } else {
             close
         };

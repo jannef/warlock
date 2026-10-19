@@ -8,7 +8,7 @@
 //! scrolls. It is read from the perception snapshot when it opens; no game time passes while it
 //! is open.
 
-use super::menu::{Nav, Panel, Press, wrap};
+use super::menu::{Hints, Nav, Panel, Press, wrap};
 use super::screens::{ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::{Bindings, KeyCommand};
@@ -143,7 +143,7 @@ impl QuestScreen {
             Some(own) => format!("{own} or Esc close"),
             None => "Esc close".to_string(),
         };
-        format!("↑↓ choose   {close}")
+        format!("{} choose   {close}", Hints::of(bindings).up_down())
     }
 }
 

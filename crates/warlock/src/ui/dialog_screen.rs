@@ -13,7 +13,7 @@
 //! The safe option (Cancel, else Decline) is selected at first. Each option shows its shortcut
 //! keys. A held key's repeats never answer (`ScreenStack::handle`).
 
-use super::menu::{Nav, Panel, Press, wrap};
+use super::menu::{Hints, Nav, Panel, Press, wrap};
 use super::screens::ScreenAction;
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::{Bindings, Context, KeyCommand};
@@ -198,10 +198,12 @@ impl DialogScreen {
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         let lines = wrap(&self.dialog.text, TEXT_W as i32);
         let rows = self.rows(bindings);
+        let keys = Hints::of(bindings);
         let footer = match rows.len() {
-            0 | 1 => "Enter select",
-            _ => "↑/↓ choose  Enter select",
+            0 | 1 => format!("{} select", keys.confirm),
+            _ => format!("{}/{} choose  {} select", keys.up, keys.down, keys.confirm),
         };
+        let footer = footer.as_str();
         let width = |s: &str| s.chars().count();
         let title = if self.dialog.title.is_empty() {
             String::new()

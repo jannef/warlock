@@ -44,7 +44,7 @@ use super::skills_screen::SkillsScreen;
 use super::weapon_skills_screen::WeaponSkillsScreen;
 use crate::cli::Args;
 use crate::game::{Game, GameContent, PlayerAction};
-use crate::input::{Bindings, InputMode};
+use crate::input::{Bindings, InputMode, dev_keys};
 use crate::render::console::Console;
 use crate::render::grid::MapGrid;
 use crate::save::{Resume, SaveCommand, SaveStore};
@@ -232,12 +232,12 @@ impl Screen {
     /// Screen `name`; `run` is what the player perceives in the run, if there is one, `draft`
     /// what New run has chosen on the screens below, `slot` the slot selected on the equipment
     /// screen beneath, if any (the first slot if none), `item` the carried stack looked at on a
-    /// screen beneath (the first if none), and `talk` the run's last conversation, if its last
-    /// action was talk.
+    /// screen beneath (the first if none), `talk` the run's last conversation, if its last
+    /// action was talk, and `dev` whether the developer keys work (the controls list them).
     fn new(
         name: ScreenName,
         content: &Content,
-        has_save: bool,
+        (has_save, dev): (bool, bool),
         run: Option<&PerceptionView<'_>>,
         draft: &Draft,
         (slot, item): (Option<SlotId>, Option<usize>),
@@ -255,8 +255,8 @@ impl Screen {
             ScreenName::Summary => Screen::Summary(Box::new(SummaryScreen::new(content, draft))),
             ScreenName::Settings => Screen::Settings(SettingsScreen::default()),
             ScreenName::Files => Screen::Files(FilesScreen::new(crate::paths::locations())),
-            ScreenName::Controls => Screen::Controls(ControlsScreen::default()),
-            ScreenName::Help => Screen::Controls(ControlsScreen::help()),
+            ScreenName::Controls => Screen::Controls(ControlsScreen::new(dev)),
+            ScreenName::Help => Screen::Controls(ControlsScreen::help(dev)),
             ScreenName::Inventory => objects(ObjectList::Inventory),
             ScreenName::Equipment => Screen::Equipment(EquipmentScreen::new(run)),
             ScreenName::EquipItem => {
@@ -494,12 +494,12 @@ impl ScreenStack {
     pub fn draw(&self, console: &mut Console, settings: &Settings, bindings: &Bindings) {
         match self.screens.last() {
             None => {}
-            Some(Screen::Menu(menu)) => menu.draw(console, self.notice.as_deref()),
-            Some(Screen::NewRun(screen)) => screen.draw(console),
-            Some(Screen::Choice(screen)) => screen.draw(console),
-            Some(Screen::Summary(screen)) => screen.draw(console),
-            Some(Screen::Settings(screen)) => screen.draw(console, settings),
-            Some(Screen::Files(screen)) => screen.draw(console),
+            Some(Screen::Menu(menu)) => menu.draw(console, self.notice.as_deref(), bindings),
+            Some(Screen::NewRun(screen)) => screen.draw(console, bindings),
+            Some(Screen::Choice(screen)) => screen.draw(console, bindings),
+            Some(Screen::Summary(screen)) => screen.draw(console, bindings),
+            Some(Screen::Settings(screen)) => screen.draw(console, settings, bindings),
+            Some(Screen::Files(screen)) => screen.draw(console, bindings),
             Some(Screen::Controls(screen)) => screen.draw(console, bindings),
             Some(Screen::Objects(screen)) => screen.draw(console, bindings),
             Some(Screen::Equipment(screen)) => screen.draw(console, bindings),
@@ -509,8 +509,8 @@ impl ScreenStack {
             Some(Screen::Skills(screen)) => screen.draw(console, bindings),
             Some(Screen::WeaponSkills(screen)) => screen.draw(console, bindings),
             Some(Screen::Quests(screen)) => screen.draw(console, bindings),
-            Some(Screen::Dialogue(screen)) => screen.draw(console),
-            Some(Screen::Death(screen)) => screen.draw(console, settings.clock),
+            Some(Screen::Dialogue(screen)) => screen.draw(console, bindings),
+            Some(Screen::Death(screen)) => screen.draw(console, settings.clock, bindings),
             Some(Screen::Dialog(screen)) => screen.draw(console, bindings),
         }
     }
@@ -527,6 +527,7 @@ pub struct Screens<'w> {
     pub stack: ResMut<'w, ScreenStack>,
     content: Res<'w, GameContent>,
     store: Res<'w, SaveStore>,
+    args: Res<'w, Args>,
     /// The run, for screens that show what the player perceives (the inventory, a pile, the
     /// character screen).
     game: Option<Res<'w, Game>>,
@@ -547,8 +548,8 @@ impl Screens<'_> {
         let (draft, slot) = (self.stack.draft(), self.stack.selected_slot());
         let item = self.stack.looked_item();
         let (content, has_save) = (&self.content.0, self.store.has_save());
-        let looked = (slot, item);
-        let screen = Screen::new(name, content, has_save, view.as_ref(), &draft, looked, talk);
+        let (looked, flags) = ((slot, item), (has_save, dev_keys(&self.args)));
+        let screen = Screen::new(name, content, flags, view.as_ref(), &draft, looked, talk);
         self.stack.screens.push(screen);
     }
 
@@ -755,7 +756,8 @@ mod tests {
             let run = name.needs_run().then_some(&view);
             let (draft, slot) = (stack.draft(), stack.selected_slot());
             let looked = (slot, stack.looked_item());
-            let screen = Screen::new(*name, &content, has_save, run, &draft, looked, None);
+            let flags = (has_save, true);
+            let screen = Screen::new(*name, &content, flags, run, &draft, looked, None);
             stack.screens.push(screen);
         }
         stack
@@ -774,7 +776,7 @@ mod tests {
         stack.screens.push(Screen::new(
             Settings,
             &content(),
-            false,
+            (false, true),
             None,
             &Draft::default(),
             (None, None),

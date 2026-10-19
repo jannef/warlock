@@ -13,7 +13,7 @@
 //!
 //! Both are read from the perception snapshot: the player's own inventory and equipment.
 
-use super::menu::{Nav, Panel, Press};
+use super::menu::{Hints, Nav, Panel, Press};
 use super::screens::ScreenAction;
 use super::{ACCENT, TEXT, TEXT_DIM, rarity_color};
 use crate::input::{Bindings, KeyCommand};
@@ -349,7 +349,7 @@ impl ItemScreen {
         })
     }
 
-    pub fn draw(&self, console: &mut Console, _bindings: &Bindings) {
+    pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         // Rows: margin, the list, a gap, the hint, a gap, the footer, the frame; as large as the
         // equipment screen beneath at least.
         let count = self.choices.len().max(self.rows).max(1) as i32;
@@ -392,7 +392,8 @@ impl ItemScreen {
             );
             console.print(x, y, &hint, TEXT_DIM);
         }
-        panel.footer(console, &format!("a-z or Enter {put_on}   Esc back"));
+        let confirm = Hints::of(bindings).confirm;
+        panel.footer(console, &format!("a-z or {confirm} {put_on}   Esc back"));
     }
 }
 
