@@ -206,7 +206,8 @@ Below the map, the **status bar** shows, from left to right:
 - `Light`: how brightly your own cell is lit, where 255 is full light (see [Light](light.md));
 - your vision type, whether your lantern is lit, and the run's seed.
 
-At its right end, `? controls` reminds you where the keys are.
+At its right end, `? controls` reminds you where the keys are. It names the key as you bound it
+(`Esc menu` when the controls have no key), and so does the welcome line a new run starts with.
 
 When the window is too narrow for everything, the status bar leaves out the least important parts
 first: the seed, your position, your lantern, your vision, the light at your feet, and the turn

@@ -6375,6 +6375,7 @@ version = "0.5.0"
 dependencies = [
  "image",
  "serde",
+ "serde_json",
  "toml",
  "warlock-core",
 ]

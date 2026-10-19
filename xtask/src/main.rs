@@ -10,6 +10,9 @@
 //! - `wiki [--build]`: write the player wiki's generated tables (`--build`: run mdBook).
 //! - `bench-frames`: release-mode frame-time measurement of offscreen captures.
 //! - `bench-turns`: release-mode turn-time table for the hub and the vast level.
+//!
+//! `target/` above is Cargo's target directory, wherever it is ([`target_dir`]): build output
+//! is looked for there and xtask's own output (`xtask/`, `web/`) goes there too.
 
 mod bench;
 mod golden;
@@ -20,6 +23,7 @@ mod wiki;
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode};
+use std::sync::OnceLock;
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -56,6 +60,36 @@ pub(crate) fn workspace_root() -> PathBuf {
         .to_path_buf()
 }
 
+/// Cargo's target directory: `CARGO_TARGET_DIR` when it is set (a relative one taken from the
+/// workspace root, where every cargo command xtask runs starts), else `cargo metadata`'s
+/// `target_directory` (`target/`, or a cargo config's `build.target-dir`). The one place xtask
+/// learns where build output is.
+pub(crate) fn target_dir() -> Result<PathBuf, String> {
+    static DIR: OnceLock<Result<PathBuf, String>> = OnceLock::new();
+    DIR.get_or_init(|| match std::env::var_os("CARGO_TARGET_DIR") {
+        Some(dir) if !dir.is_empty() => Ok(workspace_root().join(dir)),
+        _ => metadata_target_dir(),
+    })
+    .clone()
+}
+
+fn metadata_target_dir() -> Result<PathBuf, String> {
+    let output = Command::new(env!("CARGO"))
+        .current_dir(workspace_root())
+        .args(["metadata", "--format-version", "1", "--no-deps"])
+        .output()
+        .map_err(|e| format!("failed to run cargo metadata: {e}"))?;
+    if !output.status.success() {
+        return Err(format!("cargo metadata failed: {}", output.status));
+    }
+    let metadata: serde_json::Value = serde_json::from_slice(&output.stdout)
+        .map_err(|e| format!("cannot read cargo metadata: {e}"))?;
+    metadata["target_directory"]
+        .as_str()
+        .map(PathBuf::from)
+        .ok_or_else(|| "cargo metadata has no target_directory".into())
+}
+
 /// Runs the game binary with the given arguments (debug profile).
 pub(crate) fn run_game(extra: &[&str]) -> Result<(), String> {
     let status = Command::new(env!("CARGO"))
@@ -72,7 +106,7 @@ pub(crate) fn run_game(extra: &[&str]) -> Result<(), String> {
 }
 
 fn smoke() -> Result<(), String> {
-    let out = workspace_root().join("target/xtask/smoke.png");
+    let out = target_dir()?.join("xtask/smoke.png");
     let _ = std::fs::remove_file(&out);
     let out_str = out.to_str().ok_or("non-UTF-8 path")?;
     run_game(&["--window", "640x360", "--scale", "1", "--capture", out_str])?;
@@ -150,7 +184,8 @@ fn web() -> Result<(), String> {
         return Err(format!("wasm build failed: {status}"));
     }
 
-    let out = root.join("target/web");
+    let target = target_dir()?;
+    let out = target.join("web");
     let _ = std::fs::remove_dir_all(&out);
     std::fs::create_dir_all(&out).map_err(|e| format!("cannot create {}: {e}", out.display()))?;
     let status = Command::new("wasm-bindgen")
@@ -166,7 +201,7 @@ fn web() -> Result<(), String> {
             "--out-dir",
         ])
         .arg(&out)
-        .arg("target/wasm32-unknown-unknown/web/warlock.wasm")
+        .arg(target.join("wasm32-unknown-unknown/web/warlock.wasm"))
         .status()
         .map_err(|e| format!("failed to run wasm-bindgen: {e}"))?;
     if !status.success() {
@@ -239,9 +274,13 @@ fn optimize_wasm(wasm: &Path) -> Result<(), String> {
 /// Loads `target/web` in headless Chromium (WebGPU), starts a run and screenshots it.
 fn web_smoke(args: &[String]) -> Result<(), String> {
     let root = workspace_root();
-    let web = root.join("target/web");
+    let target = target_dir()?;
+    let web = target.join("web");
     if !web.join("warlock_bg.wasm").exists() {
-        return Err("target/web is missing; run `cargo xtask web` first".into());
+        return Err(format!(
+            "{} is missing; run `cargo xtask web` first",
+            web.display()
+        ));
     }
     let chrome = match args.first() {
         Some(c) => c.clone(),
@@ -259,9 +298,9 @@ fn web_smoke(args: &[String]) -> Result<(), String> {
         .stderr(std::process::Stdio::null())
         .spawn()
         .map_err(|e| format!("cannot start python3 http.server: {e}"))?;
-    let out = root.join("target/xtask/web-smoke.png");
-    let profile = root.join("target/xtask/web-smoke-profile");
-    let _ = std::fs::create_dir_all(root.join("target/xtask"));
+    let out = target.join("xtask/web-smoke.png");
+    let profile = target.join("xtask/web-smoke-profile");
+    let _ = std::fs::create_dir_all(target.join("xtask"));
     let _ = std::fs::remove_dir_all(&profile);
     let result = Command::new("node")
         .current_dir(&root)

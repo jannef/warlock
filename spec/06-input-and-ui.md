@@ -83,7 +83,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   context of its own reads it first (the rest prompt and aiming before play's keys). Two kinds of
   keys are fixed: Esc, which always cancels a prompt, backs out of every screen, and opens the
   pause menu, and the letters and digits that name the rows of a list (stacks, slots, topics).
-  Hints (screen footers, the prompts, the status bar's `? controls`) name the keys as bound.
+  Hints (screen footers, the prompts, the status bar's `? controls`, the welcome line's
+  `Press ? for controls.`) name the keys as bound.
 - **Rebinding**: in Controls (the commands by context under headings, below notes on Esc and on
   list letters), select a command and press a key; it becomes the command's primary
   key (alternates such as the numpad stay). A key another command of the same context uses is taken
