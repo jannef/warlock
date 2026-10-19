@@ -157,7 +157,8 @@ const LEGEND: &str = r##"
 "r" = { terrain = "floor", creature = "rat" }
 "n" = { terrain = "floor", creature = "nearsighted_rat" }
 "k" = { terrain = "floor", creature = "kobold" }
-"a" = { terrain = "floor", creature = "archer" }
+"a" = { terrain = "floor", creature = "archer", carry = ["bow", "arrow*20"], wield = ["bow", "arrow"] }
+"u" = { terrain = "floor", creature = "archer" }
 "s" = { terrain = "floor", creature = "shaman" }
 "d" = { terrain = "floor", creature = "deer" }
 "##;
@@ -204,7 +205,49 @@ const LEVELS: &[(&str, &str)] = &[
     ),
     // A deer next to the player, and a rat beyond.
     ("bump", "#######\n#@d...#\n#.....#\n#######\n"),
+    // An archer with nothing to shoot, four cells from the player.
+    ("unarmed_archer", "########\n#u...@.#\n########\n"),
 ];
+
+/// A bow and arrows for the archers, and where they are readied.
+const OBJECTS: &str = r##"
+[[object]]
+id = "bow"
+name = "short bow"
+glyph = "}"
+fg = "#c0c0c0"
+material = "wood"
+weight = 700
+slot = "missile_weapon"
+launches = "arrow"
+damage = "1d6"
+range = 8
+
+[[object]]
+id = "arrow"
+name = "arrow"
+glyph = "/"
+fg = "#c0c0c0"
+material = "wood"
+weight = 30
+stackable = true
+slot = "missiles"
+ammo = "arrow"
+"##;
+
+const SLOTS: &str = r##"
+[[slot]]
+id = "missile_weapon"
+name = "Missile weapon"
+action = "ready"
+mark = "readied"
+
+[[slot]]
+id = "missiles"
+name = "Missiles"
+action = "ready"
+mark = "quivered"
+"##;
 
 fn files() -> ContentFiles {
     let mut files = ContentFiles::default();
@@ -212,6 +255,12 @@ fn files() -> ContentFiles {
     files.insert("data/factions.toml", FACTIONS);
     files.insert("data/creatures.toml", CREATURES);
     files.insert("data/legend.toml", LEGEND);
+    files.insert("data/objects.toml", OBJECTS);
+    files.insert("data/slots.toml", SLOTS);
+    files.insert(
+        "data/materials.toml",
+        "[[material]]\nid = \"wood\"\nname = \"wood\"\n",
+    );
     for (name, map) in LEVELS {
         files.insert(
             &format!("levels/{name}.toml"),
@@ -491,8 +540,19 @@ fn ranged_creatures_shoot_with_a_clear_line_of_fire_else_find_one() {
     assert_eq!(pos(&w, archer), Pos::new(4, 1));
     let out = w.apply(&Action::Wait);
     assert_eq!(attacks(&out), [(archer, PLAYER, AttackKind::Ranged)]);
-    // It has no bow ready: a shot announced, nothing rolled.
-    assert_eq!(last_message(&w), "The kobold archer shoots at you.");
+    // A real shot, rolled: it hit or missed (and an arrow less).
+    let said = last_message(&w);
+    assert!(
+        [
+            "The kobold archer shoots you.",
+            "The kobold archer misses you."
+        ]
+        .contains(&said.as_str())
+            || said == "The kobold archer shoots you hard!",
+        "{said}"
+    );
+    let arrows = |w: &World| w.state().actors[&archer].inventory[1].count;
+    assert_eq!(arrows(&w), 19);
     assert_eq!(
         pos(&w, archer),
         Pos::new(4, 1),
@@ -514,6 +574,24 @@ fn ranged_creatures_shoot_with_a_clear_line_of_fire_else_find_one() {
             (ActorId(1), PLAYER, AttackKind::Ranged),
             (ActorId(1), PLAYER, AttackKind::Ranged)
         ]
+    );
+}
+
+#[test]
+fn ranged_creatures_with_nothing_to_shoot_fight_in_melee() {
+    // No bow: it walks up to the player and strikes with its fists.
+    let mut w = world("unarmed_archer");
+    let archer = ActorId(1);
+    let mut seen = Vec::new();
+    for _ in 0..6 {
+        let out = w.apply(&Action::Wait);
+        seen.extend(attacks(&out));
+    }
+    assert_eq!(pos(&w, archer), Pos::new(4, 1), "next to the player");
+    assert!(!seen.is_empty());
+    assert!(
+        seen.iter()
+            .all(|a| *a == (archer, PLAYER, AttackKind::Melee))
     );
 }
 
@@ -581,6 +659,7 @@ fn attacks_the_player_does_not_perceive_leave_no_trace() {
             from,
             to,
             strike: Some(_),
+            with: None,
         } if (attacker, target, from, to) == (kobold, rat, Pos::new(3, 3), Pos::new(4, 3))
     )));
     let mut perceived = raw.clone();

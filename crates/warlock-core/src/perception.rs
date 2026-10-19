@@ -50,7 +50,8 @@ use crate::burden::{self, Load};
 use crate::character::Character;
 use crate::combat::Health;
 use crate::content::{
-    Content, CreatureId, Flow, LevelKind, LightId, SlotId, Stance, TerrainId, VisionProfile,
+    Content, CreatureId, Flow, LevelKind, LightId, ObjectId, SlotId, Stance, TerrainId,
+    VisionProfile,
 };
 use crate::daylight;
 use crate::equipment::Equipment;
@@ -686,6 +687,26 @@ impl<'a> PerceptionView<'a> {
     /// What of their inventory the player wears and wields, by slot.
     pub fn equipment(&self) -> &'a Equipment {
         &self.player.equipment
+    }
+
+    /// What the player has ready to shoot (spec §8 "Ranged combat"): their missile weapon, where
+    /// in their inventory the ammunition for it is, and how far it shoots; `None` unless they
+    /// have both.
+    pub fn ready_to_fire(&self) -> Option<(ObjectId, usize, i32)> {
+        let (launcher, _) = self.player.launcher(self.content)?;
+        let item = self.player.ammunition_item(self.content)?;
+        Some((launcher, item, self.content.object(launcher).range?))
+    }
+
+    /// Where in their inventory the throwing weapon the player has ready is (a quiver of rocks).
+    pub fn ready_to_throw(&self) -> Option<usize> {
+        self.player.ready_to_throw(self.content)
+    }
+
+    /// How far the player throws inventory stack `item`, if it is a throwing weapon.
+    pub fn throw_range(&self, item: usize) -> Option<i32> {
+        let def = self.content.object(self.player.inventory.get(item)?.object);
+        def.range.filter(|_| def.is_thrown())
     }
 
     /// What seen creature `actor` wears and wields, each thing once, in slot order: all the

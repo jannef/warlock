@@ -8,8 +8,19 @@ use crate::geom::Pos;
 use crate::grid::Grid;
 use crate::light::Light;
 use crate::object::Stack;
+use crate::time::GameTime;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+
+/// Something burning on a cell (spec §8 "Ranged combat"): a burning object landed there (a
+/// flaming arrow), giving light until it burns out and is gone.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Fire {
+    /// The light it gives, a preset.
+    pub light: LightId,
+    /// When it has burned out: it gives light while the clock is before this.
+    pub until: GameTime,
+}
 
 /// A level that has been visited. Levels persist when the player leaves them.
 ///
@@ -43,6 +54,10 @@ pub struct LevelState {
     /// away is forgotten, one that changed out of sight is remembered as it was.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) object_memory: BTreeMap<Pos, Vec<Stack>>,
+    /// Burning objects lying on cells, by position: light sources until they burn out. The
+    /// burning objects themselves lie in the pile there.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) fires: BTreeMap<Pos, Fire>,
 }
 
 impl LevelState {
@@ -63,6 +78,7 @@ impl LevelState {
             flow: template.flow.clone(),
             objects: template.objects.clone(),
             object_memory: BTreeMap::new(),
+            fires: BTreeMap::new(),
         }
     }
 
@@ -144,6 +160,7 @@ impl LevelState {
         self.terrain.cells().iter().all(known)
             && self.memory.cells().iter().flatten().all(known)
             && self.lights.values().all(|l| usize::from(l.0) < lights)
+            && self.fires.values().all(|f| usize::from(f.light.0) < lights)
             && piles.flatten().all(|s| s.is_valid_for(content))
     }
 }

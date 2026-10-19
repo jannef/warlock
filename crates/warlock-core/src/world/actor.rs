@@ -172,15 +172,34 @@ impl Actor {
 
     /// The ammunition it has ready for its launcher: the first ready stack the launcher fires.
     pub fn ammunition(&self, content: &Content) -> Option<ObjectId> {
+        self.ammunition_item(content)
+            .map(|item| self.inventory[item].object)
+    }
+
+    /// Where in its inventory the ammunition it has ready for its launcher is (see
+    /// [`Actor::ammunition`]).
+    pub fn ammunition_item(&self, content: &Content) -> Option<usize> {
         let (launcher, _) = self.launcher(content)?;
         content.slot_ids().find_map(|(slot, def)| {
             if def.action != ActionKind::Ready {
                 return None;
             }
-            let stack = self.inventory.get(self.equipment.get(slot)?)?;
-            content
-                .fires(launcher, stack.object)
-                .then_some(stack.object)
+            let item = self.equipment.get(slot)?;
+            let stack = self.inventory.get(item)?;
+            content.fires(launcher, stack.object).then_some(item)
+        })
+    }
+
+    /// The throwing weapon it has ready, if any: the first stack in a `ready` slot (the
+    /// missiles) that is thrown (a quiver of rocks), and where in its inventory it is.
+    pub fn ready_to_throw(&self, content: &Content) -> Option<usize> {
+        content.slot_ids().find_map(|(slot, def)| {
+            if def.action != ActionKind::Ready {
+                return None;
+            }
+            let item = self.equipment.get(slot)?;
+            let stack = self.inventory.get(item)?;
+            content.object(stack.object).is_thrown().then_some(item)
         })
     }
 

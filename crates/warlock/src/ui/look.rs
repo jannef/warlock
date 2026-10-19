@@ -10,8 +10,8 @@ use warlock_core::perception::{CellView, PerceptionView};
 use warlock_core::world::ActorId;
 
 /// Cursor colors: dark glyph on a warm highlight, so it reads on any terrain and under any light.
-const CURSOR_FG: Rgb = Rgb::new(0x14, 0x12, 0x10);
-const CURSOR_BG: Rgb = Rgb::new(0xe0, 0xc0, 0x70);
+pub const CURSOR_FG: Rgb = Rgb::new(0x14, 0x12, 0x10);
+pub const CURSOR_BG: Rgb = Rgb::new(0xe0, 0xc0, 0x70);
 
 /// One line describing what the player knows about `p`: who is there, what lies there (as seen
 /// or remembered), on what, and what was heard there.
@@ -115,6 +115,17 @@ fn capitalize(text: &str) -> String {
 
 /// Draws the cursor at console cell `(x, y)`, showing what the player perceives there.
 pub fn draw_cursor(console: &mut Console, x: i32, y: i32, view: &PerceptionView<'_>, p: Pos) {
+    draw_cursor_on(console, (x, y), view, p, CURSOR_BG);
+}
+
+/// [`draw_cursor`] on background `bg` (targeting marks a target out of reach with its own).
+pub fn draw_cursor_on(
+    console: &mut Console,
+    (x, y): (i32, i32),
+    view: &PerceptionView<'_>,
+    p: Pos,
+    bg: Rgb,
+) {
     let content = view.content();
     let top = view.objects(p).first();
     let ch = match (view.cell(p), view.actor_at(p), top) {
@@ -132,7 +143,7 @@ pub fn draw_cursor(console: &mut Console, x: i32, y: i32, view: &PerceptionView<
         Cell {
             ch,
             fg: CURSOR_FG,
-            bg: CURSOR_BG,
+            bg,
         },
     );
 }
@@ -343,7 +354,8 @@ mod tests {
         let archer = of("kobold_archer");
         assert!(
             archer.starts_with("A kobold archer (hostile, ")
-                && archer.contains("), with a short bow and 20 arrows ready, on "),
+                && archer.contains("), with a short bow and ")
+                && archer.contains(" arrows ready, on "),
             "{archer}"
         );
         let shaman = of("kobold_shaman");

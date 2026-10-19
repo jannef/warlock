@@ -43,6 +43,10 @@
 //! Strength, Toughness, and size let it carry slows every action it takes (in the prices,
 //! `schedule.rs`), caps its Dexterity in Defence, makes its steps louder, and, overloaded, keeps
 //! it from moving. The player is told when their burden changes.
+//!
+//! Ranged combat (`shoot.rs`): shots and throws fly along a line, attack whoever stands in their
+//! way, and come down to be picked up again; burning missiles are fires that light the level
+//! until they burn out.
 
 mod actor;
 mod ai;
@@ -52,13 +56,14 @@ mod hash;
 mod level;
 mod path;
 mod schedule;
+mod shoot;
 
 pub use actor::{Actor, ActorId, ActorKind, Mind, Patrol};
 pub use fight::Death;
 pub(crate) use hash::fnv1a;
-pub use level::LevelState;
+pub use level::{Fire, LevelState};
 
-use crate::action::{Action, Event, Letters, MAX_REST, Outcome, Rest, letter};
+use crate::action::{Action, Event, Letters, MAX_REST, MissileEnd, Outcome, Rest, letter};
 use crate::burden::{self, Burden, Load};
 use crate::character::{Character, CharacterSpec};
 use crate::content::{
@@ -71,8 +76,10 @@ use crate::mapgen::local::arrival;
 use crate::messages::MessageLog;
 use crate::noise::{self, Act, Recent};
 use crate::object::{self, Stack, Weight};
+use crate::perception::VIEW_RADIUS;
 use crate::perception::{Perception, PerceptionView};
 use crate::rng::Rng;
+use crate::sight::LineOfSight;
 use crate::time::{self, Duration, GameTime};
 use crate::weather::{self, Weather};
 use serde::{Deserialize, Serialize};
@@ -636,6 +643,7 @@ impl World {
         if self.state.weather_override.is_some_and(|o| o.until <= now) {
             self.state.weather_override = None;
         }
+        self.burn_out();
         let before = self.perception.weather();
         *self.perception = Perception::compute(&self.state, &self.content, &mut self.lights);
         let current = self.state.current_level.clone();
@@ -673,12 +681,52 @@ impl World {
             Some(a) if seen => End::Seen(content.creature(a.creature).name.as_str()),
             _ => End::Unseen,
         };
+        // A missile is seen where it flies over cells the player sees: its path is cut to the
+        // stretch from the first of them to the last, and where it was loosed is known only if
+        // the player saw it leave. A burning one is light itself: it is seen wherever it flies
+        // in the player's line of sight, in the dark too.
+        let mut los: Option<LineOfSight> = None;
+        for event in events.iter_mut() {
+            if let Event::Missile {
+                object,
+                from,
+                path,
+                end,
+            } = event
+            {
+                let burning = content.object(*object).burning.is_some();
+                if burning && los.is_none() {
+                    let level = self.state.current();
+                    let viewer = self.state.player().pos;
+                    los = Some(LineOfSight::compute(viewer, VIEW_RADIUS, |p| {
+                        level.is_opaque(&content, p)
+                    }));
+                }
+                let in_sight = |p: Pos| burning && los.as_ref().is_some_and(|l| l.contains(p));
+                let seen = |p: &Pos| perception.is_visible(*p) || in_sight(*p);
+                let (Some(first), Some(last)) =
+                    (path.iter().position(seen), path.iter().rposition(seen))
+                else {
+                    path.clear();
+                    continue;
+                };
+                if last + 1 < path.len() {
+                    *end = MissileEnd::Unseen;
+                }
+                path.truncate(last + 1);
+                path.drain(..first);
+                if first > 0 || from.is_some_and(|f| !perception.sees_actors_at(f)) {
+                    *from = None;
+                }
+            }
+        }
         events.retain(|e| match *e {
             Event::ActorMoved { actor, from, to } => {
                 actor == player || perception.sees_actors_at(from) || perception.sees_actors_at(to)
             }
             Event::DoorOpened { pos } | Event::DoorClosed { pos } => perception.is_visible(pos),
             Event::LevelChanged { .. } => true,
+            Event::Missile { ref path, .. } => !path.is_empty(),
             Event::Attacked {
                 attacker,
                 target,
@@ -686,6 +734,7 @@ impl World {
                 from,
                 to,
                 strike,
+                with,
             } => {
                 let sees_attacker = attacker == player || perception.sees_actors_at(from);
                 let sees_target = target == player || perception.sees_actors_at(to);
@@ -696,7 +745,7 @@ impl World {
                     return true;
                 }
                 if let Some(me) = self.actor_or_fallen(attacker) {
-                    let words = Words::of(me, kind, &content);
+                    let words = Words::of(me, kind, with, &content);
                     let hide = (self.actor_or_fallen(target))
                         .and_then(|t| content.creature(t.creature).natural.as_ref())
                         .map(|h| h.name.as_str());
@@ -856,6 +905,8 @@ impl World {
             Action::Drop(letters) => return self.drop_objects(*letters),
             Action::Equip { slot, item } => return self.equip(slot, *item),
             Action::Remove(slot) => return self.remove(slot),
+            Action::Fire(at) => return self.fire(*at, events),
+            Action::Throw { item, at } => return self.throw(*item, *at, events),
             Action::Rest(goal) => return self.start_rest(*goal),
             Action::SetVision(id) => return self.set_vision(id),
             Action::SetWeather(weather) => {
@@ -915,11 +966,27 @@ impl World {
             self.say("There is nothing here to pick up.");
             return false;
         }
-        let Some(chosen) = self.chosen(letters, pile.len(), |c| format!("There is no {c} here."))
+        let Some(mut chosen) =
+            self.chosen(letters, pile.len(), |c| format!("There is no {c} here."))
         else {
             return false;
         };
         let content = self.content.clone();
+        // What burns stays where it lies.
+        let burning: Vec<usize> = (chosen.iter())
+            .filter(|&i| content.object(pile[i].object).burning.is_some())
+            .collect();
+        for &i in &burning {
+            chosen.remove(i);
+        }
+        if chosen.is_empty() {
+            let what = burning.first().map(|&i| pile[i].describe(&content));
+            self.say(format!(
+                "You cannot pick up {} while it burns.",
+                what.unwrap_or_default()
+            ));
+            return false;
+        }
         let inventory = self.state.inventory_mut();
         let mut taken = Letters::default();
         for i in chosen.iter() {
@@ -932,7 +999,7 @@ impl World {
             return false;
         }
         // Everything was asked for, but the pile has more stacks than there are letters.
-        let more = letters.is_empty() && pile.len() > taken.len();
+        let more = letters.is_empty() && pile.len() > taken.len() + burning.len();
         let full = taken != chosen || (more && inventory.len() >= object::INVENTORY_SLOTS);
         let (got, left) = split(&pile, taken);
         self.state.current_mut().set_pile(here, left);
@@ -1411,6 +1478,8 @@ mod moon_tests;
 mod object_tests;
 #[cfg(test)]
 mod overworld_tests;
+#[cfg(test)]
+mod shoot_tests;
 #[cfg(test)]
 mod speed_tests;
 #[cfg(test)]

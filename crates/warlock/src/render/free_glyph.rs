@@ -57,13 +57,16 @@ pub struct FreeGlyph {
     /// Shear about the cell center: pixels to the right per pixel down (0 upright), so a
     /// vertical stroke leans along a slanted motion (falling rain).
     pub slant: f32,
+    /// Rotation about the cell center, in radians, clockwise on screen (y down): a missile's
+    /// glyph turned along its flight (spec §4.8).
+    pub turn: f32,
 }
 
 impl FreeGlyph {
     /// Whether the glyph sits exactly on the pixel grid, unscaled and upright, so it can be drawn
     /// 1:1.
     pub fn is_crisp(&self) -> bool {
-        self.scale == 1.0 && self.slant == 0.0 && self.pos == self.pos.round()
+        self.scale == 1.0 && self.slant == 0.0 && self.turn == 0.0 && self.pos == self.pos.round()
     }
 }
 
@@ -213,6 +216,7 @@ fn glyph_mesh(glyphs: &[FreeGlyph], cell: Vec2, slot: impl Fn(char) -> u16) -> M
         color: LinearRgba::NONE,
         scale: 1.0,
         slant: 0.0,
+        turn: 0.0,
     };
     let glyphs = if glyphs.is_empty() {
         &[HIDDEN][..]
@@ -232,6 +236,8 @@ fn glyph_mesh(glyphs: &[FreeGlyph], cell: Vec2, slot: impl Fn(char) -> u16) -> M
         let min = g.pos + (cell - size) * 0.5;
         let max = min + size;
         let middle = (min.y + max.y) * 0.5;
+        let center = (min + max) * 0.5;
+        let turn = Vec2::from_angle(g.turn);
         let flags = if g.is_crisp() { CRISP } else { 0 };
         for (corner, local) in [
             (Vec2::new(min.x, min.y), Vec2::ZERO),
@@ -240,7 +246,8 @@ fn glyph_mesh(glyphs: &[FreeGlyph], cell: Vec2, slot: impl Fn(char) -> u16) -> M
             (Vec2::new(min.x, max.y), Vec2::new(0.0, cell.y)),
         ] {
             let x = corner.x + g.slant * (corner.y - middle);
-            positions.push([x, corner.y, 0.0]);
+            let at = center + turn.rotate(Vec2::new(x, corner.y) - center);
+            positions.push([at.x, at.y, 0.0]);
             locals.push(local.to_array());
             colors.push(g.color.to_f32_array());
             data.push([u32::from(slot(g.ch)), flags]);
@@ -271,6 +278,7 @@ mod tests {
             color: LinearRgba::WHITE,
             scale,
             slant: 0.0,
+            turn: 0.0,
         }
     }
 
@@ -279,6 +287,30 @@ mod tests {
         assert!(glyph(Vec2::new(10.0, 20.0), 1.0).is_crisp());
         assert!(!glyph(Vec2::new(10.5, 20.0), 1.0).is_crisp());
         assert!(!glyph(Vec2::new(10.0, 20.0), 1.1).is_crisp());
+        let turned = FreeGlyph {
+            turn: 0.5,
+            ..glyph(Vec2::new(10.0, 20.0), 1.0)
+        };
+        assert!(!turned.is_crisp());
+    }
+
+    #[test]
+    fn turned_quads_rotate_about_the_cell_center() {
+        let cell = Vec2::new(10.0, 20.0);
+        let g = FreeGlyph {
+            turn: std::f32::consts::FRAC_PI_2,
+            ..glyph(Vec2::new(100.0, 40.0), 1.0)
+        };
+        let mesh = glyph_mesh(&[g], cell, |_| 3);
+        let Some(VertexAttributeValues::Float32x3(p)) = mesh.attribute(Mesh::ATTRIBUTE_POSITION)
+        else {
+            panic!("positions are Float32x3");
+        };
+        // A quarter turn clockwise (y down): the top-left corner swings to the top right.
+        let near =
+            |a: [f32; 3], b: [f32; 2]| (a[0] - b[0]).abs() < 1e-3 && (a[1] - b[1]).abs() < 1e-3;
+        assert!(near(p[0], [115.0, 45.0]), "{:?}", p[0]);
+        assert!(near(p[2], [95.0, 55.0]), "{:?}", p[2]);
     }
 
     #[test]

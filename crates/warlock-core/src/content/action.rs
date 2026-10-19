@@ -48,8 +48,13 @@ pub enum ActionKind {
     Drop,
     /// A melee attack: the player moving into a hostile creature, or a creature's.
     Melee,
-    /// A creature's ranged attack.
+    /// A shot from a missile weapon (the player's `f`, a creature's ranged attack).
     Shoot,
+    /// Throwing a throwing weapon (`t`).
+    Throw,
+    /// Reloading a missile weapon that needs it after every shot (a crossbow): part of each of
+    /// its shots.
+    Reload,
     /// A creature's spell.
     Cast,
     /// Wielding a thing in a hand, or putting it away (`data/slots.toml` names each slot's
@@ -64,7 +69,7 @@ pub enum ActionKind {
 }
 
 impl ActionKind {
-    pub const ALL: [ActionKind; 15] = [
+    pub const ALL: [ActionKind; 17] = [
         ActionKind::Step,
         ActionKind::Wait,
         ActionKind::OpenDoor,
@@ -75,6 +80,8 @@ impl ActionKind {
         ActionKind::Drop,
         ActionKind::Melee,
         ActionKind::Shoot,
+        ActionKind::Throw,
+        ActionKind::Reload,
         ActionKind::Cast,
         ActionKind::Wield,
         ActionKind::Wear,
@@ -95,6 +102,8 @@ impl ActionKind {
             ActionKind::Drop => "drop",
             ActionKind::Melee => "melee",
             ActionKind::Shoot => "shoot",
+            ActionKind::Throw => "throw",
+            ActionKind::Reload => "reload",
             ActionKind::Cast => "cast",
             ActionKind::Wield => "wield",
             ActionKind::Wear => "wear",
@@ -107,7 +116,7 @@ impl ActionKind {
     pub const fn is_attack(self) -> bool {
         matches!(
             self,
-            ActionKind::Melee | ActionKind::Shoot | ActionKind::Cast
+            ActionKind::Melee | ActionKind::Shoot | ActionKind::Throw | ActionKind::Cast
         )
     }
 

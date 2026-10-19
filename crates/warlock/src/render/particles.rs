@@ -192,6 +192,42 @@ pub fn ambient(
     }
 }
 
+/// The live particles at `time` of an emitter carried by a moving source (a burning missile's
+/// embers): it emits `rate` a second while the source moves, between visual times `span.0` and
+/// `span.1`, each particle from where the source was when it was born (`origin(born)`, a cell's
+/// top-left in level cells), so they stay behind as it flies on. `key` identifies the source.
+pub fn trail(
+    e: &ParticleEmitter,
+    key: u64,
+    span: (f32, f32),
+    origin: impl Fn(f32) -> Vec2,
+    source: Source<impl Fn(Rgb) -> Rgb + Copy>,
+    time: f32,
+    out: &mut Vec<Particle>,
+) {
+    if e.rate <= 0.0 || e.life <= 0.0 || time < span.0 {
+        return;
+    }
+    let period = 1.0 / e.rate;
+    let first = (span.0 / period).floor() as i64;
+    let last = (time.min(span.1) / period).floor() as i64;
+    let first = first.max(last - MAX_PER_EMITTER as i64 + 1);
+    for slot in first..=last {
+        let mut rng = Rng::new(key, slot as u64);
+        let born = (slot as f32 + rng.unit()) * period;
+        if !(span.0..=span.1).contains(&born) || !(0.0..e.life).contains(&(time - born)) {
+            continue;
+        }
+        let source = Source {
+            origin: origin(born),
+            ..source
+        };
+        if let Some(p) = particle(e, &mut rng, source, time - born) {
+            out.push(p);
+        }
+    }
+}
+
 /// The live particles of a burst `age` seconds after it went off.
 pub fn burst(
     e: &ParticleEmitter,

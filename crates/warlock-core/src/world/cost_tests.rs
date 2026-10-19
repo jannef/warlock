@@ -227,8 +227,48 @@ map = '''
 "@" = { terrain = "floor", spawn = "player" }
 "g" = { terrain = "floor", creature = "grunt" }
 "B" = { terrain = "floor", creature = "brute" }
-"a" = { terrain = "floor", creature = "archer" }
+"a" = { terrain = "floor", creature = "archer", carry = ["bow", "arrow*30"], wield = ["bow", "arrow"] }
 "s" = { terrain = "floor", creature = "shaman" }
+"##;
+
+// The archer's bow and arrows, and where they are readied.
+const OBJECTS: &str = r##"
+[[object]]
+id = "bow"
+name = "bow"
+glyph = "}"
+fg = "#c0c0c0"
+material = "wood"
+weight = 700
+slot = "missile_weapon"
+launches = "arrow"
+damage = "1d6"
+range = 8
+
+[[object]]
+id = "arrow"
+name = "arrow"
+glyph = "/"
+fg = "#c0c0c0"
+material = "wood"
+weight = 30
+stackable = true
+slot = "missiles"
+ammo = "arrow"
+"##;
+
+const SLOTS: &str = r##"
+[[slot]]
+id = "missile_weapon"
+name = "Missile weapon"
+action = "ready"
+mark = "readied"
+
+[[slot]]
+id = "missiles"
+name = "Missiles"
+action = "ready"
+mark = "quivered"
 "##;
 
 // An overworld: a road east to a tower (a location leading into the keep), plains around.
@@ -266,6 +306,12 @@ fn files(player_speed: u32) -> ContentFiles {
     let creatures = CREATURES.replace("PLAYER_SPEED", &player_speed.to_string());
     files.insert("data/creatures.toml", &creatures);
     files.insert("data/legend.toml", LEGEND);
+    files.insert("data/objects.toml", OBJECTS);
+    files.insert("data/slots.toml", SLOTS);
+    files.insert(
+        "data/materials.toml",
+        "[[material]]\nid = \"wood\"\nname = \"wood\"\n",
+    );
     files.insert("levels/yard.toml", YARD);
     files.insert("levels/cellar.toml", CELLAR);
     files.insert("levels/pit.toml", PIT);
@@ -336,6 +382,18 @@ fn acts_of(outs: &[Outcome], id: ActorId) -> usize {
             Event::ActorMoved { actor, .. } => *actor == id,
             Event::Attacked { attacker, .. } => *attacker == id,
             _ => false,
+        })
+        .count()
+}
+
+/// The attacks of actor `id` on the player among the outcomes' events: one per attack it made
+/// on them (an arrow that misses the player flies on, and may strike someone behind them too).
+fn attacks_on_player(outs: &[Outcome], id: ActorId) -> usize {
+    let events = outs.iter().flat_map(|o| o.events.iter());
+    events
+        .filter(|e| {
+            matches!(e, Event::Attacked { attacker, target, .. }
+                if *attacker == id && *target == ActorId(0))
         })
         .count()
 }
@@ -454,7 +512,7 @@ fn creatures_attacks_use_their_costs() {
     assert_eq!(total(&outs), 84);
     let counts: Vec<_> = [grunt, brute, archer, shaman]
         .iter()
-        .map(|id| acts_of(&outs, *id))
+        .map(|id| attacks_on_player(&outs, *id))
         .collect();
     assert_eq!(counts, [10, 7, 14, 28]);
     let content = w.content();

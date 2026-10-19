@@ -6,6 +6,7 @@
 | Wall torch | 7 cells | visible |
 | Brazier | 8 cells | visible |
 | Lamp | 6 cells | visible |
+| Arrow fire | 5 cells | visible |
 | Your lantern | 5 cells | visible |
 | Altar | 5 cells | visible |
 | Light crystal (red) | 7 cells | visible |

@@ -24,6 +24,8 @@
   - [Horoscope](horoscope.md)
 - [Stats](stats.md)
 - [Combat](combat.md)
+  - [Ranged combat](ranged.md)
+  - [Ammunition](ammunition.md)
 - [Creatures](creatures.md)
 - [Your lantern](lantern.md)
 - [Saving](saving.md)

@@ -53,6 +53,10 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   hard!"), and weapons and armour come from data. ADOM-like hit points from Toughness, race, and
   class heal with time; creatures die and drop what they carried, look as hurt as they are, and
   your own death ends the run for good: the save is gone.
+- **Ranged combat** — bows (drawn by Strength), a crossbow, a sling, and throwing weapons; aim
+  ADOM-style with a cursor and a faint line of fire, watch the arrow fly, and pick it up where it
+  fell. A flaming arrow flies burning and lights the dark where it lands until it burns out:
+  shoot one into the dark to see what waits there (and be seen).
 - **Stats** — Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
   D&D, for you and every creature; a character screen shows your own. Strength, Dexterity, and
   Toughness count in a fight; the rest do nothing yet.
@@ -135,6 +139,8 @@ cargo run --release -p warlock
 | `@` | Character: your race, gender, class, age, birth sign, stats, hit points, Defence, and weight |
 | `R` | Rest an hour, until dawn, or until nightfall (stops when something comes into view) |
 | `x` | Look around: move a cursor to read what is there (takes no time) |
+| `f` | Fire your missile weapon: aim (Tab cycles targets), then Enter |
+| `t` | Throw something: choose it, aim, then Enter |
 | `?` | Show all controls |
 | `Esc` | Pause menu: settings, controls, save and quit |
 | `Q` | Save and quit |

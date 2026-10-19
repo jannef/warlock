@@ -139,6 +139,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("classes.md".to_string(), classes(content)),
         ("horoscope.md".to_string(), horoscope(content)),
         ("weapons.md".to_string(), weapons(content)),
+        ("launchers.md".to_string(), launchers(content)),
+        ("ammunition.md".to_string(), ammunition(content)),
         ("armour.md".to_string(), armour(content)),
         ("hit-chances.md".to_string(), hit_chances()),
         ("threats.md".to_string(), threats()),
@@ -228,7 +230,9 @@ fn action_costs(content: &Content) -> String {
             ActionKind::PickUp => "Picking up (however many stacks)",
             ActionKind::Drop => "Dropping (however many stacks)",
             ActionKind::Melee => "Attacking up close",
-            ActionKind::Shoot => "Shooting (creatures)",
+            ActionKind::Shoot => "Shooting with a missile weapon",
+            ActionKind::Throw => "Throwing",
+            ActionKind::Reload => "Reloading a crossbow (after every shot, on top of shooting)",
             ActionKind::Cast => "Casting a spell (creatures)",
             ActionKind::Wield => "Wielding something, or putting it away",
             ActionKind::Wear | ActionKind::BodyArmor => "Putting something on, or taking it off",
@@ -1075,8 +1079,8 @@ fn percent(part: u32, of: u32) -> String {
 /// wields them.
 fn weapons(content: &Content) -> String {
     let mut out = String::from(
-        "| Weapon | Damage | Critical on | Critical damage | Parry | Needs Strength | Held |\n\
-         |---|:---:|:---:|:---:|:---:|:---:|---|\n",
+        "| Weapon | Damage | Critical on | Critical damage | Parry | Needs Strength | Held | \
+         Thrown |\n|---|:---:|:---:|:---:|:---:|:---:|---|:---:|\n",
     );
     for (i, o) in content.object_defs().iter().enumerate() {
         let Some(attack) = &o.attack else { continue };
@@ -1091,9 +1095,13 @@ fn weapons(content: &Content) -> String {
         } else {
             goes_on(content, i).to_lowercase()
         };
+        let thrown = match o.range {
+            Some(range) if o.is_thrown() => format!("{range} cells"),
+            _ => "-".into(),
+        };
         let _ = writeln!(
             out,
-            "| {} | {} | {} | ×{} | {parry} | {strength} | {held} |",
+            "| {} | {} | {} | ×{} | {parry} | {strength} | {held} | {thrown} |",
             capital(&o.name),
             attack.damage,
             threat_range(attack.threat),
@@ -1107,6 +1115,114 @@ fn weapons(content: &Content) -> String {
         threat_range(combat::DEFAULT_THREAT),
         combat::DEFAULT_CRIT
     );
+    out
+}
+
+/// What a launcher kind of ammunition is called: every object of that kind, in the plural, in
+/// data order ("arrows, flaming arrows").
+fn ammunition_of(content: &Content, kind: &str) -> String {
+    let names: Vec<&str> = (content.object_defs().iter())
+        .filter(|o| o.ammo.as_deref() == Some(kind))
+        .map(|o| o.plural.as_str())
+        .collect();
+    names.join(", ")
+}
+
+/// The missile weapons (ranged combat): their damage dice, critical, the Strength a bow needs,
+/// how far they shoot, what they shoot, and how long a shot takes.
+fn launchers(content: &Content) -> String {
+    let mut out = String::from(
+        "| Missile weapon | Damage | Critical on | Critical damage | Needs Strength | Range | \
+         Shoots | A shot takes |\n|---|:---:|:---:|:---:|:---:|:---:|---|---:|\n",
+    );
+    let costs = content.action_costs();
+    for o in content.object_defs() {
+        let (Some(attack), Some(kind)) = (&o.attack, &o.launches) else {
+            continue;
+        };
+        let strength = attack.strength.map_or("-".to_string(), |s| s.to_string());
+        let mut cost = costs.cost(ActionKind::Shoot);
+        if o.reloads {
+            cost += costs.cost(ActionKind::Reload);
+        }
+        let takes = at_normal_pace(price(cost, BASE_TURN));
+        let takes = if o.reloads {
+            format!("{takes} (reloading)")
+        } else {
+            takes
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | ×{} | {strength} | {} cells | {} | {takes} |",
+            capital(&o.name),
+            attack.damage,
+            threat_range(attack.threat),
+            attack.crit,
+            o.range.unwrap_or(0),
+            capital(&ammunition_of(content, kind)),
+        );
+    }
+    out
+}
+
+/// The ammunition (what shoots it, its chance to break on a hit, whether it burns where it
+/// lands) and the throwing weapons (their damage, critical, and how far they are thrown).
+fn ammunition(content: &Content) -> String {
+    let mut out = String::from(
+        "| Ammunition | Shot from | Breaks on a hit | Where it lands |\n|---|---|:---:|---|\n",
+    );
+    for o in content.object_defs() {
+        let Some(kind) = &o.ammo else { continue };
+        let from: Vec<&str> = (content.object_defs().iter())
+            .filter(|l| l.launches.as_ref() == Some(kind))
+            .map(|l| l.name.as_str())
+            .collect();
+        let breaks = if o.breaks > 0 {
+            format!("{}%", o.breaks)
+        } else {
+            "never".into()
+        };
+        let lands = match o.lit.map(|l| content.object(l)) {
+            Some(lit) => match lit.burning {
+                Some(burning) => format!(
+                    "burns as {} for {}, lighting {} cells around",
+                    lit.describe(1),
+                    burning.lasts.spoken(),
+                    content.light(burning.light).radius
+                ),
+                None => "-".into(),
+            },
+            None => "lies there, to be picked up".into(),
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {breaks} | {lands} |",
+            capital(&o.name),
+            capital(&from.join(", ")),
+        );
+    }
+    out.push_str(
+        "\n| Throwing weapon | Damage | Critical on | Critical damage | Range | Breaks on a hit \
+         |\n|---|:---:|:---:|:---:|:---:|:---:|\n",
+    );
+    for o in content.object_defs() {
+        let (Some(attack), Some(range), true) = (&o.attack, o.range, o.is_thrown()) else {
+            continue;
+        };
+        let breaks = if o.breaks > 0 {
+            format!("{}%", o.breaks)
+        } else {
+            "never".into()
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | ×{} | {range} cells | {breaks} |",
+            capital(&o.name),
+            attack.damage,
+            threat_range(attack.threat),
+            attack.crit,
+        );
+    }
     out
 }
 
@@ -1365,8 +1481,36 @@ mod tests {
             equipment.contains("| `c` | Body | Leather jerkin, chain mail shirt | 18 seconds |")
         );
         assert!(equipment.contains(", quarterstaff (both hands) |"));
-        assert!(equipment.contains("| `k` | Missile weapon | Short bow (shoots arrows) |"));
-        assert!(equipment.contains("| `l` | Missiles | Arrow | 6 seconds |"));
+        assert!(equipment.contains(
+            "| `k` | Missile weapon | Short bow (shoots arrows), long war bow (shoots arrows), \
+             crossbow (shoots crossbow bolts), sling (shoots sling stones) |"
+        ));
+        assert!(equipment.contains(
+            "| `l` | Missiles | Arrow, flaming arrow, crossbow bolt, sling stone, rock | 6 seconds |"
+        ));
+        let launchers = text("launchers.md");
+        assert!(
+            launchers.contains(
+                "| Long war bow | 1d8+2 | 22–24 | ×3 | 14 | 15 cells | Arrows, flaming arrows | 6 \
+                 seconds |"
+            ),
+            "{launchers}"
+        );
+        assert!(
+            launchers.contains("| 12 seconds (reloading) |"),
+            "{launchers}"
+        );
+        let ammunition = text("ammunition.md");
+        assert!(
+            ammunition.contains(
+                "| Flaming arrow | Short bow, long war bow | never | burns as a burning arrow for \
+                 1 minute, lighting 5 cells around |"
+            ),
+            "{ammunition}"
+        );
+        assert!(ammunition.contains("| Arrow | Short bow, long war bow | 30% | lies there"));
+        assert!(ammunition.contains("| Dagger | 1d4 | 20–24 | ×2 | 5 cells | never |"));
+        assert!(ammunition.contains("| Rock | 1d3 |"));
         let actions = text("actions.md");
         assert!(
             actions.contains(
@@ -1436,7 +1580,7 @@ mod tests {
         assert!(text("hit-points.md").contains("| Wizard | 0 |"));
         let weapons = text("weapons.md");
         assert!(
-            weapons.contains("| Dagger | 1d4 | 20–24 | ×2 | - | - | main hand |"),
+            weapons.contains("| Dagger | 1d4 | 20–24 | ×2 | - | - | main hand | 5 cells |"),
             "{weapons}"
         );
         assert!(weapons.contains("| Spear | 1d8 | 22–24 | ×3 |"));

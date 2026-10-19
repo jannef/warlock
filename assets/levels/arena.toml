@@ -5,7 +5,11 @@
 # you fights you too: you arrive in the dark south-west corner, where you can watch unseen; each
 # fights the nearest foe it sees, so come close (lantern lit, or within a kobold's darkvision) and
 # they turn on you. Blows and arrows hurt and kill (the shaman's spells are only announced): the
-# brawl ends with the fallen's spears, bow, and amulet lying where they died.
+# brawl ends with the fallen's spears, bow, and amulet lying where they died; the archer's arrows
+# lie where they fell.
+#
+# Ranged combat (M16): beside you lie a short bow, arrows, and flaming arrows. Ready them (`e`)
+# and shoot into the brawl from the dark (`f`), or light the dark with a flaming arrow.
 #
 # West: the kobolds' camp behind two doors, which kobolds open and rats do not. East: the rat
 # warren, open to the pit through three gaps. `<` leads back up to the hub's stairs nook.
@@ -50,3 +54,8 @@ map = '''
 "1" = { terrain = "floor", creature = "bat", route = "E28 S1 W28 N1" }
 "2" = { terrain = "floor", creature = "bat", route = "W28 S1 E28 N1" }
 "3" = { terrain = "floor", creature = "beetle", route = "N4 E4 S4 W4" }
+
+# Beside the player's dark corner: a bow to shoot into the pit from the dark.
+[[pile]]
+at = [21, 18]
+objects = ["short_bow", "arrow*12", "flaming_arrow*4"]

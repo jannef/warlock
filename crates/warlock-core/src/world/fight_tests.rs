@@ -291,6 +291,7 @@ launches = "arrow"
 damage = "1d8+2"
 crit = 3
 strength = 14
+range = 8
 
 [[object]]
 id = "arrow"
@@ -761,25 +762,49 @@ fn creatures_shoot_with_the_bow_they_have_ready() {
     // Dexterity 16 (+3), 6 Strength short of the bow's 14: −6 to hit and to damage.
     assert_eq!((profile.to_hit, profile.bonus, profile.crit), (-3, -6, 3));
     let mut strikes = Vec::new();
+    let mut blows = 0;
     for _ in 0..30 {
         for e in w.apply(&Action::Wait).events {
-            if let Event::Attacked {
-                attacker,
-                kind: AttackKind::Ranged,
-                strike,
-                ..
-            } = e
-                && attacker == archer
-            {
-                strikes.push(strike);
+            match e {
+                Event::Attacked {
+                    attacker,
+                    kind: AttackKind::Ranged,
+                    strike,
+                    with,
+                    ..
+                } if attacker == archer => {
+                    assert_eq!(with, content.object_id("arrow"), "an arrow flies");
+                    strikes.push(strike);
+                }
+                Event::Attacked {
+                    attacker,
+                    kind: AttackKind::Melee,
+                    ..
+                } if attacker == archer => blows += 1,
+                _ => {}
             }
         }
     }
+    // Nine arrows, nine shots, then it comes to fight with its fists.
     assert!(
-        strikes.len() > 20 && strikes.iter().all(Option::is_some),
+        strikes.len() == 9 && strikes.iter().all(Option::is_some),
         "{strikes:?}"
     );
     assert!(strikes.iter().any(|s| s.is_some_and(Strike::is_hit)));
+    assert!(blows > 0, "out of arrows, it fights in melee");
+    let archer_now = actor(&w, 1).expect("the archer");
+    assert!(archer_now.ammunition(&content).is_none());
+    assert_eq!(archer_now.inventory.len(), 1, "the bow is all it has left");
+    // Every arrow came down where the player stands, hit or miss (the wall is behind them).
+    let (level, _) = w.ground_truth();
+    let arrow = content.object_id("arrow").expect("arrow");
+    assert_eq!(
+        level.objects_at(Pos::new(1, 1)),
+        [Stack {
+            object: arrow,
+            count: 9
+        }]
+    );
     let hurt = w.state().player().hp < w.state().player().max_hp();
     assert!(hurt, "an arrow found its mark");
     let shown = messages(&w);

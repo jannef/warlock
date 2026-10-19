@@ -58,6 +58,16 @@ radius = 6
 stability.intensity = { amount = 0.04, speed = 0.35 }
 stability.hue = { degrees = 2, speed = 0.2 }
 
+# A burning arrow where it lies (objects.toml: a flaming arrow, loosed): a small open flame,
+# livelier than a torch.
+[[light]]
+id = "arrow_fire"
+color = [260, 145, 60, 0]
+radius = 5
+stability.intensity = { amount = 0.12, speed = 1.4 }
+stability.hue = { degrees = 9, speed = 0.5 }
+stability.dips = { depth = 0.12, every = 5, length = 0.6 }
+
 # The player's lantern (see scenarios).
 [[light]]
 id = "lantern"

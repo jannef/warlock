@@ -4,8 +4,9 @@
 //! of each pile go into the map grid layer, creatures and glyphs that outgrow their cell into the
 //! free-glyph layer ([`glyphs`]), and text and panels into the UI console on top. [`motion`]
 //! moves the camera and slides creatures between cells; [`effects`] adds particles, glow, heat
-//! haze, and fades; [`rain`] lets it rain under the open sky; [`sounds`] marks where unseen
-//! sounds were heard. Terrain and objects are drawn
+//! haze, and fades; [`missiles`] flies shots and throws; [`rain`] lets it rain under the open
+//! sky; [`sounds`] marks where unseen sounds were heard; [`target`] aims shots and throws (the
+//! line of fire and its cursor). Terrain and objects are drawn
 //! in their base colors: the map grid's shader lights them with the visual light
 //! (`render::lighting`), composited after the map is placed and before free glyphs are lit.
 //! [`dev`] adds the developer overlays (reveal mode is the one exception that reads ground truth).
@@ -27,6 +28,7 @@ mod equipment_screen;
 mod glyphs;
 mod look;
 mod menu;
+mod missiles;
 mod motion;
 mod new_run_screen;
 mod object_screen;
@@ -34,11 +36,13 @@ mod rain;
 mod screens;
 mod settings_screen;
 mod sounds;
+mod target;
 
 pub use menu::Press;
 pub use screens::{MenuChoice, ScreenAction, ScreenName, ScreenStack, Screens};
 
 pub use dev::DevOverlays;
+pub use target::{Aim, AimKind, LastTarget};
 
 use crate::game::{Game, SimSet};
 use crate::input::{Bindings, InputMode, route_keys};
@@ -48,12 +52,13 @@ use crate::render::grid::MapGrid;
 use crate::render::{ConsoleLayout, Effects, VisualTime, lighting, shadows};
 use crate::settings::Settings;
 use bevy::prelude::*;
+use missiles::Missiles;
 use motion::Motion;
 use warlock_core::Pos;
 use warlock_core::World;
 use warlock_core::burden::Burden;
 use warlock_core::color::Rgb;
-use warlock_core::content::MoonDef;
+use warlock_core::content::{MoonDef, ObjectId};
 use warlock_core::light::MoonPhase;
 use warlock_core::perception::{CellView, PerceptionView};
 use warlock_core::time::GameTime;
@@ -72,6 +77,7 @@ pub struct UiPlugin;
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Motion>()
+            .init_resource::<Missiles>()
             .init_resource::<DevOverlays>()
             .init_resource::<ScreenStack>()
             .add_message::<MenuChoice>()
@@ -83,14 +89,21 @@ impl Plugin for UiPlugin {
                 (
                     screens::apply_choice.after(route_keys).before(SimSet),
                     (
-                        (motion::track, effects::track, sounds::track),
+                        (
+                            motion::track,
+                            effects::track,
+                            missiles::track,
+                            sounds::track,
+                        ),
                         draw_map_layer,
+                        missiles::lights,
                         shadows::update,
                         lighting::update,
                         effects::emit,
                         rain::emit,
                         sounds::emit,
                         glyphs::emit,
+                        (missiles::emit, target::emit_path),
                     )
                         .chain()
                         .after(SimSet)
@@ -120,9 +133,9 @@ fn draw(
     mut drawn: Local<Option<(bool, Option<IVec2>)>>,
     mut console: ResMut<Console>,
 ) {
-    // Whether a run exists, and in look mode the map origin the cursor is drawn relative to. The
-    // map grid is rewritten every frame, so only that origin is watched (#56).
-    let look = matches!(*mode, InputMode::Look(_)).then_some(grid.level_origin);
+    // Whether a run exists, and in look mode (or aiming) the map origin the cursor is drawn
+    // relative to. The map grid is rewritten every frame, so only that origin is watched (#56).
+    let look = matches!(*mode, InputMode::Look(_) | InputMode::Aim(_)).then_some(grid.level_origin);
     let key = (game.is_some(), look);
     let changed = drawn.replace(key) != Some(key)
         || game.as_ref().is_some_and(|game| game.is_changed())
@@ -137,7 +150,7 @@ fn draw(
     }
     console.clear();
     if let Some(game) = &game {
-        draw_game(&mut console, game, *mode, &grid, *overlays);
+        draw_game(&mut console, game, *mode, &grid, *overlays, &bindings);
     }
     stack.draw(&mut console, &settings, &bindings);
 }
@@ -150,17 +163,31 @@ fn draw_game(
     mode: InputMode,
     grid: &MapGrid,
     overlays: DevOverlays,
+    bindings: &Bindings,
 ) {
     let rows = console.rows() as i32;
-    draw_messages(console, game, mode);
+    draw_messages(console, game, mode, bindings);
     draw_status(console, game, rows - 1);
     dev::draw_indicator(console, overlays);
-    if let InputMode::Look(p) = mode
+    let cursor = match mode {
+        InputMode::Look(p) => Some(p),
+        InputMode::Aim(aim) => Some(aim.at),
+        _ => None,
+    };
+    if let Some(p) = cursor
         && let Some(area) = map_area(console.cols() as i32, console.rows() as i32)
     {
         let (x, y) = (p.x - grid.level_origin.x, p.y - grid.level_origin.y);
         if (0..area.w).contains(&x) && (0..area.h).contains(&y) {
-            look::draw_cursor(console, area.x + x, area.y + y, &game.world.perception(), p);
+            let view = game.world.perception();
+            let at = (area.x + x, area.y + y);
+            match mode {
+                InputMode::Aim(aim) => {
+                    let line = target::line(&view, view.viewer(), p, aim.range(&view));
+                    target::draw_cursor(console, at, &view, p, &line);
+                }
+                _ => look::draw_cursor(console, at.0, at.1, &view, p),
+            }
         }
     }
 }
@@ -190,6 +217,10 @@ struct MapKey {
     level_origin: IVec2,
     area: Rect2,
     covered: Vec<Pos>,
+    /// What missiles still in flight will lie as, where: not drawn yet.
+    arriving: Vec<(Pos, ObjectId)>,
+    /// The line of fire while aiming: cells whose glyph gives way to its dots.
+    path: Vec<Pos>,
 }
 
 /// Places the map grid under the camera and redraws it when the view changed.
@@ -198,6 +229,8 @@ fn draw_map_layer(
     console: Res<Console>,
     layout: Res<ConsoleLayout>,
     motion: Res<Motion>,
+    missiles: Res<Missiles>,
+    mode: Res<InputMode>,
     visual: Res<VisualTime>,
     anims: Res<AnimTable>,
     overlays: Res<DevOverlays>,
@@ -225,6 +258,8 @@ fn draw_map_layer(
         level_origin,
         area,
         covered: motion.occupied(view.actors().iter().map(|a| a.pos)),
+        arriving: missiles.arriving(visual.seconds),
+        path: target::path_cells(&view, *mode),
     };
     let changed = game.is_changed()
         || anims.is_changed()
@@ -237,9 +272,9 @@ fn draw_map_layer(
     // One margin cell right and below, so a sub-cell offset never shows a gap.
     grid.console.resize(area.w as u32 + 1, area.h as u32 + 1);
     grid.console.clear();
-    draw_map(&mut grid, &view, &anims, &key.covered);
+    draw_map(&mut grid, &view, &anims, &key);
     if effects.glow || effects.distortion {
-        effects::draw_cell_fx(&mut grid, &view);
+        effects::draw_cell_fx(&mut grid, &view, &key.arriving);
     }
     dev::draw_map_overlays(&mut grid, &game.world, *overlays);
     *drawn = Some(key);
@@ -257,10 +292,13 @@ fn camera_origin(view: i32, level: i32, viewer: i32) -> i32 {
 
 /// Draws terrain into the map grid, with the top object of each known pile in place of the
 /// terrain's glyph (over its background, lit like terrain). Creatures are on the free-glyph
-/// layer: the grid keeps the terrain under them but not its glyph (`covered`). Only visible
-/// terrain without objects animates. Visible cells keep their base colors (the shader lights
-/// them); remembered ones, objects included, are dimmed here.
-fn draw_map(grid: &mut MapGrid, view: &PerceptionView<'_>, anims: &AnimTable, covered: &[Pos]) {
+/// layer: the grid keeps the terrain under them but not its glyph (`covered`); so do cells the
+/// line of fire is drawn over while aiming (`path`, its dots are free glyphs too), unless an
+/// object lies there. What a missile still in flight lands as (`arriving`) is not drawn until it
+/// arrives. Only visible terrain without objects animates. Visible cells keep their base colors
+/// (the shader lights them); remembered ones, objects included, are dimmed here.
+fn draw_map(grid: &mut MapGrid, view: &PerceptionView<'_>, anims: &AnimTable, key: &MapKey) {
+    let covered = &key.covered;
     let content = view.content();
     let (ox, oy) = (grid.level_origin.x, grid.level_origin.y);
     grid.free_terrain.clear();
@@ -268,7 +306,13 @@ fn draw_map(grid: &mut MapGrid, view: &PerceptionView<'_>, anims: &AnimTable, co
         for sx in 0..grid.console.cols() as i32 {
             let p = Pos::new(ox + sx, oy + sy);
             let seen = view.cell(p);
-            let top = view.objects(p).first().map(|s| content.object(s.object));
+            let pile = match view.objects(p) {
+                [top, rest @ ..] if top.count == 1 && key.arriving.contains(&(p, top.object)) => {
+                    rest
+                }
+                pile => pile,
+            };
+            let top = pile.first().map(|s| content.object(s.object));
             let glyph = |t| {
                 let def = content.terrain(t);
                 let (ch, fg) = top.map_or((def.glyph, def.fg), |o| (o.glyph, o.fg));
@@ -312,6 +356,12 @@ fn draw_map(grid: &mut MapGrid, view: &PerceptionView<'_>, anims: &AnimTable, co
         let at = grid.to_console(p);
         grid.console.clear_glyph(at.x, at.y);
     }
+    for &p in &key.path {
+        if view.objects(p).is_empty() {
+            let at = grid.to_console(p);
+            grid.console.clear_glyph(at.x, at.y);
+        }
+    }
 }
 
 /// Remembered terrain: dim and desaturated, so it never reads as "in view" (visible terrain in
@@ -322,13 +372,39 @@ fn remembered(c: Rgb) -> Rgb {
     Rgb::new(f(c.r), f(c.g), f(c.b))
 }
 
-fn draw_messages(console: &mut Console, game: &Game, mode: InputMode) {
+fn draw_messages(console: &mut Console, game: &Game, mode: InputMode, bindings: &Bindings) {
     if let InputMode::Direction(_) = mode {
         console.print(1, 0, "In which direction? (Esc to cancel)", ACCENT);
         return;
     }
     if mode == InputMode::Rest {
         console.print(1, 0, REST_PROMPT, ACCENT);
+        return;
+    }
+    if let InputMode::Aim(aim) = mode {
+        let view = game.world.perception();
+        let line = target::line(&view, view.viewer(), aim.at, aim.range(&view));
+        let mut about = look::describe(&view, aim.at);
+        if let Some(status) = line.status() {
+            about = format!("{about} {status}");
+        }
+        console.print(1, 0, &about, TEXT);
+        let key = |command| {
+            (bindings.keys_of(command).first()).map_or_else(|| "?".to_string(), |k| k.display())
+        };
+        let (confirm, missile) = match aim.kind {
+            AimKind::Fire => {
+                let ammo = view.ready_to_fire().map(|(_, item, _)| item);
+                (crate::input::KeyCommand::Fire, ammo)
+            }
+            AimKind::Throw(item) => (crate::input::KeyCommand::Throw, Some(item)),
+        };
+        let content = view.content();
+        let ready = (missile.and_then(|i| view.inventory().get(i)))
+            .map_or_else(String::new, |s| content.object(s.object).describe(1));
+        let next = key(crate::input::KeyCommand::NextTarget);
+        let prompt = aim.prompt(&ready, (&key(confirm), &next));
+        console.print(1, 1, &prompt, ACCENT);
         return;
     }
     if let InputMode::Look(p) = mode {
@@ -781,7 +857,19 @@ mod tests {
         let mut grid = MapGrid::default();
         grid.console.resize(7, 3);
         let player = view.viewer();
-        draw_map(&mut grid, &view, &anims, &[player]);
+        let key = MapKey {
+            level_origin: IVec2::ZERO,
+            area: Rect2 {
+                x: 0,
+                y: 0,
+                w: 7,
+                h: 3,
+            },
+            covered: vec![player],
+            arriving: Vec::new(),
+            path: Vec::new(),
+        };
+        draw_map(&mut grid, &view, &anims, &key);
 
         let at = |x: i32, y: i32| (y * 7 + x) as usize;
         let cell = |x, y| grid.console.cells()[at(x, y)];
@@ -799,7 +887,7 @@ mod tests {
         let altar = content.terrain_id("altar").expect("altar exists");
         world.apply(&Action::Open(Dir::E));
         let view = world.perception();
-        draw_map(&mut grid, &view, &anims, &[player]);
+        draw_map(&mut grid, &view, &anims, &key);
         assert_eq!(grid.free_terrain, vec![(Pos::new(5, 1), altar)]);
         assert_eq!(grid.console.cells()[at(5, 1)].map(|c| c.ch), Some(' '));
     }

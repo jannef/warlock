@@ -34,7 +34,10 @@ Build the engine and framework, not the game. Everything built is production qua
 - Combat (M16): melee blows and shots rolled with 2d12 against Defence (D&D-like, with threat
   ranges and confirmed criticals), weapon and armour data, ADOM-like hit points from Toughness,
   race, and class, regeneration with game time, and death: creatures die and drop what they
-  carry, the player's death ends the run for good (§8 "Combat"). Spells stay announced only
+  carry, the player's death ends the run for good (§8 "Combat"). Ranged combat (M16): bows, a
+  crossbow, a sling, and throwing weapons, ammunition spent and picked up again, ADOM-like
+  targeting, missiles flying on screen, and flaming arrows that light the dark where they land
+  (§8 "Ranged combat"). Spells stay announced only
 - Moons with phases and moonlight, weather starting with rain (M12)
 - Action costs: what an actor does and its speed decide how long it takes (M13)
 - Stats (M14): Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
@@ -57,9 +60,9 @@ Build the engine and framework, not the game. Everything built is production qua
   (rooms and corridors, caves) with hand-made vaults, joined to the hand-authored levels by stairs
 - An overworld with travel time, locations, local areas, and day and night (M9)
 
-**Out of scope for now**: magic (spells are announced, nothing is damaged), ranged combat for
-the player (#117), rules that use stats beyond combat and burden (ability checks, saving throws,
-training), levels and experience, what a class gives beyond starting stats and hit
+**Out of scope for now**: magic (spells are announced, nothing is damaged), damage types (a
+flaming arrow does an arrow's damage), rules that use stats beyond combat and burden (ability
+checks, saving throws, training), levels and experience, what a class gives beyond starting stats and hit
 points (skills, equipment, spells), item effects, audio, mouse input, infravision, localization.
 
 Vision types are in scope even though there are no other mechanics yet: they are part of perception,
@@ -76,8 +79,8 @@ regression scene for golden screenshots, replays, and snapshot tests.
 | Room | Demonstrates | Milestone |
 |---|---|---|
 | Start room | movement, message line, `?` help; gold and a small pile to pick up | M1, M11 |
-| Door corridor | opening/closing doors, doors blocking sight; a storeroom of arms and armor (something for every equipment slot but the neck and the rings, a two-handed quarterstaff, a bow and arrows) and a pantry of objects | M1–M2, M11, M16 |
-| Patrol gallery | creatures moving in and out of view, never shown in memory; a cave beetle and a quicker cave bat (wildlife, so they keep to their lanes) on parallel lanes, a slower torch-bearing kobold circling them (wielding a sword, carrying coins), which comes for the player once it sees them, searches where it lost them, and returns to its round; heard from the corridor behind its closed door, and in its dark middle (the bat flies silently) | M2, M10, M11 |
+| Door corridor | opening/closing doors, doors blocking sight; a storeroom of arms and armor (something for every equipment slot but the neck and the rings, a two-handed quarterstaff, a short bow and arrows, flaming arrows, a long war bow, a crossbow and bolts, a sling and stones, rocks to throw) and a pantry of objects | M1–M2, M11, M16 |
+| Patrol gallery | creatures moving in and out of view, never shown in memory; a cave beetle and a quicker cave bat (wildlife, so they keep to their lanes) on parallel lanes, a slower torch-bearing kobold circling them (wielding a sword, carrying coins), which comes for the player once it sees them, searches where it lost them, and returns to its round; heard from the corridor behind its closed door, and in its dark middle (the bat flies silently), which a flaming arrow shot from its door lights where it lands | M2, M10, M11, M16 |
 | Light hall | colored lights, falloff, pillar and creature shadows, steady magical light | M3, M8 |
 | Darkness chamber | vision types, a UV-only rune, darkvision fade; an amulet seen only by those who see in the dark | M3, M11 |
 | Water garden | still ponds and running rills (flow, glints, foam), pulsing altar with a ring before it | M4, M8, M11 |
@@ -103,7 +106,9 @@ darkvision) turns them on the player. The brawl resolves (M16): melee pairs trad
 archer shoots and the shaman casts (its spells announced only) over them, the wounded look it,
 and the fallen drop their spears, bow, and amulet where they die; the rats, quicker and harder
 to hit, win within a few minutes of game time. Lighting the lantern there gets the
-player shot from the dark. The `arena` scenario starts there.
+player shot from the dark. The archer spends an arrow a shot (they lie where they fell) and,
+out of arrows, comes to fight with its fists. Beside the player's corner lie a short bow, arrows,
+and flaming arrows, to shoot into the pit from the dark. The `arena` scenario starts there.
 
 **Level 2 — Vast (≥ 400×300)**: scrolling camera, many light sources, performance budget check.
 Introduced in M2, lit in M3. Beside its stairs up to the hub, stairs down lead into the depths and
@@ -225,8 +230,11 @@ Water is calm by design; motion stays tasteful, never busy:
 
 ### 4.4 Visual lighting
 - Derived from gameplay light (§5), plus visual-only modulation: light stability (flicker and hue
-  drift), creature shadows, and transient effect lights (e.g. a spell's glow). Visual-only light
-  never affects gameplay.
+  drift), creature shadows, and transient effect lights: a burning missile in flight lights its
+  way (its object's light preset, with its flicker, falling off like gameplay light from its
+  fractional position to each visible cell's center it has a line of sight to over the terrain the
+  player knows), and the gameplay light of a burning missile that has landed is held back until
+  it arrives on screen (§4.8). Visual-only light never affects gameplay.
 - Each frame, the CPU composites the perceived light of the viewport's cells (plus a one-cell
   margin) from the perception snapshot — the base light (ambient plus sky plus bounce, steady) plus
   every visible source's per-cell contribution, the sun's and the moons' included — into a
@@ -323,7 +331,7 @@ Water is calm by design; motion stays tasteful, never busy:
 Declared in data per terrain or creature type (and per weather), like glyph animation. They are
 presentation-only: gameplay never reads them. Effects are deliberately subtle — sparse, short-lived particles, gentle
 glow, barely perceptible distortion, short fades.
-- **Glyph particles** on the free-glyph layer. An emitter has glyphs to pick from, colors over the
+- **Glyph particles** on the free-glyph layer (terrain, creatures, objects). An emitter has glyphs to pick from, colors over the
   particle's life, a lifetime, velocity ± spread, gravity, a start offset and spawn area, sideways
   sway, scale, fade-out, glow, and opacity (how opaque it is at most, default 1). Emitters fire `ambient` (a steady rate while the source is in
   view: sparks over braziers and torches, embers over lava, fountain spray, dust motes), on `step`
@@ -333,11 +341,24 @@ glow, barely perceptible distortion, short fades.
   boulders, ripples where a stream enters a pool; the emitter is turned with the flow, its `y`
   pointing downstream). Creature emitters move with the creature; a creature's `attack` emitters
   burst at the target of each attack the player sees (the kobold shaman's faint violet sparkle).
-- **Shots**: a ranged attack the player sees sends one glyph (`-`, `|`, `/`, or `\`, pointing
-  the way it flies; pale wood, lit like free glyphs) from the edge of the shooter's cell to the
-  edge of the target's at 24 cells a second (at least 60 ms), fading in and out at the ends.
-  Shots and attack bursts run with the particles switch; with frozen visual time a shot is shown
-  halfway.
+- **Missiles**: every shot and throw the player perceives (`Event::Missile`, which carries the
+  cells it flew over as far as the player saw them, so nothing unseen is drawn; a missile from an
+  unseen shooter appears where it enters view) flies on the free-glyph layer from the edge of the
+  shooter's cell (or where it came into view) to where it came down (or a little short of the
+  center of whom it struck, or out of the last cell seen) at 30 cells a second (at least 60 ms),
+  easing out a little; the missiles of one turn fly one after another. Its glyph is its object's
+  `missile` glyph (§7), drawn pointing right and turned along the flight on screen (free glyphs
+  can turn: an arrow `→`, a bolt `➔`, a spear `⟶`), tumbling if it `spins` (a thrown dagger
+  `†`), else its own glyph upright (a stone `•`); it fades in and out at the ends and trails three
+  faint dots. It is lit like any free glyph; a burning one is light itself (unlit, glowing a
+  little with `glow`), lights its way (§4.4), and sheds embers (its `flight` particles), and it is
+  seen wherever it flies in the player's line of sight, in the dark too (§8 "Ranged combat"). A
+  tiny puff of dust where it comes down or strikes. What it lands as (the arrow on the floor, a
+  burning arrow's glyph, glow, sparks, and light) is held back until it arrives. With the motion
+  switch off (or reduced effects) nothing flies: what lands is there at once; embers and puffs run
+  with particles; with frozen visual time a missile is shown halfway. Attack bursts run with the
+  particles switch. Objects may have particle emitters too: `ambient` while one lies in view on
+  top of its pile (a burning arrow's sparks), `flight` while it flies.
 - Particles are a pure function of visual time and a seed (the source's cell or identity, or the
   event) through a visual-only RNG, so they never depend on frame rate or gameplay randomness. Only
   visible cells, seen creatures, and perceived events emit; particles over cells that are not
@@ -379,8 +400,9 @@ rate or animation.
   sources that reach it (the sun and the moons included) plus bounce light (saturating).
 - **Light sources** come from light presets (`color = [r, g, b, uv]`, which is also the intensity,
   and `radius`): terrain that emits light, lights placed on cells by the level legend (overriding
-  the terrain's own), creatures that carry light, and the player's lantern (from the scenario,
-  toggled by the player; takes a turn). Emitters must be transparent; a source in an opaque cell
+  the terrain's own), fires (a burning object lying on a cell, such as a flaming arrow that has
+  landed, until it has burned out; §8 "Ranged combat"), creatures that carry light, and the
+  player's lantern (from the scenario, toggled by the player; takes a turn). Emitters must be transparent; a source in an opaque cell
   (e.g. on a closed door) gives no light. Presets also carry visual-only stability (§4.4), never
   read by rules.
 - **Falloff and shadows**: a source shadowcasts with the same shadowcasting within its radius and
@@ -627,13 +649,14 @@ rate or animation.
   the binding table, so it is always accurate.
 - **Screens**: the main menu, New run and its character creation steps, pause menu, Settings,
   Controls, help, the inventory, the equipment screen and its choice of what goes in a slot, the
-  character screen, choosing what to pick up or drop, and the death screen are modal screens on
-  one stack. Opening
+  character screen, choosing what to pick up, drop, or throw, and the death screen are modal
+  screens on one stack. Opening
   a screen puts it on top; Esc or Back closes it and returns to the screen below as it was left.
   While any screen is open it receives every key press, the run (if any) stays visible beneath
   it, and no game time passes but for what is chosen on a screen (picking up, dropping, wearing,
   wielding), which is done as it is chosen and takes its time. Prompts in the message line (a
-  direction to open or close, how long to rest, look mode) are not screens.
+  direction to open or close, how long to rest, look mode, aiming a shot or a throw) are not
+  screens.
 - **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
   `--record`, or `--capture` name what to run): Continue (only if a save exists), New run
   (scenario list from content, optional seed, then character creation), Settings, Controls,
@@ -669,7 +692,8 @@ rate or animation.
   "Reset all keys" resets everything.
 - First-phase commands: move, wait, open/close door, ascend/descend, light/douse lantern (`L`),
   pick up (`,` or `g`), drop (`d`), inventory (`i`), equipment (`e`), character (`@`), rest
-  (`R`), look, help, save and quit (`Q`). Free actions (look, help, the inventory, looking at the
+  (`R`), look, fire (`f`), throw (`t`), next target (`Tab`, while aiming), help, save and quit
+  (`Q`). Free actions (look, help, the inventory, looking at the
   equipment screen, the character screen, menus, vision switch) do not advance time.
 - **Objects** (M11) lie in piles on cells, the top first: the map shows the top object's glyph
   (§4.2), and dropped objects go on top. Stepping onto a pile says what lies there: `You see here
@@ -770,14 +794,32 @@ rate or animation.
   spear.", "The kobold's spear glances off your armour.", "You block the kobold's spear with your
   shield.", "You parry the kobold's spear.", "Your sword glances off the cave beetle's shell."),
   a shot ("The kobold archer shoots the giant rat."), and a death ("The giant rat dies.", "You
-  die..."). Spells are announced ("The kobold shaman casts a spell at you."), and so is a shot by
-  a creature with no missile weapon ready ("... shoots at ..."). An end the player does not see is
+  die..."). Spells are announced ("The kobold shaman casts a spell at you."). An end the player
+  does not see is
   "something" ("Something hits you.", "The kobold misses something."), and a miss is then just
   a miss. A creature's attack is reported when the turn is perceived, the player's own as it is
   made (by what they see as they strike). Attacks the player perceives nothing of leave no
   message (and no event). Moving into a hostile creature attacks it in melee ("You hit the
   giant rat.", "You miss something."; it takes a turn); into a neutral one stops ("The deer is
   in the way.", "Something is in the way."; no time passes).
+- **Targeting** (ADOM-like; `ui/target.rs`): `f` aims the readied missile weapon (with nothing
+  to shoot, it is refused: "You have no missile weapon ready.", "You have no arrows ready."), `t`
+  aims the throwing weapon readied in a `ready` slot (rocks in the missiles slot), else opens the
+  choice of what to throw: the inventory's throwing weapons by their letters (a letter or Enter
+  chooses; "You have nothing to throw."). Aiming is an input mode like look mode: no time passes.
+  The cursor starts on the last target if the player still sees it (a creature) or it is on this
+  level (a cell), else on the nearest hostile creature in view, else on the player; `Tab` and
+  `Shift`+`Tab` cycle through the creatures in view, nearest first (ties: the lower id); the
+  movement keys move it anywhere on the level. The line of fire (the integer line the rules fly
+  the missile along, §8) is drawn as faint, unlit dots from the player toward the cursor, over
+  what the player perceives: it ends before the first cell they see or remember as solid (cells
+  never seen let it pass) and at the edge of the range; a cursor beyond something solid or a
+  creature in view in the way is blocked, one beyond the range out of range, and both show on a
+  muted red cursor and in the message line ("Out of range.", "The way is blocked.", after the
+  target's description, as look mode gives it). No chance to hit is ever shown. `Enter` (or the
+  key that started it, `f` or `t`) looses the missile (replay text `fire:X,Y`,
+  `throw:LETTER:X,Y`) and remembers the target, so `f` then `Enter` shoots it again; `Esc`
+  cancels. Out of range or at the player's own cell, the rules refuse it and no time passes.
 - **Look mode** describes what the player perceives at the cursor: a creature and its terrain,
   with how it stands toward the player and how hurt it looks ("A giant rat (hostile, unhurt), on
   stone floor."; its type tells the player its faction's stance toward them, the only faction
@@ -918,7 +960,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   e.g. `wait = 1000`, 1000 being a normal action (6 s at normal speed; §8 "Time"), 100 to
   10 000. The ids are `step` (onto terrain of `move_cost` 100), `wait`, `open_door`,
   `close_door`, `lantern`, `stairs` (also entering a location or local area and walking off an
-  area's edge), `pick_up`, `drop`, `melee`, `shoot`, `cast`, and for equipment (each slot names
+  area's edge), `pick_up`, `drop`, `melee`, `shoot`, `throw`, `reload` (a missile weapon that
+  `reloads`: a crossbow shot costs `shoot` plus `reload`, 2000), `cast`, and for equipment (each slot names
   one, below) `wield` (1000), `wear` (1000: helmets, cloaks, gloves, boots, rings, amulets),
   `body_armor` (3000: it takes a while to strap on), and `ready` (1000: a missile weapon and
   missiles). An action left out, or every action without the file, costs 1000; an unknown id or
@@ -950,12 +993,26 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   multiplier, 2 to 5, default 2), `to_hit` (default 0, within ±20), and for bows `strength` (the
   Strength they need, 1 to 40), all four only with `damage`; `parry` (Defence while wielded),
   `armour` (while worn) and `max_dex` (the most Dexterity may add to Defence while it is worn),
-  and `shield` (while held), each 0 to 20. Test objects: weapons for the main hand (dagger 1d4
-  and short sword 1d6, threat 20; spear 1d8 ×3; club 1d6; a two-handed quarterstaff 1d6 with
-  parry 1), a small shield (off hand, shield 1), an iron helm, a wool cloak, leather gloves and
-  boots, body armor (leather jerkin armour 2, max Dexterity 6; chain mail shirt armour 4, max
-  Dexterity 4), a silver ring, amulets, a short bow that launches arrows (1d6 ×3, Strength 10),
-  and arrows.
+  and `shield` (while held), each 0 to 20. Ranged combat (§8 "Ranged combat"): `range` (1 to
+  40 cells; required for a missile weapon: how far it shoots; on anything else it makes a
+  throwing weapon, thrown that far with its own `damage`, which then needs no `slot`: a rock;
+  ammunition has none), `reloads` (missile weapons: each shot also takes the `reload` action),
+  `breaks` (ammunition and throwing weapons: the chance in percent, 0 to 100, that it breaks on a
+  hit), `lit` (ammunition and throwing weapons: the object it flies and lands as, lit as it is
+  loosed, which must burn), `light` and `burns` (together: the light preset it gives where it
+  lies and for how many seconds, 1 to a day, it burns there before it is gone); and
+  presentation only: `missile` (the glyph it flies as, drawn pointing right; default its own,
+  upright), `spins` (it tumbles in flight), `glow` (0 to 1, where it lies), and particle
+  `particles` (`ambient`: while it lies in view on top of its pile; `flight`: while it flies).
+  Test objects: weapons for the main hand (dagger 1d4 and short sword 1d6, threat 20; spear 1d8
+  ×3; club 1d6; a two-handed quarterstaff 1d6 with parry 1; the dagger thrown 5 cells, the spear
+  6), a small shield (off hand, shield 1), an iron helm, a wool cloak, leather gloves and boots,
+  body armor (leather jerkin armour 2, max Dexterity 6; chain mail shirt armour 4, max Dexterity
+  4), a silver ring, amulets; missile weapons: a short bow (1d6 ×3, Strength 10, range 10), a long
+  war bow (1d8+2 ×3, Strength 14, range 15), a crossbow (1d10+1, threat 20, no Strength, range 13,
+  reloads), a sling (1d4, range 9); ammunition: arrows (break 30 %), flaming arrows (lit as burning
+  arrows: light `arrow_fire`, burning 60 s), crossbow bolts (break 20 %), sling stones; rocks
+  (thrown 1d3, 6 cells, readied in the missiles slot).
 - **Equipment slots** (`data/slots.toml`, optional; without it nothing can be worn or wielded;
   M16): up to 26 `[[slot]]`s in the order the equipment screen lists them (lettered `a` on):
   `id` (objects name it in `slot`, replays in `equip:SLOT:LETTER`), `name`, `fits` (what objects
@@ -1102,7 +1159,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   version 9), what every actor wears and wields (which inventory stack is in which slot, §6
   "Equipment"; format version 10), every actor's hit points (what it has left, what its race and
   class or its type add to its Toughness, and the seconds banked toward the next one back; §8
-  "Combat"; format version 11), and a dev weather override while
+  "Combat"; format version 11), the fires burning on each level (§8 "Ranged combat"; format
+  version 12), and a dev weather override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
   platform data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
@@ -1163,14 +1221,15 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   - **Costs** (M13): the action decides how long it takes, and the actor's speed scales
     it. Every action that takes time has a **cost** in energy, 1000 for a normal action, given in
     `data/actions.toml` (`step`, `wait`, `open_door`, `close_door`, `lantern`, `stairs`,
-    `pick_up`, `drop`, `melee`, `shoot`, `cast`, `wield`, `wear`, `body_armor`, `ready`; 100 to
+    `pick_up`, `drop`, `melee`, `shoot`, `throw`, `reload`, `cast`, `wield`, `wear`,
+    `body_armor`, `ready`; 100 to
     10 000; an action left out, or every action without the file, costs 1000; unknown ids are
     errors), and a **base time**: 6 s
     (`BASE_TURN`) for every action but a step on the overworld. An action of cost *c* takes an
     actor of speed *v* `c / 1000 × 1000 / v × 6 s`: a normal action takes 6 s at normal speed
     (the player's), one of cost 1400 (two-weapon fighting, say) 8.4 s, and a normal action at
     speed 1111 about 5.4 s, at speed 900 about 6.7 s. All built-in actions cost 1000 for now but
-    `body_armor` (3000: 18 s).
+    `body_armor` (3000: 18 s); a crossbow shot takes `shoot` and `reload` (12 s).
     - Equipment (§6 "Equipment"): every thing put on or taken off costs the action of the slot it
       goes in or comes out of (a two-handed weapon: the first hand's), taking off what putting on
       does, and one action pays for all of them: a swap costs both, a quarterstaff that puts away
@@ -1185,8 +1244,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
       waiting and the lantern take 6 s as well. Bumping a closed door costs `open_door`; moving
       into a hostile creature, `melee`.
     - A creature's action costs the same: a step onto the destination terrain, else its action's
-      cost (`melee`, `shoot`, `cast` for attacks, `open_door`, `wait` when it waits or is
-      blocked). A creature type may give its attacks their own `attack_cost` (§7), so a future
+      cost (`melee`, `shoot` (and `reload`), `cast` for attacks, `open_door`, `wait` when it waits
+      or is blocked). A creature type may give its attacks their own `attack_cost` (§7), so a future
       attack or ability is one more entry. Free and refused actions take no time.
     - The scheduler (below) prices an action at its cost × its base in seconds; an actor gains its
       speed in energy per second, so it takes cost × base / speed seconds. The clock keeps whole
@@ -1243,9 +1302,12 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
      nearest is its target (squared distance; ties: the lower actor id).
   2. **Fight**: a `melee` creature attacks a target next to it (diagonals too), else steps along
      a shortest path toward a cell next to it. A `ranged` creature or `caster` shoots or casts
-     when the target is within its `range` (the rounded radius, like every radius) with a clear
-     line of fire: no opaque cell and no actor on the cells between (an integer Bresenham line);
-     else it steps toward the nearest cell that gives it one, failing that toward the target.
+     when the target is within its `range` (the rounded radius, like every radius; for a shot no
+     farther than its missile weapon's range) with a clear line of fire: no opaque cell and no
+     actor on the cells between (an integer Bresenham line, the one missiles fly); else it steps
+     toward the nearest cell that gives it one, failing that toward the target. A `ranged`
+     creature with nothing to shoot (no missile weapon ready, or no ammunition for it left) fights
+     as a `melee` one.
      Leaving its routine it remembers where it was (its post) and where it saw the target.
   3. **Search**: with no hostile in sight, it goes to where it last saw one (next to the spot if
      someone it cannot see stands there).
@@ -1263,10 +1325,11 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   direction (N, NE, E, … NW). A spot it cannot reach is given up.
 
   **Attacks** are resolved by the rules of combat ("Combat" below): melee blows and shots hurt
-  and kill; spells (and shots by a creature with no missile weapon ready) stay intents until
-  magic is designed. An attack is an event (`Event::Attacked { attacker, target, kind: Melee |
-  Ranged | Spell, from, to, strike }`, `strike` what came of it, `None` for an intent), a noise
-  (§5), and a message when the player perceives it (§6). The event reaches presentation only
+  and kill (a shot is a missile, "Ranged combat" below); spells stay intents until magic is
+  designed. An attack is an event (`Event::Attacked { attacker, target, kind: Melee | Ranged |
+  Thrown | Spell, from, to, strike, with }`, `strike` what came of it, `None` for an intent,
+  `with` the missile of a shot or throw), a noise (§5), and a message when the player perceives
+  it (§6). The event reaches presentation only
   when the player sees both ends (or made the attack and saw the target). The player moving into
   a hostile creature is a melee attack; into a neutral one it stops. Creatures neither flee nor
   fight differently when hurt. What a creature has in mind (last seen, noise to look into, post)
@@ -1291,10 +1354,9 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     launcher's own bonus is in its dice (its draw weight), and each point of Strength below what
     a bow needs costs 1 to hit and 1 damage. Bare hands are 1d3 plus Strength; a creature with
     no weapon uses its natural attack (§7), else bare hands. Melee uses the weapon in the first
-    hand slot that holds one; a shot uses the missile weapon in a `ready` slot, and the
-    ammunition matched to it only names the shot (#117 adds launching, ammunition use, and the
-    player's shots; `World::attack_with` takes any `Profile`: `Profile::ranged`,
-    `Profile::thrown`).
+    hand slot that holds one; a shot uses the missile weapon in a `ready` slot and the
+    ammunition matched to it ("Ranged combat" below); a throw (`Profile::thrown`) its thrown
+    weapon's own attack, Dexterity to hit and Strength to damage.
   - **Defence** = 10 + one bonus per category: **Dexterity** (the Dexterity modifier, capped
     by the lowest `max_dex` of what the actor wears and by its burden, +3 Burdened, +1 Strained,
     0 Overloaded ("Burden" below), the lowest cap winning; a penalty counts in full), **Armour** (worn
@@ -1335,6 +1397,52 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     creature's hit points, a to-hit, a roll, a modifier, or the Defence breakdown (its Dexterity
     part would give a modifier away). Ground-truth dev dumps (`actors`) show every actor's hit
     points and Defence.
+- **Ranged combat** (`warlock-core/src/world/shoot.rs`; M16): shots and throws.
+  - **Loosing**: the player fires (`Action::Fire(cell)`, `fire:X,Y`) with the missile weapon in a
+    `ready` slot and the ammunition it shoots in a `ready` slot, or throws (`Action::Throw { item,
+    at }`, `throw:LETTER:X,Y`) one of an inventory stack that is a throwing weapon (wielded or
+    not: the last one leaves the hand). Refused, taking no time: with nothing ready ("You have no
+    missile weapon ready.", "You have no arrows ready."), at the player's own cell, beyond the
+    range (the rounded radius of the weapon's `range`: "That is out of range."), something that
+    is no throwing weapon ("You cannot throw a coil of rope."), and on the overworld. A shot takes
+    `shoot` (plus `reload` for a missile weapon that `reloads`), a throw `throw`; creatures shoot
+    by the same rules (`World::creature_shoots`; the AI saw to it that they can).
+  - **One missile** leaves its stack (the last empties its slot: "You have no arrows left.") and
+    makes its noise once, as it is loosed (a bowstring, 40; a throw, heard as fighting, 30).
+    What is `lit` flies and lands as that object (a flaming arrow as a burning arrow).
+  - **Flight**: along the integer line from the shooter through the cell aimed at and on beyond
+    it (`Pos::ray`: up to that cell exactly the line of fire creatures check), cell by cell, as
+    far as the weapon's range, over transparent cells only: it stops before the first opaque one
+    (and the level's edge). Whoever stands on a cell it reaches is attacked in turn
+    (`World::missile_hits`: rolled against their Defence, no noise of its own), until one is hit;
+    on a miss it flies on. At the cell aimed at it comes down if nobody stands there; past
+    someone it missed there it flies on.
+  - **Coming down**: on the cell of whom it hit, else on the last cell it reached (before
+    something solid, at the end of its range, or the cell aimed at), on top of the pile there, to
+    be picked up again (stackable ammunition joins its stack). On a hit it breaks with its
+    `breaks` chance (one draw of the gameplay stream, made only when the chance is not 0); a
+    missile that comes down on a cell that is not walkable is lost.
+  - **Fires**: a burning object (`light` and `burns`) that comes down starts a fire on its cell
+    (`LevelState::fires`: the light preset and when it has burned out; saved), a light source
+    keyed by the level and the cell (`LightCache`, only while the clock is before its end, so
+    the player's perception and every creature's sight see by it exactly as by any other light,
+    at any moment) that lights by every rule of light (falloff, shadows, bounce, wall faces).
+    Another burning object on the same cell keeps the fire going until the last has burned out.
+    When the time is up (checked as perception runs) the fire goes out and the burning objects
+    there are gone (they leave nothing). A burning object cannot be picked up ("You cannot pick
+    up a burning arrow while it burns."; the rest of the pile can). Fires cost nothing but
+    themselves: only lit objects are sources.
+  - **Messages**: the player's attacks are said as they are made, by what they see ("You shoot
+    the kobold.", "You miss the kobold.", "You hit the kobold." for a throw); a missile that
+    reaches nobody says itself ("You shoot a flaming arrow.", "You throw a dagger."). A creature's
+    shots are said like its blows ("The kobold archer shoots you.", "You dodge the kobold
+    archer's arrow.").
+  - **What the player perceives**: `Event::Missile { object, from, path, end }`, the whole flight
+    cut to the stretch between the first and the last cell of its path the player sees (a burning
+    one: in their line of sight, light itself); `from` only if they saw it leave; `end` `Struck`,
+    `Fell`, or `Unseen` when the last cell seen is not where it ended. Dropped if none of it was
+    seen. The player's own readied missile weapon, its ammunition, and ranges are in the snapshot
+    (`PerceptionView::ready_to_fire`, `ready_to_throw`, `throw_range`) for the targeting UI.
 - **Stats** (`warlock-core/src/stats.rs`; M14): six stats inspired by D&D, in display order
   Strength (St), Dexterity (Dx), Toughness (To; D&D's Constitution), Intelligence (In),
   Willpower (Wi; D&D's Wisdom), and Presence (Pr; D&D's Charisma). More will come (mostly
@@ -1448,7 +1556,7 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   a fixed number as a TOML integer.
 - **Events to effects**: the core emits events (door opened, actor moved, attacked, died); the
   presentation layer turns them into animations: slides, a short lunge toward the target for a
-  melee attack (motion), a shot glyph flying from shooter to target and a creature's `attack`
+  melee attack (motion), missiles flying (§4.8) and a creature's `attack`
   particles where its attack lands, e.g. the shaman's violet sparkle (particles); a death shows
   as the creature gone and what it dropped, and in the message line. Gameplay never waits for
   them.
@@ -1490,7 +1598,9 @@ cargo xtask golden [--update]                             # compare golden scree
   character `{race, gender, class}` (left out for a run without one; a replay without it starts
   as the scenario's character, so older replays still load). Actions use a text
   syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
-  pickup pickup:ac drop drop:b equip:body:b remove:body vision:darkvision skip:1h weather:rain`;
+  pickup pickup:ac drop drop:b equip:body:b remove:body fire:12,5 throw:c:12,5
+  vision:darkvision skip:1h weather:rain`; `fire:X,Y` shoots at level cell (X, Y),
+  `throw:LETTER:X,Y` throws one of inventory stack LETTER there;
   durations are a whole number with `s`, `m`, or `h`, a rest at most `24h`; letters name stacks
   of the pile or the inventory, `a` first, and without letters `pickup` and `drop` take
   everything; `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT (a slot id of
@@ -1535,6 +1645,8 @@ cargo xtask golden [--update]                             # compare golden scree
   they have died), the weather under the open sky (`weather rain`), and hash.
 - Freezing visual time and fixing window size and scale make screenshots reproducible. With frozen
   time, glyph animations show that moment and motion (slides, camera) completes instantly.
+- `--fire` (dev) starts the run aiming the readied missile weapon, as `f` would, so captures show
+  the targeting line (golden manifest entries pass it with `args`).
 - Dev builds add in-game commands: switch vision profile (`F3`), reveal map (`F2`, ground truth,
   marked as dev-only on screen), toggle debug overlays (light values `F4`; line of sight and memory
   later), save and load named snapshots (`F5`/`F9`), skip an hour (`F6`, recorded as `skip:1h`),
@@ -1635,7 +1747,8 @@ Each milestone ships a playable build.
   the combat core (#113, #116): 2d12 against Defence with categories and miss attribution,
   threat ranges with confirmed criticals, weapon and armour data, hit points from Toughness,
   race, and class, regeneration, death with drops and permadeath, health in words; ranged
-  combat for the player follows (#117).
+  combat (#117): bows, a crossbow, a sling, and throwing weapons, ammunition spent and picked up
+  again, ADOM-like targeting, missiles on screen, and flaming arrows that light the dark.
 
 ## 13. GitHub workflow
 

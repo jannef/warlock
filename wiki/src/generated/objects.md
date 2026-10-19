@@ -8,7 +8,14 @@
 | Club | `)` | weapon | wood | 1.4 kg | no | Main hand |
 | Quarterstaff | `)` | weapon | wood | 2 kg | no | Main hand (both hands) |
 | Short bow | `}` | missile weapon | wood | 700 g | no | Missile weapon |
+| Long war bow | `}` | missile weapon | wood | 1.3 kg | no | Missile weapon |
+| Crossbow | `}` | missile weapon | wood | 3.2 kg | no | Missile weapon |
+| Sling | `}` | missile weapon | leather | 100 g | no | Missile weapon |
 | Arrow | `/` | missile | wood | 30 g | yes | Missiles |
+| Flaming arrow | `/` | missile | wood | 40 g | yes | Missiles |
+| Burning arrow | `/` | missile | wood | 30 g | yes | - |
+| Crossbow bolt | `/` | missile | wood | 60 g | yes | Missiles |
+| Sling stone | `*` | stone or gem | stone | 40 g | yes | Missiles |
 | Leather jerkin | `[` | armor | leather | 3.5 kg | no | Body |
 | Chain mail shirt | `[` | armor | iron | 11 kg | no | Body |
 | Iron helm | `[` | armor | iron | 1.5 kg | no | Head |
@@ -24,7 +31,7 @@
 | Scroll of light | `?` | scroll | paper | 50 g | yes | - |
 | Strip of dried meat | `%` | food | flesh | 150 g | yes | - |
 | Apple | `%` | food | plant matter | 150 g | yes | - |
-| Rock | `*` | stone or gem | stone | 800 g | yes | - |
+| Rock | `*` | stone or gem | stone | 800 g | yes | Missiles |
 | Ruby | `*` | stone or gem | gemstone | 5 g | yes | - |
 | Gold coin | `$` | coin | gold | 10 g | yes | - |
 | Copper coin | `$` | coin | copper | 8 g | yes | - |

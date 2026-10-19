@@ -1,17 +1,19 @@
-//! Visual effects from the perception snapshot (spec §4.8): glyph particles, shots, per-cell glow
-//! and heat haze in the map grid, and the screen fade on level change.
+//! Visual effects from the perception snapshot (spec §4.8): glyph particles, per-cell glow and
+//! heat haze in the map grid, and the screen fade on level change. Missiles in flight are
+//! [`super::missiles`].
 //!
-//! Only perceived things produce effects. Ambient emitters run on visible cells and seen
-//! creatures; obstacle emitters (foam) on visible running water whose flow runs into a known cell
-//! that is not running water. Bursts come from the turn's events (`Outcome.events`, already
-//! filtered by perception) at visible cells: a splash where a creature steps into water, dust
-//! where a door opens or closes, a creature's `attack` emitters (a spell's sparkle) where its
-//! attack lands. A ranged attack sends a shot: one glyph flying from the shooter to its target.
-//! Particles and shots over cells that are not visible are not drawn, and remembered cells never
-//! glow, haze, or emit. Each part runs only with its effect on (shots and sparkles with
-//! particles).
+//! Only perceived things produce effects. Ambient emitters run on visible cells, seen creatures,
+//! and objects in sight on top of their piles (a burning arrow's sparks); obstacle emitters
+//! (foam) on visible running water whose flow runs into a known cell that is not running water.
+//! Bursts come from the turn's events (`Outcome.events`, already filtered by perception) at
+//! visible cells: a splash where a creature steps into water, dust where a door opens or closes,
+//! a creature's `attack` emitters (a spell's sparkle) where its attack lands. Particles over
+//! cells that are not visible are not drawn, and remembered cells never glow, haze, or emit.
+//! What a missile still in flight lands as neither glows nor emits until it arrives. Each part
+//! runs only with its effect on (sparkles with particles).
 
 use super::glyphs;
+use super::missiles::Missiles;
 use super::motion::Motion;
 use crate::game::Game;
 use crate::render::console::CellFx;
@@ -24,9 +26,11 @@ use crate::render::{Effects, VisualTime};
 use crate::settings::{Role, Settings};
 use bevy::prelude::*;
 use warlock_core::color::Rgb;
-use warlock_core::content::{Content, CreatureId, ParticleEmitter, ParticleTrigger, TerrainId};
+use warlock_core::content::{
+    Content, CreatureId, ObjectId, ParticleEmitter, ParticleTrigger, TerrainId,
+};
 use warlock_core::perception::{CellView, PerceptionView};
-use warlock_core::{AttackKind, Event, Pos};
+use warlock_core::{Event, Pos};
 
 /// How long the map takes to fade in from black after a level change, in seconds.
 pub const FADE_SECONDS: f32 = 0.25;
@@ -49,13 +53,8 @@ const HAZE_PLUME: [(i32, i32, f32); 8] = [
 
 /// Seed bit that keeps creature particle keys apart from cell keys.
 const CREATURE_KEY: u64 = 1 << 63;
-
-/// How fast a shot flies, in cells per second.
-const SHOT_SPEED: f32 = 24.0;
-/// The shortest flight, in seconds (a shot at a neighbor).
-const SHOT_MIN_SECONDS: f32 = 0.06;
-/// A shot's color: pale wood and iron, lit like any glyph.
-const SHOT_COLOR: Rgb = Rgb::new(0xd8, 0xcc, 0xa8);
+/// Seed bit that keeps the particle keys of objects lying on cells apart from terrain's.
+const OBJECT_KEY: u64 = 1 << 61;
 
 /// Whose emitters a burst runs.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -84,54 +83,10 @@ struct Burst {
     start: f32,
 }
 
-/// A shot in flight: one glyph from the shooter's cell to its target's, at [`SHOT_SPEED`].
-#[derive(Clone, Copy, Debug, PartialEq)]
-struct Shot {
-    from: Pos,
-    to: Pos,
-    start: f32,
-}
-
-impl Shot {
-    fn seconds(&self) -> f32 {
-        let d = cell(self.to) - cell(self.from);
-        (d.length() / SHOT_SPEED).max(SHOT_MIN_SECONDS)
-    }
-
-    /// The glyph pointing the way it flies (y down): `-`, `|`, `/`, or `\`.
-    fn glyph(&self) -> char {
-        let d = cell(self.to) - cell(self.from);
-        let (x, y) = (d.x.abs(), d.y.abs());
-        if y * 2.0 < x {
-            '-'
-        } else if x * 2.0 < y {
-            '|'
-        } else if (d.x > 0.0) == (d.y < 0.0) {
-            '/'
-        } else {
-            '\\'
-        }
-    }
-
-    /// Where it is at `time` (its glyph cell's top-left, in level cells) and how opaque, or
-    /// `None` before it leaves and after it lands. It flies from the edge of the shooter's cell
-    /// to the edge of the target's, fading in and out at the ends.
-    fn at(&self, time: f32) -> Option<(Vec2, f32)> {
-        let x = (time - self.start) / self.seconds();
-        if !(0.0..1.0).contains(&x) {
-            return None;
-        }
-        let (a, b) = (cell(self.from), cell(self.to));
-        let edge = (b - a).normalize_or_zero() * 0.5;
-        Some(((a + edge).lerp(b - edge, x), particles::fade(x, 0.25)))
-    }
-}
-
-/// Running particle bursts and shots.
+/// Running particle bursts.
 #[derive(Resource, Debug, Default)]
 pub struct Bursts {
     list: Vec<Burst>,
-    shots: Vec<Shot>,
     /// The turn whose events were read last.
     turn: Option<u64>,
 }
@@ -178,33 +133,25 @@ impl Bursts {
         }
     }
 
-    /// A perceived attack by a creature of type `attacker` (if still seen) from `from` on `to`:
-    /// its `attack` emitters where the attack lands, and for a ranged one a shot. With frozen
-    /// visual time (`frozen_at` is then the moment shown) a shot is shown halfway.
+    /// A perceived attack by a creature of type `attacker` (if still seen) on `to`: its
+    /// `attack` emitters where the attack lands.
     fn attack(
         &mut self,
         view: &PerceptionView<'_>,
         attacker: Option<CreatureId>,
-        (kind, from, to): (AttackKind, Pos, Pos),
+        to: Pos,
         seed: u64,
-        (start, frozen_at): (f32, Option<f32>),
+        start: f32,
     ) {
         if let Some(creature) = attacker {
             let source = Emitters::Creature(creature);
             self.start(view, source, to, ParticleTrigger::Attack, seed, start);
         }
-        if kind == AttackKind::Ranged {
-            let mut shot = Shot { from, to, start };
-            if let Some(now) = frozen_at {
-                shot.start = now - shot.seconds() * 0.5;
-            }
-            self.shots.push(shot);
-        }
     }
 }
 
-/// Reads a new turn's perceived events: bursts for steps, doors, and attacks, shots, and a fade
-/// on level change.
+/// Reads a new turn's perceived events: bursts for steps, doors, and attacks, and a fade on level
+/// change.
 pub(super) fn track(
     game: Res<Game>,
     visual: Res<VisualTime>,
@@ -222,9 +169,6 @@ pub(super) fn track(
     };
     if bursts.list.iter().any(|b| now - b.start >= life(b)) {
         bursts.list.retain(|b| now - b.start < life(b));
-    }
-    if bursts.shots.iter().any(|s| now - s.start >= s.seconds()) {
-        bursts.shots.retain(|s| now - s.start < s.seconds());
     }
     if !game.is_changed() {
         return;
@@ -248,28 +192,15 @@ pub(super) fn track(
             Event::DoorOpened { pos } | Event::DoorClosed { pos } => {
                 bursts.trigger(&view, *pos, ParticleTrigger::Toggle, seed, start);
             }
-            &Event::Attacked {
-                attacker,
-                kind,
-                from,
-                to,
-                ..
-            } => {
+            &Event::Attacked { attacker, to, .. } => {
                 let creature = view.actors().iter().find(|a| a.id == attacker);
-                let frozen_at = visual.frozen.then_some(now);
-                bursts.attack(
-                    &view,
-                    creature.map(|a| a.creature),
-                    (kind, from, to),
-                    seed,
-                    (start, frozen_at),
-                );
+                bursts.attack(&view, creature.map(|a| a.creature), to, seed, start);
             }
-            // A death shows as the creature gone (and what it dropped) and in the message line.
-            Event::Died { .. } => {}
+            // A death shows as the creature gone (and what it dropped) and in the message line;
+            // a missile flies in `missiles`.
+            Event::Died { .. } | Event::Missile { .. } => {}
             Event::LevelChanged { .. } => {
                 bursts.list.clear();
-                bursts.shots.clear();
                 tints.clear();
                 if !visual.frozen && effects.screen_fades {
                     tints.flash(LinearRgba::BLACK, FADE_SECONDS, now);
@@ -284,6 +215,8 @@ pub(super) fn track(
 pub(super) struct Sources {
     key: Option<(IVec2, UVec2)>,
     cells: Vec<(Pos, TerrainId)>,
+    /// Objects in sight on top of their piles with ambient emitters (a burning arrow).
+    objects: Vec<(Pos, ObjectId)>,
     /// Visible running water whose flow runs into something else, with the way it flows.
     blocked: Vec<(Pos, TerrainId, Vec2)>,
 }
@@ -296,6 +229,7 @@ pub(super) fn emit(
     visual: Res<VisualTime>,
     effects: Res<Effects>,
     bursts: Res<Bursts>,
+    missiles: Res<Missiles>,
     settings: Res<Settings>,
     light: Res<VisualLight>,
     mut free: ResMut<FreeGlyphs>,
@@ -313,6 +247,7 @@ pub(super) fn emit(
     if game.is_changed() || sources.key != Some(key) {
         sources.key = Some(key);
         sources.cells = ambient_sources(&view, grid.level_origin, size);
+        sources.objects = ambient_objects(&view, grid.level_origin, size);
         sources.blocked = blocked_flows(&view, grid.level_origin, size);
     }
 
@@ -328,6 +263,17 @@ pub(super) fn emit(
     for &(p, terrain) in &sources.cells {
         for e in content.terrain(terrain).particles.iter().filter(ambient) {
             particles::ambient(e, particles::cell_key(p.x, p.y), from(cell(p)), time, out);
+        }
+    }
+    // What lies in sight and gives off particles, once it has landed.
+    let arriving = missiles.arriving(time);
+    for &(p, object) in &sources.objects {
+        if arriving.contains(&(p, object)) {
+            continue;
+        }
+        for e in content.object(object).particles.iter().filter(ambient) {
+            let key = OBJECT_KEY | particles::cell_key(p.x, p.y);
+            particles::ambient(e, key, from(cell(p)), time, out);
         }
     }
     // Foam where running water runs into something: emitters turned downstream.
@@ -357,19 +303,6 @@ pub(super) fn emit(
             particles::burst(e, b.seed, from(cell(b.pos)), time - b.start, out);
         }
     }
-    for shot in &bursts.shots {
-        if let Some((pos, alpha)) = shot.at(time) {
-            let mut color = particles::linear(paint(SHOT_COLOR));
-            color.alpha = alpha;
-            out.push(Particle {
-                pos,
-                ch: shot.glyph(),
-                color,
-                scale: 1.0,
-                emissive: false,
-            });
-        }
-    }
 
     for p in out.iter() {
         let at = Pos::new(
@@ -385,6 +318,7 @@ pub(super) fn emit(
             color: particle_color(p, at, &light),
             scale: p.scale,
             slant: 0.0,
+            turn: 0.0,
         });
     }
 }
@@ -412,6 +346,28 @@ fn ambient_sources(view: &PerceptionView<'_>, origin: IVec2, size: UVec2) -> Vec
         }
     }
     cells
+}
+
+/// Objects in sight among the `size` cells from `origin`, on top of their piles, that have
+/// ambient emitters.
+fn ambient_objects(view: &PerceptionView<'_>, origin: IVec2, size: UVec2) -> Vec<(Pos, ObjectId)> {
+    let content = view.content();
+    let mut objects = Vec::new();
+    for y in origin.y..origin.y + size.y as i32 {
+        for x in origin.x..origin.x + size.x as i32 {
+            let p = Pos::new(x, y);
+            if !view.sees_objects_at(p) {
+                continue;
+            }
+            if let Some(top) = view.objects(p).first()
+                && (content.object(top.object).particles.iter())
+                    .any(|e| e.on == ParticleTrigger::Ambient)
+            {
+                objects.push((p, top.object));
+            }
+        }
+    }
+    objects
 }
 
 /// Visible running water among the `size` cells from `origin` whose flow runs into a known cell
@@ -467,9 +423,14 @@ fn byte(v: f32) -> u8 {
     (v.clamp(0.0, 1.0) * 255.0).round() as u8
 }
 
-/// Writes the glow and heat haze of visible terrain into the map grid (after the map is drawn).
-/// Haze rises from hot cells into the visible cells above them.
-pub(super) fn draw_cell_fx(grid: &mut MapGrid, view: &PerceptionView<'_>) {
+/// Writes the glow and heat haze of visible terrain into the map grid (after the map is drawn),
+/// and the glow of a glowing object on top of a pile in sight (a burning arrow; not one still
+/// `arriving` on screen). Haze rises from hot cells into the visible cells above them.
+pub(super) fn draw_cell_fx(
+    grid: &mut MapGrid,
+    view: &PerceptionView<'_>,
+    arriving: &[(Pos, ObjectId)],
+) {
     let content = view.content();
     let (cols, rows) = (grid.console.cols() as i32, grid.console.rows() as i32);
     let origin = grid.level_origin;
@@ -481,8 +442,21 @@ pub(super) fn draw_cell_fx(grid: &mut MapGrid, view: &PerceptionView<'_>) {
                 continue;
             };
             let def = content.terrain(t);
-            // An object lying on glowing terrain hides its glyph, and does not glow itself.
-            if def.glow > 0.0 && view.objects(at(x, y)).is_empty() {
+            // An object lying on glowing terrain hides its glyph; it glows if it glows itself.
+            let top = view.objects(at(x, y)).first();
+            let object_glow = top
+                .filter(|s| !arriving.contains(&(at(x, y), s.object)))
+                .map(|s| content.object(s.object).glow);
+            if let Some(glow) = object_glow.filter(|g| *g > 0.0) {
+                grid.console.set_fx(
+                    x,
+                    y,
+                    CellFx {
+                        glow: byte(glow),
+                        haze: 0,
+                    },
+                );
+            } else if def.glow > 0.0 && top.is_none() {
                 grid.console.set_fx(
                     x,
                     y,
@@ -526,7 +500,7 @@ mod tests {
     use super::*;
     use std::sync::Arc;
     use warlock_core::content::{Content, ContentFiles};
-    use warlock_core::{Action, Dir, World};
+    use warlock_core::{Action, AttackKind, Dir, World};
 
     /// A lit room with a brazier and water, and a door to a side room with the same.
     fn room() -> World {
@@ -555,7 +529,7 @@ mod tests {
         let world = room();
         let view = world.perception();
         let mut grid = grid_for(&world);
-        draw_cell_fx(&mut grid, &view);
+        draw_cell_fx(&mut grid, &view, &[]);
         let fx = |x: i32, y: i32| grid.console.fx()[(y * 9 + x) as usize];
         // The visible brazier at (2, 2) glows and heats the cells above it.
         assert!(fx(2, 2).glow > 0);
@@ -636,72 +610,42 @@ mod tests {
     }
 
     #[test]
-    fn shots_fly_from_the_shooter_to_the_target_pointing_their_way() {
-        let shot = |to: (i32, i32)| Shot {
-            from: Pos::new(5, 5),
-            to: Pos::new(to.0, to.1),
-            start: 1.0,
-        };
-        assert_eq!(shot((9, 5)).glyph(), '-');
-        assert_eq!(shot((5, 1)).glyph(), '|');
-        assert_eq!(shot((8, 2)).glyph(), '/');
-        assert_eq!(shot((2, 2)).glyph(), '\\');
-        assert_eq!(shot((9, 6)).glyph(), '-');
-        let s = shot((11, 5));
-        assert!((s.seconds() - 6.0 / SHOT_SPEED).abs() < 1e-6);
-        assert_eq!(shot((6, 5)).seconds(), SHOT_MIN_SECONDS);
-        assert_eq!(s.at(0.99), None, "not yet");
-        let (start, faint) = s.at(1.0).expect("leaving");
-        assert_eq!(
-            start,
-            Vec2::new(5.5, 5.0),
-            "from the edge of the shooter's cell"
-        );
-        assert_eq!(faint, 0.0, "fading in");
-        let (mid, alpha) = s.at(1.0 + s.seconds() * 0.5).expect("in flight");
-        assert!((mid - Vec2::new(8.0, 5.0)).length() < 1e-4 && alpha == 1.0);
-        assert_eq!(s.at(1.0 + s.seconds()), None, "landed");
-    }
-
-    #[test]
-    fn perceived_attacks_send_shots_and_sparkles() {
+    fn perceived_attacks_set_off_sparkles_and_shots_fly_as_missiles() {
         let content = Arc::new(Content::builtin().expect("builtin content"));
         let mut world = World::new(content, "arena", None).expect("arena");
         let mut seen = Vec::new();
+        let mut missiles = 0;
         for _ in 0..20 {
             let out = world.apply(&Action::Wait);
             let view = world.perception();
             for event in out.events {
-                if let Event::Attacked {
-                    attacker,
-                    kind,
-                    from,
-                    to,
-                    ..
-                } = event
-                {
-                    let creature = view.actors().iter().find(|a| a.id == attacker);
-                    seen.push((creature.map(|a| a.creature), kind, from, to));
+                match event {
+                    Event::Attacked {
+                        attacker, kind, to, ..
+                    } => {
+                        let creature = view.actors().iter().find(|a| a.id == attacker);
+                        seen.push((creature.map(|a| a.creature), kind, to));
+                    }
+                    Event::Missile { .. } => missiles += 1,
+                    _ => {}
                 }
             }
-            if seen.iter().any(|s| s.1 == AttackKind::Ranged)
-                && seen.iter().any(|s| s.1 == AttackKind::Spell)
-            {
+            if missiles > 0 && seen.iter().any(|s| s.1 == AttackKind::Spell) {
                 break;
             }
         }
+        assert!(
+            missiles > 0,
+            "the archer's arrows fly where the player sees them"
+        );
         let view = world.perception();
-        let kind_of = |k| seen.iter().find(|s| s.1 == k).copied().expect("seen");
-        // A shot: one flying glyph, no burst (the archer has no attack emitters).
-        let (archer, kind, from, to) = kind_of(AttackKind::Ranged);
-        let mut bursts = Bursts::default();
-        bursts.attack(&view, archer, (kind, from, to), 1, (0.0, None));
-        assert_eq!(bursts.shots.len(), 1);
         // A spell: the shaman's sparkle where it lands, if that cell is in view.
-        let (shaman, kind, from, to) = kind_of(AttackKind::Spell);
+        let (shaman, _, to) = (seen.iter())
+            .find(|s| s.1 == AttackKind::Spell)
+            .copied()
+            .expect("a spell");
         let mut bursts = Bursts::default();
-        bursts.attack(&view, shaman, (kind, from, to), 1, (0.0, Some(0.5)));
-        assert!(bursts.shots.is_empty());
+        bursts.attack(&view, shaman, to, 1, 0.0);
         assert_eq!(bursts.list.len(), usize::from(view.is_visible(to)));
         assert!(
             bursts
@@ -709,17 +653,6 @@ mod tests {
                 .iter()
                 .all(|b| b.pos == to && matches!(b.source, Emitters::Creature(_)))
         );
-        // Frozen time shows a shot halfway.
-        let mut bursts = Bursts::default();
-        bursts.attack(
-            &view,
-            None,
-            (AttackKind::Ranged, from, to),
-            1,
-            (0.0, Some(2.0)),
-        );
-        let s = bursts.shots[0];
-        assert!((s.start - (2.0 - s.seconds() * 0.5)).abs() < 1e-6);
     }
 
     #[test]
