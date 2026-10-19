@@ -1,0 +1,116 @@
+# Warlock specification — 7. Levels and data formats: level files
+
+Part of the specification, the source of truth for what to build; the index is
+[`specification.md`](../specification.md). Update it together with the code and the
+developer notes (CLAUDE.md, `docs/dev/`).
+
+## 7. Levels and data formats
+
+Rule: **hand-authored data is TOML; machine-written data is JSON.**
+
+- **Level files** (TOML): a header (name, ambient light, legend, lights, patrols, stair links,
+  and how time passes: `kind = "dungeon"` (default), `"outdoor"` (under the open sky, lit by the
+  sun and the sky; §5 "Sunlight"), or `"overworld"` (also under the sky, where a step's base time
+  is the terrain's travel time; §8 "Time"; a level has no turn length of its own); optional
+  named regions, `[[region]] name = "Thornwood" area = [x0, y0, x1, y1]`, inclusive, first match
+  wins) plus a multiline ASCII map. Level size comes from the map, with no fixed upper limit: most dungeon levels
+  are about 80×21, some are vast. The camera scrolls when a level is larger than the viewport. The
+  same format defines vaults for procedural generation (below). Illustrative only — exact syntax
+  is designed in M1:
+
+  ```toml
+  name = "Hub"
+  ambient = [8, 8, 12, 0]  # r, g, b, uv
+  map = '''
+  ##########
+  #@..T...+.
+  #..~~~..#>
+  ##########
+  '''
+
+  [legend]
+  "#" = "wall"
+  "." = "floor"
+  "+" = "door_closed"
+  "~" = "water"
+  "T" = { terrain = "floor", light = "torch" }
+  ">" = { terrain = "stairs_down", to = "vast" }
+  "@" = { terrain = "floor", spawn = "player" }
+
+  [[patrol]]
+  creature = "rat"
+  path = [[12, 3], [20, 3], [20, 8]]
+  ```
+- **Objects in level files** (M11): a legend entry places a pile with `objects = ["dagger",
+  "arrow*12"]` (top first; `*N` places N, as one stack if the object is stackable, else as N
+  stacks of one), and a creature's entry gives what it carries with `carry = ["spear",
+  "copper_coin*7"]` (at most 26 stacks), and what of that it wields and wears with `wield =
+  "spear"` and `wear = ["leather_jerkin"]` (an object id or a list; M16): each the first carried
+  stack of that object not yet equipped, in the first free slot that fits it (a second ring on
+  the other hand). `wield` takes what goes in a slot of action `wield` or `ready` (weapons,
+  shields, missile weapons and missiles), `wear` the rest; an object it does not carry, one with
+  no free slot, or the wrong one of the two is a content error. `[[pile]] at = [x, y] objects =
+  [...]` places a pile without a legend character (on top of the legend's there, if any).
+  Objects lie only on walkable terrain. Vaults place objects the same way, and generators stamp
+  them with the vault.
+  Magic items (M29, #149; §8 "Magic items") are placed by `[[item]]` tables, on top of the pile
+  at `at = [x, y]` after the `[[pile]]`s: `object` (a base item), `affixes` (affix ids, each with
+  an optional tier, `"sharp:2"`, default 1; its value the top of the tier's range), `name` (a
+  rare item's: with a name it is rare, without magic), `identified` (default false), `level`
+  (the item level, default that of its highest tier), and `count` (stackable ones, default 1).
+  The item must be one its affixes may roll on (§8 "Magic items"), else a content error. A
+  level's `item_level` (1 to 99, default 1) is the item level of what creatures drop there (the
+  arena's is 2); a branch level's is its depth. A vault's legend entry may give `loot = "any"`,
+  `"magic"`, or `"rare"`: a cell where an item of loot at least that good is rolled when the
+  vault is stamped into a generated level (only vaults: in a level file it is a content error);
+  the guard post's store room holds a magic one, the shrine and the roofless chapel any.
+- **Locks in level files** (M19, §8 "Doors"): a legend entry on a closed door locks it with
+  `lock = "pantry"` (a lock id: keys with that id open it, and skeleton keys) or `locked = true`
+  (a lock without an id: only a skeleton key opens it). A lock on anything but a closed door, an
+  empty lock id or `*`, or a `lock` with `locked = false` is a content error. Hand-made levels
+  need not give a lock's key (a door may be meant to be kicked in); vaults must (below).
+- **Traps in level files** (M18; §8 "Traps"): a legend entry places a trap with `trap = "id"` (an
+  id in `data/traps.toml`), hidden unless `known = true`, and for a bolt trap optionally the way
+  its bolt runs, `dir = "E"` (default: along the longest clear line from it). Traps lie only on
+  walkable terrain that is not stairs nor water that freezes; `known` or `dir` without a `trap`, `dir` on any other
+  trap, or an unknown id is a content error. Dungeon vaults place traps the same way and
+  generators stamp them with the vault; outdoor vaults have none.
+- **Traps** (`data/traps.toml`, optional; without it there are no traps; M18): `[[trap]]`s with
+  `id`, `name` ("fireball trap", said in "Really step onto the fireball trap?"), `glyph` (default
+  `^`) and `fg` (how it shows once known), an optional `message` said when the player perceives
+  it go off ("A fireball explodes!"), optional `charges` (1 to 1000; how often it goes off before
+  it is spent and gone; none: every time), an optional `noise` (`{ sound, loudness }`: a sound
+  kind of §5 "Hearing" and its loudness on the trap's cell, 1 to 300), and its `kind`, with the
+  fields each kind needs (any other is a content error): `shot` (`object`, the missile, which
+  lands as that object; `damage`, `to_hit`), `strike` (`noun`, `damage`, `to_hit`), `burst`
+  (`radius` 1 to 5, `damage`, `spell`, `noun`, an optional `blast` 0 to 10000: the walls it
+  reaches whose hardness is below it break, §8 "Digging"), `bolt` (`length` 1 to 40, `damage`,
+  `spell`, `noun`), `pit` (`damage`), `alarm` (needs a `noise`), `teleport`. `noun` and `verb`
+  (default "hits") make the messages ("The fireball burns you."); `spell` names the effect
+  presentation shows (`data/effects.toml`; §4.8). `to_hit` is within ±20 and never shown;
+  `damage` is dice that can do harm. The built-in traps: arrow (`shot`, an arrow, 1d6, a
+  bowstring 40), spear (`strike`, 1d8), fireball (`burst` radius 2, 3d6, a blast of 1000, once,
+  an explosion 150), lightning bolt
+  (`bolt` 12 cells, 4d6, twice, a thunderclap 120), pit (1d6), alarm (a bell 300), and teleport.
+  The wiki shows them in a generated table.
+- **Water**: `~` is still water (`water`); `shallow_water` (ankle-deep over a stone floor, paler,
+  a flooded room's floor, §7 "Special rooms") steps at 150 and splashes like water. Running
+  water (`running_water`, terrain with a `flow`
+  animation) needs a flow on every cell, given by its legend entry: `flow` (the direction it runs,
+  `N` … `NW`) and an optional `flow_speed` (percent of the terrain's animation speed, 10–300,
+  default 100). The shared legend (`data/legend.toml`) draws running water as arrows pointing the
+  way it flows: `↑ ↗ → ↘ ↓ ↙ ← ↖` at normal speed and `⇑ ⇗ ⇒ ⇘ ⇓ ⇙ ⇐ ⇖` at double speed, so a
+  stream reads in the map file as it flows, e.g. `~~~←←←~~~`. A `flow` on any other terrain, or
+  running water without one, is a content error. Levels carry their flow into the game (saved with
+  the level; generated levels get theirs from vaults); like animation it is presentation data that
+  no rule reads. The vast level's generator derives the river's flow from its channel: each row
+  runs toward where the channel continues in the next row, edge cells turn toward water below them
+  where the channel narrows, and a few boulders (from their own random stream, so the rest of the
+  level is unchanged) stand in the wide stretches for the water to foam against.
+- **Temperature and ice in level files** (M26; §5 "Temperature", "Ice"): a level under no sky
+  may set its `temperature` (°C, −40 to 40; default its branch's, else 10); under the open sky
+  it follows the weather, so an outdoor or overworld level giving one is a content error. A
+  legend entry on water that freezes may lay ice on it, `{ terrain = "water", ice = 25 }` (mm, 1
+  to 1000): the cell shows the ice terrain that thickness reaches. Ice terrain is never placed by
+  itself (a content error): it lies on water, which it thaws back into. Vaults lay no ice and
+  have no temperature (the level they are stamped into decides).

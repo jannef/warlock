@@ -1,0 +1,132 @@
+# Warlock specification — 8. Architecture (continued): creatures
+
+Part of the specification, the source of truth for what to build; the index is
+[`specification.md`](../specification.md). Update it together with the code and the
+developer notes (CLAUDE.md, `docs/dev/`).
+
+- **Creature behavior** (`warlock-core/src/world/ai.rs`, inside `World::creature_turn`; M10):
+  quite deterministic, outplayable by design; no randomness. Each action, in order:
+  1. **Look**: the hostile actors it sees (§5 "Creature sight"; hostile by faction, §7); the
+     nearest is its target (squared distance; ties: the lower actor id).
+  2. **Fight**: a `melee` creature attacks a target next to it (diagonals too), else steps along
+     a shortest path toward a cell next to it. A `ranged` creature or `caster` shoots or casts
+     when the target is within its `range` (the rounded radius, like every radius; for a shot no
+     farther than its missile weapon's range) with a clear line of fire: no opaque cell and no
+     actor on the cells between (an integer Bresenham line, the one missiles fly); else it steps
+     toward the nearest cell that gives it one, failing that toward the target. A `ranged`
+     creature with nothing to shoot (no missile weapon ready, or no ammunition for it left) fights
+     as a `melee` one.
+     Leaving its routine it remembers where it was (its post) and where it saw the target.
+  3. **Search**: with no hostile in sight, it goes to where it last saw one (next to the spot if
+     someone it cannot see stands there, or no one can stand there: a door shut or kicked at).
+  4. **Listen**: failing that, to where it last heard a noise (§5 "Hearing"; the newest it heard
+     since it last acted) whose source cell it does not see (next to it, as above, when someone
+     stands there or no one can). Only creatures whose faction is hostile to someone go to look;
+     wildlife does not care.
+  5. **Return**: then back to its post (waiting beside it while someone else stands on it), and
+     on along its patrol route from where it left it (or it waits there). A creature the player
+     swapped places with has its old cell as its post ("Displacement" below), so it steps back
+     and carries on.
+
+  Paths are A* over king's moves within a bounded box (12 cells beyond the target, at most 64
+  from the creature), each step costing 1: walkable cells, and closed doors for creatures that
+  open them (1 more: it opens the door, a turn and a noise, then steps in); a locked door only
+  for one carrying a key that fits it (1 more again: it unlocks the door as it opens it, §8
+  "Doors"), to every other creature a wall. Another actor's cell
+  costs 4 more, so a creature walks a short detour around someone in its way but waits behind
+  them rather than take a long one. Ties go to cells nearer the target, then to the earlier
+  direction (N, NE, E, … NW). A spot it cannot reach is given up. A creature hostile to the
+  player never steps into a sanctuary (§7 "Special rooms") from outside it, on a path or on its
+  patrol (it waits instead); one already inside may move about and leave. It may still strike
+  across the threshold or shoot in.
+
+  **Attacks** are resolved by the rules of combat ("Combat" below): melee blows and shots hurt
+  and kill (a shot is a missile, "Ranged combat" below); spells stay intents until magic is
+  designed. An attack is an event (`Event::Attacked { attacker, target, kind: Melee | Ranged |
+  Thrown | Spell, from, to, strike, with }`, `strike` what came of it, `None` for an intent,
+  `with` the missile of a shot or throw), a noise (§5), and a message when the player perceives
+  it (§6). The event reaches presentation only
+  when the player sees both ends (or made the attack and saw the target). The player moving into
+  a hostile creature is a melee attack; into any other one it swaps places with it
+  ("Displacement" below). Creatures neither flee nor
+  fight differently when hurt. What a creature has in mind (last seen, noise to look into, post)
+  is part of the world state.
+- **Dialogue** (`warlock-core/src/content/dialogue.rs`, the data; `world/talk.rs`, the rules;
+  M28, #146): NPCs are creatures with a dialogue (§7), by their type or by the unique `npc` id
+  their level gave them (which wins).
+  - **Chatting** (`Action::Chat(dir)`, replay text `chat:E`; §6 "Chat") with a creature the player
+    sees on that cell takes the time of `chat`. One without a dialogue does not answer ("The
+    giant rat doesn't answer."), one hostile to the player is in no mood ("The brigand is in no
+    mood to talk."); either still takes the time. Otherwise it answers (`The old hermit says:
+    "…"`): its `greet` the first time the player chats with it (it is then *met*), else its next
+    one-liner.
+  - **Rotation**: the one-liners come in rounds, each line once a round, every round in an order
+    of the speaker's own (a Fisher–Yates shuffle drawn from FNV-1a and SplitMix64's finalizer
+    over the run seed, the actor, and the round), and a round never starts with the line the last
+    one ended on, so the same line never comes twice in a row. Each actor counts the lines it has
+    said (`Actor::talk`, saved and hashed once it has said something).
+  - **Topics**: the answer is an event (`Event::Talked`: who, what they said, the topics the
+    player may ask about, and the topic it answers); one with topics opens the dialogue screen
+    (§6). Asking (`Action::Ask { dir, topic }`, replay text `ask:E:rooms`) takes no time and gets
+    the topic's reply; an unknown topic is "The sage knows nothing about that." `World::topics`
+    is the one place topics come from: quests ("Quests" below) add theirs there, first.
+  - **Muttering**: after each of its actions, a creature whose dialogue has a `mutter`, that goes
+    about its routine (its mind calm) within 5 cells of the player (as far as a voice carries), mutters
+    with its `chance` (a hash of the run seed, the actor, and the moment: the gameplay stream is
+    untouched) one of its muttered lines, in rounds like the one-liners. It is a noise, a voice
+    (50; §5 "Hearing"), and the player gets the words only if they hear it: with the speaker's
+    name if they see it (`The bard sings: "Over the Wendle and under the moon..."`), else from
+    where they place the sound (`You hear a voice to the north: "…"`, or, faint, `You faintly
+    hear a voice to the north.`, without the words). Mutters are logged without stopping a rest.
+- **Quests** (`warlock-core/src/content/quest.rs`, the data; `world/quest.rs`, the rules; M28,
+  #148): simple, ADOM-like errands people give through their dialogue topics. No escorts, timers,
+  or branching outcomes.
+  - **Topics** (first among a speaker's, in file order): a quest a giver may offer (what it
+    requires done; new to the player, or done and `repeatable`) is a topic named after it,
+    `quest-ID` (replay text `ask:E:quest-rats`). Asking hears the `offer`; it then waits for an
+    answer, as the topics `accept-ID` ("Accept: Rats in the arena") and `decline-ID` ("Decline:
+    …"), one offer per giver at a time (hearing another withdraws it). Declining says `decline`
+    and forgets the offer. Accepting says `accept` and makes the quest active; a delivery's giver
+    hands the item over ("The wandering bard gives you a sealed letter."; without room in the pack
+    the accept is refused, "You have no room for a sealed letter.", and the offer stands). An
+    active quest stays a topic of its giver, who says the `reminder` until its goal is met; it is
+    also a topic of whoever it is handed in to (the recipient of a delivery or of a bring with
+    `to`) while its goal is met. Asking the one it is handed in to once the goal is met completes
+    it: what it asks for leaves the pack ("You give the gardener 3 apples."; stacks not worn or
+    wielded first), they say `done`, "Quest complete: Three apples.", the reward goes into the
+    pack ("The gardener gives you 10 gold coins.", what has no room lies at the player's feet),
+    and the XP is gained ("You gain 15 experience.", with any levels it earns, §8 "Experience").
+    Topics the speaker does not have now are refused ("… knows nothing about that.") and change
+    nothing. Talk about quests takes no time.
+  - **Goals**: *kill* counts the player's own kills (§8 "Experience": melee, shots, throws, and a
+    wound of theirs that bleeds it to death; never by others or traps) of the creature type, on its level or any level of its branch if it names
+    one. Kills are tallied per level and creature type for every type some kill quest asks for
+    (saved), so kills made before the quest was taken up count, and a repeat of a repeatable one
+    counts only the kills since it was taken up again. *Bring* counts what the player carries of
+    the object. *Reach* is met once the player has been on the level, before taking the quest
+    up too. *Deliver* is met while the player carries the item: dropping it (or losing it) blocks
+    the quest until they pick it up again (it cannot be handed in without it).
+  - **Progress** the player's action made is said right after it: "Quest updated: 2 / 3 giant
+    rats.", and once the goal is met "Quest updated: 3 / 3 giant rats. Return to the old hermit."
+    (bring: "… apples. Return to the gardener." or "Take them to …"; reach: "Quest updated: you
+    have reached the Depths 3. Return to the old hermit."; a delivery's item picked up again:
+    "Quest updated: take the sealed letter to the old hermit."); a quest whose goal is met as it
+    is taken up says so after the accept. Rewards and the XP gained are the only numbers said.
+  - **No abandoning, no cap** (the owner's decision): a quest taken up stays in the log until it
+    is done, and the player may have any number of them at once.
+  - **State**: per quest the player has heard of, its stage (offered, active, done), how many
+    times it was completed, the kills counted before a repeat, and whether a reach quest's level
+    was reached; and the kill tally. Saved and hashed, left out of the state while empty, so runs
+    without quests hash as before. Presentation reads `PerceptionView::quests()` (the log: name,
+    giver, the offer, objective, status), never ground truth: the player knows their quests.
+- **Displacement** (`world/talk.rs`; M28, #147): the player moving into a creature that is not
+  hostile to them (neutral or peaceful) swaps places with it: the player steps onto its cell (the
+  step's time and noise) and it onto the player's (its footsteps), its own turn unaffected; "You
+  swap places with the deer." ("…with something." if unseen). It remembers the cell it stood on
+  as its post (unless it already had one), walks back there once the player has moved off it, and
+  carries on with its routine ("Creature behavior", Return). It refuses, and the move takes no
+  time, when its type's `budge` is `never`, or `off_post` while its mind is calm (keeping its
+  post: shopkeepers, #145); when it cannot move (overloaded): "The sentry doesn't budge."; or
+  when it is two sizes or more larger than the player (sizes in `data/sizes.toml` order; none of
+  the built-in sizes is): "The giant is too big to squeeze past." A refusal the player does not
+  see the creature for is "Something is in the way."

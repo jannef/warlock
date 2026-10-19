@@ -1,0 +1,24 @@
+# Hearing
+
+Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185); the
+rules it implements are in spec/05-visibility.md. Keep it current with the code, as CLAUDE.md says.
+
+Hearing (spec §5 "Hearing") lives in `warlock-core/src/noise.rs`. `noise::noise(content, level,
+actor, burden, Act)` is the one place an action's loudness is decided (creature `footsteps` ×
+terrain `step_noise` percent × the burden's `footsteps()` percent for `Act::Step`, the door's
+`toggle_noise` for `Act::OpenDoor`/`CloseDoor`, `VOICE_NOISE` for `Act::Mutter`; `make_noise` passes the actor's
+`Load::penalty`):
+a new noisy action gets an `Act` variant there, and its call site in `world/mod.rs` is one
+`self.make_noise(actor, Act::…)` where the action happens. `noise::make` delivers it at once to
+every other actor on the level whose `hearing` threshold it reaches (`propagate`: integer Dijkstra,
+10 a step, 14 diagonally, plus terrain `muffle`; solid terrain blocks unless it has a muffle),
+pushing a `Heard { kind, at, loudness }` onto `Actor::heard`. A creature's list is what it heard
+since it last acted and is cleared as it acts in `World::creature_turn` (the AI reads it there
+before clearing); the player's is cleared in `World::run_turn` once the player has acted, and
+becomes `PerceptionView::sounds()` (sources not visible only; kind, `Volume`, and `rough_place`,
+never the actor; a walker's several steps within one turn are one sound). `World::hear` logs news
+(`noise::news` against `WorldState::recent_sounds`) as messages, which stop a rest (voices are said
+with their words by `World::say_mutters` instead, as notes). The app draws
+`PerceptionView::sounds()` in `ui/sounds.rs` (a still `◌` marker, always: it is information; the
+ripple only with `glyph_animation`). Sounds carry at most `noise::MAX_REACH` (30) cells, under
+`VIEW_RADIUS`, which keeps rest batching (`out_of_view_for`) exact (a const assert guards it).
