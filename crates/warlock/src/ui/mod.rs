@@ -525,8 +525,23 @@ fn draw_messages(
         .collect();
     for (row, msg) in recent.iter().rev().enumerate() {
         let color = if msg.turn + 1 >= turn { TEXT } else { TEXT_DIM };
-        console.print(1, row as i32, &msg.display(), color);
+        let text = msg.display_with(|id| message_key(bindings, id));
+        console.print(1, row as i32, &text, color);
     }
+}
+
+/// A key a message names by its command's id ([`warlock_core::messages::key`]), as bound: `?`
+/// for `help` with the default keys (`Welcome to Showcase. Press ? for controls.`). Without a key,
+/// help points at Esc, whose pause menu holds Controls (as [`controls_hint`] does), and any
+/// other command is named.
+fn message_key(bindings: &Bindings, id: &str) -> String {
+    let Some(command) = KeyCommand::from_id(id) else {
+        return id.to_string();
+    };
+    bindings.key_name(command).unwrap_or_else(|| match command {
+        KeyCommand::Help => "Esc".to_string(),
+        other => other.name(),
+    })
 }
 
 /// The rest prompt, naming each choice's key as bound ([`crate::input::REST_CHOICES`]):
@@ -1178,6 +1193,22 @@ mod tests {
         );
         b.0.retain(|(_, c)| *c != KeyCommand::Help);
         assert_eq!(controls_hint(&b), "Esc menu");
+    }
+
+    #[test]
+    fn the_welcome_line_names_the_help_key_as_bound() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let world = World::new(content, "showcase", None).expect("starts");
+        let welcome = world.messages().iter().next().expect("a welcome");
+        let shown = |b: &Bindings| welcome.display_with(|id| message_key(b, id));
+        let mut b = Bindings::default();
+        // The text it always had, with the default keys.
+        assert_eq!(shown(&b), "Welcome to Showcase. Press ? for controls.");
+        let key = crate::input::KeyBinding::from_text("F1").unwrap();
+        b.bind_primary(KeyCommand::Help, key).unwrap();
+        assert_eq!(shown(&b), "Welcome to Showcase. Press F1 for controls.");
+        b.0.retain(|(_, c)| *c != KeyCommand::Help);
+        assert_eq!(shown(&b), "Welcome to Showcase. Press Esc for controls.");
     }
 
     #[test]
