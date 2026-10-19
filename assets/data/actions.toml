@@ -48,3 +48,6 @@ eat = 1000
 # A turn of digging into a wall with a digging tool ready (spec §8 "Digging"): digging goes on
 # turn after turn until the wall gives way or something interrupts it.
 dig = 1000
+# Chatting with someone (`C`): a few words. Asking about a topic on the dialogue screen takes no
+# time.
+chat = 500

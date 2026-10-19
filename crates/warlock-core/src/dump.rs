@@ -38,7 +38,8 @@ pub enum Layer {
     /// brighter); see [`light_digit`].
     Light,
     /// Sounds the player heard from unseen sources, at their rough places ([`sound_char`]: `f`
-    /// footsteps, `o` a door opening, `c` a door closing; upper case when loud), over the view.
+    /// footsteps, `o` a door opening, `c` a door closing, `v` a voice; upper case when loud),
+    /// over the view.
     Sound,
     /// Blood the player sees or remembers ([`blood_digit`]: `1` a few drops to `9` soaked), over
     /// the view.
@@ -207,8 +208,8 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
 }
 
 /// A heard sound in the `sound` layer: `f` footsteps, `o` a door opening, `c` a door closing,
-/// `x` fighting, `b` a bowstring, `m` chanting (magic), `k` banging (a door kicked), `d` digging;
-/// upper case when loud.
+/// `x` fighting, `b` a bowstring, `m` chanting (magic), `k` banging (a door kicked), `d` digging,
+/// `v` a voice; upper case when loud.
 pub fn sound_char(sound: &PerceivedSound) -> char {
     let c = match sound.kind {
         SoundKind::Footsteps => 'f',
@@ -219,6 +220,7 @@ pub fn sound_char(sound: &PerceivedSound) -> char {
         SoundKind::Chanting => 'm',
         SoundKind::Banging => 'k',
         SoundKind::Digging => 'd',
+        SoundKind::Voice => 'v',
     };
     if sound.volume == Volume::Loud {
         c.to_ascii_uppercase()
@@ -420,10 +422,11 @@ fn actor_weapon_skills(
 /// Every actor on the level (ground truth): id, creature, position, hit points and Defence,
 /// weight, what it carries, its burden and carrying limit, its stats as score/potential
 /// (`St 12/15`), its trained skills with their marks toward the next point
-/// (`stealth 17 (2/5)`), its status effects with their severities (`effects bleeding 2`), and
-/// the player's nutrition and hunger (`nutrition 3540 (not_hungry)`); then every corpse on the
-/// level and in the player's pack with when it died and how it has rotted (`corpse kobold_corpse
-/// at (12, 5): died 1444-11-11 08:12:00, 2 hours ago, fresh`).
+/// (`stealth 17 (2/5)`), its status effects with their severities (`effects bleeding 2`), the
+/// player's nutrition and hunger (`nutrition 3540 (not_hungry)`), and, if it has any, the unique
+/// character it is and how far its talk has got; then every corpse on the level and in the
+/// player's pack with when it died and how it has rotted (`corpse kobold_corpse at (12, 5): died
+/// 1444-11-11 08:12:00, 2 hours ago, fresh`).
 fn actor_rows(world: &World) -> Vec<String> {
     let content = world.content();
     let (level, actors) = world.ground_truth();
@@ -505,9 +508,18 @@ fn actor_rows(world: &World) -> Vec<String> {
             };
             let weapons = actor_weapon_skills(content, a)
                 .map_or(String::new(), |s| format!("; weapon skills {s}"));
+            // Who it is and how far its talk has got (spec §8 "Dialogue"), if anything.
+            let npc = (a.npc.as_ref()).map_or(String::new(), |n| format!("; npc {n}"));
+            let talk = if a.talk.is_new() {
+                String::new()
+            } else {
+                let met = if a.talk.met { ", met" } else { "" };
+                let (said, muttered) = (a.talk.said, a.talk.muttered);
+                format!("; talk said {said}, muttered {muttered}{met}")
+            };
             format!(
                 "{} {} at {}: hp {}/{} dv {}; weight {} (base {} + carried {}: {carried})\
-                 {equipped}; {} (limit {}){weapons}; stats {}{skills}{effects}{hunger}",
+                 {equipped}; {} (limit {}){weapons}; stats {}{skills}{effects}{hunger}{npc}{talk}",
                 a.id,
                 content.creature(a.creature).id,
                 a.pos,

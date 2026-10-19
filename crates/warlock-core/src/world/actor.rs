@@ -1,5 +1,6 @@
 //! Actors: the player and creatures.
 
+use super::Talk;
 use crate::action::AttackKind;
 use crate::burden::Burden;
 use crate::combat::{self, Attack, Category, Defence, Health, Profile};
@@ -140,6 +141,14 @@ pub struct Actor {
     /// Its combat stance (spec §8 "Stances"): the player chooses theirs; creatures stay neutral.
     #[serde(default, skip_serializing_if = "CombatStance::is_neutral")]
     pub stance: CombatStance,
+    /// The unique character its level made it (`npc` in a level legend entry), whose dialogue it
+    /// speaks rather than its type's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub npc: Option<String>,
+    /// How far its talk has got (spec §8 "Dialogue"): which line comes next, which mutter, and
+    /// whether the player has met it.
+    #[serde(default, skip_serializing_if = "Talk::is_new")]
+    pub talk: Talk,
 }
 
 fn is_zero(n: &u32) -> bool {

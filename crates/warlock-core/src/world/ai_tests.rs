@@ -624,13 +624,20 @@ fn casters_cast_from_within_their_range() {
 }
 
 #[test]
-fn bumping_a_hostile_attacks_it_and_a_neutral_one_is_in_the_way() {
+fn bumping_a_hostile_attacks_it_and_a_neutral_one_swaps_places() {
     let mut w = world("bump");
     let deer = ActorId(1);
     assert_eq!(w.stance(PLAYER, deer), Stance::Neutral);
+    let (me, it) = (w.player_pos(), pos(&w, deer));
     let out = w.apply(&Action::Move(Dir::E));
-    assert!(!out.took_turn);
-    assert_eq!(last_message(&w), "The deer is in the way.");
+    assert!(out.took_turn, "a swap takes the player's step");
+    assert!(attacks(&out).is_empty());
+    assert_eq!((w.player_pos(), pos(&w, deer)), (it, me));
+    assert!(
+        messages(&w).contains(&"You swap places with the deer.".to_string()),
+        "{:?}",
+        messages(&w)
+    );
 
     let mut w = world("duel");
     run(&mut w, "wait*5");
@@ -740,6 +747,8 @@ fn search_the_last_seen_spot_then_go_back_and_patrol_on() {
             effects: Default::default(),
             weapon_skills: Default::default(),
             faction_override: None,
+            npc: None,
+            talk: Default::default(),
             satiation: None,
             stance: Default::default(),
         },
@@ -1091,15 +1100,16 @@ fn a_level_can_place_a_creature_among_the_peaceful_folk() {
     assert_eq!(pos(&w, rat), Pos::new(7, 1), "it stays where it is");
     let me = &w.state().actors[&PLAYER];
     assert_eq!(me.hp, me.max_hp(w.content()));
-    // Bumping into the rat is "in the way", never an attack.
+    // Bumping into the rat swaps places with it, never attacks it.
     run(&mut w, "move:E*5");
     assert_eq!(w.player_pos(), Pos::new(6, 1));
     let out = w.apply(&Action::Move(Dir::E));
-    assert!(!out.took_turn);
+    assert!(out.took_turn);
     assert!(attacks(&out).is_empty());
-    assert_eq!(last_message(&w), "The giant rat is in the way.");
+    assert_eq!(w.player_pos(), Pos::new(7, 1));
+    assert_eq!(last_message(&w), "You swap places with the giant rat.");
 
-    // The kobold walks its round; bumping into it is "in the way", never an attack.
+    // The kobold walks its round, and never attacks.
     let mut w = world("calm_kobold");
     let kobold = ActorId(1);
     assert_eq!(w.stance(PLAYER, kobold), Stance::Neutral);

@@ -281,6 +281,7 @@ impl<'a> Canvas<'a> {
         self.creatures.push(CreatureSpawn {
             creature,
             faction: None,
+            npc: None,
             pos: start,
             route,
             carry: Vec::new(),

@@ -9,6 +9,7 @@ mod anim;
 mod calendar;
 mod class;
 mod creature;
+mod dialogue;
 mod dungeon;
 mod effect;
 mod experience;
@@ -42,8 +43,11 @@ pub use anim::GlyphAnim;
 pub use calendar::Calendar;
 pub use class::ClassDef;
 pub use creature::{
-    Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, NORMAL_SPEED, NaturalAttack, OnEat,
-    SPEEDS,
+    Budge, Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, NORMAL_SPEED, NaturalAttack,
+    OnEat, SPEEDS,
+};
+pub use dialogue::{
+    Dialogue, DialogueId, MAX_LINE, MAX_REPLY, MAX_TOPICS, MUTTER_CHANCES, Mutter, Speaker, Topic,
 };
 pub use dungeon::{DungeonDef, Generator, LevelPlan, parse_branch_level};
 pub use effect::{
@@ -237,7 +241,7 @@ struct LegendFile {
 /// `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
 /// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, `data/horoscope.toml`,
 /// `data/effects.toml`, `data/room_effects.toml`, `data/weapon_skills.toml`, `data/stances.toml`,
-/// and `data/status.toml` are optional (without effects, spell effects
+/// `data/status.toml`, and `data/dialogue.toml` are optional (without effects, spell effects
 /// are not drawn). Without vision
 /// profiles, a single `normal` profile that needs no light is used, so content without lighting
 /// stays fully visible; without sizes, everything is medium; without factions, everyone is neutral; without a calendar, months are numbered;
@@ -248,8 +252,8 @@ struct LegendFile {
 /// skills nobody is trained in anything; without a horoscope, characters are born under no sign;
 /// without room effects there are no special rooms; without weapon skills nobody has any, and
 /// weapons name no category; without statuses nothing ails anyone, and resting heals twice as
-/// fast; without `data/hunger.toml` nobody hungers, nothing is eaten, and creatures leave no
-/// corpses.
+/// fast; without dialogue, nobody talks; without `data/hunger.toml` nobody hungers, nothing is
+/// eaten, and creatures leave no corpses.
 #[derive(Debug)]
 pub struct Content {
     terrain: Vec<TerrainDef>,
@@ -297,6 +301,8 @@ pub struct Content {
     statuses: Vec<StatusDef>,
     status_ids: BTreeMap<String, StatusId>,
     healing: Healing,
+    /// What creatures say (`data/dialogue.toml`), in file order.
+    dialogues: Vec<Dialogue>,
 }
 
 impl Content {
@@ -344,6 +350,7 @@ impl Content {
             statuses: Vec::new(),
             status_ids: BTreeMap::new(),
             healing: Healing::default(),
+            dialogues: Vec::new(),
         };
         let path = "data/calendar.toml";
         if let Some(text) = files.get_optional(path) {
@@ -416,6 +423,10 @@ impl Content {
         let path = "data/effects.toml";
         if let Some(text) = files.get_optional(path) {
             content.effects = effect::parse(path, text)?;
+        }
+        let path = "data/dialogue.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.dialogues = dialogue::parse(path, text, &content)?;
         }
         content.load_hunger(files)?;
 
@@ -1506,6 +1517,24 @@ impl Content {
         &self.weapon_skills
     }
 
+    /// What creatures say (`data/dialogue.toml`; empty without it), in file order.
+    pub fn dialogues(&self) -> &[Dialogue] {
+        &self.dialogues
+    }
+
+    pub fn dialogue(&self, id: DialogueId) -> &Dialogue {
+        &self.dialogues[usize::from(id.0)]
+    }
+
+    /// The dialogue of a creature of type `creature` that a level named `npc`: the npc's own if
+    /// it has one, else its type's; `None` if neither talks.
+    pub fn dialogue_of(&self, creature: CreatureId, npc: Option<&str>) -> Option<DialogueId> {
+        let find = |speaker: &Speaker| self.dialogues.iter().position(|d| d.speaker == *speaker);
+        let npc = npc.and_then(|n| find(&Speaker::Npc(n.to_string())));
+        npc.or_else(|| find(&Speaker::Creature(creature)))
+            .map(|i| DialogueId(i as u16))
+    }
+
     /// Month names for showing dates.
     pub fn calendar(&self) -> &Calendar {
         &self.calendar
@@ -2355,6 +2384,18 @@ mod tests {
             assert_eq!(err.file, "vaults/bad.toml");
             assert!(err.message.contains(expected), "{map}: {}", err.message);
         }
+        // A vault may be stamped many times: no unique character in one.
+        let mut files = ContentFiles::builtin();
+        let dialogue = files.get("data/dialogue.toml").unwrap().to_string();
+        let twin = "[[dialogue]]\nnpc = \"twin\"\nlines = [\"Again?\"]\n";
+        files.insert("data/dialogue.toml", &format!("{dialogue}\n{twin}"));
+        files.insert(
+            "vaults/bad.toml",
+            "name = \"Bad\"\nmap = '''\n##+##\n#.s.#\n#####\n'''\n[legend]\n\
+             \"s\" = { terrain = \"floor\", creature = \"deer\", npc = \"twin\" }\n",
+        );
+        let err = Content::load(&files).unwrap_err();
+        assert!(err.message.contains("unique npc"), "{}", err.message);
         let content = Content::builtin().unwrap();
         let ids: Vec<_> = content.vaults().iter().map(Vault::id).collect();
         assert_eq!(

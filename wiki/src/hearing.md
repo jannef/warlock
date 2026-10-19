@@ -19,6 +19,9 @@ around you hear too.
   [Creatures](creatures.md).
 - **Digging.** Digging into a wall is loud, louder than fighting (see
   [Digging and walls](digging.md)).
+- **Voices.** People muttering to themselves can be heard a few cells away. If you hear one you
+  cannot see, you hear a voice, and its words unless it was faint: "You hear a voice to the
+  north: "Weeds. Always the weeds."" See [People and talk](npcs.md#muttering).
 
 How loud a step is also depends on what you step onto. Wading through water splashes, and
 crashing through bushes or over loose rubble is loud. Grass, flowers, the forest floor, a dirt
