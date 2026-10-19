@@ -477,6 +477,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         })),
         "stats": view.own_scores(),
         "hp": { "current": hp, "max": max_hp },
+        "experience": view.own_experience(),
         "defence": view.own_defence(),
         "death": death,
         "messages": messages,

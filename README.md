@@ -53,6 +53,11 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   hard!"), and weapons and armour come from data. ADOM-like hit points from Toughness, race, and
   class heal with time; creatures die and drop what they carried, look as hurt as they are, and
   your own death ends the run for good: the save is gone.
+- **Experience** — every creature has a level and an XP value; kills you make yourself (melee,
+  shots, throws) earn XP, less and less the further the monster is below your level, as in World
+  of Warcraft (nothing from grey ones, a little extra from tougher ones). Levels run to 50 and, up
+  to level 20, make you hardier. Your level and XP show on the status bar, the character screen,
+  and the death screen.
 - **Ranged combat** — bows (drawn by Strength), a crossbow, a sling, and throwing weapons; aim
   ADOM-style with a cursor and a faint line of fire, watch the arrow fly, and pick it up where it
   fell. A flaming arrow flies burning and lights the dark where it lands until it burns out:

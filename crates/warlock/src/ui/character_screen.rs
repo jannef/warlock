@@ -18,7 +18,7 @@ use warlock_core::burden::{Burden, Load};
 use warlock_core::character::{Character, Gender};
 use warlock_core::content::Content;
 use warlock_core::object::{Weight, format_weight};
-use warlock_core::perception::PerceptionView;
+use warlock_core::perception::{PerceptionView, Progress};
 use warlock_core::stats::{PerStat, Stat};
 use warlock_core::time::GameTime;
 
@@ -39,6 +39,8 @@ pub struct CharacterScreen {
     weight: Weight,
     /// What they carry against what they can; `None` outside a run.
     load: Option<Load>,
+    /// Character level and experience (spec §8 "Experience").
+    progress: Progress,
     /// Hit points left and the most.
     hp: (i32, i32),
     /// Defence: the total only.
@@ -57,6 +59,11 @@ impl CharacterScreen {
                 scores: PerStat::splat(warlock_core::stats::AVERAGE),
                 weight: Weight::default(),
                 load: None,
+                progress: Progress {
+                    level: 1,
+                    xp: 0,
+                    next: None,
+                },
                 hp: (0, 0),
                 defence: warlock_core::combat::BASE_DEFENCE,
             };
@@ -87,6 +94,7 @@ impl CharacterScreen {
             scores: view.own_scores(),
             weight: view.own_weight(),
             load: Some(view.own_load()),
+            progress: view.own_experience(),
             hp: view.own_hp(),
             defence: view.own_defence(),
         }
@@ -107,7 +115,7 @@ impl CharacterScreen {
 
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         // Rows: margin, the name, a gap, race, gender, class, the birth, and a gap (with a
-        // character), the stats, a gap, hit points and Defence, a gap, the weight, the burden's
+        // character), the stats, a gap, level, experience, hit points and Defence, a gap, the weight, the burden's
         // thresholds, a gap, the footer, frame.
         let width = WIDTH.min(console.cols() as i32) - 4;
         let birth = fit_parts(&self.birth, width);
@@ -116,7 +124,7 @@ impl CharacterScreen {
             n => (n + birth.len()) as i32 + 1,
         };
         let thresholds = (self.load.as_ref()).map_or(Vec::new(), |l| thresholds(l, width));
-        let h = Stat::COUNT as i32 + 12 + identity_rows + thresholds.len() as i32;
+        let h = Stat::COUNT as i32 + 14 + identity_rows + thresholds.len() as i32;
         let panel = Panel::new(console, " Character ", WIDTH, h);
         let x = panel.inner_x();
         // Rows from the footer's down would draw over it, or the frame, of a panel cut short.
@@ -151,9 +159,12 @@ impl CharacterScreen {
             y += 1;
         }
         y += 1;
-        // `HP  Hit points  18/24` and `Dv  Defence  15`, in the stats' columns.
+        // `Lv  Level  3`, `XP  Experience  85 / 120` (the total alone at the highest level),
+        // `HP  Hit points  18/24`, and `Dv  Defence  15`, in the stats' columns.
         let (hp, max) = self.hp;
         for (abbrev, name, value) in [
+            ("Lv", "Level", self.progress.level.to_string()),
+            ("XP", "Experience", experience_text(&self.progress)),
             ("HP", "Hit points", format!("{hp}/{max}")),
             ("Dv", "Defence", format!("{:>2}", self.defence)),
         ] {
@@ -193,6 +204,15 @@ impl CharacterScreen {
             None => "Esc close".to_string(),
         };
         panel.footer(console, &footer);
+    }
+}
+
+/// Experience as shown: `85 / 120`, the total and the total at which the next level comes; just
+/// the total at the highest level.
+pub fn experience_text(progress: &Progress) -> String {
+    match progress.next {
+        Some(next) => format!("{} / {next}", progress.xp),
+        None => progress.xp.to_string(),
     }
 }
 
@@ -327,6 +347,8 @@ mod tests {
             // Toughness 10 and a human's 4 and a thief's 3; Defence 10 and Dexterity's share.
             "HP  Hit points    17/17",
             "Dv  Defence       11",
+            "Lv  Level         1",
+            "XP  Experience    0 / 20",
         ] {
             row(expected);
         }

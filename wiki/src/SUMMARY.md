@@ -24,6 +24,7 @@
   - [Horoscope](horoscope.md)
 - [Stats](stats.md)
 - [Combat](combat.md)
+  - [Experience](experience.md)
   - [Ranged combat](ranged.md)
   - [Ammunition](ammunition.md)
 - [Creatures](creatures.md)

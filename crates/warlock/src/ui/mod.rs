@@ -479,6 +479,7 @@ fn status_segments(world: &World) -> Vec<Segment> {
     // where the player knows it, and there it matters more than the date: it changes the light
     // and how far one sees. Hit points matter most after the level: they outlast the time, and
     // so does the burden (shown when there is one), which slows everything the player does.
+    // The character level (`Lv 3`) comes after them and goes before them, but after the time.
     let calendar = content.calendar();
     let (hp, max_hp) = view.own_hp();
     let burden = view.own_load().burden();
@@ -486,6 +487,10 @@ fn status_segments(world: &World) -> Vec<Segment> {
         Some(Segment::new(0, view.level_name())),
         Some(Segment::new(1, format!("HP {hp}/{max_hp}"))),
         (burden != Burden::Unburdened).then(|| Segment::new(1, burden.name())),
+        Some(Segment::new(
+            1,
+            format!("Lv {}", view.own_experience().level),
+        )),
         view.region().map(|r| Segment::new(4, r)),
         Some(Segment::new(
             1,
@@ -671,7 +676,7 @@ mod tests {
             fit_segments(&segments, line.chars().count() - 1),
             "Hoard  ·  HP 10/10"
         );
-        assert!(fit_segments(&segments, 50).contains("Burdened  ·  08:"));
+        assert!(fit_segments(&segments, 55).contains("Burdened  ·  Lv 1  ·  08:"));
     }
 
     #[test]
@@ -773,7 +778,7 @@ mod tests {
             segments[date.expect("date")].short.as_deref(),
             Some("11 Darkening")
         );
-        let line = fit_segments(&segments, 70);
+        let line = fit_segments(&segments, 80);
         assert!(
             line.contains("Heavy rain") && line.contains("11 Darkening"),
             "{line}"

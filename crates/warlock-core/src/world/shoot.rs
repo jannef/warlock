@@ -221,6 +221,7 @@ impl World {
         for text in said {
             self.say(text);
         }
+        self.say_news();
     }
 
     /// Creature `id` shoots at actor `target` with the missile weapon and ammunition it has

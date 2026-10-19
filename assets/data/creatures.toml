@@ -28,6 +28,11 @@
 #   attack_cost  what its attacks cost in energy (100 to 10000), instead of the attack's cost in
 #                actions.toml (melee, shoot, or cast; 1000 is a normal action)
 #
+# Experience (spec §8 "Experience"; the player sees only the XP and level they earn): level (1 to 99,
+# default 1) and xp (what a kill by the player is worth when the player is at that level, default 0;
+# the player's own entry has neither). Kills of lower-level monsters give less and less
+# (data/experience.toml).
+#
 # Stats (spec §8 "Stats"; never shown to the player; combat and burden use them): stats, its scores
 # by stat (strength, dexterity, toughness, intelligence, willpower, presence; 1 to 40, default 10,
 # the average), and potential, how far each score could grow (default: the score; never below
@@ -53,6 +58,8 @@ weight = 70000
 
 [[creature]]
 id = "rat"
+level = 1
+xp = 5
 name = "giant rat"
 glyph = "r"
 fg = "#b08458"
@@ -71,6 +78,8 @@ attack = { damage = "1d4", name = "bite", verb = "bites" }
 # Bats fly: no footsteps, and the keenest ears.
 [[creature]]
 id = "bat"
+level = 1
+xp = 3
 name = "cave bat"
 glyph = "b"
 fg = "#9a7ab8"
@@ -86,6 +95,8 @@ attack = { damage = "1d3", name = "bite", verb = "bites" }
 
 [[creature]]
 id = "kobold"
+level = 2
+xp = 15
 name = "kobold"
 glyph = "k"
 fg = "#7cb85a"
@@ -118,6 +129,8 @@ glow = 0.5
 # Grazing in the meadows and woods of the overworld's local areas.
 [[creature]]
 id = "deer"
+level = 1
+xp = 2
 name = "deer"
 glyph = "d"
 fg = "#c89a64"
@@ -134,6 +147,8 @@ attack = { damage = "1d4", name = "hoof", verb = "kicks" }
 # The kobold war band's archer: keeps its distance and shoots.
 [[creature]]
 id = "kobold_archer"
+level = 3
+xp = 25
 name = "kobold archer"
 glyph = "k"
 fg = "#c8b45a"
@@ -153,6 +168,8 @@ stats = { strength = 8, dexterity = 15, toughness = 10, intelligence = 10, willp
 # where its spells land.
 [[creature]]
 id = "kobold_shaman"
+level = 4
+xp = 40
 name = "kobold shaman"
 glyph = "k"
 fg = "#b080d8"
@@ -183,6 +200,8 @@ glow = 0.5
 # Harmless, clicking along the walls of the patrol gallery.
 [[creature]]
 id = "beetle"
+level = 2
+xp = 8
 name = "cave beetle"
 glyph = "a"
 fg = "#6a9aa8"
