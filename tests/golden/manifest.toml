@@ -101,7 +101,7 @@ actions = "wait*12"
 [[golden]]
 name = "death-screen"
 scenario = "arena"
-actions = "lantern wait*19"
+actions = "lantern wait*16"
 
 # A generated level (rooms generator, The Depths 1) from the scenario's fixed seed.
 [[golden]]
@@ -122,7 +122,7 @@ name = "help-screen"
 scenario = "showcase"
 actions = "wait"
 screen = "help"
-window = "1280x840"
+window = "1280x912"
 
 # Settings over a run, opened over the pause menu (#57).
 [[golden]]
@@ -288,3 +288,24 @@ actions = "move:E*2 move:NE move:E*6 move:NE move:E*3 skip:82h weather:clear"
 name = "forest-noon"
 scenario = "world"
 actions = "move:W*11 move:SW move:W*10 move:N descend move:S descend skip:1140m weather:clear"
+
+# Ranged combat (spec §8 "Ranged combat", §6 "Targeting", §4.8 "Missiles"). In the arena's dark
+# corner the player readies the bow and arrows lying beside them and aims (`--fire`, as `f`):
+# the cursor on the nearest hostile creature, out of range and marked so, the faint line of fire.
+[[golden]]
+name = "ranged-aim"
+scenario = "arena"
+actions = "move:E pickup equip:missile_weapon:a equip:missiles:b wait"
+args = ["--fire"]
+
+# From the storeroom (a short bow and flaming arrows) to the patrol gallery's door, a flaming arrow
+# shot into its dark middle: halfway (frozen time), lighting its way, then burning where it landed.
+[[golden]]
+name = "ranged-flight"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:S pickup move:W pickup equip:missile_weapon:a equip:missiles:c move:NE move:E*2 move:N*4 move:E*20 open:S move:S fire:45,17"
+
+[[golden]]
+name = "ranged-burning-arrow"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:S pickup move:W pickup equip:missile_weapon:a equip:missiles:c move:NE move:E*2 move:N*4 move:E*20 open:S move:S fire:45,17 wait"

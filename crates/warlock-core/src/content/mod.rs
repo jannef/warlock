@@ -640,13 +640,36 @@ impl Content {
         };
         let err = |m: String| ContentError::new(path, m);
         let parsed: ObjectFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
+        let mut lit = Vec::new();
         for (i, spec) in parsed.object.into_iter().enumerate() {
             let id = ObjectId(u16::try_from(i).map_err(|_| err("too many objects".into()))?);
             if self.object_ids.insert(spec.id.clone(), id).is_some() {
                 return Err(err(format!("duplicate object id `{}`", spec.id)));
             }
-            let def = spec.resolve(path, |m| self.material_ids.get(m).copied(), &self.slots)?;
+            let (def, lit_as) = spec.resolve(
+                path,
+                |m| self.material_ids.get(m).copied(),
+                |l| self.light_ids.get(l).copied(),
+                &self.slots,
+            )?;
+            check_effects(path, "object", &def.id, None, def.glow, 0.0, &def.particles)?;
+            lit.push(lit_as);
             self.objects.push(def);
+        }
+        // What is lit as it is loosed flies as an object that burns.
+        for (i, lit_as) in lit.into_iter().enumerate() {
+            let Some(name) = lit_as else { continue };
+            let target = self.object_ids.get(&name).copied();
+            let def = &self.objects[i];
+            let Some(target) = target.filter(|t| self.objects[usize::from(t.0)].burning.is_some())
+            else {
+                return Err(err(format!(
+                    "object `{}`: `lit = \"{name}\"` must name an object that burns (`light` and \
+                     `burns`)",
+                    def.id
+                )));
+            };
+            self.objects[i].lit = Some(target);
         }
         // Launchers and ammunition pair by kind: a launcher shoots something there is.
         for o in &self.objects {
@@ -1116,7 +1139,11 @@ impl Content {
                 .chain(c.anim.iter().flat_map(|a| a.extra_glyphs()))
                 .chain(particles(&c.particles))
         });
-        let objects = self.objects.iter().map(|o| o.glyph);
+        let objects = self.objects.iter().flat_map(|o| {
+            std::iter::once(o.glyph)
+                .chain(o.missile)
+                .chain(particles(&o.particles))
+        });
         let weather = crate::weather::Weather::ALL
             .into_iter()
             .flat_map(|w| self.climate.def(w).emitters())
@@ -1201,12 +1228,12 @@ fn check_effects(
                 "particles: `obstacle` emitters need a `flow` animation (running water)".into(),
             ));
         }
-        let creature = kind == "creature";
         let fits = match emitter.on {
             ParticleTrigger::Ambient => true,
-            ParticleTrigger::Attack => creature,
+            ParticleTrigger::Attack => kind == "creature",
+            ParticleTrigger::Flight => kind == "object",
             ParticleTrigger::Step | ParticleTrigger::Toggle | ParticleTrigger::Obstacle => {
-                !creature
+                kind == "terrain"
             }
         };
         if !fits {
@@ -1891,7 +1918,7 @@ mod tests {
     fn every_object_has_a_glyph_color_material_and_weight() {
         let content = Content::builtin().unwrap();
         let objects = content.object_defs();
-        assert!((15..=30).contains(&objects.len()), "{}", objects.len());
+        assert!((15..=40).contains(&objects.len()), "{}", objects.len());
         let glyphs = content.glyphs();
         for def in objects {
             assert!(def.weight > 0 && glyphs.contains(&def.glyph), "{}", def.id);
@@ -2000,9 +2027,36 @@ mod tests {
             ("two_handed = true", "`two_handed` needs"),
             ("ammo = \"\"", "`ammo` must not be empty"),
             (
-                "slot = \"head\"\nlaunches = \"bolt\"\ndamage = \"1d6\"",
+                "slot = \"head\"\nlaunches = \"bolt\"\ndamage = \"1d6\"\nrange = 9",
                 "launches `bolt`, but no object has",
             ),
+            // Ranged combat: missile weapons shoot so far, throwing weapons have damage, and
+            // only what flies breaks or is lit.
+            (
+                "slot = \"head\"\nlaunches = \"bolt\"\ndamage = \"1d6\"",
+                "a missile weapon (`launches`) needs a `range`",
+            ),
+            (
+                "range = 4",
+                "a throwing weapon (`range`) needs its `damage`",
+            ),
+            ("damage = \"1d3\"\nrange = 0", "`range` must be 1 to 40"),
+            ("damage = \"1d3\"\nrange = 41", "`range` must be 1 to 40"),
+            ("ammo = \"bolt\"\nrange = 5", "no `range`"),
+            ("reloads = true", "only missile weapons"),
+            ("breaks = 20", "`breaks` and `lit` are for things that fly"),
+            (
+                "ammo = \"bolt\"\nbreaks = 101",
+                "`breaks` is a chance in percent",
+            ),
+            (
+                "ammo = \"bolt\"\nlit = \"key\"",
+                "must name an object that burns",
+            ),
+            ("light = \"torch\"", "`light` and `burns` go together"),
+            ("burns = 30", "`light` and `burns` go together"),
+            ("light = \"sun\"\nburns = 30", "unknown light preset `sun`"),
+            ("glow = 2.0", "`glow` must be between 0 and 1"),
             (
                 "launches = \"bolt\"",
                 "a missile weapon (`launches`) needs its `damage`",
@@ -2057,7 +2111,7 @@ mod tests {
         // A launcher pairs with the ammunition of its kind.
         let pair = format!(
             "{}{}",
-            object("slot = \"head\"\nlaunches = \"bolt\"\ndamage = \"1d10+1\""),
+            object("slot = \"head\"\nlaunches = \"bolt\"\ndamage = \"1d10+1\"\nrange = 12"),
             object("ammo = \"bolt\"").replace("\"key\"", "\"bolt\"")
         );
         let content = load(&slots, &pair).expect("a crossbow and a bolt");

@@ -1,7 +1,7 @@
 //! The screen stack (spec §6): every modal screen — main menu, new run and character creation,
 //! pause, settings, controls, the `?` help, the inventory, the equipment screen and its choice of
-//! what goes in a slot, the character screen, and choosing what to pick up or drop — lives on
-//! one stack, bottom to top.
+//! what goes in a slot, the character screen, and choosing what to pick up, drop, or throw —
+//! lives on one stack, bottom to top.
 //!
 //! - **Open**: [`Screens::open`] is the one way to open a screen, by [`ScreenName`]: `?` and Esc
 //!   in play, screens opening sub-screens, the main menu at startup and after a run, and
@@ -80,6 +80,8 @@ pub enum ScreenName {
     PickUp,
     /// Choose what to drop (`d` in play).
     Drop,
+    /// Choose what to throw (`t` in play, with no throwing weapon readied).
+    Throw,
     /// The run is over: who died, where, when, and of what. It opens by itself when the player
     /// dies, so it is no `--screen`.
     #[value(skip)]
@@ -99,6 +101,7 @@ impl ScreenName {
                 | ScreenName::Character
                 | ScreenName::PickUp
                 | ScreenName::Drop
+                | ScreenName::Throw
                 | ScreenName::Death
         )
     }
@@ -136,6 +139,8 @@ pub enum ScreenAction {
     Choose(MenuChoice),
     /// Close this screen and apply a gameplay action (what to pick up, drop, wear, or wield).
     Act(Action),
+    /// Close this screen and aim inventory stack `usize` to throw it (what to throw).
+    Aim(usize),
 }
 
 /// A modal screen.
@@ -193,6 +198,7 @@ impl Screen {
             ScreenName::Character => Screen::Character(CharacterScreen::new(run)),
             ScreenName::PickUp => objects(ObjectList::PickUp),
             ScreenName::Drop => objects(ObjectList::Drop),
+            ScreenName::Throw => objects(ObjectList::Throw),
             ScreenName::Death => Screen::Death(DeathScreen::new(run)),
         }
     }
@@ -211,6 +217,7 @@ impl Screen {
                 ObjectList::Inventory => ScreenName::Inventory,
                 ObjectList::PickUp => ScreenName::PickUp,
                 ObjectList::Drop => ScreenName::Drop,
+                ObjectList::Throw => ScreenName::Throw,
             },
             Screen::Equipment(_) => ScreenName::Equipment,
             Screen::EquipItem(_) => ScreenName::EquipItem,
@@ -753,6 +760,8 @@ mod tests {
             .init_resource::<Settings>()
             .init_resource::<Bindings>()
             .init_resource::<InputMode>()
+            .init_resource::<crate::ui::LastTarget>()
+            .init_resource::<ButtonInput<KeyCode>>()
             .init_resource::<DevOverlays>()
             .init_resource::<MapGrid>()
             .init_resource::<Actions>()
@@ -890,6 +899,59 @@ mod tests {
             actions(&app).last(),
             Some(Action::Rest(warlock_core::Rest::For(_)))
         ));
+    }
+
+    #[test]
+    fn aiming_fires_at_the_cursor_cycles_targets_and_remembers_the_last() {
+        use crate::ui::{Aim, AimKind, LastTarget};
+        // In the arena, with the bow and arrows lying beside the player readied.
+        let content = content();
+        let mut world = warlock_core::World::new(content.clone(), "arena", None).expect("run");
+        let ready = "move:E pickup equip:missile_weapon:a equip:missiles:b wait";
+        for action in warlock_core::action::parse_actions(ready).expect("actions") {
+            world.apply(&action);
+        }
+        let mut app = app_with(content, Some(Game::from_world(world)));
+        let aim = |app: &App| match *app.world().resource::<InputMode>() {
+            InputMode::Aim(aim) => Some(aim),
+            _ => None,
+        };
+        let (fire, tab) = ((KeyCode::KeyF, "f"), (KeyCode::Tab, ""));
+        // `f` aims at the nearest hostile creature in view.
+        frame(&mut app, &[fire]);
+        let first = aim(&app).expect("aiming");
+        assert_eq!(first.kind, AimKind::Fire);
+        let world = app.world().resource::<Game>().world.clone();
+        let view = world.perception();
+        let nearest = Aim::start(AimKind::Fire, &view, &LastTarget::default());
+        assert_eq!(first, nearest);
+        // Tab moves on to another creature; a direction key moves the cursor a cell.
+        frame(&mut app, &[tab]);
+        let second = aim(&app).expect("still aiming");
+        assert_ne!(second.at, first.at);
+        assert!(view.actor_at(second.at).is_some());
+        frame(&mut app, &[(KeyCode::KeyL, "l")]);
+        let moved = aim(&app).expect("still aiming");
+        assert_eq!(moved.at, second.at.step(Dir::E));
+        // `?` does nothing while aiming; Esc cancels and shoots nothing.
+        frame(&mut app, &[HELP, ESC]);
+        assert!(names(&app).is_empty());
+        assert_eq!(aim(&app), None);
+        let before = actions(&app).len();
+        // Aim again, Tab to the second creature, and Enter shoots it.
+        frame(&mut app, &[fire, tab, ENTER]);
+        assert_eq!(aim(&app), None);
+        assert_eq!(actions(&app)[before..], [Action::Fire(second.at)]);
+        // The next `f` starts on that creature again: `f`, Enter shoots it once more.
+        frame(&mut app, &[fire]);
+        assert_eq!(aim(&app).map(|a| a.at), Some(second.at));
+        frame(&mut app, &[(KeyCode::KeyF, "f")]);
+        assert_eq!(actions(&app).last(), Some(&Action::Fire(second.at)));
+        // `t` with nothing to throw ready opens the choice of what to throw.
+        frame(&mut app, &[(KeyCode::KeyT, "t")]);
+        assert_eq!(names(&app), [ScreenName::Throw]);
+        frame(&mut app, &[ESC]);
+        assert!(names(&app).is_empty());
     }
 
     #[test]
@@ -1159,6 +1221,8 @@ mod tests {
             .init_resource::<Settings>()
             .init_resource::<Bindings>()
             .init_resource::<InputMode>()
+            .init_resource::<crate::ui::LastTarget>()
+            .init_resource::<ButtonInput<KeyCode>>()
             .init_resource::<DevOverlays>()
             .init_resource::<MapGrid>()
             .init_resource::<Actions>()

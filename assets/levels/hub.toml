@@ -36,6 +36,11 @@
 # Equipment (M16): the storeroom has something for every slot but the rings and the neck (the
 # ring and the amulets lie elsewhere): a helm, mail, a cloak, weapons (a quarterstaff for both
 # hands), a shield, gloves, boots, and a bow with arrows. Wear and wield them with `e`.
+#
+# Ranged combat (M16): the storeroom also has a long war bow, a crossbow with bolts, a sling with
+# stones, rocks to throw, and flaming arrows beside the short bow's arrows. Ready a bow and arrows
+# with `e`, then fire with `f` (throw with `t`): a flaming arrow shot into the patrol gallery's
+# dark middle lights it where it lands until it burns out.
 name = "The Hub"
 ambient = [0, 0, 0, 0]
 map = '''
@@ -110,6 +115,28 @@ objects = ["spear"]
 [[pile]]
 at = [21, 15]
 objects = ["short_bow", "arrow*24"]
+
+# Ranged combat (M16): flaming arrows, more missile weapons and what they shoot, and rocks to
+# throw.
+[[pile]]
+at = [20, 15]
+objects = ["flaming_arrow*6"]
+
+[[pile]]
+at = [19, 15]
+objects = ["long_bow"]
+
+[[pile]]
+at = [18, 15]
+objects = ["crossbow", "bolt*16"]
+
+[[pile]]
+at = [19, 13]
+objects = ["sling", "sling_stone*20"]
+
+[[pile]]
+at = [20, 14]
+objects = ["rock*5"]
 
 [[pile]]
 at = [17, 15]

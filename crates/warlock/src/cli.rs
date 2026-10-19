@@ -95,6 +95,11 @@ pub struct Args {
     #[arg(long, value_enum)]
     pub screen: Option<ScreenName>,
 
+    /// Dev: start the run aiming the readied missile weapon, as `f` would (the cursor on the
+    /// nearest hostile creature in view), so `--capture` shows the targeting line.
+    #[arg(long)]
+    pub fire: bool,
+
     /// Number of frames to render before taking the `--capture` screenshot.
     #[arg(long, default_value_t = 10)]
     pub capture_after_frames: u32,

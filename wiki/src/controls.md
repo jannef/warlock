@@ -23,6 +23,9 @@ authoritative: it is generated from your current key bindings.
 | Character (your stats and weight) | `@` |
 | Rest | `R` |
 | Look around | `x` |
+| Fire your missile weapon | `f`, then aim (see below) |
+| Throw something | `t`, then aim |
+| Next target while aiming (with Shift: the one before) | `Tab` |
 | Show or hide the controls | `?` |
 | Pause menu | `Esc` |
 | Save and quit | `Q` |
@@ -63,6 +66,26 @@ describes what you know about the cell under it:
 
 Looking takes no time. Press `x` or `Esc` to leave.
 
+## Aiming
+
+`f` fires the missile weapon you have ready (a bow, a crossbow, a sling: ready it and its
+ammunition with `e`), `t` throws something (a throwing weapon you have ready in the missiles slot,
+or one you choose from a list of what you can throw). Both put a cursor on the map:
+
+- it starts on your last target, if you still see it (or on the same spot), else on the nearest
+  hostile creature you see, else on you;
+- `Tab` moves it to the next creature you see, nearest first, `Shift`+`Tab` back; the movement
+  keys move it anywhere, also into the dark;
+- a faint dotted line shows the way the missile would fly, as far as you know the ground: it
+  ends before anything solid you know of and at the edge of the range. A target beyond it is
+  marked on the cursor and in the message line: "Out of range." or "The way is blocked." (a
+  wall, or a creature in the way, which the missile would reach first);
+- the message line describes the target as look mode does. It never shows a chance to hit;
+- `Enter` (or `f` again, or `t` again when throwing) shoots, `Esc` cancels. Shooting again later
+  starts on the same target, so `f` `Enter` shoots it again.
+
+See [Ranged combat](ranged.md).
+
 ## Objects
 
 `,` or `g` picks up what lies where you stand: a single stack at once, or, where several lie, from
@@ -71,6 +94,9 @@ On these screens a letter marks or unmarks a stack (even `h`, `j`, `k`, `l`), `,
 everything, the arrows and Space work too, `Enter` confirms, and `Esc` cancels. `i` shows your
 pack, what it weighs, and how much more you can carry before your [burden](burden.md) grows; it
 takes no time. See [Objects and your pack](objects.md).
+
+`t` with nothing throwable ready opens a list of what you carry that can be thrown, by its pack
+letter: choose one and aim it.
 
 `e` shows what you wear and wield, slot by slot. A slot's letter (on this screen every letter
 names a slot) opens a list of what you carry that fits there: its letter puts it on, swapping

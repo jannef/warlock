@@ -16,18 +16,35 @@
 //! that threatens, default 22; `crit`, the damage multiplier, default 2), an optional `to_hit`,
 //! a `parry` bonus to Defence while wielded, and for bows the `strength` they need; armour its
 //! `armour` bonus and the most Dexterity bonus it allows (`max_dex`); a shield its `shield` bonus.
+//!
+//! Ranged combat (spec §8 "Ranged combat"): a missile weapon shoots as far as its `range` (and
+//! one that `reloads`, a crossbow, takes the `reload` action after every shot); anything else
+//! with a `range` is a throwing weapon, thrown that far, its `damage` its own (a rock needs no
+//! slot). What flies may `break` on a hit (a percent chance), and what is `lit` as it is loosed
+//! flies and lands as that other object: a flaming arrow lands as a burning arrow, which gives
+//! the `light` of a preset where it lies for `burns` seconds, then is gone. The rest is
+//! presentation only: the `missile` glyph it flies as (pointing right, turned along its flight),
+//! whether it `spins`, how much it `glow`s where it lies, and its `particles` (`ambient` while
+//! it lies in view on top of its pile, `flight` while it flies).
 
+use super::light::LightId;
 use super::material::MaterialId;
+use super::particles::ParticleEmitter;
 use super::slot::SlotDef;
 use super::{Content, ContentError};
 use crate::color::Rgb;
 use crate::combat::{Attack, CRITS, DEFAULT_CRIT, DEFAULT_THREAT, THREATS};
 use crate::dice::Dice;
 use crate::object::Stack;
+use crate::time::{DAY, Duration};
 use serde::{Deserialize, Serialize};
 
 /// The largest Defence bonus one object may give, and the largest `to_hit` either way.
 pub const MAX_BONUS: i32 = 20;
+/// The farthest anything shoots or is thrown, in cells: as far as anyone sees.
+pub const MAX_RANGE: i32 = crate::perception::VIEW_RADIUS;
+/// The longest anything burns where it lies, in seconds: a day.
+pub const MAX_BURN: u32 = DAY as u32;
 
 /// Index of an object definition in [`super::Content::object_defs`].
 ///
@@ -85,6 +102,34 @@ pub(super) struct ObjectSpec {
     /// Defence while held (the Shield category).
     #[serde(default)]
     pub shield: i32,
+    /// How far a missile weapon shoots, or a throwing weapon (anything else with a range) is
+    /// thrown, in cells.
+    pub range: Option<i32>,
+    /// A missile weapon reloaded after every shot (a crossbow): a shot also takes `reload`.
+    #[serde(default)]
+    pub reloads: bool,
+    /// The chance in percent that it breaks when it hits (ammunition, throwing weapons).
+    #[serde(default)]
+    pub breaks: u8,
+    /// Lit as it is shot or thrown: it flies and lands as this object (an object id).
+    pub lit: Option<String>,
+    /// The light it gives while it burns where it lies (a light preset id); with `burns`.
+    pub light: Option<String>,
+    /// How long it burns where it lands, in seconds of game time; then it is gone.
+    pub burns: Option<u32>,
+    /// Presentation: the glyph it flies as, drawn pointing right and turned along its flight
+    /// (default: its own glyph, upright).
+    pub missile: Option<char>,
+    /// Presentation: it tumbles as it flies (a thrown dagger).
+    #[serde(default)]
+    pub spins: bool,
+    /// Presentation: how much its glyph glows where it lies, 0 to 1.
+    #[serde(default)]
+    pub glow: f32,
+    /// Presentation: particle emitters, `ambient` (while it lies in view on top of its pile) or
+    /// `flight` (while it flies).
+    #[serde(default)]
+    pub particles: Vec<ParticleEmitter>,
 }
 
 /// A resolved object type.
@@ -121,9 +166,44 @@ pub struct ObjectDef {
     pub max_dex: Option<i32>,
     /// Defence while held: its Shield bonus.
     pub shield: i32,
+    /// How far it shoots (a missile weapon) or is thrown (a throwing weapon), in cells.
+    pub range: Option<i32>,
+    /// A missile weapon reloaded after every shot: a shot also takes the `reload` action.
+    pub reloads: bool,
+    /// The chance in percent that it breaks when it hits.
+    pub breaks: u8,
+    /// What it flies and lands as, lit (a flaming arrow: a burning arrow).
+    pub lit: Option<ObjectId>,
+    /// The light it gives where it lies, while it burns, and for how long it burns.
+    pub burning: Option<Burning>,
+    /// Presentation: the glyph it flies as, pointing right; `None`: its glyph, upright.
+    pub missile: Option<char>,
+    /// Presentation: it tumbles as it flies.
+    pub spins: bool,
+    /// Presentation: how much its glyph glows where it lies.
+    pub glow: f32,
+    /// Presentation: its particle emitters.
+    pub particles: Vec<ParticleEmitter>,
+}
+
+/// How a burning object burns where it lies: the light it gives, and for how long.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Burning {
+    pub light: LightId,
+    pub lasts: Duration,
 }
 
 impl ObjectDef {
+    /// Whether it is a throwing weapon: it has a range and is no missile weapon.
+    pub fn is_thrown(&self) -> bool {
+        self.range.is_some() && self.launches.is_none()
+    }
+
+    /// Whether it flies: ammunition, or a throwing weapon.
+    pub fn flies(&self) -> bool {
+        self.ammo.is_some() || self.is_thrown()
+    }
+
     /// `count` of it in words: "a dagger", "an iron key", "12 arrows".
     pub fn describe(&self, count: u32) -> String {
         if count == 1 {
@@ -143,14 +223,16 @@ pub fn article(noun: &str) -> &'static str {
 }
 
 impl ObjectSpec {
-    /// Checks the definition and resolves its material; `slots` are where things may be worn or
-    /// wielded.
+    /// Checks the definition and resolves its material and light; `slots` are where things may
+    /// be worn or wielded. Returns the object and the id of what it is `lit` as, which names
+    /// another object and is resolved once every object is known.
     pub(super) fn resolve(
         self,
         file: &str,
         material: impl Fn(&str) -> Option<MaterialId>,
+        light: impl Fn(&str) -> Option<LightId>,
         slots: &[SlotDef],
-    ) -> Result<ObjectDef, ContentError> {
+    ) -> Result<(ObjectDef, Option<String>), ContentError> {
         let err = |m: String| ContentError::new(file, format!("object `{}`: {m}", self.id));
         if self.name.trim().is_empty() || self.plural.as_ref().is_some_and(|p| p.trim().is_empty())
         {
@@ -189,8 +271,23 @@ impl ObjectSpec {
         }
         let attack = self.attack().map_err(err)?;
         self.check_defence().map_err(err)?;
+        self.check_ranged().map_err(err)?;
+        let burning = match (&self.light, self.burns) {
+            (None, None) => None,
+            (Some(id), Some(seconds)) => {
+                let light = light(id).ok_or_else(|| err(format!("unknown light preset `{id}`")))?;
+                Some(Burning {
+                    light,
+                    lasts: Duration::seconds(u64::from(seconds)),
+                })
+            }
+            _ => return Err(err("`light` and `burns` go together".into())),
+        };
+        if !(0.0..=1.0).contains(&self.glow) {
+            return Err(err("`glow` must be between 0 and 1".into()));
+        }
         let plural = self.plural.unwrap_or_else(|| format!("{}s", self.name));
-        Ok(ObjectDef {
+        let def = ObjectDef {
             id: self.id,
             name: self.name,
             plural,
@@ -208,7 +305,57 @@ impl ObjectSpec {
             armour: self.armour,
             max_dex: self.max_dex,
             shield: self.shield,
-        })
+            range: self.range,
+            reloads: self.reloads,
+            breaks: self.breaks,
+            lit: None,
+            burning,
+            missile: self.missile,
+            spins: self.spins,
+            glow: self.glow,
+            particles: self.particles,
+        };
+        Ok((def, self.lit))
+    }
+
+    /// The fields of ranged combat: a missile weapon needs a range and may reload; a throwing
+    /// weapon (a range without `launches`) needs its own damage; ammunition takes its range from
+    /// the launcher; only what flies may break or be lit.
+    fn check_ranged(&self) -> Result<(), String> {
+        if let Some(range) = self.range
+            && !(1..=MAX_RANGE).contains(&range)
+        {
+            return Err(format!("`range` must be 1 to {MAX_RANGE} cells"));
+        }
+        if self.launches.is_some() && self.range.is_none() {
+            return Err("a missile weapon (`launches`) needs a `range`".into());
+        }
+        if self.ammo.is_some() && self.range.is_some() {
+            return Err(
+                "ammunition (`ammo`) flies as far as its launcher shoots: no `range`".into(),
+            );
+        }
+        let thrown = self.range.is_some() && self.launches.is_none();
+        if thrown && self.damage.is_none() {
+            return Err("a throwing weapon (`range`) needs its `damage` dice".into());
+        }
+        if self.reloads && self.launches.is_none() {
+            return Err("only missile weapons (`launches`) `reload`".into());
+        }
+        let flies = self.ammo.is_some() || thrown;
+        if self.breaks > 100 {
+            return Err("`breaks` is a chance in percent, 0 to 100".into());
+        }
+        if !flies && (self.breaks > 0 || self.lit.is_some()) {
+            return Err(
+                "`breaks` and `lit` are for things that fly: ammunition and throwing weapons"
+                    .into(),
+            );
+        }
+        if self.burns.is_some_and(|s| !(1..=MAX_BURN).contains(&s)) {
+            return Err(format!("`burns` must be 1 to {MAX_BURN} seconds"));
+        }
+        Ok(())
     }
 
     /// The weapon it is, from `damage` and the fields that go with it: only something that is
@@ -229,8 +376,10 @@ impl ObjectSpec {
             }
             return Ok(None);
         };
-        if self.slot.is_none() {
-            return Err("a weapon (`damage`) must go in a slot (`slot`)".into());
+        if self.slot.is_none() && self.range.is_none() {
+            return Err(
+                "a weapon (`damage`) must go in a slot (`slot`) or be thrown (`range`)".into(),
+            );
         }
         let threat = self.threat.unwrap_or(DEFAULT_THREAT);
         let crit = self.crit.unwrap_or(DEFAULT_CRIT);
@@ -344,6 +493,15 @@ mod tests {
             armour: 0,
             max_dex: None,
             shield: 0,
+            range: None,
+            reloads: false,
+            breaks: 0,
+            lit: None,
+            burning: None,
+            missile: None,
+            spins: false,
+            glow: 0.0,
+            particles: Vec::new(),
         };
         assert_eq!(def("dagger", "daggers").describe(1), "a dagger");
         assert_eq!(def("iron key", "iron keys").describe(1), "an iron key");

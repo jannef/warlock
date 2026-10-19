@@ -29,7 +29,8 @@ const MAGIC: &str = "WARLOCK-SAVE";
 /// 10: actors wear and wield things (`Actor::equipment`: an inventory stack per slot).
 /// 11: combat: actors have hit points (`Actor::hp`, `hp_base`, `regen`); the world records the
 ///     player's death.
-pub const FORMAT_VERSION: u32 = 11;
+/// 12: ranged combat: level states keep their fires (burning missiles and when they burn out).
+pub const FORMAT_VERSION: u32 = 12;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 

@@ -7,14 +7,14 @@
 | Copper | copper coins |
 | Silver | silver rings |
 | Gold | gold coins |
-| Wood | spears, clubs, quarterstaves, short bows, arrows, small shields |
-| Leather | leather jerkins, pairs of leather gloves, pairs of leather boots |
+| Wood | spears, clubs, quarterstaves, short bows, long war bows, crossbows, arrows, flaming arrows, burning arrows, crossbow bolts, small shields |
+| Leather | slings, leather jerkins, pairs of leather gloves, pairs of leather boots |
 | Cloth | wool cloaks, coils of rope |
 | Glass | red potions, blue potions |
 | Paper | scrolls of light |
 | Wax | wax candles |
 | Bone | bone amulets |
-| Stone | rocks, jade amulets |
+| Stone | sling stones, rocks, jade amulets |
 | Gemstone | rubies |
 | Flesh | strips of dried meat |
 | Plant matter | apples |

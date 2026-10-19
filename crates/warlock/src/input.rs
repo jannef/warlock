@@ -3,7 +3,8 @@
 //! [`route_keys`] reads every key press exactly once. While a screen is open (the screen stack is
 //! not empty) the press goes to the top screen; otherwise it is a gameplay command, read through
 //! the bindings in the current [`InputMode`]. Prompts in the message line (the direction for
-//! open/close, how long to rest, look mode) are input modes, not screens.
+//! open/close, how long to rest, look mode, aiming a shot or a throw) are input modes, not
+//! screens.
 //!
 //! Letter and symbol commands bind by *logical* key (the character the keyboard layout produces),
 //! so `<`, `>`, and `?` work on any layout. Arrows and the numpad bind by physical key code.
@@ -12,7 +13,9 @@ use crate::cli::Args;
 use crate::game::{Game, PlayerAction, SimSet};
 use crate::save::SaveCommand;
 use crate::settings::Settings;
-use crate::ui::{DevOverlays, MenuChoice, Press, ScreenAction, ScreenName, Screens};
+use crate::ui::{
+    Aim, AimKind, DevOverlays, LastTarget, MenuChoice, Press, ScreenAction, ScreenName, Screens,
+};
 use bevy::ecs::system::SystemParam;
 use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput};
@@ -46,6 +49,13 @@ pub enum KeyCommand {
     Rest,
     /// Move a cursor over the map to read what is there (no time passes).
     Look,
+    /// Aim the readied missile weapon (a cursor on the map), then shoot.
+    Fire,
+    /// Choose something to throw (what is readied in the missiles slot, else from the pack),
+    /// aim it, then throw.
+    Throw,
+    /// While aiming: the cursor to the next creature in view (with Shift, the one before).
+    NextTarget,
     /// Dev: switch to the next vision profile.
     CycleVision,
     /// Dev: move the clock an hour ahead at once.
@@ -81,6 +91,9 @@ impl KeyCommand {
             KeyCommand::Character => "Character",
             KeyCommand::Rest => "Rest",
             KeyCommand::Look => "Look around",
+            KeyCommand::Fire => "Fire missile weapon",
+            KeyCommand::Throw => "Throw",
+            KeyCommand::NextTarget => "Next target (aiming; Shift: previous)",
             KeyCommand::CycleVision => "Next vision profile (dev)",
             KeyCommand::SkipHour => "Skip an hour (dev)",
             KeyCommand::NextWeather => "Next weather (dev)",
@@ -185,6 +198,9 @@ impl Default for Bindings {
             (ch("@"), Character),
             (ch("R"), Rest),
             (ch("x"), Look),
+            (ch("f"), Fire),
+            (ch("t"), Throw),
+            (Code(KeyCode::Tab), NextTarget),
             (ch("?"), Help),
             (Code(KeyCode::Escape), Cancel),
             (ch("Q"), Quit),
@@ -243,6 +259,8 @@ pub enum InputMode {
     Rest,
     /// Look mode: a cursor at this level position.
     Look(Pos),
+    /// Aiming a shot or a throw (`ui::target`).
+    Aim(Aim),
 }
 
 pub struct InputPlugin;
@@ -260,6 +278,8 @@ impl Plugin for InputPlugin {
         }
         app.insert_resource(bindings)
             .init_resource::<InputMode>()
+            .init_resource::<LastTarget>()
+            .add_systems(Startup, aim_at_startup)
             .add_systems(Update, route_keys.before(SimSet));
     }
 }
@@ -309,6 +329,10 @@ pub fn route_keys(
                 screens.stack.close();
                 play.act(action);
             }
+            ScreenAction::Aim(item) => {
+                screens.stack.close();
+                play.aim(AimKind::Throw(item));
+            }
             ScreenAction::Open(name) => screens.open(name),
             ScreenAction::Return(name) => screens.stack.return_to(name),
             ScreenAction::Choose(choice) => {
@@ -324,6 +348,8 @@ pub fn route_keys(
 pub struct Gameplay<'w> {
     game: Option<Res<'w, Game>>,
     mode: ResMut<'w, InputMode>,
+    last: ResMut<'w, LastTarget>,
+    held: Res<'w, ButtonInput<KeyCode>>,
     overlays: ResMut<'w, DevOverlays>,
     actions: MessageWriter<'w, PlayerAction>,
     saves: MessageWriter<'w, SaveCommand>,
@@ -342,13 +368,68 @@ impl Gameplay<'_> {
             *self.mode = InputMode::Normal;
             return None;
         }
+        // Enter looses an aimed missile, whatever it is bound to.
+        if let InputMode::Aim(aim) = *self.mode
+            && matches!(key.key_code, KeyCode::Enter | KeyCode::NumpadEnter)
+        {
+            if !key.repeat {
+                self.loose(aim);
+            }
+            return None;
+        }
         let command = bindings.lookup(key)?;
-        // Held keys repeat only for movement and waiting.
-        if key.repeat && !matches!(command, KeyCommand::Move(_) | KeyCommand::Wait) {
+        // Held keys repeat only for movement and waiting, and the aiming cursor's moves.
+        let moves = matches!(command, KeyCommand::Move(_) | KeyCommand::Wait);
+        if key.repeat && !moves {
             return None;
         }
         let mut open = None;
         let next = match (*self.mode, command) {
+            (InputMode::Aim(aim), KeyCommand::Move(dir)) => {
+                InputMode::Aim(aim.step(dir, &game.world.perception()))
+            }
+            (InputMode::Aim(aim), KeyCommand::NextTarget) => {
+                let back =
+                    self.held.pressed(KeyCode::ShiftLeft) || self.held.pressed(KeyCode::ShiftRight);
+                InputMode::Aim(aim.cycle(&game.world.perception(), !back))
+            }
+            (InputMode::Aim(aim), KeyCommand::Fire | KeyCommand::Throw) => {
+                let confirm = match aim.kind {
+                    AimKind::Fire => KeyCommand::Fire,
+                    AimKind::Throw(_) => KeyCommand::Throw,
+                };
+                if command == confirm {
+                    self.loose(aim);
+                    return None;
+                }
+                InputMode::Aim(aim)
+            }
+            (InputMode::Aim(_), KeyCommand::Cancel | KeyCommand::Look) => InputMode::Normal,
+            (InputMode::Aim(aim), _) => InputMode::Aim(aim),
+            (InputMode::Normal, KeyCommand::Fire) => {
+                let view = game.world.perception();
+                if view.ready_to_fire().is_some() {
+                    InputMode::Aim(Aim::start(AimKind::Fire, &view, &self.last))
+                } else {
+                    // Nothing to shoot: the rules say why ("You have no missile weapon ready.").
+                    let here = view.viewer();
+                    self.actions.write(PlayerAction(Action::Fire(here)));
+                    InputMode::Normal
+                }
+            }
+            (InputMode::Normal, KeyCommand::Throw) => {
+                let view = game.world.perception();
+                match view.ready_to_throw() {
+                    Some(item) => {
+                        InputMode::Aim(Aim::start(AimKind::Throw(item), &view, &self.last))
+                    }
+                    None => {
+                        open = Some(ScreenName::Throw);
+                        InputMode::Normal
+                    }
+                }
+            }
+            (InputMode::Normal, KeyCommand::NextTarget) => InputMode::Normal,
             (InputMode::Look(_), KeyCommand::Look | KeyCommand::Cancel) => InputMode::Normal,
             (InputMode::Look(at), KeyCommand::Move(dir)) => {
                 let view = game.world.perception();
@@ -490,6 +571,32 @@ impl Gameplay<'_> {
     fn act(&mut self, action: Action) {
         self.actions.write(PlayerAction(action));
     }
+
+    /// Starts aiming `kind` (a throw chosen on a screen).
+    fn aim(&mut self, kind: AimKind) {
+        if let Some(game) = &self.game {
+            let aim = Aim::start(kind, &game.world.perception(), &self.last);
+            *self.mode = InputMode::Aim(aim);
+        }
+    }
+
+    /// Looses the missile `aim` aims, remembering its target for the next shot.
+    fn loose(&mut self, aim: Aim) {
+        if let Some(game) = &self.game {
+            self.last.remember(&game.world.perception(), aim);
+        }
+        self.actions.write(PlayerAction(aim.action()));
+        *self.mode = InputMode::Normal;
+    }
+}
+
+/// Dev (`--fire`): starts the run aiming the readied missile weapon, as `f` would, so captures
+/// show the targeting line.
+fn aim_at_startup(args: Res<Args>, game: Option<Res<Game>>, mut mode: ResMut<InputMode>) {
+    if let (true, Some(game)) = (args.fire, game) {
+        let view = game.world.perception();
+        *mode = InputMode::Aim(Aim::start(AimKind::Fire, &view, &LastTarget::default()));
+    }
 }
 
 /// The rest prompt's answers: the key (a character) and what it rests for.
@@ -549,6 +656,9 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Inventory), ["i"]);
         assert_eq!(keys(&b, KeyCommand::Equipment), ["e"]);
         assert_eq!(keys(&b, KeyCommand::Character), ["@"]);
+        assert_eq!(keys(&b, KeyCommand::Fire), ["f"]);
+        assert_eq!(keys(&b, KeyCommand::Throw), ["t"]);
+        assert_eq!(keys(&b, KeyCommand::NextTarget), ["Tab"]);
     }
 
     #[test]

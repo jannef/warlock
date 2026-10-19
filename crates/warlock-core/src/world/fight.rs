@@ -21,7 +21,7 @@
 use super::{Actor, ActorId, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Category, Profile, Strike};
-use crate::content::{Content, CreatureId};
+use crate::content::{Content, CreatureId, ObjectId};
 use crate::noise::Act;
 use crate::object;
 use crate::stats::Stat;
@@ -58,8 +58,13 @@ impl Words {
         }
     }
 
-    /// What `actor` attacks with, by `kind`.
-    pub(super) fn of(actor: &Actor, kind: AttackKind, content: &Content) -> Self {
+    /// What `actor` attacks with, by `kind`; a shot or a throw is made `with` its missile.
+    pub(super) fn of(
+        actor: &Actor,
+        kind: AttackKind,
+        with: Option<ObjectId>,
+        content: &Content,
+    ) -> Self {
         let words = |noun: &str, verb: &str| Self {
             noun: noun.into(),
             verb: verb.into(),
@@ -73,9 +78,13 @@ impl Words {
                     (None, None) => words("fist", "hits"),
                 }
             }
-            AttackKind::Ranged => match actor.ammunition(content) {
+            AttackKind::Ranged => match with.or_else(|| actor.ammunition(content)) {
                 Some(ammo) => words(&content.object(ammo).name, "shoots"),
                 None => words("shot", "shoots"),
+            },
+            AttackKind::Thrown => match with {
+                Some(thrown) => words(&content.object(thrown).name, "hits"),
+                None => words("throw", "hits"),
             },
             AttackKind::Spell => words("spell", "casts a spell at"),
         }
@@ -157,6 +166,7 @@ pub(super) fn attack_message(
         let verb = match kind {
             AttackKind::Melee => attacker.verb("attack", "attacks"),
             AttackKind::Ranged => attacker.verb("shoot at", "shoots at"),
+            AttackKind::Thrown => attacker.verb("throw at", "throws at"),
             AttackKind::Spell => attacker.verb("cast a spell at", "casts a spell at"),
         };
         return Some(format!("{a} {verb} {t}."));
@@ -254,7 +264,7 @@ impl World {
         let profile = match kind {
             AttackKind::Melee => Some(me.melee(&self.content)),
             AttackKind::Ranged => me.ranged(&self.content),
-            AttackKind::Spell => None,
+            AttackKind::Thrown | AttackKind::Spell => None,
         };
         self.attack_with(attacker, target, kind, profile, events)
     }
@@ -270,14 +280,49 @@ impl World {
 
     /// Actor `attacker` attacks actor `target` with `profile` (`None`: an intent only, nothing is
     /// rolled), against the target's Defence: the event, the noise, and the damage, which may
-    /// kill. Ranged combat (#117) calls this with the profile of the launcher, ammunition, or
-    /// thrown weapon it uses ([`Profile::ranged`], [`Profile::thrown`]).
+    /// kill. A missile's attacks ([`World::missile_hits`], `shoot.rs`) make their noise once, as
+    /// it is loosed.
     pub(crate) fn attack_with(
         &mut self,
         attacker: ActorId,
         target: ActorId,
         kind: AttackKind,
         profile: Option<Profile>,
+        events: &mut Vec<Event>,
+    ) -> Option<Blow> {
+        self.resolve(attacker, target, (kind, None), profile, true, events)
+    }
+
+    /// A missile `with` loosed by `attacker` reaches actor `target`, attacking it with `profile`
+    /// (a shot or a throw, `kind`): the event and the damage, which may kill; no noise (the
+    /// missile made it as it was loosed).
+    pub(super) fn missile_hits(
+        &mut self,
+        attacker: ActorId,
+        target: ActorId,
+        (kind, with): (AttackKind, ObjectId),
+        profile: Profile,
+        events: &mut Vec<Event>,
+    ) -> Option<Blow> {
+        self.resolve(
+            attacker,
+            target,
+            (kind, Some(with)),
+            Some(profile),
+            false,
+            events,
+        )
+    }
+
+    /// Rolls an attack of `kind` made `with` a missile (or not) and applies it, with its noise
+    /// if `noisy`.
+    fn resolve(
+        &mut self,
+        attacker: ActorId,
+        target: ActorId,
+        (kind, with): (AttackKind, Option<ObjectId>),
+        profile: Option<Profile>,
+        noisy: bool,
         events: &mut Vec<Event>,
     ) -> Option<Blow> {
         let (Some(from), Some(to)) = (
@@ -295,8 +340,11 @@ impl World {
             from,
             to,
             strike: blow.map(|b| b.strike),
+            with,
         });
-        self.make_noise(attacker, Act::Attack(kind));
+        if noisy {
+            self.make_noise(attacker, Act::Attack(kind));
+        }
         if let Some(blow) = blow
             && blow.damage > 0
         {
@@ -378,7 +426,7 @@ impl World {
         let mut made = Vec::new();
         self.attack(player, target, AttackKind::Melee, &mut made);
         let content = self.content.clone();
-        let words = Words::of(self.state.player(), AttackKind::Melee, &content);
+        let words = Words::of(self.state.player(), AttackKind::Melee, None, &content);
         let target_actor = self.actor_or_fallen(target);
         let name = target_actor.map(|a| content.creature(a.creature).name.as_str());
         let hide = (target_actor)

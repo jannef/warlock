@@ -28,7 +28,8 @@ for the nearest one:
   once they stand next to it.
 - Creatures that **shoot** or **cast spells** need to be close enough and to have a clear line:
   nothing solid, and nobody, in between. If they have one, they attack from where they are;
-  otherwise they move to the nearest place that gives them one.
+  otherwise they move to the nearest place that gives them one. An archer spends an arrow a
+  shot, and with none left (or no bow) it comes to fight up close ([Ranged combat](ranged.md)).
 - When it loses sight of its target, it goes to where it last saw it (or next to that spot, if
   someone it cannot see stands there). If it finds no one there, or cannot get there, it gives up.
 - When it **hears** something it cannot see, it goes to have a look, if it has enemies at all

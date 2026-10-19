@@ -11,7 +11,9 @@
 | Picking up (however many stacks) | 1000 | 6 seconds |
 | Dropping (however many stacks) | 1000 | 6 seconds |
 | Attacking up close | 1000 | 6 seconds |
-| Shooting (creatures) | 1000 | 6 seconds |
+| Shooting with a missile weapon | 1000 | 6 seconds |
+| Throwing | 1000 | 6 seconds |
+| Reloading a crossbow (after every shot, on top of shooting) | 1000 | 6 seconds |
 | Casting a spell (creatures) | 1000 | 6 seconds |
 | Wielding something, or putting it away: Main hand, off hand | 1000 | 6 seconds |
 | Putting something on, or taking it off: Head, neck, cloak, hands, left ring, right ring, feet | 1000 | 6 seconds |

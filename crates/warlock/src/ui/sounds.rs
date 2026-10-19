@@ -108,6 +108,7 @@ fn marker(
         color: base.with_alpha(alpha),
         scale: 1.0,
         slant: 0.0,
+        turn: 0.0,
     };
     let ring = age.and_then(ripple).map(|(scale, keep)| FreeGlyph {
         color: base.with_alpha(alpha * keep),

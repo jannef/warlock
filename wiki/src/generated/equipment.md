@@ -12,5 +12,5 @@
 | `h` | Left ring | Silver ring | 6 seconds |
 | `i` | Right ring | Silver ring | 6 seconds |
 | `j` | Feet | Pair of leather boots | 6 seconds |
-| `k` | Missile weapon | Short bow (shoots arrows) | 6 seconds |
-| `l` | Missiles | Arrow | 6 seconds |
+| `k` | Missile weapon | Short bow (shoots arrows), long war bow (shoots arrows), crossbow (shoots crossbow bolts), sling (shoots sling stones) | 6 seconds |
+| `l` | Missiles | Arrow, flaming arrow, crossbow bolt, sling stone, rock | 6 seconds |

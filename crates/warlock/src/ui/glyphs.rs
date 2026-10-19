@@ -126,6 +126,7 @@ fn glyph(grid: &MapGrid, at: Vec2, ch: char, fg: Rgb, frame: AnimFrame) -> FreeG
         color,
         scale: frame.scale,
         slant: 0.0,
+        turn: 0.0,
     }
 }
 

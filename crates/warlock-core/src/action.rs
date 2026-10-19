@@ -1,7 +1,7 @@
 //! Player actions and the events a turn produces.
 
 use crate::combat::Strike;
-use crate::content::ActionKind;
+use crate::content::{ActionKind, ObjectId};
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
 use crate::weather::Weather;
@@ -42,6 +42,16 @@ pub enum Action {
     },
     /// Take off what is in a slot (an id in `data/slots.toml`). Takes the time of its action.
     Remove(String),
+    /// Shoot the readied missile weapon's ammunition at this cell (spec §8 "Ranged combat"):
+    /// one shot flies along the line through it, as far as the weapon shoots. Takes the time of
+    /// `shoot` (plus `reload` for a missile weapon that needs it).
+    Fire(Pos),
+    /// Throw one of inventory stack `item` (a position, `a` = 0), a throwing weapon, at cell
+    /// `at`. Takes the time of `throw`.
+    Throw {
+        item: usize,
+        at: Pos,
+    },
     /// Wait turn after turn (creatures act) until the goal, stopping early when a creature comes
     /// into view or a message is logged.
     Rest(Rest),
@@ -178,6 +188,21 @@ pub enum Event {
         from: Pos,
         to: Pos,
         strike: Option<Strike>,
+        /// What a shot or a throw was made with: the missile (the ammunition as it flew, the
+        /// thrown thing); `None` for blows and spells.
+        with: Option<ObjectId>,
+    },
+    /// A missile flew (spec §8 "Ranged combat"): a shot or a throw. As the player perceives it
+    /// (the rest of the turn's events are kept only when seen; this one is cut to what was
+    /// seen): `from` is where it was loosed if the player saw that cell, `path` the cells it
+    /// flew over, in order, from the first the player saw to the last, and `end` how its flight
+    /// ended on the last of them. Kept when the player saw any of its path.
+    Missile {
+        /// What flew: the object as it flies and lands (a flaming arrow flies burning).
+        object: ObjectId,
+        from: Option<Pos>,
+        path: Vec<Pos>,
+        end: MissileEnd,
     },
     /// An actor died where it stood, killed by the attack before it. Kept when the player saw
     /// it (their own death always).
@@ -187,24 +212,40 @@ pub enum Event {
     },
 }
 
+/// How a missile's flight ended, on the last cell of its path.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MissileEnd {
+    /// It struck someone there.
+    Struck,
+    /// It came down there: it stopped against something solid, at the end of its range, or at
+    /// the cell it was aimed at.
+    Fell,
+    /// It flew on out of the player's sight.
+    Unseen,
+}
+
 /// How an attack is made.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AttackKind {
     /// From the next cell.
     Melee,
-    /// A shot from a distance.
+    /// A shot from a distance, with a missile weapon.
     Ranged,
+    /// A throwing weapon thrown from a distance.
+    Thrown,
     /// A spell cast from a distance.
     Spell,
 }
 
 impl AttackKind {
-    /// The action whose cost it has (`data/actions.toml`: `melee`, `shoot`, `cast`).
+    /// The action whose cost it has (`data/actions.toml`: `melee`, `shoot`, `throw`, `cast`).
     pub const fn action(self) -> ActionKind {
         match self {
             AttackKind::Melee => ActionKind::Melee,
             AttackKind::Ranged => ActionKind::Shoot,
+            AttackKind::Thrown => ActionKind::Throw,
             AttackKind::Spell => ActionKind::Cast,
         }
     }
@@ -223,11 +264,12 @@ pub struct Outcome {
 }
 
 /// Text syntax for scripting: `move:E wait open:E close:W ascend descend lantern rest:1h
-/// rest:dawn rest:dusk pickup pickup:ac drop:b equip:body:b remove:body vision:ID skip:1h
-/// weather:rain` (durations: `30s`, `10m`, `2h`; letters name stacks, `a` first; `pickup` and
-/// `drop` without letters take everything; `equip:SLOT:LETTER` puts inventory stack LETTER on in
-/// slot SLOT, `remove:SLOT` takes off what is there; weather: `clear`, `overcast`, `rain`,
-/// `heavy`).
+/// rest:dawn rest:dusk pickup pickup:ac drop:b equip:body:b remove:body fire:12,5 throw:c:12,5
+/// vision:ID skip:1h weather:rain` (durations: `30s`, `10m`, `2h`; letters name stacks, `a`
+/// first; `pickup` and `drop` without letters take everything; `equip:SLOT:LETTER` puts
+/// inventory stack LETTER on in slot SLOT, `remove:SLOT` takes off what is there; `fire:X,Y`
+/// shoots at the level cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack LETTER
+/// there; weather: `clear`, `overcast`, `rain`, `heavy`).
 ///
 /// `Display` and `FromStr` round-trip; action names are case-insensitive when parsing (vision
 /// profile and slot ids keep their case).
@@ -249,6 +291,11 @@ impl fmt::Display for Action {
                 write!(f, "equip:{slot}:{}", letter(*item).unwrap_or('?'))
             }
             Action::Remove(slot) => write!(f, "remove:{slot}"),
+            Action::Fire(at) => write!(f, "fire:{},{}", at.x, at.y),
+            Action::Throw { item, at } => {
+                let item = letter(*item).unwrap_or('?');
+                write!(f, "throw:{item}:{},{}", at.x, at.y)
+            }
             Action::Rest(Rest::For(d)) => write!(f, "rest:{d}"),
             Action::Rest(Rest::Dawn) => f.write_str("rest:dawn"),
             Action::Rest(Rest::Dusk) => f.write_str("rest:dusk"),
@@ -339,6 +386,22 @@ impl FromStr for Action {
                 }
                 _ => Err("`remove` needs a slot, e.g. `remove:body`".into()),
             },
+            "fire" => {
+                let at = arg.ok_or_else(|| "`fire` needs a cell, e.g. `fire:12,5`".to_string())?;
+                parse_cell(at).map(Action::Fire)
+            }
+            "throw" => {
+                let usage = || "`throw` needs a letter and a cell, e.g. `throw:c:12,5`".to_string();
+                let (item, at) = arg.and_then(|a| a.split_once(':')).ok_or_else(usage)?;
+                let mut chars = item.chars();
+                match (chars.next(), chars.next()) {
+                    (Some(c @ 'a'..='z'), None) => Ok(Action::Throw {
+                        item: usize::from(c as u8 - b'a'),
+                        at: parse_cell(at).map_err(|_| usage())?,
+                    }),
+                    _ => Err(usage()),
+                }
+            }
             "vision" => match s.split_once(':').map(|(_, id)| id) {
                 Some(id) if !id.is_empty() => Ok(Action::SetVision(id.to_string())),
                 _ => Err("`vision` needs a profile id, e.g. `vision:darkvision`".into()),
@@ -346,11 +409,19 @@ impl FromStr for Action {
             _ => Err(format!(
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
                  descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
-                 equip:SLOT:LETTER, remove:SLOT, vision:ID, skip:DURATION, \
-                 weather:clear|overcast|rain|heavy)"
+                 equip:SLOT:LETTER, remove:SLOT, fire:X,Y, throw:LETTER:X,Y, vision:ID, \
+                 skip:DURATION, weather:clear|overcast|rain|heavy)"
             )),
         }
     }
+}
+
+/// A level cell written `X,Y` (`12,5`).
+fn parse_cell(text: &str) -> Result<Pos, String> {
+    let bad = || format!("`{text}` is no cell; expected X,Y, e.g. `12,5`");
+    let (x, y) = text.split_once(',').ok_or_else(bad)?;
+    let coord = |v: &str| v.trim().parse::<i32>().map_err(|_| bad());
+    Ok(Pos::new(coord(x)?, coord(y)?))
 }
 
 /// Parses whitespace-separated actions, e.g. `"move:E move:SE wait"`; `ACTION*N` repeats an
@@ -426,6 +497,12 @@ mod tests {
                 item: 25,
             },
             Action::Remove("main_hand".into()),
+            Action::Fire(Pos::new(12, 5)),
+            Action::Fire(Pos::new(0, 40)),
+            Action::Throw {
+                item: 2,
+                at: Pos::new(7, 3),
+            },
         ];
         all.extend(Weather::ALL.map(Action::SetWeather));
         for d in Dir::ALL {
@@ -509,7 +586,26 @@ mod tests {
             .to_string(),
             "equip:head:c"
         );
+        assert_eq!(
+            parse_actions("FIRE:3,4 throw:B:10,2"),
+            Ok(vec![
+                Action::Fire(Pos::new(3, 4)),
+                Action::Throw {
+                    item: 1,
+                    at: Pos::new(10, 2)
+                },
+            ])
+        );
         for bad in [
+            "fire",
+            "fire:",
+            "fire:3",
+            "fire:a,b",
+            "throw",
+            "throw:3,4",
+            "throw:a",
+            "throw:ab:3,4",
+            "throw:1:3,4",
             "equip",
             "equip:body",
             "equip:body:",

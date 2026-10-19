@@ -18,10 +18,15 @@ lantern = 1000
 stairs = 1000
 pick_up = 1000
 drop = 1000
-# Attacks: the player moving into a hostile creature, and creatures' attacks.
+# Attacks: the player moving into a hostile creature, and creatures' attacks; a shot from a
+# missile weapon (the player's `f`, a creature's), a throw (`t`), a spell.
 melee = 1000
 shoot = 1000
+throw = 1000
 cast = 1000
+# Reloading a missile weapon that needs it after every shot (a crossbow): part of each of its
+# shots, so a crossbow shot takes shoot + reload.
+reload = 1000
 # Equipment (data/slots.toml names the action of each slot). Taking a thing off costs what
 # putting it on does, and a swap pays for both: the old thing comes off, the new one goes on.
 # Wielding a weapon or a shield in a hand, or putting it away.

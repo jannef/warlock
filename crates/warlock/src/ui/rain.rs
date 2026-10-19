@@ -192,6 +192,7 @@ pub(super) fn emit(
             color: particle_color(p, at, &light),
             scale: p.scale,
             slant: lean * aspect,
+            turn: 0.0,
         });
     }
 }

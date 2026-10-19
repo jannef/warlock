@@ -63,6 +63,8 @@ Game flags (`cargo run -p warlock -- --help`):
   `--config-dir DIR` keeps `settings.toml` in DIR; captures and replays otherwise use default
   settings and never write the file.
 
+- `--fire` (dev) — start the run aiming the readied missile weapon, as `f` would (captures of the
+  targeting line; golden entries pass it with `args = ["--fire"]`).
 - `--replay FILE` — apply a replay at startup (its scenario/seed/character win; a hash divergence
   is logged as a warning), so `--capture` can screenshot any state. `--record FILE` — write every applied
   action (with state hashes) to a replay, rewritten after each action.
@@ -78,11 +80,13 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 | Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor; also local areas, `--level local:49,23`) |
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascend descend lantern
-pickup[:LETTERS] drop[:LETTERS] equip:SLOT:LETTER remove:SLOT rest:GOAL vision:PROFILE
-skip:DURATION weather:KIND` (`DIR` = N
+pickup[:LETTERS] drop[:LETTERS] equip:SLOT:LETTER remove:SLOT fire:X,Y throw:LETTER:X,Y
+rest:GOAL vision:PROFILE skip:DURATION weather:KIND` (`DIR` = N
 NE E SE S SW W NW; `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
 player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `SLOT` = a slot id in
-`assets/data/slots.toml`, e.g. `equip:body:b` (put inventory stack `b` on), `remove:body`; `PROFILE` = an id in
+`assets/data/slots.toml`, e.g. `equip:body:b` (put inventory stack `b` on), `remove:body`;
+`fire:X,Y` shoots the readied missile weapon at level cell (X, Y), `throw:c:X,Y` throws one of
+inventory stack `c` there; `PROFILE` = an id in
 `assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are
 `30s`, `10m`, `2h`; `skip` is the dev hour skip; `weather` is the dev weather override, `KIND` =
 `clear`, `overcast`, `rain`, `heavy`, for three hours of game time; `ACTION*N` repeats one, e.g.
@@ -476,6 +480,23 @@ validation, `arrival`). Overworld terrain picks its generator with `landscape` i
 --nocapture` prints areas with one character per terrain (`WARLOCK_SEED` for the seed), and the
 `forest` scenario or `--content-dir` scenarios with `start_level = "local:x,y"` capture them.
 
+Ranged combat (spec §8 "Ranged combat") lives in `warlock-core/src/world/shoot.rs`: `fire`,
+`throw`, and `creature_shoots` loose one missile (`loose`): it leaves its stack, makes its noise
+once, flies along `Pos::ray` (the line the AI's `clear_shot` checks) over transparent cells as far
+as the weapon's `range`, attacks whoever stands in its way (`World::missile_hits`, no noise) until
+one is hit, and comes down (`come_down`) on top of the pile, unless it broke (`breaks`, one
+gameplay draw on a hit) or the cell is not walkable. What is `lit` flies as its burning object and
+starts a fire (`LevelState::fires`, saved): a light source in `LightCache::sources` while the clock
+is before its end, cleaned up by `World::burn_out` at the start of `perceive`. Prices go through
+`price_of`/`price_for` (shoot, plus `reload` for a launcher that `reloads`; throw), so burden
+slows them too. `Event::Missile` carries the path; `perceive_events` cuts it to what the player
+saw (a burning missile: everything in their line of sight). In the app, `ui/target.rs` is the
+aiming input mode (`InputMode::Aim`: cursor start, Tab cycling, the line of fire as the player
+knows it, `LastTarget`), `ui/missiles.rs` flies missiles on the free-glyph layer (glyphs turned
+with `FreeGlyph::turn`, trail, embers via `particles::trail`, impact puff) and writes this frame's
+`render::lighting::Transients` (the moving light of a burning missile, and landed lights held back
+until it arrives; `draw_map`, object glow, and object particles hold back what is `arriving` too).
+
 Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebuffer pixels:
 1. **Map grid** (`render/grid.rs`): a `Console` (`render/console.rs`) drawn by one quad with the
    console `Material2d` (`render/console.wesl`). Each fragment finds its cell from its framebuffer
@@ -491,9 +512,9 @@ Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebu
    stay put while the camera scrolls.
 2. **Free-glyph layer** (`render/free_glyph.rs` + `.wesl`): producers push `FreeGlyph`s
    (pixel position, color/alpha, scale) each frame; they become one dynamic mesh, one draw call.
-   Glyphs at rest read the 1:1 atlas; moving or scaled ones sample a supersampled (2×, linear)
-   atlas whose slots are exactly 2× the 1:1 slots. Creatures, particles, and `pulse` terrain live
-   here.
+   Glyphs at rest read the 1:1 atlas; moving, scaled, slanted, or turned ones sample a
+   supersampled (2×, linear) atlas whose slots are exactly 2× the 1:1 slots. Creatures,
+   particles, missiles, the aiming line's dots, and `pulse` terrain live here.
 3. **UI console**: the same console material over the whole window; unwritten cells are
    transparent.
 
@@ -713,8 +734,8 @@ A successful compile does not verify anything visual. Before opening a PR:
 its river): a scenario and text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file,
 and optional `window`, `scale`, `freeze_time`, `screen` (`--screen` over the run: `pause`,
 `help`, `settings`, `controls`, `inventory`, `equipment`, `equip-item`, `character`, `pick-up`,
-`drop`; or over the main menu, the replay then unused: `race`, `summary`), `tolerance`
-(per-channel, default 2) and `max_diff_ratio`
+`drop`; or over the main menu, the replay then unused: `race`, `summary`), `args` (more game
+flags, e.g. `["--fire"]`), `tolerance` (per-channel, default 2) and `max_diff_ratio`
 (default 0.05% of pixels).
 `cargo xtask golden` builds a replay per entry with `warlock-core`, runs the game with
 `--replay ... --capture ...`, and compares with `tests/golden/<name>.png`. On a mismatch it writes

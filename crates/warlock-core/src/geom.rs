@@ -61,6 +61,31 @@ impl Pos {
             (p != to).then_some(p)
         })
     }
+
+    /// The cells from `self` through `through` and on beyond it, endlessly (the caller bounds
+    /// it): the same line as [`Pos::line_between`] up to `through`, then on along it. Empty if
+    /// the two are the same cell. The line a missile flies (spec §8 "Ranged combat").
+    pub fn ray(self, through: Self) -> impl Iterator<Item = Pos> {
+        let (dx, dy) = ((through.x - self.x).abs(), -(through.y - self.y).abs());
+        let (sx, sy) = ((through.x - self.x).signum(), (through.y - self.y).signum());
+        let (mut p, mut err) = (self, dx + dy);
+        let still = self == through;
+        std::iter::from_fn(move || {
+            if still {
+                return None;
+            }
+            let e2 = 2 * err;
+            if e2 >= dy {
+                err += dy;
+                p.x += sx;
+            }
+            if e2 <= dx {
+                err += dx;
+                p.y += sy;
+            }
+            Some(p)
+        })
+    }
 }
 
 impl fmt::Display for Pos {
@@ -245,6 +270,33 @@ mod tests {
             }
             let (pa, pb) = (Pos::new(a.0, a.1), Pos::new(b.0, b.1));
             assert_eq!(cells.len() as i32, pa.chebyshev(pb) - 1);
+        }
+    }
+
+    #[test]
+    fn rays_follow_the_line_through_the_target_and_beyond() {
+        let o = Pos::new(0, 0);
+        assert_eq!(o.ray(o).next(), None);
+        for to in [
+            Pos::new(7, 3),
+            Pos::new(-2, 9),
+            Pos::new(1, -6),
+            Pos::new(5, 5),
+            Pos::new(-4, 0),
+        ] {
+            let ray: Vec<Pos> = o.ray(to).take(40).collect();
+            let line: Vec<Pos> = o.line_between(to).chain([to]).collect();
+            assert_eq!(&ray[..line.len()], &line[..], "the same cells up to {to}");
+            // Beyond it, a king's move at a time, on the same slope.
+            for w in ray.windows(2) {
+                assert_eq!(w[0].chebyshev(w[1]), 1);
+            }
+            let far = ray[2 * line.len() - 1];
+            assert_eq!(
+                far,
+                Pos::new(2 * to.x, 2 * to.y),
+                "{to}: twice as far, {far}"
+            );
         }
     }
 

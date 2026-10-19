@@ -16,6 +16,11 @@
 //! - `light_flags` (`Rgba8Uint`): [`LIT`] on visible cells and [`OPAQUE`] on walls (red), and
 //!   the intensity gain (green, see [`gain_byte`]).
 //!
+//! Transient lights ([`Transients`], visual only too) add light that is in no snapshot: a burning
+//! missile lights its surroundings as it flies (point light falloff from its fractional
+//! position, over the cells in its line of sight), and the light of a burning missile that has
+//! landed in the rules but is still flying on screen is held back until it arrives.
+//!
 //! Creature shadows ([`super::shadows`], visual only as well) take part of each source's
 //! contribution away behind the creatures it lights. The shaded light is left out of what is
 //! drawn but not out of what darkvision measures, so darkvision's glow never brightens a shadow.
@@ -36,6 +41,7 @@ use bevy::prelude::*;
 use bevy::render::render_resource::Extent3d;
 use bevy::shader::load_shader_library;
 use warlock_core::Pos;
+use warlock_core::content::LightId;
 use warlock_core::fov::radius2;
 use warlock_core::light::Light;
 use warlock_core::perception::{CellView, PerceptionView};
@@ -81,6 +87,7 @@ impl Plugin for LightingPlugin {
         load_shader_library!(app, "lighting.wesl");
         app.init_resource::<VisualLight>()
             .init_resource::<Shadows>()
+            .init_resource::<Transients>()
             .add_systems(PostUpdate, upload.before(super::upload));
     }
 }
@@ -104,6 +111,26 @@ impl CellLight {
     };
 }
 
+/// A light that moves between cells (a burning missile in flight): visual only.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct TransientLight {
+    /// Where it is, in level cells: a cell's center is its position plus one half.
+    pub at: Vec2,
+    /// Its light preset: color, radius, and stability (flicker).
+    pub preset: LightId,
+    /// Stable for its whole flight: seeds its flicker.
+    pub key: u64,
+}
+
+/// Visual-only light for this frame beyond the perception snapshot (spec §4.4): moving lights,
+/// and point sources of the snapshot held back (by position and preset) until what gives them
+/// arrives on screen. Written by the missiles (`ui::missiles`) every frame.
+#[derive(Resource, Debug, Default, Clone, PartialEq)]
+pub struct Transients {
+    pub lights: Vec<TransientLight>,
+    pub held: Vec<(Pos, LightId)>,
+}
+
 /// Visual light for the map grid, recomposited every frame.
 #[derive(Resource, Debug, Default)]
 pub struct VisualLight {
@@ -122,10 +149,26 @@ impl VisualLight {
     /// Recomputes the light of the `size` cells from level position `origin` on, with creature
     /// `shadows` (computed from the same `view`). `time` is the visual time for the sources'
     /// modulation, `None` for steady light (the `flicker` effect off).
+    #[cfg(test)]
     pub fn composite(
         &mut self,
         view: &PerceptionView<'_>,
         shadows: &Shadows,
+        origin: IVec2,
+        size: UVec2,
+        time: Option<f32>,
+    ) {
+        let none = Transients::default();
+        self.composite_with(view, shadows, &none, origin, size, time);
+    }
+
+    /// [`VisualLight::composite`] with this frame's `transients`: moving lights added, held
+    /// sources left out.
+    pub fn composite_with(
+        &mut self,
+        view: &PerceptionView<'_>,
+        shadows: &Shadows,
+        transients: &Transients,
         origin: IVec2,
         size: UVec2,
         time: Option<f32>,
@@ -164,6 +207,11 @@ impl VisualLight {
             }
         }
         for source in view.light_sources() {
+            if let (Some(pos), Some(preset)) = (source.pos(), source.preset())
+                && transients.held.contains(&(pos, preset))
+            {
+                continue;
+            }
             // The sun and the moons have no preset: they are never modulated.
             let modulation = match (time, source.preset()) {
                 (Some(time), Some(preset)) => modulation(source.key, content.light(preset), time),
@@ -176,6 +224,26 @@ impl VisualLight {
                 {
                     let light = light_vec(light);
                     let draw = modulation.color(light) * shadows.keep(p);
+                    sums[i] += light;
+                    drawn[i] += draw;
+                    gains[i] += Vec2::new(modulation.gain, 1.0) * draw.element_sum();
+                }
+            }
+        }
+
+        for light in &transients.lights {
+            let preset = content.light(light.preset);
+            let modulation = match time {
+                Some(time) => modulation(light.key, preset, time),
+                None => Modulation::STEADY,
+            };
+            let color = light_vec(preset.color);
+            for (p, share) in transient_cells(view, light.at, preset.radius) {
+                if let Some(i) = index(p)
+                    && flags[i] & LIT != 0
+                {
+                    let light = color * share;
+                    let draw = modulation.color(light);
                     sums[i] += light;
                     drawn[i] += draw;
                     gains[i] += Vec2::new(modulation.gain, 1.0) * draw.element_sum();
@@ -268,6 +336,32 @@ impl VisualLight {
         }
         Some(out)
     }
+}
+
+/// The cells a light at `at` (level cells, fractional) of `radius` reaches, each with its share
+/// of the light: the gameplay falloff, `(R² − d²) / R²` with `R² = radius² + radius`, from the
+/// light to the cell's center, over the cells it has a line of sight to through terrain the
+/// player knows to be transparent (an opaque cell takes the light of its face, like a wall).
+fn transient_cells(view: &PerceptionView<'_>, at: Vec2, radius: i32) -> Vec<(Pos, f32)> {
+    let content = view.content();
+    let home = Pos::new(at.x.floor() as i32, at.y.floor() as i32);
+    let r2 = radius2(radius) as f32;
+    let clear = |p: Pos| match view.cell(p) {
+        CellView::Visible(t) | CellView::Remembered(t) => content.terrain(t).transparent,
+        CellView::Unknown => false,
+    };
+    let mut cells = Vec::new();
+    for y in home.y - radius..=home.y + radius {
+        for x in home.x - radius..=home.x + radius {
+            let p = Pos::new(x, y);
+            let d2 = (Vec2::new(x as f32 + 0.5, y as f32 + 0.5) - at).length_squared();
+            if d2 >= r2 || !home.line_between(p).all(clear) || (p != home && !clear(home)) {
+                continue;
+            }
+            cells.push((p, (r2 - d2) / r2));
+        }
+    }
+    cells
 }
 
 fn cell_index(origin: IVec2, size: UVec2, p: IVec2) -> Option<usize> {
@@ -377,12 +471,14 @@ pub fn update(
     visual: Res<VisualTime>,
     effects: Res<Effects>,
     shadows: Res<Shadows>,
+    transients: Res<Transients>,
     mut light: ResMut<VisualLight>,
 ) {
     let view = game.world.perception();
     let size = UVec2::new(grid.console.cols(), grid.console.rows()) + 2 * MARGIN as u32;
     let time = effects.flicker.then_some(visual.seconds);
-    light.composite(&view, &shadows, grid.level_origin - MARGIN, size, time);
+    let origin = grid.level_origin - MARGIN;
+    light.composite_with(&view, &shadows, &transients, origin, size, time);
 }
 
 /// Writes the visual light into the map material's light textures when it changed.

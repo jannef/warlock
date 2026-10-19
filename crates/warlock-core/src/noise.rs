@@ -3,10 +3,11 @@
 //! **Noise**: actions make noise. A step makes the walker's `footsteps` (creature data) scaled by
 //! the `step_noise` percent of the terrain stepped onto (water splashes, grass is soft) and by its
 //! burden (×1.25 Burdened, ×1.5 Strained; spec §8 "Burden": a heavy load is noisy); opening or
-//! closing a door makes the door's `toggle_noise` (terrain data); an attack (an intent, spec §8
-//! "Creature behavior") makes fighting, a bowstring, or chanting where the attacker stands
-//! ([`MELEE_NOISE`], [`SHOT_NOISE`], [`SPELL_NOISE`]). [`noise`] is the one function
-//! that decides how loud an action is, so skills such as moving silently can change it there.
+//! closing a door makes the door's `toggle_noise` (terrain data); an attack (spec §8 "Combat")
+//! makes fighting, a bowstring, fighting more quietly (a throw), or chanting where the attacker
+//! stands ([`MELEE_NOISE`], [`SHOT_NOISE`], [`THROW_NOISE`], [`SPELL_NOISE`]). [`noise`] is the
+//! one function that decides how loud an action is, so skills such as moving silently can change
+//! it there.
 //! Loudness is an integer, at most [`MAX_LOUDNESS`]; a creature or door without the field is
 //! silent.
 //!
@@ -105,9 +106,10 @@ impl SoundKind {
 }
 
 /// How loud an attack is where the attacker stands, hit or miss (spec §8 "Combat"): a scuffle, a
-/// bowstring, a chant.
+/// bowstring, a throw (heard as fighting, quieter), a chant.
 pub const MELEE_NOISE: u16 = 60;
 pub const SHOT_NOISE: u16 = 40;
+pub const THROW_NOISE: u16 = 30;
 pub const SPELL_NOISE: u16 = 50;
 
 /// Something an actor does that makes noise.
@@ -233,6 +235,7 @@ pub fn noise(
             let (sound, loudness) = match kind {
                 AttackKind::Melee => (SoundKind::Fighting, MELEE_NOISE),
                 AttackKind::Ranged => (SoundKind::Bowstring, SHOT_NOISE),
+                AttackKind::Thrown => (SoundKind::Fighting, THROW_NOISE),
                 AttackKind::Spell => (SoundKind::Chanting, SPELL_NOISE),
             };
             (sound, actor.pos, u32::from(loudness))

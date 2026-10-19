@@ -27,6 +27,10 @@ pub enum ParticleTrigger {
     /// Creatures only: a burst of `count` particles at the target when a creature of this type
     /// is seen attacking it (a spell's sparkle).
     Attack,
+    /// Objects only: continuously, `rate` particles per second, from the object while it flies
+    /// (a burning arrow's embers). An object's `ambient` emitters run while it lies in view, on
+    /// top of its pile.
+    Flight,
 }
 
 impl ParticleTrigger {
@@ -38,11 +42,12 @@ impl ParticleTrigger {
             ParticleTrigger::Toggle => "toggle",
             ParticleTrigger::Obstacle => "obstacle",
             ParticleTrigger::Attack => "attack",
+            ParticleTrigger::Flight => "flight",
         }
     }
 }
 
-/// A source of glyph particles on a terrain or creature type. Positions are in cells: x right,
+/// A source of glyph particles on a terrain, creature, or object type. Positions are in cells: x right,
 /// y down.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -144,9 +149,9 @@ impl ParticleEmitter {
             ParticleTrigger::Ambient if self.rate <= 0.0 => {
                 Err("ambient particles need a positive `rate`".into())
             }
-            ParticleTrigger::Obstacle if self.rate <= 0.0 => {
-                Err("obstacle particles need a positive `rate`".into())
-            }
+            ParticleTrigger::Obstacle | ParticleTrigger::Flight if self.rate <= 0.0 => Err(
+                format!("{} particles need a positive `rate`", self.on.name()),
+            ),
             ParticleTrigger::Step | ParticleTrigger::Toggle | ParticleTrigger::Attack
                 if self.count == 0 =>
             {

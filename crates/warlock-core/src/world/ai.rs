@@ -18,8 +18,9 @@
 //! Paths (`path.rs`) go over walkable cells and, for creatures that open doors, closed doors (it
 //! opens the door, then steps in). Other actors block: a path may lead through one only when the
 //! way around is much longer, and then the creature waits behind it. Melee attacks and shots are
-//! real (`fight.rs`: rolled against Defence, they hurt and kill); spells stay intents until magic
-//! is designed. Each is an [`Event::Attacked`], a noise, and, if the player perceives it, a
+//! real (`fight.rs`, `shoot.rs`: rolled against Defence, they hurt and kill; a shot spends an
+//! arrow, which flies and comes down to lie where it fell); a ranged creature with nothing left
+//! to shoot fights in melee. Spells stay intents until magic is designed. Each is an [`Event::Attacked`], a noise, and, if the player perceives it, a
 //! message. Steps and opened doors make noise too. Creatures neither flee nor change how they
 //! fight when hurt.
 
@@ -89,6 +90,10 @@ impl World {
             .map(|a| std::mem::take(&mut a.heard))
             .unwrap_or_default();
         match self.decide(id, &heard) {
+            Plan::Attack {
+                target,
+                kind: AttackKind::Ranged,
+            } => self.creature_shoots(id, target, events),
             Plan::Attack { target, kind } => {
                 self.attack(id, target, kind, events);
                 self.price_of(id, kind.action())
@@ -205,7 +210,9 @@ impl World {
         None
     }
 
-    /// Step 2: attack the target at `at`, or get where the creature can.
+    /// Step 2: attack the target at `at`, or get where the creature can. A ranged creature
+    /// with nothing to shoot (no missile weapon ready, or no ammunition for it left) fights in
+    /// melee; it shoots no farther than its missile weapon does.
     fn fight(&self, id: ActorId, target: ActorId, at: Pos) -> Plan {
         let me = &self.state.actors[&id];
         let def = self.content.creature(me.creature);
@@ -214,15 +221,18 @@ impl World {
             Route::Step(dir) => Plan::Step(dir),
             Route::There | Route::Wait | Route::Unreachable => Plan::Wait,
         };
-        let kind = match def.combat {
-            Combat::Melee if me.pos.chebyshev(at) <= 1 => return attack(AttackKind::Melee),
-            Combat::Melee => return close_in(),
-            Combat::Ranged => AttackKind::Ranged,
-            Combat::Caster => AttackKind::Spell,
+        let shoots = (me.launcher(&self.content))
+            .filter(|_| me.ammunition_item(&self.content).is_some())
+            .and_then(|(launcher, _)| self.content.object(launcher).range);
+        let (kind, range) = match (def.combat, shoots) {
+            (Combat::Ranged, Some(reach)) => (AttackKind::Ranged, def.range.min(reach)),
+            (Combat::Caster, _) => (AttackKind::Spell, def.range),
+            _ if me.pos.chebyshev(at) <= 1 => return attack(AttackKind::Melee),
+            _ => return close_in(),
         };
-        let reach2 = radius2(def.range);
+        let reach2 = radius2(range);
         let can_hit = |q: Pos| q.dist2(at) <= reach2 && self.clear_shot(q, at, id, target);
-        match self.route(id, at, def.range, can_hit) {
+        match self.route(id, at, range, can_hit) {
             Route::There => attack(kind),
             Route::Step(dir) => Plan::Step(dir),
             Route::Wait => Plan::Wait,

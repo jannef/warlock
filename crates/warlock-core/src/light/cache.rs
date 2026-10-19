@@ -125,8 +125,8 @@ struct LevelLights {
 
 impl LightCache {
     /// Sources on the player's level whose light can reach a cell within `reach` of `center`, in a
-    /// stable order (static lights by position, then carried lights by actor id), each with its
-    /// shadow mask. Masks are computed only for these sources, and only when missing or stale.
+    /// stable order (static lights by position, fires by position, then carried lights by actor
+    /// id), each with its shadow mask. Masks are computed only for these sources, and only when missing or stale.
     pub fn near(
         &mut self,
         state: &WorldState,
@@ -202,8 +202,10 @@ impl LevelLights {
         }
     }
 
-    /// Every source currently shining on the player's level. A source in an opaque cell (e.g. a
-    /// light placed on a door that was then closed) gives no light.
+    /// Every source currently shining on the player's level: static lights by position, then
+    /// fires (burning objects on the floor that have not burned out yet) by position, then
+    /// carried lights by actor id. A source in an opaque cell (e.g. a light placed on a door
+    /// that was then closed) gives no light.
     fn sources(&self, state: &WorldState, content: &Content) -> Vec<Source> {
         let level = state.current();
         let mut sources: Vec<Source> = self
@@ -215,6 +217,12 @@ impl LevelLights {
                 preset,
             })
             .collect();
+        let burning = (level.fires.iter()).filter(|(_, fire)| fire.until > state.time);
+        sources.extend(burning.map(|(&pos, fire)| Source {
+            key: fire_key(&level.id, pos),
+            pos,
+            preset: fire.light,
+        }));
         let lantern = content
             .scenario(&state.scenario)
             .and_then(|s| s.lantern.as_deref())
@@ -252,10 +260,20 @@ fn static_light(level: &LevelState, content: &Content, p: Pos) -> Option<LightId
 
 /// FNV-1a over the level id and position, with the carried-light tag bits cleared.
 fn static_key(level: &str, p: Pos) -> u64 {
+    cell_key(level, 0xff, p)
+}
+
+/// The key of a fire on cell `p` of `level`: like a static light's, from another separator, so
+/// a fire never shares a key with a light placed on its cell.
+fn fire_key(level: &str, p: Pos) -> u64 {
+    cell_key(level, 0xfe, p)
+}
+
+fn cell_key(level: &str, separator: u8, p: Pos) -> u64 {
     let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
     let bytes = level
         .bytes()
-        .chain([0xff])
+        .chain([separator])
         .chain(p.x.to_le_bytes())
         .chain(p.y.to_le_bytes());
     for byte in bytes {
@@ -348,6 +366,9 @@ mod tests {
         assert_ne!(a, static_key("hub", Pos::new(4, 3)));
         assert_ne!(a, static_key("vast", Pos::new(3, 4)));
         assert_eq!(a & (CARRIED | LANTERN), 0, "never the sun's key either");
+        let fire = fire_key("hub", Pos::new(3, 4));
+        assert_ne!(fire, a, "a fire on a lit cell is a source of its own");
+        assert_eq!(fire & (CARRIED | LANTERN), 0);
         assert_ne!(SUN_KEY & LANTERN, 0);
         assert_eq!(SUN_KEY & CARRIED, 0);
         let moons: BTreeSet<u64> = (0..8).map(moon_key).collect();

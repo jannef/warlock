@@ -69,6 +69,9 @@ struct Entry {
     capture_after_frames: Option<u32>,
     /// Open this menu screen over the game (`--screen`, e.g. `pause`).
     screen: Option<String>,
+    /// More game flags, e.g. `["--fire"]` (start aiming the readied missile weapon).
+    #[serde(default)]
+    args: Vec<String>,
     tolerance: Option<u8>,
     max_diff_ratio: Option<f64>,
 }
@@ -197,10 +200,11 @@ pub fn run(mode: Mode) -> Result<(), String> {
             Mode::Compare => out_dir.join(format!("{}.actual.png", entry.name)),
         };
         let _ = std::fs::remove_file(&actual_path);
-        let screen_args: Vec<&str> = match &entry.screen {
+        let mut screen_args: Vec<&str> = match &entry.screen {
             Some(screen) => vec!["--screen", screen.as_str()],
             None => Vec::new(),
         };
+        screen_args.extend(entry.args.iter().map(String::as_str));
         run_game(
             &[
                 &screen_args[..],

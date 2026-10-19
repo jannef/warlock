@@ -1,5 +1,7 @@
 //! Object screens (spec §6): the inventory (`i`), and the selection screens for picking up from a
-//! pile (`,` or `g` where several objects lie) and for dropping (`d`).
+//! pile (`,` or `g` where several objects lie), for dropping (`d`), and for choosing what to
+//! throw (`t`: the throwing weapons the player carries, by their inventory letters; choosing one
+//! aims it, `ui::target`).
 //!
 //! Each lists stacks by letter, `a` first, with their glyph, name, and weight; the inventory and
 //! the drop screen mark what is worn or wielded ("(being worn)", "(wielded)"; dropping it takes
@@ -35,6 +37,8 @@ pub enum ObjectList {
     PickUp,
     /// The inventory: choose what to drop.
     Drop,
+    /// The throwing weapons in the inventory: choose one to throw.
+    Throw,
 }
 
 impl ObjectList {
@@ -43,6 +47,7 @@ impl ObjectList {
             ObjectList::Inventory => " Inventory ",
             ObjectList::PickUp => " Pick up ",
             ObjectList::Drop => " Drop ",
+            ObjectList::Throw => " Throw ",
         }
     }
 
@@ -50,6 +55,7 @@ impl ObjectList {
         match self {
             ObjectList::Inventory | ObjectList::Drop => "You are not carrying anything.",
             ObjectList::PickUp => "There is nothing here.",
+            ObjectList::Throw => "You have nothing to throw.",
         }
     }
 
@@ -58,7 +64,7 @@ impl ObjectList {
     fn width(self) -> i32 {
         match self {
             ObjectList::Inventory => 72,
-            ObjectList::PickUp | ObjectList::Drop => 60,
+            ObjectList::PickUp | ObjectList::Drop | ObjectList::Throw => 60,
         }
     }
 }
@@ -80,6 +86,9 @@ pub struct ObjectScreen {
     list: ObjectList,
     /// At most one per letter.
     entries: Vec<Entry>,
+    /// The position (letter) of each entry in its list: in the inventory for what to throw,
+    /// which lists only some of it.
+    items: Vec<usize>,
     /// The `>` row of a selection screen; the first row shown in the inventory.
     cursor: usize,
     marked: Letters,
@@ -97,22 +106,29 @@ impl ObjectScreen {
         let (stacks, weight): (&[Stack], Weight) = match view {
             Some(view) => {
                 let stacks = match list {
-                    ObjectList::Inventory | ObjectList::Drop => view.inventory(),
+                    ObjectList::Inventory | ObjectList::Drop | ObjectList::Throw => {
+                        view.inventory()
+                    }
                     ObjectList::PickUp => view.objects(view.viewer()),
                 };
                 (stacks, view.own_weight())
             }
             None => (&[], Weight::default()),
         };
+        let shown = |i: usize| match (list, view) {
+            (ObjectList::Throw, Some(view)) => view.throw_range(i).is_some(),
+            _ => true,
+        };
+        let items: Vec<usize> = (0..stacks.len().min(Letters::COUNT))
+            .filter(|&i| shown(i))
+            .collect();
         let entries = match view {
             Some(view) => {
                 let content = view.content();
                 // The inventory marks what is worn or wielded; a pile has nothing worn.
                 let carried = list != ObjectList::PickUp;
-                stacks
-                    .iter()
-                    .take(Letters::COUNT)
-                    .enumerate()
+                (items.iter())
+                    .map(|&i| (i, &stacks[i]))
                     .map(|(i, s)| {
                         let def = content.object(s.object);
                         Entry {
@@ -132,6 +148,7 @@ impl ObjectScreen {
         Self {
             list,
             entries,
+            items,
             cursor: 0,
             marked: Letters::default(),
             weight,
@@ -163,6 +180,23 @@ impl ObjectScreen {
         }
         if press.nav == Nav::Back || self.entries.is_empty() && press.nav == Nav::Enter {
             return ScreenAction::Close;
+        }
+        if self.list == ObjectList::Throw {
+            // One choice: its letter, or Enter on the `>` row.
+            let rows = self.entries.len().max(1);
+            match (press.text, press.nav) {
+                (Some(c @ 'a'..='z'), _) => {
+                    let i = usize::from(c as u8 - b'a');
+                    if self.items.contains(&i) {
+                        return ScreenAction::Aim(i);
+                    }
+                }
+                (_, Nav::Up) => self.cursor = (self.cursor + rows - 1) % rows,
+                (_, Nav::Down) => self.cursor = (self.cursor + 1) % rows,
+                (_, Nav::Enter) => return ScreenAction::Aim(self.items[self.cursor]),
+                _ => {}
+            }
+            return ScreenAction::Stay;
         }
         // Space is a named key, not a typed character.
         let space = press.binding == Some(KeyBinding::Code(KeyCode::Space));
@@ -203,7 +237,9 @@ impl ObjectScreen {
                 };
                 return ScreenAction::Act(match self.list {
                     ObjectList::PickUp => Action::PickUp(chosen),
-                    ObjectList::Drop | ObjectList::Inventory => Action::Drop(chosen),
+                    ObjectList::Drop | ObjectList::Inventory | ObjectList::Throw => {
+                        Action::Drop(chosen)
+                    }
                 });
             }
             _ => {}
@@ -284,7 +320,7 @@ impl ObjectScreen {
             }
             // `a - ) a dagger`: letter, mark, the glyph in the object's color, the name.
             let mark = if self.marked.contains(i) { '+' } else { '-' };
-            let label = format!("{} {mark}", letter(i).unwrap_or('?'));
+            let label = format!("{} {mark}", letter(self.items[i]).unwrap_or('?'));
             console.print(x + 2, y, &label, color);
             let glyph_x = x + 3 + label.chars().count() as i32;
             console.print(glyph_x, y, &entry.glyph.to_string(), entry.fg);
@@ -315,6 +351,7 @@ impl ObjectScreen {
         let verb = match self.list {
             ObjectList::PickUp => "pick up",
             ObjectList::Drop | ObjectList::Inventory => "drop",
+            ObjectList::Throw => "throw",
         };
         let footer = if read_only {
             let scroll = if first > 0 || more {
@@ -327,6 +364,8 @@ impl ObjectScreen {
                 None => "Esc close".to_string(),
             };
             format!("{scroll}{close}")
+        } else if self.list == ObjectList::Throw {
+            "a-z or Enter choose   Esc cancel".to_string()
         } else {
             format!("a-z mark   , all   Enter {verb}   Esc cancel")
         };
@@ -364,6 +403,40 @@ mod tests {
         (0..console.rows() as i32)
             .map(|y| line(console, y))
             .collect()
+    }
+
+    #[test]
+    fn the_throw_choice_lists_throwing_weapons_by_their_pack_letters() {
+        let mut world = on_the_pile();
+        world.apply(&Action::PickUp(Letters::default()));
+        // a leather jerkin, b dagger, c 2 wax candles: only the dagger is thrown.
+        let b = Bindings::default();
+        let mut screen = ObjectScreen::new(ObjectList::Throw, Some(&world.perception()));
+        assert_eq!(screen.entries.len(), 1);
+        assert_eq!(screen.entries[0].name, "a dagger");
+        let mut console = Console::default();
+        console.resize(80, 24);
+        screen.draw(&mut console, &b);
+        assert!(text(&console).iter().any(|l| l.contains("b - ) a dagger")));
+        assert_eq!(screen.handle(&typed('a'), &b), ScreenAction::Stay);
+        assert_eq!(screen.handle(&typed('b'), &b), ScreenAction::Aim(1));
+        assert_eq!(
+            screen.handle(&Press::nav(Nav::Enter), &b),
+            ScreenAction::Aim(1)
+        );
+        // Nothing to throw: it says so, and Enter or Esc closes it.
+        let empty = on_the_pile();
+        let mut screen = ObjectScreen::new(ObjectList::Throw, Some(&empty.perception()));
+        screen.draw(&mut console, &b);
+        assert!(
+            text(&console)
+                .iter()
+                .any(|l| l.contains("You have nothing to throw."))
+        );
+        assert_eq!(
+            screen.handle(&Press::nav(Nav::Enter), &b),
+            ScreenAction::Close
+        );
     }
 
     #[test]

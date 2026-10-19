@@ -4,7 +4,9 @@ Fights are decided by dice, as in Dungeons & Dragons, but with two twelve-sided 
 one twenty-sided die, and with ADOM's kind of hit points. Every blow is rolled, can miss, can hit
 hard, and hurts; what loses all its hit points dies. That goes for you too, and death is final.
 
-You attack by moving into a hostile creature (see [Controls](controls.md)), which takes a turn.
+You attack by moving into a hostile creature (see [Controls](controls.md)), which takes a turn,
+or from afar: you shoot with a missile weapon (`f`) and throw (`t`), see
+[Ranged combat](ranged.md).
 Creatures fight each other and you by the same rules (see [Creatures](creatures.md)). Spells are
 the exception: casters only announce them for now, and nothing is hurt by a spell.
 

@@ -11,7 +11,8 @@ around you hear too.
   [Burden](burden.md)).
 - **Doors.** Opening a door makes noise, and closing one is louder still.
 - **Fighting.** Attacks are noisy: you may hear fighting, a bowstring, or chanting (a spell)
-  where you cannot see it. See [Creatures](creatures.md).
+  where you cannot see it. A throw sounds like fighting, but quieter. See
+  [Creatures](creatures.md).
 
 How loud a step is also depends on what you step onto. Wading through water splashes, and
 crashing through bushes or over loose rubble is loud. Grass, flowers, the forest floor, a dirt
