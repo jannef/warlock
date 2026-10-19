@@ -26,6 +26,7 @@ mod dev;
 mod effects;
 mod equipment_screen;
 mod glyphs;
+mod info_tabs;
 mod look;
 mod menu;
 mod missiles;

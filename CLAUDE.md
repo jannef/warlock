@@ -187,6 +187,17 @@ to open, read keys for, or draw one:
   dropped. Held-key repeats never open, close, choose, or act.
 - **Draw**: `ui::draw` is the one system that writes the UI console: when anything it shows
   changed, it clears the console, draws the gameplay UI if a run exists, then the top screen.
+- **Info pages** (`ui/info_tabs.rs`): the screens about the player (Character, Inventory,
+  Equipment) are an ordered group, `PAGES`. While one is the top screen, the page keys replace
+  it (`ScreenAction::Replace` -> `Screens::replace`: the stack depth is unchanged, so Esc still
+  returns to where the first was opened) and each draws its tab line on the bottom border with
+  `info_tabs::draw_tabs`. **A new info screen joins the group**: one entry in `PAGES` (its
+  position is its number) and one `draw_tabs` call in its `draw`; never a separate way to switch.
+  Sub-steps of a page (`EquipItem`, pick-up/drop/throw lists) are not pages and keep their
+  number keys. The keys are the `Context::Pages` commands `Page(1..9)`, `NextPage` (Shift
+  reverses), `PrevPage`: rebindable like all commands (`KeyCommand::context`: keys are unique
+  per context, so Tab is `NextTarget` in play and `NextPage` here; `Bindings::owner_in` and
+  `lookup` read one context). `Press::shift` carries Shift from the router.
 - Prompts in the message line (open/close direction, rest, look mode) are `InputMode`s, not
   screens.
 - Screens are plain state machines tested without a window: `ui/menu.rs` (`Press`, `Panel`, main

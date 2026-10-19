@@ -83,6 +83,7 @@ impl SkillsScreen {
         let list = self.rows.len().max(1) as i32;
         let h = list + 8;
         let panel = Panel::new(console, " Skills ", width, h);
+        super::info_tabs::draw_tabs(console, &panel, bindings, super::ScreenName::Skills);
         let x = panel.inner_x();
         let fits = |y: i32| y < panel.y + panel.h - 2;
         // A list taller than the panel scrolls to keep the selection in view.
