@@ -34,6 +34,9 @@ pub struct Game {
     pub world: World,
     /// Events from the most recent turn, for presentation.
     pub last_outcome: Outcome,
+    /// How many actions this session applied: presentation that must read each outcome once,
+    /// even one that took no turn (a dev spell effect), watches it.
+    pub applied: u64,
     /// Present with `--record`: the run so far, saved after every action.
     recorder: Option<(Replay, PathBuf)>,
 }
@@ -49,11 +52,7 @@ impl Game {
     ) -> Result<Self, String> {
         let world = World::with_character(content, scenario, seed, character)
             .map_err(|e| format!("cannot start scenario `{scenario}`: {e}"))?;
-        Ok(Self {
-            world,
-            last_outcome: Outcome::default(),
-            recorder: None,
-        })
+        Ok(Self::from_world(world))
     }
 
     /// A game around a world loaded elsewhere (the saved run).
@@ -61,6 +60,7 @@ impl Game {
         Self {
             world,
             last_outcome: Outcome::default(),
+            applied: 0,
             recorder: None,
         }
     }
@@ -83,13 +83,7 @@ impl Game {
         let mut failure = None;
         if SaveStore::resumes(args) {
             match Self::resumed(&SaveStore::from_args(args), &content) {
-                Resume::Loaded(world) => {
-                    return Ok(Self {
-                        world,
-                        last_outcome: Outcome::default(),
-                        recorder: None,
-                    });
-                }
+                Resume::Loaded(world) => return Ok(Self::from_world(world)),
                 Resume::Failed(message) => failure = Some(message),
                 Resume::NoSave => {}
             }
@@ -125,6 +119,7 @@ impl Game {
         let game = Self {
             world,
             last_outcome,
+            applied: 0,
             recorder,
         };
         game.save_recording();
@@ -134,6 +129,7 @@ impl Game {
     /// Applies `action`, recording it if `--record` is on.
     pub fn apply(&mut self, action: &Action) {
         self.last_outcome = self.world.apply(action);
+        self.applied += 1;
         if let Some((replay, _)) = &mut self.recorder {
             replay.push(action, &self.world);
         }

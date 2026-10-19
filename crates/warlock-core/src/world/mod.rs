@@ -58,6 +58,7 @@ mod level;
 mod path;
 mod schedule;
 mod shoot;
+mod spell;
 mod train;
 
 pub use actor::{Actor, ActorId, ActorKind, Mind, Patrol};
@@ -720,7 +721,23 @@ impl World {
         // the player saw it leave. A burning one is light itself: it is seen wherever it flies
         // in the player's line of sight, in the dark too.
         let mut los: Option<LineOfSight> = None;
+        let line_of_sight = |los: &mut Option<LineOfSight>| {
+            if los.is_none() {
+                let level = self.state.current();
+                let viewer = self.state.player().pos;
+                *los = Some(LineOfSight::compute(viewer, VIEW_RADIUS, |p| {
+                    level.is_opaque(&content, p)
+                }));
+            }
+        };
         for event in events.iter_mut() {
+            // A spell effect is light itself too (`spell.rs`).
+            if let Event::Spell { .. } = event {
+                line_of_sight(&mut los);
+                let los = los.as_ref().expect("computed");
+                spell::perceive_spell(event, |p| perception.is_visible(p) || los.contains(p));
+                continue;
+            }
             if let Event::Missile {
                 object,
                 from,
@@ -729,12 +746,8 @@ impl World {
             } = event
             {
                 let burning = content.object(*object).burning.is_some();
-                if burning && los.is_none() {
-                    let level = self.state.current();
-                    let viewer = self.state.player().pos;
-                    los = Some(LineOfSight::compute(viewer, VIEW_RADIUS, |p| {
-                        level.is_opaque(&content, p)
-                    }));
+                if burning {
+                    line_of_sight(&mut los);
                 }
                 let in_sight = |p: Pos| burning && los.as_ref().is_some_and(|l| l.contains(p));
                 let seen = |p: &Pos| perception.is_visible(*p) || in_sight(*p);
@@ -761,6 +774,7 @@ impl World {
             Event::DoorOpened { pos } | Event::DoorClosed { pos } => perception.is_visible(pos),
             Event::LevelChanged { .. } => true,
             Event::Missile { ref path, .. } => !path.is_empty(),
+            Event::Spell { ref cells, .. } => !cells.is_empty(),
             Event::Attacked {
                 attacker,
                 target,
@@ -970,6 +984,9 @@ impl World {
             Action::SkipTime(duration) => {
                 self.say(format!("Time skips ahead {} (dev).", duration.spoken()));
                 return Spent::Skip(*duration);
+            }
+            Action::Effect { effect, at, to } => {
+                return self.show_effect(effect, *at, *to, events);
             }
         };
         self.took(done, kind)

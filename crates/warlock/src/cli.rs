@@ -49,8 +49,9 @@ pub struct Args {
     pub freeze_time: Option<f32>,
 
     /// Force reduced effects on: no glyph animation, light flicker, movement slides, camera
-    /// easing, particles, bloom, heat haze, screen fades, or falling rain (spec §4.7). The settings
-    /// file can turn them on too; this flag always wins.
+    /// easing, particles, bloom, heat haze, screen fades, screen shake, or falling rain, and spell
+    /// effects are still flashes (spec §4.7). The settings file can turn them on too; this flag
+    /// always wins.
     #[arg(long)]
     pub reduced_effects: bool,
 

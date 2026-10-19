@@ -47,7 +47,8 @@ Game flags (`cargo run -p warlock -- --help`):
   `--capture-after-frames N` (default 10), `--freeze-time SECONDS` pins animation time (glyph
   animations show that moment; slides and camera moves complete instantly).
 - `--reduced-effects` — force reduced effects on (no glyph animation, light flicker, slides,
-  camera easing, particles, bloom/glow, heat haze, fades, or falling rain); always wins over the settings
+  camera easing, particles, bloom/glow, heat haze, fades, screen shake, or falling rain; a spell
+  effect is a still flash); always wins over the settings
   (`Settings::effective_effects(force)`). With `--freeze-time`, particle bursts from the last turn's events (a `--replay`'s last step)
   show a fixed moment of their life; fades complete instantly.
 - Without `--scenario`, `--new`, `--replay`, `--record`, or `--capture` the game opens on the main
@@ -85,7 +86,7 @@ load, stats, and skills with their marks).
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] equip:SLOT:LETTER remove:SLOT fire:X,Y throw:LETTER:X,Y
-rest:GOAL vision:PROFILE skip:DURATION weather:KIND` (`DIR` = N
+rest:GOAL vision:PROFILE skip:DURATION weather:KIND effect:ID@X,Y[>X,Y]` (`DIR` = N
 NE E SE S SW W NW; `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
 player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `SLOT` = a slot id in
 `assets/data/slots.toml`, e.g. `equip:body:b` (put inventory stack `b` on), `remove:body`;
@@ -93,7 +94,10 @@ player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `SLO
 inventory stack `c` there; `PROFILE` = an id in
 `assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are
 `30s`, `10m`, `2h`; `skip` is the dev hour skip; `weather` is the dev weather override, `KIND` =
-`clear`, `overcast`, `rain`, `heavy`, for three hours of game time; `ACTION*N` repeats one, e.g.
+`clear`, `overcast`, `rain`, `heavy`, for three hours of game time; `effect` is the dev spell
+effect, `ID` an id in `assets/data/effects.toml`: `effect:fireball@30,14` (a burst there),
+`effect:fireball@20,10>30,14` (flying there first), `effect:lightning_bolt@21,17>58,17` (a bolt
+toward the second cell), no time and no rules effect, for captures; `ACTION*N` repeats one, e.g.
 `wait*10`). Dump layers: `view` (what the player sees), `fov` (`*` visible),
 `memory` (seen terrain and remembered objects), `light` (perceived brightness of visible cells as a
 digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places over the view: `f`
@@ -145,7 +149,7 @@ Settings (`crates/warlock/src/settings/`): `settings.toml` in the platform confi
 `~/Library/Application Support/warlock`), schema in the `settings/mod.rs` module docs. Changes
 apply live and are written at once; a bad file means defaults plus a warning, per value. Effects:
 `reduced_effects` is a preset over the `[effects]` switches (`EffectSwitches`: glyph_animation,
-flicker, motion, glow, distortion, particles, screen_fades, weather; all on by default). Each consumer reads
+flicker, motion, glow, distortion, particles, screen_fades, screen_shake, weather; all on by default). Each consumer reads
 its own switch from the `render::Effects` resource (the effective values, synced every frame from
 `Settings` + `--reduced-effects`), never the preset; a new effect needs a switch in
 `EffectSwitches`, the file, and a row in `ui/settings_screen.rs`. `clock` (`settings/clock.rs`, `"24h"`/`"12h"`) is the one way a time of day is written
@@ -642,7 +646,7 @@ overcast, `r` rain, `R` heavy). Tune the clouds and the rain with captures of th
 (full-moon midnight) with `--content-dir assets`; the wiki's weather tables come from the file.
 
 Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distortion`,
-`screen_fades`, `weather`) and all off with reduced effects:
+`screen_fades`, `screen_shake`, `weather`) and all off with reduced effects:
 - **Particles** (`render/particles.rs`): stateless, a pure function of visual time and a seed via
   a visual-only SplitMix RNG (ambient emitters: one particle per `1/rate` slot; bursts: `count`
   particles per event). `ui/effects.rs` emits them from perception (visible cells, seen creatures,
@@ -664,16 +668,41 @@ Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distor
   `BELOW` rows), keyed by level position; a particle is drawn only over a cell it rains on, at most
   `MAX_PARTICLES` a frame. Drops are `│` sheared along their velocity (`FreeGlyph::slant`, pixels
   across per pixel down, applied in `free_glyph::glyph_mesh`) and faint (`ParticleEmitter::opacity`).
+- **Spell effects** (spec §4.8 "Spell effects"): `Event::Spell { effect, origin, shape:
+  SpellShape::{Burst { center, radius }, Bolt { path }}, cells }` in `warlock-core/src/action.rs`
+  (traps emit it; `perceive_events` cuts it with `world/spell.rs::perceive_spell` to the cells the
+  player sees or has in line of sight). Data: `data/effects.toml` (`content/effect.rs`,
+  `EffectDef`, `Content::effects()`/`effect(id)`; presentation only, not in the fingerprint; a
+  test plays the same run with changed looks and checks the hashes). The dev action
+  `effect:ID@X,Y[>X,Y]` (`World::show_effect`, `Spent::NoTime`) makes one for captures; because it
+  takes no turn, `ui/spells.rs` reads each outcome once by `Game::applied`, not by the turn. The
+  model is pure in `render/spells.rs` (`Timeline` travel/impact/linger, `strength`, `burst_heat`
+  with `burst_distance` measured on screen, `bolt_strokes` (turned `━` strokes about a cell wide,
+  a slow wander plus jitter, forks only into `open` cells), `darken_curve`, `shake_offset`);
+  `ui/spells.rs` (`Spells`) starts casts (one after another; frozen time: all at visual time 0, so
+  `--freeze-time T` shows T s after), writes `render::lighting::SpellLights` (lights, `dim`, and
+  the cells seen, which spell light passes even when unknown), and draws glyphs and particles last
+  (on top, unlit, undimmed). **Darkening** happens where the light is made: `VisualLight` scales
+  everything but spell light by `SpellLights::keep()` (`(1 − dim)^2.2`, so `darken.amount` is how
+  much darker it looks), free glyphs scale their floor (`glyphs::lit`) and emissive particles and
+  burning missiles their color (`glyphs::darkened`) by `VisualLight::keep()`, and the map shader
+  gets `ConsoleParams::dim` for its floor and unlit (remembered) cells. **Shake**:
+  `Spells::shake` (whole physical pixels) is added to the camera in `draw_map_layer` before
+  `camera_split`, so the grid, free glyphs, and light move together and the viewport edges never
+  gap. `motion` off: a still flash (`Timeline::still`); `screen_fades` off: no darkening;
+  `screen_shake` off: no shake. Tune with `--content-dir` and captures across freeze times (e.g.
+  `effect:fireball@30,14` and `effect:lightning_bolt@21,17>58,17` in the arena, 0.03 to 0.6 s).
 
 `ui/` decides what is drawn from the perception snapshot: `ui/mod.rs` (UI console, map grid in
 base colors, the status bar: `status_segments`), `ui/glyphs.rs` (free glyphs), `ui/motion.rs`
 (slides from `Outcome.events`, one per creature along all the steps it took that turn; camera
 easing; new input completes running motion), `ui/effects.rs` (particles, bursts, glow and haze,
-fades), `ui/rain.rs` (rain), `ui/sounds.rs` (heard-sound markers), `ui/look.rs` (look mode), `ui/dev.rs` (dev overlays: reveal map, the one reader of
+fades), `ui/rain.rs` (rain), `ui/spells.rs` (spell effects), `ui/sounds.rs` (heard-sound markers), `ui/look.rs` (look mode), `ui/dev.rs` (dev overlays: reveal map, the one reader of
 ground truth, and light values).
 Animation curves live in `render/anim.rs` (water: `render/water.rs`, test-only mirrors of the
 shader) and are mirrored in `console.wesl` — change both together. Everything animated is a function of `VisualTime`. Effects are deliberately subtle (the
-bar: sparse, short-lived particles, gentle bloom, barely perceptible distortion, short fades); judge
+bar: sparse, short-lived particles, gentle bloom, barely perceptible distortion, short fades;
+the one exception is spell effects, dramatic but short); judge
 changes by capturing several `--freeze-time` values, at `--scale 1` and `--window 2560x1440
 --scale 2`.
 
@@ -764,6 +793,11 @@ A successful compile does not verify anything visual. Before opening a PR:
   only, the Linux, wasm32, and cargo-deny checks must pass, linear history.
 
 ## Golden screenshots
+
+> **Temporarily advisory (#166).** While the current wave of visual changes lands, CI's golden
+> comparison doesn't fail the build, and feature PRs don't regenerate or commit reference images
+> (adding manifest entries is fine). #166 regenerates and reviews everything, then makes it
+> blocking again; until then, ignore the procedure below.
 
 `tests/golden/manifest.toml` lists one entry per showcase room plus the vast level (its start and
 its river): a scenario and text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file,

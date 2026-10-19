@@ -1,0 +1,121 @@
+# Spell effects (spec §4.8 "Spell effects", §7): what traps' (and later spells') effects look like.
+# Presentation only: no rule reads this file. The renderer draws each perceived spell event with
+# the effect it names; the dev action `effect:ID@X,Y` (or `effect:ID@X,Y>X,Y`) shows one at a cell
+# for captures, a burst of this file's `radius`.
+#
+# An effect runs in three phases from the moment it is perceived:
+#   travel  a burst's projectile flies from its origin to its center (`speed` cells a second; none
+#           when they are the same cell), or a bolt draws out along its path (at `speed`);
+#   impact  `impact` seconds at full strength: a burst grows to its full size over the first
+#           `grow` seconds and burns; a bolt flashes `flashes` times;
+#   linger  `linger` seconds fading: a burst cools from its edge in, a bolt's afterglow dims.
+#
+# Fields:
+#   id, shape      "burst" (a ball over the cells around a center) or "bolt" (a line along a path)
+#   radius         bursts: the dev action's radius in cells (traps and spells give their own)
+#   speed, grow, impact, linger, flashes   the phases above (seconds; `speed` in cells a second)
+#   flicker        seconds each glyph shape lasts before another is picked
+#   glyphs         bursts: by heat, hottest first; bolts: the line glyph of its strokes (each about a
+#                  cell wide, turned along the jagged line), then that of its forks
+#   projectile     bursts: the glyph that flies to the center
+#   colors         hottest (brightest) first: a burst's core and a flash at its brightest, then
+#                  outward and as it cools
+#   glow           how much the hottest glyphs glow (bloom), 0 to 1
+#   fill           bursts: how opaque each cell's glowing body (a solid block a shade cooler than
+#                  its glyph, thinner toward the edge) is at its hottest, 0 to 1
+#   branches       bolts: the chance, per cell and flash, of a short fork off the line
+#   light          { color = [r, g, b], radius }: the light it gives at full strength (255 = fully
+#                  lit, more = overbright, up to 4000; as in lights.toml), from a burst's center
+#                  or along a bolt every other cell. It lights the scene like any light, but
+#                  only on screen.
+#   darken         { amount, seconds }: everything but the effect's own light looks up to `amount`
+#                  darker (0.6 = 60 % darker on screen; at most 0.9) while it peaks, easing back by
+#                  `seconds` after the impact starts. Off with the `screen_fades` switch.
+#   shake          { pixels, radius, seconds }: when it lands within `radius` cells of the player
+#                  the view shakes, at most `pixels` (logical pixels; less the farther), dying
+#                  down over `seconds`. Off with the `screen_shake` switch.
+#   [[effect.particles]]  emitters (spec §4.8): `impact` and `linger` bursts of `count` particles
+#                  from each affected cell as the effect reaches it and as it starts to fade;
+#                  `flight` (a `rate`) from a burst's projectile.
+#
+# With the `motion` switch off (or reduced effects) an effect is a brief, still flash of its cells:
+# no travel, light, darkening, or shake. Keep effects short: dramatic, never long or garish.
+
+[[effect]]
+id = "fireball"
+shape = "burst"
+radius = 2
+speed = 24
+grow = 0.1
+impact = 0.2
+linger = 0.5
+flicker = 0.045
+glyphs = "▓▒░"
+fill = 0.85
+projectile = "●"
+colors = ["#fffff0", "#fff2a0", "#ffc840", "#ff8018", "#e04010", "#a01808", "#4a0c06"]
+glow = 1.0
+light = { color = [1100, 560, 160], radius = 7 }
+darken = { amount = 0.65, seconds = 0.4 }
+shake = { pixels = 4, radius = 6, seconds = 0.3 }
+
+# Embers thrown out of the ball.
+[[effect.particles]]
+on = "impact"
+glyphs = "'`.,·"
+colors = ["#fff0a0", "#ffa030", "#c03010"]
+count = 2
+life = 0.6
+velocity = [0.0, -1.0]
+spread = [3.0, 2.5]
+gravity = 2.0
+area = [0.3, 0.3]
+scale = 0.7
+fade = 0.6
+glow = 0.8
+
+# A faint smoke rising as it cools.
+[[effect.particles]]
+on = "linger"
+glyphs = "░·∙"
+colors = ["#5a524c", "#2c2826"]
+count = 1
+life = 1.0
+velocity = [0.0, -0.8]
+spread = [0.3, 0.2]
+gravity = 0.2
+area = [0.3, 0.2]
+sway = 0.15
+scale = 0.9
+fade = 0.6
+opacity = 0.45
+
+# Sparks trailing the ball as it flies.
+[[effect.particles]]
+on = "flight"
+glyphs = "'`·"
+colors = ["#fff0a0", "#ff9030"]
+rate = 40
+life = 0.25
+velocity = [0.0, 0.0]
+spread = [0.6, 0.6]
+gravity = 1.0
+area = [0.1, 0.1]
+scale = 0.6
+glow = 0.8
+
+[[effect]]
+id = "lightning_bolt"
+shape = "bolt"
+speed = 600
+impact = 0.28
+flashes = 3
+linger = 0.3
+flicker = 0.035
+glyphs = "━─"
+colors = ["#ffffff", "#e4f0ff", "#a8c8ff", "#6a88ff", "#4a40c8", "#2a1870"]
+glow = 1.0
+branches = 0.08
+light = { color = [520, 620, 1000], radius = 5 }
+darken = { amount = 0.7, seconds = 0.45 }
+shake = { pixels = 3, radius = 5, seconds = 0.22 }

@@ -37,6 +37,7 @@ mod screens;
 mod settings_screen;
 mod skills_screen;
 mod sounds;
+mod spells;
 mod target;
 
 pub use menu::Press;
@@ -55,6 +56,7 @@ use crate::settings::{Clock, Settings};
 use bevy::prelude::*;
 use missiles::Missiles;
 use motion::Motion;
+use spells::Spells;
 use warlock_core::Pos;
 use warlock_core::World;
 use warlock_core::burden::Burden;
@@ -79,6 +81,7 @@ impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Motion>()
             .init_resource::<Missiles>()
+            .init_resource::<Spells>()
             .init_resource::<DevOverlays>()
             .init_resource::<ScreenStack>()
             .add_message::<MenuChoice>()
@@ -94,10 +97,11 @@ impl Plugin for UiPlugin {
                             motion::track,
                             effects::track,
                             missiles::track,
+                            spells::track,
                             sounds::track,
                         ),
                         draw_map_layer,
-                        missiles::lights,
+                        (missiles::lights, spells::lights),
                         shadows::update,
                         lighting::update,
                         effects::emit,
@@ -105,6 +109,8 @@ impl Plugin for UiPlugin {
                         sounds::emit,
                         glyphs::emit,
                         (missiles::emit, target::emit_path),
+                        // Spell effects are light themselves: on top of everything on the map.
+                        spells::emit,
                     )
                         .chain()
                         .after(SimSet)
@@ -240,6 +246,7 @@ fn draw_map_layer(
     layout: Res<ConsoleLayout>,
     motion: Res<Motion>,
     missiles: Res<Missiles>,
+    spells: Res<Spells>,
     mode: Res<InputMode>,
     visual: Res<VisualTime>,
     anims: Res<AnimTable>,
@@ -253,7 +260,14 @@ fn draw_map_layer(
         return;
     };
     let cell = layout.cell.as_vec2();
-    let (level_origin, offset) = motion::camera_split(motion.camera(visual.seconds), cell);
+    // A spell effect landing near the player shakes the camera by whole pixels.
+    let shake = if effects.screen_shake {
+        spells.shake(visual.seconds, layout.scale)
+    } else {
+        Vec2::ZERO
+    };
+    let camera = motion.camera(visual.seconds) + shake / cell;
+    let (level_origin, offset) = motion::camera_split(camera, cell);
     let top_left = layout.origin + Vec2::new(area.x as f32, area.y as f32) * cell;
     grid.cell = cell;
     grid.clip = Rect::from_corners(

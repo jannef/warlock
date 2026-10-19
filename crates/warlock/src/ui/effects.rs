@@ -197,8 +197,8 @@ pub(super) fn track(
                 bursts.attack(&view, creature.map(|a| a.creature), to, seed, start);
             }
             // A death shows as the creature gone (and what it dropped) and in the message line;
-            // a missile flies in `missiles`.
-            Event::Died { .. } | Event::Missile { .. } => {}
+            // a missile flies in `missiles`, a spell effect plays in `spells`.
+            Event::Died { .. } | Event::Missile { .. } | Event::Spell { .. } => {}
             Event::LevelChanged { .. } => {
                 bursts.list.clear();
                 tints.clear();
@@ -408,11 +408,12 @@ fn blocked_flows(
     cells
 }
 
-/// A particle's color on screen: glowing particles are light themselves; the rest are lit like
-/// free glyphs (sampled at the particle, else at its cell `home`) and kept within display range.
+/// A particle's color on screen: glowing particles are light themselves (darkened only while a
+/// spell effect darkens the view); the rest are lit like free glyphs (sampled at the particle,
+/// else at its cell `home`) and kept within display range.
 pub(super) fn particle_color(p: &Particle, home: Pos, light: &VisualLight) -> LinearRgba {
     if p.emissive {
-        return p.color;
+        return glyphs::darkened(p.color, light.keep());
     }
     let home = cell(home);
     in_range(glyphs::lit(p.color, light, p.pos, home, TERRAIN_FLOOR))
