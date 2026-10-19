@@ -245,7 +245,7 @@ mod tests {
         w.apply(&Action::Move(Dir::W));
         w.apply(&Action::Move(Dir::W));
         let view = w.perception();
-        let floor = Pos::new(77, 18);
+        let floor = Pos::new(76, 18);
         let text = describe(&view, floor);
         assert_eq!(text, "You remember a stone floor here, in a sanctuary.");
     }
