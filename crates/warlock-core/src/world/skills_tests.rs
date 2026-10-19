@@ -512,8 +512,15 @@ fn skills_and_marks_survive_a_save_and_replays_reproduce_training() {
     let played = replay.run(content.clone()).expect("the replay verifies");
     assert_eq!(played.state(), a.state());
     let bytes = crate::save::encode(&a);
-    let b = crate::save::decode(&bytes, content).expect("loads");
+    let b = crate::save::decode(&bytes, content.clone()).expect("loads");
     assert_eq!(b.state(), a.state());
     assert_eq!(b.state_hash(), a.state_hash());
     assert_eq!(b.perception().own_skills(), a.perception().own_skills());
+    // A state that names a skill the content does not have is refused, not trusted.
+    let mut odd = a.state().clone();
+    let player = odd.player;
+    let unknown = SkillId(content.skills().len() as u8);
+    (odd.actors.get_mut(&player).expect("player").skills).add(unknown, 5);
+    let err = World::from_state(content, odd).unwrap_err();
+    assert!(err.to_string().contains("knows skills"), "{err}");
 }

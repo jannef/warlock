@@ -399,15 +399,17 @@ impl World {
             )));
         }
         let creatures = content.creature_defs().len();
+        let skills = content.skills().len();
         if let Some(actor) = state.actors.values().find(|a| {
             usize::from(a.creature.0) >= creatures
                 || !a.inventory.iter().all(|s| s.is_valid_for(&content))
                 || a.inventory.len() > object::INVENTORY_SLOTS
                 || !a.equipment.is_valid_for(&a.inventory, &content)
+                || a.skills.iter().any(|(id, _)| usize::from(id.0) >= skills)
         }) {
             return Err(WorldError::InconsistentState(format!(
-                "actor {} is a creature, carries objects, or wears them in slots this content \
-                 does not have",
+                "actor {} is a creature, carries objects, wears them in slots, or knows skills \
+                 this content does not have",
                 actor.id
             )));
         }
