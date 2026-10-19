@@ -1,0 +1,11 @@
+[[object]]
+id = "dried_meat"
+name = "strip of dried meat"
+plural = "strips of dried meat"
+glyph = "%"
+fg = "#b06848"
+material = "flesh"
+weight = 150
+value = 3
+stackable = true
+food = { nutrition = 600, turns = 2 }

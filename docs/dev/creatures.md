@@ -7,7 +7,10 @@ Factions and creature behavior (spec §7 "Factions", §5 "Creature sight", §8 "
 `data/factions.toml` (`content/faction.rs`: `Factions`, symmetric hostility, `Stance`; optional,
 without it everyone is neutral, but then no creature may name a faction) and per creature type
 `faction`, `vision`, `sight`, `combat` (`melee`/`ranged`/`caster`), `range`, `opens_doors`
-(`content/creature.rs`, checked in `content/mod.rs`). Stance comes from types:
+(`content/creature.rs`, checked in `content/mod.rs`). Creature types live in `data/creatures/`,
+one file per creature named by its id (`kobold.toml`; the field documentation is in its
+`README.toml`), a table directory read in path order: see "Content directories" in
+`docs/dev/content.md`. Stance comes from types:
 `Content::stance(creature, creature)`, `World::stance(actor, actor)`, and for presentation only
 `PerceptionView::stance(seen actor)` (look mode's "(hostile)"). The AI is `world/ai.rs`
 (look → fight → search the last seen spot → look into the newest unseen noise → back to the post →

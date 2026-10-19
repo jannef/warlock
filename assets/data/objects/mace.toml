@@ -1,0 +1,12 @@
+[[object]]
+id = "mace"
+name = "mace"
+glyph = ")"
+fg = "#a4a8ac"
+material = "iron"
+weight = 2700
+value = 40
+slot = "main_hand"
+damage = "1d8"
+category = "maces"
+kind = "weapon"

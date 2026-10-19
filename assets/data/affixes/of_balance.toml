@@ -1,0 +1,12 @@
+[[suffix]]
+id = "of_balance"
+name = "of Balance"
+effect = "skill"
+skill = "balance"
+bases = ["body", "boots", "amulet"]
+weight = 60
+tiers = [
+  { level = 1, min = 10, max = 20 },
+  { level = 4, min = 20, max = 35 },
+  { level = 7, min = 35, max = 50 },
+]

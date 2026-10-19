@@ -1,0 +1,10 @@
+[[object]]
+id = "mattock"
+name = "mattock"
+glyph = "("
+fg = "#a49680"
+material = "iron"
+weight = 4500
+value = 70
+slot = "tool"
+dig = 15

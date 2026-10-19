@@ -1,0 +1,22 @@
+# Grazing in the meadows and woods of the overworld's local areas.
+[[creature]]
+id = "deer"
+level = 1
+xp = 2
+name = "deer"
+plural = "deer"
+glyph = "d"
+fg = "#c89a64"
+speed = 1300
+faction = "wildlife"
+sight = 12
+footsteps = 50
+hearing = 5
+weight = 80000
+stats = { strength = 14, dexterity = 15, toughness = 12, intelligence = 2, willpower = 12, presence = 5 }
+base_hp = 4
+attack = { damage = "1d4", name = "hoof", verb = "kicks" }
+# Wary game: it hears what others miss.
+skills = { listen = 30 }
+# Very nourishing.
+on_eat = { message = "Venison! It does you good.", satiation = 1000, heal = "1d6" }

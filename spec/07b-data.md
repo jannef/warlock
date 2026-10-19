@@ -5,7 +5,12 @@ Part of the specification, the source of truth for what to build; the index is
 developer notes (CLAUDE.md, `docs/dev/`).
 
 - **Definitions** (TOML): terrain types, creature types, light presets, vision profiles, glyph
-  animations, and effects (glow, heat haze, particle emitters; §4.8). Creature types have a
+  animations, and effects (glow, heat haze, particle emitters; §4.8). A table that grows entry by
+  entry (creature types, objects, materials, affixes) may be a directory read in path order,
+  one file per entry (`data/creatures/kobold.toml`), after the single file of the same name if
+  there is one; ids are numbered in that order, and an id in two files is a load error naming
+  both. The small ordered registries (slots, stats, weapon skills, factions, actions, ...) stay
+  single files. Creature types have a
   `name` and a `plural` (default the name plus `s`; the deer's is "deer"; quest messages count
   them), a
   `speed` (100 to 10 000, default 1000, the player's; never shown to the player; §8 "Speed"): the
@@ -139,11 +144,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   1 to 400, default 100; its light scales with the square), `period_days` (new moon to new moon,
   1 to 3600), and `phase_offset_days` (its age at the calendar epoch, less than the period,
   default 0). §5 "Moonlight".
-- **Objects and materials** (M11): every object (`[[object]]` in `data/objects.toml`) defines the
+- **Objects and materials** (M11): every object (`[[object]]` in `data/objects.toml`, a
+  directory read in path order, one object a file; see Definitions) defines the
   symbol it renders with and its color, material, and weight: `id`, `name` (singular, without an
   article; `plural` defaults to the name plus `s`), `glyph`, `fg`, `material` (an id in
-  `data/materials.toml`, whose `[[material]]` entries have an `id` and a `name`; properties come
-  later), `weight` (integer grams, at least 1), `value` (what one is worth in gold coins,
+  `data/materials.toml`, likewise a directory, whose `[[material]]` entries have an `id` and a
+  `name`; properties come later), `weight` (integer grams, at least 1), `value` (what one is worth in gold coins,
   required, 0 to 1 000 000; shops price their goods from it, §7 "Shops"), and `stackable`
   (default false). Glyphs follow ADOM loosely, and are an object's class (shops trade by class):
   `)` weapons, `}` missile weapons, `/` missiles, `[` armor, `(` tools, `!` potions, `?`
@@ -231,7 +237,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   rings, and amulets have no stats of their own (no implicits yet): they are worn for their magic.
   The wiki lists them all in a generated table.
 - **Magic items** (`data/affixes.toml`, optional; without it loot is always normal; M29, #149;
-  §8 "Magic items"): `[rarity]` the weights of normal, magic, and rare loot (70, 24, 6, not all
+  §8 "Magic items"; the settings below live in that file and the affixes themselves in the
+  `data/affixes/` directory, one a file, read in path order; see Definitions): `[rarity]` the
+  weights of normal, magic, and rare loot (70, 24, 6, not all
   0); `[magic] both`, the chance in percent that a magic item has a prefix and a suffix (25; else
   one of either, evenly); `[rare] affixes`, `[count, weight]` pairs for how many affixes a rare
   item rolls (1 to 6; built in: 3 40, 4 35, 5 17, 6 8); `[names] first` (words, none empty) and

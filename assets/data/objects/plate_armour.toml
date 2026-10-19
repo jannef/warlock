@@ -1,0 +1,14 @@
+[[object]]
+id = "plate_armour"
+name = "suit of plate armour"
+plural = "suits of plate armour"
+glyph = "["
+fg = "#c4ccd4"
+material = "steel"
+weight = 22000
+value = 900
+slot = "body"
+armour = 7
+max_dex = 1
+kind = "body"
+level = 7

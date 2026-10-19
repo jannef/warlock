@@ -1,0 +1,18 @@
+# Bats fly: no footsteps, and the keenest ears.
+[[creature]]
+id = "bat"
+level = 1
+xp = 3
+name = "cave bat"
+glyph = "b"
+fg = "#9a7ab8"
+speed = 2000
+faction = "wildlife"
+vision = "darkvision"
+sight = 8
+hearing = 3
+weight = 500
+size = "small"
+stats = { strength = 1, dexterity = 15, toughness = 10, intelligence = 2, willpower = 14, presence = 4 }
+attack = { damage = "1d3", name = "bite", verb = "bites" }
+on_eat = { message = "Leathery wings, and they disagree with you.", harm = "1d2" }

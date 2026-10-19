@@ -1,0 +1,11 @@
+# Walks the courtyard, singing of the world.
+[[creature]]
+id = "bard"
+name = "wandering bard"
+glyph = "@"
+fg = "#d7a8e6"
+faction = "peaceful"
+footsteps = 50
+hearing = 8
+weight = 64000
+stats = { dexterity = 12, presence = 15 }

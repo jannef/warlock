@@ -1,0 +1,16 @@
+[[object]]
+id = "maul"
+name = "maul"
+glyph = ")"
+fg = "#848a90"
+material = "iron"
+weight = 6000
+value = 90
+slot = "main_hand"
+two_handed = true
+damage = "2d6"
+crit = 3
+category = "maces"
+attack_cost = 1200
+kind = "weapon"
+level = 5

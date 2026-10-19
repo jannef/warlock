@@ -1,0 +1,8 @@
+[[object]]
+id = "sealed_letter"
+name = "sealed letter"
+glyph = "?"
+fg = "#e0d2a8"
+material = "paper"
+weight = 20
+value = 0

@@ -1,0 +1,16 @@
+[[object]]
+id = "short_bow"
+name = "short bow"
+glyph = "}"
+fg = "#b08048"
+material = "wood"
+weight = 700
+value = 60
+slot = "missile_weapon"
+launches = "arrow"
+damage = "1d6"
+category = "bows"
+crit = 3
+strength = 10
+range = 10
+kind = "launcher"

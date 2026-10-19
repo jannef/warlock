@@ -1,0 +1,10 @@
+[[object]]
+id = "wool_cloak"
+name = "wool cloak"
+glyph = "["
+fg = "#6e7c5a"
+material = "cloth"
+weight = 1200
+value = 20
+slot = "cloak"
+kind = "cloak"

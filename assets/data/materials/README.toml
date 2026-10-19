@@ -1,0 +1,7 @@
+# Materials, one file per material, named by its id (`iron.toml`). This file holds only the notes
+# below: a file of comments defines nothing. The game numbers the materials in path order, so a
+# new material is a new file, a renamed id is a renamed file, and the same id in two files is a
+# load error naming both (docs/dev/content.md).
+#
+# Materials objects are made of (spec §7). Fields: id, name. Properties (hardness, burning,
+# rusting) come later.

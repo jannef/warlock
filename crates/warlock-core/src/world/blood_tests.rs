@@ -44,9 +44,6 @@ fn files() -> ContentFiles {
     files
 }
 
-/// The built-in creature types, as written.
-const CREATURES: &str = include_str!("../../../../assets/data/creatures.toml");
-
 static CONTENT: LazyLock<Arc<Content>> =
     LazyLock::new(|| Arc::new(Content::load(&files()).expect("test content is valid")));
 
@@ -166,22 +163,21 @@ fn water_takes_no_blood_and_ichor_is_its_own_colour() {
 
 #[test]
 fn bloodless_creatures_leave_none_and_bad_blood_is_refused() {
-    let mut files = files();
-    let creatures = CREATURES;
-    files.insert(
-        "data/creatures.toml",
-        &creatures.replace("id = \"rat\"\n", "id = \"rat\"\nblood = \"none\"\n"),
-    );
-    let content = Arc::new(Content::load(&files).expect("valid"));
+    // The rat's own file, whichever that is (the table is a directory, one creature a file).
+    let rat_with = |blood: &str| {
+        let mut files = files();
+        let marker = "id = \"rat\"\n";
+        files.edit_table("creatures", |t| {
+            t.replace(marker, &format!("{marker}blood = \"{blood}\"\n"))
+        });
+        files
+    };
+    let content = Arc::new(Content::load(&rat_with("none")).expect("valid"));
     let mut w = World::new(content, "bloodtest", None).expect("world");
     let rat = actor_of(&w, "rat");
     strike(&mut w, rat, hit(30, true), 3);
     assert!(blood(&w).is_empty());
-    files.insert(
-        "data/creatures.toml",
-        &creatures.replace("id = \"rat\"\n", "id = \"rat\"\nblood = \"crimson\"\n"),
-    );
-    let e = Content::load(&files).expect_err("not a colour");
+    let e = Content::load(&rat_with("crimson")).expect_err("not a colour");
     assert!(e.to_string().contains("blood"), "{e}");
 }
 
@@ -255,14 +251,15 @@ fn blood_is_saved() {
 /// The built-in content with every creature bloodless.
 fn bloodless() -> Arc<Content> {
     let mut files = ContentFiles::builtin();
-    let text: String = (CREATURES.lines())
-        .filter(|l| !l.starts_with("blood = "))
-        .map(|l| match l {
-            "[[creature]]" => "[[creature]]\nblood = \"none\"\n".to_string(),
-            l => format!("{l}\n"),
-        })
-        .collect();
-    files.insert("data/creatures.toml", &text);
+    files.edit_table("creatures", |text| {
+        (text.lines())
+            .filter(|l| !l.starts_with("blood = "))
+            .map(|l| match l {
+                "[[creature]]" => "[[creature]]\nblood = \"none\"\n".to_string(),
+                l => format!("{l}\n"),
+            })
+            .collect()
+    });
     Arc::new(Content::load(&files).expect("valid"))
 }
 

@@ -1,8 +1,9 @@
 //! Vision profiles and light presets, named as the player sees them.
 
+use super::order;
 use super::text::{article, capital, yes};
 use std::fmt::Write as _;
-use warlock_core::content::{Content, LightId};
+use warlock_core::content::{AffixKind, Content, LightId};
 
 pub(super) fn vision(content: &Content) -> String {
     let mut out = String::from(
@@ -60,7 +61,8 @@ fn light_name(content: &Content, id: LightId) -> String {
     if !terrain.is_empty() {
         return capital(&terrain.join(", "));
     }
-    let carriers: Vec<String> = (content.creature_defs().iter())
+    let carriers: Vec<String> = (order::creatures(content).into_iter())
+        .map(|(_, c)| c)
         .filter(|c| c.light == Some(id))
         .map(|c| format!("{} {}", article(&c.name), c.name))
         .collect();
@@ -77,7 +79,8 @@ fn light_name(content: &Content, id: LightId) -> String {
     {
         return "Your lantern".into();
     }
-    let affixes: Vec<&str> = (content.affixes().all().iter())
+    let affixes: Vec<&str> = (order::affixes(content, AffixKind::Prefix).into_iter())
+        .chain(order::affixes(content, AffixKind::Suffix))
         .filter(|a| a.tiers.iter().any(|t| t.light == Some(id)))
         .map(|a| a.name.as_str())
         .collect();

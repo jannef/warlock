@@ -1,6 +1,7 @@
 //! Magic items (spec §8 "Magic items"): rarity, base items, prefixes, suffixes, and rare names.
 
 use super::combat::percent;
+use super::order;
 use super::text::capital;
 use super::vision::glow_word;
 use std::fmt::Write as _;
@@ -61,8 +62,10 @@ pub(super) fn magic_bases(content: &Content) -> String {
         "| Base item | Kind | Stats | Weight | From item level | How often |\n\
          |---|---|---|---:|:---:|:---:|\n",
     );
+    let all = order::objects(content);
     for kind in ItemKind::ALL {
-        let bases: Vec<_> = (content.object_defs().iter())
+        let bases: Vec<_> = (all.iter())
+            .map(|(_, o)| *o)
             .filter(|o| o.kind == Some(kind))
             .collect();
         let total: u32 = bases.iter().map(|o| o.frequency).sum();
@@ -106,10 +109,7 @@ fn affix_table(content: &Content, kind: AffixKind) -> String {
         "| {what} | Effect | Rolls on | Tiers (item level: value) | Weight |\n\
          |---|---|---|---|:---:|\n"
     );
-    let all: Vec<&AffixDef> = (content.affixes().all().iter())
-        .filter(|a| a.kind == kind)
-        .collect();
-    for a in all {
+    for a in order::affixes(content, kind) {
         let bases: Vec<&str> = a.bases.iter().map(|k| k.plural()).collect();
         let tiers: Vec<String> = (a.tiers.iter())
             .map(|t| format!("{}: {}", t.level, tier_value(a.effect, t, content)))

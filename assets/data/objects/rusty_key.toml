@@ -1,0 +1,10 @@
+# The rooms locked in the Depths (dungeons.toml).
+[[object]]
+id = "rusty_key"
+name = "rusty key"
+glyph = "("
+fg = "#a86a40"
+material = "iron"
+weight = 50
+value = 0
+key = "depths"

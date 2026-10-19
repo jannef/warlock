@@ -1,5 +1,7 @@
-//! Embeds the TOML content under `assets/{data,levels,scenarios,vaults}` into the binary, so every
-//! build (including the web build) is self-contained.
+//! Embeds the TOML content under `assets/{data,levels,scenarios,vaults}` (subdirectories included:
+//! `data/creatures/kobold.toml`) into the binary, so every build (including the web build) is
+//! self-contained. The list is in sorted path order, the order `ContentFiles::from_dir` reads
+//! a content directory in.
 
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
@@ -31,14 +33,18 @@ fn main() {
     std::fs::write(out_dir.join("builtin_assets.rs"), out).expect("write builtin_assets.rs");
 }
 
+/// Every `.toml` file under `dir`, subdirectories included, as (`rel/name`, absolute path).
 fn collect(dir: &Path, rel: &str, files: &mut Vec<(String, PathBuf)>) {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return;
     };
     for entry in entries.flatten() {
         let path = entry.path();
-        if path.extension().is_some_and(|e| e == "toml") {
-            let name = path.file_name().unwrap_or_default().to_string_lossy();
+        let name = path.file_name().unwrap_or_default().to_string_lossy();
+        if path.is_dir() {
+            println!("cargo:rerun-if-changed={}", path.display());
+            collect(&path, &format!("{rel}/{name}"), files);
+        } else if path.extension().is_some_and(|e| e == "toml") {
             let abs = path.canonicalize().unwrap_or(path.clone());
             files.push((format!("{rel}/{name}"), abs));
         }

@@ -1,4 +1,4 @@
-//! Creature definitions (`assets/data/creatures.toml`).
+//! Creature definitions (`assets/data/creatures/`, one file per creature; docs/dev/content.md).
 
 use super::anim::GlyphAnim;
 use super::disease::DiseaseId;

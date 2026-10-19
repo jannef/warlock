@@ -1,0 +1,12 @@
+[[object]]
+id = "iron_shod_boots"
+name = "pair of iron-shod boots"
+plural = "pairs of iron-shod boots"
+glyph = "["
+fg = "#8a8278"
+material = "iron"
+weight = 2000
+value = 50
+slot = "feet"
+kind = "boots"
+level = 3

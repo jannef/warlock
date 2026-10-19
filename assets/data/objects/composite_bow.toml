@@ -1,0 +1,17 @@
+[[object]]
+id = "composite_bow"
+name = "composite bow"
+glyph = "}"
+fg = "#a06c40"
+material = "wood"
+weight = 1000
+value = 250
+slot = "missile_weapon"
+launches = "arrow"
+damage = "1d8+1"
+crit = 3
+strength = 12
+range = 13
+category = "bows"
+kind = "launcher"
+level = 5

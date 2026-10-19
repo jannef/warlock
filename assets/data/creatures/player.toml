@@ -1,0 +1,9 @@
+[[creature]]
+id = "player"
+name = "you"
+glyph = "@"
+fg = "#f4f4f4"
+speed = 1000
+footsteps = 60
+hearing = 10
+weight = 70000

@@ -1,0 +1,12 @@
+[[object]]
+id = "small_shield"
+name = "small shield"
+glyph = "["
+fg = "#a07a4a"
+material = "wood"
+weight = 2500
+value = 30
+slot = "off_hand"
+shield = 1
+bash = "1d3"
+kind = "shield"

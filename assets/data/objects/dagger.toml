@@ -1,0 +1,18 @@
+[[object]]
+id = "dagger"
+name = "dagger"
+glyph = ")"
+fg = "#c8ccd4"
+material = "steel"
+weight = 450
+value = 30
+slot = "main_hand"
+light_weapon = true
+damage = "1d4"
+category = "daggers"
+threat = 20
+kind = "weapon"
+# Balanced for throwing: it tumbles end over end.
+range = 5
+missile = "†"
+spins = true

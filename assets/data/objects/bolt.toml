@@ -1,0 +1,16 @@
+[[object]]
+id = "bolt"
+name = "crossbow bolt"
+glyph = "/"
+fg = "#b4aca0"
+material = "wood"
+weight = 60
+value = 2
+stackable = true
+slot = "missiles"
+ammo = "bolt"
+breaks = 20
+missile = "➔"
+kind = "ammo"
+level = 2
+frequency = 40

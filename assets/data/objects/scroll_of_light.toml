@@ -1,0 +1,10 @@
+[[object]]
+id = "scroll_of_light"
+name = "scroll of light"
+plural = "scrolls of light"
+glyph = "?"
+fg = "#ece4cc"
+material = "paper"
+weight = 50
+value = 50
+stackable = true

@@ -1,6 +1,7 @@
 //! Hunger (spec §8 "Hunger"): the states, the facts, each race's need, food, and corpses.
 
 use super::burden::factor;
+use super::order;
 use super::text::{capital, signed};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, HungerDef};
@@ -191,7 +192,7 @@ pub(super) fn food(content: &Content) -> String {
         "| Food | Nutrition | Feeds a human for | Turns to eat | Weight |\n\
          |---|---:|---:|:---:|---:|\n",
     );
-    for o in content.object_defs() {
+    for (_, o) in order::objects(content) {
         let (Some(food), None) = (o.food, o.corpse) else {
             continue;
         };
@@ -219,7 +220,7 @@ pub(super) fn corpses(content: &Content) -> String {
         "| Corpse | Size | Weight | Nutrition | Feeds a human for | Turns to eat |\n\
          |---|---|---:|---:|---:|:---:|\n",
     );
-    for o in content.object_defs() {
+    for (_, o) in order::objects(content) {
         let (Some(food), Some(creature)) = (o.food, o.corpse) else {
             continue;
         };

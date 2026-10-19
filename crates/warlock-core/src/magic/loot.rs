@@ -61,10 +61,13 @@ impl LootGrade {
 /// give the draws). `None` when content has no base item found at that level.
 pub fn roll(content: &Content, rng: &mut Rng, level: u8, grade: LootGrade) -> Option<Stack> {
     let level = level.max(1);
-    let bases: Vec<(ObjectId, u32)> = (content.object_defs().iter().enumerate())
+    // The candidates by object id (the string), never by load order: a draw picks the same base
+    // however the object files are laid out (docs/dev/content.md).
+    let mut bases: Vec<(ObjectId, u32)> = (content.object_defs().iter().enumerate())
         .filter(|(_, o)| o.kind.is_some() && o.frequency > 0 && o.level <= level)
         .map(|(i, o)| (ObjectId(i as u16), o.frequency))
         .collect();
+    bases.sort_by(|a, b| content.object(a.0).id.cmp(&content.object(b.0).id));
     let object = *pick_weighted(rng, &bases)?;
     let def = content.object(object);
     let count = if def.kind == Some(ItemKind::Ammo) {
@@ -163,7 +166,8 @@ fn roll_affix(
     let taken: Vec<_> = (rolled.iter())
         .filter_map(|a| affixes.get(&a.id).map(|d| d.group()))
         .collect();
-    let candidates: Vec<(usize, u32)> = (affixes.all().iter().enumerate())
+    // By affix id, like the bases: not by the order the affix files load in.
+    let mut candidates: Vec<(usize, u32)> = (affixes.all().iter().enumerate())
         .filter(|(_, a)| {
             a.kind == kind
                 && a.weight > 0
@@ -173,6 +177,7 @@ fn roll_affix(
         })
         .map(|(i, a)| (i, a.weight))
         .collect();
+    candidates.sort_by(|a, b| affixes.all()[a.0].id.cmp(&affixes.all()[b.0].id));
     let a = &affixes.all()[*pick_weighted(rng, &candidates)?];
     let tiers = a.tiers_at(level);
     let tier = rng.index(tiers);

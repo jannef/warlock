@@ -1,0 +1,11 @@
+[[suffix]]
+id = "of_the_fox"
+name = "of the Fox"
+effect = "skill"
+skill = "listen"
+bases = ["helmet", "ring", "amulet"]
+tiers = [
+  { level = 1, min = 10, max = 20 },
+  { level = 4, min = 20, max = 30 },
+  { level = 7, min = 30, max = 50 },
+]

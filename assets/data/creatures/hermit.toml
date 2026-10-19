@@ -1,0 +1,12 @@
+# Sits by the hub's stairs, and knows its rooms. Slow, and a little hard of hearing.
+[[creature]]
+id = "hermit"
+name = "old hermit"
+glyph = "@"
+fg = "#b9b09c"
+speed = 800
+faction = "peaceful"
+footsteps = 40
+hearing = 15
+weight = 55000
+stats = { strength = 8, dexterity = 8, toughness = 9, intelligence = 14, willpower = 15 }

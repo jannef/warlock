@@ -53,9 +53,8 @@ struct Loose {
 /// What ammunition of the kind missile weapon `launcher` shoots is called, in the plural:
 /// "arrows", "bolts".
 fn ammunition_name(content: &Content, launcher: ObjectId) -> String {
-    let kind = content.object(launcher).launches.as_ref();
-    (content.object_defs().iter())
-        .find(|o| o.ammo.is_some() && o.ammo.as_ref() == kind)
+    let kind = content.object(launcher).launches.as_deref();
+    kind.and_then(|k| content.ammunition(k))
         .map_or_else(|| "ammunition".into(), |o| o.plural.clone())
 }
 

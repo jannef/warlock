@@ -1,0 +1,15 @@
+[[object]]
+id = "rapier"
+name = "rapier"
+glyph = ")"
+fg = "#f0f0f4"
+material = "steel"
+weight = 1100
+value = 70
+slot = "main_hand"
+damage = "1d6"
+threat = 19
+category = "long_blades"
+attack_cost = 900
+kind = "weapon"
+level = 2

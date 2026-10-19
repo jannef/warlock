@@ -91,7 +91,7 @@ pub(super) fn experience_creatures(content: &Content) -> String {
     let mut list: Vec<_> = (content.creature_defs().iter())
         .filter(|c| c.id != "player")
         .collect();
-    list.sort_by_key(|c| (c.level, c.xp));
+    list.sort_by_key(|c| (c.level, c.xp, c.name.to_lowercase()));
     for c in list {
         let _ = writeln!(out, "| {} | {} | {} |", capital(&c.name), c.level, c.xp);
     }

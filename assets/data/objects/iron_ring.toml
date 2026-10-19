@@ -1,0 +1,11 @@
+[[object]]
+id = "iron_ring"
+name = "iron ring"
+glyph = "="
+fg = "#a8acb0"
+material = "iron"
+weight = 10
+value = 50
+slot = "ring"
+kind = "ring"
+frequency = 50

@@ -1,0 +1,14 @@
+[[object]]
+id = "sling"
+name = "sling"
+glyph = "}"
+fg = "#9a7450"
+material = "leather"
+weight = 100
+value = 10
+slot = "missile_weapon"
+launches = "stone"
+damage = "1d4"
+category = "slings"
+range = 9
+kind = "launcher"

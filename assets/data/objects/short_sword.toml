@@ -1,0 +1,14 @@
+[[object]]
+id = "short_sword"
+name = "short sword"
+glyph = ")"
+fg = "#dce0e8"
+material = "steel"
+weight = 1100
+value = 50
+slot = "main_hand"
+light_weapon = true
+damage = "1d6"
+category = "short_blades"
+threat = 20
+kind = "weapon"

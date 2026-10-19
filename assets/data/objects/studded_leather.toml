@@ -1,0 +1,13 @@
+[[object]]
+id = "studded_leather"
+name = "studded leather jerkin"
+glyph = "["
+fg = "#8c6a48"
+material = "leather"
+weight = 6500
+value = 80
+slot = "body"
+armour = 3
+max_dex = 5
+kind = "body"
+level = 2

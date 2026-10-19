@@ -1,0 +1,10 @@
+[[object]]
+id = "apple"
+name = "apple"
+glyph = "%"
+fg = "#d84838"
+material = "plant"
+weight = 150
+value = 1
+stackable = true
+food = { nutrition = 150, turns = 1 }

@@ -30,9 +30,11 @@ fn dig_time(content: &Content, hardness: u16, power: u16, strength: u8) -> Strin
 /// The walls that break (spec §8 "Digging"): how hard each is, how long each digging tool takes
 /// through it at average Strength, and what it becomes.
 pub(super) fn digging(content: &Content) -> String {
-    let tools: Vec<(&str, u16)> = (content.object_defs().iter())
+    // The tools from the weakest, so the pick-axe comes before the mattock.
+    let mut tools: Vec<(&str, u16)> = (content.object_defs().iter())
         .filter_map(|o| o.dig.map(|power| (o.name.as_str(), power)))
         .collect();
+    tools.sort_by_key(|&(name, power)| (power, name));
     let blasts: Vec<(&str, u16)> = (content.trap_defs().iter())
         .filter_map(|t| match t.effect {
             TrapEffect::Burst { blast, .. } if blast > 0 => Some((t.noun.as_str(), blast)),
@@ -77,8 +79,10 @@ pub(super) fn digging(content: &Content) -> String {
 /// How Strength changes digging: the first digging tool through each wall that breaks, at a
 /// few Strength scores.
 pub(super) fn digging_strength(content: &Content) -> String {
-    let Some((tool, power)) =
-        (content.object_defs().iter()).find_map(|o| o.dig.map(|power| (o.name.as_str(), power)))
+    // The weakest tool: the pick-axe.
+    let Some((tool, power)) = (content.object_defs().iter())
+        .filter_map(|o| o.dig.map(|power| (o.name.as_str(), power)))
+        .min_by_key(|&(name, power)| (power, name))
     else {
         return String::new();
     };

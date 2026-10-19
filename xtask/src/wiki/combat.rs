@@ -3,6 +3,7 @@
 
 use super::actions::at_normal_pace;
 use super::objects::goes_on;
+use super::order;
 use super::text::capital;
 use std::fmt::Write as _;
 use warlock_core::combat;
@@ -36,7 +37,7 @@ pub(super) fn weapons(content: &Content) -> String {
          Thrown | Weapon skill | A blow takes |\n|---|:---:|:---:|:---:|:---:|:---:|---|:---:|---|---:|\n",
     );
     let melee = content.action_costs().cost(ActionKind::Melee);
-    for (i, o) in content.object_defs().iter().enumerate() {
+    for (id, o) in order::objects(content) {
         let Some(attack) = &o.attack else { continue };
         let in_hand = (content.slots().iter()).any(|s| s.hand && o.slot.as_ref() == Some(&s.fits));
         let blow = if in_hand {
@@ -51,9 +52,9 @@ pub(super) fn weapons(content: &Content) -> String {
         };
         let strength = attack.strength.map_or("-".to_string(), |s| s.to_string());
         let held = if o.launches.is_some() {
-            format!("{}, shoots", goes_on(content, i).to_lowercase())
+            format!("{}, shoots", goes_on(content, id).to_lowercase())
         } else {
-            goes_on(content, i).to_lowercase()
+            goes_on(content, id).to_lowercase()
         };
         let thrown = match o.range {
             Some(range) if o.is_thrown() => format!("{range} cells"),
@@ -82,11 +83,11 @@ pub(super) fn weapons(content: &Content) -> String {
 }
 
 /// What a launcher kind of ammunition is called: every object of that kind, in the plural, in
-/// data order ("arrows, flaming arrows").
+/// name order ("arrows, flaming arrows").
 fn ammunition_of(content: &Content, kind: &str) -> String {
-    let names: Vec<&str> = (content.object_defs().iter())
-        .filter(|o| o.ammo.as_deref() == Some(kind))
-        .map(|o| o.plural.as_str())
+    let names: Vec<&str> = (order::objects(content).into_iter())
+        .filter(|(_, o)| o.ammo.as_deref() == Some(kind))
+        .map(|(_, o)| o.plural.as_str())
         .collect();
     names.join(", ")
 }
@@ -99,7 +100,7 @@ pub(super) fn launchers(content: &Content) -> String {
          Shoots | A shot takes |\n|---|:---:|:---:|:---:|:---:|:---:|---|---:|\n",
     );
     let costs = content.action_costs();
-    for o in content.object_defs() {
+    for (_, o) in order::objects(content) {
         let (Some(attack), Some(kind)) = (&o.attack, &o.launches) else {
             continue;
         };
@@ -134,11 +135,12 @@ pub(super) fn ammunition(content: &Content) -> String {
     let mut out = String::from(
         "| Ammunition | Shot from | Breaks on a hit | Where it lands |\n|---|---|:---:|---|\n",
     );
-    for o in content.object_defs() {
+    let all = order::objects(content);
+    for (_, o) in &all {
         let Some(kind) = &o.ammo else { continue };
-        let from: Vec<&str> = (content.object_defs().iter())
-            .filter(|l| l.launches.as_ref() == Some(kind))
-            .map(|l| l.name.as_str())
+        let from: Vec<&str> = (all.iter())
+            .filter(|(_, l)| l.launches.as_ref() == Some(kind))
+            .map(|(_, l)| l.name.as_str())
             .collect();
         let breaks = if o.breaks > 0 {
             format!("{}%", o.breaks)
@@ -168,7 +170,7 @@ pub(super) fn ammunition(content: &Content) -> String {
         "\n| Throwing weapon | Damage | Critical on | Critical damage | Range | Breaks on a hit \
          |\n|---|:---:|:---:|:---:|:---:|:---:|\n",
     );
-    for o in content.object_defs() {
+    for (_, o) in &all {
         let (Some(attack), Some(range), true) = (&o.attack, o.range, o.is_thrown()) else {
             continue;
         };
@@ -190,18 +192,21 @@ pub(super) fn ammunition(content: &Content) -> String {
 }
 
 /// Armour and shields: what each adds to Defence, in which category, and the most Dexterity
-/// may add while it is worn.
+/// may add while it is worn. Armour before shields, the lightest Defence first, then by name.
 pub(super) fn armour(content: &Content) -> String {
     let mut out = String::from(
         "| Armour or shield | Worn on | Defence | Category | Most Dexterity adds | Bash |\n\
          |---|---|:---:|---|:---:|:---:|\n",
     );
-    for (i, o) in content.object_defs().iter().enumerate() {
-        let (bonus, category) = match (o.armour, o.shield) {
-            (0, 0) => continue,
-            (a, s) if a >= s => (a, "Armour"),
-            (_, s) => (s, "Shield"),
-        };
+    let mut rows: Vec<_> = (order::objects(content).into_iter())
+        .filter_map(|(id, o)| match (o.armour, o.shield) {
+            (0, 0) => None,
+            (a, s) if a >= s => Some((id, o, a, "Armour")),
+            (_, s) => Some((id, o, s, "Shield")),
+        })
+        .collect();
+    rows.sort_by_key(|&(_, o, bonus, category)| (category, bonus, o.name.to_lowercase()));
+    for (id, o, bonus, category) in rows {
         let max_dex = o
             .max_dex
             .map_or("no limit".to_string(), |m| format!("+{m}"));
@@ -210,7 +215,7 @@ pub(super) fn armour(content: &Content) -> String {
             out,
             "| {} | {} | +{bonus} | {category} | {max_dex} | {bash} |",
             capital(&o.name),
-            goes_on(content, i).to_lowercase(),
+            goes_on(content, id).to_lowercase(),
         );
     }
     out

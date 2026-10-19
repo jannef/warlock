@@ -1,6 +1,7 @@
 //! Objects: the objects, shops, equipment slots, materials, and the pack.
 
 use super::actions::at_normal_pace;
+use super::order;
 use super::text::{capital, glyph, yes};
 use std::fmt::Write as _;
 use warlock_core::content::{BASE_TURN, Content, ObjectClass, ObjectDef, ObjectId, price};
@@ -13,17 +14,16 @@ pub(super) fn equipment(content: &Content) -> String {
         "| Letter | Slot | What goes there | On or off takes |\n|:---:|---|---|---:|\n",
     );
     for (i, (slot, def)) in content.slot_ids().enumerate() {
-        let fits: Vec<String> = (content.object_defs().iter().enumerate())
-            .filter(|&(o, _)| content.fits_properly(ObjectId(o as u16), slot))
+        let fits: Vec<String> = (order::objects(content).into_iter())
+            .filter(|&(id, _)| content.fits_properly(id, slot))
             .map(|(_, o)| {
                 let mut name = o.name.clone();
                 if o.two_handed {
                     name.push_str(" (both hands)");
                 }
                 if let Some(kind) = &o.launches {
-                    let ammo = (content.object_defs().iter())
-                        .find(|a| a.ammo.as_ref() == Some(kind))
-                        .map_or(kind.clone(), |a| a.plural.clone());
+                    let ammo =
+                        (content.ammunition(kind)).map_or(kind.clone(), |a| a.plural.clone());
                     let _ = write!(name, " (shoots {ammo})");
                 }
                 name
@@ -50,8 +50,7 @@ pub(super) fn equipment(content: &Content) -> String {
 }
 
 /// Where an object goes, if it can be worn or wielded: the slots that fit it.
-pub(super) fn goes_on(content: &Content, object: usize) -> String {
-    let id = ObjectId(object as u16);
+pub(super) fn goes_on(content: &Content, id: ObjectId) -> String {
     // Where it belongs; else where it may be readied (rocks: the missile weapon slot).
     let names = |proper: bool| -> Vec<String> {
         (content.slot_ids())
@@ -98,13 +97,13 @@ pub(super) fn object_class(glyph: char) -> Option<&'static str> {
     })
 }
 
-/// Every object but corpses (Food and corpses has those).
+/// Every object but corpses (Food and corpses has those), by class, then name.
 pub(super) fn objects(content: &Content) -> String {
     let mut out = String::from(
         "| Object | Glyph | Kind | Material | Weight (each) | Worth (each) | Stacks | Worn or wielded on |\n\
          |---|:---:|---|---|---:|---:|:---:|---|\n",
     );
-    for (i, o) in content.object_defs().iter().enumerate() {
+    for (id, o) in order::objects(content) {
         if o.corpse.is_some() {
             continue;
         }
@@ -121,7 +120,7 @@ pub(super) fn objects(content: &Content) -> String {
             content.material(o.material).name,
             format_weight(u64::from(o.weight)),
             yes(o.stackable),
-            goes_on(content, i)
+            goes_on(content, id)
         );
     }
     out
@@ -159,11 +158,13 @@ pub(super) fn shops(content: &Content) -> String {
     out
 }
 
+/// The materials by name, each with the objects made of it (by class, then name).
 pub(super) fn materials(content: &Content) -> String {
     let mut out = String::from("| Material | Objects made of it |\n|---|---|\n");
-    for (i, m) in content.materials().iter().enumerate() {
-        let of_it = |o: &&ObjectDef| usize::from(o.material.0) == i;
-        let objects = content.object_defs().iter().filter(of_it);
+    let all = order::objects(content);
+    for (id, m) in order::materials(content) {
+        let of_it = |o: &&ObjectDef| o.material == id;
+        let objects = all.iter().map(|(_, o)| *o).filter(of_it);
         let mut made: Vec<&str> = (objects.clone())
             .filter(|o| o.corpse.is_none())
             .map(|o| o.plural.as_str())

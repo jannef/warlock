@@ -1,0 +1,10 @@
+[[suffix]]
+id = "of_the_mule"
+name = "of the Mule"
+effect = "carry"
+bases = ["body", "cloak", "gloves", "boots", "ring", "amulet"]
+tiers = [
+  { level = 1, min = 3, max = 5 },
+  { level = 4, min = 5, max = 8 },
+  { level = 7, min = 8, max = 12 },
+]

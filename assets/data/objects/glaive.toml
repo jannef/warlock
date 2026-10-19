@@ -1,0 +1,18 @@
+[[object]]
+id = "glaive"
+name = "glaive"
+glyph = ")"
+fg = "#b0a898"
+material = "iron"
+weight = 5000
+value = 90
+slot = "main_hand"
+two_handed = true
+damage = "1d10"
+threat = 20
+category = "polearms"
+attack_cost = 1100
+# Its long haft keeps foes at bay.
+parry = 1
+kind = "weapon"
+level = 5

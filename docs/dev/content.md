@@ -14,3 +14,35 @@ file's optional `arrival = "..."` line is said when the player arrives by stairs
 `flow_speed` percent), and the shared legend draws it as arrows (`→` normal, `⇒` double speed).
 Flow is presentation data carried by `LevelTemplate::flow` / `LevelState::flow` and read by the
 renderer through `PerceptionView::flow` (visible cells only); no rule reads it.
+
+## Content directories
+
+The tables that grow entry by entry are directories, so two PRs adding an entity never touch
+the same file: `assets/data/creatures/`, `objects/` (base items included), `materials/`, and
+`affixes/`, **one file per entity, named by its id** (`creatures/kobold.toml`,
+`affixes/of_the_bear.toml`). A family file holds several entries only for a tight set of
+variants always edited together, named after the family (`objects/arrows.toml`: the arrow, the
+flaming arrow, and the burning arrow it flies as). Each directory's `README.toml` is comments
+only (the field documentation and notes for authors; a file of comments defines nothing, the
+loaders take a missing array as empty). `build.rs` embeds and `ContentFiles::from_dir` reads
+`assets/{data,levels,scenarios,vaults}` recursively, both in sorted path order, and a table
+loader reads `ContentFiles::table(name)`: `data/<name>.toml` first, if there is one (a whole
+table in one file is still accepted, so test fixtures that insert it keep working), then
+`data/<name>/**/*.toml` in path order. Ids (`CreatureId`, `ObjectId`, `MaterialId`, an affix's
+index) are indices in that order and feed the content fingerprint, so moving entries between
+files changes ids and invalidates saves (the release bump covers it). Each file is parsed on its
+own, so an error names the file the bad entry is in; **a duplicate id across files is a
+`ContentError` naming both** (`content::duplicate_id`). For affixes the scalar tables (`[rarity]`,
+`[magic]`, `[rare]`, `[names]`) stay in the settings file `data/affixes.toml`, each set in
+exactly one file of the table (a second file setting one is an error naming both), and the
+entry files hold `[[prefix]]`/`[[suffix]]` only. `ContentFiles::remove("data/creatures/")` drops
+a directory; `ContentFiles::edit_table(name, edit)` rewrites every file of a table (tests that
+change one built-in line). Every other `data/*.toml` file is a single file whose order means
+something (slots, stats, weapon skills, factions, actions, ...): never split those.
+
+**Nothing visible follows the load order of these four tables.** Wiki tables sort by an
+explicit key (`xtask/src/wiki/order.rs`: objects by class, weapon skill, name; creatures,
+materials, and affixes by name), the shop stock a generated shop draws from
+(`mapgen/shop.rs`) and the bases and affixes loot rolls from (`magic/loot.rs`) are sorted by id
+before the draw, and "shoots arrows" names `Content::ammunition(kind)`, the first ammunition of
+the kind by id. A new list over one of these tables gets a sort key too.

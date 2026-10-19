@@ -1,0 +1,10 @@
+[[object]]
+id = "ration"
+name = "food ration"
+glyph = "%"
+fg = "#c8a878"
+material = "plant"
+weight = 500
+value = 5
+stackable = true
+food = { nutrition = 1500, turns = 4 }

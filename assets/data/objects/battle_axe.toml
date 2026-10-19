@@ -1,0 +1,14 @@
+[[object]]
+id = "battle_axe"
+name = "battle axe"
+glyph = ")"
+fg = "#a8a090"
+material = "iron"
+weight = 2600
+value = 60
+slot = "main_hand"
+damage = "1d8"
+crit = 3
+category = "axes"
+kind = "weapon"
+level = 2

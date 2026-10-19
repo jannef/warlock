@@ -1,0 +1,17 @@
+[[object]]
+id = "long_bow"
+name = "long war bow"
+glyph = "}"
+fg = "#8c6236"
+material = "wood"
+weight = 1300
+value = 200
+slot = "missile_weapon"
+launches = "arrow"
+damage = "1d8+2"
+category = "bows"
+crit = 3
+strength = 14
+range = 15
+kind = "launcher"
+level = 3

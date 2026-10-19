@@ -1,0 +1,11 @@
+[[prefix]]
+id = "burly"
+name = "Burly"
+effect = "carry"
+bases = ["body", "gloves"]
+weight = 60
+tiers = [
+  { level = 1, min = 3, max = 5 },
+  { level = 4, min = 5, max = 8 },
+  { level = 7, min = 8, max = 12 },
+]

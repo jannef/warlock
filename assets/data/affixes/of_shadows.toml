@@ -1,0 +1,11 @@
+[[suffix]]
+id = "of_shadows"
+name = "of Shadows"
+effect = "skill"
+skill = "stealth"
+bases = ["cloak", "gloves", "boots", "amulet"]
+tiers = [
+  { level = 1, min = 5, max = 10 },
+  { level = 4, min = 10, max = 20 },
+  { level = 7, min = 20, max = 30 },
+]

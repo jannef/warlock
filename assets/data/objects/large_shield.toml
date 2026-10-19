@@ -1,0 +1,13 @@
+[[object]]
+id = "large_shield"
+name = "large shield"
+glyph = "["
+fg = "#90724c"
+material = "wood"
+weight = 6000
+value = 70
+slot = "off_hand"
+shield = 2
+bash = "1d4"
+kind = "shield"
+level = 3

@@ -1,5 +1,6 @@
 //! Doors (spec §8 "Doors"): kicking them in, and the keys.
 
+use super::order;
 use super::text::{capital, glyph};
 use std::fmt::Write as _;
 use warlock_core::content::Content;
@@ -34,7 +35,7 @@ pub(super) fn doors(content: &Content) -> String {
 /// The keys and the locks they open (spec §8 "Doors").
 pub(super) fn keys(content: &Content) -> String {
     let mut out = String::from("| Key | Glyph | Opens |\n|---|:---:|---|\n");
-    for o in content.object_defs() {
+    for (_, o) in order::objects(content) {
         let opens = match &o.key {
             Some(door::Key::Skeleton) => "every lock".to_string(),
             Some(door::Key::Lock(id)) => format!("locks named `{id}`"),

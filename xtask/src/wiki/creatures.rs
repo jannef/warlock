@@ -1,22 +1,23 @@
 //! Creatures and factions (spec §7 "Factions"): never their hidden numbers.
 
+use super::order;
 use super::text::{capital, glyph, yes};
 use std::fmt::Write as _;
-use warlock_core::content::{Combat, Content, CreatureId, FactionId, Stance};
+use warlock_core::content::{Combat, Content, FactionId, Stance};
 
 /// Speed, eyes, and sight radius are deliberately left out: they are hidden from the player (spec
-/// §8 "Speed"); how a creature stands toward the player and how it attacks are seen in play.
+/// §8 "Speed"); how a creature stands toward the player and how it attacks are seen in play. By
+/// name.
 pub(super) fn creatures(content: &Content) -> String {
     let mut out = String::from(
         "| Creature | Glyph | Faction | Toward you | Attacks | Opens doors | Carries a light | \
          Drops magic |\n|---|:---:|---|---|---|:---:|:---:|:---:|\n",
     );
     let player = content.creature_id("player");
-    for (i, c) in content.creature_defs().iter().enumerate() {
+    for (id, c) in order::creatures(content) {
         if c.id == "player" {
             continue;
         }
-        let id = CreatureId(i as u16);
         let faction = c.faction.map_or_else(
             || "none".into(),
             |f| capital(&content.factions().def(f).name),

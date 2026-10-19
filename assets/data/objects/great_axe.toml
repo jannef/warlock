@@ -1,0 +1,16 @@
+[[object]]
+id = "great_axe"
+name = "great axe"
+glyph = ")"
+fg = "#9c9488"
+material = "iron"
+weight = 5000
+value = 120
+slot = "main_hand"
+two_handed = true
+damage = "1d12"
+crit = 3
+category = "axes"
+attack_cost = 1200
+kind = "weapon"
+level = 4

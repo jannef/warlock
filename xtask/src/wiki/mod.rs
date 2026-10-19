@@ -25,6 +25,7 @@ mod hunger;
 mod magic;
 mod moons;
 mod objects;
+mod order;
 mod rooms;
 mod scenarios;
 mod sight;
@@ -309,25 +310,26 @@ mod tests {
         );
         let equipment = text("equipment.md");
         assert!(
-            equipment.contains("| `a` | Head | Leather cap, iron helm, great helm | 6 seconds |"),
+            equipment.contains("| `a` | Head | Great helm, iron helm, leather cap | 6 seconds |"),
             "{equipment}"
         );
         assert!(equipment.contains(
-            "| `c` | Body | Padded coat, leather jerkin, studded leather jerkin, chain mail shirt, \
-             suit of scale mail, suit of banded mail, suit of plate armour | 18 seconds |"
+            "| `c` | Body | Chain mail shirt, leather jerkin, padded coat, studded leather jerkin, \
+             suit of banded mail, suit of plate armour, suit of scale mail | 18 seconds |"
         ));
-        assert!(equipment.contains(", quarterstaff (both hands), ironwood staff (both hands) |"));
-        assert!(equipment.contains("| `f` | Off hand | Dagger, stiletto, short sword, "));
+        // Weapons by skill, then name (the staves last among the melee skills).
+        assert!(equipment.contains(", ironwood staff (both hands), quarterstaff (both hands) |"));
+        assert!(equipment.contains("| `f` | Off hand | Dagger, stiletto, short sword, buckler, "));
         assert!(equipment.contains(
-            "| `k` | Missile weapon | Short bow (shoots arrows), long war bow (shoots arrows), \
-             composite bow (shoots arrows), crossbow (shoots crossbow bolts), heavy crossbow \
+            "| `k` | Missile weapon | Composite bow (shoots arrows), long war bow (shoots arrows), \
+             short bow (shoots arrows), crossbow (shoots crossbow bolts), heavy crossbow \
              (shoots crossbow bolts), sling (shoots sling stones), any other weapon, and anything \
              made for throwing |"
         ));
         assert!(equipment.contains(
-            "| `l` | Missiles | Arrow, flaming arrow, crossbow bolt, sling stone | 6 seconds |"
+            "| `l` | Missiles | Arrow, crossbow bolt, flaming arrow, sling stone | 6 seconds |"
         ));
-        assert!(equipment.contains("| `m` | Tool | Pick-axe, mattock | 6 seconds |"));
+        assert!(equipment.contains("| `m` | Tool | Mattock, pick-axe | 6 seconds |"));
         let digging = text("digging.md");
         assert!(
             digging.contains(
@@ -360,12 +362,12 @@ mod tests {
         let ammunition = text("ammunition.md");
         assert!(
             ammunition.contains(
-                "| Flaming arrow | Short bow, long war bow, composite bow | never | burns as a \
+                "| Flaming arrow | Composite bow, long war bow, short bow | never | burns as a \
                  burning arrow for 1 minute, lighting 5 cells around |"
             ),
             "{ammunition}"
         );
-        assert!(ammunition.contains("| Arrow | Short bow, long war bow, composite bow | 30% |"));
+        assert!(ammunition.contains("| Arrow | Composite bow, long war bow, short bow | 30% |"));
         assert!(ammunition.contains("| Dagger | 1d4 | 20–24 | ×2 | 5 cells | never |"));
         assert!(ammunition.contains("| Rock | 1d3 |"));
         let actions = text("actions.md");
@@ -379,7 +381,9 @@ mod tests {
             actions
                 .contains("| Putting something on, or taking it off: Body | 3000 | 18 seconds |")
         );
-        assert!(text("materials.md").contains("| Steel | daggers, stilettos, short swords,"));
+        assert!(
+            text("materials.md").contains("| Steel | daggers, stilettos, scimitars, short swords,")
+        );
         assert!(text("pack.md").contains("| Your own weight | 70 kg |"));
         let burden = text("burden.md");
         for row in [

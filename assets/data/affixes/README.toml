@@ -1,0 +1,58 @@
+# Affixes, one file per prefix or suffix, named by its id (`sharp.toml`, `of_the_bear.toml`); a
+# file holds `[[prefix]]` or `[[suffix]]` entries only. The settings of magic items (`[rarity]`,
+# `[magic]`, `[rare]`, `[names]`) stay in ../affixes.toml, and may be set in one file only. This
+# file holds only the notes below: a file of comments defines nothing. The game numbers the
+# affixes in path order, so a new affix is a new file (never edited into another's), a renamed id
+# is a renamed file, and the same id in two files is a load error naming both
+# (docs/dev/content.md).
+#
+# Every affix ([[prefix]] or [[suffix]]) defines:
+#   id      stable name: items record their affixes by it (saves, `[[item]]` in level files)
+#   name    "Sharp" (a prefix, before the item's name) or "of the Bear" (a suffix, after it)
+#   effect  what it does, one of:
+#             to_hit        + to hit
+#             damage        + to every roll of the damage dice
+#             extra_damage  adds 1dN to every roll of the damage (the value is N)
+#             threat        widens the critical threat range by N natural rolls
+#             crit          + to the critical multiplier (at most ×5)
+#             attack_speed  attacks N% faster (less of their cost; at most 50 in all)
+#             range         + cells it shoots or is thrown
+#             draw          a bow needs N less Strength
+#             durability    breaks N% less often
+#             parry, armour, shield   + to the item's own Parry, Armour, or Shield
+#             max_dex       + to the most Dexterity may add to Defence while it is worn
+#             weight        N% lighter
+#             dodge         + Dodge (bonuses add up)
+#             deflection    + Deflection (the best counts)
+#             natural       + natural armour (the best counts, with a creature's own)
+#             max_hp        + maximum hit points
+#             regeneration  hit points come back N% faster
+#             strength, dexterity, toughness, intelligence, willpower, presence   + to the score
+#             move_speed    steps N% faster (at most 50 in all)
+#             carry         + N kg carrying limit
+#             stealth       footsteps N% quieter
+#             light         the wearer carries the light of a preset (lights.toml)
+#             skill         + to the value of the affix's `skill` (an id in skills.toml) for
+#                           what that skill gives, trained or not
+#           Attack effects (to_hit through durability) on a weapon, a missile weapon, or
+#           ammunition change the attacks made with it (local); on anything else every attack
+#           (global). parry, armour, shield, max_dex, and weight change the item itself; the
+#           rest change whoever wears or wields it. An item has at most one affix of each effect
+#           (of each skill, for skill affixes).
+#   bases   the kinds of item that may roll it: weapon, launcher, ammo, body, helmet, cloak,
+#           gloves, boots, shield, ring, amulet. An affix whose effect the item lacks the means
+#           for (range without a range, draw without a Strength to draw, durability on what never
+#           breaks, armour, shield, or max_dex on what has none) does not roll on it
+#   weight  how often it rolls among those that may (default 100)
+#   tiers   from the lowest item level (`level`, the dungeon depth) each is found at, the range
+#           its value is rolled in (`min`, `max`); a light's tiers name a `light` preset instead.
+#           Loot picks among the tiers its item level allows, evenly.
+
+# Notes on the groups, in the order they were kept in:
+#
+# Prefixes: mostly offensive, or flat defence and life.
+#
+# Suffixes: mostly utility and stats, speed, criticals, and regeneration.
+#
+# Skill suffixes (spec §8 "Skills"): `effect = "skill"` with the `skill` (an id in skills.toml)
+# whose value it raises for what the skill gives, trained or not (untrained, from 0).

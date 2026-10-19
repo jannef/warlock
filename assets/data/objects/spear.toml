@@ -1,0 +1,16 @@
+[[object]]
+id = "spear"
+name = "spear"
+glyph = ")"
+fg = "#b8955a"
+material = "wood"
+weight = 1800
+value = 35
+slot = "main_hand"
+damage = "1d8"
+category = "spears"
+crit = 3
+kind = "weapon"
+# Thrown point first.
+range = 6
+missile = "⟶"

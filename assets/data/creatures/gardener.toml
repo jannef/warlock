@@ -1,0 +1,11 @@
+# Tends the courtyard's flower beds.
+[[creature]]
+id = "gardener"
+name = "gardener"
+glyph = "@"
+fg = "#9cc46a"
+faction = "peaceful"
+footsteps = 50
+hearing = 10
+weight = 72000
+stats = { strength = 12, toughness = 12, intelligence = 9 }

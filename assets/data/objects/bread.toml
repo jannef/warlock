@@ -1,0 +1,11 @@
+[[object]]
+id = "bread"
+name = "loaf of bread"
+plural = "loaves of bread"
+glyph = "%"
+fg = "#d8b070"
+material = "plant"
+weight = 400
+value = 2
+stackable = true
+food = { nutrition = 800, turns = 3 }

@@ -4,8 +4,10 @@ Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185)
 rules it implements are in spec/08g-magic-items.md. Keep it current with the code, as CLAUDE.md says.
 
 Magic items (spec §8 "Magic items", #149) live in `warlock-core`: `content/affix.rs`
-(`data/affixes.toml`: `ItemKind`, `Effect`, `AffixDef` with tiers, `Rarity`, rarity weights,
-rare names), base item fields in `content/object.rs` (`kind`, `level`, `frequency`,
+(`data/affixes.toml`, the settings file with the rarity weights and rare names, and
+`data/affixes/`, one file per prefix or suffix named by its id, read in path order; see
+"Content directories" in `docs/dev/content.md`: `ItemKind`, `Effect`, `AffixDef` with tiers,
+`Rarity`), base item fields in `content/object.rs` (`kind`, `level`, `frequency`,
 `attack_cost`; the weapon skill `category` names the item in descriptions, `weapon_noun`), and
 `magic/` (`mod.rs`: `Magic`/`Affix`, the instance on a `Stack` (saved, hashed), `check`;
 `mods.rs`: `Mods::local` (an item's own and its attacks') and `Mods::worn` (what an actor wears

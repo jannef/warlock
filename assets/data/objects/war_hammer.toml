@@ -1,0 +1,14 @@
+[[object]]
+id = "war_hammer"
+name = "war hammer"
+glyph = ")"
+fg = "#8c949c"
+material = "iron"
+weight = 2300
+value = 50
+slot = "main_hand"
+damage = "1d8"
+crit = 3
+category = "maces"
+kind = "weapon"
+level = 3
