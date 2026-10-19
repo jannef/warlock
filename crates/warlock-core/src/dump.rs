@@ -1,8 +1,8 @@
 //! Text and JSON dumps of the simulation for developers and agents (spec §9).
 //!
-//! Every layer except [`Layer::Truth`] and [`Layer::Actors`] is built from [`World::perception`]
-//! only, so dumps cannot leak information the player does not have. `Truth` and `Actors` read
-//! ground truth and are dev-only.
+//! Every layer except [`Layer::Truth`], [`Layer::Actors`], and [`Layer::Rooms`] is built from
+//! [`World::perception`] only, so dumps cannot leak information the player does not have.
+//! `Truth`, `Actors`, and `Rooms` read ground truth and are dev-only.
 
 use crate::action::letter;
 use crate::character::Gender;
@@ -55,10 +55,14 @@ pub enum Layer {
     /// and wields), its stats (scores and potentials), and its trained skills with their marks
     /// (ground truth). **Dev-only.**
     Actors,
+    /// The level's special rooms (spec §7 "Special rooms"; ground truth): the terrain, with the
+    /// plain ground of each special room drawn as its effect's `mark`, then a line per room
+    /// (`s shadowed room at (12, 3)-(20, 9), entered`). **Dev-only.**
+    Rooms,
 }
 
 impl Layer {
-    const ALL: [Layer; 11] = [
+    const ALL: [Layer; 12] = [
         Layer::View,
         Layer::Fov,
         Layer::Memory,
@@ -70,6 +74,7 @@ impl Layer {
         Layer::Skills,
         Layer::Truth,
         Layer::Actors,
+        Layer::Rooms,
     ];
 
     /// Layer name as used on the command line and in JSON.
@@ -86,12 +91,13 @@ impl Layer {
             Layer::Skills => "skills",
             Layer::Truth => "truth",
             Layer::Actors => "actors",
+            Layer::Rooms => "rooms",
         }
     }
 
     /// Whether the layer reads ground truth.
     pub const fn is_dev_only(self) -> bool {
-        matches!(self, Layer::Truth | Layer::Actors)
+        matches!(self, Layer::Truth | Layer::Actors | Layer::Rooms)
     }
 }
 
@@ -105,7 +111,7 @@ impl FromStr for Layer {
             .ok_or_else(|| {
                 format!(
                     "unknown layer `{s}` (expected view, fov, memory, light, sound, inventory, \
-                     equipment, stats, skills, truth, actors)"
+                     equipment, stats, skills, truth, actors, rooms)"
                 )
             })
     }
@@ -121,6 +127,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
     match layer {
         Layer::Truth => truth_rows(world),
         Layer::Actors => actor_rows(world),
+        Layer::Rooms => room_rows(world),
         Layer::Inventory => inventory_rows(&world.perception()),
         Layer::Equipment => equipment_rows(&world.perception()),
         Layer::Stats => stat_rows(&world.perception()),
@@ -168,7 +175,8 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
         | Layer::Stats
         | Layer::Skills
         | Layer::Truth
-        | Layer::Actors => {
+        | Layer::Actors
+        | Layer::Rooms => {
             unreachable!("not a map built from perception")
         }
     }
@@ -215,6 +223,35 @@ fn truth_rows(world: &World) -> Vec<String> {
                 .map_or(' ', |t| content.terrain(t).glyph),
         }
     })
+}
+
+/// The level's special rooms (ground truth): the terrain with each special room's plain ground
+/// ([`crate::content::TerrainDef::is_plain_ground`]) drawn as its effect's mark, then one line
+/// per room.
+fn room_rows(world: &World) -> Vec<String> {
+    let content = world.content();
+    let (level, _) = world.ground_truth();
+    let mut out = rows(level.width(), level.height(), |p| {
+        let Some(t) = level.terrain_at(p) else {
+            return ' ';
+        };
+        let room = level.rooms().iter().find(|r| r.contains(p));
+        match room {
+            Some(room) if content.terrain(t).is_plain_ground() => {
+                content.room_effect(room.effect).mark
+            }
+            _ => content.terrain(t).glyph,
+        }
+    });
+    for room in level.rooms() {
+        let effect = content.room_effect(room.effect);
+        let entered = if room.entered { ", entered" } else { "" };
+        out.push(format!(
+            "{} {} at {}-{}{entered}",
+            effect.mark, effect.name, room.min, room.max
+        ));
+    }
+    out
 }
 
 /// The player's inventory (`a - a dagger (450 g)`, `b - a leather jerkin (being worn) (3.5
@@ -420,9 +457,9 @@ pub fn ascii(world: &World, layers: &[Layer]) -> String {
     out
 }
 
-/// Structured dump: turn, game time, level, viewer, the weather (under the open sky; else
-/// null), seen actors, heard sounds, the player's inventory, equipment (by slot id), weight, and
-/// scores (by stat id),
+/// Structured dump: turn, game time, level, viewer, the special room the player stands in if they
+/// know it (its effect id; else null), the weather (under the open sky; else null), seen actors,
+/// heard sounds, the player's inventory, equipment (by slot id), weight, and scores (by stat id),
 /// recent messages, the requested layers as arrays of rows, and optionally the full
 /// [`crate::WorldState`] under `state`.
 pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
@@ -490,6 +527,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "time": time_json(world),
         "level": view.level_id(),
         "viewer": view.viewer(),
+        "room": view.room(view.viewer()).map(|e| e.id.as_str()),
         "weather": view.weather(),
         "hash": format!("{:016x}", world.state_hash()),
         "seen_actors": seen,
@@ -600,6 +638,7 @@ mod tests {
         assert_eq!(value["layers"]["fov"].as_array().map(Vec::len), Some(21));
         assert!(value["layers"].get("memory").is_none());
         assert_eq!(value["state"]["turn"], 1);
+        assert!(value["room"].is_null(), "not in a special room");
         assert!(value["seen_actors"][0]["kind"] == "player");
         // The player's character, and their own scores by stat id; nothing else about stats.
         assert_eq!(

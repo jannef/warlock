@@ -4,8 +4,8 @@
 //! (month names, moons, weather, terrain, vision profiles, light presets, creatures, factions,
 //! objects and materials, equipment slots, scenarios, action costs, races and classes, their sizes
 //! and carrying limits, the horoscope, skills: what each does, how it trains, what it gives by
-//! value, who trains it, and the increase curve) and a few constants of the rules (sight radii, the
-//! pack's size, the stats' names, what each gender raises). Those are written to
+//! value, who trains it, and the increase curve, special rooms) and a few constants of the rules
+//! (sight radii, the pack's size, the stats' names, what each gender raises). Those are written to
 //! `wiki/src/generated/*.md` from the built-in content, and the pages pull them in with
 //! `{{#include generated/NAME.md}}`, so they cannot drift. Output is deterministic. `--check`
 //! fails when a file is stale; `--build` also runs `mdbook build wiki`.
@@ -175,6 +175,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("burden.md".to_string(), burden_levels()),
         ("burden-races.md".to_string(), burden_races(content)),
         ("burden-examples.md".to_string(), burden_examples(content)),
+        ("special-rooms.md".to_string(), special_rooms(content)),
     ];
     for (_, text) in &mut files {
         *text = format!(
@@ -1598,6 +1599,73 @@ fn regeneration() -> String {
     out
 }
 
+/// How many times as much `percent` is, in words: "twice", "two fifths", "30% of".
+fn times(percent: u16) -> String {
+    match percent {
+        200 => "twice".into(),
+        300 => "three times".into(),
+        50 => "half".into(),
+        40 => "two fifths".into(),
+        25 => "a quarter".into(),
+        p => format!("{p}% of"),
+    }
+}
+
+/// The special rooms (spec §7 "Special rooms"): what each is called, what it says the first time
+/// you enter it, and what it does inside, in words.
+fn special_rooms(content: &Content) -> String {
+    let mut out = String::from("| Room | The first time you enter | Inside |\n|---|---|---|\n");
+    for e in content.room_effects().defs() {
+        let mut does: Vec<String> = Vec::new();
+        if e.light < 100 {
+            does.push(format!(
+                "All light is drained to {}% of what it would be.",
+                e.light
+            ));
+        }
+        if !e.glow.is_dark() {
+            let faint = if e.glow.luma() < 80 { "faint " } else { "" };
+            let warm = if e.glow.rgb[0] > e.glow.rgb[2] {
+                "warm "
+            } else {
+                ""
+            };
+            does.push(format!("A {faint}{warm}glow lights it."));
+        }
+        if e.noise != 100 {
+            let farther = if e.noise > 100 {
+                ", and so carries farther"
+            } else {
+                ""
+            };
+            does.push(format!(
+                "Every noise made in it is {} as loud{farther}.",
+                times(e.noise)
+            ));
+        }
+        if e.regen != 100 {
+            does.push(format!("Wounds heal {} as fast.", times(e.regen)));
+        }
+        if e.shunned {
+            does.push("Creatures hostile to you do not step in.".into());
+        }
+        if let Some(floor) = e.floor {
+            does.push(format!(
+                "Its floor is {}.",
+                content.terrain(floor).name.to_lowercase()
+            ));
+        }
+        let _ = writeln!(
+            out,
+            "| {} | \"{}\" | {} |",
+            capital(&e.name),
+            e.enter,
+            does.join(" ")
+        );
+    }
+    out
+}
+
 /// What each level of burden costs (spec §8 "Burden"), from the rules' own numbers.
 fn burden_levels() -> String {
     let mut out = String::from(
@@ -1727,7 +1795,24 @@ mod tests {
         assert!(text("terrain-local.md").contains("| Still water | `~` | yes | no | 12 seconds |"));
         assert!(text("terrain-local.md").contains("| 12 seconds | very loud |"));
         assert!(text("terrain-local.md").contains("muffles sound"));
-        assert!(text("footsteps.md").contains("| Very loud | Still water, running water |"));
+        assert!(
+            text("footsteps.md")
+                .contains("| Very loud | Still water, running water, shallow water |")
+        );
+        let rooms = text("special-rooms.md");
+        for row in [
+            "| Shadowed room | \"The light seems to drain away here.\" | All light is drained to \
+             30% of what it would be. |",
+            "| Echoing hall | \"Your footsteps echo loudly.\" | Every noise made in it is twice as \
+             loud, and so carries farther. |",
+            "| Hushed chamber | \"A deep hush fills this room.\" | Every noise made in it is two \
+             fifths as loud. |",
+            "| Sanctuary | \"You feel at peace here.\" | A faint warm glow lights it. Wounds heal \
+             three times as fast. Creatures hostile to you do not step in. |",
+            "| Flooded room | \"The floor here is flooded.\" | Its floor is shallow water. |",
+        ] {
+            assert!(rooms.contains(row), "{row}\n{rooms}");
+        }
         assert!(text("footsteps.md").contains("grass"));
         assert!(
             text("objects.md")

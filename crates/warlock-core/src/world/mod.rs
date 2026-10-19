@@ -47,6 +47,12 @@
 //! Ranged combat (`shoot.rs`): shots and throws fly along a line, attack whoever stands in their
 //! way, and come down to be picked up again; burning missiles are fires that light the level
 //! until they burn out.
+//!
+//! Special rooms (spec §7 "Special rooms", [`crate::content::RoomEffectDef`]): a level's special
+//! rooms change the rules inside them, through one question, [`World::room_effect_at`]: the
+//! light (and so what the player and creatures see), the noise made there, regeneration, and
+//! whether creatures hostile to the player step in. The first time the player is inside one they
+//! are told what it is.
 
 mod actor;
 mod ai;
@@ -70,8 +76,8 @@ use crate::action::{Action, Event, Letters, MAX_REST, MissileEnd, Outcome, Rest,
 use crate::burden::{self, Burden, Load};
 use crate::character::{Character, CharacterSpec};
 use crate::content::{
-    ActionKind, Content, CreatureId, EdgeExit, LevelKind, LevelTemplate, StairsDir, Stance,
-    TerrainId, local_area_id,
+    ActionKind, Content, CreatureId, EdgeExit, LevelKind, LevelTemplate, RoomEffectDef, StairsDir,
+    Stance, TerrainId, local_area_id,
 };
 use crate::geom::{Dir, Pos};
 use crate::light::{LightCache, Sky};
@@ -373,6 +379,9 @@ impl World {
         state
             .messages
             .push(0, format!("Welcome to {}. Press ? for controls.", def.name));
+        if let Some(text) = enter_room(&mut state, &content) {
+            state.messages.push(0, text);
+        }
         Ok(Self::assemble(content, state))
     }
 
@@ -537,6 +546,15 @@ impl World {
         (level, actors)
     }
 
+    /// The effect of the special room at `pos` on level `level`, if that level has been visited
+    /// and a special room lies there (spec §7 "Special rooms"). This is the one question the rules
+    /// ask of special rooms (through the level's state inside the core); ground truth, **for the
+    /// rules, tests, and developer tools**: the player knows only the rooms they have been in
+    /// ([`PerceptionView::room`]).
+    pub fn room_effect_at(&self, level: &str, pos: Pos) -> Option<&RoomEffectDef> {
+        (self.state.levels.get(level)?).room_effect_at(&self.content, pos)
+    }
+
     /// Applies one player action and runs the rest of the turn if it took time. Once the player
     /// has died, nothing more happens: every action is refused.
     pub fn apply(&mut self, action: &Action) -> Outcome {
@@ -670,9 +688,9 @@ impl World {
             .collect()
     }
 
-    /// Phase 4: recomputes perception, updates memory, says what news the player heard and how
-    /// the weather changed, reports the attacks the player perceived, and drops events the player
-    /// did not see.
+    /// Phase 4: recomputes perception, updates memory, tells the player about a special room they
+    /// are in for the first time, says what news they heard and how the weather changed, reports
+    /// the attacks they perceived, and drops events they did not see.
     fn perceive(&mut self, events: &mut Vec<Event>) {
         let now = self.state.time;
         if self.state.weather_override.is_some_and(|o| o.until <= now) {
@@ -684,6 +702,9 @@ impl World {
         let current = self.state.current_level.clone();
         if let Some(level) = self.state.levels.get_mut(&current) {
             self.perception.remember(level);
+        }
+        if let Some(text) = enter_room(&mut self.state, &self.content) {
+            self.say(text);
         }
         self.hear();
         if let (Some(from), Some(to)) = (before, self.perception.weather()) {
@@ -1462,6 +1483,18 @@ fn split(stacks: &[Stack], chosen: Letters) -> (Vec<Stack>, Vec<Stack>) {
     (unzip(picked), unzip(rest))
 }
 
+/// The first time the player is inside a special room (spec §7 "Special rooms"): marks it
+/// entered and returns what they are told; from then on they know it (look mode names it).
+fn enter_room(state: &mut WorldState, content: &Content) -> Option<String> {
+    let here = state.player().pos;
+    let room = (state.current_mut().rooms.iter_mut()).find(|r| r.contains(here))?;
+    if room.entered {
+        return None;
+    }
+    room.entered = true;
+    Some(content.room_effect(room.effect).enter.clone())
+}
+
 /// `A` or `An` for a noun.
 fn article(noun: &str) -> &'static str {
     match noun.chars().next() {
@@ -1554,6 +1587,8 @@ mod moon_tests;
 mod object_tests;
 #[cfg(test)]
 mod overworld_tests;
+#[cfg(test)]
+mod room_tests;
 #[cfg(test)]
 mod shoot_tests;
 #[cfg(test)]
