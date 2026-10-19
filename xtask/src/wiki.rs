@@ -333,7 +333,7 @@ fn equipment(content: &Content) -> String {
     );
     for (i, (slot, def)) in content.slot_ids().enumerate() {
         let fits: Vec<String> = (content.object_defs().iter().enumerate())
-            .filter(|&(o, _)| content.fits(ObjectId(o as u16), slot))
+            .filter(|&(o, _)| content.fits_properly(ObjectId(o as u16), slot))
             .map(|(_, o)| {
                 let mut name = o.name.clone();
                 if o.two_handed {
@@ -348,11 +348,14 @@ fn equipment(content: &Content) -> String {
                 name
             })
             .collect();
-        let fits = if fits.is_empty() {
+        let mut fits = if fits.is_empty() {
             "-".to_string()
         } else {
             capital(&fits.join(", "))
         };
+        if def.takes_weapons {
+            fits.push_str(", any other weapon, and anything made for throwing");
+        }
         let cost = content.action_costs().cost(def.action);
         let _ = writeln!(
             out,
@@ -368,10 +371,22 @@ fn equipment(content: &Content) -> String {
 /// Where an object goes, if it can be worn or wielded: the slots that fit it.
 fn goes_on(content: &Content, object: usize) -> String {
     let id = ObjectId(object as u16);
-    let slots: Vec<String> = (content.slot_ids())
-        .filter(|&(s, _)| content.fits(id, s))
-        .map(|(_, s)| s.name.to_lowercase())
-        .collect();
+    // Where it belongs; else where it may be readied (rocks: the missile weapon slot).
+    let names = |proper: bool| -> Vec<String> {
+        (content.slot_ids())
+            .filter(|&(s, _)| {
+                if proper {
+                    content.fits_properly(id, s)
+                } else {
+                    content.fits(id, s)
+                }
+            })
+            .map(|(_, s)| s.name.to_lowercase())
+            .collect()
+    };
+    let slots = Some(names(true))
+        .filter(|n| !n.is_empty())
+        .unwrap_or_else(|| names(false));
     if slots.is_empty() {
         return "-".into();
     }
@@ -2057,10 +2072,10 @@ mod tests {
         assert!(equipment.contains(", quarterstaff (both hands) |"));
         assert!(equipment.contains(
             "| `k` | Missile weapon | Short bow (shoots arrows), long war bow (shoots arrows), \
-             crossbow (shoots crossbow bolts), sling (shoots sling stones) |"
+             crossbow (shoots crossbow bolts), sling (shoots sling stones), any other weapon, and anything made for throwing |"
         ));
         assert!(equipment.contains(
-            "| `l` | Missiles | Arrow, flaming arrow, crossbow bolt, sling stone, rock | 6 seconds |"
+            "| `l` | Missiles | Arrow, flaming arrow, crossbow bolt, sling stone | 6 seconds |"
         ));
         assert!(equipment.contains("| `m` | Tool | Pick-axe, mattock | 6 seconds |"));
         let digging = text("digging.md");

@@ -812,7 +812,8 @@ rate or animation.
   "Reset all keys" resets everything.
 - First-phase commands: move, wait, open/close door, ascend/descend, light/douse lantern (`L`),
   pick up (`,` or `g`), drop (`d`), inventory (`i`), equipment (`e`), character (`@`), skills
-  (`S`), weapon skills (`W`), quest log (`q`), rest (`R`), look, fire (`f`), throw (`t`), more
+  (`S`), weapon skills (`W`), quest log (`q`), rest (`R`), look, shoot or throw what is in the
+  missile weapon slot (`t`), throw from the pack (`T`), fire (`f`, unbound by default), more
   aggressive / more defensive combat stance (`+` / `-`; §8 "Stances"), bash with a shield (an
   ability, below: no key by default; bound in Controls, it asks for a direction, like opening a
   door), next target (`Tab`, while aiming), use a tool (`U`, then a direction: dig), chat (`C`),
@@ -991,11 +992,13 @@ rate or animation.
   places with something."; the player's step), or, if it will not make way, stops ("The sentry
   doesn't budge.", "The giant is too big to squeeze past.", "Something is in the way."; no time
   passes; §8 "Displacement").
-- **Targeting** (ADOM-like; `ui/target.rs`): `f` aims the readied missile weapon (with nothing
-  to shoot, it is refused: "You have no missile weapon ready.", "You have no arrows ready."), `t`
-  aims the throwing weapon readied in a `ready` slot (rocks in the missiles slot), else opens the
-  choice of what to throw: the inventory's throwing weapons by their letters (a letter or Enter
-  chooses; "You have nothing to throw."). Aiming is an input mode like look mode: no time passes.
+- **Targeting** (ADOM-like; `ui/target.rs`): `t` aims what is in the Missile weapon slot: a launcher
+  shoots its readied ammunition, a throwing weapon or a stack (rocks) is thrown one at a time,
+  any other weapon is thrown whole (improvised: -4 to hit, `IMPROVISED_TO_HIT`, and
+  `IMPROVISED_RANGE` cells, in `combat.rs`); with nothing there, or no ammunition, it is refused
+  ("You have nothing ready to throw or shoot.", "You have no arrows ready."). `T` opens the choice
+  of what to throw: the inventory's throwing weapons by their letters (a letter or Enter
+  chooses; "You have nothing to throw."). `f` (no default key) aims the readied launcher only. Aiming is an input mode like look mode: no time passes.
   The cursor starts on the last target if the player still sees it (a creature) or it is on this
   level (a cell), else on the nearest hostile creature in view, else on the player; `Tab` and
   `Shift`+`Tab` cycle through the creatures in view, nearest first (ties: the lower id); the
@@ -1006,8 +1009,8 @@ rate or animation.
   creature in view in the way is blocked, one beyond the range out of range, and both show on a
   muted red cursor and in the message line ("Out of range.", "The way is blocked.", after the
   target's description, as look mode gives it). No chance to hit is ever shown. `Enter` (or the
-  key that started it, `f` or `t`) looses the missile (replay text `fire:X,Y`,
-  `throw:LETTER:X,Y`) and remembers the target, so `f` then `Enter` shoots it again; `Esc`
+  key that started it, or `t`) looses the missile (replay text `fire:X,Y`,
+  `throw:LETTER:X,Y`) and remembers the target, so `t` then `Enter` shoots it again; `Esc`
   cancels. Out of range or at the player's own cell, the rules refuse it and no time passes.
 - **Look mode** describes what the player perceives at the cursor: a creature and its terrain,
   with how it stands toward the player and how hurt it looks ("A giant rat (hostile, unhurt), on
@@ -1947,10 +1950,14 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   - **Loosing**: the player fires (`Action::Fire(cell)`, `fire:X,Y`) with the missile weapon in a
     `ready` slot and the ammunition it shoots in a `ready` slot, or throws (`Action::Throw { item,
     at }`, `throw:LETTER:X,Y`) one of an inventory stack that is a throwing weapon (wielded or
-    not: the last one leaves the hand). Refused, taking no time: with nothing ready ("You have no
-    missile weapon ready.", "You have no arrows ready."), at the player's own cell, beyond the
+    not: the last one leaves the hand), or any other weapon that is no launcher or ammunition,
+    whole, with `IMPROVISED_TO_HIT` (-4) to hit and `IMPROVISED_RANGE` cells (`ObjectDef::
+    is_improvised`). The Missile weapon slot (`takes_weapons` in `slots.toml`) holds any weapon or
+    throwing weapon besides launchers, so `t` throws what is readied there (a weapon readied
+    there does not parry). Refused, taking no time: with nothing ready ("You have nothing ready
+    to throw or shoot.", "You have no arrows ready."), at the player's own cell, beyond the
     range (the rounded radius of the weapon's `range`: "That is out of range."), something that
-    is no throwing weapon ("You cannot throw a coil of rope."), and on the overworld. A shot takes
+    cannot be thrown ("You cannot throw a coil of rope."), and on the overworld. A shot takes
     `shoot` (plus `reload` for a missile weapon that `reloads`), a throw `throw` (less what the
     weapon skill's rank takes off, "Weapon skills" below); creatures shoot
     by the same rules (`World::creature_shoots`; the AI saw to it that they can).

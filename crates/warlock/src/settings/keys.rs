@@ -38,6 +38,7 @@ pub const REBINDABLE: &[KeyCommand] = &[
     KeyCommand::WeaponSkills,
     KeyCommand::Rest,
     KeyCommand::Look,
+    KeyCommand::Missile,
     KeyCommand::Fire,
     KeyCommand::Throw,
     KeyCommand::MoreAggressive,
@@ -68,8 +69,9 @@ const PAGE_IDS: [&str; 9] = [
 ];
 
 /// Rebindable commands with no key by default: abilities (`warlock_core::ability`), which the
-/// abilities menu (#156) lists instead of a key each. The player may bind one in Controls.
-pub const UNBOUND: [KeyCommand; 1] = [KeyCommand::Bash];
+/// abilities menu (#156) lists instead of a key each, and `f` (fire), which `t` covers. The
+/// player may bind one in Controls.
+pub const UNBOUND: &[KeyCommand] = &[KeyCommand::Bash, KeyCommand::Fire];
 
 /// Physical keys a command may be bound to.
 const CODES: &[KeyCode] = &[
@@ -143,6 +145,7 @@ impl KeyCommand {
             WeaponSkills => "weapon_skills",
             Rest => "rest",
             Look => "look",
+            Missile => "missile",
             Fire => "fire",
             Throw => "throw",
             MoreAggressive => "more_aggressive",
@@ -369,7 +372,7 @@ impl Bindings {
                 }
             }
             if keys.is_empty() {
-                // An ability may be left without a key, as it is by default.
+                // A command without a default key (an ability, fire) may be left without one.
                 if !UNBOUND.contains(&command) || !items.is_empty() {
                     warnings.push(format!("bindings.{id}: no usable keys; using the defaults"));
                 }

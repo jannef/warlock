@@ -65,7 +65,7 @@ Game flags (`cargo run -p warlock -- --help`):
   `--config-dir DIR` keeps `settings.toml` in DIR; captures and replays otherwise use default
   settings and never write the file.
 
-- `--fire` (dev) — start the run aiming the readied missile weapon, as `f` would (captures of the
+- `--fire` (dev) — start the run aiming the readied missile weapon, as `f` (unbound by default) would (captures of the
   targeting line; golden entries pass it with `args = ["--fire"]`).
 - `--replay FILE` — apply a replay at startup (its scenario/seed/character win; a hash divergence
   is logged as a warning), so `--capture` can screenshot any state. `--record FILE` — write every applied
@@ -94,7 +94,7 @@ player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `SLO
 `assets/data/slots.toml`, e.g. `equip:body:b` (put inventory stack `b` on), `remove:body`;
 `bash:DIR` bashes with the held shield, `fire:X,Y` shoots the readied missile weapon at level
 cell (X, Y), `throw:c:X,Y` throws one of
-inventory stack `c` there; `dig:E` digs into the wall east with the tool in the Tool slot, turn
+inventory stack `c` there (any weapon is thrown whole, badly: `t` in the game sends `fire` for a launcher, else `throw` for what the Missile weapon slot holds); `dig:E` digs into the wall east with the tool in the Tool slot, turn
 after turn until it gives way or something interrupts; `chat:E` talks to the creature east of
 the player, `ask:E:rooms` asks it about topic `rooms` (an id in `assets/data/dialogue.toml`;
 quest topics are `quest-ID`, `accept-ID`, `decline-ID`, ids in `assets/data/quests.toml`),
@@ -647,7 +647,7 @@ Perception sees and remembers the rubble like any terrain; `PerceptionView::read
 app bursts the new terrain's `toggle` particles (rubble's dust) on `WallBroken`, like a door's.
 Creatures do not dig. Times are in the wiki's generated `digging.md` tables.
 
-Ranged combat (spec §8 "Ranged combat") lives in `warlock-core/src/world/shoot.rs`: `fire`,
+Ranged combat (spec §8 "Ranged combat"; keys: `t` shoots or throws the Missile weapon slot's contents, `T` is the throw chooser, `f` unbound but rebindable; the slot `takes_weapons`) lives in `warlock-core/src/world/shoot.rs`: `fire`,
 `throw`, and `creature_shoots` loose one missile (`loose`): it leaves its stack, makes its noise
 once, flies along `Pos::ray` (the line the AI's `clear_shot` checks) over transparent cells as far
 as the weapon's `range`, attacks whoever stands in its way (`World::missile_hits`, no noise) until

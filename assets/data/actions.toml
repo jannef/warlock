@@ -19,7 +19,7 @@ stairs = 1000
 pick_up = 1000
 drop = 1000
 # Attacks: the player moving into a hostile creature, and creatures' attacks; a shot from a
-# missile weapon (the player's `f`, a creature's), a throw (`t`), a spell.
+# missile weapon (the player's `t`, a creature's), a throw (`T`), a spell.
 melee = 1000
 shoot = 1000
 throw = 1000
