@@ -12,9 +12,9 @@
 # the bat faster; the torch-carrying kobold (2) circles them a little slower than you walk.
 #
 # Factions and behavior (M10): the beetle and the bat are wildlife, neutral to everyone, so they
-# keep to their lanes; the kobold is hostile to you: once it sees you it leaves its round to come
-# for you (opening doors on the way), goes to where it last saw you when you get out of sight, and
-# then walks back to its round. The arena (v, down) shows factions fighting each other.
+# keep to their lanes; the kobold is of the peaceful faction (`faction = "peaceful"` overrides its
+# type's hostile one), so the showcase is safe and it just walks its round. The arena (v, down)
+# is where creatures hunt, fight each other, and fight you.
 #
 # Effects (M4): the effects room has a brazier (sparks, glow, heat haze), a lava pool (=, embers,
 # haze), a fountain (F) in a pool to wade through (splashes), and dusty floor (:, drifting motes);
@@ -70,7 +70,7 @@ map = '''
 [legend]
 "@" = { terrain = "floor", spawn = "player" }
 "1" = { terrain = "floor", creature = "beetle", route = "E24 W24" }
-"2" = { terrain = "floor", creature = "kobold", route = "E24 N5 W24 S5", carry = ["short_sword", "copper_coin*7"], wield = "short_sword" }
+"2" = { terrain = "floor", creature = "kobold", faction = "peaceful", route = "E24 N5 W24 S5", carry = ["short_sword", "copper_coin*7"], wield = "short_sword" }
 # Beside the beetle, a cave bat on a parallel lane: it is faster (creatures.toml `speed`), so it
 # pulls ahead and laps the beetle.
 "3" = { terrain = "floor", creature = "bat", route = "E24 W24" }

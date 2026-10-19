@@ -2,10 +2,10 @@
 
 | Scenario | Starts at | What it is |
 |---|---|---|
-| Showcase | 08:00, 11 Darkening, Year 1444 | A hand-made tour of every engine capability, one room per feature. |
-| Arena | 08:00, 11 Darkening, Year 1444 | Factions at war: a kobold war band and a pack of giant rats fight in a torch-lit pit while the wildlife looks on. Watch unseen from the dark corner; come close, and they turn on you too. |
+| Showcase | 08:00, 11 Darkening, Year 1444 | A hand-made tour of every engine capability, one room per feature. A safe place: its creatures keep to their rounds and leave you alone. For a fight, take the stairs down to the arena. |
+| Arena | 08:00, 11 Darkening, Year 1444 | The place to fight: a kobold war band and a pack of giant rats fight in a torch-lit pit while the wildlife looks on. Watch unseen from the dark corner; come close, and they turn on you too. |
 | Courtyard | 06:30, 11 Darkening, Year 1444 | The walled garden at dawn: sunlight, sky light, and shadows that turn with the sun. |
 | Depths | 08:00, 11 Darkening, Year 1444 | Straight into the generated dungeon branch: eight levels of rooms and caverns built from the run seed (try `--seed` with a word). |
 | Forest | 06:30, 11 Darkening, Year 1444 | A glade deep in the Thornwood at dawn: a generated local area of the overworld, where the trees cast long shadows. Walk off any edge to reach the overworld. |
-| Vast | 08:00, 11 Darkening, Year 1444 | The 420x300 cavern level: scrolling camera, river, rooms, patrols, many lights; used for captures and perf checks. |
+| Vast | 08:00, 11 Darkening, Year 1444 | The 420x300 cavern level: scrolling camera, river, rooms, peaceful patrols, many lights; used for captures and perf checks. |
 | World | 08:00, 11 Darkening, Year 1444 | The overworld: travel the Wildlands by road and wild, day and night; enter the Hall, the Vast Caverns, the Depths, or any cell's local area with >. |

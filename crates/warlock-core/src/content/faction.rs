@@ -6,14 +6,14 @@
 //!
 //! The file is optional: without it there are no factions and everyone is neutral to everyone.
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 /// The faction the player belongs to; required when factions are defined.
 pub const PLAYER_FACTION: &str = "player";
 
 /// Index of a faction in [`Factions`].
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct FactionId(pub u16);
 
 /// How two factions (or two actors) stand toward each other.

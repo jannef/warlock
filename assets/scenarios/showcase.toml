@@ -1,5 +1,5 @@
 name = "Showcase"
-description = "A hand-made tour of every engine capability, one room per feature."
+description = "A hand-made tour of every engine capability, one room per feature. A safe place: its creatures keep to their rounds and leave you alone. For a fight, take the stairs down to the arena."
 start_level = "hub"
 seed = 1
 # The player's character when the run does not choose one (New run and --character do): a

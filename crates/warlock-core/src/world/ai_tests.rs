@@ -73,6 +73,10 @@ hostile = ["player", "vermin"]
 [[faction]]
 id = "wildlife"
 name = "wildlife"
+
+[[faction]]
+id = "peaceful"
+name = "peaceful folk"
 "##;
 
 // Everyone at normal speed, so each creature acts once a turn, in id order, after the player.
@@ -157,6 +161,8 @@ const LEGEND: &str = r##"
 "r" = { terrain = "floor", creature = "rat" }
 "n" = { terrain = "floor", creature = "nearsighted_rat" }
 "k" = { terrain = "floor", creature = "kobold" }
+"R" = { terrain = "floor", creature = "rat", faction = "peaceful" }
+"K" = { terrain = "floor", creature = "kobold", faction = "peaceful", route = "E2 W2" }
 "a" = { terrain = "floor", creature = "archer", carry = ["bow", "arrow*20"], wield = ["bow", "arrow"] }
 "u" = { terrain = "floor", creature = "archer" }
 "s" = { terrain = "floor", creature = "shaman" }
@@ -168,6 +174,16 @@ const LEGEND: &str = r##"
 const LEVELS: &[(&str, &str)] = &[
     // A giant rat six cells east of the player.
     ("duel", "##########\n#@.....r.#\n#........#\n##########\n"),
+    // The same duel with the rat placed among the peaceful folk, and a peaceful kobold on a
+    // short round by the player.
+    (
+        "calm_duel",
+        "##########\n#@.....R.#\n#........#\n##########\n",
+    ),
+    (
+        "calm_kobold",
+        "##########\n#@.K.....#\n#........#\n##########\n",
+    ),
     // A kobold between two nearsighted rats (ids 1 and 3, both four cells away, too far to see
     // it); the player is walled off.
     (
@@ -720,6 +736,7 @@ fn search_the_last_seen_spot_then_go_back_and_patrol_on() {
             hp: 10,
             hp_base: 0,
             regen: 0,
+            faction_override: None,
         },
     );
     assert_ne!(player, rat);
@@ -1053,4 +1070,100 @@ fn the_arena_fights_the_same_way_every_time() {
     run(&mut a, "wait*5");
     run(&mut loaded, "wait*5");
     assert_eq!(loaded.state_hash(), a.state_hash());
+}
+
+#[test]
+fn a_level_can_place_a_creature_among_the_peaceful_folk() {
+    // The same giant rat that hunts the player in `duel` leaves them alone in `calm_duel`.
+    let mut w = world("calm_duel");
+    let rat = ActorId(1);
+    assert!(w.state().actors[&rat].faction_override.is_some());
+    assert_eq!(w.stance(PLAYER, rat), Stance::Neutral);
+    assert_eq!(w.stance(rat, PLAYER), Stance::Neutral);
+    for out in run(&mut w, "wait*40") {
+        assert!(attacks(&out).is_empty(), "{:?}", out.events);
+    }
+    assert_eq!(pos(&w, rat), Pos::new(7, 1), "it stays where it is");
+    let me = &w.state().actors[&PLAYER];
+    assert_eq!(me.hp, me.max_hp());
+    // Bumping into the rat is "in the way", never an attack.
+    run(&mut w, "move:E*5");
+    assert_eq!(w.player_pos(), Pos::new(6, 1));
+    let out = w.apply(&Action::Move(Dir::E));
+    assert!(!out.took_turn);
+    assert!(attacks(&out).is_empty());
+    assert_eq!(last_message(&w), "The giant rat is in the way.");
+
+    // The kobold walks its round; bumping into it is "in the way", never an attack.
+    let mut w = world("calm_kobold");
+    let kobold = ActorId(1);
+    assert_eq!(w.stance(PLAYER, kobold), Stance::Neutral);
+    for out in run(&mut w, "wait*40") {
+        assert!(attacks(&out).is_empty(), "{:?}", out.events);
+    }
+}
+
+#[test]
+fn creatures_of_a_hostile_type_still_fight_without_the_override() {
+    let mut w = world("duel");
+    assert_eq!(w.state().actors[&ActorId(1)].faction_override, None);
+    let fights = run(&mut w, "wait*10")
+        .iter()
+        .any(|o| !attacks(o).is_empty());
+    assert!(fights, "the rat attacks");
+}
+
+#[test]
+fn the_override_is_seen_saved_and_checked() {
+    let w = world("calm_duel");
+    let perception = w.perception();
+    let rat = perception
+        .actors()
+        .iter()
+        .find(|a| a.id == ActorId(1))
+        .expect("seen");
+    assert_eq!(perception.stance(rat), Stance::Neutral);
+
+    let restored = crate::save::decode(&crate::save::encode(&w), CONTENT.clone()).expect("decode");
+    assert_eq!(restored.state(), w.state());
+    assert!(
+        restored.state().actors[&ActorId(1)]
+            .faction_override
+            .is_some()
+    );
+
+    let level = |faction: &str| {
+        let mut files = files();
+        files.insert(
+            "levels/calm_duel.toml",
+            &format!(
+                "name = \"x\"\nmap = \'\'\'\n#####\n#@.R#\n#####\n\'\'\'\n[legend]\n\"R\" = {{ terrain = \"floor\", creature = \"rat\", faction = \"{faction}\" }}\n"
+            ),
+        );
+        Content::load(&files).map(|_| ()).map_err(|e| e.message)
+    };
+    assert_eq!(level("peaceful"), Ok(()));
+    let err = level("elves").expect_err("unknown faction");
+    assert!(err.contains("unknown faction `elves`"), "{err}");
+}
+
+#[test]
+fn the_showcase_is_safe_and_the_arena_is_not() {
+    let content = Content::builtin().expect("builtin content");
+    let player = content.creature_id("player").expect("player");
+    let hostile = |level: &str| {
+        let template = content.level(level).expect("level");
+        (template.creatures.iter())
+            .filter(|s| {
+                let faction = s.faction.or(content.creature(s.creature).faction);
+                content.stance_of(content.creature(player).faction, faction) == Stance::Hostile
+            })
+            .count()
+    };
+    for level in ["hub", "vast", "courtyard"] {
+        if content.level(level).is_some() {
+            assert_eq!(hostile(level), 0, "{level} is safe");
+        }
+    }
+    assert!(hostile("arena") > 0, "the arena is where fighting happens");
 }

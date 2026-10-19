@@ -37,7 +37,8 @@ fn files() -> ContentFiles {
         "[[faction]]\nid = \"player\"\nname = \"you\"\n\
          [[faction]]\nid = \"vermin\"\nname = \"vermin\"\n\
          [[faction]]\nid = \"kobolds\"\nname = \"kobolds\"\n\
-         [[faction]]\nid = \"wildlife\"\nname = \"wildlife\"\n",
+         [[faction]]\nid = \"wildlife\"\nname = \"wildlife\"\n\
+         [[faction]]\nid = \"peaceful\"\nname = \"peaceful folk\"\n",
     );
     files.insert("levels/armory.toml", LEVEL);
     // Strong enough to carry the whole armory (22.7 kg) unburdened: up to 25 kg (spec §8
