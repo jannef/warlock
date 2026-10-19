@@ -2,10 +2,11 @@
 //!
 //! A level is a multiline ASCII `map` plus a `legend` mapping characters to terrain and to things
 //! placed on that terrain (player start, creatures with patrol routes, what they carry, and what
-//! of that they wield and wear (`wield = "spear"`, `wear = ["leather_jerkin"]`), stair links,
-//! lights, the flow of running water, objects, and locks on closed doors: `lock = "pantry"`, a
-//! lock its keys open, or `locked = true`, one only a skeleton key opens; spec §8 "Doors").
-//! Characters not in the level's legend fall back to the shared default legend
+//! of that they wield and wear (`wield = "spear"`, `wear = ["leather_jerkin"]`), the faction they
+//! are placed in, and the unique character they are (`npc = "hermit"`, whose dialogue they
+//! speak), stair links, lights, the flow of running water, objects, and locks on closed doors:
+//! `lock = "pantry"`, a lock its keys open, or `locked = true`, one only a skeleton key opens;
+//! spec §8 "Doors"). Characters not in the level's legend fall back to the shared default legend
 //! (`assets/data/legend.toml`, which has arrows for running water). Objects may also be placed
 //! without a legend character: `[[pile]]` tables with `at = [x, y]` and `objects`. Objects are
 //! written as ids with an optional count, top of the pile first: `objects = ["dagger",
@@ -25,7 +26,7 @@ use super::light::LightId;
 use super::object::parse_stacks;
 use super::room_effect::SpecialRoom;
 use super::terrain::{StairsDir, TerrainId};
-use super::{ActionKind, Content, ContentError};
+use super::{ActionKind, Content, ContentError, Speaker};
 use crate::door::{Lock, check_lock_id};
 use crate::equipment::{self, Equipment};
 use crate::geom::{Dir, Pos};
@@ -155,6 +156,9 @@ pub(super) struct LegendDetail {
     /// Faction the creature on this cell belongs to instead of its type's (`faction =
     /// "peaceful"`); an id in `data/factions.toml`.
     faction: Option<String>,
+    /// The unique character the creature on this cell is (`npc = "hermit"`): it says what the
+    /// npc's dialogue in `data/dialogue.toml` says, not its type's.
+    npc: Option<String>,
     /// Patrol route, e.g. `"E4 S2 W4 N2"`; must return to its start.
     route: Option<String>,
     /// Level id the stairs on this cell lead to.
@@ -227,6 +231,8 @@ pub struct CreatureSpawn {
     pub creature: CreatureId,
     /// The faction it is placed in when not its type's.
     pub faction: Option<FactionId>,
+    /// The unique character it is (an npc id of `data/dialogue.toml`), if any.
+    pub npc: Option<String>,
     pub pos: Pos,
     /// Looping patrol route; empty means the creature stays put.
     pub route: Vec<Dir>,
@@ -431,6 +437,15 @@ pub(super) fn parse_level(
                     Some(r) => parse_route(r).map_err(|m| err(format!("legend `{ch}`: {m}")))?,
                     None => Vec::new(),
                 };
+                if let Some(npc) = &detail.npc {
+                    let known = (content.dialogues().iter())
+                        .any(|d| d.speaker == Speaker::Npc(npc.clone()));
+                    if !known {
+                        return Err(err(format!(
+                            "legend `{ch}`: npc `{npc}` has no dialogue in data/dialogue.toml"
+                        )));
+                    }
+                }
                 let carry = match &detail.carry {
                     Some(specs) => parse_stacks(specs, content)
                         .map_err(|m| err(format!("legend `{ch}`: carry: {m}")))?,
@@ -446,6 +461,7 @@ pub(super) fn parse_level(
                 creatures.push(CreatureSpawn {
                     creature: id,
                     faction,
+                    npc: detail.npc.clone(),
                     pos,
                     route,
                     carry,
@@ -453,12 +469,13 @@ pub(super) fn parse_level(
                 });
             } else if detail.route.is_some()
                 || detail.faction.is_some()
+                || detail.npc.is_some()
                 || detail.carry.is_some()
                 || detail.wield.is_some()
                 || detail.wear.is_some()
             {
                 return Err(err(format!(
-                    "legend `{ch}` has a faction, route, carry, wield, or wear but no creature"
+                    "legend `{ch}` has a faction, npc, route, carry, wield, or wear but no creature"
                 )));
             }
         }

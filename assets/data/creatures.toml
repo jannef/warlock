@@ -25,6 +25,9 @@
 #   range        how far a ranged or caster creature reaches, in cells (2 up to its sight; it
 #                needs a clear line of fire)
 #   opens_doors  whether it opens closed doors in its way (default false)
+#   budge        whether you can swap places with it when it is not hostile to you (spec §8
+#                "Displacement"): "always" (default), "off_post" (not while it keeps its post,
+#                going about its routine: a shopkeeper at its counter), or "never" (rooted)
 #   attack_cost  what its attacks cost in energy (100 to 10000), instead of the attack's cost in
 #                actions.toml (melee, shoot, or cast; 1000 is a normal action)
 #
@@ -264,3 +267,44 @@ natural = { defence = 3, name = "shell" }
 on_eat = { message = "Crunchy.", stat = { toughness = 10 } }
 # Greenish-black ichor.
 blood = "#38461a"
+
+# The showcase's people (spec §3): folk who talk (data/dialogue.toml, `C` to chat) and mutter to
+# themselves now and then. Peaceful by type: they never fight, and you swap places with them
+# when they are in your way.
+
+# Tends the courtyard's flower beds.
+[[creature]]
+id = "gardener"
+name = "gardener"
+glyph = "@"
+fg = "#9cc46a"
+faction = "peaceful"
+footsteps = 50
+hearing = 10
+weight = 72000
+stats = { strength = 12, toughness = 12, intelligence = 9 }
+
+# Walks the courtyard, singing of the world.
+[[creature]]
+id = "bard"
+name = "wandering bard"
+glyph = "@"
+fg = "#d7a8e6"
+faction = "peaceful"
+footsteps = 50
+hearing = 8
+weight = 64000
+stats = { dexterity = 12, presence = 15 }
+
+# Sits by the hub's stairs, and knows its rooms. Slow, and a little hard of hearing.
+[[creature]]
+id = "hermit"
+name = "old hermit"
+glyph = "@"
+fg = "#b9b09c"
+speed = 800
+faction = "peaceful"
+footsteps = 40
+hearing = 15
+weight = 55000
+stats = { strength = 8, dexterity = 8, toughness = 9, intelligence = 14, willpower = 15 }

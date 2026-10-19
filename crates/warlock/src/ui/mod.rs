@@ -14,8 +14,8 @@
 //! Menus, character creation ([`chargen_screen`]), settings, controls, the `?` help, the
 //! inventory, choosing what to pick up or drop ([`object_screen`]), the equipment screen and its
 //! choice of what goes in a slot ([`equipment_screen`]), the character screen
-//! ([`character_screen`]), the weapon skills screen ([`weapon_skills_screen`]), and the death
-//! screen ([`death_screen`]) are screens on one stack
+//! ([`character_screen`]), the weapon skills screen ([`weapon_skills_screen`]), the dialogue
+//! screen ([`dialogue_screen`]), and the death screen ([`death_screen`]) are screens on one stack
 //! ([`screens`]): opened by [`Screens::open`], fed key presses by `input::route_keys`, and drawn
 //! by [`draw`], the one system that writes the UI console.
 
@@ -26,6 +26,7 @@ mod confirm_screen;
 mod controls_screen;
 mod death_screen;
 mod dev;
+mod dialogue_screen;
 mod effects;
 mod equipment_screen;
 mod files_screen;
@@ -122,7 +123,8 @@ impl Plugin for UiPlugin {
                         .chain()
                         .after(SimSet)
                         .run_if(resource_exists::<Game>),
-                    (screens::refresh, screens::on_death)
+                    (screens::refresh, screens::converse, screens::on_death)
+                        .chain()
                         .after(SimSet)
                         .before(draw)
                         .run_if(resource_exists::<Game>),
@@ -433,6 +435,7 @@ fn draw_messages(
     if let InputMode::Direction(command) = mode {
         let prompt = match command {
             crate::input::KeyCommand::UseTool => "Dig in which direction? (Esc to cancel)",
+            crate::input::KeyCommand::Chat => "Talk in which direction? (Esc to cancel)",
             _ => "In which direction? (Esc to cancel)",
         };
         console.print(1, 0, prompt, ACCENT);

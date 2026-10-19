@@ -47,7 +47,9 @@ const MAGIC: &str = "WARLOCK-SAVE";
 ///     corpses' death times (`Stack::died`), and what killed the player when neither a creature
 ///     nor a status did (`Death::cause`: starving, choking).
 /// 22: doors: level states keep the locks on their doors (`LevelState::locks`).
-pub const FORMAT_VERSION: u32 = 22;
+/// 23: NPCs and dialogue: actors keep how far their talk has got (`Actor::talk`: lines said and
+///     muttered, met) and the unique character a level made them (`Actor::npc`).
+pub const FORMAT_VERSION: u32 = 23;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 

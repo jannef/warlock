@@ -13,7 +13,9 @@
 //! 4. **Listen**: failing that, to where it last heard a noise whose source it could not see
 //!    ([`crate::noise`]; what it heard since it last acted, the newest first). Only creatures
 //!    with enemies (a faction hostile to someone) go to look; wildlife does not care.
-//! 5. **Return**: then back to its post, and carries on with its patrol route (or waits).
+//! 5. **Return**: then back to its post (waiting beside it while someone stands on it), and
+//!    carries on with its patrol route (or waits). A creature the player swapped places with
+//!    (`talk.rs`) has its old cell as its post, so it steps back onto its route.
 //!
 //! Paths (`path.rs`) go over walkable cells and, for creatures that open doors, closed doors (it
 //! opens the door, then steps in); a locked door only for one carrying a key that fits it (it
@@ -97,7 +99,7 @@ impl World {
         let heard = (self.state.actors.get_mut(&id))
             .map(|a| std::mem::take(&mut a.heard))
             .unwrap_or_default();
-        match self.decide(id, &heard) {
+        let price = match self.decide(id, &heard) {
             Plan::Attack {
                 target,
                 kind: AttackKind::Ranged,
@@ -111,7 +113,10 @@ impl World {
             Plan::Step(dir) => self.step_or_wait(id, dir, events).1,
             Plan::Patrol => self.patrol(id, events),
             Plan::Wait => self.price_of(id, ActionKind::Wait),
-        }
+        };
+        // Going about its routine, it may mutter to itself (`talk.rs`).
+        self.mutter(id);
+        price
     }
 
     /// Creature `id` steps in `dir` ([`World::creature_steps`]); returns what it did and its
@@ -266,9 +271,15 @@ impl World {
             }
         }
         if let Some(post) = mind.post {
-            match self.route(id, post, 0, |q| q == post) {
+            // Someone on it (the player who swapped places with it, perhaps): it waits beside
+            // it until they are gone.
+            let level = &self.state.current_level;
+            let taken = (self.state.actor_at(level, post)).is_some_and(|a| a.id != id);
+            let reach = i32::from(taken);
+            match self.route(id, post, reach, |q| q.chebyshev(post) <= reach) {
                 Route::Step(dir) => return Plan::Step(dir),
                 Route::Wait => return Plan::Wait,
+                Route::There if taken => return Plan::Wait,
                 Route::There | Route::Unreachable => mind.post = None,
             }
         }

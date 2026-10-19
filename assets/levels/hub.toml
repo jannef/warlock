@@ -32,6 +32,10 @@
 # glow, wounds heal three times as fast, and nothing hostile to you steps in. You are told the
 # first time you enter it ("You feel at peace here."), and look mode names it from then on.
 #
+# NPCs (#146): an old hermit (H) sits in the stairs nook's corner, beside the quarry stairs. Chat
+# with him (`C`): he knows the hall's rooms and tells you about them. He is peaceful, and walking
+# into him (or any creature that is not hostile) swaps places with him (#147).
+#
 # Objects (M11): gold and a small pile in the start room to pick up (`,` or `g`); the door
 # corridor's west room is a storeroom of arms and armor and its east room a pantry; an amulet lies
 # in the dark of the darkness chamber, and a ring before the water garden's altar. The patrolling
@@ -75,7 +79,7 @@ map = '''
 #......@.......##.....#.#.....##3........................#......B......#.......#
 #..............####+###.###+####..#...#...#...#...#...#..#.............#.<.>.v.#
 #..............##.............##2........................#.===.....::::#.......#
-#..............##......t......##.........................#.===.....::::#.....Q.#
+#..............##......t......##.........................#.===.....::::#.....QH#
 #..t.......t...#################t.......................t#.........::::#.......#
 ################################################################################
 '''
@@ -110,6 +114,8 @@ map = '''
 "P" = { terrain = "door_closed", lock = "pantry" }
 # Stairs down (drawn `>`) to the quarry, the place to dig.
 "Q" = { terrain = "stairs_down", to = "quarry" }
+# The old hermit, by the stairs.
+"H" = { terrain = "floor", creature = "hermit" }
 
 # Special rooms (data/room_effects.toml): the stairs nook, walls and door included, is a sanctuary.
 [[room]]

@@ -75,10 +75,12 @@ pub enum ActionKind {
     /// A turn of digging into a wall with a digging tool (spec §8 "Digging"): a dig takes many
     /// of them.
     Dig,
+    /// Chatting with a creature (spec §8 "Dialogue"): a short action.
+    Chat,
 }
 
 impl ActionKind {
-    pub const ALL: [ActionKind; 21] = [
+    pub const ALL: [ActionKind; 22] = [
         ActionKind::Step,
         ActionKind::Wait,
         ActionKind::OpenDoor,
@@ -100,6 +102,7 @@ impl ActionKind {
         ActionKind::Ready,
         ActionKind::Eat,
         ActionKind::Dig,
+        ActionKind::Chat,
     ];
 
     /// Its id in `data/actions.toml`.
@@ -126,6 +129,7 @@ impl ActionKind {
             ActionKind::Ready => "ready",
             ActionKind::Eat => "eat",
             ActionKind::Dig => "dig",
+            ActionKind::Chat => "chat",
         }
     }
 

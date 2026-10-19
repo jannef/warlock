@@ -204,6 +204,14 @@ name = "skills-screen"
 scenario = "showcase"
 screen = "skills"
 
+# NPCs and dialogue (#146): the old hermit in the stairs nook, chatted with and asked about the
+# hall's rooms: his name, his answer, and his topics on the dialogue screen. (Reference: #166.)
+[[golden]]
+name = "dialogue-screen"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:SE*3 chat:SE ask:SE:rooms"
+screen = "dialogue"
+
 # Status effects (#138): four bites' worth of poison and a wound (the dev `afflict:` action), a
 # turn later. The character screen names them (never how bad) and shows Strength and Dexterity
 # lowered by the strong poison, in red; the status bar beneath names them after the hit points.

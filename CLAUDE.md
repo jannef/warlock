@@ -57,8 +57,9 @@ Game flags (`cargo run -p warlock -- --help`):
   character creation's `race`, `gender`, `class`, and `summary` over New run and the steps
   before them (each on its preselection: the showcase's character);
   `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `pick-up` (the pile on the player's cell), `drop`, and `eat` over a run
-  (e.g. after a `--replay` that walks onto a pile), `equip-item` (the choice for the first slot,
-  Head) over the equipment screen; `settings` and `controls` over the main menu, or over the pause
+  (e.g. after a `--replay` that walks onto a pile), `dialogue` over a run whose last action was
+  talk with topics (a `--replay` ending in `chat:SE` or `ask:SE:rooms` next to the hub's hermit),
+  `equip-item` (the choice for the first slot, Head) over the equipment screen; `settings` and `controls` over the main menu, or over the pause
   menu when `--scenario`, `--new`, `--replay`, or `--record` names a run (`--capture` alone does
   not).
   `--config-dir DIR` keeps `settings.toml` in DIR; captures and replays otherwise use default
@@ -86,8 +87,8 @@ load, stats, and skills with their marks).
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-eat:LETTER eat:floor:LETTER dig:DIR rest:GOAL stance:NAME vision:PROFILE skip:DURATION weather:KIND
-effect:ID@X,Y[>X,Y] afflict:STATUS` (`DIR` = N
+eat:LETTER eat:floor:LETTER dig:DIR chat:DIR ask:DIR:TOPIC rest:GOAL stance:NAME vision:PROFILE
+skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] afflict:STATUS` (`DIR` = N
 NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
 player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `SLOT` = a slot id in
 `assets/data/slots.toml`, e.g. `equip:body:b` (put inventory stack `b` on), `remove:body`;
@@ -95,7 +96,9 @@ player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `SLO
 cell (X, Y), `throw:c:X,Y` throws one of
 inventory stack `c` there (any weapon is thrown whole, badly: `t` in the game sends `fire` for a launcher, else `throw` for what the Missile weapon slot holds); `eat:b` eats one of inventory stack `b`, `eat:floor:a` one of the top
 stack underfoot; `dig:E` digs into the wall east with the tool in the Tool slot, turn
-after turn until it gives way or something interrupts; `PROFILE` = an id in
+after turn until it gives way or something interrupts; `chat:E` talks to the creature east of
+the player, `ask:E:rooms` asks it about topic `rooms` (an id in `assets/data/dialogue.toml`);
+`PROFILE` = an id in
 `assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are
 `30s`, `10m`, `2h`; `skip` is the dev hour skip; `weather` is the dev weather override, `KIND` =
 `clear`, `overcast`, `rain`, `heavy`, for three hours of game time; `effect` is the dev spell
@@ -108,8 +111,9 @@ effect: one degree more of `STATUS`, an id in `assets/data/status.toml`, e.g.
 `memory` (seen terrain and remembered objects), `light` (perceived brightness of visible cells as a
 digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places over the view: `f`
 footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m` chanting, `k`
-banging (a door kicked), `d` digging, upper case when loud), `blood` (blood the player sees or
-remembers as a digit over the view, `1` a few drops to `9` soaked), `inventory` (what the player
+banging (a door kicked), `d` digging, `v` a voice, upper case when loud), `blood` (blood the
+player sees or remembers as a digit over the view, `1` a few drops to `9` soaked), `inventory`
+(what the player
 carries and weighs, worn and wielded things marked, their burden and its thresholds),
 `equipment` (the player's slots), `stats`
 (the player's race, gender, and class, then their own scores as the rules read them, then
@@ -118,9 +122,10 @@ ranks and progress toward the next, `Long blades 2 (40%)`), `truth`
 (ground truth, **dev-only**), `actors` (every actor on the level with its hit points and
 Defence, its weight, what it carries and of that wears and wields, its burden and carrying
 limit, its weapon skills with marks, its stats as score/potential, its status effects with
-severities, and the player's nutrition; then every corpse on the level and in the pack with its
-death time and rot, **dev-only**), `rooms` (the level's special rooms: their plain ground as the
-effect's `mark`, then a line per room, **dev-only**). The header line has the player's `hp
+severities, the player's nutrition, and its npc id and talk counts, if any; then every corpse on
+the level and in the pack with its death time and rot, **dev-only**), `rooms` (the level's
+special rooms: their plain ground as the effect's `mark`, then a line per room, **dev-only**).
+The header line has the player's `hp
 17/17` (and `dead` once the run has ended) and `hunger hungry` unless Not hungry; JSON dumps add
 `hp`, `defence`, `burden` (`level`, `limit`), `hunger`, `effects` (status ids), `death` (with
 `of`, the status that killed, and `cause`, starving or choking), `weapon_skills` (by skill id:
@@ -200,7 +205,10 @@ Modal screens (spec §6) — main menu, new run and character creation (race, ge
 summary), pause, settings, controls, the `?` help, the inventory (`i`), the equipment screen
 (`e`) and its choice of what goes in a slot, the character screen (`@`), the weapon skills
 screen (`W`), choosing what to
-pick up (`,`/`g` on several stacks), drop (`d`), or eat (`E`), and the death screen (opened by
+pick up (`,`/`g` on several stacks), drop (`d`), or eat (`E`), the dialogue screen (opened by
+`screens::converse` after an action this frame whose outcome is talk with topics,
+`Event::Talked`; asking is `ScreenAction::Act(Action::Ask)`, which closes it, and the answer
+reopens it on the topic asked), and the death screen (opened by
 `screens::on_death` when `World::death` is set; Enter/Esc is `MenuChoice::LeaveRun`, back to the
 main menu without saving; no `--screen`: capture a dead replay instead) — are one
 screen stack (`ui/screens.rs`, the `ScreenStack` resource); add a screen there, never a second way
@@ -245,9 +253,11 @@ to open, read keys for, or draw one:
   number keys. The keys are the `Context::Pages` commands `Page(1..9)`, `NextPage` (Shift
   reverses), `PrevPage`: rebindable like all commands (`KeyCommand::context`: keys are unique
   per context, so Tab is `NextTarget` in play and `NextPage` here; `Bindings::owner_in` and
-  `lookup` read one context). `Press::shift` carries Shift from the router.
-- Prompts in the message line (open/close/bash direction, rest, look mode) are `InputMode`s,
-  not screens.
+  `lookup` read one context). `Press::shift` carries Shift from the router. The dialogue screen
+  is no page: its digits ask about topics.
+- Prompts in the message line (open/close/bash/chat direction, rest, look mode) are
+  `InputMode`s, not screens. `C` with exactly one creature in view next to the player chats with
+  it at once (`input::chat_partner`), else asks for a direction.
 - Screens are plain state machines tested without a window: `ui/menu.rs` (`Press`, `Panel`, main
   and pause menu), `ui/new_run_screen.rs`, `ui/settings_screen.rs`, `ui/controls_screen.rs` (also
   the `?` help: the same binding list, read-only), `ui/object_screen.rs` (inventory, pick up,
@@ -260,7 +270,9 @@ to open, read keys for, or draw one:
   and Defence total, weight and burden thresholds; 72 wide like the summary),
   `ui/weapon_skills_screen.rs` (sections, ranks, and a faint ten-cell marks bar; never a
   benefit), `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per
-  step with a Random row rolled from the seed, `SummaryScreen`, `Draft`), `ui/death_screen.rs`
+  step with a Random row rolled from the seed, `SummaryScreen`, `Draft`), `ui/dialogue_screen.rs`
+  (the speaker, their last line, numbered topics; built from the last `Event::Talked`, so it never
+  shows more than the player was told), `ui/death_screen.rs`
   (who or what killed the player, where, when, after how many turns).
 
 Typical render check: `cargo run -p warlock -- --scale 1 --freeze-time 1 --capture target/shot.png`,
@@ -287,6 +299,25 @@ file's optional `arrival = "..."` line is said when the player arrives by stairs
 `flow_speed` percent), and the shared legend draws it as arrows (`→` normal, `⇒` double speed).
 Flow is presentation data carried by `LevelTemplate::flow` / `LevelState::flow` and read by the
 renderer through `PerceptionView::flow` (visible cells only); no rule reads it.
+
+NPCs, dialogue, and making way (spec §8 "Dialogue" and "Displacement", #146, #147):
+`content/dialogue.rs` loads `data/dialogue.toml` (per creature type, or per unique `npc` id a level
+legend entry gives a creature, `Actor::npc`; `Content::dialogue_of` prefers the npc's): rotating
+`lines`, `greet`, `[[dialogue.topic]]`s (`id`, `name`, `reply`), and `mutter` (chance per action,
+verb, lines). `world/talk.rs` is the one place talk happens: `World::chat` (`Action::Chat`, cost
+`chat`), `World::ask` (`Action::Ask`, no time), `World::topics` (the one source of what an NPC can
+be asked about: quests, #148, add their topics there and answer them in `ask`), `rotation` (each
+line once a round in a per-speaker shuffled order, never twice in a row; `Actor::talk` counts what
+was said; with `Actor::npc` saved and hashed, `FORMAT_VERSION` 23), mutters (`World::mutter` after each `creature_turn`, a hash roll that never
+draws on the gameplay stream; `Act::Mutter` noise; `say_mutters` logs what the player heard, with
+the words, only as notes that never stop a rest), and making way: moving into a creature that is
+not hostile swaps places (`swap_places`; the creature takes its old cell as its `Mind::post` and
+`ai.rs` walks it back, waiting beside the post while someone stands on it, then on with its
+route) unless `World::refusal` says why not (the type's `budge`: `never`, or `off_post` while its
+mind is calm, ready for shopkeepers, #145; it cannot move; or it is two sizes or more larger:
+sizes are listed smallest first). What an actor is called in messages comes from
+`World::called` ("the gardener"): named shopkeepers go there. Creatures that talk and fight no one
+never stop a rest by coming into view (`World::disturbs_rest`).
 
 Experience (spec §8 "Experience", M21): `content/experience.rs` holds the rules from
 `data/experience.toml` (level curve, `hp_level`, the WoW-style `kill_xp` scaling with its zero
@@ -316,13 +347,15 @@ and runs the other actors on the level in time order until the player may act ag
 the clock (whole seconds; leftover energy carries, so a run of actions takes its exact total time,
 up to the second the actor is ready, with no drift) to each action, and `rest` loops waits until
 the goal or an interruption, its last turn cut short with `price_until` so it ends exactly at the
-goal at any player speed. Long actions (`rest`, `dig`) go through `World::keep_at(events, more,
-act)`: turn after turn of `act` while `more` holds, stopping on a creature coming into view, a
-message (`say`; `note` does not stop it), or death (`Ended`), perceiving only after turns in which
-a creature could have come into view (`out_of_view_for`, which accounts for speed and the cheapest
-step) or in which the weather the player would see changed (`weather_turned`). A new action that
-takes time needs an `ActionKind` (with its id and a line in `data/actions.toml`) and must return
-its price there,
+goal at any player speed. Long actions (`rest`, `dig`, meals) go through `World::keep_at(events, more,
+act)`: turn after turn of `act` while `more` holds, stopping on a creature coming into view (but
+for one who talks and fights no one, `World::disturbs_rest`), a message (`say`; `note` does not
+stop it), or death (`Ended`), perceiving only after turns in which a creature that disturbs a
+rest could have come into view (`out_of_view_for`, which accounts for speed and the cheapest
+step and leaves out those who talk and fight no one), in which the player heard something, or in
+which the weather the player would see changed (`weather_turned`). A new action that takes time
+needs an `ActionKind` (with its id and a line in `data/actions.toml`) and must return its price
+there,
 asked through `price_of`/`step_price`/`price_for`: those apply the actor's burden (below,
 `World::burdened`), so a price taken anywhere else would escape it (`price_until`, the rest's
 last turn, deliberately does). Price an action that changes the load before it does (pick up,
@@ -339,7 +372,7 @@ carry `start_date`/`start_time`. Rest (`R`) is a message-line input mode (`Input
 Hearing (spec §5 "Hearing") lives in `warlock-core/src/noise.rs`. `noise::noise(content, level,
 actor, burden, Act)` is the one place an action's loudness is decided (creature `footsteps` ×
 terrain `step_noise` percent × the burden's `footsteps()` percent for `Act::Step`, the door's
-`toggle_noise` for `Act::OpenDoor`/`CloseDoor`; `make_noise` passes the actor's
+`toggle_noise` for `Act::OpenDoor`/`CloseDoor`, `VOICE_NOISE` for `Act::Mutter`; `make_noise` passes the actor's
 `Load::penalty`):
 a new noisy action gets an `Act` variant there, and its call site in `world/mod.rs` is one
 `self.make_noise(actor, Act::…)` where the action happens. `noise::make` delivers it at once to
@@ -350,7 +383,8 @@ since it last acted and is cleared as it acts in `World::creature_turn` (the AI 
 before clearing); the player's is cleared in `World::run_turn` once the player has acted, and
 becomes `PerceptionView::sounds()` (sources not visible only; kind, `Volume`, and `rough_place`,
 never the actor; a walker's several steps within one turn are one sound). `World::hear` logs news
-(`noise::news` against `WorldState::recent_sounds`) as messages, which stop a rest. The app draws
+(`noise::news` against `WorldState::recent_sounds`) as messages, which stop a rest (voices are said
+with their words by `World::say_mutters` instead, as notes). The app draws
 `PerceptionView::sounds()` in `ui/sounds.rs` (a still `◌` marker, always: it is information; the
 ripple only with `glyph_animation`). Sounds carry at most `noise::MAX_REACH` (30) cells, under
 `VIEW_RADIUS`, which keeps rest batching (`out_of_view_for`) exact (a const assert guards it).

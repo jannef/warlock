@@ -5,7 +5,7 @@ use crate::content::{ActionKind, CombatStance, ObjectId, StatusId};
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
 use crate::weather::Weather;
-use crate::world::ActorId;
+use crate::world::{ActorId, Conversation};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
@@ -66,6 +66,15 @@ pub enum Action {
     /// Wait turn after turn (creatures act) until the goal, stopping early when a creature comes
     /// into view or a message is logged.
     Rest(Rest),
+    /// Chat with the creature in a direction (spec §8 "Dialogue"): it answers with a line, and
+    /// one that has topics opens the dialogue screen. Takes the time of `chat`; refused (no
+    /// time) when the player sees no one there.
+    Chat(Dir),
+    /// Ask the creature in a direction about one of its topics, by id. Takes no time.
+    Ask {
+        dir: Dir,
+        topic: String,
+    },
     /// Eat one of a stack, from the pack or the floor (spec §8 "Hunger"): a meal of as many
     /// turns (each the `eat` action) as the food takes, stopping early like a rest; the food is
     /// eaten and feeds at the end.
@@ -288,6 +297,10 @@ pub enum Event {
         /// The affected cells the player can see; perception-filtered, never ground truth.
         cells: Vec<Pos>,
     },
+    /// The player chatted with a creature, or asked it about a topic, and it answered (spec §8
+    /// "Dialogue"): what it said and what the player may ask it about. One with topics opens
+    /// the dialogue screen.
+    Talked(Conversation),
     /// A wall gave way (spec §8 "Digging") and is rubble now. Kept when the player sees the cell
     /// afterwards.
     WallBroken {
@@ -370,14 +383,15 @@ pub struct Outcome {
 
 /// Text syntax for scripting: `move:E wait open:E close:W kick:N ascend descend lantern rest:1h
 /// rest:dawn rest:dusk pickup pickup:ac drop:b equip:body:b remove:body bash:E fire:12,5
-/// throw:c:12,5 dig:E eat:b eat:floor:a vision:ID skip:1h weather:rain effect:fireball@12,5
-/// effect:lightning_bolt@3,4>12,4 afflict:bleeding` (durations: `30s`, `10m`, `2h`; letters
-/// name stacks, `a` first; `pickup` and `drop` without letters take everything;
-/// `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT, `remove:SLOT` takes off what
-/// is there; `bash:DIR` bashes with the held shield; `dig:DIR` digs toward a wall; `fire:X,Y`
-/// shoots at the level cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack LETTER
-/// there; `eat:LETTER` eats one of inventory stack LETTER, `eat:floor:LETTER` one of the stack
-/// LETTER of the pile underfoot; weather: `clear`, `overcast`, `rain`, `heavy`;
+/// throw:c:12,5 dig:E eat:b eat:floor:a chat:E ask:E:TOPIC vision:ID skip:1h weather:rain
+/// effect:fireball@12,5 effect:lightning_bolt@3,4>12,4 afflict:bleeding` (durations: `30s`,
+/// `10m`, `2h`; letters name stacks, `a` first; `pickup` and `drop` without letters take
+/// everything; `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT, `remove:SLOT`
+/// takes off what is there; `bash:DIR` bashes with the held shield; `dig:DIR` digs toward a wall;
+/// `fire:X,Y` shoots at the level cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack
+/// LETTER there; `eat:LETTER` eats one of inventory stack LETTER, `eat:floor:LETTER` one of the
+/// stack LETTER of the pile underfoot; `chat:DIR` talks to the creature that way, `ask:DIR:TOPIC`
+/// asks it about a topic by id; weather: `clear`, `overcast`, `rain`, `heavy`;
 /// `effect:ID@X,Y[>X,Y]` shows a spell effect at a cell, or from one cell toward another).
 ///
 /// `Display` and `FromStr` round-trip; action names are case-insensitive when parsing (vision
@@ -414,6 +428,8 @@ impl fmt::Display for Action {
             Action::Rest(Rest::For(d)) => write!(f, "rest:{d}"),
             Action::Rest(Rest::Dawn) => f.write_str("rest:dawn"),
             Action::Rest(Rest::Dusk) => f.write_str("rest:dusk"),
+            Action::Chat(d) => write!(f, "chat:{d}"),
+            Action::Ask { dir, topic } => write!(f, "ask:{dir}:{topic}"),
             Action::SetStance(stance) => write!(f, "stance:{stance}"),
             Action::Dig(d) => write!(f, "dig:{d}"),
             Action::SetVision(id) => write!(f, "vision:{id}"),
@@ -452,6 +468,19 @@ impl FromStr for Action {
             "move" => dir().map(Action::Move),
             "open" => dir().map(Action::Open),
             "close" => dir().map(Action::Close),
+            "chat" => dir().map(Action::Chat),
+            "ask" => {
+                let usage =
+                    || "`ask` needs a direction and a topic, e.g. `ask:E:rooms`".to_string();
+                let (dir, topic) = arg.and_then(|a| a.split_once(':')).ok_or_else(usage)?;
+                if topic.is_empty() || topic.contains(':') {
+                    return Err(usage());
+                }
+                Ok(Action::Ask {
+                    dir: dir.parse().map_err(|_| usage())?,
+                    topic: topic.to_string(),
+                })
+            }
             "kick" => dir().map(Action::Kick),
             "bash" => dir().map(Action::Bash),
             "dig" => dir().map(Action::Dig),
@@ -592,8 +621,9 @@ impl FromStr for Action {
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, kick:DIR, \
                  ascend, descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
                  equip:SLOT:LETTER, remove:SLOT, bash:DIR, fire:X,Y, throw:LETTER:X,Y, dig:DIR, \
-                 eat:LETTER, eat:floor:LETTER, stance:NAME, vision:ID, skip:DURATION, \
-                 weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y], afflict:STATUS)"
+                 eat:LETTER, eat:floor:LETTER, chat:DIR, ask:DIR:TOPIC, stance:NAME, vision:ID, \
+                 skip:DURATION, weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y], \
+                 afflict:STATUS)"
             )),
         }
     }
@@ -698,6 +728,10 @@ mod tests {
                 at: Pos::new(-3, 4),
                 to: Some(Pos::new(12, 0)),
             },
+            Action::Ask {
+                dir: Dir::NW,
+                topic: "the_rooms".into(),
+            },
             Action::Eat(Meal::Pack(1)),
             Action::Eat(Meal::Floor(0)),
             Action::Eat(Meal::Floor(25)),
@@ -710,6 +744,7 @@ mod tests {
                 Action::Move(d),
                 Action::Open(d),
                 Action::Close(d),
+                Action::Chat(d),
                 Action::Kick(d),
                 Action::Bash(d),
                 Action::Dig(d),
@@ -796,6 +831,16 @@ mod tests {
             }
             .to_string(),
             "equip:head:c"
+        );
+        assert_eq!(
+            parse_actions("CHAT:ne ask:E:Rooms"),
+            Ok(vec![
+                Action::Chat(Dir::NE),
+                Action::Ask {
+                    dir: Dir::E,
+                    topic: "rooms".into()
+                }
+            ])
         );
         assert_eq!(
             parse_actions("FIRE:3,4 throw:B:10,2"),
@@ -896,6 +941,13 @@ mod tests {
             "skip",
             "skip:0s",
             "skip:x",
+            "chat",
+            "chat:up",
+            "ask",
+            "ask:E",
+            "ask:E:",
+            "ask:up:rooms",
+            "ask:E:a:b",
             "dig",
             "dig:",
             "dig:down",
