@@ -9,16 +9,20 @@ screen instead; see [Controls](controls.md#rebinding-keys).
 | Setting | What it does |
 |---|---|
 | Font size | The size of the glyphs, from 12 to 36 (18 to start with). Larger glyphs show less of the map. |
-| Reduced effects | Turns every effect below off at once, whatever its own switch says. |
+| Reduced effects | Turns every effect below but Blood off at once, whatever its own switch says. |
 | Glyph animation | Water waves and flows, the altar pulses, and a sound you hear ripples in on the map. |
 | Light flicker | Firelight flickers and drifts in color. Off, every light is steady. |
-| Slides, camera | Creatures slide from cell to cell, attackers lunge, and the view follows you smoothly. Off, they jump. |
+| Slides, camera | Creatures slide from cell to cell, attackers lunge, the view follows you smoothly, and a fireball or a lightning bolt plays out. Off, they jump, and a spell is a brief still flash of the cells it hits. |
 | Bloom and glow | A soft glow around glowing glyphs such as lava and crystals. |
 | Heat haze | The air shimmers above lava and fires. |
 | Particles | Sparks, embers, splashes, dust, foam, arrows in flight, and the sparkle of a spell. |
-| Screen fades | The fade in from black after you change level. |
+| Screen fades | The fade in from black after you change level, and the rest of the view darkening for a moment while a fireball or a lightning bolt flares. |
+| Screen shake | The view shakes for a moment when a fireball or a lightning bolt goes off near you; the nearer, the harder. |
 | Weather | Rain falling, splashing, and ringing on water. |
+| Blood | The stains big hits and kills leave on floors and walls (see [Combat](combat.md#blood)). Not one of the effects: Reduced effects leaves it as it is. |
 | Color palette | The colors: Default, High contrast, or Colorblind (red-green). See below. |
+| Clock | How the time of day is written: 24-hour (`14:32`, the default) or 12-hour (`2:32 PM`). It changes the status bar and the death screen; the game itself keeps one clock. |
+| Where are my files? | Opens a screen showing where your settings, save, and logs are, and why, with **Open folder** for each. See [Saving](saving.md#portable-mode). |
 | Reset to defaults | Puts every setting above back to its default. Your keys stay as they are. |
 
 ## Effects never hide anything
@@ -29,8 +33,12 @@ Every effect is only for show, and no information depends on one:
 - With the Weather switch off, a rainy day is still as dark as it is; only the falling drops are
   gone (see [Weather](weather.md)).
 - With Light flicker off, lights are steady at the brightness the rules use for them.
+- A fireball or a lightning bolt always shows the cells it hits, if only as a brief still flash;
+  its light, the darkening, and the shake are only for show.
 - Creature shadows are always drawn, and they never change what you or anyone else can see (see
   [Light](light.md#what-is-only-for-show)).
+- Blood is only for show: with the Blood switch off, nothing about a fight changes, and look
+  mode stops mentioning it.
 
 ## Palettes
 

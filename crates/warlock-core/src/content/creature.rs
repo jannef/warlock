@@ -11,6 +11,7 @@ use crate::combat::{Attack, CRITS, DEFAULT_CRIT, DEFAULT_THREAT, THREATS};
 use crate::dice::Dice;
 use crate::skills::Skills;
 use crate::stats::{Stat, Stats};
+use crate::weapon_skills::WeaponSkills;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::ops::RangeInclusive;
@@ -116,6 +117,12 @@ pub(super) struct CreatureSpec {
     pub attack: Option<NaturalAttackSpec>,
     /// Its natural armour: hide, shell, or scales.
     pub natural: Option<Hide>,
+    /// The colour of its blood (`"#rrggbb"`), or `"none"` for a bloodless creature; none:
+    /// dark red ([`crate::blood::RED`]).
+    pub blood: Option<String>,
+    /// Its ranks in weapon skills (spec §8 "Weapon skills"), by skill id.
+    #[serde(default)]
+    pub weapon_skills: BTreeMap<String, u8>,
     pub anim: Option<GlyphAnim>,
     #[serde(default)]
     pub glow: f32,
@@ -163,6 +170,18 @@ pub struct Hide {
     pub name: String,
 }
 
+/// What a creature type's `blood` says: its colour, or `None` for `"none"` (bloodless); dark
+/// red when it says nothing.
+pub(super) fn blood(spec: Option<&str>) -> Result<Option<Rgb>, String> {
+    match spec {
+        None => Ok(Some(crate::blood::RED)),
+        Some("none") => Ok(None),
+        Some(color) => color.parse().map(Some).map_err(|_| {
+            format!("blood: expected a color like \"#rrggbb\" or \"none\", got `{color}`")
+        }),
+    }
+}
+
 impl NaturalAttackSpec {
     /// Checks the attack like a weapon's and resolves its defaults; `status` resolves a status
     /// id to the status and its `max`.
@@ -207,6 +226,7 @@ impl NaturalAttackSpec {
 
 /// What a creature type's names resolve to when content loads.
 pub(super) struct Resolved {
+    pub blood: Option<Rgb>,
     pub light: Option<LightId>,
     pub faction: Option<FactionId>,
     pub vision: usize,
@@ -214,6 +234,7 @@ pub(super) struct Resolved {
     pub stats: Stats,
     pub skills: Skills,
     pub attack: Option<NaturalAttack>,
+    pub weapon_skills: WeaponSkills,
 }
 
 impl CreatureSpec {
@@ -243,6 +264,8 @@ impl CreatureSpec {
             xp: self.xp,
             attack: r.attack,
             natural: self.natural,
+            blood: r.blood,
+            weapon_skills: r.weapon_skills,
             anim: self.anim,
             glow: self.glow,
             particles: self.particles,
@@ -312,6 +335,12 @@ pub struct CreatureDef {
     pub attack: Option<NaturalAttack>,
     /// Gameplay: its natural armour, if any.
     pub natural: Option<Hide>,
+    /// Presentation-only: the colour of its blood (spec §8 "Blood"); `None`: it does not bleed.
+    pub blood: Option<Rgb>,
+    /// Gameplay: the ranks in weapon skills a creature of this type has (spec §8 "Weapon
+    /// skills"), defaults included. Rules only: never shown. The player's come from their race
+    /// and class.
+    pub weapon_skills: WeaponSkills,
     /// Presentation-only.
     pub anim: Option<GlyphAnim>,
     /// Presentation-only: how much the glyph glows (bloom), 0 to 1.

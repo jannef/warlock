@@ -148,18 +148,20 @@ impl World {
 
     /// How fast actor `id` gets hit points back now, in percent of the normal pace (spec §8
     /// "Healing"): the slowest `regen` of its statuses (100 without any), times the resting
-    /// bonus while the player rests. Hunger (#137: Weak or worse) and disease (#139) slow it
-    /// through their statuses' `regen`.
+    /// bonus while the player rests, times the `regen` of a special room it stands in (a
+    /// sanctuary: three times; spec §7 "Special rooms"). The one place that decides it. Hunger
+    /// (#137: Weak or worse) and disease (#139) slow it through their statuses' `regen`.
     pub(crate) fn healing_rate(&self, id: ActorId) -> u32 {
         let Some(actor) = self.state.actors.get(&id) else {
             return 0;
         };
-        let rate = u32::from(actor.effects.regen(&self.content));
+        let mut rate = u32::from(actor.effects.regen(&self.content));
         if self.resting && id == self.state.player {
-            rate * u32::from(self.content.healing().resting) / 100
-        } else {
-            rate
+            rate = rate * u32::from(self.content.healing().resting) / 100;
         }
+        let room = (self.state.levels.get(&actor.level))
+            .and_then(|level| level.room_effect_at(&self.content, actor.pos));
+        room.map_or(rate, |effect| rate * u32::from(effect.regen) / 100)
     }
 
     /// `seconds` of game time from `start` pass for actors `ids` (on the current level, in

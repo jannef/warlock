@@ -9,13 +9,17 @@ use super::menu::{Nav, Panel, Press, wrap};
 use super::screens::{MenuChoice, ScreenAction};
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::render::console::Console;
+use crate::settings::Clock;
 use warlock_core::content::article;
 use warlock_core::perception::PerceptionView;
+use warlock_core::time::GameTime;
 
 #[derive(Debug)]
 pub struct DeathScreen {
-    /// The lines of the epitaph, in order.
+    /// The lines of the epitaph, in order; the empty one is the date and time of death.
     lines: Vec<String>,
+    /// The date and time of death (the clock setting decides how the time is written).
+    when: Option<(String, GameTime)>,
 }
 
 impl DeathScreen {
@@ -25,6 +29,7 @@ impl DeathScreen {
         let Some((view, death)) = view.and_then(|v| v.death().map(|d| (v, d))) else {
             return Self {
                 lines: vec!["Nothing has died.".into()],
+                when: None,
             };
         };
         let content = view.content();
@@ -50,15 +55,11 @@ impl DeathScreen {
             lines: vec![
                 format!("{by},"),
                 format!("in {},", death.place),
-                format!(
-                    "on {}, at {:02}:{:02},",
-                    calendar.full_date(death.time),
-                    death.time.hour(),
-                    death.time.minute()
-                ),
+                String::new(),
                 format!("{turns}."),
                 format!("You had reached level {}.", view.own_experience().level),
             ],
+            when: Some((calendar.full_date(death.time), death.time)),
         }
     }
 
@@ -70,9 +71,15 @@ impl DeathScreen {
         }
     }
 
-    pub fn draw(&self, console: &mut Console) {
+    pub fn draw(&self, console: &mut Console, clock: Clock) {
         let w = 52;
-        let text: Vec<String> = self.lines.iter().flat_map(|l| wrap(l, 44)).collect();
+        let lines = self.lines.iter().map(|line| match &self.when {
+            Some((date, time)) if line.is_empty() => {
+                format!("on {date}, at {},", clock.format(*time))
+            }
+            _ => line.clone(),
+        });
+        let text: Vec<String> = lines.flat_map(|l| wrap(&l, 44)).collect();
         // Rows: margin, the title and its rule, a gap, the epitaph, a gap, the save's fate, a
         // gap, the footer, frame.
         let h = 10 + text.len() as i32;
@@ -143,7 +150,7 @@ mod tests {
         let screen = DeathScreen::new(Some(&w.perception()));
         let mut console = Console::default();
         console.resize(80, 30);
-        screen.draw(&mut console);
+        screen.draw(&mut console, Clock::H24);
         let shown = text(&console);
         assert!(shown.contains("Bled to death,"), "{shown}");
         assert!(!shown.contains("Killed by"), "{shown}");
@@ -160,7 +167,7 @@ mod tests {
         let screen = DeathScreen::new(Some(&w.perception()));
         let mut console = Console::default();
         console.resize(80, 30);
-        screen.draw(&mut console);
+        screen.draw(&mut console, Clock::H24);
         let shown = text(&console);
         assert!(shown.contains("Y O U   D I E D"), "{shown}");
         assert!(shown.contains("in The Arena,"), "{shown}");

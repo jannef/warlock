@@ -65,7 +65,7 @@ impl ControlsScreen {
     /// order, then the fixed and dev keys.
     fn rows(&self, bindings: &Bindings) -> Vec<Row> {
         if self.mode != Mode::ReadOnly {
-            let commands = REBINDABLE.into_iter().map(Row::Command);
+            let commands = REBINDABLE.iter().copied().map(Row::Command);
             return commands.chain([Row::Reset, Row::Back]).collect();
         }
         let mut commands = REBINDABLE.to_vec();
@@ -275,6 +275,7 @@ mod tests {
             binding: KeyBinding::from_text(text),
             repeat: false,
             text: None,
+            shift: false,
         };
         screen.handle(&press, b);
     }
@@ -363,7 +364,14 @@ mod tests {
         b.add_dev_keys();
         let mut help = ControlsScreen::help();
         let rows = help.rows(&b);
-        assert_eq!(rows[..REBINDABLE.len()], REBINDABLE.map(Row::Command));
+        assert_eq!(
+            rows[..REBINDABLE.len()],
+            REBINDABLE
+                .iter()
+                .copied()
+                .map(Row::Command)
+                .collect::<Vec<_>>()[..]
+        );
         for extra in [
             KeyCommand::Cancel,
             KeyCommand::RevealMap,
@@ -381,10 +389,10 @@ mod tests {
         assert_eq!(help.mode, Mode::ReadOnly);
 
         let mut console = Console::default();
-        console.resize(80, 40);
+        console.resize(80, 70);
         help.selected = 0;
         help.draw(&mut console, &b);
-        let text: Vec<String> = (0..40).map(|y| line(&console, y)).collect();
+        let text: Vec<String> = (0..70).map(|y| line(&console, y)).collect();
         assert!(
             text.iter()
                 .any(|l| l.contains("Move north") && l.contains("k Num8 ↑"))
@@ -408,6 +416,7 @@ mod tests {
             binding: KeyBinding::from_text("?"),
             repeat: false,
             text: Some('?'),
+            shift: false,
         };
         assert!(ControlsScreen::help().handle(&question, &mut b));
         assert!(ControlsScreen::help().handle(&Press::nav(Nav::Back), &mut b));

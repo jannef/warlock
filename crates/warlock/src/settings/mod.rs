@@ -9,6 +9,7 @@
 //! font_px = 18            # logical pixels, 12 to 36
 //! reduced_effects = false # preset: forces every effect below off
 //! palette = "default"     # "default", "high-contrast", "colorblind"
+//! clock = "24h"           # "24h" (14:32) or "12h" (2:32 PM)
 //!
 //! [effects]               # per-effect switches, all on by default
 //! glyph_animation = true  # wave, pulse, shimmer, cycle; heard sounds ripple in
@@ -17,13 +18,16 @@
 //! glow = true             # bloom and glyph glow
 //! distortion = true       # heat haze
 //! particles = true
-//! screen_fades = true     # level-change fade and flashes
+//! screen_fades = true     # level-change fade, flashes, and spell effects darkening the view
+//! screen_shake = true     # the view shakes when a spell effect lands near the player
 //! weather = true          # rain falling, splashing, and rings on water
+//! blood = true            # blood stains; not part of reduced effects
 //!
 //! [bindings]              # command id -> keys; a character, or a key name like "ArrowUp"
 //! move_n = ["k", "Numpad8", "ArrowUp"]
 //! ```
 
+pub mod clock;
 pub mod keys;
 pub mod palette;
 
@@ -31,6 +35,7 @@ use crate::cli::Args;
 use crate::input::Bindings;
 use crate::storage::Backend;
 use bevy::prelude::*;
+pub use clock::Clock;
 pub use palette::{Palette, Role};
 
 pub const MIN_FONT_PX: u32 = 12;
@@ -49,6 +54,8 @@ pub struct Settings {
     /// Per-effect switches; an effect runs only when its switch is on and reduced effects is off.
     pub effects: EffectSwitches,
     pub palette: Palette,
+    /// How times of day are written (status bar, death screen).
+    pub clock: Clock,
 }
 
 /// Which visual effects run (spec §4.7). In [`Settings`] these are the player's per-effect
@@ -67,12 +74,18 @@ pub struct EffectSwitches {
     /// Heat haze.
     pub distortion: bool,
     pub particles: bool,
-    /// The level-change fade and screen flashes.
+    /// The level-change fade, screen flashes, and bright spell effects darkening the rest of the
+    /// view while they peak.
     pub screen_fades: bool,
+    /// The view shaking when a spell effect (a trap's fireball) lands near the player.
+    pub screen_shake: bool,
     /// Weather drawn over the map: rain falling, splashing, and rings on still water. A switch of
     /// its own (not `particles`): it moves over the whole view, not around a few sources. The
     /// weather itself (its light, the status bar) does not depend on it.
     pub weather: bool,
+    /// Blood stains on floors and walls (spec §8 "Blood"). A content preference rather than an
+    /// effect: reduced effects leaves it as it is.
+    pub blood: bool,
 }
 
 impl EffectSwitches {
@@ -84,7 +97,9 @@ impl EffectSwitches {
         distortion: true,
         particles: true,
         screen_fades: true,
+        screen_shake: true,
         weather: true,
+        blood: true,
     };
     pub const ALL_OFF: Self = Self {
         glyph_animation: false,
@@ -94,16 +109,26 @@ impl EffectSwitches {
         distortion: false,
         particles: false,
         screen_fades: false,
+        screen_shake: false,
         weather: false,
+        blood: false,
     };
 
-    /// The effective switches: each as set, and everything off when `reduced`.
+    /// The effective switches: each as set, and when `reduced` every effect off; blood stays
+    /// as set (it is a content preference, not an effect).
     pub fn effective(self, reduced: bool) -> Self {
-        if reduced { Self::ALL_OFF } else { self }
+        if reduced {
+            Self {
+                blood: self.blood,
+                ..Self::ALL_OFF
+            }
+        } else {
+            self
+        }
     }
 
     /// The setting names, for the file.
-    const KEYS: [&'static str; 8] = [
+    const KEYS: [&'static str; 10] = [
         "glyph_animation",
         "flicker",
         "motion",
@@ -111,7 +136,9 @@ impl EffectSwitches {
         "distortion",
         "particles",
         "screen_fades",
+        "screen_shake",
         "weather",
+        "blood",
     ];
 
     fn to_map(self) -> std::collections::BTreeMap<&'static str, bool> {
@@ -131,7 +158,9 @@ impl EffectSwitches {
             "distortion" => &mut self.distortion,
             "particles" => &mut self.particles,
             "screen_fades" => &mut self.screen_fades,
+            "screen_shake" => &mut self.screen_shake,
             "weather" => &mut self.weather,
+            "blood" => &mut self.blood,
             _ => return None,
         })
     }
@@ -158,6 +187,7 @@ impl Default for Settings {
             reduced_effects: false,
             effects: EffectSwitches::ALL_ON,
             palette: Palette::Default,
+            clock: Clock::H24,
         }
     }
 }
@@ -199,6 +229,7 @@ pub fn parse(text: &str) -> Loaded {
             "reduced_effects",
             "effects",
             "palette",
+            "clock",
             "bindings",
         ]
         .contains(&key.as_str())
@@ -248,6 +279,12 @@ pub fn parse(text: &str) -> Loaded {
             None => warnings.push(format!("unknown palette {value}; using the default")),
         }
     }
+    if let Some(value) = table.get("clock") {
+        match value.as_str().and_then(Clock::from_id) {
+            Some(clock) => settings.clock = clock,
+            None => warnings.push(format!("unknown clock {value}; using the default")),
+        }
+    }
     let bindings = match table.get("bindings") {
         Some(toml::Value::Table(t)) => Bindings::from_table(t, &mut warnings),
         Some(_) => {
@@ -268,6 +305,7 @@ struct FileOut<'a> {
     font_px: u32,
     reduced_effects: bool,
     palette: &'a str,
+    clock: &'a str,
     effects: std::collections::BTreeMap<&'static str, bool>,
     bindings: std::collections::BTreeMap<String, Vec<String>>,
 }
@@ -278,6 +316,7 @@ pub fn to_toml(settings: &Settings, bindings: &Bindings) -> String {
         font_px: settings.font_px,
         reduced_effects: settings.reduced_effects,
         palette: settings.palette.id(),
+        clock: settings.clock.id(),
         effects: settings.effects.to_map(),
         bindings: bindings.to_map(),
     };
@@ -347,7 +386,11 @@ impl SettingsStore {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn default_backend() -> Option<Backend> {
-    crate::paths::project_dirs().map(|d| Backend::Dir(d.config_dir().to_path_buf()))
+    crate::paths::locations()
+        .config
+        .dir
+        .clone()
+        .map(Backend::Dir)
 }
 
 /// Browser storage; without it (some privacy modes) settings last for the session only.
@@ -416,10 +459,13 @@ mod tests {
             effects: EffectSwitches {
                 particles: false,
                 flicker: false,
+                screen_shake: false,
                 weather: false,
+                blood: false,
                 ..EffectSwitches::ALL_ON
             },
             palette: Palette::Colorblind,
+            clock: Clock::H12,
         };
         let mut bindings = Bindings::default();
         bindings
@@ -458,12 +504,29 @@ mod tests {
         s.effects.particles = false;
         let e = s.effective_effects(false);
         assert!(!e.particles && e.glow && e.flicker);
+        // Reduced effects turns every effect off, but blood stays as set.
+        let reduced = EffectSwitches {
+            blood: true,
+            ..EffectSwitches::ALL_OFF
+        };
         s.reduced_effects = true;
-        assert_eq!(s.effective_effects(false), EffectSwitches::ALL_OFF);
+        assert_eq!(s.effective_effects(false), reduced);
         s.reduced_effects = false;
-        assert_eq!(s.effective_effects(true), EffectSwitches::ALL_OFF);
+        assert_eq!(s.effective_effects(true), reduced);
+        s.effects.blood = false;
+        assert!(!s.effective_effects(true).blood && !s.effective_effects(false).blood);
         // Turning the preset off again restores the individual switches.
         assert!(s.effective_effects(false).glow);
+    }
+
+    #[test]
+    fn the_clock_setting_parses_and_a_bad_value_costs_only_itself() {
+        assert_eq!(parse("clock = \"12h\"\n").settings.clock, Clock::H12);
+        let loaded = parse("clock = \"noon\"\nfont_px = 20\n");
+        assert_eq!(loaded.settings.clock, Clock::H24);
+        assert_eq!(loaded.settings.font_px, 20);
+        assert_eq!(loaded.warnings.len(), 1, "{:?}", loaded.warnings);
+        assert_eq!(parse("font_px = 20\n").settings.clock, Clock::H24);
     }
 
     #[test]

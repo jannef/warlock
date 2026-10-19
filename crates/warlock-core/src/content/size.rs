@@ -1,6 +1,7 @@
 //! Sizes (`assets/data/sizes.toml`, spec §8 "Burden"): how big a race or a creature type is,
 //! and so how much it can carry. A size scales the carrying limit by its `carry` percent: small
-//! races (halflings, gnomes) carry three quarters of what a medium one does.
+//! races (halflings, gnomes) carry three quarters of what a medium one does. Its `blood` percent
+//! scales how much blood it spills (spec §8 "Blood"; presentation only).
 //!
 //! Every race and creature type has a size, [`MEDIUM`] unless it names another. Without the file
 //! there is only [`SizeDef::medium`].
@@ -13,6 +14,8 @@ use std::ops::RangeInclusive;
 pub const MEDIUM: &str = "medium";
 /// What a size may carry, in percent of a medium one: a tenth to ten times as much.
 pub const CARRY: RangeInclusive<u16> = 10..=1000;
+/// How much blood a size may spill, in percent of a medium one: none to ten times as much.
+pub const BLOOD: RangeInclusive<u16> = 0..=1000;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -29,6 +32,14 @@ pub struct SizeDef {
     pub name: String,
     /// How much it carries, in percent of what a medium one does (spec §8 "Burden").
     pub carry: u16,
+    /// How much blood it spills, in percent of what a medium one does (spec §8 "Blood"); 100 by
+    /// default.
+    #[serde(default = "full_blood")]
+    pub blood: u16,
+}
+
+fn full_blood() -> u16 {
+    100
 }
 
 impl SizeDef {
@@ -38,6 +49,7 @@ impl SizeDef {
             id: MEDIUM.into(),
             name: "Medium".into(),
             carry: 100,
+            blood: 100,
         }
     }
 }
@@ -60,6 +72,15 @@ pub(super) fn parse(file: &str, text: &str) -> Result<Vec<SizeDef>, ContentError
                 CARRY.end()
             )));
         }
+        if !BLOOD.contains(&size.blood) {
+            return Err(err(format!(
+                "size `{}`: blood {} is out of range ({} to {})",
+                size.id,
+                size.blood,
+                BLOOD.start(),
+                BLOOD.end()
+            )));
+        }
         sizes.push(size);
     }
     if !sizes.iter().any(|s| s.id == MEDIUM) {
@@ -76,11 +97,15 @@ mod tests {
 
     #[test]
     fn sizes_parse_in_file_order() {
-        let text = "[[size]]\nid = \"small\"\nname = \"Small\"\ncarry = 75\n\
+        let text = "[[size]]\nid = \"small\"\nname = \"Small\"\ncarry = 75\nblood = 60\n\
                     [[size]]\nid = \"medium\"\nname = \"Medium\"\ncarry = 100\n";
         let sizes = parse("sizes.toml", text).expect("valid");
         assert_eq!(sizes.len(), 2);
-        assert_eq!((sizes[0].id.as_str(), sizes[0].carry), ("small", 75));
+        let small = &sizes[0];
+        assert_eq!(
+            (small.id.as_str(), small.carry, small.blood),
+            ("small", 75, 60)
+        );
         assert_eq!(sizes[1], SizeDef::medium());
     }
 
@@ -92,6 +117,10 @@ mod tests {
             (format!("{medium}{medium}"), "duplicate size id `medium`"),
             (medium.replace("100", "9"), "carry 9 is out of range"),
             (medium.replace("100", "1001"), "carry 1001 is out of range"),
+            (
+                format!("{medium}blood = 1001\n"),
+                "blood 1001 is out of range",
+            ),
             (medium.replace("carry = 100\n", ""), "missing field `carry`"),
             (format!("{medium}weight = 3\n"), "unknown field `weight`"),
         ] {

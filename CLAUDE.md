@@ -37,7 +37,7 @@ Game flags (`cargo run -p warlock -- --help`):
 - `--scenario NAME` (default `showcase`; `depths` starts in the generated dungeon, `courtyard` in
   the sunlit courtyard at 06:30, `world` on the overworld beside the Hall, `forest` in the glade
   of a generated forest area of the overworld at 06:30, `arena` in the dark corner of the arena
-  where kobolds and giant rats fight), `--seed S`
+  where kobolds and giant rats fight, `quarry` in the quarry beside a pick-axe), `--seed S`
   (default: the scenario's seed; a number, or a word hashed with FNV-1a, e.g. `--seed warlock`),
   `--character RACE,GENDER,CLASS` (e.g. `dwarf,female,warrior`; default: the scenario's
   character; like `--seed` it shapes the run other flags start and alone does not skip the menu)
@@ -47,7 +47,8 @@ Game flags (`cargo run -p warlock -- --help`):
   `--capture-after-frames N` (default 10), `--freeze-time SECONDS` pins animation time (glyph
   animations show that moment; slides and camera moves complete instantly).
 - `--reduced-effects` — force reduced effects on (no glyph animation, light flicker, slides,
-  camera easing, particles, bloom/glow, heat haze, fades, or falling rain); always wins over the settings
+  camera easing, particles, bloom/glow, heat haze, fades, screen shake, or falling rain; a spell
+  effect is a still flash); always wins over the settings
   (`Settings::effective_effects(force)`). With `--freeze-time`, particle bursts from the last turn's events (a `--replay`'s last step)
   show a fixed moment of their life; fades complete instantly.
 - Without `--scenario`, `--new`, `--replay`, `--record`, or `--capture` the game opens on the main
@@ -55,7 +56,7 @@ Game flags (`cargo run -p warlock -- --help`):
   `new-run` on the main menu (e.g. `--scale 1 --screen new-run --capture target/menu.png`), and
   character creation's `race`, `gender`, `class`, and `summary` over New run and the steps
   before them (each on its preselection: the showcase's character);
-  `pause`, `help`, `inventory`, `equipment`, `character`, `pick-up` (the pile on the player's cell), and `drop` over a run
+  `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `pick-up` (the pile on the player's cell), and `drop` over a run
   (e.g. after a `--replay` that walks onto a pile), `equip-item` (the choice for the first slot,
   Head) over the equipment screen; `settings` and `controls` over the main menu, or over the pause
   menu when `--scenario`, `--new`, `--replay`, or `--record` names a run (`--capture` alone does
@@ -63,7 +64,7 @@ Game flags (`cargo run -p warlock -- --help`):
   `--config-dir DIR` keeps `settings.toml` in DIR; captures and replays otherwise use default
   settings and never write the file.
 
-- `--fire` (dev) — start the run aiming the readied missile weapon, as `f` would (captures of the
+- `--fire` (dev) — start the run aiming the readied missile weapon, as `f` (unbound by default) would (captures of the
   targeting line; golden entries pass it with `args = ["--fire"]`).
 - `--replay FILE` — apply a replay at startup (its scenario/seed/character win; a hash divergence
   is logged as a warning), so `--capture` can screenshot any state. `--record FILE` — write every applied
@@ -77,46 +78,61 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 | Dump a replay's end state | `... dump --replay runs/x.json [--actions "wait"] --format ascii\|json [--state]` |
 | Create a replay | `... replay --create --scenario showcase --actions "move:N wait" -o runs/x.json` |
 | Verify a replay | `... replay --verify runs/x.json` (exit 1 and first diverging step on mismatch) |
-| Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor; also local areas, `--level local:49,23`) |
+| Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor; a special room's floor by its effect's letter; also local areas, `--level local:49,23`) |
 
 Dump layers beyond the map ones: `inventory`, `equipment`, `stats`, and `skills` (the player's
 trained skills, `Stealth 17`) from perception; `actors` (dev-only: every actor's hit points,
 load, stats, and skills with their marks).
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascend descend lantern
-pickup[:LETTERS] drop[:LETTERS] equip:SLOT:LETTER remove:SLOT fire:X,Y throw:LETTER:X,Y
-rest:GOAL vision:PROFILE skip:DURATION weather:KIND afflict:STATUS` (`DIR` = N
-NE E SE S SW W NW; `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
+pickup[:LETTERS] drop[:LETTERS] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
+dig:DIR rest:GOAL stance:NAME vision:PROFILE skip:DURATION weather:KIND effect:ID@X,Y[>X,Y]
+afflict:STATUS` (`DIR` = N
+NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
 player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `SLOT` = a slot id in
 `assets/data/slots.toml`, e.g. `equip:body:b` (put inventory stack `b` on), `remove:body`;
-`fire:X,Y` shoots the readied missile weapon at level cell (X, Y), `throw:c:X,Y` throws one of
-inventory stack `c` there; `PROFILE` = an id in
+`bash:DIR` bashes with the held shield, `fire:X,Y` shoots the readied missile weapon at level
+cell (X, Y), `throw:c:X,Y` throws one of
+inventory stack `c` there (any weapon is thrown whole, badly: `t` in the game sends `fire` for a launcher, else `throw` for what the Missile weapon slot holds); `dig:E` digs into the wall east with the tool in the Tool slot, turn
+after turn until it gives way or something interrupts; `PROFILE` = an id in
 `assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are
 `30s`, `10m`, `2h`; `skip` is the dev hour skip; `weather` is the dev weather override, `KIND` =
-`clear`, `overcast`, `rain`, `heavy`, for three hours of game time; `afflict` is the dev status
+`clear`, `overcast`, `rain`, `heavy`, for three hours of game time; `effect` is the dev spell
+effect, `ID` an id in `assets/data/effects.toml`: `effect:fireball@30,14` (a burst there),
+`effect:fireball@20,10>30,14` (flying there first), `effect:lightning_bolt@21,17>58,17` (a bolt
+toward the second cell), no time and no rules effect, for captures; `afflict` is the dev status
 effect: one degree more of `STATUS`, an id in `assets/data/status.toml`, e.g.
 `afflict:poisoned*4 afflict:bleeding`, no game time; `ACTION*N` repeats one, e.g.
 `wait*10`). Dump layers: `view` (what the player sees), `fov` (`*` visible),
 `memory` (seen terrain and remembered objects), `light` (perceived brightness of visible cells as a
 digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places over the view: `f`
-footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m` chanting, upper case
-when loud), `inventory` (what the player
+footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m` chanting, `d`
+digging, upper case when loud), `blood` (blood the player sees or remembers as a digit over the
+view, `1` a few drops to `9` soaked), `inventory` (what the player
 carries and weighs, worn and wielded things marked, their burden and its thresholds),
 `equipment` (the player's slots), `stats`
 (the player's race, gender, and class, then their own scores as the rules read them, then
-`Effects Bleeding, Poisoned` when they suffer any), `truth`
+`Effects Bleeding, Poisoned` when they suffer any), `weapon_skills` (the player's
+ranks and progress toward the next, `Long blades 2 (40%)`), `truth`
 (ground truth, **dev-only**), `actors` (every actor on the level with its hit points and
 Defence, its weight, what it carries and of that wears and wields, its burden and carrying
-limit, its stats as score/potential, and its status effects with severities, **dev-only**). The
-header line has the player's `hp 17/17` (and `dead` once the run has ended); JSON dumps add
-`hp`, `defence`, `burden` (`level`, `limit`), `effects` (status ids), `death` (with `of`, the
-status that killed), and each seen actor's `health` and `effects` (those that show). Replay
+limit, its weapon skills with marks, its stats as score/potential, and its status effects with
+severities, **dev-only**), `rooms` (the level's special rooms: their plain ground as the
+effect's `mark`, then a line per room, **dev-only**). The header line has the player's `hp
+17/17` (and `dead` once the run has ended); JSON dumps add `hp`, `defence`, `burden` (`level`,
+`limit`), `effects` (status ids), `death` (with `of`, the status that killed), `weapon_skills`
+(by skill id: `rank`, `progress`), each seen actor's `health` and `effects` (those that show),
+and `room` (the special room the player stands in, if they know it). Replay
 files are JSON
 `{game_version, scenario, seed, character, steps:[{action, hash}]}` (`character` =
 `{race, gender, class}`, left out for a run without one; a replay without it starts as the
 scenario's, so old replays load); `hash` is the FNV-1a 64 state hash (`World::state_hash`) after
 the step, as 16 hex digits.
 
+- `--portable [DIR]` keep everything in `warlock-data` next to the game (or DIR); a `warlock-data`
+  folder there does it without the flag. `--paths` prints the locations and why, then exits.
+  `--move-data native|portable [DIR]` (`--dry-run` to preview) moves files between portable and
+  the platform folders.
 - `--new` start a fresh run instead of resuming the save; `--dev` enables the dev keys in release
   builds (always on in debug: F2 reveal map (ground truth), F3 next vision profile, F4 light-value
   overlay, F5/F9 snapshots, F6 skip an hour (recorded as `skip:1h`), F7 next weather (recorded as
@@ -133,27 +149,43 @@ milliseconds on the vast level) and the `visibilitychange`/`pagehide` listeners 
 warning; failed writes (quota) are messages, never panics. Only the `web-sys` features in
 `crates/warlock/Cargo.toml` are enabled (size).
 
-Saves: `Q` saves and quits (closing the window saves too); the game autosaves every 50 turns and on
-level change to `run.sav` in the platform data dir (`paths.rs`, app name "warlock"; macOS
-`~/Library/Application Support/warlock`). On startup an existing save is resumed unless `--new`, `--capture`,
+Saves: Quit in the pause menu saves and quits (closing the window saves too; the `Q` key is unbound by default, rebindable); the game autosaves every 50 turns and on
+level change to `run.sav` in the data dir (see "File locations" below). On startup an existing save is resumed unless `--new`, `--capture`,
 `--replay`, or `--record` (replays and recordings always start a fresh run). F5 / F9 write / load `snapshots/quick.sav`. An unreadable save is renamed `run.sav.bad`,
 never deleted. Format and `Content::fingerprint` live in `warlock-core/src/save.rs`: bump
 `FORMAT_VERSION` on any incompatible `WorldState` change; adding or reordering terrain, creatures,
-lights, levels, objects, equipment slots, skills, statuses, or dungeon branches invalidates
+lights, levels, objects, equipment slots, skills, weapon skills, statuses, or dungeon branches invalidates
 existing saves.
 **Permadeath**: when the player dies, `screens::on_death` deletes `run.sav`
 (`SaveStore::delete_run`) and opens the death screen; `SaveStore::save_run` never writes a dead
-run (it deletes instead), so autosave, `Q`, and closing the window cannot bring it back, and the
+run (it deletes instead), so autosave, quitting, and closing the window cannot bring it back, and the
 web build parks no state for the page being hidden.
 
-Settings (`crates/warlock/src/settings/`): `settings.toml` in the platform config dir (macOS
-`~/Library/Application Support/warlock`), schema in the `settings/mod.rs` module docs. Changes
+**File locations** (`crates/warlock/src/paths.rs`, the one place that decides; never call
+`ProjectDirs` elsewhere): `paths::init(&args, check_only)` runs first in `main`, before logging,
+and `paths::locations()` is what stores, logging, and the Files screen ask (it carries each
+folder's `Reason`, shown by `--paths`). Precedence per folder: `--config-dir` / `--save-dir`, then
+`--portable [DIR]`, then a `warlock-data` folder next to the game (`paths::game_folder`: the
+executable's folder; on macOS next to the `.app`, never inside it), then the platform dirs
+(`directories`, app name "warlock"; macOS `~/Library/Application Support/warlock`). Portable
+layout `warlock-data/{config,data,logs}`; `Locations::prepare` creates it and warns (never
+fails) when it is unwritable. `resolve` is pure over `Inputs` and tested without a filesystem; new
+files go in the folder `Locations` gives (`keymaps_dir()` for key map files). `warlock --paths`
+prints the report and exits; `warlock --move-data native|portable [DIR] [--dry-run]`
+(`move_data.rs`: copy, compare, rename, remove; `*.bak-<time>` for conflicts; refuses while a game
+holds the shared lock on `logs/.in-use`) moves files between the two layouts. Settings > Files
+(`ui/files_screen.rs`, `ScreenName::Files`, `--screen files`) shows the report with Open folder.
+
+Settings (`crates/warlock/src/settings/`): `settings.toml` in the config dir, schema in the `settings/mod.rs` module docs. Changes
 apply live and are written at once; a bad file means defaults plus a warning, per value. Effects:
 `reduced_effects` is a preset over the `[effects]` switches (`EffectSwitches`: glyph_animation,
-flicker, motion, glow, distortion, particles, screen_fades, weather; all on by default). Each consumer reads
+flicker, motion, glow, distortion, particles, screen_fades, screen_shake, weather; all on by default), all but
+`blood` (on by default too), a content preference the preset leaves as set
+(`EffectSwitches::effective`; its settings row is not indented and never says "(preset)"). Each consumer reads
 its own switch from the `render::Effects` resource (the effective values, synced every frame from
 `Settings` + `--reduced-effects`), never the preset; a new effect needs a switch in
-`EffectSwitches`, the file, and a row in `ui/settings_screen.rs`. Palettes
+`EffectSwitches`, the file, and a row in `ui/settings_screen.rs`. `clock` (`settings/clock.rs`, `"24h"`/`"12h"`) is the one way a time of day is written
+in the UI (`Clock::format`: status bar, death screen); dumps stay 24-hour. Palettes
 (`settings/palette.rs`) are applied only when cells are uploaded to the GPU (`render::upload`) and
 in `ui/glyphs.rs`, never to content colors. Rebindable commands have stable ids in
 `settings/keys.rs` (`KeyCommand::id`): **a new `KeyCommand` variant must be added there**
@@ -163,14 +195,15 @@ it): gate systems that read it with `run_if(resource_exists::<Game>)`; content i
 
 Modal screens (spec §6) — main menu, new run and character creation (race, gender, class,
 summary), pause, settings, controls, the `?` help, the inventory (`i`), the equipment screen
-(`e`) and its choice of what goes in a slot, the character screen (`@`), choosing what to
+(`e`) and its choice of what goes in a slot, the character screen (`@`), the weapon skills
+screen (`W`), choosing what to
 pick up (`,`/`g` on several stacks) or drop (`d`), and the death screen (opened by
 `screens::on_death` when `World::death` is set; Enter/Esc is `MenuChoice::LeaveRun`, back to the
 main menu without saving; no `--screen`: capture a dead replay instead) — are one
 screen stack (`ui/screens.rs`, the `ScreenStack` resource); add a screen there, never a second way
 to open, read keys for, or draw one:
 - **Open**: `Screens::open(ScreenName)` (a `SystemParam` over the stack, content, save store, and
-  the run, if any) is the one way a screen opens: `?`, `i`, `e`, `@`, `,`, `d`, and Esc in play,
+  the run, if any) is the one way a screen opens: `?`, `i`, `e`, `@`, `W`, `,`, `d`, and Esc in play,
   sub-screens, the startup main menu and `--screen`, and the return to the main menu after a run.
   Screens that show the run read the perception snapshot when they open (no time passes while
   they are open but for an action chosen on one). Back/Esc pops the top screen, so a sub-screen
@@ -192,8 +225,26 @@ to open, read keys for, or draw one:
   dropped. Held-key repeats never open, close, choose, or act.
 - **Draw**: `ui::draw` is the one system that writes the UI console: when anything it shows
   changed, it clears the console, draws the gameplay UI if a run exists, then the top screen.
-- Prompts in the message line (open/close direction, rest, look mode) are `InputMode`s, not
-  screens.
+- **Confirm** (`ui/confirm_screen.rs`): a reusable Yes/No dialog, No selected. A screen (or gameplay)
+  answers `ScreenAction::Confirm(question, MenuChoice)`; the dialog pops itself on Yes and the
+  choice is applied as usual, `n`/Esc/Enter-on-No close it. Every quit path (pause Quit and Save and
+  quit to menu, main menu Quit, a bound `KeyCommand::Quit`) goes through it. `y`/`n` are fixed (they
+  are movement keys in play), like the rest prompt's letters. `--screen confirm` shows it. On
+  wasm, quit saves then reloads the page (`storage::web::reload`; `AppExit` also reloads), and the
+  main menu has no Quit.
+- **Info pages** (`ui/info_tabs.rs`): the screens about the player (Character, Inventory,
+  Equipment, Skills) are an ordered group, `PAGES`. While one is the top screen, the page keys replace
+  it (`ScreenAction::Replace` -> `Screens::replace`: the stack depth is unchanged, so Esc still
+  returns to where the first was opened) and each draws its tab line on the bottom border with
+  `info_tabs::draw_tabs`. **A new info screen joins the group**: one entry in `PAGES` (its
+  position is its number) and one `draw_tabs` call in its `draw`; never a separate way to switch.
+  Sub-steps of a page (`EquipItem`, pick-up/drop/throw lists) are not pages and keep their
+  number keys. The keys are the `Context::Pages` commands `Page(1..9)`, `NextPage` (Shift
+  reverses), `PrevPage`: rebindable like all commands (`KeyCommand::context`: keys are unique
+  per context, so Tab is `NextTarget` in play and `NextPage` here; `Bindings::owner_in` and
+  `lookup` read one context). `Press::shift` carries Shift from the router.
+- Prompts in the message line (open/close/bash direction, rest, look mode) are `InputMode`s,
+  not screens.
 - Screens are plain state machines tested without a window: `ui/menu.rs` (`Press`, `Panel`, main
   and pause menu), `ui/new_run_screen.rs`, `ui/settings_screen.rs`, `ui/controls_screen.rs` (also
   the `?` help: the same binding list, read-only), `ui/object_screen.rs` (inventory, pick up,
@@ -203,7 +254,8 @@ to open, read keys for, or draw one:
   their inventory letters), `ui/character_screen.rs` (name, race, gender, class, age, birthday,
   and sign (`birth_parts`/`fit_parts`, shared with the summary), the player's scores, hit points
   and Defence total, weight and burden thresholds; 72 wide like the summary),
-  `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per
+  `ui/weapon_skills_screen.rs` (sections, ranks, and a faint ten-cell marks bar; never a
+  benefit), `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per
   step with a Random row rolled from the seed, `SummaryScreen`, `Draft`), `ui/death_screen.rs`
   (who killed the player, where, when, after how many turns).
 
@@ -260,10 +312,13 @@ and runs the other actors on the level in time order until the player may act ag
 the clock (whole seconds; leftover energy carries, so a run of actions takes its exact total time,
 up to the second the actor is ready, with no drift) to each action, and `rest` loops waits until
 the goal or an interruption, its last turn cut short with `price_until` so it ends exactly at the
-goal at any player speed (perceiving only after turns in which a creature could have come into
-view: `out_of_view_for`, which accounts for speed and the cheapest step, or in which the weather
-the player would see changed: `weather_turned`). A new action that takes time needs an
-`ActionKind` (with its id and a line in `data/actions.toml`) and must return its price there,
+goal at any player speed. Long actions (`rest`, `dig`) go through `World::keep_at(events, more,
+act)`: turn after turn of `act` while `more` holds, stopping on a creature coming into view, a
+message (`say`; `note` does not stop it), or death (`Ended`), perceiving only after turns in which
+a creature could have come into view (`out_of_view_for`, which accounts for speed and the cheapest
+step) or in which the weather the player would see changed (`weather_turned`). A new action that
+takes time needs an `ActionKind` (with its id and a line in `data/actions.toml`) and must return
+its price there,
 asked through `price_of`/`step_price`/`price_for`: those apply the actor's burden (below,
 `World::burdened`), so a price taken anywhere else would escape it (`price_until`, the rest's
 last turn, deliberately does). Price an action that changes the load before it does (pick up,
@@ -327,10 +382,11 @@ taken off (`World::price_for`); dropping takes off first (`take_off_before_dropp
 (`wield`/`wear` in a level legend, resolved in `content/level.rs::equip`). Presentation reads
 `PerceptionView::equipment` (the player's own) and `PerceptionView::gear(actor)` (what a seen
 creature wears and wields, all of what it carries that is seen; look mode, `ui/look.rs::gear`).
-Combat reads equipment (below): `Actor::weapon` (the first hand holding a weapon), `launcher` and
-`ammunition` (the `ready` slots), and `defence(content, burden)` (armour, shield, parry,
-Dexterity capped by worn `max_dex` and the burden's `max_dex`, the lower winning; the rules ask
-`World::defence_of(id)`, which passes the actor's `Load::penalty`).
+Digging reads it too: `Actor::dig_tool` (the first equipped thing with `dig` power: the Tool slot's
+pick-axe). Combat reads equipment (below): `Actor::weapon` (the first hand holding a weapon),
+`launcher` and `ammunition` (the `ready` slots), and `defence(content, burden)` (armour, shield,
+parry, Dexterity capped by worn `max_dex` and the burden's `max_dex`, the lower winning; the rules
+ask `World::defence_of(id)`, which passes the actor's `Load::penalty`).
 
 Combat (spec §8 "Combat"; M16, #116): the pure rules are `warlock-core/src/combat.rs` (2d12
 `roll_natural`, `hits`, `hit_ways`, `ways`; `Category` (Dexterity, Armour, Shield, Parry,
@@ -361,9 +417,40 @@ away), `SeenActor::health`, and `death`: **never a creature's hit points, a to-h
 modifier**. Spells stay intents (`strike: None`). Tests: `combat.rs` (exhaustive 2d12
 enumeration for hit chances, criticals, miss attribution), `world/fight_tests.rs`.
 
+Weapon skills (spec §8 "Weapon skills"; M22, #134): data is `data/weapon_skills.toml`
+(`content/weapon_skill.rs`: `WeaponSkillTable` with `MarkRules`, named need curves, skills
+(`WeaponSkillDef`: `id`, `name`, `phrase`, `Role`, curve, `[Benefit; 11]` per rank) and the
+symmetric defaults; `SkillId` is an index in file order, in the content fingerprint). Weapons
+name theirs (`category` → `ObjectDef::skill`, its role checked against what the weapon is),
+shields bash (`bash` → `ObjectDef::bash`), races and classes give starting ranks
+(`weapon_skills`, dice; classes `weapon_skill_choice`), creatures fixed ranks. The runtime side
+is `weapon_skills.rs`: `WeaponSkills` (a `Training { rank, marks }` per skill on
+`Actor::weapon_skills`, saved and hashed, `FORMAT_VERSION` 16), `train` (marks → a rank, then
+`raise`: the defaults rise, their marks reset; no chaining), `from_ranks` (starting ranks,
+order-free), `progress`. The rules hook in at one place each: `Actor::attack_skill(kind, with)`
+picks the skill of an attack (a blow: the wielded weapon's, else unarmed; `Melee` `with` a
+shield: shield bashing; a shot: the launcher's; a throw: thrown); `Profile::with(&Benefit)` and
+`Actor::melee`/`ranged`/`thrown`/`bash` apply to-hit, damage, and threat; `Actor::defence` adds
+parry and shield blocking; `World::attack_price` takes `speed`/`reload` off the cost;
+`World::resolve` (`fight.rs`) earns the player's marks (`practise`; a Shield-credited miss on
+the player trains shield blocking; `World::level_of` weighs the opponent by its creature type's
+`level`, spec §8 "Experience") and pushes "You feel more skilled ..." into the unsaved
+`World::news`, said after the attack's own messages (`say_news`, also at the end of
+`perceive` for a block in a creature's turn). A later kind of skill (fighting styles, #135) is another `Role` with the
+same ranks, marks, curve, and `Benefit`s (`Benefit::plus` sums them). Starting ranks roll from
+their own stream (`character/weapon-skills/...`), so stat rolls never move. Presentation reads
+`PerceptionView::own_weapon_skills` only: ranks and a bar, **never a benefit**. Tests:
+`content/weapon_skill.rs`, `weapon_skills.rs`, `world/weapon_skill_tests.rs`; the wiki's tables
+are `xtask/src/wiki/weapon_skills.rs`.
+
 Key commands `,`/`g` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop` screen),
-`i` (`Inventory` screen), `e` (`Equipment` screen), `@` (`Character` screen) are in `input.rs` and
-`settings/keys.rs`.
+`i` (`Inventory` screen), `e` (`Equipment` screen), `@` (`Character` screen), `W` (`WeaponSkills`
+screen), and bash (`KeyCommand::Bash`: a direction prompt, `InputMode::Direction`) are in
+`input.rs` and `settings/keys.rs`. **Abilities** (racial, class, skill, style; the owner's rule,
+#156) get no key of their own: they go into one abilities menu (to come). Each is a core
+`Action` with replay text, an entry in `warlock_core::ability` (`Ability`, listed by
+`PerceptionView::abilities` when usable), and a rebindable `KeyCommand` left unbound by default
+(`settings/keys.rs::UNBOUND`). Shield bash is the first.
 
 Stats (spec §8 "Stats"; M14) live in `warlock-core/src/stats.rs`: `Stat` (Strength, Dexterity,
 Toughness, Intelligence, Willpower, Presence; id, abbreviation, name) is generated by the
@@ -495,6 +582,21 @@ validation is regenerated from the next derived stream. The insta snapshots in
 `src/mapgen/snapshots/` and `src/mapgen/local/snapshots/` flag any change in generator output:
 review the maps in the diff, then accept them deliberately.
 
+Special rooms (spec §7 "Special rooms", M25) are data: `data/room_effects.toml`
+(`content/room_effect.rs`: effects, the per-room `chance`, `per_level`). Generators make them last
+(`mapgen/special.rs`, from the level's map stream, so levels without one are unchanged; rooms
+levels: a room's rectangle, walls included; caves: a floor blob away from the arrival), and level
+files mark them (`[[room]] effect area`; the hub's stairs nook is a sanctuary). They live in
+`LevelState::rooms` (saved, with whether the player has been in each), and the rules ask one
+question, `LevelState::room_effect_at` (public: `World::room_effect_at`): perception light and
+creature sight (`room_shade` on every part of a cell's light, `room_glow` in the base light —
+change `perception.rs` and `sight.rs` together; `special_rooms_keep_the_light_invariants` checks
+they agree), noise (`noise::noise`), regeneration (`World::regen_rate`, the one pace hook), and
+hostile creatures shunning a sanctuary (`World::shuns` in `ai.rs`). A flooded room's slower,
+louder steps come from its floor terrain (`shallow_water`). `enter_room` (world/mod.rs) says the
+first-entry message; `PerceptionView::room` gives look mode the rooms the player knows;
+`PerceptionView::light_kept` lets the renderer dim its own transient light in a shadowed room.
+
 Local areas (spec §3, §7) are generated in `mapgen/local/`: `mod.rs` (`Setting`: the cell's
 landscape and its neighbors' roads, rivers, lakes, and land, read from the overworld; per-landscape
 feature chances; the attempt loop, glade, ruins, deer), `kit.rs` (the terrain and creature ids it
@@ -509,7 +611,29 @@ validation, `arrival`). Overworld terrain picks its generator with `landscape` i
 --nocapture` prints areas with one character per terrain (`WARLOCK_SEED` for the seed), and the
 `forest` scenario or `--content-dir` scenarios with `start_level = "local:x,y"` capture them.
 
-Ranged combat (spec §8 "Ranged combat") lives in `warlock-core/src/world/shoot.rs`: `fire`,
+Digging (spec §8 "Digging"; M19, #131) lives in `warlock-core/src/world/dig.rs`. Terrain that
+breaks has `hardness` and `becomes` (`TerrainDef::breaks: Option<Breakable>`, validated: only
+solid terrain breaks, into walkable, transparent, plain ground); `void` (solid rock) has a `face`
+(`wall`) it turns into when a cell next to it opens, as mapgen walls open ground. Cells on a
+level's edge never break (`LevelState::on_edge`, `breaks_at`). `Action::Dig(Dir)` (`dig:DIR`,
+key `U` = `KeyCommand::UseTool`, ADOM's use-item key, a direction prompt; `a` is left for the
+abilities menu, #156) needs `Actor::dig_tool`; `start_dig` refuses (no time) or returns
+`Spent::Dig(at)`, and `dig` runs `keep_at` with a `dig` action per turn
+(priced by `price_of`, so burden slows it): `dig_turn` makes `Act::Dig` noise (`DIG_NOISE` 80,
+`SoundKind::Digging`) and adds `dig_work(power, strength)` (power × (Strength score + 10), in
+`WORK_SCALE` = 20ths of a hardness point) to `LevelState::dug` (saved, by position); at hardness ×
+20 `break_wall` sets the `becomes` terrain through `set_terrain` (light masks), clears the
+progress, bares `face`s around, and pushes `Event::WallBroken { pos, cause: Breach::Dug }`.
+Explosions (none yet; the fireball trap, #128, is to be the first) call
+`World::blast(center, radius, blast, events)`: every breakable wall in the burst
+(line of sight from the center, computed before anything breaks) with hardness below the blast
+breaks (`Breach::Blast`; `perceive_events` says "The wall collapses!" for those the player sees).
+Perception sees and remembers the rubble like any terrain; `PerceptionView::ready_to_dig` and
+`is_dug` (a visible wall with progress: look mode's "partly dug") are all presentation gets. The
+app bursts the new terrain's `toggle` particles (rubble's dust) on `WallBroken`, like a door's.
+Creatures do not dig. Times are in the wiki's generated `digging.md` tables.
+
+Ranged combat (spec §8 "Ranged combat"; keys: `t` shoots or throws the Missile weapon slot's contents, `T` is the throw chooser, `f` unbound but rebindable; the slot `takes_weapons`) lives in `warlock-core/src/world/shoot.rs`: `fire`,
 `throw`, and `creature_shoots` loose one missile (`loose`): it leaves its stack, makes its noise
 once, flies along `Pos::ray` (the line the AI's `clear_shot` checks) over transparent cells as far
 as the weapon's `range`, attacks whoever stands in its way (`World::missile_hits`, no noise) until
@@ -543,6 +667,23 @@ abilities menu (#156), which reads `PerceptionView::active_skills` (`OwnSkill::a
 skill's kind is `action`; `available`: usable now, false until the uses exist). Pending hooks: athletics (kicking doors, #130; climbing out of pits, #128) and
 escape artist (pits, #128).
 
+Blood (spec §8 "Blood", §4.8; M17): the pure pattern is `warlock-core/src/blood.rs` (`Wound`:
+`volume` by kill or big hit (a third of the maximum, or a critical), size `blood` percent,
+overkill, critical, missile; `spatter`: pool, fan away from the attacker (±45° melee, ±30°
+missiles), kill flecks, stopped by opaque cells, walls next to the victim stained on their face;
+`Stain`: amount to `CAP` 100, colour and spill time mixed by amount, `faces` bits; `seed` hashes
+turn, time, and actor ids with SplitMix: **never the gameplay stream**). `world/bleed.rs`
+(`World::bleed`, called from `fight.rs::resolve` before `hurt`) writes `LevelState::blood` via
+`LevelState::stain` (terrain `stains`, data; never on the overworld). No rule reads blood;
+`blood_tests.rs` checks a fight is identical with and without it. Perception: `PerceptionView::blood`
+(open cells in sight; walls only from a stained face; else `blood_memory` as last seen, updated
+in `Perception::remember`). Data: creature `blood` (`"#rrggbb"` or `"none"`, default
+`blood::RED`), size `blood`, terrain `stains`. App: `ui/blood.rs::stained` shifts a cell's fg/bg
+toward the blood (dried by age) in `draw_map` before the shader lights it, so darkvision, memory
+dimming, and palettes apply as for terrain; look mode prefixes the terrain with `Stain::word`.
+The `blood` switch hides both. Tune by capturing the arena at `wait*8` (first kills) and `wait*40`
+(after the brawl) and the `blood-wall` golden's walk.
+
 Status effects and healing (spec §8 "Status effects", "Healing"; M24, #138; **diseases, #139,
 build on this**): statuses are data, `data/status.toml` (`content/status.rs`: `StatusDef` with
 `seen`, `max`, `stacking`, `tick`/`damage`, `eases`, `regen`, `penalty`, `wound`, `cured_by`,
@@ -566,7 +707,7 @@ drip hook `drip_blood` (#127's stains go there). The player's statuses beginning
 the rest loop keeps them from the turns it does not perceive). Presentation reads
 `PerceptionView::own_effects` (status bar after HP, character screen `Status` row) and
 `effects_of(actor)` (look mode; only statuses with `seen`), never severities. Saved and hashed
-(`FORMAT_VERSION` 15; `Actor::regen` counts hundredths of a second at the normal pace). The dev
+(`FORMAT_VERSION` 20; `Actor::regen` counts hundredths of a second at the normal pace). The dev
 action `afflict:ID` (`Action::Afflict`) gives the player a degree, for tests and captures. Tests:
 `status.rs`, `content/status.rs`, `world/status_tests.rs`.
 
@@ -680,7 +821,7 @@ overcast, `r` rain, `R` heavy). Tune the clouds and the rain with captures of th
 (full-moon midnight) with `--content-dir assets`; the wiki's weather tables come from the file.
 
 Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distortion`,
-`screen_fades`, `weather`) and all off with reduced effects:
+`screen_fades`, `screen_shake`, `weather`) and all off with reduced effects:
 - **Particles** (`render/particles.rs`): stateless, a pure function of visual time and a seed via
   a visual-only SplitMix RNG (ambient emitters: one particle per `1/rate` slot; bursts: `count`
   particles per event). `ui/effects.rs` emits them from perception (visible cells, seen creatures,
@@ -702,16 +843,41 @@ Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distor
   `BELOW` rows), keyed by level position; a particle is drawn only over a cell it rains on, at most
   `MAX_PARTICLES` a frame. Drops are `│` sheared along their velocity (`FreeGlyph::slant`, pixels
   across per pixel down, applied in `free_glyph::glyph_mesh`) and faint (`ParticleEmitter::opacity`).
+- **Spell effects** (spec §4.8 "Spell effects"): `Event::Spell { effect, origin, shape:
+  SpellShape::{Burst { center, radius }, Bolt { path }}, cells }` in `warlock-core/src/action.rs`
+  (traps emit it; `perceive_events` cuts it with `world/spell.rs::perceive_spell` to the cells the
+  player sees or has in line of sight). Data: `data/effects.toml` (`content/effect.rs`,
+  `EffectDef`, `Content::effects()`/`effect(id)`; presentation only, not in the fingerprint; a
+  test plays the same run with changed looks and checks the hashes). The dev action
+  `effect:ID@X,Y[>X,Y]` (`World::show_effect`, `Spent::NoTime`) makes one for captures; because it
+  takes no turn, `ui/spells.rs` reads each outcome once by `Game::applied`, not by the turn. The
+  model is pure in `render/spells.rs` (`Timeline` travel/impact/linger, `strength`, `burst_heat`
+  with `burst_distance` measured on screen, `bolt_strokes` (turned `━` strokes about a cell wide,
+  a slow wander plus jitter, forks only into `open` cells), `darken_curve`, `shake_offset`);
+  `ui/spells.rs` (`Spells`) starts casts (one after another; frozen time: all at visual time 0, so
+  `--freeze-time T` shows T s after), writes `render::lighting::SpellLights` (lights, `dim`, and
+  the cells seen, which spell light passes even when unknown), and draws glyphs and particles last
+  (on top, unlit, undimmed). **Darkening** happens where the light is made: `VisualLight` scales
+  everything but spell light by `SpellLights::keep()` (`(1 − dim)^2.2`, so `darken.amount` is how
+  much darker it looks), free glyphs scale their floor (`glyphs::lit`) and emissive particles and
+  burning missiles their color (`glyphs::darkened`) by `VisualLight::keep()`, and the map shader
+  gets `ConsoleParams::dim` for its floor and unlit (remembered) cells. **Shake**:
+  `Spells::shake` (whole physical pixels) is added to the camera in `draw_map_layer` before
+  `camera_split`, so the grid, free glyphs, and light move together and the viewport edges never
+  gap. `motion` off: a still flash (`Timeline::still`); `screen_fades` off: no darkening;
+  `screen_shake` off: no shake. Tune with `--content-dir` and captures across freeze times (e.g.
+  `effect:fireball@30,14` and `effect:lightning_bolt@21,17>58,17` in the arena, 0.03 to 0.6 s).
 
 `ui/` decides what is drawn from the perception snapshot: `ui/mod.rs` (UI console, map grid in
 base colors, the status bar: `status_segments`), `ui/glyphs.rs` (free glyphs), `ui/motion.rs`
 (slides from `Outcome.events`, one per creature along all the steps it took that turn; camera
 easing; new input completes running motion), `ui/effects.rs` (particles, bursts, glow and haze,
-fades), `ui/rain.rs` (rain), `ui/sounds.rs` (heard-sound markers), `ui/look.rs` (look mode), `ui/dev.rs` (dev overlays: reveal map, the one reader of
+fades), `ui/rain.rs` (rain), `ui/spells.rs` (spell effects), `ui/sounds.rs` (heard-sound markers), `ui/look.rs` (look mode), `ui/dev.rs` (dev overlays: reveal map, the one reader of
 ground truth, and light values).
 Animation curves live in `render/anim.rs` (water: `render/water.rs`, test-only mirrors of the
 shader) and are mirrored in `console.wesl` — change both together. Everything animated is a function of `VisualTime`. Effects are deliberately subtle (the
-bar: sparse, short-lived particles, gentle bloom, barely perceptible distortion, short fades); judge
+bar: sparse, short-lived particles, gentle bloom, barely perceptible distortion, short fades;
+the one exception is spell effects, dramatic but short); judge
 changes by capturing several `--freeze-time` values, at `--scale 1` and `--window 2560x1440
 --scale 2`.
 

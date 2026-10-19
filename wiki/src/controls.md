@@ -22,14 +22,20 @@ authoritative: it is generated from your current key bindings.
 | Equipment (wear and wield) | `e` |
 | Character (your stats and weight) | `@` |
 | Skills | `S` |
+| Weapon skills | `W` |
+| Info page 1 to 9 (while an info screen is open) | `1` to `9` |
+| Next / previous info page (wraps) | `Tab` or `PageDown` / `Shift`+`Tab` or `PageUp` |
 | Rest | `R` |
 | Look around | `x` |
-| Fire your missile weapon | `f`, then aim (see below) |
-| Throw something | `t`, then aim |
+| Shoot or throw what is in your Missile weapon slot | `t`, then aim (see below) |
+| Throw something from your pack | `T`, choose it, then aim |
+| More aggressive combat stance, more defensive (no time passes) | `+`, `-` |
+| Bash with your shield | no key until you bind one, then a direction |
 | Next target while aiming (with Shift: the one before) | `Tab` |
+| Use a tool: dig into a wall with a pick-axe | `U`, then a direction |
 | Show or hide the controls | `?` |
 | Pause menu | `Esc` |
-| Save and quit | `Q` |
+| Save and quit (unbound by default; use the pause menu) | none |
 
 The movement keys are the vi keys (`hjklyubn`), the numpad, and the arrows. Symbol keys such as
 `<`, `>`, and `?` are matched by the character they produce, so they work on other keyboard
@@ -46,7 +52,9 @@ kept with your [settings](settings.md).
 
 ## Prompts
 
-Opening and closing a door ask `In which direction? (Esc to cancel)` on the message line, and
+Opening and closing a door, and bashing with your shield, ask `In which direction? (Esc to
+cancel)` on the message line, digging asks `Dig in which direction? (Esc to cancel)` (see
+[Digging and walls](digging.md)), and
 resting asks how long (see [Resting](resting.md)). Answer with a direction or the key shown, or
 press `Esc` to cancel. Pressing any other command cancels the prompt.
 
@@ -60,9 +68,12 @@ describes what you know about the cell under it:
   wounded, or nearly dead; see [Combat](combat.md)) and whether it bleeds (see
   [Status effects](status-effects.md)), what it wields and wears, the objects lying there, and
   the terrain, as in "A giant rat (hostile, unhurt), on stone floor." or "A kobold (hostile,
-  badly wounded, bleeding), wielding a spear, on stone floor.";
+  badly wounded, bleeding), wielding a spear, on stone floor."; a wall you have started digging
+  into is "partly dug";
 - what you remember there, if you cannot see it now: the terrain and the objects you saw on it;
 - for stairs and the places on the overworld, where they lead;
+- the [special room](special-rooms.md) the ground lies in, once you have been inside it, as in
+  "A stone floor in an echoing hall.";
 - a sound you heard there this turn ([Hearing](hearing.md));
 - or "You don't know what is there."
 
@@ -70,9 +81,11 @@ Looking takes no time. Press `x` or `Esc` to leave.
 
 ## Aiming
 
-`f` fires the missile weapon you have ready (a bow, a crossbow, a sling: ready it and its
-ammunition with `e`), `t` throws something (a throwing weapon you have ready in the missiles slot,
-or one you choose from a list of what you can throw). Both put a cursor on the map:
+`t` shoots or throws whatever is in your Missile weapon slot: a bow, a crossbow, or a sling
+shoots its ammunition from the Missiles slot (ready both with `e`); a throwing weapon (a dagger,
+a spear, rocks) or any other weapon is thrown. `T` instead lists what you carry that can be
+thrown, to choose one. (`f`, firing the missile weapon, has no key by default; bind it in the
+controls screen.) Either puts a cursor on the map:
 
 - it starts on your last target, if you still see it (or on the same spot), else on the nearest
   hostile creature you see, else on you;
@@ -83,8 +96,8 @@ or one you choose from a list of what you can throw). Both put a cursor on the m
   marked on the cursor and in the message line: "Out of range." or "The way is blocked." (a
   wall, or a creature in the way, which the missile would reach first);
 - the message line describes the target as look mode does. It never shows a chance to hit;
-- `Enter` (or `f` again, or `t` again when throwing) shoots, `Esc` cancels. Shooting again later
-  starts on the same target, so `f` `Enter` shoots it again.
+- `Enter` (or `t` again) shoots or throws, `Esc` cancels. Doing it again later starts on the same
+  target, so `t` `Enter` shoots it again.
 
 See [Ranged combat](ranged.md).
 
@@ -97,8 +110,8 @@ everything, the arrows and Space work too, `Enter` confirms, and `Esc` cancels. 
 pack, what it weighs, and how much more you can carry before your [burden](burden.md) grows; it
 takes no time. See [Objects and your pack](objects.md).
 
-`t` with nothing throwable ready opens a list of what you carry that can be thrown, by its pack
-letter: choose one and aim it.
+`T` opens a list of what you carry that can be thrown, by its pack letter: choose one and aim
+it.
 
 `e` shows what you wear and wield, slot by slot. A slot's letter (on this screen every letter
 names a slot) opens a list of what you carry that fits there: its letter puts it on, swapping
@@ -148,6 +161,21 @@ carry, and the weights at which your [burden](burden.md) changes. It takes no ti
 `S` lists the [skills](skills.md) you are trained in, each with its value and a small meter of how
 near it is to its next point. The arrow keys pick a skill to read what it is about. It takes no
 time; press `S` or `Esc` to close it.
+
+## Info pages
+
+The character screen, the inventory, the equipment screen, and the skills screen are numbered pages of one set,
+shown on the bottom edge of each as `1 Character · 2 Inventory · 3 Equipment · 4 Skills`, the one you are on
+highlighted. While one of them is open, `1` to `9` switch to the page with that number (the row
+of number keys above the letters; the numpad still moves), and `Tab` / `Shift`+`Tab` go to the
+next or previous page, wrapping around. The page replaces the one you were on, so `Esc` closes it
+and takes you back to where you opened the first one, as if you had only ever opened that one.
+The number keys do nothing during play, and they keep their own meaning on a screen that is a
+step of a page, such as choosing what goes in a slot. Each page also keeps its own key (`@`,
+`i`, `e`, `S`) to open it and to close it. All of these keys can be rebound in the Controls screen, as
+"Info page 1" to "Info page 9", "Next info page", and "Previous info page"; they are separate
+from the play keys, so `Tab` can be both "next target" while aiming and "next info page" on an
+info screen.
 
 ## Death
 

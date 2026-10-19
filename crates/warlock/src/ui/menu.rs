@@ -37,6 +37,8 @@ pub struct Press {
     pub repeat: bool,
     /// The character the key typed, if any (for text fields such as the seed).
     pub text: Option<char>,
+    /// Shift was held (set by the input router, which sees the keyboard state).
+    pub shift: bool,
 }
 
 impl Press {
@@ -76,6 +78,7 @@ impl Press {
             binding: KeyBinding::from_input(input),
             repeat: input.repeat,
             text,
+            shift: false,
         }
     }
 
@@ -87,6 +90,7 @@ impl Press {
             binding: None,
             repeat: false,
             text: None,
+            shift: false,
         }
     }
 
@@ -98,6 +102,7 @@ impl Press {
             binding: None,
             repeat: false,
             text: Some(ch),
+            shift: false,
         }
     }
 }
@@ -173,12 +178,11 @@ impl MainMenu {
         if self.has_save {
             items.push(MainItem::Continue);
         }
-        items.extend([
-            MainItem::NewRun,
-            MainItem::Settings,
-            MainItem::Controls,
-            MainItem::Quit,
-        ]);
+        items.extend([MainItem::NewRun, MainItem::Settings, MainItem::Controls]);
+        // A web page cannot quit: closing the tab is the browser's job.
+        if !cfg!(target_arch = "wasm32") {
+            items.push(MainItem::Quit);
+        }
         items
     }
 
@@ -198,11 +202,17 @@ impl MainMenu {
                 return match items[self.selected] {
                     MainItem::Resume => ScreenAction::Close,
                     MainItem::Continue => ScreenAction::Choose(MenuChoice::Continue),
-                    MainItem::SaveToMenu => ScreenAction::Choose(MenuChoice::SaveToMenu),
+                    MainItem::SaveToMenu => ScreenAction::Confirm(
+                        "Save and return to the main menu?",
+                        MenuChoice::SaveToMenu,
+                    ),
                     MainItem::NewRun => ScreenAction::Open(ScreenName::NewRun),
                     MainItem::Settings => ScreenAction::Open(ScreenName::Settings),
                     MainItem::Controls => ScreenAction::Open(ScreenName::Controls),
-                    MainItem::Quit => ScreenAction::Choose(MenuChoice::Quit),
+                    MainItem::Quit if self.pause => {
+                        ScreenAction::Confirm("Save and quit Warlock?", MenuChoice::Quit)
+                    }
+                    MainItem::Quit => ScreenAction::Confirm("Quit Warlock?", MenuChoice::Quit),
                 };
             }
             _ => {}
@@ -460,12 +470,12 @@ mod tests {
         press(&mut m, Nav::Down);
         assert_eq!(
             press(&mut m, Nav::Enter),
-            ScreenAction::Choose(MenuChoice::SaveToMenu)
+            ScreenAction::Confirm("Save and return to the main menu?", MenuChoice::SaveToMenu)
         );
         press(&mut m, Nav::Down);
         assert_eq!(
             press(&mut m, Nav::Enter),
-            ScreenAction::Choose(MenuChoice::Quit)
+            ScreenAction::Confirm("Save and quit Warlock?", MenuChoice::Quit)
         );
     }
 
@@ -475,7 +485,7 @@ mod tests {
         press(&mut m, Nav::Up);
         assert_eq!(
             press(&mut m, Nav::Enter),
-            ScreenAction::Choose(MenuChoice::Quit)
+            ScreenAction::Confirm("Quit Warlock?", MenuChoice::Quit)
         );
     }
 
