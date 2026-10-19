@@ -1,11 +1,13 @@
 //! Races (`assets/data/races.toml`, spec §8 "Character creation"): the first choice of a new
 //! run. A race adjusts the starting scores and the potentials (fixed numbers or dice), gives the
-//! player their eyes, sets the range of their starting age, and gives the player their size
-//! (spec §8 "Burden": how much they can carry) and whether being Burdened costs them nothing.
+//! player their eyes, sets the range of their starting age, gives the player their size
+//! (spec §8 "Burden": how much they can carry) and whether being Burdened costs them nothing, and
+//! trains them in skills (spec §8 "Skills"; dice, and humans' extra class skill).
 
 use super::ContentError;
 use crate::combat::MAX_BASE_HP;
 use crate::dice::Dice;
+use crate::skills::{self, GRANTS, SkillId};
 use crate::stats::{PerStat, SCORES, Stat, adjustments};
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -35,6 +37,10 @@ struct RaceSpec {
     size: Option<String>,
     #[serde(default)]
     ignores_burdened: bool,
+    #[serde(default)]
+    skills: BTreeMap<String, Dice>,
+    #[serde(default)]
+    class_skill: Dice,
 }
 
 /// The oldest a character may start, in years.
@@ -66,6 +72,12 @@ pub struct RaceDef {
     /// slowdown, no cap on Dexterity in Defence, no louder steps); from Strained on they are
     /// treated like everyone else. Dwarves.
     pub ignores_burdened: bool,
+    /// The skills it trains (spec §8 "Skills"), each by dice rolled when the character is made,
+    /// in skill order; added to the class's.
+    pub skills: Vec<(SkillId, Dice)>,
+    /// Dice added to one of the class's skills, picked when the character is made (0: none).
+    /// Humans: one extra class skill.
+    pub class_skill: Dice,
 }
 
 /// Every race, and the base every potential starts from.
@@ -78,13 +90,15 @@ pub struct Races {
 }
 
 impl Races {
-    /// Parses `data/races.toml`; `has_vision` says whether a vision profile id exists, and
-    /// `size_index` where a size id is in [`super::Content::sizes`].
+    /// Parses `data/races.toml`; `has_vision` says whether a vision profile id exists,
+    /// `size_index` where a size id is in [`super::Content::sizes`], and `skill_id` which skill a
+    /// skill id is.
     pub(super) fn parse(
         file: &str,
         text: &str,
         has_vision: impl Fn(&str) -> bool,
         size_index: impl Fn(&str) -> Option<usize>,
+        skill_id: impl Fn(&str) -> Option<SkillId>,
     ) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: RaceFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
@@ -131,6 +145,16 @@ impl Races {
             let size_id = spec.size.as_deref().unwrap_or(super::MEDIUM);
             let size = size_index(size_id)
                 .ok_or_else(|| err(format!("race `{id}`: unknown size `{size_id}`")))?;
+            let skills = skills::grants(&spec.skills, &skill_id)
+                .map_err(|m| err(format!("race `{id}`: skills: {m}")))?;
+            let extra = spec.class_skill;
+            if !GRANTS.contains(&extra.min()) || !GRANTS.contains(&extra.max()) {
+                return Err(err(format!(
+                    "race `{id}`: class_skill {extra} is out of range ({} to {})",
+                    GRANTS.start(),
+                    GRANTS.end()
+                )));
+            }
             list.push(RaceDef {
                 id: spec.id,
                 name: spec.name,
@@ -142,6 +166,8 @@ impl Races {
                 hp: i32::from(spec.hp),
                 size,
                 ignores_burdened: spec.ignores_burdened,
+                skills,
+                class_skill: extra,
             });
         }
         Ok(Self {
@@ -157,11 +183,13 @@ mod tests {
 
     fn parse(text: &str) -> Result<Races, ContentError> {
         let sizes = ["small", "medium"];
+        let skills = ["listen", "spot"];
         Races::parse(
             "races.toml",
             text,
             |v| v == "normal",
             |s| sizes.iter().position(|id| *id == s),
+            |k| (skills.iter().position(|id| *id == k)).map(|i| SkillId(i as u8)),
         )
     }
 
@@ -186,10 +214,25 @@ mod tests {
         assert_eq!(human.potential[Stat::Willpower].to_string(), "1d2");
         assert_eq!(human.size, 1, "medium unless named");
         assert!(!human.ignores_burdened);
+        assert!(human.skills.is_empty() && human.class_skill.is_zero());
         let dwarf =
             parse(&format!("{ONE}size = \"small\"\nignores_burdened = true\n")).expect("valid");
         assert_eq!(dwarf.list[0].size, 0);
         assert!(dwarf.list[0].ignores_burdened);
+        let elf = parse(&format!(
+            "{ONE}skills = {{ spot = \"1d6+4\", listen = 3 }}\nclass_skill = \"1d4\"\n"
+        ))
+        .expect("valid");
+        let elf = &elf.list[0];
+        assert_eq!(
+            elf.skills,
+            [
+                (SkillId(0), Dice::fixed(3)),
+                (SkillId(1), "1d6+4".parse().expect("dice"))
+            ],
+            "in skill order"
+        );
+        assert_eq!(elf.class_skill.to_string(), "1d4");
     }
 
     #[test]
@@ -225,6 +268,18 @@ mod tests {
             ),
             (ONE.replace("15", "0"), "base_potential 0"),
             (format!("{ONE}size = \"huge\"\n"), "unknown size `huge`"),
+            (
+                format!("{ONE}skills = {{ luck = 5 }}\n"),
+                "race `human`: skills: unknown skill `luck`",
+            ),
+            (
+                format!("{ONE}skills = {{ spot = \"1d6-3\" }}\n"),
+                "spot 1d6-3 is out of range",
+            ),
+            (
+                format!("{ONE}class_skill = \"1d100+5\"\n"),
+                "class_skill 1d100+5 is out of range",
+            ),
             (
                 format!("{ONE}{}", ONE.replace("base_potential = 15\n", "")),
                 "duplicate race id `human`",

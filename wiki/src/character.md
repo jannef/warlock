@@ -6,11 +6,12 @@ New run screen, you choose who you are, one step at a time.
 1. **Race**: your people, which shapes your stats, gives you your eyes, and sets how old you can
    be (see [Races](races.md)).
 2. **Gender**: a small push to one stat (below).
-3. **Class**: what you did before the adventure, which shapes your stats again (see
-   [Classes](classes.md)).
+3. **Class**: what you did before the adventure, which shapes your stats again and trains you
+   in a handful of [skills](skills.md) (see [Classes](classes.md)).
 4. **Summary**: your race, gender, and class, your age, birthday, and birth sign, the
-   [stats](stats.md) you will start with, your vision, and the scenario and seed. **Start the
-   run** begins it; **Race**, **Gender**, and **Class** take you back to that step.
+   [stats](stats.md) you will start with and, beside them, the [skills](skills.md) you are
+   trained in, your vision, and the scenario and seed. **Start the run** begins it; **Race**,
+   **Gender**, and **Class** take you back to that step.
 
 Each step lists its options with a short description, and for races and classes how they change
 your stats. Move with the arrow keys (or `j` and `k`), press `Enter` to choose and go on, and `Esc`
@@ -60,5 +61,6 @@ fun.
 The character screen (`@`) shows your race, gender, and class, your age, birthday, and sign,
 your stats, your level and experience (see [Experience](experience.md)), and your hit points (your Toughness plus what your race and class give; see
 [Combat](combat.md#hit-points)) and Defence, and what you weigh and carry against what you can
-(see [Burden](burden.md)). The game does not change your race, gender, class, or sign once a run
-has started; you get a year older on every birthday.
+(see [Burden](burden.md)). `S` there, or anywhere in play, shows your [skills](skills.md). The
+game does not change your race, gender, class, or sign once a run has started; you get a year
+older on every birthday.

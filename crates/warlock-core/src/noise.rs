@@ -6,8 +6,8 @@
 //! closing a door makes the door's `toggle_noise` (terrain data); an attack (spec §8 "Combat")
 //! makes fighting, a bowstring, fighting more quietly (a throw), or chanting where the attacker
 //! stands ([`MELEE_NOISE`], [`SHOT_NOISE`], [`THROW_NOISE`], [`SPELL_NOISE`]). [`noise`] is the
-//! one function that decides how loud an action is, so skills such as moving silently can change
-//! it there.
+//! one function that decides how loud an action is: the actor's skills (stealth; spec §8
+//! "Skills") make its steps and doors quieter there ([`plain_noise`] is the noise without them).
 //! Loudness is an integer, at most [`MAX_LOUDNESS`]; a creature or door without the field is
 //! silent.
 //!
@@ -23,10 +23,11 @@
 //! follows the loudness, not the level size. The overworld is silent: its steps are journeys.
 //!
 //! **Listeners**: every actor whose creature type has `hearing` (the faintest loudness it hears;
-//! the player too) hears a noise made by another actor on its level when the loudness at its cell
-//! is at least that. It keeps what it heard ([`Heard`]: kind, where, how loud) in
-//! [`crate::world::Actor::heard`] until it next acts: a creature as its turn starts (the input
-//! the creature AI reads, #77), the player when the next turn starts passing.
+//! the player too; its skills, listen, lower it: [`Actor::hearing`]) hears a noise made by another
+//! actor on its level when the loudness at its cell is at least that. It keeps what it heard
+//! ([`Heard`]: kind, where, how loud) in [`crate::world::Actor::heard`] until it next acts: a
+//! creature as its turn starts (the input the creature AI reads, #77), the player when the next
+//! turn starts passing.
 //!
 //! **The player** perceives heard sounds whose source they do not see through
 //! [`crate::perception::PerceptionView::sounds`]: the kind, how loud ([`Volume`]), and roughly
@@ -37,6 +38,7 @@ use crate::action::AttackKind;
 use crate::burden::Burden;
 use crate::content::Content;
 use crate::geom::{Dir, Pos};
+use crate::skills::Effect;
 use crate::world::{Actor, ActorId, LevelState, WorldState, fnv1a};
 use serde::{Deserialize, Serialize};
 use std::collections::BinaryHeap;
@@ -200,9 +202,28 @@ pub struct Recent {
 }
 
 /// How loud `act` by `actor` is on `level`, `burden` being the burden it suffers
-/// ([`crate::burden::Load::penalty`]): the one place an action's noise is decided. `None` if it
-/// is silent.
+/// ([`crate::burden::Load::penalty`]): the one place an action's noise is decided. The actor's
+/// skills (stealth, [`Effect::Quiet`]) take their percent off its steps and doors (not its
+/// attacks), rounded down. `None` if it is silent.
 pub fn noise(
+    content: &Content,
+    level: &LevelState,
+    actor: &Actor,
+    burden: Burden,
+    act: Act,
+) -> Option<Noise> {
+    let plain = plain_noise(content, level, actor, burden, act)?;
+    if matches!(act, Act::Attack(_)) {
+        return Some(plain);
+    }
+    let quiet = actor.skills.effect(content, Effect::Quiet).clamp(0, 100) as u16;
+    let loudness = (u32::from(plain.loudness) * u32::from(100 - quiet) / 100) as u16;
+    (loudness > 0).then_some(Noise { loudness, ..plain })
+}
+
+/// How loud `act` by `actor` would be without its skills: what [`noise`] makes of it before
+/// stealth. Training reads it (a creature that could hear the step).
+pub fn plain_noise(
     content: &Content,
     level: &LevelState,
     actor: &Actor,
@@ -342,12 +363,32 @@ pub fn propagate(
     field
 }
 
-/// Makes `noise` on the current level: every other actor there with `hearing` that it reaches
+/// Makes `noise` on the current level: every other actor there with hearing that it reaches
 /// loudly enough keeps it in its [`Actor::heard`] list. The overworld is silent.
 pub(crate) fn make(state: &mut WorldState, content: &Content, noise: Noise) {
+    for (id, loudness) in hearers(state, content, noise) {
+        if let Some(actor) = state.actors.get_mut(&id) {
+            actor.heard.push(Heard {
+                kind: noise.kind,
+                at: noise.at,
+                loudness,
+            });
+        }
+    }
+}
+
+/// Whether anyone but its maker on the current level would hear `noise`.
+pub(crate) fn heard_by_anyone(state: &WorldState, content: &Content, noise: Noise) -> bool {
+    !hearers(state, content, noise).is_empty()
+}
+
+/// The actors on the current level, but its maker, that `noise` reaches at least at their
+/// hearing threshold ([`Actor::hearing`]), with how loud it is where each stands. None on the
+/// overworld, which is silent.
+fn hearers(state: &WorldState, content: &Content, noise: Noise) -> Vec<(ActorId, u16)> {
     let level = state.current();
     if level.kind == crate::content::LevelKind::Overworld {
-        return;
+        return Vec::new();
     }
     let reach = i32::from(noise.loudness / STEP_LOSS);
     let listeners: Vec<(ActorId, Pos, u16)> = state
@@ -356,26 +397,20 @@ pub(crate) fn make(state: &mut WorldState, content: &Content, noise: Noise) {
         .filter(|a| a.id != noise.maker && a.level == level.id)
         .filter(|a| a.pos.chebyshev(noise.at) <= reach)
         .filter_map(|a| {
-            let threshold = content.creature(a.creature).hearing?;
+            let threshold = a.hearing(content)?;
             (threshold <= noise.loudness).then_some((a.id, a.pos, threshold))
         })
         .collect();
     let Some(floor) = listeners.iter().map(|&(_, _, t)| t).min() else {
-        return;
+        return Vec::new();
     };
     let field = propagate(level, content, noise.at, noise.loudness, floor);
-    for (id, pos, threshold) in listeners {
-        let loudness = field.at(pos);
-        if loudness >= threshold
-            && let Some(actor) = state.actors.get_mut(&id)
-        {
-            actor.heard.push(Heard {
-                kind: noise.kind,
-                at: noise.at,
-                loudness,
-            });
-        }
-    }
+    (listeners.into_iter())
+        .filter_map(|(id, pos, threshold)| {
+            let loudness = field.at(pos);
+            (loudness >= threshold).then_some((id, loudness))
+        })
+        .collect()
 }
 
 /// The sounds in `heard` (the player's during one turn, with hearing `threshold`) the player

@@ -46,15 +46,19 @@ pub enum Layer {
     /// Not a map: the player's character (`Race Dwarf`, `Gender Female`, `Class Warrior`), if
     /// any, then their own scores, one stat a line (`Strength 12`); never potentials or modifiers.
     Stats,
+    /// Not a map: the player's own trained skills, one a line in skill order (`Stealth 17`);
+    /// never an untrained skill, a mark, or a benefit.
+    Skills,
     /// Ground truth: all terrain, objects, and actors on the level. **Dev-only.**
     Truth,
     /// Not a map: every actor on the level with its weight, what it carries (and of that wears
-    /// and wields), and its stats (scores and potentials) (ground truth). **Dev-only.**
+    /// and wields), its stats (scores and potentials), and its trained skills with their marks
+    /// (ground truth). **Dev-only.**
     Actors,
 }
 
 impl Layer {
-    const ALL: [Layer; 10] = [
+    const ALL: [Layer; 11] = [
         Layer::View,
         Layer::Fov,
         Layer::Memory,
@@ -63,6 +67,7 @@ impl Layer {
         Layer::Inventory,
         Layer::Equipment,
         Layer::Stats,
+        Layer::Skills,
         Layer::Truth,
         Layer::Actors,
     ];
@@ -78,6 +83,7 @@ impl Layer {
             Layer::Inventory => "inventory",
             Layer::Equipment => "equipment",
             Layer::Stats => "stats",
+            Layer::Skills => "skills",
             Layer::Truth => "truth",
             Layer::Actors => "actors",
         }
@@ -99,7 +105,7 @@ impl FromStr for Layer {
             .ok_or_else(|| {
                 format!(
                     "unknown layer `{s}` (expected view, fov, memory, light, sound, inventory, \
-                     equipment, stats, truth, actors)"
+                     equipment, stats, skills, truth, actors)"
                 )
             })
     }
@@ -118,6 +124,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
         Layer::Inventory => inventory_rows(&world.perception()),
         Layer::Equipment => equipment_rows(&world.perception()),
         Layer::Stats => stat_rows(&world.perception()),
+        Layer::Skills => skill_rows(&world.perception()),
         _ => {
             let view = world.perception();
             rows(view.width(), view.height(), |p| {
@@ -156,7 +163,12 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
             Some(sound) => sound_char(sound),
             None => perceived_glyph(view, Layer::View, p),
         },
-        Layer::Inventory | Layer::Equipment | Layer::Stats | Layer::Truth | Layer::Actors => {
+        Layer::Inventory
+        | Layer::Equipment
+        | Layer::Stats
+        | Layer::Skills
+        | Layer::Truth
+        | Layer::Actors => {
             unreachable!("not a map built from perception")
         }
     }
@@ -282,9 +294,18 @@ fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
     rows
 }
 
+/// The player's own trained skills, one a line in skill order: `Stealth 17`.
+fn skill_rows(view: &PerceptionView<'_>) -> Vec<String> {
+    let content = view.content();
+    (view.own_skills().iter())
+        .map(|s| format!("{} {}", content.skill(s.skill).name, s.value))
+        .collect()
+}
+
 /// Every actor on the level (ground truth): id, creature, position, hit points and Defence,
-/// weight, what it carries, its burden and carrying limit, and its stats as score/potential
-/// (`St 12/15`).
+/// weight, what it carries, its burden and carrying limit, its stats as score/potential
+/// (`St 12/15`), and its trained skills with their marks toward the next point
+/// (`stealth 17 (2/5)`).
 fn actor_rows(world: &World) -> Vec<String> {
     let content = world.content();
     let (_, actors) = world.ground_truth();
@@ -320,9 +341,20 @@ fn actor_rows(world: &World) -> Vec<String> {
                     format!("{} {score}/{potential}", s.abbrev())
                 })
                 .collect();
+            let skills: Vec<String> = (a.skills.iter())
+                .map(|(id, t)| {
+                    let need = content.increase().need(t.value);
+                    format!("{} {} ({}/{need})", content.skill(id).id, t.value, t.marks)
+                })
+                .collect();
+            let skills = if skills.is_empty() {
+                String::new()
+            } else {
+                format!("; skills {}", skills.join(", "))
+            };
             format!(
                 "{} {} at {}: hp {}/{} dv {}; weight {} (base {} + carried {}: {carried})\
-                 {equipped}; {} (limit {}); stats {}",
+                 {equipped}; {} (limit {}); stats {}{skills}",
                 a.id,
                 content.creature(a.creature).id,
                 a.pos,
@@ -476,6 +508,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             "sign": c.sign,
         })),
         "stats": view.own_scores(),
+        "skills": skills_json(&view),
         "hp": { "current": hp, "max": max_hp },
         "experience": view.own_experience(),
         "defence": view.own_defence(),
@@ -487,6 +520,15 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         out["state"] = serde_json::to_value(world.state()).expect("state serializes");
     }
     out
+}
+
+/// The player's own trained skills by skill id, with their values: `{"stealth": 17}`.
+fn skills_json(view: &PerceptionView<'_>) -> Value {
+    let content = view.content();
+    let map: serde_json::Map<String, Value> = (view.own_skills().iter())
+        .map(|s| (content.skill(s.skill).id.clone(), json!(s.value)))
+        .collect();
+    Value::Object(map)
 }
 
 /// The clock in seconds since the epoch, and as a calendar date and time of day.
@@ -572,7 +614,53 @@ mod tests {
             json!({ "strength": 9, "dexterity": 13, "toughness": 10, "intelligence": 12,
                     "willpower": 11, "presence": 9 })
         );
+        // Their own trained skills by skill id, with their values: no marks, nothing untrained.
+        assert_eq!(
+            value["skills"],
+            json!({ "appraise": 11, "disable_device": 16, "escape_artist": 7, "open_lock": 18,
+                    "search": 9, "spot": 10, "steal": 17, "stealth": 16, "tumble": 16 })
+        );
         assert!(json(&world, &[], false).get("state").is_none());
+    }
+
+    #[test]
+    fn skills_show_the_players_trained_skills_only() {
+        let world = showcase();
+        assert_eq!(
+            layer_rows(&world, Layer::Skills),
+            [
+                "Appraise 11",
+                "Disable device 16",
+                "Escape artist 7",
+                "Open lock 18",
+                "Search 9",
+                "Spot 10",
+                "Steal 17",
+                "Stealth 16",
+                "Tumble 16"
+            ]
+        );
+        assert_eq!(
+            parse_layers("skills,stats"),
+            Ok(vec![Layer::Skills, Layer::Stats])
+        );
+        assert!(!Layer::Skills.is_dev_only());
+        // A creature's skills show only in the dev layer: the arena's shaman's.
+        let content = Arc::new(Content::builtin().expect("content"));
+        let arena = World::new(content, "arena", None).expect("world");
+        let actors = layer_rows(&arena, Layer::Actors);
+        let shaman = actors.iter().find(|a| a.contains(" kobold_shaman at "));
+        assert!(
+            shaman.is_some_and(
+                |s| s.ends_with("; skills concentration 20 (0/6), spellcraft 25 (0/6)")
+            ),
+            "{actors:#?}"
+        );
+        let text = ascii(&arena, &[Layer::Skills, Layer::View]);
+        assert!(
+            !text.contains("spellcraft") && !text.contains("Spellcraft"),
+            "{text}"
+        );
     }
 
     #[test]
@@ -619,8 +707,13 @@ mod tests {
             layer_rows(&gnome, Layer::Stats)
         );
         let actors = layer_rows(&world, Layer::Actors);
+        // Every actor's stats, then its trained skills with their marks toward the next point.
         assert!(
-            actors[0].ends_with("stats St 9/16 Dx 13/16 To 10/16 In 12/16 Wi 11/16 Pr 9/16"),
+            actors[0].contains(
+                "stats St 9/16 Dx 13/16 To 10/16 In 12/16 Wi 11/16 Pr 9/16; skills appraise 11 \
+                 (0/5), disable_device 16 (0/5), escape_artist 7 (0/4), open_lock 18 (0/5), \
+                 search 9 (0/4), spot 10 (0/5), steal 17 (0/5), stealth 16 (0/5), tumble 16 (0/5)"
+            ),
             "{}",
             actors[0]
         );

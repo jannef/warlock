@@ -196,6 +196,14 @@ fn a_step_takes_the_travel_time_of_the_terrain_stepped_onto() {
          MMMMMMMM\n",
     );
     let mut world = World::new(content, "world", None).expect("world");
+    // Untrained in survival, which would make journeys quicker (`skills_tests.rs`).
+    let player = world.state.player;
+    world
+        .state
+        .actors
+        .get_mut(&player)
+        .expect("the player")
+        .skills = Default::default();
     let minutes = |m| Duration::minutes(m);
     for (dir, terrain, took) in [
         (Dir::N, "forest", minutes(90)),

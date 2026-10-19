@@ -10,6 +10,8 @@ around you hear too.
   steps louder: a quarter louder when burdened, half again as loud when strained (see
   [Burden](burden.md)).
 - **Doors.** Opening a door makes noise, and closing one is louder still.
+- **Stealth.** The [stealth](skills.md#what-skills-give) skill makes your footsteps and the doors
+  you open and close quieter, more the higher it is; your attacks are as loud as ever.
 - **Fighting.** Attacks are noisy: you may hear fighting, a bowstring, or chanting (a spell)
   where you cannot see it. A throw sounds like fighting, but quieter. See
   [Creatures](creatures.md).
@@ -74,5 +76,6 @@ such as footsteps you have been hearing for a few turns, does not.
 ## Creatures hear you
 
 Your footsteps, the doors you open and close, and your attacks carry to the creatures around
-you, through the same rules. A creature with enemies that hears something it cannot see goes to
+you, through the same rules. The [listen](skills.md#what-skills-give) skill lets you, or a
+creature, hear fainter sounds. A creature with enemies that hears something it cannot see goes to
 have a look: walk softly, and mind the doors. See [Creatures](creatures.md).

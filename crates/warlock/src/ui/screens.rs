@@ -32,6 +32,7 @@ use super::motion::Motion;
 use super::new_run_screen::NewRunScreen;
 use super::object_screen::{ObjectList, ObjectScreen};
 use super::settings_screen::SettingsScreen;
+use super::skills_screen::SkillsScreen;
 use crate::cli::Args;
 use crate::game::{Game, GameContent};
 use crate::input::{Bindings, InputMode};
@@ -76,6 +77,9 @@ pub enum ScreenName {
     EquipItem,
     /// The player's name, stats, and weight (`@` in play).
     Character,
+    /// The player's trained skills and their values (`S` in play, or from the character
+    /// screen).
+    Skills,
     /// Choose what to pick up from the pile here (`,` or `g` where several objects lie).
     PickUp,
     /// Choose what to drop (`d` in play).
@@ -99,6 +103,7 @@ impl ScreenName {
                 | ScreenName::Equipment
                 | ScreenName::EquipItem
                 | ScreenName::Character
+                | ScreenName::Skills
                 | ScreenName::PickUp
                 | ScreenName::Drop
                 | ScreenName::Throw
@@ -162,6 +167,7 @@ enum Screen {
     /// Choosing what goes in a slot.
     EquipItem(ItemScreen),
     Character(CharacterScreen),
+    Skills(SkillsScreen),
     Death(DeathScreen),
 }
 
@@ -196,6 +202,7 @@ impl Screen {
                 Screen::EquipItem(ItemScreen::new(run, slot.unwrap_or(SlotId(0))))
             }
             ScreenName::Character => Screen::Character(CharacterScreen::new(run)),
+            ScreenName::Skills => Screen::Skills(SkillsScreen::new(run)),
             ScreenName::PickUp => objects(ObjectList::PickUp),
             ScreenName::Drop => objects(ObjectList::Drop),
             ScreenName::Throw => objects(ObjectList::Throw),
@@ -222,6 +229,7 @@ impl Screen {
             Screen::Equipment(_) => ScreenName::Equipment,
             Screen::EquipItem(_) => ScreenName::EquipItem,
             Screen::Character(_) => ScreenName::Character,
+            Screen::Skills(_) => ScreenName::Skills,
             Screen::Death(_) => ScreenName::Death,
         }
     }
@@ -349,6 +357,7 @@ impl ScreenStack {
             Some(Screen::Equipment(screen)) => screen.handle(press, bindings),
             Some(Screen::EquipItem(screen)) => screen.handle(press, bindings),
             Some(Screen::Character(screen)) => screen.handle(press, bindings),
+            Some(Screen::Skills(screen)) => screen.handle(press, bindings),
             Some(Screen::Death(screen)) => screen.handle(press),
         };
         if action == ScreenAction::Stay {
@@ -388,6 +397,7 @@ impl ScreenStack {
             Some(Screen::Equipment(screen)) => screen.draw(console, bindings),
             Some(Screen::EquipItem(screen)) => screen.draw(console, bindings),
             Some(Screen::Character(screen)) => screen.draw(console, bindings),
+            Some(Screen::Skills(screen)) => screen.draw(console, bindings),
             Some(Screen::Death(screen)) => screen.draw(console),
         }
     }

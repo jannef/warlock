@@ -30,6 +30,7 @@ pub mod replay;
 pub mod rng;
 pub mod save;
 mod sight;
+pub mod skills;
 pub mod stats;
 pub mod time;
 pub mod weather;

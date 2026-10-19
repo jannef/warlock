@@ -45,6 +45,8 @@ pub enum KeyCommand {
     Equipment,
     /// Show the player's name, stats, and weight (no time passes).
     Character,
+    /// Show the player's trained skills and their values (no time passes).
+    Skills,
     /// Ask how long to rest (an hour, until dawn, until dusk).
     Rest,
     /// Move a cursor over the map to read what is there (no time passes).
@@ -89,6 +91,7 @@ impl KeyCommand {
             KeyCommand::Inventory => "Inventory",
             KeyCommand::Equipment => "Equipment",
             KeyCommand::Character => "Character",
+            KeyCommand::Skills => "Skills",
             KeyCommand::Rest => "Rest",
             KeyCommand::Look => "Look around",
             KeyCommand::Fire => "Fire missile weapon",
@@ -196,6 +199,7 @@ impl Default for Bindings {
             (ch("i"), Inventory),
             (ch("e"), Equipment),
             (ch("@"), Character),
+            (ch("S"), Skills),
             (ch("R"), Rest),
             (ch("x"), Look),
             (ch("f"), Fire),
@@ -510,6 +514,10 @@ impl Gameplay<'_> {
             }
             (InputMode::Normal, KeyCommand::Character) => {
                 open = Some(ScreenName::Character);
+                InputMode::Normal
+            }
+            (InputMode::Normal, KeyCommand::Skills) => {
+                open = Some(ScreenName::Skills);
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::CycleVision) => {

@@ -174,6 +174,13 @@ scenario = "showcase"
 actions = "move:SW*2 pickup"
 screen = "character"
 
+# The Skills screen (#132): the showcase's thief's trained skills (never an untrained one) with
+# their values and, dimmer, how near each is to its next point; the first one's description.
+[[golden]]
+name = "skills-screen"
+scenario = "showcase"
+screen = "skills"
+
 # Character creation (#108, #111, #118), over New run on the main menu (no run; the replay goes
 # unused): the race step with the showcase's character's race preselected, and the summary of
 # that character (race, gender, and class each preselected), with its age, birthday, and sign
@@ -268,8 +275,9 @@ scenario = "forest"
 actions = "skip:330m weather:heavy"
 
 # The overworld (`world` scenario): along the road from the Hall to the bridge over the Wendle,
-# at 12:20 (sunlit, sight radius 9) and after a skip of three days and ten hours to 22:20 on the
-# 14th of Darkening (cold night light with a nearly full moon on top, sight radius 4).
+# at 12:12 (sunlit, sight radius 9; the ranger's survival makes the journeys a little quicker) and
+# after a skip of three days and ten hours to 22:12 on the 14th of Darkening (cold night light with
+# a nearly full moon on top, sight radius 4).
 [[golden]]
 name = "overworld-noon"
 scenario = "world"
@@ -282,12 +290,13 @@ actions = "move:E*2 move:NE move:E*6 move:NE move:E*3 skip:82h weather:clear"
 
 # A forest clearing at noon (#55): along the road west into the Thornwood and north onto a forest
 # cell, `>` into its local area (arriving on its south side), back out, and `>` again into the
-# glade in the middle (6 seconds each); then the clock skips to 12:00 the next day. Short shadows
-# due north of the trees; the strip seen on the first visit is remembered.
+# glade in the middle (6 seconds each), at 16:44 (the ranger's survival makes the journeys a
+# little quicker); then the clock skips to 12:00 the next day. Short shadows due north of the
+# trees; the strip seen on the first visit is remembered.
 [[golden]]
 name = "forest-noon"
 scenario = "world"
-actions = "move:W*11 move:SW move:W*10 move:N descend move:S descend skip:1140m weather:clear"
+actions = "move:W*11 move:SW move:W*10 move:N descend move:S descend skip:1156m weather:clear"
 
 # Ranged combat (spec §8 "Ranged combat", §6 "Targeting", §4.8 "Missiles"). In the arena's dark
 # corner the player readies the bow and arrows lying beside them and aims (`--fire`, as `f`):

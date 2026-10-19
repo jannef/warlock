@@ -7,6 +7,7 @@
 //! |---|---|---|
 //! | Map generation, per level | `map/<level id>` (retry *k*: `map/<level id>/<k>`) | never; derived on demand |
 //! | Gameplay | `gameplay` | in [`crate::WorldState`], so saves continue it |
+//! | Training marks' chances (skills) | `training` | in [`crate::WorldState`] |
 //! | The stat gender "other" raises | `character/gender` | never; derived on demand |
 //! | A new character's age and birthday | `character/birth/<race>` | never |
 //! | A new character's dice | `character/rolls/<race>,<gender>,<class>` | never |
@@ -35,6 +36,12 @@ impl Rng {
     /// The gameplay stream of a run.
     pub fn gameplay(run_seed: u64) -> Self {
         Self::stream(run_seed, "gameplay")
+    }
+
+    /// The training stream of a run: the chances of skills' training marks (spec §8 "Skills"),
+    /// kept apart from the gameplay stream so training never changes a fight's rolls.
+    pub fn training(run_seed: u64) -> Self {
+        Self::stream(run_seed, "training")
     }
 
     /// The map-generation stream for `level`; `attempt` > 0 derives the stream for a retry after

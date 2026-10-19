@@ -2,12 +2,13 @@
 //!
 //! The wiki (`wiki/`, built with mdBook) is written by hand except for facts that live in data
 //! (month names, moons, weather, terrain, vision profiles, light presets, creatures, factions,
-//! objects and materials, equipment slots, scenarios, action costs, races and classes, their
-//! sizes and carrying limits, the horoscope) and a few constants of the rules (sight radii, the
-//! pack's size, the stats' names, what each gender raises). Those are
-//! written to `wiki/src/generated/*.md` from the built-in content, and the pages pull them in with
-//! `{{#include generated/NAME.md}}`, so they cannot drift. Output is deterministic. `--check` fails
-//! when a file is stale; `--build` also runs `mdbook build wiki`.
+//! objects and materials, equipment slots, scenarios, action costs, races and classes, their sizes
+//! and carrying limits, the horoscope, skills: what each does, how it trains, what it gives by
+//! value, who trains it, and the increase curve) and a few constants of the rules (sight radii, the
+//! pack's size, the stats' names, what each gender raises). Those are written to
+//! `wiki/src/generated/*.md` from the built-in content, and the pages pull them in with
+//! `{{#include generated/NAME.md}}`, so they cannot drift. Output is deterministic. `--check`
+//! fails when a file is stale; `--build` also runs `mdbook build wiki`.
 
 use crate::workspace_root;
 use std::collections::BTreeSet;
@@ -28,6 +29,7 @@ use warlock_core::dice::Dice;
 use warlock_core::light::{Light, Moon, Sky, Sun};
 use warlock_core::object::{INVENTORY_SLOTS, format_weight};
 use warlock_core::perception::VIEW_RADIUS;
+use warlock_core::skills::{Effect, SkillId};
 use warlock_core::stats::{AVERAGE, PerStat, Stat};
 use warlock_core::time::{DAY, Duration, GameTime};
 use warlock_core::weather::{Clouds, Conditions, Weather};
@@ -138,6 +140,10 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("races.md".to_string(), races(content)),
         ("classes.md".to_string(), classes(content)),
         ("horoscope.md".to_string(), horoscope(content)),
+        ("skills.md".to_string(), skills(content)),
+        ("skill-benefits.md".to_string(), skill_benefits(content)),
+        ("skill-grants.md".to_string(), skill_grants(content)),
+        ("skill-increase.md".to_string(), skill_increase(content)),
         ("weapons.md".to_string(), weapons(content)),
         ("launchers.md".to_string(), launchers(content)),
         ("ammunition.md".to_string(), ammunition(content)),
@@ -1014,6 +1020,156 @@ fn classes(content: &Content) -> String {
     out
 }
 
+/// Every skill in the order the Skills screen lists them: what kind it is, what it is about,
+/// what it gives (the benefits table has the numbers), and when it earns a training mark (with
+/// the chance).
+fn skills(content: &Content) -> String {
+    let mut out = String::from(
+        "| Skill | Kind | What it is about | Gives | Trains on |\n|---|---|---|---|---|\n",
+    );
+    for skill in content.skills() {
+        let gives: Vec<&str> = skill
+            .benefits
+            .iter()
+            .map(|b| effect_name(b.effect))
+            .collect();
+        let gives = if gives.is_empty() {
+            "nothing yet".to_string()
+        } else {
+            gives.join("; ")
+        };
+        let trains: Vec<String> = (skill.marks.iter())
+            .map(|m| format!("{} ({}%)", m.on.describe(), m.chance))
+            .collect();
+        let trains = if trains.is_empty() {
+            "nothing yet".to_string()
+        } else {
+            trains.join("; ")
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {gives} | {trains} |",
+            skill.name,
+            skill.kind.name(),
+            skill.description
+        );
+    }
+    out
+}
+
+/// What an effect does, in words.
+fn effect_name(effect: Effect) -> &'static str {
+    match effect {
+        Effect::Dodge => "a Dodge bonus to Defence",
+        Effect::Quiet => "quieter steps and doors",
+        Effect::Hearing => "keener hearing",
+        Effect::Burden => "less slowdown from your load",
+        Effect::Travel => "quicker journeys on the overworld",
+    }
+}
+
+/// The values the benefits table shows.
+const BENEFIT_VALUES: [u16; 14] = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 125, 150, 200];
+
+/// What each skill's benefits give at a range of values, one column per benefit, from the data.
+fn skill_benefits(content: &Content) -> String {
+    let columns: Vec<(&str, &warlock_core::skills::Benefit)> = (content.skills().iter())
+        .flat_map(|s| s.benefits.iter().map(move |b| (s.name.as_str(), b)))
+        .collect();
+    let mut out = String::from("| Value |");
+    for (name, b) in &columns {
+        let what = match b.effect {
+            Effect::Dodge => "Dodge",
+            Effect::Quiet => "noise",
+            Effect::Hearing => "hears fainter by",
+            Effect::Burden => "Burdened / Strained",
+            Effect::Travel => "journeys",
+        };
+        let _ = write!(out, " {name}: {what} |");
+    }
+    out.push_str("\n|---:|");
+    out.push_str(&":---:|".repeat(columns.len()));
+    out.push('\n');
+    for value in BENEFIT_VALUES {
+        let _ = write!(out, "| {value} |");
+        for (_, b) in &columns {
+            let n = b.at(value);
+            let cell = match b.effect {
+                _ if n == 0 => "—".to_string(),
+                Effect::Dodge => format!("+{n}"),
+                Effect::Quiet | Effect::Travel => format!("\u{2212}{n}%"),
+                Effect::Hearing => n.to_string(),
+                Effect::Burden => {
+                    let slowed = |b: Burden| factor(b.slow_eased(100, n));
+                    format!(
+                        "×{} / ×{}",
+                        slowed(Burden::Burdened),
+                        slowed(Burden::Strained)
+                    )
+                }
+            };
+            let _ = write!(out, " {cell} |");
+        }
+        out.push('\n');
+    }
+    out
+}
+
+/// A skill's name, for the grants tables.
+fn skill_name(content: &Content, id: SkillId) -> &str {
+    &content.skill(id).name
+}
+
+/// What each race and each class trains, as dice (`1d6+4`), in the order New run offers them.
+fn skill_grants(content: &Content) -> String {
+    let list = |grants: &[(SkillId, Dice)]| -> String {
+        let parts: Vec<String> = (grants.iter())
+            .map(|&(id, dice)| format!("{} `{dice}`", skill_name(content, id)))
+            .collect();
+        parts.join(", ")
+    };
+    let mut out = String::from("| Race | Trains |\n|---|---|\n");
+    for r in &content.races().list {
+        let mut trains = list(&r.skills);
+        if !r.class_skill.is_zero() {
+            if !trains.is_empty() {
+                trains.push_str("; ");
+            }
+            let _ = write!(
+                trains,
+                "one of the class's skills `+{}`, picked at random",
+                r.class_skill
+            );
+        }
+        if trains.is_empty() {
+            trains = "-".into();
+        }
+        let _ = writeln!(out, "| {} | {trains} |", r.name);
+    }
+    out.push_str("\n| Class | Trains |\n|---|---|\n");
+    for c in content.classes() {
+        let _ = writeln!(out, "| {} | {} |", c.name, list(&c.skills));
+    }
+    out
+}
+
+/// **[provisional]** The increase curve: the marks a point needs at a range of values, and all
+/// the marks from 0.
+fn skill_increase(content: &Content) -> String {
+    let inc = content.increase();
+    let mut out =
+        String::from("| Value | Marks for the next point | Marks from 0 |\n|---:|---:|---:|\n");
+    for value in [0, 10, 25, 50, 75, 99, 100, 101, 110, 120, 150, 200] {
+        let _ = writeln!(
+            out,
+            "| {value} | {} | {} |",
+            inc.need(value),
+            inc.total(0, value)
+        );
+    }
+    out
+}
+
 /// The horoscope: the animals in the order of the Great Race and the elements, each with its
 /// stat adjustments and what it means; then the great cycle, sign by sign, with its years in the
 /// great cycle of the showcase's start and the two before it.
@@ -1659,6 +1815,40 @@ mod tests {
         assert!(text("stats.md").contains("| Strength | `St` |\n| Dexterity | `Dx` |"));
         assert!(text("stats.md").contains("| Presence | `Pr` |"));
         assert!(text("genders.md").contains("| Female | Dexterity +1 |"));
+        // Skills: what each does and trains on, what the passive ones give by value, who trains
+        // them as dice, and the provisional increase curve.
+        let skills = text("skills.md");
+        assert!(
+            skills.contains(
+                "| Tumble | passive | Rolling, diving, and twisting out of harm's way. | a Dodge \
+                 bonus to Defence | dodging an attack (40%) |"
+            ),
+            "{skills}"
+        );
+        assert!(skills.contains("| Swim | read by rules |"));
+        assert_eq!(skills.matches("\n| ").count(), 1 + 26, "{skills}");
+        let benefits = text("skill-benefits.md");
+        assert!(
+            benefits.contains(
+                "| Value | Balance: Burdened / Strained | Listen: hears fainter by | Stealth: \
+                 noise | Survival: journeys | Tumble: Dodge |"
+            ),
+            "{benefits}"
+        );
+        assert!(benefits.contains("| 100 | ×1.1 / ×1.2 | 10 | \u{2212}60% | \u{2212}20% | +5 |"));
+        assert!(benefits.contains("| 150 | ×1.08 / ×1.15 | 15 | \u{2212}75% | \u{2212}20% | +7 |"));
+        let grants = text("skill-grants.md");
+        assert!(grants.contains("| Halfling | Listen `1d6+4`, Stealth `1d6+4` |"));
+        assert!(
+            grants.contains("| Human | one of the class's skills `+2d4+4`, picked at random |")
+        );
+        assert!(grants.contains("| Commoner | Athletics `2d4+4`, Handle animal `2d4+4` |"));
+        let increase = text("skill-increase.md");
+        assert!(
+            increase.contains("| 99 | 13 | 837 |\n| 100 | 42 | 850 |"),
+            "{increase}"
+        );
+        assert!(increase.contains("| 120 | 48 | 1720 |"));
         assert!(
             text("races.md")
                 .contains("| Race | St | Dx | To | In | Wi | Pr | Vision | Starting age |"),

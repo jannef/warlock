@@ -25,8 +25,9 @@
 
 use super::{Actor, ActorId, ActorKind, World};
 use crate::action::Event;
-use crate::content::{ActionKind, BASE_TURN, TerrainDef, price};
+use crate::content::{ActionKind, BASE_TURN, LevelKind, TerrainDef, price};
 use crate::perception::VIEW_RADIUS;
+use crate::skills::Effect;
 use crate::time::{Duration, GameTime};
 
 /// Whole seconds until an actor with `energy` and `speed` may act: 0 if it may act now.
@@ -36,6 +37,12 @@ fn wait(energy: i64, speed: u32) -> u64 {
     } else {
         energy.unsigned_abs().div_ceil(u64::from(speed.max(1)))
     }
+}
+
+/// `price` with `percent` (0 to 100) taken off, rounded up; at least 1.
+fn shortened(price: i64, percent: i32) -> i64 {
+    let keep = i64::from(100 - percent.clamp(0, 100));
+    (price.saturating_mul(keep).saturating_add(99) / 100).max(1)
 }
 
 /// An actor in the running turn's schedule.
@@ -58,18 +65,26 @@ impl World {
     }
 
     /// The energy price of actor `id` stepping onto terrain `to` on the current level, slowed by
-    /// its burden ([`World::burdened`]).
+    /// its burden ([`World::burdened`]). On the overworld its skills (survival; spec §8
+    /// "Skills") take their percent off the journey, rounded up (at least 1).
     pub(super) fn step_price(&self, id: ActorId, to: &TerrainDef) -> i64 {
-        let creature = self.state.actors[&id].creature;
-        let step = self.content.action_cost(creature, ActionKind::Step);
-        self.burdened(id, self.state.current().step_price(to, step))
+        let actor = &self.state.actors[&id];
+        let step = self.content.action_cost(actor.creature, ActionKind::Step);
+        let level = self.state.current();
+        let mut price = level.step_price(to, step);
+        if level.kind == LevelKind::Overworld {
+            price = shortened(price, actor.skills.effect(&self.content, Effect::Travel));
+        }
+        self.burdened(id, price)
     }
 
     /// `price` as actor `id` pays it now: ×1.25 Burdened, ×1.5 Strained or Overloaded (spec §8
     /// "Burden"; [`crate::burden::Burden::slow`]), nothing more for a race that ignores Burdened
-    /// while it is Burdened. An action is priced at the burden its actor has as it begins.
+    /// while it is Burdened, and less of the slowdown for its skills (balance; spec §8
+    /// "Skills"). An action is priced at the burden its actor has as it begins.
     fn burdened(&self, id: ActorId, price: i64) -> i64 {
-        self.load_of(id).penalty().slow(price)
+        let ease = (self.state.actors[&id].skills).effect(&self.content, Effect::Burden);
+        self.load_of(id).penalty().slow_eased(price, ease)
     }
 
     /// The price that leaves the player ready to act exactly at `until` (the last turn of a
@@ -192,5 +207,14 @@ mod tests {
         assert_eq!(wait(-6000, 1500), 4);
         assert_eq!(wait(-6001, 1000), 7);
         assert_eq!(wait(-1, 10_000), 1);
+    }
+
+    #[test]
+    fn journeys_are_shortened_by_whole_percents_rounded_up() {
+        assert_eq!(shortened(1_200_000, 0), 1_200_000);
+        assert_eq!(shortened(1_200_000, 20), 960_000);
+        assert_eq!(shortened(1_200_000, 150), 1, "never free");
+        assert_eq!(shortened(1_200_000, -5), 1_200_000);
+        assert_eq!(shortened(101, 10), 91);
     }
 }

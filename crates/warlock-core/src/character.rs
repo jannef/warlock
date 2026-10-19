@@ -19,8 +19,13 @@
 //!   are hidden from the player.
 //! - **Dice**: adjustments may be dice ([`Dice`](crate::dice::Dice)), rolled from the stream
 //!   `character/rolls/<race>,<gender>,<class>` in this order: the race's scores, the class's,
-//!   the animal's, the element's (each in stat order), then the race's potentials. Fixed numbers
-//!   draw nothing.
+//!   the animal's, the element's (each in stat order), then the race's potentials, then the
+//!   skills (below). Fixed numbers draw nothing.
+//! - **Skills** (spec §8 "Skills"): the race's and the class's skills, each by its dice, rolled
+//!   after everything above (so they never change a score) in this order: the race's skills, the
+//!   class's (each in skill order), then the race's extra class skill (`class_skill`, humans):
+//!   one of the class's skills picked uniformly, then its dice. A skill both train sums the two.
+//!   Every other skill is untrained.
 //! - **Eyes**: the player's vision profile is the race's.
 //!
 //! Everything follows from the content, the spec, the run seed, and the start date, so a run
@@ -28,6 +33,7 @@
 
 use crate::content::{Calendar, ClassDef, Content, RaceDef, Sign};
 use crate::rng::Rng;
+use crate::skills::{self, Skills};
 use crate::stats::{self, AVERAGE, PerStat, Stat, Stats, adjusted};
 use crate::time::{DAYS_PER_MONTH, GameTime, MONTHS_PER_YEAR};
 use serde::{Deserialize, Serialize};
@@ -198,6 +204,8 @@ pub struct Start {
     pub vision: String,
     /// What the race and the class add to the hit points (spec §8 "Combat").
     pub hp: i32,
+    /// The trained skills, with their starting values (spec §8 "Skills").
+    pub skills: Skills,
     pub character: Character,
 }
 
@@ -245,10 +253,12 @@ impl CharacterSpec {
             add(stats::roll(&element.stats, &mut rng));
         }
         let potential = stats::roll(&race.potential, &mut rng);
+        let skills = starting_skills(race, class, &mut rng);
         Ok(Start {
             stats: starting_stats(by, potential, content.races().base_potential),
             vision: race.vision.clone(),
             hp: race.hp + class.hp,
+            skills,
             character: Character {
                 spec: self.clone(),
                 raised,
@@ -267,6 +277,19 @@ fn birth(race: &RaceDef, seed: u64, today: GameTime) -> BirthDate {
     let month = rng.range(1, MONTHS_PER_YEAR as i32) as u32;
     let day = rng.range(1, DAYS_PER_MONTH as i32) as u32;
     BirthDate::counted_back(today, age, month, day)
+}
+
+/// Starting skills: the race's, then the class's, then the race's extra class skill on one of
+/// the class's skills picked uniformly (drawing nothing when there is none to pick from).
+fn starting_skills(race: &RaceDef, class: &ClassDef, rng: &mut Rng) -> Skills {
+    let mut out = Skills::default();
+    skills::roll_grants(&race.skills, &mut out, rng);
+    skills::roll_grants(&class.skills, &mut out, rng);
+    if !race.class_skill.is_zero() && !class.skills.is_empty() {
+        let (skill, _) = class.skills[rng.index(class.skills.len())];
+        out.add(skill, race.class_skill.roll(rng));
+    }
+    out
 }
 
 /// Starting stats from the adjustments: scores 10 plus `by`, potentials `base_potential` plus
@@ -321,6 +344,7 @@ mod tests {
     use super::*;
     use crate::content::ContentFiles;
     use crate::dice::Dice;
+    use crate::skills::SkillId;
     use std::collections::{BTreeMap, BTreeSet};
 
     fn content() -> Content {
@@ -679,6 +703,114 @@ mod tests {
             "unknown class `necromancer`"
         );
         assert!(spec("half_orc,other,witch").check(&content).is_ok());
+    }
+
+    /// The built-in content without skills: no skills file, and no race or class training any.
+    fn skill_free_content() -> Content {
+        let mut files = ContentFiles::builtin();
+        files.remove("data/skills.toml");
+        for (path, text) in [
+            (
+                "data/races.toml",
+                include_str!("../../../assets/data/races.toml"),
+            ),
+            (
+                "data/classes.toml",
+                include_str!("../../../assets/data/classes.toml"),
+            ),
+            (
+                "data/creatures.toml",
+                include_str!("../../../assets/data/creatures.toml"),
+            ),
+        ] {
+            let kept: Vec<&str> = (text.lines())
+                .filter(|l| !l.starts_with("skills = ") && !l.starts_with("class_skill = "))
+                .collect();
+            files.insert(path, &kept.join("\n"));
+        }
+        Content::load(&files).expect("valid content")
+    }
+
+    #[test]
+    fn skills_are_rolled_after_everything_else_and_never_move_a_score() {
+        let content = content();
+        let plain = skill_free_content();
+        assert!(plain.skills().is_empty());
+        for race in &content.races().list {
+            for class in content.classes() {
+                for gender in Gender::ALL {
+                    let spec = CharacterSpec {
+                        race: race.id.clone(),
+                        gender,
+                        class: class.id.clone(),
+                    };
+                    for seed in 0..3 {
+                        let with = spec.start(&content, seed, start_date()).expect("starts");
+                        let without = spec.start(&plain, seed, start_date()).expect("starts");
+                        // Scores, potentials, eyes, hit points, birth: all as before skills.
+                        assert_eq!(with.stats, without.stats, "{spec} seed {seed}");
+                        assert_eq!(with.character, without.character, "{spec} seed {seed}");
+                        assert_eq!((with.vision, with.hp), (without.vision, without.hp));
+                        assert!(without.skills.is_empty());
+                        // Trained in exactly what the race and the class train.
+                        let granted: BTreeSet<SkillId> = (race.skills.iter().chain(&class.skills))
+                            .map(|&(id, _)| id)
+                            .collect();
+                        let trained: BTreeSet<SkillId> =
+                            with.skills.iter().map(|(id, _)| id).collect();
+                        assert_eq!(trained, granted, "{spec}");
+                        // Each value within what the dice allow, both summed, plus a human's
+                        // extra class skill on one of them.
+                        let mut extra = 0;
+                        for (id, t) in with.skills.iter() {
+                            let dice: Vec<Dice> = (race.skills.iter().chain(&class.skills))
+                                .filter(|&&(s, _)| s == id)
+                                .map(|&(_, d)| d)
+                                .collect();
+                            let lo: i32 = dice.iter().map(Dice::min).sum();
+                            let hi: i32 = dice.iter().map(Dice::max).sum();
+                            let v = i32::from(t.value);
+                            if v > hi {
+                                extra += 1;
+                                assert!(v <= hi + race.class_skill.max(), "{spec} {id}");
+                            }
+                            assert!(v >= lo, "{spec} {id}: {v} < {lo}");
+                            assert_eq!(t.marks, 0);
+                        }
+                        assert!(extra <= 1, "{spec}");
+                    }
+                }
+            }
+        }
+        // The same seed and choices, the same skills; another seed rolls others.
+        let thief = start(&content, "human,female,thief", 1);
+        assert_eq!(
+            thief.skills,
+            start(&content, "human,female,thief", 1).skills
+        );
+        let others =
+            (2..12).filter(|&s| start(&content, "human,female,thief", s).skills != thief.skills);
+        assert!(others.count() > 5);
+    }
+
+    #[test]
+    fn humans_add_their_extra_class_skill_to_one_of_the_classs() {
+        let content = content();
+        let human = content.race("human").expect("human");
+        assert_eq!(human.class_skill.to_string(), "2d4+4");
+        assert!(human.skills.is_empty());
+        let class = content.class("merchant").expect("merchant");
+        // Over many seeds, every one of the merchant's skills gets the extra now and then.
+        let mut boosted = BTreeSet::new();
+        for seed in 0..60 {
+            let s = start(&content, "human,male,merchant", seed);
+            for &(id, dice) in &class.skills {
+                if i32::from(s.skills.value(id).expect("trained")) > dice.max() {
+                    boosted.insert(id);
+                }
+            }
+        }
+        assert_eq!(boosted.len(), class.skills.len(), "{boosted:?}");
     }
 
     #[test]

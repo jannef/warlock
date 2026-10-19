@@ -79,6 +79,10 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 | Verify a replay | `... replay --verify runs/x.json` (exit 1 and first diverging step on mismatch) |
 | Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor; also local areas, `--level local:49,23`) |
 
+Dump layers beyond the map ones: `inventory`, `equipment`, `stats`, and `skills` (the player's
+trained skills, `Stealth 17`) from perception; `actors` (dev-only: every actor's hit points,
+load, stats, and skills with their marks).
+
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] equip:SLOT:LETTER remove:SLOT fire:X,Y throw:LETTER:X,Y
 rest:GOAL vision:PROFILE skip:DURATION weather:KIND` (`DIR` = N
@@ -131,7 +135,7 @@ level change to `run.sav` in the platform data dir (`paths.rs`, app name "warloc
 `--replay`, or `--record` (replays and recordings always start a fresh run). F5 / F9 write / load `snapshots/quick.sav`. An unreadable save is renamed `run.sav.bad`,
 never deleted. Format and `Content::fingerprint` live in `warlock-core/src/save.rs`: bump
 `FORMAT_VERSION` on any incompatible `WorldState` change; adding or reordering terrain, creatures,
-lights, levels, objects, equipment slots, or dungeon branches invalidates existing saves.
+lights, levels, objects, equipment slots, skills, or dungeon branches invalidates existing saves.
 **Permadeath**: when the player dies, `screens::on_death` deletes `run.sav`
 (`SaveStore::delete_run`) and opens the death screen; `SaveStore::save_run` never writes a dead
 run (it deletes instead), so autosave, `Q`, and closing the window cannot bring it back, and the
@@ -509,6 +513,23 @@ knows it, `LastTarget`), `ui/missiles.rs` flies missiles on the free-glyph layer
 with `FreeGlyph::turn`, trail, embers via `particles::trail`, impact puff) and writes this frame's
 `render::lighting::Transients` (the moving light of a burning missile, and landed lights held back
 until it arrives; `draw_map`, object glow, and object particles hold back what is `arriving` too).
+
+Skills (spec §8 "Skills", #132) live in `warlock-core`: `skills.rs` (`Skills` per actor: trained
+skills only, a missing one is untrained and gives nothing; `Effect` and `Use`, the typed benefit
+and training-mark hooks; `Benefit` growth by `steps` or a `curve`; the **provisional**
+`Increase` curve), `content/skill.rs` (`data/skills.toml`; adding a skill is one entry), and
+`world/train.rs` (marks for the player only, drawn from the `training` stream in `WorldState`,
+never the gameplay stream). Race and class grants are dice rolled in `character.rs` after every
+other roll, so they never move a score. Each effect is read in one place: Dodge in
+`Actor::defence`, quiet in `noise::noise`, hearing in `Actor::hearing`, burden in
+`World::burdened` (`Burden::slow_eased`), travel in `World::step_price`; each use is reported
+where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`, `player_moves`). A new
+effect or use is a variant there plus its one hook. The player sees values only
+(`PerceptionView::own_skills`, the Skills screen `ui/skills_screen.rs`, `S`); never marks or
+benefit numbers. Skills get no keys of their own: active uses will be chosen from the one
+abilities menu (#156), which reads `PerceptionView::active_skills` (`OwnSkill::active`: the
+skill's kind is `action`; `available`: usable now, false until the uses exist). Pending hooks: athletics (kicking doors, #130; climbing out of pits, #128) and
+escape artist (pits, #128).
 
 Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebuffer pixels:
 1. **Map grid** (`render/grid.rs`): a `Console` (`render/console.rs`) drawn by one quad with the

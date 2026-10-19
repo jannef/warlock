@@ -35,6 +35,7 @@ mod object_screen;
 mod rain;
 mod screens;
 mod settings_screen;
+mod skills_screen;
 mod sounds;
 mod target;
 
