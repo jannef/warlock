@@ -2,9 +2,9 @@
 //!
 //! The wiki (`wiki/`, built with mdBook) is written by hand except for facts that live in data
 //! (month names, moons, weather, terrain, vision profiles, light presets, creatures, factions,
-//! objects and materials, equipment slots, scenarios, action costs, races and classes, the
-//! horoscope) and a few constants of the rules (sight radii, the pack's size, the stats' names,
-//! what each gender raises). Those are
+//! objects and materials, equipment slots, scenarios, action costs, races and classes, their
+//! sizes and carrying limits, the horoscope) and a few constants of the rules (sight radii, the
+//! pack's size, the stats' names, what each gender raises). Those are
 //! written to `wiki/src/generated/*.md` from the built-in content, and the pages pull them in with
 //! `{{#include generated/NAME.md}}`, so they cannot drift. Output is deterministic. `--check` fails
 //! when a file is stale; `--build` also runs `mdbook build wiki`.
@@ -14,6 +14,7 @@ use std::collections::BTreeSet;
 use std::fmt::Write as _;
 use std::path::PathBuf;
 use std::process::Command;
+use warlock_core::burden::{self, Burden, Load};
 use warlock_core::character::Gender;
 use warlock_core::combat;
 use warlock_core::content::{
@@ -143,6 +144,9 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("threats.md".to_string(), threats()),
         ("hit-points.md".to_string(), hit_points(content)),
         ("regeneration.md".to_string(), regeneration()),
+        ("burden.md".to_string(), burden_levels()),
+        ("burden-races.md".to_string(), burden_races(content)),
+        ("burden-examples.md".to_string(), burden_examples(content)),
     ];
     for (_, text) in &mut files {
         *text = format!(
@@ -1209,6 +1213,106 @@ fn regeneration() -> String {
     out
 }
 
+/// What each level of burden costs (spec §8 "Burden"), from the rules' own numbers.
+fn burden_levels() -> String {
+    let mut out = String::from(
+        "| Burden | You carry | Every action takes | Dexterity adds to Defence | Your steps |\n\
+         |---|---|---|---|---|\n",
+    );
+    for b in Burden::ALL {
+        let carried = match b {
+            Burden::Unburdened => "up to a third of your limit",
+            Burden::Burdened => "up to two thirds",
+            Burden::Strained => "up to your limit",
+            Burden::Overloaded => "more than your limit",
+        };
+        // How long a normal action takes, from its price: 6 s at a normal pace.
+        let normal = price(warlock_core::content::NORMAL_COST, BASE_TURN);
+        let takes = match (b.can_move(), at_normal_pace(b.slow(normal))) {
+            (true, t) if b == Burden::Unburdened => format!("{t} (as usual)"),
+            (true, t) => format!("{t} (×{})", factor(b.slow(100))),
+            (false, t) => format!("{t} (×{}); you cannot move", factor(b.slow(100))),
+        };
+        let dex = b
+            .max_dex()
+            .map_or("all of it".to_string(), |cap| match cap {
+                0 => "nothing".to_string(),
+                cap => format!("at most +{cap}"),
+            });
+        let steps = match b.footsteps() {
+            100 => "as loud as ever".to_string(),
+            _ if !b.can_move() => "-".to_string(),
+            percent => format!("×{} as loud", factor(i64::from(percent))),
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {carried} | {takes} | {dex} | {steps} |",
+            b.name()
+        );
+    }
+    out
+}
+
+/// `percent` as a factor: `1`, `0.75`, `1.25`, `1.5`.
+fn factor(percent: i64) -> String {
+    let text = format!("{}.{:02}", percent / 100, percent % 100);
+    text.trim_end_matches('0').trim_end_matches('.').to_string()
+}
+
+/// Each race's size and what it carries next to a medium race, and whether it shrugs off
+/// Burdened.
+fn burden_races(content: &Content) -> String {
+    let mut out = String::from("| Race | Size | Carries | When burdened |\n|---|---|:---:|---|\n");
+    for r in &content.races().list {
+        let size = content.size(r.size);
+        let burdened = if r.ignores_burdened {
+            "no penalty at all"
+        } else {
+            "slowed, louder, less nimble"
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | ×{} | {burdened} |",
+            r.name,
+            size.name,
+            factor(i64::from(size.carry))
+        );
+    }
+    out
+}
+
+/// Carrying limits of a few characters: the race's size with the given Strength and Toughness.
+fn burden_examples(content: &Content) -> String {
+    let mut out = String::from(
+        "| Character | Limit | Unburdened up to | Burdened up to | Strained up to |\n\
+         |---|---:|---:|---:|---:|\n",
+    );
+    for (race, strength, toughness) in [
+        ("human", 10, 10),
+        ("half_orc", 16, 14),
+        ("dwarf", 14, 16),
+        ("halfling", 8, 12),
+        ("elf", 6, 8),
+    ] {
+        let Some(r) = content.race(race) else {
+            continue;
+        };
+        let load = Load {
+            carried: 0,
+            limit: burden::limit(strength, toughness, content.size(r.size).carry),
+            ignores_burdened: r.ignores_burdened,
+        };
+        let [burdened, strained, overloaded] = load.thresholds().map(|(_, g)| format_weight(g));
+        let _ = writeln!(
+            out,
+            "| {}, St {strength} To {toughness} | {overloaded} | {burdened} | {strained} | \
+             {overloaded} |",
+            r.name
+        );
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1276,6 +1380,25 @@ mod tests {
         );
         assert!(text("materials.md").contains("| Steel | daggers, short swords |"));
         assert!(text("pack.md").contains("| Your own weight | 70 kg |"));
+        let burden = text("burden.md");
+        for row in [
+            "| Unburdened | up to a third of your limit | 6 seconds (as usual) | all of it | as \
+             loud as ever |",
+            "| Burdened | up to two thirds | 7.5 seconds (×1.25) | at most +3 | ×1.25 as loud |",
+            "| Strained | up to your limit | 9 seconds (×1.5) | at most +1 | ×1.5 as loud |",
+            "| Overloaded | more than your limit | 9 seconds (×1.5); you cannot move | nothing | - |",
+        ] {
+            assert!(burden.contains(row), "{row} in {burden}");
+        }
+        let races = text("burden-races.md");
+        assert!(races.contains("| Halfling | Small | ×0.75 | slowed, louder, less nimble |"));
+        assert!(races.contains("| Dwarf | Medium | ×1 | no penalty at all |"));
+        let examples = text("burden-examples.md");
+        assert!(examples.contains("| Human, St 10 To 10 | 45 kg | 15 kg | 30 kg | 45 kg |"));
+        assert!(
+            examples.contains("| Halfling, St 8 To 12 | 31.5 kg | 10.5 kg | 21 kg | 31.5 kg |")
+        );
+        assert!(examples.contains("| Half-orc, St 16 To 14 | 69 kg | 23 kg | 46 kg | 69 kg |"));
         assert!(text("stats.md").contains("| Strength | `St` |\n| Dexterity | `Dx` |"));
         assert!(text("stats.md").contains("| Presence | `Pr` |"));
         assert!(text("genders.md").contains("| Female | Dexterity +1 |"));

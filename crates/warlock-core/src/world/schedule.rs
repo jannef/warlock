@@ -9,9 +9,12 @@
 //! act while its energy is at least 0, and whatever is left over carries on, so over any span the
 //! actions an actor takes stay proportional to its speed and their costs while the clock keeps
 //! whole seconds: a run of actions takes their exact total time, up to the next whole second,
-//! with no drift. Creatures on other levels are frozen (they gain nothing until the player is
-//! back), so coming back to a level never sets off a burst of actions; the dev time skip gives
-//! nobody energy either.
+//! with no drift. An actor's burden (spec §8 "Burden", [`crate::burden`]) raises every price it
+//! pays, ×1.25 Burdened and ×1.5 Strained or Overloaded, as a lower speed would: the prices
+//! here ([`World::price_of`], [`World::step_price`]) are the one place that happens, so it
+//! covers every action, overworld journeys included. Creatures on other levels are frozen (they
+//! gain nothing until the player is back), so coming back to a level never sets off a burst of
+//! actions; the dev time skip gives nobody energy either.
 //!
 //! After the player acts, the other actors on the level act in time order until the player may
 //! act again ([`World::run_turn`]): next is whoever reaches 0 soonest, the clock moves to that
@@ -44,17 +47,29 @@ struct Scheduled {
 
 impl World {
     /// The energy price of action `kind` for actor `id`: its creature type's cost of it over the
-    /// 6-second base. Steps are priced by the terrain instead ([`World::step_price`]).
+    /// 6-second base, slowed by its burden ([`World::burdened`]). Steps are priced by the terrain
+    /// instead ([`World::step_price`]).
     pub(super) fn price_of(&self, id: ActorId, kind: ActionKind) -> i64 {
         let creature = self.state.actors[&id].creature;
-        price(self.content.action_cost(creature, kind), BASE_TURN)
+        self.burdened(
+            id,
+            price(self.content.action_cost(creature, kind), BASE_TURN),
+        )
     }
 
-    /// The energy price of actor `id` stepping onto terrain `to` on the current level.
+    /// The energy price of actor `id` stepping onto terrain `to` on the current level, slowed by
+    /// its burden ([`World::burdened`]).
     pub(super) fn step_price(&self, id: ActorId, to: &TerrainDef) -> i64 {
         let creature = self.state.actors[&id].creature;
         let step = self.content.action_cost(creature, ActionKind::Step);
-        self.state.current().step_price(to, step)
+        self.burdened(id, self.state.current().step_price(to, step))
+    }
+
+    /// `price` as actor `id` pays it now: ×1.25 Burdened, ×1.5 Strained or Overloaded (spec §8
+    /// "Burden"; [`crate::burden::Burden::slow`]), nothing more for a race that ignores Burdened
+    /// while it is Burdened. An action is priced at the burden its actor has as it begins.
+    fn burdened(&self, id: ActorId, price: i64) -> i64 {
+        self.load_of(id).penalty().slow(price)
     }
 
     /// The price that leaves the player ready to act exactly at `until` (the last turn of a
@@ -134,7 +149,8 @@ impl World {
     /// [`VIEW_RADIUS`] (and heard only within [`crate::noise::MAX_REACH`], less than that), and
     /// every step costs at least the level's cheapest step: before its first step that could
     /// bring it into view, it needs the energy for all the steps that cannot. (Creature types
-    /// give only their attacks costs of their own, so a step costs every creature the same.)
+    /// give only their attacks costs of their own, so a step costs every creature the same; a
+    /// burden only makes it dearer, and an overloaded creature cannot step at all.)
     pub(super) fn out_of_view_for(&self) -> Duration {
         const _: () = assert!(crate::noise::MAX_REACH < VIEW_RADIUS);
         let level = self.state.current();

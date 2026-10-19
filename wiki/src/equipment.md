@@ -61,7 +61,7 @@ Every thing you put on or take off takes its slot's time from the table:
 What you wear and wield stays in your pack, with its letter. The [inventory](objects.md#your-pack)
 marks it: "(being worn)", "(wielded)", "(in off hand)", "(on left hand)", "(on right hand)",
 "(readied)", "(quivered)", and "(wielded in both hands)" for a two-handed weapon. It still counts
-toward the weight you carry.
+toward the weight you carry, and so toward your [burden](burden.md).
 
 **Dropping** something you wear or wield takes it off first ("You take off a leather jerkin.")
 and then drops it, which takes the time of both. The objects after it in your pack move up a

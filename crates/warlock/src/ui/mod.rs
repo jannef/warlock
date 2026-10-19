@@ -51,6 +51,7 @@ use bevy::prelude::*;
 use motion::Motion;
 use warlock_core::Pos;
 use warlock_core::World;
+use warlock_core::burden::Burden;
 use warlock_core::color::Rgb;
 use warlock_core::content::MoonDef;
 use warlock_core::light::MoonPhase;
@@ -400,12 +401,15 @@ fn status_segments(world: &World) -> Vec<Segment> {
     // of equal ones the later first). The moon phase is cut down to its glyph and the date to
     // its day and month before they are dropped. The weather shows only under the open sky,
     // where the player knows it, and there it matters more than the date: it changes the light
-    // and how far one sees. Hit points matter most after the level: they outlast the time.
+    // and how far one sees. Hit points matter most after the level: they outlast the time, and
+    // so does the burden (shown when there is one), which slows everything the player does.
     let calendar = content.calendar();
     let (hp, max_hp) = view.own_hp();
+    let burden = view.own_load().burden();
     [
         Some(Segment::new(0, view.level_name())),
         Some(Segment::new(1, format!("HP {hp}/{max_hp}"))),
+        (burden != Burden::Unburdened).then(|| Segment::new(1, burden.name())),
         view.region().map(|r| Segment::new(4, r)),
         Some(Segment::new(
             1,
@@ -544,13 +548,55 @@ fn fit_segments(segments: &[Segment], width: usize) -> String {
     line(&forms)
 }
 
+/// A test world: average scores (St 10 To 10, so burdened over 15 kg), standing on two chain
+/// mails (22 kg).
+#[cfg(test)]
+pub(crate) fn hoard() -> World {
+    let mut files = warlock_core::content::ContentFiles::builtin();
+    files.insert(
+        "levels/hoard.toml",
+        "name = \"Hoard\"\nmap = '''\n#####\n#@..#\n#####\n'''\n[legend]\n\
+         \"@\" = { terrain = \"floor\", spawn = \"player\", \
+         objects = [\"chain_mail\", \"chain_mail\"] }\n",
+    );
+    files.insert(
+        "scenarios/hoard.toml",
+        "name = \"Hoard\"\nstart_level = \"hoard\"\n",
+    );
+    let content = warlock_core::content::Content::load(&files).expect("valid");
+    World::new(std::sync::Arc::new(content), "hoard", None).expect("world")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::render::console::CellAnim;
     use std::sync::Arc;
     use warlock_core::content::{Content, ContentFiles};
-    use warlock_core::{Action, Dir, World};
+    use warlock_core::{Action, Dir, Letters, World};
+
+    #[test]
+    fn the_status_bar_shows_the_burden_after_the_hit_points_and_keeps_it_late() {
+        let mut world = hoard();
+        let texts =
+            |w: &World| -> Vec<String> { status_segments(w).into_iter().map(|s| s.text).collect() };
+        assert!(
+            !texts(&world).iter().any(|t| t.contains("urdened")),
+            "unburdened: nothing"
+        );
+        world.apply(&Action::PickUp(Letters::default()));
+        let segments = status_segments(&world);
+        assert_eq!(segments[1].text, "HP 10/10");
+        assert_eq!(segments[2].text, "Burdened", "right after the hit points");
+        // Narrow: the time gives way first, then the burden, before the hit points.
+        let line = "Hoard  ·  HP 10/10  ·  Burdened";
+        assert_eq!(fit_segments(&segments, line.chars().count()), line);
+        assert_eq!(
+            fit_segments(&segments, line.chars().count() - 1),
+            "Hoard  ·  HP 10/10"
+        );
+        assert!(fit_segments(&segments, 50).contains("Burdened  ·  08:"));
+    }
 
     #[test]
     fn ui_text_has_readable_contrast() {

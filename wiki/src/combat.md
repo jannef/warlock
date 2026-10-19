@@ -32,7 +32,9 @@ Your **Defence** (shown as `Dv` on the [character screen](character.md), `@`) is
 protects you, in kinds:
 
 - **Dexterity**: quick feet. A clumsy character's Defence is lower than 10. Heavy armour limits
-  how much Dexterity can add (see the table below).
+  how much Dexterity can add (see the table below), and so does a heavy load: at most +3 when
+  you are burdened, +1 when strained, nothing when overloaded (see [Burden](burden.md)). The
+  lower limit counts.
 - **Armour**: what you wear on your body.
 - **Shield**: a shield held in your off hand.
 - **Parry**: a weapon that turns blows aside, such as the quarterstaff.

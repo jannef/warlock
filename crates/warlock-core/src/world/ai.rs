@@ -318,7 +318,8 @@ impl World {
     }
 
     /// Creature `id` steps in `dir`: onto a walkable cell no one stands on, or, for a creature
-    /// that opens doors, opening a closed door there. Either makes noise.
+    /// that opens doors, opening a closed door there. Either makes noise. An overloaded creature
+    /// opens doors but does not step.
     fn creature_steps(&mut self, id: ActorId, dir: Dir, events: &mut Vec<Event>) -> Stepped {
         let level = self.state.current();
         let actor = &self.state.actors[&id];
@@ -333,7 +334,9 @@ impl World {
             events.push(Event::DoorOpened { pos: to });
             return Stepped::Opened;
         }
-        if !def.walkable || self.state.actor_at(&level.id, to).is_some() {
+        // An overloaded creature cannot move (spec §8 "Burden"): it waits.
+        let overloaded = !self.load_of(id).penalty().can_move();
+        if !def.walkable || overloaded || self.state.actor_at(&level.id, to).is_some() {
             return Stepped::Blocked;
         }
         let price = self.step_price(id, def);

@@ -1,5 +1,6 @@
 //! Actors: the player and creatures.
 
+use crate::burden::Burden;
 use crate::combat::{self, Attack, Category, Defence, Health, Profile};
 use crate::content::{ActionKind, Content, CreatureId, ObjectDef, ObjectId};
 use crate::equipment::Equipment;
@@ -118,15 +119,17 @@ impl Actor {
     }
 
     /// Its Defence (spec §8 "Combat"): 10 plus its Dexterity modifier (capped by the worn
-    /// armour that allows the least), the best armour, shield, and parry of what it wears and
+    /// armour that allows the least and by its `burden`, the burden it suffers, spec §8
+    /// "Burden": the lowest cap wins), the best armour, shield, and parry of what it wears and
     /// wields, and its creature type's natural armour.
-    pub fn defence(&self, content: &Content) -> Defence {
+    pub fn defence(&self, content: &Content, burden: Burden) -> Defence {
         let equipped: Vec<&ObjectDef> = (self.equipment.items().into_iter())
             .filter_map(|(_, item)| self.inventory.get(item))
             .map(|s| content.object(s.object))
             .collect();
         let dexterity = self.stats.modifier(Stat::Dexterity);
-        let cap = equipped.iter().filter_map(|o| o.max_dex).min();
+        let worn = equipped.iter().filter_map(|o| o.max_dex);
+        let cap = worn.chain(burden.max_dex()).min();
         let dexterity = cap.map_or(dexterity, |cap| dexterity.min(cap));
         let worn = equipped.iter().flat_map(|o| {
             [

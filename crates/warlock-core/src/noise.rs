@@ -1,7 +1,8 @@
 //! Noise and hearing (spec §5 "Hearing").
 //!
 //! **Noise**: actions make noise. A step makes the walker's `footsteps` (creature data) scaled by
-//! the `step_noise` percent of the terrain stepped onto (water splashes, grass is soft); opening or
+//! the `step_noise` percent of the terrain stepped onto (water splashes, grass is soft) and by its
+//! burden (×1.25 Burdened, ×1.5 Strained; spec §8 "Burden": a heavy load is noisy); opening or
 //! closing a door makes the door's `toggle_noise` (terrain data); an attack (an intent, spec §8
 //! "Creature behavior") makes fighting, a bowstring, or chanting where the attacker stands
 //! ([`MELEE_NOISE`], [`SHOT_NOISE`], [`SPELL_NOISE`]). [`noise`] is the one function
@@ -32,6 +33,7 @@
 //! message (and so stop a rest).
 
 use crate::action::AttackKind;
+use crate::burden::Burden;
 use crate::content::Content;
 use crate::geom::{Dir, Pos};
 use crate::world::{Actor, ActorId, LevelState, WorldState, fnv1a};
@@ -195,15 +197,27 @@ pub struct Recent {
     pub turn: u64,
 }
 
-/// How loud `act` by `actor` is on `level`: the one place an action's noise is decided. `None`
-/// if it is silent.
-pub fn noise(content: &Content, level: &LevelState, actor: &Actor, act: Act) -> Option<Noise> {
+/// How loud `act` by `actor` is on `level`, `burden` being the burden it suffers
+/// ([`crate::burden::Load::penalty`]): the one place an action's noise is decided. `None` if it
+/// is silent.
+pub fn noise(
+    content: &Content,
+    level: &LevelState,
+    actor: &Actor,
+    burden: Burden,
+    act: Act,
+) -> Option<Noise> {
     let terrain = |p: Pos| level.terrain.get(p).map(|t| content.terrain(*t));
     let (kind, at, loudness) = match act {
         Act::Step(to) => {
             let footsteps = u32::from(content.creature(actor.creature).footsteps);
             let percent = terrain(to).map_or(100, |t| u32::from(t.step_noise));
-            (SoundKind::Footsteps, to, footsteps * percent / 100)
+            let load = burden.footsteps();
+            (
+                SoundKind::Footsteps,
+                to,
+                footsteps * percent * load / 10_000,
+            )
         }
         Act::OpenDoor(p) => (
             SoundKind::DoorOpened,

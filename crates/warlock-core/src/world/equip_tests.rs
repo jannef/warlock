@@ -40,9 +40,12 @@ fn files() -> ContentFiles {
          [[faction]]\nid = \"wildlife\"\nname = \"wildlife\"\n",
     );
     files.insert("levels/armory.toml", LEVEL);
+    // Strong enough to carry the whole armory (22.7 kg) unburdened: up to 25 kg (spec §8
+    // "Burden").
     files.insert(
         "scenarios/armory.toml",
-        "name = \"Armory\"\nstart_level = \"armory\"\n",
+        "name = \"Armory\"\nstart_level = \"armory\"\n\
+         stats = { strength = 18, toughness = 14 }\n",
     );
     files
 }

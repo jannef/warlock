@@ -1,6 +1,7 @@
 //! Races (`assets/data/races.toml`, spec §8 "Character creation"): the first choice of a new
 //! run. A race adjusts the starting scores and the potentials (fixed numbers or dice), gives the
-//! player their eyes, and sets the range of their starting age.
+//! player their eyes, sets the range of their starting age, and gives the player their size
+//! (spec §8 "Burden": how much they can carry) and whether being Burdened costs them nothing.
 
 use super::ContentError;
 use crate::combat::MAX_BASE_HP;
@@ -31,6 +32,9 @@ struct RaceSpec {
     potential: BTreeMap<Stat, Dice>,
     #[serde(default)]
     hp: u16,
+    size: Option<String>,
+    #[serde(default)]
+    ignores_burdened: bool,
 }
 
 /// The oldest a character may start, in years.
@@ -55,6 +59,13 @@ pub struct RaceDef {
     /// What the race adds to the hit points (spec §8 "Combat"): maximum hit points are
     /// Toughness plus the race's and the class's.
     pub hp: i32,
+    /// Its size (spec §8 "Burden"): an index into [`super::Content::sizes`], which scales how
+    /// much the player can carry.
+    pub size: usize,
+    /// Whether the player suffers nothing for being Burdened, the first level of burden (no
+    /// slowdown, no cap on Dexterity in Defence, no louder steps); from Strained on they are
+    /// treated like everyone else. Dwarves.
+    pub ignores_burdened: bool,
 }
 
 /// Every race, and the base every potential starts from.
@@ -67,11 +78,13 @@ pub struct Races {
 }
 
 impl Races {
-    /// Parses `data/races.toml`; `has_vision` says whether a vision profile id exists.
+    /// Parses `data/races.toml`; `has_vision` says whether a vision profile id exists, and
+    /// `size_index` where a size id is in [`super::Content::sizes`].
     pub(super) fn parse(
         file: &str,
         text: &str,
         has_vision: impl Fn(&str) -> bool,
+        size_index: impl Fn(&str) -> Option<usize>,
     ) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: RaceFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
@@ -115,6 +128,9 @@ impl Races {
                     spec.hp
                 )));
             }
+            let size_id = spec.size.as_deref().unwrap_or(super::MEDIUM);
+            let size = size_index(size_id)
+                .ok_or_else(|| err(format!("race `{id}`: unknown size `{size_id}`")))?;
             list.push(RaceDef {
                 id: spec.id,
                 name: spec.name,
@@ -124,6 +140,8 @@ impl Races {
                 stats,
                 potential,
                 hp: i32::from(spec.hp),
+                size,
+                ignores_burdened: spec.ignores_burdened,
             });
         }
         Ok(Self {
@@ -138,7 +156,13 @@ mod tests {
     use super::*;
 
     fn parse(text: &str) -> Result<Races, ContentError> {
-        Races::parse("races.toml", text, |v| v == "normal")
+        let sizes = ["small", "medium"];
+        Races::parse(
+            "races.toml",
+            text,
+            |v| v == "normal",
+            |s| sizes.iter().position(|id| *id == s),
+        )
     }
 
     const ONE: &str = "base_potential = 15\n[[race]]\nid = \"human\"\nname = \"Human\"\n\
@@ -160,6 +184,12 @@ mod tests {
         assert!(human.stats[Stat::Dexterity].is_zero());
         assert_eq!(human.potential[Stat::Presence], Dice::fixed(-1));
         assert_eq!(human.potential[Stat::Willpower].to_string(), "1d2");
+        assert_eq!(human.size, 1, "medium unless named");
+        assert!(!human.ignores_burdened);
+        let dwarf =
+            parse(&format!("{ONE}size = \"small\"\nignores_burdened = true\n")).expect("valid");
+        assert_eq!(dwarf.list[0].size, 0);
+        assert!(dwarf.list[0].ignores_burdened);
     }
 
     #[test]
@@ -194,6 +224,7 @@ mod tests {
                 "potential: toughness",
             ),
             (ONE.replace("15", "0"), "base_potential 0"),
+            (format!("{ONE}size = \"huge\"\n"), "unknown size `huge`"),
             (
                 format!("{ONE}{}", ONE.replace("base_potential = 15\n", "")),
                 "duplicate race id `human`",

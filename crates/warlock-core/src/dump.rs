@@ -222,9 +222,12 @@ fn inventory_rows(view: &PerceptionView<'_>) -> Vec<String> {
         })
         .collect();
     let weight = view.own_weight();
+    let load = view.own_load();
     rows.push(format!(
-        "carried {}, total weight {}",
+        "carried {} ({}: {}), total weight {}",
         format_weight(weight.carried),
+        load.burden().id(),
+        load.over().join(", "),
         format_weight(weight.total())
     ));
     rows
@@ -279,14 +282,16 @@ fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
     rows
 }
 
-/// Every actor on the level (ground truth): id, creature, position, weight, what it carries, and
-/// its stats as score/potential (`St 12/15`).
+/// Every actor on the level (ground truth): id, creature, position, hit points and Defence,
+/// weight, what it carries, its burden and carrying limit, and its stats as score/potential
+/// (`St 12/15`).
 fn actor_rows(world: &World) -> Vec<String> {
     let content = world.content();
     let (_, actors) = world.ground_truth();
     actors
         .map(|a| {
             let w = a.weight(content);
+            let load = world.actor_load(a.id).expect("the actor exists");
             let carried: Vec<String> = a.inventory.iter().map(|s| s.describe(content)).collect();
             let carried = if carried.is_empty() {
                 "nothing".to_string()
@@ -317,16 +322,18 @@ fn actor_rows(world: &World) -> Vec<String> {
                 .collect();
             format!(
                 "{} {} at {}: hp {}/{} dv {}; weight {} (base {} + carried {}: {carried})\
-                 {equipped}; stats {}",
+                 {equipped}; {} (limit {}); stats {}",
                 a.id,
                 content.creature(a.creature).id,
                 a.pos,
                 a.hp,
                 a.max_hp(),
-                a.defence(content).total(),
+                a.defence(content, load.penalty()).total(),
                 format_weight(w.total()),
                 format_weight(w.base),
                 format_weight(w.carried),
+                load.burden().id(),
+                format_weight(load.limit),
                 stats.join(" "),
             )
         })
@@ -429,6 +436,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         })
         .collect();
     let weight = view.own_weight();
+    let load = view.own_load();
     let (hp, max_hp) = view.own_hp();
     let death = world.death().map(|d| {
         json!({
@@ -457,6 +465,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "inventory": inventory,
         "equipment": equipment,
         "weight": { "base": weight.base, "carried": weight.carried, "total": weight.total() },
+        "burden": { "level": load.burden(), "limit": load.limit },
         "character": view.character().map(|c| json!({
             "race": c.spec.race,
             "gender": c.spec.gender,

@@ -22,6 +22,10 @@ is refused, such as walking into a wall.
 The clock counts whole seconds, so an action of 8.4 seconds shows as 8 or 9 seconds on it, but a
 run of actions always adds up to their exact time: five such actions take exactly 42 seconds.
 
+A heavy load slows every action you take, journeys included: a quarter longer when you are
+burdened, half again as long when you are strained, so a normal action takes 7.5 or 9 seconds.
+Overloaded, you cannot move at all. See [Burden](burden.md).
+
 ## Steps
 
 On a dungeon or outdoor level a step costs more or less depending on the terrain you step onto. A
@@ -43,7 +47,7 @@ attacks it, and moving into any other creature takes no time ("The deer is in th
 Every creature has its own pace, and the game does not show it. A faster creature takes less time
 over the same action, so it acts more often; a slower one acts less often. Creatures' actions
 have costs too: a step, a wait, or an attack takes a creature as long as its cost and its pace
-say. After your action, the creatures on the level act in the order their turns come up until it
+say, and a creature's load slows it as yours slows you. After your action, the creatures on the level act in the order their turns come up until it
 is your turn again:
 
 - A creature as quick as you acts once for each normal action of yours, right after you.

@@ -187,14 +187,44 @@ fn an_action_s_noise_comes_from_the_actor_and_the_terrain() {
     let content = content("#######\n#.~+'.#\n#######\n");
     let level = level(&content);
     let player = actor(&content, "player");
-    let step = |x| noise(&content, &level, &player, Act::Step(Pos::new(x, 1)));
+    let unburdened = Burden::Unburdened;
+    let step = |x| {
+        noise(
+            &content,
+            &level,
+            &player,
+            unburdened,
+            Act::Step(Pos::new(x, 1)),
+        )
+    };
     let footsteps = step(1).expect("footsteps");
     assert_eq!(
         (footsteps.kind, footsteps.loudness, footsteps.maker),
         (SoundKind::Footsteps, 50, ActorId(1))
     );
     assert_eq!(step(2).map(|n| n.loudness), Some(100), "water splashes");
-    let door = |act| noise(&content, &level, &player, act).map(|n| (n.kind, n.loudness));
+    // A load makes steps louder (spec §8 "Burden"): ×1.25 burdened, ×1.5 strained; doors and
+    // attacks sound the same.
+    let loaded = |burden, x| {
+        noise(&content, &level, &player, burden, Act::Step(Pos::new(x, 1))).map(|n| n.loudness)
+    };
+    assert_eq!(
+        loaded(Burden::Burdened, 1),
+        Some(62),
+        "50 × 1.25, rounded down"
+    );
+    assert_eq!(loaded(Burden::Strained, 1), Some(75));
+    assert_eq!(
+        loaded(Burden::Burdened, 2),
+        Some(125),
+        "water: 200 % of 62.5"
+    );
+    assert_eq!(loaded(Burden::Strained, 2), Some(150));
+    let door = |act| {
+        let strained = noise(&content, &level, &player, Burden::Strained, act);
+        assert_eq!(strained, noise(&content, &level, &player, unburdened, act));
+        strained.map(|n| (n.kind, n.loudness))
+    };
     assert_eq!(
         door(Act::OpenDoor(Pos::new(3, 1))),
         Some((SoundKind::DoorOpened, 60))
@@ -206,7 +236,13 @@ fn an_action_s_noise_comes_from_the_actor_and_the_terrain() {
     // A creature without footsteps moves silently.
     let mouse = actor(&content, "mouse");
     assert_eq!(
-        noise(&content, &level, &mouse, Act::Step(Pos::new(1, 1))),
+        noise(
+            &content,
+            &level,
+            &mouse,
+            Burden::Strained,
+            Act::Step(Pos::new(1, 1))
+        ),
         None
     );
 }

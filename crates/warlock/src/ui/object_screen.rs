@@ -3,13 +3,15 @@
 //!
 //! Each lists stacks by letter, `a` first, with their glyph, name, and weight; the inventory and
 //! the drop screen mark what is worn or wielded ("(being worn)", "(wielded)"; dropping it takes
-//! it off first). The inventory is read-only and also shows what the player carries and weighs. In a selection screen a letter
-//! marks or unmarks its stack (`+` marked, `-` not: never color alone), `,` marks everything (or,
-//! with everything marked, nothing), the arrows move the `>` cursor and Space marks its row, and
-//! Enter picks up or drops the marked stacks (the cursor's row if none is marked); that is one
-//! action, recorded like any other. Esc cancels. The list is read from the perception snapshot
+//! it off first). The inventory is read-only and also shows what the player carries and weighs,
+//! their burden when they have one, and the weights at which it changes (spec §8 "Burden"). In a
+//! selection screen a letter marks or unmarks its stack (`+` marked, `-` not: never color
+//! alone), `,` marks everything (or, with everything marked, nothing), the arrows move the `>`
+//! cursor and Space marks its row, and Enter picks up or drops the marked stacks (the cursor's
+//! row if none is marked); that is one action, recorded like any other. Esc cancels. The list is read from the perception snapshot
 //! when the screen opens; no game time passes while it is open, so it cannot go stale.
 
+use super::character_screen::{fit_joined, thresholds};
 use super::menu::{Nav, Panel, Press};
 use super::screens::ScreenAction;
 use super::{ACCENT, TEXT, TEXT_DIM};
@@ -17,6 +19,7 @@ use crate::input::{Bindings, KeyBinding, KeyCommand};
 use crate::render::console::Console;
 use bevy::input::keyboard::KeyCode;
 use warlock_core::action::letter;
+use warlock_core::burden::{Burden, Load};
 use warlock_core::color::Rgb;
 use warlock_core::equipment;
 use warlock_core::object::{Stack, Weight, format_weight};
@@ -49,6 +52,15 @@ impl ObjectList {
             ObjectList::PickUp => "There is nothing here.",
         }
     }
+
+    /// The panel's width: the inventory's is wider, for what the player carries, weighs, and
+    /// may carry on one line each.
+    fn width(self) -> i32 {
+        match self {
+            ObjectList::Inventory => 72,
+            ObjectList::PickUp | ObjectList::Drop => 60,
+        }
+    }
 }
 
 /// One stack as the screen shows it.
@@ -73,6 +85,9 @@ pub struct ObjectScreen {
     marked: Letters,
     /// The player's weight (shown in the inventory).
     weight: Weight,
+    /// What the player carries against what they can (shown in the inventory); `None` outside
+    /// a run.
+    load: Option<Load>,
 }
 
 impl ObjectScreen {
@@ -120,6 +135,7 @@ impl ObjectScreen {
             cursor: 0,
             marked: Letters::default(),
             weight,
+            load: view.map(PerceptionView::own_load),
         }
     }
 
@@ -195,6 +211,29 @@ impl ObjectScreen {
         ScreenAction::Stay
     }
 
+    /// The inventory's summary in lines of at most `width` characters, each with its color: what
+    /// the player carries (and their burden, if any) and weighs, then the weights at which the
+    /// burden changes, dimmer: `Carrying 28.4 kg (burdened)   ·   Your weight 98.4 kg (you 70
+    /// kg)`, `Burdened over 15 kg, strained over 30 kg, overloaded over 45 kg`.
+    fn summary(&self, width: i32) -> Vec<(String, Rgb)> {
+        let burden = (self.load.map(|l| l.burden()))
+            .filter(|b| *b != Burden::Unburdened)
+            .map_or(String::new(), |b| format!(" ({})", b.id()));
+        let parts = [
+            format!("Carrying {}{burden}", format_weight(self.weight.carried)),
+            format!(
+                "Your weight {} (you {})",
+                format_weight(self.weight.total()),
+                format_weight(self.weight.base),
+            ),
+        ];
+        let carried = fit_joined(&parts, "   ·   ", width).into_iter();
+        let limits = (self.load.as_ref()).map_or(Vec::new(), |l| thresholds(l, width));
+        (carried.map(|l| (l, TEXT)))
+            .chain(limits.into_iter().map(|l| (l, TEXT_DIM)))
+            .collect()
+    }
+
     fn toggle(&mut self, i: usize) {
         if self.marked.contains(i) {
             self.marked.remove(i);
@@ -206,9 +245,25 @@ impl ObjectScreen {
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         let read_only = self.list == ObjectList::Inventory;
         let count = self.entries.len().max(1);
-        // Rows: margin, the list, a gap, the summary (inventory), a gap, the footer, the frame.
-        let extra = if read_only { 7 } else { 5 };
-        let panel = Panel::new(console, self.list.title(), 60, count as i32 + extra);
+        // Rows: margin, the list, a gap, the summary and the burden's thresholds (inventory), a
+        // gap, the footer, the frame.
+        let width = self.list.width().min(console.cols() as i32) - 4;
+        let summary = if read_only {
+            self.summary(width)
+        } else {
+            Vec::new()
+        };
+        let extra = if read_only {
+            6 + summary.len() as i32
+        } else {
+            5
+        };
+        let panel = Panel::new(
+            console,
+            self.list.title(),
+            self.list.width(),
+            count as i32 + extra,
+        );
         let visible = (panel.body_rows() - (extra - 4)).max(1) as usize;
         let first = if read_only {
             self.cursor
@@ -249,14 +304,13 @@ impl ObjectScreen {
         if more {
             console.print(panel.x + panel.w - 3, panel.y + panel.h - 2, "↓", TEXT_DIM);
         }
-        if read_only {
-            let summary = format!(
-                "Carrying {}   ·   Your weight {} (you {})",
-                format_weight(self.weight.carried),
-                format_weight(self.weight.total()),
-                format_weight(self.weight.base),
-            );
-            console.print(x, panel.y + panel.h - 4, &summary, TEXT);
+        let below = panel.y + panel.h - 3 - summary.len() as i32;
+        for (i, (line, color)) in summary.iter().enumerate() {
+            let y = below + i as i32;
+            // The frame of a panel cut short keeps its footer.
+            if y > panel.y + 1 + visible as i32 && y < panel.y + panel.h - 2 {
+                console.print(x, y, line, *color);
+            }
         }
         let verb = match self.list {
             ObjectList::PickUp => "pick up",
@@ -413,6 +467,54 @@ mod tests {
             screen.handle(&Press::nav(Nav::Back), &b),
             ScreenAction::Close
         );
+    }
+
+    #[test]
+    fn the_inventory_shows_the_burden_and_where_it_changes() {
+        let b = Bindings::default();
+        let draw = |world: &World, cols: u32| {
+            let screen = ObjectScreen::new(ObjectList::Inventory, Some(&world.perception()));
+            let mut console = Console::default();
+            console.resize(cols, 30);
+            screen.draw(&mut console, &b);
+            text(&console)
+        };
+        // The showcase's thief, St 9 To 10: a limit of 42 kg, by thirds.
+        let mut world = on_the_pile();
+        world.apply(&Action::PickUp(Letters::default()));
+        let text = draw(&world, 80);
+        let at = |needle: &str| text.iter().position(|l| l.contains(needle));
+        let thresholds = "Burdened over 14 kg, strained over 28 kg, overloaded over 42 kg";
+        assert_eq!(at(thresholds), at("Carrying 4.2 kg   ·").map(|y| y + 1));
+        assert!(!text.iter().any(|l| l.contains("(burdened)")), "unburdened");
+        // Two chain mails for average scores: burdened over 15 kg.
+        let mut world = crate::ui::hoard();
+        world.apply(&Action::PickUp(Letters::default()));
+        let text = draw(&world, 80);
+        for expected in [
+            "Carrying 22 kg (burdened)   ·   Your weight 92 kg (you 70 kg)",
+            "Burdened over 15 kg, strained over 30 kg, overloaded over 45 kg",
+        ] {
+            assert!(
+                text.iter().any(|l| l.contains(expected)),
+                "{expected:?} in {text:#?}"
+            );
+        }
+        // Narrow: the lines wrap, and the footer stays.
+        let text = draw(&world, 40);
+        for expected in [
+            "Carrying 22 kg (burdened)",
+            "Your weight 92 kg (you 70 kg)",
+            "│ Burdened over 15 kg,  ",
+            "│ strained over 30 kg,  ",
+            "│ overloaded over 45 kg  ",
+            "i or Esc close",
+        ] {
+            assert!(
+                text.iter().any(|l| l.contains(expected)),
+                "{expected:?} in {text:#?}"
+            );
+        }
     }
 
     #[test]

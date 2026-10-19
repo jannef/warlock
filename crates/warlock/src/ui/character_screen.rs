@@ -2,7 +2,9 @@
 //! their race, gender, and class, their age, birthday, and birth sign (spec §8 "Character
 //! creation"; when the run has a character), their score in each stat (spec §8 "Stats") with its
 //! abbreviation and full name, their hit points and Defence (spec §8 "Combat"; the total only),
-//! and what they weigh. Never a modifier, a potential, or a to-hit: perception has none of them.
+//! what they weigh and carry, their burden, and the weights at which it changes (spec §8
+//! "Burden": they follow from scores the player knows). Never a modifier, a potential, or a
+//! to-hit: perception has none of them.
 //!
 //! Read-only: Esc, Enter, or its own key closes it. It is read from the perception snapshot when
 //! it opens; no game time passes while it is open, so it cannot go stale.
@@ -12,6 +14,7 @@ use super::screens::ScreenAction;
 use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
+use warlock_core::burden::{Burden, Load};
 use warlock_core::character::{Character, Gender};
 use warlock_core::content::Content;
 use warlock_core::object::{Weight, format_weight};
@@ -22,8 +25,8 @@ use warlock_core::time::GameTime;
 /// Width of the stat name column: the longest name and a space.
 const NAME_W: i32 = 14;
 
-/// Width of the panel.
-const WIDTH: i32 = 48;
+/// Width of the panel: the birth and the burden's thresholds fit on one line each.
+const WIDTH: i32 = 72;
 
 #[derive(Debug)]
 pub struct CharacterScreen {
@@ -34,6 +37,8 @@ pub struct CharacterScreen {
     birth: Vec<String>,
     scores: PerStat<u8>,
     weight: Weight,
+    /// What they carry against what they can; `None` outside a run.
+    load: Option<Load>,
     /// Hit points left and the most.
     hp: (i32, i32),
     /// Defence: the total only.
@@ -51,6 +56,7 @@ impl CharacterScreen {
                 birth: Vec::new(),
                 scores: PerStat::splat(warlock_core::stats::AVERAGE),
                 weight: Weight::default(),
+                load: None,
                 hp: (0, 0),
                 defence: warlock_core::combat::BASE_DEFENCE,
             };
@@ -80,6 +86,7 @@ impl CharacterScreen {
             birth,
             scores: view.own_scores(),
             weight: view.own_weight(),
+            load: Some(view.own_load()),
             hp: view.own_hp(),
             defence: view.own_defence(),
         }
@@ -100,14 +107,16 @@ impl CharacterScreen {
 
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         // Rows: margin, the name, a gap, race, gender, class, the birth, and a gap (with a
-        // character), the stats, a gap, hit points and Defence, a gap, the weight, a gap, the
-        // footer, frame.
-        let birth = fit_parts(&self.birth, WIDTH.min(console.cols() as i32) - 4);
+        // character), the stats, a gap, hit points and Defence, a gap, the weight, the burden's
+        // thresholds, a gap, the footer, frame.
+        let width = WIDTH.min(console.cols() as i32) - 4;
+        let birth = fit_parts(&self.birth, width);
         let identity_rows = match self.identity.len() {
             0 => 0,
             n => (n + birth.len()) as i32 + 1,
         };
-        let h = Stat::COUNT as i32 + 12 + identity_rows;
+        let thresholds = (self.load.as_ref()).map_or(Vec::new(), |l| thresholds(l, width));
+        let h = Stat::COUNT as i32 + 12 + identity_rows + thresholds.len() as i32;
         let panel = Panel::new(console, " Character ", WIDTH, h);
         let x = panel.inner_x();
         // Rows from the footer's down would draw over it, or the frame, of a panel cut short.
@@ -158,16 +167,26 @@ impl CharacterScreen {
         y += 1;
         if fits(y) {
             let w = &self.weight;
+            // `carrying 28.4 kg, burdened`: the burden is named when there is one.
+            let burden = (self.load.map(|l| l.burden()))
+                .filter(|b| *b != Burden::Unburdened)
+                .map_or(String::new(), |b| format!(", {}", b.id()));
             let weight = match w.carried {
                 0 => format!("Weight {}, carrying nothing", format_weight(w.total())),
                 carried => format!(
-                    "Weight {} (you {}, carrying {})",
+                    "Weight {} (you {}, carrying {}{burden})",
                     format_weight(w.total()),
                     format_weight(w.base),
                     format_weight(carried),
                 ),
             };
             console.print(x, y, &weight, TEXT);
+        }
+        for line in &thresholds {
+            y += 1;
+            if fits(y) {
+                console.print(x, y, line, TEXT_DIM);
+            }
         }
         let footer = match bindings.keys_of(KeyCommand::Character).first() {
             Some(key) => format!("{} or Esc close", key.display()),
@@ -201,17 +220,38 @@ pub fn birth_parts(character: &Character, content: &Content, now: GameTime) -> V
 /// `parts` joined with ` · ` into lines of at most `width` characters, a new line where the next
 /// part would not fit: `Age 27 · born 3 Seedtide 1417 · year of the Fire Manticore`.
 pub fn fit_parts(parts: &[String], width: i32) -> Vec<String> {
+    fit_joined(parts, " · ", width)
+}
+
+/// `parts` joined with `sep` into lines of at most `width` characters, a new line where the next
+/// part would not fit.
+pub fn fit_joined(parts: &[String], sep: &str, width: i32) -> Vec<String> {
     let mut lines: Vec<String> = Vec::new();
+    let sep_len = sep.chars().count();
     for part in parts {
         match lines.last_mut() {
-            Some(line) if (line.chars().count() + 3 + part.chars().count()) as i32 <= width => {
-                line.push_str(" · ");
+            Some(line)
+                if (line.chars().count() + sep_len + part.chars().count()) as i32 <= width =>
+            {
+                line.push_str(sep);
                 line.push_str(part);
             }
             _ => lines.push(part.clone()),
         }
     }
     lines
+}
+
+/// The weights at which the player's burden changes (spec §8 "Burden"), in lines of at most
+/// `width` characters: `Burdened over 15 kg, strained over 30 kg, overloaded over 45 kg`.
+pub fn thresholds(load: &Load, width: i32) -> Vec<String> {
+    let mut parts = load.over().to_vec();
+    parts[0] = capitalized(&parts[0]);
+    let last = parts.len() - 1;
+    for part in &mut parts[..last] {
+        part.push(',');
+    }
+    fit_joined(&parts, " ", width)
 }
 
 /// `name` with its first letter in upper case.
@@ -291,12 +331,43 @@ mod tests {
             row(expected);
         }
         row("Weight 73.5 kg (you 70 kg, carrying 3.5 kg)");
+        // St 9 To 10: a limit of 42 kg, by thirds; the line right below the weight.
+        let at = |needle: &str| text.iter().position(|l| l.contains(needle));
+        let thresholds = "Burdened over 14 kg, strained over 28 kg, overloaded over 42 kg";
+        assert_eq!(at(thresholds), at("Weight 73.5 kg").map(|y| y + 1));
         row("@ or Esc close");
         let empty_handed = drawn(&showcase(), 80, 30);
         assert!(
             (empty_handed.iter()).any(|l| l.contains("Weight 70 kg, carrying nothing")),
             "{empty_handed:#?}"
         );
+    }
+
+    #[test]
+    fn names_the_burden_and_wraps_the_thresholds_to_the_width() {
+        let mut world = showcase();
+        let load = world.perception().own_load();
+        assert_eq!(
+            thresholds(&load, 68),
+            ["Burdened over 14 kg, strained over 28 kg, overloaded over 42 kg"]
+        );
+        assert_eq!(
+            thresholds(&load, 44),
+            [
+                "Burdened over 14 kg, strained over 28 kg,",
+                "overloaded over 42 kg"
+            ]
+        );
+        // Two chain mails (22 kg) for average scores (St 10 To 10: burdened over 15 kg).
+        world = crate::ui::hoard();
+        world.apply(&Action::PickUp(Letters::default()));
+        let text = drawn(&world, 80, 30).join("\n");
+        for expected in [
+            "Weight 92 kg (you 70 kg, carrying 22 kg, burdened)",
+            "Burdened over 15 kg, strained over 30 kg, overloaded over 45 kg",
+        ] {
+            assert!(text.contains(expected), "{expected:?} in\n{text}");
+        }
     }
 
     #[test]

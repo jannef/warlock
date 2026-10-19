@@ -21,6 +21,7 @@ mod overworld;
 mod particles;
 mod race;
 mod scenario;
+mod size;
 mod sky;
 mod slot;
 mod terrain;
@@ -50,6 +51,7 @@ pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use race::{RaceDef, Races};
 pub use scenario::ScenarioDef;
+pub use size::{CARRY, MEDIUM, SizeDef};
 pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use terrain::{MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
@@ -202,10 +204,10 @@ struct LegendFile {
 ///
 /// `data/lights.toml`, `data/vision.toml`, `data/factions.toml`, `data/dungeons.toml`,
 /// `data/calendar.toml`, `data/sky.toml`, `data/materials.toml`, `data/objects.toml`,
-/// `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/races.toml`,
-/// `data/classes.toml`, and `data/horoscope.toml` are optional. Without vision profiles, a single
-/// `normal` profile that needs no light is used, so content without lighting stays fully
-/// visible; without factions, everyone is neutral; without a calendar, months are numbered;
+/// `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
+/// `data/races.toml`, `data/classes.toml`, and `data/horoscope.toml` are optional. Without vision
+/// profiles, a single `normal` profile that needs no light is used, so content without lighting
+/// stays fully visible; without sizes, everything is medium; without factions, everyone is neutral; without a calendar, months are numbered;
 /// without a sky file there are no moons; without an objects file there are no objects; without a
 /// weather file the sky is always clear; without an actions file every action costs 1000;
 /// without a slots file nothing can be worn or wielded; without races or classes there is no
@@ -228,6 +230,8 @@ pub struct Content {
     light_ids: BTreeMap<String, LightId>,
     visions: Vec<VisionProfile>,
     vision_ids: BTreeMap<String, usize>,
+    /// In `data/sizes.toml` order.
+    sizes: Vec<SizeDef>,
     levels: BTreeMap<String, LevelTemplate>,
     scenarios: BTreeMap<String, ScenarioDef>,
     dungeons: BTreeMap<String, DungeonDef>,
@@ -265,6 +269,7 @@ impl Content {
             light_ids: BTreeMap::new(),
             visions: Vec::new(),
             vision_ids: BTreeMap::new(),
+            sizes: vec![SizeDef::medium()],
             levels: BTreeMap::new(),
             scenarios: BTreeMap::new(),
             dungeons: BTreeMap::new(),
@@ -295,9 +300,15 @@ impl Content {
         }
         content.load_lights(files)?;
         content.load_vision(files)?;
+        let path = "data/sizes.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.sizes = size::parse(path, text)?;
+        }
         let path = "data/races.toml";
         if let Some(text) = files.get_optional(path) {
-            content.races = Races::parse(path, text, |id| content.vision(id).is_some())?;
+            let has_vision = |id: &str| content.vision(id).is_some();
+            let size_index = |id: &str| content.size_index(id);
+            content.races = Races::parse(path, text, has_vision, size_index)?;
         }
         let path = "data/classes.toml";
         if let Some(text) = files.get_optional(path) {
@@ -534,8 +545,12 @@ impl Content {
                 action::check_cost(cost)
                     .map_err(|m| err(format!("creature `{}`: attack_cost: {m}", spec.id)))?;
             }
+            let size_id = spec.size.as_deref().unwrap_or(MEDIUM);
+            let size = (self.size_index(size_id))
+                .ok_or_else(|| err(format!("creature `{}`: unknown size `{size_id}`", spec.id)))?;
             let resolved = creature::Resolved {
                 light,
+                size,
                 stats,
                 attack,
                 faction: self.creature_faction(&spec).map_err(err)?,
@@ -958,6 +973,21 @@ impl Content {
     /// Every vision profile in file order; never empty.
     pub fn vision_profiles(&self) -> &[VisionProfile] {
         &self.visions
+    }
+
+    /// The sizes of `data/sizes.toml`, in file order (only medium without the file).
+    pub fn sizes(&self) -> &[SizeDef] {
+        &self.sizes
+    }
+
+    /// The size at `index` in [`Content::sizes`] (a race's or creature type's `size`).
+    pub fn size(&self, index: usize) -> &SizeDef {
+        &self.sizes[index]
+    }
+
+    /// The index of size `id` in [`Content::sizes`].
+    pub fn size_index(&self, id: &str) -> Option<usize> {
+        self.sizes.iter().position(|s| s.id == id)
     }
 
     /// A hand-made level. Generated levels (`depths:3`, `local:12,30`) are not stored here; see
@@ -1413,6 +1443,21 @@ mod tests {
             content.race("dwarf").map(|r| r.vision.as_str()),
             Some("darkvision")
         );
+        // Sizes (spec §8 "Burden"): halflings and gnomes are small; dwarves shrug off Burdened.
+        let size = |race: &str| {
+            let race = content.race(race).expect(race);
+            let size = content.size(race.size);
+            (size.id.as_str(), size.carry, race.ignores_burdened)
+        };
+        assert_eq!(size("halfling"), ("small", 75, false));
+        assert_eq!(size("gnome"), ("small", 75, false));
+        assert_eq!(size("dwarf"), ("medium", 100, true));
+        assert_eq!(size("human"), ("medium", 100, false));
+        let creature = |id: &str| {
+            let def = content.creature(content.creature_id(id).expect(id));
+            content.size(def.size).id.as_str()
+        };
+        assert_eq!((creature("kobold"), creature("deer")), ("small", "medium"));
         assert_eq!(
             content
                 .class("wizard")
@@ -2105,6 +2150,12 @@ mod tests {
                 "rat",
                 "natural = { defence = 0, name = \"hide\" }",
                 "natural: `defence` must be 1 to 20",
+            ),
+            // Without data/sizes.toml there is only medium.
+            (
+                "rat",
+                "size = \"small\"",
+                "creature `rat`: unknown size `small`",
             ),
         ];
         for (creature, fields, expected) in cases {
