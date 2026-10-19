@@ -39,7 +39,8 @@ const MAGIC: &str = "WARLOCK-SAVE";
 /// 16: weapon skills: actors have a rank and marks in each (`Actor::weapon_skills`).
 /// 17: digging: level states keep the work done on walls dug into (`LevelState::dug`).
 /// 18: combat stances (`Actor::stance`).
-pub const FORMAT_VERSION: u32 = 18;
+/// 19: blood: level states keep their stains and the stains as last seen.
+pub const FORMAT_VERSION: u32 = 19;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 

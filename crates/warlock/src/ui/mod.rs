@@ -6,8 +6,8 @@
 //! moves the camera and slides creatures between cells; [`effects`] adds particles, glow, heat
 //! haze, and fades; [`missiles`] flies shots and throws; [`rain`] lets it rain under the open
 //! sky; [`sounds`] marks where unseen sounds were heard; [`target`] aims shots and throws (the
-//! line of fire and its cursor). Terrain and objects are drawn
-//! in their base colors: the map grid's shader lights them with the visual light
+//! line of fire and its cursor); [`blood`] stains the cells blood lies on. Terrain and objects are
+//! drawn in their base colors: the map grid's shader lights them with the visual light
 //! (`render::lighting`), composited after the map is placed and before free glyphs are lit.
 //! [`dev`] adds the developer overlays (reveal mode is the one exception that reads ground truth).
 //!
@@ -19,6 +19,7 @@
 //! ([`screens`]): opened by [`Screens::open`], fed key presses by `input::route_keys`, and drawn
 //! by [`draw`], the one system that writes the UI console.
 
+mod blood;
 mod character_screen;
 mod chargen_screen;
 mod confirm_screen;
@@ -162,6 +163,7 @@ fn draw(
     }
     console.clear();
     if let Some(game) = &game {
+        let blood = settings.effects.blood;
         draw_game(
             &mut console,
             game,
@@ -169,6 +171,7 @@ fn draw(
             &grid,
             *overlays,
             &bindings,
+            blood,
             settings.clock,
         );
     }
@@ -184,10 +187,11 @@ fn draw_game(
     grid: &MapGrid,
     overlays: DevOverlays,
     bindings: &Bindings,
+    blood: bool,
     clock: Clock,
 ) {
     let rows = console.rows() as i32;
-    draw_messages(console, game, mode, bindings);
+    draw_messages(console, game, mode, bindings, blood);
     draw_status(console, game, rows - 1, clock);
     dev::draw_indicator(console, overlays);
     let cursor = match mode {
@@ -301,7 +305,7 @@ fn draw_map_layer(
     // One margin cell right and below, so a sub-cell offset never shows a gap.
     grid.console.resize(area.w as u32 + 1, area.h as u32 + 1);
     grid.console.clear();
-    draw_map(&mut grid, &view, &anims, &key);
+    draw_map(&mut grid, &view, &anims, &key, effects.blood);
     if effects.glow || effects.distortion {
         effects::draw_cell_fx(&mut grid, &view, &key.arriving);
     }
@@ -325,8 +329,15 @@ fn camera_origin(view: i32, level: i32, viewer: i32) -> i32 {
 /// line of fire is drawn over while aiming (`path`, its dots are free glyphs too), unless an
 /// object lies there. What a missile still in flight lands as (`arriving`) is not drawn until it
 /// arrives. Only visible terrain without objects animates. Visible cells keep their base colors
-/// (the shader lights them); remembered ones, objects included, are dimmed here.
-fn draw_map(grid: &mut MapGrid, view: &PerceptionView<'_>, anims: &AnimTable, key: &MapKey) {
+/// (the shader lights them); remembered ones, objects included, are dimmed here. Blood the player
+/// knows of tints its cell first ([`blood::stained`]), unless `show_blood` is off.
+fn draw_map(
+    grid: &mut MapGrid,
+    view: &PerceptionView<'_>,
+    anims: &AnimTable,
+    key: &MapKey,
+    show_blood: bool,
+) {
     let covered = &key.covered;
     let content = view.content();
     let (ox, oy) = (grid.level_origin.x, grid.level_origin.y);
@@ -342,10 +353,18 @@ fn draw_map(grid: &mut MapGrid, view: &PerceptionView<'_>, anims: &AnimTable, ke
                 pile => pile,
             };
             let top = pile.first().map(|s| content.object(s.object));
+            let stain = view.blood(p).filter(|_| show_blood);
             let glyph = |t| {
                 let def = content.terrain(t);
                 let (ch, fg) = top.map_or((def.glyph, def.fg), |o| (o.glyph, o.fg));
-                (ch, fg, def.bg)
+                let (fg, bg) = match stain {
+                    Some(stain) => {
+                        let wall = !def.transparent;
+                        blood::stained((fg, def.bg), stain, view.time(), wall, top.is_some())
+                    }
+                    None => (fg, def.bg),
+                };
+                (ch, fg, bg)
             };
             let cell = match seen {
                 CellView::Unknown => continue,
@@ -401,7 +420,15 @@ fn remembered(c: Rgb) -> Rgb {
     Rgb::new(f(c.r), f(c.g), f(c.b))
 }
 
-fn draw_messages(console: &mut Console, game: &Game, mode: InputMode, bindings: &Bindings) {
+/// The message line, or the prompt of the input mode; look mode and aiming describe the cell
+/// under the cursor (its blood only if `blood` is shown).
+fn draw_messages(
+    console: &mut Console,
+    game: &Game,
+    mode: InputMode,
+    bindings: &Bindings,
+    blood: bool,
+) {
     if let InputMode::Direction(command) = mode {
         let prompt = match command {
             crate::input::KeyCommand::UseTool => "Dig in which direction? (Esc to cancel)",
@@ -417,7 +444,7 @@ fn draw_messages(console: &mut Console, game: &Game, mode: InputMode, bindings: 
     if let InputMode::Aim(aim) = mode {
         let view = game.world.perception();
         let line = target::line(&view, view.viewer(), aim.at, aim.range(&view));
-        let mut about = look::describe(&view, aim.at);
+        let mut about = look::describe(&view, aim.at, blood);
         if let Some(status) = line.status() {
             about = format!("{about} {status}");
         }
@@ -441,7 +468,8 @@ fn draw_messages(console: &mut Console, game: &Game, mode: InputMode, bindings: 
         return;
     }
     if let InputMode::Look(p) = mode {
-        console.print(1, 0, &look::describe(&game.world.perception(), p), TEXT);
+        let about = look::describe(&game.world.perception(), p, blood);
+        console.print(1, 0, &about, TEXT);
         console.print(
             1,
             1,
@@ -955,7 +983,7 @@ mod tests {
             arriving: Vec::new(),
             path: Vec::new(),
         };
-        draw_map(&mut grid, &view, &anims, &key);
+        draw_map(&mut grid, &view, &anims, &key, true);
 
         let at = |x: i32, y: i32| (y * 7 + x) as usize;
         let cell = |x, y| grid.console.cells()[at(x, y)];
@@ -973,7 +1001,7 @@ mod tests {
         let altar = content.terrain_id("altar").expect("altar exists");
         world.apply(&Action::Open(Dir::E));
         let view = world.perception();
-        draw_map(&mut grid, &view, &anims, &key);
+        draw_map(&mut grid, &view, &anims, &key, true);
         assert_eq!(grid.free_terrain, vec![(Pos::new(5, 1), altar)]);
         assert_eq!(grid.console.cells()[at(5, 1)].map(|c| c.ch), Some(' '));
     }

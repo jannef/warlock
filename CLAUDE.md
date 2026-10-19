@@ -104,7 +104,8 @@ toward the second cell), no time and no rules effect, for captures; `ACTION*N` r
 `memory` (seen terrain and remembered objects), `light` (perceived brightness of visible cells as a
 digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places over the view: `f`
 footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m` chanting, `d`
-digging, upper case when loud), `inventory` (what the player
+digging, upper case when loud), `blood` (blood the player sees or remembers as a digit over the
+view, `1` a few drops to `9` soaked), `inventory` (what the player
 carries and weighs, worn and wielded things marked, their burden and its thresholds),
 `equipment` (the player's slots), `stats`
 (the player's race, gender, and class, then their own scores), `weapon_skills` (the player's
@@ -173,7 +174,9 @@ holds the shared lock on `logs/.in-use`) moves files between the two layouts. Se
 Settings (`crates/warlock/src/settings/`): `settings.toml` in the config dir, schema in the `settings/mod.rs` module docs. Changes
 apply live and are written at once; a bad file means defaults plus a warning, per value. Effects:
 `reduced_effects` is a preset over the `[effects]` switches (`EffectSwitches`: glyph_animation,
-flicker, motion, glow, distortion, particles, screen_fades, screen_shake, weather; all on by default). Each consumer reads
+flicker, motion, glow, distortion, particles, screen_fades, screen_shake, weather; all on by default), all but
+`blood` (on by default too), a content preference the preset leaves as set
+(`EffectSwitches::effective`; its settings row is not indented and never says "(preset)"). Each consumer reads
 its own switch from the `render::Effects` resource (the effective values, synced every frame from
 `Settings` + `--reduced-effects`), never the preset; a new effect needs a switch in
 `EffectSwitches`, the file, and a row in `ui/settings_screen.rs`. `clock` (`settings/clock.rs`, `"24h"`/`"12h"`) is the one way a time of day is written
@@ -651,6 +654,23 @@ benefit numbers. Skills get no keys of their own: active uses will be chosen fro
 abilities menu (#156), which reads `PerceptionView::active_skills` (`OwnSkill::active`: the
 skill's kind is `action`; `available`: usable now, false until the uses exist). Pending hooks: athletics (kicking doors, #130; climbing out of pits, #128) and
 escape artist (pits, #128).
+
+Blood (spec §8 "Blood", §4.8; M17): the pure pattern is `warlock-core/src/blood.rs` (`Wound`:
+`volume` by kill or big hit (a third of the maximum, or a critical), size `blood` percent,
+overkill, critical, missile; `spatter`: pool, fan away from the attacker (±45° melee, ±30°
+missiles), kill flecks, stopped by opaque cells, walls next to the victim stained on their face;
+`Stain`: amount to `CAP` 100, colour and spill time mixed by amount, `faces` bits; `seed` hashes
+turn, time, and actor ids with SplitMix: **never the gameplay stream**). `world/bleed.rs`
+(`World::bleed`, called from `fight.rs::resolve` before `hurt`) writes `LevelState::blood` via
+`LevelState::stain` (terrain `stains`, data; never on the overworld). No rule reads blood;
+`blood_tests.rs` checks a fight is identical with and without it. Perception: `PerceptionView::blood`
+(open cells in sight; walls only from a stained face; else `blood_memory` as last seen, updated
+in `Perception::remember`). Data: creature `blood` (`"#rrggbb"` or `"none"`, default
+`blood::RED`), size `blood`, terrain `stains`. App: `ui/blood.rs::stained` shifts a cell's fg/bg
+toward the blood (dried by age) in `draw_map` before the shader lights it, so darkvision, memory
+dimming, and palettes apply as for terrain; look mode prefixes the terrain with `Stain::word`.
+The `blood` switch hides both. Tune by capturing the arena at `wait*8` (first kills) and `wait*40`
+(after the brawl) and the `blood-wall` golden's walk.
 
 Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebuffer pixels:
 1. **Map grid** (`render/grid.rs`): a `Console` (`render/console.rs`) drawn by one quad with the

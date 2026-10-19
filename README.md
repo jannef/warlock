@@ -68,6 +68,8 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   ADOM-style with a cursor and a faint line of fire, watch the arrow fly, and pick it up where it
   fell. A flaming arrow flies burning and lights the dark where it lands until it burns out:
   shoot one into the dark to see what waits there (and be seen).
+- **Blood** — big hits and kills stain the floor and the walls beside the victim, by its size and
+  how the blow landed; subtle for one kill, a slaughterhouse where many fell (a setting hides it).
 - **Weapon skills** — ADOM-style: every blow, shot, and throw earns marks in its weapon's skill
   (daggers, long blades, axes, bows, …, sixteen in all, shield blocking and shield bashing among
   them), and ranks 0 to 10 come slower and slower; each rank makes you hit, hurt, parry, or

@@ -21,6 +21,7 @@
 //! screen_fades = true     # level-change fade, flashes, and spell effects darkening the view
 //! screen_shake = true     # the view shakes when a spell effect lands near the player
 //! weather = true          # rain falling, splashing, and rings on water
+//! blood = true            # blood stains; not part of reduced effects
 //!
 //! [bindings]              # command id -> keys; a character, or a key name like "ArrowUp"
 //! move_n = ["k", "Numpad8", "ArrowUp"]
@@ -82,6 +83,9 @@ pub struct EffectSwitches {
     /// its own (not `particles`): it moves over the whole view, not around a few sources. The
     /// weather itself (its light, the status bar) does not depend on it.
     pub weather: bool,
+    /// Blood stains on floors and walls (spec §8 "Blood"). A content preference rather than an
+    /// effect: reduced effects leaves it as it is.
+    pub blood: bool,
 }
 
 impl EffectSwitches {
@@ -95,6 +99,7 @@ impl EffectSwitches {
         screen_fades: true,
         screen_shake: true,
         weather: true,
+        blood: true,
     };
     pub const ALL_OFF: Self = Self {
         glyph_animation: false,
@@ -106,15 +111,24 @@ impl EffectSwitches {
         screen_fades: false,
         screen_shake: false,
         weather: false,
+        blood: false,
     };
 
-    /// The effective switches: each as set, and everything off when `reduced`.
+    /// The effective switches: each as set, and when `reduced` every effect off; blood stays
+    /// as set (it is a content preference, not an effect).
     pub fn effective(self, reduced: bool) -> Self {
-        if reduced { Self::ALL_OFF } else { self }
+        if reduced {
+            Self {
+                blood: self.blood,
+                ..Self::ALL_OFF
+            }
+        } else {
+            self
+        }
     }
 
     /// The setting names, for the file.
-    const KEYS: [&'static str; 9] = [
+    const KEYS: [&'static str; 10] = [
         "glyph_animation",
         "flicker",
         "motion",
@@ -124,6 +138,7 @@ impl EffectSwitches {
         "screen_fades",
         "screen_shake",
         "weather",
+        "blood",
     ];
 
     fn to_map(self) -> std::collections::BTreeMap<&'static str, bool> {
@@ -145,6 +160,7 @@ impl EffectSwitches {
             "screen_fades" => &mut self.screen_fades,
             "screen_shake" => &mut self.screen_shake,
             "weather" => &mut self.weather,
+            "blood" => &mut self.blood,
             _ => return None,
         })
     }
@@ -445,6 +461,7 @@ mod tests {
                 flicker: false,
                 screen_shake: false,
                 weather: false,
+                blood: false,
                 ..EffectSwitches::ALL_ON
             },
             palette: Palette::Colorblind,
@@ -487,10 +504,17 @@ mod tests {
         s.effects.particles = false;
         let e = s.effective_effects(false);
         assert!(!e.particles && e.glow && e.flicker);
+        // Reduced effects turns every effect off, but blood stays as set.
+        let reduced = EffectSwitches {
+            blood: true,
+            ..EffectSwitches::ALL_OFF
+        };
         s.reduced_effects = true;
-        assert_eq!(s.effective_effects(false), EffectSwitches::ALL_OFF);
+        assert_eq!(s.effective_effects(false), reduced);
         s.reduced_effects = false;
-        assert_eq!(s.effective_effects(true), EffectSwitches::ALL_OFF);
+        assert_eq!(s.effective_effects(true), reduced);
+        s.effects.blood = false;
+        assert!(!s.effective_effects(true).blood && !s.effective_effects(false).blood);
         // Turning the preset off again restores the individual switches.
         assert!(s.effective_effects(false).glow);
     }

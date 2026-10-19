@@ -72,6 +72,9 @@ pub(super) struct TerrainSpec {
     /// Under a roof: never lit by the sun or the sky (indoor floors on outdoor levels).
     #[serde(default)]
     pub roofed: bool,
+    /// Whether blood stains it (spec §8 "Blood"); water, lava, and fire do not hold it.
+    #[serde(default = "yes")]
+    pub stains: bool,
     /// How loud steps onto it are, in percent of the walker's footsteps (spec §5 "Hearing").
     #[serde(default = "full_noise")]
     pub step_noise: u16,
@@ -150,6 +153,9 @@ pub struct TerrainDef {
     pub height: u8,
     /// Gameplay: under a roof, so never lit by the sun or the sky.
     pub roofed: bool,
+    /// Presentation-only: whether blood stains it (spec §8 "Blood"); water, lava, and fire do
+    /// not hold it.
+    pub stains: bool,
     /// Gameplay: how loud steps onto it are, in percent of the walker's footsteps
     /// ([`crate::noise::noise`]): water splashes (200), grass is soft (70).
     pub step_noise: u16,
