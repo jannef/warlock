@@ -4,7 +4,7 @@
 //! configurations, defaults, and what each rank gives (two-weapon penalties included); and the
 //! starting ranks of races and classes, as data writes them.
 
-use super::capital;
+use super::text::capital;
 use std::fmt::Write as _;
 use warlock_core::content::{
     Benefit, ClassDef, Content, Grip, MAX_RANK, Role, TwoWeapons, WeaponSkillDef, WeaponSkillId,
@@ -389,7 +389,7 @@ pub fn ranks_text(content: &Content, ranks: &[(WeaponSkillId, Dice)]) -> String 
             let rank = if dice.is_fixed() {
                 dice.max().to_string()
             } else {
-                super::adjustment(dice)
+                super::character::adjustment(dice)
             };
             format!("{} {rank}", table.skill(id).name)
         })
