@@ -233,6 +233,15 @@ impl Actor {
         })
     }
 
+    /// The digging tool it has ready (spec §8 "Digging"): the first thing it wears or wields, in
+    /// slot order, that digs (a pick-axe in the Tool slot), and its power.
+    pub fn dig_tool(&self, content: &Content) -> Option<(ObjectId, u16)> {
+        self.equipment.items().into_iter().find_map(|(_, item)| {
+            let stack = self.inventory.get(item)?;
+            (content.object(stack.object).dig).map(|power| (stack.object, power))
+        })
+    }
+
     /// What its melee attacks do: with the weapon it wields, else its natural attack, else its
     /// bare hands; Strength to hit and to damage.
     pub fn melee(&self, content: &Content) -> Profile {

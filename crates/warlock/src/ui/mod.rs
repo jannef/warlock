@@ -389,8 +389,12 @@ fn remembered(c: Rgb) -> Rgb {
 }
 
 fn draw_messages(console: &mut Console, game: &Game, mode: InputMode, bindings: &Bindings) {
-    if let InputMode::Direction(_) = mode {
-        console.print(1, 0, "In which direction? (Esc to cancel)", ACCENT);
+    if let InputMode::Direction(command) = mode {
+        let prompt = match command {
+            crate::input::KeyCommand::Apply => "Dig in which direction? (Esc to cancel)",
+            _ => "In which direction? (Esc to cancel)",
+        };
+        console.print(1, 0, prompt, ACCENT);
         return;
     }
     if mode == InputMode::Rest {

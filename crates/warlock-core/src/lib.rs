@@ -36,7 +36,9 @@ pub mod time;
 pub mod weather;
 pub mod world;
 
-pub use action::{Action, AttackKind, Event, Letters, MissileEnd, Outcome, Rest, SpellShape};
+pub use action::{
+    Action, AttackKind, Breach, Event, Letters, MissileEnd, Outcome, Rest, SpellShape,
+};
 pub use geom::{Dir, Pos};
 pub use world::{World, WorldError, WorldState};
 

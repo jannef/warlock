@@ -1,5 +1,5 @@
 //! Per-level mutable state: terrain and piles of objects as they are now, and what the player
-//! remembers of them.
+//! remembers of them; fires, and the walls dug into.
 
 use crate::content::{
     Content, EdgeExit, Flow, LevelKind, LevelTemplate, LightId, StairsLink, TerrainDef, TerrainId,
@@ -58,6 +58,10 @@ pub struct LevelState {
     /// burning objects themselves lie in the pile there.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) fires: BTreeMap<Pos, Fire>,
+    /// Walls dug into and still standing, by position (spec §8 "Digging"): the work done on each,
+    /// in [`super::dig::WORK_SCALE`]ths of the work its hardness counts.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) dug: BTreeMap<Pos, u32>,
 }
 
 impl LevelState {
@@ -79,6 +83,7 @@ impl LevelState {
             objects: template.objects.clone(),
             object_memory: BTreeMap::new(),
             fires: BTreeMap::new(),
+            dug: BTreeMap::new(),
         }
     }
 

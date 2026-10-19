@@ -64,12 +64,15 @@ pub enum ActionKind {
     Wear,
     /// Putting on or taking off body armor: it takes a while to strap on.
     BodyArmor,
-    /// Readying a missile weapon or missiles, or putting them away.
+    /// Readying a missile weapon, missiles, or a tool, or putting them away.
     Ready,
+    /// A turn of digging into a wall with a digging tool (spec §8 "Digging"): a dig takes many
+    /// of them.
+    Dig,
 }
 
 impl ActionKind {
-    pub const ALL: [ActionKind; 17] = [
+    pub const ALL: [ActionKind; 18] = [
         ActionKind::Step,
         ActionKind::Wait,
         ActionKind::OpenDoor,
@@ -87,6 +90,7 @@ impl ActionKind {
         ActionKind::Wear,
         ActionKind::BodyArmor,
         ActionKind::Ready,
+        ActionKind::Dig,
     ];
 
     /// Its id in `data/actions.toml`.
@@ -109,6 +113,7 @@ impl ActionKind {
             ActionKind::Wear => "wear",
             ActionKind::BodyArmor => "body_armor",
             ActionKind::Ready => "ready",
+            ActionKind::Dig => "dig",
         }
     }
 

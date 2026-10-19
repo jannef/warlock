@@ -738,6 +738,16 @@ impl<'a> PerceptionView<'a> {
         self.player.ready_to_throw(self.content)
     }
 
+    /// The digging tool the player has ready (spec §8 "Digging"), if any.
+    pub fn ready_to_dig(&self) -> Option<ObjectId> {
+        self.player.dig_tool(self.content).map(|(tool, _)| tool)
+    }
+
+    /// Whether the wall at `p`, which the player sees, has been dug into and still stands.
+    pub fn is_dug(&self, p: Pos) -> bool {
+        self.is_visible(p) && self.level.dug.contains_key(&p)
+    }
+
     /// How far the player throws inventory stack `item`, if it is a throwing weapon.
     pub fn throw_range(&self, item: usize) -> Option<i32> {
         let def = self.content.object(self.player.inventory.get(item)?.object);
