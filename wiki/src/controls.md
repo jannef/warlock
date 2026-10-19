@@ -60,11 +60,12 @@ cancel)` on the message line, digging asks `Dig in which direction? (Esc to canc
 resting asks how long (see [Resting](resting.md)). Answer with a direction or the key shown, or
 press `Esc` to cancel. Pressing any other command cancels the prompt.
 
-A few things ask a yes-or-no question first, in a small window over the map: quitting, leaving
-a shop owing money, and dropping something a shop would buy (see [Shops](shops.md)). Answer `y`
-or `n`, or choose with the arrow keys and `Enter`; `Esc` cancels. No is chosen at first, so
-`Enter` alone never does what you might regret. The yes and no keys are their own: in a question
-`y` and `n` do not move you, and you can rebind them without touching movement.
+A few things ask first, in a small window over the map: quitting, leaving a shop owing money,
+and dropping something a shop would buy (see [Shops](shops.md)). The window lists its answers,
+each with the keys that choose it: `y` picks the yes answer, `n` the no answer, and `Esc` the
+one that backs out; or move with the arrow keys and press `Enter`. The safe answer is chosen at
+first, so `Enter` alone never does what you might regret. The yes and no keys are their own: in
+a question `y` and `n` do not move you, and you can rebind them without touching movement.
 
 ## Look mode
 

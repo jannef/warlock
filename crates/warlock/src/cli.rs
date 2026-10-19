@@ -126,6 +126,13 @@ pub struct Args {
     #[arg(long, value_name = "X,Y", value_parser = parse_cell)]
     pub look: Option<warlock_core::Pos>,
 
+    /// Dev: press these keys at startup, after any `--replay`, as if typed, so `--capture` shows
+    /// what they open (a dialog, e.g. `--keys h` at a shop's door owing, `--keys "d b Enter"` to
+    /// sell): single characters, or `Enter`, `Esc`, `Tab`, `Up`, `Down`, `Left`, `Right`,
+    /// separated by spaces.
+    #[arg(long, value_name = "KEYS", value_parser = parse_keys)]
+    pub keys: Option<Keys>,
+
     /// Number of frames to render before taking the `--capture` screenshot.
     #[arg(long, default_value_t = 10)]
     pub capture_after_frames: u32,
@@ -183,6 +190,28 @@ fn parse_size(s: &str) -> Result<UVec2, String> {
 }
 
 /// A level cell written `X,Y` (`56,13`).
+/// Keys for `--keys`: single characters, or the names [`KEY_NAMES`] has.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Keys(pub Vec<String>);
+
+/// The keys `--keys` takes by name.
+pub const KEY_NAMES: [&str; 7] = ["Enter", "Esc", "Tab", "Up", "Down", "Left", "Right"];
+
+fn parse_keys(s: &str) -> Result<Keys, String> {
+    let keys: Vec<String> = s.split_whitespace().map(String::from).collect();
+    match keys
+        .iter()
+        .find(|k| k.chars().count() != 1 && !KEY_NAMES.contains(&k.as_str()))
+    {
+        Some(bad) => Err(format!(
+            "`{bad}`: a key is one character or one of {}",
+            KEY_NAMES.join(", ")
+        )),
+        None if keys.is_empty() => Err("no keys".into()),
+        None => Ok(Keys(keys)),
+    }
+}
+
 fn parse_cell(s: &str) -> Result<warlock_core::Pos, String> {
     let (x, y) = s
         .split_once(',')
@@ -216,6 +245,15 @@ mod tests {
             assert!(menu(&["--screen", creation, "--capture", "x.png"]));
             assert!(menu(&["--screen", creation, "--replay", "r.json"]));
         }
+    }
+
+    #[test]
+    fn keys_are_characters_or_names() {
+        let args = Args::parse_from(["warlock", "--keys", "d b Enter"]);
+        let keys = ["d", "b", "Enter"].map(String::from).to_vec();
+        assert_eq!(args.keys, Some(Keys(keys)));
+        assert!(Args::try_parse_from(["warlock", "--keys", "Return"]).is_err());
+        assert!(Args::try_parse_from(["warlock", "--keys", " "]).is_err());
     }
 
     #[test]

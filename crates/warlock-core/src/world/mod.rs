@@ -1171,7 +1171,17 @@ impl World {
                     Spent::Nothing
                 });
             }
-            Action::Pay => return self.pay(),
+            Action::Pay(then) => {
+                // Paid, the player steps out at once; a step that fails leaves them paid.
+                let paid = self.pay();
+                return match (paid, then) {
+                    (Spent::NoTime, Some(dir)) => match self.player_moves(*dir, events) {
+                        Spent::Nothing => Spent::NoTime,
+                        spent => spent,
+                    },
+                    _ => paid,
+                };
+            }
             Action::Equip { slot, item } => return self.equip(slot, *item),
             Action::Remove(slot) => return self.remove(slot),
             Action::Bash(dir) => return self.bash(*dir, events),
@@ -1388,7 +1398,7 @@ impl World {
 
     fn player_moves(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
         let from = self.player_pos();
-        let to = from.step(dir);
+        let mut to = from.step(dir);
         let level = self.state.current();
         let Some(&terrain) = level.terrain.get(to) else {
             if let Some(exit) = level.exit.clone() {
@@ -1434,11 +1444,22 @@ impl World {
         if !self.can_move() {
             return Spent::Nothing;
         }
+        // Out of a shop's door owing anything: the keeper turns the player back (spec §7
+        // "Shops"), a step the other way, or none at all if the shop floor is full.
+        let mut terrain = terrain;
+        if let Some(back) = self.turned_back(from, to) {
+            to = back;
+            terrain = self.state.current().terrain[to];
+        }
         let player = self.state.player;
         let fleeing = self.flees(player, to);
         let step = self.step_price(player, self.content.terrain(terrain), fleeing);
         let overworld = self.state.current().kind == LevelKind::Overworld;
         self.state.overworld_step = overworld.then_some(dir);
+        if to == from {
+            // Turned back with nowhere to go: the step's time, spent at the door.
+            return Spent::Turn(step);
+        }
         if let Some(actor) = self.state.actors.get_mut(&player) {
             actor.pos = to;
         }
@@ -1765,7 +1786,8 @@ fn instantiate_level(state: &mut WorldState, content: &Content, template: &Level
         let spawned = (template.creatures.iter()).position(|c| c.pos == plan.post);
         if let Some(k) = spawned {
             let keeper = ActorId(first + u32::try_from(k).unwrap_or(u32::MAX));
-            level.shops.push(Shop::from_plan(plan, keeper));
+            let shop = Shop::from_plan(plan, keeper, &template.terrain, content);
+            level.shops.push(shop);
         }
     }
     state.levels.insert(id.to_string(), level);

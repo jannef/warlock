@@ -30,16 +30,27 @@ you owe ("You pick up a dagger (unpaid, 45 gold)."), and your pack marks it "(un
 Pay with `p`. Paying takes no time; it pays for everything you owe, from the gold you carry, and
 your goods are yours. If you do not have enough gold, put something back: drop it in the shop.
 
-If you try to leave owing anything, you are asked first: `You owe Grimbold 45 gold. Pay before
-you leave?` Answer `y` to pay; then you are free to go. Answer `n`, or if you cannot pay, you are
-asked whether to leave without paying (see Theft, below); `n` or `Esc` there keeps you in the
-shop. If you hold a movement key, you stop at the shop's edge instead of being asked.
+## Leaving
+
+A shopkeeper does not let you out of the door owing money. Step toward the door while you owe
+anything and a small window asks first:
+
+- If you have the gold: `You owe Grimbold 47 gold.` Choose **Pay 47 gold and leave** (`y`) to
+  pay and step out at once, in one move. Choose **Don't pay** (`n`, or `Esc`) and Grimbold steps
+  into your way: "Grimbold steps into your way: you haven't paid." You are pushed back one step
+  into the shop.
+- If you do not: it says what you owe and how much you have, and **Go back** is the only answer:
+  you are pushed back the same way. Put something back, or bring more gold.
+
+Being turned back takes as long as a step. If you hold a movement key, you stop at the shop's
+edge instead of being asked.
 
 ## Selling
 
 Drop something in a shop, and if the shop buys that kind of thing, its keeper makes an offer:
-`Grimbold offers 15 gold for a scroll of light. Sell?` Answer `y` and you are paid from the
-keeper's purse; the thing stays on the shop floor, for sale. Answer `n` and you keep it. A shop
+`Grimbold offers 15 gold for a scroll of light.` Choose **Sell for 15 gold** (`y`) and you are
+paid from the keeper's purse; the thing stays on the shop floor, for sale. Choose **Keep it**
+(`n` or `Esc`) and you keep it. A shop
 has no use for what it does not buy, and you cannot leave it lying there. A shop pays only part
 of what a thing is worth, and always less than it asks for it.
 
@@ -54,8 +65,10 @@ shown as a number; you see only the prices.
 
 ## Theft
 
-Leaving a shop owing anything is theft. The shopkeeper shouts "Stop, thief!", turns hostile, and
-comes after you, and the goods you took are yours, stolen. A shopkeeper you attack turns on you
+Walking out of the door can never steal, but leaving a shop owing anything any other way is
+theft: through a wall you have dug open, say. You are asked first (pay and leave, leave without
+paying, or stay). Leave without paying and the shopkeeper shouts "Stop, thief!", turns hostile,
+and comes after you, and the goods you took are yours, stolen. A shopkeeper you attack turns on you
 the same way. Shopkeepers are tough, quick, and well armed: stealing is always your choice, and
 the courtyard stays safe unless you make it. An angry shopkeeper trades no more.
 

@@ -13,18 +13,24 @@
 //! - **Dropping** in the shop puts back what is unpaid; of the player's own things it offers a
 //!   price for what it buys ([`crate::Action::Drop`] says the offer and keeps them;
 //!   [`crate::Action::Sell`] takes it, from the keeper's purse), and has no use for the rest.
-//! - **Leaving** the shop floor owing anything is theft: the keeper joins the outraged faction
-//!   (hostile to the player) and comes after them, and so does a keeper the player attacks
-//!   ([`ShopStatus::Outraged`]): it trades no more. A keeper's death leaves its goods free to
-//!   take ([`ShopStatus::Abandoned`]). Unpaid goods cannot be shot or thrown in the shop.
+//! - **Leaving** by the shop's way out (its `exits`: the door) owing anything, the keeper steps
+//!   into the way and the player is turned back one step into the shop ([`World::turned_back`]):
+//!   walking out of the door never steals. [`crate::Action::Pay`] with a direction pays and
+//!   steps out at once.
+//! - **Theft**: leaving the shop floor owing anything any other way (through a wall dug open) is
+//!   theft: the keeper joins the outraged faction (hostile to the player) and comes after them,
+//!   and so does a keeper the player attacks ([`ShopStatus::Outraged`]): it trades no more. A
+//!   keeper's death leaves its goods free to take ([`ShopStatus::Abandoned`]). Unpaid goods
+//!   cannot be shot or thrown in the shop.
 //!
 //! Prices follow the player's favour ([`favour`]): their Presence and their Appraise skill, never
 //! shown but as gold.
 
 use super::{ActorId, Spent, World};
 use crate::action::{Letters, letter};
-use crate::content::{ActionKind, Content, MAX_FAVOUR, ShopId, ShopPlan, Shops};
+use crate::content::{ActionKind, Content, MAX_FAVOUR, ShopId, ShopPlan, Shops, TerrainId};
 use crate::geom::Pos;
+use crate::grid::Grid;
 use crate::object::{self, Stack};
 use crate::skills::Effect;
 use crate::stats::Stat;
@@ -61,6 +67,10 @@ pub struct Shop {
     pub max: Pos,
     /// Where the keeper stands.
     pub post: Pos,
+    /// The ways out, as the level was made: the walkable cells (and doors) around the shop floor.
+    /// A step onto one owing anything is turned back; leaving any other way is theft.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub exits: Vec<Pos>,
     /// What the player has picked up here and not paid for, by object (one stack each).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub unpaid: Vec<Stack>,
@@ -69,18 +79,41 @@ pub struct Shop {
 }
 
 impl Shop {
-    /// The shop `plan` lays out, kept by actor `keeper`.
-    pub(crate) fn from_plan(plan: &ShopPlan, keeper: ActorId) -> Self {
+    /// The shop `plan` lays out on `terrain`, kept by actor `keeper`. Its ways out are the cells
+    /// around its floor that can be walked onto, or are doors.
+    pub(crate) fn from_plan(
+        plan: &ShopPlan,
+        keeper: ActorId,
+        terrain: &Grid<TerrainId>,
+        content: &Content,
+    ) -> Self {
+        let (min, max) = (plan.min, plan.max);
+        let exits = (min.y - 1..=max.y + 1)
+            .flat_map(|y| (min.x - 1..=max.x + 1).map(move |x| Pos::new(x, y)))
+            .filter(|&p| !plan.contains(p))
+            .filter(|&p| {
+                (terrain.get(p)).is_some_and(|&t| {
+                    let def = content.terrain(t);
+                    def.walkable || def.is_closed_door()
+                })
+            })
+            .collect();
         Self {
             kind: plan.kind,
             keeper,
             name: plan.keeper.clone(),
-            min: plan.min,
-            max: plan.max,
+            min,
+            max,
             post: plan.post,
+            exits,
             unpaid: Vec::new(),
             status: ShopStatus::Open,
         }
+    }
+
+    /// Whether `p` is one of its ways out.
+    pub fn is_exit(&self, p: Pos) -> bool {
+        self.exits.contains(&p)
     }
 
     /// Whether `p` is on the shop floor.
@@ -115,6 +148,7 @@ impl Shop {
             .is_some_and(|s| usize::from(self.kind.0) < s.defs().len())
             && inside(self.min)
             && inside(self.max)
+            && self.exits.iter().all(|&p| inside(p))
             && self.unpaid.iter().all(|s| s.is_valid_for(content))
     }
 
@@ -465,8 +499,45 @@ impl World {
         false
     }
 
+    /// Where the player ends up trying to step from `from` onto `to`, if the keeper of the open
+    /// shop they stand in turns them back (spec §7 "Shops"): `to` is one of its ways out and they
+    /// owe it something. They are pushed one cell away from the way out, the other way from the
+    /// step, or else onto the nearest free cell of the shop floor (the first in row order among
+    /// the nearest), or else they stay where they are. Says why.
+    pub(super) fn turned_back(&mut self, from: Pos, to: Pos) -> Option<Pos> {
+        let shops = &self.state.current().shops;
+        let shop = shops
+            .iter()
+            .find(|s| s.is_open() && s.contains(from) && s.is_exit(to) && !s.unpaid.is_empty())?
+            .clone();
+        let level = self.state.current();
+        let free = |p: Pos| {
+            p != from
+                && shop.contains(p)
+                && (level.terrain.get(p)).is_some_and(|&t| self.content.terrain(t).walkable)
+                && self.state.actor_at(&level.id, p).is_none()
+        };
+        let back = Pos::new(2 * from.x - to.x, 2 * from.y - to.y);
+        let floor = (shop.min.y..=shop.max.y)
+            .flat_map(|y| (shop.min.x..=shop.max.x).map(move |x| Pos::new(x, y)));
+        let land = if free(back) {
+            back
+        } else {
+            floor
+                .filter(|&p| free(p))
+                .min_by_key(|p| p.dist2(from))
+                .unwrap_or(from)
+        };
+        self.say(format!(
+            "{} steps into your way: you haven't paid.",
+            shop.name
+        ));
+        Some(land)
+    }
+
     /// The player stepped from `from` to `to` on the current level: entering an open shop the
-    /// keeper greets them; leaving one owing anything is theft (spec §7 "Shops").
+    /// keeper greets them; leaving one owing anything (any way but its ways out, which turn them
+    /// back) is theft (spec §7 "Shops").
     pub(super) fn shop_step(&mut self, from: Pos, to: Pos) {
         let content = self.content.clone();
         for i in 0..self.state.current().shops.len() {

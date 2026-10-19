@@ -39,8 +39,10 @@ pub enum Action {
     /// what the shop buys is sold, paid from the keeper's purse. Takes the time of `drop`.
     Sell(Letters),
     /// Pay for everything unpaid in the shop the player stands in (spec §7 "Shops"), from the
-    /// gold they carry. Takes no game time; recorded in replays.
-    Pay,
+    /// gold they carry, which takes no game time; then, with a direction, step that way (out of
+    /// the shop, as [`Action::Move`] would, taking its time): paying and leaving in one action.
+    /// Refused, with no step, if the player cannot pay.
+    Pay(Option<Dir>),
     /// Wear or wield inventory stack `item` (a position, `a` = 0) in `slot` (an id in
     /// `data/slots.toml`), taking off what is there first (a swap). Takes the time of the slot's
     /// action (`wield`, `wear`, `body_armor`, `ready`) for each thing put on or taken off.
@@ -347,10 +349,11 @@ pub struct Outcome {
 }
 
 /// Text syntax for scripting: `move:E wait open:E close:W ascend descend lantern rest:1h
-/// rest:dawn rest:dusk pickup pickup:ac drop:b sell:b pay equip:body:b remove:body bash:E
-/// fire:12,5 throw:c:12,5 dig:E vision:ID skip:1h weather:rain effect:fireball@12,5
+/// rest:dawn rest:dusk pickup pickup:ac drop:b sell:b pay pay:W equip:body:b remove:body
+/// bash:E fire:12,5 throw:c:12,5 dig:E vision:ID skip:1h weather:rain effect:fireball@12,5
 /// effect:lightning_bolt@3,4>12,4 afflict:bleeding` (durations: `30s`, `10m`, `2h`; letters
 /// name stacks, `a` first; `pickup`, `drop`, and `sell` without letters take everything;
+/// `pay:DIR` pays and steps that way, out of the shop;
 /// `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT, `remove:SLOT` takes off what
 /// is there; `bash:DIR` bashes with the held shield; `dig:DIR` digs toward a wall; `fire:X,Y`
 /// shoots at the level cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack LETTER
@@ -375,7 +378,8 @@ impl fmt::Display for Action {
             Action::Drop(l) => write!(f, "drop:{l}"),
             Action::Sell(l) if l.is_empty() => f.write_str("sell"),
             Action::Sell(l) => write!(f, "sell:{l}"),
-            Action::Pay => f.write_str("pay"),
+            Action::Pay(None) => f.write_str("pay"),
+            Action::Pay(Some(d)) => write!(f, "pay:{d}"),
             Action::Equip { slot, item } => {
                 write!(f, "equip:{slot}:{}", letter(*item).unwrap_or('?'))
             }
@@ -433,7 +437,10 @@ impl FromStr for Action {
             "ascend" => bare(Action::Ascend),
             "descend" => bare(Action::Descend),
             "lantern" => bare(Action::ToggleLantern),
-            "pay" => bare(Action::Pay),
+            "pay" => match arg {
+                None => Ok(Action::Pay(None)),
+                Some(_) => dir().map(|d| Action::Pay(Some(d))),
+            },
             "pickup" | "drop" | "sell" => {
                 let letters = match arg {
                     None => Letters::default(),
@@ -546,8 +553,8 @@ impl FromStr for Action {
             _ => Err(format!(
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
                  descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
-                 sell[:LETTERS], pay, equip:SLOT:LETTER, remove:SLOT, bash:DIR, fire:X,Y, \
-                 throw:LETTER:X,Y, dig:DIR, stance:NAME, vision:ID, skip:DURATION, \
+                 sell[:LETTERS], pay[:DIR], equip:SLOT:LETTER, remove:SLOT, bash:DIR, \
+                 fire:X,Y, throw:LETTER:X,Y, dig:DIR, stance:NAME, vision:ID, skip:DURATION, \
                  weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y], afflict:STATUS)"
             )),
         }
@@ -630,7 +637,8 @@ mod tests {
             Action::Drop(Letters::of(0..Letters::COUNT)),
             Action::Sell(Letters::default()),
             Action::Sell(Letters::of([0, 3])),
-            Action::Pay,
+            Action::Pay(None),
+            Action::Pay(Some(Dir::W)),
             Action::Equip {
                 slot: "body".into(),
                 item: 1,
@@ -820,7 +828,7 @@ mod tests {
             "afflict:a:b",
             "pickup:",
             "pickup:a1",
-            "pay:E",
+            "pay:Q",
             "sell:",
             "sell:A1",
             "drop:A-",

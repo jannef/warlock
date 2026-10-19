@@ -8,7 +8,7 @@
 //! [`ScreenAction`], so it is testable without a window. Selection is always shown by text (a `>`
 //! marker), never by color alone.
 
-use super::confirm_screen::Question;
+use super::dialog_screen::Dialog;
 use super::screens::{MenuChoice, ScreenAction, ScreenName};
 use super::{ACCENT, PANEL_BG, TEXT, TEXT_DIM};
 use crate::input::KeyBinding;
@@ -108,6 +108,28 @@ impl Press {
     }
 }
 
+/// The dialog every way to quit asks (spec §6): over a run (`saving`) the run is saved first; on
+/// the web, quitting reloads the page (`MenuChoice::Quit` does either).
+pub fn quit_dialog(saving: bool) -> Dialog {
+    let (text, yes) = if saving {
+        ("Save the run and quit Warlock?", "Save and quit")
+    } else {
+        ("Quit Warlock?", "Quit")
+    };
+    Dialog::yes_no("Quit", text, yes, MenuChoice::Quit, "Stay")
+}
+
+/// The dialog the pause menu's Save and quit to menu asks.
+pub fn save_to_menu_dialog() -> Dialog {
+    Dialog::yes_no(
+        "Main menu",
+        "Save the run and return to the main menu?",
+        "Save and return",
+        MenuChoice::SaveToMenu,
+        "Stay",
+    )
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum MainItem {
     Resume,
@@ -203,18 +225,11 @@ impl MainMenu {
                 return match items[self.selected] {
                     MainItem::Resume => ScreenAction::Close,
                     MainItem::Continue => ScreenAction::Choose(MenuChoice::Continue),
-                    MainItem::SaveToMenu => {
-                        Question::new("Save and return to the main menu?", MenuChoice::SaveToMenu)
-                            .into()
-                    }
+                    MainItem::SaveToMenu => save_to_menu_dialog().into(),
                     MainItem::NewRun => ScreenAction::Open(ScreenName::NewRun),
                     MainItem::Settings => ScreenAction::Open(ScreenName::Settings),
                     MainItem::Controls => ScreenAction::Open(ScreenName::Controls),
-                    MainItem::Quit if self.pause => ScreenAction::from(Question::new(
-                        "Save and quit Warlock?",
-                        MenuChoice::Quit,
-                    )),
-                    MainItem::Quit => Question::new("Quit Warlock?", MenuChoice::Quit).into(),
+                    MainItem::Quit => quit_dialog(self.pause).into(),
                 };
             }
             _ => {}
@@ -472,15 +487,12 @@ mod tests {
         press(&mut m, Nav::Down);
         assert_eq!(
             press(&mut m, Nav::Enter),
-            ScreenAction::from(Question::new(
-                "Save and return to the main menu?",
-                MenuChoice::SaveToMenu
-            ))
+            ScreenAction::from(save_to_menu_dialog())
         );
         press(&mut m, Nav::Down);
         assert_eq!(
             press(&mut m, Nav::Enter),
-            ScreenAction::from(Question::new("Save and quit Warlock?", MenuChoice::Quit))
+            ScreenAction::from(quit_dialog(true))
         );
     }
 
@@ -490,7 +502,7 @@ mod tests {
         press(&mut m, Nav::Up);
         assert_eq!(
             press(&mut m, Nav::Enter),
-            ScreenAction::from(Question::new("Quit Warlock?", MenuChoice::Quit))
+            ScreenAction::from(quit_dialog(false))
         );
     }
 

@@ -150,7 +150,8 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   provisioner, a fletcher), each kept by a named shopkeeper by the door: goods show their price
   in gold, what you pick up you owe until you pay (`p`, or when you leave), the keeper makes an
   offer for what you drop, and your Presence and the Appraise skill get you better prices.
-  Walk out without paying and the shopkeeper, tough and well armed, comes after you. Grimbold's
+  The keeper won't let you out of the door owing money; leave another way (dig through the wall)
+  and the shopkeeper, tough and well armed, comes after you. Grimbold's
   General Store stands in the courtyard; about one level of the Depths in seven has a shop.
 
   ![A generated level in The Depths](docs/screenshots/m6-depths-rooms.png)

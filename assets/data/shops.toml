@@ -1,10 +1,11 @@
 # Shops (spec §7 "Shops"; #145), ADOM-like: a room with goods on its floor and a named shopkeeper
 # by its door. Everything lying in a shop is for sale while its keeper lives and is not angry:
 # look mode and stepping onto it show the price, picking it up adds the price to what you owe,
-# and you pay with `p` (or when you leave: "Pay 40 gold?"). Dropping something the shop buys gets
-# an offer; dropping something you have not paid for puts it back. Leaving with unpaid goods is
-# theft: the keeper turns hostile and comes after you, and so does one you attack. A dead keeper's
-# goods are free to take.
+# and you pay with `p` (or at the door: "Pay 40 gold and leave"). Dropping something the shop buys
+# gets an offer; dropping something you have not paid for puts it back. The keeper turns you back
+# at the door while you owe anything; leaving with unpaid goods any other way (through a wall dug
+# open) is theft: the keeper turns hostile and comes after you, and so does one you attack. A dead
+# keeper's goods are free to take.
 #
 # Prices: an object's `value` (objects.toml) times the shop's `markup`, and for what it buys its
 # `pays`, both in percent; your Presence moves both in your favour or against you (`presence`

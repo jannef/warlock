@@ -251,21 +251,104 @@ fn dropping_ones_own_gets_an_offer_and_selling_takes_it() {
 }
 
 #[test]
-fn leaving_with_unpaid_goods_is_theft_and_the_keeper_comes_after_the_thief() {
+fn walking_out_of_the_door_owing_is_turned_back_one_step() {
     let mut w = in_shop();
     let (player, keeper) = (w.player_id(), keeper(&w));
+    assert_eq!(shop(&w).exits, [DOOR], "the hut's one way out");
     apply(&mut w, "move:E move:NE pickup move:SW move:W");
     assert_eq!(w.player_pos(), FRONT);
-    assert_eq!(
-        w.perception().owed_on_leaving(DOOR).map(|(_, n)| n),
-        Some(price(&w, object(&w, "dagger")))
-    );
+    let owed = price(&w, object(&w, "dagger"));
+    let view = w.perception();
+    let (seen, n) = view.owed_on_leaving(DOOR).expect("leaving owes");
+    assert_eq!((seen.is_exit(DOOR), n), (true, owed));
     assert!(
         w.perception().owed_on_leaving(Pos::new(55, 14)).is_none(),
         "still inside"
     );
-    apply(&mut w, "move:W");
+    // Grimbold steps into the way: a step back, the other way, in a step's time.
+    let time = w.time();
+    let out = apply(&mut w, "move:W");
+    assert!(out.took_turn);
+    assert!(w.time() > time);
+    assert_eq!(w.player_pos(), Pos::new(55, 14));
+    assert_eq!(last(&w), "Grimbold steps into your way: you haven't paid.");
+    assert_eq!(shop(&w).status, ShopStatus::Open, "no theft");
+    assert_eq!(w.stance(player, keeper), Stance::Neutral);
+    assert_eq!(shop(&w).unpaid, [object(&w, "dagger")], "still owed");
+    // Diagonally out of the door from the south corner: the way back is the wall, so onto the
+    // nearest free cell (the first in row order), beside the door.
+    apply(&mut w, "move:SW");
+    assert_eq!(w.player_pos(), Pos::new(54, 15));
+    apply(&mut w, "move:NW");
+    assert_eq!(w.player_pos(), FRONT);
+    // Paying and leaving is one action: paid, the step goes out.
+    let gold_before = gold(&w, player);
+    let out = apply(&mut w, "pay:W");
+    assert!(out.took_turn, "the step's time");
     assert_eq!(w.player_pos(), DOOR);
+    assert_eq!(gold(&w, player), gold_before - owed);
+    assert!(said(&w, &format!("You pay Grimbold {owed} gold.")));
+    assert_eq!(shop(&w).status, ShopStatus::Open);
+    assert_eq!(w.stance(player, keeper), Stance::Neutral);
+}
+
+#[test]
+fn without_the_gold_paying_and_leaving_goes_nowhere() {
+    let mut w = in_shop();
+    apply(
+        &mut w,
+        "move:E move:NE move:E move:E pickup move:W*3 move:SW",
+    );
+    assert_eq!(w.player_pos(), FRONT);
+    let out = apply(&mut w, "pay:W");
+    assert!(!out.took_turn);
+    assert_eq!(w.player_pos(), FRONT, "no step without paying");
+    assert!(last(&w).starts_with("You owe Grimbold"), "{}", last(&w));
+}
+
+#[test]
+fn turned_back_with_nowhere_to_go_the_player_stays() {
+    // A shop of two cells, the keeper on one: the player, on the other, has nowhere to go.
+    let mut files = ContentFiles::builtin();
+    files.insert(
+        "levels/booth.toml",
+        "name = \"Booth\"\nambient = [255, 255, 255, 0]\nmap = '''\n####\n#@.#\n#+##\n#..#\n####\n'''\n\
+         [legend]\n\"@\" = { terrain = \"floor\", spawn = \"player\", objects = [\"dagger\"] }\n\
+         [[shop]]\nkind = \"weaponsmith\"\nkeeper = \"Orvald\"\narea = [1, 1, 2, 1]\npost = [2, 1]\n",
+    );
+    files.insert(
+        "scenarios/booth.toml",
+        "name = \"Booth\"\nstart_level = \"booth\"\nhp = 100\n",
+    );
+    let content = Arc::new(Content::load(&files).expect("valid"));
+    let mut w = World::new(content, "booth", None).expect("booth");
+    let here = Pos::new(1, 1);
+    assert_eq!(shop(&w).exits, [Pos::new(1, 2)], "the door, shut");
+    apply(&mut w, "pickup move:S");
+    assert!(!shop(&w).unpaid.is_empty());
+    let time = w.time();
+    let out = apply(&mut w, "move:S");
+    assert!(out.took_turn, "a step's time, spent at the door");
+    assert!(w.time() > time);
+    assert_eq!(w.player_pos(), here);
+    assert_eq!(last(&w), "Orvald steps into your way: you haven't paid.");
+    assert_eq!(shop(&w).status, ShopStatus::Open);
+}
+
+#[test]
+fn leaving_any_other_way_owing_is_theft_and_the_keeper_comes_after_the_thief() {
+    let mut w = in_shop();
+    let (player, keeper) = (w.player_id(), keeper(&w));
+    apply(&mut w, "move:E move:NE pickup move:SW move:E*7");
+    assert_eq!(w.player_pos(), Pos::new(62, 14));
+    // The hut's east wall gives way (as a wall dug open would): not a way out of the shop.
+    let hole = Pos::new(63, 14);
+    let floor = w.content().terrain_id("plank_floor").expect("plank floor");
+    w.set_terrain(hole, floor);
+    let (seen, _) = w.perception().owed_on_leaving(hole).expect("leaving owes");
+    assert!(!seen.is_exit(hole));
+    apply(&mut w, "move:E");
+    assert_eq!(w.player_pos(), hole);
     assert!(said(
         &w,
         "You leave without paying. \"Stop, thief!\" shouts Grimbold."
@@ -273,19 +356,11 @@ fn leaving_with_unpaid_goods_is_theft_and_the_keeper_comes_after_the_thief() {
     assert_eq!(shop(&w).status, ShopStatus::Outraged);
     assert!(shop(&w).unpaid.is_empty(), "the dagger is stolen now");
     assert_eq!(w.stance(player, keeper), Stance::Hostile);
-    let seen = w
-        .perception()
-        .actor_at(POST)
-        .copied()
-        .expect("Grimbold in view");
-    assert_eq!(w.perception().stance(&seen), Stance::Hostile);
     // An outraged keeper trades no more: no greeting, no prices.
     assert!(w.perception().shop_at(SWORD).is_none());
-    assert_eq!(
-        w.state.actors[&keeper].mind.post,
-        Some(POST),
-        "it went for the thief"
-    );
+    // It comes after the thief.
+    apply(&mut w, "wait");
+    assert_ne!(w.state.actors[&keeper].pos, POST, "it went for the thief");
 }
 
 #[test]
@@ -371,14 +446,19 @@ fn prices_follow_presence_and_appraise() {
 
 #[test]
 fn shops_save_replay_and_hash() {
-    let actions = format!("{INTO_SHOP} move:E move:NE pickup move:SW sell:b");
+    // Into the shop for the dagger, a scroll sold; out of the door unpaid, turned back; then
+    // paid and out in one action.
+    let actions =
+        format!("{INTO_SHOP} move:E move:NE pickup move:SW sell:b move:W move:W move:W pay:W");
     let mut w = courtyard();
     let mut replay = Replay::new(&w);
     for action in parse_actions(&actions).expect("actions") {
         w.apply(&action);
         replay.push(&action, &w);
     }
-    assert!(!shop(&w).unpaid.is_empty(), "owing the dagger");
+    assert_eq!(w.player_pos(), DOOR, "paid and out");
+    assert!(shop(&w).unpaid.is_empty());
+    assert!(said(&w, "Grimbold steps into your way: you haven't paid."));
     let (again, divergence) = replay.play(content()).expect("plays");
     assert!(divergence.is_none(), "the replay verifies");
     assert_eq!(again.state_hash(), w.state_hash());
@@ -386,7 +466,7 @@ fn shops_save_replay_and_hash() {
     let loaded = crate::save::decode(&bytes, content()).expect("loads");
     assert_eq!(loaded.state_hash(), w.state_hash());
     assert_eq!(loaded.state().current().shops, w.state().current().shops);
-    // A replay through theft lands the same.
+    // Being turned back lands the same every time.
     let mut a = courtyard();
     let mut b = courtyard();
     let theft = format!("{INTO_SHOP} move:E move:NE pickup move:SW move:W move:W wait*3");
@@ -452,6 +532,7 @@ fn generated_shops_are_kept_by_their_keepers() {
     assert_eq!((keeper.pos, keeper.level.as_str()), (shop.post, "depths:1"));
     assert_eq!(w.content().creature(keeper.creature).id, "shopkeeper");
     assert!(!keeper.equipment.is_empty(), "armed and armoured");
+    assert_eq!(shop.exits.len(), 1, "its one door: {:?}", shop.exits);
     let goods = (w.state.current().objects.iter()).filter(|(p, _)| shop.contains(**p));
     assert!(goods.count() >= usize::from(def.items.0));
 }

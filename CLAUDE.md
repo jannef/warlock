@@ -58,16 +58,19 @@ Game flags (`cargo run -p warlock -- --help`):
   before them (each on its preselection: the showcase's character);
   `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `pick-up` (the pile on the player's cell), and `drop` over a run
   (e.g. after a `--replay` that walks onto a pile), `equip-item` (the choice for the first slot,
-  Head) over the equipment screen; `settings` and `controls` over the main menu, or over the pause
-  menu when `--scenario`, `--new`, `--replay`, or `--record` names a run (`--capture` alone does
-  not).
+  Head) over the equipment screen; `settings`, `controls`, and `dialog` (the quit dialog) over the
+  main menu, or over the pause menu when `--scenario`, `--new`, `--replay`, or `--record` names a
+  run (`--capture` alone does not).
   `--config-dir DIR` keeps `settings.toml` in DIR; captures and replays otherwise use default
   settings and never write the file.
 
 - `--fire` (dev) — start the run aiming the readied missile weapon, as `f` (unbound by default) would (captures of the
   targeting line; golden entries pass it with `args = ["--fire"]`). `--look X,Y` (dev) — start
   in look mode with the cursor on level cell (X, Y) (captures of what look mode says, e.g. a
-  shop's price).
+  shop's price). `--keys "KEYS"` (dev) — press keys at startup, after any `--replay`, as if typed
+  (single characters, or `Enter`, `Esc`, `Tab`, `Up`, `Down`, `Left`, `Right`), so captures show
+  what they open: `--keys h` at a shop's door owing (the pay dialog), `--keys "d b Enter"`
+  (a sell offer).
 - `--replay FILE` — apply a replay at startup (its scenario/seed/character win; a hash divergence
   is logged as a warning), so `--capture` can screenshot any state. `--record FILE` — write every applied
   action (with state hashes) to a replay, rewritten after each action.
@@ -228,18 +231,29 @@ to open, read keys for, or draw one:
   dropped. Held-key repeats never open, close, choose, or act.
 - **Draw**: `ui::draw` is the one system that writes the UI console: when anything it shows
   changed, it clears the console, draws the gameplay UI if a run exists, then the top screen.
-- **Confirm** (`ui/confirm_screen.rs`): the one reusable Yes/No dialog, No selected. A screen or
-  gameplay answers `ScreenAction::Confirm(Box<Question>)`: a `Question` is its text, what Yes
-  does, and what No does (`Question::new(text, yes)`, No closes; `.or(no)`), each a
-  `ScreenAction` (`From<MenuChoice>` is `Choose`, `From<Action>` is `Act`): a menu choice pops
-  the dialog and is applied as usual, an action closes it and is applied, and a follow-up
-  question takes its place (`ScreenStack::handle`); Esc closes it. Every quit path (pause Quit
-  and Save and quit to menu, main menu Quit, a bound `KeyCommand::Quit`) and the shop's
-  questions (`input.rs`: `leaving_question`, `sale_question`; spec §7 "Shops") go through it.
-  Its answers are the `Context::Confirm` commands `KeyCommand::Yes`/`No` (`y`/`n` by default,
-  rebindable; their own context because `y`/`n` move the player in play). `--screen confirm`
-  shows it. On wasm, quit saves then reloads the page (`storage::web::reload`; `AppExit` also
-  reloads), and the main menu has no Quit.
+- **Dialog** (`ui/dialog_screen.rs`): the one question screen; **every** confirmation is this
+  screen with its own parameters, never a screen or prompt of its own. A screen or gameplay
+  answers `ScreenAction::Dialog(Box<Dialog>)` (`Dialog` converts `into()` it; `Screens::ask`
+  opens it). A `Dialog` is a `title` (on the frame), the question `text` (wrapped), and
+  `options`: each a `Choice` with a `label`, a `Role` (`Accept`, `Decline`, `Cancel`, `Plain`),
+  and an `outcome`, any `ScreenAction` (`From<MenuChoice>` is `Choose`, `From<Action>` is `Act`,
+  a `Dialog` is a follow-up that takes its place, `Close`). Build it with `Dialog::new(title,
+  text).accept(..).decline(..).cancel(..).plain(..)`, or `Dialog::yes_no(title, text, yes,
+  outcome, no)` for a plain question. It sizes itself to its content and draws the options in
+  a column, each with its shortcut keys. Keys: the menu keys move the selection, Enter takes it;
+  the `Context::Dialog` commands `KeyCommand::Yes`/`No` (`y`/`n` by default, rebindable; their
+  own context because `y`/`n` move the player in play) pick the Accept option and the Decline
+  option (else Cancel); Esc picks Cancel (else Decline; else closes); the safe option (Cancel,
+  else Decline) is selected first. A menu choice pops the dialog and is applied as usual, an
+  action closes it and is applied (`play.act`, which may answer with a dialog of its own: the
+  sell offer), a follow-up dialog replaces it (`ScreenStack::handle`). Users: every quit path
+  (`menu::quit_dialog(saving)` for the pause and main menu Quit and a bound `KeyCommand::Quit`,
+  `save_to_menu_dialog`), and the shop (`input.rs`: `leaving_dialog`, `sale_dialog`; spec §7
+  "Shops"). **A new question is a `Dialog` value at its call site**: e.g. the quest log's yes/no
+  prompt (#182) becomes `Dialog::yes_no("Quest", text, "Accept", Action::.., "Not now")`
+  returned as `ScreenAction::Dialog`, with no screen, prompt, or key handling of its own.
+  `--screen dialog` shows the quit dialog. On wasm, quit saves then reloads the page
+  (`storage::web::reload`; `AppExit` also reloads), and the main menu has no Quit.
 - **Info pages** (`ui/info_tabs.rs`): the screens about the player (Character, Inventory,
   Equipment, Skills) are an ordered group, `PAGES`. While one is the top screen, the page keys replace
   it (`ScreenAction::Replace` -> `Screens::replace`: the stack depth is unchanged, so Esc still
@@ -252,7 +266,7 @@ to open, read keys for, or draw one:
   per context, so Tab is `NextTarget` in play and `NextPage` here; `Bindings::owner_in` and
   `lookup` read one context). `Press::shift` carries Shift from the router.
 - Prompts in the message line (open/close/bash direction, rest, look mode) are `InputMode`s,
-  not screens; a yes/no question is the confirmation dialog (above).
+  not screens; a question is the dialog (above).
 - Screens are plain state machines tested without a window: `ui/menu.rs` (`Press`, `Panel`, main
   and pause menu), `ui/new_run_screen.rs`, `ui/settings_screen.rs`, `ui/controls_screen.rs` (also
   the `?` help: the same binding list, read-only), `ui/object_screen.rs` (inventory, pick up,
@@ -617,17 +631,22 @@ prices are made). Every object has a `value` (required; test fixtures with their
 (level files: `[[shop]] kind keeper area post`; generated: `mapgen/shop.rs`, last after special
 rooms, rooms levels only, from the map stream) whose keeper is spawned at its post; at
 instantiation it becomes a `world::Shop` in `LevelState::shops` (saved, hashed; format 30): the
-keeper's actor id, `unpaid` (what the player owes, counted by object; `unpaid_parts` assigns the
-counts to the last stacks of each object), and `ShopStatus` (Open, Outraged, Abandoned). The rules
-are `world/shop.rs`: `shop_step` (greeting, theft) from `player_moves`, `picked_up_goods` from
-`pick_up`, `trade` (drop and `Action::Sell`) from `drop_objects`, `pay` (`Action::Pay`, no time),
+keeper's actor id, its `exits` (the cells around the floor that could be walked onto or were
+doors when the level was made: the door), `unpaid` (what the player owes, counted by object;
+`unpaid_parts` assigns the counts to the last stacks of each object), and `ShopStatus` (Open,
+Outraged, Abandoned). The rules are `world/shop.rs`: `turned_back` from `player_moves` (a step
+onto an exit owing anything: the keeper steps into the way and the step lands one cell back
+into the shop, priced as a step; walking out of the door never steals), `shop_step` (greeting,
+theft: leaving owing any other way, such as a wall dug open) from `player_moves`,
+`picked_up_goods` from `pick_up`, `trade` (drop and `Action::Sell`) from `drop_objects`, `pay`
+(`Action::Pay(None)`, no time; `Action::Pay(Some(dir))`, `pay:W`, pays and steps out at once),
 `provoke` from `fight.rs::resolve` (the player attacking a keeper), `keeper_died` from
 `creature_dies`, `may_loose` in `shoot.rs` (unpaid goods are not shot or thrown). An outraged
 keeper gets the `outraged` faction as its `faction_override`, so the AI and stance need nothing
 new. The player's `favour` (Presence modifier × `presence` + the Appraise `Effect::Bargain`,
 at most `MAX_FAVOUR`) is never shown: presentation reads only prices
 (`PerceptionView::shop_at`/`shop_here`, `price_tag`, `unpaid`, `owed_on_leaving`, `sale`,
-`own_gold`; look mode, the object screens, and the shop's questions in `input.rs`).
+`own_gold`; look mode, the object screens, and the shop's dialogs in `input.rs`).
 
 Local areas (spec §3, §7) are generated in `mapgen/local/`: `mod.rs` (`Setting`: the cell's
 landscape and its neighbors' roads, rivers, lakes, and land, read from the overworld; per-landscape

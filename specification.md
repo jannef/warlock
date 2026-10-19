@@ -782,6 +782,16 @@ rate or animation.
   wielding), which is done as it is chosen and takes its time. Prompts in the message line (a
   direction to open, close, or bash, or to dig, how long to rest, look mode, aiming a shot or a
   throw) are not screens.
+- **The dialog**: every question the game asks first (quitting, a shop's way out and its offers)
+  is one dialog screen given its content: a title (on its frame), the question, and its options,
+  each a label (`Pay 47 gold and leave`, `Stay`), a role (accept, decline, cancel, or plain),
+  and what choosing it does (a menu choice, a game action, or a further dialog in its place).
+  It sizes itself to its content and lists the options in a column, each with its shortcut
+  keys. ↑/↓ (and ←/→) move the selection and Enter takes it; the Yes and No keys (`y` and `n`
+  by default; rebindable, in a context of their own, as `y` and `n` move the player in play)
+  pick the accept option and the decline option (else the cancel one); Esc picks the cancel
+  option (else the decline one). The safe option (cancel, else decline) is selected at first,
+  so Enter alone never does what the player might regret.
 - **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
   `--record`, or `--capture` name what to run): Continue (only if a save exists), New run
   (scenario list from content, optional seed, then character creation), Settings, Controls,
@@ -829,12 +839,9 @@ rate or animation.
   "Shops"), help, save and quit
   (rebindable, unbound by default: quitting is done from the pause menu). Every way to quit (the
   pause menu's Save and quit to menu and Quit, the main menu's Quit, a bound quick key) asks
-  first, in a Yes/No dialog with No selected (`y` yes; `n` no; Esc cancels; ←/→ and Enter choose;
-  closing the window or the tab does not ask). The same dialog asks before the player leaves a
-  shop owing anything and before they sell (§7 "Shops"); there No may ask a further question in
-  its place. Its Yes and No keys (`y` and `n` by default) are rebindable, in a context of their
-  own, as `y` and `n` move the player in play. On the web Quit saves and reloads the page to a
-  fresh main menu (a page cannot close itself), which has no Quit item. Free actions (look, help, the inventory, looking at the
+  first, in the dialog (`Save the run and quit Warlock?`: `Save and quit`, `Stay`; closing the
+  window or the tab does not ask). On the web Quit saves and reloads the page to a fresh main
+  menu (a page cannot close itself), which has no Quit item. Free actions (look, help, the inventory, looking at the
   equipment screen, the character screen, the Skills screen, the weapon skills screen, menus,
   vision switch, a change of stance, paying in a shop) do not
   advance time.
@@ -1412,7 +1419,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
     more is owed). **Paying** (`p`, `Action::Pay`, replay text `pay`) pays everything owed, from
     the gold the player carries into the keeper's purse, and takes no time; refused outside a
     shop, owing nothing, or without enough gold ("You owe Grimbold 75 gold, but you have only
-    60."). Without enough gold the player **puts it back**: dropping unpaid goods in the shop
+    60."). Paying with a direction (`pay:W`) pays and then steps that way, out of the shop, in
+    one action that takes the step's time; refused, with no step, if the player cannot pay. Without enough gold the player **puts it back**: dropping unpaid goods in the shop
     returns them to the floor (and off the debt), taking a drop's time. Which stacks are unpaid
     follows from the counts: of an object's stacks, the last ones in the pack.
   - **Selling**: dropping the player's own things in the shop keeps them and says the offer
@@ -1420,19 +1428,32 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
     **selling** (`Action::Sell`, replay text `sell:b`, `sell` for everything) takes the offer
     from the keeper's purse ("You sell a scroll of light to Grimbold for 15 gold."; "Grimbold
     cannot afford ..." when the purse is short) and leaves the thing on the floor, for sale.
-    Presentation asks first, in the confirmation dialog (§6): dropping in a shop what it buys
-    asks `Grimbold offers 15 gold for a scroll of light. Sell?` (yes sells, no drops nothing).
-  - **Theft**: a step from the shop floor to outside it while owing anything is theft ("You
+    Presentation asks first, in the dialog (§6): dropping in a shop what it buys asks
+    `Grimbold offers 15 gold for a scroll of light.` with `Sell for 15 gold` (accept) and `Keep
+    it` (cancel: nothing is dropped).
+  - **The way out**: a shop's `exits` are the cells around its floor that could be walked onto,
+    or were doors, when the level was made: its door. A step onto one while owing anything is
+    turned back (`World::turned_back`, in the rules, so no step out of the door ever steals):
+    "Grimbold steps into your way: you haven't paid.", and the step lands one cell the other way,
+    back into the shop, or, if that cell is not free shop floor, on the nearest free cell of the
+    shop floor (the first in row order among the nearest), or nowhere if none is free; it takes
+    a step's time (`step_price`) either way. Presentation asks first, in the dialog: with the
+    gold, `You owe Grimbold 47 gold.` with `Pay 47 gold and leave` (accept: `pay:W`, paid and out
+    in one action) and `Don't pay` (decline: the step, turned back; so is Esc); without it, `You
+    owe Grimbold 125 gold and have only 60. Put something back, or bring more gold.` with only
+    `Go back` (the step, turned back). A held movement key stops at the shop's edge instead of
+    asking.
+  - **Theft**: leaving the shop floor owing anything any other way (a step through a wall dug
+    open, or anything else that puts the player outside but a way out) is theft ("You
     leave without paying. \"Stop, thief!\" shouts Grimbold."): the keeper joins the `outraged`
     faction (its `faction_override`, hostile to the player; ADOM-like, it comes after them), the
     shop trades no more (`ShopStatus::Outraged`), and what was owed is the player's, stolen. A
     keeper the player attacks (any attack, melee, shot, or throw, hit or miss) turns the same way
-    ("\"You will pay for that!\" shouts Grimbold."). Presentation asks before a step out owing
-    anything, in the confirmation dialog (§6): `You owe Grimbold 45 gold. Pay before you leave?`
-    (yes pays, and the player is free to go; no asks the next question), or without the gold
-    `You owe Grimbold 78 gold and cannot pay it.` and then `Leave without paying? Grimbold will
-    call it theft.` (yes steps out, stealing; no stays). Esc stays, and a held movement key
-    stops at the shop's edge, so theft is always the player's choice. Unpaid goods cannot be shot or thrown ("You have not paid
+    ("\"You will pay for that!\" shouts Grimbold."). A step out that is not a way out asks first,
+    in the dialog: `You owe Grimbold 47 gold. Leave this way without paying, and Grimbold will
+    call it theft.` with `Pay 47 gold and leave` (accept, with the gold), `Leave without paying`
+    (plain: the step, theft), and `Stay` (cancel), so theft is always the player's choice.
+    Unpaid goods cannot be shot or thrown ("You have not paid
     for a dagger (c)."). A keeper's death abandons its shop (`ShopStatus::Abandoned`): what lies
     there is free to take, and its purse falls with it. Witnesses, pacifying a keeper, and the
     steal skill come later.
@@ -1455,7 +1476,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
     keeper is spawned there from `[keeper]`, and the level places the goods like any objects.
     Vaults have none.
   - **State**: each level state keeps its shops (`LevelState::shops`: the kind, the keeper's
-    actor id and name, the floor, the post, what the player owes, and the status; saved and
+    actor id and name, the floor, the post, the ways out, what the player owes, and the status; saved and
     hashed, format version 30). Prices are not saved: they follow from the data and the player.
   - **What the player perceives** (`PerceptionView::shop_at`, `shop_here`, `price_tag`,
     `unpaid`, `owed_on_leaving`, `sale`, `own_gold`): an open shop's sign, its keeper's name, its
@@ -2437,7 +2458,7 @@ cargo xtask golden [--update]                             # compare golden scree
   character `{race, gender, class}` (left out for a run without one; a replay without it starts
   as the scenario's character, so older replays still load). Actions use a text
   syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
-  pickup pickup:ac drop drop:b sell:b pay equip:body:b remove:body bash:E fire:12,5
+  pickup pickup:ac drop drop:b sell:b pay pay:W equip:body:b remove:body bash:E fire:12,5
   throw:c:12,5 dig:E vision:darkvision skip:1h weather:rain stance:coward effect:fireball@12,5
   effect:lightning_bolt@3,4>12,4 afflict:bleeding`; `bash:DIR` bashes with the held shield that
   way, `dig:DIR` digs toward a direction until the wall gives way or something interrupts;
@@ -2449,7 +2470,7 @@ cargo xtask golden [--update]                             # compare golden scree
   and only says so in the message log;
   durations are a whole number with `s`, `m`, or `h`, a rest at most `24h`; letters name stacks
   of the pile or the inventory, `a` first, and without letters `pickup`, `drop`, and `sell`
-  take everything; `sell` sells to the shop the player stands in, `pay` pays it (§7 "Shops"); `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT (a slot id of
+  take everything; `sell` sells to the shop the player stands in, `pay` pays it, and `pay:DIR` pays and steps out that way (§7 "Shops"); `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT (a slot id of
   `data/slots.toml`) and `remove:SLOT` takes off what is there; the dev weather
   override takes `clear`, `overcast`, `rain`, or `heavy`; the dev `afflict:ID` gives the player a
   degree more of status ID (`data/status.toml`); in scripts, `ACTION*N` repeats an
@@ -2511,7 +2532,10 @@ cargo xtask golden [--update]                             # compare golden scree
   time, glyph animations show that moment and motion (slides, camera) completes instantly.
 - `--fire` (dev) starts the run aiming the readied missile weapon, as `f` would, so captures show
   the targeting line (golden manifest entries pass it with `args`); `--look X,Y` (dev) starts in
-  look mode with the cursor on level cell (X, Y), so captures show what look mode says there.
+  look mode with the cursor on level cell (X, Y), so captures show what look mode says there;
+  `--keys "KEYS"` (dev) presses keys at startup, after any replay, as if typed, so captures show
+  what they open (the shop's dialogs: `--keys h`, `--keys "d b Enter"`); `--screen dialog`
+  opens the quit dialog.
 - Dev builds add in-game commands: switch vision profile (`F3`), reveal map (`F2`, ground truth,
   marked as dev-only on screen), toggle debug overlays (light values `F4`; line of sight and memory
   later), save and load named snapshots (`F5`/`F9`), skip an hour (`F6`, recorded as `skip:1h`),

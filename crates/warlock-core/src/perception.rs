@@ -1099,6 +1099,12 @@ impl<'a> ShopView<'a> {
         self.shop.contains(p)
     }
 
+    /// Whether `p` is one of its ways out (its door, in plain sight): a step out there owing
+    /// anything is turned back, any other way out is theft.
+    pub fn is_exit(&self, p: Pos) -> bool {
+        self.shop.is_exit(p)
+    }
+
     /// What it asks for `stack`, if it is for sale (worth something, not the currency).
     pub fn price(&self, stack: Stack) -> Option<u32> {
         let price = (self.shops).price(self.content, self.shop.kind, stack, self.favour);
@@ -1176,7 +1182,8 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// What the player owes, and to whom, if a step onto `to` leaves the open shop they stand in
-    /// (onto ground they know is walkable): leaving then is theft, so presentation asks first.
+    /// (onto ground they know is walkable): by a way out ([`ShopView::is_exit`]) the keeper turns
+    /// them back, any other way is theft, so presentation asks first.
     pub fn owed_on_leaving(&self, to: Pos) -> Option<(ShopView<'a>, u32)> {
         let view = self.shop_here()?;
         let walkable = match self.cell(to) {

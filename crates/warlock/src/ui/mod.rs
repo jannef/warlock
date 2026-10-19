@@ -22,10 +22,10 @@
 mod blood;
 mod character_screen;
 mod chargen_screen;
-mod confirm_screen;
 mod controls_screen;
 mod death_screen;
 mod dev;
+mod dialog_screen;
 mod effects;
 mod equipment_screen;
 mod files_screen;
@@ -46,8 +46,8 @@ mod spells;
 mod target;
 mod weapon_skills_screen;
 
-pub use confirm_screen::Question;
-pub use menu::Press;
+pub use dialog_screen::Dialog;
+pub use menu::{Press, quit_dialog};
 pub use screens::{MenuChoice, ScreenAction, ScreenName, ScreenStack, Screens};
 
 pub use dev::DevOverlays;
