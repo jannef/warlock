@@ -12,8 +12,8 @@ and glyph-based effects — while every character stays crisp and readable.
 
 This is the engine and framework phase: creatures hunt you, fight, shoot, and die (spells are only
 announced so far), death is permanent, and there is no character progression yet. You walk a hand-made
-**showcase world** where each room demonstrates one capability, an arena where kobolds and giant
-rats fight, an ADOM-like **overworld** with day and night and weather, outdoor areas generated
+**showcase world** where each room demonstrates one capability (its creatures are peaceful), an
+arena where kobolds and giant rats fight (and you can join in), an ADOM-like **overworld** with day and night and weather, outdoor areas generated
 from it, a vast lit cavern, and procedurally generated dungeon levels.
 
 ## What's in it
@@ -57,6 +57,10 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   ADOM-style with a cursor and a faint line of fire, watch the arrow fly, and pick it up where it
   fell. A flaming arrow flies burning and lights the dark where it lands until it burns out:
   shoot one into the dark to see what waits there (and be seen).
+- **Burden** — everything you carry weighs on you: past a third of what your Strength and
+  Toughness can bear you are burdened, then strained, then overloaded. Every action takes longer,
+  armour-like caps keep your Dexterity from helping your Defence, and your footsteps get louder.
+  Dwarves shrug off the first level. The inventory shows where the thresholds lie.
 - **Stats** — Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
   D&D, for you and every creature; a character screen shows your own. Strength, Dexterity, and
   Toughness count in a fight; the rest do nothing yet.
