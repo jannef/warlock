@@ -27,6 +27,7 @@ use super::chargen_screen::{ChoiceScreen, Draft, Picks, Step, SummaryScreen};
 use super::controls_screen::ControlsScreen;
 use super::death_screen::DeathScreen;
 use super::equipment_screen::{EquipmentScreen, ItemScreen};
+use super::info_tabs;
 use super::menu::{MainMenu, Press};
 use super::motion::Motion;
 use super::new_run_screen::NewRunScreen;
@@ -139,6 +140,8 @@ pub enum ScreenAction {
     Close,
     /// Open a screen on top.
     Open(ScreenName),
+    /// Close this screen and open another in its place (an info screen's page number).
+    Replace(ScreenName),
     /// Close screens until this one is on top (as it was left).
     Return(ScreenName),
     Choose(MenuChoice),
@@ -339,6 +342,14 @@ impl ScreenStack {
                 ScreenAction::Stay
             }
         };
+        if !press.repeat
+            && let Some(screen) = self.screens.last()
+            && info_tabs::is_page(screen.name())
+            && let Some(action) = info_tabs::switch(screen.name(), press, bindings)
+        {
+            self.notice = None;
+            return action;
+        }
         let action = match self.screens.last_mut() {
             None => ScreenAction::Stay,
             Some(Screen::Menu(menu)) => menu.handle(press),
@@ -427,6 +438,13 @@ impl Screens<'_> {
         let (content, has_save) = (&self.content.0, self.store.has_save());
         let screen = Screen::new(name, content, has_save, view.as_ref(), &draft, slot);
         self.stack.screens.push(screen);
+    }
+
+    /// Replaces the top screen with screen `name`: the same stack depth, so closing it returns
+    /// to where the one it replaced was opened from.
+    pub fn replace(&mut self, name: ScreenName) {
+        self.stack.close();
+        self.open(name);
     }
 }
 
@@ -1184,6 +1202,42 @@ mod tests {
         assert!(names(&app).is_empty());
         frame(&mut app, &[at, ESC]);
         assert!(names(&app).is_empty(), "Esc closes it rather than pausing");
+        assert!(actions(&app).is_empty());
+    }
+
+    #[test]
+    fn info_screen_digits_replace_the_page_and_esc_returns_to_play() {
+        let mut app = app(true);
+        let digit = |n: u8| {
+            let code = [KeyCode::Digit1, KeyCode::Digit2, KeyCode::Digit3][usize::from(n) - 1];
+            (code, ["1", "2", "3"][usize::from(n) - 1])
+        };
+        // Digits do nothing in play.
+        frame(&mut app, &[digit(2)]);
+        assert!(names(&app).is_empty());
+        assert!(actions(&app).is_empty());
+        frame(&mut app, &[(KeyCode::Digit2, "@")]);
+        assert_eq!(names(&app), [ScreenName::Character]);
+        frame(&mut app, &[digit(2)]);
+        assert_eq!(names(&app), [ScreenName::Inventory], "replaced, not pushed");
+        frame(&mut app, &[digit(3)]);
+        assert_eq!(names(&app), [ScreenName::Equipment]);
+        // Its own page, a page that does not exist, and the numpad change nothing.
+        frame(
+            &mut app,
+            &[digit(3), (KeyCode::Digit9, "9"), (KeyCode::Numpad1, "1")],
+        );
+        assert_eq!(names(&app), [ScreenName::Equipment]);
+        // A sub-step is not a page: its digits are its own.
+        frame(&mut app, &[(KeyCode::KeyC, "c")]);
+        assert_eq!(names(&app), [ScreenName::Equipment, ScreenName::EquipItem]);
+        frame(&mut app, &[digit(1)]);
+        assert_eq!(names(&app), [ScreenName::Equipment, ScreenName::EquipItem]);
+        frame(&mut app, &[ESC, digit(1), digit(2), ESC]);
+        assert!(
+            names(&app).is_empty(),
+            "Esc returns to where the first was opened"
+        );
         assert!(actions(&app).is_empty());
     }
 

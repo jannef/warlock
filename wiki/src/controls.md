@@ -22,6 +22,8 @@ authoritative: it is generated from your current key bindings.
 | Equipment (wear and wield) | `e` |
 | Character (your stats and weight) | `@` |
 | Skills | `S` |
+| Info page 1 to 9 (while an info screen is open) | `1` to `9` |
+| Next / previous info page (wraps) | `Tab` or `PageDown` / `Shift`+`Tab` or `PageUp` |
 | Rest | `R` |
 | Look around | `x` |
 | Fire your missile weapon | `f`, then aim (see below) |
@@ -62,6 +64,8 @@ describes what you know about the cell under it:
   (hostile, badly wounded), wielding a spear, on stone floor.";
 - what you remember there, if you cannot see it now: the terrain and the objects you saw on it;
 - for stairs and the places on the overworld, where they lead;
+- the [special room](special-rooms.md) the ground lies in, once you have been inside it, as in
+  "A stone floor in an echoing hall.";
 - a sound you heard there this turn ([Hearing](hearing.md));
 - or "You don't know what is there."
 
@@ -143,6 +147,21 @@ skills.
 `S` lists the [skills](skills.md) you are trained in, each with its value and a small meter of how
 near it is to its next point. The arrow keys pick a skill to read what it is about. It takes no
 time; press `S` or `Esc` to close it.
+
+## Info pages
+
+The character screen, the inventory, the equipment screen, and the skills screen are numbered pages of one set,
+shown on the bottom edge of each as `1 Character · 2 Inventory · 3 Equipment · 4 Skills`, the one you are on
+highlighted. While one of them is open, `1` to `9` switch to the page with that number (the row
+of number keys above the letters; the numpad still moves), and `Tab` / `Shift`+`Tab` go to the
+next or previous page, wrapping around. The page replaces the one you were on, so `Esc` closes it
+and takes you back to where you opened the first one, as if you had only ever opened that one.
+The number keys do nothing during play, and they keep their own meaning on a screen that is a
+step of a page, such as choosing what goes in a slot. Each page also keeps its own key (`@`,
+`i`, `e`, `S`) to open it and to close it. All of these keys can be rebound in the Controls screen, as
+"Info page 1" to "Info page 9", "Next info page", and "Previous info page"; they are separate
+from the play keys, so `Tab` can be both "next target" while aiming and "next info page" on an
+info screen.
 
 ## Death
 

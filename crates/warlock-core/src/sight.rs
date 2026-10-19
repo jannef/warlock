@@ -4,7 +4,8 @@
 //! have it (see [`crate::perception`]): in line of sight (symmetric shadowcasting from the
 //! creature's cell) within its sight radius, **and** lit at least to its eye's threshold by the
 //! same gameplay light the player sees (ambient, sky, every source, the sun and the moons through
-//! the weather's clouds, bounce) or within its darkvision radius. On the overworld, sight is at map
+//! the weather's clouds, bounce, and what a special room does to it: a shadowed room's darkness, a
+//! sanctuary's glow) or within its darkvision radius. On the overworld, sight is at map
 //! scale: line of sight within the daylight (and moonlight, and rain) radius and the creature's
 //! own sight, whatever the light. An actor on an opaque cell is seen
 //! only within darkvision (off the overworld; no such terrain exists there yet).
@@ -123,8 +124,9 @@ pub(crate) fn sees(
 
 /// The light `eye` perceives on transparent cell `p` of the current level: exactly the light the
 /// player's perception finds there with the same eye (ambient light, the overworld's night light,
-/// sky light, bounce light, every source's contribution, and the sun's). Bounce light needs the
-/// direct light within [`BOUNCE_STEPS`] of the cell, so the sources and the sunlight of that
+/// sky light, bounce light, a special room's glow, every source's contribution, and the sun's,
+/// each as a special room there leaves it: a shadowed room keeps part of each). Bounce light needs
+/// the direct light within [`BOUNCE_STEPS`] of the cell, so the sources and the sunlight of that
 /// small area are evaluated (source masks come from, and go into, `lights`). Without `bounce`,
 /// the same light but for bounce light: no more than it, and much cheaper.
 pub(crate) fn light(
@@ -187,6 +189,7 @@ pub(crate) fn light(
     } else {
         Light::DARK
     };
+    let bounce = bounce.saturating_add(eye.perceive(level.room_glow(content, p)));
     let indirect = if !glow.is_dark() && exposed(p) {
         bounce.saturating_add(glow)
     } else {
@@ -194,15 +197,16 @@ pub(crate) fn light(
     };
 
     // In the order the player's perception adds them: base light, the sources, the sun and the
-    // moons.
-    let mut light = ambient.saturating_add(indirect);
+    // moons, each as a special room there leaves it (a shadowed room keeps part of each).
+    let shade = |light: Light| level.room_shade(content, p, light);
+    let mut light = shade(ambient.saturating_add(indirect));
     for (_, mask) in &near {
         if let Some(c) = mask.at(p) {
-            light = light.saturating_add(eye.perceive(c));
+            light = light.saturating_add(shade(eye.perceive(c)));
         }
     }
     for beam in &beams {
-        light = light.saturating_add(eye.perceive(beam.at(p)));
+        light = light.saturating_add(shade(eye.perceive(beam.at(p))));
     }
     light
 }

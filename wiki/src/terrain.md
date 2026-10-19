@@ -29,6 +29,10 @@ either takes twice as long as a step on dry ground, and splashes loudly. Running
 direction you can see in the ripples, and foams where it meets a bank or rock. The current does
 not push you yet. Water glints with nearby light.
 
+Shallow water, ankle-deep over a stone floor, covers the floor of a flooded room (see
+[Special rooms](special-rooms.md)). It is paler than a pool. Wading through it is slower than
+walking, though quicker than wading a pool, and it splashes just as loudly.
+
 ## Plants and rock outdoors
 
 Trees, pines, dead trees, boulders, crags (rock outcrops), and standing stones block your way,

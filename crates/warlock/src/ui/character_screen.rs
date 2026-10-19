@@ -126,6 +126,7 @@ impl CharacterScreen {
         let thresholds = (self.load.as_ref()).map_or(Vec::new(), |l| thresholds(l, width));
         let h = Stat::COUNT as i32 + 14 + identity_rows + thresholds.len() as i32;
         let panel = Panel::new(console, " Character ", WIDTH, h);
+        super::info_tabs::draw_tabs(console, &panel, bindings, super::ScreenName::Character);
         let x = panel.inner_x();
         // Rows from the footer's down would draw over it, or the frame, of a panel cut short.
         let fits = |y: i32| y < panel.y + panel.h - 2;

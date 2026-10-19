@@ -11,7 +11,8 @@
 //! action after that is refused, and the app shows the death screen and deletes the save.
 //!
 //! Hit points come back with game time, one per [`combat::regen_seconds`] of it, for every actor
-//! on the current level ([`World::regenerate`], as the scheduler moves the clock).
+//! on the current level ([`World::regenerate`], as the scheduler moves the clock), at the pace
+//! [`World::regen_rate`] decides (three times as fast in a sanctuary).
 //!
 //! Messages (spec §6 "Attacks") never carry numbers: "The kobold hits you.", "…hits you hard!" for
 //! a critical, "You block the kobold's spear with your shield.", "The giant rat dies." The
@@ -409,11 +410,26 @@ impl World {
         self.fallen.push(actor);
     }
 
+    /// How fast actor `id` gets hit points back, in percent of the pace of its Toughness
+    /// ([`combat::regen_seconds`]): the one place that decides it. A special room it stands in
+    /// may speed it up (a sanctuary, spec §7 "Special rooms"); other effects on the actor will
+    /// scale it here too.
+    pub(super) fn regen_rate(&self, id: ActorId) -> u32 {
+        let Some(actor) = self.state.actors.get(&id) else {
+            return 100;
+        };
+        let room = (self.state.levels.get(&actor.level))
+            .and_then(|level| level.room_effect_at(&self.content, actor.pos));
+        room.map_or(100, |effect| u32::from(effect.regen))
+    }
+
     /// `seconds` of game time pass for actors `ids` (on the current level, alive): each hurt one
-    /// gets a hit point back for every [`combat::regen_seconds`] of its Toughness, the seconds
-    /// left over counting toward the next.
+    /// gets a hit point back for every [`combat::regen_seconds`] of its Toughness (at its
+    /// [`World::regen_rate`]: three times as often in a sanctuary), the seconds left over
+    /// counting toward the next.
     pub(super) fn regenerate(&mut self, ids: impl Iterator<Item = ActorId>, seconds: u64) {
         for id in ids {
+            let rate = u64::from(self.regen_rate(id).max(1));
             let Some(actor) = self.state.actors.get_mut(&id) else {
                 continue;
             };
@@ -422,7 +438,8 @@ impl World {
                 actor.regen = 0;
                 continue;
             }
-            let every = u64::from(combat::regen_seconds(actor.stats.score(Stat::Toughness)));
+            let pace = u64::from(combat::regen_seconds(actor.stats.score(Stat::Toughness)));
+            let every = (pace * 100 / rate).max(1);
             let banked = u64::from(actor.regen).saturating_add(seconds);
             let gained = i32::try_from(banked / every).unwrap_or(i32::MAX);
             actor.hp = actor.hp.saturating_add(gained).min(max);
