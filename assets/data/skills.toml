@@ -58,6 +58,8 @@ id = "athletics"
 name = "Athletics"
 description = "Running, jumping, climbing, and kicking: strength put to use."
 kind = "rules"
+# Pending: kicking doors in (#130) and climbing out of pits (#128) will read it (a benefit and a
+# mark rule here then).
 
 [[skill]]
 id = "balance"
@@ -97,6 +99,7 @@ id = "escape_artist"
 name = "Escape artist"
 description = "Slipping out of bonds, grabs, and tight places."
 kind = "rules"
+# Pending: getting out of pits (#128) will read it (a benefit and a mark rule here then).
 
 [[skill]]
 id = "handle_animal"

@@ -22,6 +22,12 @@
 //!
 //! What the player sees: their own trained skills with their values, and a coarse sense of
 //! progress toward the next point ([`progress`]). Never a benefit's number, a mark, or a chance.
+//!
+//! **Pending hooks** (extension points for rules not on main yet): athletics will add to the
+//! Strength-based chance of kicking a door in (#130) and shorten the turns stuck in a pit (#128),
+//! and escape artist will take a turn off being stuck per 33 points (#128). Each becomes one more
+//! [`Effect`] (and a [`Use`] for its marks: a kick, a climb) read in that one place, with its
+//! numbers in `data/skills.toml`; until then those skills are trained and shown but give nothing.
 
 use crate::content::Content;
 use crate::dice::Dice;
