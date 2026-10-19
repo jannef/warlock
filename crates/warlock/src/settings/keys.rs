@@ -66,9 +66,9 @@ const PAGE_IDS: [&str; 9] = [
 ];
 
 /// Rebindable commands with no key by default: abilities (`warlock_core::ability`), which the
-/// abilities menu (#156) lists instead of a key each, and `f` (fire), which `t` covers. The
-/// player may bind one in Controls.
-pub const UNBOUND: &[KeyCommand] = &[KeyCommand::Bash, KeyCommand::Fire];
+/// abilities menu (#156) lists instead of a key each; `f` (fire), which `t` covers; and Quit,
+/// done from the pause menu. The player may bind one in Controls.
+pub const UNBOUND: &[KeyCommand] = &[KeyCommand::Bash, KeyCommand::Fire, KeyCommand::Quit];
 
 /// Physical keys a command may be bound to.
 const CODES: &[KeyCode] = &[
@@ -327,7 +327,8 @@ impl Bindings {
         }
     }
 
-    /// The settings-file form: command id to key spellings.
+    /// The settings-file form: command id to key spellings (a command with no key, such as
+    /// Quit or an ability by default, is left out, and reads back as unbound).
     pub fn to_map(&self) -> BTreeMap<String, Vec<String>> {
         REBINDABLE
             .iter()
@@ -335,7 +336,6 @@ impl Bindings {
             .filter_map(|c| {
                 let id = c.id()?;
                 let keys: Vec<String> = self.keys_of(c).iter().map(|k| k.to_text()).collect();
-                // An unbound ability is left out, as it is by default.
                 (!keys.is_empty()).then(|| (id.to_string(), keys))
             })
             .collect()

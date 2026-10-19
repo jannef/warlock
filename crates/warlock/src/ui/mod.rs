@@ -21,6 +21,7 @@
 
 mod character_screen;
 mod chargen_screen;
+mod confirm_screen;
 mod controls_screen;
 mod death_screen;
 mod dev;

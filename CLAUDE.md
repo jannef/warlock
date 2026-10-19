@@ -139,7 +139,7 @@ milliseconds on the vast level) and the `visibilitychange`/`pagehide` listeners 
 warning; failed writes (quota) are messages, never panics. Only the `web-sys` features in
 `crates/warlock/Cargo.toml` are enabled (size).
 
-Saves: `Q` saves and quits (closing the window saves too); the game autosaves every 50 turns and on
+Saves: Quit in the pause menu saves and quits (closing the window saves too; the `Q` key is unbound by default, rebindable); the game autosaves every 50 turns and on
 level change to `run.sav` in the platform data dir (`paths.rs`, app name "warlock"; macOS
 `~/Library/Application Support/warlock`). On startup an existing save is resumed unless `--new`, `--capture`,
 `--replay`, or `--record` (replays and recordings always start a fresh run). F5 / F9 write / load `snapshots/quick.sav`. An unreadable save is renamed `run.sav.bad`,
@@ -149,7 +149,7 @@ lights, levels, objects, equipment slots, skills, weapon skills, or dungeon bran
 existing saves.
 **Permadeath**: when the player dies, `screens::on_death` deletes `run.sav`
 (`SaveStore::delete_run`) and opens the death screen; `SaveStore::save_run` never writes a dead
-run (it deletes instead), so autosave, `Q`, and closing the window cannot bring it back, and the
+run (it deletes instead), so autosave, quitting, and closing the window cannot bring it back, and the
 web build parks no state for the page being hidden.
 
 Settings (`crates/warlock/src/settings/`): `settings.toml` in the platform config dir (macOS
@@ -200,6 +200,13 @@ to open, read keys for, or draw one:
   dropped. Held-key repeats never open, close, choose, or act.
 - **Draw**: `ui::draw` is the one system that writes the UI console: when anything it shows
   changed, it clears the console, draws the gameplay UI if a run exists, then the top screen.
+- **Confirm** (`ui/confirm_screen.rs`): a reusable Yes/No dialog, No selected. A screen (or gameplay)
+  answers `ScreenAction::Confirm(question, MenuChoice)`; the dialog pops itself on Yes and the
+  choice is applied as usual, `n`/Esc/Enter-on-No close it. Every quit path (pause Quit and Save and
+  quit to menu, main menu Quit, a bound `KeyCommand::Quit`) goes through it. `y`/`n` are fixed (they
+  are movement keys in play), like the rest prompt's letters. `--screen confirm` shows it. On
+  wasm, quit saves then reloads the page (`storage::web::reload`; `AppExit` also reloads), and the
+  main menu has no Quit.
 - **Info pages** (`ui/info_tabs.rs`): the screens about the player (Character, Inventory,
   Equipment, Skills) are an ordered group, `PAGES`. While one is the top screen, the page keys replace
   it (`ScreenAction::Replace` -> `Screens::replace`: the stack depth is unchanged, so Esc still

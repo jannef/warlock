@@ -800,9 +800,14 @@ rate or animation.
   (`t`), throw from the pack (`T`), fire (`f`, unbound by default), more aggressive / more
   defensive combat stance (`+` / `-`; §8 "Stances"), bash with a shield (an ability, below: no
   key by default; bound in Controls, it asks for a direction, like opening a door), next target
-  (`Tab`, while aiming), use a tool (`U`, then a direction: dig), help, save and quit (`Q`). Free
-  actions (look, help, the inventory, looking at the equipment screen, the character screen, the
-  Skills screen, the weapon skills screen, menus, vision switch, a change of stance) do not
+  (`Tab`, while aiming), use a tool (`U`, then a direction: dig), help, save and quit
+  (rebindable, unbound by default: quitting is done from the pause menu). Every way to quit (the
+  pause menu's Save and quit to menu and Quit, the main menu's Quit, a bound quick key) asks
+  first, in a Yes/No dialog with No selected (`y` yes; `n`, Esc no; closing the window or the tab
+  does not ask). On the web Quit saves and reloads the page to a fresh main menu (a page cannot
+  close itself), which has no Quit item. Free actions (look, help, the inventory, looking at the
+  equipment screen, the character screen, the Skills screen, the weapon skills screen, menus,
+  vision switch, a change of stance) do not
   advance time.
 - **Objects** (M11) lie in piles on cells, the top first: the map shows the top object's glyph
   (§4.2), and dropped objects go on top. Stepping onto a pile says what lies there: `You see here
@@ -1469,7 +1474,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   actor's combat stance (§8 "Stances"; format version 18), and a dev weather override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
-  platform data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
+  platform data directory. quitting from the pause menu saves (closing the window saves too), autosave runs every 50 turns
   and on level change, and a save that cannot be read is renamed `run.sav.bad`, never deleted, while
   a new run starts. Starting resumes the save unless `--new` is given. **Permadeath**: when the
   player dies the save is deleted, and a run that has ended is never saved again (every trigger
@@ -1478,7 +1483,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   `--dev`).
   On the web the files are `localStorage` keys `warlock/run.sav`, `warlock/run.sav.bad`,
   `warlock/snapshots/quick.sav`, and `warlock/settings.toml`, the save bytes base64-encoded, with the
-  same envelope and checks. The same triggers save (autosave, level change, `Q`), and so does the page
+  same envelope and checks. The same triggers save (autosave, level change, quit), and so does the page
   being hidden or closed (`visibilitychange` to hidden, `pagehide`); main menu Continue works after a
   reload. Storage that is unavailable (some privacy modes) turns saving off with a warning in the log;
   a write that fails (quota) shows a message in the message line; neither panics.

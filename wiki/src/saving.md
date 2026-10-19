@@ -8,8 +8,8 @@ and a run that has ended is never saved again: there is nothing to continue.
 
 ## When the game saves
 
-- When you press `Q` (save and quit), and when you close the window.
-- When you choose **Save and quit to menu** or **Quit** in the pause menu (`Esc`).
+- When you close the window (no question asked).
+- When you choose **Save and quit to menu** or **Quit** in the pause menu (`Esc`) and answer Yes to the question that follows. Quitting always asks first: `y` or Enter on Yes confirms; `n`, `Esc`, or Enter on the default No cancels. You can bind a quick "Save and quit" key in the Controls screen; it asks too.
 - Automatically every 50 turns.
 - Automatically when you change level.
 
