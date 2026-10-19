@@ -29,6 +29,7 @@
   - [Ranged combat](ranged.md)
   - [Ammunition](ammunition.md)
   - [Status effects](status-effects.md)
+  - [Diseases](diseases.md)
   - [Healing](healing.md)
 - [Creatures](creatures.md)
 - [Your lantern](lantern.md)

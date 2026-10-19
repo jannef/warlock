@@ -1,7 +1,7 @@
 //! Player actions and the events a turn produces.
 
 use crate::combat::Strike;
-use crate::content::{ActionKind, ObjectId, StatusId};
+use crate::content::{ActionKind, DiseaseId, ObjectId, StatusId};
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
 use crate::weather::Weather;
@@ -67,6 +67,10 @@ pub enum Action {
     /// `data/status.toml`), as a wound or a bite would give it: for trying statuses out and for
     /// captures. Takes no game time; recorded in replays.
     Afflict(String),
+    /// Dev command: the player catches a disease (an id in `data/diseases.toml`) as if they
+    /// had failed to resist it: it incubates, then shows. Takes no game time; recorded in
+    /// replays.
+    Infect(String),
 }
 
 /// How long to rest.
@@ -224,6 +228,26 @@ pub enum Event {
         status: StatusId,
         began: bool,
     },
+    /// A disease of the player's showed itself, went badly at a progression, or left them (spec
+    /// §8 "Diseases"). Only the player's own, which they always perceive: said in the message
+    /// line in the disease's own words (its `onset`, a symptom, `recovered`).
+    Disease {
+        actor: ActorId,
+        disease: DiseaseId,
+        news: DiseaseNews,
+    },
+}
+
+/// What became of a disease ([`Event::Disease`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DiseaseNews {
+    /// Its incubation is over: it shows.
+    Onset,
+    /// Its progression number `n` (1 for the first) went badly: a symptom.
+    Worse(u16),
+    /// It is gone.
+    Recovered,
 }
 
 /// How a missile's flight ended, on the last cell of its path.
@@ -279,7 +303,7 @@ pub struct Outcome {
 
 /// Text syntax for scripting: `move:E wait open:E close:W ascend descend lantern rest:1h
 /// rest:dawn rest:dusk pickup pickup:ac drop:b equip:body:b remove:body fire:12,5 throw:c:12,5
-/// vision:ID skip:1h weather:rain afflict:bleeding` (durations: `30s`, `10m`, `2h`; letters
+/// vision:ID skip:1h weather:rain afflict:bleeding infect:filth_fever` (durations: `30s`, `10m`, `2h`; letters
 /// name stacks, `a`
 /// first; `pickup` and `drop` without letters take everything; `equip:SLOT:LETTER` puts
 /// inventory stack LETTER on in slot SLOT, `remove:SLOT` takes off what is there; `fire:X,Y`
@@ -318,6 +342,7 @@ impl fmt::Display for Action {
             Action::SkipTime(d) => write!(f, "skip:{d}"),
             Action::SetWeather(w) => write!(f, "weather:{}", w.id()),
             Action::Afflict(id) => write!(f, "afflict:{id}"),
+            Action::Infect(id) => write!(f, "infect:{id}"),
         }
     }
 }
@@ -428,11 +453,18 @@ impl FromStr for Action {
                 }
                 _ => Err("`afflict` needs a status id, e.g. `afflict:bleeding`".into()),
             },
+            "infect" => match s.split_once(':').map(|(_, id)| id) {
+                Some(id) if !id.is_empty() && !id.contains(':') => {
+                    Ok(Action::Infect(id.to_string()))
+                }
+                _ => Err("`infect` needs a disease id, e.g. `infect:filth_fever`".into()),
+            },
             _ => Err(format!(
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
                  descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
                  equip:SLOT:LETTER, remove:SLOT, fire:X,Y, throw:LETTER:X,Y, vision:ID, \
-                 skip:DURATION, weather:clear|overcast|rain|heavy, afflict:STATUS)"
+                 skip:DURATION, weather:clear|overcast|rain|heavy, afflict:STATUS, \
+                 infect:DISEASE)"
             )),
         }
     }
@@ -527,6 +559,8 @@ mod tests {
             },
             Action::Afflict("bleeding".into()),
             Action::Afflict("Odd_Case".into()),
+            Action::Infect("filth_fever".into()),
+            Action::Infect("Odd_Case".into()),
         ];
         all.extend(Weather::ALL.map(Action::SetWeather));
         for d in Dir::ALL {
@@ -645,6 +679,9 @@ mod tests {
             "afflict",
             "afflict:",
             "afflict:a:b",
+            "infect",
+            "infect:",
+            "infect:a:b",
             "pickup:",
             "pickup:a1",
             "drop:A-",

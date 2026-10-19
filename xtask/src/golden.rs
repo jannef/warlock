@@ -108,12 +108,13 @@ fn make_replay(
     let text = entry.actions.as_deref().unwrap_or("");
     for action in parse_actions(text)? {
         let outcome = world.apply(&action);
-        // Switching vision, setting the weather, and the dev status effect are free by design;
-        // anything else that takes no time and no turn was refused. (A turn can pass in no time:
-        // a creature quick off the mark may kill the player at the very second they acted.)
+        // Switching vision, setting the weather, and the dev status effect and infection are free
+        // by design; anything else that takes no time and no turn was refused. (A turn can pass
+        // in no time: a creature quick off the mark may kill the player at the very second they
+        // acted.)
         let free = matches!(
             action,
-            Action::SetVision(_) | Action::SetWeather(_) | Action::Afflict(_)
+            Action::SetVision(_) | Action::SetWeather(_) | Action::Afflict(_) | Action::Infect(_)
         );
         if outcome.elapsed.is_zero() && !outcome.took_turn && !free {
             return Err(format!(

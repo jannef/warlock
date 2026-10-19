@@ -41,14 +41,19 @@ Build the engine and framework, not the game. Everything built is production qua
 - Status effects and passive healing (M24): a data-driven framework of effects on actors that
   tick and wear off in game time, stack, can be cured, lower stats, slow healing, and can kill;
   bleeding from big hits and confirmed criticals, poison from a giant rat's bite; hit points come
-  back twice as fast while resting (§8 "Status effects", "Healing")
+  back twice as fast while resting (§8 "Status effects", "Healing"). Diseases (M24, #139): one
+  umbrella status, Diseased, over six pathologies in the D&D 3.5 spirit that are caught by a
+  failed check, incubate unseen, progress daily with a check each (a loss costs stat damage),
+  are shaken off by two checks won in a row (grave rot never, and it can kill), and slow healing;
+  stat damage mends a point a day once they are gone (§8 "Checks", "Diseases")
 - Moons with phases and moonlight, weather starting with rain (M12)
 - Action costs: what an actor does and its speed decide how long it takes (M13)
 - Stats (M14): Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
   D&D, with D&D 3.5 modifiers and ADOM-like potentials that the player never sees; every actor
   has them, and the player sees their own scores on a character screen (§8 "Stats"). Combat uses
-  Strength, Dexterity, and Toughness (§8 "Combat"), and so does burden; status effects may lower
-  them (§8 "Status effects"); no other rule uses stats yet
+  Strength, Dexterity, and Toughness (§8 "Combat"), and so does burden; status effects and stat
+  damage may lower them (§8 "Status effects", "Diseases"); diseases are resisted with checks of
+  Toughness or Willpower (§8 "Checks"); no other rule uses stats yet
 - Experience (M21): creatures have a level and an XP value; the player's own kills (melee,
   shots, throws) earn XP, scaled down for monsters below the player's level as in World of
   Warcraft, and levels (to 50) grow the hit points up to level 20 (§8 "Experience")
@@ -775,13 +780,15 @@ rate or animation.
   creature's, "You"), their race, gender, and class (`Race    Dwarf`; "other" with the stat it
   raised), their age today, birthday, and birth sign as on the summary (when the run has a
   character), their score in each stat (§8 "Stats") in display order with its abbreviation and
-  full name (`St  Strength  12`; a score a status effect lowers shows lowered, in a muted red;
-  §8 "Status effects"), their level and experience (`Lv  Level  3`, `XP  Experience
+  full name (`St  Strength  12`; a score a status effect or stat damage lowers shows lowered, in
+  a muted red; §8 "Status effects", "Diseases"), their level and experience (`Lv  Level  3`, `XP  Experience
   85 / 120`, the total alone at the highest level; §8 "Experience"), their hit points (`HP  Hit
   points  18/24`) and Defence
   (`Dv  Defence  15`; the total only, as its Dexterity part would give away a modifier; §8
   "Combat"), the status effects they suffer, by name, when there are any (`Status  Bleeding,
-  Poisoned`; never how severe or for how long), their weight (their own plus what they carry, and their burden when they have one:
+  Poisoned`; never how severe or for how long), the diseases they know they have, by name, on a
+  row of their own below (`Diseased  Filth fever, red ache`; one that has not progressed yet is
+  only "Diseased"; never a timer or a check; §8 "Diseases"), their weight (their own plus what they carry, and their burden when they have one:
   `Weight 98.4 kg (you 70 kg, carrying 28.4 kg, burdened)`), and, dimmer, the weights at which
   their burden changes, as in the inventory (§8 "Burden"). The panel is 72 wide, so the birth and
   the thresholds take a line each. Never a modifier, a potential, or a to-hit, which the player
@@ -797,7 +804,8 @@ rate or animation.
 - **Death screen** (§8 "Combat"): when the player dies, the death screen opens over the run as it
   ended, in place of any other screen, and the run's save is deleted (permadeath): `Y O U   D I E
   D`, then who killed them ("Killed by a kobold", or "Killed by something you did not see" when
-  they did not see it), or the status effect that did (its `death` line: "Bled to death"), where
+  they did not see it), or the status effect that did (its `death` line: "Bled to death"; a
+  disease kills by Diseased: "Died of disease"), where
   (the level's name), when (the date and time), and after how many turns, and the level they
   had reached ("You had reached level 3."). It takes every key press; Enter or Esc returns to
   the main menu (no Continue: nothing is
@@ -815,11 +823,13 @@ rate or animation.
   `rest:dawn`, `rest:dusk`); any other command cancels. Resting is one action that passes turn
   after turn and stops early when a creature comes into view or a message is logged (§8 "Time"),
   such as an attack the player perceives (§8 "Combat"), a status effect beginning ("You feel
-  sick."), a sound that is news (§5 "Hearing"), or rain starting or growing heavier (§5
+  sick."), a disease showing or worsening ("You feel feverish.", "Fever wracks you."; §8
+  "Diseases"), a sound that is news (§5 "Hearing"), or rain starting or growing heavier (§5
   "Weather"), and when the player dies;
   a sound already known goes on without stopping it, and so does other news of the weather (the
-  rain easing or stopping, clouds gathering or parting) and a status effect ending ("The
-  bleeding stops."), which are logged all the same. Hit points come back twice as fast while
+  rain easing or stopping, clouds gathering or parting), a status effect ending ("The
+  bleeding stops."), and a disease leaving ("Your fever breaks."), which are logged all the
+  same. Hit points come back twice as fast while
   resting (§8 "Healing").
   It is a gameplay input mode like the open/close direction prompt, not a menu screen.
 - **Messages**: the last two show in the message line; the same text logged again in a row folds
@@ -842,7 +852,10 @@ rate or animation.
   message (and no event). Status effects (§8) are said as they begin and end for the player
   ("You are bleeding.", "The bleeding stops.", "You feel sick.", "The poison wears off."), right
   after the attack that caused them; a creature the player sees die of one dies in its words
-  ("The giant rat bleeds to death."). Moving into a hostile creature attacks it in melee ("You hit the
+  ("The giant rat bleeds to death."). The player's diseases speak for themselves (§8
+  "Diseases"): nothing is said as one is caught or incubates; its `onset` as it shows ("You feel
+  feverish."), a symptom at each progression that goes badly ("Fever wracks you."), and its
+  `recovered` as it leaves ("Your fever breaks."); Diseased itself says nothing. Moving into a hostile creature attacks it in melee ("You hit the
   giant rat.", "You miss something."; it takes a turn); into a neutral one stops ("The deer is
   in the way.", "Something is in the way."; no time passes).
 - **Targeting** (ADOM-like; `ui/target.rs`): `f` aims the readied missile weapon (with nothing
@@ -877,7 +890,8 @@ rate or animation.
   heard there ("You hear footsteps here.").
 - Screen layout: map viewport, message log, status panel (level, the player's hit points as
   `HP 18/24` (never below 0), the status effects they suffer by name, the most important first
-  (`Bleeding`, `Poisoned`; data order; §8 "Status effects"), their burden when they have one
+  (`Bleeding`, `Poisoned`, `Diseased`; data order; §8 "Status effects"; never which disease, §8
+  "Diseases"), their burden when they have one
   (`Burdened`, `Strained`, `Overloaded`; §8 "Burden"), their level as `Lv 3` (§8
   "Experience"; it goes after the burden and before the time and the date), region (on the
   overworld and in
@@ -980,15 +994,18 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   default 0; the player creature has none: race and class give the player's); `attack`, its
   natural attack, used when it wields no weapon (`{ damage = "1d4", name = "bite", verb = "bites"
   }`, with optional `threat`, `crit`, and `to_hit` as for weapons, and `on_hit`, the status
-  effects a hit with it may cause if the target lives: `[{ status = "poisoned", chance = 10,
-  severity = 2 }]`, the chance in percent (1 to 100) and the severity in degrees (1 to the
-  status's `max`; §8 "Status effects"); without one, bare hands: 1d3, "fist", "hits"); and
+  effects and diseases a hit with it may cause if the target lives: `[{ status = "poisoned",
+  chance = 10, severity = 2 }]`, the chance in percent (1 to 100) and the severity in degrees (1
+  to the status's `max`; §8 "Status effects"), or `{ disease = "filth_fever", chance = 10 }`
+  (exposure to the disease, which the target then resists with a check; §8 "Diseases"; never the
+  status diseases show as); without one, bare hands: 1d3, "fist", "hits"); and
   `natural`, its natural armour (`{ defence = 3, name = "shell" }`, 1 to 20, the Natural
   category of Defence; the name is said when it turns a blow). For experience (§8
   "Experience"): `level` (1 to 99, default 1) and `xp` (0 to 100000, default 0; the player
   creature has neither): the kobold 2/15, the kobold archer 3/25, the kobold shaman 4/40, the
   giant rat 1/5, the cave bat 1/3, the cave beetle 2/8, the deer 1/2. The giant rat and the
-  cave bat bite (1d4, 1d3; the rat's bite poisons one hit in ten, 2 degrees), the deer kicks
+  cave bat bite (1d4, 1d3; the rat's bite poisons one hit in ten, 2 degrees, and exposes to
+  filth fever one hit in ten), the deer kicks
   (1d4, "hoof"; `base_hp` 4), the cave beetle
   bites (1d3) and has a shell (3); kobolds fight with what they wield. For burden (§8
   "Burden"): `size`, a size in `data/sizes.toml` (default `medium`); the kobolds, the giant rat,
@@ -1192,9 +1209,39 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   the player sees dying of it: "bleeds to death"), `death` (the death screen's line: "Bled to
   death"). Built in: **bleeding** (`seen` "bleeding", max 5, a hit point every 40 s per degree,
   a degree eased a minute, no healing while it lasts, a big hit 1 degree and a critical 2, cured
-  by a bandage) and **poisoned** (max 10, a hit point every 2 minutes per degree, a degree eased
+  by a bandage), **poisoned** (max 10, a hit point every 2 minutes per degree, a degree eased
   every 2 minutes, healing at half the pace, Strength and Dexterity −1 from 4 degrees on; it does
-  not show on others).
+  not show on others), and **diseased** (what every disease shows as, `data/diseases.toml`'s
+  `status`: max 1, healing at half the pace, no words of its own, "succumbs to disease", "Died of
+  disease"). The status diseases show as may have no `tick`, `eases`, `wound`, or `cured_by`
+  (diseases give it and take it away), and no `on_hit` names it.
+- **Diseases** (`data/diseases.toml`, optional; without it nobody falls ill; §8 "Checks",
+  "Diseases"): `status` (the status every disease shows as, required with any disease:
+  `diseased`), then the `[[disease]]`s in file order: `id`, `name` (as the character screen
+  names it once known: `filth fever`), `difficulty` (what a check must reach to resist it, 1 to
+  50), `check` (the stat whose modifier the checks add, default `toughness`), `incubation` (days
+  from catching it to its onset: dice or a number, at least 1, at most 365, whatever it rolls),
+  `interval` (days between progressions, default 1, 1 to 365), `damage` (stat damage a failed
+  check does: `{ dexterity = "1d3", toughness = "1d3" }`, each 1 to 40 whatever it rolls), `hp`
+  (hit points a failed check costs: dice, 1 to 1000; none by default; a failed check must do
+  one or the other), `recovery` (checks won in a row that shake it off, default 2; 0: never by
+  itself), `kills` (default false: whether its damage may take Toughness to 0 or the last hit
+  point, which kills), `regen` (how fast hit points come back while it shows, in percent, when
+  slower than its status's; 0 to 1000), `caught` (the sources rules expose to it by name:
+  `rotten_food`), `wading` (`{ terrain = ["marsh", "swamp"], per_hour = 4 }`: the terrain the
+  player catches it in, a chance in percent for each hour spent crossing it, 1 to 100),
+  `cured_by` (the means that cure it at once: `remove_disease`; nothing applies one yet), and the
+  words, all required: `onset` (said as it shows), `symptoms` (said at the progressions that go
+  badly, in turn, the first again after the last), `recovered` (said as it leaves). Built in, our
+  own in the D&D 3.5 spirit (a check of 2d12 + modifier against the difficulty): **filth fever**
+  (difficulty 13, `1d3` days, `1d3` Dexterity and `1d3` Toughness; from the giant rat's bite),
+  **red ache** (16, `1d3` days, `1d6` Strength), **the shakes** (14, 1 day, `1d6` Dexterity),
+  **marsh ague** (14, `1d4` days, `1d3` Toughness, healing at a quarter of the pace; caught
+  crossing marsh (the ground of swamp areas) and the overworld's swamp, 4 % an hour), **grave
+  rot** (15, 1 day, `1d4` Toughness and `1d4` Presence, never by itself, kills; from rotten food,
+  later the undead), and **brain fever** (Willpower against 13, `1d3` days, `1d3` Intelligence
+  and `1d3` Willpower); all recover after two checks won in a row but grave rot, and all are
+  cured by `remove_disease`. Red ache, the shakes, and brain fever have no source yet.
 - **Sizes** (`data/sizes.toml`, optional; §8 "Burden"), in file order: `id`, `name`, and `carry`
   (what it carries in percent of a medium one, 10 to 1000): small 75, medium 100. `medium` is
   required (the size of every race and creature type that names none); without the file there
@@ -1255,8 +1302,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   atomically (temp file + rename). Before 1.0, incompatible saves are rejected with a clear message;
   from 1.0 on, saves are migrated. The web build keeps the same bytes in the browser's
   `localStorage` (below). The envelope also records a content fingerprint (hash of the ordered
-  terrain, creature, level, light, dungeon-branch, object, equipment slot, skill, and status
-  ids), because ids are indices; a save made with different content is rejected. Generated
+  terrain, creature, level, light, dungeon-branch, object, equipment slot, skill, status, and
+  disease ids), because ids are indices; a save made with different content is rejected. Generated
   levels are saved with the run like visited hand-made ones (terrain, memory, stairs, lights,
   kind, arrival point,
   edge exit, piles of objects and the piles as remembered), together with the gameplay random
@@ -1278,7 +1325,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   effects (each status with its severity, its progress toward its next tick and easing, and who
   caused it), the progress toward the next hit point back counted in hundredths of a second at
   the normal pace, and the status effect that killed the player (§8 "Status effects",
-  "Healing"; format version 15), and a dev weather override while
+  "Healing"; format version 15), every actor's diseases (each with the seconds to its next turn,
+  whether it shows, its progressions so far, its checks won in a row, and who gave it) and stat
+  damage (with the seconds banked toward mending it; §8 "Diseases"; format version 16), and a
+  dev weather override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved: it follows from the seed and the clock. The save is `run.sav` in the
   platform data directory. `Q` saves and quits (closing the window saves too), autosave runs every 50 turns
@@ -1305,7 +1355,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 crates/
   warlock-core/   plain Rust, no Bevy: map, actors, actions, turns, time, fov, light,
                   perception, rng, levels, mapgen, stats, skills, dice, character,
-                  burden, status, save
+                  burden, status, checks, diseases, save
   warlock-cli/    no Bevy: scenarios, replay, dump, verify
   warlock/        Bevy app: render, input, UI, effects, platform (ECS lives here)
 xtask/            screenshot capture, golden-image diff, CI helpers
@@ -1499,7 +1549,9 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   - **Order of draws**: the two dice of the attack roll; on an attributable miss one draw for
     why; on a threat the two dice of the confirmation; then one draw per damage die each time the
     damage is rolled; then, if the target lives, one draw for each `on_hit` effect of the attack
-    whose chance is below 100 ("Status effects" below).
+    whose chance is below 100 ("Status effects" below), and for a disease that lands on a target
+    that does not carry it yet, the two dice of its check and, if it is caught, one draw per
+    incubation die ("Diseases" below).
   - **Hit points** (ADOM-like, no hit dice, no levels): maximum = Toughness + race HP + class
     HP (§7 tables: e.g. a dwarf barbarian with To 16 has 6 + 8 + 16 = 30; a human warrior with
     To 12 has 23; an elf wizard with To 8 has 10), at least 1; a creature's = Toughness + its
@@ -1512,8 +1564,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     hit points is a **big hit** (`combat::big_hit`). A blow that hits and leaves its target alive
     may cause status effects: those whose `wound` it meets (bleeding: a big hit 1 degree, a
     confirmed critical 2; every blow alike until weapons have categories), then each `on_hit`
-    effect of the attack (a creature's natural attack: the giant rat's bite poisons by its chance)
-    ("Status effects" below).
+    effect of the attack (a creature's natural attack: the giant rat's bite poisons, or exposes to
+    filth fever, by its chance) ("Status effects", "Diseases" below).
   - **Death**: at 0 hit points an actor dies (`Event::Died { actor, at, of }`, right after the
     attack, or at the moment a status effect takes the last hit point, `of` naming it). A
     creature leaves the world, and what it carried, worn and wielded things too, falls on its
@@ -1602,7 +1654,7 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     (`PerceptionView::ready_to_fire`, `ready_to_throw`, `throw_range`) for the targeting UI.
 - **Status effects** (`warlock-core/src/status.rs`, the rules of one actor's effects;
   `world/status.rs`, applying them; data `data/status.toml`, §7; M24, #138): what ails an actor.
-  Diseases (#139) build on it.
+  Diseases ("Diseases" below) build on it: they show as one status, Diseased.
   - **Effects**: an actor carries at most one effect of each status (`Actor::effects`, in status
     order), each with a **severity** in degrees (1 to the status's `max`), its progress toward
     its next tick and toward easing, and who caused it (the last to add to it). A new dose adds
@@ -1616,8 +1668,9 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     status with `eases` loses a degree every `eases` seconds, and at none it is gone. Hit points
     come back meanwhile ("Healing" below). Everything happens at its own moment, so it makes no
     difference how time is cut up (many waits or one long journey); at one moment a hit point
-    back comes first, then the ticks, then the easing. Actors on other levels are frozen, and the
-    dev time skip passes no time for anyone.
+    back comes first, then the ticks, then the easing, then a point of stat damage mending, then
+    the diseases' turns ("Diseases" below). Actors on other levels are frozen, and the dev time
+    skip passes no time for anyone.
   - **Stats**: a status's `penalty` lowers scores from a severity on (several add up, kept
     within 1 to 40); every rule reads the effective score (`Actor::effective_stats`): combat
     (to-hit, damage, Defence, hit points), burden (the limit), and healing. The player sees their
@@ -1642,10 +1695,67 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
 - **Healing** (`world/status.rs`): a hurt actor's progress toward its next hit point back
   (`Actor::regen`, in hundredths of a second at the normal pace, saved) grows each second by its
   healing rate in percent: 100 normally, the slowest `regen` of its status effects (bleeding 0,
-  poison 50), times `[healing] resting` (200) while the player rests (creatures never rest);
-  every `regen_seconds(Toughness)` × 100 of it is a hit point ("Combat" above; the effective
-  Toughness). Progress carries over and is dropped at full health. Hunger (#137) and disease
-  (#139) slow it through their own statuses' `regen`.
+  poison 50, Diseased 50) and of the diseases that show (marsh ague 25), times `[healing]
+  resting` (200) while the player rests (creatures never rest); every `regen_seconds(Toughness)`
+  × 100 of it is a hit point ("Combat" above; the effective Toughness). Progress carries over
+  and is dropped at full health. Hunger (#137) slows it through its own statuses' `regen`.
+- **Checks** (`warlock-core/src/check.rs`; M24, #139): a stat put to the test, rolled like an
+  attack: 2d12 (the natural roll, `combat::roll_natural`, two draws of the gameplay stream) plus
+  the modifier of the stat tested (the effective score's) succeeds at the **difficulty** or
+  more; a natural 2 always fails and a natural 24 always succeeds (`check::check`,
+  `check::ways` for the odds: against 13 at +0, 78 of 144). Diseases are resisted and fought off
+  with them (Toughness, brain fever Willpower). The player never sees a difficulty, a modifier,
+  or a roll; they see what comes of it. Nothing limits retrying: the time a disease takes is its
+  cost.
+- **Diseases** (`warlock-core/src/disease.rs`, the rules of one actor's infections;
+  `world/disease.rs`, applying them; data `data/diseases.toml`, §7; M24, #139), modelled on D&D
+  3.5's: the pathologies behind one umbrella status, **Diseased** (the file's `status`).
+  - **Infections**: an actor carries at most one of each disease (`Actor::diseases`, in disease
+    order), each with the seconds to its next turn (`Infection::left`), whether it shows, its
+    progressions so far, its checks won in a row, and who gave it.
+  - **Exposure** (`World::expose`): an `on_hit` entry naming a disease (its chance drawn first;
+    the giant rat's bite, filth fever one hit in ten), terrain the player steps onto
+    (`World::wade`: a disease's `wading` terrain, a chance of `per_hour` percent for each hour of
+    the step's length (its price over the player's speed), one draw out of 360 000 unless it is
+    sure; creatures do not catch diseases from the land), and named sources a rule exposes an
+    actor to (`World::expose_to`: `rotten_food`, for hunger's rotten corpses, #137, to call).
+    An actor that does not carry the disease makes a check against its difficulty; losing it, it
+    catches it (`World::infect`), silently: it **incubates** for its `incubation`, rolled in days.
+  - **Turns** (`World::disease_turn`, as the clock moves, in `World::live` like the status
+    effects, so it makes no difference how time is cut up): when its incubation is over it
+    **shows**: its `onset` is said, and the actor is Diseased (the status, `World::afflict`);
+    then every `interval` days it **progresses**: a check. A loss costs its `damage` (stat
+    damage, stat by stat in display order, then `hp`), says its next symptom, and starts the
+    count of wins over; a win counts, and `recovery` wins in a row shake it off: its `recovered`
+    is said, and with no disease left showing, Diseased ends (`World::end_disease`). A disease
+    with `recovery = 0` never goes by itself (grave rot).
+  - **Stat damage** (`stats::StatDamage`, `Actor::damage`): points off the scores, which every
+    rule reads (`Actor::effective_stats`, with the status penalties); never below 1. Toughness
+    damage lowers the most hit points through the hit point formula, as in 3.5, and what is left
+    is cut down to them. Damage alone never kills (stats stop at 1, `hp` damage at the last hit
+    point) unless the disease `kills`: then a progression whose Toughness damage reaches the
+    score (Toughness 0) or whose `hp` takes the last hit point kills, by Diseased (`Event::Died`'s
+    `of`, `Death::of`: "Died of disease"; a creature "succumbs to disease"), credited to whoever
+    gave it. Once no disease shows, a point of each damaged stat mends every day (the seconds
+    toward it banked in `StatDamage::mend`, dropped while a disease shows).
+  - **Healing**: while a disease shows, hit points come back at the slowest of Diseased's `regen`
+    and the showing diseases' own (marsh ague).
+  - **Knowing it**: the player knows a disease by name after its first progression (whatever
+    came of it; `Infection::is_known`); Heal or Knowledge (#132) could tell it sooner later.
+    Until then it is only Diseased; while it incubates, nothing of it can be perceived.
+  - **Shown**: Diseased in the status bar and on the character screen like any status, the known
+    diseases by name on the character screen (`Diseased  Filth fever`) and in the `stats` dump
+    layer (`Diseases filth fever`), the scores with the damage taken off (lowered, in red), and
+    the words; never a difficulty, a timer, or a check. Diseased does not show on others.
+  - **Messages** (`Event::Disease { actor, disease, news }`, the player's own: `Onset`,
+    `Worse(n)`, `Recovered`): an onset and a symptom are news that stop a rest (a batched rest
+    turn in which one comes is perceived at once), a recovery is only logged.
+  - **Cures**: `World::cure(actor, means)` also ends every disease, showing or incubating, that
+    lists the means in its `cured_by` (`remove_disease`); potions and priests will apply it.
+  - **Dev**: the action `infect:ID` makes the player catch a disease as if they had lost the
+    check (it incubates; no game time; recorded in replays; "You catch filth fever (dev)."), for
+    tests and captures. `afflict:diseased` is refused: Diseased comes of a disease.
+  - Infections and stat damage are part of the world state (saved, covered by the state hash).
 - **Stats** (`warlock-core/src/stats.rs`; M14): six stats inspired by D&D, in display order
   Strength (St), Dexterity (Dx), Toughness (To; D&D's Constitution), Intelligence (In),
   Willpower (Wi; D&D's Wisdom), and Presence (Pr; D&D's Charisma). More will come (mostly
@@ -1665,12 +1775,17 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     `stats` dump layer; the perception snapshot carries those and nothing else of stats
     (`PerceptionView::own_scores`). A creature's stats are never shown; ground-truth dev dumps
     (`actors`, the world state) show every actor's scores and potentials.
+  - **Stat damage** (`StatDamage`, `Actor::damage`; saved, hashed): points a disease's failed
+    checks take off the scores for a while; the rules read the scores less them, never below 1,
+    and they mend a point a day each once no disease shows ("Diseases" below). The player sees
+    their scores lowered, never the damage as a number apart.
   - **What uses them**: combat (Strength to hit and to damage in melee, Dexterity to hit with
     shots and in Defence, Toughness in hit points and regeneration; "Combat" above) and burden
     (Strength and Toughness scores, never modifiers, in the carrying limit; "Burden" below), each
-    reading the effective score that status effects may lower ("Status effects" above). No
+    reading the effective score that status effects and stat damage may lower ("Status effects",
+    "Diseases" above); and checks (Toughness, Willpower) resist diseases ("Checks" above). No
     other rule does yet, and no other D&D concept comes with them: no ability checks or saving
-    throws. Stats and potentials are part of the world state (saved, covered by the state hash).
+    throws beyond the disease checks. Stats and potentials are part of the world state (saved, covered by the state hash).
 - **Burden** (`warlock-core/src/burden.rs`; M16, #115), ADOM-like, with 3.5's thirds:
   - **Limit**: 1.5 kg × (2 × Strength + Toughness) × the actor's size's `carry` percent (§7
     `data/sizes.toml`: small 75 %, medium 100 %), from the scores, never the modifiers: a St 10
@@ -1864,14 +1979,15 @@ cargo xtask golden [--update]                             # compare golden scree
   as the scenario's character, so older replays still load). Actions use a text
   syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
   pickup pickup:ac drop drop:b equip:body:b remove:body fire:12,5 throw:c:12,5
-  vision:darkvision skip:1h weather:rain afflict:bleeding`; `fire:X,Y` shoots at level cell (X, Y),
+  vision:darkvision skip:1h weather:rain afflict:bleeding infect:filth_fever`; `fire:X,Y` shoots at level cell (X, Y),
   `throw:LETTER:X,Y` throws one of inventory stack LETTER there;
   durations are a whole number with `s`, `m`, or `h`, a rest at most `24h`; letters name stacks
   of the pile or the inventory, `a` first, and without letters `pickup` and `drop` take
   everything; `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT (a slot id of
   `data/slots.toml`) and `remove:SLOT` takes off what is there; the dev weather
   override takes `clear`, `overcast`, `rain`, or `heavy`; the dev `afflict:ID` gives the player a
-  degree more of status ID (`data/status.toml`); in scripts, `ACTION*N` repeats an
+  degree more of status ID (`data/status.toml`), and `infect:ID` makes them catch disease ID
+  (`data/diseases.toml`); in scripts, `ACTION*N` repeats an
   action, e.g. `wait*10`); `hash` is the
   FNV-1a 64 hash of the
   canonical JSON encoding of `WorldState` after the step. Verification reports the first
@@ -1892,15 +2008,17 @@ cargo xtask golden [--update]                             # compare golden scree
   `stats` (the player's race, gender, and class, `Race Dwarf`, their age, birthday, and
   sign, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`, then their own scores as the
   rules read them, `Strength 12`, then their status effects by name, `Effects Bleeding,
-  Poisoned`), and `skills` (the player's trained skills in skill order, `Stealth 17`) are
+  Diseased`, then the diseases they know they have, `Diseases filth fever`), and `skills` (the player's trained skills in skill order, `Stealth 17`) are
   built from the perception snapshot only;
   `truth` (terrain, objects, and creatures) and `actors` (every actor on the level with its hit
   points and Defence, `hp 8/12 dv 13`, its
   weight, base plus carried, what it carries and of that wears and wields, `equipped main_hand a
   spear`, its burden and carrying limit, `unburdened (limit 31.5 kg)`, its stats as
   score/potential, `St 12/15`, its trained skills with their marks toward the next point,
-  `skills stealth 17 (2/5)`, and its status effects with their severities, `effects
-  bleeding 2`) show
+  `skills stealth 17 (2/5)`, its status effects with their severities, `effects
+  bleeding 2`, its diseases with their progressions (checks won in a row) or `incubating` and the
+  time to their next turn, `diseases filth_fever 2 (1 won) 0d17h`, and its stat damage, `damage
+  Dx 2 To 1`) show
   ground truth and are dev-only. JSON dumps
   carry turn, game time (seconds and calendar fields), level, viewer, the weather (under the open
   sky; else null), seen actors (each with how hurt it looks, `health`: `unhurt`,
@@ -1910,7 +2028,8 @@ cargo xtask golden [--update]                             # compare golden scree
   limit}`, the limit in grams), character
   (`{race, gender, class, raised, age, born: {year, month, day}, sign: {animal, element}}` or
   null), scores (`stats`, by stat id), trained skills (`skills`, by skill id with their values),
-  status effects (`effects`, by id), hit points (`hp: {current, max}`), Defence (`defence`, the
+  status effects (`effects`, by id), the diseases they know they have (`diseases`, by id), hit
+  points (`hp: {current, max}`), Defence (`defence`, the
   total), how the run ended (`death: {turn, time, place, by, of}` or null), recent messages,
   and optionally the full world state; the ASCII header line has the turn, the time
   (`0001-01-01 08:00:00`), level, viewer, the player's hit points (`hp 17/17`, then `dead` once
@@ -2034,7 +2153,13 @@ Each milestone ships a playable build.
   with severities that tick, ease, stack, and can be cured in game time, lower stats, slow
   healing, and can kill; bleeding from big hits and criticals, poison from a giant rat's bite;
   healing twice as fast while resting; shown by name in the status bar, on the character
-  screen, and on creatures in look mode. Diseases build on it (#139).
+  screen, and on creatures in look mode. Diseases (#139): one umbrella status, Diseased, over six
+  pathologies (filth fever, red ache, the shakes, marsh ague, grave rot, brain fever) with
+  incubation, daily progression, checks (2d12 + a stat modifier against a difficulty, hidden),
+  stat damage that mends a point a day once they are gone (Toughness damage lowers the most hit
+  points), recovery by two checks won in a row (grave rot never; it can kill); caught from the
+  giant rat's bite, the marshes and swamps, and rotten food; named on the character screen
+  after their first progression.
 
 ## 13. GitHub workflow
 

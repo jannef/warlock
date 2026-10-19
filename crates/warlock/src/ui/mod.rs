@@ -704,6 +704,26 @@ mod tests {
     }
 
     #[test]
+    fn the_status_bar_shows_diseased_once_a_disease_shows_never_which() {
+        let mut world = hoard();
+        world.apply(&Action::Infect("the_shakes".into()));
+        let texts =
+            |w: &World| -> Vec<String> { status_segments(w).into_iter().map(|s| s.text).collect() };
+        assert!(
+            !texts(&world).iter().any(|t| t.contains("isease")),
+            "incubating"
+        );
+        // The shakes show within a day, and are known a day later: still just "Diseased".
+        for _ in 0..2 {
+            world.apply(&Action::Rest(warlock_core::Rest::For(
+                warlock_core::time::Duration::hours(24),
+            )));
+            assert_eq!(texts(&world)[..3], ["Hoard", "HP 10/10", "Diseased"]);
+        }
+        assert!(!texts(&world).iter().any(|t| t.contains("shakes")));
+    }
+
+    #[test]
     fn ui_text_has_readable_contrast() {
         use crate::settings::palette::contrast_ratio;
         for (name, fg) in [("TEXT", TEXT), ("TEXT_DIM", TEXT_DIM), ("ACCENT", ACCENT)] {

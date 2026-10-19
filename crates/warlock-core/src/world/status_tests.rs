@@ -5,7 +5,7 @@
 use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::combat::{Blow, Strike};
-use crate::content::{ContentFiles, StatusId};
+use crate::content::{Affliction, ContentFiles, StatusId};
 use crate::replay::Replay;
 use crate::stats::Stat;
 use crate::status::Effect;
@@ -776,9 +776,10 @@ fn the_built_in_rat_may_poison_and_wounds_may_bleed() {
     let bite = content.creature(rat).attack.as_ref().expect("a bite");
     let poisoned = content.status_id("poisoned").expect("poisoned");
     assert!(
-        bite.on_hit
-            .iter()
-            .any(|o| o.status == poisoned && o.chance < 100),
+        bite.on_hit.iter().any(
+            |o| matches!(o.what, Affliction::Status { status, .. } if status == poisoned)
+                && o.chance < 100
+        ),
         "a small chance"
     );
     let bleeding = content.status_id("bleeding").expect("bleeding");

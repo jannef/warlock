@@ -1,9 +1,11 @@
 //! The character screen (spec §6; `@`): who the player is, as far as they know it. Their name,
 //! their race, gender, and class, their age, birthday, and birth sign (spec §8 "Character
 //! creation"; when the run has a character), their score in each stat (spec §8 "Stats") with its
-//! abbreviation and full name (as the rules read it: a score a status effect lowers is shown
-//! lowered, in a warning color), their hit points and Defence (spec §8 "Combat"; the total
-//! only), the status effects they suffer, by name (spec §8 "Status effects"), what they weigh and
+//! abbreviation and full name (as the rules read it: a score a status effect or stat damage
+//! lowers is shown lowered, in a warning color), their hit points and Defence (spec §8 "Combat";
+//! the total only), the status effects they suffer, by name (spec §8 "Status effects"), the
+//! diseases they know they have, by name (spec §8 "Diseases": `Diseased  Filth fever`), what
+//! they weigh and
 //! carry, their burden, and the weights at which it changes (spec §8 "Burden": they follow from
 //! scores the player knows). Never a modifier, a potential, a to-hit, or how severe an effect
 //! is: perception has none of them.
@@ -32,7 +34,8 @@ const NAME_W: i32 = 14;
 /// Width of the panel: the birth and the burden's thresholds fit on one line each.
 const WIDTH: i32 = 72;
 
-/// A score lowered by a status effect, and the status effects themselves: a muted red.
+/// A score lowered by a status effect or stat damage, and the status effects and diseases
+/// themselves: a muted red.
 const LOWERED: Rgb = Rgb::new(0xd0, 0x78, 0x68);
 
 #[derive(Debug)]
@@ -47,6 +50,9 @@ pub struct CharacterScreen {
     base: PerStat<u8>,
     /// The status effects they suffer, by name, the most important first.
     effects: Vec<String>,
+    /// The diseases they know they have, by name (one that has not progressed yet is only
+    /// "Diseased").
+    diseases: Vec<String>,
     weight: Weight,
     /// What they carry against what they can; `None` outside a run.
     load: Option<Load>,
@@ -70,6 +76,7 @@ impl CharacterScreen {
                 scores: PerStat::splat(warlock_core::stats::AVERAGE),
                 base: PerStat::splat(warlock_core::stats::AVERAGE),
                 effects: Vec::new(),
+                diseases: Vec::new(),
                 weight: Weight::default(),
                 load: None,
                 progress: Progress {
@@ -109,6 +116,9 @@ impl CharacterScreen {
             effects: (view.own_effects())
                 .map(|s| content.status(s).name.clone())
                 .collect(),
+            diseases: (view.own_diseases())
+                .map(|d| content.disease(d).name.clone())
+                .collect(),
             weight: view.own_weight(),
             load: Some(view.own_load()),
             progress: view.own_experience(),
@@ -132,7 +142,8 @@ impl CharacterScreen {
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         // Rows: margin, the name, a gap, race, gender, class, the birth, and a gap (with a
         // character), the stats, a gap, level, experience, hit points and Defence (and the status
-        // effects, if any), a gap, the weight, the burden's thresholds, a gap, the footer, frame.
+        // effects and known diseases, if any), a gap, the weight, the burden's thresholds, a gap,
+        // the footer, frame.
         let width = WIDTH.min(console.cols() as i32) - 4;
         let birth = fit_parts(&self.birth, width);
         let identity_rows = match self.identity.len() {
@@ -140,7 +151,8 @@ impl CharacterScreen {
             n => (n + birth.len()) as i32 + 1,
         };
         let thresholds = (self.load.as_ref()).map_or(Vec::new(), |l| thresholds(l, width));
-        let status_rows = i32::from(!self.effects.is_empty());
+        let status_rows =
+            i32::from(!self.effects.is_empty()) + i32::from(!self.diseases.is_empty());
         let h = Stat::COUNT as i32 + 14 + identity_rows + thresholds.len() as i32 + status_rows;
         let panel = Panel::new(console, " Character ", WIDTH, h);
         let x = panel.inner_x();
@@ -202,6 +214,15 @@ impl CharacterScreen {
             if fits(y) {
                 console.print(x + 4, y, "Status", TEXT);
                 console.print(x + 4 + NAME_W, y, &self.effects.join(", "), LOWERED);
+            }
+            y += 1;
+        }
+        // `    Diseased      Filth fever`: the diseases they know they have.
+        if !self.diseases.is_empty() {
+            if fits(y) {
+                let names = capitalized(&self.diseases.join(", "));
+                console.print(x + 4, y, "Diseased", TEXT);
+                console.print(x + 4 + NAME_W, y, &names, LOWERED);
             }
             y += 1;
         }
@@ -458,6 +479,32 @@ mod tests {
             .find(|c| c.ch == '8')
             .expect("the score");
         assert_eq!(score.fg, LOWERED);
+    }
+
+    #[test]
+    fn names_a_disease_once_known_and_shows_its_stat_damage() {
+        use warlock_core::Rest;
+        use warlock_core::time::Duration;
+        let mut world = crate::ui::hoard();
+        world.apply(&Action::Infect("the_shakes".into()));
+        let day = Action::Rest(Rest::For(Duration::hours(24)));
+        world.apply(&day);
+        // It shows: Diseased, but not yet which disease.
+        let text = drawn(&world, 80, 30).join("\n");
+        assert!(text.contains("Status        Diseased"), "{text}");
+        assert!(!text.contains("shakes"), "{text}");
+        // A day later it has progressed once: named. (A check lost shows as Dexterity lowered.)
+        world.apply(&day);
+        let text = drawn(&world, 80, 30).join("\n");
+        for expected in ["Status        Diseased", "Diseased      The shakes"] {
+            assert!(text.contains(expected), "{expected:?} in\n{text}");
+        }
+        let dexterity = world.perception().own_scores()[Stat::Dexterity];
+        assert!(
+            text.contains(&format!("Dx  Dexterity     {dexterity:>2}")),
+            "{text}"
+        );
+        assert_eq!(world.perception().own_base_scores()[Stat::Dexterity], 10);
     }
 
     #[test]

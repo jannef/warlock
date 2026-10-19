@@ -5,3 +5,5 @@
 | Resting (`R`) | twice as fast |
 | Bleeding | not at all |
 | Poisoned | half as fast |
+| Diseased | half as fast |
+| Diseased with marsh ague | a quarter as fast |

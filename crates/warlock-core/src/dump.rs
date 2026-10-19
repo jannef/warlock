@@ -45,8 +45,9 @@ pub enum Layer {
     Equipment,
     /// Not a map: the player's character (`Race Dwarf`, `Gender Female`, `Class Warrior`), if
     /// any, then their own scores, one stat a line (`Strength 12`, lowered while a status effect
-    /// lowers it), then their status effects by name (`Effects Bleeding, Poisoned`) if any;
-    /// never potentials, modifiers, or how severe an effect is.
+    /// or stat damage lowers it), then their status effects by name (`Effects Bleeding,
+    /// Diseased`) and the diseases they know they have (`Diseases filth fever`) if any; never
+    /// potentials, modifiers, how severe an effect is, or a disease's timers.
     Stats,
     /// Not a map: the player's own trained skills, one a line in skill order (`Stealth 17`);
     /// never an untrained skill, a mark, or a benefit.
@@ -54,8 +55,9 @@ pub enum Layer {
     /// Ground truth: all terrain, objects, and actors on the level. **Dev-only.**
     Truth,
     /// Not a map: every actor on the level with its weight, what it carries (and of that wears
-    /// and wields), its stats (scores and potentials), its trained skills with their marks, and
-    /// its status effects with their severities (ground truth). **Dev-only.**
+    /// and wields), its stats (scores and potentials), its trained skills with their marks, its
+    /// status effects with their severities, and its diseases and stat damage (ground truth).
+    /// **Dev-only.**
     Actors,
 }
 
@@ -299,6 +301,12 @@ fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
     if !effects.is_empty() {
         rows.push(format!("Effects {}", effects.join(", ")));
     }
+    let diseases: Vec<&str> = (view.own_diseases())
+        .map(|d| content.disease(d).name.as_str())
+        .collect();
+    if !diseases.is_empty() {
+        rows.push(format!("Diseases {}", diseases.join(", ")));
+    }
     rows
 }
 
@@ -368,9 +376,10 @@ fn actor_rows(world: &World) -> Vec<String> {
             } else {
                 format!("; effects {}", effects.join(", "))
             };
+            let diseases = disease_text(a, content);
             format!(
                 "{} {} at {}: hp {}/{} dv {}; weight {} (base {} + carried {}: {carried})\
-                 {equipped}; {} (limit {}); stats {}{skills}{effects}",
+                 {equipped}; {} (limit {}); stats {}{skills}{effects}{diseases}",
                 a.id,
                 content.creature(a.creature).id,
                 a.pos,
@@ -386,6 +395,42 @@ fn actor_rows(world: &World) -> Vec<String> {
             )
         })
         .collect()
+}
+
+/// An actor's diseases and stat damage, as the `actors` dump shows them (ground truth):
+/// `; diseases filth_fever incubating 2d, red_ache 3 (1 won) 1d; damage St 2`, each infection
+/// with its progressions so far (and checks won in a row) and the time to its next turn, in
+/// days and hours; empty without any.
+fn disease_text(a: &crate::world::Actor, content: &crate::content::Content) -> String {
+    let mut out = String::new();
+    let infections: Vec<String> = (a.diseases.iter())
+        .map(|i| {
+            let id = &content.disease(i.disease).id;
+            let left = u64::from(i.left);
+            let (days, hours) = (left / crate::time::DAY, left % crate::time::DAY / 3600);
+            let stage = if i.shown {
+                let won = match i.streak {
+                    0 => String::new(),
+                    n => format!(" ({n} won)"),
+                };
+                format!("{}{won}", i.progressions)
+            } else {
+                "incubating".to_string()
+            };
+            format!("{id} {stage} {days}d{hours}h")
+        })
+        .collect();
+    if !infections.is_empty() {
+        let _ = write!(out, "; diseases {}", infections.join(", "));
+    }
+    let damaged: Vec<String> = (Stat::ALL.iter())
+        .filter(|&&s| a.damage.get(s) > 0)
+        .map(|&s| format!("{} {}", s.abbrev(), a.damage.get(s)))
+        .collect();
+    if !damaged.is_empty() {
+        let _ = write!(out, "; damage {}", damaged.join(" "));
+    }
+    out
 }
 
 fn rows(width: i32, height: i32, glyph: impl Fn(Pos) -> char) -> Vec<String> {
@@ -501,6 +546,9 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     let effects: Vec<&str> = (view.own_effects())
         .map(|s| content.status(s).id.as_str())
         .collect();
+    let diseases: Vec<&str> = (view.own_diseases())
+        .map(|d| content.disease(d).id.as_str())
+        .collect();
     let layer_map: serde_json::Map<String, Value> = layers
         .iter()
         .map(|&l| (l.name().to_string(), json!(layer_rows(world, l))))
@@ -533,6 +581,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "stats": view.own_scores(),
         "skills": skills_json(&view),
         "effects": effects,
+        "diseases": diseases,
         "hp": { "current": hp, "max": max_hp },
         "experience": view.own_experience(),
         "defence": view.own_defence(),

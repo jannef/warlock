@@ -10,11 +10,13 @@
 pub mod action;
 pub mod burden;
 pub mod character;
+pub mod check;
 pub mod color;
 pub mod combat;
 pub mod content;
 pub mod daylight;
 pub mod dice;
+pub mod disease;
 pub mod dump;
 pub mod equipment;
 pub mod fov;
@@ -37,7 +39,7 @@ pub mod time;
 pub mod weather;
 pub mod world;
 
-pub use action::{Action, AttackKind, Event, Letters, MissileEnd, Outcome, Rest};
+pub use action::{Action, AttackKind, DiseaseNews, Event, Letters, MissileEnd, Outcome, Rest};
 pub use geom::{Dir, Pos};
 pub use world::{World, WorldError, WorldState};
 

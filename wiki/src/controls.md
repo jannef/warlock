@@ -115,8 +115,8 @@ Below the map, the **status bar** shows, from left to right:
 
 - the name of the level, and on the overworld and in its local areas the region you are in;
 - your hit points, as `HP 18/24`: what you have left of your most (see [Combat](combat.md));
-- what ails you, if anything, the most urgent first: `Bleeding`, `Poisoned` (see
-  [Status effects](status-effects.md));
+- what ails you, if anything, the most urgent first: `Bleeding`, `Poisoned`, `Diseased` (see
+  [Status effects](status-effects.md) and [Diseases](diseases.md));
 - your burden, when you have one: `Burdened`, `Strained`, or `Overloaded` (see
   [Burden](burden.md));
 - the time, the date, and the phase of the moon (see [Time and the calendar](time.md));
@@ -137,9 +137,10 @@ come back as soon as there is room.
 ## Character
 
 `@` shows your name, your race, gender, and class, your age, birthday, and
-[birth sign](horoscope.md), your [stats](stats.md) (one that a status effect lowers is shown
-lowered, in red), your hit points and Defence (`Dv`; see [Combat](combat.md)), what ails you
-(`Status  Bleeding, Poisoned`; see [Status effects](status-effects.md)), your weight and what you
+[birth sign](horoscope.md), your [stats](stats.md) (one that a status effect or a disease lowers
+is shown lowered, in red), your hit points and Defence (`Dv`; see [Combat](combat.md)), what ails
+you (`Status  Bleeding, Poisoned`; see [Status effects](status-effects.md)), the diseases you know
+you have (`Diseased  Filth fever`; see [Diseases](diseases.md)), your weight and what you
 carry, and the weights at which your [burden](burden.md) changes. It takes no time; press `@` or
 `Esc` to close it, or `S` for your skills.
 

@@ -198,7 +198,10 @@ pub(super) fn track(
             }
             // A death shows as the creature gone (and what it dropped) and in the message line;
             // a missile flies in `missiles`; a status effect shows in the status bar.
-            Event::Died { .. } | Event::Missile { .. } | Event::Status { .. } => {}
+            Event::Died { .. }
+            | Event::Missile { .. }
+            | Event::Status { .. }
+            | Event::Disease { .. } => {}
             Event::LevelChanged { .. } => {
                 bursts.list.clear();
                 tints.clear();

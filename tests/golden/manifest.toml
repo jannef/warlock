@@ -191,6 +191,17 @@ actions = "afflict:poisoned*4 afflict:bleeding wait"
 screen = "character"
 window = "960x600"
 
+# Diseases (#139): filth fever caught (the dev `infect:` action), then four days' rest. It has
+# shown and progressed, so the character screen names it on its own row below the status
+# (`Diseased  Filth fever`) and shows the stat damage it did (Dexterity and Toughness lowered, in
+# red, and the most hit points with Toughness); the status bar beneath says only `Diseased`.
+[[golden]]
+name = "diseased"
+scenario = "showcase"
+actions = "infect:filth_fever rest:24h*4"
+screen = "character"
+window = "960x600"
+
 # Character creation (#108, #111, #118), over New run on the main menu (no run; the replay goes
 # unused): the race step with the showcase's character's race preselected, and the summary of
 # that character (race, gender, and class each preselected), with its age, birthday, and sign
