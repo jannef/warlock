@@ -153,6 +153,18 @@ scenario = "showcase"
 actions = "move:SW*2 pickup move:NE*2 move:E*2 move:NE pickup"
 screen = "inventory"
 
+# Burden (#115): most of the storeroom picked up (20.9 kg; the showcase's thief, St 9 To 10, is
+# burdened over 14 kg). The inventory names the burden and the weights at which it changes, and
+# the status bar shows "Burdened" right after the hit points.
+[[golden]]
+name = "burdened-inventory"
+scenario = "showcase"
+actions = '''
+move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N pickup move:S*2 pickup
+move:NW move:W*2 move:N pickup move:SW pickup
+'''
+screen = "inventory"
+
 # The character screen (#107, #108, #111): the player's name, race, gender, and class, their
 # age, birthday, and birth sign, their score in each stat (never a modifier or a potential), and
 # what they weigh, carrying the start room's pile.

@@ -69,7 +69,8 @@ Looking takes no time. Press `x` or `Esc` to leave.
 a screen listing them by letter. `d` opens the same kind of screen for what you carry, to drop.
 On these screens a letter marks or unmarks a stack (even `h`, `j`, `k`, `l`), `,` marks
 everything, the arrows and Space work too, `Enter` confirms, and `Esc` cancels. `i` shows your
-pack and what it weighs; it takes no time. See [Objects and your pack](objects.md).
+pack, what it weighs, and how much more you can carry before your [burden](burden.md) grows; it
+takes no time. See [Objects and your pack](objects.md).
 
 `e` shows what you wear and wield, slot by slot. A slot's letter (on this screen every letter
 names a slot) opens a list of what you carry that fits there: its letter puts it on, swapping
@@ -86,6 +87,8 @@ Below the map, the **status bar** shows, from left to right:
 
 - the name of the level, and on the overworld and in its local areas the region you are in;
 - your hit points, as `HP 18/24`: what you have left of your most (see [Combat](combat.md));
+- your burden, when you have one: `Burdened`, `Strained`, or `Overloaded` (see
+  [Burden](burden.md));
 - the time, the date, and the phase of the moon (see [Time and the calendar](time.md));
 - the weather, while you are under the open sky (see [Weather](weather.md));
 - the turn count and your position (column, row);
@@ -97,14 +100,15 @@ At its right end, `? controls` reminds you where the keys are.
 When the window is too narrow for everything, the status bar leaves out the least important parts
 first: the seed, your position, your lantern, your vision, the light at your feet, and the turn
 count; then it shortens the moon's phase to its picture, and only then drops it; then the region,
-then the year of the date, then the date. The weather, the time, your hit points, and the name of
-the level stay longest. Parts come back as soon as there is room.
+then the year of the date, then the date. The weather, the time, your burden, your hit points,
+and the name of the level stay longest. Parts come back as soon as there is room.
 
 ## Character
 
 `@` shows your name, your race, gender, and class, your age, birthday, and
 [birth sign](horoscope.md), your [stats](stats.md), your hit points and Defence (`Dv`; see
-[Combat](combat.md)), and your weight. It takes no time; press `@` or `Esc` to close it.
+[Combat](combat.md)), your weight and what you carry, and the weights at which your
+[burden](burden.md) changes. It takes no time; press `@` or `Esc` to close it.
 
 ## Death
 

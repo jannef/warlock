@@ -40,7 +40,11 @@ Build the engine and framework, not the game. Everything built is production qua
 - Stats (M14): Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
   D&D, with D&D 3.5 modifiers and ADOM-like potentials that the player never sees; every actor
   has them, and the player sees their own scores on a character screen (§8 "Stats"). Combat uses
-  Strength, Dexterity, and Toughness (§8 "Combat"); no other rule uses stats yet
+  Strength, Dexterity, and Toughness (§8 "Combat"), and so does burden; no other rule uses stats
+  yet
+- Burden (M16): a carrying limit from Strength, Toughness, and size; carrying more than a third,
+  two thirds, or all of it slows every action, caps Dexterity in Defence, makes steps louder, and
+  overloaded, keeps the actor from moving (§8 "Burden")
 - Character creation (M15): every new run chooses a race, a gender, and a class, which set the
   player's starting stats (partly rolled with dice, ADOM-like) and eyes; a random age by race
   and a random birthday give the birth year, whose horoscope sign (12 mythological animals × 5
@@ -54,8 +58,8 @@ Build the engine and framework, not the game. Everything built is production qua
 - An overworld with travel time, locations, local areas, and day and night (M9)
 
 **Out of scope for now**: magic (spells are announced, nothing is damaged), ranged combat for
-the player (#117), rules that use stats beyond combat (ability checks, saving throws, carrying
-capacity, training), levels and experience, what a class gives beyond starting stats and hit
+the player (#117), rules that use stats beyond combat and burden (ability checks, saving throws,
+training), levels and experience, what a class gives beyond starting stats and hit
 points (skills, equipment, spells), item effects, audio, mouse input, infravision, localization.
 
 Vision types are in scope even though there are no other mechanics yet: they are part of perception,
@@ -546,11 +550,13 @@ rate or animation.
     30; bats fly silently) scaled by the `step_noise` of
     the terrain stepped onto, in percent (water and running water 200, marsh, bushes, and rubble
     150, reeds 130, gazebo boards and dry grass 120, tall grass and rocky ground 110, dirt road
-    90, forest floor 80, grass, flowers, and dusty floor 70; default 100). Opening a door makes
+    90, forest floor 80, grass, flowers, and dusty floor 70; default 100), and by the walker's
+    burden (§8 "Burden": ×1.25 Burdened, ×1.5 Strained; a dwarf's steps are not louder while
+    Burdened), rounded down. Opening a door makes
     the closed door's `toggle_noise` (60), closing one the open door's (70). One function decides
     an action's loudness, so skills such as moving silently can change it there later. Loudness
     is at most 300; a creature without `footsteps` moves silently, a door without `toggle_noise`
-    is silent. (Footsteps may scale with a creature's weight once it has one, M11.) Attacks
+    is silent. Attacks
     (§8 "Combat"; hit or miss) are heard where the attacker stands: fighting (melee, 60), a
     bowstring (a shot, 40), chanting (a spell, 50).
   - **Propagation**: a noise spreads from its cell through the 8 neighbors, losing 10 loudness
@@ -678,17 +684,21 @@ rate or animation.
   Enter picks up the marked stacks (the cursor's row if none is marked), Esc cancels. **Drop**
   (`d`) chooses from the inventory the same way. Picking up and dropping are one action each
   (replay text `pickup:ac`, `drop:b`; `pickup` and `drop` alone take everything) and take their
-  action's time (§8 "Time"); with nothing there or nothing carried, they are refused and take
-  none. Dropping something worn or wielded takes it off first ("You take off a leather
-  jerkin."), which takes its time too, and the stacks after a dropped one move up a letter
-  (worn things keep being worn).
+  action's time (§8 "Time"; at the burden the player has as they begin, §8 "Burden"); with
+  nothing there or nothing carried, they are refused and take none. Picking up is allowed
+  however much the player carries, even into Overloaded. Dropping something worn or wielded
+  takes it off first ("You take off a leather jerkin."), which takes its time too, and the stacks
+  after a dropped one move up a letter (worn things keep being worn).
 - **Inventory** (`i`): what the player carries, ADOM-like: stacks lettered `a` to `z` in the order
   they were picked up (at most 26; a pile with more stacks keeps what does not fit), each with its
-  glyph, name, and weight, then what the player carries and their weight (their own plus what
-  they carry). What is worn or wielded is marked with its slot's mark: "(being worn)",
-  "(wielded)", "(in off hand)", "(on left hand)", "(readied)", "(quivered)", and a two-handed
-  weapon "(wielded in both hands)"; the drop screen marks it the same way. Read-only; `i` or Esc
-  closes it.
+  glyph, name, and weight, then what the player carries (with their burden when they have one,
+  §8 "Burden": `Carrying 28.4 kg (burdened)`) and their weight (their own plus what they carry),
+  and, dimmer, the weights at which their burden changes: `Burdened over 15 kg, strained over 30
+  kg, overloaded over 45 kg` (from scores the player knows, never a modifier; lines wrap at part
+  boundaries in a narrow window). What is worn or wielded is marked with its slot's mark: "(being
+  worn)", "(wielded)", "(in off hand)", "(on left hand)", "(readied)", "(quivered)", and a
+  two-handed weapon "(wielded in both hands)"; the drop screen marks it the same way. Read-only;
+  `i` or Esc closes it.
 - **Equipment** (`e`; M16), as in ADOM: the slots, lettered `a` to `l` in this order — Head, Neck,
   Body, Cloak, Main hand, Off hand, Hands, Left ring, Right ring, Feet, Missile weapon, Missiles
   (data, `data/slots.toml`, §7, so more can be added) — each with what is in it (glyph, name,
@@ -709,18 +719,22 @@ rate or animation.
   slot, nothing there) takes none. Messages say it: "You put on a leather jerkin.", "You wield a
   quarterstaff in both hands.", "You ready 24 arrows.", "You take off an iron helm.", "You put
   away a short bow." Equipped things stay in the inventory and still count toward the player's
-  weight. What is worn and wielded fights and protects (§8 "Combat": the wielded weapon's blows,
-  the readied missile weapon's shots, armour, shield, and parry in Defence); it changes neither
-  sight, noise, nor speed.
+  weight and burden (§8 "Burden"). What is worn and wielded fights and protects (§8 "Combat": the
+  wielded weapon's blows, the readied missile weapon's shots, armour, shield, and parry in
+  Defence); being worn changes neither sight, noise, nor speed (its weight does, as part of the
+  load).
 - **Character** (`@`): who the player is, as far as they know it: their name (the player
   creature's, "You"), their race, gender, and class (`Race    Dwarf`; "other" with the stat it
   raised), their age today, birthday, and birth sign as on the summary (when the run has a
   character), their score in each stat (§8 "Stats") in display order with its abbreviation and
   full name (`St  Strength  12`), their hit points (`HP  Hit points  18/24`) and Defence
   (`Dv  Defence  15`; the total only, as its Dexterity part would give away a modifier; §8
-  "Combat"), and their weight (their own plus what they carry). Never a modifier, a potential, or
-  a to-hit, which the player does not know. Read-only; `@`, Enter, or Esc closes it. The status
-  bar does not show stats: it is full at common window sizes.
+  "Combat"), their weight (their own plus what they carry, and their burden when they have one:
+  `Weight 98.4 kg (you 70 kg, carrying 28.4 kg, burdened)`), and, dimmer, the weights at which
+  their burden changes, as in the inventory (§8 "Burden"). The panel is 72 wide, so the birth and
+  the thresholds take a line each. Never a modifier, a potential, or a to-hit, which the player
+  does not know. Read-only; `@`, Enter, or Esc closes it. The status bar does not show stats: it
+  is full at common window sizes.
 - **Death screen** (§8 "Combat"): when the player dies, the death screen opens over the run as it
   ended, in place of any other screen, and the run's save is deleted (permadeath): `Y O U   D I E
   D`, then who killed them ("Killed by a kobold", or "Killed by something you did not see" when
@@ -729,8 +743,8 @@ rate or animation.
   left to continue). A run that has ended is never saved again, by any trigger.
 - **Weight**: every object and every creature (the player included) has a weight in grams. An
   actor weighs its creature's base weight plus everything it carries; the rules know every
-  actor's weight (no rule uses it yet; footstep noise, §5 "Hearing", may), but the player is shown
-  only their own.
+  actor's weight (what it carries decides its burden, §8 "Burden"), but the player is shown only
+  their own.
   Creatures carry objects from their spawn (`carry`, §7), and wield and wear some of them
   (`wield`, `wear`); they drop everything when they die (§8 "Combat"), and nothing else makes
   them drop or change anything yet. Worn and wielded things weigh what they weigh.
@@ -775,7 +789,8 @@ rate or animation.
   ..."; never what else it carries), terrain, remembered terrain, where stairs lead, and a sound
   heard there ("You hear footsteps here.").
 - Screen layout: map viewport, message log, status panel (level, the player's hit points as
-  `HP 18/24` (never below 0), region (on the overworld and in
+  `HP 18/24` (never below 0), their burden when they have one (`Burdened`, `Strained`,
+  `Overloaded`; §8 "Burden"), region (on the overworld and in
   its local areas), time of day and date as `14:32 · 12 Rainmoon, Year 1444`, the moon's phase as a
   glyph and its name (`◑ First quarter`; with several moons each moon's name and glyph, `Moon ●
   Ilse ☽`), the weather under the open sky (`Clear`, `Overcast`, `Rain`, `Heavy rain`; §5
@@ -784,8 +799,8 @@ rate or animation.
   `◑` first quarter and waxing gibbous, `●` full, `◐` waning gibbous and last quarter, `☾` waning
   crescent. When the window is narrow, segments give way in priority order — seed, position,
   lantern, vision, light, turn, then the moon's phase (first cut down to its glyph), region, date
-  (first cut down to day and month, `12 Rainmoon`), weather, time, and hit points, the level name
-  last — and
+  (first cut down to day and month, `12 Rainmoon`), weather, time, burden, and hit points, the
+  level name last — and
   segments that fit again in the room left take it back, most important first. Outdoors the
   weather outranks the date: it changes the light and how far one sees.
 
@@ -878,7 +893,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   1d3, "fist", "hits"); and `natural`, its natural armour (`{ defence = 3, name = "shell" }`, 1
   to 20, the Natural category of Defence; the name is said when it turns a blow). The giant rat
   and the cave bat bite (1d4, 1d3), the deer kicks (1d4, "hoof"; `base_hp` 4), the cave beetle
-  bites (1d3) and has a shell (3); kobolds fight with what they wield. Creature particle emitters may
+  bites (1d3) and has a shell (3); kobolds fight with what they wield. For burden (§8
+  "Burden"): `size`, a size in `data/sizes.toml` (default `medium`); the kobolds, the giant rat,
+  the cave bat, and the cave beetle are small, the deer and the player creature medium (the
+  player's size comes from their race when the run has a character). Creature particle emitters may
   fire `on = "attack"`: a burst at the target of each attack the player sees (the shaman's
   violet sparkle). Terrain has a `move_cost`: what a step onto it costs in percent of a normal
   step (the `step` action; default 100; still and running water 200; local levels only), a
@@ -1020,13 +1038,20 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   them: `id`, `name`, a one-line `description`, `vision` (a profile in `vision.toml`: the
   player's eyes), `age = [youngest, oldest]` (a new character's age in years, 1 to 1000),
   `stats` (adjustments to the starting scores), `potential` (adjustments to the potentials,
-  the same way; hidden from the player), and `hp` (its hit points, 0 to 1000, default 0; §8
-  "Combat"); and at the top `base_potential` (1 to 40), what every
+  the same way; hidden from the player), `hp` (its hit points, 0 to 1000, default 0; §8
+  "Combat"), `size` (a size in `data/sizes.toml`, default `medium`; §8 "Burden"), and
+  `ignores_burdened` (default false: whether Burdened, the first level of burden, costs the
+  character nothing); and at the top `base_potential` (1 to 40), what every
   potential is before the race adjusts it (15). Races are mostly fixed numbers, their identity,
   with a little dice. The races, their eyes, ages, and hit points: elf (low-light, 90–300, 2),
   half-elf (low-light, 20–60, 3), human (normal, 16–35, 4), dwarf (darkvision, 40–120, 6),
   halfling (normal, 20–50, 2), gnome (low-light, 40–150, 3), half-orc (darkvision, 14–30, 6);
-  humans adjust no score but roll `1d2` on every potential.
+  humans adjust no score but roll `1d2` on every potential. Halflings and gnomes are small, the
+  rest medium; dwarves ignore Burdened.
+- **Sizes** (`data/sizes.toml`, optional; §8 "Burden"), in file order: `id`, `name`, and `carry`
+  (what it carries in percent of a medium one, 10 to 1000): small 75, medium 100. `medium` is
+  required (the size of every race and creature type that names none); without the file there
+  is only medium.
 - **Classes** (`data/classes.toml`, optional), in the order offered: `id`, `name`, a one-line
   `description`, `stats` (adjustments as for races), and `hp` (as for races). Each class rolls
   its key stats (the warrior St `1d3+1` and To `1d3`, the wizard In `2d2+1` and To `-1d2`, the
@@ -1103,7 +1128,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 ```
 crates/
   warlock-core/   plain Rust, no Bevy: map, actors, actions, turns, time, fov, light,
-                  perception, rng, levels, mapgen, stats, dice, character, save
+                  perception, rng, levels, mapgen, stats, dice, character, burden, save
   warlock-cli/    no Bevy: scenarios, replay, dump, verify
   warlock/        Bevy app: render, input, UI, effects, platform (ECS lives here)
 xtask/            screenshot capture, golden-image diff, CI helpers
@@ -1170,6 +1195,14 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
       take exactly 54 s, five 8.4 s attacks exactly 42 s, 1111 steps at speed 1111 exactly
       6000 s; ten steps at speed 1111 (5.4005 s each) take 55 s, the first whole second after
       54.005 s. Single actions show as whole seconds (8.4 s as 9, 8, 9, 8, 8).
+    - An actor's burden ("Burden" below) raises every price it pays, as a lower speed would:
+      ×1.25 Burdened, ×1.5 Strained or Overloaded (rounded up to a whole unit of energy; every
+      built-in price scales exactly), for every action alike, overworld journeys included (a
+      20-minute road takes 25 minutes Burdened). It is applied in one place, the scheduler's
+      prices (`World::price_of`, `World::step_price`), at the burden the actor has as the
+      action begins (picking up and dropping are priced before the load changes). A burdened
+      normal action takes 7.5 s, so eight take exactly 60 s; a rest still ends exactly at its
+      goal.
   - **Speed** (`warlock-core/src/world/schedule.rs`), ADOM-like: every creature type has a
     `speed` (§7), 1000 being normal and the player's; twice the speed is twice as many actions in
     the same game time. An energy scheduler, integer only: each actor on the current level gains
@@ -1263,7 +1296,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     player's shots; `World::attack_with` takes any `Profile`: `Profile::ranged`,
     `Profile::thrown`).
   - **Defence** = 10 + one bonus per category: **Dexterity** (the Dexterity modifier, capped
-    by the lowest `max_dex` of what the actor wears; a penalty counts in full), **Armour** (worn
+    by the lowest `max_dex` of what the actor wears and by its burden, +3 Burdened, +1 Strained,
+    0 Overloaded ("Burden" below), the lowest cap winning; a penalty counts in full), **Armour** (worn
     `armour`), **Shield** (held `shield`), **Parry** (a wielded weapon's `parry`), **Natural** (the
     creature type's `natural` armour), **Dodge** (none yet: training and effects), and
     **Deflection** (none yet: magic). Within a category only the highest bonus counts, except
@@ -1321,10 +1355,46 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     (`PerceptionView::own_scores`). A creature's stats are never shown; ground-truth dev dumps
     (`actors`, the world state) show every actor's scores and potentials.
   - **What uses them**: combat (Strength to hit and to damage in melee, Dexterity to hit with
-    shots and in Defence, Toughness in hit points and regeneration; "Combat" below). No other
-    rule does yet, and no other D&D concept comes with them: no ability checks, saving throws, or
-    carrying capacity from Strength. Stats and potentials are part of the world state (saved,
-    covered by the state hash).
+    shots and in Defence, Toughness in hit points and regeneration; "Combat" above) and burden
+    (Strength and Toughness scores, never modifiers, in the carrying limit; "Burden" below). No
+    other rule does yet, and no other D&D concept comes with them: no ability checks or saving
+    throws. Stats and potentials are part of the world state (saved, covered by the state hash).
+- **Burden** (`warlock-core/src/burden.rs`; M16, #115), ADOM-like, with 3.5's thirds:
+  - **Limit**: 1.5 kg × (2 × Strength + Toughness) × the actor's size's `carry` percent (§7
+    `data/sizes.toml`: small 75 %, medium 100 %), from the scores, never the modifiers: a St 10
+    To 10 human carries 45 kg, a half-orc St 16 To 14 69 kg, a dwarf St 14 To 16 66 kg, a halfling
+    St 8 To 12 31.5 kg, an elf St 6 To 8 30 kg. In grams it is always a multiple of 3, so the
+    thirds are exact. The player's size is their race's when the run has a character, else the
+    player creature type's; a creature's is its type's. Everything an actor carries counts, worn
+    and wielded things included; its own body weight does not.
+  - **Levels**: Unburdened up to a third of the limit, Burdened up to two thirds, Strained up to
+    the limit, Overloaded beyond it (`Burden`, `Load::burden`).
+  - **Effects**: every action's price ×1.25 Burdened and ×1.5 Strained or Overloaded ("Costs"
+    above); the Dexterity bonus to Defence at most +3 Burdened, +1 Strained, 0 Overloaded, the
+    lower of that and worn armour's `max_dex` winning ("Combat" above); footsteps ×1.25 and ×1.5
+    as loud (§5 "Hearing"). Overloaded, the actor cannot move: no step, no walking off a local
+    area's edge, no stairs, no entering a location or local area ("You carry too much to move.",
+    refused, no time); everything else works (waiting, attacking, opening doors, picking up,
+    dropping, putting on and taking off), as slowly as Strained. Picking up is always allowed,
+    even into Overloaded, as in ADOM. An overloaded creature opens doors but waits instead of
+    stepping.
+  - **Dwarves** (the race's `ignores_burdened`): Burdened costs them nothing (no slowdown, no
+    Dexterity cap, no louder steps; `Load::penalty`); from Strained on they are treated like
+    everyone else. Their burden is still Burdened in words.
+  - **Creatures** follow the same rules from their stats and their type's size (none carries
+    enough to be burdened yet; AI that picks things up will stop at Burdened, later).
+  - **What the player sees** (`PerceptionView::own_load`: what they carry, their limit, and
+    whether they ignore Burdened, all from what they know): their burden in words, in the status
+    bar when it is not Unburdened (`Burdened`, `Strained`, `Overloaded`; it gives way late, after
+    the time and before the hit points), in the inventory and on the character screen together
+    with the weights at which it changes (`Burdened over 15 kg, strained over 30 kg, overloaded
+    over 45 kg`; §6), and a message when it changes, right after the action that changed it:
+    "You are burdened.", "You strain under your load.", "You carry too much to move.", "You are
+    no longer burdened." Never a modifier, never another actor's load. Dev dumps: the
+    `inventory` layer has the player's burden and thresholds, JSON dumps `burden` (`level`,
+    `limit`), and the `actors` layer every actor's burden and limit.
+  - Nothing is stored: the burden follows from the inventory, the stats, and the content, so
+    saves and the state hash are unchanged.
 - **Character creation** (`warlock-core/src/character.rs`; M15): a run starts as a character, a
   race (`data/races.toml`), a gender (male, female, or other), and a class
   (`data/classes.toml`), chosen on New run (§6) or given on the command line (`--character
@@ -1439,7 +1509,9 @@ cargo xtask golden [--update]                             # compare golden scree
   `sound` (the view with each heard sound at its rough place: `f` footsteps, `o` a door opening,
   `c` a door closing, `x` fighting, `b` a bowstring, `m` chanting, upper case when loud),
   `inventory` (what the player carries, by letter with weights and what is worn or wielded
-  marked, `b - a leather jerkin (being worn) (3.5 kg)`, then what they carry and weigh),
+  marked, `b - a leather jerkin (being worn) (3.5 kg)`, then what they carry, their burden and
+  its thresholds, and what they weigh, `carried 4.2 kg (unburdened: burdened over 14 kg,
+  strained over 28 kg, overloaded over 42 kg), total weight 74.2 kg`),
   `equipment` (the player's slots by letter, `c Body: a leather jerkin (b)`, `-` when empty),
   and `stats` (the player's race, gender, and class, `Race Dwarf`, their age, birthday, and
   sign, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`, then their own scores,
@@ -1447,12 +1519,14 @@ cargo xtask golden [--update]                             # compare golden scree
   `truth` (terrain, objects, and creatures) and `actors` (every actor on the level with its hit
   points and Defence, `hp 8/12 dv 13`, its
   weight, base plus carried, what it carries and of that wears and wields, `equipped main_hand a
-  spear`, and its stats as score/potential, `St 12/15`) show
+  spear`, its burden and carrying limit, `unburdened (limit 31.5 kg)`, and its stats as
+  score/potential, `St 12/15`) show
   ground truth and are dev-only. JSON dumps
   carry turn, game time (seconds and calendar fields), level, viewer, the weather (under the open
   sky; else null), seen actors (each with how hurt it looks, `health`: `unhurt`,
   `lightly_wounded`, `wounded`, `badly_wounded`, `nearly_dead`), heard sounds, the player's
-  inventory, equipment (by slot id: letter, object, count), weight, character
+  inventory, equipment (by slot id: letter, object, count), weight, burden (`burden: {level,
+  limit}`, the limit in grams), character
   (`{race, gender, class, raised, age, born: {year, month, day}, sign: {animal, element}}` or
   null), scores (`stats`, by stat id), hit points (`hp: {current, max}`), Defence (`defence`, the
   total), how the run ended (`death: {turn, time, place, by}` or null), recent messages,

@@ -259,6 +259,15 @@ impl World {
         self.attack_with(attacker, target, kind, profile, events)
     }
 
+    /// The Defence of actor `id`, its burden capping its Dexterity (spec §8 "Burden").
+    pub(crate) fn defence_of(&self, id: ActorId) -> combat::Defence {
+        let actor = &self.state.actors[&id];
+        actor.defence(
+            &self.content,
+            self.state.load(&self.content, actor).penalty(),
+        )
+    }
+
     /// Actor `attacker` attacks actor `target` with `profile` (`None`: an intent only, nothing is
     /// rolled), against the target's Defence: the event, the noise, and the damage, which may
     /// kill. Ranged combat (#117) calls this with the profile of the launcher, ammunition, or
@@ -277,10 +286,8 @@ impl World {
         ) else {
             return None;
         };
-        let blow = profile.map(|profile| {
-            let defence = self.state.actors[&target].defence(&self.content);
-            combat::strike(&profile, &defence, &mut self.state.rng)
-        });
+        let defence = self.defence_of(target);
+        let blow = profile.map(|profile| combat::strike(&profile, &defence, &mut self.state.rng));
         events.push(Event::Attacked {
             attacker,
             target,

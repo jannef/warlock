@@ -1,7 +1,10 @@
 # Creature types. The player is the creature with id "player".
 # Fields: id, name, glyph, fg, speed (how quickly it acts: 1000 is normal and the default, 2000
 # twice as many actions in the same game time; 100 to 10000; never shown to the player), weight
-# (the creature's own weight in grams, required; what it carries adds to it), light (a preset in
+# (the creature's own weight in grams, required; what it carries adds to it), size (a size in
+# sizes.toml, default "medium": how much it can carry, 1.5 kg × (2 × Strength + Toughness) scaled
+# by the size's carry, before it is burdened, spec §8 "Burden"; the player's comes from their
+# race when the run has a character), light (a preset in
 # lights.toml the creature carries), anim, and the presentation-only effects glow and
 # [[creature.particles]] (see terrain.toml; they move with the creature; `on = "attack"` bursts
 # at the target of each attack the player sees, e.g. a spell's sparkle).
@@ -25,7 +28,7 @@
 #   attack_cost  what its attacks cost in energy (100 to 10000), instead of the attack's cost in
 #                actions.toml (melee, shoot, or cast; 1000 is a normal action)
 #
-# Stats (spec §8 "Stats"; never shown to the player, and no rule uses them yet): stats, its scores
+# Stats (spec §8 "Stats"; never shown to the player; combat and burden use them): stats, its scores
 # by stat (strength, dexterity, toughness, intelligence, willpower, presence; 1 to 40, default 10,
 # the average), and potential, how far each score could grow (default: the score; never below
 # it). The player's stats come from the scenario, not from here.
@@ -61,6 +64,7 @@ sight = 8
 footsteps = 50
 hearing = 5
 weight = 4000
+size = "small"
 stats = { strength = 10, dexterity = 17, toughness = 12, intelligence = 1, willpower = 12, presence = 4 }
 attack = { damage = "1d4", name = "bite", verb = "bites" }
 
@@ -76,6 +80,7 @@ vision = "darkvision"
 sight = 8
 hearing = 3
 weight = 500
+size = "small"
 stats = { strength = 1, dexterity = 15, toughness = 10, intelligence = 2, willpower = 14, presence = 4 }
 attack = { damage = "1d3", name = "bite", verb = "bites" }
 
@@ -86,6 +91,7 @@ glyph = "k"
 fg = "#7cb85a"
 speed = 900
 weight = 25000
+size = "small"
 light = "torch"
 faction = "kobolds"
 vision = "darkvision"
@@ -140,6 +146,7 @@ opens_doors = true
 footsteps = 70
 hearing = 12
 weight = 22000
+size = "small"
 stats = { strength = 8, dexterity = 15, toughness = 10, intelligence = 10, willpower = 10, presence = 8 }
 
 # The war band's shaman, slow and frail: casts from a few cells away. A faint violet sparkle
@@ -158,6 +165,7 @@ opens_doors = true
 footsteps = 60
 hearing = 10
 weight = 18000
+size = "small"
 stats = { strength = 7, dexterity = 11, toughness = 8, intelligence = 12, willpower = 14, presence = 10 }
 
 [[creature.particles]]
@@ -185,6 +193,7 @@ sight = 6
 footsteps = 30
 hearing = 20
 weight = 300
+size = "small"
 stats = { strength = 10, dexterity = 11, toughness = 11, intelligence = 1, willpower = 10, presence = 7 }
 attack = { damage = "1d3", name = "bite", verb = "bites" }
 natural = { defence = 3, name = "shell" }

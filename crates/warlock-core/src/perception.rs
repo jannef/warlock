@@ -3,10 +3,11 @@
 //! Everything the player can know — and therefore everything rendering, UI, and dumps may show —
 //! goes through [`PerceptionView`]. It exposes currently visible cells, creatures (what they
 //! wear and wield, and how hurt they look, in words), objects, and light, remembered terrain and
-//! objects, and what the player carries, wears, weighs, and scores in each stat, and their hit
-//! points and Defence; it never exposes unseen terrain or objects, hidden creatures, what else
-//! creatures carry or their hit points, any stat's modifier or potential, a creature's stats,
-//! a to-hit, or light the player's eyes cannot perceive.
+//! objects, and what the player carries, wears, weighs, and scores in each stat, their burden and
+//! carrying limit, and their hit points and Defence; it never exposes unseen terrain or objects,
+//! hidden creatures, what else creatures carry, their burden, or their hit points, any stat's
+//! modifier or potential, a creature's stats, a to-hit, or light the player's eyes cannot
+//! perceive.
 //!
 //! **Memory** (spec §5): terrain and piles of objects as last seen. Objects are seen where
 //! creatures are (cells in line of sight, never completed walls); a pile seen gone is forgotten,
@@ -45,6 +46,7 @@
 //! is not visible are perceived with their kind, volume, and a rough place (a cell the player
 //! does not see, near the source); never with who made them.
 
+use crate::burden::{self, Load};
 use crate::character::Character;
 use crate::combat::Health;
 use crate::content::{
@@ -705,10 +707,18 @@ impl<'a> PerceptionView<'a> {
         (self.player.hp.clamp(0, max), max)
     }
 
-    /// The player's Defence ("Dv"): the total an attack roll must reach. Only the total: its
-    /// Dexterity part would give away a modifier.
+    /// What the player carries against what they can (spec §8 "Burden"): their burden, and the
+    /// weights at which it changes, which follow from scores they know.
+    pub fn own_load(&self) -> Load {
+        let race = self.character.and_then(|c| c.spec.race(self.content).ok());
+        burden::load(self.player, race, self.content)
+    }
+
+    /// The player's Defence ("Dv"): the total an attack roll must reach (their burden capping
+    /// their Dexterity). Only the total: its Dexterity part would give away a modifier.
     pub fn own_defence(&self) -> i32 {
-        self.player.defence(self.content).total()
+        let burden = self.own_load().penalty();
+        self.player.defence(self.content, burden).total()
     }
 
     /// How the run ended, once the player has died (what killed them only if they saw it).

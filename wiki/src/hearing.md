@@ -6,7 +6,9 @@ around you hear too.
 ## What makes noise
 
 - **Footsteps.** Every step makes noise, yours and the creatures'. Some creatures are heavier on
-  their feet than others, and some (bats, which fly) make no sound at all.
+  their feet than others, and some (bats, which fly) make no sound at all. A heavy load makes
+  steps louder: a quarter louder when burdened, half again as loud when strained (see
+  [Burden](burden.md)).
 - **Doors.** Opening a door makes noise, and closing one is louder still.
 - **Fighting.** Attacks are noisy: you may hear fighting, a bowstring, or chanting (a spell)
   where you cannot see it. See [Creatures](creatures.md).

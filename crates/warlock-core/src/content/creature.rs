@@ -62,6 +62,8 @@ pub(super) struct CreatureSpec {
     pub speed: u32,
     /// Base weight in grams, without anything carried.
     pub weight: u32,
+    /// Its size (`data/sizes.toml`); none: medium.
+    pub size: Option<String>,
     /// The faction it belongs to (`data/factions.toml`).
     pub faction: Option<String>,
     /// Its eyes: a vision profile in `data/vision.toml`.
@@ -179,6 +181,7 @@ pub(super) struct Resolved {
     pub light: Option<LightId>,
     pub faction: Option<FactionId>,
     pub vision: usize,
+    pub size: usize,
     pub stats: Stats,
     pub attack: Option<NaturalAttack>,
 }
@@ -192,6 +195,7 @@ impl CreatureSpec {
             fg: self.fg,
             speed: self.speed,
             weight: self.weight,
+            size: r.size,
             faction: r.faction,
             vision: r.vision,
             sight: self.sight,
@@ -226,6 +230,10 @@ pub struct CreatureDef {
     /// Gameplay: the creature's own weight in grams, without what it carries (see
     /// [`crate::object::Weight`]). At least 1.
     pub weight: u32,
+    /// Gameplay: its size, an index into [`super::Content::sizes`] (spec §8 "Burden"): how much
+    /// it can carry before it is burdened. The player's comes from their race, if the run has a
+    /// character.
+    pub size: usize,
     /// The faction it belongs to; `None` when the content defines no factions. The player's
     /// creature belongs to [`super::PLAYER_FACTION`].
     pub faction: Option<FactionId>,

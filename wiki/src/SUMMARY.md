@@ -17,6 +17,7 @@
 - [Terrain](terrain.md)
 - [Objects and your pack](objects.md)
 - [Equipment](equipment.md)
+- [Burden](burden.md)
 - [Your character](character.md)
   - [Races](races.md)
   - [Classes](classes.md)

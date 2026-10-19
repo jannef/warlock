@@ -91,12 +91,14 @@ player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `SLO
 digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places over the view: `f`
 footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m` chanting, upper case
 when loud), `inventory` (what the player
-carries and weighs, worn and wielded things marked), `equipment` (the player's slots), `stats`
+carries and weighs, worn and wielded things marked, their burden and its thresholds),
+`equipment` (the player's slots), `stats`
 (the player's race, gender, and class, then their own scores), `truth`
 (ground truth, **dev-only**), `actors` (every actor on the level with its hit points and
-Defence, its weight, what it carries and of that wears and wields, and its stats as
-score/potential, **dev-only**). The header line has the player's `hp 17/17` (and `dead` once the
-run has ended); JSON dumps add `hp`, `defence`, `death`, and each seen actor's `health`. Replay
+Defence, its weight, what it carries and of that wears and wields, its burden and carrying
+limit, and its stats as score/potential, **dev-only**). The header line has the player's `hp
+17/17` (and `dead` once the run has ended); JSON dumps add `hp`, `defence`, `burden` (`level`,
+`limit`), `death`, and each seen actor's `health`. Replay
 files are JSON
 `{game_version, scenario, seed, character, steps:[{action, hash}]}` (`character` =
 `{race, gender, class}`, left out for a run without one; a replay without it starts as the
@@ -187,7 +189,8 @@ to open, read keys for, or draw one:
   own key `e` closes it only when it names none; `ItemScreen`: the stacks that fit one slot, by
   their inventory letters), `ui/character_screen.rs` (name, race, gender, class, age, birthday,
   and sign (`birth_parts`/`fit_parts`, shared with the summary), the player's scores, hit points
-  and Defence total, weight), `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per
+  and Defence total, weight and burden thresholds; 72 wide like the summary),
+  `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per
   step with a Random row rolled from the seed, `SummaryScreen`, `Draft`), `ui/death_screen.rs`
   (who killed the player, where, when, after how many turns).
 
@@ -233,7 +236,11 @@ the goal or an interruption, its last turn cut short with `price_until` so it en
 goal at any player speed (perceiving only after turns in which a creature could have come into
 view: `out_of_view_for`, which accounts for speed and the cheapest step, or in which the weather
 the player would see changed: `weather_turned`). A new action that takes time needs an
-`ActionKind` (with its id and a line in `data/actions.toml`) and must return its price there.
+`ActionKind` (with its id and a line in `data/actions.toml`) and must return its price there,
+asked through `price_of`/`step_price`/`price_for`: those apply the actor's burden (below,
+`World::burdened`), so a price taken anywhere else would escape it (`price_until`, the rest's
+last turn, deliberately does). Price an action that changes the load before it does (pick up,
+drop).
 `creature_turn` is one creature's action and returns its price: the one place creature behavior
 lives (AI decisions, the noise and events an action makes; the AI is `world/ai.rs`, below).
 Speed (`speed` in `data/creatures.toml`, default 1000 = the player's; any player speed works)
@@ -244,8 +251,10 @@ carry `start_date`/`start_time`. Rest (`R`) is a message-line input mode (`Input
 `input::REST_CHOICES`), not a menu screen.
 
 Hearing (spec §5 "Hearing") lives in `warlock-core/src/noise.rs`. `noise::noise(content, level,
-actor, Act)` is the one place an action's loudness is decided (creature `footsteps` × terrain
-`step_noise` percent for `Act::Step`, the door's `toggle_noise` for `Act::OpenDoor`/`CloseDoor`):
+actor, burden, Act)` is the one place an action's loudness is decided (creature `footsteps` ×
+terrain `step_noise` percent × the burden's `footsteps()` percent for `Act::Step`, the door's
+`toggle_noise` for `Act::OpenDoor`/`CloseDoor`; `make_noise` passes the actor's
+`Load::penalty`):
 a new noisy action gets an `Act` variant there, and its call site in `world/mod.rs` is one
 `self.make_noise(actor, Act::…)` where the action happens. `noise::make` delivers it at once to
 every other actor on the level whose `hearing` threshold it reaches (`propagate`: integer Dijkstra,
@@ -292,7 +301,9 @@ taken off (`World::price_for`); dropping takes off first (`take_off_before_dropp
 `PerceptionView::equipment` (the player's own) and `PerceptionView::gear(actor)` (what a seen
 creature wears and wields, all of what it carries that is seen; look mode, `ui/look.rs::gear`).
 Combat reads equipment (below): `Actor::weapon` (the first hand holding a weapon), `launcher` and
-`ammunition` (the `ready` slots), and `defence` (armour, shield, parry, Dexterity cap).
+`ammunition` (the `ready` slots), and `defence(content, burden)` (armour, shield, parry,
+Dexterity capped by worn `max_dex` and the burden's `max_dex`, the lower winning; the rules ask
+`World::defence_of(id)`, which passes the actor's `Load::penalty`).
 
 Combat (spec §8 "Combat"; M16, #116): the pure rules are `warlock-core/src/combat.rs` (2d12
 `roll_natural`, `hits`, `hit_ways`, `ways`; `Category` (Dexterity, Armour, Shield, Parry,
@@ -335,10 +346,33 @@ score, never below it; `Stats::from_data` validates) on creature types in `data/
 the player's come from their character (below), or from a scenario without one
 (`ScenarioDef::player_stats`; the `player` creature may not set any). **Never show a modifier, a potential, or a creature's stats**: presentation reads only
 `PerceptionView::own_scores` (the player's scores) — the character screen and the `stats` dump
-layer; only the dev `actors` layer and `--state` dumps show the rest. Only combat uses stats
-(Strength, Dexterity, Toughness), and no other D&D concept (checks, saves, carrying capacity)
-comes with them. The status bar has no stats segment: it is already full at common window
-sizes (it shows `HP 17/17` right after the level name, dropping only before it).
+layer; only the dev `actors` layer and `--state` dumps show the rest. Only combat (Strength,
+Dexterity, Toughness) and burden (Strength and Toughness scores) use stats, and no other D&D
+concept (checks, saves) comes with them. The status bar has no stats segment: it is already
+full at common window sizes (it shows `HP 17/17` right after the level name, dropping only
+before it, and the burden right after that when there is one).
+
+Burden (spec §8 "Burden"; M16, #115) lives in `warlock-core/src/burden.rs`: `Load` (`carried`,
+`limit`, `ignores_burdened`; `burden()` the level by thirds, `penalty()` what the actor suffers:
+Unburdened for a Burdened dwarf, `thresholds()`/`over()`), `Burden` (Unburdened, Burdened,
+Strained, Overloaded; its effects: `slow(price)` ×1.25/×1.5 rounded up, `max_dex()` +3/+1/0,
+`footsteps()` 125/150 %, `can_move()`, `news()`), `limit(st, to, carry)` = 1500 g × (2 St + To)
+× carry % (always a multiple of 3, so thirds are exact), and `load(actor, race, content)`.
+Sizes are data, `data/sizes.toml` (`content/size.rs`, `SizeDef { id, name, carry }`;
+`Content::sizes`/`size`/`size_index`; `medium` required, the default; without the file only
+medium); races have `size` and `ignores_burdened` (dwarves), creature types `size` (the
+kobolds, the rat, the bat, and the beetle are small). The player's size is their race's when the
+run has a character (`WorldState::load(content, actor)` picks it; `World::actor_load(id)` for
+dev tools). Nothing is stored (no `FORMAT_VERSION` bump): the burden follows from the inventory,
+stats, and content. Every penalty goes by `Load::penalty`: prices in `schedule.rs`
+(`World::burdened`, inside `price_of` and `step_price`: the one place, so every action and
+overworld journey is slowed), `World::defence_of`, `make_noise`, and moving (`World::can_move`
+refuses steps, edge exits, stairs, and entering a location or local area: "You carry too much to
+move."; `creature_steps` makes an overloaded creature wait). `World::apply` says the change
+(`burden_news`) right after the player's action. Presentation reads `PerceptionView::own_load`:
+the status bar (`Burdened`/`Strained`/`Overloaded` after the HP, priority 1), the inventory
+(72 wide; `Carrying 28.4 kg (burdened)` and the thresholds line, `character_screen::thresholds`)
+and the character screen.
 
 Character creation (spec §8 "Character creation"; M15) lives in `warlock-core/src/character.rs`:
 `CharacterSpec` (race id, `Gender`, class id; `FromStr`/`Display` as `dwarf,female,warrior`;
@@ -609,9 +643,11 @@ action costs, sight radii, the pack's
 size, the stats' names, races (stat adjustments as written, dice included, vision, starting
 ages, hit points), classes (stat adjustments, hit points), what each gender raises, the horoscope
 (animals, elements, and the great cycle's signs and years), combat (weapons, armour and shields,
-the 2d12 hit chances and threat ranges, regeneration by Toughness); never hidden rules such as
+the 2d12 hit chances and threat ranges, regeneration by Toughness), burden (its levels and what
+each costs, the races' sizes, sample carrying limits); never hidden rules such as
 speed, hearing thresholds, creature sight, creature weights, stat modifiers and potentials, a
-to-hit, or creatures' stats, hit points, and natural attacks and armour) are tables generated by
+to-hit, or creatures' stats, hit points, and natural attacks and armour) are tables
+generated by
 `cargo xtask wiki`
 (`xtask/src/wiki.rs`) into `wiki/src/generated/` (committed) and pulled into pages with
 `{{#include generated/NAME.md}}`; CI runs `cargo xtask wiki --check` and `mdbook build wiki` on the

@@ -14,3 +14,6 @@ Your starting age is picked at random within the race's range.
 
 Races are not balanced against each other. Humans start with no gifts and no flaws, and the
 others trade one strength for one weakness, or for two.
+
+Halflings and gnomes are small, and carry three quarters of what the others do; dwarves are not
+slowed or hindered by a load until they strain under it. See [Burden](burden.md).

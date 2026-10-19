@@ -38,6 +38,11 @@
 //! Combat (spec §8 "Combat", `fight.rs`): attacks are rolled against Defence and take hit
 //! points; a creature at 0 dies and drops what it carried, and the player's death ends the run
 //! ([`World::death`]): every action after it is refused. Hit points come back with game time.
+//!
+//! Burden (spec §8 "Burden", [`crate::burden`]): what an actor carries against what its
+//! Strength, Toughness, and size let it carry slows every action it takes (in the prices,
+//! `schedule.rs`), caps its Dexterity in Defence, makes its steps louder, and, overloaded, keeps
+//! it from moving. The player is told when their burden changes.
 
 mod actor;
 mod ai;
@@ -54,6 +59,7 @@ pub(crate) use hash::fnv1a;
 pub use level::LevelState;
 
 use crate::action::{Action, Event, Letters, MAX_REST, Outcome, Rest, letter};
+use crate::burden::{self, Burden, Load};
 use crate::character::{Character, CharacterSpec};
 use crate::content::{
     ActionKind, Content, CreatureId, EdgeExit, LevelKind, LevelTemplate, StairsDir, Stance,
@@ -150,6 +156,16 @@ impl WorldState {
 
     pub(crate) fn current(&self) -> &LevelState {
         &self.levels[&self.current_level]
+    }
+
+    /// What `actor` carries against what it can (spec §8 "Burden"): the player by their race's
+    /// size (and whether it ignores Burdened) when the run has a character, anyone else by its
+    /// creature type's size.
+    pub(crate) fn load(&self, content: &Content, actor: &Actor) -> Load {
+        let race = (self.character.as_ref())
+            .filter(|_| actor.kind == ActorKind::Player)
+            .and_then(|c| c.spec.race(content).ok());
+        burden::load(actor, race, content)
     }
 
     fn current_mut(&mut self) -> &mut LevelState {
@@ -462,6 +478,17 @@ impl World {
         self.state.actors.get(&id).map(|a| a.weight(&self.content))
     }
 
+    /// What actor `id`, on any level, carries against what it can (spec §8 "Burden"). For the
+    /// rules and dev tools; the player is shown only their own ([`PerceptionView::own_load`]).
+    pub fn actor_load(&self, id: ActorId) -> Option<Load> {
+        (self.state.actors.get(&id)).map(|a| self.state.load(&self.content, a))
+    }
+
+    /// What actor `id` carries against what it can.
+    fn load_of(&self, id: ActorId) -> Load {
+        self.state.load(&self.content, &self.state.actors[&id])
+    }
+
     /// Ground truth for the current level, **for developer tools only** (reveal mode, debug
     /// dumps). Gameplay presentation must use [`World::perception`].
     pub fn ground_truth(&self) -> (&LevelState, impl Iterator<Item = &Actor>) {
@@ -483,7 +510,10 @@ impl World {
         self.fallen.clear();
         let (turn, time) = (self.state.turn, self.state.time);
         let mut events = Vec::new();
-        match self.player_acts(action, &mut events) {
+        let burden = self.load_of(self.state.player).burden();
+        let spent = self.player_acts(action, &mut events);
+        self.burden_news(burden);
+        match spent {
             Spent::Nothing => {}
             Spent::NoTime => self.perceive(&mut events),
             Spent::Turn(price) => {
@@ -553,6 +583,24 @@ impl World {
             (None, false, Rest::Dusk) => "You rest until dusk.".into(),
         };
         self.say(text);
+    }
+
+    /// A message when the player's burden is no longer `before` (spec §8 "Burden"): picking
+    /// something up or dropping it changed it. Said right after the action that did it.
+    fn burden_news(&mut self, before: Burden) {
+        let now = self.load_of(self.state.player).burden();
+        if now != before {
+            self.say(now.news());
+        }
+    }
+
+    /// Whether the player can move under their load; if not, says so (spec §8 "Burden").
+    fn can_move(&mut self) -> bool {
+        let movable = self.load_of(self.state.player).penalty().can_move();
+        if !movable {
+            self.say(burden::MOVE_REFUSED);
+        }
+        movable
     }
 
     /// The weather now, which the player would see: on a level under the open sky.
@@ -727,13 +775,14 @@ impl World {
         }
     }
 
-    /// The noise of `act` by `actor` on the current level, heard by those it reaches.
+    /// The noise of `act` by `actor` on the current level (under its burden), heard by those it
+    /// reaches.
     fn make_noise(&mut self, actor: ActorId, act: Act) {
-        let made = self
-            .state
-            .actors
-            .get(&actor)
-            .and_then(|a| noise::noise(&self.content, self.state.current(), a, act));
+        let (state, content) = (&self.state, &self.content);
+        let made = state.actors.get(&actor).and_then(|a| {
+            let burden = state.load(content, a).penalty();
+            noise::noise(content, state.current(), a, burden, act)
+        });
         if let Some(made) = made {
             noise::make(&mut self.state, &self.content, made);
         }
@@ -795,7 +844,15 @@ impl World {
             ),
             Action::Ascend => (self.take_stairs(StairsDir::Up, events), ActionKind::Stairs),
             Action::ToggleLantern => (self.toggle_lantern(), ActionKind::Lantern),
-            Action::PickUp(letters) => (self.pick_up(*letters), ActionKind::PickUp),
+            Action::PickUp(letters) => {
+                // Priced at the load the player has as they begin.
+                let price = self.price_of(self.state.player, ActionKind::PickUp);
+                return if self.pick_up(*letters) {
+                    Spent::Turn(price)
+                } else {
+                    Spent::Nothing
+                };
+            }
             Action::Drop(letters) => return self.drop_objects(*letters),
             Action::Equip { slot, item } => return self.equip(slot, *item),
             Action::Remove(slot) => return self.remove(slot),
@@ -902,6 +959,8 @@ impl World {
         };
         let mut kinds = self.take_off_before_dropping(chosen.iter());
         kinds.push(ActionKind::Drop);
+        // Priced at the load the player has as they begin.
+        let spent = self.price_for(&kinds);
         let (dropped, kept) = split(&inventory, chosen);
         *self.state.inventory_mut() = kept;
         self.player_mut().equipment.after_removal(chosen);
@@ -912,7 +971,7 @@ impl World {
         object::add_to_pile(&mut pile, &dropped, &content);
         level.set_pile(here, pile);
         self.say(format!("You drop {}.", object::phrase(&dropped, &content)));
-        self.price_for(&kinds)
+        spent
     }
 
     /// The positions `letters` names in a list of `len` stacks, every position (up to `z`) for
@@ -960,6 +1019,9 @@ impl World {
         let level = self.state.current();
         let Some(&terrain) = level.terrain.get(to) else {
             if let Some(exit) = level.exit.clone() {
+                if !self.can_move() {
+                    return Spent::Nothing;
+                }
                 return self.leave_by_edge(exit, events);
             }
             self.say("You can't go that way.");
@@ -995,9 +1057,13 @@ impl World {
             self.say(format!("{what} is in the way."));
             return Spent::Nothing;
         }
+        if !self.can_move() {
+            return Spent::Nothing;
+        }
         let player = self.state.player;
-        let step = self.step_price(player, def);
-        self.state.overworld_step = (level.kind == LevelKind::Overworld).then_some(dir);
+        let step = self.step_price(player, self.content.terrain(terrain));
+        let overworld = self.state.current().kind == LevelKind::Overworld;
+        self.state.overworld_step = overworld.then_some(dir);
         if let Some(actor) = self.state.actors.get_mut(&player) {
             actor.pos = to;
         }
@@ -1065,6 +1131,9 @@ impl World {
             return false;
         };
         let what = self.content.terrain(area.terrain).name.clone();
+        if !self.can_move() {
+            return false;
+        }
         let from = self.state.current_level.clone();
         let side = self.state.overworld_step.map(Dir::opposite);
         let content = self.content.clone();
@@ -1160,6 +1229,9 @@ impl World {
             self.say("These stairs lead nowhere yet.");
             return false;
         };
+        if !self.can_move() {
+            return false;
+        }
         let from = self.state.current_level.clone();
         if let Err(err) = self.travel(&to, None) {
             self.say(format!("The stairs are blocked ({err})."));
@@ -1319,6 +1391,8 @@ fn instantiate_level(state: &mut WorldState, content: &Content, template: &Level
 mod ai_tests;
 #[cfg(test)]
 mod branch_tests;
+#[cfg(test)]
+mod burden_tests;
 #[cfg(test)]
 mod character_tests;
 #[cfg(test)]

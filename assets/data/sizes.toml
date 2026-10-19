@@ -1,0 +1,20 @@
+# Sizes (spec §8 "Burden"): how big a race (races.toml) or a creature type (creatures.toml) is,
+# and so how much it can carry.
+#
+# Fields:
+#   id      the size's id, named by races and creature types (`size = "small"`)
+#   name    its name, as the wiki shows it
+#   carry   how much it carries, in percent of what a medium one does (10 to 1000): the carrying
+#           limit, 1.5 kg × (2 × Strength + Toughness), is scaled by it
+#
+# `medium` is required: it is the size of every race and creature type that names none.
+
+[[size]]
+id = "small"
+name = "Small"
+carry = 75
+
+[[size]]
+id = "medium"
+name = "Medium"
+carry = 100

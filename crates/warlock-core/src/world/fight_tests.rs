@@ -467,25 +467,35 @@ fn defence_stacks_by_category_and_armour_caps_dexterity() {
     me.equipment.put(&[slot("body")], 0);
     me.equipment.put(&[slot("off_hand")], 1);
     me.equipment.put(&[slot("main_hand")], 2);
-    let dv = me.defence(&content);
+    let dv = me.defence(&content, Burden::Unburdened);
     // The mail caps Dexterity at +1; armour 5, shield 2, parry 3.
     assert_eq!(dv.bonus(Category::Dexterity), 1);
     assert_eq!(dv.bonus(Category::Armour), 5);
     assert_eq!(dv.bonus(Category::Shield), 2);
     assert_eq!(dv.bonus(Category::Parry), 3);
     assert_eq!(dv.total(), 21);
-    // A clumsy player keeps the whole penalty under armour.
+    // A clumsy player keeps the whole penalty under armour (and a load).
     let mut clumsy = me.clone();
     clumsy.stats = crate::stats::Stats::from_data(
         &std::collections::BTreeMap::from([(crate::stats::Stat::Dexterity, 6)]),
         &Default::default(),
     )
     .expect("stats");
-    assert_eq!(clumsy.defence(&content).bonus(Category::Dexterity), -2);
+    assert_eq!(
+        clumsy
+            .defence(&content, Burden::Burdened)
+            .bonus(Category::Dexterity),
+        -2
+    );
     // The turtle's shell is natural armour.
     let w = world_on("#####\n#@t.#\n#####\n", "hp = 10");
     let turtle = actor(&w, 1).expect("turtle");
-    assert_eq!(turtle.defence(w.content()).bonus(Category::Natural), 15);
+    assert_eq!(
+        turtle
+            .defence(w.content(), Burden::Unburdened)
+            .bonus(Category::Natural),
+        15
+    );
 }
 
 #[test]
