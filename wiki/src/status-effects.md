@@ -42,7 +42,8 @@ bleeds to death."
 ## Poisoned
 
 Some creatures' attacks carry poison: now and then a giant rat's filthy bite leaves you sick.
-"You feel sick."
+"You feel sick." So does bad food: a rotten corpse that stays down, and the flesh of some
+creatures (see [Food and corpses](food.md)).
 
 Poison works slowly: a hit point every couple of minutes, faster the stronger it is, and your hit
 points come back only half as fast. **Strong poison** (a few doses at once) also makes you

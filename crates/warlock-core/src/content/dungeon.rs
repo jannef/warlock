@@ -16,6 +16,7 @@
 //! creatures = ["rat", "kobold"] # patrolling creatures generators may place; default none
 //! ambient = [0, 0, 0, 0]        # optional
 //! temperature = 9               # °C; default the dungeon default (10)
+//! key = "rusty_key"             # optional: rooms levels lock a few rooms with its lock
 //!
 //! [[dungeon.levels]]            # optional per-depth overrides, first match wins
 //! from = 3
@@ -27,6 +28,7 @@
 
 use super::ContentError;
 use super::creature::CreatureId;
+use super::object::ObjectId;
 use crate::light::Light;
 use crate::temperature::{LEVEL_TEMPERATURES, Temperature};
 use serde::Deserialize;
@@ -72,6 +74,8 @@ struct DungeonSpec {
     creatures: Vec<String>,
     /// The temperature on its levels, in °C; default the dungeon default.
     temperature: Option<i8>,
+    /// The key (an object) to the rooms the generators lock; none: no locked rooms.
+    key: Option<String>,
     #[serde(default)]
     levels: Vec<LevelsSpec>,
 }
@@ -106,6 +110,9 @@ pub struct DungeonDef {
     pub ambient: Light,
     /// Creatures generators may place on patrol.
     pub creatures: Vec<CreatureId>,
+    /// The key to the rooms the rooms generator locks (spec §8 "Doors"): it locks them with the
+    /// lock this key opens and leaves one where the player can reach it. `None`: no locked rooms.
+    pub key: Option<ObjectId>,
     /// One plan per depth, index `depth - 1`.
     plans: Vec<LevelPlan>,
 }
@@ -139,11 +146,13 @@ pub fn parse_branch_level(id: &str) -> Option<(&str, u32)> {
 }
 
 impl DungeonFile {
-    /// Validates every branch; `creature_id` resolves creature names.
+    /// Validates every branch; `creature_id` resolves creature names, `key_id` the names of
+    /// keys (objects that open a lock).
     pub(super) fn resolve(
         self,
         file: &str,
         creature_id: impl Fn(&str) -> Option<CreatureId>,
+        key_id: impl Fn(&str) -> Option<ObjectId>,
     ) -> Result<Vec<DungeonDef>, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let mut defs: Vec<DungeonDef> = Vec::new();
@@ -218,12 +227,21 @@ impl DungeonFile {
                         .ok_or_else(|| err(format!("dungeon `{id}` uses unknown creature `{c}`")))
                 })
                 .collect::<Result<Vec<_>, _>>()?;
+            let key = match &spec.key {
+                Some(k) => Some(key_id(k).ok_or_else(|| {
+                    err(format!(
+                        "dungeon `{id}`: `key = \"{k}\"` is no key (objects.toml)"
+                    ))
+                })?),
+                None => None,
+            };
             defs.push(DungeonDef {
                 name: spec.name.unwrap_or_else(|| id.clone()),
                 id,
                 depth: spec.depth,
                 ambient: spec.ambient,
                 creatures,
+                key,
                 plans,
             });
         }
@@ -238,7 +256,11 @@ mod tests {
     fn resolve(text: &str) -> Result<Vec<DungeonDef>, ContentError> {
         let file: DungeonFile =
             toml::from_str(text).map_err(|e| ContentError::new("d", e.to_string()))?;
-        file.resolve("d", |c| (c == "rat").then_some(CreatureId(1)))
+        file.resolve(
+            "d",
+            |c| (c == "rat").then_some(CreatureId(1)),
+            |k| (k == "key").then_some(ObjectId(2)),
+        )
     }
 
     #[test]
@@ -304,6 +326,11 @@ mod tests {
         let base = "[[dungeon]]\ngenerator = \"rooms\"\ndepth = 2\nsize = [80, 21]\n";
         assert!(resolve(&format!("{base}id = \"a:b\"\n")).is_err());
         assert!(resolve(&format!("{base}id = \"a\"\ncreatures = [\"dragon\"]\n")).is_err());
+        assert!(resolve(&format!("{base}id = \"a\"\nkey = \"dagger\"\n")).is_err());
+        assert_eq!(
+            resolve(&format!("{base}id = \"a\"\nkey = \"key\"\n")).unwrap()[0].key,
+            Some(ObjectId(2))
+        );
         let tiny = "[[dungeon]]\nid = \"a\"\ngenerator = \"caves\"\ndepth = 2\nsize = [80, 21]\n";
         assert!(resolve(tiny).unwrap_err().message.contains("outside"));
         let range = format!(

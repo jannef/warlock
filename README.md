@@ -64,6 +64,12 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   of Warcraft (nothing from grey ones, a little extra from tougher ones). Levels run to 50 and, up
   to level 20, make you hardier. Your level and XP show on the status bar, the character screen,
   and the death screen.
+- **People and talk** — the showcase has folk to talk to: a gardener and a wandering bard in the
+  courtyard, an old hermit by the hub's stairs. Chat with `C`: most say a one-liner, a different
+  one each time; some have topics to ask about on a small dialogue screen (the hermit knows the
+  hall's rooms, the bard the moon, the year 1444, and the Great Race). They mutter to themselves
+  now and then, which you may overhear through a wall. Walking into anyone who is not hostile
+  swaps places with them, so nobody blocks a corridor (a few will not budge).
 - **Ranged combat** — bows (drawn by Strength), a crossbow, a sling, and throwing weapons; aim
   ADOM-style with a cursor and a faint line of fire, watch the arrow fly, and pick it up where it
   fell. A flaming arrow flies burning and lights the dark where it lands until it burns out:
@@ -85,9 +91,18 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   Toughness can bear you are burdened, then strained, then overloaded. Every action takes longer,
   armour-like caps keep your Dexterity from helping your Defence, and your footsteps get louder.
   Dwarves shrug off the first level. The inventory shows where the thresholds lie.
+- **Doors** — some are locked, and look like any other until you try them: a key made for the
+  lock, or a skeleton key, opens it. Or kick it in (`K`): the stronger you are, the sooner it
+  breaks, and every kick bangs through the halls. Kobolds open doors, but a locked one only with
+  its key; the dungeon's locked rooms always leave their key within reach.
+- **Hunger** — ADOM-style: time empties your stomach (resting and long journeys too), faster for
+  a halfling than an elf. Hungry, then weak, fainting, and starving to death; eat too much and
+  you are bloated and slow, or vomit. Eat rations, bread, and apples, or the corpses creatures
+  leave behind: they weigh what the creature did, rot within a day or two, and some do more than
+  feed you (a kobold tastes terrible; a beetle might toughen you). The hub's pantry has food.
 - **Stats** — Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
   D&D, for you and every creature; a character screen shows your own. Strength, Dexterity, and
-  Toughness count in a fight; the rest do nothing yet.
+  Toughness count in a fight, and Strength kicks doors in; the rest do nothing yet.
 - **Character creation** — ADOM-style, at the start of every run: seven races (elf, half-elf,
   human, dwarf, halfling, gnome, half-orc), each with its own eyes, three genders, and fifteen
   classes from barbarian and wizard to merchant and commoner shape your starting stats and
@@ -177,9 +192,10 @@ cargo run --release -p warlock
 
 | Key | Action |
 |---|---|
-| `h j k l y u b n`, numpad, arrows | Move (8 directions; arrows move orthogonally); moving into a hostile creature attacks it |
+| `h j k l y u b n`, numpad, arrows | Move (8 directions; arrows move orthogonally); moving into a hostile creature attacks it, into anyone else swaps places |
 | `.` or numpad 5 | Wait a turn |
-| `o` / `c` + direction | Open / close a door (walking into a closed door opens it) |
+| `o` / `c` + direction | Open / close a door (walking into a closed door opens it; a locked one opens only with its key, which unlocks it) |
+| `K` + direction | Kick: a door, to break it in, or a creature |
 | `>` / `<` | Go down / up stairs |
 | `L` | Light or douse your lantern |
 | `,` or `g` | Pick up what lies here (choose by letter where several things lie) |
@@ -188,7 +204,9 @@ cargo run --release -p warlock
 | `e` | Equipment: wear and wield things, slot by slot (head, body, hands, rings, missiles, a tool, …), as in ADOM |
 | `@` | Character: your race, gender, class, age, birth sign, stats, hit points, Defence, status effects, and weight |
 | `W` | Weapon skills: your rank in each, and how far to the next |
+| `C` | Chat with someone next to you (asks for a direction if there are several) |
 | `R` | Rest an hour, until dawn, or until nightfall (stops when something comes into view) |
+| `E` | Eat: food lying here, or from your pack (a meal takes a few turns) |
 | `x` | Look around: move a cursor to read what is there (takes no time) |
 | `t` | Shoot or throw what is in your Missile weapon slot: aim (Tab cycles targets), then Enter |
 | `T` | Throw something from your pack: choose it, aim, then Enter |

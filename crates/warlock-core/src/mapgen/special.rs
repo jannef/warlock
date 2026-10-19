@@ -59,7 +59,7 @@ pub(super) fn make(canvas: &mut Canvas, room: SpecialRoom) -> bool {
     }
     if let Some(floor) = effect.floor {
         for p in room.cells() {
-            if canvas.get(p) == canvas.pal.floor && !canvas.is_locked(p) {
+            if canvas.get(p) == canvas.pal.floor && !canvas.is_stamped(p) {
                 canvas.set(p, floor);
             }
         }
@@ -102,7 +102,7 @@ pub(super) fn cave_rooms(canvas: &mut Canvas, rng: &mut Rng, up: Pos) {
 /// [`CHAMBER_R2`] around it, 4-connected, in the order found.
 fn chamber(canvas: &Canvas, middle: Pos) -> Vec<Pos> {
     let open =
-        |p: Pos| canvas.is_walkable(p) && !canvas.is_locked(p) && p.dist2(middle) <= CHAMBER_R2;
+        |p: Pos| canvas.is_walkable(p) && !canvas.is_stamped(p) && p.dist2(middle) <= CHAMBER_R2;
     let mut found = vec![middle];
     let mut queue = VecDeque::from([middle]);
     while let Some(p) = queue.pop_front() {

@@ -127,10 +127,7 @@ fn mm(world: &World, p: Pos) -> u32 {
 fn carry_rocks(world: &mut World, id: ActorId, n: u32) {
     let rock = world.content().object_id("rock").expect("rock");
     let actor = world.state.actors.get_mut(&id).expect("actor");
-    actor.inventory = vec![Stack {
-        object: rock,
-        count: n,
-    }];
+    actor.inventory = vec![Stack::new(rock, n)];
 }
 
 const PLUNGE: &str = "The ice cracks beneath you and you plunge into the freezing water!";

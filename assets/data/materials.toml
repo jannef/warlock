@@ -64,3 +64,7 @@ name = "flesh"
 [[material]]
 id = "plant"
 name = "plant matter"
+
+[[material]]
+id = "brass"
+name = "brass"

@@ -240,8 +240,12 @@ fn rain_shortens_sight_on_the_overworld() {
 
 #[test]
 fn each_change_of_weather_is_said_once() {
-    // Four days and nights in the courtyard, resting a day at a time (rain wakes the player).
-    let mut w = world("courtyard");
+    // Four days and nights in the courtyard, resting a day at a time (rain wakes the player),
+    // with no need to eat (spec §8 "Hunger": four days without food would starve them).
+    let mut files = crate::content::ContentFiles::builtin();
+    files.remove("data/hunger.toml");
+    let content = Arc::new(Content::load(&files).expect("content without hunger"));
+    let mut w = World::new(content, "courtyard", None).expect("scenario starts");
     let start = w.time();
     let end = start + Duration::hours(96);
     while w.time() < end {

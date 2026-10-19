@@ -14,3 +14,6 @@ character = { race = "human", gender = "female", class = "thief" }
 lantern = "lantern"
 # The start time (hh:mm); the date is the default, 11 Darkening 1444 (data/calendar.toml).
 start_time = "08:00"
+# A scenario may also give the player a starting pack, as level files place objects (`carry =
+# ["ration*3"]`; the depths, world, and forest scenarios give food). The showcase gives nothing:
+# its food is in the hub's pantry.

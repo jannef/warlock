@@ -12,7 +12,8 @@
 //! with no drift. An actor's burden (spec §8 "Burden", [`crate::burden`]) raises every price it
 //! pays, ×1.25 Burdened and ×1.5 Strained or Overloaded, as a lower speed would: the prices
 //! here ([`World::price_of`], [`World::step_price`]) are the one place that happens, so it
-//! covers every action, overworld journeys included. Creatures on other levels are frozen (they
+//! covers every action, overworld journeys included; being Bloated (spec §8 "Hunger") raises
+//! them the same way, after the burden. Creatures on other levels are frozen (they
 //! gain nothing until the player is back), so coming back to a level never sets off a burst of
 //! actions; the dev time skip gives nobody energy either.
 //!
@@ -23,7 +24,7 @@
 //!
 //! Speed is hidden from the player: it is in neither the perception snapshot nor any message.
 
-use super::{Actor, ActorId, ActorKind, World};
+use super::{Actor, ActorId, World};
 use crate::action::Event;
 use crate::content::{
     ActionKind, BASE_TURN, Benefit, LevelKind, Stance, TerrainDef, WeaponSkillId, percent_of, price,
@@ -138,10 +139,12 @@ impl World {
     /// `price` as actor `id` pays it now: ×1.25 Burdened, ×1.5 Strained or Overloaded (spec §8
     /// "Burden"; [`crate::burden::Burden::slow`]), nothing more for a race that ignores Burdened
     /// while it is Burdened, and less of the slowdown for its skills (balance; spec §8
-    /// "Skills"). An action is priced at the burden its actor has as it begins.
+    /// "Skills"); and then, while it is Bloated, by `[bloated] slow` (spec §8 "Hunger",
+    /// [`World::bloated`]). An action is priced at the burden and hunger its actor has as it
+    /// begins.
     fn burdened(&self, id: ActorId, price: i64) -> i64 {
         let ease = (self.state.actors[&id].skills).effect(&self.content, Effect::Burden);
-        self.load_of(id).penalty().slow_eased(price, ease)
+        self.bloated(id, self.load_of(id).penalty().slow_eased(price, ease))
     }
 
     /// The price that leaves the player ready to act exactly at `until` (the last turn of a
@@ -161,12 +164,16 @@ impl World {
     /// While the turn runs, energies live in the turn's schedule; they are written back to the
     /// actors when the player is ready. As the clock moves, every actor on the level lives
     /// through the time ([`World::pass_time`]: status effects tick and ease, hit points come
-    /// back). A creature that dies leaves the schedule; the player's death ends the turn there
-    /// and then.
+    /// back, the player's nutrition burns). A player who faints from hunger as the turn begins
+    /// pays for the turns lost too ([`World::faint`]). A creature that dies leaves the schedule;
+    /// the player's death ends the turn there and then.
     pub(super) fn run_turn(&mut self, price: i64, events: &mut Vec<Event>) {
         self.state.turn += 1;
-        // The player has acted: what they heard before is spent, and they hear afresh.
+        // The player has acted: what they heard before is spent, and they hear afresh (lines
+        // muttered too: said only if heard this turn).
         self.player_mut().heard.clear();
+        self.mutters.clear();
+        let price = price.saturating_add(self.faint());
         let player = self.state.player;
         let level = &self.state.current_level;
         let scheduled = |a: &Actor| Scheduled {
@@ -208,7 +215,7 @@ impl World {
                 }
                 continue;
             }
-            if next == 0 {
+            if next == 0 || self.state.death.is_some() {
                 break;
             }
             let fallen = self.fallen.len();
@@ -226,13 +233,16 @@ impl World {
         }
     }
 
-    /// How long from now no creature on the current level could come into view, so a rest need
-    /// not look after turns that end by then (spec §8 "Rest"). A creature is seen only within
-    /// [`VIEW_RADIUS`] (and heard only within [`crate::noise::MAX_REACH`], less than that), and
-    /// every step costs at least the level's cheapest step: before its first step that could
-    /// bring it into view, it needs the energy for all the steps that cannot. (Creature types
-    /// give only their attacks costs of their own, so a step costs every creature the same; a
-    /// burden only makes it dearer, and an overloaded creature cannot step at all.)
+    /// How long from now no creature on the current level that disturbs a rest
+    /// ([`World::disturbs_rest`]) could come into view, so a rest need not look after turns that
+    /// end by then and in which the player heard nothing (spec §8 "Rest"). A creature is seen
+    /// only within [`VIEW_RADIUS`] (and heard only within [`crate::noise::MAX_REACH`], less than
+    /// that), and every step costs at least the level's cheapest step: before its first step that
+    /// could bring it into view, it needs the energy for all the steps that cannot. (Creature
+    /// types give only their attacks costs of their own, so a step costs every creature the same;
+    /// a burden only makes it dearer, and an overloaded creature cannot step at all.) The others
+    /// (the showcase's people) never stop a rest by coming into view, and what they do that the
+    /// player could notice is heard (their steps, their muttering) or done nowhere near.
     pub(super) fn out_of_view_for(&self) -> Duration {
         const _: () = assert!(crate::noise::MAX_REACH < VIEW_RADIUS);
         let level = self.state.current();
@@ -249,7 +259,7 @@ impl World {
         self.state
             .actors
             .values()
-            .filter(|a| a.level == level.id && a.kind == ActorKind::Creature)
+            .filter(|a| a.level == level.id && self.disturbs_rest(a))
             .map(|a| {
                 let steps = i64::from((a.pos.chebyshev(player) - VIEW_RADIUS - 1).max(0));
                 let short = steps.saturating_mul(cheapest).saturating_sub(a.energy);

@@ -39,6 +39,10 @@ pub enum ActionKind {
     Wait,
     OpenDoor,
     CloseDoor,
+    /// Unlocking a locked door with a key: part of opening it, so it costs this plus `open_door`.
+    Unlock,
+    /// A kick (`K`): at a door, to break it, or at a creature, an unarmed blow.
+    Kick,
     /// Lighting or dousing the lantern.
     Lantern,
     /// Taking stairs: also entering a location or a local area from the overworld, and walking
@@ -66,19 +70,25 @@ pub enum ActionKind {
     BodyArmor,
     /// Readying a missile weapon, missiles, or a tool, or putting them away.
     Ready,
+    /// A turn of eating (spec §8 "Hunger"): a meal takes as many as the food's `turns`.
+    Eat,
     /// A turn of digging into a wall with a digging tool (spec §8 "Digging"): a dig takes many
     /// of them.
     Dig,
+    /// Chatting with a creature (spec §8 "Dialogue"): a short action.
+    Chat,
     /// Climbing out of the water onto ice (spec §5 "Ice"): on top of the step onto it.
     Climb,
 }
 
 impl ActionKind {
-    pub const ALL: [ActionKind; 19] = [
+    pub const ALL: [ActionKind; 23] = [
         ActionKind::Step,
         ActionKind::Wait,
         ActionKind::OpenDoor,
         ActionKind::CloseDoor,
+        ActionKind::Unlock,
+        ActionKind::Kick,
         ActionKind::Lantern,
         ActionKind::Stairs,
         ActionKind::PickUp,
@@ -92,7 +102,9 @@ impl ActionKind {
         ActionKind::Wear,
         ActionKind::BodyArmor,
         ActionKind::Ready,
+        ActionKind::Eat,
         ActionKind::Dig,
+        ActionKind::Chat,
         ActionKind::Climb,
     ];
 
@@ -103,6 +115,8 @@ impl ActionKind {
             ActionKind::Wait => "wait",
             ActionKind::OpenDoor => "open_door",
             ActionKind::CloseDoor => "close_door",
+            ActionKind::Unlock => "unlock",
+            ActionKind::Kick => "kick",
             ActionKind::Lantern => "lantern",
             ActionKind::Stairs => "stairs",
             ActionKind::PickUp => "pick_up",
@@ -116,7 +130,9 @@ impl ActionKind {
             ActionKind::Wear => "wear",
             ActionKind::BodyArmor => "body_armor",
             ActionKind::Ready => "ready",
+            ActionKind::Eat => "eat",
             ActionKind::Dig => "dig",
+            ActionKind::Chat => "chat",
             ActionKind::Climb => "climb",
         }
     }

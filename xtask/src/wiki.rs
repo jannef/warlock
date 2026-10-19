@@ -24,13 +24,15 @@ use warlock_core::burden::{self, Burden, Load};
 use warlock_core::character::Gender;
 use warlock_core::combat;
 use warlock_core::content::{
-    ActionKind, BASE_TURN, Combat, Content, CreatureId, FactionId, LevelKind, LightId,
-    NORMAL_SPEED, ObjectId, Stance, StatusDef, TerrainDef, price,
+    ActionKind, BASE_TURN, Combat, Content, CreatureId, FactionId, HungerDef, LevelKind, LightId,
+    NORMAL_SPEED, ObjectDef, ObjectId, Speaker, Stance, StatusDef, TerrainDef, price,
 };
 use warlock_core::daylight::{
     MOONLIGHT_PER_CELL, SIGHT_DAY, SIGHT_MOONLIT, SIGHT_NIGHT, SIGHT_TWILIGHT, overworld_sight,
 };
 use warlock_core::dice::Dice;
+use warlock_core::door;
+use warlock_core::hunger::Hunger;
 use warlock_core::ice;
 use warlock_core::light::{Light, Moon, Sky, Sun};
 use warlock_core::object::{INVENTORY_SLOTS, format_weight};
@@ -145,6 +147,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("lights.md".to_string(), lights(content)),
         ("creatures.md".to_string(), creatures(content)),
         ("factions.md".to_string(), factions(content)),
+        ("dialogue.md".to_string(), dialogue(content)),
         ("footsteps.md".to_string(), footsteps(content)),
         ("objects.md".to_string(), objects(content)),
         ("equipment.md".to_string(), equipment(content)),
@@ -194,6 +197,13 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("burden.md".to_string(), burden_levels()),
         ("burden-races.md".to_string(), burden_races(content)),
         ("burden-examples.md".to_string(), burden_examples(content)),
+        ("doors.md".to_string(), doors(content)),
+        ("keys.md".to_string(), keys(content)),
+        ("hunger-states.md".to_string(), hunger_states(content)),
+        ("hunger-facts.md".to_string(), hunger_facts(content)),
+        ("hunger-races.md".to_string(), hunger_races(content)),
+        ("food.md".to_string(), food(content)),
+        ("corpses.md".to_string(), corpses(content)),
         ("digging.md".to_string(), digging(content)),
         ("digging-strength.md".to_string(), digging_strength(content)),
         ("special-rooms.md".to_string(), special_rooms(content)),
@@ -284,6 +294,8 @@ fn action_costs(content: &Content) -> String {
             ActionKind::Wait => "Waiting",
             ActionKind::OpenDoor => "Opening a door",
             ActionKind::CloseDoor => "Closing a door",
+            ActionKind::Unlock => "Unlocking a door with a key (on top of opening it)",
+            ActionKind::Kick => "Kicking (a door, or a creature)",
             ActionKind::Lantern => "Lighting or dousing the lantern",
             ActionKind::Stairs => {
                 "Taking stairs, entering a place from the overworld, or walking off an area's edge"
@@ -298,7 +310,9 @@ fn action_costs(content: &Content) -> String {
             ActionKind::Wield => "Wielding something, or putting it away",
             ActionKind::Wear | ActionKind::BodyArmor => "Putting something on, or taking it off",
             ActionKind::Ready => "Readying something, or putting it away",
+            ActionKind::Eat => "A turn of eating (a meal takes several: see Food and corpses)",
             ActionKind::Dig => "A turn of digging (digging through a wall takes many)",
+            ActionKind::Chat => "Chatting with someone (asking about a topic takes no time)",
             ActionKind::Climb => {
                 "Climbing out of the water onto ice (on top of the step onto the ice)"
             }
@@ -435,6 +449,12 @@ fn local_terrain(content: &Content) -> String {
         let mut notes = Vec::new();
         if t.is_closed_door() {
             notes.push("door: walking into it opens it".to_string());
+        }
+        if let Some((to, sturdiness)) = t.kicked_in {
+            let broken = content.terrain(to).name.to_lowercase();
+            notes.push(format!(
+                "kicked in, it breaks into a {broken} (sturdiness {sturdiness})"
+            ));
         }
         if t.is_open_door() {
             notes.push("door: can be closed".to_string());
@@ -1165,12 +1185,16 @@ fn object_class(glyph: char) -> Option<&'static str> {
     })
 }
 
+/// Every object but corpses (Food and corpses has those).
 fn objects(content: &Content) -> String {
     let mut out = String::from(
         "| Object | Glyph | Kind | Material | Weight (each) | Stacks | Worn or wielded on |\n\
          |---|:---:|---|---|---:|:---:|---|\n",
     );
     for (i, o) in content.object_defs().iter().enumerate() {
+        if o.corpse.is_some() {
+            continue;
+        }
         let _ = writeln!(
             out,
             "| {} | {} | {} | {} | {} | {} | {} |",
@@ -1189,18 +1213,58 @@ fn objects(content: &Content) -> String {
 fn materials(content: &Content) -> String {
     let mut out = String::from("| Material | Objects made of it |\n|---|---|\n");
     for (i, m) in content.materials().iter().enumerate() {
-        let made: Vec<&str> = content
-            .object_defs()
-            .iter()
-            .filter(|o| usize::from(o.material.0) == i)
+        let of_it = |o: &&ObjectDef| usize::from(o.material.0) == i;
+        let objects = content.object_defs().iter().filter(of_it);
+        let mut made: Vec<&str> = (objects.clone())
+            .filter(|o| o.corpse.is_none())
             .map(|o| o.plural.as_str())
             .collect();
+        if objects.clone().any(|o| o.corpse.is_some()) {
+            made.push("corpses");
+        }
         let made = if made.is_empty() {
             "-".to_string()
         } else {
             made.join(", ")
         };
         let _ = writeln!(out, "| {} | {made} |", capital(&m.name));
+    }
+    out
+}
+
+/// Who talks (`data/dialogue.toml`): each speaker, whether they greet you, how many one-liners
+/// they take turns with, what you may ask them about, and how they mutter. The lines themselves
+/// are left to the game.
+fn dialogue(content: &Content) -> String {
+    let mut out = String::from(
+        "| Who | Greets you | One-liners | Topics | Mutters |\n|---|:---:|---:|---|---|\n",
+    );
+    for d in content.dialogues() {
+        let who = match &d.speaker {
+            Speaker::Creature(c) => capital(&content.creature(*c).name),
+            Speaker::Npc(npc) => format!("`{npc}` (a unique character)"),
+        };
+        let topics: Vec<&str> = d.topics.iter().map(|t| t.name.as_str()).collect();
+        let topics = if topics.is_empty() {
+            "—".to_string()
+        } else {
+            topics.join(", ")
+        };
+        let mutters = d.mutter.as_ref().map_or_else(
+            || "—".to_string(),
+            |m| {
+                format!(
+                    "{} ({} % of its actions, when you are near)",
+                    m.verb, m.chance
+                )
+            },
+        );
+        let _ = writeln!(
+            out,
+            "| {who} | {} | {} | {topics} | {mutters} |",
+            yes(d.greet.is_some()),
+            d.lines.len()
+        );
     }
     out
 }
@@ -1750,6 +1814,51 @@ fn armour(content: &Content) -> String {
     out
 }
 
+/// The Strength scores the door table shows, and the last column's "and up".
+const KICK_STRENGTHS: [u8; 8] = [3, 6, 9, 10, 12, 15, 18, 20];
+
+/// How often a kick breaks each door that can break, by the kicker's Strength score
+/// (spec §8 "Doors").
+fn doors(content: &Content) -> String {
+    let mut out = String::from("| Door | Sturdiness |");
+    let mut rule = String::from("|---|:---:|");
+    for st in KICK_STRENGTHS {
+        let _ = write!(out, " Strength {st} |");
+        rule.push_str(":---:|");
+    }
+    let _ = writeln!(out, "\n{rule}");
+    for t in content.terrain_defs() {
+        let Some((_, sturdiness)) = t.kicked_in else {
+            continue;
+        };
+        let _ = write!(out, "| {} | {sturdiness} |", capital(&t.name));
+        for st in KICK_STRENGTHS {
+            let _ = write!(out, " {}% |", door::break_chance(st, sturdiness));
+        }
+        out.push('\n');
+    }
+    out
+}
+
+/// The keys and the locks they open (spec §8 "Doors").
+fn keys(content: &Content) -> String {
+    let mut out = String::from("| Key | Glyph | Opens |\n|---|:---:|---|\n");
+    for o in content.object_defs() {
+        let opens = match &o.key {
+            Some(door::Key::Skeleton) => "every lock".to_string(),
+            Some(door::Key::Lock(id)) => format!("locks named `{id}`"),
+            None => continue,
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {opens} |",
+            capital(&o.name),
+            glyph(o.glyph)
+        );
+    }
+    out
+}
+
 /// The combat stances: what each does to the player's attacks, Defence, and speed (percent for
 /// costs and noise; "-" for no change).
 fn stances(content: &Content) -> String {
@@ -1981,6 +2090,9 @@ fn healing(content: &Content) -> String {
     for def in content.status_defs().iter().filter(|s| s.regen != 100) {
         let _ = writeln!(out, "| {} | {} |", def.name, pace(u32::from(def.regen)));
     }
+    if content.hunger().is_some() {
+        let _ = writeln!(out, "| {} | {} |", Hunger::Starving.name(), pace(0));
+    }
     out
 }
 
@@ -1992,8 +2104,9 @@ fn every(seconds: u32) -> String {
     }
 }
 
-/// What causes a status, in words: wounds, and the attacks whose `on_hit` names it (without
-/// saying which creatures or how often: their natural attacks are hidden).
+/// What causes a status, in words: wounds, the attacks whose `on_hit` names it (without saying
+/// which creatures or how often: their natural attacks are hidden), and rotten corpses when it is
+/// the sickness of food (spec §8 "Hunger"; what fresh ones do stays hidden too).
 fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
     let mut causes = Vec::new();
     if let Some(w) = def.wound {
@@ -2008,6 +2121,12 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
         .any(|a| a.on_hit.iter().any(|o| usize::from(o.status.0) == status));
     if by_attack {
         causes.push("some creatures' attacks");
+    }
+    let sickness = (content.hunger())
+        .and_then(|h| h.corpses.as_ref())
+        .and_then(|c| content.status_id(c.sickness.as_deref()?));
+    if sickness.is_some_and(|s| usize::from(s.0) == status) {
+        causes.push("eating rotten corpses");
     }
     if causes.is_empty() {
         "—".into()
@@ -2253,6 +2372,236 @@ fn burden_examples(content: &Content) -> String {
     out
 }
 
+/// How long `points` of nutrition last a race of hunger `percent`, in whole minutes: "36
+/// hours", "1 hour and 15 minutes".
+fn lasts(def: &HungerDef, points: i32, percent: u16) -> String {
+    let points = u64::try_from(points).unwrap_or(0);
+    let seconds = points * u64::from(def.burn_seconds) * 100 / u64::from(percent.max(1));
+    Duration::seconds(seconds / 60 * 60).spoken()
+}
+
+/// The states of hunger from the most fed down: the nutrition of each, when a human who eats
+/// nothing gets there from the start of a run, and what it does.
+fn hunger_states(content: &Content) -> String {
+    let Some(def) = content.hunger() else {
+        return "Nobody hungers.\n".into();
+    };
+    let mut out = String::from(
+        "| State | Nutrition | A human eating nothing gets there after | What it does |\n\
+         |---|---:|---:|---|\n",
+    );
+    let weak: Vec<String> = (Stat::ALL.iter())
+        .filter(|s| def.weak[**s] != 0)
+        .map(|s| format!("{} {}", s.name(), signed(def.weak[*s])))
+        .collect();
+    let weak = weak.join(", ");
+    let (faint, starve) = (def.faint, def.starve);
+    for (i, state) in Hunger::ALL.into_iter().enumerate() {
+        let range = match (def.least(state), i) {
+            (None, _) => format!("below {}", def.states.fainting),
+            (Some(n), 0) => format!("{n} and more"),
+            (Some(n), _) => {
+                let above = def.least(Hunger::ALL[i - 1]).unwrap_or(n);
+                format!("{n} to {}", above - 1)
+            }
+        };
+        // A state is reached by falling below the least nutrition of the one above it.
+        let after = match i
+            .checked_sub(1)
+            .and_then(|above| def.least(Hunger::ALL[above]))
+        {
+            _ if def.state(def.start) == state => "(you start here)".to_string(),
+            Some(above) if above <= def.start => lasts(def, def.start - above, 100),
+            _ => "-".to_string(),
+        };
+        let does = match state {
+            Hunger::Bloated => format!(
+                "everything you do takes ×{} as long",
+                factor(i64::from(def.bloated_slow))
+            ),
+            Hunger::Satiated => "nothing".into(),
+            Hunger::NotHungry => "nothing (the status bar shows nothing)".into(),
+            Hunger::Hungry => "a warning; becoming hungry stops a rest".into(),
+            Hunger::Weak => weak.clone(),
+            Hunger::Fainting => format!(
+                "as Weak, and a {}% chance each turn to faint, losing {} turns",
+                faint.chance, faint.turns
+            ),
+            Hunger::Starving => format!(
+                "as Fainting; no hit points come back, and you lose {} every {}, until you \
+                 starve to death",
+                starve.damage,
+                Duration::seconds(u64::from(starve.seconds)).spoken()
+            ),
+        };
+        let _ = writeln!(out, "| {} | {range} | {after} | {does} |", state.name());
+    }
+    out
+}
+
+/// How fast nutrition burns, where a run starts, the most there can be, exertion, overeating,
+/// vomiting, and how corpses rot.
+fn hunger_facts(content: &Content) -> String {
+    let Some(def) = content.hunger() else {
+        return "Nobody hungers.\n".into();
+    };
+    let day = DAY / u64::from(def.burn_seconds);
+    let mut out = String::from("| Fact | Value |\n|---|---|\n");
+    let mut row = |fact: &str, value: String| {
+        let _ = writeln!(out, "| {fact} | {value} |");
+    };
+    let every = match def.burn_seconds {
+        60 => "a point a minute".to_string(),
+        3600 => "a point an hour".to_string(),
+        s => format!("a point every {s} seconds"),
+    };
+    row(
+        "A human burns",
+        format!("{every}: {day} a day, resting, walking, or travelling the overworld alike"),
+    );
+    row(
+        "A run starts with",
+        format!(
+            "{} ({})",
+            def.start,
+            def.state(def.start).name().to_lowercase()
+        ),
+    );
+    row("The most there can be", def.max.to_string());
+    let exertion: Vec<String> = (warlock_core::content::EXERTIONS.iter())
+        .map(|k| format!("{} {}", def.exertion(*k), k.id()))
+        .collect();
+    row(
+        "Exertion burns more (points, at your race's need)",
+        exertion.join(", "),
+    );
+    let o = def.overeating;
+    let choke = if o.choke == 0 {
+        "never chokes".to_string()
+    } else {
+        format!("a {}% chance to choke to death", o.choke)
+    };
+    row(
+        "Overeating (a meal past the most)",
+        format!(
+            "{choke}; a {}% chance to vomit; else what does not fit is lost",
+            o.vomit
+        ),
+    );
+    row(
+        "Vomiting leaves you with at most",
+        format!(
+            "{} ({}); what made you vomit feeds nothing",
+            def.vomit_leaves,
+            def.state(def.vomit_leaves).name().to_lowercase()
+        ),
+    );
+    if let Some(c) = &def.corpses {
+        row(
+            "Corpses",
+            format!(
+                "rotten {} after the death, gone after {}",
+                c.rotten.spoken(),
+                c.gone.spoken()
+            ),
+        );
+        row(
+            "Eating a rotten corpse",
+            format!(
+                "a {}% chance to vomit; else it makes you sick{}, and it feeds you",
+                c.rotten_vomit,
+                (c.sickness.as_deref())
+                    .and_then(|s| content.status_id(s))
+                    .map_or(String::new(), |s| format!(
+                        " ({})",
+                        content.status(s).name.to_lowercase()
+                    ))
+            ),
+        );
+    }
+    out
+}
+
+/// What each race needs to eat next to a human, burns in a day, and how long it goes from the
+/// start of a run before it is hungry.
+fn hunger_races(content: &Content) -> String {
+    let Some(def) = content.hunger() else {
+        return "Nobody hungers.\n".into();
+    };
+    let mut out =
+        String::from("| Race | Needs | Burns a day | Hungry after |\n|---|:---:|---:|---:|\n");
+    let day = DAY / u64::from(def.burn_seconds);
+    for r in &content.races().list {
+        let _ = writeln!(
+            out,
+            "| {} | ×{} | {} | {} |",
+            r.name,
+            factor(i64::from(r.hunger)),
+            day * u64::from(r.hunger) / 100,
+            lasts(def, def.start - def.states.not_hungry, r.hunger)
+        );
+    }
+    out
+}
+
+/// The food objects: what each gives, how long that feeds a human, how many turns it takes to
+/// eat, and what it weighs.
+fn food(content: &Content) -> String {
+    let Some(def) = content.hunger() else {
+        return "Nobody hungers.\n".into();
+    };
+    let mut out = String::from(
+        "| Food | Nutrition | Feeds a human for | Turns to eat | Weight |\n\
+         |---|---:|---:|:---:|---:|\n",
+    );
+    for o in content.object_defs() {
+        let (Some(food), None) = (o.food, o.corpse) else {
+            continue;
+        };
+        let nutrition = i32::try_from(food.nutrition).unwrap_or(i32::MAX);
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} | {} |",
+            capital(&o.name),
+            food.nutrition,
+            lasts(def, nutrition, 100),
+            food.turns,
+            format_weight(u64::from(o.weight))
+        );
+    }
+    out
+}
+
+/// Every creature's corpse: what it weighs (the creature's weight) and what it gives (by size).
+/// What eating it does beyond that stays for the player to find out.
+fn corpses(content: &Content) -> String {
+    let Some(def) = content.hunger() else {
+        return "Nobody hungers.\n".into();
+    };
+    let mut out = String::from(
+        "| Corpse | Size | Weight | Nutrition | Feeds a human for | Turns to eat |\n\
+         |---|---|---:|---:|---:|:---:|\n",
+    );
+    for o in content.object_defs() {
+        let (Some(food), Some(creature)) = (o.food, o.corpse) else {
+            continue;
+        };
+        let size = content.size(content.creature(creature).size);
+        let nutrition = i32::try_from(food.nutrition).unwrap_or(i32::MAX);
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} | {} | {} |",
+            capital(&o.name),
+            size.name,
+            format_weight(u64::from(o.weight)),
+            food.nutrition,
+            lasts(def, nutrition, 100),
+            food.turns
+        );
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2282,6 +2631,14 @@ mod tests {
         assert!(text("terrain-local.md").contains("| Still water | `~` | yes | no | 12 seconds |"));
         assert!(text("terrain-local.md").contains("| 12 seconds | very loud |"));
         assert!(text("terrain-local.md").contains("muffles sound"));
+        assert!(text("terrain-local.md").contains("breaks into a broken door (sturdiness 30)"));
+        assert!(
+            text("doors.md").contains("| Closed door | 30 | 10% | 20% | 30% | 33% |"),
+            "{}",
+            text("doors.md")
+        );
+        assert!(text("keys.md").contains("| Skeleton key | `(` | every lock |"));
+        assert!(text("keys.md").contains("| Iron key | `(` | locks named `pantry` |"));
         assert!(
             text("footsteps.md")
                 .contains("| Very loud | Still water, running water, shallow water |")
@@ -2510,6 +2867,7 @@ mod tests {
             "| Resting (`R`) | twice as fast |",
             "| Bleeding | not at all |",
             "| Poisoned | half as fast |",
+            "| Starving | not at all |",
         ] {
             assert!(healing.contains(row), "{row} in {healing}");
         }
@@ -2518,7 +2876,7 @@ mod tests {
             "| Bleeding | yes, \"bleeding\" | Big hits and confirmed criticals | A hit point every \
              40 seconds, faster the worse it is | A degree a minute | Not at all | — | Bandage |",
             "| A degree every 2 minutes | Half as fast |",
-            "| Poisoned | no | Some creatures' attacks |",
+            "| Poisoned | no | Some creatures' attacks; eating rotten corpses |",
             "Strength \u{2212}1, Dexterity \u{2212}1 when strong",
         ] {
             assert!(statuses.contains(row), "{row} in {statuses}");
@@ -2593,5 +2951,18 @@ mod tests {
         assert!(scenarios.contains("| Showcase | 08:00, 11 Darkening, Year 1444 |"));
         assert!(scenarios.contains("| World | 08:00, 11 Darkening, Year 1444 |"));
         assert!(scenarios.find("| Showcase").unwrap() < scenarios.find("| Arena").unwrap());
+        // Hunger: the states by nutrition, each race's need, food, and corpses (their effects
+        // when eaten stay unsaid: the player finds them out).
+        let states = text("hunger-states.md");
+        assert!(
+            states.contains("| Hungry | 720 to 1439 | 36 hours |"),
+            "{states}"
+        );
+        assert!(states.contains("| Not hungry | 1440 to 3999 | (you start here) |"));
+        assert!(text("hunger-races.md").contains("| Halfling | ×1.25 | 1800 |"));
+        assert!(text("food.md").contains("| Food ration | 1500 | 25 hours | 4 | 500 g |"));
+        assert!(text("corpses.md").contains("| Kobold corpse | Small | 25 kg | 400 |"));
+        assert!(!text("objects.md").contains("corpse"));
+        assert!(!text("corpses.md").contains("terrible"));
     }
 }

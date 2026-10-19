@@ -14,8 +14,8 @@
 //! Menus, character creation ([`chargen_screen`]), settings, controls, the `?` help, the
 //! inventory, choosing what to pick up or drop ([`object_screen`]), the equipment screen and its
 //! choice of what goes in a slot ([`equipment_screen`]), the character screen
-//! ([`character_screen`]), the weapon skills screen ([`weapon_skills_screen`]), and the death
-//! screen ([`death_screen`]) are screens on one stack
+//! ([`character_screen`]), the weapon skills screen ([`weapon_skills_screen`]), the dialogue
+//! screen ([`dialogue_screen`]), and the death screen ([`death_screen`]) are screens on one stack
 //! ([`screens`]): opened by [`Screens::open`], fed key presses by `input::route_keys`, and drawn
 //! by [`draw`], the one system that writes the UI console.
 
@@ -26,6 +26,7 @@ mod confirm_screen;
 mod controls_screen;
 mod death_screen;
 mod dev;
+mod dialogue_screen;
 mod effects;
 mod equipment_screen;
 mod files_screen;
@@ -68,6 +69,7 @@ use warlock_core::World;
 use warlock_core::burden::Burden;
 use warlock_core::color::Rgb;
 use warlock_core::content::{MoonDef, ObjectId};
+use warlock_core::hunger::Hunger;
 use warlock_core::light::MoonPhase;
 use warlock_core::perception::{CellView, PerceptionView};
 use warlock_core::time::GameTime;
@@ -127,7 +129,8 @@ impl Plugin for UiPlugin {
                         .chain()
                         .after(SimSet)
                         .run_if(resource_exists::<Game>),
-                    (screens::refresh, screens::on_death)
+                    (screens::refresh, screens::converse, screens::on_death)
+                        .chain()
                         .after(SimSet)
                         .before(draw)
                         .run_if(resource_exists::<Game>),
@@ -441,6 +444,7 @@ fn draw_messages(
     if let InputMode::Direction(command) = mode {
         let prompt = match command {
             crate::input::KeyCommand::UseTool => "Dig in which direction? (Esc to cancel)",
+            crate::input::KeyCommand::Chat => "Talk in which direction? (Esc to cancel)",
             _ => "In which direction? (Esc to cancel)",
         };
         console.print(1, 0, prompt, ACCENT);
@@ -563,14 +567,15 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
     // where the player knows it, and there it matters more than the date: it changes the light
     // and how far one sees. Hit points matter most after the level: they outlast the time, and
     // so do the status effects the player suffers (by name, the most important first: the last
-    // gives way first) and the burden (shown when there is one), which slows everything the
-    // player does. The character level (`Lv 3`) comes after them and goes before them, but
-    // after the time. The temperature where the player is (always, underground too) sits after
-    // the weather; it outlasts the turn, the position, the seed, and the moon, and gives way
-    // before the date.
+    // gives way first), hunger (shown unless the player is Not hungry), and the burden (shown
+    // when there is one), which slows everything the player does; hunger outlasts the burden. The
+    // character level (`Lv 3`) comes after them and goes before them, but after the time. The
+    // temperature where the player is (always, underground too) sits after the weather; it
+    // outlasts the turn, the position, the seed, and the moon, and gives way before the date.
     let calendar = content.calendar();
     let (hp, max_hp) = view.own_hp();
     let burden = view.own_load().burden();
+    let hunger = view.own_hunger().filter(|h| *h != Hunger::NotHungry);
     let effects = (view.own_effects()).map(|s| Segment::new(1, content.status(s).name.clone()));
     let stance = view.own_stance();
     let head = [
@@ -578,6 +583,7 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
         Segment::new(1, format!("HP {hp}/{max_hp}")),
     ];
     let rest = [
+        hunger.map(|h| Segment::new(1, h.name())),
         (burden != Burden::Unburdened).then(|| Segment::new(1, burden.name())),
         Some(Segment::new(
             1,
@@ -774,6 +780,68 @@ mod tests {
             "Hoard  ·  HP 10/10"
         );
         assert!(fit_segments(&segments, 55).contains("Burdened  ·  Lv 1  ·  08:"));
+    }
+
+    #[test]
+    fn the_status_bar_shows_hunger_unless_not_hungry_and_keeps_it_later_than_the_burden() {
+        let world_starting_at = |nutrition: i32| {
+            let mut files = ContentFiles::builtin();
+            let hunger = include_str!("../../../../assets/data/hunger.toml")
+                .replace("start = 3600", &format!("start = {nutrition}"));
+            files.insert("data/hunger.toml", &hunger);
+            files.insert(
+                "levels/hoard.toml",
+                "name = \"Hoard\"\nmap = '''\n#####\n#@..#\n#####\n'''\n[legend]\n\
+                 \"@\" = { terrain = \"floor\", spawn = \"player\", \
+                 objects = [\"chain_mail\", \"chain_mail\"] }\n",
+            );
+            files.insert(
+                "scenarios/hoard.toml",
+                "name = \"Hoard\"\nstart_level = \"hoard\"\n",
+            );
+            let content = Arc::new(Content::load(&files).expect("valid"));
+            World::new(content, "hoard", None).expect("world")
+        };
+        let texts = |w: &World| -> Vec<String> {
+            status_segments(w, Clock::H24, TemperatureUnit::Celsius)
+                .into_iter()
+                .map(|s| s.text)
+                .collect()
+        };
+        assert!(
+            !texts(&world_starting_at(3600))
+                .iter()
+                .any(|t| t.contains("ungry")),
+            "not hungry: nothing"
+        );
+        for (nutrition, shown) in [
+            (6000, "Bloated"),
+            (5000, "Satiated"),
+            (1000, "Hungry"),
+            (500, "Weak"),
+            (100, "Fainting"),
+        ] {
+            assert_eq!(
+                texts(&world_starting_at(nutrition))[2],
+                shown,
+                "{nutrition}"
+            );
+        }
+        let mut world = world_starting_at(1000);
+        world.apply(&Action::PickUp(Letters::default()));
+        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
+        assert_eq!(
+            texts(&world)[..4],
+            ["Hoard", "HP 10/10", "Hungry", "Burdened"]
+        );
+        // Narrow: the time gives way first, then the burden, then hunger, before the hit points.
+        let line = "Hoard  ·  HP 10/10  ·  Hungry  ·  Burdened";
+        assert_eq!(fit_segments(&segments, line.chars().count()), line);
+        assert_eq!(
+            fit_segments(&segments, line.chars().count() - 1),
+            "Hoard  ·  HP 10/10  ·  Hungry"
+        );
+        assert_eq!(fit_segments(&segments, 25), "Hoard  ·  HP 10/10");
     }
 
     #[test]

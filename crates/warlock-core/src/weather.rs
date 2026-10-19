@@ -378,7 +378,7 @@ fn spread(draws: impl Iterator<Item = u64>) -> u32 {
 /// A 64-bit hash of the seed, a label, and a block number: FNV-1a over the seed's little-endian
 /// bytes, a `0xff` separator, the label, and `k`'s little-endian bytes, then SplitMix64's
 /// finalizer so every bit depends on every input bit.
-fn draw(seed: u64, label: &[u8], k: i64) -> u64 {
+pub(crate) fn draw(seed: u64, label: &[u8], k: i64) -> u64 {
     let bytes = (seed.to_le_bytes().into_iter())
         .chain([0xff])
         .chain(label.iter().copied())

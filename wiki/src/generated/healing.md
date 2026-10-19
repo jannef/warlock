@@ -5,3 +5,4 @@
 | Resting (`R`) | twice as fast |
 | Bleeding | not at all |
 | Poisoned | half as fast |
+| Starving | not at all |
