@@ -2,6 +2,9 @@
 
 | Creature | Level | XP |
 |---|:---:|---:|
+| Gardener | 1 | 0 |
+| Wandering bard | 1 | 0 |
+| Old hermit | 1 | 0 |
 | Deer | 1 | 2 |
 | Cave bat | 1 | 3 |
 | Giant rat | 1 | 5 |

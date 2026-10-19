@@ -94,7 +94,8 @@ fn content(map: &str) -> Content {
 }
 
 fn level(content: &Content) -> LevelState {
-    LevelState::from_template(content.level("t").expect("level t"))
+    let template = content.level("t").expect("level t");
+    LevelState::from_template(template, content, crate::time::GameTime::EPOCH)
 }
 
 /// Loudness at `to` of a noise of `loudness` made at `from` on `map`.
@@ -128,6 +129,9 @@ fn actor(content: &Content, creature: &str) -> Actor {
         damage: Default::default(),
         weapon_skills: Default::default(),
         faction_override: None,
+        npc: None,
+        talk: Default::default(),
+        satiation: None,
         stance: Default::default(),
     }
 }

@@ -11,18 +11,24 @@
 //! 4. The up staircase goes in one room, the down staircase in a room far from it.
 //! 5. Wall torches (sconces) in room corners light most rooms, always the arrival room.
 //! 6. A few creatures walk laps or back and forth in rooms.
-//! 7. Now and then a room other than the arrival room is special (`special.rs`): the room with
+//! 7. With the branch's key, up to two rooms with a single door get it locked, and the key
+//!    lies in a room that is not locked.
+//! 8. Now and then a room other than the arrival room is special (`special.rs`): the room with
 //!    its walls and doors.
 
 use super::connect::cheapest_path;
 use super::{Canvas, Needs, special, vault};
-use crate::content::{SpecialRoom, StairsDir};
+use crate::content::{ObjectId, SpecialRoom, StairsDir};
+use crate::door::{Key, Lock};
 use crate::geom::{Dir, Pos};
+use crate::object::Stack;
 use crate::rng::Rng;
 use std::collections::BTreeMap;
 
 /// Rock between rooms, so walls are never shared and corridors fit between them.
 const GAP: i32 = 2;
+/// The most rooms a level locks (with the branch's key).
+const MAX_LOCKED: usize = 2;
 /// Chance (percent) that a level gets a vault.
 const VAULT_CHANCE: u32 = 50;
 /// Chance (percent) that a room other than the arrival room has torches.
@@ -133,8 +139,54 @@ pub(super) fn build(canvas: &mut Canvas, rng: &mut Rng, needs: Needs) -> Option<
     let up_room = place_stairs(canvas, rng, &rooms, needs)?;
     light_rooms(canvas, rng, &rooms, up_room);
     patrols(canvas, rng, &rooms, up_room, needs);
+    if let Some(key) = needs.key {
+        lock_rooms(canvas, rng, &rooms, up_room, key);
+    }
     special_rooms(canvas, rng, &rooms, up_room);
     Some(())
+}
+
+/// Locks the door of up to [`MAX_LOCKED`] rooms that have only one (not the arrival room, not a
+/// room with stairs, not a vault) with the lock `key` opens, and leaves the key on a free spot
+/// in a room that is not locked, so the player can always reach it (spec §8 "Doors"). A
+/// doorway or an open door becomes a closed door to be locked. Whatever lies or walks in a
+/// locked room stays there.
+fn lock_rooms(canvas: &mut Canvas, rng: &mut Rng, rooms: &[Room], up_room: usize, key: ObjectId) {
+    let lock = match canvas.content.object(key).key {
+        Some(Key::Lock(ref id)) => Lock::new(Some(id)),
+        _ => Lock::new(None),
+    };
+    let stairs = [canvas.up, canvas.down];
+    let mut dead_ends: Vec<usize> = (0..rooms.len())
+        .filter(|&i| {
+            let room = &rooms[i];
+            i != up_room
+                && !room.vault
+                && room.doors.len() == 1
+                && !stairs.iter().flatten().any(|p| room.contains(*p))
+        })
+        .collect();
+    rng.shuffle(&mut dead_ends);
+    let count = rng.range(0, MAX_LOCKED as i32) as usize;
+    let locked: Vec<usize> = dead_ends.into_iter().take(count).collect();
+    let open: Vec<usize> = (0..rooms.len())
+        .filter(|i| !rooms[*i].vault && !locked.contains(i))
+        .collect();
+    if locked.is_empty() {
+        return;
+    }
+    let Some(at) = rng
+        .pick(&open)
+        .and_then(|&i| free_spot(canvas, rng, &rooms[i]))
+    else {
+        return;
+    };
+    canvas.objects.insert(at, vec![Stack::one(key)]);
+    for i in locked {
+        let (door, _) = rooms[i].doors[0];
+        canvas.set(door, canvas.pal.door_closed);
+        canvas.locks.insert(door, lock.clone());
+    }
 }
 
 /// Rooms but the arrival room and vaults may be special, each with the content's chance (spec §7
@@ -266,7 +318,7 @@ fn join(canvas: &mut Canvas, rooms: &mut [Room], a: usize, b: usize, rng: &mut R
     }
     let (floor, void) = (canvas.pal.floor, canvas.pal.void);
     let cost = |p: Pos| {
-        if !canvas.is_inner(p) || canvas.is_locked(p) || rooms.iter().any(|r| r.contains(p)) {
+        if !canvas.is_inner(p) || canvas.is_stamped(p) || rooms.iter().any(|r| r.contains(p)) {
             None
         } else if canvas.get(p) == floor {
             Some(1)

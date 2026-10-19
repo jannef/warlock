@@ -507,7 +507,13 @@ mod tests {
         assert!(text.contains("Status        Diseased"), "{text}");
         assert!(!text.contains("shakes"), "{text}");
         // A day later it has progressed once: named. (A check lost shows as Dexterity lowered.)
-        world.apply(&day);
+        // Hunger may cut a rest short ("You are getting hungry."): rest on until it has.
+        for _ in 0..4 {
+            if world.perception().own_diseases().next().is_some() {
+                break;
+            }
+            world.apply(&day);
+        }
         let text = drawn(&world, 80, 30).join("\n");
         for expected in ["Status        Diseased", "Diseased      The shakes"] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");

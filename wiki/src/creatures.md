@@ -41,6 +41,7 @@ see by the same rules you do (see [Sight and memory](sight.md)), each with its o
 the same light, clouds included: a creature without darkvision does not see you standing in the
 dark, and lighting your [lantern](lantern.md) gets you noticed. Some creatures open closed doors
 in their way, which takes them a turn and makes noise; the others cannot get past a closed door.
+A locked door stops even those, unless they carry its key (see [Doors](doors.md)).
 
 Other creatures block the way: a creature walks a little way round someone in its way, or waits
 behind them.
@@ -67,11 +68,14 @@ too) lunges at its target, an arrow flies from the archer to its target, and a s
 faint violet sparkle (with the matching [settings](settings.md) on).
 
 Moving into a hostile creature attacks it ("You hit the giant rat.", "You miss something." if
-you cannot see it), which takes a turn. Moving into a neutral one does not, and takes no time:
-"The deer is in the way." ("Something is in the way." if you cannot see it).
+you cannot see it), which takes a turn. Moving into any other creature swaps places with it, for
+your step's time ("You swap places with the deer."); it walks back to where it stood afterwards
+and carries on. A few will not make way ("The sentry doesn't budge."), which takes no time; see
+[People and talk](npcs.md#getting-past).
 
-Some creatures are hostile by nature but placed among the **peaceful folk** by the place they
-live in: the kobold in the showcase hub and the kobolds and rats of the Vast Caverns walk their
+The showcase's people (the gardener, the bard, the hermit) are peaceful folk by nature, and talk
+to you (see [People and talk](npcs.md)). Some creatures are hostile by nature but placed among
+the **peaceful folk** by the place they live in: the kobold in the showcase hub and the kobolds and rats of the Vast Caverns walk their
 rounds and never attack you. The showcase is safe. Fighting happens in the arena and in the Depths.
 
 The **Arena** scenario (see [Starting a run](introduction.md#starting-a-run)) is the place to watch

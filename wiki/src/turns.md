@@ -38,9 +38,10 @@ On the overworld a step is a journey: it takes the time given for the terrain yo
 
 You can move in eight directions, diagonals included. You cannot step into a wall or other solid
 terrain; trying takes no time. Walking into a closed door opens it, which costs the same as
-opening it. You cannot step onto a creature either: moving into one that is hostile to you
-attacks it, and moving into any other creature takes no time ("The deer is in the way."). See
-[Creatures](creatures.md#attacks).
+opening it. Moving into a creature that is hostile to you attacks it (see
+[Creatures](creatures.md#attacks)). Moving into any other creature swaps places with it, for
+your step's time ("You swap places with the deer."), unless it will not make way, which takes no
+time ("The sentry doesn't budge."); see [People and talk](npcs.md#getting-past).
 
 ## Creatures act at their own pace
 

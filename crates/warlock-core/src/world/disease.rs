@@ -66,9 +66,8 @@ impl World {
     }
 
     /// Actor `id` is exposed to every disease caught from `source` (one of
-    /// [`crate::content::SOURCES`]: `rotten_food`), in disease order. Hunger's rotten corpses
-    /// (#137) expose the eater here.
-    #[cfg_attr(not(test), allow(dead_code))]
+    /// [`crate::content::SOURCES`]: `rotten_food`), in disease order. Eating a rotten corpse
+    /// (`world/eat.rs`) exposes the eater here.
     pub(crate) fn expose_to(&mut self, id: ActorId, source: &str) {
         let caught: Vec<DiseaseId> = (self.content.disease_ids())
             .filter(|(_, def)| def.caught.iter().any(|c| c == source))

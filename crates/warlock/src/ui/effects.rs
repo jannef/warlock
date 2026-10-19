@@ -190,9 +190,12 @@ pub(super) fn track(
                 bursts.trigger(&view, *to, ParticleTrigger::Step, seed, start);
             }
             // A door's dust as it swings, a wall's as it gives way: the toggle burst of the
-            // terrain the cell turned into.
+            // terrain the cell turned into. A kick that breaks a door throws the broken door's
+            // splinters; one that holds shakes dust off the closed door.
             Event::DoorOpened { pos }
             | Event::DoorClosed { pos }
+            | Event::DoorKicked { pos }
+            | Event::DoorBroken { pos }
             | Event::WallBroken { pos, .. } => {
                 bursts.trigger(&view, *pos, ParticleTrigger::Toggle, seed, start);
             }
@@ -202,12 +205,16 @@ pub(super) fn track(
             }
             // A death shows as the creature gone (and what it dropped) and in the message line;
             // a missile flies in `missiles`, a spell effect plays in `spells`; a status effect or
-            // a disease shows in the status bar.
+            // a disease shows in the status bar; talk is in the message line (and the dialogue
+            // screen). A fall through the ice splashes as the step into the water there (the ice
+            // is gone).
             Event::Died { .. }
             | Event::Missile { .. }
             | Event::Spell { .. }
             | Event::Status { .. }
-            | Event::Disease { .. } => {}
+            | Event::Disease { .. }
+            | Event::Talked(_)
+            | Event::FellThroughIce { .. } => {}
             Event::LevelChanged { .. } => {
                 bursts.list.clear();
                 tints.clear();

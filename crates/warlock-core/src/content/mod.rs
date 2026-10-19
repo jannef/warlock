@@ -9,6 +9,7 @@ mod anim;
 mod calendar;
 mod class;
 mod creature;
+mod dialogue;
 mod disease;
 mod dungeon;
 mod effect;
@@ -16,6 +17,7 @@ mod experience;
 mod faction;
 mod flow;
 mod horoscope;
+mod hunger;
 mod level;
 mod light;
 mod material;
@@ -42,7 +44,11 @@ pub use anim::GlyphAnim;
 pub use calendar::Calendar;
 pub use class::ClassDef;
 pub use creature::{
-    Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, NORMAL_SPEED, NaturalAttack, SPEEDS,
+    Budge, Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, NORMAL_SPEED, NaturalAttack,
+    OnEat, SPEEDS,
+};
+pub use dialogue::{
+    Dialogue, DialogueId, MAX_LINE, MAX_REPLY, MAX_TOPICS, MUTTER_CHANCES, Mutter, Speaker, Topic,
 };
 pub use disease::{DIFFICULTIES, DiseaseDef, DiseaseId, SOURCES, Wading};
 pub use dungeon::{DungeonDef, Generator, LevelPlan, parse_branch_level};
@@ -54,6 +60,9 @@ pub use experience::{Experience, MAX_LEVEL, MAX_XP};
 pub use faction::{FactionDef, FactionId, Factions, PLAYER_FACTION, Stance};
 pub use flow::{FLOW_SPEEDS, Flow};
 pub use horoscope::{Horoscope, Sign, SignPart};
+pub use hunger::{
+    Corpses, EXERTIONS, Faint, Food, HungerDef, MAX_MEAL, MAX_NUTRITION, Overeating, Starve, States,
+};
 pub(crate) use level::validate_route;
 pub use level::{
     CreatureSpawn, EdgeExit, LevelKind, LevelTemplate, Region, StairsLink, parse_route,
@@ -63,7 +72,7 @@ pub use material::{MaterialDef, MaterialId};
 pub use object::{MAX_BONUS, MAX_DIG, MAX_PLACED, ObjectDef, ObjectId, article};
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use particles::{ParticleEmitter, ParticleTrigger};
-pub use race::{RaceDef, Races};
+pub use race::{HUNGER, RaceDef, Races};
 pub use room_effect::{RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom};
 pub use scenario::ScenarioDef;
 pub use size::{CARRY, MEDIUM, SizeDef};
@@ -75,14 +84,16 @@ pub use status::{
     Affliction, Healing, MAX_REGEN, MAX_SEVERITY, OnHit, Penalty, Stacking, StatusDef, StatusId,
     Wound,
 };
-pub use terrain::{Breakable, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
+pub use terrain::{Breakable, Freeze, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
 pub use vault::Vault;
 pub use vision::VisionProfile;
 pub use weapon_skill::{
     Benefit, MAX_RANK, MarkRules, RANKS, Role, Section, WeaponSkillDef, WeaponSkillId,
     WeaponSkillTable,
 };
-pub use weather::{Climate, MAX_SIGHT_LOSS, WeatherDef};
+pub use weather::{
+    Climate, MAX_CHILL, MAX_SIGHT_LOSS, MAX_SWING, MILD, MILD_SWING, MONTH_TEMPERATURES, WeatherDef,
+};
 
 use crate::dice::Dice;
 use crate::noise::MAX_LOUDNESS;
@@ -235,8 +246,8 @@ struct LegendFile {
 /// `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
 /// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, `data/horoscope.toml`,
 /// `data/effects.toml`, `data/room_effects.toml`, `data/weapon_skills.toml`, `data/stances.toml`,
-/// `data/status.toml`, and `data/diseases.toml` are optional (without effects, spell effects are
-/// not drawn). Without vision
+/// `data/status.toml`, `data/diseases.toml`, and `data/dialogue.toml` are optional (without
+/// effects, spell effects are not drawn). Without vision
 /// profiles, a single `normal` profile that needs no light is used, so content without lighting
 /// stays fully visible; without sizes, everything is medium; without factions, everyone is neutral; without a calendar, months are numbered;
 /// without a sky file there are no moons; without an objects file there are no objects; without a
@@ -246,11 +257,14 @@ struct LegendFile {
 /// skills nobody is trained in anything; without a horoscope, characters are born under no sign;
 /// without room effects there are no special rooms; without weapon skills nobody has any, and
 /// weapons name no category; without statuses nothing ails anyone, and resting heals twice as
-/// fast; without diseases nobody falls ill.
+/// fast; without diseases nobody falls ill; without dialogue, nobody talks; without
+/// `data/hunger.toml` nobody hungers, nothing is eaten, and creatures leave no corpses.
 #[derive(Debug)]
 pub struct Content {
     terrain: Vec<TerrainDef>,
     terrain_ids: BTreeMap<String, TerrainId>,
+    /// The terrain ice looks like, by the thinnest ice that looks like it (mm), thinnest first.
+    ice: Vec<(u16, TerrainId)>,
     creatures: Vec<CreatureDef>,
     creature_ids: BTreeMap<String, CreatureId>,
     materials: Vec<MaterialDef>,
@@ -283,6 +297,9 @@ pub struct Content {
     horoscope: Option<Horoscope>,
     /// Spell effects, in `data/effects.toml` order: presentation only.
     effects: Vec<EffectDef>,
+    hunger: Option<HungerDef>,
+    /// The corpse object of each creature type, by creature id (`None`: it leaves none).
+    corpses: Vec<Option<ObjectId>>,
     weapon_skills: WeaponSkillTable,
     /// Special rooms' effects (`data/room_effects.toml`).
     room_effects: RoomEffects,
@@ -296,6 +313,8 @@ pub struct Content {
     disease_ids: BTreeMap<String, DiseaseId>,
     /// The status diseases show as ("Diseased"), with any disease.
     disease_status: Option<StatusId>,
+    /// What creatures say (`data/dialogue.toml`), in file order.
+    dialogues: Vec<Dialogue>,
 }
 
 impl Content {
@@ -308,6 +327,7 @@ impl Content {
         let mut content = Content {
             terrain: Vec::new(),
             terrain_ids: BTreeMap::new(),
+            ice: Vec::new(),
             creatures: Vec::new(),
             creature_ids: BTreeMap::new(),
             materials: Vec::new(),
@@ -335,6 +355,8 @@ impl Content {
             experience: Experience::default(),
             horoscope: None,
             effects: Vec::new(),
+            hunger: None,
+            corpses: Vec::new(),
             weapon_skills: WeaponSkillTable::default(),
             room_effects: RoomEffects::default(),
             stances: Stances::default(),
@@ -344,6 +366,7 @@ impl Content {
             diseases: Vec::new(),
             disease_ids: BTreeMap::new(),
             disease_status: None,
+            dialogues: Vec::new(),
         };
         let path = "data/calendar.toml";
         if let Some(text) = files.get_optional(path) {
@@ -418,6 +441,11 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.effects = effect::parse(path, text)?;
         }
+        let path = "data/dialogue.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.dialogues = dialogue::parse(path, text, &content)?;
+        }
+        content.load_hunger(files)?;
 
         let path = "data/legend.toml";
         let legend_file: LegendFile =
@@ -432,7 +460,15 @@ impl Content {
             content.levels.insert(id.to_string(), level);
         }
         for (path, id, text) in files.in_dir("scenarios") {
-            let scenario = ScenarioDef::parse(path, id, text)?;
+            let mut scenario = ScenarioDef::parse(path, id, text)?;
+            let err = |m: String| ContentError::new(path, format!("carry: {m}"));
+            scenario.carry = object::parse_stacks(&scenario.carry_spec, &content).map_err(err)?;
+            if scenario.carry.len() > crate::object::INVENTORY_SLOTS {
+                return Err(err(format!(
+                    "at most {} stacks fit in a pack",
+                    crate::object::INVENTORY_SLOTS
+                )));
+            }
             content.scenarios.insert(id.to_string(), scenario);
         }
         for (path, id, text) in files.in_dir("vaults") {
@@ -498,6 +534,8 @@ impl Content {
                 )));
             }
             check_terrain_noise(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
+            check_terrain_ice(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
+            check_kicking(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
             let breaks = match (spec.hardness, &spec.becomes) {
                 (None, None) => None,
                 (Some(hardness), Some(_)) if (1..=MAX_HARDNESS).contains(&hardness) => {
@@ -532,6 +570,7 @@ impl Content {
                 id: spec.id.clone(),
                 name: spec.name.clone(),
                 glyph: spec.glyph,
+                variants: spec.variants.chars().collect(),
                 fg: spec.fg,
                 bg: spec.bg,
                 walkable: spec.walkable,
@@ -542,6 +581,10 @@ impl Content {
                 landscape: spec.landscape,
                 opens_to: resolve(&spec.opens_to)?,
                 closes_to: resolve(&spec.closes_to)?,
+                kicked_in: match (resolve(&spec.breaks_to)?, spec.sturdiness) {
+                    (Some(to), Some(sturdiness)) => Some((to, sturdiness)),
+                    _ => None,
+                },
                 stairs: spec.stairs,
                 light,
                 bounce: spec.bounce,
@@ -554,6 +597,8 @@ impl Content {
                 muffle: spec
                     .muffle
                     .or((spec.walkable || spec.transparent).then_some(0)),
+                freeze: spec.freeze,
+                ice: spec.ice,
                 breaks,
                 face: resolve(&spec.face)?,
                 anim: spec.anim.clone(),
@@ -561,6 +606,18 @@ impl Content {
                 haze: spec.haze,
                 particles: spec.particles.clone(),
             });
+        }
+        // A broken door is open for good: walkable, and no door to open or close.
+        if let Some(def) = defs.iter().find(|d| {
+            d.kicked_in.is_some_and(|(to, _)| {
+                let to = &defs[usize::from(to.0)];
+                !to.walkable || to.opens_to.is_some() || to.closes_to.is_some()
+            })
+        }) {
+            return Err(err(format!(
+                "terrain `{}`: what it `breaks_to` must be walkable and no door",
+                def.id
+            )));
         }
         for def in &defs {
             check_breaking(def, &defs).map_err(|m| err(format!("terrain `{}`: {m}", def.id)))?;
@@ -585,7 +642,28 @@ impl Content {
                 def.id
             )));
         }
+        let mut ice: Vec<(u16, TerrainId)> = (defs.iter().enumerate())
+            .filter_map(|(i, d)| d.ice.map(|mm| (mm, TerrainId(i as u16))))
+            .collect();
+        ice.sort();
+        if let Some(pair) = ice.windows(2).find(|w| w[0].0 == w[1].0) {
+            return Err(err(format!(
+                "terrain `{}` and `{}` both look like ice from {} mm",
+                defs[usize::from(pair[0].1.0)].id,
+                defs[usize::from(pair[1].1.0)].id,
+                pair[0].0
+            )));
+        }
+        if let Some(water) = defs.iter().find(|d| d.freeze.is_some())
+            && ice.is_empty()
+        {
+            return Err(err(format!(
+                "terrain `{}` freezes, but no terrain looks like ice (`ice`)",
+                water.id
+            )));
+        }
         self.terrain = defs;
+        self.ice = ice;
         Ok(())
     }
 
@@ -724,6 +802,17 @@ impl Content {
                 })?,
             };
             check_combat(&spec).map_err(err)?;
+            if let Some(on_eat) = &spec.on_eat {
+                on_eat
+                    .check()
+                    .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
+                if !spec.corpse || spec.id == "player" {
+                    return Err(err(format!(
+                        "creature `{}`: `on_eat` is for creatures that leave a corpse",
+                        spec.id
+                    )));
+                }
+            }
             self.creatures.push(spec.resolve(resolved));
         }
         if !self.creature_ids.contains_key("player") {
@@ -920,6 +1009,69 @@ impl Content {
         Ok(())
     }
 
+    /// `data/hunger.toml` (spec §8 "Hunger"), then a corpse object for each creature type that
+    /// leaves one (not the player), after the objects of `data/objects.toml`, in creature order.
+    fn load_hunger(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
+        self.corpses = vec![None; self.creatures.len()];
+        let path = "data/hunger.toml";
+        let Some(text) = files.get_optional(path) else {
+            return Ok(());
+        };
+        let err = |m: String| ContentError::new(path, m);
+        let size_index = |id: &str| self.size_index(id);
+        let def = HungerDef::parse(path, text, self.sizes.len(), size_index)?;
+        if let Some(corpses) = &def.corpses {
+            let material =
+                (self.material_ids.get(&corpses.material).copied()).ok_or_else(|| {
+                    err(format!(
+                        "corpses: unknown material `{}` (data/materials.toml)",
+                        corpses.material
+                    ))
+                })?;
+            for (i, creature) in self.creatures.iter().enumerate() {
+                if creature.id == "player" || !creature.corpse {
+                    continue;
+                }
+                let id = ObjectId(
+                    u16::try_from(self.objects.len())
+                        .map_err(|_| err("too many objects".into()))?,
+                );
+                let creature_id = CreatureId(i as u16);
+                let food = corpses.sizes[creature.size];
+                let def = ObjectDef::corpse_of(creature_id, creature, material, food);
+                if self.object_ids.insert(def.id.clone(), id).is_some() {
+                    return Err(err(format!(
+                        "the corpse of `{}` would be object `{}`, which data/objects.toml has",
+                        creature.id, def.id
+                    )));
+                }
+                self.corpses[i] = Some(id);
+                self.objects.push(def);
+            }
+            // Harm from eating is degrees of a status (spec §8 "Status effects").
+            let harms = corpses.rotten_harm.max() > 0
+                || (self.creatures.iter())
+                    .any(|c| c.on_eat.as_ref().is_some_and(|e| e.harm.is_some()));
+            match &corpses.sickness {
+                Some(id) if self.status_id(id).is_none() => {
+                    return Err(err(format!(
+                        "corpses: unknown sickness `{id}` (data/status.toml)"
+                    )));
+                }
+                None if harms => {
+                    return Err(err(
+                        "corpses: `rotten_harm` and `on_eat` harm need a `sickness`, a status in \
+                         data/status.toml"
+                            .into(),
+                    ));
+                }
+                _ => {}
+            }
+        }
+        self.hunger = Some(def);
+        Ok(())
+    }
+
     fn load_lights(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
         let path = "data/lights.toml";
         let Some(text) = files.get_optional(path) else {
@@ -954,7 +1106,11 @@ impl Content {
         };
         let parsed: dungeon::DungeonFile =
             toml::from_str(text).map_err(|e| ContentError::new(path, e.to_string()))?;
-        for def in parsed.resolve(path, |name| self.creature_id(name))? {
+        let key_id = |name: &str| {
+            self.object_id(name)
+                .filter(|o| self.object(*o).key.is_some())
+        };
+        for def in parsed.resolve(path, |name| self.creature_id(name), key_id)? {
             if self.levels.contains_key(&def.id) {
                 return Err(ContentError::new(
                     path,
@@ -1126,6 +1282,20 @@ impl Content {
 
     pub fn terrain_defs(&self) -> &[TerrainDef] {
         &self.terrain
+    }
+
+    /// The terrain ice looks like (thin ice, ice, thick ice; spec §5 "Ice"), each with the
+    /// thinnest ice that looks like it in mm, thinnest first; empty if nothing freezes.
+    pub fn ice_terrain(&self) -> &[(u16, TerrainId)] {
+        &self.ice
+    }
+
+    /// What ice `um` micrometres thick looks like; `None` when it is too thin to be more than
+    /// the water beneath (thinner than the thinnest ice terrain).
+    pub fn ice_look(&self, um: u32) -> Option<TerrainId> {
+        (self.ice.iter().rev())
+            .find(|(mm, _)| um >= u32::from(*mm) * 1000)
+            .map(|(_, t)| *t)
     }
 
     pub fn creature(&self, id: CreatureId) -> &CreatureDef {
@@ -1453,9 +1623,38 @@ impl Content {
         self.effects.iter().find(|e| e.id == id)
     }
 
+    /// How the player hungers, `data/hunger.toml` (spec §8 "Hunger"); `None` without the file:
+    /// nobody hungers and nothing is eaten.
+    pub fn hunger(&self) -> Option<&HungerDef> {
+        self.hunger.as_ref()
+    }
+
+    /// The corpse a creature of type `creature` leaves when it dies, if any.
+    pub fn corpse_of(&self, creature: CreatureId) -> Option<ObjectId> {
+        self.corpses.get(usize::from(creature.0)).copied().flatten()
+    }
+
     /// The weapon skills (`data/weapon_skills.toml`; empty without the file).
     pub fn weapon_skills(&self) -> &WeaponSkillTable {
         &self.weapon_skills
+    }
+
+    /// What creatures say (`data/dialogue.toml`; empty without it), in file order.
+    pub fn dialogues(&self) -> &[Dialogue] {
+        &self.dialogues
+    }
+
+    pub fn dialogue(&self, id: DialogueId) -> &Dialogue {
+        &self.dialogues[usize::from(id.0)]
+    }
+
+    /// The dialogue of a creature of type `creature` that a level named `npc`: the npc's own if
+    /// it has one, else its type's; `None` if neither talks.
+    pub fn dialogue_of(&self, creature: CreatureId, npc: Option<&str>) -> Option<DialogueId> {
+        let find = |speaker: &Speaker| self.dialogues.iter().position(|d| d.speaker == *speaker);
+        let npc = npc.and_then(|n| find(&Speaker::Npc(n.to_string())));
+        npc.or_else(|| find(&Speaker::Creature(creature)))
+            .map(|i| DialogueId(i as u16))
     }
 
     /// Month names for showing dates.
@@ -1505,6 +1704,7 @@ impl Content {
         };
         let terrain = self.terrain.iter().flat_map(|t| {
             std::iter::once(t.glyph)
+                .chain(t.variants.iter().copied())
                 .chain(t.anim.iter().flat_map(|a| a.extra_glyphs()))
                 .chain(particles(&t.particles))
         });
@@ -1552,6 +1752,76 @@ fn check_terrain_noise(spec: &terrain::TerrainSpec) -> Result<(), String> {
         return Err("only doors have a `toggle_noise`".into());
     }
     Ok(())
+}
+
+/// Checks a terrain type's ice fields (spec §5 "Ice"): water that freezes and the ice on it
+/// are walkable, transparent, give no light, and are neither doors nor stairs (ice and water
+/// trade places as it freezes and thaws, so nothing else may change with them); water freezes
+/// from 0 °C down to [`crate::ice::COLDEST_FREEZE`], at 1 to 100 percent of still water's
+/// pace, and a fall into it takes no hit points back; ice is 1 mm to [`crate::ice::MAX_MM`]
+/// thick and does not move like water.
+fn check_terrain_ice(spec: &terrain::TerrainSpec) -> Result<(), String> {
+    if spec.freeze.is_none() && spec.ice.is_none() {
+        return Ok(());
+    }
+    if spec.freeze.is_some() && spec.ice.is_some() {
+        return Err("terrain is water that freezes (`freeze`) or ice (`ice`), not both".into());
+    }
+    let plain = spec.walkable
+        && spec.transparent
+        && spec.light.is_none()
+        && spec.stairs.is_none()
+        && spec.opens_to.is_none()
+        && spec.closes_to.is_none()
+        && spec.travel_minutes.is_none();
+    if !plain {
+        return Err(
+            "water that freezes and ice must be walkable, transparent, without a light, \
+                    and neither a door nor stairs nor overworld terrain"
+                .into(),
+        );
+    }
+    if let Some(freeze) = &spec.freeze {
+        if !(crate::ice::COLDEST_FREEZE..=0).contains(&freeze.below) {
+            return Err(format!(
+                "`freeze.below` must be {} to 0 (°C)",
+                crate::ice::COLDEST_FREEZE
+            ));
+        }
+        if !(1..=100).contains(&freeze.rate) {
+            return Err("`freeze.rate` must be 1 to 100 (percent)".into());
+        }
+        if freeze.plunge.min() < 0 {
+            return Err("`freeze.plunge` must not heal".into());
+        }
+    }
+    if let Some(mm) = spec.ice {
+        if !(1..=crate::ice::MAX_MM).contains(&mm) {
+            return Err(format!("`ice` must be 1 to {} (mm)", crate::ice::MAX_MM));
+        }
+        if spec.anim.as_ref().is_some_and(GlyphAnim::is_flow) {
+            return Err("ice does not flow".into());
+        }
+    }
+    Ok(())
+}
+
+/// Checks a terrain type's kicking fields (spec §8 "Doors"): only a closed door breaks, and
+/// `breaks_to` and `sturdiness` go together.
+fn check_kicking(spec: &terrain::TerrainSpec) -> Result<(), String> {
+    match (&spec.breaks_to, spec.sturdiness) {
+        (None, None) => Ok(()),
+        (Some(_), Some(_)) if spec.opens_to.is_none() => {
+            Err("only closed doors (`opens_to`) break when kicked".into())
+        }
+        (Some(_), Some(s)) if !crate::door::STURDINESS.contains(&s) => Err(format!(
+            "`sturdiness` must be {} to {}",
+            crate::door::STURDINESS.start(),
+            crate::door::STURDINESS.end()
+        )),
+        (Some(_), Some(_)) => Ok(()),
+        _ => Err("`breaks_to` and `sturdiness` go together".into()),
+    }
 }
 
 /// Checks how a terrain type breaks (spec §8 "Digging"): only solid terrain (neither walkable
@@ -2289,6 +2559,18 @@ mod tests {
             assert_eq!(err.file, "vaults/bad.toml");
             assert!(err.message.contains(expected), "{map}: {}", err.message);
         }
+        // A vault may be stamped many times: no unique character in one.
+        let mut files = ContentFiles::builtin();
+        let dialogue = files.get("data/dialogue.toml").unwrap().to_string();
+        let twin = "[[dialogue]]\nnpc = \"twin\"\nlines = [\"Again?\"]\n";
+        files.insert("data/dialogue.toml", &format!("{dialogue}\n{twin}"));
+        files.insert(
+            "vaults/bad.toml",
+            "name = \"Bad\"\nmap = '''\n##+##\n#.s.#\n#####\n'''\n[legend]\n\
+             \"s\" = { terrain = \"floor\", creature = \"deer\", npc = \"twin\" }\n",
+        );
+        let err = Content::load(&files).unwrap_err();
+        assert!(err.message.contains("unique npc"), "{}", err.message);
         let content = Content::builtin().unwrap();
         let ids: Vec<_> = content.vaults().iter().map(Vault::id).collect();
         assert_eq!(
@@ -2463,7 +2745,8 @@ mod tests {
     fn every_object_has_a_glyph_color_material_and_weight() {
         let content = Content::builtin().unwrap();
         let objects = content.object_defs();
-        assert!((15..=40).contains(&objects.len()), "{}", objects.len());
+        // With a corpse for every creature type but the player.
+        assert!((15..=60).contains(&objects.len()), "{}", objects.len());
         let glyphs = content.glyphs();
         for def in objects {
             assert!(def.weight > 0 && glyphs.contains(&def.glyph), "{}", def.id);
@@ -2791,10 +3074,7 @@ mod tests {
         let content = stream(map, legend).unwrap();
         let level = content.level("stream").unwrap();
         let id = |name: &str| content.object_id(name).unwrap();
-        let stack = |name: &str, count| crate::object::Stack {
-            object: id(name),
-            count,
-        };
+        let stack = |name: &str, count| crate::object::Stack::new(id(name), count);
         assert_eq!(
             level.objects[&Pos::new(2, 1)],
             [

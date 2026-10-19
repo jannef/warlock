@@ -1,5 +1,6 @@
 //! Actors: the player and creatures.
 
+use super::Talk;
 use crate::action::AttackKind;
 use crate::burden::Burden;
 use crate::combat::{self, Attack, Category, Defence, Health, Profile};
@@ -8,8 +9,10 @@ use crate::content::{
     WeaponSkillId,
 };
 use crate::disease::Diseases;
+use crate::door::{Key, Lock};
 use crate::equipment::Equipment;
 use crate::geom::{Dir, Pos};
+use crate::hunger::{Hunger, Satiation};
 use crate::noise::Heard;
 use crate::object::{Stack, Weight, weight_of};
 use crate::skills::{Effect, Skills};
@@ -140,9 +143,21 @@ pub struct Actor {
     /// peaceful creatures in the showcase). Read the one that counts with [`Actor::faction`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub faction_override: Option<FactionId>,
+    /// How fed it is (spec §8 "Hunger"): the player's, when the content has hunger; creatures
+    /// do not hunger (`None`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub satiation: Option<Satiation>,
     /// Its combat stance (spec §8 "Stances"): the player chooses theirs; creatures stay neutral.
     #[serde(default, skip_serializing_if = "CombatStance::is_neutral")]
     pub stance: CombatStance,
+    /// The unique character its level made it (`npc` in a level legend entry), whose dialogue it
+    /// speaks rather than its type's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub npc: Option<String>,
+    /// How far its talk has got (spec §8 "Dialogue"): which line comes next, which mutter, and
+    /// whether the player has met it.
+    #[serde(default, skip_serializing_if = "Talk::is_new")]
+    pub talk: Talk,
 }
 
 fn is_zero(n: &u32) -> bool {
@@ -156,13 +171,29 @@ impl Actor {
             .or(content.creature(self.creature).faction)
     }
 
+    /// How hungry it is (spec §8 "Hunger"); `None` for an actor that does not hunger.
+    pub fn hunger(&self, content: &Content) -> Option<Hunger> {
+        let def = content.hunger()?;
+        self.satiation.map(|s| def.state(s.nutrition))
+    }
+
     /// Its stats as the rules read them: its scores less what its status effects take from
-    /// them (spec §8 "Status effects": strong poison lowers Strength and Dexterity) and less its
-    /// stat damage (spec §8 "Diseases"), never below 1.
+    /// them (spec §8 "Status effects": strong poison lowers Strength and Dexterity), what
+    /// hunger takes while it is Weak or worse (spec §8 "Hunger": `[weak]` in `data/hunger.toml`,
+    /// Strength and Dexterity), and its stat damage (spec §8 "Diseases"). The penalties add up;
+    /// no score goes below 1.
     pub fn effective_stats(&self, content: &Content) -> Stats {
         let mut by = self.effects.penalty(content);
+        if let (Some(def), Some(hunger)) = (content.hunger(), self.hunger(content))
+            && hunger.is_weak()
+        {
+            let by = by.get_or_insert_with(|| PerStat::splat(0));
+            for stat in Stat::ALL {
+                by[stat] += def.weak[stat];
+            }
+        }
         if self.damage.is_damaged() {
-            let sum = by.get_or_insert(PerStat::splat(0));
+            let sum = by.get_or_insert_with(|| PerStat::splat(0));
             for (stat, points) in self.damage.by().iter() {
                 sum[stat] += points;
             }
@@ -366,6 +397,25 @@ impl Actor {
         })
     }
 
+    /// The key it carries that opens `lock` (spec §8 "Doors"): the first one made for it, else
+    /// the first skeleton key; `None` if it carries none that fits.
+    pub fn key_for(&self, content: &Content, lock: &Lock) -> Option<ObjectId> {
+        let fitting = (self.inventory.iter())
+            .map(|s| s.object)
+            .filter_map(|o| Some((o, content.object(o).key.as_ref()?)))
+            .filter(|(_, key)| key.opens(lock));
+        let mut skeleton = None;
+        for (object, key) in fitting {
+            match key {
+                Key::Lock(_) => return Some(object),
+                Key::Skeleton => {
+                    skeleton.get_or_insert(object);
+                }
+            }
+        }
+        skeleton
+    }
+
     /// What its melee attacks do: with the weapon it wields, else its natural attack, else its
     /// bare hands; Strength to hit and to damage, and what its weapon skill gives.
     pub fn melee(&self, content: &Content) -> Profile {
@@ -415,6 +465,16 @@ impl Actor {
         let profile = Profile::melee(attack, &self.effective_stats(content))
             .with(&self.benefit(content, skill));
         Some((shield, self.stanced(content, profile)))
+    }
+
+    /// What its kicks at a creature do (spec §8 "Doors"): an unarmed blow whatever it wields
+    /// (bare hands' damage, Strength to hit and to damage), with what its unarmed fighting gives
+    /// and its combat stance.
+    pub fn kick(&self, content: &Content) -> Profile {
+        let skill = content.weapon_skills().of_role(Role::Unarmed);
+        let profile = Profile::melee(&Attack::unarmed(), &self.effective_stats(content))
+            .with(&self.benefit(content, skill));
+        self.stanced(content, profile)
     }
 }
 

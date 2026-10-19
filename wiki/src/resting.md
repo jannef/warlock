@@ -24,15 +24,19 @@ wait is cut short so the rest ends exactly at its goal. A rest never lasts more 
 A rest stops early when:
 
 - a creature comes into view that you did not see the turn before ("A kobold comes into view; you
-  stop resting after 2 hours."),
+  stop resting after 2 hours."), unless it is one of the people who talk and fight no one (see
+  [People and talk](npcs.md)): you see who it is, and rest on,
 - a message is written to the message line, such as a new sound you hear ("You hear footsteps to
   the north-east.") or an attack you notice ("The kobold hits you."). A sound you have already
   been hearing does not stop you; see [Hearing](hearing.md). A status effect wearing off ("The
   bleeding stops.", "The poison wears off.") or a disease leaving you ("Your fever breaks.") does
-  not stop you either; see [Status effects](status-effects.md) and [Diseases](diseases.md), or
+  not stop you either; see [Status effects](status-effects.md) and [Diseases](diseases.md),
 - under the open sky, rain starts or grows heavier ("It starts to rain.", "It starts to pour.",
   "The rain grows heavy."). Other news of the [weather](weather.md), such as the rain stopping,
-  is written to the message line but lets you rest on.
+  and someone muttering to themselves, is written to the message line but lets you rest on, or
+- you get hungrier: hungry, weak, fainting, or starving ("You are getting hungry."), or you faint
+  from hunger. Resting burns food like any other time (see [Hunger](hunger.md)); a full stomach
+  settling ("You no longer feel satiated.") lets you rest on.
 
 So resting next to a creature walking back and forth behind a door is interrupted each time it
 comes back into earshot. A creature already in view when you start does not stop the rest by

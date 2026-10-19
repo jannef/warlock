@@ -56,9 +56,10 @@ Game flags (`cargo run -p warlock -- --help`):
   `new-run` on the main menu (e.g. `--scale 1 --screen new-run --capture target/menu.png`), and
   character creation's `race`, `gender`, `class`, and `summary` over New run and the steps
   before them (each on its preselection: the showcase's character);
-  `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `pick-up` (the pile on the player's cell), and `drop` over a run
-  (e.g. after a `--replay` that walks onto a pile), `equip-item` (the choice for the first slot,
-  Head) over the equipment screen; `settings` and `controls` over the main menu, or over the pause
+  `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `pick-up` (the pile on the player's cell), `drop`, and `eat` over a run
+  (e.g. after a `--replay` that walks onto a pile), `dialogue` over a run whose last action was
+  talk with topics (a `--replay` ending in `chat:SE` or `ask:SE:rooms` next to the hub's hermit),
+  `equip-item` (the choice for the first slot, Head) over the equipment screen; `settings` and `controls` over the main menu, or over the pause
   menu when `--scenario`, `--new`, `--replay`, or `--record` names a run (`--capture` alone does
   not).
   `--config-dir DIR` keeps `settings.toml` in DIR; captures and replays otherwise use default
@@ -78,23 +79,26 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 | Dump a replay's end state | `... dump --replay runs/x.json [--actions "wait"] --format ascii\|json [--state]` |
 | Create a replay | `... replay --create --scenario showcase --actions "move:N wait" -o runs/x.json` |
 | Verify a replay | `... replay --verify runs/x.json` (exit 1 and first diverging step on mismatch) |
-| Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor; a special room's floor by its effect's letter; also local areas, `--level local:49,23`) |
+| Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor, `&` = locked door; a special room's floor by its effect's letter; also local areas, `--level local:49,23`) |
 
 Dump layers beyond the map ones: `inventory`, `equipment`, `stats`, and `skills` (the player's
 trained skills, `Stealth 17`) from perception; `actors` (dev-only: every actor's hit points,
 load, stats, and skills with their marks).
 
-Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR ascend descend lantern
+Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-dig:DIR rest:GOAL stance:NAME vision:PROFILE skip:DURATION weather:KIND effect:ID@X,Y[>X,Y]
-afflict:STATUS infect:DISEASE` (`DIR` = N
+eat:LETTER eat:floor:LETTER dig:DIR chat:DIR ask:DIR:TOPIC rest:GOAL stance:NAME vision:PROFILE
+skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] afflict:STATUS infect:DISEASE` (`DIR` = N
 NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
 player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `SLOT` = a slot id in
 `assets/data/slots.toml`, e.g. `equip:body:b` (put inventory stack `b` on), `remove:body`;
 `bash:DIR` bashes with the held shield, `fire:X,Y` shoots the readied missile weapon at level
 cell (X, Y), `throw:c:X,Y` throws one of
-inventory stack `c` there (any weapon is thrown whole, badly: `t` in the game sends `fire` for a launcher, else `throw` for what the Missile weapon slot holds); `dig:E` digs into the wall east with the tool in the Tool slot, turn
-after turn until it gives way or something interrupts; `PROFILE` = an id in
+inventory stack `c` there (any weapon is thrown whole, badly: `t` in the game sends `fire` for a launcher, else `throw` for what the Missile weapon slot holds); `eat:b` eats one of inventory stack `b`, `eat:floor:a` one of the top
+stack underfoot; `dig:E` digs into the wall east with the tool in the Tool slot, turn
+after turn until it gives way or something interrupts; `chat:E` talks to the creature east of
+the player, `ask:E:rooms` asks it about topic `rooms` (an id in `assets/data/dialogue.toml`);
+`PROFILE` = an id in
 `assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are
 `30s`, `10m`, `2h`; `skip` is the dev hour skip; `weather` is the dev weather override, `KIND` =
 `clear`, `overcast`, `rain`, `heavy`, for three hours of game time; `effect` is the dev spell
@@ -104,14 +108,16 @@ toward the second cell), no time and no rules effect, for captures; `afflict` is
 effect: one degree more of `STATUS`, an id in `assets/data/status.toml`, e.g.
 `afflict:poisoned*4 afflict:bleeding`, no game time (not `diseased`: that comes of a disease);
 `infect` is the dev disease: the player catches `DISEASE`, an id in `assets/data/diseases.toml`,
-as if they had lost the check (it incubates, then shows), e.g. `infect:the_shakes rest:24h*2`,
-no game time; `ACTION*N` repeats one, e.g.
+as if they had lost the check (it incubates, then shows), e.g. `infect:the_shakes rest:24h*3`,
+no game time; `freeze:X,Y,R` and `thaw:X,Y,R` are the dev frost and heat bursts (radius 0 to 20
+around level cell (X, Y), in its line of sight; no time); `ACTION*N` repeats one, e.g.
 `wait*10`). Dump layers: `view` (what the player sees), `fov` (`*` visible),
 `memory` (seen terrain and remembered objects), `light` (perceived brightness of visible cells as a
 digit, `0` dark to `9` fully lit), `sound` (heard sounds at their rough places over the view: `f`
-footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m` chanting, `d`
-digging, upper case when loud), `blood` (blood the player sees or remembers as a digit over the
-view, `1` a few drops to `9` soaked), `inventory` (what the player
+footsteps, `o`/`c` a door opening/closing, `x` fighting, `b` a bowstring, `m` chanting, `k`
+banging (a door kicked), `d` digging, `v` a voice, upper case when loud), `blood` (blood the
+player sees or remembers as a digit over the view, `1` a few drops to `9` soaked), `inventory`
+(what the player
 carries and weighs, worn and wielded things marked, their burden and its thresholds),
 `equipment` (the player's slots), `stats`
 (the player's race, gender, and class, then their own scores as the rules read them, then
@@ -121,14 +127,18 @@ ranks and progress toward the next, `Long blades 2 (40%)`), `truth`
 (ground truth, **dev-only**), `actors` (every actor on the level with its hit points and
 Defence, its weight, what it carries and of that wears and wields, its burden and carrying
 limit, its weapon skills with marks, its stats as score/potential, its status effects with
-severities, and its diseases (progressions, checks won in a row, time to their next turn) and
-stat damage, **dev-only**), `rooms` (the level's special rooms: their plain ground as the
-effect's `mark`, then a line per room, **dev-only**). The header line has the player's `hp
-17/17` (and `dead` once the run has ended); JSON dumps add `hp`, `defence`, `burden` (`level`,
-`limit`), `effects` (status ids), `diseases` (the known ones' ids), `death` (with `of`, the
-status that killed), `weapon_skills` (by skill id: `rank`, `progress`), each seen actor's
-`health` and `effects` (those that show), and `room` (the special room the player stands in, if
-they know it). Replay
+severities, its diseases (progressions, checks won in a row, time to their next turn) and stat
+damage, the player's nutrition, and its npc id and talk counts, if any; then every corpse on
+the level and in the pack with its death time and rot, **dev-only**), `rooms` (the level's
+special rooms: their plain ground as the effect's `mark`, then a line per room, **dev-only**),
+`ice` (the level's temperature and the thickness of the ice on its water in cm, `0`-`9`, `a`-`z`
+for 10-35, `#` beyond, **dev-only**). The header line has the player's `hp 17/17` (and `dead`
+once the run has ended), `hunger hungry` unless Not hungry, and the `temperature`; JSON dumps add
+`hp`, `defence`, `burden` (`level`, `limit`), `hunger`, `effects` (status ids), `diseases` (the
+known ones' ids), `death` (with `of`, the status that killed, and `cause`, starving or choking),
+`temperature` (°C to a tenth), `weapon_skills` (by skill id: `rank`, `progress`), each seen
+actor's `health` and `effects` (those that show), and `room` (the special room the player stands
+in, if they know it). Replay
 files are JSON
 `{game_version, scenario, seed, character, steps:[{action, hash}]}` (`character` =
 `{race, gender, class}`, left out for a run without one; a replay without it starts as the
@@ -183,7 +193,9 @@ holds the shared lock on `logs/.in-use`) moves files between the two layouts. Se
 (`ui/files_screen.rs`, `ScreenName::Files`, `--screen files`) shows the report with Open folder.
 
 Settings (`crates/warlock/src/settings/`): `settings.toml` in the config dir, schema in the `settings/mod.rs` module docs. Changes
-apply live and are written at once; a bad file means defaults plus a warning, per value. Effects:
+apply live and are written at once; a bad file means defaults plus a warning, per value. The
+temperature unit (`temperature = "celsius"`/`"fahrenheit"`, `settings::TemperatureUnit`) is
+applied only where the status bar shows the temperature (`TemperatureUnit::show`). Effects:
 `reduced_effects` is a preset over the `[effects]` switches (`EffectSwitches`: glyph_animation,
 flicker, motion, glow, distortion, particles, screen_fades, screen_shake, weather; all on by default), all but
 `blood` (on by default too), a content preference the preset leaves as set
@@ -193,7 +205,10 @@ its own switch from the `render::Effects` resource (the effective values, synced
 `EffectSwitches`, the file, and a row in `ui/settings_screen.rs`. `clock` (`settings/clock.rs`, `"24h"`/`"12h"`) is the one way a time of day is written
 in the UI (`Clock::format`: status bar, death screen); dumps stay 24-hour. Palettes
 (`settings/palette.rs`) are applied only when cells are uploaded to the GPU (`render::upload`) and
-in `ui/glyphs.rs`, never to content colors. Rebindable commands have stable ids in
+in `ui/glyphs.rs`, never to content colors. Binding a key another command of the same context uses moves it
+(`Bindings::bind_primary` returns `Bound::Moved`; fixed commands outside `REBINDABLE`, Esc's Cancel,
+are refused with `Conflict`); a command left keyless is saved as an empty list and loads unbound.
+Rebindable commands have stable ids in
 `settings/keys.rs` (`KeyCommand::id`): **a new `KeyCommand` variant must be added there**
 (`REBINDABLE` or the non-rebindable arm). `Game` exists only during a run (the menu runs without
 it): gate systems that read it with `run_if(resource_exists::<Game>)`; content is the
@@ -203,7 +218,10 @@ Modal screens (spec §6) — main menu, new run and character creation (race, ge
 summary), pause, settings, controls, the `?` help, the inventory (`i`), the equipment screen
 (`e`) and its choice of what goes in a slot, the character screen (`@`), the weapon skills
 screen (`W`), choosing what to
-pick up (`,`/`g` on several stacks) or drop (`d`), and the death screen (opened by
+pick up (`,`/`g` on several stacks), drop (`d`), or eat (`E`), the dialogue screen (opened by
+`screens::converse` after an action this frame whose outcome is talk with topics,
+`Event::Talked`; asking is `ScreenAction::Act(Action::Ask)`, which closes it, and the answer
+reopens it on the topic asked), and the death screen (opened by
 `screens::on_death` when `World::death` is set; Enter/Esc is `MenuChoice::LeaveRun`, back to the
 main menu without saving; no `--screen`: capture a dead replay instead) — are one
 screen stack (`ui/screens.rs`, the `ScreenStack` resource); add a screen there, never a second way
@@ -248,13 +266,16 @@ to open, read keys for, or draw one:
   number keys. The keys are the `Context::Pages` commands `Page(1..9)`, `NextPage` (Shift
   reverses), `PrevPage`: rebindable like all commands (`KeyCommand::context`: keys are unique
   per context, so Tab is `NextTarget` in play and `NextPage` here; `Bindings::owner_in` and
-  `lookup` read one context). `Press::shift` carries Shift from the router.
-- Prompts in the message line (open/close/bash direction, rest, look mode) are `InputMode`s,
-  not screens.
+  `lookup` read one context). `Press::shift` carries Shift from the router. The dialogue screen
+  is no page: its digits ask about topics.
+- Prompts in the message line (open/close/bash/chat direction, rest, look mode) are
+  `InputMode`s, not screens. `C` with exactly one creature in view next to the player chats with
+  it at once (`input::chat_partner`), else asks for a direction.
 - Screens are plain state machines tested without a window: `ui/menu.rs` (`Press`, `Panel`, main
   and pause menu), `ui/new_run_screen.rs`, `ui/settings_screen.rs`, `ui/controls_screen.rs` (also
   the `?` help: the same binding list, read-only), `ui/object_screen.rs` (inventory, pick up,
-  drop: stacks by letter; in the choices letters always name stacks, even `h j k l`),
+  drop, throw, eat: stacks by letter; in the choices letters always name stacks, even `h j k l`;
+  the eat choice lists food lying here first, without letters, then the pack's by letter),
   `ui/equipment_screen.rs` (`EquipmentScreen`: slots by letter, which always name slots, so its
   own key `e` closes it only when it names none; `ItemScreen`: the stacks that fit one slot, by
   their inventory letters), `ui/character_screen.rs` (name, race, gender, class, age, birthday,
@@ -262,8 +283,10 @@ to open, read keys for, or draw one:
   and Defence total, weight and burden thresholds; 72 wide like the summary),
   `ui/weapon_skills_screen.rs` (sections, ranks, and a faint ten-cell marks bar; never a
   benefit), `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per
-  step with a Random row rolled from the seed, `SummaryScreen`, `Draft`), `ui/death_screen.rs`
-  (who killed the player, where, when, after how many turns).
+  step with a Random row rolled from the seed, `SummaryScreen`, `Draft`), `ui/dialogue_screen.rs`
+  (the speaker, their last line, numbered topics; built from the last `Event::Talked`, so it never
+  shows more than the player was told), `ui/death_screen.rs`
+  (who or what killed the player, where, when, after how many turns).
 
 Typical render check: `cargo run -p warlock -- --scale 1 --freeze-time 1 --capture target/shot.png`,
 then read the PNG.
@@ -289,6 +312,25 @@ file's optional `arrival = "..."` line is said when the player arrives by stairs
 `flow_speed` percent), and the shared legend draws it as arrows (`→` normal, `⇒` double speed).
 Flow is presentation data carried by `LevelTemplate::flow` / `LevelState::flow` and read by the
 renderer through `PerceptionView::flow` (visible cells only); no rule reads it.
+
+NPCs, dialogue, and making way (spec §8 "Dialogue" and "Displacement", #146, #147):
+`content/dialogue.rs` loads `data/dialogue.toml` (per creature type, or per unique `npc` id a level
+legend entry gives a creature, `Actor::npc`; `Content::dialogue_of` prefers the npc's): rotating
+`lines`, `greet`, `[[dialogue.topic]]`s (`id`, `name`, `reply`), and `mutter` (chance per action,
+verb, lines). `world/talk.rs` is the one place talk happens: `World::chat` (`Action::Chat`, cost
+`chat`), `World::ask` (`Action::Ask`, no time), `World::topics` (the one source of what an NPC can
+be asked about: quests, #148, add their topics there and answer them in `ask`), `rotation` (each
+line once a round in a per-speaker shuffled order, never twice in a row; `Actor::talk` counts what
+was said; with `Actor::npc` saved and hashed, `FORMAT_VERSION` 23), mutters (`World::mutter` after each `creature_turn`, a hash roll that never
+draws on the gameplay stream; `Act::Mutter` noise; `say_mutters` logs what the player heard, with
+the words, only as notes that never stop a rest), and making way: moving into a creature that is
+not hostile swaps places (`swap_places`; the creature takes its old cell as its `Mind::post` and
+`ai.rs` walks it back, waiting beside the post while someone stands on it, then on with its
+route) unless `World::refusal` says why not (the type's `budge`: `never`, or `off_post` while its
+mind is calm, ready for shopkeepers, #145; it cannot move; or it is two sizes or more larger:
+sizes are listed smallest first). What an actor is called in messages comes from
+`World::called` ("the gardener"): named shopkeepers go there. Creatures that talk and fight no one
+never stop a rest by coming into view (`World::disturbs_rest`).
 
 Experience (spec §8 "Experience", M21): `content/experience.rs` holds the rules from
 `data/experience.toml` (level curve, `hp_level`, the WoW-style `kill_xp` scaling with its zero
@@ -318,13 +360,15 @@ and runs the other actors on the level in time order until the player may act ag
 the clock (whole seconds; leftover energy carries, so a run of actions takes its exact total time,
 up to the second the actor is ready, with no drift) to each action, and `rest` loops waits until
 the goal or an interruption, its last turn cut short with `price_until` so it ends exactly at the
-goal at any player speed. Long actions (`rest`, `dig`) go through `World::keep_at(events, more,
-act)`: turn after turn of `act` while `more` holds, stopping on a creature coming into view, a
-message (`say`; `note` does not stop it), or death (`Ended`), perceiving only after turns in which
-a creature could have come into view (`out_of_view_for`, which accounts for speed and the cheapest
-step) or in which the weather the player would see changed (`weather_turned`). A new action that
-takes time needs an `ActionKind` (with its id and a line in `data/actions.toml`) and must return
-its price there,
+goal at any player speed. Long actions (`rest`, `dig`, meals) go through `World::keep_at(events, more,
+act)`: turn after turn of `act` while `more` holds, stopping on a creature coming into view (but
+for one who talks and fights no one, `World::disturbs_rest`), a message (`say`; `note` does not
+stop it), or death (`Ended`), perceiving only after turns in which a creature that disturbs a
+rest could have come into view (`out_of_view_for`, which accounts for speed and the cheapest
+step and leaves out those who talk and fight no one), in which the player heard something, or in
+which the weather the player would see changed (`weather_turned`). A new action that takes time
+needs an `ActionKind` (with its id and a line in `data/actions.toml`) and must return its price
+there,
 asked through `price_of`/`step_price`/`price_for`: those apply the actor's burden (below,
 `World::burdened`), so a price taken anywhere else would escape it (`price_until`, the rest's
 last turn, deliberately does). Price an action that changes the load before it does (pick up,
@@ -341,7 +385,7 @@ carry `start_date`/`start_time`. Rest (`R`) is a message-line input mode (`Input
 Hearing (spec §5 "Hearing") lives in `warlock-core/src/noise.rs`. `noise::noise(content, level,
 actor, burden, Act)` is the one place an action's loudness is decided (creature `footsteps` ×
 terrain `step_noise` percent × the burden's `footsteps()` percent for `Act::Step`, the door's
-`toggle_noise` for `Act::OpenDoor`/`CloseDoor`; `make_noise` passes the actor's
+`toggle_noise` for `Act::OpenDoor`/`CloseDoor`, `VOICE_NOISE` for `Act::Mutter`; `make_noise` passes the actor's
 `Load::penalty`):
 a new noisy action gets an `Act` variant there, and its call site in `world/mod.rs` is one
 `self.make_noise(actor, Act::…)` where the action happens. `noise::make` delivers it at once to
@@ -352,7 +396,8 @@ since it last acted and is cleared as it acts in `World::creature_turn` (the AI 
 before clearing); the player's is cleared in `World::run_turn` once the player has acted, and
 becomes `PerceptionView::sounds()` (sources not visible only; kind, `Volume`, and `rough_place`,
 never the actor; a walker's several steps within one turn are one sound). `World::hear` logs news
-(`noise::news` against `WorldState::recent_sounds`) as messages, which stop a rest. The app draws
+(`noise::news` against `WorldState::recent_sounds`) as messages, which stop a rest (voices are said
+with their words by `World::say_mutters` instead, as notes). The app draws
 `PerceptionView::sounds()` in `ui/sounds.rs` (a still `◌` marker, always: it is information; the
 ripple only with `glyph_animation`). Sounds carry at most `noise::MAX_REACH` (30) cells, under
 `VIEW_RADIUS`, which keeps rest batching (`out_of_view_for`) exact (a const assert guards it).
@@ -435,8 +480,10 @@ is `weapon_skills.rs`: `WeaponSkills` (a `Training { rank, marks }` per skill on
 `raise`: the defaults rise, their marks reset; no chaining), `from_ranks` (starting ranks,
 order-free), `progress`. The rules hook in at one place each: `Actor::attack_skill(kind, with)`
 picks the skill of an attack (a blow: the wielded weapon's, else unarmed; `Melee` `with` a
-shield: shield bashing; a shot: the launcher's; a throw: thrown); `Profile::with(&Benefit)` and
-`Actor::melee`/`ranged`/`thrown`/`bash` apply to-hit, damage, and threat; `Actor::defence` adds
+shield: shield bashing; a shot: the launcher's; a throw: thrown; a kick, spec §8 "Doors": unarmed
+whatever is wielded, `World::player_kicks`), and `fight.rs::resolve` takes the skill its caller
+picked; `Profile::with(&Benefit)` and
+`Actor::melee`/`ranged`/`thrown`/`bash`/`kick` apply to-hit, damage, and threat; `Actor::defence` adds
 parry and shield blocking; `World::attack_price` takes `speed`/`reload` off the cost;
 `World::resolve` (`fight.rs`) earns the player's marks (`practise`; a Shield-credited miss on
 the player trains shield blocking; `World::level_of` weighs the opponent by its creature type's
@@ -499,6 +546,45 @@ move."; `creature_steps` makes an overloaded creature wait). `World::apply` says
 the status bar (`Burdened`/`Strained`/`Overloaded` after the HP, priority 1), the inventory
 (72 wide; `Carrying 28.4 kg (burdened)` and the thresholds line, `character_screen::thresholds`)
 and the character screen.
+
+Hunger (spec §8 "Hunger"; M23, #137): the rules are `warlock-core/src/hunger.rs` (`Hunger`, the
+seven states from `Starving` up to `Bloated`, ordered so `<` is hungrier; `news(from, to)`,
+`stops_rest`; `Satiation { nutrition, banked, starving }` on `Actor::satiation`, the player's
+only, with `burn`/`starve`/`feed`), data `data/hunger.toml` (`content/hunger.rs`, `HungerDef`:
+`burn_seconds`, `start`, `max`, `vomit_leaves`, `[states]` least nutrition, `bloated_slow`,
+`weak` stats, `faint`, `starve`, `exertion` (only `EXERTIONS`: melee, shoot, throw),
+`overeating`, optional `corpses` (material, rot hours, rotten vomit/harm, `sickness` (a status
+id: harm from food is degrees of it), `Food` per size);
+`Content::hunger()`; without the file nobody hungers and there are no corpses), races' `hunger`
+percent, objects' `food = { nutrition, turns }`, creatures' `corpse` (default true) and `on_eat`
+(`OnEat`), scenarios' `carry` (starting pack). Corpses are objects made at load
+(`Content::load_hunger`, after the file's objects, id `<creature>_corpse`, `ObjectDef::corpse`
+names the creature, `Content::corpse_of`); their stacks carry `Stack::died` (crate-private:
+presentation cannot read a corpse's age), `Stack::is_valid_for` checks it, and level files
+cannot place corpses. Hunger joins the status framework (`world/status.rs`) rather than running
+beside it: the player's nutrition burns inside `World::live` (status effects' event loop, called
+through `pass_time` by `run_turn`), each change of state and each hit point lost to starving a
+moment of its own (`World::until_hungrier`, `World::digest(id, seconds)` in `world/hunger.rs`),
+so splitting time never changes the result and the player starves to death at the exact moment;
+`World::healing_rate` (the one pace) gives a Starving player none; harm from food (a rotten
+corpse, `on_eat` `harm`) is `World::afflict` of the `sickness` status (poisoned: "You feel
+sick.", said at once by `sicken`). `run_turn` adds `faint()` to the player's price;
+`World::bloated` is inside `burdened`, so every price is slowed while Bloated; `exert(kind)`
+after the player's blow, shot, or throw (priced before it); `die_of(cause, when)` kills without
+an `Event::Died` (`Death::cause`: `Cause::Starvation`, `Choked`; a death by food poisoning is
+the status's, `Death::of`). Weak lowers `Actor::effective_stats(content)` (adding to the status
+effects' `penalty`, `Stats::adjusted_by`), which combat profiles, `Actor::defence`,
+`burden::load`, and `own_scores` read; never `actor.stats` directly in a rule that hunger
+should touch. Eating (`world/eat.rs`): `Action::Eat(Meal::Pack|Floor)` → `Spent::Meal(Dish)` →
+`dine` (turns of `eat` through `World::keep_at`, stopping like a rest; the food stays until the
+last turn) → `finish` (take one, then rotten / fresh corpse `on_eat` / plain food, `feed` with
+overeating, `vomit`, hunger and burden news). Saved and hashed (`FORMAT_VERSION` 21:
+`Actor::satiation`, `Stack::died`, `Death::cause`).
+`creature_dies` calls `leave_corpse` (corpse on top); `perceive` calls `rot_away` (current
+level's piles and the pack). Presentation: `PerceptionView::own_hunger` (the status bar segment
+after the HP, priority 1, hidden while Not hungry), `E` (`KeyCommand::Eat`, id `eat`) opens
+`ScreenName::Eat` (`ObjectList::Eat`). Long tests that rest or travel for days remove
+`data/hunger.toml` (or the player starves).
 
 Character creation (spec §8 "Character creation"; M15) lives in `warlock-core/src/character.rs`:
 `CharacterSpec` (race id, `Gender`, class id; `FromStr`/`Display` as `dwarf,female,warrior`;
@@ -673,6 +759,27 @@ abilities menu (#156), which reads `PerceptionView::active_skills` (`OwnSkill::a
 skill's kind is `action`; `available`: usable now, false until the uses exist). Pending hooks: athletics (kicking doors, #130; climbing out of pits, #128) and
 escape artist (pits, #128).
 
+Doors (spec §8 "Doors"; M19, #130): the rules are `warlock-core/src/door.rs` (`Lock`, `Key`,
+`kick_breaks`/`break_chance`: `1d(sturdiness) ≤ Strength`, one gameplay draw), applied in
+`world/door.rs` (`open_door` unlocks with `Actor::key_for` and costs `unlock` + `open_door`,
+`swing_open`, `close_door`, `kick`/`kick_door`; kicking a creature is `World::player_kicks`, an
+unarmed blow whatever is wielded: `Actor::kick` (bare hands with unarmed fighting's benefits and
+the stance), training unarmed fighting, priced `kick` by `attack_price`, said with `Words::kick`). Locks are per-cell state, never terrain: `locks` on
+`LevelTemplate` and `LevelState` (by position, saved, hashed, `FORMAT_VERSION` 22; ground truth only, so perception,
+memory, look mode, and dumps show a locked door as any closed door); `World::set_terrain` drops a
+lock whenever the cell stops being a closed door. Level legends lock with `lock = "id"` or
+`locked = true`; objects are keys with `key = "id"` (`"*"`: skeleton); closed doors break with
+`breaks_to` + `sturdiness` (`TerrainDef::kicked_in`; digging and blasts break only terrain with a
+`hardness`, `TerrainDef::breaks`, never a door). The AI (`world/ai.rs`) paths through a locked door, and opens it, only
+with a key (`Stepped::Unlocked`); `go_look` stops next to a spot no one can stand on (a door kicked
+at). Generated levels: `Needs::key` (the branch's `key` in `dungeons.toml`) makes `rooms.rs`'s
+`lock_rooms` lock up to two single-door rooms and drop the key in an unlocked room;
+`connect::validate` checks locks sit on closed doors and that the stairs and a key to each lock
+(`LevelTemplate::has_key_for`, lying or carried) are reachable without unlocking anything; vaults
+must hold their own keys (`content/vault.rs`, `check_keys`). The app binds `K` (`KeyCommand::Kick`,
+a direction prompt like open/close, bash, and dig) and bursts the door terrain's `toggle` particles on
+`Event::DoorKicked`/`DoorBroken`.
+
 Blood (spec §8 "Blood", §4.8; M17): the pure pattern is `warlock-core/src/blood.rs` (`Wound`:
 `volume` by kill or big hit (a third of the maximum, or a critical), size `blood` percent,
 overkill, critical, missile; `spatter`: pool, fan away from the attacker (±45° melee, ±30°
@@ -700,13 +807,14 @@ effects (`Actor::effects: Effects`, at most one `Effect { status, severity, tick
 status in status order; `Effects::add` applies the stacking rule, `penalty`, `regen`,
 `is_valid_for`; `Effect::until_tick`/`until_eases`/`advance` are the timer math: ticks bank
 `seconds × severity` degree-seconds). `world/status.rs` applies them: `World::afflict(actor,
-status, severity, by, events)` (**the one way to give an actor a status**: hunger and rotten
-corpses (#137), traps, diseases call it), `World::cure(actor, means, events)` (the Heal skill's
+status, severity, by, events)` (**the one way to give an actor a status**: food poisoning
+from what the player eats (#137), traps, diseases call it), `World::cure(actor, means, events)` (the Heal skill's
 bandage, #132), `World::after_blow` (wounds by `combat::big_hit` and criticals, then `on_hit`
 with one gameplay draw per chance below 100), `World::healing_rate` (min of the statuses'
-`regen`, × resting for the player while `World::resting`; hook hunger's Weak here or as a status),
+`regen`, × resting for the player while `World::resting`, none for a Starving player),
 and `World::pass_time` → `live`, called by `run_turn` for every scheduled actor as the clock
-moves: an event loop over the next tick, easing, or hit point back, so splitting time never
+moves: an event loop over the next tick, easing, hit point back, or change in the player's
+hunger (Hunger above), so splitting time never
 changes the result, deaths at their exact moment (`dies(.., Some(status), when)`), the blood
 drip hook `drip_blood` (#127's stains go there). The player's statuses beginning and ending are
 `Event::Status` (said by `perceive_events`: begin = `say`, stops a rest; end = `note`, does not;
@@ -736,7 +844,7 @@ down to its onset, then each progression; known by name once `progressions > 0`)
 status penalties, so every rule (and max HP through Toughness) sees it. `world/disease.rs`:
 `World::expose(actor, disease, by)` (**the one way to expose**: a check, then `infect`),
 `World::infect` (rolls the incubation; the dev `infect:ID`), `World::expose_to(actor, source)`
-(**hunger's rotten corpses (#137) must call `expose_to(player, "rotten_food")`**),
+(eating a rotten corpse calls `expose_to(player, "rotten_food")`, `world/eat.rs`),
 `World::wade` (called from `player_moves` with the step's seconds: one draw out of 360 000
 unless sure), `World::disease_turn` (onset: `afflict` Diseased; progression: a check, damage in
 stat order then `hp`, hp cut to the new max, death by Diseased for a disease that `kills`),
@@ -860,6 +968,46 @@ overcast, `r` rain, `R` heavy). Tune the clouds and the rain with captures of th
 `forest` scenarios after `skip:330m weather:rain` (noon) and `skip:353h skip:30m weather:heavy`
 (full-moon midnight) with `--content-dir assets`; the wiki's weather tables come from the file.
 
+**Temperature** (spec §5 "Temperature", `temperature.rs`; M26): `Temperature` is tenths of a
+degree Celsius (`celsius()`/`fahrenheit()` round to whole degrees for display). Underground it is
+fixed per level (`LevelState::temperature`, from the level file's `temperature`, else the
+branch plan's in `data/dungeons.toml`, else `UNDERGROUND` 10 °C; refused on sky-exposed
+levels); under the open sky `temperature::outdoors(seed, time, climate, override)` is stateless
+like the weather: the month means (`temperature` per `[[month]]` in `data/weather.toml`,
+interpolated between mid-months) plus a cosine day swing (coldest 04:00; `swing` at the top of the
+file, times each weather's `swing` percent) less the weather's `chill`, blended across weather
+changes by `weather::blend` (the one place the clouds' and the temperature's hour-long
+transition is decided). `WorldState::temperature_on(level, ..)` is the one place a level's
+temperature is decided; `World::temperature()` (ground truth) and `PerceptionView::temperature()`
+(the player feels it, anywhere) read it. The status bar always shows it (`ui::status_segments`,
+priority 4, after the weather; cool tint below 0, warm from 30 °C), in the settings' unit.
+Nothing feels the cold yet.
+
+**Ice** (spec §5 "Ice", `ice.rs` the model, `world/ice.rs` the rules; M26): water terrain with a
+`freeze` table grows ice; terrain with `ice = MM` is what ice of at least that thickness looks
+like (`Content::ice_terrain`, `ice_look`). Ice is kept per level, sparsely, in µm
+(`LevelState::ice`: `Ice { water, um }`), and the terrain grid shows its look (the water when
+too thin), so sight, memory, look mode, and noise just follow; ice and freezing water are
+transparent and lightless (validated), so light masks never need invalidating. **Never tick
+ice per cell per second**: `LevelState::advance_ice` brings a level up to a time in fixed
+10-minute ticks of the clock (`ice::ticks`, each at its middle's temperature; `ice_until` the
+last tick done), grouping cells by (water, thickness), so it is exact however time passed (rests,
+skips, journeys) and a year away is cheap. It runs on the current level as the clock moves
+(`run_turn`) and as perception begins, and for a new sky-exposed level over `ice::PRE_ROLL` (30
+days) on instantiation. Stepping onto ice goes through `World::tread` (player and creatures
+alike; weight from `Actor::weight`, `ice::gives_way`: no draw up to what it holds, a gameplay draw
+up to twice that), then `tread_price` (the `climb` action from water onto ice) and `after_tread`
+(the plunge: `freeze.plunge` dice, never the last hit point, `Event::FellThroughIce`). Bursts:
+`World::frost` (instant freeze; dev `freeze:x,y,r`, which also shows the `frost_burst` effect of
+`data/effects.toml` through `World::frost_look`) and `World::shock` (`Shock::Heat` melts,
+`Shock::Blast(um)` shatters thinner ice; dev `thaw:x,y,r`) are the hooks fireballs, frost traps,
+blasts, and spells call. Saves: `FORMAT_VERSION` 24. Tests: `ice.rs`, `temperature.rs`,
+`world/ice_tests.rs` (growth/melt over rests, weight, falling in, climbing out, sinking objects,
+creatures, bursts, saves, replays, a year's catch-up). Tune the look with captures of the Frost
+Grotto (hub stairs nook, the `>` below the first) and the courtyard in winter (`skip:` into
+Deepwinter) with `--content-dir assets`. Terrain `variants` (presentation-only:
+`TerrainDef::glyph_at`, a glyph per cell by position) draw thin ice's hairline cracks.
+
 Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distortion`,
 `screen_fades`, `screen_shake`, `weather`) and all off with reduced effects:
 - **Particles** (`render/particles.rs`): stateless, a pure function of visual time and a seed via
@@ -937,7 +1085,8 @@ notes, and no locations or level walkthroughs yet), built with [mdBook](https://
 (`wiki/book.toml`, table of contents in `wiki/src/SUMMARY.md`, default theme `coal`). It is
 published at https://jannef.github.io/warlock/wiki/ by the release workflow's web job, which
 builds it into `pages/wiki/` beside the game. Facts that live in data (months, moons, weather,
-terrain, footstep loudness in words, vision profiles, light presets (named as the player sees
+temperatures by month and weather, water that freezes, ice by thickness and what it holds, how
+long water takes to freeze, terrain, footstep loudness in words, vision profiles, light presets (named as the player sees
 them), creatures, factions, objects, materials, equipment slots and what fits them, scenarios,
 action costs, sight radii, the pack's
 size, the stats' names, races (stat adjustments as written, dice included, vision, starting
@@ -1021,7 +1170,7 @@ A successful compile does not verify anything visual. Before opening a PR:
 its river): a scenario and text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file,
 and optional `window`, `scale`, `freeze_time`, `screen` (`--screen` over the run: `pause`,
 `help`, `settings`, `controls`, `inventory`, `equipment`, `equip-item`, `character`, `pick-up`,
-`drop`; or over the main menu, the replay then unused: `race`, `summary`), `args` (more game
+`drop`, `eat`; or over the main menu, the replay then unused: `race`, `summary`), `args` (more game
 flags, e.g. `["--fire"]`), `tolerance` (per-channel, default 2) and `max_diff_ratio`
 (default 0.05% of pixels).
 `cargo xtask golden` builds a replay per entry with `warlock-core`, runs the game with

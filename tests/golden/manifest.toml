@@ -154,6 +154,13 @@ name = "storeroom"
 scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W"
 
+# Doors (#130): the pantry's locked west door, across the corridor from the storeroom, kicked
+# in (it breaks on the fourth kick), seen from just inside the pantry: the broken door behind.
+[[golden]]
+name = "kicked-door"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 kick:E*4 move:E*2"
+
 # Choosing what to pick up from the start room's pile (#80).
 [[golden]]
 name = "pick-up-screen"
@@ -197,6 +204,14 @@ name = "skills-screen"
 scenario = "showcase"
 screen = "skills"
 
+# NPCs and dialogue (#146): the old hermit in the stairs nook, chatted with and asked about the
+# hall's rooms: his name, his answer, and his topics on the dialogue screen. (Reference: #166.)
+[[golden]]
+name = "dialogue-screen"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:SE*3 chat:SE ask:SE:rooms"
+screen = "dialogue"
+
 # Status effects (#138): four bites' worth of poison and a wound (the dev `afflict:` action), a
 # turn later. The character screen names them (never how bad) and shows Strength and Dexterity
 # lowered by the strong poison, in red; the status bar beneath names them after the hit points.
@@ -207,14 +222,15 @@ actions = "afflict:poisoned*4 afflict:bleeding wait"
 screen = "character"
 window = "960x600"
 
-# Diseases (#139): filth fever caught (the dev `infect:` action), then four days' rest. It has
-# shown and progressed, so the character screen names it on its own row below the status
-# (`Diseased  Filth fever`) and shows the stat damage it did (Dexterity and Toughness lowered, in
-# red, and the most hit points with Toughness); the status bar beneath says only `Diseased`.
+# Diseases (#139): the shakes caught (the dev `infect:` action), then rest. Hunger cuts the rests
+# short ("You are getting hungry."), so it takes three: two days on, the disease has shown and
+# progressed once, so the character screen names it on its own row below the status
+# (`Diseased  The shakes`); the status bar beneath says only `Diseased` (and `Weak`: hunger
+# lowers Strength and Dexterity, in red).
 [[golden]]
 name = "diseased"
 scenario = "showcase"
-actions = "infect:filth_fever rest:24h*4"
+actions = "infect:the_shakes rest:24h*3"
 screen = "character"
 window = "960x600"
 
@@ -415,3 +431,16 @@ actions = "move:E pickup equip:tool:a move:E*35"
 name = "quarry-dug"
 scenario = "quarry"
 actions = "move:E pickup equip:tool:a move:E*35 dig:E"
+
+# Temperature and ice (spec §5 "Ice"; M26). The Frost Grotto, down the stairs nook's third `>`:
+# its frozen pool from thick ice to thin ice, and a spring keeping a hole open; the status bar
+# shows the cold. Then the player walks out on the ice and plunges through the thin ice.
+[[golden]]
+name = "frost-grotto"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*8 move:E descend move:SE move:E*2"
+
+[[golden]]
+name = "frost-grotto-hole"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*8 move:E descend move:SE move:E*23 move:SE"

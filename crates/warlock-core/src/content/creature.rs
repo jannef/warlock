@@ -40,6 +40,10 @@ fn normal_vision() -> String {
     "normal".into()
 }
 
+fn yes() -> bool {
+    true
+}
+
 /// Index of a creature definition in [`super::Content::creatures`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct CreatureId(pub u16);
@@ -56,6 +60,21 @@ pub enum Combat {
     Ranged,
     /// Casts spells from up to its `range` away, with a clear line of fire.
     Caster,
+}
+
+/// Whether the player may swap places with a creature of a type that is not hostile to them
+/// (spec §8 "Displacement", #147): moving into it swaps places unless it refuses.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Budge {
+    /// It gives way.
+    #[default]
+    Always,
+    /// It keeps its post: while it goes about its routine (its mind is calm) it does not give
+    /// way, as a shopkeeper keeps to the door of its shop; once it has left its post it does.
+    OffPost,
+    /// It never gives way: rooted to the spot.
+    Never,
 }
 
 /// A creature type as written in content files.
@@ -87,6 +106,9 @@ pub(super) struct CreatureSpec {
     /// Whether it opens closed doors in its way.
     #[serde(default)]
     pub opens_doors: bool,
+    /// Whether it lets the player swap places with it.
+    #[serde(default)]
+    pub budge: Budge,
     /// What its attacks cost, in energy; none: the attack's cost in `data/actions.toml`.
     pub attack_cost: Option<u32>,
     /// Light preset the creature carries.
@@ -118,6 +140,11 @@ pub(super) struct CreatureSpec {
     pub attack: Option<NaturalAttackSpec>,
     /// Its natural armour: hide, shell, or scales.
     pub natural: Option<Hide>,
+    /// Whether it leaves a corpse when it dies (spec §8 "Hunger"; with `data/hunger.toml`).
+    #[serde(default = "yes")]
+    pub corpse: bool,
+    /// What eating its corpse does, beyond feeding the eater.
+    pub on_eat: Option<OnEat>,
     /// The colour of its blood (`"#rrggbb"`), or `"none"` for a bloodless creature; none:
     /// dark red ([`crate::blood::RED`]).
     pub blood: Option<String>,
@@ -129,6 +156,52 @@ pub(super) struct CreatureSpec {
     pub glow: f32,
     #[serde(default)]
     pub particles: Vec<ParticleEmitter>,
+}
+
+/// What eating a creature's fresh corpse does (spec §8 "Hunger"), beyond feeding the eater by
+/// its size: `on_eat = { message = "...", stat = { toughness = 5 }, heal = "1d4", harm = "1d2",
+/// satiation = 500, vomit = 25 }`. None of it is shown before the player tries; a rotten corpse
+/// does none of it.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OnEat {
+    /// Said once it is eaten ("This kobold meat tastes terrible.").
+    pub message: Option<String>,
+    /// The chance in percent, per stat, to raise it by 1, up to its potential.
+    #[serde(default)]
+    pub stat: BTreeMap<Stat, u8>,
+    /// Hit points it gives back.
+    pub heal: Option<Dice>,
+    /// Hit points it costs.
+    pub harm: Option<Dice>,
+    /// Nutrition beyond what its size gives (less, if negative).
+    #[serde(default)]
+    pub satiation: i32,
+    /// The chance in percent that it comes back up: the eater vomits, and it feeds nothing.
+    #[serde(default)]
+    pub vomit: u8,
+}
+
+impl OnEat {
+    /// Checks chances (0 to 100), dice (rolling 0 to 1000), the extra nutrition, and the message.
+    pub(super) fn check(&self) -> Result<(), String> {
+        if self.message.as_ref().is_some_and(|m| m.trim().is_empty()) {
+            return Err("on_eat: `message` must not be empty".into());
+        }
+        if self.vomit > 100 || self.stat.values().any(|&c| c > 100) {
+            return Err("on_eat: `vomit` and `stat` are chances in percent, 0 to 100".into());
+        }
+        for (field, dice) in [("heal", self.heal), ("harm", self.harm)] {
+            if dice.is_some_and(|d| d.min() < 0 || d.max() > 1000) {
+                return Err(format!("on_eat: `{field}` must roll 0 to 1000"));
+            }
+        }
+        let max = super::hunger::MAX_NUTRITION;
+        if self.satiation.abs() > max {
+            return Err(format!("on_eat: `satiation` must be within ±{max}"));
+        }
+        Ok(())
+    }
 }
 
 /// A natural attack as written in content files: `attack = { damage = "1d4", name = "bite",
@@ -259,6 +332,7 @@ impl CreatureSpec {
             combat: self.combat,
             range: self.range.unwrap_or(1),
             opens_doors: self.opens_doors,
+            budge: self.budge,
             attack_cost: self.attack_cost,
             light: r.light,
             footsteps: self.footsteps,
@@ -270,6 +344,8 @@ impl CreatureSpec {
             xp: self.xp,
             attack: r.attack,
             natural: self.natural,
+            corpse: self.corpse,
+            on_eat: self.on_eat,
             blood: r.blood,
             weapon_skills: r.weapon_skills,
             anim: self.anim,
@@ -310,6 +386,9 @@ pub struct CreatureDef {
     pub range: i32,
     /// Whether it opens closed doors in its way.
     pub opens_doors: bool,
+    /// Gameplay: whether the player may swap places with it when it is not hostile (spec §8
+    /// "Displacement").
+    pub budge: Budge,
     /// What its attacks (melee, shooting, or casting) cost in energy, if its type says
     /// ([`super::Content::action_cost`]); `None`: the cost of the attack in `data/actions.toml`.
     /// Rules only.
@@ -341,6 +420,12 @@ pub struct CreatureDef {
     pub attack: Option<NaturalAttack>,
     /// Gameplay: its natural armour, if any.
     pub natural: Option<Hide>,
+    /// Gameplay: whether it leaves a corpse when it dies (spec §8 "Hunger"; only with
+    /// `data/hunger.toml`, which says how corpses rot and feed).
+    pub corpse: bool,
+    /// Gameplay: what eating its fresh corpse does, beyond feeding the eater. Hidden from the
+    /// player until they try.
+    pub on_eat: Option<OnEat>,
     /// Presentation-only: the colour of its blood (spec §8 "Blood"); `None`: it does not bleed.
     pub blood: Option<Rgb>,
     /// Gameplay: the ranks in weapon skills a creature of this type has (spec §8 "Weapon

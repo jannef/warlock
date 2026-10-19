@@ -163,10 +163,13 @@ mod tests {
             switch(Character, &top_row("w"), &b),
             Some(ScreenAction::Replace(Equipment))
         );
-        // Page keys are unique among themselves, but may be play keys too.
+        // Page keys are unique among themselves (a used one moves), but may be play keys too.
         let two = KeyBinding::Char("2".into());
-        assert!(b.bind_primary(KeyCommand::Page(3), two.clone()).is_err());
-        assert!(b.bind_primary(KeyCommand::NextTarget, two).is_ok());
+        b.bind_primary(KeyCommand::NextTarget, two.clone()).unwrap();
+        assert_eq!(b.owner_in(Context::Pages, &two), Some(KeyCommand::Page(2)));
+        b.bind_primary(KeyCommand::Page(3), two.clone()).unwrap();
+        assert_eq!(b.owner_in(Context::Pages, &two), Some(KeyCommand::Page(3)));
+        assert_eq!(b.owner(&two), Some(KeyCommand::NextTarget));
     }
 
     #[test]

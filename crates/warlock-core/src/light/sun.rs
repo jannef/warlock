@@ -216,10 +216,10 @@ impl Sunlight {
 // The table, computed at compile time with integer math.
 
 /// Angles are in 1/65 536 of a full turn.
-pub(super) const TURN: i64 = 1 << 16;
+pub(crate) const TURN: i64 = 1 << 16;
 const QUARTER: i64 = TURN / 4;
 /// Sines and cosines are in 1/65 536.
-pub(super) const ONE: i64 = 1 << 16;
+pub(crate) const ONE: i64 = 1 << 16;
 /// 2π in 1/65 536.
 const TAU: i64 = 411_775;
 
@@ -263,7 +263,7 @@ const fn sin(a: i64) -> i64 {
     }
 }
 
-pub(super) const fn cos(a: i64) -> i64 {
+pub(crate) const fn cos(a: i64) -> i64 {
     sin(a + QUARTER)
 }
 

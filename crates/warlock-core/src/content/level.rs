@@ -2,12 +2,15 @@
 //!
 //! A level is a multiline ASCII `map` plus a `legend` mapping characters to terrain and to things
 //! placed on that terrain (player start, creatures with patrol routes, what they carry, and what
-//! of that they wield and wear (`wield = "spear"`, `wear = ["leather_jerkin"]`), stair links,
-//! lights, the flow of running water, objects). Characters not in the level's legend fall
-//! back to the shared default legend (`assets/data/legend.toml`, which has arrows for running
-//! water). Objects may also be placed without a legend character: `[[pile]]` tables with `at =
-//! [x, y]` and `objects`. Objects are written as ids with an optional count, top of the pile
-//! first: `objects = ["dagger", "arrow*12"]`. An optional
+//! of that they wield and wear (`wield = "spear"`, `wear = ["leather_jerkin"]`), the faction they
+//! are placed in, and the unique character they are (`npc = "hermit"`, whose dialogue they
+//! speak), stair links, lights, the flow of running water, objects, and locks on closed doors:
+//! `lock = "pantry"`, a lock its keys open, or `locked = true`, one only a skeleton key opens;
+//! spec §8 "Doors"). Characters not in the level's legend fall back to the shared default legend
+//! (`assets/data/legend.toml`, which has arrows for running water). Objects may also be placed
+//! without a legend character: `[[pile]]` tables with `at = [x, y]` and `objects`. Objects are
+//! written as ids with an optional count, top of the pile first: `objects = ["dagger",
+//! "arrow*12"]`. An optional
 //! `ambient = [r, g, b, uv]` lights the whole level. `kind` (`dungeon`, the default, `outdoor`,
 //! or `overworld`) decides what a step there takes (spec §8 "Time"); outdoor levels and the
 //! overworld are lit by the sun and the sky by day (spec §5). Optional
@@ -22,13 +25,15 @@ use super::flow::{FLOW_SPEEDS, Flow};
 use super::light::LightId;
 use super::object::parse_stacks;
 use super::room_effect::SpecialRoom;
-use super::terrain::{StairsDir, TerrainId};
-use super::{ActionKind, Content, ContentError};
+use super::terrain::{StairsDir, TerrainDef, TerrainId};
+use super::{ActionKind, Content, ContentError, Speaker};
+use crate::door::{Lock, check_lock_id};
 use crate::equipment::{self, Equipment};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use crate::light::Light;
 use crate::object::{INVENTORY_SLOTS, Stack, add_to_pile};
+use crate::temperature::{LEVEL_TEMPERATURES, Temperature};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -71,6 +76,9 @@ struct LevelFile {
     ambient: Light,
     #[serde(default)]
     kind: LevelKind,
+    /// The temperature underground, in °C (spec §5 "Temperature"); default the dungeon default.
+    /// Under the open sky it follows the weather, so outdoor levels have none.
+    temperature: Option<i8>,
     map: String,
     #[serde(default)]
     legend: BTreeMap<String, LegendEntry>,
@@ -152,6 +160,9 @@ pub(super) struct LegendDetail {
     /// Faction the creature on this cell belongs to instead of its type's (`faction =
     /// "peaceful"`); an id in `data/factions.toml`.
     faction: Option<String>,
+    /// The unique character the creature on this cell is (`npc = "hermit"`): it says what the
+    /// npc's dialogue in `data/dialogue.toml` says, not its type's.
+    npc: Option<String>,
     /// Patrol route, e.g. `"E4 S2 W4 N2"`; must return to its start.
     route: Option<String>,
     /// Level id the stairs on this cell lead to.
@@ -163,6 +174,8 @@ pub(super) struct LegendDetail {
     flow: Option<Dir>,
     /// Flow speed in percent of the terrain's (default 100).
     flow_speed: Option<u16>,
+    /// Ice on the water of this cell, in mm (spec §5 "Ice"); only on water that freezes.
+    ice: Option<u16>,
     /// Objects lying on this cell, top first, e.g. `["dagger", "arrow*12"]`.
     objects: Option<Vec<String>>,
     /// Objects the creature on this cell carries.
@@ -172,6 +185,11 @@ pub(super) struct LegendDetail {
     wield: Option<OneOrMany>,
     /// Objects of what it carries that it wears (armor, rings, amulets), by object id.
     wear: Option<OneOrMany>,
+    /// The closed door on this cell is locked (only a skeleton key opens it unless it has a
+    /// `lock` id).
+    locked: Option<bool>,
+    /// The closed door on this cell is locked, with this lock id: keys of that id open it.
+    lock: Option<String>,
 }
 
 /// One object id or a list of them.
@@ -219,6 +237,8 @@ pub struct CreatureSpawn {
     pub creature: CreatureId,
     /// The faction it is placed in when not its type's.
     pub faction: Option<FactionId>,
+    /// The unique character it is (an npc id of `data/dialogue.toml`), if any.
+    pub npc: Option<String>,
     pub pos: Pos,
     /// Looping patrol route; empty means the creature stays put.
     pub route: Vec<Dir>,
@@ -258,15 +278,36 @@ pub struct LevelTemplate {
     pub flow: BTreeMap<Pos, Flow>,
     /// Piles of objects, by position, each top first; only on walkable terrain.
     pub objects: BTreeMap<Pos, Vec<Stack>>,
+    /// Locks, by position: only on closed doors (spec §8 "Doors").
+    pub locks: BTreeMap<Pos, Lock>,
     /// Named areas, first match wins.
     pub regions: Vec<Region>,
     /// Special rooms (spec §7 "Special rooms"), none overlapping another.
     pub rooms: Vec<SpecialRoom>,
     /// Where walking off the edge leads (local areas); `None`: the edge cannot be crossed.
     pub exit: Option<EdgeExit>,
+    /// The temperature underground (spec §5 "Temperature"); `None`: the dungeon default (or,
+    /// under the open sky, the weather's).
+    pub temperature: Option<Temperature>,
+    /// Ice on water, by position, in µm (spec §5 "Ice"); only on water that freezes.
+    pub ice: BTreeMap<Pos, u32>,
 }
 
 impl LevelTemplate {
+    /// Whether a key that opens `lock` lies in a pile, or is carried by a creature placed, on a
+    /// cell `within` accepts (spec §8 "Doors").
+    pub fn has_key_for(
+        &self,
+        content: &Content,
+        lock: &Lock,
+        within: impl Fn(Pos) -> bool,
+    ) -> bool {
+        let fits =
+            |s: &Stack| (content.object(s.object).key.as_ref()).is_some_and(|k| k.opens(lock));
+        let lying = (self.objects.iter()).any(|(p, pile)| within(*p) && pile.iter().any(fits));
+        lying || (self.creatures.iter()).any(|c| within(c.pos) && c.carry.iter().any(fits))
+    }
+
     /// The name of the first region containing `p`.
     pub fn region_at(&self, p: Pos) -> Option<&str> {
         self.regions
@@ -322,7 +363,9 @@ pub(super) fn parse_level(
     let mut stairs = Vec::new();
     let mut lights = BTreeMap::new();
     let mut flow = BTreeMap::new();
+    let mut ice = BTreeMap::new();
     let mut objects: BTreeMap<Pos, Vec<Stack>> = BTreeMap::new();
+    let mut locks = BTreeMap::new();
 
     for (y, row) in rows.iter().enumerate() {
         for x in 0..width as usize {
@@ -344,6 +387,9 @@ pub(super) fn parse_level(
             if let Some(f) = parse_flow(ch, entry, running, pos).map_err(err)? {
                 flow.insert(pos, f);
             }
+            if let Some(um) = parse_ice(ch, entry, content.terrain(terrain)).map_err(err)? {
+                ice.insert(pos, um);
+            }
             if let Some(dir) = content.terrain(terrain).stairs {
                 stairs.push(StairsLink {
                     pos,
@@ -357,6 +403,17 @@ pub(super) fn parse_level(
                 )));
             }
             let Some(detail) = detail else { continue };
+            if let Some(lock) =
+                parse_lock(detail).map_err(|m| err(format!("legend `{ch}`: {m}")))?
+            {
+                if !content.terrain(terrain).is_closed_door() {
+                    return Err(err(format!(
+                        "legend `{ch}` locks terrain `{}`, which is no closed door",
+                        entry.terrain()
+                    )));
+                }
+                locks.insert(pos, lock);
+            }
             if let Some(light) = &detail.light {
                 let id = content
                     .light_id(light)
@@ -395,6 +452,15 @@ pub(super) fn parse_level(
                     Some(r) => parse_route(r).map_err(|m| err(format!("legend `{ch}`: {m}")))?,
                     None => Vec::new(),
                 };
+                if let Some(npc) = &detail.npc {
+                    let known = (content.dialogues().iter())
+                        .any(|d| d.speaker == Speaker::Npc(npc.clone()));
+                    if !known {
+                        return Err(err(format!(
+                            "legend `{ch}`: npc `{npc}` has no dialogue in data/dialogue.toml"
+                        )));
+                    }
+                }
                 let carry = match &detail.carry {
                     Some(specs) => parse_stacks(specs, content)
                         .map_err(|m| err(format!("legend `{ch}`: carry: {m}")))?,
@@ -410,6 +476,7 @@ pub(super) fn parse_level(
                 creatures.push(CreatureSpawn {
                     creature: id,
                     faction,
+                    npc: detail.npc.clone(),
                     pos,
                     route,
                     carry,
@@ -417,12 +484,13 @@ pub(super) fn parse_level(
                 });
             } else if detail.route.is_some()
                 || detail.faction.is_some()
+                || detail.npc.is_some()
                 || detail.carry.is_some()
                 || detail.wield.is_some()
                 || detail.wear.is_some()
             {
                 return Err(err(format!(
-                    "legend `{ch}` has a faction, route, carry, wield, or wear but no creature"
+                    "legend `{ch}` has a faction, npc, route, carry, wield, or wear but no creature"
                 )));
             }
         }
@@ -494,6 +562,23 @@ pub(super) fn parse_level(
         )));
     }
 
+    let temperature = match parsed.temperature {
+        Some(_) if parsed.kind.is_sky_exposed() => {
+            return Err(err(
+                "only levels under no sky have a `temperature`: under the open sky it follows \
+                 the weather"
+                    .into(),
+            ));
+        }
+        Some(c) if !LEVEL_TEMPERATURES.contains(&c) => {
+            return Err(err(format!(
+                "`temperature` must be {} to {} (°C)",
+                LEVEL_TEMPERATURES.start(),
+                LEVEL_TEMPERATURES.end()
+            )));
+        }
+        c => c.map(|c| Temperature::degrees(c.into())),
+    };
     let template = LevelTemplate {
         id: id.to_string(),
         name: parsed.name,
@@ -507,9 +592,12 @@ pub(super) fn parse_level(
         lights,
         flow,
         objects,
+        locks,
         regions,
         rooms,
         exit: None,
+        temperature,
+        ice,
     };
     for spawn in &template.creatures {
         validate_route(&template, content, spawn).map_err(err)?;
@@ -564,6 +652,49 @@ fn parse_flow(
             }
             Ok(Some(Flow::new(dir, speed)))
         }
+    }
+}
+
+/// The ice a legend entry lays on the water of its cell, in µm (`ice = mm`): only on water that
+/// freezes. Ice terrain is never placed by itself: it lies on water, which it needs to thaw back
+/// into.
+fn parse_ice(ch: char, entry: &LegendEntry, terrain: &TerrainDef) -> Result<Option<u32>, String> {
+    if terrain.ice.is_some() {
+        return Err(format!(
+            "legend `{ch}` places ice (`{}`) itself; lay it on water instead: \
+             `{{ terrain = \"water\", ice = MM }}`",
+            terrain.id
+        ));
+    }
+    let Some(mm) = entry.detail().and_then(|d| d.ice) else {
+        return Ok(None);
+    };
+    if terrain.freeze.is_none() {
+        return Err(format!(
+            "legend `{ch}` has `ice` but terrain `{}` is not water that freezes",
+            terrain.id
+        ));
+    }
+    if !(1..=crate::ice::MAX_MM).contains(&mm) {
+        return Err(format!(
+            "legend `{ch}` has `ice` {mm}; expected 1 to {} (mm)",
+            crate::ice::MAX_MM
+        ));
+    }
+    Ok(Some(u32::from(mm) * 1000))
+}
+
+/// The lock a legend entry puts on its cell: `lock = "id"` (a lock of that id) or `locked =
+/// true` (a lock only a skeleton key opens); none for neither or `locked = false` alone.
+fn parse_lock(detail: &LegendDetail) -> Result<Option<Lock>, String> {
+    match (detail.locked, &detail.lock) {
+        (Some(false), Some(_)) => Err("has a `lock` but `locked = false`".into()),
+        (_, Some(id)) => {
+            check_lock_id(id)?;
+            Ok(Some(Lock::new(Some(id))))
+        }
+        (Some(true), None) => Ok(Some(Lock::new(None))),
+        (Some(false) | None, None) => Ok(None),
     }
 }
 

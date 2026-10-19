@@ -7,14 +7,17 @@
 //!
 //! 1. Draw from the level's own stream, [`Rng::map`]`(seed, id, attempt)`.
 //! 2. Build the map with the branch's generator for that depth: `rooms` (rooms joined by
-//!    corridors, doors at room entrances) or `caves` (cellular automata). Both stamp
-//!    [vaults](crate::content::Vault) where they fit, place the stairs, light sources (torches in
-//!    rooms; lamps and glowing fungus in caves), and a few patrolling creatures, and last now and
-//!    then make a room (a cave chamber) special (`special.rs`, spec §7 "Special rooms").
+//!    corridors, doors at room entrances; with the branch's `key`, a few rooms locked and the
+//!    key left where the player can reach it) or `caves` (cellular automata). Both stamp
+//!    [vaults](crate::content::Vault) where they fit (with their locks and keys), place the
+//!    stairs, light sources (torches in rooms; lamps and glowing fungus in caves), and a few
+//!    patrolling creatures, and last now and then make a room (a cave chamber) special
+//!    (`special.rs`, spec §7 "Special rooms").
 //! 3. Turn rock that touches open ground into walls.
 //! 4. Validate (`connect::validate`): every stair, door, and walkable cell is reachable from the
-//!    up staircase (flood fill), patrols are valid, and something emits light. A failed attempt is
-//!    discarded and the next attempt's stream is used, so retries are deterministic too.
+//!    up staircase (flood fill), the stairs and a key to every lock without unlocking a door,
+//!    patrols are valid, and something emits light. A failed attempt is discarded and the next
+//!    attempt's stream is used, so retries are deterministic too.
 //!
 //! Generation is integer-only and never iterates a hash map. Seeds are stable within a game
 //! version; the snapshot tests in this module flag any change in generator output.
@@ -28,8 +31,9 @@ mod vault;
 
 use crate::content::{
     Content, CreatureId, CreatureSpawn, Flow, Generator, LevelKind, LevelTemplate, LightId,
-    SpecialRoom, StairsDir, StairsLink, TerrainId,
+    ObjectId, SpecialRoom, StairsDir, StairsLink, TerrainId,
 };
+use crate::door::Lock;
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use crate::object::Stack;
@@ -138,6 +142,8 @@ pub(crate) struct Needs<'a> {
     pub down: bool,
     /// Creatures that may patrol the level.
     pub creatures: &'a [CreatureId],
+    /// The key to the rooms the level locks (the branch's); `None`: it locks none.
+    pub key: Option<ObjectId>,
 }
 
 /// A level under construction.
@@ -149,13 +155,15 @@ pub(crate) struct Canvas<'a> {
     pub lights: BTreeMap<Pos, LightId>,
     /// Flow of running water stamped from vaults (generators make none of their own).
     pub flow: BTreeMap<Pos, Flow>,
-    /// Objects stamped from vaults.
+    /// Objects stamped from vaults, and keys to locked rooms.
     pub objects: BTreeMap<Pos, Vec<Stack>>,
+    /// Locks on closed doors: stamped from vaults, and on locked rooms (spec §8 "Doors").
+    pub locks: BTreeMap<Pos, Lock>,
     pub creatures: Vec<CreatureSpawn>,
     /// Special rooms (spec §7 "Special rooms"; `special.rs`).
     pub rooms: Vec<SpecialRoom>,
     /// Cells stamped from vaults; later passes leave them alone.
-    pub locked: Grid<bool>,
+    pub stamped: Grid<bool>,
     pub up: Option<Pos>,
     pub down: Option<Pos>,
 }
@@ -169,9 +177,10 @@ impl<'a> Canvas<'a> {
             lights: BTreeMap::new(),
             flow: BTreeMap::new(),
             objects: BTreeMap::new(),
+            locks: BTreeMap::new(),
             creatures: Vec::new(),
             rooms: Vec::new(),
-            locked: Grid::new(width, height, false),
+            stamped: Grid::new(width, height, false),
             up: None,
             down: None,
         }
@@ -200,8 +209,9 @@ impl<'a> Canvas<'a> {
         t == self.pal.void || t == self.pal.wall
     }
 
-    pub fn is_locked(&self, p: Pos) -> bool {
-        self.locked.get(p).copied().unwrap_or(false)
+    /// Whether a vault was stamped on `p`.
+    pub fn is_stamped(&self, p: Pos) -> bool {
+        self.stamped.get(p).copied().unwrap_or(false)
     }
 
     /// Walkable, or a door the player can open.
@@ -221,7 +231,7 @@ impl<'a> Canvas<'a> {
     /// Plain floor nothing has claimed yet: no vault, stairs, light, or creature.
     pub fn is_free_floor(&self, p: Pos) -> bool {
         self.get(p) == self.pal.floor
-            && !self.is_locked(p)
+            && !self.is_stamped(p)
             && !self.lights.contains_key(&p)
             && !self.creatures.iter().any(|c| c.pos == p)
     }
@@ -271,6 +281,7 @@ impl<'a> Canvas<'a> {
         self.creatures.push(CreatureSpawn {
             creature,
             faction: None,
+            npc: None,
             pos: start,
             route,
             carry: Vec::new(),
@@ -283,7 +294,7 @@ impl<'a> Canvas<'a> {
     fn build_walls(&mut self) {
         let mut walls = Vec::new();
         for p in self.cells() {
-            if self.get(p) != self.pal.void || self.is_locked(p) {
+            if self.get(p) != self.pal.void || self.is_stamped(p) {
                 continue;
             }
             if Dir::ALL.iter().any(|d| !self.is_rock(p.step(*d))) {
@@ -318,6 +329,7 @@ pub fn generate(
     let needs = Needs {
         down: depth < def.depth,
         creatures: &def.creatures,
+        key: def.key,
     };
     let up_to = if depth > 1 {
         Some(def.level_id(depth - 1))
@@ -368,9 +380,12 @@ pub fn generate(
             lights: canvas.lights,
             flow: canvas.flow,
             objects: canvas.objects,
+            locks: canvas.locks,
             regions: Vec::new(),
             rooms: canvas.rooms,
             exit: None,
+            temperature: plan.temperature,
+            ice: Default::default(),
         };
         if connect::validate(&template, content).is_ok() {
             return Ok(template);
@@ -380,7 +395,8 @@ pub fn generate(
 }
 
 /// The template as text: terrain glyphs, the top object of each pile over them, creatures on top,
-/// and `*` for a light placed on floor. Trailing spaces are trimmed. Used by snapshot tests.
+/// `*` for a light placed on floor, and `&` for a locked door. Trailing spaces are trimmed. Used
+/// by snapshot tests.
 pub fn ascii(template: &LevelTemplate, content: &Content) -> String {
     draw(template, content, false)
 }
@@ -407,6 +423,8 @@ fn draw(template: &LevelTemplate, content: &Content, rooms: bool) -> String {
                     content.object(top.object).glyph
                 } else if template.lights.contains_key(&p) && Some(t) == floor {
                     '*'
+                } else if template.locks.contains_key(&p) {
+                    '&'
                 } else if let Some(room) = room {
                     content.room_effect(room.effect).mark
                 } else {

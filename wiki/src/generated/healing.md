@@ -7,3 +7,4 @@
 | Poisoned | half as fast |
 | Diseased | half as fast |
 | Diseased with marsh ague | a quarter as fast |
+| Starving | not at all |

@@ -3,5 +3,5 @@
 | Status | Seen on others | Caused by | Costs | Wears off | Healing | Stats | Cured by |
 |---|---|---|---|---|---|---|---|
 | Bleeding | yes, "bleeding" | Big hits and confirmed criticals | A hit point every 40 seconds, faster the worse it is | A degree a minute | Not at all | — | Bandage |
-| Poisoned | no | Some creatures' attacks | A hit point every 2 minutes, faster the worse it is | A degree every 2 minutes | Half as fast | Strength −1, Dexterity −1 when strong | — |
+| Poisoned | no | Some creatures' attacks; eating rotten corpses | A hit point every 2 minutes, faster the worse it is | A degree every 2 minutes | Half as fast | Strength −1, Dexterity −1 when strong | — |
 | Diseased | no | Any disease, once it shows | Nothing | When the diseases are gone | Half as fast | — | — |
