@@ -41,7 +41,7 @@ change one built-in line). Every other `data/*.toml` file is a single file whose
 something (slots, stats, weapon skills, factions, actions, ...): never split those.
 
 **Nothing visible follows the load order of these four tables.** Wiki tables sort by an
-explicit key (`xtask/src/wiki/order.rs`: objects by class, weapon skill, name; creatures,
+explicit key (`xtask/src/wiki/order.rs`: objects by class, weapon skill, value, name; creatures,
 materials, and affixes by name), the shop stock a generated shop draws from
 (`mapgen/shop.rs`) and the bases and affixes loot rolls from (`magic/loot.rs`) are sorted by id
 before the draw, and "shoots arrows" names `Content::ammunition(kind)`, the first ammunition of

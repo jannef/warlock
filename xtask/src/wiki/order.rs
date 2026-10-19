@@ -9,7 +9,8 @@ use warlock_core::content::{
 
 /// Every object with its id: by class (the glyph order of the objects page, a glyph of no class
 /// last), then by weapon skill (the order of `weapon_skills.toml`, so the weapons of one skill
-/// stand together), then by name.
+/// stand together), then by value (the humble before the fine: leather cap, iron helm, great
+/// helm), then by name.
 pub(super) fn objects(content: &Content) -> Vec<(ObjectId, &ObjectDef)> {
     let mut all: Vec<_> = (content.object_defs().iter().enumerate())
         .map(|(i, o)| (ObjectId(i as u16), o))
@@ -19,7 +20,7 @@ pub(super) fn objects(content: &Content) -> Vec<(ObjectId, &ObjectDef)> {
             .and_then(|c| ObjectClass::ALL.iter().position(|&k| k == c))
             .unwrap_or(ObjectClass::ALL.len());
         let skill = o.skill.map_or(usize::MAX, |s| usize::from(s.0));
-        (class, skill, o.name.to_lowercase())
+        (class, skill, o.value, o.name.to_lowercase())
     });
     all
 }
