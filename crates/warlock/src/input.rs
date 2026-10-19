@@ -3,8 +3,8 @@
 //! [`route_keys`] reads every key press exactly once. While a screen is open (the screen stack is
 //! not empty) the press goes to the top screen; otherwise it is a gameplay command, read through
 //! the bindings in the current [`InputMode`]. Prompts in the message line (the direction for
-//! open/close, how long to rest, look mode, aiming a shot or a throw) are input modes, not
-//! screens.
+//! open/close or a chat, how long to rest, look mode, aiming a shot or a throw) are input modes,
+//! not screens.
 //!
 //! Letter and symbol commands bind by *logical* key (the character the keyboard layout produces),
 //! so `<`, `>`, and `?` work on any layout. Arrows and the numpad bind by physical key code.
@@ -21,8 +21,10 @@ use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
 use warlock_core::content::VisionProfile;
+use warlock_core::perception::PerceptionView;
 use warlock_core::time::Duration;
 use warlock_core::weather::Weather;
+use warlock_core::world::ActorKind;
 use warlock_core::{Action, Dir, Letters, Pos, Rest};
 
 /// What a key does.
@@ -58,6 +60,9 @@ pub enum KeyCommand {
     Throw,
     /// While aiming: the cursor to the next creature in view (with Shift, the one before).
     NextTarget,
+    /// Chat with someone next to you: the one in view if there is only one, else in a
+    /// direction.
+    Chat,
     /// Dev: switch to the next vision profile.
     CycleVision,
     /// Dev: move the clock an hour ahead at once.
@@ -122,6 +127,7 @@ impl KeyCommand {
             KeyCommand::Fire => "Fire missile weapon",
             KeyCommand::Throw => "Throw",
             KeyCommand::NextTarget => "Next target (aiming; Shift: previous)",
+            KeyCommand::Chat => "Chat",
             KeyCommand::CycleVision => "Next vision profile (dev)",
             KeyCommand::SkipHour => "Skip an hour (dev)",
             KeyCommand::NextWeather => "Next weather (dev)",
@@ -232,6 +238,7 @@ impl Default for Bindings {
             (ch("x"), Look),
             (ch("f"), Fire),
             (ch("t"), Throw),
+            (ch("C"), Chat),
             (Code(KeyCode::Tab), NextTarget),
             (ch("?"), Help),
             (Code(KeyCode::Escape), Cancel),
@@ -298,7 +305,7 @@ impl Bindings {
 pub enum InputMode {
     #[default]
     Normal,
-    /// Waiting for a direction for `Open` or `Close`.
+    /// Waiting for a direction for `Open`, `Close`, or `Chat`.
     Direction(KeyCommand),
     /// Asking how long to rest ([`REST_CHOICES`]).
     Rest,
@@ -494,10 +501,10 @@ impl Gameplay<'_> {
             (InputMode::Look(at), _) => InputMode::Look(at),
             (InputMode::Normal, KeyCommand::Look) => InputMode::Look(game.world.player_pos()),
             (InputMode::Direction(cmd), KeyCommand::Move(dir)) => {
-                let action = if cmd == KeyCommand::Open {
-                    Action::Open(dir)
-                } else {
-                    Action::Close(dir)
+                let action = match cmd {
+                    KeyCommand::Open => Action::Open(dir),
+                    KeyCommand::Chat => Action::Chat(dir),
+                    _ => Action::Close(dir),
                 };
                 self.actions.write(PlayerAction(action));
                 InputMode::Normal
@@ -596,6 +603,14 @@ impl Gameplay<'_> {
             (InputMode::Normal, KeyCommand::Open | KeyCommand::Close) => {
                 InputMode::Direction(command)
             }
+            // The one creature in view next to the player, at once; else ask which way.
+            (InputMode::Normal, KeyCommand::Chat) => match chat_partner(&game.world.perception()) {
+                Some(dir) => {
+                    self.actions.write(PlayerAction(Action::Chat(dir)));
+                    InputMode::Normal
+                }
+                None => InputMode::Direction(command),
+            },
             (InputMode::Normal, KeyCommand::Help) => {
                 open = Some(ScreenName::Help);
                 InputMode::Normal
@@ -648,6 +663,19 @@ impl Gameplay<'_> {
         }
         self.actions.write(PlayerAction(aim.action()));
         *self.mode = InputMode::Normal;
+    }
+}
+
+/// The way to the one creature the player sees next to them, if there is exactly one (whom `C`
+/// talks to without asking).
+fn chat_partner(view: &PerceptionView<'_>) -> Option<Dir> {
+    let me = view.viewer();
+    let mut near = (view.actors().iter())
+        .filter(|a| a.kind == ActorKind::Creature && a.pos.chebyshev(me) == 1)
+        .map(|a| Dir::from_delta(a.pos.x - me.x, a.pos.y - me.y));
+    match (near.next(), near.next()) {
+        (Some(dir), None) => dir,
+        _ => None,
     }
 }
 
@@ -720,6 +748,7 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Fire), ["f"]);
         assert_eq!(keys(&b, KeyCommand::Throw), ["t"]);
         assert_eq!(keys(&b, KeyCommand::NextTarget), ["Tab"]);
+        assert_eq!(keys(&b, KeyCommand::Chat), ["C"]);
     }
 
     #[test]

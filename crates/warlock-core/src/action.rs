@@ -5,7 +5,7 @@ use crate::content::{ActionKind, ObjectId};
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
 use crate::weather::Weather;
-use crate::world::ActorId;
+use crate::world::{ActorId, Conversation};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
@@ -55,6 +55,15 @@ pub enum Action {
     /// Wait turn after turn (creatures act) until the goal, stopping early when a creature comes
     /// into view or a message is logged.
     Rest(Rest),
+    /// Chat with the creature in a direction (spec §8 "Dialogue"): it answers with a line, and
+    /// one that has topics opens the dialogue screen. Takes the time of `chat`; refused (no
+    /// time) when the player sees no one there.
+    Chat(Dir),
+    /// Ask the creature in a direction about one of its topics, by id. Takes no time.
+    Ask {
+        dir: Dir,
+        topic: String,
+    },
     /// Dev command: switch the player's vision profile (an id in `data/vision.toml`). Takes no
     /// game time, but changes state and perception, so replays record it like any action.
     SetVision(String),
@@ -233,6 +242,10 @@ pub enum Event {
         /// The affected cells the player can see; perception-filtered, never ground truth.
         cells: Vec<Pos>,
     },
+    /// The player chatted with a creature, or asked it about a topic, and it answered (spec §8
+    /// "Dialogue"): what it said and what the player may ask it about. One with topics opens
+    /// the dialogue screen.
+    Talked(Conversation),
 }
 
 /// The shape of a spell effect ([`Event::Spell`]).
@@ -299,13 +312,14 @@ pub struct Outcome {
 
 /// Text syntax for scripting: `move:E wait open:E close:W ascend descend lantern rest:1h
 /// rest:dawn rest:dusk pickup pickup:ac drop:b equip:body:b remove:body fire:12,5 throw:c:12,5
-/// vision:ID skip:1h weather:rain effect:fireball@12,5 effect:lightning_bolt@3,4>12,4`
-/// (durations: `30s`, `10m`, `2h`; letters name stacks, `a` first; `pickup` and `drop` without
-/// letters take everything; `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT,
-/// `remove:SLOT` takes off what is there; `fire:X,Y` shoots at the level cell (X, Y),
-/// `throw:LETTER:X,Y` throws one of inventory stack LETTER there; weather: `clear`, `overcast`,
-/// `rain`, `heavy`; `effect:ID@X,Y[>X,Y]` shows a spell effect at a cell, or from one cell
-/// toward another).
+/// chat:E ask:E:TOPIC vision:ID skip:1h weather:rain effect:fireball@12,5
+/// effect:lightning_bolt@3,4>12,4` (durations: `30s`, `10m`, `2h`; letters name stacks, `a`
+/// first; `pickup` and `drop` without letters take everything; `equip:SLOT:LETTER` puts inventory
+/// stack LETTER on in slot SLOT, `remove:SLOT` takes off what is there; `fire:X,Y` shoots at the
+/// level cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack LETTER there; `chat:DIR`
+/// talks to the creature that way, `ask:DIR:TOPIC` asks it about a topic by id; weather:
+/// `clear`, `overcast`, `rain`, `heavy`; `effect:ID@X,Y[>X,Y]` shows a spell effect at a cell, or
+/// from one cell toward another).
 ///
 /// `Display` and `FromStr` round-trip; action names are case-insensitive when parsing (vision
 /// profile, slot, and effect ids keep their case).
@@ -335,6 +349,8 @@ impl fmt::Display for Action {
             Action::Rest(Rest::For(d)) => write!(f, "rest:{d}"),
             Action::Rest(Rest::Dawn) => f.write_str("rest:dawn"),
             Action::Rest(Rest::Dusk) => f.write_str("rest:dusk"),
+            Action::Chat(d) => write!(f, "chat:{d}"),
+            Action::Ask { dir, topic } => write!(f, "ask:{dir}:{topic}"),
             Action::SetVision(id) => write!(f, "vision:{id}"),
             Action::SkipTime(d) => write!(f, "skip:{d}"),
             Action::SetWeather(w) => write!(f, "weather:{}", w.id()),
@@ -370,6 +386,19 @@ impl FromStr for Action {
             "move" => dir().map(Action::Move),
             "open" => dir().map(Action::Open),
             "close" => dir().map(Action::Close),
+            "chat" => dir().map(Action::Chat),
+            "ask" => {
+                let usage =
+                    || "`ask` needs a direction and a topic, e.g. `ask:E:rooms`".to_string();
+                let (dir, topic) = arg.and_then(|a| a.split_once(':')).ok_or_else(usage)?;
+                if topic.is_empty() || topic.contains(':') {
+                    return Err(usage());
+                }
+                Ok(Action::Ask {
+                    dir: dir.parse().map_err(|_| usage())?,
+                    topic: topic.to_string(),
+                })
+            }
             "wait" => bare(Action::Wait),
             "ascend" => bare(Action::Ascend),
             "descend" => bare(Action::Descend),
@@ -476,8 +505,9 @@ impl FromStr for Action {
             _ => Err(format!(
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, ascend, \
                  descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
-                 equip:SLOT:LETTER, remove:SLOT, fire:X,Y, throw:LETTER:X,Y, vision:ID, \
-                 skip:DURATION, weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y])"
+                 equip:SLOT:LETTER, remove:SLOT, fire:X,Y, throw:LETTER:X,Y, chat:DIR, \
+                 ask:DIR:TOPIC, vision:ID, skip:DURATION, weather:clear|overcast|rain|heavy, \
+                 effect:ID@X,Y[>X,Y])"
             )),
         }
     }
@@ -580,10 +610,19 @@ mod tests {
                 at: Pos::new(-3, 4),
                 to: Some(Pos::new(12, 0)),
             },
+            Action::Ask {
+                dir: Dir::NW,
+                topic: "the_rooms".into(),
+            },
         ];
         all.extend(Weather::ALL.map(Action::SetWeather));
         for d in Dir::ALL {
-            all.extend([Action::Move(d), Action::Open(d), Action::Close(d)]);
+            all.extend([
+                Action::Move(d),
+                Action::Open(d),
+                Action::Close(d),
+                Action::Chat(d),
+            ]);
         }
         assert_eq!(parse_actions(&format_actions(&all)), Ok(all));
     }
@@ -664,6 +703,16 @@ mod tests {
             "equip:head:c"
         );
         assert_eq!(
+            parse_actions("CHAT:ne ask:E:Rooms"),
+            Ok(vec![
+                Action::Chat(Dir::NE),
+                Action::Ask {
+                    dir: Dir::E,
+                    topic: "rooms".into()
+                }
+            ])
+        );
+        assert_eq!(
             parse_actions("FIRE:3,4 throw:B:10,2"),
             Ok(vec![
                 Action::Fire(Pos::new(3, 4)),
@@ -740,6 +789,13 @@ mod tests {
             "skip",
             "skip:0s",
             "skip:x",
+            "chat",
+            "chat:up",
+            "ask",
+            "ask:E",
+            "ask:E:",
+            "ask:up:rooms",
+            "ask:E:a:b",
         ] {
             assert!(parse_actions(bad).is_err(), "{bad}");
         }

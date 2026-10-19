@@ -59,12 +59,14 @@ mod path;
 mod schedule;
 mod shoot;
 mod spell;
+mod talk;
 mod train;
 
 pub use actor::{Actor, ActorId, ActorKind, Mind, Patrol};
 pub use fight::Death;
 pub(crate) use hash::fnv1a;
 pub use level::{Fire, LevelState};
+pub use talk::{Conversation, Talk, TopicView};
 
 use crate::action::{Action, Event, Letters, MAX_REST, MissileEnd, Outcome, Rest, letter};
 use crate::burden::{self, Burden, Load};
@@ -189,6 +191,15 @@ impl WorldState {
         burden::load(actor, race, content)
     }
 
+    /// How big `actor` is: an index into [`Content::sizes`], smallest first. The player is their
+    /// race's size when the run has a character, anyone else its creature type's.
+    pub(crate) fn size_of(&self, content: &Content, actor: &Actor) -> usize {
+        let race = (self.character.as_ref())
+            .filter(|_| actor.kind == ActorKind::Player)
+            .and_then(|c| c.spec.race(content).ok());
+        race.map_or(content.creature(actor.creature).size, |r| r.size)
+    }
+
     fn current_mut(&mut self) -> &mut LevelState {
         self.levels
             .get_mut(&self.current_level)
@@ -258,6 +269,9 @@ pub struct World {
     /// What the player's kills earned them during the current action (not saved): said after
     /// the attack's own messages.
     news: Vec<String>,
+    /// Lines muttered during the current turn (not saved): said when perception runs, if the
+    /// player heard them.
+    mutters: Vec<talk::Mutter>,
 }
 
 /// How much time an action took.
@@ -365,6 +379,8 @@ impl World {
             regen: 0,
             skills,
             faction_override: None,
+            npc: None,
+            talk: Talk::default(),
         };
         player.hp = player.max_hp();
         state.actors.insert(ActorId(0), player);
@@ -429,6 +445,7 @@ impl World {
             said: 0,
             fallen: Vec::new(),
             news: Vec::new(),
+            mutters: Vec::new(),
         }
     }
 
@@ -578,17 +595,19 @@ impl World {
     }
 
     /// Rests until `until`: turn after turn through the normal pipeline (the player waits, the
-    /// others act, perception), stopping after a turn in which a creature came into view or a
-    /// message was logged that stops a rest. The last turn is cut short to end exactly at
+    /// others act, perception), stopping after a turn in which a creature came into view (but
+    /// for one who talks and fights no one, [`World::disturbs_rest`]: the player sees who it is)
+    /// or a message was logged that stops a rest. The last turn is cut short to end exactly at
     /// `until`, whatever the player's speed ([`World::price_until`]). Turns that end before any
-    /// creature could come into view ([`World::out_of_view_for`]) and in which the weather the
-    /// player sees did not change pass without perception, which cannot change the outcome; only
-    /// the last turn's events are kept.
+    /// creature that disturbs a rest could come into view ([`World::out_of_view_for`]), in
+    /// which the player heard nothing, and in which the weather the player sees did not change
+    /// pass without perception, which cannot change the outcome; only the last turn's events are
+    /// kept.
     fn rest(&mut self, until: GameTime, goal: Rest, events: &mut Vec<Event>) {
         let start = self.state.time;
         let wait = self.price_of(self.state.player, ActionKind::Wait);
         let said = self.said;
-        let mut in_view = self.creatures_in_view();
+        let mut in_view = self.watched_in_view();
         let mut came = None;
         let alive = |w: &Self| w.state.death.is_none();
         while self.state.time < until && came.is_none() && self.said == said && alive(self) {
@@ -597,12 +616,14 @@ impl World {
                 events.clear();
                 self.run_turn(wait.min(self.price_until(until)), events);
                 let done = self.state.time >= until || self.said != said || !alive(self);
-                if done || self.state.time > unseen_until || self.weather_turned() {
+                // Something heard may be news (or someone muttering): perception says.
+                let heard = !self.state.player().heard.is_empty();
+                if done || heard || self.state.time > unseen_until || self.weather_turned() {
                     break;
                 }
             }
             self.perceive(events);
-            let now_in_view = self.creatures_in_view();
+            let now_in_view = self.watched_in_view();
             came = now_in_view.iter().find(|a| !in_view.contains(a)).copied();
             in_view = now_in_view;
         }
@@ -670,6 +691,13 @@ impl World {
             .collect()
     }
 
+    /// Creatures the player sees whose coming into view stops a rest ([`World::disturbs_rest`]).
+    fn watched_in_view(&self) -> Vec<ActorId> {
+        let mut seen = self.creatures_in_view();
+        seen.retain(|id| self.disturbs_rest(&self.state.actors[id]));
+        seen
+    }
+
     /// Phase 4: recomputes perception, updates memory, says what news the player heard and how
     /// the weather changed, reports the attacks the player perceived, and drops events the player
     /// did not see.
@@ -686,6 +714,7 @@ impl World {
             self.perception.remember(level);
         }
         self.hear();
+        self.say_mutters();
         if let (Some(from), Some(to)) = (before, self.perception.weather()) {
             self.weather_news(from, to);
         }
@@ -772,7 +801,7 @@ impl World {
                 actor == player || perception.sees_actors_at(from) || perception.sees_actors_at(to)
             }
             Event::DoorOpened { pos } | Event::DoorClosed { pos } => perception.is_visible(pos),
-            Event::LevelChanged { .. } => true,
+            Event::LevelChanged { .. } | Event::Talked(_) => true,
             Event::Missile { ref path, .. } => !path.is_empty(),
             Event::Spell { ref cells, .. } => !cells.is_empty(),
             Event::Attacked {
@@ -830,7 +859,8 @@ impl World {
     }
 
     /// A message for each sound the player perceives that is news ([`noise::news`]): a patrol
-    /// heard turn after turn is said once, not every turn. Messages stop a rest.
+    /// heard turn after turn is said once, not every turn. Messages stop a rest. A voice is said
+    /// with its words, if any ([`World::say_mutters`]).
     fn hear(&mut self) {
         let turn = self.state.turn;
         let news = noise::news(
@@ -840,7 +870,7 @@ impl World {
         );
         let viewer = self.player_pos();
         let mut said: Vec<String> = Vec::new();
-        for sound in &news {
+        for sound in news.iter().filter(|s| s.kind != noise::SoundKind::Voice) {
             let text = sound.message(viewer);
             if !said.contains(&text) {
                 self.say(text.clone());
@@ -970,6 +1000,8 @@ impl World {
             Action::Fire(at) => return self.fire(*at, events),
             Action::Throw { item, at } => return self.throw(*item, *at, events),
             Action::Rest(goal) => return self.start_rest(*goal),
+            Action::Chat(dir) => return self.chat(*dir, events),
+            Action::Ask { dir, topic } => return self.ask(*dir, topic, events),
             Action::SetVision(id) => return self.set_vision(id),
             Action::SetWeather(weather) => {
                 let over = weather::Override::new(*weather, self.state.time);
@@ -1169,25 +1201,23 @@ impl World {
             self.say(format!("The {name} blocks your way."));
             return Spent::Nothing;
         }
+        // Someone there: the player attacks them if they are hostile (by their stance toward the
+        // player, which the player knows from what they are), else swaps places with them
+        // unless they will not make way. Only what the player sees of them is said.
+        let mut swap = None;
         if let Some(other) = self.state.actor_at(&level.id, to) {
-            // What the player knows of it: its name if they see it, else just that something is
-            // there; and its stance toward them (from its type), which decides between attacking
-            // and stopping.
             let target = other.id;
             let seen = self.perception.sees_actors_at(to);
-            let name = self.content.creature(other.creature).name.clone();
             let player = self.state.player;
             if self.stance(player, target) == Stance::Hostile {
                 self.player_attacks(target, seen, events);
                 return self.took(true, ActionKind::Melee);
             }
-            let what = if seen {
-                format!("The {name}")
-            } else {
-                "Something".into()
-            };
-            self.say(format!("{what} is in the way."));
-            return Spent::Nothing;
+            if let Some(why) = self.refusal(target) {
+                self.refused(target, why, seen);
+                return Spent::Nothing;
+            }
+            swap = Some((target, seen));
         }
         if !self.can_move() {
             return Spent::Nothing;
@@ -1205,6 +1235,9 @@ impl World {
             to,
         });
         self.make_noise(player, Act::Step(to));
+        if let Some((other, seen)) = swap {
+            self.swap_places(other, to, from, seen, events);
+        }
         // A journey on the overworld trains survival.
         if overworld && self.trains(Use::Travel) {
             self.train(Use::Travel);
@@ -1522,6 +1555,8 @@ fn instantiate_level(state: &mut WorldState, content: &Content, template: &Level
             regen: 0,
             skills: def.skills.clone(),
             faction_override: spawn.faction,
+            npc: spawn.npc.clone(),
+            talk: Talk::default(),
         };
         actor.hp = actor.max_hp();
         state.actors.insert(actor_id, actor);
@@ -1564,6 +1599,8 @@ mod speed_tests;
 mod stats_tests;
 #[cfg(test)]
 mod sun_tests;
+#[cfg(test)]
+mod talk_tests;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

@@ -7,7 +7,7 @@ real shadows, and gently animated terrain.
 This wiki explains how the game works: the rules you play by and the facts about its world. It is
 for players. It describes the game as it is today, which is an early build. You can walk and
 explore, travel the overworld, watch the days, the moon, and the weather change, hear what you
-cannot see, and pick up, carry, wear, and wield objects. Creatures go about their business,
+cannot see, talk to the people you meet, and pick up, carry, wear, and wield objects. Creatures go about their business,
 notice you, and fight each other and you: blows and arrows are rolled against your Defence, hurt,
 and kill, and death is final (spells are only announced so far). Your stats, your weapon, and
 your armour decide how well you fight.
@@ -30,6 +30,7 @@ your armour decide how well you fight.
   [Horoscope](horoscope.md), and [Stats](stats.md) explain who you are; [Combat](combat.md) how
   fights go, and how you die.
 - [Terrain](terrain.md), [Objects and your pack](objects.md), [Creatures](creatures.md),
+  [People and talk](npcs.md),
   [Your lantern](lantern.md), and [Saving](saving.md) cover the rest.
 
 ## Starting a run

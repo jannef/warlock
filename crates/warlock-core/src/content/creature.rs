@@ -55,6 +55,21 @@ pub enum Combat {
     Caster,
 }
 
+/// Whether the player may swap places with a creature of a type that is not hostile to them
+/// (spec §8 "Displacement", #147): moving into it swaps places unless it refuses.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Budge {
+    /// It gives way.
+    #[default]
+    Always,
+    /// It keeps its post: while it goes about its routine (its mind is calm) it does not give
+    /// way, as a shopkeeper keeps to the door of its shop; once it has left its post it does.
+    OffPost,
+    /// It never gives way: rooted to the spot.
+    Never,
+}
+
 /// A creature type as written in content files.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -84,6 +99,9 @@ pub(super) struct CreatureSpec {
     /// Whether it opens closed doors in its way.
     #[serde(default)]
     pub opens_doors: bool,
+    /// Whether it lets the player swap places with it.
+    #[serde(default)]
+    pub budge: Budge,
     /// What its attacks cost, in energy; none: the attack's cost in `data/actions.toml`.
     pub attack_cost: Option<u32>,
     /// Light preset the creature carries.
@@ -217,6 +235,7 @@ impl CreatureSpec {
             combat: self.combat,
             range: self.range.unwrap_or(1),
             opens_doors: self.opens_doors,
+            budge: self.budge,
             attack_cost: self.attack_cost,
             light: r.light,
             footsteps: self.footsteps,
@@ -266,6 +285,9 @@ pub struct CreatureDef {
     pub range: i32,
     /// Whether it opens closed doors in its way.
     pub opens_doors: bool,
+    /// Gameplay: whether the player may swap places with it when it is not hostile (spec §8
+    /// "Displacement").
+    pub budge: Budge,
     /// What its attacks (melee, shooting, or casting) cost in energy, if its type says
     /// ([`super::Content::action_cost`]); `None`: the cost of the attack in `data/actions.toml`.
     /// Rules only.

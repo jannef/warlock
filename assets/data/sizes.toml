@@ -1,5 +1,6 @@
 # Sizes (spec §8 "Burden"): how big a race (races.toml) or a creature type (creatures.toml) is,
-# and so how much it can carry.
+# and so how much it can carry. Listed smallest first: you cannot squeeze past a creature two
+# sizes or more larger than you (spec §8 "Displacement").
 #
 # Fields:
 #   id      the size's id, named by races and creature types (`size = "small"`)

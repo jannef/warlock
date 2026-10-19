@@ -66,10 +66,12 @@ pub enum ActionKind {
     BodyArmor,
     /// Readying a missile weapon or missiles, or putting them away.
     Ready,
+    /// Chatting with a creature (spec §8 "Dialogue"): a short action.
+    Chat,
 }
 
 impl ActionKind {
-    pub const ALL: [ActionKind; 17] = [
+    pub const ALL: [ActionKind; 18] = [
         ActionKind::Step,
         ActionKind::Wait,
         ActionKind::OpenDoor,
@@ -87,6 +89,7 @@ impl ActionKind {
         ActionKind::Wear,
         ActionKind::BodyArmor,
         ActionKind::Ready,
+        ActionKind::Chat,
     ];
 
     /// Its id in `data/actions.toml`.
@@ -109,6 +112,7 @@ impl ActionKind {
             ActionKind::Wear => "wear",
             ActionKind::BodyArmor => "body_armor",
             ActionKind::Ready => "ready",
+            ActionKind::Chat => "chat",
         }
     }
 

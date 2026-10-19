@@ -542,6 +542,12 @@ impl Perception {
         self.sight.get(p).is_some_and(|s| *s != Sight::Hidden)
     }
 
+    /// Whether the player does not see `p`, a cell of the level that is not their own: where
+    /// they may place a sound they hear ([`noise::rough_place`]).
+    pub(crate) fn hides(&self, p: Pos) -> bool {
+        self.sight.get(p) == Some(&Sight::Hidden) && p != self.viewer
+    }
+
     /// Whether creatures at `p` can be seen: only in line of sight, never on completed walls.
     pub(crate) fn sees_actors_at(&self, p: Pos) -> bool {
         self.sight.get(p) == Some(&Sight::Seen)

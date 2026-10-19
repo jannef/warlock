@@ -59,6 +59,12 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   of Warcraft (nothing from grey ones, a little extra from tougher ones). Levels run to 50 and, up
   to level 20, make you hardier. Your level and XP show on the status bar, the character screen,
   and the death screen.
+- **People and talk** — the showcase has folk to talk to: a gardener and a wandering bard in the
+  courtyard, an old hermit by the hub's stairs. Chat with `C`: most say a one-liner, a different
+  one each time; some have topics to ask about on a small dialogue screen (the hermit knows the
+  hall's rooms, the bard the moon, the year 1444, and the Great Race). They mutter to themselves
+  now and then, which you may overhear through a wall. Walking into anyone who is not hostile
+  swaps places with them, so nobody blocks a corridor (a few will not budge).
 - **Ranged combat** — bows (drawn by Strength), a crossbow, a sling, and throwing weapons; aim
   ADOM-style with a cursor and a faint line of fire, watch the arrow fly, and pick it up where it
   fell. A flaming arrow flies burning and lights the dark where it lands until it burns out:
@@ -143,7 +149,7 @@ cargo run --release -p warlock
 
 | Key | Action |
 |---|---|
-| `h j k l y u b n`, numpad, arrows | Move (8 directions; arrows move orthogonally); moving into a hostile creature attacks it |
+| `h j k l y u b n`, numpad, arrows | Move (8 directions; arrows move orthogonally); moving into a hostile creature attacks it, into anyone else swaps places |
 | `.` or numpad 5 | Wait a turn |
 | `o` / `c` + direction | Open / close a door (walking into a closed door opens it) |
 | `>` / `<` | Go down / up stairs |
@@ -153,6 +159,7 @@ cargo run --release -p warlock
 | `i` | Inventory: what you carry, by letter, and what it all weighs |
 | `e` | Equipment: wear and wield things, slot by slot (head, body, hands, rings, missiles, …), as in ADOM |
 | `@` | Character: your race, gender, class, age, birth sign, stats, hit points, Defence, and weight |
+| `C` | Chat with someone next to you (asks for a direction if there are several) |
 | `R` | Rest an hour, until dawn, or until nightfall (stops when something comes into view) |
 | `x` | Look around: move a cursor to read what is there (takes no time) |
 | `f` | Fire your missile weapon: aim (Tab cycles targets), then Enter |

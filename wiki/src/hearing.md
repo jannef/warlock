@@ -15,6 +15,9 @@ around you hear too.
 - **Fighting.** Attacks are noisy: you may hear fighting, a bowstring, or chanting (a spell)
   where you cannot see it. A throw sounds like fighting, but quieter. See
   [Creatures](creatures.md).
+- **Voices.** People muttering to themselves can be heard a few cells away. If you hear one you
+  cannot see, you hear a voice, and its words unless it was faint: "You hear a voice to the
+  north: "Weeds. Always the weeds."" See [People and talk](npcs.md#muttering).
 
 How loud a step is also depends on what you step onto. Wading through water splashes, and
 crashing through bushes or over loose rubble is loud. Grass, flowers, the forest floor, a dirt

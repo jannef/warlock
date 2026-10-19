@@ -20,7 +20,7 @@ use warlock_core::character::Gender;
 use warlock_core::combat;
 use warlock_core::content::{
     ActionKind, BASE_TURN, Combat, Content, CreatureId, FactionId, LevelKind, LightId,
-    NORMAL_SPEED, ObjectId, Stance, TerrainDef, price,
+    NORMAL_SPEED, ObjectId, Speaker, Stance, TerrainDef, price,
 };
 use warlock_core::daylight::{
     MOONLIGHT_PER_CELL, SIGHT_DAY, SIGHT_MOONLIT, SIGHT_NIGHT, SIGHT_TWILIGHT, overworld_sight,
@@ -129,6 +129,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("lights.md".to_string(), lights(content)),
         ("creatures.md".to_string(), creatures(content)),
         ("factions.md".to_string(), factions(content)),
+        ("dialogue.md".to_string(), dialogue(content)),
         ("footsteps.md".to_string(), footsteps(content)),
         ("objects.md".to_string(), objects(content)),
         ("equipment.md".to_string(), equipment(content)),
@@ -263,6 +264,7 @@ fn action_costs(content: &Content) -> String {
             ActionKind::Wield => "Wielding something, or putting it away",
             ActionKind::Wear | ActionKind::BodyArmor => "Putting something on, or taking it off",
             ActionKind::Ready => "Readying something, or putting it away",
+            ActionKind::Chat => "Chatting with someone (asking about a topic takes no time)",
         };
         // Equipment actions say which slots take them (data/slots.toml); a kind no slot uses
         // is left out.
@@ -893,6 +895,43 @@ fn materials(content: &Content) -> String {
             made.join(", ")
         };
         let _ = writeln!(out, "| {} | {made} |", capital(&m.name));
+    }
+    out
+}
+
+/// Who talks (`data/dialogue.toml`): each speaker, whether they greet you, how many one-liners
+/// they take turns with, what you may ask them about, and how they mutter. The lines themselves
+/// are left to the game.
+fn dialogue(content: &Content) -> String {
+    let mut out = String::from(
+        "| Who | Greets you | One-liners | Topics | Mutters |\n|---|:---:|---:|---|---|\n",
+    );
+    for d in content.dialogues() {
+        let who = match &d.speaker {
+            Speaker::Creature(c) => capital(&content.creature(*c).name),
+            Speaker::Npc(npc) => format!("`{npc}` (a unique character)"),
+        };
+        let topics: Vec<&str> = d.topics.iter().map(|t| t.name.as_str()).collect();
+        let topics = if topics.is_empty() {
+            "—".to_string()
+        } else {
+            topics.join(", ")
+        };
+        let mutters = d.mutter.as_ref().map_or_else(
+            || "—".to_string(),
+            |m| {
+                format!(
+                    "{} ({} % of its actions, when you are near)",
+                    m.verb, m.chance
+                )
+            },
+        );
+        let _ = writeln!(
+            out,
+            "| {who} | {} | {} | {topics} | {mutters} |",
+            yes(d.greet.is_some()),
+            d.lines.len()
+        );
     }
     out
 }

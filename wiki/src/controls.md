@@ -10,6 +10,8 @@ authoritative: it is generated from your current key bindings.
 | Move (numpad) | `8` `9` `6` `3` `2` `1` `4` `7` |
 | Move (arrows) | Up, Right, Down, Left (four directions) |
 | Attack | move into a hostile creature |
+| Swap places | move into any other creature |
+| Chat with someone next to you | `C` (then a direction, if several are near) |
 | Wait a turn | `.` or numpad `5` |
 | Open a door | `o`, then a direction (or walk into the door) |
 | Close a door | `c`, then a direction |
@@ -48,8 +50,9 @@ kept with your [settings](settings.md).
 
 ## Prompts
 
-Opening and closing a door ask `In which direction? (Esc to cancel)` on the message line, and
-resting asks how long (see [Resting](resting.md)). Answer with a direction or the key shown, or
+Opening and closing a door ask `In which direction? (Esc to cancel)` on the message line,
+chatting with several creatures near asks `Talk in which direction? (Esc to cancel)` (see
+[People and talk](npcs.md)), and resting asks how long (see [Resting](resting.md)). Answer with a direction or the key shown, or
 press `Esc` to cancel. Pressing any other command cancels the prompt.
 
 ## Look mode
@@ -175,9 +178,9 @@ and quit to menu, and Quit, which saves too. The main menu, where the game opens
 [Settings](settings.md). New run goes on to creating your character, a step at a time: the arrow
 keys (or `j` and `k`) choose, `Enter` goes on, and `Esc` goes back a step (see
 [Your character](character.md)). While any menu or screen is open (including the inventory, the
-equipment screen, the character screen, and the pick-up and drop screens), no game time passes,
-except for what you choose there: picking up, dropping, and putting on or taking off take their
-time.
+equipment screen, the character screen, the pick-up and drop screens, and the screen of topics
+someone you chat with offers), no game time passes, except for what you choose there: picking
+up, dropping, and putting on or taking off take their time. Asking about a topic takes none.
 
 ## Developer keys
 

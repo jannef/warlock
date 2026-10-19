@@ -29,5 +29,6 @@
   - [Ranged combat](ranged.md)
   - [Ammunition](ammunition.md)
 - [Creatures](creatures.md)
+  - [People and talk](npcs.md)
 - [Your lantern](lantern.md)
 - [Saving](saving.md)

@@ -41,6 +41,13 @@ impl Vault {
         if let Some(stairs) = template.stairs.first() {
             return Err(format!("a vault cannot have stairs (at {})", stairs.pos));
         }
+        // A vault may be stamped many times; a unique character cannot be.
+        if let Some(spawn) = template.creatures.iter().find(|c| c.npc.is_some()) {
+            return Err(format!(
+                "a vault cannot place a unique npc (at {})",
+                spawn.pos
+            ));
+        }
         let is_door = |p: Pos| {
             let def = content.terrain(terrain[p]);
             def.is_closed_door() || def.is_open_door()

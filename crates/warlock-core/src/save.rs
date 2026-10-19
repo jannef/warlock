@@ -34,7 +34,9 @@ const MAGIC: &str = "WARLOCK-SAVE";
 ///     types have levels and XP.
 /// 14: skills: actors' trained skills (`Actor::skills`: value and training marks by skill) and the
 ///     training random stream (`WorldState::training`).
-pub const FORMAT_VERSION: u32 = 14;
+/// 15: NPCs and dialogue: actors keep how far their talk has got (`Actor::talk`: lines said and
+///     muttered, met) and the unique character a level made them (`Actor::npc`).
+pub const FORMAT_VERSION: u32 = 15;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 

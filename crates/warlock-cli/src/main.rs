@@ -58,7 +58,7 @@ struct RunArgs {
     #[arg(long)]
     character: Option<CharacterSpec>,
     /// Actions as text, e.g. "move:E move:SE wait open:E close:W descend ascend pickup:ab
-    /// drop:a".
+    /// drop:a chat:E ask:E:rooms".
     #[arg(long)]
     actions: Option<String>,
 }

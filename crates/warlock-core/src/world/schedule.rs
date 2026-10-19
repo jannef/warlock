@@ -23,7 +23,7 @@
 //!
 //! Speed is hidden from the player: it is in neither the perception snapshot nor any message.
 
-use super::{Actor, ActorId, ActorKind, World};
+use super::{Actor, ActorId, World};
 use crate::action::Event;
 use crate::content::{ActionKind, BASE_TURN, LevelKind, TerrainDef, price};
 use crate::perception::VIEW_RADIUS;
@@ -107,8 +107,10 @@ impl World {
     /// player's death ends the turn there and then.
     pub(super) fn run_turn(&mut self, price: i64, events: &mut Vec<Event>) {
         self.state.turn += 1;
-        // The player has acted: what they heard before is spent, and they hear afresh.
+        // The player has acted: what they heard before is spent, and they hear afresh (lines
+        // muttered too: said only if heard this turn).
         self.player_mut().heard.clear();
+        self.mutters.clear();
         let player = self.state.player;
         let level = &self.state.current_level;
         let scheduled = |a: &Actor| Scheduled {
@@ -159,13 +161,16 @@ impl World {
         }
     }
 
-    /// How long from now no creature on the current level could come into view, so a rest need
-    /// not look after turns that end by then (spec §8 "Rest"). A creature is seen only within
-    /// [`VIEW_RADIUS`] (and heard only within [`crate::noise::MAX_REACH`], less than that), and
-    /// every step costs at least the level's cheapest step: before its first step that could
-    /// bring it into view, it needs the energy for all the steps that cannot. (Creature types
-    /// give only their attacks costs of their own, so a step costs every creature the same; a
-    /// burden only makes it dearer, and an overloaded creature cannot step at all.)
+    /// How long from now no creature on the current level that disturbs a rest
+    /// ([`World::disturbs_rest`]) could come into view, so a rest need not look after turns that
+    /// end by then and in which the player heard nothing (spec §8 "Rest"). A creature is seen
+    /// only within [`VIEW_RADIUS`] (and heard only within [`crate::noise::MAX_REACH`], less than
+    /// that), and every step costs at least the level's cheapest step: before its first step that
+    /// could bring it into view, it needs the energy for all the steps that cannot. (Creature
+    /// types give only their attacks costs of their own, so a step costs every creature the same;
+    /// a burden only makes it dearer, and an overloaded creature cannot step at all.) The others
+    /// (the showcase's people) never stop a rest by coming into view, and what they do that the
+    /// player could notice is heard (their steps, their muttering) or done nowhere near.
     pub(super) fn out_of_view_for(&self) -> Duration {
         const _: () = assert!(crate::noise::MAX_REACH < VIEW_RADIUS);
         let level = self.state.current();
@@ -182,7 +187,7 @@ impl World {
         self.state
             .actors
             .values()
-            .filter(|a| a.level == level.id && a.kind == ActorKind::Creature)
+            .filter(|a| a.level == level.id && self.disturbs_rest(a))
             .map(|a| {
                 let steps = i64::from((a.pos.chebyshev(player) - VIEW_RADIUS - 1).max(0));
                 let short = steps.saturating_mul(cheapest).saturating_sub(a.energy);

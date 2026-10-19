@@ -1,5 +1,6 @@
 //! Actors: the player and creatures.
 
+use super::Talk;
 use crate::burden::Burden;
 use crate::combat::{self, Attack, Category, Defence, Health, Profile};
 use crate::content::{ActionKind, Content, CreatureId, FactionId, ObjectDef, ObjectId};
@@ -112,6 +113,14 @@ pub struct Actor {
     /// peaceful creatures in the showcase). Read the one that counts with [`Actor::faction`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub faction_override: Option<FactionId>,
+    /// The unique character its level made it (`npc` in a level legend entry), whose dialogue it
+    /// speaks rather than its type's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub npc: Option<String>,
+    /// How far its talk has got (spec §8 "Dialogue"): which line comes next, which mutter, and
+    /// whether the player has met it.
+    #[serde(default, skip_serializing_if = "Talk::is_new")]
+    pub talk: Talk,
 }
 
 fn is_zero(n: &u32) -> bool {

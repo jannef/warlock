@@ -51,6 +51,10 @@ Build the engine and framework, not the game. Everything built is production qua
 - Burden (M16): a carrying limit from Strength, Toughness, and size; carrying more than a third,
   two thirds, or all of it slows every action, caps Dexterity in Defence, makes steps louder, and
   overloaded, keeps the actor from moving (§8 "Burden")
+- NPCs and dialogue (M28): creatures who talk (data, `data/dialogue.toml`): chatting (`C`) gets
+  a rotating one-liner, or opens a small dialogue screen of topics; some mutter to themselves,
+  overheard through hearing. Moving into a creature that is not hostile swaps places with it,
+  unless it will not make way (§8 "Dialogue", "Displacement")
 - Character creation (M15): every new run chooses a race, a gender, and a class, which set the
   player's starting stats (partly rolled with dice, ADOM-like) and eyes; a random age by race
   and a random birthday give the birth year, whose horoscope sign (12 mythological animals × 5
@@ -96,16 +100,19 @@ regression scene for golden screenshots, replays, and snapshot tests.
 | Darkness chamber | vision types, a UV-only rune, darkvision fade; an amulet seen only by those who see in the dark | M3, M11 |
 | Water garden | still ponds and running rills (flow, glints, foam), pulsing altar with a ring before it | M4, M8, M11 |
 | Effects room | glyph particles, glow, fades, distortion | M4 |
-| Stairs | connection to Level 2 and the arena (down), the courtyard and the overworld (up) | M2, M9, M10 |
+| Stairs | connection to Level 2 and the arena (down), the courtyard and the overworld (up); an old hermit sits in the nook's lamplit corner and tells of the hall's rooms (topics, §8 "Dialogue") | M2, M9, M10, M28 |
 
 **Courtyard (66×19, outdoor)**: up the stairs nook's `<`, a walled garden under the open sky —
 trees, a ruined wall, a pond, standing stones, flower beds, and a roofed gazebo with a lamp — where
 sunlight, sky light, and shadows turn and stretch with the time of day (§5 "Sunlight"; M9), and the
 moon lights it faintly by night, waxing and waning with the month (§5 "Moonlight"; M12). The
 `courtyard` scenario starts there at 06:30, while the shadows are long. Windfall apples lie under
-a tree, and a candle and a scroll in the gazebo (M11).
+a tree, and a candle and a scroll in the gazebo (M11). A gardener paces beside the flower bed by
+the ruined wall (one-liners, grumbling now and then), and a wandering bard walks a round of the
+meadow east of the gazebo, singing (one-liners and topics: the moon, the year 1444, the Great
+Race, the Wildlands; M28).
 
-**Safety**: the hand-made showcase (the hub, Level 2, the courtyard) is safe. Creatures that would hunt the player by type (the hub's kobold, Level 2's kobolds and rats) are placed in the `peaceful` faction by their level (§7 "Factions"): they keep their types, patrols, speeds, footsteps, and looks, and attack no one. Fighting happens in the arena, and in the generated Depths (the real dungeon). Arriving in the arena says "The clash of arms echoes off the stone." (a level's `arrival` line).
+**Safety**: the hand-made showcase (the hub, Level 2, the courtyard) is safe. Its people (the hermit, the gardener, the bard) are peaceful folk by type. Creatures that would hunt the player by type (the hub's kobold, Level 2's kobolds and rats) are placed in the `peaceful` faction by their level (§7 "Factions"): they keep their types, patrols, speeds, footsteps, and looks, and attack no one. Fighting happens in the arena, and in the generated Depths (the real dungeon). Arriving in the arena says "The clash of arms echoes off the stone." (a level's `arrival` line).
 
 **Arena (72×21, M10)**: down the stairs nook's second `>`: the place to fight; factions at war. A kobold war band
 (three torch-bearing kobolds wielding spears, an archer with a short bow and arrows ready, a slow
@@ -641,7 +648,8 @@ rate or animation.
     is at most 300; a creature without `footsteps` moves silently, a door without `toggle_noise`
     is silent. Attacks
     (§8 "Combat"; hit or miss) are heard where the attacker stands: fighting (melee, 60), a
-    bowstring (a shot, 40), chanting (a spell, 50).
+    bowstring (a shot, 40), chanting (a spell, 50). A creature muttering to itself (§8
+    "Dialogue") is a voice (50) where it stands.
   - **Propagation**: a noise spreads from its cell through the 8 neighbors, losing 10 loudness
     per orthogonal step and 14 per diagonal one, plus the `muffle` of every cell it enters (a
     closed door 30). Solid terrain (neither walkable nor transparent: walls, rock, trees,
@@ -662,7 +670,7 @@ rate or animation.
   - **The player** perceives the sounds they heard during the turn that just passed whose source
     cell they do not see (a creature in darkness or out of sight, a door around the corner),
     never who or what made them: the kind (footsteps, a door opening, a door closing, fighting, a
-    bowstring, chanting), how loud
+    bowstring, chanting, a voice), how loud
     (faint, clear, or loud: under 10, under 30, or at least 30 above their threshold), and
     roughly where: a cell up to 2 (faint), 1 (clear), or 0 (loud) steps from the source through
     cells that pass sound unmuffled, which the player does not see, picked by a hash of the
@@ -674,7 +682,8 @@ rate or animation.
     hear a door close to the west." (the direction of the rough place, of eight). A perceived
     sound is no news if one of the same kind was perceived within 4 cells plus 2 per turn since,
     in the last 10 turns (a creature takes up to two steps a turn), so a patrol heard turn after
-    turn is said once per pass, not every turn. Like any message they stop a rest.
+    turn is said once per pass, not every turn. Like any message they stop a rest. A voice is
+    said with its words instead (§8 "Dialogue"), and never stops a rest.
   - **On the map**, each perceived sound is a faint, still marker (`◌`, pale grey, fainter for
     fainter sounds, never lit) at its rough place until the next turn; with glyph animation on
     it ripples in, a ring growing out of it and fading within a second. Look mode describes it
@@ -711,15 +720,15 @@ rate or animation.
   the binding table, so it is always accurate.
 - **Screens**: the main menu, New run and its character creation steps, pause menu, Settings,
   Controls, help, the inventory, the equipment screen and its choice of what goes in a slot, the
-  character screen, the Skills screen, choosing what to pick up, drop, or throw, and the death
-  screen are modal
+  character screen, the Skills screen, choosing what to pick up, drop, or throw, the dialogue
+  screen, and the death screen are modal
   screens on one stack. Opening
   a screen puts it on top; Esc or Back closes it and returns to the screen below as it was left.
   While any screen is open it receives every key press, the run (if any) stays visible beneath
   it, and no game time passes but for what is chosen on a screen (picking up, dropping, wearing,
   wielding), which is done as it is chosen and takes its time. Prompts in the message line (a
-  direction to open or close, how long to rest, look mode, aiming a shot or a throw) are not
-  screens.
+  direction to open or close or to chat, how long to rest, look mode, aiming a shot or a throw)
+  are not screens.
 - **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
   `--record`, or `--capture` name what to run): Continue (only if a save exists), New run
   (scenario list from content, optional seed, then character creation), Settings, Controls,
@@ -758,9 +767,10 @@ rate or animation.
   "Reset all keys" resets everything.
 - First-phase commands: move, wait, open/close door, ascend/descend, light/douse lantern (`L`),
   pick up (`,` or `g`), drop (`d`), inventory (`i`), equipment (`e`), character (`@`), skills
-  (`S`), rest (`R`), look, fire (`f`), throw (`t`), next target (`Tab`, while aiming), help, save
-  and quit (`Q`). Free actions (look, help, the inventory, looking at the
-  equipment screen, the character screen, the Skills screen, menus, vision switch) do not
+  (`S`), rest (`R`), look, fire (`f`), throw (`t`), next target (`Tab`, while aiming), chat
+  (`C`), help, save and quit (`Q`). Free actions (look, help, the inventory, looking at the
+  equipment screen, the character screen, the Skills screen, asking about a topic, menus, vision
+  switch) do not
   advance time.
 - **Objects** (M11) lie in piles on cells, the top first: the map shows the top object's glyph
   (§4.2), and dropped objects go on top. Stepping onto a pile says what lies there: `You see here
@@ -850,14 +860,27 @@ rate or animation.
   (`wield`, `wear`); they drop everything when they die (§8 "Combat"), and nothing else makes
   them drop or change anything yet. Worn and wielded things weigh what they weigh.
   Weights read `450 g` below a kilogram and `3.5 kg` above.
+- **Chat** (`C`; §8 "Dialogue"): with exactly one creature in view next to the player, it talks
+  to that one at once; otherwise it asks for a direction in the message line ("Talk in which
+  direction? (Esc to cancel)"), like opening a door. The answer is a message: `The gardener says:
+  "Mind the beds. Flowers bruise if you so much as look at them."` A creature with topics also
+  opens the **dialogue screen**: its name as the title, what it said (wrapped), and its topics
+  numbered 1 to 9 with a `>` marker on the selected one; a topic's number, or Enter on the
+  selected one (the arrows move it), asks about it, which takes no time: the screen closes, the
+  answer is said, and the screen opens again with it, on the topic asked. Esc (or `C`) leaves.
+  Chatting takes the time of `chat` (§7 "Action costs"); with no creature the player sees there,
+  it is refused ("You see no one there to talk to.") and takes none.
 - **Rest** (`R`) asks in the message line: `Rest: (h)our, until (d)awn, until (n)ightfall? (Esc to
   cancel)`. `h` rests an hour, `d` until 06:00, `n` until 18:00 (replay text `rest:1h`,
   `rest:dawn`, `rest:dusk`); any other command cancels. Resting is one action that passes turn
-  after turn and stops early when a creature comes into view or a message is logged (§8 "Time"),
+  after turn and stops early when a creature comes into view (not one who talks and fights no
+  one, such as the showcase's people: the player sees who it is) or a message is logged (§8
+  "Time"),
   such as an attack the player perceives (§8 "Combat"), a sound that is news (§5 "Hearing"), or
   rain starting or growing heavier (§5 "Weather"), and when the player dies;
   a sound already known goes on without stopping it, and so does other news of the weather (the
-  rain easing or stopping, clouds gathering or parting), which is logged all the same.
+  rain easing or stopping, clouds gathering or parting), and someone muttering (§8 "Dialogue"),
+  which are logged all the same.
   It is a gameplay input mode like the open/close direction prompt, not a menu screen.
 - **Messages**: the last two show in the message line; the same text logged again in a row folds
   into one entry with a count (`You open the door. (×2)`). Heard sounds are logged only when they
@@ -877,8 +900,10 @@ rate or animation.
   a miss. A creature's attack is reported when the turn is perceived, the player's own as it is
   made (by what they see as they strike). Attacks the player perceives nothing of leave no
   message (and no event). Moving into a hostile creature attacks it in melee ("You hit the
-  giant rat.", "You miss something."; it takes a turn); into a neutral one stops ("The deer is
-  in the way.", "Something is in the way."; no time passes).
+  giant rat.", "You miss something."; it takes a turn); into any other one swaps places with it
+  ("You swap places with the deer.", "You swap places with something."; the player's step), or,
+  if it will not make way, stops ("The sentry doesn't budge.", "The giant is too big to squeeze
+  past.", "Something is in the way."; no time passes; §8 "Displacement").
 - **Targeting** (ADOM-like; `ui/target.rs`): `f` aims the readied missile weapon (with nothing
   to shoot, it is refused: "You have no missile weapon ready.", "You have no arrows ready."), `t`
   aims the throwing weapon readied in a `ready` slot (rocks in the missiles slot), else opens the
@@ -994,7 +1019,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   `faction` (below; required when factions exist, the player's is `player`), its eyes `vision`
   (a profile; default `normal`) and `sight` (radius, 1 to 40, default 10), how it fights:
   `combat = "melee"` (default), `"ranged"`, or `"caster"`, the latter two with a `range` (2 to its
-  sight), `opens_doors` (default false), and optionally `attack_cost`, what its attacks cost
+  sight), `opens_doors` (default false), `budge` (whether the player may swap places with it
+  when it is not hostile, §8 "Displacement": `always`, the default; `off_post`, not while it keeps
+  its post, going about its routine, as a shopkeeper at its counter will; `never`), and
+  optionally `attack_cost`, what its attacks cost
   instead of the attack's cost in `data/actions.toml` (100 to 10 000; §8 "Time"; none of the
   built-in creatures has one yet). The kobold: darkvision, sight 10, melee, opens doors;
   the kobold archer: darkvision, sight 12, ranged 7; the kobold shaman (speed 800): darkvision,
@@ -1022,7 +1050,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   player's size comes from their race when the run has a character). Skills (§8 "Skills"; never
   shown): `skills`, the skills it is trained in by skill id with fixed values (0 to 999); the
   rest untrained; the player creature lists none. The deer listens (30), the kobold shaman knows
-  concentration (20) and spellcraft (25). Creature particle emitters may
+  concentration (20) and spellcraft (25). The showcase's people (M28): the gardener, the
+  wandering bard, and the old hermit (speed 800), glyph `@`, of the peaceful folk by type, level
+  1 and worth no experience. Creature particle emitters may
   fire `on = "attack"`: a burst at the target of each attack the player sees (the shaman's
   violet sparkle). Terrain has a `move_cost`: what a step onto it costs in percent of a normal
   step (the `step` action; default 100; still and running water 200; local levels only), a
@@ -1048,8 +1078,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   `reloads`: a crossbow shot costs `shoot` plus `reload`, 2000), `cast`, and for equipment (each slot names
   one, below) `wield` (1000), `wear` (1000: helmets, cloaks, gloves, boots, rings, amulets),
   `body_armor` (3000: it takes a while to strap on), and `ready` (1000: a missile weapon and
-  missiles). An action left out, or every action without the file, costs 1000; an unknown id or
-  a cost out of range is a content error. The wiki shows them in a generated table.
+  missiles), and `chat` (500: a few words, §8 "Dialogue"). An action left out, or every action
+  without the file, costs 1000; an unknown id or a cost out of range is a content error. The wiki shows them in a generated table.
 - **The sky** (`data/sky.toml`, optional; without it there are no moons): up to 8 `[[moon]]`s,
   each with `name` (shown in the status bar when there are several), `color` (`[r, g, b, uv]`,
   the direct light of the moon when full and high in the night sky), `sky` (the same for the
@@ -1117,13 +1147,31 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   gives the stance (`Hostile` or `Neutral`) of two factions, creature types, or actors. Test
   factions: `vermin` (giant rats; hostile to the player), `kobolds` (the war band; hostile to the
   player and the vermin), `wildlife` (deer, cave bats, the cave beetle; neutral to everyone), and
-  `peaceful` ("peaceful folk", hostile to no one), which only levels place creatures in. A level
+  `peaceful` ("peaceful folk", hostile to no one: the showcase's people by type, and creatures
+  levels place in it). A level
   legend entry with a `creature` may name a `faction` (a known faction id; an unknown one is a
   content error) that replaces its type's for that creature: it is stored on the actor
   (`faction_override`, saved and hashed only when set), used wherever stance is computed (AI
   targeting and noise, look mode "(hostile)", bump-to-attack vs "in the way"), and so can make a
-  hostile type harmless in the showcase. Level files may also have an `arrival` line, said each
-  time the player arrives by stairs.
+  hostile type harmless in the showcase. The showcase's people belong to `peaceful` by type. A
+  legend entry with a `creature` may also name an `npc` (an npc id of `data/dialogue.toml`; one
+  without a dialogue there is a content error): the unique character that creature is, which
+  speaks the npc's dialogue rather than its type's (stored on the actor, saved and hashed only
+  when set). Level files may also have an `arrival` line, said each time the player arrives by
+  stairs.
+- **Dialogue** (`data/dialogue.toml`, optional; without it nobody talks; §8 "Dialogue"): each
+  `[[dialogue]]` names exactly one of `creature` (a creature type, not the player) or `npc` (an
+  npc id: lower-case letters, digits, and underscores), at most one dialogue each, and has `lines`
+  (at least one one-liner), an optional `greet`, optional `[[dialogue.topic]]`s (at most 9, each
+  with a unique `id` in lower-case letters, digits, and underscores, a `name`, and a `reply`), and
+  an optional `mutter = { chance, verb, lines }` (`chance` in percent per action, 1 to 100; `verb`
+  one lower-case word, default "mutters"; at least one line). Lines, greetings, topic names, and
+  muttered lines are one line of at most 72 characters (they fit the message line with the
+  speaker's name), replies at most 280 (the dialogue screen wraps them); none is empty or padded.
+  Built in: the gardener (one-liners; grumbles), the wandering bard (one-liners and topics: the
+  moon, the Great Race, this year, the Wildlands; sings), and the old hermit (a greeting,
+  one-liners, and topics: this hall, the dark chamber, the gallery, the water garden, these
+  stairs; mutters).
 - **The weather** (`data/weather.toml`, optional; without it the sky is always clear): exactly 12
   `[[month]]`s in calendar order, each with the chance in percent of `clear`, `overcast`, `rain`,
   and `heavy_rain` (adding up to 100), and a table for each of `overcast`, `rain`, and
@@ -1187,7 +1235,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 - **Vaults** (`assets/vaults/*.toml`): hand-made pieces in the level-file format, stamped verbatim
   (terrain, lights, objects, creatures) where they fit — into rock with room for corridors or tunnels to
   every entrance. A vault's edge is solid except for its entrances (doors, not on a corner); it has
-  no stairs or player start, and all its walkable cells are reachable from an entrance. Vaults of
+  no stairs, player start, or unique character (`npc`), and all its walkable cells are reachable from an entrance. Vaults of
   `kind = "outdoor"` are ruins for local areas, stamped on open land with a ring of open ground
   around them: their spaces (`void`) keep the area's own ground, every open cell on their edge is
   a way in, and their walkable cells are reachable from the edge. Dungeon generators use only
@@ -1213,8 +1261,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   listen and spot, half-elves bluff and spot (`1d4+2`), dwarves metalcraft and search
   (stonecunning), halflings listen and stealth, gnomes appraise and listen, half-orcs intimidate;
   humans none, but one extra class skill (`class_skill = "2d4+4"`).
-- **Sizes** (`data/sizes.toml`, optional; §8 "Burden"), in file order: `id`, `name`, and `carry`
-  (what it carries in percent of a medium one, 10 to 1000): small 75, medium 100. `medium` is
+- **Sizes** (`data/sizes.toml`, optional; §8 "Burden"), in file order, smallest first (§8
+  "Displacement" compares them): `id`, `name`, and `carry` (what it carries in percent of a medium one, 10 to 1000): small 75, medium 100. `medium` is
   required (the size of every race and creature type that names none); without the file there
   is only medium.
 - **Classes** (`data/classes.toml`, optional), in the order offered: `id`, `name`, a one-line
@@ -1282,7 +1330,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   acted on, the sounds the player perceived lately (§5 "Hearing"; saves without them load with
   none), what every actor carries, and what each creature has in mind (where it last saw a
   hostile or heard a noise to look into, and the post it left; §8 "Creature behavior"; saves
-  without it load with every creature calm; format version 7), every actor's stats, scores and
+  without it load with every creature calm; format version 7), how far each actor's talk has got
+  and the unique character a level made it (§8 "Dialogue"; format version 15; left out while
+  nothing has been said, or none), every actor's stats, scores and
   potentials (§8 "Stats"; format version 8), the player's character (race, gender, and class,
   the stat the gender raised, birth date, and birth sign; §8 "Character creation"; format
   version 9), what every actor wears and wields (which inventory stack is in which slot, §6
@@ -1380,7 +1430,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
       into a hostile creature, `melee`.
     - A creature's action costs the same: a step onto the destination terrain, else its action's
       cost (`melee`, `shoot` (and `reload`), `cast` for attacks, `open_door`, `wait` when it waits
-      or is blocked). A creature type may give its attacks their own `attack_cost` (§7), so a future
+      or is blocked). Chatting costs `chat`; swapping places with someone costs the player's step
+      (§8 "Displacement"). A creature type may give its attacks their own `attack_cost` (§7), so a future
       attack or ability is one more entry. Free and refused actions take no time.
     - The scheduler (below) prices an action at its cost × its base in seconds; an actor gains its
       speed in energy per second, so it takes cost × base / speed seconds. The clock keeps whole
@@ -1418,10 +1469,14 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     each turn), the others act, perception runs; the last turn is cut short so the rest ends
     exactly at its goal at any speed of the player (it costs all the energy the player has and
     gains until the goal; one hour, the next 06:00, or the next 18:00; at most a day). It stops after a turn in which a
-    creature came into view (one not seen the turn before) or a message was logged that stops a
-    rest (all but weather news other than rain starting or growing heavier, §5 "Weather"), and
-    logs how long the player rested. Turns that end before any creature on the level could come
-    within view, and in which the weather the player would see did not change, pass without
+    creature came into view (one not seen the turn before; never one who talks and fights no one,
+    a creature with a dialogue whose faction is hostile to nobody, as the showcase's people: the
+    player sees who it is) or a message was logged that stops a
+    rest (all but weather news other than rain starting or growing heavier, §5 "Weather", and
+    muttering, "Dialogue" below), and
+    logs how long the player rested. Turns that end before any creature on the level that could
+    stop the rest could come within view, in which the player heard nothing, and in which the
+    weather the player would see did not change, pass without
     perception: a creature is seen only within the view range, and before its
     first step that could bring it there it needs the energy for every step that cannot (each at
     least the level's cheapest step), so a fast creature shortens the stretch. Those turns cannot
@@ -1449,8 +1504,10 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   4. **Listen**: failing that, to where it last heard a noise (§5 "Hearing"; the newest it heard
      since it last acted) whose source cell it does not see. Only creatures whose faction is
      hostile to someone go to look; wildlife does not care.
-  5. **Return**: then back to its post, and on along its patrol route from where it left it (or
-     it waits there).
+  5. **Return**: then back to its post (waiting beside it while someone else stands on it), and
+     on along its patrol route from where it left it (or it waits there). A creature the player
+     swapped places with has its old cell as its post ("Displacement" below), so it steps back
+     and carries on.
 
   Paths are A* over king's moves within a bounded box (12 cells beyond the target, at most 64
   from the creature), each step costing 1: walkable cells, and closed doors for creatures that
@@ -1466,9 +1523,48 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   `with` the missile of a shot or throw), a noise (§5), and a message when the player perceives
   it (§6). The event reaches presentation only
   when the player sees both ends (or made the attack and saw the target). The player moving into
-  a hostile creature is a melee attack; into a neutral one it stops. Creatures neither flee nor
+  a hostile creature is a melee attack; into any other one it swaps places with it
+  ("Displacement" below). Creatures neither flee nor
   fight differently when hurt. What a creature has in mind (last seen, noise to look into, post)
   is part of the world state.
+- **Dialogue** (`warlock-core/src/content/dialogue.rs`, the data; `world/talk.rs`, the rules;
+  M28, #146): NPCs are creatures with a dialogue (§7), by their type or by the unique `npc` id
+  their level gave them (which wins).
+  - **Chatting** (`Action::Chat(dir)`, replay text `chat:E`; §6 "Chat") with a creature the player
+    sees on that cell takes the time of `chat`. One without a dialogue does not answer ("The
+    giant rat doesn't answer."), one hostile to the player is in no mood ("The brigand is in no
+    mood to talk."); either still takes the time. Otherwise it answers (`The old hermit says:
+    "…"`): its `greet` the first time the player chats with it (it is then *met*), else its next
+    one-liner.
+  - **Rotation**: the one-liners come in rounds, each line once a round, every round in an order
+    of the speaker's own (a Fisher–Yates shuffle drawn from FNV-1a and SplitMix64's finalizer
+    over the run seed, the actor, and the round), and a round never starts with the line the last
+    one ended on, so the same line never comes twice in a row. Each actor counts the lines it has
+    said (`Actor::talk`, saved and hashed once it has said something).
+  - **Topics**: the answer is an event (`Event::Talked`: who, what they said, the topics the
+    player may ask about, and the topic it answers); one with topics opens the dialogue screen
+    (§6). Asking (`Action::Ask { dir, topic }`, replay text `ask:E:rooms`) takes no time and gets
+    the topic's reply; an unknown topic is "The sage knows nothing about that." `World::topics`
+    is the one place topics come from, so quests (#148) add theirs there.
+  - **Muttering**: after each of its actions, a creature whose dialogue has a `mutter`, that goes
+    about its routine (its mind calm) within 5 cells of the player (as far as a voice carries), mutters
+    with its `chance` (a hash of the run seed, the actor, and the moment: the gameplay stream is
+    untouched) one of its muttered lines, in rounds like the one-liners. It is a noise, a voice
+    (50; §5 "Hearing"), and the player gets the words only if they hear it: with the speaker's
+    name if they see it (`The bard sings: "Over the Wendle and under the moon..."`), else from
+    where they place the sound (`You hear a voice to the north: "…"`, or, faint, `You faintly
+    hear a voice to the north.`, without the words). Mutters are logged without stopping a rest.
+- **Displacement** (`world/talk.rs`; M28, #147): the player moving into a creature that is not
+  hostile to them (neutral or peaceful) swaps places with it: the player steps onto its cell (the
+  step's time and noise) and it onto the player's (its footsteps), its own turn unaffected; "You
+  swap places with the deer." ("…with something." if unseen). It remembers the cell it stood on
+  as its post (unless it already had one), walks back there once the player has moved off it, and
+  carries on with its routine ("Creature behavior", Return). It refuses, and the move takes no
+  time, when its type's `budge` is `never`, or `off_post` while its mind is calm (keeping its
+  post: shopkeepers, #145); when it cannot move (overloaded): "The sentry doesn't budge."; or
+  when it is two sizes or more larger than the player (sizes in `data/sizes.toml` order; none of
+  the built-in sizes is): "The giant is too big to squeeze past." A refusal the player does not
+  see the creature for is "Something is in the way."
 - **Combat** (`warlock-core/src/combat.rs`, the rules; `world/fight.rs`, applying them; M16),
   after D&D 3rd edition with 2d12 and ADOM-like hit points. Every roll comes from the gameplay
   random stream.
@@ -1816,10 +1912,11 @@ cargo xtask golden [--update]                             # compare golden scree
   character `{race, gender, class}` (left out for a run without one; a replay without it starts
   as the scenario's character, so older replays still load). Actions use a text
   syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
-  pickup pickup:ac drop drop:b equip:body:b remove:body fire:12,5 throw:c:12,5
-  vision:darkvision skip:1h weather:rain effect:fireball@12,5
+  pickup pickup:ac drop drop:b equip:body:b remove:body fire:12,5 throw:c:12,5 chat:E
+  ask:E:rooms vision:darkvision skip:1h weather:rain effect:fireball@12,5
   effect:lightning_bolt@3,4>12,4`; `fire:X,Y` shoots at level cell (X, Y),
-  `throw:LETTER:X,Y` throws one of inventory stack LETTER there; the dev action
+  `throw:LETTER:X,Y` throws one of inventory stack LETTER there; `chat:DIR` talks to the
+  creature that way, `ask:DIR:TOPIC` asks it about a topic by id; the dev action
   `effect:ID@X,Y[>X,Y]` shows spell effect ID (`data/effects.toml`) as the player perceives it, a
   burst around X,Y (around the second cell, flying there from the first) or a bolt from the first
   cell toward the second (cut short by the first opaque cell); it hurts no one, takes no time,
@@ -1840,7 +1937,8 @@ cargo xtask golden [--update]                             # compare golden scree
 - Dump layers: `view`, `fov`, `memory` (terrain and the top object of each known pile), `light`
   (perceived brightness of each visible cell as a digit, `0` dark to `9` fully lit or brighter),
   `sound` (the view with each heard sound at its rough place: `f` footsteps, `o` a door opening,
-  `c` a door closing, `x` fighting, `b` a bowstring, `m` chanting, upper case when loud),
+  `c` a door closing, `x` fighting, `b` a bowstring, `m` chanting, `v` a voice, upper case when
+  loud),
   `inventory` (what the player carries, by letter with weights and what is worn or wielded
   marked, `b - a leather jerkin (being worn) (3.5 kg)`, then what they carry, their burden and
   its thresholds, and what they weigh, `carried 4.2 kg (unburdened: burdened over 14 kg,
@@ -1854,8 +1952,9 @@ cargo xtask golden [--update]                             # compare golden scree
   points and Defence, `hp 8/12 dv 13`, its
   weight, base plus carried, what it carries and of that wears and wields, `equipped main_hand a
   spear`, its burden and carrying limit, `unburdened (limit 31.5 kg)`, its stats as
-  score/potential, `St 12/15`, and its trained skills with their marks toward the next point,
-  `skills stealth 17 (2/5)`) show
+  score/potential, `St 12/15`, its trained skills with their marks toward the next point,
+  `skills stealth 17 (2/5)`, and the unique character it is and how far its talk has got, `npc
+  elder; talk said 3, muttered 1, met`, if any) show
   ground truth and are dev-only. JSON dumps
   carry turn, game time (seconds and calendar fields), level, viewer, the weather (under the open
   sky; else null), seen actors (each with how hurt it looks, `health`: `unhurt`,
@@ -1984,6 +2083,11 @@ Each milestone ships a playable build.
   World of Warcraft scaling for monsters below (down to grey, worth nothing) and above the
   player's level, a quadratic level curve to 50 in data, and hit point growth up to level 20;
   level and XP on the status bar, the character screen, and the death screen (#133).
+- **M28 NPCs and quests** — NPCs and dialogue (#146): creatures who talk, by type or as unique
+  characters, with rotating one-liners, a greeting, topics on a dialogue screen (`C`), and
+  mutters overheard through hearing; a gardener and a wandering bard in the courtyard and an old
+  hermit by the hub's stairs. Displacement (#147): swapping places with anyone who is not
+  hostile, unless they will not make way. Quests (#148) follow.
 
 ## 13. GitHub workflow
 

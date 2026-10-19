@@ -37,3 +37,6 @@ wear = 1000
 body_armor = 3000
 # Readying a missile weapon or missiles, or putting them away.
 ready = 1000
+# Chatting with someone (`C`): a few words. Asking about a topic on the dialogue screen takes no
+# time.
+chat = 500

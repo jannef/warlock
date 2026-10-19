@@ -35,7 +35,8 @@ pub enum Layer {
     /// brighter); see [`light_digit`].
     Light,
     /// Sounds the player heard from unseen sources, at their rough places ([`sound_char`]: `f`
-    /// footsteps, `o` a door opening, `c` a door closing; upper case when loud), over the view.
+    /// footsteps, `o` a door opening, `c` a door closing, `v` a voice; upper case when loud),
+    /// over the view.
     Sound,
     /// Not a map: the player's inventory, one line per stack (marked when worn or wielded), then
     /// what they carry and weigh.
@@ -175,7 +176,7 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
 }
 
 /// A heard sound in the `sound` layer: `f` footsteps, `o` a door opening, `c` a door closing,
-/// `x` fighting, `b` a bowstring, `m` chanting (magic); upper case when loud.
+/// `x` fighting, `b` a bowstring, `m` chanting (magic), `v` a voice; upper case when loud.
 pub fn sound_char(sound: &PerceivedSound) -> char {
     let c = match sound.kind {
         SoundKind::Footsteps => 'f',
@@ -184,6 +185,7 @@ pub fn sound_char(sound: &PerceivedSound) -> char {
         SoundKind::Fighting => 'x',
         SoundKind::Bowstring => 'b',
         SoundKind::Chanting => 'm',
+        SoundKind::Voice => 'v',
     };
     if sound.volume == Volume::Loud {
         c.to_ascii_uppercase()
@@ -304,8 +306,9 @@ fn skill_rows(view: &PerceptionView<'_>) -> Vec<String> {
 
 /// Every actor on the level (ground truth): id, creature, position, hit points and Defence,
 /// weight, what it carries, its burden and carrying limit, its stats as score/potential
-/// (`St 12/15`), and its trained skills with their marks toward the next point
-/// (`stealth 17 (2/5)`).
+/// (`St 12/15`), its trained skills with their marks toward the next point
+/// (`stealth 17 (2/5)`), and, if it has any, the unique character it is and how far its talk has
+/// got.
 fn actor_rows(world: &World) -> Vec<String> {
     let content = world.content();
     let (_, actors) = world.ground_truth();
@@ -352,9 +355,18 @@ fn actor_rows(world: &World) -> Vec<String> {
             } else {
                 format!("; skills {}", skills.join(", "))
             };
+            // Who it is and how far its talk has got (spec §8 "Dialogue"), if anything.
+            let npc = (a.npc.as_ref()).map_or(String::new(), |n| format!("; npc {n}"));
+            let talk = if a.talk.is_new() {
+                String::new()
+            } else {
+                let met = if a.talk.met { ", met" } else { "" };
+                let (said, muttered) = (a.talk.said, a.talk.muttered);
+                format!("; talk said {said}, muttered {muttered}{met}")
+            };
             format!(
                 "{} {} at {}: hp {}/{} dv {}; weight {} (base {} + carried {}: {carried})\
-                 {equipped}; {} (limit {}); stats {}{skills}",
+                 {equipped}; {} (limit {}); stats {}{skills}{npc}{talk}",
                 a.id,
                 content.creature(a.creature).id,
                 a.pos,

@@ -197,8 +197,10 @@ pub(super) fn track(
                 bursts.attack(&view, creature.map(|a| a.creature), to, seed, start);
             }
             // A death shows as the creature gone (and what it dropped) and in the message line;
-            // a missile flies in `missiles`, a spell effect plays in `spells`.
-            Event::Died { .. } | Event::Missile { .. } | Event::Spell { .. } => {}
+            // a missile flies in `missiles`, a spell effect plays in `spells`; talk is in the
+            // message line (and the dialogue screen).
+            Event::Died { .. } | Event::Missile { .. } | Event::Spell { .. } | Event::Talked(_) => {
+            }
             Event::LevelChanged { .. } => {
                 bursts.list.clear();
                 tints.clear();

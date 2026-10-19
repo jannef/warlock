@@ -5,9 +5,10 @@
 //! burden (×1.25 Burdened, ×1.5 Strained; spec §8 "Burden": a heavy load is noisy); opening or
 //! closing a door makes the door's `toggle_noise` (terrain data); an attack (spec §8 "Combat")
 //! makes fighting, a bowstring, fighting more quietly (a throw), or chanting where the attacker
-//! stands ([`MELEE_NOISE`], [`SHOT_NOISE`], [`THROW_NOISE`], [`SPELL_NOISE`]). [`noise`] is the
-//! one function that decides how loud an action is: the actor's skills (stealth; spec §8
-//! "Skills") make its steps and doors quieter there ([`plain_noise`] is the noise without them).
+//! stands ([`MELEE_NOISE`], [`SHOT_NOISE`], [`THROW_NOISE`], [`SPELL_NOISE`]); a creature muttering
+//! to itself (spec §8 "Dialogue") is a voice ([`VOICE_NOISE`]). [`noise`] is the one function that
+//! decides how loud an action is: the actor's skills (stealth; spec §8 "Skills") make its steps
+//! and doors quieter there ([`plain_noise`] is the noise without them).
 //! Loudness is an integer, at most [`MAX_LOUDNESS`]; a creature or door without the field is
 //! silent.
 //!
@@ -79,6 +80,8 @@ pub enum SoundKind {
     Bowstring,
     /// A spell cast.
     Chanting,
+    /// Someone muttering to themselves (spec §8 "Dialogue").
+    Voice,
 }
 
 impl SoundKind {
@@ -91,6 +94,7 @@ impl SoundKind {
             SoundKind::Fighting => "fighting",
             SoundKind::Bowstring => "bowstring",
             SoundKind::Chanting => "chanting",
+            SoundKind::Voice => "voice",
         }
     }
 
@@ -103,6 +107,7 @@ impl SoundKind {
             SoundKind::Fighting => "fighting",
             SoundKind::Bowstring => "a bowstring",
             SoundKind::Chanting => "chanting",
+            SoundKind::Voice => "a voice",
         }
     }
 }
@@ -113,6 +118,9 @@ pub const MELEE_NOISE: u16 = 60;
 pub const SHOT_NOISE: u16 = 40;
 pub const THROW_NOISE: u16 = 30;
 pub const SPELL_NOISE: u16 = 50;
+/// How loud a creature muttering to itself is where it stands (spec §8 "Dialogue"): heard a few
+/// cells away, by those who listen.
+pub const VOICE_NOISE: u16 = 50;
 
 /// Something an actor does that makes noise.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -125,6 +133,8 @@ pub enum Act {
     CloseDoor(Pos),
     /// Attacks someone, from where it stands.
     Attack(AttackKind),
+    /// Mutters to itself, where it stands.
+    Mutter,
 }
 
 /// A noise made by an actor.
@@ -163,7 +173,7 @@ pub enum Volume {
 }
 
 impl Volume {
-    fn of(loudness: u16, threshold: u16) -> Self {
+    pub(crate) fn of(loudness: u16, threshold: u16) -> Self {
         match loudness.saturating_sub(threshold) {
             m if m >= 3 * STEP_LOSS => Volume::Loud,
             m if m >= STEP_LOSS => Volume::Clear,
@@ -204,7 +214,7 @@ pub struct Recent {
 /// How loud `act` by `actor` is on `level`, `burden` being the burden it suffers
 /// ([`crate::burden::Load::penalty`]): the one place an action's noise is decided. The actor's
 /// skills (stealth, [`Effect::Quiet`]) take their percent off its steps and doors (not its
-/// attacks), rounded down. `None` if it is silent.
+/// attacks or its voice), rounded down. `None` if it is silent.
 pub fn noise(
     content: &Content,
     level: &LevelState,
@@ -213,7 +223,7 @@ pub fn noise(
     act: Act,
 ) -> Option<Noise> {
     let plain = plain_noise(content, level, actor, burden, act)?;
-    if matches!(act, Act::Attack(_)) {
+    if matches!(act, Act::Attack(_) | Act::Mutter) {
         return Some(plain);
     }
     let quiet = actor.skills.effect(content, Effect::Quiet).clamp(0, 100) as u16;
@@ -261,6 +271,7 @@ pub fn plain_noise(
             };
             (sound, actor.pos, u32::from(loudness))
         }
+        Act::Mutter => (SoundKind::Voice, actor.pos, u32::from(VOICE_NOISE)),
     };
     let loudness = loudness.min(u32::from(MAX_LOUDNESS)) as u16;
     (loudness > 0).then_some(Noise {

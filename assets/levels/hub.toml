@@ -27,6 +27,10 @@
 # Sunlight (M9): the stairs nook's staircase up (^ in the map, drawn `<`) climbs to the courtyard,
 # a garden under the open sky.
 #
+# NPCs (#146): an old hermit (H) sits in the stairs nook's lamplit corner. Chat with him (`C`):
+# he knows the hall's rooms and tells you about them. He is peaceful, and walking into him (or
+# any creature that is not hostile) swaps places with him (#147).
+#
 # Objects (M11): gold and a small pile in the start room to pick up (`,` or `g`); the door
 # corridor's west room is a storeroom of arms and armor and its east room a pantry; an amulet lies
 # in the dark of the darkness chamber, and a ring before the water garden's altar. The patrolling
@@ -62,7 +66,7 @@ map = '''
 #......@.......##.....#.#.....##3........................#......B......#.......#
 #..............####+###.###+####..#...#...#...#...#...#..#.............#.<.>.v.#
 #..............##.............##2........................#.===.....::::#.......#
-#..............##......t......##.........................#.===.....::::#.......#
+#..............##......t......##.........................#.===.....::::#......H#
 #..t.......t...#################t.......................t#.........::::#.......#
 ################################################################################
 '''
@@ -92,6 +96,8 @@ map = '''
 "^" = { terrain = "stairs_up", to = "courtyard" }
 # Stairs down (drawn `>`) to the arena.
 "v" = { terrain = "stairs_down", to = "arena" }
+# The old hermit, by the stairs.
+"H" = { terrain = "floor", creature = "hermit" }
 
 # Objects, top of each pile first.
 # The start room.

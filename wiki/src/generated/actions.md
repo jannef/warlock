@@ -19,3 +19,4 @@
 | Putting something on, or taking it off: Head, neck, cloak, hands, left ring, right ring, feet | 1000 | 6 seconds |
 | Putting something on, or taking it off: Body | 3000 | 18 seconds |
 | Readying something, or putting it away: Missile weapon, missiles | 1000 | 6 seconds |
+| Chatting with someone (asking about a topic takes no time) | 500 | 3 seconds |
