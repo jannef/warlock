@@ -18,6 +18,8 @@ your armour decide how well you fight.
 
 ## Where to start
 
+- [What's in the game](features.md) is the overview: every feature in a paragraph, with
+  screenshots.
 - [Controls](controls.md) lists the keys and explains the screen. In the game, `?` shows the
   up-to-date list. [Settings](settings.md) covers font size, colors, and effects.
 - [Time and the calendar](time.md), [Turns and movement](turns.md), and [Resting](resting.md)
