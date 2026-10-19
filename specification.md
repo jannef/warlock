@@ -2001,7 +2001,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
     Vaults have none.
   - **State**: each level state keeps its shops (`LevelState::shops`: the kind, the keeper's
     actor id and name, the floor, the post, the ways out, what the player owes, and the status; saved and
-    hashed, format version 30). Prices are not saved: they follow from the data and the player.
+    hashed). Prices are not saved: they follow from the data and the player.
   - **What the player perceives** (`PerceptionView::shop_at`, `shop_here`, `price_tag`,
     `unpaid`, `owed_on_leaving`, `sale`, `own_gold`): an open shop's sign, its keeper's name, its
     prices for them, what they owe, and their own gold; never a value, a markup, or how their
@@ -2227,7 +2227,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   continues the run. Dev builds add named snapshots. Format: a versioned envelope (magic, format
   version, game version) around a JSON payload, gzip-compressed with a pure-Rust backend, written
   atomically (temp file + rename). Before 1.0, incompatible saves are rejected with a clear message;
-  from 1.0 on, saves are migrated. The web build keeps the same bytes in the browser's
+  from 1.0 on, saves are migrated. The format version is bumped once per release by the
+  integrator, never by a feature change (`docs/dev/merging.md`): saves are not promised
+  across development builds, and a save a build cannot read is kept as `run.sav.bad`. The web build keeps the same bytes in the browser's
   `localStorage` (below). The envelope also records a content fingerprint (hash of the ordered
   terrain, creature, level, light, dungeon-branch, object, equipment slot, skill, room effect,
   weapon skill, status, disease, trap, and shop
@@ -2240,48 +2242,48 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   acted on, the sounds the player perceived lately (§5 "Hearing"; saves without them load with
   none), what every actor carries, and what each creature has in mind (where it last saw a
   hostile or heard a noise to look into, and the post it left; §8 "Creature behavior"; saves
-  without it load with every creature calm; format version 7), every actor's stats, scores and
-  potentials (§8 "Stats"; format version 8), the player's character (race, gender, and class,
-  the stat the gender raised, birth date, and birth sign; §8 "Character creation"; format
-  version 9), what every actor wears and wields (which inventory stack is in which slot, §6
-  "Equipment"; format version 10), every actor's hit points (what it has left, what its race and
+  without it load with every creature calm), every actor's stats, scores and
+  potentials (§8 "Stats"), the player's character (race, gender, and class,
+  the stat the gender raised, birth date, and birth sign; §8 "Character creation"),
+  what every actor wears and wields (which inventory stack is in which slot, §6
+  "Equipment"), every actor's hit points (what it has left, what its race and
   class or its type add to its Toughness, and the seconds banked toward the next one back; §8
-  "Combat"; format version 11), the fires burning on each level (§8 "Ranged combat"; format
-  version 12), the player's experience total (§8 "Experience"; format version 13; absent while
+  "Combat"), the fires burning on each level (§8 "Ranged combat"), the player's
+  experience total (§8 "Experience"; absent while
   0, so a run without kills hashes as before), every actor's trained skills (value and training
-  marks) and the training random stream (§8 "Skills"; format version 14), each level's special
-  rooms and whether the player has been in each (§7 "Special rooms"; format version 15), every
-  actor's weapon skills (its rank and marks in each, §8 "Weapon skills"; format version 16), the
-  work done on walls dug into and still standing (§8 "Digging"; format version 17), every
-  actor's combat stance (§8 "Stances"; format version 18), the blood on each level and the blood
-  as last seen (§8 "Blood"; format version 19), every actor's status effects (each status with
+  marks) and the training random stream (§8 "Skills"), each level's special
+  rooms and whether the player has been in each (§7 "Special rooms"), every
+  actor's weapon skills (its rank and marks in each, §8 "Weapon skills"), the
+  work done on walls dug into and still standing (§8 "Digging"), every
+  actor's combat stance (§8 "Stances"), the blood on each level and the blood
+  as last seen (§8 "Blood"), every actor's status effects (each status with
   its severity, its progress toward its next tick and easing, and who caused it), the progress
   toward the next hit point back counted in hundredths of a second at the normal pace, and the
-  status effect that killed the player (§8 "Status effects", "Healing"; format version 20), the
+  status effect that killed the player (§8 "Status effects", "Healing"), the
   player's satiation (their nutrition, the burn banked toward the next point, and the seconds
   toward the next hit point lost while starving), every corpse's death time, and what killed the
-  player when neither a creature nor a status effect did (§8 "Hunger"; format version 21), the
-  locks on each level's doors (§8 "Doors"; format version 22), how far each actor's talk has got
-  and the unique character a level made it (§8 "Dialogue"; format version 23; left out while
+  player when neither a creature nor a status effect did (§8 "Hunger"), the
+  locks on each level's doors (§8 "Doors"), how far each actor's talk has got
+  and the unique character a level made it (§8 "Dialogue"; left out while
   nothing has been said, or none), each level's temperature underground, the ice on its water
   (thickness and the water beneath), and when its ice was last brought up to date (§5
-  "Temperature", "Ice"; format version 24), every actor's diseases (each with the seconds to
+  "Temperature", "Ice"), every actor's diseases (each with the seconds to
   its next turn, whether it shows, its progressions so far, its checks won in a row, and who gave
-  it) and stat damage (with the seconds banked toward mending it; §8 "Diseases"; format version
-  25), every magic or rare item as it is (§8 "Magic items": on its stack wherever it lies or is
+  it) and stat damage (with the seconds banked toward mending it; §8 "Diseases"),
+  every magic or rare item as it is (§8 "Magic items": on its stack wherever it lies or is
   carried, its rarity, item level, each affix by id with its tier and rolled value, a rare item's
-  name, and whether it is identified; format version 26; absent on normal stacks; an affix this
+  name, and whether it is identified; absent on normal stacks; an affix this
   content does not have, a tier or value out of range, or more affixes than the rarity allows
   makes the save inconsistent; affixes are recorded by id, so adding affixes does not change the
-  content fingerprint), the player's quests and the kills they count (§8 "Quests"; format
-  version 27; left out while the player has heard of none and killed nothing a kill quest asks
+  content fingerprint), the player's quests and the kills they count (§8 "Quests";
+  left out while the player has heard of none and killed nothing a kill quest asks
   for; quests and creature types are recorded by id, so a save naming one this content does not
   have is inconsistent), the traps on each level (kind, whether the player knows it, charges
   left, a bolt's direction), the known traps as the player remembers them, and a trap as what
-  killed the player (§8 "Traps"; format version 28), every actor's fighting styles (after its
-  weapon skills, §8 "Fighting styles") and a light weapon in the off hand (format version 29),
+  killed the player (§8 "Traps"), every actor's fighting styles (after its
+  weapon skills, §8 "Fighting styles") and a light weapon in the off hand,
   each level's shops (the keeper, its ways out, what the player owes, and how the keeper stands;
-  §7 "Shops"; format version 30), and a dev weather override while
+  §7 "Shops"), and a dev weather override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved, nor the temperature under the open sky: they follow from the seed and the
   clock. The save is `run.sav` in the
@@ -2975,8 +2977,8 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   - **Colour**: each creature type's `blood` (§7): dark red by default, greenish-black ichor for
     the cave beetle; `none` bleeds nothing.
   - **Deterministic, gameplay-neutral**: stains are level state (`LevelState::blood`, sparse by
-    cell: amount, colour, when spilled, stained wall faces), saved and covered by the state hash
-    (format version 19). Where drops land is a hash of the turn, the moment, the two actors, and
+    cell: amount, colour, when spilled, stained wall faces), saved and covered by the state hash.
+    Where drops land is a hash of the turn, the moment, the two actors, and
     the cells, never the gameplay random stream: a fight goes exactly the same with or without
     blood.
   - **What the player perceives** (`PerceptionView::blood`): a stain on an open cell they see;
@@ -3518,7 +3520,7 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
     (`PerceptionView::own_weapon_skills`), shown as ranks and a bar on the weapon skills screen
     (§6) and in the `weapon_skills` dump layer; never a benefit or a creature's ranks (the
     `actors` dev layer shows every actor's). Ranks and marks are part of the world state
-    (saved, hashed; format version 16).
+    (saved, hashed).
 - **Fighting styles** (#135; `content/weapon_skill.rs`: `Role::Style`, `Grip`, `Style`,
   `TwoWeapons`; `world/actor.rs`: `Actor::grip`, `style`, `styles_in_use`, `attack_skills`
   (`AttackSkills`: an attack's weapon skill and style), `attack_benefit`, `off_hand`,

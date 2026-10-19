@@ -186,11 +186,12 @@ warning; failed writes (quota) are messages, never panics. Only the `web-sys` fe
 Saves: Quit in the pause menu saves and quits (closing the window saves too; the `Q` key is unbound by default, rebindable); the game autosaves every 50 turns and on
 level change to `run.sav` in the data dir (see "File locations" below). On startup an existing save is resumed unless `--new`, `--capture`,
 `--replay`, or `--record` (replays and recordings always start a fresh run). F5 / F9 write / load `snapshots/quick.sav`. An unreadable save is renamed `run.sav.bad`,
-never deleted. Format and `Content::fingerprint` live in `warlock-core/src/save.rs`: bump
-`FORMAT_VERSION` on any incompatible `WorldState` change; adding or reordering terrain, creatures,
+never deleted. Format and `Content::fingerprint` live in `warlock-core/src/save.rs`.
+`FORMAT_VERSION` is bumped by the integrator once per release, never in a feature PR
+(`docs/dev/merging.md`): an incompatible `WorldState` change, or adding or reordering terrain, creatures,
 lights, levels, objects, equipment slots, skills, weapon skills (fighting styles too), statuses, diseases, traps, or
-dungeon branches invalidates existing saves (affixes are saved by id: adding them does not,
-removing one a save uses does).
+dungeon branches, invalidates existing saves (affixes are saved by id: adding them does not,
+removing one a save uses does); say so in the PR and leave the number alone.
 **Permadeath**: when the player dies, `screens::on_death` deletes `run.sav`
 (`SaveStore::delete_run`) and opens the death screen; `SaveStore::save_run` never writes a dead
 run (it deletes instead), so autosave, quitting, and closing the window cannot bring it back, and the
@@ -369,7 +370,7 @@ verb, lines). `world/talk.rs` is the one place talk happens: `World::chat` (`Act
 `chat`), `World::ask` (`Action::Ask`, no time), `World::topics` (the one source of what an NPC can
 be asked about: quests, #148, add their topics there and answer them in `ask`), `rotation` (each
 line once a round in a per-speaker shuffled order, never twice in a row; `Actor::talk` counts what
-was said; with `Actor::npc` saved and hashed, `FORMAT_VERSION` 23), mutters (`World::mutter` after each `creature_turn`, a hash roll that never
+was said; with `Actor::npc` saved and hashed), mutters (`World::mutter` after each `creature_turn`, a hash roll that never
 draws on the gameplay stream; `Act::Mutter` noise; `say_mutters` logs what the player heard, with
 the words, only as notes that never stop a rest), and making way: moving into a creature that is
 not hostile swaps places (`swap_places`; the creature takes its old cell as its `Mind::post` and
@@ -388,7 +389,7 @@ topics come first in `World::topics` (`quest_topics`: `quest-ID`, `accept-ID`, `
 are answered in `World::ask` (`ask_quest`, `Spent::NoTime` when state changes); `Quests` in
 `WorldState` (records by quest id: stage, completed, counted, reached; the kill tally by level
 and creature id, only for types a kill quest asks for), left out of the JSON while empty so runs
-without quests hash as before (`FORMAT_VERSION` 27). Hooks: `fight.rs::dies` tallies the
+without quests hash as before. Hooks: `fight.rs::dies` tallies the
 player's kills (`tally_kill`, beside `earn_kill`, so a creature bled to death by the player's
 wound counts too), `travel` marks reach quests (`reach`), and `World::apply` snapshots active
 quests' `progress` before the player acts and says what rose after it, and again after the
@@ -484,8 +485,8 @@ in place of the terrain glyph (no terrain animation or glow there); look mode na
 
 Equipment (spec §6 "Equipment", §7; M16): slots are data, `data/slots.toml`
 (`content/slot.rs`: `SlotDef` with `id`, `name`, `fits`, `action`, `mark`, `hand`; `SlotId` is an
-index in screen order, in the content fingerprint), so **a new slot is one entry there** (and a
-`FORMAT_VERSION` bump if saves change). Objects say where they go (`slot` = a slot's `fits`,
+index in screen order, in the content fingerprint), so **a new slot is one entry there** (saves
+change). Objects say where they go (`slot` = a slot's `fits`,
 `two_handed`, `light_weapon` (any hand), `ammo`, `launches`; `Content::fits`, `Content::fires`, `Content::hand_slots`).
 `equipment.rs` holds the runtime side: `Equipment` (slot → inventory position, on
 `Actor::equipment`, saved and hashed; equipped stacks stay in the inventory and keep weighing),
@@ -541,7 +542,7 @@ name theirs (`category` → `ObjectDef::skill`, its role checked against what th
 shields bash (`bash` → `ObjectDef::bash`), races and classes give starting ranks
 (`weapon_skills`, dice; classes `weapon_skill_choice`), creatures fixed ranks. The runtime side
 is `weapon_skills.rs`: `WeaponSkills` (a `Training { rank, marks }` per skill on
-`Actor::weapon_skills`, saved and hashed, `FORMAT_VERSION` 16; 29 with the styles), `train`
+`Actor::weapon_skills`, saved and hashed), `train`
 (marks → a rank, then
 `raise`: the defaults rise, their marks reset; no chaining), `from_ranks` (starting ranks,
 order-free), `progress`. The rules hook in at one place each: `Actor::attack_skill(kind, with)`
@@ -605,7 +606,7 @@ go there too.
 
 Stats (spec §8 "Stats"; M14) live in `warlock-core/src/stats.rs`: `Stat` (Strength, Dexterity,
 Toughness, Intelligence, Willpower, Presence; id, abbreviation, name) is generated by the
-`stats!` list there, so **a new stat is one entry in that list** (and a `FORMAT_VERSION` bump);
+`stats!` list there, so **a new stat is one entry in that list** (saves change);
 `PerStat<T>` holds one value per stat (serialized as a map by stat id), `Stats` an actor's scores
 and potentials (`Actor::stats`, saved and hashed), and `modifier(score)` /
 `Stats::modifier(stat)` the D&D 3.5 modifier (`floor((score − 10) / 2)`) for the rules. Content:
@@ -638,7 +639,7 @@ Sizes are data, `data/sizes.toml` (`content/size.rs`, `SizeDef { id, name, carry
 medium); races have `size` and `ignores_burdened` (dwarves), creature types `size` (the
 kobolds, the rat, the bat, and the beetle are small). The player's size is their race's when the
 run has a character (`WorldState::load(content, actor)` picks it; `World::actor_load(id)` for
-dev tools). Nothing is stored (no `FORMAT_VERSION` bump): the burden follows from the inventory,
+dev tools). Nothing is stored (saves are unchanged): the burden follows from the inventory,
 stats, and content. Every penalty goes by `Load::penalty`: prices in `schedule.rs`
 (`World::burdened`, inside `price_of` and `step_price`: the one place, so every action and
 overworld journey is slowed), `World::defence_of`, `make_noise`, and moving (`World::can_move`
@@ -680,8 +681,8 @@ effects' `penalty`, `Stats::adjusted_by`), which combat profiles, `Actor::defenc
 should touch. Eating (`world/eat.rs`): `Action::Eat(Meal::Pack|Floor)` → `Spent::Meal(Dish)` →
 `dine` (turns of `eat` through `World::keep_at`, stopping like a rest; the food stays until the
 last turn) → `finish` (take one, then rotten / fresh corpse `on_eat` / plain food, `feed` with
-overeating, `vomit`, hunger and burden news). Saved and hashed (`FORMAT_VERSION` 21:
-`Actor::satiation`, `Stack::died`, `Death::cause`).
+overeating, `vomit`, hunger and burden news). Saved and hashed (`Actor::satiation`,
+`Stack::died`, `Death::cause`).
 `creature_dies` calls `leave_corpse` (corpse on top); `perceive` calls `rot_away` (current
 level's piles and the pack). Presentation: `PerceptionView::own_hunger` (the status bar segment
 after the HP, priority 1, hidden while Not hungry), `E` (`KeyCommand::Eat`, id `eat`) opens
@@ -712,8 +713,8 @@ one dice type (parse `2d3+1`/`-1d2`/`+2`, `Display`, `min`/`max`, `roll(&mut Rng
 uses it for damage. Scenarios name their character (`character = { race, gender, class }`,
 `ScenarioDef::character`); with one, `vision`, `stats`, `potential`, and `hp` are refused.
 `World::new` starts as the scenario's character, `World::with_character(content, scenario, seed,
-Some(&spec))` as another; `WorldState::character` (the `Character`, saved, hashed;
-`FORMAT_VERSION` 9) and `PerceptionView::character` (the player knows it; `PerceptionView::time`
+Some(&spec))` as another; `WorldState::character` (the `Character`, saved, hashed)
+and `PerceptionView::character` (the player knows it; `PerceptionView::time`
 for their age). Replays record only the spec. The summary and the character screen show final
 scores only: never dice, a breakdown, a modifier, or a potential (the step screens and the wiki
 show adjustments as written in data). Balance is not a goal; classes only adjust starting
@@ -784,8 +785,7 @@ Magic items (spec §8 "Magic items", #149) live in `warlock-core`: `content/affi
 (`data/affixes.toml`: `ItemKind`, `Effect`, `AffixDef` with tiers, `Rarity`, rarity weights,
 rare names), base item fields in `content/object.rs` (`kind`, `level`, `frequency`,
 `attack_cost`; the weapon skill `category` names the item in descriptions, `weapon_noun`), and
-`magic/` (`mod.rs`: `Magic`/`Affix`, the instance on a `Stack` (saved, hashed; `FORMAT_VERSION`
-26), `check`;
+`magic/` (`mod.rs`: `Magic`/`Affix`, the instance on a `Stack` (saved, hashed), `check`;
 `mods.rs`: `Mods::local` (an item's own and its attacks') and `Mods::worn` (what an actor wears
 and wields, global), the one aggregation every rule reads; `loot.rs`: `roll`, its draw order;
 `name.rs`; `describe.rs`: base stats and affixes in words for the item description screen).
@@ -955,7 +955,7 @@ Doors (spec §8 "Doors"; M19, #130): the rules are `warlock-core/src/door.rs` (`
 `swing_open`, `close_door`, `kick`/`kick_door`; kicking a creature is `World::player_kicks`, an
 unarmed blow whatever is wielded: `Actor::kick` (bare hands with unarmed fighting's benefits and
 the stance), training unarmed fighting, priced `kick` by `attack_price`, said with `Words::kick`). Locks are per-cell state, never terrain: `locks` on
-`LevelTemplate` and `LevelState` (by position, saved, hashed, `FORMAT_VERSION` 22; ground truth only, so perception,
+`LevelTemplate` and `LevelState` (by position, saved, hashed; ground truth only, so perception,
 memory, look mode, and dumps show a locked door as any closed door); `World::set_terrain` drops a
 lock whenever the cell stops being a closed door. Level legends lock with `lock = "id"` or
 `locked = true`; objects are keys with `key = "id"` (`"*"`: skeleton); closed doors break with
@@ -1012,7 +1012,7 @@ drip hook `drip_blood` (#127's stains go there). The player's statuses beginning
 the rest loop keeps them from the turns it does not perceive). Presentation reads
 `PerceptionView::own_effects` (status bar after HP, character screen `Status` row) and
 `effects_of(actor)` (look mode; only statuses with `seen`), never severities. Saved and hashed
-(`FORMAT_VERSION` 20; `Actor::regen` counts hundredths of a second at the normal pace). The dev
+(`Actor::regen` counts hundredths of a second at the normal pace). The dev
 action `afflict:ID` (`Action::Afflict`) gives the player a degree, for tests and captures. Tests:
 `status.rs`, `content/status.rs`, `world/status_tests.rs`.
 
@@ -1046,8 +1046,8 @@ the min with `Diseases::regen`; `World::cure` also ends diseases by their `cured
 are `Event::Disease { actor, disease, news: DiseaseNews::{Onset, Worse(n), Recovered} }` (onset
 and symptoms `say`, recovery `note`s; a batched rest turn with an onset or symptom stops the
 batch). Presentation: Diseased via `own_effects`, `PerceptionView::own_diseases` (known ones:
-the character screen's `Diseased` row, the `stats` dump layer). Saved and hashed
-(`FORMAT_VERSION` 25). Tests: `check.rs`, `disease.rs`, `content/disease.rs`,
+the character screen's `Diseased` row, the `stats` dump layer). Saved and hashed.
+Tests: `check.rs`, `disease.rs`, `content/disease.rs`,
 `world/disease_tests.rs` (custom content with extreme stats, mirrored draws).
 
 Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebuffer pixels:
@@ -1192,7 +1192,7 @@ up to twice that), then `tread_price` (the `climb` action from water onto ice) a
 `World::frost` (instant freeze; dev `freeze:x,y,r`, which also shows the `frost_burst` effect of
 `data/effects.toml` through `World::frost_look`) and `World::shock` (`Shock::Heat` melts,
 `Shock::Blast(um)` shatters thinner ice; dev `thaw:x,y,r`) are the hooks fireballs, frost traps,
-blasts, and spells call. Saves: `FORMAT_VERSION` 24. Tests: `ice.rs`, `temperature.rs`,
+blasts, and spells call. Saved and hashed. Tests: `ice.rs`, `temperature.rs`,
 `world/ice_tests.rs` (growth/melt over rests, weight, falling in, climbing out, sinking objects,
 creatures, bursts, saves, replays, a year's catch-up). Tune the look with captures of the Frost
 Grotto (hub stairs nook, the `>` below the first) and the courtyard in winter (`skip:` into

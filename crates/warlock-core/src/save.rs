@@ -15,7 +15,13 @@ use std::sync::Arc;
 
 /// Marker identifying a Warlock save inside the envelope.
 const MAGIC: &str = "WARLOCK-SAVE";
-/// The only save format version this build reads. Bump on any incompatible state change.
+/// The only save format version this build reads.
+///
+/// Bumped by the integrator once per release, never by a feature PR (`docs/dev/merging.md`):
+/// before 1.0, saves are not promised across development builds (a save a build cannot read is
+/// renamed `run.sav.bad`, never lost), so every incompatible change to [`WorldState`] or to the
+/// content fingerprint between two releases is covered by the next release's bump. The history
+/// below is per feature up to 30; from here on it is one line per release.
 ///
 /// 2: the gameplay random stream in the world state; ambient and placed lights in level states.
 /// 3: the game clock (`time`) in the world state; level kind and turn length in level states.

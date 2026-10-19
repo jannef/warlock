@@ -14,7 +14,8 @@
 //! else: never a modifier, never a potential, never a creature's stats. Combat and burden use
 //! them (spec §8 "Combat", "Burden").
 //!
-//! Adding a stat is one entry in the `stats!` list below; saves then need a new format version.
+//! Adding a stat is one entry in the `stats!` list below; saves then change (the format version
+//! is bumped per release, see `save.rs`).
 
 use crate::dice::Dice;
 use crate::rng::Rng;
