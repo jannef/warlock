@@ -318,3 +318,40 @@ actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 mo
 name = "ranged-burning-arrow"
 scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:S pickup move:W pickup equip:missile_weapon:a equip:missiles:c move:NE move:E*2 move:N*4 move:E*20 open:S move:S fire:45,17 wait"
+
+# Spell effects (spec §4.8 "Spell effects"), shown with the dev action `effect` (no time passes,
+# so `freeze_time` is how long after the effect began): a fireball in the arena's pit at its peak
+# (white-hot core cooling outward, its light on the floor around it, the rest of the arena
+# darkened) and cooling (embers flying, the view easing back); a lightning bolt across the pit at
+# its first flash; a fireball in the start room right beside the player (the room darkened, the
+# view shaken a few pixels); and the same with reduced effects: a brief still flash of its cells.
+[[golden]]
+name = "spell-fireball"
+scenario = "arena"
+actions = "effect:fireball@30,14"
+freeze_time = 0.12
+
+[[golden]]
+name = "spell-fireball-cooling"
+scenario = "arena"
+actions = "effect:fireball@30,14"
+freeze_time = 0.3
+
+[[golden]]
+name = "spell-lightning"
+scenario = "arena"
+actions = "effect:lightning_bolt@21,17>58,17"
+freeze_time = 0.07
+
+[[golden]]
+name = "spell-fireball-near"
+scenario = "showcase"
+actions = "effect:fireball@11,13"
+freeze_time = 0.08
+
+[[golden]]
+name = "spell-still"
+scenario = "showcase"
+actions = "effect:fireball@11,13"
+freeze_time = 0.1
+args = ["--reduced-effects"]

@@ -247,7 +247,10 @@ Water is calm by design; motion stays tasteful, never busy:
   way (its object's light preset, with its flicker, falling off like gameplay light from its
   fractional position to each visible cell's center it has a line of sight to over the terrain the
   player knows), and the gameplay light of a burning missile that has landed is held back until
-  it arrives on screen (§4.8). Visual-only light never affects gameplay.
+  it arrives on screen (§4.8); a spell effect's light (§4.8 "Spell effects") lights the scene the
+  same way in any color, falling off more softly (the square of the gameplay falloff), through
+  the cells the effect was seen on too, and may darken everything else while it peaks.
+  Visual-only light never affects gameplay.
 - Each frame, the CPU composites the perceived light of the viewport's cells (plus a one-cell
   margin) from the perception snapshot — the base light (ambient plus sky plus bounce, steady) plus
   every visible source's per-cell contribution, the sun's and the moons' included — into a
@@ -325,10 +328,11 @@ Water is calm by design; motion stays tasteful, never busy:
   around glyphs rather than over them, small distortion amplitudes.
 - A **reduced effects** setting is a preset that turns off glyph animation, flicker (light
   stability: light is steady), sliding (instant snap), camera easing, bloom and glow, distortion,
-  particles, screen fades and flashes, and falling rain. Each can also be switched off on its own
-  (settings: glyph animation, light flicker, motion = slides and camera easing, bloom and glow,
-  distortion, particles, screen fades, weather); an effect runs only when its switch is on and
-  reduced effects is off. Rain has a switch of its own rather than riding on particles: it moves
+  particles, screen fades and flashes, screen shake, and falling rain. Each can also be switched
+  off on its own (settings: glyph animation, light flicker, motion = slides, camera easing, and
+  spell effects' motion, bloom and glow, distortion, particles, screen fades = fades, flashes,
+  and spell effects darkening the view, screen shake, weather); an effect runs only when its
+  switch is on and reduced effects is off. Rain has a switch of its own rather than riding on particles: it moves
   over the whole view, not around a few sources. The weather itself (its light, the status bar)
   never depends on it. No gameplay information may
   depend on an effect: heard sounds keep a still marker when their ripple (glyph animation) is
@@ -354,6 +358,9 @@ glow, barely perceptible distortion, short fades.
   boulders, ripples where a stream enters a pool; the emitter is turned with the flow, its `y`
   pointing downstream). Creature emitters move with the creature; a creature's `attack` emitters
   burst at the target of each attack the player sees (the kobold shaman's faint violet sparkle).
+  Spell effects' emitters burst from each affected cell on `impact` (as the effect reaches it: a
+  fireball's embers) and `linger` (as it starts to fade: its smoke), and trail a burst's
+  projectile on `flight`.
 - **Missiles**: every shot and throw the player perceives (`Event::Missile`, which carries the
   cells it flew over as far as the player saw them, so nothing unseen is drawn; a missile from an
   unseen shooter appears where it enters view) flies on the free-glyph layer from the edge of the
@@ -384,6 +391,45 @@ glow, barely perceptible distortion, short fades.
 - **Heat haze** (`haze`, 0–1) rises a few cells above hot terrain (braziers, lava). The grid shader
   moves where glyphs there are sampled by about a pixel, in slow rising ripples; backgrounds stay
   put and text elsewhere stays crisp.
+- **Spell effects** (`data/effects.toml`, §7): every spell-like effect the player perceives
+  (`Event::Spell { effect, origin, shape, cells }`: a trap's fireball or lightning bolt now,
+  spells later; its cells cut to those the player sees or has in line of sight, since the effect
+  is light itself, so nothing unseen is drawn) plays its effect, a pure function of visual time
+  and the event like the particles, in three phases: **travel** (a burst's projectile flies from
+  its origin to its center, a bolt draws out along its path), **impact** (full strength), and
+  **linger** (fading). They are deliberately dramatic, the one place where effects may be loud,
+  yet short (well under a second) and never garish:
+  - A **fireball** (a burst over the cells around a center) grows from its core to its edge,
+    white-hot at the core and cooling outward through yellow and orange to deep red (its glyphs
+    by heat, `▓▒░`, flickering, over a glowing body), burns, then cools from its edge in; embers
+    fly at the impact and a faint smoke rises as it fades. Its heat is measured as it looks on
+    screen (cells are taller than wide), so the hot core looks round.
+  - A **lightning bolt** (a line along a path) draws out almost at once and flashes two or three
+    times, each flash a little dimmer: a jagged line of turned line glyphs (`━`, about a cell wide
+    each, the corners pushed sideways by a slow wander and a sharp jitter) that takes a new shape
+    with every flash and flicker and forks now and then into the cells the player sees, very
+    bright blue-white, then a violet afterglow.
+  - Both are light themselves (drawn unlit and glowing, on top of everything else on the map)
+    and light the scene with their own light (§4.4): from a burst's center, along a bolt every
+    other cell.
+  - **Darkening**: while a bright effect peaks, everything that is not its light (base light,
+    every other source, the readability floor, remembered terrain, other glyphs and particles)
+    looks up to `darken` darker (0.65 = 65 % darker on screen), easing in over the first tenth of
+    its `seconds`, holding until two fifths, then easing back: the effect dominates the view and
+    the scene comes back, deliberately, never like a frame drop. Off with the `screen fades`
+    switch.
+  - **Screen shake**: when an effect lands within its `shake` radius of the player (the nearest
+    of its cells), the map view shakes by whole pixels, at most its `pixels` (logical pixels, on
+    the player's cell; less the farther), kicking in a new direction 28 times a second, eased, and
+    dying down over its `seconds` (about a quarter of a second). The status bar and messages stay
+    put. An experiment: tuned in data, off with its own `screen shake` switch.
+  - The effects of one turn play one after another; new input does not cut them short (they hold
+    nothing back), a level change does. With the `motion` switch off (or reduced effects) an
+    effect is a brief still flash of its cells (0.3 s): no travel, light, darkening, or shake.
+    With frozen visual time (`--freeze-time T`) each effect of the last turn shows its moment `T`
+    seconds after it began, so captures can show any moment.
+  - Presentation only: no rule reads effects. The dev action `effect:ID@X,Y` (a burst there, or a
+    bolt toward `>X,Y`; §9) shows one with no other consequence, for captures and goldens.
 - **Screen tints** over the map viewport: a short fade in from black after a level change, and a
   flash (color, strength, duration) as the hook for hit-style events.
 - **Weather** (§5 "Weather"): while it rains where the player is, faint drops fall on every visible
@@ -397,7 +443,8 @@ glow, barely perceptible distortion, short fades.
   are drawn a frame. The darker, cooler look of a rainy day is the gameplay light itself, not an
   effect. Off with the `weather` switch.
 - With frozen visual time (`--freeze-time`) fades complete instantly and bursts show a fixed
-  moment early in their life, so captures are reproducible.
+  moment early in their life, so captures are reproducible; spell effects show the frozen moment
+  after they began.
 
 ## 5. Visibility, light, and vision
 
@@ -1087,6 +1134,19 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   (§4.8; `rate` per cell and second): `drops` (on every visible cell under the sky), `splash` (on
   open ground: walkable, transparent, not running water), and `ripples` (on still water, terrain
   with a `wave` animation). §5 "Weather".
+- **Spell effects** (`data/effects.toml`, optional; presentation only, no rule reads it, and it is
+  not in the content fingerprint): `[[effect]]` with a unique `id` (no `:`, `@`, `>`, or spaces),
+  `shape` (`burst` or `bolt`), `radius` (bursts: the dev action's radius, 0 to 8, default 1),
+  `speed` (cells a second: a burst's projectile, a bolt drawing out), `grow` (bursts: seconds to
+  full size, at most `impact`), `impact` and `linger` (seconds, up to 2; `linger` may be 0),
+  `flashes` (bolts: 1 to 6), `flicker` (seconds a glyph shape lasts), `glyphs` (bursts: by heat,
+  hottest first; bolts: the line glyph, then the forks'), `projectile` (bursts), `colors`
+  (hottest first), `glow` and `fill` (bursts: the opacity of each cell's glowing body) and
+  `branches` (bolts: the chance of a fork at each corner) from 0 to 1, optional
+  `light = { color = [r, g, b], radius }` (255 = fully lit, up to 4000), `darken = { amount,
+  seconds }` (amount 0 to 0.9), `shake = { pixels, radius, seconds }` (pixels 0 to 12, radius up
+  to the view radius), and `[[effect.particles]]` emitters on `impact`, `linger`, or (with a
+  `projectile`) `flight`. Every glyph joins the atlas. §4.8 "Spell effects".
 - **Dungeon branches** (`data/dungeons.toml`): stacks of generated levels, e.g.
   `{ id = "depths", generator = "rooms", depth = 8, size = [80, 21] }`, plus optional name,
   patrolling creature kinds, ambient light, and per-depth overrides of generator and size. Stairs
@@ -1757,8 +1817,13 @@ cargo xtask golden [--update]                             # compare golden scree
   as the scenario's character, so older replays still load). Actions use a text
   syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
   pickup pickup:ac drop drop:b equip:body:b remove:body fire:12,5 throw:c:12,5
-  vision:darkvision skip:1h weather:rain`; `fire:X,Y` shoots at level cell (X, Y),
-  `throw:LETTER:X,Y` throws one of inventory stack LETTER there;
+  vision:darkvision skip:1h weather:rain effect:fireball@12,5
+  effect:lightning_bolt@3,4>12,4`; `fire:X,Y` shoots at level cell (X, Y),
+  `throw:LETTER:X,Y` throws one of inventory stack LETTER there; the dev action
+  `effect:ID@X,Y[>X,Y]` shows spell effect ID (`data/effects.toml`) as the player perceives it, a
+  burst around X,Y (around the second cell, flying there from the first) or a bolt from the first
+  cell toward the second (cut short by the first opaque cell); it hurts no one, takes no time,
+  and only says so in the message log;
   durations are a whole number with `s`, `m`, or `h`, a rest at most `24h`; letters name stacks
   of the pile or the inventory, `a` first, and without letters `pickup` and `drop` take
   everything; `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT (a slot id of
