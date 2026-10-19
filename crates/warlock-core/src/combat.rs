@@ -15,7 +15,8 @@
 //! - **Damage**: the attack's dice plus its bonus, at least 1 ([`Profile`]).
 //! - **Hit points**: Toughness plus what race and class (a creature: its type) give
 //!   ([`max_hp`]); one comes back every `max(60 s, 360 s − 12 s × Toughness)` of game time
-//!   ([`regen_seconds`]).
+//!   ([`regen_seconds`]) at the normal pace (resting and status effects change the pace,
+//!   `world/status.rs`). A **big hit** takes at least a third of them ([`big_hit`]).
 //!
 //! Every roll comes from the gameplay random stream, so fights replay exactly. Nothing here is
 //! shown to the player as a number but their own hit points and Defence: never a to-hit, a
@@ -230,6 +231,9 @@ pub struct Profile {
     pub threat: u8,
     /// How many times a confirmed critical rolls the damage.
     pub crit: u8,
+    /// Dice rolled with every roll of the damage, after its own (a magic weapon's "adds 1d4
+    /// damage"; spec §8 "Magic items").
+    pub extra: Option<Dice>,
 }
 
 /// What an attack is made with, as data gives it: a weapon (`data/objects.toml`) or a creature's
@@ -324,13 +328,16 @@ impl Profile {
             bonus,
             threat: attack.threat,
             crit: attack.crit,
+            extra: None,
         }
     }
 
-    /// One roll of the damage: the dice plus the bonus (it may be below 1; a blow's total is
-    /// at least 1).
+    /// One roll of the damage: the dice, the extra dice if any, plus the bonus (it may be below
+    /// 1; a blow's total is at least 1).
     fn roll_damage(&self, rng: &mut Rng) -> i32 {
-        self.damage.roll(rng) + self.bonus
+        let dice = self.damage.roll(rng);
+        let extra = self.extra.map_or(0, |d| d.roll(rng));
+        dice + extra + self.bonus
     }
 }
 
@@ -391,6 +398,12 @@ pub fn strike(profile: &Profile, defence: &Defence, rng: &mut Rng) -> Blow {
     }
 }
 
+/// Whether a blow of `damage` against a target of `max` hit points is a **big hit**: at least a
+/// third of them (spec §8 "Status effects": it may make the target bleed).
+pub fn big_hit(damage: i32, max: i32) -> bool {
+    damage > 0 && 3 * i64::from(damage) >= i64::from(max.max(1))
+}
+
 /// Maximum hit points: Toughness plus `base` (race and class for the player, the creature
 /// type's `base_hp` for a creature), at least 1. Linear in Toughness: no runaway pools.
 pub fn max_hp(toughness: u8, base: i32) -> i32 {
@@ -403,7 +416,8 @@ pub const REGEN_FASTEST: u32 = 60;
 /// ...and how much each point of Toughness takes off.
 pub const REGEN_PER_TOUGHNESS: u32 = 12;
 
-/// Seconds of game time per regenerated hit point: `max(60, 360 − 12 × Toughness)`.
+/// Seconds of game time per regenerated hit point at the normal pace: `max(60, 360 − 12 ×
+/// Toughness)`.
 pub fn regen_seconds(toughness: u8) -> u32 {
     REGEN_SLOWEST
         .saturating_sub(REGEN_PER_TOUGHNESS * u32::from(toughness))
@@ -467,7 +481,27 @@ mod tests {
             bonus: 0,
             threat,
             crit,
+            extra: None,
         }
+    }
+
+    #[test]
+    fn extra_dice_roll_after_the_weapons_own() {
+        let dv = Defence::from_bonuses([(Category::Dexterity, -10)]);
+        let p = Profile {
+            extra: Some(Dice::of(1, 4)),
+            ..profile(0, "1d6", 24, 2)
+        };
+        let mut rng = Rng::stream(5, "combat-test");
+        let mut seen = std::collections::BTreeSet::new();
+        for _ in 0..1000 {
+            let blow = strike(&p, &dv, &mut rng);
+            if blow.strike == (Strike::Hit { critical: false }) {
+                assert!((2..=10).contains(&blow.damage), "{}", blow.damage);
+                seen.insert(blow.damage);
+            }
+        }
+        assert_eq!(seen.len(), 9, "1d6 + 1d4 falls 2 to 10");
     }
 
     #[test]

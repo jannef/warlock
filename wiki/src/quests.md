@@ -18,7 +18,8 @@ Talking about quests takes no time.
 
 - **Kill**: kill a number of creatures of one kind, sometimes in a particular place ("Kill 3
   giant rats in the Arena."). Only creatures you kill yourself count, with a weapon, a shot, or a
-  throw; one killed by someone else, or by a trap, does not. Kills you made before you took the
+  throw, or by a wound you gave them that bleeds them to death; one killed by someone else, or by
+  a trap, does not. Kills you made before you took the
   quest up count too, so the person is pleased to hear the job is done already.
 - **Bring**: bring some things in your pack ("Bring 3 apples to the gardener."). They are taken
   from your pack when you hand the quest in; anything you carry beyond what was asked stays yours.
@@ -47,9 +48,8 @@ old hermit."), and who gave it, in their words. It is page 5 of the info screens
 `Tab`, and `Shift`+`Tab` switch between it and the character screen, the inventory, the
 equipment, and your skills.
 
-To give a quest up, choose it and press `a`; the log asks first, and `Enter` abandons it (any
-other key keeps it). The person who gave it will offer it again. Something they gave you to
-deliver stays with you. Opening the log and abandoning take no time.
+A quest you take up stays in the log until you have done it: quests cannot be given up. There is
+no limit on how many you may be on at once. Opening the log takes no time.
 
 ## Who gives quests
 

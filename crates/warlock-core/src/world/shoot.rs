@@ -32,9 +32,11 @@ use super::fight::{End, Words, attack_message, death_message};
 use super::{ActorId, Fire, Spent, World};
 use crate::action::{AttackKind, Event, Letters, MissileEnd, letter};
 use crate::combat::Profile;
-use crate::content::{ActionKind, Content, LevelKind, ObjectId, Role};
+use crate::content::{ActionKind, Content, Effect, LevelKind, ObjectId, Role};
 use crate::fov::radius2;
 use crate::geom::Pos;
+use crate::magic::Mods;
+use crate::magic::mods::less;
 use crate::noise::Act;
 use crate::object::{self, Stack};
 
@@ -57,6 +59,14 @@ fn ammunition_name(content: &Content, launcher: ObjectId) -> String {
         .map_or_else(|| "ammunition".into(), |o| o.plural.clone())
 }
 
+/// The chance in percent that `missile` breaks when it hits: its `breaks`, less what a durability
+/// affix takes off (spec §8 "Magic items").
+pub(super) fn break_chance(missile: &Stack, content: &Content) -> u32 {
+    let def = content.object(missile.object);
+    let sturdier = Mods::local(missile, content).get(Effect::Durability);
+    u32::try_from(less(u64::from(def.breaks), sturdier)).unwrap_or(0)
+}
+
 impl World {
     /// The player shoots at cell `at` with the missile weapon and ammunition they have ready.
     pub(super) fn fire(&mut self, at: Pos, events: &mut Vec<Event>) -> Spent {
@@ -75,8 +85,7 @@ impl World {
             self.say(format!("You have no {what} ready."));
             return Spent::Nothing;
         };
-        let def = content.object(launcher);
-        let range = def.range.unwrap_or(1);
+        let range = me.launcher_range(&content).unwrap_or(1);
         if !self.within_reach(at, range, "shoot") {
             return Spent::Nothing;
         }
@@ -87,7 +96,10 @@ impl World {
             range,
         };
         self.player_looses(at, loose, events);
-        Spent::Turn(self.shot_price(self.state.player, launcher))
+        // Priced before the exertion, which may leave the player hungrier (no longer Bloated).
+        let price = self.shot_price(self.state.player, launcher);
+        self.exert(ActionKind::Shoot);
+        Spent::Turn(price)
     }
 
     /// What a shot from missile weapon `launcher` costs actor `id`: `shoot`, and `reload` too
@@ -109,21 +121,17 @@ impl World {
             return Spent::Nothing;
         }
         let me = self.state.player();
-        let Some(stack) = me.inventory.get(item).copied() else {
+        let Some(stack) = me.inventory.get(item) else {
             let c = letter(item).unwrap_or('?');
             self.say(format!("You carry no {c}."));
             return Spent::Nothing;
         };
-        let def = content.object(stack.object);
-        let (Some(range), Some(attack)) = (def.throw_range(), def.attack) else {
-            self.say(format!("You cannot throw {}.", def.describe(1)));
+        let (Some(range), Some(profile)) =
+            (me.throw_range(item, &content), me.thrown(item, &content))
+        else {
+            let what = stack.single().describe(&content);
+            self.say(format!("You cannot throw {what}."));
             return Spent::Nothing;
-        };
-        let profile = me.thrown(&content, &attack);
-        let profile = if def.is_improvised() {
-            profile.improvised()
-        } else {
-            profile
         };
         if !self.within_reach(at, range, "throw") {
             return Spent::Nothing;
@@ -136,7 +144,9 @@ impl World {
         };
         self.player_looses(at, loose, events);
         let throwing = content.weapon_skills().of_role(Role::Thrown);
-        Spent::Turn(self.attack_price(self.state.player, ActionKind::Throw, throwing))
+        let price = self.attack_price(self.state.player, ActionKind::Throw, throwing);
+        self.exert(ActionKind::Throw);
+        Spent::Turn(price)
     }
 
     /// Whether missiles fly here: not on the overworld, a map of the land.
@@ -169,8 +179,9 @@ impl World {
     /// the player sees as the turn is perceived), its attacks on creatures they see too.
     fn player_looses(&mut self, at: Pos, loose: Loose, events: &mut Vec<Event>) {
         let content = self.content.clone();
-        let stack = self.state.player().inventory[loose.item];
-        let last = stack.count == 1 && loose.kind == AttackKind::Ranged;
+        let stack = self.state.player().inventory[loose.item].single();
+        let last = (self.state.player().inventory[loose.item].count == 1)
+            && loose.kind == AttackKind::Ranged;
         let mut made = Vec::new();
         self.loose(self.state.player, at, loose, &mut made);
         let words = Words::of(
@@ -225,7 +236,7 @@ impl World {
                 AttackKind::Thrown => "throw",
                 _ => "shoot",
             };
-            let what = content.object(stack.object).describe(1);
+            let what = stack.describe(&content);
             said.insert(0, format!("You {verb} {what}."));
         }
         if last {
@@ -262,7 +273,7 @@ impl World {
             kind: AttackKind::Ranged,
             item,
             profile,
-            range: content.object(launcher).range.unwrap_or(1),
+            range: me.launcher_range(&content).unwrap_or(1),
         };
         self.loose(id, at, loose, events);
         self.shot_price(id, launcher)
@@ -281,6 +292,7 @@ impl World {
         let Some(stack) = me.inventory.get_mut(loose.item) else {
             return;
         };
+        let missile = stack.single();
         let ammo = stack.object;
         stack.count -= 1;
         if stack.count == 0 {
@@ -289,6 +301,14 @@ impl World {
         }
         let def = content.object(ammo);
         let flies = def.lit.unwrap_or(ammo);
+        // What is lit flies as another object (a burning arrow), its magic gone; anything else
+        // keeps its magic as it flies and lands (spec §8 "Magic items"), and a durable one breaks
+        // less often.
+        let breaks = break_chance(&missile, &content);
+        let lands = match def.lit {
+            Some(lit) => Stack::one(lit),
+            None => missile,
+        };
         self.make_noise(shooter, Act::Attack(loose.kind));
 
         let reach = radius2(loose.range);
@@ -319,9 +339,9 @@ impl World {
             }
         }
         let end = path.last().copied().unwrap_or(from);
-        let broke = struck && def.breaks > 0 && self.state.rng.chance(u32::from(def.breaks));
+        let broke = struck && breaks > 0 && self.state.rng.chance(breaks);
         if !broke && self.state.current().is_walkable(&content, end) {
-            self.come_down(end, flies);
+            self.come_down(end, lands);
         }
         events.push(Event::Missile {
             object: flies,
@@ -336,9 +356,10 @@ impl World {
         events.extend(attacks);
     }
 
-    /// One `object` comes down on cell `p` of the current level, on top of the pile there. If
+    /// One `missile` comes down on cell `p` of the current level, on top of the pile there. If
     /// it burns, it starts a fire there, or the fire there burns on until it has burned out too.
-    fn come_down(&mut self, p: Pos, object: ObjectId) {
+    fn come_down(&mut self, p: Pos, missile: Stack) {
+        let object = missile.object;
         let content = self.content.clone();
         let now = self.state.time;
         if self
@@ -352,7 +373,7 @@ impl World {
         }
         let level = self.state.current_mut();
         let mut pile = level.objects_at(p).to_vec();
-        object::add_to_pile(&mut pile, &[Stack::one(object)], &content);
+        object::add_to_pile(&mut pile, &[missile], &content);
         level.set_pile(p, pile);
         if let Some(burning) = content.object(object).burning {
             let until = now + burning.lasts;
@@ -386,7 +407,7 @@ impl World {
         level.fires.remove(&p);
         let pile: Vec<Stack> = (level.objects_at(p).iter())
             .filter(|s| content.object(s.object).burning.is_none())
-            .copied()
+            .cloned()
             .collect();
         level.set_pile(p, pile);
     }

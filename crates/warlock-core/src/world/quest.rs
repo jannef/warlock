@@ -8,8 +8,8 @@
 //! completes it: what it asks for leaves the pack, they say their thanks, and the reward
 //! follows (gold coins and items into the pack, or at the player's feet if it is full; XP).
 //! A repeatable quest is offered again once done; a quest that `requires` another is offered
-//! once that one is done. Abandoning ([`Action::Abandon`](crate::Action::Abandon), from the
-//! quest log) gives an active quest up: its giver offers it again.
+//! once that one is done. There is no abandoning a quest and no cap on how many are active (the
+//! owner's decision).
 //!
 //! **Goals**, and how far they have got ([`progress`]):
 //! - kill: the player's own kills of the creature type (on its level or branch, if it names
@@ -490,7 +490,9 @@ impl World {
         let given = match def.goal {
             Goal::Deliver { object, .. } => {
                 let letter = Stack::one(object);
-                if !object::add_to_inventory(self.state.inventory_mut(), letter, &content) {
+                let added =
+                    object::add_to_inventory(self.state.inventory_mut(), letter.clone(), &content);
+                if !added {
                     self.say(format!(
                         "You have no room for {}.",
                         letter.describe(&content)
@@ -581,19 +583,16 @@ impl World {
         }
         player.inventory.retain(|s| s.count > 0);
         player.equipment.after_removal(emptied);
-        vec![Stack {
-            object,
-            count: count - left,
-        }]
+        vec![Stack::new(object, count - left)]
     }
 
     /// Puts `stacks` into the player's pack; what has no room there lies at their feet.
     fn give_player(&mut self, stacks: &[Stack]) {
         let content = self.content.clone();
         let mut dropped = Vec::new();
-        for &stack in stacks {
-            if !object::add_to_inventory(self.state.inventory_mut(), stack, &content) {
-                dropped.push(stack);
+        for stack in stacks {
+            if !object::add_to_inventory(self.state.inventory_mut(), stack.clone(), &content) {
+                dropped.push(stack.clone());
             }
         }
         if dropped.is_empty() {
@@ -608,24 +607,6 @@ impl World {
             "You have no room for {}; it lies at your feet.",
             object::phrase(&dropped, &content)
         ));
-    }
-
-    /// Gives up quest `id` (the quest log's abandon): its giver offers it again. Takes no time;
-    /// refused unless it is active.
-    pub(super) fn abandon(&mut self, id: &str) -> Spent {
-        let content = self.content.clone();
-        let def = content.quest_id(id).map(|q| content.quest(q));
-        match def {
-            Some(def) if self.state.quests.is_active(def) => {
-                self.state.quests.withdraw(def);
-                self.say(format!("You abandon the quest: {}.", def.name));
-                Spent::NoTime
-            }
-            _ => {
-                self.say("You have no such quest.");
-                Spent::Nothing
-            }
-        }
     }
 
     /// The player killed a creature of type `creature` on level `level`: tallied if some kill

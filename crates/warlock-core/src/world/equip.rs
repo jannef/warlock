@@ -22,7 +22,7 @@ impl World {
             return Spent::Nothing;
         };
         let player = self.state.player();
-        let Some(stack) = player.inventory.get(item).copied() else {
+        let Some(stack) = player.inventory.get(item).cloned() else {
             let c = letter(item).unwrap_or('?');
             self.say(format!("You carry no {c}."));
             return Spent::Nothing;

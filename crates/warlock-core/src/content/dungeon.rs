@@ -14,19 +14,28 @@
 //! depth = 8
 //! size = [80, 21]
 //! creatures = ["rat", "kobold"] # patrolling creatures generators may place; default none
+//! loot = [2, 4]                 # items of loot on each level's floor; default none
 //! ambient = [0, 0, 0, 0]        # optional
+//! temperature = 9               # °C; default the dungeon default (10)
+//! key = "rusty_key"             # optional: rooms levels lock a few rooms with its lock
 //!
 //! [[dungeon.levels]]            # optional per-depth overrides, first match wins
 //! from = 3
 //! to = 5                        # inclusive; default: just `from`
-//! generator = "caves"
+//! generator = "caves"           # default: the branch's generator
 //! size = [120, 60]              # default: the branch's size
+//! temperature = 7               # default: the branch's temperature
 //! ```
 
 use super::ContentError;
 use super::creature::CreatureId;
+use super::object::ObjectId;
 use crate::light::Light;
+use crate::temperature::{LEVEL_TEMPERATURES, Temperature};
 use serde::Deserialize;
+
+/// The most items of loot a branch level's floor may hold.
+pub const MAX_LOOT: u8 = 50;
 
 /// Which generator builds a level.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
@@ -67,6 +76,13 @@ struct DungeonSpec {
     ambient: Light,
     #[serde(default)]
     creatures: Vec<String>,
+    /// How many items of loot lie on the floor of each level, `[fewest, most]`.
+    #[serde(default)]
+    loot: [u8; 2],
+    /// The temperature on its levels, in °C; default the dungeon default.
+    temperature: Option<i8>,
+    /// The key (an object) to the rooms the generators lock; none: no locked rooms.
+    key: Option<String>,
     #[serde(default)]
     levels: Vec<LevelsSpec>,
 }
@@ -76,8 +92,9 @@ struct DungeonSpec {
 struct LevelsSpec {
     from: u32,
     to: Option<u32>,
-    generator: Generator,
+    generator: Option<Generator>,
     size: Option<[i32; 2]>,
+    temperature: Option<i8>,
 }
 
 /// How one level of a branch is generated.
@@ -86,6 +103,8 @@ pub struct LevelPlan {
     pub generator: Generator,
     pub width: i32,
     pub height: i32,
+    /// Its temperature (spec §5 "Temperature"); `None`: the dungeon default.
+    pub temperature: Option<Temperature>,
 }
 
 /// A validated dungeon branch.
@@ -98,6 +117,12 @@ pub struct DungeonDef {
     pub ambient: Light,
     /// Creatures generators may place on patrol.
     pub creatures: Vec<CreatureId>,
+    /// How many items of loot lie on the floor of each level, fewest and most (spec §8 "Magic
+    /// items"; item level: the depth).
+    pub loot: [u8; 2],
+    /// The key to the rooms the rooms generator locks (spec §8 "Doors"): it locks them with the
+    /// lock this key opens and leaves one where the player can reach it. `None`: no locked rooms.
+    pub key: Option<ObjectId>,
     /// One plan per depth, index `depth - 1`.
     plans: Vec<LevelPlan>,
 }
@@ -131,11 +156,13 @@ pub fn parse_branch_level(id: &str) -> Option<(&str, u32)> {
 }
 
 impl DungeonFile {
-    /// Validates every branch; `creature_id` resolves creature names.
+    /// Validates every branch; `creature_id` resolves creature names, `key_id` the names of
+    /// keys (objects that open a lock).
     pub(super) fn resolve(
         self,
         file: &str,
         creature_id: impl Fn(&str) -> Option<CreatureId>,
+        key_id: impl Fn(&str) -> Option<ObjectId>,
     ) -> Result<Vec<DungeonDef>, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let mut defs: Vec<DungeonDef> = Vec::new();
@@ -170,15 +197,27 @@ impl DungeonFile {
                     .levels
                     .iter()
                     .find(|l| (l.from..=l.to.unwrap_or(l.from)).contains(&depth));
-                let (generator, [width, height]) = match over {
-                    Some(l) => (l.generator, l.size.unwrap_or(spec.size)),
-                    None => (spec.generator, spec.size),
+                let (generator, [width, height], temperature) = match over {
+                    Some(l) => (
+                        l.generator.unwrap_or(spec.generator),
+                        l.size.unwrap_or(spec.size),
+                        l.temperature.or(spec.temperature),
+                    ),
+                    None => (spec.generator, spec.size, spec.temperature),
                 };
                 check_size(generator, [width, height])?;
+                if let Some(c) = temperature.filter(|c| !LEVEL_TEMPERATURES.contains(c)) {
+                    return Err(err(format!(
+                        "dungeon `{id}`: temperature {c} is outside {} to {} (°C)",
+                        LEVEL_TEMPERATURES.start(),
+                        LEVEL_TEMPERATURES.end()
+                    )));
+                }
                 plans.push(LevelPlan {
                     generator,
                     width,
                     height,
+                    temperature: temperature.map(|c| Temperature::degrees(c.into())),
                 });
             }
             for l in &spec.levels {
@@ -198,12 +237,27 @@ impl DungeonFile {
                         .ok_or_else(|| err(format!("dungeon `{id}` uses unknown creature `{c}`")))
                 })
                 .collect::<Result<Vec<_>, _>>()?;
+            if spec.loot[0] > spec.loot[1] || spec.loot[1] > MAX_LOOT {
+                return Err(err(format!(
+                    "dungeon `{id}`: `loot` is [fewest, most], at most {MAX_LOOT}"
+                )));
+            }
+            let key = match &spec.key {
+                Some(k) => Some(key_id(k).ok_or_else(|| {
+                    err(format!(
+                        "dungeon `{id}`: `key = \"{k}\"` is no key (objects.toml)"
+                    ))
+                })?),
+                None => None,
+            };
             defs.push(DungeonDef {
                 name: spec.name.unwrap_or_else(|| id.clone()),
                 id,
                 depth: spec.depth,
                 ambient: spec.ambient,
                 creatures,
+                loot: spec.loot,
+                key,
                 plans,
             });
         }
@@ -218,7 +272,11 @@ mod tests {
     fn resolve(text: &str) -> Result<Vec<DungeonDef>, ContentError> {
         let file: DungeonFile =
             toml::from_str(text).map_err(|e| ContentError::new("d", e.to_string()))?;
-        file.resolve("d", |c| (c == "rat").then_some(CreatureId(1)))
+        file.resolve(
+            "d",
+            |c| (c == "rat").then_some(CreatureId(1)),
+            |k| (k == "key").then_some(ObjectId(2)),
+        )
     }
 
     #[test]
@@ -247,7 +305,8 @@ mod tests {
             Some(LevelPlan {
                 generator: Generator::Caves,
                 width: 120,
-                height: 60
+                height: 60,
+                temperature: None,
             })
         );
         assert_eq!(d.plan(4).map(|p| p.width), Some(80));
@@ -257,10 +316,37 @@ mod tests {
     }
 
     #[test]
+    fn branches_and_depths_set_the_temperature() {
+        let defs = resolve(
+            "[[dungeon]]\nid = \"d\"\ngenerator = \"rooms\"\ndepth = 4\nsize = [80, 21]\n\
+             temperature = 9\n\
+             [[dungeon.levels]]\nfrom = 3\nto = 4\ntemperature = -2\n",
+        )
+        .unwrap();
+        let t = |depth| defs[0].plan(depth).and_then(|p| p.temperature);
+        assert_eq!(t(1), Some(Temperature::degrees(9)));
+        assert_eq!(t(3), Some(Temperature::degrees(-2)));
+        // The override keeps the branch's generator and size.
+        assert_eq!(defs[0].plan(4).map(|p| p.generator), Some(Generator::Rooms));
+        let plain = "[[dungeon]]\nid = \"d\"\ngenerator = \"rooms\"\ndepth = 1\nsize = [80, 21]\n";
+        assert_eq!(
+            resolve(plain).unwrap()[0].plan(1).unwrap().temperature,
+            None
+        );
+        let hot = format!("{plain}temperature = 41\n");
+        assert!(resolve(&hot).unwrap_err().message.contains("temperature"));
+    }
+
+    #[test]
     fn rejects_bad_branches() {
         let base = "[[dungeon]]\ngenerator = \"rooms\"\ndepth = 2\nsize = [80, 21]\n";
         assert!(resolve(&format!("{base}id = \"a:b\"\n")).is_err());
         assert!(resolve(&format!("{base}id = \"a\"\ncreatures = [\"dragon\"]\n")).is_err());
+        assert!(resolve(&format!("{base}id = \"a\"\nkey = \"dagger\"\n")).is_err());
+        assert_eq!(
+            resolve(&format!("{base}id = \"a\"\nkey = \"key\"\n")).unwrap()[0].key,
+            Some(ObjectId(2))
+        );
         let tiny = "[[dungeon]]\nid = \"a\"\ngenerator = \"caves\"\ndepth = 2\nsize = [80, 21]\n";
         assert!(resolve(tiny).unwrap_err().message.contains("outside"));
         let range = format!(

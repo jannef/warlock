@@ -95,13 +95,29 @@ name = "arena-shot"
 scenario = "arena"
 actions = "wait*12"
 
+# Blood (spec §8 "Blood", #127): the arena after its brawl, seven dead around the fire pit and
+# subtle dark stains where they fell; and a kill against walls: on the first Depths level the
+# warrior opens the door, lights the lantern, waits at the corridor's bend for the patrolling rat,
+# backs off to draw it into the corridor, and punches it dead there: a pool on the floor and
+# blood on the corridor walls beside it.
+[[golden]]
+name = "arena-blood"
+scenario = "arena"
+actions = "wait*40"
+
+[[golden]]
+name = "blood-wall"
+scenario = "depths"
+actions = "move:SE move:E*5 open:E lantern move:E*6 wait*2 move:W*2 move:E*8"
+scale = 2.0
+
 # Combat (spec §8 "Combat"): the player lights the lantern in the arena's dark corner and the war
 # band's archer shoots them down from the dark. The death screen opens by itself over the run as
 # it ended. Every action must take a turn, so the walk ends with the killing one.
 [[golden]]
 name = "death-screen"
 scenario = "arena"
-actions = "lantern wait*16"
+actions = "lantern wait*17"
 
 # A generated level (rooms generator, The Depths 1) from the scenario's fixed seed.
 [[golden]]
@@ -137,6 +153,13 @@ screen = "settings"
 name = "storeroom"
 scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W"
+
+# Doors (#130): the pantry's locked west door, across the corridor from the storeroom, kicked
+# in (it breaks on the fourth kick), seen from just inside the pantry: the broken door behind.
+[[golden]]
+name = "kicked-door"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 kick:E*4 move:E*2"
 
 # Choosing what to pick up from the start room's pile (#80).
 [[golden]]
@@ -189,6 +212,28 @@ scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:SE*3 chat:SE ask:SE:rooms"
 screen = "dialogue"
 
+# Status effects (#138): four bites' worth of poison and a wound (the dev `afflict:` action), a
+# turn later. The character screen names them (never how bad) and shows Strength and Dexterity
+# lowered by the strong poison, in red; the status bar beneath names them after the hit points.
+[[golden]]
+name = "status-effects"
+scenario = "showcase"
+actions = "afflict:poisoned*4 afflict:bleeding wait"
+screen = "character"
+window = "960x600"
+
+# Diseases (#139): the shakes caught (the dev `infect:` action), then rest. Hunger cuts the rests
+# short ("You are getting hungry."), so it takes three: two days on, the disease has shown and
+# progressed once, so the character screen names it on its own row below the status
+# (`Diseased  The shakes`); the status bar beneath says only `Diseased` (and `Weak`: hunger
+# lowers Strength and Dexterity, in red).
+[[golden]]
+name = "diseased"
+scenario = "showcase"
+actions = "infect:the_shakes rest:24h*3"
+screen = "character"
+window = "960x600"
+
 # Quests (#148): the old hermit's offer on the dialogue screen (Accept and Decline first), then the
 # quest log (info page 5) once it is taken up. (Reference: #166.)
 [[golden]]
@@ -240,6 +285,26 @@ move:NW move:W*2 move:N pickup move:SW pickup equip:head:f equip:body:e equip:ma
 equip:missile_weapon:c equip:missiles:d equip:feet:i
 '''
 screen = "equip-item"
+
+# Magic items (#149): the storeroom's magic arms picked up, names in their rarity's color (magic
+# blue, rare yellow): a magic ring and a rare bow not yet identified, Dread Visage (a rare helm,
+# worn), and a Sharp long sword of the Bear.
+[[golden]]
+name = "magic-inventory"
+scenario = "showcase"
+actions = '''
+move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*5 pickup move:E pickup
+equip:head:c
+'''
+screen = "inventory"
+
+# The item description (#149): Dread Visage, the rare helm, identified and worn: what it is, its
+# base stats in words, its item level, and each affix in plain words.
+[[golden]]
+name = "item-description"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*4 pickup equip:head:a"
+screen = "describe"
 
 [[golden]]
 name = "vast-level"
@@ -400,3 +465,16 @@ actions = "move:E pickup equip:tool:a move:E*35"
 name = "quarry-dug"
 scenario = "quarry"
 actions = "move:E pickup equip:tool:a move:E*35 dig:E"
+
+# Temperature and ice (spec §5 "Ice"; M26). The Frost Grotto, down the stairs nook's third `>`:
+# its frozen pool from thick ice to thin ice, and a spring keeping a hole open; the status bar
+# shows the cold. Then the player walks out on the ice and plunges through the thin ice.
+[[golden]]
+name = "frost-grotto"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*8 move:E descend move:SE move:E*2"
+
+[[golden]]
+name = "frost-grotto-hole"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*8 move:E descend move:SE move:E*23 move:SE"

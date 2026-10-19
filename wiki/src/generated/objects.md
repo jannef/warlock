@@ -3,29 +3,66 @@
 | Object | Glyph | Kind | Material | Weight (each) | Stacks | Worn or wielded on |
 |---|:---:|---|---|---:|:---:|---|
 | Dagger | `)` | weapon | steel | 450 g | no | Main hand |
+| Stiletto | `)` | weapon | steel | 300 g | no | Main hand |
 | Short sword | `)` | weapon | steel | 1.1 kg | no | Main hand |
+| Scimitar | `)` | weapon | steel | 1.5 kg | no | Main hand |
+| Long sword | `)` | weapon | steel | 1.8 kg | no | Main hand |
+| Rapier | `)` | weapon | steel | 1.1 kg | no | Main hand |
+| Bastard sword | `)` | weapon | steel | 2.8 kg | no | Main hand |
+| Great sword | `)` | weapon | steel | 3.5 kg | no | Main hand (both hands) |
+| Hand axe | `)` | weapon | iron | 1.3 kg | no | Main hand |
+| Battle axe | `)` | weapon | iron | 2.6 kg | no | Main hand |
+| Great axe | `)` | weapon | iron | 5 kg | no | Main hand (both hands) |
 | Spear | `)` | weapon | wood | 1.8 kg | no | Main hand |
+| Javelin | `)` | weapon | wood | 1 kg | no | Main hand |
+| Trident | `)` | weapon | iron | 2 kg | no | Main hand |
 | Club | `)` | weapon | wood | 1.4 kg | no | Main hand |
+| Mace | `)` | weapon | iron | 2.7 kg | no | Main hand |
+| Morning star | `)` | weapon | iron | 3 kg | no | Main hand |
+| War hammer | `)` | weapon | iron | 2.3 kg | no | Main hand |
+| Maul | `)` | weapon | iron | 6 kg | no | Main hand (both hands) |
+| Halberd | `)` | weapon | iron | 5.5 kg | no | Main hand (both hands) |
+| Glaive | `)` | weapon | iron | 5 kg | no | Main hand (both hands) |
 | Quarterstaff | `)` | weapon | wood | 2 kg | no | Main hand (both hands) |
+| Ironwood staff | `)` | weapon | wood | 2.5 kg | no | Main hand (both hands) |
 | Short bow | `}` | missile weapon | wood | 700 g | no | Missile weapon |
 | Long war bow | `}` | missile weapon | wood | 1.3 kg | no | Missile weapon |
+| Composite bow | `}` | missile weapon | wood | 1 kg | no | Missile weapon |
 | Crossbow | `}` | missile weapon | wood | 3.2 kg | no | Missile weapon |
+| Heavy crossbow | `}` | missile weapon | wood | 4.5 kg | no | Missile weapon |
 | Sling | `}` | missile weapon | leather | 100 g | no | Missile weapon |
 | Arrow | `/` | missile | wood | 30 g | yes | Missiles |
 | Flaming arrow | `/` | missile | wood | 40 g | yes | Missiles |
 | Burning arrow | `/` | missile | wood | 30 g | yes | - |
 | Crossbow bolt | `/` | missile | wood | 60 g | yes | Missiles |
 | Sling stone | `*` | stone or gem | stone | 40 g | yes | Missiles |
+| Padded coat | `[` | armor | cloth | 4 kg | no | Body |
 | Leather jerkin | `[` | armor | leather | 3.5 kg | no | Body |
+| Studded leather jerkin | `[` | armor | leather | 6.5 kg | no | Body |
 | Chain mail shirt | `[` | armor | iron | 11 kg | no | Body |
+| Suit of scale mail | `[` | armor | iron | 14 kg | no | Body |
+| Suit of banded mail | `[` | armor | steel | 17 kg | no | Body |
+| Suit of plate armour | `[` | armor | steel | 22 kg | no | Body |
+| Leather cap | `[` | armor | leather | 600 g | no | Head |
 | Iron helm | `[` | armor | iron | 1.5 kg | no | Head |
+| Great helm | `[` | armor | steel | 3 kg | no | Head |
 | Wool cloak | `[` | armor | cloth | 1.2 kg | no | Cloak |
+| Travelling cloak | `[` | armor | leather | 1.8 kg | no | Cloak |
+| Fur cloak | `[` | armor | leather | 2.5 kg | no | Cloak |
 | Small shield | `[` | armor | wood | 2.5 kg | no | Off hand |
+| Buckler | `[` | armor | iron | 1.5 kg | no | Off hand |
+| Large shield | `[` | armor | wood | 6 kg | no | Off hand |
+| Tower shield | `[` | armor | iron | 12 kg | no | Off hand |
 | Pair of leather gloves | `[` | armor | leather | 250 g | no | Hands |
+| Pair of gauntlets | `[` | armor | iron | 1 kg | no | Hands |
 | Pair of leather boots | `[` | armor | leather | 1 kg | no | Feet |
+| Pair of iron-shod boots | `[` | armor | iron | 2 kg | no | Feet |
 | Pick-axe | `(` | tool | iron | 3 kg | no | Tool |
 | Mattock | `(` | tool | iron | 4.5 kg | no | Tool |
 | Iron key | `(` | tool | iron | 40 g | no | - |
+| Brass key | `(` | tool | brass | 40 g | no | - |
+| Rusty key | `(` | tool | iron | 50 g | no | - |
+| Skeleton key | `(` | tool | iron | 30 g | no | - |
 | Wax candle | `(` | tool | wax | 100 g | yes | - |
 | Coil of rope | `(` | tool | cloth | 1.5 kg | no | - |
 | Red potion | `!` | potion | glass | 250 g | yes | - |
@@ -33,11 +70,17 @@
 | Scroll of light | `?` | scroll | paper | 50 g | yes | - |
 | Strip of dried meat | `%` | food | flesh | 150 g | yes | - |
 | Apple | `%` | food | plant matter | 150 g | yes | - |
+| Food ration | `%` | food | plant matter | 500 g | yes | - |
+| Loaf of bread | `%` | food | plant matter | 400 g | yes | - |
 | Rock | `*` | stone or gem | stone | 800 g | yes | Missile weapon |
 | Ruby | `*` | stone or gem | gemstone | 5 g | yes | - |
 | Gold coin | `$` | coin | gold | 10 g | yes | - |
 | Copper coin | `$` | coin | copper | 8 g | yes | - |
+| Iron ring | `=` | ring | iron | 10 g | no | Left ring or right ring |
 | Silver ring | `=` | ring | silver | 10 g | no | Left ring or right ring |
+| Gold ring | `=` | ring | gold | 10 g | no | Left ring or right ring |
 | Bone amulet | `"` | amulet | bone | 60 g | no | Neck |
 | Jade amulet | `"` | amulet | stone | 80 g | no | Neck |
+| Amber amulet | `"` | amulet | gemstone | 60 g | no | Neck |
+| Gold amulet | `"` | amulet | gold | 90 g | no | Neck |
 | Sealed letter | `?` | scroll | paper | 20 g | no | - |

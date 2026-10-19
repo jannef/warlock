@@ -194,7 +194,7 @@ fn melee_kills_are_worth_their_xp_and_levels_come_with_messages() {
     let mut w = world_on("########\n#@pppp.#\n########\n");
     let (hp0, max0) = {
         let p = w.state().player();
-        (p.hp, p.max_hp())
+        (p.hp, p.max_hp(w.content()))
     };
     assert_eq!((w.player_level(), w.player_xp()), (1, 0));
     // Each pup is level 1 and worth 10: two of them make level 2.
@@ -214,7 +214,7 @@ fn melee_kills_are_worth_their_xp_and_levels_come_with_messages() {
     assert_eq!(log[i + 1], "Welcome to level 2.");
     assert_eq!(log[i - 1], "The pup dies.", "after the death: {log:?}");
     let p = w.state().player();
-    assert_eq!(p.max_hp(), max0 + per_level(&w));
+    assert_eq!(p.max_hp(w.content()), max0 + per_level(&w));
     assert_eq!(p.hp, hp0 + per_level(&w), "the current hit points rose too");
     // A level 1 pup is below a level 2 player: four fifths of its XP.
     for _ in 0..200 {
@@ -268,13 +268,16 @@ fn several_levels_come_at_once_and_hit_points_grow_up_to_the_cap() {
     let mut w = world_on("#####\n#@..#\n#####\n");
     let (hp0, max0) = {
         let p = w.state().player();
-        (p.hp, p.max_hp())
+        (p.hp, p.max_hp(w.content()))
     };
     let step = per_level(&w);
     w.grant_xp(120);
     assert_eq!(w.player_level(), 4, "levels 2, 3, and 4 at once");
     let p = w.state().player();
-    assert_eq!((p.max_hp(), p.hp), (max0 + 3 * step, hp0 + 3 * step));
+    assert_eq!(
+        (p.max_hp(w.content()), p.hp),
+        (max0 + 3 * step, hp0 + 3 * step)
+    );
     w.say_news();
     let log = said(&w);
     assert_eq!(
@@ -285,15 +288,15 @@ fn several_levels_come_at_once_and_hit_points_grow_up_to_the_cap() {
     // To level 19, and over the last growing level: level 20 grows, level 21 does not.
     let rules = w.content().experience().clone();
     w.state.experience = rules.threshold(19);
-    let max19 = w.state().player().max_hp();
+    let max19 = w.state().player().max_hp(w.content());
     w.grant_xp(rules.threshold(20) - rules.threshold(19));
     assert_eq!(w.player_level(), 20);
-    assert_eq!(w.state().player().max_hp(), max19 + step);
-    let max20 = w.state().player().max_hp();
+    assert_eq!(w.state().player().max_hp(w.content()), max19 + step);
+    let max20 = w.state().player().max_hp(w.content());
     w.grant_xp(rules.threshold(21) - rules.threshold(20));
     assert_eq!(w.player_level(), 21);
     assert_eq!(
-        w.state().player().max_hp(),
+        w.state().player().max_hp(w.content()),
         max20,
         "no more hit points past level 20"
     );

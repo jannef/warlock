@@ -8,9 +8,11 @@ you had reached.
 ## What counts
 
 You get XP for the kills you make yourself: with your weapon up close, with a shot, or with
-something you throw (see [Combat](combat.md) and [Ranged combat](ranged.md)), and for
-[quests](quests.md) you complete. A creature that dies to a trap or to another creature gives you
-nothing, and neither does anything else, such as a kill you merely watched.
+something you throw (see [Combat](combat.md) and [Ranged combat](ranged.md)), for a creature
+that bleeds to death from a wound you gave it (see [Status effects](status-effects.md)), and for
+[quests](quests.md) you complete. A creature that dies to a trap or to another creature (or to a
+wound another creature gave it) gives you nothing, and neither does anything else, such as a kill
+you merely watched.
 
 Every kind of creature has a **level** and an **XP value**:
 

@@ -41,6 +41,7 @@ see by the same rules you do (see [Sight and memory](sight.md)), each with its o
 the same light, clouds included: a creature without darkvision does not see you standing in the
 dark, and lighting your [lantern](lantern.md) gets you noticed. Some creatures open closed doors
 in their way, which takes them a turn and makes noise; the others cannot get past a closed door.
+A locked door stops even those, unless they carry its key (see [Doors](doors.md)).
 
 Other creatures block the way: a creature walks a little way round someone in its way, or waits
 behind them.
@@ -57,7 +58,10 @@ you may also hear fighting, a bowstring, or chanting out of sight.
 
 A creature that dies is gone, and what it carried lies where it fell. Creatures do not flee or
 fight any differently when they are hurt, but [look mode](controls.md#look-mode) shows how hurt
-they look.
+they look, and whether they bleed. Big hits and criticals make creatures bleed as they make you
+bleed, and a badly wounded one may bleed to death after the fight; a giant rat's bite may poison
+whatever it bites (see [Status effects](status-effects.md)), or give it filth fever (see
+[Diseases](diseases.md)).
 
 When you see both ends of an attack, you also see it happen: a creature fighting up close (you
 too) lunges at its target, an arrow flies from the archer to its target, and a spell lands with a

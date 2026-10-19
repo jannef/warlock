@@ -1,6 +1,7 @@
 //! Quests (spec §8 "Quests", #148) in the turn pipeline: offers, accepting and declining, each
 //! kind of goal end to end (kill, bring, reach, deliver), prerequisites, rewards with XP,
-//! repeats, abandoning, the quest log, saves, and replays; then the showcase's own quests.
+//! repeats, no cap on active quests, the quest log, saves, and replays; then the showcase's own
+//! quests.
 
 use super::*;
 use crate::action::parse_actions;
@@ -695,20 +696,17 @@ fn a_full_pack_refuses_a_delivery_and_drops_a_reward_at_the_feet() {
 }
 
 #[test]
-fn abandoning_gives_a_quest_up_and_its_giver_offers_it_again() {
+fn any_number_of_quests_may_be_active_and_none_is_given_up() {
+    // The owner's decision: no cap on active quests, and no abandoning.
     let mut w = world_on(YARD);
     take(&mut w, Dir::W, "pups");
-    let outcome = w.apply(&Action::Abandon("pups".into()));
-    assert!(!outcome.took_turn);
-    assert_eq!(last(&w, 1), ["You abandon the quest: Pups."]);
-    assert_eq!(stage(&w, "pups"), None);
-    assert!(topics_of(&w, "elder").contains(&"quest-pups".to_string()));
-    // Only an active quest can be given up.
-    let before = quiet_state(&w);
-    w.apply(&Action::Abandon("pups".into()));
-    w.apply(&Action::Abandon("nonsense".into()));
-    assert_eq!(last(&w, 1), ["You have no such quest."]);
-    assert!(quiet_state(&w) == before);
+    take(&mut w, Dir::W, "parcel");
+    take(&mut w, Dir::E, "apples");
+    for quest in ["pups", "parcel", "apples"] {
+        assert_eq!(stage(&w, quest), Some(Stage::Active), "{quest}");
+    }
+    assert_eq!(w.perception().quests().len(), 3);
+    assert!(parse_actions("abandon:pups").is_err());
 }
 
 #[test]
@@ -752,7 +750,7 @@ fn the_quest_log_lists_active_quests_then_done_ones() {
 #[test]
 fn quests_survive_a_save_and_replay_exactly() {
     let actions = "ask:W:quest-pups ask:W:accept-pups move:E*12 ask:W:quest-parcel \
-                   ask:W:accept-parcel drop wait pickup abandon:pups";
+                   ask:W:accept-parcel drop wait pickup";
     let mut w = world_on("#########\n#E@pp...#\n#########\n");
     let mut replay = Replay::new(&w);
     for action in parse_actions(actions).expect("actions") {
@@ -1046,10 +1044,7 @@ fn the_gardeners_apples_and_the_bards_letter() {
     let toward = beside(&mut w, "gardener");
     take(&mut w, toward, "apples");
     let apple = w.content().object_id("apple").expect("apple");
-    w.state.inventory_mut().push(Stack {
-        object: apple,
-        count: 3,
-    });
+    w.state.inventory_mut().push(Stack::new(apple, 3));
     ask(&mut w, toward, "quest-apples");
     assert_eq!(
         from(&w, "You give the gardener 3 apples.", 5),

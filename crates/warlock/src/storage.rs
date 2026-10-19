@@ -222,6 +222,13 @@ pub mod web {
         }
     }
 
+    /// Reloads the page (a web page cannot quit; it comes back as a fresh main menu).
+    pub fn reload() {
+        if let Some(window) = web_sys::window() {
+            let _ = window.location().reload();
+        }
+    }
+
     /// Installs the `visibilitychange` (to hidden) and `pagehide` listeners once.
     pub fn hook_page_hide(run_file: &'static str) {
         if HOOKED.replace(true) {

@@ -1,7 +1,7 @@
 //! The screen stack (spec §6): every modal screen — main menu, new run and character creation,
 //! pause, settings, controls, the `?` help, the inventory, the equipment screen and its choice of
-//! what goes in a slot, the character screen, the weapon skills screen, the quest log, choosing
-//! what to pick up, drop, or throw, and the dialogue screen — lives on one stack, bottom to top.
+//! what goes in a slot, the character screen, the weapon skills screen, choosing what to pick up,
+//! drop, or throw, and the dialogue screen — lives on one stack, bottom to top.
 //!
 //! - **Open**: [`Screens::open`] is the one way to open a screen, by [`ScreenName`]: `?` and Esc
 //!   in play, screens opening sub-screens, the main menu at startup and after a run, and
@@ -26,10 +26,13 @@
 
 use super::character_screen::CharacterScreen;
 use super::chargen_screen::{ChoiceScreen, Draft, Picks, Step, SummaryScreen};
+use super::confirm_screen::ConfirmScreen;
 use super::controls_screen::ControlsScreen;
 use super::death_screen::DeathScreen;
+use super::describe_screen::DescribeScreen;
 use super::dialogue_screen::{DialogueScreen, last_talk};
 use super::equipment_screen::{EquipmentScreen, ItemScreen};
+use super::files_screen::FilesScreen;
 use super::info_tabs;
 use super::menu::{MainMenu, Press};
 use super::motion::Motion;
@@ -70,6 +73,8 @@ pub enum ScreenName {
     /// The character before the run starts: start, or go back to a step.
     Summary,
     Settings,
+    /// Where the settings, saves, and logs are, over Settings.
+    Files,
     Controls,
     /// The pause menu over a run (Esc in play).
     Pause,
@@ -82,21 +87,26 @@ pub enum ScreenName {
     /// Choose what goes in the slot selected on the equipment screen beneath (a slot's letter
     /// there).
     EquipItem,
+    /// What one carried stack is, as the player knows it: the one looked at on the inventory or
+    /// the equipment screen beneath (a letter there), else the first.
+    Describe,
     /// The player's name, stats, and weight (`@` in play).
     Character,
     /// The player's trained skills and their values (`S` in play, or from the character
     /// screen).
     Skills,
-    /// The player's quests, active and done (`q` in play).
-    Quests,
     /// The player's weapon skills: ranks and marks (`W` in play).
     WeaponSkills,
+    /// The player's quests, active and done (`q` in play).
+    Quests,
     /// Choose what to pick up from the pile here (`,` or `g` where several objects lie).
     PickUp,
     /// Choose what to drop (`d` in play).
     Drop,
     /// Choose what to throw (`t` in play, with no throwing weapon readied).
     Throw,
+    /// Choose what to eat (`E` in play): food lying here, then food in the pack.
+    Eat,
     /// Talking with someone who has topics (`C` next to them): opens by itself when they answer;
     /// as `--screen`, over a run whose last action was such a chat (a replay's last step).
     Dialogue,
@@ -104,6 +114,9 @@ pub enum ScreenName {
     /// dies, so it is no `--screen`.
     #[value(skip)]
     Death,
+    /// The confirmation dialog (dev: asks "Quit Warlock?"). Screens ask with
+    /// [`ScreenAction::Confirm`].
+    Confirm,
 }
 
 impl ScreenName {
@@ -116,13 +129,15 @@ impl ScreenName {
                 | ScreenName::Inventory
                 | ScreenName::Equipment
                 | ScreenName::EquipItem
+                | ScreenName::Describe
                 | ScreenName::Character
                 | ScreenName::Skills
-                | ScreenName::Quests
                 | ScreenName::WeaponSkills
+                | ScreenName::Quests
                 | ScreenName::PickUp
                 | ScreenName::Drop
                 | ScreenName::Throw
+                | ScreenName::Eat
                 | ScreenName::Dialogue
                 | ScreenName::Death
         )
@@ -161,6 +176,9 @@ pub enum ScreenAction {
     /// Close screens until this one is on top (as it was left).
     Return(ScreenName),
     Choose(MenuChoice),
+    /// Ask first: open the confirmation dialog with this question; on Yes it closes and applies
+    /// the choice.
+    Confirm(&'static str, MenuChoice),
     /// Close this screen and apply a gameplay action (what to pick up, drop, wear, or wield).
     Act(Action),
     /// Close this screen and aim inventory stack `usize` to throw it (what to throw).
@@ -178,6 +196,7 @@ enum Screen {
     /// Boxed: it holds the whole character.
     Summary(Box<SummaryScreen>),
     Settings(SettingsScreen),
+    Files(FilesScreen),
     /// The controls screen, or the read-only `?` help.
     Controls(ControlsScreen),
     /// The inventory, or choosing what to pick up or drop.
@@ -185,26 +204,31 @@ enum Screen {
     Equipment(EquipmentScreen),
     /// Choosing what goes in a slot.
     EquipItem(ItemScreen),
+    /// What one carried stack is.
+    Describe(DescribeScreen),
     Character(CharacterScreen),
     Skills(SkillsScreen),
+    WeaponSkills(WeaponSkillsScreen),
     Quests(QuestScreen),
     Dialogue(DialogueScreen),
-    WeaponSkills(WeaponSkillsScreen),
     Death(DeathScreen),
+    /// The confirmation dialog.
+    Confirm(ConfirmScreen),
 }
 
 impl Screen {
     /// Screen `name`; `run` is what the player perceives in the run, if there is one, `draft`
     /// what New run has chosen on the screens below, `slot` the slot selected on the equipment
-    /// screen beneath, if any (the first slot if none), and `talk` the run's last conversation,
-    /// if its last action was talk.
+    /// screen beneath, if any (the first slot if none), `item` the carried stack looked at on a
+    /// screen beneath (the first if none), and `talk` the run's last conversation, if its last
+    /// action was talk.
     fn new(
         name: ScreenName,
         content: &Content,
         has_save: bool,
         run: Option<&PerceptionView<'_>>,
         draft: &Draft,
-        slot: Option<SlotId>,
+        (slot, item): (Option<SlotId>, Option<usize>),
         talk: Option<&Conversation>,
     ) -> Self {
         let objects = |list| Screen::Objects(ObjectScreen::new(list, run));
@@ -218,6 +242,7 @@ impl Screen {
             ScreenName::Class => choice(Step::Class),
             ScreenName::Summary => Screen::Summary(Box::new(SummaryScreen::new(content, draft))),
             ScreenName::Settings => Screen::Settings(SettingsScreen::default()),
+            ScreenName::Files => Screen::Files(FilesScreen::new(crate::paths::locations())),
             ScreenName::Controls => Screen::Controls(ControlsScreen::default()),
             ScreenName::Help => Screen::Controls(ControlsScreen::help()),
             ScreenName::Inventory => objects(ObjectList::Inventory),
@@ -225,15 +250,22 @@ impl Screen {
             ScreenName::EquipItem => {
                 Screen::EquipItem(ItemScreen::new(run, slot.unwrap_or(SlotId(0))))
             }
+            ScreenName::Describe => {
+                Screen::Describe(DescribeScreen::new(run, Some(item.unwrap_or(0))))
+            }
             ScreenName::Character => Screen::Character(CharacterScreen::new(run)),
             ScreenName::Skills => Screen::Skills(SkillsScreen::new(run)),
-            ScreenName::Quests => Screen::Quests(QuestScreen::new(run)),
             ScreenName::WeaponSkills => Screen::WeaponSkills(WeaponSkillsScreen::new(run)),
+            ScreenName::Quests => Screen::Quests(QuestScreen::new(run)),
             ScreenName::PickUp => objects(ObjectList::PickUp),
             ScreenName::Drop => objects(ObjectList::Drop),
             ScreenName::Throw => objects(ObjectList::Throw),
+            ScreenName::Eat => objects(ObjectList::Eat),
             ScreenName::Dialogue => Screen::Dialogue(DialogueScreen::new(talk, run)),
             ScreenName::Death => Screen::Death(DeathScreen::new(run)),
+            ScreenName::Confirm => {
+                Screen::Confirm(ConfirmScreen::new("Quit Warlock?", MenuChoice::Quit))
+            }
         }
     }
 
@@ -245,6 +277,7 @@ impl Screen {
             Screen::Choice(screen) => screen.step().screen(),
             Screen::Summary(_) => ScreenName::Summary,
             Screen::Settings(_) => ScreenName::Settings,
+            Screen::Files(_) => ScreenName::Files,
             Screen::Controls(screen) if screen.is_help() => ScreenName::Help,
             Screen::Controls(_) => ScreenName::Controls,
             Screen::Objects(screen) => match screen.list() {
@@ -252,15 +285,18 @@ impl Screen {
                 ObjectList::PickUp => ScreenName::PickUp,
                 ObjectList::Drop => ScreenName::Drop,
                 ObjectList::Throw => ScreenName::Throw,
+                ObjectList::Eat => ScreenName::Eat,
             },
             Screen::Equipment(_) => ScreenName::Equipment,
             Screen::EquipItem(_) => ScreenName::EquipItem,
+            Screen::Describe(_) => ScreenName::Describe,
             Screen::Character(_) => ScreenName::Character,
             Screen::Skills(_) => ScreenName::Skills,
+            Screen::WeaponSkills(_) => ScreenName::WeaponSkills,
             Screen::Quests(_) => ScreenName::Quests,
             Screen::Dialogue(_) => ScreenName::Dialogue,
-            Screen::WeaponSkills(_) => ScreenName::WeaponSkills,
             Screen::Death(_) => ScreenName::Death,
+            Screen::Confirm(_) => ScreenName::Confirm,
         }
     }
 }
@@ -339,6 +375,16 @@ impl ScreenStack {
         })
     }
 
+    /// The carried stack looked at on the topmost inventory or equipment screen, if any: what a
+    /// description opened from it describes.
+    fn looked_item(&self) -> Option<usize> {
+        self.screens.iter().rev().find_map(|s| match s {
+            Screen::Objects(screen) if screen.list() == ObjectList::Inventory => screen.looked(),
+            Screen::Equipment(screen) => screen.selected_item(),
+            _ => None,
+        })
+    }
+
     /// Whether an equipment screen is open (it shows the run as it changes, [`refresh`]).
     fn shows_equipment(&self) -> bool {
         (self.screens.iter()).any(|s| matches!(s, Screen::Equipment(_)))
@@ -389,17 +435,20 @@ impl ScreenStack {
                 action
             }
             Some(Screen::Summary(screen)) => screen.handle(press),
-            Some(Screen::Settings(screen)) => leave(screen.handle(press, settings)),
+            Some(Screen::Settings(screen)) => screen.handle(press, settings),
+            Some(Screen::Files(screen)) => screen.handle(press),
             Some(Screen::Controls(screen)) => leave(screen.handle(press, bindings)),
             Some(Screen::Objects(screen)) => screen.handle(press, bindings),
             Some(Screen::Equipment(screen)) => screen.handle(press, bindings),
             Some(Screen::EquipItem(screen)) => screen.handle(press, bindings),
+            Some(Screen::Describe(screen)) => screen.handle(press, bindings),
             Some(Screen::Character(screen)) => screen.handle(press, bindings),
             Some(Screen::Skills(screen)) => screen.handle(press, bindings),
+            Some(Screen::WeaponSkills(screen)) => screen.handle(press, bindings),
             Some(Screen::Quests(screen)) => screen.handle(press, bindings),
             Some(Screen::Dialogue(screen)) => screen.handle(press, bindings),
-            Some(Screen::WeaponSkills(screen)) => screen.handle(press, bindings),
             Some(Screen::Death(screen)) => screen.handle(press),
+            Some(Screen::Confirm(screen)) => screen.handle(press),
         };
         if action == ScreenAction::Stay {
             return action;
@@ -408,6 +457,12 @@ impl ScreenStack {
             return ScreenAction::Stay;
         }
         self.notice = None;
+        // The dialog is done once it has answered Yes (a failed choice then shows on the menu).
+        if matches!(action, ScreenAction::Choose(_))
+            && matches!(self.screens.last(), Some(Screen::Confirm(_)))
+        {
+            self.screens.pop();
+        }
         action
     }
 
@@ -433,16 +488,19 @@ impl ScreenStack {
             Some(Screen::Choice(screen)) => screen.draw(console),
             Some(Screen::Summary(screen)) => screen.draw(console),
             Some(Screen::Settings(screen)) => screen.draw(console, settings),
+            Some(Screen::Files(screen)) => screen.draw(console),
             Some(Screen::Controls(screen)) => screen.draw(console, bindings),
             Some(Screen::Objects(screen)) => screen.draw(console, bindings),
             Some(Screen::Equipment(screen)) => screen.draw(console, bindings),
             Some(Screen::EquipItem(screen)) => screen.draw(console, bindings),
+            Some(Screen::Describe(screen)) => screen.draw(console, bindings),
             Some(Screen::Character(screen)) => screen.draw(console, bindings),
             Some(Screen::Skills(screen)) => screen.draw(console, bindings),
+            Some(Screen::WeaponSkills(screen)) => screen.draw(console, bindings),
             Some(Screen::Quests(screen)) => screen.draw(console, bindings),
             Some(Screen::Dialogue(screen)) => screen.draw(console),
-            Some(Screen::WeaponSkills(screen)) => screen.draw(console, bindings),
             Some(Screen::Death(screen)) => screen.draw(console, settings.clock),
+            Some(Screen::Confirm(screen)) => screen.draw(console),
         }
     }
 
@@ -464,13 +522,22 @@ pub struct Screens<'w> {
 }
 
 impl Screens<'_> {
+    /// Opens the confirmation dialog asking `question`, which on Yes applies `choice`.
+    pub fn confirm(&mut self, question: &'static str, choice: MenuChoice) {
+        self.stack
+            .screens
+            .push(Screen::Confirm(ConfirmScreen::new(question, choice)));
+    }
+
     /// Opens screen `name` on top of the stack. The one way screens open.
     pub fn open(&mut self, name: ScreenName) {
         let view = self.game.as_ref().map(|game| game.world.perception());
         let talk = (self.game.as_ref()).and_then(|game| last_talk(&game.last_outcome));
         let (draft, slot) = (self.stack.draft(), self.stack.selected_slot());
+        let item = self.stack.looked_item();
         let (content, has_save) = (&self.content.0, self.store.has_save());
-        let screen = Screen::new(name, content, has_save, view.as_ref(), &draft, slot, talk);
+        let looked = (slot, item);
+        let screen = Screen::new(name, content, has_save, view.as_ref(), &draft, looked, talk);
         self.stack.screens.push(screen);
     }
 
@@ -532,10 +599,13 @@ fn startup_screens(screen: Option<ScreenName>, in_run: bool) -> Vec<ScreenName> 
                 .chain([s])
                 .collect()
         }
-        (false, Some(s @ (NewRun | Settings | Controls))) => vec![Main, s],
+        (false, Some(s @ (NewRun | Settings | Controls | Confirm))) => vec![Main, s],
+        (false, Some(Files)) => vec![Main, Settings, Files],
         (false, _) => vec![Main],
-        (true, Some(s @ (Settings | Controls))) => vec![Pause, s],
+        (true, Some(s @ (Settings | Controls | Confirm))) => vec![Pause, s],
+        (true, Some(Files)) => vec![Pause, Settings, Files],
         (true, Some(EquipItem)) => vec![Equipment, EquipItem],
+        (true, Some(Describe)) => vec![Inventory, Describe],
         (true, Some(s)) if s.needs_run() => vec![s],
         (true, _) => Vec::new(),
     }
@@ -673,7 +743,8 @@ mod tests {
         for name in names {
             let run = name.needs_run().then_some(&view);
             let (draft, slot) = (stack.draft(), stack.selected_slot());
-            let screen = Screen::new(*name, &content, has_save, run, &draft, slot, None);
+            let looked = (slot, stack.looked_item());
+            let screen = Screen::new(*name, &content, has_save, run, &draft, looked, None);
             stack.screens.push(screen);
         }
         stack
@@ -695,7 +766,7 @@ mod tests {
             false,
             None,
             &Draft::default(),
-            None,
+            (None, None),
             None,
         ));
         assert_eq!(stack.names(), [Pause, Settings]);
@@ -771,6 +842,7 @@ mod tests {
             [Equipment, EquipItem]
         );
         assert_eq!(startup_screens(Some(EquipItem), false), [Main]);
+        assert_eq!(startup_screens(Some(Describe), true), [Inventory, Describe]);
         assert_eq!(startup_screens(Some(Drop), false), [Main]);
         assert_eq!(startup_screens(Some(Dialogue), true), [Dialogue]);
         assert_eq!(startup_screens(Some(Dialogue), false), [Main]);
@@ -1463,7 +1535,7 @@ mod tests {
         let game = app.world().resource::<Game>();
         assert_eq!(game.world.turn(), turn);
         let last = game.world.messages().iter().last().map(|m| m.text.clone());
-        assert!(last.is_some_and(|m| m.contains("Two stairs")));
+        assert!(last.is_some_and(|m| m.contains("Three stairs")));
         // His quest comes first: asking hears the offer, and the screen reopens on accepting it.
         frame(&mut app, &[(KeyCode::Digit1, "1")]);
         let topics = |app: &App| {
@@ -1506,12 +1578,83 @@ mod tests {
         assert!(names(&app).is_empty());
     }
 
-    #[test]
-    fn quit_from_pause_saves_the_run() {
-        let mut app = app(true);
-        frame(&mut app, &[ESC, (KeyCode::ArrowUp, ""), ENTER]);
+    const UP: (KeyCode, &str) = (KeyCode::ArrowUp, "");
+    const YES: (KeyCode, &str) = (KeyCode::KeyY, "y");
+    const NO: (KeyCode, &str) = (KeyCode::KeyN, "n");
+
+    fn saves_sent(app: &App) -> Vec<SaveCommand> {
         let saves = app.world().resource::<Messages<SaveCommand>>();
-        let sent: Vec<_> = saves.iter_current_update_messages().copied().collect();
-        assert_eq!(sent, [SaveCommand::SaveAndQuit]);
+        saves.iter_current_update_messages().copied().collect()
+    }
+
+    #[test]
+    fn quit_from_pause_asks_first_and_saves_on_yes() {
+        let mut app = app(true);
+        // Quit is the last row: Esc, Up (wraps to Quit), Enter opens the dialog, nothing is saved.
+        frame(&mut app, &[ESC, UP, ENTER]);
+        assert_eq!(names(&app), [ScreenName::Pause, ScreenName::Confirm]);
+        frame(&mut app, &[]);
+        assert!(saves_sent(&app).is_empty());
+        // Enter takes the default, No; Esc and n cancel too. The pause menu is as it was.
+        for answer in [ENTER, ESC, NO] {
+            frame(&mut app, &[answer]);
+            assert_eq!(names(&app), [ScreenName::Pause]);
+            assert!(saves_sent(&app).is_empty());
+            frame(&mut app, &[ENTER]);
+            assert_eq!(names(&app), [ScreenName::Pause, ScreenName::Confirm]);
+        }
+        frame(&mut app, &[YES]);
+        assert_eq!(saves_sent(&app), [SaveCommand::SaveAndQuit]);
+        assert_eq!(names(&app), [ScreenName::Pause]);
+    }
+
+    #[test]
+    fn held_keys_never_confirm() {
+        let mut app = app(true);
+        frame(&mut app, &[ESC, UP, ENTER]);
+        assert_eq!(names(&app), [ScreenName::Pause, ScreenName::Confirm]);
+        let mut held = key(YES.0, YES.1);
+        held.repeat = true;
+        app.world_mut().write_message(held);
+        app.update();
+        assert_eq!(names(&app), [ScreenName::Pause, ScreenName::Confirm]);
+        assert!(saves_sent(&app).is_empty());
+    }
+
+    #[test]
+    fn q_does_nothing_unless_bound_and_then_asks() {
+        const Q: (KeyCode, &str) = (KeyCode::KeyQ, "Q");
+        let mut app = app(true);
+        frame(&mut app, &[Q]);
+        assert!(names(&app).is_empty());
+        assert!(saves_sent(&app).is_empty());
+        app.world_mut().resource_mut::<Bindings>().0.push((
+            crate::input::KeyBinding::Char("Q".into()),
+            crate::input::KeyCommand::Quit,
+        ));
+        frame(&mut app, &[Q]);
+        assert_eq!(names(&app), [ScreenName::Confirm]);
+        frame(&mut app, &[NO]);
+        assert!(names(&app).is_empty());
+        assert!(saves_sent(&app).is_empty());
+        frame(&mut app, &[Q]);
+        frame(&mut app, &[YES]);
+        assert!(names(&app).is_empty());
+        assert_eq!(saves_sent(&app), [SaveCommand::SaveAndQuit]);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn main_menu_quit_asks_first() {
+        let mut app = app(false);
+        // Quit is the last row of the main menu.
+        frame(&mut app, &[UP, ENTER]);
+        assert_eq!(names(&app), [ScreenName::Main, ScreenName::Confirm]);
+        frame(&mut app, &[ESC]);
+        assert_eq!(names(&app), [ScreenName::Main]);
+        frame(&mut app, &[ENTER]);
+        frame(&mut app, &[YES]);
+        let exits = app.world().resource::<Messages<AppExit>>();
+        assert_eq!(exits.iter_current_update_messages().count(), 1);
     }
 }

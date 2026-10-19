@@ -2,19 +2,20 @@
 
 | Material | Objects made of it |
 |---|---|
-| Iron | chain mail shirts, iron helms, pick-axes, mattocks, iron keys |
-| Steel | daggers, short swords |
+| Iron | hand axes, battle axes, great axes, tridents, maces, morning stars, war hammers, mauls, halberds, glaives, chain mail shirts, suits of scale mail, iron helms, bucklers, tower shields, pairs of gauntlets, pairs of iron-shod boots, pick-axes, mattocks, iron keys, rusty keys, skeleton keys, iron rings |
+| Steel | daggers, stilettos, short swords, scimitars, long swords, rapiers, bastard swords, great swords, suits of banded mail, suits of plate armour, great helms |
 | Copper | copper coins |
 | Silver | silver rings |
-| Gold | gold coins |
-| Wood | spears, clubs, quarterstaves, short bows, long war bows, crossbows, arrows, flaming arrows, burning arrows, crossbow bolts, small shields |
-| Leather | slings, leather jerkins, pairs of leather gloves, pairs of leather boots |
-| Cloth | wool cloaks, coils of rope |
+| Gold | gold coins, gold rings, gold amulets |
+| Wood | spears, javelins, clubs, quarterstaves, ironwood staves, short bows, long war bows, composite bows, crossbows, heavy crossbows, arrows, flaming arrows, burning arrows, crossbow bolts, small shields, large shields |
+| Leather | slings, leather jerkins, studded leather jerkins, leather caps, travelling cloaks, fur cloaks, pairs of leather gloves, pairs of leather boots |
+| Cloth | padded coats, wool cloaks, coils of rope |
 | Glass | red potions, blue potions |
 | Paper | scrolls of light, sealed letters |
 | Wax | wax candles |
 | Bone | bone amulets |
 | Stone | sling stones, rocks, jade amulets |
-| Gemstone | rubies |
-| Flesh | strips of dried meat |
-| Plant matter | apples |
+| Gemstone | rubies, amber amulets |
+| Flesh | strips of dried meat, corpses |
+| Plant matter | apples, food rations, loaves of bread |
+| Brass | brass keys |

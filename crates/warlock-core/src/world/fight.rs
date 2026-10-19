@@ -10,9 +10,11 @@
 //! the world and drops what it carried on its cell; the player's run ends ([`Death`]): every
 //! action after that is refused, and the app shows the death screen and deletes the save.
 //!
-//! Hit points come back with game time, one per [`combat::regen_seconds`] of it, for every actor
-//! on the current level ([`World::regenerate`], as the scheduler moves the clock), at the pace
-//! [`World::regen_rate`] decides (three times as fast in a sanctuary).
+//! A blow that hits and leaves its target alive may cause status effects (bleeding from a big
+//! hit or a critical, poison from a rat's bite; `status.rs`, [`World::after_blow`]). Hit points
+//! come back with game time, one per [`combat::regen_seconds`] of it at the normal pace, for
+//! every actor on the current level (`status.rs`, as the scheduler moves the clock), at the rate
+//! [`World::healing_rate`] decides (three times as fast in a sanctuary).
 //!
 //! Messages (spec §6 "Attacks") never carry numbers: "The kobold hits you.", "…hits you hard!" for
 //! a critical, "You block the kobold's spear with your shield.", "The giant rat dies." The
@@ -30,12 +32,13 @@
 use super::{Actor, ActorId, Spent, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Category, Profile, Strike};
-use crate::content::{ActionKind, Content, CreatureId, ObjectId, Role, Stance, WeaponSkillId};
+use crate::content::{
+    ActionKind, Content, CreatureId, ObjectId, Role, Stance, StatusId, WeaponSkillId,
+};
 use crate::geom::Dir;
 use crate::noise::Act;
 use crate::object;
 use crate::skills::Use;
-use crate::stats::Stat;
 use crate::time::GameTime;
 use serde::{Deserialize, Serialize};
 
@@ -47,14 +50,52 @@ pub struct Death {
     pub time: GameTime,
     /// Where: the name of the level.
     pub place: String,
-    /// What killed them, if they saw it: a creature type. `None`: something unseen.
+    /// What killed them, if they saw it: a creature type. `None`: something unseen, a status,
+    /// or no creature at all (see `cause`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub by: Option<CreatureId>,
+    /// The status effect that killed them, if one did (they bled to death).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub of: Option<StatusId>,
+    /// What killed them when it was neither a creature's attack nor a status effect (spec §8
+    /// "Hunger"): starving, or choking on a meal.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cause: Option<Cause>,
+}
+
+/// A death that was neither a creature's doing nor a status effect's.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Cause {
+    /// They starved to death.
+    Starvation,
+    /// They choked to death on this, overeating.
+    Choked(ObjectId),
+}
+
+impl Cause {
+    /// How the death screen says it: "Starved to death", "Choked to death on a ration".
+    pub fn epitaph(self, content: &Content) -> String {
+        let what = |o: ObjectId| content.object(o).describe(1);
+        match self {
+            Cause::Starvation => "Starved to death".into(),
+            Cause::Choked(o) => format!("Choked to death on {}", what(o)),
+        }
+    }
+
+    /// What the player is told as it happens: "You starve to death...".
+    pub fn message(self, content: &Content) -> String {
+        let name = |o: ObjectId| content.object(o).name.clone();
+        match self {
+            Cause::Starvation => "You starve to death...".into(),
+            Cause::Choked(o) => format!("You choke to death on the {}...", name(o)),
+        }
+    }
 }
 
 /// What an attack is made with, in words: what it is called ("spear", "bite", "fist", "arrow",
-/// "small shield"), what it does to its target ("hits", "bites", "shoots", "bashes"), and what
-/// the player does with it ("hit", "bash").
+/// "small shield", "kick"), what it does to its target ("hits", "bites", "shoots", "bashes",
+/// "kicks"), and what the player does with it ("hit", "bash", "kick").
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) struct Words {
     noun: String,
@@ -69,6 +110,15 @@ impl Words {
             noun: noun.into(),
             verb: verb.into(),
             you: if verb == "bashes" { "bash" } else { "hit" },
+        }
+    }
+
+    /// A kick (spec §8 "Doors"): "You kick the giant rat.", "The giant rat dodges your kick."
+    pub(super) fn kick() -> Self {
+        Self {
+            noun: "kick".into(),
+            verb: "kicks".into(),
+            you: "kick",
         }
     }
 
@@ -310,7 +360,8 @@ impl World {
         profile: Option<Profile>,
         events: &mut Vec<Event>,
     ) -> Option<Blow> {
-        self.resolve(attacker, target, (kind, None), profile, true, events)
+        let skill = self.skill_of(attacker, kind, None);
+        self.resolve(attacker, target, (kind, None, skill), profile, true, events)
     }
 
     /// A missile `with` loosed by `attacker` reaches actor `target`, attacking it with `profile`
@@ -324,23 +375,29 @@ impl World {
         profile: Profile,
         events: &mut Vec<Event>,
     ) -> Option<Blow> {
-        self.resolve(
-            attacker,
-            target,
-            (kind, Some(with)),
-            Some(profile),
-            false,
-            events,
-        )
+        let skill = self.skill_of(attacker, kind, Some(with));
+        let kind = (kind, Some(with), skill);
+        self.resolve(attacker, target, kind, Some(profile), false, events)
     }
 
-    /// Rolls an attack of `kind` made `with` a missile (or not) and applies it, with its noise
-    /// if `noisy`.
+    /// The weapon skill actor `id`'s attack of `kind` made `with` a missile or a shield (or
+    /// not) draws on ([`Actor::attack_skill`]).
+    fn skill_of(
+        &self,
+        id: ActorId,
+        kind: AttackKind,
+        with: Option<ObjectId>,
+    ) -> Option<WeaponSkillId> {
+        (self.state.actors.get(&id)).and_then(|a| a.attack_skill(&self.content, kind, with))
+    }
+
+    /// Rolls an attack of `kind` made `with` a missile or a shield (or not), drawing on weapon
+    /// skill `skill` (the player's earns its marks), and applies it, with its noise if `noisy`.
     fn resolve(
         &mut self,
         attacker: ActorId,
         target: ActorId,
-        (kind, with): (AttackKind, Option<ObjectId>),
+        (kind, with, skill): (AttackKind, Option<ObjectId>, Option<WeaponSkillId>),
         profile: Option<Profile>,
         noisy: bool,
         events: &mut Vec<Event>,
@@ -352,8 +409,6 @@ impl World {
             return None;
         };
         let defence = self.defence_of(target);
-        let skill = (self.state.actors.get(&attacker))
-            .and_then(|a| a.attack_skill(&self.content, kind, with));
         let levels = (self.level_of(attacker), self.level_of(target));
         let blow = profile.map(|profile| combat::strike(&profile, &defence, &mut self.state.rng));
         events.push(Event::Attacked {
@@ -401,7 +456,11 @@ impl World {
         if let Some(blow) = blow
             && blow.damage > 0
         {
-            self.hurt(target, blow.damage, attacker, events);
+            self.bleed((attacker, target), from, kind, blow);
+            let died = self.hurt(target, blow.damage, attacker, events);
+            if !died {
+                self.after_blow(attacker, target, kind, &blow, events);
+            }
         }
         blow
     }
@@ -436,27 +495,51 @@ impl World {
         }
     }
 
-    /// Actor `id` loses `damage` hit points to `by`; at 0 it dies.
-    fn hurt(&mut self, id: ActorId, damage: i32, by: ActorId, events: &mut Vec<Event>) {
+    /// Actor `id` loses `damage` hit points to `by`; at 0 it dies. Returns whether it died.
+    fn hurt(&mut self, id: ActorId, damage: i32, by: ActorId, events: &mut Vec<Event>) -> bool {
         let Some(actor) = self.state.actors.get_mut(&id) else {
-            return;
+            return false;
         };
         actor.hp -= damage;
         if actor.hp > 0 {
-            return;
+            return false;
         }
-        let (at, creature) = (actor.pos, actor.creature);
-        events.push(Event::Died { actor: id, at });
+        self.dies(id, Some(by), None, self.state.time, events);
+        true
+    }
+
+    /// Actor `id` dies at moment `when`: killed by actor `by` (if anyone), of status `of` (if
+    /// one did it). A creature leaves the world; the player's run ends. A creature killed by the
+    /// player earns them its experience (spec §8 "Experience"), and so does one that dies of a
+    /// status effect the player caused (`by`: a wound they dealt bleeds it to death).
+    pub(super) fn dies(
+        &mut self,
+        id: ActorId,
+        by: Option<ActorId>,
+        of: Option<StatusId>,
+        when: GameTime,
+        events: &mut Vec<Event>,
+    ) {
+        let Some((at, creature)) = self.state.actors.get(&id).map(|a| (a.pos, a.creature)) else {
+            return;
+        };
+        events.push(Event::Died { actor: id, at, of });
         if id == self.state.player {
-            let by = self.actor_or_fallen(by).map(|a| a.creature);
+            // A blow's dealer, if the player saw it (settled as the turn is perceived); a status
+            // names itself instead.
+            let by = (by.filter(|_| of.is_none()))
+                .and_then(|b| self.actor_or_fallen(b))
+                .map(|a| a.creature);
             self.state.death = Some(Death {
                 turn: self.state.turn,
-                time: self.state.time,
+                time: when,
                 place: self.state.current().name.clone(),
                 by,
+                of,
+                cause: None,
             });
         } else {
-            if by == self.state.player {
+            if by == Some(self.state.player) {
                 self.earn_kill(creature);
                 let level = self.state.current_level.clone();
                 self.tally_kill(creature, &level);
@@ -466,68 +549,43 @@ impl World {
     }
 
     /// Creature `id` dies: it leaves the world, and what it carried (worn and wielded things
-    /// too) falls on its cell, on top of what lies there, in the order it carried them.
+    /// too) falls on its cell, on top of what lies there, in the order it carried them, and its
+    /// corpse on top of that (spec §8 "Hunger").
     fn creature_dies(&mut self, id: ActorId) {
         let Some(actor) = self.state.actors.remove(&id) else {
             return;
         };
-        if !actor.inventory.is_empty()
+        let mut dropped = actor.inventory.clone();
+        dropped.extend(self.loot_of(&actor));
+        if !dropped.is_empty()
             && let Some(level) = self.state.levels.get_mut(&actor.level)
         {
             let mut pile = level.objects_at(actor.pos).to_vec();
-            object::add_to_pile(&mut pile, &actor.inventory, &self.content);
+            object::add_to_pile(&mut pile, &dropped, &self.content);
             level.set_pile(actor.pos, pile);
         }
+        self.leave_corpse(&actor);
         self.fallen.push(actor);
-    }
-
-    /// How fast actor `id` gets hit points back, in percent of the pace of its Toughness
-    /// ([`combat::regen_seconds`]): the one place that decides it. A special room it stands in
-    /// may speed it up (a sanctuary, spec §7 "Special rooms"); other effects on the actor will
-    /// scale it here too.
-    pub(super) fn regen_rate(&self, id: ActorId) -> u32 {
-        let Some(actor) = self.state.actors.get(&id) else {
-            return 100;
-        };
-        let room = (self.state.levels.get(&actor.level))
-            .and_then(|level| level.room_effect_at(&self.content, actor.pos));
-        room.map_or(100, |effect| u32::from(effect.regen))
-    }
-
-    /// `seconds` of game time pass for actors `ids` (on the current level, alive): each hurt one
-    /// gets a hit point back for every [`combat::regen_seconds`] of its Toughness (at its
-    /// [`World::regen_rate`]: three times as often in a sanctuary), the seconds left over
-    /// counting toward the next.
-    pub(super) fn regenerate(&mut self, ids: impl Iterator<Item = ActorId>, seconds: u64) {
-        for id in ids {
-            let rate = u64::from(self.regen_rate(id).max(1));
-            let Some(actor) = self.state.actors.get_mut(&id) else {
-                continue;
-            };
-            let max = actor.max_hp();
-            if actor.hp <= 0 || actor.hp >= max {
-                actor.regen = 0;
-                continue;
-            }
-            let pace = u64::from(combat::regen_seconds(actor.stats.score(Stat::Toughness)));
-            let every = (pace * 100 / rate).max(1);
-            let banked = u64::from(actor.regen).saturating_add(seconds);
-            let gained = i32::try_from(banked / every).unwrap_or(i32::MAX);
-            actor.hp = actor.hp.saturating_add(gained).min(max);
-            actor.regen = if actor.hp >= max {
-                0
-            } else {
-                u32::try_from(banked % every).unwrap_or(0)
-            };
-        }
     }
 
     /// The player attacks `target`, which they `seen` or not, in melee: the message is said at
     /// once, by what the player knows as they strike; events reach presentation only if they
     /// saw the target.
     pub(super) fn player_attacks(&mut self, target: ActorId, seen: bool, events: &mut Vec<Event>) {
-        let profile = self.state.player().melee(&self.content);
-        self.player_strikes(target, seen, (None, profile), events);
+        let me = self.state.player();
+        let profile = me.melee(&self.content);
+        let skill = me.attack_skill(&self.content, AttackKind::Melee, None);
+        let words = Words::of(me, AttackKind::Melee, None, &self.content);
+        self.player_strikes(target, seen, (None, profile, skill), words, events);
+    }
+
+    /// The player kicks `target` (spec §8 "Doors"): an unarmed blow in melee, whatever they
+    /// wield ([`Actor::kick`]: it draws on and trains unarmed fighting), said and shown like any
+    /// blow.
+    pub(super) fn player_kicks(&mut self, target: ActorId, seen: bool, events: &mut Vec<Event>) {
+        let profile = self.state.player().kick(&self.content);
+        let skill = self.content.weapon_skills().of_role(Role::Unarmed);
+        self.player_strikes(target, seen, (None, profile, skill), Words::kick(), events);
     }
 
     /// The player bashes whoever stands in `dir` with the shield they hold (spec §8 "Weapon
@@ -558,26 +616,29 @@ impl World {
             });
             return Spent::Nothing;
         }
-        self.player_strikes(target, seen, (Some(shield), profile), events);
-        let skill = content.weapon_skills().of_role(Role::ShieldBash);
+        let me = self.state.player();
+        let skill = me.attack_skill(&content, AttackKind::Melee, Some(shield));
+        let words = Words::of(me, AttackKind::Melee, Some(shield), &content);
+        self.player_strikes(target, seen, (Some(shield), profile, skill), words, events);
         Spent::Turn(self.attack_price(player, ActionKind::Melee, skill))
     }
 
     /// The player strikes `target` in melee with `profile`, made `with` a shield (a bash) or
-    /// not (a blow): see [`World::player_attacks`].
+    /// not (a blow, a kick), drawing on (and training) weapon skill `skill`, said in `words`:
+    /// see [`World::player_attacks`].
     fn player_strikes(
         &mut self,
         target: ActorId,
         seen: bool,
-        (with, profile): (Option<ObjectId>, Profile),
+        (with, profile, skill): (Option<ObjectId>, Profile, Option<WeaponSkillId>),
+        words: Words,
         events: &mut Vec<Event>,
     ) {
         let player = self.state.player;
         let mut made = Vec::new();
-        let kind = (AttackKind::Melee, with);
+        let kind = (AttackKind::Melee, with, skill);
         self.resolve(player, target, kind, Some(profile), true, &mut made);
         let content = self.content.clone();
-        let words = Words::of(self.state.player(), AttackKind::Melee, with, &content);
         let target_actor = self.actor_or_fallen(target);
         let name = target_actor.map(|a| content.creature(a.creature).name.as_str());
         let hide = (target_actor)

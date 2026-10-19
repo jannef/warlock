@@ -15,7 +15,8 @@ Steel*: a swordsman who is good with a long sword is not a beginner with a short
 
 Every weapon belongs to one skill (see the weapon tables in [Combat](combat.md#damage) and
 [Ranged combat](ranged.md)). Every throw trains **thrown weapons**, whatever you throw: a dagger
-thrown is not a dagger held. **Unarmed** is fighting with your bare hands.
+thrown is not a dagger held. **Unarmed** is fighting with your bare hands, and every kick at a
+creature, whatever you wield (see [Doors](doors.md)).
 
 **Shield blocking** trains when your shield stops a blow: when the message says "You block the
 kobold's spear with your shield." It adds to the Shield part of your [Defence](combat.md#defence)

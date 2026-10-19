@@ -41,6 +41,9 @@
 # skill id (skills.toml), with fixed values (0 to 999); every other skill is untrained. The player's
 # come from their race and class, not from here. Creatures do not train (yet).
 #
+# Loot (spec §8 "Magic items"): loot, the chance in percent (default 0) that it drops a magic or
+# rare item where it dies, besides what it carried; the item level is the level's.
+#
 # Stats (spec §8 "Stats"; never shown to the player; combat and burden use them): stats, its scores
 # by stat (strength, dexterity, toughness, intelligence, willpower, presence; 1 to 40, default 10,
 # the average), and potential, how far each score could grow (default: the score; never below
@@ -50,12 +53,30 @@
 #   base_hp   hit points beyond its Toughness (default 0); the player's come from the scenario
 #   attack    its natural attack, used when it wields no weapon (without one: bare hands, 1d3):
 #             { damage = "1d4", name = "bite", verb = "bites" } and optionally threat, crit,
-#             and to_hit as for weapons (objects.toml); Strength adds to hit and to damage
+#             and to_hit as for weapons (objects.toml); Strength adds to hit and to damage.
+#             on_hit lists the status effects (status.toml) and diseases (diseases.toml) a hit
+#             with it may cause, if the target lives: [{ status = "poisoned", chance = 10,
+#             severity = 2 }] (chance in percent, 1 to 100; severity in degrees, up to the
+#             status's max), { disease = "filth_fever", chance = 10 } (then a check to resist it)
 #   natural   its natural armour: { defence = 3, name = "shell" } (the Natural category of
 #             Defence; "Your sword glances off the cave beetle's shell.")
 #   weapon_skills  its ranks in weapon skills (spec §8 "Weapon skills"), by skill id in
 #             weapon_skills.toml, 0 to 10: { spears = 1 }; each raises the skills it defaults
 #             to. Creatures do not train (yet); the player's come from their race and class
+#
+# Corpses (spec §8 "Hunger"; with hunger.toml; never shown to the player before they try):
+#   corpse    whether it leaves a corpse when it dies (default true): a "kobold corpse" (`%` in its
+#             color) weighing what it does, feeding by its size (hunger.toml)
+#   on_eat    what eating its fresh corpse does besides feeding, in this order: { message = "..."
+#             (said once eaten), vomit = 25 (percent chance it comes back up and feeds nothing),
+#             stat = { toughness = 5 } (percent chance per stat to raise it by 1, up to its
+#             hidden potential), heal = "1d4" (hit points), harm = "1d2" (degrees of sickness:
+#             hunger.toml's `sickness`, poison), satiation = 500 (nutrition beyond its size's;
+#             less if negative) }. A rotten corpse does none of it
+#
+# Blood (spec §8 "Blood"; presentation only, no rule reads it): blood, the colour of the stains it
+# leaves when hurt badly or killed ("#rrggbb"; default dark red, "#6e0e0c"), or "none" for a
+# bloodless creature. How much it spills goes by its size's `blood` in sizes.toml.
 
 [[creature]]
 id = "player"
@@ -84,7 +105,18 @@ hearing = 5
 weight = 4000
 size = "small"
 stats = { strength = 10, dexterity = 17, toughness = 12, intelligence = 1, willpower = 12, presence = 4 }
-attack = { damage = "1d4", name = "bite", verb = "bites" }
+# Nothing special, slightly gross.
+on_eat = { message = "Gamey and stringy, but it stays down." }
+
+# Its bite is filthy: now and then it poisons, or gives filth fever (unless resisted).
+[creature.attack]
+damage = "1d4"
+name = "bite"
+verb = "bites"
+on_hit = [
+    { status = "poisoned", chance = 10, severity = 2 },
+    { disease = "filth_fever", chance = 10 },
+]
 
 # Bats fly: no footsteps, and the keenest ears.
 [[creature]]
@@ -103,11 +135,13 @@ weight = 500
 size = "small"
 stats = { strength = 1, dexterity = 15, toughness = 10, intelligence = 2, willpower = 14, presence = 4 }
 attack = { damage = "1d3", name = "bite", verb = "bites" }
+on_eat = { message = "Leathery wings, and they disagree with you.", harm = "1d2" }
 
 [[creature]]
 id = "kobold"
 level = 2
 xp = 15
+loot = 25
 name = "kobold"
 glyph = "k"
 fg = "#7cb85a"
@@ -122,6 +156,7 @@ opens_doors = true
 footsteps = 80
 hearing = 15
 stats = { strength = 9, dexterity = 13, toughness = 10, intelligence = 10, willpower = 9, presence = 8 }
+on_eat = { message = "This kobold meat tastes terrible!", vomit = 40 }
 weapon_skills = { spears = 1 }
 
 # Sparks from the torch it carries.
@@ -158,12 +193,15 @@ base_hp = 4
 attack = { damage = "1d4", name = "hoof", verb = "kicks" }
 # Wary game: it hears what others miss.
 skills = { listen = 30 }
+# Very nourishing.
+on_eat = { message = "Venison! It does you good.", satiation = 1000, heal = "1d6" }
 
 # The kobold war band's archer: keeps its distance and shoots.
 [[creature]]
 id = "kobold_archer"
 level = 3
 xp = 25
+loot = 30
 name = "kobold archer"
 glyph = "k"
 fg = "#c8b45a"
@@ -178,6 +216,7 @@ hearing = 12
 weight = 22000
 size = "small"
 stats = { strength = 8, dexterity = 15, toughness = 10, intelligence = 10, willpower = 10, presence = 8 }
+on_eat = { message = "This kobold meat tastes terrible!", vomit = 40 }
 weapon_skills = { bows = 1 }
 
 # The war band's shaman, slow and frail: casts from a few cells away. A faint violet sparkle
@@ -186,6 +225,7 @@ weapon_skills = { bows = 1 }
 id = "kobold_shaman"
 level = 4
 xp = 40
+loot = 50
 name = "kobold shaman"
 glyph = "k"
 fg = "#b080d8"
@@ -201,6 +241,8 @@ weight = 18000
 size = "small"
 stats = { strength = 7, dexterity = 11, toughness = 8, intelligence = 12, willpower = 14, presence = 10 }
 skills = { concentration = 20, spellcraft = 25 }
+# A tiny chance to take in some of its will.
+on_eat = { message = "It tastes terrible, and of bitter herbs.", vomit = 40, stat = { willpower = 3 } }
 
 [[creature.particles]]
 on = "attack"
@@ -233,6 +275,10 @@ size = "small"
 stats = { strength = 10, dexterity = 11, toughness = 11, intelligence = 1, willpower = 10, presence = 7 }
 attack = { damage = "1d3", name = "bite", verb = "bites" }
 natural = { defence = 3, name = "shell" }
+# A small chance to toughen the eater.
+on_eat = { message = "Crunchy.", stat = { toughness = 10 } }
+# Greenish-black ichor.
+blood = "#38461a"
 
 # The showcase's people (spec §3): folk who talk (data/dialogue.toml, `C` to chat) and mutter to
 # themselves now and then. Peaceful by type: they never fight, and you swap places with them

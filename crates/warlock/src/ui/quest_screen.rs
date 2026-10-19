@@ -3,17 +3,16 @@
 //! below: what it asks, how far it has got ("2 / 3 killed.", "Return to the old hermit."), and
 //! who gave it, in their words. Offers not yet answered are not here.
 //!
-//! The abandon key (`a`) on an active quest asks first, on the footer: Enter gives it up
-//! ([`Action::Abandon`], which takes no time; its giver offers it again), anything else keeps it.
-//! Otherwise read-only: ↑↓ choose; Esc, Enter, or its own key closes it. It is read from the
-//! perception snapshot when it opens; no game time passes while it is open.
+//! Read-only (quests are not abandoned, and there is no cap on how many are active: the owner's
+//! decision): ↑↓ choose; Esc, Enter, or its own key closes it. A list taller than the panel
+//! scrolls. It is read from the perception snapshot when it opens; no game time passes while it
+//! is open.
 
 use super::menu::{Nav, Panel, Press, wrap};
 use super::screens::{ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
-use crate::input::{Bindings, Context, KeyCommand};
+use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
-use warlock_core::Action;
 use warlock_core::perception::PerceptionView;
 use warlock_core::world::QuestView;
 
@@ -27,8 +26,6 @@ pub struct QuestScreen {
     /// Active quests first, then done ones.
     quests: Vec<QuestView>,
     selected: usize,
-    /// Asking whether to give up the selected quest.
-    confirming: bool,
 }
 
 impl QuestScreen {
@@ -37,29 +34,15 @@ impl QuestScreen {
         Self {
             quests: view.map_or_else(Vec::new, PerceptionView::quests),
             selected: 0,
-            confirming: false,
         }
     }
 
-    /// Applies a key press: ↑↓ choose; the abandon key asks to give up the selected active
-    /// quest, and Enter then does; Esc, Enter, or the screen's own key closes it.
+    /// Applies a key press: ↑↓ choose; Esc, Enter, or the screen's own key closes it.
     pub fn handle(&mut self, press: &Press, bindings: &Bindings) -> ScreenAction {
-        if std::mem::take(&mut self.confirming) {
-            return match (press.nav, self.quests.get(self.selected)) {
-                (Nav::Enter, Some(quest)) => ScreenAction::Act(Action::Abandon(quest.id.clone())),
-                _ => ScreenAction::Stay,
-            };
-        }
         let key = press.binding.as_ref();
         let own_key = key.is_some_and(|k| bindings.owner(k) == Some(KeyCommand::Quests));
-        let abandon = key.is_some_and(|k| {
-            bindings.owner_in(Context::Pages, k) == Some(KeyCommand::AbandonQuest)
-        });
         let n = self.quests.len().max(1);
         match press.nav {
-            _ if abandon => {
-                self.confirming = self.quests.get(self.selected).is_some_and(|q| q.active);
-            }
             _ if own_key => return ScreenAction::Close,
             Nav::Back | Nav::Enter => return ScreenAction::Close,
             Nav::Up => self.selected = (self.selected + n - 1) % n,
@@ -154,25 +137,13 @@ impl QuestScreen {
         panel.footer(console, &self.footer(bindings));
     }
 
-    /// The footer: the question while asking whether to abandon, else the keys.
+    /// The footer: the keys.
     fn footer(&self, bindings: &Bindings) -> String {
-        let key = |command| (bindings.keys_of(command).first()).map(|k| k.display());
-        let selected = self.quests.get(self.selected);
-        if let (true, Some(quest)) = (self.confirming, selected) {
-            return format!("Abandon {}?  Enter abandon   Esc keep", quest.name);
-        }
-        let mut parts = vec!["↑↓ choose".to_string()];
-        if let (Some(abandon), true) = (
-            key(KeyCommand::AbandonQuest),
-            selected.is_some_and(|q| q.active),
-        ) {
-            parts.push(format!("{abandon} abandon"));
-        }
-        parts.push(match key(KeyCommand::Quests) {
+        let close = match (bindings.keys_of(KeyCommand::Quests).first()).map(|k| k.display()) {
             Some(own) => format!("{own} or Esc close"),
             None => "Esc close".to_string(),
-        });
-        parts.join("   ")
+        };
+        format!("↑↓ choose   {close}")
     }
 }
 
@@ -248,39 +219,12 @@ mod tests {
             "Kill 3 giant rats in the Arena.",
             "0 / 3 killed.",
             "The old hermit: \"Here we don't fight.",
-            "↑↓ choose   a abandon   q or Esc close",
+            "↑↓ choose   q or Esc close",
             "5 Quests",
         ] {
             assert!(shown.contains(expected), "{expected:?} in\n{shown}");
         }
         assert!(!shown.contains("Done"), "nothing done yet:\n{shown}");
-    }
-
-    #[test]
-    fn abandoning_asks_first() {
-        let world = with_quests();
-        let b = Bindings::default();
-        let mut screen = QuestScreen::new(Some(&world.perception()));
-        assert_eq!(screen.handle(&typed("a"), &b), ScreenAction::Stay);
-        assert!(drawn(&screen, 80, 30).contains("Abandon Rats in the arena?  Enter abandon"));
-        // Anything but Enter keeps it, Esc too (it does not close the log).
-        assert_eq!(
-            screen.handle(&Press::nav(Nav::Back), &b),
-            ScreenAction::Stay
-        );
-        assert!(!drawn(&screen, 80, 30).contains("Abandon Rats"));
-        screen.handle(&typed("a"), &b);
-        assert_eq!(
-            screen.handle(&Press::nav(Nav::Enter), &b),
-            ScreenAction::Act(Action::Abandon("rats".into()))
-        );
-        // The abandon key is rebindable, and a done quest cannot be given up.
-        let mut b = Bindings::default();
-        b.bind_primary(KeyCommand::AbandonQuest, KeyBinding::Char("x".into()))
-            .expect("free");
-        let mut screen = QuestScreen::new(Some(&world.perception()));
-        screen.handle(&typed("x"), &b);
-        assert!(screen.confirming);
     }
 
     #[test]
@@ -305,8 +249,8 @@ mod tests {
     }
 
     #[test]
-    fn done_quests_follow_the_active_ones_and_cannot_be_abandoned() {
-        let mut world = with_quests();
+    fn done_quests_follow_the_active_ones() {
+        let world = with_quests();
         let mut quests = world.perception().quests();
         let mut done = quests[0].clone();
         (done.name, done.active, done.status) = ("Three apples".into(), false, "Done.".into());
@@ -315,7 +259,6 @@ mod tests {
         let mut screen = QuestScreen {
             quests,
             selected: 0,
-            confirming: false,
         };
         let shown = drawn(&screen, 80, 30);
         let at = |what: &str| {
@@ -330,12 +273,41 @@ mod tests {
         let shown = drawn(&screen, 80, 30);
         assert!(shown.contains("> Three apples"), "{shown}");
         assert!(shown.contains("↑↓ choose   q or Esc close"), "{shown}");
-        screen.handle(&typed("a"), &b);
-        assert!(!screen.confirming);
-        // Given up, the log is empty.
-        world.apply(&Action::Abandon("rats".into()));
-        let screen = QuestScreen::new(Some(&world.perception()));
-        assert!(drawn(&screen, 80, 30).contains("You have taken up no quests."));
+    }
+
+    #[test]
+    fn many_quests_scroll_within_the_panel() {
+        // No cap on active quests: a long log keeps the selection in view and its frame whole.
+        let world = with_quests();
+        let one = world.perception().quests()[0].clone();
+        let quests: Vec<QuestView> = (0..60)
+            .map(|i| QuestView {
+                name: format!("Errand {i}"),
+                active: i < 40,
+                ..one.clone()
+            })
+            .collect();
+        let b = Bindings::default();
+        let mut screen = QuestScreen {
+            quests,
+            selected: 0,
+        };
+        for _ in 0..55 {
+            screen.handle(&Press::nav(Nav::Down), &b);
+        }
+        for (cols, rows) in [(80, 30), (80, 24), (48, 12), (30, 8)] {
+            let shown = drawn(&screen, cols, rows);
+            assert_eq!(shown.lines().count(), rows as usize);
+            if rows >= 24 {
+                assert!(shown.contains("> Errand 55"), "{shown}");
+                assert!(
+                    !shown.contains("  Errand 0 "),
+                    "scrolled past the first:\n{shown}"
+                );
+            }
+        }
+        screen.handle(&Press::nav(Nav::Up), &b);
+        assert_eq!(screen.selected, 54);
     }
 
     #[test]

@@ -6,7 +6,8 @@
 # Each [[quest]] has:
 #   id         lower-case letters, digits, and underscores; replays ask about it as topics:
 #              `ask:E:quest-ID` (the offer, the reminder, or handing it in), `ask:E:accept-ID`,
-#              `ask:E:decline-ID`, and give it up with `abandon:ID`
+#              and `ask:E:decline-ID` (a quest taken up is never given up, and any number may be
+#              active at once)
 #   name       its title in the quest log, and the topic it is asked about (at most 32
 #              characters)
 #   giver      who gives it: a creature type with a dialogue (data/dialogue.toml), or the npc id

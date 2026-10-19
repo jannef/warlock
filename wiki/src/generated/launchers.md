@@ -4,5 +4,7 @@
 |---|:---:|:---:|:---:|:---:|:---:|---|---:|
 | Short bow | 1d6 | 22–24 | ×3 | 10 | 10 cells | Arrows, flaming arrows | 6 seconds |
 | Long war bow | 1d8+2 | 22–24 | ×3 | 14 | 15 cells | Arrows, flaming arrows | 6 seconds |
+| Composite bow | 1d8+1 | 22–24 | ×3 | 12 | 13 cells | Arrows, flaming arrows | 6 seconds |
 | Crossbow | 1d10+1 | 20–24 | ×2 | - | 13 cells | Crossbow bolts | 12 seconds (reloading) |
+| Heavy crossbow | 1d12+2 | 20–24 | ×2 | - | 15 cells | Crossbow bolts | 12 seconds (reloading) |
 | Sling | 1d4 | 22–24 | ×2 | - | 9 cells | Sling stones | 6 seconds |

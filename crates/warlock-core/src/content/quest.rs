@@ -140,11 +140,8 @@ impl Reward {
     pub fn stacks(&self, content: &Content) -> Vec<Stack> {
         let gold = (content.object_id(GOLD))
             .filter(|_| self.gold > 0)
-            .map(|object| Stack {
-                object,
-                count: self.gold,
-            });
-        gold.into_iter().chain(self.items.iter().copied()).collect()
+            .map(|object| Stack::new(object, self.gold));
+        gold.into_iter().chain(self.items.iter().cloned()).collect()
     }
 }
 

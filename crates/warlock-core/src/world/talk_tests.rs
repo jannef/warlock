@@ -863,6 +863,6 @@ fn the_showcase_people_talk() {
     );
     assert!(
         said.last()
-            .is_some_and(|t| t.contains("Two stairs down, two up."))
+            .is_some_and(|t| t.contains("Three stairs down, two up."))
     );
 }

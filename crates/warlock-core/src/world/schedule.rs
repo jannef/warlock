@@ -12,7 +12,8 @@
 //! with no drift. An actor's burden (spec §8 "Burden", [`crate::burden`]) raises every price it
 //! pays, ×1.25 Burdened and ×1.5 Strained or Overloaded, as a lower speed would: the prices
 //! here ([`World::price_of`], [`World::step_price`]) are the one place that happens, so it
-//! covers every action, overworld journeys included. Creatures on other levels are frozen (they
+//! covers every action, overworld journeys included; being Bloated (spec §8 "Hunger") raises
+//! them the same way, after the burden. Creatures on other levels are frozen (they
 //! gain nothing until the player is back), so coming back to a level never sets off a burst of
 //! actions; the dev time skip gives nobody energy either.
 //!
@@ -25,13 +26,17 @@
 
 use super::{Actor, ActorId, World};
 use crate::action::Event;
+use crate::content::Effect as ItemEffect;
 use crate::content::{
     ActionKind, BASE_TURN, Benefit, LevelKind, Stance, TerrainDef, WeaponSkillId, percent_of, price,
 };
 use crate::geom::Pos;
+use crate::magic::Mods;
+use crate::magic::mods::faster;
 use crate::perception::VIEW_RADIUS;
 use crate::skills::Effect;
 use crate::time::{Duration, GameTime};
+use std::collections::BTreeMap;
 
 /// Whole seconds until an actor with `energy` and `speed` may act: 0 if it may act now.
 fn wait(energy: i64, speed: u32) -> u64 {
@@ -56,13 +61,51 @@ struct Scheduled {
 }
 
 impl World {
-    /// The energy price of action `kind` for actor `id`: its creature type's cost of it over the
-    /// 6-second base, slowed by its burden ([`World::burdened`]). Steps are priced by the terrain
-    /// instead ([`World::step_price`]).
+    /// The energy price of action `kind` for actor `id`: what it costs it ([`World::cost_of`])
+    /// over the 6-second base, as dear as its combat stance makes an attack, slowed by its burden
+    /// ([`World::burdened`]). Steps are priced by the terrain instead ([`World::step_price`]).
     pub(super) fn price_of(&self, id: ActorId, kind: ActionKind) -> i64 {
         let actor = &self.state.actors[&id];
-        let base = price(self.content.action_cost(actor.creature, kind), BASE_TURN);
+        let base = price(self.cost_of(id, kind), BASE_TURN);
         self.burdened(id, self.stanced(actor, kind, base))
+    }
+
+    /// What action `kind` costs actor `id`: its creature type's cost of it (spec §8 "Time"),
+    /// except that an attack with a weapon that has its own `attack_cost` costs that (a blow with
+    /// the weapon it wields, a shot with its missile weapon) unless the creature type gives its
+    /// attacks a cost of their own. Then magic items make attacks and steps faster (spec §8
+    /// "Magic items"): the attack speed of the weapon's affixes and of what the actor wears and
+    /// wields, and the moving speed of what it wears.
+    pub(super) fn cost_of(&self, id: ActorId, kind: ActionKind) -> u32 {
+        let content = &self.content;
+        let actor = &self.state.actors[&id];
+        let cost = content.action_cost(actor.creature, kind);
+        let item = match kind {
+            ActionKind::Melee => actor.weapon_item(content),
+            ActionKind::Shoot => actor.launcher_item(content),
+            ActionKind::Step | ActionKind::Throw => None,
+            _ => return cost,
+        };
+        let stack = item.and_then(|i| actor.inventory.get(i));
+        let own = stack.and_then(|s| content.object(s.object).attack_cost);
+        let cost = match own {
+            Some(own) if content.creature(actor.creature).attack_cost.is_none() => own,
+            _ => cost,
+        };
+        let mods = actor.mods(content);
+        let speed = match kind {
+            ActionKind::Step => mods.get(ItemEffect::MoveSpeed),
+            _ => {
+                let local =
+                    stack.map_or(0, |s| Mods::local(s, content).get(ItemEffect::AttackSpeed));
+                mods.get(ItemEffect::AttackSpeed) + local
+            }
+        };
+        if speed == 0 {
+            cost
+        } else {
+            faster(cost, speed)
+        }
     }
 
     /// `base` as dear as `actor`'s combat stance makes its attacks (spec §8 "Stances"): melee,
@@ -97,8 +140,9 @@ impl World {
     }
 
     /// The energy price of attack action `kind` (`melee`, `shoot`, `throw`, `reload`) for actor
-    /// `id` drawing on weapon skill `skill` (spec §8 "Weapon skills"): its cost less what its
-    /// rank takes off (`speed`; `reload` for reloading), then priced like any action
+    /// `id` drawing on weapon skill `skill` (spec §8 "Weapon skills"): its cost with its weapon's
+    /// and its magic items' (`World::cost_of`; a shield bash costs what a blow does) less what
+    /// its rank takes off (`speed`; `reload` for reloading), then priced like any action
     /// ([`World::price_of`]), its combat stance included.
     pub(super) fn attack_price(
         &self,
@@ -112,7 +156,7 @@ impl World {
             ActionKind::Reload => benefit.reload,
             _ => benefit.speed,
         };
-        let cost = self.content.action_cost(actor.creature, kind);
+        let cost = self.cost_of(id, kind);
         let base = price(Benefit::saving(cost, saving), BASE_TURN);
         self.burdened(id, self.stanced(actor, kind, base))
     }
@@ -123,11 +167,11 @@ impl World {
     /// off the journey, rounded up (at least 1).
     pub(super) fn step_price(&self, id: ActorId, to: &TerrainDef, fleeing: bool) -> i64 {
         let actor = &self.state.actors[&id];
-        let step = self.content.action_cost(actor.creature, ActionKind::Step);
+        let step = self.cost_of(id, ActionKind::Step);
         let level = self.state.current();
         let mut price = level.step_price(to, step);
         if level.kind == LevelKind::Overworld {
-            price = shortened(price, actor.skills.effect(&self.content, Effect::Travel));
+            price = shortened(price, actor.skill_effect(&self.content, Effect::Travel));
         }
         if fleeing {
             price = percent_of(price, self.content.stance_def(actor.stance).flee_cost);
@@ -138,10 +182,12 @@ impl World {
     /// `price` as actor `id` pays it now: ×1.25 Burdened, ×1.5 Strained or Overloaded (spec §8
     /// "Burden"; [`crate::burden::Burden::slow`]), nothing more for a race that ignores Burdened
     /// while it is Burdened, and less of the slowdown for its skills (balance; spec §8
-    /// "Skills"). An action is priced at the burden its actor has as it begins.
+    /// "Skills"); and then, while it is Bloated, by `[bloated] slow` (spec §8 "Hunger",
+    /// [`World::bloated`]). An action is priced at the burden and hunger its actor has as it
+    /// begins.
     fn burdened(&self, id: ActorId, price: i64) -> i64 {
-        let ease = (self.state.actors[&id].skills).effect(&self.content, Effect::Burden);
-        self.load_of(id).penalty().slow_eased(price, ease)
+        let ease = self.state.actors[&id].skill_effect(&self.content, Effect::Burden);
+        self.bloated(id, self.load_of(id).penalty().slow_eased(price, ease))
     }
 
     /// The price that leaves the player ready to act exactly at `until` (the last turn of a
@@ -159,15 +205,18 @@ impl World {
     /// moment of each action, and ends at the moment the player is ready.
     ///
     /// While the turn runs, energies live in the turn's schedule; they are written back to the
-    /// actors when the player is ready. As the clock moves, every actor on the level regains
-    /// hit points ([`World::regenerate`]). A creature that dies leaves the schedule; the
-    /// player's death ends the turn there and then.
+    /// actors when the player is ready. As the clock moves, every actor on the level lives
+    /// through the time ([`World::pass_time`]: status effects tick and ease, hit points come
+    /// back, the player's nutrition burns). A player who faints from hunger as the turn begins
+    /// pays for the turns lost too ([`World::faint`]). A creature that dies leaves the schedule;
+    /// the player's death ends the turn there and then.
     pub(super) fn run_turn(&mut self, price: i64, events: &mut Vec<Event>) {
         self.state.turn += 1;
         // The player has acted: what they heard before is spent, and they hear afresh (lines
         // muttered too: said only if heard this turn).
         self.player_mut().heard.clear();
         self.mutters.clear();
+        let price = price.saturating_add(self.faint());
         let player = self.state.player;
         let level = &self.state.current_level;
         let scheduled = |a: &Actor| Scheduled {
@@ -192,15 +241,24 @@ impl World {
                 .min()
                 .expect("the player is scheduled");
             if seconds > 0 {
+                let (start, fallen) = (self.state.time, self.fallen.len());
                 self.state.time += Duration::seconds(seconds);
-                self.regenerate(schedule.iter().map(|s| s.id), seconds);
+                // Whoever steps onto the ice next meets the ice of the moment.
+                self.update_ice();
+                self.pass_time(schedule.iter().map(|s| s.id), start, seconds, events);
                 let seconds = i64::try_from(seconds).unwrap_or(i64::MAX);
                 for s in &mut schedule {
                     let gain = i64::from(s.speed).saturating_mul(seconds);
                     s.energy = s.energy.saturating_add(gain);
                 }
+                // Some may have died of their wounds meanwhile: whoever is ready now acts
+                // next (the same actor, unless it died).
+                if self.fallen.len() > fallen {
+                    schedule.retain(|s| self.state.actors.contains_key(&s.id));
+                }
+                continue;
             }
-            if next == 0 {
+            if next == 0 || self.state.death.is_some() {
                 break;
             }
             let fallen = self.fallen.len();
@@ -224,22 +282,25 @@ impl World {
     /// only within [`VIEW_RADIUS`] (and heard only within [`crate::noise::MAX_REACH`], less than
     /// that), and every step costs at least the level's cheapest step: before its first step that
     /// could bring it into view, it needs the energy for all the steps that cannot. (Creature
-    /// types give only their attacks costs of their own, so a step costs every creature the same;
-    /// a burden only makes it dearer, and an overloaded creature cannot step at all.) The others
-    /// (the showcase's people) never stop a rest by coming into view, and what they do that the
-    /// player could notice is heard (their steps, their muttering) or done nowhere near.
+    /// types give only their attacks costs of their own, so a step costs every creature the same
+    /// but for what magic items it wears take off; a burden only makes it dearer, and an
+    /// overloaded creature cannot step at all.) The others (the showcase's people) never stop a
+    /// rest by coming into view, and what they do that the player could notice is heard (their
+    /// steps, their muttering) or done nowhere near.
     pub(super) fn out_of_view_for(&self) -> Duration {
         const _: () = assert!(crate::noise::MAX_REACH < VIEW_RADIUS);
         let level = self.state.current();
-        let step = self.content.action_costs().cost(ActionKind::Step);
-        let cheapest = self
-            .content
-            .terrain_defs()
-            .iter()
-            .filter(|t| t.walkable)
-            .map(|t| level.step_price(t, step))
-            .min()
-            .unwrap_or(1);
+        // The cheapest step on the level for each step cost, as creatures need them.
+        let mut cheapest_for: BTreeMap<u32, i64> = BTreeMap::new();
+        let mut cheapest = |step: u32| {
+            *cheapest_for.entry(step).or_insert_with(|| {
+                (self.content.terrain_defs().iter())
+                    .filter(|t| t.walkable)
+                    .map(|t| level.step_price(t, step))
+                    .min()
+                    .unwrap_or(1)
+            })
+        };
         let player = self.player_pos();
         self.state
             .actors
@@ -247,6 +308,7 @@ impl World {
             .filter(|a| a.level == level.id && self.disturbs_rest(a))
             .map(|a| {
                 let steps = i64::from((a.pos.chebyshev(player) - VIEW_RADIUS - 1).max(0));
+                let cheapest = cheapest(self.cost_of(a.id, ActionKind::Step));
                 let short = steps.saturating_mul(cheapest).saturating_sub(a.energy);
                 let speed = self.content.creature(a.creature).speed;
                 Duration::seconds(wait(short.saturating_neg(), speed))
