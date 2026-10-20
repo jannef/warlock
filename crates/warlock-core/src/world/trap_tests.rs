@@ -674,11 +674,11 @@ fn the_trap_hall_shows_hidden_traps_going_off() {
     let content = Arc::new(Content::builtin().expect("builtin content"));
     let mut w = World::new(content, "traps", None).expect("the trap hall");
     let known = |w: &World| w.perception().known_traps().len();
-    assert_eq!(known(&w), 7, "the proving row");
+    assert_eq!(known(&w), 8, "the proving row, and the west closet's door");
     run(&mut w, "wait*15");
     assert_eq!(
         known(&w),
-        10,
+        11,
         "the spear, the lightning, and the arrow; the fireball is spent"
     );
     let said = texts(&w);

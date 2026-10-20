@@ -491,6 +491,31 @@ fn searching_finds_a_doors_trap() {
     assert!(said.contains(&found), "{said:?}");
 }
 
+/// The trap hall's closets: the west door shows its arrow trap; the east door stands open on a
+/// kobold's rounds until the player shuts it, and the kobold rings its alarm opening it again;
+/// the arrow goes off as the player opens the west door.
+#[test]
+fn the_trap_halls_closets_have_trapped_doors() {
+    let content = Arc::new(Content::builtin().expect("builtin content"));
+    let mut w = World::new(content, "traps", None).expect("the trap hall");
+    let player = w.state.player;
+    let (west, east) = (Pos::new(2, 4), Pos::new(9, 4));
+    let trap = |w: &World, id: &str| w.content().trap_id(id).expect("trap");
+    assert_eq!(w.perception().trap(west), Some(trap(&w, "arrow")));
+    assert_eq!(terrain(&w, east), "door_open");
+    let out = run(&mut w, "move:NW*14 move:W*13 close:NW wait*6");
+    assert_eq!(w.player_pos(), Pos::new(10, 5));
+    let rang = sprung_at(&out, east);
+    assert_eq!(rang.len(), 1, "once, as the kobold opened the door");
+    assert_eq!(w.content().creature(w.state.actors[&rang[0]].creature).id, "kobold");
+    assert_eq!(w.perception().trap(east), Some(trap(&w, "alarm")));
+    assert!(texts(&w).contains(&"A loud bell rings!".to_string()));
+    let out = run(&mut w, "move:SW move:W*6 move:NW open:N");
+    assert_eq!(w.player_pos(), Pos::new(2, 5));
+    assert_eq!(sprung_at(&out, west), vec![player]);
+    assert!(texts(&w).contains(&"An arrow shoots out of the wall!".to_string()));
+}
+
 #[test]
 fn door_traps_save_and_replay() {
     let map = "#######\n#@b.r.#\n#######\n";
