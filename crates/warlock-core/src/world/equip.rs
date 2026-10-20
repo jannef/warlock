@@ -8,7 +8,6 @@
 //! fights and protects (`fight.rs`); it weighs what it weighs, worn or not.
 
 use super::{Spent, World};
-use crate::action::letter;
 use crate::content::{ActionKind, SlotId};
 use crate::equipment::{self, verbs};
 
@@ -23,8 +22,7 @@ impl World {
         };
         let player = self.state.player();
         let Some(stack) = player.inventory.get(item).cloned() else {
-            let c = letter(item).unwrap_or('?');
-            self.say(format!("You carry no {c}."));
+            self.say("You carry no such thing.");
             return Spent::Nothing;
         };
         let what = stack.describe(&content);

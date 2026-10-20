@@ -42,7 +42,7 @@ use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use crate::light::Light;
 use crate::magic::{Affix, LootGrade, Magic};
-use crate::object::{INVENTORY_SLOTS, Stack, add_to_pile};
+use crate::object::{Stack, add_to_pile};
 use crate::temperature::{LEVEL_TEMPERATURES, Temperature};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -574,11 +574,6 @@ pub(super) fn parse_level(
                         .map_err(|m| err(format!("legend `{ch}`: carry: {m}")))?,
                     None => Vec::new(),
                 };
-                if carry.len() > INVENTORY_SLOTS {
-                    return Err(err(format!(
-                        "legend `{ch}`: a creature carries at most {INVENTORY_SLOTS} stacks"
-                    )));
-                }
                 let equipment = equip(detail, &carry, content)
                     .map_err(|m| err(format!("legend `{ch}`: {m}")))?;
                 creatures.push(CreatureSpawn {

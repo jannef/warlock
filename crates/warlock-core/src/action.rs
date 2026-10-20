@@ -7,6 +7,7 @@ use crate::time::{DAY, Duration};
 use crate::weather::Weather;
 use crate::world::{ActorId, Conversation};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
 use std::fmt;
 use std::str::FromStr;
 
@@ -33,18 +34,18 @@ pub enum Action {
     Descend,
     /// Light or douse the lantern the scenario gives the player. Takes a turn.
     ToggleLantern,
-    /// Pick up the stacks with these letters from the pile on the player's cell (`a` is the top
-    /// of the pile), or everything there with no letters. Takes a turn (its cost: `pick_up`).
-    PickUp(Letters),
-    /// Drop the inventory stacks with these letters onto the player's cell, or everything
-    /// carried with no letters. Takes a turn (its cost: `drop`, plus taking off what of it is
-    /// worn or wielded). In a shop (spec §7 "Shops") what of them is unpaid goes back; the
-    /// player's own things stay, and the shop says what it would pay for those it buys.
-    Drop(Letters),
-    /// Sell the inventory stacks with these letters (everything with no letters) to the shop the
+    /// Pick up the stacks at these positions in the pile on the player's cell (0 is the top of
+    /// the pile), or everything there with none. Takes a turn (its cost: `pick_up`).
+    PickUp(Positions),
+    /// Drop the inventory stacks at these positions onto the player's cell, or everything
+    /// carried with none. Takes a turn (its cost: `drop`, plus taking off what of it is worn or
+    /// wielded). In a shop (spec §7 "Shops") what of them is unpaid goes back; the player's own
+    /// things stay, and the shop says what it would pay for those it buys.
+    Drop(Positions),
+    /// Sell the inventory stacks at these positions (everything with none) to the shop the
     /// player stands in, for what it offers (spec §7 "Shops"): like [`Action::Drop`] there, but
     /// what the shop buys is sold, paid from the keeper's purse. Takes the time of `drop`.
-    Sell(Letters),
+    Sell(Positions),
     /// Pay for everything unpaid in the shop the player stands in (spec §7 "Shops"), from the
     /// gold they carry, which takes no game time; then, with a direction, step that way (out of
     /// the shop, as [`Action::Move`] would, taking its time): paying and leaving in one action.
@@ -120,10 +121,10 @@ pub enum Action {
         at: Pos,
         to: Option<Pos>,
     },
-    /// Dev command: identify the inventory stacks with these letters, or everything carried
-    /// with no letters (spec §8 "Magic items"; the scroll of identify does it in play). Takes no
+    /// Dev command: identify the inventory stacks at these positions, or everything carried
+    /// with none (spec §8 "Magic items"; the scroll of identify does it in play). Takes no
     /// game time; recorded in replays.
-    Identify(Letters),
+    Identify(Positions),
     /// Dev command: the player suffers one degree more of a status effect (an id in
     /// `data/status.toml`), as a wound or a bite would give it: for trying statuses out and for
     /// captures. Takes no game time; recorded in replays.
@@ -180,79 +181,100 @@ pub enum Meal {
     Floor(usize),
 }
 
-/// A set of letters `a` to `z` naming stacks of a list the player sees (a pile, the inventory)
-/// by position: `a` is the first. Written as the letters in order, e.g. `ac`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct Letters(u32);
+/// A set of stacks of a list (a pile, the inventory) by position, `0` the first: the rules name
+/// stacks by where they are, never by the letter a screen shows (letters restart on every page
+/// of a list, spec §6). Action text writes the set as letters while every position is below 26
+/// (`a` = 0: `ac`), else as numbers (`0,2,30`); both forms parse, mixed too (`ac,30`).
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct Positions(BTreeSet<usize>);
 
-impl Letters {
-    /// How many letters there are.
-    pub const COUNT: usize = 26;
+/// The letters naming list rows, `a` to `z`: action text writes the positions below this as
+/// letters, and a page of a list holds at most this many stacks.
+pub const LETTERS: usize = 26;
 
-    /// The letters of these positions; positions past `z` are left out.
+impl Positions {
     pub fn of(positions: impl IntoIterator<Item = usize>) -> Self {
-        let mut letters = Self::default();
-        for i in positions {
-            letters.insert(i);
-        }
-        letters
+        Self(positions.into_iter().collect())
     }
 
     pub fn insert(&mut self, i: usize) {
-        if i < Self::COUNT {
-            self.0 |= 1 << i;
-        }
+        self.0.insert(i);
     }
 
     pub fn remove(&mut self, i: usize) {
-        if i < Self::COUNT {
-            self.0 &= !(1 << i);
-        }
+        self.0.remove(&i);
     }
 
-    pub fn contains(self, i: usize) -> bool {
-        i < Self::COUNT && self.0 & (1 << i) != 0
+    pub fn contains(&self, i: usize) -> bool {
+        self.0.contains(&i)
     }
 
-    pub fn is_empty(self) -> bool {
-        self.0 == 0
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
     }
 
-    pub fn len(self) -> usize {
-        self.0.count_ones() as usize
+    pub fn len(&self) -> usize {
+        self.0.len()
     }
 
     /// The positions, in order.
-    pub fn iter(self) -> impl Iterator<Item = usize> {
-        (0..Self::COUNT).filter(move |i| self.contains(*i))
+    pub fn iter(&self) -> impl Iterator<Item = usize> + '_ {
+        self.0.iter().copied()
     }
 }
 
-/// The letter of list position `i`: `a` for 0. Positions past `z` have none.
+/// The letter of list row `i`: `a` for 0. Rows past `z` have none.
 pub fn letter(i: usize) -> Option<char> {
-    (i < Letters::COUNT).then(|| char::from(b'a' + i as u8))
+    (i < LETTERS).then(|| char::from(b'a' + i as u8))
 }
 
-impl fmt::Display for Letters {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.iter()
-            .filter_map(letter)
-            .try_for_each(|c| write!(f, "{c}"))
+/// Position `i` in action text: its letter below 26 (`c`), else its number (`30`).
+pub fn position_text(i: usize) -> String {
+    letter(i).map_or_else(|| i.to_string(), String::from)
+}
+
+/// One position in action text: a letter `a` to `z` (either case) or a number.
+fn parse_position(text: &str) -> Option<usize> {
+    let mut chars = text.chars();
+    match (chars.next(), chars.next()) {
+        (Some(c), None) if c.is_ascii_alphabetic() => {
+            Some(usize::from(c.to_ascii_lowercase() as u8 - b'a'))
+        }
+        _ if text.bytes().all(|b| b.is_ascii_digit()) => text.parse().ok(),
+        _ => None,
     }
 }
 
-impl FromStr for Letters {
+impl fmt::Display for Positions {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.iter().all(|i| i < LETTERS) {
+            return (self.iter().filter_map(letter)).try_for_each(|c| write!(f, "{c}"));
+        }
+        let numbers: Vec<String> = self.iter().map(|i| i.to_string()).collect();
+        f.write_str(&numbers.join(","))
+    }
+}
+
+impl FromStr for Positions {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut letters = Letters::default();
-        for c in s.chars() {
-            if !c.is_ascii_lowercase() {
-                return Err(format!("`{c}` is not a letter from a to z"));
+        let mut positions = Positions::default();
+        for part in s.split(',') {
+            let letters = !part.is_empty() && part.bytes().all(|b| b.is_ascii_lowercase());
+            let number = !part.is_empty() && part.bytes().all(|b| b.is_ascii_digit());
+            if letters {
+                part.bytes()
+                    .for_each(|b| positions.insert(usize::from(b - b'a')));
+            } else if let (true, Ok(i)) = (number, part.parse()) {
+                positions.insert(i);
+            } else {
+                return Err(format!(
+                    "`{part}` is neither letters a to z nor a position such as `30`"
+                ));
             }
-            letters.insert(usize::from(c as u8 - b'a'));
         }
-        Ok(letters)
+        Ok(positions)
     }
 }
 
@@ -471,9 +493,10 @@ pub struct Outcome {
 /// fire:12,5 throw:c:12,5 dig:E search search:10 eat:b eat:floor:a chat:E ask:E:TOPIC vision:ID
 /// skip:1h
 /// weather:rain effect:fireball@12,5 effect:lightning_bolt@3,4>12,4 identify:a afflict:bleeding
-/// infect:filth_fever freeze:12,5,3 thaw:12,5,3` (durations: `30s`, `10m`, `2h`; letters name
-/// stacks, `a` first; `pickup`, `drop`, `sell`, and `identify` without letters take everything;
-/// `pay:DIR` pays and steps that way, out of the shop;
+/// infect:filth_fever freeze:12,5,3 thaw:12,5,3` (durations: `30s`, `10m`, `2h`; LETTER names a
+/// stack by its position, a letter for the first 26 (`a` = 0) or a number for any (`30`), and
+/// LETTERS several, as letters (`ac`) or numbers (`0,2,30`); `pickup`, `drop`, `sell`, and
+/// `identify` without letters take everything; `pay:DIR` pays and steps that way, out of the shop;
 /// `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT, `remove:SLOT` takes off what
 /// is there; `bash:DIR` bashes with the held shield; `dig:DIR` digs toward a wall; `search`
 /// searches once and `search:N` for up to N turns, 1 to [`MAX_SEARCH`]; `fire:X,Y`
@@ -506,20 +529,15 @@ impl fmt::Display for Action {
             Action::Sell(l) => write!(f, "sell:{l}"),
             Action::Pay(None) => f.write_str("pay"),
             Action::Pay(Some(d)) => write!(f, "pay:{d}"),
-            Action::Equip { slot, item } => {
-                write!(f, "equip:{slot}:{}", letter(*item).unwrap_or('?'))
-            }
+            Action::Equip { slot, item } => write!(f, "equip:{slot}:{}", position_text(*item)),
             Action::Remove(slot) => write!(f, "remove:{slot}"),
             Action::Bash(d) => write!(f, "bash:{d}"),
             Action::Fire(at) => write!(f, "fire:{},{}", at.x, at.y),
             Action::Throw { item, at } => {
-                let item = letter(*item).unwrap_or('?');
-                write!(f, "throw:{item}:{},{}", at.x, at.y)
+                write!(f, "throw:{}:{},{}", position_text(*item), at.x, at.y)
             }
-            Action::Eat(Meal::Pack(item)) => write!(f, "eat:{}", letter(*item).unwrap_or('?')),
-            Action::Eat(Meal::Floor(item)) => {
-                write!(f, "eat:floor:{}", letter(*item).unwrap_or('?'))
-            }
+            Action::Eat(Meal::Pack(item)) => write!(f, "eat:{}", position_text(*item)),
+            Action::Eat(Meal::Floor(item)) => write!(f, "eat:floor:{}", position_text(*item)),
             Action::Rest(Rest::For(d)) => write!(f, "rest:{d}"),
             Action::Rest(Rest::Dawn) => f.write_str("rest:dawn"),
             Action::Rest(Rest::Dusk) => f.write_str("rest:dusk"),
@@ -602,16 +620,16 @@ impl FromStr for Action {
                 Some(_) => dir().map(|d| Action::Pay(Some(d))),
             },
             "pickup" | "drop" | "sell" | "identify" => {
-                let letters = match arg {
-                    None => Letters::default(),
+                let positions = match arg {
+                    None => Positions::default(),
                     Some("") => return Err(format!("`{verb}:` needs letters, e.g. `{verb}:ab`")),
                     Some(text) => text.parse().map_err(|e| format!("`{s}`: {e}"))?,
                 };
                 Ok(match verb {
-                    "pickup" => Action::PickUp(letters),
-                    "drop" => Action::Drop(letters),
-                    "sell" => Action::Sell(letters),
-                    _ => Action::Identify(letters),
+                    "pickup" => Action::PickUp(positions),
+                    "drop" => Action::Drop(positions),
+                    "sell" => Action::Sell(positions),
+                    _ => Action::Identify(positions),
                 })
             }
             "rest" => match arg {
@@ -634,20 +652,17 @@ impl FromStr for Action {
                 None => Err("`weather` needs `clear`, `overcast`, `rain`, or `heavy`".into()),
             },
             "equip" => {
-                // The slot id keeps its case; the letter is a letter.
+                // The slot id keeps its case; the letter is a letter (or a number).
                 let usage = || "`equip` needs a slot and a letter, e.g. `equip:body:b`".to_string();
                 let (slot, item) = s
                     .split_once(':')
                     .and_then(|(_, rest)| rest.rsplit_once(':'))
                     .ok_or_else(usage)?;
-                let mut chars = item.chars();
-                match (chars.next().map(|c| c.to_ascii_lowercase()), chars.next()) {
-                    (Some(c @ 'a'..='z'), None) if !slot.is_empty() && !slot.contains(':') => {
-                        Ok(Action::Equip {
-                            slot: slot.to_string(),
-                            item: usize::from(c as u8 - b'a'),
-                        })
-                    }
+                match parse_position(item) {
+                    Some(item) if !slot.is_empty() && !slot.contains(':') => Ok(Action::Equip {
+                        slot: slot.to_string(),
+                        item,
+                    }),
                     _ => Err(usage()),
                 }
             }
@@ -668,30 +683,20 @@ impl FromStr for Action {
                     Some(None) => (false, arg.unwrap_or_default()),
                     _ => return Err(usage()),
                 };
-                let mut chars = item.chars();
-                match (chars.next(), chars.next()) {
-                    (Some(c @ 'a'..='z'), None) => {
-                        let i = usize::from(c as u8 - b'a');
-                        Ok(Action::Eat(if floor {
-                            Meal::Floor(i)
-                        } else {
-                            Meal::Pack(i)
-                        }))
-                    }
-                    _ => Err(usage()),
-                }
+                let i = parse_position(item).ok_or_else(usage)?;
+                Ok(Action::Eat(if floor {
+                    Meal::Floor(i)
+                } else {
+                    Meal::Pack(i)
+                }))
             }
             "throw" => {
                 let usage = || "`throw` needs a letter and a cell, e.g. `throw:c:12,5`".to_string();
                 let (item, at) = arg.and_then(|a| a.split_once(':')).ok_or_else(usage)?;
-                let mut chars = item.chars();
-                match (chars.next(), chars.next()) {
-                    (Some(c @ 'a'..='z'), None) => Ok(Action::Throw {
-                        item: usize::from(c as u8 - b'a'),
-                        at: parse_cell(at).map_err(|_| usage())?,
-                    }),
-                    _ => Err(usage()),
-                }
+                Ok(Action::Throw {
+                    item: parse_position(item).ok_or_else(usage)?,
+                    at: parse_cell(at).map_err(|_| usage())?,
+                })
             }
             "stance" => arg
                 .ok_or_else(|| "`stance` needs a stance, e.g. `stance:coward`".to_string())?
@@ -801,18 +806,32 @@ mod tests {
     use super::*;
 
     #[test]
-    fn letters_are_a_set_of_positions() {
-        let mut l = Letters::of([3, 0, 3, 30]);
+    fn positions_are_a_set_written_as_letters_or_numbers() {
+        let mut l = Positions::of([3, 0, 3]);
         assert_eq!((l.len(), l.to_string()), (2, "ad".to_string()));
-        assert!(l.contains(3) && !l.contains(1) && !l.contains(30));
+        assert!(l.contains(3) && !l.contains(1));
         l.remove(3);
         l.insert(25);
         assert_eq!(l.iter().collect::<Vec<_>>(), [0, 25]);
-        assert_eq!("za".parse::<Letters>(), Ok(Letters::of([0, 25])));
+        assert_eq!("za".parse::<Positions>(), Ok(Positions::of([0, 25])));
+        // Past `z` there are no letters: every position is a number then, and both forms (and a
+        // mix of them) parse.
+        l.insert(30);
+        assert_eq!(l.to_string(), "0,25,30");
+        for text in ["0,25,30", "az,30", "30,a,25", "za,30,30"] {
+            assert_eq!(text.parse::<Positions>(), Ok(l.clone()), "{text}");
+        }
+        for bad in ["", "a,", ",b", "A", "-1", "+3", "3x", "a b"] {
+            assert!(bad.parse::<Positions>().is_err(), "{bad}");
+        }
         assert_eq!(letter(0), Some('a'));
         assert_eq!(letter(25), Some('z'));
         assert_eq!(letter(26), None);
-        assert!(Letters::default().is_empty());
+        assert_eq!(
+            (position_text(2), position_text(26)),
+            ("c".into(), "26".into())
+        );
+        assert!(Positions::default().is_empty());
     }
 
     #[test]
@@ -832,14 +851,16 @@ mod tests {
             Action::Rest(Rest::Dusk),
             Action::SkipTime(Duration::hours(1)),
             Action::SkipTime(Duration::seconds(30)),
-            Action::PickUp(Letters::default()),
-            Action::PickUp(Letters::of([0])),
-            Action::PickUp(Letters::of([0, 2, 25])),
-            Action::Drop(Letters::default()),
-            Action::Drop(Letters::of([1])),
-            Action::Drop(Letters::of(0..Letters::COUNT)),
-            Action::Sell(Letters::default()),
-            Action::Sell(Letters::of([0, 3])),
+            Action::PickUp(Positions::default()),
+            Action::PickUp(Positions::of([0])),
+            Action::PickUp(Positions::of([0, 2, 25])),
+            Action::Drop(Positions::default()),
+            Action::Drop(Positions::of([1])),
+            Action::Drop(Positions::of(0..LETTERS)),
+            Action::Drop(Positions::of([0, 26, 140])),
+            Action::PickUp(Positions::of([27])),
+            Action::Sell(Positions::default()),
+            Action::Sell(Positions::of([0, 3])),
             Action::Pay(None),
             Action::Pay(Some(Dir::W)),
             Action::Equip {
@@ -867,8 +888,8 @@ mod tests {
                 at: Pos::new(-3, 4),
                 to: Some(Pos::new(12, 0)),
             },
-            Action::Identify(Letters::default()),
-            Action::Identify(Letters::of([0, 3])),
+            Action::Identify(Positions::default()),
+            Action::Identify(Positions::of([0, 3])),
             Action::Ask {
                 dir: Dir::NW,
                 topic: "the_rooms".into(),
@@ -876,6 +897,18 @@ mod tests {
             Action::Eat(Meal::Pack(1)),
             Action::Eat(Meal::Floor(0)),
             Action::Eat(Meal::Floor(25)),
+            Action::Eat(Meal::Pack(26)),
+            Action::Eat(Meal::Floor(31)),
+            Action::Throw {
+                item: 40,
+                at: Pos::new(1, 2),
+            },
+            Action::Equip {
+                slot: "body".into(),
+                item: 26,
+            },
+            Action::Identify(Positions::of([26])),
+            Action::Sell(Positions::of([3, 99])),
             Action::Afflict("bleeding".into()),
             Action::Afflict("Odd_Case".into()),
             Action::Infect("filth_fever".into()),
@@ -991,13 +1024,43 @@ mod tests {
         assert_eq!(
             parse_actions("PICKUP:CA drop pickup drop:b"),
             Ok(vec![
-                Action::PickUp(Letters::of([0, 2])),
-                Action::Drop(Letters::default()),
-                Action::PickUp(Letters::default()),
-                Action::Drop(Letters::of([1])),
+                Action::PickUp(Positions::of([0, 2])),
+                Action::Drop(Positions::default()),
+                Action::PickUp(Positions::default()),
+                Action::Drop(Positions::of([1])),
             ])
         );
-        assert_eq!(Action::PickUp(Letters::of([2, 0])).to_string(), "pickup:ac");
+        assert_eq!(
+            Action::PickUp(Positions::of([2, 0])).to_string(),
+            "pickup:ac"
+        );
+        // Any position as a number: the same stack as its letter, and past `z` too.
+        assert_eq!(parse_actions("drop:2,0"), parse_actions("drop:ac"));
+        assert_eq!(
+            parse_actions("eat:1 equip:body:1"),
+            parse_actions("eat:b equip:body:b")
+        );
+        assert_eq!(
+            parse_actions("EAT:Floor:27 throw:30:4,5 drop:26"),
+            Ok(vec![
+                Action::Eat(Meal::Floor(27)),
+                Action::Throw {
+                    item: 30,
+                    at: Pos::new(4, 5)
+                },
+                Action::Drop(Positions::of([26])),
+            ])
+        );
+        for bad in [
+            "eat:",
+            "eat:ab",
+            "throw:-1:4,5",
+            "equip:body:",
+            "drop:a,,b",
+            "pickup:1x",
+        ] {
+            assert!(parse_actions(bad).is_err(), "{bad}");
+        }
         assert_eq!(
             parse_actions("WEATHER:Heavy weather:clear"),
             Ok(vec![
@@ -1092,7 +1155,6 @@ mod tests {
             "eat",
             "eat:",
             "eat:ab",
-            "eat:1",
             "eat:floor",
             "eat:floor:",
             "eat:floor:ab",
@@ -1105,13 +1167,11 @@ mod tests {
             "throw:3,4",
             "throw:a",
             "throw:ab:3,4",
-            "throw:1:3,4",
             "equip",
             "equip:body",
             "equip:body:",
             "equip::b",
             "equip:body:ab",
-            "equip:body:1",
             "equip:a:b:c",
             "remove",
             "remove:",

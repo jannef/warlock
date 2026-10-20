@@ -3,6 +3,7 @@ id = "iron_ring"
 name = "iron ring"
 glyph = "="
 fg = "#a8acb0"
+class = "rings"
 material = "iron"
 weight = 10
 value = 50

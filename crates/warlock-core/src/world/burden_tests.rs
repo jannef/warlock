@@ -118,6 +118,7 @@ id = "anvil"
 name = "anvil"
 glyph = "&"
 fg = "#808080"
+class = "miscellaneous"
 material = "iron"
 weight = 10000
 value = 0
@@ -127,6 +128,7 @@ id = "ingot"
 name = "ingot"
 glyph = "="
 fg = "#808080"
+class = "rings"
 material = "iron"
 weight = 1000
 value = 0
@@ -137,6 +139,7 @@ id = "mail"
 name = "mail shirt"
 glyph = "["
 fg = "#c0c0c0"
+class = "body_armour"
 material = "iron"
 weight = 9000
 value = 0
@@ -282,6 +285,10 @@ map = '''
 
 fn files() -> ContentFiles {
     let mut files = ContentFiles::default();
+    files.insert(
+        "data/item_classes.toml",
+        crate::content::BUILTIN_ITEM_CLASSES,
+    );
     for (path, text) in [
         ("data/terrain.toml", TERRAIN),
         ("data/factions.toml", FACTIONS),

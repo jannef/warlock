@@ -349,7 +349,7 @@ mod tests {
     use crate::input::KeyBinding;
     use std::sync::Arc;
     use warlock_core::content::{CombatStance, Content};
-    use warlock_core::{Action, Dir, Letters, World};
+    use warlock_core::{Action, Dir, Positions, World};
 
     fn showcase() -> World {
         let content = Arc::new(Content::builtin().expect("content"));
@@ -380,7 +380,7 @@ mod tests {
         // Pick up the start room's jerkin, for something carried.
         world.apply(&Action::Move(Dir::SW));
         world.apply(&Action::Move(Dir::SW));
-        world.apply(&Action::PickUp(Letters::of([0])));
+        world.apply(&Action::PickUp(Positions::of([0])));
         let text = drawn(&world, 80, 30);
         let row = |needle: &str| {
             text.iter()
@@ -450,7 +450,7 @@ mod tests {
         );
         // Two chain mails (22 kg) for average scores (St 10 To 10: burdened over 15 kg).
         world = crate::ui::hoard();
-        world.apply(&Action::PickUp(Letters::default()));
+        world.apply(&Action::PickUp(Positions::default()));
         let text = drawn(&world, 80, 30).join("\n");
         for expected in [
             "Weight 92 kg (you 70 kg, carrying 22 kg, burdened)",

@@ -1,10 +1,9 @@
 //! Objects (spec §5, §6): piles, picking up and dropping, inventories, weights, and memory.
 
 use super::*;
-use crate::action::{Letters, parse_actions};
+use crate::action::{Positions, parse_actions};
 use crate::content::ContentFiles;
 use crate::dump::{Layer, layer_rows};
-use crate::object::INVENTORY_SLOTS;
 use crate::perception::CellView;
 use crate::replay::Replay;
 
@@ -221,28 +220,64 @@ fn refused_pick_ups_and_drops_take_no_time() {
     refused(&mut w, "pickup", "There is nothing here to pick up.");
     refused(&mut w, "drop", "You are not carrying anything.");
     run(&mut w, "move:E move:E");
-    refused(&mut w, "pickup:c", "There is no c here.");
+    refused(&mut w, "pickup:c", "There is no such thing here.");
     run(&mut w, "pickup:a");
-    refused(&mut w, "drop:ab", "You carry no b.");
+    refused(&mut w, "drop:ab", "You carry no such thing.");
+    refused(&mut w, "drop:1", "You carry no such thing.");
     assert_eq!(inventory(&w), [pair("dagger", 1)]);
 }
 
 #[test]
-fn an_inventory_has_one_letter_per_stack() {
+fn the_pack_holds_any_number_of_stacks_named_by_position() {
+    // No count limit (spec §6): weight is the only one. Past `z`, action text names stacks by
+    // number, and equipment follows positions past the 26th.
     let mut w = world();
     run(&mut w, "move:SE move:SE move:E move:E");
     assert_eq!(w.player_pos(), HEAP);
     run(&mut w, "pickup");
-    assert_eq!(inventory(&w).len(), INVENTORY_SLOTS);
-    assert_eq!(
-        last_message(&w),
-        "You pick up 26 objects. You have no room for more."
-    );
-    assert_eq!(truth(&w, HEAP).len(), 30 - INVENTORY_SLOTS);
+    assert_eq!(inventory(&w).len(), 30);
+    assert_eq!(last_message(&w), "You pick up 30 objects.");
+    assert!(truth(&w, HEAP).is_empty());
+    let main_hand = w.content().slot_id("main_hand").expect("main hand");
+    run(&mut w, "equip:main_hand:29");
+    assert_eq!(w.state.player().equipment.get(main_hand), Some(29));
     let turn = w.turn();
-    run(&mut w, "pickup");
-    assert_eq!(last_message(&w), "You have no room for more.");
-    assert_eq!(w.turn(), turn);
+    run(&mut w, "drop:a,27");
+    assert!(w.turn() > turn);
+    assert_eq!((inventory(&w).len(), truth(&w, HEAP).len()), (28, 2));
+    assert_eq!(w.state.player().equipment.get(main_hand), Some(27));
+    assert_eq!(last_message(&w), "You drop a dagger and a dagger.");
+    let turn = w.turn();
+    run(&mut w, "drop:28");
+    assert_eq!(
+        (w.turn(), last_message(&w)),
+        (turn, "You carry no such thing.".into())
+    );
+    // The dump names them as action text does.
+    let rows = layer_rows(&w, Layer::Inventory);
+    assert!(
+        rows.iter()
+            .any(|r| r.starts_with("27 - a dagger (wielded)")),
+        "{rows:?}"
+    );
+}
+
+#[test]
+fn the_inventory_dump_groups_by_class_and_keeps_positions() {
+    // A ruby picked up first, then a dagger: the dagger's class (melee weapons) comes first in
+    // the list, but each keeps its position (spec §6 "Item lists").
+    let mut w = world();
+    run(
+        &mut w,
+        "move:SE move:E*3 open:E move:E*3 pickup move:W*5 pickup",
+    );
+    assert_eq!(inventory(&w), [pair("ruby", 1), pair("dagger", 1)]);
+    let rows = layer_rows(&w, Layer::Inventory);
+    assert_eq!(rows[0], "Melee weapons:");
+    assert!(rows[1].starts_with("b - a dagger ("), "{rows:?}");
+    assert_eq!(rows[2], "Gems:");
+    assert!(rows[3].starts_with("a - a ruby ("), "{rows:?}");
+    assert!(rows[4].starts_with("carried "), "{rows:?}");
 }
 
 #[test]
@@ -379,7 +414,7 @@ fn pick_up_and_drop_replay_deterministically() {
     assert_eq!(divergence, None);
     assert_eq!(played.state_hash(), w.state_hash());
     assert_eq!(
-        Action::PickUp(Letters::of([1])).to_string(),
+        Action::PickUp(Positions::of([1])).to_string(),
         actions[2].to_string()
     );
 }

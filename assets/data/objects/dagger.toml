@@ -3,6 +3,7 @@ id = "dagger"
 name = "dagger"
 glyph = ")"
 fg = "#c8ccd4"
+class = "melee_weapons"
 material = "steel"
 weight = 450
 value = 30

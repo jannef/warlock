@@ -1,11 +1,11 @@
 //! Equipment (spec §6, §7): what an actor wears and wields.
 //!
-//! Equipped things stay in the actor's inventory (they keep their letters and still count
-//! toward its weight); [`Equipment`] records which inventory stack is in which slot
+//! Equipped things stay in the actor's inventory (they keep their positions and still
+//! count toward its weight); [`Equipment`] records which inventory stack is in which slot
 //! (`data/slots.toml`, [`crate::content::SlotDef`]). A two-handed object is in every hand slot at
 //! once. Combat reads it (`Actor::weapon`, `launcher`, `defence`).
 
-use crate::action::Letters;
+use crate::action::Positions;
 use crate::content::{ActionKind, Content, ObjectId, SlotId};
 use crate::object::Stack;
 use serde::{Deserialize, Serialize};
@@ -13,7 +13,7 @@ use std::collections::BTreeMap;
 
 /// Which inventory stack is in each slot that holds something, by slot.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Equipment(BTreeMap<SlotId, u8>);
+pub struct Equipment(BTreeMap<SlotId, usize>);
 
 impl Equipment {
     pub fn is_empty(&self) -> bool {
@@ -22,12 +22,12 @@ impl Equipment {
 
     /// The inventory position of what is in `slot`.
     pub fn get(&self, slot: SlotId) -> Option<usize> {
-        self.0.get(&slot).map(|&i| usize::from(i))
+        self.0.get(&slot).copied()
     }
 
     /// Every slot that holds something, in display order, with the inventory position there.
     pub fn iter(&self) -> impl Iterator<Item = (SlotId, usize)> + '_ {
-        self.0.iter().map(|(&s, &i)| (s, usize::from(i)))
+        self.0.iter().map(|(&s, &i)| (s, i))
     }
 
     /// Each equipped inventory stack once, with the first slot it is in, in display order.
@@ -56,7 +56,6 @@ impl Equipment {
 
     /// Puts inventory stack `item` in `slots` (what [`slots_taken`] gives).
     pub(crate) fn put(&mut self, slots: &[SlotId], item: usize) {
-        let Ok(item) = u8::try_from(item) else { return };
         for &slot in slots {
             self.0.insert(slot, item);
         }
@@ -64,16 +63,16 @@ impl Equipment {
 
     /// Takes inventory stack `item` out of every slot it is in.
     pub(crate) fn take_off(&mut self, item: usize) {
-        self.0.retain(|_, i| usize::from(*i) != item);
+        self.0.retain(|_, i| *i != item);
     }
 
     /// Follows the inventory losing the stacks `removed` names: those come off, and the stacks
-    /// after them move up a letter.
-    pub(crate) fn after_removal(&mut self, removed: Letters) {
-        self.0.retain(|_, i| !removed.contains(usize::from(*i)));
+    /// after them move up a place.
+    pub(crate) fn after_removal(&mut self, removed: &Positions) {
+        self.0.retain(|_, i| !removed.contains(*i));
         for i in self.0.values_mut() {
-            let below = removed.iter().filter(|&r| r < usize::from(*i)).count();
-            *i -= u8::try_from(below).unwrap_or(0);
+            let below = removed.iter().filter(|&r| r < *i).count();
+            *i -= below;
         }
     }
 
@@ -226,15 +225,19 @@ mod tests {
     }
 
     #[test]
-    fn removing_stacks_moves_the_letters_up() {
+    fn removing_stacks_moves_the_positions_up() {
         let c = content();
         let (head, body, feet) = (slot(&c, "head"), slot(&c, "body"), slot(&c, "feet"));
         let mut worn = Equipment::default();
         worn.put(&[head], 1);
         worn.put(&[body], 3);
         worn.put(&[feet], 4);
-        worn.after_removal(Letters::of([0, 3]));
+        worn.after_removal(&Positions::of([0, 3]));
         assert_eq!(worn.iter().collect::<Vec<_>>(), [(head, 0), (feet, 2)]);
+        // Past the 26th stack too.
+        worn.put(&[body], 300);
+        worn.after_removal(&Positions::of([1, 26, 299]));
+        assert_eq!(worn.get(body), Some(297));
     }
 
     #[test]

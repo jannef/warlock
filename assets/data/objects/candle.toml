@@ -3,6 +3,7 @@ id = "candle"
 name = "wax candle"
 glyph = "("
 fg = "#f0e6c8"
+class = "light_sources"
 material = "wax"
 weight = 100
 value = 2

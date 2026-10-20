@@ -4,6 +4,7 @@ name = "pair of gauntlets"
 plural = "pairs of gauntlets"
 glyph = "["
 fg = "#9aa0a6"
+class = "gloves"
 material = "iron"
 weight = 1000
 value = 40

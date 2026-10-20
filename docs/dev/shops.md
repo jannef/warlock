@@ -5,8 +5,8 @@ rules it implements are in spec/07d-shops-and-rooms.md. Keep it current with the
 
 Shops (spec §7 "Shops", M27, #145) are data: `data/shops.toml` (`content/shop.rs`: `Shops` with
 the currency, the outraged faction, `presence`, the generation `chance`, keeper `names`, the
-`[keeper]` template, and the kinds, `ShopDef`: `stock`/`buys` by `ObjectClass` (the object's
-glyph, `content/object.rs`), `items`, `markup`, `pays`; `Shops::price`/`offer` are the one place
+`[keeper]` template, and the kinds, `ShopDef`: `stock`/`buys` by item class (`ItemClassId`, ids
+in `data/item_classes.toml`, `docs/dev/objects.md`), `items`, `markup`, `pays`; `Shops::price`/`offer` are the one place
 prices are made). Every object has a `value` (required; test fixtures with their own objects need
 `value = 0`; fixtures that replace `factions.toml` but keep the built-in creatures need the
 `merchants` and `outraged` factions, and fixtures that replace creatures or objects start from

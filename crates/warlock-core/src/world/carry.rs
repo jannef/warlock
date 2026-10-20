@@ -1,20 +1,20 @@
 //! Picking up and dropping (spec §6 "Objects", §8 "Burden"): [`crate::action::Action::PickUp`]
-//! and [`crate::action::Action::Drop`], the letters they name, and the burden news a changed
+//! and [`crate::action::Action::Drop`], the positions they name, and the burden news a changed
 //! load is said with. `world/mod.rs` has only the dispatch line.
 
 use super::{Spent, World};
-use crate::action::{Letters, letter};
+use crate::action::Positions;
 use crate::burden::Burden;
 use crate::content::ActionKind;
 use crate::object::{self, Stack};
 
 impl World {
-    /// [`crate::action::Action::PickUp`]: picks up what `letters` names ([`World::pick_up`])
+    /// [`crate::action::Action::PickUp`]: picks up what `positions` names ([`World::pick_up`])
     /// and returns what it cost.
-    pub(super) fn pick_up_objects(&mut self, letters: Letters) -> Spent {
+    pub(super) fn pick_up_objects(&mut self, positions: &Positions) -> Spent {
         // Priced at the load the player has as they begin.
         let price = self.price_of(self.state.player, ActionKind::PickUp);
-        if self.pick_up(letters) {
+        if self.pick_up(positions) {
             Spent::Turn(price)
         } else {
             Spent::Nothing
@@ -30,18 +30,16 @@ impl World {
         }
     }
 
-    /// Picks up the stacks `letters` names in the pile on the player's cell (everything there
-    /// with no letters), as many as the inventory has letters for. Returns whether anything was
-    /// taken.
-    pub(super) fn pick_up(&mut self, letters: Letters) -> bool {
+    /// Picks up the stacks `positions` names in the pile on the player's cell (everything there
+    /// with none). Returns whether anything was taken.
+    pub(super) fn pick_up(&mut self, positions: &Positions) -> bool {
         let here = self.player_pos();
         let pile = self.state.current().objects_at(here).to_vec();
         if pile.is_empty() {
             self.say("There is nothing here to pick up.");
             return false;
         }
-        let Some(mut chosen) =
-            self.chosen(letters, pile.len(), |c| format!("There is no {c} here."))
+        let Some(mut chosen) = self.chosen(positions, pile.len(), "There is no such thing here.")
         else {
             return false;
         };
@@ -62,20 +60,10 @@ impl World {
             return false;
         }
         let inventory = self.state.inventory_mut();
-        let mut taken = Letters::default();
         for i in chosen.iter() {
-            if object::add_to_inventory(inventory, pile[i].clone(), &content) {
-                taken.insert(i);
-            }
+            object::add_to_inventory(inventory, pile[i].clone(), &content);
         }
-        if taken.is_empty() {
-            self.say("You have no room for more.");
-            return false;
-        }
-        // Everything was asked for, but the pile has more stacks than there are letters.
-        let more = letters.is_empty() && pile.len() > taken.len() + burning.len();
-        let full = taken != chosen || (more && inventory.len() >= object::INVENTORY_SLOTS);
-        let (got, left) = split(&pile, taken);
+        let (got, left) = split(&pile, &chosen);
         self.state.current_mut().set_pile(here, left);
         // In a shop, goods for sale are now owed for (spec §7 "Shops").
         let prices = self.picked_up_goods(&got);
@@ -89,19 +77,16 @@ impl World {
         {
             text.push_str(&format!(" You owe {name} {owed} gold."));
         }
-        if full {
-            text.push_str(" You have no room for more.");
-        }
         self.say(text);
         true
     }
 
-    /// Drops the inventory stacks `letters` names (everything with no letters) on top of the pile
-    /// on the player's cell, taking off first what of them is worn or wielded (which takes its
-    /// time too).
-    pub(super) fn drop_objects(&mut self, letters: Letters) -> Spent {
+    /// Drops the inventory stacks `positions` names (everything with none) on top of the pile on
+    /// the player's cell, taking off first what of them is worn or wielded (which takes its time
+    /// too).
+    pub(super) fn drop_objects(&mut self, positions: &Positions) -> Spent {
         // In an open shop, unpaid goods go back and the player's own are offered for.
-        if let Some(spent) = self.trade(letters, false) {
+        if let Some(spent) = self.trade(positions, false) {
             return spent;
         }
         let inventory = self.state.player().inventory.clone();
@@ -109,7 +94,7 @@ impl World {
             self.say("You are not carrying anything.");
             return Spent::Nothing;
         }
-        let Some(chosen) = self.chosen(letters, inventory.len(), |c| format!("You carry no {c}."))
+        let Some(chosen) = self.chosen(positions, inventory.len(), "You carry no such thing.")
         else {
             return Spent::Nothing;
         };
@@ -117,9 +102,9 @@ impl World {
         kinds.push(ActionKind::Drop);
         // Priced at the load the player has as they begin.
         let spent = self.price_for(&kinds);
-        let (dropped, kept) = split(&inventory, chosen);
+        let (dropped, kept) = split(&inventory, &chosen);
         *self.state.inventory_mut() = kept;
-        self.player_mut().equipment.after_removal(chosen);
+        self.player_mut().equipment.after_removal(&chosen);
         let here = self.player_pos();
         let content = self.content.clone();
         let level = self.state.current_mut();
@@ -130,29 +115,28 @@ impl World {
         spent
     }
 
-    /// The positions `letters` names in a list of `len` stacks, every position (up to `z`) for
-    /// no letters. A letter past the end is refused with the message `missing` makes of it.
+    /// The stacks `positions` names in a list of `len` stacks, every one for none. A
+    /// position past the end is refused with the message `missing` (no letter: positions are
+    /// not what the player sees, spec §6).
     pub(super) fn chosen(
         &mut self,
-        letters: Letters,
+        positions: &Positions,
         len: usize,
-        missing: impl Fn(char) -> String,
-    ) -> Option<Letters> {
-        if letters.is_empty() {
-            return Some(Letters::of(0..len));
+        missing: &str,
+    ) -> Option<Positions> {
+        if positions.is_empty() {
+            return Some(Positions::of(0..len));
         }
-        match letters.iter().find(|i| *i >= len).and_then(letter) {
-            Some(c) => {
-                self.say(missing(c));
-                None
-            }
-            None => Some(letters),
+        if positions.iter().any(|i| i >= len) {
+            self.say(missing);
+            return None;
         }
+        Some(positions.clone())
     }
 }
 
 /// The stacks of `stacks` that `chosen` names, and the others, each in order.
-pub(super) fn split(stacks: &[Stack], chosen: Letters) -> (Vec<Stack>, Vec<Stack>) {
+pub(super) fn split(stacks: &[Stack], chosen: &Positions) -> (Vec<Stack>, Vec<Stack>) {
     let (picked, rest): (Vec<_>, Vec<_>) = stacks
         .iter()
         .enumerate()

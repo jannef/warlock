@@ -4,6 +4,7 @@ name = "suit of scale mail"
 plural = "suits of scale mail"
 glyph = "["
 fg = "#a0a8a4"
+class = "body_armour"
 material = "iron"
 weight = 14000
 value = 300

@@ -87,8 +87,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     answer, as the topics `accept-ID` ("Accept: Rats in the arena") and `decline-ID` ("Decline:
     …"), one offer per giver at a time (hearing another withdraws it). Declining says `decline`
     and forgets the offer. Accepting says `accept` and makes the quest active; a delivery's giver
-    hands the item over ("The wandering bard gives you a sealed letter."; without room in the pack
-    the accept is refused, "You have no room for a sealed letter.", and the offer stands). An
+    hands the item over ("The wandering bard gives you a sealed letter."; the pack has room for
+    anything, §6 "Item lists"). An
     active quest stays a topic of its giver, who says the `reminder` until its goal is met; it is
     also a topic of whoever it is handed in to (the recipient of a delivery or of a bring with
     `to`) while its goal is met. Asking the one it is handed in to once the goal is met completes

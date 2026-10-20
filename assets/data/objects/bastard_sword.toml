@@ -3,6 +3,7 @@ id = "bastard_sword"
 name = "bastard sword"
 glyph = ")"
 fg = "#c8d0dc"
+class = "melee_weapons"
 material = "steel"
 weight = 2800
 value = 120

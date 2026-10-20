@@ -3,6 +3,7 @@ id = "leather_jerkin"
 name = "leather jerkin"
 glyph = "["
 fg = "#9a6838"
+class = "body_armour"
 material = "leather"
 weight = 3500
 value = 40

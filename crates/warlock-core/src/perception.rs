@@ -60,15 +60,16 @@
 //! does not see, near the source); never with who made them.
 
 use crate::ability::Ability;
-use crate::action::Letters;
+use crate::action::Positions;
 use crate::blood::Stain;
 use crate::burden::{self, Load};
 use crate::character::Character;
 use crate::combat::Health;
 use crate::content::Shops;
 use crate::content::{
-    CombatStance, Content, CreatureId, DiseaseId, FactionId, Flow, LevelKind, LightId, ObjectId,
-    RoomEffectDef, SlotId, Stance, StatusId, TerrainId, TrapId, VisionProfile, WeaponSkillId,
+    CombatStance, Content, CreatureId, DiseaseId, FactionId, Flow, ItemClassId, LevelKind, LightId,
+    ObjectId, RoomEffectDef, SlotId, Stance, StatusId, TerrainId, TrapId, VisionProfile,
+    WeaponSkillId,
 };
 use crate::daylight;
 use crate::equipment::Equipment;
@@ -854,9 +855,23 @@ impl<'a> PerceptionView<'a> {
             .collect()
     }
 
-    /// What the player carries, letter `a` first.
+    /// What the player carries, by position (0 first: the order they picked it up in).
     pub fn inventory(&self) -> &'a [Stack] {
         &self.player.inventory
+    }
+
+    /// The item class `stack` shows as (spec §7 "Objects and materials"): its base item's, which
+    /// the player knows of anything they see, identified or not.
+    pub fn item_class(&self, stack: &Stack) -> ItemClassId {
+        self.content.object(stack.object).class
+    }
+
+    /// The positions of `stacks` as item lists show them (spec §6 "Item lists"): grouped by item
+    /// class in class order, each class in the stacks' own order.
+    pub fn by_class(&self, stacks: &[Stack]) -> Vec<usize> {
+        let mut order: Vec<usize> = (0..stacks.len()).collect();
+        order.sort_by_key(|&i| self.item_class(&stacks[i]));
+        order
     }
 
     /// The player's own weight: their base weight plus what they carry, worn and wielded things
@@ -1288,24 +1303,20 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// What the shop the player stands in offers for their own things among the inventory stacks
-    /// `letters` names (all of them for none), if it buys any: what dropping them there would
+    /// `positions` names (all of them for none), if it buys any: what dropping them there would
     /// sell ([`crate::Action::Sell`]).
-    pub fn sale(&self, letters: Letters) -> Option<Sale> {
+    pub fn sale(&self, positions: &Positions) -> Option<Sale> {
         let view = self.shop_here()?;
         let inventory = &self.player.inventory;
         let parts = unpaid_parts(inventory, &view.shop.unpaid);
-        let chosen = if letters.is_empty() {
-            Letters::of(0..inventory.len())
-        } else {
-            letters
-        };
+        let all = positions.is_empty();
         let mut sale = Sale {
             offer: 0,
             stacks: Vec::new(),
         };
         for (i, stack) in inventory.iter().enumerate() {
             let own = part_of(stack, stack.count - parts[i]);
-            if !chosen.contains(i) || own.count == 0 {
+            if !(all || positions.contains(i)) || own.count == 0 {
                 continue;
             }
             if let Some(offer) = view.offer(&own) {

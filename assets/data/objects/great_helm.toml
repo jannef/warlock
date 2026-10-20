@@ -3,6 +3,7 @@ id = "great_helm"
 name = "great helm"
 glyph = "["
 fg = "#b4bac0"
+class = "helmets"
 material = "steel"
 weight = 3000
 value = 120

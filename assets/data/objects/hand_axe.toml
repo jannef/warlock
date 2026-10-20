@@ -3,6 +3,7 @@ id = "hand_axe"
 name = "hand axe"
 glyph = ")"
 fg = "#b4a48c"
+class = "melee_weapons"
 material = "iron"
 weight = 1300
 value = 25

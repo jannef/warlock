@@ -2,8 +2,9 @@
 //! inventories, and what things weigh.
 //!
 //! A **pile** is the ordered list of stacks on a cell, the top first: the top is what the map
-//! shows, and dropped objects go on top. An **inventory** is an ordered list of at most
-//! [`INVENTORY_SLOTS`] stacks, lettered `a` to `z` in order; new stacks go last. A stackable
+//! shows, and dropped objects go on top. An **inventory** is an ordered list of stacks, as many
+//! as the actor can carry (weight is the only limit); new stacks go last, and the rules name
+//! them by position (screens letter them per page). A stackable
 //! object (coins, arrows) joins a stack of the same object wherever it goes; any other object is
 //! a stack of one.
 //!
@@ -24,9 +25,6 @@ use crate::content::{Content, ObjectId, Rarity};
 use crate::magic::{Effect, Magic, Mods, name};
 use crate::time::GameTime;
 use serde::{Deserialize, Serialize};
-
-/// Most stacks an inventory holds: one per letter, `a` to `z`.
-pub const INVENTORY_SLOTS: usize = 26;
 
 /// Some number of one object, and what it rolled if it is magic.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -263,17 +261,11 @@ pub fn add_to_pile(pile: &mut Vec<Stack>, stacks: &[Stack], content: &Content) {
     }
 }
 
-/// Adds `stack` to `inventory`: joins a stack of the same object if it stacks, else takes the
-/// next letter. Returns false (and changes nothing) when every letter is taken.
-pub fn add_to_inventory(inventory: &mut Vec<Stack>, stack: Stack, content: &Content) -> bool {
-    if join(inventory, &stack, content) {
-        return true;
+/// Adds `stack` to `inventory`: joins a stack of the same object if it stacks, else goes last.
+pub fn add_to_inventory(inventory: &mut Vec<Stack>, stack: Stack, content: &Content) {
+    if !join(inventory, &stack, content) {
+        inventory.push(stack);
     }
-    if inventory.len() >= INVENTORY_SLOTS {
-        return false;
-    }
-    inventory.push(stack);
-    true
 }
 
 #[cfg(test)]
@@ -324,18 +316,10 @@ mod tests {
         assert_eq!(pile[0], stack(&c, "arrow", 12));
 
         let mut inventory = Vec::new();
-        assert!(add_to_inventory(
-            &mut inventory,
-            stack(&c, "gold_coin", 3),
-            &c
-        ));
-        assert!(add_to_inventory(
-            &mut inventory,
-            stack(&c, "gold_coin", 4),
-            &c
-        ));
-        assert!(add_to_inventory(&mut inventory, stack(&c, "dagger", 1), &c));
-        assert!(add_to_inventory(&mut inventory, stack(&c, "dagger", 1), &c));
+        add_to_inventory(&mut inventory, stack(&c, "gold_coin", 3), &c);
+        add_to_inventory(&mut inventory, stack(&c, "gold_coin", 4), &c);
+        add_to_inventory(&mut inventory, stack(&c, "dagger", 1), &c);
+        add_to_inventory(&mut inventory, stack(&c, "dagger", 1), &c);
         assert_eq!(inventory.len(), 3);
         assert_eq!(inventory[0].count, 7);
     }
@@ -348,8 +332,8 @@ mod tests {
             ..stack(&c, "bread", count)
         };
         let mut inventory = vec![made(2, 10)];
-        assert!(add_to_inventory(&mut inventory, made(1, 4), &c));
-        assert!(add_to_inventory(&mut inventory, made(3, 20), &c));
+        add_to_inventory(&mut inventory, made(1, 4), &c);
+        add_to_inventory(&mut inventory, made(3, 20), &c);
         assert_eq!(inventory, [made(6, 4)], "one stack, as old as the oldest");
         let mut pile = vec![made(1, 30)];
         add_to_pile(&mut pile, &[made(2, 12)], &c);
@@ -366,22 +350,17 @@ mod tests {
     }
 
     #[test]
-    fn an_inventory_has_a_letter_per_stack() {
+    fn an_inventory_holds_any_number_of_stacks() {
         let c = content();
         let mut inventory = Vec::new();
-        for _ in 0..INVENTORY_SLOTS {
-            assert!(add_to_inventory(&mut inventory, stack(&c, "dagger", 1), &c));
+        for _ in 0..40 {
+            add_to_inventory(&mut inventory, stack(&c, "dagger", 1), &c);
         }
-        assert!(!add_to_inventory(
-            &mut inventory,
-            stack(&c, "dagger", 1),
-            &c
-        ));
-        assert_eq!(inventory.len(), INVENTORY_SLOTS);
-        // A stackable object still fits when it joins a stack.
-        inventory[0] = stack(&c, "arrow", 1);
-        assert!(add_to_inventory(&mut inventory, stack(&c, "arrow", 3), &c));
-        assert_eq!(inventory[0].count, 4);
+        assert_eq!(inventory.len(), 40);
+        // A stackable object joins its stack wherever it is, past the 26th too.
+        add_to_inventory(&mut inventory, stack(&c, "arrow", 1), &c);
+        add_to_inventory(&mut inventory, stack(&c, "arrow", 3), &c);
+        assert_eq!((inventory.len(), inventory[40].count), (41, 4));
     }
 
     #[test]

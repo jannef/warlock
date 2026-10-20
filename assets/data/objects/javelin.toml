@@ -3,6 +3,7 @@ id = "javelin"
 name = "javelin"
 glyph = ")"
 fg = "#c4a46c"
+class = "melee_weapons"
 material = "wood"
 weight = 1000
 value = 10

@@ -85,6 +85,22 @@ to open, read keys for, or draw one:
   per context, so Tab is `NextTarget` in play and `NextPage` here; `Bindings::owner_in` and
   `lookup` read one context). `Press::shift` carries Shift from the router. The dialogue screen
   is no page: its digits ask about topics.
+- **Item lists** (`ui/paged_list.rs`, spec §6 "Item lists", #188, #189): **every lettered list
+  of stacks is the one `PagedList`** (the inventory, pick up, drop, throw, eat, the equip choice;
+  sell is a drop in a shop, identify a dev action): never a list or scrolling of its own. Items
+  group by item class in class order (`PerceptionView::item_class`), a header row per class
+  (`Row::Header`, no letter), each class in the items' own order. A page holds as many rows as
+  the console has for it (the screen's `fit`/`layout`, which sets `PagedList::set_room`;
+  where room, not the 26 letters, is what pages the list, the screen's margin and gaps give way
+  first) and at most 26 items; letters run down a page from `a` and restart on every page
+  (`at_letter`), a class split across pages repeats its header, and the frame shows `Page 2/3`
+  (`draw_label`). The list's cursor picks the page shown; Up/Down move it across pages, and the
+  `Context::Menu` commands `NextListPage` (`>`, PageDown) and `PrevListPage` (`<`, PageUp),
+  `Nav::NextPage`/`PrevPage`, turn the page (cursor to its first item; no wrapping). Drawing knows
+  the console, presses do not: `route_keys` keeps `ScreenStack::console` current and the stack
+  calls the screen's `fit` before each press, so a letter names what is drawn even before the
+  first draw (`--keys`). Screens hold stack positions (`Item::position`), never letters, and
+  send actions by position.
 - Prompts in the message line (open/close/bash/chat direction, rest, look mode, aiming) are
   `InputMode`s, not screens; a question (the step onto a known trap, `input::trap_dialog`) is
   the dialog (above). The rules never ask: a `move` steps onto whatever is there. `C` with
@@ -95,14 +111,14 @@ to open, read keys for, or draw one:
   `ui/controls_screen.rs` (commands grouped by `Context` under headings, notes on Esc and list
   letters, Reset all keys, Export keys…, Import keys…; also the `?` help: the same list,
   read-only, the developer keys only where they work), `ui/object_screen.rs` (inventory, pick up,
-  drop, throw, eat: stacks by letter; in the choices letters always name stacks, even `h j k l`;
-  the eat choice lists food lying here first, without letters, then the pack's by letter; in the
-  inventory a letter opens the stack's description, and `i` closes it only when it names none),
+  drop, throw, eat; in the choices letters always name stacks, even `h j k l`; the eat choice
+  lists food lying here first ("lying here"), then the pack's; in the inventory a letter opens
+  the stack's description, and `i` closes it only when it names none; marks belong to stacks
+  (positions), so they stay as pages turn),
   `ui/describe_screen.rs` (`DescribeScreen`: one stack as the player knows it, from
   `magic::describe`; names everywhere in their rarity's color, `ui::rarity_color`),
   `ui/equipment_screen.rs` (`EquipmentScreen`: slots by letter, which always name slots, so its
-  own key `e` closes it only when it names none; `ItemScreen`: the stacks that fit one slot, by
-  their inventory letters), `ui/character_screen.rs` (name, race, gender, class, age, birthday,
+  own key `e` closes it only when it names none; `ItemScreen`: the stacks that fit one slot), `ui/character_screen.rs` (name, race, gender, class, age, birthday,
   and sign (`birth_parts`/`fit_parts`, shared with the summary), the player's scores, hit points
   and Defence total, weight and burden thresholds; 72 wide like the summary),
   `ui/weapon_skills_screen.rs` (an info page: sections, ranks, and a faint ten-cell marks bar,

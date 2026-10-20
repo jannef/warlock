@@ -232,6 +232,7 @@ id = "bow"
 name = "short bow"
 glyph = "}"
 fg = "#c0c0c0"
+class = "missile_weapons"
 material = "wood"
 weight = 700
 value = 0
@@ -245,6 +246,7 @@ id = "arrow"
 name = "arrow"
 glyph = "/"
 fg = "#c0c0c0"
+class = "missiles"
 material = "wood"
 weight = 30
 value = 0
@@ -269,6 +271,10 @@ mark = "quivered"
 
 fn files() -> ContentFiles {
     let mut files = ContentFiles::default();
+    files.insert(
+        "data/item_classes.toml",
+        crate::content::BUILTIN_ITEM_CLASSES,
+    );
     files.insert("data/terrain.toml", TERRAIN);
     files.insert("data/factions.toml", FACTIONS);
     files.insert("data/creatures.toml", CREATURES);

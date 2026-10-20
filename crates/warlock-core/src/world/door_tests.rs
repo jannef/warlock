@@ -125,6 +125,7 @@ id = "iron_key"
 name = "iron key"
 glyph = "("
 fg = "#b4b8bc"
+class = "tools"
 material = "iron"
 weight = 40
 value = 0
@@ -135,6 +136,7 @@ id = "brass_key"
 name = "brass key"
 glyph = "("
 fg = "#d8b048"
+class = "tools"
 material = "iron"
 weight = 40
 value = 0
@@ -145,6 +147,7 @@ id = "skeleton_key"
 name = "skeleton key"
 glyph = "("
 fg = "#e0dccc"
+class = "tools"
 material = "iron"
 weight = 30
 value = 0
@@ -155,6 +158,7 @@ id = "maul"
 name = "maul"
 glyph = ")"
 fg = "#c0c0c0"
+class = "melee_weapons"
 material = "iron"
 weight = 5000
 value = 0
@@ -238,6 +242,10 @@ const LEVELS: &[(&str, &str, &str)] = &[
 
 fn files() -> ContentFiles {
     let mut files = ContentFiles::default();
+    files.insert(
+        "data/item_classes.toml",
+        crate::content::BUILTIN_ITEM_CLASSES,
+    );
     files.insert("data/terrain.toml", TERRAIN);
     files.insert("data/factions.toml", FACTIONS);
     files.insert("data/creatures.toml", CREATURES);

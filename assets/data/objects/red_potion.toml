@@ -3,6 +3,7 @@ id = "red_potion"
 name = "red potion"
 glyph = "!"
 fg = "#e04848"
+class = "potions"
 material = "glass"
 weight = 250
 value = 60

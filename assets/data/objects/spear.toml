@@ -3,6 +3,7 @@ id = "spear"
 name = "spear"
 glyph = ")"
 fg = "#b8955a"
+class = "melee_weapons"
 material = "wood"
 weight = 1800
 value = 35

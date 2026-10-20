@@ -3,6 +3,7 @@ id = "mace"
 name = "mace"
 glyph = ")"
 fg = "#a4a8ac"
+class = "melee_weapons"
 material = "iron"
 weight = 2700
 value = 40

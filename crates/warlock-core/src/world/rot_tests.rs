@@ -4,7 +4,7 @@
 //! eating rotten food of any kind, shops and rotten food, the dev dump, saves, and replays.
 
 use super::*;
-use crate::action::{Letters, Meal, parse_actions};
+use crate::action::{Meal, Positions, parse_actions};
 use crate::content::ContentFiles;
 use crate::object::Stack;
 use crate::replay::Replay;
@@ -460,7 +460,7 @@ fn rotten_food_is_worth_nothing_in_a_shop() {
         w.state.current().shops[0].unpaid.is_empty(),
         "nothing owed for it"
     );
-    assert_eq!(w.perception().sale(Letters::of([2])), None);
+    assert_eq!(w.perception().sale(&Positions::of([2])), None);
     run(&mut w, "sell:c");
     assert_eq!(
         said(
@@ -483,5 +483,5 @@ fn rotten_food_is_worth_nothing_in_a_shop() {
         .iter()
         .position(|s| s.object == meat.object);
     w.player_mut().inventory[fresh.unwrap()].died = Some(w.time());
-    assert!(w.perception().sale(Letters::of([2])).is_some());
+    assert!(w.perception().sale(&Positions::of([2])).is_some());
 }

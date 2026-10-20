@@ -11,7 +11,7 @@
 //! item level is the level's.
 
 use super::{Actor, ActorId, Spent, World};
-use crate::action::Letters;
+use crate::action::Positions;
 use crate::magic::{LootGrade, loot};
 use crate::object::Stack;
 use crate::rng::Rng;
@@ -45,11 +45,11 @@ impl World {
         Identified::Now(name)
     }
 
-    /// Dev: identifies the inventory stacks `letters` names (everything with no letters).
+    /// Dev: identifies the inventory stacks `positions` names (everything with none).
     /// Takes no time; says what each turned out to be, or that there was nothing to learn.
-    pub(super) fn identify_dev(&mut self, letters: Letters) -> Spent {
+    pub(super) fn identify_dev(&mut self, positions: &Positions) -> Spent {
         let len = self.state.player().inventory.len();
-        let Some(chosen) = self.chosen(letters, len, |c| format!("You carry no {c}.")) else {
+        let Some(chosen) = self.chosen(positions, len, "You carry no such thing.") else {
             return Spent::Nothing;
         };
         let learned = (chosen.iter())

@@ -3,6 +3,7 @@ id = "battle_axe"
 name = "battle axe"
 glyph = ")"
 fg = "#a8a090"
+class = "melee_weapons"
 material = "iron"
 weight = 2600
 value = 60

@@ -3,6 +3,7 @@ id = "jade_amulet"
 name = "jade amulet"
 glyph = '"'
 fg = "#68c090"
+class = "amulets"
 material = "stone"
 weight = 80
 value = 120

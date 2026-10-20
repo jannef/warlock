@@ -4,6 +4,7 @@ name = "suit of plate armour"
 plural = "suits of plate armour"
 glyph = "["
 fg = "#c4ccd4"
+class = "body_armour"
 material = "steel"
 weight = 22000
 value = 900

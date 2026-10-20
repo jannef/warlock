@@ -3,6 +3,7 @@ id = "sling"
 name = "sling"
 glyph = "}"
 fg = "#9a7450"
+class = "missile_weapons"
 material = "leather"
 weight = 100
 value = 10

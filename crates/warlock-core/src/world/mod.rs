@@ -137,7 +137,7 @@ use crate::hunger::Satiation;
 use crate::light::{LightCache, Sky};
 use crate::messages::MessageLog;
 use crate::noise::Recent;
-use crate::object::{self, Stack, Weight};
+use crate::object::{Stack, Weight};
 use crate::perception::{Perception, PerceptionView};
 use crate::rng::Rng;
 use crate::skills::{Skills, Use};
@@ -518,7 +518,6 @@ impl World {
         if let Some(actor) = state.actors.values().find(|a| {
             usize::from(a.creature.0) >= creatures
                 || !a.inventory.iter().all(|s| s.is_valid_for(&content))
-                || a.inventory.len() > object::INVENTORY_SLOTS
                 || !a.equipment.is_valid_for(&a.inventory, &content)
                 || a.skills.iter().any(|(id, _)| usize::from(id.0) >= skills)
                 || !a.weapon_skills.is_valid_for(content.weapon_skills())
@@ -803,10 +802,10 @@ impl World {
             ),
             Action::Ascend => (self.take_stairs(StairsDir::Up, events), ActionKind::Stairs),
             Action::ToggleLantern => (self.toggle_lantern(), ActionKind::Lantern),
-            Action::PickUp(letters) => return self.pick_up_objects(*letters),
-            Action::Drop(letters) => return self.drop_objects(*letters),
-            Action::Sell(letters) => {
-                return self.trade(*letters, true).unwrap_or_else(|| {
+            Action::PickUp(positions) => return self.pick_up_objects(positions),
+            Action::Drop(positions) => return self.drop_objects(positions),
+            Action::Sell(positions) => {
+                return self.trade(positions, true).unwrap_or_else(|| {
                     self.say("There is nobody here to sell to.");
                     Spent::Nothing
                 });
@@ -830,7 +829,7 @@ impl World {
             Action::Effect { effect, at, to } => {
                 return self.show_effect(effect, *at, *to, events);
             }
-            Action::Identify(letters) => return self.identify_dev(*letters),
+            Action::Identify(positions) => return self.identify_dev(positions),
             Action::Freeze { at, radius } => return self.freeze_dev(*at, *radius, events),
             Action::Thaw { at, radius } => return self.thaw_dev(*at, *radius, events),
             Action::Afflict(id) => return self.afflict_dev(id, events),

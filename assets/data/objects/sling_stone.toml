@@ -3,6 +3,7 @@ id = "sling_stone"
 name = "sling stone"
 glyph = "*"
 fg = "#9c968c"
+class = "missiles"
 material = "stone"
 weight = 40
 value = 0

@@ -1,0 +1,99 @@
+# Item classes (spec §7 "Objects and materials"; #189), as in ADOM: what kind of thing an object
+# is. Every item list (the inventory, picking up, dropping, what to eat or throw, what goes in an
+# equipment slot) groups its items by class, in the order of this file, each class under a header
+# with its name; within a class, items keep their order. Shops sell and buy by class (shops.toml).
+#
+# Every object names its class (`class` in objects/). Each [[class]]:
+#   id       what objects and shops name it by
+#   name     the header item lists show
+#   kinds    the magic item kinds (`kind` in objects/) of its objects: an object of one of these
+#            kinds must be of this class, and each kind is of one class only
+#   corpses  corpses are of this class (one class; needed where creatures leave corpses)
+
+[[class]]
+id = "melee_weapons"
+name = "Melee weapons"
+kinds = ["weapon"]
+
+[[class]]
+id = "missile_weapons"
+name = "Missile weapons"
+kinds = ["launcher"]
+
+[[class]]
+id = "missiles"
+name = "Missiles"
+kinds = ["ammo"]
+
+[[class]]
+id = "shields"
+name = "Shields"
+kinds = ["shield"]
+
+[[class]]
+id = "body_armour"
+name = "Body armour"
+kinds = ["body"]
+
+[[class]]
+id = "helmets"
+name = "Helmets"
+kinds = ["helmet"]
+
+[[class]]
+id = "cloaks"
+name = "Cloaks"
+kinds = ["cloak"]
+
+[[class]]
+id = "gloves"
+name = "Gloves"
+kinds = ["gloves"]
+
+[[class]]
+id = "boots"
+name = "Boots"
+kinds = ["boots"]
+
+[[class]]
+id = "rings"
+name = "Rings"
+kinds = ["ring"]
+
+[[class]]
+id = "amulets"
+name = "Amulets"
+kinds = ["amulet"]
+
+[[class]]
+id = "light_sources"
+name = "Light sources"
+
+[[class]]
+id = "tools"
+name = "Tools"
+
+[[class]]
+id = "food"
+name = "Food"
+corpses = true
+
+[[class]]
+id = "potions"
+name = "Potions"
+
+[[class]]
+id = "scrolls"
+name = "Scrolls"
+
+[[class]]
+id = "gems"
+name = "Gems"
+
+[[class]]
+id = "coins"
+name = "Coins"
+
+[[class]]
+id = "miscellaneous"
+name = "Miscellaneous"

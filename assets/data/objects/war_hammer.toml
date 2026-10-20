@@ -3,6 +3,7 @@ id = "war_hammer"
 name = "war hammer"
 glyph = ")"
 fg = "#8c949c"
+class = "melee_weapons"
 material = "iron"
 weight = 2300
 value = 50

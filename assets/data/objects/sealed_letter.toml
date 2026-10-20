@@ -3,6 +3,7 @@ id = "sealed_letter"
 name = "sealed letter"
 glyph = "?"
 fg = "#e0d2a8"
+class = "scrolls"
 material = "paper"
 weight = 20
 value = 0

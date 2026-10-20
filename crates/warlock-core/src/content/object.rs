@@ -5,7 +5,9 @@
 //! Every object defines the glyph it is drawn with, its color, its material, and its weight in
 //! grams. Glyphs follow ADOM loosely: `)` weapons, `/` missiles, `}` missile weapons, `[` armor,
 //! `(` tools, `!` potions, `?` scrolls, `%` food, `*` stones and gems, `$` coins, `=` rings,
-//! `"` amulets.
+//! `"` amulets. Every object also names its item class (`class`, an id in
+//! `data/item_classes.toml`, [`super::item_class`]): what item lists group it under and shops
+//! trade it as; an object with a magic item `kind` is of the class that lists the kind.
 //!
 //! Things that can be worn or wielded say where they go (`slot`, the id or `fits` of a slot in
 //! `data/slots.toml`: `slot = "body"`, `slot = "ring"` for either ring slot); a `two_handed` one
@@ -58,6 +60,7 @@ use super::action::check_cost;
 use super::affix::{ItemKind, MAX_ITEM_LEVEL};
 use super::creature::CreatureDef;
 use super::hunger::Food;
+use super::item_class::{ItemClassDef, ItemClassId};
 use super::light::LightId;
 use super::material::MaterialId;
 use super::particles::ParticleEmitter;
@@ -82,96 +85,6 @@ pub const MAX_BURN: u32 = DAY as u32;
 pub const MAX_DIG: u16 = 100;
 /// The most one object may be worth, in gold coins.
 pub const MAX_VALUE: u32 = 1_000_000;
-
-/// An object's class, ADOM-like: its glyph says what kind of thing it is (spec §7 "Objects and
-/// materials"). Shops sell and buy by class (spec §7 "Shops").
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum ObjectClass {
-    /// `)`
-    Weapons,
-    /// `}`
-    MissileWeapons,
-    /// `/`
-    Missiles,
-    /// `[`
-    Armour,
-    /// `(`
-    Tools,
-    /// `!`
-    Potions,
-    /// `?`
-    Scrolls,
-    /// `%`
-    Food,
-    /// `*`: stones and gems.
-    Stones,
-    /// `$`
-    Coins,
-    /// `=`
-    Rings,
-    /// `"`
-    Amulets,
-}
-
-impl ObjectClass {
-    /// Every class, in glyph order of the ADOM list.
-    pub const ALL: [ObjectClass; 12] = [
-        ObjectClass::Weapons,
-        ObjectClass::MissileWeapons,
-        ObjectClass::Missiles,
-        ObjectClass::Armour,
-        ObjectClass::Tools,
-        ObjectClass::Potions,
-        ObjectClass::Scrolls,
-        ObjectClass::Food,
-        ObjectClass::Stones,
-        ObjectClass::Coins,
-        ObjectClass::Rings,
-        ObjectClass::Amulets,
-    ];
-
-    /// The class of objects drawn with `glyph`; `None` for a glyph no class uses.
-    pub fn of_glyph(glyph: char) -> Option<Self> {
-        Self::ALL.into_iter().find(|c| c.glyph() == glyph)
-    }
-
-    /// The glyph its objects are drawn with.
-    pub const fn glyph(self) -> char {
-        match self {
-            ObjectClass::Weapons => ')',
-            ObjectClass::MissileWeapons => '}',
-            ObjectClass::Missiles => '/',
-            ObjectClass::Armour => '[',
-            ObjectClass::Tools => '(',
-            ObjectClass::Potions => '!',
-            ObjectClass::Scrolls => '?',
-            ObjectClass::Food => '%',
-            ObjectClass::Stones => '*',
-            ObjectClass::Coins => '$',
-            ObjectClass::Rings => '=',
-            ObjectClass::Amulets => '"',
-        }
-    }
-
-    /// What the class is called, in the plural: "missile weapons".
-    pub const fn name(self) -> &'static str {
-        match self {
-            ObjectClass::Weapons => "weapons",
-            ObjectClass::MissileWeapons => "missile weapons",
-            ObjectClass::Missiles => "missiles",
-            ObjectClass::Armour => "armour",
-            ObjectClass::Tools => "tools",
-            ObjectClass::Potions => "potions",
-            ObjectClass::Scrolls => "scrolls",
-            ObjectClass::Food => "food",
-            ObjectClass::Stones => "stones and gems",
-            ObjectClass::Coins => "coins",
-            ObjectClass::Rings => "rings",
-            ObjectClass::Amulets => "amulets",
-        }
-    }
-}
 
 /// Index of an object definition in [`super::Content::object_defs`].
 ///
@@ -226,6 +139,8 @@ pub(super) struct ObjectSpec {
     pub plural: Option<String>,
     pub glyph: char,
     pub fg: Rgb,
+    /// Its item class, an id in `data/item_classes.toml`: what kind of thing it is.
+    pub class: String,
     /// A material id in `materials.toml`.
     pub material: String,
     /// Grams, at least 1.
@@ -331,6 +246,9 @@ pub struct ObjectDef {
     pub plural: String,
     pub glyph: char,
     pub fg: Rgb,
+    /// Its item class (`data/item_classes.toml`): what kind of thing it is, which item lists
+    /// group by and shops trade by. The player knows it of anything they see, identified or not.
+    pub class: ItemClassId,
     pub material: MaterialId,
     /// Weight of one, in grams; at least 1.
     pub weight: u32,
@@ -420,6 +338,7 @@ impl ObjectDef {
     pub(super) fn corpse_of(
         id: CreatureId,
         creature: &CreatureDef,
+        class: ItemClassId,
         material: MaterialId,
         food: Food,
     ) -> Self {
@@ -429,6 +348,7 @@ impl ObjectDef {
             plural: format!("{} corpses", creature.name),
             glyph: '%',
             fg: creature.fg,
+            class,
             material,
             weight: creature.weight,
             // Nobody buys or sells a corpse (spec §7 "Shops").
@@ -502,11 +422,6 @@ impl ObjectDef {
         self.ammo.is_some() || self.is_thrown()
     }
 
-    /// Its class, from its glyph (ADOM-like); `None` for a glyph no class uses.
-    pub fn class(&self) -> Option<ObjectClass> {
-        ObjectClass::of_glyph(self.glyph)
-    }
-
     /// `count` of it in words: "a dagger", "an iron key", "12 arrows".
     pub fn describe(&self, count: u32) -> String {
         if count == 1 {
@@ -526,13 +441,14 @@ pub fn article(noun: &str) -> &'static str {
 }
 
 impl ObjectSpec {
-    /// Checks the definition and resolves its material, light, and weapon skill; `slots` are
-    /// where things may be worn or wielded, `skills` the weapon skills. Returns the object and
-    /// the id of what it is `lit` as, which names another object and is resolved once every
-    /// object is known.
+    /// Checks the definition and resolves its class, material, light, and weapon skill;
+    /// `classes` are the item classes, `slots` where things may be worn or wielded, `skills`
+    /// the weapon skills. Returns the object and the id of what it is `lit` as, which names
+    /// another object and is resolved once every object is known.
     pub(super) fn resolve(
         self,
         file: &str,
+        classes: &[ItemClassDef],
         material: impl Fn(&str) -> Option<MaterialId>,
         light: impl Fn(&str) -> Option<LightId>,
         slots: &[SlotDef],
@@ -554,6 +470,7 @@ impl ObjectSpec {
         if self.value > MAX_VALUE {
             return Err(err(format!("`value` is in gold coins, 0 to {MAX_VALUE}")));
         }
+        let class = self.item_class(classes).map_err(err)?;
         let material = material(&self.material)
             .ok_or_else(|| err(format!("unknown material `{}`", self.material)))?;
         if let Some(slot) = &self.slot
@@ -645,6 +562,7 @@ impl ObjectSpec {
             plural,
             glyph: self.glyph,
             fg: self.fg,
+            class,
             material,
             weight: self.weight,
             value: self.value,
@@ -684,6 +602,35 @@ impl ObjectSpec {
             corpse: None,
         };
         Ok((def, self.lit))
+    }
+
+    /// Its class: one of `classes`, and the class of its magic item `kind`, if it has one (so
+    /// the two cannot say different things).
+    fn item_class(&self, classes: &[ItemClassDef]) -> Result<ItemClassId, String> {
+        let at = (classes.iter().position(|c| c.id == self.class)).ok_or_else(|| {
+            format!(
+                "unknown item class `{}` (data/item_classes.toml)",
+                self.class
+            )
+        })?;
+        if let Some(kind) = self.kind
+            && !classes[at].kinds.contains(&kind)
+        {
+            let of = classes.iter().find(|c| c.kinds.contains(&kind));
+            return Err(match of {
+                Some(c) => format!(
+                    "`kind = \"{}\"` is of class `{}`, not `{}`",
+                    kind.id(),
+                    c.id,
+                    self.class
+                ),
+                None => format!(
+                    "no class in data/item_classes.toml lists kind `{}`",
+                    kind.id()
+                ),
+            });
+        }
+        Ok(ItemClassId(at as u8))
     }
 
     /// The fields of a base item: its `kind` fits what it is (a weapon has an attack and goes in
@@ -942,6 +889,7 @@ mod tests {
             plural: plural.into(),
             glyph: ')',
             fg: Rgb::WHITE,
+            class: ItemClassId(0),
             material: MaterialId(0),
             weight: 1,
             value: 0,

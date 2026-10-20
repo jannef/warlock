@@ -33,6 +33,10 @@ pub enum Nav {
     Mark,
     /// Mark everything on a pick-up or drop list (`KeyCommand::MarkAll`, `,`).
     MarkAll,
+    /// The next page of an item list (`KeyCommand::NextListPage`, `>`).
+    NextPage,
+    /// The previous page of an item list (`KeyCommand::PrevListPage`, `<`).
+    PrevPage,
     Other,
 }
 
@@ -66,6 +70,8 @@ impl Press {
                 Some(KeyCommand::Erase) => Nav::Erase,
                 Some(KeyCommand::Mark) => Nav::Mark,
                 Some(KeyCommand::MarkAll) => Nav::MarkAll,
+                Some(KeyCommand::NextListPage) => Nav::NextPage,
+                Some(KeyCommand::PrevListPage) => Nav::PrevPage,
                 _ => Nav::Other,
             }
         };
@@ -125,6 +131,8 @@ pub struct Hints {
     pub erase: String,
     pub mark: String,
     pub mark_all: String,
+    pub next_page: String,
+    pub prev_page: String,
 }
 
 impl Hints {
@@ -139,6 +147,8 @@ impl Hints {
             erase: key(KeyCommand::Erase),
             mark: key(KeyCommand::Mark),
             mark_all: key(KeyCommand::MarkAll),
+            next_page: key(KeyCommand::NextListPage),
+            prev_page: key(KeyCommand::PrevListPage),
         }
     }
 

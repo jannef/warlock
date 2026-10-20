@@ -3,6 +3,7 @@ id = "chain_mail"
 name = "chain mail shirt"
 glyph = "["
 fg = "#aab2ba"
+class = "body_armour"
 material = "iron"
 weight = 11000
 value = 250

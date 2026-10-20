@@ -3,6 +3,7 @@ id = "great_sword"
 name = "great sword"
 glyph = ")"
 fg = "#d0d8e4"
+class = "melee_weapons"
 material = "steel"
 weight = 3500
 value = 160

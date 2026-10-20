@@ -1,5 +1,5 @@
 //! Shops (`assets/data/shops.toml`, spec §7 "Shops"), ADOM-like: kinds of shop (a general store
-//! and specialty shops), what each sells and buys by object class ([`ObjectClass`]), its prices,
+//! and specialty shops), what each sells and buys by item class ([`ItemClassId`]), its prices,
 //! the shopkeeper every shop has, and how often generated levels get one.
 //!
 //! Prices are an object's `value` (`objects.toml`) times a shop's `markup` (what it asks) or
@@ -16,11 +16,12 @@
 
 use super::creature::CreatureId;
 use super::faction::FactionId;
+use super::item_class::ItemClassId;
 use super::level::{CreatureSpawn, equip_ids};
-use super::object::{ObjectClass, ObjectId, parse_stacks};
+use super::object::{ObjectId, parse_stacks};
 use super::{Content, ContentError, Stance};
 use crate::geom::Pos;
-use crate::object::{INVENTORY_SLOTS, Stack};
+use crate::object::Stack;
 use serde::{Deserialize, Serialize};
 
 /// Index of a kind of shop in [`Shops::defs`]; assigned in file order (in the save fingerprint).
@@ -29,6 +30,8 @@ pub struct ShopId(pub u8);
 
 /// The most kinds of shop there can be.
 pub const MAX_SHOPS: usize = 32;
+/// The most stacks of goods a generated shop lays out.
+pub const MAX_ITEMS: u8 = 52;
 /// The most the player's favour moves a price, in percent either way.
 pub const MAX_FAVOUR: i32 = 50;
 /// The placeholder for the keeper's name in a shop's `title`.
@@ -69,9 +72,9 @@ struct ShopSpec {
     id: String,
     name: String,
     title: String,
-    stock: Vec<ObjectClass>,
+    stock: Vec<String>,
     #[serde(default)]
-    buys: Vec<ObjectClass>,
+    buys: Vec<String>,
     items: [u8; 2],
     markup: u16,
     pays: u8,
@@ -85,10 +88,10 @@ pub struct ShopDef {
     pub name: String,
     /// Its sign, with [`KEEPER`] for the keeper's name: "{keeper}'s General Store".
     pub title: String,
-    /// The classes of what generated shops of this kind lay out.
-    pub stock: Vec<ObjectClass>,
-    /// The classes of what it buys.
-    pub buys: Vec<ObjectClass>,
+    /// The item classes of what generated shops of this kind lay out.
+    pub stock: Vec<ItemClassId>,
+    /// The item classes of what it buys.
+    pub buys: Vec<ItemClassId>,
     /// How many stacks of goods a generated shop lays out, least and most.
     pub items: (u8, u8),
     /// What it asks, in percent of the value.
@@ -190,9 +193,7 @@ impl Shops {
         let def = content.object(object);
         self.trades(content, object)
             && def.burning.is_none()
-            && def
-                .class()
-                .is_some_and(|c| self.get(kind).stock.contains(&c))
+            && self.get(kind).stock.contains(&def.class)
     }
 
     /// Whether a shop of kind `kind` buys `object`.
@@ -200,9 +201,7 @@ impl Shops {
         let def = content.object(object);
         self.trades(content, object)
             && def.burning.is_none()
-            && def
-                .class()
-                .is_some_and(|c| self.get(kind).buys.contains(&c))
+            && self.get(kind).buys.contains(&def.class)
     }
 
     /// What a shop of kind `kind` asks for `stack`, in gold, from a buyer with `favour` (percent
@@ -307,10 +306,9 @@ impl Shops {
                 return Err(bad("`stock` must name at least one class".into()));
             }
             let [least, most] = spec.items;
-            if least == 0 || least > most || usize::from(most) > INVENTORY_SLOTS * 2 {
+            if least == 0 || least > most || most > MAX_ITEMS {
                 return Err(bad(format!(
-                    "`items` must be [least, most] from 1 to {}",
-                    INVENTORY_SLOTS * 2
+                    "`items` must be [least, most] from 1 to {MAX_ITEMS}"
                 )));
             }
             if !(100..=1000).contains(&spec.markup) || spec.pays > 100 {
@@ -319,12 +317,22 @@ impl Shops {
                         .into(),
                 ));
             }
+            let classes = |ids: &[String]| -> Result<Vec<ItemClassId>, ContentError> {
+                (ids.iter())
+                    .map(|c| {
+                        (content.item_class_id(c)).ok_or_else(|| {
+                            bad(format!("unknown item class `{c}` (data/item_classes.toml)"))
+                        })
+                    })
+                    .collect()
+            };
+            let (stock, buys) = (classes(&spec.stock)?, classes(&spec.buys)?);
             defs.push(ShopDef {
                 id: spec.id,
                 name: spec.name,
                 title: spec.title,
-                stock: spec.stock,
-                buys: spec.buys,
+                stock,
+                buys,
                 items: (least, most),
                 markup: spec.markup,
                 pays: spec.pays,
@@ -368,9 +376,6 @@ fn keeper(spec: &KeeperSpec, content: &Content) -> Result<Keeper, String> {
         .filter(|_| spec.creature != "player")
         .ok_or_else(|| format!("unknown creature `{}`", spec.creature))?;
     let carry = parse_stacks(&spec.carry, content).map_err(|m| format!("carry: {m}"))?;
-    if carry.len() > INVENTORY_SLOTS {
-        return Err(format!("carries at most {INVENTORY_SLOTS} stacks"));
-    }
     let equipment = equip_ids(&spec.wield, &spec.wear, &carry, content)?;
     Ok(Keeper {
         creature,
@@ -526,14 +531,14 @@ mod tests {
                 "ruby",
             ),
             (
-                "stock = [\"armour\"]",
+                "stock = [\"melee_weapons\", \"missiles\"]",
                 "stock = [\"coins\"]",
                 "no object worth",
             ),
             (
-                "stock = [\"armour\"]",
+                "stock = [\"melee_weapons\", \"missiles\"]",
                 "stock = [\"swords\"]",
-                "unknown variant",
+                "unknown item class `swords`",
             ),
         ] {
             assert!(good.contains(from), "{from}");

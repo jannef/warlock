@@ -12,7 +12,7 @@
 //!   arrives there.
 
 use super::{ActorId, World};
-use crate::action::Letters;
+use crate::action::Positions;
 use crate::object::Stack;
 use crate::rot::{self, Stage};
 use crate::time::GameTime;
@@ -24,7 +24,7 @@ impl World {
     }
 
     /// Food that has rotted away by `now` leaves actor `id`'s pack, the equipment following the
-    /// letters; the player is told of each ("Your loaf of bread has rotted away.", logged without
+    /// positions; the player is told of each ("Your loaf of bread has rotted away.", logged without
     /// stopping a rest).
     pub(super) fn rot_pack(&mut self, id: ActorId, now: GameTime) {
         let content = &self.content;
@@ -32,7 +32,7 @@ impl World {
             return;
         };
         let gone = |s: &Stack| rot::stage(content, s, now) == Some(Stage::Gone);
-        let rotted = Letters::of(
+        let rotted = Positions::of(
             (actor.inventory.iter().enumerate()).filter_map(|(i, s)| gone(s).then_some(i)),
         );
         if rotted.is_empty() {
@@ -54,7 +54,7 @@ impl World {
             i += 1;
             keep
         });
-        actor.equipment.after_removal(rotted);
+        actor.equipment.after_removal(&rotted);
         if id == self.state.player {
             for text in told {
                 self.note(text);

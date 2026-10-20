@@ -101,8 +101,11 @@ pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remov
 eat:LETTER eat:floor:LETTER dig:DIR search search:N chat:DIR ask:DIR:TOPIC rest:GOAL stance:NAME vision:PROFILE
 skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS infect:DISEASE`
 (`DIR` = N
-NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
-player's cell, `a` its top) or `drop:b` (the inventory), none = everything; `sell:b` sells to
+NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by position, as letters
+for the first 26 (`a` = 0, the first) or numbers for any (`0,2,30`; mixed works too, `ac,30`),
+e.g. `pickup:ac` (the pile on the player's cell, `a` its top) or `drop:b` (the inventory), none
+= everything; `LETTER` = one position, `b` or `27` (`equip:body:27`, `eat:floor:30`); positions
+are where stacks are stored, never the letters a screen's page shows; `sell:b` sells to
 the shop the player stands in and `pay` pays it (spec §7 "Shops"); `SLOT` = a slot id in
 `assets/data/slots.toml`, e.g. `equip:body:b` (put inventory stack `b` on), `remove:body`;
 `bash:DIR` bashes with the held shield, `fire:X,Y` shoots the readied missile weapon at level
@@ -136,7 +139,9 @@ chanting, `k` banging (a door kicked), `d` digging, `v` a voice, `a` an alarm be
 explosion, `t` a thunderclap, upper case when loud), `blood` (blood the
 player sees or remembers as a digit over the view, `1` a few drops to `9` soaked), `inventory`
 (what the player
-carries and weighs, worn and wielded things marked, their burden and its thresholds),
+carries, grouped by item class under `Class:` header lines as the screens group it, each stack by
+its position as action text names it, and weighs, worn and wielded things marked, their burden
+and its thresholds),
 `equipment` (the player's slots), `stats`
 (the player's race, gender, and class, then their own scores as the rules read them, then
 `Effects Bleeding, Diseased` when they suffer any, then `Diseases filth fever`, the diseases they
@@ -164,8 +169,9 @@ died) and its stage, `fresh`, `old`, `rotten`, or `gone`, which the player is ne
 `known_traps`, `temperature` (°C to a tenth), `weapon_skills` (by skill id:
 `rank`, `progress`), `styles_in_use` (style ids), `quests` (the log: `id`, `name`, `kind`, `active`, `completed`, `giver`,
 `objective`, `status`), each seen actor's `health` and `effects` (those that show), `room` (the
-special room the player stands in, if they know it), and per inventory stack its `name`,
-`rarity`, `identified`, and `magic` (affixes only once identified). Replay
+special room the player stands in, if they know it), and per inventory stack (in position
+order) its `letter` (the position as action text), `class` (item class id), `name`, `rarity`,
+`identified`, and `magic` (affixes only once identified). Replay
 files are JSON
 `{game_version, scenario, seed, character, steps:[{action, hash}]}` (`character` =
 `{race, gender, class}`, left out for a run without one; a replay without it starts as the
@@ -264,8 +270,8 @@ builds it into `pages/wiki/` beside the game. Facts that live in data (months, m
 temperatures by month and weather, water that freezes, ice by thickness and what it holds, how
 long water takes to freeze, terrain, footstep loudness in words, vision profiles, light presets (named as the player sees
 them), creatures, factions, objects, materials, equipment slots and what fits them, scenarios,
-action costs, sight radii, the pack's
-size, the stats' names, races (stat adjustments as written, dice included, vision, starting
+action costs, sight radii, item classes and
+what is in each, the stats' names, races (stat adjustments as written, dice included, vision, starting
 ages, hit points), classes (stat adjustments, hit points), what each gender raises, the horoscope
 (animals, elements, and the great cycle's signs and years), combat (weapons, armour and shields,
 the 2d12 hit chances and threat ranges, regeneration by Toughness), status effects (what causes

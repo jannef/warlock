@@ -4,6 +4,7 @@ name = "strip of dried meat"
 plural = "strips of dried meat"
 glyph = "%"
 fg = "#b06848"
+class = "food"
 material = "flesh"
 weight = 150
 value = 3

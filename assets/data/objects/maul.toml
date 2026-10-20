@@ -3,6 +3,7 @@ id = "maul"
 name = "maul"
 glyph = ")"
 fg = "#848a90"
+class = "melee_weapons"
 material = "iron"
 weight = 6000
 value = 90

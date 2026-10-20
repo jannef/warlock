@@ -3,6 +3,7 @@ id = "gold_coin"
 name = "gold coin"
 glyph = "$"
 fg = "#f0cc40"
+class = "coins"
 material = "gold"
 weight = 10
 value = 1

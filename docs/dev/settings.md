@@ -22,8 +22,10 @@ Key bindings (spec §6 "Rebinding", #159) are the `Bindings` resource (`input.rs
 ids, and the rules in `settings/keys.rs`). **Every key the game reads is a `KeyCommand` in its
 `input::Context`**: `Play` (the map, direction prompts, look mode), `Aim` (`NextTarget`,
 `PrevTarget`, `Loose`), `Prompt` (the rest choices), `Menu` (`MenuUp`/`Down`/`Left`/`Right`,
-`Confirm`, `Back`, `Erase`, `Mark`, `MarkAll`: `Press::from_input` turns them into `Nav`, so
-screens read `press.nav`, never a key), `Pages`, `Dialog` (`Yes`, `No`), and `Dev` (the developer
+`Confirm`, `Back`, `Erase`, `Mark`, `MarkAll`, and the item lists' `NextListPage` (`>`,
+PageDown) and `PrevListPage` (`<`, PageUp): `Press::from_input` turns them into `Nav`, so
+screens read `press.nav`, never a key), `Pages` (Tab; the previous info page is Shift with it,
+`PrevPage` unbound by default), `Dialog` (`Yes`, `No`), and `Dev` (the developer
 keys: in every table, read by `input::command_in` and listed by Controls only where
 `input::dev_keys` is true). Keys are unique within a context; a mode with its own context reads it
 before play's (`command_in`). Nothing matches a `KeyCode` or a character directly but Esc (fixed:

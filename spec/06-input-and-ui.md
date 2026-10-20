@@ -79,8 +79,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   mode), aiming (next and previous target, shoot or throw: `Tab`, none, Enter), the rest prompt
   (`h`, `d`, `n`), menus and screens (up, down, left, right: the arrows and `k` `j` `h` `l`;
   choose: Enter; back: no key of its own, as Esc always backs out; erase a character or reset a
-  key: Delete, Backspace; on the pick-up and drop lists mark: Space, mark everything: `,`), info
-  pages, dialogs (yes, no), and the developer keys (§9). A key is unique within its context only,
+  key: Delete, Backspace; on the pick-up and drop lists mark: Space, mark everything: `,`; on
+  every item list the next and previous page: `>` and PageDown, `<` and PageUp), info pages (a
+  digit, `Tab`; Shift+`Tab` the previous), dialogs (yes, no), and the developer keys (§9). A key is unique within its context only,
   so `Tab` is next target while aiming and next page on an info screen; a mode or screen with a
   context of its own reads it first (the rest prompt and aiming before play's keys). Two kinds of
   keys are fixed: Esc, which always cancels a prompt, backs out of every screen, and opens the
@@ -137,23 +138,39 @@ developer notes (CLAUDE.md, `docs/dev/`).
   count (`17 objects`). A stack is some number of one object: stackable objects (coins, arrows,
   potions) join a stack of the same object wherever they go; any other object is a stack of one.
   A door does not close on objects in its doorway.
-- **Pick up** (`,` or `g`) takes a lone stack at once. Where several lie, a screen lists them by
-  letter (`a` the top) with glyph, name, and weight: a letter marks or unmarks its stack (`+`
-  marked, `-` not), `,` marks everything, the arrows move the `>` cursor and Space marks its row,
-  Enter picks up the marked stacks (the cursor's row if none is marked), Esc cancels. **Drop**
+- **Item lists** (#188, #189): every list of stacks the player chooses from or reads (the
+  inventory, picking up, dropping, what to throw or eat, what goes in an equipment slot; selling
+  is dropping in a shop) is one paged list. Its stacks are grouped by **item class** (§7 "Objects
+  and materials": melee weapons, missile weapons, missiles, shields, body armour, ... coins,
+  miscellaneous), in class order, each class under a header row with its name and no letter;
+  within a class they keep their order (the order they were picked up, or the pile's). A page
+  shows as many rows as fit the screen (where the screen is what makes more pages, the panel's
+  margin and gaps give way first) and at most 26 stacks, lettered `a` down the page: letters
+  restart at `a` on every page, so on page 2 `a` names that page's first stack, and a class
+  split across pages repeats its header there. The frame says `Page 2/3`, and `>` or PageDown
+  turns to the next page, `<` or PageUp to the previous (rebindable list commands; not Tab, which
+  switches info pages); the `>` cursor moves across pages with the arrows, and the page follows
+  it. There is no scrolling. Letters always name stacks on a list, never commands. Marks belong
+  to stacks, not letters, so they stay as the pages turn. Actions name stacks by where they are
+  stored (their position), never by a page's letter, and no message names a letter.
+- **Pick up** (`,` or `g`) takes a lone stack at once. Where several lie, the list shows them
+  (above) with glyph, name, and weight: a letter marks or unmarks its stack (`+` marked, `-`
+  not), `,` marks everything (on every page), the arrows move the `>` cursor and Space marks its
+  row, Enter picks up the marked stacks (the cursor's row if none is marked), Esc cancels. **Drop**
   (`d`) chooses from the inventory the same way. Picking up and dropping are one action each
-  (replay text `pickup:ac`, `drop:b`; `pickup` and `drop` alone take everything) and take their
+  (replay text `pickup:ac`, `drop:b`, by position: `a` to `z` are the first 26, and any position
+  may be written as a number, `drop:0,2,30`; `pickup` and `drop` alone take everything) and take their
   action's time (§8 "Time"; at the burden the player has as they begin, §8 "Burden"); with
   nothing there or nothing carried, they are refused and take none. Picking up is allowed
   however much the player carries, even into Overloaded. Dropping something worn or wielded
   takes it off first ("You take off a leather jerkin."), which takes its time too, and the stacks
-  after a dropped one move up a letter (worn things keep being worn). In a shop, picking up goods
+  after a dropped one move up a place (worn things keep being worn). In a shop, picking up goods
   adds them to what the player owes, and dropping puts back what is unpaid and offers to buy the
   player's own things (§7 "Shops"); the inventory and drop screens mark what is unpaid
   ("(unpaid, 45 gold)"), the pick-up screen what is for sale.
-- **Inventory** (`i`): what the player carries, ADOM-like: stacks lettered `a` to `z` in the order
-  they were picked up (at most 26; a pile with more stacks keeps what does not fit), each with its
-  glyph, name, and weight, then what the player carries (with their burden when they have one,
+- **Inventory** (`i`): what the player carries, ADOM-like: as many stacks as they can carry
+  (weight is the only limit, §8 "Burden"), in the item list (above), each with its glyph, name,
+  and weight, then what the player carries (with their burden when they have one,
   §8 "Burden": `Carrying 28.4 kg (burdened)`) and their weight (their own plus what they carry),
   and, dimmer, the weights at which their burden changes: `Burdened over 15 kg, strained over 30
   kg, overloaded over 45 kg` (from scores the player knows, never a modifier; lines wrap at part
@@ -182,7 +199,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   what is in it (glyph, name, weight) or `—`, then what the player carries and weighs. A two-handed
   weapon shows in both hands, "(both hands)". A slot's letter (or Enter on the `>` row; the arrows
   move it) opens the choice of what goes there: the inventory stacks that fit the slot (and what it
-  holds, such as a two-handed weapon in the off hand), by their inventory letters, marked as in the
+  holds, such as a two-handed weapon in the off hand), in the item list (above), marked as in the
   inventory; the stack already there is the `>` row. Choosing a stack (its letter, or Enter) puts it
   on in the slot, taking off first what is there (a swap) and moving it if it is in another slot;
   choosing what is already there takes it off. Rings fit either ring slot, a light weapon (`light_weapon`, §7: the
@@ -263,7 +280,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   closes it.
   The character screen, the inventory, the equipment screen, the Skills screen, the weapon
   skills screen, and the quest log are the numbered info pages 1 to 6: on one of them, a digit,
-  Tab, or Shift+Tab (PageDown, PageUp) replaces it with another, and the tab line on its bottom
+  Tab, or Shift+Tab replaces it with another, and the tab line on its bottom
   border names them, each after its key: by their names where the panel is wide enough
   (`1 Character · 2 Inventory · …`), else the current page by its name and the others by short
   names (`1 Char · 2 Inventory · 3 Equip · 4 Skills · 5 Weapons · 6 Quests`), else all by their
@@ -317,10 +334,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (§8 "Healing").
   It is a gameplay input mode like the open/close/kick direction prompt, not a menu screen.
 - **Eat** (`E`; §8 "Hunger") opens the choice of what to eat: the food lying on the player's
-  cell first (no letter, marked "lying here"; the `>` cursor starts on it, as ADOM asks about
-  the floor first), then the food in the inventory by its letters; with nothing, "You have
-  nothing to eat." A pack letter, or Enter on the `>` row, eats it (replay text `eat:b` for
-  inventory stack `b`, `eat:floor:a` for the top stack of the pile underfoot); Esc cancels. A
+  cell first (marked "lying here"; the `>` cursor starts on it, as ADOM asks about the floor
+  first), then the food in the inventory, in the item list (above); with nothing, "You have
+  nothing to eat." A letter, or Enter on the `>` row, eats it (replay text by position: `eat:b`
+  for inventory stack `b`, `eat:floor:a` for the top stack of the pile underfoot); Esc
+  cancels. A
   meal is one action of several turns, stopped early like a rest; "You eat the food ration. You
   feel satiated." when it is done, "You stop eating." (or "A kobold comes into view; you stop
   eating.") when not, the food left as it was. What is no food is refused and takes no time
@@ -368,7 +386,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   any other weapon is thrown whole (improvised: -4 to hit, `IMPROVISED_TO_HIT`, and
   `IMPROVISED_RANGE` cells, in `combat.rs`); with nothing there, or no ammunition, it is refused
   ("You have nothing ready to throw or shoot.", "You have no arrows ready."). `T` opens the choice
-  of what to throw: the inventory's throwing weapons by their letters (a letter or Enter
+  of what to throw: the inventory's throwing weapons, in the item list (a letter or Enter
   chooses; "You have nothing to throw."). `f` (no default key) aims the readied launcher only. Aiming is an input mode like look mode: no time passes.
   The cursor starts on the last target if the player still sees it (a creature) or it is on this
   level (a cell), else on the nearest hostile creature in view, else on the player; `Tab` and
