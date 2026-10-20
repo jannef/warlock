@@ -3,11 +3,12 @@
 //! player their eyes, sets the range of their starting age, gives the player their size
 //! (spec §8 "Burden": how much they can carry), whether being Burdened costs them nothing, and
 //! how much they need to eat (spec §8 "Hunger"), trains them in skills (spec §8 "Skills"; dice,
-//! and humans' extra class skill), and gives them starting ranks in weapon skills (spec §8
-//! "Weapon skills"; fixed numbers or dice).
+//! and humans' extra class skill), gives them starting ranks in weapon skills (spec §8
+//! "Weapon skills"; fixed numbers or dice), and says what they notice of hidden features in
+//! passing (spec §8 "Searching").
 
 use super::weapon_skill::Ranked;
-use super::{ContentError, WeaponSkillId, WeaponSkillTable};
+use super::{ContentError, PassiveSearch, WeaponSkillId, WeaponSkillTable};
 use crate::combat::MAX_BASE_HP;
 use crate::dice::Dice;
 use crate::skills::{self, GRANTS, SkillId};
@@ -47,6 +48,9 @@ struct RaceSpec {
     size: Option<String>,
     #[serde(default)]
     ignores_burdened: bool,
+    passive_search: Option<PassiveSearch>,
+    #[serde(default)]
+    search: i32,
     #[serde(default)]
     skills: BTreeMap<String, Dice>,
     #[serde(default)]
@@ -59,6 +63,9 @@ struct RaceSpec {
 
 /// The oldest a character may start, in years.
 pub const MAX_AGE: u32 = 1000;
+
+/// What a race may add to searching and noticing (spec §8 "Searching").
+pub const SEARCH_BONUSES: RangeInclusive<i32> = -10..=10;
 
 /// A race, in the order offered.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -86,6 +93,11 @@ pub struct RaceDef {
     /// slowdown, no cap on Dexterity in Defence, no louder steps); from Strained on they are
     /// treated like everyone else. Dwarves.
     pub ignores_burdened: bool,
+    /// Which hidden features the player notices in passing, untrained (spec §8 "Searching"):
+    /// elves everything, dwarves what is on stone; `None`: only with the Spot skill trained.
+    pub passive_search: Option<PassiveSearch>,
+    /// Points added to searching and to noticing in passing alike (spec §8 "Searching").
+    pub search: i32,
     /// The skills it trains (spec §8 "Skills"), each by dice rolled when the character is made,
     /// in skill order; added to the class's.
     pub skills: Vec<(SkillId, Dice)>,
@@ -184,6 +196,14 @@ impl Races {
                     HUNGER.end()
                 )));
             }
+            if !SEARCH_BONUSES.contains(&spec.search) {
+                return Err(err(format!(
+                    "race `{id}`: search {} is out of range ({} to {})",
+                    spec.search,
+                    SEARCH_BONUSES.start(),
+                    SEARCH_BONUSES.end()
+                )));
+            }
             let weapon_skills = (weapon_table.starting_ranks(&spec.weapon_skills, Ranked::Weapons))
                 .map_err(|m| err(format!("race `{id}`: {m}")))?;
             list.push(RaceDef {
@@ -197,6 +217,8 @@ impl Races {
                 hp: i32::from(spec.hp),
                 size,
                 ignores_burdened: spec.ignores_burdened,
+                passive_search: spec.passive_search,
+                search: spec.search,
                 skills,
                 class_skill: extra,
                 hunger: spec.hunger,

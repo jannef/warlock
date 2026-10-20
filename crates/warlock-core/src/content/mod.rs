@@ -29,6 +29,7 @@ mod quest;
 mod race;
 mod room_effect;
 mod scenario;
+mod search;
 mod shop;
 mod size;
 mod skill;
@@ -90,6 +91,9 @@ pub use quest::{
 pub use race::{HUNGER, RaceDef, Races};
 pub use room_effect::{RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom};
 pub use scenario::ScenarioDef;
+pub use search::{
+    PASSIVE_PENALTIES, PassiveSearch, SEARCH_TURNS, SearchRules, Secret, secret_look,
+};
 pub use shop::{KEEPER, Keeper, MAX_FAVOUR, MAX_SHOPS, ShopDef, ShopId, ShopPlan, Shops};
 pub use size::{CARRY, MEDIUM, SizeDef};
 pub use skill::{SkillBook, SkillDef};
@@ -368,6 +372,8 @@ pub struct Content {
     /// Trap types, in file order.
     traps: Vec<TrapDef>,
     trap_ids: BTreeMap<String, TrapId>,
+    /// The numbers of searching for hidden features (`data/search.toml`, spec §8 "Searching").
+    search: SearchRules,
     factions: Factions,
     lights: Vec<LightPreset>,
     light_ids: BTreeMap<String, LightId>,
@@ -438,6 +444,7 @@ impl Content {
             slots: Vec::new(),
             traps: Vec::new(),
             trap_ids: BTreeMap::new(),
+            search: SearchRules::default(),
             factions: Factions::default(),
             lights: Vec::new(),
             light_ids: BTreeMap::new(),
@@ -563,6 +570,10 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             let (traps, ids) = trap::parse(path, text, &content)?;
             (content.traps, content.trap_ids) = (traps, ids);
+        }
+        let path = "data/search.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.search = SearchRules::parse(path, text)?;
         }
         let path = "data/dialogue.toml";
         if let Some(text) = files.get_optional(path) {
@@ -724,6 +735,7 @@ impl Content {
                 height,
                 roofed: spec.roofed,
                 stains: spec.stains,
+                stone: spec.stone,
                 step_noise: spec.step_noise,
                 toggle_noise: spec.toggle_noise,
                 // Solid terrain blocks sound unless it muffles it; everything else passes it.
@@ -1578,6 +1590,12 @@ impl Content {
     /// Every trap type, in file order (by [`TrapId`]; none without `data/traps.toml`).
     pub fn trap_defs(&self) -> &[TrapDef] {
         &self.traps
+    }
+
+    /// The numbers of searching for hidden features (spec §8 "Searching"; `data/search.toml`,
+    /// else [`SearchRules::default`]).
+    pub fn search(&self) -> &SearchRules {
+        &self.search
     }
 
     pub fn material(&self, id: MaterialId) -> &MaterialDef {

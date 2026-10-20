@@ -18,6 +18,11 @@
 #   ignores_burdened  whether being Burdened, the first level of burden, costs the character
 #                 nothing (no slowdown, no cap on Dexterity in Defence, no louder steps; default
 #                 false); from Strained on they are treated like everyone else
+#   passive_search  which hidden features (secret doors, hidden traps; spec §8 "Searching") the
+#                 character notices in passing without the Spot skill: "all", or "stone" (those
+#                 on stone, terrain.toml `stone`); default none: only with Spot trained
+#   search        points added to searching and to noticing in passing alike (-10 to 10,
+#                 default 0)
 #   skills        the skills the race trains (spec §8 "Skills"; skills.toml), by skill id: dice
 #                 (`"1d6+4"`) or a number, rolled when the character is made, every result within
 #                 0 to 100; added to the class's (a skill both train sums the two)
@@ -52,6 +57,9 @@ potential = { strength = -2, dexterity = 3, toughness = -3, intelligence = 2, wi
 hp = 2
 size = "medium"
 skills = { listen = "1d6+4", spot = "1d6+4" }
+# Keen eyes: elves notice every hidden thing in passing, and find it more easily.
+passive_search = "all"
+search = 2
 hunger = 80
 weapon_skills = { long_blades = 1, bows = 1 }
 
@@ -97,6 +105,8 @@ skills = { metalcraft = "1d6+4", search = "1d6+4" }
 weapon_skills = { axes = 1, crossbows = 1 }
 # Dwarves carry loads all their lives: being Burdened costs them nothing.
 ignores_burdened = true
+# They know stonework: they notice what is hidden in stone in passing (most of a dungeon).
+passive_search = "stone"
 hunger = 110
 
 [[race]]

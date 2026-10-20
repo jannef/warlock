@@ -1,5 +1,6 @@
-# Traps (spec §7, §8 "Traps"). A trap lies on a cell, hidden until the player sets it off or sees
-# a creature do it; from then on it shows as its glyph and stays in memory. Whoever steps onto a
+# Traps (spec §7, §8 "Traps"). A trap lies on a cell, hidden until the player finds it (spec §8
+# "Searching"), sets it off, or sees a creature do it; from then on it shows as its glyph and
+# stays in memory. Whoever steps onto a
 # trap sets it off, the player and creatures alike (creatures know nothing of traps). Stepping
 # onto a known trap asks first. Levels place traps with `trap = "id"` in a legend entry (`known
 # = true` to show it from the start; `dir` for a bolt's direction); dungeon branches hide a few
@@ -9,6 +10,11 @@
 #   id, name     the trap's id and what it is called ("Really step onto the fireball trap?")
 #   glyph, fg    how it shows once known (glyph default "^")
 #   message      said when the player perceives it go off (optional)
+#   difficulty   how hard it is to find while hidden (spec §8 "Searching"): what a search must
+#                reach, 1 to 50 (default 15); on a dungeon branch its `hidden_per_depth` adds to it
+#                (data/dungeons.toml)
+#   sign         what gives it away to whoever finds it: "You notice a tripwire: an alarm trap."
+#                (default "a pressure plate")
 #   charges      how often it goes off before it is spent and gone (default: it never runs out)
 #   noise        { sound, loudness }: what it sounds like going off (bowstring, explosion,
 #                thunder, bell, ...) and how loud on its cell, 1 to 300 (default: silent)
@@ -34,6 +40,7 @@
 [[trap]]
 id = "arrow"
 name = "arrow trap"
+difficulty = 14
 fg = "#c8b48c"
 message = "An arrow shoots out of the wall!"
 kind = "shot"
@@ -45,6 +52,7 @@ noise = { sound = "bowstring", loudness = 40 }
 [[trap]]
 id = "spear"
 name = "spear trap"
+difficulty = 15
 fg = "#b4b8c4"
 message = "Spears spring from the floor!"
 kind = "strike"
@@ -55,6 +63,8 @@ to_hit = 3
 [[trap]]
 id = "fireball"
 name = "fireball trap"
+difficulty = 17
+sign = "faint scorch marks"
 fg = "#ff7a3a"
 message = "A fireball explodes!"
 charges = 1
@@ -73,6 +83,8 @@ noise = { sound = "explosion", loudness = 150 }
 [[trap]]
 id = "frost"
 name = "frost trap"
+difficulty = 17
+sign = "a rime of frost"
 fg = "#b0d4f4"
 message = "Frost bursts from the floor!"
 charges = 1
@@ -87,6 +99,8 @@ frost = 100
 [[trap]]
 id = "lightning_bolt"
 name = "lightning trap"
+difficulty = 17
+sign = "a blackened line on the floor"
 fg = "#a8c8ff"
 message = "Lightning arcs across the floor!"
 charges = 2
@@ -101,6 +115,8 @@ noise = { sound = "thunder", loudness = 120 }
 [[trap]]
 id = "pit"
 name = "pit"
+difficulty = 13
+sign = "a thin crust over a hole"
 fg = "#9a7a58"
 kind = "pit"
 damage = "1d6"
@@ -108,6 +124,8 @@ damage = "1d6"
 [[trap]]
 id = "alarm"
 name = "alarm trap"
+difficulty = 12
+sign = "a tripwire"
 fg = "#e8d060"
 message = "A loud bell rings!"
 kind = "alarm"
@@ -116,5 +134,7 @@ noise = { sound = "bell", loudness = 300 }
 [[trap]]
 id = "teleport"
 name = "teleport trap"
+difficulty = 18
+sign = "faint runes"
 fg = "#c890ff"
 kind = "teleport"

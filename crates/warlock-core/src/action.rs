@@ -98,6 +98,10 @@ pub enum Action {
     /// "Digging"): turn after turn (each the `dig` action's time) until the wall gives way,
     /// stopping early like a rest. What was dug stays dug.
     Dig(Dir),
+    /// Search for hidden features (secret doors, hidden traps; spec §8 "Searching") for up to
+    /// this many turns (each the `search` action's time, a fresh check every turn), stopping at
+    /// once when something is found or something interrupts, like a rest. 1 is one search.
+    Search(u8),
     /// Dev command: switch the player's vision profile (an id in `data/vision.toml`). Takes no
     /// game time, but changes state and perception, so replays record it like any action.
     SetVision(String),
@@ -146,6 +150,9 @@ pub enum Action {
 
 /// The largest radius of the dev frost and heat bursts.
 pub const MAX_BURST: i32 = 20;
+
+/// The most turns one search action may last (`search:N`).
+pub const MAX_SEARCH: u8 = 100;
 
 /// How long to rest.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -461,13 +468,15 @@ pub struct Outcome {
 
 /// Text syntax for scripting: `move:E wait open:E close:W kick:N ascend descend lantern rest:1h
 /// rest:dawn rest:dusk pickup pickup:ac drop:b sell:b pay pay:W equip:body:b remove:body bash:E
-/// fire:12,5 throw:c:12,5 dig:E eat:b eat:floor:a chat:E ask:E:TOPIC vision:ID skip:1h
+/// fire:12,5 throw:c:12,5 dig:E search search:10 eat:b eat:floor:a chat:E ask:E:TOPIC vision:ID
+/// skip:1h
 /// weather:rain effect:fireball@12,5 effect:lightning_bolt@3,4>12,4 identify:a afflict:bleeding
 /// infect:filth_fever freeze:12,5,3 thaw:12,5,3` (durations: `30s`, `10m`, `2h`; letters name
 /// stacks, `a` first; `pickup`, `drop`, `sell`, and `identify` without letters take everything;
 /// `pay:DIR` pays and steps that way, out of the shop;
 /// `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT, `remove:SLOT` takes off what
-/// is there; `bash:DIR` bashes with the held shield; `dig:DIR` digs toward a wall; `fire:X,Y`
+/// is there; `bash:DIR` bashes with the held shield; `dig:DIR` digs toward a wall; `search`
+/// searches once and `search:N` for up to N turns, 1 to [`MAX_SEARCH`]; `fire:X,Y`
 /// shoots at the level cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack LETTER
 /// there; `eat:LETTER` eats one of inventory stack LETTER, `eat:floor:LETTER` one of the stack
 /// LETTER of the pile underfoot; `chat:DIR` talks to the creature that way, `ask:DIR:TOPIC` asks
@@ -518,6 +527,8 @@ impl fmt::Display for Action {
             Action::Ask { dir, topic } => write!(f, "ask:{dir}:{topic}"),
             Action::SetStance(stance) => write!(f, "stance:{stance}"),
             Action::Dig(d) => write!(f, "dig:{d}"),
+            Action::Search(1) => f.write_str("search"),
+            Action::Search(turns) => write!(f, "search:{turns}"),
             Action::SetVision(id) => write!(f, "vision:{id}"),
             Action::SkipTime(d) => write!(f, "skip:{d}"),
             Action::SetWeather(w) => write!(f, "weather:{}", w.id()),
@@ -575,6 +586,13 @@ impl FromStr for Action {
             "kick" => dir().map(Action::Kick),
             "bash" => dir().map(Action::Bash),
             "dig" => dir().map(Action::Dig),
+            "search" => match arg.map(str::parse::<u8>) {
+                None => Ok(Action::Search(1)),
+                Some(Ok(turns)) if (1..=MAX_SEARCH).contains(&turns) => Ok(Action::Search(turns)),
+                Some(_) => Err(format!(
+                    "`search:N` searches for 1 to {MAX_SEARCH} turns, e.g. `search:10`"
+                )),
+            },
             "wait" => bare(Action::Wait),
             "ascend" => bare(Action::Ascend),
             "descend" => bare(Action::Descend),
@@ -874,6 +892,9 @@ mod tests {
                 dir: Dir::S,
                 topic: "accept-rats".into(),
             },
+            Action::Search(1),
+            Action::Search(10),
+            Action::Search(MAX_SEARCH),
         ];
         all.extend(Weather::ALL.map(Action::SetWeather));
         for d in Dir::ALL {
@@ -904,6 +925,17 @@ mod tests {
         assert!(parse_actions("wait:E").is_err());
         assert_eq!(parse_actions("BASH:sw"), Ok(vec![Action::Bash(Dir::SW)]));
         assert!(parse_actions("bash").is_err());
+        assert_eq!(
+            parse_actions("SEARCH search:1 search:10"),
+            Ok(vec![
+                Action::Search(1),
+                Action::Search(1),
+                Action::Search(10)
+            ])
+        );
+        for bad in ["search:0", "search:101", "search:E", "search:"] {
+            assert!(parse_actions(bad).is_err(), "{bad}");
+        }
         assert!(parse_actions("dance").is_err());
         assert_eq!(
             parse_actions("move:N*3 wait*0 wait"),

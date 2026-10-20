@@ -76,8 +76,11 @@
 //!
 //! Traps (spec §8 "Traps", `trap.rs`): whoever steps onto a trap sets it off, the player and
 //! creatures alike: arrows, spears, fireballs, lightning, pits, alarms, and teleports. Traps are
-//! hidden until the player sets one off or sees a creature do it; then they are known and
-//! remembered.
+//! hidden until the player finds one, sets one off, or sees a creature do it; then they are
+//! known and remembered.
+//! Searching (spec §8 "Searching", `search.rs`): secret doors look like walls and hidden traps
+//! like the floor until the player finds them, searching (a check of Intelligence) or in passing
+//! (of Willpower, after every turn, for those who notice such things).
 
 mod actor;
 mod ai;
@@ -102,6 +105,7 @@ mod perceive;
 mod quest;
 mod rest;
 mod schedule;
+mod search;
 mod shoot;
 mod shop;
 mod spell;
@@ -327,6 +331,9 @@ pub struct World {
     /// Traps sprung since this world was created or loaded (not saved): a rest perceives every
     /// turn in which one went off (a teleport moves someone farther than a step).
     sprung: u64,
+    /// Hidden features the player found since this world was created or loaded (not saved):
+    /// searching for a while stops when one is found (`search.rs`).
+    found: u64,
     /// Lines muttered during the current turn (not saved): said when perception runs, if the
     /// player heard them.
     mutters: Vec<talk::Mutter>,
@@ -351,6 +358,8 @@ enum Spent {
     Meal(eat::Dish),
     /// Digging into the wall at this cell (see [`World::dig`]).
     Dig(Pos),
+    /// Searching for up to this many turns (see [`World::search`]).
+    Search(u8),
     /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
     Skip(Duration),
 }
@@ -558,6 +567,7 @@ impl World {
             fallen: Vec::new(),
             news: Vec::new(),
             sprung: 0,
+            found: 0,
             mutters: Vec::new(),
             resting: false,
         }
@@ -720,6 +730,7 @@ impl World {
             Spent::Rest(until, goal) => self.rest(until, goal, &mut events),
             Spent::Meal(dish) => self.dine(dish, &mut events),
             Spent::Dig(at) => self.dig(at, &mut events),
+            Spent::Search(turns) => self.search(turns, &mut events),
             Spent::Skip(duration) => {
                 // Nobody acts or gains energy.
                 self.state.time += duration;
@@ -811,6 +822,7 @@ impl World {
             Action::Ask { dir, topic } => return self.ask(*dir, topic, events),
             Action::Eat(meal) => return self.eat(*meal),
             Action::Dig(dir) => return self.start_dig(*dir),
+            Action::Search(turns) => return Spent::Search(*turns),
             Action::SetVision(id) => return self.set_vision(id),
             Action::SetStance(stance) => return self.set_stance(*stance),
             Action::SetWeather(weather) => return self.set_weather_dev(*weather),
@@ -901,6 +913,8 @@ mod overworld_tests;
 mod quest_tests;
 #[cfg(test)]
 mod room_tests;
+#[cfg(test)]
+mod search_tests;
 #[cfg(test)]
 mod shoot_tests;
 #[cfg(test)]

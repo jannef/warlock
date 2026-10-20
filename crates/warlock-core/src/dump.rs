@@ -70,7 +70,8 @@ pub enum Layer {
     /// Not a map: the player's quest log, one quest a line, active first (`Rats in the arena
     /// (active, from the old hermit): Kill 3 giant rats in the Arena. 2 / 3 killed.`).
     Quests,
-    /// Ground truth: all terrain, objects, traps (hidden ones too), and actors on the level.
+    /// Ground truth: all terrain, objects, traps (hidden ones too), secret doors (`S`), and
+    /// actors on the level.
     /// **Dev-only.**
     Truth,
     /// Not a map: every actor on the level with its weight, what it carries (and of that wears
@@ -289,6 +290,7 @@ fn truth_rows(world: &World) -> Vec<String> {
             (Some(actor), _, _) => content.creature(actor.creature).glyph,
             (None, Some(trap), _) => content.trap(trap.kind).glyph,
             (None, None, Some(top)) => content.object(top.object).glyph,
+            (None, None, None) if level.secret_at(p).is_some() => 'S',
             (None, None, None) => level
                 .terrain_at(p)
                 .map_or(' ', |t| content.terrain(t).glyph),

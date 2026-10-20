@@ -140,21 +140,22 @@ pub(super) fn cheapest_path(
 pub(super) enum Invalid {
     NoUpStairs,
     Unreachable(Pos),
-    /// Reached only through a locked door.
+    /// Reached only through a locked door or a secret one.
     LockedAway(Pos),
     /// A lock on something other than a closed door.
     BadLock(Pos),
-    /// No key to the lock here within reach.
+    /// No key to the lock here within reach (without unlocking or finding a door).
     NoKey(Pos),
     BadPatrol(String),
     Dark,
 }
 
 /// Checks a generated level: it has an up staircase (the arrival point and player start), and
-/// every stair, door, and walkable cell is reachable from it; locks lie only on closed doors,
-/// and the stairs and a key to every lock (lying, or carried by a creature) are reachable
-/// without unlocking any door (spec §8 "Doors"), so no level needs a key it does not give; every
-/// patrol stays on walkable terrain and loops; and at least one cell emits light.
+/// every stair, door (secret ones too), and walkable cell is reachable from it; locks lie only on
+/// closed doors, and the stairs and a key to every lock (lying, or carried by a creature) are
+/// reachable without unlocking any door (spec §8 "Doors") or finding any secret door (spec §8
+/// "Searching"), so no level needs a key it does not give or a door the player may never find;
+/// every patrol stays on walkable terrain and loops; and at least one cell emits light.
 pub(super) fn validate(level: &LevelTemplate, content: &Content) -> Result<(), Invalid> {
     let terrain = &level.terrain;
     let up = level
@@ -165,10 +166,11 @@ pub(super) fn validate(level: &LevelTemplate, content: &Content) -> Result<(), I
         .filter(|p| level.player_start == Some(*p))
         .ok_or(Invalid::NoUpStairs)?;
     let passable = |p: Pos| {
-        terrain.get(p).is_some_and(|t| {
-            let def = content.terrain(*t);
-            def.walkable || def.is_closed_door()
-        })
+        level.secrets.contains_key(&p)
+            || terrain.get(p).is_some_and(|t| {
+                let def = content.terrain(*t);
+                def.walkable || def.is_closed_door()
+            })
     };
     let reached = flood(terrain.width(), terrain.height(), up, passable);
     if let Some((p, _)) = terrain.iter().find(|(p, _)| passable(*p) && !reached[*p]) {
@@ -177,7 +179,7 @@ pub(super) fn validate(level: &LevelTemplate, content: &Content) -> Result<(), I
     if let Some(s) = level.stairs.iter().find(|s| !reached[s.pos]) {
         return Err(Invalid::Unreachable(s.pos));
     }
-    if !level.locks.is_empty() {
+    if !level.locks.is_empty() || !level.secrets.is_empty() {
         let closed = |p: Pos| {
             terrain
                 .get(p)
@@ -186,7 +188,9 @@ pub(super) fn validate(level: &LevelTemplate, content: &Content) -> Result<(), I
         if let Some(p) = level.locks.keys().find(|p| !closed(**p)) {
             return Err(Invalid::BadLock(*p));
         }
-        let unlocked = |p: Pos| passable(p) && !level.locks.contains_key(&p);
+        let unlocked = |p: Pos| {
+            passable(p) && !level.locks.contains_key(&p) && !level.secrets.contains_key(&p)
+        };
         let open = flood(terrain.width(), terrain.height(), up, unlocked);
         if let Some(s) = level.stairs.iter().find(|s| !open[s.pos]) {
             return Err(Invalid::LockedAway(s.pos));

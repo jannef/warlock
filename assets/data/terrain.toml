@@ -10,7 +10,9 @@
 # "Sunlight": how many cells tall it stands for sun shadows, 0 to 4; default 1 if opaque, else 0),
 # roofed (gameplay: under a roof, never lit by the sun or the sky; default false),
 # stains (presentation-only, spec §8 "Blood": whether blood stains it; default true; water, lava,
-# and fire hold none),
+# and fire hold none), stone (gameplay, spec §8 "Searching": stone, worked or not; dwarves notice
+# what is hidden on it in passing, a secret door in a stone wall or a trap in a stone floor;
+# default false),
 # anim (presentation-only, §4.3).
 # Noise (gameplay, spec §5 "Hearing"): step_noise (how loud steps onto it are, in percent of the
 # walker's footsteps, 0 to 1000; default 100), toggle_noise (doors only: how loud opening the
@@ -60,6 +62,7 @@
 [[terrain]]
 id = "void"
 name = "solid rock"
+stone = true
 glyph = " "
 fg = "#000000"
 walkable = false
@@ -70,6 +73,7 @@ face = "wall"
 [[terrain]]
 id = "floor"
 name = "stone floor"
+stone = true
 glyph = "."
 fg = "#6a6a72"
 bg = "#0d0d10"
@@ -77,6 +81,7 @@ bg = "#0d0d10"
 [[terrain]]
 id = "wall"
 name = "stone wall"
+stone = true
 glyph = "#"
 fg = "#958c80"
 bg = "#262220"
@@ -103,6 +108,7 @@ becomes = "rubble"
 [[terrain]]
 id = "granite"
 name = "granite"
+stone = true
 glyph = "#"
 fg = "#d4c8d0"
 bg = "#302c34"
@@ -191,6 +197,7 @@ fade = 0.5
 [[terrain]]
 id = "stairs_down"
 name = "staircase down"
+stone = true
 glyph = ">"
 fg = "#f0e6c8"
 bg = "#0d0d10"
@@ -199,6 +206,7 @@ stairs = "down"
 [[terrain]]
 id = "stairs_up"
 name = "staircase up"
+stone = true
 glyph = "<"
 fg = "#f0e6c8"
 bg = "#0d0d10"
@@ -287,6 +295,7 @@ fade = 0.6
 [[terrain]]
 id = "shallow_water"
 name = "shallow water"
+stone = true
 glyph = "~"
 fg = "#7aa4c8"
 bg = "#0e1822"
@@ -315,6 +324,7 @@ fade = 0.4
 [[terrain]]
 id = "altar"
 name = "altar"
+stone = true
 glyph = "_"
 fg = "#e0c060"
 bg = "#0d0d10"
@@ -400,6 +410,7 @@ glow = 0.25
 [[terrain]]
 id = "uv_rune"
 name = "faint rune"
+stone = true
 glyph = "ᛟ"
 fg = "#c890ff"
 bg = "#0d0d10"
@@ -439,6 +450,7 @@ glow = 0.5
 [[terrain]]
 id = "fountain"
 name = "fountain"
+stone = true
 glyph = "{"
 fg = "#8fd0ff"
 bg = "#0a1a30"
@@ -462,6 +474,7 @@ fade = 0.3
 [[terrain]]
 id = "dusty_floor"
 name = "dusty floor"
+stone = true
 glyph = "."
 fg = "#7a7264"
 bg = "#0f0e0c"
@@ -507,6 +520,7 @@ step_noise = 70
 [[terrain]]
 id = "flagstones"
 name = "flagstone path"
+stone = true
 glyph = "."
 fg = "#c0b29a"
 bg = "#3a3428"
@@ -525,6 +539,7 @@ bounce = "#98c878"
 [[terrain]]
 id = "standing_stone"
 name = "standing stone"
+stone = true
 glyph = "●"
 fg = "#c4bcb0"
 bg = "#2e2b26"
@@ -573,6 +588,7 @@ step_noise = 80
 [[terrain]]
 id = "rocky_ground"
 name = "rocky ground"
+stone = true
 glyph = "."
 fg = "#a89e8a"
 bg = "#2b2822"
@@ -662,6 +678,7 @@ height = 2
 [[terrain]]
 id = "boulder"
 name = "boulder"
+stone = true
 glyph = "●"
 fg = "#958c7e"
 bg = "#1e1c18"
@@ -671,6 +688,7 @@ transparent = false
 [[terrain]]
 id = "crag"
 name = "rock outcrop"
+stone = true
 glyph = "▲"
 fg = "#aaa294"
 bg = "#28251f"
@@ -702,6 +720,7 @@ step_noise = 90
 [[terrain]]
 id = "rubble"
 name = "rubble"
+stone = true
 glyph = ","
 fg = "#a49c8e"
 bg = "#1c1a15"

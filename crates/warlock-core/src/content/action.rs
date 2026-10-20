@@ -75,6 +75,9 @@ pub enum ActionKind {
     /// A turn of digging into a wall with a digging tool (spec §8 "Digging"): a dig takes many
     /// of them.
     Dig,
+    /// A turn of searching for hidden features (spec §8 "Searching"): searching for a while
+    /// takes several.
+    Search,
     /// Chatting with a creature (spec §8 "Dialogue"): a short action.
     Chat,
     /// Climbing out of the water onto ice (spec §5 "Ice"): on top of the step onto it.
@@ -105,6 +108,7 @@ impl ActionKind {
         ActionKind::Ready,
         ActionKind::Eat,
         ActionKind::Dig,
+        ActionKind::Search,
         ActionKind::Chat,
         ActionKind::Climb,
     ];
@@ -133,6 +137,7 @@ impl ActionKind {
             ActionKind::Ready => "ready",
             ActionKind::Eat => "eat",
             ActionKind::Dig => "dig",
+            ActionKind::Search => "search",
             ActionKind::Chat => "chat",
             ActionKind::Climb => "climb",
         }

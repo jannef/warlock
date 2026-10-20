@@ -48,6 +48,12 @@ pub const GRANTS: RangeInclusive<i32> = 0..=100;
 /// How finely the player senses their progress toward a skill's next point: in quarters.
 pub const PROGRESS_STEPS: u8 = 4;
 
+/// The most a skill adds to searching or to noticing in passing (spec §8 "Searching").
+pub const MAX_SEARCH_BONUS: i32 = 20;
+
+/// The most cells farther a search may reach than the cells around the searcher.
+pub const MAX_SEARCH_REACH: i32 = 2;
+
 /// Index of a skill in [`Content::skills`]: in file order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct SkillId(pub u8);
@@ -86,6 +92,14 @@ pub enum Effect {
     /// How much fainter a sound the actor hears: its hearing threshold, that much lower (never
     /// below 1).
     Hearing,
+    /// Points added to an active search for hidden features (spec §8 "Searching";
+    /// `world/search.rs`).
+    Search,
+    /// Cells farther a search reaches than the cells around the searcher.
+    SearchReach,
+    /// Points added to noticing hidden features in passing (spec §8 "Searching"); a skill with
+    /// it, trained, lets the actor notice them at all.
+    Spot,
     /// Percent less of the burden's slowdown (spec §8 "Burden"): Burdened ×1.25 becomes ×1.10
     /// at 60.
     Burden,
@@ -106,6 +120,8 @@ impl Effect {
             Effect::Dodge | Effect::Hearing => MAX_VALUE as i32,
             Effect::Quiet | Effect::Burden | Effect::Travel | Effect::Bargain => 100,
             Effect::Kick => *crate::stats::SCORES.end() as i32,
+            Effect::Search | Effect::Spot => MAX_SEARCH_BONUS,
+            Effect::SearchReach => MAX_SEARCH_REACH,
         }
     }
 }
@@ -118,6 +134,10 @@ pub enum Use {
     Sneak,
     /// Hearing something new: a sound that is news (spec §5 "Hearing").
     Hear,
+    /// A turn spent searching (spec §8 "Searching"), whatever it finds.
+    Search,
+    /// Noticing something hidden in passing (spec §8 "Searching").
+    Spot,
     /// An attack that missed because the actor dodged it (the Dexterity or Dodge category).
     Dodge,
     /// An action taken (not waiting) while the burden slows the actor.
@@ -134,6 +154,8 @@ impl Use {
         match self {
             Use::Sneak => "a step within earshot of a creature that could hear it",
             Use::Hear => "hearing something new",
+            Use::Search => "a turn spent searching",
+            Use::Spot => "noticing something hidden in passing",
             Use::Dodge => "dodging an attack",
             Use::Burdened => "acting (not waiting) while your load slows you",
             Use::Travel => "a journey on the overworld",
@@ -233,6 +255,8 @@ impl Use {
         match self {
             Use::Sneak => "sneak",
             Use::Hear => "hear",
+            Use::Search => "search",
+            Use::Spot => "spot",
             Use::Dodge => "dodge",
             Use::Burdened => "burdened",
             Use::Travel => "travel",
@@ -248,6 +272,9 @@ impl Effect {
             Effect::Dodge => "dodge",
             Effect::Quiet => "quiet",
             Effect::Hearing => "hearing",
+            Effect::Search => "search",
+            Effect::SearchReach => "search_reach",
+            Effect::Spot => "spot",
             Effect::Burden => "burden",
             Effect::Travel => "travel",
             Effect::Bargain => "bargain",
@@ -433,6 +460,14 @@ impl Skills {
                     .sum::<i32>()
             })
             .sum()
+    }
+
+    /// Whether a skill with a benefit of `effect` is trained, whatever it gives at its value
+    /// (the Spot skill lets the actor notice hidden features in passing at all, spec §8
+    /// "Searching").
+    pub fn trains_effect(&self, content: &Content, effect: Effect) -> bool {
+        self.iter()
+            .any(|(id, _)| (content.skill(id).benefits.iter()).any(|b| b.effect == effect))
     }
 
     /// What its skills give of `effect` with `bonus` added to some skills' values (what magic
