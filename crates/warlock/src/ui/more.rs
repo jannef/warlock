@@ -237,7 +237,10 @@ mod tests {
         let game = game("move:N*3", "open:N");
         assert_eq!(
             line(&game, InputMode::Normal, 80),
-            [" Welcome to Showcase. Press ? for controls.", " You open the door."]
+            [
+                " Welcome to Showcase. Press ? for controls.",
+                " You open the door."
+            ]
         );
         // A turn that says nothing leaves the last two messages, one a row.
         let game = self::game("move:N*3 open:N", "move:N");
