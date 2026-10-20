@@ -100,3 +100,22 @@ the content fingerprint (any new id in an indexed table) say "saves change" in t
 number alone: before 1.0, saves are not promised across development builds, and a save a build
 cannot read is renamed `run.sav.bad`, never lost. Do not write "format version N" in the spec,
 CLAUDE.md, the topic files, or the wiki.
+
+## Design documents
+
+A design that needs the owner's approval before anyone builds it (a feature too large for an
+issue body, or one with many choices to review) is a **draft PR that adds
+`docs/design/<topic>.md`** and changes nothing else.
+
+- The owner reviews it in the PR: line comments, suggested changes, a review with questions.
+  Answer by revising the document; each revision is a commit, so the owner can see what changed
+  since their last read.
+- **Merging the PR approves the design.** Then split it into implementation issues, each linking
+  to the section it implements. The spec stays the source of truth for what is built: when a
+  feature lands, its spec section and `docs/dev/` topic describe it, and the design document
+  stays as the record of why.
+- CI's `changes` job sees a PR that touches only `docs/design/` and skips the build. The
+  required checks report as skipped, which counts as passing. Touching any other file builds as
+  usual, so keep design PRs to their document.
+- A document can be any length (issue and Discussion bodies stop at 65,536 characters). Prefer
+  tables to prose.
