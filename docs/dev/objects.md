@@ -5,7 +5,8 @@ rules it implements are in spec/07b-data.md and spec/06-input-and-ui.md. Keep it
 
 Objects (spec §5, §6, §7; M11): every object in `data/objects/` (one file per object, named by
 its id; a family file only for variants always edited together, `arrows.toml`) defines its glyph,
-color, item class (`class`, below), material (`data/materials/`, one file per material), and weight in grams
+color, item class (`class`, below), material (`data/materials/`, one file per material), and weight in grams (a scroll also
+what reading it does, `read`: `docs/dev/scrolls.md`)
 (`content/object.rs`: `ObjectDef`, `ObjectId`, and the `"id*N"` placement strings;
 `content/material.rs`); the tables are directories read in path order, see "Content
 directories" in `docs/dev/content.md`. Every creature has a base `weight`. `object.rs` holds the runtime side: `Stack` (object + count; stackable objects join,

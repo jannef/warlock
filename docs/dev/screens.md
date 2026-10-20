@@ -8,7 +8,9 @@ summary), pause, settings, controls, the `?` help, the inventory (`i`), the equi
 (`e`) and its choice of what goes in a slot, an item's description (a letter in the inventory,
 an upper-case slot letter on the equipment screen), the character screen (`@`), the weapon skills
 screen (`W`), the quest log (`q`), choosing what to
-pick up (`,`/`g` on several stacks), drop (`d`), or eat (`E`), the dialogue screen (opened by
+pick up (`,`/`g` on several stacks), drop (`d`), eat (`E`), or read (`r`; then, for the scroll of
+identify, what to read it on, `ScreenName::Identify`, which takes the read list's place), the
+dialogue screen (opened by
 `screens::converse` after an action this frame whose outcome is talk with topics,
 `Event::Talked`; asking is `ScreenAction::Act(Action::Ask)`, which closes it, and the answer
 reopens it on the topic asked, also when no topics are left), and the death screen (opened by
@@ -62,8 +64,8 @@ to open, read keys for, or draw one:
   action closes it and is applied (`play.act`, which may answer with a dialog of its own: the
   sell offer), a follow-up dialog replaces it (`ScreenStack::handle`). Users: every quit path
   (`menu::quit_dialog(saving)` for the pause and main menu Quit and a bound `KeyCommand::Quit`,
-  `save_to_menu_dialog`), the step onto a known trap (`input::trap_dialog`, spec §8 "Traps"),
-  and the shop (`input.rs`: `leaving_dialog`, `sale_dialog`; spec §7 "Shops"). **A new
+  `save_to_menu_dialog`), the step onto a known trap (`input::trap_dialog`, spec §8 "Traps"), a burst
+  read so close it may catch the player (`input::burst_dialog`, spec §8 "Scrolls"), and the shop (`input.rs`: `leaving_dialog`, `sale_dialog`; spec §7 "Shops"). **A new
   question is a `Dialog` value at its call site**, e.g. `Dialog::yes_no("Quest", text,
   "Accept", Action::.., "Not now")` returned as `ScreenAction::Dialog`, with no screen, prompt,
   `InputMode`, or key handling of its own (quests are offered and accepted through dialogue
@@ -86,7 +88,8 @@ to open, read keys for, or draw one:
   `lookup` read one context). `Press::shift` carries Shift from the router. The dialogue screen
   is no page: its digits ask about topics.
 - **Item lists** (`ui/paged_list.rs`, spec §6 "Item lists", #188, #189): **every lettered list
-  of stacks is the one `PagedList`** (the inventory, pick up, drop, throw, eat, the equip choice;
+  of stacks is the one `PagedList`** (the inventory, pick up, drop, throw, eat, read, identify, the
+  equip choice;
   sell is a drop in a shop, identify a dev action): never a list or scrolling of its own. Items
   group by item class in class order (`PerceptionView::item_class`), a header row per class
   (`Row::Header`, no letter), each class in the items' own order. A page holds as many rows as
@@ -133,7 +136,8 @@ to open, read keys for, or draw one:
 
 Key commands `,`/`g` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop` screen),
 `i` (`Inventory` screen), `e` (`Equipment` screen), `@` (`Character` screen), `W` (`WeaponSkills`
-screen), `p` (`KeyCommand::Pay`), and bash (`KeyCommand::Bash`: a direction prompt,
+screen), `r` (`Read` screen, `KeyCommand::Read`: a basic command, not an ability), `p`
+(`KeyCommand::Pay`), and bash (`KeyCommand::Bash`: a direction prompt,
 `InputMode::Direction`) are in
 `input.rs` and `settings/keys.rs`. **Abilities** (racial, class, skill, style; the owner's rule,
 #156) get no key of their own: they go into one abilities menu (to come). Each is a core

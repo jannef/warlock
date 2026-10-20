@@ -21,7 +21,8 @@ How often loot is normal, magic, or rare, and how many affixes magic and rare it
 
 ## Finding them
 
-- **On the floor** of every level of [the Depths](overworld.md) lie a few items of loot.
+- **On the floor** of every level of [the Depths](overworld.md) lie a few items of loot (now and
+  then a [scroll](scrolls.md), which is never magic).
 - **Vaults** hold a reward: the guard post's store room something magic, the shrine and the
   roofless chapel something.
 - **Creatures** may drop something magic or rare where they die, besides what they carried: a
@@ -41,8 +42,8 @@ Magic and rare items are **unidentified** when you find them. You see their rari
 (magic)", "an iron helm (rare)"), not their affixes or a rare item's name. Their magic works all
 the same while you wear or wield them, as in ADOM and Path of Exile: an unknown ring of Strength
 makes you stronger, and one that glows lights your way. Wearing it for a while does not tell you
-what it is. A scroll of identify will (it comes next); once identified, an item stays known
-wherever it goes: "This is a Sharp long sword of the Bear!"
+what it is. A [scroll of identify](scrolls.md#the-scroll-of-identify) will; once identified, an
+item stays known wherever it goes: "This is a Sharp long sword of the Bear!"
 
 ## What their magic does
 

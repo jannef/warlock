@@ -28,6 +28,7 @@ mod objects;
 mod order;
 mod rooms;
 mod scenarios;
+mod scrolls;
 mod searching;
 mod sight;
 mod skills;
@@ -175,6 +176,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("magic-prefixes.md", magic::prefixes),
         ("magic-suffixes.md", magic::suffixes),
         ("magic-names.md", magic::rare_names),
+        ("scrolls.md", scrolls::scrolls),
         ("weapon-skills.md", weapon_skills::skills),
         ("weapon-defaults.md", weapon_skills::defaults),
         ("weapon-marks.md", weapon_skills::marks),
@@ -220,6 +222,20 @@ mod tests {
             "{traps}"
         );
         assert!(traps.contains("| Pit `^` |") && !traps.contains("to_hit"));
+        let scrolls = text("scrolls.md");
+        assert!(
+            scrolls.contains("| Scroll of fireball `?` | Flies at the cell you aim at"),
+            "{scrolls}"
+        );
+        assert!(
+            scrolls.contains("| 3d6 | 10 cells | Explosion, very loud | item level 3 | 150 gold |"),
+            "{scrolls}"
+        );
+        assert!(scrolls.contains("| Scroll of identify `?` | Identifies one unidentified item"));
+        assert!(
+            !scrolls.contains("Scroll of light `"),
+            "nothing to read on it yet"
+        );
         assert!(
             text("moons.md").contains(
                 "| Moon | 30 days | standard | about 17% of full light | 1 Frostmere, Year 1 |"

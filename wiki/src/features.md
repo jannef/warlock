@@ -62,6 +62,10 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   long sword", in yellow). Found unidentified, they work all the same; each remembers what it
   rolled. They lie in the Depths, in vaults, and fall from slain kobolds, and an item's
   description says what it does in plain words. A glowing helm lights your way.
+- **Scrolls** — read with `r`: scrolls of fireball, lightning, and frost cast the traps' spells
+  where you aim them (a fireball read too close asks first), and what they kill is yours; a
+  scroll of identify tells you what an unidentified item is. They lie in the Depths and sell in
+  general stores.
 - **People and talk** — the showcase has folk to talk to: a gardener and a wandering bard in the
   courtyard, an old hermit by the hub's stairs. Chat with `C`: most say a one-liner, a different
   one each time; some have topics to ask about on a small dialogue screen (the hermit knows the

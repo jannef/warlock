@@ -134,8 +134,8 @@ than its dice), rules that use stats beyond combat, burden, and kicking doors in
 saving throws, training stats), levels and experience, digging down or up, creatures that dig,
 what a class gives beyond starting stats, hit points, skills, weapon skills, and fighting
 styles (equipment, spells), active uses of skills (picking locks, healing, and the like), item effects
-beyond magic items' affixes and food's (§8 "Hunger"; no potions or scrolls to use yet, no unique
-items, no enchanting), audio, mouse input, infravision, localization.
+beyond magic items' affixes, food's, and scrolls' (§8 "Hunger", "Scrolls"; no potions to use
+yet, no unique items, no enchanting), audio, mouse input, infravision, localization.
 
 Vision types are in scope even though there are no other mechanics yet: they are part of perception,
 and the light data model must carry them from the start.

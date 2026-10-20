@@ -53,8 +53,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
       the hash FNV-1a over the seed, the level id, the turn, the victim's id, and the trap's cell:
       deterministic, and never the gameplay random stream. A creature goes on from where it
       lands.
-    Every roll (attack rolls, damage) comes from the gameplay random stream, so traps replay
-    exactly. A trap's blow is dealt like any other: a big one spills the victim's blood (§8
+    A burst or a bolt is the one shared spell code that scrolls cast too (§8 "Scrolls";
+    `World::cast_burst`, `World::cast_bolt`, with the trap as the caster). Every roll (attack
+    rolls, damage) comes from the gameplay random stream, so traps replay exactly. A trap's blow is dealt like any other: a big one spills the victim's blood (§8
     "Blood"; from the slit for an arrow, from the trap's cell for the rest), it takes hit points
     and kills (`Event::Died`; a creature drops what it carried), and a victim that lives gets the
     statuses its wound causes (bleeding from a big hit or a confirmed critical; §8 "Status

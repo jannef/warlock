@@ -62,7 +62,7 @@ Game flags (`cargo run -p warlock -- --help`):
   `new-run` on the main menu (e.g. `--scale 1 --screen new-run --capture target/menu.png`), and
   character creation's `race`, `gender`, `class`, and `summary` over New run and the steps
   before them (each on its preselection: the showcase's character);
-  `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `quests`, `pick-up` (the pile on the player's cell), `drop`, and `eat` over a run
+  `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `quests`, `pick-up` (the pile on the player's cell), `drop`, `eat`, `read`, and `identify` (for the first stack's scroll) over a run
   (e.g. after a `--replay` that walks onto a pile), `dialogue` over a run whose last action was
   talk with topics (a `--replay` ending in `chat:SE` or `ask:SE:rooms` next to the hub's hermit),
   `equip-item` (the choice for the first slot, Head) over the equipment screen; `settings`,
@@ -98,7 +98,7 @@ trained skills, `Stealth 17`), and `quests` (the quest log, active first) from p
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-eat:LETTER eat:floor:LETTER dig:DIR search search:N chat:DIR ask:DIR:TOPIC rest:GOAL stance:NAME vision:PROFILE
+eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] dig:DIR search search:N chat:DIR ask:DIR:TOPIC rest:GOAL stance:NAME vision:PROFILE
 skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS infect:DISEASE`
 (`DIR` = N
 NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by position, as letters
@@ -111,7 +111,9 @@ the shop the player stands in and `pay` pays it (spec §7 "Shops"); `SLOT` = a s
 `bash:DIR` bashes with the held shield, `fire:X,Y` shoots the readied missile weapon at level
 cell (X, Y), `throw:c:X,Y` throws one of
 inventory stack `c` there (any weapon is thrown whole, badly: `t` in the game sends `fire` for a launcher, else `throw` for what the Missile weapon slot holds); `eat:b` eats one of inventory stack `b`, `eat:floor:a` one of the top
-stack underfoot; `dig:E` digs into the wall east with the tool in the Tool slot, turn
+stack underfoot; `read:b:12,5` reads scroll stack `b` at level cell (12, 5) (a spell scroll:
+fireball, lightning, frost), `read:b:c` reads it on inventory stack `c` (the scroll of
+identify); `dig:E` digs into the wall east with the tool in the Tool slot, turn
 after turn until it gives way or something interrupts; `search` searches the cells around the
 player for secret doors and hidden traps, `search:N` for up to N turns (1 to 100), stopping when
 something is found; `chat:E` talks to the creature east of
@@ -238,6 +240,7 @@ file). Topics:
 - `docs/dev/traps.md` — trap data, triggering, known traps, the dev trap actions
 - `docs/dev/searching.md` — secret doors, the active and passive checks, who notices, the secrets stream
 - `docs/dev/magic-items.md` — affixes, rarities, base items, loot, identification, the item description
+- `docs/dev/scrolls.md` — reading, spell scrolls on the traps' shared spell code, the scroll of identify, the read and identify lists
 - `docs/dev/overworld.md` — the overworld level, locations, sight at map scale, generated local areas
 - `docs/dev/mapgen.md` — RNG streams, dungeon branches, generators, vaults, snapshots, special rooms
 - `docs/dev/rendering.md` — the three layers, the console shader, visual lighting and creature shadows, light stability, particles, glow, post, rain, spell effects, the `ui/` modules

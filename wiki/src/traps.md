@@ -45,6 +45,8 @@ to stay where you are. Holding a movement key stops you short of the trap instea
 - **A teleport trap** moves you to another free place on the same level, somewhere you may never
   have seen ("You are wrenched elsewhere.").
 - **Charges**: some traps go off only once or twice; then they are spent and gone.
+- **The same spells** come on [scrolls](scrolls.md): a scroll of fireball, lightning, or frost
+  casts what the trap does, where you aim it.
 
 A trap's blow wounds like any other: a big one spills blood and can leave you
 [bleeding](status-effects.md#bleeding). Traps can kill, you as well as creatures. Creatures
