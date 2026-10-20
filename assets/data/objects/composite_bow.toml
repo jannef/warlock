@@ -3,6 +3,7 @@ id = "composite_bow"
 name = "composite bow"
 glyph = "}"
 fg = "#a06c40"
+class = "missile_weapons"
 material = "wood"
 weight = 1000
 value = 250

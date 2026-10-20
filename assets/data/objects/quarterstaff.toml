@@ -4,6 +4,7 @@ name = "quarterstaff"
 plural = "quarterstaves"
 glyph = ")"
 fg = "#a87c4c"
+class = "melee_weapons"
 material = "wood"
 weight = 2000
 value = 15

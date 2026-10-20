@@ -67,8 +67,9 @@ use crate::character::Character;
 use crate::combat::Health;
 use crate::content::Shops;
 use crate::content::{
-    CombatStance, Content, CreatureId, DiseaseId, FactionId, Flow, LevelKind, LightId, ObjectId,
-    RoomEffectDef, SlotId, Stance, StatusId, TerrainId, TrapId, VisionProfile, WeaponSkillId,
+    CombatStance, Content, CreatureId, DiseaseId, FactionId, Flow, ItemClassId, LevelKind, LightId,
+    ObjectId, RoomEffectDef, SlotId, Stance, StatusId, TerrainId, TrapId, VisionProfile,
+    WeaponSkillId,
 };
 use crate::daylight;
 use crate::equipment::Equipment;
@@ -854,9 +855,23 @@ impl<'a> PerceptionView<'a> {
             .collect()
     }
 
-    /// What the player carries, letter `a` first.
+    /// What the player carries, by position (0 first: the order they picked it up in).
     pub fn inventory(&self) -> &'a [Stack] {
         &self.player.inventory
+    }
+
+    /// The item class `stack` shows as (spec §7 "Objects and materials"): its base item's, which
+    /// the player knows of anything they see, identified or not.
+    pub fn item_class(&self, stack: &Stack) -> ItemClassId {
+        self.content.object(stack.object).class
+    }
+
+    /// The positions of `stacks` as item lists show them (spec §6 "Item lists"): grouped by item
+    /// class in class order, each class in the stacks' own order.
+    pub fn by_class(&self, stacks: &[Stack]) -> Vec<usize> {
+        let mut order: Vec<usize> = (0..stacks.len()).collect();
+        order.sort_by_key(|&i| self.item_class(&stacks[i]));
+        order
     }
 
     /// The player's own weight: their base weight plus what they carry, worn and wielded things

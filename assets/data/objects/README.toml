@@ -11,6 +11,9 @@
 #   id        stable name used by level files (`objects = ["dagger", "arrow*12"]`)
 #   name      singular, without an article ("dagger"); `plural` defaults to the name plus "s"
 #   glyph     the character it is drawn with; fg its color
+#   class     its item class, an id in item_classes.toml (melee_weapons, body_armour, food, ...):
+#             what item lists group it under and shops trade it as. An object with a magic item
+#             `kind` (below) is of the class that lists that kind
 #   material  an id in materials.toml
 #   weight    grams for one, at least 1
 #   value     what one is worth, in gold coins (required; 0 to 1000000): shops price their

@@ -3,6 +3,7 @@ id = "trident"
 name = "trident"
 glyph = ")"
 fg = "#a8b4b8"
+class = "melee_weapons"
 material = "iron"
 weight = 2000
 value = 50

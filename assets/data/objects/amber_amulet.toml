@@ -3,6 +3,7 @@ id = "amber_amulet"
 name = "amber amulet"
 glyph = '"'
 fg = "#e0a040"
+class = "amulets"
 material = "gemstone"
 weight = 60
 value = 80

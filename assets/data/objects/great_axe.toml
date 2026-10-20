@@ -3,6 +3,7 @@ id = "great_axe"
 name = "great axe"
 glyph = ")"
 fg = "#9c9488"
+class = "melee_weapons"
 material = "iron"
 weight = 5000
 value = 120

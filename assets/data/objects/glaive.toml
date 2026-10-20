@@ -3,6 +3,7 @@ id = "glaive"
 name = "glaive"
 glyph = ")"
 fg = "#b0a898"
+class = "melee_weapons"
 material = "iron"
 weight = 5000
 value = 90

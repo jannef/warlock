@@ -3,6 +3,7 @@ id = "copper_coin"
 name = "copper coin"
 glyph = "$"
 fg = "#d08448"
+class = "coins"
 material = "copper"
 weight = 8
 value = 0

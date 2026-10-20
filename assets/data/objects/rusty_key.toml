@@ -4,6 +4,7 @@ id = "rusty_key"
 name = "rusty key"
 glyph = "("
 fg = "#a86a40"
+class = "tools"
 material = "iron"
 weight = 50
 value = 0

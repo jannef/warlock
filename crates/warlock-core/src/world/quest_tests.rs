@@ -125,6 +125,7 @@ id = "apple"
 name = "apple"
 glyph = "%"
 fg = "#d84838"
+class = "food"
 material = "plant"
 weight = 150
 value = 0
@@ -135,6 +136,7 @@ id = "letter"
 name = "letter"
 glyph = "?"
 fg = "#e0d2a8"
+class = "scrolls"
 material = "paper"
 weight = 20
 value = 0
@@ -144,6 +146,7 @@ id = "gold_coin"
 name = "gold coin"
 glyph = "$"
 fg = "#f0c040"
+class = "coins"
 material = "gold"
 weight = 10
 value = 0
@@ -154,6 +157,7 @@ id = "charm"
 name = "charm"
 glyph = '"'
 fg = "#c0c0ff"
+class = "amulets"
 material = "gold"
 weight = 10
 value = 0
@@ -163,6 +167,7 @@ id = "rock"
 name = "rock"
 glyph = "*"
 fg = "#808080"
+class = "miscellaneous"
 material = "plant"
 weight = 100
 value = 0
@@ -274,6 +279,10 @@ const CELLAR: &str = "\
 /// Content with `quests` (the fixture's by default), and the yard on `map`.
 fn files_with(map: &str, quests: &str) -> ContentFiles {
     let mut files = ContentFiles::default();
+    files.insert(
+        "data/item_classes.toml",
+        crate::content::BUILTIN_ITEM_CLASSES,
+    );
     for (path, text) in [
         ("data/terrain.toml", TERRAIN),
         ("data/factions.toml", FACTIONS),

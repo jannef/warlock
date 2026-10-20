@@ -378,25 +378,34 @@ fn ice_rows(world: &World) -> Vec<String> {
     out
 }
 
-/// The player's inventory (`a - a dagger (450 g)`, `b - a leather jerkin (being worn) (3.5
-/// kg)`), then what they carry and weigh.
+/// The player's inventory grouped by item class as the screens group it, a header line a class
+/// (`Melee weapons:`), each stack by its position as action text names it (`a - a dagger (450
+/// g)`, `b - a leather jerkin (being worn) (3.5 kg)`, `26 - a rock (1 kg)`), then what they
+/// carry and weigh.
 fn inventory_rows(view: &PerceptionView<'_>) -> Vec<String> {
     let content = view.content();
     let unpaid = view.unpaid();
-    let mut rows: Vec<String> = view
-        .inventory()
-        .iter()
-        .enumerate()
-        .map(|(i, s)| {
-            let name = s.describe(content);
-            let weight = format_weight(s.weight(content));
-            let mark = equipment::mark(content, view.equipment(), i)
-                .map_or(String::new(), |m| format!(" ({m})"));
-            let owed = (unpaid.get(i).copied().flatten())
-                .map_or(String::new(), |p| format!(" (unpaid, {p} gold)"));
-            format!("{} - {name}{mark}{owed} ({weight})", position_text(i))
-        })
-        .collect();
+    let inventory = view.inventory();
+    let mut rows: Vec<String> = Vec::new();
+    let mut class = None;
+    for i in view.by_class(inventory) {
+        let s = &inventory[i];
+        let here = view.item_class(s);
+        if class != Some(here) {
+            class = Some(here);
+            rows.push(format!("{}:", content.item_class(here).name));
+        }
+        let name = s.describe(content);
+        let weight = format_weight(s.weight(content));
+        let mark = equipment::mark(content, view.equipment(), i)
+            .map_or(String::new(), |m| format!(" ({m})"));
+        let owed = (unpaid.get(i).copied().flatten())
+            .map_or(String::new(), |p| format!(" (unpaid, {p} gold)"));
+        rows.push(format!(
+            "{} - {name}{mark}{owed} ({weight})",
+            position_text(i)
+        ));
+    }
     let weight = view.own_weight();
     let load = view.own_load();
     rows.push(format!(
@@ -815,6 +824,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             let mut entry = json!({
                 "letter": position_text(i),
                 "object": content.object(s.object).id,
+                "class": content.item_class(view.item_class(s)).id,
                 "count": s.count,
                 "weight": s.weight(content),
                 "name": s.describe(content),

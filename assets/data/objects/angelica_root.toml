@@ -5,6 +5,7 @@ id = "angelica_root"
 name = "angelica root"
 glyph = "%"
 fg = "#9cc65a"
+class = "food"
 material = "plant"
 weight = 40
 value = 30

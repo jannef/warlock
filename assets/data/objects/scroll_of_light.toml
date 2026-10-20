@@ -4,6 +4,7 @@ name = "scroll of light"
 plural = "scrolls of light"
 glyph = "?"
 fg = "#ece4cc"
+class = "scrolls"
 material = "paper"
 weight = 50
 value = 50

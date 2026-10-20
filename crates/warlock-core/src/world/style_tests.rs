@@ -78,6 +78,7 @@ id = "sword"
 name = "sword"
 glyph = ")"
 fg = "#c0c0c0"
+class = "melee_weapons"
 material = "steel"
 weight = 1000
 value = 0
@@ -90,6 +91,7 @@ id = "dagger"
 name = "dagger"
 glyph = ")"
 fg = "#c0c0c0"
+class = "melee_weapons"
 material = "steel"
 weight = 450
 value = 0
@@ -104,6 +106,7 @@ id = "knife"
 name = "knife"
 glyph = ")"
 fg = "#c0c0c0"
+class = "melee_weapons"
 material = "steel"
 weight = 300
 value = 0
@@ -117,6 +120,7 @@ id = "greatsword"
 name = "greatsword"
 glyph = ")"
 fg = "#c0c0c0"
+class = "melee_weapons"
 material = "steel"
 weight = 3000
 value = 0
@@ -130,6 +134,7 @@ id = "staff"
 name = "staff"
 glyph = ")"
 fg = "#c0c0c0"
+class = "melee_weapons"
 material = "steel"
 weight = 2000
 value = 0
@@ -143,6 +148,7 @@ id = "buckler"
 name = "buckler"
 glyph = "["
 fg = "#c0c0c0"
+class = "shields"
 material = "steel"
 weight = 2000
 value = 0
@@ -155,6 +161,7 @@ id = "crossbow"
 name = "crossbow"
 glyph = "}"
 fg = "#c0c0c0"
+class = "missile_weapons"
 material = "steel"
 weight = 3000
 value = 0
@@ -170,6 +177,7 @@ id = "bolt"
 name = "bolt"
 glyph = "/"
 fg = "#c0c0c0"
+class = "missiles"
 material = "steel"
 weight = 50
 value = 0
@@ -182,6 +190,7 @@ id = "rock"
 name = "rock"
 glyph = "*"
 fg = "#c0c0c0"
+class = "miscellaneous"
 material = "steel"
 weight = 800
 value = 0
@@ -235,6 +244,10 @@ const WEAPON_SKILLS: &str = include_str!("../../../../assets/data/weapon_skills.
 /// scenario gives the player a thousand hit points.
 fn content_with(map: &str, tables: &str) -> Arc<Content> {
     let mut files = ContentFiles::default();
+    files.insert(
+        "data/item_classes.toml",
+        crate::content::BUILTIN_ITEM_CLASSES,
+    );
     for (path, text) in [
         ("data/terrain.toml", TERRAIN),
         ("data/factions.toml", FACTIONS),

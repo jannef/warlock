@@ -106,6 +106,7 @@ id = "sword"
 name = "sword"
 glyph = ")"
 fg = "#c0c0c0"
+class = "melee_weapons"
 material = "steel"
 weight = 1000
 value = 0
@@ -119,6 +120,7 @@ id = "dagger"
 name = "dagger"
 glyph = ")"
 fg = "#c0c0c0"
+class = "melee_weapons"
 material = "steel"
 weight = 450
 value = 0
@@ -132,6 +134,7 @@ id = "buckler"
 name = "buckler"
 glyph = "["
 fg = "#c0c0c0"
+class = "shields"
 material = "steel"
 weight = 2000
 value = 0
@@ -144,6 +147,7 @@ id = "crossbow"
 name = "crossbow"
 glyph = "}"
 fg = "#c0c0c0"
+class = "missile_weapons"
 material = "steel"
 weight = 3000
 value = 0
@@ -159,6 +163,7 @@ id = "bolt"
 name = "bolt"
 glyph = "/"
 fg = "#c0c0c0"
+class = "missiles"
 material = "steel"
 weight = 50
 value = 0
@@ -217,6 +222,10 @@ fn content_on(map: &str) -> Arc<Content> {
 /// [`content_on`] with `tables` after the level's map (`[[pile]]`s).
 fn content_with(map: &str, tables: &str) -> Arc<Content> {
     let mut files = ContentFiles::default();
+    files.insert(
+        "data/item_classes.toml",
+        crate::content::BUILTIN_ITEM_CLASSES,
+    );
     for (path, text) in [
         ("data/terrain.toml", TERRAIN),
         ("data/factions.toml", FACTIONS),

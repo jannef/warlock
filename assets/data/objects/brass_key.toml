@@ -4,6 +4,7 @@ id = "brass_key"
 name = "brass key"
 glyph = "("
 fg = "#d8b048"
+class = "tools"
 material = "brass"
 weight = 40
 value = 0

@@ -197,6 +197,7 @@ id = "boulder"
 name = "boulder"
 glyph = "*"
 fg = "#808080"
+class = "miscellaneous"
 material = "stone"
 weight = 100000
 value = 0
@@ -333,6 +334,10 @@ map = '''
 
 fn files() -> ContentFiles {
     let mut files = ContentFiles::default();
+    files.insert(
+        "data/item_classes.toml",
+        crate::content::BUILTIN_ITEM_CLASSES,
+    );
     files.insert("data/terrain.toml", TERRAIN);
     files.insert("data/creatures.toml", CREATURES);
     files.insert("data/factions.toml", FACTIONS);

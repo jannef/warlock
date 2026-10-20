@@ -1,10 +1,10 @@
-//! Objects: the objects, shops, equipment slots, materials, and the pack.
+//! Objects: the objects, their item classes, shops, equipment slots, materials, and the pack.
 
 use super::actions::at_normal_pace;
 use super::order;
 use super::text::{capital, glyph, yes};
 use std::fmt::Write as _;
-use warlock_core::content::{BASE_TURN, Content, ObjectClass, ObjectDef, ObjectId, price};
+use warlock_core::content::{BASE_TURN, Content, ItemClassId, ObjectDef, ObjectId, price};
 use warlock_core::object::format_weight;
 
 /// The equipment slots in the order the screen lists them, with their letters, what goes in
@@ -78,29 +78,33 @@ pub(super) fn goes_on(content: &Content, id: ObjectId) -> String {
     format!("{}{both}", capital(&slots.join(" or ")))
 }
 
-/// What a glyph means for objects (ADOM-like classes); `None` for a glyph no class uses.
-pub(super) fn object_class(glyph: char) -> Option<&'static str> {
-    Some(match glyph {
-        ')' => "weapon",
-        '}' => "missile weapon",
-        '/' => "missile",
-        '[' => "armor",
-        '(' => "tool",
-        '!' => "potion",
-        '?' => "scroll",
-        '%' => "food",
-        '*' => "stone or gem",
-        '$' => "coin",
-        '=' => "ring",
-        '"' => "amulet",
-        _ => return None,
-    })
+/// The item classes in the order item lists group by, each with the objects of it (by name, in
+/// the plural; corpses as one entry).
+pub(super) fn item_classes(content: &Content) -> String {
+    let mut out = String::from("| Class | Objects of it |\n|---|---|\n");
+    for (i, class) in content.item_classes().iter().enumerate() {
+        let of_it = |o: &&ObjectDef| usize::from(o.class.0) == i;
+        let objects = content.object_defs().iter().filter(of_it);
+        let mut named: Vec<&ObjectDef> = objects.clone().filter(|o| o.corpse.is_none()).collect();
+        named.sort_by_cached_key(|o| o.name.to_lowercase());
+        let mut names: Vec<String> = named.iter().map(|o| o.plural.clone()).collect();
+        if objects.clone().any(|o| o.corpse.is_some()) {
+            names.push("corpses".into());
+        }
+        let names = if names.is_empty() {
+            "-".to_string()
+        } else {
+            capital(&names.join(", "))
+        };
+        let _ = writeln!(out, "| {} | {names} |", class.name);
+    }
+    out
 }
 
 /// Every object but corpses (Food and corpses has those), by class, then name.
 pub(super) fn objects(content: &Content) -> String {
     let mut out = String::from(
-        "| Object | Glyph | Kind | Material | Weight (each) | Worth (each) | Stacks | Worn or wielded on |\n\
+        "| Object | Glyph | Class | Material | Weight (each) | Worth (each) | Stacks | Worn or wielded on |\n\
          |---|:---:|---|---|---:|---:|:---:|---|\n",
     );
     for (id, o) in order::objects(content) {
@@ -116,7 +120,7 @@ pub(super) fn objects(content: &Content) -> String {
             "| {} | {} | {} | {} | {} | {worth} | {} | {} |",
             capital(&o.name),
             glyph(o.glyph),
-            object_class(o.glyph).unwrap_or("-"),
+            content.item_class(o.class).name.to_lowercase(),
             content.material(o.material).name,
             format_weight(u64::from(o.weight)),
             yes(o.stackable),
@@ -134,11 +138,13 @@ pub(super) fn shops(content: &Content) -> String {
     let Some(shops) = content.shops() else {
         return out;
     };
-    let classes = |list: &[ObjectClass]| {
-        let names: Vec<&str> = list.iter().map(|c| c.name()).collect();
+    let classes = |list: &[ItemClassId]| {
+        let names: Vec<String> = (list.iter())
+            .map(|&c| content.item_class(c).name.to_lowercase())
+            .collect();
         match names.as_slice() {
             [] => "nothing".to_string(),
-            [one] => (*one).to_string(),
+            [one] => one.clone(),
             [a, b] => format!("{a} and {b}"),
             [rest @ .., last] => format!("{}, and {last}", rest.join(", ")),
         }

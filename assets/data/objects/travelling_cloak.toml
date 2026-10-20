@@ -3,6 +3,7 @@ id = "travelling_cloak"
 name = "travelling cloak"
 glyph = "["
 fg = "#7c6a52"
+class = "cloaks"
 material = "leather"
 weight = 1800
 value = 30

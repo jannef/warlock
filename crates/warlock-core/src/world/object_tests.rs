@@ -253,6 +253,31 @@ fn the_pack_holds_any_number_of_stacks_named_by_position() {
         (w.turn(), last_message(&w)),
         (turn, "You carry no such thing.".into())
     );
+    // The dump names them as action text does.
+    let rows = layer_rows(&w, Layer::Inventory);
+    assert!(
+        rows.iter()
+            .any(|r| r.starts_with("27 - a dagger (wielded)")),
+        "{rows:?}"
+    );
+}
+
+#[test]
+fn the_inventory_dump_groups_by_class_and_keeps_positions() {
+    // A ruby picked up first, then a dagger: the dagger's class (melee weapons) comes first in
+    // the list, but each keeps its position (spec §6 "Item lists").
+    let mut w = world();
+    run(
+        &mut w,
+        "move:SE move:E*3 open:E move:E*3 pickup move:W*5 pickup",
+    );
+    assert_eq!(inventory(&w), [pair("ruby", 1), pair("dagger", 1)]);
+    let rows = layer_rows(&w, Layer::Inventory);
+    assert_eq!(rows[0], "Melee weapons:");
+    assert!(rows[1].starts_with("b - a dagger ("), "{rows:?}");
+    assert_eq!(rows[2], "Gems:");
+    assert!(rows[3].starts_with("a - a ruby ("), "{rows:?}");
+    assert!(rows[4].starts_with("carried "), "{rows:?}");
 }
 
 #[test]

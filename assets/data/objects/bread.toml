@@ -4,6 +4,7 @@ name = "loaf of bread"
 plural = "loaves of bread"
 glyph = "%"
 fg = "#d8b070"
+class = "food"
 material = "plant"
 weight = 400
 value = 2

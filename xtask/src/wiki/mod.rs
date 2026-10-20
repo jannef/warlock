@@ -123,6 +123,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("quests.md", dialogue::quests),
         ("footsteps.md", terrain::footsteps),
         ("objects.md", objects::objects),
+        ("item-classes.md", objects::item_classes),
         ("shops.md", objects::shops),
         ("equipment.md", objects::equipment),
         ("materials.md", objects::materials),
@@ -261,7 +262,7 @@ mod tests {
         }
         assert!(text("footsteps.md").contains("grass"));
         assert!(text("objects.md").contains(
-            "| Dagger | `)` | weapon | steel | 450 g | 30 gold | no | Main hand or off hand |"
+            "| Dagger | `)` | melee weapons | steel | 450 g | 30 gold | no | Main hand or off hand |"
         ));
         // Fighting styles: their configurations, defaults, ranks, and the classes' starting ones.
         let styles = text("styles.md");
@@ -290,7 +291,7 @@ mod tests {
         );
         assert!(
             text("objects.md")
-                .contains("| Arrow | `/` | missile | wood | 30 g | 1 gold | yes | Missiles |")
+                .contains("| Arrow | `/` | missiles | wood | 30 g | 1 gold | yes | Missiles |")
         );
         assert!(text("objects.md").contains("| Left ring or right ring |"));
         assert!(text("objects.md").contains("| Main hand (both hands) |"));
@@ -299,13 +300,14 @@ mod tests {
                 .contains("| Apple | `%` | food | plant matter | 150 g | 1 gold | yes | - |")
         );
         assert!(
-            text("objects.md").contains("| Rock | `*` | stone or gem | stone | 800 g | nothing |")
+            text("objects.md").contains("| Rock | `*` | miscellaneous | stone | 800 g | nothing |")
         );
         let shops = text("shops.md");
         assert!(
             shops.contains(
-                "| Armourer | Grimbold's Armoury | armour | armour | 130% of the worth | 40% of the \
-                 worth |"
+                "| Armourer | Grimbold's Armoury | shields, body armour, helmets, cloaks, gloves, and \
+                 boots | shields, body armour, helmets, cloaks, gloves, and boots | 130% of the \
+                 worth | 40% of the worth |"
             ),
             "{shops}"
         );
@@ -331,7 +333,7 @@ mod tests {
              made for throwing |"
         ));
         assert!(equipment.contains(
-            "| `l` | Missiles | Arrow, crossbow bolt, flaming arrow, sling stone | 6 seconds |"
+            "| `l` | Missiles | Sling stone, arrow, crossbow bolt, flaming arrow | 6 seconds |"
         ));
         assert!(equipment.contains("| `m` | Tool | Pick-axe, mattock | 6 seconds |"));
         let digging = text("digging.md");
@@ -623,10 +625,22 @@ mod tests {
             "{horoscope}"
         );
         assert_eq!(horoscope.matches(" Salamander | 1").count(), 5);
-        // Every object glyph belongs to a class the objects page explains.
-        for o in content.object_defs() {
-            assert!(objects::object_class(o.glyph).is_some(), "{}", o.id);
-        }
+        // Every class is listed, in order, with its objects.
+        let classes = text("item-classes.md");
+        assert!(
+            classes.contains("| Melee weapons | Bastard swords, battle axes, "),
+            "{classes}"
+        );
+        assert!(
+            classes.contains(
+                "| Food | Angelica roots, apples, food rations, loaves of bread, strips of dried \
+                 meat, corpses |"
+            ),
+            "{classes}"
+        );
+        let at = |row: &str| classes.find(row).unwrap_or_else(|| panic!("{row}"));
+        assert!(at("| Melee weapons |") < at("| Gems | Rubies |"));
+        assert!(at("| Gems | Rubies |") < at("| Miscellaneous | Rocks |"));
         assert!(
             text("creatures.md")
                 .contains("| Giant rat | `r` | Vermin | hostile | up close | no | no |")

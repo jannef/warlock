@@ -3,6 +3,7 @@ id = "large_shield"
 name = "large shield"
 glyph = "["
 fg = "#90724c"
+class = "shields"
 material = "wood"
 weight = 6000
 value = 70

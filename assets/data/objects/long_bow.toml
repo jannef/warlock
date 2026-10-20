@@ -3,6 +3,7 @@ id = "long_bow"
 name = "long war bow"
 glyph = "}"
 fg = "#8c6236"
+class = "missile_weapons"
 material = "wood"
 weight = 1300
 value = 200

@@ -3,6 +3,7 @@ id = "bone_amulet"
 name = "bone amulet"
 glyph = '"'
 fg = "#e8e0c8"
+class = "amulets"
 material = "bone"
 weight = 60
 value = 25

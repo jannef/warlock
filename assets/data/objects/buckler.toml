@@ -3,6 +3,7 @@ id = "buckler"
 name = "buckler"
 glyph = "["
 fg = "#b09070"
+class = "shields"
 material = "iron"
 weight = 1500
 value = 20

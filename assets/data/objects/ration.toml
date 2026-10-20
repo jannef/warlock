@@ -3,6 +3,7 @@ id = "ration"
 name = "food ration"
 glyph = "%"
 fg = "#c8a878"
+class = "food"
 material = "plant"
 weight = 500
 value = 5
