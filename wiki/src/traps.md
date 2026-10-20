@@ -1,8 +1,9 @@
 # Traps
 
-Some floors are trapped. A trap lies on a cell, **hidden**: it looks like the floor around it,
-and nothing tells you it is there until it goes off. Whoever steps onto a trap sets it off, you
-and the creatures alike.
+Some floors are trapped, and some doors. A trap lies on a cell, **hidden**: it looks like the
+floor around it, or the door it is on, and nothing tells you it is there until it goes off.
+Whoever steps onto a trap sets it off, you and the creatures alike; a door's trap goes off when
+someone opens or kicks the door (see [Trapped doors](#trapped-doors)).
 
 ## Finding traps
 
@@ -55,6 +56,22 @@ makes way for you onto a trap you stood on sets it off too.
 
 No trap lies on water that can freeze, and a teleport never sets you down on ice.
 
+## Trapped doors
+
+A trap may lie on a door instead of the floor. It belongs to the door: walking through the
+doorway never sets it off, and stepping into it never asks. It goes off when someone **opens**
+the door (`o`, or walking into it; unlocking it with a key too), you or a creature that opens
+doors, and at every **kick** at the door, whether the door breaks or holds. It goes off at
+whoever opened or kicked it, from the door: an arrow shoots from the wall beside the door at them,
+a blade strikes at them, lightning runs from the door through them, and a fireball bursts out on
+both sides of the door, even while it is still shut. Pits are never on doors.
+
+The trap stays with the door: shut the door again and it is set again, ready to go off at the
+next one who opens it (unless it has run out of charges). A door you kick in takes its trap with
+it. Searching finds a door's trap like any hidden trap ("You notice that the door is trapped: an
+arrow trap."), and once you know it, it shows as `^` in place of the door. A secret door is never
+trapped.
+
 ## Where traps are
 
 - **The Depths** hide a few traps on every level, never on or next to the stairs, and never where
@@ -63,5 +80,7 @@ No trap lies on water that can freeze, and a teleport never sets you down on ice
 - **The Trap hall**, reached by the third staircase down in the showcase hub's stairs nook (and
   its own scenario), is the place to learn them: a row of known traps to try, one of each kind,
   and creatures going their rounds across hidden ones, so you can watch fireballs and lightning
-  catch them. Its creatures leave you alone.
+  catch them. In its north-west corner, three closets have trapped doors: one shows its trap, one
+  hides its trap for you to search for, and one stands open on a kobold's rounds; shut it and
+  watch. Its creatures leave you alone.
 - **The showcase** (the hub, the vast cavern, the courtyard) and the overworld have no traps.

@@ -486,7 +486,7 @@ fn patrolled(template: &LevelTemplate) -> std::collections::BTreeSet<Pos> {
 /// Hides a few of a generated level's doors (spec §8 "Searching"): `secret_doors` of them, drawn
 /// from the level's own secret stream ([`Rng::secrets`]), so the rest of the level is the same
 /// with or without them. A door is hidden only if it is closed and nothing else claims it (no
-/// lock, no patrol through it, no shop it leads into, no vault it was `stamped` from: vaults
+/// lock, no trap, no patrol through it, no shop it leads into, no vault it was `stamped` from: vaults
 /// bring their own secrets), and only where the level stays valid without
 /// it: the stairs and a key to every lock are still reached from the arrival
 /// (`connect::validate`), so a secret door only ever hides a way the player may do without. It
@@ -512,6 +512,7 @@ fn hide_secrets(
         .filter(|&(p, t)| {
             content.terrain(*t).is_closed_door()
                 && !template.locks.contains_key(&p)
+                && !template.traps.contains_key(&p)
                 && !patrolled.contains(&p)
                 && !shop_door(p)
                 && !stamped[p]
