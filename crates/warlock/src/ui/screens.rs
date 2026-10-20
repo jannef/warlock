@@ -38,6 +38,7 @@ use super::equipment_screen::{EquipmentScreen, ItemScreen};
 use super::files_screen::FilesScreen;
 use super::info_tabs;
 use super::menu::{MainMenu, Press, quit_dialog};
+use super::messages_screen::MessagesScreen;
 use super::motion::Motion;
 use super::name_screen::NameScreen;
 use super::new_run_screen::NewRunScreen;
@@ -110,6 +111,9 @@ pub enum ScreenName {
     WeaponSkills,
     /// The player's quests, active and done (`q` in play).
     Quests,
+    /// The message history (`M` in play): every message the log keeps, the newest at the
+    /// bottom. No info page.
+    Messages,
     /// Choose what to pick up from the pile here (`,` or `g` where several objects lie).
     PickUp,
     /// Choose what to drop (`d` in play).
@@ -155,6 +159,7 @@ impl ScreenName {
                 | ScreenName::Skills
                 | ScreenName::WeaponSkills
                 | ScreenName::Quests
+                | ScreenName::Messages
                 | ScreenName::PickUp
                 | ScreenName::Drop
                 | ScreenName::Throw
@@ -273,6 +278,7 @@ enum Screen {
     Skills(SkillsScreen),
     WeaponSkills(WeaponSkillsScreen),
     Quests(QuestScreen),
+    Messages(MessagesScreen),
     Abilities(AbilitiesScreen),
     Dialogue(DialogueScreen),
     Death(DeathScreen),
@@ -341,6 +347,7 @@ impl Screen {
             ScreenName::Skills => Screen::Skills(SkillsScreen::new(run)),
             ScreenName::WeaponSkills => Screen::WeaponSkills(WeaponSkillsScreen::new(run)),
             ScreenName::Quests => Screen::Quests(QuestScreen::new(run)),
+            ScreenName::Messages => Screen::Messages(MessagesScreen::new(run)),
             ScreenName::PickUp => objects(ObjectList::PickUp),
             ScreenName::Drop => objects(ObjectList::Drop),
             ScreenName::Throw => objects(ObjectList::Throw),
@@ -383,6 +390,7 @@ impl Screen {
             Screen::Skills(_) => ScreenName::Skills,
             Screen::WeaponSkills(_) => ScreenName::WeaponSkills,
             Screen::Quests(_) => ScreenName::Quests,
+            Screen::Messages(_) => ScreenName::Messages,
             Screen::Abilities(_) => ScreenName::Abilities,
             Screen::Dialogue(_) => ScreenName::Dialogue,
             Screen::Death(_) => ScreenName::Death,
@@ -596,6 +604,12 @@ impl ScreenStack {
             Some(Screen::Skills(screen)) => screen.handle(press, bindings),
             Some(Screen::WeaponSkills(screen)) => screen.handle(press, bindings),
             Some(Screen::Quests(screen)) => screen.handle(press, bindings),
+            Some(Screen::Messages(screen)) => {
+                if let Some((cols, rows)) = self.console {
+                    screen.fit(cols, rows);
+                }
+                screen.handle(press, bindings)
+            }
             Some(Screen::Abilities(screen)) => {
                 if let Some((cols, rows)) = self.console {
                     screen.fit(cols, rows);
@@ -653,6 +667,7 @@ impl ScreenStack {
             Some(Screen::Skills(screen)) => screen.draw(console, bindings),
             Some(Screen::WeaponSkills(screen)) => screen.draw(console, bindings),
             Some(Screen::Quests(screen)) => screen.draw(console, bindings),
+            Some(Screen::Messages(screen)) => screen.draw(console, bindings),
             Some(Screen::Abilities(screen)) => screen.draw(console, bindings),
             Some(Screen::Dialogue(screen)) => screen.draw(console, bindings),
             Some(Screen::Death(screen)) => screen.draw(console, settings.clock, bindings),
@@ -2093,5 +2108,89 @@ mod tests {
         frame(&mut app, &[YES]);
         let exits = app.world().resource::<Messages<AppExit>>();
         assert_eq!(exits.iter_current_update_messages().count(), 1);
+    }
+
+    /// An app in the arena while its fight goes on (ten turns in, everything said so far read),
+    /// applying actions and waiting at `--more--` like the game, its console 80 by 24.
+    fn arena_app() -> App {
+        let content = content();
+        let mut world = warlock_core::World::new(content.clone(), "arena", None).expect("run");
+        for _ in 0..10 {
+            world.apply(&Action::Wait);
+        }
+        let mut app = app_with(content, Some(Game::from_world(world, "pip-1".into())));
+        fn apply(mut actions: MessageReader<PlayerAction>, mut game: ResMut<Game>) {
+            for PlayerAction(action) in actions.read() {
+                game.apply(action);
+            }
+        }
+        let mut console = Console::default();
+        console.resize(80, 24);
+        app.insert_resource(console).add_systems(
+            Update,
+            (apply, super::super::more::wait)
+                .chain()
+                .after(count_actions),
+        );
+        app
+    }
+
+    fn mode(app: &App) -> InputMode {
+        *app.world().resource::<InputMode>()
+    }
+
+    #[test]
+    fn more_waits_for_its_keys_and_nothing_else_acts_meanwhile() {
+        const SPACE: (KeyCode, &str) = (KeyCode::Space, "");
+        let mut app = arena_app();
+        // A turn of the fight says more than the message line holds at once.
+        frame(&mut app, &[WAIT]);
+        assert_eq!(mode(&app), InputMode::More(0));
+        let pages = {
+            let (game, bindings) = (app.world().resource::<Game>(), Bindings::default());
+            super::super::more::page_count(game, 80, &bindings)
+        };
+        assert!(pages >= 2, "{pages} pages");
+        // Other keys do nothing: no move, no wait, no screen.
+        frame(
+            &mut app,
+            &[(KeyCode::KeyJ, "j"), WAIT, HELP, (KeyCode::KeyM, "M")],
+        );
+        assert_eq!(actions(&app).len(), 1);
+        assert!(names(&app).is_empty());
+        assert_eq!(mode(&app), InputMode::More(0));
+        // A held key's repeats never turn a page.
+        app.world_mut().write_message(KeyboardInput {
+            repeat: true,
+            ..key(SPACE.0, SPACE.1)
+        });
+        app.update();
+        assert_eq!(mode(&app), InputMode::More(0));
+        // Space shows the next page, up to the last, which waits for nothing.
+        for page in 1..pages {
+            assert_eq!(mode(&app), InputMode::More(page - 1));
+            frame(&mut app, &[SPACE]);
+        }
+        assert_eq!(mode(&app), InputMode::Normal);
+        // Play goes on, until a turn says too much again; Esc skips the rest of its messages
+        // without opening the pause menu.
+        frame(&mut app, &[WAIT]);
+        assert_eq!(actions(&app).len(), 2);
+        while mode(&app) == InputMode::Normal && actions(&app).len() < 30 {
+            frame(&mut app, &[WAIT]);
+        }
+        assert_eq!(mode(&app), InputMode::More(0));
+        frame(&mut app, &[ESC]);
+        assert_eq!(mode(&app), InputMode::Normal);
+        assert!(names(&app).is_empty());
+    }
+
+    #[test]
+    fn the_message_history_opens_with_its_key_and_closes_with_it() {
+        let mut app = app(true);
+        frame(&mut app, &[(KeyCode::KeyM, "M")]);
+        assert_eq!(names(&app), [ScreenName::Messages]);
+        frame(&mut app, &[(KeyCode::KeyM, "M")]);
+        assert!(names(&app).is_empty());
     }
 }

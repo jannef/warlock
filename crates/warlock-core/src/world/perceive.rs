@@ -209,6 +209,7 @@ impl World {
                 to,
                 strike,
                 with,
+                damage,
             } => {
                 let sees_attacker = attacker == player || perception.sees_actors_at(from);
                 let sees_target = target == player || perception.sees_actors_at(to);
@@ -219,7 +220,7 @@ impl World {
                     return true;
                 }
                 if let Some(me) = self.actor_or_fallen(attacker) {
-                    let words = Words::of(me, kind, with, &content);
+                    let words = Words::of(me, kind, with, damage, &content);
                     let guard = Guard::of(self.actor_or_fallen(target), &content);
                     let (a, t) = (end(attacker, sees_attacker), end(target, sees_target));
                     let said = attack_message(a, t, &words, kind, strike, guard);

@@ -1,7 +1,9 @@
 //! Player actions and the events a turn produces.
 
 use crate::combat::Strike;
-use crate::content::{ActionKind, CombatStance, DiseaseId, ObjectId, StatusId, TrapId};
+use crate::content::{
+    ActionKind, CombatStance, DamageTypeId, DiseaseId, ObjectId, StatusId, TrapId,
+};
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
 use crate::weather::Weather;
@@ -339,6 +341,10 @@ pub enum Event {
         /// What a shot or a throw was made with: the missile (the ammunition as it flew, the
         /// thrown thing); for a shield bash, the shield; `None` for other blows and spells.
         with: Option<ObjectId>,
+        /// The kind of damage it did (spec §8 "Damage types": what a blow is said with, a
+        /// sword's slashing or piercing by what was better); `None` for a miss, an intent, or
+        /// an untyped attack.
+        damage: Option<DamageTypeId>,
     },
     /// A missile flew (spec §8 "Ranged combat"): a shot or a throw. As the player perceives it
     /// (the rest of the turn's events are kept only when seen; this one is cut to what was

@@ -19,7 +19,7 @@
 //! (stats, hit points, Dodge, Deflection, natural armour, regeneration, moving, carrying,
 //! stealth, light) always global. Effects apply while the item is worn or wielded.
 
-use super::{ContentError, LightId};
+use super::{ContentError, DamageTypeId, LightId};
 use crate::skills::SkillId;
 use crate::stats::Stat;
 use serde::{Deserialize, Serialize};
@@ -156,6 +156,9 @@ pub enum Effect {
     Damage,
     /// Adds 1dN to every roll of the damage (the value is N).
     ExtraDamage,
+    /// Adds 1dN of the affix's damage type (`damage_type`, an element; spec §8 "Damage
+    /// types") to every roll of the damage (the value is N).
+    Elemental,
     /// Widens the critical threat range by this many natural rolls.
     Threat,
     /// Added to the critical multiplier.
@@ -190,6 +193,8 @@ pub enum Effect {
     MaxHp,
     /// Percent faster hit point regeneration.
     Regeneration,
+    /// Percent resistance to the affix's damage type (`damage_type`; spec §8 "Damage types").
+    Resistance,
     /// A stat's score.
     Stat(Stat),
     /// Percent off the cost of steps.
@@ -211,6 +216,7 @@ impl Effect {
             Effect::ToHit,
             Effect::Damage,
             Effect::ExtraDamage,
+            Effect::Elemental,
             Effect::Threat,
             Effect::Crit,
             Effect::AttackSpeed,
@@ -228,6 +234,7 @@ impl Effect {
             Effect::Natural,
             Effect::MaxHp,
             Effect::Regeneration,
+            Effect::Resistance,
         ];
         all.extend(Stat::ALL.map(Effect::Stat));
         all.extend([
@@ -246,6 +253,7 @@ impl Effect {
             Effect::ToHit => "to_hit",
             Effect::Damage => "damage",
             Effect::ExtraDamage => "extra_damage",
+            Effect::Elemental => "elemental",
             Effect::Threat => "threat",
             Effect::Crit => "crit",
             Effect::AttackSpeed => "attack_speed",
@@ -263,6 +271,7 @@ impl Effect {
             Effect::Natural => "natural",
             Effect::MaxHp => "max_hp",
             Effect::Regeneration => "regeneration",
+            Effect::Resistance => "resistance",
             Effect::Stat(stat) => stat.id(),
             Effect::MoveSpeed => "move_speed",
             Effect::Carry => "carry",
@@ -277,7 +286,7 @@ impl Effect {
     }
 
     /// How many effects there are.
-    pub const COUNT: usize = 25 + Stat::COUNT;
+    pub const COUNT: usize = 27 + Stat::COUNT;
 
     /// Its place in [`Effect::all`].
     pub const fn index(self) -> usize {
@@ -285,41 +294,49 @@ impl Effect {
             Effect::ToHit => 0,
             Effect::Damage => 1,
             Effect::ExtraDamage => 2,
-            Effect::Threat => 3,
-            Effect::Crit => 4,
-            Effect::AttackSpeed => 5,
-            Effect::Range => 6,
-            Effect::Draw => 7,
-            Effect::Durability => 8,
-            Effect::Parry => 9,
-            Effect::Armour => 10,
-            Effect::Protection => 11,
-            Effect::Shield => 12,
-            Effect::MaxDex => 13,
-            Effect::Weight => 14,
-            Effect::Dodge => 15,
-            Effect::Deflection => 16,
-            Effect::Natural => 17,
-            Effect::MaxHp => 18,
-            Effect::Regeneration => 19,
-            Effect::Stat(stat) => 20 + stat as usize,
-            Effect::MoveSpeed => 20 + Stat::COUNT,
-            Effect::Carry => 21 + Stat::COUNT,
-            Effect::Stealth => 22 + Stat::COUNT,
-            Effect::Light => 23 + Stat::COUNT,
-            Effect::Skill => 24 + Stat::COUNT,
+            Effect::Elemental => 3,
+            Effect::Threat => 4,
+            Effect::Crit => 5,
+            Effect::AttackSpeed => 6,
+            Effect::Range => 7,
+            Effect::Draw => 8,
+            Effect::Durability => 9,
+            Effect::Parry => 10,
+            Effect::Armour => 11,
+            Effect::Protection => 12,
+            Effect::Shield => 13,
+            Effect::MaxDex => 14,
+            Effect::Weight => 15,
+            Effect::Dodge => 16,
+            Effect::Deflection => 17,
+            Effect::Natural => 18,
+            Effect::MaxHp => 19,
+            Effect::Regeneration => 20,
+            Effect::Resistance => 21,
+            Effect::Stat(stat) => 22 + stat as usize,
+            Effect::MoveSpeed => 22 + Stat::COUNT,
+            Effect::Carry => 23 + Stat::COUNT,
+            Effect::Stealth => 24 + Stat::COUNT,
+            Effect::Light => 25 + Stat::COUNT,
+            Effect::Skill => 26 + Stat::COUNT,
         }
+    }
+
+    /// Whether it names a damage type (`damage_type` in its affix): what it adds or resists.
+    pub const fn is_typed(self) -> bool {
+        matches!(self, Effect::Elemental | Effect::Resistance)
     }
 
     /// The values a tier may roll (a light's tier has none).
     pub const fn values(self) -> RangeInclusive<i32> {
         match self {
-            Effect::ExtraDamage => 2..=20,
+            Effect::ExtraDamage | Effect::Elemental => 2..=20,
             Effect::Threat | Effect::Crit => 1..=3,
             Effect::AttackSpeed | Effect::MoveSpeed => 1..=MAX_SPEED,
             Effect::Durability | Effect::Weight | Effect::Stealth => 1..=90,
             Effect::MaxHp | Effect::Carry | Effect::Skill => 1..=100,
             Effect::Regeneration => 1..=300,
+            Effect::Resistance => 1..=crate::damage::MAX_RESISTANCE,
             Effect::Light => 0..=0,
             _ => 1..=10,
         }
@@ -332,6 +349,7 @@ impl Effect {
             Effect::ToHit
                 | Effect::Damage
                 | Effect::ExtraDamage
+                | Effect::Elemental
                 | Effect::Threat
                 | Effect::Crit
                 | Effect::AttackSpeed
@@ -365,9 +383,11 @@ impl Effect {
     /// such an item, and what changes an item needs one that has it.
     fn allowed_on(self, kind: ItemKind) -> bool {
         match self {
-            Effect::ExtraDamage | Effect::Range | Effect::Draw | Effect::Durability => {
-                kind.attacks()
-            }
+            Effect::ExtraDamage
+            | Effect::Elemental
+            | Effect::Range
+            | Effect::Draw
+            | Effect::Durability => kind.attacks(),
             Effect::Parry => kind == ItemKind::Weapon,
             Effect::Armour => kind == ItemKind::Body,
             Effect::Protection => kind.is_armour(),
@@ -401,6 +421,9 @@ pub struct AffixDef {
     pub effect: Effect,
     /// The skill a [`Effect::Skill`] affix adds to.
     pub skill: Option<SkillId>,
+    /// The damage type an [`Effect::Elemental`] affix adds or an [`Effect::Resistance`] one
+    /// resists.
+    pub damage_type: Option<DamageTypeId>,
     /// What kinds of item may roll it.
     pub bases: Vec<ItemKind>,
     /// How often it rolls among those that may (default 100).
@@ -409,11 +432,15 @@ pub struct AffixDef {
     pub tiers: Vec<Tier>,
 }
 
+/// What an affix changes: its effect, the skill a skill affix raises, and the damage type an
+/// elemental or resistance affix names. An item has at most one affix of each.
+pub type Group = (Effect, Option<SkillId>, Option<DamageTypeId>);
+
 impl AffixDef {
     /// What it changes, for the rule that an item has at most one affix of each: its effect, and
-    /// for a skill affix which skill.
-    pub fn group(&self) -> (Effect, Option<SkillId>) {
-        (self.effect, self.skill)
+    /// for a skill affix which skill, for a typed one which damage type.
+    pub fn group(&self) -> Group {
+        (self.effect, self.skill, self.damage_type)
     }
 
     /// Its tier `tier` (1 for the first), if it has one.
@@ -586,6 +613,9 @@ struct AffixSpec {
     weight: Option<u32>,
     /// The skill an affix of effect `skill` adds to (an id in `data/skills.toml`).
     skill: Option<String>,
+    /// The damage type an affix of effect `elemental` adds or one of effect `resistance`
+    /// resists (an id in `data/damage_types.toml`).
+    damage_type: Option<String>,
     tiers: Vec<TierSpec>,
 }
 
@@ -602,11 +632,13 @@ struct TierSpec {
 /// then `data/affixes/*.toml` in path order; at least one file), each of the settings tables set
 /// in exactly one of them, the entries numbered in the order read. `light` resolves light preset
 /// ids and `skill` skill ids (`has_skills`: whether content has any; without, skill affixes are
-/// left out).
+/// left out), and `damage` damage type ids (`damage_type`; `has_types`: whether content has
+/// any; without, elemental and resistance affixes are left out).
 pub(super) fn parse<'a>(
     files: impl IntoIterator<Item = (&'a str, &'a str)>,
     light: impl Fn(&str) -> Option<LightId>,
     (skill, has_skills): (impl Fn(&str) -> Option<SkillId>, bool),
+    (damage, has_types): (impl Fn(&str) -> Option<DamageTypeId>, bool),
 ) -> Result<Affixes, ContentError> {
     let mut rarity_spec = Once::new("rarity");
     let mut magic_spec = Once::new("magic");
@@ -692,12 +724,16 @@ pub(super) fn parse<'a>(
     };
     let mut seen: BTreeMap<String, &str> = BTreeMap::new();
     for (file, kind, spec) in specs {
-        // Without skills (no `data/skills.toml`) skill affixes have nothing to raise: left out.
+        // Without skills (no `data/skills.toml`) skill affixes have nothing to raise: left out;
+        // so are typed affixes without damage types (nothing to add or resist).
         if spec.effect == Effect::Skill.id() && !has_skills {
             continue;
         }
+        if Effect::from_id(&spec.effect).is_some_and(Effect::is_typed) && !has_types {
+            continue;
+        }
         let id = spec.id.clone();
-        let def = spec.resolve(kind, &light, &skill).map_err(|m| {
+        let def = spec.resolve(kind, &light, &skill, &damage).map_err(|m| {
             ContentError::new(file, format!("{} `{id}`: {m}", kind.name().to_lowercase()))
         })?;
         if let Some(first) = seen.insert(id.clone(), file) {
@@ -715,6 +751,7 @@ impl AffixSpec {
         kind: AffixKind,
         light: &impl Fn(&str) -> Option<LightId>,
         skill: &impl Fn(&str) -> Option<SkillId>,
+        damage: &impl Fn(&str) -> Option<DamageTypeId>,
     ) -> Result<AffixDef, String> {
         if self.id.trim().is_empty() || self.name.trim().is_empty() {
             return Err("`id` and `name` must not be empty".into());
@@ -728,6 +765,20 @@ impl AffixSpec {
             (Effect::Skill, None) => return Err("effect `skill` names its `skill`".into()),
             (_, Some(_)) => return Err("`skill` is for affixes of effect `skill`".into()),
             (_, None) => None,
+        };
+        let damage_type = match (effect.is_typed(), &self.damage_type) {
+            (true, Some(id)) => {
+                Some(damage(id).ok_or_else(|| format!("unknown damage type `{id}`"))?)
+            }
+            (true, None) => {
+                return Err(format!("effect `{}` names its `damage_type`", effect.id()));
+            }
+            (false, Some(_)) => {
+                return Err(
+                    "`damage_type` is for affixes of effect `elemental` or `resistance`".into(),
+                );
+            }
+            (false, None) => None,
         };
         if self.bases.is_empty() {
             return Err("`bases` names no kind of item".into());
@@ -797,6 +848,7 @@ impl AffixSpec {
             kind,
             effect,
             skill,
+            damage_type,
             bases,
             weight: self.weight.unwrap_or(100),
             tiers,
@@ -846,6 +898,7 @@ amulet = ["Charm"]
             files,
             |id| (id == "glow").then_some(LightId(0)),
             (|id: &str| (id == "stealth").then_some(SkillId(0)), true),
+            (|id: &str| (id == "fire").then_some(DamageTypeId(0)), true),
         )
     }
 

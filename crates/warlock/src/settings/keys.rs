@@ -44,10 +44,13 @@ pub const REBINDABLE: &[KeyCommand] = &[
     KeyCommand::Skills,
     KeyCommand::WeaponSkills,
     KeyCommand::Quests,
+    KeyCommand::Messages,
     KeyCommand::Rest,
     KeyCommand::RestHour,
     KeyCommand::RestDawn,
     KeyCommand::RestDusk,
+    KeyCommand::MoreNext,
+    KeyCommand::MoreSkip,
     KeyCommand::Eat,
     KeyCommand::Read,
     KeyCommand::Look,
@@ -124,13 +127,14 @@ const PAGE_IDS: [&str; 9] = [
 /// Rebindable commands with no key by default: abilities (`warlock_core::ability`), which the
 /// abilities menu (#156) lists instead of a key each; `f` (fire), which `t` covers; Quit, done
 /// from the pause menu; the previous target and the previous info page, which Shift with the
-/// next one's key picks; and Back, in menus and in text fields, which Esc always does. The player
-/// may bind one in Controls.
+/// next one's key picks; and Back (in menus and in text fields) and skipping the rest at
+/// `--more--`, which Esc always does. The player may bind one in Controls.
 pub const UNBOUND: &[KeyCommand] = &[
     KeyCommand::Bash,
     KeyCommand::Fire,
     KeyCommand::Quit,
     KeyCommand::PrevTarget,
+    KeyCommand::MoreSkip,
     KeyCommand::PrevPage,
     KeyCommand::Back,
     KeyCommand::TextBack,
@@ -212,10 +216,13 @@ impl KeyCommand {
             Skills => "skills",
             WeaponSkills => "weapon_skills",
             Quests => "quests",
+            Messages => "messages",
             Rest => "rest",
             RestHour => "rest_hour",
             RestDawn => "rest_dawn",
             RestDusk => "rest_dusk",
+            MoreNext => "more_next",
+            MoreSkip => "more_skip",
             Eat => "eat",
             Read => "read",
             Look => "look",

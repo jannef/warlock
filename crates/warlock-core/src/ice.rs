@@ -150,11 +150,13 @@ mod tests {
         below: 0,
         rate: 100,
         plunge: Dice::fixed(1),
+        kind: None,
     };
     const RUNNING: Freeze = Freeze {
         below: -6,
         rate: 50,
         plunge: Dice::fixed(1),
+        kind: None,
     };
 
     /// Ice after `ticks` ticks at `c` °C, from `um`.

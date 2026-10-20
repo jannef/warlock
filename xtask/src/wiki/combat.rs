@@ -75,7 +75,7 @@ pub(super) fn weapons(content: &Content) -> String {
     let _ = writeln!(
         out,
         "\nBare hands: {} (plus your Strength, as every blow), critical on {}, ×{}.",
-        combat::Attack::unarmed().damage,
+        combat::Attack::unarmed(None).damage,
         threat_range(combat::DEFAULT_THREAT),
         combat::DEFAULT_CRIT
     );

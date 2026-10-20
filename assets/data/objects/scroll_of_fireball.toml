@@ -22,6 +22,7 @@ verb = "burns"
 message = "A fireball streaks from the scroll and explodes!"
 radius = 2
 damage = "3d6"
+damage_type = "fire"
 range = 10
 # Blows stone walls and packed earth apart; granite holds. Melts ice.
 blast = 1000

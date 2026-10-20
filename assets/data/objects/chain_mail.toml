@@ -10,6 +10,8 @@ value = 250
 slot = "body"
 armour = 2
 protection = 3
+# Mail turns a blade well and a point badly.
+protects = { slashing = 1, piercing = -1 }
 max_dex = 4
 kind = "body"
 level = 3

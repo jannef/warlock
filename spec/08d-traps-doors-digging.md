@@ -47,6 +47,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
       one roll of the damage.
     - **pit**: the victim takes the damage and loses its next action climbing out: its step
       costs a `wait` more (6 s at normal speed; a creature's too).
+    - Every trap's damage is of a kind (`damage_type`, §8 "Damage types"): the arrow's and the
+      spears' piercing (soaked by Protection like any blow), the fireball's fire, the frost's
+      cold, the lightning's electricity, the pit's bludgeoning (a fall meets no armour, but the
+      victim's resistance to the kind takes its share; a fall is no cut, so it opens no wound).
+      A burst's or a bolt's damage a victim resists in full is `Strike::Resisted`: "The
+      fireball does the salamander no harm."
     - **alarm**: only its noise.
     - **teleport**: the victim is moved at once to a free cell of the level (walkable, no one
       there, no trap, no ice: §5 "Ice"), the cell at index `hash % count` of those in row order,

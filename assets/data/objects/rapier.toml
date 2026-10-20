@@ -11,6 +11,7 @@ slot = "main_hand"
 damage = "1d6"
 threat = 19
 category = "long_blades"
+damage_type = "piercing"
 attack_cost = 900
 kind = "weapon"
 level = 2

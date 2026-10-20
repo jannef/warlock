@@ -25,17 +25,20 @@
 //!
 //! `burst` and `bolt` name the `spell` effect presentation shows (`data/effects.toml`: what a
 //! fireball looks like); `strike`, `burst`, and `bolt` name what hits (`noun`, "fireball") and
-//! what it does (`verb`, default "hits"), for messages ("The fireball burns the kobold.").
+//! what it does (`verb`, default: its damage type's verb), for messages ("The fireball burns
+//! the kobold."). Every trap that does damage names its `damage_type` (spec §8 "Damage
+//! types"): the arrow and the spears piercing, the fireball fire, the pit bludgeoning.
 //!
 //! A trap on a level ([`Trap`]) is hidden until the player sets it off or sees a creature do it,
 //! and from then on known and remembered (spec §8 "Traps"). A level may put one on a door, of any
 //! kind but a pit ([`TrapEffect::fits_door`]): opening or kicking the door sets it off (spec §8
 //! "Trapped doors").
 
+use super::damage_type::TypeNames;
 use super::effect::EffectShape;
 use super::object::{MAX_BONUS, ObjectDef, ObjectId};
-use super::spell::{self, Bolt, Burst, SpellFields, check_effect};
-use super::{Content, ContentError};
+use super::spell::{self, Bolt, Burst, SpellFields, check_effect, default_verb, one_kind};
+use super::{Content, ContentError, DamageTypeId};
 use crate::color::Rgb;
 use crate::combat::{Attack, DEFAULT_CRIT, DEFAULT_THREAT};
 use crate::dice::Dice;
@@ -54,10 +57,6 @@ pub const MAX_CHARGES: u16 = 1000;
 
 fn trap_glyph() -> char {
     '^'
-}
-
-fn hits() -> String {
-    "hits".into()
 }
 
 /// A trap's difficulty where data gives none (spec §8 "Searching").
@@ -137,6 +136,8 @@ pub(super) struct TrapSpec {
     object: Option<String>,
     /// `shot`, `strike`, `burst`, `bolt`, `pit`.
     damage: Option<Dice>,
+    /// `shot`, `strike`, `burst`, `bolt`, `pit`: the kind of damage it does.
+    damage_type: Option<TypeNames>,
     /// `shot`, `strike`.
     #[serde(default)]
     to_hit: i32,
@@ -155,8 +156,8 @@ pub(super) struct TrapSpec {
     spell: Option<String>,
     /// `strike`, `burst`, `bolt`: what hits.
     noun: Option<String>,
-    #[serde(default = "hits")]
-    verb: String,
+    /// What it does to whom it hits; default: its damage type's verb.
+    verb: Option<String>,
 }
 
 /// What a trap does when it goes off.
@@ -172,8 +173,11 @@ pub enum TrapEffect {
     /// A line from the trap until a wall, at most `length` cells ([`Bolt`]): `damage` to
     /// everyone on it.
     Bolt(Bolt),
-    /// A fall: `damage`, and the next action lost climbing out.
-    Pit { damage: Dice },
+    /// A fall: `damage` of `kind` (bludgeoning), and the next action lost climbing out.
+    Pit {
+        damage: Dice,
+        kind: Option<DamageTypeId>,
+    },
     /// Only its noise.
     Alarm,
     /// Whoever steps on it is moved to a free cell of the level.
@@ -208,7 +212,18 @@ impl TrapEffect {
             TrapEffect::Shot { attack, .. } | TrapEffect::Strike { attack } => Some(attack.damage),
             TrapEffect::Burst(Burst { damage, .. })
             | TrapEffect::Bolt(Bolt { damage, .. })
-            | TrapEffect::Pit { damage } => Some(*damage),
+            | TrapEffect::Pit { damage, .. } => Some(*damage),
+            TrapEffect::Alarm | TrapEffect::Teleport => None,
+        }
+    }
+
+    /// The kind of damage it does, if it does any (spec §8 "Damage types").
+    pub fn damage_kind(&self) -> Option<DamageTypeId> {
+        match self {
+            TrapEffect::Shot { attack, .. } | TrapEffect::Strike { attack } => attack.kinds.main(),
+            TrapEffect::Burst(Burst { kind, .. })
+            | TrapEffect::Bolt(Bolt { kind, .. })
+            | TrapEffect::Pit { kind, .. } => *kind,
             TrapEffect::Alarm | TrapEffect::Teleport => None,
         }
     }
@@ -284,9 +299,20 @@ impl TrapSpec {
             self.damage.is_some(),
             &[Shot, Strike, Burst, Bolt, Pit],
         )?;
-        if self.name.trim().is_empty() || self.verb.trim().is_empty() {
+        allowed(
+            "damage_type",
+            self.damage_type.is_some(),
+            &[Shot, Strike, Burst, Bolt, Pit],
+        )?;
+        if self.name.trim().is_empty() || self.verb.as_ref().is_some_and(|v| v.trim().is_empty()) {
             return Err(err("`name` and `verb` must not be empty".into()));
         }
+        // What does damage does it of a kind.
+        let damage_kind = if self.damage.is_some() {
+            one_kind(content, self.damage_type.as_ref()).map_err(err)?
+        } else {
+            None
+        };
         if self.to_hit.abs() > MAX_BONUS {
             return Err(err(format!("`to_hit` must be within ±{MAX_BONUS}")));
         }
@@ -315,10 +341,12 @@ impl TrapSpec {
             threat: DEFAULT_THREAT,
             crit: DEFAULT_CRIT,
             strength: None,
+            kinds: damage_kind.map_or(crate::damage::Kinds::NONE, crate::damage::Kinds::one),
         };
         let fields = SpellFields {
             spell: self.spell.clone(),
             damage: self.damage,
+            kind: damage_kind,
             radius: self.radius,
             blast: self.blast,
             heat: self.heat,
@@ -357,7 +385,13 @@ impl TrapSpec {
                 TrapEffect::Bolt(spell::Bolt::new(&fields).map_err(err)?),
                 noun()?,
             ),
-            Pit => (TrapEffect::Pit { damage: damage()? }, "fall".into()),
+            Pit => (
+                TrapEffect::Pit {
+                    damage: damage()?,
+                    kind: damage_kind,
+                },
+                "fall".into(),
+            ),
             Alarm => (TrapEffect::Alarm, "bell".into()),
             Teleport => (TrapEffect::Teleport, "magic".into()),
         };
@@ -379,7 +413,9 @@ impl TrapSpec {
             difficulty: self.difficulty,
             sign: self.sign,
             noun,
-            verb: self.verb,
+            verb: self
+                .verb
+                .unwrap_or_else(|| default_verb(content, damage_kind)),
             effect,
         })
     }

@@ -322,14 +322,16 @@ impl World {
     }
 
     /// Actor `id` plunged through the ice into the freezing water at `at`: it loses the water's
-    /// `plunge` hit points (never the last one: the cold does not kill yet, [`Harm::Spared`]). A
-    /// creature's fall is said when the player perceives it ([`World::perceive`]); the player's
-    /// where it happens.
+    /// `plunge` hit points, cold damage it resists like any (spec §8 "Damage types"; never the
+    /// last hit point: the cold does not kill yet, [`Harm::Spared`]). A creature's fall is said
+    /// when the player perceives it ([`World::perceive`]); the player's where it happens.
     fn fall_in(&mut self, id: ActorId, at: Pos, events: &mut Vec<Event>) {
         let water = self.state.current().water_at(&self.content, at);
-        let plunge = water.and_then(|w| self.content.terrain(w).freeze.map(|f| f.plunge));
-        let damage = plunge.map_or(0, |d| d.roll(&mut self.state.rng).max(0));
-        self.hurt(id, damage, Harm::Spared, events);
+        let freeze = water.and_then(|w| self.content.terrain(w).freeze);
+        let damage = freeze.map_or(0, |f| f.plunge.roll(&mut self.state.rng).max(0));
+        let kind = freeze.and_then(|f| f.kind);
+        let taken = self.resisted(id, crate::damage::Damage::new(damage, kind));
+        self.hurt(id, taken, Harm::Spared, events);
         events.push(Event::FellThroughIce { actor: id, at });
     }
 

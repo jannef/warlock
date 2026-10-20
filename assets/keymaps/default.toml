@@ -30,6 +30,7 @@ character = ["@"]
 skills = ["S"]
 weapon_skills = ["W"]
 quests = ["q"]
+messages = ["M"]
 rest = ["R"]
 eat = ["E"]
 read = ["r"]
@@ -57,6 +58,10 @@ loose = ["Enter", "NumpadEnter"]
 rest_hour = ["h"]
 rest_dawn = ["d"]
 rest_dusk = ["n"]
+
+[more] # More messages (--more--)
+more_next = ["Space", "Enter", "NumpadEnter"]
+more_skip = []
 
 [menu] # Menus and screens
 menu_up = ["ArrowUp", "k"]

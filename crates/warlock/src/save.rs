@@ -369,6 +369,7 @@ fn handle_commands(
                 Ok(world) => {
                     game.world = world;
                     game.last_outcome = default();
+                    game.mark_read();
                     game.world.notice("Snapshot loaded.");
                 }
                 Err(e) => game.world.notice(e),

@@ -15,8 +15,10 @@ hearing = 20
 weight = 300
 size = "small"
 stats = { strength = 10, dexterity = 11, toughness = 11, intelligence = 1, willpower = 10, presence = 7 }
-attack = { damage = "1d3", name = "bite", verb = "bites" }
+attack = { damage = "1d3", damage_type = "piercing", name = "bite", verb = "bites" }
 natural = { defence = 1, protection = 3, name = "shell" }
+# Its shell shrugs off acid and poison, more or less.
+resist = { acid = 50, poison = 25 }
 # A small chance to toughen the eater.
 on_eat = { message = "Crunchy.", stat = { toughness = 10 } }
 # Greenish-black ichor.
