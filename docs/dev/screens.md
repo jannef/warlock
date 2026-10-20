@@ -7,7 +7,7 @@ Modal screens (spec §6) — main menu, new run and character creation (race, ge
 summary), pause, settings, controls, the `?` help, the inventory (`i`), the equipment screen
 (`e`) and its choice of what goes in a slot, an item's description (a letter in the inventory,
 an upper-case slot letter on the equipment screen), the character screen (`@`), the weapon skills
-screen (`W`), the quest log (`q`), choosing what to
+screen (`W`), the quest log (`q`), the message history (`M`), choosing what to
 pick up (`,`/`g` on several stacks), drop (`d`), eat (`E`), or read (`r`; then, for the scroll of
 identify, what to read it on, `ScreenName::Identify`, which takes the read list's place), the
 abilities menu (`a`), the
@@ -107,9 +107,26 @@ to open, read keys for, or draw one:
   calls the screen's `fit` before each press, so a letter names what is drawn even before the
   first draw (`--keys`). Screens hold stack positions (`Item::position`), never letters, and
   send actions by position.
-- Prompts in the message line (open/close/bash/chat direction, rest, look mode, aiming) are
-  `InputMode`s, not screens; a question (the step onto a known trap, `input::trap_dialog`) is
-  the dialog (above). The rules never ask: a `move` steps onto whatever is there. `C` with
+- Prompts in the message line (open/close/bash/chat direction, rest, look mode, aiming,
+  `--more--`) are `InputMode`s, not screens; a question (the step onto a known trap,
+  `input::trap_dialog`) is the dialog (above).
+- **The message line and `--more--`** (`ui/more.rs`, spec §6 "Messages", #207): `Game::read` is
+  the message log as it was when the player last acted (`Game::apply` takes it before applying;
+  a new run starts with nothing read, so its welcome is news; `Game::from_world`, a resumed run,
+  has read everything; a replay's last step is news, `play_replay`; a loaded snapshot calls
+  `Game::mark_read`), and `Game::unread` lines it up with the log (which only grows at its end,
+  folds repeats into its last entry, and drops its oldest beyond `messages::CAPACITY`) to give
+  this turn's messages. `more::pages` runs them on in rows of the console's width less a margin
+  either side, split at word boundaries, in pages of `MESSAGE_ROWS`, every page but the last
+  leaving room for ` --more--`. `more::wait` (after `SimSet`, before `draw`) enters
+  `InputMode::More(0)` when a new action (`Game::applied`, or a new run) needs more than one
+  page, from play only (a dev flag's aiming or look mode keeps its mode), and follows a resize.
+  In `More(page)` `Gameplay::press` reads `Context::More` first: `MoreNext` (Space, Enter)
+  turns to `more::advance(page, count)` (play once the last page shows), `MoreSkip` (unbound)
+  and Esc go to play; every other command, and every held key's repeat, does nothing. Screens
+  keep their keys while it waits beneath them. `more::draw` draws the page waited at with
+  `--more--` after it, else the end of this turn's messages with earlier ones, one a row, in the
+  rows left. Presentation only: dumps and replays never see pages. The rules never ask: a `move` steps onto whatever is there. `C` with
   exactly one creature in view next to the player chats with it at once
   (`input::chat_partner`), else asks for a direction.
 - Screens are plain state machines tested without a window: `ui/menu.rs` (`Press`, `Hints`,
@@ -132,7 +149,12 @@ to open, read keys for, or draw one:
   and margins and then scrolls with ↑↓; never a benefit), `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per
   step with a Random row rolled from the seed, `SummaryScreen`, `Draft`), `ui/quest_screen.rs`
   (the quest log from `PerceptionView::quests`: active then done, the selected one's objective,
-  status, and the giver's offer; read-only), `ui/dialogue_screen.rs`
+  status, and the giver's offer; read-only), `ui/messages_screen.rs` (`MessagesScreen`,
+  `ScreenName::Messages`, `--screen messages`: the message history, every message of
+  `PerceptionView::messages` wrapped with further lines indented, a dim first line on what the log
+  keeps, scrolled in lines from the newest at the bottom by `Nav::Up`/`Down` and a panel's height
+  by `Nav::PrevPage`/`NextPage`; no info page, and no `PagedList`, whose rows are lettered single
+  lines to choose from; the stack calls its `fit` before a press), `ui/dialogue_screen.rs`
   (the speaker, their last line, numbered topics; built from the last `Event::Talked`, so it never
   shows more than the player was told), `ui/abilities_screen.rs` (`AbilitiesScreen`, below),
   `ui/death_screen.rs`
@@ -140,7 +162,7 @@ to open, read keys for, or draw one:
 
 Key commands `,`/`g` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop` screen),
 `i` (`Inventory` screen), `e` (`Equipment` screen), `@` (`Character` screen), `W` (`WeaponSkills`
-screen), `r` (`Read` screen, `KeyCommand::Read`: a basic command, not an ability), `p`
+screen), `M` (`KeyCommand::Messages`: the `Messages` screen), `r` (`Read` screen, `KeyCommand::Read`: a basic command, not an ability), `p`
 (`KeyCommand::Pay`), `a` (`KeyCommand::Abilities`: the `Abilities` screen), `A`
 (`KeyCommand::RepeatAbility`), and bash (`KeyCommand::Bash`, unbound) are in `input.rs` and
 `settings/keys.rs`.
