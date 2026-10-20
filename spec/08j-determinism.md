@@ -26,7 +26,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `map/<level id>/<k>`), so a level depends only on the seed and its id, never on visiting order
   (its special room and then its shop are drawn last, so a level without them is the map it
   would be without them);
-  the traps hidden on a generated level (`traps/<level id>`, apart from its map's); a generated
+  the traps hidden on a generated level (`traps/<level id>`, apart from its map's); the doors it
+  hides (`secrets/<level id>`, after its traps, so the map is the same with or without them, §8
+  "Searching"); a generated
   level's loot (`loot/<level id>`, drawn once its map is valid and its traps hidden, so the map
   is the same with or without it); what a creature drops when it dies (`drop/<actor id>`, so a
   kill never changes a later roll of the gameplay stream; actor ids are never reused);

@@ -90,7 +90,7 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 | Dump a replay's end state | `... dump --replay runs/x.json [--actions "wait"] --format ascii\|json [--state]` |
 | Create a replay | `... replay --create --scenario showcase --actions "move:N wait" -o runs/x.json` |
 | Verify a replay | `... replay --verify runs/x.json` (exit 1 and first diverging step on mismatch) |
-| Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor, `&` = locked door; `^` = a trap, hidden ones too; a special room's floor by its effect's letter; also local areas, `--level local:49,23`) |
+| Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor, `&` = locked door, `S` = secret door; `^` = a trap, hidden ones too; a special room's floor by its effect's letter; also local areas, `--level local:49,23`) |
 
 Dump layers beyond the map ones: `inventory`, `equipment`, `stats`, `skills` (the player's
 trained skills, `Stealth 17`), and `quests` (the quest log, active first) from perception;
@@ -98,7 +98,7 @@ trained skills, `Stealth 17`), and `quests` (the quest log, active first) from p
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-eat:LETTER eat:floor:LETTER dig:DIR chat:DIR ask:DIR:TOPIC rest:GOAL stance:NAME vision:PROFILE
+eat:LETTER eat:floor:LETTER dig:DIR search search:N chat:DIR ask:DIR:TOPIC rest:GOAL stance:NAME vision:PROFILE
 skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS infect:DISEASE`
 (`DIR` = N
 NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by letter, `a` first, e.g. `pickup:ac` (the pile on the
@@ -109,7 +109,9 @@ the shop the player stands in and `pay` pays it (spec §7 "Shops"); `SLOT` = a s
 cell (X, Y), `throw:c:X,Y` throws one of
 inventory stack `c` there (any weapon is thrown whole, badly: `t` in the game sends `fire` for a launcher, else `throw` for what the Missile weapon slot holds); `eat:b` eats one of inventory stack `b`, `eat:floor:a` one of the top
 stack underfoot; `dig:E` digs into the wall east with the tool in the Tool slot, turn
-after turn until it gives way or something interrupts; `chat:E` talks to the creature east of
+after turn until it gives way or something interrupts; `search` searches the cells around the
+player for secret doors and hidden traps, `search:N` for up to N turns (1 to 100), stopping when
+something is found; `chat:E` talks to the creature east of
 the player, `ask:E:rooms` asks it about topic `rooms` (an id in `assets/data/dialogue.toml`;
 quest topics are `quest-ID`, `accept-ID`, `decline-ID`, ids in `assets/data/quests.toml`);
 `PROFILE` = an id in
@@ -143,7 +145,7 @@ ranks and progress toward the next, `Long blades 2 (40%)`, fighting styles too, 
 marked `Duelist 1 (0%), in use`), `traps` (the traps the player knows,
 one a line), `quests` (the quest log, active
 first: name, stage, giver, objective, and status), `truth`
-(ground truth, hidden traps too, **dev-only**), `actors` (every actor on the level with its hit points and
+(ground truth, hidden traps and secret doors (`S`) too, **dev-only**), `actors` (every actor on the level with its hit points and
 Defence, its weight, what it carries and of that wears and wields (magic items as they truly
 are, "(unidentified)" marked), what its magic items do to it (`magic strength +1`), its burden
 and carrying limit, its weapon skills with marks, its stats as score/potential, its status
@@ -226,6 +228,7 @@ file). Topics:
 - `docs/dev/doors.md` — locks and keys, kicking, breaking, what creatures open
 - `docs/dev/digging.md` — digging tools, wall hardness, the dig loop, blasts
 - `docs/dev/traps.md` — trap data, triggering, known traps, the dev trap actions
+- `docs/dev/searching.md` — secret doors, the active and passive checks, who notices, the secrets stream
 - `docs/dev/magic-items.md` — affixes, rarities, base items, loot, identification, the item description
 - `docs/dev/overworld.md` — the overworld level, locations, sight at map scale, generated local areas
 - `docs/dev/mapgen.md` — RNG streams, dungeon branches, generators, vaults, snapshots, special rooms

@@ -28,6 +28,7 @@ mod objects;
 mod order;
 mod rooms;
 mod scenarios;
+mod searching;
 mod sight;
 mod skills;
 mod temperature;
@@ -180,6 +181,9 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("styles.md", weapon_skills::styles),
         ("style-defaults.md", weapon_skills::style_defaults),
         ("style-benefits.md", weapon_skills::style_benefits),
+        ("search-features.md", searching::search_features),
+        ("search-depths.md", searching::search_depths),
+        ("search-races.md", searching::search_races),
         ("traps.md", traps::traps),
     ];
     let mut files: Vec<(String, String)> = tables
@@ -427,19 +431,48 @@ mod tests {
         assert!(
             benefits.contains(
                 "| Value | Appraise: prices | Athletics: kicking doors in | Balance: Burdened / \
-                 Strained | Listen: hears fainter by | Stealth: noise | Survival: journeys | \
-                 Tumble: Dodge |"
+                 Strained | Listen: hears fainter by | Search: searching | Search: search reaches \
+                 | Spot: noticing | Stealth: noise | Survival: journeys | Tumble: Dodge |"
             ),
             "{benefits}"
         );
         assert!(benefits.contains(
-            "| 100 | 20% better | +8 Strength | ×1.1 / ×1.2 | 10 | \u{2212}60% | \u{2212}20% \
-                 | +5 |"
+            "| 100 | 20% better | +8 Strength | ×1.1 / ×1.2 | 10 | +8 | +1 cell | +8 | \u{2212}60% \
+                 | \u{2212}20% | +5 |"
         ));
         assert!(benefits.contains(
-            "| 150 | 25% better | +10 Strength | ×1.08 / ×1.15 | 15 | \u{2212}75% | \u{2212}20% \
-             | +7 |"
+            "| 150 | 25% better | +10 Strength | ×1.08 / ×1.15 | 15 | +10 | +1 cell | +10 | \
+             \u{2212}75% | \u{2212}20% | +7 |"
         ));
+        // Searching: the hidden things' chances for an average character, deeper down, and who
+        // notices in passing.
+        let features = text("search-features.md");
+        assert!(features.contains("| Secret door | A seam in the wall | 46% | over 99% | 19% |"));
+        assert!(
+            features.contains("| Alarm trap | A tripwire |"),
+            "{features}"
+        );
+        let depths = text("search-depths.md");
+        assert!(
+            depths.contains("| The Depths 3 | none (caves have no doors) |"),
+            "{depths}"
+        );
+        assert!(
+            depths.contains("| The Depths 8 | 1 to 2 | 6.9% | 51% | 0.7% |"),
+            "{depths}"
+        );
+        let races = text("search-races.md");
+        assert!(
+            races.contains("| Dwarf | What is hidden in stone | — |"),
+            "{races}"
+        );
+        assert!(
+            races.contains("| Elf | Everything | more easily (+2) |"),
+            "{races}"
+        );
+        assert!(
+            races.contains("trained in Spot, who notice everything in passing: Ranger, Thief.")
+        );
         let grants = text("skill-grants.md");
         assert!(grants.contains("| Halfling | Listen `1d6+4`, Stealth `1d6+4` |"));
         assert!(

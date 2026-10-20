@@ -13,7 +13,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (adjustments to the starting scores), `potential` (adjustments to the potentials, the same way;
   hidden from the player), `hp` (its hit points, 0 to 1000, default 0; §8 "Combat"), `size` (a size
   in `data/sizes.toml`, default `medium`; §8 "Burden"), `ignores_burdened` (default false: whether
-  Burdened, the first level of burden, costs the character nothing), `skills` (the skills it trains,
+  Burdened, the first level of burden, costs the character nothing), `passive_search` (which
+  hidden features the character notices in passing without the Spot skill: `"all"`, elves, or
+  `"stone"`, dwarves; default none; §8 "Searching"), `search` (points added to searching and
+  noticing alike, −10 to 10, default 0; elves 2), `skills` (the skills it trains,
   by skill id: dice or a number, every result 0 to 100; §8 "Skills"), `class_skill` (dice added
   to one of the class's skills, picked when the character is made; default none), `hunger` (how
   much the character needs to eat, in percent of a human, 10 to 1000, default 100; §8 "Hunger":

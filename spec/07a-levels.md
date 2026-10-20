@@ -69,6 +69,13 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   (a lock without an id: only a skeleton key opens it). A lock on anything but a closed door, an
   empty lock id or `*`, or a `lock` with `locked = false` is a content error. Hand-made levels
   need not give a lock's key (a door may be meant to be kicked in); vaults must (below).
+- **Secret doors in level files** (#140, §8 "Searching"): a legend entry on a closed door makes
+  it secret with `secret = true` (difficulty `data/search.toml`'s `secret_door`) or `secret = N`
+  (difficulty N, 1 to 50). The cell then shows the wall around it (of its solid neighbors north,
+  east, south, and west that are no door, the most common) until the player finds it. A secret
+  on anything but an unlocked closed door, or one with no wall beside it, is a content error.
+  Indoor vaults place secret doors the same way and generators stamp them with the vault (a key
+  must not lie behind one); outdoor vaults have none.
 - **Traps in level files** (M18; §8 "Traps"): a legend entry places a trap with `trap = "id"` (an
   id in `data/traps.toml`), hidden unless `known = true`, and for a bolt trap optionally the way
   its bolt runs, `dir = "E"` (default: along the longest clear line from it). Traps lie only on
@@ -78,7 +85,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 - **Traps** (`data/traps.toml`, optional; without it there are no traps; M18): `[[trap]]`s with
   `id`, `name` ("fireball trap", said in "Really step onto the fireball trap?"), `glyph` (default
   `^`) and `fg` (how it shows once known), an optional `message` said when the player perceives
-  it go off ("A fireball explodes!"), optional `charges` (1 to 1000; how often it goes off before
+  it go off ("A fireball explodes!"), `difficulty` (how hard it is to find, 1 to 50, default 15;
+  §8 "Searching") and `sign` (what gives it away when found, default "a pressure plate": "You
+  notice a tripwire: an alarm trap."), optional `charges` (1 to 1000; how often it goes off before
   it is spent and gone; none: every time), an optional `noise` (`{ sound, loudness }`: a sound
   kind of §5 "Hearing" and its loudness on the trap's cell, 1 to 300), and its `kind`, with the
   fields each kind needs (any other is a content error): `shot` (`object`, the missile, which

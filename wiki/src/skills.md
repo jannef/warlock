@@ -21,9 +21,9 @@ difference. This page gives the rules.
 
 Some skills work by themselves, all the time (**passive**); some will be used as **actions**
 (searching, picking a lock, binding a wound); some are **read by rules** when something calls for
-them (athletics when you kick a door). For now only the passive skills, Appraise, and
-Athletics (kicking doors in, see [Doors](doors.md)) do something: the others are there to be
-trained, and get their uses as the game grows.
+them (athletics when you kick a door). For now only the passive skills, Appraise, Athletics
+(kicking doors in, see [Doors](doors.md)), and Search (see [Searching](searching.md)) do
+something: the others are there to be trained, and get their uses as the game grows.
 
 {{#include generated/skills.md}}
 
@@ -42,6 +42,10 @@ The passive skills help you more the higher they are:
 - **Survival** makes your journeys on the [overworld](overworld.md) quicker. It does nothing in a
   local area or a dungeon.
 - **Appraise** gets you better prices in [shops](shops.md): you pay less and are offered more.
+- **Search** helps you find secret doors and hidden traps when you search (`s`, `z`), and a
+  master's search reaches a cell farther (see [Searching](searching.md)).
+- **Spot** lets you notice hidden things in passing at all, and the higher it is, the more you
+  notice.
 
 {{#include generated/skill-benefits.md}}
 

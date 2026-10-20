@@ -107,7 +107,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   file without a version (command ids at the top level, or a settings file's `[bindings]`) is
   read too, and a newer version as far as this one knows. The defaults ship as
   `keymaps/default.toml` beside the game.
-- First-phase commands: move, wait, open/close door, kick (`K`, then a direction; §8 "Doors"),
+- First-phase commands: move, wait, search (`s`, a turn; `z`, for a while: up to 10 turns,
+  stopping when something is found or interrupts, like a rest; §8 "Searching"; basic commands,
+  not abilities), open/close door, kick (`K`, then a direction; §8 "Doors"),
   ascend/descend, light/douse lantern (`L`),
   pick up (`,` or `g`), drop (`d`), inventory (`i`), equipment (`e`), character (`@`), skills
   (`S`), weapon skills (`W`), quest log (`q`), rest (`R`), eat (`E`), look, shoot or throw what

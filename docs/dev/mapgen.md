@@ -12,7 +12,9 @@ stamping, `connect.rs` flood fill / corridor digging / validation). A branch lev
 states carry their own ambient and placed lights). Generation is integer-only; a level that fails
 validation is regenerated from the next derived stream. A valid branch level then hides its
 branch's traps (`mapgen::hide_traps`, from the stream `traps/<level id>`, so the map is the same
-with or without them). The insta snapshots in
+with or without them), then a few of its doors (`mapgen::hide_secrets`, secret doors, from the
+stream `secrets/<level id>`, only where `connect::validate` still reaches the stairs and every key
+without them; `docs/dev/searching.md`). The insta snapshots in
 `src/mapgen/snapshots/` and `src/mapgen/local/snapshots/` flag any change in generator output:
 review the maps in the diff, then accept them deliberately. Loot (`mapgen::place_loot`: floor
 items by the branch's `loot`, vault `loot` cells) is rolled once a map is valid, from its own

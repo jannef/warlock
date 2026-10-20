@@ -6,7 +6,8 @@ and the creatures alike.
 
 ## Finding traps
 
-There is no searching for traps yet. You learn where a trap is when it goes off:
+You learn where a trap is when you find it, searching or in passing (see
+[Searching](searching.md)), or when it goes off:
 
 - when **you** set it off;
 - when you **see a creature** set it off. Creatures know no more about traps than you do, so they

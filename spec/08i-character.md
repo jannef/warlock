@@ -86,7 +86,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     because of their Dexterity or Dodge (`dodge`, the dodge messages), an action other than
     waiting (not a rest's turns) taken while the player's burden slows them, as it began
     (`burdened`; a dwarf's Burdened does not), a step on the overworld (`travel`), a kick at a
-    closed door (`kick`). Only the player trains for now; creatures keep their type's skills.
+    closed door (`kick`), a turn spent searching, whatever it finds (`search`), noticing
+    something hidden in passing (`spot`; §8 "Searching"). Only the player trains for now;
+    creatures keep their type's skills.
   - **[provisional] Increases**: the owner has not decided how skills increase (alternatives for
     later: ADOM's level-up dice per class once experience exists, or marks that count only once
     the player rests). For now a skill gains a point when its marks reach
@@ -112,10 +114,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
     - athletics: points added to the Strength a kick at a closed door is rolled against (§8
       "Doors"), +8 at 100 and +12 at 200 (`kick`; `World::kick_door`), and a mark (20 %) for
       every kick at a door;
+    - search: points added to searching for hidden features (§8 "Searching"), +8 at 100 and
+      +12 at 200 (`search`), and from 75 a search reaches a cell farther (`search_reach`;
+      `world/search.rs`); a mark (10 %) for every turn spent searching;
+    - spot: trained at all, the player notices hidden features in passing (§8 "Searching");
+      points added to that check, +8 at 100 and +12 at 200 (`spot`); a mark (50 %) for each
+      thing noticed;
     - athletics' climbing out of pits and escape artist (out of pits faster) wait for that rule
       (#128); swim for deep water; concentration, spellcraft, and use magic
-      device for magic; the other action skills (search, open lock, heal, …) for their
-      actions.
+      device for magic; the other action skills (open lock, heal, …) for their actions.
+      Searching is a basic command with keys of its own (`s`, `z`), so Search is read by rules,
+      not an action skill.
   - **What the player sees**: their own trained skills' values and a coarse progress (quarters)
     toward the next point (`PerceptionView::own_skills`), on the Skills screen (§6) and the
     character creation summary; the `skills` dump layer.
