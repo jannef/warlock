@@ -317,7 +317,7 @@ impl KeyCommand {
             KeyCommand::MenuRight => "Right (change a setting)",
             KeyCommand::Confirm => "Choose",
             KeyCommand::Back => "Back (Esc always works)",
-            KeyCommand::Erase => "Erase / reset keys / delete a save",
+            KeyCommand::Erase => "Erase, reset keys, delete a save",
             KeyCommand::Mark => "Mark a stack (pick up, drop)",
             KeyCommand::MarkAll => "Mark everything (pick up, drop)",
             KeyCommand::NextListPage => "Next page of a list",
