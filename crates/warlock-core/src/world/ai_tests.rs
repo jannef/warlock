@@ -761,6 +761,7 @@ fn search_the_last_seen_spot_then_go_back_and_patrol_on() {
             talk: Default::default(),
             satiation: None,
             stance: Default::default(),
+            free_blows: Default::default(),
         },
     );
     assert_ne!(player, rat);

@@ -94,6 +94,7 @@ mod eat;
 mod equip;
 mod experience;
 mod fight;
+mod free_blow;
 mod hash;
 mod hearing;
 mod hunger;
@@ -120,6 +121,7 @@ mod travel;
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
 pub use fight::{Cause, Death};
+pub use free_blow::FreeBlows;
 pub(crate) use hash::fnv1a;
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
@@ -328,6 +330,9 @@ pub struct World {
     /// What the player's kills earned them during the current action (not saved): said after
     /// the attack's own messages.
     news: Vec<String>,
+    /// While the player strikes a free blow in another's turn (not saved): what is said
+    /// meanwhile, to join the news (`free_blow.rs`).
+    held: Option<Vec<String>>,
     /// Traps sprung since this world was created or loaded (not saved): a rest perceives every
     /// turn in which one went off (a teleport moves someone farther than a step).
     sprung: u64,
@@ -471,6 +476,7 @@ impl World {
             talk: Talk::default(),
             satiation: content.hunger().map(|h| Satiation::new(h.start)),
             stance: CombatStance::Neutral,
+            free_blows: FreeBlows::default(),
         };
         player.hp = player.max_hp(&content);
         crate::rot::made_at(&mut player.inventory, &content, def.start);
@@ -566,6 +572,7 @@ impl World {
             said: 0,
             fallen: Vec::new(),
             news: Vec::new(),
+            held: None,
             sprung: 0,
             found: 0,
             mutters: Vec::new(),
@@ -762,8 +769,13 @@ impl World {
         self.say(text);
     }
 
-    /// Logs a message; it stops a rest.
+    /// Logs a message; it stops a rest. While the player strikes in another's turn (a free blow,
+    /// `free_blow.rs`), it is held instead, to be said with the news after that turn's reports.
     fn say(&mut self, text: impl Into<String>) {
+        if let Some(held) = &mut self.held {
+            held.push(text.into());
+            return;
+        }
         self.note(text);
         self.said += 1;
     }
@@ -896,6 +908,8 @@ mod equip_tests;
 mod experience_tests;
 #[cfg(test)]
 mod fight_tests;
+#[cfg(test)]
+mod free_blow_tests;
 #[cfg(test)]
 mod gem_tests;
 #[cfg(test)]

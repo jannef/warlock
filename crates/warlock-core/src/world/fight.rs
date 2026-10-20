@@ -41,7 +41,12 @@
 //! a blow that hits may be followed by a free shield bash, by the style's chance. Each blow is
 //! resolved on its own: its weapon's skill and affixes, its blood, and the bleeding of a big hit.
 //! A kick is made whatever the hands hold: it draws on unarmed fighting and no style.
+//!
+//! Free blows (spec §8 "Free blows", `free_blow.rs`): the end of a melee attack may bring a
+//! cleave (it killed) or the target's riposte (its Parry made a blow miss), and a step away from
+//! beside an opportunist its blow; [`World::second_blow`] decides each.
 
+use super::free_blow::{self, Cue, Free, FreeBlow};
 use super::{Actor, ActorId, AttackSkills, Spent, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Category, Profile, Strike};
@@ -413,7 +418,7 @@ impl World {
     }
 
     /// Actor `attacker` attacks actor `target`: a melee blow with what it wields (else its
-    /// natural attack, else its bare hands) and the blow that may follow it
+    /// natural attack, else its bare hands) and the blows that may follow it
     /// ([`World::second_blow`]), a shot with the missile weapon it has ready (with none, an
     /// intent only), or a spell (an intent only, until magic is designed). Returns the (first)
     /// blow, if one was struck.
@@ -431,14 +436,46 @@ impl World {
             AttackKind::Thrown | AttackKind::Spell => None,
         };
         let blow = self.attack_with(attacker, target, kind, profile, events);
-        if kind == AttackKind::Melee
-            && let Some((with, profile)) = self.second_blow(attacker, target, blow)
-        {
-            let skills = self.skills_of(attacker, AttackKind::Melee, Some(with));
-            let second = (AttackKind::Melee, Some(with), skills);
-            self.resolve(attacker, target, second, Some(profile), false, events);
+        if kind == AttackKind::Melee {
+            let mut parried = free_blow::parried(blow);
+            if let Some(second) = self.second_blow(attacker, target, Cue::First(blow)) {
+                parried |= free_blow::parried(self.strike_free(second, events));
+            }
+            self.after_attack(attacker, target, parried, events);
         }
         blow
+    }
+
+    /// A blow more, by actor `striker` at `target`, on `cue` (spec §8 "Fighting styles", "Free
+    /// blows"), if any: who strikes whom, and with what. The one place every blow beyond an
+    /// attack's first is decided (`free_blow.rs`):
+    /// - [`Cue::First`]: the second blow of `striker`'s melee attack on `target` (below);
+    /// - [`Cue::Attacked`]: its end: a cleave if it killed `target`, else `target`'s riposte;
+    /// - [`Cue::Cleaved`]: another cleave, with great cleave, after one that killed `target`;
+    /// - [`Cue::Leaves`]: `target` steps away from beside `striker`: the opportunist's blow.
+    ///
+    /// Only the second blow may draw while deciding; the free blows never do.
+    pub(super) fn second_blow(
+        &mut self,
+        striker: ActorId,
+        target: ActorId,
+        cue: Cue,
+    ) -> Option<FreeBlow> {
+        match cue {
+            Cue::First(first) => {
+                (self.off_hand_or_bash(striker, target, first)).map(|(with, profile)| FreeBlow {
+                    by: striker,
+                    at: target,
+                    kind: Free::Second,
+                    with: Some(with),
+                    profile,
+                })
+            }
+            Cue::Attacked { parried } => (self.cleave(striker, target, false))
+                .or_else(|| self.riposte(striker, target, parried)),
+            Cue::Cleaved => self.cleave(striker, target, true),
+            Cue::Leaves => self.opportunist(striker, target),
+        }
     }
 
     /// The blow after the first of actor `attacker`'s melee attack on `target` (spec §8
@@ -446,7 +483,7 @@ impl World {
     /// hand's ([`Actor::off_hand_blow`]); with a weapon and a shield, after a `first` that hit, a
     /// shield bash by the style's `bash` chance (one draw from the gameplay stream, only when
     /// the chance is above 0). None once the target is gone.
-    fn second_blow(
+    fn off_hand_or_bash(
         &mut self,
         attacker: ActorId,
         target: ActorId,
@@ -539,7 +576,7 @@ impl World {
     /// Rolls an attack of `kind` made `with` a missile, a shield, or the off hand's weapon (or
     /// not), drawing on weapon skill and fighting style `skills` (the player's earn their
     /// marks), and applies it, with its noise if `noisy`.
-    fn resolve(
+    pub(super) fn resolve(
         &mut self,
         attacker: ActorId,
         target: ActorId,
@@ -753,33 +790,36 @@ impl World {
         self.fallen.push(actor);
     }
 
-    /// The player attacks `target`, which they `seen` or not, in melee: a blow, and the blow
-    /// that may follow it ([`World::second_blow`]: the off hand's, a shield bash). Each message
-    /// is said at once, by what the player knows as they strike; events reach presentation only
-    /// if they saw the target.
+    /// The player attacks `target`, which they `seen` or not, in melee: a blow, and the blows
+    /// that may follow it ([`World::second_blow`]: the off hand's, a shield bash, then a cleave
+    /// or the target's riposte). Each message is said at once, by what the player knows as they
+    /// strike; events reach presentation only if they saw the target.
     pub(super) fn player_attacks(&mut self, target: ActorId, seen: bool, events: &mut Vec<Event>) {
         let player = self.state.player;
         let first = self.player_blow(target, seen, None, events);
-        if let Some((with, profile)) = self.second_blow(player, target, first) {
-            self.player_blow(target, seen, Some((with, profile)), events);
+        let mut parried = free_blow::parried(first);
+        if let Some(second) = self.second_blow(player, target, Cue::First(first)) {
+            parried |= free_blow::parried(self.player_blow(target, seen, Some(second), events));
         }
+        self.after_attack(player, target, parried, events);
     }
 
     /// The player strikes `target` in melee: the first blow of an attack (`None`: with what
-    /// they wield, its noise made), or the blow that follows it, made with what and how.
-    fn player_blow(
+    /// they wield, its noise made), or a blow more ([`World::second_blow`]), made with what and
+    /// how.
+    pub(super) fn player_blow(
         &mut self,
         target: ActorId,
         seen: bool,
-        second: Option<(ObjectId, Profile)>,
+        more: Option<FreeBlow>,
         events: &mut Vec<Event>,
     ) -> Option<Blow> {
         let me = self.state.player();
-        let with = second.map(|(with, _)| with);
-        let profile = second.map_or_else(|| me.melee(&self.content), |(_, p)| p);
+        let with = more.as_ref().and_then(|b| b.with);
+        let noisy = more.as_ref().is_none_or(|b| b.kind.noisy());
+        let profile = more.map_or_else(|| me.melee(&self.content), |b| b.profile);
         let skills = me.attack_skills(&self.content, AttackKind::Melee, with);
         let words = Words::of(me, AttackKind::Melee, with, &self.content);
-        let noisy = second.is_none();
         self.player_strikes(
             target,
             seen,
@@ -791,19 +831,27 @@ impl World {
 
     /// The player kicks `target` (spec §8 "Doors"): an unarmed blow in melee, whatever they
     /// wield ([`Actor::kick`]: it draws on and trains unarmed fighting, and no fighting style),
-    /// said and shown like any blow.
+    /// said and shown like any blow, with the free blows the end of an attack brings
+    /// ([`World::after_attack`]).
     pub(super) fn player_kicks(&mut self, target: ActorId, seen: bool, events: &mut Vec<Event>) {
         let profile = self.state.player().kick(&self.content);
         let skills = AttackSkills::only(self.content.weapon_skills().of_role(Role::Unarmed));
         let blow = (None, profile, skills);
-        self.player_strikes(target, seen, blow, (Words::kick(), true), events);
+        let struck = self.player_strikes(target, seen, blow, (Words::kick(), true), events);
+        self.after_attack(
+            self.state.player,
+            target,
+            free_blow::parried(struck),
+            events,
+        );
     }
 
     /// The player bashes whoever stands in `dir` with the shield they hold (spec §8 "Weapon
     /// skills"): a blow like any other ([`World::player_attacks`]), with the shield's `bash`
     /// dice and shield bashing's benefits, for the price of a blow with the shield (`melee`, its
     /// own affixes and what the player wears, never the wielded weapon's cost or affixes:
-    /// [`World::attack_cost`]). Refused (no time) without a
+    /// [`World::attack_cost`]), and the free blows the end of an attack brings
+    /// ([`World::after_attack`]). Refused (no time) without a
     /// shield to bash with, with nobody there, and against someone not hostile.
     pub(super) fn bash(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
@@ -835,7 +883,8 @@ impl World {
         let with = me.shield_item(&content);
         let price = self.attack_price(player, ActionKind::Melee, with, skills);
         let blow = (Some(shield), profile, skills);
-        self.player_strikes(target, seen, blow, (words, true), events);
+        let struck = self.player_strikes(target, seen, blow, (words, true), events);
+        self.after_attack(player, target, free_blow::parried(struck), events);
         Spent::Turn(price)
     }
 
