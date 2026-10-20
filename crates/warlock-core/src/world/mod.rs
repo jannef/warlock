@@ -791,10 +791,10 @@ impl World {
             ),
             Action::Ascend => (self.take_stairs(StairsDir::Up, events), ActionKind::Stairs),
             Action::ToggleLantern => (self.toggle_lantern(), ActionKind::Lantern),
-            Action::PickUp(letters) => return self.pick_up_objects(letters),
-            Action::Drop(letters) => return self.drop_objects(letters),
-            Action::Sell(letters) => {
-                return self.trade(letters, true).unwrap_or_else(|| {
+            Action::PickUp(positions) => return self.pick_up_objects(positions),
+            Action::Drop(positions) => return self.drop_objects(positions),
+            Action::Sell(positions) => {
+                return self.trade(positions, true).unwrap_or_else(|| {
                     self.say("There is nobody here to sell to.");
                     Spent::Nothing
                 });
@@ -817,7 +817,7 @@ impl World {
             Action::Effect { effect, at, to } => {
                 return self.show_effect(effect, *at, *to, events);
             }
-            Action::Identify(letters) => return self.identify_dev(letters),
+            Action::Identify(positions) => return self.identify_dev(positions),
             Action::Freeze { at, radius } => return self.freeze_dev(*at, *radius, events),
             Action::Thaw { at, radius } => return self.thaw_dev(*at, *radius, events),
             Action::Afflict(id) => return self.afflict_dev(id, events),

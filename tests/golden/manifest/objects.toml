@@ -21,8 +21,36 @@ scenario = "showcase"
 actions = "move:SW*2"
 screen = "pick-up"
 
+# Item lists page (#188, #189): the start room's pile and gold and most of the storeroom, 13
+# stacks of 11 item classes, are two pages of the drop list at 960x540. `a` marks the first
+# stack, `>` turns the page, where letters start again at `a`, and `b` marks the gold coins: the
+# page label, the class headers, and the page keys in the footer.
+[[golden]]
+name = "drop-page-2"
+scenario = "showcase"
+actions = '''
+move:SW*2 pickup move:NE*2 move:E*2 move:NE pickup move:SW move:W*2 move:N*3 open:N move:N*2
+move:E*16 open:S move:S*4 open:W move:W*2 move:N pickup move:S*2 pickup move:NW move:W*2 move:N
+pickup move:SW pickup
+'''
+screen = "drop"
+args = ["--keys", "a > b"]
+
+# The same 13 stacks in the inventory, its second page (`>`): the margin and gaps gave way to fit
+# more rows a page, as the console's height is what pages the list.
+[[golden]]
+name = "inventory-page-2"
+scenario = "showcase"
+actions = '''
+move:SW*2 pickup move:NE*2 move:E*2 move:NE pickup move:SW move:W*2 move:N*3 open:N move:N*2
+move:E*16 open:S move:S*4 open:W move:W*2 move:N pickup move:S*2 pickup move:NW move:W*2 move:N
+pickup move:SW pickup
+'''
+screen = "inventory"
+args = ["--keys", ">"]
+
 # The inventory after picking up the start room's pile and gold (#80, #81): letters, glyphs,
-# weights, and what the player carries and weighs.
+# weights, and what the player carries and weighs, grouped by item class (#189).
 [[golden]]
 name = "inventory-screen"
 scenario = "showcase"

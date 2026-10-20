@@ -45,11 +45,11 @@ impl World {
         Identified::Now(name)
     }
 
-    /// Dev: identifies the inventory stacks `letters` names (everything with none).
+    /// Dev: identifies the inventory stacks `positions` names (everything with none).
     /// Takes no time; says what each turned out to be, or that there was nothing to learn.
-    pub(super) fn identify_dev(&mut self, letters: &Positions) -> Spent {
+    pub(super) fn identify_dev(&mut self, positions: &Positions) -> Spent {
         let len = self.state.player().inventory.len();
-        let Some(chosen) = self.chosen(letters, len, "You carry no such thing.") else {
+        let Some(chosen) = self.chosen(positions, len, "You carry no such thing.") else {
             return Spent::Nothing;
         };
         let learned = (chosen.iter())

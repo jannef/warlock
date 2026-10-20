@@ -602,16 +602,16 @@ impl FromStr for Action {
                 Some(_) => dir().map(|d| Action::Pay(Some(d))),
             },
             "pickup" | "drop" | "sell" | "identify" => {
-                let letters = match arg {
+                let positions = match arg {
                     None => Positions::default(),
                     Some("") => return Err(format!("`{verb}:` needs letters, e.g. `{verb}:ab`")),
                     Some(text) => text.parse().map_err(|e| format!("`{s}`: {e}"))?,
                 };
                 Ok(match verb {
-                    "pickup" => Action::PickUp(letters),
-                    "drop" => Action::Drop(letters),
-                    "sell" => Action::Sell(letters),
-                    _ => Action::Identify(letters),
+                    "pickup" => Action::PickUp(positions),
+                    "drop" => Action::Drop(positions),
+                    "sell" => Action::Sell(positions),
+                    _ => Action::Identify(positions),
                 })
             }
             "rest" => match arg {

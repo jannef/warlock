@@ -383,19 +383,20 @@ impl World {
         }
     }
 
-    /// Drops (`sell` false) or sells (`sell` true) the inventory stacks `letters` names in the
+    /// Drops (`sell` false) or sells (`sell` true) the inventory stacks `positions` names in the
     /// open shop the player stands in (spec §7 "Shops"): what of them is unpaid goes back; of
     /// the player's own things, a drop says what the shop offers for what it buys and keeps
     /// them, a sale takes the offer from the keeper's purse. Returns `None` outside an open
     /// shop.
-    pub(super) fn trade(&mut self, letters: &Positions, sell: bool) -> Option<Spent> {
+    pub(super) fn trade(&mut self, positions: &Positions, sell: bool) -> Option<Spent> {
         let i = self.shop_here()?;
         let inventory = self.state.player().inventory.clone();
         if inventory.is_empty() {
             self.say("You are not carrying anything.");
             return Some(Spent::Nothing);
         }
-        let Some(chosen) = self.chosen(letters, inventory.len(), "You carry no such thing.") else {
+        let Some(chosen) = self.chosen(positions, inventory.len(), "You carry no such thing.")
+        else {
             return Some(Spent::Nothing);
         };
         let content = self.content.clone();
