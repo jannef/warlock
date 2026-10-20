@@ -308,9 +308,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     used now. Every ability is a normal core `Action` with replay text, so replays record it as
     that action.
   - **What there is**: the shield bash (§8 "Weapon skills"), which everyone has and can use
-    while holding a shield to bash with; and each skill used as an action (`kind = "action"`,
-    §8 "Skills") the player is trained in, listed but never available until its use comes (it
-    then becomes an ability of its own with its action). No race, class, or item gives one yet.
+    while holding a shield to bash with; disarming a trap (`Ability::Disarm`, "Disarm a trap",
+    §8 "Disarming traps"), Disable device's use, which whoever is trained in it has, in a
+    direction ("Disarm in which direction? (Esc to cancel)"); and each other skill used as an
+    action (`kind = "action"`, §8 "Skills") the player is trained in, listed but never available
+    until its use comes (it then becomes an ability of its own with its action, listed in the
+    skill's place: `Ability::use_of`). No race, class, or item gives one yet.
   - **The menu** (a screen on the stack) lists them as the one paged list (§6 "Item lists"),
     grouped by source under a header each, lettered down each page from `a`: each row the
     ability's name and what it asks for ("in a direction"), or greyed out with why it cannot be

@@ -181,8 +181,8 @@ Key commands `,`/`g` (pick up: one stack at once, else the `PickUp` screen), `d`
 `i` (`Inventory` screen), `e` (`Equipment` screen), `@` (`Character` screen), `W` (`WeaponSkills`
 screen), `M` (`KeyCommand::Messages`: the `Messages` screen), `r` (`Read` screen, `KeyCommand::Read`: a basic command, not an ability), `p`
 (`KeyCommand::Pay`), `a` (`KeyCommand::Abilities`: the `Abilities` screen), `A`
-(`KeyCommand::RepeatAbility`), and bash (`KeyCommand::Bash`, unbound) are in `input.rs` and
-`settings/keys.rs`.
+(`KeyCommand::RepeatAbility`), bash (`KeyCommand::Bash`, unbound), and disarm
+(`KeyCommand::Disarm`, unbound) are in `input.rs` and `settings/keys.rs`.
 
 **Abilities** (spec §6 "Abilities"; racial, class, skill, weapon skill and style, item; the
 owner's rule, #156) get no key of their own: they go into the one abilities menu.
@@ -196,7 +196,9 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   why it cannot be used now); the `abilities` dump layer and JSON key show the same, and the
   wiki's table (`xtask/src/wiki/abilities.rs`) lists `Ability::every`. Skills used as actions are
   `Ability::Skill(id)` until their use exists (never available); a use, when it comes, is a
-  variant of its own. `Aim` has `Nothing` and `Direction`: a target (the aiming mode) and an item
+  variant of its own, listed in its skill's place (`Ability::use_of`: the skill's benefit effect
+  names it, so `had_by` asks `Skills::trains_effect`): `Ability::Disarm`, Disable device's
+  (`docs/dev/traps.md`). `Aim` has `Nothing` and `Direction`: a target (the aiming mode) and an item
   (a `PagedList` of the pack) join it with the first ability that needs one, as a variant and an
   arm in `Gameplay::use_ability`.
 - **Menu**: `ui/abilities_screen.rs` (`AbilitiesScreen`, `ScreenName::Abilities`, `--screen
@@ -205,11 +207,13 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   letter or Enter on an available row answers `ScreenAction::UseAbility(ability)`; on an
   unavailable one it shows why and stays. Its own key closes it only when it names no row.
 - **Dispatch**: `ScreenAction::UseAbility` is the one way an ability is used, from the menu, its
-  own key (`KeyCommand::Bash` answers it from `Gameplay::press`), or the quick repeat:
+  own key (`KeyCommand::Bash` and `KeyCommand::Disarm` answer it from `Gameplay::press`), or
+  the quick repeat:
   `input::route_keys` closes the top screen if any, remembers it (`ScreenStack::last_ability`,
   cleared with the stack when a run ends, like the creation picks), and calls
   `Gameplay::use_ability`: `Aim::Direction` enters `InputMode::Ability(ability)` (the message
-  line's "In which direction? (Esc to cancel)"; a direction applies `ability.action(Some(dir))`),
+  line's "In which direction? (Esc to cancel)", disarming's "Disarm in which direction?",
+  `ui/mod.rs`; a direction applies `ability.action(Some(dir))`),
   `Aim::Nothing` applies it at once, and one that cannot be used now is applied at once with a
   placeholder direction so the rules say why and take no time (as `U` does with no tool).
 - **Quick repeat**: the menu opens on `ScreenStack::last_ability` (else the first available row);

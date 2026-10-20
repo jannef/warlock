@@ -51,6 +51,9 @@ pub const PROGRESS_STEPS: u8 = 4;
 /// The most a skill adds to searching or to noticing in passing (spec §8 "Searching").
 pub const MAX_SEARCH_BONUS: i32 = 20;
 
+/// The most a skill adds to disarming a trap (spec §8 "Disarming traps").
+pub const MAX_DISARM_BONUS: i32 = 20;
+
 /// The most cells farther a search may reach than the cells around the searcher.
 pub const MAX_SEARCH_REACH: i32 = 2;
 
@@ -100,6 +103,9 @@ pub enum Effect {
     /// Points added to noticing hidden features in passing (spec §8 "Searching"); a skill with
     /// it, trained, lets the actor notice them at all.
     Spot,
+    /// Points added to disarming a trap (spec §8 "Disarming traps"; `world/disarm.rs`); a skill
+    /// with it, trained, lets the actor disarm traps at all (the Disarm ability).
+    Disarm,
     /// Percent less of the burden's slowdown (spec §8 "Burden"): Burdened ×1.25 becomes ×1.10
     /// at 60.
     Burden,
@@ -121,6 +127,7 @@ impl Effect {
             Effect::Quiet | Effect::Burden | Effect::Travel | Effect::Bargain => 100,
             Effect::Kick => *crate::stats::SCORES.end() as i32,
             Effect::Search | Effect::Spot => MAX_SEARCH_BONUS,
+            Effect::Disarm => MAX_DISARM_BONUS,
             Effect::SearchReach => MAX_SEARCH_REACH,
         }
     }
@@ -138,6 +145,8 @@ pub enum Use {
     Search,
     /// Noticing something hidden in passing (spec §8 "Searching").
     Spot,
+    /// An attempt to disarm a trap (spec §8 "Disarming traps"), whatever comes of it.
+    Disarm,
     /// An attack that missed because the actor dodged it (the Dexterity or Dodge category).
     Dodge,
     /// An action taken (not waiting) while the burden slows the actor.
@@ -156,6 +165,7 @@ impl Use {
             Use::Hear => "hearing something new",
             Use::Search => "a turn spent searching",
             Use::Spot => "noticing something hidden in passing",
+            Use::Disarm => "trying to disarm a trap",
             Use::Dodge => "dodging an attack",
             Use::Burdened => "acting (not waiting) while your load slows you",
             Use::Travel => "a journey on the overworld",
@@ -257,6 +267,7 @@ impl Use {
             Use::Hear => "hear",
             Use::Search => "search",
             Use::Spot => "spot",
+            Use::Disarm => "disarm",
             Use::Dodge => "dodge",
             Use::Burdened => "burdened",
             Use::Travel => "travel",
@@ -275,6 +286,7 @@ impl Effect {
             Effect::Search => "search",
             Effect::SearchReach => "search_reach",
             Effect::Spot => "spot",
+            Effect::Disarm => "disarm",
             Effect::Burden => "burden",
             Effect::Travel => "travel",
             Effect::Bargain => "bargain",

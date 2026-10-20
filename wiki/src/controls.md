@@ -44,6 +44,7 @@ The in-game `?` screen is authoritative: it is generated from your current key b
 | Abilities: everything you can do because of who you are, in one menu | `a` (see [Abilities](abilities.md)) |
 | Use the ability you used last again | `A` |
 | Bash with your shield (an ability: also in the abilities menu) | no key until you bind one, then a direction |
+| Disarm a trap (an ability: also in the abilities menu) | no key until you bind one, then a direction |
 | Next target while aiming (with Shift: the one before) | `Tab` |
 | Use a tool: dig into a wall with a pick-axe | `U`, then a direction |
 | Show or hide the controls | `?` |
@@ -124,7 +125,8 @@ such a file, `keymaps/default.toml`.
 Opening, closing, and kicking a door, and bashing with your shield, ask `In which direction? (Esc
 to cancel)` on the message line, digging asks `Dig in which direction? (Esc to cancel)` (see
 [Digging and walls](digging.md)), chatting with several creatures near asks `Talk in which
-direction? (Esc to cancel)` (see [People and talk](npcs.md)), and
+direction? (Esc to cancel)` (see [People and talk](npcs.md)), disarming a trap asks `Disarm in
+which direction? (Esc to cancel)` (see [Traps](traps.md#disarming-traps)), and
 resting asks how long (see [Resting](resting.md)). Answer with a direction or the key shown, or
 press `Esc` to cancel. Pressing any other command cancels the prompt. The rest prompt's keys (`h`,
 `d`, `n`) are their own: they can be rebound without touching movement, and the prompt names
@@ -205,8 +207,9 @@ A letter, or `Enter` on the marked row, eats it. See
 
 ## Abilities
 
-`a` opens the abilities menu: everything you can do because of who you are (a shield bash, the
-skills you use as actions, and later racial, class, and item abilities), grouped by where each
+`a` opens the abilities menu: everything you can do because of who you are (a shield bash,
+disarming a trap, the other skills you use as actions, and later racial, class, and item
+abilities), grouped by where each
 comes from and lettered like a list of items. Choose one by its letter, or `Enter` on the `>`
 row; one you cannot use now is greyed out with why. It then asks for what it needs, such as a
 direction. The menu opens on the ability you used last, and `A` uses that one again at once.

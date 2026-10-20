@@ -225,6 +225,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("search-depths.md", searching::search_depths),
         ("search-races.md", searching::search_races),
         ("traps.md", traps::traps),
+        ("trap-disarm.md", traps::disarming),
     ];
     let mut files: Vec<(String, String)> = tables
         .iter()
@@ -597,6 +598,25 @@ mod tests {
         );
         assert!(abilities.contains("| Open lock | Skills | everyone trained in the skill | — |"));
         assert!(
+            abilities.contains(
+                "| Disarm a trap | Skills | everyone trained in Disable device | a direction | Take \
+                 apart a trap you know of next to you; a clumsy try sets it off. | 12 seconds |"
+            ),
+            "{abilities}"
+        );
+        assert!(!abilities.contains("| Disable device |"), "{abilities}");
+        // Disarming: an arrow trap (14) at Dexterity 10 is 66 of 144 rolls, set off by 36 (a
+        // natural 9 or less); at Dexterity 14 (+2) 89 and 21; with Disable device 100 (+8 more)
+        // all but a natural 2 or 3, and never set off.
+        let disarm = text("trap-disarm.md");
+        assert!(
+            disarm.contains(
+                "| Arrow trap | 14 | 46% disarmed, 25% set off | 62% disarmed, 15% set off | 98% \
+                 disarmed, 0% set off |"
+            ),
+            "{disarm}"
+        );
+        assert!(
             text("materials.md")
                 .contains("| Steel | no | stilettos, daggers, short swords, scimitars,")
         );
@@ -639,18 +659,19 @@ mod tests {
         assert!(
             benefits.contains(
                 "| Value | Appraise: prices | Athletics: kicking doors in | Balance: Burdened / \
-                 Strained | Listen: hears fainter by | Search: searching | Search: search reaches \
-                 | Spot: noticing | Stealth: noise | Survival: journeys | Tumble: Dodge |"
+                 Strained | Disable device: disarming traps | Listen: hears fainter by | Search: \
+                 searching | Search: search reaches | Spot: noticing | Stealth: noise | Survival: \
+                 journeys | Tumble: Dodge |"
             ),
             "{benefits}"
         );
         assert!(benefits.contains(
-            "| 100 | 20% better | +8 Strength | ×1.1 / ×1.2 | 10 | +8 | +1 cell | +8 | \u{2212}60% \
-                 | \u{2212}20% | +5 |"
+            "| 100 | 20% better | +8 Strength | ×1.1 / ×1.2 | +8 | 10 | +8 | +1 cell | +8 | \
+             \u{2212}60% | \u{2212}20% | +5 |"
         ));
         assert!(benefits.contains(
-            "| 150 | 25% better | +10 Strength | ×1.08 / ×1.15 | 15 | +10 | +1 cell | +10 | \
-             \u{2212}75% | \u{2212}20% | +7 |"
+            "| 150 | 25% better | +10 Strength | ×1.08 / ×1.15 | +10 | 15 | +10 | +1 cell | +10 \
+             | \u{2212}75% | \u{2212}20% | +7 |"
         ));
         // Searching: the hidden things' chances for an average character, deeper down, and who
         // notices in passing.

@@ -1349,14 +1349,15 @@ mod tests {
 
     #[test]
     fn abilities_show_what_the_player_can_do_and_why_not() {
-        // The showcase thief: the class's skills used as actions (no use yet), then the shield
-        // bash, which needs a shield in hand.
+        // The showcase thief: the class's skills used as actions (no use yet, but Disable
+        // device's: disarming a trap, in a direction), then the shield bash, which needs a shield
+        // in hand.
         let mut world = showcase();
         assert_eq!(
             layer_rows(&world, Layer::Abilities),
             [
                 "Appraise (skill): not usable yet",
-                "Disable device (skill): not usable yet",
+                "Disarm a trap (skill): a direction",
                 "Open lock (skill): not usable yet",
                 "Steal (skill): not usable yet",
                 "Shield bash (weapon skill): you hold no shield",
@@ -1369,6 +1370,10 @@ mod tests {
                    "unavailable": "no_shield"})
         );
         assert_eq!(value["abilities"][2]["id"], "open_lock");
+        assert_eq!(
+            value["abilities"][1],
+            json!({"id": "disarm", "source": "skill", "aim": "a direction", "unavailable": null})
+        );
         // The storeroom's small shield in hand: it can be used, in a direction.
         let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
                     pickup:a equip:off_hand:a";

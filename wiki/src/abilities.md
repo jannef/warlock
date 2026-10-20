@@ -35,6 +35,9 @@ menu).
 - **Shield bash**: anyone can bash with a shield (see [Weapon skills](weapon-skills.md)), so it is
   always in the menu, and you can use it while you hold a shield. It strikes whoever stands in
   the direction you choose, in the time of a blow.
+- **Disarm a trap**: everyone trained in Disable device (the thief) has it, in place of the
+  skill. Choose a direction, toward a trap you know of next to you, on the floor or on a door:
+  you try to take it apart (see [Traps](traps.md#disarming-traps)).
 - **Skills used as actions** (Open lock, Steal, Heal, ...): each is in the menu once you are
   trained in it (see [Skills](skills.md)), greyed out until its use comes to the game.
 - No race, class, or item gives an ability yet.
@@ -42,6 +45,6 @@ menu).
 ## Keys of their own
 
 If you use an ability often, you can give it a key in the Controls screen (the shield bash is
-"Bash with your shield", which has no key by default): the key uses the ability just as the menu
-would, asking for a direction if it needs one. Without a shield, it says so at once and takes no
+"Bash with your shield" and disarming "Disarm a trap", which have no key by default): the key uses
+the ability just as the menu would, asking for a direction if it needs one. Without a shield, it says so at once and takes no
 time. `a` ("Abilities") and `A` ("Use the last ability again") can be rebound like every key.
