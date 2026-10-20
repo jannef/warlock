@@ -8,8 +8,10 @@ seed = 1
 # `vision` (a profile in data/vision.toml; default "normal"), `stats` and `potential` by stat id
 # (1 to 40; a missing score 10, the average; a missing potential the score; hidden from the
 # player), and `hp`, the hit points beyond Toughness that a race and a class would give (default
-# 0).
-character = { race = "human", gender = "female", class = "thief" }
+# 0). Its `name` (optional, up to 20 characters) is the character's name in a run told none (a
+# replay or a command line without `--name`); another character is given one of their race's names
+# (data/names.toml).
+character = { race = "human", gender = "female", class = "thief", name = "Tamsin" }
 # The lantern the player carries (data/lights.toml; starts unlit).
 lantern = "lantern"
 # The start time (hh:mm); the date is the default, 11 Darkening 1444 (data/calendar.toml).

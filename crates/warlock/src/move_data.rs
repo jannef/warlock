@@ -478,8 +478,8 @@ mod tests {
 
     fn seed(sb: &Sandbox) {
         sb.write("native/config/settings.toml", "font_px = 20\n");
-        sb.write("native/data/run.sav", "SAVE");
-        sb.write("native/data/snapshots/quick.sav", "SNAP");
+        sb.write("native/data/saves/tamsin-1.sav", "SAVE");
+        sb.write("native/data/snapshots/tamsin-1.sav", "SNAP");
         sb.write("native/data-logs/logs/warlock-1.log", "LOG");
     }
 
@@ -519,8 +519,13 @@ mod tests {
         assert!(out.contains("Moved 4 file(s)."), "{out}");
         assert_eq!(sb.files("game/warlock-data").len(), 4);
         assert_eq!(
-            sb.files("game/warlock-data")["data/snapshots/quick.sav"],
+            sb.files("game/warlock-data")["data/snapshots/tamsin-1.sav"],
             "SNAP"
+        );
+        // The characters' saves move with their folder.
+        assert_eq!(
+            sb.files("game/warlock-data")["data/saves/tamsin-1.sav"],
+            "SAVE"
         );
         assert!(
             sb.files("native").is_empty(),
@@ -541,7 +546,10 @@ mod tests {
     fn a_file_at_the_destination_is_backed_up_never_overwritten() {
         let sb = Sandbox::new("conflict");
         seed(&sb);
-        sb.write("game/warlock-data/data/run.sav", "OLD PORTABLE SAVE");
+        sb.write(
+            "game/warlock-data/data/saves/tamsin-1.sav",
+            "OLD PORTABLE SAVE",
+        );
         // Not "already portable" for the route: name the folder explicitly.
         let target = Target::Portable(Some(sb.game().join("warlock-data")));
         let inputs = Inputs {
@@ -558,11 +566,11 @@ mod tests {
             "20261019-101500",
         )
         .unwrap();
-        assert!(out.contains("run.sav.bak-20261019-101500"), "{out}");
+        assert!(out.contains("tamsin-1.sav.bak-20261019-101500"), "{out}");
         let files = sb.files("game/warlock-data");
-        assert_eq!(files["data/run.sav"], "SAVE");
+        assert_eq!(files["data/saves/tamsin-1.sav"], "SAVE");
         assert_eq!(
-            files["data/run.sav.bak-20261019-101500"],
+            files["data/saves/tamsin-1.sav.bak-20261019-101500"],
             "OLD PORTABLE SAVE"
         );
     }
@@ -574,7 +582,7 @@ mod tests {
         let before = sb.files("");
         let out = go(&sb, &Target::Portable(None), true).unwrap();
         assert!(out.starts_with("Dry run"), "{out}");
-        assert!(out.contains("run.sav"));
+        assert!(out.contains("tamsin-1.sav"));
         assert_eq!(sb.files(""), before);
         assert!(!sb.game().exists());
     }
@@ -604,7 +612,7 @@ mod tests {
         // Every file is complete in one place or the other, and no half copies remain.
         let moved = sb.files("game/warlock-data");
         let kept = sb.files("native");
-        assert_eq!(kept["data/snapshots/quick.sav"], "SNAP");
+        assert_eq!(kept["data/snapshots/tamsin-1.sav"], "SNAP");
         assert_eq!(moved["config/settings.toml"], "font_px = 20\n");
         assert_eq!(moved["data/snapshots"], "in the way");
         assert!(moved.keys().all(|k| !k.ends_with(".part")));

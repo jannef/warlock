@@ -24,12 +24,30 @@ Adjustments are `PerStat<Dice>` (`stats::adjustments` checks every result is wit
 order (race, class, animal, element, race potentials): **adding a die to data changes later
 rolls** of every character with that race or class. `Dice` (`warlock-core/src/dice.rs`) is the
 one dice type (parse `2d3+1`/`-1d2`/`+2`, `Display`, `min`/`max`, `roll(&mut Rng)`); combat
-uses it for damage. Scenarios name their character (`character = { race, gender, class }`,
-`ScenarioDef::character`); with one, `vision`, `stats`, `potential`, and `hp` are refused.
+uses it for damage. Scenarios name their character (`character = { race, gender, class, name }`,
+`ScenarioDef::character` and `character_name`; the `name` optional); with one, `vision`, `stats`,
+`potential`, and `hp` are refused.
 `World::new` starts as the scenario's character, `World::with_character(content, scenario, seed,
-Some(&spec))` as another; `WorldState::character` (the `Character`, saved, hashed)
-and `PerceptionView::character` (the player knows it; `PerceptionView::time`
-for their age). Replays record only the spec. The summary and the character screen show final
-scores only: never dice, a breakdown, a modifier, or a potential (the step screens and the wiki
-show adjustments as written in data). Balance is not a goal; classes only adjust starting
-scores and give hit points.
+Some(&spec))` as another, `World::with_character_named(.., name)` named; `WorldState::character`
+(the `Character`, saved, hashed) and `PerceptionView::character` (the player knows it;
+`PerceptionView::time` for their age). Replays record the spec and the name (`Replay::name`). The
+summary and the character screen show final scores only: never dice, a breakdown, a modifier, or a
+potential (the step screens and the wiki show adjustments as written in data). Balance is not a
+goal; classes only adjust starting scores and give hit points.
+
+**Names** (#218): `Character::name` (saved, hashed: saves change). `character::check_name` is the
+one check (trimmed, 1 to `MAX_NAME` = 20 characters, no control character; what the font draws is
+the text field's business, `render::atlas::draws`). `data/names.toml` (`content/names.rs`:
+`Names`, a `male` and a `female` list by race id, checked against the races; `Names::offered`
+gives `other` both; not fingerprinted) feeds `character::random_name(content, seed, spec, draw)`,
+drawn from `character/name/<race>,<gender>/<draw>`, its own stream, so no roll moves (the class
+plays no part). `CharacterSpec::start` names the character with draw 0 (else `NAMELESS`,
+"Wanderer"); a run told no name (`with_character`, a replay or command line without one) gets
+`character::default_name`: the scenario's `character_name` for its own character, else draw 0. The
+CLI and the game take `--name`; the `stats` dump layer starts `Name Brakka` and the JSON
+`character` has `name`. Character creation's Name step (`ui/name_screen.rs`, after the class) is
+the game's text field: typed text is literal, `Context::Text` edits it (`docs/dev/screens.md`); an
+empty field gives draw 0 (`Draft::name`), and the summary starts the run with the name
+(`MenuChoice::NewRun { name, .. }`). The name is shown on the character screen, the summary, the
+death screen ("Here lies Brakka,"), and the list of saved characters (`docs/dev/saves.md`); no rule
+or message reads it yet.

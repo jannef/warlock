@@ -206,7 +206,7 @@ mod tests {
         for action in parse_actions(walk).expect("actions") {
             world.apply(&action);
         }
-        let mut game = Game::from_world(world);
+        let mut game = Game::from_world(world, "tamsin-1".into());
         for action in parse_actions(then).expect("actions") {
             game.apply(&action);
         }
