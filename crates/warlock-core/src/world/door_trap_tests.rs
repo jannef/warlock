@@ -507,7 +507,10 @@ fn the_trap_halls_closets_have_trapped_doors() {
     assert_eq!(w.player_pos(), Pos::new(10, 5));
     let rang = sprung_at(&out, east);
     assert_eq!(rang.len(), 1, "once, as the kobold opened the door");
-    assert_eq!(w.content().creature(w.state.actors[&rang[0]].creature).id, "kobold");
+    assert_eq!(
+        w.content().creature(w.state.actors[&rang[0]].creature).id,
+        "kobold"
+    );
     assert_eq!(w.perception().trap(east), Some(trap(&w, "alarm")));
     assert!(texts(&w).contains(&"A loud bell rings!".to_string()));
     let out = run(&mut w, "move:SW move:W*6 move:NW open:N");
