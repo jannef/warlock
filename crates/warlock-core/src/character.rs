@@ -1,9 +1,14 @@
 //! Character creation (spec §8 "Character creation"): who the player is, made when a run
 //! starts. A [`CharacterSpec`] is the choice — a race (`data/races.toml`), a gender, and a class
 //! (`data/classes.toml`) — written `dwarf,female,warrior` on the command line. A [`Character`]
-//! is what came of it in a run: the choice, the stat the gender raised, the birth date, and the
-//! birth sign (`data/horoscope.toml`).
+//! is what came of it in a run: the name, the choice, the stat the gender raised, the birth
+//! date, and the birth sign (`data/horoscope.toml`).
 //!
+//! - **Name**: chosen with the character, or one of the race's names for the gender
+//!   (`data/names.toml`) picked from the run seed ([`random_name`]: the stream
+//!   `character/name/<race>,<gender>/<draw>`, so no other roll moves), at most [`MAX_NAME`]
+//!   characters ([`check_name`]). A run told no name gets [`default_name`]: the scenario's own
+//!   name for its own character, else the race's first random name. The rules never read it.
 //! - **Age and birthday**: the age is uniform in the race's `age` range and the birthday
 //!   (month, then day) uniform over the year, from the random stream `character/birth/<race>`.
 //!   The birth date counts back from the run's start date, so the character is exactly that old
@@ -43,7 +48,7 @@
 //! (and its replay) is reproduced by its scenario, seed, and character.
 
 use crate::alignment::Score;
-use crate::content::{Calendar, ClassDef, Content, RaceDef, Sign};
+use crate::content::{Calendar, ClassDef, Content, RaceDef, ScenarioDef, Sign};
 use crate::rng::Rng;
 use crate::skills::{self, Skills};
 use crate::stats::{self, AVERAGE, PerStat, Stat, Stats, adjusted};
@@ -158,6 +163,9 @@ impl BirthDate {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Character {
+    /// The character's name ([`check_name`]): shown on the character screen, the death screen,
+    /// and the list of saved characters; the rules never read it.
+    pub name: String,
     /// What was chosen.
     pub spec: CharacterSpec,
     /// The stat the gender raised by one.
@@ -208,6 +216,68 @@ impl Character {
     }
 }
 
+/// The longest name a character may have, in characters.
+pub const MAX_NAME: usize = 20;
+
+/// The name of a character there is no name for: no names for their race and gender, and no
+/// scenario name.
+pub const NAMELESS: &str = "Wanderer";
+
+/// `name` as a character's name: without the spaces around it. An error when that is empty or
+/// longer than [`MAX_NAME`] characters, or when it holds a control character.
+pub fn check_name(name: &str) -> Result<&str, String> {
+    let name = name.trim();
+    if name.is_empty() {
+        return Err("a character's name cannot be empty".into());
+    }
+    if name.chars().count() > MAX_NAME {
+        return Err(format!(
+            "the name `{name}` is longer than {MAX_NAME} characters"
+        ));
+    }
+    if name.chars().any(char::is_control) {
+        return Err(format!(
+            "the name `{}` holds a control character",
+            name.escape_debug()
+        ));
+    }
+    Ok(name)
+}
+
+/// The `draw`th random name (0 first) for a character of `spec` in a run with `seed`: one of the
+/// race's names for the gender (`data/names.toml`; `other` picks from both lists), from the
+/// stream `character/name/<race>,<gender>/<draw>`. `None` when there are none to pick from.
+pub fn random_name(
+    content: &Content,
+    seed: u64,
+    spec: &CharacterSpec,
+    draw: u32,
+) -> Option<String> {
+    let names = content.names().offered(&spec.race, spec.gender);
+    if names.is_empty() {
+        return None;
+    }
+    let label = format!("character/name/{},{}/{draw}", spec.race, spec.gender.id());
+    let mut rng = Rng::stream(seed, &label);
+    Some(names[rng.index(names.len())].to_string())
+}
+
+/// The name a run of `scenario` with `seed` gives a character of `spec` when it is told none (a
+/// replay or a command line without one): the scenario's own name when `spec` is its own
+/// character, else the race's first random name ([`random_name`]), else [`NAMELESS`].
+pub fn default_name(
+    content: &Content,
+    scenario: &ScenarioDef,
+    seed: u64,
+    spec: &CharacterSpec,
+) -> String {
+    (scenario.character.as_ref())
+        .filter(|own| *own == spec)
+        .and(scenario.character_name.clone())
+        .or_else(|| random_name(content, seed, spec, 0))
+        .unwrap_or_else(|| NAMELESS.into())
+}
+
 /// What a character starts a run with.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Start {
@@ -247,7 +317,8 @@ impl CharacterSpec {
     }
 
     /// What this character starts a run with `seed` on `today` (the run's start) with: see the
-    /// module docs.
+    /// module docs. Its name is the first random name ([`random_name`]) until the caller names
+    /// it.
     pub fn start(&self, content: &Content, seed: u64, today: GameTime) -> Result<Start, String> {
         let race = self.race(content)?;
         let class = self.class(content)?;
@@ -279,6 +350,7 @@ impl CharacterSpec {
             weapon_skills: self.weapon_skills(content, seed),
             alignment: Score::new(race.alignment + class.alignment),
             character: Character {
+                name: random_name(content, seed, self, 0).unwrap_or_else(|| NAMELESS.into()),
                 spec: self.clone(),
                 raised,
                 born,
@@ -708,10 +780,96 @@ mod tests {
     }
 
     #[test]
+    fn names_are_checked() {
+        assert_eq!(check_name("  Brakka "), Ok("Brakka"));
+        assert_eq!(check_name("Ånne-Marie O'Hara"), Ok("Ånne-Marie O'Hara"));
+        assert_eq!(
+            check_name(&"x".repeat(MAX_NAME)).map(str::len),
+            Ok(MAX_NAME)
+        );
+        assert!(check_name(&"x".repeat(MAX_NAME + 1)).is_err());
+        assert!(check_name("").is_err());
+        assert!(check_name("   ").is_err());
+        assert!(check_name("Bra\nkka").is_err());
+    }
+
+    #[test]
+    fn random_names_come_from_the_race_and_gender_and_the_seed() {
+        let content = content();
+        let dwarf = spec("dwarf,female,warrior");
+        let females = content.names().offered("dwarf", Gender::Female);
+        let mut seen = BTreeSet::new();
+        for draw in 0..40 {
+            let name = random_name(&content, 7, &dwarf, draw).expect("a name");
+            assert!(females.contains(&name.as_str()), "{name}");
+            assert_eq!(random_name(&content, 7, &dwarf, draw), Some(name.clone()));
+            seen.insert(name);
+        }
+        assert!(seen.len() > 5, "draws vary: {seen:?}");
+        // The class plays no part; the seed does.
+        let monk = spec("dwarf,female,monk");
+        assert_eq!(
+            random_name(&content, 7, &monk, 0),
+            random_name(&content, 7, &dwarf, 0)
+        );
+        let other = spec("dwarf,other,warrior");
+        let both = content.names().offered("dwarf", Gender::Other);
+        assert!(both.contains(&random_name(&content, 7, &other, 0).unwrap().as_str()));
+        // A new character starts with the first draw.
+        let c = start(&content, "dwarf,female,warrior", 7).character;
+        assert_eq!(Some(c.name), random_name(&content, 7, &dwarf, 0));
+        // Without names to pick from there is none, and the character is nameless.
+        let mut files = ContentFiles::builtin();
+        files.remove("data/names.toml");
+        let bare = Content::load(&files).expect("valid");
+        assert_eq!(random_name(&bare, 7, &dwarf, 0), None);
+        assert_eq!(
+            start(&bare, "dwarf,female,warrior", 7).character.name,
+            NAMELESS
+        );
+    }
+
+    #[test]
+    fn names_never_move_a_roll() {
+        let content = content();
+        let mut files = ContentFiles::builtin();
+        files.remove("data/names.toml");
+        let bare = Content::load(&files).expect("valid");
+        for text in [
+            "dwarf,female,warrior",
+            "human,other,thief",
+            "gnome,male,bard",
+        ] {
+            let (named, unnamed) = (start(&content, text, 11), start(&bare, text, 11));
+            assert_eq!(named.stats, unnamed.stats, "{text}");
+            assert_eq!(named.skills, unnamed.skills, "{text}");
+            assert_eq!(named.weapon_skills, unnamed.weapon_skills, "{text}");
+            let (mut a, b) = (named.character, unnamed.character);
+            a.name = b.name.clone();
+            assert_eq!(a, b, "{text}");
+        }
+    }
+
+    #[test]
+    fn the_default_name_is_the_scenarios_for_its_own_character() {
+        let content = content();
+        let showcase = content.scenario("showcase").expect("showcase");
+        let own = showcase.character.clone().expect("a character");
+        assert_eq!(default_name(&content, showcase, 1, &own), "Tamsin");
+        assert_eq!(default_name(&content, showcase, 99, &own), "Tamsin");
+        let dwarf = spec("dwarf,female,warrior");
+        assert_eq!(
+            Some(default_name(&content, showcase, 1, &dwarf)),
+            random_name(&content, 1, &dwarf, 0)
+        );
+    }
+
+    #[test]
     fn characters_round_trip_and_check_against_content() {
         let content = content();
         let c = start(&content, "half_elf,other,ranger", 4).character;
         let json = serde_json::to_string(&c).expect("serializes");
+        assert!(json.contains(&format!(r#""name":"{}""#, c.name)), "{json}");
         assert!(
             json.contains(r#""spec":{"race":"half_elf","gender":"other","class":"ranger"}"#),
             "{json}"

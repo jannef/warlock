@@ -1,7 +1,8 @@
-//! Alignment (spec §8 "Alignment"): the bands, what moves the score and what reads it, and the
-//! band each race and class starts in, all in words: the score and its numbers stay hidden.
+//! Alignment (spec §8 "Alignment"): the bands with their scores, what moves the score and by how
+//! much, what reads it, and the score and band each race and class starts with. The game shows
+//! only the band; the wiki states the numbers exactly (the game is vague, the wiki is accurate).
 
-use super::text::capital;
+use super::text::{capital, signed};
 use std::fmt::Write as _;
 use warlock_core::alignment::{Band, Score};
 use warlock_core::content::{AlignmentRules, Content};
@@ -20,6 +21,11 @@ fn worth(amount: i32) -> String {
     format!("{how} {way}")
 }
 
+/// A score or a worth with its sign (a real minus), 0 bare.
+fn signed_or_zero(n: i32) -> String {
+    if n == 0 { "0".into() } else { signed(n) }
+}
+
 fn rules(content: &Content) -> Option<&AlignmentRules> {
     content.alignment()
 }
@@ -29,9 +35,17 @@ pub(super) fn alignment_bands(content: &Content) -> String {
     let Some(rules) = rules(content) else {
         return "There is no alignment.\n".into();
     };
-    let mut out = String::from("| Band | What it means |\n|---|---|\n");
+    let mut out = String::from("| Band | Scores | What it means |\n|---|:---:|---|\n");
+    let mut top = warlock_core::alignment::MAX;
     for def in rules.bands() {
-        let _ = writeln!(out, "| {} | {} |", def.band.name(), def.description);
+        let scores = format!("{} to {}", signed_or_zero(def.from), signed_or_zero(top));
+        let _ = writeln!(
+            out,
+            "| {} | {scores} | {} |",
+            def.band.name(),
+            def.description
+        );
+        top = def.from - 1;
     }
     out
 }
@@ -82,9 +96,14 @@ pub(super) fn alignment_deeds(content: &Content) -> String {
             s.eat_kin,
         ),
     ];
-    let mut out = String::from("| Deed | Moves you |\n|---|---|\n");
+    let mut out = String::from("| Deed | Moves you | Worth |\n|---|---|:---:|\n");
     for (deed, amount) in rows {
-        let _ = writeln!(out, "| {deed} | {} |", worth(amount));
+        let _ = writeln!(
+            out,
+            "| {deed} | {} | {} |",
+            worth(amount),
+            signed_or_zero(amount)
+        );
     }
     out
 }
@@ -98,16 +117,18 @@ pub(super) fn alignment_quests(content: &Content) -> String {
     if quests.is_empty() {
         return "No quest moves your alignment.\n".into();
     }
-    let mut out =
-        String::from("| Quest | Given by | Completing it is | Offered to |\n|---|---|---|---|\n");
+    let mut out = String::from(
+        "| Quest | Given by | Completing it is | Worth | Offered to |\n|---|---|---|:---:|---|\n",
+    );
     for q in quests {
         let offered = q.requires_alignment.map_or("anyone".into(), |r| r.words());
         let _ = writeln!(
             out,
-            "| {} | {} | {} | {offered} |",
+            "| {} | {} | {} | {} | {offered} |",
             q.name,
             capital(&content.speaker_name(q.giver)),
             worth(q.alignment),
+            signed_or_zero(q.alignment),
         );
     }
     out
@@ -118,7 +139,8 @@ pub(super) fn alignment_shops(content: &Content) -> String {
     let Some(rules) = rules(content) else {
         return "There is no alignment.\n".into();
     };
-    let mut out = String::from("| Band | A good shopkeeper's prices |\n|---|---|\n");
+    let mut out =
+        String::from("| Band | A good shopkeeper's prices | In your favour |\n|---|---|:---:|\n");
     for band in Band::ALL {
         let favour = rules.favour(band);
         let how = if favour.abs() <= 10 {
@@ -128,14 +150,20 @@ pub(super) fn alignment_shops(content: &Content) -> String {
         };
         let way = if favour > 0 { "lower" } else { "higher" };
         if favour != 0 {
-            let _ = writeln!(out, "| {} | {how} {way} |", band.name());
+            let _ = writeln!(
+                out,
+                "| {} | {how} {way} | {} % |",
+                band.name(),
+                signed(favour)
+            );
         }
     }
-    out.push_str("| Any other | as for anyone |\n");
+    out.push_str("| Any other | as for anyone | 0 % |\n");
     out
 }
 
-/// The band a new character starts in, by class (rows) and race (columns), both by name.
+/// The score and band a new character starts with, by class (rows) and race (columns), both by
+/// name: the race's `alignment` plus the class's.
 pub(super) fn alignment_start(content: &Content) -> String {
     let Some(rules) = rules(content) else {
         return "There is no alignment.\n".into();
@@ -154,8 +182,14 @@ pub(super) fn alignment_start(content: &Content) -> String {
     for c in classes {
         let _ = write!(out, "| {} |", c.name);
         for r in &races {
-            let band = rules.band(Score::new(r.alignment + c.alignment));
-            let _ = write!(out, " {} |", band.name());
+            let score = Score::new(r.alignment + c.alignment);
+            let band = rules.band(score);
+            let _ = write!(
+                out,
+                " {} ({}) |",
+                band.name(),
+                signed_or_zero(score.value())
+            );
         }
         out.push('\n');
     }
@@ -167,21 +201,28 @@ mod tests {
     use super::*;
 
     #[test]
-    fn deeds_are_told_in_words() {
+    fn deeds_are_told_in_words_and_numbers() {
         assert_eq!(worth(0), "nothing");
         assert_eq!(worth(5), "a little good");
         assert_eq!(worth(-100), "strongly evil");
         assert_eq!(worth(-200), "very strongly evil");
         let content = Content::builtin().expect("content");
         let start = alignment_start(&content);
-        assert!(start.contains("| Paladin | Good |"), "{start}");
-        for table in [
-            start,
-            alignment_deeds(&content),
-            alignment_shops(&content),
-            alignment_quests(&content),
-        ] {
-            assert!(!table.contains("450") && !table.contains("-150"), "{table}");
-        }
+        assert!(start.contains("| Paladin | Good (+450) |"), "{start}");
+        let bands = alignment_bands(&content);
+        assert!(bands.contains("| Saintly | +750 to +1000 |"), "{bands}");
+        assert!(
+            bands.contains("| Neutral | \u{2212}149 to +149 |"),
+            "{bands}"
+        );
+        assert!(
+            bands.contains("| Wicked | \u{2212}1000 to \u{2212}750 |"),
+            "{bands}"
+        );
+        let deeds = alignment_deeds(&content);
+        assert!(
+            deeds.contains("| very strongly evil | \u{2212}150 |"),
+            "{deeds}"
+        );
     }
 }

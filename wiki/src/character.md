@@ -8,17 +8,28 @@ New run screen, you choose who you are, one step at a time.
 2. **Gender**: a small push to one stat (below).
 3. **Class**: what you did before the adventure, which shapes your stats again and trains you
    in a handful of [skills](skills.md) (see [Classes](classes.md)).
-4. **Summary**: your race, gender, and class, your age, birthday, and birth sign, the
+4. **Name**: type your character's name, up to 20 characters (below).
+5. **Summary**: your name, race, gender, and class, your age, birthday, and birth sign, the
    [stats](stats.md) you will start with and, beside them, the [skills](skills.md) you are
    trained in, the [alignment](alignment.md) you start in, your vision, and the scenario and
-   seed. **Start the run** begins it; **Race**,
-   **Gender**, and **Class** take you back to that step.
+   seed. **Start the run** begins it; **Name**, **Race**, **Gender**, and **Class** take you back
+   to that step.
 
-Each step lists its options with a short description, and for races and classes how they change
-your stats. Move with the arrow keys (or `j` and `k`), press `Enter` to choose and go on, and `Esc`
-to go back one step. When you go back and forward again, the steps remember what you chose.
-Every step also has **Random**, which picks an option for you. Random choices come from the run's
-seed, so the same seed rolls the same choices; pressing Random again rolls again.
+Each choice step lists its options with a short description, and for races and classes how they
+change your stats. Move with the arrow keys (or `j` and `k`), press `Enter` to choose and go on,
+and `Esc` to go back one step. When you go back and forward again, the steps remember what you
+chose. Every choice step also has **Random**, which picks an option for you. Random choices come
+from the run's seed, so the same seed rolls the same choices; pressing Random again rolls again.
+
+## Name
+
+On the name step every key types what it types (`j` and `k` too), as long as the game's font
+can draw it. `Backspace` erases, `Tab` puts in one of your people's names (by race and gender,
+picked from the run's seed; press it again for another), and `Enter` accepts. A name cannot be
+empty: accept an empty field and you get the random name it shows, dimmed. You can rebind these
+keys in Controls, under **Text fields**. Your name is shown on the character screen, the summary,
+the death screen, and the list of saved characters (see [Saving](saving.md)); it changes nothing
+else.
 
 ## Gender
 
@@ -55,7 +66,9 @@ are rolled again.
 
 The choices are not balanced, and they are not meant to be. Some combinations are poor on
 purpose: a halfling commoner, or a gnome barbarian, makes for a hard start. That is part of the
-fun.
+fun. The poor choices have one consolation: your race and class also set how much
+[experience](experience.md#levels) each level needs, and the long-lived races and the patient
+callings level slowly, while short-lived races and everyday folk level quickly.
 
 ## Seeing who you are
 

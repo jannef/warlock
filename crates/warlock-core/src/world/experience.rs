@@ -1,19 +1,58 @@
 //! Experience (spec §8 "Experience"): the player's XP total and level. Kills the player makes
 //! with their own attacks (melee, shots, throws) are worth the creature type's XP scaled by the
 //! difference in levels ([`Experience::kill_xp`](crate::content::Experience::kill_xp)); kills by
-//! traps or by other creatures are worth nothing. The level follows from the total (thresholds
-//! in `data/experience.toml`), so only the total is saved. Each level gained, up to the file's
+//! traps or by other creatures are worth nothing. The level follows from the total and the
+//! character's experience factor (thresholds in `data/experience.toml`, times their race's and
+//! their class's `experience`), so only the total is saved. Each level gained, up to the file's
 //! `hp_level`, adds `max(1, class hp ÷ 2 + the Toughness modifier)` to the player's maximum hit
 //! points and to their current ones.
+//!
+//! **Discovery** (`[discovery]`): the player's first kill of each creature type is worth the
+//! type's XP once more, unscaled ("You learn something of kobolds."), and their first arrival on
+//! a level `arrival` × its item level ("You gain 20 experience for finding your way here."); the
+//! level a run starts on, the overworld, and local areas give none. Neither draws anything at
+//! random. The creature types are remembered in [`Progress`]; a level is new when this arrival
+//! made its state.
 
 use super::World;
-use crate::content::{Content, CreatureId};
+use crate::content::{Content, CreatureId, Factor, LevelKind, parse_local_area};
 use crate::stats::Stat;
+use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
+
+/// The player's progression beyond the XP total (spec §8 "Experience"): what they have
+/// discovered. Left out of the saved state while empty.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Progress {
+    #[serde(default, skip_serializing_if = "Discovered::is_empty")]
+    pub(crate) discovered: Discovered,
+}
+
+impl Progress {
+    pub fn is_empty(&self) -> bool {
+        self.discovered.is_empty()
+    }
+}
+
+/// What the player has been rewarded for discovering.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Discovered {
+    /// The creature types (by id) whose first kill has paid.
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub(crate) kills: BTreeSet<String>,
+}
+
+impl Discovered {
+    pub fn is_empty(&self) -> bool {
+        self.kills.is_empty()
+    }
+}
 
 impl World {
     /// The player's level (spec §8 "Experience").
     pub fn player_level(&self) -> u8 {
-        self.content.experience().level_for(self.state.experience)
+        let factor = self.experience_factor();
+        (self.content.experience()).level_for(self.state.experience, factor)
     }
 
     /// The player's experience total.
@@ -21,13 +60,47 @@ impl World {
         self.state.experience
     }
 
+    /// The player's experience factor: their race's and their class's (100 % without a
+    /// character).
+    fn experience_factor(&self) -> Factor {
+        let spec = self.state.character.as_ref().map(|c| &c.spec);
+        Factor::of(&self.content, spec)
+    }
+
     /// The player has killed a creature of type `creature` by their own attack: gains its XP,
-    /// and any levels that earns. The messages wait in `news` until the attack's own are said.
+    /// and its XP once more the first time they kill one of its type, and any levels that
+    /// earns. The messages wait in `news` until the attack's own are said.
     pub(super) fn earn_kill(&mut self, creature: CreatureId) {
         let content = self.content.clone();
         let def = content.creature(creature);
         let rules = content.experience();
-        let gain = rules.kill_xp(def.xp, def.level, self.player_level());
+        let mut gain = rules.kill_xp(def.xp, def.level, self.player_level());
+        let first = rules.first_kill_xp(def.xp);
+        let discovered = &mut self.state.progress.discovered.kills;
+        if first > 0 && !discovered.contains(&def.id) {
+            discovered.insert(def.id.clone());
+            self.news
+                .push(format!("You learn something of {}.", def.plural));
+            gain += first;
+        }
+        self.grant_xp(gain);
+    }
+
+    /// The player has arrived on level `id` for the first time: a level of a dungeon branch or
+    /// a hand-made one is worth `arrival` × its item level; the overworld and its local areas
+    /// nothing. Said after the arrival's own messages, as the turn is perceived.
+    pub(super) fn discover_level(&mut self, id: &str) {
+        let overworld = self.state.levels.get(id).map(|l| l.kind) == Some(LevelKind::Overworld);
+        if overworld || parse_local_area(id).is_some() {
+            return;
+        }
+        let gain = (self.content.experience()).arrival_xp(self.content.item_level(id));
+        if gain == 0 {
+            return;
+        }
+        self.news.push(format!(
+            "You gain {gain} experience for finding your way here."
+        ));
         self.grant_xp(gain);
     }
 
@@ -77,8 +150,11 @@ impl World {
         for text in std::mem::take(&mut self.news) {
             self.say(text);
         }
-        for text in std::mem::take(&mut self.notes) {
-            self.note(text);
+        // In a free blow the news is held for after that turn's reports, and so are the notes.
+        if self.held.is_none() {
+            for text in std::mem::take(&mut self.notes) {
+                self.note(text);
+            }
         }
     }
 }

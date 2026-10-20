@@ -26,6 +26,7 @@ mod item_class;
 mod level;
 mod light;
 mod material;
+mod names;
 mod object;
 mod overworld;
 pub(crate) mod part;
@@ -74,7 +75,9 @@ pub use effect::{
     Darken, EffectDef, EffectLight, EffectShape, FILL_GLYPH, MAX_BURST_RADIUS, MAX_DARKEN,
     MAX_SHAKE_PIXELS, Shake,
 };
-pub use experience::{Experience, MAX_LEVEL, MAX_XP};
+pub use experience::{
+    Discovery, Experience, FACTORS, Factor, Guideline, Kills, MAX_LEVEL, MAX_XP, pace_words,
+};
 pub use faction::{FactionDef, FactionId, Factions, PLAYER_FACTION, Stance};
 pub use flow::{FLOW_SPEEDS, Flow};
 pub use gem::{
@@ -95,6 +98,7 @@ pub use level::{
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
 pub use material::{MAX_MATERIAL_VALUE, MaterialDef, MaterialId};
+pub use names::{NameLists, Names};
 pub use object::{
     MAX_BONUS, MAX_DIG, MAX_PLACED, MAX_VALUE, ObjectDef, ObjectId, article, counted, weapon_noun,
 };
@@ -120,8 +124,8 @@ pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use status::{
-    Affliction, Healing, MAX_REGEN, MAX_SEVERITY, OnHit, Penalty, Stacking, StatusDef, StatusId,
-    Wound,
+    Affliction, COST_PERCENT, CombatBonus, Healing, MAX_REGEN, MAX_SEVERITY, OnHit, Penalty,
+    Stacking, StatusDef, StatusId, Wound,
 };
 pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
@@ -357,7 +361,8 @@ struct LegendFile {
 /// `data/lights.toml`, `data/vision.toml`, `data/factions.toml`, `data/dungeons.toml`,
 /// `data/calendar.toml`, `data/sky.toml`, `data/materials/`, `data/parts.toml`, `data/objects/`,
 /// `data/gems.toml`, `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
-/// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, `data/horoscope.toml`,
+/// `data/races.toml`, `data/names.toml`, `data/classes.toml`, `data/skills.toml`,
+/// `data/horoscope.toml`,
 /// `data/effects.toml`, `data/room_effects.toml`, `data/weapon_skills.toml`, `data/stances.toml`,
 /// `data/status.toml`, `data/diseases.toml`, `data/dialogue.toml`, `data/quests.toml`,
 /// `data/traps.toml`, and `data/shops.toml` are optional (without effects, spell effects are not
@@ -371,6 +376,7 @@ struct LegendFile {
 /// weather file the sky is always clear; without an actions file every action costs 1000;
 /// without a slots file nothing can be worn or wielded; without races or classes there is no
 /// character to choose, and scenarios give the player's eyes and stats themselves; without
+/// names a character told none is nameless (`character::NAMELESS`); without
 /// skills nobody is trained in anything; without a horoscope, characters are born under no sign;
 /// without room effects there are no special rooms; without weapon skills nobody has any, and
 /// weapons name no category; without statuses nothing ails anyone, and resting heals twice as
@@ -423,6 +429,8 @@ pub struct Content {
     actions: ActionCosts,
     skills: SkillBook,
     races: Races,
+    /// Names offered to new characters, by race (`data/names.toml`): flavour, not fingerprinted.
+    names: Names,
     classes: Vec<ClassDef>,
     /// The alignment rules (`data/alignment.toml`): none without it.
     alignment: Option<AlignmentRules>,
@@ -497,6 +505,7 @@ impl Content {
             actions: ActionCosts::default(),
             skills: SkillBook::default(),
             races: Races::default(),
+            names: Names::default(),
             classes: Vec::new(),
             alignment: None,
             experience: Experience::default(),
@@ -574,6 +583,10 @@ impl Content {
             let skill_id = |id: &str| content.skill_id(id);
             let weapons = &content.weapon_skills;
             content.races = Races::parse(path, text, has_vision, size_index, skill_id, weapons)?;
+        }
+        let path = "data/names.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.names = Names::parse(path, text, |id| content.race(id).is_some())?;
         }
         let path = "data/classes.toml";
         if let Some(text) = files.get_optional(path) {
@@ -1149,13 +1162,25 @@ impl Content {
                 || def.eases.is_some()
                 || def.wound.is_some()
                 || !def.cured_by.is_empty()
+                || def.follows.is_some()
             {
                 return Err(ContentError::new(
                     path,
                     format!(
                         "status `{}`: the status diseases show as lasts while they do: no \
-                         `tick`, `eases`, `wound`, or `cured_by` (cure the diseases instead)",
+                         `tick`, `eases`, `wound`, `cured_by`, or `follows` (cure the diseases \
+                         instead)",
                         def.id
+                    ),
+                ));
+            }
+            if let Some(other) = self.statuses.iter().find(|s| s.follows == Some(status)) {
+                return Err(ContentError::new(
+                    path,
+                    format!(
+                        "status `{}`: follows `{}`, the status diseases show as (only diseases \
+                         give it)",
+                        other.id, def.id
                     ),
                 ));
             }
@@ -2073,6 +2098,12 @@ impl Content {
         self.races.list.iter().find(|r| r.id == id)
     }
 
+    /// The names offered to new characters, by race and gender (`data/names.toml`; none without
+    /// the file).
+    pub fn names(&self) -> &Names {
+        &self.names
+    }
+
     /// The classes of `data/classes.toml`, in the order offered (none without the file).
     pub fn classes(&self) -> &[ClassDef] {
         &self.classes
@@ -2940,6 +2971,16 @@ mod tests {
                 "elf", "half_elf", "human", "dwarf", "halfling", "gnome", "half_orc"
             ]
         );
+        // Every race offers names to every gender, and every scenario names its character.
+        for race in &content.races().list {
+            for gender in crate::character::Gender::ALL {
+                let names = content.names().offered(&race.id, gender);
+                assert!(names.len() >= 10, "{} {gender:?}: {names:?}", race.id);
+            }
+        }
+        for scenario in content.scenarios() {
+            assert!(scenario.character_name.is_some(), "{}", scenario.id);
+        }
         let classes: Vec<&str> = content.classes().iter().map(|c| c.id.as_str()).collect();
         assert_eq!(
             classes,

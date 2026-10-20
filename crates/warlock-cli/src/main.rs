@@ -2,7 +2,7 @@
 //!
 //! ```text
 //! warlock-cli dump --scenario showcase --actions "move:N move:N" --layers view,fov
-//! warlock-cli dump --scenario showcase --character dwarf,female,warrior --layers stats
+//! warlock-cli dump --scenario showcase --character dwarf,female,warrior --name Brakka --layers stats
 //! warlock-cli replay --create --scenario showcase --actions "move:N wait" -o run.json
 //! warlock-cli replay --verify run.json
 //! warlock-cli gen --level depths:3 --seed warlock
@@ -57,6 +57,11 @@ struct RunArgs {
     /// the scenario's (ignored when `--replay` is given).
     #[arg(long)]
     character: Option<CharacterSpec>,
+    /// The character's name (up to 20 characters); defaults to the scenario's for its own
+    /// character, else one of the race's names picked from the seed (ignored when `--replay` is
+    /// given).
+    #[arg(long)]
+    name: Option<String>,
     /// Actions as text, e.g. "move:E move:SE wait open:E close:W kick:N descend ascend pickup:ab
     /// drop:a bash:E chat:E ask:E:rooms".
     #[arg(long)]
@@ -166,10 +171,16 @@ fn parse_run_actions(args: &RunArgs) -> Result<Vec<Action>, String> {
     parse_actions(args.actions.as_deref().unwrap_or("")).map_err(|e| format!("--actions: {e}"))
 }
 
-/// A fresh run of `--scenario` with `--seed` and `--character`.
+/// A fresh run of `--scenario` with `--seed`, `--character`, and `--name`.
 fn start(content: Arc<Content>, args: &RunArgs) -> Result<World, String> {
-    World::with_character(content, &args.scenario, args.seed, args.character.as_ref())
-        .map_err(|e| format!("cannot start scenario `{}`: {e}", args.scenario))
+    World::with_character_named(
+        content,
+        &args.scenario,
+        args.seed,
+        args.character.as_ref(),
+        args.name.as_deref(),
+    )
+    .map_err(|e| format!("cannot start scenario `{}`: {e}", args.scenario))
 }
 
 fn dump_command(content: Arc<Content>, args: DumpArgs) -> Result<(), String> {

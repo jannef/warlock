@@ -195,7 +195,7 @@ mod tests {
         assert_eq!(press(&mut screen, Nav::Enter), ScreenAction::Stay);
         assert_eq!(
             OPENED.lock().unwrap().as_slice(),
-            [PathBuf::from("/p/data")]
+            [PathBuf::from("/p/data/saves")]
         );
         assert!(
             screen

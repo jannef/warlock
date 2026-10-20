@@ -61,4 +61,5 @@ Creatures carry by the same rules, from their own Strength, Toughness, and size.
   if you have one, and the weights at which it changes:
   `Burdened over 15 kg, strained over 30 kg, overloaded over 45 kg`.
 
-You never see a creature's burden or what it carries.
+You never see a creature's burden or what it carries; creatures' carrying limits are on
+[Creatures in numbers](creature-numbers.md#pace-senses-and-size).

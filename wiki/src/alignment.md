@@ -1,8 +1,9 @@
 # Alignment
 
 Every character stands somewhere between **good** and **evil**, and what you do moves you along
-the way. You never see where you stand as a number: the character screen (`@`) and the summary
-at character creation name your **band**, one of seven words.
+the way. Behind it is a score from −1000 (as evil as can be) to +1000 (as good), which the game
+never shows: the character screen (`@`) and the summary at character creation name your
+**band**, one of seven words.
 
 {{#include generated/alignment-bands.md}}
 
@@ -20,6 +21,10 @@ the band you start in.
 Deeds move you. The further along a way you already are, the less each deed that way moves you:
 a saint's next good deed counts for little, and small kindnesses alone never make anyone a
 saint. A deed the other way counts in full, so a fall is quick and a climb back is slow.
+Exactly: a deed in the direction your score already leans moves it by its worth × (1000 −
+|score|) / 1000, rounded toward 0 (at +500 a good deed worth +10 moves you +5; at +950, not at
+all); a deed the other way, or from 0, moves it by its whole worth. The score never passes −1000
+or +1000.
 
 {{#include generated/alignment-deeds.md}}
 

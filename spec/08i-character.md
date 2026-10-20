@@ -8,6 +8,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   race (`data/races.toml`), a gender (male, female, or other), and a class
   (`data/classes.toml`), chosen on New run (§6) or given on the command line (`--character
   dwarf,female,warrior`, §9); otherwise the scenario's character (§7). It decides:
+  - **Name** (#218): the character has a name, 1 to 20 characters, typed on New run's Name step
+    (after the class, before the summary; §6) or given on the command line (`--name Brakka`).
+    The step's Random, and an empty field, give one of the race's names for the gender
+    (`data/names.toml`, a `male` and a `female` list per race; `other` draws from both), drawn
+    from the stream `character/name/<race>,<gender>/<draw>`, so no other roll moves and the class
+    plays no part. A run told no name (a replay or command line without one) gives the
+    scenario's own name (§7) to its own character, else the race's first random name, else
+    "Wanderer". The name is shown on the character screen, the summary, the death screen ("Here
+    lies Brakka, …"), and the list of saved characters (§7 "Saves"); no rule or message reads it
+    yet.
   - **Age and birthday**: the starting age is uniform within the race's `age` range, the
     birthday (month, then day) uniform over the year, both from the stream
     `character/birth/<race>` (so the class and gender never move a birthday). The birth date is
@@ -60,12 +70,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     classes do nothing but adjust starting scores, give hit points, train skills, give
     weapon skills and fighting styles, and set where the alignment starts. No other D&D concept
     comes with them (equipment, spells; the alignment is good against evil only, not D&D's grid).
-  - The character (`Character`: the race, gender, and class ids, the stat the gender raised,
-    the birth date, and the birth sign) is part of the world state (saved, hashed) and shown on
-    the character screen; replays record the choice only, and since everything else follows
-    from the content, the choice, the seed, and the start date, a run is reproduced by its
-    scenario, seed, and character. `World::new` starts as the scenario's character,
-    `World::with_character` as a given one.
+  - The character (`Character`: the name, the race, gender, and class ids, the stat the gender
+    raised, the birth date, and the birth sign) is part of the world state (saved, hashed) and
+    shown on the character screen; replays record the choice and the name only, and since
+    everything else follows from the content, the choice, the seed, and the start date, a run is
+    reproduced by its scenario, seed, character, and name. `World::new` starts as the scenario's
+    character, `World::with_character` as a given one, `World::with_character_named` named.
 - **Alignment** (`warlock-core/src/alignment.rs`, `content/alignment.rs`, `world/alignment.rs`;
   #254): good against evil, as ADOM has law against chaos.
   - **The score**: the player has a hidden integer score from −1000 (as evil as can be) to 1000

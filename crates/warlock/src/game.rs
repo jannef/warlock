@@ -38,6 +38,8 @@ pub struct Game {
     /// How many actions this session applied: presentation that must read each outcome once,
     /// even one that took no turn (a dev spell effect), watches it.
     pub applied: u64,
+    /// The character's save id (`save::SaveStore`): every way of saving writes its files.
+    pub save_id: String,
     /// The message log as it was when the player last acted: what was logged since is this
     /// turn's news, which the message line shows first ([`Game::unread`], `ui::more`).
     read: MessageLog,
@@ -46,39 +48,51 @@ pub struct Game {
 }
 
 impl Game {
-    /// A fresh run of `scenario` as `character` (the scenario's if `None`), e.g. from the main
-    /// menu.
+    /// A fresh run of `scenario` as `character` (the scenario's if `None`) named `name` (the
+    /// run's default if `None`), e.g. from the main menu, with a new save id from `store`: it
+    /// never touches another character's save.
     pub fn new_run(
         content: Arc<Content>,
+        store: &SaveStore,
         scenario: &str,
         seed: Option<u64>,
         character: Option<&CharacterSpec>,
+        name: Option<&str>,
     ) -> Result<Self, String> {
-        let world = World::with_character(content, scenario, seed, character)
+        let world = World::with_character_named(content, scenario, seed, character, name)
             .map_err(|e| format!("cannot start scenario `{scenario}`: {e}"))?;
         // The run's first words (the welcome) are news.
         Ok(Self {
             read: MessageLog::default(),
-            ..Self::from_world(world)
+            ..Self::new_character(world, store)
         })
     }
 
-    /// A game around a world loaded elsewhere (the saved run), its messages all read.
-    pub fn from_world(world: World) -> Self {
+    /// A game around a world loaded elsewhere (a saved character's run), saved as `save_id`,
+    /// its messages all read.
+    pub fn from_world(world: World, save_id: String) -> Self {
         Self {
             read: world.messages().clone(),
             world,
             last_outcome: Outcome::default(),
             applied: 0,
+            save_id,
             recorder: None,
         }
     }
 
-    /// The saved run, if there is a usable one.
-    pub fn resumed(store: &SaveStore, content: &Arc<Content>) -> Resume {
-        match store.resume(content) {
+    /// A game around a fresh run, with a new save id from `store`.
+    fn new_character(world: World, store: &SaveStore) -> Self {
+        let name = world.character().map_or("", |c| c.name.as_str());
+        let id = store.new_id(name);
+        Self::from_world(world, id)
+    }
+
+    /// Character `id`'s saved run, if it is usable.
+    pub fn resumed(store: &SaveStore, id: &str, content: &Arc<Content>) -> Resume {
+        match store.resume(id, content) {
             Resume::Loaded(mut world) => {
-                info!("resumed the saved run at turn {}", world.turn());
+                info!("resumed {id} at turn {}", world.turn());
                 world.notice("Welcome back.");
                 Resume::Loaded(world)
             }
@@ -86,13 +100,17 @@ impl Game {
         }
     }
 
-    /// Starts the game the command line asks for: the saved run, a replay, or the scenario (as
-    /// `--character`, else the scenario's). Only used when the main menu is skipped.
+    /// Starts the game the command line asks for: the character played last, a replay, or the
+    /// scenario (as `--character` named `--name`, else the scenario's). Only used when the main
+    /// menu is skipped.
     pub fn start(args: &Args, content: Arc<Content>) -> Result<Self, String> {
         let mut failure = None;
-        if SaveStore::resumes(args) {
-            match Self::resumed(&SaveStore::from_args(args), &content) {
-                Resume::Loaded(world) => return Ok(Self::from_world(world)),
+        let store = SaveStore::from_args(args);
+        if SaveStore::resumes(args)
+            && let Some(last) = store.last_played()
+        {
+            match Self::resumed(&store, &last.id, &content) {
+                Resume::Loaded(world) => return Ok(Self::from_world(world, last.id)),
                 Resume::Failed(message) => failure = Some(message),
                 Resume::NoSave => {}
             }
@@ -115,9 +133,10 @@ impl Game {
             }
             None => {
                 let scenario = args.scenario_name();
-                let character = args.character.as_ref();
-                let mut world = World::with_character(content, scenario, args.seed, character)
-                    .map_err(|e| format!("cannot start scenario `{scenario}`: {e}"))?;
+                let (character, name) = (args.character.as_ref(), args.name.as_deref());
+                let mut world =
+                    World::with_character_named(content, scenario, args.seed, character, name)
+                        .map_err(|e| format!("cannot start scenario `{scenario}`: {e}"))?;
                 if let Some(message) = failure {
                     world.notice(message);
                 }
@@ -127,11 +146,10 @@ impl Game {
         };
         let recorder = args.record.clone().zip(replay).map(|(path, r)| (r, path));
         let game = Self {
-            world,
             last_outcome,
-            applied: 0,
             read,
             recorder,
+            ..Self::new_character(world, &store)
         };
         game.save_recording();
         Ok(game)
@@ -247,6 +265,7 @@ fn apply_actions(mut actions: MessageReader<PlayerAction>, mut game: ResMut<Game
 #[cfg(test)]
 mod tests {
     use super::*;
+    use clap::Parser;
     use warlock_core::messages::CAPACITY;
     use warlock_core::{Dir, Event};
 
@@ -304,7 +323,8 @@ mod tests {
     #[test]
     fn a_new_run_starts_with_news_and_each_action_marks_what_was_read() {
         let content = Arc::new(Content::builtin().expect("built-in content loads"));
-        let mut game = Game::new_run(content, "showcase", None, None).expect("run");
+        let store = SaveStore::from_args(&Args::parse_from(["warlock", "--capture", "x.png"]));
+        let mut game = Game::new_run(content, &store, "showcase", None, None, None).expect("run");
         assert!(texts(&game.unread())[0].starts_with("Welcome to Showcase."));
         for action in warlock_core::action::parse_actions("move:N*3 open:N").expect("actions") {
             game.apply(&action);
@@ -313,7 +333,7 @@ mod tests {
         game.apply(&Action::Wait);
         assert!(game.unread().is_empty());
         // A resumed run has read everything so far.
-        let resumed = Game::from_world(game.world);
+        let resumed = Game::from_world(game.world, "tamsin-1".into());
         assert!(resumed.unread().is_empty());
     }
 
