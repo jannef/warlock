@@ -87,8 +87,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     waiting (not a rest's turns) taken while the player's burden slows them, as it began
     (`burdened`; a dwarf's Burdened does not), a step on the overworld (`travel`), a kick at a
     closed door (`kick`), a turn spent searching, whatever it finds (`search`), noticing
-    something hidden in passing (`spot`; §8 "Searching"). Only the player trains for now;
-    creatures keep their type's skills.
+    something hidden in passing (`spot`; §8 "Searching"), an attempt to steal, whatever comes of
+    it (`steal`; "Stealing" below). Only the player trains for now; creatures keep their type's
+    skills.
   - **[provisional] Increases**: the owner has not decided how skills increase (alternatives for
     later: ADOM's level-up dice per class once experience exists, or marks that count only once
     the player rests). For now a skill gains a point when its marks reach
@@ -120,6 +121,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     - spot: trained at all, the player notices hidden features in passing (§8 "Searching");
       points added to that check, +8 at 100 and +12 at 200 (`spot`); a mark (50 %) for each
       thing noticed;
+    - steal: trained at all, the player can steal ("Stealing" below); points added to the
+      contest, +8 at 100 and +12 at 200 (`steal`, at most 20; `world/steal.rs`); a mark (50 %)
+      for every attempt;
     - athletics' climbing out of pits and escape artist (out of pits faster) wait for that rule
       (#128); swim for deep water; concentration, spellcraft, and use magic
       device for magic; the other action skills (open lock, heal, …) for their actions.
@@ -131,11 +135,46 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Active uses**: skills get no keys of their own. Racial, class, skill, and style abilities
     are chosen from one abilities menu (§6 "Abilities", #156), unlike ADOM: each trained skill
     with an active use (`kind = "action"`) is an ability there (`warlock_core::ability`,
-    `PerceptionView::abilities`), greyed out as "not usable yet": the uses come with their
-    actions. Never a benefit's number, a mark, a
+    `PerceptionView::abilities`), greyed out as "not usable yet" until its use comes with its
+    action, when it becomes an ability of its own in the skill's place (Steal: "Stealing"
+    below). Never a benefit's number, a mark, a
     chance, an untrained skill, or a creature's skills; ground-truth dev dumps (`actors`, the
     world state) show every actor's skills with their marks. Skills and marks are part of the
     world state (saved, hashed).
+- **Stealing** (`world/steal.rs`, data `data/steal.toml`, §7; #234, the progression design's
+  B7): the Steal skill's use, the abilities menu's **Steal** (`Ability::Steal`, in the skill's
+  place among the Skills; a direction; `Action::Steal`, replay text `steal:DIR`; cost `steal`;
+  a rebindable key, "Steal", unbound by default). Anyone trained in a skill with the `steal`
+  benefit has it, while `data/steal.toml` exists (without it nobody steals and the skill stays
+  "not usable yet"); the thief's class trains Steal.
+  - **Whom**: a creature on the cell in that direction that the player sees and that is not
+    hostile to them (`World::stance`). Refused, taking no time: untrained ("You do not know how
+    to steal."), no one seen there ("You see no one there to steal from."), or someone hostile
+    ("The kobold is hostile: it would never let you near enough.").
+  - **The contest** ("Checks" in §8): 2d12 + the player's Dexterity modifier + what Steal gives,
+    against 2d12 + the victim's Willpower modifier (both of the effective scores); a tie goes to
+    the thief, and their natural 2 always fails, their natural 24 always works. Four draws of
+    the gameplay stream (the victim's roll first). It takes the `steal` action's time whatever
+    comes of it (priced before anything changes hands, so the burden applies) and may earn
+    Steal a training mark.
+  - **Unnoticed**: the player takes one stack, all of it, of what the victim carries and neither
+    wears nor wields, picked uniformly (one more gameplay draw when there are two or more), "You
+    steal 7 copper coins from the kobold."; with nothing like that on it, "You find nothing to
+    take from the gardener.", unnoticed all the same. There is no choice of item: the player
+    never sees a creature's pack (`PerceptionView::gear` is only what it wears and wields), and
+    what is worn or wielded cannot be lifted unnoticed. `World::got_away_with` is the one place a
+    theft that took something has consequences beyond the goods: alignment (#254, stealing is
+    evil) hooks in there.
+  - **Caught**: the victim turns on the player. A keeper of an open shop (§7 "Shops") is outraged
+    as a robbed one is: "Grimbold catches you stealing. \"Stop, thief!\"", its shop trades no
+    more, and what the player owed it is stolen. Anyone else joins `data/steal.toml`'s `caught`
+    faction (its `faction_override`, hostile to the player), so the AI and every stance follow:
+    "The kobold catches you stealing and turns on you!".
+  - **Shop goods** are not stolen this way: what lies in a shop stays the shop's rules' (picking
+    it up is owing for it; leaving owing any way but the door is theft, §7 "Shops"). Stealing
+    from a keeper takes from its pack: its purse.
+  - No limit on trying again (the owner's rule): a victim that caught the player stays angry,
+    and that is the price. Presentation shows only what comes of it, never a modifier or a roll.
 - **Weapon skills** (`warlock-core/src/weapon_skills.rs`, training; `content/weapon_skill.rs`,
   the data; M22, #134), ADOM-like, with *The Riddle of Steel*'s defaults:
   - **Skills** (`data/weapon_skills.toml`, §7): the categories weapons belong to. A skill's

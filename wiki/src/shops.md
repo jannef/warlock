@@ -82,8 +82,11 @@ Walking out of the door can never steal, but leaving a shop owing anything any o
 theft: through a wall you have dug open, say. You are asked first (pay and leave, leave without
 paying, or stay). Leave without paying and the shopkeeper shouts "Stop, thief!", turns hostile,
 and comes after you, and the goods you took are yours, stolen. A shopkeeper you attack turns on you
-the same way. Shopkeepers are tough, quick, and well armed: stealing is always your choice, and
-the courtyard stays safe unless you make it. An angry shopkeeper trades no more.
+the same way, and so does one who catches you picking their pocket with the Steal skill ("Grimbold
+catches you stealing. \"Stop, thief!\""; see [Stealing](skills.md#stealing)). A purse lifted
+unnoticed leaves the shop open, though the shopkeeper cannot pay for what you sell until they
+have gold again. Shopkeepers are tough, quick, and well armed: stealing is always your choice,
+and the courtyard stays safe unless you make it. An angry shopkeeper trades no more.
 
 While you owe for something, you cannot shoot or throw it.
 

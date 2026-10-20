@@ -164,8 +164,8 @@ Key commands `,`/`g` (pick up: one stack at once, else the `PickUp` screen), `d`
 `i` (`Inventory` screen), `e` (`Equipment` screen), `@` (`Character` screen), `W` (`WeaponSkills`
 screen), `M` (`KeyCommand::Messages`: the `Messages` screen), `r` (`Read` screen, `KeyCommand::Read`: a basic command, not an ability), `p`
 (`KeyCommand::Pay`), `a` (`KeyCommand::Abilities`: the `Abilities` screen), `A`
-(`KeyCommand::RepeatAbility`), and bash (`KeyCommand::Bash`, unbound) are in `input.rs` and
-`settings/keys.rs`.
+(`KeyCommand::RepeatAbility`), bash (`KeyCommand::Bash`, unbound), and steal
+(`KeyCommand::Steal`, unbound) are in `input.rs` and `settings/keys.rs`.
 
 **Abilities** (spec §6 "Abilities"; racial, class, skill, weapon skill and style, item; the
 owner's rule, #156) get no key of their own: they go into the one abilities menu.
@@ -178,7 +178,8 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   why it cannot be used now); the `abilities` dump layer and JSON key show the same, and the
   wiki's table (`xtask/src/wiki/abilities.rs`) lists `Ability::every`. Skills used as actions are
   `Ability::Skill(id)` until their use exists (never available); a use, when it comes, is a
-  variant of its own. `Aim` has `Nothing` and `Direction`: a target (the aiming mode) and an item
+  variant of its own, listed in its skill's place (`Ability::use_of`: the skill's benefit names
+  it; `Ability::Steal` for the `steal` benefit, `docs/dev/stealing.md`). `Aim` has `Nothing` and `Direction`: a target (the aiming mode) and an item
   (a `PagedList` of the pack) join it with the first ability that needs one, as a variant and an
   arm in `Gameplay::use_ability`.
 - **Menu**: `ui/abilities_screen.rs` (`AbilitiesScreen`, `ScreenName::Abilities`, `--screen
@@ -198,5 +199,5 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   `A` (`RepeatAbility`, passed the last ability by `route_keys`) answers `UseAbility(last)`, or
   opens the menu when there is none.
 - **Keys**: an ability with an action of its own may have a rebindable `KeyCommand`, left unbound
-  by default (`settings/keys.rs::UNBOUND`); never a default key. Shield bash is the first; a
-  style's rank 10 abilities (later) go there too.
+  by default (`settings/keys.rs::UNBOUND`); never a default key. Shield bash is the first, Steal
+  the second; a style's rank 10 abilities (later) go there too.

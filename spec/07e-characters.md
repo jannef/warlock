@@ -146,11 +146,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   them (alphabetical), each with `id`, `name`, a one-line `description`, `kind` (`passive`,
   `action`, or `rules`: what it is for; no rule reads it), `mark` (when it earns training marks:
   `{ on = USE, chance = PERCENT }`, 1 to 100; uses `sneak`, `hear`, `dodge`, `burdened`,
-  `travel`), and `benefit` (what it gives by its value: `{ effect = EFFECT, steps = [20, 40],
+  `travel`, `steal`), and `benefit` (what it gives by its value: `{ effect = EFFECT, steps = [20, 40],
   every = 25 }`, one for each value reached and one more for every `every` points past the last,
   or `{ effect = EFFECT, curve = [[0, 0], [100, 60]] }`, straight between points from value 0,
   rounded down, level after the last; effects `dodge`, `quiet`, `hearing`, `burden`, `travel`,
-  the percent ones within 0 to 100). At the top, **[provisional]** `[increase]`: `marks`,
+  `steal` (points added to stealing, at most 20; trained, it lets the player steal: §8
+  "Stealing"), the percent ones within 0 to 100). At the top, **[provisional]** `[increase]`: `marks`,
   `per`, `soft_cap`, `past_cap` (each at least 1; default 4, 10, 100, 3). Adding a skill is one
   entry (saves then change: skill ids are indices). The 26 skills: appraise, athletics,
   balance, bluff, concentration, decipher script, disable device, escape artist, handle animal,

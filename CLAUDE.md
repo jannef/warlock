@@ -99,7 +99,7 @@ log, active first) from perception;
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] dig:DIR search search:N chat:DIR ask:DIR:TOPIC rest:GOAL stance:NAME vision:PROFILE
+eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] dig:DIR search search:N chat:DIR ask:DIR:TOPIC steal:DIR rest:GOAL stance:NAME vision:PROFILE
 skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS infect:DISEASE`
 (`DIR` = N
 NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by position, as letters
@@ -119,7 +119,8 @@ after turn until it gives way or something interrupts; `search` searches the cel
 player for secret doors and hidden traps, `search:N` for up to N turns (1 to 100), stopping when
 something is found; `chat:E` talks to the creature east of
 the player, `ask:E:rooms` asks it about topic `rooms` (an id in `assets/data/dialogue.toml`;
-quest topics are `quest-ID`, `accept-ID`, `decline-ID`, ids in `assets/data/quests.toml`);
+quest topics are `quest-ID`, `accept-ID`, `decline-ID`, ids in `assets/data/quests.toml`),
+`steal:E` tries to steal from it (the Steal ability, spec §8 "Stealing");
 `PROFILE` = an id in
 `assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are
 `30s`, `10m`, `2h`; `skip` is the dev hour skip; `weather` is the dev weather override, `KIND` =
@@ -241,6 +242,7 @@ file). Topics:
 - `docs/dev/npcs.md` — unique characters, chat and ask, rotation lines and mutters, displacement
 - `docs/dev/quests.md` — quest data and stages, hooks in kills, travel, and talk, the quest log
 - `docs/dev/shops.md` — shop data, keepers, prices, buying, selling, theft, the shop dialogs
+- `docs/dev/stealing.md` — the Steal ability and action, the contest, what is taken, a caught thief, the alignment hook
 - `docs/dev/doors.md` — locks and keys, kicking, breaking, what creatures open
 - `docs/dev/digging.md` — digging tools, wall hardness, the dig loop, blasts
 - `docs/dev/traps.md` — trap data, triggering, known traps, the dev trap actions
@@ -387,7 +389,8 @@ A successful compile does not verify anything visual. Before opening a PR:
 `*.toml` files (one per showcase room or feature, read in file-name order; entry names are
 unique across files) list one entry per showcase room plus the vast level (its start and
 its river): a scenario and text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file,
-and optional `window`, `scale`, `freeze_time`, `screen` (a `--screen` value: over the run, e.g.
+and optional `seed`, `character` (`human,female,thief`: play as another than the scenario's),
+`window`, `scale`, `freeze_time`, `screen` (a `--screen` value: over the run, e.g.
 `pause`, `help`, `settings`, `controls`, `inventory`, `equipment`, `equip-item`, `describe`,
 `character`, `skills`, `weapon-skills`, `quests`, `messages`, `pick-up`, `drop`, `eat`, `abilities`,
 `dialogue`; or over
