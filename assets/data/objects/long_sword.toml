@@ -4,7 +4,10 @@ name = "long sword"
 glyph = ")"
 fg = "#e4e8f0"
 class = "melee_weapons"
-material = "steel"
+materials = [
+    { part = "blade", of = "steel" },
+    { part = "grip", of = "leather", share = 10 },
+]
 weight = 1800
 value = 80
 slot = "main_hand"

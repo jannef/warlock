@@ -41,7 +41,11 @@ mark), stopping when `World::found` (an unsaved counter) moves; `notice_hidden` 
 check, called once per player turn at the start of `run_turn` (`schedule.rs`), so steps, waits,
 rests, digs, meals, and searches all get it. `reveal` turns a door into its door
 (`set_terrain`) or knows a trap (`World::know_trap`, shared with `learn_traps`), writes memory
-at once (`memory`, `trap_memory`), and `say`s, which stops long actions.
+at once (`memory`, `trap_memory`), and `say`s, which stops long actions. A trap on a door (spec
+§8 "Trapped doors") is a hidden trap like any other (`hidden_near` reads `LevelState::traps`
+whatever the terrain); found, it is said without the trap's `sign`, which is the floor's ("You
+notice that the door is trapped: an arrow trap."). Doors are no `stone`, so dwarves do not
+notice a door's trap in passing.
 
 **Invariants**: checks draw from the gameplay stream (`crate::check`, two draws each) only for
 hidden features in reach, so runs without any nearby keep their hashes; no memory of failed

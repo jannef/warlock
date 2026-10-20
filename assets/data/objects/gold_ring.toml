@@ -4,7 +4,7 @@ name = "gold ring"
 glyph = "="
 fg = "#f0d060"
 class = "rings"
-material = "gold"
+materials = ["gold"]
 weight = 10
 value = 150
 slot = "ring"

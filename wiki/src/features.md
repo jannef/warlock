@@ -105,8 +105,9 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   row shake it off, and grave rot never goes by itself. The character screen names the disease
   once it has run a day; lost stat points mend a point a day once you are well.
 - **Traps** — arrow and spear traps, fireballs, lightning bolts, pits, alarms, and teleports lie
-  hidden until someone steps on them: you, or a creature you lure there. One you saw go off is
-  known from then on, shown as `^` and remembered, and stepping onto it asks first. The Depths
+  hidden until someone steps on them: you, or a creature you lure there; a trapped door goes off
+  when someone opens or kicks it. One you saw go off is known from then on, shown as `^` and
+  remembered, and stepping onto it asks first. The Depths
   hide a few on every level; a trap hall beside the arena lets you try them and watch them catch
   creatures.
 - **Searching** — secret doors look like the wall and hidden traps like the floor until you find

@@ -3,5 +3,15 @@
 # new material is a new file, a renamed id is a renamed file, and the same id in two files is a
 # load error naming both (docs/dev/content.md).
 #
-# Materials objects are made of (spec §7). Fields: id, name. Properties (hardness, burning,
-# rusting) come later.
+# Materials objects are made of, part by part (spec §7; objects/README.toml, `materials`).
+# Fields:
+#   id        what objects name it by (`materials = ["iron"]`, `of = "iron"`)
+#   name      as names and descriptions write it
+#   precious  a gem or a precious metal (default false): the names of items it is part of show
+#             it ("gold and ruby amulet", "ruby-pommelled long sword"); plain materials show only
+#             in an item's description
+#   value     what it is worth, in percent of steel (default 100, 1 to 10000): an item made of
+#             other parts than its base item is worth the base item's value times what its parts
+#             are worth (each part's share of the weight times its material's value) over what
+#             the base item's are. Items carry no parts of their own yet, so it changes no price
+# Properties (weight, colour, weapon and armour modifiers, hardness, burning, rusting) come later.

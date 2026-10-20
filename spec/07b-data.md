@@ -153,12 +153,40 @@ developer notes (CLAUDE.md, `docs/dev/`).
   default 0). §5 "Moonlight".
 - **Objects and materials** (M11): every object (`[[object]]` in `data/objects.toml`, a
   directory read in path order, one object a file; see Definitions) defines the
-  symbol it renders with and its color, item class, material, and weight: `id`, `name` (singular,
-  without an article; `plural` defaults to the name plus `s`), `glyph`, `fg`, `class`, `material` (an id in
-  `data/materials.toml`, likewise a directory, whose `[[material]]` entries have an `id` and a
-  `name`; properties come later), `weight` (integer grams, at least 1), `value` (what one is worth in gold coins,
+  symbol it renders with and its color, item class, materials, and weight: `id`, `name` (singular,
+  without an article; `plural` defaults to the name plus `s`), `glyph`, `fg`, `class`,
+  `materials`, `weight` (integer grams, at least 1), `value` (what one is worth in gold coins,
   required, 0 to 1 000 000; shops price their goods from it, §7 "Shops"), and `stackable`
-  (default false). Glyphs follow ADOM loosely: `)` weapons, `}` missile weapons, `/` missiles, `[`
+  (default false).
+  **Parts** (#199): `materials` is what an object is made of, an ordered list of parts, each of
+  one material (an id in `data/materials.toml`, likewise a directory, whose `[[material]]`
+  entries have an `id`, a `name`, `precious` (a gem or a precious metal, default false), and
+  `value` (percent of steel's, 1 to 10 000, default 100); more properties come later). A part is
+  a table, `{ part = "setting", of = "ruby", share = 10 }`: `part` an id in `data/parts.toml` (a
+  small vocabulary, `[[part]]` with `id`, `name`, and an optional `adjective`: band, blade, chain,
+  cord, grip, haft, head, inlay, lining, pendant, pommel, setting, trim), `of` its material,
+  `share` its percent of the weight. A plain material id is one unnamed part, the shorthand:
+  `materials = ["steel"]`, what most objects are. **The first part is the main one**: it takes
+  the share the others leave (at least 1%; it gives none), may be unnamed, and decides what a
+  single material decides (`ObjectDef::material`: the material named first, the material word a
+  name begins with, and, with metals and organic materials, #193 and #194, the colour, the weight
+  scale, and weapon and armour modifiers). Every other part names its part and share; a part
+  name appears once; the old `material` key is a content error that says to write `materials`.
+  **Value by shares**: an object made of other parts than its own is worth its `value` × Σ(share
+  × material value) of those parts / the same sum of its own (`ObjectDef::value_with`, rounded to
+  the nearest coin), so made of its own parts it is worth its `value`. Items carry no parts of
+  their own yet (metal variants and gems will, #193, #191): every item is made of its base item's
+  parts (`Stack::parts`), and saves are unchanged. **Names** show the notable parts, gems and
+  precious metals (`precious` materials), that the written name does not mention as a word: a
+  notable part whose part has an `adjective` goes before the name ("ruby-pommelled long sword"),
+  any other joins the main part's material if the name begins with it ("gold amulet" with a ruby
+  setting is the "gold and ruby amulet"; "iron and ruby ring"), else goes before the name; the
+  name is composed when content loads (`part::names`), so every message, list, and screen says
+  it. The plain parts (a leather grip) show in the item's description, which lists every part
+  ("steel blade, leather grip"). Materials are visible, not hidden: an unidentified amulet shows
+  that it is gold and ruby (its magic stays hidden). The showcase's examples: the gold amulet
+  (gold chain, ruby setting), the amber amulet (amber pendant, leather cord), and the long sword
+  (steel blade, leather grip). Glyphs follow ADOM loosely: `)` weapons, `}` missile weapons, `/` missiles, `[`
   armor, `(` tools, `!` potions, `?` scrolls, `%` food, `*` stones and gems, `$` coins, `=` rings,
   `"` amulets. **Item classes** (#189) say what kind of thing an object is, ADOM-like:
   `data/item_classes.toml` is their ordered list (`[[class]]` with `id`, `name`, the header item

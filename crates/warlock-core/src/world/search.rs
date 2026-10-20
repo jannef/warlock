@@ -2,10 +2,10 @@
 //!
 //! Hidden features are **secret doors**, which look and act like the wall around them (the cell's
 //! terrain is that wall; [`crate::content::Secret`] keeps the door), and **hidden traps**, which
-//! look like the floor (spec §8 "Traps"). Each has a **difficulty**: the trap type's, or the
-//! secret door's own, plus on a dungeon branch its `hidden_per_depth` for each level below the
-//! first. Two checks find them (spec §8 "Checks", [`crate::check`]: 2d12 plus a modifier against
-//! the difficulty):
+//! look like the floor or the door they lie on (spec §8 "Traps", "Trapped doors"). Each has a
+//! **difficulty**: the trap type's, or the secret door's own, plus on a dungeon branch its
+//! `hidden_per_depth` for each level below the first. Two checks find them (spec §8 "Checks",
+//! [`crate::check`]: 2d12 plus a modifier against the difficulty):
 //!
 //! - **Searching** ([`crate::Action::Search`]): each turn of it (the `search` action) checks
 //!   every hidden feature within reach, the cells around the player (farther with a high Search
@@ -27,7 +27,9 @@
 //!
 //! A found secret door becomes its closed door ([`World::set_terrain`]), a found trap is known
 //! ([`World::know_trap`], as a trap seen going off is), and both are remembered at once, in the
-//! dark too: "You find a secret door!", "You notice a pressure plate: an arrow trap."
+//! dark too: "You find a secret door!", "You notice a pressure plate: an arrow trap.", and for a
+//! door's trap "You notice that the door is trapped: an arrow trap." (a trap's `sign` is the
+//! floor's).
 
 use super::World;
 use super::rest::Ended;
@@ -230,12 +232,12 @@ impl World {
                 };
                 self.state.current_mut().trap_memory.insert(at, kind);
                 let def = self.content.trap(kind);
-                let text = format!(
-                    "You notice {}: {} {}.",
-                    def.sign,
-                    article(&def.name),
-                    def.name
-                );
+                let sign = if self.state.current().is_door(&self.content, at) {
+                    "that the door is trapped"
+                } else {
+                    &def.sign
+                };
+                let text = format!("You notice {sign}: {} {}.", article(&def.name), def.name);
                 self.say(text);
             }
         }

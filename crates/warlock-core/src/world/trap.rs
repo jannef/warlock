@@ -3,10 +3,12 @@
 //! A trap lies on a cell of a level ([`crate::content::Trap`], in the level state), hidden until
 //! the player sets it off or sees a creature do it; then it is known, shown, and remembered.
 //! Whoever steps onto a trap sets it off, the player and creatures alike (creatures know nothing
-//! of traps yet, so they walk onto them, and luring them is a tactic). [`World::spring_trap`] is
-//! the one way a trap goes off: it spends a charge (a trap with none left is spent and gone),
-//! makes the trap's noise on its cell, and does what the trap does
-//! ([`crate::content::TrapEffect`]):
+//! of traps yet, so they walk onto them, and luring them is a tactic): [`World::step_onto_trap`].
+//! A trap on a door (spec §8 "Trapped doors") is the door's, not the floor's: walking through
+//! the doorway never sets it off; opening the door does, and kicking it (`world/door.rs`), at
+//! whoever opened or kicked it from the next cell. [`World::spring_trap`] is the one way a trap
+//! goes off: it spends a charge (a trap with none left is spent and gone), makes the trap's noise
+//! on its cell, and does what the trap does ([`crate::content::TrapEffect`]):
 //!
 //! - **shot**: a missile shoots out of a hidden slit, the nearest wall in one of the eight
 //!   directions (ties go to the direction a hash of the level and the cell picks first), at the
@@ -15,14 +17,16 @@
 //!   lie where it fell;
 //! - **strike**: an attack roll against the victim;
 //! - **burst**: everyone on the cells within the radius that the blast reaches from the trap
-//!   (shadowcast: walls stop it) takes one roll of the damage, half of it (at least 1) beyond
+//!   (shadowcast: walls stop it, but not the trap's own cell, so a door's blast bursts out on
+//!   both sides of it, shut or open) takes one roll of the damage, half of it (at least 1) beyond
 //!   radius − 1; no roll to hit; then the walls it reaches that are softer than its `blast` break
 //!   ([`World::blast`], spec §8 "Digging"); then a hot one melts the ice it reaches, and whoever
 //!   stood on it falls in ([`World::shock`]), and a cold one freezes the water it reaches
 //!   ([`World::frost`], spec §5 "Ice");
-//! - **bolt**: a line from the trap in its direction (the level's `dir`, else the longest clear
-//!   line from it, ties to the earlier of N, NE, ... NW) until a wall, at most its length:
-//!   everyone on it takes one roll of the damage;
+//! - **bolt**: a line from the trap in its direction (the level's `dir`; else, set off from the
+//!   next cell (a door's), toward the victim; else the longest clear line from it, ties to the
+//!   earlier of N, NE, ... NW) until a wall, at most its length: everyone on it takes one roll of
+//!   the damage;
 //! - **pit**: the victim takes the damage and loses its next action climbing out (the action's
 //!   price is a `wait` more);
 //! - **alarm**: only its noise;
@@ -52,9 +56,25 @@ use std::collections::BTreeSet;
 const OVERSHOOT: usize = 8;
 
 impl World {
+    /// Actor `victim` has just stepped onto `at`: a trap there goes off ([`World::spring_trap`]),
+    /// unless it is on a door, which only opening or kicking the door sets off (spec §8 "Trapped
+    /// doors"). Returns the energy a pit's climb costs on top of the step.
+    pub(super) fn step_onto_trap(
+        &mut self,
+        at: Pos,
+        victim: ActorId,
+        events: &mut Vec<Event>,
+    ) -> i64 {
+        if self.state.current().is_door(&self.content, at) {
+            return 0;
+        }
+        self.spring_trap(at, victim, events)
+    }
+
     /// The trap on cell `at` of the current level goes off at actor `victim`, who stepped onto it
-    /// (module docs); a trap set off from elsewhere (a trapped door, opened from the next cell)
-    /// aims its missile or blades at the victim where it stands, its blast at `at`. Pushes
+    /// (module docs); a trap set off from elsewhere (a trapped door, opened or kicked from the
+    /// next cell) aims its missile or blades at the victim where it stands, its bolt (with no
+    /// `dir` of its own) through them, and its blast at `at`. Pushes
     /// [`Event::TrapSprung`] and what came of it. Returns the energy the victim pays on top of its
     /// action: a pit's climb out, else 0. Nothing happens if no trap lies there.
     pub(super) fn spring_trap(&mut self, at: Pos, victim: ActorId, events: &mut Vec<Event>) -> i64 {
@@ -125,7 +145,13 @@ impl World {
                 spell,
                 length,
                 damage,
-            } => self.trap_bolt(kind, at, dir, (spell, *length), *damage, events),
+            } => {
+                // Set off from the next cell (a door's trap), it runs at whoever did.
+                let from = self.state.actors.get(&victim).map(|a| a.pos);
+                let toward = from.filter(|p| p.chebyshev(at) == 1);
+                let dir = dir.or_else(|| toward.and_then(|p| Dir::toward(at, p)));
+                self.trap_bolt(kind, at, dir, (spell, *length), *damage, events);
+            }
             TrapEffect::Pit { damage } => {
                 if !self.state.actors.contains_key(&victim) {
                     return 0;
@@ -296,8 +322,8 @@ impl World {
     }
 
     /// A burst trap on `at` goes off (module docs). Its cells are the spell effect's
-    /// ([`spell::burst_cells`]: within the radius, in line of sight from the trap, no wall), so
-    /// what is drawn is what is hit.
+    /// ([`spell::burst_cells`]: within the radius, in line of sight from the trap, no wall; the
+    /// trap's own cell, a shut door's, never stops it), so what is drawn is what is hit.
     fn trap_burst(
         &mut self,
         trap: TrapId,
@@ -308,7 +334,8 @@ impl World {
         events: &mut Vec<Event>,
     ) {
         let level = self.state.current();
-        let cells = spell::burst_cells(at, radius, |p| level.is_opaque(&self.content, p));
+        let cells =
+            spell::burst_cells(at, radius, |p| p != at && level.is_opaque(&self.content, p));
         events.push(Event::Spell {
             effect: spell.to_string(),
             origin: at,

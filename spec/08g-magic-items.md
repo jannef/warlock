@@ -22,7 +22,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Names** (`Stack::describe`, the one name presentation uses): normal "a long sword"; magic
     its prefix and suffix around the base, "a Sharp long sword of the Bear" ("12 Sharp arrows of
     Durability"); rare its name then the base, "Grim Bite, a long sword"; unidentified the base
-    and its rarity, "a long sword (magic)", "12 arrows (rare)". Rarity colors the name (§6).
+    and its rarity, "a long sword (magic)", "12 arrows (rare)". The base is the object's name
+    with its gems and precious metals (§7 "Objects and materials": "a gold and ruby amulet
+    (magic)"), which show identified or not. Rarity colors the name (§6).
     Combat messages name the base ("The kobold's spear glances off your armour.").
   - **Unidentified**: magic and rare items are found unidentified. The rarity shows, the affixes
     and a rare name do not, and their effects apply all the same while worn or wielded (as in

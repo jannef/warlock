@@ -21,7 +21,7 @@
 //! when its creature died): it rots from then on, and is gone in the end ([`crate::rot`]). Food
 //! joins a stack of the same food whatever its age, and the stack keeps the oldest.
 
-use crate::content::{Content, ObjectId, Rarity};
+use crate::content::{Content, ObjectId, Part, Rarity};
 use crate::magic::{Effect, Magic, Mods, name};
 use crate::time::GameTime;
 use serde::{Deserialize, Serialize};
@@ -134,6 +134,20 @@ impl Stack {
             None => 0,
         };
         content.object(self.object).protection + more
+    }
+
+    /// What it is made of, part by part, the main part first (spec §7 "Objects and materials"):
+    /// its base item's parts, until items carry parts of their own (metal variants and gems,
+    /// #193, #191). Materials are not hidden: the player sees them, identified or not.
+    pub fn parts<'a>(&self, content: &'a Content) -> &'a [Part] {
+        &content.object(self.object).parts
+    }
+
+    /// What it is worth, in gold coins: each one's value, made of its [`Stack::parts`]
+    /// ([`crate::content::ObjectDef::value_with`]), times the count. Magic does not change it.
+    pub fn value(&self, content: &Content) -> u64 {
+        let def = content.object(self.object);
+        u64::from(def.value_with(self.parts(content), content)) * u64::from(self.count)
     }
 
     /// As the player knows it: "a dagger", "12 arrows", "a Sharp long sword of the Bear", "Grim

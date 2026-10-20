@@ -1,3 +1,4 @@
 [[material]]
 id = "gold"
 name = "gold"
+precious = true
