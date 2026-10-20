@@ -125,8 +125,9 @@ pub fn advance(page: usize, count: usize) -> InputMode {
 }
 
 /// Waits at `--more--` when the player's action (or the run's start) logged more than the
-/// message line shows at once: the first page, from play only (a prompt or aiming a dev flag
-/// started in keeps its mode). When the window changes size, the page follows the new layout.
+/// message line shows at once: the first page, from plain play only (aiming or look mode that a
+/// dev flag started in keeps its mode). When the window changes size, the page follows the new
+/// layout.
 pub(super) fn wait(
     game: Res<Game>,
     console: Res<Console>,
