@@ -21,7 +21,7 @@
 //! when its creature died): it rots from then on, and is gone in the end ([`crate::rot`]). Food
 //! joins a stack of the same food whatever its age, and the stack keeps the oldest.
 
-use crate::content::{Content, ObjectId, Part, Rarity};
+use crate::content::{Content, DamageTypeId, ObjectId, Part, Rarity};
 use crate::magic::{Effect, Magic, Mods, name};
 use crate::time::GameTime;
 use serde::{Deserialize, Serialize};
@@ -134,6 +134,18 @@ impl Stack {
             None => 0,
         };
         content.object(self.object).protection + more
+    }
+
+    /// How its Protection stands against each physical kind, more or less than its total
+    /// (spec §8 "Damage types": its object's `protects`).
+    pub(crate) fn protects<'c>(&self, content: &'c Content) -> &'c [(DamageTypeId, i32)] {
+        &content.object(self.object).protects
+    }
+
+    /// What it resists while worn or held, in percent per damage type: its object's `resist`
+    /// (what its affixes add is global: [`Mods::worn`]).
+    pub(crate) fn resists<'c>(&self, content: &'c Content) -> &'c [(DamageTypeId, i32)] {
+        &content.object(self.object).resist
     }
 
     /// What it is made of, part by part, the main part first (spec §7 "Objects and materials"):

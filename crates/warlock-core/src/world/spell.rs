@@ -24,6 +24,7 @@ use super::{ActorId, Spent, World};
 use crate::action::{AttackKind, Event, SpellShape};
 use crate::combat::{Blow, Strike};
 use crate::content::{Bolt, Burst, BurstIce, EffectShape, TrapId, TrapNoise};
+use crate::damage::Damage;
 use crate::fov::radius2;
 use crate::geom::Pos;
 use crate::ice::Shock;
@@ -220,6 +221,7 @@ impl World {
         for (id, p) in caught {
             let edge = p.dist2(center) > inner;
             let damage = if edge { (roll / 2).max(1) } else { roll };
+            let damage = Damage::new(damage, burst.kind);
             self.spell_hurts(caster, id, (center, false), damage, events);
         }
         if burst.blast > 0 {
@@ -264,22 +266,24 @@ impl World {
             caught.extend(self.state.actor_at(&level, *p).map(|a| a.id));
         }
         for id in caught {
-            self.spell_hurts(caster, id, (origin, true), roll, events);
+            let damage = Damage::new(roll, bolt.kind);
+            self.spell_hurts(caster, id, (origin, true), damage, events);
         }
     }
 
     /// `caster`'s spell does `damage` to `target` from `source` (a cell, and whether it flew
-    /// along a line from it), with no roll to hit: a trap's blow ([`World::trap_hurts`]), or an
-    /// actor's, dealt the way every blow is (spec §8 "Blood", "Status effects"): the event, a big
-    /// hit's blood, the damage, which may kill (a kill by the player earns its experience), and
-    /// if it lives the statuses its wound causes. A shopkeeper the player's spell reaches turns
-    /// on them, as one they strike does.
+    /// along a line from it), with no roll to hit and less what the target resists of its kind
+    /// (spec §8 "Damage types"): a trap's blow ([`World::trap_hurts`]), or an actor's, dealt
+    /// the way every blow is (spec §8 "Blood", "Status effects"): the event, a big hit's blood,
+    /// the damage, which may kill (a kill by the player earns its experience), and if it lives
+    /// the statuses its wound causes. A shopkeeper the player's spell reaches turns on them, as
+    /// one they strike does.
     fn spell_hurts(
         &mut self,
         caster: Caster,
         target: ActorId,
         source: (Pos, bool),
-        damage: i32,
+        damage: Damage,
         events: &mut Vec<Event>,
     ) {
         let by = match caster {
@@ -290,25 +294,29 @@ impl World {
             return;
         };
         let from = self.state.actors.get(&by).map_or(source.0, |a| a.pos);
-        let strike = Strike::Hit { critical: false };
+        let taken = self.resisted(target, damage);
+        let mut blow = Blow::plain(taken, damage.kind);
+        if damage.amount > 0 && taken <= 0 {
+            blow.strike = Strike::Resisted;
+        }
         events.push(Event::Attacked {
             attacker: by,
             target,
             kind: AttackKind::Spell,
             from,
             to,
-            strike: Some(strike),
+            strike: Some(blow.strike),
             with: None,
+            damage: damage.kind,
         });
         if by == self.state.player && target != by {
             self.provoke(target);
         }
-        if damage <= 0 {
+        if taken <= 0 {
             return;
         }
-        let blow = Blow { strike, damage };
         self.spill(by.0, target, source, blow);
-        if !self.hurt(target, damage, Harm::Actor(by), events) {
+        if !self.hurt(target, taken, Harm::Actor(by), events) {
             self.wounded(target, &blow, Some(by), events);
         }
     }

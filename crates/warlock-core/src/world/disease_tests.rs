@@ -566,6 +566,7 @@ fn bites_expose_their_target_who_resists_with_a_check() {
     let blow = Blow {
         strike: Strike::Hit { critical: false },
         damage: 1,
+        kind: None,
     };
     let caught = |seed: u64, toughness: u8| {
         let scenario = format!("stats = {{ toughness = {toughness} }}\nhp = 1000");
