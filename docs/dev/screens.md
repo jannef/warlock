@@ -130,7 +130,7 @@ to open, read keys for, or draw one:
   `ui/weapon_skills_screen.rs` (an info page: sections, ranks, and a faint ten-cell marks bar,
   the fighting styles in use marked `•`; two columns from 88 wide, else one that drops its gaps
   and margins and then scrolls with ↑↓; never a benefit), `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per
-  step with a Random row rolled from the seed, `SummaryScreen`, `Draft`), `ui/quest_screen.rs`
+  step with a Random row rolled from the seed, `SummaryScreen` (with the starting kit, `kit_words`; 84 wide, dropping its gaps on a short console), `Draft`), `ui/quest_screen.rs`
   (the quest log from `PerceptionView::quests`: active then done, the selected one's objective,
   status, and the giver's offer; read-only), `ui/dialogue_screen.rs`
   (the speaker, their last line, numbered topics; built from the last `Event::Talked`, so it never

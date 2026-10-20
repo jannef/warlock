@@ -1,8 +1,8 @@
 //! Character creation (spec §6 "New run", §8 "Character creation"): after the scenario and the
 //! seed, New run asks for a race, a gender, and a class, one screen each ([`ChoiceScreen`]), then
 //! shows the character ([`SummaryScreen`]): age, birthday, and birth sign, the final scores (the
-//! dice already rolled), the starting trained skills with their values, and a way back to any
-//! step.
+//! dice already rolled), the starting trained skills with their values, the starting kit in
+//! words, and a way back to any step.
 //!
 //! The steps are screens on the stack, in order (New run, race, gender, class, summary), so Esc
 //! steps back one and the summary's "change" rows return to a step as it was left. What has been
@@ -13,7 +13,7 @@
 //!
 //! Like every screen these are plain state machines, testable without a window.
 
-use super::character_screen::{birth_parts, fit_parts, gender_text};
+use super::character_screen::{birth_parts, fit_joined, fit_parts, gender_text};
 use super::menu::{Hints, Nav, Panel, Press, wrap};
 use super::screens::{MenuChoice, ScreenAction, ScreenName};
 use super::{ACCENT, TEXT, TEXT_DIM};
@@ -22,12 +22,15 @@ use crate::render::console::Console;
 use warlock_core::character::{CharacterSpec, Gender, Start, other_stat};
 use warlock_core::content::Content;
 use warlock_core::dice::Dice;
+use warlock_core::kit;
 use warlock_core::rng::Rng;
 use warlock_core::stats::{PerStat, Stat};
 use warlock_core::time::GameTime;
 
 /// Width of the panels: wide enough for the summary's age, birthday, and sign on one line.
 const WIDTH: i32 = 72;
+/// Width of the summary's panel (where the console has room): wider, for the starting kit.
+const SUMMARY_WIDTH: i32 = 84;
 
 /// A step of character creation, in order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -365,10 +368,46 @@ const SUMMARY_ROWS: [(&str, Option<Step>); 4] = [
 const SKILLS_X: i32 = 26;
 /// The room between two columns of skills.
 const SKILL_GAP: i32 = 3;
+/// Where the kit's lines begin, after its label (from the panel's inner edge), as the eyes' and
+/// the scenario's values do.
+const KIT_X: i32 = 12;
+
+/// What the summary says a character starts with in the scenario being set up (spec §8
+/// "Character creation"): every stack of the starting pack as named, the kit and the scenario's
+/// own pack on top; or, when the scenario leaves the kit behind, a note and the scenario's pack.
+fn kit_words(
+    content: &Content,
+    draft: &Draft,
+    start: &Result<Start, String>,
+) -> (Option<String>, Vec<String>) {
+    let Ok(start) = start else {
+        return (None, Vec::new());
+    };
+    let scenario = (draft.scenario.as_ref()).and_then(|s| content.scenario(&s.id));
+    let Some(scenario) = scenario else {
+        return (None, start.kit.names(content));
+    };
+    let pack = kit::starting_pack(content, scenario, Some(&start.kit)).names(content);
+    let name = &scenario.name;
+    match (scenario.kit, pack.is_empty()) {
+        (true, false) => (None, pack),
+        (true, true) => (None, vec!["nothing".into()]),
+        (false, true) => (
+            Some(format!("left behind: the {name} starts you empty-handed")),
+            Vec::new(),
+        ),
+        (false, false) => (
+            Some(format!(
+                "left behind: the {name} starts you with its own pack"
+            )),
+            pack,
+        ),
+    }
+}
 
 /// The character before the run starts: race, gender, and class (each a way back to its step),
-/// age, birthday, and birth sign, the final scores, the starting trained skills, the eyes, and
-/// the scenario and seed.
+/// age, birthday, and birth sign, the final scores, the starting trained skills, the starting
+/// kit, the eyes, and the scenario and seed.
 #[derive(Debug)]
 pub struct SummaryScreen {
     scenario: Option<ScenarioPick>,
@@ -381,6 +420,11 @@ pub struct SummaryScreen {
     birth: Vec<String>,
     /// The starting trained skills, by name, with their values, in skill order.
     skills: Vec<(String, u16)>,
+    /// What the character starts with, each stack as named (`a dagger (wielded)`), the
+    /// scenario's own pack included; after `kit_note`, if any.
+    kit: Vec<String>,
+    /// Said before the kit when the scenario leaves it behind.
+    kit_note: Option<String>,
     eyes: String,
     selected: usize,
 }
@@ -418,6 +462,7 @@ impl SummaryScreen {
                 .map(|(id, t)| (content.skill(id).name.clone(), t.value))
                 .collect()
         });
+        let (kit_note, kit) = kit_words(content, draft, &start);
         Self {
             scenario: draft.scenario.clone(),
             spec,
@@ -425,9 +470,30 @@ impl SummaryScreen {
             names,
             birth,
             skills,
+            kit,
+            kit_note,
             eyes,
             selected: 0,
         }
+    }
+
+    /// The starting kit's lines in a panel `inner` cells wide: the note, then the stacks with a
+    /// comma after each but the last, wrapped beside the label.
+    fn kit_lines(&self, inner: i32) -> Vec<String> {
+        let n = self.kit.len();
+        let parts: Vec<String> = (self.kit.iter().enumerate())
+            .map(|(i, name)| {
+                if i + 1 < n {
+                    format!("{name},")
+                } else {
+                    name.clone()
+                }
+            })
+            .collect();
+        let width = inner - KIT_X;
+        let mut lines: Vec<String> = self.kit_note.iter().cloned().collect();
+        lines.extend(fit_joined(&parts, " ", width));
+        lines
     }
 
     /// The width of a column of the starting skills: the longest name, a space, and a value.
@@ -485,22 +551,26 @@ impl SummaryScreen {
 
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         // Rows: margin, start and the three choices, a gap, the birth and a gap (if any), the
-        // stats with the skills beside them (or the skills below them, and a gap), a gap, eyes
-        // and scenario, a gap, the footer, the frame.
-        let birth = fit_parts(&self.birth, WIDTH.min(console.cols() as i32) - 6);
-        let birth_rows = match birth.len() {
-            0 => 0,
-            n => n as i32 + 1,
-        };
-        let inner = WIDTH.min(console.cols() as i32) - 4;
+        // stats with the skills beside them (or the skills below them, and a gap), a gap, the
+        // kit, eyes and scenario, a gap, the footer, the frame. Too tall for the console, the
+        // gaps before the kit, after the birth, and after the choices go, in that order.
+        let width = SUMMARY_WIDTH.min(console.cols() as i32);
+        let birth = fit_parts(&self.birth, width - 6);
+        let inner = width - 4;
         let (skill_rows, below) = self.skill_layout(inner);
         let block = (Stat::COUNT.max(skill_rows)) as i32;
         let below_rows = match below.len() {
             0 => 0,
             n => n as i32 + 1,
         };
-        let h = SUMMARY_ROWS.len() as i32 + block + 9 + birth_rows + below_rows;
-        let panel = Panel::new(console, " Your character ", WIDTH, h);
+        let kit = self.kit_lines(inner);
+        let birth_rows = birth.len() as i32 + i32::from(!birth.is_empty());
+        let full =
+            SUMMARY_ROWS.len() as i32 + block + 9 + birth_rows + below_rows + kit.len() as i32;
+        let squeeze = (full - console.rows() as i32).clamp(0, 3);
+        let gap = |n: i32| i32::from(squeeze < n);
+        let h = full - squeeze;
+        let panel = Panel::new(console, " Your character ", width, h);
         let x = panel.inner_x();
         let fits = |y: i32| y < panel.y + panel.h - 2;
         let mut y = panel.y + 2;
@@ -511,14 +581,14 @@ impl SummaryScreen {
             }
             y += 1;
         }
-        y += 1;
+        y += gap(3);
         for line in &birth {
             if fits(y) {
                 console.print(x + 2, y, line, TEXT);
             }
             y += 1;
         }
-        y += i32::from(!birth.is_empty());
+        y += i32::from(!birth.is_empty()) * gap(2);
         match &self.start {
             Ok(start) => {
                 for (i, (stat, score)) in start.stats.scores().iter().enumerate() {
@@ -558,7 +628,16 @@ impl SummaryScreen {
                 y += block;
             }
         }
-        y += 1;
+        y += gap(1);
+        for (i, line) in kit.iter().enumerate() {
+            if fits(y) {
+                if i == 0 {
+                    console.print(x + 2, y, "Kit", TEXT_DIM);
+                }
+                console.print(x + KIT_X, y, line, TEXT);
+            }
+            y += 1;
+        }
         let scenario = self
             .scenario
             .as_ref()
@@ -746,6 +825,53 @@ mod tests {
         d.chosen.set(Step::Gender, spec.gender.id());
         d.chosen.set(Step::Class, &spec.class);
         SummaryScreen::new(&CONTENT, &d)
+    }
+
+    #[test]
+    fn the_summary_lists_the_starting_kit_or_says_it_stays_behind() {
+        // The world gives the kit: the ranger's is listed as it is named and worn.
+        let world = CONTENT.scenario("world").expect("world");
+        let mut d = draft(1);
+        d.scenario = Some(ScenarioPick {
+            id: "world".into(),
+            name: world.name.clone(),
+            typed_seed: None,
+            seed: 1,
+            character: world.character.clone(),
+            start: world.start,
+        });
+        let text = drawn(&SummaryScreen::new(&CONTENT, &d));
+        for expected in [
+            "Kit       a short bow (readied), 24 arrows (quivered),",
+            "a short sword (wielded)",
+            "a pair of leather boots (being worn)",
+            "3 strips of dried meat",
+            "a loaf of bread",
+        ] {
+            assert!(text.contains(expected), "{expected:?} in\n{text}");
+        }
+        assert!(!text.contains("left behind"), "{text}");
+        // The showcase leaves it behind.
+        let showcase = drawn(&summary("human,female,thief", 1));
+        assert!(
+            showcase.contains("Kit       left behind: the Showcase starts you empty-handed"),
+            "{showcase}"
+        );
+        // A short console squeezes out the gaps before the kit's lines go.
+        let mut console = Console::default();
+        console.resize(90, 24);
+        let mut d = d.clone();
+        d.chosen.set(Step::Race, "halfling");
+        d.chosen.set(Step::Class, "merchant");
+        SummaryScreen::new(&CONTENT, &d).draw(&mut console, &Bindings::default());
+        let short = super::tests::text(&console);
+        for expected in [
+            "Scenario  World, seed 1",
+            "scroll of identify",
+            "2 wool cloaks",
+        ] {
+            assert!(short.contains(expected), "{expected:?} in\n{short}");
+        }
     }
 
     fn drawn(screen: &SummaryScreen) -> String {
