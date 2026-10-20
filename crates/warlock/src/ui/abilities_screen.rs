@@ -230,6 +230,7 @@ fn needs(aim: Aim) -> &'static str {
     match aim {
         Aim::Nothing => "",
         Aim::Direction => "in a direction",
+        Aim::Cell => "at a place you see",
     }
 }
 
@@ -276,17 +277,21 @@ mod tests {
         let text = drawn(&screen, 80, 30).join("\n");
         for expected in [
             " Abilities ",
+            "Class",
+            "> a  Throw your voice   at a place you see",
             "Skills",
-            "> a  Appraise        not usable yet",
-            "  d  Steal           not usable yet",
+            "  b  Appraise           not usable yet",
+            "  e  Steal              not usable yet",
             "Weapon skills",
-            "  e  Shield bash     you hold no shield",
-            "a-e or Enter use   Esc close",
+            "  f  Shield bash        you hold no shield",
+            "Items",
+            "  g  Hood your lantern",
+            "a-g or Enter use   Esc close",
         ] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }
-        // Nothing can be used: the cursor stays on the first row.
-        assert_eq!(screen.selected().map(|a| a.source()), Some(Source::Skill));
+        // The cursor starts on the first that can be used: throwing one's voice.
+        assert_eq!(screen.selected().map(|a| a.source()), Some(Source::Class));
     }
 
     #[test]
@@ -294,7 +299,7 @@ mod tests {
         let b = Bindings::default();
         let world = thief(false);
         let mut screen = AbilitiesScreen::new(Some(&world.perception()), None);
-        assert_eq!(screen.handle(&Press::typed('e'), &b), ScreenAction::Stay);
+        assert_eq!(screen.handle(&Press::typed('f'), &b), ScreenAction::Stay);
         assert_eq!(screen.selected(), Some(Ability::ShieldBash));
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(text.contains("Shield bash: you hold no shield."), "{text}");
@@ -302,26 +307,29 @@ mod tests {
         screen.handle(&Press::nav(Nav::Down), &b);
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(!text.contains("you hold no shield."), "{text}");
-        // With a shield in hand it can be used, and the cursor starts on it.
+        // With a shield in hand it can be used.
         let world = thief(true);
         let mut screen = AbilitiesScreen::new(Some(&world.perception()), None);
-        assert_eq!(screen.selected(), Some(Ability::ShieldBash));
+        assert_eq!(
+            screen.handle(&Press::typed('f'), &b),
+            ScreenAction::UseAbility(Ability::ShieldBash)
+        );
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(
-            text.contains("> e  Shield bash     in a direction"),
+            text.contains("> f  Shield bash        in a direction"),
             "{text}"
         );
         assert!(text.contains("Strike someone next to you with the shield you hold."));
         assert_eq!(
-            screen.handle(&Press::typed('e'), &b),
-            ScreenAction::UseAbility(Ability::ShieldBash)
-        );
-        assert_eq!(
             screen.handle(&Press::nav(Nav::Enter), &b),
             ScreenAction::UseAbility(Ability::ShieldBash)
         );
-        // `a` names the first row here, so it does not close the menu; Esc does.
-        assert_eq!(screen.handle(&Press::typed('a'), &b), ScreenAction::Stay);
+        // `a` names the first row here (throwing one's voice), so it does not close the menu;
+        // Esc does.
+        assert_eq!(
+            screen.handle(&Press::typed('a'), &b),
+            ScreenAction::UseAbility(Ability::ThrowVoice)
+        );
         assert_eq!(
             screen.handle(&Press::nav(Nav::Back), &b),
             ScreenAction::Close
@@ -355,8 +363,10 @@ mod tests {
             assert_eq!(drawn(&screen, cols, rows).len(), rows as usize);
         }
         // A short console pages the list, showing the cursor's page: letters restart on it.
+        let last = Some(Ability::ShieldBash);
+        let screen = AbilitiesScreen::new(Some(&world.perception()), last);
         let text = drawn(&screen, 80, 12).join("\n");
-        assert!(text.contains("Page 2/2"), "{text}");
-        assert!(text.contains("> b  Shield bash"), "{text}");
+        assert!(text.contains("Page 3/3"), "{text}");
+        assert!(text.contains("> a  Shield bash"), "{text}");
     }
 }

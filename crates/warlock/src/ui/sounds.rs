@@ -1,6 +1,8 @@
 //! Heard sounds on the map (spec §5 "Hearing", §4.8): a faint marker on the free-glyph layer at
 //! the rough place of each sound the player heard during the last turn from a source they do not
-//! see (`PerceptionView::sounds`). It lasts until the next turn.
+//! see (`PerceptionView::sounds`). It lasts until the next turn. The player's own voice, thrown
+//! to a cell they see (`Event::VoiceThrown`, spec §5 "Hearing"), is marked where it sounded the
+//! same way, as a loud sound: they made it, so they hear nothing, but they know where it went.
 //!
 //! The marker is information, so it is always drawn: still, faint, and fainter for fainter
 //! sounds, never lit (the cell is not seen). With glyph animation on it ripples in when a turn's
@@ -13,8 +15,9 @@ use crate::render::grid::MapGrid;
 use crate::render::{Effects, VisualTime};
 use crate::settings::{Role, Settings};
 use bevy::prelude::*;
+use warlock_core::Event;
 use warlock_core::color::Rgb;
-use warlock_core::noise::{PerceivedSound, Volume};
+use warlock_core::noise::{PerceivedSound, SoundKind, Volume};
 
 /// The marker glyph: a dotted ring, "something here, not seen".
 pub const MARKER: char = '◌';
@@ -83,13 +86,28 @@ pub(super) fn emit(
         visual.seconds - markers.start
     };
     let color = settings.palette.apply(COLOR, Role::Fg);
-    for sound in view.sounds() {
+    let thrown = thrown_voices(&game.last_outcome.events);
+    for sound in view.sounds().iter().chain(&thrown) {
         let (still, ring) = marker(&grid, sound, color, effects.glyph_animation.then_some(age));
         free.push(still);
         if let Some(ring) = ring {
             free.push(ring);
         }
     }
+}
+
+/// Where the player's voice sounded during the last turn (`events`), as loud sounds.
+fn thrown_voices(events: &[Event]) -> Vec<PerceivedSound> {
+    (events.iter())
+        .filter_map(|event| match *event {
+            Event::VoiceThrown { at } => Some(PerceivedSound {
+                kind: SoundKind::Voice,
+                pos: at,
+                volume: Volume::Loud,
+            }),
+            _ => None,
+        })
+        .collect()
 }
 
 /// The still marker of `sound`, and its ripple ring `age` seconds in (none without animation).
@@ -122,7 +140,6 @@ fn marker(
 mod tests {
     use super::*;
     use warlock_core::Pos;
-    use warlock_core::noise::SoundKind;
 
     fn sound(volume: Volume) -> PerceivedSound {
         PerceivedSound {
@@ -148,6 +165,21 @@ mod tests {
         assert!(ring.scale > 1.0 && ring.color.alpha < still.color.alpha);
         let (_, gone) = marker(&grid, &sound(Volume::Clear), COLOR, Some(RIPPLE_SECONDS));
         assert_eq!(gone, None, "the ripple fades within a second");
+    }
+
+    #[test]
+    fn a_thrown_voice_is_marked_where_it_sounded() {
+        let at = Pos::new(7, 1);
+        let events = [Event::DoorOpened { pos: at }, Event::VoiceThrown { at }];
+        assert_eq!(
+            thrown_voices(&events),
+            [PerceivedSound {
+                kind: SoundKind::Voice,
+                pos: at,
+                volume: Volume::Loud,
+            }]
+        );
+        assert!(thrown_voices(&events[..1]).is_empty());
     }
 
     #[test]

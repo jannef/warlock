@@ -62,6 +62,8 @@ pub const REBINDABLE: &[KeyCommand] = &[
     KeyCommand::Abilities,
     KeyCommand::RepeatAbility,
     KeyCommand::Bash,
+    KeyCommand::ThrowVoice,
+    KeyCommand::HoodLantern,
     KeyCommand::Pay,
     KeyCommand::NextTarget,
     KeyCommand::PrevTarget,
@@ -125,6 +127,8 @@ const PAGE_IDS: [&str; 9] = [
 /// The player may bind one in Controls.
 pub const UNBOUND: &[KeyCommand] = &[
     KeyCommand::Bash,
+    KeyCommand::ThrowVoice,
+    KeyCommand::HoodLantern,
     KeyCommand::Fire,
     KeyCommand::Quit,
     KeyCommand::PrevTarget,
@@ -227,6 +231,8 @@ impl KeyCommand {
             Abilities => "abilities",
             RepeatAbility => "repeat_ability",
             Bash => "bash",
+            ThrowVoice => "throw_voice",
+            HoodLantern => "hood_lantern",
             NextTarget => "next_target",
             PrevTarget => "prev_target",
             Loose => "loose",

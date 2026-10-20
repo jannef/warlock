@@ -865,7 +865,7 @@ mod tests {
     use bevy::input::keyboard::{Key, KeyboardInput, NativeKey};
     use clap::Parser;
     use std::sync::Arc;
-    use warlock_core::{Action, Dir};
+    use warlock_core::{Action, Dir, Pos};
 
     fn content() -> Arc<Content> {
         Arc::new(Content::builtin().expect("content"))
@@ -1713,21 +1713,21 @@ mod tests {
         const ABILITIES: (KeyCode, &str) = (KeyCode::KeyA, "a");
         const REPEAT: (KeyCode, &str) = (KeyCode::KeyA, "A");
         let mode = |app: &App| *app.world().resource::<InputMode>();
-        // Without a shield: the menu opens on `a`; the shield bash (`e`) is greyed out, so its
+        // Without a shield: the menu opens on `a`; the shield bash (`f`) is greyed out, so its
         // letter only says why; Esc closes the menu, and no time passed.
         let mut app = app(true);
         frame(&mut app, &[ABILITIES]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
-        frame(&mut app, &[(KeyCode::KeyE, "e")]);
+        frame(&mut app, &[(KeyCode::KeyF, "f")]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
         frame(&mut app, &[ESC]);
         assert!(names(&app).is_empty() && actions(&app).is_empty());
         // The quick repeat with nothing used yet opens the menu.
         frame(&mut app, &[REPEAT]);
         assert_eq!(names(&app), [ScreenName::Abilities]);
-        // With a shield: `a` `e` closes the menu and asks for a direction; a direction bashes.
+        // With a shield: `a` `f` closes the menu and asks for a direction; a direction bashes.
         let mut app = with_a_shield();
-        frame(&mut app, &[ABILITIES, (KeyCode::KeyE, "e")]);
+        frame(&mut app, &[ABILITIES, (KeyCode::KeyF, "f")]);
         assert!(names(&app).is_empty());
         assert_eq!(mode(&app), InputMode::Ability(Ability::ShieldBash));
         frame(&mut app, &[(KeyCode::KeyL, "l")]);
@@ -1743,6 +1743,33 @@ mod tests {
         // The menu opens on it, so Enter repeats it too.
         frame(&mut app, &[ABILITIES, ENTER, (KeyCode::KeyH, "h")]);
         assert_eq!(actions(&app), [Action::Bash(Dir::E), Action::Bash(Dir::W)]);
+    }
+
+    #[test]
+    fn a_thrown_voice_is_aimed_at_a_cell_and_the_hood_needs_nothing() {
+        let mode = |app: &App| *app.world().resource::<InputMode>();
+        // `a` `a`: throwing one's voice starts aiming, on the player (no one in view); two steps
+        // east and Enter throw it there.
+        let mut app = app(true);
+        let me = app.world().resource::<Game>().world.player_pos();
+        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyA, "a")]);
+        assert!(names(&app).is_empty());
+        let aim = match mode(&app) {
+            InputMode::Aim(aim) => aim,
+            other => panic!("aiming, not {other:?}"),
+        };
+        assert_eq!(aim.kind, AimKind::Ability(Ability::ThrowVoice));
+        assert_eq!(aim.at, me);
+        frame(
+            &mut app,
+            &[(KeyCode::KeyL, "l"), (KeyCode::KeyL, "l"), ENTER],
+        );
+        assert_eq!(mode(&app), InputMode::Normal);
+        let at = Pos::new(me.x + 2, me.y);
+        assert_eq!(actions(&app), [Action::ThrowVoice(at)]);
+        // `a` `g`: the lantern's hood, at once.
+        frame(&mut app, &[(KeyCode::KeyA, "a"), (KeyCode::KeyG, "g")]);
+        assert_eq!(actions(&app), [Action::ThrowVoice(at), Action::HoodLantern]);
     }
 
     #[test]
