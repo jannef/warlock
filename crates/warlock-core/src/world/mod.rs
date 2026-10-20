@@ -85,6 +85,7 @@
 mod actor;
 mod ai;
 mod bleed;
+mod buff;
 mod carry;
 mod dev;
 mod dig;
@@ -785,6 +786,9 @@ impl World {
 
     /// Phase 1. Returns what the action cost.
     fn player_acts(&mut self, action: &Action, events: &mut Vec<Event>) -> Spent {
+        if let Some(refused) = self.refuse_blocked(action) {
+            return refused;
+        }
         let here = self.player_pos();
         // Whether the action was done, and what kind of action it was for its cost (the same on
         // any level: taking stairs ends on another).
@@ -876,6 +880,8 @@ mod ai_tests;
 mod blood_tests;
 #[cfg(test)]
 mod branch_tests;
+#[cfg(test)]
+mod buff_tests;
 #[cfg(test)]
 mod burden_tests;
 #[cfg(test)]

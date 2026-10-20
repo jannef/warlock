@@ -15,15 +15,24 @@
 //!   at none it is gone. Without, it lasts until cured.
 //! - **Stacking** ([`Stacking`]): a new dose of a status the actor has adds its degrees (to the
 //!   `max`), or takes the stronger of the two (`refresh` also starts its easing over).
-//! - **Stats** ([`Effects::penalty`]): a status's `penalty` lowers scores from a severity on;
-//!   several add up. Rules read the stats through it ([`crate::world::Actor::effective_stats`]).
+//! - **Stats** ([`Effects::penalty`]): a status's `penalty` lowers (or raises) scores from a
+//!   severity on; several add up. Rules read the stats through it
+//!   ([`crate::world::Actor::effective_stats`]).
 //! - **Healing** ([`Effects::regen`]): the slowest `regen` of its statuses.
+//! - **Fighting** ([`Effects::sharpen`], [`Effects::defence`]): while it lasts, a status adds its
+//!   `combat` to-hit and damage to every attack and its Dodge and Parry to Defence, as a combat
+//!   stance does.
+//! - **Slowness** ([`Effects::slow`]): each status multiplies the price of every action by its
+//!   `cost` percent.
+//! - **Blocks** ([`Effects::blocking`]): the actions a status refuses while it lasts, by kind.
+//! - **Follows**: as a status ends, the one it `follows` begins (`world/buff.rs`).
 //!
 //! Every effect is in the world state (saved, covered by the state hash). The player knows their
 //! own statuses by name, and sees on creatures those a status says show (`seen`); never a
 //! severity or a timer.
 
-use crate::content::{Content, Stacking, StatusDef, StatusId};
+use crate::combat::{Category, Profile};
+use crate::content::{ActionKind, Content, Stacking, StatusDef, StatusId};
 use crate::stats::{PerStat, Stat};
 use crate::world::ActorId;
 use serde::{Deserialize, Serialize};
@@ -191,12 +200,9 @@ impl Effects {
         self.0.len() < before
     }
 
-    /// Removes the effects that have eased away (severity 0), returning their statuses.
-    pub(crate) fn drop_spent(&mut self) -> Vec<StatusId> {
-        let spent = (self.0.iter())
-            .filter(|e| e.severity == 0)
-            .map(|e| e.status)
-            .collect();
+    /// Removes the effects that have eased away (severity 0), returning them as they were.
+    pub(crate) fn drop_spent(&mut self) -> Vec<Effect> {
+        let spent = self.0.iter().filter(|e| e.severity == 0).copied().collect();
         self.0.retain(|e| e.severity > 0);
         spent
     }
@@ -214,6 +220,49 @@ impl Effects {
             }
         }
         total
+    }
+
+    /// `profile` with what its statuses add to the to-hit and to every roll of the damage of its
+    /// attacks (their `combat`, added up).
+    pub fn sharpen(&self, content: &Content, profile: Profile) -> Profile {
+        let (to_hit, damage) = (self.0.iter())
+            .map(|e| content.status(e.status).combat)
+            .fold((0, 0), |(h, d), c| (h + c.to_hit, d + c.damage));
+        Profile {
+            to_hit: profile.to_hit + to_hit,
+            bonus: profile.bonus + damage,
+            ..profile
+        }
+    }
+
+    /// The Defence bonuses its statuses give, one per status and category (none that are zero):
+    /// Dodge bonuses stack, and of the Parry bonuses the highest counts, as always.
+    pub fn defence<'a>(
+        &'a self,
+        content: &'a Content,
+    ) -> impl Iterator<Item = (Category, i32)> + 'a {
+        (self.0.iter())
+            .map(|e| content.status(e.status).combat)
+            .flat_map(|c| [(Category::Dodge, c.dodge), (Category::Parry, c.parry)])
+            .filter(|&(_, bonus)| bonus != 0)
+    }
+
+    /// `price` as its statuses make it: each multiplies it by its `cost` percent, rounded up.
+    pub fn slow(&self, content: &Content, price: i64) -> i64 {
+        (self.0.iter())
+            .map(|e| i64::from(content.status(e.status).cost))
+            .filter(|&cost| cost != 100)
+            .fold(price, |price, cost| {
+                price.saturating_mul(cost).saturating_add(99) / 100
+            })
+    }
+
+    /// The first (the most important) of its statuses that refuses actions of `kind` while it
+    /// lasts (`blocks`), if any.
+    pub fn blocking(&self, content: &Content, kind: ActionKind) -> Option<StatusId> {
+        (self.0.iter())
+            .map(|e| e.status)
+            .find(|&s| content.status(s).blocks.contains(&kind))
     }
 
     /// How fast hit points come back while these last, in percent of normal: the slowest of
@@ -314,6 +363,48 @@ mod tests {
         }
         assert!(effects.remove(status) && !effects.remove(status));
         assert!(effects.is_empty());
+    }
+
+    #[test]
+    fn slows_multiply_rounding_up_and_the_first_block_names_why() {
+        let mut files = ContentFiles::builtin();
+        let (_, text) = files.table("status").next().expect("data/status.toml");
+        let text = format!(
+            "{text}[[status]]\nid = \"slowed\"\nname = \"Slowed\"\nmax = 1\ncost = 150\n\
+             blocks = [\"read\"]\n\
+             [[status]]\nid = \"mired\"\nname = \"Mired\"\nmax = 1\ncost = 200\n\
+             blocks = [\"read\", \"melee\"]\n\
+             combat = {{ to_hit = 2, damage = -1, dodge = -2, parry = 1 }}\n"
+        );
+        files.insert("data/status.toml", &text);
+        let content = Content::load(&files).expect("content");
+        let (slowed, slow) = def(&content, "slowed");
+        let (mired, mire) = def(&content, "mired");
+        let mut effects = Effects::default();
+        assert_eq!(effects.slow(&content, 6000), 6000, "nothing: as it was");
+        effects.add(slowed, &slow, 1, None);
+        assert_eq!(effects.slow(&content, 6000), 9000);
+        assert_eq!(effects.slow(&content, 7), 11, "10.5, rounded up");
+        effects.add(mired, &mire, 1, None);
+        assert_eq!(effects.slow(&content, 6000), 18_000, "×1.5, then ×2");
+        // The most important first: Slowed comes before Mired in the file.
+        assert_eq!(effects.blocking(&content, ActionKind::Read), Some(slowed));
+        assert_eq!(effects.blocking(&content, ActionKind::Melee), Some(mired));
+        assert_eq!(effects.blocking(&content, ActionKind::Wait), None);
+        // Fighting: to-hit and damage add to a profile; Dodge and Parry are bonuses of their own.
+        let profile = Profile {
+            to_hit: 3,
+            damage: "1d3".parse().expect("dice"),
+            bonus: 1,
+            threat: 24,
+            crit: 2,
+            extra: None,
+            penetration: 0,
+        };
+        let sharp = effects.sharpen(&content, profile);
+        assert_eq!((sharp.to_hit, sharp.bonus), (5, 0));
+        let defence: Vec<(Category, i32)> = effects.defence(&content).collect();
+        assert_eq!(defence, [(Category::Dodge, -2), (Category::Parry, 1)]);
     }
 
     #[test]

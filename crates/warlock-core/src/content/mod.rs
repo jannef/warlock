@@ -116,8 +116,8 @@ pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use status::{
-    Affliction, Healing, MAX_REGEN, MAX_SEVERITY, OnHit, Penalty, Stacking, StatusDef, StatusId,
-    Wound,
+    Affliction, COST_PERCENT, CombatBonus, Healing, MAX_REGEN, MAX_SEVERITY, OnHit, Penalty,
+    Stacking, StatusDef, StatusId, Wound,
 };
 pub use terrain::{Breakable, Freeze, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
 pub use trap::{MAX_CHARGES, Trap, TrapDef, TrapEffect, TrapId, TrapNoise};
@@ -1092,13 +1092,25 @@ impl Content {
                 || def.eases.is_some()
                 || def.wound.is_some()
                 || !def.cured_by.is_empty()
+                || def.follows.is_some()
             {
                 return Err(ContentError::new(
                     path,
                     format!(
                         "status `{}`: the status diseases show as lasts while they do: no \
-                         `tick`, `eases`, `wound`, or `cured_by` (cure the diseases instead)",
+                         `tick`, `eases`, `wound`, `cured_by`, or `follows` (cure the diseases \
+                         instead)",
                         def.id
+                    ),
+                ));
+            }
+            if let Some(other) = self.statuses.iter().find(|s| s.follows == Some(status)) {
+                return Err(ContentError::new(
+                    path,
+                    format!(
+                        "status `{}`: follows `{}`, the status diseases show as (only diseases \
+                         give it)",
+                        other.id, def.id
                     ),
                 ));
             }

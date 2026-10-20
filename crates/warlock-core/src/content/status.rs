@@ -5,18 +5,26 @@
 //! combines with one the actor already has ([`Stacking`]), its timers in game time (a hit point
 //! lost every `tick` seconds at one degree, `n` times as often at `n` degrees; a degree eased
 //! every `eases` seconds), how fast hit points come back while it lasts (`regen`), what it does to
-//! stats from some severity on ([`Penalty`]), what causes it (big hits and criticals,
-//! [`Wound`]; a creature's attack, [`OnHit`]), what cures it (`cured_by`), and its messages.
-//! The rules that apply them live in `crate::status` and `world/status.rs`.
+//! stats from some severity on ([`Penalty`]: a penalty, or a raise), what it does to its
+//! fighting while it lasts ([`CombatBonus`]), how much slower it makes every action (`cost`),
+//! which actions it refuses (`blocks`), the status that follows it as it ends (`follows`), what
+//! causes it (big hits and criticals, [`Wound`]; a creature's attack, [`OnHit`]), what cures it
+//! (`cured_by`), and its messages. So a status may be a harm (bleeding), a buff (raging), a hex
+//! on a creature, or a cooldown (a status with `eases` and no tick, during which an ability
+//! cannot be used: Exhausted). The rules that apply them live in `crate::status`,
+//! `world/status.rs`, and `world/buff.rs`.
 //!
 //! Without the file there are no status effects, and resting heals at the default rate
 //! ([`Healing::default`]).
 
 use super::ContentError;
+use super::action::ActionKind;
 use super::disease::DiseaseId;
+use super::stance::BONUS;
 use crate::stats::{ADJUSTMENTS, PerStat, Stat};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use std::ops::RangeInclusive;
 
 /// The most degrees of severity a status may have.
 pub const MAX_SEVERITY: u16 = 100;
@@ -24,6 +32,10 @@ pub const MAX_SEVERITY: u16 = 100;
 pub const MAX_REGEN: u16 = 1000;
 /// The most hit points one tick may cost.
 pub const MAX_TICK_DAMAGE: u16 = 1000;
+/// What a status may make every action cost, in percent: as much as usual (100) to ten times as
+/// much. Statuses slow and never hasten, so a creature's quickest step is what it always was (a
+/// rest's batching counts on it, `World::out_of_view_for`).
+pub const COST_PERCENT: RangeInclusive<u32> = 100..=1000;
 
 /// Index of a status definition in [`super::Content::status_defs`], in file order (which is
 /// also how important it is: the status bar shows the first first).
@@ -61,8 +73,32 @@ impl Stacking {
 pub struct Penalty {
     /// The lowest severity it applies at.
     pub from: u16,
-    /// What it adds to each score (negative: a penalty).
+    /// What it adds to each score (negative: a penalty; positive: a raise, as Raging gives).
     pub by: PerStat<i8>,
+}
+
+/// What a status adds to the fighting of an actor who suffers it, while it lasts, as a combat
+/// stance does (spec §8 "Stances"): `combat = { to_hit = 1, dodge = 1 }` (Inspired), each -20
+/// to 20 and 0 when left out. Several statuses add up, but in the Parry category only the highest
+/// bonus counts, as always (`crate::combat::Defence`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields, default)]
+pub struct CombatBonus {
+    /// Added to the to-hit of its attacks.
+    pub to_hit: i32,
+    /// Added to every roll of the damage of its attacks.
+    pub damage: i32,
+    /// Added to its Defence in the Dodge category (bonuses stack there).
+    pub dodge: i32,
+    /// Added to its Defence in the Parry category.
+    pub parry: i32,
+}
+
+impl CombatBonus {
+    /// Whether it changes nothing.
+    pub fn is_none(&self) -> bool {
+        *self == Self::default()
+    }
 }
 
 /// Which blows cause a status, and how many degrees of it (spec §8 "Status effects"): a big hit
@@ -210,6 +246,13 @@ struct StatusSpec {
     #[serde(default = "normal_regen")]
     regen: u16,
     penalty: Option<PenaltySpec>,
+    #[serde(default)]
+    combat: CombatBonus,
+    #[serde(default = "normal_cost")]
+    cost: u32,
+    #[serde(default)]
+    blocks: Vec<String>,
+    follows: Option<String>,
     wound: Option<Wound>,
     #[serde(default)]
     cured_by: Vec<String>,
@@ -220,6 +263,10 @@ struct StatusSpec {
 }
 
 fn normal_regen() -> u16 {
+    100
+}
+
+fn normal_cost() -> u32 {
     100
 }
 
@@ -255,6 +302,17 @@ pub struct StatusDef {
     /// usual. With several statuses the slowest counts.
     pub regen: u16,
     pub penalty: Option<Penalty>,
+    /// What it adds to the actor's fighting while it lasts.
+    pub combat: CombatBonus,
+    /// What every action costs the actor while it lasts, in percent of its price ([`COST_PERCENT`]):
+    /// 150 half again as much (Slowed), 100 as usual.
+    pub cost: u32,
+    /// The actions refused while it lasts, by their kind (`read`: a raging barbarian cannot
+    /// read); an ability that costs one of them cannot be used.
+    pub blocks: Vec<ActionKind>,
+    /// The status that begins (at one degree) as this one ends, worn off or cured: Raging is
+    /// followed by Exhausted. A chain never leads back to where it began.
+    pub follows: Option<StatusId>,
     /// The blows that cause it, if any.
     pub wound: Option<Wound>,
     /// The means that cure it (`bandage`): [`crate::World`]'s cure takes one of these.
@@ -290,15 +348,49 @@ pub(super) fn parse(file: &str, text: &str) -> Result<(Healing, Vec<StatusDef>),
         )));
     }
     let mut list: Vec<StatusDef> = Vec::new();
+    let mut follows = Vec::new();
     for spec in parsed.status {
         let id = spec.id.clone();
         if list.iter().any(|s| s.id == id) {
             return Err(err(format!("duplicate status id `{id}`")));
         }
+        follows.push(spec.follows.clone());
         let def = resolve(spec).map_err(|m| err(format!("status `{id}`: {m}")))?;
         list.push(def);
     }
+    resolve_follows(&mut list, &follows).map_err(err)?;
     Ok((parsed.healing, list))
+}
+
+/// Resolves each status's `follows` (`names`, in list order) to the status it names, which may
+/// come later in the file; none may lead back to itself, at once or down a chain.
+fn resolve_follows(list: &mut [StatusDef], names: &[Option<String>]) -> Result<(), String> {
+    for (i, name) in names.iter().enumerate() {
+        let Some(name) = name else {
+            continue;
+        };
+        let at = (list.iter().position(|s| s.id == *name))
+            .ok_or_else(|| format!("status `{}`: follows: unknown status `{name}`", list[i].id))?;
+        let id = u16::try_from(at).map_err(|_| "too many statuses".to_string())?;
+        list[i].follows = Some(StatusId(id));
+    }
+    for (i, def) in list.iter().enumerate() {
+        let mut next = def.follows;
+        // A chain that loops without coming back here is found from one of its own.
+        for _ in 0..list.len() {
+            let Some(status) = next else {
+                break;
+            };
+            if usize::from(status.0) == i {
+                return Err(format!(
+                    "status `{}`: follows: it leads back to itself",
+                    def.id
+                ));
+            }
+            next = list[usize::from(status.0)].follows;
+        }
+    }
+    Ok(())
 }
 
 fn resolve(spec: StatusSpec) -> Result<StatusDef, String> {
@@ -324,6 +416,32 @@ fn resolve(spec: StatusSpec) -> Result<StatusDef, String> {
         return Err(format!("regen must be 0 to {MAX_REGEN} (percent)"));
     }
     let penalty = spec.penalty.map(|p| penalty(p, spec.max)).transpose()?;
+    let c = spec.combat;
+    for (what, value) in [
+        ("to_hit", c.to_hit),
+        ("damage", c.damage),
+        ("dodge", c.dodge),
+        ("parry", c.parry),
+    ] {
+        if !BONUS.contains(&value) {
+            return Err(format!(
+                "combat: {what} {value} is out of range ({} to {})",
+                BONUS.start(),
+                BONUS.end()
+            ));
+        }
+    }
+    if !COST_PERCENT.contains(&spec.cost) {
+        return Err(format!(
+            "cost must be {} to {} (percent: statuses slow, never hasten)",
+            COST_PERCENT.start(),
+            COST_PERCENT.end()
+        ));
+    }
+    let blocks = blocks(&spec.blocks)?;
+    if spec.follows.is_some() && spec.eases.is_none() && spec.cured_by.is_empty() {
+        return Err("follows: it never ends (it has no `eases` and no `cured_by`)".into());
+    }
     if let Some(w) = spec.wound
         && (w.big_hit > spec.max || w.critical > spec.max || w.big_hit + w.critical == 0)
     {
@@ -346,6 +464,10 @@ fn resolve(spec: StatusSpec) -> Result<StatusDef, String> {
         eases: spec.eases,
         regen: spec.regen,
         penalty,
+        combat: spec.combat,
+        cost: spec.cost,
+        blocks,
+        follows: None,
         wound: spec.wound,
         cured_by: spec.cured_by,
         start: spec.start,
@@ -353,6 +475,21 @@ fn resolve(spec: StatusSpec) -> Result<StatusDef, String> {
         dies: spec.dies,
         death: spec.death,
     })
+}
+
+/// The action kinds `ids` names (`["read"]`), each once.
+fn blocks(ids: &[String]) -> Result<Vec<ActionKind>, String> {
+    let mut kinds = Vec::new();
+    for id in ids {
+        let kind = (ActionKind::ALL.iter().copied())
+            .find(|k| k.id() == id)
+            .ok_or_else(|| format!("blocks: unknown action `{id}` (an id in actions.toml)"))?;
+        if kinds.contains(&kind) {
+            return Err(format!("blocks: `{id}` is listed twice"));
+        }
+        kinds.push(kind);
+    }
+    Ok(kinds)
 }
 
 fn penalty(spec: PenaltySpec, max: u16) -> Result<Penalty, String> {
@@ -491,6 +628,94 @@ mod tests {
             let e = parse("status.toml", &text).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
+    }
+
+    const RAGING: &str = "[[status]]\nid = \"raging\"\nname = \"Raging\"\nmax = 1\neases = 300\n\
+                          penalty = { from = 1, strength = 2, intelligence = -2 }\n\
+                          combat = { to_hit = 1, dodge = -2 }\ncost = 150\n\
+                          blocks = [\"read\", \"cast\"]\nfollows = \"exhausted\"\n";
+    const EXHAUSTED: &str =
+        "[[status]]\nid = \"exhausted\"\nname = \"Exhausted\"\nmax = 1\neases = 600\n";
+
+    #[test]
+    fn buffs_and_cooldowns_parse() {
+        // Raging follows into a status further down the file.
+        let text = format!("{BLEEDING}{RAGING}{EXHAUSTED}");
+        let (_, list) = parse("status.toml", &text).expect("valid");
+        let (bleeding, raging, exhausted) = (&list[0], &list[1], &list[2]);
+        // Left out: nothing.
+        assert!(bleeding.combat.is_none());
+        assert_eq!(
+            (bleeding.cost, bleeding.blocks.len(), bleeding.follows),
+            (100, 0, None)
+        );
+        assert_eq!(
+            raging.combat,
+            CombatBonus {
+                to_hit: 1,
+                damage: 0,
+                dodge: -2,
+                parry: 0
+            }
+        );
+        assert_eq!(raging.cost, 150);
+        assert_eq!(raging.blocks, [ActionKind::Read, ActionKind::Cast]);
+        assert_eq!(raging.follows, Some(StatusId(2)));
+        // A penalty may raise a stat.
+        let by = raging.penalty_at(1).expect("from 1");
+        assert_eq!((by[Stat::Strength], by[Stat::Intelligence]), (2, -2));
+        // A cooldown: it eases away, and ticks never.
+        assert_eq!((exhausted.eases, exhausted.tick), (Some(600), None));
+    }
+
+    #[test]
+    fn bad_buffs_are_refused() {
+        let raging = |from: &str, to: &str| format!("{}{EXHAUSTED}", RAGING.replace(from, to));
+        for (text, why) in [
+            (
+                raging("to_hit = 1", "to_hit = 21"),
+                "combat: to_hit 21 is out of range (-20 to 20)",
+            ),
+            (raging("dodge = -2", "luck = 1"), "unknown field `luck`"),
+            (
+                raging("cost = 150", "cost = 99"),
+                "cost must be 100 to 1000",
+            ),
+            (
+                raging("cost = 150", "cost = 1001"),
+                "cost must be 100 to 1000",
+            ),
+            (
+                raging("\"cast\"", "\"sleep\""),
+                "blocks: unknown action `sleep`",
+            ),
+            (
+                raging("\"cast\"", "\"read\""),
+                "blocks: `read` is listed twice",
+            ),
+            (
+                raging("\"exhausted\"", "\"calm\""),
+                "status `raging`: follows: unknown status `calm`",
+            ),
+            (
+                raging("\"exhausted\"", "\"raging\""),
+                "status `raging`: follows: it leads back to itself",
+            ),
+            (
+                format!("{RAGING}{EXHAUSTED}follows = \"raging\"\n"),
+                "status `raging`: follows: it leads back to itself",
+            ),
+            (
+                raging("eases = 300\n", ""),
+                "follows: it never ends (it has no `eases` and no `cured_by`)",
+            ),
+        ] {
+            let e = parse("status.toml", &text).unwrap_err();
+            assert!(e.message.contains(why), "{why}: {}", e.message);
+        }
+        // One that is cured ends too, so something may follow it.
+        let cured = raging("eases = 300\n", "cured_by = [\"calm\"]\n");
+        assert!(parse("status.toml", &cured).is_ok());
     }
 
     #[test]

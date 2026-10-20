@@ -37,6 +37,8 @@
 //!   ("The giant rat bleeds to death."); look mode shows those that show.
 //! - **Cures**: [`World::cure`] ends what a named means cures (`cured_by`: a bandage stops the
 //!   bleeding; diseases list their own), for the Heal skill (#132), potions, and priests to use.
+//! - **Endings**: a status that ends, worn off or cured, may be followed by another (`follows`;
+//!   buffs, hexes, and cooldowns are `world/buff.rs`).
 
 use super::fight::Harm;
 use super::{ActorId, Spent, World, disease, rot};
@@ -46,7 +48,7 @@ use crate::content::Effect as ItemEffect;
 use crate::content::{Affliction, Content, DiseaseId, OnHit, StatusId};
 use crate::hunger::Hunger;
 use crate::stats::Stat;
-use crate::status::Added;
+use crate::status::{Added, Effect};
 use crate::time::{Duration, GameTime};
 
 /// What happened to an actor at one moment while time passed.
@@ -86,12 +88,12 @@ impl World {
     }
 
     /// Cures actor `id` with `cure`, a means named in the statuses' and diseases' `cured_by`
-    /// (`bandage`, `remove_disease`): every status of its that the means cures ends, and every
-    /// disease (showing or not). Returns whether any did. Eating a remedy applies its cures
-    /// (`world/eat.rs`); the Heal skill's bandaging (#132), potions, and priests will too.
+    /// (`bandage`, `remove_disease`): every status of its that the means cures ends (and what
+    /// `follows` it begins), and every disease (showing or not). Returns whether any did. Eating
+    /// a remedy applies its cures (`world/eat.rs`); the Heal skill's bandaging (#132), potions,
+    /// and priests will too.
     pub(crate) fn cure(&mut self, id: ActorId, cure: &str, events: &mut Vec<Event>) -> bool {
         let content = self.content.clone();
-        let player = self.state.player;
         let Some(actor) = self.state.actors.get_mut(&id) else {
             return false;
         };
@@ -104,16 +106,13 @@ impl World {
             .map(|i| i.disease)
             .filter(|&d| cures(&content.disease(d).cured_by))
             .collect();
+        let ended: Vec<Effect> = (cured.iter())
+            .filter_map(|&status| actor.effects.get(status).copied())
+            .collect();
         for &status in &cured {
             actor.effects.remove(status);
-            if id == player {
-                events.push(Event::Status {
-                    actor: id,
-                    status,
-                    began: false,
-                });
-            }
         }
+        self.ended(id, &ended, events);
         for &disease in &healed {
             self.end_disease(id, disease, events);
         }
@@ -325,13 +324,7 @@ impl World {
             if starved > 0 && self.hurt(id, starved, Harm::Starving(when), events) {
                 return;
             }
-            if id == self.state.player {
-                events.extend(spent.into_iter().map(|status| Event::Status {
-                    actor: id,
-                    status,
-                    began: false,
-                }));
-            }
+            self.ended(id, &spent, events);
             if let Some(before) = hunger {
                 self.hunger_news(before);
             }
