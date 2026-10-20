@@ -37,7 +37,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   stands) asks first, in the dialog, ADOM-like: `Really step onto the fireball trap?` with
   `Step onto it` (accept: the move as usual, replay text `move:DIR`: the rules never ask) and
   `Stay back` (cancel, selected first). Asking is the interface's: the rules step onto whatever
-  they are told to.
+  they are told to. A door's trap is never stepped on (§8 "Trapped doors"), so a door never asks:
+  walking through a trapped doorway sets nothing off, and walking into a trapped closed door opens
+  it as `o` does.
 - **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
   `--record`, or `--capture` name what to run): Continue (only if a save exists), New run
   (scenario list from content, optional seed, then character creation), Settings, Controls,

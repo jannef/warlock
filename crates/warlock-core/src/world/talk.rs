@@ -433,7 +433,7 @@ impl World {
         self.after_tread(id, to, footing, events);
         self.make_noise(id, Act::Step(to));
         self.say(format!("You swap places with {who}."));
-        let extra = self.tread_price(id, footing) + self.spring_trap(to, id, events);
+        let extra = self.tread_price(id, footing) + self.step_onto_trap(to, id, events);
         if let Some(actor) = self.state.actors.get_mut(&id) {
             actor.energy = actor.energy.saturating_sub(extra);
         }

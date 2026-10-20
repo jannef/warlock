@@ -77,10 +77,11 @@ enum Route {
 enum Stepped {
     /// Moved, for this energy price.
     Moved(i64),
-    /// Opened the closed door in the way instead.
-    Opened,
-    /// Unlocked the locked door in the way with its key, and opened it.
-    Unlocked,
+    /// Opened the closed door in the way instead, for this energy price (priced before the door
+    /// swings: a trap on it may kill the opener).
+    Opened(i64),
+    /// Unlocked the locked door in the way with its key, and opened it, for this energy price.
+    Unlocked(i64),
     Blocked,
 }
 
@@ -126,11 +127,7 @@ impl World {
     fn step_or_wait(&mut self, id: ActorId, dir: Dir, events: &mut Vec<Event>) -> (Stepped, i64) {
         let stepped = self.creature_steps(id, dir, events);
         let price = match stepped {
-            Stepped::Moved(price) => price,
-            Stepped::Opened => self.price_of(id, ActionKind::OpenDoor),
-            Stepped::Unlocked => {
-                self.price_of(id, ActionKind::Unlock) + self.price_of(id, ActionKind::OpenDoor)
-            }
+            Stepped::Moved(price) | Stepped::Opened(price) | Stepped::Unlocked(price) => price,
             Stepped::Blocked => self.price_of(id, ActionKind::Wait),
         };
         (stepped, price)
@@ -381,7 +378,8 @@ impl World {
 
     /// Creature `id` steps in `dir`: onto a walkable cell no one stands on, or, for a creature
     /// that opens doors, opening a closed door there (unlocking it first if it is locked and the
-    /// creature carries a key that fits; else it is blocked). Either makes noise. An overloaded
+    /// creature carries a key that fits; else it is blocked), which sets off a trap on the door
+    /// ([`World::swing_open`]). Either makes noise. An overloaded
     /// creature opens doors but does not step. A creature hostile to the player does not step
     /// (or open a door) into a sanctuary ([`World::shuns`]): it waits.
     fn creature_steps(&mut self, id: ActorId, dir: Dir, events: &mut Vec<Event>) -> Stepped {
@@ -395,9 +393,12 @@ impl World {
             return Stepped::Blocked;
         }
         if def.is_closed_door() && self.content.creature(actor.creature).opens_doors {
+            let open = self.price_of(id, ActionKind::OpenDoor);
             let stepped = match level.locks.get(&to) {
-                None => Stepped::Opened,
-                Some(lock) if actor.key_for(&self.content, lock).is_some() => Stepped::Unlocked,
+                None => Stepped::Opened(open),
+                Some(lock) if actor.key_for(&self.content, lock).is_some() => {
+                    Stepped::Unlocked(self.price_of(id, ActionKind::Unlock) + open)
+                }
                 Some(_) => return Stepped::Blocked,
             };
             self.state.current_mut().locks.remove(&to);
@@ -426,7 +427,7 @@ impl World {
         self.make_step_noise(id, to, fleeing);
         // It knows nothing of traps (spec §8 "Traps"): one there goes off; a pit costs it its
         // next action.
-        let climb = self.spring_trap(to, id, events);
+        let climb = self.step_onto_trap(to, id, events);
         Stepped::Moved(price + climb)
     }
 
