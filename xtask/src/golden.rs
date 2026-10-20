@@ -22,6 +22,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use warlock_core::action::parse_actions;
+use warlock_core::character::CharacterSpec;
 use warlock_core::content::Content;
 use warlock_core::replay::Replay;
 use warlock_core::{Action, Event, World};
@@ -129,6 +130,8 @@ struct Entry {
     name: String,
     scenario: Option<String>,
     seed: Option<u64>,
+    /// The character to play (`human,female,thief`), else the scenario's.
+    character: Option<String>,
     /// Text actions (`move:N*3 open:E wait`; `*N` repeats an action); created into a replay.
     actions: Option<String>,
     /// An existing replay file, relative to `tests/golden/`.
@@ -173,8 +176,13 @@ fn make_replay(
         return Ok(golden_dir.join(replay));
     }
     let scenario = entry.scenario.as_deref().unwrap_or("showcase");
-    let mut world = World::new(content.clone(), scenario, entry.seed)
-        .map_err(|e| format!("{}: {e}", entry.name))?;
+    let character = (entry.character.as_deref())
+        .map(str::parse::<CharacterSpec>)
+        .transpose()
+        .map_err(|e| format!("{}: character: {e}", entry.name))?;
+    let mut world =
+        World::with_character(content.clone(), scenario, entry.seed, character.as_ref())
+            .map_err(|e| format!("{}: {e}", entry.name))?;
     let mut replay = Replay::new(&world);
     let text = entry.actions.as_deref().unwrap_or("");
     let actions = parse_actions(text).map_err(|e| format!("{}: {e}", entry.name))?;

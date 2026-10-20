@@ -108,6 +108,9 @@ pub enum KeyCommand {
     /// Bash with the shield held, in a direction (asked for in the message line). An ability
     /// (`warlock_core::ability`): unbound by default, as the abilities menu lists it (#156).
     Bash,
+    /// Steal from someone in a direction (asked for in the message line; spec §8 "Stealing").
+    /// An ability: unbound by default, as the abilities menu lists it.
+    Steal,
     /// While aiming: the cursor to the next creature in view (with Shift, the one before).
     NextTarget,
     /// While aiming: the cursor to the creature in view before (no default key: Shift with
@@ -306,6 +309,7 @@ impl KeyCommand {
             KeyCommand::Abilities => "Abilities",
             KeyCommand::RepeatAbility => "Use the last ability again",
             KeyCommand::Bash => "Bash with your shield",
+            KeyCommand::Steal => "Steal",
             KeyCommand::NextTarget => "Next target (Shift: previous)",
             KeyCommand::PrevTarget => "Previous target",
             KeyCommand::Loose => "Shoot or throw",
@@ -1027,6 +1031,10 @@ impl Gameplay<'_> {
                 open = Some(ScreenAction::UseAbility(Ability::ShieldBash));
                 InputMode::Normal
             }
+            (InputMode::Normal, KeyCommand::Steal) => {
+                open = Some(ScreenAction::UseAbility(Ability::Steal));
+                InputMode::Normal
+            }
             // The one creature in view next to the player, at once; else ask which way.
             (InputMode::Normal, KeyCommand::Chat) => match chat_partner(&game.world.perception()) {
                 Some(dir) => {
@@ -1349,6 +1357,10 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Throw), ["T"]);
         assert_eq!(keys(&b, KeyCommand::WeaponSkills), ["W"]);
         assert!(keys(&b, KeyCommand::Bash).is_empty(), "an ability: unbound");
+        assert!(
+            keys(&b, KeyCommand::Steal).is_empty(),
+            "an ability: unbound"
+        );
         assert_eq!(keys(&b, KeyCommand::Abilities), ["a"]);
         assert_eq!(keys(&b, KeyCommand::RepeatAbility), ["A"]);
         assert_eq!(keys(&b, KeyCommand::MoreAggressive), ["+"]);

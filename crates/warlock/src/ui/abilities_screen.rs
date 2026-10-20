@@ -277,15 +277,16 @@ mod tests {
         for expected in [
             " Abilities ",
             "Skills",
-            "> a  Appraise        not usable yet",
-            "  d  Steal           not usable yet",
+            "  a  Appraise        not usable yet",
+            "> d  Steal           in a direction",
             "Weapon skills",
             "  e  Shield bash     you hold no shield",
             "a-e or Enter use   Esc close",
         ] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }
-        // Nothing can be used: the cursor stays on the first row.
+        // The cursor starts on the first that can be used: stealing, a skill's use.
+        assert_eq!(screen.selected(), Some(Ability::Steal));
         assert_eq!(screen.selected().map(|a| a.source()), Some(Source::Skill));
     }
 
@@ -302,9 +303,12 @@ mod tests {
         screen.handle(&Press::nav(Nav::Down), &b);
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(!text.contains("you hold no shield."), "{text}");
-        // With a shield in hand it can be used, and the cursor starts on it.
+        // With a shield in hand it can be used; the cursor starts on the first that can be
+        // (stealing), and moves to it.
         let world = thief(true);
         let mut screen = AbilitiesScreen::new(Some(&world.perception()), None);
+        assert_eq!(screen.selected(), Some(Ability::Steal));
+        screen.handle(&Press::nav(Nav::Down), &b);
         assert_eq!(screen.selected(), Some(Ability::ShieldBash));
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(
@@ -319,6 +323,10 @@ mod tests {
         assert_eq!(
             screen.handle(&Press::nav(Nav::Enter), &b),
             ScreenAction::UseAbility(Ability::ShieldBash)
+        );
+        assert_eq!(
+            screen.handle(&Press::typed('d'), &b),
+            ScreenAction::UseAbility(Ability::Steal)
         );
         // `a` names the first row here, so it does not close the menu; Esc does.
         assert_eq!(screen.handle(&Press::typed('a'), &b), ScreenAction::Stay);
@@ -350,7 +358,7 @@ mod tests {
         };
         assert_eq!(none.handle(&a, &b), ScreenAction::Close);
         let world = thief(true);
-        let screen = AbilitiesScreen::new(Some(&world.perception()), None);
+        let screen = AbilitiesScreen::new(Some(&world.perception()), Some(Ability::ShieldBash));
         for (cols, rows) in [(48, 12), (30, 8), (5, 3), (0, 0)] {
             assert_eq!(drawn(&screen, cols, rows).len(), rows as usize);
         }

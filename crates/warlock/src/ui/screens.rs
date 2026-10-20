@@ -1696,6 +1696,37 @@ mod tests {
         assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
     }
 
+    #[test]
+    fn stealing_asks_for_a_direction_from_the_menu_or_its_own_key() {
+        // The showcase's thief can steal: `a` opens the menu on it (the first ability that can
+        // be used), Enter asks for a direction in the message line, and a direction steals.
+        let mut app = app(true);
+        frame(&mut app, &[(KeyCode::KeyA, "a"), ENTER]);
+        assert!(names(&app).is_empty());
+        assert_eq!(
+            app.world().resource::<InputMode>(),
+            &InputMode::Ability(Ability::Steal)
+        );
+        frame(&mut app, &[(KeyCode::KeyL, "l")]);
+        assert_eq!(actions(&app), [Action::Steal(Dir::E)]);
+        // Unbound by default; bound (here to `X`), it asks the same.
+        let mut app = self::app(true);
+        {
+            let mut bindings = app.world_mut().resource_mut::<Bindings>();
+            let steal = crate::input::KeyCommand::Steal;
+            assert!(bindings.keys_of(steal).is_empty());
+            let key = crate::input::KeyBinding::from_text("X").expect("a key");
+            bindings.0.push((key, steal));
+        }
+        frame(&mut app, &[(KeyCode::KeyX, "X")]);
+        assert_eq!(
+            app.world().resource::<InputMode>(),
+            &InputMode::Ability(Ability::Steal)
+        );
+        frame(&mut app, &[(KeyCode::KeyH, "h")]);
+        assert_eq!(actions(&app), [Action::Steal(Dir::W)]);
+    }
+
     /// A run of the showcase's thief with the storeroom's small shield in hand.
     fn with_a_shield() -> App {
         let content = content();
