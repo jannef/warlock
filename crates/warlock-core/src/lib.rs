@@ -49,8 +49,8 @@ pub mod weather;
 pub mod world;
 
 pub use action::{
-    Action, AttackKind, Breach, DiseaseNews, Event, Meal, MissileEnd, Outcome, Positions, Rest,
-    SpellShape,
+    Action, AttackKind, Breach, DiseaseNews, Event, Meal, MissileEnd, Outcome, Positions,
+    ReadTarget, Rest, SpellShape,
 };
 pub use geom::{Dir, Pos};
 pub use world::{World, WorldError, WorldState};

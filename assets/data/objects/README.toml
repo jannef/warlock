@@ -108,7 +108,7 @@
 #              gloves, boots, shield, ring, or amulet: the affixes it may roll
 #   level      the lowest item level (dungeon depth) loot holds it at; default 1
 #   frequency  how often loot holds it, relative to the rest; default 100, 0 never
-# Things without a kind are never magic and never loot.
+# Things without a kind are never magic, and never loot but for scrolls (below).
 #
 # Digging (spec §8 "Digging"; ready a tool in the Tool slot, then use it with `U`):
 #   dig        a digging tool's power (1 to 100): each turn of digging does power × (Strength +
@@ -133,6 +133,19 @@
 #   cures      a remedy (food only): what eating it cures, means that statuses and diseases name
 #              in their `cured_by` (status.toml, diseases.toml): `cures = ["remove_disease"]`
 #              ends every disease at once, shown or not (spec §8 "Diseases")
+# Scrolls (spec §8 "Scrolls"; read with `r`):
+#   [object.read]  what reading it does (never on things worn, wielded, eaten, shot, or thrown);
+#              reading takes the `read` action (actions.toml) and uses one up. `kind`:
+#     burst    a trap's burst (traps.toml has the fields: `spell`, `noun`, `verb`, `damage`,
+#              `radius`, `blast`, `heat` or `frost`, `noise`), aimed: it flies from the reader
+#              toward the cell aimed at, as far as its `range` (cells), and goes off on the first
+#              creature in its way, before a wall, or there; it may catch the reader
+#     bolt     a trap's bolt (`spell`, `noun`, `verb`, `damage`, `length`, `noise`), aimed: it
+#              runs from the reader through the cell aimed at and on, `length` cells or to a wall
+#     identify identifies one unidentified item the reader carries
+#   `message` (burst, bolt) is said as it is read. A scroll may have `level` and `frequency`, as
+#   base items do: it is loot, never magic.
+#
 # Corpses are not listed here: every creature that leaves one has its own (`kobold_corpse`), made
 # from creatures.toml and hunger.toml, and only creatures that die leave them.
 #

@@ -21,6 +21,7 @@
 - [Doors](doors.md)
 - [Special rooms](special-rooms.md)
 - [Objects and your pack](objects.md)
+  - [Scrolls](scrolls.md)
 - [Equipment](equipment.md)
   - [Magic items](magic-items.md)
 - [Burden](burden.md)

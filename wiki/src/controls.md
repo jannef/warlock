@@ -35,6 +35,7 @@ The in-game `?` screen is authoritative: it is generated from your current key b
 | Next / previous info page (wraps) | `Tab` / `Shift`+`Tab` |
 | Rest | `R` |
 | Eat | `E` |
+| Read a scroll | `r`, choose it, then aim a spell (see [Scrolls](scrolls.md)) |
 | Look around | `x` |
 | Shoot or throw what is in your Missile weapon slot | `t`, then aim (see below) |
 | Throw something from your pack | `T`, choose it, then aim |
@@ -165,6 +166,10 @@ controls screen.) Either puts a cursor on the map:
 - `Enter` (or `t` again) shoots or throws, `Esc` cancels. Doing it again later starts on the same
   target, so `t` `Enter` shoots it again. The aiming keys (next target, previous target, which has
   no key until you bind one, and shoot or throw) are their own group in Controls.
+
+A spell scroll you read (`r`, see [Scrolls](scrolls.md)) is aimed the same way: `Enter` or `r`
+reads it at the cursor. A lightning bolt runs through creatures, so only walls block its line;
+a fireball read so close that it may catch you asks first.
 
 See [Ranged combat](ranged.md).
 

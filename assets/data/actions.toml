@@ -45,6 +45,9 @@ ready = 1000
 # A turn of eating (spec §8 "Hunger"): a meal takes as many turns as the food says (`food` in
 # objects.toml; corpses by their creature's size, hunger.toml).
 eat = 1000
+# Reading a scroll (`r`; spec §8 "Scrolls"): casting the spell written on it, or identifying an
+# item. The scroll is used up.
+read = 1000
 # A turn of digging into a wall with a digging tool ready (spec §8 "Digging"): digging goes on
 # turn after turn until the wall gives way or something interrupts it.
 dig = 1000

@@ -8,7 +8,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Exile. A first pass: the lists and numbers are to be tuned after playtesting.
   - **Base items** are objects with a `kind` (§7): weapon, missile weapon (`launcher`),
     ammunition, body armour, helmet, cloak, gloves, boots, shield, ring, amulet. Only they are
-    loot or magic.
+    magic; they and scrolls (§8 "Scrolls", never magic) are loot.
   - **Rarity**: *normal* (no affixes), *magic* (a prefix, a suffix, or one of each; most have
     one), *rare* (up to three prefixes and three suffixes, usually three or four affixes in all,
     and a two-word name: a first word and a second for its kind, "Grim Bite"). Unique items
@@ -68,7 +68,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     most one affix of each effect (of each skill, for skill affixes).
   - **Loot** (`magic::loot::roll`): the item level is the depth (a branch level's depth, a
     hand-made level's `item_level`, 1 elsewhere). One roll draws, in order: the base (among
-    those with `level` at most the item level, by `frequency`); a stack's count (ammunition 8 to
+    the loot objects with `level` at most the item level, by `frequency`, sorted by id; scrolls
+    left out of loot that must be magic or better, and drawing no rarity: they are normal); a stack's count (ammunition 8 to
     20); the rarity (by weight, those below the grade asked for left out); how many affixes
     (magic: both by `magic.both`, else prefix or suffix evenly; rare: the count by weight, then
     how many are prefixes, evenly within at most three of each); each affix, prefixes first (by
@@ -86,3 +87,42 @@ developer notes (CLAUDE.md, `docs/dev/`).
     level's item level.
   - **Dev**: replay text `identify` / `identify:LETTERS` (`Action::Identify`, `F8` in dev
     builds: everything carried) identifies without time passing, recorded in replays.
+
+- **Scrolls** (`warlock-core/src/world/read.rs`, data `read` in `data/objects/` §7; M29, #150):
+  objects (`?`, the scrolls class, stackable, with a value) whose `read` says what reading one
+  does. They are **read** (`Action::Read { item, target }`, replay text `read:LETTER:X,Y` at a
+  cell or `read:LETTER:LETTER` on an inventory stack; `r`, §6 "Read"), which takes the `read`
+  action's time and uses one up; a reading that cannot be done is refused, takes no time, and
+  keeps the scroll: nothing to read on it ("You cannot read a dagger."), no target or the wrong
+  kind ("Read it at what?", "Read it on what?"), the player's own cell ("You cannot aim at
+  yourself."), out of reach ("That is out of range."), a spell on the overworld, or a stack
+  there is nothing to learn about ("You already know what a dagger is."). Scroll types are
+  known on sight; ADOM-style unknown labels ("a scroll labelled XYZZY") may come later.
+  - **Spell scrolls** cast a trap's spell (§8 "Traps") with the same rules, data, and code
+    (`World::cast_burst`, `World::cast_bolt`), aimed by the reader (§6 "Targeting"): the scroll
+    of **fireball** and of **frost** a burst (the fireball and frost traps': 3d6 and 2d6 in
+    radius 2, the fireball breaking earth and stone and melting ice, the frost freezing water to
+    10 cm), which flies from the reader along the line through the cell aimed at (the line a
+    missile flies, `Pos::ray`) as far as its `range` (10) and goes off on the first cell an actor
+    stands on, before the first opaque cell (the reader's own cell when that is the next), or
+    on the cell aimed at, so it may catch the reader; the scroll of **lightning** a bolt (4d6),
+    which runs from the reader along that line and on, `length` (12) cells or to the first
+    opaque cell, striking everyone on it but the reader. Its effect is `Event::Spell` from the
+    reader (a burst flies to its center first, §4.8), its noise (`noise` in data: an explosion,
+    thunder) is made where it goes off (a burst's center, the reader for a bolt) and heard by
+    everyone in earshot, like a trap's. Unlike a trap's, its blows are the reader's: an
+    `Event::Attacked` (a spell, a hit) for each actor reached, blood, damage (no roll to hit),
+    and the wound's statuses, caused by the reader; so its kills earn the reader their
+    experience (§8 "Experience") and count for their quests, and a shopkeeper it reaches turns on
+    them (§7 "Shops"). A scroll that kills its reader is what killed them (`Death::cause`,
+    "Killed by their own scroll of fireball"). Messages, said at once by what the player sees:
+    "You read the scroll of fireball.", its `message` ("A fireball streaks from the scroll and
+    explodes!"), then its blows in its `noun` and `verb` and combat's words ("The fireball burns
+    the kobold.") and deaths ("The kobold dies.").
+  - **The scroll of identify** identifies one unidentified stack the player carries
+    (`World::identify`: "This is a Sharp dagger of the Lynx!"); a stronger "identify all" can
+    come later.
+  - **Where**: loot (by `level` and `frequency`, never magic), general stores' stock (they sell
+    and buy the scrolls class, §7 "Shops"), and the trap hall beside its arrival (two of each
+    spell, a scroll of identify, and an unidentified dagger). The showcase has none. Later:
+    Spellcraft, Decipher Script, and Use Magic Device (§8 "Skills") may change reading.

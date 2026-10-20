@@ -72,6 +72,8 @@ pub enum ActionKind {
     Ready,
     /// A turn of eating (spec §8 "Hunger"): a meal takes as many as the food's `turns`.
     Eat,
+    /// Reading a scroll (spec §8 "Scrolls"): casting its spell, or identifying an item.
+    Read,
     /// A turn of digging into a wall with a digging tool (spec §8 "Digging"): a dig takes many
     /// of them.
     Dig,
@@ -107,6 +109,7 @@ impl ActionKind {
         ActionKind::BodyArmor,
         ActionKind::Ready,
         ActionKind::Eat,
+        ActionKind::Read,
         ActionKind::Dig,
         ActionKind::Search,
         ActionKind::Chat,
@@ -136,6 +139,7 @@ impl ActionKind {
             ActionKind::BodyArmor => "body_armor",
             ActionKind::Ready => "ready",
             ActionKind::Eat => "eat",
+            ActionKind::Read => "read",
             ActionKind::Dig => "dig",
             ActionKind::Search => "search",
             ActionKind::Chat => "chat",

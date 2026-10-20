@@ -21,11 +21,16 @@
 //! The eat screen (`E`, spec §8 "Hunger") lists what can be eaten: first what lies here
 //! ("lying here"; the cursor starts on it, as ADOM asks about the floor first), then what the
 //! player carries. A letter or Enter on the `>` row eats it.
+//!
+//! The read screen (`r`, spec §8 "Scrolls") lists the scrolls the player carries: choosing a
+//! spell scroll aims it (`ui::target`), choosing the scroll of identify replaces the list with
+//! the unidentified stacks carried, and choosing one of those reads the scroll on it.
 
 use super::character_screen::{fit_joined, thresholds};
 use super::menu::{Hints, Nav, Panel, Press};
 use super::paged_list::{PagedList, Row, draw_header};
 use super::screens::ScreenAction;
+use super::target::AimKind;
 use super::{ACCENT, TEXT, TEXT_DIM, rarity_color};
 use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
@@ -35,7 +40,7 @@ use warlock_core::content::Rarity;
 use warlock_core::equipment;
 use warlock_core::object::{Stack, Weight, format_weight};
 use warlock_core::perception::PerceptionView;
-use warlock_core::{Action, Meal, Positions};
+use warlock_core::{Action, Meal, Positions, ReadTarget};
 
 /// Which list the screen shows, and what choosing does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -50,6 +55,11 @@ pub enum ObjectList {
     Throw,
     /// Food lying here, then food in the pack: choose one to eat.
     Eat,
+    /// The scrolls in the pack: choose one to read.
+    Read,
+    /// The unidentified stacks in the pack: choose one to read the scroll of identify at this
+    /// position on.
+    Identify(usize),
 }
 
 impl ObjectList {
@@ -60,6 +70,8 @@ impl ObjectList {
             ObjectList::Drop => " Drop ",
             ObjectList::Throw => " Throw ",
             ObjectList::Eat => " Eat ",
+            ObjectList::Read => " Read ",
+            ObjectList::Identify(_) => " Identify ",
         }
     }
 
@@ -69,6 +81,8 @@ impl ObjectList {
             ObjectList::PickUp => "There is nothing here.",
             ObjectList::Throw => "You have nothing to throw.",
             ObjectList::Eat => "You have nothing to eat.",
+            ObjectList::Read => "You have nothing to read.",
+            ObjectList::Identify(_) => "You carry nothing unidentified.",
         }
     }
 
@@ -77,13 +91,21 @@ impl ObjectList {
     fn width(self) -> i32 {
         match self {
             ObjectList::Inventory => 72,
-            ObjectList::PickUp | ObjectList::Drop | ObjectList::Throw | ObjectList::Eat => 60,
+            ObjectList::PickUp
+            | ObjectList::Drop
+            | ObjectList::Throw
+            | ObjectList::Eat
+            | ObjectList::Read
+            | ObjectList::Identify(_) => 60,
         }
     }
 
     /// Whether choosing is one pick (a letter or Enter) rather than marking several.
     fn picks_one(self) -> bool {
-        matches!(self, ObjectList::Throw | ObjectList::Eat)
+        matches!(
+            self,
+            ObjectList::Throw | ObjectList::Eat | ObjectList::Read | ObjectList::Identify(_)
+        )
     }
 }
 
@@ -115,6 +137,8 @@ struct Entry {
     weight: u64,
     /// Its name's color: by its rarity (spec §8 "Magic items").
     rarity: Rarity,
+    /// A scroll read at a cell (a spell): choosing it to read aims it.
+    aimed: bool,
 }
 
 #[derive(Debug)]
@@ -152,6 +176,7 @@ impl ObjectScreen {
         let content = view.content();
         let (pile, pack) = (view.objects(view.viewer()), view.inventory());
         let edible = |s: &Stack| content.object(s.object).food.is_some();
+        let reading = |s: &Stack| content.object(s.object).read.as_ref();
         let items: Vec<Item> = match list {
             ObjectList::PickUp => (0..pile.len()).map(Item::Floor).collect(),
             ObjectList::Inventory | ObjectList::Drop => (0..pack.len()).map(Item::Pack).collect(),
@@ -168,6 +193,14 @@ impl ObjectScreen {
                     .map(Item::Pack),
             )
             .collect(),
+            ObjectList::Read => (0..pack.len())
+                .filter(|&i| reading(&pack[i]).is_some())
+                .map(Item::Pack)
+                .collect(),
+            ObjectList::Identify(_) => (0..pack.len())
+                .filter(|&i| !pack[i].is_identified())
+                .map(Item::Pack)
+                .collect(),
         };
         let unpaid = view.unpaid();
         let entries = (items.into_iter())
@@ -202,6 +235,7 @@ impl ObjectScreen {
                     mark: (!marks.is_empty()).then(|| marks.join(") (")),
                     weight: s.weight(content),
                     rarity: s.rarity(),
+                    aimed: reading(s).is_some_and(|r| r.range().is_some()),
                 };
                 (view.item_class(s), entry)
             })
@@ -216,12 +250,24 @@ impl ObjectScreen {
         }
     }
 
-    /// What choosing `item` does on a screen of one pick: aim it to throw, or eat it.
-    fn pick(&self, item: Item) -> ScreenAction {
+    /// What choosing `item` does on a screen of one pick: aim it to throw, eat it, aim the
+    /// spell scroll to read it, pick what to read the scroll of identify on (which remembers
+    /// the scroll), or read that scroll on it.
+    fn pick(&mut self, item: Item) -> ScreenAction {
+        let aimed = self.entries.iter().any(|e| e.item == item && e.aimed);
         match (self.list, item) {
             (ObjectList::Eat, Item::Floor(i)) => ScreenAction::Act(Action::Eat(Meal::Floor(i))),
             (ObjectList::Eat, Item::Pack(i)) => ScreenAction::Act(Action::Eat(Meal::Pack(i))),
-            (_, item) => ScreenAction::Aim(item.position()),
+            (ObjectList::Read, item) if aimed => ScreenAction::Aim(AimKind::Read(item.position())),
+            (ObjectList::Read, item) => {
+                self.looked = Some(item.position());
+                ScreenAction::Replace(super::ScreenName::Identify)
+            }
+            (ObjectList::Identify(scroll), item) => ScreenAction::Act(Action::Read {
+                item: scroll,
+                target: Some(ReadTarget::Item(item.position())),
+            }),
+            (_, item) => ScreenAction::Aim(AimKind::Throw(item.position())),
         }
     }
 
@@ -276,8 +322,8 @@ impl ObjectScreen {
             match press.nav {
                 _ if letter.is_some() => {}
                 Nav::Enter => {
-                    if let Some(entry) = self.entries.selected() {
-                        return self.pick(entry.item);
+                    if let Some(item) = self.entries.selected().map(|e| e.item) {
+                        return self.pick(item);
                     }
                 }
                 nav => {
@@ -314,7 +360,9 @@ impl ObjectScreen {
                     ObjectList::Drop
                     | ObjectList::Inventory
                     | ObjectList::Throw
-                    | ObjectList::Eat => Action::Drop(chosen),
+                    | ObjectList::Eat
+                    | ObjectList::Read
+                    | ObjectList::Identify(_) => Action::Drop(chosen),
                 });
             }
             nav => {
@@ -486,6 +534,8 @@ impl ObjectScreen {
             }
             ObjectList::Eat => format!("{}   {page}Esc cancel", either("eat")),
             ObjectList::Throw => format!("{}   {page}Esc cancel", either("choose")),
+            ObjectList::Read => format!("{}   {page}Esc cancel", either("read")),
+            ObjectList::Identify(_) => format!("{}   {page}Esc cancel", either("identify")),
             ObjectList::PickUp | ObjectList::Drop => {
                 let verb = if self.list == ObjectList::PickUp {
                     "pick up"
@@ -612,6 +662,79 @@ mod tests {
         );
     }
 
+    /// The trap hall's scrolls and unknown dagger picked up: a dagger (magic, unidentified), b
+    /// fireball, c lightning, d frost, e identify.
+    fn with_scrolls() -> World {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let mut world = World::new(content, "traps", None).expect("world");
+        world.apply(&Action::Move(Dir::E));
+        world.apply(&Action::PickUp(Positions::default()));
+        world
+    }
+
+    #[test]
+    fn the_read_choice_aims_spells_and_asks_what_to_identify() {
+        let world = with_scrolls();
+        let b = Bindings::default();
+        let mut screen = ObjectScreen::new(ObjectList::Read, Some(&world.perception()));
+        let names: Vec<&str> = screen.entries.iter().map(|e| e.name.as_str()).collect();
+        assert_eq!(
+            names,
+            [
+                "2 scrolls of fireball",
+                "2 scrolls of lightning",
+                "2 scrolls of frost",
+                "a scroll of identify"
+            ],
+            "no dagger"
+        );
+        let mut console = Console::default();
+        console.resize(80, 24);
+        screen.draw(&mut console, &b);
+        let shown = text(&console);
+        assert!(shown.iter().any(|l| l.contains("│ Scrolls")), "{shown:#?}");
+        assert!(
+            shown
+                .iter()
+                .any(|l| l.contains("a - ? 2 scrolls of fireball"))
+        );
+        assert!(
+            shown
+                .iter()
+                .any(|l| l.contains("a-d or Enter read   Esc cancel"))
+        );
+        // A spell scroll is aimed; the scroll of identify asks what to read it on, in its place.
+        assert_eq!(
+            screen.handle(&typed('b'), &b),
+            ScreenAction::Aim(AimKind::Read(2))
+        );
+        assert_eq!(
+            screen.handle(&typed('d'), &b),
+            ScreenAction::Replace(super::super::ScreenName::Identify)
+        );
+        assert_eq!(screen.looked(), Some(4));
+        // What it is read on: the unidentified stacks only.
+        let mut screen = ObjectScreen::new(ObjectList::Identify(4), Some(&world.perception()));
+        let names: Vec<&str> = screen.entries.iter().map(|e| e.name.as_str()).collect();
+        assert_eq!(names, ["a dagger (magic)"]);
+        assert_eq!(
+            screen.handle(&typed('a'), &b),
+            ScreenAction::Act(Action::Read {
+                item: 4,
+                target: Some(ReadTarget::Item(0))
+            })
+        );
+        // Nothing to read: it says so.
+        let empty = on_the_pile();
+        let screen = ObjectScreen::new(ObjectList::Read, Some(&empty.perception()));
+        screen.draw(&mut console, &b);
+        assert!(
+            text(&console)
+                .iter()
+                .any(|l| l.contains("You have nothing to read."))
+        );
+    }
+
     #[test]
     fn the_throw_choice_lists_throwing_weapons_lettered_by_page() {
         let mut world = on_the_pile();
@@ -629,10 +752,13 @@ mod tests {
         screen.draw(&mut console, &b);
         assert!(text(&console).iter().any(|l| l.contains("a - ) a dagger")));
         assert_eq!(screen.handle(&typed('b'), &b), ScreenAction::Stay);
-        assert_eq!(screen.handle(&typed('a'), &b), ScreenAction::Aim(1));
+        assert_eq!(
+            screen.handle(&typed('a'), &b),
+            ScreenAction::Aim(AimKind::Throw(1))
+        );
         assert_eq!(
             screen.handle(&Press::nav(Nav::Enter), &b),
-            ScreenAction::Aim(1)
+            ScreenAction::Aim(AimKind::Throw(1))
         );
         // Nothing to throw: it says so, and Enter or Esc closes it.
         let empty = on_the_pile();

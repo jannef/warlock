@@ -218,7 +218,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   rations (1500, 4, 30 and 60), loaves of bread (800, 3, 5 and 10), angelica roots (20, 1, 30
   and 60). A remedy also has `cures`, the means it
   applies as it is eaten (names some status or disease lists in its `cured_by`, else a content
-  error; food only): the angelica root `cures = ["remove_disease"]` (§8 "Diseases"). **Corpses** are objects too, one made for every creature type
+  error; food only): the angelica root `cures = ["remove_disease"]` (§8 "Diseases"). A
+  **scroll** (§8 "Scrolls") has `read`, what reading it does (never on things worn, wielded,
+  eaten, shot, or thrown): `kind = "burst"` or `"bolt"`, a trap's spell with a trap's fields
+  (`spell`, an effect of its shape in `data/effects.toml`; `noun`, `verb`, `damage`; a burst's
+  `radius`, `blast`, `heat` or `frost`, and `range`, how far it flies, 1 to the view radius; a
+  bolt's `length`; an optional `noise` and `message`), or `kind = "identify"`; with `read` an
+  object may have `level` and `frequency`, as base items do, and is loot (never magic): the
+  scrolls of fireball (item level 3), lightning (2), frost, and identify. **Corpses** are objects too, one made for every creature type
   that leaves one (not the player) when content loads, after the objects of the file in creature
   order, with the id `<creature>_corpse`: "kobold corpse", `%` in the creature's color, made of
   the corpses' material (`data/hunger.toml`), weighing the creature's weight, not stackable, and

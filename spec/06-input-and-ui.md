@@ -40,6 +40,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   they are told to. A door's trap is never stepped on (§8 "Trapped doors"), so a door never asks:
   walking through a trapped doorway sets nothing off, and walking into a trapped closed door opens
   it as `o` does.
+- **Reading too close** (§8 "Scrolls"): a burst read from a scroll (fireball, frost) aimed where,
+  as far as the player knows, it may catch them too (they stand within its radius of where it
+  would go off: the first creature they see on the line of fire, the last cell before one they
+  know is solid, or the cursor) asks first, in the dialog: `The fireball may catch you too. Read
+  the scroll of fireball anyway?` with `Read it` (accept: the read as usual, replay text
+  `read:LETTER:X,Y`), `Aim again` (decline: back to aiming, on the same target), and `Don't read
+  it` (cancel, selected first). The rules never ask.
 - **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
   `--record`, or `--capture` name what to run): Continue (only if a save exists), New run
   (scenario list from content, optional seed, then character creation), Settings, Controls,
@@ -115,7 +122,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   not abilities), open/close door, kick (`K`, then a direction; §8 "Doors"),
   ascend/descend, light/douse lantern (`L`),
   pick up (`,` or `g`), drop (`d`), inventory (`i`), equipment (`e`), character (`@`), skills
-  (`S`), weapon skills (`W`), quest log (`q`), rest (`R`), eat (`E`), look, shoot or throw what
+  (`S`), weapon skills (`W`), quest log (`q`), rest (`R`), eat (`E`), read (`r`; a basic
+  command, not an ability), look, shoot or throw what
   is in the missile weapon slot
   (`t`), throw from the pack (`T`), fire (`f`, unbound by default), more aggressive / more
   defensive combat stance (`+` / `-`; §8 "Stances"), the abilities menu (`a`, below) and the
@@ -140,8 +148,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   potions) join a stack of the same object wherever they go; any other object is a stack of one.
   A door does not close on objects in its doorway.
 - **Item lists** (#188, #189): every list of stacks the player chooses from or reads (the
-  inventory, picking up, dropping, what to throw or eat, what goes in an equipment slot; selling
-  is dropping in a shop) is one paged list. Its stacks are grouped by **item class** (§7 "Objects
+  inventory, picking up, dropping, what to throw, eat, or read, what to read the scroll of
+  identify on, what goes in an equipment slot; selling is dropping in a shop) is one paged list. Its stacks are grouped by **item class** (§7 "Objects
   and materials": melee weapons, missile weapons, missiles, shields, body armour, ... coins,
   miscellaneous), in class order, each class under a header row with its name and no letter;
   within a class they keep their order (the order they were picked up, or the pile's). A page
@@ -375,6 +383,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   feel satiated." when it is done, "You stop eating." (or "A kobold comes into view; you stop
   eating.") when not, the food left as it was. What is no food is refused and takes no time
   ("You cannot eat a dagger.").
+- **Read** (`r`; §8 "Scrolls") opens the choice of what to read: the scrolls in the inventory
+  (what has something to read on it), in the item list; with nothing, "You have nothing to
+  read." A letter, or Enter on the `>` row, chooses: a spell scroll is then aimed (Targeting,
+  below), and the scroll of identify replaces the list with the unidentified stacks the player
+  carries ("You carry nothing unidentified."), where a letter or Enter reads it on that stack
+  (replay text `read:LETTER:LETTER`, the scroll then the stack). Esc cancels either list.
 - **Dig** (`U`, "use a tool", ADOM's use-item key, an item's use rather than an ability; §8
   "Digging") asks in the message line `Dig in which direction? (Esc to cancel)`; a direction
   digs (replay text `dig:E`), any other command cancels. With no digging tool ready nothing is
@@ -422,7 +436,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `IMPROVISED_RANGE` cells, in `combat.rs`); with nothing there, or no ammunition, it is refused
   ("You have nothing ready to throw or shoot.", "You have no arrows ready."). `T` opens the choice
   of what to throw: the inventory's throwing weapons, in the item list (a letter or Enter
-  chooses; "You have nothing to throw."). `f` (no default key) aims the readied launcher only. Aiming is an input mode like look mode: no time passes.
+  chooses; "You have nothing to throw."). `f` (no default key) aims the readied launcher only.
+  A spell scroll chosen to read (`r`, above) is aimed the same way, as far as its spell reaches
+  (its `range`; a bolt's length); a bolt's line is blocked only by what is solid, as it runs
+  through creatures. Aiming is an input mode like look mode: no time passes.
   The cursor starts on the last target if the player still sees it (a creature) or it is on this
   level (a cell), else on the nearest hostile creature in view, else on the player; `Tab` and
   `Shift`+`Tab` cycle through the creatures in view, nearest first (ties: the lower id); the
@@ -433,8 +450,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   creature in view in the way is blocked, one beyond the range out of range, and both show on a
   muted red cursor and in the message line ("Out of range.", "The way is blocked.", after the
   target's description, as look mode gives it). No chance to hit is ever shown. `Enter` (or the
-  key that started it, or `t`) looses the missile (replay text `fire:X,Y`,
-  `throw:LETTER:X,Y`) and remembers the target, so `t` then `Enter` shoots it again; `Esc`
+  key that started it, or `t` for a shot or a throw) looses the missile or reads the scroll
+  (replay text `fire:X,Y`, `throw:LETTER:X,Y`, `read:LETTER:X,Y`; a burst that may catch the
+  player asks first, above) and remembers the target, so `t` then `Enter` shoots it again; `Esc`
   cancels. Out of range or at the player's own cell, the rules refuse it and no time passes.
 - **Look mode** describes what the player perceives at the cursor: a creature and its terrain,
   with how it stands toward the player and how hurt it looks ("A giant rat (hostile, unhurt), on

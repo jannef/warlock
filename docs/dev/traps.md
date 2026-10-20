@@ -24,7 +24,7 @@ opener) and `kick_door` (as the kick lands, before the door breaks) call
 whose door stops being a door (kicked in). Aimed from the door: a shot and a strike go at the
 victim where it stands, a bolt without a `dir` runs from the door through the victim (`spring_trap`
 picks `Dir::toward` when the victim stands next to the trap), and a burst's own cell never stops it
-(`trap_burst`), so a shut door's blast leaves both sides. The app's step prompt
+(`World::cast_burst`), so a shut door's blast leaves both sides. The app's step prompt
 (`input::trap_dialog`) skips doors. A trap's blow is dealt like any other
 (`World::trap_deals`: blood by `World::spill`, `hurt` with `Harm::Trap`, then the wound's
 statuses by `World::wounded`); its kills earn nothing, and the player's death records
@@ -34,7 +34,10 @@ Knowledge is decided as the turn is perceived
 (`World::learn_traps`: set off by the player, or on a cell they see), or as the player finds
 one (searching or in passing, `docs/dev/searching.md`): both go through `World::know_trap`. A
 trap's `difficulty` and `sign` are for finding it; messages come from
-`perceive_events` (`Event::TrapSprung`, `TrapStruck`). Bursts and bolts emit the full
+`perceive_events` (`Event::TrapSprung`, `TrapStruck`). Bursts and bolts (`TrapEffect::Burst(Burst)`, `Bolt(Bolt)`, the data types scrolls share,
+`content/spell.rs`) go through the one shared spell code, `World::cast_burst` and
+`World::cast_bolt` in `world/spell.rs`, with `Caster::Trap` (scrolls cast with `Caster::Actor`,
+`docs/dev/scrolls.md`); the noise is `World::sound_at`. They emit the full
 `Event::Spell { effect, origin, shape: SpellShape, cells }` (`spell::burst_cells`, so what is drawn
 is what is hit; a bolt's path starts after the trap's cell; the trap's `spell` must be an effect of
 its shape), which `spell::perceive_spell` cuts and `ui/spells.rs` draws; a burst with a `blast`

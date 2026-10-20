@@ -1,6 +1,6 @@
-//! Targeting (spec §6 "Targeting"): aiming a shot (`f`) or a throw (`t`) with a cursor on the
-//! map, ADOM-like. It is an input mode like look mode, not a screen: no game time passes until
-//! the missile is loosed.
+//! Targeting (spec §6 "Targeting"): aiming a shot (`f`), a throw (`t`), or a spell scroll read
+//! (`r`, spec §8 "Scrolls") with a cursor on the map, ADOM-like. It is an input mode like look
+//! mode, not a screen: no game time passes until the missile is loosed or the scroll read.
 //!
 //! The cursor starts on the last target if the player still sees it (a creature) or it lies on
 //! this level (a cell), else on the nearest creature in view that is hostile, else on the player.
@@ -11,9 +11,11 @@
 //! The line of fire ([`Line`]) is the integer line the rules fly a missile along
 //! ([`Pos::ray`]), drawn as faint dots from the player toward the cursor, as far as the player
 //! knows it: it ends before the first cell they know to be solid, and at the edge of the range.
-//! A target beyond something solid or behind a creature in the way is blocked, one beyond the
-//! range out of range; the message line says so (never color alone). No chance to hit is shown.
-//! Everything here reads the perception snapshot only.
+//! A target beyond something solid or behind a creature in the way is blocked (a bolt runs
+//! through creatures: only what is solid blocks it), one beyond the range out of range; the
+//! message line says so (never color alone). No chance to hit is shown. A burst read so close
+//! that it may catch the player asks first ([`Aim::catches_reader`]). Everything here reads the
+//! perception snapshot only.
 
 use super::look;
 use crate::game::Game;
@@ -24,11 +26,11 @@ use crate::render::grid::MapGrid;
 use crate::settings::{Role, Settings};
 use bevy::prelude::*;
 use warlock_core::color::Rgb;
-use warlock_core::content::Stance;
+use warlock_core::content::{Cast, ScrollSpell, Stance};
 use warlock_core::fov::radius2;
 use warlock_core::perception::{CellView, PerceptionView};
 use warlock_core::world::ActorId;
-use warlock_core::{Action, Dir, Pos};
+use warlock_core::{Action, Dir, Pos, ReadTarget};
 
 /// The path's dots: faint, warm, and never lit, so the line reads in the dark too.
 pub const PATH_GLYPH: char = '·';
@@ -44,6 +46,8 @@ pub enum AimKind {
     Fire,
     /// A throw of inventory stack `usize` (`t`).
     Throw(usize),
+    /// Reading the spell scroll of inventory stack `usize` at a cell (`r`).
+    Read(usize),
 }
 
 /// Aiming: what, and where the cursor is (a level position).
@@ -147,6 +151,7 @@ impl Aim {
         match self.kind {
             AimKind::Fire => view.ready_to_fire().map(|(_, _, range)| range),
             AimKind::Throw(item) => view.throw_range(item),
+            AimKind::Read(item) => scroll_spell(view, item).map(|s| s.range),
         }
     }
 
@@ -155,7 +160,56 @@ impl Aim {
         match self.kind {
             AimKind::Fire => Action::Fire(self.at),
             AimKind::Throw(item) => Action::Throw { item, at: self.at },
+            AimKind::Read(item) => Action::Read {
+                item,
+                target: Some(ReadTarget::Cell(self.at)),
+            },
         }
+    }
+
+    /// The line of fire to the cursor, as the player knows it: a bolt read from a scroll runs
+    /// through creatures, so only what is solid blocks it.
+    pub fn line(&self, view: &PerceptionView<'_>) -> Line {
+        let bolt = match self.kind {
+            AimKind::Read(item) => {
+                scroll_spell(view, item).is_some_and(|s| matches!(s.cast, Cast::Bolt(_)))
+            }
+            _ => false,
+        };
+        line_of(view, view.viewer(), self.at, self.range(view), !bolt)
+    }
+
+    /// Whether the burst a scroll read at the cursor goes off near enough to catch the player,
+    /// as far as they know (the rules', spec §8 "Scrolls": it flies along the line of fire and
+    /// goes off on the first creature they see in its way, before the first cell they know is
+    /// solid, or on the cursor; the player within its radius of that, walls between not
+    /// counted). Returns what would catch them ("fireball"); `None` for anything else.
+    pub fn catches_reader(&self, view: &PerceptionView<'_>) -> Option<String> {
+        let AimKind::Read(item) = self.kind else {
+            return None;
+        };
+        let spell = scroll_spell(view, item)?;
+        let Cast::Burst(burst) = &spell.cast else {
+            return None;
+        };
+        let me = view.viewer();
+        let content = view.content();
+        let solid = |p: Pos| match view.cell(p) {
+            CellView::Visible(t) | CellView::Remembered(t) => !content.terrain(t).transparent,
+            CellView::Unknown => false,
+        };
+        let mut center = me;
+        let steps = me.chebyshev(self.at).clamp(0, spell.range.max(0)) as usize;
+        for p in me.ray(self.at).take(steps) {
+            if solid(p) {
+                break;
+            }
+            center = p;
+            if view.actor_at(p).is_some() {
+                break;
+            }
+        }
+        (me.dist2(center) <= radius2(burst.radius)).then(|| spell.noun.clone())
     }
 
     /// The prompt in the message line: what is aimed, and how. `ready` names the missile ("an
@@ -164,6 +218,7 @@ impl Aim {
         let (verb, does) = match self.kind {
             AimKind::Fire => ("Fire", "fires"),
             AimKind::Throw(_) => ("Throw", "throws"),
+            AimKind::Read(_) => ("Read", "reads"),
         };
         format!(
             "{verb} {ready}: {next} or direction keys aim, {loose} or {confirm} {does}, Esc cancels."
@@ -198,10 +253,25 @@ pub struct Line {
     pub out_of_range: bool,
 }
 
+/// The spell the scroll in inventory stack `item` casts, if it is one (scroll types are known on
+/// sight, spec §8 "Scrolls").
+fn scroll_spell<'v>(view: &PerceptionView<'v>, item: usize) -> Option<&'v ScrollSpell> {
+    let stack = view.inventory().get(item)?;
+    let content = view.content();
+    content.object(stack.object).read.as_ref()?.spell()
+}
+
 /// The line of fire from `from` to `to` for a missile that flies `range` cells (`None`: nothing
 /// ready, so no range to mark), over what the player perceives: the cells they see or remember
-/// are solid or not as they know them; cells never seen let it pass.
-pub fn line(view: &PerceptionView<'_>, from: Pos, to: Pos, range: Option<i32>) -> Line {
+/// are solid or not as they know them; cells never seen let it pass. A creature they see in the
+/// way blocks it if `creatures_block` (not a bolt's).
+fn line_of(
+    view: &PerceptionView<'_>,
+    from: Pos,
+    to: Pos,
+    range: Option<i32>,
+    creatures_block: bool,
+) -> Line {
     let content = view.content();
     let solid = |p: Pos| match view.cell(p) {
         CellView::Visible(t) | CellView::Remembered(t) => !content.terrain(t).transparent,
@@ -217,7 +287,7 @@ pub fn line(view: &PerceptionView<'_>, from: Pos, to: Pos, range: Option<i32>) -
             out.blocked = true;
             break;
         }
-        if view.actor_at(p).is_some() {
+        if creatures_block && view.actor_at(p).is_some() {
             out.blocked = true;
         }
         if p.dist2(from) > reach {
@@ -237,7 +307,7 @@ pub fn path_cells(view: &PerceptionView<'_>, mode: InputMode) -> Vec<Pos> {
     let InputMode::Aim(aim) = mode else {
         return Vec::new();
     };
-    let line = line(view, view.viewer(), aim.at, aim.range(view));
+    let line = aim.line(view);
     (line.cells.into_iter())
         .filter(|&p| view.actor_at(p).is_none())
         .collect()
@@ -294,6 +364,10 @@ mod tests {
     use std::sync::Arc;
     use warlock_core::World;
     use warlock_core::content::Content;
+
+    fn line(view: &PerceptionView<'_>, from: Pos, to: Pos, range: Option<i32>) -> Line {
+        line_of(view, from, to, range, true)
+    }
 
     fn arena() -> World {
         let content = Arc::new(Content::builtin().expect("content"));
@@ -404,6 +478,46 @@ mod tests {
         assert!(line(&view, me, Pos::new(0, me.y), Some(12)).blocked);
         // No range given (nothing ready): never out of range.
         assert!(!line(&view, me, Pos::new(me.x + 6, me.y), None).out_of_range);
+    }
+
+    #[test]
+    fn a_scroll_is_aimed_as_far_as_its_spell_reaches_and_close_bursts_ask() {
+        // The trap hall's scrolls picked up: b fireball (range 10), c lightning (12 cells).
+        let content = Arc::new(Content::builtin().expect("content"));
+        let mut w = World::new(content, "traps", None).expect("trap hall");
+        w.apply(&Action::Move(Dir::E));
+        w.apply(&Action::PickUp(warlock_core::Positions::default()));
+        let view = w.perception();
+        let me = view.viewer();
+        let fireball = Aim {
+            kind: AimKind::Read(1),
+            at: Pos::new(me.x, me.y - 1),
+        };
+        assert_eq!(fireball.range(&view), Some(10));
+        assert_eq!(
+            fireball.action(),
+            Action::Read {
+                item: 1,
+                target: Some(ReadTarget::Cell(fireball.at))
+            }
+        );
+        // Next to the reader: it may catch them; far off it does not.
+        assert_eq!(fireball.catches_reader(&view).as_deref(), Some("fireball"));
+        let far = Aim {
+            at: Pos::new(me.x, me.y - 8),
+            ..fireball
+        };
+        assert_eq!(far.catches_reader(&view), None);
+        // A bolt never comes back at its reader; it reaches its length.
+        let bolt = Aim {
+            kind: AimKind::Read(2),
+            ..fireball
+        };
+        assert_eq!(bolt.range(&view), Some(12));
+        assert_eq!(bolt.catches_reader(&view), None);
+        let text = bolt.prompt("a scroll of lightning", ("Enter", "r", "Tab"));
+        assert!(text.starts_with("Read a scroll of lightning:"), "{text}");
+        assert!(text.contains("Enter or r reads"), "{text}");
     }
 
     #[test]

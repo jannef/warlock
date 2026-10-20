@@ -236,7 +236,7 @@ fn draw_game(
             let at = (area.x + x, area.y + y);
             match mode {
                 InputMode::Aim(aim) => {
-                    let line = target::line(&view, view.viewer(), p, aim.range(&view));
+                    let line = aim.line(&view);
                     target::draw_cursor(console, at, &view, p, &line);
                 }
                 _ => look::draw_cursor(console, at.0, at.1, &view, p),
@@ -486,7 +486,7 @@ fn draw_messages(
     }
     if let InputMode::Aim(aim) = mode {
         let view = game.world.perception();
-        let line = target::line(&view, view.viewer(), aim.at, aim.range(&view));
+        let line = aim.line(&view);
         let mut about = look::describe(&view, aim.at, blood);
         if let Some(status) = line.status() {
             about = format!("{about} {status}");
@@ -501,6 +501,7 @@ fn draw_messages(
                 (KeyCommand::Missile, ammo)
             }
             AimKind::Throw(item) => (KeyCommand::Missile, Some(item)),
+            AimKind::Read(item) => (KeyCommand::Read, Some(item)),
         };
         let content = view.content();
         let ready = (missile.and_then(|i| view.inventory().get(i)))

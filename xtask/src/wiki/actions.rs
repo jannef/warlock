@@ -44,6 +44,7 @@ pub(super) fn action_costs(content: &Content) -> String {
             ActionKind::Wear | ActionKind::BodyArmor => "Putting something on, or taking it off",
             ActionKind::Ready => "Readying something, or putting it away",
             ActionKind::Eat => "A turn of eating (a meal takes several: see Food and corpses)",
+            ActionKind::Read => "Reading a scroll",
             ActionKind::Dig => "A turn of digging (digging through a wall takes many)",
             ActionKind::Search => "A turn of searching (searching for a while takes several)",
             ActionKind::Chat => "Chatting with someone (asking about a topic takes no time)",
