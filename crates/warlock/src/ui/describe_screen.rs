@@ -234,6 +234,7 @@ mod tests {
             "Magic long sword · steel blade, leather grip · 1.8 kg"
         ));
         assert!(has(&sword, "Damage 1d8; criticals on 20–24, ×2 damage"));
+        assert!(has(&sword, "Slashing or piercing damage"));
         assert!(has(&sword, "Item level 3"));
         assert!(has(&sword, "Prefix  Sharp: +2 damage"), "{sword:#?}");
         assert!(has(&sword, "Suffix  of the Bear: +2 to Strength"));
