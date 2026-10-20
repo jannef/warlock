@@ -31,5 +31,5 @@ Some(&spec))` as another; `WorldState::character` (the `Character`, saved, hashe
 and `PerceptionView::character` (the player knows it; `PerceptionView::time`
 for their age). Replays record only the spec. The summary and the character screen show final
 scores only: never dice, a breakdown, a modifier, or a potential (the step screens and the wiki
-show adjustments as written in data). Balance is not a goal; classes only adjust starting
-scores and give hit points.
+show adjustments as written in data; the wiki also gives the modifiers and the races' potentials
+exactly). Balance is not a goal; classes only adjust starting scores and give hit points.

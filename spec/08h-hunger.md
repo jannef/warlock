@@ -98,8 +98,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     potential ("You feel tougher!"; nothing at the potential; raising Toughness raises the most
     hit points); `heal` ("You feel better." when it healed any); `harm` (degrees of sickness, as
     rotten food's); then it feeds its size's nutrition plus `satiation` (at least 0), overeating as food
-    does. The effects are never shown before the player tries; the wiki keeps to the general
-    rule.
+    does. The effects are never shown in the game before the player tries; the wiki states them
+    exactly (the game is vague, the wiki is accurate).
   - **What the player perceives** (`PerceptionView::own_hunger`): their state, never the counter
     or any food's age or stage (the owner's decision: no "(old)" or "(rotten)" in names, look
     mode, or lists, for corpses and all other food alike, so eating stays a gamble; revealing

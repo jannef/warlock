@@ -12,6 +12,12 @@ notice you, and fight each other and you: blows and arrows are rolled against yo
 and kill, and death is final (spells are only announced so far). Your stats, your weapon, and
 your armour decide how well you fight.
 
+**The numbers here are exact.** The game keeps many of them to itself and tells you in words: a
+creature looks "badly wounded", you "feel more skilled", boots make you "move faster". The wiki
+gives the rules' own numbers, generated from the game's data, so they cannot drift: your bonus
+to hit and its parts, the stat modifiers, speeds, how loud things are, what a rank gives, and
+every creature's stats, attacks, and senses ([Creatures in numbers](creature-numbers.md)).
+
 - **Play in your browser:** <https://jannef.github.io/warlock/> (needs a browser with WebGPU)
 - **Download for Windows, macOS, and Linux:** <https://github.com/jannef/warlock/releases>
 - **Source and issues:** <https://github.com/jannef/warlock>

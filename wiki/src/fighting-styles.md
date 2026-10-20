@@ -56,7 +56,7 @@ Creatures that hold two weapons fight with both too.
 ## What a rank gives
 
 As with weapon skills, the game never tells you what a rank gives in numbers. These are the
-rules. A style's benefits add to those of the weapon skill you fight with:
+rules, exactly. A style's benefits add to those of the weapon skill you fight with:
 
 - **To hit**, **Damage**, **Time**, **Parry**, **Shield**, and **Reload time** as for
   [weapon skills](weapon-skills.md#what-a-rank-gives).
