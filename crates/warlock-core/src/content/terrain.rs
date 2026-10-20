@@ -87,6 +87,9 @@ pub(super) struct TerrainSpec {
     /// Whether blood stains it (spec §8 "Blood"); water, lava, and fire do not hold it.
     #[serde(default = "yes")]
     pub stains: bool,
+    /// Whether it is stone (spec §8 "Searching": dwarves notice what is hidden on stone).
+    #[serde(default)]
+    pub stone: bool,
     /// How loud steps onto it are, in percent of the walker's footsteps (spec §5 "Hearing").
     #[serde(default = "full_noise")]
     pub step_noise: u16,
@@ -198,6 +201,9 @@ pub struct TerrainDef {
     /// Presentation-only: whether blood stains it (spec §8 "Blood"); water, lava, and fire do
     /// not hold it.
     pub stains: bool,
+    /// Gameplay: stone, worked or not (spec §8 "Searching"): dwarves notice the hidden features
+    /// on it in passing (a secret door in a stone wall, a trap in a stone floor).
+    pub stone: bool,
     /// Gameplay: how loud steps onto it are, in percent of the walker's footsteps
     /// ([`crate::noise::noise`]): water splashes (200), grass is soft (70).
     pub step_noise: u16,

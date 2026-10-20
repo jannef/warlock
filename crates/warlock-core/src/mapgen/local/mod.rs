@@ -182,6 +182,7 @@ pub(super) fn generate(content: &Content, seed: u64, id: &str) -> Result<LevelTe
             objects: land.objects,
             traps: Default::default(),
             locks: land.locks,
+            secrets: Default::default(),
             regions: Vec::new(),
             rooms: Vec::new(),
             shops: Vec::new(),

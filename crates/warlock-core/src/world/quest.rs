@@ -488,7 +488,8 @@ impl World {
         let def = content.quest(q);
         let given = match def.goal {
             Goal::Deliver { object, .. } => {
-                let letter = Stack::one(object);
+                let mut letter = Stack::one(object);
+                crate::rot::made_at([&mut letter], &content, self.state.time);
                 object::add_to_inventory(self.state.inventory_mut(), letter.clone(), &content);
                 Some(letter)
             }
@@ -536,7 +537,8 @@ impl World {
         self.answer(id, def.texts.done.clone(), Some(topic.into()), events);
         self.say(format!("Quest complete: {}.", def.name));
         let who = capitalized(&self.called(&self.state.actors[&id]));
-        let stacks = def.reward.stacks(&content);
+        let mut stacks = def.reward.stacks(&content);
+        crate::rot::made_at(&mut stacks, &content, self.state.time);
         if !stacks.is_empty() {
             self.say(format!(
                 "{who} gives you {}.",

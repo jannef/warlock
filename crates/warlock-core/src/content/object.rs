@@ -45,11 +45,13 @@
 //! it (default 1), and how often (`frequency`, default 100; 0: never). Weapons may cost more or
 //! less than a normal attack (`attack_cost`, instead of the `melee` or `shoot` action's).
 //!
-//! Food (spec §8 "Hunger") says what it gives and how long it takes to eat: `food = { nutrition
-//! = 1500, turns = 4 }`. Corpses are objects too, one made for each creature type that leaves
-//! one ([`ObjectDef::corpse_of`]): "kobold corpse", `%` in the creature's color, weighing what
-//! the creature does, feeding by its size. Level files cannot place them: they lie where
-//! creatures died, each with the moment it died ([`Stack::died`]), from which it rots.
+//! Food (spec §8 "Hunger") says what it gives, how long it takes to eat, and how long it keeps
+//! and lasts: `food = { nutrition = 1500, turns = 4, keeps = "30d", lasts = "60d" }` (it rots
+//! from when it was made, [`Stack::died`], [`crate::rot`]). Corpses are objects too, one made for
+//! each creature type that leaves one ([`ObjectDef::corpse_of`]): "kobold corpse", `%` in the
+//! creature's color, weighing what the creature does, feeding and keeping by its size. Level
+//! files cannot place them: they lie where creatures died, each with the moment it died, from
+//! which it rots.
 //!
 //! Digging tools (spec §8 "Digging") have a `dig` power: the work a dig with one does against a
 //! wall's hardness (a pick-axe 10, at Strength 10). They go in a slot (the Tool slot).

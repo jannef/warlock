@@ -40,6 +40,12 @@ use warlock_core::{Action, Dir, Pos, Positions, Rest};
 pub enum KeyCommand {
     Move(Dir),
     Wait,
+    /// Search the cells around the player for secret doors and hidden traps: a turn (spec §8
+    /// "Searching").
+    Search,
+    /// Search turn after turn, up to `data/search.toml`'s `turns`, stopping when something is
+    /// found or something interrupts, like a rest.
+    SearchLong,
     Open,
     Close,
     /// Kick in a direction: a door (to break it in), or a creature.
@@ -243,6 +249,8 @@ impl KeyCommand {
         match self {
             KeyCommand::Move(_) => "Move",
             KeyCommand::Wait => "Wait a turn",
+            KeyCommand::Search => "Search",
+            KeyCommand::SearchLong => "Search for a while",
             KeyCommand::Open => "Open a door",
             KeyCommand::Close => "Close a door",
             KeyCommand::Kick => "Kick",
@@ -385,6 +393,8 @@ impl Default for Bindings {
             (Code(KeyCode::ArrowLeft), Move(Dir::W)),
             (ch("."), Wait),
             (Code(KeyCode::Numpad5), Wait),
+            (ch("s"), Search),
+            (ch("z"), SearchLong),
             (ch("o"), Open),
             (ch("c"), Close),
             (ch("K"), Kick),
@@ -678,8 +688,12 @@ impl Gameplay<'_> {
     fn press(&mut self, key: &KeyboardInput, bindings: &Bindings) -> Option<ScreenAction> {
         let game = self.game.as_ref()?;
         let command = command_in(*self.mode, key, bindings, dev_keys(&self.args))?;
-        // Held keys repeat only for movement and waiting, and the aiming cursor's moves.
-        let moves = matches!(command, KeyCommand::Move(_) | KeyCommand::Wait);
+        // Held keys repeat only for movement, waiting, and searching, and the aiming cursor's
+        // moves.
+        let moves = matches!(
+            command,
+            KeyCommand::Move(_) | KeyCommand::Wait | KeyCommand::Search
+        );
         if key.repeat && !moves {
             return None;
         }
@@ -794,6 +808,15 @@ impl Gameplay<'_> {
             }
             (InputMode::Normal, KeyCommand::Wait) => {
                 self.actions.write(PlayerAction(Action::Wait));
+                InputMode::Normal
+            }
+            (InputMode::Normal, KeyCommand::Search) => {
+                self.actions.write(PlayerAction(Action::Search(1)));
+                InputMode::Normal
+            }
+            (InputMode::Normal, KeyCommand::SearchLong) => {
+                let turns = game.world.content().search().turns;
+                self.actions.write(PlayerAction(Action::Search(turns)));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::Descend) => {
@@ -1141,6 +1164,8 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Help), ["?"]);
         assert_eq!(keys(&b, KeyCommand::Cancel), ["Esc"]);
         assert_eq!(keys(&b, KeyCommand::Rest), ["R"]);
+        assert_eq!(keys(&b, KeyCommand::Search), ["s"]);
+        assert_eq!(keys(&b, KeyCommand::SearchLong), ["z"]);
         assert_eq!(keys(&b, KeyCommand::PickUp), [",", "g"]);
         assert_eq!(keys(&b, KeyCommand::Drop), ["d"]);
         assert_eq!(keys(&b, KeyCommand::Inventory), ["i"]);

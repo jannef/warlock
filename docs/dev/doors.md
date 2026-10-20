@@ -14,7 +14,9 @@ attack speed change its time), said with `Words::kick`). A kick at a door is no 
 Strength it is rolled against, and the kick earns athletics marks (`Use::Kick`). Locks are per-cell state, never terrain: `locks` on
 `LevelTemplate` and `LevelState` (by position, saved, hashed; ground truth only, so perception,
 memory, look mode, and dumps show a locked door as any closed door); `World::set_terrain` drops a
-lock whenever the cell stops being a closed door. Level legends lock with `lock = "id"` or
+lock whenever the cell stops being a closed door. Secret doors (`docs/dev/searching.md`) are
+per-cell state too (`secrets`, beside the wall they look like until found); a secret door is
+never locked. Level legends lock with `lock = "id"` or
 `locked = true`; objects are keys with `key = "id"` (`"*"`: skeleton); closed doors break with
 `breaks_to` + `sturdiness` (`TerrainDef::kicked_in`; digging and blasts break only terrain with a
 `hardness`, `TerrainDef::breaks`, never a door). The AI (`world/ai.rs`) paths through a locked door, and opens it, only

@@ -6,9 +6,11 @@
 //! are placed in, and the unique character they are (`npc = "hermit"`, whose dialogue they
 //! speak), stair links, lights, the flow of running water, objects, locks on closed doors:
 //! `lock = "pantry"`, a lock its keys open, or `locked = true`, one only a skeleton key opens;
-//! spec §8 "Doors", and traps: `trap = "fireball"`, hidden unless `known = true`, a bolt trap's
-//! direction with `dir`; spec §8 "Traps"). Characters not in the level's legend fall back to the
-//! shared default legend (`assets/data/legend.toml`, which has arrows for running water). Objects
+//! spec §8 "Doors", traps: `trap = "fireball"`, hidden unless `known = true`, a bolt trap's
+//! direction with `dir`; spec §8 "Traps", and secret doors: `secret = true` or `secret = N` (a
+//! difficulty) on a closed door, which looks like the wall around it until it is found; spec §8
+//! "Searching"). Characters not in the level's legend fall back to the shared default legend
+//! (`assets/data/legend.toml`, which has arrows for running water). Objects
 //! may also be placed without a legend character: `[[pile]]` tables with `at = [x, y]` and
 //! `objects`. Objects are written as ids with an optional count, top of the pile first:
 //! `objects = ["dagger", "arrow*12"]`. An optional
@@ -29,6 +31,7 @@ use super::flow::{FLOW_SPEEDS, Flow};
 use super::light::LightId;
 use super::object::parse_stacks;
 use super::room_effect::SpecialRoom;
+use super::search::{Secret, SecretSpec, secret_look};
 use super::shop::ShopPlan;
 use super::terrain::{StairsDir, TerrainDef, TerrainId};
 use super::trap::{Trap, TrapEffect};
@@ -247,6 +250,9 @@ pub(super) struct LegendDetail {
     locked: Option<bool>,
     /// The closed door on this cell is locked, with this lock id: keys of that id open it.
     lock: Option<String>,
+    /// The closed door on this cell is secret (spec §8 "Searching"): `true` (the default
+    /// difficulty) or its difficulty. It looks like the wall around it until it is found.
+    secret: Option<SecretSpec>,
 }
 
 /// One object id or a list of them.
@@ -339,6 +345,9 @@ pub struct LevelTemplate {
     pub traps: BTreeMap<Pos, Trap>,
     /// Locks, by position: only on closed doors (spec §8 "Doors").
     pub locks: BTreeMap<Pos, Lock>,
+    /// Secret doors, by position (spec §8 "Searching"): the terrain there is the wall each
+    /// looks like until it is found.
+    pub secrets: BTreeMap<Pos, Secret>,
     /// Named areas, first match wins.
     pub regions: Vec<Region>,
     /// Special rooms (spec §7 "Special rooms"), none overlapping another.
@@ -436,6 +445,7 @@ pub(super) fn parse_level(
     let mut traps = BTreeMap::new();
     let mut loot = Vec::new();
     let mut locks = BTreeMap::new();
+    let mut secret_doors: Vec<(Pos, TerrainId, u8)> = Vec::new();
 
     for (y, row) in rows.iter().enumerate() {
         for x in 0..width as usize {
@@ -483,6 +493,20 @@ pub(super) fn parse_level(
                     )));
                 }
                 locks.insert(pos, lock);
+            }
+            if let Some(spec) = detail.secret {
+                let difficulty = (spec.difficulty(content.search()))
+                    .map_err(|m| err(format!("legend `{ch}`: {m}")))?;
+                if let Some(difficulty) = difficulty {
+                    if !content.terrain(terrain).is_closed_door() || locks.contains_key(&pos) {
+                        return Err(err(format!(
+                            "legend `{ch}` makes terrain `{}` secret: only an unlocked closed door \
+                             can be",
+                            entry.terrain()
+                        )));
+                    }
+                    secret_doors.push((pos, terrain, difficulty));
+                }
             }
             if let Some(light) = &detail.light {
                 let id = content
@@ -616,7 +640,8 @@ pub(super) fn parse_level(
         rooms.push(room);
     }
 
-    let terrain = Grid::from_vec(width, height, cells);
+    let mut terrain = Grid::from_vec(width, height, cells);
+    let secrets = hide_secret_doors(&mut terrain, &secret_doors, content).map_err(err)?;
     for spec in parsed.pile {
         let at = Pos::new(spec.at[0], spec.at[1]);
         if !terrain.in_bounds(at) {
@@ -689,6 +714,7 @@ pub(super) fn parse_level(
         objects,
         traps,
         locks,
+        secrets,
         regions,
         rooms,
         shops,
@@ -932,6 +958,29 @@ fn parse_lock(detail: &LegendDetail) -> Result<Option<Lock>, String> {
         (Some(true), None) => Ok(Some(Lock::new(None))),
         (Some(false) | None, None) => Ok(None),
     }
+}
+
+/// Hides the secret doors a legend placed (spec §8 "Searching"): each cell's terrain becomes the
+/// wall around it ([`secret_look`], read before any of them changes), and the door it is goes
+/// into the secrets. A secret door with no wall beside it is refused.
+fn hide_secret_doors(
+    terrain: &mut Grid<TerrainId>,
+    doors: &[(Pos, TerrainId, u8)],
+    content: &Content,
+) -> Result<BTreeMap<Pos, Secret>, String> {
+    let mut looks = Vec::with_capacity(doors.len());
+    for &(pos, door, difficulty) in doors {
+        let look = secret_look(terrain, content, pos).ok_or_else(|| {
+            format!("the secret door at {pos} has no wall beside it to look like")
+        })?;
+        looks.push((pos, look, Secret { door, difficulty }));
+    }
+    let mut secrets = BTreeMap::new();
+    for (pos, look, secret) in looks {
+        terrain.set(pos, look);
+        secrets.insert(pos, secret);
+    }
+    Ok(secrets)
 }
 
 /// Parses a route like `"E4 S2 W4 N2"` (count defaults to 1).

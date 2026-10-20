@@ -13,7 +13,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (adjustments to the starting scores), `potential` (adjustments to the potentials, the same way;
   hidden from the player), `hp` (its hit points, 0 to 1000, default 0; §8 "Combat"), `size` (a size
   in `data/sizes.toml`, default `medium`; §8 "Burden"), `ignores_burdened` (default false: whether
-  Burdened, the first level of burden, costs the character nothing), `skills` (the skills it trains,
+  Burdened, the first level of burden, costs the character nothing), `passive_search` (which
+  hidden features the character notices in passing without the Spot skill: `"all"`, elves, or
+  `"stone"`, dwarves; default none; §8 "Searching"), `search` (points added to searching and
+  noticing alike, −10 to 10, default 0; elves 2), `skills` (the skills it trains,
   by skill id: dice or a number, every result 0 to 100; §8 "Skills"), `class_skill` (dice added
   to one of the class's skills, picked when the character is made; default none), `hunger` (how
   much the character needs to eat, in percent of a human, 10 to 1000, default 100; §8 "Hunger":
@@ -91,10 +94,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   required (the size of every race and creature type that names none); without the file there
   is only medium.
 - **Hunger** (`data/hunger.toml`, optional; §8 "Hunger"; without it nobody hungers, nothing can
-  be eaten, and creatures leave no corpses): `burn_seconds` (game seconds per nutrition point
-  burned at 100 % hunger, 1 to 86 400: 60), `start` (nutrition at the start of a run: 3600),
-  `max` (the most there can be: 6500), `vomit_leaves` (the most left after vomiting: 1000),
-  `[states]` (the least nutrition of `bloated` 5500, `satiated` 4000, `not_hungry` 1440,
+  be eaten, food does not rot, and creatures leave no corpses): `burn_seconds` (game seconds per
+  nutrition point burned at 100 % hunger, 1 to 86 400: 60), `start` (nutrition at the start of a
+  run: 3600), `max` (the most there can be: 6500), `vomit_leaves` (the most left after
+  vomiting: 1000), `sickness` (the status id, `data/status.toml`, that harm from eating gives:
+  `poisoned`; needed when anything eaten harms), `[states]` (the least nutrition of `bloated` 5500, `satiated` 4000, `not_hungry` 1440,
   `hungry` 720, `weak` 240, and `fainting` 0, strictly falling and below `max`; below
   `fainting` the player is Starving; `start` and `vomit_leaves` lie from `fainting` to `max`),
   `[bloated] slow` (percent of an action's price while Bloated, 100 to 1000: 125), `[weak]
@@ -103,14 +107,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   to 100: 5), `[starving]` (`damage` hit points, 1 to 1000: 1, every `seconds` of game time, 1
   to 86 400: 600), `[exertion]` (extra points the player's `melee`, `shoot`, and `throw` burn,
   0 to 1000: 2, 1, 1; no other action), `[overeating]` (`choke`, the percent chance a meal past
-  `max` chokes the eater to death: 0, off; `vomit`, else the chance they vomit: 50), and
-  `[corpses]` (optional; without it creatures leave none: `material` (`flesh`),
-  `rotten_hours` (8) and `gone_hours` (36; more than `rotten_hours`, at most a month),
-  `rotten_vomit` (percent: 50), `rotten_harm` (dice of degrees of sickness, 0 to 1000: `1d4`),
-  `sickness` (the status id, `data/status.toml`, that harm from eating gives: `poisoned`; needed
-  when anything eaten harms), and `[corpses.size]` with every size of `data/sizes.toml` and what its corpses give, `{ nutrition,
-  turns }`: small 400 and 3, medium 1000 and 6). The wiki shows its tables (the states, the
-  races' needs, food, corpses) generated.
+  `max` chokes the eater to death: 0, off; `vomit`, else the chance they vomit: 50), `[rotten]`
+  (what eating rotten food of any kind does: `vomit`, percent: 50; `harm`, dice of degrees of
+  sickness, 0 to 1000: `1d4`), and `[corpses]` (optional; without it creatures leave none:
+  `material` (`flesh`), and `[corpses.size]` with every size of `data/sizes.toml` and what its
+  corpses give and how long they keep, `{ nutrition, turns, keeps, lasts }` as for food (§7
+  "Objects"): small 400 and 3, medium 1000 and 6, both keeping `"8h"` and lasting `"36h"`). The
+  wiki shows its tables (the states, the races' needs, food, corpses) generated.
 - **Classes** (`data/classes.toml`, optional), in the order offered: `id`, `name`, a one-line
   `description`, `stats` (adjustments as for races), `hp` (as for races), `skills` (as for
   races), `weapon_skills` (starting ranks as for races), `weapon_skill_choice` (two or more

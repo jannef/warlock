@@ -16,7 +16,7 @@ use crate::noise::{PerceivedSound, SoundKind, Volume};
 use crate::object::format_weight;
 use crate::perception::{CellView, PerceivedLight, PerceptionView};
 use crate::stats::Stat;
-use crate::world::{Cause, Rot, World, rot_at};
+use crate::world::{Cause, World};
 use serde_json::{Value, json};
 use std::fmt::Write;
 use std::str::FromStr;
@@ -70,7 +70,8 @@ pub enum Layer {
     /// Not a map: the player's quest log, one quest a line, active first (`Rats in the arena
     /// (active, from the old hermit): Kill 3 giant rats in the Arena. 2 / 3 killed.`).
     Quests,
-    /// Ground truth: all terrain, objects, traps (hidden ones too), and actors on the level.
+    /// Ground truth: all terrain, objects, traps (hidden ones too), secret doors (`S`), and
+    /// actors on the level.
     /// **Dev-only.**
     Truth,
     /// Not a map: every actor on the level with its weight, what it carries (and of that wears
@@ -289,6 +290,7 @@ fn truth_rows(world: &World) -> Vec<String> {
             (Some(actor), _, _) => content.creature(actor.creature).glyph,
             (None, Some(trap), _) => content.trap(trap.kind).glyph,
             (None, None, Some(top)) => content.object(top.object).glyph,
+            (None, None, None) if level.secret_at(p).is_some() => 'S',
             (None, None, None) => level
                 .terrain_at(p)
                 .map_or(' ', |t| content.terrain(t).glyph),
@@ -556,33 +558,40 @@ fn actor_weapon_skills(
 /// (`St 12/15`), its trained skills with their marks toward the next point
 /// (`stealth 17 (2/5)`), its status effects with their severities (`effects bleeding 2`), the
 /// player's nutrition and hunger (`nutrition 3540 (not_hungry)`), and, if it has any, the unique
-/// character it is and how far its talk has got; then every corpse on the level and in the
-/// player's pack with when it died and how it has rotted (`corpse kobold_corpse at (12, 5): died
-/// 1444-11-11 08:12:00, 2 hours ago, fresh`).
+/// character it is and how far its talk has got; then all food on the level and in the packs of
+/// those on it, with when it was made (a corpse: when its creature died) and how it has rotted
+/// (`corpse kobold_corpse at (12, 5): died 1444-11-11 08:12:00, 2 hours ago, fresh`, `food
+/// bread*2 carried by 0: made ..., 70 hours ago, old`): the stage food never shows the player.
 fn actor_rows(world: &World) -> Vec<String> {
     let content = world.content();
     let (level, actors) = world.ground_truth();
     let now = world.time();
-    let corpse = |where_: String, s: &crate::object::Stack| {
-        let died = s.died?;
-        let rot = match rot_at(content, s, now)? {
-            Rot::Fresh => "fresh",
-            Rot::Rotten => "rotten",
-            Rot::Gone => "gone",
+    let food = |where_: String, s: &crate::object::Stack| {
+        let made = s.died?;
+        let stage = crate::rot::stage(content, s, now)?;
+        let (what, verb) = match content.object(s.object).corpse {
+            Some(_) => ("corpse", "died"),
+            None => ("food", "made"),
+        };
+        let count = match s.count {
+            1 => String::new(),
+            n => format!("*{n}"),
         };
         Some(format!(
-            "corpse {} {where_}: died {died}, {} ago, {rot}",
+            "{what} {}{count} {where_}: {verb} {made}, {} ago, {}",
             content.object(s.object).id,
-            now.since(died).spoken()
+            now.since(made).spoken(),
+            stage.id()
         ))
     };
     let on_level = (level.objects.iter())
         .flat_map(|(p, pile)| pile.iter().map(move |s| (*p, s)))
-        .filter_map(|(p, s)| corpse(format!("at {p}"), s));
-    let carried = (world.state().player().inventory.iter())
-        .filter_map(|s| corpse("carried".into(), s))
+        .filter_map(|(p, s)| food(format!("at {p}"), s));
+    let carried = (world.ground_truth().1)
+        .flat_map(|a| a.inventory.iter().map(move |s| (a.id, s)))
+        .filter_map(|(id, s)| food(format!("carried by {}", id.0), s))
         .collect::<Vec<_>>();
-    let corpses: Vec<String> = on_level.chain(carried).collect();
+    let foods: Vec<String> = on_level.chain(carried).collect();
     let rows: Vec<String> = actors
         .map(|a| {
             let w = a.weight(content);
@@ -687,7 +696,7 @@ fn actor_rows(world: &World) -> Vec<String> {
             )
         })
         .collect();
-    rows.into_iter().chain(corpses).collect()
+    rows.into_iter().chain(foods).collect()
 }
 
 /// An actor's diseases and stat damage, as the `actors` dump shows them (ground truth):

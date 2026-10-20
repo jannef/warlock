@@ -1,10 +1,14 @@
 # Hunger and food (spec §8 "Hunger"), ADOM-like. Without this file nobody hungers, nothing can be
-# eaten, and creatures leave no corpses.
+# eaten, food does not rot, and creatures leave no corpses.
 #
 # Nutrition is counted in points. A race of hunger 100 % (`hunger` in races.toml: a human) burns
 # a point every `burn_seconds` of game time, whatever it does: resting and journeys over the
-# overworld burn it too. Food gives points (`food` in objects.toml), corpses by their creature's
+# overworld burn it too. Food gives points (`food` in objects/), corpses by their creature's
 # size (below). The player knows how hungry they are (the states below), never the count.
+#
+# Food rots: every food keeps for a while after it was made (`keeps`: old past half of it, then
+# rotten) and lasts a while longer (`lasts`: then it has rotted away, from the floor and from the
+# pack alike). It never shows how old it is. Eating old food is fine; rotten food is below.
 
 # Game seconds per point burned at 100 %: a point a minute, 1440 a day.
 burn_seconds = 60
@@ -12,8 +16,11 @@ burn_seconds = 60
 start = 3600
 # The most nutrition there can be; eating past it is overeating (below).
 max = 6500
-# Vomiting (overeating, a rotten corpse, a corpse that disagrees) leaves at most this much: hungry.
+# Vomiting (overeating, rotten food, a corpse that disagrees) leaves at most this much: hungry.
 vomit_leaves = 1000
+# What harm from food is: degrees of this status (status.toml), from rotten food and from a
+# creature's `on_eat` harm. Without it nothing eaten may harm.
+sickness = "poisoned"
 
 # The least nutrition of each state, from the most fed down; below `fainting` the player is
 # Starving. Hungry is a warning only.
@@ -58,22 +65,23 @@ throw = 1
 choke = 0
 vomit = 50
 
+# Rotten food, any food past its keeping (corpses too): eating it makes you vomit with a `vomit`
+# percent chance, else makes you sick (`harm`, dice of degrees of the `sickness` status) and
+# exposes you to the diseases rotten food carries (diseases.toml), and it feeds you; a rotten
+# corpse's `on_eat` effects are gone from it.
+[rotten]
+vomit = 50
+harm = "1d4"
+
 # Corpses: a creature that dies leaves one (`corpse = false` in creatures.toml for none), made of
-# `material` and weighing what the creature did. It is fresh, then rotten `rotten_hours` after
-# the death, and gone `gone_hours` after it; it does not show its age. Eating a rotten one makes
-# you vomit with a `rotten_vomit` percent chance, else makes you sick (`rotten_harm`, dice of
-# degrees of the `sickness` status, status.toml) and feeds you; its creature's `on_eat` effects
-# are gone from it. A creature's `on_eat` harm is degrees of the same sickness.
+# `material` and weighing what the creature did. It rots from the moment of the death.
 [corpses]
 material = "flesh"
-rotten_hours = 8
-gone_hours = 36
-rotten_vomit = 50
-rotten_harm = "1d4"
-sickness = "poisoned"
 
 # What a corpse gives by its creature's size (sizes.toml; every size needs one): its nutrition,
-# and how many turns of eating (the `eat` action, actions.toml) it takes.
+# how many turns of eating (the `eat` action, actions.toml) it takes, and its shelf life (whole
+# hours or days, "8h", "30d"): how long after the death it `keeps` (then it is rotten) and
+# `lasts` (then it has rotted away).
 [corpses.size]
-small = { nutrition = 400, turns = 3 }
-medium = { nutrition = 1000, turns = 6 }
+small = { nutrition = 400, turns = 3, keeps = "8h", lasts = "36h" }
+medium = { nutrition = 1000, turns = 6, keeps = "8h", lasts = "36h" }

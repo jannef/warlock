@@ -17,8 +17,9 @@
 //! [`Stack::describe`] and [`Stack::known_magic`], which keep an unidentified item's affixes
 //! hidden.
 //!
-//! A corpse (spec §8 "Hunger") is a stack of one that remembers when its creature died
-//! ([`Stack::died`]): it rots from then on, and is gone in the end.
+//! Food (spec §8 "Hunger") remembers when it was made ([`Stack::died`]; a corpse, a stack of one,
+//! when its creature died): it rots from then on, and is gone in the end ([`crate::rot`]). Food
+//! joins a stack of the same food whatever its age, and the stack keeps the oldest.
 
 use crate::content::{Content, ObjectId, Rarity};
 use crate::magic::{Effect, Magic, Mods, name};
@@ -35,14 +36,16 @@ pub struct Stack {
     /// read it, presentation only through [`Stack::known_magic`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     magic: Option<Box<Magic>>,
-    /// A corpse: when its creature died, the moment it rots from (rules and dev tools only: a
-    /// corpse does not show its age, so presentation cannot read it). `None` for everything else.
+    /// Food: when it was made (a corpse: when its creature died), the moment it rots from (rules
+    /// and dev tools only: food does not show its age, so presentation cannot read it). `None`
+    /// for everything else, and for food in content that has not come into the world yet
+    /// ([`crate::rot::made_at`]).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) died: Option<GameTime>,
 }
 
 impl Stack {
-    /// `count` of a normal `object`, which is no corpse.
+    /// `count` of a normal `object`; food made by it does not know its age yet.
     pub fn new(object: ObjectId, count: u32) -> Self {
         Self {
             object,
@@ -148,13 +151,22 @@ impl Stack {
     }
 
     /// Whether the object exists in `content`, the count makes sense, its magic is valid for it,
-    /// and it knows when it died if and only if it is a corpse (a guard for saves).
+    /// and it knows when it was made if and only if it is food (a guard for saves).
     pub(crate) fn is_valid_for(&self, content: &Content) -> bool {
         usize::from(self.object.0) < content.object_defs().len()
             && self.count >= 1
             && (self.count == 1 || content.object(self.object).stackable)
             && (self.magic()).is_none_or(|m| m.check(content.object(self.object), content).is_ok())
-            && self.died.is_some() == content.object(self.object).corpse.is_some()
+            && self.died.is_some() == content.object(self.object).food.is_some()
+    }
+}
+
+/// The age a stack of food keeps when two join: the oldest (a stack that does not know its age
+/// takes the other's).
+fn oldest(a: Option<GameTime>, b: Option<GameTime>) -> Option<GameTime> {
+    match (a, b) {
+        (Some(a), Some(b)) => Some(a.min(b)),
+        (a, b) => a.or(b),
     }
 }
 
@@ -224,7 +236,7 @@ pub fn phrase_with(
 }
 
 /// Joins `stack` to a stack of the same object (and the same magic, if any) in `stacks` if it
-/// stacks; returns whether it did.
+/// stacks; returns whether it did. Food joins whatever its age, and keeps the oldest.
 fn join(stacks: &mut [Stack], stack: &Stack, content: &Content) -> bool {
     if !content.object(stack.object).stackable {
         return false;
@@ -232,6 +244,7 @@ fn join(stacks: &mut [Stack], stack: &Stack, content: &Content) -> bool {
     match (stacks.iter_mut()).find(|s| s.object == stack.object && s.magic == stack.magic) {
         Some(same) => {
             same.count += stack.count;
+            same.died = oldest(same.died, stack.died);
             true
         }
         None => false,
@@ -309,6 +322,31 @@ mod tests {
         add_to_inventory(&mut inventory, stack(&c, "dagger", 1), &c);
         assert_eq!(inventory.len(), 3);
         assert_eq!(inventory[0].count, 7);
+    }
+
+    #[test]
+    fn food_joins_whatever_its_age_and_keeps_the_oldest() {
+        let c = content();
+        let made = |count, hour: u64| Stack {
+            died: Some(GameTime::from_seconds(hour * 3600)),
+            ..stack(&c, "bread", count)
+        };
+        let mut inventory = vec![made(2, 10)];
+        add_to_inventory(&mut inventory, made(1, 4), &c);
+        add_to_inventory(&mut inventory, made(3, 20), &c);
+        assert_eq!(inventory, [made(6, 4)], "one stack, as old as the oldest");
+        let mut pile = vec![made(1, 30)];
+        add_to_pile(&mut pile, &[made(2, 12)], &c);
+        assert_eq!(pile, [made(3, 12)]);
+        // A loaf that does not know its age yet takes the stack's.
+        add_to_pile(&mut pile, &[stack(&c, "bread", 1)], &c);
+        assert_eq!(pile, [made(4, 12)]);
+        // Corpses never join: each keeps the moment its creature died.
+        let rat = c.object_id("rat_corpse").expect("a rat corpse");
+        let hour = |h: u64| GameTime::from_seconds(h * 3600);
+        let mut pile = vec![Stack::corpse(rat, hour(1))];
+        add_to_pile(&mut pile, &[Stack::corpse(rat, hour(2))], &c);
+        assert_eq!(pile.len(), 2);
     }
 
     #[test]

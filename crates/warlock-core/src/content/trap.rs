@@ -65,6 +65,17 @@ fn hits() -> String {
     "hits".into()
 }
 
+/// A trap's difficulty where data gives none (spec §8 "Searching").
+pub const DEFAULT_TRAP_DIFFICULTY: u8 = 15;
+
+fn trap_difficulty() -> u8 {
+    DEFAULT_TRAP_DIFFICULTY
+}
+
+fn trap_sign() -> String {
+    "a pressure plate".into()
+}
+
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct TrapFile {
@@ -120,6 +131,12 @@ pub(super) struct TrapSpec {
     message: Option<String>,
     charges: Option<u16>,
     noise: Option<TrapNoise>,
+    /// How hard it is to find (spec §8 "Searching").
+    #[serde(default = "trap_difficulty")]
+    difficulty: u8,
+    /// What gives it away to whoever finds it: "a pressure plate".
+    #[serde(default = "trap_sign")]
+    sign: String,
     kind: Kind,
     /// `shot`: the object that flies (and lands).
     object: Option<String>,
@@ -229,6 +246,10 @@ pub struct TrapDef {
     pub charges: Option<u16>,
     /// The noise it makes going off, on its cell.
     pub noise: Option<TrapNoise>,
+    /// How hard it is to find while hidden (spec §8 "Searching"): what a search must reach.
+    pub difficulty: u8,
+    /// What gives it away to whoever finds it: "You notice a pressure plate: an arrow trap."
+    pub sign: String,
     /// What hits ("arrow", "fireball") and what it does ("hits", "burns"), for messages.
     pub noun: String,
     pub verb: String,
@@ -245,6 +266,17 @@ impl TrapSpec {
         let id = self.id.clone();
         let err = |m: String| format!("trap `{id}`: {m}");
         let kind = self.kind;
+        if !super::DIFFICULTIES.contains(&i32::from(self.difficulty)) {
+            return Err(err(format!(
+                "difficulty {} is out of range ({} to {})",
+                self.difficulty,
+                super::DIFFICULTIES.start(),
+                super::DIFFICULTIES.end()
+            )));
+        }
+        if self.sign.trim().is_empty() {
+            return Err(err("`sign` must not be empty".into()));
+        }
         let allowed = |field: &str, given: bool, kinds: &[Kind]| {
             if given && !kinds.contains(&kind) {
                 Err(err(format!(
@@ -409,6 +441,8 @@ impl TrapSpec {
             message: self.message,
             charges: self.charges,
             noise: self.noise,
+            difficulty: self.difficulty,
+            sign: self.sign,
             noun,
             verb: self.verb,
             effect,

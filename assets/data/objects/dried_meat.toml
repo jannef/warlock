@@ -9,4 +9,4 @@ material = "flesh"
 weight = 150
 value = 3
 stackable = true
-food = { nutrition = 600, turns = 2 }
+food = { nutrition = 600, turns = 2, keeps = "60d", lasts = "120d" }

@@ -20,6 +20,8 @@
 //!    patrols are valid, and something emits light. A failed attempt is discarded and the next
 //!    attempt's stream is used, so retries are deterministic too.
 //! 5. Hide the branch's traps (spec §8 "Traps") from the level's trap stream ([`Rng::traps`]),
+//!    then a few of its doors (secret doors, spec §8 "Searching") from its secret stream
+//!    ([`Rng::secrets`]), only where the stairs and every key are still reached without them,
 //!    then roll its loot from its loot stream ([`Rng::loot`]).
 //!
 //! Generation is integer-only and never iterates a hash map. Seeds are stable within a game
@@ -35,7 +37,7 @@ mod vault;
 
 use crate::content::{
     Content, CreatureId, CreatureSpawn, Flow, Generator, LevelKind, LevelTemplate, LightId,
-    ObjectId, ShopPlan, SpecialRoom, StairsDir, StairsLink, TerrainId, Trap,
+    ObjectId, Secret, ShopPlan, SpecialRoom, StairsDir, StairsLink, TerrainId, Trap, secret_look,
 };
 use crate::door::Lock;
 use crate::geom::{Dir, Pos};
@@ -168,6 +170,8 @@ pub(crate) struct Canvas<'a> {
     pub loot: Vec<(Pos, LootGrade)>,
     /// Locks on closed doors: stamped from vaults, and on locked rooms (spec §8 "Doors").
     pub locks: BTreeMap<Pos, Lock>,
+    /// Secret doors stamped from vaults (spec §8 "Searching").
+    pub secrets: BTreeMap<Pos, Secret>,
     pub creatures: Vec<CreatureSpawn>,
     /// Special rooms (spec §7 "Special rooms"; `special.rs`).
     pub rooms: Vec<SpecialRoom>,
@@ -191,6 +195,7 @@ impl<'a> Canvas<'a> {
             traps: BTreeMap::new(),
             loot: Vec::new(),
             locks: BTreeMap::new(),
+            secrets: BTreeMap::new(),
             creatures: Vec::new(),
             rooms: Vec::new(),
             shops: Vec::new(),
@@ -397,6 +402,7 @@ pub fn generate(
             objects: canvas.objects,
             traps: canvas.traps,
             locks: canvas.locks,
+            secrets: canvas.secrets,
             regions: Vec::new(),
             rooms: canvas.rooms,
             shops: canvas.shops,
@@ -408,6 +414,7 @@ pub fn generate(
         };
         if connect::validate(&template, content).is_ok() {
             hide_traps(&mut template, content, pal, seed, def);
+            hide_secrets(&mut template, content, seed, def, &canvas.stamped);
             let floor = Floor {
                 terrain: pal.floor,
                 count: def.loot,
@@ -438,15 +445,7 @@ fn hide_traps(
     let mut rng = Rng::traps(seed, &template.id);
     let [least, most] = def.traps_per_level;
     let count = least + rng.below(most - least + 1);
-    let mut patrolled = std::collections::BTreeSet::new();
-    for spawn in &template.creatures {
-        let mut p = spawn.pos;
-        patrolled.insert(p);
-        for dir in &spawn.route {
-            p = p.step(*dir);
-            patrolled.insert(p);
-        }
-    }
+    let patrolled = patrolled(template);
     let near_stairs = |p: Pos| template.stairs.iter().any(|s| s.pos.chebyshev(p) <= 1);
     let mut free: Vec<Pos> = (template.terrain.iter())
         .filter(|&(p, t)| {
@@ -467,6 +466,74 @@ fn hide_traps(
         let at = free.swap_remove(rng.index(free.len()));
         let kind = def.traps[rng.index(def.traps.len())];
         (template.traps).insert(at, Trap::new(kind, content.trap(kind), false, None));
+    }
+}
+
+/// The cells creatures walk on their patrols, where they start included.
+fn patrolled(template: &LevelTemplate) -> std::collections::BTreeSet<Pos> {
+    let mut patrolled = std::collections::BTreeSet::new();
+    for spawn in &template.creatures {
+        let mut p = spawn.pos;
+        patrolled.insert(p);
+        for dir in &spawn.route {
+            p = p.step(*dir);
+            patrolled.insert(p);
+        }
+    }
+    patrolled
+}
+
+/// Hides a few of a generated level's doors (spec §8 "Searching"): `secret_doors` of them, drawn
+/// from the level's own secret stream ([`Rng::secrets`]), so the rest of the level is the same
+/// with or without them. A door is hidden only if it is closed and nothing else claims it (no
+/// lock, no patrol through it, no shop it leads into, no vault it was `stamped` from: vaults
+/// bring their own secrets), and only where the level stays valid without
+/// it: the stairs and a key to every lock are still reached from the arrival
+/// (`connect::validate`), so a secret door only ever hides a way the player may do without. It
+/// becomes the wall around it ([`secret_look`]), with the branch's difficulty for secret doors
+/// ([`crate::content::SearchRules::secret_door`]).
+fn hide_secrets(
+    template: &mut LevelTemplate,
+    content: &Content,
+    seed: u64,
+    def: &crate::content::DungeonDef,
+    stamped: &Grid<bool>,
+) {
+    let [least, most] = def.secret_doors;
+    if most == 0 {
+        return;
+    }
+    let mut rng = Rng::secrets(seed, &template.id);
+    let count = least + rng.below(most - least + 1);
+    let patrolled = patrolled(template);
+    let shop_door =
+        |p: Pos| (template.shops.iter()).any(|s| Dir::ALL.iter().any(|d| s.contains(p.step(*d))));
+    let mut doors: Vec<Pos> = (template.terrain.iter())
+        .filter(|&(p, t)| {
+            content.terrain(*t).is_closed_door()
+                && !template.locks.contains_key(&p)
+                && !patrolled.contains(&p)
+                && !shop_door(p)
+                && !stamped[p]
+        })
+        .map(|(p, _)| p)
+        .collect();
+    let difficulty = content.search().secret_door;
+    let mut hidden = 0;
+    while hidden < count && !doors.is_empty() {
+        let at = doors.swap_remove(rng.index(doors.len()));
+        let door = template.terrain[at];
+        let Some(look) = secret_look(&template.terrain, content, at) else {
+            continue;
+        };
+        template.terrain.set(at, look);
+        template.secrets.insert(at, Secret { door, difficulty });
+        if connect::validate(template, content).is_ok() {
+            hidden += 1;
+        } else {
+            template.terrain.set(at, door);
+            template.secrets.remove(&at);
+        }
     }
 }
 
@@ -525,8 +592,8 @@ pub(crate) fn place_loot(
 }
 
 /// The template as text: terrain glyphs, the top object of each pile over them, traps (hidden
-/// ones too) over those, creatures on top, `*` for a light placed on floor, and `&` for a locked
-/// door. Trailing spaces are trimmed. Used by snapshot tests.
+/// ones too) over those, creatures on top, `*` for a light placed on floor, `&` for a locked
+/// door, and `S` for a secret door. Trailing spaces are trimmed. Used by snapshot tests.
 pub fn ascii(template: &LevelTemplate, content: &Content) -> String {
     draw(template, content, false)
 }
@@ -557,6 +624,8 @@ fn draw(template: &LevelTemplate, content: &Content, rooms: bool) -> String {
                     '*'
                 } else if template.locks.contains_key(&p) {
                     '&'
+                } else if template.secrets.contains_key(&p) {
+                    'S'
                 } else if let Some(room) = room {
                     content.room_effect(room.effect).mark
                 } else {

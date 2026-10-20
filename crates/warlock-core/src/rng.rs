@@ -63,6 +63,13 @@ impl Rng {
         Self::stream(run_seed, &format!("traps/{level}"))
     }
 
+    /// The stream that hides doors on generated level `level` (secret doors, spec §8
+    /// "Searching"), apart from its map's and its traps', so a level is the same with or without
+    /// them.
+    pub fn secrets(run_seed: u64, level: &str) -> Self {
+        Self::stream(run_seed, &format!("secrets/{level}"))
+    }
+
     /// The loot stream of generated level `level` (spec §8 "Magic items"): what lies on its floor
     /// and in its vaults, rolled once the map is built, so the map is the same without it.
     pub fn loot(run_seed: u64, level: &str) -> Self {

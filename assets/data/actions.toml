@@ -48,6 +48,9 @@ eat = 1000
 # A turn of digging into a wall with a digging tool ready (spec §8 "Digging"): digging goes on
 # turn after turn until the wall gives way or something interrupts it.
 dig = 1000
+# A turn of searching for secret doors and hidden traps around you (`s`; spec §8 "Searching"):
+# searching for a while (`z`) goes on turn after turn until something is found or interrupts it.
+search = 1000
 # Chatting with someone (`C`): a few words. Asking about a topic on the dialogue screen takes no
 # time.
 chat = 500

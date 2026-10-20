@@ -11,8 +11,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     trap's cell is in their sight as the turn is perceived (a creature they see stepping onto
     it). Then it is **known** (`known`) from then on: drawn as its glyph and color over anything
     lying there (§4.2), remembered like terrain (`trap_memory`, as last seen; forgotten when seen
-    gone), named by look mode, and in the snapshot (`PerceptionView::trap`, `known_traps`). There
-    is no searching yet; a level may show a trap from the start (`known = true`).
+    gone), named by look mode, and in the snapshot (`PerceptionView::trap`, `known_traps`). The
+    player may also find it (§8 "Searching"); a level may show a trap from the start (`known =
+    true`).
   - **Setting one off**: whoever steps onto a trap sets it off, the player (any `move` onto it:
     the rules never ask; the interface does, §6 "Known traps") and creatures alike: creatures
     know nothing of traps, hidden or known, and walk onto them on their rounds or chasing someone,
@@ -136,6 +137,60 @@ developer notes (CLAUDE.md, `docs/dev/`).
     its brass key carried by the kobold on guard, a skeleton key inside); a dungeon branch with a
     `key` gets a few locked rooms on its rooms levels, its key always within reach (§7
     "Generators", validated). The showcase's locked door is harmless.
+- **Searching** (`warlock-core/src/world/search.rs`; data `data/search.toml` §7; #140): one
+  check finds every hidden feature, secret doors and hidden traps alike.
+  - **Secret doors**: a closed door that looks and acts like the wall around it until it is
+    found. It is per-cell ground truth beside that wall, like a lock (`LevelState::secrets`: the
+    door it is and its difficulty; saved and hashed): the cell's terrain *is* the wall it looks
+    like (`content::secret_look`: of its solid neighbors north, east, south, and west that are no
+    door, rock counting as its face, the most common, ties to the first). So it blocks sight,
+    sound, light, and every step, creatures' too, is drawn, remembered, and named as that wall,
+    and breaks as that wall to digging and blasts; whatever becomes of the wall takes the secret
+    with it (`World::set_terrain`). Perception never carries secrets.
+  - **Difficulty**: each hidden feature has one, a trap type's (`difficulty`, §7) or a secret
+    door's own (`secret = N` in a legend, else `data/search.toml`'s `secret_door`, 14), plus on
+    a dungeon branch its `hidden_per_depth` for each level below the first (the Depths: 1, so a
+    secret door on depth 8 is 21).
+  - **The checks** (§8 "Checks": 2d12 plus a modifier against the difficulty; a natural 2 always
+    fails, a natural 24 always succeeds), both of the effective scores (§8 "Stats"):
+    - **active**, searching: the Intelligence modifier, plus the Search skill's benefit (+8 at
+      100, +12 at 200), plus the race's `search` (elves 2);
+    - **passive**, noticing in passing: the Willpower modifier, plus the Spot skill's benefit
+      (+8 at 100, +12 at 200), plus the race's `search`, less `passive_penalty` (4).
+    The player never sees a difficulty, a modifier, or a roll: an average searcher (Intelligence
+    10, untrained) finds a secret door of 14 with 46 % of their turns of searching.
+  - **Searching** (`s`: `Action::Search(1)`, replay text `search`; `z`, searching for a while:
+    `search:N`, N up to 100, the key sending `data/search.toml`'s `turns`, 10): each turn is the
+    `search` action (1000, 6 s; slowed by burden like every price) and gives every hidden feature
+    within reach the active check: the eight cells around the player (never their own: a trap
+    there has just gone off), and with the Search skill's reach (75 and up: one cell more) the
+    cells that far in the player's line of sight. Searching for a while goes on turn after turn
+    through the rest loop (`World::keep_at`), so it stops like a rest (a creature coming into
+    view, a message, death) and at once when something is found. Every turn of it may earn the
+    Search skill a training mark (10 %), whatever it finds. A single search that finds nothing
+    says nothing; one for a while says how it ended: "You search for 1 minute and find
+    nothing.", "You stop searching after 30 seconds.", "A kobold comes into view; you stop
+    searching after 30 seconds."
+  - **Noticing in passing**: after every turn the player takes (`run_turn`, before anyone else
+    acts: a step, a wait, a turn of a rest, a dig, a meal, or a search), every hidden feature on
+    the eight cells around them gets the passive check, if they notice such things at all:
+    **elves** everything (the race's `passive_search = "all"`), **dwarves** what is on stone
+    (`"stone"`: the cell's terrain is `stone`, stone walls and floors, most of a dungeon, but not
+    timber, earth, or trees), and anyone **trained in Spot** everything (a thief, a ranger);
+    everyone else nothing. Each thing noticed may earn Spot a mark (50 %).
+  - **No limit on trying again** (the owner's rule): every check is rolled afresh, after every
+    turn, with no memory of failed ones and no cooldown; time is the only price. Checks draw
+    from the gameplay stream only when a hidden feature is in reach (two draws each), so a turn
+    with nothing hidden around draws nothing extra.
+  - **Found**: a secret door becomes its closed door ("You find a secret door!"); a trap becomes
+    known as one seen going off does (`World::know_trap`, shared with `learn_traps`; "You notice
+    a tripwire: an alarm trap.", the trap's `sign`, default "a pressure plate"). Either is
+    remembered at once, in the dark too, and the message stops a rest.
+  - **Where secret doors are**: level legends (§7 "Secret doors in level files"), indoor vaults
+    (stamped with them), and the rooms levels of a branch with `secret_doors` (the Depths: one
+    or two a level), only where the level does without them (§7 "Generators"). The showcase hub
+    has one, harmless: the hall below the storeroom and the pantry hides a closet with a little
+    gold.
 - **Digging** (`warlock-core/src/world/dig.rs`; M19, #131): walls give way to digging and to
   explosions, ADOM-like.
   - **Walls that break**: terrain with a `hardness` and what it `becomes` (§7): stone walls 600,

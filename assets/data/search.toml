@@ -1,0 +1,29 @@
+# Searching (spec §8 "Searching"): finding hidden features, secret doors and hidden traps, with
+# one check for all of them (spec §8 "Checks": 2d12 plus a modifier against a difficulty).
+#
+# A secret door looks and acts like the wall around it until it is found; a hidden trap looks
+# like the floor. Each has a difficulty: a trap's comes from its type (traps.toml `difficulty`),
+# a secret door's from its level (`secret = N` in a legend, else `secret_door` below); on a dungeon
+# branch every hidden feature is harder by the branch's `hidden_per_depth` for each level below
+# the first (dungeons.toml).
+#
+# - Searching (`s`, a turn; `z`, for a while): every hidden feature on the cells around you
+#   (farther with a high Search skill) gets the active check: 2d12 + your Intelligence modifier +
+#   what your Search skill gives + your race's `search` (races.toml).
+# - In passing, after every turn you take: every hidden feature on the cells around you gets the
+#   passive check: 2d12 + your Willpower modifier + what your Spot skill gives + your race's
+#   `search` - `passive_penalty`. Only elves (everything), dwarves (what is on stone), and those
+#   trained in Spot (everything) notice things in passing.
+#
+# Every check is rolled afresh: try as often as you like; time is the only price.
+
+# What the passive check loses against searching: you notice less in passing than where you
+# look (0 to 20).
+passive_penalty = 4
+# Searching for a while (`z`) goes on for at most this many turns, stopping at once when
+# something is found or interrupts it (1 to 100).
+turns = 10
+# A secret door's difficulty where its level gives none: `secret = true` in a level legend, and
+# the doors the generators hide (1 to 50). An average searcher (Intelligence 10, untrained) finds
+# one at 14 nearly half of the time with each turn of searching.
+secret_door = 14

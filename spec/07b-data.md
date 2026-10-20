@@ -73,7 +73,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   tries (`{ message = "...", vomit = 25, stat = { toughness = 5 }, heal = "1d4", harm = "1d2",
   satiation = 500 }`: the message said once it is eaten, a percent chance it comes back up, a
   percent chance per stat to raise it by 1 up to its potential, dice of hit points healed, dice
-  of degrees of sickness given (the status `[corpses] sickness` names, poisoned; §8 "Status
+  of degrees of sickness given (the status `sickness` names, poisoned; §8 "Status
   effects"), nutrition beyond its size's; chances 0 to 100, dice rolling 0 to 1000; only on a
   creature that leaves a corpse). The built-in ones: the giant rat "Gamey and stringy, but it
   stays down."; the cave bat leathery and sickening (1d2); the kobold and the kobold archer
@@ -85,9 +85,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   step (the `step` action; default 100; still and running water 200, shallow water 150; local
   levels only), a
   `bounce` tint for the light it reflects (§5), a `height` in cells for sun shadows (default 1 if opaque, else 0; at most 4),
-  `roofed` (never lit by the sun or the sky), `stains` (whether blood stains it, §8 "Blood";
-  default true; false for water, running water, lava, fountains, braziers, wall torches, solid
-  rock, and the overworld's river and lake), and for hearing a `step_noise` (how loud steps onto
+  `roofed` (never lit by the sun or the sky), `stone` (stone, worked or not: dwarves notice what
+  is hidden on it in passing, §8 "Searching"; default false; floors, walls, granite, stairs,
+  flagstones, rubble, rocky ground, boulders, and the like), `stains` (whether blood stains it,
+  §8 "Blood"; default true; false for water, running water, lava, fountains, braziers, wall
+  torches, solid rock, and the overworld's river and lake), and for hearing a `step_noise` (how loud steps onto
   it are, in percent of the walker's footsteps, 0 to 1000; default 100), a door's `toggle_noise`
   (how loud opening the closed door or closing the open one is, at most 300; default 0, silent;
   only doors), and a `muffle` (the loudness a sound loses entering the cell, at most 300; default
@@ -122,6 +124,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   of its `glyph`, one per cell picked by a hash of its position (a space for none; look mode
   and dumps use `glyph`). The calendar's month names are
   `data/calendar.toml` (exactly 12; without the file months are numbered).
+- **Searching** (`data/search.toml`, optional; without it the numbers below; §8 "Searching"):
+  `passive_penalty` (what noticing in passing loses against searching, 0 to 20; 4), `turns` (how
+  long searching for a while lasts at most, 1 to 100; 10), and `secret_door` (a secret door's
+  difficulty where its level gives none, 1 to 50; 14).
 - **Action costs** (`data/actions.toml`, optional): action ids mapped to their cost in energy,
   e.g. `wait = 1000`, 1000 being a normal action (6 s at normal speed; §8 "Time"), 100 to
   10 000. The ids are `step` (onto terrain of `move_cost` 100), `wait`, `open_door`,
@@ -174,17 +180,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
   scimitar, the rapier, and the club are not), `ammo` (the kind of ammunition it is, `ammo = "arrow"`), and
   `launches` (the kind a missile weapon shoots, `launches = "arrow"`; some object must be that
   ammunition). Launchers and ammunition pair by that kind (`Content::fires`). Food (§8
-  "Hunger") has `food = { nutrition = 1500, turns = 4 }`: the nutrition points it gives (1 to
-  100 000) and the turns of eating it takes (1 to 100; never on things worn, wielded, shot,
-  thrown, or burned): strips of dried meat (600, 2 turns), apples (150, 1), food rations (1500,
-  4), loaves of bread (800, 3), angelica roots (20, 1). A remedy also has `cures`, the means it
+  "Hunger") has `food = { nutrition = 1500, turns = 4, keeps = "30d", lasts = "60d" }`: the
+  nutrition points it gives (1 to 100 000), the turns of eating it takes (1 to 100; never on
+  things worn, wielded, shot, thrown, or burned), and its shelf life in whole hours or days
+  (`"8h"`, `"30d"`): how long after it was made it `keeps` (1 hour or more; old past half of it,
+  rotten after it) and `lasts` (longer than it keeps, at most 3600 days; then it has rotted
+  away): strips of dried meat (600, 2 turns, 60 and 120 days), apples (150, 1, 14 and 28), food
+  rations (1500, 4, 30 and 60), loaves of bread (800, 3, 5 and 10), angelica roots (20, 1, 30
+  and 60). A remedy also has `cures`, the means it
   applies as it is eaten (names some status or disease lists in its `cured_by`, else a content
   error; food only): the angelica root `cures = ["remove_disease"]` (§8 "Diseases"). **Corpses** are objects too, one made for every creature type
   that leaves one (not the player) when content loads, after the objects of the file in creature
   order, with the id `<creature>_corpse`: "kobold corpse", `%` in the creature's color, made of
   the corpses' material (`data/hunger.toml`), weighing the creature's weight, not stackable, and
-  feeding by the creature's size. Level files and `carry` cannot place them (a content error):
-  only creatures that die leave them, each knowing when it died. What they do in a
+  feeding and keeping by the creature's size. Level files and `carry` cannot place them (a
+  content error): only creatures that die leave them, each knowing when it died. What they do in a
   fight (§8 "Combat"; only for things with a `slot`): a weapon's `damage` dice (`"1d8"`; a
   launcher's, required for one, are its shots' and carry its draw weight, `"1d8+2"`), `threat`
   (the lowest natural roll that threatens a critical, 2 to 24, default 22), `crit` (the damage

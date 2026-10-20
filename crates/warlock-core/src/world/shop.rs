@@ -16,6 +16,9 @@
 //! - **Dropping** in the shop puts back what is unpaid; of the player's own things it offers a
 //!   price for what it buys ([`crate::Action::Drop`] says the offer and keeps them;
 //!   [`crate::Action::Sell`] takes it, from the keeper's purse), and has no use for the rest.
+//! - **Rotten food** (spec §8 "Hunger") is worth nothing: lying in the shop it is not for sale,
+//!   and the keeper will not buy it ("Grimbold sniffs at a loaf of bread and says: \"Not at any
+//!   price.\""). What is on the bill stays priced as it was.
 //! - **Leaving** by the shop's way out (its `exits`: the door) owing anything, the keeper steps
 //!   into the way and the player is turned back one step into the shop ([`World::turned_back`]):
 //!   walking out of the door never steals. [`crate::Action::Pay`] with a direction pays and
@@ -152,11 +155,17 @@ impl Shop {
             && inside(self.min)
             && inside(self.max)
             && self.exits.iter().all(|&p| inside(p))
-            && self.unpaid.iter().all(|s| s.is_valid_for(content))
+            // The bill counts by object: no stacks lying anywhere, so no magic and no age.
+            && self.unpaid.iter().all(|s| {
+                usize::from(s.object.0) < content.object_defs().len()
+                    && s.count >= 1
+                    && s.magic().is_none()
+                    && s.died.is_none()
+            })
     }
 
     /// Adds `stack` to what the player owes, counted by object (a magic item is priced as its
-    /// base item).
+    /// base item, food whatever its age).
     fn owe(&mut self, stack: &Stack) {
         match self.unpaid.iter_mut().find(|s| s.object == stack.object) {
             Some(same) => same.count += stack.count,
@@ -243,6 +252,8 @@ struct Deal {
     offer: u32,
     /// The player's own things the shop has no use for.
     refused: Vec<Stack>,
+    /// The player's own food the shop would buy but for its being rotten.
+    spoilt: Vec<Stack>,
     /// How many of each inventory stack leave the player's pack.
     leaving: Vec<u32>,
 }
@@ -266,27 +277,40 @@ impl World {
         favour(&self.content, self.shop_kinds(), self.state.player())
     }
 
-    /// What `stack` lying at `p` costs, if it is for sale there: in an open shop, and traded.
+    /// Whether `stack` is rotten food, which is worth nothing (spec §7 "Shops").
+    fn spoilt(&self, stack: &Stack) -> bool {
+        self.stage(stack).is_some_and(|s| s.is_rotten())
+    }
+
+    /// What `stack` lying at `p` costs, if it is for sale there: in an open shop, traded, and
+    /// not rotten food.
     pub(super) fn asking_price(&self, p: Pos, stack: &Stack) -> Option<u32> {
         let shops = self.content.shops()?;
         let shop = (self.state.current().shops.iter()).find(|s| s.is_open() && s.contains(p))?;
+        if self.spoilt(stack) {
+            return None;
+        }
         let price = shops.price(&self.content, shop.kind, stack, self.player_favour());
         (price > 0).then_some(price)
     }
 
     /// The player picked up `got` in the open shop they stand in: what is for sale is now unpaid.
-    /// Returns the price of each stack (`None` for what is free to take).
+    /// Returns the price of each stack (`None` for what is free to take: rotten food too).
     pub(super) fn picked_up_goods(&mut self, got: &[Stack]) -> Vec<Option<u32>> {
         let Some(i) = self.shop_here() else {
             return vec![None; got.len()];
         };
         let (content, favour) = (self.content.clone(), self.player_favour());
         let shops = content.shops().expect("a shop is here");
+        let spoilt: Vec<bool> = got.iter().map(|s| self.spoilt(s)).collect();
         let level = self.state.current_mut();
         let shop = &mut level.shops[i];
-        got.iter()
-            .map(|stack| {
-                let price = shops.price(&content, shop.kind, stack, favour);
+        (got.iter().zip(spoilt))
+            .map(|(stack, spoilt)| {
+                let price = match spoilt {
+                    true => 0,
+                    false => shops.price(&content, shop.kind, stack, favour),
+                };
                 (price > 0).then(|| {
                     shop.owe(stack);
                     price
@@ -298,12 +322,22 @@ impl World {
     /// The player ate `food` (one of it), from the pack or the floor as `meal` says, in the open
     /// shop they stand in: eaten goods are bought (spec §7 "Shops"). Food that lay there for sale
     /// is now owed for; unpaid food from the pack stays owed, as the bill counts by object and
-    /// nothing that uses goods up takes them off it. The keeper says so.
+    /// nothing that uses goods up takes them off it. The keeper says so. (Rotten food lying
+    /// there was worth nothing; unpaid food from the pack is priced as the bill prices it.)
     pub(super) fn ate_goods(&mut self, meal: Meal, food: &Stack) {
         let Some(i) = self.shop_here() else {
             return;
         };
-        let Some(price) = self.asking_price(self.player_pos(), food) else {
+        let price = match meal {
+            Meal::Floor(_) => self.asking_price(self.player_pos(), food),
+            Meal::Pack(_) => {
+                let kind = self.state.current().shops[i].kind;
+                let price =
+                    (self.shop_kinds()).price(&self.content, kind, food, self.player_favour());
+                (price > 0).then_some(price)
+            }
+        };
+        let Some(price) = price else {
             return;
         };
         let what = &self.content.object(food.object).name;
@@ -407,6 +441,13 @@ impl World {
             let what = object::phrase(&deal.refused, &content);
             self.say(format!("{name} has no use for {what}."));
         }
+        // Rotten food is worth nothing: the keeper's nose is the only hint of it the player gets.
+        if !deal.spoilt.is_empty() {
+            let what = object::phrase(&deal.spoilt, &content);
+            self.say(format!(
+                "{name} sniffs at {what} and says: \"Not at any price.\""
+            ));
+        }
         if !deal.offered.is_empty() {
             let what = object::phrase(&deal.offered, &content);
             self.say(format!("{name} offers {} gold for {what}.", deal.offer));
@@ -476,6 +517,8 @@ impl World {
             let offer = shops.offer(&content, shop.kind, &own, favour);
             if offer == 0 {
                 deal.refused.push(own);
+            } else if self.spoilt(&own) {
+                deal.spoilt.push(own);
             } else if sell {
                 deal.sold.push(own);
                 deal.payment += offer;

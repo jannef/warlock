@@ -8,7 +8,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `{ id = "depths", generator = "rooms", depth = 8, size = [80, 21] }`, plus optional name,
   patrolling creature kinds, the traps its levels hide (`traps`, trap ids; one named twice comes
   up twice as often) and how many a level gets (`traps_per_level = [least, most]`, default
-  `[2, 4]`, at most 50), ambient light, `loot = [fewest, most]` (items of loot on each
+  `[2, 4]`, at most 50), how many doors its rooms levels hide (`secret_doors = [least, most]`,
+  at most 20, default none; the Depths `[1, 2]`; §8 "Searching") and how much harder its hidden
+  features are for each level below the first (`hidden_per_depth`, 0 to 5, default 0; the Depths
+  1), ambient light, `loot = [fewest, most]` (items of loot on each
   level's floor, at most 50; the Depths 2 to 4; §8 "Magic items"), `temperature` (°C, −40 to 40;
   default 10; §5 "Temperature"), a `key` (a key object: its rooms levels lock a few rooms with
   the lock it opens, §8 "Doors"; the Depths' is the rusty key), and per-depth overrides of
@@ -46,8 +49,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (`traps/<level id>`, so the level is the same with or without them): a count within
   `traps_per_level`, each of a kind from `traps`, on plain floor nothing else claims (no object,
   light, or trap), never on or next to a staircase (the player arrives there), and never on a
-  creature's patrol (creatures know nothing of traps and would spring one every round); its loot
-  is rolled after that (§8 "Magic items"). *outdoor* (the local
+  creature's patrol (creatures know nothing of traps and would spring one every round); then it
+  hides doors (secret doors, §8 "Searching"), also from a stream of their own (`secrets/<level
+  id>`): a count within `secret_doors`, each a closed door nothing else claims (no lock, no
+  patrol through it, no shop it leads into, no vault it came with), made the wall around it and
+  kept only if the level still validates with secret doors counted as walls for the stairs and
+  the keys (every cell is still reached with them found), so a secret door only ever hides a way
+  the player can do without; its loot is rolled after that (§8 "Magic items"). *outdoor* (the local
   areas of the overworld, §3): smooth integer value noise (random values on a coarse lattice,
   eased between) sized as a share of the area lays everything in natural blobs — woods, clearings,
   meadows of flowers, pools, crags; the share of woods blends towards each neighboring cell's

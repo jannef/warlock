@@ -434,15 +434,21 @@ impl World {
     /// themselves, and those set off where they see (a creature they see stepping onto one).
     pub(super) fn learn_traps(&mut self, events: &[Event]) {
         let player = self.state.player;
-        let current = self.state.current_level.clone();
         for event in events {
             if let Event::TrapSprung { at, victim, .. } = *event
                 && (victim == player || self.perception.sees_actors_at(at))
-                && let Some(trap) =
-                    (self.state.levels.get_mut(&current)).and_then(|l| l.traps.get_mut(&at))
             {
-                trap.known = true;
+                self.know_trap(at);
             }
         }
+    }
+
+    /// The trap at `at` on the current level is known from now on: the player saw it go off
+    /// ([`World::learn_traps`]) or found it (spec §8 "Searching"). Returns its type, if a trap
+    /// lies there.
+    pub(super) fn know_trap(&mut self, at: Pos) -> Option<TrapId> {
+        let trap = self.state.current_mut().traps.get_mut(&at)?;
+        trap.known = true;
+        Some(trap.kind)
     }
 }

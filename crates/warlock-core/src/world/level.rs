@@ -1,13 +1,13 @@
-//! Per-level mutable state: terrain, locks, piles of objects, traps, and blood as they are now,
-//! and what the player remembers of them; fires, and the walls dug into; the level's special
-//! rooms (spec §7 "Special rooms") and whether the player has been inside each; its shops (spec
-//! §7 "Shops").
+//! Per-level mutable state: terrain, locks, secret doors, piles of objects, traps, and blood as
+//! they are now, and what the player remembers of them; fires, and the walls dug into; the
+//! level's special rooms (spec §7 "Special rooms") and whether the player has been inside each;
+//! its shops (spec §7 "Shops").
 
 use super::shop::Shop;
 use crate::blood::{Spatter, Stain};
 use crate::color::Rgb;
 use crate::content::{
-    Content, EdgeExit, Flow, LevelKind, LevelTemplate, LightId, RoomEffectDef, SpecialRoom,
+    Content, EdgeExit, Flow, LevelKind, LevelTemplate, LightId, RoomEffectDef, Secret, SpecialRoom,
     StairsLink, TerrainDef, TerrainId, Trap, TrapId,
 };
 use crate::door::Lock;
@@ -71,6 +71,10 @@ pub struct LevelState {
     /// broken. Ground truth: a locked door looks like any closed door.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) locks: BTreeMap<Pos, Lock>,
+    /// Secret doors not yet found, by position (spec §8 "Searching"): the cell's terrain is the
+    /// wall each looks like; found, it becomes its door and is gone from here. Ground truth.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) secrets: BTreeMap<Pos, Secret>,
     /// Blood on cells, by position (spec §8 "Blood"). Presentation-only: no rule reads it.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) blood: BTreeMap<Pos, Stain>,
@@ -138,6 +142,7 @@ impl LevelState {
             object_memory: BTreeMap::new(),
             fires: BTreeMap::new(),
             locks: template.locks.clone(),
+            secrets: template.secrets.clone(),
             blood: BTreeMap::new(),
             blood_memory: BTreeMap::new(),
             dug: BTreeMap::new(),
@@ -212,6 +217,13 @@ impl LevelState {
     /// tools only**: the player learns a door is locked by trying it.
     pub fn lock_at(&self, p: Pos) -> Option<&Lock> {
         self.locks.get(&p)
+    }
+
+    /// The secret door at `p`, if one is there and not yet found (ground truth: it looks like
+    /// the wall around it). Only reachable through [`crate::World::ground_truth`] outside the
+    /// rules, **for developer tools only**.
+    pub fn secret_at(&self, p: Pos) -> Option<&Secret> {
+        self.secrets.get(&p)
     }
 
     /// Blood of `color` lands here at `now`: on a cell whose terrain holds it, it adds to the
