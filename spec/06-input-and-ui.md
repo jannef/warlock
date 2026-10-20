@@ -229,7 +229,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   85 / 120`, the total alone at the highest level; §8 "Experience"), their hit points (`HP  Hit
   points  18/24`), Defence
   (`Dv  Defence  15`; the total only, as its Dexterity part would give away a modifier; §8
-  "Combat"), and Protection right below it (`Pv  Protection  3`; the total only), their combat stance by name (`Stance  Neutral`; §8 "Stances"), the status effects
+  "Combat") and Protection beside it on the same row (`Pv  Protection  3`; the total only),
+  their combat stance by name (`Stance  Neutral`; §8 "Stances"), the status effects
   they suffer, by name, when there are any (`Status  Bleeding, Poisoned`; never how severe or for
   how long), the diseases they know they have, by name, on a row of their own below (`Diseased
   Filth fever, red ache`; one that has not progressed yet is only "Diseased"; never a timer or a

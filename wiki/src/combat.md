@@ -116,7 +116,7 @@ carry a disease: see [Diseases](diseases.md).
 ## Protection
 
 Defence decides whether a blow lands; **Protection** (shown as `Pv` on the
-[character screen](character.md), `@`, below your Defence) takes damage off every blow that
+[character screen](character.md), `@`, beside your Defence) takes damage off every blow that
 does. Each hit loses between half your Protection (rounded up) and all of it, at random.
 
 - **Every piece adds up**: body armour, helm, gloves, boots, and cloak each add their

@@ -30,6 +30,10 @@ use warlock_core::time::GameTime;
 /// Width of the stat name column: the longest name and a space.
 const NAME_W: i32 = 14;
 
+/// Where a value's neighbour on its row begins (Protection beside Defence), from the value's
+/// column: room for the value and a gap.
+const BESIDE: i32 = 8;
+
 /// Width of the panel: the birth and the burden's thresholds fit on one line each.
 const WIDTH: i32 = 72;
 
@@ -148,8 +152,8 @@ impl CharacterScreen {
 
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         // Rows: margin, the name, a gap, race, gender, class, the birth, and a gap (with a
-        // character), the stats, a gap, level, experience, hit points, Defence, Protection, and
-        // stance (and the status effects and known diseases, if any), a gap, the weight, the
+        // character), the stats, a gap, level, experience, hit points, Defence and Protection,
+        // and stance (and the status effects and known diseases, if any), a gap, the weight, the
         // burden's thresholds, a gap, the footer, frame.
         let width = WIDTH.min(console.cols() as i32) - 4;
         let birth = fit_parts(&self.birth, width);
@@ -160,7 +164,7 @@ impl CharacterScreen {
         let thresholds = (self.load.as_ref()).map_or(Vec::new(), |l| thresholds(l, width));
         let status_rows =
             i32::from(!self.effects.is_empty()) + i32::from(!self.diseases.is_empty());
-        let h = Stat::COUNT as i32 + 16 + identity_rows + thresholds.len() as i32 + status_rows;
+        let h = Stat::COUNT as i32 + 15 + identity_rows + thresholds.len() as i32 + status_rows;
         let panel = Panel::new(console, " Character ", WIDTH, h);
         super::info_tabs::draw_tabs(console, &panel, bindings, super::ScreenName::Character);
         let x = panel.inner_x();
@@ -202,21 +206,32 @@ impl CharacterScreen {
         }
         y += 1;
         // `Lv  Level  3`, `XP  Experience  85 / 120` (the total alone at the highest level),
-        // `HP  Hit points  18/24`, `Dv  Defence  15`, and `Pv  Protection  3`, in the stats'
-        // columns.
+        // `HP  Hit points  18/24`, and `Dv  Defence  15` in the stats' columns, with
+        // `Pv  Protection  3` beside the Defence.
         let (hp, max) = self.hp;
-        for (abbrev, name, value) in [
-            ("Lv", "Level", self.progress.level.to_string()),
-            ("XP", "Experience", experience_text(&self.progress)),
-            ("HP", "Hit points", format!("{hp}/{max}")),
-            ("Dv", "Defence", format!("{:>2}", self.defence)),
-            ("Pv", "Protection", format!("{:>2}", self.protection)),
-            ("", "Stance", self.stance.clone()),
+        let protection = ("Pv", "Protection", format!("{:>2}", self.protection));
+        for (abbrev, name, value, beside) in [
+            ("Lv", "Level", self.progress.level.to_string(), None),
+            ("XP", "Experience", experience_text(&self.progress), None),
+            ("HP", "Hit points", format!("{hp}/{max}"), None),
+            (
+                "Dv",
+                "Defence",
+                format!("{:>2}", self.defence),
+                Some(protection),
+            ),
+            ("", "Stance", self.stance.clone(), None),
         ] {
             if fits(y) {
                 console.print(x, y, abbrev, TEXT_DIM);
                 console.print(x + 4, y, name, TEXT);
                 console.print(x + 4 + NAME_W, y, &value, TEXT);
+                if let Some((abbrev, name, value)) = beside {
+                    let x = x + 4 + NAME_W + BESIDE;
+                    console.print(x, y, abbrev, TEXT_DIM);
+                    console.print(x + 4, y, name, TEXT);
+                    console.print(x + 4 + name.len() as i32 + 1, y, &value, TEXT);
+                }
             }
             y += 1;
         }
@@ -410,10 +425,10 @@ mod tests {
             "In  Intelligence  12",
             "Wi  Willpower     11",
             "Pr  Presence       9",
-            // Toughness 10 and a human's 4 and a thief's 3; Defence 10 and Dexterity's share.
+            // Toughness 10 and a human's 4 and a thief's 3; Defence 10 and Dexterity's share,
+            // and no Protection beside it.
             "HP  Hit points    17/17",
-            "Dv  Defence       11",
-            "Pv  Protection     0",
+            "Dv  Defence       11      Pv  Protection  0",
             "Lv  Level         1",
             "XP  Experience    0 / 20",
         ] {

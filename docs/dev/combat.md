@@ -57,7 +57,7 @@ shell.", "Something hits you but does no harm." when an end is unseen. Penetrati
 `off_hand_blow`, `ranged` (launcher plus ammunition), and `thrown`; natural attacks, bashes,
 kicks, and traps have none. Data: objects `protection` (armour worn, never a hand slot or a
 shield; `check_protection`) and `penetration`; creatures `natural = { defence, protection,
-name }`. Presentation: `PerceptionView::own_protection` (the character screen's `Pv` row, the
+name }`. Presentation: `PerceptionView::own_protection` (the character screen's `Pv` beside `Dv`, the
 JSON dump's `protection`), the item description ("Protection 3", "Pierces armour": never a
 penetration number); the dev `actors` layer shows every actor's `pv`. **Damage types (#151)**
 split it later: Protection soaks physical damage only, per-kind adjustments on a piece,
