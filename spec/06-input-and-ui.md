@@ -296,9 +296,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     item: the menu's groups, in that order), what it asks for (`Aim`: nothing, or a direction;
     a target and an item from the pack join with the first ability that needs one), its action
     cost (an `ActionKind`), who has it, and whether it can be used now and why not
-    (`Unavailable`: "you hold no shield", "not usable yet"). `PerceptionView::abilities` lists
-    the player's, in menu order, each with why it cannot be used now. Every ability is a normal
-    core `Action` with replay text, so replays record it as that action.
+    (`Unavailable`: "you hold no shield", "not usable yet", or while a status lasts that blocks
+    its kind of action or is its cooldown, "you are winded", §8 "Status effects").
+    `PerceptionView::abilities` lists the player's, in menu order, each with why it cannot be
+    used now. Every ability is a normal core `Action` with replay text, so replays record it as
+    that action.
   - **What there is**: the shield bash (§8 "Weapon skills"), which everyone has and can use
     while holding a shield to bash with; and each skill used as an action (`kind = "action"`,
     §8 "Skills") the player is trained in, listed but never available until its use comes (it

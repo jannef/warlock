@@ -60,8 +60,8 @@ impl AbilitiesScreen {
                 .map(|own| {
                     let a = own.ability;
                     let state = match own.unavailable {
-                        Some(why) => why.reason(),
-                        None => needs(a.aim()),
+                        Some(why) => why.reason(content),
+                        None => needs(a.aim()).into(),
                     };
                     let entry = Entry {
                         ability: a,

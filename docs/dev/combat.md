@@ -110,3 +110,30 @@ cells carry the kind). Tests: `damage.rs`, `content/damage_type.rs`, `combat.rs`
 kind, elements unsoaked, riders' draw order, resisted hits), `world/damage_tests.rs` (the
 built-in data names a kind everywhere, verbs, per-kind Protection, resistance sums and words,
 riders, wounds by kind, poison doses, spells, the plunge, descriptions, data checks, replay).
+
+Free blows (spec §8 "Free blows", #228; design `docs/design/progression.md` §4.1 B3) live in
+`world/free_blow.rs`. **`World::second_blow(striker, target, Cue)` (`fight.rs`) is the one place
+every blow beyond an attack's first is decided**; a new kind of extra blow is a `Cue` (or a case
+of one) there and a `Free` kind, never a second mechanism. Cues: `First(blow)` (the off hand's or
+Sword and Board's bash, `off_hand_or_bash`, unchanged), `Attacked { parried }` (the end of a
+melee attack: `World::cleave` if the target is gone, else `World::riposte`), `Cleaved` (great
+cleave's next), `Leaves` (`World::opportunist`). Callers: `World::attack` (creatures) and
+`player_attacks` run the first and second blows, then `World::after_attack(attacker, target,
+parried)`, which strikes the cleave or riposte and follows cleaves while `Cleaved` gives more;
+`player_kicks` and `bash` call `after_attack` after their one blow; `World::step_away(id, to)`
+runs before a step in `travel.rs::player_moves` and `ai.rs::creature_steps` (after the step is
+decided, before `tread`: the mover may die, and then never steps), using `World::leaves` (the
+flee geometry `World::flees` also uses). `World::strike_free` strikes one: `resolve` for a
+creature, `player_blow` for the player (said at once); the player's out-of-turn ones (`Free::
+Riposte`, `Opportunist`) run with `World::held` set, so `World::say` holds their messages, which
+join `World::news` after what was pending and are said at the end of `perceive`, after that
+turn's reports. The switches are `FreeBlows` (`cleave`, `great_cleave`, `riposte`, `opportunist`)
+on `Actor::free_blows` (saved and hashed, skipped while none is on, so hashes stand), read only
+through `World::free_blows_of(actor)`: **talents and class abilities (the progression design's
+items D, H1, I1, I4) switch them on there**, by folding their aggregation in or by setting the
+field; nothing does yet. A free blow is an ordinary blow: its kinds, riders, resistances, and
+verbs come with its `Profile` and `Words::of` like any other's. Rules: deciding never draws (cleave's target is the next hostile clockwise from where
+the target fell); a free blow draws only as the blow it is; free blows give none of their own
+but cleave after cleave; noise only for the opportunist's. Tests: `world/free_blow_tests.rs`
+(cleave order and count, great cleave, kicks, ripostes and their message order, no answer to a
+riposte, opportunists both ways, in the dark, no draws while triggers do not fire, saves).

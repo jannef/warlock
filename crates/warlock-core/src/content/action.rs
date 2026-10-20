@@ -164,6 +164,38 @@ impl ActionKind {
         )
     }
 
+    /// What an actor does in it, after "cannot" ("You cannot read while raging.": a status that
+    /// `blocks` it, spec §8 "Status effects").
+    pub const fn doing(self) -> &'static str {
+        match self {
+            ActionKind::Step => "move",
+            ActionKind::Wait => "wait",
+            ActionKind::OpenDoor => "open doors",
+            ActionKind::CloseDoor => "close doors",
+            ActionKind::Unlock => "unlock doors",
+            ActionKind::Kick => "kick",
+            ActionKind::Lantern => "tend a lantern",
+            ActionKind::Stairs => "travel",
+            ActionKind::PickUp => "pick things up",
+            ActionKind::Drop => "drop things",
+            ActionKind::Melee => "fight",
+            ActionKind::Shoot => "shoot",
+            ActionKind::Throw => "throw",
+            ActionKind::Reload => "reload",
+            ActionKind::Cast => "cast spells",
+            ActionKind::Wield => "change what you hold",
+            ActionKind::Wear => "change what you wear",
+            ActionKind::BodyArmor => "change your armour",
+            ActionKind::Ready => "change what you have ready",
+            ActionKind::Eat => "eat",
+            ActionKind::Read => "read",
+            ActionKind::Dig => "dig",
+            ActionKind::Search => "search",
+            ActionKind::Chat => "talk",
+            ActionKind::Climb => "climb",
+        }
+    }
+
     fn index(self) -> usize {
         self as usize
     }

@@ -20,7 +20,18 @@
 #   regen      how fast hit points come back while it lasts, in percent of the normal pace
 #              (default 100; 0 none). With several statuses the slowest counts
 #   penalty    what it does to stats from a severity on: { from = 4, strength = -1 }; every rule
-#              reads the stat that much lower (combat, burden, hit points); several add up
+#              reads the stat that much lower (combat, burden, hit points); several add up. A
+#              positive number raises the stat instead (-10 to 10)
+#   combat     what it adds to the fighting of whoever suffers it while it lasts, as a stance does
+#              (stances.toml): { to_hit = 1, damage = 2, dodge = 1, parry = 1 }, each -20 to 20,
+#              0 when left out; several add up (of Parry bonuses the highest counts)
+#   cost       what every action costs while it lasts, in percent of its price (100 to 1000;
+#              default 100): 150 is half again as slow. Several multiply
+#   blocks     the actions refused while it lasts, by their ids in actions.toml: ["read"]; an
+#              ability that costs one cannot be used either
+#   follows    a status that begins (at one degree) as this one ends, worn off or cured: a rage's
+#              exhaustion. A status with no tick that eases away is a cooldown: while it lasts,
+#              the ability that gave it cannot be used again
 #   wound      the blows that cause it: { big_hit = 1, critical = 2 } degrees for a hit that takes
 #              at least a third of the target's hit points, and for a confirmed critical (a
 #              blow that is both: the more of the two); `from` lists the kinds of damage that
@@ -86,3 +97,29 @@ max = 1
 regen = 50
 dies = "succumbs to disease"
 death = "Died of disease"
+
+# Buffs and cooldowns (a class's abilities give them; the dev action `afflict:raging` too).
+# A barbarian's rage: stronger and tougher for five minutes, too wild to read; then exhausted for
+# ten, and no rage until that passes.
+[[status]]
+id = "raging"
+name = "Raging"
+seen = "raging"
+max = 1
+stacking = "refresh"
+eases = 300
+penalty = { from = 1, strength = 2, toughness = 2, intelligence = -2 }
+blocks = ["read"]
+follows = "exhausted"
+start = "You fly into a rage!"
+end = "Your rage subsides."
+
+[[status]]
+id = "exhausted"
+name = "Exhausted"
+max = 1
+stacking = "refresh"
+eases = 600
+penalty = { from = 1, strength = -1 }
+start = "You are exhausted."
+end = "You feel rested again."
