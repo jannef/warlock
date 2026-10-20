@@ -313,6 +313,13 @@ impl LevelState {
             .is_some_and(|t| content.terrain(*t).walkable)
     }
 
+    /// Whether a door, closed or open, is at `p` ([`crate::content::TerrainDef::is_door`]).
+    pub(crate) fn is_door(&self, content: &Content, p: Pos) -> bool {
+        self.terrain
+            .get(p)
+            .is_some_and(|t| content.terrain(*t).is_door())
+    }
+
     pub(crate) fn stairs_at(&self, p: Pos) -> Option<&StairsLink> {
         self.stairs.iter().find(|s| s.pos == p)
     }

@@ -28,7 +28,9 @@
 //! what it does (`verb`, default "hits"), for messages ("The fireball burns the kobold.").
 //!
 //! A trap on a level ([`Trap`]) is hidden until the player sets it off or sees a creature do it,
-//! and from then on known and remembered (spec §8 "Traps").
+//! and from then on known and remembered (spec §8 "Traps"). A level may put one on a door, of any
+//! kind but a pit ([`TrapEffect::fits_door`]): opening or kicking the door sets it off (spec §8
+//! "Trapped doors").
 
 use super::effect::EffectShape;
 use super::object::{MAX_BONUS, ObjectDef, ObjectId};
@@ -209,6 +211,14 @@ impl TrapEffect {
             TrapEffect::Alarm => "alarm",
             TrapEffect::Teleport => "teleport",
         }
+    }
+
+    /// Whether a trap of this kind may lie on a door (spec §8 "Trapped doors"). A door's trap
+    /// goes off at whoever opens or kicks the door, from the next cell: everything that strikes
+    /// its victim where it stands or bursts out around the trap works there, but a pit needs its
+    /// victim on its own cell, to fall in and climb out.
+    pub const fn fits_door(&self) -> bool {
+        !matches!(self, TrapEffect::Pit { .. })
     }
 
     /// The damage it does, if it does any.

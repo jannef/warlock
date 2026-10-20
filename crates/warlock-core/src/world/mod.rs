@@ -887,6 +887,8 @@ mod disease_tests;
 #[cfg(test)]
 mod door_tests;
 #[cfg(test)]
+mod door_trap_tests;
+#[cfg(test)]
 mod equip_tests;
 #[cfg(test)]
 mod experience_tests;
@@ -908,6 +910,8 @@ mod moon_tests;
 mod object_tests;
 #[cfg(test)]
 mod overworld_tests;
+#[cfg(test)]
+mod parts_tests;
 #[cfg(test)]
 mod quest_tests;
 #[cfg(test)]

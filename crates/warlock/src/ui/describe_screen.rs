@@ -3,9 +3,9 @@
 //! letter), over the screen it came from.
 //!
 //! It names the item (in its rarity's color, spec §8 "Magic items"), says what it is (rarity,
-//! base, material, weight) and whether it is worn or wielded, then its base stats in words
-//! (`warlock_core::magic::describe`): how it is held or worn, its damage dice and criticals, how
-//! far it shoots or is thrown, what it needs, its Defence. A magic or rare item that is
+//! base, every part it is made of, weight) and whether it is worn or wielded, then its base
+//! stats in words (`warlock_core::magic::describe`): how it is held or worn, its damage dice and
+//! criticals, how far it shoots or is thrown, what it needs, its Defence. A magic or rare item that is
 //! identified lists its item level and its affixes in plain language ("Sharp: +2 damage", "of
 //! Celerity: attacks faster"); one that is not says its magic is unknown. Speed is said in words;
 //! nothing about the player's own to-hit or modifiers is shown.
@@ -229,7 +229,10 @@ mod tests {
         );
         let sword = text(&DescribeScreen::new(Some(&view), Some(3)));
         assert!(has(&sword, ") Sharp long sword of the Bear"), "{sword:#?}");
-        assert!(has(&sword, "Magic long sword · steel · 1.8 kg"));
+        assert!(has(
+            &sword,
+            "Magic long sword · steel blade, leather grip · 1.8 kg"
+        ));
         assert!(has(&sword, "Damage 1d8; criticals on 20–24, ×2 damage"));
         assert!(has(&sword, "Item level 3"));
         assert!(has(&sword, "Prefix  Sharp: +2 damage"), "{sword:#?}");

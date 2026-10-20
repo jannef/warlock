@@ -270,6 +270,17 @@ mod tests {
         assert!(text("objects.md").contains(
             "| Dagger | `)` | melee weapons | steel | 450 g | 30 gold | no | Main hand or off hand |"
         ));
+        // Objects of several parts list them all, the main one first; names show the gems and
+        // precious metals.
+        let objects = text("objects.md");
+        assert!(
+            objects.contains("| Long sword | `)` | melee weapons | steel blade, leather grip |")
+        );
+        assert!(
+            objects
+                .contains("| Gold and ruby amulet | `\"` | amulets | gold chain, ruby setting |")
+        );
+        assert!(text("materials.md").contains("| Ruby | yes | gold and ruby amulets, rubies |"));
         // Fighting styles: their configurations, defaults, ranks, and the classes' starting ones.
         let styles = text("styles.md");
         for row in [
@@ -403,7 +414,8 @@ mod tests {
         );
         assert!(abilities.contains("| Open lock | Skills | everyone trained in the skill | — |"));
         assert!(
-            text("materials.md").contains("| Steel | stilettos, daggers, short swords, scimitars,")
+            text("materials.md")
+                .contains("| Steel | no | stilettos, daggers, short swords, scimitars,")
         );
         assert!(text("pack.md").contains("| Your own weight | 70 kg |"));
         let burden = text("burden.md");

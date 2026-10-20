@@ -9,8 +9,9 @@ corpses](food.md)), but you cannot drink or read anything yet.
 
 ## What an object is
 
-Every object has its own glyph and color, a class, a material, a weight, and a worth in gold
-(what [shops](shops.md) price it from). The glyph hints at what kind of thing it is, as in ADOM:
+Every object has its own glyph and color, a class, what it is made of (see
+[Materials](#materials)), a weight, and a worth in gold (what [shops](shops.md) price it from).
+The glyph hints at what kind of thing it is, as in ADOM:
 
 | Glyph | Kind |
 |:---:|---|
@@ -142,6 +143,19 @@ they weigh, only what they wear and wield.
 
 ## Materials
 
-Every object is made of a material. Materials only have a name for now.
+Every object is made of one or more **parts**, each of one material: most are of one material
+throughout (a steel dagger), some of several (a long sword's steel blade and leather grip, a gold
+amulet's chain and the ruby in its setting). The first part is the main one: it is the material
+the object is mostly made of, and the one the table above names first.
+
+You can always see what something is made of, even a magic item you have not identified. An
+item's name shows its **gems and precious metals** (the precious materials below) that it does
+not mention already: a gold amulet set with a ruby is a *gold and ruby amulet*, and a long sword
+with a ruby pommel would be a *ruby-pommelled long sword*. Plain parts, like a leather grip, show
+only when you look at the item (see [Magic items](magic-items.md#looking-at-an-item)), which lists
+every part.
+
+Materials have nothing else to them yet; what an item is worth will follow what it is made of
+once items come in other materials than their usual ones.
 
 {{#include generated/materials.md}}

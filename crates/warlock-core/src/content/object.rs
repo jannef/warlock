@@ -2,12 +2,15 @@
 //! §7): the things that lie on the floor and
 //! are picked up and carried.
 //!
-//! Every object defines the glyph it is drawn with, its color, its material, and its weight in
-//! grams. Glyphs follow ADOM loosely: `)` weapons, `/` missiles, `}` missile weapons, `[` armor,
-//! `(` tools, `!` potions, `?` scrolls, `%` food, `*` stones and gems, `$` coins, `=` rings,
-//! `"` amulets. Every object also names its item class (`class`, an id in
-//! `data/item_classes.toml`, [`super::item_class`]): what item lists group it under and shops
-//! trade it as; an object with a magic item `kind` is of the class that lists the kind.
+//! Every object defines the glyph it is drawn with, its color, what it is made of (`materials`,
+//! its parts, the first the main one: [`super::part`]), and its weight in grams. Its name shows
+//! its notable parts (gems and precious metals) that the written name does not mention yet, and
+//! its value follows its parts' materials ([`ObjectDef::value_with`]). Glyphs follow ADOM
+//! loosely: `)` weapons, `/` missiles, `}` missile weapons, `[` armor, `(` tools, `!` potions,
+//! `?` scrolls, `%` food, `*` stones and gems, `$` coins, `=` rings, `"` amulets. Every object
+//! also names its item class (`class`, an id in `data/item_classes.toml`, [`super::item_class`]):
+//! what item lists group it under and shops trade it as; an object with a magic item `kind` is of
+//! the class that lists the kind.
 //!
 //! Things that can be worn or wielded say where they go (`slot`, the id or `fits` of a slot in
 //! `data/slots.toml`: `slot = "body"`, `slot = "ring"` for either ring slot); a `two_handed` one
@@ -63,6 +66,7 @@ use super::hunger::Food;
 use super::item_class::{ItemClassDef, ItemClassId};
 use super::light::LightId;
 use super::material::MaterialId;
+use super::part::{self, Part, PartEntry};
 use super::particles::ParticleEmitter;
 use super::slot::SlotDef;
 use super::weapon_skill::{Role, WeaponSkillId, WeaponSkillTable};
@@ -141,8 +145,12 @@ pub(super) struct ObjectSpec {
     pub fg: Rgb,
     /// Its item class, an id in `data/item_classes.toml`: what kind of thing it is.
     pub class: String,
-    /// A material id in `materials.toml`.
-    pub material: String,
+    /// What it is made of: its parts, the first the main one, each a material id (`["steel"]`)
+    /// or a table (`{ part = "setting", of = "ruby", share = 10 }`; [`super::part`]).
+    #[serde(default)]
+    pub materials: Vec<PartEntry>,
+    /// The single material objects had before parts: refused, with a pointer to `materials`.
+    pub material: Option<String>,
     /// Grams, at least 1.
     pub weight: u32,
     /// What one is worth, in gold coins (shops; spec §7 "Shops").
@@ -249,7 +257,9 @@ pub struct ObjectDef {
     /// Its item class (`data/item_classes.toml`): what kind of thing it is, which item lists
     /// group by and shops trade by. The player knows it of anything they see, identified or not.
     pub class: ItemClassId,
-    pub material: MaterialId,
+    /// What it is made of, part by part, the main part first ([`ObjectDef::material`]); the
+    /// shares sum to 100. Never empty.
+    pub parts: Vec<Part>,
     /// Weight of one, in grams; at least 1.
     pub weight: u32,
     /// What one is worth, in gold coins, at most [`MAX_VALUE`]; 0 for junk (spec §7 "Shops":
@@ -349,7 +359,7 @@ impl ObjectDef {
             glyph: '%',
             fg: creature.fg,
             class,
-            material,
+            parts: vec![Part::whole(material)],
             weight: creature.weight,
             // Nobody buys or sells a corpse (spec §7 "Shops").
             value: 0,
@@ -385,6 +395,29 @@ impl ObjectDef {
             level: 1,
             frequency: 0,
         }
+    }
+
+    /// What it is made of: its main part's material (spec §7 "Objects and materials"), which
+    /// decides what a single material decides. [`ObjectDef::parts`] has every part.
+    pub fn material(&self) -> MaterialId {
+        self.parts[0].material
+    }
+
+    /// What one of it made of `parts` is worth, in gold coins: its `value`, scaled by what
+    /// `parts` are worth against its own parts (each part's share times its material's value,
+    /// [`part::worth`]), rounded to the nearest coin, at most [`MAX_VALUE`]. Made of its own
+    /// parts, its `value`. Until items carry parts of their own (#193), every item is made of its
+    /// base item's.
+    pub fn value_with(&self, parts: &[Part], content: &Content) -> u32 {
+        if parts == self.parts.as_slice() {
+            return self.value;
+        }
+        let (worth, own) = (
+            part::worth(parts, content.materials()),
+            part::worth(&self.parts, content.materials()),
+        );
+        let value = (u64::from(self.value) * worth + own / 2) / own.max(1);
+        u32::try_from(value.min(u64::from(MAX_VALUE))).unwrap_or(MAX_VALUE)
     }
 
     /// Whether it is a throwing weapon: it has a range and is no missile weapon.
@@ -441,15 +474,17 @@ pub fn article(noun: &str) -> &'static str {
 }
 
 impl ObjectSpec {
-    /// Checks the definition and resolves its class, material, light, and weapon skill;
-    /// `classes` are the item classes, `slots` where things may be worn or wielded, `skills`
-    /// the weapon skills. Returns the object and the id of what it is `lit` as, which names
-    /// another object and is resolved once every object is known.
+    /// Checks the definition and resolves its class, parts, light, and weapon skill;
+    /// `classes` are the item classes, `parts` resolves its `materials` ([`part::resolve`]),
+    /// `slots` are where things may be worn or wielded, `skills` the weapon skills. Returns the
+    /// object, its name as written (its notable parts are added once content knows them all:
+    /// [`part::names`]), and the id of what it is `lit` as, which names another object and is
+    /// resolved once every object is known.
     pub(super) fn resolve(
         self,
         file: &str,
         classes: &[ItemClassDef],
-        material: impl Fn(&str) -> Option<MaterialId>,
+        parts: impl Fn(&[PartEntry]) -> Result<Vec<Part>, String>,
         light: impl Fn(&str) -> Option<LightId>,
         slots: &[SlotDef],
         skills: &WeaponSkillTable,
@@ -471,8 +506,13 @@ impl ObjectSpec {
             return Err(err(format!("`value` is in gold coins, 0 to {MAX_VALUE}")));
         }
         let class = self.item_class(classes).map_err(err)?;
-        let material = material(&self.material)
-            .ok_or_else(|| err(format!("unknown material `{}`", self.material)))?;
+        if let Some(material) = &self.material {
+            return Err(err(format!(
+                "`material` is now `materials`, a list of parts, the first the main one: \
+                 `materials = [\"{material}\"]` for one"
+            )));
+        }
+        let parts = parts(&self.materials).map_err(err)?;
         if let Some(slot) = &self.slot
             && !slots.iter().any(|s| s.fits == *slot)
         {
@@ -563,7 +603,7 @@ impl ObjectSpec {
             glyph: self.glyph,
             fg: self.fg,
             class,
-            material,
+            parts,
             weight: self.weight,
             value: self.value,
             stackable: self.stackable,
@@ -890,7 +930,7 @@ mod tests {
             glyph: ')',
             fg: Rgb::WHITE,
             class: ItemClassId(0),
-            material: MaterialId(0),
+            parts: vec![Part::whole(MaterialId(0))],
             weight: 1,
             value: 0,
             stackable: false,

@@ -13,6 +13,11 @@
 //!   fighting, spec §8 "Weapon skills"). At anything else it is refused and takes no time:
 //!   "You kick at empty space." where one could walk, else "Kicking the stone wall would only
 //!   hurt your foot."
+//! - **Trapped doors** (spec §8 "Trapped doors"): a trap on a door goes off
+//!   ([`World::spring_trap`]) at whoever opens the door (unlocking it too: [`World::swing_open`],
+//!   the player and creatures alike) or kicks it, as it swings open or as the kick lands, before
+//!   the door breaks; walking through the doorway never sets it off. A door kicked in takes its
+//!   trap with it ([`World::set_terrain`]).
 
 use super::{ActorId, AttackSkills, Spent, World};
 use crate::action::Event;
@@ -61,13 +66,15 @@ impl World {
     }
 
     /// Actor `id` swings the closed door at `p` open (unlocked by now): its noise, the terrain
-    /// it opens to, and the event.
+    /// it opens to, and the event; then a trap on the door goes off at them. No pit lies on a
+    /// door (content refuses one), so opening it costs no more than it did.
     pub(super) fn swing_open(&mut self, id: ActorId, p: Pos, events: &mut Vec<Event>) {
         let terrain = self.state.current().terrain[p];
         let opened = (self.content.terrain(terrain).opens_to).expect("closed doors have opens_to");
         self.make_noise(id, Act::OpenDoor(p));
         self.set_terrain(p, opened);
         events.push(Event::DoorOpened { pos: p });
+        self.spring_trap(p, id, events);
     }
 
     /// The player closes the open door at `p`, unless someone or something is in the doorway.
@@ -134,8 +141,9 @@ impl World {
     /// The player kicks the closed door at `p`: a banging noise, and with a chance of their
     /// Strength in its sturdiness it breaks for good (one draw of the gameplay stream; a door
     /// that cannot break draws nothing). Their athletics adds to the Strength (spec §8
-    /// "Skills"), and the kick trains it. Kicking a door is no attack: neither the combat stance
-    /// nor attack speed changes its time.
+    /// "Skills"), and the kick trains it. A trap on the door goes off at them as the kick lands,
+    /// before the door gives way. Kicking a door is no attack: neither the combat stance nor
+    /// attack speed changes its time.
     fn kick_door(&mut self, p: Pos, events: &mut Vec<Event>) -> Spent {
         let player = self.state.player;
         let price = self.price_of(player, ActionKind::Kick);
@@ -151,6 +159,7 @@ impl World {
             self.train(Use::Kick);
         }
         self.make_noise(player, Act::Kick(p));
+        self.spring_trap(p, player, events);
         match broken {
             Some(to) => {
                 self.set_terrain(p, to);

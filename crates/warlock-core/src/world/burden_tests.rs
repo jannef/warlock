@@ -119,7 +119,7 @@ name = "anvil"
 glyph = "&"
 fg = "#808080"
 class = "miscellaneous"
-material = "iron"
+materials = ["iron"]
 weight = 10000
 value = 0
 
@@ -129,7 +129,7 @@ name = "ingot"
 glyph = "="
 fg = "#808080"
 class = "rings"
-material = "iron"
+materials = ["iron"]
 weight = 1000
 value = 0
 stackable = true
@@ -140,7 +140,7 @@ name = "mail shirt"
 glyph = "["
 fg = "#c0c0c0"
 class = "body_armour"
-material = "iron"
+materials = ["iron"]
 weight = 9000
 value = 0
 slot = "body"

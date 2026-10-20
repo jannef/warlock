@@ -284,6 +284,11 @@ impl TerrainDef {
         self.closes_to.is_some()
     }
 
+    /// A door, closed or open: what a trap on it belongs to (spec §8 "Trapped doors").
+    pub fn is_door(&self) -> bool {
+        self.is_closed_door() || self.is_open_door()
+    }
+
     /// Running water: every cell of it has a [`super::Flow`] (presentation-only).
     pub fn flows(&self) -> bool {
         self.anim.as_ref().is_some_and(GlyphAnim::is_flow)

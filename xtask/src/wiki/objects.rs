@@ -104,7 +104,7 @@ pub(super) fn item_classes(content: &Content) -> String {
 /// Every object but corpses (Food and corpses has those), by class, then name.
 pub(super) fn objects(content: &Content) -> String {
     let mut out = String::from(
-        "| Object | Glyph | Class | Material | Weight (each) | Worth (each) | Stacks | Worn or wielded on |\n\
+        "| Object | Glyph | Class | Made of | Weight (each) | Worth (each) | Stacks | Worn or wielded on |\n\
          |---|:---:|---|---|---:|---:|:---:|---|\n",
     );
     for (id, o) in order::objects(content) {
@@ -121,7 +121,7 @@ pub(super) fn objects(content: &Content) -> String {
             capital(&o.name),
             glyph(o.glyph),
             content.item_class(o.class).name.to_lowercase(),
-            content.material(o.material).name,
+            content.describe_parts(&o.parts),
             format_weight(u64::from(o.weight)),
             yes(o.stackable),
             goes_on(content, id)
@@ -164,12 +164,16 @@ pub(super) fn shops(content: &Content) -> String {
     out
 }
 
-/// The materials by name, each with the objects made of it (by class, then name).
+/// The materials by name, whether they are precious (shown in names), and the objects with a
+/// part made of each (by class, then name).
 pub(super) fn materials(content: &Content) -> String {
-    let mut out = String::from("| Material | Objects made of it |\n|---|---|\n");
+    let mut out = String::from(
+        "| Material | Precious (shown in names) | Objects made of it, in part or whole |\n\
+         |---|:---:|---|\n",
+    );
     let all = order::objects(content);
     for (id, m) in order::materials(content) {
-        let of_it = |o: &&ObjectDef| o.material == id;
+        let of_it = |o: &&ObjectDef| o.parts.iter().any(|p| p.material == id);
         let objects = all.iter().map(|(_, o)| *o).filter(of_it);
         let mut made: Vec<&str> = (objects.clone())
             .filter(|o| o.corpse.is_none())
@@ -183,7 +187,12 @@ pub(super) fn materials(content: &Content) -> String {
         } else {
             made.join(", ")
         };
-        let _ = writeln!(out, "| {} | {made} |", capital(&m.name));
+        let _ = writeln!(
+            out,
+            "| {} | {} | {made} |",
+            capital(&m.name),
+            yes(m.precious)
+        );
     }
     out
 }

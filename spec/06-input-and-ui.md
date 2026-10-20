@@ -37,7 +37,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   stands) asks first, in the dialog, ADOM-like: `Really step onto the fireball trap?` with
   `Step onto it` (accept: the move as usual, replay text `move:DIR`: the rules never ask) and
   `Stay back` (cancel, selected first). Asking is the interface's: the rules step onto whatever
-  they are told to.
+  they are told to. A door's trap is never stepped on (§8 "Trapped doors"), so a door never asks:
+  walking through a trapped doorway sets nothing off, and walking into a trapped closed door opens
+  it as `o` does.
 - **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
   `--record`, or `--capture` name what to run): Continue (only if a save exists), New run
   (scenario list from content, optional seed, then character creation), Settings, Controls,
@@ -183,7 +185,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Item description** (#149): one carried stack as the player knows it, opened by its letter in
   the inventory or by a slot's upper-case letter (`A` to `M`) on the equipment screen, over the
   screen it came from: its glyph and name (in its rarity's color, with its mark if worn or
-  wielded), what it is (`Magic long sword · steel · 1.8 kg`), its base stats in words
+  wielded), what it is (`Magic long sword · steel blade, leather grip · 1.8 kg`: every part, the
+  main one first, §7 "Objects and materials"), its base stats in words
   (`magic::describe`: "Long blade, for the main hand", "Damage 1d8; criticals on 20–24, ×2
   damage", "Shoots up to 15 cells", "Needs Strength 14 to draw", "Quick to strike", "Armour +4",
   "Dexterity adds at most +4 to Defence while worn", "Breaks on a hit 30% of the time"), and for
