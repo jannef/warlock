@@ -135,6 +135,7 @@ id = "arrow"
 name = "arrow"
 glyph = "/"
 fg = "#c0c0c0"
+class = "missiles"
 material = "wood"
 weight = 30
 value = 0
@@ -145,6 +146,7 @@ id = "iron_key"
 name = "iron key"
 glyph = "("
 fg = "#b4b8bc"
+class = "tools"
 material = "wood"
 weight = 40
 value = 0
@@ -238,6 +240,10 @@ const LEGEND: &str = r##"
 
 fn files(map: &str, scenario: &str) -> ContentFiles {
     let mut files = ContentFiles::default();
+    files.insert(
+        "data/item_classes.toml",
+        crate::content::BUILTIN_ITEM_CLASSES,
+    );
     for (path, text) in [
         ("data/terrain.toml", TERRAIN),
         ("data/factions.toml", FACTIONS),
