@@ -10,6 +10,7 @@ use crate::combat::Category;
 use crate::content::{ContentFiles, StatusId};
 use crate::equipment;
 use crate::replay::Replay;
+use crate::stats::Stat;
 use crate::status::Effect;
 
 /// Statuses for the tests, after the built-in ones: a buff, a hex, a slow, one that blocks, and
@@ -272,6 +273,55 @@ fn blocked_actions_are_refused_and_abilities_that_cost_them_greyed_out() {
     run(&mut w, "wait*10");
     assert_eq!(effect(&w, player, "fumbling"), None);
     assert_eq!(w.perception().abilities()[0].unavailable, None);
+}
+
+#[test]
+fn the_built_in_rage_raises_and_lowers_scores_blocks_reading_and_is_followed_by_exhaustion() {
+    let mut w = world(ALONE);
+    let content = w.content().clone();
+    let player = w.player_id();
+    let scores = |w: &World| w.state.actors[&player].effective_stats(&content);
+    let calm = scores(&w);
+    let lasting = w.state.player().lasting_max_hp(&content);
+    run(&mut w, "afflict:raging");
+    assert_eq!(last_message(&w), "You fly into a rage!");
+    let raging = scores(&w);
+    for (stat, by) in [
+        (Stat::Strength, 2),
+        (Stat::Toughness, 2),
+        (Stat::Intelligence, -2),
+    ] {
+        assert_eq!(
+            i32::from(raging.score(stat)),
+            i32::from(calm.score(stat)) + by
+        );
+    }
+    // Tougher, it can take more hit points, healed up to them in time.
+    let max = w.state.player().max_hp(&content);
+    assert!(max > lasting);
+    w.state.actors.get_mut(&player).expect("player").hp = max;
+    run(&mut w, "read:a");
+    assert_eq!(last_message(&w), "You cannot read while raging.");
+    // Five minutes later the rage ends, and exhaustion follows at that moment.
+    run(&mut w, "wait*50");
+    assert_eq!(effect(&w, player, "raging"), None);
+    let exhausted = effect(&w, player, "exhausted").expect("exhausted");
+    assert_eq!((exhausted.severity, exhausted.wear), (1, 0));
+    let said = messages(&w);
+    let at = (said.iter().position(|m| m == "Your rage subsides.")).expect("the end is said");
+    assert_eq!(said[at + 1], "You are exhausted.");
+    assert_eq!(
+        i32::from(scores(&w).score(Stat::Strength)),
+        i32::from(calm.score(Stat::Strength)) - 1
+    );
+    // The hit points the rage gave go with it.
+    assert_eq!(w.state.player().hp, lasting);
+    // Reading again, and ten minutes later the exhaustion passes too.
+    run(&mut w, "read:a");
+    assert_ne!(last_message(&w), "You cannot read while raging.");
+    run(&mut w, "wait*100");
+    assert_eq!(effect(&w, player, "exhausted"), None);
+    assert_eq!(scores(&w), calm);
 }
 
 #[test]

@@ -13,8 +13,9 @@ resting, ...) keep their keys (see [Controls](controls.md)).
 a letter:
 
 - beside each, what it asks for once you choose it, such as `in a direction`;
-- an ability you cannot use right now is greyed out, with why: `you hold no shield`, or `not
-  usable yet` for a skill whose use is not in the game yet;
+- an ability you cannot use right now is greyed out, with why: `you hold no shield`, `not
+  usable yet` for a skill whose use is not in the game yet, or `you are winded` while a
+  [status effect](status-effects.md#buffs-and-cooldowns) keeps you from it;
 - the arrow keys move the `>` cursor, and the ability under it is described at the bottom;
 - a letter, or `Enter` on the `>` row, uses it: the menu closes, the ability asks for what it
   needs (a direction, on the message line), and then it takes its time like any other action.
