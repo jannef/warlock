@@ -688,12 +688,20 @@ pub struct PerceptionView<'a> {
     pub(crate) experience: u32,
     /// The player's quests, which they know.
     pub(crate) quests: &'a crate::world::Quests,
+    /// Everything the player was told, which they know.
+    pub(crate) messages: &'a crate::messages::MessageLog,
     pub(crate) snapshot: &'a Perception,
 }
 
 impl<'a> PerceptionView<'a> {
     pub fn content(&self) -> &'a Content {
         self.content
+    }
+
+    /// The message log: what the player was told, oldest first, at most
+    /// [`crate::messages::CAPACITY`] entries (the message line and the message history).
+    pub fn messages(&self) -> &'a crate::messages::MessageLog {
+        self.messages
     }
 
     pub fn level_id(&self) -> &'a str {
