@@ -10,6 +10,7 @@
 //! `pub(super) fn table(content: &Content) -> String`; `text` holds the helpers two or more of
 //! them share. [`generate`] is the one registration list: a line per generated file, in order.
 
+mod abilities;
 mod actions;
 mod burden;
 mod calendar;
@@ -139,6 +140,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("skill-benefits.md", skills::skill_benefits),
         ("skill-grants.md", skills::skill_grants),
         ("skill-increase.md", skills::skill_increase),
+        ("abilities.md", abilities::abilities),
         ("weapons.md", combat::weapons),
         ("light-weapons.md", combat::light_weapons),
         ("launchers.md", combat::launchers),
@@ -402,6 +404,15 @@ mod tests {
             actions
                 .contains("| Putting something on, or taking it off: Body | 3000 | 18 seconds |")
         );
+        let abilities = text("abilities.md");
+        assert!(
+            abilities.contains(
+                "| Shield bash | Weapon skills | everyone (usable with a shield in hand) | a \
+                 direction | Strike someone next to you with the shield you hold. | 6 seconds |"
+            ),
+            "{abilities}"
+        );
+        assert!(abilities.contains("| Open lock | Skills | everyone trained in the skill | — |"));
         assert!(
             text("materials.md")
                 .contains("| Steel | no | stilettos, daggers, short swords, scimitars,")

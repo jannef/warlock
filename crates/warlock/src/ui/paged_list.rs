@@ -1,6 +1,8 @@
 //! The one paged list of items (spec §6 "Item lists"; #188, #189): every lettered list of stacks
 //! (the inventory, picking up, dropping, what to throw or eat, what goes in an equipment slot)
-//! is a [`PagedList`]; never a list of its own.
+//! is a [`PagedList`]; never a list of its own. So is the abilities menu's list (spec §6
+//! "Abilities"), grouped by where each ability comes from instead of by item class
+//! ([`PagedList::grouped`]).
 //!
 //! Items are grouped by item class in class order (`data/item_classes.toml`), each class under a
 //! header row with its name, and keep their own order within a class. A page holds as many rows
@@ -30,12 +32,13 @@ pub enum Row<'a> {
     Item { index: usize, letter: char },
 }
 
+/// A paged list of `T`, grouped by `K`: item classes, unless a list groups by something else.
 #[derive(Debug)]
-pub struct PagedList<T> {
+pub struct PagedList<T, K = ItemClassId> {
     /// The items in list order (grouped by class), each with its class.
-    items: Vec<(ItemClassId, T)>,
+    items: Vec<(K, T)>,
     /// The headers: each class's name, by class.
-    names: Vec<(ItemClassId, String)>,
+    names: Vec<(K, String)>,
     /// The selected item (an index into `items`); the page shown is the one it is on.
     cursor: usize,
     /// Rows a page may take, headers included, as last drawn.
@@ -45,12 +48,21 @@ pub struct PagedList<T> {
 impl<T> PagedList<T> {
     /// The list of `items`, each with its class, grouped by class in class order (a stable sort:
     /// within a class they keep the order given), the cursor on the first.
-    pub fn new(mut items: Vec<(ItemClassId, T)>, content: &Content) -> Self {
+    pub fn new(items: Vec<(ItemClassId, T)>, content: &Content) -> Self {
+        Self::grouped(items, |class| content.item_class(class).name.clone())
+    }
+}
+
+impl<T, K: Copy + Ord> PagedList<T, K> {
+    /// The list of `items`, each with its group, grouped in group order (a stable sort: within a
+    /// group they keep the order given), each group headed by `name(group)`, the cursor on the
+    /// first.
+    pub fn grouped(mut items: Vec<(K, T)>, name: impl Fn(K) -> String) -> Self {
         items.sort_by_key(|(class, _)| *class);
-        let mut names: Vec<(ItemClassId, String)> = Vec::new();
+        let mut names: Vec<(K, String)> = Vec::new();
         for &(class, _) in &items {
             if names.last().is_none_or(|(c, _)| *c != class) {
-                names.push((class, content.item_class(class).name.clone()));
+                names.push((class, name(class)));
             }
         }
         Self {
@@ -244,7 +256,7 @@ impl<T> PagedList<T> {
         }
     }
 
-    fn name(&self, class: ItemClassId) -> &str {
+    fn name(&self, class: K) -> &str {
         (self.names.iter())
             .find(|(c, _)| *c == class)
             .map_or("", |(_, name)| name.as_str())

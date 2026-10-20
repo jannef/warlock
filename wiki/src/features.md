@@ -143,6 +143,10 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   already: tumbling adds to your Defence, stealth quiets your steps and doors, listening lets you
   hear fainter sounds, balance eases a heavy load, and survival speeds your journeys. A Skills
   screen (`S`) shows their values, never the numbers behind them.
+- **Abilities** — unlike ADOM's key for each, one menu (`a`) holds everything you can do
+  because of who you are: a shield bash, the skills you use as actions, and later racial, class,
+  and item abilities. What you cannot use right now is greyed out with why, and `A` repeats the
+  last one.
 - **Living glyphs and effects** — still ponds that glint in the torchlight, streams and a river
   that visibly flow and foam against rocks, a pulsing altar, flickering torches, sparks and
   embers, a soft glow, heat haze over braziers, short fades. All of it is tunable per effect, and
