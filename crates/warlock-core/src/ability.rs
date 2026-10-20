@@ -7,9 +7,10 @@
 //! key command, unbound by default (rebindable in Controls: shield bash).
 //!
 //! **This is the one registry**: a system that gives abilities adds them here, as a variant of
-//! [`Ability`] with its name, source, aim, cost, and action, and a line in [`Ability::of`] that
-//! lists it for the actors who have it; [`Ability::unavailable`] says when it cannot be used now
-//! and why (the menu greys it out with the reason). Nothing else gets a key of its own.
+//! [`Ability`] with its name, source, aim, cost, and action, a line in [`Ability::every`] that
+//! lists it, and who has it ([`Ability::had_by`]); [`Ability::unavailable`] says when it cannot
+//! be used now and why (the menu greys it out with the reason). Nothing else gets a key of its
+//! own.
 //!
 //! [`PerceptionView::abilities`]: crate::perception::PerceptionView::abilities
 
@@ -119,18 +120,34 @@ impl Unavailable {
 }
 
 impl Ability {
-    /// Every ability `actor` has, in menu order: by [`Source`], then as each source lists its
-    /// own. The one place abilities are registered.
-    pub(crate) fn of(actor: &Actor, content: &Content) -> Vec<Ability> {
-        // Skills: the trained ones used as actions, in skill order.
-        let skills = (actor.skills.iter())
-            .filter(|(id, _)| content.skill(*id).is_active())
-            .map(|(id, _)| Ability::Skill(id));
+    /// Every ability there is, in menu order: by [`Source`], then as each source lists its own.
+    /// The one place abilities are registered (the wiki's table lists these).
+    pub fn every(content: &Content) -> Vec<Ability> {
+        // Skills: those used as actions, in skill order.
+        let skills = (content.skills().iter().enumerate())
+            .filter(|(_, def)| def.is_active())
+            .filter_map(|(i, _)| u8::try_from(i).ok().map(|i| Ability::Skill(SkillId(i))));
         // Weapon skills and fighting styles: the shield bash.
         let weapon_skills = [Ability::ShieldBash];
         let mut all: Vec<Ability> = skills.chain(weapon_skills).collect();
         all.sort_by_key(|a| a.source());
         all
+    }
+
+    /// Every ability `actor` has, in menu order.
+    pub(crate) fn of(actor: &Actor, content: &Content) -> Vec<Ability> {
+        (Ability::every(content).into_iter())
+            .filter(|a| a.had_by(actor))
+            .collect()
+    }
+
+    /// Whether `actor` has it (whether or not they can use it now): a skill, if they are trained
+    /// in it; the shield bash, everyone.
+    fn had_by(self, actor: &Actor) -> bool {
+        match self {
+            Ability::Skill(id) => actor.skills.get(id).is_some(),
+            Ability::ShieldBash => true,
+        }
     }
 
     /// Its id in dumps: `shield_bash`, or the skill's id.
@@ -226,6 +243,38 @@ mod tests {
             names,
             ["Racial", "Class", "Skills", "Weapon skills", "Items"]
         );
+    }
+
+    #[test]
+    fn every_ability_is_registered_in_menu_order() {
+        let content = Content::builtin().expect("content");
+        let every = Ability::every(&content);
+        assert!(every.windows(2).all(|w| w[0].source() <= w[1].source()));
+        // The skills used as actions, in skill order, then the shield bash.
+        let skills: Vec<&str> = (every.iter())
+            .filter(|a| a.source() == Source::Skill)
+            .map(|a| a.id(&content))
+            .collect();
+        assert_eq!(
+            skills,
+            [
+                "appraise",
+                "bluff",
+                "decipher_script",
+                "disable_device",
+                "handle_animal",
+                "heal",
+                "intimidate",
+                "knowledge",
+                "metalcraft",
+                "music",
+                "open_lock",
+                "steal",
+                "use_magic_device",
+                "woodcraft",
+            ]
+        );
+        assert_eq!(every.last(), Some(&Ability::ShieldBash));
     }
 
     #[test]
