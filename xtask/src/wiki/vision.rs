@@ -79,6 +79,14 @@ fn light_name(content: &Content, id: LightId) -> String {
     {
         return "Your lantern".into();
     }
+    let hood_of = |s: &str| content.light_id(s).map(|l| content.light(l).hooded.clone());
+    if content
+        .scenarios()
+        .filter_map(|s| hood_of(s.lantern.as_deref()?).flatten())
+        .any(|hooded| hooded == preset.id)
+    {
+        return "Your lantern, hooded".into();
+    }
     let affixes: Vec<&str> = (order::affixes(content, AffixKind::Prefix).into_iter())
         .chain(order::affixes(content, AffixKind::Suffix))
         .filter(|a| a.tiers.iter().any(|t| t.light == Some(id)))

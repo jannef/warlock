@@ -6,7 +6,8 @@ rules it implements are in spec/05-visibility.md. Keep it current with the code,
 Hearing (spec §5 "Hearing") lives in `warlock-core/src/noise.rs`. `noise::noise(content, level,
 actor, burden, Act)` is the one place an action's loudness is decided (creature `footsteps` ×
 terrain `step_noise` percent × the burden's `footsteps()` percent for `Act::Step`, the door's
-`toggle_noise` for `Act::OpenDoor`/`CloseDoor`, `VOICE_NOISE` for `Act::Mutter`; `make_noise` passes the actor's
+`toggle_noise` for `Act::OpenDoor`/`CloseDoor`, `VOICE_NOISE` for `Act::Mutter` and for
+`Act::ThrowVoice(at)`, which is made on that cell, not the actor's; `make_noise` passes the actor's
 `Load::penalty`):
 a new noisy action gets an `Act` variant there, and its call site in the feature's module (the makers are `world/hearing.rs`) is one
 `self.make_noise(actor, Act::…)` where the action happens. `noise::make` delivers it at once to
@@ -20,5 +21,10 @@ never the actor; a walker's several steps within one turn are one sound). `World
 (`noise::news` against `WorldState::recent_sounds`) as messages, which stop a rest (voices are said
 with their words by `World::say_mutters` instead, as notes). The app draws
 `PerceptionView::sounds()` in `ui/sounds.rs` (a still `◌` marker, always: it is information; the
-ripple only with `glyph_animation`). Sounds carry at most `noise::MAX_REACH` (30) cells, under
+ripple only with `glyph_animation`), and there too where the player's own thrown voice sounded
+(`Event::VoiceThrown` in the last outcome, as a loud sound). Throwing one's voice (#235) is
+`world/voice.rs` (`World::throw_voice`, `VOICE_RANGE`; tests `world/voice_tests.rs`): refused
+on the overworld, at the player, out of reach, or at a cell not `sees_actors_at` or solid; else
+one `make_noise(player, Act::ThrowVoice(at))`, so the AI's listening step sends creatures with
+enemies that do not see the cell there. Sounds carry at most `noise::MAX_REACH` (30) cells, under
 `VIEW_RADIUS`, which keeps rest batching (`out_of_view_for`) exact (a const assert guards it).

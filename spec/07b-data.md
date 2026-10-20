@@ -140,6 +140,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   e.g. `wait = 1000`, 1000 being a normal action (6 s at normal speed; §8 "Time"), 100 to
   10 000. The ids are `step` (onto terrain of `move_cost` 100), `wait`, `open_door`,
   `close_door`, `unlock` (unlocking a door with a key, on top of opening it), `kick`, `lantern`,
+  `hood` (500: lowering or raising the lantern's hood; lighting it hooded costs `lantern` too),
   `stairs` (also entering a location or local area and walking off an
   area's edge), `pick_up`, `drop`, `melee` (a shield bash too), `shoot`, `throw`, `reload` (a
   missile weapon that `reloads`: a crossbow shot costs `shoot` plus `reload`, 2000), `cast`,
@@ -147,7 +148,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   one, below) `wield` (1000), `wear` (1000: helmets, cloaks, gloves, boots, rings, amulets),
   `body_armor` (3000: it takes a while to strap on), `ready` (1000: a missile weapon, missiles,
   a tool), `eat` (1000: a turn of eating; a meal takes the food's `turns`, §8 "Hunger"), `chat`
-  (500: a few words, §8 "Dialogue"), and `climb` (2000: climbing out of the water onto ice, on
+  (500: a few words, §8 "Dialogue"), `throw_voice` (1000: throwing one's voice, §5 "Hearing"),
+  and `climb` (2000: climbing out of the water onto ice, on
   top of the step onto it; §5 "Ice"). An action left out, or every action without the file,
   costs 1000; an unknown id or a cost out of range is a content error. The wiki shows them in a
   generated table.

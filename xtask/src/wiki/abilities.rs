@@ -20,6 +20,8 @@ pub(super) fn abilities(content: &Content) -> String {
         let who = match a {
             Ability::Skill(_) => "everyone trained in the skill",
             Ability::ShieldBash => "everyone (usable with a shield in hand)",
+            Ability::ThrowVoice => "everyone",
+            Ability::HoodLantern => "everyone (it needs a lantern with a hood)",
         };
         let (asks, takes) = match a.cost() {
             Some(kind) => {
@@ -44,5 +46,6 @@ fn aim(aim: Aim) -> &'static str {
     match aim {
         Aim::Nothing => "nothing",
         Aim::Direction => "a direction",
+        Aim::Cell => "a place you see",
     }
 }
