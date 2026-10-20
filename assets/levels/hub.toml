@@ -62,13 +62,14 @@
 # dark middle lights it where it lands until it burns out.
 #
 # Magic items (#149): two piles in the middle of the storeroom hold magic and rare arms ([[item]]
-# tables at the end): a Sharp long sword of the Bear and a rare helm, Dread Visage, both
-# identified (the helm glows when worn), and an unidentified rare bow and magic ring.
+# tables at the end): a Sharp emerald-pommelled long sword of the Bear (gems, #191: its pommel is
+# a small emerald of fine cut) and a rare helm, Dread Visage, both identified (the helm glows when
+# worn), and an unidentified rare bow and magic ring.
 # Digging (M19): the storeroom has a pick-axe for the Tool slot; use it with `U` toward a wall.
 # The stairs nook's Q leads down to the quarry, the place to dig.
 #
 # Searching (#140): the hall below the storeroom and the pantry hides a secret door (S) at its
-# west end, behind which a closet keeps a little gold. It looks like the wall until it is found:
+# west end, behind which a closet keeps a little gold and two gems (#191). It looks like the wall until it is found:
 # search beside it (`s`, or `z` for a while), or notice it in passing (elves, dwarves, and anyone
 # trained in Spot, like the showcase's thief).
 name = "The Hub"
@@ -205,12 +206,26 @@ objects = ["wool_cloak", "leather_gloves", "leather_boots"]
 
 # Magic items (#149): a rack of magic arms in the storeroom. Identified, a magic sword and a rare
 # helm that glows when worn; not yet identified, a rare bow and a magic ring (their rarity shows,
-# their affixes do not, yet their effects apply). Look at them in the inventory (a letter).
+# their affixes do not, yet their effects apply). Look at them in the inventory (a letter). The
+# sword's pommel is an emerald (gems, #191): its name and its description show it.
 [[item]]
 at = [19, 14]
 object = "long_sword"
 affixes = ["sharp:2", "of_the_bear:2"]
 identified = true
+parts = [{ part = "pommel", of = "emerald", size = "small", cut = "fine" }]
+
+# Gems (#191): the secret closet's reward besides its gold, an uncut tiny garnet, duller than a
+# cut gem, and on top a medium sapphire of fine cut.
+[[item]]
+at = [17, 18]
+object = "gem"
+parts = [{ of = "garnet", size = "tiny", cut = "uncut" }]
+
+[[item]]
+at = [17, 18]
+object = "gem"
+parts = [{ of = "sapphire", size = "medium", cut = "fine" }]
 
 [[item]]
 at = [19, 14]

@@ -36,6 +36,15 @@ pickup move:SW pickup
 screen = "drop"
 args = ["--keys", "a > b"]
 
+# Gems (#191): the hub's secret closet emptied, its gold and two loose gems, each named by its
+# size and cut and drawn in its gem's colour: a medium fine sapphire and an uncut tiny garnet,
+# duller than a cut gem.
+[[golden]]
+name = "gem-inventory"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*7 move:W*4 move:S move:W*3 pickup"
+screen = "inventory"
+
 # The same 13 stacks in the inventory, its second page (`>`): the margin and gaps gave way to fit
 # more rows a page, as the console's height is what pages the list.
 [[golden]]

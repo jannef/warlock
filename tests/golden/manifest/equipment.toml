@@ -26,7 +26,7 @@ screen = "equip-item"
 
 # Magic items (#149): the storeroom's magic arms picked up, names in their rarity's color (magic
 # blue, rare yellow): a magic ring and a rare bow not yet identified, Dread Visage (a rare helm,
-# worn), and a Sharp long sword of the Bear.
+# worn), and a Sharp emerald-pommelled long sword of the Bear (#191).
 [[golden]]
 name = "magic-inventory"
 scenario = "showcase"
@@ -42,4 +42,13 @@ screen = "inventory"
 name = "item-description"
 scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*4 pickup equip:head:a"
+screen = "describe"
+
+# An item set with a gem (#191): the storeroom's Sharp emerald-pommelled long sword of the Bear
+# picked up alone, its gem in its name between the prefix and the base, every part (the emerald
+# pommel too) in what it is, and the gem's size and cut on a line of its own.
+[[golden]]
+name = "ornament-description"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*4 pickup:b"
 screen = "describe"

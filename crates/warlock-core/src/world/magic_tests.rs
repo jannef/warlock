@@ -665,7 +665,7 @@ fn generated_levels_hold_floor_and_vault_loot() {
         names(Pos::new(19, 14)),
         [
             "Dread Visage, an iron helm",
-            "a Sharp long sword of the Bear"
+            "a Sharp emerald-pommelled long sword of the Bear"
         ]
     );
     assert_eq!(
