@@ -463,3 +463,41 @@ fn mana_is_saved_in_the_state_hash_and_replays() {
     // 45 spent, and 22 back over the half-hour's rest.
     assert_eq!(verified.state().player().mana, 102 - 45 + 3 * 30 * 60 / 240);
 }
+
+/// One `object` with the affix `id` at `value`, identified, as loot would make it.
+fn magic(w: &World, object: &str, id: &str, value: i32) -> Stack {
+    let magic = crate::magic::Magic {
+        rarity: crate::magic::Rarity::Magic,
+        level: 1,
+        affixes: vec![crate::magic::Affix {
+            id: id.into(),
+            tier: 1,
+            value,
+        }],
+        name: None,
+        identified: true,
+    };
+    let object = w.content().object_id(object).expect("object");
+    Stack::with_magic(object, 1, magic)
+}
+
+#[test]
+fn magic_items_raise_the_maximum_and_the_pace_and_taking_them_off_lowers_it() {
+    let mut w = world();
+    let player = w.player_id();
+    let ring = magic(&w, "gold_ring", "mystic", 5);
+    let amulet = magic(&w, "jade_amulet", "of_clarity", 50);
+    let me = w.state.actors.get_mut(&player).expect("player");
+    me.inventory.extend([ring, amulet]);
+    run(&mut w, "equip:left_ring:a equip:neck:b");
+    let me = w.state().player();
+    assert_eq!(me.max_mana(w.content()), 107, "+5 to maximum mana");
+    assert_eq!(me.mana, 102, "putting it on fills nothing");
+    assert_eq!(w.mana_rate(player), 150, "half again as fast");
+    // Full, then the ring comes off: down to the maximum without it.
+    set_mana(&mut w, 107);
+    run(&mut w, "remove:left_ring");
+    assert_eq!(w.perception().own_mana(), (102, 102));
+    run(&mut w, "remove:neck");
+    assert_eq!(w.mana_rate(player), 100);
+}

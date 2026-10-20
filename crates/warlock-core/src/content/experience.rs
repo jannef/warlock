@@ -269,6 +269,7 @@ mod tests {
         for (from, to) in [
             ("max_level = 50", "max_level = 0"),
             ("hp_level = 20", "hp_level = 60"),
+            ("mana_level = 20", "mana_level = 60"),
             ("from = 1\nzd = 5", "from = 2\nzd = 5"),
             ("zd = 5", "zd = 0"),
         ] {

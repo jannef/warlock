@@ -435,7 +435,8 @@ mod tests {
             // Toughness 10 and a human's 4 and a thief's 3; Defence 10 and Dexterity's share,
             // and no Protection beside it.
             "HP  Hit points    17/17",
-            "MP  Mana          0/0",
+            // A human's 2 and a thief's 1, and the mental stats' +1, 0, and -1.
+            "MP  Mana          3/3",
             "Dv  Defence       11      Pv  Protection  0",
             "Lv  Level         1",
             "XP  Experience    0 / 20",

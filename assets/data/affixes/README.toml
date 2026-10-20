@@ -29,6 +29,8 @@
 #             natural       + natural armour (the best counts, with a creature's own)
 #             max_hp        + maximum hit points
 #             regeneration  hit points come back N% faster
+#             max_mana      + maximum mana
+#             mana_regeneration  mana comes back N% faster
 #             strength, dexterity, toughness, intelligence, willpower, presence   + to the score
 #             move_speed    steps N% faster (at most 50 in all)
 #             carry         + N kg carrying limit

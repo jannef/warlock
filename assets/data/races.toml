@@ -13,6 +13,9 @@
 #   potential     adjustments to the potentials, the same way (hidden from the player)
 #   hp            hit points (spec §8 "Combat"; default 0): a character's maximum is their
 #                 Toughness plus their race's and their class's (classes.toml)
+#   mana          mana (spec §8 "Mana"; default 0, at most 1000): a character's maximum is
+#                 their race's and their class's plus the modifiers of their Intelligence,
+#                 Willpower, and Presence
 #   size          a size in sizes.toml (default "medium"; spec §8 "Burden"): how much the
 #                 character can carry, 1.5 kg × (2 × Strength + Toughness), is scaled by its carry
 #   ignores_burdened  whether being Burdened, the first level of burden, costs the character
@@ -55,6 +58,7 @@ age = [90, 300]
 stats = { strength = -1, dexterity = "1d2+1", toughness = -2, intelligence = 1, presence = 1 }
 potential = { strength = -2, dexterity = 3, toughness = -3, intelligence = 2, willpower = 1, presence = 1 }
 hp = 2
+mana = 4
 size = "medium"
 skills = { listen = "1d6+4", spot = "1d6+4" }
 # Keen eyes: elves notice every hidden thing in passing, and find it more easily.
@@ -72,6 +76,7 @@ age = [20, 60]
 stats = { dexterity = 1, presence = "1d2" }
 potential = { dexterity = 1, toughness = -1, intelligence = 1, presence = 2 }
 hp = 3
+mana = 3
 size = "medium"
 skills = { bluff = "1d4+2", spot = "1d4+2" }
 hunger = 90
@@ -86,6 +91,7 @@ vision = "normal"
 age = [16, 35]
 potential = { strength = "1d2", dexterity = "1d2", toughness = "1d2", intelligence = "1d2", willpower = "1d2", presence = "1d2" }
 hp = 4
+mana = 2
 size = "medium"
 # One extra class skill: one of the class's skills, picked when the character is made.
 class_skill = "2d4+4"
@@ -100,6 +106,7 @@ age = [40, 120]
 stats = { strength = 1, dexterity = -1, toughness = "1d2+2", willpower = 1, presence = -2 }
 potential = { strength = 2, dexterity = -2, toughness = 4, willpower = 1, presence = -2 }
 hp = 6
+mana = 1
 size = "medium"
 skills = { metalcraft = "1d6+4", search = "1d6+4" }
 weapon_skills = { axes = 1, crossbows = 1 }
@@ -118,6 +125,7 @@ age = [20, 50]
 stats = { strength = -3, dexterity = 3, willpower = 1 }
 potential = { strength = -4, dexterity = 3, willpower = 1, presence = 1 }
 hp = 2
+mana = 2
 size = "small"
 skills = { listen = "1d6+4", stealth = "1d6+4" }
 # Second breakfast.
@@ -133,6 +141,7 @@ age = [40, 150]
 stats = { strength = -2, toughness = 1, intelligence = "1d2+1", willpower = -1 }
 potential = { strength = -3, dexterity = 1, toughness = 1, intelligence = 3 }
 hp = 3
+mana = 4
 size = "small"
 skills = { appraise = "1d6+4", listen = "1d6+4" }
 hunger = 90
