@@ -257,12 +257,17 @@ fn blocked_actions_are_refused_and_abilities_that_cost_them_greyed_out() {
         .put(&equipment::slots_taken(&content, buckler, slot), item);
     run(&mut w, "afflict:fumbling");
     let fumbling = status(&w, "fumbling");
+    let bash = |w: &World| {
+        (w.perception().abilities().into_iter())
+            .find(|a| a.ability == Ability::ShieldBash)
+            .expect("everyone can bash")
+    };
     assert_eq!(
-        w.perception().abilities(),
-        [OwnAbility {
+        bash(&w),
+        OwnAbility {
             ability: Ability::ShieldBash,
             unavailable: Some(Unavailable::While(fumbling)),
-        }]
+        }
     );
     let why = Unavailable::While(fumbling);
     assert_eq!(why.reason(&content), "you are fumbling");
@@ -272,7 +277,7 @@ fn blocked_actions_are_refused_and_abilities_that_cost_them_greyed_out() {
     // Worn off, the bash is back.
     run(&mut w, "wait*10");
     assert_eq!(effect(&w, player, "fumbling"), None);
-    assert_eq!(w.perception().abilities()[0].unavailable, None);
+    assert_eq!(bash(&w).unavailable, None);
 }
 
 #[test]

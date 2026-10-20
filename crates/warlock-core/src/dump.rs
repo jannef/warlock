@@ -572,6 +572,7 @@ fn aim_word(aim: Aim) -> &'static str {
     match aim {
         Aim::Nothing => "nothing",
         Aim::Direction => "a direction",
+        Aim::Cell => "a cell",
     }
 }
 
@@ -1333,26 +1334,30 @@ mod tests {
 
     #[test]
     fn abilities_show_what_the_player_can_do_and_why_not() {
-        // The showcase thief: the class's skills used as actions (no use yet), then the shield
-        // bash, which needs a shield in hand.
+        // The showcase thief: throwing their voice (everyone's for now), the class's skills used
+        // as actions (no use yet), the shield bash, which needs a shield in hand, and the
+        // lantern's hood.
         let mut world = showcase();
         assert_eq!(
             layer_rows(&world, Layer::Abilities),
             [
+                "Throw your voice (class): a cell",
                 "Appraise (skill): not usable yet",
                 "Disable device (skill): not usable yet",
                 "Open lock (skill): not usable yet",
                 "Steal (skill): not usable yet",
                 "Shield bash (weapon skill): you hold no shield",
+                "Hood your lantern (item): nothing",
             ]
         );
         let value = json(&world, &[], false);
         assert_eq!(
-            value["abilities"][4],
+            value["abilities"][5],
             json!({"id": "shield_bash", "source": "weapon_skill", "aim": "a direction",
                    "unavailable": "no_shield"})
         );
-        assert_eq!(value["abilities"][2]["id"], "open_lock");
+        assert_eq!(value["abilities"][3]["id"], "open_lock");
+        assert_eq!(value["abilities"][0]["aim"], "a cell");
         // The storeroom's small shield in hand: it can be used, in a direction.
         let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
                     pickup:a equip:off_hand:a";
@@ -1360,9 +1365,9 @@ mod tests {
             world.apply(&action);
         }
         let rows = layer_rows(&world, Layer::Abilities);
-        assert_eq!(rows[4], "Shield bash (weapon skill): a direction");
+        assert_eq!(rows[5], "Shield bash (weapon skill): a direction");
         assert_eq!(
-            json(&world, &[], false)["abilities"][4]["unavailable"],
+            json(&world, &[], false)["abilities"][5]["unavailable"],
             Value::Null
         );
         assert!(!Layer::Abilities.is_dev_only());

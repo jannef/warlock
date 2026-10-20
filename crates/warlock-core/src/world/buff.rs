@@ -52,6 +52,7 @@ impl World {
             Action::Kick(_) => ActionKind::Kick,
             Action::Ascend | Action::Descend => ActionKind::Stairs,
             Action::ToggleLantern => ActionKind::Lantern,
+            Action::HoodLantern => ActionKind::Hood,
             Action::PickUp(_) => ActionKind::PickUp,
             Action::Drop(_) => ActionKind::Drop,
             Action::Equip { slot, .. } | Action::Remove(slot) => {
@@ -61,6 +62,7 @@ impl World {
             Action::Fire(_) => ActionKind::Shoot,
             Action::Throw { .. } => ActionKind::Throw,
             Action::Chat(_) | Action::Ask { .. } => ActionKind::Chat,
+            Action::ThrowVoice(_) => ActionKind::ThrowVoice,
             Action::Eat(_) => ActionKind::Eat,
             Action::Read { .. } => ActionKind::Read,
             Action::Dig(_) => ActionKind::Dig,

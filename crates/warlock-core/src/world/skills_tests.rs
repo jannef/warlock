@@ -152,9 +152,9 @@ fn the_player_perceives_only_their_own_trained_skills() {
             unavailable: Some(Unavailable::NotYet),
         }]
     );
-    assert_eq!(
-        w.perception().abilities().last().map(|a| a.ability),
-        Some(Ability::ShieldBash)
+    assert!(
+        (w.perception().abilities().iter()).any(|a| a.ability == Ability::ShieldBash),
+        "beside the skills, the shield bash"
     );
     // A creature's skills are never perceived: the arena's shaman has some, the player none of
     // its.

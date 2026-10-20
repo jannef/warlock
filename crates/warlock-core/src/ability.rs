@@ -19,14 +19,18 @@
 
 use crate::action::Action;
 use crate::content::{ActionKind, Content, StatusId};
-use crate::geom::Dir;
+use crate::geom::{Dir, Pos};
 use crate::skills::SkillId;
-use crate::world::Actor;
+use crate::world::{Actor, VOICE_RANGE};
 use std::borrow::Cow;
 
 /// An ability, as the abilities menu lists it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Ability {
+    /// Throw your voice (spec §5 "Hearing"; #235): [`Action::ThrowVoice`] at a cell the player
+    /// sees. The bard's (design §4.8, at level 32); until the class tables give it to them alone,
+    /// everyone has it.
+    ThrowVoice,
     /// A skill used as an action (`kind = "action"` in `data/skills.toml`) that the actor is
     /// trained in, whose use is not in the game yet: listed, never available (spec §8
     /// "Skills"). A use, when it comes, is a variant of its own with its action, and its skill
@@ -36,6 +40,10 @@ pub enum Ability {
     /// with a shield (at shield bashing's rank 0 too), so everyone has it; it is available while
     /// a shield to bash with is held.
     ShieldBash,
+    /// Lower or raise the lantern's hood (spec §5 "Light sources"; #235): [`Action::HoodLantern`].
+    /// Listed with what the player carries, the lantern; the Hooded light talent (design §7.5)
+    /// will give it, and until then everyone has it (without a lantern the rules say so).
+    HoodLantern,
 }
 
 /// Where an ability comes from: the abilities menu's groups, in this order.
@@ -43,13 +51,13 @@ pub enum Ability {
 pub enum Source {
     /// The character's race (none yet).
     Race,
-    /// The character's class (none yet).
+    /// The character's class (throwing one's voice, everyone's until the class tables).
     Class,
     /// A trained skill used as an action (spec §8 "Skills").
     Skill,
     /// A weapon skill or a fighting style (spec §8 "Weapon skills", "Fighting styles").
     WeaponSkill,
-    /// Something worn or carried (none yet).
+    /// Something worn or carried (the lantern's hood).
     Item,
 }
 
@@ -86,14 +94,16 @@ impl Source {
     }
 }
 
-/// What an ability asks for before it is used. A target (the aiming mode) and an item (a list of
-/// the pack) join these with the first ability that needs one.
+/// What an ability asks for before it is used. An item (a list of the pack) joins these with the
+/// first ability that needs one.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Aim {
     /// Nothing: choosing it uses it.
     Nothing,
     /// A direction, as opening a door does.
     Direction,
+    /// A cell, in the aiming mode, as a shot does ([`Ability::action_at`]).
+    Cell,
 }
 
 /// Why an ability cannot be used now: the abilities menu shows it beside the greyed-out row.
@@ -139,9 +149,17 @@ impl Ability {
         let skills = (content.skills().iter().enumerate())
             .filter(|(_, def)| def.is_active())
             .filter_map(|(i, _)| u8::try_from(i).ok().map(|i| Ability::Skill(SkillId(i))));
+        // Class: throwing one's voice.
+        let class = [Ability::ThrowVoice];
         // Weapon skills and fighting styles: the shield bash.
         let weapon_skills = [Ability::ShieldBash];
-        let mut all: Vec<Ability> = skills.chain(weapon_skills).collect();
+        // Items: the lantern's hood.
+        let items = [Ability::HoodLantern];
+        let mut all: Vec<Ability> = (class.into_iter())
+            .chain(skills)
+            .chain(weapon_skills)
+            .chain(items)
+            .collect();
         all.sort_by_key(|a| a.source());
         all
     }
@@ -154,11 +172,11 @@ impl Ability {
     }
 
     /// Whether `actor` has it (whether or not they can use it now): a skill, if they are trained
-    /// in it; the shield bash, everyone.
+    /// in it; the shield bash, throwing one's voice, and the lantern's hood, everyone.
     fn had_by(self, actor: &Actor) -> bool {
         match self {
             Ability::Skill(id) => actor.skills.get(id).is_some(),
-            Ability::ShieldBash => true,
+            Ability::ThrowVoice | Ability::ShieldBash | Ability::HoodLantern => true,
         }
     }
 
@@ -166,7 +184,9 @@ impl Ability {
     pub fn id(self, content: &Content) -> &str {
         match self {
             Ability::Skill(id) => &content.skill(id).id,
+            Ability::ThrowVoice => "throw_voice",
             Ability::ShieldBash => "shield_bash",
+            Ability::HoodLantern => "hood_lantern",
         }
     }
 
@@ -174,7 +194,9 @@ impl Ability {
     pub fn name(self, content: &Content) -> &str {
         match self {
             Ability::Skill(id) => &content.skill(id).name,
+            Ability::ThrowVoice => "Throw your voice",
             Ability::ShieldBash => "Shield bash",
+            Ability::HoodLantern => "Hood your lantern",
         }
     }
 
@@ -182,7 +204,14 @@ impl Ability {
     pub fn description(self, content: &Content) -> &str {
         match self {
             Ability::Skill(id) => &content.skill(id).description,
+            Ability::ThrowVoice => {
+                "Make a voice sound at a place you see nearby: those who hear it go and look there."
+            }
             Ability::ShieldBash => "Strike someone next to you with the shield you hold.",
+            Ability::HoodLantern => {
+                "Lower your lantern's hood, or raise it: hooded, it dimly lights the ground around \
+                 you but not you."
+            }
         }
     }
 
@@ -190,14 +219,17 @@ impl Ability {
     pub const fn source(self) -> Source {
         match self {
             Ability::Skill(_) => Source::Skill,
+            Ability::ThrowVoice => Source::Class,
             Ability::ShieldBash => Source::WeaponSkill,
+            Ability::HoodLantern => Source::Item,
         }
     }
 
     /// What it asks for before it is used.
     pub const fn aim(self) -> Aim {
         match self {
-            Ability::Skill(_) => Aim::Nothing,
+            Ability::Skill(_) | Ability::HoodLantern => Aim::Nothing,
+            Ability::ThrowVoice => Aim::Cell,
             Ability::ShieldBash => Aim::Direction,
         }
     }
@@ -207,17 +239,39 @@ impl Ability {
     pub const fn cost(self) -> Option<ActionKind> {
         match self {
             Ability::Skill(_) => None,
+            Ability::ThrowVoice => Some(ActionKind::ThrowVoice),
             Ability::ShieldBash => Some(ActionKind::Melee),
+            Ability::HoodLantern => Some(ActionKind::Hood),
+        }
+    }
+
+    /// How far a cell it aims at may be, in cells (a disc, as ranges are); `None` for one that
+    /// aims at no cell.
+    pub const fn range(self) -> Option<i32> {
+        match self {
+            Ability::ThrowVoice => Some(VOICE_RANGE),
+            Ability::Skill(_) | Ability::ShieldBash | Ability::HoodLantern => None,
         }
     }
 
     /// The action it is, aimed `dir` when it asks for a direction; `None` for one with no use
-    /// yet, or one that asks for a direction without it.
+    /// yet, one that asks for a direction without it, or one that asks for a cell
+    /// ([`Ability::action_at`]).
     pub const fn action(self, dir: Option<Dir>) -> Option<Action> {
         match (self, dir) {
-            (Ability::Skill(_), _) => None,
+            (Ability::Skill(_) | Ability::ThrowVoice, _) => None,
             (Ability::ShieldBash, Some(dir)) => Some(Action::Bash(dir)),
             (Ability::ShieldBash, None) => None,
+            (Ability::HoodLantern, _) => Some(Action::HoodLantern),
+        }
+    }
+
+    /// The action it is, aimed at level cell `at`, for one that asks for a cell; `None` for any
+    /// other.
+    pub const fn action_at(self, at: Pos) -> Option<Action> {
+        match self {
+            Ability::ThrowVoice => Some(Action::ThrowVoice(at)),
+            Ability::Skill(_) | Ability::ShieldBash | Ability::HoodLantern => None,
         }
     }
 
@@ -226,6 +280,7 @@ impl Ability {
     pub(crate) fn unavailable(self, actor: &Actor, content: &Content) -> Option<Unavailable> {
         let own = match self {
             Ability::Skill(_) => Some(Unavailable::NotYet),
+            Ability::ThrowVoice | Ability::HoodLantern => None,
             Ability::ShieldBash => actor
                 .shield(content)
                 .is_none()
@@ -267,6 +322,11 @@ mod tests {
         let content = Content::builtin().expect("content");
         let every = Ability::every(&content);
         assert!(every.windows(2).all(|w| w[0].source() <= w[1].source()));
+        assert_eq!(
+            every.first(),
+            Some(&Ability::ThrowVoice),
+            "the class's first"
+        );
         // The skills used as actions, in skill order, then the shield bash.
         let skills: Vec<&str> = (every.iter())
             .filter(|a| a.source() == Source::Skill)
@@ -291,7 +351,8 @@ mod tests {
                 "woodcraft",
             ]
         );
-        assert_eq!(every.last(), Some(&Ability::ShieldBash));
+        let last: Vec<Ability> = every.iter().rev().take(2).rev().copied().collect();
+        assert_eq!(last, [Ability::ShieldBash, Ability::HoodLantern]);
     }
 
     #[test]
@@ -303,5 +364,23 @@ mod tests {
         assert_eq!(bash.action(Some(Dir::E)), Some(Action::Bash(Dir::E)));
         assert_eq!(bash.action(None), None, "not without a direction");
         assert_eq!(Ability::Skill(SkillId(0)).action(Some(Dir::E)), None);
+        assert_eq!(bash.range(), None);
+        assert_eq!(bash.action_at(Pos::new(3, 4)), None);
+    }
+
+    #[test]
+    fn throwing_a_voice_aims_at_a_cell_and_the_hood_at_nothing() {
+        let voice = Ability::ThrowVoice;
+        assert_eq!((voice.aim(), voice.source()), (Aim::Cell, Source::Class));
+        assert_eq!(voice.cost(), Some(ActionKind::ThrowVoice));
+        assert_eq!(voice.range(), Some(VOICE_RANGE));
+        assert_eq!(voice.action(None), None, "not without a cell");
+        let at = Pos::new(3, 4);
+        assert_eq!(voice.action_at(at), Some(Action::ThrowVoice(at)));
+        let hood = Ability::HoodLantern;
+        assert_eq!((hood.aim(), hood.source()), (Aim::Nothing, Source::Item));
+        assert_eq!(hood.cost(), Some(ActionKind::Hood));
+        assert_eq!(hood.action(None), Some(Action::HoodLantern));
+        assert_eq!((hood.range(), hood.action_at(at)), (None, None));
     }
 }

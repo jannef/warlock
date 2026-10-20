@@ -198,7 +198,7 @@ impl World {
                 }
                 seen
             }
-            Event::LevelChanged { .. } | Event::Talked(_) => true,
+            Event::LevelChanged { .. } | Event::Talked(_) | Event::VoiceThrown { .. } => true,
             Event::Missile { ref path, .. } => !path.is_empty(),
             Event::Spell { ref cells, .. } => !cells.is_empty(),
             Event::Attacked {
