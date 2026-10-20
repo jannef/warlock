@@ -104,6 +104,7 @@ mod path;
 mod perceive;
 mod quest;
 mod rest;
+mod rot;
 mod schedule;
 mod search;
 mod shoot;
@@ -117,8 +118,6 @@ mod travel;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
-pub use eat::Rot;
-pub(crate) use eat::rot_at;
 pub use fight::{Cause, Death};
 pub(crate) use hash::fnv1a;
 pub use level::{Fire, LevelState};
@@ -473,6 +472,7 @@ impl World {
             stance: CombatStance::Neutral,
         };
         player.hp = player.max_hp(&content);
+        crate::rot::made_at(&mut player.inventory, &content, def.start);
         state.actors.insert(ActorId(0), player);
         instantiate_level(&mut state, &content, &start);
         drop(start); // It may borrow `content`, which `assemble` takes.
@@ -913,6 +913,8 @@ mod overworld_tests;
 mod quest_tests;
 #[cfg(test)]
 mod room_tests;
+#[cfg(test)]
+mod rot_tests;
 #[cfg(test)]
 mod search_tests;
 #[cfg(test)]

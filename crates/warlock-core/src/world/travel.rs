@@ -381,7 +381,7 @@ pub(super) fn level_template<'a>(
 
 /// Creates the runtime state for a level and spawns its creatures, each with its type's stats,
 /// carrying, wearing, and wielding what the level gives it; its shops are kept by the keepers
-/// spawned at their posts.
+/// spawned at their posts. The food lying there and carried is made now (it rots from now on).
 pub(super) fn instantiate_level(
     state: &mut WorldState,
     content: &Content,
@@ -389,6 +389,7 @@ pub(super) fn instantiate_level(
 ) {
     let id = template.id.as_str();
     let mut level = LevelState::from_template(template, content, state.time);
+    crate::rot::made_at(level.objects.values_mut().flatten(), content, state.time);
     let first = state.next_actor_id;
     for plan in &template.shops {
         let spawned = (template.creatures.iter()).position(|c| c.pos == plan.post);
@@ -436,6 +437,7 @@ pub(super) fn instantiate_level(
             stance: CombatStance::Neutral,
         };
         actor.hp = actor.max_hp(content);
+        crate::rot::made_at(&mut actor.inventory, content, state.time);
         state.actors.insert(actor_id, actor);
     }
 }

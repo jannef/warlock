@@ -13,7 +13,8 @@
 //!   cut up (by a long journey or many short actions). Diseases take their turns and stat damage
 //!   mends at their own moments too (`world/disease.rs`). At one moment a hit point back comes
 //!   first, then the ticks, then the easing, then the player's hunger, then a point of stat
-//!   damage mending, then the diseases' turns. Actors on other levels are frozen, as with energy, and the dev time skip
+//!   damage mending, then the diseases' turns, then food rotting away in its pack
+//!   (`world/rot.rs`). Actors on other levels are frozen, as with energy, and the dev time skip
 //!   passes no time for anyone.
 //! - **Healing** ([`World::healing_rate`]): normally one hit point per
 //!   [`combat::regen_seconds`] of the actor's (effective) Toughness; twice as fast while the
@@ -38,7 +39,7 @@
 //!   bleeding; diseases list their own), for the Heal skill (#132), potions, and priests to use.
 
 use super::fight::Harm;
-use super::{ActorId, Spent, World, disease};
+use super::{ActorId, Spent, World, disease, rot};
 use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Strike};
 use crate::content::Effect as ItemEffect;
@@ -233,10 +234,13 @@ impl World {
     }
 
     /// `seconds` of game time from `start` pass for actor `id`: its effects tick and ease, it
-    /// heals, (the player) hungers, its stat damage mends, and its diseases take their turns,
-    /// each at the moment it happens, until the time is up or it dies.
+    /// heals, (the player) hungers, its stat damage mends, its diseases take their turns, and
+    /// the food in its pack rots away, each at the moment it happens, until the time is up or it
+    /// dies.
     fn live(&mut self, id: ActorId, start: GameTime, seconds: u64, events: &mut Vec<Event>) {
         let content = self.content.clone();
+        // What rotted away while it was frozen (on another level, or over a dev skip) goes first.
+        self.rot_pack(id, start);
         let mut passed = 0;
         while passed < seconds {
             let rate = self.healing_rate(id);
@@ -248,20 +252,29 @@ impl World {
                 return;
             }
             let left = seconds - passed;
+            let rots = rot::until_rots(
+                &actor.inventory,
+                &content,
+                start + Duration::seconds(passed),
+            );
             if actor.effects.is_empty()
                 && hungrier.is_none()
                 && actor.diseases.is_empty()
                 && actor.damage.is_none()
+                && rots.is_none_or(|r| r > left)
             {
                 heal(actor, &content, left, rate);
                 return;
             }
             // Up to the next moment something happens: a tick, an easing, a hit point back, a
             // change in its hunger (a new state, a hit point lost to starving), a disease's
-            // turn, or a point of stat damage mended.
+            // turn, a point of stat damage mended, or food in its pack rotting away.
             let mut step = hungrier.map_or(left, |h| h.min(left));
             if let Some(next) = disease::until_next(actor) {
                 step = step.min(next);
+            }
+            if let Some(r) = rots {
+                step = step.min(r.max(1));
             }
             for e in actor.effects.iter() {
                 let def = content.status(e.status);
@@ -327,6 +340,7 @@ impl World {
                     return;
                 }
             }
+            self.rot_pack(id, when);
         }
     }
 

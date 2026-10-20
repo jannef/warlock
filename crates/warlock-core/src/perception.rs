@@ -1158,9 +1158,22 @@ pub struct ShopView<'a> {
     content: &'a Content,
     /// The player's favour (`world::favour`), hidden: only prices come of it.
     favour: i32,
+    /// The moment it is: rotten food is worth nothing (spec §8 "Hunger"), which only the
+    /// prices tell.
+    now: GameTime,
 }
 
 impl<'a> ShopView<'a> {
+    /// Whether `stack` is rotten food, which the shop neither sells nor buys.
+    fn spoilt(&self, stack: &Stack) -> bool {
+        crate::rot::stage(self.content, stack, self.now).is_some_and(|s| s.is_rotten())
+    }
+
+    /// What `stack` costs on the bill (what the player took is priced as it was).
+    fn bill(&self, stack: &Stack) -> u32 {
+        (self.shops).price(self.content, self.shop.kind, stack, self.favour)
+    }
+
     /// Its sign: "Grimbold's General Store".
     pub fn sign(&self) -> String {
         self.shop.sign(self.content)
@@ -1182,14 +1195,22 @@ impl<'a> ShopView<'a> {
         self.shop.is_exit(p)
     }
 
-    /// What it asks for `stack`, if it is for sale (worth something, not the currency).
+    /// What it asks for `stack` lying on its floor, if it is for sale (worth something, not the
+    /// currency, not rotten food).
     pub fn price(&self, stack: &Stack) -> Option<u32> {
-        let price = (self.shops).price(self.content, self.shop.kind, stack, self.favour);
+        let price = if self.spoilt(stack) {
+            0
+        } else {
+            self.bill(stack)
+        };
         (price > 0).then_some(price)
     }
 
-    /// What it offers for `stack`, if it buys it.
+    /// What it offers for `stack`, if it buys it (never rotten food).
     pub fn offer(&self, stack: &Stack) -> Option<u32> {
+        if self.spoilt(stack) {
+            return None;
+        }
         let offer = (self.shops).offer(self.content, self.shop.kind, stack, self.favour);
         (offer > 0).then_some(offer)
     }
@@ -1222,6 +1243,7 @@ impl<'a> PerceptionView<'a> {
             shops,
             content: self.content,
             favour: favour(self.content, shops, self.player),
+            now: self.time,
         })
     }
 
@@ -1248,7 +1270,7 @@ impl<'a> PerceptionView<'a> {
         };
         let parts = unpaid_parts(inventory, &view.shop.unpaid);
         (inventory.iter().zip(parts))
-            .map(|(s, n)| (n > 0).then(|| view.price(&part_of(s, n)).unwrap_or(0)))
+            .map(|(s, n)| (n > 0).then(|| view.bill(&part_of(s, n))))
             .collect()
     }
 

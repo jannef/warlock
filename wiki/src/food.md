@@ -22,6 +22,23 @@ The [showcase](introduction.md)'s pantry, beside the storeroom of arms in the hu
 rations, loaves of bread, dried meat, and apples. Some runs start with food in your pack: the
 Depths, the World, and the Forest.
 
+## Food spoils
+
+All food **rots**, whether it lies on the floor or in your pack: it keeps for a while (the
+table above says roughly how long: a loaf of bread for about five days, a food ration for about a
+month), and some time after that it has rotted away altogether. Food in your pack that rots away
+is gone, and you are told ("Your loaf of bread has rotted away."); what lies on the floor is
+simply gone when you next look. Food never shows how old it is, and picked up or put down, food
+of a kind keeps together in one stack, as old as the oldest of it: remember where it came from
+and when.
+
+Food a little past its best is fine to eat. Food past its keeping is **rotten**, and eating it is
+a bad idea: "Ugh! The loaf of bread was rotten." You may vomit, and if it stays down it makes
+you sick ("You feel sick."): food poisoning, which costs hit points for a while until it wears
+off (see [Status effects](status-effects.md#poisoned)), though it still feeds you. Rotten food
+may also give you grave rot (see [Diseases](diseases.md)). Shopkeepers know rotten food when they
+smell it: they will not buy it, and they do not sell it either (see [Shops](shops.md)).
+
 ## Corpses
 
 A creature that dies leaves its **corpse** where it fell, on top of what it dropped: a "kobold
@@ -31,13 +48,10 @@ while to eat.
 
 {{#include generated/corpses.md}}
 
-Corpses **rot**. A fresh corpse turns rotten some hours after the death, and later rots away
-altogether, from the floor and from your pack alike ("Your giant rat corpse rots away."). A
-corpse does not show how old it is: remember when it fell. Eating a rotten one is a bad idea:
-"Ugh! The kobold corpse was rotten." You may vomit, and if it stays down it makes you sick ("You
-feel sick."): food poisoning, which costs hit points for a while until it wears off (see
-[Status effects](status-effects.md#poisoned)), though it still feeds you. Rotten flesh may also
-give you grave rot (see [Diseases](diseases.md)).
+Corpses rot like all food, only faster: a fresh corpse turns rotten some hours after the death,
+and rots away altogether in a day or two, from the floor and from your pack alike ("Your giant
+rat corpse has rotted away."). A corpse does not show how old it is: remember when it fell.
+Eating a rotten one is as bad an idea as any rotten food: "Ugh! The kobold corpse was rotten."
 
 Eating a fresh corpse may do more than feed you. Some taste terrible and may come back up, some
 make you sick, some do you good, and a rare few may make you a little stronger in some way, as

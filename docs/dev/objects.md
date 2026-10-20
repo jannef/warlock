@@ -9,7 +9,8 @@ color, material (`data/materials/`, one file per material), and weight in grams
 (`content/object.rs`: `ObjectDef`, `ObjectId`, and the `"id*N"` placement strings;
 `content/material.rs`); the tables are directories read in path order, see "Content
 directories" in `docs/dev/content.md`. Every creature has a base `weight`. `object.rs` holds the runtime side: `Stack` (object + count; stackable objects join,
-others are stacks of one), piles (`add_to_pile`: dropped stacks go on top, index 0 is the top the
+others are stacks of one; food knows when it was made, `Stack::died`, and joins whatever its age,
+keeping the oldest: `docs/dev/hunger.md`), piles (`add_to_pile`: dropped stacks go on top, index 0 is the top the
 map shows), inventories (`add_to_inventory`, at most `INVENTORY_SLOTS` = 26, lettered by index),
 `Weight` (base + carried), `format_weight`, and `phrase` for messages. Piles live in
 `LevelState::objects` (by position, never empty) with `object_memory` beside them (piles as last

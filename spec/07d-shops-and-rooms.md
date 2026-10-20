@@ -65,6 +65,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Presentation asks first, in the dialog (§6): dropping in a shop what it buys asks
     `Grimbold offers 15 gold for a scroll of light.` with `Sell for 15 gold` (accept) and `Keep
     it` (cancel: nothing is dropped).
+  - **Rotten food** (§8 "Hunger": food past its keeping, by its age) is worth nothing: a shop
+    neither sells it (lying on its floor it shows no price, and picking it up or eating it there
+    owes nothing) nor buys it (no offer; dropping or selling it keeps it, and the keeper says
+    "Grimbold sniffs at a loaf of bread and says: \"Not at any price.\"", the one in-world hint of
+    rot besides eating it). What is already on the bill stays priced as it was (the bill counts
+    by object, whatever the age). `World::spoilt` in `world/shop.rs` and `ShopView` in
+    perception decide it with the same `rot::stage`.
   - **The way out**: a shop's `exits` are the cells around its floor that could be walked onto,
     or were doors, when the level was made: its door. A step onto one while owing anything is
     turned back (`World::turned_back`, in the rules, so no step out of the door ever steals):

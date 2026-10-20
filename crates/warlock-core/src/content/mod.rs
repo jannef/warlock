@@ -70,7 +70,8 @@ pub use faction::{FactionDef, FactionId, Factions, PLAYER_FACTION, Stance};
 pub use flow::{FLOW_SPEEDS, Flow};
 pub use horoscope::{Horoscope, Sign, SignPart};
 pub use hunger::{
-    Corpses, EXERTIONS, Faint, Food, HungerDef, MAX_MEAL, MAX_NUTRITION, Overeating, Starve, States,
+    Corpses, EXERTIONS, Faint, Food, HungerDef, MAX_MEAL, MAX_NUTRITION, MAX_SHELF_LIFE,
+    Overeating, Rotten, Starve, States,
 };
 pub(crate) use level::validate_route;
 pub use level::{
@@ -354,7 +355,7 @@ struct LegendFile {
 /// weapons name no category; without statuses nothing ails anyone, and resting heals twice as
 /// fast; without diseases nobody falls ill; without dialogue, nobody talks; without quests,
 /// nobody asks anything of the player; without `data/hunger.toml` nobody hungers, nothing is
-/// eaten, and creatures leave no corpses.
+/// eaten, food does not rot, and creatures leave no corpses.
 #[derive(Debug)]
 pub struct Content {
     terrain: Vec<TerrainDef>,
@@ -1238,25 +1239,24 @@ impl Content {
                 self.corpses[i] = Some(id);
                 self.objects.push(def);
             }
-            // Harm from eating is degrees of a status (spec §8 "Status effects").
-            let harms = corpses.rotten_harm.max() > 0
-                || (self.creatures.iter())
-                    .any(|c| c.on_eat.as_ref().is_some_and(|e| e.harm.is_some()));
-            match &corpses.sickness {
-                Some(id) if self.status_id(id).is_none() => {
-                    return Err(err(format!(
-                        "corpses: unknown sickness `{id}` (data/status.toml)"
-                    )));
-                }
-                None if harms => {
-                    return Err(err(
-                        "corpses: `rotten_harm` and `on_eat` harm need a `sickness`, a status in \
-                         data/status.toml"
-                            .into(),
-                    ));
-                }
-                _ => {}
+        }
+        // Harm from eating is degrees of a status (spec §8 "Status effects").
+        let harms = def.rotten.harm.max() > 0
+            || (def.corpses.is_some()
+                && (self.creatures.iter())
+                    .any(|c| c.on_eat.as_ref().is_some_and(|e| e.harm.is_some())));
+        match &def.sickness {
+            Some(id) if self.status_id(id).is_none() => {
+                return Err(err(format!("unknown sickness `{id}` (data/status.toml)")));
             }
+            None if harms => {
+                return Err(err(
+                    "rotten food's `harm` and `on_eat` harm need a `sickness`, a status in \
+                     data/status.toml"
+                        .into(),
+                ));
+            }
+            _ => {}
         }
         self.hunger = Some(def);
         Ok(())
@@ -1875,7 +1875,7 @@ impl Content {
     }
 
     /// How the player hungers, `data/hunger.toml` (spec §8 "Hunger"); `None` without the file:
-    /// nobody hungers and nothing is eaten.
+    /// nobody hungers, nothing is eaten, and food does not rot.
     pub fn hunger(&self) -> Option<&HungerDef> {
         self.hunger.as_ref()
     }
