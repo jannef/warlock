@@ -17,12 +17,15 @@
 //! said by whoever the quest is handed in to (the recipient of a bring with `to` or a delivery,
 //! else the giver). The `reward` is `gold` (gold coins), `items` (placement strings, `"apple*2"`),
 //! and `xp`, each optional. `requires` names a quest (earlier in the file) that must be done
-//! before this one is offered; `repeatable` quests are offered again once done (never a reach).
+//! before this one is offered, and `requires_alignment` the bands the player must be in for it
+//! to be offered (spec §8 "Alignment"); `alignment` moves their score as it is completed;
+//! `repeatable` quests are offered again once done (never a reach).
 
 use super::creature::CreatureId;
 use super::dialogue::{DialogueId, MAX_LINE, MAX_REPLY, MAX_TOPICS, Speaker, check_lines, is_id};
 use super::object::{MAX_PLACED, ObjectId, parse_stacks};
 use super::{Content, ContentError};
+use crate::alignment::{MAX as ALIGNMENT_MAX, Requirement};
 use crate::object::Stack;
 use serde::Deserialize;
 
@@ -90,6 +93,9 @@ struct QuestSpec {
     reminder: String,
     done: String,
     requires: Option<String>,
+    requires_alignment: Option<Requirement>,
+    #[serde(default)]
+    alignment: i32,
     #[serde(default)]
     repeatable: bool,
 }
@@ -174,6 +180,11 @@ pub struct QuestDef {
     pub texts: QuestTexts,
     /// A quest that must be done before this one is offered.
     pub requires: Option<QuestId>,
+    /// The alignment the player must be of for it to be offered (spec §8 "Alignment").
+    pub requires_alignment: Option<Requirement>,
+    /// How far completing it moves the player's alignment score (spec §8 "Alignment"):
+    /// helping quests good, dark ones evil.
+    pub alignment: i32,
     /// Offered again once done.
     pub repeatable: bool,
 }
@@ -406,6 +417,14 @@ fn resolve(spec: QuestSpec, before: &[QuestDef], content: &Content) -> Result<Qu
         &spec.done,
     ];
     check_lines(said, MAX_REPLY)?;
+    if let Some(r) = spec.requires_alignment {
+        r.check()?;
+    }
+    if spec.alignment.abs() > ALIGNMENT_MAX {
+        return Err(format!(
+            "`alignment` is -{ALIGNMENT_MAX} to {ALIGNMENT_MAX}"
+        ));
+    }
     let requires = match &spec.requires {
         Some(id) => Some(
             (before.iter().position(|q| q.id == *id))
@@ -432,6 +451,8 @@ fn resolve(spec: QuestSpec, before: &[QuestDef], content: &Content) -> Result<Qu
             done: spec.done,
         },
         requires,
+        requires_alignment: spec.requires_alignment,
+        alignment: spec.alignment,
         repeatable: spec.repeatable,
     })
 }

@@ -11,6 +11,7 @@ weight = 25000
 size = "small"
 light = "torch"
 faction = "kobolds"
+alignment = "evil"
 vision = "darkvision"
 opens_doors = true
 # Clumsy and loud, and not the best listener.

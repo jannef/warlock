@@ -47,6 +47,7 @@
 //! Everything follows from the content, the spec, the run seed, and the start date, so a run
 //! (and its replay) is reproduced by its scenario, seed, and character.
 
+use crate::alignment::Score;
 use crate::content::{Calendar, ClassDef, Content, RaceDef, ScenarioDef, Sign};
 use crate::rng::Rng;
 use crate::skills::{self, Skills};
@@ -290,6 +291,8 @@ pub struct Start {
     pub skills: Skills,
     /// Starting ranks in weapon skills, defaults included (spec §8 "Weapon skills").
     pub weapon_skills: WeaponSkills,
+    /// The starting alignment score (spec §8 "Alignment"): the race's plus the class's.
+    pub alignment: Score,
     pub character: Character,
 }
 
@@ -345,6 +348,7 @@ impl CharacterSpec {
             hp: race.hp + class.hp,
             skills,
             weapon_skills: self.weapon_skills(content, seed),
+            alignment: Score::new(race.alignment + class.alignment),
             character: Character {
                 name: random_name(content, seed, self, 0).unwrap_or_else(|| NAMELESS.into()),
                 spec: self.clone(),

@@ -7,7 +7,9 @@ Content (`assets/data`, `assets/levels`, `assets/scenarios`, `assets/vaults`) is
 `warlock-core` at build time by `build.rs`. Level maps are ASCII with a legend; see
 `assets/levels/hub.toml` and spec §7. A legend entry with a `creature` may set `faction = "peaceful"` (any id in
 `data/factions.toml`) to override its type's faction for that spawn (`Actor::faction_override`; read it with
-`Actor::faction`, never the creature type's, when computing stance). The showcase (hub, vast, courtyard) is safe
+`Actor::faction`, never the creature type's, when computing stance), and `alignment = "good"`
+to override its type's alignment the same way (`Actor::alignment_override`, read with
+`Actor::nature`; `docs/dev/alignment.md`). The showcase (hub, vast, courtyard) is safe
 this way: `xtask/src/vast.rs` emits it for its rats and kobolds; fighting is the arena's and the Depths'. A level
 file's optional `arrival = "..."` line is said when the player arrives by stairs. `secret =
 true` (or a difficulty) on a closed door makes it a secret door: the cell shows the wall around

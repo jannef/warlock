@@ -15,9 +15,16 @@
 //! [`Unavailable::While`] it, and so is one whose kind of action a status `blocks`; nothing
 //! counts uses.
 //!
+//! An ability that asks for an alignment (`requires_alignment` in its data, spec §8
+//! "Alignment": the paladin's gifts are Good or better) stays the character's when they stray
+//! from it, but cannot be used ([`Unavailable::Strayed`], "you have strayed") until they climb
+//! back: its arm of [`Ability::unavailable`] asks [`strayed`] first. The class tables (#243) and
+//! talents (#220) carry the requirement as an `Option<Requirement>` in their data.
+//!
 //! [`PerceptionView::abilities`]: crate::perception::PerceptionView::abilities
 
 use crate::action::Action;
+use crate::alignment::Requirement;
 use crate::content::{ActionKind, Content, SkillDef, StatusId};
 use crate::geom::Dir;
 use crate::skills::{Effect, SkillId};
@@ -113,6 +120,9 @@ pub enum Unavailable {
     NoShield,
     /// A skill whose use is not in the game yet.
     NotYet,
+    /// One that asks for an alignment the character has strayed from (spec §8 "Alignment"):
+    /// they keep it, and may use it again once they climb back.
+    Strayed,
     /// While a status lasts (spec §8 "Status effects"): one that blocks the kind of action the
     /// ability is (a raging barbarian cannot read), or the ability's cooldown, which the class
     /// abilities bring (Winded: "you are winded"). Only time lifts it.
@@ -125,6 +135,7 @@ impl Unavailable {
         match self {
             Unavailable::NoShield => "you hold no shield".into(),
             Unavailable::NotYet => "not usable yet".into(),
+            Unavailable::Strayed => "you have strayed".into(),
             Unavailable::While(status) => {
                 format!("you are {}", content.status(status).name.to_lowercase()).into()
             }
@@ -136,6 +147,7 @@ impl Unavailable {
         match self {
             Unavailable::NoShield => "no_shield".into(),
             Unavailable::NotYet => "not_yet".into(),
+            Unavailable::Strayed => "strayed".into(),
             Unavailable::While(status) => format!("while:{}", content.status(status).id).into(),
         }
     }
@@ -277,6 +289,19 @@ impl Ability {
     }
 }
 
+/// Why `actor` cannot use an ability that asks for alignment `required` (its data's
+/// `requires_alignment`; `None`: any): [`Unavailable::Strayed`] while their band falls short of
+/// it (spec §8 "Alignment"). Every ability that has a requirement asks this first in
+/// [`Ability::unavailable`].
+pub fn strayed(
+    actor: &Actor,
+    content: &Content,
+    required: Option<Requirement>,
+) -> Option<Unavailable> {
+    let band = actor.band(content);
+    (!required?.allows(band)).then_some(Unavailable::Strayed)
+}
+
 /// One of the player's abilities, as they know it: for the abilities menu.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct OwnAbility {
@@ -332,6 +357,41 @@ mod tests {
             ]
         );
         assert_eq!(every.last(), Some(&Ability::ShieldBash));
+    }
+
+    #[test]
+    fn an_ability_that_asks_for_an_alignment_is_unavailable_to_one_who_strayed() {
+        use crate::alignment::{Band, Score};
+        use crate::character::CharacterSpec;
+        let content = std::sync::Arc::new(Content::builtin().expect("content"));
+        let paladin: CharacterSpec = "human,male,paladin".parse().unwrap();
+        let world = crate::World::with_character(content.clone(), "showcase", None, Some(&paladin))
+            .expect("world");
+        // A test ability of a paladin's: Good or better.
+        let gift = Some(Requirement {
+            min: Some(Band::Good),
+            max: None,
+        });
+        let mut me = world.state().player().clone();
+        assert_eq!(me.band(&content), Band::Good, "a paladin starts Good");
+        assert_eq!(strayed(&me, &content, gift), None);
+        assert_eq!(strayed(&me, &content, None), None, "no requirement");
+        // Fallen to Kind: kept, but greyed out.
+        me.alignment = Some(Score::new(200));
+        assert_eq!(strayed(&me, &content, gift), Some(Unavailable::Strayed));
+        assert_eq!(Unavailable::Strayed.reason(&content), "you have strayed");
+        assert_eq!(Unavailable::Strayed.id(&content), "strayed");
+        // Climbed back: usable again.
+        me.alignment = Some(Score::new(800));
+        assert_eq!(strayed(&me, &content, gift), None);
+        // A dark gift, Callous or worse, the other way round.
+        let dark = Some(Requirement {
+            min: None,
+            max: Some(Band::Callous),
+        });
+        assert_eq!(strayed(&me, &content, dark), Some(Unavailable::Strayed));
+        me.alignment = Some(Score::new(-500));
+        assert_eq!(strayed(&me, &content, dark), None);
     }
 
     #[test]

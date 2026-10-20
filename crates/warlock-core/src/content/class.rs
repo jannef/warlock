@@ -37,6 +37,8 @@ struct ClassSpec {
     #[serde(default = "normal_experience")]
     experience: u16,
     #[serde(default)]
+    alignment: i32,
+    #[serde(default)]
     skills: BTreeMap<String, Dice>,
     #[serde(default)]
     weapon_skills: BTreeMap<String, Dice>,
@@ -62,6 +64,9 @@ pub struct ClassDef {
     /// How much experience a level needs, in percent (spec §8 "Experience"): multiplied with
     /// the race's onto every threshold. Patient classes pay more (a wizard, 125).
     pub experience: u16,
+    /// Its part of a new character's alignment score (spec §8 "Alignment"), added to the
+    /// race's: a paladin starts Good.
+    pub alignment: i32,
     /// The skills it trains (spec §8 "Skills"), each by dice rolled when the character is made,
     /// in skill order; added to the race's.
     pub skills: Vec<(SkillId, Dice)>,
@@ -114,6 +119,8 @@ impl ClassDef {
                     FACTORS.end()
                 )));
             }
+            let alignment = crate::alignment::check_start(spec.alignment)
+                .map_err(|m| err(format!("class `{id}`: {m}")))?;
             let skills = skills::grants(&spec.skills, &skill_id)
                 .map_err(|m| err(format!("class `{id}`: skills: {m}")))?;
             let ranks = |data: &BTreeMap<String, Dice>, ranked| {
@@ -146,6 +153,7 @@ impl ClassDef {
                 stats,
                 hp: i32::from(spec.hp),
                 experience: spec.experience,
+                alignment,
                 skills,
                 weapon_skills,
                 weapon_skill_choice,

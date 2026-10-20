@@ -6,8 +6,9 @@ rules it implements are in spec/08b-creatures.md. Keep it current with the code,
 Factions and creature behavior (spec §7 "Factions", §5 "Creature sight", §8 "Creature behavior"):
 `data/factions.toml` (`content/faction.rs`: `Factions`, symmetric hostility, `Stance`; optional,
 without it everyone is neutral, but then no creature may name a faction) and per creature type
-`faction`, `vision`, `sight`, `combat` (`melee`/`ranged`/`caster`), `range`, `opens_doors`
-(`content/creature.rs`, checked in `content/mod.rs`). Creature types live in `data/creatures/`,
+`faction`, `vision`, `sight`, `combat` (`melee`/`ranged`/`caster`), `range`, `opens_doors`,
+`alignment` and `race` (`docs/dev/alignment.md`; read a creature's with `Actor::nature`, never the
+type's) (`content/creature.rs`, checked in `content/mod.rs`). Creature types live in `data/creatures/`,
 one file per creature named by its id (`kobold.toml`; the field documentation is in its
 `README.toml`), a table directory read in path order: see "Content directories" in
 `docs/dev/content.md`. Stance comes from types:

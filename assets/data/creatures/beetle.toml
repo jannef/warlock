@@ -8,6 +8,7 @@ glyph = "a"
 fg = "#6a9aa8"
 speed = 1200
 faction = "wildlife"
+alignment = "neutral"
 vision = "darkvision"
 sight = 6
 footsteps = 30

@@ -11,7 +11,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   them: `id`, `name`, a one-line `description`, `vision` (a profile in `vision.toml`: the player's
   eyes), `age = [youngest, oldest]` (a new character's age in years, 1 to 1000), `stats`
   (adjustments to the starting scores), `potential` (adjustments to the potentials, the same way;
-  hidden from the player), `hp` (its hit points, 0 to 1000, default 0; §8 "Combat"), `size` (a size
+  hidden from the player), `hp` (its hit points, 0 to 1000, default 0; §8 "Combat"), `alignment`
+  (its part of a new character's alignment score, −1000 to 1000, default 0; §8 "Alignment": elf
+  and halfling 50, half-orc −50, the rest 0), `size` (a size
   in `data/sizes.toml`, default `medium`; §8 "Burden"), `ignores_burdened` (default false: whether
   Burdened, the first level of burden, costs the character nothing), `passive_search` (which
   hidden features the character notices in passing without the Spot skill: `"all"`, elves, or
@@ -121,7 +123,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `description`, `stats` (adjustments as for races), `hp` (as for races), `experience` (as for
   races, multiplied with the race's; §8 "Experience": wizard 125, monk 120, priest, druid, and
   witch 115, paladin 110, ranger 105, warrior and bard 100, thief 95, barbarian, aristocrat,
-  craftsperson, and merchant 90, commoner 80), `skills` (as for races), `weapon_skills` (starting ranks as for races), `weapon_skill_choice` (two or more
+  craftsperson, and merchant 90, commoner 80), `alignment` (as for races, added to the race's:
+  paladin 450, Good; thief and witch −200, Callous; the rest 0), `skills` (as for races), `weapon_skills` (starting ranks as for races), `weapon_skill_choice` (two or more
   sets of such ranks, one picked at random when the character is made), and `styles` and
   `style_choice` (the same for fighting styles, §8 "Fighting styles"; `weapon_skills` names no
   style and `styles` nothing but styles). Each class rolls
@@ -146,6 +149,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   staff fighter 1, paladin sword and board 1, ranger marksman 1, thief twin blades 1 or duelist
   1, warrior sword and board 1, aristocrat duelist 1, commoner brawler 1; the wizard, witch,
   craftsperson, and merchant none.
+- **Alignment** (`data/alignment.toml`, optional; without it nobody has a score, everyone counts
+  as Neutral, and nothing moves it; §8 "Alignment"): seven `[[band]]`s, best first (`id` saintly,
+  good, kind, neutral, callous, evil, wicked, in that order; `from`, the least score in the band,
+  each below the one before and wicked's −1000; a one-line `description` for the wiki; `rise`,
+  said when the score rises into the band, every band but wicked; `fall`, said when it falls into
+  it, every band but saintly), `[shift]` (what each deed is worth before it diminishes, −1000 to
+  1000: `kill_peaceful` and `kill_hostile` by the victim's alignment, `{ good, neutral, evil }`;
+  `kill_beast`, `attack_shopkeeper`, `theft`, `pay_debt`, `eat_kin`), and `[shops] favour` (how
+  much better a good shopkeeper's prices are for each band, in percent, −50 to 50; a band not
+  listed 0).
 - **Skills** (`data/skills.toml`, optional; without it nobody is trained in anything, and any
   `skills` elsewhere is an error; §8 "Skills"): `[[skill]]`s in the order the Skills screen lists
   them (alphabetical), each with `id`, `name`, a one-line `description`, `kind` (`passive`,

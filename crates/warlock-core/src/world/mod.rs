@@ -84,6 +84,7 @@
 
 mod actor;
 mod ai;
+mod alignment;
 mod bleed;
 mod buff;
 mod carry;
@@ -122,6 +123,7 @@ mod trap;
 mod travel;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
+pub use alignment::Deed;
 pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
 pub use disarm::SPRINGS_SHORT_BY;
 pub use experience::{Discovered, Progress};
@@ -137,6 +139,7 @@ pub use talk::{Conversation, Talk, TopicView};
 use travel::{enter_room, instantiate_level, level_template};
 
 use crate::action::{Action, Event, Outcome, Rest};
+use crate::alignment::Score;
 use crate::burden::{self, Burden, Load};
 use crate::character::{Character, CharacterSpec};
 use crate::content::{ActionKind, CombatStance, Content, RoomEffectDef, StairsDir, Stance};
@@ -338,6 +341,9 @@ pub struct World {
     /// What the player's kills earned them during the current action (not saved): said after
     /// the attack's own messages.
     news: Vec<String>,
+    /// Notes the current action earned (not saved): said after its own messages and the news,
+    /// as notes that do not stop a rest (an alignment band crossed, `alignment.rs`).
+    notes: Vec<String>,
     /// While the player strikes a free blow in another's turn (not saved): what is said
     /// meanwhile, to join the news (`free_blow.rs`).
     held: Option<Vec<String>>,
@@ -417,9 +423,9 @@ impl World {
         let seed = seed.unwrap_or(def.seed);
         // The player's hit points beyond their Toughness: what their race and class give, or
         // without a character what the scenario gives. Without a character the player is trained
-        // in nothing and has no weapon skills.
+        // in nothing, has no weapon skills, and starts Neutral.
         let chosen = character.or(def.character.as_ref());
-        let (stats, vision, hp_base, skills, character, weapon_skills) = match chosen {
+        let (stats, vision, hp_base, skills, character, weapon_skills, alignment) = match chosen {
             Some(spec) => {
                 let mut s =
                     (spec.start(&content, seed, def.start)).map_err(WorldError::Character)?;
@@ -437,6 +443,7 @@ impl World {
                     s.skills,
                     character,
                     s.weapon_skills,
+                    s.alignment,
                 )
             }
             None => (
@@ -446,6 +453,7 @@ impl World {
                 Skills::default(),
                 None,
                 WeaponSkills::default(),
+                Score::ZERO,
             ),
         };
         let start = level_template(&content, seed, &def.start_level, None)?;
@@ -502,6 +510,8 @@ impl World {
             damage: Default::default(),
             weapon_skills,
             faction_override: None,
+            alignment: content.alignment().map(|_| alignment),
+            alignment_override: None,
             npc: None,
             talk: Talk::default(),
             satiation: content.hunger().map(|h| Satiation::new(h.start)),
@@ -602,6 +612,7 @@ impl World {
             said: 0,
             fallen: Vec::new(),
             news: Vec::new(),
+            notes: Vec::new(),
             held: None,
             sprung: 0,
             found: 0,
@@ -920,6 +931,8 @@ fn article(noun: &str) -> &'static str {
 
 #[cfg(test)]
 mod ai_tests;
+#[cfg(test)]
+mod alignment_tests;
 #[cfg(test)]
 mod blood_tests;
 #[cfg(test)]

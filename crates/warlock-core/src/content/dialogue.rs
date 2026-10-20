@@ -4,7 +4,9 @@
 //! Each `[[dialogue]]` belongs to a creature type (`creature = "gardener"`) or to one unique
 //! character (`npc = "hermit"`, which a level gives a creature with `npc = "hermit"` in its legend
 //! entry; it wins over its type's). It has one-liners (`lines`) that rotate, an optional `greet`
-//! said the first time the player chats with it, optional `[[dialogue.topic]]`s (`id`, `name`,
+//! said the first time the player chats with it, optional cold greetings (`greet_evil`, said by a
+//! good speaker to an Evil or Wicked character in place of its greeting and lines, and
+//! `greet_good`, by an evil one to a Good or Saintly character; spec §8 "Alignment"), optional `[[dialogue.topic]]`s (`id`, `name`,
 //! `reply`) asked about on the dialogue screen, and an optional `mutter`: the percent chance per
 //! action that it mutters one of the mutter's `lines` (with a `verb`, "mutters" by default) while
 //! the player is near enough to hear it.
@@ -40,6 +42,10 @@ struct DialogueSpec {
     creature: Option<String>,
     npc: Option<String>,
     greet: Option<String>,
+    #[serde(default)]
+    greet_evil: Vec<String>,
+    #[serde(default)]
+    greet_good: Vec<String>,
     #[serde(default)]
     lines: Vec<String>,
     #[serde(default)]
@@ -92,6 +98,11 @@ pub struct Dialogue {
     pub speaker: Speaker,
     /// Said the first time the player chats with it, instead of a line.
     pub greet: Option<String>,
+    /// What a good speaker says to an Evil or Wicked character instead of its greeting and
+    /// lines, in turn (spec §8 "Alignment"); none: its usual words.
+    pub greet_evil: Vec<String>,
+    /// What an evil speaker says to a Good or Saintly character, the same way.
+    pub greet_good: Vec<String>,
     /// One-liners, said in turn ([`crate::world`]'s rotation: each once a round, in an order of
     /// the speaker's own, never the same twice in a row).
     pub lines: Vec<String>,
@@ -148,7 +159,10 @@ pub(super) fn parse(
         if spec.lines.is_empty() {
             return Err(bad("`lines` needs at least one line".into()));
         }
-        let said = spec.greet.iter().chain(&spec.lines);
+        let said = (spec.greet.iter())
+            .chain(&spec.lines)
+            .chain(&spec.greet_evil)
+            .chain(&spec.greet_good);
         check_lines(said, MAX_LINE).map_err(bad)?;
         if spec.topic.len() > MAX_TOPICS {
             return Err(bad(format!("at most {MAX_TOPICS} topics")));
@@ -195,6 +209,8 @@ pub(super) fn parse(
         dialogues.push(Dialogue {
             speaker,
             greet: spec.greet,
+            greet_evil: spec.greet_evil,
+            greet_good: spec.greet_good,
             lines: spec.lines,
             topics: spec.topic,
             mutter,
