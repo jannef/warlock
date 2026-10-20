@@ -31,6 +31,7 @@ pub mod ice;
 pub mod item_parts;
 pub mod light;
 pub mod magic;
+pub mod mana;
 pub mod mapgen;
 pub mod messages;
 pub mod noise;

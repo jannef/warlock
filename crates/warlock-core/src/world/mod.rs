@@ -100,6 +100,7 @@ mod hunger;
 mod ice;
 mod level;
 mod loot;
+mod mana;
 mod path;
 mod perceive;
 mod quest;
@@ -388,18 +389,18 @@ impl World {
             .scenario(scenario)
             .ok_or_else(|| WorldError::UnknownScenario(scenario.to_string()))?;
         let seed = seed.unwrap_or(def.seed);
-        // The player's hit points beyond their Toughness: what their race and class give, or
-        // without a character what the scenario gives. Without a character the player is trained
-        // in nothing and has no weapon skills.
+        // The player's hit points beyond their Toughness (and mana beyond their mental stats):
+        // what their race and class give, or without a character what the scenario gives.
+        // Without a character the player is trained in nothing and has no weapon skills.
         let chosen = character.or(def.character.as_ref());
-        let (stats, vision, hp_base, skills, character, weapon_skills) = match chosen {
+        let (stats, vision, (hp_base, mana_base), skills, character, weapon_skills) = match chosen {
             Some(spec) => {
                 let s = (spec.start(&content, seed, def.start)).map_err(WorldError::Character)?;
                 let character = Some(s.character);
                 (
                     s.stats,
                     s.vision,
-                    s.hp,
+                    (s.hp, s.mana),
                     s.skills,
                     character,
                     s.weapon_skills,
@@ -408,7 +409,7 @@ impl World {
             None => (
                 def.player_stats,
                 def.vision().to_string(),
-                i32::from(def.hp),
+                (i32::from(def.hp), i32::from(def.mana)),
                 Skills::default(),
                 None,
                 WeaponSkills::default(),
@@ -461,6 +462,9 @@ impl World {
             hp: 0,
             hp_base,
             regen: 0,
+            mana: 0,
+            mana_base,
+            mana_regen: 0,
             skills,
             effects: Default::default(),
             diseases: Default::default(),
@@ -473,6 +477,7 @@ impl World {
             stance: CombatStance::Neutral,
         };
         player.hp = player.max_hp(&content);
+        player.mana = player.max_mana(&content);
         crate::rot::made_at(&mut player.inventory, &content, def.start);
         state.actors.insert(ActorId(0), player);
         instantiate_level(&mut state, &content, &start);
@@ -707,8 +712,9 @@ impl World {
         let (burden, slowed) = (load.burden(), load.penalty() != Burden::Unburdened);
         let quests = self.quest_progress();
         let spent = self.player_acts(action, &mut events);
-        // Taking off what raised them lowers the player's maximum hit points.
+        // Taking off what raised them lowers the player's maximum hit points and mana.
         self.keep_hp_within_max(self.state.player);
+        self.keep_mana_within_max(self.state.player);
         self.burden_news(burden);
         self.quest_news(&quests);
         // Acting (not waiting) under a load that slows the player trains balance.
@@ -835,6 +841,7 @@ impl World {
             Action::Freeze { at, radius } => return self.freeze_dev(*at, *radius, events),
             Action::Thaw { at, radius } => return self.thaw_dev(*at, *radius, events),
             Action::Afflict(id) => return self.afflict_dev(id, events),
+            Action::Drain(amount) => return self.drain_dev(*amount),
             Action::Infect(id) => return self.infect_dev(id),
         };
         self.took(done, kind)
@@ -908,6 +915,8 @@ mod ice_tests;
 mod light_tests;
 #[cfg(test)]
 mod magic_tests;
+#[cfg(test)]
+mod mana_tests;
 #[cfg(test)]
 mod moon_tests;
 #[cfg(test)]

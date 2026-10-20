@@ -16,7 +16,7 @@
 //! (gloves, rings, amulets) they are **global**: every attack. Effects on the item itself (its
 //! Armour, Protection, Shield, Parry, the Dexterity it allows, its weight) are always local, and
 //! the rest
-//! (stats, hit points, Dodge, Deflection, natural armour, regeneration, moving, carrying,
+//! (stats, hit points, mana, Dodge, Deflection, natural armour, regeneration, moving, carrying,
 //! stealth, light) always global. Effects apply while the item is worn or wielded.
 
 use super::{ContentError, LightId};
@@ -190,6 +190,10 @@ pub enum Effect {
     MaxHp,
     /// Percent faster hit point regeneration.
     Regeneration,
+    /// Maximum mana (spec §8 "Mana").
+    MaxMana,
+    /// Percent faster mana regeneration.
+    ManaRegeneration,
     /// A stat's score.
     Stat(Stat),
     /// Percent off the cost of steps.
@@ -228,6 +232,8 @@ impl Effect {
             Effect::Natural,
             Effect::MaxHp,
             Effect::Regeneration,
+            Effect::MaxMana,
+            Effect::ManaRegeneration,
         ];
         all.extend(Stat::ALL.map(Effect::Stat));
         all.extend([
@@ -263,6 +269,8 @@ impl Effect {
             Effect::Natural => "natural",
             Effect::MaxHp => "max_hp",
             Effect::Regeneration => "regeneration",
+            Effect::MaxMana => "max_mana",
+            Effect::ManaRegeneration => "mana_regeneration",
             Effect::Stat(stat) => stat.id(),
             Effect::MoveSpeed => "move_speed",
             Effect::Carry => "carry",
@@ -277,7 +285,7 @@ impl Effect {
     }
 
     /// How many effects there are.
-    pub const COUNT: usize = 25 + Stat::COUNT;
+    pub const COUNT: usize = 27 + Stat::COUNT;
 
     /// Its place in [`Effect::all`].
     pub const fn index(self) -> usize {
@@ -302,12 +310,14 @@ impl Effect {
             Effect::Natural => 17,
             Effect::MaxHp => 18,
             Effect::Regeneration => 19,
-            Effect::Stat(stat) => 20 + stat as usize,
-            Effect::MoveSpeed => 20 + Stat::COUNT,
-            Effect::Carry => 21 + Stat::COUNT,
-            Effect::Stealth => 22 + Stat::COUNT,
-            Effect::Light => 23 + Stat::COUNT,
-            Effect::Skill => 24 + Stat::COUNT,
+            Effect::MaxMana => 20,
+            Effect::ManaRegeneration => 21,
+            Effect::Stat(stat) => 22 + stat as usize,
+            Effect::MoveSpeed => 22 + Stat::COUNT,
+            Effect::Carry => 23 + Stat::COUNT,
+            Effect::Stealth => 24 + Stat::COUNT,
+            Effect::Light => 25 + Stat::COUNT,
+            Effect::Skill => 26 + Stat::COUNT,
         }
     }
 
@@ -318,8 +328,8 @@ impl Effect {
             Effect::Threat | Effect::Crit => 1..=3,
             Effect::AttackSpeed | Effect::MoveSpeed => 1..=MAX_SPEED,
             Effect::Durability | Effect::Weight | Effect::Stealth => 1..=90,
-            Effect::MaxHp | Effect::Carry | Effect::Skill => 1..=100,
-            Effect::Regeneration => 1..=300,
+            Effect::MaxHp | Effect::MaxMana | Effect::Carry | Effect::Skill => 1..=100,
+            Effect::Regeneration | Effect::ManaRegeneration => 1..=300,
             Effect::Light => 0..=0,
             _ => 1..=10,
         }

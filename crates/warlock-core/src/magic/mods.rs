@@ -8,7 +8,8 @@
 //! they are.
 //!
 //! The rules read them in one place each: combat (`Actor::melee`, `ranged`, `thrown`,
-//! `defence`, `max_hp`), stats (`Actor::effective_stats`), healing (`World::healing_rate`),
+//! `defence`, `max_hp`), mana (`Actor::max_mana`, `World::mana_rate`), stats
+//! (`Actor::effective_stats`), healing (`World::healing_rate`),
 //! prices (attack and step speed),
 //! burden (carrying limit and weight), noise (stealth), and light (a glowing item's wearer
 //! carries its light).

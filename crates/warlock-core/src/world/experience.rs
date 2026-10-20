@@ -4,7 +4,7 @@
 //! traps or by other creatures are worth nothing. The level follows from the total (thresholds
 //! in `data/experience.toml`), so only the total is saved. Each level gained, up to the file's
 //! `hp_level`, adds `max(1, class hp ÷ 2 + the Toughness modifier)` to the player's maximum hit
-//! points and to their current ones.
+//! points and to their current ones, and each up to `mana_level` adds mana (`world/mana.rs`).
 
 use super::World;
 use crate::content::{Content, CreatureId};
@@ -52,6 +52,7 @@ impl World {
             player.hp_base += hp;
             player.hp += hp;
         }
+        self.level_up_mana(before, after);
         self.news.push("You feel more experienced.".into());
         self.news.push(format!("Welcome to level {after}."));
     }

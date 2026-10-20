@@ -1,13 +1,15 @@
 //! Classes (`assets/data/classes.toml`, spec §8 "Character creation"): the third choice of a new
-//! run. A class adjusts the starting scores, by fixed numbers or dice, adds hit points, trains
-//! the character in skills (spec §8 "Skills"), by dice, and gives starting ranks in weapon skills
-//! (spec §8 "Weapon skills") and fighting styles (spec §8 "Fighting styles"): some always, and
-//! perhaps one set of a choice, rolled when the character is made.
+//! run. A class adjusts the starting scores, by fixed numbers or dice, adds hit points and mana
+//! (spec §8 "Mana"), trains the character in skills (spec §8 "Skills"), by dice, and gives
+//! starting ranks in weapon skills (spec §8 "Weapon skills") and fighting styles (spec §8
+//! "Fighting styles"): some always, and perhaps one set of a choice, rolled when the character
+//! is made.
 
 use super::weapon_skill::Ranked;
 use super::{ContentError, WeaponSkillId, WeaponSkillTable};
 use crate::combat::MAX_BASE_HP;
 use crate::dice::Dice;
+use crate::mana::MAX_BASE_MANA;
 use crate::skills::{self, SkillId};
 use crate::stats::{PerStat, Stat, adjustments};
 use serde::Deserialize;
@@ -29,6 +31,8 @@ struct ClassSpec {
     stats: BTreeMap<Stat, Dice>,
     #[serde(default)]
     hp: u16,
+    #[serde(default)]
+    mana: u16,
     #[serde(default)]
     skills: BTreeMap<String, Dice>,
     #[serde(default)]
@@ -52,6 +56,8 @@ pub struct ClassDef {
     pub stats: PerStat<Dice>,
     /// What the class adds to the hit points (spec §8 "Combat").
     pub hp: i32,
+    /// What the class adds to the mana (spec §8 "Mana"); half of it comes with each level.
+    pub mana: i32,
     /// The skills it trains (spec §8 "Skills"), each by dice rolled when the character is made,
     /// in skill order; added to the race's.
     pub skills: Vec<(SkillId, Dice)>,
@@ -96,6 +102,12 @@ impl ClassDef {
                     spec.hp
                 )));
             }
+            if spec.mana > MAX_BASE_MANA {
+                return Err(err(format!(
+                    "class `{id}`: mana {} is more than {MAX_BASE_MANA}",
+                    spec.mana
+                )));
+            }
             let skills = skills::grants(&spec.skills, &skill_id)
                 .map_err(|m| err(format!("class `{id}`: skills: {m}")))?;
             let ranks = |data: &BTreeMap<String, Dice>, ranked| {
@@ -127,6 +139,7 @@ impl ClassDef {
                 description: spec.description,
                 stats,
                 hp: i32::from(spec.hp),
+                mana: i32::from(spec.mana),
                 skills,
                 weapon_skills,
                 weapon_skill_choice,
@@ -232,5 +245,20 @@ mod tests {
             let e = parse(&text).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
+    }
+
+    #[test]
+    fn classes_give_mana_up_to_the_most_a_class_may() {
+        assert_eq!(
+            parse(&format!("{ONE}mana = 8\n")).expect("valid")[0].mana,
+            8
+        );
+        assert_eq!(parse(ONE).expect("valid")[0].mana, 0, "none unless named");
+        let e = parse(&format!("{ONE}mana = 1001\n")).unwrap_err();
+        assert!(
+            e.message.contains("mana 1001 is more than 1000"),
+            "{}",
+            e.message
+        );
     }
 }

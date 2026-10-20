@@ -895,12 +895,20 @@ impl Content {
                 )));
             }
             let has_stats = !spec.stats.is_empty() || !spec.potential.is_empty();
-            if spec.id == "player" && (has_stats || spec.base_hp != 0) {
+            if spec.id == "player" && (has_stats || spec.base_hp != 0 || spec.mana != 0) {
                 return Err(err(
-                    "creature `player`: the player's stats and hit points come from the scenario \
-                     (`stats`, `potential`, and `hp` in scenarios/*.toml)"
+                    "creature `player`: the player's stats, hit points, and mana come from the \
+                     scenario (`stats`, `potential`, `hp`, and `mana` in scenarios/*.toml)"
                         .into(),
                 ));
+            }
+            if spec.mana > crate::mana::MAX_BASE_MANA {
+                return Err(err(format!(
+                    "creature `{}`: mana {} is more than {}",
+                    spec.id,
+                    spec.mana,
+                    crate::mana::MAX_BASE_MANA
+                )));
             }
             if spec.id == "player" && !spec.skills.is_empty() {
                 return Err(err(
@@ -3607,7 +3615,7 @@ mod tests {
             (
                 "player",
                 "stats = { strength = 12 }",
-                "the player's stats and hit points come from the scenario",
+                "the player's stats, hit points, and mana come from the scenario",
             ),
             (
                 "player",
@@ -3615,6 +3623,12 @@ mod tests {
                 "come from the scenario",
             ),
             ("player", "base_hp = 3", "come from the scenario"),
+            ("player", "mana = 3", "come from the scenario"),
+            (
+                "rat",
+                "mana = 1001",
+                "creature `rat`: mana 1001 is more than 1000",
+            ),
             ("rat", "level = 0", "`level` must be 1 to 99"),
             ("rat", "level = 100", "`level` must be 1 to 99"),
             ("rat", "xp = 100001", "`xp` at most 100000"),

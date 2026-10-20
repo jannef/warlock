@@ -730,7 +730,7 @@ fn actor_rows(world: &World) -> Vec<String> {
                 format!("; talk said {said}, muttered {muttered}{met}")
             };
             format!(
-                "{} {} at {}: hp {}/{} dv {} pv {}; weight {} (base {} + carried {}: {carried})\
+                "{} {} at {}: hp {}/{} mp {}/{} dv {} pv {}; weight {} (base {} + carried {}: {carried})\
                  {equipped}; {} (limit {}){weapons}; stats {}{skills}{effects}{diseases}{hunger}{npc}\
                  {talk}",
                 a.id,
@@ -738,6 +738,8 @@ fn actor_rows(world: &World) -> Vec<String> {
                 a.pos,
                 a.hp,
                 a.max_hp(content),
+                a.mana,
+                a.max_mana(content),
                 a.defence(content, load.penalty()).total(),
                 a.protection(content),
                 format_weight(w.total()),
@@ -808,14 +810,15 @@ fn summary(world: &World) -> String {
         .unwrap_or_default();
     let temperature = view.temperature();
     let (hp, max) = view.own_hp();
+    let (mp, max_mp) = view.own_mana();
     let dead = if world.death().is_some() { " dead" } else { "" };
     // As the status bar shows it: only when it is not Not hungry.
     let hunger = (view.own_hunger())
         .filter(|h| *h != Hunger::NotHungry)
         .map_or(String::new(), |h| format!(" hunger {}", h.id()));
     format!(
-        "turn {} time {} level {} viewer {} hp {hp}/{max}{dead}{hunger}{weather} temperature \
-         {temperature} hash {:016x}",
+        "turn {} time {} level {} viewer {} hp {hp}/{max} mp {mp}/{max_mp}{dead}{hunger}{weather} \
+         temperature {temperature} hash {:016x}",
         world.turn(),
         world.time(),
         view.level_id(),
@@ -917,6 +920,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     let weight = view.own_weight();
     let load = view.own_load();
     let (hp, max_hp) = view.own_hp();
+    let (mana, max_mana) = view.own_mana();
     let death = world.death().map(|d| {
         json!({
             "turn": d.turn,
@@ -997,6 +1001,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "abilities": abilities_json(&view),
         "quests": quests_json(&view),
         "hp": { "current": hp, "max": max_hp },
+        "mana": { "current": mana, "max": max_mana },
         "experience": view.own_experience(),
         "defence": view.own_defence(),
         "protection": view.own_protection(),

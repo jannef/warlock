@@ -1,5 +1,5 @@
 //! Experience (`assets/data/experience.toml`, spec §8 "Experience"): the player's level
-//! thresholds, the hit points a level gives, and what a kill is worth at the player's level
+//! thresholds, the hit points and mana a level gives, and what a kill is worth at the player's level
 //! (classic World of Warcraft scaling). Without the file the player stays at level 1 and kills
 //! are scaled by a zero difference of 5.
 
@@ -20,6 +20,8 @@ struct ExperienceFile {
     linear: u32,
     quadratic: u32,
     hp_level: u8,
+    #[serde(default)]
+    mana_level: u8,
     bonus_percent: u32,
     bonus_levels: u8,
     zero_difference: Vec<Band>,
@@ -39,6 +41,7 @@ pub struct Experience {
     linear: u32,
     quadratic: u32,
     hp_level: u8,
+    mana_level: u8,
     bonus_percent: u32,
     bonus_levels: u8,
     /// `(from player level, zero difference)`, ascending, the first from level 1.
@@ -53,6 +56,7 @@ impl Default for Experience {
             linear: 10,
             quadratic: 10,
             hp_level: 0,
+            mana_level: 0,
             bonus_percent: 5,
             bonus_levels: 4,
             zero_difference: vec![(1, 5)],
@@ -69,6 +73,9 @@ impl Experience {
         }
         if p.hp_level > p.max_level {
             return Err(err("hp_level is more than max_level".into()));
+        }
+        if p.mana_level > p.max_level {
+            return Err(err("mana_level is more than max_level".into()));
         }
         if p.linear > MAX_STEP || p.quadratic > MAX_STEP {
             return Err(err(format!(
@@ -95,6 +102,7 @@ impl Experience {
             linear: p.linear,
             quadratic: p.quadratic,
             hp_level: p.hp_level,
+            mana_level: p.mana_level,
             bonus_percent: p.bonus_percent,
             bonus_levels: p.bonus_levels,
             zero_difference: p.zero_difference.iter().map(|b| (b.from, b.zd)).collect(),
@@ -109,6 +117,11 @@ impl Experience {
     /// The last level whose gain adds hit points.
     pub fn hp_level(&self) -> u8 {
         self.hp_level
+    }
+
+    /// The last level whose gain adds mana (spec §8 "Mana"); 0 when the file says none.
+    pub fn mana_level(&self) -> u8 {
+        self.mana_level
     }
 
     /// How many levels above the player a monster's worth still grows, and by how many percent
@@ -264,5 +277,27 @@ mod tests {
                 "{to}"
             );
         }
+    }
+
+    #[test]
+    fn mana_comes_with_levels_up_to_mana_level() {
+        let ok = include_str!("../../../../assets/data/experience.toml");
+        let none = ok.replace("mana_level = 20\n", "");
+        assert_eq!(
+            Experience::parse("x", &none).expect("valid").mana_level(),
+            0
+        );
+        let some = format!("mana_level = 3\n{none}");
+        assert_eq!(
+            Experience::parse("x", &some).expect("valid").mana_level(),
+            3
+        );
+        let bad = format!("mana_level = 51\n{none}");
+        let e = Experience::parse("x", &bad).unwrap_err();
+        assert!(
+            e.message.contains("mana_level is more than max_level"),
+            "{}",
+            e.message
+        );
     }
 }

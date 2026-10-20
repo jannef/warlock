@@ -158,6 +158,8 @@ fn effect_words(effect: ItemEffect) -> String {
         ItemEffect::Natural => "natural armour".into(),
         ItemEffect::MaxHp => "maximum hit points".into(),
         ItemEffect::Regeneration => "hit points come back faster".into(),
+        ItemEffect::MaxMana => "maximum mana".into(),
+        ItemEffect::ManaRegeneration => "mana comes back faster".into(),
         ItemEffect::Stat(stat) => stat.name().into(),
         ItemEffect::MoveSpeed => "you move faster".into(),
         ItemEffect::Carry => "carrying capacity".into(),
@@ -196,7 +198,8 @@ fn tier_value(effect: ItemEffect, tier: &warlock_core::content::Tier, content: &
         ItemEffect::Durability
         | ItemEffect::Weight
         | ItemEffect::Stealth
-        | ItemEffect::Regeneration => range("", "%"),
+        | ItemEffect::Regeneration
+        | ItemEffect::ManaRegeneration => range("", "%"),
         ItemEffect::Carry => range("+", " kg"),
         ItemEffect::Light => {
             let radius = tier.light.map_or(0, |id| content.light(id).radius);

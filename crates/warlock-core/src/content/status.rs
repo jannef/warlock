@@ -170,18 +170,28 @@ impl OnHitSpec {
     }
 }
 
-/// The passive healing rules (spec §8 "Healing"): `[healing]` in the file.
+/// The passive healing rules (spec §8 "Healing", "Mana"): `[healing]` in the file.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Healing {
     /// How fast hit points come back while the player rests, in percent of normal.
     pub resting: u16,
+    /// How fast mana comes back while the player rests, in percent of normal (default 200).
+    #[serde(default = "twice")]
+    pub mana_resting: u16,
+}
+
+fn twice() -> u16 {
+    200
 }
 
 impl Default for Healing {
-    /// Resting heals twice as fast.
+    /// Resting heals, and brings mana back, twice as fast.
     fn default() -> Self {
-        Self { resting: 200 }
+        Self {
+            resting: 200,
+            mana_resting: 200,
+        }
     }
 }
 
@@ -209,6 +219,10 @@ struct StatusSpec {
     eases: Option<u32>,
     #[serde(default = "normal_regen")]
     regen: u16,
+    #[serde(default = "normal_regen")]
+    mana_regen: u16,
+    #[serde(default)]
+    mana_damage: u16,
     penalty: Option<PenaltySpec>,
     wound: Option<Wound>,
     #[serde(default)]
@@ -254,6 +268,11 @@ pub struct StatusDef {
     /// How fast hit points come back while it lasts, in percent of normal: 0 not at all, 100 as
     /// usual. With several statuses the slowest counts.
     pub regen: u16,
+    /// How fast mana comes back while it lasts, in percent of normal (spec §8 "Mana"), the same
+    /// way.
+    pub mana_regen: u16,
+    /// Mana each tick drains (spec §8 "Mana"): none below 0, and never a death.
+    pub mana_damage: u16,
     pub penalty: Option<Penalty>,
     /// The blows that cause it, if any.
     pub wound: Option<Wound>,
@@ -287,6 +306,11 @@ pub(super) fn parse(file: &str, text: &str) -> Result<(Healing, Vec<StatusDef>),
     if parsed.healing.resting > MAX_REGEN {
         return Err(err(format!(
             "healing: resting must be 0 to {MAX_REGEN} (percent)"
+        )));
+    }
+    if parsed.healing.mana_resting > MAX_REGEN {
+        return Err(err(format!(
+            "healing: mana_resting must be 0 to {MAX_REGEN} (percent)"
         )));
     }
     let mut list: Vec<StatusDef> = Vec::new();
@@ -323,6 +347,7 @@ fn resolve(spec: StatusSpec) -> Result<StatusDef, String> {
     if spec.regen > MAX_REGEN {
         return Err(format!("regen must be 0 to {MAX_REGEN} (percent)"));
     }
+    mana(&spec)?;
     let penalty = spec.penalty.map(|p| penalty(p, spec.max)).transpose()?;
     if let Some(w) = spec.wound
         && (w.big_hit > spec.max || w.critical > spec.max || w.big_hit + w.critical == 0)
@@ -345,6 +370,8 @@ fn resolve(spec: StatusSpec) -> Result<StatusDef, String> {
         damage: spec.damage,
         eases: spec.eases,
         regen: spec.regen,
+        mana_regen: spec.mana_regen,
+        mana_damage: spec.mana_damage,
         penalty,
         wound: spec.wound,
         cured_by: spec.cured_by,
@@ -353,6 +380,20 @@ fn resolve(spec: StatusSpec) -> Result<StatusDef, String> {
         dies: spec.dies,
         death: spec.death,
     })
+}
+
+/// Checks what a status does to mana (spec §8 "Mana"): its pace and its drain.
+fn mana(spec: &StatusSpec) -> Result<(), String> {
+    if spec.mana_damage > MAX_TICK_DAMAGE {
+        return Err(format!("mana_damage must be at most {MAX_TICK_DAMAGE}"));
+    }
+    if spec.mana_damage > 0 && spec.tick.is_none() {
+        return Err("`mana_damage` needs a `tick`".into());
+    }
+    if spec.mana_regen > MAX_REGEN {
+        return Err(format!("mana_regen must be 0 to {MAX_REGEN} (percent)"));
+    }
+    Ok(())
 }
 
 fn penalty(spec: PenaltySpec, max: u16) -> Result<Penalty, String> {
@@ -548,6 +589,48 @@ mod tests {
         ] {
             let e = bad.resolve(known, disease).unwrap_err();
             assert!(e.contains(why), "{why}: {e}");
+        }
+    }
+
+    #[test]
+    fn mana_paces_and_drains_parse_and_are_checked() {
+        let text = format!(
+            "[healing]\nresting = 200\nmana_resting = 400\n{BLEEDING}mana_regen = 50\n\
+             mana_damage = 2\n"
+        );
+        let (healing, list) = parse("status.toml", &text).expect("valid");
+        assert_eq!((healing.mana_resting, list[0].mana_regen), (400, 50));
+        assert_eq!(list[0].mana_damage, 2);
+        let (healing, list) = parse("status.toml", BLEEDING).expect("valid");
+        assert_eq!(healing.mana_resting, 200, "twice as fast resting");
+        assert_eq!(
+            (list[0].mana_regen, list[0].mana_damage),
+            (100, 0),
+            "the defaults"
+        );
+        for (text, why) in [
+            (
+                format!("{BLEEDING}mana_regen = 1001\n"),
+                "mana_regen must be 0 to 1000",
+            ),
+            (
+                format!("{BLEEDING}mana_damage = 1001\n"),
+                "mana_damage must be at most 1000",
+            ),
+            (
+                format!(
+                    "{}mana_damage = 1\n",
+                    BLEEDING.replace("tick = 40\ndamage = 1\n", "")
+                ),
+                "`mana_damage` needs a `tick`",
+            ),
+            (
+                format!("[healing]\nresting = 200\nmana_resting = 1001\n{BLEEDING}"),
+                "mana_resting must be 0 to 1000",
+            ),
+        ] {
+            let e = parse("status.toml", &text).unwrap_err();
+            assert!(e.message.contains(why), "{why}: {}", e.message);
         }
     }
 }

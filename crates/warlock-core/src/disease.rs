@@ -163,6 +163,16 @@ impl Diseases {
             .unwrap_or(100)
     }
 
+    /// How fast mana comes back while these show (spec §8 "Mana"): the slowest `mana_regen` of
+    /// the showing diseases that have one, 100 otherwise. (Diseased has its own.)
+    pub fn mana_regen(&self, content: &Content) -> u16 {
+        (self.0.iter())
+            .filter(|i| i.shown)
+            .filter_map(|i| content.disease(i.disease).mana_regen)
+            .min()
+            .unwrap_or(100)
+    }
+
     /// Whether these make sense with `content` (a save from other content, or damaged, does
     /// not): known diseases, in order, each once, their timers in range, and nothing counted of
     /// one still incubating.

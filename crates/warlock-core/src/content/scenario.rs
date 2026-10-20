@@ -3,6 +3,7 @@
 use super::ContentError;
 use crate::character::CharacterSpec;
 use crate::combat::MAX_BASE_HP;
+use crate::mana::MAX_BASE_MANA;
 use crate::stats::{Stat, Stats};
 use crate::time::{GameTime, HOUR, MINUTE, parse_time_of_day};
 use serde::Deserialize;
@@ -59,6 +60,10 @@ pub struct ScenarioDef {
     /// what a race and a class would give (default 0).
     #[serde(default)]
     pub hp: u16,
+    /// Without a character: the player's mana beyond their mental stats' modifiers (spec §8
+    /// "Mana"), what a race and a class would give (default 0).
+    #[serde(default)]
+    pub mana: u16,
     /// What the player starts with in their pack, as level files place objects
     /// (`carry = ["ration*2"]`; spec §8 "Hunger": starting food).
     #[serde(default, rename = "carry")]
@@ -102,16 +107,23 @@ impl ScenarioDef {
             && (def.vision.is_some()
                 || !def.stats.is_empty()
                 || !def.potential.is_empty()
-                || def.hp != 0)
+                || def.hp != 0
+                || def.mana != 0)
         {
             return Err(err(
-                "a scenario with a `character` takes the player's eyes, stats, and hit points \
-                 from it: leave out `vision`, `stats`, `potential`, and `hp`"
+                "a scenario with a `character` takes the player's eyes, stats, hit points, and \
+                 mana from it: leave out `vision`, `stats`, `potential`, `hp`, and `mana`"
                     .into(),
             ));
         }
         if def.hp > MAX_BASE_HP {
             return Err(err(format!("hp {} is more than {MAX_BASE_HP}", def.hp)));
+        }
+        if def.mana > MAX_BASE_MANA {
+            return Err(err(format!(
+                "mana {} is more than {MAX_BASE_MANA}",
+                def.mana
+            )));
         }
         Ok(def)
     }
@@ -210,11 +222,18 @@ mod tests {
             "hit points without a character"
         );
         assert!(parse("hp = 1001").is_err());
+        assert_eq!(
+            parse("mana = 4").unwrap().mana,
+            4,
+            "mana without a character"
+        );
+        assert!(parse("mana = 1001").is_err());
         for extra in [
             "vision = \"normal\"",
             "stats = { strength = 12 }",
             "potential = { strength = 12 }",
             "hp = 7",
+            "mana = 4",
         ] {
             let err = parse(&format!("{character}\n{extra}")).unwrap_err();
             assert!(
