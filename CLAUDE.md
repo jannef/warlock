@@ -230,7 +230,7 @@ file). Topics:
 - `docs/dev/stats.md` — the six stats, modifiers, scores and potentials, what may be shown
 - `docs/dev/burden.md` — load, limits, sizes, every penalty's one hook
 - `docs/dev/hunger.md` — satiation, eating, corpses and rot, starving
-- `docs/dev/character-creation.md` — `CharacterSpec`, races, classes, genders, the horoscope, starting rolls
+- `docs/dev/character-creation.md` — `CharacterSpec`, races, classes, genders, the horoscope, starting rolls, starting kits
 - `docs/dev/skills.md` — trained skills, effects and uses, training marks, the skills screen
 - `docs/dev/experience.md` — the level curve, kill XP, level-ups
 - `docs/dev/status-effects.md` — statuses and severities, healing paces, checks, diseases and stat damage

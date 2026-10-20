@@ -21,6 +21,7 @@ mod gem;
 mod horoscope;
 mod hunger;
 mod item_class;
+mod kit;
 mod level;
 mod light;
 mod material;
@@ -85,6 +86,7 @@ pub use hunger::{
 #[cfg(test)]
 pub(crate) use item_class::BUILTIN as BUILTIN_ITEM_CLASSES;
 pub use item_class::{ItemClassDef, ItemClassId, MAX_ITEM_CLASSES};
+pub use kit::{Keep, Kit, KitItem};
 pub(crate) use level::validate_route;
 pub use level::{
     CreatureSpawn, EdgeExit, LevelKind, LevelTemplate, Region, StairsLink, parse_route,
@@ -626,6 +628,7 @@ impl Content {
             }
             content.levels.insert(id.to_string(), level);
         }
+        content.load_kits()?;
         for (path, id, text) in files.in_dir("scenarios") {
             let mut scenario = ScenarioDef::parse(path, id, text)?;
             let err = |m: String| ContentError::new(path, format!("carry: {m}"));
@@ -1120,6 +1123,53 @@ impl Content {
         let err = |m: String| ContentError::new(path, m);
         let parsed: faction::FactionFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
         self.factions = Factions::resolve(parsed.faction).map_err(err)?;
+        Ok(())
+    }
+
+    /// The classes', races', and birth signs' starting kits (spec §8 "Character creation"), once
+    /// the objects, gems, slots, and weapon skills they name are known.
+    fn load_kits(&mut self) -> Result<(), ContentError> {
+        let classes = (self.classes.iter())
+            .map(|c| {
+                kit::resolve(&c.kit_spec, self, Some(&c.trainable())).map_err(|m| {
+                    ContentError::new("data/classes.toml", format!("class `{}`: {m}", c.id))
+                })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let races = (self.races.list.iter())
+            .map(|r| {
+                kit::resolve(&r.kit_spec, self, None).map_err(|m| {
+                    ContentError::new("data/races.toml", format!("race `{}`: {m}", r.id))
+                })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let signs = |parts: &[SignPart]| {
+            (parts.iter())
+                .map(|p| {
+                    kit::resolve(&p.kit_spec, self, None).map_err(|m| {
+                        ContentError::new("data/horoscope.toml", format!("`{}`: {m}", p.id))
+                    })
+                })
+                .collect::<Result<Vec<_>, _>>()
+        };
+        let horoscope = match &self.horoscope {
+            Some(h) => Some((signs(&h.animals)?, signs(&h.elements)?)),
+            None => None,
+        };
+        for (class, kit) in self.classes.iter_mut().zip(classes) {
+            class.kit = kit;
+        }
+        for (race, kit) in self.races.list.iter_mut().zip(races) {
+            race.kit = kit;
+        }
+        if let (Some(h), Some((animals, elements))) = (&mut self.horoscope, horoscope) {
+            for (part, kit) in (h.animals.iter_mut()).zip(animals) {
+                part.kit = kit;
+            }
+            for (part, kit) in (h.elements.iter_mut()).zip(elements) {
+                part.kit = kit;
+            }
+        }
         Ok(())
     }
 

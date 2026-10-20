@@ -52,9 +52,38 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `character/styles/<race>,<gender>,<class>`: the class's (in skill order), the pick of the
     choice, then the chosen set's; so they never move a stat or a weapon skill roll. Each raises
     the styles it defaults to.
+  - **Starting kit** (`warlock-core/src/kit.rs`, data `content/kit.rs`; #257): what the character
+    carries, wields, and wears at the start. The class's `kit` (`data/classes.toml`) comes first,
+    then the race's few racial items (`data/races.toml`), then the birth sign's animal's and
+    element's (`data/horoscope.toml`: the hook for the horoscope; none give anything yet). A kit
+    is a list of lines, each one item or a few of one, as level files place objects: a string is
+    carried, a table says `carry`, `wield` (wielded or readied: hands, missile weapon, missiles,
+    Tool slot), or `wear`, and may add `trained` (only if the class trained that weapon skill or
+    fighting style: its fixed ranks, or the set of its choice that was picked; never the race's
+    ranks or defaults), `gender` (only for that gender: the hook for gender's items), and
+    `magic` (a base item made as loot makes it at item level 1, its rarity rolled at least
+    `any`, `magic`, or `rare`); `"a|b|c"` is one of them. Each item goes into the pack in order
+    (a stackable one joins a stack of the same), and a `wield` or `wear` item into the first free
+    slot it fits (a second light weapon to the off hand); one that finds none is carried. Kits
+    roll from a stream of their own, `character/kit/<race>,<gender>,<class>`, in that order: a
+    line draws only if it applies, one draw to pick among alternatives, then for a `magic` line
+    the loot draws (rarity, affixes, a rare name, an ornament); so no stat, skill, weapon skill,
+    or style roll moves. Kit items are what they are: magic ones unidentified,
+    food made when the run starts (§8 "Hunger"). Data is checked when content loads (every item
+    exists, what is wielded or worn fits a slot of that kind, `magic` only on base items, a
+    class's `trained` only what it trains). Unfair on purpose: the aristocrat sets out rich, with
+    a perhaps magic rapier and an heirloom ring (magic or rare), the merchant with goods and gems,
+    the commoner with a stick and a turnip; nobody starts Strained, and only the aristocrat and
+    the merchant may start Burdened (a test checks the weakest character of every combination,
+    every die at its least and the worst sign). A scenario's `carry` comes on top, or alone with
+    `kit = false` (§7 "Scenarios"). The summary of character creation (§6) lists what the run
+    starts with, each stack as named ("a dagger (wielded)", "2 wool cloaks"), or that the scenario
+    leaves the kit behind; it never names the seed. The wiki lists every class's kit and race's
+    additions.
   - Balance is deliberately not a goal: some combinations are poor (a halfling commoner), and
-    classes do nothing but adjust starting scores, give hit points, train skills, and give
-    weapon skills and fighting styles. No other D&D concept comes with them (alignment, equipment, spells).
+    classes do nothing but adjust starting scores, give hit points, train skills, give weapon
+    skills and fighting styles, and give a starting kit. No other D&D concept comes with them
+    (alignment, spells).
   - The character (`Character`: the race, gender, and class ids, the stat the gender raised,
     the birth date, and the birth sign) is part of the world state (saved, hashed) and shown on
     the character screen; replays record the choice only, and since everything else follows

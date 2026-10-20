@@ -82,12 +82,28 @@ pub fn roll(content: &Content, rng: &mut Rng, level: u8, grade: LootGrade) -> Op
         .collect();
     bases.sort_by(|a, b| content.object(a.0).id.cmp(&content.object(b.0).id));
     let object = *pick_weighted(rng, &bases)?;
-    let def = content.object(object);
-    let count = if def.kind == Some(ItemKind::Ammo) {
+    let count = if content.object(object).kind == Some(ItemKind::Ammo) {
         u32::try_from(rng.range(*AMMO.start(), *AMMO.end())).unwrap_or(1)
     } else {
         1
     };
+    Some(make(content, rng, object, count, level, grade))
+}
+
+/// `count` of `object` made as loot makes its base item at item level `level`, at least of
+/// `grade`: draws 3 to 7 of [`roll`] (the rarity, the affixes, a rare item's name, an ornament),
+/// unidentified. What is never magic (no `kind`) draws no rarity and stays normal. A starting
+/// kit's magic items are made so (spec §8 "Character creation").
+pub fn make(
+    content: &Content,
+    rng: &mut Rng,
+    object: ObjectId,
+    count: u32,
+    level: u8,
+    grade: LootGrade,
+) -> Stack {
+    let level = level.max(1);
+    let def = content.object(object);
     let rarity = match def.kind {
         Some(_) => roll_rarity(content, rng, grade),
         None => Rarity::Normal,
@@ -100,10 +116,10 @@ pub fn roll(content: &Content, rng: &mut Rng, level: u8, grade: LootGrade) -> Op
         Some(magic) => Stack::with_magic(object, count, magic),
         None => Stack::new(object, count),
     };
-    Some(match gem::ornament(content, rng, def, level) {
+    match gem::ornament(content, rng, def, level) {
         Some(part) => stack.with_parts(vec![part]),
         None => stack,
-    })
+    }
 }
 
 /// A rarity by the weights in content, leaving out those below `grade`.

@@ -392,9 +392,14 @@ impl World {
         // without a character what the scenario gives. Without a character the player is trained
         // in nothing and has no weapon skills.
         let chosen = character.or(def.character.as_ref());
-        let (stats, vision, hp_base, skills, character, weapon_skills) = match chosen {
-            Some(spec) => {
-                let s = (spec.start(&content, seed, def.start)).map_err(WorldError::Character)?;
+        let start = (chosen
+            .map(|spec| spec.start(&content, seed, def.start))
+            .transpose())
+        .map_err(WorldError::Character)?;
+        // The character's kit, the scenario's pack on top (spec §8 "Character creation").
+        let pack = crate::kit::starting_pack(&content, def, start.as_ref().map(|s| &s.kit));
+        let (stats, vision, hp_base, skills, character, weapon_skills) = match start {
+            Some(s) => {
                 let character = Some(s.character);
                 (
                     s.stats,
@@ -455,8 +460,8 @@ impl World {
             energy: 0,
             heard: Vec::new(),
             mind: Mind::default(),
-            inventory: def.carry.clone(),
-            equipment: Default::default(),
+            inventory: pack.items,
+            equipment: pack.equipment,
             stats,
             hp: 0,
             hp_base,

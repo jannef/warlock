@@ -4,9 +4,10 @@
 //! (spec §8 "Burden": how much they can carry), whether being Burdened costs them nothing, and
 //! how much they need to eat (spec §8 "Hunger"), trains them in skills (spec §8 "Skills"; dice,
 //! and humans' extra class skill), gives them starting ranks in weapon skills (spec §8
-//! "Weapon skills"; fixed numbers or dice), and says what they notice of hidden features in
-//! passing (spec §8 "Searching").
+//! "Weapon skills"; fixed numbers or dice), says what they notice of hidden features in passing
+//! (spec §8 "Searching"), and adds a few things to the starting kit (`kit`, [`super::kit`]).
 
+use super::kit::{Kit, KitLineSpec};
 use super::weapon_skill::Ranked;
 use super::{ContentError, PassiveSearch, WeaponSkillId, WeaponSkillTable};
 use crate::combat::MAX_BASE_HP;
@@ -59,6 +60,8 @@ struct RaceSpec {
     hunger: u16,
     #[serde(default)]
     weapon_skills: BTreeMap<String, Dice>,
+    #[serde(default)]
+    kit: Vec<KitLineSpec>,
 }
 
 /// The oldest a character may start, in years.
@@ -110,6 +113,11 @@ pub struct RaceDef {
     /// Starting ranks in weapon skills (spec §8 "Weapon skills"), in skill order: added to the
     /// class's.
     pub weapon_skills: Vec<(WeaponSkillId, Dice)>,
+    /// The starting kit as written; resolved by the loader into `kit`.
+    pub(super) kit_spec: Vec<KitLineSpec>,
+    /// What the race adds to a new character's pack after the class's kit (spec §8 "Character
+    /// creation"); filled in by the loader once objects are known.
+    pub kit: Kit,
 }
 
 /// Every race, and the base every potential starts from.
@@ -223,6 +231,8 @@ impl Races {
                 class_skill: extra,
                 hunger: spec.hunger,
                 weapon_skills,
+                kit_spec: spec.kit,
+                kit: Kit::default(),
             });
         }
         Ok(Self {

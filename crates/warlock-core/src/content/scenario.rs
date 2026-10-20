@@ -66,6 +66,14 @@ pub struct ScenarioDef {
     /// The player's starting pack, from `carry`; filled in by the loader.
     #[serde(skip)]
     pub carry: Vec<crate::object::Stack>,
+    /// Whether the player starts with their character's kit (spec §8 "Character creation"),
+    /// `carry` on top (default); `false`: with `carry` alone.
+    #[serde(default = "with_kit")]
+    pub kit: bool,
+}
+
+fn with_kit() -> bool {
+    true
 }
 
 fn default_date() -> [u32; 3] {
