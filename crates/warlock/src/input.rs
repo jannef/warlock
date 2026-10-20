@@ -28,7 +28,7 @@ use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
 use warlock_core::content::VisionProfile;
-use warlock_core::perception::PerceptionView;
+use warlock_core::perception::{CellView, PerceptionView};
 use warlock_core::time::Duration;
 use warlock_core::weather::Weather;
 use warlock_core::world::ActorKind;
@@ -1099,10 +1099,17 @@ fn command_in(
 
 /// The dialog a step in `dir` opens first, if it goes onto a trap the player knows, where no one
 /// they see stands (moving there would be an attack, or stop; spec §8 "Traps"): "Really step
-/// onto the fireball trap?", to step onto it or stay back (the safe answer, selected first).
+/// onto the fireball trap?", to step onto it or stay back (the safe answer, selected first). A
+/// door's trap is not stepped on (spec §8 "Trapped doors"), so a door never asks.
 fn trap_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
     let to = view.viewer().step(dir);
-    let trap = view.trap(to).filter(|_| view.actor_at(to).is_none())?;
+    let door = match view.cell(to) {
+        CellView::Visible(t) | CellView::Remembered(t) => view.content().terrain(t).is_door(),
+        CellView::Unknown => false,
+    };
+    let trap = view
+        .trap(to)
+        .filter(|_| !door && view.actor_at(to).is_none())?;
     let name = &view.content().trap(trap).name;
     Some(
         Dialog::new("Trap", format!("Really step onto the {name}?"))
