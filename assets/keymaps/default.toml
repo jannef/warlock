@@ -65,6 +65,8 @@ back = []
 erase = ["Delete", "Backspace"]
 mark = ["Space"]
 mark_all = [","]
+next_list_page = [">", "PageDown"]
+prev_list_page = ["<", "PageUp"]
 
 [pages] # Info pages
 page_1 = ["1"]
@@ -76,8 +78,8 @@ page_6 = ["6"]
 page_7 = ["7"]
 page_8 = ["8"]
 page_9 = ["9"]
-next_page = ["Tab", "PageDown"]
-prev_page = ["PageUp"]
+next_page = ["Tab"]
+prev_page = []
 
 [dialog] # Dialogs
 yes = ["y"]

@@ -4,7 +4,7 @@
 //! [`World::perception`] only, so dumps cannot leak information the player does not have.
 //! `Truth`, `Actors`, and `Rooms` read ground truth and are dev-only.
 
-use crate::action::letter;
+use crate::action::{letter, position_text};
 use crate::blood::{self, Stain};
 use crate::character::Gender;
 use crate::content::WeaponSkillId;
@@ -380,28 +380,34 @@ fn ice_rows(world: &World) -> Vec<String> {
     out
 }
 
-/// The player's inventory (`a - a dagger (450 g)`, `b - a leather jerkin (being worn) (3.5
-/// kg)`), then what they carry and weigh.
+/// The player's inventory grouped by item class as the screens group it, a header line a class
+/// (`Melee weapons:`), each stack by its position as action text names it (`a - a dagger (450
+/// g)`, `b - a leather jerkin (being worn) (3.5 kg)`, `26 - a rock (1 kg)`), then what they
+/// carry and weigh.
 fn inventory_rows(view: &PerceptionView<'_>) -> Vec<String> {
     let content = view.content();
     let unpaid = view.unpaid();
-    let mut rows: Vec<String> = view
-        .inventory()
-        .iter()
-        .enumerate()
-        .map(|(i, s)| {
-            let name = s.describe(content);
-            let weight = format_weight(s.weight(content));
-            let mark = equipment::mark(content, view.equipment(), i)
-                .map_or(String::new(), |m| format!(" ({m})"));
-            let owed = (unpaid.get(i).copied().flatten())
-                .map_or(String::new(), |p| format!(" (unpaid, {p} gold)"));
-            format!(
-                "{} - {name}{mark}{owed} ({weight})",
-                letter(i).unwrap_or('?')
-            )
-        })
-        .collect();
+    let inventory = view.inventory();
+    let mut rows: Vec<String> = Vec::new();
+    let mut class = None;
+    for i in view.by_class(inventory) {
+        let s = &inventory[i];
+        let here = view.item_class(s);
+        if class != Some(here) {
+            class = Some(here);
+            rows.push(format!("{}:", content.item_class(here).name));
+        }
+        let name = s.describe(content);
+        let weight = format_weight(s.weight(content));
+        let mark = equipment::mark(content, view.equipment(), i)
+            .map_or(String::new(), |m| format!(" ({m})"));
+        let owed = (unpaid.get(i).copied().flatten())
+            .map_or(String::new(), |p| format!(" (unpaid, {p} gold)"));
+        rows.push(format!(
+            "{} - {name}{mark}{owed} ({weight})",
+            position_text(i)
+        ));
+    }
     let weight = view.own_weight();
     let load = view.own_load();
     rows.push(format!(
@@ -415,7 +421,7 @@ fn inventory_rows(view: &PerceptionView<'_>) -> Vec<String> {
 }
 
 /// The player's equipment, one slot a line by its letter: `c Body: a leather jerkin (b)` (the
-/// inventory letter in parentheses), `a Head: -` when empty.
+/// inventory position in parentheses, as action text names it), `a Head: -` when empty.
 fn equipment_rows(view: &PerceptionView<'_>) -> Vec<String> {
     let content = view.content();
     let worn = view.equipment();
@@ -424,7 +430,7 @@ fn equipment_rows(view: &PerceptionView<'_>) -> Vec<String> {
         .map(|(i, (slot, def))| {
             let what = match worn.get(slot) {
                 Some(item) => view.inventory().get(item).map_or("?".into(), |s| {
-                    format!("{} ({})", s.describe(content), letter(item).unwrap_or('?'))
+                    format!("{} ({})", s.describe(content), position_text(item))
                 }),
                 None => "-".into(),
             };
@@ -825,8 +831,9 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
                 .known_magic()
                 .map(|m| json!({ "level": m.level, "name": m.name, "affixes": m.affixes }));
             let mut entry = json!({
-                "letter": letter(i).map(String::from),
+                "letter": position_text(i),
                 "object": content.object(s.object).id,
+                "class": content.item_class(view.item_class(s)).id,
                 "count": s.count,
                 "weight": s.weight(content),
                 "name": s.describe(content),
@@ -847,7 +854,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         .filter_map(|(slot, item)| {
             let s = view.inventory().get(item)?;
             let entry = json!({
-                "letter": letter(item).map(String::from),
+                "letter": position_text(item),
                 "object": content.object(s.object).id,
                 "count": s.count,
             });

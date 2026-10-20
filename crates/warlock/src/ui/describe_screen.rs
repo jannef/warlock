@@ -178,7 +178,7 @@ mod tests {
     use super::*;
     use std::sync::Arc;
     use warlock_core::content::Content;
-    use warlock_core::{Action, Letters, World};
+    use warlock_core::{Action, Positions, World};
 
     /// The showcase, standing on the storeroom's magic arms with them picked up: a the magic ring
     /// (unidentified), b the rare bow (unidentified), c the rare helm, d the magic sword.
@@ -243,7 +243,7 @@ mod tests {
         assert!(has(&bow, "Unidentified"));
         assert!(!has(&bow, "Hunter") && !has(&bow, "Storm Song") && !has(&bow, "Prefix"));
         // Identified, its affixes show.
-        world.apply(&Action::Identify(Letters::of([1])));
+        world.apply(&Action::Identify(Positions::of([1])));
         let view = world.perception();
         let bow = text(&DescribeScreen::new(Some(&view), Some(1)));
         assert!(has(&bow, "} Storm Song"), "{bow:#?}");

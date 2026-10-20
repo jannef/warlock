@@ -19,16 +19,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     18, quick (1200), tough, in the `merchants` faction, carrying a spear, a small shield, a chain
     mail shirt, an iron helm, and a purse of 300 gold coins), and `[[shop]]`s (at most 32; ids are
     indices, in the save fingerprint): `id`, `name` ("general store"), `title` (its sign, with
-    `{keeper}` for the keeper's name: "{keeper}'s General Store"), `stock` and `buys` (object
+    `{keeper}` for the keeper's name: "{keeper}'s General Store"), `stock` and `buys` (item
     classes), `items` (`[least, most]` stacks of generated stock), `markup` (what it asks, percent
     of the value, 100 to 1000), and `pays` (what it pays for what it buys, 0 to 100). Objects
-    are traded by **class**, which is their glyph as in ADOM (`weapons` `)`, `missile_weapons`
-    `}`, `missiles` `/`, `armour` `[`, `tools` `(`, `potions` `!`, `scrolls` `?`, `food` `%`,
-    `stones` `*`, `coins` `$`, `rings` `=`, `amulets` `"`; `ObjectClass`). The kinds: a general
-    store (weapons, missile weapons, missiles, armour, tools, potions, scrolls, food; asks 150 %,
-    pays 30 %), a weaponsmith ("{keeper}'s Forge": weapons and missiles; 130 %, 40 %), an
-    armourer ("{keeper}'s Armoury": armour), a provisioner ("{keeper}'s Provisions": food and
-    tools; 120 %, 30 %), and a fletcher ("{keeper}'s Fletchery": missile weapons and missiles;
+    are traded by **item class** (`data/item_classes.toml`, §7 "Objects and materials":
+    `melee_weapons`, `missile_weapons`, `missiles`, `shields`, `body_armour`, `helmets`,
+    `cloaks`, `gloves`, `boots`, `rings`, `amulets`, `light_sources`, `tools`, `food`,
+    `potions`, `scrolls`, `gems`, `coins`, `miscellaneous`). The kinds: a general store (melee
+    weapons, missile weapons, missiles, armour of every kind, light sources, tools, food, potions,
+    scrolls; asks 150 %, pays 30 %), a weaponsmith ("{keeper}'s Forge": melee weapons and
+    missiles; 130 %, 40 %), an armourer ("{keeper}'s Armoury": shields, body armour, helmets,
+    cloaks, gloves, and boots), a provisioner ("{keeper}'s Provisions": light sources, tools,
+    and food; 120 %, 30 %), and a fletcher ("{keeper}'s Fletchery": missile weapons and missiles;
     125 %, 40 %). Alchemists and scribes wait for potions and scrolls that do something.
   - **Prices** (`Shops::price`, `Shops::offer`; integers): a stack's value (each one's times the
     count) times the markup, less the player's **favour**, rounded up and at least 1; an offer is

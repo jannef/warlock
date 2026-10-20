@@ -4,6 +4,7 @@ id = "iron_key"
 name = "iron key"
 glyph = "("
 fg = "#b4b8bc"
+class = "tools"
 material = "iron"
 weight = 40
 value = 0

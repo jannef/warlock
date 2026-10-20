@@ -4,6 +4,7 @@ id = "tower_shield"
 name = "tower shield"
 glyph = "["
 fg = "#867a68"
+class = "shields"
 material = "iron"
 weight = 12000
 value = 120

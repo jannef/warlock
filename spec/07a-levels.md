@@ -44,7 +44,7 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 - **Objects in level files** (M11): a legend entry places a pile with `objects = ["dagger",
   "arrow*12"]` (top first; `*N` places N, as one stack if the object is stackable, else as N
   stacks of one), and a creature's entry gives what it carries with `carry = ["spear",
-  "copper_coin*7"]` (at most 26 stacks), and what of that it wields and wears with `wield =
+  "copper_coin*7"]` (any number of stacks), and what of that it wields and wears with `wield =
   "spear"` and `wear = ["leather_jerkin"]` (an object id or a list; M16): each the first carried
   stack of that object not yet equipped, in the first free slot that fits it (a second ring on
   the other hand). `wield` takes what goes in a slot of action `wield` or `ready` (weapons,

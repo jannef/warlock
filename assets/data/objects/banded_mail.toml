@@ -4,6 +4,7 @@ name = "suit of banded mail"
 plural = "suits of banded mail"
 glyph = "["
 fg = "#a4acb4"
+class = "body_armour"
 material = "steel"
 weight = 17000
 value = 400

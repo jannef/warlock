@@ -50,7 +50,9 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   and `thaw:X,Y,R` (a burst of heat: the ice there melts, and whoever stood on it falls in) take
   no time (§5 "Ice");
   durations are a whole number with `s`, `m`, or `h`, a rest at most `24h`; letters name stacks
-  of the pile or the inventory, `a` first, and without letters `pickup`, `drop`, `sell`, and the
+  of the pile or the inventory by position, `a` first, `z` the 26th, and any position may be a
+  number instead (`drop:0,2,30`, `equip:body:26`, `throw:27:12,5`), as positions past `z` must;
+  without letters `pickup`, `drop`, `sell`, and the
   dev `identify` (§8 "Magic items") take everything; `sell` sells to the shop the player stands
   in, `pay` pays it, and `pay:DIR` pays and steps out that way (§7 "Shops"); `equip:SLOT:LETTER` puts inventory stack LETTER
   on in slot SLOT (a slot id of `data/slots.toml`) and `remove:SLOT` takes off what is there;
@@ -74,8 +76,9 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   when loud),
   `traps` (the traps the player knows, one a line, `(12, 5) fireball trap`, `(remembered)` when
   out of sight; `no known traps`),
-  `inventory` (what the player carries, by letter with weights and what is worn or wielded
-  marked, `b - a leather jerkin (being worn) (3.5 kg)`, and in a shop what is unpaid, `c - a
+  `inventory` (what the player carries, grouped by item class as the screens group it, a
+  `Melee weapons:` line before each class, each stack by its position as action text names it
+  with weights and what is worn or wielded marked, `b - a leather jerkin (being worn) (3.5 kg)`, and in a shop what is unpaid, `c - a
   dagger (unpaid, 45 gold) (450 g)`, then what they carry, their burden and
   its thresholds, and what they weigh, `carried 4.2 kg (unburdened: burdened over 14 kg,
   strained over 28 kg, overloaded over 42 kg), total weight 74.2 kg`),

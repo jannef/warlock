@@ -3,6 +3,7 @@ id = "skeleton_key"
 name = "skeleton key"
 glyph = "("
 fg = "#e0dccc"
+class = "tools"
 material = "iron"
 weight = 30
 value = 0

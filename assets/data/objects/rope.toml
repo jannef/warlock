@@ -4,6 +4,7 @@ name = "coil of rope"
 plural = "coils of rope"
 glyph = "("
 fg = "#c8b080"
+class = "tools"
 material = "cloth"
 weight = 1500
 value = 10

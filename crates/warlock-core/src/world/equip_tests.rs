@@ -116,7 +116,7 @@ fn objects_go_only_where_they_fit_and_refusals_take_no_time() {
         ("equip:missile_weapon:i", "12 arrows do not go there."),
         ("equip:main_hand:h", "A short bow does not go there."),
         ("equip:tail:a", "There is no slot `tail`."),
-        ("equip:body:z", "You carry no z."),
+        ("equip:body:z", "You carry no such thing."),
         ("remove:body", "You have nothing there (body)."),
     ] {
         assert_eq!(took(&mut w, action), 0, "{action}");

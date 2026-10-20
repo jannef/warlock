@@ -3,6 +3,7 @@ id = "mattock"
 name = "mattock"
 glyph = "("
 fg = "#a49680"
+class = "tools"
 material = "iron"
 weight = 4500
 value = 70

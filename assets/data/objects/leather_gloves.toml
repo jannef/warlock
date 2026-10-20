@@ -4,6 +4,7 @@ name = "pair of leather gloves"
 plural = "pairs of leather gloves"
 glyph = "["
 fg = "#8a6040"
+class = "gloves"
 material = "leather"
 weight = 250
 value = 10

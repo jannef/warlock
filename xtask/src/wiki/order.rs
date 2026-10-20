@@ -3,12 +3,12 @@
 //! list here sorts by an explicit key, the group a page reads by first, then the name.
 
 use warlock_core::content::{
-    AffixDef, AffixKind, Content, CreatureDef, CreatureId, MaterialDef, MaterialId, ObjectClass,
-    ObjectDef, ObjectId,
+    AffixDef, AffixKind, Content, CreatureDef, CreatureId, MaterialDef, MaterialId, ObjectDef,
+    ObjectId,
 };
 
-/// Every object with its id: by class (the glyph order of the objects page, a glyph of no class
-/// last), then by weapon skill (the order of `weapon_skills.toml`, so the weapons of one skill
+/// Every object with its id: by item class (the order of `item_classes.toml`, as item lists in
+/// the game group), then by weapon skill (the order of `weapon_skills.toml`, so the weapons of one skill
 /// stand together), then by value (the humble before the fine: leather cap, iron helm, great
 /// helm), then by name.
 pub(super) fn objects(content: &Content) -> Vec<(ObjectId, &ObjectDef)> {
@@ -16,9 +16,7 @@ pub(super) fn objects(content: &Content) -> Vec<(ObjectId, &ObjectDef)> {
         .map(|(i, o)| (ObjectId(i as u16), o))
         .collect();
     all.sort_by_cached_key(|(_, o)| {
-        let class = (ObjectClass::of_glyph(o.glyph))
-            .and_then(|c| ObjectClass::ALL.iter().position(|&k| k == c))
-            .unwrap_or(ObjectClass::ALL.len());
+        let class = o.class;
         let skill = o.skill.map_or(usize::MAX, |s| usize::from(s.0));
         (class, skill, o.value, o.name.to_lowercase())
     });

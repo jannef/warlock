@@ -3,6 +3,7 @@ id = "crossbow"
 name = "crossbow"
 glyph = "}"
 fg = "#a8a098"
+class = "missile_weapons"
 material = "wood"
 weight = 3200
 value = 150

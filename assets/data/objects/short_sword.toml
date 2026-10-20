@@ -3,6 +3,7 @@ id = "short_sword"
 name = "short sword"
 glyph = ")"
 fg = "#dce0e8"
+class = "melee_weapons"
 material = "steel"
 weight = 1100
 value = 50

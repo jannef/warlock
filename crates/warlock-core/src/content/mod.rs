@@ -19,6 +19,7 @@ mod faction;
 mod flow;
 mod horoscope;
 mod hunger;
+mod item_class;
 mod level;
 mod light;
 mod material;
@@ -73,6 +74,9 @@ pub use hunger::{
     Corpses, EXERTIONS, Faint, Food, HungerDef, MAX_MEAL, MAX_NUTRITION, MAX_SHELF_LIFE,
     Overeating, Rotten, Starve, States,
 };
+#[cfg(test)]
+pub(crate) use item_class::BUILTIN as BUILTIN_ITEM_CLASSES;
+pub use item_class::{ItemClassDef, ItemClassId, MAX_ITEM_CLASSES};
 pub(crate) use level::validate_route;
 pub use level::{
     CreatureSpawn, EdgeExit, LevelKind, LevelTemplate, Region, StairsLink, parse_route,
@@ -80,8 +84,7 @@ pub use level::{
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
 pub use material::{MaterialDef, MaterialId};
 pub use object::{
-    MAX_BONUS, MAX_DIG, MAX_PLACED, MAX_VALUE, ObjectClass, ObjectDef, ObjectId, article,
-    weapon_noun,
+    MAX_BONUS, MAX_DIG, MAX_PLACED, MAX_VALUE, ObjectDef, ObjectId, article, weapon_noun,
 };
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use particles::{ParticleEmitter, ParticleTrigger};
@@ -346,7 +349,8 @@ struct LegendFile {
 /// drawn; without traps or shops there are none). Without vision
 /// profiles, a single `normal` profile that needs no light is used, so content without lighting
 /// stays fully visible; without sizes, everything is medium; without factions, everyone is neutral; without a calendar, months are numbered;
-/// without a sky file there are no moons; without an objects file there are no objects; without a
+/// without a sky file there are no moons; without an objects file there are no objects, and
+/// without `data/item_classes.toml` there may be none (each names its class); without a
 /// weather file the sky is always clear; without an actions file every action costs 1000;
 /// without a slots file nothing can be worn or wielded; without races or classes there is no
 /// character to choose, and scenarios give the player's eyes and stats themselves; without
@@ -366,6 +370,8 @@ pub struct Content {
     creature_ids: BTreeMap<String, CreatureId>,
     materials: Vec<MaterialDef>,
     material_ids: BTreeMap<String, MaterialId>,
+    /// Item classes, in the order item lists group by.
+    item_classes: Vec<ItemClassDef>,
     objects: Vec<ObjectDef>,
     object_ids: BTreeMap<String, ObjectId>,
     /// Equipment slots, in display order.
@@ -440,6 +446,7 @@ impl Content {
             creature_ids: BTreeMap::new(),
             materials: Vec::new(),
             material_ids: BTreeMap::new(),
+            item_classes: Vec::new(),
             objects: Vec::new(),
             object_ids: BTreeMap::new(),
             slots: Vec::new(),
@@ -604,12 +611,6 @@ impl Content {
             let mut scenario = ScenarioDef::parse(path, id, text)?;
             let err = |m: String| ContentError::new(path, format!("carry: {m}"));
             scenario.carry = object::parse_stacks(&scenario.carry_spec, &content).map_err(err)?;
-            if scenario.carry.len() > crate::object::INVENTORY_SLOTS {
-                return Err(err(format!(
-                    "at most {} stacks fit in a pack",
-                    crate::object::INVENTORY_SLOTS
-                )));
-            }
             content.scenarios.insert(id.to_string(), scenario);
         }
         for (path, id, text) in files.in_dir("vaults") {
@@ -1123,6 +1124,10 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             self.slots = slot::parse(path, text)?;
         }
+        let path = "data/item_classes.toml";
+        if let Some(text) = files.get_optional(path) {
+            self.item_classes = item_class::parse(path, text)?;
+        }
         let specs = load_table(files, "objects", |f: ObjectFile| f.object)?;
         let mut seen: BTreeMap<String, &str> = BTreeMap::new();
         // Each object's file, for the errors found once every object is known.
@@ -1138,6 +1143,7 @@ impl Content {
             self.object_ids.insert(spec.id.clone(), id);
             let (def, lit_as) = spec.resolve(
                 path,
+                &self.item_classes,
                 |m| self.material_ids.get(m).copied(),
                 |l| self.light_ids.get(l).copied(),
                 &self.slots,
@@ -1219,6 +1225,15 @@ impl Content {
                         corpses.material
                     ))
                 })?;
+            let class = (self.item_classes.iter().position(|c| c.corpses))
+                .map(|i| ItemClassId(i as u8))
+                .ok_or_else(|| {
+                    err(
+                        "creatures leave corpses: a class in data/item_classes.toml must take \
+                         them (`corpses = true`)"
+                            .into(),
+                    )
+                })?;
             for (i, creature) in self.creatures.iter().enumerate() {
                 if creature.id == "player" || !creature.corpse {
                     continue;
@@ -1229,7 +1244,7 @@ impl Content {
                 );
                 let creature_id = CreatureId(i as u16);
                 let food = corpses.sizes[creature.size];
-                let def = ObjectDef::corpse_of(creature_id, creature, material, food);
+                let def = ObjectDef::corpse_of(creature_id, creature, class, material, food);
                 if self.object_ids.insert(def.id.clone(), id).is_some() {
                     return Err(err(format!(
                         "the corpse of `{}` would be object `{}`, which data/objects.toml has",
@@ -1521,6 +1536,19 @@ impl Content {
     /// Every object type, in file order (by [`ObjectId`]).
     pub fn object_defs(&self) -> &[ObjectDef] {
         &self.objects
+    }
+
+    /// The item classes, in the order item lists group by (by [`ItemClassId`]).
+    pub fn item_classes(&self) -> &[ItemClassDef] {
+        &self.item_classes
+    }
+
+    pub fn item_class(&self, id: ItemClassId) -> &ItemClassDef {
+        &self.item_classes[usize::from(id.0)]
+    }
+
+    pub fn item_class_id(&self, name: &str) -> Option<ItemClassId> {
+        (self.item_classes.iter().position(|c| c.id == name)).map(|i| ItemClassId(i as u8))
     }
 
     /// The equipment slots, in display order (by [`SlotId`]; empty without `data/slots.toml`).
@@ -2214,6 +2242,7 @@ mod tests {
 
     fn minimal_files(level_map: &str, extra_legend: &str) -> ContentFiles {
         let mut files = ContentFiles::default();
+        files.insert("data/item_classes.toml", BUILTIN_ITEM_CLASSES);
         files.insert(
             "data/terrain.toml",
             r##"
@@ -2360,7 +2389,7 @@ mod tests {
             "duplicate material id `iron` (also in data/materials.toml)"
         );
         files.remove("data/materials/");
-        let nail = "[[object]]\nid = \"nail\"\nname = \"nail\"\nglyph = \"(\"\nfg = \"#ffffff\"\n\
+        let nail = "[[object]]\nid = \"nail\"\nname = \"nail\"\nglyph = \"(\"\nfg = \"#ffffff\"\nclass = \"tools\"\n\
                     material = \"iron\"\nweight = 5\nvalue = 1\n";
         files.insert("data/objects/a.toml", nail);
         files.insert("data/objects/b.toml", nail);
@@ -3187,7 +3216,7 @@ mod tests {
         const MATERIALS: &str = "[[material]]\nid = \"iron\"\nname = \"iron\"\n";
         let object = |fields: &str| {
             format!(
-                "[[object]]\nid = \"key\"\nname = \"key\"\nglyph = \"(\"\nfg = \"#ffffff\"\n{fields}"
+                "[[object]]\nid = \"key\"\nname = \"key\"\nglyph = \"(\"\nfg = \"#ffffff\"\nclass = \"tools\"\n{fields}"
             )
         };
         let cases = [
@@ -3206,6 +3235,19 @@ mod tests {
             (
                 object("material = \"bronze\"\nweight = 5\nvalue = 1\n"),
                 "unknown material `bronze`",
+            ),
+            (
+                object("material = \"iron\"\nweight = 5\nvalue = 1\n").replace("tools", "toys"),
+                "unknown item class `toys`",
+            ),
+            (
+                object("material = \"iron\"\nweight = 5\nvalue = 1\n")
+                    .replace("class = \"tools\"\n", ""),
+                "missing field `class`",
+            ),
+            (
+                object("material = \"iron\"\nweight = 5\nvalue = 1\nkind = \"ring\"\n"),
+                "`kind = \"ring\"` is of class `rings`, not `tools`",
             ),
             (
                 object("material = \"iron\"\nvalue = 1\n"),
@@ -3262,7 +3304,7 @@ mod tests {
         .concat();
         let object = |fields: &str| {
             format!(
-                "[[object]]\nid = \"key\"\nname = \"key\"\nglyph = \"(\"\nfg = \"#ffffff\"\n\
+                "[[object]]\nid = \"key\"\nname = \"key\"\nglyph = \"(\"\nfg = \"#ffffff\"\nclass = \"tools\"\n\
                  material = \"iron\"\nweight = 5\nvalue = 1\n{fields}\n"
             )
         };
@@ -3537,10 +3579,6 @@ mod tests {
             (
                 "\"x\" = { terrain = \"floor\", carry = [\"dagger\"] }",
                 "carry, wield, or wear but no creature",
-            ),
-            (
-                "\"x\" = { terrain = \"floor\", creature = \"kobold\", carry = [\"dagger*27\"] }",
-                "at most 26 stacks",
             ),
             (
                 "\"x\" = \"floor\"\n[[pile]]\nat = [9, 9]\nobjects = [\"dagger\"]",

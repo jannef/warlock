@@ -3,6 +3,7 @@ id = "rapier"
 name = "rapier"
 glyph = ")"
 fg = "#f0f0f4"
+class = "melee_weapons"
 material = "steel"
 weight = 1100
 value = 70

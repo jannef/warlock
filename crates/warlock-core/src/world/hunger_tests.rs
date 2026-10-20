@@ -401,7 +401,7 @@ fn a_meal_takes_its_turns_then_feeds() {
     assert_eq!(texts(&w).last().unwrap(), "You cannot eat a dagger.");
     let out = w.apply(&Action::Eat(Meal::Pack(5)));
     assert!(!out.took_turn);
-    assert_eq!(texts(&w).last().unwrap(), "You carry no f.");
+    assert_eq!(texts(&w).last().unwrap(), "You carry no such thing.");
 }
 
 #[test]

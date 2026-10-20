@@ -3,6 +3,7 @@ id = "pick_axe"
 name = "pick-axe"
 glyph = "("
 fg = "#b8b0a4"
+class = "tools"
 material = "iron"
 weight = 3000
 value = 50

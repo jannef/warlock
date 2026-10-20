@@ -73,6 +73,8 @@ pub const REBINDABLE: &[KeyCommand] = &[
     KeyCommand::Erase,
     KeyCommand::Mark,
     KeyCommand::MarkAll,
+    KeyCommand::NextListPage,
+    KeyCommand::PrevListPage,
     KeyCommand::Yes,
     KeyCommand::No,
     KeyCommand::Page(1),
@@ -112,13 +114,14 @@ const PAGE_IDS: [&str; 9] = [
 
 /// Rebindable commands with no key by default: abilities (`warlock_core::ability`), which the
 /// abilities menu (#156) lists instead of a key each; `f` (fire), which `t` covers; Quit, done
-/// from the pause menu; the previous target, which Shift with the next target's key picks; and
-/// Back, which Esc always does. The player may bind one in Controls.
+/// from the pause menu; the previous target and the previous info page, which Shift with the
+/// next one's key picks; and Back, which Esc always does. The player may bind one in Controls.
 pub const UNBOUND: &[KeyCommand] = &[
     KeyCommand::Bash,
     KeyCommand::Fire,
     KeyCommand::Quit,
     KeyCommand::PrevTarget,
+    KeyCommand::PrevPage,
     KeyCommand::Back,
 ];
 
@@ -225,6 +228,8 @@ impl KeyCommand {
             Erase => "erase",
             Mark => "mark",
             MarkAll => "mark_all",
+            NextListPage => "next_list_page",
+            PrevListPage => "prev_list_page",
             Yes => "yes",
             No => "no",
             Help => "help",

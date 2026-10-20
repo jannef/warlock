@@ -3,6 +3,7 @@ id = "leather_cap"
 name = "leather cap"
 glyph = "["
 fg = "#8e6640"
+class = "helmets"
 material = "leather"
 weight = 600
 value = 10

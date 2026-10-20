@@ -3,6 +3,7 @@ id = "scimitar"
 name = "scimitar"
 glyph = ")"
 fg = "#e0d8c8"
+class = "melee_weapons"
 material = "steel"
 weight = 1500
 value = 60

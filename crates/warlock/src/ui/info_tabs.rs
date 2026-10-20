@@ -175,8 +175,9 @@ mod tests {
         assert_eq!(switch(WeaponSkills, &tab(false), &b), replace(Quests));
         assert_eq!(switch(Quests, &tab(false), &b), replace(Character));
         assert_eq!(switch(Character, &tab(true), &b), replace(Quests));
+        // PageUp and PageDown turn the pages of an item list instead (the inventory is one).
         let up = press(KeyBinding::Code(KeyCode::PageUp), false);
-        assert_eq!(switch(Inventory, &up, &b), replace(Character));
+        assert_eq!(switch(Inventory, &up, &b), None);
     }
 
     #[test]

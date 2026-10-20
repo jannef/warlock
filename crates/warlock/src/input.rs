@@ -17,6 +17,7 @@
 
 use crate::cli::Args;
 use crate::game::{Game, PlayerAction, SimSet};
+use crate::render::console::Console;
 use crate::save::SaveCommand;
 use crate::settings::Settings;
 use crate::ui::{
@@ -32,7 +33,7 @@ use warlock_core::perception::PerceptionView;
 use warlock_core::time::Duration;
 use warlock_core::weather::Weather;
 use warlock_core::world::ActorKind;
-use warlock_core::{Action, Dir, Letters, Pos, Rest};
+use warlock_core::{Action, Dir, Pos, Positions, Rest};
 
 /// What a key does.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -129,6 +130,10 @@ pub enum KeyCommand {
     Mark,
     /// On the pick-up and drop lists: mark everything, or nothing if everything is marked.
     MarkAll,
+    /// On an item list (the inventory, pick up, drop, ...): the next page of the list.
+    NextListPage,
+    /// On an item list: the previous page of the list.
+    PrevListPage,
     /// In the confirmation dialog (quitting; paying before leaving a shop, selling): yes.
     Yes,
     /// In the confirmation dialog: no.
@@ -229,9 +234,8 @@ impl KeyCommand {
             Yes | No => Context::Dialog,
             NextTarget | PrevTarget | Loose => Context::Aim,
             RestHour | RestDawn | RestDusk => Context::Prompt,
-            MenuUp | MenuDown | MenuLeft | MenuRight | Confirm | Back | Erase | Mark | MarkAll => {
-                Context::Menu
-            }
+            MenuUp | MenuDown | MenuLeft | MenuRight | Confirm | Back | Erase | Mark | MarkAll
+            | NextListPage | PrevListPage => Context::Menu,
             CycleVision | SkipHour | NextWeather | IdentifyAll | RevealMap | LightValues
             | Snapshot | LoadSnapshot => Context::Dev,
             _ => Context::Play,
@@ -288,6 +292,8 @@ impl KeyCommand {
             KeyCommand::Erase => "Erase a character / reset keys",
             KeyCommand::Mark => "Mark a stack (pick up, drop)",
             KeyCommand::MarkAll => "Mark everything (pick up, drop)",
+            KeyCommand::NextListPage => "Next page of a list",
+            KeyCommand::PrevListPage => "Previous page of a list",
             KeyCommand::Yes => "Yes (in a dialog)",
             KeyCommand::No => "No (in a dialog)",
             KeyCommand::CycleVision => "Next vision profile (dev)",
@@ -434,6 +440,10 @@ impl Default for Bindings {
             (Code(KeyCode::Backspace), Erase),
             (Code(KeyCode::Space), Mark),
             (ch(","), MarkAll),
+            (ch(">"), NextListPage),
+            (Code(KeyCode::PageDown), NextListPage),
+            (ch("<"), PrevListPage),
+            (Code(KeyCode::PageUp), PrevListPage),
             (ch("y"), Yes),
             (ch("n"), No),
             (ch("?"), Help),
@@ -443,8 +453,6 @@ impl Default for Bindings {
             table.0.push((ch(&n.to_string()), Page(n)));
         }
         table.0.push((Code(KeyCode::Tab), NextPage));
-        table.0.push((Code(KeyCode::PageDown), NextPage));
-        table.0.push((Code(KeyCode::PageUp), PrevPage));
         // The developer keys: in every build's table, read only where they are on (`dev_keys`).
         table.0.extend([
             (Code(KeyCode::F2), RevealMap),
@@ -551,7 +559,7 @@ fn leaving_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
 
 /// The dialog dropping the inventory stacks `letters` opens first, if the shop the player stands
 /// in would buy some of them (spec §7 "Shops"): sell them, or keep them (nothing is dropped).
-fn sale_dialog(view: &PerceptionView<'_>, letters: Letters) -> Option<Dialog> {
+fn sale_dialog(view: &PerceptionView<'_>, letters: &Positions) -> Option<Dialog> {
     let sale = view.sale(letters)?;
     let shop = view.shop_here()?;
     let what = warlock_core::object::phrase(&sale.stacks, view.content());
@@ -559,7 +567,7 @@ fn sale_dialog(view: &PerceptionView<'_>, letters: Letters) -> Option<Dialog> {
     let sell = format!("Sell for {} gold", sale.offer);
     Some(
         Dialog::new(shop.sign(), text)
-            .accept(sell, Action::Sell(letters))
+            .accept(sell, Action::Sell(letters.clone()))
             .cancel("Keep it", ScreenAction::Close),
     )
 }
@@ -594,7 +602,16 @@ pub fn route_keys(
     mut bindings: ResMut<Bindings>,
     mut play: Gameplay,
     mut choices: MessageWriter<MenuChoice>,
+    console: Option<Res<Console>>,
 ) {
+    // Item lists page by the console's size: the screens learn it before any press.
+    let size = console.map(|c| (c.cols(), c.rows()));
+    if let Some(size) = size
+        && !keys.is_empty()
+        && screens.stack.console() != Some(size)
+    {
+        screens.stack.set_console(size);
+    }
     let mut chosen = false;
     for key in keys.read() {
         if chosen || key.state != ButtonState::Pressed {
@@ -819,8 +836,8 @@ impl Gameplay<'_> {
                 // nothing here, the core says so.
                 let view = game.world.perception();
                 let letters = match view.objects(view.viewer()).len() {
-                    0 => Some(Letters::default()),
-                    1 => Some(Letters::of([0])),
+                    0 => Some(Positions::default()),
+                    1 => Some(Positions::of([0])),
                     _ => None,
                 };
                 match letters {
@@ -834,7 +851,7 @@ impl Gameplay<'_> {
             (InputMode::Normal, KeyCommand::Drop) => {
                 if game.world.perception().inventory().is_empty() {
                     self.actions
-                        .write(PlayerAction(Action::Drop(Letters::default())));
+                        .write(PlayerAction(Action::Drop(Positions::default())));
                 } else {
                     open = Some(ScreenAction::Open(ScreenName::Drop));
                 }
@@ -897,7 +914,7 @@ impl Gameplay<'_> {
             }
             (InputMode::Normal, KeyCommand::IdentifyAll) => {
                 self.actions
-                    .write(PlayerAction(Action::Identify(Letters::default())));
+                    .write(PlayerAction(Action::Identify(Positions::default())));
                 InputMode::Normal
             }
             (InputMode::Normal, KeyCommand::RevealMap) => {
@@ -968,6 +985,8 @@ impl Gameplay<'_> {
                 | KeyCommand::Erase
                 | KeyCommand::Mark
                 | KeyCommand::MarkAll
+                | KeyCommand::NextListPage
+                | KeyCommand::PrevListPage
                 | KeyCommand::Page(_)
                 | KeyCommand::NextPage
                 | KeyCommand::PrevPage
@@ -985,7 +1004,7 @@ impl Gameplay<'_> {
     /// would buy asks first whether to sell (spec §7 "Shops"): the dialog is returned instead.
     fn act(&mut self, action: Action) -> Option<Dialog> {
         if let (Action::Drop(letters), Some(game)) = (&action, &self.game)
-            && let Some(dialog) = sale_dialog(&game.world.perception(), *letters)
+            && let Some(dialog) = sale_dialog(&game.world.perception(), letters)
         {
             return Some(dialog);
         }
@@ -1324,9 +1343,9 @@ mod tests {
         );
         assert!(leaving_dialog(&view, Dir::E).is_none(), "a step inside");
         // Selling the scroll asks; putting back the dagger does not.
-        let offer = view.sale(Letters::of([1])).expect("an offer").offer;
+        let offer = view.sale(&Positions::of([1])).expect("an offer").offer;
         assert_eq!(
-            sale_dialog(&view, Letters::of([1])),
+            sale_dialog(&view, &Positions::of([1])),
             Some(
                 Dialog::new(
                     "Grimbold's General Store",
@@ -1334,12 +1353,12 @@ mod tests {
                 )
                 .accept(
                     format!("Sell for {offer} gold"),
-                    Action::Sell(Letters::of([1]))
+                    Action::Sell(Positions::of([1]))
                 )
                 .cancel("Keep it", ScreenAction::Close)
             )
         );
-        assert!(sale_dialog(&view, Letters::of([2])).is_none());
+        assert!(sale_dialog(&view, &Positions::of([2])).is_none());
         // With the short sword too, more than the purse holds: no way to pay, only back.
         walk(
             &mut world,

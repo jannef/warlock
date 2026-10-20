@@ -3,6 +3,7 @@ id = "halberd"
 name = "halberd"
 glyph = ")"
 fg = "#a49c8c"
+class = "melee_weapons"
 material = "iron"
 weight = 5500
 value = 100

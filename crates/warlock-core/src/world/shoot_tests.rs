@@ -3,7 +3,7 @@
 //! picked up again; burning arrows light the level until they burn out.
 
 use super::*;
-use crate::action::{AttackKind, Letters, MissileEnd, parse_actions};
+use crate::action::{AttackKind, MissileEnd, Positions, parse_actions};
 use crate::content::ContentFiles;
 use crate::replay::Replay;
 use crate::sight::{self, LineOfSight};
@@ -96,6 +96,7 @@ id = "bow"
 name = "short bow"
 glyph = "}"
 fg = "#c0c0c0"
+class = "missile_weapons"
 material = "wood"
 weight = 700
 value = 0
@@ -110,6 +111,7 @@ id = "war_bow"
 name = "long war bow"
 glyph = "}"
 fg = "#c0c0c0"
+class = "missile_weapons"
 material = "wood"
 weight = 1300
 value = 0
@@ -125,6 +127,7 @@ id = "crossbow"
 name = "crossbow"
 glyph = "}"
 fg = "#c0c0c0"
+class = "missile_weapons"
 material = "wood"
 weight = 3200
 value = 0
@@ -139,6 +142,7 @@ id = "arrow"
 name = "arrow"
 glyph = "/"
 fg = "#c0c0c0"
+class = "missiles"
 material = "wood"
 weight = 30
 value = 0
@@ -151,6 +155,7 @@ id = "brittle_arrow"
 name = "brittle arrow"
 glyph = "/"
 fg = "#c0c0c0"
+class = "missiles"
 material = "wood"
 weight = 30
 value = 0
@@ -164,6 +169,7 @@ id = "flaming_arrow"
 name = "flaming arrow"
 glyph = "/"
 fg = "#c08040"
+class = "missiles"
 material = "wood"
 weight = 40
 value = 0
@@ -177,6 +183,7 @@ id = "burning_arrow"
 name = "burning arrow"
 glyph = "/"
 fg = "#ffc070"
+class = "missiles"
 material = "wood"
 weight = 30
 value = 0
@@ -189,6 +196,7 @@ id = "bolt"
 name = "bolt"
 glyph = "/"
 fg = "#c0c0c0"
+class = "missiles"
 material = "wood"
 weight = 60
 value = 0
@@ -201,6 +209,7 @@ id = "dagger"
 name = "dagger"
 glyph = ")"
 fg = "#c0c0c0"
+class = "melee_weapons"
 material = "wood"
 weight = 450
 value = 0
@@ -213,6 +222,7 @@ id = "club"
 name = "club"
 glyph = ")"
 fg = "#c0c0c0"
+class = "melee_weapons"
 material = "wood"
 weight = 1400
 value = 0
@@ -225,6 +235,7 @@ id = "rock"
 name = "rock"
 glyph = "*"
 fg = "#c0c0c0"
+class = "miscellaneous"
 material = "wood"
 weight = 800
 value = 0
@@ -270,6 +281,10 @@ const LEGEND: &str = r##"
 /// The player stands on `@` with `objects` at their feet; the level is fully lit unless `dark`.
 fn files(map: &str, objects: &str, dark: bool, scenario: &str) -> ContentFiles {
     let mut files = ContentFiles::default();
+    files.insert(
+        "data/item_classes.toml",
+        crate::content::BUILTIN_ITEM_CLASSES,
+    );
     for (path, text) in [
         ("data/terrain.toml", TERRAIN),
         ("data/factions.toml", FACTIONS),
@@ -637,7 +652,7 @@ fn a_flaming_arrow_burns_where_it_lands_lighting_the_dark_for_a_minute() {
     assert!(view.light(spot).expect("lit").brightness() > 100);
     // It cannot be picked up while it burns.
     run(&mut w, "move:E*5");
-    assert!(!w.apply(&Action::PickUp(Letters::default())).took_turn);
+    assert!(!w.apply(&Action::PickUp(Positions::default())).took_turn);
     assert_eq!(
         last_message(&w),
         "You cannot pick up a burning arrow while it burns."

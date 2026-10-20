@@ -3,6 +3,7 @@ id = "bolt"
 name = "crossbow bolt"
 glyph = "/"
 fg = "#b4aca0"
+class = "missiles"
 material = "wood"
 weight = 60
 value = 2

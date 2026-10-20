@@ -241,6 +241,7 @@ id = "sword"
 name = "sword"
 glyph = ")"
 fg = "#c0c0c0"
+class = "melee_weapons"
 material = "steel"
 weight = 1000
 value = 0
@@ -253,6 +254,7 @@ id = "mail"
 name = "mail shirt"
 glyph = "["
 fg = "#c0c0c0"
+class = "body_armour"
 material = "steel"
 weight = 9000
 value = 0
@@ -265,6 +267,7 @@ id = "buckler"
 name = "buckler"
 glyph = "["
 fg = "#c0c0c0"
+class = "shields"
 material = "steel"
 weight = 2000
 value = 0
@@ -276,6 +279,7 @@ id = "staff"
 name = "staff"
 glyph = ")"
 fg = "#c0c0c0"
+class = "melee_weapons"
 material = "steel"
 weight = 2000
 value = 0
@@ -288,6 +292,7 @@ id = "bow"
 name = "bow"
 glyph = "}"
 fg = "#c0c0c0"
+class = "missile_weapons"
 material = "steel"
 weight = 700
 value = 0
@@ -303,6 +308,7 @@ id = "arrow"
 name = "arrow"
 glyph = "/"
 fg = "#c0c0c0"
+class = "missiles"
 material = "steel"
 weight = 30
 value = 0
@@ -315,6 +321,7 @@ id = "coin"
 name = "coin"
 glyph = "$"
 fg = "#f0c040"
+class = "coins"
 material = "steel"
 weight = 10
 value = 0
@@ -403,6 +410,10 @@ const LEGEND: &str = r##"
 /// with `level` header lines, the scenario with `scenario` lines.
 fn files(map: &str, level: &str, scenario: &str) -> ContentFiles {
     let mut files = ContentFiles::default();
+    files.insert(
+        "data/item_classes.toml",
+        crate::content::BUILTIN_ITEM_CLASSES,
+    );
     for (path, text) in [
         ("data/terrain.toml", TERRAIN),
         ("data/factions.toml", FACTIONS),
@@ -779,6 +790,10 @@ fn creatures_shoot_with_the_bow_they_have_ready() {
     let legend = "\"a\" = { terrain = \"floor\", creature = \"archer\", carry = [\"bow\", \
                   \"arrow*9\"], wield = [\"bow\", \"arrow\"] }\n";
     let mut files = ContentFiles::default();
+    files.insert(
+        "data/item_classes.toml",
+        crate::content::BUILTIN_ITEM_CLASSES,
+    );
     let creatures = format!(
         "{CREATURES}\n[[creature]]\nid = \"archer\"\nname = \"kobold archer\"\nglyph = \"k\"\n\
          fg = \"#a0a040\"\nweight = 20000\nfaction = \"kobolds\"\ncombat = \"ranged\"\n\

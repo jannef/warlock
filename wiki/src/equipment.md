@@ -26,8 +26,9 @@ long putting one on there, or taking it off, takes at a normal pace.
   goes there. On this screen every letter names a slot, even `e`, `h`, `j`, `k`, `l`, and `m`.
 - Press a slot's letter in upper case (`A` to `M`) to look at what is in it (see
   [Magic items](magic-items.md#looking-at-an-item)).
-- The next screen lists what you carry that fits the slot, with each object's letter from your
-  [pack](objects.md#your-pack). Press its letter, or `Enter` on the `>` row, to put it on.
+- The next screen lists what you carry that fits the slot (see [Lists of
+  objects](objects.md#lists-of-objects)). Press its letter, or `Enter` on the `>` row, to put it
+  on.
 - If the slot already holds something, it is taken off first: the two swap places. Choose what
   is already in the slot (the `>` starts on it) to take it off.
 - `Esc` goes back to the equipment screen, and `Esc` there back to the game.
@@ -72,15 +73,14 @@ Every thing you put on or take off takes its slot's time from the table:
 
 ## Your pack
 
-What you wear and wield stays in your pack, with its letter. The [inventory](objects.md#your-pack)
+What you wear and wield stays in your pack. The [inventory](objects.md#your-pack)
 marks it: "(being worn)", "(wielded)", "(in off hand)", "(on left hand)", "(on right hand)",
 "(readied)", "(quivered)", "(in use)" for a tool, and "(wielded in both hands)" for a two-handed
 weapon. It still counts
 toward the weight you carry, and so toward your [burden](burden.md).
 
 **Dropping** something you wear or wield takes it off first ("You take off a leather jerkin.")
-and then drops it, which takes the time of both. The objects after it in your pack move up a
-letter, and stay worn.
+and then drops it, which takes the time of both. What else you wear stays worn.
 
 ## Creatures
 

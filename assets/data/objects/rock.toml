@@ -4,6 +4,7 @@ id = "rock"
 name = "rock"
 glyph = "*"
 fg = "#a29c90"
+class = "miscellaneous"
 material = "stone"
 weight = 800
 value = 0
