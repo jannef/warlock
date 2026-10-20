@@ -24,6 +24,7 @@ mod doors;
 mod experience;
 mod gems;
 mod healing;
+mod hearing;
 mod hunger;
 mod magic;
 mod moons;
@@ -109,6 +110,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
     let tables: &[(&str, Table)] = &[
         ("calendar.md", calendar::months),
         ("actions.md", actions::action_costs),
+        ("speeds.md", actions::speeds),
         ("terrain-local.md", terrain::local_terrain),
         ("terrain-overworld.md", terrain::overworld_terrain),
         ("overworld-sight.md", sight::overworld_sight_table),
@@ -124,9 +126,16 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("lights.md", vision::lights),
         ("creatures.md", creatures::creatures),
         ("factions.md", creatures::factions),
+        ("creature-stats.md", creatures::creature_stats),
+        ("creature-defences.md", creatures::creature_defences),
+        ("creature-attacks.md", creatures::creature_attacks),
+        ("creature-senses.md", creatures::creature_senses),
         ("dialogue.md", dialogue::dialogue),
         ("quests.md", dialogue::quests),
         ("footsteps.md", terrain::footsteps),
+        ("noises.md", hearing::noises),
+        ("sound-travel.md", hearing::sound_travel),
+        ("muffling.md", hearing::muffling),
         ("objects.md", objects::objects),
         ("item-classes.md", objects::item_classes),
         ("shops.md", objects::shops),
@@ -139,6 +148,9 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("pack.md", objects::pack),
         ("scenarios.md", scenarios::scenarios),
         ("stats.md", character::stats),
+        ("stat-modifiers.md", character::stat_modifiers),
+        ("stat-uses.md", character::stat_uses),
+        ("potentials.md", character::potentials),
         ("genders.md", character::genders),
         ("races.md", character::races),
         ("classes.md", character::classes),
@@ -154,17 +166,21 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("ammunition.md", combat::ammunition),
         ("armour.md", combat::armour),
         ("piercing.md", combat::piercing),
+        ("protection.md", combat::protection),
         ("damage-types.md", damage::damage_types),
         ("damage-weapons.md", damage::weapon_kinds),
         ("damage-armour.md", damage::armour_kinds),
         ("stances.md", combat::stances),
+        ("to-hit.md", combat::to_hit),
         ("hit-chances.md", combat::hit_chances),
         ("threats.md", combat::threats),
         ("hit-points.md", combat::hit_points),
+        ("health.md", combat::health),
         ("regeneration.md", combat::regeneration),
         ("healing.md", healing::healing),
         ("status-effects.md", healing::status_effects),
         ("diseases.md", healing::diseases),
+        ("disease-checks.md", healing::disease_checks),
         ("experience-levels.md", experience::experience_levels),
         ("experience-factors.md", experience::experience_factors),
         ("experience-discovery.md", experience::experience_discovery),
@@ -182,6 +198,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("hunger-races.md", hunger::hunger_races),
         ("food.md", hunger::food),
         ("corpses.md", hunger::corpses),
+        ("corpse-effects.md", hunger::corpse_effects),
         ("digging.md", digging::digging),
         ("digging-strength.md", digging::digging_strength),
         ("special-rooms.md", rooms::special_rooms),
@@ -219,6 +236,124 @@ fn generate(content: &Content) -> Vec<(String, String)> {
 mod tests {
     use super::*;
 
+    /// The numbers the game keeps to itself are stated exactly (#264): creatures, stats, speed,
+    /// hearing, combat, diseases, and corpses.
+    #[test]
+    fn hidden_numbers_are_exact() {
+        let content = Content::builtin().expect("content loads");
+        let files = generate(&content);
+        let text = |name: &str| &files.iter().find(|(n, _)| n == name).expect("file").1;
+        let has = |name: &str, row: &str| {
+            assert!(
+                text(name).contains(row),
+                "{row}\nin {name}:\n{}",
+                text(name)
+            );
+        };
+        // Creatures: stats with modifiers, Defence with its parts, attacks read through the
+        // rules (the rat's Dexterity, the beetle's shell), speed, senses (the deer's listen
+        // skill lowers its hearing from 5), and carrying limits.
+        has(
+            "creature-stats.md",
+            "| Giant rat | 1 | 5 | 10 (+0) | 17 (+3) | 12 (+1) | 1 (\u{2212}5) | 12 (+1) | \
+             4 (\u{2212}3) | as its scores | - | - |",
+        );
+        has("creature-stats.md", "| Deer | 1 | 2 |");
+        has("creature-stats.md", "| Listen 30 | - |");
+        has(
+            "creature-defences.md",
+            "| Giant rat | 12 | 13 (Dexterity +3) | - | - |",
+        );
+        has(
+            "creature-defences.md",
+            "| Cave beetle | 11 | 11 (Natural +1) | 3 (shell) | acid 50%, poison 25% |",
+        );
+        has(
+            "creature-attacks.md",
+            "| Giant rat | up close | bite | 1d4 piercing | +0 | 22–24 ×2 | 5 seconds | 10% \
+             poisoned (2 degrees), 10% filth fever (unless resisted) |",
+        );
+        has(
+            "creature-attacks.md",
+            "| Kobold | up close | fists | 1d3\u{2212}1 bludgeoning | \u{2212}1 |",
+        );
+        has(
+            "creature-senses.md",
+            "| Cave bat | 2000 | 3 seconds | 8 cells | Darkvision | 3 | silent | 500 g | Small |",
+        );
+        has(
+            "creature-senses.md",
+            "| Deer | 1300 | 4.6 seconds | 12 cells | Normal | 2 | 50 |",
+        );
+        assert!(!text("creature-senses.md").contains("| You"));
+        // Speed: yours first, then the quickest.
+        assert!(
+            text("speeds.md").contains(
+                "|---|---:|---:|\n| You, whatever your race | 1000 | 6 seconds |\n| Cave bat | \
+                 2000 | 3 seconds |"
+            ),
+            "{}",
+            text("speeds.md")
+        );
+        // Stats: every score's modifier, the races' potentials, and what reads them.
+        for row in [
+            "| 1 | \u{2212}5 |",
+            "| 10–11 | +0 |",
+            "| 18–19 | +4 |",
+            "| 40 | +15 |",
+        ] {
+            has("stat-modifiers.md", row);
+        }
+        has("potentials.md", "| Human | 16–17 | 16–17 |");
+        has("potentials.md", "| Dwarf | 17 | 13 | 19 |");
+        has(
+            "stat-uses.md",
+            "| Presence | shop prices: 3% in your favour for each point",
+        );
+        has("stat-uses.md", "checks against brain fever");
+        // Hearing: loudness where made and how far you hear it, how sound fades, what muffles.
+        has(
+            "noises.md",
+            "| Your step onto normal ground | footsteps | 60 | 5 cells (3 diagonally) |",
+        );
+        has(
+            "noises.md",
+            "| An alarm trap going off | a bell ring | 300 | 29 cells (20 diagonally) |",
+        );
+        has("noises.md", "| Kicking a door | banging | 100 |");
+        has("sound-travel.md", "loses 10 loudness for every cell");
+        has("sound-travel.md", "farther than 30 cells");
+        has("muffling.md", "| Closed door | 30 | 3 more cells |");
+        // Combat: the soak, the parts of the to-hit, how hurt creatures look, regeneration.
+        has("protection.md", "| 3 | 2–3 | 2.5 |");
+        has("protection.md", "| 20 | 10–20 | 15 |");
+        has(
+            "to-hit.md",
+            "main hand \u{2212}4, off hand \u{2212}8 to hit",
+        );
+        has(
+            "to-hit.md",
+            "| A weapon not made for throwing | - | - | \u{2212}4 to hit |",
+        );
+        has("health.md", "| Lightly wounded | 41–59 | 9–11 |");
+        has("health.md", "| Nearly dead | 1–10 | 1–2 |");
+        has("regeneration.md", "max(60, 360 − 12 × Toughness)");
+        // Diseases: each check's difficulty and odds by score (an average 10 as in the
+        // diseases table), and what fresh corpses do.
+        has(
+            "disease-checks.md",
+            "| Filth fever | Toughness | 13 | 31% | 38% | 46% | 54% |",
+        );
+        has(
+            "corpse-effects.md",
+            "| Cave beetle corpse | 10% Toughness +1 | \"Crunchy.\" |",
+        );
+        has(
+            "corpse-effects.md",
+            "| Deer corpse | +1000 nutrition; heals 1d6 hit points |",
+        );
+    }
+
     #[test]
     fn tables_are_deterministic_and_list_the_data() {
         let content = Content::builtin().expect("content loads");
@@ -232,7 +367,7 @@ mod tests {
             "{traps}"
         );
         assert!(
-            traps.contains("| 3d6 fire | once | Explosion, very loud |"),
+            traps.contains("| 3d6 fire | once | Explosion, very loud (150) |"),
             "{traps}"
         );
         assert!(traps.contains("| Pit `^` |") && !traps.contains("to_hit"));
@@ -243,7 +378,7 @@ mod tests {
         );
         assert!(
             scrolls.contains(
-                "| 3d6 fire | 10 cells | Explosion, very loud | item level 3 | 150 gold |"
+                "| 3d6 fire | 10 cells | Explosion, very loud (150) | item level 3 | 150 gold |"
             ),
             "{scrolls}"
         );
@@ -265,11 +400,13 @@ mod tests {
         assert!(
             text("overworld-sight.md").contains("| Night, a half moon high in the sky | 3 cells |")
         );
-        assert!(text("vision.md").contains("| Darkvision | about 16% of full light | 5 cells |"));
+        assert!(
+            text("vision.md").contains("| Darkvision | 40 of 255 (16% of full light) | 5 cells |")
+        );
         assert!(text("terrain-overworld.md").contains("| Road | `·` | 20 minutes |"));
         assert!(text("terrain-local.md").contains("| Still water | `~` | yes | no | 12 seconds |"));
-        assert!(text("terrain-local.md").contains("| 12 seconds | very loud |"));
-        assert!(text("terrain-local.md").contains("muffles sound"));
+        assert!(text("terrain-local.md").contains("| 12 seconds | very loud, 200% |"));
+        assert!(text("terrain-local.md").contains("muffles sound by 30"));
         assert!(text("terrain-local.md").contains("breaks into a broken door (sturdiness 30)"));
         assert!(
             text("doors.md").contains("| Closed door | 30 | 10% | 20% | 30% | 33% |"),
@@ -280,7 +417,7 @@ mod tests {
         assert!(text("keys.md").contains("| Iron key | `(` | locks named `pantry` |"));
         assert!(
             text("footsteps.md")
-                .contains("| Very loud | Still water, running water, shallow water |")
+                .contains("| Very loud, 200% | Still water, running water, shallow water |")
         );
         let rooms = text("special-rooms.md");
         for row in [
@@ -611,16 +748,10 @@ mod tests {
         assert!(prefixes.contains(
             "| Sharp | damage, added to every roll | weapons, ammunition | 1: +1 · 3: +1–2"
         ));
+        // Speed is exact: the share of the time it takes off.
         assert!(
-            prefixes.contains("| Fleet | you move faster | boots | 1: a little faster to faster")
+            prefixes.contains("| Fleet | you move faster | boots | 1: 5–8% less time · 4: 8–12%")
         );
-        // Speed stays in words: no row about it has a number of percent.
-        let suffixes = text("magic-suffixes.md");
-        for line in prefixes.lines().chain(suffixes.lines()) {
-            if line.contains("| you move faster |") || line.contains("| attacks faster |") {
-                assert!(!line.contains('%'), "{line}");
-            }
-        }
         assert!(text("magic-suffixes.md").contains("| of the Bear | Strength |"));
         assert!(text("magic-names.md").contains("| Weapons | Bite,"));
         assert!(
@@ -635,10 +766,10 @@ mod tests {
         );
         assert!(armour.contains("| Small shield | off hand | +1 | Shield | - | no limit |"));
         assert!(armour.contains("| Great helm | head | - | - | 2 | no limit | - |"));
-        assert!(
-            text("piercing.md")
-                .ends_with("The crossbow bolt, the stiletto, and the war hammer pierce armour.\n")
-        );
+        assert!(text("piercing.md").ends_with(
+            "The crossbow bolt (2), the stiletto (2), and the war hammer (2) pierce armour, each \
+             ignoring that much of the Protection of whatever it hits.\n"
+        ));
         let stances = text("stances.md");
         assert!(
             stances.contains("| Aggressive | +1 | +2 | \u{2212}3 | - | - | - | - | 125% |"),
@@ -672,15 +803,11 @@ mod tests {
             "| Bleeding | yes, \"bleeding\" | Big hits and confirmed criticals | A hit point every \
              40 seconds, faster the worse it is | A degree a minute | Not at all | — | Bandage |",
             "| A degree every 2 minutes | Half as fast |",
-            "| Poisoned | no | Some creatures' attacks; eating rotten food |",
+            "| Poisoned | no | The giant rat's bite (10%, 2 degrees); eating rotten food |",
             "Strength \u{2212}1, Dexterity \u{2212}1 when strong",
         ] {
             assert!(statuses.contains(row), "{row} in {statuses}");
         }
-        assert!(
-            !statuses.contains("iant rat"),
-            "which creatures poison stays hidden"
-        );
         assert!(statuses.contains("| Diseased | no | Any disease, once it shows | Nothing |"));
         // Buffs and cooldowns: a raise, what it keeps you from, and what follows it.
         for row in [
@@ -693,21 +820,17 @@ mod tests {
         }
         let diseases = text("diseases.md");
         for row in [
-            "| Filth fever | Some creatures' bites | Toughness, 54% | 1d3 days | Every day | \
+            "| Filth fever | The giant rat's bite (10%) | Toughness, 54% | 1d3 days | Every day | \
              1d3 Dexterity, 1d3 Toughness | Two checks won in a row | no | Half as fast |",
-            "| Marsh ague | Crossing marsh or swamp |",
+            "| Marsh ague | Crossing marsh or swamp (4% an hour) |",
             "| Grave rot | Eating rotten food |",
             "| Never by itself | yes |",
             "| Brain fever | — | Willpower, 54% |",
         ] {
             assert!(diseases.contains(row), "{row} in {diseases}");
         }
-        assert!(
-            !diseases.contains("iant rat"),
-            "which creatures stays hidden"
-        );
         assert!(healing.contains("| Diseased with marsh ague | a quarter as fast |"));
-        // Potentials stay hidden: the human's rolled potentials are nowhere.
+        // The races' potentials have their own table.
         assert!(!text("races.md").contains("otential"));
         let horoscope = text("horoscope.md");
         assert!(
@@ -785,8 +908,8 @@ mod tests {
         assert!(scenarios.contains("| Showcase | 08:00, 11 Darkening, Year 1444 |"));
         assert!(scenarios.contains("| World | 08:00, 11 Darkening, Year 1444 |"));
         assert!(scenarios.find("| Showcase").unwrap() < scenarios.find("| Arena").unwrap());
-        // Hunger: the states by nutrition, each race's need, food, and corpses (their effects
-        // when eaten stay unsaid: the player finds them out).
+        // Hunger: the states by nutrition, each race's need, food, and corpses (what eating them
+        // does is a table of its own).
         let states = text("hunger-states.md");
         assert!(
             states.contains("| Hungry | 720 to 1439 | 36 hours |"),
@@ -795,11 +918,11 @@ mod tests {
         assert!(states.contains("| Not hungry | 1440 to 3999 | (you start here) |"));
         assert!(text("hunger-races.md").contains("| Halfling | ×1.25 | 1800 |"));
         assert!(text("food.md").contains("| Food ration | 1500 | 25 hours | 4 | 500 g |"));
-        // How long food keeps, roughly: never a timer.
-        assert!(text("food.md").contains("| about a month | about two months |"));
-        assert!(text("food.md").contains("| about five days | about ten days |"));
+        // How long food keeps, exactly.
+        assert!(text("food.md").contains("| 30 days | 60 days |"));
+        assert!(text("food.md").contains("| 5 days | 10 days |"));
         assert!(text("corpses.md").contains("| Kobold corpse | Small | 25 kg | 400 |"));
-        assert!(text("corpses.md").contains("| a few hours | a day or two |"));
+        assert!(text("corpses.md").contains("| 8 hours | 36 hours |"));
         assert!(!text("objects.md").contains("corpse"));
         assert!(!text("corpses.md").contains("terrible"));
     }

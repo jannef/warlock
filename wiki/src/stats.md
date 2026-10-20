@@ -19,7 +19,8 @@ short names; a stat that a status effect or a disease lowers is shown lowered, i
 points and Defence (see [Combat](combat.md)), your weight: your own, plus what you carry (see [Objects and your pack](objects.md)), and how much you can carry (see
 [Burden](burden.md)). Looking takes no time; press `@` or `Esc` to close it.
 
-Creatures have stats too, but you cannot see theirs.
+Creatures have stats too, but you cannot see theirs in the game: they are on
+[Creatures in numbers](creature-numbers.md).
 
 ## What they do
 
@@ -28,16 +29,42 @@ In a fight (see [Combat](combat.md)), under a load (see [Burden](burden.md)), an
 
 - **Strength** helps you hit up close and adds to the damage of your blows, and draws a bow. It
   counts double toward how much you can carry, and the stronger you are, the sooner you kick a
-  door in.
-- **Dexterity** helps you aim a shot and dodge blows: it adds to your Defence (less under a heavy
-  load or heavy armour).
+  door in and dig through a wall.
+- **Dexterity** helps you aim a shot or a throw and dodge blows: it adds to your Defence (less
+  under a heavy load or heavy armour).
 - **Toughness** gives you hit points, and makes them come back sooner. It counts toward how much
   you can carry, and fights off most [diseases](diseases.md).
-- **Willpower** fights off a few diseases (brain fever).
+- **Intelligence** helps you find hidden things when you search ([Searching](searching.md)).
+- **Willpower** helps you notice hidden things in passing, and fights off a few diseases (brain
+  fever).
+- **Presence** moves [shop](shops.md) prices in your favour, or against you if it is low.
 
-Intelligence and Presence do nothing yet. Stats do not change how far you see or how quietly you
-walk. Strong poison lowers your Strength and Dexterity by one while it lasts, for everything they
-do (see [Status effects](status-effects.md)), and hunger saps them for a while (Weak lowers your
+### Modifiers
+
+Most rules read a stat's **modifier** rather than its score, as in D&D: the score less 10,
+halved and rounded down. The game never shows a modifier; here they are:
+
+{{#include generated/stat-modifiers.md}}
+
+What reads the modifier and what reads the score, exactly:
+
+{{#include generated/stat-uses.md}}
+
+### Potentials
+
+Every stat also has a **potential**, which the game never shows: how far it can grow for good.
+A corpse that raises a stat never raises it past its potential (magic items raise it only while
+you wear them, potential or not). Yours are set at the start of a run: the potential your race
+gives, rolled once, and never below your starting score (a score above it raises the potential
+to the score):
+
+{{#include generated/potentials.md}}
+
+### What changes them
+
+Stats do not change how far you see or how quietly you walk. Strong poison lowers your Strength
+and Dexterity by one while it lasts, for everything they do (see
+[Status effects](status-effects.md)), and hunger saps them for a while (Weak lowers your
 Strength and Dexterity; see [Hunger](hunger.md)). Diseases take points off your stats (**stat
 damage**), which come back a point a day once no disease shows (see [Diseases](diseases.md)).
 Eating the corpse of some creatures may raise one for good, as far as it can grow (see
