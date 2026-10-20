@@ -4,3 +4,6 @@ start_level = "trap_hall"
 seed = 1
 character = { race = "human", gender = "male", class = "warrior" }
 lantern = "lantern"
+# A tour of one feature: its rooms hold what to try, and its tests and captures walk it with
+# this pack, so the character's kit stays behind (spec §8 "Character creation").
+kit = false

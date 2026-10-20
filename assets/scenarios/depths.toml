@@ -4,5 +4,5 @@ start_level = "depths:1"
 seed = 1
 character = { race = "human", gender = "male", class = "warrior" }
 lantern = "lantern"
-# Starting food (spec §8 "Hunger"): a few days of it.
-carry = ["ration*3"]
+# Food and the rest come with the character's kit (data/classes.toml, data/races.toml): no
+# pack on top, so even the smallest starts unburdened.

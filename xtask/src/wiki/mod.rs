@@ -24,6 +24,7 @@ mod experience;
 mod gems;
 mod healing;
 mod hunger;
+mod kits;
 mod magic;
 mod moons;
 mod objects;
@@ -142,6 +143,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("races.md", character::races),
         ("classes.md", character::classes),
         ("horoscope.md", character::horoscope),
+        ("class-kits.md", kits::class_kits),
+        ("race-kits.md", kits::race_kits),
         ("skills.md", skills::skills),
         ("skill-benefits.md", skills::skill_benefits),
         ("skill-grants.md", skills::skill_grants),
@@ -718,6 +721,28 @@ mod tests {
             "{horoscope}"
         );
         assert_eq!(horoscope.matches(" Salamander | 1").count(), 5);
+        // Starting kits, items as named, with how they are kept and when they come.
+        let kits = text("class-kits.md");
+        assert!(
+            kits.contains("| Commoner | a club (wielded); a turnip; 3 copper coins |"),
+            "{kits}"
+        );
+        assert!(
+            kits.contains("a dagger (wielded, with Twin Blades); a stiletto (with Duelist)"),
+            "{kits}"
+        );
+        assert!(
+            kits.contains("a gold ring (on left hand, magic or rare)"),
+            "{kits}"
+        );
+        assert!(
+            text("race-kits.md")
+                .contains("| Dwarf | a pick-axe (in use); 2 strips of dried meat |")
+        );
+        assert!(
+            text("scenarios.md")
+                .contains("| Showcase | 08:00, 11 Darkening, Year 1444 | left behind |")
+        );
         // Every class is listed, in order, with its objects.
         let classes = text("item-classes.md");
         assert!(
@@ -727,13 +752,13 @@ mod tests {
         assert!(
             classes.contains(
                 "| Food | Angelica roots, apples, food rations, loaves of bread, strips of dried \
-                 meat, corpses |"
+                 meat, turnips, wafers of waybread, corpses |"
             ),
             "{classes}"
         );
         let at = |row: &str| classes.find(row).unwrap_or_else(|| panic!("{row}"));
         assert!(at("| Melee weapons |") < at("| Gems | Gems |"));
-        assert!(at("| Gems | Gems |") < at("| Miscellaneous | Rocks |"));
+        assert!(at("| Gems | Gems |") < at("| Miscellaneous | Long-stemmed pipes, lutes, rocks |"));
         assert!(
             text("creatures.md")
                 .contains("| Giant rat | `r` | Vermin | hostile | up close | no | no |")

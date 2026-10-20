@@ -4,5 +4,8 @@ start_level = "courtyard"
 seed = 1
 character = { race = "human", gender = "female", class = "druid" }
 lantern = "lantern"
+# A tour of one feature: its rooms hold what to try, and its tests and captures walk it with
+# this pack, so the character's kit stays behind (spec §8 "Character creation").
+kit = false
 # Early, while the shadows are long (the turn benchmark walks here then).
 start_time = "06:30"

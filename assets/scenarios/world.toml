@@ -5,5 +5,5 @@ seed = 1
 character = { race = "human", gender = "male", class = "ranger" }
 lantern = "lantern"
 start_time = "08:00"
-# Starting food (spec §8 "Hunger"): a few days of it.
-carry = ["ration*3", "dried_meat*2"]
+# Food and the rest come with the character's kit (data/classes.toml, data/races.toml): no
+# pack on top, so even the smallest starts unburdened.

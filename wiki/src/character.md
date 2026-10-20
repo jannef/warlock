@@ -10,7 +10,8 @@ New run screen, you choose who you are, one step at a time.
    in a handful of [skills](skills.md) (see [Classes](classes.md)).
 4. **Summary**: your race, gender, and class, your age, birthday, and birth sign, the
    [stats](stats.md) you will start with and, beside them, the [skills](skills.md) you are
-   trained in, your vision, and the scenario and seed. **Start the run** begins it; **Race**,
+   trained in, your [starting kit](starting-kit.md) item by item (or that the scenario leaves
+   it behind), your vision, and the scenario and seed. **Start the run** begins it; **Race**,
    **Gender**, and **Class** take you back to that step.
 
 Each step lists its options with a short description, and for races and classes how they change
