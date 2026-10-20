@@ -651,6 +651,7 @@ impl World {
             death: self.state.death.as_ref(),
             experience: self.state.experience,
             quests: &self.state.quests,
+            messages: &self.state.messages,
             snapshot: &self.perception,
         }
     }
