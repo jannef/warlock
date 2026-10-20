@@ -61,7 +61,7 @@ impl DescribeScreen {
         let def = content.object(stack.object);
         Self {
             glyph: def.glyph,
-            fg: def.fg,
+            fg: stack.fg(content),
             title: capitalized(&stack.title(content)),
             rarity: stack.rarity(),
             mark: equipment::mark(content, view.equipment(), item),

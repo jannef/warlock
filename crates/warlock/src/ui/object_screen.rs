@@ -197,7 +197,7 @@ impl ObjectScreen {
                 let entry = Entry {
                     item,
                     glyph: def.glyph,
-                    fg: def.fg,
+                    fg: s.fg(content),
                     name: s.describe(content),
                     mark: (!marks.is_empty()).then(|| marks.join(") (")),
                     weight: s.weight(content),
