@@ -68,7 +68,8 @@ of what a thing is worth, and always less than it asks for it.
 Each kind of shop asks a part of an object's worth above it, and pays a part of it for what it
 buys. Your **Presence** moves prices in your favour, or against you if it is low, and so does the
 **Appraise** skill if you are trained in it: you pay less and are offered more. Neither is ever
-shown as a number; you see only the prices.
+shown as a number; you see only the prices. Shops sell and buy by [item
+class](objects.md#item-classes):
 
 {{#include generated/shops.md}}
 

@@ -146,14 +146,23 @@ developer notes (CLAUDE.md, `docs/dev/`).
   default 0). §5 "Moonlight".
 - **Objects and materials** (M11): every object (`[[object]]` in `data/objects.toml`, a
   directory read in path order, one object a file; see Definitions) defines the
-  symbol it renders with and its color, material, and weight: `id`, `name` (singular, without an
-  article; `plural` defaults to the name plus `s`), `glyph`, `fg`, `material` (an id in
+  symbol it renders with and its color, item class, material, and weight: `id`, `name` (singular,
+  without an article; `plural` defaults to the name plus `s`), `glyph`, `fg`, `class`, `material` (an id in
   `data/materials.toml`, likewise a directory, whose `[[material]]` entries have an `id` and a
   `name`; properties come later), `weight` (integer grams, at least 1), `value` (what one is worth in gold coins,
   required, 0 to 1 000 000; shops price their goods from it, §7 "Shops"), and `stackable`
-  (default false). Glyphs follow ADOM loosely, and are an object's class (shops trade by class):
-  `)` weapons, `}` missile weapons, `/` missiles, `[` armor, `(` tools, `!` potions, `?`
-  scrolls, `%` food, `*` stones and gems, `$` coins, `=` rings, `"` amulets.
+  (default false). Glyphs follow ADOM loosely: `)` weapons, `}` missile weapons, `/` missiles, `[`
+  armor, `(` tools, `!` potions, `?` scrolls, `%` food, `*` stones and gems, `$` coins, `=` rings,
+  `"` amulets. **Item classes** (#189) say what kind of thing an object is, ADOM-like:
+  `data/item_classes.toml` is their ordered list (`[[class]]` with `id`, `name`, the header item
+  lists show, `kinds`, and `corpses`): melee weapons, missile weapons, missiles, shields, body
+  armour, helmets, cloaks, gloves, boots, rings, amulets, light sources, tools, food (corpses
+  included, `corpses = true`), potions, scrolls, gems, coins, miscellaneous. Every object names
+  its class (`class`, required); a class lists the magic item kinds (`kind`, §8 "Magic items")
+  of its objects, each kind in one class only, so an object of a kind is of that kind's class
+  and data cannot contradict itself. Every item list groups by class in this order (§6 "Item
+  lists"), and shops sell and buy by class (§7 "Shops"). The player knows the class of anything
+  they see (an unidentified item's is its base item's).
   Every creature in `data/creatures.toml` has a base `weight` in grams (required, at least 1).
   Things that can be worn or wielded (M16) say where they go: `slot`, a slot's id or what it
   `fits` (`slot = "body"`, `slot = "ring"` for either ring slot; an unknown one is a content

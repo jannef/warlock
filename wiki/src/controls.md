@@ -30,7 +30,7 @@ The in-game `?` screen is authoritative: it is generated from your current key b
 | Weapon skills | `W` |
 | Quest log | `q` |
 | Info page 1 to 9 (while an info screen is open) | `1` to `9` |
-| Next / previous info page (wraps) | `Tab` or `PageDown` / `Shift`+`Tab` or `PageUp` |
+| Next / previous info page (wraps) | `Tab` / `Shift`+`Tab` |
 | Rest | `R` |
 | Eat | `E` |
 | Look around | `x` |
@@ -61,10 +61,13 @@ On every menu and screen:
 | Back | `Esc`, always |
 | Erase a character (the seed), reset a key (Controls) | `Delete` or `Backspace` |
 | Mark a stack, mark everything (picking up, dropping) | `Space`, `,` |
+| Next / previous page of a list of items | `>` or `PageDown` / `<` or `PageUp` |
 
 On a list that names its rows by letter (your pack, a pile, the equipment slots) or by number
 (the topics someone offers), those letters and digits always pick rows, whatever
-else they are bound to.
+else they are bound to. A list of items is grouped by kind of item (weapons, armour, food, ...)
+and shows a page at a time: the letters name the rows of the page you see, starting again at
+`a` on every page.
 
 ## Rebinding keys
 
@@ -164,17 +167,17 @@ See [Ranged combat](ranged.md).
 ## Objects
 
 `,` or `g` picks up what lies where you stand: a single stack at once, or, where several lie, from
-a screen listing them by letter. `d` opens the same kind of screen for what you carry, to drop.
-On these screens a letter marks or unmarks a stack (even `h`, `j`, `k`, `l`), `,` marks
-everything, the arrows and Space work too, `Enter` confirms, and `Esc` cancels. `i` shows your
+a list of them. `d` opens the same kind of list for what you carry, to drop. On these lists a
+letter marks or unmarks a stack (even `h`, `j`, `k`, `l`), `,` marks everything (on every
+page), the arrows and Space work too, `>` and `<` turn the pages of a long list (what you marked
+stays marked), `Enter` confirms, and `Esc` cancels. `i` shows your
 pack, what it weighs, and how much more you can carry before your [burden](burden.md) grows; it
 takes no time. See [Objects and your pack](objects.md).
 
-`T` opens a list of what you carry that can be thrown, by its pack letter: choose one and aim
-it.
+`T` opens a list of what you carry that can be thrown: choose one by its letter and aim it.
 
-`E` opens a list of what you can eat: food lying where you stand first, then the food you carry,
-by its pack letter. A letter, or `Enter` on the marked row, eats it. See
+`E` opens a list of what you can eat: food lying where you stand first, then the food you carry.
+A letter, or `Enter` on the marked row, eats it. See
 [Food and corpses](food.md).
 
 `e` shows what you wear and wield, slot by slot. A slot's letter (on this screen every letter
