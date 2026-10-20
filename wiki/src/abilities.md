@@ -35,13 +35,17 @@ menu).
 - **Shield bash**: anyone can bash with a shield (see [Weapon skills](weapon-skills.md)), so it is
   always in the menu, and you can use it while you hold a shield. It strikes whoever stands in
   the direction you choose, in the time of a blow.
-- **Skills used as actions** (Open lock, Steal, Heal, ...): each is in the menu once you are
-  trained in it (see [Skills](skills.md)), greyed out until its use comes to the game.
+- **Pick lock**: the use of the Open lock skill, in the menu once you are trained in it (thieves
+  are). It tries the lock of a closed door in the direction you choose (see
+  [Doors](doors.md#picking-locks)).
+- **Other skills used as actions** (Steal, Heal, ...): each is in the menu once you are trained
+  in it (see [Skills](skills.md)), greyed out until its use comes to the game.
 - No race, class, or item gives an ability yet.
 
 ## Keys of their own
 
 If you use an ability often, you can give it a key in the Controls screen (the shield bash is
-"Bash with your shield", which has no key by default): the key uses the ability just as the menu
-would, asking for a direction if it needs one. Without a shield, it says so at once and takes no
-time. `a` ("Abilities") and `A` ("Use the last ability again") can be rebound like every key.
+"Bash with your shield", picking a lock "Pick a lock", neither with a key by default): the key
+uses the ability just as the menu would, asking for a direction if it needs one. Without a
+shield, it says so at once and takes no time. `a` ("Abilities") and `A` ("Use the last ability
+again") can be rebound like every key.
