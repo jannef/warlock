@@ -13,14 +13,17 @@
 //!   ([`DEFAULT_THREAT`] 22, 3.5's natural 20) threatens; a second roll against the same Defence
 //!   confirms it, and then the damage is rolled `crit` times ([`DEFAULT_CRIT`] 2).
 //! - **Damage**: the attack's dice plus its bonus, at least 1 ([`Profile`]).
+//! - **Protection** ("Pv") takes damage off every hit that lands: one draw from ⌈Pv/2⌉ to Pv
+//!   ([`soak`]), after the critical multiplied the damage, less the attack's penetration. A hit
+//!   may be soaked to nothing ([`Strike::Soaked`]).
 //! - **Hit points**: Toughness plus what race and class (a creature: its type) give
 //!   ([`max_hp`]); one comes back every `max(60 s, 360 s − 12 s × Toughness)` of game time
 //!   ([`regen_seconds`]) at the normal pace (resting and status effects change the pace,
 //!   `world/status.rs`). A **big hit** takes at least a third of them ([`big_hit`]).
 //!
 //! Every roll comes from the gameplay random stream, so fights replay exactly. Nothing here is
-//! shown to the player as a number but their own hit points and Defence: never a to-hit, a
-//! modifier, or a roll.
+//! shown to the player as a number but their own hit points, Defence, and Protection: never a
+//! to-hit, a modifier, a roll, or a penetration.
 
 use crate::content::Benefit;
 use crate::dice::Dice;
@@ -234,6 +237,9 @@ pub struct Profile {
     /// Dice rolled with every roll of the damage, after its own (a magic weapon's "adds 1d4
     /// damage"; spec §8 "Magic items").
     pub extra: Option<Dice>,
+    /// How much of the target's Protection it ignores (a weapon's or a missile's
+    /// `penetration`: a war hammer, a crossbow bolt).
+    pub penetration: i32,
 }
 
 /// What an attack is made with, as data gives it: a weapon (`data/objects.toml`) or a creature's
@@ -336,6 +342,7 @@ impl Profile {
             threat: attack.threat,
             crit: attack.crit,
             extra: None,
+            penetration: 0,
         }
     }
 
@@ -359,26 +366,31 @@ pub enum Strike {
     },
     /// It hit; `critical`: a confirmed critical.
     Hit { critical: bool },
+    /// It hit, but the target's Protection took all of its damage: it glanced off.
+    Soaked,
 }
 
 impl Strike {
+    /// Whether it landed: a hit, soaked or not.
     pub fn is_hit(self) -> bool {
-        matches!(self, Strike::Hit { .. })
+        matches!(self, Strike::Hit { .. } | Strike::Soaked)
     }
 }
 
-/// An attack resolved: what came of it and the damage it does (0 for a miss, else at least 1).
+/// An attack resolved: what came of it and the damage it does (0 for a miss or a hit soaked to
+/// nothing, else at least 1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Blow {
     pub strike: Strike,
     pub damage: i32,
 }
 
-/// Resolves an attack with `profile` against `defence`, drawing from `rng` in this order: the
-/// two dice of the attack roll; on an attributable miss one draw for why; on a threat the two
-/// dice of the confirmation roll; then one draw per damage die for each time the damage is
-/// rolled.
-pub fn strike(profile: &Profile, defence: &Defence, rng: &mut Rng) -> Blow {
+/// Resolves an attack with `profile` against a target of `defence` and `protection`, drawing
+/// from `rng` in this order: the two dice of the attack roll; on an attributable miss one draw
+/// for why; on a threat the two dice of the confirmation roll; then one draw per damage die for
+/// each time the damage is rolled; then, on a hit against Protection above the attack's
+/// penetration, one draw for the soak ([`soak`]).
+pub fn strike(profile: &Profile, defence: &Defence, protection: i32, rng: &mut Rng) -> Blow {
     let dv = defence.total();
     let natural = roll_natural(rng);
     if !hits(natural, profile.to_hit, dv) {
@@ -399,10 +411,38 @@ pub fn strike(profile: &Profile, defence: &Defence, rng: &mut Rng) -> Blow {
     let critical = threat && hits(roll_natural(rng), profile.to_hit, dv);
     let times = if critical { profile.crit.max(1) } else { 1 };
     let damage: i32 = (0..times).map(|_| profile.roll_damage(rng)).sum();
+    // The critical multiplied the damage first; the soak comes off once, so criticals punch
+    // through armour.
+    let damage = damage.max(1) - soak(protection - profile.penetration, rng);
+    if damage <= 0 {
+        return Blow {
+            strike: Strike::Soaked,
+            damage: 0,
+        };
+    }
     Blow {
         strike: Strike::Hit { critical },
-        damage: damage.max(1),
+        damage,
     }
+}
+
+/// The damage `protection` takes off a hit (spec §8 "Combat": Protection, "Pv"): one draw in
+/// [`soaks`], uniform; nothing, and no draw, when it is 0 or less (an unprotected target, or a
+/// penetration that ignores all of it). One physical soak for every hit: damage types (#151)
+/// will make it soak only slashing, piercing, and bludgeoning, better or worse by kind.
+pub fn soak(protection: i32, rng: &mut Rng) -> i32 {
+    if protection <= 0 {
+        return 0;
+    }
+    let range = soaks(protection);
+    let span = u32::try_from(range.end() - range.start() + 1).unwrap_or(1);
+    range.start() + i32::try_from(rng.below(span)).unwrap_or(0)
+}
+
+/// What `protection` may take off a hit: ⌈Pv/2⌉ to Pv (0 to 0 when it is 0 or less).
+pub fn soaks(protection: i32) -> std::ops::RangeInclusive<i32> {
+    let pv = protection.max(0);
+    (pv + 1) / 2..=pv
 }
 
 /// Whether a blow of `damage` against a target of `max` hit points is a **big hit**: at least a
@@ -489,6 +529,7 @@ mod tests {
             threat,
             crit,
             extra: None,
+            penetration: 0,
         }
     }
 
@@ -502,7 +543,7 @@ mod tests {
         let mut rng = Rng::stream(5, "combat-test");
         let mut seen = std::collections::BTreeSet::new();
         for _ in 0..1000 {
-            let blow = strike(&p, &dv, &mut rng);
+            let blow = strike(&p, &dv, 0, &mut rng);
             if blow.strike == (Strike::Hit { critical: false }) {
                 assert!((2..=10).contains(&blow.damage), "{}", blow.damage);
                 seen.insert(blow.damage);
@@ -661,8 +702,8 @@ mod tests {
         let hard = Defence::from_bonuses([(Category::Armour, 30)]);
         let (mut hit, mut missed) = (0, 0);
         for _ in 0..2000 {
-            match strike(&profile(0, "1d4", 2, 2), &hard, &mut rng).strike {
-                Strike::Hit { .. } => hit += 1,
+            match strike(&profile(0, "1d4", 2, 2), &hard, 0, &mut rng).strike {
+                Strike::Hit { .. } | Strike::Soaked => hit += 1,
                 Strike::Missed { .. } => missed += 1,
             }
         }
@@ -681,7 +722,7 @@ mod tests {
         let mut rng = Rng::stream(3, "combat-test");
         let mut seen = BTreeMap::new();
         for _ in 0..2000 {
-            let blow = strike(&fixed(3), &dv, &mut rng);
+            let blow = strike(&fixed(3), &dv, 0, &mut rng);
             *seen.entry((blow.strike, blow.damage)).or_insert(0) += 1;
         }
         let keys: Vec<_> = seen.keys().copied().collect();
@@ -700,11 +741,11 @@ mod tests {
             ..profile(0, "1d4", 2, 2)
         };
         for _ in 0..500 {
-            let blow = strike(&p, &dv, &mut rng);
+            let blow = strike(&p, &dv, 0, &mut rng);
             match blow.strike {
                 Strike::Hit { critical: true } => assert!((4..=10).contains(&blow.damage)),
                 Strike::Hit { critical: false } => assert!((2..=5).contains(&blow.damage)),
-                Strike::Missed { .. } => assert_eq!(blow.damage, 0),
+                Strike::Missed { .. } | Strike::Soaked => assert_eq!(blow.damage, 0),
             }
         }
     }
@@ -718,7 +759,7 @@ mod tests {
         };
         let mut rng = Rng::stream(4, "combat-test");
         for _ in 0..500 {
-            let blow = strike(&weak, &dv, &mut rng);
+            let blow = strike(&weak, &dv, 0, &mut rng);
             if blow.strike.is_hit() {
                 assert_eq!(blow.damage, 1);
             }
@@ -732,7 +773,7 @@ mod tests {
         let run = |seed| {
             let mut rng = Rng::stream(seed, "combat-test");
             (0..50)
-                .map(|_| strike(&p, &dv, &mut rng))
+                .map(|_| strike(&p, &dv, 0, &mut rng))
                 .collect::<Vec<_>>()
         };
         assert_eq!(run(5), run(5));
@@ -743,7 +784,7 @@ mod tests {
             // Far out of reach, everything but a natural 24 is a plain miss: two draws.
             let mut expected = rng.clone();
             let natural = roll_natural(&mut expected);
-            let blow = strike(&profile(-20, "1d4", 22, 2), &dv, &mut rng);
+            let blow = strike(&profile(-20, "1d4", 22, 2), &dv, 0, &mut rng);
             if natural < SURE_HIT {
                 assert_eq!(blow.strike, Strike::Missed { by: None });
                 assert_eq!(rng, expected, "two draws");
@@ -751,13 +792,113 @@ mod tests {
             // Against a high Defence a roll of 10 or more misses for a reason: one draw more.
             let mut expected = rng.clone();
             let natural = roll_natural(&mut expected);
-            let blow = strike(&profile(0, "1d4", 22, 2), &hard, &mut rng);
+            let blow = strike(&profile(0, "1d4", 22, 2), &hard, 0, &mut rng);
             if (BASE_DEFENCE..SURE_HIT).contains(&natural) {
                 expected.below(20);
                 let armour = Some(Category::Armour);
                 assert_eq!(blow.strike, Strike::Missed { by: armour });
                 assert_eq!(rng, expected, "three draws");
             }
+        }
+    }
+
+    #[test]
+    fn protection_soaks_half_to_all_of_it_evenly() {
+        // Exhaustive: every Pv's range, and each value in it as often as the others.
+        assert_eq!(soaks(0), 0..=0);
+        assert_eq!(soaks(-3), 0..=0);
+        assert_eq!(soaks(1), 1..=1);
+        assert_eq!(soaks(2), 1..=2);
+        assert_eq!(soaks(3), 2..=3);
+        assert_eq!(soaks(6), 3..=6);
+        assert_eq!(soaks(7), 4..=7);
+        for pv in 1..=20 {
+            let range = soaks(pv);
+            assert_eq!(*range.start(), (pv + 1) / 2, "⌈{pv}/2⌉");
+            let mut rng = Rng::stream(pv as u64, "soak-test");
+            let mut seen = BTreeMap::new();
+            let n = 4000;
+            for _ in 0..n {
+                let mut one = rng.clone();
+                let soaked = soak(pv, &mut rng);
+                one.below(1);
+                assert_eq!(rng, one, "one draw at Pv {pv}");
+                *seen.entry(soaked).or_insert(0u32) += 1;
+            }
+            let values: Vec<i32> = seen.keys().copied().collect();
+            assert_eq!(values, range.clone().collect::<Vec<_>>(), "Pv {pv}");
+            let even = n / range.count() as u32;
+            for (value, count) in seen {
+                assert!(
+                    count.abs_diff(even) < even / 4,
+                    "Pv {pv}: {value} {count} times"
+                );
+            }
+        }
+        // No Protection: no draw at all.
+        let mut rng = Rng::stream(1, "soak-test");
+        let before = rng.clone();
+        assert_eq!((soak(0, &mut rng), soak(-2, &mut rng)), (0, 0));
+        assert_eq!(rng, before);
+    }
+
+    #[test]
+    fn the_soak_comes_after_the_damage_once_and_penetration_ignores_some() {
+        // Against Defence 0 everything but a natural 2 hits; threat 2 makes every hit a threat,
+        // and a fixed 3 a roll shows what came off.
+        let dv = Defence::from_bonuses([(Category::Dexterity, -10)]);
+        let fixed = |crit, penetration| Profile {
+            bonus: 3,
+            penetration,
+            ..profile(0, "+0", 2, crit)
+        };
+        let mut rng = Rng::stream(8, "combat-test");
+        let mut seen = std::collections::BTreeSet::new();
+        for _ in 0..2000 {
+            // Pv 4 soaks 2 to 4: a normal hit of 3 does 1 or nothing; a ×3 critical's 9 does
+            // 5 to 7, the soak taken once.
+            let mut expected = rng.clone();
+            let natural = roll_natural(&mut expected);
+            let blow = strike(&fixed(3, 0), &dv, 4, &mut rng);
+            seen.insert((blow.strike, blow.damage));
+            if natural != FUMBLE {
+                // The confirmation, the damage (fixed: no draws), then one for the soak.
+                roll_natural(&mut expected);
+                let soaked = soak(4, &mut expected);
+                assert_eq!(rng, expected, "the soak is the last draw");
+                let raw = if blow.strike == (Strike::Hit { critical: true }) {
+                    9
+                } else {
+                    3
+                };
+                assert_eq!(blow.damage, (raw - soaked).max(0));
+            }
+        }
+        let outcomes: Vec<_> = seen.into_iter().collect();
+        assert_eq!(
+            outcomes,
+            [
+                (Strike::Missed { by: None }, 0),
+                (Strike::Hit { critical: false }, 1),
+                (Strike::Hit { critical: true }, 5),
+                (Strike::Hit { critical: true }, 6),
+                (Strike::Hit { critical: true }, 7),
+                (Strike::Soaked, 0),
+            ]
+        );
+        // Penetration 2 against Pv 4 leaves Pv 2 (soaks 1 or 2); penetration 4 leaves none, and
+        // no draw: the blow draws as against an unprotected target.
+        for _ in 0..500 {
+            let blow = strike(&fixed(2, 2), &dv, 4, &mut rng);
+            if blow.strike == (Strike::Hit { critical: false }) {
+                assert!(matches!(blow.damage, 1 | 2), "{}", blow.damage);
+            }
+            let mut bare = rng.clone();
+            let through = strike(&fixed(2, 4), &dv, 4, &mut rng);
+            assert_eq!(through, strike(&fixed(2, 0), &dv, 0, &mut bare));
+            assert_eq!(rng, bare);
+            let past = strike(&fixed(2, 9), &dv, 4, &mut rng);
+            assert_ne!(past.strike, Strike::Soaked);
         }
     }
 

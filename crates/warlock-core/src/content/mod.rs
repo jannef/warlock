@@ -906,13 +906,16 @@ impl Content {
             .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let ranks = ranks.iter().map(|&(id, rank)| (id, rank.max() as u8));
             let weapon_skills = WeaponSkills::from_ranks(&self.weapon_skills, ranks);
-            if spec
-                .natural
-                .as_ref()
-                .is_some_and(|n| !(1..=object::MAX_BONUS).contains(&n.defence) || n.name.is_empty())
-            {
+            if spec.natural.as_ref().is_some_and(|n| {
+                let bonus = 0..=object::MAX_BONUS;
+                !bonus.contains(&n.defence)
+                    || !bonus.contains(&n.protection)
+                    || n.defence + n.protection == 0
+                    || n.name.is_empty()
+            }) {
                 return Err(err(format!(
-                    "creature `{}`: natural: `defence` must be 1 to {} and `name` given",
+                    "creature `{}`: natural: `defence` and `protection` must be 0 to {}, not both \
+                     0, and `name` given",
                     spec.id,
                     object::MAX_BONUS
                 )));
@@ -3392,10 +3395,40 @@ mod tests {
             ("max_dex = 3", "are for things worn or wielded"),
             ("slot = \"head\"\nshield = -1", "`shield` must be 0 to 20"),
             ("slot = \"head\"\narmour = 21", "`armour` must be 0 to 20"),
+            // Protection is for armour worn, never in a hand or on a shield; penetration for
+            // weapons and ammunition.
+            ("protection = 1", "`protection` is for armour worn"),
+            (
+                "slot = \"main_hand\"\nprotection = 1",
+                "`protection` is for armour worn",
+            ),
+            (
+                "slot = \"head\"\nshield = 1\nprotection = 1",
+                "`protection` is for armour worn",
+            ),
+            (
+                "slot = \"head\"\nprotection = 21",
+                "`protection` must be 0 to 20",
+            ),
+            (
+                "slot = \"head\"\npenetration = 1",
+                "`penetration` is for weapons",
+            ),
+            (
+                "slot = \"main_hand\"\ndamage = \"1d4\"\npenetration = -1",
+                "`penetration` must be 0 to 20",
+            ),
         ] {
             let err = load(&slots, &object(fields)).unwrap_err();
             assert_eq!(err.file, "data/objects.toml", "{fields}");
             assert!(err.message.contains(expected), "{fields}: {}", err.message);
+        }
+        for fields in [
+            "slot = \"head\"\nprotection = 2",
+            "slot = \"main_hand\"\ndamage = \"1d8\"\npenetration = 2",
+            "ammo = \"bolt\"\npenetration = 2",
+        ] {
+            assert!(load(&slots, &object(fields)).is_ok(), "{fields}");
         }
         let staff = object("slot = \"main_hand\"\ntwo_handed = true");
         assert!(load(&slots, &staff).is_ok());
@@ -3502,7 +3535,12 @@ mod tests {
             (
                 "rat",
                 "natural = { defence = 0, name = \"hide\" }",
-                "natural: `defence` must be 1 to 20",
+                "natural: `defence` and `protection` must be 0 to 20, not both 0",
+            ),
+            (
+                "rat",
+                "natural = { protection = 21, name = \"hide\" }",
+                "natural: `defence` and `protection` must be 0 to 20",
             ),
             // Without data/sizes.toml there is only medium.
             (

@@ -151,7 +151,7 @@ marked `Duelist 1 (0%), in use`), `traps` (the traps the player knows,
 one a line), `quests` (the quest log, active
 first: name, stage, giver, objective, and status), `truth`
 (ground truth, hidden traps and secret doors (`S`) too, **dev-only**), `actors` (every actor on the level with its hit points and
-Defence, its weight, what it carries and of that wears and wields (magic items as they truly
+Defence and Protection, its weight, what it carries and of that wears and wields (magic items as they truly
 are, "(unidentified)" marked), what its magic items do to it (`magic strength +1`), its burden
 and carrying limit, its weapon skills with marks, its stats as score/potential, its status
 effects with severities, its diseases (progressions, checks won in a row, time to their next
@@ -163,7 +163,7 @@ died) and its stage, `fresh`, `old`, `rotten`, or `gone`, which the player is ne
 **dev-only**), `ice` (the level's temperature and the thickness of the ice on its water in cm,
 `0`-`9`, `a`-`z` for 10-35, `#` beyond, **dev-only**). The header line has the player's `hp
 17/17` (and `dead` once the run has ended), `hunger hungry` unless Not hungry, and the
-`temperature`; JSON dumps add `hp`, `defence`, `burden` (`level`, `limit`), `hunger`, `effects`
+`temperature`; JSON dumps add `hp`, `defence`, `protection`, `burden` (`level`, `limit`), `hunger`, `effects`
 (status ids), `diseases` (the known ones' ids), `death` (with `of`, the status that killed,
 `cause`, starving, choking, or a trap, and `trap`, the id of the trap that killed),
 `known_traps`, `temperature` (°C to a tenth), `weapon_skills` (by skill id:

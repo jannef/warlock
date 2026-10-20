@@ -40,7 +40,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     ammunition are **local**: they change attacks made with that item (a shot: the missile
     weapon's and the ammunition's together; a throw: the thrown weapon's); on anything else
     (gloves, rings, amulets, helmets) they are **global**: every attack. Effects on the item itself
-    (Armour, Shield, Parry, `max_dex`, weight) are local. The rest are global: the six stats,
+    (Armour, Protection, Shield, Parry, `max_dex`, weight) are local (the Hardened prefix adds
+    to an armour's Protection, which adds up with every other piece's). The rest are global: the six stats,
     maximum hit points, regeneration, Dodge (stacks), Deflection and natural armour (the best
     counts, with the creature's own), moving speed, carrying limit, stealth (quieter footsteps,
     §5 "Hearing"), **light** (the wearer carries the brightest light among its glowing items,

@@ -100,7 +100,7 @@ impl World {
     /// them (each stopping a rest). A wall that gave way is kept if the player sees its cell, and
     /// one blasted open is said ("The wall collapses!"; digging says its own).
     pub(super) fn perceive_events(&mut self, events: &mut Vec<Event>) -> Vec<(String, bool)> {
-        use fight::{End, Words, attack_message, death_message};
+        use fight::{End, Guard, Words, attack_message, death_message};
         let player = self.state.player;
         let content = self.content.clone();
         let mut reports: Vec<(String, bool)> = Vec::new();
@@ -220,11 +220,9 @@ impl World {
                 }
                 if let Some(me) = self.actor_or_fallen(attacker) {
                     let words = Words::of(me, kind, with, &content);
-                    let hide = (self.actor_or_fallen(target))
-                        .and_then(|t| content.creature(t.creature).natural.as_ref())
-                        .map(|h| h.name.as_str());
+                    let guard = Guard::of(self.actor_or_fallen(target), &content);
                     let (a, t) = (end(attacker, sees_attacker), end(target, sees_target));
-                    let said = attack_message(a, t, &words, kind, strike, hide);
+                    let said = attack_message(a, t, &words, kind, strike, guard);
                     reports.extend(said.map(|text| (text, true)));
                 }
                 sees_attacker && sees_target
@@ -347,16 +345,14 @@ impl World {
                 // A fall is said with the trap ("You fall into a pit.").
                 if seen && !matches!(def.effect, TrapEffect::Pit { .. }) {
                     let words = Words::new(&def.noun, &def.verb);
-                    let hide = (self.actor_or_fallen(target))
-                        .and_then(|t| content.creature(t.creature).natural.as_ref())
-                        .map(|h| h.name.as_str());
+                    let guard = Guard::of(self.actor_or_fallen(target), &content);
                     let said = attack_message(
                         End::Trap(&def.noun),
                         end(target, true),
                         &words,
                         AttackKind::Melee,
                         Some(strike),
-                        hide,
+                        guard,
                     );
                     reports.extend(said.map(|text| (text, true)));
                 }

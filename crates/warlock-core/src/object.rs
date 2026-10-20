@@ -125,6 +125,17 @@ impl Stack {
         crate::magic::mods::less(each, lighter).max(1) * u64::from(self.count)
     }
 
+    /// Its Protection while worn (spec §8 "Combat"): its object's, plus what a Protection affix
+    /// adds (the one reader of that effect; rules only, as the player knows it only once
+    /// identified).
+    pub(crate) fn protection(&self, content: &Content) -> i32 {
+        let more = match self.magic {
+            Some(_) => Mods::local(self, content).get(Effect::Protection),
+            None => 0,
+        };
+        content.object(self.object).protection + more
+    }
+
     /// As the player knows it: "a dagger", "12 arrows", "a Sharp long sword of the Bear", "Grim
     /// Bite, a long sword", unidentified "a long sword (magic)".
     pub fn describe(&self, content: &Content) -> String {
