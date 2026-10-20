@@ -51,9 +51,16 @@
 #   parry      Defence while wielded (the Parry category)
 #   armour     Defence while worn (the Armour category); max_dex the most a worn armour lets
 #              Dexterity add to Defence
+#   protection the damage it soaks off every hit while worn (Protection, 0 to 20; body armour,
+#              helmets, cloaks, gloves, boots: never a shield or anything in a hand). Unlike
+#              Defence, every piece worn adds up. Light armour is mostly Defence, heavy armour
+#              mostly Protection
 #   shield     Defence while held (the Shield category)
 #   bash       a shield's damage dice when bashing with it (spec §8 "Weapon skills"); the
 #              wielder's Strength modifier adds to it, as to every melee blow
+#   penetration how much of a target's Protection a blow or a shot with it ignores (0 to 20;
+#              weapons and ammunition: a shot's is its launcher's and its ammunition's together;
+#              picks, war hammers, stilettos, crossbow bolts). Never shown as a number
 # Within a category of Defence only the best bonus counts.
 #
 # Weapon skills (spec §8 "Weapon skills"):
@@ -123,11 +130,11 @@
 #
 # Missiles, for the missile weapons that shoot them. Loot holds them in stacks.
 #
-# Armor: body armour, from padding to plate (Armour, and the most Dexterity it lets add to
-# Defence).
+# Armor: body armour, from padding to plate (Armour, the most Dexterity it lets add to Defence,
+# and Protection).
 #
-# Helmets, cloaks, gloves, and boots give no Defence of their own (only the best Armour counts):
-# they are worn for what magic they hold.
+# Helmets, cloaks, gloves, and boots give no Defence of their own (only the best Armour counts);
+# the heavy ones give Protection, which adds up, and all are worn for what magic they hold.
 #
 # Tools
 # Digging tools go in the Tool slot. A pick-axe digs through a stone wall in six minutes at

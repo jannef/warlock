@@ -8,5 +8,6 @@ material = "steel"
 weight = 3000
 value = 120
 slot = "head"
+protection = 2
 kind = "helmet"
 level = 4

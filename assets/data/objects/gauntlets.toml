@@ -9,5 +9,6 @@ material = "iron"
 weight = 1000
 value = 40
 slot = "hands"
+protection = 1
 kind = "gloves"
 level = 3

@@ -8,5 +8,6 @@ material = "leather"
 weight = 2500
 value = 60
 slot = "cloak"
+protection = 1
 kind = "cloak"
 level = 4
