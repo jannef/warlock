@@ -14,5 +14,6 @@ threat = 20
 range = 15
 reloads = true
 category = "crossbows"
+damage_type = "piercing"
 kind = "launcher"
 level = 5

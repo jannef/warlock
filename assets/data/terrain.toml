@@ -30,8 +30,9 @@
 # level legend (the arrows in legend.toml).
 # Ice (gameplay, spec §5 "Ice"): water that freezes has a `freeze` table: `below` (ice grows while
 # the air is colder than this, °C, 0 down to -30; it melts above 0), `rate` (how fast, in percent
-# of still water's pace, 1 to 100, default 100), and `plunge` (dice: the hit points a fall
-# through the ice into it takes; never the last one). Ice is terrain with `ice`, the thinnest ice
+# of still water's pace, 1 to 100, default 100), `plunge` (dice: the hit points a fall
+# through the ice into it takes; never the last one), and `damage_type` (the kind of damage the
+# plunge does, damage_types.toml: cold, which whoever falls in resists like any). Ice is terrain with `ice`, the thinnest ice
 # that looks like it in mm (1 to 1000; the next one's takes over from its thickness): it lies on
 # water, which it thaws back into, so levels lay it with `ice = MM` on a water cell, never by
 # itself. Both are walkable and transparent, without a light, and neither doors nor stairs.
@@ -225,7 +226,7 @@ step_noise = 200
 bounce = "#a8c8ff"
 anim = { kind = "wave", speed = 0.16, amount = 0.05, glint = 0.5 }
 # It freezes below 0 °C, and a fall through the ice into it hurts a little.
-freeze = { below = 0, plunge = "1d3" }
+freeze = { below = 0, plunge = "1d3", damage_type = "cold" }
 stains = false
 
 # A splash when something wades in.
@@ -257,7 +258,7 @@ step_noise = 200
 bounce = "#a8c8ff"
 anim = { kind = "flow", speed = 0.5, glint = 0.4 }
 # The current keeps it open until a hard frost, and then it freezes slowly.
-freeze = { below = -6, rate = 40, plunge = "1d3" }
+freeze = { below = -6, rate = 40, plunge = "1d3", damage_type = "cold" }
 stains = false
 
 [[terrain.particles]]
@@ -305,7 +306,7 @@ bounce = "#a8c8ff"
 anim = { kind = "wave", speed = 0.12, amount = 0.03, glint = 0.3 }
 # It freezes like a pool (a flooded room in a cold place), and a fall through into it, ankle-deep,
 # barely hurts.
-freeze = { below = 0, plunge = 1 }
+freeze = { below = 0, plunge = 1, damage_type = "cold" }
 
 [[terrain.particles]]
 on = "step"

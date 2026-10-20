@@ -354,6 +354,7 @@ fn big_hits_and_criticals_make_their_target_bleed() {
     let blow = |critical, damage| Blow {
         strike: Strike::Hit { critical },
         damage,
+        kind: None,
     };
     let mut w = world_on("#####\n#@r.#\n#####\n", "hp = 1000");
     let rat = ActorId(1);
@@ -405,6 +406,7 @@ fn bites_poison_by_their_chance_drawing_only_below_a_sure_thing() {
     let blow = Blow {
         strike: Strike::Hit { critical: false },
         damage: 1,
+        kind: None,
     };
     // The biter always poisons: no draw.
     let mut w = world_on("#####\n#@b.#\n#####\n", "hp = 1000");

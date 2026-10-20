@@ -103,13 +103,15 @@ words: "Prefix Sharp: +2 damage", "Suffix of Celerity: attacks faster". `Esc` go
 
 ## Prefixes
 
-Prefixes are mostly offensive, or flat Defence and life.
+Prefixes are mostly offensive, or flat Defence and life. *Flaming* and *Freezing* add a die of
+fire or cold to every hit, which no armour soaks (see [Damage types](damage-types.md)).
 
 {{#include generated/magic-prefixes.md}}
 
 ## Suffixes
 
-Suffixes are mostly stats, speed, criticals, utility, and skills.
+Suffixes are mostly stats, speed, criticals, utility, and skills; *of the Salamander* and *of
+Warmth* resist fire and cold, in percent (see [Damage types](damage-types.md)).
 
 {{#include generated/magic-suffixes.md}}
 

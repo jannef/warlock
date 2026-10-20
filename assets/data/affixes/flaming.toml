@@ -1,0 +1,14 @@
+# Burning weapons: fire added to every hit, which armour never soaks.
+[[prefix]]
+id = "flaming"
+name = "Flaming"
+effect = "elemental"
+damage_type = "fire"
+bases = ["weapon", "launcher", "ammo"]
+weight = 60
+tiers = [
+  { level = 2, min = 2, max = 3 },
+  { level = 4, min = 3, max = 4 },
+  { level = 6, min = 4, max = 6 },
+  { level = 8, min = 6, max = 8 },
+]

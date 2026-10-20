@@ -658,6 +658,7 @@ impl World {
             death: self.state.death.as_ref(),
             experience: self.state.experience,
             quests: &self.state.quests,
+            messages: &self.state.messages,
             snapshot: &self.perception,
         }
     }
@@ -894,6 +895,8 @@ mod burden_tests;
 mod character_tests;
 #[cfg(test)]
 mod cost_tests;
+#[cfg(test)]
+mod damage_tests;
 #[cfg(test)]
 mod dig_tests;
 #[cfg(test)]

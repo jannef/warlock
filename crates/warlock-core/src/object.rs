@@ -27,7 +27,7 @@
 //! joins a stack of the same food whatever its age, and the stack keeps the oldest.
 
 use crate::color::Rgb;
-use crate::content::{Content, Cutting, MaterialId, ObjectId, Part, Rarity, part};
+use crate::content::{Content, Cutting, DamageTypeId, MaterialId, ObjectId, Part, Rarity, part};
 use crate::item_parts::{self, ItemPart};
 use crate::magic::{Effect, Magic, Mods, name};
 use crate::time::GameTime;
@@ -159,6 +159,18 @@ impl Stack {
             None => 0,
         };
         content.object(self.object).protection + more
+    }
+
+    /// How its Protection stands against each physical kind, more or less than its total
+    /// (spec §8 "Damage types": its object's `protects`).
+    pub(crate) fn protects<'c>(&self, content: &'c Content) -> &'c [(DamageTypeId, i32)] {
+        &content.object(self.object).protects
+    }
+
+    /// What it resists while worn or held, in percent per damage type: its object's `resist`
+    /// (what its affixes add is global: [`Mods::worn`]).
+    pub(crate) fn resists<'c>(&self, content: &'c Content) -> &'c [(DamageTypeId, i32)] {
+        &content.object(self.object).resist
     }
 
     /// What it is made of where it differs from its base item, as saved: its own parts

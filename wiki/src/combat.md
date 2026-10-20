@@ -106,8 +106,9 @@ A hit does the weapon's damage dice, at least 1:
 
 {{#include generated/weapons.md}}
 
-Messages never give numbers: "The kobold hits you.", "The giant rat bites the kobold.", "You hit
-the giant rat hard!"
+Messages never give numbers, and say what kind of blow it was: "The kobold stabs you.", "You
+slash the giant rat hard!", "The giant rat bites the kobold.", "You cleave the kobold." (see
+[Damage types](damage-types.md)).
 
 A **big hit**, one that takes at least a third of the target's hit points at once, makes it
 bleed, and some creatures' attacks can poison: see [Status effects](status-effects.md). Some bites
@@ -135,7 +136,10 @@ does. Each hit loses between half your Protection (rounded up) and all of it, at
 {{#include generated/piercing.md}}
 
 Protection soaks the blows of weapons, claws, and bites, and a trap's arrows and spears; the
-blast of a fireball, a lightning bolt, or a fall into a pit goes straight through. You never see
+blast of a fireball, a lightning bolt, or a fall into a pit goes straight through. It soaks
+**physical** damage only, and a piece may stand better or worse against one kind of it: chain
+mail turns a blade well and a point badly; fire, cold, and the rest go through any armour, and
+**resistances** take their share after it. See [Damage types](damage-types.md). You never see
 a creature's Protection, only how its armour turns your blows.
 
 ## Stances

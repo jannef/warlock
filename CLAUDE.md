@@ -62,7 +62,7 @@ Game flags (`cargo run -p warlock -- --help`):
   `new-run` on the main menu (e.g. `--scale 1 --screen new-run --capture target/menu.png`), and
   character creation's `race`, `gender`, `class`, and `summary` over New run and the steps
   before them (each on its preselection: the showcase's character);
-  `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `quests`, `pick-up` (the pile on the player's cell), `drop`, `eat`, `read`, `identify` (for the first stack's scroll), and `abilities` (the abilities menu) over a run
+  `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `quests`, `messages` (the message history), `pick-up` (the pile on the player's cell), `drop`, `eat`, `read`, `identify` (for the first stack's scroll), and `abilities` (the abilities menu) over a run
   (e.g. after a `--replay` that walks onto a pile), `dialogue` over a run whose last action was
   talk with topics (a `--replay` ending in `chat:SE` or `ask:SE:rooms` next to the hub's hermit),
   `equip-item` (the choice for the first slot, Head) over the equipment screen; `settings`,
@@ -148,7 +148,8 @@ and its thresholds),
 `equipment` (the player's slots), `stats`
 (the player's race, gender, and class, then their own scores as the rules read them, then
 `Effects Bleeding, Diseased` when they suffer any, then `Diseases filth fever`, the diseases they
-know they have), `weapon_skills` (the player's
+know they have, then what they resist in words, `Resistant to cold`, `Vulnerable to fire`,
+`Immune to poison`), `weapon_skills` (the player's
 ranks and progress toward the next, `Long blades 2 (40%)`, fighting styles too, those in use
 marked `Duelist 1 (0%), in use`), `abilities` (the player's abilities in the abilities menu's
 order, each with its source and what it asks for or why it cannot be used now: `Shield bash
@@ -160,7 +161,7 @@ Defence and Protection, its weight, what it carries and of that wears and wields
 are, "(unidentified)" marked), what its magic items do to it (`magic strength +1`), its burden
 and carrying limit, its weapon skills with marks, its stats as score/potential, its status
 effects with severities, its diseases (progressions, checks won in a row, time to their next
-turn) and stat damage, the player's nutrition, and its npc id and talk counts, if any; then
+turn) and stat damage, the player's nutrition, its npc id and talk counts, if any, and what it resists in percent (`resists fire 25`); then
 all food on the level and in the packs of those on it with when it was made (a corpse: when it
 died) and its stage, `fresh`, `old`, `rotten`, or `gone`, which the player is never shown,
 **dev-only**), `rooms`
@@ -168,7 +169,8 @@ died) and its stage, `fresh`, `old`, `rotten`, or `gone`, which the player is ne
 **dev-only**), `ice` (the level's temperature and the thickness of the ice on its water in cm,
 `0`-`9`, `a`-`z` for 10-35, `#` beyond, **dev-only**). The header line has the player's `hp
 17/17` (and `dead` once the run has ended), `hunger hungry` unless Not hungry, and the
-`temperature`; JSON dumps add `hp`, `defence`, `protection`, `burden` (`level`, `limit`), `hunger`, `effects`
+`temperature`; JSON dumps add `hp`, `defence`, `protection`, `resistances` (by damage type id, the
+word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `hunger`, `effects`
 (status ids), `diseases` (the known ones' ids), `death` (with `of`, the status that killed,
 `cause`, starving, choking, or a trap, and `trap`, the id of the trap that killed),
 `known_traps`, `temperature` (°C to a tenth), `weapon_skills` (by skill id:
@@ -382,7 +384,7 @@ unique across files) list one entry per showcase room plus the vast level (its s
 its river): a scenario and text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file,
 and optional `window`, `scale`, `freeze_time`, `screen` (a `--screen` value: over the run, e.g.
 `pause`, `help`, `settings`, `controls`, `inventory`, `equipment`, `equip-item`, `describe`,
-`character`, `skills`, `weapon-skills`, `quests`, `pick-up`, `drop`, `eat`, `abilities`,
+`character`, `skills`, `weapon-skills`, `quests`, `messages`, `pick-up`, `drop`, `eat`, `abilities`,
 `dialogue`; or over
 the main menu, the replay then unused: `main`, `race`, `summary`), `args` (more game flags, e.g.
 `["--fire"]`, `["--keys", "h"]`), `tolerance` (per-channel, default 2) and `max_diff_ratio`

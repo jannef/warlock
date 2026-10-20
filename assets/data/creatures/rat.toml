@@ -21,6 +21,7 @@ on_eat = { message = "Gamey and stringy, but it stays down." }
 # Its bite is filthy: now and then it poisons, or gives filth fever (unless resisted).
 [creature.attack]
 damage = "1d4"
+damage_type = "piercing"
 name = "bite"
 verb = "bites"
 on_hit = [

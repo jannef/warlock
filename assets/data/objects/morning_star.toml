@@ -10,5 +10,6 @@ value = 50
 slot = "main_hand"
 damage = "2d4"
 category = "maces"
+damage_type = ["bludgeoning", "piercing"]
 kind = "weapon"
 level = 3

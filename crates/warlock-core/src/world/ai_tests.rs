@@ -691,6 +691,7 @@ fn attacks_the_player_does_not_perceive_leave_no_trace() {
             to,
             strike: Some(_),
             with: None,
+            ..
         } if (attacker, target, from, to) == (kobold, rat, Pos::new(3, 3), Pos::new(4, 3))
     )));
     let mut perceived = raw.clone();
@@ -1080,7 +1081,7 @@ fn the_arena_fights_the_same_way_every_time() {
     let shown = messages(&a);
     for what in [
         "bites the kobold",
-        "hits the giant rat",
+        "stabs the giant rat",
         "kobold archer",
         "casts a spell at the",
         "dies.",
