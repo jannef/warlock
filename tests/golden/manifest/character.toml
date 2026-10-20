@@ -2,8 +2,8 @@
 
 # The character screen (#107, #108, #111): the player's name, race, gender, and class, their
 # age, birthday, and birth sign, their score in each stat (never a modifier or a potential), level,
-# hit points, Defence, and stance, and what they weigh, carrying the start room's pile, with the
-# burden's thresholds. The character screens are 680 high: at 540 the panel cuts its last rows.
+# hit points, Defence, Protection, and stance, and what they weigh, carrying the start room's
+# pile, with the burden's thresholds. The character screens are 680 high: at 540 the panel cuts its last rows.
 [[golden]]
 name = "character-screen"
 scenario = "showcase"

@@ -4,8 +4,9 @@
 //! item's affixes cannot leak.
 //!
 //! Numbers that are item properties are shown, as in Path of Exile (dice, criticals, Defence
-//! bonuses, an affix's rolled value); speed is said in words ("attacks faster"), never as a
-//! number, and nothing about who wears it (no to-hit total, no modifier).
+//! bonuses, Protection, an affix's rolled value); speed is said in words ("attacks faster") and
+//! penetration only as a fact ("Pierces armour"), never as a number, and nothing about who wears
+//! it (no to-hit total, no modifier).
 
 use super::{AffixKind, Effect, Rolled};
 use crate::combat::SURE_HIT;
@@ -108,6 +109,7 @@ pub fn phrase(rolled: &Rolled<'_>, kind: ItemKind, content: &Content) -> String 
         Effect::Durability => format!("breaks {v}% less often"),
         Effect::Parry => format!("+{v} to Parry"),
         Effect::Armour => format!("+{v} to Armour"),
+        Effect::Protection => format!("+{v} to Protection"),
         Effect::Shield => format!("+{v} to Shield"),
         Effect::MaxDex => format!("lets Dexterity add {v} more to Defence"),
         Effect::Weight => format!("{v}% lighter"),
@@ -201,11 +203,18 @@ pub fn base_stats(def: &ObjectDef, content: &Content) -> Vec<String> {
     if def.reloads {
         out.push("Reloaded after every shot".into());
     }
+    // How much armour it ignores stays hidden, as the soak does: only that it does.
+    if def.penetration > 0 {
+        out.push("Pierces armour".into());
+    }
     if def.parry > 0 {
         out.push(format!("Parry +{}", def.parry));
     }
     if def.armour > 0 {
         out.push(format!("Armour +{}", def.armour));
+    }
+    if def.protection > 0 {
+        out.push(format!("Protection {}", def.protection));
     }
     if def.shield > 0 {
         out.push(format!("Shield +{}", def.shield));

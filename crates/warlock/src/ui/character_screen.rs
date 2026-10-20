@@ -2,11 +2,10 @@
 //! their race, gender, and class, their age, birthday, and birth sign (spec §8 "Character
 //! creation"; when the run has a character), their score in each stat (spec §8 "Stats") with its
 //! abbreviation and full name (as the rules read it: a score a status effect or stat damage
-//! lowers is shown lowered, in a warning color), their hit points and Defence (spec §8 "Combat";
-//! the total only), the status effects they suffer, by name (spec §8 "Status effects"), the
-//! diseases they know they have, by name (spec §8 "Diseases": `Diseased  Filth fever`), what
-//! they weigh and
-//! carry, their burden, and the weights at which it changes (spec §8 "Burden": they follow from
+//! lowers is shown lowered, in a warning color), their hit points, Defence, and Protection
+//! (spec §8 "Combat"; the totals only), the status effects they suffer, by name (spec §8 "Status
+//! effects"), the diseases they know they have, by name (spec §8 "Diseases": `Diseased  Filth
+//! fever`), what they weigh and carry, their burden, and the weights at which it changes (spec §8 "Burden": they follow from
 //! scores the player knows). Never a modifier, a potential, a to-hit, or how severe an effect
 //! is: perception has none of them.
 //!
@@ -30,6 +29,10 @@ use warlock_core::time::GameTime;
 
 /// Width of the stat name column: the longest name and a space.
 const NAME_W: i32 = 14;
+
+/// Where a value's neighbour on its row begins (Protection beside Defence), from the value's
+/// column: room for the value and a gap.
+const BESIDE: i32 = 8;
 
 /// Width of the panel: the birth and the burden's thresholds fit on one line each.
 const WIDTH: i32 = 72;
@@ -62,6 +65,8 @@ pub struct CharacterScreen {
     hp: (i32, i32),
     /// Defence: the total only.
     defence: i32,
+    /// Protection: the total only.
+    protection: i32,
     /// The combat stance's name.
     stance: String,
 }
@@ -88,6 +93,7 @@ impl CharacterScreen {
                 },
                 hp: (0, 0),
                 defence: warlock_core::combat::BASE_DEFENCE,
+                protection: 0,
                 stance: "Neutral".into(),
             };
         };
@@ -127,6 +133,7 @@ impl CharacterScreen {
             progress: view.own_experience(),
             hp: view.own_hp(),
             defence: view.own_defence(),
+            protection: view.own_protection(),
             stance: content.stance_def(view.own_stance()).name.clone(),
         }
     }
@@ -145,9 +152,9 @@ impl CharacterScreen {
 
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         // Rows: margin, the name, a gap, race, gender, class, the birth, and a gap (with a
-        // character), the stats, a gap, level, experience, hit points, Defence, and stance (and
-        // the status effects and known diseases, if any), a gap, the weight, the burden's
-        // thresholds, a gap, the footer, frame.
+        // character), the stats, a gap, level, experience, hit points, Defence and Protection,
+        // and stance (and the status effects and known diseases, if any), a gap, the weight, the
+        // burden's thresholds, a gap, the footer, frame.
         let width = WIDTH.min(console.cols() as i32) - 4;
         let birth = fit_parts(&self.birth, width);
         let identity_rows = match self.identity.len() {
@@ -199,19 +206,32 @@ impl CharacterScreen {
         }
         y += 1;
         // `Lv  Level  3`, `XP  Experience  85 / 120` (the total alone at the highest level),
-        // `HP  Hit points  18/24`, and `Dv  Defence  15`, in the stats' columns.
+        // `HP  Hit points  18/24`, and `Dv  Defence  15` in the stats' columns, with
+        // `Pv  Protection  3` beside the Defence.
         let (hp, max) = self.hp;
-        for (abbrev, name, value) in [
-            ("Lv", "Level", self.progress.level.to_string()),
-            ("XP", "Experience", experience_text(&self.progress)),
-            ("HP", "Hit points", format!("{hp}/{max}")),
-            ("Dv", "Defence", format!("{:>2}", self.defence)),
-            ("", "Stance", self.stance.clone()),
+        let protection = ("Pv", "Protection", format!("{:>2}", self.protection));
+        for (abbrev, name, value, beside) in [
+            ("Lv", "Level", self.progress.level.to_string(), None),
+            ("XP", "Experience", experience_text(&self.progress), None),
+            ("HP", "Hit points", format!("{hp}/{max}"), None),
+            (
+                "Dv",
+                "Defence",
+                format!("{:>2}", self.defence),
+                Some(protection),
+            ),
+            ("", "Stance", self.stance.clone(), None),
         ] {
             if fits(y) {
                 console.print(x, y, abbrev, TEXT_DIM);
                 console.print(x + 4, y, name, TEXT);
                 console.print(x + 4 + NAME_W, y, &value, TEXT);
+                if let Some((abbrev, name, value)) = beside {
+                    let x = x + 4 + NAME_W + BESIDE;
+                    console.print(x, y, abbrev, TEXT_DIM);
+                    console.print(x + 4, y, name, TEXT);
+                    console.print(x + 4 + name.len() as i32 + 1, y, &value, TEXT);
+                }
             }
             y += 1;
         }
@@ -405,9 +425,10 @@ mod tests {
             "In  Intelligence  12",
             "Wi  Willpower     11",
             "Pr  Presence       9",
-            // Toughness 10 and a human's 4 and a thief's 3; Defence 10 and Dexterity's share.
+            // Toughness 10 and a human's 4 and a thief's 3; Defence 10 and Dexterity's share,
+            // and no Protection beside it.
             "HP  Hit points    17/17",
-            "Dv  Defence       11",
+            "Dv  Defence       11      Pv  Protection  0",
             "Lv  Level         1",
             "XP  Experience    0 / 20",
         ] {

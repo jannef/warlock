@@ -9,5 +9,6 @@ materials = ["iron"]
 weight = 2000
 value = 50
 slot = "feet"
+protection = 1
 kind = "boots"
 level = 3

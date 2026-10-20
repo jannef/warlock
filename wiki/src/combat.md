@@ -55,11 +55,15 @@ protects you, in kinds:
 Within each kind only the best counts: two pieces of armour do not add up. Dodge is the one kind
 that does.
 
+Armour also has **Protection**, which takes damage off the blows that get through (see
+[Protection](#protection) below): light armour is mostly Defence, heavy armour mostly
+Protection.
+
 {{#include generated/armour.md}}
 
 Helms, cloaks, gloves, boots, rings, and amulets do not add to Defence by themselves, only by
 their magic (see [Magic items](magic-items.md)), and magic armour or a magic shield may add more
-than its base.
+than its base. The heavier helms, gloves, boots, and the fur cloak give Protection.
 
 ### Why an attack missed
 
@@ -108,6 +112,31 @@ the giant rat hard!"
 A **big hit**, one that takes at least a third of the target's hit points at once, makes it
 bleed, and some creatures' attacks can poison: see [Status effects](status-effects.md). Some bites
 carry a disease: see [Diseases](diseases.md).
+
+## Protection
+
+Defence decides whether a blow lands; **Protection** (shown as `Pv` on the
+[character screen](character.md), `@`, beside your Defence) takes damage off every blow that
+does. Each hit loses between half your Protection (rounded up) and all of it, at random.
+
+- **Every piece adds up**: body armour, helm, gloves, boots, and cloak each add their
+  Protection (the armour table above), and so does the magic of armour that is
+  *Hardened* (see [Magic items](magic-items.md)). A shield gives Defence only. Creatures have
+  their own: a cave beetle's shell turns aside much of what hits it.
+- **Criticals punch through**: a confirmed critical rolls its damage twice (or more) first, and
+  the Protection comes off only once.
+- **A hit can do nothing at all**: if Protection takes all of its damage, the blow glances off,
+  and nothing else comes of it: no blood, no bleeding, no poison. "Your sword glances off the
+  cave beetle's shell.", "The kobold's spear glances off your chain mail shirt." It still landed,
+  so it trains your weapon skill as a hit does.
+- **Some weapons pierce armour**, ignoring part of the Protection of whatever they hit. Their
+  description says so ("Pierces armour"); how much stays hidden.
+
+{{#include generated/piercing.md}}
+
+Protection soaks the blows of weapons, claws, and bites, and a trap's arrows and spears; the
+blast of a fireball, a lightning bolt, or a fall into a pit goes straight through. You never see
+a creature's Protection, only how its armour turns your blows.
 
 ## Stances
 

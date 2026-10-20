@@ -169,7 +169,8 @@ impl World {
     }
 
     /// Trap `trap` attacks `target` with `profile` from `source` (a cell, and whether a missile
-    /// flew from it), rolled against its Defence: the event and the blow ([`World::trap_deals`]).
+    /// flew from it), rolled against its Defence and soaked by its Protection like any blow: the
+    /// event and the blow ([`World::trap_deals`]).
     fn trap_strikes(
         &mut self,
         trap: TrapId,
@@ -180,7 +181,8 @@ impl World {
     ) -> Option<Blow> {
         let to = self.state.actors.get(&target)?.pos;
         let defence = self.defence_of(target);
-        let blow = combat::strike(profile, &defence, &mut self.state.rng);
+        let protection = self.protection_of(target);
+        let blow = combat::strike(profile, &defence, protection, &mut self.state.rng);
         events.push(Event::TrapStruck {
             trap,
             target,

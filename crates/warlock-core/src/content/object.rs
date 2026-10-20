@@ -22,8 +22,10 @@
 //! (a launcher's carry its draw weight, `1d8+2`), its critical (`threat`, the lowest natural roll
 //! that threatens, default 22; `crit`, the damage multiplier, default 2), an optional `to_hit`,
 //! a `parry` bonus to Defence while wielded, and for bows the `strength` they need; armour its
-//! `armour` bonus and the most Dexterity bonus it allows (`max_dex`); a shield its `shield` bonus,
-//! and the `bash` dice of a blow with it (spec §8 "Weapon skills": the shield bash).
+//! `armour` bonus and the most Dexterity bonus it allows (`max_dex`), and its `protection` (the
+//! damage it soaks off every hit, which adds up across what is worn); a shield its `shield` bonus,
+//! and the `bash` dice of a blow with it (spec §8 "Weapon skills": the shield bash). A weapon or
+//! a missile may have `penetration`: that much of a target's Protection it ignores.
 //!
 //! Every weapon names its weapon skill (`category`, an id in `data/weapon_skills.toml`; spec §8
 //! "Weapon skills"): a skill of role `melee` for what is wielded in a hand, `launcher` for a
@@ -187,11 +189,18 @@ pub(super) struct ObjectSpec {
     pub armour: i32,
     /// The most Dexterity bonus to Defence it allows while worn.
     pub max_dex: Option<i32>,
+    /// Damage it soaks off every hit while worn (Protection; armour, never a shield).
+    #[serde(default)]
+    pub protection: i32,
     /// Defence while held (the Shield category).
     #[serde(default)]
     pub shield: i32,
     /// A shield's damage dice when bashing with it.
     pub bash: Option<Dice>,
+    /// How much of a target's Protection a blow or a shot with it ignores (a weapon, a
+    /// missile weapon, ammunition).
+    #[serde(default)]
+    pub penetration: i32,
     /// The weapon skill a weapon trains and draws on (`data/weapon_skills.toml`).
     pub category: Option<String>,
     /// How far a missile weapon shoots, or a throwing weapon (anything else with a range) is
@@ -286,10 +295,16 @@ pub struct ObjectDef {
     pub armour: i32,
     /// While worn, the most the Dexterity bonus may add to Defence (`None`: no limit).
     pub max_dex: Option<i32>,
+    /// While worn, the damage it soaks off every hit: its Protection, which adds up with the
+    /// rest of what is worn (spec §8 "Combat").
+    pub protection: i32,
     /// Defence while held: its Shield bonus.
     pub shield: i32,
     /// What a bash with it does, if it is a shield one can bash with.
     pub bash: Option<Attack>,
+    /// How much of a target's Protection an attack with it ignores (a weapon, a missile weapon,
+    /// ammunition: a shot's is its launcher's and its ammunition's together). Rules only.
+    pub penetration: i32,
     /// Its weapon skill: a weapon's `category` (`None` for anything else, and without
     /// `data/weapon_skills.toml`).
     pub skill: Option<WeaponSkillId>,
@@ -373,8 +388,10 @@ impl ObjectDef {
             parry: 0,
             armour: 0,
             max_dex: None,
+            protection: 0,
             shield: 0,
             bash: None,
+            penetration: 0,
             skill: None,
             range: None,
             reloads: false,
@@ -546,6 +563,7 @@ impl ObjectSpec {
         }
         let attack = self.attack().map_err(err)?;
         self.check_defence().map_err(err)?;
+        self.check_protection(slots).map_err(err)?;
         self.check_ranged().map_err(err)?;
         let skill = self.skill(slots, skills).map_err(err)?;
         let bash = match (self.bash, self.shield) {
@@ -616,8 +634,10 @@ impl ObjectSpec {
             parry: self.parry,
             armour: self.armour,
             max_dex: self.max_dex,
+            protection: self.protection,
             shield: self.shield,
             bash,
+            penetration: self.penetration,
             skill,
             range: self.range,
             reloads: self.reloads,
@@ -875,6 +895,31 @@ impl ObjectSpec {
         }
         Ok(())
     }
+
+    /// Protection is for armour worn, never in a hand (a shield's is Defence only), and
+    /// penetration for weapons and ammunition; each 0 to [`MAX_BONUS`].
+    fn check_protection(&self, slots: &[SlotDef]) -> Result<(), String> {
+        for (field, value) in [
+            ("protection", self.protection),
+            ("penetration", self.penetration),
+        ] {
+            if !(0..=MAX_BONUS).contains(&value) {
+                return Err(format!("`{field}` must be 0 to {MAX_BONUS}"));
+            }
+        }
+        let in_hand = (slots.iter()).any(|s| s.hand && Some(&s.fits) == self.slot.as_ref());
+        if self.protection > 0 && (self.slot.is_none() || in_hand || self.shield > 0) {
+            return Err(
+                "`protection` is for armour worn (a `slot` that is no hand; a shield's is \
+                 `shield`)"
+                    .into(),
+            );
+        }
+        if self.penetration > 0 && self.damage.is_none() && self.ammo.is_none() {
+            return Err("`penetration` is for weapons (`damage`) and ammunition (`ammo`)".into());
+        }
+        Ok(())
+    }
 }
 
 /// Parses objects as level files place them: ids, each optionally with a count (`"arrow*12"`),
@@ -943,8 +988,10 @@ mod tests {
             parry: 0,
             armour: 0,
             max_dex: None,
+            protection: 0,
             shield: 0,
             bash: None,
+            penetration: 0,
             skill: None,
             range: None,
             reloads: false,

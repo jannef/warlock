@@ -188,8 +188,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   wielded), what it is (`Magic long sword · steel blade, leather grip · 1.8 kg`: every part, the
   main one first, §7 "Objects and materials"), its base stats in words
   (`magic::describe`: "Long blade, for the main hand", "Damage 1d8; criticals on 20–24, ×2
-  damage", "Shoots up to 15 cells", "Needs Strength 14 to draw", "Quick to strike", "Armour +4",
-  "Dexterity adds at most +4 to Defence while worn", "Breaks on a hit 30% of the time"), and for
+  damage", "Shoots up to 15 cells", "Needs Strength 14 to draw", "Quick to strike", "Pierces
+  armour" (never how much), "Armour +2", "Protection 3", "Dexterity adds at most +4 to Defence
+  while worn", "Breaks on a hit 30% of the time"), and for
   a magic or rare item either "Unidentified: what its magic does is unknown, though it works all
   the same." or its item level and each affix, "Prefix  Sharp: +2 damage", "Suffix  of Celerity:
   attacks faster" (affix magnitudes are item properties and shown; speed only in words; global
@@ -230,9 +231,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   status effect or stat damage lowers shows lowered, in a muted red; §8 "Status effects",
   "Diseases"), their level and experience (`Lv  Level  3`, `XP  Experience
   85 / 120`, the total alone at the highest level; §8 "Experience"), their hit points (`HP  Hit
-  points  18/24`) and Defence
+  points  18/24`), Defence
   (`Dv  Defence  15`; the total only, as its Dexterity part would give away a modifier; §8
-  "Combat"), their combat stance by name (`Stance  Neutral`; §8 "Stances"), the status effects
+  "Combat") and Protection beside it on the same row (`Pv  Protection  3`; the total only),
+  their combat stance by name (`Stance  Neutral`; §8 "Stances"), the status effects
   they suffer, by name, when there are any (`Status  Bleeding, Poisoned`; never how severe or for
   how long), the diseases they know they have, by name, on a row of their own below (`Diseased
   Filth fever, red ache`; one that has not progressed yet is only "Diseased"; never a timer or a
@@ -389,7 +391,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   player saw both ends ("The kobold misses you." for a plain miss; "You dodge the kobold's
   spear.", "The kobold's spear glances off your armour.", "You block the kobold's spear with your
   shield.", "You parry the kobold's spear.", "Your sword glances off the cave beetle's shell."),
-  a shot ("The kobold archer shoots the giant rat."), and a death ("The giant rat dies.", "You
+  a hit Protection soaked to nothing, naming what took it when the player saw both ends (the
+  natural armour, or the worn piece with the most Protection: "Your sword glances off the cave
+  beetle's shell.", "The kobold's spear glances off your chain mail shirt."; else "Something
+  hits you but does no harm."), a shot ("The kobold archer shoots the giant rat."), and a death ("The giant rat dies.", "You
   die..."). Spells are announced ("The kobold shaman casts a spell at you."). An end the player
   does not see is
   "something" ("Something hits you.", "The kobold misses something."), and a miss is then just

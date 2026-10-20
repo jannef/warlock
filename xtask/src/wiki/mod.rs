@@ -146,6 +146,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("launchers.md", combat::launchers),
         ("ammunition.md", combat::ammunition),
         ("armour.md", combat::armour),
+        ("piercing.md", combat::piercing),
         ("stances.md", combat::stances),
         ("hit-chances.md", combat::hit_chances),
         ("threats.md", combat::threats),
@@ -590,10 +591,15 @@ mod tests {
         assert!(weapons.contains("Bare hands: 1d3"));
         let armour = text("armour.md");
         assert!(
-            armour.contains("| Chain mail shirt | body | +4 | Armour | +4 |"),
+            armour.contains("| Chain mail shirt | body | +2 | Armour | 3 | +4 |"),
             "{armour}"
         );
-        assert!(armour.contains("| Small shield | off hand | +1 | Shield | no limit |"));
+        assert!(armour.contains("| Small shield | off hand | +1 | Shield | - | no limit |"));
+        assert!(armour.contains("| Great helm | head | - | - | 2 | no limit | - |"));
+        assert!(
+            text("piercing.md")
+                .ends_with("The crossbow bolt, the stiletto, and the war hammer pierce armour.\n")
+        );
         let stances = text("stances.md");
         assert!(
             stances.contains("| Aggressive | +1 | +2 | \u{2212}3 | - | - | - | - | 125% |"),

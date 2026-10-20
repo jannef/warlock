@@ -10,6 +10,7 @@ value = 2
 stackable = true
 slot = "missiles"
 ammo = "bolt"
+penetration = 2
 breaks = 20
 missile = "➔"
 kind = "ammo"

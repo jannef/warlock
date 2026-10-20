@@ -10,6 +10,7 @@ value = 50
 slot = "main_hand"
 damage = "1d8"
 crit = 3
+penetration = 2
 category = "maces"
 kind = "weapon"
 level = 3

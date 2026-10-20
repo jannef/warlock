@@ -604,8 +604,9 @@ fn actor_weapon_skills(
     (!skills.is_empty()).then(|| skills.join(", "))
 }
 
-/// Every actor on the level (ground truth): id, creature, position, hit points and Defence,
-/// weight, what it carries, its burden and carrying limit, its stats as score/potential
+/// Every actor on the level (ground truth): id, creature, position, hit points, Defence and
+/// Protection (`dv 11 pv 3`), weight, what it carries, its burden and carrying limit, its stats
+/// as score/potential
 /// (`St 12/15`), its trained skills with their marks toward the next point
 /// (`stealth 17 (2/5)`), its status effects with their severities (`effects bleeding 2`), the
 /// player's nutrition and hunger (`nutrition 3540 (not_hungry)`), and, if it has any, the unique
@@ -729,7 +730,7 @@ fn actor_rows(world: &World) -> Vec<String> {
                 format!("; talk said {said}, muttered {muttered}{met}")
             };
             format!(
-                "{} {} at {}: hp {}/{} dv {}; weight {} (base {} + carried {}: {carried})\
+                "{} {} at {}: hp {}/{} dv {} pv {}; weight {} (base {} + carried {}: {carried})\
                  {equipped}; {} (limit {}){weapons}; stats {}{skills}{effects}{diseases}{hunger}{npc}\
                  {talk}",
                 a.id,
@@ -738,6 +739,7 @@ fn actor_rows(world: &World) -> Vec<String> {
                 a.hp,
                 a.max_hp(content),
                 a.defence(content, load.penalty()).total(),
+                a.protection(content),
                 format_weight(w.total()),
                 format_weight(w.base),
                 format_weight(w.carried),
@@ -997,6 +999,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "hp": { "current": hp, "max": max_hp },
         "experience": view.own_experience(),
         "defence": view.own_defence(),
+        "protection": view.own_protection(),
         "hunger": view.own_hunger(),
         "death": death,
         "messages": messages,

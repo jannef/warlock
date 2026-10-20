@@ -1054,6 +1054,12 @@ impl<'a> PerceptionView<'a> {
         self.player.defence(self.content, burden).total()
     }
 
+    /// The player's Protection ("Pv"): the damage what they wear soaks off every hit, the total
+    /// only. Never a creature's.
+    pub fn own_protection(&self) -> i32 {
+        self.player.protection(self.content)
+    }
+
     /// How the run ended, once the player has died (what killed them only if they saw it).
     pub fn death(&self) -> Option<&'a Death> {
         self.death

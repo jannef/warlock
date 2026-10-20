@@ -21,7 +21,9 @@ effects, Weak, and stat damage; `raised_stats` is before those, for the characte
 and level-up hit points), the one source every rule reads; an attack profile is built as those stats, the
 weapon skill's benefit, the fighting style's (with the two-weapon penalty it eases), the
 affixes, then the combat stance. The regeneration affix goes
-through `World::healing_rate` like every other pace change. Hard
+through `World::healing_rate` like every other pace change; the Protection affix (Hardened, an
+item effect, local, on armour kinds: `ItemKind::is_armour`) through `Stack::protection`, which
+`Actor::protection` sums (docs/dev/combat.md). Hard
 rule: presentation reads an item's affixes only through `Stack::known_magic` (none until
 identified; `Stack::magic` is crate-private), and names only through `Stack::describe` /
 `title`, so unidentified affixes cannot leak; dev dumps use `describe_truth`. A new effect is a

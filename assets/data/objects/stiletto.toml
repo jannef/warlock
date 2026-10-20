@@ -12,6 +12,7 @@ slot = "main_hand"
 light_weapon = true
 damage = "1d4"
 threat = 19
+penetration = 2
 category = "daggers"
 attack_cost = 900
 kind = "weapon"

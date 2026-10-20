@@ -47,7 +47,8 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
 - **Combat** — D&D-style with two twelve-sided dice: every blow and shot is rolled against
   Defence (Dexterity, armour, shield, parry, a beetle's shell), misses say why ("You block the
   kobold's spear with your shield."), criticals threaten and confirm ("The kobold hits you
-  hard!"), and weapons and armour come from data. ADOM-like hit points from Toughness, race, and
+  hard!"), armour and hides soak damage like ADOM's PV ("Your sword glances off the cave beetle's
+  shell."), and weapons and armour come from data. ADOM-like hit points from Toughness, race, and
   class heal with time; creatures die and drop what they carried, look as hurt as they are, and
   your own death ends the run for good: the save is gone.
 - **Experience** — every creature has a level and an XP value; kills you make yourself (melee,

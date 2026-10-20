@@ -36,3 +36,31 @@ scenario without a character `hp`. Hit points live on `Actor` (`hp`, `hp_base`, 
 away), `SeenActor::health`, and `death`: **never a creature's hit points, a to-hit, a roll, or a
 modifier**. Spells stay intents (`strike: None`). Tests: `combat.rs` (exhaustive 2d12
 enumeration for hit chances, criticals, miss attribution), `world/fight_tests.rs`.
+
+Protection (spec §8 "Combat", #192; ADOM's PV): `combat::strike(profile, defence, protection,
+rng)` takes the target's Protection and soaks a hit with `combat::soak` (one draw from
+`soaks(pv)` = ⌈Pv/2⌉..=Pv, **only when Pv less the profile's `penetration` is above 0**, so
+fights against unprotected targets keep their draws and hashes), after the damage dice (the
+critical multiplied first) and the at-least-1; a hit soaked to 0 is `Strike::Soaked` (damage
+0; `is_hit()` stays true). The rules ask `World::protection_of(id)` (`Actor::protection`: every
+equipped stack's `Stack::protection`, its object's `protection` plus the `Effect::Protection`
+affix, the one reader of that effect, plus the creature type's `Hide::protection`). `resolve`
+and `trap_strikes` pass it; `trap_hurts` (blasts, bolts, falls), status ticks, and diseases do
+not. Everything a blow does to its target is gated on `blow.damage > 0` in `resolve` (bleed,
+`hurt`, `after_blow`) and `trap_deals`, so a soaked hit has no side effects; marks
+(`practise`, by `is_hit`), the provoked shopkeeper, noise, the second blow, and a missile's
+breaking still happen. Messages go through `fight::Guard` (`Guard::of(target, content)`: the
+hide's name for a Natural miss, `Actor::soaked_by` for a soak: the worn piece with the most
+Protection, else the hide) into `attack_message`: "Your sword glances off the cave beetle's
+shell.", "Something hits you but does no harm." when an end is unseen. Penetration is
+`ObjectDef::penetration` (weapons and ammunition), set on the profile by `Actor::melee`,
+`off_hand_blow`, `ranged` (launcher plus ammunition), and `thrown`; natural attacks, bashes,
+kicks, and traps have none. Data: objects `protection` (armour worn, never a hand slot or a
+shield; `check_protection`) and `penetration`; creatures `natural = { defence, protection,
+name }`. Presentation: `PerceptionView::own_protection` (the character screen's `Pv` beside `Dv`, the
+JSON dump's `protection`), the item description ("Protection 3", "Pierces armour": never a
+penetration number); the dev `actors` layer shows every actor's `pv`. **Damage types (#151)**
+split it later: Protection soaks physical damage only, per-kind adjustments on a piece,
+elements ignore it, resistances after the soak; the hook is `combat::soak` and its comment.
+Tests: `combat.rs` (soak distribution, draw order, criticals before the soak, penetration),
+`world/protection_tests.rs` (sums, soaked hits, messages, penetration, replay).

@@ -207,34 +207,69 @@ pub(super) fn ammunition(content: &Content) -> String {
     out
 }
 
-/// Armour and shields: what each adds to Defence, in which category, and the most Dexterity
-/// may add while it is worn. Armour before shields, the lightest Defence first, then by name.
+/// Armour and shields: what each adds to Defence, in which category, its Protection, and the
+/// most Dexterity may add while it is worn. Body armour before shields before the other armour
+/// (helmets, cloaks, gloves, boots: Protection only), the least Protection first, then the
+/// least Defence, then by name.
 pub(super) fn armour(content: &Content) -> String {
     let mut out = String::from(
-        "| Armour or shield | Worn on | Defence | Category | Most Dexterity adds | Bash |\n\
-         |---|---|:---:|---|:---:|:---:|\n",
+        "| Armour or shield | Worn on | Defence | Category | Protection | Most Dexterity adds | \
+         Bash |\n|---|---|:---:|---|:---:|:---:|:---:|\n",
     );
     let mut rows: Vec<_> = (order::objects(content).into_iter())
-        .filter_map(|(id, o)| match (o.armour, o.shield) {
-            (0, 0) => None,
-            (a, s) if a >= s => Some((id, o, a, "Armour")),
-            (_, s) => Some((id, o, s, "Shield")),
+        .filter_map(|(id, o)| match (o.armour, o.shield, o.protection) {
+            (0, 0, 0) => None,
+            (0, 0, _) => Some((id, o, (2, 0), None)),
+            (a, s, _) if a >= s => Some((id, o, (0, a), Some("Armour"))),
+            (_, s, _) => Some((id, o, (1, s), Some("Shield"))),
         })
         .collect();
-    rows.sort_by_key(|&(_, o, bonus, category)| (category, bonus, o.name.to_lowercase()));
-    for (id, o, bonus, category) in rows {
+    rows.sort_by_key(|&(_, o, (group, defence), _)| {
+        (group, o.protection, defence, o.name.to_lowercase())
+    });
+    let bonus = |n: i32| {
+        if n > 0 { format!("+{n}") } else { "-".into() }
+    };
+    let number = |n: i32| {
+        if n > 0 { n.to_string() } else { "-".into() }
+    };
+    for (id, o, (_, defence), category) in rows {
+        let defence = if category.is_some() {
+            bonus(defence)
+        } else {
+            "-".into()
+        };
         let max_dex = o
             .max_dex
             .map_or("no limit".to_string(), |m| format!("+{m}"));
         let bash = (o.bash).map_or("-".to_string(), |a| a.damage.to_string());
         let _ = writeln!(
             out,
-            "| {} | {} | +{bonus} | {category} | {max_dex} | {bash} |",
+            "| {} | {} | {defence} | {} | {} | {max_dex} | {bash} |",
             capital(&o.name),
             goes_on(content, id).to_lowercase(),
+            category.unwrap_or("-"),
+            number(o.protection),
         );
     }
     out
+}
+
+/// The weapons and missiles that pierce armour (`penetration`: how much stays hidden), in name
+/// order, as a sentence.
+pub(super) fn piercing(content: &Content) -> String {
+    let mut names: Vec<&str> = (order::objects(content).into_iter())
+        .filter(|(_, o)| o.penetration > 0)
+        .map(|(_, o)| o.name.as_str())
+        .collect();
+    names.sort_unstable();
+    let the: Vec<String> = names.iter().map(|n| format!("the {n}")).collect();
+    match the.as_slice() {
+        [] => "Nothing pierces armour.\n".into(),
+        [one] => format!("Only {one} pierces armour.\n"),
+        [one, two] => format!("{} and {two} pierce armour.\n", capital(one)),
+        [rest @ .., last] => format!("{}, and {last} pierce armour.\n", capital(&rest.join(", "))),
+    }
 }
 
 /// The combat stances: what each does to the player's attacks, Defence, and speed (percent for
