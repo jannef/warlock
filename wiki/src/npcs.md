@@ -23,6 +23,8 @@ Chatting takes a few words' time (half a normal action, 3 seconds; see
   person goes through all of their lines before saying one again, in an order of their own, and
   never says the same line twice in a row.
 - Some greet you the first time you talk to them, with a line they say only then.
+- Good folk turn cold to an Evil or Wicked character (see [Alignment](alignment.md)): they
+  answer with a cold word instead of their greeting and their talk.
 - Some have **topics** you can ask about. Chatting with them opens a small screen: who you are
   talking to, what they just said, and their topics, numbered. Press a topic's number (or move
   the `>` marker with the arrows and press `Enter`) to ask. Asking takes no time; the answer

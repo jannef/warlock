@@ -40,7 +40,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   hostile or heard a noise to look into, and the post it left; §8 "Creature behavior"; saves
   without it load with every creature calm), every actor's stats, scores and
   potentials (§8 "Stats"), the player's character (race, gender, and class,
-  the stat the gender raised, birth date, and birth sign; §8 "Character creation"),
+  the stat the gender raised, birth date, and birth sign; §8 "Character creation"), the player's
+  alignment score and the alignment a level gave a creature, if any (§8 "Alignment"; a score off
+  the scale does not load),
   what every actor wears and wields (which inventory stack is in which slot, §6
   "Equipment"), every actor's hit points (what it has left, what its race and
   class or its type add to its Toughness, and the seconds banked toward the next one back; §8

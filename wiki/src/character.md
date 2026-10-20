@@ -10,7 +10,8 @@ New run screen, you choose who you are, one step at a time.
    in a handful of [skills](skills.md) (see [Classes](classes.md)).
 4. **Summary**: your race, gender, and class, your age, birthday, and birth sign, the
    [stats](stats.md) you will start with and, beside them, the [skills](skills.md) you are
-   trained in, your vision, and the scenario and seed. **Start the run** begins it; **Race**,
+   trained in, the [alignment](alignment.md) you start in, your vision, and the scenario and
+   seed. **Start the run** begins it; **Race**,
    **Gender**, and **Class** take you back to that step.
 
 Each step lists its options with a short description, and for races and classes how they change
@@ -59,7 +60,7 @@ fun.
 ## Seeing who you are
 
 The character screen (`@`) shows your race, gender, and class, your age, birthday, and sign,
-your stats, your level and experience (see [Experience](experience.md)), and your hit points (your Toughness plus what your race and class give; see
+your stats, your [alignment](alignment.md), your level and experience (see [Experience](experience.md)), and your hit points (your Toughness plus what your race and class give; see
 [Combat](combat.md#hit-points)), Defence, and Protection (see
 [Combat](combat.md#protection)), what ails you (see
 [Status effects](status-effects.md)) and which diseases you know you have (see

@@ -15,8 +15,9 @@ the birth year's)). Scores: 10 + race + gender + class + animal + element, clamp
 potentials `base_potential` + the race's, never below the score. Flags for rules:
 `Character::born_of_element("fire")`, `born_in_year_of("manticore")`. Content:
 `data/races.toml` (`content/race.rs`: `Races` with `base_potential`, `RaceDef` with `vision`,
-`age`, `stats`, `potential`, `hp`), `data/classes.toml` (`content/class.rs`: `ClassDef` with
-`stats`, `hp`; `Start::hp` is their sum),
+`age`, `stats`, `potential`, `hp`, `alignment`), `data/classes.toml` (`content/class.rs`:
+`ClassDef` with `stats`, `hp`, `alignment`; `Start::hp` is their sum, and `Start::alignment` the
+sum of their `alignment`s, the starting score, `docs/dev/alignment.md`),
 and `data/horoscope.toml` (`content/horoscope.rs`: `Horoscope` with `anchor_year`, `animals`,
 `elements`, `sign_of_year`, `great_cycle` (60), `name` ("Fire Manticore")); all optional.
 Adjustments are `PerStat<Dice>` (`stats::adjustments` checks every result is within -10..=10;
