@@ -79,8 +79,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
 - **Traps in level files** (M18; §8 "Traps"): a legend entry places a trap with `trap = "id"` (an
   id in `data/traps.toml`), hidden unless `known = true`, and for a bolt trap optionally the way
   its bolt runs, `dir = "E"` (default: along the longest clear line from it). Traps lie only on
-  walkable terrain that is not stairs nor water that freezes; `known` or `dir` without a `trap`, `dir` on any other
-  trap, or an unknown id is a content error. Dungeon vaults place traps the same way and
+  walkable terrain that is not stairs nor water that freezes, or on a door, closed or open (§8
+  "Trapped doors"), where any trap but a pit may lie, and never on a secret door; `known` or `dir`
+  without a `trap`, `dir` on any other trap, a pit on a door, a trapped secret door, or an unknown
+  id is a content error. Dungeon vaults place traps the same way and
   generators stamp them with the vault; outdoor vaults have none.
 - **Traps** (`data/traps.toml`, optional; without it there are no traps; M18): `[[trap]]`s with
   `id`, `name` ("fireball trap", said in "Really step onto the fireball trap?"), `glyph` (default

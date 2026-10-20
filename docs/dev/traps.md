@@ -9,10 +9,22 @@ shot / strike / burst / bolt / pit / alarm / teleport, and the instance `Trap` w
 and branches (`traps`, `traps_per_level` in `data/dungeons.toml`); the showcase has none, the
 trap hall (`levels/trap_hall.toml`, scenario `traps`) has one of each. They live in
 `LevelState::traps` (and `trap_memory`, what the player remembers). `World::spring_trap(at,
-victim)` in `world/trap.rs` is the one way a trap goes off: stepping onto a cell calls it (the
-player in `player_moves`, creatures in `ai.rs::creature_steps`, one who makes way for the player
-onto their old cell in `talk.rs::swap_places`, its pit's climb taken off its energy; a trapped
-door will call it too) and returns the extra energy a pit costs. A trap's blow is dealt like any other
+victim)` in `world/trap.rs` is the one way a trap goes off: stepping onto a cell calls it through
+`World::step_onto_trap` (the player in `player_moves`, creatures in `ai.rs::creature_steps`, one
+who makes way for the player onto their old cell in `talk.rs::swap_places`, its pit's climb taken
+off its energy), and returns the extra energy a pit costs. **Trapped doors** (spec §8 "Trapped
+doors", #174): a trap may lie on a door, closed or open (`TerrainDef::is_door`,
+`LevelState::is_door`), of any kind but a pit (`TrapEffect::fits_door`, checked by
+`content/level.rs::parse_trap`, which also refuses a trapped secret door; `mapgen::hide_secrets`
+never hides a trapped door). `step_onto_trap` skips door cells, so the step trigger never sets one
+off; `world/door.rs` does: `swing_open` (every opening, the player's with or without a key and a
+creature's in `creature_steps`) and `kick_door` (as the kick lands, before the door breaks) call
+`spring_trap` with the door's cell and the opener or kicker beside it. `set_terrain` drops a trap
+whose door stops being a door (kicked in). Aimed from the door: a shot and a strike go at the
+victim where it stands, a bolt without a `dir` runs from the door through the victim (`spring_trap`
+picks `Dir::toward` when the victim stands next to the trap), and a burst's own cell never stops it
+(`trap_burst`), so a shut door's blast leaves both sides. The app's step prompt
+(`input::trap_dialog`) skips doors. A trap's blow is dealt like any other
 (`World::trap_deals`: blood by `World::spill`, `hurt` with `Harm::Trap`, then the wound's
 statuses by `World::wounded`); its kills earn nothing, and the player's death records
 `Cause::Trap` (`Death::cause`: "Killed by a fireball trap"). Traps never lie on water that
