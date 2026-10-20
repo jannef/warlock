@@ -119,7 +119,6 @@ impl World {
         if let Some(text) = &spell.message {
             self.say(text.clone());
         }
-        let alive = self.state.death.is_none();
         let mut made = Vec::new();
         match &spell.cast {
             Cast::Burst(burst) => {
@@ -135,8 +134,9 @@ impl World {
             }
         }
         self.say_spell(spell, made, events);
-        // Killed by their own spell: the scroll is what killed them, not "a you".
-        if alive && let Some(death) = &mut self.state.death {
+        // Killed by their own spell (no action is taken after death, so it was this one): the
+        // scroll is what killed them, not "a you".
+        if let Some(death) = &mut self.state.death {
             death.by = None;
             death.cause = Some(Cause::Scroll(scroll.object));
         }
