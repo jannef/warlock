@@ -1696,6 +1696,29 @@ mod tests {
         assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
     }
 
+    #[test]
+    fn a_disarm_key_asks_for_a_direction_and_disarms() {
+        // Disarming is an ability: unbound by default. Bound (here to `X`), the showcase's
+        // thief, trained in Disable device, is asked which way, as the abilities menu asks.
+        let mut app = app(true);
+        {
+            let mut bindings = app.world_mut().resource_mut::<Bindings>();
+            let disarm = crate::input::KeyCommand::Disarm;
+            assert!(bindings.keys_of(disarm).is_empty());
+            let key = crate::input::KeyBinding::from_text("X").expect("a key");
+            bindings.0.push((key, disarm));
+        }
+        frame(&mut app, &[(KeyCode::KeyX, "X")]);
+        assert_eq!(
+            app.world().resource::<InputMode>(),
+            &InputMode::Ability(Ability::Disarm)
+        );
+        assert!(actions(&app).is_empty(), "nothing yet");
+        frame(&mut app, &[(KeyCode::KeyL, "l")]);
+        assert_eq!(actions(&app), [Action::Disarm(Dir::E)]);
+        assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
+    }
+
     /// A run of the showcase's thief with the storeroom's small shield in hand.
     fn with_a_shield() -> App {
         let content = content();
