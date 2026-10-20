@@ -130,6 +130,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     - spot: trained at all, the player notices hidden features in passing (§8 "Searching");
       points added to that check, +8 at 100 and +12 at 200 (`spot`); a mark (50 %) for each
       thing noticed;
+    - disable device: trained at all, the player can disarm traps (§8 "Disarming traps", the
+      Disarm ability); points added to that check, +8 at 100 and +12 at 200 (`disarm`); a mark
+      (20 %) for each try, whatever comes of it;
     - athletics' climbing out of pits and escape artist (out of pits faster) wait for that rule
       (#128); swim for deep water; concentration, spellcraft, and use magic
       device for magic; the other action skills (open lock, heal, …) for their actions.
@@ -142,7 +145,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     are chosen from one abilities menu (§6 "Abilities", #156), unlike ADOM: each trained skill
     with an active use (`kind = "action"`) is an ability there (`warlock_core::ability`,
     `PerceptionView::abilities`), greyed out as "not usable yet": the uses come with their
-    actions. Never a benefit's number, a mark, a
+    actions, and one whose use has come is that ability instead (Disable device's is "Disarm a
+    trap", §8 "Disarming traps"). Never a benefit's number, a mark, a
     chance, an untrained skill, or a creature's skills; ground-truth dev dumps (`actors`, the
     world state) show every actor's skills with their marks. Skills and marks are part of the
     world state (saved, hashed).

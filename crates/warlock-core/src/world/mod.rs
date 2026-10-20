@@ -89,6 +89,7 @@ mod buff;
 mod carry;
 mod dev;
 mod dig;
+mod disarm;
 mod disease;
 mod door;
 mod eat;
@@ -121,6 +122,7 @@ mod travel;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
+pub use disarm::SPRINGS_SHORT_BY;
 pub use experience::{Discovered, Progress};
 pub use fight::{Cause, Death};
 pub use free_blow::FreeBlows;
@@ -867,6 +869,7 @@ impl World {
             Action::Read { item, target } => return self.read(*item, *target, events),
             Action::Dig(dir) => return self.start_dig(*dir),
             Action::Search(turns) => return Spent::Search(*turns),
+            Action::Disarm(dir) => return self.disarm(*dir, events),
             Action::SetVision(id) => return self.set_vision(id),
             Action::SetStance(stance) => return self.set_stance(*stance),
             Action::SetWeather(weather) => return self.set_weather_dev(*weather),
@@ -931,6 +934,8 @@ mod cost_tests;
 mod damage_tests;
 #[cfg(test)]
 mod dig_tests;
+#[cfg(test)]
+mod disarm_tests;
 #[cfg(test)]
 mod disease_tests;
 #[cfg(test)]
