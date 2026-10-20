@@ -126,6 +126,11 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
     if sickness.is_some_and(|s| usize::from(s.0) == status) {
         causes.push("eating rotten food");
     }
+    let mut causes: Vec<String> = causes.into_iter().map(String::from).collect();
+    let ending = (content.status_defs().iter())
+        .filter(|s| s.follows.is_some_and(|f| usize::from(f.0) == status))
+        .map(|s| format!("the end of {}", s.name));
+    causes.extend(ending);
     if causes.is_empty() {
         "—".into()
     } else {
@@ -133,12 +138,48 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
     }
 }
 
+/// What else a status does while it lasts and as it ends, in words: its fighting bonuses (as a
+/// stance's), how much slower it makes every action, what it keeps you from doing, and what
+/// follows it.
+fn also(content: &Content, def: &StatusDef) -> String {
+    let mut parts = Vec::new();
+    let c = def.combat;
+    let fighting: Vec<String> = [
+        ("to hit", c.to_hit),
+        ("damage", c.damage),
+        ("Dodge", c.dodge),
+        ("Parry", c.parry),
+    ]
+    .into_iter()
+    .filter(|&(_, n)| n != 0)
+    .map(|(what, n)| format!("{what} {}", signed(n)))
+    .collect();
+    if !fighting.is_empty() {
+        parts.push(fighting.join(", "));
+    }
+    if def.cost != 100 {
+        parts.push(format!("every action takes {}% of the time", def.cost));
+    }
+    if !def.blocks.is_empty() {
+        let doing: Vec<&str> = def.blocks.iter().map(|k| k.doing()).collect();
+        parts.push(format!("you cannot {}", doing.join(" or ")));
+    }
+    if let Some(next) = def.follows {
+        parts.push(format!("{} follows it", content.status(next).name));
+    }
+    if parts.is_empty() {
+        "—".into()
+    } else {
+        capital(&parts.join("; "))
+    }
+}
+
 /// The status effects (spec §8 "Status effects"): how they show, what causes them, what they
 /// cost, how they wear off, and what they do to healing and stats.
 pub(super) fn status_effects(content: &Content) -> String {
     let mut out = String::from(
-        "| Status | Seen on others | Caused by | Costs | Wears off | Healing | Stats | Cured by |\n\
-         |---|---|---|---|---|---|---|---|\n",
+        "| Status | Seen on others | Caused by | Costs | Wears off | Healing | Stats | Cured by | \
+         Also |\n|---|---|---|---|---|---|---|---|---|\n",
     );
     for (i, def) in content.status_defs().iter().enumerate() {
         let seen = def
@@ -165,6 +206,9 @@ pub(super) fn status_effects(content: &Content) -> String {
             .disease_status()
             .is_some_and(|s| usize::from(s.0) == i);
         let eases = match def.eases {
+            Some(e) if def.max == 1 => {
+                format!("after {}", Duration::seconds(u64::from(e)).spoken())
+            }
             Some(e) => format!("a degree {}", every(e)),
             None if diseased => "when the diseases are gone".to_string(),
             None => "only when cured".to_string(),
@@ -187,12 +231,13 @@ pub(super) fn status_effects(content: &Content) -> String {
         };
         let _ = writeln!(
             out,
-            "| {} | {seen} | {} | {} | {} | {} | {stats} | {cured} |",
+            "| {} | {seen} | {} | {} | {} | {} | {stats} | {cured} | {} |",
             def.name,
             causes(content, i, def),
             capital(&costs),
             capital(&eases),
             capital(&pace(u32::from(def.regen))),
+            also(content, def),
         );
     }
     out

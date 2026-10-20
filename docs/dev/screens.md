@@ -3,8 +3,8 @@
 Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185); the
 rules it implements are in spec/06-input-and-ui.md. Keep it current with the code, as CLAUDE.md says.
 
-Modal screens (spec §6) — main menu, new run and character creation (race, gender, class,
-summary), pause, settings, controls, the `?` help, the inventory (`i`), the equipment screen
+Modal screens (spec §6) — main menu, the saved characters (Characters), new run and character
+creation (race, gender, class, name, summary), pause, settings, controls, the `?` help, the inventory (`i`), the equipment screen
 (`e`) and its choice of what goes in a slot, an item's description (a letter in the inventory,
 an upper-case slot letter on the equipment screen), the character screen (`@`), the weapon skills
 screen (`W`), the quest log (`q`), the message history (`M`), choosing what to
@@ -28,15 +28,22 @@ to open, read keys for, or draw one:
   until `name` is on top (the summary going back to a step). Sub-screens read what was chosen
   below them off the stack: character creation's steps (`ScreenStack::draft`: New run's scenario
   and seed, each step's selection) preselect what was chosen before going back
-  (`ScreenStack::picks`), else the scenario's character, and the summary's Start is
-  `MenuChoice::NewRun { scenario, seed, character }`; `EquipItem` takes the slot selected on the
+  (`ScreenStack::picks`), else the scenario's character (the name step: what was typed, else an
+  empty field), and the summary's Start is `MenuChoice::NewRun { scenario, seed, character, name
+  }`; the main menu and the Characters screen read the saved characters when they open
+  (`Launch::characters`, from `SaveStore::characters`; no other screen lists the saves);
+  `EquipItem` takes the slot selected on the
   equipment screen beneath (`ScreenStack::selected_slot`), and `Describe` the stack looked at
   on the inventory or equipment screen beneath (`ScreenStack::looked_item`; the first stack
   without one, as `--screen describe` opens it over the inventory).
 - **Input**: `input::route_keys` is the one reader of `KeyboardInput`. Stack not empty: the press
   goes to the top screen as a `Press` whose `nav` comes from the `Context::Menu` bindings (Esc is
   always `Nav::Back`; see `docs/dev/settings.md` for contexts: a screen never matches a key code or
-  a character, except list letters and digits and the typed seed) (`ScreenStack::handle` →
+  a character, except list letters and digits and the typed seed) and whose `edit` comes from the
+  `Context::Text` bindings (Esc is always `Edit::Back`), for the text field, which reads only
+  `edit` and `text` (the key event's text, literal; else the character its key stands for), so
+  every key not bound there types; held keys type and erase but never accept
+  (`ScreenStack::handle` →
   `ScreenAction`: stay, close, open, a
   `MenuChoice`, or `Act(Action)`: close and apply a gameplay action, e.g. `pickup:ac`,
   `equip:body:b`; the screens beneath stay, and `screens::refresh`, after `SimSet`, shows the
@@ -147,7 +154,15 @@ to open, read keys for, or draw one:
   `ui/weapon_skills_screen.rs` (an info page: sections, ranks, and a faint ten-cell marks bar,
   the fighting styles in use marked `•`; two columns from 88 wide, else one that drops its gaps
   and margins and then scrolls with ↑↓; never a benefit), `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per
-  step with a Random row rolled from the seed, `SummaryScreen`, `Draft`), `ui/quest_screen.rs`
+  step with a Random row rolled from the seed, `SummaryScreen`, `Draft`), `ui/name_screen.rs`
+  (`NameScreen`, the Name step and the game's text field: typed text literal while the font draws
+  it (`render::atlas::draws`) and there is room; the `Context::Text` keys accept, erase, put in the
+  next of the race's random names (never the one shown; not on a held key), and back out; an empty
+  field shows, dimmed, the name it gives), `ui/characters_screen.rs` (`CharactersScreen`: the saved
+  characters, the one played last first; Enter is `MenuChoice::Resume(id)`, the Erase key asks the
+  dialog whose Delete is `MenuChoice::DeleteCharacter(id)`, after which the main menu and the list
+  open afresh; `--screen characters`, with `--capture` over a read-only `--save-dir`),
+  `ui/quest_screen.rs`
   (the quest log from `PerceptionView::quests`: active then done, the selected one's objective,
   status, and the giver's offer; read-only), `ui/messages_screen.rs` (`MessagesScreen`,
   `ScreenName::Messages`, `--screen messages`: the message history, every message of
@@ -158,7 +173,7 @@ to open, read keys for, or draw one:
   (the speaker, their last line, numbered topics; built from the last `Event::Talked`, so it never
   shows more than the player was told), `ui/abilities_screen.rs` (`AbilitiesScreen`, below),
   `ui/death_screen.rs`
-  (who or what killed the player, where, when, after how many turns).
+  (who died, "Here lies Brakka,", who or what killed them, where, when, after how many turns).
 
 Key commands `,`/`g` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop` screen),
 `i` (`Inventory` screen), `e` (`Equipment` screen), `@` (`Character` screen), `W` (`WeaponSkills`
@@ -173,7 +188,8 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   a variant of `Ability` (id, name, description, `Source`, `Aim`, cost `ActionKind`, the `Action`
   it makes from its aim), a line in `Ability::every` (menu order: by source, then as listed),
   who has it (`had_by`), and when it cannot be used (`unavailable` → `Unavailable` with its
-  reason). `PerceptionView::abilities` is what presentation reads (`OwnAbility`: the ability and
+  reason; `While(status)` for a status that blocks its cost's kind or is its cooldown,
+  `docs/dev/status-effects.md`; `reason`/`id` take the content). `PerceptionView::abilities` is what presentation reads (`OwnAbility`: the ability and
   why it cannot be used now); the `abilities` dump layer and JSON key show the same, and the
   wiki's table (`xtask/src/wiki/abilities.rs`) lists `Ability::every`. Skills used as actions are
   `Ability::Skill(id)` until their use exists (never available); a use, when it comes, is a

@@ -133,6 +133,7 @@ fn actor(content: &Content, creature: &str) -> Actor {
         talk: Default::default(),
         satiation: None,
         stance: Default::default(),
+        free_blows: Default::default(),
     }
 }
 

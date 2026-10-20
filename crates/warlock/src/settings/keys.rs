@@ -81,6 +81,10 @@ pub const REBINDABLE: &[KeyCommand] = &[
     KeyCommand::MarkAll,
     KeyCommand::NextListPage,
     KeyCommand::PrevListPage,
+    KeyCommand::TextConfirm,
+    KeyCommand::TextErase,
+    KeyCommand::TextRandom,
+    KeyCommand::TextBack,
     KeyCommand::Yes,
     KeyCommand::No,
     KeyCommand::Page(1),
@@ -104,13 +108,15 @@ pub const REBINDABLE: &[KeyCommand] = &[
     KeyCommand::LoadSnapshot,
 ];
 
-/// The commands that reach the controls screen (and its Reset all keys) from anywhere: they
-/// never lose their last key, so no binding, settings file, or keymap can lock the player out.
-/// Esc, which always backs out, is the rest of the way there.
+/// The commands that reach the controls screen (and its Reset all keys) from anywhere, and the
+/// one that gets a new character past its name: they never lose their last key, so no binding,
+/// settings file, or keymap can lock the player out. Esc, which always backs out, is the rest of
+/// the way there.
 pub const VITAL: &[KeyCommand] = &[
     KeyCommand::MenuUp,
     KeyCommand::MenuDown,
     KeyCommand::Confirm,
+    KeyCommand::TextConfirm,
 ];
 
 /// The settings ids of [`KeyCommand::Page`] 1 to 9.
@@ -121,8 +127,8 @@ const PAGE_IDS: [&str; 9] = [
 /// Rebindable commands with no key by default: abilities (`warlock_core::ability`), which the
 /// abilities menu (#156) lists instead of a key each; `f` (fire), which `t` covers; Quit, done
 /// from the pause menu; the previous target and the previous info page, which Shift with the
-/// next one's key picks; and Back and skipping the rest at `--more--`, which Esc always does.
-/// The player may bind one in Controls.
+/// next one's key picks; and Back (in menus and in text fields) and skipping the rest at
+/// `--more--`, which Esc always does. The player may bind one in Controls.
 pub const UNBOUND: &[KeyCommand] = &[
     KeyCommand::Bash,
     KeyCommand::Fire,
@@ -131,6 +137,7 @@ pub const UNBOUND: &[KeyCommand] = &[
     KeyCommand::MoreSkip,
     KeyCommand::PrevPage,
     KeyCommand::Back,
+    KeyCommand::TextBack,
 ];
 
 /// Physical keys a command may be bound to.
@@ -244,6 +251,10 @@ impl KeyCommand {
             MarkAll => "mark_all",
             NextListPage => "next_list_page",
             PrevListPage => "prev_list_page",
+            TextConfirm => "text_confirm",
+            TextBack => "text_back",
+            TextErase => "text_erase",
+            TextRandom => "text_random",
             Yes => "yes",
             No => "no",
             Help => "help",

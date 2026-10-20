@@ -180,6 +180,23 @@ The numbers are first guesses, tuned by playtesting:
 Dodge adds to your Defence on top of everything else; Parry only counts when it beats what your
 weapon already gives. Creatures do not take stances yet.
 
+## Free blows
+
+Some fighters get a blow in for free, at no cost in time. Talents and class abilities will
+teach them (they are coming with character levels); no one fights this way yet.
+
+- **Cleave**: when your attack kills, you strike another hostile creature next to you: the next
+  one round from where your victim stood, going clockwise. Once per attack, or, with great cleave,
+  again after every cleave that kills.
+- **Riposte**: when your Parry turns a blow aside, you strike back once the attack is over (once
+  per attack, however many of its blows you parried). Shots and throws are never riposted.
+- **Opportunist**: a hostile creature that steps away from beside you is struck as it turns to
+  go; it may not live to take the step. A creature that fights this way strikes you the same
+  way when you step away from it.
+
+A free blow is a blow like any other: it can miss, wound, and kill, and it trains your weapon
+skill. It never brings another free blow, except a cleave after a cleave.
+
 ## Hit points
 
 Your **hit points** are your Toughness plus what your [race](races.md) and your

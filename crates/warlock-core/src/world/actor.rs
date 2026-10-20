@@ -1,6 +1,6 @@
 //! Actors: the player and creatures.
 
-use super::Talk;
+use super::{FreeBlows, Talk};
 use crate::action::AttackKind;
 use crate::burden::Burden;
 use crate::combat::{self, Attack, Category, Defence, Health, Profile, Target};
@@ -175,6 +175,10 @@ pub struct Actor {
     /// Its combat stance (spec §8 "Stances"): the player chooses theirs; creatures stay neutral.
     #[serde(default, skip_serializing_if = "CombatStance::is_neutral")]
     pub stance: CombatStance,
+    /// The free blows it is given (spec §8 "Free blows"): none until talents and class
+    /// abilities give them. Read through `World::free_blows_of`.
+    #[serde(default, skip_serializing_if = "FreeBlows::is_none")]
+    pub free_blows: FreeBlows,
     /// The unique character its level made it (`npc` in a level legend entry), whose dialogue it
     /// speaks rather than its type's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -299,7 +303,8 @@ impl Actor {
     /// its magic items give (spec §8 "Magic items"). Weapon skills add (spec §8 "Weapon skills"):
     /// the wielded weapon's skill to its parry, shield blocking to a held shield's; and so does
     /// the fighting style its hands are in (spec §8 "Fighting styles": a duelist's parry, sword
-    /// and board's shield).
+    /// and board's shield). Its combat stance and its status effects add their Dodge and Parry
+    /// (spec §8 "Stances", "Status effects").
     pub fn defence(&self, content: &Content, burden: Burden) -> Defence {
         let mods = self.mods(content);
         let weapon = self.weapon_item(content);
@@ -364,7 +369,8 @@ impl Actor {
                 .chain(natural)
                 .chain(dodge)
                 .chain(magic.into_iter().filter(|&(_, b)| b != 0))
-                .chain(stance),
+                .chain(stance)
+                .chain(self.effects.defence(content)),
         )
     }
 
@@ -786,9 +792,11 @@ impl Actor {
         self.stanced(content, profile)
     }
 
-    /// `profile` with the to-hit and damage of its combat stance.
+    /// `profile` with the to-hit and damage of its combat stance, and of its status effects
+    /// (spec §8 "Status effects": a buff's or a hex's `combat`).
     pub fn stanced(&self, content: &Content, profile: Profile) -> Profile {
-        content.stance_def(self.stance).apply(profile)
+        let profile = content.stance_def(self.stance).apply(profile);
+        self.effects.sharpen(content, profile)
     }
 
     /// The off hand's blow while it holds a weapon in each hand (spec §8 "Fighting styles"):

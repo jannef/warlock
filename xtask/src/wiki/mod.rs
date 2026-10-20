@@ -807,6 +807,15 @@ mod tests {
             assert!(statuses.contains(row), "{row} in {statuses}");
         }
         assert!(statuses.contains("| Diseased | no | Any disease, once it shows | Nothing |"));
+        // Buffs and cooldowns: a raise, what it keeps you from, and what follows it.
+        for row in [
+            "| Raging | yes, \"raging\" | — | Nothing |",
+            "| Strength +2, Toughness +2, Intelligence \u{2212}2 | — | You cannot read; Exhausted \
+             follows it |",
+            "| Exhausted | no | The end of Raging | Nothing |",
+        ] {
+            assert!(statuses.contains(row), "{row} in {statuses}");
+        }
         let diseases = text("diseases.md");
         for row in [
             "| Filth fever | The giant rat's bite (10%) | Toughness, 54% | 1d3 days | Every day | \
