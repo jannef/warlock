@@ -392,7 +392,8 @@ mod tests {
                 .contains("| Putting something on, or taking it off: Body | 3000 | 18 seconds |")
         );
         assert!(
-            text("materials.md").contains("| Steel | stilettos, daggers, short swords, scimitars,")
+            text("materials.md")
+                .contains("| Steel | no | stilettos, daggers, short swords, scimitars,")
         );
         assert!(text("pack.md").contains("| Your own weight | 70 kg |"));
         let burden = text("burden.md");

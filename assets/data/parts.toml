@@ -1,0 +1,71 @@
+# Parts (spec §7 "Objects and materials"): the parts objects are made of, a small vocabulary that
+# names and (later) construction rules refer to. An object lists its parts in `materials`, each of
+# one material, the first the main one (objects/README.toml):
+#
+#   materials = [{ part = "chain", of = "gold" }, { part = "setting", of = "ruby", share = 10 }]
+#
+# Every part defines:
+#   id         what objects name it by (`part = "pommel"`)
+#   name       how an item's description names it ("leather grip")
+#   adjective  how a notable part of this kind (one of a `precious` material: a gem or a precious
+#              metal) is written before an item's name, after its material and a hyphen:
+#              `adjective = "pommelled"` makes a long sword with a ruby pommel a "ruby-pommelled
+#              long sword". Without one, a notable part's material joins the material the name
+#              begins with: a gold amulet with a ruby setting is a "gold and ruby amulet"
+#
+# Nothing follows this file's order; keep it alphabetical.
+
+[[part]]
+id = "band"
+name = "band"
+
+[[part]]
+id = "blade"
+name = "blade"
+
+[[part]]
+id = "chain"
+name = "chain"
+
+[[part]]
+id = "cord"
+name = "cord"
+
+[[part]]
+id = "grip"
+name = "grip"
+
+[[part]]
+id = "haft"
+name = "haft"
+
+[[part]]
+id = "head"
+name = "head"
+
+[[part]]
+id = "inlay"
+name = "inlay"
+adjective = "inlaid"
+
+[[part]]
+id = "lining"
+name = "lining"
+
+[[part]]
+id = "pendant"
+name = "pendant"
+
+[[part]]
+id = "pommel"
+name = "pommel"
+adjective = "pommelled"
+
+[[part]]
+id = "setting"
+name = "setting"
+
+[[part]]
+id = "trim"
+name = "trim"
+adjective = "trimmed"

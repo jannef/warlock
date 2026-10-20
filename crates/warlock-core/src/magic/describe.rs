@@ -15,7 +15,7 @@ use crate::object::{Stack, format_weight};
 /// What a line of a description is, for how it is shown.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LineKind {
-    /// What it is: rarity, base, material, weight.
+    /// What it is: rarity, base, what it is made of, weight.
     Base,
     /// A base stat: damage, Defence, range.
     Stat,
@@ -39,9 +39,9 @@ fn line(kind: LineKind, text: impl Into<String>) -> Line {
     }
 }
 
-/// The description of `stack`, as the player knows it: what it is (`Magic long sword · steel ·
-/// 1.8 kg`), its base stats, and its affixes if identified (`Sharp: +2 damage`) or a note that its
-/// magic is unknown.
+/// The description of `stack`, as the player knows it: what it is (`Magic long sword · steel
+/// blade, leather grip · 1.8 kg`: every part, as materials show identified or not), its base
+/// stats, and its affixes if identified (`Sharp: +2 damage`) or a note that its magic is unknown.
 pub fn lines(stack: &Stack, content: &Content) -> Vec<Line> {
     let def = content.object(stack.object);
     let mut out = Vec::new();
@@ -54,12 +54,9 @@ pub fn lines(stack: &Stack, content: &Content) -> Vec<Line> {
         Rarity::Normal => capitalized(&base),
         rarity => format!("{} {base}", capitalized(rarity.word())),
     };
-    let material = &content.material(def.material).name;
+    let parts = content.describe_parts(stack.parts(content));
     let weight = format_weight(stack.weight(content));
-    out.push(line(
-        LineKind::Base,
-        format!("{what} · {material} · {weight}"),
-    ));
+    out.push(line(LineKind::Base, format!("{what} · {parts} · {weight}")));
     out.extend(
         base_stats(def, content)
             .into_iter()
