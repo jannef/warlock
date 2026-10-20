@@ -6,6 +6,11 @@
 //! gameplay random stream. Spells stay intents: nothing is rolled or damaged. Every attack is an
 //! [`Event::Attacked`] with what came of it, and a noise.
 //!
+//! Protection (spec §8 "Combat"): what the target wears and its hide soak damage off every hit
+//! ([`World::protection_of`], less the attack's penetration). A hit soaked to nothing
+//! ([`Strike::Soaked`]) glances off ("Your sword glances off the cave beetle's shell.") and does
+//! nothing else, no blood and no wound, but it landed: it trains as a hit does.
+//!
 //! Damage takes hit points; at 0 the target dies ([`Event::Died`]). A creature is removed from
 //! the world and drops what it carried on its cell; the player's run ends ([`Death`]): every
 //! action after that is refused, and the app shows the death screen and deletes the save.
@@ -273,17 +278,41 @@ impl End<'_> {
     }
 }
 
+/// What a target's armour is called in the messages of the blows it turns (spec §6 "Attacks").
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub(super) struct Guard<'a> {
+    /// Its natural armour, for a blow that missed because of it: "shell".
+    pub(super) hide: Option<&'a str>,
+    /// What took all of a blow its Protection soaked: the piece it wears with the most
+    /// Protection, else its natural armour ([`Actor::soaked_by`]).
+    pub(super) soak: Option<&'a str>,
+}
+
+impl<'a> Guard<'a> {
+    /// The guard of `target` (alive, or fallen this action), if it is known.
+    pub(super) fn of(target: Option<&Actor>, content: &'a Content) -> Self {
+        let Some(target) = target else {
+            return Self::default();
+        };
+        Self {
+            hide: (content.creature(target.creature).natural.as_ref()).map(|h| h.name.as_str()),
+            soak: target.soaked_by(content),
+        }
+    }
+}
+
 /// The message for an attack: by `attacker` on `target`, made with `words`, and what came of it
-/// (`None`: an intent only, a spell or a shot with no missile weapon). `hide` is the target's
-/// natural armour, for a blow it turned. Why an attack missed is said only when the player saw
-/// both ends; `None` if they saw neither and were not the target.
+/// (`None`: an intent only, a spell or a shot with no missile weapon). `guard` names the
+/// target's armour, for a blow it turned or soaked. Why an attack missed, and what a blow
+/// soaked to nothing glanced off, is said only when the player saw both ends; `None` if they
+/// saw neither and were not the target.
 pub(super) fn attack_message(
     attacker: End<'_>,
     target: End<'_>,
     words: &Words,
     kind: AttackKind,
     strike: Option<Strike>,
-    hide: Option<&str>,
+    guard: Guard<'_>,
 ) -> Option<String> {
     if attacker == End::Unseen && target == End::Unseen {
         return None;
@@ -300,16 +329,23 @@ pub(super) fn attack_message(
     };
     let weapon = format!("{} {}", attacker.whose(), words.noun);
     let both_seen = attacker != End::Unseen && target != End::Unseen;
+    let hit = match (attacker, kind) {
+        (End::You, AttackKind::Ranged) => "shoot",
+        (End::You, _) => words.you,
+        _ => words.verb.as_str(),
+    };
     let text = match strike {
         Strike::Hit { critical } => {
-            let verb = match (attacker, kind) {
-                (End::You, AttackKind::Ranged) => "shoot",
-                (End::You, _) => words.you,
-                _ => words.verb.as_str(),
-            };
             let end = if critical { " hard!" } else { "." };
-            format!("{a} {verb} {t}{end}")
+            format!("{a} {hit} {t}{end}")
         }
+        Strike::Soaked if both_seen => format!(
+            "{} glances off {} {}.",
+            capitalized(&weapon),
+            target.whose(),
+            guard.soak.unwrap_or("armour")
+        ),
+        Strike::Soaked => format!("{a} {hit} {t} but {} no harm.", attacker.verb("do", "does")),
         Strike::Missed { by } => match by.filter(|_| both_seen) {
             None => format!("{a} {} {t}.", attacker.verb("miss", "misses")),
             Some(Category::Dexterity | Category::Dodge) => format!(
@@ -337,7 +373,7 @@ pub(super) fn attack_message(
                 "{} glances off {} {}.",
                 capitalized(&weapon),
                 target.whose(),
-                hide.unwrap_or("hide")
+                guard.hide.unwrap_or("hide")
             ),
             Some(Category::Deflection) => format!(
                 "{} turns aside before it reaches {t}.",
@@ -442,6 +478,12 @@ impl World {
         )
     }
 
+    /// The Protection of actor `id` (spec §8 "Combat"): what it wears and its hide soak off
+    /// every hit; 0 for one that is gone.
+    pub(crate) fn protection_of(&self, id: ActorId) -> i32 {
+        (self.state.actors.get(&id)).map_or(0, |a| a.protection(&self.content))
+    }
+
     /// Actor `attacker` attacks actor `target` with `profile` (`None`: an intent only, nothing is
     /// rolled), against the target's Defence: the event, the noise, and the damage, which may
     /// kill. A missile's attacks ([`World::missile_hits`], `shoot.rs`) make their noise once, as
@@ -513,8 +555,10 @@ impl World {
             return None;
         };
         let defence = self.defence_of(target);
+        let protection = self.protection_of(target);
         let levels = (self.level_of(attacker), self.level_of(target));
-        let blow = profile.map(|profile| combat::strike(&profile, &defence, &mut self.state.rng));
+        let rng = &mut self.state.rng;
+        let blow = profile.map(|profile| combat::strike(&profile, &defence, protection, rng));
         events.push(Event::Attacked {
             attacker,
             target,
@@ -814,9 +858,7 @@ impl World {
         let content = self.content.clone();
         let target_actor = self.actor_or_fallen(target);
         let name = target_actor.map(|a| content.creature(a.creature).name.as_str());
-        let hide = (target_actor)
-            .and_then(|a| content.creature(a.creature).natural.as_ref())
-            .map(|h| h.name.as_str());
+        let guard = Guard::of(target_actor, &content);
         let end = match name {
             Some(name) if seen => End::Seen(name),
             _ => End::Unseen,
@@ -833,7 +875,7 @@ impl World {
             &words,
             AttackKind::Melee,
             strike,
-            hide,
+            guard,
         ));
         if died && seen {
             said.push(death_message(end));

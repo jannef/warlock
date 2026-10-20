@@ -107,7 +107,7 @@ name = "sword"
 glyph = ")"
 fg = "#c0c0c0"
 class = "melee_weapons"
-material = "steel"
+materials = ["steel"]
 weight = 1000
 value = 0
 slot = "main_hand"
@@ -121,7 +121,7 @@ name = "dagger"
 glyph = ")"
 fg = "#c0c0c0"
 class = "melee_weapons"
-material = "steel"
+materials = ["steel"]
 weight = 450
 value = 0
 slot = "main_hand"
@@ -135,7 +135,7 @@ name = "buckler"
 glyph = "["
 fg = "#c0c0c0"
 class = "shields"
-material = "steel"
+materials = ["steel"]
 weight = 2000
 value = 0
 slot = "off_hand"
@@ -148,7 +148,7 @@ name = "crossbow"
 glyph = "}"
 fg = "#c0c0c0"
 class = "missile_weapons"
-material = "steel"
+materials = ["steel"]
 weight = 3000
 value = 0
 slot = "missile_weapon"
@@ -164,7 +164,7 @@ name = "bolt"
 glyph = "/"
 fg = "#c0c0c0"
 class = "missiles"
-material = "steel"
+materials = ["steel"]
 weight = 50
 value = 0
 stackable = true
@@ -471,8 +471,17 @@ fn blocks_by_the_shield_train_shield_blocking() {
 #[test]
 fn a_shield_bash_is_a_blow_with_the_shield_that_trains_shield_bashing() {
     let mut w = world_on(YARD);
-    // Without a shield, nothing to bash with: refused, no time; nor is it an ability to list.
-    assert!(w.perception().abilities().is_empty());
+    // Without a shield, nothing to bash with: refused, no time; the abilities menu lists it,
+    // greyed out with why.
+    use crate::ability::{Ability, OwnAbility, Unavailable};
+    let bash = |unavailable| OwnAbility {
+        ability: Ability::ShieldBash,
+        unavailable,
+    };
+    assert_eq!(
+        w.perception().abilities(),
+        [bash(Some(Unavailable::NoShield))]
+    );
     let outcome = w.apply(&Action::Bash(Dir::E));
     assert!(!outcome.took_turn);
     assert_eq!(
@@ -480,11 +489,13 @@ fn a_shield_bash_is_a_blow_with_the_shield_that_trains_shield_bashing() {
         Some("You have no shield to bash with.")
     );
     arm(&mut w, &["sword", "buckler"]);
-    // With one, the abilities menu (#156) lists it, and it asks for a direction.
-    use crate::ability::{Ability, Aim};
-    assert_eq!(w.perception().abilities(), [Ability::ShieldBash]);
-    assert_eq!(Ability::ShieldBash.aim(), Aim::Direction);
-    assert_eq!(Ability::ShieldBash.action(Dir::E), Action::Bash(Dir::E));
+    // With one, the abilities menu (#156) lists it available, and it asks for a direction.
+    assert_eq!(w.perception().abilities(), [bash(None)]);
+    assert_eq!(Ability::ShieldBash.aim(), crate::ability::Aim::Direction);
+    assert_eq!(
+        Ability::ShieldBash.action(Some(Dir::E)),
+        Some(Action::Bash(Dir::E))
+    );
     for (dir, said) in [
         (Dir::W, "There is nothing there to bash."),
         (Dir::SW, "There is nothing there to bash."),
@@ -535,6 +546,7 @@ fn a_shield_bash_is_a_blow_with_the_shield_that_trains_shield_bashing() {
                 assert_eq!(text, "You bash the dummy.");
             }
             Strike::Hit { critical: true } => assert_eq!(text, "You bash the dummy hard!"),
+            Strike::Soaked => unreachable!("the dummy has no Protection"),
             Strike::Missed { .. } => {
                 missed = true;
                 assert_eq!(text, "You miss the dummy.");

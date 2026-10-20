@@ -14,12 +14,31 @@
 #   class     its item class, an id in item_classes.toml (melee_weapons, body_armour, food, ...):
 #             what item lists group it under and shops trade it as. An object with a magic item
 #             `kind` (below) is of the class that lists that kind
-#   material  an id in materials.toml
+#   materials what it is made of: its parts, each of one material (materials/), the first the
+#             main one. A plain material id is one unnamed part, so most objects are
+#             `materials = ["steel"]`; an object of several parts writes each as a table:
+#               materials = [
+#                   { part = "chain", of = "gold" },
+#                   { part = "setting", of = "ruby", share = 10 },
+#               ]
+#             `part` is an id in parts.toml (blade, grip, pommel, chain, setting, ...), `of` a
+#             material id, and `share` the part's percent of the weight. Every part but the first
+#             names its part and share; the main part takes what the others leave (at least 1),
+#             and decides what a single material does: the material word a name begins with
+#             (and, later, the colour, the weight, and how a weapon or armour fights). Names
+#             show the gems and precious metals (`precious` materials) they do not mention yet:
+#             the gold amulet above is a "gold and ruby amulet", a long sword with a ruby pommel
+#             a "ruby-pommelled long sword" (parts.toml's `adjective`); a leather grip shows
+#             only in the item's description, which lists every part. Materials are never
+#             hidden: an unidentified amulet shows that it is gold and ruby
 #   weight    grams for one, at least 1
 #   value     what one is worth, in gold coins (required; 0 to 1000000): shops price their
 #             goods from it and pay part of it for what they buy (shops.toml). Junk is worth 0,
 #             and nobody buys or sells it; so are keys and quest letters, which are never traded.
-#             A magic or rare item is priced as its base item, identified or not
+#             A magic or rare item is priced as its base item, identified or not. It is the
+#             value of the object made of its own `materials`: one made of other materials is
+#             worth it times what those are worth (each part's share times its material's
+#             `value`) over what its own are worth
 #   stackable several lie in one stack (coins, arrows); default false: a stack of one each
 #   key       a key (spec §8 "Doors"): the lock id it opens (levels lock doors with `lock =
 #             "id"`), or "*" for a skeleton key, which opens every lock
@@ -51,9 +70,16 @@
 #   parry      Defence while wielded (the Parry category)
 #   armour     Defence while worn (the Armour category); max_dex the most a worn armour lets
 #              Dexterity add to Defence
+#   protection the damage it soaks off every hit while worn (Protection, 0 to 20; body armour,
+#              helmets, cloaks, gloves, boots: never a shield or anything in a hand). Unlike
+#              Defence, every piece worn adds up. Light armour is mostly Defence, heavy armour
+#              mostly Protection
 #   shield     Defence while held (the Shield category)
 #   bash       a shield's damage dice when bashing with it (spec §8 "Weapon skills"); the
 #              wielder's Strength modifier adds to it, as to every melee blow
+#   penetration how much of a target's Protection a blow or a shot with it ignores (0 to 20;
+#              weapons and ammunition: a shot's is its launcher's and its ammunition's together;
+#              picks, war hammers, stilettos, crossbow bolts). Never shown as a number
 # Within a category of Defence only the best bonus counts.
 #
 # Weapon skills (spec §8 "Weapon skills"):
@@ -136,11 +162,11 @@
 #
 # Missiles, for the missile weapons that shoot them. Loot holds them in stacks.
 #
-# Armor: body armour, from padding to plate (Armour, and the most Dexterity it lets add to
-# Defence).
+# Armor: body armour, from padding to plate (Armour, the most Dexterity it lets add to Defence,
+# and Protection).
 #
-# Helmets, cloaks, gloves, and boots give no Defence of their own (only the best Armour counts):
-# they are worn for what magic they hold.
+# Helmets, cloaks, gloves, and boots give no Defence of their own (only the best Armour counts);
+# the heavy ones give Protection, which adds up, and all are worn for what magic they hold.
 #
 # Tools
 # Digging tools go in the Tool slot. A pick-axe digs through a stone wall in six minutes at

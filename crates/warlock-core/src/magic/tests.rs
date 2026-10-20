@@ -368,7 +368,7 @@ fn descriptions_say_base_stats_and_known_affixes_in_words() {
     assert_eq!(
         text(&plain),
         [
-            "Long sword · steel · 1.8 kg",
+            "Long sword · steel blade, leather grip · 1.8 kg",
             "Long blade, for the main hand",
             "Damage 1d8; criticals on 20–24, ×2 damage",
         ]
@@ -380,7 +380,10 @@ fn descriptions_say_base_stats_and_known_affixes_in_words() {
         None,
     );
     let unknown = text(&sword);
-    assert_eq!(unknown[0], "Magic long sword · steel · 1.8 kg");
+    assert_eq!(
+        unknown[0],
+        "Magic long sword · steel blade, leather grip · 1.8 kg"
+    );
     assert!(
         unknown
             .last()
@@ -443,10 +446,15 @@ fn descriptions_say_base_stats_and_known_affixes_in_words() {
         mail[1..],
         [
             "Worn: body",
-            "Armour +4",
+            "Armour +2",
+            "Protection 3",
             "Dexterity adds at most +4 to Defence while worn",
         ]
     );
+    // Penetration is a fact, never a number.
+    let hammer = text(&Stack::one(object(&c, "war_hammer")));
+    assert!(hammer.iter().any(|l| l == "Pierces armour"), "{hammer:?}");
+    assert!(!hammer.iter().any(|l| l.contains("enetrat")), "{hammer:?}");
     let great = text(&Stack::one(object(&c, "great_sword")));
     assert!(great.contains(&"Great blade, for both hands".to_string()));
     assert!(great.contains(&"Slow to strike".to_string()));

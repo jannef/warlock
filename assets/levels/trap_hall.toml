@@ -19,6 +19,14 @@
 # stone (#) north of it, granite (G) south. Its blast breaks the two softer ones into rubble ("The
 # walls collapse!"); the granite holds.
 #
+# The closets (north-west, spec §8 "Trapped doors"): three closets open onto the hall, each by a
+# trapped door. A trap on a door goes off at whoever opens or kicks the door, never at whoever
+# walks through the doorway. The west door shows its arrow trap (d): open it and an arrow shoots
+# out of the wall beside it. The middle door hides a fireball (e): search (`s`) next to it first,
+# or open it and find out (its blast bursts out on both sides of the door). The east door (o)
+# stands open on a kobold's rounds (k) in and out of its closet, and hides an alarm: shut it (`c`)
+# and watch the kobold open it again.
+#
 # Scrolls (spec §8 "Scrolls"): beside the arrival lie scrolls to try the same spells with, aimed
 # where you like (`r`): fireball, lightning, and frost; and a scroll of identify for the dagger
 # beside them, which nobody has identified.
@@ -27,10 +35,10 @@ name = "The Trap Hall"
 ambient = [48, 46, 42, 0]
 map = '''
 ########################################################################
-#############.......#.......#.......#.......#.......#.......#.......####
-#############...a...#...s...#...p...#...b...#...x...#...l...#...f...####
-#############.......#.......#.......#.......#.......#.......#.......####
-#############.......#.......#.......#.......#.......#.......#.......####
+#...#...#...#.......#.......#.......#.......#.......#.......#.......####
+#...#...#k..#...a...#...s...#...p...#...b...#...x...#...l...#...f...####
+#...#...#...#.......#.......#.......#.......#.......#.......#.......####
+##d###e##o###.......#.......#.......#.......#.......#.......#.......####
 #t....................................................................t#
 #......................................................................#
 #......................................................................#
@@ -69,6 +77,11 @@ map = '''
 "S" = { terrain = "floor", trap = "spear" }
 "F" = { terrain = "floor", trap = "fireball" }
 "L" = { terrain = "floor", trap = "lightning_bolt", dir = "W" }
+# The closets' trapped doors, and the kobold whose rounds lead through the open one.
+"d" = { terrain = "door_closed", trap = "arrow", known = true }
+"e" = { terrain = "door_closed", trap = "fireball" }
+"o" = { terrain = "door_open", trap = "alarm" }
+"k" = { terrain = "floor", creature = "kobold", faction = "peaceful", route = "S3 N3" }
 # Pillars by the fireball: what its blast breaks and what it does not.
 "E" = "packed_earth"
 "G" = "granite"

@@ -20,7 +20,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     so luring them is a tactic; so does one who makes way for the player onto the cell they
     stood on (§8 "Displacement"), its pit's climb taken off its next action.
     `World::spring_trap(at, victim)` is the one way a trap goes off
-    (a trapped door, later, calls it too): it spends a charge (the last leaves the trap spent and
+    (opening or kicking a trapped door calls it too, "Trapped doors" below): it spends a charge (the last leaves the trap spent and
     gone), makes the trap's noise on its cell (no actor made it, so everyone in earshot hears it,
     §5 "Hearing"; an alarm's bell draws every creature with enemies to look), and does what the
     trap does:
@@ -85,6 +85,25 @@ developer notes (CLAUDE.md, `docs/dev/`).
     are wrenched elsewhere." / "The kobold vanishes!", and deaths ("The cave beetle dies.", "You
     die..."). Like any message they stop a rest; a rest also perceives every turn in which a trap
     went off (a teleport moves a creature farther than its steps).
+  - **Trapped doors** (#174): a level may put a trap on a door, closed or open (§7 "Traps in level
+    files"), of any kind but a pit (`TrapEffect::fits_door`): a door's trap goes off at whoever
+    opens the door from the next cell, and no one can fall into a pit there. It belongs to the
+    door, not the floor: walking through the doorway never sets it off (`World::step_onto_trap`
+    skips door cells, for the player, creatures, and whoever makes way; the interface never asks,
+    §6 "Known traps"). Opening the door does (`o`, or walking into it, unlocking it with a key
+    too), the player's and a creature's alike (`World::swing_open`), and so does every kick at it,
+    as the kick lands and before the door breaks, whether it breaks or holds. It opens and shuts
+    with the door: shut again, it is set again, and opening the door again sets it off again
+    while it has charges. A door kicked in takes its trap with it (`World::set_terrain`, as with a
+    lock). It is aimed from the door at whoever set it off: a shot from the slit beside the door at
+    them, a strike at them, a burst around the door, a bolt along its `dir`, else from the door
+    through them, an alarm's bell on the door, a teleport of them. The trap's own cell never stops
+    its burst, so a door's blast goes out on both sides of it even while it is shut (the player
+    sees their side of it). Hidden, it looks like the door; searching and noticing in passing find
+    it like any hidden trap ("Searching" below), and once known it shows as the trap's glyph in
+    place of the door's, like any known trap (§4.2), and look mode names both ("An arrow trap, on
+    closed door."). A secret door is never trapped, as it is never locked (a content error in a
+    level file; generators never hide a trapped door). The trap hall's closets show them (§3).
 - **Doors** (`warlock-core/src/door.rs`, the rules; `world/door.rs`, applying them; M19, #130):
   locked doors and keys, and kicking doors in.
   - **Locks** are per-cell state of a level, not terrain of their own: a locked door is the
@@ -185,7 +204,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     with nothing hidden around draws nothing extra.
   - **Found**: a secret door becomes its closed door ("You find a secret door!"); a trap becomes
     known as one seen going off does (`World::know_trap`, shared with `learn_traps`; "You notice
-    a tripwire: an alarm trap.", the trap's `sign`, default "a pressure plate"). Either is
+    a tripwire: an alarm trap.", the trap's `sign`, default "a pressure plate"; a door's trap
+    "You notice that the door is trapped: an arrow trap.", since a sign is the floor's). Either is
     remembered at once, in the dark too, and the message stops a rest.
   - **Where secret doors are**: level legends (§7 "Secret doors in level files"), indoor vaults
     (stamped with them), and the rooms levels of a branch with `secret_doors` (the Depths: one

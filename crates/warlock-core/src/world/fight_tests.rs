@@ -1,7 +1,7 @@
 //! Combat in the world (spec §8 "Combat"): attacks hurt and kill, creatures drop what they
 //! carry, hit points come back with time, and the player's death ends the run.
 
-use super::fight::{End, Words, attack_message, death_message};
+use super::fight::{End, Guard, Words, attack_message, death_message};
 use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::combat::{Category, Health, Strike};
@@ -12,8 +12,19 @@ use crate::replay::Replay;
 fn messages_say_what_came_of_an_attack_without_numbers() {
     let spear = Words::test("spear", "hits");
     let bite = Words::test("bite", "bites");
+    let shell = Guard {
+        hide: Some("shell"),
+        soak: Some("shell"),
+    };
     let say = |a, t, words: &Words, strike| {
-        attack_message(a, t, words, AttackKind::Melee, Some(strike), Some("shell"))
+        attack_message(a, t, words, AttackKind::Melee, Some(strike), shell).unwrap_or_default()
+    };
+    let mail = Guard {
+        hide: None,
+        soak: Some("chain mail shirt"),
+    };
+    let soaked = |a, t, words: &Words| {
+        attack_message(a, t, words, AttackKind::Melee, Some(Strike::Soaked), mail)
             .unwrap_or_default()
     };
     let (kobold, rat, beetle) = (
@@ -91,13 +102,48 @@ fn messages_say_what_came_of_an_attack_without_numbers() {
             say(kobold, End::Unseen, &spear, crit),
             "The kobold hits something hard!",
         ),
+        // A hit Protection soaked to nothing glances off the hide, or the armour worn that
+        // soaks the most; what it glanced off needs both ends seen.
+        (
+            say(End::You, beetle, &spear, Strike::Soaked),
+            "Your spear glances off the cave beetle's shell.",
+        ),
+        (
+            soaked(kobold, End::You, &spear),
+            "The kobold's spear glances off your chain mail shirt.",
+        ),
+        (
+            soaked(rat, kobold, &bite),
+            "The giant rat's bite glances off the kobold's chain mail shirt.",
+        ),
+        (
+            soaked(End::Unseen, End::You, &spear),
+            "Something hits you but does no harm.",
+        ),
+        (
+            soaked(End::You, End::Unseen, &spear),
+            "You hit something but do no harm.",
+        ),
+        (
+            attack_message(
+                End::Trap("arrow"),
+                End::You,
+                &Words::test("arrow", "hits"),
+                AttackKind::Melee,
+                Some(Strike::Soaked),
+                mail,
+            )
+            .unwrap_or_default(),
+            "The arrow glances off your chain mail shirt.",
+        ),
     ] {
         assert_eq!(text, expected);
     }
     // Shots, and intents (a spell; a shot with no missile weapon).
     let arrow = Words::test("arrow", "shoots");
     let archer = End::Seen("kobold archer");
-    let shot = |a, t, strike| attack_message(a, t, &arrow, AttackKind::Ranged, strike, None);
+    let shot =
+        |a, t, strike| attack_message(a, t, &arrow, AttackKind::Ranged, strike, Guard::default());
     assert_eq!(
         shot(archer, rat, Some(hit)).as_deref(),
         Some("The kobold archer shoots the giant rat.")
@@ -118,7 +164,7 @@ fn messages_say_what_came_of_an_attack_without_numbers() {
             &spell,
             AttackKind::Spell,
             None,
-            None
+            Guard::default()
         )
         .as_deref(),
         Some("The kobold shaman casts a spell at the giant rat.")
@@ -131,7 +177,7 @@ fn messages_say_what_came_of_an_attack_without_numbers() {
             &spear,
             AttackKind::Melee,
             Some(hit),
-            None
+            Guard::default()
         ),
         None
     );
@@ -242,7 +288,7 @@ name = "sword"
 glyph = ")"
 fg = "#c0c0c0"
 class = "melee_weapons"
-material = "steel"
+materials = ["steel"]
 weight = 1000
 value = 0
 slot = "main_hand"
@@ -255,7 +301,7 @@ name = "mail shirt"
 glyph = "["
 fg = "#c0c0c0"
 class = "body_armour"
-material = "steel"
+materials = ["steel"]
 weight = 9000
 value = 0
 slot = "body"
@@ -268,7 +314,7 @@ name = "buckler"
 glyph = "["
 fg = "#c0c0c0"
 class = "shields"
-material = "steel"
+materials = ["steel"]
 weight = 2000
 value = 0
 slot = "off_hand"
@@ -280,7 +326,7 @@ name = "staff"
 glyph = ")"
 fg = "#c0c0c0"
 class = "melee_weapons"
-material = "steel"
+materials = ["steel"]
 weight = 2000
 value = 0
 slot = "main_hand"
@@ -293,7 +339,7 @@ name = "bow"
 glyph = "}"
 fg = "#c0c0c0"
 class = "missile_weapons"
-material = "steel"
+materials = ["steel"]
 weight = 700
 value = 0
 slot = "missile_weapon"
@@ -309,7 +355,7 @@ name = "arrow"
 glyph = "/"
 fg = "#c0c0c0"
 class = "missiles"
-material = "steel"
+materials = ["steel"]
 weight = 30
 value = 0
 stackable = true
@@ -322,7 +368,7 @@ name = "coin"
 glyph = "$"
 fg = "#f0c040"
 class = "coins"
-material = "steel"
+materials = ["steel"]
 weight = 10
 value = 0
 stackable = true

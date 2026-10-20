@@ -1,60 +1,290 @@
-//! Abilities (spec §6 "Abilities"): what a character can do beyond the commands every run has —
-//! racial, class, skill, and style abilities. Unlike ADOM, they do not get a key each: they go
-//! into one abilities menu (#156, to come), which lists [`PerceptionView::abilities`], the ones
-//! the player can use now, asks for what each needs ([`Ability::aim`]), and applies the
-//! [`Action`] it makes ([`Ability::action`]). Each is also a key command that is unbound by
-//! default (rebindable in Controls).
+//! Abilities (spec §6 "Abilities", #156): what a character can do beyond the commands every run
+//! has, because of who they are — racial, class, skill, weapon skill and fighting style, and
+//! item abilities. Unlike ADOM, they do not get a key each: they all go into one abilities menu,
+//! which lists [`PerceptionView::abilities`] grouped by [`Source`], asks for what each needs
+//! ([`Ability::aim`]), and applies the [`Action`] it makes ([`Ability::action`]), so replays
+//! record an ability as the action it is. An ability that has an action of its own may also be a
+//! key command, unbound by default (rebindable in Controls: shield bash).
+//!
+//! **This is the one registry**: a system that gives abilities adds them here, as a variant of
+//! [`Ability`] with its name, source, aim, cost, and action, a line in [`Ability::every`] that
+//! lists it, and who has it ([`Ability::had_by`]); [`Ability::unavailable`] says when it cannot
+//! be used now and why (the menu greys it out with the reason). Nothing else gets a key of its
+//! own.
 //!
 //! [`PerceptionView::abilities`]: crate::perception::PerceptionView::abilities
 
 use crate::action::Action;
-use crate::content::Content;
+use crate::content::{ActionKind, Content};
 use crate::geom::Dir;
+use crate::skills::SkillId;
 use crate::world::Actor;
 
 /// An ability, as the abilities menu lists it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Ability {
-    /// Bash with the shield held (spec §8 "Weapon skills"): [`Action::Bash`].
+    /// A skill used as an action (`kind = "action"` in `data/skills.toml`) that the actor is
+    /// trained in, whose use is not in the game yet: listed, never available (spec §8
+    /// "Skills"). A use, when it comes, is a variant of its own with its action, and its skill
+    /// is no longer listed as this.
+    Skill(SkillId),
+    /// Bash with the shield held (spec §8 "Weapon skills"): [`Action::Bash`]. Everyone can bash
+    /// with a shield (at shield bashing's rank 0 too), so everyone has it; it is available while
+    /// a shield to bash with is held.
     ShieldBash,
 }
 
-/// What an ability asks for before it is used.
+/// Where an ability comes from: the abilities menu's groups, in this order.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum Source {
+    /// The character's race (none yet).
+    Race,
+    /// The character's class (none yet).
+    Class,
+    /// A trained skill used as an action (spec §8 "Skills").
+    Skill,
+    /// A weapon skill or a fighting style (spec §8 "Weapon skills", "Fighting styles").
+    WeaponSkill,
+    /// Something worn or carried (none yet).
+    Item,
+}
+
+impl Source {
+    /// Every source, in menu order.
+    pub const ALL: &[Source] = &[
+        Source::Race,
+        Source::Class,
+        Source::Skill,
+        Source::WeaponSkill,
+        Source::Item,
+    ];
+
+    /// Its group's heading in the abilities menu.
+    pub const fn name(self) -> &'static str {
+        match self {
+            Source::Race => "Racial",
+            Source::Class => "Class",
+            Source::Skill => "Skills",
+            Source::WeaponSkill => "Weapon skills",
+            Source::Item => "Items",
+        }
+    }
+
+    /// Its id in dumps.
+    pub const fn id(self) -> &'static str {
+        match self {
+            Source::Race => "race",
+            Source::Class => "class",
+            Source::Skill => "skill",
+            Source::WeaponSkill => "weapon_skill",
+            Source::Item => "item",
+        }
+    }
+}
+
+/// What an ability asks for before it is used. A target (the aiming mode) and an item (a list of
+/// the pack) join these with the first ability that needs one.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Aim {
+    /// Nothing: choosing it uses it.
+    Nothing,
     /// A direction, as opening a door does.
     Direction,
 }
 
+/// Why an ability cannot be used now: the abilities menu shows it beside the greyed-out row.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Unavailable {
+    /// A shield bash without a shield to bash with.
+    NoShield,
+    /// A skill whose use is not in the game yet.
+    NotYet,
+}
+
+impl Unavailable {
+    /// The reason, as the menu says it.
+    pub const fn reason(self) -> &'static str {
+        match self {
+            Unavailable::NoShield => "you hold no shield",
+            Unavailable::NotYet => "not usable yet",
+        }
+    }
+
+    /// Its id in dumps.
+    pub const fn id(self) -> &'static str {
+        match self {
+            Unavailable::NoShield => "no_shield",
+            Unavailable::NotYet => "not_yet",
+        }
+    }
+}
+
 impl Ability {
-    /// Every ability, in menu order.
-    pub const ALL: &[Ability] = &[Ability::ShieldBash];
+    /// Every ability there is, in menu order: by [`Source`], then as each source lists its own.
+    /// The one place abilities are registered (the wiki's table lists these).
+    pub fn every(content: &Content) -> Vec<Ability> {
+        // Skills: those used as actions, in skill order.
+        let skills = (content.skills().iter().enumerate())
+            .filter(|(_, def)| def.is_active())
+            .filter_map(|(i, _)| u8::try_from(i).ok().map(|i| Ability::Skill(SkillId(i))));
+        // Weapon skills and fighting styles: the shield bash.
+        let weapon_skills = [Ability::ShieldBash];
+        let mut all: Vec<Ability> = skills.chain(weapon_skills).collect();
+        all.sort_by_key(|a| a.source());
+        all
+    }
+
+    /// Every ability `actor` has, in menu order.
+    pub(crate) fn of(actor: &Actor, content: &Content) -> Vec<Ability> {
+        (Ability::every(content).into_iter())
+            .filter(|a| a.had_by(actor))
+            .collect()
+    }
+
+    /// Whether `actor` has it (whether or not they can use it now): a skill, if they are trained
+    /// in it; the shield bash, everyone.
+    fn had_by(self, actor: &Actor) -> bool {
+        match self {
+            Ability::Skill(id) => actor.skills.get(id).is_some(),
+            Ability::ShieldBash => true,
+        }
+    }
+
+    /// Its id in dumps: `shield_bash`, or the skill's id.
+    pub fn id(self, content: &Content) -> &str {
+        match self {
+            Ability::Skill(id) => &content.skill(id).id,
+            Ability::ShieldBash => "shield_bash",
+        }
+    }
 
     /// Its name in the menu.
-    pub const fn name(self) -> &'static str {
+    pub fn name(self, content: &Content) -> &str {
         match self {
-            Ability::ShieldBash => "Bash with your shield",
+            Ability::Skill(id) => &content.skill(id).name,
+            Ability::ShieldBash => "Shield bash",
+        }
+    }
+
+    /// What it does, in a line.
+    pub fn description(self, content: &Content) -> &str {
+        match self {
+            Ability::Skill(id) => &content.skill(id).description,
+            Ability::ShieldBash => "Strike someone next to you with the shield you hold.",
+        }
+    }
+
+    /// Where it comes from: its group in the menu.
+    pub const fn source(self) -> Source {
+        match self {
+            Ability::Skill(_) => Source::Skill,
+            Ability::ShieldBash => Source::WeaponSkill,
         }
     }
 
     /// What it asks for before it is used.
     pub const fn aim(self) -> Aim {
         match self {
+            Ability::Skill(_) => Aim::Nothing,
             Ability::ShieldBash => Aim::Direction,
         }
     }
 
-    /// The action it is, aimed in `dir`.
-    pub const fn action(self, dir: Dir) -> Action {
+    /// What it costs, as an action of this kind (`data/actions.toml`; the rules then price it as
+    /// that action, spec §8 "Time"); `None` for one with no use yet.
+    pub const fn cost(self) -> Option<ActionKind> {
         match self {
-            Ability::ShieldBash => Action::Bash(dir),
+            Ability::Skill(_) => None,
+            Ability::ShieldBash => Some(ActionKind::Melee),
         }
     }
 
-    /// Whether `actor` can use it now: a shield bash needs a shield to bash with.
-    pub(crate) fn usable(self, actor: &Actor, content: &Content) -> bool {
-        match self {
-            Ability::ShieldBash => actor.shield(content).is_some(),
+    /// The action it is, aimed `dir` when it asks for a direction; `None` for one with no use
+    /// yet, or one that asks for a direction without it.
+    pub const fn action(self, dir: Option<Dir>) -> Option<Action> {
+        match (self, dir) {
+            (Ability::Skill(_), _) => None,
+            (Ability::ShieldBash, Some(dir)) => Some(Action::Bash(dir)),
+            (Ability::ShieldBash, None) => None,
         }
+    }
+
+    /// Why `actor` cannot use it now; `None` when it can.
+    pub(crate) fn unavailable(self, actor: &Actor, content: &Content) -> Option<Unavailable> {
+        match self {
+            Ability::Skill(_) => Some(Unavailable::NotYet),
+            Ability::ShieldBash => actor
+                .shield(content)
+                .is_none()
+                .then_some(Unavailable::NoShield),
+        }
+    }
+}
+
+/// One of the player's abilities, as they know it: for the abilities menu.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct OwnAbility {
+    pub ability: Ability,
+    /// Why it cannot be used now; `None` when it can.
+    pub unavailable: Option<Unavailable>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sources_are_in_menu_order_and_named() {
+        let mut sorted = Source::ALL.to_vec();
+        sorted.sort();
+        assert_eq!(sorted, Source::ALL, "the menu's order is the enum's");
+        let names: Vec<&str> = Source::ALL.iter().map(|s| s.name()).collect();
+        assert_eq!(
+            names,
+            ["Racial", "Class", "Skills", "Weapon skills", "Items"]
+        );
+    }
+
+    #[test]
+    fn every_ability_is_registered_in_menu_order() {
+        let content = Content::builtin().expect("content");
+        let every = Ability::every(&content);
+        assert!(every.windows(2).all(|w| w[0].source() <= w[1].source()));
+        // The skills used as actions, in skill order, then the shield bash.
+        let skills: Vec<&str> = (every.iter())
+            .filter(|a| a.source() == Source::Skill)
+            .map(|a| a.id(&content))
+            .collect();
+        assert_eq!(
+            skills,
+            [
+                "appraise",
+                "bluff",
+                "decipher_script",
+                "disable_device",
+                "handle_animal",
+                "heal",
+                "intimidate",
+                "knowledge",
+                "metalcraft",
+                "music",
+                "open_lock",
+                "steal",
+                "use_magic_device",
+                "woodcraft",
+            ]
+        );
+        assert_eq!(every.last(), Some(&Ability::ShieldBash));
+    }
+
+    #[test]
+    fn a_shield_bash_asks_for_a_direction_and_is_a_bash() {
+        let bash = Ability::ShieldBash;
+        assert_eq!(bash.aim(), Aim::Direction);
+        assert_eq!(bash.source(), Source::WeaponSkill);
+        assert_eq!(bash.cost(), Some(ActionKind::Melee));
+        assert_eq!(bash.action(Some(Dir::E)), Some(Action::Bash(Dir::E)));
+        assert_eq!(bash.action(None), None, "not without a direction");
+        assert_eq!(Ability::Skill(SkillId(0)).action(Some(Dir::E)), None);
     }
 }

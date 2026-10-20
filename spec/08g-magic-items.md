@@ -22,7 +22,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Names** (`Stack::describe`, the one name presentation uses): normal "a long sword"; magic
     its prefix and suffix around the base, "a Sharp long sword of the Bear" ("12 Sharp arrows of
     Durability"); rare its name then the base, "Grim Bite, a long sword"; unidentified the base
-    and its rarity, "a long sword (magic)", "12 arrows (rare)". Rarity colors the name (§6).
+    and its rarity, "a long sword (magic)", "12 arrows (rare)". The base is the object's name
+    with its gems and precious metals (§7 "Objects and materials": "a gold and ruby amulet
+    (magic)"), which show identified or not. Rarity colors the name (§6).
     Combat messages name the base ("The kobold's spear glances off your armour.").
   - **Unidentified**: magic and rare items are found unidentified. The rarity shows, the affixes
     and a rare name do not, and their effects apply all the same while worn or wielded (as in
@@ -40,7 +42,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     ammunition are **local**: they change attacks made with that item (a shot: the missile
     weapon's and the ammunition's together; a throw: the thrown weapon's); on anything else
     (gloves, rings, amulets, helmets) they are **global**: every attack. Effects on the item itself
-    (Armour, Shield, Parry, `max_dex`, weight) are local. The rest are global: the six stats,
+    (Armour, Protection, Shield, Parry, `max_dex`, weight) are local (the Hardened prefix adds
+    to an armour's Protection, which adds up with every other piece's). The rest are global: the six stats,
     maximum hit points, regeneration, Dodge (stacks), Deflection and natural armour (the best
     counts, with the creature's own), moving speed, carrying limit, stealth (quieter footsteps,
     §5 "Hearing"), **light** (the wearer carries the brightest light among its glowing items,

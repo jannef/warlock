@@ -10,6 +10,7 @@
 //! `pub(super) fn table(content: &Content) -> String`; `text` holds the helpers two or more of
 //! them share. [`generate`] is the one registration list: a line per generated file, in order.
 
+mod abilities;
 mod actions;
 mod burden;
 mod calendar;
@@ -140,11 +141,13 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("skill-benefits.md", skills::skill_benefits),
         ("skill-grants.md", skills::skill_grants),
         ("skill-increase.md", skills::skill_increase),
+        ("abilities.md", abilities::abilities),
         ("weapons.md", combat::weapons),
         ("light-weapons.md", combat::light_weapons),
         ("launchers.md", combat::launchers),
         ("ammunition.md", combat::ammunition),
         ("armour.md", combat::armour),
+        ("piercing.md", combat::piercing),
         ("stances.md", combat::stances),
         ("hit-chances.md", combat::hit_chances),
         ("threats.md", combat::threats),
@@ -284,6 +287,17 @@ mod tests {
         assert!(text("objects.md").contains(
             "| Dagger | `)` | melee weapons | steel | 450 g | 30 gold | no | Main hand or off hand |"
         ));
+        // Objects of several parts list them all, the main one first; names show the gems and
+        // precious metals.
+        let objects = text("objects.md");
+        assert!(
+            objects.contains("| Long sword | `)` | melee weapons | steel blade, leather grip |")
+        );
+        assert!(
+            objects
+                .contains("| Gold and ruby amulet | `\"` | amulets | gold chain, ruby setting |")
+        );
+        assert!(text("materials.md").contains("| Ruby | yes | gold and ruby amulets, rubies |"));
         // Fighting styles: their configurations, defaults, ranks, and the classes' starting ones.
         let styles = text("styles.md");
         for row in [
@@ -407,8 +421,18 @@ mod tests {
             actions
                 .contains("| Putting something on, or taking it off: Body | 3000 | 18 seconds |")
         );
+        let abilities = text("abilities.md");
         assert!(
-            text("materials.md").contains("| Steel | stilettos, daggers, short swords, scimitars,")
+            abilities.contains(
+                "| Shield bash | Weapon skills | everyone (usable with a shield in hand) | a \
+                 direction | Strike someone next to you with the shield you hold. | 6 seconds |"
+            ),
+            "{abilities}"
+        );
+        assert!(abilities.contains("| Open lock | Skills | everyone trained in the skill | — |"));
+        assert!(
+            text("materials.md")
+                .contains("| Steel | no | stilettos, daggers, short swords, scimitars,")
         );
         assert!(text("pack.md").contains("| Your own weight | 70 kg |"));
         let burden = text("burden.md");
@@ -583,10 +607,15 @@ mod tests {
         assert!(weapons.contains("Bare hands: 1d3"));
         let armour = text("armour.md");
         assert!(
-            armour.contains("| Chain mail shirt | body | +4 | Armour | +4 |"),
+            armour.contains("| Chain mail shirt | body | +2 | Armour | 3 | +4 |"),
             "{armour}"
         );
-        assert!(armour.contains("| Small shield | off hand | +1 | Shield | no limit |"));
+        assert!(armour.contains("| Small shield | off hand | +1 | Shield | - | no limit |"));
+        assert!(armour.contains("| Great helm | head | - | - | 2 | no limit | - |"));
+        assert!(
+            text("piercing.md")
+                .ends_with("The crossbow bolt, the stiletto, and the war hammer pierce armour.\n")
+        );
         let stances = text("stances.md");
         assert!(
             stances.contains("| Aggressive | +1 | +2 | \u{2212}3 | - | - | - | - | 125% |"),

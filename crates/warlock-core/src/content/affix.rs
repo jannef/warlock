@@ -14,7 +14,8 @@
 //! Attack effects (to-hit, damage, criticals, attack speed, range, ...) on a weapon, a missile
 //! weapon, or ammunition are **local**: they change attacks made with that item only. Elsewhere
 //! (gloves, rings, amulets) they are **global**: every attack. Effects on the item itself (its
-//! Armour, Shield, Parry, the Dexterity it allows, its weight) are always local, and the rest
+//! Armour, Protection, Shield, Parry, the Dexterity it allows, its weight) are always local, and
+//! the rest
 //! (stats, hit points, Dodge, Deflection, natural armour, regeneration, moving, carrying,
 //! stealth, light) always global. Effects apply while the item is worn or wielded.
 
@@ -111,6 +112,19 @@ impl ItemKind {
     pub const fn attacks(self) -> bool {
         matches!(self, ItemKind::Weapon | ItemKind::Launcher | ItemKind::Ammo)
     }
+
+    /// Whether it is armour worn for its Protection: body armour, a helmet, a cloak, gloves, or
+    /// boots (a shield's is Defence only).
+    pub const fn is_armour(self) -> bool {
+        matches!(
+            self,
+            ItemKind::Body
+                | ItemKind::Helmet
+                | ItemKind::Cloak
+                | ItemKind::Gloves
+                | ItemKind::Boots
+        )
+    }
 }
 
 /// A prefix or a suffix.
@@ -158,6 +172,8 @@ pub enum Effect {
     Parry,
     /// Added to the armour's Armour.
     Armour,
+    /// Added to the armour's Protection (the damage it soaks off every hit).
+    Protection,
     /// Added to the shield's Shield.
     Shield,
     /// Added to the most Dexterity may add to Defence while it is worn.
@@ -203,6 +219,7 @@ impl Effect {
             Effect::Durability,
             Effect::Parry,
             Effect::Armour,
+            Effect::Protection,
             Effect::Shield,
             Effect::MaxDex,
             Effect::Weight,
@@ -237,6 +254,7 @@ impl Effect {
             Effect::Durability => "durability",
             Effect::Parry => "parry",
             Effect::Armour => "armour",
+            Effect::Protection => "protection",
             Effect::Shield => "shield",
             Effect::MaxDex => "max_dex",
             Effect::Weight => "weight",
@@ -259,7 +277,7 @@ impl Effect {
     }
 
     /// How many effects there are.
-    pub const COUNT: usize = 24 + Stat::COUNT;
+    pub const COUNT: usize = 25 + Stat::COUNT;
 
     /// Its place in [`Effect::all`].
     pub const fn index(self) -> usize {
@@ -275,20 +293,21 @@ impl Effect {
             Effect::Durability => 8,
             Effect::Parry => 9,
             Effect::Armour => 10,
-            Effect::Shield => 11,
-            Effect::MaxDex => 12,
-            Effect::Weight => 13,
-            Effect::Dodge => 14,
-            Effect::Deflection => 15,
-            Effect::Natural => 16,
-            Effect::MaxHp => 17,
-            Effect::Regeneration => 18,
-            Effect::Stat(stat) => 19 + stat as usize,
-            Effect::MoveSpeed => 19 + Stat::COUNT,
-            Effect::Carry => 20 + Stat::COUNT,
-            Effect::Stealth => 21 + Stat::COUNT,
-            Effect::Light => 22 + Stat::COUNT,
-            Effect::Skill => 23 + Stat::COUNT,
+            Effect::Protection => 11,
+            Effect::Shield => 12,
+            Effect::MaxDex => 13,
+            Effect::Weight => 14,
+            Effect::Dodge => 15,
+            Effect::Deflection => 16,
+            Effect::Natural => 17,
+            Effect::MaxHp => 18,
+            Effect::Regeneration => 19,
+            Effect::Stat(stat) => 20 + stat as usize,
+            Effect::MoveSpeed => 20 + Stat::COUNT,
+            Effect::Carry => 21 + Stat::COUNT,
+            Effect::Stealth => 22 + Stat::COUNT,
+            Effect::Light => 23 + Stat::COUNT,
+            Effect::Skill => 24 + Stat::COUNT,
         }
     }
 
@@ -322,12 +341,17 @@ impl Effect {
         )
     }
 
-    /// Whether it changes the item itself wherever it is (its Armour, Shield, Parry, the
-    /// Dexterity it allows, its weight).
+    /// Whether it changes the item itself wherever it is (its Armour, Protection, Shield, Parry,
+    /// the Dexterity it allows, its weight).
     pub const fn is_item(self) -> bool {
         matches!(
             self,
-            Effect::Parry | Effect::Armour | Effect::Shield | Effect::MaxDex | Effect::Weight
+            Effect::Parry
+                | Effect::Armour
+                | Effect::Protection
+                | Effect::Shield
+                | Effect::MaxDex
+                | Effect::Weight
         )
     }
 
@@ -346,6 +370,7 @@ impl Effect {
             }
             Effect::Parry => kind == ItemKind::Weapon,
             Effect::Armour => kind == ItemKind::Body,
+            Effect::Protection => kind.is_armour(),
             Effect::Shield => kind == ItemKind::Shield,
             Effect::MaxDex => matches!(kind, ItemKind::Body | ItemKind::Shield),
             _ => true,
@@ -965,6 +990,21 @@ tiers = [{ level = 1, min = 1, max = 2 }]
         assert!(Effect::ToHit.is_local_on(ItemKind::Ammo));
         assert!(!Effect::ToHit.is_local_on(ItemKind::Gloves));
         assert!(Effect::Armour.is_local_on(ItemKind::Body));
+        assert!(Effect::Protection.is_local_on(ItemKind::Boots));
+        let protected: Vec<_> = (ItemKind::ALL.into_iter())
+            .filter(|&k| Effect::Protection.allowed_on(k))
+            .collect();
+        assert_eq!(
+            protected,
+            [
+                ItemKind::Body,
+                ItemKind::Helmet,
+                ItemKind::Cloak,
+                ItemKind::Gloves,
+                ItemKind::Boots
+            ],
+            "armour, never a shield"
+        );
         assert!(Effect::Weight.is_local_on(ItemKind::Ring));
         assert!(!Effect::Stat(Stat::Strength).is_local_on(ItemKind::Weapon));
         assert!(!Effect::Light.is_local_on(ItemKind::Weapon));

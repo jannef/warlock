@@ -2,11 +2,11 @@
 //! and specialty shops), what each sells and buys by item class ([`ItemClassId`]), its prices,
 //! the shopkeeper every shop has, and how often generated levels get one.
 //!
-//! Prices are an object's `value` (`objects.toml`) times a shop's `markup` (what it asks) or
-//! `pays` (what it offers for what it buys), in percent, moved in the player's favour (or against
-//! it) by their *favour*: their Presence and their Appraise skill ([`Shops::price`],
-//! [`Shops::offer`]; the favour itself is `world/shop.rs`'s). A shop never offers more for
-//! something than it asks for it.
+//! Prices are a stack's value (`Stack::value`: its object's `value`, made of its parts) times a
+//! shop's `markup` (what it asks) or `pays` (what it offers for what it buys), in percent, moved
+//! in the player's favour (or against it) by their *favour*: their Presence and their Appraise
+//! skill ([`Shops::price`], [`Shops::offer`]; the favour itself is `world/shop.rs`'s). A shop
+//! never offers more for something than it asks for it.
 //!
 //! Where a shop lies on a level is a [`ShopPlan`]: from a level file's `[[shop]]` (a hand-made
 //! shop, its goods placed like any objects) or from the generator (`mapgen/shop.rs`). Its
@@ -230,9 +230,9 @@ impl Shops {
         offer.min(self.price(content, kind, stack, favour))
     }
 
-    /// The value of `stack`: each one's times how many.
+    /// The value of `stack`: each one's, by what it is made of, times how many.
     fn base(&self, content: &Content, stack: &Stack) -> u64 {
-        u64::from(content.object(stack.object).value) * u64::from(stack.count)
+        stack.value(content)
     }
 
     /// The keeper of a shop, to spawn at `post` with the level's creatures.

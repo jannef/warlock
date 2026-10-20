@@ -30,13 +30,21 @@ impl World {
     }
 
     /// Changes terrain on the current level and invalidates light masks it may affect. A lock
-    /// stays only on a closed door, and a secret door is gone with the wall it looked like.
+    /// stays only on a closed door, a door's trap goes with the door (kicked in), and a secret
+    /// door is gone with the wall it looked like.
     pub(super) fn set_terrain(&mut self, p: Pos, terrain: TerrainId) {
-        let closed_door = self.content.terrain(terrain).is_closed_door();
+        let def = self.content.terrain(terrain);
+        let (closed_door, door) = (def.is_closed_door(), def.is_door());
+        let was_door = self.state.current().is_door(&self.content, p);
         let level = self.state.current_mut();
         level.terrain.set(p, terrain);
         if !closed_door {
             level.locks.remove(&p);
+        }
+        // A trap on a door is part of it (spec §8 "Trapped doors"): it opens and shuts with the
+        // door, and is gone when the door is.
+        if was_door && !door {
+            level.traps.remove(&p);
         }
         // A secret door is the wall it looks like until it is found: whatever becomes of that
         // wall (dug through, blasted, found), the secret is gone.
@@ -169,7 +177,7 @@ impl World {
             self.say(text);
         }
         // A trap there goes off (spec §8 "Traps"); a pit costs the next action too.
-        let climb = self.spring_trap(to, player, events);
+        let climb = self.step_onto_trap(to, player, events);
         Spent::Turn(step + climb)
     }
 

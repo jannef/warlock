@@ -47,7 +47,8 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
 - **Combat** — D&D-style with two twelve-sided dice: every blow and shot is rolled against
   Defence (Dexterity, armour, shield, parry, a beetle's shell), misses say why ("You block the
   kobold's spear with your shield."), criticals threaten and confirm ("The kobold hits you
-  hard!"), and weapons and armour come from data. ADOM-like hit points from Toughness, race, and
+  hard!"), armour and hides soak damage like ADOM's PV ("Your sword glances off the cave beetle's
+  shell."), and weapons and armour come from data. ADOM-like hit points from Toughness, race, and
   class heal with time; creatures die and drop what they carried, look as hurt as they are, and
   your own death ends the run for good: the save is gone.
 - **Experience** — every creature has a level and an XP value; kills you make yourself (melee,
@@ -108,8 +109,9 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   row shake it off, and grave rot never goes by itself. The character screen names the disease
   once it has run a day; lost stat points mend a point a day once you are well.
 - **Traps** — arrow and spear traps, fireballs, lightning bolts, pits, alarms, and teleports lie
-  hidden until someone steps on them: you, or a creature you lure there. One you saw go off is
-  known from then on, shown as `^` and remembered, and stepping onto it asks first. The Depths
+  hidden until someone steps on them: you, or a creature you lure there; a trapped door goes off
+  when someone opens or kicks it. One you saw go off is known from then on, shown as `^` and
+  remembered, and stepping onto it asks first. The Depths
   hide a few on every level; a trap hall beside the arena lets you try them and watch them catch
   creatures.
 - **Searching** — secret doors look like the wall and hidden traps like the floor until you find
@@ -146,6 +148,10 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   already: tumbling adds to your Defence, stealth quiets your steps and doors, listening lets you
   hear fainter sounds, balance eases a heavy load, and survival speeds your journeys. A Skills
   screen (`S`) shows their values, never the numbers behind them.
+- **Abilities** — unlike ADOM's key for each, one menu (`a`) holds everything you can do
+  because of who you are: a shield bash, the skills you use as actions, and later racial, class,
+  and item abilities. What you cannot use right now is greyed out with why, and `A` repeats the
+  last one.
 - **Living glyphs and effects** — still ponds that glint in the torchlight, streams and a river
   that visibly flow and foam against rocks, a pulsing altar, flickering torches, sparks and
   embers, a soft glow, heat haze over braziers, short fades. All of it is tunable per effect, and

@@ -367,6 +367,41 @@ impl Actor {
         )
     }
 
+    /// Its Protection (spec §8 "Combat"): the damage it soaks off every hit, the sum of what it
+    /// wears (each piece's `protection` with what its own affixes add; a shield has none) and
+    /// its creature type's natural armour.
+    pub fn protection(&self, content: &Content) -> i32 {
+        let worn: i32 = (self.equipment.items().into_iter())
+            .filter_map(|(_, item)| self.inventory.get(item))
+            .map(|s| s.protection(content))
+            .sum();
+        let natural =
+            (content.creature(self.creature).natural.as_ref()).map_or(0, |h| h.protection);
+        worn + natural
+    }
+
+    /// What a blow that its Protection soaked to nothing glanced off, in messages: the piece it
+    /// wears with the most Protection (the first in slot order of the best), else its natural
+    /// armour, if either has any.
+    pub(crate) fn soaked_by<'c>(&self, content: &'c Content) -> Option<&'c str> {
+        let mut best: Option<(i32, &'c str)> = None;
+        for (_, item) in self.equipment.items() {
+            let Some(stack) = self.inventory.get(item) else {
+                continue;
+            };
+            let pv = stack.protection(content);
+            if pv > 0 && best.is_none_or(|(b, _)| pv > b) {
+                best = Some((pv, content.object(stack.object).name.as_str()));
+            }
+        }
+        let hide = (content.creature(self.creature).natural.as_ref()).filter(|h| h.protection > 0);
+        match (best, hide) {
+            (Some((pv, _)), Some(hide)) if hide.protection > pv => Some(hide.name.as_str()),
+            (Some((_, name)), _) => Some(name),
+            (None, hide) => hide.map(|h| h.name.as_str()),
+        }
+    }
+
     /// The faintest loudness it hears (spec §5 "Hearing"): its creature type's `hearing`, lower
     /// by what its skills give (listen; spec §8 "Skills"), never below 1; `None`: deaf.
     pub fn hearing(&self, content: &Content) -> Option<u16> {
@@ -688,16 +723,21 @@ impl Actor {
         let mods = self.mods(content);
         let natural = content.creature(self.creature).attack.as_ref();
         let weapon = self.weapon_item(content).map(|i| &self.inventory[i]);
-        let (attack, local) = match (weapon, natural) {
+        let (attack, local, penetration) = match (weapon, natural) {
             (Some(stack), _) => match &content.object(stack.object).attack {
-                Some(attack) => (*attack, Mods::local(stack, content)),
-                None => (Attack::unarmed(), Mods::default()),
+                Some(attack) => (
+                    *attack,
+                    Mods::local(stack, content),
+                    content.object(stack.object).penetration,
+                ),
+                None => (Attack::unarmed(), Mods::default(), 0),
             },
-            (None, Some(natural)) => (natural.attack, Mods::default()),
-            (None, None) => (Attack::unarmed(), Mods::default()),
+            (None, Some(natural)) => (natural.attack, Mods::default(), 0),
+            (None, None) => (Attack::unarmed(), Mods::default(), 0),
         };
         let benefit = self.attack_benefit(content, AttackKind::Melee, None);
         let mut profile = Profile::melee(&attack, &self.stats_with(content, &mods)).with(&benefit);
+        profile.penetration = penetration;
         if self.off_hand(content).is_some() {
             let main = content.weapon_skills().two_weapons().main;
             profile.to_hit += TwoWeapons::eased(main, benefit.ease_main);
@@ -723,6 +763,7 @@ impl Actor {
         let mods = self.mods(content);
         let benefit = self.attack_benefit(content, AttackKind::Melee, Some(stack.object));
         let mut profile = Profile::melee(attack, &self.stats_with(content, &mods)).with(&benefit);
+        profile.penetration = content.object(stack.object).penetration;
         let penalty = content.weapon_skills().two_weapons().off;
         profile.to_hit += TwoWeapons::eased(penalty, benefit.ease_off);
         Mods::local(stack, content).sharpen(&mut profile);
@@ -746,9 +787,12 @@ impl Actor {
             (attack.strength).map(|s| u8::try_from((i32::from(s) - draw).max(1)).unwrap_or(1));
         let benefit = self.attack_benefit(content, AttackKind::Ranged, None);
         let mut profile = Profile::ranged(&attack, &self.stats_with(content, &mods)).with(&benefit);
+        profile.penetration = def.penetration;
         local.sharpen(&mut profile);
         if let Some(ammo) = self.ammunition_item(content) {
-            Mods::local(&self.inventory[ammo], content).sharpen(&mut profile);
+            let ammo = &self.inventory[ammo];
+            profile.penetration += content.object(ammo.object).penetration;
+            Mods::local(ammo, content).sharpen(&mut profile);
         }
         mods.sharpen(&mut profile);
         Some(self.stanced(content, profile))
@@ -769,6 +813,7 @@ impl Actor {
             profile = profile.improvised();
         }
         let mut profile = profile.with(&benefit);
+        profile.penetration = def.penetration;
         Mods::local(stack, content).sharpen(&mut profile);
         mods.sharpen(&mut profile);
         Some(self.stanced(content, profile))

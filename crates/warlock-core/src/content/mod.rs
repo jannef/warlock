@@ -25,6 +25,7 @@ mod light;
 mod material;
 mod object;
 mod overworld;
+mod part;
 mod particles;
 mod quest;
 mod race;
@@ -84,11 +85,12 @@ pub use level::{
     CreatureSpawn, EdgeExit, LevelKind, LevelTemplate, Region, StairsLink, parse_route,
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
-pub use material::{MaterialDef, MaterialId};
+pub use material::{MAX_MATERIAL_VALUE, MaterialDef, MaterialId};
 pub use object::{
     MAX_BONUS, MAX_DIG, MAX_PLACED, MAX_VALUE, ObjectDef, ObjectId, article, weapon_noun,
 };
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
+pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId};
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use quest::{
     DEFAULT_DECLINE, GOLD, Goal, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, QuestDef, QuestId, QuestKind,
@@ -342,7 +344,7 @@ struct LegendFile {
 /// All loaded and cross-validated content.
 ///
 /// `data/lights.toml`, `data/vision.toml`, `data/factions.toml`, `data/dungeons.toml`,
-/// `data/calendar.toml`, `data/sky.toml`, `data/materials/`, `data/objects/`,
+/// `data/calendar.toml`, `data/sky.toml`, `data/materials/`, `data/parts.toml`, `data/objects/`,
 /// `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
 /// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, `data/horoscope.toml`,
 /// `data/effects.toml`, `data/room_effects.toml`, `data/weapon_skills.toml`, `data/stances.toml`,
@@ -351,7 +353,8 @@ struct LegendFile {
 /// drawn; without traps or shops there are none). Without vision
 /// profiles, a single `normal` profile that needs no light is used, so content without lighting
 /// stays fully visible; without sizes, everything is medium; without factions, everyone is neutral; without a calendar, months are numbered;
-/// without a sky file there are no moons; without an objects file there are no objects, and
+/// without a sky file there are no moons; without part names every object is of one unnamed part
+/// (`materials = ["steel"]`); without an objects file there are no objects, and
 /// without `data/item_classes.toml` there may be none (each names its class); without a
 /// weather file the sky is always clear; without an actions file every action costs 1000;
 /// without a slots file nothing can be worn or wielded; without races or classes there is no
@@ -372,6 +375,8 @@ pub struct Content {
     creature_ids: BTreeMap<String, CreatureId>,
     materials: Vec<MaterialDef>,
     material_ids: BTreeMap<String, MaterialId>,
+    /// Part names (`data/parts.toml`), in file order.
+    parts: Vec<PartDef>,
     /// Item classes, in the order item lists group by.
     item_classes: Vec<ItemClassDef>,
     objects: Vec<ObjectDef>,
@@ -448,6 +453,7 @@ impl Content {
             creature_ids: BTreeMap::new(),
             materials: Vec::new(),
             material_ids: BTreeMap::new(),
+            parts: Vec::new(),
             item_classes: Vec::new(),
             objects: Vec::new(),
             object_ids: BTreeMap::new(),
@@ -909,13 +915,16 @@ impl Content {
             .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let ranks = ranks.iter().map(|&(id, rank)| (id, rank.max() as u8));
             let weapon_skills = WeaponSkills::from_ranks(&self.weapon_skills, ranks);
-            if spec
-                .natural
-                .as_ref()
-                .is_some_and(|n| !(1..=object::MAX_BONUS).contains(&n.defence) || n.name.is_empty())
-            {
+            if spec.natural.as_ref().is_some_and(|n| {
+                let bonus = 0..=object::MAX_BONUS;
+                !bonus.contains(&n.defence)
+                    || !bonus.contains(&n.protection)
+                    || n.defence + n.protection == 0
+                    || n.name.is_empty()
+            }) {
                 return Err(err(format!(
-                    "creature `{}`: natural: `defence` must be 1 to {} and `name` given",
+                    "creature `{}`: natural: `defence` and `protection` must be 0 to {}, not both \
+                     0, and `name` given",
                     spec.id,
                     object::MAX_BONUS
                 )));
@@ -1104,10 +1113,11 @@ impl Content {
         Ok(())
     }
 
-    /// Materials, then the objects made of them.
+    /// Materials and part names, then the objects made of them.
     /// The material and object tables (`data/materials.toml` and `data/materials/*.toml`,
     /// `data/objects.toml` and `data/objects/*.toml`; both optional), numbered in path order
-    /// (the single file first), with `data/slots.toml` between them.
+    /// (the single file first), with `data/parts.toml`, `data/slots.toml`, and
+    /// `data/item_classes.toml` between them.
     fn load_objects(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
         let mut seen: BTreeMap<String, &str> = BTreeMap::new();
         for (i, (path, def)) in (load_table(files, "materials", |f: MaterialFile| f.material)?)
@@ -1120,8 +1130,13 @@ impl Content {
             if let Some(first) = seen.insert(def.id.clone(), path) {
                 return Err(duplicate_id("material", &def.id, path, first));
             }
+            def.check().map_err(|m| ContentError::new(path, m))?;
             self.material_ids.insert(def.id.clone(), id);
             self.materials.push(def);
+        }
+        let path = "data/parts.toml";
+        if let Some(text) = files.get_optional(path) {
+            self.parts = part::parse(path, text)?;
         }
         let path = "data/slots.toml";
         if let Some(text) = files.get_optional(path) {
@@ -1144,14 +1159,27 @@ impl Content {
                 return Err(duplicate_id("object", &spec.id, path, first));
             }
             self.object_ids.insert(spec.id.clone(), id);
-            let (def, lit_as) = spec.resolve(
+            let (mut def, lit_as) = spec.resolve(
                 path,
                 &self.item_classes,
-                |m| self.material_ids.get(m).copied(),
+                |entries| {
+                    part::resolve(
+                        entries,
+                        |m| self.material_ids.get(m).copied(),
+                        |p| self.part_id(p),
+                    )
+                },
                 |l| self.light_ids.get(l).copied(),
                 &self.slots,
                 &self.weapon_skills,
             )?;
+            (def.name, def.plural) = part::names(
+                &def.name,
+                &def.plural,
+                &def.parts,
+                &self.materials,
+                &self.parts,
+            );
             check_effects(path, "object", &def.id, None, def.glow, 0.0, &def.particles)?;
             lit.push(lit_as);
             paths.push(path);
@@ -1640,6 +1668,22 @@ impl Content {
     /// Every material, in file order (by [`MaterialId`]).
     pub fn materials(&self) -> &[MaterialDef] {
         &self.materials
+    }
+
+    /// The part names of `data/parts.toml`, in file order (by [`PartId`]).
+    pub fn part_defs(&self) -> &[PartDef] {
+        &self.parts
+    }
+
+    pub fn part_id(&self, name: &str) -> Option<PartId> {
+        let i = self.parts.iter().position(|p| p.id == name)?;
+        Some(PartId(u8::try_from(i).ok()?))
+    }
+
+    /// `parts` in words, every part, the main one first: "steel blade, leather grip", "iron"
+    /// (spec §6 "Item description").
+    pub fn describe_parts(&self, parts: &[Part]) -> String {
+        part::phrase(parts, &self.materials, &self.parts)
     }
 
     /// The factions of `data/factions.toml` (empty without the file).
@@ -2393,7 +2437,7 @@ mod tests {
         );
         files.remove("data/materials/");
         let nail = "[[object]]\nid = \"nail\"\nname = \"nail\"\nglyph = \"(\"\nfg = \"#ffffff\"\nclass = \"tools\"\n\
-                    material = \"iron\"\nweight = 5\nvalue = 1\n";
+                    materials = [\"iron\"]\nweight = 5\nvalue = 1\n";
         files.insert("data/objects/a.toml", nail);
         files.insert("data/objects/b.toml", nail);
         let err = Content::load(&files).unwrap_err();
@@ -3188,7 +3232,7 @@ mod tests {
         let glyphs = content.glyphs();
         for def in objects {
             assert!(def.weight > 0 && glyphs.contains(&def.glyph), "{}", def.id);
-            assert!(!content.material(def.material).name.is_empty());
+            assert!(!content.material(def.material()).name.is_empty());
             assert_eq!(
                 content
                     .object_id(&def.id)
@@ -3200,7 +3244,7 @@ mod tests {
         for class in [')', '[', '(', '!', '?', '%', '*', '$', '=', '"'] {
             assert!(classes.contains(&class), "an object drawn `{class}`");
         }
-        let materials: BTreeSet<MaterialId> = objects.iter().map(|o| o.material).collect();
+        let materials: BTreeSet<MaterialId> = objects.iter().map(|o| o.material()).collect();
         assert!(materials.len() >= 10, "objects of many materials");
         let ruby = content.object(content.object_id("ruby").unwrap());
         assert_eq!(
@@ -3224,50 +3268,62 @@ mod tests {
         };
         let cases = [
             (
-                object("material = \"iron\"\nweight = 0\nvalue = 1\n"),
+                object("materials = [\"iron\"]\nweight = 0\nvalue = 1\n"),
                 "at least 1",
             ),
             (
-                object("material = \"iron\"\nweight = 5\nvalue = 1000001\n"),
+                object("materials = [\"iron\"]\nweight = 5\nvalue = 1000001\n"),
                 "`value` is in gold coins",
             ),
             (
-                object("material = \"iron\"\nweight = 5\n"),
+                object("materials = [\"iron\"]\nweight = 5\n"),
                 "missing field `value`",
             ),
             (
-                object("material = \"bronze\"\nweight = 5\nvalue = 1\n"),
+                object("materials = [\"bronze\"]\nweight = 5\nvalue = 1\n"),
                 "unknown material `bronze`",
             ),
             (
-                object("material = \"iron\"\nweight = 5\nvalue = 1\n").replace("tools", "toys"),
+                object("materials = [\"iron\"]\nweight = 5\nvalue = 1\n").replace("tools", "toys"),
                 "unknown item class `toys`",
             ),
             (
-                object("material = \"iron\"\nweight = 5\nvalue = 1\n")
+                object("materials = [\"iron\"]\nweight = 5\nvalue = 1\n")
                     .replace("class = \"tools\"\n", ""),
                 "missing field `class`",
             ),
             (
-                object("material = \"iron\"\nweight = 5\nvalue = 1\nkind = \"ring\"\n"),
+                object("materials = [\"iron\"]\nweight = 5\nvalue = 1\nkind = \"ring\"\n"),
                 "`kind = \"ring\"` is of class `rings`, not `tools`",
             ),
             (
-                object("material = \"iron\"\nvalue = 1\n"),
+                object("materials = [\"iron\"]\nvalue = 1\n"),
                 "missing field `weight`",
             ),
             (
                 object("weight = 5\nvalue = 1\n"),
-                "missing field `material`",
+                "`materials` lists its parts, at least one",
             ),
             (
-                object("material = \"iron\"\nweight = 5\nvalue = 1\n").replace("\"(\"", "\" \""),
+                object("material = \"iron\"\nweight = 5\nvalue = 1\n"),
+                "`material` is now `materials`, a list of parts, the first the main one: \
+                 `materials = [\"iron\"]` for one",
+            ),
+            (
+                object(
+                    "materials = [\"iron\", { part = \"grip\", of = \"iron\", share = 5 }]\n\
+                     weight = 5\nvalue = 1\n",
+                ),
+                "unknown part `grip` (data/parts.toml)",
+            ),
+            (
+                object("materials = [\"iron\"]\nweight = 5\nvalue = 1\n").replace("\"(\"", "\" \""),
                 "visible character",
             ),
             (
                 format!(
                     "{0}\n{0}",
-                    object("material = \"iron\"\nweight = 5\nvalue = 1\n")
+                    object("materials = [\"iron\"]\nweight = 5\nvalue = 1\n")
                 ),
                 "duplicate object id `key`",
             ),
@@ -3308,7 +3364,7 @@ mod tests {
         let object = |fields: &str| {
             format!(
                 "[[object]]\nid = \"key\"\nname = \"key\"\nglyph = \"(\"\nfg = \"#ffffff\"\nclass = \"tools\"\n\
-                 material = \"iron\"\nweight = 5\nvalue = 1\n{fields}\n"
+                 materials = [\"iron\"]\nweight = 5\nvalue = 1\n{fields}\n"
             )
         };
         let load = |slots: &str, objects: &str| {
@@ -3395,10 +3451,40 @@ mod tests {
             ("max_dex = 3", "are for things worn or wielded"),
             ("slot = \"head\"\nshield = -1", "`shield` must be 0 to 20"),
             ("slot = \"head\"\narmour = 21", "`armour` must be 0 to 20"),
+            // Protection is for armour worn, never in a hand or on a shield; penetration for
+            // weapons and ammunition.
+            ("protection = 1", "`protection` is for armour worn"),
+            (
+                "slot = \"main_hand\"\nprotection = 1",
+                "`protection` is for armour worn",
+            ),
+            (
+                "slot = \"head\"\nshield = 1\nprotection = 1",
+                "`protection` is for armour worn",
+            ),
+            (
+                "slot = \"head\"\nprotection = 21",
+                "`protection` must be 0 to 20",
+            ),
+            (
+                "slot = \"head\"\npenetration = 1",
+                "`penetration` is for weapons",
+            ),
+            (
+                "slot = \"main_hand\"\ndamage = \"1d4\"\npenetration = -1",
+                "`penetration` must be 0 to 20",
+            ),
         ] {
             let err = load(&slots, &object(fields)).unwrap_err();
             assert_eq!(err.file, "data/objects.toml", "{fields}");
             assert!(err.message.contains(expected), "{fields}: {}", err.message);
+        }
+        for fields in [
+            "slot = \"head\"\nprotection = 2",
+            "slot = \"main_hand\"\ndamage = \"1d8\"\npenetration = 2",
+            "ammo = \"bolt\"\npenetration = 2",
+        ] {
+            assert!(load(&slots, &object(fields)).is_ok(), "{fields}");
         }
         let staff = object("slot = \"main_hand\"\ntwo_handed = true");
         assert!(load(&slots, &staff).is_ok());
@@ -3505,7 +3591,12 @@ mod tests {
             (
                 "rat",
                 "natural = { defence = 0, name = \"hide\" }",
-                "natural: `defence` must be 1 to 20",
+                "natural: `defence` and `protection` must be 0 to 20, not both 0",
+            ),
+            (
+                "rat",
+                "natural = { protection = 21, name = \"hide\" }",
+                "natural: `defence` and `protection` must be 0 to 20",
             ),
             // Without data/sizes.toml there is only medium.
             (

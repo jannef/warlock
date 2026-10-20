@@ -2,12 +2,15 @@
 //! §7): the things that lie on the floor and
 //! are picked up and carried.
 //!
-//! Every object defines the glyph it is drawn with, its color, its material, and its weight in
-//! grams. Glyphs follow ADOM loosely: `)` weapons, `/` missiles, `}` missile weapons, `[` armor,
-//! `(` tools, `!` potions, `?` scrolls, `%` food, `*` stones and gems, `$` coins, `=` rings,
-//! `"` amulets. Every object also names its item class (`class`, an id in
-//! `data/item_classes.toml`, [`super::item_class`]): what item lists group it under and shops
-//! trade it as; an object with a magic item `kind` is of the class that lists the kind.
+//! Every object defines the glyph it is drawn with, its color, what it is made of (`materials`,
+//! its parts, the first the main one: [`super::part`]), and its weight in grams. Its name shows
+//! its notable parts (gems and precious metals) that the written name does not mention yet, and
+//! its value follows its parts' materials ([`ObjectDef::value_with`]). Glyphs follow ADOM
+//! loosely: `)` weapons, `/` missiles, `}` missile weapons, `[` armor, `(` tools, `!` potions,
+//! `?` scrolls, `%` food, `*` stones and gems, `$` coins, `=` rings, `"` amulets. Every object
+//! also names its item class (`class`, an id in `data/item_classes.toml`, [`super::item_class`]):
+//! what item lists group it under and shops trade it as; an object with a magic item `kind` is of
+//! the class that lists the kind.
 //!
 //! Things that can be worn or wielded say where they go (`slot`, the id or `fits` of a slot in
 //! `data/slots.toml`: `slot = "body"`, `slot = "ring"` for either ring slot); a `two_handed` one
@@ -19,8 +22,10 @@
 //! (a launcher's carry its draw weight, `1d8+2`), its critical (`threat`, the lowest natural roll
 //! that threatens, default 22; `crit`, the damage multiplier, default 2), an optional `to_hit`,
 //! a `parry` bonus to Defence while wielded, and for bows the `strength` they need; armour its
-//! `armour` bonus and the most Dexterity bonus it allows (`max_dex`); a shield its `shield` bonus,
-//! and the `bash` dice of a blow with it (spec §8 "Weapon skills": the shield bash).
+//! `armour` bonus and the most Dexterity bonus it allows (`max_dex`), and its `protection` (the
+//! damage it soaks off every hit, which adds up across what is worn); a shield its `shield` bonus,
+//! and the `bash` dice of a blow with it (spec §8 "Weapon skills": the shield bash). A weapon or
+//! a missile may have `penetration`: that much of a target's Protection it ignores.
 //!
 //! Every weapon names its weapon skill (`category`, an id in `data/weapon_skills.toml`; spec §8
 //! "Weapon skills"): a skill of role `melee` for what is wielded in a hand, `launcher` for a
@@ -67,6 +72,7 @@ use super::hunger::Food;
 use super::item_class::{ItemClassDef, ItemClassId};
 use super::light::LightId;
 use super::material::MaterialId;
+use super::part::{self, Part, PartEntry};
 use super::particles::ParticleEmitter;
 use super::scroll::{ReadSpec, Reading};
 use super::slot::SlotDef;
@@ -146,8 +152,12 @@ pub(super) struct ObjectSpec {
     pub fg: Rgb,
     /// Its item class, an id in `data/item_classes.toml`: what kind of thing it is.
     pub class: String,
-    /// A material id in `materials.toml`.
-    pub material: String,
+    /// What it is made of: its parts, the first the main one, each a material id (`["steel"]`)
+    /// or a table (`{ part = "setting", of = "ruby", share = 10 }`; [`super::part`]).
+    #[serde(default)]
+    pub materials: Vec<PartEntry>,
+    /// The single material objects had before parts: refused, with a pointer to `materials`.
+    pub material: Option<String>,
     /// Grams, at least 1.
     pub weight: u32,
     /// What one is worth, in gold coins (shops; spec §7 "Shops").
@@ -184,11 +194,18 @@ pub(super) struct ObjectSpec {
     pub armour: i32,
     /// The most Dexterity bonus to Defence it allows while worn.
     pub max_dex: Option<i32>,
+    /// Damage it soaks off every hit while worn (Protection; armour, never a shield).
+    #[serde(default)]
+    pub protection: i32,
     /// Defence while held (the Shield category).
     #[serde(default)]
     pub shield: i32,
     /// A shield's damage dice when bashing with it.
     pub bash: Option<Dice>,
+    /// How much of a target's Protection a blow or a shot with it ignores (a weapon, a
+    /// missile weapon, ammunition).
+    #[serde(default)]
+    pub penetration: i32,
     /// The weapon skill a weapon trains and draws on (`data/weapon_skills.toml`).
     pub category: Option<String>,
     /// How far a missile weapon shoots, or a throwing weapon (anything else with a range) is
@@ -256,7 +273,9 @@ pub struct ObjectDef {
     /// Its item class (`data/item_classes.toml`): what kind of thing it is, which item lists
     /// group by and shops trade by. The player knows it of anything they see, identified or not.
     pub class: ItemClassId,
-    pub material: MaterialId,
+    /// What it is made of, part by part, the main part first ([`ObjectDef::material`]); the
+    /// shares sum to 100. Never empty.
+    pub parts: Vec<Part>,
     /// Weight of one, in grams; at least 1.
     pub weight: u32,
     /// What one is worth, in gold coins, at most [`MAX_VALUE`]; 0 for junk (spec §7 "Shops":
@@ -283,10 +302,16 @@ pub struct ObjectDef {
     pub armour: i32,
     /// While worn, the most the Dexterity bonus may add to Defence (`None`: no limit).
     pub max_dex: Option<i32>,
+    /// While worn, the damage it soaks off every hit: its Protection, which adds up with the
+    /// rest of what is worn (spec §8 "Combat").
+    pub protection: i32,
     /// Defence while held: its Shield bonus.
     pub shield: i32,
     /// What a bash with it does, if it is a shield one can bash with.
     pub bash: Option<Attack>,
+    /// How much of a target's Protection an attack with it ignores (a weapon, a missile weapon,
+    /// ammunition: a shot's is its launcher's and its ammunition's together). Rules only.
+    pub penetration: i32,
     /// Its weapon skill: a weapon's `category` (`None` for anything else, and without
     /// `data/weapon_skills.toml`).
     pub skill: Option<WeaponSkillId>,
@@ -359,7 +384,7 @@ impl ObjectDef {
             glyph: '%',
             fg: creature.fg,
             class,
-            material,
+            parts: vec![Part::whole(material)],
             weight: creature.weight,
             // Nobody buys or sells a corpse (spec §7 "Shops").
             value: 0,
@@ -373,8 +398,10 @@ impl ObjectDef {
             parry: 0,
             armour: 0,
             max_dex: None,
+            protection: 0,
             shield: 0,
             bash: None,
+            penetration: 0,
             skill: None,
             range: None,
             reloads: false,
@@ -396,6 +423,29 @@ impl ObjectDef {
             level: 1,
             frequency: 0,
         }
+    }
+
+    /// What it is made of: its main part's material (spec §7 "Objects and materials"), which
+    /// decides what a single material decides. [`ObjectDef::parts`] has every part.
+    pub fn material(&self) -> MaterialId {
+        self.parts[0].material
+    }
+
+    /// What one of it made of `parts` is worth, in gold coins: its `value`, scaled by what
+    /// `parts` are worth against its own parts (each part's share times its material's value,
+    /// [`part::worth`]), rounded to the nearest coin, at most [`MAX_VALUE`]. Made of its own
+    /// parts, its `value`. Until items carry parts of their own (#193), every item is made of its
+    /// base item's.
+    pub fn value_with(&self, parts: &[Part], content: &Content) -> u32 {
+        if parts == self.parts.as_slice() {
+            return self.value;
+        }
+        let (worth, own) = (
+            part::worth(parts, content.materials()),
+            part::worth(&self.parts, content.materials()),
+        );
+        let value = (u64::from(self.value) * worth + own / 2) / own.max(1);
+        u32::try_from(value.min(u64::from(MAX_VALUE))).unwrap_or(MAX_VALUE)
     }
 
     /// Whether it is a throwing weapon: it has a range and is no missile weapon.
@@ -452,15 +502,17 @@ pub fn article(noun: &str) -> &'static str {
 }
 
 impl ObjectSpec {
-    /// Checks the definition and resolves its class, material, light, and weapon skill;
-    /// `classes` are the item classes, `slots` where things may be worn or wielded, `skills`
-    /// the weapon skills. Returns the object and the id of what it is `lit` as, which names
-    /// another object and is resolved once every object is known.
+    /// Checks the definition and resolves its class, parts, light, and weapon skill;
+    /// `classes` are the item classes, `parts` resolves its `materials` ([`part::resolve`]),
+    /// `slots` are where things may be worn or wielded, `skills` the weapon skills. Returns the
+    /// object, its name as written (its notable parts are added once content knows them all:
+    /// [`part::names`]), and the id of what it is `lit` as, which names another object and is
+    /// resolved once every object is known.
     pub(super) fn resolve(
         self,
         file: &str,
         classes: &[ItemClassDef],
-        material: impl Fn(&str) -> Option<MaterialId>,
+        parts: impl Fn(&[PartEntry]) -> Result<Vec<Part>, String>,
         light: impl Fn(&str) -> Option<LightId>,
         slots: &[SlotDef],
         skills: &WeaponSkillTable,
@@ -482,8 +534,13 @@ impl ObjectSpec {
             return Err(err(format!("`value` is in gold coins, 0 to {MAX_VALUE}")));
         }
         let class = self.item_class(classes).map_err(err)?;
-        let material = material(&self.material)
-            .ok_or_else(|| err(format!("unknown material `{}`", self.material)))?;
+        if let Some(material) = &self.material {
+            return Err(err(format!(
+                "`material` is now `materials`, a list of parts, the first the main one: \
+                 `materials = [\"{material}\"]` for one"
+            )));
+        }
+        let parts = parts(&self.materials).map_err(err)?;
         if let Some(slot) = &self.slot
             && !slots.iter().any(|s| s.fits == *slot)
         {
@@ -517,6 +574,7 @@ impl ObjectSpec {
         }
         let attack = self.attack().map_err(err)?;
         self.check_defence().map_err(err)?;
+        self.check_protection(slots).map_err(err)?;
         self.check_ranged().map_err(err)?;
         let skill = self.skill(slots, skills).map_err(err)?;
         let bash = match (self.bash, self.shield) {
@@ -586,7 +644,7 @@ impl ObjectSpec {
             glyph: self.glyph,
             fg: self.fg,
             class,
-            material,
+            parts,
             weight: self.weight,
             value: self.value,
             stackable: self.stackable,
@@ -599,8 +657,10 @@ impl ObjectSpec {
             parry: self.parry,
             armour: self.armour,
             max_dex: self.max_dex,
+            protection: self.protection,
             shield: self.shield,
             bash,
+            penetration: self.penetration,
             skill,
             range: self.range,
             reloads: self.reloads,
@@ -863,6 +923,31 @@ impl ObjectSpec {
         }
         Ok(())
     }
+
+    /// Protection is for armour worn, never in a hand (a shield's is Defence only), and
+    /// penetration for weapons and ammunition; each 0 to [`MAX_BONUS`].
+    fn check_protection(&self, slots: &[SlotDef]) -> Result<(), String> {
+        for (field, value) in [
+            ("protection", self.protection),
+            ("penetration", self.penetration),
+        ] {
+            if !(0..=MAX_BONUS).contains(&value) {
+                return Err(format!("`{field}` must be 0 to {MAX_BONUS}"));
+            }
+        }
+        let in_hand = (slots.iter()).any(|s| s.hand && Some(&s.fits) == self.slot.as_ref());
+        if self.protection > 0 && (self.slot.is_none() || in_hand || self.shield > 0) {
+            return Err(
+                "`protection` is for armour worn (a `slot` that is no hand; a shield's is \
+                 `shield`)"
+                    .into(),
+            );
+        }
+        if self.penetration > 0 && self.damage.is_none() && self.ammo.is_none() {
+            return Err("`penetration` is for weapons (`damage`) and ammunition (`ammo`)".into());
+        }
+        Ok(())
+    }
 }
 
 /// Parses objects as level files place them: ids, each optionally with a count (`"arrow*12"`),
@@ -918,7 +1003,7 @@ mod tests {
             glyph: ')',
             fg: Rgb::WHITE,
             class: ItemClassId(0),
-            material: MaterialId(0),
+            parts: vec![Part::whole(MaterialId(0))],
             weight: 1,
             value: 0,
             stackable: false,
@@ -931,8 +1016,10 @@ mod tests {
             parry: 0,
             armour: 0,
             max_dex: None,
+            protection: 0,
             shield: 0,
             bash: None,
+            penetration: 0,
             skill: None,
             range: None,
             reloads: false,

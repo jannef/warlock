@@ -26,7 +26,7 @@
 //! **The scroll of identify** identifies one unidentified stack the player carries
 //! ([`World::identify`]): "This is a Sharp long sword of the Bear!"
 
-use super::fight::{End, Words, attack_message, death_message};
+use super::fight::{End, Guard, Words, attack_message, death_message};
 use super::spell::Caster;
 use super::{Cause, Spent, World};
 use crate::action::{AttackKind, Event, Positions, ReadTarget};
@@ -189,7 +189,7 @@ impl World {
                 } => {
                     let fallen = self.actor_or_fallen(target);
                     let def = fallen.map(|a| content.creature(a.creature));
-                    let hide = (def.and_then(|d| d.natural.as_ref())).map(|h| h.name.as_str());
+                    let guard = Guard::of(fallen, &content);
                     let end = match def {
                         _ if target == player => End::You,
                         Some(d) if self.perception.sees_actors_at(to) => End::Seen(&d.name),
@@ -197,7 +197,7 @@ impl World {
                     };
                     let caster = End::Trap(&spell.noun);
                     let kind = AttackKind::Spell;
-                    said.extend(attack_message(caster, end, &words, kind, strike, hide));
+                    said.extend(attack_message(caster, end, &words, kind, strike, guard));
                     seen = (end != End::Unseen).then_some(end);
                     if seen.is_some() {
                         events.push(event);

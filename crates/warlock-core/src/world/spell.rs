@@ -186,7 +186,8 @@ impl World {
 
     /// `burst` goes off around `center`, cast by `caster` from `origin` (a trap's own cell; the
     /// reader of a scroll, from whom it flew): its effect ([`Event::Spell`] over the cells it
-    /// reaches, [`burst_cells`], so what is drawn is what is hit), one roll of its damage for
+    /// reaches, [`burst_cells`], its own cell never stopping it (a trap's on a shut door), so
+    /// what is drawn is what is hit), one roll of its damage for
     /// everyone on them, half of it (at least 1) beyond radius − 1; then the walls its blast
     /// breaks ([`World::blast`]), then the ice it melts ([`World::shock`]) or the water it
     /// freezes ([`World::frost`]).
@@ -199,7 +200,9 @@ impl World {
     ) {
         let level = self.state.current();
         let radius = burst.radius;
-        let cells = burst_cells(center, radius, |p| level.is_opaque(&self.content, p));
+        // Its own cell never stops it: a trap's on a shut door bursts out on both sides.
+        let opaque = |p: Pos| p != center && level.is_opaque(&self.content, p);
+        let cells = burst_cells(center, radius, opaque);
         events.push(Event::Spell {
             effect: burst.spell.clone(),
             origin,

@@ -1,7 +1,8 @@
 //! The screen stack (spec §6): every modal screen — main menu, new run and character creation,
 //! pause, settings, controls, the `?` help, the inventory, the equipment screen and its choice of
 //! what goes in a slot, the character screen, the weapon skills screen, choosing what to pick up,
-//! drop, or throw, and the dialogue screen — lives on one stack, bottom to top.
+//! drop, or throw, the abilities menu, and the dialogue screen — lives on one stack, bottom to
+//! top.
 //!
 //! - **Open**: [`Screens::open`] is the one way to open a screen, by [`ScreenName`]: `?` and Esc
 //!   in play, screens opening sub-screens, the main menu at startup and after a run, and
@@ -24,6 +25,7 @@
 //! Screens are plain state machines: they take [`Press`]es and answer with a [`ScreenAction`],
 //! so they are testable without a window.
 
+use super::abilities_screen::AbilitiesScreen;
 use super::character_screen::CharacterScreen;
 use super::chargen_screen::{ChoiceScreen, Draft, Picks, Step, SummaryScreen};
 use super::controls_screen::ControlsScreen;
@@ -55,6 +57,7 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use clap::ValueEnum;
 use warlock_core::Action;
+use warlock_core::ability::Ability;
 use warlock_core::character::CharacterSpec;
 use warlock_core::content::{Content, SlotId};
 use warlock_core::perception::PerceptionView;
@@ -116,6 +119,9 @@ pub enum ScreenName {
     /// the place of the read list where that scroll was chosen (as `--screen`, the first stack's
     /// scroll).
     Identify,
+    /// The abilities menu (`a` in play): racial, class, skill, weapon skill, and item
+    /// abilities, to choose one to use.
+    Abilities,
     /// Talking with someone who has topics (`C` next to them): opens by itself when they answer;
     /// as `--screen`, over a run whose last action was such a chat (a replay's last step).
     Dialogue,
@@ -149,6 +155,7 @@ impl ScreenName {
                 | ScreenName::Eat
                 | ScreenName::Read
                 | ScreenName::Identify
+                | ScreenName::Abilities
                 | ScreenName::Dialogue
                 | ScreenName::Death
         )
@@ -194,6 +201,10 @@ pub enum ScreenAction {
     Act(Action),
     /// Close this screen and aim: a throw of the stack chosen, a scroll read at a cell.
     Aim(AimKind),
+    /// Close this screen, if one is open, and use an ability (the abilities menu's choice, its
+    /// own key, or the quick repeat): it asks for what it needs, then is applied as its action.
+    /// The stack remembers it as the ability used last.
+    UseAbility(Ability),
 }
 
 impl From<MenuChoice> for ScreenAction {
@@ -244,28 +255,39 @@ enum Screen {
     Skills(SkillsScreen),
     WeaponSkills(WeaponSkillsScreen),
     Quests(QuestScreen),
+    Abilities(AbilitiesScreen),
     Dialogue(DialogueScreen),
     Death(DeathScreen),
     /// The dialog.
     Dialog(DialogScreen),
 }
 
+/// What a screen opening may read off the stack: the slot selected on the equipment screen
+/// beneath, if any (the first slot if none), the carried stack looked at on a screen beneath
+/// (the first if none), and the ability used last.
+#[derive(Clone, Copy, Debug, Default)]
+struct Beneath {
+    slot: Option<SlotId>,
+    item: Option<usize>,
+    ability: Option<Ability>,
+}
+
 impl Screen {
     /// Screen `name`; `run` is what the player perceives in the run, if there is one, `draft`
-    /// what New run has chosen on the screens below, `slot` the slot selected on the equipment
-    /// screen beneath, if any (the first slot if none), `item` the carried stack looked at on a
-    /// screen beneath (the first if none), `talk` the run's last conversation, if its last
-    /// action was talk, and `launch` what this launch has (a save, the developer keys, where
-    /// keymaps go).
+    /// what New run has chosen on the screens below, `beneath` what the stack holds for it (the
+    /// slot and the stack selected beneath, the ability used last), `talk` the run's last
+    /// conversation, if its last action was talk, and `launch` what this launch has (a save, the
+    /// developer keys, where keymaps go).
     fn new(
         name: ScreenName,
         content: &Content,
         launch: &Launch,
         run: Option<&PerceptionView<'_>>,
         draft: &Draft,
-        (slot, item): (Option<SlotId>, Option<usize>),
+        beneath: Beneath,
         talk: Option<&Conversation>,
     ) -> Self {
+        let Beneath { slot, item, .. } = beneath;
         let objects = |list| Screen::Objects(ObjectScreen::new(list, run));
         let choice = |step| Screen::Choice(ChoiceScreen::new(step, content, draft));
         match name {
@@ -299,7 +321,8 @@ impl Screen {
             ScreenName::Throw => objects(ObjectList::Throw),
             ScreenName::Eat => objects(ObjectList::Eat),
             ScreenName::Read => objects(ObjectList::Read),
-            ScreenName::Identify => objects(ObjectList::Identify(item.unwrap_or(0))),
+            ScreenName::Identify => objects(ObjectList::Identify(beneath.item.unwrap_or(0))),
+            ScreenName::Abilities => Screen::Abilities(AbilitiesScreen::new(run, beneath.ability)),
             ScreenName::Dialogue => Screen::Dialogue(DialogueScreen::new(talk, run)),
             ScreenName::Death => Screen::Death(DeathScreen::new(run)),
             ScreenName::Dialog => Screen::Dialog(DialogScreen::new(quit_dialog(run.is_some()))),
@@ -333,6 +356,7 @@ impl Screen {
             Screen::Skills(_) => ScreenName::Skills,
             Screen::WeaponSkills(_) => ScreenName::WeaponSkills,
             Screen::Quests(_) => ScreenName::Quests,
+            Screen::Abilities(_) => ScreenName::Abilities,
             Screen::Dialogue(_) => ScreenName::Dialogue,
             Screen::Death(_) => ScreenName::Death,
             Screen::Dialog(_) => ScreenName::Dialog,
@@ -354,6 +378,9 @@ pub struct ScreenStack {
     /// The UI console's size (columns, rows), if known: item lists page by it, so a letter
     /// names the stack drawn there even before the screen is first drawn.
     console: Option<(u32, u32)>,
+    /// The ability used last in this run, which the abilities menu opens on and the quick
+    /// repeat uses again.
+    last_ability: Option<Ability>,
 }
 
 impl ScreenStack {
@@ -393,6 +420,17 @@ impl ScreenStack {
         self.screens.clear();
         self.notice = None;
         self.picks = Picks::default();
+        self.last_ability = None;
+    }
+
+    /// The ability used last in this run, if any.
+    pub fn last_ability(&self) -> Option<Ability> {
+        self.last_ability
+    }
+
+    /// Remembers `ability` as the one used last.
+    pub fn remember_ability(&mut self, ability: Ability) {
+        self.last_ability = Some(ability);
     }
 
     /// What New run has chosen so far: the scenario and seed, and each character creation
@@ -522,6 +560,12 @@ impl ScreenStack {
             Some(Screen::Skills(screen)) => screen.handle(press, bindings),
             Some(Screen::WeaponSkills(screen)) => screen.handle(press, bindings),
             Some(Screen::Quests(screen)) => screen.handle(press, bindings),
+            Some(Screen::Abilities(screen)) => {
+                if let Some((cols, rows)) = self.console {
+                    screen.fit(cols, rows);
+                }
+                screen.handle(press, bindings)
+            }
             Some(Screen::Dialogue(screen)) => screen.handle(press, bindings),
             Some(Screen::Death(screen)) => screen.handle(press),
             Some(Screen::Dialog(screen)) => screen.handle(press, bindings),
@@ -575,6 +619,7 @@ impl ScreenStack {
             Some(Screen::Skills(screen)) => screen.draw(console, bindings),
             Some(Screen::WeaponSkills(screen)) => screen.draw(console, bindings),
             Some(Screen::Quests(screen)) => screen.draw(console, bindings),
+            Some(Screen::Abilities(screen)) => screen.draw(console, bindings),
             Some(Screen::Dialogue(screen)) => screen.draw(console, bindings),
             Some(Screen::Death(screen)) => screen.draw(console, settings.clock, bindings),
             Some(Screen::Dialog(screen)) => screen.draw(console, bindings),
@@ -618,14 +663,19 @@ impl Screens<'_> {
     fn open_on(&mut self, name: ScreenName, item: Option<usize>) {
         let view = self.game.as_ref().map(|game| game.world.perception());
         let talk = (self.game.as_ref()).and_then(|game| last_talk(&game.last_outcome));
-        let (draft, slot) = (self.stack.draft(), self.stack.selected_slot());
+        let draft = self.stack.draft();
+        let beneath = Beneath {
+            slot: self.stack.selected_slot(),
+            item,
+            ability: self.stack.last_ability,
+        };
         let launch = Launch {
             has_save: self.store.has_save(),
             dev: dev_keys(&self.args),
             keymap: self.settings.keymap(),
         };
-        let (content, looked) = (&self.content.0, (slot, item));
-        let screen = Screen::new(name, content, &launch, view.as_ref(), &draft, looked, talk);
+        let content = &self.content.0;
+        let screen = Screen::new(name, content, &launch, view.as_ref(), &draft, beneath, talk);
         self.stack.screens.push(screen);
     }
 
@@ -832,14 +882,18 @@ mod tests {
         let mut stack = ScreenStack::default();
         for name in names {
             let run = name.needs_run().then_some(&view);
-            let (draft, slot) = (stack.draft(), stack.selected_slot());
-            let looked = (slot, stack.looked_item());
+            let draft = stack.draft();
+            let beneath = Beneath {
+                slot: stack.selected_slot(),
+                item: stack.looked_item(),
+                ability: stack.last_ability,
+            };
             let launch = Launch {
                 has_save,
                 dev: true,
                 keymap: KeymapFile::Nowhere,
             };
-            let screen = Screen::new(*name, &content, &launch, run, &draft, looked, None);
+            let screen = Screen::new(*name, &content, &launch, run, &draft, beneath, None);
             stack.screens.push(screen);
         }
         stack
@@ -861,7 +915,7 @@ mod tests {
             &Launch::default(),
             None,
             &Draft::default(),
-            (None, None),
+            Beneath::default(),
             None,
         ));
         assert_eq!(stack.names(), [Pause, Settings]);
@@ -1600,21 +1654,80 @@ mod tests {
         frame(&mut app, &[skills]);
         assert!(names(&app).is_empty());
         assert!(actions(&app).is_empty(), "no time passes");
-        // Bash is an ability: unbound by default. Bound (here to `B`), it asks for a direction
-        // in the message line, like opening a door.
-        let mut bindings = app.world_mut().resource_mut::<Bindings>();
-        let bash = crate::input::KeyCommand::Bash;
-        assert!(bindings.keys_of(bash).is_empty());
-        let key = crate::input::KeyBinding::from_text("B").expect("a key");
-        bindings.0.push((key, bash));
+        // Bash is an ability: unbound by default. Bound (here to `B`) without a shield, the
+        // rules say why at once (no prompt, no time).
+        let bind_b = |app: &mut App| {
+            let mut bindings = app.world_mut().resource_mut::<Bindings>();
+            let bash = crate::input::KeyCommand::Bash;
+            assert!(bindings.keys_of(bash).is_empty());
+            let key = crate::input::KeyBinding::from_text("B").expect("a key");
+            bindings.0.push((key, bash));
+        };
+        bind_b(&mut app);
+        frame(&mut app, &[(KeyCode::KeyB, "B")]);
+        assert_eq!(actions(&app), [Action::Bash(Dir::N)]);
+        assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
+        // With a shield in hand, it asks for a direction in the message line, like opening a
+        // door, as the abilities menu does.
+        let mut app = with_a_shield();
+        bind_b(&mut app);
         frame(&mut app, &[(KeyCode::KeyB, "B")]);
         assert_eq!(
             app.world().resource::<InputMode>(),
-            &InputMode::Direction(crate::input::KeyCommand::Bash)
+            &InputMode::Ability(Ability::ShieldBash)
         );
         frame(&mut app, &[(KeyCode::KeyL, "l")]);
         assert_eq!(actions(&app), [Action::Bash(Dir::E)]);
         assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
+    }
+
+    /// A run of the showcase's thief with the storeroom's small shield in hand.
+    fn with_a_shield() -> App {
+        let content = content();
+        let mut world = warlock_core::World::new(content.clone(), "showcase", None).expect("run");
+        let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
+                    pickup:a equip:off_hand:a";
+        for action in warlock_core::action::parse_actions(walk).expect("actions") {
+            world.apply(&action);
+        }
+        app_with(content, Some(Game::from_world(world)))
+    }
+
+    #[test]
+    fn the_abilities_menu_uses_an_ability_and_remembers_it_for_the_quick_repeat() {
+        const ABILITIES: (KeyCode, &str) = (KeyCode::KeyA, "a");
+        const REPEAT: (KeyCode, &str) = (KeyCode::KeyA, "A");
+        let mode = |app: &App| *app.world().resource::<InputMode>();
+        // Without a shield: the menu opens on `a`; the shield bash (`e`) is greyed out, so its
+        // letter only says why; Esc closes the menu, and no time passed.
+        let mut app = app(true);
+        frame(&mut app, &[ABILITIES]);
+        assert_eq!(names(&app), [ScreenName::Abilities]);
+        frame(&mut app, &[(KeyCode::KeyE, "e")]);
+        assert_eq!(names(&app), [ScreenName::Abilities]);
+        frame(&mut app, &[ESC]);
+        assert!(names(&app).is_empty() && actions(&app).is_empty());
+        // The quick repeat with nothing used yet opens the menu.
+        frame(&mut app, &[REPEAT]);
+        assert_eq!(names(&app), [ScreenName::Abilities]);
+        // With a shield: `a` `e` closes the menu and asks for a direction; a direction bashes.
+        let mut app = with_a_shield();
+        frame(&mut app, &[ABILITIES, (KeyCode::KeyE, "e")]);
+        assert!(names(&app).is_empty());
+        assert_eq!(mode(&app), InputMode::Ability(Ability::ShieldBash));
+        frame(&mut app, &[(KeyCode::KeyL, "l")]);
+        assert_eq!(actions(&app), [Action::Bash(Dir::E)]);
+        let stack = app.world().resource::<ScreenStack>();
+        assert_eq!(stack.last_ability(), Some(Ability::ShieldBash));
+        // `A` uses it again; Esc cancels the direction prompt rather than pausing.
+        frame(&mut app, &[REPEAT]);
+        assert_eq!(mode(&app), InputMode::Ability(Ability::ShieldBash));
+        frame(&mut app, &[ESC]);
+        assert_eq!(mode(&app), InputMode::Normal);
+        assert!(names(&app).is_empty());
+        // The menu opens on it, so Enter repeats it too.
+        frame(&mut app, &[ABILITIES, ENTER, (KeyCode::KeyH, "h")]);
+        assert_eq!(actions(&app), [Action::Bash(Dir::E), Action::Bash(Dir::W)]);
     }
 
     #[test]

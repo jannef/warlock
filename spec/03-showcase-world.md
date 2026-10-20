@@ -66,7 +66,11 @@ fireball, and a second kobold shot from the south wall by an arrow trap, and fro
 those traps. Three pillars stand by that fireball, packed earth and stone north of it and granite
 south: its blast breaks the two softer ones into rubble and the granite holds (§8 "Digging").
 The rat and the kobolds are among the peaceful folk and the beetle is wildlife, so nobody attacks
-the player; the traps attack everybody.
+the player; the traps attack everybody. North-west, three closets open onto the hall by trapped
+doors (§8 "Trapped doors"): the west door shows its arrow trap, to try by opening it; the middle
+one hides a fireball, to search for first; the east one stands open on a peaceful kobold's rounds
+in and out of its closet and hides an alarm, so a player who shuts it watches the kobold ring it
+opening the door again, and walk through the open doorway after without setting it off.
 
 **Arena (72×21, M10)**: down the stairs nook's second `>`: the place to fight; factions at war. A kobold war band
 (three torch-bearing kobolds wielding spears, an archer with a short bow and arrows ready, a slow

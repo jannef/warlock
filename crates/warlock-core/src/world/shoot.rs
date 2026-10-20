@@ -28,7 +28,7 @@
 //! a throw `throw`, less what the rank in the launcher's skill or in throwing takes off (spec §8
 //! "Weapon skills"), which also adds to their to-hit and damage.
 
-use super::fight::{End, Words, attack_message, death_message};
+use super::fight::{End, Guard, Words, attack_message, death_message};
 use super::{ActorId, Fire, Spent, World};
 use crate::action::{AttackKind, Event, MissileEnd, Positions};
 use crate::combat::Profile;
@@ -207,9 +207,7 @@ impl World {
                     attacked = true;
                     let fallen = self.actor_or_fallen(target);
                     let def = fallen.map(|a| content.creature(a.creature));
-                    let hide = def
-                        .and_then(|d| d.natural.as_ref())
-                        .map(|h| h.name.as_str());
+                    let guard = Guard::of(fallen, &content);
                     let end = match def {
                         Some(d) if self.perception.sees_actors_at(to) => End::Seen(&d.name),
                         _ => End::Unseen,
@@ -220,7 +218,7 @@ impl World {
                         &words,
                         loose.kind,
                         strike,
-                        hide,
+                        guard,
                     ));
                     seen = (end != End::Unseen).then_some(end);
                     if seen.is_some() {

@@ -44,8 +44,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   to the status's `max`; §8 "Status effects"), or `{ disease = "filth_fever", chance = 10 }`
   (exposure to the disease, which the target then resists with a check; §8 "Diseases"; never the
   status diseases show as); without one, bare hands: 1d3, "fist", "hits"); and
-  `natural`, its natural armour (`{ defence = 3, name = "shell" }`, 1 to 20, the Natural
-  category of Defence; the name is said when it turns a blow). For experience (§8
+  `natural`, its natural armour (`{ defence = 1, protection = 3, name = "shell" }`: `defence`
+  in the Natural category of Defence, `protection` soaking damage off every hit with what it
+  wears, each 0 to 20, not both 0; the name is said when it turns or soaks a blow). For experience (§8
   "Experience"): `level` (1 to 99, default 1) and `xp` (0 to 100000, default 0; the player
   creature has neither): the kobold 2/15, the kobold archer 3/25, the kobold shaman 4/40, the
   giant rat 1/5, the cave bat 1/3, the cave beetle 2/8, the deer 1/2. For loot (§8 "Magic
@@ -152,12 +153,40 @@ developer notes (CLAUDE.md, `docs/dev/`).
   default 0). §5 "Moonlight".
 - **Objects and materials** (M11): every object (`[[object]]` in `data/objects.toml`, a
   directory read in path order, one object a file; see Definitions) defines the
-  symbol it renders with and its color, item class, material, and weight: `id`, `name` (singular,
-  without an article; `plural` defaults to the name plus `s`), `glyph`, `fg`, `class`, `material` (an id in
-  `data/materials.toml`, likewise a directory, whose `[[material]]` entries have an `id` and a
-  `name`; properties come later), `weight` (integer grams, at least 1), `value` (what one is worth in gold coins,
+  symbol it renders with and its color, item class, materials, and weight: `id`, `name` (singular,
+  without an article; `plural` defaults to the name plus `s`), `glyph`, `fg`, `class`,
+  `materials`, `weight` (integer grams, at least 1), `value` (what one is worth in gold coins,
   required, 0 to 1 000 000; shops price their goods from it, §7 "Shops"), and `stackable`
-  (default false). Glyphs follow ADOM loosely: `)` weapons, `}` missile weapons, `/` missiles, `[`
+  (default false).
+  **Parts** (#199): `materials` is what an object is made of, an ordered list of parts, each of
+  one material (an id in `data/materials.toml`, likewise a directory, whose `[[material]]`
+  entries have an `id`, a `name`, `precious` (a gem or a precious metal, default false), and
+  `value` (percent of steel's, 1 to 10 000, default 100); more properties come later). A part is
+  a table, `{ part = "setting", of = "ruby", share = 10 }`: `part` an id in `data/parts.toml` (a
+  small vocabulary, `[[part]]` with `id`, `name`, and an optional `adjective`: band, blade, chain,
+  cord, grip, haft, head, inlay, lining, pendant, pommel, setting, trim), `of` its material,
+  `share` its percent of the weight. A plain material id is one unnamed part, the shorthand:
+  `materials = ["steel"]`, what most objects are. **The first part is the main one**: it takes
+  the share the others leave (at least 1%; it gives none), may be unnamed, and decides what a
+  single material decides (`ObjectDef::material`: the material named first, the material word a
+  name begins with, and, with metals and organic materials, #193 and #194, the colour, the weight
+  scale, and weapon and armour modifiers). Every other part names its part and share; a part
+  name appears once; the old `material` key is a content error that says to write `materials`.
+  **Value by shares**: an object made of other parts than its own is worth its `value` × Σ(share
+  × material value) of those parts / the same sum of its own (`ObjectDef::value_with`, rounded to
+  the nearest coin), so made of its own parts it is worth its `value`. Items carry no parts of
+  their own yet (metal variants and gems will, #193, #191): every item is made of its base item's
+  parts (`Stack::parts`), and saves are unchanged. **Names** show the notable parts, gems and
+  precious metals (`precious` materials), that the written name does not mention as a word: a
+  notable part whose part has an `adjective` goes before the name ("ruby-pommelled long sword"),
+  any other joins the main part's material if the name begins with it ("gold amulet" with a ruby
+  setting is the "gold and ruby amulet"; "iron and ruby ring"), else goes before the name; the
+  name is composed when content loads (`part::names`), so every message, list, and screen says
+  it. The plain parts (a leather grip) show in the item's description, which lists every part
+  ("steel blade, leather grip"). Materials are visible, not hidden: an unidentified amulet shows
+  that it is gold and ruby (its magic stays hidden). The showcase's examples: the gold amulet
+  (gold chain, ruby setting), the amber amulet (amber pendant, leather cord), and the long sword
+  (steel blade, leather grip). Glyphs follow ADOM loosely: `)` weapons, `}` missile weapons, `/` missiles, `[`
   armor, `(` tools, `!` potions, `?` scrolls, `%` food, `*` stones and gems, `$` coins, `=` rings,
   `"` amulets. **Item classes** (#189) say what kind of thing an object is, ADOM-like:
   `data/item_classes.toml` is their ordered list (`[[class]]` with `id`, `name`, the header item
@@ -208,7 +237,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   multiplier, 2 to 5, default 2), `to_hit` (default 0, within ±20), and for bows `strength` (the
   Strength they need, 1 to 40), all four only with `damage`; `parry` (Defence while wielded),
   `armour` (while worn) and `max_dex` (the most Dexterity may add to Defence while it is worn),
-  and `shield` (while held), each 0 to 20; `bash` (a shield's damage dice when bashing with it,
+  and `shield` (while held), each 0 to 20; `protection` (damage soaked off every hit while worn,
+  0 to 20, adding up across what is worn; only on armour worn, never in a hand or on a shield);
+  `penetration` (how much of a target's Protection it ignores, 0 to 20; weapons and
+  ammunition); `bash` (a shield's damage dice when bashing with it,
   only with `shield`; §8 "Weapon skills"); and `category`, the weapon skill a weapon draws on and
   trains (an id in `data/weapon_skills.toml`; required for every weapon when there are weapon
   skills, refused on anything else): a `melee` skill for what goes in a hand, a `launcher` one
@@ -277,14 +309,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `[names.second]`, words for every kind of item (rare names: one of each, "Grim Bite"). Then
   `[[prefix]]`s and `[[suffix]]`es (ids unique across both): `id`, `name` ("Sharp", "of the
   Bear"), `effect` (one of `to_hit`, `damage`, `extra_damage` (adds 1dN), `threat`, `crit`,
-  `attack_speed`, `range`, `draw`, `durability`, `parry`, `armour`, `shield`, `max_dex`,
+  `attack_speed`, `range`, `draw`, `durability`, `parry`, `armour`, `protection`, `shield`,
+  `max_dex`,
   `weight`, `dodge`, `deflection`, `natural`, `max_hp`, `regeneration`, a stat id, `move_speed`,
   `carry`, `stealth`, `light`, `skill` with a `skill`, an id in `data/skills.toml`, whose value
   it raises; without skills content, skill affixes are left out), `bases` (kinds of item it
   rolls on, at least one; an effect only
   attacks can use, `extra_damage`, `range`, `draw`, `durability`, needs weapons, missile weapons,
-  or ammunition, `parry` weapons, `armour` body armour, `shield` shields, `max_dex` body armour or
-  shields; else a content error), `weight` (default 100), and `tiers`, at least one, item levels
+  or ammunition, `parry` weapons, `armour` body armour, `protection` armour (body armour,
+  helmets, cloaks, gloves, boots), `shield` shields, `max_dex` body armour or shields; else a
+  content error), `weight` (default 100), and `tiers`, at least one, item levels
   rising: `{ level, min, max }` (values within the effect's range: 1 to 10 for most, dice sides 2
   to 20 for `extra_damage`, 1 to 3 for `threat` and `crit`, percent 1 to 50 for speeds, 1 to 90
   for `durability`, `weight`, `stealth`, 1 to 100 for `max_hp`, `carry` (kg), and `skill`, 1 to

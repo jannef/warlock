@@ -140,7 +140,7 @@ fn bad_readings_are_reported() {
             "data/objects/scroll_of_folly.toml",
             &format!(
                 "[[object]]\nid = \"scroll_of_folly\"\nname = \"scroll of folly\"\nglyph = \"?\"\n\
-                 fg = \"#ffffff\"\nclass = \"scrolls\"\nmaterial = \"paper\"\nweight = 50\n\
+                 fg = \"#ffffff\"\nclass = \"scrolls\"\nmaterials = [\"paper\"]\nweight = 50\n\
                  value = 10\nstackable = true\n[object.read]\n{read}\n"
             ),
         );
