@@ -43,7 +43,8 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   ```
 - **Objects in level files** (M11): a legend entry places a pile with `objects = ["dagger",
   "arrow*12"]` (top first; `*N` places N, as one stack if the object is stackable, else as N
-  stacks of one), and a creature's entry gives what it carries with `carry = ["spear",
+  stacks of one; a loose gem names its gem, `"gem:ruby*3"`, of the plain size and cut, §7
+  "Gems"), and a creature's entry gives what it carries with `carry = ["spear",
   "copper_coin*7"]` (any number of stacks), and what of that it wields and wears with `wield =
   "spear"` and `wear = ["leather_jerkin"]` (an object id or a list; M16): each the first carried
   stack of that object not yet equipped, in the first free slot that fits it (a second ring on
@@ -58,7 +59,11 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   an optional tier, `"sharp:2"`, default 1; its value the top of the tier's range), `name` (a
   rare item's: with a name it is rare, without magic), `identified` (default false), `level`
   (the item level, default that of its highest tier), and `count` (stackable ones, default 1).
-  The item must be one its affixes may roll on (§8 "Magic items"), else a content error. A
+  The item must be one its affixes may roll on (§8 "Magic items"), else a content error. An
+  `[[item]]` may give `parts` (§7 "Gems"), with affixes or without: gems, each `{ part, of, size,
+  cut }` (`part` a part id, none for a loose gem's gem, its main part; `of` a gem; `size` and
+  `cut` default to the plain ones), in place of the base item's part of that name or besides its
+  parts: `parts = [{ part = "pommel", of = "emerald", size = "small", cut = "fine" }]`. A
   level's `item_level` (1 to 99, default 1) is the item level of what creatures drop there (the
   arena's is 2); a branch level's is its depth. A vault's legend entry may give `loot = "any"`,
   `"magic"`, or `"rare"`: a cell where an item of loot at least that good is rolled when the

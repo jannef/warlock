@@ -12,7 +12,12 @@ Magic items (spec §8 "Magic items", #149) live in `warlock-core`: `content/affi
 `magic/` (`mod.rs`: `Magic`/`Affix`, the instance on a `Stack` (saved, hashed), `check`;
 `mods.rs`: `Mods::local` (an item's own and its attacks') and `Mods::worn` (what an actor wears
 and wields, global), the one aggregation every rule reads; `loot.rs`: `roll`, its draw order;
-`name.rs`; `describe.rs`: base stats and affixes in words for the item description screen).
+`name.rs`: the names around `Stack::names`, the item as it is made (its gems, #191), so the order
+is [prefix] [ornament] base [suffix] and a rare item's base shows its gem; `describe.rs`: base
+stats, gems with their size and cut, and affixes in words for the item description screen).
+`loot::roll` first lets a find of grade `any` be a loose gem (`gem::find`) and last sets an item
+of a class with an `[[ornament]]` with a gem (`gem::ornament`); creature drops try `gem::find`
+before the magic item (`docs/dev/objects.md`, "Gems").
 `world/loot.rs` has `World::identify` (the API the scroll of identify calls from its action),
 creature drops (`drop/<actor id>` stream), and the hit-point clamp after equipment changes
 (to `Actor::lasting_max_hp`: a penalty's lower maximum passes). Stats raised by magic are

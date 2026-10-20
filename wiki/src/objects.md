@@ -151,11 +151,12 @@ the object is mostly made of, and the one the table above names first.
 You can always see what something is made of, even a magic item you have not identified. An
 item's name shows its **gems and precious metals** (the precious materials below) that it does
 not mention already: a gold amulet set with a ruby is a *gold and ruby amulet*, and a long sword
-with a ruby pommel would be a *ruby-pommelled long sword*. Plain parts, like a leather grip, show
+with a ruby pommel is a *ruby-pommelled long sword*. Plain parts, like a leather grip, show
 only when you look at the item (see [Magic items](magic-items.md#looking-at-an-item)), which lists
 every part.
 
-Materials have nothing else to them yet; what an item is worth will follow what it is made of
-once items come in other materials than their usual ones.
+**Gems** are materials too, each with a size and a cut (see [Gems](gems.md)): a loose gem is made
+of its gem alone, and an item found set with a gem has it as one of its parts, which adds the
+gem's worth to the item's. Other materials have nothing else to them yet.
 
 {{#include generated/materials.md}}

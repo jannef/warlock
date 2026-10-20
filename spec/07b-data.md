@@ -163,7 +163,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `value` (percent of steel's, 1 to 10 000, default 100); more properties come later). A part is
   a table, `{ part = "setting", of = "ruby", share = 10 }`: `part` an id in `data/parts.toml` (a
   small vocabulary, `[[part]]` with `id`, `name`, and an optional `adjective`: band, blade, chain,
-  cord, grip, haft, head, inlay, lining, pendant, pommel, setting, trim), `of` its material,
+  cord, grip, haft, head, inlay, lining, pendant, pommel, setting, studs, tip, trim), `of` its material,
   `share` its percent of the weight. A plain material id is one unnamed part, the shorthand:
   `materials = ["steel"]`, what most objects are. **The first part is the main one**: it takes
   the share the others leave (at least 1%; it gives none), may be unnamed, and decides what a
@@ -172,16 +172,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
   scale, and weapon and armour modifiers). Every other part names its part and share; a part
   name appears once; the old `material` key is a content error that says to write `materials`.
   **Value by shares**: an object made of other parts than its own is worth its `value` × Σ(share
-  × material value) of those parts / the same sum of its own (`ObjectDef::value_with`, rounded to
-  the nearest coin), so made of its own parts it is worth its `value`. Items carry no parts of
-  their own yet (metal variants and gems will, #193, #191): every item is made of its base item's
-  parts (`Stack::parts`), and saves are unchanged. **Names** show the notable parts, gems and
+  × material value) of those parts without a gem / the same sum of its own (`ObjectDef::value_with`,
+  rounded to the nearest coin), plus what each gem part is worth by its size and cut (below), so
+  made of its own parts it is worth its `value`. An item may carry **parts of its own** (gems,
+  below; metal variants later, #193): `Stack::parts` is its base item's parts with its own in
+  their place, each an instance part (a part, a material, and a gem's size and cut) saved by id
+  with the stack beside its magic. **Names** show the notable parts, gems and
   precious metals (`precious` materials), that the written name does not mention as a word: a
   notable part whose part has an `adjective` goes before the name ("ruby-pommelled long sword"),
   any other joins the main part's material if the name begins with it ("gold amulet" with a ruby
   setting is the "gold and ruby amulet"; "iron and ruby ring"), else goes before the name; the
   name is composed when content loads (`part::names`), so every message, list, and screen says
-  it. The plain parts (a leather grip) show in the item's description, which lists every part
+  it; an item with parts of its own is named from its written name and those parts
+  (`Stack::names`). The plain parts (a leather grip) show in the item's description, which lists every part
   ("steel blade, leather grip"). Materials are visible, not hidden: an unidentified amulet shows
   that it is gold and ruby (its magic stays hidden). The showcase's examples: the gold amulet
   (gold chain, ruby setting), the amber amulet (amber pendant, leather cord), and the long sword
@@ -197,6 +200,36 @@ developer notes (CLAUDE.md, `docs/dev/`).
   and data cannot contradict itself. Every item list groups by class in this order (§6 "Item
   lists"), and shops sell and buy by class (§7 "Shops"). The player knows the class of anything
   they see (an unidentified item's is its base item's).
+- **Gems** (#191): ten gems are materials of their own (`data/materials/diamond.toml`, ...: a
+  precious material with a `gem` table: `color`, `value` in gold for a gem of the plain size and
+  cut, `rarity`, a weight among the gems in loot, and an optional `plural`): diamond (400, very
+  rare), ruby and emerald (300, rare), sapphire (280, rare), topaz (120), heliodor (110), and
+  amethyst (80, uncommon), zircon (70), garnet (60), and smokestone (30, common); amber stays a
+  precious material, no gem. `data/gems.toml` holds what they share: `object` (the loose gem,
+  `objects/gem.toml`, `*`, item class gems), `chance` (percent of finds that are a loose gem),
+  the ordered `[[size]]`s (`value` multiplier in percent, `weight` in grams, loot weights `find`
+  at item level 1 plus `deeper` per item level): tiny ×0.3, small ×1, medium ×4, large ×15, huge
+  ×50, weighing 1 to 4 g; the ordered `[[cut]]`s (`value`, `find`, `deeper`): uncut ×0.25,
+  crude ×0.6, fair ×1, fine ×1.6, exquisite ×2.5, flawless ×4; exactly one size and one cut is
+  `plain` (small and fair, ×1 both: what names leave unsaid and what a placed gem is unless it
+  says otherwise), and a cut may be `rough` (uncut: named before the size, drawn at half its
+  colour's saturation, never set in an item); and the `[[ornament]]`s, one per item class: the
+  `part` a gem becomes in its items (melee weapons a pommel, missile weapons and shields an
+  inlay, helmets studs, rings and amulets a setting), its `chance` in percent, and `colour` (the
+  item takes its gem's colour: rings). An object may name its own `ornament` part (staves a tip;
+  clubs and polearms an inlay); a gem never becomes an item's main part. A gem is worth its
+  value × its size's × its cut's multiplier (`Gems::value`, rounded, at least 1). **A loose
+  gem** is the gems' object made of its gem as its main part, with a size and cut: it is named
+  "[uncut] [size] [cut] gem", the plain size and cut unsaid ("a ruby", "a large fine emerald",
+  "an uncut tiny garnet", "3 medium rubies"), drawn in its gem's colour, weighs its size's
+  weight, and is worth its gem's worth; it stacks only with identical gems. **An ornament** is a
+  gem part of any other item, in place of its part of that name or besides its parts (weighing
+  nothing beside them): the item's name shows it as its part does ("an emerald-pommelled long
+  sword", "a gold and sapphire amulet", "a topaz-tipped quarterstaff", "a garnet-studded iron
+  helm"), the item's description lists it with its size and cut ("Pommel: small emerald, fine
+  cut"), it adds its gem's worth to the item's, and it has no rules effect yet. Like every
+  material, gems show at once, identified or not. Loot rolls them (§8 "Magic items"), general
+  stores buy them (§7 "Shops"), and level files place them (§7 "Levels").
   Every creature in `data/creatures.toml` has a base `weight` in grams (required, at least 1).
   Things that can be worn or wielded (M16) say where they go: `slot`, a slot's id or what it
   `fits` (`slot = "body"`, `slot = "ring"` for either ring slot; an unknown one is a content
