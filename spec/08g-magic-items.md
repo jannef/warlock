@@ -24,7 +24,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Durability"); rare its name then the base, "Grim Bite, a long sword"; unidentified the base
     and its rarity, "a long sword (magic)", "12 arrows (rare)". The base is the object's name
     with its gems and precious metals (§7 "Objects and materials": "a gold and ruby amulet
-    (magic)"), which show identified or not. Rarity colors the name (§6).
+    (magic)"), which show identified or not, its own gems included (§7 "Gems"), so the order is
+    [prefix] [ornament] [metal, #193] base [suffix]: "a Sharp emerald-pommelled long sword of the
+    Bear"; a rare item keeps its two-word name and its gem follows in the base, "Grim Bite, an
+    emerald-pommelled long sword", and in its description. Rarity colors the name (§6).
     Combat messages name the base ("The kobold's spear glances off your armour.").
   - **Unidentified**: magic and rare items are found unidentified. The rarity shows, the affixes
     and a rare name do not, and their effects apply all the same while worn or wielded (as in
@@ -67,24 +70,29 @@ developer notes (CLAUDE.md, `docs/dev/`).
     each with the kinds of item it rolls on and up to four tiers by item level; an item has at
     most one affix of each effect (of each skill, for skill affixes).
   - **Loot** (`magic::loot::roll`): the item level is the depth (a branch level's depth, a
-    hand-made level's `item_level`, 1 elsewhere). One roll draws, in order: the base (among
-    the loot objects with `level` at most the item level, by `frequency`, sorted by id; scrolls
-    left out of loot that must be magic or better, and drawing no rarity: they are normal); a stack's count (ammunition 8 to
+    hand-made level's `item_level`, 1 elsewhere). One roll draws, in order: for a find of grade
+    `any`, whether it is a loose gem (§7 "Gems": one draw against `chance`, then the gem by
+    `rarity` among the gem materials by id, its size and its cut by their weights at the item
+    level; `gem::find`), which ends the roll; the base (among the loot objects with `level` at
+    most the item level, by `frequency`, sorted by id; scrolls left out of loot that must be
+    magic or better, and drawing no rarity: they are normal); a stack's count (ammunition 8 to
     20); the rarity (by weight, those below the grade asked for left out); how many affixes
     (magic: both by `magic.both`, else prefix or suffix evenly; rare: the count by weight, then
     how many are prefixes, evenly within at most three of each); each affix, prefixes first (by
     weight among those that may roll: the item's kind in its bases, something for its effect to
     change, a tier at the item level, an effect not yet on the item), its tier (evenly among
     those at the item level), and its value (evenly in the tier's range); a rare item's name (two
-    draws). With nothing left to roll an item has fewer affixes, with none it is normal. Loot is
-    found unidentified.
+    draws); and for an item of a class with an `[[ornament]]`, whether it is set with a gem (one
+    draw against its chance, then the gem, size, and cut, never a rough cut; `gem::ornament`).
+    With nothing left to roll an item has fewer affixes, with none it is normal. Loot is found
+    unidentified (its gems show).
   - **Where**: generated branch levels' floors hold `loot` items (the Depths 2 to 4) on plain
     floor where nothing lies, stands, shines, or leads away, and vault `loot` cells an item at
     least of their grade; outdoor ruins' loot cells too (local areas have no floor loot); all
     from the level's `loot/<level id>` stream once its map is valid (the map is the same as
     without loot). Creatures with `loot` drop a magic or rare item (grade magic) where they die,
     besides what they carried, by their chance, from the stream `drop/<actor id>`, at their
-    level's item level.
+    level's item level; by the gems' `chance` (one draw first) the drop is a loose gem instead.
   - **Dev**: replay text `identify` / `identify:LETTERS` (`Action::Identify`, `F8` in dev
     builds: everything carried) identifies without time passing, recorded in replays.
 

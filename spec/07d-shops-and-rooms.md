@@ -27,7 +27,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `cloaks`, `gloves`, `boots`, `rings`, `amulets`, `light_sources`, `tools`, `food`,
     `potions`, `scrolls`, `gems`, `coins`, `miscellaneous`). The kinds: a general store (melee
     weapons, missile weapons, missiles, armour of every kind, light sources, tools, food, potions,
-    scrolls; asks 150 %, pays 30 %), a weaponsmith ("{keeper}'s Forge": melee weapons and
+    scrolls; buys gems too, §7 "Gems", and sells none; asks 150 %, pays 30 %), a weaponsmith ("{keeper}'s Forge": melee weapons and
     missiles; 130 %, 40 %), an armourer ("{keeper}'s Armoury": shields, body armour, helmets,
     cloaks, gloves, and boots), a provisioner ("{keeper}'s Provisions": light sources, tools,
     and food; 120 %, 30 %), and a fletcher ("{keeper}'s Fletchery": missile weapons and missiles;
@@ -43,7 +43,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     ("Welcome to Grimbold's General Store!"). While the keeper trades (`ShopStatus::Open`),
     everything traded lying on the shop floor is for sale: stepping onto it says the price ("You
     see here a dagger (for sale, 45 gold)."), and so do look mode and the pick-up screen.
-    Picking it up adds it to what the player owes (`Shop::unpaid`, counted by object) and says
+    Picking it up adds it to what the player owes (`Shop::unpaid`, counted by goods: an object
+    and what it is made of, so a gem is priced by its gem, size, and cut) and says
     the price ("You pick up a dagger (unpaid, 45 gold).", with "You owe Grimbold 63 gold." when
     more is owed). **Paying** (`p`, `Action::Pay`, replay text `pay`) pays everything owed, from
     the gold the player carries into the keeper's purse, and takes no time; refused outside a

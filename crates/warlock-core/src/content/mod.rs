@@ -17,6 +17,7 @@ mod effect;
 mod experience;
 mod faction;
 mod flow;
+mod gem;
 mod horoscope;
 mod hunger;
 mod item_class;
@@ -25,7 +26,7 @@ mod light;
 mod material;
 mod object;
 mod overworld;
-mod part;
+pub(crate) mod part;
 mod particles;
 mod quest;
 mod race;
@@ -72,6 +73,10 @@ pub use effect::{
 pub use experience::{Experience, MAX_LEVEL, MAX_XP};
 pub use faction::{FactionDef, FactionId, Factions, PLAYER_FACTION, Stance};
 pub use flow::{FLOW_SPEEDS, Flow};
+pub use gem::{
+    Cut, CutId, Cutting, GemDef, GemSize, GemSizeId, Gems, MAX_GEM_VALUE, MAX_GEM_WEIGHT,
+    MAX_MULTIPLIER, Ornament, ROUGH_SATURATION, dull,
+};
 pub use horoscope::{Horoscope, Sign, SignPart};
 pub use hunger::{
     Corpses, EXERTIONS, Faint, Food, HungerDef, MAX_MEAL, MAX_NUTRITION, MAX_SHELF_LIFE,
@@ -87,7 +92,7 @@ pub use level::{
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
 pub use material::{MAX_MATERIAL_VALUE, MaterialDef, MaterialId};
 pub use object::{
-    MAX_BONUS, MAX_DIG, MAX_PLACED, MAX_VALUE, ObjectDef, ObjectId, article, weapon_noun,
+    MAX_BONUS, MAX_DIG, MAX_PLACED, MAX_VALUE, ObjectDef, ObjectId, article, counted, weapon_noun,
 };
 pub use overworld::{Landscape, LocalArea, local_area_id, parse_local_area};
 pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId};
@@ -345,7 +350,7 @@ struct LegendFile {
 ///
 /// `data/lights.toml`, `data/vision.toml`, `data/factions.toml`, `data/dungeons.toml`,
 /// `data/calendar.toml`, `data/sky.toml`, `data/materials/`, `data/parts.toml`, `data/objects/`,
-/// `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
+/// `data/gems.toml`, `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
 /// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, `data/horoscope.toml`,
 /// `data/effects.toml`, `data/room_effects.toml`, `data/weapon_skills.toml`, `data/stances.toml`,
 /// `data/status.toml`, `data/diseases.toml`, `data/dialogue.toml`, `data/quests.toml`,
@@ -354,7 +359,8 @@ struct LegendFile {
 /// profiles, a single `normal` profile that needs no light is used, so content without lighting
 /// stays fully visible; without sizes, everything is medium; without factions, everyone is neutral; without a calendar, months are numbered;
 /// without a sky file there are no moons; without part names every object is of one unnamed part
-/// (`materials = ["steel"]`); without an objects file there are no objects, and
+/// (`materials = ["steel"]`); without `data/gems.toml` there are no gems to find or set; without
+/// an objects file there are no objects, and
 /// without `data/item_classes.toml` there may be none (each names its class); without a
 /// weather file the sky is always clear; without an actions file every action costs 1000;
 /// without a slots file nothing can be worn or wielded; without races or classes there is no
@@ -381,6 +387,8 @@ pub struct Content {
     item_classes: Vec<ItemClassDef>,
     objects: Vec<ObjectDef>,
     object_ids: BTreeMap<String, ObjectId>,
+    /// Gem sizes, cuts, and ornaments (`data/gems.toml`); none without the file.
+    gems: Option<Gems>,
     /// Equipment slots, in display order.
     slots: Vec<SlotDef>,
     /// Trap types, in file order.
@@ -457,6 +465,7 @@ impl Content {
             item_classes: Vec::new(),
             objects: Vec::new(),
             object_ids: BTreeMap::new(),
+            gems: None,
             slots: Vec::new(),
             traps: Vec::new(),
             trap_ids: BTreeMap::new(),
@@ -574,6 +583,7 @@ impl Content {
         content.load_factions(files)?;
         content.load_creatures(files)?;
         content.load_objects(files)?;
+        content.load_gems(files)?;
         let path = "data/shops.toml";
         if let Some(text) = files.get_optional(path) {
             content.shops = Some(Shops::parse(path, text, &content)?);
@@ -1113,6 +1123,25 @@ impl Content {
         Ok(())
     }
 
+    /// `data/gems.toml` (spec §7 "Gems"), once the objects, item classes, and part names it
+    /// names are known.
+    fn load_gems(&mut self, files: &ContentFiles) -> Result<(), ContentError> {
+        let path = "data/gems.toml";
+        let Some(text) = files.get_optional(path) else {
+            return Ok(());
+        };
+        let object_id = |id: &str| self.object_ids.get(id).copied();
+        let known = gem::Known {
+            object_id: &object_id,
+            objects: &self.objects,
+            classes: &self.item_classes,
+            parts: &self.parts,
+        };
+        let gems = Gems::parse(path, text, &known)?;
+        self.gems = Some(gems);
+        Ok(())
+    }
+
     /// Materials and part names, then the objects made of them.
     /// The material and object tables (`data/materials.toml` and `data/materials/*.toml`,
     /// `data/objects.toml` and `data/objects/*.toml`; both optional), numbered in path order
@@ -1159,6 +1188,18 @@ impl Content {
                 return Err(duplicate_id("object", &spec.id, path, first));
             }
             self.object_ids.insert(spec.id.clone(), id);
+            let ornament = match &spec.ornament {
+                Some(part) => Some(self.part_id(part).ok_or_else(|| {
+                    ContentError::new(
+                        path,
+                        format!(
+                            "object `{}`: `ornament = \"{part}\"` is no part of data/parts.toml",
+                            spec.id
+                        ),
+                    )
+                })?),
+                None => None,
+            };
             let (mut def, lit_as) = spec.resolve(
                 path,
                 &self.item_classes,
@@ -1173,6 +1214,7 @@ impl Content {
                 &self.slots,
                 &self.weapon_skills,
             )?;
+            def.ornament = ornament;
             (def.name, def.plural) = part::names(
                 &def.name,
                 &def.plural,
@@ -1668,6 +1710,12 @@ impl Content {
     /// Every material, in file order (by [`MaterialId`]).
     pub fn materials(&self) -> &[MaterialDef] {
         &self.materials
+    }
+
+    /// Gem sizes, cuts, and ornaments (`data/gems.toml`, spec §7 "Gems"); `None` without the
+    /// file: no gems are found or set.
+    pub fn gems(&self) -> Option<&Gems> {
+        self.gems.as_ref()
     }
 
     /// The part names of `data/parts.toml`, in file order (by [`PartId`]).
@@ -3246,11 +3294,8 @@ mod tests {
         }
         let materials: BTreeSet<MaterialId> = objects.iter().map(|o| o.material()).collect();
         assert!(materials.len() >= 10, "objects of many materials");
-        let ruby = content.object(content.object_id("ruby").unwrap());
-        assert_eq!(
-            (ruby.describe(1), ruby.describe(2)),
-            ("a ruby".into(), "2 rubies".into())
-        );
+        let rubies = object::parse_stacks(&["gem:ruby*2".into()], &content).expect("rubies");
+        assert_eq!(rubies[0].describe(&content), "2 rubies");
         // Every creature has a weight; the hub places objects and its kobold carries some.
         assert!(content.creature_defs().iter().all(|c| c.weight > 0));
         let hub = content.level("hub").unwrap();
@@ -3632,15 +3677,16 @@ mod tests {
         let map = "#####\n#.d.#\n#####\n";
         let legend = "\"d\" = { terrain = \"floor\", objects = [\"dagger\", \"arrow*12\", \"dagger*2\"] }\n\
                       [[pile]]\nat = [3, 1]\nobjects = [\"gold_coin*5\", \"gold_coin*2\"]\n\
-                      [[pile]]\nat = [2, 1]\nobjects = [\"ruby\"]\n";
+                      [[pile]]\nat = [2, 1]\nobjects = [\"gem:ruby\"]\n";
         let content = stream(map, legend).unwrap();
         let level = content.level("stream").unwrap();
         let id = |name: &str| content.object_id(name).unwrap();
         let stack = |name: &str, count| crate::object::Stack::new(id(name), count);
+        let ruby = object::parse_stacks(&["gem:ruby".into()], &content).expect("a ruby");
         assert_eq!(
             level.objects[&Pos::new(2, 1)],
             [
-                stack("ruby", 1),
+                ruby[0].clone(),
                 stack("dagger", 1),
                 stack("arrow", 12),
                 stack("dagger", 1),

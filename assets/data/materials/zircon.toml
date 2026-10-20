@@ -1,0 +1,5 @@
+[[material]]
+id = "zircon"
+name = "zircon"
+precious = true
+gem = { color = "#5fc7d9", value = 70, rarity = 20 }

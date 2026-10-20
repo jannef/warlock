@@ -1,0 +1,5 @@
+[[material]]
+id = "smokestone"
+name = "smokestone"
+precious = true
+gem = { color = "#8a7f73", value = 30, rarity = 20 }

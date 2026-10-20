@@ -20,9 +20,33 @@ env:
   CARGO_INCREMENTAL: 0
 
 jobs:
+  # Design documents pending the owner's approval are PRs that only touch docs/design/
+  # (docs/dev/merging.md, "Design documents"). They don't build: the required jobs below are
+  # skipped, and a skipped job counts as passing. Anything else, or a failure here, builds.
+  changes:
+    name: What changed
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - id: diff
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          code=true
+          if [ "$EVENT" = pull_request ]; then
+            files=$(gh api --paginate "repos/$REPO/pulls/$PR/files" --jq '.[].filename')
+            if [ -n "$files" ] && ! grep -qv '^docs/design/' <<< "$files"; then code=false; fi
+          fi
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+
   linux:
     name: Linux (fmt, clippy, test, smoke)
-    if: ${{ !inputs.update_golden }}
+    needs: changes
+    if: ${{ !cancelled() && !inputs.update_golden && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -72,7 +96,8 @@ jobs:
 
   wasm:
     name: wasm32 check
-    if: ${{ !inputs.update_golden }}
+    needs: changes
+    if: ${{ !cancelled() && !inputs.update_golden && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -118,7 +143,8 @@ jobs:
 
   deny:
     name: cargo-deny
-    if: ${{ !inputs.update_golden }}
+    needs: changes
+    if: ${{ !cancelled() && !inputs.update_golden && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

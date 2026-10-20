@@ -69,7 +69,7 @@ stock = [
 ]
 buys = [
     "melee_weapons", "missile_weapons", "missiles", "shields", "body_armour", "helmets",
-    "cloaks", "gloves", "boots", "light_sources", "tools", "food", "potions", "scrolls",
+    "cloaks", "gloves", "boots", "light_sources", "tools", "food", "potions", "scrolls", "gems",
 ]
 items = [6, 10]
 markup = 150

@@ -107,6 +107,7 @@ pub(super) fn objects(content: &Content) -> String {
         "| Object | Glyph | Class | Made of | Weight (each) | Worth (each) | Stacks | Worn or wielded on |\n\
          |---|:---:|---|---|---:|---:|:---:|---|\n",
     );
+    let loose = content.gems().map(|g| g.object);
     for (id, o) in order::objects(content) {
         if o.corpse.is_some() {
             continue;
@@ -115,14 +116,29 @@ pub(super) fn objects(content: &Content) -> String {
             0 => "nothing".to_string(),
             v => format!("{v} gold"),
         };
+        // A loose gem is made of its gem, which weighs and prices it (Gems has the tables).
+        let (made, weight, worth) = match (loose == Some(id), content.gems()) {
+            (true, Some(gems)) => {
+                let grams = |s: Option<&warlock_core::content::GemSize>| s.map_or(0, |s| s.weight);
+                let (least, most) = (grams(gems.sizes().first()), grams(gems.sizes().last()));
+                (
+                    "its gem".to_string(),
+                    format!("{least}–{most} g"),
+                    "its gem's".to_string(),
+                )
+            }
+            _ => (
+                content.describe_parts(&o.parts),
+                format_weight(u64::from(o.weight)),
+                worth,
+            ),
+        };
         let _ = writeln!(
             out,
-            "| {} | {} | {} | {} | {} | {worth} | {} | {} |",
+            "| {} | {} | {} | {made} | {weight} | {worth} | {} | {} |",
             capital(&o.name),
             glyph(o.glyph),
             content.item_class(o.class).name.to_lowercase(),
-            content.describe_parts(&o.parts),
-            format_weight(u64::from(o.weight)),
             yes(o.stackable),
             goes_on(content, id)
         );
@@ -171,7 +187,11 @@ pub(super) fn materials(content: &Content) -> String {
         "| Material | Precious (shown in names) | Objects made of it, in part or whole |\n\
          |---|:---:|---|\n",
     );
-    let all = order::objects(content);
+    // A loose gem is made of its gem, never of what its object would be without one.
+    let loose = content.gems().map(|g| g.object);
+    let all: Vec<_> = (order::objects(content).into_iter())
+        .filter(|(id, _)| Some(*id) != loose)
+        .collect();
     for (id, m) in order::materials(content) {
         let of_it = |o: &&ObjectDef| o.parts.iter().any(|p| p.material == id);
         let objects = all.iter().map(|(_, o)| *o).filter(of_it);
@@ -181,6 +201,9 @@ pub(super) fn materials(content: &Content) -> String {
             .collect();
         if objects.clone().any(|o| o.corpse.is_some()) {
             made.push("corpses");
+        }
+        if m.gem.is_some() && loose.is_some() {
+            made.push("loose gems, and items set with one");
         }
         let made = if made.is_empty() {
             "-".to_string()

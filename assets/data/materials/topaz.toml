@@ -1,0 +1,5 @@
+[[material]]
+id = "topaz"
+name = "topaz"
+precious = true
+gem = { color = "#f0a830", value = 120, rarity = 10, plural = "topazes" }

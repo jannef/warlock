@@ -1,0 +1,5 @@
+[[material]]
+id = "diamond"
+name = "diamond"
+precious = true
+gem = { color = "#e8f4ff", value = 400, rarity = 2 }

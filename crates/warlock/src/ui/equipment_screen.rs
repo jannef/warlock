@@ -50,7 +50,7 @@ impl Item {
         let def = content.object(stack.object);
         Self {
             glyph: def.glyph,
-            fg: def.fg,
+            fg: stack.fg(content),
             name: stack.describe(content),
             weight: stack.weight(content),
             rarity: stack.rarity(),

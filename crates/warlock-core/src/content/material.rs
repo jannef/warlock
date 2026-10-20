@@ -2,8 +2,10 @@
 //! made of, part by part ([`super::part`]). A material has a name, whether it is `precious` (a gem
 //! or a precious metal: it shows in the names of what it is part of), and its `value` (percent,
 //! steel 100), which weighs it against the others in what an object of other parts is worth;
-//! more properties (weight, colour, weapon and armour modifiers, burning, rusting) come later.
+//! a gem has a `gem` table besides ([`GemDef`], spec §7 "Gems"); more properties (weight,
+//! colour, weapon and armour modifiers, burning, rusting) come later.
 
+use super::gem::GemDef;
 use serde::{Deserialize, Serialize};
 
 /// Index of a material in [`super::Content::materials`].
@@ -27,6 +29,10 @@ pub struct MaterialDef {
     /// [`MAX_MATERIAL_VALUE`].
     #[serde(default = "steel")]
     pub value: u32,
+    /// A gem (spec §7 "Gems"): its colour, what a plain one is worth, and how often loot finds
+    /// it. A gem is precious.
+    #[serde(default)]
+    pub gem: Option<GemDef>,
 }
 
 fn steel() -> u32 {
@@ -47,6 +53,15 @@ impl MaterialDef {
                 "material `{}`: `value` is in percent of steel's, 1 to {MAX_MATERIAL_VALUE}",
                 self.id
             ));
+        }
+        if let Some(gem) = &self.gem {
+            if !self.precious {
+                return Err(format!(
+                    "material `{}`: a gem is precious (`precious = true`)",
+                    self.id
+                ));
+            }
+            gem.check(&self.id)?;
         }
         Ok(())
     }
