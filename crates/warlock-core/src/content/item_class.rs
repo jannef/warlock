@@ -121,7 +121,7 @@ mod tests {
         assert_eq!(class_of("sling_stone"), "missiles");
         assert_eq!(class_of("small_shield"), "shields");
         assert_eq!(class_of("kobold_corpse"), "food");
-        assert_eq!(class_of("ruby"), "gems");
+        assert_eq!(class_of("gem"), "gems");
         assert_eq!(class_of("rock"), "miscellaneous");
         for o in c.object_defs() {
             if let Some(kind) = o.kind {

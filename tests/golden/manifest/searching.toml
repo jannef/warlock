@@ -1,6 +1,7 @@
 # Searching (spec §8 "Searching"): the hub's secret closet. The showcase's thief, trained in Spot,
 # notices the secret door at the west end of the hall below the storeroom in passing as she walks
-# in ("You find a secret door!"), then opens it on the closet and its gold.
+# in ("You find a secret door!"), then opens it on the closet, its gold, and its gems (#191: a
+# medium fine sapphire on top).
 [[golden]]
 name = "secret-closet"
 scenario = "showcase"

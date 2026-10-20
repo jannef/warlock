@@ -194,7 +194,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   the inventory or by a slot's upper-case letter (`A` to `M`) on the equipment screen, over the
   screen it came from: its glyph and name (in its rarity's color, with its mark if worn or
   wielded), what it is (`Magic long sword · steel blade, leather grip · 1.8 kg`: every part, the
-  main one first, §7 "Objects and materials"), its base stats in words
+  main one first, §7 "Objects and materials"), each gem in it with its size and cut ("Pommel:
+  small emerald, fine cut", a loose gem's "Gem: tiny garnet, uncut"; §7 "Gems"), its base stats
+  in words
   (`magic::describe`: "Long blade, for the main hand", "Damage 1d8; criticals on 20–24, ×2
   damage", "Shoots up to 15 cells", "Needs Strength 14 to draw", "Quick to strike", "Pierces
   armour" (never how much), "Armour +2", "Protection 3", "Dexterity adds at most +4 to Defence

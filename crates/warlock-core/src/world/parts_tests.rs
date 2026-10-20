@@ -1,8 +1,8 @@
 //! Objects made of parts (spec §7 "Objects and materials", #199): every built-in object's parts
 //! are valid, the main part is what a single material was, names show the gems and precious
 //! metals, descriptions every part, before identification too, and value follows the parts'
-//! materials by their shares. Items carry their base item's parts (instances of their own come
-//! with metal variants and gems, #193 and #191), so loot, creature kits, and saves keep them.
+//! materials by their shares. Items carry their base item's parts, with their own gems in place
+//! (#191, `gem_tests.rs`), so loot, creature kits, and saves keep them.
 
 use super::*;
 use crate::content::{ContentFiles, ObjectId, Part};
@@ -24,15 +24,26 @@ fn part(content: &Content, part: &str, material: &str, share: u8) -> Part {
         part: Some(content.part_id(part).expect("part")),
         material: content.material_id(material).expect("material"),
         share,
+        gem: None,
     }
 }
 
 /// Every part of `stack` checks out against its base item: the same parts, valid shares, the
-/// main part first, and a name and value made of them.
+/// main part first, and a name and value made of them. A stack with gems of its own (a loose gem,
+/// an ornament) is its base item's parts with its gems in their place.
 fn check_stack(content: &Content, stack: &Stack) {
     let def = content.object(stack.object);
+    if let Some(own) = stack.own_parts() {
+        crate::item_parts::check(def, own, content).expect("valid parts");
+        let parts = stack.parts(content);
+        assert_eq!(*parts, crate::item_parts::resolve(&def.parts, own, content));
+        assert_eq!(parts.iter().map(|p| u32::from(p.share)).sum::<u32>(), 100);
+        assert!(parts.iter().any(|p| p.gem.is_some()), "{}", def.id);
+        assert!(stack.value(content) > 0, "{}", def.id);
+        return;
+    }
     let parts = stack.parts(content);
-    assert_eq!(parts, def.parts.as_slice(), "{}", def.id);
+    assert_eq!(*parts, *def.parts.as_slice(), "{}", def.id);
     assert!(!parts.is_empty() && parts.len() <= crate::content::MAX_OBJECT_PARTS);
     assert_eq!(parts.iter().map(|p| u32::from(p.share)).sum::<u32>(), 100);
     assert!(parts.iter().all(|p| p.share >= 1), "{}", def.id);
@@ -102,11 +113,8 @@ fn names_show_gems_and_precious_metals_descriptions_every_part() {
             "Long sword · steel blade, leather grip · 1.8 kg".into()
         )
     );
-    // A material the name says already is not said again; one part is just its material.
-    assert_eq!(name("ruby"), ("a ruby".into(), "Ruby · ruby · 5 g".into()));
+    // A material the name says already is not said again.
     assert_eq!(name("gold_ring").0, "a gold ring");
-    let rubies = Stack::new(object(&content, "ruby"), 3);
-    assert_eq!(rubies.describe(&content), "3 rubies");
     let amulets = Stack::new(object(&content, "gold_amulet"), 2);
     assert_eq!(amulets.describe(&content), "2 gold and ruby amulets");
 }
@@ -159,7 +167,8 @@ fn value_follows_the_parts_materials_by_their_shares() {
     );
     files.insert(
         "data/materials/ruby.toml",
-        "[[material]]\nid = \"ruby\"\nname = \"ruby\"\nprecious = true\nvalue = 5000\n",
+        "[[material]]\nid = \"ruby\"\nname = \"ruby\"\nprecious = true\nvalue = 5000\n\
+         gem = { color = \"#d3213b\", value = 300, rarity = 5 }\n",
     );
     let content = Content::load(&files).expect("content");
     let amulet = content.object(object(&content, "gold_amulet"));

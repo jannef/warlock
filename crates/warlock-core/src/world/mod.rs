@@ -897,6 +897,8 @@ mod experience_tests;
 #[cfg(test)]
 mod fight_tests;
 #[cfg(test)]
+mod gem_tests;
+#[cfg(test)]
 mod hearing_tests;
 #[cfg(test)]
 mod hunger_tests;

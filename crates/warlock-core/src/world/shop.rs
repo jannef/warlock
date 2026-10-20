@@ -6,7 +6,8 @@
 //! (but the currency) is for sale:
 //!
 //! - **Entering** the shop floor the keeper greets the player with the shop's sign.
-//! - **Picking up** goods adds them to what the player owes (`unpaid`, counted by object), and
+//! - **Picking up** goods adds them to what the player owes (`unpaid`, counted by object and
+//!   what it is made of, so a gem is priced by its gem, size, and cut), and
 //!   says the price; the player **pays** with [`crate::Action::Pay`] (no time), from the gold
 //!   they carry into the keeper's purse. Without enough gold they put things back by dropping
 //!   them, which takes the drop's time.
@@ -155,27 +156,31 @@ impl Shop {
             && inside(self.min)
             && inside(self.max)
             && self.exits.iter().all(|&p| inside(p))
-            // The bill counts by object: no stacks lying anywhere, so no magic and no age.
+            // The bill counts goods (an object and what it is made of): no stacks lying
+            // anywhere, so no magic and no age.
             && self.unpaid.iter().all(|s| {
                 usize::from(s.object.0) < content.object_defs().len()
                     && s.count >= 1
                     && s.magic().is_none()
                     && s.died.is_none()
+                    && (s.own_parts()).is_none_or(|own| {
+                        crate::item_parts::check(content.object(s.object), own, content).is_ok()
+                    })
             })
     }
 
-    /// Adds `stack` to what the player owes, counted by object (a magic item is priced as its
-    /// base item, food whatever its age).
+    /// Adds `stack` to what the player owes, counted by goods: its object and what it is made
+    /// of (a magic item is priced as its base item, food whatever its age, a gem by its gem).
     fn owe(&mut self, stack: &Stack) {
-        match self.unpaid.iter_mut().find(|s| s.object == stack.object) {
+        match self.unpaid.iter_mut().find(|s| s.same_goods(stack)) {
             Some(same) => same.count += stack.count,
-            None => self.unpaid.push(Stack::new(stack.object, stack.count)),
+            None => self.unpaid.push(stack.goods(stack.count)),
         }
     }
 
     /// Takes `stack` off what the player owes: they put it back.
     fn put_back(&mut self, stack: &Stack) {
-        if let Some(same) = self.unpaid.iter_mut().find(|s| s.object == stack.object) {
+        if let Some(same) = self.unpaid.iter_mut().find(|s| s.same_goods(stack)) {
             same.count = same.count.saturating_sub(stack.count);
         }
         self.unpaid.retain(|s| s.count > 0);
@@ -189,14 +194,14 @@ pub fn part_of(stack: &Stack, count: u32) -> Stack {
     part
 }
 
-/// How much of each stack of `inventory` is unpaid: the count of each object `unpaid` names,
-/// given to that object's stacks from the last one back (the latest picked up).
+/// How much of each stack of `inventory` is unpaid: the count of the goods `unpaid` names,
+/// given to the stacks of those goods from the last one back (the latest picked up).
 pub fn unpaid_parts(inventory: &[Stack], unpaid: &[Stack]) -> Vec<u32> {
     let mut parts = vec![0; inventory.len()];
     for owed in unpaid {
         let mut left = owed.count;
         for (i, stack) in inventory.iter().enumerate().rev() {
-            if stack.object == owed.object && left > 0 {
+            if stack.same_goods(owed) && left > 0 {
                 parts[i] = stack.count.min(left);
                 left -= parts[i];
             }

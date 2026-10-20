@@ -222,7 +222,7 @@ file). Topics:
 - `docs/dev/screens.md` — the screen stack (open, input, draw, the dialog, info pages), prompts as input modes, the screen modules, key commands and the abilities menu
 - `docs/dev/time.md` — `GameTime`, the calendar, action costs and prices, the energy scheduler, rest, creature speed
 - `docs/dev/hearing.md` — noise per action, propagation, what creatures and the player hear, sound markers
-- `docs/dev/objects.md` — object and material data, stacks, piles, inventories, weight, pick up and drop
+- `docs/dev/objects.md` — object and material data, parts and instance parts, gems, stacks, piles, inventories, weight, pick up and drop
 - `docs/dev/equipment.md` — slots as data, wielding and wearing, what combat reads from equipment
 - `docs/dev/combat.md` — the 2d12 rules, Defence categories, strikes, hit points and death, messages
 - `docs/dev/ranged-combat.md` — firing and throwing, missiles in flight, fires, the aiming mode

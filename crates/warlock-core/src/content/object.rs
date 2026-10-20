@@ -72,7 +72,7 @@ use super::hunger::Food;
 use super::item_class::{ItemClassDef, ItemClassId};
 use super::light::LightId;
 use super::material::MaterialId;
-use super::part::{self, Part, PartEntry};
+use super::part::{self, Part, PartEntry, PartId};
 use super::particles::ParticleEmitter;
 use super::scroll::{ReadSpec, Reading};
 use super::slot::SlotDef;
@@ -82,6 +82,7 @@ use crate::color::Rgb;
 use crate::combat::{Attack, CRITS, DEFAULT_CRIT, DEFAULT_THREAT, THREATS};
 use crate::dice::Dice;
 use crate::door::Key;
+use crate::item_parts::ItemPart;
 use crate::object::Stack;
 use crate::time::{DAY, Duration};
 use serde::{Deserialize, Serialize};
@@ -158,6 +159,9 @@ pub(super) struct ObjectSpec {
     pub materials: Vec<PartEntry>,
     /// The single material objects had before parts: refused, with a pointer to `materials`.
     pub material: Option<String>,
+    /// The part a gem is set as when loot ornaments it (a part id: `tip`), instead of its
+    /// class's in `data/gems.toml` (spec §7 "Gems").
+    pub ornament: Option<String>,
     /// Grams, at least 1.
     pub weight: u32,
     /// What one is worth, in gold coins (shops; spec §7 "Shops").
@@ -264,10 +268,15 @@ pub(super) struct ObjectSpec {
 #[derive(Clone, Debug)]
 pub struct ObjectDef {
     pub id: String,
-    /// Singular, without an article: "dagger".
+    /// Singular, without an article: "dagger"; with the notable parts its written name does not
+    /// mention ("gold and ruby amulet", [`super::part::names`]).
     pub name: String,
     /// "daggers".
     pub plural: String,
+    /// Its name and plural as its file writes them, before its parts are added: what an item
+    /// made of other parts is named from ([`crate::object::Stack::names`]).
+    pub written_name: String,
+    pub written_plural: String,
     pub glyph: char,
     pub fg: Rgb,
     /// Its item class (`data/item_classes.toml`): what kind of thing it is, which item lists
@@ -276,6 +285,8 @@ pub struct ObjectDef {
     /// What it is made of, part by part, the main part first ([`ObjectDef::material`]); the
     /// shares sum to 100. Never empty.
     pub parts: Vec<Part>,
+    /// The part a gem is set as when loot ornaments it, instead of its class's (spec §7 "Gems").
+    pub ornament: Option<PartId>,
     /// Weight of one, in grams; at least 1.
     pub weight: u32,
     /// What one is worth, in gold coins, at most [`MAX_VALUE`]; 0 for junk (spec §7 "Shops":
@@ -381,10 +392,13 @@ impl ObjectDef {
             id: format!("{}_corpse", creature.id),
             name: format!("{} corpse", creature.name),
             plural: format!("{} corpses", creature.name),
+            written_name: format!("{} corpse", creature.name),
+            written_plural: format!("{} corpses", creature.name),
             glyph: '%',
             fg: creature.fg,
             class,
             parts: vec![Part::whole(material)],
+            ornament: None,
             weight: creature.weight,
             // Nobody buys or sells a corpse (spec §7 "Shops").
             value: 0,
@@ -432,20 +446,27 @@ impl ObjectDef {
     }
 
     /// What one of it made of `parts` is worth, in gold coins: its `value`, scaled by what
-    /// `parts` are worth against its own parts (each part's share times its material's value,
-    /// [`part::worth`]), rounded to the nearest coin, at most [`MAX_VALUE`]. Made of its own
-    /// parts, its `value`. Until items carry parts of their own (#193), every item is made of its
-    /// base item's.
+    /// `parts` without a gem are worth against its own parts (each part's share times its
+    /// material's value, [`part::worth`]), rounded to the nearest coin, plus what each gem part
+    /// is worth by its size and cut ([`super::Gems::value`]: a loose gem, an ornament), at most
+    /// [`MAX_VALUE`]. Made of its own parts, its `value`.
     pub fn value_with(&self, parts: &[Part], content: &Content) -> u32 {
         if parts == self.parts.as_slice() {
             return self.value;
         }
+        let plain: Vec<Part> = parts.iter().filter(|p| p.gem.is_none()).copied().collect();
         let (worth, own) = (
-            part::worth(parts, content.materials()),
+            part::worth(&plain, content.materials()),
             part::worth(&self.parts, content.materials()),
         );
-        let value = (u64::from(self.value) * worth + own / 2) / own.max(1);
-        u32::try_from(value.min(u64::from(MAX_VALUE))).unwrap_or(MAX_VALUE)
+        let made = (u64::from(self.value) * worth + own / 2) / own.max(1);
+        let gems: u64 = (parts.iter())
+            .filter_map(|p| {
+                let (gems, gem) = (content.gems()?, content.material(p.material).gem.as_ref()?);
+                Some(u64::from(gems.value(gem, p.gem?)))
+            })
+            .sum();
+        u32::try_from((made + gems).min(u64::from(MAX_VALUE))).unwrap_or(MAX_VALUE)
     }
 
     /// Whether it is a throwing weapon: it has a range and is no missile weapon.
@@ -485,11 +506,17 @@ impl ObjectDef {
 
     /// `count` of it in words: "a dagger", "an iron key", "12 arrows".
     pub fn describe(&self, count: u32) -> String {
-        if count == 1 {
-            format!("{} {}", article(&self.name), self.name)
-        } else {
-            format!("{count} {}", self.plural)
-        }
+        counted(&self.name, &self.plural, count)
+    }
+}
+
+/// `count` of something called `name` (`plural` for several) in words: "a dagger", "an iron
+/// key", "12 arrows".
+pub fn counted(name: &str, plural: &str, count: u32) -> String {
+    if count == 1 {
+        format!("{} {name}", article(name))
+    } else {
+        format!("{count} {plural}")
     }
 }
 
@@ -639,12 +666,16 @@ impl ObjectSpec {
         let loot = self.kind.is_some() || read.is_some();
         let def = ObjectDef {
             id: self.id,
+            written_name: self.name.clone(),
+            written_plural: plural.clone(),
             name: self.name,
             plural,
             glyph: self.glyph,
             fg: self.fg,
             class,
             parts,
+            // Resolved as content loads, once the part names are known.
+            ornament: None,
             weight: self.weight,
             value: self.value,
             stackable: self.stackable,
@@ -951,12 +982,13 @@ impl ObjectSpec {
 }
 
 /// Parses objects as level files place them: ids, each optionally with a count (`"arrow*12"`),
-/// first on top. A stackable object becomes one stack (the same id twice joins it); any other
-/// object becomes a stack of one per count.
+/// first on top; a loose gem names its gem (`"gem:ruby*3"`: the gems' object made of that gem,
+/// of the plain size and cut; spec §7 "Gems"). A stackable object becomes one stack (the same
+/// placement twice joins it); any other object becomes a stack of one per count.
 pub(super) fn parse_stacks(specs: &[String], content: &Content) -> Result<Vec<Stack>, String> {
     let mut stacks: Vec<Stack> = Vec::new();
     for spec in specs {
-        let (id, count) = match spec.split_once('*') {
+        let (placed, count) = match spec.split_once('*') {
             Some((id, n)) => {
                 let count = n
                     .trim()
@@ -970,6 +1002,10 @@ pub(super) fn parse_stacks(specs: &[String], content: &Content) -> Result<Vec<St
             }
             None => (spec.trim(), 1),
         };
+        let (id, gem) = match placed.split_once(':') {
+            Some((id, gem)) => (id.trim(), Some(gem.trim())),
+            None => (placed, None),
+        };
         let object = content
             .object_id(id)
             .ok_or_else(|| format!("unknown object `{id}`"))?;
@@ -978,16 +1014,38 @@ pub(super) fn parse_stacks(specs: &[String], content: &Content) -> Result<Vec<St
                 "`{id}` is a corpse: corpses lie only where creatures died"
             ));
         }
+        let stack = placed_gem(content, object, gem)?;
         if content.object(object).stackable {
-            match stacks.iter_mut().find(|s| s.object == object) {
-                Some(stack) => stack.count += count,
-                None => stacks.push(Stack::new(object, count)),
+            match stacks.iter_mut().find(|s| s.same_goods(&stack)) {
+                Some(same) => same.count += count,
+                None => stacks.push(stack.goods(count)),
             }
         } else {
-            stacks.extend((0..count).map(|_| Stack::one(object)));
+            stacks.extend((0..count).map(|_| stack.clone()));
         }
     }
     Ok(stacks)
+}
+
+/// One of `object` as a placement names it: a loose gem (the gems' object) of its `gem`, of the
+/// plain size and cut; anything else as it is (it names no gem).
+fn placed_gem(content: &Content, object: ObjectId, gem: Option<&str>) -> Result<Stack, String> {
+    let id = &content.object(object).id;
+    let loose = content.gems().filter(|g| g.object == object);
+    match (loose, gem) {
+        (None, None) => Ok(Stack::one(object)),
+        (None, Some(gem)) => Err(format!(
+            "`{id}:{gem}`: only a loose gem names its gem (`gem:ruby`)"
+        )),
+        (Some(_), None) => Err(format!("`{id}` is a loose gem: name its gem, `{id}:ruby`")),
+        (Some(gems), Some(gem)) => {
+            let material = (content.material_id(gem))
+                .filter(|m| content.material(*m).gem.is_some())
+                .ok_or_else(|| format!("`{id}:{gem}`: `{gem}` is no gem (data/materials/)"))?;
+            let part = ItemPart::gem(content, None, material, gems.plain());
+            Ok(Stack::one(object).with_parts(vec![part]))
+        }
+    }
 }
 
 #[cfg(test)]
@@ -1000,10 +1058,13 @@ mod tests {
             id: name.into(),
             name: name.into(),
             plural: plural.into(),
+            written_name: name.into(),
+            written_plural: plural.into(),
             glyph: ')',
             fg: Rgb::WHITE,
             class: ItemClassId(0),
             parts: vec![Part::whole(MaterialId(0))],
+            ornament: None,
             weight: 1,
             value: 0,
             stackable: false,

@@ -66,6 +66,16 @@ id = "setting"
 name = "setting"
 
 [[part]]
+id = "studs"
+name = "studs"
+adjective = "studded"
+
+[[part]]
+id = "tip"
+name = "tip"
+adjective = "tipped"
+
+[[part]]
 id = "trim"
 name = "trim"
 adjective = "trimmed"

@@ -63,6 +63,10 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   long sword", in yellow). Found unidentified, they work all the same; each remembers what it
   rolled. They lie in the Depths, in vaults, and fall from slain kobolds, and an item's
   description says what it does in plain words. A glowing helm lights your way.
+- **Gems** — ten gems from smokestone to diamond, each of a size and a cut (uncut included), are
+  rare finds, larger and finer deeper down, and what rings, amulets, and now and then weapons,
+  shields, and helms are set with: "an emerald-pommelled long sword", "a gold and ruby ring".
+  General stores buy them at what they are worth.
 - **Scrolls** — read with `r`: scrolls of fireball, lightning, and frost cast the traps' spells
   where you aim them (a fireball read too close asks first), and what they kill is yours; a
   scroll of identify tells you what an unidentified item is. They lie in the Depths and sell in

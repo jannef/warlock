@@ -1,0 +1,13 @@
+[[object]]
+id = "gem"
+name = "gem"
+glyph = "*"
+fg = "#c8c8c8"
+class = "gems"
+# A loose gem is made of its gem, which each gem carries with its size and cut (gems.toml): the
+# gem names it, colours it, and is what it is worth; its size is what it weighs. The stone here
+# is only what this object would be made of without one, which no gem is.
+materials = ["stone"]
+weight = 1
+value = 0
+stackable = true
