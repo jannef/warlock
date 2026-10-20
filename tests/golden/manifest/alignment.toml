@@ -1,0 +1,19 @@
+# Alignment (#254): good against evil, shown as a band, never a number.
+
+# A paladin (Good) walks into Grimbold's General Store and kicks him: attacking a shopkeeper who
+# trades with you is evil, so the paladin falls to Kind, and the message line says so after the
+# kick's own messages ("You feel you have strayed from the path of good.").
+[[golden]]
+name = "alignment-strayed"
+scenario = "courtyard"
+character = "human,male,paladin"
+actions = "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 move:S*5 move:E*5 kick:N"
+
+# The same paladin's character screen: `Alignment  Kind` below the stance.
+[[golden]]
+name = "alignment-strayed-character"
+scenario = "courtyard"
+character = "human,male,paladin"
+actions = "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 move:S*5 move:E*5 kick:N"
+screen = "character"
+window = "960x680"
