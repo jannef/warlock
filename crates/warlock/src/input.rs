@@ -17,6 +17,7 @@
 
 use crate::cli::Args;
 use crate::game::{Game, PlayerAction, SimSet};
+use crate::render::console::Console;
 use crate::save::SaveCommand;
 use crate::settings::Settings;
 use crate::ui::{
@@ -123,6 +124,10 @@ pub enum KeyCommand {
     Mark,
     /// On the pick-up and drop lists: mark everything, or nothing if everything is marked.
     MarkAll,
+    /// On an item list (the inventory, pick up, drop, ...): the next page of the list.
+    NextListPage,
+    /// On an item list: the previous page of the list.
+    PrevListPage,
     /// In the confirmation dialog (quitting; paying before leaving a shop, selling): yes.
     Yes,
     /// In the confirmation dialog: no.
@@ -223,9 +228,8 @@ impl KeyCommand {
             Yes | No => Context::Dialog,
             NextTarget | PrevTarget | Loose => Context::Aim,
             RestHour | RestDawn | RestDusk => Context::Prompt,
-            MenuUp | MenuDown | MenuLeft | MenuRight | Confirm | Back | Erase | Mark | MarkAll => {
-                Context::Menu
-            }
+            MenuUp | MenuDown | MenuLeft | MenuRight | Confirm | Back | Erase | Mark | MarkAll
+            | NextListPage | PrevListPage => Context::Menu,
             CycleVision | SkipHour | NextWeather | IdentifyAll | RevealMap | LightValues
             | Snapshot | LoadSnapshot => Context::Dev,
             _ => Context::Play,
@@ -280,6 +284,8 @@ impl KeyCommand {
             KeyCommand::Erase => "Erase a character / reset keys",
             KeyCommand::Mark => "Mark a stack (pick up, drop)",
             KeyCommand::MarkAll => "Mark everything (pick up, drop)",
+            KeyCommand::NextListPage => "Next page of a list",
+            KeyCommand::PrevListPage => "Previous page of a list",
             KeyCommand::Yes => "Yes (in a dialog)",
             KeyCommand::No => "No (in a dialog)",
             KeyCommand::CycleVision => "Next vision profile (dev)",
@@ -424,6 +430,10 @@ impl Default for Bindings {
             (Code(KeyCode::Backspace), Erase),
             (Code(KeyCode::Space), Mark),
             (ch(","), MarkAll),
+            (ch(">"), NextListPage),
+            (Code(KeyCode::PageDown), NextListPage),
+            (ch("<"), PrevListPage),
+            (Code(KeyCode::PageUp), PrevListPage),
             (ch("y"), Yes),
             (ch("n"), No),
             (ch("?"), Help),
@@ -433,8 +443,6 @@ impl Default for Bindings {
             table.0.push((ch(&n.to_string()), Page(n)));
         }
         table.0.push((Code(KeyCode::Tab), NextPage));
-        table.0.push((Code(KeyCode::PageDown), NextPage));
-        table.0.push((Code(KeyCode::PageUp), PrevPage));
         // The developer keys: in every build's table, read only where they are on (`dev_keys`).
         table.0.extend([
             (Code(KeyCode::F2), RevealMap),
@@ -584,7 +592,16 @@ pub fn route_keys(
     mut bindings: ResMut<Bindings>,
     mut play: Gameplay,
     mut choices: MessageWriter<MenuChoice>,
+    console: Option<Res<Console>>,
 ) {
+    // Item lists page by the console's size: the screens learn it before any press.
+    let size = console.map(|c| (c.cols(), c.rows()));
+    if let Some(size) = size
+        && !keys.is_empty()
+        && screens.stack.console() != Some(size)
+    {
+        screens.stack.set_console(size);
+    }
     let mut chosen = false;
     for key in keys.read() {
         if chosen || key.state != ButtonState::Pressed {
@@ -945,6 +962,8 @@ impl Gameplay<'_> {
                 | KeyCommand::Erase
                 | KeyCommand::Mark
                 | KeyCommand::MarkAll
+                | KeyCommand::NextListPage
+                | KeyCommand::PrevListPage
                 | KeyCommand::Page(_)
                 | KeyCommand::NextPage
                 | KeyCommand::PrevPage

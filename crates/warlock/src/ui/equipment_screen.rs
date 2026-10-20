@@ -2,7 +2,8 @@
 //! Tool, from `data/slots.toml`) with what is in it, or `—`.
 //!
 //! A slot's letter, or Enter on the `>` row, opens the choice of what goes there
-//! ([`ItemScreen`]): the inventory stacks that fit the slot, by their inventory letters. Choosing
+//! ([`ItemScreen`]): the inventory stacks that fit the slot, in the one paged list
+//! (`paged_list`: grouped by item class, lettered per page). Choosing
 //! one wears or wields it (a swap if the slot holds something), and choosing what is already
 //! there takes it off. That is one action, recorded like any other, and it takes its time; the
 //! choice closes and the equipment screen, still open beneath it, shows the result
@@ -14,6 +15,7 @@
 //! Both are read from the perception snapshot: the player's own inventory and equipment.
 
 use super::menu::{Hints, Nav, Panel, Press};
+use super::paged_list::{PagedList, Row, draw_header};
 use super::screens::ScreenAction;
 use super::{ACCENT, TEXT, TEXT_DIM, rarity_color};
 use crate::input::{Bindings, KeyCommand};
@@ -246,7 +248,7 @@ impl EquipmentScreen {
 /// A stack that fits the slot, as the choice shows it.
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct Choice {
-    /// Its inventory position (and letter).
+    /// Its inventory position.
     item: usize,
     shown: Item,
     /// What the inventory says of it if it is worn or wielded: "(being worn)".
@@ -263,9 +265,8 @@ pub struct ItemScreen {
     name: String,
     /// What putting on and taking off are called here ("wield", "put away").
     verbs: (&'static str, &'static str),
-    choices: Vec<Choice>,
-    /// The `>` row.
-    cursor: usize,
+    /// What fits, grouped by class and paged (`paged_list`); its cursor is the `>` row.
+    choices: PagedList<Choice>,
     /// Rows to make room for at least: as many as the equipment screen beneath has slots, so it
     /// covers that screen.
     rows: usize,
@@ -279,8 +280,7 @@ impl ItemScreen {
             slot: String::new(),
             name: String::new(),
             verbs: verbs(ActionKind::Wear),
-            choices: Vec::new(),
-            cursor: 0,
+            choices: PagedList::empty(),
             rows: 0,
         };
         let Some(view) = view else { return screen };
@@ -296,45 +296,57 @@ impl ItemScreen {
         screen.verbs = verbs(def.action);
         // What fits, and what the slot holds (a two-handed weapon in the off hand fits only
         // the main hand, but can be taken off from either).
-        screen.choices = (view.inventory().iter().enumerate())
+        let choices = (view.inventory().iter().enumerate())
             .filter(|&(i, s)| content.fits(s.object, slot) || worn.get(slot) == Some(i))
-            .map(|(i, s)| Choice {
-                item: i,
-                shown: Item::of(s, content),
-                mark: equipment::mark(content, worn, i),
-                here: worn.get(slot) == Some(i),
+            .map(|(i, s)| {
+                let choice = Choice {
+                    item: i,
+                    shown: Item::of(s, content),
+                    mark: equipment::mark(content, worn, i),
+                    here: worn.get(slot) == Some(i),
+                };
+                (view.item_class(s), choice)
             })
             .collect();
+        screen.choices = PagedList::new(choices, content);
         // Start on what is there, if anything.
-        screen.cursor = screen.choices.iter().position(|c| c.here).unwrap_or(0);
+        let here = screen.choices.iter().position(|c| c.here);
+        if let Some(here) = here {
+            screen.choices.select(here);
+        }
         screen
     }
 
-    /// Applies a key press: a listed stack's letter, or Enter on the `>` row, chooses it; Esc
-    /// goes back to the equipment screen.
+    /// Applies a key press: a listed stack's letter on the page shown, or Enter on the `>` row,
+    /// chooses it; the list keys turn the page; Esc goes back to the equipment screen.
     pub fn handle(&mut self, press: &Press, _bindings: &Bindings) -> ScreenAction {
         if press.nav == Nav::Back || (self.choices.is_empty() && press.nav == Nav::Enter) {
             return ScreenAction::Close;
         }
-        // Letters name inventory stacks (even `j` and `k`, which move selections elsewhere).
-        if let Some(c @ 'a'..='z') = press.text {
-            let i = usize::from(c as u8 - b'a');
-            return match self.choices.iter().position(|ch| ch.item == i) {
+        // Letters name the page's stacks (even `j` and `k`, which move selections elsewhere).
+        if let Some(c) = press.text.filter(char::is_ascii_lowercase) {
+            return match self.choices.at_letter(c) {
                 Some(row) => self.choose(row),
                 None => ScreenAction::Stay,
             };
         }
-        let rows = self.choices.len().max(1);
         match press.nav {
-            Nav::Up => self.cursor = (self.cursor + rows - 1) % rows,
-            Nav::Down => self.cursor = (self.cursor + 1) % rows,
-            Nav::Enter => return self.choose(self.cursor),
-            _ => {}
+            Nav::Enter => return self.choose(self.choices.cursor()),
+            nav => {
+                self.choices.navigate(nav);
+            }
         }
         ScreenAction::Stay
     }
 
-    /// Puts on the stack on row `row`, or takes it off if it is what the slot holds.
+    /// Lays the list out for a console of `cols` by `rows`: a page takes the rows the frame, the
+    /// margin, the hint, the gaps, and the footer leave. Drawing calls it, and so does the screen
+    /// stack before a press, so a letter names what is drawn.
+    pub fn fit(&self, _cols: u32, rows: u32) {
+        self.choices.set_room((rows as i32 - 7).max(1) as usize);
+    }
+
+    /// Puts on the stack of list item `row`, or takes it off if it is what the slot holds.
     fn choose(&self, row: usize) -> ScreenAction {
         let Some(choice) = self.choices.get(row) else {
             return ScreenAction::Stay;
@@ -351,10 +363,12 @@ impl ItemScreen {
 
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         // Rows: margin, the list, a gap, the hint, a gap, the footer, the frame; as large as the
-        // equipment screen beneath at least.
-        let count = self.choices.len().max(self.rows).max(1) as i32;
+        // equipment screen beneath at least. A page takes what rows the console has for it.
+        self.fit(console.cols(), console.rows());
+        let count = self.choices.tallest().max(self.rows).max(1) as i32;
         let title = format!(" Equipment: {} ", self.name);
         let panel = Panel::new(console, &title, WIDTH, count + 7);
+        self.choices.draw_label(console, &panel);
         let x = panel.inner_x();
         let right = panel.x + panel.w - 3;
         let fits = |y: i32| y < panel.y + panel.h - 2;
@@ -362,18 +376,27 @@ impl ItemScreen {
             let text = "You carry nothing that goes here.";
             console.print(x + 2, panel.y + 2, text, TEXT_DIM);
         }
-        for (i, choice) in self.choices.iter().enumerate() {
-            let y = panel.y + 2 + i as i32;
+        for (row, y) in self.choices.rows().into_iter().zip(panel.y + 2..) {
             if !fits(y) {
                 break;
             }
-            let selected = i == self.cursor;
+            let (index, letter) = match row {
+                Row::Header(name) => {
+                    draw_header(console, x, y, name);
+                    continue;
+                }
+                Row::Item { index, letter } => (index, letter),
+            };
+            let Some(choice) = self.choices.get(index) else {
+                continue;
+            };
+            let selected = index == self.choices.cursor();
             let color = if selected { ACCENT } else { TEXT };
             if selected {
                 console.print(x, y, ">", ACCENT);
             }
-            // `b - [ an iron helm (being worn)    1.5 kg`, the inventory's letter.
-            let label = format!("{} -", letter(choice.item).unwrap_or('?'));
+            // `b - [ an iron helm (being worn)    1.5 kg`, the page's letter.
+            let label = format!("{letter} -");
             console.print(x + 2, y, &label, color);
             let note = choice
                 .mark
@@ -392,8 +415,15 @@ impl ItemScreen {
             );
             console.print(x, y, &hint, TEXT_DIM);
         }
-        let confirm = Hints::of(bindings).confirm;
-        panel.footer(console, &format!("a-z or {confirm} {put_on}   Esc back"));
+        let keys = Hints::of(bindings);
+        let confirm = &keys.confirm;
+        let choose = match self.choices.last_letter() {
+            Some('a') => format!("a or {confirm}"),
+            Some(last) => format!("a-{last} or {confirm}"),
+            None => confirm.clone(),
+        };
+        let page = (self.choices.hint(&keys)).map_or(String::new(), |hint| format!("{hint}   "));
+        panel.footer(console, &format!("{choose} {put_on}   {page}Esc back"));
     }
 }
 
@@ -507,24 +537,26 @@ mod tests {
         let content = world.content().clone();
         let body = content.slot_id("body").expect("body");
         let mut screen = ItemScreen::new(Some(&world.perception()), body);
-        // Only the chain mail shirt fits the body; it goes on with its letter, `e`.
+        // Only the chain mail shirt (inventory position 4) fits the body; it goes on with its
+        // letter on the page, `a`.
         assert_eq!(screen.choices.len(), 1);
-        assert_eq!(screen.handle(&Press::typed('a'), &b), ScreenAction::Stay);
+        assert_eq!(screen.handle(&Press::typed('e'), &b), ScreenAction::Stay);
         let wear = Action::Equip {
             slot: "body".into(),
             item: 4,
         };
         assert_eq!(
-            screen.handle(&Press::typed('e'), &b),
+            screen.handle(&Press::typed('a'), &b),
             ScreenAction::Act(wear.clone())
         );
         world.apply(&wear);
         // Now it is there: choosing it takes it off.
         let mut screen = ItemScreen::new(Some(&world.perception()), body);
         let text = drawn(|c| screen.draw(c, &b));
-        assert!(row(&text, "e - [ a chain mail shirt (being worn)").contains("11 kg"));
+        assert!(row(&text, "a - [ a chain mail shirt (being worn)").contains("11 kg"));
+        row(&text, "│ Body armour");
         row(&text, "Choose what is there to take it off.");
-        row(&text, "a-z or Enter put on   Esc back");
+        row(&text, "a or Enter put on   Esc back");
         assert_eq!(
             screen.handle(&Press::nav(Nav::Enter), &b),
             ScreenAction::Act(Action::Remove("body".into()))
@@ -545,22 +577,24 @@ mod tests {
         let text = drawn(|c| screen.draw(c, &b));
         row(&text, " Equipment: Off hand ");
         row(&text, "a - [ a small shield");
-        row(&text, "a-z or Enter wield");
-        // With the quarterstaff in both hands, the off hand's choice has it too, to put away.
+        row(&text, "a or Enter wield");
+        // With the quarterstaff in both hands, the off hand's choice has it too, to put away:
+        // first, as melee weapons come before shields.
         world.apply(&Action::Equip {
             slot: "main_hand".into(),
             item: 1,
         });
         let mut screen = ItemScreen::new(Some(&world.perception()), off);
         let text = drawn(|c| screen.draw(c, &b));
-        row(&text, "> b - ) a quarterstaff (wielded in both hands)");
+        row(&text, "> a - ) a quarterstaff (wielded in both hands)");
+        row(&text, "b - [ a small shield");
         row(&text, "Choose what is there to put it away.");
         assert_eq!(
             screen.handle(&Press::nav(Nav::Enter), &b),
             ScreenAction::Act(Action::Remove("off_hand".into()))
         );
         assert_eq!(
-            screen.handle(&Press::typed('a'), &b),
+            screen.handle(&Press::typed('b'), &b),
             ScreenAction::Act(Action::Equip {
                 slot: "off_hand".into(),
                 item: 0

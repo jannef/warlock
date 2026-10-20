@@ -337,11 +337,23 @@ pub struct ScreenStack {
     /// Character creation choices made before going back to an earlier step, preselected when
     /// their steps open again.
     picks: Picks,
+    /// The UI console's size (columns, rows), if known: item lists page by it, so a letter
+    /// names the stack drawn there even before the screen is first drawn.
+    console: Option<(u32, u32)>,
 }
 
 impl ScreenStack {
     pub fn is_empty(&self) -> bool {
         self.screens.is_empty()
+    }
+
+    /// The UI console's size the screens lay out for (the input router keeps it current).
+    pub fn console(&self) -> Option<(u32, u32)> {
+        self.console
+    }
+
+    pub fn set_console(&mut self, size: (u32, u32)) {
+        self.console = Some(size);
     }
 
     /// The open screens, bottom to top.
@@ -473,9 +485,19 @@ impl ScreenStack {
             Some(Screen::Settings(screen)) => screen.handle(press, settings),
             Some(Screen::Files(screen)) => screen.handle(press),
             Some(Screen::Controls(screen)) => leave(screen.handle(press, bindings)),
-            Some(Screen::Objects(screen)) => screen.handle(press, bindings),
+            Some(Screen::Objects(screen)) => {
+                if let Some((cols, rows)) = self.console {
+                    screen.fit(cols, rows);
+                }
+                screen.handle(press, bindings)
+            }
             Some(Screen::Equipment(screen)) => screen.handle(press, bindings),
-            Some(Screen::EquipItem(screen)) => screen.handle(press, bindings),
+            Some(Screen::EquipItem(screen)) => {
+                if let Some((cols, rows)) = self.console {
+                    screen.fit(cols, rows);
+                }
+                screen.handle(press, bindings)
+            }
             Some(Screen::Describe(screen)) => screen.handle(press, bindings),
             Some(Screen::Character(screen)) => screen.handle(press, bindings),
             Some(Screen::Skills(screen)) => screen.handle(press, bindings),
@@ -1354,8 +1376,8 @@ mod tests {
         frame(&mut app, &[d, b, ENTER, yes]);
         assert!(names(&app).is_empty());
         assert_eq!(actions(&app), [Action::Sell(Positions::of([1]))]);
-        // Putting back the unpaid dagger is a plain drop: nothing to sell.
-        frame(&mut app, &[d, (KeyCode::KeyC, "c"), ENTER]);
+        // Putting back the unpaid dagger (`a`, its class first) is a plain drop: nothing to sell.
+        frame(&mut app, &[d, (KeyCode::KeyA, "a"), ENTER]);
         assert!(names(&app).is_empty());
         assert_eq!(
             actions(&app).last(),

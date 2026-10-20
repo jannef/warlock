@@ -39,6 +39,7 @@ mod missiles;
 mod motion;
 mod new_run_screen;
 mod object_screen;
+mod paged_list;
 mod quest_screen;
 mod rain;
 mod screens;
