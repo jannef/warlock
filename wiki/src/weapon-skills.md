@@ -23,9 +23,9 @@ kobold's spear with your shield." It adds to the Shield part of your [Defence](c
 while you hold a shield. **Shield bashing** is an attack of its own: it bashes whoever stands
 in a direction with the shield you hold, for the shield's own damage (and your Strength, as
 every blow), in the time of a blow. You need a shield to bash with, and you bash only what is
-hostile to you. A shield bash is an *ability*: abilities will have a menu of their own, so it
-has no key by default; give it one in the Controls screen ("Bash with your shield"), then press
-it and a direction.
+hostile to you. A shield bash is an *ability*: choose it from the abilities menu (`a`, see
+[Abilities](abilities.md)), then a direction. It has no key of its own by default; give it one in
+the Controls screen ("Bash with your shield") if you like.
 
 ## Seeing your skills
 

@@ -116,8 +116,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (`S`), weapon skills (`W`), quest log (`q`), rest (`R`), eat (`E`), look, shoot or throw what
   is in the missile weapon slot
   (`t`), throw from the pack (`T`), fire (`f`, unbound by default), more aggressive / more
-  defensive combat stance (`+` / `-`; §8 "Stances"), bash with a shield (an ability, below: no
-  key by default; bound in Controls, it asks for a direction, like opening a door), next target
+  defensive combat stance (`+` / `-`; §8 "Stances"), the abilities menu (`a`, below) and the
+  quick repeat of the ability used last (`A`), bash with a shield (an ability, below: no key by
+  default; bound in Controls, it asks for a direction, like opening a door), next target
   (`Tab`, while aiming), use a tool (`U`, then a direction: dig), chat (`C`), pay (`p`, in a
   shop; §7 "Shops"), help, save and quit
   (rebindable, unbound by default: quitting is done from the pause menu). Every way to quit (the
@@ -126,8 +127,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   window or the tab does not ask). On the web Quit saves and reloads the page to a fresh main
   menu (a page cannot close itself), which has no Quit item. Free actions (look, help, the
   inventory, looking at the equipment screen, the character screen, the Skills screen, the
-  weapon skills screen, the quest log, asking about a topic, menus, vision switch, a change of
-  stance, paying in a shop) do not
+  weapon skills screen, the quest log, the abilities menu, asking about a topic, menus, vision
+  switch, a change of stance, paying in a shop) do not
   advance time.
 - **Objects** (M11) lie in piles on cells, the top first: the map shows the top object's glyph
   (§4.2), and dropped objects go on top. Stepping onto a pile says what lies there: `You see here
@@ -245,12 +246,40 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ↑↓ choose a skill, whose one-line description shows below the list (a list taller than the
   panel scrolls). Never a benefit's number, a mark, or a chance. Read-only; `S`, Enter, or Esc
   closes it (back to the character screen when opened from there).
-- **Abilities** (the owner's rule; #156): racial, class, skill, and style abilities go into one
-  abilities menu (to come), not a key each, unlike ADOM. Each is a core `Action` with replay
-  text and a key command that is unbound by default (rebindable in Controls). The list the menu
-  will read is `warlock_core::ability` (`Ability`: name, what it asks for (`Aim`), the `Action`
-  it makes) and `PerceptionView::abilities` (those the player can use now). The first is the
-  shield bash (§8 "Weapon skills"), listed while the player holds a shield to bash with.
+- **Abilities** (the owner's rule; #156): everything the character can actively do because of
+  who they are — racial, class, skill (active skill uses), weapon skill and fighting style, and
+  item abilities — goes into one abilities menu (`a`), not a key each, unlike ADOM. Basic
+  roguelike commands (move, open/close, kick, pick up/drop, eat, chat, search, look, throw/shoot,
+  rest, inventory, equipment) keep their keys; digging is an item's use (`U`), not an ability.
+  - **The registry** is `warlock_core::ability`, the one place abilities are registered: every
+    `Ability` has an id, a name, a description, a `Source` (race, class, skill, weapon skill,
+    item: the menu's groups, in that order), what it asks for (`Aim`: nothing, or a direction;
+    a target and an item from the pack join with the first ability that needs one), its action
+    cost (an `ActionKind`), who has it, and whether it can be used now and why not
+    (`Unavailable`: "you hold no shield", "not usable yet"). `PerceptionView::abilities` lists
+    the player's, in menu order, each with why it cannot be used now. Every ability is a normal
+    core `Action` with replay text, so replays record it as that action.
+  - **What there is**: the shield bash (§8 "Weapon skills"), which everyone has and can use
+    while holding a shield to bash with; and each skill used as an action (`kind = "action"`,
+    §8 "Skills") the player is trained in, listed but never available until its use comes (it
+    then becomes an ability of its own with its action). No race, class, or item gives one yet.
+  - **The menu** (a screen on the stack) lists them as the one paged list (§6 "Item lists"),
+    grouped by source under a header each, lettered down each page from `a`: each row the
+    ability's name and what it asks for ("in a direction"), or greyed out with why it cannot be
+    used now; the selected ability's description below. A letter, or Enter on the `>` row, uses
+    it: the menu closes, the ability asks for what it needs (a direction in the message line,
+    "In which direction? (Esc to cancel)"), and its action is applied; choosing one that cannot
+    be used now says why on the menu instead ("Shield bash: you hold no shield."). Esc closes
+    it; so does `a` when it names no row (an empty menu: "You have no abilities."). No time
+    passes while it is open.
+  - **Quick repeat**: the menu opens on the ability used last in the run (else the first that
+    can be used), so `a` Enter repeats it; `A` (`KeyCommand::RepeatAbility`) uses it again at
+    once, and opens the menu when none was used yet.
+  - **Keys**: an ability with an action of its own is also a rebindable key command, unbound by
+    default (the shield bash: "Bash with your shield"); bound, it uses the ability as the menu
+    does, and one that cannot be used now is applied at once so the rules say why, taking no
+    time ("You have no shield to bash with."). New abilities register in the registry and get
+    no default key.
 - **Weapon skills** (`W`; M22, §8 "Weapon skills", "Fighting styles"), ADOM-like: the player's
   weapon skills and fighting styles in four sections in data order — Melee (the `melee` and
   `unarmed` skills), Missile and thrown (`launcher`, `thrown`), Shields (`shield_block`,

@@ -129,10 +129,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     toward the next point (`PerceptionView::own_skills`), on the Skills screen (§6) and the
     character creation summary; the `skills` dump layer.
   - **Active uses**: skills get no keys of their own. Racial, class, skill, and style abilities
-    will be chosen from one abilities menu (#156), unlike ADOM; for it, perception says which of
-    the player's trained skills have an active use (`kind = "action"`) and whether it is
-    available now (`OwnSkill::active`, `available`; `PerceptionView::active_skills`). None is
-    available yet: the uses come with their actions. Never a benefit's number, a mark, a
+    are chosen from one abilities menu (§6 "Abilities", #156), unlike ADOM: each trained skill
+    with an active use (`kind = "action"`) is an ability there (`warlock_core::ability`,
+    `PerceptionView::abilities`), greyed out as "not usable yet": the uses come with their
+    actions. Never a benefit's number, a mark, a
     chance, an untrained skill, or a creature's skills; ground-truth dev dumps (`actors`, the
     world state) show every actor's skills with their marks. Skills and marks are part of the
     world state (saved, hashed).
@@ -175,7 +175,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     skill (fighting styles, #135) can stack on a weapon's: another role, with the same ranks,
     marks, curve, and benefits.
   - **Shield bash** (`Action::Bash(dir)`, replay text `bash:DIR`; an ability, §6 "Abilities":
-    unbound by default, a direction once bound): a melee blow at whoever stands that way with
+    chosen from the abilities menu, or a key once bound, then a direction): a melee blow at whoever stands that way with
     the held shield's `bash` dice (§7; the small shield 1d3) plus the Strength modifier to hit
     and to damage, drawing on and training shield
     bashing; it costs a blow with the shield: `melee` (faster by the shield's own attack speed

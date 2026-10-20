@@ -8,7 +8,8 @@ summary), pause, settings, controls, the `?` help, the inventory (`i`), the equi
 (`e`) and its choice of what goes in a slot, an item's description (a letter in the inventory,
 an upper-case slot letter on the equipment screen), the character screen (`@`), the weapon skills
 screen (`W`), the quest log (`q`), choosing what to
-pick up (`,`/`g` on several stacks), drop (`d`), or eat (`E`), the dialogue screen (opened by
+pick up (`,`/`g` on several stacks), drop (`d`), or eat (`E`), the abilities menu (`a`), the
+dialogue screen (opened by
 `screens::converse` after an action this frame whose outcome is talk with topics,
 `Event::Talked`; asking is `ScreenAction::Act(Action::Ask)`, which closes it, and the answer
 reopens it on the topic asked, also when no topics are left), and the death screen (opened by
@@ -87,7 +88,9 @@ to open, read keys for, or draw one:
   is no page: its digits ask about topics.
 - **Item lists** (`ui/paged_list.rs`, spec §6 "Item lists", #188, #189): **every lettered list
   of stacks is the one `PagedList`** (the inventory, pick up, drop, throw, eat, the equip choice;
-  sell is a drop in a shop, identify a dev action): never a list or scrolling of its own. Items
+  sell is a drop in a shop, identify a dev action): never a list or scrolling of its own. The
+  abilities menu is one too, grouped by `Source` instead of item class
+  (`PagedList::grouped(items, name)`; `PagedList::new` groups by item class). Items
   group by item class in class order (`PerceptionView::item_class`), a header row per class
   (`Row::Header`, no letter), each class in the items' own order. A page holds as many rows as
   the console has for it (the screen's `fit`/`layout`, which sets `PagedList::set_room`;
@@ -128,16 +131,45 @@ to open, read keys for, or draw one:
   (the quest log from `PerceptionView::quests`: active then done, the selected one's objective,
   status, and the giver's offer; read-only), `ui/dialogue_screen.rs`
   (the speaker, their last line, numbered topics; built from the last `Event::Talked`, so it never
-  shows more than the player was told), `ui/death_screen.rs`
+  shows more than the player was told), `ui/abilities_screen.rs` (`AbilitiesScreen`, below),
+  `ui/death_screen.rs`
   (who or what killed the player, where, when, after how many turns).
 
 Key commands `,`/`g` (pick up: one stack at once, else the `PickUp` screen), `d` (`Drop` screen),
 `i` (`Inventory` screen), `e` (`Equipment` screen), `@` (`Character` screen), `W` (`WeaponSkills`
-screen), `p` (`KeyCommand::Pay`), and bash (`KeyCommand::Bash`: a direction prompt,
-`InputMode::Direction`) are in
-`input.rs` and `settings/keys.rs`. **Abilities** (racial, class, skill, style; the owner's rule,
-#156) get no key of their own: they go into one abilities menu (to come). Each is a core
-`Action` with replay text, an entry in `warlock_core::ability` (`Ability`, listed by
-`PerceptionView::abilities` when usable), and a rebindable `KeyCommand` left unbound by default
-(`settings/keys.rs::UNBOUND`). Shield bash is the first. A style's rank 10 abilities (later)
-go there too.
+screen), `p` (`KeyCommand::Pay`), `a` (`KeyCommand::Abilities`: the `Abilities` screen), `A`
+(`KeyCommand::RepeatAbility`), and bash (`KeyCommand::Bash`, unbound) are in `input.rs` and
+`settings/keys.rs`.
+
+**Abilities** (spec §6 "Abilities"; racial, class, skill, weapon skill and style, item; the
+owner's rule, #156) get no key of their own: they go into the one abilities menu.
+- **Registry**: `warlock_core::ability` is the one place they are registered. A new ability is
+  a variant of `Ability` (id, name, description, `Source`, `Aim`, cost `ActionKind`, the `Action`
+  it makes from its aim), a line in `Ability::every` (menu order: by source, then as listed),
+  who has it (`had_by`), and when it cannot be used (`unavailable` → `Unavailable` with its
+  reason). `PerceptionView::abilities` is what presentation reads (`OwnAbility`: the ability and
+  why it cannot be used now); the `abilities` dump layer and JSON key show the same, and the
+  wiki's table (`xtask/src/wiki/abilities.rs`) lists `Ability::every`. Skills used as actions are
+  `Ability::Skill(id)` until their use exists (never available); a use, when it comes, is a
+  variant of its own. `Aim` has `Nothing` and `Direction`: a target (the aiming mode) and an item
+  (a `PagedList` of the pack) join it with the first ability that needs one, as a variant and an
+  arm in `Gameplay::use_ability`.
+- **Menu**: `ui/abilities_screen.rs` (`AbilitiesScreen`, `ScreenName::Abilities`, `--screen
+  abilities`): the `PagedList<Entry, Source>`, greyed rows with their reason, the selected
+  ability's description below; the stack calls its `fit` before a press like the item lists. A
+  letter or Enter on an available row answers `ScreenAction::UseAbility(ability)`; on an
+  unavailable one it shows why and stays. Its own key closes it only when it names no row.
+- **Dispatch**: `ScreenAction::UseAbility` is the one way an ability is used, from the menu, its
+  own key (`KeyCommand::Bash` answers it from `Gameplay::press`), or the quick repeat:
+  `input::route_keys` closes the top screen if any, remembers it (`ScreenStack::last_ability`,
+  cleared with the stack when a run ends, like the creation picks), and calls
+  `Gameplay::use_ability`: `Aim::Direction` enters `InputMode::Ability(ability)` (the message
+  line's "In which direction? (Esc to cancel)"; a direction applies `ability.action(Some(dir))`),
+  `Aim::Nothing` applies it at once, and one that cannot be used now is applied at once with a
+  placeholder direction so the rules say why and take no time (as `U` does with no tool).
+- **Quick repeat**: the menu opens on `ScreenStack::last_ability` (else the first available row);
+  `A` (`RepeatAbility`, passed the last ability by `route_keys`) answers `UseAbility(last)`, or
+  opens the menu when there is none.
+- **Keys**: an ability with an action of its own may have a rebindable `KeyCommand`, left unbound
+  by default (`settings/keys.rs::UNBOUND`); never a default key. Shield bash is the first; a
+  style's rank 10 abilities (later) go there too.

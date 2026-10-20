@@ -33,6 +33,7 @@
   - [Horoscope](horoscope.md)
 - [Stats](stats.md)
 - [Skills](skills.md)
+- [Abilities](abilities.md)
 - [Combat](combat.md)
   - [Experience](experience.md)
   - [Ranged combat](ranged.md)
