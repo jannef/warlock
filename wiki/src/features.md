@@ -108,6 +108,10 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   known from then on, shown as `^` and remembered, and stepping onto it asks first. The Depths
   hide a few on every level; a trap hall beside the arena lets you try them and watch them catch
   creatures.
+- **Searching** — secret doors look like the wall and hidden traps like the floor until you find
+  them: search (`s`, or `z` for a while) with your Intelligence and Search skill, or notice them in
+  passing with your Willpower, if you are an elf, a dwarf (in stone), or trained in Spot. Every
+  turn is a fresh try. The Depths hide a door or two on their levels of rooms, never one you need.
 - **Burden** — everything you carry weighs on you: past a third of what your Strength and
   Toughness can bear you are burdened, then strained, then overloaded. Every action takes longer,
   armour-like caps keep your Dexterity from helping your Defence, and your footsteps get louder.

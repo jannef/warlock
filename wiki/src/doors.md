@@ -60,6 +60,12 @@ Press `K` and a direction to kick. A kick takes a normal action (6 seconds).
 Your Strength never shows as a bonus anywhere in the game: these chances follow your Strength
 score itself (see [Stats](stats.md)).
 
+## Secret doors
+
+Some doors are **secret**: they look like the wall around them, and are that wall, until you find
+them, searching or in passing (see [Searching](searching.md)). A secret door is never locked.
+Once found, it is a closed door like any other, and you remember it.
+
 ## Creatures and doors
 
 Some creatures open closed doors (kobolds do; rats do not). A locked door stops them unless they

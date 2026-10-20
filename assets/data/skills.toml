@@ -18,7 +18,9 @@
 #                 with that chance (1 to 100) on each such use, so skills used often do not race
 #                 ahead. Uses: "sneak" (a step within earshot of a creature that could hear it,
 #                 before stealth made it quieter), "hear" (hearing something new: a sound that is
-#                 news), "dodge" (an attack that missed because you dodged it), "burdened" (an
+#                 news), "search" (a turn spent searching, whatever it finds), "spot" (noticing
+#                 something hidden in passing), "dodge" (an attack that missed because you dodged
+#                 it), "burdened" (an
 #                 action, not waiting, while your load slows you), "travel" (a journey: a step on
 #                 the overworld), "kick" (a kick at a closed door). Only the player trains, for
 #                 now.
@@ -28,7 +30,11 @@
 #                 between them, rounded down, level after the last). Effects: "dodge" (Defence in
 #                 the Dodge category, whose bonuses add up), "quiet" (percent less noise from your
 #                 steps and doors), "hearing" (you hear sounds this much fainter: your hearing
-#                 threshold, lower), "burden" (percent less of your burden's slowdown), "travel"
+#                 threshold, lower), "search" (points added to searching for hidden features,
+#                 spec §8 "Searching"; at most 20), "search_reach" (cells farther a search reaches
+#                 than the cells around you; at most 2), "spot" (points added to noticing hidden
+#                 features in passing, at most 20; trained, a skill with it lets you notice them
+#                 at all), "burden" (percent less of your burden's slowdown), "travel"
 #                 (percent less time a journey on the overworld takes), "bargain" (percent better
 #                 prices in shops, together with Presence at most half; shops.toml), "kick"
 #                 (points added to the Strength a kick at a closed door is rolled against, at most
@@ -164,7 +170,15 @@ kind = "action"
 id = "search"
 name = "Search"
 description = "Finding what is hidden: doors, traps, and caches."
-kind = "action"
+kind = "rules"
+mark = [{ on = "search", chance = 10 }]
+# Searching (spec §8 "Searching"; `s`): added to the check, +8 at 100 (a secret door of 14 found
+# with 46 % of the turns of searching at Intelligence 10 becomes 93 %), +12 at 200; from 75 on a
+# search reaches a cell farther.
+benefit = [
+    { effect = "search", curve = [[0, 0], [100, 8], [200, 12]] },
+    { effect = "search_reach", steps = [75] },
+]
 
 [[skill]]
 id = "spellcraft"
@@ -176,7 +190,11 @@ kind = "rules"
 id = "spot"
 name = "Spot"
 description = "Noticing what is hiding or out of place at a glance."
-kind = "rules"
+kind = "passive"
+mark = [{ on = "spot", chance = 50 }]
+# Noticing hidden features in passing (spec §8 "Searching"): trained at all, you notice them
+# (else only elves and dwarves do); added to the check, +8 at 100, +12 at 200.
+benefit = [{ effect = "spot", curve = [[0, 0], [100, 8], [200, 12]] }]
 
 [[skill]]
 id = "steal"

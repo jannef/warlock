@@ -85,9 +85,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   step (the `step` action; default 100; still and running water 200, shallow water 150; local
   levels only), a
   `bounce` tint for the light it reflects (§5), a `height` in cells for sun shadows (default 1 if opaque, else 0; at most 4),
-  `roofed` (never lit by the sun or the sky), `stains` (whether blood stains it, §8 "Blood";
-  default true; false for water, running water, lava, fountains, braziers, wall torches, solid
-  rock, and the overworld's river and lake), and for hearing a `step_noise` (how loud steps onto
+  `roofed` (never lit by the sun or the sky), `stone` (stone, worked or not: dwarves notice what
+  is hidden on it in passing, §8 "Searching"; default false; floors, walls, granite, stairs,
+  flagstones, rubble, rocky ground, boulders, and the like), `stains` (whether blood stains it,
+  §8 "Blood"; default true; false for water, running water, lava, fountains, braziers, wall
+  torches, solid rock, and the overworld's river and lake), and for hearing a `step_noise` (how loud steps onto
   it are, in percent of the walker's footsteps, 0 to 1000; default 100), a door's `toggle_noise`
   (how loud opening the closed door or closing the open one is, at most 300; default 0, silent;
   only doors), and a `muffle` (the loudness a sound loses entering the cell, at most 300; default
@@ -122,6 +124,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   of its `glyph`, one per cell picked by a hash of its position (a space for none; look mode
   and dumps use `glyph`). The calendar's month names are
   `data/calendar.toml` (exactly 12; without the file months are numbered).
+- **Searching** (`data/search.toml`, optional; without it the numbers below; §8 "Searching"):
+  `passive_penalty` (what noticing in passing loses against searching, 0 to 20; 4), `turns` (how
+  long searching for a while lasts at most, 1 to 100; 10), and `secret_door` (a secret door's
+  difficulty where its level gives none, 1 to 50; 14).
 - **Action costs** (`data/actions.toml`, optional): action ids mapped to their cost in energy,
   e.g. `wait = 1000`, 1000 being a normal action (6 s at normal speed; §8 "Time"), 100 to
   10 000. The ids are `step` (onto terrain of `move_cost` 100), `wait`, `open_door`,

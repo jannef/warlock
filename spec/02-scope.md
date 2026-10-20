@@ -63,7 +63,11 @@ Build the engine and framework, not the game. Everything built is production qua
 - Traps (M18): arrow, spear, fireball, lightning bolt, pit, alarm, and teleport traps (data),
   hidden until the player sets one off or sees a creature do it, then known and remembered;
   creatures walk onto them too; a few hidden on every generated Depths level, and a trap hall to
-  try them (§8 "Traps"). No searching for traps and no saving throws
+  try them (§8 "Traps"). No saving throws
+- Searching (#140): secret doors (level legends, vaults, a door or two on each Depths rooms level)
+  and hidden traps, found with one check: searching (`s`, `z` for a while; Intelligence and the
+  Search skill) or in passing (Willpower and Spot; elves, dwarves on stone, anyone trained in
+  Spot), rolled afresh every turn (§8 "Searching")
 - Magic items (M29, #149), after Path of Exile: base items (weapons, missile weapons,
   ammunition, armour, helmets, cloaks, gloves, boots, shields, rings, amulets) roll prefixes and
   suffixes by rarity (normal, magic: one of each at most; rare: up to three of each and a name),
@@ -129,7 +133,7 @@ fireballs and lightning), damage types (a flaming arrow does an arrow's damage, 
 than its dice), rules that use stats beyond combat, burden, and kicking doors in (ability checks,
 saving throws, training stats), levels and experience, digging down or up, creatures that dig,
 what a class gives beyond starting stats, hit points, skills, weapon skills, and fighting
-styles (equipment, spells), active uses of skills (searching, picking locks, healing, and the like), item effects
+styles (equipment, spells), active uses of skills (picking locks, healing, and the like), item effects
 beyond magic items' affixes and food's (§8 "Hunger"; no potions or scrolls to use yet, no unique
 items, no enchanting), audio, mouse input, infravision, localization.
 

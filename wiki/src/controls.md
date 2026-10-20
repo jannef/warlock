@@ -14,6 +14,8 @@ The in-game `?` screen is authoritative: it is generated from your current key b
 | Swap places | move into any other creature |
 | Chat with someone next to you | `C` (then a direction, if several are near) |
 | Wait a turn | `.` or numpad `5` |
+| Search the cells around you (a turn) | `s` (see [Searching](searching.md)) |
+| Search for a while (up to 10 turns, stops when something turns up) | `z` |
 | Open a door | `o`, then a direction (or walk into the door) |
 | Close a door | `c`, then a direction |
 | Kick (a door, to break it in, or a creature) | `K`, then a direction (see [Doors](doors.md)) |

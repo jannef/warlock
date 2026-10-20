@@ -225,6 +225,8 @@ impl World {
         // muttered too: said only if heard this turn).
         self.player_mut().heard.clear();
         self.mutters.clear();
+        // What the player notices in passing where their turn left them (spec §8 "Searching").
+        self.notice_hidden();
         let price = price.saturating_add(self.faint());
         let player = self.state.player;
         let level = &self.state.current_level;

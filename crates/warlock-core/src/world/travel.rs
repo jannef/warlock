@@ -30,7 +30,7 @@ impl World {
     }
 
     /// Changes terrain on the current level and invalidates light masks it may affect. A lock
-    /// stays only on a closed door.
+    /// stays only on a closed door, and a secret door is gone with the wall it looked like.
     pub(super) fn set_terrain(&mut self, p: Pos, terrain: TerrainId) {
         let closed_door = self.content.terrain(terrain).is_closed_door();
         let level = self.state.current_mut();
@@ -38,6 +38,9 @@ impl World {
         if !closed_door {
             level.locks.remove(&p);
         }
+        // A secret door is the wall it looks like until it is found: whatever becomes of that
+        // wall (dug through, blasted, found), the secret is gone.
+        level.secrets.remove(&p);
         let level = self.state.current();
         self.lights.terrain_changed(level, &self.content, p);
     }

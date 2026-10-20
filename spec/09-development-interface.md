@@ -21,6 +21,7 @@ warlock-cli replay --verify runs/doors.json               # check per-turn state
 warlock-cli gen --level depths:3 --seed warlock           # print a generated level (dev-only;
                                                           # also local areas: local:49,23;
                                                           # `*` a placed light, `&` a lock,
+                                                          # `S` a secret door,
                                                           # special rooms by their letter)
 cargo xtask golden [--update | --local]                   # compare golden screenshots
 ```
@@ -31,11 +32,12 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   syntax (`move:E wait open:E close:W ascend descend lantern rest:1h rest:dawn rest:dusk
   pickup pickup:ac drop drop:b sell:b pay pay:W equip:body:b remove:body bash:E fire:12,5
   throw:c:12,5 eat:b
-  eat:floor:a dig:E chat:E ask:E:rooms ask:E:quest-rats ask:E:accept-rats vision:darkvision
+  eat:floor:a dig:E search search:10 chat:E ask:E:rooms ask:E:quest-rats ask:E:accept-rats vision:darkvision
   skip:1h weather:rain stance:coward effect:fireball@12,5 effect:lightning_bolt@3,4>12,4
   identify:a afflict:bleeding infect:filth_fever freeze:12,5,3 thaw:12,5,3`; `bash:DIR` bashes
   with the held shield that way, `dig:DIR` digs toward a direction until the wall gives way or
-  something interrupts; `fire:X,Y` shoots at level cell (X, Y),
+  something interrupts; `search` searches the cells around the player once, `search:N` for up to
+  N turns (1 to 100), stopping when something is found; `fire:X,Y` shoots at level cell (X, Y),
   `throw:LETTER:X,Y` throws one of inventory stack LETTER there; `eat:LETTER` eats one of
   inventory stack LETTER, `eat:floor:LETTER` one of stack LETTER of the pile underfoot;
   `chat:DIR` talks to the creature that way, `ask:DIR:TOPIC` asks it about a topic by id (a
@@ -87,7 +89,7 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   the styles they fight in now marked, `Duelist 1 (0%), in use`), and `quests`
   (the quest log, active first: `Rats in the arena (active, from the old hermit): Kill 3 giant
   rats in the Arena. 0 / 3 killed.`) are built from the perception snapshot only;
-  `truth` (terrain, objects, traps hidden or known, and creatures) and `actors` (every actor on
+  `truth` (terrain, objects, traps hidden or known, secret doors as `S`, and creatures) and `actors` (every actor on
   the level with its hit
   points and Defence, `hp 8/12 dv 13`, its
   weight, base plus carried, what it carries and of that wears and wields, `equipped main_hand a

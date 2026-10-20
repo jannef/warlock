@@ -56,6 +56,11 @@ impl Vault {
         if let (LevelKind::Outdoor, Some(at)) = (template.kind, template.traps.keys().next()) {
             return Err(format!("an outdoor vault cannot have traps (at {at})"));
         }
+        if let (LevelKind::Outdoor, Some(at)) = (template.kind, template.secrets.keys().next()) {
+            return Err(format!(
+                "an outdoor vault cannot have secret doors (at {at})"
+            ));
+        }
         // The level it is stamped into decides its temperature, and so its ice.
         if let Some(at) = template.ice.keys().next() {
             return Err(format!("a vault cannot lay ice (at {at})"));

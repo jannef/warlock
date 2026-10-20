@@ -16,6 +16,8 @@
 //! creatures = ["rat", "kobold"] # patrolling creatures generators may place; default none
 //! traps = ["arrow", "pit"]      # traps generators may hide (spec §8 "Traps"); default none
 //! traps_per_level = [2, 4]      # how many a level gets, at least and at most; default [2, 4]
+//! secret_doors = [0, 2]         # doors hidden on each level (spec §8 "Searching"); default none
+//! hidden_per_depth = 1          # hidden features this much harder to find per level down
 //! loot = [2, 4]                 # items of loot on each level's floor; default none
 //! ambient = [0, 0, 0, 0]        # optional
 //! temperature = 9               # °C; default the dungeon default (10)
@@ -90,6 +92,10 @@ struct DungeonSpec {
     traps: Vec<String>,
     traps_per_level: Option<[u32; 2]>,
     #[serde(default)]
+    secret_doors: [u32; 2],
+    #[serde(default)]
+    hidden_per_depth: u8,
+    #[serde(default)]
     levels: Vec<LevelsSpec>,
 }
 
@@ -97,6 +103,10 @@ struct DungeonSpec {
 const TRAPS_PER_LEVEL: [u32; 2] = [2, 4];
 /// The most traps a generated level may get.
 const MAX_TRAPS_PER_LEVEL: u32 = 50;
+/// The most secret doors a generated level may get.
+const MAX_SECRET_DOORS: u32 = 20;
+/// The most a level down may add to how hard hidden features are to find.
+const MAX_HIDDEN_PER_DEPTH: u8 = 5;
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -132,6 +142,12 @@ pub struct DungeonDef {
     pub traps: Vec<TrapId>,
     /// How many traps a level gets, at least and at most.
     pub traps_per_level: [u32; 2],
+    /// How many of a level's doors are hidden (secret doors, spec §8 "Searching"), at least and
+    /// at most: only doors the level can do without, so a level may get fewer.
+    pub secret_doors: [u32; 2],
+    /// How much harder the hidden features on a level (secret doors, hidden traps) are to find
+    /// for each level below the first ([`DungeonDef::hidden_at`]).
+    pub hidden_per_depth: u8,
     /// How many items of loot lie on the floor of each level, fewest and most (spec §8 "Magic
     /// items"; item level: the depth).
     pub loot: [u8; 2],
@@ -152,6 +168,13 @@ impl DungeonDef {
     /// The level id of `depth`, e.g. `depths:3`.
     pub fn level_id(&self, depth: u32) -> String {
         format!("{}:{depth}", self.id)
+    }
+
+    /// What finding a hidden feature on level `depth` takes beyond its own difficulty (spec §8
+    /// "Searching"): [`DungeonDef::hidden_per_depth`] for each level below the first.
+    pub fn hidden_at(&self, depth: u32) -> i32 {
+        let below = i32::try_from(depth.saturating_sub(1)).unwrap_or(i32::MAX);
+        i32::from(self.hidden_per_depth).saturating_mul(below)
     }
 
     /// The display name of level `depth`, e.g. `The Depths 3`.
@@ -271,6 +294,18 @@ impl DungeonFile {
                     "dungeon `{id}` has traps_per_level but no `traps`"
                 )));
             }
+            let [least, most] = spec.secret_doors;
+            if least > most || most > MAX_SECRET_DOORS {
+                return Err(err(format!(
+                    "dungeon `{id}`: secret_doors must be [least, most], at most \
+                     {MAX_SECRET_DOORS}"
+                )));
+            }
+            if spec.hidden_per_depth > MAX_HIDDEN_PER_DEPTH {
+                return Err(err(format!(
+                    "dungeon `{id}`: hidden_per_depth must be 0 to {MAX_HIDDEN_PER_DEPTH}"
+                )));
+            }
             if spec.loot[0] > spec.loot[1] || spec.loot[1] > MAX_LOOT {
                 return Err(err(format!(
                     "dungeon `{id}`: `loot` is [fewest, most], at most {MAX_LOOT}"
@@ -292,6 +327,8 @@ impl DungeonFile {
                 creatures,
                 traps,
                 traps_per_level,
+                secret_doors: spec.secret_doors,
+                hidden_per_depth: spec.hidden_per_depth,
                 loot: spec.loot,
                 key,
                 plans,

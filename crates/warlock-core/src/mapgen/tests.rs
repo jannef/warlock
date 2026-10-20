@@ -93,14 +93,16 @@ fn deepest_level_snapshot() {
     insta::assert_snapshot!("rooms_seed_warlock_depth_8", describe(&level(seed, 8)));
 }
 
-/// Cells the player can walk to from `from` (8-way moves; closed doors open on a bump).
+/// Cells the player can walk to from `from` (8-way moves; closed doors open on a bump, and
+/// secret doors once found).
 fn player_reach(level: &LevelTemplate, from: Pos) -> Grid<bool> {
     let terrain = &level.terrain;
     let passable = |p: Pos| {
-        terrain.get(p).is_some_and(|t| {
-            let def = CONTENT.terrain(*t);
-            def.walkable || def.is_closed_door()
-        })
+        level.secrets.contains_key(&p)
+            || terrain.get(p).is_some_and(|t| {
+                let def = CONTENT.terrain(*t);
+                def.walkable || def.is_closed_door()
+            })
     };
     let mut seen = Grid::new(terrain.width(), terrain.height(), false);
     seen[from] = true;
@@ -156,6 +158,27 @@ fn check(level: &LevelTemplate, depth: u32) -> Result<(), TestCaseError> {
         let edge =
             p.x == 0 || p.y == 0 || p.x == terrain.width() - 1 || p.y == terrain.height() - 1;
         prop_assert!(!edge || !def.walkable, "walkable edge at {}", p);
+    }
+
+    // Secret doors (spec §8 "Searching"): closed doors hidden in a wall, never locked, and only
+    // where the stairs are reached without finding them.
+    let plain = player_reach_unlocked(level, level.stairs[0].pos);
+    for s in &level.stairs {
+        prop_assert!(plain[s.pos], "stairs at {} behind a secret door", s.pos);
+    }
+    for (p, secret) in &level.secrets {
+        let look = content.terrain(terrain[*p]);
+        prop_assert!(content.terrain(secret.door).is_closed_door());
+        prop_assert!(
+            !look.walkable && !look.transparent,
+            "secret door at {} shows",
+            p
+        );
+        prop_assert!(
+            !level.locks.contains_key(p),
+            "a locked secret door at {}",
+            p
+        );
     }
 
     // Light: something shines.
@@ -269,9 +292,46 @@ fn check(level: &LevelTemplate, depth: u32) -> Result<(), TestCaseError> {
     Ok(())
 }
 
-/// Cells the player can walk to from `from` without unlocking a door (8-way moves).
+/// Rooms levels hide a door or two (spec §8 "Searching") from a stream of their own: with its
+/// secret doors opened, a level is the one generated without any, and every one of them hides a
+/// way the level can do without (`check`).
+#[test]
+fn rooms_levels_hide_a_few_doors_of_their_own() {
+    let text = include_str!("../../../../assets/data/dungeons.toml");
+    let without = text.replace("secret_doors = [1, 2]\n", "");
+    assert_ne!(without, text, "the depths hide doors");
+    let mut files = ContentFiles::builtin();
+    files.insert("data/dungeons.toml", &without);
+    let plain = Content::load(&files).expect("content");
+    let [_, most] = CONTENT.dungeon("depths").expect("depths").secret_doors;
+    let (mut levels, mut doors) = (0, 0);
+    for seed in 0..10 {
+        for depth in [1, 2, 6, 7, 8] {
+            let level = level(seed, depth);
+            let id = format!("depths:{depth}");
+            let bare = generate(&plain, seed, &id, Some("vast")).expect("generates");
+            assert!(bare.secrets.is_empty());
+            let mut opened = level.terrain.clone();
+            for (p, secret) in &level.secrets {
+                opened.set(*p, secret.door);
+            }
+            assert_eq!(opened, bare.terrain, "{id}, seed {seed}");
+            assert!(level.secrets.len() <= most as usize);
+            levels += usize::from(!level.secrets.is_empty());
+            doors += level.secrets.len();
+        }
+    }
+    assert!(
+        levels > 40 && doors > levels,
+        "{levels} levels, {doors} doors"
+    );
+}
+
+/// Cells the player can walk to from `from` without unlocking a door or finding a secret one
+/// (8-way moves).
 fn player_reach_unlocked(level: &LevelTemplate, from: Pos) -> Grid<bool> {
     let mut open = level.clone();
+    open.secrets.clear();
     for p in level.locks.keys() {
         open.terrain
             .set(*p, CONTENT.terrain_id("wall").expect("wall"));
