@@ -3,12 +3,13 @@
 use super::Talk;
 use crate::action::AttackKind;
 use crate::burden::Burden;
-use crate::combat::{self, Attack, Category, Defence, Health, Profile};
+use crate::combat::{self, Attack, Category, Defence, Health, Profile, Target};
 use crate::content::Effect as ItemEffect;
 use crate::content::{
-    ActionKind, Benefit, CombatStance, Content, CreatureId, FactionId, Grip, ObjectDef, ObjectId,
-    Role, TwoWeapons, WeaponSkillId,
+    ActionKind, Benefit, CombatStance, Content, CreatureId, DamageTypeId, FactionId, Grip,
+    ObjectDef, ObjectId, Role, TwoWeapons, WeaponSkillId,
 };
+use crate::damage::{Protection, Resistances};
 use crate::disease::Diseases;
 use crate::door::{Key, Lock};
 use crate::equipment::Equipment;
@@ -369,17 +370,48 @@ impl Actor {
         )
     }
 
-    /// Its Protection (spec §8 "Combat"): the damage it soaks off every hit, the sum of what it
-    /// wears (each piece's `protection` with what its own affixes add; a shield has none) and
-    /// its creature type's natural armour.
-    pub fn protection(&self, content: &Content) -> i32 {
-        let worn: i32 = (self.equipment.items().into_iter())
+    /// Its Protection (spec §8 "Combat"): the damage it soaks off every physical hit, the sum
+    /// of what it wears (each piece's `protection` with what its own affixes add; a shield has
+    /// none) and its creature type's natural armour; against each physical kind, more or less
+    /// by what the pieces say (spec §8 "Damage types": chain mail +1 against slashing, −1
+    /// against piercing), and nothing against an element.
+    pub fn protection(&self, content: &Content) -> Protection {
+        let worn: Vec<&Stack> = (self.equipment.items().into_iter())
             .filter_map(|(_, item)| self.inventory.get(item))
-            .map(|s| s.protection(content))
-            .sum();
+            .collect();
+        let base: i32 = worn.iter().map(|s| s.protection(content)).sum();
         let natural =
             (content.creature(self.creature).natural.as_ref()).map_or(0, |h| h.protection);
-        worn + natural
+        let adjustments = (worn.iter()).flat_map(|s| s.protects(content).iter().copied());
+        if content.damage_types().is_empty() {
+            return Protection::plain(base + natural);
+        }
+        Protection::new(content, base + natural, adjustments)
+    }
+
+    /// What it resists (spec §8 "Damage types"), in percent per kind: what its creature type
+    /// is, plus what it wears and wields (each piece's `resist`, and the resistance affixes of
+    /// all of it), capped ([`Resistances::sum`]).
+    pub fn resistances(&self, content: &Content) -> Resistances {
+        let count = content.damage_types().len();
+        let innate = content.creature(self.creature).resist.iter().copied();
+        let worn = (self.equipment.items().into_iter())
+            .filter_map(|(_, item)| self.inventory.get(item))
+            .flat_map(|s| s.resists(content).iter().copied());
+        let magic = self.mods(content);
+        let gear: Vec<(DamageTypeId, i32)> =
+            worn.chain(magic.resistances().iter().copied()).collect();
+        Resistances::sum(count, innate, gear)
+    }
+
+    /// The side of it an attack strikes (spec §8 "Combat"): its Defence (its `burden` capping
+    /// its Dexterity), its Protection, and its resistances.
+    pub fn target(&self, content: &Content, burden: Burden) -> Target {
+        Target {
+            defence: self.defence(content, burden),
+            protection: self.protection(content),
+            resistances: self.resistances(content),
+        }
     }
 
     /// What a blow that its Protection soaked to nothing glanced off, in messages: the piece it
@@ -725,17 +757,22 @@ impl Actor {
         let mods = self.mods(content);
         let natural = content.creature(self.creature).attack.as_ref();
         let weapon = self.weapon_item(content).map(|i| &self.inventory[i]);
-        let (attack, local, penetration) = match (weapon, natural) {
+        let unarmed = || Attack::unarmed(content.unarmed_damage());
+        let (attack, local, penetration, added) = match (weapon, natural) {
             (Some(stack), _) => match &content.object(stack.object).attack {
-                Some(attack) => (
-                    *attack,
-                    Mods::local(stack, content),
-                    content.object(stack.object).penetration,
-                ),
-                None => (Attack::unarmed(), Mods::default(), 0),
+                Some(attack) => {
+                    let def = content.object(stack.object);
+                    (
+                        *attack,
+                        Mods::local(stack, content),
+                        def.penetration,
+                        def.added,
+                    )
+                }
+                None => (unarmed(), Mods::default(), 0, None),
             },
-            (None, Some(natural)) => (natural.attack, Mods::default(), 0),
-            (None, None) => (Attack::unarmed(), Mods::default(), 0),
+            (None, Some(natural)) => (natural.attack, Mods::default(), 0, None),
+            (None, None) => (unarmed(), Mods::default(), 0, None),
         };
         let benefit = self.attack_benefit(content, AttackKind::Melee, None);
         let mut profile = Profile::melee(&attack, &self.stats_with(content, &mods)).with(&benefit);
@@ -744,6 +781,8 @@ impl Actor {
             let main = content.weapon_skills().two_weapons().main;
             profile.to_hit += TwoWeapons::eased(main, benefit.ease_main);
         }
+        // The weapon's own added damage first, then what its affixes add, then the worn ones'.
+        profile.riders.extend(added);
         local.sharpen(&mut profile);
         mods.sharpen(&mut profile);
         self.stanced(content, profile)
@@ -770,6 +809,7 @@ impl Actor {
         profile.penetration = content.object(stack.object).penetration;
         let penalty = content.weapon_skills().two_weapons().off;
         profile.to_hit += TwoWeapons::eased(penalty, benefit.ease_off);
+        profile.riders.extend(content.object(stack.object).added);
         Mods::local(stack, content).sharpen(&mut profile);
         mods.sharpen(&mut profile);
         Some((stack.object, self.stanced(content, profile)))
@@ -792,10 +832,14 @@ impl Actor {
         let benefit = self.attack_benefit(content, AttackKind::Ranged, None);
         let mut profile = Profile::ranged(&attack, &self.stats_with(content, &mods)).with(&benefit);
         profile.penetration = def.penetration;
+        // Added damage: the launcher's own, its affixes', the ammunition's own, its affixes'.
+        profile.riders.extend(def.added);
         local.sharpen(&mut profile);
         if let Some(ammo) = self.ammunition_item(content) {
             let ammo = &self.inventory[ammo];
-            profile.penetration += content.object(ammo.object).penetration;
+            let ammo_def = content.object(ammo.object);
+            profile.penetration += ammo_def.penetration;
+            profile.riders.extend(ammo_def.added);
             Mods::local(ammo, content).sharpen(&mut profile);
         }
         mods.sharpen(&mut profile);
@@ -818,6 +862,7 @@ impl Actor {
         }
         let mut profile = profile.with(&benefit);
         profile.penetration = def.penetration;
+        profile.riders.extend(def.added);
         Mods::local(stack, content).sharpen(&mut profile);
         mods.sharpen(&mut profile);
         Some(self.stanced(content, profile))
@@ -843,7 +888,8 @@ impl Actor {
     pub fn kick(&self, content: &Content) -> Profile {
         let skill = content.weapon_skills().of_role(Role::Unarmed);
         let mods = self.mods(content);
-        let mut profile = Profile::melee(&Attack::unarmed(), &self.stats_with(content, &mods))
+        let fists = Attack::unarmed(content.unarmed_damage());
+        let mut profile = Profile::melee(&fists, &self.stats_with(content, &mods))
             .with(&self.benefit(content, skill));
         mods.sharpen(&mut profile);
         self.stanced(content, profile)

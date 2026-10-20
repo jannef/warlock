@@ -444,6 +444,7 @@ mod tests {
             to: Pos::new(to.0, to.1),
             strike: None,
             with: None,
+            damage: None,
         };
         let events = [
             attack(3, AttackKind::Melee, (4, 4), (5, 3)),

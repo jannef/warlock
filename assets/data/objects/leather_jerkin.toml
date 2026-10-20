@@ -10,5 +10,7 @@ value = 40
 slot = "body"
 armour = 1
 protection = 1
+# Leather takes acid better than skin.
+resist = { acid = 10 }
 max_dex = 6
 kind = "body"

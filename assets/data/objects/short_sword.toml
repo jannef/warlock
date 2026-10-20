@@ -11,5 +11,6 @@ slot = "main_hand"
 light_weapon = true
 damage = "1d6"
 category = "short_blades"
+damage_type = ["slashing", "piercing"]
 threat = 20
 kind = "weapon"

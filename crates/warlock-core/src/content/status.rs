@@ -17,10 +17,10 @@
 //! Without the file there are no status effects, and resting heals at the default rate
 //! ([`Healing::default`]).
 
-use super::ContentError;
 use super::action::ActionKind;
 use super::disease::DiseaseId;
 use super::stance::BONUS;
+use super::{ContentError, DamageTypeId};
 use crate::stats::{ADJUSTMENTS, PerStat, Stat};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -103,14 +103,28 @@ impl CombatBonus {
 
 /// Which blows cause a status, and how many degrees of it (spec §8 "Status effects"): a big hit
 /// (damage of at least a third of the target's most hit points, [`crate::combat::big_hit`]) or
-/// a confirmed critical. A blow that is both causes the more of the two.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize)]
+/// a confirmed critical. A blow that is both causes the more of the two. `from` names the kinds
+/// of damage that wound this way (spec §8 "Damage types": bleeding from slashing and piercing);
+/// none named: every kind.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
+struct WoundSpec {
+    #[serde(default)]
+    big_hit: u16,
+    #[serde(default)]
+    critical: u16,
+    #[serde(default)]
+    from: Vec<String>,
+}
+
+/// Which blows cause a status, and how many degrees of it (spec §8 "Status effects"): a big hit
+/// or a confirmed critical, of one of `kinds` (every kind when none are named).
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Wound {
-    #[serde(default)]
     pub big_hit: u16,
-    #[serde(default)]
     pub critical: u16,
+    /// The kinds of damage that wound this way; empty: every kind (spec §8 "Damage types").
+    pub kinds: Vec<DamageTypeId>,
 }
 
 impl Wound {
@@ -120,6 +134,15 @@ impl Wound {
         let crit = if critical { self.critical } else { 0 };
         let big = if big { self.big_hit } else { 0 };
         crit.max(big)
+    }
+
+    /// Whether a blow of `kind` wounds this way: any blow when no kinds are named, and an
+    /// untyped blow always (content without damage types).
+    pub fn caused_by(&self, kind: Option<DamageTypeId>) -> bool {
+        match kind {
+            Some(k) if !self.kinds.is_empty() => self.kinds.contains(&k),
+            _ => true,
+        }
     }
 }
 
@@ -253,7 +276,10 @@ struct StatusSpec {
     #[serde(default)]
     blocks: Vec<String>,
     follows: Option<String>,
-    wound: Option<Wound>,
+    wound: Option<WoundSpec>,
+    /// The kind of damage it is (poison): a target immune to it never suffers it, and a
+    /// resistance shrinks every dose (spec §8 "Damage types").
+    damage_type: Option<String>,
     #[serde(default)]
     cured_by: Vec<String>,
     start: Option<String>,
@@ -315,6 +341,9 @@ pub struct StatusDef {
     pub follows: Option<StatusId>,
     /// The blows that cause it, if any.
     pub wound: Option<Wound>,
+    /// The kind of damage it is (poison; spec §8 "Damage types"): a resistance to it shrinks
+    /// every dose, immunity refuses it. `None`: nothing resists it (bleeding).
+    pub damage_type: Option<DamageTypeId>,
     /// The means that cure it (`bandage`): [`crate::World`]'s cure takes one of these.
     pub cured_by: Vec<String>,
     /// Said when the player comes to suffer it: "You are bleeding."
@@ -338,8 +367,13 @@ impl StatusDef {
     }
 }
 
-/// Parses `data/status.toml`: the healing rules and the statuses in file order.
-pub(super) fn parse(file: &str, text: &str) -> Result<(Healing, Vec<StatusDef>), ContentError> {
+/// Parses `data/status.toml`: the healing rules and the statuses in file order; `damage`
+/// resolves damage type ids (`damage_type`, a wound's `from`).
+pub(super) fn parse(
+    file: &str,
+    text: &str,
+    damage: impl Fn(&str) -> Option<DamageTypeId>,
+) -> Result<(Healing, Vec<StatusDef>), ContentError> {
     let err = |m: String| ContentError::new(file, m);
     let parsed: StatusFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
     if parsed.healing.resting > MAX_REGEN {
@@ -355,7 +389,7 @@ pub(super) fn parse(file: &str, text: &str) -> Result<(Healing, Vec<StatusDef>),
             return Err(err(format!("duplicate status id `{id}`")));
         }
         follows.push(spec.follows.clone());
-        let def = resolve(spec).map_err(|m| err(format!("status `{id}`: {m}")))?;
+        let def = resolve(spec, &damage).map_err(|m| err(format!("status `{id}`: {m}")))?;
         list.push(def);
     }
     resolve_follows(&mut list, &follows).map_err(err)?;
@@ -393,7 +427,10 @@ fn resolve_follows(list: &mut [StatusDef], names: &[Option<String>]) -> Result<(
     Ok(())
 }
 
-fn resolve(spec: StatusSpec) -> Result<StatusDef, String> {
+fn resolve(
+    spec: StatusSpec,
+    damage: &impl Fn(&str) -> Option<DamageTypeId>,
+) -> Result<StatusDef, String> {
     if spec.id.trim().is_empty() || spec.name.trim().is_empty() {
         return Err("`id` and `name` must not be empty".into());
     }
@@ -442,7 +479,7 @@ fn resolve(spec: StatusSpec) -> Result<StatusDef, String> {
     if spec.follows.is_some() && spec.eases.is_none() && spec.cured_by.is_empty() {
         return Err("follows: it never ends (it has no `eases` and no `cured_by`)".into());
     }
-    if let Some(w) = spec.wound
+    if let Some(w) = &spec.wound
         && (w.big_hit > spec.max || w.critical > spec.max || w.big_hit + w.critical == 0)
     {
         return Err(format!(
@@ -450,6 +487,26 @@ fn resolve(spec: StatusSpec) -> Result<StatusDef, String> {
             spec.max
         ));
     }
+    let kind = |name: &str| damage(name).ok_or_else(|| format!("unknown damage type `{name}`"));
+    let wound = match spec.wound {
+        None => None,
+        Some(w) => {
+            let mut kinds = Vec::new();
+            for name in &w.from {
+                let id = kind(name).map_err(|m| format!("wound: from: {m}"))?;
+                if kinds.contains(&id) {
+                    return Err(format!("wound: from: `{name}` twice"));
+                }
+                kinds.push(id);
+            }
+            Some(Wound {
+                big_hit: w.big_hit,
+                critical: w.critical,
+                kinds,
+            })
+        }
+    };
+    let damage_type = spec.damage_type.as_deref().map(kind).transpose()?;
     if spec.cured_by.iter().any(|c| c.trim().is_empty()) {
         return Err("cured_by: a cure must have a name".into());
     }
@@ -468,7 +525,8 @@ fn resolve(spec: StatusSpec) -> Result<StatusDef, String> {
         cost: spec.cost,
         blocks,
         follows: None,
-        wound: spec.wound,
+        wound,
+        damage_type,
         cured_by: spec.cured_by,
         start: spec.start,
         end: spec.end,
@@ -532,7 +590,7 @@ mod tests {
              [[status]]\nid = \"poisoned\"\nname = \"Poisoned\"\nmax = 10\nstacking = \"refresh\"\n\
              penalty = {{ from = 4, strength = -1, dexterity = -1 }}\n"
         );
-        let (healing, list) = parse("status.toml", &text).expect("valid");
+        let (healing, list) = parse("status.toml", &text, |_| None).expect("valid");
         assert_eq!(healing.resting, 300);
         assert_eq!(list.len(), 2);
         let (bleeding, poison) = (&list[0], &list[1]);
@@ -541,9 +599,10 @@ mod tests {
             (bleeding.tick, bleeding.eases, bleeding.regen),
             (Some(40), Some(60), 0)
         );
-        assert_eq!(bleeding.wound.map(|w| w.degrees(true, true)), Some(2));
-        assert_eq!(bleeding.wound.map(|w| w.degrees(false, true)), Some(1));
-        assert_eq!(bleeding.wound.map(|w| w.degrees(false, false)), Some(0));
+        let wound = bleeding.wound.as_ref();
+        assert_eq!(wound.map(|w| w.degrees(true, true)), Some(2));
+        assert_eq!(wound.map(|w| w.degrees(false, true)), Some(1));
+        assert_eq!(wound.map(|w| w.degrees(false, false)), Some(0));
         assert_eq!(bleeding.cured_by, ["bandage"]);
         assert_eq!(poison.stacking, Stacking::Refresh);
         assert_eq!((poison.regen, poison.tick, poison.damage), (100, None, 0));
@@ -558,7 +617,7 @@ mod tests {
             (-1, -1, 0)
         );
         // Without statuses: none, and resting heals twice as fast.
-        let (healing, list) = parse("status.toml", "").expect("empty is valid");
+        let (healing, list) = parse("status.toml", "", |_| None).expect("empty is valid");
         assert_eq!((healing, list.len()), (Healing::default(), 0));
         assert_eq!(Healing::default().resting, 200);
     }
@@ -625,7 +684,7 @@ mod tests {
                 "resting must be 0 to 1000",
             ),
         ] {
-            let e = parse("status.toml", &text).unwrap_err();
+            let e = parse("status.toml", &text, |_| None).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
     }
@@ -641,7 +700,7 @@ mod tests {
     fn buffs_and_cooldowns_parse() {
         // Raging follows into a status further down the file.
         let text = format!("{BLEEDING}{RAGING}{EXHAUSTED}");
-        let (_, list) = parse("status.toml", &text).expect("valid");
+        let (_, list) = parse("status.toml", &text, |_| None).expect("valid");
         let (bleeding, raging, exhausted) = (&list[0], &list[1], &list[2]);
         // Left out: nothing.
         assert!(bleeding.combat.is_none());
@@ -710,12 +769,12 @@ mod tests {
                 "follows: it never ends (it has no `eases` and no `cured_by`)",
             ),
         ] {
-            let e = parse("status.toml", &text).unwrap_err();
+            let e = parse("status.toml", &text, |_| None).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
         // One that is cured ends too, so something may follow it.
         let cured = raging("eases = 300\n", "cured_by = [\"calm\"]\n");
-        assert!(parse("status.toml", &cured).is_ok());
+        assert!(parse("status.toml", &cured, |_| None).is_ok());
     }
 
     #[test]

@@ -34,7 +34,11 @@
 #              the ability that gave it cannot be used again
 #   wound      the blows that cause it: { big_hit = 1, critical = 2 } degrees for a hit that takes
 #              at least a third of the target's hit points, and for a confirmed critical (a
-#              blow that is both: the more of the two)
+#              blow that is both: the more of the two); `from` lists the kinds of damage that
+#              wound this way (damage_types.toml; bleeding from slashing and piercing), none
+#              listed: any
+#   damage_type the kind of damage the status is (poison): a target immune to it never suffers
+#              it, and a resistance shrinks each dose it is given (spec §8 "Damage types")
 #   cured_by   what cures it at once (a bandage: the Heal skill, later)
 #   start, end what the player is told as it begins and ends ("end" lets a rest go on)
 #   dies       what a creature you see does when it kills it ("The giant rat bleeds to death.")
@@ -56,7 +60,7 @@ tick = 40
 damage = 1
 eases = 60
 regen = 0
-wound = { big_hit = 1, critical = 2 }
+wound = { big_hit = 1, critical = 2, from = ["slashing", "piercing"] }
 cured_by = ["bandage"]
 start = "You are bleeding."
 end = "The bleeding stops."
@@ -72,6 +76,7 @@ max = 10
 stacking = "add"
 tick = 120
 damage = 1
+damage_type = "poison"
 eases = 120
 regen = 50
 penalty = { from = 4, strength = -1, dexterity = -1 }

@@ -14,9 +14,13 @@ status in status order; `Effects::add` applies the stacking rule, `penalty`, `re
 `is_valid_for`; `Effect::until_tick`/`until_eases`/`advance` are the timer math: ticks bank
 `seconds × severity` degree-seconds). `world/status.rs` applies them: `World::afflict(actor,
 status, severity, by, events)` (**the one way to give an actor a status**: food poisoning
-from what the player eats (#137), traps, diseases call it), `World::cure(actor, means, events)` (eating
+from what the player eats (#137), traps, diseases call it; a status with a `damage_type`
+(poisoned: poison) meets the actor's resistance there as a dose, docs/dev/combat.md "Damage
+types": immune refuses it, else `damage::resist` on the severity), `World::cure(actor, means, events)` (eating
 a remedy, an object with `cures`, `world/eat.rs::remedy`, which says what ended at once; the Heal
-skill's bandage, #132), `World::after_blow` (wounds by `combat::big_hit` and criticals, then `on_hit`
+skill's bandage, #132), `World::after_blow` (wounds by `combat::big_hit` and criticals, of the
+kinds the status's `wound.from` names, `Wound::caused_by(blow.kind)`: bleeding from slashing
+and piercing; then `on_hit`
 with one gameplay draw per chance below 100), `World::healing_rate` (min of the statuses'
 `regen`, × resting for the player while `World::resting`, none for a Starving player, × a
 special room's `regen`, × (100 + the regeneration affixes of what the actor wears and wields) %),

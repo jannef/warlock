@@ -82,7 +82,7 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
     {
         causes.push("any disease, once it shows");
     }
-    if let Some(w) = def.wound {
+    if let Some(w) = &def.wound {
         match (w.big_hit > 0, w.critical > 0) {
             (true, true) => causes.push("big hits and confirmed criticals"),
             (true, false) => causes.push("big hits"),

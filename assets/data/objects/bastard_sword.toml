@@ -11,5 +11,6 @@ slot = "main_hand"
 damage = "1d10"
 threat = 20
 category = "long_blades"
+damage_type = ["slashing", "piercing"]
 kind = "weapon"
 level = 4

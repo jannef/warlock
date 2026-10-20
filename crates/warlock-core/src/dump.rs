@@ -487,7 +487,30 @@ fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
     if !diseases.is_empty() {
         rows.push(format!("Diseases {}", diseases.join(", ")));
     }
+    rows.extend(resistance_rows(view));
     rows
+}
+
+/// The player's resistances in words (spec §8 "Damage types"), a row per word: `Resistant to
+/// fire, cold`, `Vulnerable to acid`, `Immune to poison`; never a percentage.
+fn resistance_rows(view: &PerceptionView<'_>) -> Vec<String> {
+    use crate::damage::ResistanceWord;
+    let content = view.content();
+    let own = view.own_resistances();
+    [
+        ResistanceWord::Immune,
+        ResistanceWord::Resistant,
+        ResistanceWord::Vulnerable,
+    ]
+    .into_iter()
+    .filter_map(|word| {
+        let kinds: Vec<&str> = (own.iter())
+            .filter(|(_, w)| *w == word)
+            .map(|(k, _)| content.damage_type(*k).name.as_str())
+            .collect();
+        (!kinds.is_empty()).then(|| format!("{} {}", word.label(), kinds.join(", ")))
+    })
+    .collect()
 }
 
 /// The player's own trained skills, one a line in skill order: `Stealth 17`.
@@ -729,17 +752,26 @@ fn actor_rows(world: &World) -> Vec<String> {
                 let (said, muttered) = (a.talk.said, a.talk.muttered);
                 format!("; talk said {said}, muttered {muttered}{met}")
             };
+            // What it resists, in percent by kind (ground truth: never shown in play).
+            let resists: Vec<String> = (a.resistances(content).iter())
+                .map(|(k, p)| format!("{} {p}", content.damage_type(k).id))
+                .collect();
+            let resists = if resists.is_empty() {
+                String::new()
+            } else {
+                format!("; resists {}", resists.join(" "))
+            };
             format!(
                 "{} {} at {}: hp {}/{} dv {} pv {}; weight {} (base {} + carried {}: {carried})\
                  {equipped}; {} (limit {}){weapons}; stats {}{skills}{effects}{diseases}{hunger}{npc}\
-                 {talk}",
+                 {talk}{resists}",
                 a.id,
                 content.creature(a.creature).id,
                 a.pos,
                 a.hp,
                 a.max_hp(content),
                 a.defence(content, load.penalty()).total(),
-                a.protection(content),
+                a.protection(content).base,
                 format_weight(w.total()),
                 format_weight(w.base),
                 format_weight(w.carried),
@@ -1000,6 +1032,9 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "experience": view.own_experience(),
         "defence": view.own_defence(),
         "protection": view.own_protection(),
+        "resistances": (view.own_resistances().into_iter())
+            .map(|(k, w)| (content.damage_type(k).id.clone(), json!(w.word())))
+            .collect::<serde_json::Map<String, Value>>(),
         "hunger": view.own_hunger(),
         "death": death,
         "messages": messages,
@@ -1172,9 +1207,9 @@ mod tests {
         let actors = layer_rows(&arena, Layer::Actors);
         let shaman = actors.iter().find(|a| a.contains(" kobold_shaman at "));
         assert!(
-            shaman.is_some_and(
-                |s| s.ends_with("; skills concentration 20 (0/6), spellcraft 25 (0/6)")
-            ),
+            shaman.is_some_and(|s| s.ends_with(
+                "; skills concentration 20 (0/6), spellcraft 25 (0/6); resists fire 25"
+            )),
             "{actors:#?}"
         );
         let text = ascii(&arena, &[Layer::Skills, Layer::View]);

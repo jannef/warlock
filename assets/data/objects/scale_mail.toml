@@ -11,6 +11,8 @@ value = 300
 slot = "body"
 armour = 2
 protection = 4
+# Scales turn a blade; a blow dents them.
+protects = { slashing = 1, bludgeoning = -1 }
 max_dex = 3
 kind = "body"
 level = 4

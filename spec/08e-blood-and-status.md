@@ -106,13 +106,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Causes**: `World::afflict(actor, status, severity, by)` is the one way to give an actor a
     status: wounds and `on_hit` (below), sickness from what the player eats (§8 "Hunger"), and
     later traps and diseases.
-  - **Bleeding**: from big hits and confirmed criticals; it costs hit points, stops healing, and
+  - **Bleeding**: from big hits and confirmed criticals of slashing and piercing blows (the
+    status's `wound.from`, §8 "Damage types": a club, a fall, or a fireball opens no wound; an
+    untyped blow does); it costs hit points, stops healing, and
     eases by itself; it shows on creatures ("bleeding"). Blood dripping where the bleeder goes
-    (the stains of #127) hooks in where it ticks (`World::drip_blood`).
+    (the stains of #127) hooks in where it ticks (`World::drip_blood`). Its ticks are untyped:
+    nothing resists them.
   - **Poisoned**: from a giant rat's bite (one hit in ten, 2 degrees) and bad food (§8
     "Hunger": the sickness of a rotten corpse, or of some creatures' flesh); it costs hit points
     slowly, halves healing, and from 4 degrees lowers Strength and Dexterity by 1; stronger
-    poison lasts longer.
+    poison lasts longer. It is damage of the kind poison (`damage_type`, §8 "Damage types"): a
+    creature immune to poison is never poisoned, and a resistance takes its share off each dose
+    as it is given (rounded to the nearest; 2 degrees at 50 % is 1), never off the ticks.
   - **Shown**: the player's own by name (status bar, character screen, the `stats` dump layer),
     those with a `seen` word on creatures the player sees (look mode); never a severity or a
     timer. Effects are part of the world state (saved, covered by the state hash).

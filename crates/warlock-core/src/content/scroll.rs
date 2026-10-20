@@ -16,9 +16,10 @@
 //! ```
 
 use super::Content;
+use super::damage_type::TypeNames;
 use super::effect::EffectShape;
 use super::object::MAX_RANGE;
-use super::spell::{Bolt, Burst, SpellFields, check_effect};
+use super::spell::{Bolt, Burst, SpellFields, check_effect, default_verb, one_kind};
 use super::trap::TrapNoise;
 use crate::dice::Dice;
 use crate::noise::MAX_LOUDNESS;
@@ -33,10 +34,6 @@ enum Kind {
     Identify,
 }
 
-fn hits() -> String {
-    "hits".into()
-}
-
 /// `read` as an object's file writes it.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -44,14 +41,16 @@ pub(super) struct ReadSpec {
     kind: Kind,
     /// `burst`, `bolt`: the effect presentation shows (`data/effects.toml`).
     spell: Option<String>,
-    /// `burst`, `bolt`: what hits ("fireball") and what it does ("burns"), for messages.
+    /// `burst`, `bolt`: what hits ("fireball") and what it does ("burns", default: its damage
+    /// type's verb), for messages.
     noun: Option<String>,
-    #[serde(default = "hits")]
-    verb: String,
+    verb: Option<String>,
     /// Said as it is read, after "You read the scroll of fireball.".
     message: Option<String>,
     /// `burst`, `bolt`.
     damage: Option<Dice>,
+    /// `burst`, `bolt`: the kind of damage it does (spec §8 "Damage types").
+    damage_type: Option<TypeNames>,
     /// `burst`.
     radius: Option<i32>,
     /// `burst`: how far it flies, in cells.
@@ -122,7 +121,7 @@ impl Reading {
 
 impl ReadSpec {
     /// Checks the spec (its spell effect is checked once effects are loaded, [`check_spells`]).
-    pub(super) fn resolve(self) -> Result<Reading, String> {
+    pub(super) fn resolve(self, content: &Content) -> Result<Reading, String> {
         let kind = self.kind;
         let spelled = matches!(kind, Kind::Burst | Kind::Bolt);
         let allowed = |field: &str, given: bool, ok: bool| {
@@ -135,8 +134,9 @@ impl ReadSpec {
         let burst = kind == Kind::Burst;
         allowed("spell", self.spell.is_some(), spelled)?;
         allowed("noun", self.noun.is_some(), spelled)?;
-        allowed("verb", self.verb != hits(), spelled)?;
+        allowed("verb", self.verb.is_some(), spelled)?;
         allowed("damage", self.damage.is_some(), spelled)?;
+        allowed("damage_type", self.damage_type.is_some(), spelled)?;
         allowed("noise", self.noise.is_some(), spelled)?;
         allowed("radius", self.radius.is_some(), burst)?;
         allowed("range", self.range.is_some(), burst)?;
@@ -163,12 +163,15 @@ impl ReadSpec {
         let noun = (self.noun.clone())
             .filter(|n| !n.trim().is_empty())
             .ok_or("`read`: needs a `noun`: what hits")?;
-        if self.verb.trim().is_empty() {
+        if self.verb.as_ref().is_some_and(|v| v.trim().is_empty()) {
             return Err("`read`: `verb` must not be empty".into());
         }
+        let damage_kind =
+            one_kind(content, self.damage_type.as_ref()).map_err(|m| format!("`read`: {m}"))?;
         let fields = SpellFields {
             spell: self.spell,
             damage: self.damage,
+            kind: damage_kind,
             radius: self.radius,
             blast: self.blast,
             heat: self.heat,
@@ -194,7 +197,9 @@ impl ReadSpec {
             cast,
             range,
             noun,
-            verb: self.verb,
+            verb: self
+                .verb
+                .unwrap_or_else(|| default_verb(content, damage_kind)),
             message: self.message,
             noise: self.noise,
         }))

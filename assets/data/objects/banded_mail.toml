@@ -11,6 +11,7 @@ value = 400
 slot = "body"
 armour = 1
 protection = 5
+protects = { slashing = 1 }
 max_dex = 1
 kind = "body"
 level = 6

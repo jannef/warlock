@@ -42,7 +42,7 @@ use crate::object::{self, Stack};
 
 /// A missile about to be loosed: a shot or a throw (`kind`), from inventory stack `item`, what
 /// its attack does, and how far it flies.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 struct Loose {
     kind: AttackKind,
     item: usize,
@@ -184,15 +184,17 @@ impl World {
     /// the player sees as the turn is perceived), its attacks on creatures they see too.
     fn player_looses(&mut self, at: Pos, loose: Loose, events: &mut Vec<Event>) {
         let content = self.content.clone();
+        let kind = loose.kind;
         let stack = self.state.player().inventory[loose.item].single();
-        let last = (self.state.player().inventory[loose.item].count == 1)
-            && loose.kind == AttackKind::Ranged;
+        let last =
+            (self.state.player().inventory[loose.item].count == 1) && kind == AttackKind::Ranged;
         let mut made = Vec::new();
         self.loose(self.state.player, at, loose, &mut made);
         let words = Words::of(
             self.state.player(),
-            loose.kind,
+            kind,
             Some(stack.object),
+            None,
             &content,
         );
         let mut said = Vec::new();
@@ -212,14 +214,7 @@ impl World {
                         Some(d) if self.perception.sees_actors_at(to) => End::Seen(&d.name),
                         _ => End::Unseen,
                     };
-                    said.extend(attack_message(
-                        End::You,
-                        end,
-                        &words,
-                        loose.kind,
-                        strike,
-                        guard,
-                    ));
+                    said.extend(attack_message(End::You, end, &words, kind, strike, guard));
                     seen = (end != End::Unseen).then_some(end);
                     if seen.is_some() {
                         events.push(event);
@@ -235,7 +230,7 @@ impl World {
             }
         }
         if !attacked {
-            let verb = match loose.kind {
+            let verb = match kind {
                 AttackKind::Thrown => "throw",
                 _ => "shoot",
             };
@@ -331,8 +326,8 @@ impl World {
             match target {
                 Some(target) => {
                     let with = (loose.kind, ammo);
-                    let blow =
-                        self.missile_hits(shooter, target, with, loose.profile, &mut attacks);
+                    let profile = loose.profile.clone();
+                    let blow = self.missile_hits(shooter, target, with, profile, &mut attacks);
                     if blow.is_some_and(|b| b.strike.is_hit()) {
                         struck = true;
                         break;

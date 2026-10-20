@@ -5,7 +5,8 @@
 //! [`Context::Menu`] bindings (Esc always backs out); otherwise it is a gameplay command, read
 //! through the bindings of the current [`InputMode`]'s contexts. Prompts in the message line (the
 //! direction for open/close/kick, for digging, for a chat, or for an ability, how long to rest,
-//! look mode, aiming a shot or a throw) are input modes, not screens.
+//! look mode, aiming a shot or a throw, `--more--` when a turn says more than the message line
+//! holds) are input modes, not screens.
 //!
 //! **Every key the game reads is a [`KeyCommand`] in its [`Context`]** (#159), rebindable in
 //! Controls and listed by the `?` help; nothing matches a key code or a character itself, but for
@@ -22,7 +23,7 @@ use crate::save::SaveCommand;
 use crate::settings::Settings;
 use crate::ui::{
     Aim, AimKind, DevOverlays, Dialog, LastTarget, MenuChoice, Press, ScreenAction, ScreenName,
-    Screens, quit_dialog,
+    Screens, more, quit_dialog,
 };
 use bevy::ecs::system::SystemParam;
 use bevy::input::ButtonState;
@@ -70,6 +71,8 @@ pub enum KeyCommand {
     WeaponSkills,
     /// Show the player's quests, active and done (no time passes).
     Quests,
+    /// Show the messages so far, the newest at the bottom (no time passes).
+    Messages,
     /// Ask how long to rest (an hour, until dawn, until dusk).
     Rest,
     /// In the rest prompt: rest an hour.
@@ -78,6 +81,11 @@ pub enum KeyCommand {
     RestDawn,
     /// In the rest prompt: rest until nightfall.
     RestDusk,
+    /// At `--more--`: show the next of this turn's messages.
+    MoreNext,
+    /// At `--more--`: skip the rest of this turn's messages (Esc always does it; no default key
+    /// of its own).
+    MoreSkip,
     /// Choose something to eat, from the floor or the pack.
     Eat,
     /// Choose a scroll to read: a spell is aimed next (a cursor on the map), the scroll of
@@ -186,6 +194,8 @@ pub enum Context {
     Aim,
     /// In the rest prompt.
     Prompt,
+    /// At `--more--`, when this turn's messages need more than one look at the message line.
+    More,
     /// On every menu and screen: moving the selection, choosing, backing out.
     Menu,
     /// On an info screen ([`crate::ui`]'s numbered pages).
@@ -202,6 +212,7 @@ impl Context {
         Context::Play,
         Context::Aim,
         Context::Prompt,
+        Context::More,
         Context::Menu,
         Context::Pages,
         Context::Dialog,
@@ -214,6 +225,7 @@ impl Context {
             Context::Play => "In play",
             Context::Aim => "Aiming",
             Context::Prompt => "Rest prompt",
+            Context::More => "More messages (--more--)",
             Context::Menu => "Menus and screens",
             Context::Pages => "Info pages",
             Context::Dialog => "Dialogs",
@@ -227,6 +239,7 @@ impl Context {
             Context::Play => "play",
             Context::Aim => "aim",
             Context::Prompt => "prompt",
+            Context::More => "more",
             Context::Menu => "menu",
             Context::Pages => "pages",
             Context::Dialog => "dialog",
@@ -243,6 +256,7 @@ impl KeyCommand {
             Yes | No => Context::Dialog,
             NextTarget | PrevTarget | Loose => Context::Aim,
             RestHour | RestDawn | RestDusk => Context::Prompt,
+            MoreNext | MoreSkip => Context::More,
             MenuUp | MenuDown | MenuLeft | MenuRight | Confirm | Back | Erase | Mark | MarkAll
             | NextListPage | PrevListPage => Context::Menu,
             CycleVision | SkipHour | NextWeather | IdentifyAll | RevealMap | LightValues
@@ -274,10 +288,13 @@ impl KeyCommand {
             KeyCommand::Skills => "Skills",
             KeyCommand::WeaponSkills => "Weapon skills",
             KeyCommand::Quests => "Quest log",
+            KeyCommand::Messages => "Message history",
             KeyCommand::Rest => "Rest",
             KeyCommand::RestHour => "Rest an hour",
             KeyCommand::RestDawn => "Rest until dawn",
             KeyCommand::RestDusk => "Rest until nightfall",
+            KeyCommand::MoreNext => "Show the next messages",
+            KeyCommand::MoreSkip => "Skip the rest (Esc always works)",
             KeyCommand::Eat => "Eat",
             KeyCommand::Read => "Read a scroll",
             KeyCommand::Look => "Look around",
@@ -422,6 +439,7 @@ impl Default for Bindings {
             (ch("S"), Skills),
             (ch("W"), WeaponSkills),
             (ch("q"), Quests),
+            (ch("M"), Messages),
             (ch("R"), Rest),
             (ch("E"), Eat),
             (ch("r"), Read),
@@ -439,6 +457,9 @@ impl Default for Bindings {
             (ch("h"), RestHour),
             (ch("d"), RestDawn),
             (ch("n"), RestDusk),
+            (Code(KeyCode::Space), MoreNext),
+            (Code(KeyCode::Enter), MoreNext),
+            (Code(KeyCode::NumpadEnter), MoreNext),
             (ch("U"), UseTool),
             (ch("p"), Pay),
             (Code(KeyCode::ArrowUp), MenuUp),
@@ -530,6 +551,10 @@ pub enum InputMode {
     Look(Pos),
     /// Aiming a shot or a throw (`ui::target`).
     Aim(Aim),
+    /// `--more--`: the message line shows page `n` of this turn's messages, and waits for
+    /// [`KeyCommand::MoreNext`] (or [`KeyCommand::MoreSkip`], or Esc) before anything else
+    /// (`ui::more`).
+    More(usize),
 }
 
 /// The dialog a step in `dir` opens first, if it leaves the shop the player stands in owing
@@ -701,6 +726,8 @@ pub struct Gameplay<'w> {
     overlays: ResMut<'w, DevOverlays>,
     actions: MessageWriter<'w, PlayerAction>,
     saves: MessageWriter<'w, SaveCommand>,
+    /// The UI console, whose width lays out the message line's pages (`--more--`).
+    console: Option<Res<'w, Console>>,
 }
 
 impl Gameplay<'_> {
@@ -731,6 +758,14 @@ impl Gameplay<'_> {
         }
         let mut open: Option<ScreenAction> = None;
         let next = match (*self.mode, command) {
+            // `--more--`: the next page of this turn's messages, then play once the last shows;
+            // skipping goes to play at once (the last page shows). Nothing else acts meanwhile.
+            (InputMode::More(page), KeyCommand::MoreNext) => {
+                let cols = self.console.as_ref().map_or(0, |c| c.cols());
+                more::advance(page, more::page_count(game, cols, bindings))
+            }
+            (InputMode::More(_), KeyCommand::MoreSkip | KeyCommand::Cancel) => InputMode::Normal,
+            (InputMode::More(page), _) => InputMode::More(page),
             (
                 InputMode::Rest,
                 KeyCommand::RestHour | KeyCommand::RestDawn | KeyCommand::RestDusk,
@@ -938,6 +973,10 @@ impl Gameplay<'_> {
                 open = Some(ScreenAction::Open(ScreenName::Quests));
                 InputMode::Normal
             }
+            (InputMode::Normal, KeyCommand::Messages) => {
+                open = Some(ScreenAction::Open(ScreenName::Messages));
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::CycleVision) => {
                 let view = game.world.perception();
                 let next = next_vision(view.content().vision_profiles(), &view.vision().id);
@@ -1035,6 +1074,8 @@ impl Gameplay<'_> {
                 | KeyCommand::RestHour
                 | KeyCommand::RestDawn
                 | KeyCommand::RestDusk
+                | KeyCommand::MoreNext
+                | KeyCommand::MoreSkip
                 | KeyCommand::MenuUp
                 | KeyCommand::MenuDown
                 | KeyCommand::MenuLeft
@@ -1191,9 +1232,9 @@ pub const REST_CHOICES: [(KeyCommand, Rest, &str); 3] = [
     (KeyCommand::RestDusk, Rest::Dusk, "until nightfall"),
 ];
 
-/// The command a key press stands for in input mode `mode`: the rest prompt's answers and
-/// aiming's keys before play's, which the other modes read alone; the developer keys last, in
-/// plain play, where they are on (`dev`).
+/// The command a key press stands for in input mode `mode`: the rest prompt's answers,
+/// `--more--`'s keys, and aiming's keys before play's, which the other modes read alone; the
+/// developer keys last, in plain play, where they are on (`dev`).
 fn command_in(
     mode: InputMode,
     key: &KeyboardInput,
@@ -1203,6 +1244,7 @@ fn command_in(
     let own = match mode {
         InputMode::Rest => Some(Context::Prompt),
         InputMode::Aim(_) => Some(Context::Aim),
+        InputMode::More(_) => Some(Context::More),
         InputMode::Normal
         | InputMode::Direction(_)
         | InputMode::Ability(_)

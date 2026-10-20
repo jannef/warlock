@@ -21,7 +21,8 @@ in `ui/glyphs.rs`, never to content colors.
 Key bindings (spec §6 "Rebinding", #159) are the `Bindings` resource (`input.rs`; text forms,
 ids, and the rules in `settings/keys.rs`). **Every key the game reads is a `KeyCommand` in its
 `input::Context`**: `Play` (the map, direction prompts, look mode), `Aim` (`NextTarget`,
-`PrevTarget`, `Loose`), `Prompt` (the rest choices), `Menu` (`MenuUp`/`Down`/`Left`/`Right`,
+`PrevTarget`, `Loose`), `Prompt` (the rest choices), `More` (at `--more--`: `MoreNext`, Space and
+Enter; `MoreSkip`, unbound, as Esc always skips; `ui/more.rs`), `Menu` (`MenuUp`/`Down`/`Left`/`Right`,
 `Confirm`, `Back`, `Erase`, `Mark`, `MarkAll`, and the item lists' `NextListPage` (`>`,
 PageDown) and `PrevListPage` (`<`, PageUp): `Press::from_input` turns them into `Nav`, so
 screens read `press.nav`, never a key), `Pages` (Tab; the previous info page is Shift with it,
@@ -29,7 +30,8 @@ screens read `press.nav`, never a key), `Pages` (Tab; the previous info page is 
 keys: in every table, read by `input::command_in` and listed by Controls only where
 `input::dev_keys` is true). Keys are unique within a context; a mode with its own context reads it
 before play's (`command_in`). Nothing matches a `KeyCode` or a character directly but Esc (fixed:
-Cancel in play, `Nav::Back` on every screen) and the letters and digits that name list rows.
+Cancel in play, which skips the rest at `--more--`, `Nav::Back` on every screen) and the letters
+and digits that name list rows.
 Hints name keys through `Bindings::key_name` and `ui::menu::Hints` (footers), never a literal key.
 Core knows no bindings, so a message names a key by its command's id (`messages::key("help")`
 writes `{key:help}`, as the welcome line does) and the message line fills it in as bound

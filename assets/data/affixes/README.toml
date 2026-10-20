@@ -13,6 +13,8 @@
 #             to_hit        + to hit
 #             damage        + to every roll of the damage dice
 #             extra_damage  adds 1dN to every roll of the damage (the value is N)
+#             elemental     adds 1dN damage of the affix's `damage_type` (an element, an id in
+#                           damage_types.toml) to every roll; never soaked by armour
 #             threat        widens the critical threat range by N natural rolls
 #             crit          + to the critical multiplier (at most ×5)
 #             attack_speed  attacks N% faster (less of their cost; at most 50 in all)
@@ -29,6 +31,8 @@
 #             natural       + natural armour (the best counts, with a creature's own)
 #             max_hp        + maximum hit points
 #             regeneration  hit points come back N% faster
+#             resistance    + N% resistance to the affix's `damage_type` (capped at 75 with
+#                           everything else worn)
 #             strength, dexterity, toughness, intelligence, willpower, presence   + to the score
 #             move_speed    steps N% faster (at most 50 in all)
 #             carry         + N kg carrying limit
@@ -41,7 +45,8 @@
 #           (global). parry, armour, protection, shield, max_dex, and weight change the item
 #           itself; the rest change whoever wears or wields it. An item has at most one affix of
 #           each effect
-#           (of each skill, for skill affixes).
+#           (of each skill, for skill affixes; of each damage type, for elemental and
+#           resistance affixes).
 #   bases   the kinds of item that may roll it: weapon, launcher, ammo, body, helmet, cloak,
 #           gloves, boots, shield, ring, amulet. An affix whose effect the item lacks the means
 #           for (range without a range, draw without a Strength to draw, durability on what never
