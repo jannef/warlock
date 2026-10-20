@@ -67,9 +67,9 @@ use crate::character::Character;
 use crate::combat::Health;
 use crate::content::Shops;
 use crate::content::{
-    CombatStance, Content, CreatureId, DiseaseId, FactionId, Flow, ItemClassId, LevelKind, LightId,
-    ObjectId, RoomEffectDef, SlotId, Stance, StatusId, TerrainId, TrapId, VisionProfile,
-    WeaponSkillId,
+    CombatStance, Content, CreatureId, DamageTypeId, DiseaseId, FactionId, Flow, ItemClassId,
+    LevelKind, LightId, ObjectId, RoomEffectDef, SlotId, Stance, StatusId, TerrainId, TrapId,
+    VisionProfile, WeaponSkillId,
 };
 use crate::daylight;
 use crate::equipment::Equipment;
@@ -1063,9 +1063,18 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// The player's Protection ("Pv"): the damage what they wear soaks off every hit, the total
-    /// only. Never a creature's.
+    /// only (never what each piece does against a kind, nor a creature's).
     pub fn own_protection(&self) -> i32 {
-        self.player.protection(self.content)
+        self.player.protection(self.content).base
+    }
+
+    /// What the player resists (spec §8 "Damage types"), in words only: each kind they resist,
+    /// are vulnerable to, or are immune to, in damage type order; never a percentage, and never
+    /// a creature's.
+    pub fn own_resistances(&self) -> Vec<(DamageTypeId, crate::damage::ResistanceWord)> {
+        (self.player.resistances(self.content).iter())
+            .filter_map(|(kind, percent)| Some((kind, crate::damage::ResistanceWord::of(percent)?)))
+            .collect()
     }
 
     /// How the run ended, once the player has died (what killed them only if they saw it).

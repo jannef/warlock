@@ -134,7 +134,7 @@ fn protection_adds_up_across_what_is_worn_and_the_hide() {
         ],
     );
     let player = w.state.player;
-    assert_eq!(w.protection_of(player), 7);
+    assert_eq!(w.protection_of(player).base, 7);
     w.perceive(&mut Vec::new());
     assert_eq!(w.perception().own_protection(), 7);
     // A Hardened leather cap adds its affix, identified or not (the total is all the player is
@@ -146,7 +146,7 @@ fn protection_adds_up_across_what_is_worn_and_the_hide() {
             (hardened("leather_cap", 2), "head"),
         ],
     );
-    assert_eq!(w.protection_of(player), 5);
+    assert_eq!(w.protection_of(player).base, 5);
     // Identified, its description says so; the base item has none of its own.
     let mut cap = hardened("leather_cap", 2);
     cap.identify();
@@ -168,8 +168,8 @@ fn protection_adds_up_across_what_is_worn_and_the_hide() {
     assert_eq!(me.soaked_by(w.content()), Some("chain mail shirt"));
     // A creature's hide adds to what it wears; the beetle's shell is 3, the rat has none.
     let tortoise = actor_of(&w, "tortoise");
-    assert_eq!(w.protection_of(tortoise), 20);
-    assert_eq!(w.protection_of(actor_of(&w, "rat")), 0);
+    assert_eq!(w.protection_of(tortoise).base, 20);
+    assert_eq!(w.protection_of(actor_of(&w, "rat")).base, 0);
     let shell = w.state.actors[&tortoise].soaked_by(w.content());
     assert_eq!(shell, Some("carapace"));
     let beetle = CONTENT.creature(CONTENT.creature_id("beetle").expect("beetle"));

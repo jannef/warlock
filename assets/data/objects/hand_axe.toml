@@ -12,6 +12,8 @@ light_weapon = true
 damage = "1d6"
 crit = 3
 category = "axes"
+damage_type = "slashing"
+verb = "cleaves"
 kind = "weapon"
 # Thrown end over end.
 range = 4

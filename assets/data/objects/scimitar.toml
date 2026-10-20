@@ -11,5 +11,6 @@ slot = "main_hand"
 damage = "1d6"
 threat = 19
 category = "short_blades"
+damage_type = "slashing"
 kind = "weapon"
 level = 2

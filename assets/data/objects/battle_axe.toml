@@ -11,5 +11,7 @@ slot = "main_hand"
 damage = "1d8"
 crit = 3
 category = "axes"
+damage_type = "slashing"
+verb = "cleaves"
 kind = "weapon"
 level = 2
