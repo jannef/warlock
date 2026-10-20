@@ -51,7 +51,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   rooms and whether the player has been in each (§7 "Special rooms"), every
   actor's weapon skills (its rank and marks in each, §8 "Weapon skills"), the
   work done on walls dug into and still standing (§8 "Digging"), every
-  actor's combat stance (§8 "Stances"), the blood on each level and the blood
+  actor's combat stance (§8 "Stances"), the free blows each actor is given (absent while none,
+  §8 "Free blows"), the blood on each level and the blood
   as last seen (§8 "Blood"), every actor's status effects (each status with
   its severity, its progress toward its next tick and easing, and who caused it), the progress
   toward the next hit point back counted in hundredths of a second at the normal pace, and the
