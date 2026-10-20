@@ -344,8 +344,10 @@ pub fn experience_text(progress: &Progress) -> String {
     }
 }
 
-/// The gender as shown: its name, and for "other" the stat it raised (`Other (Willpower +1)`).
-pub fn gender_text(character: &Character) -> String {
+/// The gender as the character screen shows it: its name, and for "other" the stat it raised
+/// (`Other (Willpower +1)`), named once the run has begun as the rest of the character is;
+/// character creation never names it (#256).
+fn gender_text(character: &Character) -> String {
     match character.spec.gender {
         Gender::Other => format!("Other ({} +1)", character.raised.name()),
         gender => gender.name().to_string(),

@@ -41,7 +41,7 @@ use super::menu::{MainMenu, Press, quit_dialog};
 use super::messages_screen::MessagesScreen;
 use super::motion::Motion;
 use super::name_screen::NameScreen;
-use super::new_run_screen::NewRunScreen;
+use super::new_run_screen::{self, NewRunScreen};
 use super::object_screen::{ObjectList, ObjectScreen};
 use super::quest_screen::QuestScreen;
 use super::settings_screen::SettingsScreen;
@@ -243,7 +243,8 @@ struct Launch {
     /// The saved characters, the one played last first (the main menu offers Continue and
     /// Characters with any); only read for the screens that show them.
     characters: Vec<SavedCharacter>,
-    /// The developer keys work (the controls and the help list them).
+    /// A developer build or `--dev`: the developer keys work (the controls and the help list
+    /// them), and New run has a seed field.
     dev: bool,
     /// Where the controls' Export keys and Import keys go.
     keymap: KeymapFile,
@@ -323,7 +324,11 @@ impl Screen {
                 Screen::Characters(CharactersScreen::new(launch.characters.clone()))
             }
             ScreenName::Pause => Screen::Menu(MainMenu::pause()),
-            ScreenName::NewRun => Screen::NewRun(NewRunScreen::new(content)),
+            // A release build's new run gets a seed no one chooses; a developer may type one.
+            ScreenName::NewRun => {
+                let fresh = (!launch.dev).then(new_run_screen::fresh_seed);
+                Screen::NewRun(NewRunScreen::new(content, fresh))
+            }
             ScreenName::Race => choice(Step::Race),
             ScreenName::Gender => choice(Step::Gender),
             ScreenName::Class => choice(Step::Class),

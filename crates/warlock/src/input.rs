@@ -531,7 +531,8 @@ impl Default for Bindings {
 
 /// Whether the developer keys work in this launch: always in debug builds, with `--dev` in
 /// release builds (spec §9). Their bindings are in every table; only where this is false are
-/// they never read, nor listed by the controls screen and the `?` help.
+/// they never read, nor listed by the controls screen and the `?` help. It also gives New run
+/// its seed field (`NewRunScreen`): elsewhere a new run's seed is no one's choice (#256).
 pub fn dev_keys(args: &Args) -> bool {
     cfg!(debug_assertions) || args.dev
 }
