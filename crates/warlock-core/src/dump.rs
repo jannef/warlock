@@ -4,6 +4,7 @@
 //! [`World::perception`] only, so dumps cannot leak information the player does not have.
 //! `Truth`, `Actors`, and `Rooms` read ground truth and are dev-only.
 
+use crate::ability::Aim;
 use crate::action::{letter, position_text};
 use crate::blood::{self, Stain};
 use crate::character::Gender;
@@ -64,6 +65,10 @@ pub enum Layer {
     /// how far its marks are toward the next (`Long blades 2 (40%)`), the styles they fight in
     /// now marked (`Duelist 1 (0%), in use`); never what a rank gives.
     WeaponSkills,
+    /// Not a map: the player's abilities in the abilities menu's order, one a line with its
+    /// source and what it asks for, or why it cannot be used now (`Shield bash (weapon skill):
+    /// a direction`, `Open lock (skill): not usable yet`).
+    Abilities,
     /// Not a map: the traps the player knows on the level, one a line by position (`(12, 5)
     /// fireball trap`, `(remembered)` when out of sight); never hidden ones.
     Traps,
@@ -104,6 +109,7 @@ impl Layer {
         Layer::Stats,
         Layer::Skills,
         Layer::WeaponSkills,
+        Layer::Abilities,
         Layer::Traps,
         Layer::Quests,
         Layer::Truth,
@@ -126,6 +132,7 @@ impl Layer {
             Layer::Stats => "stats",
             Layer::Skills => "skills",
             Layer::WeaponSkills => "weapon_skills",
+            Layer::Abilities => "abilities",
             Layer::Traps => "traps",
             Layer::Quests => "quests",
             Layer::Truth => "truth",
@@ -155,8 +162,8 @@ impl FromStr for Layer {
             .ok_or_else(|| {
                 format!(
                     "unknown layer `{s}` (expected view, fov, memory, light, sound, blood, \
-                     inventory, equipment, stats, skills, weapon_skills, traps, quests, truth, \
-                     actors, rooms, ice)"
+                     inventory, equipment, stats, skills, weapon_skills, abilities, traps, quests, \
+                     truth, actors, rooms, ice)"
                 )
             })
     }
@@ -179,6 +186,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
         Layer::Stats => stat_rows(&world.perception()),
         Layer::Skills => skill_rows(&world.perception()),
         Layer::WeaponSkills => weapon_skill_rows(&world.perception()),
+        Layer::Abilities => ability_rows(&world.perception()),
         Layer::Traps => trap_rows(&world.perception()),
         Layer::Quests => quest_rows(&world.perception()),
         _ => {
@@ -229,6 +237,7 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
         | Layer::Stats
         | Layer::Skills
         | Layer::WeaponSkills
+        | Layer::Abilities
         | Layer::Traps
         | Layer::Quests
         | Layer::Truth
@@ -514,6 +523,48 @@ fn weapon_skill_rows(view: &PerceptionView<'_>) -> Vec<String> {
             } else {
                 row
             }
+        })
+        .collect()
+}
+
+/// The player's abilities, one a line in menu order: its name, its source, and what it asks for
+/// or why it cannot be used now.
+fn ability_rows(view: &PerceptionView<'_>) -> Vec<String> {
+    let content = view.content();
+    (view.abilities().iter())
+        .map(|own| {
+            let a = own.ability;
+            let state = match own.unavailable {
+                Some(why) => why.reason(),
+                None => aim_word(a.aim()),
+            };
+            let source = a.source().id().replace('_', " ");
+            format!("{} ({source}): {state}", a.name(content))
+        })
+        .collect()
+}
+
+/// What an ability asks for, in a word or two.
+fn aim_word(aim: Aim) -> &'static str {
+    match aim {
+        Aim::Nothing => "nothing",
+        Aim::Direction => "a direction",
+    }
+}
+
+/// The player's abilities in menu order: `[{"id", "source", "aim", "unavailable"}]`
+/// (`unavailable` the reason's id, `null` when it can be used now).
+fn abilities_json(view: &PerceptionView<'_>) -> Value {
+    let content = view.content();
+    (view.abilities().iter())
+        .map(|own| {
+            let a = own.ability;
+            json!({
+                "id": a.id(content),
+                "source": a.source().id(),
+                "aim": aim_word(a.aim()),
+                "unavailable": own.unavailable.map(|why| why.id()),
+            })
         })
         .collect()
 }
@@ -943,6 +994,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "styles_in_use": (view.own_styles_in_use().into_iter())
             .map(|id| content.weapon_skills().skill(id).id.clone())
             .collect::<Vec<_>>(),
+        "abilities": abilities_json(&view),
         "quests": quests_json(&view),
         "hp": { "current": hp, "max": max_hp },
         "experience": view.own_experience(),
@@ -1242,6 +1294,43 @@ mod tests {
         assert_eq!(value["weapon_skills"]["duelist"]["rank"], 1);
         assert_eq!(value["styles_in_use"], json!(["brawler"]));
         assert!(!Layer::WeaponSkills.is_dev_only());
+    }
+
+    #[test]
+    fn abilities_show_what_the_player_can_do_and_why_not() {
+        // The showcase thief: the class's skills used as actions (no use yet), then the shield
+        // bash, which needs a shield in hand.
+        let mut world = showcase();
+        assert_eq!(
+            layer_rows(&world, Layer::Abilities),
+            [
+                "Appraise (skill): not usable yet",
+                "Disable device (skill): not usable yet",
+                "Open lock (skill): not usable yet",
+                "Steal (skill): not usable yet",
+                "Shield bash (weapon skill): you hold no shield",
+            ]
+        );
+        let value = json(&world, &[], false);
+        assert_eq!(
+            value["abilities"][4],
+            json!({"id": "shield_bash", "source": "weapon_skill", "aim": "a direction",
+                   "unavailable": "no_shield"})
+        );
+        assert_eq!(value["abilities"][2]["id"], "open_lock");
+        // The storeroom's small shield in hand: it can be used, in a direction.
+        let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
+                    pickup:a equip:off_hand:a";
+        for action in crate::action::parse_actions(walk).expect("actions") {
+            world.apply(&action);
+        }
+        let rows = layer_rows(&world, Layer::Abilities);
+        assert_eq!(rows[4], "Shield bash (weapon skill): a direction");
+        assert_eq!(
+            json(&world, &[], false)["abilities"][4]["unavailable"],
+            Value::Null
+        );
+        assert!(!Layer::Abilities.is_dev_only());
     }
 
     #[test]

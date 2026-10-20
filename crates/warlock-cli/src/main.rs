@@ -78,7 +78,9 @@ struct DumpArgs {
     /// when loud), inventory (what the player carries and weighs), equipment (what they wear
     /// and wield), stats (the player's race, gender, class, and scores), skills (the player's
     /// trained skills and their values), weapon_skills (the player's weapon skills: rank and
-    /// progress toward the next), quests (the player's quest log: what each asks and how far it
+    /// progress toward the next), abilities (the player's abilities in the abilities menu's
+    /// order: what each asks for, or why it cannot be used now), quests (the player's quest
+    /// log: what each asks and how far it
     /// has got), truth (dev-only ground truth), actors (dev-only: every actor on the level with
     /// its weight, what it carries, its weapon skills with marks, its stats as score/potential,
     /// and its trained skills with their marks), rooms (dev-only: the level's special rooms,

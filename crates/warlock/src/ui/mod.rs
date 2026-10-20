@@ -19,6 +19,7 @@
 //! ([`screens`]): opened by [`Screens::open`], fed key presses by `input::route_keys`, and drawn
 //! by [`draw`], the one system that writes the UI console.
 
+mod abilities_screen;
 mod blood;
 mod character_screen;
 mod chargen_screen;
@@ -473,6 +474,10 @@ fn draw_messages(
             _ => "In which direction? (Esc to cancel)",
         };
         console.print(1, 0, prompt, ACCENT);
+        return;
+    }
+    if let InputMode::Ability(_) = mode {
+        console.print(1, 0, "In which direction? (Esc to cancel)", ACCENT);
         return;
     }
     if mode == InputMode::Rest {

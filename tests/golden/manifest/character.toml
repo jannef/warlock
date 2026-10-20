@@ -18,6 +18,18 @@ name = "skills-screen"
 scenario = "showcase"
 screen = "skills"
 
+# The abilities menu (#156), with the storeroom's small shield in hand: the thief's skills used
+# as actions greyed out ("not usable yet"), then the shield bash, which can be used ("in a
+# direction"), under the cursor and described below.
+[[golden]]
+name = "abilities-menu"
+scenario = "showcase"
+actions = '''
+move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N pickup:a
+equip:off_hand:a
+'''
+screen = "abilities"
+
 # Status effects (#138): four bites' worth of poison and a wound (the dev `afflict:` action), a
 # turn later. The character screen names them (never how bad) and shows Strength and Dexterity
 # lowered by the strong poison, in red; the status bar beneath names them after the hit points.
