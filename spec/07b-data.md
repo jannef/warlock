@@ -73,7 +73,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   tries (`{ message = "...", vomit = 25, stat = { toughness = 5 }, heal = "1d4", harm = "1d2",
   satiation = 500 }`: the message said once it is eaten, a percent chance it comes back up, a
   percent chance per stat to raise it by 1 up to its potential, dice of hit points healed, dice
-  of degrees of sickness given (the status `[corpses] sickness` names, poisoned; §8 "Status
+  of degrees of sickness given (the status `sickness` names, poisoned; §8 "Status
   effects"), nutrition beyond its size's; chances 0 to 100, dice rolling 0 to 1000; only on a
   creature that leaves a corpse). The built-in ones: the giant rat "Gamey and stringy, but it
   stays down."; the cave bat leathery and sickening (1d2); the kobold and the kobold archer
@@ -165,17 +165,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
   scimitar, the rapier, and the club are not), `ammo` (the kind of ammunition it is, `ammo = "arrow"`), and
   `launches` (the kind a missile weapon shoots, `launches = "arrow"`; some object must be that
   ammunition). Launchers and ammunition pair by that kind (`Content::fires`). Food (§8
-  "Hunger") has `food = { nutrition = 1500, turns = 4 }`: the nutrition points it gives (1 to
-  100 000) and the turns of eating it takes (1 to 100; never on things worn, wielded, shot,
-  thrown, or burned): strips of dried meat (600, 2 turns), apples (150, 1), food rations (1500,
-  4), loaves of bread (800, 3), angelica roots (20, 1). A remedy also has `cures`, the means it
+  "Hunger") has `food = { nutrition = 1500, turns = 4, keeps = "30d", lasts = "60d" }`: the
+  nutrition points it gives (1 to 100 000), the turns of eating it takes (1 to 100; never on
+  things worn, wielded, shot, thrown, or burned), and its shelf life in whole hours or days
+  (`"8h"`, `"30d"`): how long after it was made it `keeps` (1 hour or more; old past half of it,
+  rotten after it) and `lasts` (longer than it keeps, at most 3600 days; then it has rotted
+  away): strips of dried meat (600, 2 turns, 60 and 120 days), apples (150, 1, 14 and 28), food
+  rations (1500, 4, 30 and 60), loaves of bread (800, 3, 5 and 10), angelica roots (20, 1, 30
+  and 60). A remedy also has `cures`, the means it
   applies as it is eaten (names some status or disease lists in its `cured_by`, else a content
   error; food only): the angelica root `cures = ["remove_disease"]` (§8 "Diseases"). **Corpses** are objects too, one made for every creature type
   that leaves one (not the player) when content loads, after the objects of the file in creature
   order, with the id `<creature>_corpse`: "kobold corpse", `%` in the creature's color, made of
   the corpses' material (`data/hunger.toml`), weighing the creature's weight, not stackable, and
-  feeding by the creature's size. Level files and `carry` cannot place them (a content error):
-  only creatures that die leave them, each knowing when it died. What they do in a
+  feeding and keeping by the creature's size. Level files and `carry` cannot place them (a
+  content error): only creatures that die leave them, each knowing when it died. What they do in a
   fight (§8 "Combat"; only for things with a `slot`): a weapon's `damage` dice (`"1d8"`; a
   launcher's, required for one, are its shots' and carry its draw weight, `"1d8+2"`), `threat`
   (the lowest natural roll that threatens a critical, 2 to 24, default 22), `crit` (the damage

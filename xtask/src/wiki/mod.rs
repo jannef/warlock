@@ -569,7 +569,7 @@ mod tests {
             "| Bleeding | yes, \"bleeding\" | Big hits and confirmed criticals | A hit point every \
              40 seconds, faster the worse it is | A degree a minute | Not at all | — | Bandage |",
             "| A degree every 2 minutes | Half as fast |",
-            "| Poisoned | no | Some creatures' attacks; eating rotten corpses |",
+            "| Poisoned | no | Some creatures' attacks; eating rotten food |",
             "Strength \u{2212}1, Dexterity \u{2212}1 when strong",
         ] {
             assert!(statuses.contains(row), "{row} in {statuses}");
@@ -671,7 +671,11 @@ mod tests {
         assert!(states.contains("| Not hungry | 1440 to 3999 | (you start here) |"));
         assert!(text("hunger-races.md").contains("| Halfling | ×1.25 | 1800 |"));
         assert!(text("food.md").contains("| Food ration | 1500 | 25 hours | 4 | 500 g |"));
+        // How long food keeps, roughly: never a timer.
+        assert!(text("food.md").contains("| about a month | about two months |"));
+        assert!(text("food.md").contains("| about five days | about ten days |"));
         assert!(text("corpses.md").contains("| Kobold corpse | Small | 25 kg | 400 |"));
+        assert!(text("corpses.md").contains("| a few hours | a day or two |"));
         assert!(!text("objects.md").contains("corpse"));
         assert!(!text("corpses.md").contains("terrible"));
     }

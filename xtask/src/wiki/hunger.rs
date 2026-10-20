@@ -8,7 +8,7 @@ use warlock_core::content::{Content, HungerDef};
 use warlock_core::hunger::Hunger;
 use warlock_core::object::format_weight;
 use warlock_core::stats::Stat;
-use warlock_core::time::{DAY, Duration};
+use warlock_core::time::{DAY, Duration, HOUR};
 
 /// How long `points` of nutrition last a race of hunger `percent`, in whole minutes: "36
 /// hours", "1 hour and 15 minutes".
@@ -16,6 +16,34 @@ fn lasts(def: &HungerDef, points: i32, percent: u16) -> String {
     let points = u64::try_from(points).unwrap_or(0);
     let seconds = points * u64::from(def.burn_seconds) * 100 / u64::from(percent.max(1));
     Duration::seconds(seconds / 60 * 60).spoken()
+}
+
+/// A shelf life roughly, never as a timer: "a few hours", "a day or two", "about five days",
+/// "about two weeks", "about a month".
+fn roughly(d: Duration) -> String {
+    const WORDS: [&str; 13] = [
+        "no", "a", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+        "eleven", "twelve",
+    ];
+    let about = |n: u64, unit: &str| {
+        let s = if n == 1 { "" } else { "s" };
+        let n = usize::try_from(n).unwrap_or(usize::MAX);
+        match WORDS.get(n) {
+            Some(w) => format!("about {w} {unit}{s}"),
+            None => format!("about {n} {unit}{s}"),
+        }
+    };
+    let hours = d.as_seconds() / HOUR;
+    let days = |n: u64| n * 24;
+    match hours {
+        h if h < 12 => "a few hours".into(),
+        h if h < days(1) => "less than a day".into(),
+        h if h < days(2) => "a day or two".into(),
+        h if h < days(13) => about((h + 12) / 24, "day"),
+        h if h < days(28) => about((h + days(7) / 2) / days(7), "week"),
+        h if h < days(360) => about((h + days(30) / 2) / days(30), "month"),
+        h => about((h + days(360) / 2) / days(360), "year"),
+    }
 }
 
 /// The states of hunger from the most fed down: the nutrition of each, when a human who eats
@@ -134,29 +162,18 @@ pub(super) fn hunger_facts(content: &Content) -> String {
             def.state(def.vomit_leaves).name().to_lowercase()
         ),
     );
-    if let Some(c) = &def.corpses {
-        row(
-            "Corpses",
-            format!(
-                "rotten {} after the death, gone after {}",
-                c.rotten.spoken(),
-                c.gone.spoken()
-            ),
-        );
-        row(
-            "Eating a rotten corpse",
-            format!(
-                "a {}% chance to vomit; else it makes you sick{}, and it feeds you",
-                c.rotten_vomit,
-                (c.sickness.as_deref())
-                    .and_then(|s| content.status_id(s))
-                    .map_or(String::new(), |s| format!(
-                        " ({})",
-                        content.status(s).name.to_lowercase()
-                    ))
-            ),
-        );
-    }
+    let sick = (def.sickness.as_deref())
+        .and_then(|s| content.status_id(s))
+        .map_or(String::new(), |s| {
+            format!(" ({})", content.status(s).name.to_lowercase())
+        });
+    row(
+        "Eating rotten food (corpses too)",
+        format!(
+            "a {}% chance to vomit; else it makes you sick{sick}, and it feeds you",
+            def.rotten.vomit
+        ),
+    );
     out
 }
 
@@ -183,14 +200,14 @@ pub(super) fn hunger_races(content: &Content) -> String {
 }
 
 /// The food objects: what each gives, how long that feeds a human, how many turns it takes to
-/// eat, and what it weighs.
+/// eat, what it weighs, what it cures, and roughly how long it keeps and lasts.
 pub(super) fn food(content: &Content) -> String {
     let Some(def) = content.hunger() else {
         return "Nobody hungers.\n".into();
     };
     let mut out = String::from(
-        "| Food | Nutrition | Feeds a human for | Turns to eat | Weight | Cures |\n\
-         |---|---:|---:|:---:|---:|---|\n",
+        "| Food | Nutrition | Feeds a human for | Turns to eat | Weight | Cures | Keeps for | \
+         Rots away after |\n|---|---:|---:|:---:|---:|---|---|---|\n",
     );
     for (_, o) in order::objects(content) {
         let (Some(food), None) = (o.food, o.corpse) else {
@@ -199,13 +216,15 @@ pub(super) fn food(content: &Content) -> String {
         let nutrition = i32::try_from(food.nutrition).unwrap_or(i32::MAX);
         let _ = writeln!(
             out,
-            "| {} | {} | {} | {} | {} | {} |",
+            "| {} | {} | {} | {} | {} | {} | {} | {} |",
             capital(&o.name),
             food.nutrition,
             lasts(def, nutrition, 100),
             food.turns,
             format_weight(u64::from(o.weight)),
-            cures(content, &o.cures)
+            cures(content, &o.cures),
+            roughly(food.keeps),
+            roughly(food.lasts)
         );
     }
     out
@@ -239,15 +258,16 @@ fn cures(content: &Content, means: &[String]) -> String {
     }
 }
 
-/// Every creature's corpse: what it weighs (the creature's weight) and what it gives (by size).
-/// What eating it does beyond that stays for the player to find out.
+/// Every creature's corpse: what it weighs (the creature's weight), what it gives, and roughly
+/// how long it keeps and lasts (by size). What eating it does beyond that stays for the player to
+/// find out.
 pub(super) fn corpses(content: &Content) -> String {
     let Some(def) = content.hunger() else {
         return "Nobody hungers.\n".into();
     };
     let mut out = String::from(
-        "| Corpse | Size | Weight | Nutrition | Feeds a human for | Turns to eat |\n\
-         |---|---|---:|---:|---:|:---:|\n",
+        "| Corpse | Size | Weight | Nutrition | Feeds a human for | Turns to eat | Keeps for | \
+         Rots away after |\n|---|---|---:|---:|---:|:---:|---|---|\n",
     );
     for (_, o) in order::objects(content) {
         let (Some(food), Some(creature)) = (o.food, o.corpse) else {
@@ -257,13 +277,15 @@ pub(super) fn corpses(content: &Content) -> String {
         let nutrition = i32::try_from(food.nutrition).unwrap_or(i32::MAX);
         let _ = writeln!(
             out,
-            "| {} | {} | {} | {} | {} | {} |",
+            "| {} | {} | {} | {} | {} | {} | {} | {} |",
             capital(&o.name),
             size.name,
             format_weight(u64::from(o.weight)),
             food.nutrition,
             lasts(def, nutrition, 100),
-            food.turns
+            food.turns,
+            roughly(food.keeps),
+            roughly(food.lasts)
         );
     }
     out
