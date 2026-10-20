@@ -148,7 +148,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   bled to death), and each level gained up to `hp_level` (20)
   raises the player's maximum and current hit points (`Actor::hp_base`, `hp`) by `max(1, class
   hp ÷ 2 + the Toughness modifier)`; without a character the scenario's `hp` stands in for the
-  class's. The player is shown their level, XP, and the XP of the next level
+  class's. Each level gained up to `mana_level` (20) raises their mana the same way (§8 "Mana").
+  The player is shown their level, XP, and the XP of the next level
   (`PerceptionView::own_experience`), and nothing else about the rules.
 - **Stances** (`content/stance.rs`, `data/stances.toml`; M22), after ADOM's combat tactics. The
   player is in one of four **combat stances**, `CombatStance`: aggressive, neutral (the

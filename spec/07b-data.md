@@ -344,7 +344,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Bear"), `effect` (one of `to_hit`, `damage`, `extra_damage` (adds 1dN), `threat`, `crit`,
   `attack_speed`, `range`, `draw`, `durability`, `parry`, `armour`, `protection`, `shield`,
   `max_dex`,
-  `weight`, `dodge`, `deflection`, `natural`, `max_hp`, `regeneration`, a stat id, `move_speed`,
+  `weight`, `dodge`, `deflection`, `natural`, `max_hp`, `regeneration`, `max_mana`,
+  `mana_regeneration`, a stat id, `move_speed`,
   `carry`, `stealth`, `light`, `skill` with a `skill`, an id in `data/skills.toml`, whose value
   it raises; without skills content, skill affixes are left out), `bases` (kinds of item it
   rolls on, at least one; an effect only
@@ -354,9 +355,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   content error), `weight` (default 100), and `tiers`, at least one, item levels
   rising: `{ level, min, max }` (values within the effect's range: 1 to 10 for most, dice sides 2
   to 20 for `extra_damage`, 1 to 3 for `threat` and `crit`, percent 1 to 50 for speeds, 1 to 90
-  for `durability`, `weight`, `stealth`, 1 to 100 for `max_hp`, `carry` (kg), and `skill`, 1 to
-  300 for `regeneration`), or for `light` `{ level, light }` naming a light preset. The built-in
-  affixes: 21 prefixes and 26 suffixes in up to four tiers (item levels 1, 3, 5, 7 for most); the wiki
+  for `durability`, `weight`, `stealth`, 1 to 100 for `max_hp`, `max_mana`, `carry` (kg), and
+  `skill`, 1 to 300 for `regeneration` and `mana_regeneration`), or for `light` `{ level, light }` naming a light preset. The built-in
+  affixes: 23 prefixes and 27 suffixes in up to four tiers (item levels 1, 3, 5, 7 for most); the wiki
   lists them in generated tables. The light presets `item_glow_faint`, `item_glow`, and
   `item_glow_bright` (radius 2, 3, 4; steady, cool) are the glowing tiers'.
 - **Weapon skills** (`data/weapon_skills.toml`, optional; without it nobody has weapon skills and

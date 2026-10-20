@@ -75,8 +75,8 @@ A few rules from elsewhere carry over:
   Dodge adds up (see [Combat](combat.md)). **Protection** always adds up, piece by piece, and a
   Hardened piece of armour adds its magic to its own (see
   [Combat](combat.md#protection)).
-- **Hit points**: putting on something that adds to them raises your maximum, not what you have;
-  taking it off lowers both, if need be.
+- **Hit points** and **mana**: putting on something that adds to them raises your maximum, not
+  what you have; taking it off lowers both, if need be (see [Mana](mana.md)).
 - **Healing**: magic that speeds healing adds on top of everything else that changes its pace
   (see [Healing](healing.md)); nothing heals you while you bleed, magic or not.
 - **Throwing**: a magic weapon readied in the Missile weapon slot keeps its magic when you throw

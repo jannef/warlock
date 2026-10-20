@@ -95,12 +95,12 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 Dump layers beyond the map ones: `inventory`, `equipment`, `stats`, `skills` (the player's
 trained skills, `Stealth 17`), `abilities` (the abilities menu's list), and `quests` (the quest
 log, active first) from perception;
-`actors` (dev-only: every actor's hit points, load, stats, and skills with their marks).
+`actors` (dev-only: every actor's hit points, mana, load, stats, and skills with their marks).
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR ascend descend lantern
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
 eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] dig:DIR search search:N chat:DIR ask:DIR:TOPIC rest:GOAL stance:NAME vision:PROFILE
-skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS infect:DISEASE`
+skip:DURATION weather:KIND effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS drain:N infect:DISEASE`
 (`DIR` = N
 NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by position, as letters
 for the first 26 (`a` = 0, the first) or numbers for any (`0,2,30`; mixed works too, `ac,30`),
@@ -130,7 +130,8 @@ toward the second cell), no time and no rules effect, for captures; `identify` i
 identify (magic items, no time; without letters everything carried); `afflict` is the dev status
 effect: one degree more of `STATUS`, an id in `assets/data/status.toml`, e.g.
 `afflict:poisoned*4 afflict:bleeding`, no game time (not `diseased`: that comes of a disease);
-`infect` is the dev disease: the player catches `DISEASE`, an id in `assets/data/diseases.toml`,
+`drain` is the dev mana drain: the player spends N mana (1 or more) through `World::spend_mana`,
+refused when they have less, no game time, for captures (`docs/dev/mana.md`); `infect` is the dev disease: the player catches `DISEASE`, an id in `assets/data/diseases.toml`,
 as if they had lost the check (it incubates, then shows), e.g. `infect:the_shakes rest:24h*3`,
 no game time; `freeze:X,Y,R` and `thaw:X,Y,R` are the dev frost and heat bursts (radius 0 to 20
 around level cell (X, Y), in its line of sight; no time); `ACTION*N` repeats one, e.g.
@@ -155,8 +156,8 @@ order, each with its source and what it asks for or why it cannot be used now: `
 (weapon skill): a direction`, `Open lock (skill): not usable yet`), `traps` (the traps the player knows,
 one a line), `quests` (the quest log, active
 first: name, stage, giver, objective, and status), `truth`
-(ground truth, hidden traps and secret doors (`S`) too, **dev-only**), `actors` (every actor on the level with its hit points and
-Defence and Protection, its weight, what it carries and of that wears and wields (magic items as they truly
+(ground truth, hidden traps and secret doors (`S`) too, **dev-only**), `actors` (every actor on the level with its hit points,
+mana, Defence, and Protection, its weight, what it carries and of that wears and wields (magic items as they truly
 are, "(unidentified)" marked), what its magic items do to it (`magic strength +1`), its burden
 and carrying limit, its weapon skills with marks, its stats as score/potential, its status
 effects with severities, its diseases (progressions, checks won in a row, time to their next
@@ -167,8 +168,8 @@ died) and its stage, `fresh`, `old`, `rotten`, or `gone`, which the player is ne
 (the level's special rooms: their plain ground as the effect's `mark`, then a line per room,
 **dev-only**), `ice` (the level's temperature and the thickness of the ice on its water in cm,
 `0`-`9`, `a`-`z` for 10-35, `#` beyond, **dev-only**). The header line has the player's `hp
-17/17` (and `dead` once the run has ended), `hunger hungry` unless Not hungry, and the
-`temperature`; JSON dumps add `hp`, `defence`, `protection`, `burden` (`level`, `limit`), `hunger`, `effects`
+17/17` and `mp 3/3` (and `dead` once the run has ended), `hunger hungry` unless Not hungry, and the
+`temperature`; JSON dumps add `hp`, `mana` (`current`, `max`), `defence`, `protection`, `burden` (`level`, `limit`), `hunger`, `effects`
 (status ids), `diseases` (the known ones' ids), `death` (with `of`, the status that killed,
 `cause`, starving, choking, or a trap, and `trap`, the id of the trap that killed),
 `known_traps`, `temperature` (°C to a tenth), `weapon_skills` (by skill id:
@@ -234,6 +235,7 @@ file). Topics:
 - `docs/dev/skills.md` — trained skills, effects and uses, training marks, the skills screen
 - `docs/dev/experience.md` — the level curve, kill XP, level-ups
 - `docs/dev/status-effects.md` — statuses and severities, healing paces, checks, diseases and stat damage
+- `docs/dev/mana.md` — the second pool: its maximum, regeneration in the status loop, every modifier's one hook, spending, the dev drain
 - `docs/dev/blood.md` — wounds and stains, bleeding, how blood is drawn
 - `docs/dev/creatures.md` — factions and stance, the AI, paths, creature sight
 - `docs/dev/npcs.md` — unique characters, chat and ask, rotation lines and mutters, displacement

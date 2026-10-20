@@ -11,7 +11,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   them: `id`, `name`, a one-line `description`, `vision` (a profile in `vision.toml`: the player's
   eyes), `age = [youngest, oldest]` (a new character's age in years, 1 to 1000), `stats`
   (adjustments to the starting scores), `potential` (adjustments to the potentials, the same way;
-  hidden from the player), `hp` (its hit points, 0 to 1000, default 0; §8 "Combat"), `size` (a size
+  hidden from the player), `hp` (its hit points, 0 to 1000, default 0; §8 "Combat"), `mana` (its
+  mana, 0 to 1000, default 0; §8 "Mana"), `size` (a size
   in `data/sizes.toml`, default `medium`; §8 "Burden"), `ignores_burdened` (default false: whether
   Burdened, the first level of burden, costs the character nothing), `passive_search` (which
   hidden features the character notices in passing without the Spot skill: `"all"`, elves, or
@@ -37,7 +38,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   axes 1; humans none.
 - **Status effects** (`data/status.toml`, optional; without it nothing ails anyone and resting
   heals twice as fast; §8 "Status effects", "Healing"): `[healing] resting` (how fast hit points
-  come back while the player rests, in percent of the normal pace, 0 to 1000; 200), then the
+  come back while the player rests, in percent of the normal pace, 0 to 1000; 200) and
+  `mana_resting` (the same for mana, §8 "Mana"; default 200), then the
   `[[status]]`s in order of importance (the status bar shows the first first): `id`, `name`
   (as the status bar and the character screen show it), `seen` (how look mode names it on a
   creature the player sees; none: it does not show on others), `max` (the most degrees of
@@ -46,7 +48,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `tick` (seconds between ticks at one degree; `n` times as often at `n` degrees) and `damage`
   (hit points a tick costs, default 0, needing a `tick`), `eases` (seconds for it to ease by a
   degree; none: until cured), `regen` (how fast hit points come back while it lasts, in percent,
-  0 to 1000, default 100), `penalty` (`{ from = 4, strength = -1, dexterity = -1 }`: what it
+  0 to 1000, default 100), `mana_regen` (the same for mana, §8 "Mana") and `mana_damage` (mana a
+  tick drains, default 0, needing a `tick`; never below 0), `penalty` (`{ from = 4, strength = -1, dexterity = -1 }`: what it
   does to scores from a severity on, each −10 to 10), `wound` (`{ big_hit = 1, critical = 2 }`:
   the degrees a big hit and a confirmed critical cause), `cured_by` (the means that end it at
   once: `bandage`), and the words: `start` and `end` (said to the player), `dies` (a creature
@@ -71,7 +74,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   one or the other), `recovery` (checks won in a row that shake it off, default 2; 0: never by
   itself), `kills` (default false: whether its damage may take Toughness to 0 or the last hit
   point, which kills), `regen` (how fast hit points come back while it shows, in percent, when
-  slower than its status's; 0 to 1000), `caught` (the sources rules expose to it by name:
+  slower than its status's; 0 to 1000), `mana_regen` (the same for mana; the built-in brain
+  fever 25), `caught` (the sources rules expose to it by name:
   `rotten_food`), `wading` (`{ terrain = ["marsh", "swamp"], per_hour = 4 }`: the terrain the
   player catches it in, a chance in percent for each hour spent crossing it, 1 to 100),
   `cured_by` (the means that cure it at once: `remove_disease`; nothing applies one yet), and the
@@ -115,7 +119,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   "Objects"): small 400 and 3, medium 1000 and 6, both keeping `"8h"` and lasting `"36h"`). The
   wiki shows its tables (the states, the races' needs, food, corpses) generated.
 - **Classes** (`data/classes.toml`, optional), in the order offered: `id`, `name`, a one-line
-  `description`, `stats` (adjustments as for races), `hp` (as for races), `skills` (as for
+  `description`, `stats` (adjustments as for races), `hp` and `mana` (as for races; half the
+  class's mana comes with each level up to `mana_level`), `skills` (as for
   races), `weapon_skills` (starting ranks as for races), `weapon_skill_choice` (two or more
   sets of such ranks, one picked at random when the character is made), and `styles` and
   `style_choice` (the same for fighting styles, §8 "Fighting styles"; `weapon_skills` names no

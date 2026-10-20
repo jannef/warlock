@@ -45,6 +45,7 @@
   - [Status effects](status-effects.md)
   - [Diseases](diseases.md)
   - [Healing](healing.md)
+  - [Mana](mana.md)
 - [Creatures](creatures.md)
   - [People and talk](npcs.md)
   - [Quests](quests.md)

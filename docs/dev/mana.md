@@ -1,0 +1,58 @@
+# Mana
+
+Developer notes for working on this part of Warlock; the rules it implements are in
+spec/08e-blood-and-status.md ("Mana"). Keep it current with the code, as CLAUDE.md says.
+
+Mana (spec §8 "Mana", #223) is a second pool beside hit points, built the same way, for magic to
+spend (the progression design, #220, gives classes mana values, per-level gains, and abilities
+and talents that cost or raise it; none of that is built yet). **Every new system says in its
+issue how it interacts with mana**, and hooks in at the one place below.
+
+- **Pure rules**: `warlock-core/src/mana.rs`: `max_mana(stats, base)` (base plus the mental
+  stats' modifiers, `MENTAL` = Intelligence, Willpower, Presence, at least 0),
+  `mental_modifier`, `regen_seconds(willpower)` (`max(60, 360 − 12 × Willpower)`, its own
+  constants beside combat's), `MAX_BASE_MANA` (1000).
+- **State**: `Actor::mana`, `mana_base`, `mana_regen` (progress in hundredths of a second at the
+  normal pace, like `Actor::regen`), saved and hashed, each left out of the JSON while 0, so an
+  actor without mana saves and hashes as before mana existed. `Actor::max_mana(content)` (the
+  effective stats, plus `max_mana` affixes through `Mods::worn`) and `lasting_max_mana` (the
+  raised stats: what a status takes off comes back), beside `max_hp` and `lasting_max_hp`.
+- **Data**: `mana` on races, classes, creature types (`CreatureDef::base_mana`; the player
+  creature may not set it), and scenarios without a character (`ScenarioDef::mana`, refused with
+  one); `Start::mana` is race plus class. `mana_level` in `data/experience.toml` (default 0).
+  `[healing] mana_resting` (default 200), statuses' `mana_regen` (default 100) and
+  `mana_damage` (default 0, needs a `tick`), diseases' `mana_regen` (optional, like `regen`),
+  room effects' `mana_regen` (default 100). Affix effects `ItemEffect::MaxMana` (`max_mana`,
+  1 to 100) and `ItemEffect::ManaRegeneration` (`mana_regeneration`, percent 1 to 300); the
+  built-in affixes Mystic and of Clarity.
+- **Hooks** (`world/mana.rs`, each the one place):
+  - `World::mana_rate(id)`: the pace in percent, the twin of `World::healing_rate`: min of
+    `Effects::mana_regen` and `Diseases::mana_regen`, × `mana_resting` while the player rests, ×
+    the room's `mana_regen`, × (100 + `ManaRegeneration`) / 100; 0 for a Starving player.
+    Burden, temperature, and stances never enter it.
+  - `World::live` (`world/status.rs`) calls `mana::regain` beside `heal` (in the fast path too)
+    and takes `mana::until_regained` as a moment, so a point back is exact however time is cut;
+    the ticks' `mana_damage` sums into `Moment::drained` and `mana::drain` takes it (never below
+    0, never a death).
+  - `World::spend_mana(id, amount) -> bool`: the one way to spend; refused when short. Spells
+    and abilities call it (and say why they could not); the dev `drain:N`
+    (`Action::Drain`, `World::drain_dev`) is its only caller now.
+  - `World::keep_mana_within_max` after every player action (in `World::apply`, beside
+    `keep_hp_within_max`): down to the lasting maximum when something that raised it comes off.
+    `World::disease_turn` cuts mana to the new maximum after mental stat damage, like hit points.
+  - `World::level_up_mana(before, after)` from `grant_xp`: `max(0, class mana ÷ 2 + the mental
+    modifiers of the raised stats)` per level up to `mana_level` (`World::level_mana`; the
+    scenario's `mana` without a character).
+- **Presentation**: `PerceptionView::own_mana()` (current clamped to the maximum, and the
+  maximum) is all the UI gets: the status bar's `MP 5/12` (`ui::status_segments`, priority 1
+  right after HP, so it gives way after everything else of that priority, before the HP), the
+  character screen's `MP  Mana  5/12` beside the hit points (`BESIDE`, as Protection beside
+  Defence), the dump header's `mp`, the JSON dump's `mana: {current, max}`. The dev `actors`
+  layer shows every actor's `mp`. Never a creature's mana or any pace in the game.
+- **Wiki**: `xtask/src/wiki/mana.rs` (race and class mana, regeneration by Willpower, what
+  changes the pace) for `wiki/src/mana.md`; the special rooms table says the room's pace.
+- **Tests**: `mana.rs` (the formulas), `world/mana_tests.rs` (maximum from data and stats,
+  creature mana and serialization, regeneration by Willpower and resting, time cut differently,
+  drains, statuses, diseases, starving, rooms, burden and stances doing nothing, the penalty that
+  passes, disease damage, spending and `drain:N`, levels, magic items, saves, replays), and the
+  content parsers' own tests.

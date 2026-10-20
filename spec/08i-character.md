@@ -41,6 +41,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Eyes**: the player's vision profile is the race's (the dev vision switch still works).
   - **Hit points**: the race's and the class's `hp` add to Toughness for the maximum ("Combat"
     below).
+  - **Mana**: the race's and the class's `mana` add to the mental stats' modifiers for the
+    maximum (§8 "Mana").
   - **Weapon skills** ("Weapon skills" below): the race's starting ranks plus the class's, plus
     one set of the class's `weapon_skill_choice` if it has one, at most 10 each; each then
     raises the skills it defaults to. Dice among them roll from their own stream,

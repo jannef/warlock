@@ -1,4 +1,4 @@
-# Warlock specification — 8. Architecture (continued): blood, status effects, healing, checks, diseases
+# Warlock specification — 8. Architecture (continued): blood, status effects, healing, mana, checks, diseases
 
 Part of the specification, the source of truth for what to build; the index is
 [`specification.md`](../specification.md). Update it together with the code and the
@@ -60,7 +60,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     status with `eases` loses a degree every `eases` seconds, and at none it is gone. Hit points
     come back meanwhile ("Healing" below). Everything happens at its own moment, so it makes no
     difference how time is cut up (many waits or one long journey); at one moment a hit point
-    back comes first, then the ticks, then the easing, then the player's hunger (§8 "Hunger": its
+    back (and a point of mana back, "Mana" below) comes first, then the ticks, then the easing, then the player's hunger (§8 "Hunger": its
     burn, each change of state, and each hit point lost to starving are moments too), then a
     point of stat damage mending, then the diseases' turns ("Diseases" below). Actors on other
     levels are frozen, and the dev time skip passes no time for anyone.
@@ -99,6 +99,49 @@ developer notes (CLAUDE.md, `docs/dev/`).
   is dropped at full health. A Starving player gets none back (§8 "Hunger"). The regeneration
   affixes of what the actor wears and wields multiply the rate by (100 + their percent) / 100 (§8
   "Magic items"). `World::healing_rate` is the one place that decides the pace.
+- **Mana** (`warlock-core/src/mana.rs`, the pure rules; `world/mana.rs`, applying them; #223):
+  a second pool beside hit points, built the same way. Nothing spends it yet: magic will (the
+  class abilities and talents of the progression design, #220, are its first users). Every
+  future system says in its issue how it interacts with mana, if at all.
+  - **The maximum** (`Actor::max_mana`): `mana_base` (the race's and the class's `mana`, §7; a
+    creature type's `mana`, default 0; a scenario without a character gives the player's) plus
+    what magic items add (`max_mana` affixes, §8 "Magic items") plus the modifiers of the three
+    mental stats, Intelligence, Willpower, and Presence, the effective scores', at least 0. Every
+    actor starts with all of it. Each level gained up to the experience file's `mana_level` (20)
+    adds `max(0, class mana ÷ 2 + the mental stats' modifiers)` (the stats as worn magic raises
+    them, not as a status lowers them) to the maximum and to the mana the player has; without a
+    character the scenario's `mana` stands in for the class's (`World::level_up_mana`).
+  - **When it falls**: taking off what raised it cuts the mana down to the maximum without its
+    status effects (`Actor::lasting_max_mana`, `World::keep_mana_within_max`, after every player
+    action, as hit points are kept by `lasting_max_hp`); damage to a mental stat from a disease
+    cuts it down to the new maximum (as Toughness damage does hit points); a status effect's
+    penalty passes, so the mana kept under it stays, none comes back above the lowered maximum,
+    and the player is shown no more than it.
+  - **Regeneration** (`World::mana_rate`, the one place that decides the pace, the twin of
+    `World::healing_rate`): an actor below its maximum gets a point back per `max(60 s, 360 s −
+    12 s × Willpower)` of game time at the normal pace (`mana::regen_seconds`; Wi 10: 4 minutes;
+    Wi 25 and up: 1 minute), its progress banked in `Actor::mana_regen` (hundredths of a second
+    at the normal pace, saved, dropped at the maximum). The pace in percent: the slowest
+    `mana_regen` of its status effects (poison 50, Diseased 50) and of the diseases that show
+    (brain fever 25), times `[healing] mana_resting` (200) while the player rests, times the
+    `mana_regen` of a special room it stands in (a sanctuary 300), times (100 + the mana
+    regeneration affixes of what it wears and wields) / 100; a Starving player gets none (§8
+    "Hunger"; Weak lowers only the stats it lowers). Burden, temperature, and combat stances do
+    nothing to it. A point back is a moment of `World::live`'s loop ("Status effects" above: it
+    comes with a hit point back, before the ticks), so it makes no difference how time is cut up;
+    actors on other levels are frozen, and the dev time skip passes none.
+  - **Draining**: a status with `mana_damage` drains that much mana a tick (§7), never below 0
+    and never a death. None of the built-in ones does.
+  - **Spending**: `World::spend_mana(actor, amount)` is the one way to spend it, refused (nothing
+    spent) when the actor has less. Nothing calls it yet but the dev action `drain:N` ("You spend
+    5 mana (dev)."; refused, "You have only 3 mana (dev).", when short; no game time; recorded in
+    replays).
+  - **Shown**: the player's own mana and maximum (`PerceptionView::own_mana`): the status bar's
+    `MP 5/12` right after the hit points, giving way like them (§6), the character screen beside
+    the hit points, the dump header's `mp`, and JSON dumps' `mana`. Never a creature's mana, and
+    never the pace (hidden like `regen_seconds`); the dev `actors` layer shows every actor's.
+    Mana is part of the world state (saved, covered by the state hash; an actor without any
+    serializes as before).
 - **Checks** (`warlock-core/src/check.rs`; M24, #139): a stat put to the test, rolled like an
   attack: 2d12 (the natural roll, `combat::roll_natural`, two draws of the gameplay stream) plus
   the modifier of the stat tested (the effective score's) succeeds at the **difficulty** or

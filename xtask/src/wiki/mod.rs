@@ -25,6 +25,7 @@ mod gems;
 mod healing;
 mod hunger;
 mod magic;
+mod mana;
 mod moons;
 mod objects;
 mod order;
@@ -161,6 +162,9 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("healing.md", healing::healing),
         ("status-effects.md", healing::status_effects),
         ("diseases.md", healing::diseases),
+        ("mana.md", mana::races_and_classes),
+        ("mana-regeneration.md", mana::regeneration),
+        ("mana-paces.md", mana::paces),
         ("experience-levels.md", experience::experience_levels),
         ("experience-zd.md", experience::experience_zero_difference),
         ("experience-scaling.md", experience::experience_scaling),
@@ -283,7 +287,8 @@ mod tests {
             "| Hushed chamber | \"A deep hush fills this room.\" | Every noise made in it is two \
              fifths as loud. |",
             "| Sanctuary | \"You feel at peace here.\" | A faint warm glow lights it. Wounds heal \
-             three times as fast. Creatures hostile to you do not step in. |",
+             three times as fast. Mana comes back three times as fast. Creatures hostile to you \
+             do not step in. |",
             "| Flooded room | \"The floor here is flooded.\" | Its floor is shallow water. |",
         ] {
             assert!(rooms.contains(row), "{row}\n{rooms}");
@@ -650,6 +655,9 @@ mod tests {
         assert!(text("regeneration.md").contains("| 10 | 4 minutes |"));
         assert!(text("regeneration.md").contains("| 3 | 5 minutes and 24 seconds |"));
         assert!(text("regeneration.md").contains("| 25 or more | 1 minute |"));
+        assert!(text("mana-regeneration.md").contains("| 10 | 4 minutes |"));
+        assert!(text("mana.md").contains("| Wizard | 8 |"));
+        assert!(text("mana-paces.md").contains("| In a sanctuary | three times as fast |"));
         let healing = text("healing.md");
         for row in [
             "| Resting (`R`) | twice as fast |",
