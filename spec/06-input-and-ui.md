@@ -56,7 +56,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   is the biggest choice and sets the player's eyes), then shows a **summary**. Each step lists
   its options in data order with a `>` marker, the selected option's one-line description, and
   for races and classes their stat adjustments as written in data, dice included
-  (`St 1d3+1  Dx −1`), and for races their vision; the gender step names the stat "other"
+  (`St 1d3+1  Dx −1`), for races their vision, and for both how fast levels come, in words
+  ("Levels come slowly." for an `experience` of 115 % and above, "Levels come quickly." for 95 %
+  and below, nothing between; §8 "Experience"); the gender step names the stat "other"
   raises with the run's seed. Every step ends with a
   **Random** row, rolled from the run seed and how often Random was pressed there. Up/Down (or
   `k`/`j`) choose, Enter goes on, Esc goes back a step as it was left. A step opens on the

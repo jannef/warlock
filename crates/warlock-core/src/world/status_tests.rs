@@ -583,7 +583,11 @@ fn a_creature_bled_to_death_by_the_players_wound_is_their_kill() {
         w.player_xp()
     };
     let player = Some(ActorId(0));
-    assert_eq!(bleed_out(player), 5, "the player's wound: their kill");
+    assert_eq!(
+        bleed_out(player),
+        10,
+        "the player's wound: their kill, the first of its kind"
+    );
     assert_eq!(
         bleed_out(Some(ActorId(7))),
         0,
