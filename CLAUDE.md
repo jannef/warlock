@@ -62,7 +62,7 @@ Game flags (`cargo run -p warlock -- --help`):
   `new-run` on the main menu (e.g. `--scale 1 --screen new-run --capture target/menu.png`), and
   character creation's `race`, `gender`, `class`, and `summary` over New run and the steps
   before them (each on its preselection: the showcase's character);
-  `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `quests`, `pick-up` (the pile on the player's cell), `drop`, `eat`, `read`, `identify` (for the first stack's scroll), and `abilities` (the abilities menu) over a run
+  `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `quests`, `messages` (the message history), `pick-up` (the pile on the player's cell), `drop`, `eat`, `read`, `identify` (for the first stack's scroll), and `abilities` (the abilities menu) over a run
   (e.g. after a `--replay` that walks onto a pile), `dialogue` over a run whose last action was
   talk with topics (a `--replay` ending in `chat:SE` or `ask:SE:rooms` next to the hub's hermit),
   `equip-item` (the choice for the first slot, Head) over the equipment screen; `settings`,
@@ -382,7 +382,7 @@ unique across files) list one entry per showcase room plus the vast level (its s
 its river): a scenario and text `actions` (`move:N*3 open:E`; `*N` repeats) or a `replay` file,
 and optional `window`, `scale`, `freeze_time`, `screen` (a `--screen` value: over the run, e.g.
 `pause`, `help`, `settings`, `controls`, `inventory`, `equipment`, `equip-item`, `describe`,
-`character`, `skills`, `weapon-skills`, `quests`, `pick-up`, `drop`, `eat`, `abilities`,
+`character`, `skills`, `weapon-skills`, `quests`, `messages`, `pick-up`, `drop`, `eat`, `abilities`,
 `dialogue`; or over
 the main menu, the replay then unused: `main`, `race`, `summary`), `args` (more game flags, e.g.
 `["--fire"]`, `["--keys", "h"]`), `tolerance` (per-channel, default 2) and `max_diff_ratio`
