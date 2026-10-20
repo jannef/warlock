@@ -6,6 +6,7 @@
 
 mod action;
 mod affix;
+mod alignment;
 mod anim;
 mod calendar;
 mod class;
@@ -55,6 +56,7 @@ pub use affix::{
     AffixDef, AffixKind, Affixes, Effect, Group, ItemKind, MAX_ITEM_LEVEL, MAX_PER_KIND, MAX_SPEED,
     Rarity, Tier,
 };
+pub use alignment::{AlignmentRules, BandDef, ByAlignment, Shifts};
 pub use anim::GlyphAnim;
 pub use calendar::Calendar;
 pub use class::ClassDef;
@@ -422,6 +424,8 @@ pub struct Content {
     skills: SkillBook,
     races: Races,
     classes: Vec<ClassDef>,
+    /// The alignment rules (`data/alignment.toml`): none without it.
+    alignment: Option<AlignmentRules>,
     experience: Experience,
     horoscope: Option<Horoscope>,
     /// Spell effects, in `data/effects.toml` order: presentation only.
@@ -494,6 +498,7 @@ impl Content {
             skills: SkillBook::default(),
             races: Races::default(),
             classes: Vec::new(),
+            alignment: None,
             experience: Experience::default(),
             horoscope: None,
             effects: Vec::new(),
@@ -574,6 +579,10 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             let skill_id = |id: &str| content.skill_id(id);
             content.classes = ClassDef::parse(path, text, skill_id, &content.weapon_skills)?;
+        }
+        let path = "data/alignment.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.alignment = Some(AlignmentRules::parse(path, text)?);
         }
         let path = "data/experience.toml";
         if let Some(text) = files.get_optional(path) {
@@ -916,6 +925,14 @@ impl Content {
             if spec.weight == 0 {
                 return Err(err(format!(
                     "creature `{}`: `weight` is in grams and must be at least 1",
+                    spec.id
+                )));
+            }
+            // Without races (no characters) a creature's race means nothing, and is not checked.
+            let unknown = |r: &&str| self.race(r).is_none() && !self.races.list.is_empty();
+            if let Some(race) = spec.race.as_deref().filter(unknown) {
+                return Err(err(format!(
+                    "creature `{}`: unknown race `{race}`",
                     spec.id
                 )));
             }
@@ -2064,6 +2081,12 @@ impl Content {
     /// The class with id `id`.
     pub fn class(&self, id: &str) -> Option<&ClassDef> {
         self.classes.iter().find(|c| c.id == id)
+    }
+
+    /// The alignment rules of `data/alignment.toml` (spec §8 "Alignment"); `None` without the
+    /// file: nobody has a score and nothing moves it.
+    pub fn alignment(&self) -> Option<&AlignmentRules> {
+        self.alignment.as_ref()
     }
 
     /// The experience rules of `data/experience.toml` (spec §8 "Experience").

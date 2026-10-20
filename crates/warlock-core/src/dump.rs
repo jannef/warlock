@@ -54,7 +54,8 @@ pub enum Layer {
     Equipment,
     /// Not a map: the player's character (`Race Dwarf`, `Gender Female`, `Class Warrior`), if
     /// any, then their own scores, one stat a line (`Strength 12`, lowered while a status effect
-    /// or stat damage lowers it), then their status effects by name (`Effects Bleeding,
+    /// or stat damage lowers it), then their alignment band (`Alignment Kind`; spec §8
+    /// "Alignment", never the score), then their status effects by name (`Effects Bleeding,
     /// Diseased`) and the diseases they know they have (`Diseases filth fever`) if any; never
     /// potentials, modifiers, how severe an effect is, or a disease's timers.
     Stats,
@@ -475,6 +476,9 @@ fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
         }
     }
     rows.extend((view.own_scores().iter()).map(|(stat, score)| format!("{} {score}", stat.name())));
+    if let Some(band) = view.own_alignment() {
+        rows.push(format!("Alignment {}", band.name()));
+    }
     let effects: Vec<&str> = (view.own_effects())
         .map(|s| content.status(s).name.as_str())
         .collect();
@@ -628,7 +632,8 @@ fn actor_weapon_skills(
 }
 
 /// Every actor on the level (ground truth): id, creature, position, hit points, Defence and
-/// Protection (`dv 11 pv 3`), weight, what it carries, its burden and carrying limit, its stats
+/// Protection (`dv 11 pv 3`), its alignment (`alignment evil`; the player's score and band,
+/// `alignment 450 (good)`), weight, what it carries, its burden and carrying limit, its stats
 /// as score/potential
 /// (`St 12/15`), its trained skills with their marks toward the next point
 /// (`stealth 17 (2/5)`), its status effects with their severities (`effects bleeding 2`), the
@@ -745,6 +750,12 @@ fn actor_rows(world: &World) -> Vec<String> {
                 .map_or(String::new(), |s| format!("; weapon skills {s}"));
             // Who it is and how far its talk has got (spec §8 "Dialogue"), if anything.
             let npc = (a.npc.as_ref()).map_or(String::new(), |n| format!("; npc {n}"));
+            // Where it stands between good and evil (spec §8 "Alignment"): its score and band
+            // (the player's), or its nature.
+            let alignment = match a.alignment {
+                Some(score) => format!("; alignment {} ({})", score.value(), a.band(content).id()),
+                None => format!("; alignment {}", a.nature(content).id()),
+            };
             let talk = if a.talk.is_new() {
                 String::new()
             } else {
@@ -762,9 +773,9 @@ fn actor_rows(world: &World) -> Vec<String> {
                 format!("; resists {}", resists.join(" "))
             };
             format!(
-                "{} {} at {}: hp {}/{} dv {} pv {}; weight {} (base {} + carried {}: {carried})\
-                 {equipped}; {} (limit {}){weapons}; stats {}{skills}{effects}{diseases}{hunger}{npc}\
-                 {talk}{resists}",
+                "{} {} at {}: hp {}/{} dv {} pv {}{alignment}; weight {} (base {} + carried {}: \
+                 {carried}){equipped}; {} (limit {}){weapons}; stats {}{skills}{effects}{diseases}\
+                 {hunger}{npc}{talk}{resists}",
                 a.id,
                 content.creature(a.creature).id,
                 a.pos,
@@ -1019,6 +1030,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             "sign": c.sign,
         })),
         "stats": view.own_scores(),
+        "alignment": view.own_alignment().map(|b| b.id()),
         "skills": skills_json(&view),
         "effects": effects,
         "diseases": diseases,
@@ -1251,7 +1263,8 @@ mod tests {
                 "Toughness 10",
                 "Intelligence 12",
                 "Willpower 11",
-                "Presence 9"
+                "Presence 9",
+                "Alignment Callous"
             ]
         );
         // Other names the stat it raised.

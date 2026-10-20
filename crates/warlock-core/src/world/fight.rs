@@ -794,6 +794,7 @@ impl World {
                 self.earn_kill(creature);
                 let level = self.state.current_level.clone();
                 self.tally_kill(creature, &level);
+                self.judge_kill(id);
             }
             self.creature_dies(id);
         }

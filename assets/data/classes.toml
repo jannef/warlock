@@ -9,7 +9,9 @@
 # the character is made, ADOM-like; every result within -10 to 10. Each class rolls its key
 # stats; penalties may be rolled too. hp: what the class adds to the hit points (spec §8
 # "Combat"; default 0): a character's maximum is their Toughness plus their race's (races.toml)
-# and their class's. skills: the skills the class trains (spec §8 "Skills"; skills.toml), by skill
+# and their class's. alignment: the class's part of a new character's hidden alignment score
+# (spec §8 "Alignment"; alignment.toml; -1000 evil to 1000 good, default 0), added to the race's:
+# paladins start Good, thieves and witches Callous, everyone else Neutral. skills: the skills the class trains (spec §8 "Skills"; skills.toml), by skill
 # id: dice (`"2d6+10"`) or a number, rolled when the character is made, every result within 0 to
 # 100; added to the race's. Each class has a few skills it is known for (2d6+10) and a few more
 # (2d4+4); every other skill is untrained. weapon_skills: starting ranks in weapon skills (spec §8
@@ -80,6 +82,7 @@ name = "Paladin"
 description = "A holy knight sworn to an oath: strong and commanding, steadfast to a fault, and slow to doubt."
 stats = { strength = "1d3", dexterity = -1, intelligence = -1, willpower = 1, presence = "1d3" }
 hp = 6
+alignment = 450
 skills = { intimidate = "2d6+10", concentration = "2d4+4", handle_animal = "2d4+4", heal = "2d4+4" }
 weapon_skills = { long_blades = 2, shield_block = "1d2", shield_bash = 1 }
 styles = { sword_and_board = 1 }
@@ -100,6 +103,7 @@ name = "Thief"
 description = "A cutpurse, burglar, and picker of locks who lives by nimble fingers and a quick wit."
 stats = { strength = -1, dexterity = "1d3+1", intelligence = "1d2-1", willpower = -1 }
 hp = 3
+alignment = -200
 skills = { open_lock = "2d6+10", steal = "2d6+10", stealth = "2d6+10", tumble = "2d6+10", appraise = "2d4+4", disable_device = "2d4+4", escape_artist = "2d4+4", search = "2d4+4", spot = "2d4+4" }
 weapon_skills = { daggers = 2, thrown = 1 }
 style_choice = [{ twin_blades = 1 }, { duelist = 1 }]
@@ -119,6 +123,7 @@ name = "Witch"
 description = "A hedge-magician of herbs, hexes, and old bargains: cunning, wise in strange ways, and feared."
 stats = { strength = -2, toughness = -1, intelligence = "1d3", willpower = "1d3", presence = "1d3-2" }
 hp = 1
+alignment = -200
 skills = { heal = "2d6+10", spellcraft = "2d6+10", concentration = "2d4+4", intimidate = "2d4+4", use_magic_device = "2d4+4" }
 weapon_skills = { daggers = 1, staves = 1 }
 
