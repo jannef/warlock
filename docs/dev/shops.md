@@ -7,7 +7,8 @@ Shops (spec §7 "Shops", M27, #145) are data: `data/shops.toml` (`content/shop.r
 the currency, the outraged faction, `presence`, the generation `chance`, keeper `names`, the
 `[keeper]` template, and the kinds, `ShopDef`: `stock`/`buys` by item class (`ItemClassId`, ids
 in `data/item_classes.toml`, `docs/dev/objects.md`), `items`, `markup`, `pays`; `Shops::price`/`offer` are the one place
-prices are made). Every object has a `value` (required; test fixtures with their own objects need
+prices are made, from `Stack::value`, the value of what the stack is made of: its parts,
+`docs/dev/objects.md`). Every object has a `value` (required; test fixtures with their own objects need
 `value = 0`; fixtures that replace `factions.toml` but keep the built-in creatures need the
 `merchants` and `outraged` factions, and fixtures that replace creatures or objects start from
 `ContentFiles::default()` or drop `data/shops.toml`). A shop is a `ShopPlan` in the template

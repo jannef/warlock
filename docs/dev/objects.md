@@ -5,7 +5,8 @@ rules it implements are in spec/07b-data.md and spec/06-input-and-ui.md. Keep it
 
 Objects (spec §5, §6, §7; M11): every object in `data/objects/` (one file per object, named by
 its id; a family file only for variants always edited together, `arrows.toml`) defines its glyph,
-color, item class (`class`, below), material (`data/materials/`, one file per material), and weight in grams
+color, item class (`class`, below), what it is made of (`materials`, its parts, below; materials
+in `data/materials/`, one file per material), and weight in grams
 (`content/object.rs`: `ObjectDef`, `ObjectId`, and the `"id*N"` placement strings;
 `content/material.rs`); the tables are directories read in path order, see "Content
 directories" in `docs/dev/content.md`. Every creature has a base `weight`. `object.rs` holds the runtime side: `Stack` (object + count; stackable objects join,
@@ -44,3 +45,33 @@ own order: the order every item list and the `inventory` dump layer show, `Melee
 lines, positions as action text). Storage order never changes: positions stay stable, so replays,
 equipment, and action text keep working. The UI's one paged list is `ui/paged_list.rs`
 (`docs/dev/screens.md`).
+
+Parts (spec §7 "Objects and materials", #199): an object is made of parts, each of one material
+(`content/part.rs`). `materials` in an object file is the ordered list (`PartEntry`: a plain
+material id is one unnamed part, the shorthand `materials = ["steel"]`; a table is `{ part, of,
+share }`), resolved by `part::resolve` into `ObjectDef::parts` (`Part { part: Option<PartId>,
+material, share }`, shares summing to 100, the first the main part, which takes what the others
+leave). The old `material` key is refused with a message naming `materials`. Part names are
+`data/parts.toml` (`PartDef` with `id`, `name`, `adjective`; `PartId` an index in file order,
+not saved, so not in the fingerprint; `Content::part_defs`/`part_id`; optional, without it only
+unnamed parts). **The main part is what a single material was**: `ObjectDef::material()` returns
+it, and every reader of an object's material reads that (later rules may read every part: rust,
+fire, silver, #151). Materials gain `precious` (gems and precious metals, shown in names) and
+`value` (percent of steel's, default 100; `MaterialDef::check`). Value by shares:
+`ObjectDef::value_with(parts, content)` = `value` × `part::worth(parts)` / `worth(own parts)`,
+rounded; made of its own parts, `value`. Presentation and shops go through the stack:
+`Stack::parts(content)` (the base item's parts: **the seam for item instances with their own
+parts**, metal variants #193 and gems #191, which will store them on the stack like `Magic`, and
+then saves change) and `Stack::value(content)` (what `Shops::price`/`offer` read). Names:
+`part::names(name, plural, parts, ..)` adds the notable parts the written name does not mention
+(an `adjective` part as "ruby-pommelled ...", any other joining the main material the name
+begins with, "gold and ruby amulet"); `Content::load_objects` composes `ObjectDef::name` and
+`plural` with it as each object loads, so every message, list, dump, and screen says the full
+name without asking the parts (an instance with parts of its own will compose from the written
+name again, so #193 keeps that beside it). Descriptions list every part
+(`Content::describe_parts`: "steel blade, leather grip"; `magic/describe.rs`'s first line).
+Materials are not hidden: nothing about them waits for identification. Construction lists per
+part (`made_of`, #194) will be checked in `part::resolve`. Tests: `content/part.rs` (the
+vocabulary, the forms, shares, naming, worth), `world/parts_tests.rs` (built-in objects, names
+and descriptions, unidentified items, value by shares, generated loot and creature kits, saves
+and replays).
