@@ -18,9 +18,10 @@ name = "skills-screen"
 scenario = "showcase"
 screen = "skills"
 
-# The abilities menu (#156), with the storeroom's small shield in hand: the thief's skills used
-# as actions greyed out ("not usable yet"), then the shield bash, which can be used ("in a
-# direction"), under the cursor and described below.
+# The abilities menu (#156), with the storeroom's small shield in hand: throwing one's voice
+# (#235; "at a place you see"), the first that can be used, under the cursor and described below;
+# the thief's skills used as actions greyed out ("not usable yet"); the shield bash, which can be
+# used ("in a direction"); and the lantern's hood.
 [[golden]]
 name = "abilities-menu"
 scenario = "showcase"
