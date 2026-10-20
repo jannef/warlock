@@ -235,6 +235,41 @@ developer notes (CLAUDE.md, `docs/dev/`).
   and half as loud. The player perceives it (`PerceptionView::own_stance`): the status bar shows
   it when it is not neutral, the character screen always (§6); the wiki's Combat page has the
   generated table.
+- **Free blows** (`world/free_blow.rs`; #228, design `docs/design/progression.md` §4.1 B3): blows
+  beyond an attack's first, all decided by `World::second_blow` on a `Cue`, so there is one
+  place for every extra blow. The second blow of an attack (the off hand's, Sword and Board's
+  bash, §8 "Fighting styles") is one; the others are free blows, switched on per actor
+  (`FreeBlows` on `Actor::free_blows`, saved and hashed but left out while none is on, read
+  only through `World::free_blows_of`; talents and class abilities switch them on, none does
+  yet):
+  - **Cleave** (`cleave`): when the blows of an actor's melee attack (a blow and the second
+    blow, a kick, a shield bash) kill its target, a blow with what it wields at another hostile
+    beside it: the next one clockwise from where the target fell (decided: no draw, and a sweep
+    reads naturally). One per attack; with **great cleave** (`great_cleave`, which cleaves as
+    `cleave` does) each cleave that kills gives another, so at most once per hostile around.
+  - **Riposte** (`riposte`): when a blow of a melee attack on the actor missed by its Parry
+    (`Strike::Missed { by: Parry }`, `Defence::why_missed`), a blow back with what it wields
+    once the attack is over (decided: one per attack however many of its blows were parried,
+    after the attack's last blow, so it never cuts into it). Shots and throws are never
+    riposted.
+  - **Opportunist** (`opportunist`): a hostile stepping from beside the actor to a cell out of
+    its reach (the geometry of fleeing, `World::leaves`, whatever the stepper's stance) is struck
+    as it turns to go, before it leaves its cell (`World::step_away`, from the player's step and
+    `creature_steps`): it may not live to take the step. Each opportunist beside it strikes, in
+    actor order.
+  - Each is a blow like any other: its own `Event::Attacked`, blood, wounds, kills (and their
+    experience), and weapon marks; free (no time, no exertion); silent but the opportunist's,
+    an attack of its own (the others follow a blow that made the noise of the fight). **A free
+    blow brings none of its own** but a cleave after a cleave (decided: ripostes never answer
+    ripostes, a riposte or an opportunist's blow that kills does not cleave), so they never
+    chain past the hostiles around.
+  - The player's are said as they strike (`player_blow`). What they strike in another's turn (a
+    riposte, an opportunist's blow) is held (`World::say` while `World::held`) and joins the news
+    said at the end of `perceive`, so it never comes before the report of what it answers ("You
+    parry the kobold's spear." then "You hit the kobold.").
+  - **Determinism**: deciding a free blow draws nothing (only the second blow's bash chance
+    draws); a free blow draws only as the blow it is, so fights without free blows switched on,
+    or whose triggers do not fire, keep their draws and hashes.
 - **Ranged combat** (`warlock-core/src/world/shoot.rs`; M16): shots and throws.
   - **Loosing**: the player fires (`Action::Fire(cell)`, `fire:X,Y`) with the missile weapon in a
     `ready` slot and the ammunition it shoots in a `ready` slot, or throws (`Action::Throw { item,

@@ -29,9 +29,7 @@
 use super::{Actor, ActorId, AttackSkills, World};
 use crate::action::Event;
 use crate::content::Effect as ItemEffect;
-use crate::content::{
-    ActionKind, BASE_TURN, Benefit, LevelKind, Stance, TerrainDef, percent_of, price,
-};
+use crate::content::{ActionKind, BASE_TURN, Benefit, LevelKind, TerrainDef, percent_of, price};
 use crate::geom::Pos;
 use crate::magic::Mods;
 use crate::magic::mods::faster;
@@ -117,8 +115,8 @@ impl World {
     }
 
     /// Whether actor `id` stepping to `to` flees: some hostile creature stands next to it now and
-    /// the step takes it out of that creature's reach (spec §8 "Stances": a coward's flight is
-    /// cheaper and quieter).
+    /// the step takes it out of that creature's reach ([`World::leaves`]; spec §8 "Stances": a
+    /// coward's flight is cheaper and quieter).
     pub(super) fn flees(&self, id: ActorId, to: Pos) -> bool {
         let Some(me) = self.state.actors.get(&id) else {
             return false;
@@ -127,13 +125,7 @@ impl World {
         if stance.flee_cost == 100 && stance.flee_noise == 100 {
             return false;
         }
-        self.state.actors.values().any(|other| {
-            other.id != id
-                && other.level == me.level
-                && other.pos.chebyshev(me.pos) == 1
-                && other.pos.chebyshev(to) > 1
-                && self.stance(id, other.id) == Stance::Hostile
-        })
+        (self.state.actors.values()).any(|other| self.leaves(me, other, to))
     }
 
     /// The energy price of attack `kind` (a blow, a bash, a kick, a shot, a throw, a spell) for
