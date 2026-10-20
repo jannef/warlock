@@ -19,7 +19,13 @@ doors when the level was made: the door), `unpaid` (what the player owes, counte
 `unpaid_parts` assigns the counts to the last stacks of each object; only `pay`, `put_back`,
 `outrage`, and `keeper_died` take anything off it, so whatever uses unpaid goods up (eating,
 a quest hand-in, rotting away) leaves their price on the bill with no hook of its own; it may
-hold more of an object than the pack does), and `ShopStatus` (Open, Outraged, Abandoned). The
+hold more of an object than the pack does; its lines are counts by object, not stacks lying
+anywhere, so `Shop::is_valid_for` checks them as such: any count, no magic, no food age), and
+`ShopStatus` (Open, Outraged, Abandoned). Rotten food (spec §8 "Hunger", #195) is worth
+nothing: `World::spoilt` (by `rot::stage`) makes `asking_price` and `picked_up_goods` free and
+`deal` refuse it (`Deal::spoilt`: "Grimbold sniffs at ... and says: \"Not at any price.\"");
+`ShopView::price`/`offer` in perception do the same for look mode, the object screens, and the
+sale dialog, while the bill (`Shop::owed`, `PerceptionView::unpaid`) stays priced by object. The
 rules are `world/shop.rs`: `turned_back` from `player_moves` (a step onto an exit owing
 anything: the keeper steps into the way and the step lands one cell back into the shop, priced
 as a step; walking out of the door never steals), `shop_step` (greeting, theft: leaving owing

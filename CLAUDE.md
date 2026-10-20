@@ -149,7 +149,9 @@ are, "(unidentified)" marked), what its magic items do to it (`magic strength +1
 and carrying limit, its weapon skills with marks, its stats as score/potential, its status
 effects with severities, its diseases (progressions, checks won in a row, time to their next
 turn) and stat damage, the player's nutrition, and its npc id and talk counts, if any; then
-every corpse on the level and in the pack with its death time and rot, **dev-only**), `rooms`
+all food on the level and in the packs of those on it with when it was made (a corpse: when it
+died) and its stage, `fresh`, `old`, `rotten`, or `gone`, which the player is never shown,
+**dev-only**), `rooms`
 (the level's special rooms: their plain ground as the effect's `mark`, then a line per room,
 **dev-only**), `ice` (the level's temperature and the thickness of the ice on its water in cm,
 `0`-`9`, `a`-`z` for 10-35, `#` beyond, **dev-only**). The header line has the player's `hp
