@@ -1,5 +1,5 @@
 name = "Trap hall"
-description = "Traps to try and traps to watch: a row of known traps, and creatures on their rounds across hidden ones (fireball, lightning, spears, arrows)."
+description = "Traps to try and traps to watch: a row of known traps, creatures on their rounds across hidden ones (fireball, lightning, spears, arrows), and scrolls of the same spells to read."
 start_level = "trap_hall"
 seed = 1
 character = { race = "human", gender = "male", class = "warrior" }

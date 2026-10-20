@@ -23,7 +23,9 @@ Some skills work by themselves, all the time (**passive**); some will be used as
 (searching, picking a lock, binding a wound); some are **read by rules** when something calls for
 them (athletics when you kick a door). For now only the passive skills, Appraise, Athletics
 (kicking doors in, see [Doors](doors.md)), and Search (see [Searching](searching.md)) do
-something: the others are there to be trained, and get their uses as the game grows.
+something: the others are there to be trained, and get their uses as the game grows. The skills
+used as actions are in the [abilities menu](abilities.md) once you are trained in them, greyed
+out until their uses come.
 
 {{#include generated/skills.md}}
 

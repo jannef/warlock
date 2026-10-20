@@ -446,10 +446,15 @@ fn descriptions_say_base_stats_and_known_affixes_in_words() {
         mail[1..],
         [
             "Worn: body",
-            "Armour +4",
+            "Armour +2",
+            "Protection 3",
             "Dexterity adds at most +4 to Defence while worn",
         ]
     );
+    // Penetration is a fact, never a number.
+    let hammer = text(&Stack::one(object(&c, "war_hammer")));
+    assert!(hammer.iter().any(|l| l == "Pierces armour"), "{hammer:?}");
+    assert!(!hammer.iter().any(|l| l.contains("enetrat")), "{hammer:?}");
     let great = text(&Stack::one(object(&c, "great_sword")));
     assert!(great.contains(&"Great blade, for both hands".to_string()));
     assert!(great.contains(&"Slow to strike".to_string()));

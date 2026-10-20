@@ -26,6 +26,10 @@
 # or open it and find out (its blast bursts out on both sides of the door). The east door (o)
 # stands open on a kobold's rounds (k) in and out of its closet, and hides an alarm: shut it (`c`)
 # and watch the kobold open it again.
+#
+# Scrolls (spec §8 "Scrolls"): beside the arrival lie scrolls to try the same spells with, aimed
+# where you like (`r`): fireball, lightning, and frost; and a scroll of identify for the dagger
+# beside them, which nobody has identified.
 arrival = "Scorch marks and old arrows litter the flagstones."
 name = "The Trap Hall"
 ambient = [48, 46, 42, 0]
@@ -82,3 +86,15 @@ map = '''
 "E" = "packed_earth"
 "G" = "granite"
 "A" = { terrain = "floor", trap = "arrow" }
+
+# The scrolls and the unknown dagger, east of the arrival.
+[[pile]]
+at = [38, 19]
+objects = [
+    "scroll_of_fireball*2", "scroll_of_lightning*2", "scroll_of_frost*2", "scroll_of_identify",
+]
+
+[[item]]
+at = [38, 19]
+object = "dagger"
+affixes = ["sharp:1", "of_the_lynx:1"]

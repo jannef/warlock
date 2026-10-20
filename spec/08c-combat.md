@@ -41,6 +41,28 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the highest bonus counts, except Dodge, whose bonuses add up. A magic item's own Armour,
     Shield, Parry, and `max_dex` affixes add to that item's; its Dexterity affixes raise the
     score (§8 "Magic items").
+  - **Protection** ("Pv", after ADOM's PV; #192): every hit that lands loses a **soak** of one
+    draw, uniform from ⌈Pv/2⌉ to Pv (`combat::soak`, `soaks`), drawn only when the Protection
+    left after the attack's penetration is above 0, so fights against unprotected targets keep
+    their draws. The soak comes after the critical multiplied the damage, once, so criticals
+    punch through armour; the at-least-1 of a hit is before it, so a hit can be **soaked to
+    nothing** (`Strike::Soaked`): then nothing else comes of it (no blood, no bleeding, no big
+    hit, no `on_hit`, no wound), but it landed: the player's weapon skill and style earn the
+    marks of a hit, a shield bash may still follow it, and a missile may still break. Sources
+    **add up**: each worn piece's `protection` (body armour, helmet, gloves, boots, cloak; never
+    a shield, which is Defence only) with what its Protection affix adds (§8 "Magic items"), and
+    the creature type's natural armour (`natural = { defence, protection, name }`). Armour
+    moves part of its value from Defence to Protection: light armour stays mostly Defence (a
+    leather jerkin Dv +1 / Pv 1), heavy armour mostly Protection (chain mail Dv +2 / Pv 3, plate
+    Dv +1 / Pv 6); the heavy helms, gloves, boots, and the fur cloak give Pv 1 or 2; the cave
+    beetle's shell Dv +1 / Pv 3. **Penetration**: a weapon or a missile may have `penetration`,
+    ignoring that much Protection (the war hammer, the stiletto, crossbow bolts; a shot's is its
+    launcher's and its ammunition's together). Protection soaks every blow rolled against
+    Defence: weapons, natural attacks, shots, throws, kicks, bashes, and a trap's arrows and
+    spears; not a blast, a bolt, a fall, a status effect, or a disease. One physical soak for
+    now: with damage types (#151) it soaks only physical damage (slashing, piercing,
+    bludgeoning), a piece may be better or worse against one physical kind, elements ignore it,
+    and percentage resistances apply after it.
   - **Why it missed**: a miss whose natural roll plus to-hit is below 10 would have missed an
     unarmoured, motionless target: a plain miss. Otherwise one category with a positive bonus
     made the difference, picked by one draw weighted by its bonus (in category order); a
@@ -52,7 +74,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Order of draws**: the two dice of the attack roll; on an attributable miss one draw for
     why; on a threat the two dice of the confirmation; then one draw per damage die each time the
     damage is rolled (the attack's own dice, then a magic weapon's extra die, "adds 1d4
-    damage"); then, if the target lives, one draw for each `on_hit` effect of the attack whose
+    damage"); then, on a hit against Protection above the attack's penetration, one draw for
+    the soak; then, if the target lives and took damage, one draw for each `on_hit` effect of the attack whose
     chance is below 100 ("Status effects" below), and for a disease that lands on a target that
     does not carry it yet, the two dice of its check and, if it is caught, one draw per
     incubation die ("Diseases" below).
@@ -93,12 +116,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     that did, or the `cause` when neither did: starving or choking, §8 "Hunger"), the turn stops
     there, every later action is refused, and presentation shows the death screen and deletes
     the save (§6, §7 "Saves").
-  - **What the player perceives**: their own hit points and Defence total (`PerceptionView::
-    own_hp`, `own_defence`); how hurt each seen creature looks, in words (`SeenActor::health`:
+  - **What the player perceives**: their own hit points, Defence total, and Protection total
+    (`PerceptionView::own_hp`, `own_defence`, `own_protection`); an armour's Protection, and
+    that a weapon pierces armour, in its description (§6); how hurt each seen creature looks, in words (`SeenActor::health`:
     unhurt, lightly wounded, wounded, badly wounded, nearly dead); and the messages. Never a
-    creature's hit points, a to-hit, a roll, a modifier, or the Defence breakdown (its Dexterity
-    part would give a modifier away). Ground-truth dev dumps (`actors`) show every actor's hit
-    points and Defence. The status effects the player suffers, by name
+    creature's hit points, a to-hit, a roll, a modifier, the Defence breakdown (its Dexterity
+    part would give a modifier away), a creature's Protection, a soak, or a penetration: a blow
+    soaked to nothing glances off, and only the message hints. Ground-truth dev dumps (`actors`)
+    show every actor's hit points, Defence, and Protection. The status effects the player suffers, by name
     (`PerceptionView::own_effects`), and those that show on seen creatures
     (`PerceptionView::effects_of`); never a severity or a timer.
 - **Experience** (`warlock-core/src/content/experience.rs`, the rules from

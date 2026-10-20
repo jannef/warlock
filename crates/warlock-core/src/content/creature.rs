@@ -241,12 +241,16 @@ pub struct NaturalAttack {
     pub on_hit: Vec<OnHit>,
 }
 
-/// A creature's natural armour: `natural = { defence = 3, name = "shell" }`.
+/// A creature's natural armour: `natural = { defence = 1, protection = 3, name = "shell" }`.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Hide {
     /// Its bonus to Defence (the Natural category).
+    #[serde(default)]
     pub defence: i32,
+    /// The damage it soaks off every hit (Protection, adding up with what the creature wears).
+    #[serde(default)]
+    pub protection: i32,
     /// What it is called: "shell" ("Your sword glances off the cave beetle's shell.").
     pub name: String,
 }

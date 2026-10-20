@@ -1,0 +1,26 @@
+# A scroll of frost (spec §8 "Scrolls"): read it (`r`) and aim, and a burst of bitter cold goes
+# off where it is aimed, as a frost trap's: a little cold damage, and the water it reaches
+# freezes hard enough to walk on.
+[[object]]
+id = "scroll_of_frost"
+name = "scroll of frost"
+plural = "scrolls of frost"
+glyph = "?"
+fg = "#b0d4f4"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 100
+stackable = true
+frequency = 60
+
+[object.read]
+kind = "burst"
+spell = "frost_burst"
+noun = "frost"
+verb = "bites"
+message = "Bitter cold bursts from the scroll!"
+radius = 2
+damage = "2d6"
+range = 10
+frost = 100

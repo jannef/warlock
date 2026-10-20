@@ -21,7 +21,8 @@ How often loot is normal, magic, or rare, and how many affixes magic and rare it
 
 ## Finding them
 
-- **On the floor** of every level of [the Depths](overworld.md) lie a few items of loot.
+- **On the floor** of every level of [the Depths](overworld.md) lie a few items of loot (now and
+  then a [scroll](scrolls.md), which is never magic).
 - **Vaults** hold a reward: the guard post's store room something magic, the shrine and the
   roofless chapel something.
 - **Creatures** may drop something magic or rare where they die, besides what they carried: a
@@ -44,8 +45,8 @@ Magic and rare items are **unidentified** when you find them. You see their rari
 (magic)", "an iron helm (rare)"), not their affixes or a rare item's name. Their magic works all
 the same while you wear or wield them, as in ADOM and Path of Exile: an unknown ring of Strength
 makes you stronger, and one that glows lights your way. Wearing it for a while does not tell you
-what it is. A scroll of identify will (it comes next); once identified, an item stays known
-wherever it goes: "This is a Sharp long sword of the Bear!"
+what it is. A [scroll of identify](scrolls.md#the-scroll-of-identify) will; once identified, an
+item stays known wherever it goes: "This is a Sharp long sword of the Bear!"
 
 ## What their magic does
 
@@ -56,8 +57,8 @@ Magic works while the item is **worn or wielded**, not while it is merely carrie
   your bow. A bow's magic and its arrows' add up for a shot.
 - **On anything else** (gloves, rings, amulets, a helm), attack magic changes **every attack**
   you make, bare hands and thrown rocks included.
-- Magic that changes the item itself (its Armour, Shield, or Parry, how much Dexterity it lets
-  add to your Defence, its weight) is the item's own.
+- Magic that changes the item itself (its Armour, Protection, Shield, or Parry, how much
+  Dexterity it lets add to your Defence, its weight) is the item's own.
 - Everything else is yours: stats, hit points, Dodge and Deflection and natural armour, how fast
   your wounds heal, how fast you move, how much you can carry, how quietly you walk, light, and
   [skills](skills.md): "+20 to Stealth" works as if your Stealth were 20 higher, even if you
@@ -71,7 +72,9 @@ A few rules from elsewhere carry over:
   that lowers a stat lowers it from there: poisoned while wearing a ring of Strength, you are
   still stronger than without the ring.
 - **Defence**: within Armour, Shield, Parry, Deflection, and natural armour only the best counts;
-  Dodge adds up (see [Combat](combat.md)).
+  Dodge adds up (see [Combat](combat.md)). **Protection** always adds up, piece by piece, and a
+  Hardened piece of armour adds its magic to its own (see
+  [Combat](combat.md#protection)).
 - **Hit points**: putting on something that adds to them raises your maximum, not what you have;
   taking it off lowers both, if need be.
 - **Healing**: magic that speeds healing adds on top of everything else that changes its pace
@@ -90,9 +93,9 @@ In your pack (`i`), press an item's letter to look at it; on the equipment scree
 slot's letter in upper case (`A` to `L`). The description names the item, says what it is
 (rarity, base, every part it is made of, weight: "Magic long sword · steel blade, leather grip ·
 1.8 kg") and whether you wear or wield it, then its base stats in words (how it is held or worn,
-its damage and criticals, how far it shoots, what it needs, its Defence), and, if it is
-identified, its item level and each affix in plain words: "Prefix Sharp: +2 damage", "Suffix of
-Celerity: attacks faster". `Esc` goes back.
+its damage and criticals, how far it shoots, what it needs, whether it pierces armour, its
+Defence and Protection), and, if it is identified, its item level and each affix in plain
+words: "Prefix Sharp: +2 damage", "Suffix of Celerity: attacks faster". `Esc` goes back.
 
 ## Base items
 

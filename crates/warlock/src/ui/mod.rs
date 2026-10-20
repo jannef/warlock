@@ -19,6 +19,7 @@
 //! ([`screens`]): opened by [`Screens::open`], fed key presses by `input::route_keys`, and drawn
 //! by [`draw`], the one system that writes the UI console.
 
+mod abilities_screen;
 mod blood;
 mod character_screen;
 mod chargen_screen;
@@ -235,7 +236,7 @@ fn draw_game(
             let at = (area.x + x, area.y + y);
             match mode {
                 InputMode::Aim(aim) => {
-                    let line = target::line(&view, view.viewer(), p, aim.range(&view));
+                    let line = aim.line(&view);
                     target::draw_cursor(console, at, &view, p, &line);
                 }
                 _ => look::draw_cursor(console, at.0, at.1, &view, p),
@@ -477,13 +478,17 @@ fn draw_messages(
         console.print(1, 0, prompt, ACCENT);
         return;
     }
+    if let InputMode::Ability(_) = mode {
+        console.print(1, 0, "In which direction? (Esc to cancel)", ACCENT);
+        return;
+    }
     if mode == InputMode::Rest {
         console.print(1, 0, &rest_prompt(bindings), ACCENT);
         return;
     }
     if let InputMode::Aim(aim) = mode {
         let view = game.world.perception();
-        let line = target::line(&view, view.viewer(), aim.at, aim.range(&view));
+        let line = aim.line(&view);
         let mut about = look::describe(&view, aim.at, blood);
         if let Some(status) = line.status() {
             about = format!("{about} {status}");
@@ -498,6 +503,7 @@ fn draw_messages(
                 (KeyCommand::Missile, ammo)
             }
             AimKind::Throw(item) => (KeyCommand::Missile, Some(item)),
+            AimKind::Read(item) => (KeyCommand::Read, Some(item)),
         };
         let content = view.content();
         let ready = (missile.and_then(|i| view.inventory().get(i)))

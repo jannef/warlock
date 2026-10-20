@@ -11,13 +11,36 @@
 //! a bolt's path to the stretch from the first of them to the last, and an origin the player
 //! does not see is replaced by where the effect comes into view (a burst's center, the first cell
 //! of a bolt's path seen); an event with no cell seen is dropped.
+//!
+//! **Casting** ([`World::cast_burst`], [`World::cast_bolt`]): the one place a burst or a bolt
+//! does what it does, for traps (spec §8 "Traps") and scrolls (spec §8 "Scrolls") alike: the
+//! effect's event, one roll of its damage for everyone it reaches (in ascending actor id order),
+//! then a burst's blast against walls and its heat or frost. Only who cast it differs
+//! ([`Caster`]): a trap's blows are its own and its kills no one's; an actor's (the player
+//! reading a scroll) are theirs, and so are its kills, which earn them experience.
 
-use super::{Spent, World};
-use crate::action::{Event, SpellShape};
-use crate::content::EffectShape;
+use super::fight::Harm;
+use super::{ActorId, Spent, World};
+use crate::action::{AttackKind, Event, SpellShape};
+use crate::combat::{Blow, Strike};
+use crate::content::{Bolt, Burst, BurstIce, EffectShape, TrapId, TrapNoise};
 use crate::fov::radius2;
 use crate::geom::Pos;
+use crate::ice::Shock;
+use crate::noise::{self, Noise};
 use crate::sight::LineOfSight;
+use std::collections::BTreeSet;
+
+/// Who cast a spell, and so who deals its harm.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum Caster {
+    /// A trap that went off: its blows are [`Event::TrapStruck`], and its kills earn no one
+    /// anything.
+    Trap(TrapId),
+    /// An actor (the player reading a scroll): its blows are theirs ([`Event::Attacked`], a
+    /// spell, with no roll to hit), and so are its kills.
+    Actor(ActorId),
+}
 
 /// The cells a burst around `center` of `radius` reaches: within the radius (rounded, like every
 /// radius) and in line of sight from the center, opaque cells left out. None if the center is
@@ -138,6 +161,156 @@ impl World {
             cells,
         });
         Spent::NoTime
+    }
+
+    /// `noise` (a trap's going off, a scroll's spell) on cell `at` of the current level: no actor
+    /// made it, so everyone in earshot hears it. A special room scales it like every noise made
+    /// inside it.
+    pub(super) fn sound_at(&mut self, noise: Option<TrapNoise>, at: Pos) {
+        let Some(sound) = noise else {
+            return;
+        };
+        let room = self.state.current().room_effect_at(&self.content, at);
+        let percent = room.map_or(100, |r| u32::from(r.noise));
+        let loudness = u32::from(sound.loudness) * percent / 100;
+        let noise = Noise {
+            kind: sound.sound,
+            at,
+            loudness: loudness.min(u32::from(noise::MAX_LOUDNESS)) as u16,
+            maker: None,
+        };
+        if noise.loudness > 0 {
+            noise::make(&mut self.state, &self.content, noise);
+        }
+    }
+
+    /// `burst` goes off around `center`, cast by `caster` from `origin` (a trap's own cell; the
+    /// reader of a scroll, from whom it flew): its effect ([`Event::Spell`] over the cells it
+    /// reaches, [`burst_cells`], its own cell never stopping it (a trap's on a shut door), so
+    /// what is drawn is what is hit), one roll of its damage for
+    /// everyone on them, half of it (at least 1) beyond radius − 1; then the walls its blast
+    /// breaks ([`World::blast`]), then the ice it melts ([`World::shock`]) or the water it
+    /// freezes ([`World::frost`]).
+    pub(super) fn cast_burst(
+        &mut self,
+        caster: Caster,
+        (origin, center): (Pos, Pos),
+        burst: &Burst,
+        events: &mut Vec<Event>,
+    ) {
+        let level = self.state.current();
+        let radius = burst.radius;
+        // Its own cell never stops it: a trap's on a shut door bursts out on both sides.
+        let opaque = |p: Pos| p != center && level.is_opaque(&self.content, p);
+        let cells = burst_cells(center, radius, opaque);
+        events.push(Event::Spell {
+            effect: burst.spell.clone(),
+            origin,
+            shape: SpellShape::Burst { center, radius },
+            cells: cells.clone(),
+        });
+        let roll = burst.damage.roll(&mut self.state.rng);
+        let inner = radius2(radius - 1);
+        let level = self.state.current_level.clone();
+        let reached: BTreeSet<Pos> = cells.into_iter().collect();
+        let caught: Vec<(ActorId, Pos)> = (self.state.actors.values())
+            .filter(|a| a.level == level && reached.contains(&a.pos))
+            .map(|a| (a.id, a.pos))
+            .collect();
+        for (id, p) in caught {
+            let edge = p.dist2(center) > inner;
+            let damage = if edge { (roll / 2).max(1) } else { roll };
+            self.spell_hurts(caster, id, (center, false), damage, events);
+        }
+        if burst.blast > 0 {
+            self.blast(center, radius, burst.blast, events);
+        }
+        match burst.ice {
+            Some(BurstIce::Melts) => {
+                self.shock(center, radius, Shock::Heat, events);
+            }
+            Some(BurstIce::Freezes(um)) => {
+                self.frost(center, radius, um);
+            }
+            None => {}
+        }
+    }
+
+    /// `bolt` runs from `origin` over `path` (its cells in order, as far as it reaches), cast by
+    /// `caster`: its effect ([`Event::Spell`], drawn along the cells after its origin: a trap's
+    /// own cell, first in its path, is struck but not drawn), and one roll of its damage for
+    /// everyone on the path.
+    pub(super) fn cast_bolt(
+        &mut self,
+        caster: Caster,
+        origin: Pos,
+        path: &[Pos],
+        bolt: &Bolt,
+        events: &mut Vec<Event>,
+    ) {
+        let drawn: Vec<Pos> = path.iter().copied().filter(|&p| p != origin).collect();
+        if !drawn.is_empty() {
+            events.push(Event::Spell {
+                effect: bolt.spell.clone(),
+                origin,
+                shape: SpellShape::Bolt { path: drawn },
+                cells: path.to_vec(),
+            });
+        }
+        let roll = bolt.damage.roll(&mut self.state.rng);
+        let level = self.state.current_level.clone();
+        let mut caught = Vec::new();
+        for p in path {
+            caught.extend(self.state.actor_at(&level, *p).map(|a| a.id));
+        }
+        for id in caught {
+            self.spell_hurts(caster, id, (origin, true), roll, events);
+        }
+    }
+
+    /// `caster`'s spell does `damage` to `target` from `source` (a cell, and whether it flew
+    /// along a line from it), with no roll to hit: a trap's blow ([`World::trap_hurts`]), or an
+    /// actor's, dealt the way every blow is (spec §8 "Blood", "Status effects"): the event, a big
+    /// hit's blood, the damage, which may kill (a kill by the player earns its experience), and
+    /// if it lives the statuses its wound causes. A shopkeeper the player's spell reaches turns
+    /// on them, as one they strike does.
+    fn spell_hurts(
+        &mut self,
+        caster: Caster,
+        target: ActorId,
+        source: (Pos, bool),
+        damage: i32,
+        events: &mut Vec<Event>,
+    ) {
+        let by = match caster {
+            Caster::Trap(trap) => return self.trap_hurts(trap, target, source, damage, events),
+            Caster::Actor(by) => by,
+        };
+        let Some(to) = self.state.actors.get(&target).map(|a| a.pos) else {
+            return;
+        };
+        let from = self.state.actors.get(&by).map_or(source.0, |a| a.pos);
+        let strike = Strike::Hit { critical: false };
+        events.push(Event::Attacked {
+            attacker: by,
+            target,
+            kind: AttackKind::Spell,
+            from,
+            to,
+            strike: Some(strike),
+            with: None,
+        });
+        if by == self.state.player && target != by {
+            self.provoke(target);
+        }
+        if damage <= 0 {
+            return;
+        }
+        let blow = Blow { strike, damage };
+        self.spill(by.0, target, source, blow);
+        if !self.hurt(target, damage, Harm::Actor(by), events) {
+            self.wounded(target, &blow, Some(by), events);
+        }
     }
 }
 

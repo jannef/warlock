@@ -35,11 +35,14 @@ The in-game `?` screen is authoritative: it is generated from your current key b
 | Next / previous info page (wraps) | `Tab` / `Shift`+`Tab` |
 | Rest | `R` |
 | Eat | `E` |
+| Read a scroll | `r`, choose it, then aim a spell (see [Scrolls](scrolls.md)) |
 | Look around | `x` |
 | Shoot or throw what is in your Missile weapon slot | `t`, then aim (see below) |
 | Throw something from your pack | `T`, choose it, then aim |
 | More aggressive combat stance, more defensive (no time passes) | `+`, `-` |
-| Bash with your shield | no key until you bind one, then a direction |
+| Abilities: everything you can do because of who you are, in one menu | `a` (see [Abilities](abilities.md)) |
+| Use the ability you used last again | `A` |
+| Bash with your shield (an ability: also in the abilities menu) | no key until you bind one, then a direction |
 | Next target while aiming (with Shift: the one before) | `Tab` |
 | Use a tool: dig into a wall with a pick-axe | `U`, then a direction |
 | Show or hide the controls | `?` |
@@ -164,6 +167,10 @@ controls screen.) Either puts a cursor on the map:
   target, so `t` `Enter` shoots it again. The aiming keys (next target, previous target, which has
   no key until you bind one, and shoot or throw) are their own group in Controls.
 
+A spell scroll you read (`r`, see [Scrolls](scrolls.md)) is aimed the same way: `Enter` or `r`
+reads it at the cursor. A lightning bolt runs through creatures, so only walls block its line;
+a fireball read so close that it may catch you asks first.
+
 See [Ranged combat](ranged.md).
 
 ## Objects
@@ -181,6 +188,16 @@ takes no time. See [Objects and your pack](objects.md).
 `E` opens a list of what you can eat: food lying where you stand first, then the food you carry.
 A letter, or `Enter` on the marked row, eats it. See
 [Food and corpses](food.md).
+
+## Abilities
+
+`a` opens the abilities menu: everything you can do because of who you are (a shield bash, the
+skills you use as actions, and later racial, class, and item abilities), grouped by where each
+comes from and lettered like a list of items. Choose one by its letter, or `Enter` on the `>`
+row; one you cannot use now is greyed out with why. It then asks for what it needs, such as a
+direction. The menu opens on the ability you used last, and `A` uses that one again at once.
+Abilities have no keys of their own unless you give them one in Controls. See
+[Abilities](abilities.md).
 
 `e` shows what you wear and wield, slot by slot. A slot's letter (on this screen every letter
 names a slot) opens a list of what you carry that fits there: its letter puts it on, swapping
@@ -269,9 +286,10 @@ and quit to menu, and Quit, which saves too. The main menu, where the game opens
 [Settings](settings.md). New run goes on to creating your character, a step at a time: the arrow
 keys (or `j` and `k`) choose, `Enter` goes on, and `Esc` goes back a step (see
 [Your character](character.md)). While any menu or screen is open (including the inventory, the
-equipment screen, the character screen, the pick-up and drop screens, and the screen of topics
-someone you chat with offers), no game time passes, except for what you choose there: picking
-up, dropping, and putting on or taking off take their time. Asking about a topic takes none.
+equipment screen, the character screen, the pick-up and drop screens, the abilities menu, and the
+screen of topics someone you chat with offers), no game time passes, except for what you choose
+there: picking up, dropping, putting on or taking off, and an ability take their time. Asking
+about a topic takes none.
 
 ## Developer keys
 

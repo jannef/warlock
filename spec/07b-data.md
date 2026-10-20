@@ -44,8 +44,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   to the status's `max`; §8 "Status effects"), or `{ disease = "filth_fever", chance = 10 }`
   (exposure to the disease, which the target then resists with a check; §8 "Diseases"; never the
   status diseases show as); without one, bare hands: 1d3, "fist", "hits"); and
-  `natural`, its natural armour (`{ defence = 3, name = "shell" }`, 1 to 20, the Natural
-  category of Defence; the name is said when it turns a blow). For experience (§8
+  `natural`, its natural armour (`{ defence = 1, protection = 3, name = "shell" }`: `defence`
+  in the Natural category of Defence, `protection` soaking damage off every hit with what it
+  wears, each 0 to 20, not both 0; the name is said when it turns or soaks a blow). For experience (§8
   "Experience"): `level` (1 to 99, default 1) and `xp` (0 to 100000, default 0; the player
   creature has neither): the kobold 2/15, the kobold archer 3/25, the kobold shaman 4/40, the
   giant rat 1/5, the cave bat 1/3, the cave beetle 2/8, the deer 1/2. For loot (§8 "Magic
@@ -250,7 +251,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   rations (1500, 4, 30 and 60), loaves of bread (800, 3, 5 and 10), angelica roots (20, 1, 30
   and 60). A remedy also has `cures`, the means it
   applies as it is eaten (names some status or disease lists in its `cured_by`, else a content
-  error; food only): the angelica root `cures = ["remove_disease"]` (§8 "Diseases"). **Corpses** are objects too, one made for every creature type
+  error; food only): the angelica root `cures = ["remove_disease"]` (§8 "Diseases"). A
+  **scroll** (§8 "Scrolls") has `read`, what reading it does (never on things worn, wielded,
+  eaten, shot, or thrown): `kind = "burst"` or `"bolt"`, a trap's spell with a trap's fields
+  (`spell`, an effect of its shape in `data/effects.toml`; `noun`, `verb`, `damage`; a burst's
+  `radius`, `blast`, `heat` or `frost`, and `range`, how far it flies, 1 to the view radius; a
+  bolt's `length`; an optional `noise` and `message`), or `kind = "identify"`; with `read` an
+  object may have `level` and `frequency`, as base items do, and is loot (never magic): the
+  scrolls of fireball (item level 3), lightning (2), frost, and identify. **Corpses** are objects too, one made for every creature type
   that leaves one (not the player) when content loads, after the objects of the file in creature
   order, with the id `<creature>_corpse`: "kobold corpse", `%` in the creature's color, made of
   the corpses' material (`data/hunger.toml`), weighing the creature's weight, not stackable, and
@@ -262,7 +270,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   multiplier, 2 to 5, default 2), `to_hit` (default 0, within ±20), and for bows `strength` (the
   Strength they need, 1 to 40), all four only with `damage`; `parry` (Defence while wielded),
   `armour` (while worn) and `max_dex` (the most Dexterity may add to Defence while it is worn),
-  and `shield` (while held), each 0 to 20; `bash` (a shield's damage dice when bashing with it,
+  and `shield` (while held), each 0 to 20; `protection` (damage soaked off every hit while worn,
+  0 to 20, adding up across what is worn; only on armour worn, never in a hand or on a shield);
+  `penetration` (how much of a target's Protection it ignores, 0 to 20; weapons and
+  ammunition); `bash` (a shield's damage dice when bashing with it,
   only with `shield`; §8 "Weapon skills"); and `category`, the weapon skill a weapon draws on and
   trains (an id in `data/weapon_skills.toml`; required for every weapon when there are weapon
   skills, refused on anything else): a `melee` skill for what goes in a hand, a `launcher` one
@@ -331,14 +342,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `[names.second]`, words for every kind of item (rare names: one of each, "Grim Bite"). Then
   `[[prefix]]`s and `[[suffix]]`es (ids unique across both): `id`, `name` ("Sharp", "of the
   Bear"), `effect` (one of `to_hit`, `damage`, `extra_damage` (adds 1dN), `threat`, `crit`,
-  `attack_speed`, `range`, `draw`, `durability`, `parry`, `armour`, `shield`, `max_dex`,
+  `attack_speed`, `range`, `draw`, `durability`, `parry`, `armour`, `protection`, `shield`,
+  `max_dex`,
   `weight`, `dodge`, `deflection`, `natural`, `max_hp`, `regeneration`, a stat id, `move_speed`,
   `carry`, `stealth`, `light`, `skill` with a `skill`, an id in `data/skills.toml`, whose value
   it raises; without skills content, skill affixes are left out), `bases` (kinds of item it
   rolls on, at least one; an effect only
   attacks can use, `extra_damage`, `range`, `draw`, `durability`, needs weapons, missile weapons,
-  or ammunition, `parry` weapons, `armour` body armour, `shield` shields, `max_dex` body armour or
-  shields; else a content error), `weight` (default 100), and `tiers`, at least one, item levels
+  or ammunition, `parry` weapons, `armour` body armour, `protection` armour (body armour,
+  helmets, cloaks, gloves, boots), `shield` shields, `max_dex` body armour or shields; else a
+  content error), `weight` (default 100), and `tiers`, at least one, item levels
   rising: `{ level, min, max }` (values within the effect's range: 1 to 10 for most, dice sides 2
   to 20 for `extra_damage`, 1 to 3 for `threat` and `crit`, percent 1 to 50 for speeds, 1 to 90
   for `durability`, `weight`, `stealth`, 1 to 100 for `max_hp`, `carry` (kg), and `skill`, 1 to

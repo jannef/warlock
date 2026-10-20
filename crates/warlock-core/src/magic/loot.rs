@@ -5,11 +5,12 @@
 //!
 //! 0. **a loose gem**: a find that may be anything (grade `any`) is a gem by the gems' `chance`
 //!    (one draw, then the gem's draws: [`crate::gem::find`]), and that is all;
-//! 1. **the base item**: one draw among the objects with a `kind` whose `level` is at most the
-//!    item level, weighted by their `frequency`;
+//! 1. **the base item**: one draw among the objects that are loot (base items, with a `kind`,
+//!    and scrolls, which are never magic and so left out when the grade asks for magic or
+//!    better) whose `level` is at most the item level, weighted by their `frequency`;
 //! 2. **the count**: ammunition comes in stacks of [`AMMO`] (one draw); anything else is one;
 //! 3. **the rarity**: one draw over the weights of `[rarity]` in `data/affixes.toml` (those below
-//!    the grade asked for left out);
+//!    the grade asked for left out); none for what is never magic (a scroll), which is normal;
 //! 4. **how many affixes**: a magic item has both a prefix and a suffix by the chance
 //!    `magic.both` (one draw), else one of either (one draw); a rare one draws its count from
 //!    `rare.affixes` (one draw) and how many of them are prefixes (one draw, at most three of
@@ -73,8 +74,10 @@ pub fn roll(content: &Content, rng: &mut Rng, level: u8, grade: LootGrade) -> Op
     }
     // The candidates by object id (the string), never by load order: a draw picks the same base
     // however the object files are laid out (docs/dev/content.md).
+    let magic_only = grade != LootGrade::Any;
     let mut bases: Vec<(ObjectId, u32)> = (content.object_defs().iter().enumerate())
-        .filter(|(_, o)| o.kind.is_some() && o.frequency > 0 && o.level <= level)
+        .filter(|(_, o)| o.frequency > 0 && o.level <= level)
+        .filter(|(_, o)| o.kind.is_some() || !magic_only)
         .map(|(i, o)| (ObjectId(i as u16), o.frequency))
         .collect();
     bases.sort_by(|a, b| content.object(a.0).id.cmp(&content.object(b.0).id));
@@ -85,7 +88,10 @@ pub fn roll(content: &Content, rng: &mut Rng, level: u8, grade: LootGrade) -> Op
     } else {
         1
     };
-    let rarity = roll_rarity(content, rng, grade);
+    let rarity = match def.kind {
+        Some(_) => roll_rarity(content, rng, grade),
+        None => Rarity::Normal,
+    };
     let magic = match rarity {
         Rarity::Normal => None,
         rarity => roll_magic(content, rng, def, level, rarity),

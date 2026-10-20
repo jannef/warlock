@@ -150,6 +150,17 @@ impl Stack {
         crate::magic::mods::less(each, lighter).max(1) * u64::from(self.count)
     }
 
+    /// Its Protection while worn (spec §8 "Combat"): its object's, plus what a Protection affix
+    /// adds (the one reader of that effect; rules only, as the player knows it only once
+    /// identified).
+    pub(crate) fn protection(&self, content: &Content) -> i32 {
+        let more = match self.magic {
+            Some(_) => Mods::local(self, content).get(Effect::Protection),
+            None => 0,
+        };
+        content.object(self.object).protection + more
+    }
+
     /// What it is made of where it differs from its base item, as saved: its own parts
     /// ([`crate::item_parts`]), if any. Materials are not hidden.
     pub fn own_parts(&self) -> Option<&[ItemPart]> {

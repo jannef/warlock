@@ -2,7 +2,7 @@
 
 use super::text::{article, capital};
 use std::fmt::Write as _;
-use warlock_core::content::{BurstIce, Content, TrapEffect};
+use warlock_core::content::{Bolt, Burst, BurstIce, Content, TrapEffect, TrapNoise};
 
 /// The traps (spec §8 "Traps"): what each does, its damage dice, how often it goes off, and what
 /// it sounds like. Never a to-hit, which the player does not know.
@@ -21,24 +21,12 @@ pub(super) fn traps(content: &Content) -> String {
                 "{}s spring from the floor: an attack against the Defence of whoever steps on it",
                 capital(&t.noun)
             ),
-            TrapEffect::Burst { radius, ice, .. } => {
-                let ice = match ice {
-                    Some(BurstIce::Melts) => {
-                        "; it melts the ice it reaches, and whoever stands on it falls in"
-                            .to_string()
-                    }
-                    Some(BurstIce::Freezes(um)) => format!(
-                        "; it freezes the water it reaches into ice {} cm thick",
-                        um / 10_000
-                    ),
-                    None => String::new(),
-                };
-                format!(
-                    "A blast {radius} cells around it (walls stop it): everyone in it takes the \
-                     damage, half at the edge; no roll to hit{ice}"
-                )
-            }
-            TrapEffect::Bolt { length, .. } => format!(
+            TrapEffect::Burst(Burst { radius, ice, .. }) => format!(
+                "A blast {radius} cells around it (walls stop it): everyone in it takes the \
+                 damage, half at the edge; no roll to hit{}",
+                ice_text(*ice)
+            ),
+            TrapEffect::Bolt(Bolt { length, .. }) => format!(
                 "A bolt from it along a line until a wall, up to {length} cells: everyone on it \
                  takes the damage; no roll to hit"
             ),
@@ -57,15 +45,7 @@ pub(super) fn traps(content: &Content) -> String {
             Some(2) => "twice".to_string(),
             Some(n) => format!("{n} times"),
         };
-        let sound = t.noise.map_or("Silent".to_string(), |n| {
-            let loud = match n.loudness {
-                0..50 => "quiet",
-                50..150 => "loud",
-                150..250 => "very loud",
-                _ => "deafening",
-            };
-            format!("{}, {loud}", capital(&n.sound.name().replace('_', " ")))
-        });
+        let sound = sound_text(t.noise);
         let _ = writeln!(
             out,
             "| {} `{}` | {what} | {damage} | {goes_off} | {sound} |",
@@ -74,6 +54,33 @@ pub(super) fn traps(content: &Content) -> String {
         );
     }
     out
+}
+
+/// What a burst does to ice and water, after what it does to whom (a trap's, a scroll's).
+pub(super) fn ice_text(ice: Option<BurstIce>) -> String {
+    match ice {
+        Some(BurstIce::Melts) => {
+            "; it melts the ice it reaches, and whoever stands on it falls in".to_string()
+        }
+        Some(BurstIce::Freezes(um)) => format!(
+            "; it freezes the water it reaches into ice {} cm thick",
+            um / 10_000
+        ),
+        None => String::new(),
+    }
+}
+
+/// What a noise sounds like, in words: "Explosion, very loud"; "Silent" for none.
+pub(super) fn sound_text(noise: Option<TrapNoise>) -> String {
+    noise.map_or("Silent".to_string(), |n| {
+        let loud = match n.loudness {
+            0..50 => "quiet",
+            50..150 => "loud",
+            150..250 => "very loud",
+            _ => "deafening",
+        };
+        format!("{}, {loud}", capital(&n.sound.name().replace('_', " ")))
+    })
 }
 
 /// A noun with its article: "an arrow".

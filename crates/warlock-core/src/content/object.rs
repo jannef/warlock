@@ -22,8 +22,10 @@
 //! (a launcher's carry its draw weight, `1d8+2`), its critical (`threat`, the lowest natural roll
 //! that threatens, default 22; `crit`, the damage multiplier, default 2), an optional `to_hit`,
 //! a `parry` bonus to Defence while wielded, and for bows the `strength` they need; armour its
-//! `armour` bonus and the most Dexterity bonus it allows (`max_dex`); a shield its `shield` bonus,
-//! and the `bash` dice of a blow with it (spec §8 "Weapon skills": the shield bash).
+//! `armour` bonus and the most Dexterity bonus it allows (`max_dex`), and its `protection` (the
+//! damage it soaks off every hit, which adds up across what is worn); a shield its `shield` bonus,
+//! and the `bash` dice of a blow with it (spec §8 "Weapon skills": the shield bash). A weapon or
+//! a missile may have `penetration`: that much of a target's Protection it ignores.
 //!
 //! Every weapon names its weapon skill (`category`, an id in `data/weapon_skills.toml`; spec §8
 //! "Weapon skills"): a skill of role `melee` for what is wielded in a hand, `launcher` for a
@@ -58,6 +60,10 @@
 //!
 //! Digging tools (spec §8 "Digging") have a `dig` power: the work a dig with one does against a
 //! wall's hardness (a pick-axe 10, at Strength 10). They go in a slot (the Tool slot).
+//!
+//! Scrolls (spec §8 "Scrolls") say what reading one does (`read`, [`super::scroll`]): cast a
+//! spell the reader aims, with the traps' rules, or identify an item. They are loot too (`level`,
+//! `frequency`), never magic.
 
 use super::action::check_cost;
 use super::affix::{ItemKind, MAX_ITEM_LEVEL};
@@ -68,6 +74,7 @@ use super::light::LightId;
 use super::material::MaterialId;
 use super::part::{self, Part, PartEntry, PartId};
 use super::particles::ParticleEmitter;
+use super::scroll::{ReadSpec, Reading};
 use super::slot::SlotDef;
 use super::weapon_skill::{Role, WeaponSkillId, WeaponSkillTable};
 use super::{Content, ContentError, CreatureId};
@@ -191,11 +198,18 @@ pub(super) struct ObjectSpec {
     pub armour: i32,
     /// The most Dexterity bonus to Defence it allows while worn.
     pub max_dex: Option<i32>,
+    /// Damage it soaks off every hit while worn (Protection; armour, never a shield).
+    #[serde(default)]
+    pub protection: i32,
     /// Defence while held (the Shield category).
     #[serde(default)]
     pub shield: i32,
     /// A shield's damage dice when bashing with it.
     pub bash: Option<Dice>,
+    /// How much of a target's Protection a blow or a shot with it ignores (a weapon, a
+    /// missile weapon, ammunition).
+    #[serde(default)]
+    pub penetration: i32,
     /// The weapon skill a weapon trains and draws on (`data/weapon_skills.toml`).
     pub category: Option<String>,
     /// How far a missile weapon shoots, or a throwing weapon (anything else with a range) is
@@ -246,6 +260,8 @@ pub(super) struct ObjectSpec {
     /// (`remove_disease`).
     #[serde(default)]
     pub cures: Vec<String>,
+    /// What reading it does (a scroll, spec §8 "Scrolls").
+    pub read: Option<ReadSpec>,
 }
 
 /// A resolved object type.
@@ -297,10 +313,16 @@ pub struct ObjectDef {
     pub armour: i32,
     /// While worn, the most the Dexterity bonus may add to Defence (`None`: no limit).
     pub max_dex: Option<i32>,
+    /// While worn, the damage it soaks off every hit: its Protection, which adds up with the
+    /// rest of what is worn (spec §8 "Combat").
+    pub protection: i32,
     /// Defence while held: its Shield bonus.
     pub shield: i32,
     /// What a bash with it does, if it is a shield one can bash with.
     pub bash: Option<Attack>,
+    /// How much of a target's Protection an attack with it ignores (a weapon, a missile weapon,
+    /// ammunition: a shot's is its launcher's and its ammunition's together). Rules only.
+    pub penetration: i32,
     /// Its weapon skill: a weapon's `category` (`None` for anything else, and without
     /// `data/weapon_skills.toml`).
     pub skill: Option<WeaponSkillId>,
@@ -334,7 +356,8 @@ pub struct ObjectDef {
     pub attack_cost: Option<u32>,
     /// The lowest item level loot holds it at.
     pub level: u8,
-    /// How often loot holds it, relative to the rest (0 for what has no `kind`).
+    /// How often loot holds it, relative to the rest (0 for what is no loot: neither a base item,
+    /// with a `kind`, nor a scroll).
     pub frequency: u32,
     /// What eating it gives, if it is food or a corpse (spec §8 "Hunger").
     pub food: Option<Food>,
@@ -344,6 +367,8 @@ pub struct ObjectDef {
     /// The creature type it is the corpse of, if it is a corpse: it rots from the moment its
     /// creature died ([`Stack::died`]).
     pub corpse: Option<CreatureId>,
+    /// What reading it does, if it is a scroll (spec §8 "Scrolls").
+    pub read: Option<Reading>,
 }
 
 /// How a burning object burns where it lies: the light it gives, and for how long.
@@ -387,8 +412,10 @@ impl ObjectDef {
             parry: 0,
             armour: 0,
             max_dex: None,
+            protection: 0,
             shield: 0,
             bash: None,
+            penetration: 0,
             skill: None,
             range: None,
             reloads: false,
@@ -403,6 +430,7 @@ impl ObjectDef {
             food: Some(food),
             cures: Vec::new(),
             corpse: Some(id),
+            read: None,
             key: None,
             kind: None,
             attack_cost: None,
@@ -573,6 +601,7 @@ impl ObjectSpec {
         }
         let attack = self.attack().map_err(err)?;
         self.check_defence().map_err(err)?;
+        self.check_protection(slots).map_err(err)?;
         self.check_ranged().map_err(err)?;
         let skill = self.skill(slots, skills).map_err(err)?;
         let bash = match (self.bash, self.shield) {
@@ -622,7 +651,19 @@ impl ObjectSpec {
                 "`dig` is a digging tool's power, 1 to {MAX_DIG}, and a tool goes in a `slot`"
             )));
         }
+        let read = self
+            .read
+            .clone()
+            .map(ReadSpec::resolve)
+            .transpose()
+            .map_err(err)?;
+        if read.is_some() && (self.slot.is_some() || self.food.is_some() || self.flies()) {
+            return Err(err(
+                "`read` is for scrolls: not worn, wielded, eaten, shot, or thrown".into(),
+            ));
+        }
         let plural = self.plural.unwrap_or_else(|| format!("{}s", self.name));
+        let loot = self.kind.is_some() || read.is_some();
         let def = ObjectDef {
             id: self.id,
             written_name: self.name.clone(),
@@ -647,8 +688,10 @@ impl ObjectSpec {
             parry: self.parry,
             armour: self.armour,
             max_dex: self.max_dex,
+            protection: self.protection,
             shield: self.shield,
             bash,
+            penetration: self.penetration,
             skill,
             range: self.range,
             reloads: self.reloads,
@@ -664,13 +707,15 @@ impl ObjectSpec {
             kind: self.kind,
             attack_cost: self.attack_cost,
             level: self.level.unwrap_or(1),
-            frequency: match self.kind {
-                Some(_) => self.frequency.unwrap_or(100),
-                None => 0,
+            frequency: if loot {
+                self.frequency.unwrap_or(100)
+            } else {
+                0
             },
             food: self.food,
             cures: self.cures,
             corpse: None,
+            read,
         };
         Ok((def, self.lit))
     }
@@ -705,8 +750,7 @@ impl ObjectSpec {
     }
 
     /// The fields of a base item: its `kind` fits what it is (a weapon has an attack and goes in
-    /// a hand, ...), and `level` and `frequency` are for
-    /// things with a kind.
+    /// a hand, ...), and `level` and `frequency` are for loot: things with a kind, and scrolls.
     fn check_base(&self, weapon: bool) -> Result<(), String> {
         if let Some(kind) = self.kind {
             let fits = match kind {
@@ -726,8 +770,12 @@ impl ObjectSpec {
                     kind.id()
                 ));
             }
-        } else if self.level.is_some() || self.frequency.is_some() {
-            return Err("`level` and `frequency` are for base items, which have a `kind`".into());
+        } else if (self.level.is_some() || self.frequency.is_some()) && self.read.is_none() {
+            return Err(
+                "`level` and `frequency` are for loot: base items, which have a `kind`, and \
+                 scrolls (`read`)"
+                    .into(),
+            );
         }
         if self.level.is_some_and(|l| l == 0 || l > MAX_ITEM_LEVEL) {
             return Err(format!("`level` must be 1 to {MAX_ITEM_LEVEL}"));
@@ -906,6 +954,31 @@ impl ObjectSpec {
         }
         Ok(())
     }
+
+    /// Protection is for armour worn, never in a hand (a shield's is Defence only), and
+    /// penetration for weapons and ammunition; each 0 to [`MAX_BONUS`].
+    fn check_protection(&self, slots: &[SlotDef]) -> Result<(), String> {
+        for (field, value) in [
+            ("protection", self.protection),
+            ("penetration", self.penetration),
+        ] {
+            if !(0..=MAX_BONUS).contains(&value) {
+                return Err(format!("`{field}` must be 0 to {MAX_BONUS}"));
+            }
+        }
+        let in_hand = (slots.iter()).any(|s| s.hand && Some(&s.fits) == self.slot.as_ref());
+        if self.protection > 0 && (self.slot.is_none() || in_hand || self.shield > 0) {
+            return Err(
+                "`protection` is for armour worn (a `slot` that is no hand; a shield's is \
+                 `shield`)"
+                    .into(),
+            );
+        }
+        if self.penetration > 0 && self.damage.is_none() && self.ammo.is_none() {
+            return Err("`penetration` is for weapons (`damage`) and ammunition (`ammo`)".into());
+        }
+        Ok(())
+    }
 }
 
 /// Parses objects as level files place them: ids, each optionally with a count (`"arrow*12"`),
@@ -1004,8 +1077,10 @@ mod tests {
             parry: 0,
             armour: 0,
             max_dex: None,
+            protection: 0,
             shield: 0,
             bash: None,
+            penetration: 0,
             skill: None,
             range: None,
             reloads: false,
@@ -1025,6 +1100,7 @@ mod tests {
             food: None,
             cures: Vec::new(),
             corpse: None,
+            read: None,
         };
         assert_eq!(def("dagger", "daggers").describe(1), "a dagger");
         assert_eq!(def("iron key", "iron keys").describe(1), "an iron key");

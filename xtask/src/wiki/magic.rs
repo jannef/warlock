@@ -149,6 +149,7 @@ fn effect_words(effect: ItemEffect) -> String {
         ItemEffect::Durability => "breaks less often".into(),
         ItemEffect::Parry => "Parry".into(),
         ItemEffect::Armour => "Armour".into(),
+        ItemEffect::Protection => "Protection".into(),
         ItemEffect::Shield => "Shield".into(),
         ItemEffect::MaxDex => "Dexterity may add more to Defence".into(),
         ItemEffect::Weight => "lighter".into(),

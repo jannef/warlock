@@ -20,6 +20,8 @@
 #             draw          a bow needs N less Strength
 #             durability    breaks N% less often
 #             parry, armour, shield   + to the item's own Parry, Armour, or Shield
+#             protection    + to the armour's own Protection (body armour, helmets, cloaks,
+#                           gloves, boots)
 #             max_dex       + to the most Dexterity may add to Defence while it is worn
 #             weight        N% lighter
 #             dodge         + Dodge (bonuses add up)
@@ -36,8 +38,9 @@
 #                           what that skill gives, trained or not
 #           Attack effects (to_hit through durability) on a weapon, a missile weapon, or
 #           ammunition change the attacks made with it (local); on anything else every attack
-#           (global). parry, armour, shield, max_dex, and weight change the item itself; the
-#           rest change whoever wears or wields it. An item has at most one affix of each effect
+#           (global). parry, armour, protection, shield, max_dex, and weight change the item
+#           itself; the rest change whoever wears or wields it. An item has at most one affix of
+#           each effect
 #           (of each skill, for skill affixes).
 #   bases   the kinds of item that may roll it: weapon, launcher, ammo, body, helmet, cloak,
 #           gloves, boots, shield, ring, amulet. An affix whose effect the item lacks the means

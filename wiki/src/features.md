@@ -47,7 +47,8 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
 - **Combat** — D&D-style with two twelve-sided dice: every blow and shot is rolled against
   Defence (Dexterity, armour, shield, parry, a beetle's shell), misses say why ("You block the
   kobold's spear with your shield."), criticals threaten and confirm ("The kobold hits you
-  hard!"), and weapons and armour come from data. ADOM-like hit points from Toughness, race, and
+  hard!"), armour and hides soak damage like ADOM's PV ("Your sword glances off the cave beetle's
+  shell."), and weapons and armour come from data. ADOM-like hit points from Toughness, race, and
   class heal with time; creatures die and drop what they carried, look as hurt as they are, and
   your own death ends the run for good: the save is gone.
 - **Experience** — every creature has a level and an XP value; kills you make yourself (melee,
@@ -66,6 +67,10 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   rare finds, larger and finer deeper down, and what rings, amulets, and now and then weapons,
   shields, and helms are set with: "an emerald-pommelled long sword", "a gold and ruby ring".
   General stores buy them at what they are worth.
+- **Scrolls** — read with `r`: scrolls of fireball, lightning, and frost cast the traps' spells
+  where you aim them (a fireball read too close asks first), and what they kill is yours; a
+  scroll of identify tells you what an unidentified item is. They lie in the Depths and sell in
+  general stores.
 - **People and talk** — the showcase has folk to talk to: a gardener and a wandering bard in the
   courtyard, an old hermit by the hub's stairs. Chat with `C`: most say a one-liner, a different
   one each time; some have topics to ask about on a small dialogue screen (the hermit knows the
@@ -147,6 +152,10 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   already: tumbling adds to your Defence, stealth quiets your steps and doors, listening lets you
   hear fainter sounds, balance eases a heavy load, and survival speeds your journeys. A Skills
   screen (`S`) shows their values, never the numbers behind them.
+- **Abilities** — unlike ADOM's key for each, one menu (`a`) holds everything you can do
+  because of who you are: a shield bash, the skills you use as actions, and later racial, class,
+  and item abilities. What you cannot use right now is greyed out with why, and `A` repeats the
+  last one.
 - **Living glyphs and effects** — still ponds that glint in the torchlight, streams and a river
   that visibly flow and foam against rocks, a pulsing altar, flickering torches, sparks and
   embers, a soft glow, heat haze over braziers, short fades. All of it is tunable per effect, and

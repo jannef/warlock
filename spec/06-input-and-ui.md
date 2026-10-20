@@ -40,6 +40,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   they are told to. A door's trap is never stepped on (§8 "Trapped doors"), so a door never asks:
   walking through a trapped doorway sets nothing off, and walking into a trapped closed door opens
   it as `o` does.
+- **Reading too close** (§8 "Scrolls"): a burst read from a scroll (fireball, frost) aimed where,
+  as far as the player knows, it may catch them too (they stand within its radius of where it
+  would go off: the first creature they see on the line of fire, the last cell before one they
+  know is solid, or the cursor) asks first, in the dialog: `The fireball may catch you too. Read
+  the scroll of fireball anyway?` with `Read it` (accept: the read as usual, replay text
+  `read:LETTER:X,Y`), `Aim again` (decline: back to aiming, on the same target), and `Don't read
+  it` (cancel, selected first). The rules never ask.
 - **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
   `--record`, or `--capture` name what to run): Continue (only if a save exists), New run
   (scenario list from content, optional seed, then character creation), Settings, Controls,
@@ -115,11 +122,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   not abilities), open/close door, kick (`K`, then a direction; §8 "Doors"),
   ascend/descend, light/douse lantern (`L`),
   pick up (`,` or `g`), drop (`d`), inventory (`i`), equipment (`e`), character (`@`), skills
-  (`S`), weapon skills (`W`), quest log (`q`), rest (`R`), eat (`E`), look, shoot or throw what
+  (`S`), weapon skills (`W`), quest log (`q`), rest (`R`), eat (`E`), read (`r`; a basic
+  command, not an ability), look, shoot or throw what
   is in the missile weapon slot
   (`t`), throw from the pack (`T`), fire (`f`, unbound by default), more aggressive / more
-  defensive combat stance (`+` / `-`; §8 "Stances"), bash with a shield (an ability, below: no
-  key by default; bound in Controls, it asks for a direction, like opening a door), next target
+  defensive combat stance (`+` / `-`; §8 "Stances"), the abilities menu (`a`, below) and the
+  quick repeat of the ability used last (`A`), bash with a shield (an ability, below: no key by
+  default; bound in Controls, it asks for a direction, like opening a door), next target
   (`Tab`, while aiming), use a tool (`U`, then a direction: dig), chat (`C`), pay (`p`, in a
   shop; §7 "Shops"), help, save and quit
   (rebindable, unbound by default: quitting is done from the pause menu). Every way to quit (the
@@ -128,8 +137,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   window or the tab does not ask). On the web Quit saves and reloads the page to a fresh main
   menu (a page cannot close itself), which has no Quit item. Free actions (look, help, the
   inventory, looking at the equipment screen, the character screen, the Skills screen, the
-  weapon skills screen, the quest log, asking about a topic, menus, vision switch, a change of
-  stance, paying in a shop) do not
+  weapon skills screen, the quest log, the abilities menu, asking about a topic, menus, vision
+  switch, a change of stance, paying in a shop) do not
   advance time.
 - **Objects** (M11) lie in piles on cells, the top first: the map shows the top object's glyph
   (§4.2), and dropped objects go on top. Stepping onto a pile says what lies there: `You see here
@@ -139,8 +148,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   potions) join a stack of the same object wherever they go; any other object is a stack of one.
   A door does not close on objects in its doorway.
 - **Item lists** (#188, #189): every list of stacks the player chooses from or reads (the
-  inventory, picking up, dropping, what to throw or eat, what goes in an equipment slot; selling
-  is dropping in a shop) is one paged list. Its stacks are grouped by **item class** (§7 "Objects
+  inventory, picking up, dropping, what to throw, eat, or read, what to read the scroll of
+  identify on, what goes in an equipment slot; selling is dropping in a shop) is one paged list. Its stacks are grouped by **item class** (§7 "Objects
   and materials": melee weapons, missile weapons, missiles, shields, body armour, ... coins,
   miscellaneous), in class order, each class under a header row with its name and no letter;
   within a class they keep their order (the order they were picked up, or the pile's). A page
@@ -189,8 +198,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   small emerald, fine cut", a loose gem's "Gem: tiny garnet, uncut"; §7 "Gems"), its base stats
   in words
   (`magic::describe`: "Long blade, for the main hand", "Damage 1d8; criticals on 20–24, ×2
-  damage", "Shoots up to 15 cells", "Needs Strength 14 to draw", "Quick to strike", "Armour +4",
-  "Dexterity adds at most +4 to Defence while worn", "Breaks on a hit 30% of the time"), and for
+  damage", "Shoots up to 15 cells", "Needs Strength 14 to draw", "Quick to strike", "Pierces
+  armour" (never how much), "Armour +2", "Protection 3", "Dexterity adds at most +4 to Defence
+  while worn", "Breaks on a hit 30% of the time"), and for
   a magic or rare item either "Unidentified: what its magic does is unknown, though it works all
   the same." or its item level and each affix, "Prefix  Sharp: +2 damage", "Suffix  of Celerity:
   attacks faster" (affix magnitudes are item properties and shown; speed only in words; global
@@ -231,9 +241,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   status effect or stat damage lowers shows lowered, in a muted red; §8 "Status effects",
   "Diseases"), their level and experience (`Lv  Level  3`, `XP  Experience
   85 / 120`, the total alone at the highest level; §8 "Experience"), their hit points (`HP  Hit
-  points  18/24`) and Defence
+  points  18/24`), Defence
   (`Dv  Defence  15`; the total only, as its Dexterity part would give away a modifier; §8
-  "Combat"), their combat stance by name (`Stance  Neutral`; §8 "Stances"), the status effects
+  "Combat") and Protection beside it on the same row (`Pv  Protection  3`; the total only),
+  their combat stance by name (`Stance  Neutral`; §8 "Stances"), the status effects
   they suffer, by name, when there are any (`Status  Bleeding, Poisoned`; never how severe or for
   how long), the diseases they know they have, by name, on a row of their own below (`Diseased
   Filth fever, red ache`; one that has not progressed yet is only "Diseased"; never a timer or a
@@ -250,12 +261,40 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ↑↓ choose a skill, whose one-line description shows below the list (a list taller than the
   panel scrolls). Never a benefit's number, a mark, or a chance. Read-only; `S`, Enter, or Esc
   closes it (back to the character screen when opened from there).
-- **Abilities** (the owner's rule; #156): racial, class, skill, and style abilities go into one
-  abilities menu (to come), not a key each, unlike ADOM. Each is a core `Action` with replay
-  text and a key command that is unbound by default (rebindable in Controls). The list the menu
-  will read is `warlock_core::ability` (`Ability`: name, what it asks for (`Aim`), the `Action`
-  it makes) and `PerceptionView::abilities` (those the player can use now). The first is the
-  shield bash (§8 "Weapon skills"), listed while the player holds a shield to bash with.
+- **Abilities** (the owner's rule; #156): everything the character can actively do because of
+  who they are — racial, class, skill (active skill uses), weapon skill and fighting style, and
+  item abilities — goes into one abilities menu (`a`), not a key each, unlike ADOM. Basic
+  roguelike commands (move, open/close, kick, pick up/drop, eat, chat, search, look, throw/shoot,
+  rest, inventory, equipment) keep their keys; digging is an item's use (`U`), not an ability.
+  - **The registry** is `warlock_core::ability`, the one place abilities are registered: every
+    `Ability` has an id, a name, a description, a `Source` (race, class, skill, weapon skill,
+    item: the menu's groups, in that order), what it asks for (`Aim`: nothing, or a direction;
+    a target and an item from the pack join with the first ability that needs one), its action
+    cost (an `ActionKind`), who has it, and whether it can be used now and why not
+    (`Unavailable`: "you hold no shield", "not usable yet"). `PerceptionView::abilities` lists
+    the player's, in menu order, each with why it cannot be used now. Every ability is a normal
+    core `Action` with replay text, so replays record it as that action.
+  - **What there is**: the shield bash (§8 "Weapon skills"), which everyone has and can use
+    while holding a shield to bash with; and each skill used as an action (`kind = "action"`,
+    §8 "Skills") the player is trained in, listed but never available until its use comes (it
+    then becomes an ability of its own with its action). No race, class, or item gives one yet.
+  - **The menu** (a screen on the stack) lists them as the one paged list (§6 "Item lists"),
+    grouped by source under a header each, lettered down each page from `a`: each row the
+    ability's name and what it asks for ("in a direction"), or greyed out with why it cannot be
+    used now; the selected ability's description below. A letter, or Enter on the `>` row, uses
+    it: the menu closes, the ability asks for what it needs (a direction in the message line,
+    "In which direction? (Esc to cancel)"), and its action is applied; choosing one that cannot
+    be used now says why on the menu instead ("Shield bash: you hold no shield."). Esc closes
+    it; so does `a` when it names no row (an empty menu: "You have no abilities."). No time
+    passes while it is open.
+  - **Quick repeat**: the menu opens on the ability used last in the run (else the first that
+    can be used), so `a` Enter repeats it; `A` (`KeyCommand::RepeatAbility`) uses it again at
+    once, and opens the menu when none was used yet.
+  - **Keys**: an ability with an action of its own is also a rebindable key command, unbound by
+    default (the shield bash: "Bash with your shield"); bound, it uses the ability as the menu
+    does, and one that cannot be used now is applied at once so the rules say why, taking no
+    time ("You have no shield to bash with."). New abilities register in the registry and get
+    no default key.
 - **Weapon skills** (`W`; M22, §8 "Weapon skills", "Fighting styles"), ADOM-like: the player's
   weapon skills and fighting styles in four sections in data order — Melee (the `melee` and
   `unarmed` skills), Missile and thrown (`launcher`, `thrown`), Shields (`shield_block`,
@@ -346,6 +385,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   feel satiated." when it is done, "You stop eating." (or "A kobold comes into view; you stop
   eating.") when not, the food left as it was. What is no food is refused and takes no time
   ("You cannot eat a dagger.").
+- **Read** (`r`; §8 "Scrolls") opens the choice of what to read: the scrolls in the inventory
+  (what has something to read on it), in the item list; with nothing, "You have nothing to
+  read." A letter, or Enter on the `>` row, chooses: a spell scroll is then aimed (Targeting,
+  below), and the scroll of identify replaces the list with the unidentified stacks the player
+  carries ("You carry nothing unidentified."), where a letter or Enter reads it on that stack
+  (replay text `read:LETTER:LETTER`, the scroll then the stack). Esc cancels either list.
 - **Dig** (`U`, "use a tool", ADOM's use-item key, an item's use rather than an ability; §8
   "Digging") asks in the message line `Dig in which direction? (Esc to cancel)`; a direction
   digs (replay text `dig:E`), any other command cancels. With no digging tool ready nothing is
@@ -362,7 +407,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   player saw both ends ("The kobold misses you." for a plain miss; "You dodge the kobold's
   spear.", "The kobold's spear glances off your armour.", "You block the kobold's spear with your
   shield.", "You parry the kobold's spear.", "Your sword glances off the cave beetle's shell."),
-  a shot ("The kobold archer shoots the giant rat."), and a death ("The giant rat dies.", "You
+  a hit Protection soaked to nothing, naming what took it when the player saw both ends (the
+  natural armour, or the worn piece with the most Protection: "Your sword glances off the cave
+  beetle's shell.", "The kobold's spear glances off your chain mail shirt."; else "Something
+  hits you but does no harm."), a shot ("The kobold archer shoots the giant rat."), and a death ("The giant rat dies.", "You
   die..."). Spells are announced ("The kobold shaman casts a spell at you."). An end the player
   does not see is
   "something" ("Something hits you.", "The kobold misses something."), and a miss is then just
@@ -390,7 +438,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `IMPROVISED_RANGE` cells, in `combat.rs`); with nothing there, or no ammunition, it is refused
   ("You have nothing ready to throw or shoot.", "You have no arrows ready."). `T` opens the choice
   of what to throw: the inventory's throwing weapons, in the item list (a letter or Enter
-  chooses; "You have nothing to throw."). `f` (no default key) aims the readied launcher only. Aiming is an input mode like look mode: no time passes.
+  chooses; "You have nothing to throw."). `f` (no default key) aims the readied launcher only.
+  A spell scroll chosen to read (`r`, above) is aimed the same way, as far as its spell reaches
+  (its `range`; a bolt's length); a bolt's line is blocked only by what is solid, as it runs
+  through creatures. Aiming is an input mode like look mode: no time passes.
   The cursor starts on the last target if the player still sees it (a creature) or it is on this
   level (a cell), else on the nearest hostile creature in view, else on the player; `Tab` and
   `Shift`+`Tab` cycle through the creatures in view, nearest first (ties: the lower id); the
@@ -401,8 +452,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   creature in view in the way is blocked, one beyond the range out of range, and both show on a
   muted red cursor and in the message line ("Out of range.", "The way is blocked.", after the
   target's description, as look mode gives it). No chance to hit is ever shown. `Enter` (or the
-  key that started it, or `t`) looses the missile (replay text `fire:X,Y`,
-  `throw:LETTER:X,Y`) and remembers the target, so `t` then `Enter` shoots it again; `Esc`
+  key that started it, or `t` for a shot or a throw) looses the missile or reads the scroll
+  (replay text `fire:X,Y`, `throw:LETTER:X,Y`, `read:LETTER:X,Y`; a burst that may catch the
+  player asks first, above) and remembers the target, so `t` then `Enter` shoots it again; `Esc`
   cancels. Out of range or at the player's own cell, the rules refuse it and no time passes.
 - **Look mode** describes what the player perceives at the cursor: a creature and its terrain,
   with how it stands toward the player and how hurt it looks ("A giant rat (hostile, unhurt), on

@@ -21,7 +21,8 @@ is reported where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`
 `kick_door`, `search_turn` for `search`, `notice_hidden` for `spot`). A new
 effect or use is a variant there plus its one hook. The player sees values only
 (`PerceptionView::own_skills`, the Skills screen `ui/skills_screen.rs`, `S`); never marks or
-benefit numbers. Skills get no keys of their own: active uses will be chosen from the one
-abilities menu (#156), which reads `PerceptionView::active_skills` (`OwnSkill::active`: the
-skill's kind is `action`; `available`: usable now, false until the uses exist). Pending hooks:
+benefit numbers. Skills get no keys of their own: active uses are chosen from the one abilities
+menu (#156, `docs/dev/screens.md`): each trained skill of kind `action` is an `Ability::Skill`
+there (`warlock_core::ability`), unavailable ("not usable yet") until its use exists, when it
+becomes an ability of its own. Pending hooks:
 athletics (climbing out of pits, #128) and escape artist (pits, #128).

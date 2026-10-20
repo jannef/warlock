@@ -1,5 +1,18 @@
 # Equipment and magic items.
 
+# Protection (#192): armed in the storeroom (an iron helm and a chain mail shirt, Protection 4),
+# down to the trap hall, and three times onto the arrow trap by the stairs: the third arrow is
+# soaked to nothing and glances off the armour that soaks the most.
+[[golden]]
+name = "armour-soak"
+scenario = "showcase"
+actions = '''
+move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N pickup move:S*2 pickup
+move:NW move:W*2 move:N pickup move:SW pickup equip:head:f equip:body:e equip:feet:i move:SE
+move:E*3 move:NE move:E move:N*4 move:E*51 open:S move:S*7 move:SW descend move:NW move:SE
+move:NW move:SE move:NW
+'''
+
 # The equipment screen (#114): every slot by letter with what is in it, after arming in the
 # storeroom: a helm, mail, a two-handed quarterstaff in both hands, boots, a bow and arrows.
 [[golden]]

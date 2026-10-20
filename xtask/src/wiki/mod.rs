@@ -10,6 +10,7 @@
 //! `pub(super) fn table(content: &Content) -> String`; `text` holds the helpers two or more of
 //! them share. [`generate`] is the one registration list: a line per generated file, in order.
 
+mod abilities;
 mod actions;
 mod burden;
 mod calendar;
@@ -29,6 +30,7 @@ mod objects;
 mod order;
 mod rooms;
 mod scenarios;
+mod scrolls;
 mod searching;
 mod sight;
 mod skills;
@@ -144,11 +146,13 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("skill-benefits.md", skills::skill_benefits),
         ("skill-grants.md", skills::skill_grants),
         ("skill-increase.md", skills::skill_increase),
+        ("abilities.md", abilities::abilities),
         ("weapons.md", combat::weapons),
         ("light-weapons.md", combat::light_weapons),
         ("launchers.md", combat::launchers),
         ("ammunition.md", combat::ammunition),
         ("armour.md", combat::armour),
+        ("piercing.md", combat::piercing),
         ("stances.md", combat::stances),
         ("hit-chances.md", combat::hit_chances),
         ("threats.md", combat::threats),
@@ -180,6 +184,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("magic-prefixes.md", magic::prefixes),
         ("magic-suffixes.md", magic::suffixes),
         ("magic-names.md", magic::rare_names),
+        ("scrolls.md", scrolls::scrolls),
         ("weapon-skills.md", weapon_skills::skills),
         ("weapon-defaults.md", weapon_skills::defaults),
         ("weapon-marks.md", weapon_skills::marks),
@@ -225,6 +230,20 @@ mod tests {
             "{traps}"
         );
         assert!(traps.contains("| Pit `^` |") && !traps.contains("to_hit"));
+        let scrolls = text("scrolls.md");
+        assert!(
+            scrolls.contains("| Scroll of fireball `?` | Flies at the cell you aim at"),
+            "{scrolls}"
+        );
+        assert!(
+            scrolls.contains("| 3d6 | 10 cells | Explosion, very loud | item level 3 | 150 gold |"),
+            "{scrolls}"
+        );
+        assert!(scrolls.contains("| Scroll of identify `?` | Identifies one unidentified item"));
+        assert!(
+            !scrolls.contains("Scroll of light `"),
+            "nothing to read on it yet"
+        );
         assert!(
             text("moons.md").contains(
                 "| Moon | 30 days | standard | about 17% of full light | 1 Frostmere, Year 1 |"
@@ -417,6 +436,15 @@ mod tests {
             actions
                 .contains("| Putting something on, or taking it off: Body | 3000 | 18 seconds |")
         );
+        let abilities = text("abilities.md");
+        assert!(
+            abilities.contains(
+                "| Shield bash | Weapon skills | everyone (usable with a shield in hand) | a \
+                 direction | Strike someone next to you with the shield you hold. | 6 seconds |"
+            ),
+            "{abilities}"
+        );
+        assert!(abilities.contains("| Open lock | Skills | everyone trained in the skill | — |"));
         assert!(
             text("materials.md")
                 .contains("| Steel | no | stilettos, daggers, short swords, scimitars,")
@@ -594,10 +622,15 @@ mod tests {
         assert!(weapons.contains("Bare hands: 1d3"));
         let armour = text("armour.md");
         assert!(
-            armour.contains("| Chain mail shirt | body | +4 | Armour | +4 |"),
+            armour.contains("| Chain mail shirt | body | +2 | Armour | 3 | +4 |"),
             "{armour}"
         );
-        assert!(armour.contains("| Small shield | off hand | +1 | Shield | no limit |"));
+        assert!(armour.contains("| Small shield | off hand | +1 | Shield | - | no limit |"));
+        assert!(armour.contains("| Great helm | head | - | - | 2 | no limit | - |"));
+        assert!(
+            text("piercing.md")
+                .ends_with("The crossbow bolt, the stiletto, and the war hammer pierce armour.\n")
+        );
         let stances = text("stances.md");
         assert!(
             stances.contains("| Aggressive | +1 | +2 | \u{2212}3 | - | - | - | - | 125% |"),

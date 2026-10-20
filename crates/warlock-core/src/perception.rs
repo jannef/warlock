@@ -59,7 +59,7 @@
 //! is not visible are perceived with their kind, volume, and a rough place (a cell the player
 //! does not see, near the source); never with who made them.
 
-use crate::ability::Ability;
+use crate::ability::{Ability, OwnAbility};
 use crate::action::Positions;
 use crate::blood::Stain;
 use crate::burden::{self, Load};
@@ -98,21 +98,15 @@ use serde::Serialize;
 /// Maximum sight distance, however bright the light.
 pub const VIEW_RADIUS: i32 = 40;
 
-/// One of the player's own trained skills, as they know it (spec §8 "Skills"): its value, a
-/// coarse sense of how near its next point is, and for the abilities menu (#156) whether it has
-/// an active use and whether that is available now. Never its marks or what it gives.
+/// One of the player's own trained skills, as they know it (spec §8 "Skills"): its value and a
+/// coarse sense of how near its next point is. Never its marks or what it gives. (Its active use,
+/// if it has one, is an ability: [`PerceptionView::abilities`].)
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 pub struct OwnSkill {
     pub skill: SkillId,
     pub value: u16,
     /// Toward the next point, in quarters: 0 (just gained one) to 3 (nearly there).
     pub progress: u8,
-    /// Whether it has an active use: it is used as an action (`kind = "action"` in data), which
-    /// the abilities menu lists.
-    pub active: bool,
-    /// Whether its active use can be used now. No active use exists yet (they come with their
-    /// actions), so this is always false for now.
-    pub available: bool,
 }
 
 /// What the player knows about one cell.
@@ -972,16 +966,8 @@ impl<'a> PerceptionView<'a> {
                 skill,
                 value: trained.value,
                 progress: skills::progress(trained, increase),
-                active: self.content.skill(skill).is_active(),
-                available: false,
             })
             .collect()
-    }
-
-    /// The player's own trained skills that have an active use, in skill order, each with
-    /// whether that use is available now: what the abilities menu (#156) lists of skills.
-    pub fn active_skills(&self) -> Vec<OwnSkill> {
-        self.own_skills().into_iter().filter(|s| s.active).collect()
     }
 
     /// The player's own status effects, the most important first (spec §8 "Status effects"):
@@ -1005,11 +991,15 @@ impl<'a> PerceptionView<'a> {
             .map(|(_, s)| *s)
     }
 
-    /// The abilities the player can use now, in menu order ([`crate::ability`]): for the
-    /// abilities menu (#156) to list.
-    pub fn abilities(&self) -> Vec<Ability> {
-        (Ability::ALL.iter().copied())
-            .filter(|a| a.usable(self.player, self.content))
+    /// The player's abilities, in menu order (grouped by source, [`crate::ability`]), each with
+    /// why it cannot be used now, if it cannot: what the abilities menu (#156) lists. They know
+    /// what they can do and what they hold.
+    pub fn abilities(&self) -> Vec<OwnAbility> {
+        (Ability::of(self.player, self.content).into_iter())
+            .map(|ability| OwnAbility {
+                ability,
+                unavailable: ability.unavailable(self.player, self.content),
+            })
             .collect()
     }
 
@@ -1062,6 +1052,12 @@ impl<'a> PerceptionView<'a> {
     pub fn own_defence(&self) -> i32 {
         let burden = self.own_load().penalty();
         self.player.defence(self.content, burden).total()
+    }
+
+    /// The player's Protection ("Pv"): the damage what they wear soaks off every hit, the total
+    /// only. Never a creature's.
+    pub fn own_protection(&self) -> i32 {
+        self.player.protection(self.content)
     }
 
     /// How the run ended, once the player has died (what killed them only if they saw it).
