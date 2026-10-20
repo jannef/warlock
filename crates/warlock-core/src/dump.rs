@@ -448,14 +448,15 @@ fn equipment_rows(view: &PerceptionView<'_>) -> Vec<String> {
         .collect()
 }
 
-/// The player's character, if any (`Race Dwarf`, `Gender Female`, `Class Warrior`, `Age 27`,
-/// `Born 3 Seedtide 1417`, `Sign Fire Manticore`), then their own scores, one stat a line:
-/// `Strength 12`.
+/// The player's character, if any (`Name Brakka`, `Race Dwarf`, `Gender Female`, `Class
+/// Warrior`, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`), then their own scores, one
+/// stat a line: `Strength 12`.
 fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
     let content = view.content();
     let mut rows = Vec::new();
     if let Some(c) = view.character() {
         let spec = &c.spec;
+        rows.push(format!("Name {}", c.name));
         let race = spec
             .race(content)
             .map_or(spec.race.as_str(), |r| r.name.as_str());
@@ -978,6 +979,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "weight": { "base": weight.base, "carried": weight.carried, "total": weight.total() },
         "burden": { "level": load.burden(), "limit": load.limit },
         "character": view.character().map(|c| json!({
+            "name": c.name,
             "race": c.spec.race,
             "gender": c.spec.gender,
             "class": c.spec.class,
@@ -1125,7 +1127,7 @@ mod tests {
         // The player's character, and their own scores by stat id; nothing else about stats.
         assert_eq!(
             value["character"],
-            json!({ "race": "human", "gender": "female", "class": "thief",
+            json!({ "name": "Tamsin", "race": "human", "gender": "female", "class": "thief",
                     "raised": "dexterity", "age": 34,
                     "born": { "year": 1410, "month": 5, "day": 29 },
                     "sign": { "animal": "basilisk", "element": "water" } })
@@ -1205,6 +1207,7 @@ mod tests {
         assert_eq!(
             layer_rows(&world, Layer::Stats),
             [
+                "Name Tamsin",
                 "Race Human",
                 "Gender Female",
                 "Class Thief",
