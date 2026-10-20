@@ -150,11 +150,13 @@ to open, read keys for, or draw one:
   `ui/equipment_screen.rs` (`EquipmentScreen`: slots by letter, which always name slots, so its
   own key `e` closes it only when it names none; `ItemScreen`: the stacks that fit one slot), `ui/character_screen.rs` (name, race, gender, class, age, birthday,
   and sign (`birth_parts`/`fit_parts`, shared with the summary), the player's scores, hit points
-  and Defence total, weight and burden thresholds; 72 wide like the summary),
+  and Defence total, the alignment band (`PerceptionView::own_alignment`), weight and burden
+  thresholds; 72 wide like the summary),
   `ui/weapon_skills_screen.rs` (an info page: sections, ranks, and a faint ten-cell marks bar,
   the fighting styles in use marked `•`; two columns from 88 wide, else one that drops its gaps
   and margins and then scrolls with ↑↓; never a benefit), `ui/chargen_screen.rs` (character creation: `ChoiceScreen` per
-  step with a Random row rolled from the seed, `SummaryScreen`, `Draft`), `ui/name_screen.rs`
+  step with a Random row rolled from the seed, `SummaryScreen` (with the band `Start::alignment`
+  falls in), `Draft`), `ui/name_screen.rs`
   (`NameScreen`, the Name step and the game's text field: typed text literal while the font draws
   it (`render::atlas::draws`) and there is room; the `Context::Text` keys accept, erase, put in the
   next of the race's random names (never the one shown; not on a held key), and back out; an empty
@@ -189,7 +191,8 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   it makes from its aim), a line in `Ability::every` (menu order: by source, then as listed),
   who has it (`had_by`), and when it cannot be used (`unavailable` → `Unavailable` with its
   reason; `While(status)` for a status that blocks its cost's kind or is its cooldown,
-  `docs/dev/status-effects.md`; `reason`/`id` take the content). `PerceptionView::abilities` is what presentation reads (`OwnAbility`: the ability and
+  `docs/dev/status-effects.md`; one that asks for an alignment asks `ability::strayed` first,
+  `Unavailable::Strayed`, `docs/dev/alignment.md`; `reason`/`id` take the content). `PerceptionView::abilities` is what presentation reads (`OwnAbility`: the ability and
   why it cannot be used now); the `abilities` dump layer and JSON key show the same, and the
   wiki's table (`xtask/src/wiki/abilities.rs`) lists `Ability::every`. Skills used as actions are
   `Ability::Skill(id)` until their use exists (never available); a use, when it comes, is a

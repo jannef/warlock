@@ -87,7 +87,8 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   `equipment` (the player's slots by letter, `c Body: a leather jerkin (b)`, `-` when empty),
   `stats` (the player's name, race, gender, and class, `Name Brakka`, `Race Dwarf`, their age, birthday, and
   sign, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`, then their own scores as
-  the rules read them, `Strength 12`, then their status effects by name, `Effects Bleeding,
+  the rules read them, `Strength 12`, then their alignment band, `Alignment Kind` (never the
+  score), then their status effects by name, `Effects Bleeding,
   Diseased`, then the diseases they know they have, `Diseases filth fever`), `skills` (the player's trained skills in skill order, `Stealth 17`),
   `weapon_skills` (the player's weapon skills and fighting styles in file order with their rank
   and how far their marks are toward the next, `Long blades 2 (40%)`; at rank 10 the rank alone;
@@ -96,7 +97,8 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   rats in the Arena. 0 / 3 killed.`) are built from the perception snapshot only;
   `truth` (terrain, objects, traps hidden or known, secret doors as `S`, and creatures) and `actors` (every actor on
   the level with its hit
-  points and Defence, `hp 8/12 dv 13`, its
+  points and Defence, `hp 8/12 dv 13`, its alignment (`alignment evil`; the player's score and
+  band, `alignment 450 (good)`; §8 "Alignment"), its
   weight, base plus carried, what it carries and of that wears and wields, `equipped main_hand a
   spear` (magic items as they truly are, `an iron ring of the Bear (unidentified)`), what its
   magic items do to it by effect id, `magic strength +1 light item_glow`, its burden and carrying
@@ -128,7 +130,8 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   null; an unpaid stack with its price, `unpaid`), equipment (by slot id: letter, object, count), weight, burden (`burden: {level,
   limit}`, the limit in grams), character
   (`{name, race, gender, class, raised, age, born: {year, month, day}, sign: {animal, element}}` or
-  null), scores (`stats`, by stat id), trained skills (`skills`, by skill id with their values),
+  null), scores (`stats`, by stat id), the alignment band (`alignment`, its id, or null without
+  alignment rules), trained skills (`skills`, by skill id with their values),
   status effects (`effects`, by id), the diseases they know they have (`diseases`, by id),
   weapon skills and fighting styles (`weapon_skills`, by skill id: `{rank, progress}`, the
   progress a percent or null at rank 10), the styles in use (`styles_in_use`, style ids), the

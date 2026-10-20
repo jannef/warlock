@@ -2,7 +2,8 @@
 //! seed, New run asks for a race, a gender, and a class, one screen each ([`ChoiceScreen`]), then
 //! a name (`name_screen`), then shows the character ([`SummaryScreen`]): the name, age, birthday,
 //! and birth sign, the final scores (the dice already rolled), the starting trained skills with
-//! their values, and a way back to any step.
+//! their values, the alignment band they start in (spec §8 "Alignment"), and a way back to any
+//! step.
 //!
 //! The steps are screens on the stack, in order (New run, race, gender, class, name, summary), so
 //! Esc steps back one and the summary's "change" rows return to a step as it was left. What has
@@ -425,6 +426,8 @@ pub struct SummaryScreen {
     /// The starting trained skills, by name, with their values, in skill order.
     skills: Vec<(String, u16)>,
     eyes: String,
+    /// The band the character starts in (spec §8 "Alignment"); empty without alignment rules.
+    alignment: String,
     selected: usize,
 }
 
@@ -458,6 +461,11 @@ impl SummaryScreen {
                 .vision(&s.vision)
                 .map_or(s.vision.clone(), |v| v.name.clone())
         });
+        let alignment = (start.as_ref().ok())
+            .zip(content.alignment())
+            .map_or(String::new(), |(s, rules)| {
+                rules.band(s.alignment).name().to_string()
+            });
         let skills = start.as_ref().map_or(Vec::new(), |s| {
             (s.skills.iter())
                 .map(|(id, t)| (content.skill(id).name.clone(), t.value))
@@ -472,6 +480,7 @@ impl SummaryScreen {
             birth,
             skills,
             eyes,
+            alignment,
             selected: 0,
         }
     }
@@ -546,7 +555,8 @@ impl SummaryScreen {
             0 => 0,
             n => n as i32 + 1,
         };
-        let h = SUMMARY_ROWS.len() as i32 + block + 9 + birth_rows + below_rows;
+        let alignment_rows = i32::from(!self.alignment.is_empty());
+        let h = SUMMARY_ROWS.len() as i32 + block + 9 + birth_rows + below_rows + alignment_rows;
         let panel = Panel::new(console, " Your character ", WIDTH, h);
         let x = panel.inner_x();
         let fits = |y: i32| y < panel.y + panel.h - 2;
@@ -610,7 +620,15 @@ impl SummaryScreen {
             .scenario
             .as_ref()
             .map_or(String::new(), |s| format!("{}, seed {}", s.name, s.seed));
-        for (label, value) in [("Vision", &self.eyes), ("Scenario", &scenario)] {
+        let rows = [
+            ("Alignment", &self.alignment),
+            ("Vision", &self.eyes),
+            ("Scenario", &scenario),
+        ];
+        for (label, value) in rows {
+            if label == "Alignment" && value.is_empty() {
+                continue;
+            }
             if fits(y) {
                 console.print(x + 2, y, label, TEXT_DIM);
                 console.print(x + 12, y, value, TEXT);
@@ -846,6 +864,7 @@ mod tests {
             "In  Intelligence   9",
             "Wi  Willpower     12",
             "Pr  Presence       8",
+            "Alignment Neutral",
             "Vision    Darkvision",
             "Scenario  Showcase, seed 1",
             // The starting skills beside the scores: the dwarf's and the warrior's.
@@ -854,6 +873,10 @@ mod tests {
         ] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }
+        // A paladin starts Good: the band, never the score.
+        let paladin = drawn(&summary("human,male,paladin", 1));
+        assert!(paladin.contains("Alignment Good"), "{paladin}");
+        assert!(!paladin.contains("450"), "{paladin}");
         for skill in ["Balance", "Intimidate", "Metalcraft", "Search"] {
             assert!(text.contains(skill), "{skill:?} in\n{text}");
         }

@@ -2,6 +2,7 @@
 
 use super::{FreeBlows, Talk};
 use crate::action::AttackKind;
+use crate::alignment::{Alignment, Band, Score};
 use crate::burden::Burden;
 use crate::combat::{self, Attack, Category, Defence, Health, Profile, Target};
 use crate::content::Effect as ItemEffect;
@@ -168,6 +169,15 @@ pub struct Actor {
     /// peaceful creatures in the showcase). Read the one that counts with [`Actor::faction`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub faction_override: Option<FactionId>,
+    /// Its alignment score (spec §8 "Alignment"; [`crate::alignment`]): the player's, when the
+    /// content has alignment rules; creatures have none, and stand where [`Actor::nature`]
+    /// says. Moved only by `World::shift_alignment`; never shown as a number.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub alignment: Option<Score>,
+    /// Where its level placed it between good and evil, if not where its type stands (an
+    /// `alignment` in a level legend entry). Read the one that counts with [`Actor::nature`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub alignment_override: Option<Alignment>,
     /// How fed it is (spec §8 "Hunger"): the player's, when the content has hunger; creatures
     /// do not hunger (`None`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -198,6 +208,26 @@ impl Actor {
     pub fn faction(&self, content: &Content) -> Option<FactionId> {
         self.faction_override
             .or(content.creature(self.creature).faction)
+    }
+
+    /// Which side of good and evil it is on (spec §8 "Alignment"): an actor with a score by its
+    /// band's side, else the one its level placed it on, else its creature type's.
+    pub fn nature(&self, content: &Content) -> Alignment {
+        match (self.alignment, content.alignment()) {
+            (Some(score), Some(rules)) => rules.band(score).side(),
+            _ => (self.alignment_override).unwrap_or(content.creature(self.creature).alignment),
+        }
+    }
+
+    /// Its alignment band (spec §8 "Alignment"): its score's, or for a creature, which has
+    /// none, the band its nature counts as ([`Alignment::band`]). Neutral without alignment
+    /// rules.
+    pub fn band(&self, content: &Content) -> Band {
+        match (self.alignment, content.alignment()) {
+            (Some(score), Some(rules)) => rules.band(score),
+            (_, None) => Band::Neutral,
+            (None, Some(_)) => self.nature(content).band(),
+        }
     }
 
     /// What everything it wears and wields does to it (spec §8 "Magic items"; their global

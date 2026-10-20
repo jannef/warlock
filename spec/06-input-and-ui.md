@@ -85,7 +85,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   scores (the final scores only: the dice already rolled, no breakdown, never a potential or a
   modifier) with the starting trained skills and their values beside them (§8 "Skills"; in two
   columns when there are more than six, down the first, then the second; below the scores, as
-  `Appraise 11 · Disable device 16 · …`, when the panel is too narrow), the vision, and the
+  `Appraise 11 · Disable device 16 · …`, when the panel is too narrow), the alignment band the
+  character starts in (`Alignment Good`; §8 "Alignment"; never the score), the vision, and the
   scenario and seed; "other" names the stat it raised. The
   player does not choose the age, the birthday, or the sign. Starting makes a new character with
   a save of its own: it never touches another character's (§7 "Saves"). Content without races or classes skips
@@ -269,7 +270,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   points  18/24`), Defence
   (`Dv  Defence  15`; the total only, as its Dexterity part would give away a modifier; §8
   "Combat") and Protection beside it on the same row (`Pv  Protection  3`; the total only),
-  their combat stance by name (`Stance  Neutral`; §8 "Stances"), the status effects
+  their combat stance by name (`Stance  Neutral`; §8 "Stances"), their alignment band
+  (`Alignment  Kind`; §8 "Alignment"; never the score), the status effects
   they suffer, by name, when there are any (`Status  Bleeding, Poisoned`; never how severe or for
   how long), what they resist, in words only, a row per word when there is anything to tell
   (`Immune to  poison`, `Resistant to  fire, cold`, `Vulnerable to  acid`, kinds in damage type
@@ -298,8 +300,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     item: the menu's groups, in that order), what it asks for (`Aim`: nothing, or a direction;
     a target and an item from the pack join with the first ability that needs one), its action
     cost (an `ActionKind`), who has it, and whether it can be used now and why not
-    (`Unavailable`: "you hold no shield", "not usable yet", or while a status lasts that blocks
-    its kind of action or is its cooldown, "you are winded", §8 "Status effects").
+    (`Unavailable`: "you hold no shield", "not usable yet", while a status lasts that blocks
+    its kind of action or is its cooldown, "you are winded", §8 "Status effects", or "you have
+    strayed": one that asks for an alignment the character has strayed from, §8 "Alignment",
+    kept but greyed out until they climb back; `ability::strayed`).
     `PerceptionView::abilities` lists the player's, in menu order, each with why it cannot be
     used now. Every ability is a normal core `Action` with replay text, so replays record it as
     that action.
