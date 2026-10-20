@@ -82,11 +82,13 @@ pub enum Cause {
     Choked(ObjectId),
     /// A trap of this kind killed them.
     Trap(TrapId),
+    /// The spell of a scroll of this kind they read caught them (spec §8 "Scrolls").
+    Scroll(ObjectId),
 }
 
 impl Cause {
     /// How the death screen says it: "Starved to death", "Choked to death on a ration",
-    /// "Killed by a fireball trap".
+    /// "Killed by a fireball trap", "Killed by their own scroll of fireball".
     pub fn epitaph(self, content: &Content) -> String {
         let what = |o: ObjectId| content.object(o).describe(1);
         match self {
@@ -96,6 +98,7 @@ impl Cause {
                 let name = &content.trap(t).name;
                 format!("Killed by {} {name}", article(name))
             }
+            Cause::Scroll(o) => format!("Killed by their own {}", content.object(o).name),
         }
     }
 
@@ -106,7 +109,7 @@ impl Cause {
         match self {
             Cause::Starvation => "You starve to death...".into(),
             Cause::Choked(o) => format!("You choke to death on the {}...", name(o)),
-            Cause::Trap(_) => "You die...".into(),
+            Cause::Trap(_) | Cause::Scroll(_) => "You die...".into(),
         }
     }
 }

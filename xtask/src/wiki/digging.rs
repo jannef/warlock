@@ -36,8 +36,8 @@ pub(super) fn digging(content: &Content) -> String {
         .collect();
     tools.sort_by_key(|&(name, power)| (power, name));
     let blasts: Vec<(&str, u16)> = (content.trap_defs().iter())
-        .filter_map(|t| match t.effect {
-            TrapEffect::Burst { blast, .. } if blast > 0 => Some((t.noun.as_str(), blast)),
+        .filter_map(|t| match &t.effect {
+            TrapEffect::Burst(b) if b.blast > 0 => Some((t.noun.as_str(), b.blast)),
             _ => None,
         })
         .collect();

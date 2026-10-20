@@ -19,10 +19,10 @@
 //!   radius − 1; no roll to hit; then the walls it reaches that are softer than its `blast` break
 //!   ([`World::blast`], spec §8 "Digging"); then a hot one melts the ice it reaches, and whoever
 //!   stood on it falls in ([`World::shock`]), and a cold one freezes the water it reaches
-//!   ([`World::frost`], spec §5 "Ice");
+//!   ([`World::frost`], spec §5 "Ice"). The same burst a scroll casts ([`World::cast_burst`]);
 //! - **bolt**: a line from the trap in its direction (the level's `dir`, else the longest clear
 //!   line from it, ties to the earlier of N, NE, ... NW) until a wall, at most its length:
-//!   everyone on it takes one roll of the damage;
+//!   everyone on it takes one roll of the damage ([`World::cast_bolt`]);
 //! - **pit**: the victim takes the damage and loses its next action climbing out (the action's
 //!   price is a `wait` more);
 //! - **alarm**: only its noise;
@@ -35,15 +35,12 @@
 //! perception decides what the player perceived of it and says so.
 
 use super::fight::Harm;
-use super::{ActorId, World, fnv1a, spell};
-use crate::action::{Event, MissileEnd, SpellShape};
+use super::spell::Caster;
+use super::{ActorId, World, fnv1a};
+use crate::action::{Event, MissileEnd};
 use crate::combat::{self, Blow, Profile, Strike};
-use crate::content::{ActionKind, BurstIce, ObjectId, TrapEffect, TrapId};
-use crate::dice::Dice;
-use crate::fov::radius2;
+use crate::content::{ActionKind, Bolt, ObjectId, TrapEffect, TrapId};
 use crate::geom::{Dir, Pos};
-use crate::ice::Shock;
-use crate::noise::{self, Noise};
 use crate::object::Stack;
 use crate::perception::VIEW_RADIUS;
 use std::collections::BTreeSet;
@@ -77,21 +74,7 @@ impl World {
             victim,
         });
         let def = content.trap(kind);
-        if let Some(sound) = def.noise {
-            // A special room scales it like every noise made inside it.
-            let room = self.state.current().room_effect_at(&content, at);
-            let percent = room.map_or(100, |r| u32::from(r.noise));
-            let loudness = u32::from(sound.loudness) * percent / 100;
-            let noise = Noise {
-                kind: sound.sound,
-                at,
-                loudness: loudness.min(u32::from(noise::MAX_LOUDNESS)) as u16,
-                maker: None,
-            };
-            if noise.loudness > 0 {
-                noise::make(&mut self.state, &content, noise);
-            }
-        }
+        self.sound_at(def.noise, at);
         match &def.effect {
             TrapEffect::Shot { object, attack } => {
                 self.trap_shot(kind, at, victim, *object, Profile::bare(attack), events);
@@ -100,32 +83,10 @@ impl World {
                 let profile = Profile::bare(attack);
                 self.trap_strikes(kind, victim, (at, false), &profile, events);
             }
-            TrapEffect::Burst {
-                spell,
-                radius,
-                damage,
-                blast,
-                ice,
-            } => {
-                self.trap_burst(kind, at, spell, *radius, *damage, events);
-                if *blast > 0 {
-                    self.blast(at, *radius, *blast, events);
-                }
-                match ice {
-                    Some(BurstIce::Melts) => {
-                        self.shock(at, *radius, Shock::Heat, events);
-                    }
-                    Some(BurstIce::Freezes(um)) => {
-                        self.frost(at, *radius, *um);
-                    }
-                    None => {}
-                }
+            TrapEffect::Burst(burst) => {
+                self.cast_burst(Caster::Trap(kind), (at, at), burst, events);
             }
-            TrapEffect::Bolt {
-                spell,
-                length,
-                damage,
-            } => self.trap_bolt(kind, at, dir, (spell, *length), *damage, events),
+            TrapEffect::Bolt(bolt) => self.trap_bolt(kind, at, dir, bolt, events),
             TrapEffect::Pit { damage } => {
                 if !self.state.actors.contains_key(&victim) {
                     return 0;
@@ -167,7 +128,7 @@ impl World {
 
     /// Trap `trap` does `damage` to `target` from `source` with no roll to hit (a blast, a bolt,
     /// a fall).
-    fn trap_hurts(
+    pub(super) fn trap_hurts(
         &mut self,
         trap: TrapId,
         target: ActorId,
@@ -293,41 +254,6 @@ impl World {
         best.map_or_else(far, |(_, p)| p)
     }
 
-    /// A burst trap on `at` goes off (module docs). Its cells are the spell effect's
-    /// ([`spell::burst_cells`]: within the radius, in line of sight from the trap, no wall), so
-    /// what is drawn is what is hit.
-    fn trap_burst(
-        &mut self,
-        trap: TrapId,
-        at: Pos,
-        spell: &str,
-        radius: i32,
-        damage: Dice,
-        events: &mut Vec<Event>,
-    ) {
-        let level = self.state.current();
-        let cells = spell::burst_cells(at, radius, |p| level.is_opaque(&self.content, p));
-        events.push(Event::Spell {
-            effect: spell.to_string(),
-            origin: at,
-            shape: SpellShape::Burst { center: at, radius },
-            cells: cells.clone(),
-        });
-        let roll = damage.roll(&mut self.state.rng);
-        let inner = radius2(radius - 1);
-        let level = self.state.current_level.clone();
-        let reached: BTreeSet<Pos> = cells.into_iter().collect();
-        let caught: Vec<(ActorId, Pos)> = (self.state.actors.values())
-            .filter(|a| a.level == level && reached.contains(&a.pos))
-            .map(|a| (a.id, a.pos))
-            .collect();
-        for (id, p) in caught {
-            let edge = p.dist2(at) > inner;
-            let damage = if edge { (roll / 2).max(1) } else { roll };
-            self.trap_hurts(trap, id, (at, false), damage, events);
-        }
-    }
-
     /// The cells a bolt from `at` runs over in `dir`: the trap's cell, then on until a wall or
     /// `length` cells in all.
     pub(super) fn bolt_path(&self, at: Pos, dir: Dir, length: i32) -> Vec<Pos> {
@@ -345,16 +271,16 @@ impl World {
     }
 
     /// A bolt trap on `at` goes off along `dir`, or with none along the longest clear line from
-    /// it (ties: the earlier direction, N first).
+    /// it (ties: the earlier direction, N first): the trap's own cell is struck too.
     fn trap_bolt(
         &mut self,
         trap: TrapId,
         at: Pos,
         dir: Option<Dir>,
-        (spell, length): (&str, i32),
-        damage: Dice,
+        bolt: &Bolt,
         events: &mut Vec<Event>,
     ) {
+        let length = bolt.length;
         let dir = dir.unwrap_or_else(|| {
             let mut best = (0, Dir::N);
             for d in Dir::ALL {
@@ -366,27 +292,7 @@ impl World {
             best.1
         });
         let path = self.bolt_path(at, dir, length);
-        // The bolt is drawn from the trap along the cells after it (a spell's path starts next
-        // to its origin); the trap's own cell is struck too.
-        if path.len() > 1 {
-            events.push(Event::Spell {
-                effect: spell.to_string(),
-                origin: at,
-                shape: SpellShape::Bolt {
-                    path: path[1..].to_vec(),
-                },
-                cells: path.clone(),
-            });
-        }
-        let roll = damage.roll(&mut self.state.rng);
-        let level = self.state.current_level.clone();
-        let mut caught = Vec::new();
-        for p in &path {
-            caught.extend(self.state.actor_at(&level, *p).map(|a| a.id));
-        }
-        for id in caught {
-            self.trap_hurts(trap, id, (at, true), roll, events);
-        }
+        self.cast_bolt(Caster::Trap(trap), at, &path, bolt, events);
     }
 
     /// Moves `victim` from the teleport trap on `at` to a free cell of the level (module docs).

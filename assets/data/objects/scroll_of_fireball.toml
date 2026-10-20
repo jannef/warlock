@@ -1,0 +1,29 @@
+# A scroll of fireball (spec §8 "Scrolls"): read it (`r`) and aim, and a fireball flies to the
+# cell aimed at, or the first creature in its way, and explodes as a fireball trap does.
+[[object]]
+id = "scroll_of_fireball"
+name = "scroll of fireball"
+plural = "scrolls of fireball"
+glyph = "?"
+fg = "#ff8a4a"
+class = "scrolls"
+material = "paper"
+weight = 50
+value = 150
+stackable = true
+level = 3
+frequency = 50
+
+[object.read]
+kind = "burst"
+spell = "fireball"
+noun = "fireball"
+verb = "burns"
+message = "A fireball streaks from the scroll and explodes!"
+radius = 2
+damage = "3d6"
+range = 10
+# Blows stone walls and packed earth apart; granite holds. Melts ice.
+blast = 1000
+heat = true
+noise = { sound = "explosion", loudness = 150 }

@@ -1,0 +1,17 @@
+# A scroll of identify (spec §8 "Scrolls", "Magic items"): read it (`r`) on an unidentified item
+# you carry, and you know what it is from then on.
+[[object]]
+id = "scroll_of_identify"
+name = "scroll of identify"
+plural = "scrolls of identify"
+glyph = "?"
+fg = "#d4c4f0"
+class = "scrolls"
+material = "paper"
+weight = 50
+value = 80
+stackable = true
+frequency = 100
+
+[object.read]
+kind = "identify"

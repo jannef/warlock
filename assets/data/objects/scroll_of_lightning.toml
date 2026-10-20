@@ -1,0 +1,25 @@
+# A scroll of lightning (spec §8 "Scrolls"): read it (`r`) and aim, and a lightning bolt runs
+# from you through the cell aimed at and on, striking everyone on its line, as a lightning trap's.
+[[object]]
+id = "scroll_of_lightning"
+name = "scroll of lightning"
+plural = "scrolls of lightning"
+glyph = "?"
+fg = "#a8c8ff"
+class = "scrolls"
+material = "paper"
+weight = 50
+value = 150
+stackable = true
+level = 2
+frequency = 60
+
+[object.read]
+kind = "bolt"
+spell = "lightning_bolt"
+noun = "lightning bolt"
+verb = "strikes"
+message = "Lightning leaps from the scroll!"
+length = 12
+damage = "4d6"
+noise = { sound = "thunder", loudness = 120 }

@@ -30,12 +30,14 @@ mod quest;
 mod race;
 mod room_effect;
 mod scenario;
+mod scroll;
 mod search;
 mod shop;
 mod size;
 mod skill;
 mod sky;
 mod slot;
+mod spell;
 mod stance;
 mod status;
 mod terrain;
@@ -95,6 +97,7 @@ pub use quest::{
 pub use race::{HUNGER, RaceDef, Races};
 pub use room_effect::{RoomEffectDef, RoomEffectId, RoomEffects, SpecialRoom};
 pub use scenario::ScenarioDef;
+pub use scroll::{Cast, Reading, ScrollSpell};
 pub use search::{
     PASSIVE_PENALTIES, PassiveSearch, SEARCH_TURNS, SearchRules, Secret, secret_look,
 };
@@ -103,15 +106,14 @@ pub use size::{CARRY, MEDIUM, SizeDef};
 pub use skill::{SkillBook, SkillDef};
 pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
+pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use status::{
     Affliction, Healing, MAX_REGEN, MAX_SEVERITY, OnHit, Penalty, Stacking, StatusDef, StatusId,
     Wound,
 };
 pub use terrain::{Breakable, Freeze, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
-pub use trap::{
-    BOLT_LENGTHS, BURST_RADII, BurstIce, MAX_CHARGES, Trap, TrapDef, TrapEffect, TrapId, TrapNoise,
-};
+pub use trap::{MAX_CHARGES, Trap, TrapDef, TrapEffect, TrapId, TrapNoise};
 pub use vault::Vault;
 pub use vision::VisionProfile;
 pub use weapon_skill::{
@@ -574,6 +576,7 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.effects = effect::parse(path, text)?;
         }
+        scroll::check_spells(&content).map_err(|m| ContentError::new("data/objects", m))?;
         let path = "data/traps.toml";
         if let Some(text) = files.get_optional(path) {
             let (traps, ids) = trap::parse(path, text, &content)?;

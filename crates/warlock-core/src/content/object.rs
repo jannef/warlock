@@ -55,6 +55,10 @@
 //!
 //! Digging tools (spec §8 "Digging") have a `dig` power: the work a dig with one does against a
 //! wall's hardness (a pick-axe 10, at Strength 10). They go in a slot (the Tool slot).
+//!
+//! Scrolls (spec §8 "Scrolls") say what reading one does (`read`, [`super::scroll`]): cast a
+//! spell the reader aims, with the traps' rules, or identify an item. They are loot too (`level`,
+//! `frequency`), never magic.
 
 use super::action::check_cost;
 use super::affix::{ItemKind, MAX_ITEM_LEVEL};
@@ -64,6 +68,7 @@ use super::item_class::{ItemClassDef, ItemClassId};
 use super::light::LightId;
 use super::material::MaterialId;
 use super::particles::ParticleEmitter;
+use super::scroll::{ReadSpec, Reading};
 use super::slot::SlotDef;
 use super::weapon_skill::{Role, WeaponSkillId, WeaponSkillTable};
 use super::{Content, ContentError, CreatureId};
@@ -234,6 +239,8 @@ pub(super) struct ObjectSpec {
     /// (`remove_disease`).
     #[serde(default)]
     pub cures: Vec<String>,
+    /// What reading it does (a scroll, spec §8 "Scrolls").
+    pub read: Option<ReadSpec>,
 }
 
 /// A resolved object type.
@@ -313,7 +320,8 @@ pub struct ObjectDef {
     pub attack_cost: Option<u32>,
     /// The lowest item level loot holds it at.
     pub level: u8,
-    /// How often loot holds it, relative to the rest (0 for what has no `kind`).
+    /// How often loot holds it, relative to the rest (0 for what is no loot: neither a base item,
+    /// with a `kind`, nor a scroll).
     pub frequency: u32,
     /// What eating it gives, if it is food or a corpse (spec §8 "Hunger").
     pub food: Option<Food>,
@@ -323,6 +331,8 @@ pub struct ObjectDef {
     /// The creature type it is the corpse of, if it is a corpse: it rots from the moment its
     /// creature died ([`Stack::died`]).
     pub corpse: Option<CreatureId>,
+    /// What reading it does, if it is a scroll (spec §8 "Scrolls").
+    pub read: Option<Reading>,
 }
 
 /// How a burning object burns where it lies: the light it gives, and for how long.
@@ -379,6 +389,7 @@ impl ObjectDef {
             food: Some(food),
             cures: Vec::new(),
             corpse: Some(id),
+            read: None,
             key: None,
             kind: None,
             attack_cost: None,
@@ -555,7 +566,19 @@ impl ObjectSpec {
                 "`dig` is a digging tool's power, 1 to {MAX_DIG}, and a tool goes in a `slot`"
             )));
         }
+        let read = self
+            .read
+            .clone()
+            .map(ReadSpec::resolve)
+            .transpose()
+            .map_err(err)?;
+        if read.is_some() && (self.slot.is_some() || self.food.is_some() || self.flies()) {
+            return Err(err(
+                "`read` is for scrolls: not worn, wielded, eaten, shot, or thrown".into(),
+            ));
+        }
         let plural = self.plural.unwrap_or_else(|| format!("{}s", self.name));
+        let loot = self.kind.is_some() || read.is_some();
         let def = ObjectDef {
             id: self.id,
             name: self.name,
@@ -593,13 +616,15 @@ impl ObjectSpec {
             kind: self.kind,
             attack_cost: self.attack_cost,
             level: self.level.unwrap_or(1),
-            frequency: match self.kind {
-                Some(_) => self.frequency.unwrap_or(100),
-                None => 0,
+            frequency: if loot {
+                self.frequency.unwrap_or(100)
+            } else {
+                0
             },
             food: self.food,
             cures: self.cures,
             corpse: None,
+            read,
         };
         Ok((def, self.lit))
     }
@@ -634,8 +659,7 @@ impl ObjectSpec {
     }
 
     /// The fields of a base item: its `kind` fits what it is (a weapon has an attack and goes in
-    /// a hand, ...), and `level` and `frequency` are for
-    /// things with a kind.
+    /// a hand, ...), and `level` and `frequency` are for loot: things with a kind, and scrolls.
     fn check_base(&self, weapon: bool) -> Result<(), String> {
         if let Some(kind) = self.kind {
             let fits = match kind {
@@ -655,8 +679,12 @@ impl ObjectSpec {
                     kind.id()
                 ));
             }
-        } else if self.level.is_some() || self.frequency.is_some() {
-            return Err("`level` and `frequency` are for base items, which have a `kind`".into());
+        } else if (self.level.is_some() || self.frequency.is_some()) && self.read.is_none() {
+            return Err(
+                "`level` and `frequency` are for loot: base items, which have a `kind`, and \
+                 scrolls (`read`)"
+                    .into(),
+            );
         }
         if self.level.is_some_and(|l| l == 0 || l > MAX_ITEM_LEVEL) {
             return Err(format!("`level` must be 1 to {MAX_ITEM_LEVEL}"));
@@ -924,6 +952,7 @@ mod tests {
             food: None,
             cures: Vec::new(),
             corpse: None,
+            read: None,
         };
         assert_eq!(def("dagger", "daggers").describe(1), "a dagger");
         assert_eq!(def("iron key", "iron keys").describe(1), "an iron key");

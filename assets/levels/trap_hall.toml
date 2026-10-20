@@ -18,6 +18,10 @@
 # Walls (spec §8 "Digging"): three pillars stand by the hidden fireball: packed earth (E) and
 # stone (#) north of it, granite (G) south. Its blast breaks the two softer ones into rubble ("The
 # walls collapse!"); the granite holds.
+#
+# Scrolls (spec §8 "Scrolls"): beside the arrival lie scrolls to try the same spells with, aimed
+# where you like (`r`): fireball, lightning, and frost; and a scroll of identify for the dagger
+# beside them, which nobody has identified.
 arrival = "Scorch marks and old arrows litter the flagstones."
 name = "The Trap Hall"
 ambient = [48, 46, 42, 0]
@@ -69,3 +73,15 @@ map = '''
 "E" = "packed_earth"
 "G" = "granite"
 "A" = { terrain = "floor", trap = "arrow" }
+
+# The scrolls and the unknown dagger, east of the arrival.
+[[pile]]
+at = [38, 19]
+objects = [
+    "scroll_of_fireball*2", "scroll_of_lightning*2", "scroll_of_frost*2", "scroll_of_identify",
+]
+
+[[item]]
+at = [38, 19]
+object = "dagger"
+affixes = ["sharp:1", "of_the_lynx:1"]

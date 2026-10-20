@@ -32,28 +32,21 @@
 
 use super::effect::EffectShape;
 use super::object::{MAX_BONUS, ObjectDef, ObjectId};
-use super::terrain::MAX_HARDNESS;
+use super::spell::{self, Bolt, Burst, SpellFields, check_effect};
 use super::{Content, ContentError};
 use crate::color::Rgb;
 use crate::combat::{Attack, DEFAULT_CRIT, DEFAULT_THREAT};
 use crate::dice::Dice;
 use crate::geom::Dir;
-use crate::ice;
 use crate::noise::{MAX_LOUDNESS, SoundKind};
-use crate::perception::VIEW_RADIUS;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use std::ops::RangeInclusive;
 
 /// Index of a trap definition in [`super::Content::trap_defs`]. Ids are assigned in file order,
 /// so the content fingerprint covers them.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct TrapId(pub u16);
 
-/// The radii a burst may have, in cells.
-pub const BURST_RADII: RangeInclusive<i32> = 1..=5;
-/// The lengths a bolt may have, in cells (the trap's own cell is the first).
-pub const BOLT_LENGTHS: RangeInclusive<i32> = 1..=VIEW_RADIUS;
 /// The most charges a trap may have.
 pub const MAX_CHARGES: u16 = 1000;
 
@@ -171,24 +164,12 @@ pub enum TrapEffect {
     Shot { object: ObjectId, attack: Attack },
     /// An attack roll against whoever stands on the trap.
     Strike { attack: Attack },
-    /// A blast of `radius` cells around the trap: `damage` to everyone in it (half beyond the
-    /// inner cells), no roll to hit.
-    Burst {
-        spell: String,
-        radius: i32,
-        damage: Dice,
-        /// What it does to walls (spec §8 "Digging"): it breaks those in the blast whose hardness
-        /// is below this; 0 breaks none.
-        blast: u16,
-        /// What it does to the ice and water it reaches (spec §5 "Ice"), if anything.
-        ice: Option<BurstIce>,
-    },
-    /// A line from the trap until a wall, at most `length` cells: `damage` to everyone on it.
-    Bolt {
-        spell: String,
-        length: i32,
-        damage: Dice,
-    },
+    /// A blast of `radius` cells around the trap ([`Burst`], as a scroll of fireball casts one):
+    /// `damage` to everyone in it (half beyond the inner cells), no roll to hit.
+    Burst(Burst),
+    /// A line from the trap until a wall, at most `length` cells ([`Bolt`]): `damage` to
+    /// everyone on it.
+    Bolt(Bolt),
     /// A fall: `damage`, and the next action lost climbing out.
     Pit { damage: Dice },
     /// Only its noise.
@@ -215,21 +196,12 @@ impl TrapEffect {
     pub fn damage(&self) -> Option<Dice> {
         match self {
             TrapEffect::Shot { attack, .. } | TrapEffect::Strike { attack } => Some(attack.damage),
-            TrapEffect::Burst { damage, .. }
-            | TrapEffect::Bolt { damage, .. }
+            TrapEffect::Burst(Burst { damage, .. })
+            | TrapEffect::Bolt(Bolt { damage, .. })
             | TrapEffect::Pit { damage } => Some(*damage),
             TrapEffect::Alarm | TrapEffect::Teleport => None,
         }
     }
-}
-
-/// What a burst does to the ice and the water it reaches (spec §5 "Ice").
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum BurstIce {
-    /// Heat (a fireball): it melts all the ice, and whoever stood on it falls in.
-    Melts,
-    /// Frost: the water freezes at once to at least this many µm of ice.
-    Freezes(u32),
 }
 
 /// A trap type.
@@ -334,10 +306,14 @@ impl TrapSpec {
             crit: DEFAULT_CRIT,
             strength: None,
         };
-        let spell = || {
-            (self.spell.clone())
-                .filter(|s| !s.trim().is_empty())
-                .ok_or_else(|| err("needs the `spell` effect it shows".into()))
+        let fields = SpellFields {
+            spell: self.spell.clone(),
+            damage: self.damage,
+            radius: self.radius,
+            blast: self.blast,
+            heat: self.heat,
+            frost: self.frost,
+            length: self.length,
         };
         let noun = || {
             (self.noun.clone())
@@ -363,76 +339,25 @@ impl TrapSpec {
                 },
                 noun()?,
             ),
-            Burst => {
-                let radius = self.radius.unwrap_or(0);
-                if !BURST_RADII.contains(&radius) {
-                    return Err(err(format!(
-                        "`radius` must be {} to {}",
-                        BURST_RADII.start(),
-                        BURST_RADII.end()
-                    )));
-                }
-                let blast = self.blast.unwrap_or(0);
-                if blast > MAX_HARDNESS {
-                    return Err(err(format!("`blast` must be 0 to {MAX_HARDNESS}")));
-                }
-                let ice = match (self.heat, self.frost) {
-                    (true, Some(_)) => {
-                        return Err(err("a burst has `heat` or `frost`, not both".into()));
-                    }
-                    (true, None) => Some(BurstIce::Melts),
-                    (false, Some(mm)) if (1..=ice::MAX_MM).contains(&mm) => {
-                        Some(BurstIce::Freezes(u32::from(mm) * 1000))
-                    }
-                    (false, Some(_)) => {
-                        return Err(err(format!("`frost` must be 1 to {} mm", ice::MAX_MM)));
-                    }
-                    (false, None) => None,
-                };
-                let effect = TrapEffect::Burst {
-                    spell: spell()?,
-                    radius,
-                    damage: damage()?,
-                    blast,
-                    ice,
-                };
-                (effect, noun()?)
-            }
-            Bolt => {
-                let length = self.length.unwrap_or(0);
-                if !BOLT_LENGTHS.contains(&length) {
-                    return Err(err(format!(
-                        "`length` must be {} to {}",
-                        BOLT_LENGTHS.start(),
-                        BOLT_LENGTHS.end()
-                    )));
-                }
-                let effect = TrapEffect::Bolt {
-                    spell: spell()?,
-                    length,
-                    damage: damage()?,
-                };
-                (effect, noun()?)
-            }
+            Burst => (
+                TrapEffect::Burst(spell::Burst::new(&fields).map_err(err)?),
+                noun()?,
+            ),
+            Bolt => (
+                TrapEffect::Bolt(spell::Bolt::new(&fields).map_err(err)?),
+                noun()?,
+            ),
             Pit => (TrapEffect::Pit { damage: damage()? }, "fall".into()),
             Alarm => (TrapEffect::Alarm, "bell".into()),
             Teleport => (TrapEffect::Teleport, "magic".into()),
         };
         // With spell effects in content, a burst or bolt names one of its own shape.
-        let shown = match &effect {
-            TrapEffect::Burst { spell, .. } => Some((spell, EffectShape::Burst)),
-            TrapEffect::Bolt { spell, .. } => Some((spell, EffectShape::Bolt)),
-            _ => None,
-        };
-        if let Some((spell, shape)) = shown
-            && !content.effects().is_empty()
-            && content.effect(spell).is_none_or(|e| e.shape != shape)
-        {
-            return Err(err(format!(
-                "`spell = \"{spell}\"` must name a {} effect in data/effects.toml",
-                kind.name()
-            )));
+        match &effect {
+            TrapEffect::Burst(b) => check_effect(content, &b.spell, EffectShape::Burst),
+            TrapEffect::Bolt(b) => check_effect(content, &b.spell, EffectShape::Bolt),
+            _ => Ok(()),
         }
+        .map_err(err)?;
         Ok(TrapDef {
             id: self.id,
             name: self.name,

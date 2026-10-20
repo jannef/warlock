@@ -103,6 +103,7 @@ mod loot;
 mod path;
 mod perceive;
 mod quest;
+mod read;
 mod rest;
 mod rot;
 mod schedule;
@@ -820,6 +821,7 @@ impl World {
             Action::Chat(dir) => return self.chat(*dir, events),
             Action::Ask { dir, topic } => return self.ask(*dir, topic, events),
             Action::Eat(meal) => return self.eat(*meal),
+            Action::Read { item, target } => return self.read(*item, *target, events),
             Action::Dig(dir) => return self.start_dig(*dir),
             Action::Search(turns) => return Spent::Search(*turns),
             Action::SetVision(id) => return self.set_vision(id),
@@ -910,6 +912,8 @@ mod object_tests;
 mod overworld_tests;
 #[cfg(test)]
 mod quest_tests;
+#[cfg(test)]
+mod read_tests;
 #[cfg(test)]
 mod room_tests;
 #[cfg(test)]

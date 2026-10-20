@@ -92,6 +92,14 @@ pub enum Action {
     /// turns (each the `eat` action) as the food takes, stopping early like a rest; the food is
     /// eaten and feeds at the end.
     Eat(Meal),
+    /// Read one of inventory stack `item` (a position, `a` = 0), a scroll (spec §8 "Scrolls"),
+    /// using it up: a spell scroll at the cell `target` names (it flies or runs there from the
+    /// player, with the traps' rules), the scroll of identify on the inventory stack it names.
+    /// Takes the time of `read`; refused (no time, the scroll kept) without a fitting target.
+    Read {
+        item: usize,
+        target: Option<ReadTarget>,
+    },
     /// Take a combat stance (spec §8 "Stances"). Takes no game time, but changes state, so
     /// replays record it.
     SetStance(CombatStance),
@@ -179,6 +187,16 @@ pub enum Meal {
     /// The stack at this position in the pile on the player's cell (`a` = the top):
     /// `eat:floor:a`.
     Floor(usize),
+}
+
+/// What a scroll is read at ([`Action::Read`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ReadTarget {
+    /// A level cell, aimed at: `read:b:12,5`.
+    Cell(Pos),
+    /// An inventory stack, by position: `read:b:c` (the scroll of identify).
+    Item(usize),
 }
 
 /// A set of stacks of a list (a pile, the inventory) by position, `0` the first: the rules name
@@ -490,7 +508,8 @@ pub struct Outcome {
 
 /// Text syntax for scripting: `move:E wait open:E close:W kick:N ascend descend lantern rest:1h
 /// rest:dawn rest:dusk pickup pickup:ac drop:b sell:b pay pay:W equip:body:b remove:body bash:E
-/// fire:12,5 throw:c:12,5 dig:E search search:10 eat:b eat:floor:a chat:E ask:E:TOPIC vision:ID
+/// fire:12,5 throw:c:12,5 dig:E search search:10 eat:b eat:floor:a read:b read:b:12,5 read:b:c
+/// chat:E ask:E:TOPIC vision:ID
 /// skip:1h
 /// weather:rain effect:fireball@12,5 effect:lightning_bolt@3,4>12,4 identify:a afflict:bleeding
 /// infect:filth_fever freeze:12,5,3 thaw:12,5,3` (durations: `30s`, `10m`, `2h`; LETTER names a
@@ -502,7 +521,8 @@ pub struct Outcome {
 /// searches once and `search:N` for up to N turns, 1 to [`MAX_SEARCH`]; `fire:X,Y`
 /// shoots at the level cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack LETTER
 /// there; `eat:LETTER` eats one of inventory stack LETTER, `eat:floor:LETTER` one of the stack
-/// LETTER of the pile underfoot; `chat:DIR` talks to the creature that way, `ask:DIR:TOPIC` asks
+/// LETTER of the pile underfoot; `read:LETTER:X,Y` reads inventory stack LETTER (a scroll) at
+/// the level cell (X, Y), `read:LETTER:LETTER` on the second inventory stack; `chat:DIR` talks to the creature that way, `ask:DIR:TOPIC` asks
 /// it about a topic by id; weather: `clear`, `overcast`, `rain`, `heavy`; `effect:ID@X,Y[>X,Y]`
 /// shows a spell effect at a cell, or from one cell toward another; the dev bursts
 /// `freeze:X,Y,R` and `thaw:X,Y,R` freeze the water and melt the ice within radius R, 0 to
@@ -538,6 +558,14 @@ impl fmt::Display for Action {
             }
             Action::Eat(Meal::Pack(item)) => write!(f, "eat:{}", position_text(*item)),
             Action::Eat(Meal::Floor(item)) => write!(f, "eat:floor:{}", position_text(*item)),
+            Action::Read { item, target } => {
+                write!(f, "read:{}", position_text(*item))?;
+                match target {
+                    None => Ok(()),
+                    Some(ReadTarget::Cell(at)) => write!(f, ":{},{}", at.x, at.y),
+                    Some(ReadTarget::Item(i)) => write!(f, ":{}", position_text(*i)),
+                }
+            }
             Action::Rest(Rest::For(d)) => write!(f, "rest:{d}"),
             Action::Rest(Rest::Dawn) => f.write_str("rest:dawn"),
             Action::Rest(Rest::Dusk) => f.write_str("rest:dusk"),
@@ -690,6 +718,29 @@ impl FromStr for Action {
                     Meal::Pack(i)
                 }))
             }
+            "read" => {
+                let usage = || {
+                    "`read` needs a letter, then a cell to aim at or a letter to read it on, e.g. \
+                     `read:b:12,5` or `read:b:c`"
+                        .to_string()
+                };
+                let arg = arg.ok_or_else(usage)?;
+                let (item, target) = match arg.split_once(':') {
+                    Some((item, target)) => (item, Some(target)),
+                    None => (arg, None),
+                };
+                let target = match target {
+                    None => None,
+                    Some(cell) if cell.contains(',') => {
+                        Some(ReadTarget::Cell(parse_cell(cell).map_err(|_| usage())?))
+                    }
+                    Some(i) => Some(ReadTarget::Item(parse_position(i).ok_or_else(usage)?)),
+                };
+                Ok(Action::Read {
+                    item: parse_position(item).ok_or_else(usage)?,
+                    target,
+                })
+            }
             "throw" => {
                 let usage = || "`throw` needs a letter and a cell, e.g. `throw:c:12,5`".to_string();
                 let (item, at) = arg.and_then(|a| a.split_once(':')).ok_or_else(usage)?;
@@ -760,7 +811,8 @@ impl FromStr for Action {
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, kick:DIR, \
                  ascend, descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
                  sell[:LETTERS], pay[:DIR], equip:SLOT:LETTER, remove:SLOT, bash:DIR, fire:X,Y, \
-                 throw:LETTER:X,Y, dig:DIR, eat:LETTER, eat:floor:LETTER, chat:DIR, \
+                 throw:LETTER:X,Y, dig:DIR, eat:LETTER, eat:floor:LETTER, \
+                 read:LETTER[:X,Y|:LETTER], chat:DIR, \
                  ask:DIR:TOPIC, stance:NAME, vision:ID, skip:DURATION, \
                  weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y], identify[:LETTERS], \
                  afflict:STATUS, infect:DISEASE, freeze:X,Y,R, thaw:X,Y,R)"
@@ -899,6 +951,22 @@ mod tests {
             Action::Eat(Meal::Floor(25)),
             Action::Eat(Meal::Pack(26)),
             Action::Eat(Meal::Floor(31)),
+            Action::Read {
+                item: 1,
+                target: None,
+            },
+            Action::Read {
+                item: 0,
+                target: Some(ReadTarget::Cell(Pos::new(12, 5))),
+            },
+            Action::Read {
+                item: 3,
+                target: Some(ReadTarget::Item(2)),
+            },
+            Action::Read {
+                item: 27,
+                target: Some(ReadTarget::Item(30)),
+            },
             Action::Throw {
                 item: 40,
                 at: Pos::new(1, 2),
@@ -1159,6 +1227,13 @@ mod tests {
             "eat:floor:",
             "eat:floor:ab",
             "eat:pack:a",
+            "read",
+            "read:",
+            "read:ab",
+            "read:a:",
+            "read:a:bc",
+            "read:a:1,b",
+            "read:a:1,2,3",
             "fire",
             "fire:",
             "fire:3",

@@ -155,7 +155,7 @@ impl World {
     }
 
     /// Whether missiles fly here: not on the overworld, a map of the land.
-    fn can_loose_here(&mut self) -> bool {
+    pub(super) fn can_loose_here(&mut self) -> bool {
         let here = self.state.current().kind != LevelKind::Overworld;
         if !here {
             self.say("You cannot do that on the overworld.");
@@ -165,7 +165,7 @@ impl World {
 
     /// Whether the player may `verb` ("shoot", "throw") at cell `at` with a missile that flies
     /// `range` cells: not at themselves, and not out of range. Says why not.
-    fn within_reach(&mut self, at: Pos, range: i32, verb: &str) -> bool {
+    pub(super) fn within_reach(&mut self, at: Pos, range: i32, verb: &str) -> bool {
         let here = self.player_pos();
         if at == here {
             self.say(format!("You cannot {verb} at yourself."));
