@@ -115,7 +115,8 @@ pub(super) fn ice_text(ice: Option<BurstIce>) -> String {
     }
 }
 
-/// What a noise sounds like, in words: "Explosion, very loud"; "Silent" for none.
+/// What a noise sounds like, in words and its loudness: "Explosion, very loud (150)"; "Silent"
+/// for none.
 pub(super) fn sound_text(noise: Option<TrapNoise>) -> String {
     noise.map_or("Silent".to_string(), |n| {
         let loud = match n.loudness {
@@ -124,7 +125,11 @@ pub(super) fn sound_text(noise: Option<TrapNoise>) -> String {
             150..250 => "very loud",
             _ => "deafening",
         };
-        format!("{}, {loud}", capital(&n.sound.name().replace('_', " ")))
+        format!(
+            "{}, {loud} ({})",
+            capital(&n.sound.name().replace('_', " ")),
+            n.loudness
+        )
     })
 }
 

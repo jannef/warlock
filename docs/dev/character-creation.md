@@ -24,12 +24,14 @@ Adjustments are `PerStat<Dice>` (`stats::adjustments` checks every result is wit
 order (race, class, animal, element, race potentials): **adding a die to data changes later
 rolls** of every character with that race or class. `Dice` (`warlock-core/src/dice.rs`) is the
 one dice type (parse `2d3+1`/`-1d2`/`+2`, `Display`, `min`/`max`, `roll(&mut Rng)`); combat
-uses it for damage. Scenarios name their character (`character = { race, gender, class }`,
-`ScenarioDef::character`); with one, `vision`, `stats`, `potential`, and `hp` are refused.
+uses it for damage. Scenarios name their character (`character = { race, gender, class, name }`,
+`ScenarioDef::character` and `character_name`; the `name` optional); with one, `vision`, `stats`,
+`potential`, and `hp` are refused.
 `World::new` starts as the scenario's character, `World::with_character(content, scenario, seed,
-Some(&spec))` as another; `WorldState::character` (the `Character`, saved, hashed)
-and `PerceptionView::character` (the player knows it; `PerceptionView::time`
-for their age). Replays record only the spec. The summary and the character screen show final
-scores only: never dice, a breakdown, a modifier, or a potential (the step screens and the wiki
-show adjustments as written in data). Balance is not a goal; classes only adjust starting
-scores and give hit points.
+Some(&spec))` as another, `World::with_character_named(.., name)` named; `WorldState::character`
+(the `Character`, saved, hashed) and `PerceptionView::character` (the player knows it;
+`PerceptionView::time` for their age). Replays record the spec and the name (`Replay::name`). The
+summary and the character screen show final scores only: never dice, a breakdown, a modifier, or a
+potential (the step screens and the wiki show adjustments as written in data; the wiki also gives
+the modifiers and the races' potentials exactly). Balance is not a goal; classes only adjust
+starting scores and give hit points.

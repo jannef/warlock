@@ -1,5 +1,6 @@
-//! The death screen (spec §6 "Death"): the run is over. Who died, where, when, and what killed
-//! them, as far as the player knows it; the run's save is already gone (permadeath).
+//! The death screen (spec §6 "Death"): the run is over. Who died ("Here lies Brakka,"), where,
+//! when, and what killed them, as far as the player knows it; the character's save is already
+//! gone (permadeath).
 //!
 //! It opens by itself when the player dies (`screens::on_death`), over the run as it ended, and
 //! takes every key press: Enter or Esc returns to the main menu. It is read from the perception
@@ -54,14 +55,27 @@ impl DeathScreen {
             1 => "after 1 turn".to_string(),
             n => format!("after {n} turns"),
         };
+        // "Here lies Brakka, killed by a kobold, ...": the epitaph names the character.
+        let mut lines = Vec::new();
+        let by = match view.character() {
+            Some(c) => {
+                lines.push(format!("Here lies {},", c.name));
+                let mut chars = by.chars();
+                chars
+                    .next()
+                    .map_or_else(String::new, |c| c.to_lowercase().chain(chars).collect())
+            }
+            None => by,
+        };
+        lines.extend([
+            format!("{by},"),
+            format!("in {},", death.place),
+            String::new(),
+            format!("{turns}."),
+            format!("You had reached level {}.", view.own_experience().level),
+        ]);
         Self {
-            lines: vec![
-                format!("{by},"),
-                format!("in {},", death.place),
-                String::new(),
-                format!("{turns}."),
-                format!("You had reached level {}.", view.own_experience().level),
-            ],
+            lines,
             when: Some((calendar.full_date(death.time), death.time)),
         }
     }
@@ -178,9 +192,11 @@ mod tests {
         assert!(shown.contains("Darkening, Year 1444, at 08:"), "{shown}");
         assert!(shown.contains("turns."), "{shown}");
         assert!(shown.contains("You had reached level 1."), "{shown}");
-        // The archer shot from the dark: the player never saw it.
+        // The epitaph names the character; the archer shot from the dark: the player never saw
+        // it.
+        assert!(shown.contains("Here lies Pip,"), "{shown}");
         assert!(
-            shown.contains("Killed by something you did not see,"),
+            shown.contains("killed by something you did not see,"),
             "{shown}"
         );
         // Enter or Esc leaves the run; nothing else does.
@@ -217,7 +233,8 @@ mod tests {
         console.resize(80, 30);
         screen.draw(&mut console, Clock::H24, &Bindings::default());
         let shown = text(&console);
-        assert!(shown.contains("Starved to death,"), "{shown}");
+        assert!(shown.contains("Here lies Tamsin,"), "{shown}");
+        assert!(shown.contains("starved to death,"), "{shown}");
         assert!(shown.contains("in The Hub,"), "{shown}");
     }
 }

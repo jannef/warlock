@@ -5,7 +5,7 @@
 use super::chargen_screen::ScenarioPick;
 use super::menu::{Hints, Nav, Panel, Press, wrap};
 use super::screens::{MenuChoice, ScreenAction, ScreenName};
-use super::{ACCENT, TEXT, TEXT_DIM};
+use super::{TEXT, TEXT_DIM};
 use crate::input::Bindings;
 use crate::render::console::Console;
 use warlock_core::character::CharacterSpec;
@@ -30,8 +30,6 @@ const MAX_SEED_LEN: usize = 24;
 #[derive(Debug)]
 pub struct NewRunScreen {
     scenarios: Vec<ScenarioInfo>,
-    /// A saved run exists, which a new run replaces; the screen says so.
-    has_save: bool,
     /// The content has races and classes to choose a character from.
     creates_characters: bool,
     selected: usize,
@@ -39,7 +37,9 @@ pub struct NewRunScreen {
 }
 
 impl NewRunScreen {
-    pub fn new(content: &Content, has_save: bool) -> Self {
+    /// The screen for `content`'s scenarios. A new run is a new character with a save of its
+    /// own: it touches no other character's.
+    pub fn new(content: &Content) -> Self {
         let mut scenarios: Vec<ScenarioInfo> = content
             .scenarios()
             .map(|s| ScenarioInfo {
@@ -55,7 +55,6 @@ impl NewRunScreen {
         scenarios.sort_by_key(|s| s.id != "showcase");
         Self {
             scenarios,
-            has_save,
             creates_characters: !content.races().list.is_empty() && !content.classes().is_empty(),
             selected: 0,
             seed: String::new(),
@@ -114,6 +113,7 @@ impl NewRunScreen {
                         scenario: info.id.clone(),
                         seed: self.seed(),
                         character: None,
+                        name: None,
                     });
                 }
             }
@@ -157,10 +157,6 @@ impl NewRunScreen {
                 TEXT_DIM,
             );
         }
-        if self.has_save {
-            let warning = "! Starting a new run replaces your saved run.";
-            console.print(x, panel.y + panel.h - 4, warning, ACCENT);
-        }
         let keys = Hints::of(bindings);
         let next = if self.creates_characters {
             "next"
@@ -181,7 +177,7 @@ mod tests {
     use super::*;
 
     fn screen() -> NewRunScreen {
-        NewRunScreen::new(&Content::builtin().expect("content"), false)
+        NewRunScreen::new(&Content::builtin().expect("content"))
     }
 
     #[test]
@@ -227,6 +223,7 @@ mod tests {
         use warlock_core::content::ContentFiles;
         let mut files = ContentFiles::builtin();
         files.remove("data/races.toml");
+        files.remove("data/names.toml");
         files.remove("data/classes.toml");
         for id in [
             "arena",
@@ -246,13 +243,14 @@ mod tests {
             "name = \"Plain\"\nstart_level = \"hub\"\n",
         );
         let content = Content::load(&files).expect("valid");
-        let mut s = NewRunScreen::new(&content, false);
+        let mut s = NewRunScreen::new(&content);
         assert_eq!(
             s.handle(&Press::nav(Nav::Enter)),
             ScreenAction::Choose(MenuChoice::NewRun {
                 scenario: "plain".into(),
                 seed: None,
                 character: None,
+                name: None,
             })
         );
     }

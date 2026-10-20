@@ -1,0 +1,78 @@
+# Names for new characters (spec §8 "Character creation"): the Name step's Random draws one for
+# the chosen race and gender, from the run seed, and so does a run told no name for a character
+# that is not its scenario's own (scenarios name their own character).
+#
+# One table per race id (races.toml), each with a `male` and a `female` list; a character of the
+# gender "other" draws from both. A name is 1 to 20 characters, without spaces around it. Names
+# are flavour: changing them never changes a run's rolls (they draw from their own stream,
+# `character/name/<race>,<gender>/<draw>`), only which name Random gives.
+
+[elf]
+male = [
+  "Aerendil", "Caelith", "Elorin", "Faendal", "Ilvaron", "Lathiel", "Miravel", "Nimdorel",
+  "Saelith", "Thalanor", "Valerion", "Ythariel",
+]
+female = [
+  "Aelwen", "Celwyn", "Elanwe", "Faelith", "Ilmara", "Lirwen", "Merenwe", "Nimeth", "Sirielle",
+  "Tathren", "Vaelin", "Yselle",
+]
+
+[half_elf]
+male = [
+  "Arlen", "Cador", "Davin", "Eamon", "Halvard", "Jorin", "Kestrel", "Lorcan", "Marten",
+  "Rhodri", "Tavish", "Wendel",
+]
+female = [
+  "Aurel", "Briallen", "Caelia", "Delphine", "Elowen", "Iseult", "Jessamine", "Lisette",
+  "Maelle", "Niamh", "Rosalind", "Seren",
+]
+
+[human]
+male = [
+  "Aldric", "Bram", "Cedric", "Dorian", "Edwin", "Garrick", "Hal", "Jarek", "Leofric", "Osric",
+  "Roderick", "Tobin",
+]
+female = [
+  "Adela", "Brienne", "Cerys", "Edda", "Gwendolyn", "Isolde", "Maren", "Odile", "Rowena",
+  "Sabine", "Tamsin", "Ysolde",
+]
+
+[dwarf]
+male = [
+  "Balgrim", "Borin", "Dorvak", "Durgan", "Grimbald", "Haldor", "Korgrim", "Morvek", "Nargul",
+  "Orrin", "Thrain", "Ulfgar",
+]
+female = [
+  "Astrid", "Brakka", "Dagny", "Durna", "Gerda", "Halla", "Hilde", "Ingra", "Morna", "Ragna",
+  "Sigrun", "Thora",
+]
+
+[halfling]
+male = [
+  "Bartlebee", "Corwin", "Dobbin", "Fennick", "Hob", "Jasper", "Merrin", "Nib", "Pip",
+  "Rollo", "Tam", "Wilmot",
+]
+female = [
+  "Amaryllis", "Bell", "Clover", "Daisy", "Fern", "Hazel", "Lobelia", "Marigold", "Myrtle",
+  "Poppy", "Rosie", "Tansy",
+]
+
+[gnome]
+male = [
+  "Bimble", "Dabbet", "Fizzwick", "Gribbly", "Jinx", "Nackle", "Orbin", "Pockle", "Quillon",
+  "Tinkwell", "Wobbet", "Zeppo",
+]
+female = [
+  "Bixie", "Dimsy", "Fennely", "Gimmet", "Lillith", "Mabble", "Nissa", "Posy", "Quibble",
+  "Tibbet", "Wrenna", "Zinnia",
+]
+
+[half_orc]
+male = [
+  "Bruug", "Drogath", "Garmok", "Grashnak", "Hrothgar", "Korrag", "Mogrul", "Narzug", "Rukh",
+  "Skarn", "Thrak", "Urzog",
+]
+female = [
+  "Agra", "Bolga", "Durza", "Gharra", "Korra", "Murgha", "Nazra", "Orsha", "Rasha", "Shagra",
+  "Ugra", "Zorka",
+]

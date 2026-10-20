@@ -3,5 +3,5 @@ description = "An old stone quarry under the hub: pick up the pick-axe, ready it
 start_level = "quarry"
 seed = 1
 # A stonecutter come to work the old quarry.
-character = { race = "human", gender = "male", class = "craftsperson" }
+character = { race = "human", gender = "male", class = "craftsperson", name = "Bram" }
 lantern = "lantern"

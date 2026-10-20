@@ -45,8 +45,9 @@ time ("The sentry doesn't budge."); see [People and talk](npcs.md#getting-past).
 
 ## Creatures act at their own pace
 
-Every creature has its own pace, and the game does not show it. A faster creature takes less time
-over the same action, so it acts more often; a slower one acts less often. Creatures' actions
+Every creature has its own pace, its **speed** (below), and the game does not show it. A faster
+creature takes less time over the same action, so it acts more often; a slower one acts less
+often. Creatures' actions
 have costs too: a step, a wait, or an attack takes a creature as long as its cost and its pace
 say, and a creature's load slows it as yours slows you. After your action, the creatures on the level act in the order their turns come up until it
 is your turn again:
@@ -59,3 +60,20 @@ is your turn again:
 - When a creature's turn comes up at the same moment as yours, you go first.
 
 Creatures on other levels do not act at all while you are away. See [Creatures](creatures.md).
+
+## Speed
+
+Exactly, everyone gains their **speed** in energy every second of game time, an action costs
+its cost times its base time in seconds (6, or a journey's time on the overworld), and whoever
+has paid off their last action acts next. So an action takes its cost / 1000 × 1000 / speed ×
+6 seconds: a normal action takes 6 seconds at speed 1000 and 3 seconds at speed 2000. Leftover
+energy carries over, so a run of actions takes exactly their total time.
+
+Your speed is the same whatever your race (the table below). Magic boots and cloaks take a share
+off the cost of your steps, and magic gloves, rings, and weapons off that of your attacks
+([Magic items](magic-items.md)); your rank in a weapon skill or fighting style takes some off
+your attacks with it ([Weapon skills](weapon-skills.md#what-a-rank-gives)). A load multiplies the
+time of everything you do after that (see [Burden](burden.md)), and so does being bloated
+([Hunger](hunger.md)). Everyone's speed:
+
+{{#include generated/speeds.md}}

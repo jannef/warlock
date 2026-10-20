@@ -67,9 +67,20 @@ On every menu and screen:
 | Left / right (change a setting) | Left / Right, or `h` / `l` |
 | Choose | `Enter` |
 | Back | `Esc`, always |
-| Erase a character (the seed), reset a key (Controls) | `Delete` or `Backspace` |
+| Erase a character (the seed), reset a key (Controls), delete a saved character (Characters) | `Delete` or `Backspace` |
 | Mark a stack, mark everything (picking up, dropping) | `Space`, `,` |
 | Next / previous page of a list of items | `>` or `PageDown` / `<` or `PageUp` |
+
+## Text fields
+
+In a text field (your character's name), every key types what it types, but these:
+
+| Command | Keys |
+|---|---|
+| Accept the text | `Enter` |
+| Erase the last character | `Backspace` or `Delete` |
+| A random name | `Tab` |
+| Back | `Esc`, always |
 
 On a list that names its rows by letter (your pack, a pile, the equipment slots) or by number
 (the topics someone offers), those letters and digits always pick rows, whatever
@@ -81,7 +92,7 @@ and shows a page at a time: the letters name the rows of the page you see, start
 
 You can rebind every key but `Esc` in the Controls screen (main menu or pause menu, then
 Controls). It lists the commands in groups, by where they are used: in play, while aiming, in the
-rest prompt, at `--more--`, on menus and screens, on the info pages, in the question windows, and (in builds
+rest prompt, at `--more--`, on menus and screens, in text fields, on the info pages, in the question windows, and (in builds
 that have them) the developer keys. Select a command, press `Enter`, then press the new key. It
 becomes the command's main key, and its other keys (such as the numpad) stay. A key another
 command of the same group already uses moves to the new command, and the screen says what moved;
@@ -91,7 +102,8 @@ page on an info screen, and `y` and `n` move you in play but answer yes and no i
 
 You cannot lock yourself out: `Esc` always backs out of every screen and cancels every prompt,
 and it cannot be taken; neither can the last key of up, down, or choose on the menus, which you
-need to come back to Controls. `Delete` resets the selected command to its default keys, and
+need to come back to Controls, nor the last key that accepts a text field, which you need to name
+a new character. `Delete` resets the selected command to its default keys, and
 **Reset all keys** resets every command. If your keys still get in the way, start the game with
 `warlock --reset-keys`: every key goes back to its default, and the game starts as usual. Your keys
 are kept with your [settings](settings.md).

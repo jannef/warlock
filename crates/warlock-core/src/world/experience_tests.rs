@@ -1,11 +1,15 @@
 //! Experience in the world (spec §8 "Experience"): only the player's own kills are worth
-//! anything, levels follow from the total, and each level up to the cap grows the hit points.
+//! anything, levels follow from the total and the character's factor, each level up to the cap
+//! grows the hit points, and the first kill of a type and the first arrival on a level are worth
+//! a little more.
 
 use super::*;
 use crate::action::parse_actions;
-use crate::content::ContentFiles;
+use crate::character::CharacterSpec;
+use crate::content::{ContentFiles, StairsDir};
 use crate::replay::Replay;
 use crate::stats::Stat;
+use std::sync::LazyLock;
 
 const TERRAIN: &str = r##"
 [[terrain]]
@@ -39,7 +43,8 @@ name = "hunters"
 hostile = ["pests"]
 "##;
 
-// The pup dies of a scratch; the elder is a higher-level monster, the hunter a strong killer.
+// The pup dies of a scratch (two of them, the first worth twice, make level 2); the elder is a
+// higher-level monster, the hunter a strong killer.
 const CREATURES: &str = r##"
 [[creature]]
 id = "player"
@@ -57,7 +62,7 @@ weight = 5000
 faction = "pests"
 stats = { toughness = 1, dexterity = 1 }
 level = 1
-xp = 10
+xp = 300
 
 [[creature]]
 id = "elder"
@@ -197,6 +202,18 @@ fn per_level(world: &World) -> i32 {
     (4 + world.state().player().stats.modifier(Stat::Toughness)).max(1)
 }
 
+/// Kills pups to the east until `kills` more have died.
+fn kill_pups(world: &mut World, kills: usize) {
+    let target = pups_left(world) - kills;
+    for _ in 0..200 {
+        if pups_left(world) == target {
+            return;
+        }
+        run(world, "move:E");
+    }
+    panic!("the pups did not die");
+}
+
 #[test]
 fn melee_kills_are_worth_their_xp_and_levels_come_with_messages() {
     let mut w = world_on("########\n#@pppp.#\n########\n");
@@ -205,34 +222,32 @@ fn melee_kills_are_worth_their_xp_and_levels_come_with_messages() {
         (p.hp, p.max_hp(w.content()))
     };
     assert_eq!((w.player_level(), w.player_xp()), (1, 0));
-    // Each pup is level 1 and worth 10: two of them make level 2.
-    let mut kills = 0;
-    for _ in 0..200 {
-        let before = pups_left(&w);
-        run(&mut w, "move:E");
-        kills += before - pups_left(&w);
-        if kills == 2 {
-            break;
-        }
-    }
-    assert_eq!((w.player_level(), w.player_xp()), (2, 20));
+    assert_eq!(w.perception().own_experience().next, Some(767));
+    // Each pup is level 1 and worth 300, the first one twice (a first kill): 600, then 900,
+    // past the 767 of level 2.
+    kill_pups(&mut w, 1);
+    assert_eq!((w.player_level(), w.player_xp()), (1, 600));
+    let log = said(&w);
+    assert_eq!(
+        &log[log.len() - 2..],
+        ["The pup dies.", "You learn something of pups."]
+    );
+    kill_pups(&mut w, 1);
+    assert_eq!((w.player_level(), w.player_xp()), (2, 900));
     let log = said(&w);
     let i = log.iter().rposition(|m| m == "You feel more experienced.");
     let i = i.expect("level up said");
     assert_eq!(log[i + 1], "Welcome to level 2.");
     assert_eq!(log[i - 1], "The pup dies.", "after the death: {log:?}");
+    let learned = log.iter().filter(|m| m.starts_with("You learn")).count();
+    assert_eq!(learned, 1, "the first kill only: {log:?}");
     let p = w.state().player();
     assert_eq!(p.max_hp(w.content()), max0 + per_level(&w));
     assert_eq!(p.hp, hp0 + per_level(&w), "the current hit points rose too");
     // A level 1 pup is below a level 2 player: four fifths of its XP.
-    for _ in 0..200 {
-        if pups_left(&w) == 0 {
-            break;
-        }
-        run(&mut w, "move:E");
-    }
-    assert_eq!(w.player_xp(), 20 + 8 + 8);
-    assert_eq!(w.perception().own_experience().next, Some(60));
+    kill_pups(&mut w, 2);
+    assert_eq!(w.player_xp(), 900 + 240 + 240);
+    assert_eq!(w.perception().own_experience().next, Some(2_431));
 }
 
 #[test]
@@ -246,7 +261,11 @@ fn shots_are_worth_xp_too() {
         w.apply(&Action::Fire(Pos::new(7, 1)));
     }
     assert_eq!(pups_left(&w), 0, "the pup was shot");
-    assert_eq!(w.player_xp(), 10);
+    assert_eq!(
+        w.player_xp(),
+        600,
+        "its XP, and once more for the first of its kind"
+    );
 }
 
 #[test]
@@ -261,6 +280,10 @@ fn kills_by_others_are_worth_nothing() {
     }
     assert_eq!(pups_left(&w), 0, "the hunter killed the pup");
     assert_eq!((w.player_level(), w.player_xp()), (1, 0));
+    assert!(
+        w.state.progress.is_empty(),
+        "nothing learned of a kill watched"
+    );
 }
 
 #[test]
@@ -268,7 +291,35 @@ fn a_higher_level_monster_is_worth_more() {
     let mut w = world_on("#####\n#@..#\n#####\n");
     let elder = w.content().creature_id("elder").expect("elder");
     w.earn_kill(elder);
-    assert_eq!(w.player_xp(), 60, "50 and 4 levels above: +20%");
+    assert_eq!(
+        w.player_xp(),
+        60 + 50,
+        "50 and 4 levels above: +20%, and 50 for the first"
+    );
+    w.earn_kill(elder);
+    assert_eq!(w.player_xp(), 110 + 60, "the second: no more to learn");
+}
+
+#[test]
+fn a_first_kill_pays_its_full_xp_whatever_the_levels() {
+    let mut w = world_on("#####\n#@..#\n#####\n");
+    let pup = w.content().creature_id("pup").expect("pup");
+    let rules = w.content().experience().clone();
+    // At level 10 a level 1 pup is grey: the kill gives nothing, the first kill still 300.
+    w.state.experience = rules.threshold(10);
+    w.earn_kill(pup);
+    assert_eq!(w.player_xp(), rules.threshold(10) + 300);
+    w.earn_kill(pup);
+    assert_eq!(w.player_xp(), rules.threshold(10) + 300, "grey, and known");
+    w.say_news();
+    assert_eq!(
+        said(&w).last().map(String::as_str),
+        Some("You learn something of pups.")
+    );
+    let kills: Vec<&str> = (w.state.progress.discovered.kills.iter())
+        .map(String::as_str)
+        .collect();
+    assert_eq!(kills, ["pup"]);
 }
 
 #[test]
@@ -279,7 +330,8 @@ fn several_levels_come_at_once_and_hit_points_grow_up_to_the_cap() {
         (p.hp, p.max_hp(w.content()))
     };
     let step = per_level(&w);
-    w.grant_xp(120);
+    let rules = w.content().experience().clone();
+    w.grant_xp(rules.threshold(4));
     assert_eq!(w.player_level(), 4, "levels 2, 3, and 4 at once");
     let p = w.state().player();
     assert_eq!(
@@ -294,7 +346,6 @@ fn several_levels_come_at_once_and_hit_points_grow_up_to_the_cap() {
     );
 
     // To level 19, and over the last growing level: level 20 grows, level 21 does not.
-    let rules = w.content().experience().clone();
     w.state.experience = rules.threshold(19);
     let max19 = w.state().player().max_hp(w.content());
     w.grant_xp(rules.threshold(20) - rules.threshold(19));
@@ -308,10 +359,111 @@ fn several_levels_come_at_once_and_hit_points_grow_up_to_the_cap() {
         max20,
         "no more hit points past level 20"
     );
-    // The top: 50, and no further.
-    w.grant_xp(1_000_000);
-    assert_eq!(w.player_level(), 50);
+    // The top: 60, and no further.
+    w.grant_xp(u32::MAX);
+    assert_eq!(w.player_level(), 60);
     assert_eq!(w.perception().own_experience().next, None);
+}
+
+static BUILTIN: LazyLock<Arc<Content>> =
+    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
+
+/// The showcase as `character`.
+fn showcase_as(character: &str) -> World {
+    let spec: CharacterSpec = character.parse().expect("a character");
+    World::with_character(BUILTIN.clone(), "showcase", Some(7), Some(&spec)).expect("world")
+}
+
+#[test]
+fn race_and_class_factors_scale_the_thresholds() {
+    // An elf wizard needs 175 % of the XP (140 % × 125 %), a half-orc commoner 72 % (90 % ×
+    // 80 %): level 2 at 1 342 and at 552.
+    let mut wizard = showcase_as("elf,male,wizard");
+    let mut commoner = showcase_as("half_orc,female,commoner");
+    assert_eq!(wizard.perception().own_experience().next, Some(1_342));
+    assert_eq!(commoner.perception().own_experience().next, Some(552));
+    for w in [&mut wizard, &mut commoner] {
+        w.grant_xp(1_000);
+    }
+    assert_eq!(wizard.player_level(), 1);
+    assert_eq!(commoner.player_level(), 2);
+    let next = |w: &World| w.perception().own_experience().next;
+    assert_eq!(next(&commoner), Some(1_750), "2 431 × 72 %");
+    // The showcase's human thief: 95 %.
+    assert_eq!(
+        next(&World::new(BUILTIN.clone(), "showcase", None).expect("world")),
+        Some(729)
+    );
+}
+
+/// Puts the player on the current level's first stairs going `dir`, then takes them.
+fn take_stairs(world: &mut World, dir: StairsDir) {
+    let at = (world.state.current().stairs.iter())
+        .find(|s| s.dir == dir)
+        .map(|s| s.pos)
+        .expect("stairs");
+    world
+        .state
+        .actors
+        .get_mut(&world.state.player)
+        .expect("player")
+        .pos = at;
+    world.apply(&match dir {
+        StairsDir::Down => Action::Descend,
+        StairsDir::Up => Action::Ascend,
+    });
+}
+
+#[test]
+fn the_first_arrival_on_a_level_is_worth_its_item_level() {
+    // The Depths start on their first level, which gives nothing; the second is worth 5 × 2.
+    let mut w = World::new(BUILTIN.clone(), "depths", Some(3)).expect("world");
+    take_stairs(&mut w, StairsDir::Down);
+    assert_eq!(w.state.current_level, "depths:2");
+    assert_eq!(w.player_xp(), 10);
+    let log = said(&w);
+    let i = (log.iter())
+        .position(|m| m == "You gain 10 experience for finding your way here.")
+        .expect("said");
+    assert!(log[i - 1].starts_with("You descend the stairs"), "{log:?}");
+    // Back up, and down again: both levels are known.
+    take_stairs(&mut w, StairsDir::Up);
+    take_stairs(&mut w, StairsDir::Down);
+    assert_eq!(w.state.current_level, "depths:2");
+    assert_eq!(w.player_xp(), 10, "known levels give nothing");
+    assert!(w.state.progress.is_empty(), "arrivals need no memory");
+}
+
+#[test]
+fn the_overworld_and_its_local_areas_give_nothing() {
+    // A local area of the wildlands is never worth anything, even the first time.
+    let mut w = World::new(BUILTIN.clone(), "world", None).expect("world");
+    w.apply(&Action::Descend);
+    assert!(
+        w.state.current_level.starts_with("local:"),
+        "{}",
+        w.state.current_level
+    );
+    assert_eq!(w.player_xp(), 0);
+    // Beside the Hall: the Hub below it is a hand-made level, worth 5 × 1.
+    let mut w = World::new(BUILTIN.clone(), "world", None).expect("world");
+    let hall = (w.state.current().stairs.iter())
+        .find(|s| s.to.as_deref() == Some("hub"))
+        .map(|s| s.pos)
+        .expect("the Hall");
+    w.state.actors.get_mut(&w.state.player).expect("player").pos = hall;
+    w.apply(&Action::Descend);
+    assert_eq!(w.state.current_level, "hub");
+    assert_eq!(w.player_xp(), 5);
+    // Back out to the overworld: known.
+    let out = (w.state.current().stairs.iter())
+        .find(|s| s.to.as_deref() == Some("overworld"))
+        .map(|s| s.pos)
+        .expect("the way out");
+    w.state.actors.get_mut(&w.state.player).expect("player").pos = out;
+    w.apply(&Action::Ascend);
+    assert_eq!(w.state.current_level, "overworld");
+    assert_eq!(w.player_xp(), 5);
 }
 
 #[test]
@@ -327,6 +479,7 @@ fn experience_survives_a_save_and_replays_exactly() {
     };
     let (a, replay) = play();
     assert!(a.player_xp() > 0, "something died");
+    assert!(!a.state.progress.is_empty(), "the first kill is remembered");
     let content = a.content().clone();
     let verified = Replay::from_json(&replay.to_json())
         .expect("json")

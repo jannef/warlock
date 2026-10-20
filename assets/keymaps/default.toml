@@ -77,6 +77,12 @@ mark_all = [","]
 next_list_page = [">", "PageDown"]
 prev_list_page = ["<", "PageUp"]
 
+[text] # Text fields
+text_confirm = ["Enter", "NumpadEnter"]
+text_erase = ["Backspace", "Delete"]
+text_random = ["Tab"]
+text_back = []
+
 [pages] # Info pages
 page_1 = ["1"]
 page_2 = ["2"]

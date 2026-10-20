@@ -192,20 +192,45 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Experience** (`warlock-core/src/content/experience.rs`, the rules from
   `assets/data/experience.toml`; `world/experience.rs`, applying them; M21, #133). Creature types
   have a `level` (1 to 99) and an `xp` value (§7). The player has an experience total
-  (`WorldState::experience`, saved; zero is not serialized) and their level follows from it:
-  the XP needed for level n is `linear × (n − 1) + quadratic × (n − 1)²` (10 and 10: 20 for
-  level 2, 60, 120, 200, ..., 900 for level 10, 24500 for the cap, level 50; XP beyond the cap
-  counts but buys nothing). A kill is worth `Experience::kill_xp(xp, monster level, player
+  (`WorldState::experience`, saved; zero is not serialized) and their level follows from it and
+  their character (M30, #226; the design is `docs/design/progression.md` §3). **The curve is
+  written in kills** of the player's own level (`[kills]`): with m = n − 1 a level n costs
+  `k(n) = plateau × m ÷ (m + ramp) + slope_per_100 ÷ 100 × m` kills (213, 5, 285: 38 for level
+  2, 163 for level 10, 223 for 20, 365 for 60), each worth the **creature XP guideline**
+  `per_level × n + base` (5 and 10, which the creature data follows: a content test fails for a
+  type more than three times off it either way, but for the listed outliers, the bat, the deer,
+  and the shopkeeper); a level's XP is `k(n) × guideline(n)`, rounded once from the exact
+  fraction, and the threshold of level n is the sum over levels 2 to n (767 for level 2, 45 052
+  for 10, 221 097 for 20, 2 861 748 for the cap, level 60: about 3 000 such kills to reach level
+  20 and 15 000 to reach 60; a test pins the table's hash; XP beyond the cap counts but buys
+  nothing). **Race and class factors**: races and classes have `experience`, a percent of the
+  XP a level needs (50 to 200, default 100: elf 140, gnome 120, dwarf 115, half-elf 105, human
+  100, halfling 95, half-orc 90; wizard 125, monk 120, priest, druid, and witch 115, paladin 110,
+  ranger 105, warrior and bard 100, thief 95, barbarian, craftsperson, aristocrat, and merchant
+  90, commoner 80), and a character's thresholds are `(threshold × race × class + 5 000) ÷
+  10 000` (`content::Factor`; a run without a character is at 100 %): an elf wizard needs 175 %,
+  a half-orc commoner 72 %. The factor is on the thresholds only, so every source of XP is
+  scaled by it once. A kill is worth `Experience::kill_xp(xp, monster level, player
   level)`, in integers (classic World of Warcraft): at or above the player's level the XP plus 5
   % for each level of difference up to 4 (+20 %), rounded; below it `xp × (ZD − d) ÷ ZD` rounded,
   with `d` the levels below and `ZD` the "zero difference" for the player's level (5 at levels 1 to
-  7, 6 at 8–9, 7 at 10–11, 8 at 12–15, 9 at 16–19, 11 at 20–29, 12 at 30–39, 13 at 40–44, 14 from
-  45); a monster `d ≥ ZD` below is grey and gives 0, any other kill at least 1, and a creature worth
+  7, 6 at 8–9, 7 at 10–11, 8 at 12–15, 9 at 16–19, 11 at 20–29, 12 at 30–39, 13 at 40–44, 14 at
+  45–49, 15 at 50–54, 16 at 55–59, 17 at 60); a monster `d ≥ ZD` below is grey and gives 0, any other kill at least 1, and a creature worth
   0 XP gives 0. Only kills by the player count: `World::dies` awards the XP when the one who
   landed the killing blow is the player, whether by melee, a shot, or a throw (`resolve` and
   `missile_hits`), and when a creature dies of a status effect the player caused (a wound they
   dealt bleeds it to death: the effect's `by`, "Status effects" below); traps (#128) and kills
-  by other creatures give nothing. A level
+  by other creatures give nothing. **Discovery** (`[discovery]`, optional; no draw of any random
+  stream): the player's first kill of each creature type (their own, as above) gives the type's
+  XP once more, `first_kill` percent (100) of it unscaled by the levels, so even a grey one
+  teaches ("You learn something of kobolds.", the type's `plural`, said before any level it
+  earns; a type worth 0 XP teaches nothing and is not remembered); the types are remembered by id
+  in `WorldState::progress` (`Progress::discovered`, left out of the JSON while empty). The
+  player's first arrival on a level gives `arrival` (5) × the level's item level (§8 "Magic
+  items": a branch level's depth, a hand-made level's `item_level`), "You gain 10 experience for
+  finding your way here." as the turn is perceived; the level a run starts on, the overworld, and
+  local areas give none, so walking the land is worth nothing. A level is new when this arrival
+  made its state (`World::travel`), so arrivals need no memory. A level
   gained says "You feel more experienced." and "Welcome to level N." (once per kill, naming the
   last level; after the attack's own messages, or as the turn is perceived for a creature that
   bled to death), and each level gained up to `hp_level` (20)
@@ -235,6 +260,41 @@ developer notes (CLAUDE.md, `docs/dev/`).
   and half as loud. The player perceives it (`PerceptionView::own_stance`): the status bar shows
   it when it is not neutral, the character screen always (§6); the wiki's Combat page has the
   generated table.
+- **Free blows** (`world/free_blow.rs`; #228, design `docs/design/progression.md` §4.1 B3): blows
+  beyond an attack's first, all decided by `World::second_blow` on a `Cue`, so there is one
+  place for every extra blow. The second blow of an attack (the off hand's, Sword and Board's
+  bash, §8 "Fighting styles") is one; the others are free blows, switched on per actor
+  (`FreeBlows` on `Actor::free_blows`, saved and hashed but left out while none is on, read
+  only through `World::free_blows_of`; talents and class abilities switch them on, none does
+  yet):
+  - **Cleave** (`cleave`): when the blows of an actor's melee attack (a blow and the second
+    blow, a kick, a shield bash) kill its target, a blow with what it wields at another hostile
+    beside it: the next one clockwise from where the target fell (decided: no draw, and a sweep
+    reads naturally). One per attack; with **great cleave** (`great_cleave`, which cleaves as
+    `cleave` does) each cleave that kills gives another, so at most once per hostile around.
+  - **Riposte** (`riposte`): when a blow of a melee attack on the actor missed by its Parry
+    (`Strike::Missed { by: Parry }`, `Defence::why_missed`), a blow back with what it wields
+    once the attack is over (decided: one per attack however many of its blows were parried,
+    after the attack's last blow, so it never cuts into it). Shots and throws are never
+    riposted.
+  - **Opportunist** (`opportunist`): a hostile stepping from beside the actor to a cell out of
+    its reach (the geometry of fleeing, `World::leaves`, whatever the stepper's stance) is struck
+    as it turns to go, before it leaves its cell (`World::step_away`, from the player's step and
+    `creature_steps`): it may not live to take the step. Each opportunist beside it strikes, in
+    actor order.
+  - Each is a blow like any other: its own `Event::Attacked`, blood, wounds, kills (and their
+    experience), and weapon marks; free (no time, no exertion); silent but the opportunist's,
+    an attack of its own (the others follow a blow that made the noise of the fight). **A free
+    blow brings none of its own** but a cleave after a cleave (decided: ripostes never answer
+    ripostes, a riposte or an opportunist's blow that kills does not cleave), so they never
+    chain past the hostiles around.
+  - The player's are said as they strike (`player_blow`). What they strike in another's turn (a
+    riposte, an opportunist's blow) is held (`World::say` while `World::held`) and joins the news
+    said at the end of `perceive`, so it never comes before the report of what it answers ("You
+    parry the kobold's spear." then "You hit the kobold.").
+  - **Determinism**: deciding a free blow draws nothing (only the second blow's bash chance
+    draws); a free blow draws only as the blow it is, so fights without free blows switched on,
+    or whose triggers do not fire, keep their draws and hashes.
 - **Ranged combat** (`warlock-core/src/world/shoot.rs`; M16): shots and throws.
   - **Loosing**: the player fires (`Action::Fire(cell)`, `fire:X,Y`) with the missile weapon in a
     `ready` slot and the ammunition it shoots in a `ready` slot, or throws (`Action::Throw { item,

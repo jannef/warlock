@@ -15,7 +15,7 @@ when your character is made; the rest you are **untrained** in.
   too, and the summary at the end of character creation lists the skills you will start with.
 
 What a skill does for you is never shown in numbers in the game: you see the value, and feel the
-difference. This page gives the rules.
+difference. This page gives the rules, with the exact numbers.
 
 ## The skills
 
@@ -63,7 +63,8 @@ so they never change a stat.
 {{#include generated/skill-grants.md}}
 
 Some creatures are trained in skills too: deer listen well, and the kobold shaman knows something
-of spells. You never see a creature's skills.
+of spells. You never see a creature's skills in the game; they are on
+[Creatures in numbers](creature-numbers.md#stats-and-skills).
 
 ## Getting better
 
