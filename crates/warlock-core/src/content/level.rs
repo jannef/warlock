@@ -35,11 +35,12 @@ use super::search::{Secret, SecretSpec, secret_look};
 use super::shop::ShopPlan;
 use super::terrain::{StairsDir, TerrainDef, TerrainId};
 use super::trap::{Trap, TrapEffect};
-use super::{ActionKind, Content, ContentError, MAX_ITEM_LEVEL, Rarity, Speaker};
+use super::{ActionKind, Content, ContentError, Cutting, MAX_ITEM_LEVEL, Rarity, Speaker};
 use crate::door::{Lock, check_lock_id};
 use crate::equipment::{self, Equipment};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
+use crate::item_parts::{self, ItemPart};
 use crate::light::Light;
 use crate::magic::{Affix, LootGrade, Magic};
 use crate::object::{Stack, add_to_pile};
@@ -131,15 +132,21 @@ struct PileSpec {
     objects: Vec<String>,
 }
 
-/// A magic or rare item placed by hand: `[[item]] at = [x, y] object = "long_sword" affixes =
-/// ["sharp:2", "of_the_bear"]`, each affix an id with an optional tier (default 1) whose value is
-/// the top of the tier's range; a rare one has a `name`.
+/// An item placed by hand: a magic or rare one, `[[item]] at = [x, y] object = "long_sword"
+/// affixes = ["sharp:2", "of_the_bear"]`, each affix an id with an optional tier (default 1)
+/// whose value is the top of the tier's range (a rare one has a `name`); and an item set with a
+/// gem or a loose gem, `parts = [{ part = "pommel", of = "emerald", size = "small", cut = "fine"
+/// }]` (spec §7 "Gems"; a loose gem's gem is its main part, no `part`), with affixes or without.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct ItemSpec {
     at: [i32; 2],
     object: String,
+    #[serde(default)]
     affixes: Vec<String>,
+    /// Its gems, each in place of its base item's part of that name or besides its parts.
+    #[serde(default)]
+    parts: Vec<ItemPartSpec>,
     /// A rare item's name; with a name it is rare, without magic.
     name: Option<String>,
     /// Whether the player knows its affixes from the start (default false).
@@ -149,6 +156,17 @@ struct ItemSpec {
     level: Option<u8>,
     /// How many (ammunition), default 1.
     count: Option<u32>,
+}
+
+/// A gem an `[[item]]` is made with: the part it is (none: the main part, a loose gem's), the gem,
+/// and its size and cut (the plain ones if not given).
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ItemPartSpec {
+    part: Option<String>,
+    of: String,
+    size: Option<String>,
+    cut: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -878,14 +896,47 @@ fn parse_flow(
     }
 }
 
-/// The magic or rare item an `[[item]]` table places: rare with a `name`, else magic; each
-/// affix's value the top of its tier's range; its item level that of its highest tier unless
-/// given. It must be an item its affixes may roll on (spec §8 "Magic items").
+/// The item an `[[item]]` table places: magic with affixes (rare with a `name`), each affix's
+/// value the top of its tier's range, its item level that of its highest tier unless given; it
+/// must be an item its affixes may roll on (spec §8 "Magic items"). Its `parts` are gems
+/// ([`item_parts`]) it is set with, or a loose gem's gem.
 fn parse_item(spec: &ItemSpec, content: &Content) -> Result<Stack, String> {
     let object = content
         .object_id(&spec.object)
         .ok_or_else(|| format!("unknown object `{}`", spec.object))?;
     let def = content.object(object);
+    if spec.affixes.is_empty() && spec.parts.is_empty() {
+        return Err("an item has `affixes` (magic), `parts` (gems), or both".into());
+    }
+    let count = spec.count.unwrap_or(1);
+    if count == 0 || (count > 1 && !def.stackable) {
+        return Err(format!(
+            "`count` {count} of `{}`, which does not stack",
+            def.id
+        ));
+    }
+    let magic = !spec.affixes.is_empty();
+    if !magic && (spec.name.is_some() || spec.identified || spec.level.is_some()) {
+        return Err("`name`, `identified`, and `level` are for magic items (`affixes`)".into());
+    }
+    let stack = if magic {
+        Stack::with_magic(object, count, parse_magic(spec, content)?)
+    } else {
+        Stack::new(object, count)
+    };
+    if spec.parts.is_empty() {
+        return Ok(stack);
+    }
+    let own = (spec.parts.iter())
+        .map(|p| item_part(p, content))
+        .collect::<Result<Vec<_>, _>>()?;
+    item_parts::check(def, &own, content)?;
+    Ok(stack.with_parts(own))
+}
+
+/// What a magic or rare `[[item]]` rolled: rare with a `name`, else magic.
+fn parse_magic(spec: &ItemSpec, content: &Content) -> Result<Magic, String> {
+    let def = content.object(content.object_id(&spec.object).expect("checked"));
     let mut affixes = Vec::new();
     let mut highest = 1;
     for text in &spec.affixes {
@@ -922,14 +973,38 @@ fn parse_item(spec: &ItemSpec, content: &Content) -> Result<Stack, String> {
         identified: spec.identified,
     };
     magic.check(def, content)?;
-    let count = spec.count.unwrap_or(1);
-    if count == 0 || (count > 1 && !def.stackable) {
-        return Err(format!(
-            "`count` {count} of `{}`, which does not stack",
-            def.id
-        ));
-    }
-    Ok(Stack::with_magic(object, count, magic))
+    Ok(magic)
+}
+
+/// A gem part an `[[item]]` names: a gem (until metal variants, #193, only gems are placed this
+/// way), of the plain size and cut unless it says otherwise.
+fn item_part(spec: &ItemPartSpec, content: &Content) -> Result<ItemPart, String> {
+    let gems = content
+        .gems()
+        .ok_or("an item's `parts` are gems, and there are none without data/gems.toml")?;
+    let gem = (content.material_id(&spec.of))
+        .filter(|m| content.material(*m).gem.is_some())
+        .ok_or_else(|| format!("`of = \"{}\"`: an item's `parts` are gems", spec.of))?;
+    let plain = gems.plain();
+    let size = match &spec.size {
+        Some(id) => gems
+            .size_id(id)
+            .ok_or_else(|| format!("no gem size `{id}`"))?,
+        None => plain.size,
+    };
+    let cut = match &spec.cut {
+        Some(id) => gems.cut_id(id).ok_or_else(|| format!("no cut `{id}`"))?,
+        None => plain.cut,
+    };
+    let part = match &spec.part {
+        Some(id) => Some(
+            content
+                .part_id(id)
+                .ok_or_else(|| format!("no part `{id}`"))?,
+        ),
+        None => None,
+    };
+    Ok(ItemPart::gem(content, part, gem, Cutting { size, cut }))
 }
 
 /// The ice a legend entry lays on the water of its cell, in µm (`ice = mm`): only on water that

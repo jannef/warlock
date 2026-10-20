@@ -65,4 +65,4 @@ objects = ["rock*4"]
 # What the sealed chamber keeps.
 [[pile]]
 at = [48, 8]
-objects = ["ruby*3", "gold_coin*25"]
+objects = ["gem:ruby*3", "gold_coin*25"]

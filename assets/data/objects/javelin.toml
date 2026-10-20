@@ -5,6 +5,7 @@ glyph = ")"
 fg = "#c4a46c"
 class = "melee_weapons"
 materials = ["wood"]
+ornament = "inlay"
 weight = 1000
 value = 10
 slot = "main_hand"

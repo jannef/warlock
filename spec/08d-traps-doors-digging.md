@@ -217,7 +217,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (stamped with them), and the rooms levels of a branch with `secret_doors` (the Depths: one
     or two a level), only where the level does without them (§7 "Generators"). The showcase hub
     has one, harmless: the hall below the storeroom and the pantry hides a closet with a little
-    gold.
+    gold and two gems (§7 "Gems").
 - **Digging** (`warlock-core/src/world/dig.rs`; M19, #131): walls give way to digging and to
   explosions, ADOM-like.
   - **Walls that break**: terrain with a `hardness` and what it `becomes` (§7): stone walls 600,

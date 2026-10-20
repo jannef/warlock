@@ -617,13 +617,16 @@ fn creatures_drop_loot_deterministically() {
     // From its own stream: the same actor drops the same thing.
     assert_eq!(w.loot_of(&kobold), w.loot_of(&kobold));
     // Over many actors about a quarter drop something, always magic or rare, at the level's item
-    // level (3).
+    // level (3), or now and then a loose gem (spec §7 "Gems").
     let mut drops = 0;
     for id in 1..400 {
         let mut a = kobold.clone();
         a.id = ActorId(id);
         if let Some(stack) = w.loot_of(&a) {
             drops += 1;
+            if stack.gem(w.content()).is_some() {
+                continue;
+            }
             let magic = stack.magic().expect("magic or rare");
             assert!(magic.rarity >= Rarity::Magic && !magic.identified);
             assert_eq!(magic.level, 3);
@@ -663,7 +666,7 @@ fn generated_levels_hold_floor_and_vault_loot() {
         names(Pos::new(19, 14)),
         [
             "Dread Visage, an iron helm",
-            "a Sharp long sword of the Bear"
+            "a Sharp emerald-pommelled long sword of the Bear"
         ]
     );
     assert_eq!(

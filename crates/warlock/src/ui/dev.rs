@@ -65,10 +65,7 @@ pub(super) fn draw_map_overlays(grid: &mut MapGrid, world: &World, overlays: Dev
             {
                 let def = content.terrain(t);
                 let (ch, fg) = match level.objects_at(p).first() {
-                    Some(top) => {
-                        let object = content.object(top.object);
-                        (object.glyph, object.fg)
-                    }
+                    Some(top) => (content.object(top.object).glyph, top.fg(content)),
                     None => (def.glyph_at(p), def.fg),
                 };
                 grid.console.put(

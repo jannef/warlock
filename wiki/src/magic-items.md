@@ -28,8 +28,11 @@ How often loot is normal, magic, or rare, and how many affixes magic and rare it
 - **Creatures** may drop something magic or rare where they die, besides what they carried: a
   kobold now and then, a kobold archer a little more often, a kobold shaman one time in two (see
   [Creatures](creatures.md)).
-- The showcase's storeroom has a rack of magic arms to try: a Sharp long sword of the Bear and a
-  rare helm, Dread Visage, both known, and a rare bow and a magic ring that are not.
+- The showcase's storeroom has a rack of magic arms to try: a Sharp emerald-pommelled long sword
+  of the Bear and a rare helm, Dread Visage, both known, and a rare bow and a magic ring that are
+  not.
+- Loot is sometimes set with a gem, and now and then a find is a loose gem instead (see
+  [Gems](gems.md#finding-gems)).
 
 The deeper you are, the better the loot: an item's **item level** is the depth it was found at
 (the Depths' first level is item level 1, the eighth 8; the arena's drops 2, elsewhere 1). It
@@ -119,6 +122,9 @@ remembers each affix's tier and value (so enchanting can work on them later).
 
 A magic item is called by its prefix and suffix around its base: "Sharp long sword", "long sword
 of the Bear", "Sharp long sword of the Bear". A rare item gets a name of two words, the second
-fitting what it is, and is called by its name and its base: "Grim Bite, long sword".
+fitting what it is, and is called by its name and its base: "Grim Bite, long sword". A gem the
+item is set with (see [Gems](gems.md#items-set-with-a-gem)) goes between the prefix and the base,
+"Sharp emerald-pommelled long sword of the Bear", and shows unidentified too; a rare item keeps
+its two words and the gem follows in its base, "Grim Bite, emerald-pommelled long sword".
 
 {{#include generated/magic-names.md}}

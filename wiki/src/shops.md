@@ -11,8 +11,8 @@ door (never in the caverns, never in the room you arrive in).
 ## Money
 
 Gold coins (`$`) are the money. Every object is worth some gold (the "Worth" column of the
-[objects table](objects.md#the-objects)); junk such as rocks is worth nothing, and nobody buys or
-sells it. Prices are the only numbers a shop tells you.
+[objects table](objects.md#the-objects)), and a gem, or an item set with one, by what the gem is
+worth (see [Gems](gems.md)); junk such as rocks is worth nothing, and nobody buys or sells it. Prices are the only numbers a shop tells you.
 
 ## Buying
 

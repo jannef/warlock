@@ -61,7 +61,7 @@ impl DescribeScreen {
         let def = content.object(stack.object);
         Self {
             glyph: def.glyph,
-            fg: def.fg,
+            fg: stack.fg(content),
             title: capitalized(&stack.title(content)),
             rarity: stack.rarity(),
             mark: equipment::mark(content, view.equipment(), item),
@@ -181,7 +181,8 @@ mod tests {
     use warlock_core::{Action, Positions, World};
 
     /// The showcase, standing on the storeroom's magic arms with them picked up: a the magic ring
-    /// (unidentified), b the rare bow (unidentified), c the rare helm, d the magic sword.
+    /// (unidentified), b the rare bow (unidentified), c the rare helm, d the magic sword, its
+    /// pommel an emerald.
     fn armed() -> World {
         let content = Arc::new(Content::builtin().expect("content"));
         let mut world = World::new(content, "showcase", None).expect("world");
@@ -224,15 +225,20 @@ mod tests {
                 "a silver ring (magic)",
                 "a short bow (rare)",
                 "Dread Visage, an iron helm",
-                "a Sharp long sword of the Bear",
+                "a Sharp emerald-pommelled long sword of the Bear",
             ]
         );
         let sword = text(&DescribeScreen::new(Some(&view), Some(3)));
-        assert!(has(&sword, ") Sharp long sword of the Bear"), "{sword:#?}");
-        assert!(has(
-            &sword,
-            "Magic long sword · steel blade, leather grip · 1.8 kg"
-        ));
+        assert!(
+            has(&sword, ") Sharp emerald-pommelled long sword of the Bear"),
+            "{sword:#?}"
+        );
+        // What it is made of wraps; its gem's size and cut follow.
+        assert!(
+            has(&sword, "Magic emerald-pommelled long sword ·"),
+            "{sword:#?}"
+        );
+        assert!(has(&sword, "Pommel: small emerald, fine cut"), "{sword:#?}");
         assert!(has(&sword, "Damage 1d8; criticals on 20–24, ×2 damage"));
         assert!(has(&sword, "Slashing or piercing damage"));
         assert!(has(&sword, "Item level 3"));

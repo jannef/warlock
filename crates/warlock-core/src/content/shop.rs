@@ -183,23 +183,26 @@ impl Shops {
         self.chance > 0 && !self.defs.is_empty() && !self.names.is_empty()
     }
 
-    /// Whether `object` is traded at all: it is worth something, and it is not the currency.
-    pub fn trades(&self, content: &Content, object: ObjectId) -> bool {
-        object != self.currency && content.object(object).value > 0
+    /// Whether `stack` is traded at all: it is worth something (by what it is made of: a loose
+    /// gem by its gem), and it is not the currency.
+    pub fn trades(&self, content: &Content, stack: &Stack) -> bool {
+        stack.object != self.currency && stack.value(content) > 0
     }
 
-    /// Whether a shop of kind `kind` stocks `object` when it is generated.
+    /// Whether a shop of kind `kind` stocks `object` when it is generated: it is worth
+    /// something as it is made, of a class the shop stocks.
     pub fn stocks(&self, content: &Content, kind: ShopId, object: ObjectId) -> bool {
         let def = content.object(object);
-        self.trades(content, object)
+        object != self.currency
+            && def.value > 0
             && def.burning.is_none()
             && self.get(kind).stock.contains(&def.class)
     }
 
-    /// Whether a shop of kind `kind` buys `object`.
-    pub fn buys(&self, content: &Content, kind: ShopId, object: ObjectId) -> bool {
-        let def = content.object(object);
-        self.trades(content, object)
+    /// Whether a shop of kind `kind` buys `stack`.
+    pub fn buys(&self, content: &Content, kind: ShopId, stack: &Stack) -> bool {
+        let def = content.object(stack.object);
+        self.trades(content, stack)
             && def.burning.is_none()
             && self.get(kind).buys.contains(&def.class)
     }
@@ -208,7 +211,7 @@ impl Shops {
     /// in their favour, [`MAX_FAVOUR`] at most either way): its value times the markup, less the
     /// favour, rounded up; at least 1 for anything traded, 0 for anything that is not.
     pub fn price(&self, content: &Content, kind: ShopId, stack: &Stack, favour: i32) -> u32 {
-        if !self.trades(content, stack.object) {
+        if !self.trades(content, stack) {
             return 0;
         }
         let base = self.base(content, stack) * u64::from(self.get(kind).markup);
@@ -221,7 +224,7 @@ impl Shops {
     /// value times what the shop pays, plus the favour, rounded down; never more than it would
     /// ask for it, and 0 for anything it does not buy.
     pub fn offer(&self, content: &Content, kind: ShopId, stack: &Stack, favour: i32) -> u32 {
-        if !self.buys(content, kind, stack.object) {
+        if !self.buys(content, kind, stack) {
             return 0;
         }
         let base = self.base(content, stack) * u64::from(self.get(kind).pays);
@@ -430,12 +433,15 @@ mod tests {
         let kind = |name: &str| shops.id(name).expect(name);
         assert!(shops.stocks(&c, kind("weaponsmith"), id("dagger")));
         assert!(!shops.stocks(&c, kind("weaponsmith"), id("chain_mail")));
-        assert!(shops.buys(&c, kind("armourer"), id("chain_mail")));
+        assert!(shops.buys(&c, kind("armourer"), &Stack::one(id("chain_mail"))));
         assert!(shops.stocks(&c, kind("fletcher"), id("long_bow")));
         // Nobody trades the currency, junk, or what burns.
         for name in ["gold_coin", "rock", "burning_arrow"] {
             for k in 0..shops.defs().len() {
-                assert!(!shops.buys(&c, ShopId(k as u8), id(name)), "{name}");
+                assert!(
+                    !shops.buys(&c, ShopId(k as u8), &Stack::one(id(name))),
+                    "{name}"
+                );
                 assert!(!shops.stocks(&c, ShopId(k as u8), id(name)), "{name}");
             }
         }

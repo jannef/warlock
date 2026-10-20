@@ -7,8 +7,10 @@ Shops (spec §7 "Shops", M27, #145) are data: `data/shops.toml` (`content/shop.r
 the currency, the outraged faction, `presence`, the generation `chance`, keeper `names`, the
 `[keeper]` template, and the kinds, `ShopDef`: `stock`/`buys` by item class (`ItemClassId`, ids
 in `data/item_classes.toml`, `docs/dev/objects.md`), `items`, `markup`, `pays`; `Shops::price`/`offer` are the one place
-prices are made, from `Stack::value`, the value of what the stack is made of: its parts,
-`docs/dev/objects.md`). Every object has a `value` (required; test fixtures with their own objects need
+prices are made, from `Stack::value`, the value of what the stack is made of: its parts, a gem
+by its size and cut, `docs/dev/objects.md`; `Shops::trades`/`buys` take the stack, so a loose gem,
+whose object is worth 0, is traded by its gem; the general store buys gems and no shop stocks
+them). Every object has a `value` (required; test fixtures with their own objects need
 `value = 0`; fixtures that replace `factions.toml` but keep the built-in creatures need the
 `merchants` and `outraged` factions, and fixtures that replace creatures or objects start from
 `ContentFiles::default()` or drop `data/shops.toml`). A shop is a `ShopPlan` in the template
@@ -16,8 +18,9 @@ prices are made, from `Stack::value`, the value of what the stack is made of: it
 rooms, rooms levels only, from the map stream) whose keeper is spawned at its post; at
 instantiation it becomes a `world::Shop` in `LevelState::shops` (saved, hashed; format 30): the
 keeper's actor id, its `exits` (the cells around the floor that could be walked onto or were
-doors when the level was made: the door), `unpaid` (what the player owes, counted by object;
-`unpaid_parts` assigns the counts to the last stacks of each object; only `pay`, `put_back`,
+doors when the level was made: the door), `unpaid` (what the player owes, counted by goods: an
+object and its own parts, `Stack::same_goods`/`goods`, so a gem is owed at its gem's price;
+`unpaid_parts` assigns the counts to the last stacks of the same goods; only `pay`, `put_back`,
 `outrage`, and `keeper_died` take anything off it, so whatever uses unpaid goods up (eating,
 a quest hand-in, rotting away) leaves their price on the bill with no hook of its own; it may
 hold more of an object than the pack does; its lines are counts by object, not stacks lying
@@ -40,7 +43,7 @@ steps out at once),
 keeper gets the `outraged` faction as its `faction_override`, so the AI and stance need nothing
 new. Keepers are NPCs: `budge = "off_post"` (no swapping at the post), one-liners in
 `data/dialogue.toml`, and `World::called` names them by their shop ("Grimbold says: ...").
-Prices are by the base object (`Stack::magic` is kept on what is sold and put back, never
+Prices are by the goods, never their magic (`Stack::magic` is kept on what is sold and put back, never
 priced; keys and quest letters are worth 0). Generated shops avoid locked rooms and rooms with
 something lying in them, and `hide_traps`/`place_loot` leave shop floors alone. The player's `favour` (Presence modifier × `presence` + the Appraise `Effect::Bargain`,
 at most `MAX_FAVOUR`) is never shown: presentation reads only prices

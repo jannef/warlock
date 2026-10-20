@@ -21,6 +21,7 @@
 - [Doors](doors.md)
 - [Special rooms](special-rooms.md)
 - [Objects and your pack](objects.md)
+  - [Gems](gems.md)
   - [Scrolls](scrolls.md)
 - [Equipment](equipment.md)
   - [Magic items](magic-items.md)

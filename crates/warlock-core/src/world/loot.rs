@@ -6,12 +6,14 @@
 //! Wearing or wielding an item for a while does not identify it.
 //!
 //! **Drops**: a creature type with `loot` (a chance in percent) drops a magic or rare item where
-//! it dies, besides what it carried. The roll draws from the stream `drop/<actor id>` (spec §8
-//! "Determinism"), never the gameplay stream, so a kill changes no later roll of a fight; its
-//! item level is the level's.
+//! it dies, besides what it carried, or now and then a loose gem instead (by the gems' `chance`,
+//! spec §7 "Gems"). The roll draws from the stream `drop/<actor id>` (spec §8 "Determinism"),
+//! never the gameplay stream, so a kill changes no later roll of a fight; its item level is the
+//! level's.
 
 use super::{Actor, ActorId, Spent, World};
 use crate::action::Positions;
+use crate::gem;
 use crate::magic::{LootGrade, loot};
 use crate::object::Stack;
 use crate::rng::Rng;
@@ -63,7 +65,8 @@ impl World {
     }
 
     /// What `actor`, a creature that just died, drops besides what it carried: by its type's
-    /// `loot` chance, a magic or rare item at its level's item level, from its own stream.
+    /// `loot` chance, a loose gem (by the gems' chance) or else a magic or rare item at its
+    /// level's item level, from its own stream.
     pub(super) fn loot_of(&self, actor: &Actor) -> Option<Stack> {
         let chance = content_loot(self, actor)?;
         let mut rng = Rng::stream(self.state.seed, &format!("drop/{}", actor.id.0));
@@ -71,7 +74,8 @@ impl World {
             return None;
         }
         let level = self.content.item_level(&actor.level);
-        loot::roll(&self.content, &mut rng, level, LootGrade::Magic)
+        gem::find(&self.content, &mut rng, level)
+            .or_else(|| loot::roll(&self.content, &mut rng, level, LootGrade::Magic))
     }
 
     /// Keeps actor `id`'s hit points within its maximum, which falls when it takes off something

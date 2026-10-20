@@ -382,14 +382,16 @@ fn draw_map(
                 }
                 pile => pile,
             };
-            let top = pile.first().map(|s| content.object(s.object));
+            let top = pile
+                .first()
+                .map(|s| (content.object(s.object).glyph, s.fg(content)));
             let trap = view.trap(p).map(|t| content.trap(t));
             let stain = view.blood(p).filter(|_| show_blood);
             let glyph = |t| {
                 let def = content.terrain(t);
                 let (ch, fg) = match (trap, top) {
                     (Some(trap), _) => (trap.glyph, trap.fg),
-                    (None, Some(o)) => (o.glyph, o.fg),
+                    (None, Some(o)) => o,
                     (None, None) => (def.glyph_at(p), def.fg),
                 };
                 // An object or a trap lies in the blood: only the background takes it.

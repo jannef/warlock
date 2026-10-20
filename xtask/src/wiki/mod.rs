@@ -22,6 +22,7 @@ mod dialogue;
 mod digging;
 mod doors;
 mod experience;
+mod gems;
 mod healing;
 mod hunger;
 mod magic;
@@ -131,6 +132,10 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("shops.md", objects::shops),
         ("equipment.md", objects::equipment),
         ("materials.md", objects::materials),
+        ("gems.md", gems::gems),
+        ("gem-sizes.md", gems::sizes),
+        ("gem-cuts.md", gems::cuts),
+        ("ornaments.md", gems::ornaments),
         ("pack.md", objects::pack),
         ("scenarios.md", scenarios::scenarios),
         ("stats.md", character::stats),
@@ -235,7 +240,9 @@ mod tests {
             "{scrolls}"
         );
         assert!(
-            scrolls.contains("| 3d6 fire | 10 cells | Explosion, very loud | item level 3 | 150 gold |"),
+            scrolls.contains(
+                "| 3d6 fire | 10 cells | Explosion, very loud | item level 3 | 150 gold |"
+            ),
             "{scrolls}"
         );
         assert!(scrolls.contains("| Scroll of identify `?` | Identifies one unidentified item"));
@@ -301,7 +308,17 @@ mod tests {
             objects
                 .contains("| Gold and ruby amulet | `\"` | amulets | gold chain, ruby setting |")
         );
-        assert!(text("materials.md").contains("| Ruby | yes | gold and ruby amulets, rubies |"));
+        assert!(text("materials.md").contains(
+            "| Ruby | yes | gold and ruby amulets, loose gems, and items set with one |"
+        ));
+        // Gems: their worth and how often they are found, the sizes and cuts, and ornaments.
+        assert!(text("gems.md").contains("| Diamond | `#e8f4ff` | 400 gold | 1.9% |"));
+        assert!(text("gem-sizes.md").contains("| Small (plain) | ×1 | 1 g | 33% |"));
+        assert!(text("gem-cuts.md").contains("| Uncut (never set in an item) | ×0.25 | 45% |"));
+        let ornaments = text("ornaments.md");
+        assert!(ornaments.contains("| Rings | as its setting, in its gem's colour | 35% |"));
+        assert!(ornaments.contains("as their tip instead: ironwood staves, quarterstaves."));
+        assert!(text("objects.md").contains("| Gem | `*` | gems | its gem | 1–4 g | its gem's |"));
         // Fighting styles: their configurations, defaults, ranks, and the classes' starting ones.
         let styles = text("styles.md");
         for row in [
@@ -721,8 +738,8 @@ mod tests {
             "{classes}"
         );
         let at = |row: &str| classes.find(row).unwrap_or_else(|| panic!("{row}"));
-        assert!(at("| Melee weapons |") < at("| Gems | Rubies |"));
-        assert!(at("| Gems | Rubies |") < at("| Miscellaneous | Rocks |"));
+        assert!(at("| Melee weapons |") < at("| Gems | Gems |"));
+        assert!(at("| Gems | Gems |") < at("| Miscellaneous | Rocks |"));
         assert!(
             text("creatures.md")
                 .contains("| Giant rat | `r` | Vermin | hostile | up close | no | no |")

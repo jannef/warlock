@@ -41,23 +41,38 @@ fn line(kind: LineKind, text: impl Into<String>) -> Line {
 }
 
 /// The description of `stack`, as the player knows it: what it is (`Magic long sword · steel
-/// blade, leather grip · 1.8 kg`: every part, as materials show identified or not), its base
-/// stats, and its affixes if identified (`Sharp: +2 damage`) or a note that its magic is unknown.
+/// blade, leather grip · 1.8 kg`: every part, as materials show identified or not), each gem in
+/// it with its size and cut (`Pommel: small emerald, fine cut`; a loose gem's `Gem: tiny
+/// garnet, uncut`), its base stats, and its affixes if identified (`Sharp: +2 damage`) or a note
+/// that its magic is unknown.
 pub fn lines(stack: &Stack, content: &Content) -> Vec<Line> {
     let def = content.object(stack.object);
     let mut out = Vec::new();
+    let (name, plural) = stack.names(content);
     let base = if stack.count == 1 {
-        def.name.clone()
+        name
     } else {
-        format!("{} {}", stack.count, def.plural)
+        format!("{} {plural}", stack.count)
     };
     let what = match stack.rarity() {
         Rarity::Normal => capitalized(&base),
         rarity => format!("{} {base}", capitalized(rarity.word())),
     };
-    let parts = content.describe_parts(stack.parts(content));
+    let parts = stack.parts(content);
+    let made = content.describe_parts(&parts);
     let weight = format_weight(stack.weight(content));
-    out.push(line(LineKind::Base, format!("{what} · {parts} · {weight}")));
+    out.push(line(LineKind::Base, format!("{what} · {made} · {weight}")));
+    for part in parts.iter() {
+        let Some(cutting) = part.gem else { continue };
+        let kind = (part.part).map_or("gem", |p| {
+            content.part_defs()[usize::from(p.0)].name.as_str()
+        });
+        let gem = crate::gem::phrase(content, part.material, cutting);
+        out.push(line(
+            LineKind::Base,
+            format!("{}: {gem}", capitalized(kind)),
+        ));
+    }
     out.extend(
         base_stats(def, content)
             .into_iter()

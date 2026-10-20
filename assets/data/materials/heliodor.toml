@@ -1,0 +1,5 @@
+[[material]]
+id = "heliodor"
+name = "heliodor"
+precious = true
+gem = { color = "#e8d44d", value = 110, rarity = 10 }

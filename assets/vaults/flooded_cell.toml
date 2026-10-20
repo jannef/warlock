@@ -16,4 +16,4 @@ map = '''
 # Objects (M11): rubies on the dry middle, under the lamp.
 [[pile]]
 at = [4, 2]
-objects = ["ruby*2"]
+objects = ["gem:ruby*2"]

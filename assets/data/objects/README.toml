@@ -31,6 +31,8 @@
 #             a "ruby-pommelled long sword" (parts.toml's `adjective`); a leather grip shows
 #             only in the item's description, which lists every part. Materials are never
 #             hidden: an unidentified amulet shows that it is gold and ruby
+#   ornament  the part a gem becomes when loot sets this object with one (a part id: `tip`),
+#             instead of its class's in gems.toml (spec §7 "Gems"): staves are gem-tipped
 #   weight    grams for one, at least 1
 #   value     what one is worth, in gold coins (required; 0 to 1000000): shops price their
 #             goods from it and pay part of it for what they buy (shops.toml). Junk is worth 0,
@@ -40,6 +42,9 @@
 #             worth it times what those are worth (each part's share times its material's
 #             `value`) over what its own are worth
 #   stackable several lie in one stack (coins, arrows); default false: a stack of one each
+#
+# A loose gem is gems.toml's `object` (gem.toml): one object for every gem, its gem, size, and cut
+# carried by each gem (level files place one as `"gem:ruby"`, of the plain size and cut).
 #   key       a key (spec §8 "Doors"): the lock id it opens (levels lock doors with `lock =
 #             "id"`), or "*" for a skeleton key, which opens every lock
 #

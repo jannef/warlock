@@ -1,0 +1,148 @@
+# Gems (spec §7 "Gems", #191): what every gem shares. The gems themselves are materials with a
+# `gem` table (materials/diamond.toml, ...): their colour, what a plain one is worth in gold, and
+# how often loot finds them. A gem is worth its value × its size's × its cut's multiplier.
+#
+# Top-level fields:
+#   object  the object a loose gem is (objects/gem.toml): made of its gem, which names it ("a large
+#           fine emerald"), colours it, and prices it; its size gives its weight
+#   chance  percent of finds that are a loose gem instead of an item: floor loot, vault loot cells
+#           of grade `any`, and what creatures drop. Finds are rolled from the loot streams, so
+#           maps never change
+#
+# [[size]], smallest first, and [[cut]], roughest first:
+#   id, name  what items and names say ("large", "fine")
+#   value     what it multiplies a gem's value by, in percent (×1 = 100)
+#   weight    (sizes) what a loose gem of this size weighs, in grams
+#   find      its weight in loot at item level 1; deeper adds this much for each item level
+#   deeper    above the first, so deeper finds run larger and finer
+#   plain     the one size and the one cut names leave unsaid ("a ruby": small, of fair cut), and
+#             what a placed gem is unless it says otherwise (`"gem:ruby"` in a level file)
+#   rough     (cuts) not cut at all: named before the size ("an uncut tiny garnet"), drawn duller,
+#             and never set in an item
+#
+# [[ornament]], one per item class whose loot is now and then set with a gem (an ornament: a part
+# of the item made of the gem, with a size and cut; it adds the gem's worth to the item and does
+# nothing else yet):
+#   class   an item class (item_classes.toml)
+#   part    the part the gem becomes (parts.toml): its adjective names the item ("emerald-
+#           pommelled long sword"), or its gem joins the item's material ("gold and ruby ring").
+#           An object may set its own (`ornament = "tip"` in its file: a topaz-tipped staff)
+#   chance  percent of the class's loot set with a gem
+#   colour  the item takes its gem's colour (a ring set with a ruby is drawn red)
+
+object = "gem"
+chance = 5
+
+[[size]]
+id = "tiny"
+name = "tiny"
+value = 30
+weight = 1
+find = 40
+
+[[size]]
+id = "small"
+name = "small"
+value = 100
+weight = 1
+find = 30
+deeper = 1
+plain = true
+
+[[size]]
+id = "medium"
+name = "medium"
+value = 400
+weight = 2
+find = 15
+deeper = 2
+
+[[size]]
+id = "large"
+name = "large"
+value = 1500
+weight = 3
+find = 4
+deeper = 1
+
+[[size]]
+id = "huge"
+name = "huge"
+value = 5000
+weight = 4
+find = 1
+deeper = 1
+
+[[cut]]
+id = "uncut"
+name = "uncut"
+value = 25
+find = 45
+rough = true
+
+[[cut]]
+id = "crude"
+name = "crude"
+value = 60
+find = 25
+deeper = 1
+
+[[cut]]
+id = "fair"
+name = "fair"
+value = 100
+find = 18
+deeper = 1
+plain = true
+
+[[cut]]
+id = "fine"
+name = "fine"
+value = 160
+find = 8
+deeper = 1
+
+[[cut]]
+id = "exquisite"
+name = "exquisite"
+value = 250
+find = 3
+deeper = 1
+
+[[cut]]
+id = "flawless"
+name = "flawless"
+value = 400
+find = 1
+deeper = 1
+
+[[ornament]]
+class = "melee_weapons"
+part = "pommel"
+chance = 6
+
+[[ornament]]
+class = "missile_weapons"
+part = "inlay"
+chance = 4
+
+[[ornament]]
+class = "shields"
+part = "inlay"
+chance = 6
+
+[[ornament]]
+class = "helmets"
+part = "studs"
+chance = 6
+
+[[ornament]]
+class = "rings"
+part = "setting"
+chance = 35
+colour = true
+
+[[ornament]]
+class = "amulets"
+part = "setting"
+chance = 30
