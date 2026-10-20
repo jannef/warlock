@@ -97,24 +97,7 @@ fn attacks_causing(content: &Content, what: impl Fn(&Affliction) -> Option<Strin
 /// it (with the chance a hit has and the degrees it gives), and rotten corpses when it is the
 /// sickness of food (spec §8 "Hunger").
 fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
-    let mut causes: Vec<String> = Vec::new();
-    if content
-        .disease_status()
-        .is_some_and(|s| usize::from(s.0) == status)
-    {
-        causes.push("any disease, once it shows".into());
-    }
-    if let Some(w) = &def.wound {
-        causes.push(
-            match (w.big_hit > 0, w.critical > 0) {
-                (true, true) => "big hits and confirmed criticals",
-                (true, false) => "big hits",
-                (false, _) => "confirmed criticals",
-            }
-            .into(),
-        );
-    }
-    causes.extend(attacks_causing(content, |what| match *what {
+    let attacks = attacks_causing(content, |what| match *what {
         Affliction::Status {
             status: s,
             severity,
@@ -123,10 +106,25 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
             Some(format!(", {severity} {degrees}"))
         }
         _ => None,
-    }));
+    });
+    let mut causes = Vec::new();
+    if content
+        .disease_status()
+        .is_some_and(|s| usize::from(s.0) == status)
+    {
+        causes.push("any disease, once it shows");
+    }
+    if let Some(w) = &def.wound {
+        match (w.big_hit > 0, w.critical > 0) {
+            (true, true) => causes.push("big hits and confirmed criticals"),
+            (true, false) => causes.push("big hits"),
+            (false, _) => causes.push("confirmed criticals"),
+        }
+    }
+    causes.extend(attacks.iter().map(String::as_str));
     let sickness = (content.hunger()).and_then(|h| content.status_id(h.sickness.as_deref()?));
     if sickness.is_some_and(|s| usize::from(s.0) == status) {
-        causes.push("eating rotten food".into());
+        causes.push("eating rotten food");
     }
     if causes.is_empty() {
         "—".into()
