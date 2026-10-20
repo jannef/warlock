@@ -806,6 +806,7 @@ mod tests {
         // Space (the Mark key), as the keyboard reports it: a named key that types nothing.
         let space = Press {
             nav: Nav::Mark,
+            edit: None,
             binding: Some(KeyBinding::Code(KeyCode::Space)),
             repeat: false,
             text: None,

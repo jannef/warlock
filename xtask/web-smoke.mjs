@@ -1,9 +1,11 @@
 // Dev tool for `cargo xtask web-smoke`: drive headless Chromium over CDP, load the web build,
-// press Enter six times (main menu -> New run -> race -> gender -> class -> summary -> start, the
-// scenario's character preselected), wait five turns, reload the page (its pagehide
-// hook must write the run to localStorage), choose Continue and check the run resumed at turn 5;
-// then pause, Quit and confirm: the page must reload to the main menu (a web page cannot quit),
-// where Continue resumes the run again; screenshot, and fail if errors were logged.
+// press Enter seven times (main menu -> New run -> race -> gender -> class -> name -> summary ->
+// start, the scenario's character preselected, the name left empty: a random one), check the new
+// character's save is in localStorage (`warlock/saves/<id>.sav`, written as the run starts), wait
+// five turns, reload the page (its pagehide hook must write the run to that save), choose Continue
+// and check the run resumed at turn 5; then pause, Quit and confirm: the page must reload to the
+// main menu (a web page cannot quit), where Continue resumes the run again; screenshot, and fail if
+// errors were logged.
 // Usage: node xtask/web-smoke.mjs <chrome-binary> <url> <out.png> <profile-dir>
 import { spawn } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
@@ -41,25 +43,29 @@ await key('Enter', 'Enter', 13);   // Showcase: on to the race
 await key('Enter', 'Enter', 13);   // the race (the showcase's, preselected)
 await key('Enter', 'Enter', 13);   // the gender
 await key('Enter', 'Enter', 13);   // the class
+await key('Enter', 'Enter', 13);   // the name (empty: a random one)
 await key('Enter', 'Enter', 13);   // start from the summary
 await sleep(4000);
+// The characters' saves: [key, length] of each `warlock/saves/*.sav`, and every key.
 const stored = async () => (await send('Runtime.evaluate', {
-  expression: "JSON.stringify([localStorage.getItem('warlock/run.sav')?.length ?? null, Object.keys(localStorage)])",
+  expression: "JSON.stringify([Object.keys(localStorage).filter((k) => /^warlock\\/saves\\/[^/]+\\.sav$/.test(k)).map((k) => [k, localStorage.getItem(k).length]), Object.keys(localStorage)])",
   returnByValue: true })).result.result.value;
 const before = JSON.parse(await stored());
+const failures = [];
+if (before[0].length !== 1) failures.push('the new character was not saved as the run started: ' + before[1]);
 for (let i = 0; i < 5; i++) await key('.', 'Period', 190);   // wait: five turns
 await sleep(500);
-const failures = [];
-if (before[0] !== null) failures.push('run.sav existed before the page was hidden: ' + before);
 await send('Page.reload');
 await sleep(12000);
 const after = JSON.parse(await stored());
-if (after[0] === null) failures.push('page hide did not write warlock/run.sav; keys: ' + after[1]);
-else console.log(`run.sav in localStorage after reload: ${after[0]} base64 chars`);
+if (after[0].length !== 1) failures.push('expected one character save after reload; keys: ' + after[1]);
+else console.log(`${after[0][0][0]} in localStorage after reload: ${after[0][0][1]} base64 chars`);
 await send('Runtime.evaluate', { expression: "document.querySelector('canvas')?.focus()" });
 await key('Enter', 'Enter', 13);   // Continue
 await sleep(3000);
-if (!logs.some((l) => /resumed the saved run at turn 5\b/.test(l))) failures.push('Continue did not resume at turn 5; logs: ' + logs.join(' | '));
+// Turn 5: the page-hide hook wrote the run (autosave wrote it at turn 0 and next at turn 50).
+const resumed = (l) => /resumed \S+ at turn 5\b/.test(l);
+if (!logs.some(resumed)) failures.push('Continue did not resume at turn 5; logs: ' + logs.join(' | '));
 // Quit from the pause menu (Esc, Up wraps to Quit, Enter asks, y confirms): the page reloads.
 await send('Runtime.evaluate', { expression: 'window.__beforeQuit = 1' });
 await key('Escape', 'Escape', 27);
@@ -72,7 +78,7 @@ if (alive !== 'undefined') failures.push('Quit did not reload the page');
 await send('Runtime.evaluate', { expression: "document.querySelector('canvas')?.focus()" });
 await key('Enter', 'Enter', 13);   // Continue
 await sleep(3000);
-if (logs.filter((l) => /resumed the saved run at turn 5\b/.test(l)).length < 2) failures.push('Continue after Quit did not resume at turn 5; logs: ' + logs.join(' | '));
+if (logs.filter(resumed).length < 2) failures.push('Continue after Quit did not resume at turn 5; logs: ' + logs.join(' | '));
 const shot = await send('Page.captureScreenshot', { format: 'png' });
 writeFileSync(out, Buffer.from(shot.result.data, 'base64'));
 const bad = [...failures, ...logs.filter((l) => /error|panic|EXCEPTION|warn/i.test(l))].slice(0, 15);

@@ -8,6 +8,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   race (`data/races.toml`), a gender (male, female, or other), and a class
   (`data/classes.toml`), chosen on New run (§6) or given on the command line (`--character
   dwarf,female,warrior`, §9); otherwise the scenario's character (§7). It decides:
+  - **Name** (#218): the character has a name, 1 to 20 characters, typed on New run's Name step
+    (after the class, before the summary; §6) or given on the command line (`--name Brakka`).
+    The step's Random, and an empty field, give one of the race's names for the gender
+    (`data/names.toml`, a `male` and a `female` list per race; `other` draws from both), drawn
+    from the stream `character/name/<race>,<gender>/<draw>`, so no other roll moves and the class
+    plays no part. A run told no name (a replay or command line without one) gives the
+    scenario's own name (§7) to its own character, else the race's first random name, else
+    "Wanderer". The name is shown on the character screen, the summary, the death screen ("Here
+    lies Brakka, …"), and the list of saved characters (§7 "Saves"); no rule or message reads it
+    yet.
   - **Age and birthday**: the starting age is uniform within the race's `age` range, the
     birthday (month, then day) uniform over the year, both from the stream
     `character/birth/<race>` (so the class and gender never move a birthday). The birth date is
@@ -55,12 +65,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - Balance is deliberately not a goal: some combinations are poor (a halfling commoner), and
     classes do nothing but adjust starting scores, give hit points, train skills, and give
     weapon skills and fighting styles. No other D&D concept comes with them (alignment, equipment, spells).
-  - The character (`Character`: the race, gender, and class ids, the stat the gender raised,
-    the birth date, and the birth sign) is part of the world state (saved, hashed) and shown on
-    the character screen; replays record the choice only, and since everything else follows
-    from the content, the choice, the seed, and the start date, a run is reproduced by its
-    scenario, seed, and character. `World::new` starts as the scenario's character,
-    `World::with_character` as a given one.
+  - The character (`Character`: the name, the race, gender, and class ids, the stat the gender
+    raised, the birth date, and the birth sign) is part of the world state (saved, hashed) and
+    shown on the character screen; replays record the choice and the name only, and since
+    everything else follows from the content, the choice, the seed, and the start date, a run is
+    reproduced by its scenario, seed, character, and name. `World::new` starts as the scenario's
+    character, `World::with_character` as a given one, `World::with_character_named` named.
 - **Skills** (`warlock-core/src/skills.rs`, `content/skill.rs`, `world/train.rs`; M20, #132),
   ADOM-like:
   - **Trained or untrained**: every actor has a set of trained skills, each with a **value**
@@ -120,11 +130,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     - spot: trained at all, the player notices hidden features in passing (§8 "Searching");
       points added to that check, +8 at 100 and +12 at 200 (`spot`); a mark (50 %) for each
       thing noticed;
+    - disable device: trained at all, the player can disarm traps (§8 "Disarming traps", the
+      Disarm ability); points added to that check, +8 at 100 and +12 at 200 (`disarm`); a mark
+      (20 %) for each try, whatever comes of it;
+    - open lock: trained at all, the player may pick locks (the Pick lock ability, §8 "Doors");
+      points added to that check, +8 at 100 and +12 at 200 (`pick`); a mark (20 %) for each try,
+      whatever comes of it;
     - athletics' climbing out of pits and escape artist (out of pits faster) wait for that rule
       (#128); swim for deep water; concentration, spellcraft, and use magic
-      device for magic; the other action skills (heal, steal, …) for their actions;
-    - open lock: trained at all, the player may pick locks (the Pick lock ability, §8 "Doors");
-      points added to that check, +8 at 100 and +12 at 200 (`pick`); a mark (20 %) for each try;
+      device for magic; the other action skills (heal, steal, …) for their actions.
       Searching is a basic command with keys of its own (`s`, `z`), so Search is read by rules,
       not an action skill.
   - **What the player sees**: their own trained skills' values and a coarse progress (quarters)
@@ -133,8 +147,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Active uses**: skills get no keys of their own. Racial, class, skill, and style abilities
     are chosen from one abilities menu (§6 "Abilities", #156), unlike ADOM: each trained skill
     with an active use (`kind = "action"`) is an ability there (`warlock_core::ability`,
-    `PerceptionView::abilities`), greyed out as "not usable yet" until its use comes with its
-    action, when it is that ability instead (Open lock: Pick lock, §8 "Doors"). Never a benefit's number, a mark, a
+    `PerceptionView::abilities`), greyed out as "not usable yet": the uses come with their
+    actions, and one whose use has come is that ability instead (Disable device's is "Disarm a
+    trap", §8 "Disarming traps"; Open lock's "Pick lock", §8 "Doors"). Never a benefit's number,
+    a mark, a
     chance, an untrained skill, or a creature's skills; ground-truth dev dumps (`actors`, the
     world state) show every actor's skills with their marks. Skills and marks are part of the
     world state (saved, hashed).

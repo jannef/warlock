@@ -47,7 +47,8 @@ impl Clock {
         self.format_hm(time.hour(), time.minute())
     }
 
-    fn format_hm(self, hour: u32, minute: u32) -> String {
+    /// `hour`:`minute` as this clock writes it (see [`Clock::format`]).
+    pub fn format_hm(self, hour: u32, minute: u32) -> String {
         match self {
             Clock::H24 => format!("{hour:02}:{minute:02}"),
             Clock::H12 => {

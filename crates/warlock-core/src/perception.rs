@@ -67,9 +67,9 @@ use crate::character::Character;
 use crate::combat::Health;
 use crate::content::Shops;
 use crate::content::{
-    CombatStance, Content, CreatureId, DamageTypeId, DiseaseId, FactionId, Flow, ItemClassId,
-    LevelKind, LightId, ObjectId, RoomEffectDef, SlotId, Stance, StatusId, TerrainId, TrapId,
-    VisionProfile, WeaponSkillId,
+    CombatStance, Content, CreatureId, DamageTypeId, DiseaseId, FactionId, Factor, Flow,
+    ItemClassId, LevelKind, LightId, ObjectId, RoomEffectDef, SlotId, Stance, StatusId, TerrainId,
+    TrapId, VisionProfile, WeaponSkillId,
 };
 use crate::daylight;
 use crate::equipment::Equipment;
@@ -1035,11 +1035,12 @@ impl<'a> PerceptionView<'a> {
     /// at the highest level) (spec §8 "Experience"). All of it is shown to the player.
     pub fn own_experience(&self) -> Progress {
         let rules = self.content.experience();
-        let level = rules.level_for(self.experience);
+        let factor = Factor::of(self.content, self.character.map(|c| &c.spec));
+        let level = rules.level_for(self.experience, factor);
         Progress {
             level,
             xp: self.experience,
-            next: (level < rules.max_level()).then(|| rules.threshold(level + 1)),
+            next: (level < rules.max_level()).then(|| rules.threshold_for(level + 1, factor)),
         }
     }
 

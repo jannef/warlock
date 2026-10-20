@@ -6,6 +6,23 @@ name = "main-menu"
 scenario = "showcase"
 screen = "main"
 
+# Saved characters (#218), read (never written) from the fixture folder `saved-characters`, whose
+# saves are placeholders: only their summaries are read. The main menu offers to continue as the
+# one played last (Brakka) and lists them all on the Characters screen: name, race and class,
+# level, and for the selected one where they are and when they were last played; two are named
+# Brakka, with saves of their own.
+[[golden]]
+name = "characters-screen"
+scenario = "showcase"
+screen = "characters"
+args = ["--save-dir", "tests/golden/saved-characters"]
+
+[[golden]]
+name = "main-menu-saved"
+scenario = "showcase"
+screen = "main"
+args = ["--save-dir", "tests/golden/saved-characters"]
+
 # The pause menu over a running game: guards against overlays being wiped (#56).
 [[golden]]
 name = "pause-menu"

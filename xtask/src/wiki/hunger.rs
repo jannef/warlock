@@ -8,7 +8,7 @@ use warlock_core::content::{Content, HungerDef};
 use warlock_core::hunger::Hunger;
 use warlock_core::object::format_weight;
 use warlock_core::stats::Stat;
-use warlock_core::time::{DAY, Duration, HOUR};
+use warlock_core::time::{DAY, Duration};
 
 /// How long `points` of nutrition last a race of hunger `percent`, in whole minutes: "36
 /// hours", "1 hour and 15 minutes".
@@ -18,31 +18,13 @@ fn lasts(def: &HungerDef, points: i32, percent: u16) -> String {
     Duration::seconds(seconds / 60 * 60).spoken()
 }
 
-/// A shelf life roughly, never as a timer: "a few hours", "a day or two", "about five days",
-/// "about two weeks", "about a month".
-fn roughly(d: Duration) -> String {
-    const WORDS: [&str; 13] = [
-        "no", "a", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
-        "eleven", "twelve",
-    ];
-    let about = |n: u64, unit: &str| {
-        let s = if n == 1 { "" } else { "s" };
-        let n = usize::try_from(n).unwrap_or(usize::MAX);
-        match WORDS.get(n) {
-            Some(w) => format!("about {w} {unit}{s}"),
-            None => format!("about {n} {unit}{s}"),
-        }
-    };
-    let hours = d.as_seconds() / HOUR;
-    let days = |n: u64| n * 24;
-    match hours {
-        h if h < 12 => "a few hours".into(),
-        h if h < days(1) => "less than a day".into(),
-        h if h < days(2) => "a day or two".into(),
-        h if h < days(13) => about((h + 12) / 24, "day"),
-        h if h < days(28) => about((h + days(7) / 2) / days(7), "week"),
-        h if h < days(360) => about((h + days(30) / 2) / days(30), "month"),
-        h => about((h + days(360) / 2) / days(360), "year"),
+/// A shelf life, exactly: "30 days", "1 day", "36 hours", "8 hours" (food does not show its age in
+/// the game).
+fn shelf(d: Duration) -> String {
+    match d.as_seconds() {
+        DAY => "1 day".into(),
+        s if s > DAY && s % DAY == 0 => format!("{} days", s / DAY),
+        _ => d.spoken(),
     }
 }
 
@@ -200,7 +182,7 @@ pub(super) fn hunger_races(content: &Content) -> String {
 }
 
 /// The food objects: what each gives, how long that feeds a human, how many turns it takes to
-/// eat, what it weighs, what it cures, and roughly how long it keeps and lasts.
+/// eat, what it weighs, what it cures, and how long it keeps and lasts.
 pub(super) fn food(content: &Content) -> String {
     let Some(def) = content.hunger() else {
         return "Nobody hungers.\n".into();
@@ -223,8 +205,8 @@ pub(super) fn food(content: &Content) -> String {
             food.turns,
             format_weight(u64::from(o.weight)),
             cures(content, &o.cures),
-            roughly(food.keeps),
-            roughly(food.lasts)
+            shelf(food.keeps),
+            shelf(food.lasts)
         );
     }
     out
@@ -258,9 +240,61 @@ fn cures(content: &Content, means: &[String]) -> String {
     }
 }
 
-/// Every creature's corpse: what it weighs (the creature's weight), what it gives, and roughly
-/// how long it keeps and lasts (by size). What eating it does beyond that stays for the player to
-/// find out.
+/// What eating each fresh corpse does beyond feeding, in the order the rules apply it (its
+/// creature's `on_eat`): the chance it comes back up (and feeds nothing), the nutrition it adds
+/// or takes, the chance per stat to raise it by 1 (up to the potential), the hit points it heals,
+/// and the degrees of sickness it gives. A rotten corpse does none of it.
+pub(super) fn corpse_effects(content: &Content) -> String {
+    let Some(def) = content.hunger() else {
+        return "Nobody hungers.\n".into();
+    };
+    let sickness = (def.sickness.as_deref())
+        .and_then(|s| content.status_id(s))
+        .map_or_else(
+            || "sickness".to_string(),
+            |s| content.status(s).name.to_lowercase(),
+        );
+    let mut out = String::from("| Corpse | Eaten fresh | It says |\n|---|---|---|\n");
+    for (_, o) in order::objects(content) {
+        let (Some(_), Some(creature)) = (o.food, o.corpse) else {
+            continue;
+        };
+        let Some(eat) = &content.creature(creature).on_eat else {
+            let _ = writeln!(out, "| {} | nothing more | - |", capital(&o.name));
+            continue;
+        };
+        let mut does: Vec<String> = Vec::new();
+        if eat.vomit > 0 {
+            does.push(format!("{}% it comes back up", eat.vomit));
+        }
+        if eat.satiation != 0 {
+            does.push(format!("{} nutrition", signed(eat.satiation)));
+        }
+        for (stat, chance) in &eat.stat {
+            does.push(format!("{chance}% {} +1", stat.name()));
+        }
+        if let Some(heal) = eat.heal {
+            does.push(format!("heals {heal} hit points"));
+        }
+        if let Some(harm) = eat.harm {
+            does.push(format!("{harm} degrees {sickness}"));
+        }
+        let does = if does.is_empty() {
+            "nothing more".to_string()
+        } else {
+            does.join("; ")
+        };
+        let says = eat
+            .message
+            .as_deref()
+            .map_or_else(|| "-".to_string(), |m| format!("\"{m}\""));
+        let _ = writeln!(out, "| {} | {does} | {says} |", capital(&o.name));
+    }
+    out
+}
+
+/// Every creature's corpse: what it weighs (the creature's weight), what it gives, and how long
+/// it keeps and lasts (by size). What eating it does beyond that is [`corpse_effects`].
 pub(super) fn corpses(content: &Content) -> String {
     let Some(def) = content.hunger() else {
         return "Nobody hungers.\n".into();
@@ -284,8 +318,8 @@ pub(super) fn corpses(content: &Content) -> String {
             food.nutrition,
             lasts(def, nutrition, 100),
             food.turns,
-            roughly(food.keeps),
-            roughly(food.lasts)
+            shelf(food.keeps),
+            shelf(food.lasts)
         );
     }
     out

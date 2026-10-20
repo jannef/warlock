@@ -110,6 +110,33 @@ developer notes (CLAUDE.md, `docs/dev/`).
     place of the door's, like any known trap (§4.2), and look mode names both ("An arrow trap, on
     closed door."). A secret door is never trapped, as it is never locked (a content error in a
     level file; generators never hide a trapped door). The trap hall's closets show them (§3).
+  - **Disarming traps** (`warlock-core/src/world/disarm.rs`; #232, the progression design's
+    B7): the use of the Disable device skill, an ability (§6 "Abilities": `Ability::Disarm`,
+    "Disarm a trap", in the Skills group; `KeyCommand::Disarm`, no key by default) and an action
+    with replay text, `disarm:DIR` (`Action::Disarm`). Whoever is trained in Disable device (the
+    skill with the `disarm` effect, §8 "Skills": the thief) may try to take apart a trap they
+    know of on a cell next to them, on the floor or on a door (open or shut). The try is a check
+    (§8 "Checks"; `check::roll`): 2d12 plus the Dexterity modifier (of the effective score)
+    plus what Disable device gives (`disarm`: +8 at 100, +12 at 200, at most 20) against the
+    trap's `difficulty`, the one finding it takes (with a branch's `hidden_per_depth`, §8
+    "Searching"). Made: the trap is gone (from the level and from memory), "You disarm the
+    arrow trap."; it earns nothing else. Failed: it stays, "You fail to disarm the arrow trap.";
+    failed by 5 or more (`SPRINGS_SHORT_BY`; a natural 2 fails but falls short only by what the
+    numbers say): "You set off the arrow trap!", and it goes off at the player as if they had
+    set it off from where they stand (`World::spring_trap(at, player)`, as a trapped door is
+    opened from the next cell: its arrow from the slit at them, its spears at them, its blast
+    around it, its bolt through them, a pit's fall and the climb back out (its next action
+    lost, the player still on their own cell), an alarm's bell, a teleport of them), spending
+    a charge. Every try takes the time of `disarm` (2000: 12 s at a normal pace; priced before
+    the trap may go off, plus a pit's climb) and may earn Disable device a training mark (`Use::
+    Disarm`, 20 %, the training stream), whatever comes of it; the check is two draws of the
+    gameplay stream. Nothing remembers a failed try and there is no limit on trying again (the
+    owner's rule): time and the risk are the price. Refused, with no time and no draw: without
+    the skill ("You do not know how to disarm traps."), and where the player knows of no trap
+    ("You know of no trap there.": a hidden trap is refused as an empty cell is, so trying
+    gives nothing away). Creatures do not disarm. The thief's class table (Trapfinding, level
+    6) and the Tinker talent (the craftsperson's level 32 and the gnomes') will give it to
+    those not trained in the skill when they land.
 - **Doors** (`warlock-core/src/door.rs`, the rules; `world/door.rs`, applying them; M19, #130):
   locked doors and keys, and kicking doors in.
   - **Locks** are per-cell state of a level, not terrain of their own: a locked door is the

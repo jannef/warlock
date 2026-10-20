@@ -10,7 +10,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - Symbol commands (`<`, `>`, `?`) are bound by **logical key**, so they work on non-US layouts.
 - Bindings live in the settings file. The `?` help (the controls list, read-only) is generated from
   the binding table, so it is always accurate. Every key is rebindable (below).
-- **Screens**: the main menu, New run and its character creation steps, pause menu, Settings,
+- **Screens**: the main menu, the saved characters, New run and its character creation steps, pause menu, Settings,
   Controls, help, the inventory, the equipment screen and its choice of what goes in a slot, an
   item's description, the character screen, the Skills screen, the weapon skills screen, the quest
   log, the message history, choosing what to pick up, drop, throw, or eat, the dialogue screen, and
@@ -48,20 +48,37 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `read:LETTER:X,Y`), `Aim again` (decline: back to aiming, on the same target), and `Don't read
   it` (cancel, selected first). The rules never ask.
 - **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
-  `--record`, or `--capture` name what to run): Continue (only if a save exists), New run
-  (scenario list from content, optional seed, then character creation), Settings, Controls,
-  Quit.
+  `--record`, or `--capture` name what to run): Continue (only if a character is saved: it
+  resumes the one played last, and names them), Characters (likewise), New run (scenario list
+  from content, optional seed, then character creation), Settings, Controls, Quit.
+- **Characters** (#218, §7 "Saves"): every saved character, the one played last first: the name,
+  race and class, and level, and for the selected one where they are and when they were last
+  played (wall-clock, in UTC). Up/Down choose, Enter resumes the one selected, the Erase key
+  (`Delete`) deletes it after the one dialog ("Delete Brakka's save? The character is gone for
+  good."; Keep is selected first), Esc goes back. A save whose summary cannot be read is listed
+  by its file's id; one that cannot be resumed is kept as unusable and leaves the list, and the
+  main menu says why.
 - **Character creation** (§8 "Character creation"): after the scenario and seed, New run asks for
   a **race**, a **gender**, and a **class**, one screen each and in that order (race first: it
-  is the biggest choice and sets the player's eyes), then shows a **summary**. Each step lists
+  is the biggest choice and sets the player's eyes), then a **name**, then shows a **summary**.
+  The Name step is a text field (the game's): every key types what it types, literally (`j` and
+  `k` too), as long as the font draws it and the name has room (20 characters; no space first);
+  the `Context::Text` commands, rebindable like every key, accept (Enter), erase the last
+  character (Backspace, Delete), put in one of the race's names for the gender, from the run's
+  seed (Tab; never the one shown; again for another), and back out (Esc, always). Held keys type
+  and erase again but never accept. An empty field shows, dimmed, the name accepting it gives:
+  the race's first random name. Each choice step lists
   its options in data order with a `>` marker, the selected option's one-line description, and
   for races and classes their stat adjustments as written in data, dice included
-  (`St 1d3+1  Dx −1`), and for races their vision; the gender step names the stat "other"
+  (`St 1d3+1  Dx −1`), for races their vision, and for both how fast levels come, in words
+  ("Levels come slowly." for an `experience` of 115 % and above, "Levels come quickly." for 95 %
+  and below, nothing between; §8 "Experience"); the gender step names the stat "other"
   raises with the run's seed. Every step ends with a
   **Random** row, rolled from the run seed and how often Random was pressed there. Up/Down (or
   `k`/`j`) choose, Enter goes on, Esc goes back a step as it was left. A step opens on the
   choice made there before going back, else on the scenario's character's, else on the first
-  option. The summary lists Start the run, then Race, Gender, and Class with their choices (Enter
+  option; the Name step opens on what was typed there before going back, else empty. The summary
+  lists Start the run, then Name, Race, Gender, and Class with their choices (Enter
   on one returns to that step as it was left; the steps after it close), the character's age,
   birthday, and birth sign on one line (`Age 27 · born 3 Seedtide 1417 · year of the Fire
   Manticore`; the sign on a line of its own when the panel is too narrow), the six starting
@@ -70,7 +87,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   columns when there are more than six, down the first, then the second; below the scores, as
   `Appraise 11 · Disable device 16 · …`, when the panel is too narrow), the vision, and the
   scenario and seed; "other" names the stat it raised. The
-  player does not choose the age, the birthday, or the sign. Starting replaces any saved run. Content without races or classes skips
+  player does not choose the age, the birthday, or the sign. Starting makes a new character with
+  a save of its own: it never touches another character's (§7 "Saves"). Content without races or classes skips
   character creation: New run starts the scenario as it is.
 - **Pause menu**: Esc during a run (when no prompt is open) opens it, drawn in glyphs:
   Resume, Settings, Controls, Save and quit to menu, Quit (which saves). No game time passes while
@@ -103,8 +121,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   key." or "... (was Kick)."), so the table never holds a conflict; a command left without a key
   shows as none and is saved as an empty list. Fixed commands never lose their key: Esc (cancel,
   which opens the pause menu) is refused with a reason, and so is the last key of the commands
-  that reach Controls from anywhere (up, down, and choose on the menus), so no binding, settings
-  file, or keymap can lock the player out. Delete resets a command, "Reset all keys" resets
+  that reach Controls from anywhere (up, down, and choose on the menus) and of the one that
+  accepts a text field (a new character's name), so no binding, settings file, or keymap can lock
+  the player out. Text fields have a context of their own (accept, erase, random, back): a key
+  bound there edits, every other key types. Delete resets a command, "Reset all keys" resets
   everything, and so does `--reset-keys` on the command line (saved at once; the game then starts
   as usual).
 - **Keymaps**: "Export keys…" in Controls writes every command's keys, by context, with a format
@@ -238,8 +258,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   parry in Defence; a weapon's `attack_cost` how long a blow takes); being worn changes neither
   sight, noise, nor speed (its weight does, as part of the load), but for what a magic item's
   affixes do while it is worn or wielded (§8 "Magic items").
-- **Character** (`@`): who the player is, as far as they know it: their name (the player
-  creature's, "You"), their race, gender, and class (`Race    Dwarf`; "other" with the stat it
+- **Character** (`@`): who the player is, as far as they know it: their name (the character's,
+  as typed; without a character the player creature's, "You"), their race, gender, and class (`Race    Dwarf`; "other" with the stat it
   raised), their age today, birthday, and birth sign as on the summary (when the run has a
   character), their score in each stat (§8 "Stats") in display order with its abbreviation and
   full name (`St  Strength  12`; as it is now, with what magic items they wear add; a score a
@@ -284,12 +304,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     used now. Every ability is a normal core `Action` with replay text, so replays record it as
     that action.
   - **What there is**: the shield bash (§8 "Weapon skills"), which everyone has and can use
-    while holding a shield to bash with; **Pick lock** (§8 "Doors", #233), the Open lock skill's
-    use, which those trained in Open lock have (a skill with the `pick` effect: thieves), asking
-    for a direction; and each other skill used as an action (`kind = "action"`, §8 "Skills") the
-    player is trained in, listed but never available until its use comes (it then becomes an
-    ability of its own with its action, listed in its skill's place). No race, class, or item
-    gives one yet.
+    while holding a shield to bash with; disarming a trap (`Ability::Disarm`, "Disarm a trap",
+    §8 "Disarming traps"), Disable device's use, which whoever is trained in it has, in a
+    direction ("Disarm in which direction? (Esc to cancel)"); **Pick lock** (`Ability::PickLock`,
+    §8 "Doors", #233), Open lock's use, which whoever is trained in it has (thieves), in a
+    direction; and each other skill used as an action (`kind = "action"`, §8 "Skills") the player
+    is trained in, listed but never available until its use comes (it then becomes an ability of
+    its own with its action, listed in the skill's place: `Ability::use_of`). No race, class, or
+    item gives one yet.
   - **The menu** (a screen on the stack) lists them as the one paged list (§6 "Item lists"),
     grouped by source under a header each, lettered down each page from `a`: each row the
     ability's name and what it asks for ("in a direction"), or greyed out with why it cannot be
@@ -341,16 +363,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   names (`1 Char · 2 Inventory · 3 Equip · 4 Skills · 5 Weapons · 6 Quests`), else all by their
   short names, else the current page by its name and the others by their keys alone.
 - **Death screen** (§8 "Combat"): when the player dies, the death screen opens over the run as it
-  ended, in place of any other screen, and the run's save is deleted (permadeath): `Y O U   D I E
-  D`, then who killed them ("Killed by a kobold", or "Killed by something you did not see" when
+  ended, in place of any other screen, and the character's save is deleted, and no other's
+  (permadeath): `Y O U   D I E D`, then who lies here ("Here lies Brakka,", with a character; the
+  next line then begins in lower case), who killed them ("Killed by a kobold", or "Killed by something you did not see" when
   they did not see it), the status effect that did (its `death` line: "Bled to death"; a
   disease kills by Diseased: "Died of disease"), or what, when neither did (§8 "Hunger":
   "Starved to death", "Choked to death on a food ration"; §8 "Traps": "Killed by a fireball
   trap"), where
   (the level's name), when (the date and time), and after how many turns, and the level they
   had reached ("You had reached level 3."). It takes every key press; Enter or Esc returns to
-  the main menu (no Continue: nothing is
-  left to continue). A run that has ended is never saved again, by any trigger.
+  the main menu (Continue only for another saved character: nothing of this one is left to
+  continue). A run that has ended is never saved again, by any trigger.
 - **Weight**: every object and every creature (the player included) has a weight in grams. An
   actor weighs its creature's base weight plus everything it carries; the rules know every
   actor's weight (what it carries decides its burden, §8 "Burden"), but the player is shown only

@@ -66,6 +66,7 @@ impl World {
             Action::Read { .. } => ActionKind::Read,
             Action::Dig(_) => ActionKind::Dig,
             Action::Search(_) => ActionKind::Search,
+            Action::Disarm(_) => ActionKind::Disarm,
             Action::Sell(_)
             | Action::Pay(None)
             | Action::SetStance(_)

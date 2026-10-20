@@ -27,6 +27,7 @@
 
 use super::abilities_screen::AbilitiesScreen;
 use super::character_screen::CharacterScreen;
+use super::characters_screen::CharactersScreen;
 use super::chargen_screen::{ChoiceScreen, Draft, Picks, Step, SummaryScreen};
 use super::controls_screen::ControlsScreen;
 use super::death_screen::DeathScreen;
@@ -39,6 +40,7 @@ use super::info_tabs;
 use super::menu::{MainMenu, Press, quit_dialog};
 use super::messages_screen::MessagesScreen;
 use super::motion::Motion;
+use super::name_screen::NameScreen;
 use super::new_run_screen::NewRunScreen;
 use super::object_screen::{ObjectList, ObjectScreen};
 use super::quest_screen::QuestScreen;
@@ -51,7 +53,7 @@ use crate::game::{Game, GameContent, PlayerAction};
 use crate::input::{Bindings, InputMode, dev_keys};
 use crate::render::console::Console;
 use crate::render::grid::MapGrid;
-use crate::save::{Resume, SaveCommand, SaveStore};
+use crate::save::{Resume, SaveCommand, SaveStore, SavedCharacter};
 use crate::settings::keymap::KeymapFile;
 use crate::settings::{Settings, SettingsStore};
 use bevy::ecs::system::SystemParam;
@@ -69,6 +71,8 @@ use warlock_core::world::Conversation;
 pub enum ScreenName {
     /// The main menu (no run).
     Main,
+    /// The saved characters, from the main menu: resume one, or delete it.
+    Characters,
     NewRun,
     /// Character creation, over New run: choose a race.
     Race,
@@ -76,6 +80,8 @@ pub enum ScreenName {
     Gender,
     /// Choose a class (after the gender).
     Class,
+    /// Type a name (after the class).
+    Name,
     /// The character before the run starts: start, or go back to a step.
     Summary,
     Settings,
@@ -170,12 +176,19 @@ impl ScreenName {
 /// A menu choice that starts, leaves, or ends a run; applied by [`apply_choice`].
 #[derive(Message, Debug, Clone, PartialEq, Eq)]
 pub enum MenuChoice {
+    /// Resume the character played last.
     Continue,
+    /// Resume the saved character with this save id (the Characters screen).
+    Resume(String),
+    /// Delete the saved character with this save id (the Characters screen, after the dialog).
+    DeleteCharacter(String),
     NewRun {
         scenario: String,
         seed: Option<u64>,
         /// The character chosen; `None` for the scenario's (content without races or classes).
         character: Option<CharacterSpec>,
+        /// The name chosen; `None` for the run's default.
+        name: Option<String>,
     },
     /// Pause menu: save the run and return to the main menu.
     SaveToMenu,
@@ -227,8 +240,9 @@ impl From<Action> for ScreenAction {
 /// What screens may need to know of this launch.
 #[derive(Clone, Debug, Default)]
 struct Launch {
-    /// A saved run exists (the main menu offers Continue; New run warns).
-    has_save: bool,
+    /// The saved characters, the one played last first (the main menu offers Continue and
+    /// Characters with any); only read for the screens that show them.
+    characters: Vec<SavedCharacter>,
     /// The developer keys work (the controls and the help list them).
     dev: bool,
     /// Where the controls' Export keys and Import keys go.
@@ -240,9 +254,13 @@ struct Launch {
 enum Screen {
     /// The main menu, or the pause menu over a run.
     Menu(MainMenu),
+    /// The saved characters.
+    Characters(CharactersScreen),
     NewRun(NewRunScreen),
     /// A step of character creation.
     Choice(ChoiceScreen),
+    /// Character creation's name.
+    Name(NameScreen),
     /// Boxed: it holds the whole character.
     Summary(Box<SummaryScreen>),
     Settings(SettingsScreen),
@@ -282,8 +300,8 @@ impl Screen {
     /// Screen `name`; `run` is what the player perceives in the run, if there is one, `draft`
     /// what New run has chosen on the screens below, `beneath` what the stack holds for it (the
     /// slot and the stack selected beneath, the ability used last), `talk` the run's last
-    /// conversation, if its last action was talk, and `launch` what this launch has (a save, the
-    /// developer keys, where keymaps go).
+    /// conversation, if its last action was talk, and `launch` what this launch has (the saved
+    /// characters, the developer keys, where keymaps go).
     fn new(
         name: ScreenName,
         content: &Content,
@@ -297,12 +315,19 @@ impl Screen {
         let objects = |list| Screen::Objects(ObjectScreen::new(list, run));
         let choice = |step| Screen::Choice(ChoiceScreen::new(step, content, draft));
         match name {
-            ScreenName::Main => Screen::Menu(MainMenu::main(launch.has_save)),
+            ScreenName::Main => {
+                let last = launch.characters.first().map(|c| c.name().to_string());
+                Screen::Menu(MainMenu::main(last))
+            }
+            ScreenName::Characters => {
+                Screen::Characters(CharactersScreen::new(launch.characters.clone()))
+            }
             ScreenName::Pause => Screen::Menu(MainMenu::pause()),
-            ScreenName::NewRun => Screen::NewRun(NewRunScreen::new(content, launch.has_save)),
+            ScreenName::NewRun => Screen::NewRun(NewRunScreen::new(content)),
             ScreenName::Race => choice(Step::Race),
             ScreenName::Gender => choice(Step::Gender),
             ScreenName::Class => choice(Step::Class),
+            ScreenName::Name => Screen::Name(NameScreen::new(content, draft)),
             ScreenName::Summary => Screen::Summary(Box::new(SummaryScreen::new(content, draft))),
             ScreenName::Settings => Screen::Settings(SettingsScreen::default()),
             ScreenName::Files => Screen::Files(FilesScreen::new(crate::paths::locations())),
@@ -340,8 +365,10 @@ impl Screen {
         match self {
             Screen::Menu(menu) if menu.is_pause() => ScreenName::Pause,
             Screen::Menu(_) => ScreenName::Main,
+            Screen::Characters(_) => ScreenName::Characters,
             Screen::NewRun(_) => ScreenName::NewRun,
             Screen::Choice(screen) => screen.step().screen(),
+            Screen::Name(_) => ScreenName::Name,
             Screen::Summary(_) => ScreenName::Summary,
             Screen::Settings(_) => ScreenName::Settings,
             Screen::Files(_) => ScreenName::Files,
@@ -457,6 +484,7 @@ impl ScreenStack {
                         draft.chosen.set(screen.step(), id);
                     }
                 }
+                Screen::Name(screen) => draft.chosen.set(Step::Name, screen.text()),
                 _ => {}
             }
         }
@@ -538,11 +566,19 @@ impl ScreenStack {
         let action = match self.screens.last_mut() {
             None => ScreenAction::Stay,
             Some(Screen::Menu(menu)) => menu.handle(press),
+            Some(Screen::Characters(screen)) => screen.handle(press),
             Some(Screen::NewRun(screen)) => screen.handle(press),
             Some(Screen::Choice(screen)) => {
                 let action = screen.handle(press);
                 if let (ScreenAction::Open(_), Some(id)) = (&action, screen.chosen()) {
                     self.picks.set(screen.step(), id);
+                }
+                action
+            }
+            Some(Screen::Name(screen)) => {
+                let action = screen.handle(press);
+                if let ScreenAction::Open(_) = action {
+                    self.picks.set(Step::Name, screen.text());
                 }
                 action
             }
@@ -602,13 +638,9 @@ impl ScreenStack {
     }
 
     /// Shows why a menu choice failed, on the menu it was made from (closing New run).
-    /// `save_unusable` drops Continue, as there is nothing to resume.
-    fn fail(&mut self, message: String, save_unusable: bool) {
+    fn fail(&mut self, message: String) {
         while self.screens.len() > 1 && !matches!(self.screens.last(), Some(Screen::Menu(_))) {
             self.screens.pop();
-        }
-        if save_unusable && let Some(Screen::Menu(menu)) = self.screens.last_mut() {
-            menu.drop_continue();
         }
         self.notice = Some(message);
     }
@@ -619,8 +651,10 @@ impl ScreenStack {
         match self.screens.last() {
             None => {}
             Some(Screen::Menu(menu)) => menu.draw(console, self.notice.as_deref(), bindings),
+            Some(Screen::Characters(screen)) => screen.draw(console, settings.clock, bindings),
             Some(Screen::NewRun(screen)) => screen.draw(console, bindings),
             Some(Screen::Choice(screen)) => screen.draw(console, bindings),
+            Some(Screen::Name(screen)) => screen.draw(console, bindings),
             Some(Screen::Summary(screen)) => screen.draw(console, bindings),
             Some(Screen::Settings(screen)) => screen.draw(console, settings, bindings),
             Some(Screen::Files(screen)) => screen.draw(console, bindings),
@@ -684,8 +718,13 @@ impl Screens<'_> {
             item,
             ability: self.stack.last_ability,
         };
+        // Only the screens that show the saved characters read them (a listing of the saves).
+        let characters = match name {
+            ScreenName::Main | ScreenName::Characters => self.store.characters(),
+            _ => Vec::new(),
+        };
         let launch = Launch {
-            has_save: self.store.has_save(),
+            characters,
             dev: dev_keys(&self.args),
             keymap: self.settings.keymap(),
         };
@@ -701,6 +740,18 @@ impl Screens<'_> {
         let item = self.stack.looked_item();
         self.stack.close();
         self.open_on(name, item);
+    }
+
+    /// Opens the main menu afresh, alone, with `notice` (the saved characters may have changed:
+    /// one deleted, or kept as unusable), and on it the Characters screen when `characters` and
+    /// any are left.
+    fn back_to_main(&mut self, notice: Option<String>, characters: bool) {
+        self.stack.clear();
+        self.open(ScreenName::Main);
+        self.stack.notice = notice;
+        if characters && !self.store.characters().is_empty() {
+            self.open(ScreenName::Characters);
+        }
     }
 }
 
@@ -744,7 +795,7 @@ pub(super) fn open_startup_screens(args: Res<Args>, game: Option<Res<Game>>, mut
 /// steps before them, each with its preselection.
 fn startup_screens(screen: Option<ScreenName>, in_run: bool) -> Vec<ScreenName> {
     use ScreenName::*;
-    let creation = [Race, Gender, Class, Summary];
+    let creation = [Race, Gender, Class, Name, Summary];
     match (in_run, screen) {
         (false, Some(s)) if creation.contains(&s) => {
             let steps = creation.iter().take_while(|&&c| c != s);
@@ -754,7 +805,7 @@ fn startup_screens(screen: Option<ScreenName>, in_run: bool) -> Vec<ScreenName> 
                 .chain([s])
                 .collect()
         }
-        (false, Some(s @ (NewRun | Settings | Controls | Dialog))) => vec![Main, s],
+        (false, Some(s @ (Characters | NewRun | Settings | Controls | Dialog))) => vec![Main, s],
         (false, Some(Files)) => vec![Main, Settings, Files],
         (false, _) => vec![Main],
         (true, Some(s @ (Settings | Controls | Dialog))) => vec![Pause, s],
@@ -776,13 +827,14 @@ fn leave_run(commands: &mut Commands, grid: &mut MapGrid, mode: &mut InputMode) 
     commands.remove_resource::<Game>();
 }
 
-/// When the run has ended in death: its save is deleted (permadeath), and the death screen
-/// opens over the run as it ended, in place of whatever screen was open. Once.
+/// When the run has ended in death: that character's save is deleted (permadeath), and no other
+/// character's, and the death screen opens over the run as it ended, in place of whatever screen
+/// was open. Once.
 pub(super) fn on_death(game: Res<Game>, mut screens: Screens) {
     if !game.is_changed() || game.world.death().is_none() || screens.stack.shows_death() {
         return;
     }
-    if let Err(e) = screens.store.delete_run() {
+    if let Err(e) = screens.store.delete_character(&game.save_id) {
         warn!("{e}");
     }
     screens.stack.clear();
@@ -812,45 +864,58 @@ pub(super) fn apply_choice(
             }
             MenuChoice::SaveToMenu => {
                 let Some(game) = &game else { continue };
-                match screens.store.save_run(&game.world) {
+                match screens.store.save_run(&game.save_id, &game.world) {
                     Ok(()) => {
                         leave_run(&mut commands, &mut grid, &mut mode);
-                        screens.stack.clear();
-                        screens.open(ScreenName::Main);
-                        screens.stack.notice = Some("Game saved.".into());
+                        screens.back_to_main(Some("Game saved.".into()), false);
                     }
-                    Err(e) => screens.stack.fail(e, false),
+                    Err(e) => screens.stack.fail(e),
                 }
             }
             // The run ended in death: its save is already gone, so nothing is saved.
             MenuChoice::LeaveRun => {
                 leave_run(&mut commands, &mut grid, &mut mode);
-                screens.stack.clear();
-                screens.open(ScreenName::Main);
+                screens.back_to_main(None, false);
             }
-            MenuChoice::Continue => match Game::resumed(&screens.store, &screens.content.0) {
-                Resume::Loaded(world) => {
-                    commands.insert_resource(Game::from_world(world));
-                    screens.stack.clear();
-                }
-                Resume::Failed(message) => screens.stack.fail(message, true),
-                Resume::NoSave => screens.stack.fail("There is no saved run.".into(), true),
+            MenuChoice::Continue => match screens.store.last_played() {
+                Some(last) => resume(&mut commands, &mut screens, &last.id),
+                None => screens.back_to_main(Some("There is no saved character.".into()), false),
             },
+            MenuChoice::Resume(id) => resume(&mut commands, &mut screens, id),
+            MenuChoice::DeleteCharacter(id) => {
+                let notice = screens.store.delete_character(id).err();
+                screens.back_to_main(notice, true);
+            }
             MenuChoice::NewRun {
                 scenario,
                 seed,
                 character,
+                name,
             } => {
                 let content = screens.content.0.clone();
-                match Game::new_run(content, scenario, *seed, character.as_ref()) {
+                let (character, name) = (character.as_ref(), name.as_deref());
+                match Game::new_run(content, &screens.store, scenario, *seed, character, name) {
                     Ok(game) => {
                         commands.insert_resource(game);
                         screens.stack.clear();
                     }
-                    Err(message) => screens.stack.fail(message, false),
+                    Err(message) => screens.stack.fail(message),
                 }
             }
         }
+    }
+}
+
+/// Resumes the saved character `id`. A save that cannot be resumed is kept as unusable and the
+/// main menu opens afresh (the list of saved characters without it), saying why.
+fn resume(commands: &mut Commands, screens: &mut Screens, id: &str) {
+    match Game::resumed(&screens.store, id, &screens.content.0) {
+        Resume::Loaded(world) => {
+            commands.insert_resource(Game::from_world(world, id.to_string()));
+            screens.stack.clear();
+        }
+        Resume::Failed(message) => screens.back_to_main(Some(message), false),
+        Resume::NoSave => screens.back_to_main(Some("That save is gone.".into()), false),
     }
 }
 
@@ -903,8 +968,12 @@ mod tests {
                 item: stack.looked_item(),
                 ability: stack.last_ability,
             };
+            let saved = SavedCharacter {
+                id: "tamsin-1".into(),
+                summary: None,
+            };
             let launch = Launch {
-                has_save,
+                characters: has_save.then_some(saved).into_iter().collect(),
                 dev: true,
                 keymap: KeymapFile::Nowhere,
             };
@@ -969,20 +1038,15 @@ mod tests {
     fn a_failed_choice_returns_to_the_menu_with_a_notice() {
         use ScreenName::*;
         let mut stack = stack_of(&[Main, NewRun], true);
-        stack.fail("Could not start.".into(), false);
+        stack.fail("Could not start.".into());
         assert_eq!(stack.names(), [Main]);
         assert_eq!(stack.notice.as_deref(), Some("Could not start."));
-        // Picking something clears the notice; a failed Continue drops the option.
+        // Picking something clears the notice.
         assert_eq!(
             press(&mut stack, Press::nav(Nav::Enter)),
             ScreenAction::Choose(MenuChoice::Continue)
         );
         assert_eq!(stack.notice, None);
-        stack.fail("Could not resume.".into(), true);
-        assert_eq!(
-            press(&mut stack, Press::nav(Nav::Enter)),
-            ScreenAction::Open(NewRun)
-        );
     }
 
     #[test]
@@ -1016,9 +1080,15 @@ mod tests {
             [Main, NewRun, Race, Gender, Class]
         );
         assert_eq!(
-            startup_screens(Some(Summary), false),
-            [Main, NewRun, Race, Gender, Class, Summary]
+            startup_screens(Some(Name), false),
+            [Main, NewRun, Race, Gender, Class, Name]
         );
+        assert_eq!(
+            startup_screens(Some(Summary), false),
+            [Main, NewRun, Race, Gender, Class, Name, Summary]
+        );
+        assert_eq!(startup_screens(Some(Characters), false), [Main, Characters]);
+        assert_eq!(startup_screens(Some(Characters), true), []);
     }
 
     #[test]
@@ -1062,8 +1132,10 @@ mod tests {
     /// An app with the router and the screen systems, on the main menu or in a run.
     fn app(run: bool) -> App {
         let content = content();
-        let game =
-            run.then(|| Game::new_run(content.clone(), "showcase", None, None).expect("run"));
+        let game = run.then(|| {
+            let world = warlock_core::World::new(content.clone(), "showcase", None).expect("run");
+            Game::from_world(world, "tamsin-1".into())
+        });
         app_with(content, game)
     }
 
@@ -1241,7 +1313,7 @@ mod tests {
         {
             world.apply(&action);
         }
-        let mut app = app_with(content, Some(Game::from_world(world)));
+        let mut app = app_with(content, Some(Game::from_world(world, "tamsin-1".into())));
         frame(&mut app, &[USE]);
         assert_eq!(
             app.world().resource::<InputMode>(),
@@ -1264,7 +1336,7 @@ mod tests {
         for action in warlock_core::action::parse_actions(ready).expect("actions") {
             world.apply(&action);
         }
-        let mut app = app_with(content, Some(Game::from_world(world)));
+        let mut app = app_with(content, Some(Game::from_world(world, "tamsin-1".into())));
         let aim = |app: &App| match *app.world().resource::<InputMode>() {
             InputMode::Aim(aim) => Some(aim),
             _ => None,
@@ -1313,8 +1385,9 @@ mod tests {
         app.update();
         assert_eq!(names(&app), [ScreenName::Main]);
         // Enter opens New run, and the next Enters, in the same frame, pick the showcase, its
-        // character's race, gender, and class (preselected), and start it from the summary.
-        frame(&mut app, &[ENTER, ENTER, ENTER, ENTER, ENTER]);
+        // character's race, gender, and class (preselected), and a name (an empty field: the
+        // first random one), and start it from the summary.
+        frame(&mut app, &[ENTER, ENTER, ENTER, ENTER, ENTER, ENTER]);
         assert_eq!(
             names(&app),
             [
@@ -1323,9 +1396,11 @@ mod tests {
                 ScreenName::Race,
                 ScreenName::Gender,
                 ScreenName::Class,
+                ScreenName::Name,
                 ScreenName::Summary
             ]
         );
+        let name = (app.world().resource::<ScreenStack>().draft()).name(&content());
         frame(&mut app, &[ENTER, WAIT]);
         assert!(app.world().contains_resource::<Game>());
         assert!(names(&app).is_empty());
@@ -1334,13 +1409,10 @@ mod tests {
             "presses after the choice are dropped"
         );
         let game = app.world().resource::<Game>();
-        assert_eq!(
-            game.world
-                .character()
-                .map(|c| c.spec.to_string())
-                .as_deref(),
-            Some("human,female,thief")
-        );
+        let character = game.world.character().expect("a character");
+        assert_eq!(character.spec.to_string(), "human,female,thief");
+        assert_eq!(character.name, name);
+        assert_eq!(game.save_id, format!("{}-1", name.to_lowercase()));
         frame(&mut app, &[WAIT]);
         assert_eq!(actions(&app), [Action::Wait]);
     }
@@ -1351,42 +1423,49 @@ mod tests {
         let mut app = app(false);
         app.update();
         // New run, then race: down from human to dwarf; gender: down to other; class: up from
-        // thief to ranger.
+        // thief to ranger; then a name, typed (`k` and `j` type, they move nothing here).
         frame(
             &mut app,
             &[ENTER, ENTER, down, ENTER, down, ENTER, up, ENTER],
         );
+        assert_eq!(names(&app).last(), Some(&ScreenName::Name));
+        let typed = [
+            (KeyCode::KeyK, "K"),
+            (KeyCode::KeyA, "a"),
+            (KeyCode::KeyJ, "j"),
+        ];
+        frame(&mut app, &typed);
+        frame(&mut app, &[ENTER]);
         assert_eq!(names(&app).last(), Some(&ScreenName::Summary));
         let draft = app.world().resource::<ScreenStack>().draft();
         let spec = draft.spec(&content()).expect("a character");
         assert_eq!(spec.to_string(), "dwarf,other,ranger");
-        // Change race (the summary's second row): back on the race step as it was left, the
-        // gender and class steps closed.
-        frame(&mut app, &[down, ENTER]);
+        assert_eq!(draft.name(&content()), "Kaj");
+        // Change race (the summary's third row): back on the race step as it was left, the
+        // gender, class, and name steps closed.
+        frame(&mut app, &[down, down, ENTER]);
         assert_eq!(
             names(&app),
             [ScreenName::Main, ScreenName::NewRun, ScreenName::Race]
         );
-        // Another race; the gender and class open on what was chosen before.
-        frame(&mut app, &[down, ENTER, ENTER, ENTER]);
+        // Another race; the gender, class, and name open on what was chosen before.
+        frame(&mut app, &[down, ENTER, ENTER, ENTER, ENTER]);
         assert_eq!(names(&app).last(), Some(&ScreenName::Summary));
-        let spec = (app.world().resource::<ScreenStack>().draft())
-            .spec(&content())
-            .expect("a character");
+        let draft = app.world().resource::<ScreenStack>().draft();
+        let spec = draft.spec(&content()).expect("a character");
         assert_eq!(spec.to_string(), "halfling,other,ranger");
+        assert_eq!(draft.name(&content()), "Kaj");
         // Esc steps back one screen at a time, to the main menu.
-        for left in [5, 4, 3, 2, 1] {
+        for left in [6, 5, 4, 3, 2, 1] {
             frame(&mut app, &[ESC]);
             assert_eq!(names(&app).len(), left);
         }
-        frame(&mut app, &[ENTER, ENTER, ENTER, ENTER, ENTER, ENTER]);
+        frame(&mut app, &[ENTER, ENTER, ENTER, ENTER, ENTER, ENTER, ENTER]);
         let game = app.world().resource::<Game>();
+        let character = game.world.character().expect("a character");
         assert_eq!(
-            game.world
-                .character()
-                .map(|c| c.spec.to_string())
-                .as_deref(),
-            Some("halfling,other,ranger"),
+            (character.spec.to_string().as_str(), character.name.as_str()),
+            ("halfling,other,ranger", "Kaj"),
             "the choices are remembered until the run starts"
         );
     }
@@ -1408,7 +1487,7 @@ mod tests {
     fn leaving_a_shop_owing_asks_to_pay_and_leave_or_be_turned_back() {
         let content = content();
         let world = in_the_shop(content.clone());
-        let mut app = app_with(content, Some(Game::from_world(world)));
+        let mut app = app_with(content, Some(Game::from_world(world, "tamsin-1".into())));
         let (west, yes, no) = (
             (KeyCode::KeyH, "h"),
             (KeyCode::KeyY, "y"),
@@ -1455,7 +1534,7 @@ mod tests {
         use warlock_core::Positions;
         let content = content();
         let world = in_the_shop(content.clone());
-        let mut app = app_with(content, Some(Game::from_world(world)));
+        let mut app = app_with(content, Some(Game::from_world(world, "tamsin-1".into())));
         let (d, b, yes, no) = (
             (KeyCode::KeyD, "d"),
             (KeyCode::KeyB, "b"),
@@ -1484,7 +1563,7 @@ mod tests {
     fn pick_up_drop_and_inventory_open_screens_that_choose_actions() {
         use warlock_core::Positions;
         let content = content();
-        let game = Game::from_world(on_the_pile(content.clone()));
+        let game = Game::from_world(on_the_pile(content.clone()), "tamsin-1".into());
         let mut app = app_with(content, Some(game));
         // Two stacks are left on the pile: `,` opens the choice; a letter and Enter pick up,
         // and the next press in the same frame is gameplay again.
@@ -1530,7 +1609,7 @@ mod tests {
             world.apply(&action);
         }
         assert_eq!(world.perception().inventory().len(), 2);
-        let mut app = app_with(content, Some(Game::from_world(world)));
+        let mut app = app_with(content, Some(Game::from_world(world, "tamsin-1".into())));
         let (e, c, a) = (
             (KeyCode::KeyE, "e"),
             (KeyCode::KeyC, "c"),
@@ -1566,7 +1645,7 @@ mod tests {
         for action in warlock_core::action::parse_actions(walk).expect("actions") {
             world.apply(&action);
         }
-        let mut app = app_with(content, Some(Game::from_world(world)));
+        let mut app = app_with(content, Some(Game::from_world(world, "tamsin-1".into())));
         // The simulation applies what was chosen; the screens are refreshed after it.
         fn apply(mut actions: MessageReader<PlayerAction>, mut game: ResMut<Game>) {
             for PlayerAction(action) in actions.read() {
@@ -1697,6 +1776,29 @@ mod tests {
     }
 
     #[test]
+    fn a_disarm_key_asks_for_a_direction_and_disarms() {
+        // Disarming is an ability: unbound by default. Bound (here to `X`), the showcase's
+        // thief, trained in Disable device, is asked which way, as the abilities menu asks.
+        let mut app = app(true);
+        {
+            let mut bindings = app.world_mut().resource_mut::<Bindings>();
+            let disarm = crate::input::KeyCommand::Disarm;
+            assert!(bindings.keys_of(disarm).is_empty());
+            let key = crate::input::KeyBinding::from_text("X").expect("a key");
+            bindings.0.push((key, disarm));
+        }
+        frame(&mut app, &[(KeyCode::KeyX, "X")]);
+        assert_eq!(
+            app.world().resource::<InputMode>(),
+            &InputMode::Ability(Ability::Disarm)
+        );
+        assert!(actions(&app).is_empty(), "nothing yet");
+        frame(&mut app, &[(KeyCode::KeyL, "l")]);
+        assert_eq!(actions(&app), [Action::Disarm(Dir::E)]);
+        assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
+    }
+
+    #[test]
     fn picking_a_lock_asks_for_a_direction_from_the_menu_or_its_own_key() {
         let mode = |app: &App| *app.world().resource::<InputMode>();
         // The showcase's thief is trained in Open lock: `a` `c` (Pick lock) asks for a direction.
@@ -1731,7 +1833,7 @@ mod tests {
         for action in warlock_core::action::parse_actions(walk).expect("actions") {
             world.apply(&action);
         }
-        app_with(content, Some(Game::from_world(world)))
+        app_with(content, Some(Game::from_world(world, "tamsin-1".into())))
     }
 
     #[test]
@@ -1788,16 +1890,22 @@ mod tests {
     }
 
     #[test]
-    fn death_deletes_the_save_and_the_death_screen_leads_to_the_main_menu() {
+    fn death_deletes_only_that_characters_save_and_the_death_screen_leads_to_the_main_menu() {
         let content = content();
         let dir = std::env::temp_dir().join(format!("warlock-death-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let args = Args::parse_from(["warlock", "--save-dir", dir.to_str().expect("utf-8")]);
         let store = SaveStore::from_args(&args);
+        let saved = |store: &SaveStore| -> Vec<String> {
+            store.characters().into_iter().map(|c| c.id).collect()
+        };
+        // Another character is saved too.
+        let other = warlock_core::World::new(content.clone(), "showcase", None).expect("run");
+        store.save_run("tamsin-1", &other).expect("saved");
         // The run was saved while it went on; then the archer shoots the lit player down.
         let mut world = warlock_core::World::new(content.clone(), "arena", None).expect("run");
-        store.save_run(&world).expect("saved");
-        assert!(store.has_save());
+        store.save_run("pip-1", &world).expect("saved");
+        assert_eq!(saved(&store), ["pip-1", "tamsin-1"]);
         world.apply(&Action::ToggleLantern);
         while world.death().is_none() {
             world.apply(&Action::Wait);
@@ -1810,7 +1918,7 @@ mod tests {
             .insert_resource(store.clone())
             .insert_resource(args)
             .insert_resource(GameContent(content))
-            .insert_resource(Game::from_world(world))
+            .insert_resource(Game::from_world(world, "pip-1".into()))
             .init_resource::<ScreenStack>()
             .init_resource::<Settings>()
             .init_resource::<crate::settings::SettingsStore>()
@@ -1833,16 +1941,66 @@ mod tests {
             );
         app.update();
         assert_eq!(names(&app), [ScreenName::Death]);
-        assert!(!store.has_save(), "permadeath: the save is gone");
+        assert_eq!(
+            saved(&store),
+            ["tamsin-1"],
+            "permadeath: the dead character's save is gone, and only that one"
+        );
         // It takes every key; gameplay sees none.
         frame(&mut app, &[WAIT, (KeyCode::KeyK, "k"), HELP]);
         assert_eq!(names(&app), [ScreenName::Death]);
         assert!(actions(&app).is_empty());
-        // Enter leaves the run for the main menu, which offers nothing to continue.
+        // Enter leaves the run for the main menu, which offers to continue as the other one.
         frame(&mut app, &[ENTER]);
         assert!(!app.world().contains_resource::<Game>());
         assert_eq!(names(&app), [ScreenName::Main]);
-        assert!(!store.has_save());
+        assert_eq!(saved(&store), ["tamsin-1"]);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn the_characters_screen_resumes_or_deletes_a_saved_character() {
+        let content = content();
+        let dir = std::env::temp_dir().join(format!("warlock-chars-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let args = Args::parse_from(["warlock", "--save-dir", dir.to_str().expect("utf-8")]);
+        let store = SaveStore::from_args(&args);
+        let spec: CharacterSpec = "dwarf,female,warrior".parse().expect("a character");
+        for (id, name) in [("brakka-1", "Brakka"), ("hilde-1", "Hilde")] {
+            let world = warlock_core::World::with_character_named(
+                content.clone(),
+                "showcase",
+                None,
+                Some(&spec),
+                Some(name),
+            )
+            .expect("run");
+            store.save_run(id, &world).expect("saved");
+        }
+        let mut app = app_with(content, None);
+        app.insert_resource(store.clone());
+        app.update();
+        // Continue, then Characters.
+        frame(&mut app, &[DOWN, ENTER]);
+        assert_eq!(names(&app), [ScreenName::Main, ScreenName::Characters]);
+        // Delete the first one listed: the dialog asks first; Yes deletes, and the list shows
+        // the one left.
+        let first = store.characters()[0].id.clone();
+        frame(&mut app, &[(KeyCode::Delete, "")]);
+        assert_eq!(
+            names(&app),
+            [ScreenName::Main, ScreenName::Characters, ScreenName::Dialog]
+        );
+        frame(&mut app, &[(KeyCode::KeyY, "y")]);
+        assert_eq!(names(&app), [ScreenName::Main, ScreenName::Characters]);
+        let left: Vec<String> = store.characters().into_iter().map(|c| c.id).collect();
+        assert_eq!(left.len(), 1);
+        assert!(!left.contains(&first));
+        // Enter resumes the one left, as itself.
+        frame(&mut app, &[ENTER]);
+        let game = app.world().get_resource::<Game>().expect("a run");
+        assert_eq!(game.save_id, left[0]);
+        assert!(names(&app).is_empty());
         let _ = std::fs::remove_dir_all(&dir);
     }
 
@@ -1855,7 +2013,7 @@ mod tests {
         for action in warlock_core::action::parse_actions(walk).expect("actions") {
             world.apply(&action);
         }
-        let mut app = app_with(content, Some(Game::from_world(world)));
+        let mut app = app_with(content, Some(Game::from_world(world, "tamsin-1".into())));
         fn apply(mut actions: MessageReader<PlayerAction>, mut game: ResMut<Game>) {
             for PlayerAction(action) in actions.read() {
                 game.apply(action);
@@ -2009,7 +2167,7 @@ mod tests {
         for _ in 0..10 {
             world.apply(&Action::Wait);
         }
-        let mut app = app_with(content, Some(Game::from_world(world)));
+        let mut app = app_with(content, Some(Game::from_world(world, "pip-1".into())));
         fn apply(mut actions: MessageReader<PlayerAction>, mut game: ResMut<Game>) {
             for PlayerAction(action) in actions.read() {
                 game.apply(action);

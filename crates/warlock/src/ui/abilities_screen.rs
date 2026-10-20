@@ -277,18 +277,23 @@ mod tests {
         for expected in [
             " Abilities ",
             "Skills",
-            "  a  Appraise        not usable yet",
-            "> c  Pick lock       in a direction",
-            "  d  Steal           not usable yet",
+            "  a  Appraise       not usable yet",
+            "> b  Disarm a trap  in a direction",
+            "  c  Pick lock      in a direction",
+            "  d  Steal          not usable yet",
             "Weapon skills",
-            "  e  Shield bash     you hold no shield",
+            "  e  Shield bash    you hold no shield",
             "a-e or Enter use   Esc close",
         ] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }
-        // The cursor starts on the first that can be used: picking locks (Open lock's use).
-        assert_eq!(screen.selected(), Some(Ability::PickLock));
+        // The cursor starts on the first that can be used: disarming, Disable device's use.
+        assert_eq!(screen.selected(), Some(Ability::Disarm));
         assert_eq!(screen.selected().map(|a| a.source()), Some(Source::Skill));
+        assert!(
+            text.contains("Take apart a trap you know of next to you"),
+            "{text}"
+        );
     }
 
     #[test]
@@ -304,22 +309,21 @@ mod tests {
         screen.handle(&Press::nav(Nav::Down), &b);
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(!text.contains("you hold no shield."), "{text}");
-        // With a shield in hand it can be used, as can picking a lock, where the cursor starts.
+        // With a shield in hand it can be used; the cursor starts on the first that can be used
+        // (disarming) unless the shield bash was used last.
         let world = thief(true);
         let mut screen = AbilitiesScreen::new(Some(&world.perception()), None);
-        assert_eq!(screen.selected(), Some(Ability::PickLock));
+        assert_eq!(screen.selected(), Some(Ability::Disarm));
         assert_eq!(
             screen.handle(&Press::typed('c'), &b),
             ScreenAction::UseAbility(Ability::PickLock)
         );
-        assert_eq!(
-            screen.handle(&Press::typed('e'), &b),
-            ScreenAction::UseAbility(Ability::ShieldBash)
-        );
+        let last = Some(Ability::ShieldBash);
+        let mut screen = AbilitiesScreen::new(Some(&world.perception()), last);
         assert_eq!(screen.selected(), Some(Ability::ShieldBash));
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(
-            text.contains("> e  Shield bash     in a direction"),
+            text.contains("> e  Shield bash    in a direction"),
             "{text}"
         );
         assert!(text.contains("Strike someone next to you with the shield you hold."));
@@ -357,18 +361,12 @@ mod tests {
         };
         assert_eq!(none.handle(&a, &b), ScreenAction::Close);
         let world = thief(true);
-        let screen = AbilitiesScreen::new(Some(&world.perception()), None);
+        let last = Some(Ability::ShieldBash);
+        let screen = AbilitiesScreen::new(Some(&world.perception()), last);
         for (cols, rows) in [(48, 12), (30, 8), (5, 3), (0, 0)] {
             assert_eq!(drawn(&screen, cols, rows).len(), rows as usize);
         }
         // A short console pages the list, showing the cursor's page: letters restart on it.
-        let text = drawn(&screen, 80, 12).join("\n");
-        assert!(text.contains("Page 1/2"), "{text}");
-        assert!(text.contains("> c  Pick lock"), "{text}");
-        let mut screen = screen;
-        while screen.selected() != Some(Ability::ShieldBash) {
-            screen.handle(&Press::nav(Nav::Down), &b);
-        }
         let text = drawn(&screen, 80, 12).join("\n");
         assert!(text.contains("Page 2/2"), "{text}");
         assert!(text.contains("> b  Shield bash"), "{text}");

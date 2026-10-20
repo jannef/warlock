@@ -2,7 +2,7 @@ name = "Depths"
 description = "Straight into the generated dungeon branch: eight levels of rooms and caverns built from the run seed (try --seed with a word)."
 start_level = "depths:1"
 seed = 1
-character = { race = "human", gender = "male", class = "warrior" }
+character = { race = "human", gender = "male", class = "warrior", name = "Aldric" }
 lantern = "lantern"
 # Starting food (spec §8 "Hunger"): a few days of it.
 carry = ["ration*3"]

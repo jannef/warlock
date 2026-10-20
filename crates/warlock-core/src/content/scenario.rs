@@ -1,7 +1,7 @@
 //! Scenarios (`assets/scenarios/*.toml`): a named starting setup for a run.
 
 use super::ContentError;
-use crate::character::CharacterSpec;
+use crate::character::{CharacterSpec, Gender, check_name};
 use crate::combat::MAX_BASE_HP;
 use crate::stats::{Stat, Stats};
 use crate::time::{GameTime, HOUR, MINUTE, parse_time_of_day};
@@ -23,11 +23,18 @@ pub struct ScenarioDef {
     /// Seed used when none is given on the command line.
     #[serde(default)]
     pub seed: u64,
+    /// The `character` table as written: the spec and, optionally, the character's name.
+    #[serde(default, rename = "character")]
+    character_table: Option<CharacterTable>,
     /// The player's character when the run does not choose one (spec §8 "Character creation"):
     /// their eyes and stats then come from it, so `vision`, `stats`, and `potential` may not be
-    /// given.
-    #[serde(default)]
+    /// given. Filled in by the loader from `character`.
+    #[serde(skip)]
     pub character: Option<CharacterSpec>,
+    /// The name of the scenario's own character (`character = { .., name = "Ysolde" }`), which
+    /// a run of it told no name gives them (`character::default_name`). Filled in by the loader.
+    #[serde(skip)]
+    pub character_name: Option<String>,
     /// Without a character: the player's vision profile (an id in `data/vision.toml`; default
     /// `normal`).
     #[serde(default)]
@@ -68,6 +75,18 @@ pub struct ScenarioDef {
     pub carry: Vec<crate::object::Stack>,
 }
 
+/// A scenario's `character` table: a race, a gender, and a class, as a [`CharacterSpec`] is
+/// written, and the character's name.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct CharacterTable {
+    race: String,
+    gender: Gender,
+    class: String,
+    #[serde(default)]
+    name: Option<String>,
+}
+
 fn default_date() -> [u32; 3] {
     [1444, 11, 11]
 }
@@ -98,6 +117,17 @@ impl ScenarioDef {
             ))
         })?;
         def.player_stats = Stats::from_data(&def.stats, &def.potential).map_err(err)?;
+        if let Some(table) = def.character_table.take() {
+            def.character = Some(CharacterSpec {
+                race: table.race,
+                gender: table.gender,
+                class: table.class,
+            });
+            def.character_name = match &table.name {
+                Some(name) => Some(check_name(name).map_err(err)?.to_string()),
+                None => None,
+            };
+        }
         if def.character.is_some()
             && (def.vision.is_some()
                 || !def.stats.is_empty()
@@ -227,6 +257,44 @@ mod tests {
             .unwrap_err();
         assert!(
             err.message.contains("unknown variant `x`"),
+            "{}",
+            err.message
+        );
+    }
+
+    #[test]
+    fn a_scenario_may_name_its_character() {
+        let parse = |character: &str| {
+            ScenarioDef::parse(
+                "s",
+                "s",
+                &format!("name = \"S\"\nstart_level = \"hub\"\ncharacter = {character}\n"),
+            )
+        };
+        let def = parse("{ race = \"dwarf\", gender = \"male\", class = \"monk\" }").unwrap();
+        assert_eq!(def.character_name, None);
+        let named =
+            "{ race = \"dwarf\", gender = \"male\", class = \"monk\", name = \" Brakka \" }";
+        let def = parse(named).unwrap();
+        assert_eq!(def.character_name.as_deref(), Some("Brakka"));
+        assert_eq!(
+            def.character.map(|c| c.to_string()).as_deref(),
+            Some("dwarf,male,monk")
+        );
+        for (bad, why) in [
+            ("\"\"", "cannot be empty"),
+            ("\"Brakka of the Deep Halls\"", "longer than 20"),
+        ] {
+            let text = format!(
+                "{{ race = \"dwarf\", gender = \"male\", class = \"monk\", name = {bad} }}"
+            );
+            let err = parse(&text).unwrap_err();
+            assert!(err.message.contains(why), "{bad}: {}", err.message);
+        }
+        let err = parse("{ race = \"dwarf\", gender = \"male\", class = \"monk\", age = 3 }")
+            .unwrap_err();
+        assert!(
+            err.message.contains("unknown field `age`"),
             "{}",
             err.message
         );
