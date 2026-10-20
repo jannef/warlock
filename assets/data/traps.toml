@@ -34,8 +34,11 @@
 #     pit        `damage`, and the next action is lost climbing out
 #     alarm      only its noise, which draws creatures that hear it
 #     teleport   whoever steps on it is moved to a free cell of the level
+#   damage_type  the kind of damage it does (an id in damage_types.toml, spec §8 "Damage types"):
+#                the arrow and the spears piercing, the fireball fire, the frost cold, the
+#                lightning electricity, the pit bludgeoning; what the victim resists of it
 #   noun, verb   what hits and what it does, for messages ("The fireball burns you."; verb
-#                default "hits"); a shot uses its object's name
+#                default: the damage type's); a shot uses its object's name
 
 [[trap]]
 id = "arrow"
@@ -46,6 +49,7 @@ message = "An arrow shoots out of the wall!"
 kind = "shot"
 object = "arrow"
 damage = "1d6"
+damage_type = "piercing"
 to_hit = 3
 noise = { sound = "bowstring", loudness = 40 }
 
@@ -58,6 +62,7 @@ message = "Spears spring from the floor!"
 kind = "strike"
 noun = "spear"
 damage = "1d8"
+damage_type = "piercing"
 to_hit = 3
 
 [[trap]]
@@ -74,6 +79,7 @@ noun = "fireball"
 verb = "burns"
 radius = 2
 damage = "3d6"
+damage_type = "fire"
 # Blows stone walls and packed earth apart; granite holds. Melts ice.
 blast = 1000
 heat = true
@@ -94,6 +100,7 @@ noun = "frost"
 verb = "bites"
 radius = 2
 damage = "2d6"
+damage_type = "cold"
 frost = 100
 
 [[trap]]
@@ -110,6 +117,7 @@ noun = "lightning bolt"
 verb = "strikes"
 length = 12
 damage = "4d6"
+damage_type = "electricity"
 noise = { sound = "thunder", loudness = 120 }
 
 [[trap]]
@@ -120,6 +128,7 @@ sign = "a thin crust over a hole"
 fg = "#9a7a58"
 kind = "pit"
 damage = "1d6"
+damage_type = "bludgeoning"
 
 [[trap]]
 id = "alarm"

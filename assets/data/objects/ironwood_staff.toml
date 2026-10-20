@@ -12,6 +12,7 @@ slot = "main_hand"
 two_handed = true
 damage = "1d8"
 category = "staves"
+damage_type = "bludgeoning"
 parry = 1
 kind = "weapon"
 level = 4

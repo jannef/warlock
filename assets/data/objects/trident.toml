@@ -10,6 +10,7 @@ value = 50
 slot = "main_hand"
 damage = "1d8"
 category = "spears"
+damage_type = "piercing"
 # Its tines catch blows.
 parry = 1
 kind = "weapon"

@@ -22,5 +22,6 @@ verb = "bites"
 message = "Bitter cold bursts from the scroll!"
 radius = 2
 damage = "2d6"
+damage_type = "cold"
 range = 10
 frost = 100

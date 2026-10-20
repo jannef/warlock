@@ -12,6 +12,7 @@ two_handed = true
 damage = "1d10"
 crit = 3
 category = "polearms"
+damage_type = ["slashing", "piercing"]
 attack_cost = 1100
 kind = "weapon"
 level = 3

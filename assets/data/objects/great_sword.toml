@@ -12,6 +12,7 @@ two_handed = true
 damage = "2d6"
 threat = 20
 category = "great_blades"
+damage_type = "slashing"
 attack_cost = 1200
 kind = "weapon"
 level = 3

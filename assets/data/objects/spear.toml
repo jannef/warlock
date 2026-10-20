@@ -10,6 +10,7 @@ value = 35
 slot = "main_hand"
 damage = "1d8"
 category = "spears"
+damage_type = "piercing"
 crit = 3
 kind = "weapon"
 # Thrown point first.

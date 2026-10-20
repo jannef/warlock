@@ -30,8 +30,9 @@ will last, as a number: you see your hit points go.
 ## Bleeding
 
 A **big hit**, one that takes at least a third of your hit points at once, or a **confirmed
-critical** ("The kobold hits you hard!") opens a wound: "You are bleeding." A critical opens a
-worse one than a big hit. Every blow can do it for now, a club's as well as a spear's.
+critical** ("The kobold stabs you hard!") opens a wound: "You are bleeding." A critical opens a
+worse one than a big hit. Only a blow that **cuts or stabs** does it: a club's, a fall's, or a
+fireball's does not (see [Damage types](damage-types.md)).
 
 While you bleed, you lose a hit point every so often, faster the worse you bleed, and your hit
 points do not come back at all. The bleeding eases by itself and stops after a while: "The

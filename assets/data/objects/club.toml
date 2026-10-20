@@ -10,4 +10,5 @@ value = 8
 slot = "main_hand"
 damage = "1d6"
 category = "maces"
+damage_type = "bludgeoning"
 kind = "weapon"

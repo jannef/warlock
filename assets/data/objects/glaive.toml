@@ -12,6 +12,7 @@ two_handed = true
 damage = "1d10"
 threat = 20
 category = "polearms"
+damage_type = "slashing"
 attack_cost = 1100
 # Its long haft keeps foes at bay.
 parry = 1

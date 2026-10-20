@@ -12,5 +12,6 @@ damage = "1d8"
 crit = 3
 penetration = 2
 category = "maces"
+damage_type = "bludgeoning"
 kind = "weapon"
 level = 3

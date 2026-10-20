@@ -12,6 +12,7 @@ two_handed = true
 damage = "2d6"
 crit = 3
 category = "maces"
+damage_type = "bludgeoning"
 attack_cost = 1200
 kind = "weapon"
 level = 5

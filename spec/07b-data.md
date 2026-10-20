@@ -37,8 +37,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Pr 8, the giant rat Dx 17 In 1, the cave bat St 1, the shaman Wi 14). For combat (§8
   "Combat"; never shown but as words): `base_hp`, its hit points beyond its Toughness (0 to 1000,
   default 0; the player creature has none: race and class give the player's); `attack`, its
-  natural attack, used when it wields no weapon (`{ damage = "1d4", name = "bite", verb = "bites"
-  }`, with optional `threat`, `crit`, and `to_hit` as for weapons, and `on_hit`, the status
+  natural attack, used when it wields no weapon (`{ damage = "1d4", damage_type = "piercing",
+  name = "bite", verb = "bites" }`, `damage_type` the kind of damage it does (§8 "Damage
+  types": the bites piercing, the deer's hoof bludgeoning),
+  with optional `threat`, `crit`, and `to_hit` as for weapons, and `on_hit`, the status
   effects and diseases a hit with it may cause if the target lives: `[{ status = "poisoned",
   chance = 10, severity = 2 }]`, the chance in percent (1 to 100) and the severity in degrees (1
   to the status's `max`; §8 "Status effects"), or `{ disease = "filth_fever", chance = 10 }`
@@ -46,7 +48,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   status diseases show as); without one, bare hands: 1d3, "fist", "hits"); and
   `natural`, its natural armour (`{ defence = 1, protection = 3, name = "shell" }`: `defence`
   in the Natural category of Defence, `protection` soaking damage off every hit with what it
-  wears, each 0 to 20, not both 0; the name is said when it turns or soaks a blow). For experience (§8
+  wears, each 0 to 20, not both 0; the name is said when it turns or soaks a blow); `resist`,
+  what it resists in percent per damage type (`{ acid = 50, poison = 25 }`, −100 to 100, 100
+  immune; §8 "Damage types"; the cave beetle acid 50 and poison 25, the kobold shaman fire 25;
+  never shown). For experience (§8
   "Experience"): `level` (1 to 99, default 1) and `xp` (0 to 100000, default 0; the player
   creature has neither): the kobold 2/15, the kobold archer 3/25, the kobold shaman 4/40, the
   giant rat 1/5, the cave bat 1/3, the cave beetle 2/8, the deer 1/2. For loot (§8 "Magic
@@ -113,7 +118,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   neighboring areas (§3). Water that freezes (§5 "Ice") has a `freeze` table: `below` (ice grows
   while the air is colder than this, °C, 0 down to −30; it melts above 0), `rate` (percent of
   still water's pace, 1 to 100, default 100), and `plunge` (dice: the hit points a fall through
-  the ice into it takes, never the last one); still water `{ below = 0, plunge = "1d3" }`,
+  the ice into it takes, never the last one), and `damage_type` (the kind of damage the plunge
+  does, cold; §8 "Damage types"); still water `{ below = 0, plunge = "1d3", damage_type = "cold"
+  }`,
   running water `{ below = -6, rate = 40, plunge = "1d3" }`, a flooded room's shallow water
   `{ below = 0, plunge = 1 }`. Ice is terrain with `ice`, the
   thinnest ice in mm that looks like it (1 to 1000, distinct; the next one's takes over from
@@ -221,7 +228,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   error; food only): the angelica root `cures = ["remove_disease"]` (§8 "Diseases"). A
   **scroll** (§8 "Scrolls") has `read`, what reading it does (never on things worn, wielded,
   eaten, shot, or thrown): `kind = "burst"` or `"bolt"`, a trap's spell with a trap's fields
-  (`spell`, an effect of its shape in `data/effects.toml`; `noun`, `verb`, `damage`; a burst's
+  (`spell`, an effect of its shape in `data/effects.toml`; `noun`, `verb` (default: the kind's),
+  `damage`, `damage_type` (one kind, §8 "Damage types": fire, electricity, cold); a burst's
   `radius`, `blast`, `heat` or `frost`, and `range`, how far it flies, 1 to the view radius; a
   bolt's `length`; an optional `noise` and `message`), or `kind = "identify"`; with `read` an
   object may have `level` and `frequency`, as base items do, and is loot (never magic): the
@@ -247,7 +255,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
   for a missile weapon, the `thrown` one for what is only thrown (a rock). Ranged combat (§8 "Ranged combat"): `range` (1 to
   40 cells; required for a missile weapon: how far it shoots; on anything else it makes a
   throwing weapon, thrown that far with its own `damage`, which then needs no `slot`: a rock;
-  ammunition has none), `reloads` (missile weapons: each shot also takes the `reload` action),
+  ammunition has none), `reloads` (missile weapons: each shot also takes the `reload` action);
+  damage types (§8 "Damage types"): `damage_type`, the kind a weapon does (an id in
+  `data/damage_types.toml`, or two of which a blow does the better: `["slashing", "piercing"]`;
+  a launcher's is its shots', a shield's its bash's, which is the unarmed kind without one;
+  only on weapons and shields that bash), `verb`, what a blow with a weapon does instead of
+  the kind's verb ("cleaves"), `added`, damage of another, non-physical kind every hit with a
+  weapon, a missile weapon, or ammunition adds (`{ type = "fire", damage = "1d4" }`: the
+  flaming arrow), `resist`, what a worn or held thing resists in percent per kind (`{ cold = 20
+  }`, −100 to 75; the fur cloak cold 20, the wool cloak and padded coat cold 10, the leather
+  jerkins acid 10), and `protects`, how armour's Protection stands against each physical kind,
+  more or less than its `protection` (`{ slashing = 1, piercing = -1 }`, within ±20; chain
+  mail, scale mail slashing +1 and bludgeoning −1, banded mail slashing +1; only with
+  `protection`);
   `breaks` (ammunition and throwing weapons: the chance in percent, 0 to 100, that it breaks on a
   hit), `lit` (ammunition and throwing weapons: the object it flies and lands as, lit as it is
   loosed, which must burn), `light` and `burns` (together: the light preset it gives where it
@@ -313,19 +333,34 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `max_dex`,
   `weight`, `dodge`, `deflection`, `natural`, `max_hp`, `regeneration`, a stat id, `move_speed`,
   `carry`, `stealth`, `light`, `skill` with a `skill`, an id in `data/skills.toml`, whose value
-  it raises; without skills content, skill affixes are left out), `bases` (kinds of item it
+  it raises; without skills content, skill affixes are left out; `elemental` (adds 1dN damage of
+  the affix's kind to every roll) and `resistance` (+N % resistance to it) with a
+  `damage_type`, an id in `data/damage_types.toml`; without damage types they are left out; §8
+  "Damage types"), `bases` (kinds of item it
   rolls on, at least one; an effect only
-  attacks can use, `extra_damage`, `range`, `draw`, `durability`, needs weapons, missile weapons,
-  or ammunition, `parry` weapons, `armour` body armour, `protection` armour (body armour,
+  attacks can use, `extra_damage`, `elemental`, `range`, `draw`, `durability`, needs weapons,
+  missile weapons, or ammunition, `parry` weapons, `armour` body armour, `protection` armour (body armour,
   helmets, cloaks, gloves, boots), `shield` shields, `max_dex` body armour or shields; else a
   content error), `weight` (default 100), and `tiers`, at least one, item levels
   rising: `{ level, min, max }` (values within the effect's range: 1 to 10 for most, dice sides 2
-  to 20 for `extra_damage`, 1 to 3 for `threat` and `crit`, percent 1 to 50 for speeds, 1 to 90
+  to 20 for `extra_damage` and `elemental`, 1 to 3 for `threat` and `crit`, percent 1 to 50 for
+  speeds, 1 to 90
   for `durability`, `weight`, `stealth`, 1 to 100 for `max_hp`, `carry` (kg), and `skill`, 1 to
-  300 for `regeneration`), or for `light` `{ level, light }` naming a light preset. The built-in
-  affixes: 21 prefixes and 26 suffixes in up to four tiers (item levels 1, 3, 5, 7 for most); the wiki
+  300 for `regeneration`, 1 to 75 for `resistance`), or for `light` `{ level, light }` naming a
+  light preset. The built-in
+  affixes: 23 prefixes and 28 suffixes in up to four tiers (item levels 1, 3, 5, 7 for most); the wiki
   lists them in generated tables. The light presets `item_glow_faint`, `item_glow`, and
   `item_glow_bright` (radius 2, 3, 4; steady, cool) are the glowing tiers'.
+- **Damage types** (`data/damage_types.toml`, optional; without it nothing is typed, nobody
+  resists anything, and no data may name a kind; #151, §8 "Damage types"): an ordered list of
+  `[[type]]`s, each with `id`, `name`, `physical` (Protection soaks it; default false), `verb`
+  and `you` (what a blow of it does, in the third and the second person: "slashes", "slash"),
+  and `unarmed` (bare hands, kicks, and shield bashes do this kind; one at most). Ids are
+  indices (in the content fingerprint), so a new type is a new entry at the end of the list, at
+  most 32. Built in: slashing, piercing, bludgeoning (`physical`, `unarmed`), fire, cold,
+  electricity, acid, poison. The status effects (`data/status.toml`, §8 "Status effects") name
+  the kinds that wound (`wound.from = ["slashing", "piercing"]`: bleeding; none named: any) and
+  the kind a status is (`damage_type = "poison"`: poisoned).
 - **Weapon skills** (`data/weapon_skills.toml`, optional; without it nobody has weapon skills and
   weapons name none; M22, §8 "Weapon skills"): `[marks]` (`attempt`, `hit`, `per_level`, at most
   1000, and `most`, a percent 100 to 1000), `[curves]` (named lists of the marks each rank asks

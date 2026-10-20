@@ -9,5 +9,6 @@ weight = 4000
 value = 20
 slot = "body"
 armour = 1
+resist = { cold = 10 }
 max_dex = 8
 kind = "body"

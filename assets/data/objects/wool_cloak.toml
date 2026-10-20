@@ -8,4 +8,5 @@ materials = ["cloth"]
 weight = 1200
 value = 20
 slot = "cloak"
+resist = { cold = 10 }
 kind = "cloak"

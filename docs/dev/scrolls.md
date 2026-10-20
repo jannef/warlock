@@ -23,7 +23,9 @@ used up (`use_up`, which follows the equipment's letters). Refusals take no time
 scroll. A spell checks `can_loose_here` and `within_reach` (`shoot.rs`, shared with missiles),
 then casts through **the one shared spell code** in `world/spell.rs`: `World::cast_burst(caster,
 (origin, center), burst)` and `World::cast_bolt(caster, origin, path, bolt)` (the effect's
-`Event::Spell`, one damage roll for everyone reached in actor-id order, then a burst's
+`Event::Spell`, one damage roll for everyone reached in actor-id order, typed by the burst's or
+bolt's `kind` (`damage_type` in data) and resisted by each target through `World::resisted`
+(docs/dev/combat.md "Damage types"), then a burst's
 `World::blast`, `World::shock`, `World::frost`), with `Caster::Trap(TrapId)` (blows are
 `Event::TrapStruck` via `World::trap_hurts`, `Harm::Trap`: no one's kill) or
 `Caster::Actor(ActorId)` (blows are `Event::Attacked` of `AttackKind::Spell` with a hit, blood

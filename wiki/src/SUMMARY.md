@@ -41,6 +41,7 @@
   - [Ammunition](ammunition.md)
   - [Weapon skills](weapon-skills.md)
   - [Fighting styles](fighting-styles.md)
+  - [Damage types](damage-types.md)
   - [Status effects](status-effects.md)
   - [Diseases](diseases.md)
   - [Healing](healing.md)

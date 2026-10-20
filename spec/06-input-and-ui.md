@@ -197,8 +197,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   main one first, §7 "Objects and materials"), its base stats in words
   (`magic::describe`: "Long blade, for the main hand", "Damage 1d8; criticals on 20–24, ×2
   damage", "Shoots up to 15 cells", "Needs Strength 14 to draw", "Quick to strike", "Pierces
-  armour" (never how much), "Armour +2", "Protection 3", "Dexterity adds at most +4 to Defence
-  while worn", "Breaks on a hit 30% of the time"), and for
+  armour" (never how much), "Armour +2", "Protection 3", or with per-kind adjustments
+  "Protection 3 (+1 against slashing, −1 against piercing)", "Dexterity adds at most +4 to
+  Defence while worn", "Breaks on a hit 30% of the time"; damage types (§8): the kinds a
+  weapon does on a line of their own, "Slashing or piercing damage", "Adds 1d4 fire damage",
+  "Resists cold 20%", "Vulnerable to fire 20%"; affixes once identified, "Flaming: adds 1d4
+  fire damage", "of Warmth: +20% cold resistance"), and for
   a magic or rare item either "Unidentified: what its magic does is unknown, though it works all
   the same." or its item level and each affix, "Prefix  Sharp: +2 damage", "Suffix  of Celerity:
   attacks faster" (affix magnitudes are item properties and shown; speed only in words; global
@@ -244,7 +248,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   "Combat") and Protection beside it on the same row (`Pv  Protection  3`; the total only),
   their combat stance by name (`Stance  Neutral`; §8 "Stances"), the status effects
   they suffer, by name, when there are any (`Status  Bleeding, Poisoned`; never how severe or for
-  how long), the diseases they know they have, by name, on a row of their own below (`Diseased
+  how long), what they resist, in words only, a row per word when there is anything to tell
+  (`Immune to  poison`, `Resistant to  fire, cold`, `Vulnerable to  acid`, kinds in damage type
+  order; never a percentage; §8 "Damage types"), the diseases they know they have, by name, on a row of their own below (`Diseased
   Filth fever, red ache`; one that has not progressed yet is only "Diseased"; never a timer or a
   check; §8 "Diseases"), their weight (their own plus what they carry, and their burden when they have one:
   `Weight 98.4 kg (you 70 kg, carrying 28.4 kg, burdened)`), and, dimmer, the weights at which
@@ -400,15 +406,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
   pass, not one a turn.
 - **Attacks** (§8 "Combat") are reported when the player perceives them: they see the attacker
   or the target, or are the target. Messages say what came of an attack and never carry a number:
-  a hit ("The kobold hits you.", "The giant rat bites the kobold."; with a natural attack, its
-  verb), a confirmed critical ("The kobold hits you hard!"), a miss, and why it missed when the
+  a hit, said with the verb of the kind of damage the blow did (§8 "Damage types": "The kobold
+  stabs you." with a spear, "You slash the giant rat." with a sword, "The kobold cleaves you."
+  with an axe, which names its own verb; bare hands "hit", a natural attack has its own verb:
+  "The giant rat bites the kobold."), a confirmed critical ("The kobold stabs you hard!"), a miss, and why it missed when the
   player saw both ends ("The kobold misses you." for a plain miss; "You dodge the kobold's
   spear.", "The kobold's spear glances off your armour.", "You block the kobold's spear with your
   shield.", "You parry the kobold's spear.", "Your sword glances off the cave beetle's shell."),
   a hit Protection soaked to nothing, naming what took it when the player saw both ends (the
   natural armour, or the worn piece with the most Protection: "Your sword glances off the cave
   beetle's shell.", "The kobold's spear glances off your chain mail shirt."; else "Something
-  hits you but does no harm."), a shot ("The kobold archer shoots the giant rat."), and a death ("The giant rat dies.", "You
+  hits you but does no harm."), a hit resisted to nothing (§8 "Damage types": "The fireball
+  does the salamander no harm.", "Your torch does the salamander no harm."; else "... but does
+  no harm."), a shot ("The kobold archer shoots the giant rat."), and a death ("The giant rat dies.", "You
   die..."). Spells are announced ("The kobold shaman casts a spell at you."). An end the player
   does not see is
   "something" ("Something hits you.", "The kobold misses something."), and a miss is then just

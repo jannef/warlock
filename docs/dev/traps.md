@@ -27,7 +27,10 @@ picks `Dir::toward` when the victim stands next to the trap), and a burst's own 
 (`World::cast_burst`), so a shut door's blast leaves both sides. The app's step prompt
 (`input::trap_dialog`) skips doors. A trap's blow is dealt like any other
 (`World::trap_deals`: blood by `World::spill`, `hurt` with `Harm::Trap`, then the wound's
-statuses by `World::wounded`); its kills earn nothing, and the player's death records
+statuses by `World::wounded`), of the trap's `damage_type` (`TrapEffect::damage_kind`;
+docs/dev/combat.md "Damage types": a shot's and a strike's `Attack::kinds` go through
+`combat::strike`, a burst's, a bolt's, and a pit's `Damage` through `World::trap_hurts` →
+`World::resisted`); its kills earn nothing, and the player's death records
 `Cause::Trap` (`Death::cause`: "Killed by a fireball trap"). Traps never lie on water that
 freezes (terrain with `freeze`: ice would cover them), and a teleport never lands on ice.
 Knowledge is decided as the turn is perceived

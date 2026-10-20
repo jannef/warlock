@@ -25,7 +25,12 @@ weapon skill's benefit, the fighting style's (with the two-weapon penalty it eas
 affixes, then the combat stance. The regeneration affix goes
 through `World::healing_rate` like every other pace change; the Protection affix (Hardened, an
 item effect, local, on armour kinds: `ItemKind::is_armour`) through `Stack::protection`, which
-`Actor::protection` sums (docs/dev/combat.md). Hard
+`Actor::protection` sums (docs/dev/combat.md); the typed effects (docs/dev/combat.md "Damage
+types"): `Effect::Elemental` (an attack effect, local on what attacks: `Mods::elemental` is one
+rider per kind, `sharpen` adds them to the profile) and `Effect::Resistance` (global:
+`Mods::resistances`, which `Actor::resistances` adds to what is worn and what the creature is),
+each with the affix's `damage_type` (`AffixDef::damage_type`, part of its `Group`, so an item
+may hold one of each kind). Hard
 rule: presentation reads an item's affixes only through `Stack::known_magic` (none until
 identified; `Stack::magic` is crate-private), and names only through `Stack::describe` /
 `title`, so unidentified affixes cannot leak; dev dumps use `describe_truth`. A new effect is a
