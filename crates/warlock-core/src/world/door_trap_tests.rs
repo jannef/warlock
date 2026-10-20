@@ -110,6 +110,16 @@ weight = 30000
 faction = "wildlife"
 base_hp = 1000
 opens_doors = true
+
+[[creature]]
+id = "moth"
+name = "moth man"
+glyph = "m"
+fg = "#a0a080"
+weight = 30000
+faction = "wildlife"
+base_hp = 1
+opens_doors = true
 "##;
 
 const VISION: &str = r##"
@@ -220,8 +230,10 @@ const LEGEND: &str = r##"
 "l" = { terrain = "door_closed", trap = "lightning" }
 "r" = { terrain = "door_closed", trap = "alarm" }
 "R" = { terrain = "door_open", trap = "alarm" }
+"F" = { terrain = "door_open", trap = "fireball" }
 "D" = { terrain = "floor", creature = "dummy" }
 "p" = { terrain = "floor", creature = "porter", route = "E4 W4" }
+"m" = { terrain = "floor", creature = "moth", route = "E4 W4" }
 "##;
 
 fn files(map: &str, scenario: &str) -> ContentFiles {
@@ -477,6 +489,21 @@ fn creatures_set_it_off_as_they_open_the_door_and_never_as_they_walk_through() {
     let alarm = w.content().trap_id("alarm").expect("trap");
     assert_eq!(w.perception().known_traps(), vec![(door, alarm)]);
     assert!(texts(&w).contains(&"A loud bell rings!".to_string()));
+}
+
+#[test]
+fn a_creature_the_door_kills_as_it_opens_it_dies_there() {
+    // Shut on the moth man's rounds, the door's fireball goes off as it opens it, and kills it.
+    let mut w = world("########\n#m..F..#\n#...@..#\n########\n");
+    let moth = creature_at(&w, Pos::new(1, 1));
+    let door = Pos::new(4, 1);
+    let out = run(&mut w, "close:N wait*4");
+    assert_eq!(sprung_at(&out, door), vec![moth]);
+    assert!(!w.state.actors.contains_key(&moth));
+    let died = (out.iter().flat_map(|o| &o.events))
+        .any(|e| matches!(e, Event::Died { actor, .. } if *actor == moth));
+    assert!(died);
+    assert_eq!(terrain(&w, door), "door_open");
 }
 
 #[test]

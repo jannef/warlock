@@ -77,10 +77,11 @@ enum Route {
 enum Stepped {
     /// Moved, for this energy price.
     Moved(i64),
-    /// Opened the closed door in the way instead.
-    Opened,
-    /// Unlocked the locked door in the way with its key, and opened it.
-    Unlocked,
+    /// Opened the closed door in the way instead, for this energy price (priced before the door
+    /// swings: a trap on it may kill the opener).
+    Opened(i64),
+    /// Unlocked the locked door in the way with its key, and opened it, for this energy price.
+    Unlocked(i64),
     Blocked,
 }
 
@@ -126,11 +127,7 @@ impl World {
     fn step_or_wait(&mut self, id: ActorId, dir: Dir, events: &mut Vec<Event>) -> (Stepped, i64) {
         let stepped = self.creature_steps(id, dir, events);
         let price = match stepped {
-            Stepped::Moved(price) => price,
-            Stepped::Opened => self.price_of(id, ActionKind::OpenDoor),
-            Stepped::Unlocked => {
-                self.price_of(id, ActionKind::Unlock) + self.price_of(id, ActionKind::OpenDoor)
-            }
+            Stepped::Moved(price) | Stepped::Opened(price) | Stepped::Unlocked(price) => price,
             Stepped::Blocked => self.price_of(id, ActionKind::Wait),
         };
         (stepped, price)
@@ -396,9 +393,12 @@ impl World {
             return Stepped::Blocked;
         }
         if def.is_closed_door() && self.content.creature(actor.creature).opens_doors {
+            let open = self.price_of(id, ActionKind::OpenDoor);
             let stepped = match level.locks.get(&to) {
-                None => Stepped::Opened,
-                Some(lock) if actor.key_for(&self.content, lock).is_some() => Stepped::Unlocked,
+                None => Stepped::Opened(open),
+                Some(lock) if actor.key_for(&self.content, lock).is_some() => {
+                    Stepped::Unlocked(self.price_of(id, ActionKind::Unlock) + open)
+                }
                 Some(_) => return Stepped::Blocked,
             };
             self.state.current_mut().locks.remove(&to);
