@@ -53,15 +53,25 @@ screen = "character"
 window = "960x680"
 
 # Character creation (#108, #111, #118, #218), over New run on the main menu (no run; the replay
-# goes unused): the race step with the showcase's character's race preselected; the name step
+# goes unused; a debug build, so New run has its seed field and the summary names the seed): the
+# race step with the showcase's character's race preselected; the gender step on "other", which
+# never names the stat it raises (#256: "+1 to one stat, chosen by fate."); the name step
 # with a name typed (`k` types, though it moves the selection on other screens), the keys as
 # bound, and the random name an empty field gives; and the summary of that character (race,
 # gender, and class each preselected, the name left empty: the first of the race's random names),
-# with its age, birthday, and sign and its final scores (the dice rolled from the seed).
+# with its age, birthday, and sign and its final scores (the dice rolled from the seed); then the
+# summary of an "other" (gender step: Down, then Enter through the class and an empty name),
+# whose gender row says only "Other".
 [[golden]]
 name = "race-screen"
 scenario = "showcase"
 screen = "race"
+
+[[golden]]
+name = "gender-screen"
+scenario = "showcase"
+screen = "gender"
+args = ["--keys", "Down"]
 
 [[golden]]
 name = "name-screen"
@@ -73,3 +83,9 @@ args = ["--keys", "B r a k k a"]
 name = "character-summary"
 scenario = "showcase"
 screen = "summary"
+
+[[golden]]
+name = "character-summary-other"
+scenario = "showcase"
+screen = "gender"
+args = ["--keys", "Down Enter Enter Enter"]
