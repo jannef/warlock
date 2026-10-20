@@ -909,6 +909,8 @@ mod object_tests;
 #[cfg(test)]
 mod overworld_tests;
 #[cfg(test)]
+mod parts_tests;
+#[cfg(test)]
 mod quest_tests;
 #[cfg(test)]
 mod room_tests;
