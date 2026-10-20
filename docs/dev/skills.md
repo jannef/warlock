@@ -16,13 +16,17 @@ other roll, so they never move a score. Rules read a benefit through `Actor::ski
 `World::burdened` (`Burden::slow_eased`), travel in `World::step_price`, bargain in
 `world/shop.rs`, kick (athletics: Strength for kicking a door in) in `World::kick_door`,
 search, search reach, and spot in `world/search.rs` (`search_modifier`, `search_turn`; Spot
-trained at all lets the player notice in passing, `Skills::trains_effect`); each use
+trained at all lets the player notice in passing, `Skills::trains_effect`), disarm in
+`world/disarm.rs` (`disarm_modifier`; trained at all, Disable device gives the Disarm ability,
+`Ability::had_by`); each use
 is reported where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`, `player_moves`,
-`kick_door`, `search_turn` for `search`, `notice_hidden` for `spot`). A new
+`kick_door`, `search_turn` for `search`, `notice_hidden` for `spot`, `World::disarm` for
+`disarm`). A new
 effect or use is a variant there plus its one hook. The player sees values only
 (`PerceptionView::own_skills`, the Skills screen `ui/skills_screen.rs`, `S`); never marks or
 benefit numbers. Skills get no keys of their own: active uses are chosen from the one abilities
 menu (#156, `docs/dev/screens.md`): each trained skill of kind `action` is an `Ability::Skill`
 there (`warlock_core::ability`), unavailable ("not usable yet") until its use exists, when it
-becomes an ability of its own. Pending hooks:
+becomes an ability of its own in the skill's place (`Ability::use_of`): Disable device is
+`Ability::Disarm` (`docs/dev/traps.md`). Pending hooks:
 athletics (climbing out of pits, #128) and escape artist (pits, #128).

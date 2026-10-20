@@ -18,9 +18,9 @@
 //! [`PerceptionView::abilities`]: crate::perception::PerceptionView::abilities
 
 use crate::action::Action;
-use crate::content::{ActionKind, Content, StatusId};
+use crate::content::{ActionKind, Content, SkillDef, StatusId};
 use crate::geom::Dir;
-use crate::skills::SkillId;
+use crate::skills::{Effect, SkillId};
 use crate::world::Actor;
 use std::borrow::Cow;
 
@@ -32,6 +32,11 @@ pub enum Ability {
     /// "Skills"). A use, when it comes, is a variant of its own with its action, and its skill
     /// is no longer listed as this.
     Skill(SkillId),
+    /// Disarm a trap the actor knows of, next to them (spec §8 "Disarming traps"):
+    /// [`Action::Disarm`], the use of Disable device (the skill with the disarm effect, listed as
+    /// this in its place). Had by whoever is trained in it; usable whenever they have it (the
+    /// rules refuse, taking no time, where they know of no trap).
+    Disarm,
     /// Bash with the shield held (spec §8 "Weapon skills"): [`Action::Bash`]. Everyone can bash
     /// with a shield (at shield bashing's rank 0 too), so everyone has it; it is available while
     /// a shield to bash with is held.
@@ -135,10 +140,13 @@ impl Ability {
     /// Every ability there is, in menu order: by [`Source`], then as each source lists its own.
     /// The one place abilities are registered (the wiki's table lists these).
     pub fn every(content: &Content) -> Vec<Ability> {
-        // Skills: those used as actions, in skill order.
+        // Skills: those used as actions, in skill order, each as its use once that is in the game.
         let skills = (content.skills().iter().enumerate())
             .filter(|(_, def)| def.is_active())
-            .filter_map(|(i, _)| u8::try_from(i).ok().map(|i| Ability::Skill(SkillId(i))));
+            .filter_map(|(i, def)| {
+                let id = SkillId(u8::try_from(i).ok()?);
+                Some(Ability::use_of(def).unwrap_or(Ability::Skill(id)))
+            });
         // Weapon skills and fighting styles: the shield bash.
         let weapon_skills = [Ability::ShieldBash];
         let mut all: Vec<Ability> = skills.chain(weapon_skills).collect();
@@ -146,18 +154,27 @@ impl Ability {
         all
     }
 
+    /// The ability that is the use of skill `def`, once that use is in the game: Disable device's
+    /// (the disarm effect's) is [`Ability::Disarm`]. `None` for a skill whose use is to come.
+    fn use_of(def: &SkillDef) -> Option<Ability> {
+        let gives = |effect| def.benefits.iter().any(|b| b.effect == effect);
+        gives(Effect::Disarm).then_some(Ability::Disarm)
+    }
+
     /// Every ability `actor` has, in menu order.
     pub(crate) fn of(actor: &Actor, content: &Content) -> Vec<Ability> {
         (Ability::every(content).into_iter())
-            .filter(|a| a.had_by(actor))
+            .filter(|a| a.had_by(actor, content))
             .collect()
     }
 
     /// Whether `actor` has it (whether or not they can use it now): a skill, if they are trained
-    /// in it; the shield bash, everyone.
-    fn had_by(self, actor: &Actor) -> bool {
+    /// in it; disarming, if they are trained in Disable device (the skill with the disarm
+    /// effect); the shield bash, everyone.
+    pub(crate) fn had_by(self, actor: &Actor, content: &Content) -> bool {
         match self {
             Ability::Skill(id) => actor.skills.get(id).is_some(),
+            Ability::Disarm => actor.skills.trains_effect(content, Effect::Disarm),
             Ability::ShieldBash => true,
         }
     }
@@ -166,6 +183,7 @@ impl Ability {
     pub fn id(self, content: &Content) -> &str {
         match self {
             Ability::Skill(id) => &content.skill(id).id,
+            Ability::Disarm => "disarm",
             Ability::ShieldBash => "shield_bash",
         }
     }
@@ -174,6 +192,7 @@ impl Ability {
     pub fn name(self, content: &Content) -> &str {
         match self {
             Ability::Skill(id) => &content.skill(id).name,
+            Ability::Disarm => "Disarm a trap",
             Ability::ShieldBash => "Shield bash",
         }
     }
@@ -182,6 +201,9 @@ impl Ability {
     pub fn description(self, content: &Content) -> &str {
         match self {
             Ability::Skill(id) => &content.skill(id).description,
+            Ability::Disarm => {
+                "Take apart a trap you know of next to you; a clumsy try sets it off."
+            }
             Ability::ShieldBash => "Strike someone next to you with the shield you hold.",
         }
     }
@@ -189,7 +211,7 @@ impl Ability {
     /// Where it comes from: its group in the menu.
     pub const fn source(self) -> Source {
         match self {
-            Ability::Skill(_) => Source::Skill,
+            Ability::Skill(_) | Ability::Disarm => Source::Skill,
             Ability::ShieldBash => Source::WeaponSkill,
         }
     }
@@ -198,7 +220,7 @@ impl Ability {
     pub const fn aim(self) -> Aim {
         match self {
             Ability::Skill(_) => Aim::Nothing,
-            Ability::ShieldBash => Aim::Direction,
+            Ability::Disarm | Ability::ShieldBash => Aim::Direction,
         }
     }
 
@@ -207,6 +229,7 @@ impl Ability {
     pub const fn cost(self) -> Option<ActionKind> {
         match self {
             Ability::Skill(_) => None,
+            Ability::Disarm => Some(ActionKind::Disarm),
             Ability::ShieldBash => Some(ActionKind::Melee),
         }
     }
@@ -216,8 +239,9 @@ impl Ability {
     pub const fn action(self, dir: Option<Dir>) -> Option<Action> {
         match (self, dir) {
             (Ability::Skill(_), _) => None,
+            (Ability::Disarm, Some(dir)) => Some(Action::Disarm(dir)),
             (Ability::ShieldBash, Some(dir)) => Some(Action::Bash(dir)),
-            (Ability::ShieldBash, None) => None,
+            (Ability::Disarm | Ability::ShieldBash, None) => None,
         }
     }
 
@@ -226,6 +250,7 @@ impl Ability {
     pub(crate) fn unavailable(self, actor: &Actor, content: &Content) -> Option<Unavailable> {
         let own = match self {
             Ability::Skill(_) => Some(Unavailable::NotYet),
+            Ability::Disarm => None,
             Ability::ShieldBash => actor
                 .shield(content)
                 .is_none()
@@ -267,7 +292,8 @@ mod tests {
         let content = Content::builtin().expect("content");
         let every = Ability::every(&content);
         assert!(every.windows(2).all(|w| w[0].source() <= w[1].source()));
-        // The skills used as actions, in skill order, then the shield bash.
+        // The skills used as actions, in skill order (Disable device as its use, disarming),
+        // then the shield bash.
         let skills: Vec<&str> = (every.iter())
             .filter(|a| a.source() == Source::Skill)
             .map(|a| a.id(&content))
@@ -278,7 +304,7 @@ mod tests {
                 "appraise",
                 "bluff",
                 "decipher_script",
-                "disable_device",
+                "disarm",
                 "handle_animal",
                 "heal",
                 "intimidate",
@@ -303,5 +329,27 @@ mod tests {
         assert_eq!(bash.action(Some(Dir::E)), Some(Action::Bash(Dir::E)));
         assert_eq!(bash.action(None), None, "not without a direction");
         assert_eq!(Ability::Skill(SkillId(0)).action(Some(Dir::E)), None);
+    }
+
+    #[test]
+    fn disarming_is_disable_devices_use_and_asks_for_a_direction() {
+        let content = Content::builtin().expect("content");
+        let disable = (content.skills().iter())
+            .find(|s| s.id == "disable_device")
+            .expect("Disable device");
+        assert_eq!(Ability::use_of(disable), Some(Ability::Disarm));
+        let disarm = Ability::Disarm;
+        assert_eq!(disarm.aim(), Aim::Direction);
+        assert_eq!(disarm.source(), Source::Skill);
+        assert_eq!(disarm.cost(), Some(ActionKind::Disarm));
+        assert_eq!(disarm.action(Some(Dir::W)), Some(Action::Disarm(Dir::W)));
+        assert_eq!(disarm.action(None), None, "not without a direction");
+        // Its skill is listed as it, not as a skill with no use yet.
+        let every = Ability::every(&content);
+        assert!(every.contains(&Ability::Disarm));
+        let listed_as_skill = every
+            .iter()
+            .any(|a| matches!(a, Ability::Skill(id) if content.skill(*id).id == "disable_device"));
+        assert!(!listed_as_skill);
     }
 }
