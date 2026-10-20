@@ -37,39 +37,52 @@ pub struct Game {
     /// How many actions this session applied: presentation that must read each outcome once,
     /// even one that took no turn (a dev spell effect), watches it.
     pub applied: u64,
+    /// The character's save id (`save::SaveStore`): every way of saving writes its files.
+    pub save_id: String,
     /// Present with `--record`: the run so far, saved after every action.
     recorder: Option<(Replay, PathBuf)>,
 }
 
 impl Game {
-    /// A fresh run of `scenario` as `character` (the scenario's if `None`), e.g. from the main
-    /// menu.
+    /// A fresh run of `scenario` as `character` (the scenario's if `None`) named `name` (the
+    /// run's default if `None`), e.g. from the main menu, with a new save id from `store`: it
+    /// never touches another character's save.
     pub fn new_run(
         content: Arc<Content>,
+        store: &SaveStore,
         scenario: &str,
         seed: Option<u64>,
         character: Option<&CharacterSpec>,
+        name: Option<&str>,
     ) -> Result<Self, String> {
-        let world = World::with_character(content, scenario, seed, character)
+        let world = World::with_character_named(content, scenario, seed, character, name)
             .map_err(|e| format!("cannot start scenario `{scenario}`: {e}"))?;
-        Ok(Self::from_world(world))
+        Ok(Self::new_character(world, store))
     }
 
-    /// A game around a world loaded elsewhere (the saved run).
-    pub fn from_world(world: World) -> Self {
+    /// A game around a world loaded elsewhere (a saved character's run), saved as `save_id`.
+    pub fn from_world(world: World, save_id: String) -> Self {
         Self {
             world,
             last_outcome: Outcome::default(),
             applied: 0,
+            save_id,
             recorder: None,
         }
     }
 
-    /// The saved run, if there is a usable one.
-    pub fn resumed(store: &SaveStore, content: &Arc<Content>) -> Resume {
-        match store.resume(content) {
+    /// A game around a fresh run, with a new save id from `store`.
+    fn new_character(world: World, store: &SaveStore) -> Self {
+        let name = world.character().map_or("", |c| c.name.as_str());
+        let id = store.new_id(name);
+        Self::from_world(world, id)
+    }
+
+    /// Character `id`'s saved run, if it is usable.
+    pub fn resumed(store: &SaveStore, id: &str, content: &Arc<Content>) -> Resume {
+        match store.resume(id, content) {
             Resume::Loaded(mut world) => {
-                info!("resumed the saved run at turn {}", world.turn());
+                info!("resumed {id} at turn {}", world.turn());
                 world.notice("Welcome back.");
                 Resume::Loaded(world)
             }
@@ -77,13 +90,17 @@ impl Game {
         }
     }
 
-    /// Starts the game the command line asks for: the saved run, a replay, or the scenario (as
-    /// `--character`, else the scenario's). Only used when the main menu is skipped.
+    /// Starts the game the command line asks for: the character played last, a replay, or the
+    /// scenario (as `--character` named `--name`, else the scenario's). Only used when the main
+    /// menu is skipped.
     pub fn start(args: &Args, content: Arc<Content>) -> Result<Self, String> {
         let mut failure = None;
-        if SaveStore::resumes(args) {
-            match Self::resumed(&SaveStore::from_args(args), &content) {
-                Resume::Loaded(world) => return Ok(Self::from_world(world)),
+        let store = SaveStore::from_args(args);
+        if SaveStore::resumes(args)
+            && let Some(last) = store.last_played()
+        {
+            match Self::resumed(&store, &last.id, &content) {
+                Resume::Loaded(world) => return Ok(Self::from_world(world, last.id)),
                 Resume::Failed(message) => failure = Some(message),
                 Resume::NoSave => {}
             }
@@ -105,9 +122,10 @@ impl Game {
             }
             None => {
                 let scenario = args.scenario_name();
-                let character = args.character.as_ref();
-                let mut world = World::with_character(content, scenario, args.seed, character)
-                    .map_err(|e| format!("cannot start scenario `{scenario}`: {e}"))?;
+                let (character, name) = (args.character.as_ref(), args.name.as_deref());
+                let mut world =
+                    World::with_character_named(content, scenario, args.seed, character, name)
+                        .map_err(|e| format!("cannot start scenario `{scenario}`: {e}"))?;
                 if let Some(message) = failure {
                     world.notice(message);
                 }
@@ -117,10 +135,9 @@ impl Game {
         };
         let recorder = args.record.clone().zip(replay).map(|(path, r)| (r, path));
         let game = Self {
-            world,
             last_outcome,
-            applied: 0,
             recorder,
+            ..Self::new_character(world, &store)
         };
         game.save_recording();
         Ok(game)

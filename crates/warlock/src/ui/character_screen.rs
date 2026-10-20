@@ -98,9 +98,15 @@ impl CharacterScreen {
             };
         };
         let content = view.content();
-        let name = content
-            .creature_id("player")
-            .map_or("you", |id| content.creature(id).name.as_str());
+        // The character's name, as typed; without a character, what the player is called.
+        let name = match view.character() {
+            Some(c) => c.name.clone(),
+            None => capitalized(
+                content
+                    .creature_id("player")
+                    .map_or("you", |id| content.creature(id).name.as_str()),
+            ),
+        };
         let identity = view.character().map_or(Vec::new(), |c| {
             let spec = &c.spec;
             vec![
@@ -117,7 +123,7 @@ impl CharacterScreen {
         });
         let birth = (view.character()).map_or(Vec::new(), |c| birth_parts(c, content, view.time()));
         Self {
-            name: capitalized(name),
+            name,
             identity,
             birth,
             scores: view.own_scores(),
@@ -408,10 +414,11 @@ mod tests {
                 .unwrap_or_else(|| panic!("{needle} in {text:#?}"))
         };
         assert!(row(" Character ").contains('┌') || row(" Character ").contains('─'));
+        // The character's name heads it.
         assert!(
-            row("You")
+            row("Tamsin")
                 .trim_matches(|c| c == ' ' || c == '│')
-                .starts_with("You")
+                .starts_with("Tamsin")
         );
         for expected in [
             "Race    Human",

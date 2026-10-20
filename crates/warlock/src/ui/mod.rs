@@ -22,6 +22,7 @@
 mod abilities_screen;
 mod blood;
 mod character_screen;
+mod characters_screen;
 mod chargen_screen;
 mod controls_screen;
 mod death_screen;
@@ -38,6 +39,7 @@ mod look;
 mod menu;
 mod missiles;
 mod motion;
+mod name_screen;
 mod new_run_screen;
 mod object_screen;
 mod paged_list;

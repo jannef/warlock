@@ -1,7 +1,8 @@
 //! Where the game's persistent files live: a directory natively, `window.localStorage` on the web
-//! (spec §7). Callers name files relative to the backend (`run.sav`, `snapshots/quick.sav`,
-//! `settings.toml`); the backend decides what that means. Errors are plain `io::Error`s with
-//! `NotFound` for a missing file, so callers treat both backends alike.
+//! (spec §7). Callers name files relative to the backend (`saves/tamsin-1.sav`,
+//! `snapshots/tamsin-1.sav`, `settings.toml`); the backend decides what that means, and lists
+//! the files in a folder. Errors are plain `io::Error`s with `NotFound` for a missing file, so
+//! callers treat both backends alike.
 
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
@@ -67,6 +68,7 @@ impl Backend {
     }
 
     /// Whether the file exists.
+    #[cfg(test)]
     pub fn exists(&self, name: &str) -> bool {
         match self {
             Self::Dir(dir) => dir.join(name).is_file(),
@@ -75,14 +77,56 @@ impl Backend {
         }
     }
 
+    /// The names of the files in folder `dir` (`saves`), sorted; not those in folders inside it.
+    /// A folder that is not there holds none.
+    pub fn list(&self, dir: &str) -> io::Result<Vec<String>> {
+        let mut names = match self {
+            Self::Dir(root) => match std::fs::read_dir(root.join(dir)) {
+                Ok(entries) => {
+                    let mut names = Vec::new();
+                    for entry in entries {
+                        let entry = entry?;
+                        if entry.file_type()?.is_file()
+                            && let Some(name) = entry.file_name().to_str()
+                        {
+                            names.push(name.to_string());
+                        }
+                    }
+                    names
+                }
+                Err(e) if e.kind() == io::ErrorKind::NotFound => Vec::new(),
+                Err(e) => return Err(e),
+            },
+            #[cfg(target_arch = "wasm32")]
+            Self::Browser => files_in(web::keys()?, dir),
+        };
+        names.sort();
+        Ok(names)
+    }
+
     /// The file's location for messages.
     pub fn describe(&self, name: &str) -> String {
         match self {
             Self::Dir(dir) => dir.join(name).display().to_string(),
             #[cfg(target_arch = "wasm32")]
-            Self::Browser => format!("browser storage ({}{name})", web::PREFIX),
+            Self::Browser => format!("browser storage ({BROWSER_PREFIX}{name})"),
         }
     }
+}
+
+/// Browser storage's key prefix: the keys are `warlock/settings.toml`, `warlock/saves/a.sav`,
+/// and so on.
+const BROWSER_PREFIX: &str = "warlock/";
+
+/// The names of the files in folder `dir` among browser storage keys (`warlock/saves/a.sav`):
+/// those under `warlock/<dir>/`, not in a folder inside it, without the prefix.
+#[cfg_attr(not(any(test, target_arch = "wasm32")), allow(dead_code))]
+fn files_in(keys: impl IntoIterator<Item = String>, dir: &str) -> Vec<String> {
+    let prefix = format!("{BROWSER_PREFIX}{dir}/");
+    (keys.into_iter())
+        .filter_map(|key| key.strip_prefix(&prefix).map(str::to_string))
+        .filter(|name| !name.is_empty() && !name.contains('/'))
+        .collect()
 }
 
 /// Writes `bytes` to `path` via a temp file in the same directory and a rename, so a crash never
@@ -153,14 +197,12 @@ fn decode_base64(text: &str) -> Option<Vec<u8>> {
 pub mod web {
     //! `window.localStorage` access and the page-hide hook.
 
+    use super::BROWSER_PREFIX as PREFIX;
     use std::cell::{Cell, RefCell};
     use std::io;
     use warlock_core::world::WorldState;
     use wasm_bindgen::JsCast;
     use wasm_bindgen::closure::Closure;
-
-    /// Key prefix; the keys are `warlock/run.sav`, `warlock/run.sav.bad`, and so on.
-    pub const PREFIX: &str = "warlock/";
 
     fn storage() -> io::Result<web_sys::Storage> {
         web_sys::window()
@@ -195,31 +237,54 @@ pub mod web {
             .map_err(js_err)
     }
 
+    /// Every key in local storage (this site's, the game's and any other).
+    pub fn keys() -> io::Result<Vec<String>> {
+        let storage = storage()?;
+        let len = storage.length().map_err(js_err)?;
+        Ok((0..len)
+            .filter_map(|i| storage.key(i).ok().flatten())
+            .collect())
+    }
+
+    /// A run's state waiting for the page to be hidden, and where it goes.
+    pub struct Pending {
+        pub state: WorldState,
+        /// The content fingerprint of the content it was played with.
+        pub fingerprint: u64,
+        /// The save's name (`saves/<id>.sav`).
+        pub file: String,
+        /// A file written beside it, by name, and its text: the save list's summary.
+        pub beside: (String, String),
+    }
+
     thread_local! {
-        /// The run's state (and content fingerprint) as of the last turn, waiting for the page to
-        /// be hidden. Frames stop running in a hidden tab, so the listener cannot ask the world
-        /// for a save; it encodes and writes this copy instead. Only the clone is made per turn:
-        /// encoding costs milliseconds on big levels.
-        static PENDING: RefCell<Option<(WorldState, u64)>> = const { RefCell::new(None) };
+        /// The run's state as of the last turn, waiting for the page to be hidden. Frames stop
+        /// running in a hidden tab, so the listener cannot ask the world for a save; it encodes
+        /// and writes this copy instead. Only the clone is made per turn: encoding costs
+        /// milliseconds on big levels.
+        static PENDING: RefCell<Option<Pending>> = const { RefCell::new(None) };
         static HOOKED: Cell<bool> = const { Cell::new(false) };
     }
 
     /// Replaces (or with `None` clears) the state saved when the page is hidden or closed.
-    pub fn set_pending(state: Option<(WorldState, u64)>) {
-        PENDING.with(|p| *p.borrow_mut() = state);
+    pub fn set_pending(pending: Option<Pending>) {
+        PENDING.with(|p| *p.borrow_mut() = pending);
     }
 
-    fn flush(run_file: &str) {
-        let Some(bytes) = PENDING.with(|p| {
-            p.borrow()
-                .as_ref()
-                .map(|(state, fingerprint)| warlock_core::save::encode_state(state, *fingerprint))
-        }) else {
-            return;
-        };
-        if let Err(e) = set(run_file, &super::encode_base64(&bytes)) {
-            bevy::log::warn!("could not save on page hide: {e}");
-        }
+    fn flush() {
+        PENDING.with(|p| {
+            let Some(pending) = p.borrow().as_ref().map(|pending| {
+                let bytes = warlock_core::save::encode_state(&pending.state, pending.fingerprint);
+                let (beside, text) = &pending.beside;
+                set(&pending.file, &super::encode_base64(&bytes))
+                    .and_then(|()| set(beside, &super::encode_base64(text.as_bytes())))
+            }) else {
+                return;
+            };
+            if let Err(e) = pending {
+                bevy::log::warn!("could not save on page hide: {e}");
+            }
+        });
     }
 
     /// Reloads the page (a web page cannot quit; it comes back as a fresh main menu).
@@ -230,14 +295,14 @@ pub mod web {
     }
 
     /// Installs the `visibilitychange` (to hidden) and `pagehide` listeners once.
-    pub fn hook_page_hide(run_file: &'static str) {
+    pub fn hook_page_hide() {
         if HOOKED.replace(true) {
             return;
         }
         let Some(window) = web_sys::window() else {
             return;
         };
-        let on_pagehide = Closure::<dyn FnMut()>::new(move || flush(run_file));
+        let on_pagehide = Closure::<dyn FnMut()>::new(flush);
         let _ = window
             .add_event_listener_with_callback("pagehide", on_pagehide.as_ref().unchecked_ref());
         on_pagehide.forget();
@@ -245,7 +310,7 @@ pub mod web {
             let doc = document.clone();
             let on_visibility = Closure::<dyn FnMut()>::new(move || {
                 if doc.hidden() {
-                    flush(run_file);
+                    flush();
                 }
             });
             let _ = document.add_event_listener_with_callback(
@@ -297,5 +362,40 @@ mod tests {
         b.rename("a/x", "a/y").expect("rename");
         assert!(!b.exists("a/x"));
         assert_eq!(b.read("a/y").expect("read"), b"hi");
+    }
+
+    #[test]
+    fn dir_backend_lists_a_folders_files() {
+        let dir = std::env::temp_dir().join(format!("warlock-list-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let b = Backend::Dir(dir.clone());
+        assert_eq!(b.list("saves").expect("none"), Vec::<String>::new());
+        b.write("saves/b.sav", b"b").expect("write");
+        b.write("saves/a.sav", b"a").expect("write");
+        b.write("saves/deeper/c.sav", b"c").expect("write");
+        b.write("snapshots/a.sav", b"a").expect("write");
+        assert_eq!(b.list("saves").expect("list"), ["a.sav", "b.sav"]);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// The browser backend lists a folder from local storage's keys (the web build's half is
+    /// `web::keys`, which needs a browser).
+    #[test]
+    fn browser_keys_list_a_folders_files() {
+        let keys = [
+            "warlock/saves/tamsin-1.sav",
+            "warlock/saves/tamsin-1.toml",
+            "warlock/saves/old/x.sav",
+            "warlock/saves/",
+            "warlock/snapshots/tamsin-1.sav",
+            "warlock/settings.toml",
+            "another-site/saves/y.sav",
+        ]
+        .map(String::from);
+        assert_eq!(
+            files_in(keys.clone(), "saves"),
+            ["tamsin-1.sav", "tamsin-1.toml"]
+        );
+        assert_eq!(files_in(keys, "snapshots"), ["tamsin-1.sav"]);
     }
 }
