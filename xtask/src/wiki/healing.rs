@@ -2,11 +2,14 @@
 //! "Diseases").
 
 use super::combat::percent;
+use super::order;
 use super::text::{capital, signed, yes};
 use std::fmt::Write as _;
+use warlock_core::check;
 use warlock_core::content::{Affliction, Content, DiseaseDef, DiseaseId, StatusDef};
 use warlock_core::dice::Dice;
 use warlock_core::hunger::Hunger;
+use warlock_core::stats;
 use warlock_core::time::Duration;
 
 /// A pace of healing in percent of normal, in words: `twice as fast`, `half as fast`, `not at
@@ -71,10 +74,39 @@ fn every(seconds: u32) -> String {
     }
 }
 
-/// What causes a status, in words: wounds, diseases, the attacks whose `on_hit` names it (without
-/// saying which creatures or how often: their natural attacks are hidden), and rotten corpses
-/// when it is the sickness of food (spec §8 "Hunger"; what fresh ones do stays hidden too).
+/// The creatures' natural attacks a hit with which may cause `what` (an `on_hit` entry it
+/// matches; `what` returns what to add after the chance), by creature name: "the giant rat's
+/// bite (10%, 2 degrees)".
+fn attacks_causing(content: &Content, what: impl Fn(&Affliction) -> Option<String>) -> Vec<String> {
+    let mut found = Vec::new();
+    for (_, c) in order::creatures(content) {
+        let Some(attack) = &c.attack else { continue };
+        for o in &attack.on_hit {
+            if let Some(detail) = what(&o.what) {
+                found.push(format!(
+                    "the {}'s {} ({}%{detail})",
+                    c.name, attack.name, o.chance
+                ));
+            }
+        }
+    }
+    found
+}
+
+/// What causes a status, in words: wounds, diseases, the creatures' attacks whose `on_hit` names
+/// it (with the chance a hit has and the degrees it gives), and rotten corpses when it is the
+/// sickness of food (spec §8 "Hunger").
 fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
+    let attacks = attacks_causing(content, |what| match *what {
+        Affliction::Status {
+            status: s,
+            severity,
+        } if usize::from(s.0) == status => {
+            let degrees = if severity == 1 { "degree" } else { "degrees" };
+            Some(format!(", {severity} {degrees}"))
+        }
+        _ => None,
+    });
     let mut causes = Vec::new();
     if content
         .disease_status()
@@ -89,16 +121,7 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
             (false, _) => causes.push("confirmed criticals"),
         }
     }
-    let by_attack = (content.creature_defs().iter())
-        .filter_map(|c| c.attack.as_ref())
-        .any(|a| {
-            (a.on_hit.iter()).any(|o| {
-                matches!(o.what, Affliction::Status { status: s, .. } if usize::from(s.0) == status)
-            })
-        });
-    if by_attack {
-        causes.push("some creatures' attacks");
-    }
+    causes.extend(attacks.iter().map(String::as_str));
     let sickness = (content.hunger()).and_then(|h| content.status_id(h.sickness.as_deref()?));
     if sickness.is_some_and(|s| usize::from(s.0) == status) {
         causes.push("eating rotten food");
@@ -152,7 +175,7 @@ fn also(content: &Content, def: &StatusDef) -> String {
 }
 
 /// The status effects (spec §8 "Status effects"): how they show, what causes them, what they
-/// cost, how they wear off, and what they do to healing and stats. Never a creature's chance.
+/// cost, how they wear off, and what they do to healing and stats.
 pub(super) fn status_effects(content: &Content) -> String {
     let mut out = String::from(
         "| Status | Seen on others | Caused by | Costs | Wears off | Healing | Stats | Cured by | \
@@ -220,6 +243,35 @@ pub(super) fn status_effects(content: &Content) -> String {
     out
 }
 
+/// The scores [`disease_checks`] gives the odds for.
+const CHECK_SCORES: [u8; 8] = [4, 6, 8, 10, 12, 14, 16, 18];
+
+/// Each disease's check (spec §8 "Checks": 2d12 plus the stat's modifier against the
+/// difficulty, [`check::ways`]): the stat, the difficulty, and how often it is won by score.
+pub(super) fn disease_checks(content: &Content) -> String {
+    let scores: String = CHECK_SCORES.iter().map(|s| format!(" {s} |")).collect();
+    let mut out = format!(
+        "| Disease | Stat | Difficulty |{scores}\n|---|---|:---:|{}\n",
+        ":---:|".repeat(CHECK_SCORES.len())
+    );
+    for (_, def) in content.disease_ids() {
+        let odds: String = (CHECK_SCORES.iter())
+            .map(|&s| {
+                let modifier = stats::modifier(i32::from(s));
+                format!(" {} |", percent(check::ways(modifier, def.difficulty), 144))
+            })
+            .collect();
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} |{odds}",
+            capital(&def.name),
+            def.check.name(),
+            def.difficulty
+        );
+    }
+    out
+}
+
 /// Days, as dice or a number: `1d3 days`, `1 day`.
 fn days(dice: Dice) -> String {
     if dice.is_fixed() && dice.min() == 1 {
@@ -229,23 +281,21 @@ fn days(dice: Dice) -> String {
     }
 }
 
-/// How a disease is caught, in words (without saying which creatures or how often: their
-/// natural attacks are hidden).
+/// How a disease is caught, in words: the creatures' attacks that may pass it on (with the chance
+/// a hit has), the terrain that does (with the chance an hour), and the other sources.
 fn caught_by(content: &Content, disease: DiseaseId, def: &DiseaseDef) -> String {
-    let mut ways: Vec<String> = Vec::new();
-    let by_attack = (content.creature_defs().iter())
-        .filter_map(|c| c.attack.as_ref())
-        .any(|a| {
-            (a.on_hit.iter()).any(|o| matches!(o.what, Affliction::Disease(d) if d == disease))
-        });
-    if by_attack {
-        ways.push("some creatures' bites".into());
-    }
+    let mut ways: Vec<String> = attacks_causing(content, |what| {
+        matches!(*what, Affliction::Disease(d) if d == disease).then(String::new)
+    });
     if let Some(wading) = &def.wading {
         let lands: Vec<String> = (wading.terrain.iter())
             .map(|&t| content.terrain(t).name.clone())
             .collect();
-        ways.push(format!("crossing {}", lands.join(" or ")));
+        ways.push(format!(
+            "crossing {} ({}% an hour)",
+            lands.join(" or "),
+            wading.per_hour
+        ));
     }
     for source in &def.caught {
         ways.push(match source.as_str() {
@@ -262,8 +312,7 @@ fn caught_by(content: &Content, disease: DiseaseId, def: &DiseaseDef) -> String 
 
 /// The diseases (spec §8 "Diseases"): how they are caught and resisted (the stat, and how often
 /// an average one makes the check), how long they incubate, how often they progress, what a
-/// failed check does, how they are shaken off, whether they kill, and healing meanwhile. Never
-/// a creature's chance.
+/// failed check does, how they are shaken off, whether they kill, and healing meanwhile.
 pub(super) fn diseases(content: &Content) -> String {
     let mut out = String::from(
         "| Disease | Caught by | Resisted with (an average score) | Incubation | Progresses | \
@@ -273,7 +322,7 @@ pub(super) fn diseases(content: &Content) -> String {
         let resisted = format!(
             "{}, {}",
             def.check.name(),
-            percent(warlock_core::check::ways(0, def.difficulty), 144)
+            percent(check::ways(0, def.difficulty), 144)
         );
         let progresses = match def.interval {
             1 => "Every day".to_string(),

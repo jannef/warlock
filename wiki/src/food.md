@@ -25,8 +25,8 @@ Depths, the World, and the Forest.
 ## Food spoils
 
 All food **rots**, whether it lies on the floor or in your pack: it keeps for a while (the
-table above says roughly how long: a loaf of bread for about five days, a food ration for about a
-month), and some time after that it has rotted away altogether. Food in your pack that rots away
+table above says how long; it is old past half of that), and some time after that it has rotted
+away altogether. Food in your pack that rots away
 is gone, and you are told ("Your loaf of bread has rotted away."); what lies on the floor is
 simply gone when you next look. Food never shows how old it is, and picked up or put down, food
 of a kind keeps together in one stack, as old as the oldest of it: remember where it came from
@@ -55,5 +55,8 @@ Eating a rotten one is as bad an idea as any rotten food: "Ugh! The kobold corps
 
 Eating a fresh corpse may do more than feed you. Some taste terrible and may come back up, some
 make you sick, some do you good, and a rare few may make you a little stronger in some way, as
-far as you can grow. What a corpse does is not written here: you find out by eating it. A rotten
-corpse has lost all of that.
+far as you can grow ([potential](stats.md#potentials)). In the game you find out by eating it;
+here it is, in the order it happens, each chance rolled on its own. A rotten corpse has lost all
+of that.
+
+{{#include generated/corpse-effects.md}}

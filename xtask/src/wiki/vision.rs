@@ -12,7 +12,7 @@ pub(super) fn vision(content: &Content) -> String {
     );
     for v in content.vision_profiles() {
         // Full light is 255 per channel.
-        let percent = (u32::from(v.threshold) * 100).div_ceil(255);
+        let percent = super::combat::percent(u32::from(v.threshold), 255);
         let dark = if v.darkvision > 0 {
             format!("{} cells", v.darkvision)
         } else {
@@ -20,8 +20,9 @@ pub(super) fn vision(content: &Content) -> String {
         };
         let _ = writeln!(
             out,
-            "| {} | about {percent}% of full light | {dark} | {} |",
+            "| {} | {} of 255 ({percent} of full light) | {dark} | {} |",
             v.name,
+            v.threshold,
             yes(v.sees_uv)
         );
     }
