@@ -3,6 +3,8 @@
 //! [`roll`] draws, in this order, from the stream it is given (a level's `loot/<level id>` while
 //! it is generated, `drop/<actor id>` for what a creature drops; spec §8 "Determinism"):
 //!
+//! 0. **a loose gem**: a find that may be anything (grade `any`) is a gem by the gems' `chance`
+//!    (one draw, then the gem's draws: [`crate::gem::find`]), and that is all;
 //! 1. **the base item**: one draw among the objects with a `kind` whose `level` is at most the
 //!    item level, weighted by their `frequency`;
 //! 2. **the count**: ammunition comes in stacks of [`AMMO`] (one draw); anything else is one;
@@ -19,12 +21,15 @@
 //!    the range is a single value). With nothing left to roll, the item has fewer affixes; with
 //!    none at all it is normal;
 //! 6. **a rare item's name**: one draw for its first word and one for its second, which goes
-//!    with the kind of item ("Bite" for weapons, "Loop" for rings).
+//!    with the kind of item ("Bite" for weapons, "Loop" for rings);
+//! 7. **an ornament**: an item of a class set with gems is set with one by its class's chance
+//!    (one draw, then the gem's draws: [`crate::gem::ornament`]).
 //!
-//! What is rolled is unidentified.
+//! What is rolled is unidentified (its gems show at once: materials are not hidden).
 
 use super::{Affix, AffixKind, Magic, Rarity, may_roll};
 use crate::content::{Content, ItemKind, ObjectDef, ObjectId};
+use crate::gem;
 use crate::object::Stack;
 use crate::rng::Rng;
 use serde::{Deserialize, Serialize};
@@ -61,6 +66,11 @@ impl LootGrade {
 /// give the draws). `None` when content has no base item found at that level.
 pub fn roll(content: &Content, rng: &mut Rng, level: u8, grade: LootGrade) -> Option<Stack> {
     let level = level.max(1);
+    if grade == LootGrade::Any
+        && let Some(gem) = gem::find(content, rng, level)
+    {
+        return Some(gem);
+    }
     // The candidates by object id (the string), never by load order: a draw picks the same base
     // however the object files are laid out (docs/dev/content.md).
     let mut bases: Vec<(ObjectId, u32)> = (content.object_defs().iter().enumerate())
@@ -80,9 +90,13 @@ pub fn roll(content: &Content, rng: &mut Rng, level: u8, grade: LootGrade) -> Op
         Rarity::Normal => None,
         rarity => roll_magic(content, rng, def, level, rarity),
     };
-    Some(match magic {
+    let stack = match magic {
         Some(magic) => Stack::with_magic(object, count, magic),
         None => Stack::new(object, count),
+    };
+    Some(match gem::ornament(content, rng, def, level) {
+        Some(part) => stack.with_parts(vec![part]),
+        None => stack,
     })
 }
 
@@ -202,7 +216,7 @@ fn rare_name(content: &Content, rng: &mut Rng, def: &ObjectDef) -> String {
 }
 
 /// One of `items` drawn by weight (one draw); `None` if they weigh nothing.
-fn pick_weighted<'a, T>(rng: &mut Rng, items: &'a [(T, u32)]) -> Option<&'a T> {
+pub(crate) fn pick_weighted<'a, T>(rng: &mut Rng, items: &'a [(T, u32)]) -> Option<&'a T> {
     let total: u32 = items.iter().map(|(_, w)| *w).sum();
     if total == 0 {
         return None;

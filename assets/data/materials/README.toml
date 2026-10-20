@@ -13,5 +13,12 @@
 #   value     what it is worth, in percent of steel (default 100, 1 to 10000): an item made of
 #             other parts than its base item is worth the base item's value times what its parts
 #             are worth (each part's share of the weight times its material's value) over what
-#             the base item's are. Items carry no parts of their own yet, so it changes no price
+#             the base item's are (a gem part an item carries is worth what its gem is, below)
+#   gem       makes it a gem (spec §7 "Gems"; it must be precious): an inline table of
+#               color   "#rrggbb": a loose gem's glyph, and a ring set with it
+#               value   what a plain one (of the plain size and cut in gems.toml) is worth, in
+#                       gold; a gem is worth value × its size's × its cut's multiplier
+#               rarity  how often loot finds it among the gems, a weight (0: never found)
+#               plural  "rubies" (default: the name plus s)
+#             `gem = { color = "#d3213b", value = 300, rarity = 5, plural = "rubies" }`
 # Properties (weight, colour, weapon and armour modifiers, hardness, burning, rusting) come later.

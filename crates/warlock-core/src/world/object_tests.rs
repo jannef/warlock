@@ -25,7 +25,7 @@ map = '''
 "a" = { terrain = "floor", objects = ["dagger", "arrow*5"] }
 "e" = { terrain = "floor", objects = ["arrow*3"] }
 "d" = { terrain = "floor", objects = ["dagger"] }
-"b" = { terrain = "floor", objects = ["ruby"] }
+"b" = { terrain = "floor", objects = ["gem:ruby"] }
 "k" = { terrain = "floor", creature = "kobold", carry = ["spear", "gold_coin*3"] }
 
 [[pile]]
@@ -126,11 +126,11 @@ fn the_player_sees_piles_in_sight_and_nothing_behind_the_door() {
     assert_eq!(known(&w, PILE), [pair("dagger", 1), pair("arrow", 5)]);
     assert!(w.perception().sees_objects_at(PILE));
     // The ruby lies in the closed room: ground truth has it, perception and the dump do not.
-    assert_eq!(truth(&w, RUBY), [pair("ruby", 1)]);
+    assert_eq!(truth(&w, RUBY), [pair("gem", 1)]);
     assert!(known(&w, RUBY).is_empty());
     let ruby = w
         .content()
-        .object(w.content().object_id("ruby").unwrap())
+        .object(w.content().object_id("gem").unwrap())
         .glyph;
     let view = layer_rows(&w, Layer::View).join("\n");
     assert!(!view.contains(ruby), "{view}");
@@ -271,7 +271,7 @@ fn the_inventory_dump_groups_by_class_and_keeps_positions() {
         &mut w,
         "move:SE move:E*3 open:E move:E*3 pickup move:W*5 pickup",
     );
-    assert_eq!(inventory(&w), [pair("ruby", 1), pair("dagger", 1)]);
+    assert_eq!(inventory(&w), [pair("gem", 1), pair("dagger", 1)]);
     let rows = layer_rows(&w, Layer::Inventory);
     assert_eq!(rows[0], "Melee weapons:");
     assert!(rows[1].starts_with("b - a dagger ("), "{rows:?}");
@@ -324,7 +324,7 @@ fn memory_keeps_piles_as_last_seen() {
     assert_eq!(known(&w, PILE), [pair("dagger", 1), pair("arrow", 5)]);
     assert_eq!(
         known(&w, RUBY),
-        [pair("ruby", 1)],
+        [pair("gem", 1)],
         "seen once the door opened"
     );
     // The pile changes out of sight: the player still remembers it as it was.

@@ -21,6 +21,7 @@
 //! [`ObjectDef::value_with`]: super::ObjectDef::value_with
 
 use super::ContentError;
+use super::gem::Cutting;
 use super::material::{MaterialDef, MaterialId};
 use serde::Deserialize;
 use std::collections::BTreeSet;
@@ -124,8 +125,13 @@ pub struct Part {
     /// a plain material id).
     pub part: Option<PartId>,
     pub material: MaterialId,
-    /// Its share of the object's weight, in percent; an object's parts' shares sum to 100.
+    /// Its share of the object's weight, in percent; an object's parts' shares sum to 100. A
+    /// part an item has and its base item does not (a gem it was set with) has none: it weighs
+    /// nothing beside the rest.
     pub share: u8,
+    /// A gem's size and cut (spec §7 "Gems"): an item's own gem part (a loose gem, an
+    /// ornament, [`crate::object::Stack::parts`]); never a base item's.
+    pub gem: Option<Cutting>,
 }
 
 impl Part {
@@ -135,6 +141,7 @@ impl Part {
             part: None,
             material,
             share: 100,
+            gem: None,
         }
     }
 }
@@ -204,6 +211,7 @@ pub(super) fn resolve(
             part,
             material: known(of)?,
             share: share as u8,
+            gem: None,
         });
     }
     if others >= 100 {
@@ -317,6 +325,7 @@ mod tests {
             name: id.into(),
             precious,
             value,
+            gem: None,
         }
     }
 
@@ -384,12 +393,14 @@ mod tests {
                 Part {
                     part: None,
                     material: MaterialId(2),
-                    share: 90
+                    share: 90,
+                    gem: None,
                 },
                 Part {
                     part: Some(PartId(4)),
                     material: MaterialId(3),
-                    share: 10
+                    share: 10,
+                    gem: None,
                 },
             ]
         );

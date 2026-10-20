@@ -2,3 +2,4 @@
 id = "ruby"
 name = "ruby"
 precious = true
+gem = { color = "#d3213b", value = 300, rarity = 5, plural = "rubies" }

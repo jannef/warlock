@@ -1,0 +1,5 @@
+[[material]]
+id = "garnet"
+name = "garnet"
+precious = true
+gem = { color = "#8e1f2f", value = 60, rarity = 20 }

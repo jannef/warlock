@@ -17,14 +17,22 @@
 //! [`Stack::describe`] and [`Stack::known_magic`], which keep an unidentified item's affixes
 //! hidden.
 //!
+//! An item made of other parts than its base item (spec §7 "Gems": a loose gem, an item set
+//! with a gem) carries them ([`crate::item_parts`]); its name, value, weight, and colour follow
+//! from them, and it joins only a stack made the same way. Materials are not hidden: the player
+//! sees them at once.
+//!
 //! Food (spec §8 "Hunger") remembers when it was made ([`Stack::died`]; a corpse, a stack of one,
 //! when its creature died): it rots from then on, and is gone in the end ([`crate::rot`]). Food
 //! joins a stack of the same food whatever its age, and the stack keeps the oldest.
 
-use crate::content::{Content, ObjectId, Part, Rarity};
+use crate::color::Rgb;
+use crate::content::{Content, Cutting, MaterialId, ObjectId, Part, Rarity, part};
+use crate::item_parts::{self, ItemPart};
 use crate::magic::{Effect, Magic, Mods, name};
 use crate::time::GameTime;
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 
 /// Some number of one object, and what it rolled if it is magic.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -36,6 +44,10 @@ pub struct Stack {
     /// read it, presentation only through [`Stack::known_magic`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     magic: Option<Box<Magic>>,
+    /// What it is made of where it differs from its base item ([`crate::item_parts`]): a loose
+    /// gem's gem, a gem it was set with. Boxed: most stacks have none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    parts: Option<Box<[ItemPart]>>,
     /// Food: when it was made (a corpse: when its creature died), the moment it rots from (rules
     /// and dev tools only: food does not show its age, so presentation cannot read it). `None`
     /// for everything else, and for food in content that has not come into the world yet
@@ -51,6 +63,7 @@ impl Stack {
             object,
             count,
             magic: None,
+            parts: None,
             died: None,
         }
     }
@@ -75,7 +88,15 @@ impl Stack {
         }
     }
 
-    /// One of this stack: the same object and magic.
+    /// This stack made of `parts` where it differs from its base item ([`crate::item_parts`]).
+    pub fn with_parts(self, parts: Vec<ItemPart>) -> Self {
+        Self {
+            parts: Some(parts.into_boxed_slice()),
+            ..self
+        }
+    }
+
+    /// One of this stack: the same object, magic, and parts.
     pub(crate) fn single(&self) -> Self {
         Self {
             count: 1,
@@ -115,9 +136,13 @@ impl Stack {
         }
     }
 
-    /// Grams: its object's weight, less what a weight affix takes off, times the count.
+    /// Grams: its object's weight (a loose gem: its size's), less what a weight affix takes off,
+    /// times the count.
     pub fn weight(&self, content: &Content) -> u64 {
-        let each = u64::from(content.object(self.object).weight);
+        let each = match (self.gem(content), content.gems()) {
+            (Some((_, cutting)), Some(gems)) => u64::from(gems.size(cutting.size).weight),
+            _ => u64::from(content.object(self.object).weight),
+        };
         let lighter = match self.magic {
             Some(_) => Mods::local(self, content).get(Effect::Weight),
             None => 0,
@@ -125,53 +150,142 @@ impl Stack {
         crate::magic::mods::less(each, lighter).max(1) * u64::from(self.count)
     }
 
+    /// What it is made of where it differs from its base item, as saved: its own parts
+    /// ([`crate::item_parts`]), if any. Materials are not hidden.
+    pub fn own_parts(&self) -> Option<&[ItemPart]> {
+        self.parts.as_deref()
+    }
+
     /// What it is made of, part by part, the main part first (spec §7 "Objects and materials"):
-    /// its base item's parts, until items carry parts of their own (metal variants and gems,
-    /// #193, #191). Materials are not hidden: the player sees them, identified or not.
-    pub fn parts<'a>(&self, content: &'a Content) -> &'a [Part] {
-        &content.object(self.object).parts
+    /// its base item's parts with its own in their place ([`item_parts::resolve`]). Materials are
+    /// not hidden: the player sees them, identified or not.
+    pub fn parts<'a>(&self, content: &'a Content) -> Cow<'a, [Part]> {
+        let base = &content.object(self.object).parts;
+        match &self.parts {
+            Some(own) => Cow::Owned(item_parts::resolve(base, own, content)),
+            None => Cow::Borrowed(base),
+        }
+    }
+
+    /// The gem it is, if it is a loose gem (the gems' object, spec §7 "Gems"): its material and
+    /// its size and cut.
+    pub fn gem(&self, content: &Content) -> Option<(MaterialId, Cutting)> {
+        let gems = content.gems()?;
+        if self.object != gems.object {
+            return None;
+        }
+        let main = *self.parts(content).first()?;
+        Some((main.material, main.gem?))
     }
 
     /// What it is worth, in gold coins: each one's value, made of its [`Stack::parts`]
-    /// ([`crate::content::ObjectDef::value_with`]), times the count. Magic does not change it.
+    /// ([`crate::content::ObjectDef::value_with`]: a gem by its size and cut), times the count.
+    /// Magic does not change it.
     pub fn value(&self, content: &Content) -> u64 {
         let def = content.object(self.object);
-        u64::from(def.value_with(self.parts(content), content)) * u64::from(self.count)
+        u64::from(def.value_with(&self.parts(content), content)) * u64::from(self.count)
+    }
+
+    /// What it is called as it is made, singular and plural, without an article, a count, or
+    /// magic: its object's name ("long sword", "gold and ruby amulet"), named from what its file
+    /// writes with its own parts if it has any ("emerald-pommelled long sword"; [`part::names`]),
+    /// or a loose gem's ("large fine emerald", [`crate::gem::names`]).
+    pub fn names(&self, content: &Content) -> (String, String) {
+        let def = content.object(self.object);
+        if self.parts.is_none() {
+            return (def.name.clone(), def.plural.clone());
+        }
+        if let Some((gem, cutting)) = self.gem(content) {
+            return crate::gem::names(content, gem, cutting);
+        }
+        part::names(
+            &def.written_name,
+            &def.written_plural,
+            &self.parts(content),
+            content.materials(),
+            content.part_defs(),
+        )
+    }
+
+    /// The colour its glyph is drawn in: its object's, a loose gem's own (duller uncut), or its
+    /// gem's on an item that takes its gem's colour (a ring set with one; spec §7 "Gems").
+    pub fn fg(&self, content: &Content) -> Rgb {
+        let def = content.object(self.object);
+        if self.parts.is_none() {
+            return def.fg;
+        }
+        let gem_color = || {
+            if let Some((gem, cutting)) = self.gem(content) {
+                return crate::gem::color(content, gem, cutting);
+            }
+            if !content.gems()?.ornament(def.class)?.colour {
+                return None;
+            }
+            let set = (self.parts(content).iter())
+                .find(|p| p.gem.is_some())
+                .copied()?;
+            crate::gem::color(content, set.material, set.gem?)
+        };
+        gem_color().unwrap_or(def.fg)
     }
 
     /// As the player knows it: "a dagger", "12 arrows", "a Sharp long sword of the Bear", "Grim
     /// Bite, a long sword", unidentified "a long sword (magic)".
     pub fn describe(&self, content: &Content) -> String {
-        let def = content.object(self.object);
+        let names = self.names(content);
         let known = self.is_identified();
-        name::describe(def, self.count, self.magic(), known, content)
+        name::describe(&names, self.count, self.magic(), known, content)
     }
 
     /// What it is called as the player knows it, without an article or count: "long sword",
     /// "Sharp long sword of the Bear", "Grim Bite".
     pub fn title(&self, content: &Content) -> String {
-        let def = content.object(self.object);
-        name::title(def, self.magic(), self.is_identified(), content)
+        let names = self.names(content);
+        name::title(&names, self.magic(), self.is_identified(), content)
     }
 
     /// As it truly is, identified or not: for dev tools only.
     pub(crate) fn describe_truth(&self, content: &Content) -> String {
-        let def = content.object(self.object);
-        let text = name::describe(def, self.count, self.magic(), true, content);
+        let names = self.names(content);
+        let text = name::describe(&names, self.count, self.magic(), true, content);
         match self.magic() {
             Some(m) if !m.identified => format!("{text} (unidentified)"),
             _ => text,
         }
     }
 
-    /// Whether the object exists in `content`, the count makes sense, its magic is valid for it,
-    /// and it knows when it was made if and only if it is food (a guard for saves).
+    /// Whether the object exists in `content`, the count makes sense, its magic and its own
+    /// parts are valid for it (a loose gem has its gem), and it knows when it was made if and
+    /// only if it is food (a guard for saves).
     pub(crate) fn is_valid_for(&self, content: &Content) -> bool {
-        usize::from(self.object.0) < content.object_defs().len()
-            && self.count >= 1
-            && (self.count == 1 || content.object(self.object).stackable)
-            && (self.magic()).is_none_or(|m| m.check(content.object(self.object), content).is_ok())
-            && self.died.is_some() == content.object(self.object).food.is_some()
+        if usize::from(self.object.0) >= content.object_defs().len() {
+            return false;
+        }
+        let def = content.object(self.object);
+        let loose = content.gems().is_some_and(|g| g.object == self.object);
+        self.count >= 1
+            && (self.count == 1 || def.stackable)
+            && (self.magic()).is_none_or(|m| m.check(def, content).is_ok())
+            && match self.own_parts() {
+                Some(own) => item_parts::check(def, own, content).is_ok(),
+                None => !loose,
+            }
+            && self.died.is_some() == def.food.is_some()
+    }
+
+    /// The same goods as `other`: the same object made the same way (what a shop's bill counts
+    /// by, whatever the magic or age).
+    pub fn same_goods(&self, other: &Stack) -> bool {
+        self.object == other.object && self.parts == other.parts
+    }
+
+    /// `count` of these goods as a shop's bill counts them: the object and what it is made of,
+    /// without magic or age.
+    pub(crate) fn goods(&self, count: u32) -> Stack {
+        Stack {
+            parts: self.parts.clone(),
+            ..Stack::new(self.object, count)
+        }
     }
 }
 
@@ -249,13 +363,14 @@ pub fn phrase_with(
     }
 }
 
-/// Joins `stack` to a stack of the same object (and the same magic, if any) in `stacks` if it
-/// stacks; returns whether it did. Food joins whatever its age, and keeps the oldest.
+/// Joins `stack` to a stack of the same object (and the same magic and parts, if any) in
+/// `stacks` if it stacks; returns whether it did. Food joins whatever its age, and keeps the
+/// oldest.
 fn join(stacks: &mut [Stack], stack: &Stack, content: &Content) -> bool {
     if !content.object(stack.object).stackable {
         return false;
     }
-    match (stacks.iter_mut()).find(|s| s.object == stack.object && s.magic == stack.magic) {
+    match (stacks.iter_mut()).find(|s| s.same_goods(stack) && s.magic == stack.magic) {
         Some(same) => {
             same.count += stack.count;
             same.died = oldest(same.died, stack.died);
@@ -293,6 +408,14 @@ mod tests {
     fn stack(content: &Content, id: &str, count: u32) -> Stack {
         let object = content.object_id(id).unwrap_or_else(|| panic!("{id}"));
         Stack::new(object, count)
+    }
+
+    /// A loose gem of the plain size and cut.
+    fn gem(content: &Content, gem: &str) -> Stack {
+        let gems = content.gems().expect("gems");
+        let material = content.material_id(gem).expect(gem);
+        let part = ItemPart::gem(content, None, material, gems.plain());
+        Stack::one(gems.object).with_parts(vec![part])
     }
 
     #[test]
@@ -388,7 +511,7 @@ mod tests {
         assert_eq!(weight_of(&[d(), a()], &c), dagger.weight(&c) + 12 * each);
         assert_eq!(phrase(&[d()], &c), "a dagger");
         assert_eq!(phrase(&[d(), a()], &c), "a dagger and 12 arrows");
-        let ruby = stack(&c, "ruby", 1);
+        let ruby = gem(&c, "ruby");
         assert_eq!(
             phrase(&[d(), a(), ruby.clone()], &c),
             "a dagger, 12 arrows, and a ruby"
