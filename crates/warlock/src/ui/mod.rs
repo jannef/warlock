@@ -650,8 +650,8 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
     // of equal ones the later first). The moon phase is cut down to its glyph and the date to
     // its day and month before they are dropped. The weather shows only under the open sky,
     // where the player knows it, and there it matters more than the date: it changes the light
-    // and how far one sees. Hit points matter most after the level: they outlast the time, and
-    // so do the status effects the player suffers (by name, the most important first: the last
+    // and how far one sees. Hit points matter most after the level, and mana right after them:
+    // they outlast the time, and so do the status effects the player suffers (by name, the most important first: the last
     // gives way first), hunger (shown unless the player is Not hungry), and the burden (shown
     // when there is one), which slows everything the player does; hunger outlasts the burden. The
     // character level (`Lv 3`) comes after them and goes before them, but after the time. The
@@ -659,6 +659,7 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
     // outlasts the turn, the position, the seed, and the moon, and gives way before the date.
     let calendar = content.calendar();
     let (hp, max_hp) = view.own_hp();
+    let (mp, max_mp) = view.own_mana();
     let burden = view.own_load().burden();
     let hunger = view.own_hunger().filter(|h| *h != Hunger::NotHungry);
     let effects = (view.own_effects()).map(|s| Segment::new(1, content.status(s).name.clone()));
@@ -666,6 +667,7 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
     let head = [
         Segment::new(0, view.level_name()),
         Segment::new(1, format!("HP {hp}/{max_hp}")),
+        Segment::new(1, format!("MP {mp}/{max_mp}")),
     ];
     let rest = [
         hunger.map(|h| Segment::new(1, h.name())),
@@ -841,7 +843,7 @@ mod tests {
     use warlock_core::{Action, Dir, Positions, World};
 
     #[test]
-    fn the_status_bar_shows_the_burden_after_the_hit_points_and_keeps_it_late() {
+    fn the_status_bar_shows_the_burden_after_the_hit_points_and_mana_and_keeps_it_late() {
         let mut world = hoard();
         let texts = |w: &World| -> Vec<String> {
             status_segments(w, Clock::H24, TemperatureUnit::Celsius)
@@ -856,15 +858,19 @@ mod tests {
         world.apply(&Action::PickUp(Positions::default()));
         let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
         assert_eq!(segments[1].text, "HP 10/10");
-        assert_eq!(segments[2].text, "Burdened", "right after the hit points");
-        // Narrow: the time gives way first, then the burden, before the hit points.
-        let line = "Hoard  ·  HP 10/10  ·  Burdened";
+        assert_eq!(
+            segments[2].text, "MP 0/0",
+            "mana right after the hit points"
+        );
+        assert_eq!(segments[3].text, "Burdened", "then the burden");
+        // Narrow: the time gives way first, then the burden, before the mana and hit points.
+        let line = "Hoard  ·  HP 10/10  ·  MP 0/0  ·  Burdened";
         assert_eq!(fit_segments(&segments, line.chars().count()), line);
         assert_eq!(
             fit_segments(&segments, line.chars().count() - 1),
-            "Hoard  ·  HP 10/10"
+            "Hoard  ·  HP 10/10  ·  MP 0/0"
         );
-        assert!(fit_segments(&segments, 55).contains("Burdened  ·  Lv 1  ·  08:"));
+        assert!(fit_segments(&segments, 66).contains("Burdened  ·  Lv 1  ·  08:"));
     }
 
     #[test]
@@ -907,7 +913,7 @@ mod tests {
             (100, "Fainting"),
         ] {
             assert_eq!(
-                texts(&world_starting_at(nutrition))[2],
+                texts(&world_starting_at(nutrition))[3],
                 shown,
                 "{nutrition}"
             );
@@ -916,16 +922,18 @@ mod tests {
         world.apply(&Action::PickUp(Positions::default()));
         let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
         assert_eq!(
-            texts(&world)[..4],
-            ["Hoard", "HP 10/10", "Hungry", "Burdened"]
+            texts(&world)[..5],
+            ["Hoard", "HP 10/10", "MP 0/0", "Hungry", "Burdened"]
         );
-        // Narrow: the time gives way first, then the burden, then hunger, before the hit points.
-        let line = "Hoard  ·  HP 10/10  ·  Hungry  ·  Burdened";
+        // Narrow: the time gives way first, then the burden, then hunger, before the mana, then
+        // the hit points.
+        let line = "Hoard  ·  HP 10/10  ·  MP 0/0  ·  Hungry  ·  Burdened";
         assert_eq!(fit_segments(&segments, line.chars().count()), line);
         assert_eq!(
             fit_segments(&segments, line.chars().count() - 1),
-            "Hoard  ·  HP 10/10  ·  Hungry"
+            "Hoard  ·  HP 10/10  ·  MP 0/0  ·  Hungry"
         );
+        assert_eq!(fit_segments(&segments, 36), "Hoard  ·  HP 10/10  ·  MP 0/0");
         assert_eq!(fit_segments(&segments, 25), "Hoard  ·  HP 10/10");
     }
 
@@ -936,11 +944,14 @@ mod tests {
         world.apply(&Action::Afflict("bleeding".into()));
         let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
         let texts: Vec<&str> = segments.iter().map(|s| s.text.as_str()).collect();
-        assert_eq!(texts[..4], ["Hoard", "HP 10/10", "Bleeding", "Poisoned"]);
-        // They give way late, the least important first, but before the hit points.
-        let line = "Hoard  ·  HP 10/10  ·  Bleeding  ·  Poisoned";
+        assert_eq!(
+            texts[..5],
+            ["Hoard", "HP 10/10", "MP 0/0", "Bleeding", "Poisoned"]
+        );
+        // They give way late, the least important first, but before the mana and hit points.
+        let line = "Hoard  ·  HP 10/10  ·  MP 0/0  ·  Bleeding  ·  Poisoned";
         assert_eq!(fit_segments(&segments, line.chars().count()), line);
-        let shorter = "Hoard  ·  HP 10/10  ·  Bleeding";
+        let shorter = "Hoard  ·  HP 10/10  ·  MP 0/0  ·  Bleeding";
         assert_eq!(fit_segments(&segments, line.chars().count() - 1), shorter);
         assert_eq!(fit_segments(&segments, 20), "Hoard  ·  HP 10/10");
         assert!(fit_segments(&segments, 200).contains("Poisoned  ·  "));
@@ -965,9 +976,31 @@ mod tests {
             world.apply(&Action::Rest(warlock_core::Rest::For(
                 warlock_core::time::Duration::hours(24),
             )));
-            assert_eq!(texts(&world)[..3], ["Hoard", "HP 10/10", "Diseased"]);
+            assert_eq!(
+                texts(&world)[..4],
+                ["Hoard", "HP 10/10", "MP 0/0", "Diseased"]
+            );
         }
         assert!(!texts(&world).iter().any(|t| t.contains("shakes")));
+    }
+
+    #[test]
+    fn the_status_bar_shows_the_mana_left_after_the_hit_points() {
+        let mut files = ContentFiles::builtin();
+        files.insert(
+            "levels/cell.toml",
+            "name = \"Cell\"\nmap = '''\n###\n#@#\n###\n'''\n[legend]\n\
+             \"@\" = { terrain = \"floor\", spawn = \"player\" }\n",
+        );
+        files.insert(
+            "scenarios/cell.toml",
+            "name = \"Cell\"\nstart_level = \"cell\"\nmana = 12\n",
+        );
+        let content = Arc::new(Content::load(&files).expect("valid"));
+        let mut world = World::new(content, "cell", None).expect("world");
+        world.apply(&Action::Drain(7));
+        let segments = status_segments(&world, Clock::H24, TemperatureUnit::Celsius);
+        assert_eq!(segments[2].text, "MP 5/12");
     }
 
     #[test]
@@ -1094,7 +1127,7 @@ mod tests {
             segments[date.expect("date")].short.as_deref(),
             Some("11 Darkening")
         );
-        let line = fit_segments(&segments, 80);
+        let line = fit_segments(&segments, 96);
         assert!(
             line.contains("Heavy rain") && line.contains("11 Darkening"),
             "{line}"
