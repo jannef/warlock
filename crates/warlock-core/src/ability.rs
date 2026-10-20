@@ -10,15 +10,19 @@
 //! [`Ability`] with its name, source, aim, cost, and action, a line in [`Ability::every`] that
 //! lists it, and who has it ([`Ability::had_by`]); [`Ability::unavailable`] says when it cannot
 //! be used now and why (the menu greys it out with the reason). Nothing else gets a key of its
-//! own.
+//! own. A limit on how often an ability may be used is a **cooldown status** (spec §8 "Status
+//! effects": Winded, with `eases` and no tick) given as it is used: while it lasts the ability is
+//! [`Unavailable::While`] it, and so is one whose kind of action a status `blocks`; nothing
+//! counts uses.
 //!
 //! [`PerceptionView::abilities`]: crate::perception::PerceptionView::abilities
 
 use crate::action::Action;
-use crate::content::{ActionKind, Content};
+use crate::content::{ActionKind, Content, StatusId};
 use crate::geom::Dir;
 use crate::skills::SkillId;
 use crate::world::Actor;
+use std::borrow::Cow;
 
 /// An ability, as the abilities menu lists it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -99,22 +103,30 @@ pub enum Unavailable {
     NoShield,
     /// A skill whose use is not in the game yet.
     NotYet,
+    /// While a status lasts (spec §8 "Status effects"): one that blocks the kind of action the
+    /// ability is (a raging barbarian cannot read), or the ability's cooldown, which the class
+    /// abilities bring (Winded: "you are winded"). Only time lifts it.
+    While(StatusId),
 }
 
 impl Unavailable {
-    /// The reason, as the menu says it.
-    pub const fn reason(self) -> &'static str {
+    /// The reason, as the menu says it: "you are winded".
+    pub fn reason(self, content: &Content) -> Cow<'static, str> {
         match self {
-            Unavailable::NoShield => "you hold no shield",
-            Unavailable::NotYet => "not usable yet",
+            Unavailable::NoShield => "you hold no shield".into(),
+            Unavailable::NotYet => "not usable yet".into(),
+            Unavailable::While(status) => {
+                format!("you are {}", content.status(status).name.to_lowercase()).into()
+            }
         }
     }
 
-    /// Its id in dumps.
-    pub const fn id(self) -> &'static str {
+    /// Its id in dumps: `no_shield`, `while:winded`.
+    pub fn id(self, content: &Content) -> Cow<'static, str> {
         match self {
-            Unavailable::NoShield => "no_shield",
-            Unavailable::NotYet => "not_yet",
+            Unavailable::NoShield => "no_shield".into(),
+            Unavailable::NotYet => "not_yet".into(),
+            Unavailable::While(status) => format!("while:{}", content.status(status).id).into(),
         }
     }
 }
@@ -209,15 +221,20 @@ impl Ability {
         }
     }
 
-    /// Why `actor` cannot use it now; `None` when it can.
+    /// Why `actor` cannot use it now; `None` when it can. Its own reasons come first, then a
+    /// status of the actor's that blocks the kind of action it costs ([`Unavailable::While`]).
     pub(crate) fn unavailable(self, actor: &Actor, content: &Content) -> Option<Unavailable> {
-        match self {
+        let own = match self {
             Ability::Skill(_) => Some(Unavailable::NotYet),
             Ability::ShieldBash => actor
                 .shield(content)
                 .is_none()
                 .then_some(Unavailable::NoShield),
-        }
+        };
+        own.or_else(|| {
+            let blocked = actor.effects.blocking(content, self.cost()?);
+            blocked.map(Unavailable::While)
+        })
     }
 }
 
