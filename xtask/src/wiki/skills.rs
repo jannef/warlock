@@ -58,6 +58,7 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Travel => "quicker journeys on the overworld",
         Effect::Bargain => "better prices in shops",
         Effect::Kick => "more Strength for kicking doors in",
+        Effect::Pick => "picking locks (trained at all: you can try)",
     }
 }
 
@@ -82,6 +83,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Travel => "journeys",
             Effect::Bargain => "prices",
             Effect::Kick => "kicking doors in",
+            Effect::Pick => "picking locks",
         };
         let _ = write!(out, " {name}: {what} |");
     }
@@ -94,7 +96,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             let n = b.at(value);
             let cell = match b.effect {
                 _ if n == 0 => "—".to_string(),
-                Effect::Dodge | Effect::Search | Effect::Spot => format!("+{n}"),
+                Effect::Dodge | Effect::Search | Effect::Spot | Effect::Pick => format!("+{n}"),
                 Effect::SearchReach => format!("+{n} cell{}", if n == 1 { "" } else { "s" }),
                 Effect::Kick => format!("+{n} Strength"),
                 Effect::Quiet | Effect::Travel => format!("\u{2212}{n}%"),

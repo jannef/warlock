@@ -122,7 +122,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
       thing noticed;
     - athletics' climbing out of pits and escape artist (out of pits faster) wait for that rule
       (#128); swim for deep water; concentration, spellcraft, and use magic
-      device for magic; the other action skills (open lock, heal, …) for their actions.
+      device for magic; the other action skills (heal, steal, …) for their actions;
+    - open lock: trained at all, the player may pick locks (the Pick lock ability, §8 "Doors");
+      points added to that check, +8 at 100 and +12 at 200 (`pick`); a mark (20 %) for each try;
       Searching is a basic command with keys of its own (`s`, `z`), so Search is read by rules,
       not an action skill.
   - **What the player sees**: their own trained skills' values and a coarse progress (quarters)
@@ -131,8 +133,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Active uses**: skills get no keys of their own. Racial, class, skill, and style abilities
     are chosen from one abilities menu (§6 "Abilities", #156), unlike ADOM: each trained skill
     with an active use (`kind = "action"`) is an ability there (`warlock_core::ability`,
-    `PerceptionView::abilities`), greyed out as "not usable yet": the uses come with their
-    actions. Never a benefit's number, a mark, a
+    `PerceptionView::abilities`), greyed out as "not usable yet" until its use comes with its
+    action, when it is that ability instead (Open lock: Pick lock, §8 "Doors"). Never a benefit's number, a mark, a
     chance, an untrained skill, or a creature's skills; ground-truth dev dumps (`actors`, the
     world state) show every actor's skills with their marks. Skills and marks are part of the
     world state (saved, hashed).

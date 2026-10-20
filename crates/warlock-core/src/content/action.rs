@@ -41,6 +41,9 @@ pub enum ActionKind {
     CloseDoor,
     /// Unlocking a locked door with a key: part of opening it, so it costs this plus `open_door`.
     Unlock,
+    /// A try at picking a lock without a key (spec §8 "Doors"): it takes this whatever comes of
+    /// it, and a picked lock's door then opens on top of it (`open_door`).
+    PickLock,
     /// A kick (`K`): at a door, to break it, or at a creature, an unarmed blow.
     Kick,
     /// Lighting or dousing the lantern.
@@ -94,6 +97,7 @@ impl ActionKind {
         ActionKind::OpenDoor,
         ActionKind::CloseDoor,
         ActionKind::Unlock,
+        ActionKind::PickLock,
         ActionKind::Kick,
         ActionKind::Lantern,
         ActionKind::Stairs,
@@ -124,6 +128,7 @@ impl ActionKind {
             ActionKind::OpenDoor => "open_door",
             ActionKind::CloseDoor => "close_door",
             ActionKind::Unlock => "unlock",
+            ActionKind::PickLock => "pick_lock",
             ActionKind::Kick => "kick",
             ActionKind::Lantern => "lantern",
             ActionKind::Stairs => "stairs",
@@ -173,6 +178,7 @@ impl ActionKind {
             ActionKind::OpenDoor => "open doors",
             ActionKind::CloseDoor => "close doors",
             ActionKind::Unlock => "unlock doors",
+            ActionKind::PickLock => "pick locks",
             ActionKind::Kick => "kick",
             ActionKind::Lantern => "tend a lantern",
             ActionKind::Stairs => "travel",

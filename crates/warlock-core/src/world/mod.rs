@@ -100,6 +100,7 @@ mod hearing;
 mod hunger;
 mod ice;
 mod level;
+mod lockpick;
 mod loot;
 mod path;
 mod perceive;
@@ -798,6 +799,7 @@ impl World {
             Action::Wait => (true, ActionKind::Wait),
             Action::Open(dir) => return self.open_door(here.step(*dir), events),
             Action::Kick(dir) => return self.kick(*dir, events),
+            Action::PickLock(dir) => return self.pick_lock(*dir, events),
             Action::Close(dir) => (
                 self.close_door(here.step(*dir), events),
                 ActionKind::CloseDoor,
@@ -915,6 +917,8 @@ mod hunger_tests;
 mod ice_tests;
 #[cfg(test)]
 mod light_tests;
+#[cfg(test)]
+mod lockpick_tests;
 #[cfg(test)]
 mod magic_tests;
 #[cfg(test)]

@@ -97,7 +97,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     door, not the floor: walking through the doorway never sets it off (`World::step_onto_trap`
     skips door cells, for the player, creatures, and whoever makes way; the interface never asks,
     §6 "Known traps"). Opening the door does (`o`, or walking into it, unlocking it with a key
-    too), the player's and a creature's alike (`World::swing_open`), and so does every kick at it,
+    or picking its lock too), the player's and a creature's alike (`World::swing_open`), and so does every kick at it,
     as the kick lands and before the door breaks, whether it breaks or holds. It opens and shuts
     with the door: shut again, it is set again, and opening the door again sets it off again
     while it has charges. A door kicked in takes its trap with it (`World::set_terrain`, as with a
@@ -125,6 +125,32 @@ developer notes (CLAUDE.md, `docs/dev/`).
     action, ADOM-like: `unlock` plus `open_door` (12 s at normal speed), "You unlock the door with
     your iron key and open it." The key made for the lock is used before a skeleton key; keys are
     kept. Without one: "The door is locked.", refused, no time.
+  - **Picking locks** (#233; the **Pick lock** ability, the Open lock skill's use, §6
+    "Abilities", §8 "Skills"; `Action::PickLock(dir)`, replay text `pick:DIR`; the `pick_lock`
+    action, 2000, 12 s), ADOM-like, no tool needed:
+    - **Who**: an actor trained in a skill with the `pick` effect (Open lock; thieves are, from
+      their class). Anyone else: "You do not know how to pick locks.", refused, no time.
+      Creatures do not pick locks.
+    - **A try** at the locked closed door in a direction is a check (§8 "Checks"): 2d12 plus the
+      Dexterity modifier (of the effective score) plus what Open lock gives (+8 at 100, +12 at
+      200, at most 20) against the lock's **difficulty**: its own (`lock_difficulty` in level
+      and vault legends, 1 to 50; default 14, `door::LOCK_DIFFICULTY`), plus on a dungeon branch
+      its `locks_per_depth` for each level below the first (the Depths: 1, so 14 on the first
+      level and 21 on the eighth). Two draws of the gameplay stream; a natural 2 fails and a
+      natural 24 succeeds, as every check. It takes `pick_lock` whatever comes of it, may earn
+      Open lock a training mark (`pick`, 20 %), and makes no noise of its own.
+    - **Picked**: the lock is gone and the door swings open in the same action, as with a key
+      (its noise, `DoorOpened`, and a trap on the door goes off at the picker as it swings,
+      "Trapped doors" below), on top of the try: `pick_lock` plus `open_door` (18 s), both
+      priced before the check. "You pick the lock and open the door." The door stays unlocked.
+    - **Failed**: "You fail to pick the lock." The lock holds, and nothing is remembered of the
+      try: the next may succeed, as often as the player likes (no limit, the owner's rule: time
+      is the price). A failed try sets off nothing.
+    - **Refused**, no time: a closed door without a lock ("That door is not locked.", what `o`
+      would find out at once), anything else ("There is no lock there."), or while a status
+      `blocks` `pick_lock` ("You cannot pick locks while …", §8 "Status effects").
+    - Lock difficulties are ground truth: never perceived, shown, or dumped but in the world
+      state; the wiki gives the chances by difficulty.
   - **Kicking** (`K`, then a direction; `Action::Kick`, replay text `kick:DIR`; the `kick` action,
     6 s), ADOM-like:
     - **A closed door**, locked or not, breaks with a chance of the kicker's Strength **score**

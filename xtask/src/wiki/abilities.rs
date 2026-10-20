@@ -19,6 +19,7 @@ pub(super) fn abilities(content: &Content) -> String {
     for a in every {
         let who = match a {
             Ability::Skill(_) => "everyone trained in the skill",
+            Ability::PickLock => "everyone trained in Open lock",
             Ability::ShieldBash => "everyone (usable with a shield in hand)",
         };
         let (asks, takes) = match a.cost() {

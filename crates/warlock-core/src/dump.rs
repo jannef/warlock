@@ -67,7 +67,7 @@ pub enum Layer {
     WeaponSkills,
     /// Not a map: the player's abilities in the abilities menu's order, one a line with its
     /// source and what it asks for, or why it cannot be used now (`Shield bash (weapon skill):
-    /// a direction`, `Open lock (skill): not usable yet`).
+    /// a direction`, `Steal (skill): not usable yet`).
     Abilities,
     /// Not a map: the traps the player knows on the level, one a line by position (`(12, 5)
     /// fireball trap`, `(remembered)` when out of sight); never hidden ones.
@@ -1333,15 +1333,16 @@ mod tests {
 
     #[test]
     fn abilities_show_what_the_player_can_do_and_why_not() {
-        // The showcase thief: the class's skills used as actions (no use yet), then the shield
-        // bash, which needs a shield in hand.
+        // The showcase thief: the class's skills used as actions (Open lock as its use, Pick
+        // lock, which asks for a direction; the others no use yet), then the shield bash, which
+        // needs a shield in hand.
         let mut world = showcase();
         assert_eq!(
             layer_rows(&world, Layer::Abilities),
             [
                 "Appraise (skill): not usable yet",
                 "Disable device (skill): not usable yet",
-                "Open lock (skill): not usable yet",
+                "Pick lock (skill): a direction",
                 "Steal (skill): not usable yet",
                 "Shield bash (weapon skill): you hold no shield",
             ]
@@ -1352,7 +1353,11 @@ mod tests {
             json!({"id": "shield_bash", "source": "weapon_skill", "aim": "a direction",
                    "unavailable": "no_shield"})
         );
-        assert_eq!(value["abilities"][2]["id"], "open_lock");
+        assert_eq!(
+            value["abilities"][2],
+            json!({"id": "pick_lock", "source": "skill", "aim": "a direction",
+                   "unavailable": null})
+        );
         // The storeroom's small shield in hand: it can be used, in a direction.
         let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
                     pickup:a equip:off_hand:a";

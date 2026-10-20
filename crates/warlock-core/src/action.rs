@@ -30,6 +30,11 @@ pub enum Action {
     /// its sturdiness), or a creature, an unarmed blow. Takes the time of `kick`; kicking at
     /// empty space or something solid takes none.
     Kick(Dir),
+    /// Pick the lock of the closed door in a direction (spec §8 "Doors"; the Pick lock ability,
+    /// the Open lock skill's use): a Dexterity check plus what Open lock gives against the lock's
+    /// difficulty. Picked, the door opens. Takes the time of `pick_lock` whatever comes of it
+    /// (plus `open_door` when it opens); refused, taking none, without the skill or a lock there.
+    PickLock(Dir),
     /// Take stairs up.
     Ascend,
     /// Take stairs down.
@@ -512,8 +517,8 @@ pub struct Outcome {
     pub events: Vec<Event>,
 }
 
-/// Text syntax for scripting: `move:E wait open:E close:W kick:N ascend descend lantern rest:1h
-/// rest:dawn rest:dusk pickup pickup:ac drop:b sell:b pay pay:W equip:body:b remove:body bash:E
+/// Text syntax for scripting: `move:E wait open:E close:W kick:N pick:E ascend descend lantern
+/// rest:1h rest:dawn rest:dusk pickup pickup:ac drop:b sell:b pay pay:W equip:body:b remove:body bash:E
 /// fire:12,5 throw:c:12,5 dig:E search search:10 eat:b eat:floor:a read:b read:b:12,5 read:b:c
 /// chat:E ask:E:TOPIC vision:ID
 /// skip:1h
@@ -523,8 +528,8 @@ pub struct Outcome {
 /// LETTERS several, as letters (`ac`) or numbers (`0,2,30`); `pickup`, `drop`, `sell`, and
 /// `identify` without letters take everything; `pay:DIR` pays and steps that way, out of the shop;
 /// `equip:SLOT:LETTER` puts inventory stack LETTER on in slot SLOT, `remove:SLOT` takes off what
-/// is there; `bash:DIR` bashes with the held shield; `dig:DIR` digs toward a wall; `search`
-/// searches once and `search:N` for up to N turns, 1 to [`MAX_SEARCH`]; `fire:X,Y`
+/// is there; `pick:DIR` picks the lock of the door that way; `bash:DIR` bashes with the held
+/// shield; `dig:DIR` digs toward a wall; `search` searches once and `search:N` for up to N turns, 1 to [`MAX_SEARCH`]; `fire:X,Y`
 /// shoots at the level cell (X, Y), `throw:LETTER:X,Y` throws one of inventory stack LETTER
 /// there; `eat:LETTER` eats one of inventory stack LETTER, `eat:floor:LETTER` one of the stack
 /// LETTER of the pile underfoot; `read:LETTER:X,Y` reads inventory stack LETTER (a scroll) at
@@ -544,6 +549,7 @@ impl fmt::Display for Action {
             Action::Open(d) => write!(f, "open:{d}"),
             Action::Close(d) => write!(f, "close:{d}"),
             Action::Kick(d) => write!(f, "kick:{d}"),
+            Action::PickLock(d) => write!(f, "pick:{d}"),
             Action::Ascend => f.write_str("ascend"),
             Action::Descend => f.write_str("descend"),
             Action::ToggleLantern => f.write_str("lantern"),
@@ -636,6 +642,7 @@ impl FromStr for Action {
                 })
             }
             "kick" => dir().map(Action::Kick),
+            "pick" => dir().map(Action::PickLock),
             "bash" => dir().map(Action::Bash),
             "dig" => dir().map(Action::Dig),
             "search" => match arg.map(str::parse::<u8>) {
@@ -815,7 +822,7 @@ impl FromStr for Action {
             }
             _ => Err(format!(
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, kick:DIR, \
-                 ascend, descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
+                 pick:DIR, ascend, descend, lantern, rest:1h|dawn|dusk, pickup[:LETTERS], drop[:LETTERS], \
                  sell[:LETTERS], pay[:DIR], equip:SLOT:LETTER, remove:SLOT, bash:DIR, fire:X,Y, \
                  throw:LETTER:X,Y, dig:DIR, eat:LETTER, eat:floor:LETTER, \
                  read:LETTER[:X,Y|:LETTER], chat:DIR, \
@@ -1011,6 +1018,7 @@ mod tests {
                 Action::Close(d),
                 Action::Chat(d),
                 Action::Kick(d),
+                Action::PickLock(d),
                 Action::Bash(d),
                 Action::Dig(d),
             ]);
@@ -1029,6 +1037,8 @@ mod tests {
         assert!(parse_actions("move:up").is_err());
         assert_eq!(parse_actions("KICK:sw"), Ok(vec![Action::Kick(Dir::SW)]));
         assert!(parse_actions("kick").is_err());
+        assert_eq!(parse_actions("PICK:e"), Ok(vec![Action::PickLock(Dir::E)]));
+        assert!(parse_actions("pick").is_err());
         assert!(parse_actions("wait:E").is_err());
         assert_eq!(parse_actions("BASH:sw"), Ok(vec![Action::Bash(Dir::SW)]));
         assert!(parse_actions("bash").is_err());
