@@ -381,7 +381,8 @@ impl World {
 
     /// Creature `id` steps in `dir`: onto a walkable cell no one stands on, or, for a creature
     /// that opens doors, opening a closed door there (unlocking it first if it is locked and the
-    /// creature carries a key that fits; else it is blocked). Either makes noise. An overloaded
+    /// creature carries a key that fits; else it is blocked), which sets off a trap on the door
+    /// ([`World::swing_open`]). Either makes noise. An overloaded
     /// creature opens doors but does not step. A creature hostile to the player does not step
     /// (or open a door) into a sanctuary ([`World::shuns`]): it waits.
     fn creature_steps(&mut self, id: ActorId, dir: Dir, events: &mut Vec<Event>) -> Stepped {
@@ -426,7 +427,7 @@ impl World {
         self.make_step_noise(id, to, fleeing);
         // It knows nothing of traps (spec §8 "Traps"): one there goes off; a pit costs it its
         // next action.
-        let climb = self.spring_trap(to, id, events);
+        let climb = self.step_onto_trap(to, id, events);
         Stepped::Moved(price + climb)
     }
 

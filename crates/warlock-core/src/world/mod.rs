@@ -888,6 +888,8 @@ mod disease_tests;
 #[cfg(test)]
 mod door_tests;
 #[cfg(test)]
+mod door_trap_tests;
+#[cfg(test)]
 mod equip_tests;
 #[cfg(test)]
 mod experience_tests;
