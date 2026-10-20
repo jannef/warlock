@@ -369,6 +369,10 @@ A successful compile does not verify anything visual. Before opening a PR:
   `FORMAT_VERSION` is bumped by the integrator once per release, never in a feature PR; a
   feature's dispatch lives in its own module with one line in each hot file; churning content
   tables are directories, one file per entity. All in the playbook.
+- **Design documents** pending the owner's approval are draft PRs that add
+  `docs/design/<topic>.md` and touch nothing else: the owner reviews them line by line in the PR,
+  each revision is a commit, and merging the PR approves the design. CI skips the build for them.
+  Implementation issues link to the merged document. Details in the playbook.
 
 ## Golden screenshots
 
