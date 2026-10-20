@@ -11,13 +11,13 @@ use warlock_core::action::AttackKind;
 use warlock_core::burden::{self, Burden};
 use warlock_core::combat::Category;
 use warlock_core::content::{
-    ActionKind, Affliction, BASE_TURN, Benefit, Combat, CombatStance, Content, CreatureDef,
-    CreatureId, FactionId, NORMAL_COST, NaturalAttack, Stance, price,
+    ActionKind, Affliction, BASE_TURN, Benefit, Combat, Content, CreatureDef, CreatureId,
+    FactionId, NORMAL_COST, NaturalAttack, Stance, price,
 };
 use warlock_core::geom::Pos;
 use warlock_core::object::format_weight;
 use warlock_core::stats::Stat;
-use warlock_core::world::{Actor, ActorId, ActorKind, Mind, Talk};
+use warlock_core::world::{Actor, ActorId, ActorKind};
 
 /// How a creature stands toward the player and how it attacks, as seen in play, and how often it
 /// drops a magic item. By name.
@@ -99,35 +99,28 @@ fn fights(content: &Content, c: &CreatureDef) -> bool {
 /// nothing, with no route, nowhere in particular (`world/travel.rs` makes the real ones). The
 /// tables read its numbers through the rules' own [`Actor`] methods, so they cannot drift from
 /// what a fight uses.
+///
+/// It is read from the actor's saved form with only the fields a save requires, so every other
+/// field takes its default, as it does for a fresh creature (a field an actor gains later
+/// needs nothing here); then its type's skills.
 fn bare(content: &Content, id: CreatureId) -> Actor {
     let def = content.creature(id);
-    let mut actor = Actor {
-        id: ActorId(0),
-        kind: ActorKind::Creature,
-        creature: id,
-        level: String::new(),
-        pos: Pos::new(0, 0),
-        patrol: None,
-        energy: 0,
-        heard: Vec::new(),
-        mind: Mind::default(),
-        inventory: Vec::new(),
-        equipment: Default::default(),
-        stats: def.stats,
-        hp: 0,
-        hp_base: def.base_hp,
-        regen: 0,
-        skills: def.skills.clone(),
-        effects: Default::default(),
-        diseases: Default::default(),
-        damage: Default::default(),
-        weapon_skills: def.weapon_skills.clone(),
-        faction_override: None,
-        satiation: None,
-        stance: CombatStance::Neutral,
-        npc: None,
-        talk: Talk::default(),
-    };
+    let saved = serde_json::json!({
+        "id": ActorId(0),
+        "kind": ActorKind::Creature,
+        "creature": id,
+        "level": "",
+        "pos": Pos::new(0, 0),
+        "patrol": null,
+        "energy": 0,
+        "stats": def.stats,
+        "hp": 0,
+        "hp_base": def.base_hp,
+    });
+    let mut actor: Actor = serde_json::from_value(saved)
+        .unwrap_or_else(|e| panic!("a bare {} does not load: {e}", def.id));
+    actor.skills = def.skills.clone();
+    actor.weapon_skills = def.weapon_skills.clone();
     actor.hp = actor.max_hp(content);
     actor
 }
