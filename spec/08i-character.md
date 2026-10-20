@@ -35,7 +35,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `Character::born_in_year_of("manticore")`, and `Sign::is_element`/`is_animal`.
   - **Starting scores**: 10 plus the race's adjustment, plus the gender's (male: Strength +1;
     female: Dexterity +1; other: +1 to a stat picked uniformly from the run seed's
-    `character/gender` stream, so the same seed always raises the same stat), plus the class's,
+    `character/gender` stream, so the same seed always raises the same stat; character creation
+    never names it, the character screen does once the run has begun, §6), plus the class's,
     plus the birth sign's animal's and element's, kept within 1 to 40.
   - **Dice**: adjustments that are dice are rolled in the background, ADOM-like, from the stream
     `character/rolls/<race>,<gender>,<class>`, in this order: the race's scores, the class's, the

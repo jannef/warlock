@@ -50,7 +50,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
   `--record`, or `--capture` name what to run): Continue (only if a character is saved: it
   resumes the one played last, and names them), Characters (likewise), New run (scenario list
-  from content, optional seed, then character creation), Settings, Controls, Quit.
+  from content, then character creation), Settings, Controls, Quit. A new run's seed is no
+  one's choice (#256): New run draws a fresh one from the platform's clock and entropy when it
+  opens (the app's, never the rules'), and once drawn it is the run's like any seed (saved,
+  recorded in replays, shown in the status bar). Only developer builds (debug, or `--dev`: the
+  switch that turns on the developer keys) show a seed field: type a number or a word (hashed
+  like `--seed`); empty means the scenario's own seed, so dev runs and captures stay
+  reproducible. The summary names the seed only there.
 - **Characters** (#218, §7 "Saves"): every saved character, the one played last first: the name,
   race and class, and level, and for the selected one where they are and when they were last
   played (wall-clock, in UTC). Up/Down choose, Enter resumes the one selected, the Erase key
@@ -70,9 +76,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   the race's first random name. Each choice step lists
   its options in data order with a `>` marker, the selected option's one-line description, and
   for races and classes their stat adjustments as written in data, dice included
-  (`St 1d3+1  Dx −1`), and for races their vision; the gender step names the stat "other"
-  raises with the run's seed. Every step ends with a
-  **Random** row, rolled from the run seed and how often Random was pressed there. Up/Down (or
+  (`St 1d3+1  Dx −1`), and for races their vision; "other" on the gender step says only "+1
+  to one stat, chosen by fate." and never names the stat. Every step ends with a
+  **Random** row ("Let chance pick your race."), rolled from the run seed and how often Random
+  was pressed there. No player-facing text (here, in messages, or in the wiki) says that a roll,
+  a choice, or the world follows from the seed: to the player it is chance, fate, or random
+  (#256). Up/Down (or
   `k`/`j`) choose, Enter goes on, Esc goes back a step as it was left. A step opens on the
   choice made there before going back, else on the scenario's character's, else on the first
   option; the Name step opens on what was typed there before going back, else empty. The summary
@@ -84,7 +93,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   modifier) with the starting trained skills and their values beside them (§8 "Skills"; in two
   columns when there are more than six, down the first, then the second; below the scores, as
   `Appraise 11 · Disable device 16 · …`, when the panel is too narrow), the vision, and the
-  scenario and seed; "other" names the stat it raised. The
+  scenario (with the seed in developer builds only); the gender row says "Other" without the
+  stat it raised. Once the run has begun the character screen names it (`Other (Willpower
+  +1)`), as it names the rest of the character. The
   player does not choose the age, the birthday, or the sign. Starting makes a new character with
   a save of its own: it never touches another character's (§7 "Saves"). Content without races or classes skips
   character creation: New run starts the scenario as it is.

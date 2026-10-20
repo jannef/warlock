@@ -66,7 +66,7 @@ On every menu and screen:
 | Left / right (change a setting) | Left / Right, or `h` / `l` |
 | Choose | `Enter` |
 | Back | `Esc`, always |
-| Erase a character (the seed), reset a key (Controls), delete a saved character (Characters) | `Delete` or `Backspace` |
+| Reset a key (Controls), delete a saved character (Characters) | `Delete` or `Backspace` |
 | Mark a stack, mark everything (picking up, dropping) | `Space`, `,` |
 | Next / previous page of a list of items | `>` or `PageDown` / `<` or `PageUp` |
 

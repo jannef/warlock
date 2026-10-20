@@ -22,7 +22,7 @@ closed.
 
 Stairs (`>` down, `<` up) join levels. Step onto them, then press `>` or `<` to use them. Using
 stairs is a normal action (6 seconds). Each level you visit is kept as you left it, and dungeon levels are generated
-on your first visit from the run's seed. Levels you leave and return to are exactly as they were.
+on your first visit. Levels you leave and return to are exactly as they were.
 
 ## Walls
 

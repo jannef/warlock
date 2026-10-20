@@ -37,8 +37,8 @@ your armour decide how well you fight.
 
 ## Starting a run
 
-The game opens on the main menu. **New run** lists the scenarios you can start, and takes an
-optional seed (see [Saving](saving.md)). Then you create your character: your race, your gender,
+The game opens on the main menu. **New run** lists the scenarios you can start (see
+[Saving](saving.md)). Then you create your character: your race, your gender,
 and your class, one step at a time, and a summary of your age, birth sign, and the stats you
 will start with (see [Your character](character.md)). Each scenario starts you somewhere else in the same world, at
 its own time of day:

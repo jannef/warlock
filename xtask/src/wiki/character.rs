@@ -27,7 +27,7 @@ pub(super) fn genders(_content: &Content) -> String {
         let raises = match gender {
             Gender::Male => format!("{} +1", Stat::Strength.name()),
             Gender::Female => format!("{} +1", Stat::Dexterity.name()),
-            Gender::Other => "+1 to one stat, picked by the run's seed".to_string(),
+            Gender::Other => "+1 to one stat, chosen by fate".to_string(),
         };
         let _ = writeln!(out, "| {} | {raises} |", gender.name());
     }

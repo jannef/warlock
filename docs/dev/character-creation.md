@@ -51,3 +51,13 @@ empty field gives draw 0 (`Draft::name`), and the summary starts the run with th
 (`MenuChoice::NewRun { name, .. }`). The name is shown on the character screen, the summary, the
 death screen ("Here lies Brakka,"), and the list of saved characters (`docs/dev/saves.md`); no rule
 or message reads it yet.
+
+**Wording and the seed** (#256): everything here is deterministic in the seed, and no player-facing
+text says so (UI, messages, scenario descriptions, the wiki): randomness is "chance", "fate", or
+"random". The Random rows say `Let chance pick your race.`; "other" on the gender step says `+1 to
+one stat, chosen by fate.` and the summary shows `Other` (`gender_description`; the stat is never
+named before the run starts), while the character screen, once the run has begun, names it
+(`character_screen::gender_text`: `Other (Willpower +1)`). A release build's new run gets a seed no
+one chose (`new_run_screen::fresh_seed`; see `docs/dev/screens.md`); developer builds keep the
+seed field, and only they show the seed on the summary. Code comments, data comments, the spec, and
+these notes keep explaining the determinism exactly.
