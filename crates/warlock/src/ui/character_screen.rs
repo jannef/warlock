@@ -436,8 +436,8 @@ mod tests {
             "Pr  Presence       9",
             // Toughness 10 and a human's 4 and a thief's 3; Defence 10 and Dexterity's share,
             // and no Protection beside it.
-            // Beside them a human's 2 mana and a thief's 1, and the mental stats' +1, 0, and -1.
-            "HP  Hit points    17/17   MP  Mana       3/3",
+            // Beside them a human's 1 mana and a thief's 1, and the mental stats' +1, 0, and -1.
+            "HP  Hit points    17/17   MP  Mana       2/2",
             "Dv  Defence       11      Pv  Protection  0",
             "Lv  Level         1",
             "XP  Experience    0 / 20",

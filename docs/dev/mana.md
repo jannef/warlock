@@ -40,9 +40,13 @@ issue how it interacts with mana**, and hooks in at the one place below.
   - `World::keep_mana_within_max` after every player action (in `World::apply`, beside
     `keep_hp_within_max`): down to the lasting maximum when something that raised it comes off.
     `World::disease_turn` cuts mana to the new maximum after mental stat damage, like hit points.
-  - `World::level_up_mana(before, after)` from `grant_xp`: `max(0, class mana ÷ 2 + the mental
-    modifiers of the raised stats)` per level up to `mana_level` (`World::level_mana`; the
-    scenario's `mana` without a character).
+  - `World::level_up_mana(before, after)` from `grant_xp`: `max(0, class mana ÷ 2 + the better
+    of the raised Intelligence and Willpower modifiers)` (`mana::level_modifier`) per level up to
+    `mana_level` (30; `World::level_mana`; the scenario's `mana` without a character). The race
+    and class values and this formula are the progression design's (`docs/design/progression.md`
+    §3.7), which also plans what spends mana: caster abilities costing it
+    (`Unavailable::NoMana`), spending training Willpower, the Scholar talents (Arcane mastery
+    through `World::mana_rate`).
 - **Presentation**: `PerceptionView::own_mana()` (current clamped to the maximum, and the
   maximum) is all the UI gets: the status bar's `MP 5/12` (`ui::status_segments`, priority 1
   right after HP, so it gives way after everything else of that priority, before the HP), the

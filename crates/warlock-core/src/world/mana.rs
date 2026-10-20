@@ -95,7 +95,8 @@ impl World {
     }
 
     /// What one level adds to the player's mana: half the class's mana (the scenario's `mana`
-    /// without a character) plus the mental stats' modifiers, at least 0. The stats as what
+    /// without a character) plus the better of the Intelligence and Willpower modifiers, at
+    /// least 0 (the progression design, `docs/design/progression.md` §3.7). The stats as what
     /// the player wears raises them, not as a status lowers them: the penalty passes, this mana
     /// stays.
     fn level_mana(&self, content: &Content) -> i32 {
@@ -105,8 +106,8 @@ impl World {
                 .scenario(&self.state.scenario)
                 .map_or(0, |s| i32::from(s.mana)),
         };
-        let mental = mana::mental_modifier(&self.state.player().raised_stats(content));
-        (class_mana / 2 + mental).max(0)
+        let mind = mana::level_modifier(&self.state.player().raised_stats(content));
+        (class_mana / 2 + mind).max(0)
     }
 
     /// The dev action `drain:N` ([`crate::action::Action::Drain`]): the player spends `amount`

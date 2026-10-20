@@ -12,14 +12,16 @@ have mana too, but you never see theirs.
 
 Your most mana is what your [race](races.md) and your [class](classes.md) give, plus what your
 Intelligence, Willpower, and Presence add: high scores add to it, low ones take from it, and it
-never goes below nothing. Wizards and witches have the most; warriors and barbarians start with
-none of their own, and a half-orc's race gives none.
+never goes below nothing. Wizards and witches have the most, and aristocrats oddly much;
+warriors and barbarians start with none of their own, and dwarves and half-orcs none of their
+race's.
 
 {{#include generated/mana.md}}
 
-Each level up to 20 raises it (and the mana you have now) by half your class's mana plus what your
-mental stats add again (see [Experience](experience.md#what-a-level-gives)). A wizard keeps
-growing it; a warrior with ordinary wits gains none. [Magic items](magic-items.md) that add to it
+Each level up to 30 raises it (and the mana you have now) by half your class's mana plus what the
+better of your Intelligence and Willpower adds (see
+[Experience](experience.md#what-a-level-gives)): a wizard keeps growing it after hit points stop
+at level 20; a warrior with ordinary wits gains none. [Magic items](magic-items.md) that add to it
 ("+5 to maximum mana") raise your most, not what you have.
 
 ## How fast it comes back

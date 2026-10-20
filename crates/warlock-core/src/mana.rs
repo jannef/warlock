@@ -4,7 +4,9 @@
 //!
 //! - **The maximum**: what race and class give (a creature: its type's `mana`; a scenario
 //!   without a character: its own), plus the modifiers of the three mental stats, Intelligence,
-//!   Willpower, and Presence ([`max_mana`]), at least 0. Levels add more, and so do magic items.
+//!   Willpower, and Presence ([`max_mana`]), at least 0. Levels add more (half the class's mana
+//!   and the better of the Intelligence and Willpower modifiers, [`level_modifier`]), and so do
+//!   magic items.
 //! - **Regeneration**: one point comes back every `max(60 s, 360 s − 12 s × Willpower)` of game
 //!   time ([`regen_seconds`]) at the normal pace; resting, status effects, diseases, special
 //!   rooms, starving, and magic items change the pace (`World::mana_rate`).
@@ -20,9 +22,17 @@ pub const MAX_BASE_MANA: u16 = 1000;
 pub const MENTAL: [Stat; 3] = [Stat::Intelligence, Stat::Willpower, Stat::Presence];
 
 /// The modifiers of the mental stats ([`MENTAL`]) added up: what `stats` add to the maximum
-/// mana, and to what a level gives.
+/// mana.
 pub fn mental_modifier(stats: &Stats) -> i32 {
     MENTAL.iter().map(|&stat| stats.modifier(stat)).sum()
+}
+
+/// What `stats` add to the mana a level gives: the better of the Intelligence and Willpower
+/// modifiers.
+pub fn level_modifier(stats: &Stats) -> i32 {
+    stats
+        .modifier(Stat::Intelligence)
+        .max(stats.modifier(Stat::Willpower))
 }
 
 /// Maximum mana: `base` (race and class for the player, the creature type's `mana` for a
@@ -68,6 +78,12 @@ mod tests {
         assert_eq!(max_mana(&stats(6, 8, 10), 5), 5 - 2 - 1);
         assert_eq!(max_mana(&stats(1, 1, 1), 2), 0, "never below 0");
         assert_eq!(mental_modifier(&stats(18, 14, 9)), 4 + 2 - 1);
+        assert_eq!(
+            level_modifier(&stats(18, 14, 30)),
+            4,
+            "the better, never Presence"
+        );
+        assert_eq!(level_modifier(&stats(6, 12, 10)), 1);
     }
 
     #[test]

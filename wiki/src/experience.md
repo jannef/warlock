@@ -51,6 +51,6 @@ levels at once.
 Each level up to 20 raises your maximum **hit points** (and the hit points you have now) by half
 your class's hit points plus your Toughness's share, at least 1 (see
 [Combat](combat.md#hit-points)). From level 21 on, levels grow no hit points: hit point pools do
-not run away. Up to level 20 each level raises your **mana** too, by half your class's mana plus
-what your Intelligence, Willpower, and Presence add, if that comes to anything (see
+not run away. Up to level 30 each level raises your **mana** too, by half your class's mana plus
+what the better of your Intelligence and Willpower adds, if that comes to anything (see
 [Mana](mana.md)). Skills and the rest do not depend on your level.

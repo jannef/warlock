@@ -269,7 +269,7 @@ mod tests {
         for (from, to) in [
             ("max_level = 50", "max_level = 0"),
             ("hp_level = 20", "hp_level = 60"),
-            ("mana_level = 20", "mana_level = 60"),
+            ("mana_level = 30", "mana_level = 60"),
             ("from = 1\nzd = 5", "from = 2\nzd = 5"),
             ("zd = 5", "zd = 0"),
         ] {
@@ -283,7 +283,7 @@ mod tests {
     #[test]
     fn mana_comes_with_levels_up_to_mana_level() {
         let ok = include_str!("../../../../assets/data/experience.toml");
-        let none = ok.replace("mana_level = 20\n", "");
+        let none = ok.replace("mana_level = 30\n", "");
         assert_eq!(
             Experience::parse("x", &none).expect("valid").mana_level(),
             0

@@ -58,7 +58,7 @@ age = [90, 300]
 stats = { strength = -1, dexterity = "1d2+1", toughness = -2, intelligence = 1, presence = 1 }
 potential = { strength = -2, dexterity = 3, toughness = -3, intelligence = 2, willpower = 1, presence = 1 }
 hp = 2
-mana = 4
+mana = 3
 size = "medium"
 skills = { listen = "1d6+4", spot = "1d6+4" }
 # Keen eyes: elves notice every hidden thing in passing, and find it more easily.
@@ -76,7 +76,7 @@ age = [20, 60]
 stats = { dexterity = 1, presence = "1d2" }
 potential = { dexterity = 1, toughness = -1, intelligence = 1, presence = 2 }
 hp = 3
-mana = 3
+mana = 2
 size = "medium"
 skills = { bluff = "1d4+2", spot = "1d4+2" }
 hunger = 90
@@ -91,7 +91,7 @@ vision = "normal"
 age = [16, 35]
 potential = { strength = "1d2", dexterity = "1d2", toughness = "1d2", intelligence = "1d2", willpower = "1d2", presence = "1d2" }
 hp = 4
-mana = 2
+mana = 1
 size = "medium"
 # One extra class skill: one of the class's skills, picked when the character is made.
 class_skill = "2d4+4"
@@ -106,7 +106,6 @@ age = [40, 120]
 stats = { strength = 1, dexterity = -1, toughness = "1d2+2", willpower = 1, presence = -2 }
 potential = { strength = 2, dexterity = -2, toughness = 4, willpower = 1, presence = -2 }
 hp = 6
-mana = 1
 size = "medium"
 skills = { metalcraft = "1d6+4", search = "1d6+4" }
 weapon_skills = { axes = 1, crossbows = 1 }
@@ -125,7 +124,7 @@ age = [20, 50]
 stats = { strength = -3, dexterity = 3, willpower = 1 }
 potential = { strength = -4, dexterity = 3, willpower = 1, presence = 1 }
 hp = 2
-mana = 2
+mana = 1
 size = "small"
 skills = { listen = "1d6+4", stealth = "1d6+4" }
 # Second breakfast.
@@ -141,7 +140,7 @@ age = [40, 150]
 stats = { strength = -2, toughness = 1, intelligence = "1d2+1", willpower = -1 }
 potential = { strength = -3, dexterity = 1, toughness = 1, intelligence = 3 }
 hp = 3
-mana = 4
+mana = 3
 size = "small"
 skills = { appraise = "1d6+4", listen = "1d6+4" }
 hunger = 90

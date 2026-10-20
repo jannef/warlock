@@ -429,8 +429,9 @@ fn spending_is_refused_when_short_and_the_dev_drain_spends() {
 }
 
 #[test]
-fn levels_add_half_the_class_mana_and_the_mental_stats_up_to_mana_level() {
-    // 100 mana and +2: 52 a level, for levels 2 and 3 only.
+fn levels_add_half_the_class_mana_and_the_better_mind_up_to_mana_level() {
+    // Half of 100 and Intelligence 14's +2 (better than Willpower 10's 0): 52 a level, for
+    // levels 2 and 3 only.
     let mut w = world();
     let to_five = w.content().experience().threshold(5);
     w.grant_xp(to_five);

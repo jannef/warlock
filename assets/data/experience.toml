@@ -9,8 +9,8 @@
 # Toughness modifier) to the maximum, and the same to the current hit points. No runaway pools.
 #
 # Mana: each level gained up to mana_level (inclusive; default 0, none) adds max(0, class mana ÷ 2
-# + the Intelligence, Willpower, and Presence modifiers) to the maximum, and the same to the
-# current mana.
+# + the better of the Intelligence and Willpower modifiers) to the maximum, and the same to the
+# current mana. It runs past hp_level, so casters keep growing after hit points stop.
 #
 # Scaling (classic World of Warcraft), for the player's own kills. A monster above the player is
 # worth bonus_percent more per level of difference, up to bonus_levels levels. A monster below
@@ -22,7 +22,7 @@ max_level = 50
 linear = 10
 quadratic = 10
 hp_level = 20
-mana_level = 20
+mana_level = 30
 bonus_percent = 5
 bonus_levels = 4
 

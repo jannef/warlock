@@ -107,8 +107,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     creature type's `mana`, default 0; a scenario without a character gives the player's) plus
     what magic items add (`max_mana` affixes, §8 "Magic items") plus the modifiers of the three
     mental stats, Intelligence, Willpower, and Presence, the effective scores', at least 0. Every
-    actor starts with all of it. Each level gained up to the experience file's `mana_level` (20)
-    adds `max(0, class mana ÷ 2 + the mental stats' modifiers)` (the stats as worn magic raises
+    actor starts with all of it. Each level gained up to the experience file's `mana_level` (30,
+    past `hp_level`, so casters keep growing after hit points stop) adds `max(0, class mana ÷ 2 +
+    the better of the Intelligence and Willpower modifiers)` (`docs/design/progression.md` §3.7;
+    the race and class values are its table; the stats as worn magic raises
     them, not as a status lowers them) to the maximum and to the mana the player has; without a
     character the scenario's `mana` stands in for the class's (`World::level_up_mana`).
   - **When it falls**: taking off what raised it cuts the mana down to the maximum without its

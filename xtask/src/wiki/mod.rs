@@ -656,7 +656,7 @@ mod tests {
         assert!(text("regeneration.md").contains("| 3 | 5 minutes and 24 seconds |"));
         assert!(text("regeneration.md").contains("| 25 or more | 1 minute |"));
         assert!(text("mana-regeneration.md").contains("| 10 | 4 minutes |"));
-        assert!(text("mana.md").contains("| Wizard | 8 |"));
+        assert!(text("mana.md").contains("| Wizard | 12 |"));
         assert!(text("mana-paces.md").contains("| In a sanctuary | three times as fast |"));
         let healing = text("healing.md");
         for row in [

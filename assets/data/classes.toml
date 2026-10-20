@@ -23,7 +23,7 @@
 # mana: what the class adds to the mana (spec §8 "Mana"; default 0, at most 1000): a character's
 # maximum is their race's and their class's plus the modifiers of their Intelligence, Willpower,
 # and Presence, and each level up to experience.toml's mana_level adds half the class's mana plus
-# those modifiers again.
+# the better of the Intelligence and Willpower modifiers.
 #
 # The adventurers come first, then everyday folk. Balance is not a goal: some choices are poor on
 # purpose.
@@ -45,7 +45,7 @@ name = "Bard"
 description = "A wandering singer and teller of tales who gets by on charm, quick fingers, and a quicker tongue."
 stats = { strength = -1, dexterity = 1, toughness = -1, intelligence = "1d2", presence = "1d3+1" }
 hp = 2
-mana = 4
+mana = 5
 skills = { bluff = "2d6+10", music = "2d6+10", appraise = "2d4+4", decipher_script = "2d4+4", knowledge = "2d4+4", tumble = "2d4+4" }
 weapon_skills = { short_blades = 1, daggers = "1d2" }
 styles = { duelist = 1 }
@@ -56,7 +56,7 @@ name = "Priest"
 description = "A servant of a god, schooled in rite and scripture: strong of will and voice, soft of hand."
 stats = { strength = -1, dexterity = -1, intelligence = 1, willpower = "1d3+1", presence = "1d2" }
 hp = 4
-mana = 6
+mana = 9
 skills = { heal = "2d6+10", knowledge = "2d6+10", concentration = "2d4+4", decipher_script = "2d4+4" }
 weapon_skills = { maces = 2, shield_block = 1 }
 styles = { sword_and_board = 1 }
@@ -67,7 +67,7 @@ name = "Druid"
 description = "A keeper of the old ways who speaks for forest and beast: hardy and patient, and uneasy in towns."
 stats = { toughness = "1d2", willpower = "2d2", presence = -1 }
 hp = 4
-mana = 6
+mana = 9
 skills = { handle_animal = "2d6+10", survival = "2d6+10", concentration = "2d4+4", heal = "2d4+4", listen = "2d4+4" }
 weapon_skills = { staves = 2, slings = 1 }
 styles = { staff_fighter = 1 }
@@ -78,7 +78,7 @@ name = "Monk"
 description = "A disciple of a cloister's discipline, body and mind trained as one: quick, enduring, inward-turned."
 stats = { dexterity = "1d3", toughness = 1, willpower = "1d3", presence = -1 }
 hp = 5
-mana = 3
+mana = 4
 skills = { balance = "2d6+10", tumble = "2d6+10", athletics = "2d4+4", concentration = "2d4+4", escape_artist = "2d4+4", listen = "2d4+4" }
 weapon_skills = { unarmed = 2, staves = 1 }
 style_choice = [{ brawler = 1 }, { staff_fighter = 1 }]
@@ -122,7 +122,7 @@ name = "Wizard"
 description = "A scholar of the arcane who traded sunlight for candlelight: brilliant of mind, frail of body."
 stats = { strength = -2, toughness = "-1d2", intelligence = "2d2+1", willpower = 1 }
 hp = 0
-mana = 8
+mana = 12
 skills = { concentration = "2d6+10", knowledge = "2d6+10", spellcraft = "2d6+10", decipher_script = "2d4+4", use_magic_device = "2d4+4" }
 weapon_skills = { staves = 1 }
 
@@ -132,7 +132,7 @@ name = "Witch"
 description = "A hedge-magician of herbs, hexes, and old bargains: cunning, wise in strange ways, and feared."
 stats = { strength = -2, toughness = -1, intelligence = "1d3", willpower = "1d3", presence = "1d3-2" }
 hp = 1
-mana = 7
+mana = 10
 skills = { heal = "2d6+10", spellcraft = "2d6+10", concentration = "2d4+4", intimidate = "2d4+4", use_magic_device = "2d4+4" }
 weapon_skills = { daggers = 1, staves = 1 }
 
@@ -152,7 +152,7 @@ name = "Aristocrat"
 description = "Born to wealth and command and never asked to lift anything heavier than a goblet."
 stats = { strength = -2, toughness = "-1d2", intelligence = 1, willpower = -1, presence = "1d3+1" }
 hp = 1
-mana = 2
+mana = 7
 skills = { knowledge = "2d6+10", bluff = "2d4+4", intimidate = "2d4+4" }
 weapon_skills = { long_blades = 1 }
 styles = { duelist = 1 }
@@ -163,6 +163,7 @@ name = "Commoner"
 description = "A farmhand, laborer, or servant with no training to speak of: used to hard work, not to being heard."
 stats = { toughness = "1d3-1", intelligence = -1, presence = -1 }
 hp = 3
+mana = 1
 skills = { athletics = "2d4+4", handle_animal = "2d4+4" }
 weapon_skills = { maces = 1 }
 styles = { brawler = 1 }
@@ -173,6 +174,7 @@ name = "Craftsperson"
 description = "A smith, carpenter, or weaver who knows a trade inside out: sure hands, a patient mind, and few words."
 stats = { strength = 1, dexterity = "1d3", intelligence = 1, presence = "-1d2" }
 hp = 3
+mana = 1
 skills = { metalcraft = "2d6+10", woodcraft = "2d6+10", appraise = "2d4+4" }
 weapon_skills = { axes = 1 }
 
@@ -182,6 +184,6 @@ name = "Merchant"
 description = "A trader who knows the price of everything: shrewd and persuasive, softened by years behind a counter."
 stats = { strength = -1, dexterity = -1, toughness = -1, intelligence = "1d2", presence = "1d3" }
 hp = 2
-mana = 1
+mana = 2
 skills = { appraise = "2d6+10", bluff = "2d6+10", knowledge = "2d4+4" }
 weapon_skills = { daggers = 1 }
