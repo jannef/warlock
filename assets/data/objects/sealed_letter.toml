@@ -4,6 +4,6 @@ name = "sealed letter"
 glyph = "?"
 fg = "#e0d2a8"
 class = "scrolls"
-material = "paper"
+materials = ["paper"]
 weight = 20
 value = 0

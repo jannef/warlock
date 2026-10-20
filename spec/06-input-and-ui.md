@@ -184,7 +184,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Item description** (#149): one carried stack as the player knows it, opened by its letter in
   the inventory or by a slot's upper-case letter (`A` to `M`) on the equipment screen, over the
   screen it came from: its glyph and name (in its rarity's color, with its mark if worn or
-  wielded), what it is (`Magic long sword · steel · 1.8 kg`), its base stats in words
+  wielded), what it is (`Magic long sword · steel blade, leather grip · 1.8 kg`: every part, the
+  main one first, §7 "Objects and materials"), its base stats in words
   (`magic::describe`: "Long blade, for the main hand", "Damage 1d8; criticals on 20–24, ×2
   damage", "Shoots up to 15 cells", "Needs Strength 14 to draw", "Quick to strike", "Armour +4",
   "Dexterity adds at most +4 to Defence while worn", "Breaks on a hit 30% of the time"), and for

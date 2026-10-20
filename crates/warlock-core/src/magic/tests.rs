@@ -368,7 +368,7 @@ fn descriptions_say_base_stats_and_known_affixes_in_words() {
     assert_eq!(
         text(&plain),
         [
-            "Long sword · steel · 1.8 kg",
+            "Long sword · steel blade, leather grip · 1.8 kg",
             "Long blade, for the main hand",
             "Damage 1d8; criticals on 20–24, ×2 damage",
         ]
@@ -380,7 +380,10 @@ fn descriptions_say_base_stats_and_known_affixes_in_words() {
         None,
     );
     let unknown = text(&sword);
-    assert_eq!(unknown[0], "Magic long sword · steel · 1.8 kg");
+    assert_eq!(
+        unknown[0],
+        "Magic long sword · steel blade, leather grip · 1.8 kg"
+    );
     assert!(
         unknown
             .last()

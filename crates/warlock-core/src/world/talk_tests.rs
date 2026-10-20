@@ -198,7 +198,7 @@ name = "boulder"
 glyph = "*"
 fg = "#808080"
 class = "miscellaneous"
-material = "stone"
+materials = ["stone"]
 weight = 100000
 value = 0
 "##;
