@@ -1,4 +1,4 @@
-# Warlock — Progression: experience, levels, class tables, skill advances, stat raises, talents
+# Warlock — Progression: experience, levels, class tables, skill rolls, stat training, talents, mana, resources
 
 Design document for the owner's review (2026-10-20). Written against `origin/main` at 64b3713. Nothing here is implemented; §11 cuts it into issues.
 
@@ -6,45 +6,48 @@ Design document for the owner's review (2026-10-20). Written against `origin/mai
 
 1. Summary
 2. Research, tied to the decisions
-3. Experience and levels (curve, factors, sources, hit points, the schedule)
-4. Class level tables (all fifteen classes, 1 to 60)
+3. Experience and levels (curve, factors, sources, hit points, the schedule, mana)
+4. Class level tables (all fifteen classes, 1 to 60; the features that become resources)
 5. Skill increases at level-up
-6. Attribute growth
+6. Attribute growth (stat training by use, checked at level-up)
 7. Talents (name, picks, prerequisites, ranks, the list by tree)
 8. Coverage matrix and the policy for new systems
 9. What the player sees (messages, screens, character creation, keys, wiki)
 10. Data and code sketch (files, state, hooks, determinism)
 11. Implementation plan (issues and waves)
-12. Open questions for the owner
+12. Decisions (the owner's answers and the rest)
 
 ## 1. Summary
 
-**What the owner asked for**: a level cap of 60 on a steep curve; race and class multipliers on the XP a level needs (long-lived races and patient classes pay more, the poor choices level faster); a per-class table of what each level gives; skill increases tied to level-ups "something like ADOM"; a decision on attribute growth; and a talent system with picks at creation and at levels, prerequisite trees, stat/skill/race/vision requirements, and a list of talents that interact with the systems that exist, with a policy so no system is ever "woefully unsupported".
+**What the owner asked for**: a level cap of 60 on a steep curve; race and class multipliers on the XP a level needs (long-lived races and patient classes pay more, the poor choices level faster); a per-class table of what each level gives; skill increases tied to level-ups "something like ADOM"; a decision on attribute growth; and a talent system with picks at creation and at levels, prerequisite trees, stat/skill/race/vision requirements, and a list of talents that interact with the systems that exist, with a policy so no system is ever "woefully unsupported". This revision folds in the owner's review of the first draft (PR #220): more kills per level (3 000 to level 20, 15 000 to 60), ADOM-like skill rolls fed by marks, stats trained by use and checked at level-up with no player choice, a lucky class with an extra talent, and no banking of any level-up choice.
 
 **The proposal in one table:**
 
 | Piece | Decision |
 |---|---|
-| Curve | `threshold(n) = 20·(n−1) + 10·(n−1)² + 3·(n−1)³`, cap 60 (652 127 XP for a human warrior). A cubic (as Caves of Qud) rather than a geometric curve because creature XP grows linearly with creature level; so the *kills of your own level* a level costs grow linearly from 2 to 100, which is what "steep" should mean in a game whose XP comes from kills. §3 |
+| Curve | written in kills of your own level: `k(n) = 213·m/(m+5) + 2.85·m` (m = n−1), XP for the level = `k(n) × (5n + 10)`, summed; **3 000** such kills to level 20, **15 000** to level 60 (2 863 615 XP for a human warrior), 38 for level 2, 365 for level 60. §3 |
 | Factors | `experience` percent per race (elf 140 … half-orc 90) and class (wizard 125 … commoner 80), multiplied onto the thresholds (Angband's `expfact`; ADOM has the same idea). 72 % to 175 %. §3.3 |
 | Sources | kills and quests as today; plus small, draw-free **discovery** XP: the first kill of each creature type, the first arrival on a level. §3.4 |
-| Every level | **skill advances** (2–3 by class, +1 at In 16, humans +1) spent on trained skills with class dice (`1d4+2` known-for, `1d4`, `1d3`), a used skill rolling twice; marks stay as the by-use channel. §5 |
-| Every 4th level | **+1 to a chosen stat**, lifting its potential if it is there (no hidden cap ever refuses a pick). §6 |
-| Every 3rd level | **a talent**; 2 at creation (humans 3); class bonus picks (8 or 5) from the class's trees. 27–30 by level 60 from ~100 talents in 10 trees plus racial ones, prerequisites at most two deep (talents, stat scores, skill values, ranks, level, race, eyes). §7 |
-| Class tables | a signature at 1, abilities at 6, 12, 18, 25, 32, 40, 50 (ADOM's levels), a capstone at 60, bonus talents between: 135 entries, 27 of them active (in the one abilities menu), every one on an existing hook; casters get placeholder actives on the scrolls' shared cast code until the spell system. §4 |
-| Coverage | a `systems` tag on every talent and class ability, a closed list in data, a content test that fails when a listed system has fewer than 2 talents and 1 class ability, and a "Talents" section in the feature issue template. §8 |
-| UI | level-up messages; one `LevelUp` screen on the stack (stat → skills → talent, the one paged list, Esc banks); a **Talents** info page (page 7); a Talents step in character creation with a Random row; everything rebindable; words in the game, numbers in the generated wiki tables. §9 |
-| Data and code | `data/talents/<id>.toml`, `data/classes/<id>.toml` (directories: churning tables), settings in `talents.toml`/`experience.toml`; `Progress` in the world state, `Actor::talents`, one `TalentMods` aggregation read at the hooks the affixes already use; a new `levels` random stream for advance dice, picks as replayed actions, no level-up draw from the gameplay stream. §10 |
-| Plan | 20-odd PR-sized issues; the critical path is three (curve → talents core → screens), the rest widens in parallel waves. §11 |
+| Every level: skills | **skill rolls** (2 by class, thief and ranger 3, bard 4, humans +1, +1 per 4 Intelligence from 14), each on a trained skill of the player's choice, its die set by the skill's **marks** on ADOM's ladder (+1 … 4d5), one step up for a class's known-for skill, +1 for a class's or race's other skills; a roll consumes half the marks. Marks no longer grow skills by themselves. §5 |
+| Every level: stats | **stat training**: 24 uses on existing hooks earn marks per stat (fighting Strength, being hurt Toughness, reading Intelligence …); at each level every stat is checked with chance `marks / (marks + 20 + 3·score)`, a rise consuming the marks; the potential a soft cap (chance ÷ 4 above it, lifted by a rise). No choice, no numbers. §6 |
+| Every 3rd level | **a talent**; 2 at creation (humans 3, bards 3); class bonus picks (8 or 5) from the class's trees. 27–31 by level 60 from ~100 talents in 10 trees plus racial ones, prerequisites at most two deep (talents, stat scores, skill values, ranks, level, race, eyes). §7 |
+| Class tables | a signature at 1, abilities at 6, 12, 18, 25, 32, 40, 50 (ADOM's levels), a capstone at 60, bonus talents between: 135 entries, 27 of them active (in the one abilities menu), every one on an existing hook; casters get placeholder actives on the scrolls' shared cast code until the spell system, paid in mana. §4 |
+| Mana | the owner's new resource (its own PR): race and class `mana` (wizard 12 … warrior 0, the aristocrat oddly 7), a per-level gain beside the hit points, caster actives cost mana instead of cooldowns, spending it trains Willpower, five talents, a coverage row. §3.7 |
+| No banking | the level-up screen opens with the level and cannot be left until its rolls and picks are spent; the rules refuse every other action while a choice is due, so the CLI and replays spend levels the same way; several levels in a turn are one sequence; a level stops a long action. §9.2 |
+| Coverage | a `systems` tag on every talent and class ability, a closed list in data, a content test that fails when a listed system has fewer than 2 talents and 1 class ability (and when a tree has no prerequisite-free talent), and a "Talents" section in the feature issue template. §8 |
+| UI | level-up messages; one `LevelUp` screen on the stack (skills → talent, the one paged list); a **Talents** info page (page 7); a Talents step in character creation with a Random row; everything rebindable; words in the game, numbers in the generated wiki tables. §9 |
+| Data and code | `data/talents/<id>.toml`, `data/classes/<id>.toml` (directories: churning tables), `data/stats.toml` (stat training), settings in `talents.toml`/`experience.toml`/`skills.toml`; `Progress`, `stat_marks`, and a `levels` random stream in the world state, `Actor::talents`, one `TalentMods` aggregation read at the hooks the affixes already use; picks as replayed actions; no level-up draw from the gameplay stream. §10 |
+| Resources | the owner's alternative resources (#225, after this milestone): barbarian Rage (decays, refilled by kills, ends at zero), ranger Focus, thief Openings, monk Ki, bard Inspiration; each class feature ships in its simple form first and migrates in a follow-up PR; four class talents; a coverage row. §4.18 |
+| Plan | 28 issue-ready items in six waves; the critical path is three (curve → talents core → screens); two items wait for the mana PR, five for #225. §11 |
 
 **Key decisions, and why**
 
-1. *Steepness is measured in kills, not XP.* With linear creature XP the cubic is the curve under which each level costs more fights than the last, all the way to 60, without making 60 unreachable (about 3 000 even-level kills, 300 to level 20).
-2. *Three separate budgets that never compete*: talents, stat raises, skill advances. The research is unanimous that the disliked systems are the ones where one pool buys two things (5e's feat-or-stat) and the liked ones keep pools apart (Pathfinder 2e, ToME).
-3. *Talents are never taxes, never level-1-only, never gates on ordinary actions, never flat numbers that stop mattering*: at most two-step chains, every link worth having, scaling effects, everything available whenever its prerequisites hold. These are the four complaints ADOM's and D&D's communities repeat.
-4. *Classes differ in kind, talents in degree.* ADOM's praised part is class powers that change what you can do; its unloved part is talents that add +2. Here the class tables carry the identity (abilities), and talents the build (modifiers and a few actives).
-5. *Both skill channels, one skill.* Marks reward doing; advances reward surviving; a used skill gets the kinder die, so neither channel punishes the other, and the count of advances never exposes a hidden modifier (a score threshold instead).
-6. *Stats grow at level-up, modestly, and the potential moves with them*, so the hidden ceiling never has to say no.
+1. *Steepness is measured in kills, not XP*, and the owner set the kills: a ramp to about 160 even-level kills a level by level 10, then a slope to 365 at 60; the XP table follows from a linear creature XP guideline.
+2. *Three channels that never compete and never wait*: talents (chosen), skill rolls (chosen, dice by use), stats (by use, checked at the level). The research is unanimous that the disliked systems are the ones where one pool buys two things (5e's feat-or-stat); here nothing is traded against anything.
+3. *Use charges, the level cashes in* (ADOM's shape): skill marks set the dice and are spent by the roll; stat marks set the chance and are spent by the rise. No grind buys a point outside a level-up, and no level-up gives a point to something never used, except the trained skill's guaranteed +1.
+4. *Talents are never taxes, never level-1-only, never gates on ordinary actions, never flat numbers that stop mattering*: at most two-step chains, every link worth having, scaling effects, everything available whenever its prerequisites hold, and a prerequisite-free talent in every tree so a pick is never impossible.
+5. *Classes differ in kind, talents in degree.* ADOM's praised part is class powers that change what you can do; its unloved part is talents that add +2. Here the class tables carry the identity (abilities), and talents the build.
+6. *Nothing is banked.* A level is spent when it comes, in the rules as in the screen, so a save, a replay, and a dump all agree on what a level-7 character is.
 7. *Cooldowns are statuses.* Class actives that heal or buff are limited by a visible, time-based status (Winded, Drained), the one kind of limit compatible with "time is the penalty".
 8. *Coverage is enforced by a test, not a promise.*
 
@@ -80,34 +83,49 @@ Design document for the owner's review (2026-10-20). Written against `origin/mai
 | Today (`data/experience.toml`, `content/experience.rs`, `world/experience.rs`) | Proposed |
 |---|---|
 | `max_level = 50` | **60** |
-| `threshold(n) = linear·(n−1) + quadratic·(n−1)²` (10, 10: 24 500 at 50) | add a **`cubic`** term: `20·(n−1) + 10·(n−1)² + 3·(n−1)³` (652 127 at 60) |
+| `threshold(n) = linear·(n−1) + quadratic·(n−1)²` (10, 10: 24 500 at 50) | a curve written in **kills of your own level**, `k(n) = 213·m/(m+5) + 2.85·m`, times the creature XP guideline, summed (2 863 615 at 60; 3 000 kills to 20, 15 000 to 60) |
 | one curve for everyone | the curve times the character's **race × class experience factor** (percent) |
 | XP from the player's own kills (WoW scaling, ZD bands to level 45) and quest rewards | the same, ZD bands extended to 60; plus a small **discovery** channel (first kill of a type, first arrival on a level) |
-| `hp_level = 20` | unchanged (open question 4) |
-| a level gives hit points only | a level gives **skill advances** (every level), a **stat raise** (every 4th), a **talent** (every 3rd), and the **class's gain** at its table's levels (§4–§7) |
+| `hp_level = 20` | unchanged; a **mana** gain per level beside it, to the mana PR's `mana_level` (§3.7) |
+| a level gives hit points only | a level gives **skill rolls** (every level, dice by the skill's marks), **a training check on every stat** (every level, by its marks; no choice), a **talent** (every 3rd), and the **class's gain** at its table's levels (§4–§7); all of it spent as it comes, nothing banked |
 
 Nothing else moves: `kill_xp` keeps its formula, kills by traps and creatures keep giving nothing, and the player keeps seeing their level, XP, and the XP of the next level (`PerceptionView::own_experience`).
 
 ### 3.2 The curve
 
-**Formula**: `threshold(n) = 20·(n−1) + 10·(n−1)² + 3·(n−1)³` XP to *reach* level `n` (data: `linear = 20`, `quadratic = 10`, `cubic = 3`, integer math as today). Caves of Qud uses a pure cubic (`15·x³ + 100`); Angband and DCSS use hand-tuned geometric tables. The cubic was chosen over a geometric curve for one reason: **steepness should be measured in kills, not XP.** With creature XP growing linearly with creature level (the guideline below, which the existing creatures already follow), a cubic threshold makes the number of even-level kills a level costs grow *linearly* from about 2 at level 2 to about 100 at level 60; a geometric curve (×1.15 a level) would make it grow a thousandfold, which is not a cap anyone reaches. The last ten levels alone cost 42 % of all the XP in the game.
+**Measured in kills.** Creature XP grows linearly with creature level (the guideline below, which the existing creatures follow), so the curve is written as *how many kills of your own level a level costs*, `k(n)`, and the XP table follows from it. The owner's targets: about **3 000** such kills to reach level 20 and **15 000** to reach level 60 (ADOM's scale: a level-50 winner has killed ten to twenty thousand things).
+
+**Formula** (data `[kills]` in `experience.toml`; integer math in hundredths): with `m = n − 1`,
+
+`k(n) = plateau × m / (m + ramp) + slope × m` = `213 × m / (m + 5) + 2.85 × m`
+
+`xp_for(n) = round(k(n) × guideline(n))`, `guideline(n) = 5 × n + 10`, and `threshold(n) = Σ xp_for(2..n)`.
+
+The first term ramps quickly (38 kills for level 2, 106 for level 5, 163 for level 10) toward a plateau; the second keeps every later level costlier than the last (223 at 20, 300 at 40, 365 at 60), so the curve never flattens. A pure geometric or cubic curve cannot meet both targets (their ratio, 5, forces an early ramp and a late slope), which is why the old `linear`/`quadratic` fields are replaced by `plateau`, `ramp`, and `slope_per_100`. The level 60 threshold is 2 863 615 XP for the baseline character; the steepest (elf wizard) 5 011 326, well inside `u32`.
 
 | Level | XP today | XP proposed | XP for this level | Kills of your own level for this level | Even-level kills so far |
 |---:|---:|---:|---:|---:|---:|
-| 2 | 20 | 33 | 33 | 1.6 | 2 |
-| 3 | 60 | 104 | 71 | 2.8 | 4 |
-| 5 | 200 | 432 | 201 | 5.7 | 14 |
-| 8 | 560 | 1 659 | 531 | 10.6 | 42 |
-| 10 | 900 | 3 177 | 841 | 14.0 | 67 |
-| 15 | 2 100 | 10 472 | 1 931 | 22.7 | 160 |
-| 20 | 3 800 | 24 567 | 3 471 | 31.6 | 304 |
-| 25 | 6 000 | 47 712 | 5 461 | 40.5 | 486 |
-| 30 | 8 700 | 82 157 | 7 901 | 49.4 | 717 |
-| 40 | 15 600 | 193 947 | 14 131 | 67.3 | 1 310 |
-| 50 | 24 500 | 377 937 | 22 161 | 85.2 | 2 080 |
-| 60 | — | 652 127 | 31 991 | 103.2 | 3 032 |
+| 2 | 20 | 767 | 767 | 38 | 38 |
+| 3 | 60 | 2 431 | 1 664 | 67 | 105 |
+| 4 | 120 | 5 084 | 2 653 | 88 | 193 |
+| 5 | 200 | 8 797 | 3 713 | 106 | 299 |
+| 6 | 300 | 13 628 | 4 831 | 121 | 420 |
+| 8 | 560 | 26 840 | 7 212 | 144 | 698 |
+| 10 | 900 | 45 064 | 9 758 | 163 | 1 014 |
+| 12 | 1 320 | 68 601 | 12 450 | 178 | 1 363 |
+| 15 | 2 100 | 114 464 | 16 739 | 197 | 1 935 |
+| 18 | 3 060 | 173 769 | 21 314 | 213 | 2 559 |
+| 20 | 3 800 | 221 186 | 24 517 | 223 | 3 000 |
+| 25 | 6 000 | 369 068 | 33 048 | 245 | 4 181 |
+| 30 | 8 700 | 561 820 | 42 316 | 264 | 5 465 |
+| 35 | 11 900 | 803 095 | 52 311 | 283 | 6 843 |
+| 40 | 15 600 | 1 096 517 | 63 029 | 300 | 8 309 |
+| 45 | 19 800 | 1 445 689 | 74 467 | 317 | 9 860 |
+| 50 | 24 500 | 1 854 206 | 86 623 | 333 | 11 493 |
+| 55 | 29 700 | 2 325 653 | 99 496 | 349 | 13 207 |
+| 60 | — | 2 863 615 | 113 085 | 365 | 15 000 |
 
-("Kills of your own level" assumes the creature XP guideline below; a kill of a creature above you is worth up to 20 % more, below you less, grey ones nothing, as today. Discovery and quests shorten the early levels most.)
+("Kills of your own level" is the idealised count: a kill above you is worth up to 20 % more, below you less, grey ones nothing, as today, so real kill counts run higher. The first levels are shortened in practice by discovery (§3.4: every new creature type pays its XP once more) and by quests; a level-1 character who kills the hub quest's three rats and a few new things is a third of the way to level 2.)
 
 **Creature XP guideline** (for new creature data; the wiki shows it, a content test warns past ×3 either way): `xp ≈ 5 × level + 10`. The existing creatures sit on it already: deer 2 and bat 3 (level 1, vermin), rat 5, cave beetle 8 (2), kobold 15 (2), kobold archer 25 (3), kobold shaman 40 (4), shopkeeper 400 (18, a deliberate outlier: 100 on the guideline). No change to them.
 
@@ -148,13 +166,13 @@ Range: a half-orc commoner needs 72 % of the baseline, an elf wizard 175 %.
 
 | Character | Lv 2 | Lv 10 | Lv 20 | Lv 30 | Lv 40 | Lv 50 | Lv 60 |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Human warrior (100 %) | 33 | 3 177 | 24 567 | 82 157 | 193 947 | 377 937 | 652 127 |
-| Halfling thief (90 %) | 30 | 2 867 | 22 172 | 74 147 | 175 037 | 341 088 | 588 545 |
-| Dwarf priest (132 %) | 44 | 4 202 | 32 490 | 108 653 | 256 495 | 499 822 | 862 438 |
-| Elf wizard (175 %) | 58 | 5 560 | 42 992 | 143 775 | 339 407 | 661 390 | 1 141 222 |
-| Half-orc commoner (72 %) | 24 | 2 287 | 17 688 | 59 153 | 139 642 | 272 115 | 469 531 |
+| Human warrior (100 %) | 767 | 45 064 | 221 186 | 561 820 | 1 096 517 | 1 854 206 | 2 863 615 |
+| Halfling thief (90 %) | 692 | 40 670 | 199 620 | 507 043 | 989 607 | 1 673 421 | 2 584 413 |
+| Dwarf priest (132 %) | 1 014 | 59 597 | 292 518 | 743 007 | 1 450 144 | 2 452 187 | 3 787 131 |
+| Elf wizard (175 %) | 1 342 | 78 862 | 387 076 | 983 185 | 1 918 905 | 3 244 861 | 5 011 326 |
+| Half-orc commoner (72 %) | 552 | 32 446 | 159 254 | 404 510 | 789 492 | 1 335 028 | 2 061 803 |
 
-What the player sees: their XP and the next threshold as today (`XP 85 / 120`); the character creation step for the race and the class says "Levels come slowly" / "quickly" in words, and the wiki's Races and Classes tables show the percent (a rule written in data, like stat adjustments).
+What the player sees: their XP and the next threshold as today (`XP 85 / 767`); the character creation step for the race and the class says "Levels come slowly" / "quickly" in words, and the wiki's Races and Classes tables show the percent (a rule written in data, like stat adjustments).
 
 ### 3.4 Sources of XP
 
@@ -174,15 +192,34 @@ Quest XP and discovery XP are *not* scaled by the race × class factor (the fact
 
 ### 3.5 Hit points per level
 
-Unchanged: each level up to `hp_level` (20) adds `max(1, class hp ÷ 2 + the Toughness modifier)`, so pools stay linear and a level-60 character's strength is in talents, skills, and stats, not in a runaway pool. Toughness raised at level 4, 8, … (§6) feeds this through `raised_stats` as it does for items. The Vigour talents (Hardy, §7) are the way to buy more hit points, and they scale with level so the complaint that a flat +3 means nothing late (ADOM's Hardy) does not apply. Open question 4 asks whether `hp_level` should follow the cap to 30.
+Unchanged: each level up to `hp_level` (20) adds `max(1, class hp ÷ 2 + the Toughness modifier)`, so pools stay linear and a level-60 character's strength is in talents, skills, and stats, not in a runaway pool. Toughness trained up by use (§6) feeds this through `raised_stats` as it does for items; mana grows beside hit points (§3.7). The Vigour talents (Hardy, §7) are the way to buy more hit points, and they scale with level so the complaint that a flat +3 means nothing late (ADOM's Hardy) does not apply. `hp_level` stays at 20 (decided, §12).
 
 ### 3.6 What a level gives, all together
 
-| Every level | Every 3rd (3, 6, …, 60) | Every 4th (4, 8, …, 60) | Class table levels |
-|---|---|---|---|
-| hit points (to 20); **skill advances** (§5) | a **talent** pick (§7): 20 by level 60, plus 2 at creation (humans 3) | a **stat raise** (§6): 15 by level 60 | a class ability, a bonus talent from named trees, or a weapon skill rank (§4) |
+| Every level | Every 3rd (3, 6, …, 60) | Class table levels |
+|---|---|---|
+| hit points (to 20); **mana** (to the mana PR's `mana_level`, from the class's and the race's `mana` and the mental stats, as hit points come from Toughness: §3.7); **skill rolls**, spent at once (§5); **a training check on every stat**, no choice (§6) | a **talent** pick (§7): 20 by level 60, plus 2 at creation (humans and bards 3, a human bard 4) | a class ability, or a bonus talent from named trees (§4) |
 
-The schedule is data (`[levels] talent_every = 3`, `stat_every = 4` in `data/experience.toml`), so it can be tuned without code. A level never passes silently: every level gives at least skill advances; 30 of the 60 give a talent or a stat raise, and the class tables fill most of the rest.
+The schedule is data (`[levels] talent_every = 3` in `data/experience.toml`), so it can be tuned without code. Every level is spent on the spot (§9.2: the level-up screen must be completed; nothing is banked), and every level gives at least its skill rolls and its stat checks; 20 give a talent, and the class tables fill most of the rest.
+
+### 3.7 Mana
+
+The owner has asked for **mana** as a resource with regeneration rules, built in its own PR (the mana PR): a current value on `Actor`, a maximum derived like `max_hp` from the race's and the class's `mana` in data plus a gain per level up to a `mana_level`, driven by the mental stats; one pace hook like `World::healing_rate` inside `World::live`; and hooks in hunger, statuses, diseases, special rooms, and the magic item affixes. This design gives it its place in progression and leaves its formula to that PR:
+
+| Race | `mana` | Class | `mana` | Class | `mana` |
+|---|---:|---|---:|---|---:|
+| Elf | 3 | Wizard | **12** | Paladin | 3 |
+| Gnome | 3 | Witch | **10** | Monk | 4 |
+| Half-elf | 2 | Priest | **9** | Ranger | 2 |
+| Human | 1 | Druid | **9** | Thief | 1 |
+| Halfling | 1 | Bard | 5 | Warrior | 0 |
+| Dwarf | 0 | **Aristocrat** | **7** (the oddly high one: idle minds, old blood) | Barbarian | 0 |
+| Half-orc | 0 | Merchant | 2 | Commoner, Craftsperson | 1 |
+
+- **Per level**: as hit points gain `max(1, class hp ÷ 2 + the Toughness modifier)` up to `hp_level`, mana gains `max(0, class mana ÷ 2 + the better of the Intelligence and Willpower modifiers)` up to `mana_level` (the mana PR's; 30 is the suggestion, so casters keep growing after hit points stop), through `World::level_hp`'s twin in `level_up`. A warrior with class mana 0 and In 10 gains none.
+- **Class actives that cast** (the caster placeholders of §4 and the paladin's, bard's, and priest's gifts) **cost mana instead of a cooldown status**: mana comes back with time, so "time is the penalty" holds without a second timer; a cast with too little mana is `Unavailable::NoMana` ("not enough mana"), the cost is in the ability's data (`mana = 6`), and the martial actives (second wind, rage, smite, whirlwind, volley, quivering palm) keep their statuses, since they are not magic. §4's tables say which.
+- **Stat training**: spending mana is a `cast` use that trains **Willpower** (§6.2); Intelligence already trains from reading and identifying.
+- **Talents**: five in the Scholar tree on the mana PR's hooks (§7.5), and mana is a system in the coverage list (§8).
 
 ## 4. Class level tables
 
@@ -198,14 +235,14 @@ ADOM gives every class seven fixed powers at levels 6, 12, 18, 25, 32, 40, and 5
 | 6, 12, 18, 25, 32, 40, 50 | class ability | | |
 | 60 | capstone | | |
 
-Plus the shared skeleton (§3.6) for everyone: skill advances every level (the class decides how many, §5), a talent every third level, a stat raise every fourth. A level not in a class's table gives the shared gains only.
+Plus the shared skeleton (§3.6) for everyone: skill rolls every level (the class decides how many, §5), a training check on every stat every level (§6), a talent every third level. A level not in a class's table gives the shared gains only.
 
 **Rules for the entries.** Every entry below names what system it reads or changes (its *hook*), so it can be built now; the few that need a system still to come say so (`#151` damage types; `spell` for the caster placeholders, see below; `action` for a new small action, §9). Active abilities (**A**) register in `warlock_core::ability` under `Source::Class`, with an action of their own (replay text `use:ID[:DIR|:X,Y]`), an `ActionKind` cost, and no default key; passive ones (**P**) are rules read at their hook. Numbers are the first guess, kept in the class's data file (§10) to be tuned by play.
 
 **Building blocks** most entries stand on (each is one PR in §11):
 
 - **B1 Buff and cooldown statuses.** `data/status.toml` grows optional combat fields a status applies while it lasts: `to_hit`, `damage` (as the stances have), `dodge`, `parry`, `cost` (percent of every action's price: a slow), `regen` (exists), `blocks = ["read"]` (actions refused while it lasts), and `follows = "exhausted"` (a status given as this one ends). `penalty` already takes positive numbers (−10 to 10), so a status may *raise* scores. An ability that gives the player a status is `World::afflict(player, status, 1, player)`; a **cooldown** is a status (`winded`, `drained`, `spent`, `hoarse`, `exhausted`) with an `eases` and no tick, during which the ability is `Unavailable::While(status)` ("you are winded") — a visible, honest, time-based limit, which keeps the owner's rule: time is the only price, and nothing counts uses. Statuses on creatures exist already (`Actor::effects`), so hexes work the same way.
-- **B2 The shared cast code** (`World::cast_burst`, `World::cast_bolt` with `Caster::Actor`) that scrolls use: a class ability may carry a burst or a bolt in data exactly as a scroll's `read` table does, aimed by the targeting UI. These are **placeholders for casters** until the spell system (magic is out of the first phase); they let the four caster classes have live tables now, and the spell system replaces them (open question 6).
+- **B2 The shared cast code** (`World::cast_burst`, `World::cast_bolt` with `Caster::Actor`) that scrolls use: a class ability may carry a burst or a bolt in data exactly as a scroll's `read` table does, aimed by the targeting UI. These are **placeholders for casters** until the spell system (magic is out of the first phase); they let the four caster classes have live tables now, and the spell system replaces them (decided, §12). They **cost mana** (§3.7, the mana PR) rather than a cooldown status: mana returns with time, so the one timer is enough; a cast without the mana is `Unavailable::NoMana`. The martial actives keep their statuses (and some become resources with #225, §4.18).
 - **B3 Free blows.** `World::second_blow` becomes the one place every extra blow is decided: the off hand's, Sword and Board's bash, and now a *cleave* (after a melee kill, at another adjacent hostile), a *riposte* (after a miss credited to Parry, `why_missed`), and an *opportunist's* blow (after a creature's fleeing step, `World::flees`). Each is a normal attack with its own events and marks.
 - **B4 Effective eyes.** `WorldState::vision` stays the base profile; `World::eyes()` applies talent and class changes (threshold percent, darkvision radius, `sees_uv`) and is what perception and creature sight read. Creatures keep their types' profiles.
 - **B5 Defence by attack kind.** `Actor::defence` takes the attack's kind, so a bonus can count against missiles only (`deflect_missiles`).
@@ -214,7 +251,7 @@ Plus the shared skeleton (§3.6) for everyone: skill advances every level (the c
 
 ### 4.2 Warrior
 
-Bonus talents (Weaponcraft, Guard) at 4, 10, 16, 22, 28, 34, 46, 58. Skill advances 2 a level.
+Bonus talents (Weaponcraft, Guard) at 4, 10, 16, 22, 28, 34, 46, 58. Skill rolls 2.
 
 | Lv | id | Name | A/P | Effect | Hook |
 |---:|---|---|---|---|---|
@@ -230,27 +267,27 @@ Bonus talents (Weaponcraft, Guard) at 4, 10, 16, 22, 28, 34, 46, 58. Skill advan
 
 ### 4.3 Barbarian
 
-Bonus talents (Might, Vigour) at 10, 20, 30, 45, 55. Skill advances 2.
+Bonus talents (Might, Vigour) at 10, 20, 30, 45, 55. Skill rolls 2.
 
 | Lv | id | Name | A/P | Effect | Hook |
 |---:|---|---|---|---|---|
-| 1 | `rage` | Rage | A | Raging for 5 min: St +2, To +2, In −2, cannot read; then Exhausted 10 min (St −1), during which no rage | B1 (`penalty` positive, `blocks`, `follows`); cost `wait` |
+| 1 | `rage` | Rage (#225) | A | Raging for 5 min: St +2, To +2, In −2, cannot read; then Exhausted 10 min (St −1), during which no rage | B1 (`penalty` positive, `blocks`, `follows`); cost `wait` |
 | 6 | `thick_hide` | Thick hide | P | Natural +2 while wearing no body armour | `Actor::defence` |
 | 12 | `fast_movement` | Fast movement | P | steps 10 % cheaper while Unburdened and in no body armour | `World::step_price` |
 | 18 | `brutal_critical` | Brutal critical | P | critical multiplier +1 with two-handed weapons | `Profile` |
 | 25 | `hardened` | Hardened | P | from now on every level adds hit points again (as levels up to 20 do), +1 | `World::level_hp`, `hp_level` per class |
 | 32 | `mighty_thews` | Mighty thews | P | Strength +2 and Toughness +2, scores and potentials (ADOM's 32) | `Stats` |
-| 40 | `blood_frenzy` | Blood frenzy | P | a kill while raging extends the rage by a minute | `Effects::add` refresh on `Event::Died` |
-| 50 | `mighty_rage` | Mighty rage | P | Raging gives St +4, To +4; Exhausted lasts 5 min | data |
-| 60 | `unstoppable` | Unstoppable | P | while raging, bleeding and poison tick nothing, and once per rage a blow cannot take your last hit point | `World::live`, `hurt` |
+| 40 | `blood_frenzy` | Blood frenzy (#225) | P | a kill while raging extends the rage by a minute | `Effects::add` refresh on `Event::Died` |
+| 50 | `mighty_rage` | Mighty rage (#225) | P | Raging gives St +4, To +4; Exhausted lasts 5 min | data |
+| 60 | `unstoppable` | Unstoppable (#225) | P | while raging, bleeding and poison tick nothing, and once per rage a blow cannot take your last hit point | `World::live`, `hurt` |
 
 ### 4.4 Paladin
 
-Bonus talents (Guard, Vigour) at 10, 20, 30, 45, 55. Skill advances 2.
+Bonus talents (Guard, Vigour) at 10, 20, 30, 45, 55. Skill rolls 2.
 
 | Lv | id | Name | A/P | Effect | Hook |
 |---:|---|---|---|---|---|
-| 1 | `lay_on_hands` | Lay on hands | A | regain 2 HP per level; Drained for 1 h | B1; cost `cast` |
+| 1 | `lay_on_hands` | Lay on hands | A | regain 2 HP per level; costs 6 mana | mana (§3.7); cost `cast` |
 | 6 | `divine_grace` | Divine grace | P | +2 on disease checks; poison eases twice as fast | `check` modifier, `Effect::until_eases` |
 | 12 | `smite` | Smite | A | a melee blow in a direction with +1d6 damage per 10 levels (at least 1d6); Spent for 5 min | `attack_with` with an extra `Profile` die; cost `melee` |
 | 18 | `divine_health` | Divine health | P | immune to diseases | `World::expose` refuses |
@@ -258,43 +295,43 @@ Bonus talents (Guard, Vigour) at 10, 20, 30, 45, 55. Skill advances 2.
 | 32 | `steadfast` | Steadfast | P | Burdened costs nothing (as a dwarf's) | `Load::penalty` |
 | 40 | `holy_radiance` | Holy radiance | A | a toggle: you shed a faint light (`item_glow`), seen by all; off again from the menu | worn-light hook (`LightCache` carried source) |
 | 50 | `bulwark` | Bulwark | P | Protection +2 | protection sum |
-| 60 | `avatar` | Avatar | P | Lay on hands heals fully and cures every status and disease; Drained halved | data, `World::cure` |
+| 60 | `avatar` | Avatar | P | Lay on hands heals fully and cures every status and disease, for half the mana | data, `World::cure` |
 
 ### 4.5 Monk
 
-Bonus talents (Finesse, Vigour) at 10, 20, 30, 45, 55. Skill advances 2.
+Bonus talents (Finesse, Vigour) at 10, 20, 30, 45, 55. Skill rolls 2.
 
 | Lv | id | Name | A/P | Effect | Hook |
 |---:|---|---|---|---|---|
 | 1 | `martial_arts` | Martial arts | P | bare hands 1d6 (kicks too) | bare-hands dice in `World::attack`/`player_kicks` |
 | 6 | `fleet` | Fleet | P | steps 10 % cheaper in no body armour and with no shield | `World::step_price` |
 | 12 | `deflect_missiles` | Deflect missiles | P | Dodge +2 against shots, throws, and trap arrows | B5 |
-| 18 | `flurry` | Flurry | P | unarmed attacks strike twice (the second at −2) | B3 |
+| 18 | `flurry` | Flurry (#225) | P | unarmed attacks strike twice (the second at −2) | B3 |
 | 25 | `still_mind` | Still mind | P | +2 on Willpower checks; status penalties to In and Wi never apply | `check`, `effective_stats` |
 | 32 | `purity_of_body` | Purity of body | P | immune to diseases | `World::expose` |
 | 40 | `diamond_soul` | Diamond soul | P | Deflection +2 | `Actor::defence` |
-| 50 | `quivering_palm` | Quivering palm | A | an unarmed blow in a direction; a hit that wounds makes the target bleed 3 degrees; Spent 10 min | `attack_with` + `afflict`; cost `melee` |
+| 50 | `quivering_palm` | Quivering palm (#225) | A | an unarmed blow in a direction; a hit that wounds makes the target bleed 3 degrees; Spent 10 min | `attack_with` + `afflict`; cost `melee` |
 | 60 | `perfect_self` | Perfect self | P | bare hands 1d8; unarmed threat +1 and critical multiplier +1 | `Profile` |
 
 ### 4.6 Ranger
 
-Bonus talents (Weaponcraft, Wayfarer) at 10, 20, 30, 45, 55. Skill advances 3.
+Bonus talents (Weaponcraft, Wayfarer) at 10, 20, 30, 45, 55. Skill rolls 3.
 
 | Lv | id | Name | A/P | Effect | Hook |
 |---:|---|---|---|---|---|
 | 1 | `favoured_prey` | Favoured prey | P | +1 to hit and +2 damage against the creature type you have killed most (ties: the first reached) | B6, `Profile` |
 | 6 | `tracker` | Tracker | P | you hear sounds 3 fainter, and place every sound you hear exactly | `Actor::hearing`, `PerceptionView::sounds` |
-| 12 | `rapid_shot` | Rapid shot | P | shots 10 % cheaper | `World::attack_price` |
+| 12 | `rapid_shot` | Rapid shot (#225) | P | shots 10 % cheaper | `World::attack_price` |
 | 18 | `woodland_stride` | Woodland stride | P | forest floor, bushes, reeds, tall grass, and marsh cost you as plain ground (no extra time; their noise stays) | `World::step_price` |
 | 25 | `swift_tracker` | Swift tracker | P | overworld journeys 20 % quicker | `World::step_price` |
 | 32 | `evasion` | Evasion | P | bursts and bolts (traps, scrolls, spells) do you half damage | `cast_burst`/`cast_bolt` victim hook |
 | 40 | `camouflage` | Camouflage | P | under the open sky your footsteps are half as loud | `noise::noise` (`is_sky_exposed`) |
-| 50 | `volley` | Volley | A | three shots at the target for the price of one (three missiles leave the stack) | `shoot.rs::loose` ×3; cost `shoot` |
+| 50 | `volley` | Volley (#225) | A | three shots at the target for the price of one (three missiles leave the stack) | `shoot.rs::loose` ×3; cost `shoot` |
 | 60 | `master_hunter` | Master hunter | P | bows and crossbows threat +1; favoured prey +2 to hit, +4 damage | `Profile` |
 
 ### 4.7 Thief
 
-Bonus talents (Shadow, Finesse, Delver) at 4, 10, 16, 22, 28, 34, 46, 58. Skill advances 3.
+Bonus talents (Shadow, Finesse, Delver) at 4, 10, 16, 22, 28, 34, 46, 58. Skill rolls 3.
 
 | Lv | id | Name | A/P | Effect | Hook |
 |---:|---|---|---|---|---|
@@ -303,36 +340,36 @@ Bonus talents (Shadow, Finesse, Delver) at 4, 10, 16, 22, 28, 34, 46, 58. Skill 
 | 12 | `pick_lock` | Pick lock | A | open a locked door without a key: a Dexterity check plus Open lock against the lock's difficulty (data on locks, default 14); it takes `unlock` whatever comes of it | `action` pick; `door.rs` |
 | 18 | `evasion` | Evasion | P | as the ranger's | cast hooks |
 | 25 | `uncanny_dodge` | Uncanny dodge | P | the burden's cap on Dexterity in Defence is 2 higher at every level | `Burden::max_dex` |
-| 32 | `improved_sneak_attack` | Improved sneak attack | P | sneak attack +2d6 (3d6 in all) | `Profile` |
+| 32 | `improved_sneak_attack` | Improved sneak attack (#225) | P | sneak attack +2d6 (3d6 in all) | `Profile` |
 | 40 | `light_fingers` | Light fingers | A | **Steal** (a direction): take one stack from a creature that is not hostile; a Dexterity check plus Steal against its Willpower check; caught, it turns on you (as a robbed keeper does) | `action` steal; `faction_override` |
 | 50 | `hide_in_plain_sight` | Hide in plain sight | P | your footsteps are silent while Unburdened, your attacks half as loud | `noise::noise` |
-| 60 | `master_thief` | Master thief | P | sneak attacks threaten a critical from a natural 20 | `Profile` |
+| 60 | `master_thief` | Master thief (#225) | P | sneak attacks threaten a critical from a natural 20 | `Profile` |
 
 ### 4.8 Bard
 
-Bonus talents (Scholar, Delver) at 10, 20, 30, 45, 55. Skill advances 3 (ADOM: bards get more).
+Bonus talents (Scholar, Delver) at 10, 20, 30, 45, 55. Skill rolls 4 (ADOM: bards get more); one extra talent at creation.
 
 | Lv | id | Name | A/P | Effect | Hook |
 |---:|---|---|---|---|---|
 | 1 | `lore` | Lore | P | a magic item you have carried for a day is identified | `World::identify` from `perceive` (as `rot_away` runs) |
-| 6 | `wide_learning` | Wide learning | P | +1 skill advance every level | §5 advances |
+| 6 | `wide_learning` | Wide learning | P | +1 skill roll every level (the bard's 4 become 5) | §5 rolls |
 | 12 | `song_of_rest` | Song of rest | P | resting heals half again as fast | `World::healing_rate` while `resting` |
-| 18 | `inspire` | Inspire | A | Inspired for 5 min: +1 to hit, Dodge +1; then Hoarse 10 min (no song) | B1; cost `chat` |
+| 18 | `inspire` | Inspire (#225) | A | Inspired for 5 min: +1 to hit, Dodge +1; costs 3 mana (or 3 Inspiration, §4.18) | B1, mana; cost `chat` |
 | 25 | `jack_of_all_trades` | Jack of all trades | P | every trained skill counts 5 higher | `Actor::skill_effect` |
 | 32 | `throw_voice` | Throw your voice | A | a voice (loudness 50) sounds at a cell you see within 6: creatures that hear it go and look there | `action` throw_voice; `World::sound_at`, the AI's noise step |
 | 40 | `silver_tongue` | Silver tongue | P | shop favour +15 %, quest gold ×1.25 | `world::favour`, quest reward |
 | 50 | `legend` | Legend | P | quest XP ×1.5; Presence +1 | quest reward, `Stats` |
-| 60 | `virtuoso` | Virtuoso | P | Inspired gives +2/+2 for 10 min and never leaves you Hoarse | data |
+| 60 | `virtuoso` | Virtuoso | P | Inspired gives +2/+2 for 10 min and costs no mana | data |
 
 ### 4.9 Priest
 
-Bonus talents (Vigour, Grit) at 10, 20, 30, 45, 55. Skill advances 2.
+Bonus talents (Vigour, Grit) at 10, 20, 30, 45, 55. Skill rolls 2.
 
 | Lv | id | Name | A/P | Effect | Hook |
 |---:|---|---|---|---|---|
-| 1 | `blessing` | Blessing | A | Blessed for 10 min: +1 to hit, Wi +1; Spent 10 min | B1; cost `cast` |
-| 6 | `cure_wounds` | Cure wounds | A | regain 1d8 + 1 per 2 levels; Drained 5 min | B1; cost `cast` ×2 |
-| 12 | `remove_disease` | Remove disease | A | cures every disease and poison; Drained a day | `World::cure(remove_disease)`, status end |
+| 1 | `blessing` | Blessing | A | Blessed for 10 min: +1 to hit, Wi +1; costs 2 mana | B1, mana; cost `cast` |
+| 6 | `cure_wounds` | Cure wounds | A | regain 1d8 + 1 per 2 levels; costs 4 mana | mana; cost `cast` ×2 |
+| 12 | `remove_disease` | Remove disease | A | cures every disease and poison; costs 10 mana | `World::cure(remove_disease)`, status end, mana |
 | 18 | `shield_of_faith` | Shield of faith | P | Deflection +1 | `Actor::defence` |
 | 25 | `purify` | Purify | P | rotten food neither sickens you nor exposes you to disease | `eat.rs::finish` |
 | 32 | `divine_health` | Divine health | P | immune to diseases | `World::expose` |
@@ -342,7 +379,7 @@ Bonus talents (Vigour, Grit) at 10, 20, 30, 45, 55. Skill advances 2.
 
 ### 4.10 Druid
 
-Bonus talents (Wayfarer, Vigour) at 10, 20, 30, 45, 55. Skill advances 2.
+Bonus talents (Wayfarer, Vigour) at 10, 20, 30, 45, 55. Skill rolls 2.
 
 | Lv | id | Name | A/P | Effect | Hook |
 |---:|---|---|---|---|---|
@@ -351,46 +388,46 @@ Bonus talents (Wayfarer, Vigour) at 10, 20, 30, 45, 55. Skill advances 2.
 | 12 | `weather_sense` | Weather sense | P | you know the weather of the next three hours: the status bar's weather segment shows the coming change ("rain soon") | perception, `weather::weather_at(now + 3 h)` |
 | 18 | `natures_ward` | Nature's ward | P | wading never gives you a disease; poison eases twice as fast | `World::wade`, status easing |
 | 25 | `winters_friend` | Winter's friend | P | ice holds you as if you carried nothing; a plunge never hurts; climbing out costs nothing | `World::tread`, `after_tread`, `tread_price` |
-| 32 | `call_lightning` | Call lightning | A | under the open sky: a bolt (4d6, 8 cells, a thunderclap) at a target; Drained 10 min | B2 `cast_bolt`; `spell` placeholder; cost `cast` |
+| 32 | `call_lightning` | Call lightning | A | under the open sky: a bolt (4d6, 8 cells, a thunderclap) at a target; costs 8 mana | B2 `cast_bolt`; `spell` placeholder; mana; cost `cast` |
 | 40 | `sun_and_moon` | Sun and moon | P | under the sun hit points come back half again as fast; at night your overworld sight is one cell longer | `healing_rate` (`sun().is_up`), `daylight::overworld_sight` |
-| 50 | `flame_and_frost` | Flame and frost | A | two abilities: a fireball burst (3d6, radius 2, breaks walls, melts ice) or a frost burst (2d6, freezes water); Drained 10 min | B2 `cast_burst`; `spell` placeholder |
+| 50 | `flame_and_frost` | Flame and frost | A | two abilities: a fireball burst (3d6, radius 2, breaks walls, melts ice) or a frost burst (2d6, freezes water); 10 mana each | B2 `cast_burst`; `spell` placeholder; mana |
 | 60 | `timeless_body` | Timeless body | P | hunger burns half as fast; diseases never progress (they still show until shaken off or cured) | `hunger`, `disease_turn` |
 
 ### 4.11 Wizard
 
-Bonus talents (Scholar) at 10, 20, 30, 45, 55. Skill advances 2. The actives are **placeholders** on the shared cast code until the spell system exists (open question 6).
+Bonus talents (Scholar) at 10, 20, 30, 45, 55. Skill rolls 2. The actives are **placeholders** on the shared cast code until the spell system exists (decided, §12), paid in mana (§3.7).
 
 | Lv | id | Name | A/P | Effect | Hook |
 |---:|---|---|---|---|---|
 | 1 | `scroll_adept` | Scroll adept | P | reading costs half; your spell scrolls add 1 to every die | `read` price, `cast_*` |
 | 6 | `arcane_lore` | Arcane lore | P | a magic item you have carried for an hour is identified | identify hook |
 | 12 | `spell_recall` | Spell recall | P | one read in four, the scroll is not used up | `read.rs` (one gameplay draw per read) |
-| 18 | `arcane_bolt` | Arcane bolt | A | a bolt (2d6, 6 cells) at a target; Drained 2 min | B2; `spell`; cost `cast` |
+| 18 | `arcane_bolt` | Arcane bolt | A | a bolt (2d6, 6 cells) at a target; costs 3 mana | B2; `spell`; mana; cost `cast` |
 | 25 | `mage_armour` | Mage armour | P | Deflection +2 while wearing no body armour | `Actor::defence` |
 | 32 | `empower` | Empower | P | your spell scrolls and your bolts roll one die more | `cast_*` |
-| 40 | `fire_burst` | Fire burst | A | the fireball's burst (3d6, radius 2, blast, heat) at a target; Drained 10 min | B2; `spell` |
-| 50 | `arcane_mastery` | Arcane mastery | P | Drained eases twice as fast | status easing |
-| 60 | `archmage` | Archmage | P | your spells add 2 to every die and cost half | data |
+| 40 | `fire_burst` | Fire burst | A | the fireball's burst (3d6, radius 2, blast, heat) at a target; costs 9 mana | B2; `spell`; mana |
+| 50 | `arcane_mastery` | Arcane mastery | P | mana comes back twice as fast | `World::mana_rate` (the mana PR) |
+| 60 | `archmage` | Archmage | P | your spells add 2 to every die and cost half the mana | data |
 
 ### 4.12 Witch
 
-Bonus talents (Scholar, Grit) at 10, 20, 30, 45, 55. Skill advances 2.
+Bonus talents (Scholar, Grit) at 10, 20, 30, 45, 55. Skill rolls 2.
 
 | Lv | id | Name | A/P | Effect | Hook |
 |---:|---|---|---|---|---|
 | 1 | `herb_lore` | Herb lore | P | rotten food harms you half as much; a corpse's own harm (`on_eat` harm) never; the angelica root heals 1d6 too | `eat.rs::finish` |
-| 6 | `evil_eye` | Evil eye | A | Hexed for 1 min on a creature you see in a direction: −2 to hit; Spent 1 min | B1 on creatures; cost `cast` |
+| 6 | `evil_eye` | Evil eye | A | Hexed for 1 min on a creature you see in a direction: −2 to hit; costs 2 mana | B1 on creatures; mana; cost `cast` |
 | 12 | `poison_lore` | Poison lore | P | your Poisoned eases twice as fast; +2 damage against poisoned targets | status, `Profile` |
-| 18 | `hex_of_weakness` | Hex of weakness | A | Weakened 2 min on the target: St −2, Dx −2; Spent 2 min | B1 |
+| 18 | `hex_of_weakness` | Hex of weakness | A | Weakened 2 min on the target: St −2, Dx −2; costs 3 mana | B1, mana |
 | 25 | `second_sight` | Second sight | P | you notice hidden things in passing (as if trained in Spot), +2; secret doors 2 easier | `search.rs` |
-| 32 | `curse_of_sloth` | Curse of sloth | A | Slowed 1 min on the target: its actions cost half again as much; Spent 2 min | B1 (`cost` field) |
-| 40 | `blight` | Blight | A | a burst (2d6, radius 2) that also poisons 2 degrees everyone it reaches; Drained 10 min (poison-typed with #151) | B2 + `afflict`; `spell` |
+| 32 | `curse_of_sloth` | Curse of sloth | A | Slowed 1 min on the target: its actions cost half again as much; costs 4 mana | B1 (`cost` field), mana |
+| 40 | `blight` | Blight | A | a burst (2d6, radius 2) that also poisons 2 degrees everyone it reaches; costs 8 mana (poison-typed with #151) | B2 + `afflict`; `spell`; mana |
 | 50 | `cauldron` | Cauldron | P | corpses never harm you; their stat chances are doubled; a fresh corpse heals 1d4 | `eat.rs` |
 | 60 | `hags_bargain` | Hag's bargain | P | once in a run, a death leaves you at 1 hit point, Drained a day, and Presence −2 for good | `hurt`/`dies` |
 
 ### 4.13 Aristocrat
 
-Bonus talents (Weaponcraft, Delver) at 10, 20, 30, 45, 55. Skill advances 2.
+Bonus talents (Weaponcraft, Delver) at 10, 20, 30, 45, 55. Skill rolls 2.
 
 | Lv | id | Name | A/P | Effect | Hook |
 |---:|---|---|---|---|---|
@@ -406,7 +443,7 @@ Bonus talents (Weaponcraft, Delver) at 10, 20, 30, 45, 55. Skill advances 2.
 
 ### 4.14 Commoner
 
-Bonus talents (**any tree**: the commoner's gift is versatility) at 10, 20, 30, 45, 55. Skill advances 2.
+Bonus talents (**any tree**: the commoner's gift is versatility) at 10, 20, 30, 45, 55. Skill rolls 2.
 
 | Lv | id | Name | A/P | Effect | Hook |
 |---:|---|---|---|---|---|
@@ -422,7 +459,7 @@ Bonus talents (**any tree**: the commoner's gift is versatility) at 10, 20, 30, 
 
 ### 4.15 Craftsperson
 
-Bonus talents (Weaponcraft, Guard, Delver) at 10, 20, 30, 45, 55. Skill advances 2.
+Bonus talents (Weaponcraft, Guard, Delver) at 10, 20, 30, 45, 55. Skill rolls 2.
 
 | Lv | id | Name | A/P | Effect | Hook |
 |---:|---|---|---|---|---|
@@ -438,7 +475,7 @@ Bonus talents (Weaponcraft, Guard, Delver) at 10, 20, 30, 45, 55. Skill advances
 
 ### 4.16 Merchant
 
-Bonus talents (Delver, Scholar) at 10, 20, 30, 45, 55. Skill advances 2.
+Bonus talents (Delver, Scholar) at 10, 20, 30, 45, 55. Skill rolls 2.
 
 | Lv | id | Name | A/P | Effect | Hook |
 |---:|---|---|---|---|---|
@@ -454,59 +491,119 @@ Bonus talents (Delver, Scholar) at 10, 20, 30, 45, 55. Skill advances 2.
 
 ### 4.17 Counting
 
-15 classes × 9 entries = 135 class abilities, of which 27 are active (28 menu entries: `flame_and_frost` is two) and 108 passive; 4 need a new small action (disarm, pick, steal, throw_voice), 9 are caster placeholders on the shared cast code (`spell`), and 1 (`blight`) wants #151 for its type but works untyped. Shared entries (`evasion`, `woodland_stride`, `divine_health`, `second_wind`, `smite`, `shield_of_faith`, the worth-showing ones) are one implementation each, named in several tables.
+15 classes × 9 entries = 135 class abilities, of which 27 are active (28 menu entries: `flame_and_frost` is two) and 108 passive; 4 need a new small action (disarm, pick, steal, throw_voice), 9 are caster placeholders on the shared cast code (`spell`), 14 cost mana (§3.7: the casters', the paladin's lay on hands, the bard's inspire, the priest's three; they wait for the mana PR), 1 (`blight`) wants #151 for its type but works untyped, and 10 (marked #225) move onto alternative resources after this milestone (§4.18). Shared entries (`evasion`, `woodland_stride`, `divine_health`, `second_wind`, `smite`, `shield_of_faith`, the worth-showing ones) are one implementation each, named in several tables.
+
+### 4.18 Class features that become resources (#225)
+
+The owner has asked for **alternative resources** (#225: integer pools beside hit points and mana that regenerate, decay, build from events, are spent, or end at zero and take their bar with them; a character may hold several), to be built **after** this milestone. The class features below are the ones that move onto them; each ships first in the simple form its table gives (a status, a passive) so the class is playable now, and migrates in a follow-up PR that depends on #225 (§11, R1–R5). The parameters are first guesses in `data/resources.toml`.
+
+| Class | Resource | Granted by | Max | Start | Over time | Built by | Spent by | At zero | Ships first as | Mana |
+|---|---|---|---:|---:|---|---|---|---|---|---|
+| Barbarian | **Rage** | the `rage` ability (level 1) | 20 (30 with `mighty_rage`) | 12 | **decays** 1 per base turn (6 s), resting too | +5 per kill once `blood_frenzy` (40) is known; nothing before | `unstoppable` (60): 10 rage to keep the last hit point | **ends**: the bar goes, Exhausted follows (10 min; 5 with `mighty_rage`), and the rage's benefits (St +2, To +2, In −2; cannot read) leave with it | the `raging` status of B1 (5 min, refreshed a minute by a kill); the move is "the status's timer becomes the pool" | none while raging: a barbarian cannot read, and mana abilities are refused |
+| Ranger | **Focus** | `rapid_shot` (12) | 10 | 10 | **regenerates** 1 per base turn, not while resting | — | `volley` (50): 6; with #225 `rapid_shot` becomes "a shot that costs 2 focus is 10 % cheaper" instead of always | never ends: the bar stays once granted | `rapid_shot` as the passive the table gives; `volley` as three free shots | separate; nothing converts |
+| Thief | **Openings** | `improved_sneak_attack` (32) | 5 | 0 | **decays** 1 per 20 turns | +1 per sneak attack that hits | a **finisher** added to `master_thief` (60): spend 5 for a blow that is a critical without a confirmation roll | never ends; sits at 0 | the passives as the table gives; the finisher arrives with the migration | separate |
+| Monk | **Ki** | `flurry` (18) | 5 | 5 | **regenerates** 1 per 3 base turns, resting too | — | `flurry`: 1 per second blow (no ki, no flurry); `quivering_palm` (50): 5 | never ends | `flurry` always on (B3); `quivering_palm` with its Spent status | separate: a monk's mana (4) stays for talents' sake |
+| Bard | **Inspiration** | `inspire` (18) | 5 | 0 | **decays** 1 per 30 turns | +1 per kill of the bard's own | `inspire`: 3 inspiration **in place of** its 3 mana when it has them (the one place a resource touches mana) | never ends | `inspire` costing mana | spent instead of mana when full enough |
+
+Everything else in the tables stays mana, a status, or a passive. Creatures get no resources (their rage would never show anyway). Four talents on these resources are in §7.5, marked `#225`; "Resources" is a row of the coverage matrix (§8) and joins the systems list when #225 lands.
 
 ## 5. Skill increases at level-up
 
 ### 5.1 Today, and the ADOM reference
 
-Skills grow today only from **training marks** (`world/train.rs`: a chance per meaningful use, drawn from the `training` stream; `need(value) = marks + value / per`, ×3 past the soft cap 100), a rule the spec marks **provisional** pending exactly this decision. ADOM does both: skills train "passively as the PC successfully uses them, and actively on level-up", where the level-up gives a number of increases (3 at least, plus one per 5 points of Learning over 10, more for humans and bards) and each skill rolls its own die (a ladder from +1 to +4d5) that *degrades* as the skill climbs and is *raised back by successful use*. Its known faults: the count leaks a hidden stat (Learning), and the guidebook's advice is to "not waste level advances" on skills that train by themselves, which makes the level-up a puzzle of what not to pick.
+Skills grow today only from **training marks** (`world/train.rs`: a chance per meaningful use, drawn from the `training` stream; `need(value) = marks + value / per`, ×3 past the soft cap 100), a rule the spec marks **provisional** pending exactly this decision. ADOM: skills train "passively as the PC successfully uses them, and actively on level-up"; a level-up gives a number of increases (3 at least, plus one per 5 points of Learning over 10, more for humans and bards), and each skill rolls its own die from a ladder (+1, 1d3, 1d5, 2d4, 3d3, 3d4, 3d5, 4d4, 4d5) whose step is **raised by successful use and degrades every ten points of advancement**. The owner wants this shape: marks decide how many and how large the dice are, a roll consumes marks and shrinks the dice, the class decides the count, humans get one more, high Intelligence more, and classes and races favour some skills.
 
-### 5.2 The proposal: two channels, one skill
+### 5.2 The rule: marks are a reservoir, spent as dice at level-up
 
-Keep the marks as they are (they are the "by use" channel, already tuned, already deterministic), and add a **level-up channel** of **skill advances** that is coarse, quick to spend, and favours the skills the player actually used:
+**One channel.** Marks no longer turn into points by themselves: the provisional `[increase]` rule goes, and a skill grows **only at level-up**, by rolls whose dice are set by the marks it has gathered since. The reasons: one curve to tune instead of two that interact; no double counting (a used skill is not rewarded twice); the Skills screen's meter gets a plain meaning ("how big your next roll is"); and the ADOM feel the owner asked for (use charges the skill, the level cashes it in). What is lost, growth between levels, matters less now that every level gives rolls and a trained skill always rolls at least +1.
 
-| Rule | Value | Where |
+| Rule | Value | Data |
 |---|---|---|
-| Advances per level | the class's `advances` (2 for most classes; **3** for the thief, ranger, and bard; see §4), **+1 while Intelligence is 16 or more** (a score, which the player sees; never the modifier), **+1 for humans** (their "room to grow"), +1 for a bard from level 6 (`wide_learning`), +1 with the Quick learner talent | `data/classes/*.toml`, `races.toml`, the talent |
-| What an advance may go into | any **trained** skill (an untrained skill does not exist for the character; the Apprentice talent (§7) and class tables are the ways to train a new one) | `Actor::skills` |
-| How much it gives | the class's die for that skill: **`1d4+2`** for a skill the class is known for (its `2d6+10` list, now named `known_for`), **`1d4`** for any other skill the class or the race trains, **`1d3`** for a skill trained any other way; **past 100** the roll is halved, rounded up (the soft cap, as for marks) | `data/classes/*.toml` `[advance]` |
-| Use makes the die kinder | a skill that **gained at least one point from marks since the last level-up** rolls its die **twice and keeps the better** (ADOM's "raised by successful use", without its degrading ladder) | `Skills::used_since_level` flag per skill, cleared at level-up |
-| Unspent advances | **bank**, without limit or expiry (nothing forces a pick: the owner's rule) | `Progress::pending.advances` |
-| What is said | "Your stealth improves." (the marks' phrase; never a number beyond the value on the Skills screen) | the level-up screen |
-| Randomness | the dice draw from a new **`levels` stream** in the world state (like `training`), never the gameplay stream, so spending advances never moves a fight; each `advance:SKILL` is an action recorded in the replay, so the result is reproducible | `WorldState::levels_rng` |
+| **The ladder** | a skill's die is set by its marks: 0 marks `+1`; 5 `1d3`; 12 `1d5`; 25 `2d4`; 50 `3d3`; 100 `3d4`; 200 `3d5`; 400 `4d4`; 800 `4d5` (ADOM's ladder; the steps roughly double) | `[ladder] dice = [...], marks = [0, 5, 12, 25, 50, 100, 200, 400, 800]` in `skills.toml` (replaces `[increase]`) |
+| **A roll** | adds the die to the value; past 100 the roll is halved, rounded up (the soft cap) | `Skills::roll` |
+| **It consumes marks** | half the skill's marks, rounded up, so the next roll on the same skill is one or two steps lower (50 → 25 → 12 → 6 → 3: 3d3, 2d4, 1d5, 1d3, +1) | the same |
+| **Rolls per level** | the class's `rolls` (§4: 2 for most; 3 for the thief and the ranger; **4 for the bard**, whose identity it is), **+1 for humans**, **+1 for every 4 points of Intelligence from 14** (14: +1, 18: +2, 22: +3 …; a score rule the player can read off the character screen, never the modifier) | `data/classes/*.toml`, `races.toml`, `[rolls] intelligence_from = 14, intelligence_every = 4` |
+| **Affinities** | a skill the class is **known for** (`known_for`, its `2d6+10` list) rolls its die **one step up the ladder**; a skill the class trains besides, or the **race** trains, adds **+1** to the roll (both stack: a halfling thief's Stealth is known-for and racial: one step up and +1) | `known_for`, `skills` on the class and the race; an optional explicit `affinity` table for later tuning |
+| **A skill with no marks** | still rolls (`+1`), so a trained skill never stands still, as in ADOM | |
+| **Where rolls go** | any **trained** skill, chosen by the player, all of them before the screen closes (no banking, §9.2); nothing stops every roll going into one skill, the shrinking dice are the only brake | `Action::Advance(skill)` |
+| **Earning marks** | unchanged (`mark` rules in `skills.toml`, the `training` stream); the Studious talent raises their chance | `world/train.rs` |
+| **What is said** | "Your stealth improves." (never the die or the marks) | the level-up screen |
+| **Randomness** | the dice draw from the new **`levels` stream** in the world state (like `training`); each `advance:SKILL` is an action recorded in the replay | `WorldState::levels_rng` |
 
-**Why both.** Marks reward doing; advances reward surviving. A thief who never kicks a door still becomes a better burglar by levelling, as ADOM's does, but one who sneaks all day gets more out of each advance in Stealth. The two channels never double count: the "used" flag is only a reroll, not extra points.
+### 5.3 Numbers in play
 
-**Numbers in play.** A thief (3 a level, say 2.5 with the odd In bonus) spends about 150 advances by level 50, each about 4 points in a known-for skill (4.5 average, more with the reroll): roughly 600 points, enough for three skills at 100 and the rest in the 40s, on top of what marks bring. A warrior (2 a level) spends 100: two masteries. With the halving past 100 the way from 100 to 150 costs as much as from 0 to 100.
+- A thief (3 rolls, 4 with Intelligence 14) who sneaks a lot gathers 30–60 Stealth marks a level (`sneak` 15 % per step within earshot): the first roll is `2d4` or `3d3` one step up (`3d3`/`3d4`, average 6–7.5) +1 racial if a halfling; a second roll on it half that. Spending two rolls on Stealth and two elsewhere gives Stealth about 10 a level: 25 at creation, 60 by level 5, 100 near level 10, 150 by level 25 (halved past 100). Spread over four skills, each about 4–5 a level.
+- A warrior (2 rolls) with no marks in Athletics still gets `+1` or, being known for it, `1d3` a level; with a few door kicks (`kick` 20 %) `1d5`–`2d4`.
+- A skill never used (no marks) grows by 1–2 a level if the player keeps rolling it: 60 levels buys about 90 points, a mastery for the patient.
+- Humans (+1 roll) and bards (4) are the fast learners; an elf wizard (2 rolls, In 16: +1) learns broadly but slowly, as its experience factor intends.
 
-### 5.3 Marks keep their rule
-
-The provisional `[increase]` block stays as it is (`marks = 4, per = 10, soft_cap = 100, past_cap = 3`): nothing here needs a change to it, and the Studious talent is the one knob on it. If play shows the two channels together grow skills too fast, the first knob to turn is the class dice, not the marks.
+The pace is set by three knobs in data: the ladder's mark steps, the class `rolls`, and the halving. If play shows masteries come too early, raise the mark steps; too late, lower them.
 
 ### 5.4 The level-up screen's skills step
 
-A paged list of the trained skills (the one item-list widget, §8): each row the skill's name, its value, a `•` where it was used since the last level (the kinder die), and "+N" after a spend this session; the frame says "Skill advances: 2 left"; a letter spends one on that row (`Action::Advance(skill)`, no time, said at once: "Your stealth improves."); Esc leaves the rest banked. No dice, no mark counts, no "good/other" labels: the wiki's Classes page carries the generated dice table.
+A paged list of the trained skills (the one item-list widget, §9): each row the skill's name, its value, and a dim four-cell meter of its ladder step (how practised it is: `━━──` at `2d4`), the frame saying "Skill rolls: 2 left"; a letter rolls one on that row (`advance:stealth`, no time, said at once: "Your stealth improves."), the meter dropping as the marks are spent. The step cannot be left until every roll is spent (Esc does nothing but say so); with no trained skill at all (a scenario without a character) the step is skipped and the rolls are lost. No dice, no mark counts: the wiki's Skills page carries the generated ladder and the Classes page each class's rolls and known-for skills.
 
 ## 6. Attribute growth
 
-### 6.1 The options
+### 6.1 The options, and the owner's call
 
-| Model | Where | What players say | Fit with Warlock |
+| Model | Where | What players say |
+|---|---|---|
+| None at level-up; potions and training by use | Angband (potions), ADOM (training: St by staying Burdened, To by herbs, Le by reading; checked periodically and "guaranteed on level-up", never past the potential; capped at St 15 "regardless of your potential", the verified complaint) | the grind is the complaint, the potentials the mystery |
+| A chosen point every few levels | D&D 3.5/Pathfinder (4, 8, …), DCSS (every 3–5 by species), Qud | accepted; 5e's feat-or-stat tension the only disliked form |
+| Several points every level | ToME (3) | stat inflation |
+
+The owner does not want the player picking stats. The design below is ADOM's idea made deterministic and tied to the level: **stats earn training marks from use, and at every level-up each stat has a chance to rise by its marks; a rise consumes them.**
+
+### 6.2 Stat training marks
+
+Each of the six stats has a mark count on the player (`Actor::stat_marks: PerStat<u16>`, saved and hashed; creatures earn none). Marks come from existing hooks, each with a chance in percent, one draw of the **`training`** stream per use (exactly as skill marks do: never the gameplay stream, so a fight's rolls never move). Data: `data/stats.toml`, `[[training]] stat, on, chance`.
+
+| Stat | Use (`on`) | Where it is reported today | Chance |
 |---|---|---|---|
-| **None at level-up**; potions and training by use (Angband, ADOM) | ADOM trains St by staying Burdened (capped at 15 whatever the potential), To by herbs, Le by reading; Angband by potions to 18/100 | ADOM's training is the canonical "stat pumping" grind, retreated from in 1.2.0; a verified complaint is that the cap bites "regardless of your potential" | we already have corpses raising scores toward the potential; adding use-training would add the grind the owner's "time is the penalty" rule tolerates but nobody praises |
-| **A point every few levels** (D&D 3.5 and Pathfinder: +1 at 4, 8, 12, 16, 20; DCSS: one every 3–5 levels by species; Qud: one every 3) | chosen by the player | accepted everywhere; the 5e "feat or stat" tension is the one disliked form, and only because the two compete | cheap, transparent, data-driven; a stat is one of six, so 15 points over 60 levels is an average of +2.5 a stat |
-| **Several points every level** (ToME: 3) | chosen | "number go up" but the "stat inflation" complaint (scores ten times the start) | our scores run 1–40 with D&D modifiers: inflation would break every hidden modifier's meaning |
+| **Strength** | `burdened`: an action other than waiting while your load slows you (Balance's use) | `World::apply` | 10 |
+| | `blow`: a melee blow of yours that hits (a kick, a bash too) | `fight.rs::resolve` | 5 |
+| | `dig`: a turn of digging | `dig_turn` | 10 |
+| | `kick`: a kick at a door (Athletics' use) | `kick_door` | 20 |
+| **Dexterity** | `dodge`: an attack on you that missed because of your Dexterity or Dodge (Tumble's use) | `fight.rs::resolve` | 20 |
+| | `shot`: a shot or throw of yours that hits | `missile_hits` | 10 |
+| | `sneak`: a step within earshot that stealth kept quiet (Stealth's use) | `make_noise` | 5 |
+| | `climb`: climbing out onto ice, a pit's climb | `tread_price`, `spring_trap` | 50 |
+| **Toughness** | `hurt`: a blow that costs you hit points | `hurt` | 10 |
+| | `big_hit`: a big hit or a critical on you | `after_blow` | 50 |
+| | `resisted`: a disease check won (catching or a progression) | `disease.rs` | 50 |
+| | `plunge`: falling through ice | `after_tread` | 100 |
+| **Intelligence** | `found`: a search that finds something (a secret door, a trap) | `search.rs::reveal` | 50 |
+| | `read`: a scroll read | `read.rs` | 30 |
+| | `identified`: an item identified | `World::identify` | 100 |
+| | `discovered`: the first kill of a creature type (§3.4) | `earn_kill` | 100 |
+| **Willpower** | `spot`: noticing something hidden in passing (Spot's use) | `notice_hidden` | 30 |
+| | `endured`: a long action completed to its goal (a rest to dawn, a wall dug through, a search for a while) | `keep_at` | 100 |
+| | `resisted_will`: a Willpower check won (brain fever) | `disease.rs` | 50 |
+| | `hungry_fight`: a blow landed while Hungry or worse | `fight.rs::resolve` | 10 |
+| | `cast`: mana spent on an ability (the mana PR; §3.7) | the ability's action | 20 |
+| **Presence** | `chat`: a chat or a topic asked | `talk.rs` | 20 |
+| | `trade`: a purchase paid or a sale made | `shop.rs` | 20 |
+| | `quest`: a quest completed | `quest.rs` | 100 |
+| | `swapped`: a creature making way for you | `swap_places` | 10 |
 
-### 6.2 Recommendation
+Every `on` is a `stats::Use` variant reported at the one place the thing happens, like `skills::Use`; the two reports share the call (`World::train(Use)`). There is no cap on marks and no decay: time is the only price, and the owner's no-anti-farming rule holds (kicking a door a hundred times is a hundred chances at a mark, and a hundred bangs every creature on the level hears).
 
-**Yes, modestly: the player raises one stat of their choice by 1 at levels 4, 8, 12, …, 60** (15 points in all; `stat_every = 4` in `data/experience.toml`), chosen on the level-up screen (`Action::RaiseStat(stat)`, replay text `raise:strength`, no time; "You feel stronger." / "quicker" / "tougher" / "smarter" / "more resolute" / "more confident"). Unspent raises bank.
+### 6.3 The level-up check
 
-**Potentials.** A level-up raise **raises the score and, where the score has reached it, the potential too**. Two reasons: a raise that could be refused by a hidden cap would reveal the potential at that moment (the owner's hidden-numbers rule), and the growth of a long career is the one thing that should outrun one's nature. Corpses and magic items keep their rules (never past the potential; items raise the effective score only). The potentials' role stays what it is: the ceiling for the cheap sources.
+At every level gained, **each stat in display order** gets one check, drawn from the **`levels`** stream (never gameplay): it rises by 1 with chance
 
-**What this does to the numbers.** A human warrior with St 14 at level 1 who puts every raise into Strength reaches 29 at level 60 (+9 modifier); spread evenly, each stat gains 2–3. Hit points follow Toughness raises through `raised_stats`, as they do for items, and so do carrying limits and checks. No other D&D concept comes with it: no ability checks, no saving throws.
+`p = marks / (marks + need)`, `need = 20 + 3 × score` (score 10: 50; 14: 62; 20: 80; 30: 110)
 
-**Not proposed (and why):** training by use (grind); stat talents (+1 St as a talent pick is the dull pick every review warns of; the budget above is separate so talents never compete with stats, the lesson of 5e); ADOM's class stat gifts are kept to two class entries (`mighty_thews`, `unlikely_hero`) and `legend`/`golden_tongue`'s Presence, which are flavour, not the plan.
+so 20 marks at Strength 14 is a 24 % chance, 60 marks 49 %, and no marks is no chance. **A rise consumes all the stat's marks**; a failed check keeps them (they go on growing toward the next level). At most one point per stat per level. The **potential** stays a soft cap: at or above it the chance is divided by 4, and a rise there lifts the potential with the score, so a long career outgrows nature slowly rather than never, and no sudden stop betrays the hidden number (a chance that merely fell cannot be told from bad luck). The rise says "You feel stronger." (quicker, tougher, sharper, more resolute, more confident); the character screen shows the new score; nothing else is shown: no marks, no chance, no potential.
+
+Hit points follow a Toughness rise through `raised_stats`, carrying limits a Strength one, as for items.
+
+### 6.4 Expected pace
+
+A fighting character lands 150–300 blows a level at the new curve: 8–15 Strength marks from blows plus some from burden and digging, so Strength rises about every third level early and every other level later (as marks per level grow with the kills per level), Toughness about as often from being hit, Dexterity a little less, and the mental stats only as the character reads, searches, talks, and trades: a half-orc barbarian who never opens a scroll keeps its Intelligence. Over 60 levels that is roughly **+25 to +35 points in all**, most in the two or three stats the character lives by (St 14 → 26 for a warrior who fights every level), comparable to ADOM's trained characters and to the 15 chosen points of the earlier draft doubled, since nothing is chosen. The `need` formula and the chances are the knobs; the wiki describes the uses in words ("fighting trains Strength, being hurt Toughness, reading Intelligence…"), never the chances.
+
+**Not proposed:** player-chosen raises (the owner's call), stat talents, potions (later, as items), decay of marks.
 
 ## 7. Talents
 
@@ -518,12 +615,12 @@ A paged list of the trained skills (the one item-list widget, §8): each row the
 
 | When | Picks | Notes |
 |---|---|---|
-| Character creation | **2** (humans 3: their racial `versatile`) | from the talents whose prerequisites the drafted character meets; ADOM gives 1 (up to 7 with bonuses), D&D 1 (humans 2) |
+| Character creation | **2**; humans 3 (their racial `versatile`); **bards 3** (the lucky class: ADOM gives bards, merchants, and farmers a bonus talent, and a bard's trade is many small gifts); a human bard 4 | from the talents whose prerequisites the drafted character meets |
 | Levels 3, 6, 9, …, 60 | **1 each: 20** | ADOM: every 3rd to 50 (16); 3.5: every 3rd (7 by 20) |
 | Class bonus picks (§4) | 8 (warrior, thief) or 5 (the rest) | from the class's named trees only; Pathfinder 2e's lesson: separate pools never compete |
-| In all by level 60 | **27–30** | of about 90 talents, so a career takes a third of the list, and no two builds need to look alike |
+| In all by level 60 | **27–31** | of about 100 talents, so a career takes a third of the list, and no two builds need to look alike |
 
-A pick never expires and is never forced: the level-up screen can be left and the picks stay banked (the status line of the Talents page says "1 talent to choose"). There is no respec (ADOM, DCSS: a choice is a choice); open question 8.
+Every pick is made **as it comes**, on the level-up screen that opens with the level (§9.2); nothing is banked, and there is no respec (ADOM, DCSS: a choice is a choice). So that a pick is never impossible, **every tree has at least one talent without prerequisites** (the content test checks it: Healthy, Mighty kick, Opportunist, Far shot, Armour training, Keen ears, Long strider, Apprentice, Lean, Tunneler), and a class's bonus pick falls back to any tree if its trees have nothing the character may take.
 
 ### 7.3 Prerequisites
 
@@ -550,7 +647,7 @@ Prerequisites are deliberately shallow: **at most two steps in a chain**, and ev
 
 ### 7.5 The list
 
-Notation: **Needs** as in §7.3; **R** ranks (blank = 1); **A/P** active (an entry in the abilities menu, `Source::Talent`) or passive; **Hook**: the one rule that reads it. `#151` marks talents that wait for damage types; `action` ones that need a small new action (§9). Numbers are first guesses in data.
+Notation: **Needs** as in §7.3; **R** ranks (blank = 1); **A/P** active (an entry in the abilities menu, `Source::Talent`) or passive; **Hook**: the one rule that reads it. `#151` marks talents that wait for damage types, `mana` those that wait for the mana PR (§3.7), `#225` those that wait for alternative resources (§4.18); `action` ones that need a small new action (§4.1 B7). The four `#225` talents are the only class-limited ones: a resource belongs to the class that has it. Numbers are first guesses in data.
 
 #### Vigour (hit points, healing, constitution)
 
@@ -574,9 +671,10 @@ Notation: **Needs** as in §7.3; **R** ranks (blank = 1); **A/P** active (an ent
 | `brawn` | Brawn | 2 | St 12 / 15 | +1 melee damage per rank | `Profile::melee` | P |
 | `cleave` | Cleave | | St 13, a melee skill at 3 | a melee blow that kills gives a free blow at another adjacent hostile | B3 `second_blow` | P |
 | `great_cleave` | Great cleave | | → cleave, Lv 18 | cleaving goes on while the blows kill (at most once per adjacent hostile a turn) | B3 | P |
-| `mighty_kick` | Mighty kick | | St 13 | kicks at creatures 1d6 instead of 1d3; door kicks as if 4 stronger | `player_kicks`, `kick_door` | P |
+| `mighty_kick` | Mighty kick | | — | kicks at creatures 1d6 instead of 1d3; door kicks as if 4 stronger | `player_kicks`, `kick_door` | P |
 | `breaker` | Breaker | | → mighty_kick, St 14 | door kicks as if 4 stronger again; digging ×1.25 | `kick_door`, `dig_work` | P |
 | `iron_grip` | Iron grip | | St 13, a two-handed weapon skill at 3 | blows with two-handed weapons 10 % cheaper | `World::attack_price` | P |
+| `battle_trance` | Battle trance | | class barbarian, Lv 6 | your rage starts 6 higher and decays a third slower | `data/resources.toml` Rage | P `#225` |
 | `staggering_blow` | Staggering blow | | St 15, Lv 12 | a critical you confirm in melee leaves the target Staggered: its next action costs half again as much | B1 status on creatures (`cost`) | P |
 | `crusher` | Crusher | | St 13, maces or unarmed at 3 | bludgeoning blows ignore 2 Protection (`penetration` +2) | `Profile` | P `#151` |
 
@@ -589,9 +687,10 @@ Notation: **Needs** as in §7.3; **R** ranks (blank = 1); **A/P** active (an ent
 | `light_step` | Light step | 2 | Dx 12 / Dx 14, Lv 10 | a trap you step onto gets a Dexterity check against its difficulty: won, it does not go off under you (it stays, found); rank 2: pits never catch you | `spring_trap` for the player | P |
 | `quick` | Quick | 2 | Dx 14, Lv 9 / Dx 16, Lv 24 | you move and act a little quicker (speed +5 % per rank; the number is hidden, as speed is) | `Actor::speed` | P |
 | `deflect_missiles` | Deflect missiles | | → dodge, Dx 15, Lv 12 | Dodge +2 against shots, throws, and trap arrows | B5 | P |
+| `inner_calm` | Inner calm | | class monk, Lv 18 | ki +2 at most, and it comes back half again as fast | Ki | P `#225` |
 | `evasion` | Evasion | | Dx 15, Lv 15 | bursts and bolts (traps, scrolls, spells) do you half damage | `cast_*` victim hook | P |
 | `riposte` | Riposte | | Dx 13, a melee skill at 5, Lv 12 | a blow that misses you by your Parry gives a free blow back | B3, `why_missed` | P |
-| `opportunist` | Opportunist | | Dx 12, Lv 9 | a creature that steps away from beside you (flees) takes a free blow | B3, `World::flees` | P |
+| `opportunist` | Opportunist | | — | a creature that steps away from beside you (flees) takes a free blow | B3, `World::flees` | P |
 
 #### Weaponcraft (weapon skills, styles, missiles)
 
@@ -606,13 +705,14 @@ Notation: **Needs** as in §7.3; **R** ranks (blank = 1); **A/P** active (an ent
 | `deadly_aim` | Deadly aim | | Dx 13, a launcher skill at 3 | +2 damage with shots | `Profile::ranged` | P |
 | `far_shot` | Far shot | | St 12 | launchers reach 2 cells farther, throws 1 | `launcher_range`, `throw_range` | P |
 | `thrower` | Thrower | | thrown 2 | thrown weapons +1 damage, throws 10 % cheaper | `Profile::thrown`, `attack_price` | P |
+| `steady_hand` | Steady hand | | class ranger, Lv 12 | focus comes back half again as fast | Focus | P `#225` |
 | `rapid_reload` | Rapid reload | | crossbows 3 | reloading 25 % cheaper | `attack_price` | P |
 
 #### Guard (armour, Protection, standing firm)
 
 | id | Name | R | Needs | Effect | Hook | A/P |
 |---|---|---|---|---|---|---|
-| `armour_training` | Armour training | 2 | To 12 / St 13 | worn armour's `max_dex` +1 per rank | `Actor::defence` | P |
+| `armour_training` | Armour training | 2 | — / St 13 | worn armour's `max_dex` +1 per rank | `Actor::defence` | P |
 | `heavy_armour_mastery` | Heavy armour mastery | | → armour_training ×2, Lv 12 | Protection +1 while the body armour worn has Protection 3 or more | protection sum | P |
 | `thick_skin` | Thick skin | 3 | To 12 / 15 / 18 | Natural armour +1 per rank (ADOM's Tough, Iron, Steel Skin) | `Actor::defence` (Natural) | P |
 | `shield_wall` | Shield wall | | shield_block 3 | Protection +1 while holding a shield | protection sum | P |
@@ -634,6 +734,7 @@ Notation: **Needs** as in §7.3; **R** ranks (blank = 1); **A/P** active (an ent
 | `rune_sight` | Rune sight | | In 14, Lv 15 | you see UV light | B4 (`sees_uv`) | P |
 | `hooded_light` | Hooded light | | — | a toggle: your lantern burns hooded (half its radius; a dim preset), so others see you from less far | `action` hood; the lantern's preset | **A** |
 | `lamplighter` | Lamplighter | | — | your lantern reaches one cell farther (a brighter preset) | the lantern's preset | P |
+| `patient_blade` | Patient blade | | class thief, Lv 32 | openings decay half as fast, and a sneak attack that kills gives two | Openings | P `#225` |
 | `ambusher` | Ambusher | | stealth 30, Lv 9 | +1d6 damage on a blow or shot at a creature that has not seen you | `Profile` from `Mind` | P |
 | `blood_scent` | Blood scent | | eyes darkvision | you see bleeding creatures in the dark within 4 cells | perception (status `seen`) | P |
 
@@ -662,8 +763,13 @@ Notation: **Needs** as in §7.3; **R** ranks (blank = 1); **A/P** active (an ent
 | `spell_recall` | Spell recall | | In 15, Lv 12 | one read in four, the scroll is not used up (one gameplay draw per read) | `read.rs` | P |
 | `treasure_hunter` | Treasure hunter | | In 12 or appraise 20 | loot you find and drops roll magic half again as often, rare too (the weights; from the loot streams, so maps never change) | `magic::loot::roll` rarity weights | P |
 | `good_learner` | Good learner | 2 | In 12 / In 16 | XP +5 % per rank | `grant_xp` | P |
-| `quick_learner` | Quick learner | | In 14 | +1 skill advance every level | §5 | P |
+| `quick_learner` | Quick learner | | In 14 | +1 skill roll every level | §5 | P |
 | `apprentice` | Apprentice (*skill*) | 3 | — | train a skill you are untrained in, at 1d6+4; or +1d6+4 to one you are trained in | `Actor::skills` (dice from the `levels` stream) | P |
+| `deep_well` | Deep well | 3 | In 12 or Wi 12 / Lv 10 / Lv 25 | +1 maximum mana per 4 character levels per rank (at least +2) | `Actor::max_mana` | P `mana` |
+| `clear_mind` | Clear mind | | Wi 12 | mana comes back 25 % faster | `World::mana_rate` | P `mana` |
+| `meditation` | Meditation | | → clear_mind | resting regains mana half again as fast | `mana_rate` while `resting` | P `mana` |
+| `frugal_caster` | Frugal caster | | In 14, Lv 9 | abilities cost a fifth less mana (never below 1) | the ability's spend | P `mana` |
+| `blood_magic` | Blood magic | | Wi 13, Lv 12 | give 5 hit points (never the last) for 3 mana | `hurt`, the mana PR's gain | **A** `mana` |
 
 #### Grit (hunger, burden, will)
 
@@ -684,7 +790,7 @@ Notation: **Needs** as in §7.3; **R** ranks (blank = 1); **A/P** active (an ent
 | `keen_searcher` | Keen searcher | | search 15 | searching +4 and it reaches one cell farther | `search_modifier`, reach | P |
 | `trap_sense` | Trap sense | | → alert | hidden traps and secret doors are 3 easier for you; a trap you set off does you half damage | `difficulty_of`, `trap_deals` | P |
 | `lockbreaker` | Lockbreaker | | St 12 | door kicks as if 6 stronger, half as loud | `kick_door`, `noise` | P |
-| `tunneler` | Tunneler | | St 12 | digging 50 % faster | `dig_work` | P |
+| `tunneler` | Tunneler | | — | digging 50 % faster | `dig_work` | P |
 | `silver_tongue` | Silver tongue | | Pr 12 | shop favour +10 % | `world::favour` | P |
 | `haggler` | Haggler | | → silver_tongue, appraise 20 | favour +10 % more, and the cap is 60 % | `favour`, `MAX_FAVOUR` | P |
 | `well_liked` | Well liked | | Pr 13 | quest rewards' gold and XP +25 % | quest reward | P |
@@ -695,7 +801,7 @@ Notation: **Needs** as in §7.3; **R** ranks (blank = 1); **A/P** active (an ent
 |---|---|---|---|---|---|---|
 | `elven_accuracy` | Elven accuracy | | race elf, bows 3 | threat +1 with bows | `Profile` | P |
 | `ageless` | Ageless | | race elf, Lv 9 | hunger burns 20 % slower; diseases progress every second day | `digest`, `disease_turn` | P |
-| `dual_heritage` | Dual heritage | | race half_elf | +1 skill advance every level | §5 | P |
+| `dual_heritage` | Dual heritage | | race half_elf | +1 skill roll every level | §5 | P |
 | `diplomat` | Diplomat | | race half_elf, Pr 11 | shop favour +10 %; quest gold ×1.25 | `favour`, quests | P |
 | `versatile` | Versatile | | race human | **granted at creation**: one more talent pick at creation and at level 30 | `Progress::pending` | P |
 | `stone_sense` | Stone sense | | race dwarf | noticing what is hidden in stone +4; digging ×1.25 | `search_modifier`, `dig_work` | P |
@@ -709,7 +815,7 @@ Notation: **Needs** as in §7.3; **R** ranks (blank = 1); **A/P** active (an ent
 | `ferocity` | Ferocity | | race half_orc | below a third of your hit points, +2 damage | `Profile` | P |
 | `orcish_hide` | Orcish hide | | race half_orc, To 13 | Protection +1 | protection sum | P |
 
-**Count**: 10 + 8 + 8 + 10 + 9 + 10 + 9 + 9 + 6 + 8 + 15 = **102 talents** (2 of them `#151`), 3 active (`second_wind`, `hooded_light`, `tinker`), 6 with a choice, 12 with ranks. Trimming to 80 for the first release is easy (the last two of each tree), but the list is written so every tree has a path in it and every system in §8 has its two.
+**Count**: 10 + 9 + 9 + 11 + 9 + 11 + 9 + 14 + 6 + 8 + 15 = **111 talents** (2 of them `#151`, 5 `mana`, 4 `#225`: those wait for their systems), 4 active (`second_wind`, `hooded_light`, `tinker`, `blood_magic`), 6 with a choice, 13 with ranks. Trimming to 80 for the first release is easy (the last two of each tree), but the list is written so every tree has a path in it and every system in §8 has its two.
 
 ### 7.6 What was left out, on purpose
 
@@ -766,6 +872,9 @@ Systems (rows) against what touches them: talents (§7) and class abilities (§4
 | Speed (hidden) | quick | fast_movement, fleet | |
 | Factions and a creature's stance toward the player | beast_friend, well_liked (NPCs) | wild_empathy, noblesse, light_fingers (outrage) | at the bar |
 | Damage types and resistances (#151) | elemental_ward, crusher | blight | pending |
+| **Mana** (the mana PR; §3.7) | deep_well, clear_mind, meditation, frugal_caster, blood_magic | the 14 mana-costing actives, arcane_mastery, archmage, virtuoso | pending: in the list once the mana PR lands |
+| **Resources** (#225; §4.18) | battle_trance, inner_calm, steady_hand, patient_blade | rage, blood_frenzy, mighty_rage, unstoppable, rapid_shot, volley, improved_sneak_attack, master_thief, flurry, quivering_palm, inspire | pending: in the list once #225 lands |
+| Stat training (§6) | — (every talent that makes a use happen more often trains the stat behind it) | — | not a system of its own: the training channel the level-up reads |
 
 The rows at the bar are the systems with the least surface (stances are four rows of data; carried light is a lantern and item glow). The policy below keeps every row at or above it.
 
@@ -778,7 +887,7 @@ Concrete, and checked by a test rather than by memory:
 3. **The wiki's Talents page** is generated per tree with a column of systems, and a **"By system"** table (system → talents and class abilities) comes from the same tags, so a gap is visible to players and the owner alike.
 4. **The coverage test's thresholds are data** (`min_talents = 2`, `min_class = 1`), so the bar can rise as the list grows.
 
-Pending systems with their first talents already named here: damage types (#151: `elemental_ward`, `crusher`, `blight`'s type), the spell system (replaces the caster placeholders and gets a Spellcraft tree), pits and climbing (#128: `light_step` rank 2, Athletics), food freshness (#196: `forager` would go here), potions (a Vigour/Scholar talent each).
+Pending systems with their first talents already named here: mana (the mana PR: five Scholar talents and the casters' costs), alternative resources (#225: four class talents and ten class features, §4.18), damage types (#151: `elemental_ward`, `crusher`, `blight`'s type), the spell system (replaces the caster placeholders and gets a Spellcraft tree), pits and climbing (#128: `light_step` rank 2, Athletics), food freshness (#196: `forager` would go here), potions (a Vigour/Scholar talent each).
 
 ## 9. What the player sees
 
@@ -789,30 +898,32 @@ In the order they come, after the kill's own messages (as today's "You feel more
 | Event | Message |
 |---|---|
 | XP gained from a quest or discovery | "You gain 15 experience." (quests say it today); "You learn something of kobolds." (first kill, with the XP); "You gain 20 experience for finding your way here." (arrival) |
-| a level | "You feel more experienced." "Welcome to level 3." then one line for what waits: "You may choose a talent." / "You have 2 skill advances." / "You may raise a stat." (joined: "You may choose a talent and raise a stat, and you have 2 skill advances.") |
-| the class table | "You have learned to cleave." (passive) / "You can now rage." (active: it is in the abilities menu) / "You may choose a bonus talent." |
-| a stat raised | "You feel stronger." (St), "quicker" (Dx), "tougher" (To), "sharper" (In), "more resolute" (Wi), "more confident" (Pr) |
-| a skill advanced | "Your stealth improves." (the marks' phrase) |
+| a level | "You feel more experienced." "Welcome to level 3." then the stat rises, if any ("You feel stronger."), then the level-up screen opens for what must be chosen |
+| the class table | "You have learned to cleave." (passive) / "You can now rage." (active: it is in the abilities menu) |
+| a skill rolled | "Your stealth improves." (the marks' phrase) |
 | a talent chosen | "You learn Cleave." / "You learn Hardy (2)." |
 | an ability on cooldown | "You are still winded." (refused, no time) |
+| any other action while a choice is due | "You must choose a talent first." / "You have skill rolls to spend." (refused, no time: the rules enforce it, §10.2) |
 
-Never: a die, a modifier, a potential, a speed, a chance, a mark count.
+Never: a die, a modifier, a potential, a mark, a chance, a speed.
 
 ### 9.2 The level-up screen
 
-`ScreenName::LevelUp`, one screen on the one stack (`ui/level_up_screen.rs`), **opened by `screens::on_level_up`** at the end of the turn in which something came pending (like `on_death` opens the death screen), unless another screen is open (then after it closes), and **from the Talents page** (Enter on its "Choose…" row) or the pause menu while anything is pending. No time passes on it. It walks three steps, each the one paged list (§6 "Item lists"), skipping steps with nothing pending; the frame says which step and what is left ("Level 12 · Talent 1 of 2 · Skill advances 3 · Stat raise 1"):
+`ScreenName::LevelUp`, one screen on the one stack (`ui/level_up_screen.rs`), **opened by `screens::on_level_up`** at the end of the turn in which a level came (as `on_death` opens the death screen; the death screen wins if both apply) and nowhere else: there is nothing to come back for, since nothing is banked. No time passes on it. It walks the level's choices in order, each the one paged list (§6 "Item lists"), skipping steps with nothing to choose; the frame says which step and what is left ("Level 12 · Skill rolls 3 · Talent 1"):
 
-1. **Raise a stat**: six rows (`St  Strength  14`), a letter raises one (`raise:strength`), said at once. Scores only, never potentials; a stat at its potential shows nothing different (the raise lifts both, §6).
-2. **Advance skills**: the trained skills as in §5.4; one letter per advance.
-3. **Choose a talent**: the talents the character may take now, grouped by tree under headers (as item lists group by class), each row the name, its rank if ranked ("Hardy 2/3"), and a short effect in words; talents whose prerequisites are not met are **not listed here** (the Talents page lists every talent with what it needs, so planning happens there, and the pick list stays short); a choice talent opens a second list (the weapon skills, the styles, the elements) in its place (`ScreenAction::Replace`). The selected row's full description shows below the list. A bonus pick from the class's trees is its own step with only those trees.
+1. **Roll skills**: the trained skills as in §5.4; one letter per roll, until none is left.
+2. **Choose a talent**: the talents the character may take now, grouped by tree under headers (as item lists group by class), each row the name, its rank if ranked ("Hardy 2/3"), and a short effect in words; talents whose prerequisites are not met are **not listed** (the Talents page lists every talent with what it needs, so planning happens there and the pick list stays short); a choice talent opens a second list (the weapon skills, the styles, the elements) in its place (`ScreenAction::Replace`). The selected row's full description shows below. A bonus pick from the class's trees is its own step with only those trees.
 
-Every step's letter is an `Act(Action)` (`talent:ID[:choice]`, `advance:SKILL`, `raise:STAT`), applied at once, recorded in the replay, and the screen refreshes (`screens::refresh`) with the result, like the equipment screen. **Esc leaves** with the rest banked; a `MenuChoice` is never needed. Keys: the list commands (letters, `<`/`>` pages, arrows, Enter on the `>` row), all in the existing rebindable contexts; one new rebindable command, `KeyCommand::LevelUp` ("Level up: spend what is pending", id `level_up`), unbound by default (`UNBOUND`), so a player may bind it.
+Every letter is an `Act(Action)` (`advance:SKILL`, `talent:ID[:choice]`), applied at once, recorded in the replay, and the screen refreshes with the result (`screens::refresh`), like the equipment screen. **It cannot be left** while a choice is due: Esc and the screen's own key say "You have 2 skill rolls to spend." in the message line and stay; when the last choice is made it closes by itself. (The stat checks of §6 need no step: they are rolled by the rules as the level is gained and only say their results.)
+
+**Several levels in one turn** (one kill worth two levels): the rules hand out every level's gains at once (`Progress::claimed` catches up level by level, each level's rolls and talent counted), and the screen walks them as one sequence, its frame naming the level each step belongs to ("Level 4 of 3–4 · Talent"). **A level during a long action** (a rest, a dig, a search, a meal; a creature bleeding to death from the player's wound mid-rest): the level's messages are `say`s, so `World::keep_at` stops the action as any message stops it, the turn ends, and the screen opens; the action is not resumed by itself. **In the headless CLI and replays** the same holds through the rules alone: while a choice is due, `World::apply` refuses every action but the choices ("You must choose a talent first."), so a replay carries `advance:…` and `talent:…` steps right after the kill, and `warlock-cli dump --actions` must spend them too (a `levelup:auto` dev action takes the first eligible choice of each kind, for tests and benchmarks).
+
+Keys: the list commands (letters, `<`/`>` pages, arrows, Enter on the `>` row), all in the existing rebindable contexts; no new key.
 
 ### 9.3 The Talents info page
 
 `ScreenName::Talents`, **page 7** of the info pages (`PAGES`: Character, Inventory, Equipment, Skills, Weapon skills, Quests, **Talents**; tab label "Talents"), reached by `Page(7)` and Tab in the pages context and by a rebindable `KeyCommand::Talents` of its own (id `talents`), unbound by default like `Back`, so no new default key is taken in play. It shows:
 
-- at the top, while anything is pending: `Pending: 1 talent, 3 skill advances, 1 stat raise · Enter to choose`;
 - the character's talents, grouped by tree, each with its rank and its effect in words (from data: `description`);
 - below them, dimmer, **every other talent** of the game by tree with what it needs (`Needs: Dexterity 13, Dodge`), what is met in the normal colour and what is not dimmed, so the player can plan a build without the wiki; 72 wide like the character screen, scrolling with ↑↓ where it does not fit, the selected talent's full description below.
 - The class's coming abilities are **not** listed (the wiki has them: in the game the class table is learned by levelling, like ADOM's).
@@ -821,30 +932,30 @@ The abilities menu lists active talents under "Talents" and class actives under 
 
 ### 9.4 Character creation
 
-A new step **Talents** after Class and before the Summary (`ScreenName::ChargenTalents`, a `ChoiceScreen` like the others, but a multi-pick: 2 rows marked, 3 for a human): the list of talents whose prerequisites the drafted character meets (the start is computed as the summary computes it: seed, choices, start date), grouped by tree, each with its one-line effect; a **Random** row (as the other steps have) draws the picks from the stream `character/talents/<race>,<gender>,<class>`, so a seed's random character is always the same; Esc/Back returns to Class with the picks kept in the draft (`ScreenStack::draft`). The Summary gains a `Talents  Hardy, Alert` line. The command line gets `--talents hardy,alert` beside `--character` (a `CharacterSpec` field: `dwarf,female,warrior` stays valid, no talents = none picked, which is allowed: a pick never expires, so they wait on the Talents page), and replays record them in `character` (`{race, gender, class, talents}`; old replays without the key load as before). The race and class steps add a line in words for the experience factor ("Levels come slowly." for 115 and above, "quickly" for 95 and below).
+A new step **Talents** after Class and before the Summary (`ScreenName::ChargenTalents`, a `ChoiceScreen` like the others, but a multi-pick: 2 rows marked, 3 for a human or a bard, 4 for a human bard): the list of talents whose prerequisites the drafted character meets (the start is computed as the summary computes it: seed, choices, start date), grouped by tree, each with its one-line effect; a **Random** row (as the other steps have) draws the picks from the stream `character/talents/<race>,<gender>,<class>`; Esc/Back returns to Class with the picks kept in the draft (`ScreenStack::draft`). The Summary gains a `Talents  Hardy, Alert` line. On the command line, `--talents hardy,alert` beside `--character`; **without it the Random row's picks are taken** (they are a pure function of the seed and the spec), so every scenario, replay, and golden entry starts with its talents and nothing waits. Replays record them in `character` (`{race, gender, class, talents}`); an old replay without the key gets the Random picks, which is what it would have got then too. The race and class steps add a line in words for the experience factor ("Levels come slowly." for 115 and above, "quickly" for 95 and below) and for the rolls ("Learns quickly." for 3 or more).
 
-### 9.5 The character screen and the status bar
+### 9.5 The character screen and the Skills screen
 
-The character screen's `Lv  Level  3` / `XP` rows stay; a `Talents  7 (1 to choose)` row is added after them, and the Skills row count stays as is. The status bar gets nothing new (it is full), except that `Lv` already shows; a pending pick does not nag there.
+The character screen's `Lv  Level  3` / `XP` rows stay; a `Talents  7` row is added after them. The Skills screen's four-cell meter now shows the skill's ladder step (how practised it is), with the same glyphs. The status bar gets nothing new (it is full).
 
 ### 9.6 What stays hidden
 
-The rules the talents stand on keep their numbers where the game hides them today: speed (Quick says "you move a little quicker"), checks and modifiers (Strong constitution says "you shake off disease more easily"), potentials (the stat raise never mentions them), to-hit (Weapon focus says "you hit more often with long blades"). Where the game **shows** a quantity (Defence, Protection, hit points, carrying limit, prices in shops, XP), the talent says the number ("Dodge +1", "+10 % carrying", "XP +5 %"). The in-game text is the talent's `description` in data; the **wiki** tables show the rules in full (the +2 on disease checks, the percents), as the wiki shows skill benefits and stance numbers today. Creatures' talents (none yet) would never show.
+The rules the talents stand on keep their numbers where the game hides them today: speed (Quick says "you move a little quicker"), checks and modifiers (Strong constitution says "you shake off disease more easily"), potentials and stat marks (a rise says "You feel stronger." and nothing of why), skill marks and dice (the meter shows a step, never a number), to-hit (Weapon focus says "you hit more often with long blades"). Where the game **shows** a quantity (Defence, Protection, hit points, carrying limit, prices in shops, XP), the talent says the number ("Dodge +1", "+10 % carrying", "XP +5 %"). The in-game text is the talent's `description` in data; the **wiki** tables show the rules in full (the +2 on disease checks, the percents, the ladder, the stat uses in words without chances), as the wiki shows skill benefits and stance numbers today. Creatures' talents (none yet) would never show.
 
 ### 9.7 Keys
 
-All new commands are rebindable with stable ids in `settings/keys.rs`: `level_up` (unbound), `talents` (the page, unbound; `Page(7)` reaches it), the class and talent abilities (each an unbound `KeyCommand` with its ability's id, as the shield bash is), and the list commands are the existing ones. No new fixed key.
+All new commands are rebindable with stable ids in `settings/keys.rs`: `talents` (the page, unbound; `Page(7)` reaches it), the class and talent abilities (each an unbound `KeyCommand` with its ability's id, as the shield bash is); the list commands are the existing ones. No new fixed key, and no key for the level-up screen: it opens itself.
 
 ### 9.8 Wiki
 
 | Page | Content | Generated tables (`xtask/src/wiki/`) |
 |---|---|---|
-| Experience (existing) | the curve to 60, the factors, discovery | `experience-levels.md` (to 60, with the factor examples), `experience-factors.md` (races and classes), `experience-discovery.md`, ZD table to 60 |
-| Classes (existing) | the level tables | `class-levels/<class>.md` per class (level, name, what it does), `class-advances.md` (advances a level and the dice) |
-| Races (existing) | the experience factor, racial talents | `races.md` gains the column; `talents-racial.md` |
+| Experience (existing) | the curve to 60 in kills and XP, the factors, discovery | `experience-levels.md` (to 60, with the factor examples), `experience-factors.md` (races and classes), `experience-discovery.md`, ZD table to 60 |
+| Classes (existing) | the level tables, rolls and known-for skills | `class-levels/<class>.md` per class (level, name, what it does), `class-rolls.md` |
+| Races (existing) | the experience factor, racial talents, the extra roll | `races.md` gains the columns; `talents-racial.md` |
 | **Talents** (new, under Your character) | the rules of §7.2–7.4, then the trees | `talents-<tree>.md` per tree (name, ranks, needs, effect as a rule, systems), `talents-by-system.md` |
-| Skills (existing) | the advances section | `skill-advances.md` |
-| Your character (existing) | stat raises | — |
+| Skills (existing) | the ladder and the level-up rolls | `skill-ladder.md` |
+| Stats (existing) | what trains each stat, in words | `stat-training.md` (uses only, no chances) |
 | Abilities (existing) | the class and talent actives | `abilities.md` (from the registry, as today) |
 
 ## 10. Data and code sketch
@@ -853,16 +964,17 @@ All new commands are rebindable with stable ids in `settings/keys.rs`: `level_up
 
 | File | Change |
 |---|---|
-| `data/experience.toml` | `max_level = 60`, `linear = 20`, `quadratic = 10`, **`cubic = 3`**; `[levels] talent_every = 3, stat_every = 4, creation_talents = 2`; `[discovery] first_kill = 100, arrival = 5, identify = 10`; `[[zero_difference]]` to 60; `creature_xp_guideline = [5, 10]` (slope, offset; the test's and the wiki's) |
-| `data/races.toml` | per race: `experience = 140` (percent), `talents = ["versatile"]` (granted), `advances = 1` (humans, half-elves get theirs as talents) |
-| **`data/classes/<id>.toml`** (one file per class; `classes.toml` goes) | what `[[class]]` has today, plus `experience = 125`, `known_for = [...]`, `[advance] per_level = 2, known = "1d4+2", trained = "1d4", other = "1d3"`, `bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["guard", "vigour"] }`, and `[[level]]` rows: `level = 6, ability = "shield_wall"` with the ability's own table (`[[ability]] id, name, description, kind = "passive" or "active", aim, cost, effect = {...}, cooldown = "winded", systems = [...]`, and for casters a `burst`/`bolt` table as scrolls have). Classes are numbered in path order like objects (README.toml) |
-| **`data/talents.toml`** | settings: `[systems]` (the closed tag list with names), `[coverage] min_talents = 2, min_class = 1`, `max_ranks = 3`, the trees (`[[tree]] id, name, description`, in display order) |
-| **`data/talents/<id>.toml`** (one file per talent, README.toml, numbered in path order like affixes) | `[[talent]] id, name, tree, ranks, choice, description` (words, in game), `needs = { talents = ["dodge"], stats = { dexterity = 13 }, skills = { tumble = 25 }, weapon_skills = { bows = 3 }, level = 9, race = "dwarf", eyes = "darkvision", class = "warrior" }` (per rank: `[[talent.rank]] needs = {...}, effect = {...}`), `effect = { kind = "...", ... }` (a typed enum, §10.3), `systems = ["traps"]`, `active = { aim = "nothing", cost = "wait", cooldown = "winded" }` |
+| `data/experience.toml` | `max_level = 60`; the curve as `[kills] plateau = 213, ramp = 5, slope_per_100 = 285` and `guideline = { per_level = 5, base = 10 }` (`linear` and `quadratic` go; a test pins the generated table's hash, as the sun's table is pinned); `[levels] talent_every = 3, creation_talents = 2`; `[discovery] first_kill = 100, arrival = 5, identify = 10`; `[[zero_difference]]` to 60 |
+| `data/races.toml` | per race: `experience = 140` (percent), `talents = ["versatile"]` (granted), `rolls = 1` (humans); `mana` (the mana PR's field, values in §3.7) |
+| **`data/classes/<id>.toml`** (one file per class; `classes.toml` goes) | what `[[class]]` has today, plus `experience = 125`, `mana = 12` (the mana PR's field), `rolls = 2`, `known_for = [...]`, `creation_talents = 1` (the bard), `bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["guard", "vigour"] }`, and `[[level]]` rows: `level = 6, ability = "shield_wall"` with the ability's own table (`[[ability]] id, name, description, kind = "passive" or "active", aim, cost, effect = {...}, cooldown = "winded", systems = [...]`, and for casters a `burst`/`bolt` table as scrolls have). Classes are numbered in path order like objects (README.toml) |
+| `data/skills.toml` | `[increase]` goes; `[ladder] dice = ["1", "1d3", "1d5", "2d4", "3d3", "3d4", "3d5", "4d4", "4d5"], marks = [0, 5, 12, 25, 50, 100, 200, 400, 800]`, `[rolls] intelligence_from = 14, intelligence_every = 4, spend = 50` (percent of the marks a roll consumes) |
+| **`data/stats.toml`** (new) | `[training] need_base = 20, need_per_point = 3, over_potential_divisor = 4`; `[[training.use]] stat = "strength", on = "blow", chance = 5` … (the table of §6.2) |
+| **`data/talents.toml`** | settings: `[systems]` (the closed tag list with names), `[coverage] min_talents = 2, min_class = 1, free_per_tree = 1`, `max_ranks = 3`, the trees (`[[tree]] id, name, description`, in display order) |
+| **`data/talents/<id>.toml`** (one file per talent, README.toml, numbered in path order like affixes) | `[[talent]] id, name, tree, ranks, choice, description` (words, in game), `needs = { talents = ["dodge"], stats = { dexterity = 13 }, skills = { tumble = 25 }, weapon_skills = { bows = 3 }, level = 9, race = "dwarf", eyes = "darkvision", class = "warrior" }` (per rank: `[[talent.rank]] needs = {...}, effect = {...}`), `effect = { kind = "...", ... }` (a typed enum, §10.3), `systems = ["traps"]`, `active = { aim = "nothing", cost = "wait", cooldown = "winded", mana = 0 }` |
 | `data/status.toml` | B1: optional `to_hit`, `damage`, `dodge`, `parry`, `cost`, `blocks`, `follows`; the new statuses `raging`, `exhausted`, `winded`, `drained`, `spent`, `blessed`, `inspired`, `hoarse`, `hexed`, `weakened`, `slowed`, `staggered` |
-| `data/factions.toml` | `animal = true` on the vermin (and the deer's) faction for `wild_empathy` |
-| `data/skills.toml` | nothing: the `[increase]` block stays |
+| `data/factions.toml` | `animal = true` on the vermin (and the deer's) faction for `wild_empathy` and `beast_friend` |
 
-Why a directory for talents and classes: both are long tables that churn (every system adds a talent; class tables are 15 × 9 rows and will be retuned), the repo's rule for churning tables is one file per entity (objects, affixes, creatures, materials: `docs/dev/content.md`), and parallel PRs adding talents then never conflict. `talents.toml` and `experience.toml` stay single files: settings, not tables.
+Why a directory for talents and classes: both are long tables that churn (every system adds a talent; class tables are 15 × 9 rows and will be retuned), the repo's rule for churning tables is one file per entity (objects, affixes, creatures, materials: `docs/dev/content.md`), and parallel PRs adding talents then never conflict. `talents.toml`, `stats.toml`, and `experience.toml` stay single files: settings, not tables.
 
 ### 10.2 State
 
@@ -871,21 +983,22 @@ WorldState
   experience: u32                      (exists)
   progress: Progress                   (new; left out of the JSON while default)
     talents: Vec<Taken { id: String, rank: u8, choice: Option<String> }>   by id, like affixes: adding talents keeps saves
-    pending: Pending { talents: u8, bonus: Vec<(u8 level)>, advances: u16, raises: u8 }
+    due: Due { rolls: u8, talents: u8, bonus_trees: Vec<Vec<TreeId>>, level: u8 }   what this level-up still asks for; never carried past it
     claimed: u8                        the level whose gains have been handed out (a kill that spans levels hands out each)
-    used_since_level: BTreeSet<SkillId>    the kinder-die flag (§5)
     once: BTreeSet<String>             one-per-run flags: "miracle", "hags_bargain"
     discovered: Discovered { kills: BTreeSet<CreatureId>, affixes: BTreeSet<String> }
-    empathy_broken: BTreeSet<CreatureId>   wild_empathy
-  levels_rng: Rng                      (new) the `levels` stream: advance dice, Apprentice's dice
+    empathy_broken: BTreeSet<CreatureId>   wild_empathy, beast_friend
+  levels_rng: Rng                      (new) the `levels` stream: skill rolls, Apprentice's dice, the stat checks
 Character (saved, in WorldState)
   talents: Vec<String>                 the creation picks (the spec, for replays and `--talents`)
 Actor
   talents: Talents                     (new) the player's taken talents, resolved to TalentIds for the rules; creatures' empty (a creature type may list `talents` later with no new code)
+  skills: Skills                       (exists) marks now a reservoir: value, marks; no `progress` toward a point
+  stat_marks: PerStat<u16>             (new) stat training marks, the player's
   effects: Effects                     (exists; cooldowns and buffs live here)
 ```
 
-`FORMAT_VERSION` bumps once for the lot (the thresholds alone change what level a saved XP total is). The class table's passive abilities are **not stored**: they follow from the class and the level, read through the same aggregation as talents (`Actor::talents` is the player's picks plus the class entries at or below their level, computed on load and on level-up). The state hash covers all of it.
+**No banking in the rules**: while `progress.due` asks for anything, `World::apply` refuses every action but `Action::Advance`, `Action::Talent`, and the dev `levelup:auto` ("You must choose a talent first."), so the CLI, replays, and the UI all spend a level on the spot. `FORMAT_VERSION` bumps once for the lot (the thresholds alone change what level a saved XP total is; a save at a level whose gains were never handed out, from before this change, hands them out on load at the first turn, once). The class table's passive abilities are **not stored**: they follow from the class and the level, read through the same aggregation as talents (`Actor::talents` is the player's picks plus the class entries at or below their level, computed on load and on level-up). The state hash covers all of it.
 
 ### 10.3 Where the rules hook in
 
@@ -893,7 +1006,7 @@ One aggregation, read where the affixes already are: `Talents::mods(content) -> 
 
 | Hook (exists) | Reads |
 |---|---|
-| `Actor::effective_stats`, `raised_stats` | class stat gifts (stored in `Stats`, no read) |
+| `Actor::effective_stats`, `raised_stats` | class stat gifts and level-up rises (stored in `Stats`, no read) |
 | `Actor::max_hp` | `hardy` |
 | `Actor::defence(kind, attacker)` | dodge, natural, deflection, parry, shield, burden cap (`nimble`, `uncanny_dodge`), per-kind (`deflect_missiles`, `small_target`) |
 | protection sum (`combat::soak` caller) | `heavy_armour_mastery`, `shield_wall`, `orcish_hide`, class Pv |
@@ -915,63 +1028,101 @@ One aggregation, read where the affixes already are: `Talents::mods(content) -> 
 | `grant_xp`, `earn_kill`, `travel` (arrival), `identify` | good_learner, legacy, discovery |
 | `magic::loot::roll`, `gem::find` | treasure_hunter, gem_lore, jeweller (from the loot streams: the map is unchanged) |
 | `World::identify` from `perceive` | lore, arcane_lore, connoisseur (a `Stack::carried_since` is needed: one new field on the stack, saved) |
-| `World::stance`, `World::refusal` | wild_empathy, noblesse |
+| `World::stance`, `World::refusal` | wild_empathy, beast_friend, noblesse |
 | `hurt`/`dies` | immune_to_pain, unstoppable, miracle, hags_bargain |
+| **`World::train(Use)`** (the one mark reporter, skills' and stats') | the uses of §6.2 at the places named there: `apply` (burdened), `resolve` (blow, dodge, hungry_fight), `missile_hits` (shot), `make_noise` (sneak), `tread_price`/`spring_trap` (climb), `hurt` (hurt), `after_blow` (big_hit), `after_tread` (plunge), `disease.rs` (resisted, resisted_will), `search.rs` (found, spot), `read.rs` (read), `identify` (identified), `earn_kill` (discovered), `keep_at` (endured), `talk.rs` (chat, swapped), `shop.rs` (trade), `quest.rs` (quest), `dig_turn` (dig), `kick_door` (kick) |
+| **`World::level_up`** (new, in `world/level_up.rs`, from `grant_xp`) | hands out the level's hit points and mana, class entries, due rolls and talents, and runs the six stat checks (`levels` stream), level by level |
+| the mana PR's hooks (`Actor::max_mana`, `World::mana_rate`, the ability's spend) | `deep_well`, `clear_mind`, `meditation`, `frugal_caster`, `blood_magic`; the casters' costs; `arcane_mastery`, `archmage`, `virtuoso` |
 
-New modules: `content/talent.rs` (defs, prerequisites, effects, the systems list, the coverage test), `talents.rs` (the runtime: `Talents`, `TalentMods`, `may_take`), `content/class.rs` (grows the level table and abilities), `world/level_up.rs` (pending budgets on level gain, `Action::Talent`, `Advance`, `RaiseStat`, the class table's hand-outs and messages), `world/experience.rs` (the factor, discovery), `ability.rs` (`Source::Talent`, class actives, `Unavailable::While`), `ui/level_up_screen.rs`, `ui/talents_screen.rs`, `ui/chargen_screen.rs` (the step), `xtask/src/wiki/{talents,classes}.rs`, and `warlock-cli` dump layers `talents` (the player's, with ranks and choices) and `progress` (pending, discovered; dev).
+New modules: `content/talent.rs` (defs, prerequisites, effects, the systems list, the coverage test), `talents.rs` (the runtime: `Talents`, `TalentMods`, `may_take`), `content/class.rs` (grows the level table and abilities), `content/stat_training.rs` (`data/stats.toml`), `world/level_up.rs` (the hand-out, `Action::Talent`, `Advance`, the due-choice refusal, the stat checks, messages), `world/experience.rs` (the curve in kills, the factor, discovery), `ability.rs` (`Source::Talent`, class actives, `Unavailable::While`), `ui/level_up_screen.rs`, `ui/talents_screen.rs`, `ui/chargen_screen.rs` (the step), `xtask/src/wiki/{talents,classes,stats}.rs`, and `warlock-cli` dump layers `talents` (the player's, with ranks and choices) and `progress` (due choices, discovered, stat marks; dev).
 
 ### 10.4 Determinism
 
 | Draw | Stream | Note |
 |---|---|---|
-| skill advance dice, Apprentice's dice | **`levels`** (new in `WorldState`, like `training`) | never the gameplay stream: spending advances moves no fight |
-| creation picks' Random row | `character/talents/<spec>` | the picks themselves are recorded in `character`, so the stream is the UI's only |
+| skill rolls, Apprentice's dice, **the stat checks** | **`levels`** (new in `WorldState`, like `training`) | never the gameplay stream: a level-up moves no fight. The stat checks draw six times per level in stat order, always, so the stream stays in step whatever the marks |
+| skill and stat **marks** | `training` (exists) | one draw per reported use with a chance below 100 |
+| creation picks' Random row, and the picks of a run started without `--talents` | `character/talents/<spec>` | the picks are recorded in `character` either way |
 | talents with a chance in play (`lucky`, `spell_recall`, `light_step`'s check, `staggering_blow` through the critical) | the **gameplay** stream, drawn only when the condition arises | the same rule as checks: a run without the talent draws nothing extra |
-| discovery XP, class hand-outs, stat raises, the thresholds | no draw | |
+| discovery XP, class hand-outs, the thresholds | no draw | |
 | loot talents (`treasure_hunter`, `gem_lore`, `jeweller`) | the `loot/<level>` and `drop/<actor>` streams, as today | they change what is rolled, never the map; a level generated before the talent was taken keeps its loot |
 | cooldowns | game time (statuses) | |
 
-Every pick is an action with replay text (`talent:hardy`, `talent:weapon_focus:long_blades`, `advance:stealth`, `raise:strength`), `Spent::NoTime`, refused with a message when nothing is pending or the prerequisites fail ("You cannot take Cleave yet: you need Strength 13."). The hash covers `progress`, `levels_rng`, and `Actor::talents`; a replay without picks banks them, so old replays play as before but for the thresholds (their hashes change with the format bump anyway).
+Every pick is an action with replay text (`talent:hardy`, `talent:weapon_focus:long_blades`, `advance:stealth`), `Spent::NoTime`, refused with a message when nothing is due or the prerequisites fail ("You cannot take Cleave: you need Strength 13."). The hash covers `progress`, `levels_rng`, `Actor::talents`, `stat_marks`, and the skills' marks.
 
 ## 11. Implementation plan
 
-PR-sized issues, in dependency order; letters are issues, arrows dependencies. Items in the same row can run in parallel (the owner's cap of seven agents and the merge-conflict rules in `docs/dev/merging.md` apply: no two issues in flight touch the same class or talent files).
+Issue-ready items. Each becomes one GitHub issue (title as given), one branch, one PR, with the spec, CLAUDE.md/`docs/dev/progression.md`, and wiki updated in the same PR as the repo's rule is. "Size" is S (a day), M (two to three), L (avoid: split). Items in the same wave touch no common file, so they run in parallel under the seven-agent cap; the merge order inside a wave is free. The critical path is **A → D → G** (three PRs) for a playable loop; everything else widens it.
 
-| # | Issue | Depends on | Size | Notes |
-|---|---|---|---|---|
-| A | **Experience to 60**: `cubic`, the race × class `experience` factors, ZD to 60, discovery XP, the creature XP guideline test, wiki tables | — | S | changes saves (format bump); `--character`'s words on the race/class steps |
-| B | **Buff and cooldown statuses** (B1): the status fields, `blocks`, `follows`, the new statuses, `Unavailable::While`; `afflict`-self abilities in the registry (`Source::Class` plumbing with no class entries yet) | — | S–M | parallel with A |
-| C | **Free blows** (B3): `second_blow` generalised for kill, parry, flee triggers (no consumer yet but tests) | — | S | parallel with A, B |
-| D | **Talents core**: data model, loader, `Talents`/`TalentMods`, `Actor::talents`, `Progress`, the `levels` stream, actions `talent`/`advance`/`raise`, pending budgets on level gain, messages, CLI layers, the coverage test (with the systems list), save and replay | A | M | the first 12 pure-modifier talents ship with it (dodge, hardy, healthy, brawn, silent_feet, keen_ears, pack_mule, long_strider, lean, good_learner, alert, thick_skin) to prove every hook kind |
-| E | **Skill advances at level-up**: class dice data (`data/classes/` split from `classes.toml`), `known_for`, the kinder die, the `advances` counts | D | S–M | moving classes to a directory is this PR's housekeeping |
-| F | **Stat raises** every 4th level, the potential rule | D | S | |
-| G | **Level-up screen, Talents page, chargen step, `--talents`** | D, E, F | M | UI only; golden entries for the three screens |
-| H1–H4 | **Talent waves**: H1 Vigour + Might + Finesse; H2 Weaponcraft + Guard; H3 Shadow (B4 effective eyes, B5 defence by kind) + Wayfarer; H4 Scholar + Grit + Delver | D (H2 also C; H3 brings B4/B5) | S–M each | parallel with each other and with G |
-| H5 | **Racial talents** and `versatile` | D, G | S | |
-| I1–I4 | **Class tables**: I1 warrior, barbarian, paladin, monk; I2 ranger, thief, bard; I3 priest, druid, wizard, witch (the caster placeholders through the cast code); I4 aristocrat, commoner, craftsperson, merchant | D, B, C (I1), B6 kill tally (I2) | M each | one file per class, so all four run in parallel |
-| J1–J4 | **Small new actions**: J1 disarm (Disable device), J2 pick lock (Open lock; lock difficulty data), J3 steal, J4 throw voice and hood the lantern | B | S each | parallel; I2 and H5's `tinker` wait for J1–J3 or ship their entries greyed "not usable yet", as skills are today |
-| K | **Coverage policy**: issue template section, `docs/dev/talents.md`, CLAUDE.md and spec bullets, the wiki's "by system" table | D | S | |
-| L | **#151 talents** (`elemental_ward`, `crusher`, `blight`'s type) | #151, D | S | after #151 lands |
+| # | Issue title | Implements | Depends on | Size | Parallel with |
+|---|---|---|---|---|---|
+| **A** | Experience to 60: the curve in kills, race and class experience factors, discovery XP; the per-level mana gain once the mana PR has landed (else a follow-up line in H6) | §3.1–3.5, §3.7 | — (the mana PR for the mana line only) | S | B, C |
+| **B** | Status effects as buffs and cooldowns: combat fields, `blocks`, `follows`, `Unavailable::While` | §4.1 B1 | — | S–M | A, C |
+| **C** | Free blows: `second_blow` for kill, parry, and flee triggers | §4.1 B3 | — | S | A, B |
+| **D** | Talents core: data model and loader, `Actor::talents` and `TalentMods`, `Progress` and the `levels` stream, `talent:`/`advance:` actions, due choices refused in `apply`, the coverage test, CLI layers, saves and replays; the first 12 modifier talents (`healthy`, `hardy`, `dodge`, `brawn`, `silent_feet`, `keen_ears`, `pack_mule`, `long_strider`, `lean`, `good_learner`, `alert`, `thick_skin`) | §7.1–7.4, §10 | A | M | — |
+| **E** | Skill rolls at level-up: the ladder replaces `[increase]`, marks as a reservoir, class `rolls` and `known_for`, race `rolls`, the Intelligence thresholds, `data/classes/` split from `classes.toml` | §5 | D | M | F, H1, H2, J1–J4 |
+| **F** | Stat training: `data/stats.toml`, `stat_marks`, `World::train(Use)` for stats at the 24 hooks, the level-up checks on the `levels` stream, messages | §6 | D | M | E, H1, H2, J1–J4 |
+| **G** | Level-up screen, Talents info page (page 7), the character creation Talents step, `--talents` | §9 | D, E (the rolls step), F (nothing to choose, but the messages) | M | H3, H4, I1–I4 |
+| **H1** | Talents: Vigour, Might, Finesse | §7.5 (26 talents) | D; C for `cleave`, `riposte`, `opportunist` | M | E, F, H2 |
+| **H2** | Talents: Weaponcraft, Guard | §7.5 (19) | D | S–M | E, F, H1 |
+| **H3** | Talents: Shadow and Wayfarer, with effective eyes (B4) and Defence by attack kind (B5) | §7.5 (20), §4.1 B4–B5 | D | M | G, H4 |
+| **H4** | Talents: Scholar, Grit, Delver | §7.5 (23) | D | M | G, H3 |
+| **H5** | Racial talents and `versatile` | §7.5 (15) | D, G | S | I1–I4 |
+| **H6** | Mana talents: `deep_well`, `clear_mind`, `meditation`, `frugal_caster`, `blood_magic`; the `cast` stat use | §7.5, §6.2, §3.7 | D, F, **the mana PR** | S | I1–I4 |
+| **I1** | Class tables: warrior, barbarian, paladin, monk | §4.2–4.5 | D, B, C | M | I2–I4 |
+| **I2** | Class tables: ranger, thief, bard, with the kill tally for every type (B6) | §4.6–4.8, §4.1 B6 | D, B; J1–J4 for the actives that need them (else shipped greyed "not usable yet") | M | I1, I3, I4 |
+| **I3** | Class tables: priest, druid, wizard, witch, the caster placeholders on the shared cast code, costing mana | §4.9–4.12, §3.7 | D, B, **the mana PR** | M | I1, I2, I4 |
+| **I4** | Class tables: aristocrat, commoner, craftsperson, merchant | §4.13–4.16 | D, B, C | S–M | I1–I3 |
+| **J1** | Disarm traps: the Disable device action | §4.1 B7 | B | S | J2–J4 |
+| **J2** | Pick locks: the Open lock action and lock difficulties | §4.1 B7 | B | S | J1, J3, J4 |
+| **J3** | Steal: the Steal action | §4.1 B7 | B | S | J1, J2, J4 |
+| **J4** | Throw your voice, and hood the lantern | §4.1 B7 | B | S | J1–J3 |
+| **K** | Coverage policy: the issue template section, `docs/dev/progression.md`, spec and CLAUDE.md bullets, the wiki's "by system" table | §8.2 | D | S | anything after D |
+| **L** | Damage-type talents: `elemental_ward`, `crusher`, `blight`'s type | §7.5 `#151` | #151, D | S | R1–R5 |
+| **R1** | Resources: barbarian rage as a Rage pool (from the Raging status), blood frenzy, mighty rage, unstoppable | §4.18 | **#225**, I1 | S–M | R2–R5 |
+| **R2** | Resources: ranger Focus, rapid shot and volley on it | §4.18 | **#225**, I2 | S | R1, R3–R5 |
+| **R3** | Resources: thief Openings and the master thief's finisher | §4.18 | **#225**, I2 | S | R1, R2, R4, R5 |
+| **R4** | Resources: monk Ki, flurry and quivering palm on it; bard Inspiration in place of mana | §4.18 | **#225**, I1, I2 | S | R1–R3, R5 |
+| **R5** | Resource talents: `battle_trance`, `inner_calm`, `steady_hand`, `patient_blade` | §7.5 `#225` | **#225**, D | S | R1–R4 |
 
-Critical path: A → D → G (three PRs) puts the whole loop in the game with a dozen talents; everything else widens it in parallel. Suggested waves: **wave 1** A, B, C (three agents); **wave 2** D; **wave 3** E, F, H1, H2, J1–J4 (within the cap); **wave 4** G, H3, H4, I1–I4; **wave 5** H5, K, L.
+**Waves** (each within the seven-agent cap): **1** A, B, C · **2** D · **3** E, F, H1, H2, J1–J4 (seven) · **4** G, H3, H4, I1, I2, I4 · **5** I3, H5, H6, K, L · **6** R1–R5, after #225 (the owner: after all current issues). **The mana PR** gates I3 and H6 (and A's mana line); if it lands before wave 4, I3 joins wave 4. Everything else is independent of it: the class `mana` values of §3.7 are data the mana PR may take as given.
 
-Each PR updates the spec bullets (§8 "Experience", a new §8 "Talents", "Level-up", the class bullet of §7), CLAUDE.md's pointers, `docs/dev/experience.md` → `docs/dev/progression.md`, and the wiki, as the repo's rule is.
+**Splitting the content-heavy items.** The talent waves are cut by tree so each PR is 20–26 one-file talents plus their hooks, and no two PRs touch the same hook file where it can be helped (H1 owns `fight.rs`'s profile reads and `second_blow`, H2 `defence` and the protection sum, H3 `noise.rs`, `sight`/`eyes`, `step_price`, H4 `search.rs`, `shop.rs`, `read.rs`, `eat.rs`); where two must touch one hook (`healing_rate`: H1's `fast_healer`, H3's `sun_blessed`) the first to land adds the read and the second only its talent. Class tables are cut by four classes of a kind so each PR is one data file per class and about 36 entries, and shared entries (`evasion`, `woodland_stride`, `divine_health`, `second_wind`, `smite`) are implemented by the first PR that needs them and named by the others. D ships enough talents to prove every hook kind (a flat Defence bonus, a percent, a per-level scaler, a noise percent, a check modifier), so the waves after it are data plus one read each.
 
-## 12. Open questions for the owner
+**Tests each item carries** (the repo's bar): unit tests in `warlock-core` for the rules; a replay created and verified for determinism (every level-up in it spent by `advance:`/`talent:` steps); the content coverage test from D; insta snapshots where the generators are touched (none expected); golden entries for the three new screens (G), advisory while #166 stands; `cargo xtask wiki --check`.
 
-1. **The curve.** Cubic (`3·(n−1)³ + …`: even-level kills per level grow linearly from 2 to 100, 652 k XP at 60) rather than geometric. *Recommendation: cubic, with the creature XP guideline `5·level + 10`; revisit the constant once the Depths have level-10+ creatures.*
-2. **The factors' range.** Races 90–140, classes 80–125, multiplied (72 % to 175 %). *Recommendation: as proposed; Angband 4.2 and DCSS both narrowed theirs, so keep the spread modest and show it in words at creation.*
-3. **Discovery XP.** First kill of a type (its XP once more, unscaled), first arrival on a level (5 × depth), optionally first identification of an affix (10). *Recommendation: the first two now, identification later with item knowledge.*
-4. **Hit points past 20.** Keep `hp_level = 20` (pools stay linear; Hardy and the barbarian's `hardened` buy more) or raise it to 30 with the cap at 60. *Recommendation: keep 20.*
-5. **Stat raises.** +1 to a chosen stat every 4 levels (15 by 60), lifting the potential with it so no hidden cap ever refuses a pick. *Recommendation: yes; the alternative, respecting potentials and greying the capped stat, leaks them.*
-6. **Caster classes now.** Give priest, druid, wizard, witch active placeholders through the scrolls' shared cast code with cooldown statuses, to be replaced by the spell system; or leave their tables to bonus talents until magic exists. *Recommendation: placeholders, clearly marked `spell` in data so the spell system can swap them; a wizard with nothing to do until M-magic is the ADOM "unsupported" feeling in reverse.*
-7. **Cooldowns as statuses.** Winded/Drained/Spent are visible, time-based limits on class actives. They are not use counts, so "time is the penalty" holds, but they are a limit. *Recommendation: accept; the alternative (no limit, only the action's time and hunger) makes every heal a free full heal between fights, which only moves the limit to tedium.*
-8. **Respec.** None proposed (a choice is a choice; nothing anti-farming is involved). *Recommendation: none; if ever, a rare consumable, never a menu.*
-9. **Ranks and choices.** Up to 3 ranks per talent and parameterised talents (Weapon focus (long blades)). *Recommendation: both; they keep the list at ~90 names instead of ~140.*
-10. **Skill advances.** 2 a level (3 for thief, ranger, bard), +1 at Intelligence 16 (a score threshold, not the modifier), humans and half-elves +1, dice `1d4+2` / `1d4` / `1d3`, the used-skill reroll, banking without limit. *Recommendation: as proposed; the one number to watch is the thief's 3.*
-11. **Creation picks.** 2 (humans 3), chosen on a new step before the Summary; `--talents` on the command line. *Recommendation: yes; 1 would make the step feel like a tax, 3 like homework.*
-12. **The level-up screen opens by itself** at the end of the turn a level comes, Esc banks everything. *Recommendation: yes, with the Talents page as the way back; never a `--more--`.*
-13. **Class bonus picks.** 8 for warrior and thief (martial pattern), 5 for the rest; the commoner's from any tree. *Recommendation: as proposed.*
-14. **New small actions** (disarm, pick lock, steal, throw voice, hood the lantern) ride on this milestone because the thief's and bard's tables want them. *Recommendation: yes, as four small issues; the class entries ship greyed "not usable yet" if they lag, as skill actions do today.*
-15. **`Actor::talents` on every actor** (creatures could get talents from data later, with no new code) or the player only. *Recommendation: every actor; it costs nothing and keeps one aggregation.*
-16. **Trim the list?** 99 talents are written; 80 is a comfortable first release. *Recommendation: ship all but `#151`'s now, since each is one data file and one hook, and the coverage test wants the breadth.*
+## 12. Decisions
+
+The owner reviewed the first draft (PR #220) and approved it to implement with the changes now folded in above. For the record:
+
+**Answered by the owner**
+
+1. **Kills, not XP, and more of them**: about 3 000 even-level kills to level 20 and 15 000 to level 60 (§3.2, the new curve).
+2. **Skill increases lean on ADOM**: marks set the dice, a roll consumes marks and shrinks them, the class sets the rolls (one class with "many rolls" as its identity: the bard), humans +1, Intelligence more, class and race affinities (§5).
+3. **No player-chosen stat raises**: stats train by use through marks and are checked at every level-up, a rise consuming the marks (§6).
+4. **Talent counts stand**; one lucky class gets another: the bard, at creation (§7.2).
+5. **Class signature abilities at fixed levels stand**; the tables are not set in stone and may favour some classes later; some classes are allowed to be memes (the druid's early entries stay as they are).
+6. **No banking**: every level-up choice is made at once (§9.2, enforced by the rules, §10.2).
+
+**Decided on the recommendations, under the owner's "looks good"**
+
+7. Discovery XP: the first kill of a type and the first arrival on a level now; affix identification later.
+8. `hp_level` stays 20; Hardy and the barbarian's `hardened` buy more hit points.
+9. Caster classes get placeholder actives through the scrolls' shared cast code with cooldown statuses, marked `spell` in data for the spell system to replace.
+10. Cooldowns on the martial actives are visible, time-based statuses (Winded, Drained, Spent, Exhausted); the casting actives cost mana instead (§3.7).
+11. No respec.
+12. Talents have up to 3 ranks and may take a choice (Weapon focus (long blades)).
+13. Creation picks: 2 (humans and bards 3), a Talents step before the Summary; `--talents` on the command line, the Random picks without it.
+14. The level-up screen opens by itself at the end of the turn and cannot be left until its choices are made; several levels in one turn are one sequence; a level stops a long action as a message does.
+15. Class bonus picks: 8 for the warrior and the thief, 5 for the rest, the commoner's from any tree.
+16. The four small actions (disarm, pick lock, steal, throw voice; hooding the lantern with them) ride on this milestone as separate issues.
+17. `Actor::talents` on every actor, so creatures may get talents from data later.
+18. All ~100 talents ship (the `#151` ones with #151).
+
+**Decided in this revision, flagged for a nod**
+
+19. Skill marks feed **only** the level-up rolls; the by-use point gain (the provisional `[increase]`) is removed (§5.2: one channel, one curve, no double counting). The alternative, keeping both, is a data switch away if play misses growth between levels.
+20. Potentials stay a **soft** cap on stat training: the level-up chance is quartered at or above the potential and a rise there lifts it (§6.3), so the hidden number never shows as a wall.
+21. The expected stat growth is about +25 to +35 points over 60 levels, by use, with `need = 20 + 3 × score` as the knob (§6.4).
+22. **Mana** (the owner's new request, built in its own PR): class and race `mana` values with the aristocrat as the oddly gifted meme class; a per-level gain to a `mana_level` beside the hit points; the casters' actives cost mana **instead of** cooldown statuses (mana comes back with time), the martial actives keep theirs; spending mana trains Willpower; five Scholar talents on the mana hooks; mana in the coverage list (§3.7, §7.5, §8).
+23. **Alternative resources** (#225, after this milestone): rage, focus, openings, ki, and inspiration as pools with the parameters of §4.18; each feature ships first as the status or passive its table gives and migrates in R1–R5 of §11; four class-limited talents; a coverage row.
