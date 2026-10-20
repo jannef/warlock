@@ -67,7 +67,7 @@ more (see [Healing](healing.md)). Resting still doubles the pace.
 - **Marshes and swamps**: crossing the marshes of a swamp, or a swamp on the
   [overworld](overworld.md), may give you marsh ague. The longer you spend in them, the likelier
   it gets.
-- **Rotten food**: eating rotten flesh may give you grave rot.
+- **Rotten food**: eating rotten food (of any kind) may give you grave rot.
 
 ## Grave rot
 

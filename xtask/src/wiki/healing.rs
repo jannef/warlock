@@ -99,11 +99,9 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
     if by_attack {
         causes.push("some creatures' attacks");
     }
-    let sickness = (content.hunger())
-        .and_then(|h| h.corpses.as_ref())
-        .and_then(|c| content.status_id(c.sickness.as_deref()?));
+    let sickness = (content.hunger()).and_then(|h| content.status_id(h.sickness.as_deref()?));
     if sickness.is_some_and(|s| usize::from(s.0) == status) {
-        causes.push("eating rotten corpses");
+        causes.push("eating rotten food");
     }
     if causes.is_empty() {
         "—".into()

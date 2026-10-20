@@ -118,9 +118,10 @@ from it, a vast lit cavern, and procedurally generated dungeon levels.
   its key; the dungeon's locked rooms always leave their key within reach.
 - **Hunger** — ADOM-style: time empties your stomach (resting and long journeys too), faster for
   a halfling than an elf. Hungry, then weak, fainting, and starving to death; eat too much and
-  you are bloated and slow, or vomit. Eat rations, bread, and apples, or the corpses creatures
-  leave behind: they weigh what the creature did, rot within a day or two, and some do more than
-  feed you (a kobold tastes terrible; a beetle might toughen you). The hub's pantry has food.
+  you are bloated and slow, or vomit. Eat rations, bread, and apples before they spoil, or the
+  corpses creatures leave behind: they weigh what the creature did, rot within a day or two, and
+  some do more than feed you (a kobold tastes terrible; a beetle might toughen you). Rotten food
+  makes you sick. The hub's pantry has food.
 - **Stats** — Strength, Dexterity, Toughness, Intelligence, Willpower, and Presence, inspired by
   D&D, for you and every creature; a character screen shows your own. Strength, Dexterity, and
   Toughness count in a fight, and Strength kicks doors in; the rest do nothing yet.
