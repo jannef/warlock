@@ -4,3 +4,10 @@
 name = "patrol-heard"
 scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*36 wait*3"
+
+# Throwing one's voice (#235): in the lit start room, a voice thrown to a cell four east and two
+# north. The player made it, so they hear nothing, but the map marks where it sounded.
+[[golden]]
+name = "voice-thrown"
+scenario = "showcase"
+actions = "throw_voice:11,13"

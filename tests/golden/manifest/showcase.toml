@@ -56,3 +56,15 @@ actions = "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 
 name = "darkness-chamber-darkvision"
 scenario = "showcase"
 actions = "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 move:E*6 move:S*2 vision:darkvision"
+
+# The same room by lantern light (#235): lit, and with the hood lowered, a dim ring around the
+# player that leaves them in the dark.
+[[golden]]
+name = "darkness-chamber-hooded"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 move:E*6 move:S*2 lantern hood"
+
+[[golden]]
+name = "darkness-chamber-lantern"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 move:E*6 move:S*2 lantern"
