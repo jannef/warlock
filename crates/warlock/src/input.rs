@@ -4,8 +4,8 @@
 //! not empty) the press goes to the top screen, as a [`Press`] whose menu meaning comes from the
 //! [`Context::Menu`] bindings (Esc always backs out); otherwise it is a gameplay command, read
 //! through the bindings of the current [`InputMode`]'s contexts. Prompts in the message line (the
-//! direction for open/close/kick, for digging, or for a chat, how long to rest, look mode, aiming
-//! a shot or a throw) are input modes, not screens.
+//! direction for open/close/kick, for digging, for a chat, or for an ability, how long to rest,
+//! look mode, aiming a shot or a throw) are input modes, not screens.
 //!
 //! **Every key the game reads is a [`KeyCommand`] in its [`Context`]** (#159), rebindable in
 //! Controls and listed by the `?` help; nothing matches a key code or a character itself, but for
@@ -28,6 +28,7 @@ use bevy::ecs::system::SystemParam;
 use bevy::input::ButtonState;
 use bevy::input::keyboard::{Key, KeyboardInput};
 use bevy::prelude::*;
+use warlock_core::ability::{self, Ability};
 use warlock_core::content::VisionProfile;
 use warlock_core::perception::PerceptionView;
 use warlock_core::time::Duration;
@@ -88,8 +89,13 @@ pub enum KeyCommand {
     Fire,
     /// Choose something to throw from the pack, aim it, then throw.
     Throw,
+    /// Open the abilities menu: racial, class, skill, weapon skill, and item abilities, to
+    /// choose one to use (spec §6 "Abilities", #156).
+    Abilities,
+    /// Use the ability used last again (else open the abilities menu).
+    RepeatAbility,
     /// Bash with the shield held, in a direction (asked for in the message line). An ability
-    /// (`warlock_core::ability`): unbound by default, for the abilities menu to come (#156).
+    /// (`warlock_core::ability`): unbound by default, as the abilities menu lists it (#156).
     Bash,
     /// While aiming: the cursor to the next creature in view (with Shift, the one before).
     NextTarget,
@@ -276,6 +282,8 @@ impl KeyCommand {
             KeyCommand::Throw => "Throw from the pack",
             KeyCommand::MoreAggressive => "More aggressive stance",
             KeyCommand::MoreDefensive => "More defensive stance",
+            KeyCommand::Abilities => "Abilities",
+            KeyCommand::RepeatAbility => "Use the last ability again",
             KeyCommand::Bash => "Bash with your shield",
             KeyCommand::NextTarget => "Next target (Shift: previous)",
             KeyCommand::PrevTarget => "Previous target",
@@ -417,6 +425,8 @@ impl Default for Bindings {
             (ch("T"), Throw),
             (ch("+"), MoreAggressive),
             (ch("-"), MoreDefensive),
+            (ch("a"), Abilities),
+            (ch("A"), RepeatAbility),
             (ch("C"), Chat),
             (Code(KeyCode::Tab), NextTarget),
             (Code(KeyCode::Enter), Loose),
@@ -504,8 +514,11 @@ impl Bindings {
 pub enum InputMode {
     #[default]
     Normal,
-    /// Waiting for a direction for `Open`, `Close`, `Kick`, `Bash`, `UseTool`, or `Chat`.
+    /// Waiting for a direction for `Open`, `Close`, `Kick`, `UseTool`, or `Chat`.
     Direction(KeyCommand),
+    /// Waiting for a direction to use an ability in (one whose [`ability::Aim`] is a direction:
+    /// a shield bash).
+    Ability(Ability),
     /// Asking how long to rest ([`REST_CHOICES`]).
     Rest,
     /// Look mode: a cursor at this level position.
@@ -618,7 +631,9 @@ pub fn route_keys(
             continue;
         }
         let action = if screens.stack.is_empty() {
-            play.press(key, &bindings).unwrap_or(ScreenAction::Stay)
+            let last = screens.stack.last_ability();
+            play.press(key, &bindings, last)
+                .unwrap_or(ScreenAction::Stay)
         } else {
             // Screens edit copies, so the resources only change (and are saved) when a press
             // changed them.
@@ -652,6 +667,12 @@ pub fn route_keys(
                 screens.stack.close();
                 play.aim(AimKind::Throw(item));
             }
+            ScreenAction::UseAbility(ability) => {
+                // From the abilities menu, or from play (its key, the quick repeat).
+                screens.stack.close();
+                screens.stack.remember_ability(ability);
+                play.use_ability(ability);
+            }
             ScreenAction::Open(name) => screens.open(name),
             ScreenAction::Replace(name) => screens.replace(name),
             ScreenAction::Return(name) => screens.stack.return_to(name),
@@ -683,9 +704,15 @@ impl Gameplay<'_> {
         self.held.pressed(KeyCode::ShiftLeft) || self.held.pressed(KeyCode::ShiftRight)
     }
 
-    /// Applies one key press in play. Returns the screen it opens: `?` help, or the pause menu
-    /// on Esc when no prompt is open.
-    fn press(&mut self, key: &KeyboardInput, bindings: &Bindings) -> Option<ScreenAction> {
+    /// Applies one key press in play, `last` the ability used last (for the quick repeat).
+    /// Returns what it asks of the screens: one to open (`?` help, the pause menu on Esc when no
+    /// prompt is open), a dialog, or an ability to use.
+    fn press(
+        &mut self,
+        key: &KeyboardInput,
+        bindings: &Bindings,
+        last: Option<Ability>,
+    ) -> Option<ScreenAction> {
         let game = self.game.as_ref()?;
         let command = command_in(*self.mode, key, bindings, dev_keys(&self.args))?;
         // Held keys repeat only for movement, waiting, and searching, and the aiming cursor's
@@ -772,11 +799,17 @@ impl Gameplay<'_> {
             }
             (InputMode::Look(at), _) => InputMode::Look(at),
             (InputMode::Normal, KeyCommand::Look) => InputMode::Look(game.world.player_pos()),
+            (InputMode::Ability(ability), KeyCommand::Move(dir)) => {
+                if let Some(action) = ability.action(Some(dir)) {
+                    self.actions.write(PlayerAction(action));
+                }
+                InputMode::Normal
+            }
+            (InputMode::Ability(_), _) => InputMode::Normal,
             (InputMode::Direction(cmd), KeyCommand::Move(dir)) => {
                 let action = match cmd {
                     KeyCommand::Open => Action::Open(dir),
                     KeyCommand::Kick => Action::Kick(dir),
-                    KeyCommand::Bash => Action::Bash(dir),
                     KeyCommand::UseTool => Action::Dig(dir),
                     KeyCommand::Chat => Action::Chat(dir),
                     _ => Action::Close(dir),
@@ -925,10 +958,26 @@ impl Gameplay<'_> {
                 self.overlays.light_values = !self.overlays.light_values;
                 InputMode::Normal
             }
-            (
-                InputMode::Normal,
-                KeyCommand::Open | KeyCommand::Close | KeyCommand::Kick | KeyCommand::Bash,
-            ) => InputMode::Direction(command),
+            (InputMode::Normal, KeyCommand::Open | KeyCommand::Close | KeyCommand::Kick) => {
+                InputMode::Direction(command)
+            }
+            (InputMode::Normal, KeyCommand::Abilities) => {
+                open = Some(ScreenAction::Open(ScreenName::Abilities));
+                InputMode::Normal
+            }
+            // The ability used last, again; with none yet, the menu to choose one.
+            (InputMode::Normal, KeyCommand::RepeatAbility) => {
+                open = Some(last.map_or(
+                    ScreenAction::Open(ScreenName::Abilities),
+                    ScreenAction::UseAbility,
+                ));
+                InputMode::Normal
+            }
+            // An ability's own key (unbound by default) uses it as the menu does.
+            (InputMode::Normal, KeyCommand::Bash) => {
+                open = Some(ScreenAction::UseAbility(Ability::ShieldBash));
+                InputMode::Normal
+            }
             // The one creature in view next to the player, at once; else ask which way.
             (InputMode::Normal, KeyCommand::Chat) => match chat_partner(&game.world.perception()) {
                 Some(dir) => {
@@ -1010,6 +1059,28 @@ impl Gameplay<'_> {
         }
         self.actions.write(PlayerAction(action));
         None
+    }
+
+    /// Uses `ability`: asks for what it needs (a direction in the message line), then applies
+    /// its action. One the player cannot use now is applied at once all the same, so the rules
+    /// say why, taking no time (a shield bash without a shield).
+    fn use_ability(&mut self, ability: Ability) {
+        let Some(game) = &self.game else { return };
+        let usable = (game.world.perception().abilities().iter())
+            .any(|own| own.ability == ability && own.unavailable.is_none());
+        match (usable, ability.aim()) {
+            (true, ability::Aim::Direction) => *self.mode = InputMode::Ability(ability),
+            (true, ability::Aim::Nothing) => {
+                if let Some(action) = ability.action(None) {
+                    self.actions.write(PlayerAction(action));
+                }
+            }
+            (false, _) => {
+                if let Some(action) = ability.action(Some(Dir::N)) {
+                    self.actions.write(PlayerAction(action));
+                }
+            }
+        }
     }
 
     /// Starts aiming `kind` (a throw chosen on a screen).
@@ -1106,7 +1177,10 @@ fn command_in(
     let own = match mode {
         InputMode::Rest => Some(Context::Prompt),
         InputMode::Aim(_) => Some(Context::Aim),
-        InputMode::Normal | InputMode::Direction(_) | InputMode::Look(_) => None,
+        InputMode::Normal
+        | InputMode::Direction(_)
+        | InputMode::Ability(_)
+        | InputMode::Look(_) => None,
     };
     (own.and_then(|context| bindings.lookup_in(context, key)))
         .or_else(|| bindings.lookup(key))
@@ -1179,6 +1253,8 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Throw), ["T"]);
         assert_eq!(keys(&b, KeyCommand::WeaponSkills), ["W"]);
         assert!(keys(&b, KeyCommand::Bash).is_empty(), "an ability: unbound");
+        assert_eq!(keys(&b, KeyCommand::Abilities), ["a"]);
+        assert_eq!(keys(&b, KeyCommand::RepeatAbility), ["A"]);
         assert_eq!(keys(&b, KeyCommand::MoreAggressive), ["+"]);
         assert_eq!(keys(&b, KeyCommand::MoreDefensive), ["-"]);
         assert_eq!(keys(&b, KeyCommand::Eat), ["E"]);
