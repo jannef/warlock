@@ -73,7 +73,9 @@ pub use effect::{
     Darken, EffectDef, EffectLight, EffectShape, FILL_GLYPH, MAX_BURST_RADIUS, MAX_DARKEN,
     MAX_SHAKE_PIXELS, Shake,
 };
-pub use experience::{Experience, MAX_LEVEL, MAX_XP};
+pub use experience::{
+    Discovery, Experience, FACTORS, Factor, Guideline, Kills, MAX_LEVEL, MAX_XP, pace_words,
+};
 pub use faction::{FactionDef, FactionId, Factions, PLAYER_FACTION, Stance};
 pub use flow::{FLOW_SPEEDS, Flow};
 pub use gem::{

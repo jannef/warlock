@@ -65,7 +65,9 @@ are rolled again.
 
 The choices are not balanced, and they are not meant to be. Some combinations are poor on
 purpose: a halfling commoner, or a gnome barbarian, makes for a hard start. That is part of the
-fun.
+fun. The poor choices have one consolation: your race and class also set how much
+[experience](experience.md#levels) each level needs, and the long-lived races and the patient
+callings level slowly, while short-lived races and everyday folk level quickly.
 
 ## Seeing who you are
 

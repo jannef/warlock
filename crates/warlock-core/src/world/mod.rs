@@ -121,6 +121,7 @@ mod travel;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
+pub use experience::{Discovered, Progress};
 pub use fight::{Cause, Death};
 pub use free_blow::FreeBlows;
 pub(crate) use hash::fnv1a;
@@ -214,6 +215,9 @@ pub struct WorldState {
     /// The player's experience total (spec §8 "Experience"); their level follows from it.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub(crate) experience: u32,
+    /// What the player has discovered for experience (spec §8 "Experience").
+    #[serde(default, skip_serializing_if = "Progress::is_empty")]
+    pub(crate) progress: Progress,
     /// The player's quests and the kills they count (spec §8 "Quests").
     #[serde(default, skip_serializing_if = "Quests::is_empty")]
     pub(crate) quests: Quests,
@@ -470,6 +474,7 @@ impl World {
             weather_override: None,
             death: None,
             experience: 0,
+            progress: Progress::default(),
             quests: Quests::default(),
         };
         let mut player = Actor {

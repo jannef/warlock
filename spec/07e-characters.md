@@ -20,7 +20,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   by skill id: dice or a number, every result 0 to 100; §8 "Skills"), `class_skill` (dice added
   to one of the class's skills, picked when the character is made; default none), `hunger` (how
   much the character needs to eat, in percent of a human, 10 to 1000, default 100; §8 "Hunger":
-  elf 80, half-elf 90, human 100, dwarf 110, halfling 125, gnome 90, half-orc 120), and
+  elf 80, half-elf 90, human 100, dwarf 110, halfling 125, gnome 90, half-orc 120),
+  `experience` (how much XP a level needs, in percent, 50 to 200, default 100, multiplied with
+  the class's; §8 "Experience": elf 140, half-elf 105, human 100, dwarf 115, halfling 95, gnome
+  120, half-orc 90; long-lived races pay more), and
   `weapon_skills` (starting ranks by weapon skill id, a fixed number or dice, every result 0 to
   10; §8 "Weapon skills"); and at the top
   `base_potential` (1 to 40), what every potential is before the race adjusts it (15). Races are
@@ -115,8 +118,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   "Objects"): small 400 and 3, medium 1000 and 6, both keeping `"8h"` and lasting `"36h"`). The
   wiki shows its tables (the states, the races' needs, food, corpses) generated.
 - **Classes** (`data/classes.toml`, optional), in the order offered: `id`, `name`, a one-line
-  `description`, `stats` (adjustments as for races), `hp` (as for races), `skills` (as for
-  races), `weapon_skills` (starting ranks as for races), `weapon_skill_choice` (two or more
+  `description`, `stats` (adjustments as for races), `hp` (as for races), `experience` (as for
+  races, multiplied with the race's; §8 "Experience": wizard 125, monk 120, priest, druid, and
+  witch 115, paladin 110, ranger 105, warrior and bard 100, thief 95, barbarian, aristocrat,
+  craftsperson, and merchant 90, commoner 80), `skills` (as for races), `weapon_skills` (starting ranks as for races), `weapon_skill_choice` (two or more
   sets of such ranks, one picked at random when the character is made), and `styles` and
   `style_choice` (the same for fighting styles, §8 "Fighting styles"; `weapon_skills` names no
   style and `styles` nothing but styles). Each class rolls
@@ -124,8 +129,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   commoner To `1d3-1`); the rest are fixed. Adventurers: barbarian (8 hit points), bard (2),
   priest (4), druid (4), monk (5), paladin (6), ranger (5), thief (3), wizard (0), witch (1),
   warrior (7); everyday folk: aristocrat (1), commoner (3), craftsperson (3), merchant (2). A
-  class adjusts the starting scores, gives hit points, trains skills, and gives starting ranks in
-  weapon skills and fighting styles, nothing more. Skills: a few it
+  class adjusts the starting scores, gives hit points, sets how fast levels come, trains skills,
+  and gives starting ranks in weapon skills and fighting styles, nothing more. Skills: a few it
   is known for (`2d6+10`) and a few more (`2d4+4`); the full table is in the wiki (Skills), e.g.
   the thief open lock, steal, stealth, and tumble well, appraise, disable device, escape artist,
   search, and spot a little; the ranger spot, survival, and woodcraft well, athletics, handle

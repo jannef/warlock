@@ -478,7 +478,8 @@ mod tests {
             "HP  Hit points    17/17",
             "Dv  Defence       11      Pv  Protection  0",
             "Lv  Level         1",
-            "XP  Experience    0 / 20",
+            // A human thief's level 2: 767 × 95 %.
+            "XP  Experience    0 / 729",
         ] {
             row(expected);
         }

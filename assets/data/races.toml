@@ -30,6 +30,9 @@
 #                 character is made (default none; humans: one extra class skill)
 #   hunger        how much the character needs to eat, in percent of a human (spec §8 "Hunger";
 #                 10 to 1000, default 100): game time burns their nutrition this much faster
+#   experience    how much experience a level needs, in percent (spec §8 "Experience"; 50 to
+#                 200, default 100): multiplied with the class's onto every threshold in
+#                 experience.toml. Long-lived races pay more, short-lived ones less
 #   weapon_skills starting ranks in weapon skills (spec §8 "Weapon skills"), by skill id in
 #                 weapon_skills.toml: a number or dice, every result within 0 to 10; added to
 #                 the class's (at most 10), then each raises the skills it defaults to
@@ -61,6 +64,7 @@ skills = { listen = "1d6+4", spot = "1d6+4" }
 passive_search = "all"
 search = 2
 hunger = 80
+experience = 140
 weapon_skills = { long_blades = 1, bows = 1 }
 
 [[race]]
@@ -75,6 +79,7 @@ hp = 3
 size = "medium"
 skills = { bluff = "1d4+2", spot = "1d4+2" }
 hunger = 90
+experience = 105
 weapon_skills = { bows = "1d2-1" }
 
 # No gift and no flaw, but the most room to grow (rolled).
@@ -90,6 +95,7 @@ size = "medium"
 # One extra class skill: one of the class's skills, picked when the character is made.
 class_skill = "2d4+4"
 hunger = 100
+experience = 100
 
 [[race]]
 id = "dwarf"
@@ -108,6 +114,7 @@ ignores_burdened = true
 # They know stonework: they notice what is hidden in stone in passing (most of a dungeon).
 passive_search = "stone"
 hunger = 110
+experience = 115
 
 [[race]]
 id = "halfling"
@@ -122,6 +129,7 @@ size = "small"
 skills = { listen = "1d6+4", stealth = "1d6+4" }
 # Second breakfast.
 hunger = 125
+experience = 95
 weapon_skills = { slings = 1 }
 
 [[race]]
@@ -136,6 +144,7 @@ hp = 3
 size = "small"
 skills = { appraise = "1d6+4", listen = "1d6+4" }
 hunger = 90
+experience = 120
 weapon_skills = { crossbows = 1 }
 
 [[race]]
@@ -150,4 +159,5 @@ hp = 6
 size = "medium"
 skills = { intimidate = "1d6+4" }
 hunger = 120
+experience = 90
 weapon_skills = { axes = 1 }

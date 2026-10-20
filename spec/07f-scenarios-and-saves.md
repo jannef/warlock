@@ -49,7 +49,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   class or its type add to its Toughness, and the seconds banked toward the next one back; §8
   "Combat"), the fires burning on each level (§8 "Ranged combat"), the player's
   experience total (§8 "Experience"; absent while
-  0, so a run without kills hashes as before), every actor's trained skills (value and training
+  0, so a run without kills hashes as before) and the creature types whose first kill paid
+  (absent while none), every actor's trained skills (value and training
   marks) and the training random stream (§8 "Skills"), each level's special
   rooms and whether the player has been in each (§7 "Special rooms"), every
   actor's weapon skills (its rank and marks in each, §8 "Weapon skills"), the

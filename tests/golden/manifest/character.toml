@@ -63,6 +63,13 @@ name = "race-screen"
 scenario = "showcase"
 screen = "race"
 
+# The class step (#226), the thief preselected: below its stat adjustments, how fast its levels
+# come, in words ("Levels come quickly.": a thief needs 95 % of the experience).
+[[golden]]
+name = "class-screen"
+scenario = "showcase"
+screen = "class"
+
 [[golden]]
 name = "name-screen"
 scenario = "showcase"

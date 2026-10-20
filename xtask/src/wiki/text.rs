@@ -15,6 +15,19 @@ pub(super) fn yes(b: bool) -> &'static str {
     if b { "yes" } else { "no" }
 }
 
+/// `12920` as `12,920`.
+pub(super) fn thousands(n: u32) -> String {
+    let digits = n.to_string();
+    let mut out = String::new();
+    for (i, c) in digits.chars().enumerate() {
+        if i > 0 && (digits.len() - i).is_multiple_of(3) {
+            out.push(',');
+        }
+        out.push(c);
+    }
+    out
+}
+
 /// A name for a player-facing table, first letter capitalized.
 pub(super) fn capital(name: &str) -> String {
     let mut chars = name.chars();

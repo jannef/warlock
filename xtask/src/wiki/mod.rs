@@ -182,6 +182,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("diseases.md", healing::diseases),
         ("disease-checks.md", healing::disease_checks),
         ("experience-levels.md", experience::experience_levels),
+        ("experience-factors.md", experience::experience_factors),
+        ("experience-discovery.md", experience::experience_discovery),
         ("experience-zd.md", experience::experience_zero_difference),
         ("experience-scaling.md", experience::experience_scaling),
         ("experience-example.md", experience::experience_example),
