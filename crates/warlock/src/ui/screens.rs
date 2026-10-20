@@ -41,6 +41,7 @@ use super::object_screen::{ObjectList, ObjectScreen};
 use super::quest_screen::QuestScreen;
 use super::settings_screen::SettingsScreen;
 use super::skills_screen::SkillsScreen;
+use super::target::AimKind;
 use super::weapon_skills_screen::WeaponSkillsScreen;
 use crate::cli::Args;
 use crate::game::{Game, GameContent, PlayerAction};
@@ -108,6 +109,13 @@ pub enum ScreenName {
     Throw,
     /// Choose what to eat (`E` in play): food lying here, then food in the pack.
     Eat,
+    /// Choose a scroll to read (`r` in play): a spell scroll is aimed next, the scroll of
+    /// identify asks what to read it on.
+    Read,
+    /// Choose what to read the scroll of identify on: the unidentified stacks carried. It takes
+    /// the place of the read list where that scroll was chosen (as `--screen`, the first stack's
+    /// scroll).
+    Identify,
     /// Talking with someone who has topics (`C` next to them): opens by itself when they answer;
     /// as `--screen`, over a run whose last action was such a chat (a replay's last step).
     Dialogue,
@@ -139,6 +147,8 @@ impl ScreenName {
                 | ScreenName::Drop
                 | ScreenName::Throw
                 | ScreenName::Eat
+                | ScreenName::Read
+                | ScreenName::Identify
                 | ScreenName::Dialogue
                 | ScreenName::Death
         )
@@ -182,8 +192,8 @@ pub enum ScreenAction {
     Dialog(Box<Dialog>),
     /// Close this screen and apply a gameplay action (what to pick up, drop, wear, or wield).
     Act(Action),
-    /// Close this screen and aim inventory stack `usize` to throw it (what to throw).
-    Aim(usize),
+    /// Close this screen and aim: a throw of the stack chosen, a scroll read at a cell.
+    Aim(AimKind),
 }
 
 impl From<MenuChoice> for ScreenAction {
@@ -288,6 +298,8 @@ impl Screen {
             ScreenName::Drop => objects(ObjectList::Drop),
             ScreenName::Throw => objects(ObjectList::Throw),
             ScreenName::Eat => objects(ObjectList::Eat),
+            ScreenName::Read => objects(ObjectList::Read),
+            ScreenName::Identify => objects(ObjectList::Identify(item.unwrap_or(0))),
             ScreenName::Dialogue => Screen::Dialogue(DialogueScreen::new(talk, run)),
             ScreenName::Death => Screen::Death(DeathScreen::new(run)),
             ScreenName::Dialog => Screen::Dialog(DialogScreen::new(quit_dialog(run.is_some()))),
@@ -311,6 +323,8 @@ impl Screen {
                 ObjectList::Drop => ScreenName::Drop,
                 ObjectList::Throw => ScreenName::Throw,
                 ObjectList::Eat => ScreenName::Eat,
+                ObjectList::Read => ScreenName::Read,
+                ObjectList::Identify(_) => ScreenName::Identify,
             },
             Screen::Equipment(_) => ScreenName::Equipment,
             Screen::EquipItem(_) => ScreenName::EquipItem,
@@ -413,10 +427,15 @@ impl ScreenStack {
     }
 
     /// The carried stack looked at on the topmost inventory or equipment screen, if any: what a
-    /// description opened from it describes.
+    /// description opened from it describes; or the scroll of identify chosen on the read list:
+    /// what the identify list reads.
     fn looked_item(&self) -> Option<usize> {
         self.screens.iter().rev().find_map(|s| match s {
-            Screen::Objects(screen) if screen.list() == ObjectList::Inventory => screen.looked(),
+            Screen::Objects(screen)
+                if matches!(screen.list(), ObjectList::Inventory | ObjectList::Read) =>
+            {
+                screen.looked()
+            }
             Screen::Equipment(screen) => screen.selected_item(),
             _ => None,
         })
@@ -591,10 +610,15 @@ impl Screens<'_> {
 
     /// Opens screen `name` on top of the stack. The one way screens open.
     pub fn open(&mut self, name: ScreenName) {
+        let item = self.stack.looked_item();
+        self.open_on(name, item);
+    }
+
+    /// Opens screen `name` for carried stack `item` (what was looked at or chosen beneath).
+    fn open_on(&mut self, name: ScreenName, item: Option<usize>) {
         let view = self.game.as_ref().map(|game| game.world.perception());
         let talk = (self.game.as_ref()).and_then(|game| last_talk(&game.last_outcome));
         let (draft, slot) = (self.stack.draft(), self.stack.selected_slot());
-        let item = self.stack.looked_item();
         let launch = Launch {
             has_save: self.store.has_save(),
             dev: dev_keys(&self.args),
@@ -606,10 +630,12 @@ impl Screens<'_> {
     }
 
     /// Replaces the top screen with screen `name`: the same stack depth, so closing it returns
-    /// to where the one it replaced was opened from.
+    /// to where the one it replaced was opened from. It reads what was looked at or chosen on
+    /// the screen it replaces (the scroll of identify chosen on the read list).
     pub fn replace(&mut self, name: ScreenName) {
+        let item = self.stack.looked_item();
         self.stack.close();
-        self.open(name);
+        self.open_on(name, item);
     }
 }
 

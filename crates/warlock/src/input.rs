@@ -79,6 +79,9 @@ pub enum KeyCommand {
     RestDusk,
     /// Choose something to eat, from the floor or the pack.
     Eat,
+    /// Choose a scroll to read: a spell is aimed next (a cursor on the map), the scroll of
+    /// identify asks what to read it on.
+    Read,
     /// Move a cursor over the map to read what is there (no time passes).
     Look,
     /// Shoot or throw what is in the missile weapon slot (a cursor on the map): a launcher
@@ -270,6 +273,7 @@ impl KeyCommand {
             KeyCommand::RestDawn => "Rest until dawn",
             KeyCommand::RestDusk => "Rest until nightfall",
             KeyCommand::Eat => "Eat",
+            KeyCommand::Read => "Read a scroll",
             KeyCommand::Look => "Look around",
             KeyCommand::Missile => "Throw or shoot the missile weapon",
             KeyCommand::Fire => "Fire missile weapon",
@@ -412,6 +416,7 @@ impl Default for Bindings {
             (ch("q"), Quests),
             (ch("R"), Rest),
             (ch("E"), Eat),
+            (ch("r"), Read),
             (ch("x"), Look),
             (ch("t"), Missile),
             (ch("T"), Throw),
@@ -648,9 +653,9 @@ pub fn route_keys(
                     screens.ask(dialog);
                 }
             }
-            ScreenAction::Aim(item) => {
+            ScreenAction::Aim(kind) => {
                 screens.stack.close();
-                play.aim(AimKind::Throw(item));
+                play.aim(kind);
             }
             ScreenAction::Open(name) => screens.open(name),
             ScreenAction::Replace(name) => screens.replace(name),
@@ -708,10 +713,7 @@ impl Gameplay<'_> {
                 }
                 InputMode::Normal
             }
-            (InputMode::Aim(aim), KeyCommand::Loose) => {
-                self.loose(aim);
-                return None;
-            }
+            (InputMode::Aim(aim), KeyCommand::Loose) => return self.release(aim),
             (InputMode::Aim(aim), KeyCommand::Move(dir)) => {
                 InputMode::Aim(aim.step(dir, &game.world.perception()))
             }
@@ -719,15 +721,19 @@ impl Gameplay<'_> {
                 let forward = (command == KeyCommand::NextTarget) != self.shift();
                 InputMode::Aim(aim.cycle(&game.world.perception(), forward))
             }
-            (InputMode::Aim(aim), KeyCommand::Missile | KeyCommand::Fire | KeyCommand::Throw) => {
-                // The key that started the aim confirms it, and so does `t`, which starts both.
-                let confirm = match aim.kind {
-                    AimKind::Fire => KeyCommand::Fire,
-                    AimKind::Throw(_) => KeyCommand::Throw,
+            (
+                InputMode::Aim(aim),
+                KeyCommand::Missile | KeyCommand::Fire | KeyCommand::Throw | KeyCommand::Read,
+            ) => {
+                // The key that started the aim confirms it, and so does `t`, which starts a shot
+                // and a throw.
+                let (confirm, missile) = match aim.kind {
+                    AimKind::Fire => (KeyCommand::Fire, true),
+                    AimKind::Throw(_) => (KeyCommand::Throw, true),
+                    AimKind::Read(_) => (KeyCommand::Read, false),
                 };
-                if command == confirm || command == KeyCommand::Missile {
-                    self.loose(aim);
-                    return None;
+                if command == confirm || (missile && command == KeyCommand::Missile) {
+                    return self.release(aim);
                 }
                 InputMode::Aim(aim)
             }
@@ -891,6 +897,10 @@ impl Gameplay<'_> {
                 open = Some(ScreenAction::Open(ScreenName::Eat));
                 InputMode::Normal
             }
+            (InputMode::Normal, KeyCommand::Read) => {
+                open = Some(ScreenAction::Open(ScreenName::Read));
+                InputMode::Normal
+            }
             (InputMode::Normal, KeyCommand::Quests) => {
                 open = Some(ScreenAction::Open(ScreenName::Quests));
                 InputMode::Normal
@@ -1012,12 +1022,28 @@ impl Gameplay<'_> {
         None
     }
 
-    /// Starts aiming `kind` (a throw chosen on a screen).
+    /// Starts aiming `kind` (a throw or a scroll chosen on a screen).
     fn aim(&mut self, kind: AimKind) {
         if let Some(game) = &self.game {
             let aim = Aim::start(kind, &game.world.perception(), &self.last);
             *self.mode = InputMode::Aim(aim);
         }
+    }
+
+    /// Looses what `aim` aims at its cursor; a burst that may catch the player (a scroll of
+    /// fireball read too close) asks first, in the dialog, which is returned to open (spec §6
+    /// "Targeting").
+    fn release(&mut self, aim: Aim) -> Option<ScreenAction> {
+        let dialog = (self.game.as_ref()).and_then(|g| burst_dialog(&g.world.perception(), aim));
+        let Some(dialog) = dialog else {
+            self.loose(aim);
+            return None;
+        };
+        if let Some(game) = &self.game {
+            self.last.remember(&game.world.perception(), aim);
+        }
+        *self.mode = InputMode::Normal;
+        Some(dialog.into())
     }
 
     /// Looses the missile `aim` aims, remembering its target for the next shot.
@@ -1119,6 +1145,27 @@ fn command_in(
 /// The dialog a step in `dir` opens first, if it goes onto a trap the player knows, where no one
 /// they see stands (moving there would be an attack, or stop; spec §8 "Traps"): "Really step
 /// onto the fireball trap?", to step onto it or stay back (the safe answer, selected first).
+/// The question before reading a scroll whose burst may catch the player too, aimed by `aim`
+/// (as far as they know, [`Aim::catches_reader`]): read it anyway, aim again (back at the same
+/// cursor, the target remembered), or not read it.
+fn burst_dialog(view: &PerceptionView<'_>, aim: Aim) -> Option<Dialog> {
+    let AimKind::Read(item) = aim.kind else {
+        return None;
+    };
+    let noun = aim.catches_reader(view)?;
+    let stack = view.inventory().get(item)?;
+    let name = &view.content().object(stack.object).name;
+    Some(
+        Dialog::new(
+            "Too close",
+            format!("The {noun} may catch you too. Read the {name} anyway?"),
+        )
+        .accept("Read it", aim.action())
+        .decline("Aim again", ScreenAction::Aim(aim.kind))
+        .cancel("Don't read it", ScreenAction::Close),
+    )
+}
+
 fn trap_dialog(view: &PerceptionView<'_>, dir: Dir) -> Option<Dialog> {
     let to = view.viewer().step(dir);
     let trap = view.trap(to).filter(|_| view.actor_at(to).is_none())?;
