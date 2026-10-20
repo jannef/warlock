@@ -12,13 +12,14 @@ name = "kit-inventory"
 scenario = "world"
 screen = "inventory"
 
-# New run on the world, a human male aristocrat: the summary lists the kit, the rapier and the
-# heirloom ring magic and unidentified, the gaps squeezed out at 960x540.
+# New run on the world, a halfling male merchant: the summary lists the kit and the race's
+# additions (two wool cloaks counted together), the gaps squeezed out at 960x540. A kit without
+# magic, so new affixes elsewhere never change the capture.
 [[golden]]
 name = "kit-summary"
 scenario = "world"
 screen = "new-run"
 args = [
     "--keys",
-    "Down Down Down Down Down Down Down Down Enter Enter Enter Down Down Down Down Down Enter",
+    "Down Down Down Down Down Down Down Down Enter Down Down Enter Enter Down Down Down Down Down Down Down Down Enter",
 ]
