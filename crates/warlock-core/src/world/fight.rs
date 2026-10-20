@@ -11,6 +11,14 @@
 //! ([`Strike::Soaked`]) glances off ("Your sword glances off the cave beetle's shell.") and does
 //! nothing else, no blood and no wound, but it landed: it trains as a hit does.
 //!
+//! Damage types (spec §8 "Damage types"): every blow is of a kind (a sword slashes or pierces,
+//! whichever is better against its target; bare hands and bashes bludgeon), said with the
+//! kind's verb ("The kobold stabs you.", "You cleave the giant rat."); Protection soaks only
+//! the physical kinds, and the target's resistances ([`World::resistances_of`]) take their
+//! share off each kind after it. A hit resisted to nothing ([`Strike::Resisted`]) does no harm
+//! ("Your torch does the salamander no harm."): the only hint of a creature's resistances.
+//! [`World::target_of`] gathers the three; [`World::resisted`] is for harm that is not a blow.
+//!
 //! Damage takes hit points; at 0 the target dies ([`Event::Died`]). A creature is removed from
 //! the world and drops what it carried on its cell; the player's run ends ([`Death`]): every
 //! action after that is refused, and the app shows the death screen and deletes the save.
@@ -41,14 +49,20 @@
 //! a blow that hits may be followed by a free shield bash, by the style's chance. Each blow is
 //! resolved on its own: its weapon's skill and affixes, its blood, and the bleeding of a big hit.
 //! A kick is made whatever the hands hold: it draws on unarmed fighting and no style.
+//!
+//! Free blows (spec §8 "Free blows", `free_blow.rs`): the end of a melee attack may bring a
+//! cleave (it killed) or the target's riposte (its Parry made a blow miss), and a step away from
+//! beside an opportunist its blow; [`World::second_blow`] decides each.
 
+use super::free_blow::{self, Cue, Free, FreeBlow};
 use super::{Actor, ActorId, AttackSkills, Spent, World};
 use crate::action::{AttackKind, Event};
-use crate::combat::{self, Blow, Category, Profile, Strike};
+use crate::combat::{self, Blow, Category, Profile, Strike, Target};
 use crate::content::{
-    ActionKind, Content, CreatureId, Grip, ObjectId, Role, Stance, StatusId, TrapId, WeaponSkillId,
-    article,
+    ActionKind, Content, CreatureId, DamageTypeId, Grip, ObjectDef, ObjectId, Role, Stance,
+    StatusId, TrapId, WeaponSkillId, article,
 };
+use crate::damage::{self, Damage, Protection, Resistances};
 use crate::geom::Dir;
 use crate::noise::Act;
 use crate::object;
@@ -150,16 +164,17 @@ pub(super) enum Harm {
 pub(super) struct Words {
     noun: String,
     verb: String,
-    you: &'static str,
+    you: String,
 }
 
 impl Words {
-    /// What hits ("arrow", "fireball") and what it does ("hits", "burns").
+    /// What hits ("arrow", "fireball") and what it does ("hits", "burns"); what the player does
+    /// with it follows ("hit", "burn").
     pub(super) fn new(noun: &str, verb: &str) -> Self {
         Self {
             noun: noun.into(),
             verb: verb.into(),
-            you: if verb == "bashes" { "bash" } else { "hit" },
+            you: second_person(verb),
         }
     }
 
@@ -170,38 +185,46 @@ impl Words {
 
     /// A kick (spec §8 "Doors"): "You kick the giant rat.", "The giant rat dodges your kick."
     pub(super) fn kick() -> Self {
-        Self {
-            noun: "kick".into(),
-            verb: "kicks".into(),
-            you: "kick",
+        Self::new("kick", "kicks")
+    }
+
+    /// What a weapon's blow does (spec §8 "Damage types"): the weapon's own `verb` ("cleaves"),
+    /// else the verb of `damage`, the kind it did ("slashes", "slash"), else "hits".
+    fn blow(weapon: &ObjectDef, damage: Option<DamageTypeId>, content: &Content) -> Self {
+        match (&weapon.verb, damage) {
+            (Some(verb), _) => Self::new(&weapon.name, verb),
+            (None, Some(kind)) => {
+                let kind = content.damage_type(kind);
+                Self {
+                    noun: weapon.name.clone(),
+                    verb: kind.verb.clone(),
+                    you: kind.you.clone(),
+                }
+            }
+            (None, None) => Self::new(&weapon.name, "hits"),
         }
     }
 
     /// What `actor` attacks with, by `kind`; a shot or a throw is made `with` its missile, a
-    /// bash with a shield, an off-hand blow with the off hand's weapon.
+    /// bash with a shield, an off-hand blow with the off hand's weapon; `damage` is the kind of
+    /// damage the blow did, which a weapon's blow is said with.
     pub(super) fn of(
         actor: &Actor,
         kind: AttackKind,
         with: Option<ObjectId>,
+        damage: Option<DamageTypeId>,
         content: &Content,
     ) -> Self {
-        let words = |noun: &str, verb: &str| Self {
-            noun: noun.into(),
-            verb: verb.into(),
-            you: "hit",
-        };
+        let words = |noun: &str, verb: &str| Self::new(noun, verb);
         match kind {
             AttackKind::Melee if let Some(with) = with => match content.object(with) {
-                shield if shield.bash.is_some() => Self {
-                    you: "bash",
-                    ..words(&shield.name, "bashes")
-                },
-                weapon => words(&weapon.name, "hits"),
+                shield if shield.bash.is_some() => words(&shield.name, "bashes"),
+                weapon => Self::blow(weapon, damage, content),
             },
             AttackKind::Melee => {
                 let natural = content.creature(actor.creature).attack.as_ref();
                 match (actor.weapon(content), natural) {
-                    (Some((weapon, _)), _) => words(&content.object(weapon).name, "hits"),
+                    (Some((weapon, _)), _) => Self::blow(content.object(weapon), damage, content),
                     (None, Some(attack)) => words(&attack.name, &attack.verb),
                     (None, None) => words("fist", "hits"),
                 }
@@ -278,6 +301,28 @@ impl End<'_> {
     }
 }
 
+/// A verb in the player's person: "slashes" → "slash", "bashes" → "bash", "pierces" →
+/// "pierce", "hits" → "hit" (an `es` after a sibilant comes off, else the `s`); a verb that
+/// does not end in `s` stays as it is.
+pub(super) fn second_person(verb: &str) -> String {
+    let (first, rest) = verb.split_once(' ').unwrap_or((verb, ""));
+    let stem = match first.strip_suffix('s') {
+        None => first.to_string(),
+        Some(stem) => {
+            let sibilant = ["sh", "ch", "ss", "x", "z"];
+            match stem.strip_suffix('e') {
+                Some(short) if sibilant.iter().any(|s| short.ends_with(s)) => short.to_string(),
+                _ => stem.to_string(),
+            }
+        }
+    };
+    if rest.is_empty() {
+        stem
+    } else {
+        format!("{stem} {rest}")
+    }
+}
+
 /// What a target's armour is called in the messages of the blows it turns (spec §6 "Attacks").
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub(super) struct Guard<'a> {
@@ -331,7 +376,7 @@ pub(super) fn attack_message(
     let both_seen = attacker != End::Unseen && target != End::Unseen;
     let hit = match (attacker, kind) {
         (End::You, AttackKind::Ranged) => "shoot",
-        (End::You, _) => words.you,
+        (End::You, _) => words.you.as_str(),
         _ => words.verb.as_str(),
     };
     let text = match strike {
@@ -345,7 +390,10 @@ pub(super) fn attack_message(
             target.whose(),
             guard.soak.unwrap_or("armour")
         ),
-        Strike::Soaked => format!("{a} {hit} {t} but {} no harm.", attacker.verb("do", "does")),
+        Strike::Resisted if both_seen => format!("{} does {t} no harm.", capitalized(&weapon)),
+        Strike::Soaked | Strike::Resisted => {
+            format!("{a} {hit} {t} but {} no harm.", attacker.verb("do", "does"))
+        }
         Strike::Missed { by } => match by.filter(|_| both_seen) {
             None => format!("{a} {} {t}.", attacker.verb("miss", "misses")),
             Some(Category::Dexterity | Category::Dodge) => format!(
@@ -413,7 +461,7 @@ impl World {
     }
 
     /// Actor `attacker` attacks actor `target`: a melee blow with what it wields (else its
-    /// natural attack, else its bare hands) and the blow that may follow it
+    /// natural attack, else its bare hands) and the blows that may follow it
     /// ([`World::second_blow`]), a shot with the missile weapon it has ready (with none, an
     /// intent only), or a spell (an intent only, until magic is designed). Returns the (first)
     /// blow, if one was struck.
@@ -431,14 +479,46 @@ impl World {
             AttackKind::Thrown | AttackKind::Spell => None,
         };
         let blow = self.attack_with(attacker, target, kind, profile, events);
-        if kind == AttackKind::Melee
-            && let Some((with, profile)) = self.second_blow(attacker, target, blow)
-        {
-            let skills = self.skills_of(attacker, AttackKind::Melee, Some(with));
-            let second = (AttackKind::Melee, Some(with), skills);
-            self.resolve(attacker, target, second, Some(profile), false, events);
+        if kind == AttackKind::Melee {
+            let mut parried = free_blow::parried(blow);
+            if let Some(second) = self.second_blow(attacker, target, Cue::First(blow)) {
+                parried |= free_blow::parried(self.strike_free(second, events));
+            }
+            self.after_attack(attacker, target, parried, events);
         }
         blow
+    }
+
+    /// A blow more, by actor `striker` at `target`, on `cue` (spec §8 "Fighting styles", "Free
+    /// blows"), if any: who strikes whom, and with what. The one place every blow beyond an
+    /// attack's first is decided (`free_blow.rs`):
+    /// - [`Cue::First`]: the second blow of `striker`'s melee attack on `target` (below);
+    /// - [`Cue::Attacked`]: its end: a cleave if it killed `target`, else `target`'s riposte;
+    /// - [`Cue::Cleaved`]: another cleave, with great cleave, after one that killed `target`;
+    /// - [`Cue::Leaves`]: `target` steps away from beside `striker`: the opportunist's blow.
+    ///
+    /// Only the second blow may draw while deciding; the free blows never do.
+    pub(super) fn second_blow(
+        &mut self,
+        striker: ActorId,
+        target: ActorId,
+        cue: Cue,
+    ) -> Option<FreeBlow> {
+        match cue {
+            Cue::First(first) => {
+                (self.off_hand_or_bash(striker, target, first)).map(|(with, profile)| FreeBlow {
+                    by: striker,
+                    at: target,
+                    kind: Free::Second,
+                    with: Some(with),
+                    profile,
+                })
+            }
+            Cue::Attacked { parried } => (self.cleave(striker, target, false))
+                .or_else(|| self.riposte(striker, target, parried)),
+            Cue::Cleaved => self.cleave(striker, target, true),
+            Cue::Leaves => self.opportunist(striker, target),
+        }
     }
 
     /// The blow after the first of actor `attacker`'s melee attack on `target` (spec §8
@@ -446,7 +526,7 @@ impl World {
     /// hand's ([`Actor::off_hand_blow`]); with a weapon and a shield, after a `first` that hit, a
     /// shield bash by the style's `bash` chance (one draw from the gameplay stream, only when
     /// the chance is above 0). None once the target is gone.
-    fn second_blow(
+    fn off_hand_or_bash(
         &mut self,
         attacker: ActorId,
         target: ActorId,
@@ -479,9 +559,34 @@ impl World {
     }
 
     /// The Protection of actor `id` (spec §8 "Combat"): what it wears and its hide soak off
-    /// every hit; 0 for one that is gone.
-    pub(crate) fn protection_of(&self, id: ActorId) -> i32 {
-        (self.state.actors.get(&id)).map_or(0, |a| a.protection(&self.content))
+    /// every physical hit, by kind; none for one that is gone.
+    pub(crate) fn protection_of(&self, id: ActorId) -> Protection {
+        (self.state.actors.get(&id))
+            .map_or_else(|| Protection::plain(0), |a| a.protection(&self.content))
+    }
+
+    /// What actor `id` resists (spec §8 "Damage types"): its creature type's, and what it wears
+    /// and wields; nothing for one that is gone.
+    pub(crate) fn resistances_of(&self, id: ActorId) -> Resistances {
+        (self.state.actors.get(&id))
+            .map_or_else(Resistances::default, |a| a.resistances(&self.content))
+    }
+
+    /// The side of actor `id` a blow strikes: its Defence, Protection, and resistances.
+    pub(crate) fn target_of(&self, id: ActorId) -> Target {
+        Target {
+            defence: self.defence_of(id),
+            protection: self.protection_of(id),
+            resistances: self.resistances_of(id),
+        }
+    }
+
+    /// What actor `id` takes of `damage` that is no blow (a blast, a bolt, a fall, the plunge
+    /// into freezing water): the amount less what it resists of the kind
+    /// ([`damage::resist`]); untyped harm in full.
+    pub(crate) fn resisted(&self, id: ActorId, damage: Damage) -> i32 {
+        let percent = self.resistances_of(id).get(damage.kind);
+        damage::resist(damage.amount, percent)
     }
 
     /// Actor `attacker` attacks actor `target` with `profile` (`None`: an intent only, nothing is
@@ -539,7 +644,7 @@ impl World {
     /// Rolls an attack of `kind` made `with` a missile, a shield, or the off hand's weapon (or
     /// not), drawing on weapon skill and fighting style `skills` (the player's earn their
     /// marks), and applies it, with its noise if `noisy`.
-    fn resolve(
+    pub(super) fn resolve(
         &mut self,
         attacker: ActorId,
         target: ActorId,
@@ -554,11 +659,10 @@ impl World {
         ) else {
             return None;
         };
-        let defence = self.defence_of(target);
-        let protection = self.protection_of(target);
+        let struck = self.target_of(target);
         let levels = (self.level_of(attacker), self.level_of(target));
         let rng = &mut self.state.rng;
-        let blow = profile.map(|profile| combat::strike(&profile, &defence, protection, rng));
+        let blow = profile.map(|profile| combat::strike(&profile, &struck, rng));
         events.push(Event::Attacked {
             attacker,
             target,
@@ -567,6 +671,7 @@ impl World {
             to,
             strike: blow.map(|b| b.strike),
             with,
+            damage: blow.and_then(|b| b.kind),
         });
         if noisy {
             self.make_noise(attacker, Act::Attack(kind));
@@ -753,57 +858,71 @@ impl World {
         self.fallen.push(actor);
     }
 
-    /// The player attacks `target`, which they `seen` or not, in melee: a blow, and the blow
-    /// that may follow it ([`World::second_blow`]: the off hand's, a shield bash). Each message
-    /// is said at once, by what the player knows as they strike; events reach presentation only
-    /// if they saw the target.
+    /// The player attacks `target`, which they `seen` or not, in melee: a blow, and the blows
+    /// that may follow it ([`World::second_blow`]: the off hand's, a shield bash, then a cleave
+    /// or the target's riposte). Each message is said at once, by what the player knows as they
+    /// strike; events reach presentation only if they saw the target.
     pub(super) fn player_attacks(&mut self, target: ActorId, seen: bool, events: &mut Vec<Event>) {
         let player = self.state.player;
         let first = self.player_blow(target, seen, None, events);
-        if let Some((with, profile)) = self.second_blow(player, target, first) {
-            self.player_blow(target, seen, Some((with, profile)), events);
+        let mut parried = free_blow::parried(first);
+        if let Some(second) = self.second_blow(player, target, Cue::First(first)) {
+            parried |= free_blow::parried(self.player_blow(target, seen, Some(second), events));
         }
+        self.after_attack(player, target, parried, events);
     }
 
     /// The player strikes `target` in melee: the first blow of an attack (`None`: with what
-    /// they wield, its noise made), or the blow that follows it, made with what and how.
-    fn player_blow(
+    /// they wield, its noise made), or a blow more ([`World::second_blow`]), made with what and
+    /// how.
+    pub(super) fn player_blow(
         &mut self,
         target: ActorId,
         seen: bool,
-        second: Option<(ObjectId, Profile)>,
+        more: Option<FreeBlow>,
         events: &mut Vec<Event>,
     ) -> Option<Blow> {
         let me = self.state.player();
-        let with = second.map(|(with, _)| with);
-        let profile = second.map_or_else(|| me.melee(&self.content), |(_, p)| p);
+        let with = more.as_ref().and_then(|b| b.with);
+        let noisy = more.as_ref().is_none_or(|b| b.kind.noisy());
+        let profile = more.map_or_else(|| me.melee(&self.content), |b| b.profile);
         let skills = me.attack_skills(&self.content, AttackKind::Melee, with);
-        let words = Words::of(me, AttackKind::Melee, with, &self.content);
-        let noisy = second.is_none();
+        let words = |me: &Actor, content: &Content, damage| {
+            Words::of(me, AttackKind::Melee, with, damage, content)
+        };
         self.player_strikes(
             target,
             seen,
             (with, profile, skills),
-            (words, noisy),
+            (&words, noisy),
             events,
         )
     }
 
     /// The player kicks `target` (spec §8 "Doors"): an unarmed blow in melee, whatever they
     /// wield ([`Actor::kick`]: it draws on and trains unarmed fighting, and no fighting style),
-    /// said and shown like any blow.
+    /// said and shown like any blow, with the free blows the end of an attack brings
+    /// ([`World::after_attack`]).
     pub(super) fn player_kicks(&mut self, target: ActorId, seen: bool, events: &mut Vec<Event>) {
         let profile = self.state.player().kick(&self.content);
         let skills = AttackSkills::only(self.content.weapon_skills().of_role(Role::Unarmed));
         let blow = (None, profile, skills);
-        self.player_strikes(target, seen, blow, (Words::kick(), true), events);
+        let words = |_: &Actor, _: &Content, _| Words::kick();
+        let struck = self.player_strikes(target, seen, blow, (&words, true), events);
+        self.after_attack(
+            self.state.player,
+            target,
+            free_blow::parried(struck),
+            events,
+        );
     }
 
     /// The player bashes whoever stands in `dir` with the shield they hold (spec §8 "Weapon
     /// skills"): a blow like any other ([`World::player_attacks`]), with the shield's `bash`
     /// dice and shield bashing's benefits, for the price of a blow with the shield (`melee`, its
     /// own affixes and what the player wears, never the wielded weapon's cost or affixes:
-    /// [`World::attack_cost`]). Refused (no time) without a
+    /// [`World::attack_cost`]), and the free blows the end of an attack brings
+    /// ([`World::after_attack`]). Refused (no time) without a
     /// shield to bash with, with nobody there, and against someone not hostile.
     pub(super) fn bash(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
@@ -831,24 +950,30 @@ impl World {
         }
         let me = self.state.player();
         let skills = me.attack_skills(&content, AttackKind::Melee, Some(shield));
-        let words = Words::of(me, AttackKind::Melee, Some(shield), &content);
         let with = me.shield_item(&content);
         let price = self.attack_price(player, ActionKind::Melee, with, skills);
         let blow = (Some(shield), profile, skills);
-        self.player_strikes(target, seen, blow, (words, true), events);
+        let words = |me: &Actor, content: &Content, damage| {
+            Words::of(me, AttackKind::Melee, Some(shield), damage, content)
+        };
+        let struck = self.player_strikes(target, seen, blow, (&words, true), events);
+        self.after_attack(player, target, free_blow::parried(struck), events);
         Spent::Turn(price)
     }
 
     /// The player strikes `target` in melee with `profile`, made `with` a shield (a bash), the
     /// off hand's weapon, or not (a blow, a kick), drawing on (and training) `skills`, said in
-    /// `words`, with its noise if `noisy` (the first blow of an attack): see
-    /// [`World::player_attacks`]. Returns the blow.
+    /// the `words` of the kind of damage it did, with its noise if `noisy` (the first blow of
+    /// an attack): see [`World::player_attacks`]. Returns the blow.
     fn player_strikes(
         &mut self,
         target: ActorId,
         seen: bool,
         (with, profile, skills): (Option<ObjectId>, Profile, AttackSkills),
-        (words, noisy): (Words, bool),
+        (words, noisy): (
+            &dyn Fn(&Actor, &Content, Option<DamageTypeId>) -> Words,
+            bool,
+        ),
         events: &mut Vec<Event>,
     ) -> Option<Blow> {
         let player = self.state.player;
@@ -856,6 +981,7 @@ impl World {
         let kind = (AttackKind::Melee, with, skills);
         let blow = self.resolve(player, target, kind, Some(profile), noisy, &mut made);
         let content = self.content.clone();
+        let words = words(self.state.player(), &content, blow.and_then(|b| b.kind));
         let target_actor = self.actor_or_fallen(target);
         let name = target_actor.map(|a| content.creature(a.creature).name.as_str());
         let guard = Guard::of(target_actor, &content);

@@ -31,6 +31,7 @@ The in-game `?` screen is authoritative: it is generated from your current key b
 | Skills | `S` |
 | Weapon skills | `W` |
 | Quest log | `q` |
+| Message history (see [Messages](#messages)) | `M` |
 | Info page 1 to 9 (while an info screen is open) | `1` to `9` |
 | Next / previous info page (wraps) | `Tab` / `Shift`+`Tab` |
 | Rest | `R` |
@@ -46,6 +47,7 @@ The in-game `?` screen is authoritative: it is generated from your current key b
 | Next target while aiming (with Shift: the one before) | `Tab` |
 | Use a tool: dig into a wall with a pick-axe | `U`, then a direction |
 | Show or hide the controls | `?` |
+| Show the next messages at `--more--` / skip the rest | `Space` or `Enter` / `Esc` |
 | Yes / no, when a question asks | `y` / `n` |
 | Pause menu | `Esc` |
 | Save and quit (unbound by default; use the pause menu) | none |
@@ -64,9 +66,20 @@ On every menu and screen:
 | Left / right (change a setting) | Left / Right, or `h` / `l` |
 | Choose | `Enter` |
 | Back | `Esc`, always |
-| Erase a character (the seed), reset a key (Controls) | `Delete` or `Backspace` |
+| Erase a character (the seed), reset a key (Controls), delete a saved character (Characters) | `Delete` or `Backspace` |
 | Mark a stack, mark everything (picking up, dropping) | `Space`, `,` |
 | Next / previous page of a list of items | `>` or `PageDown` / `<` or `PageUp` |
+
+## Text fields
+
+In a text field (your character's name), every key types what it types, but these:
+
+| Command | Keys |
+|---|---|
+| Accept the text | `Enter` |
+| Erase the last character | `Backspace` or `Delete` |
+| A random name | `Tab` |
+| Back | `Esc`, always |
 
 On a list that names its rows by letter (your pack, a pile, the equipment slots) or by number
 (the topics someone offers), those letters and digits always pick rows, whatever
@@ -78,7 +91,7 @@ and shows a page at a time: the letters name the rows of the page you see, start
 
 You can rebind every key but `Esc` in the Controls screen (main menu or pause menu, then
 Controls). It lists the commands in groups, by where they are used: in play, while aiming, in the
-rest prompt, on menus and screens, on the info pages, in the question windows, and (in builds
+rest prompt, at `--more--`, on menus and screens, in text fields, on the info pages, in the question windows, and (in builds
 that have them) the developer keys. Select a command, press `Enter`, then press the new key. It
 becomes the command's main key, and its other keys (such as the numpad) stay. A key another
 command of the same group already uses moves to the new command, and the screen says what moved;
@@ -88,7 +101,8 @@ page on an info screen, and `y` and `n` move you in play but answer yes and no i
 
 You cannot lock yourself out: `Esc` always backs out of every screen and cancels every prompt,
 and it cannot be taken; neither can the last key of up, down, or choose on the menus, which you
-need to come back to Controls. `Delete` resets the selected command to its default keys, and
+need to come back to Controls, nor the last key that accepts a text field, which you need to name
+a new character. `Delete` resets the selected command to its default keys, and
 **Reset all keys** resets every command. If your keys still get in the way, start the game with
 `warlock --reset-keys`: every key goes back to its default, and the game starts as usual. Your keys
 are kept with your [settings](settings.md).
@@ -206,9 +220,8 @@ stay on the equipment screen until you press `Esc`. See [Equipment](equipment.md
 
 ## The screen
 
-The map fills most of the window. Above it, the **message line** shows the last two messages;
-those from earlier turns are dimmed, and a message repeated in a row is shown once with a count,
-as in `You open the door. (×2)`. Prompts and look mode use the same line.
+The map fills most of the window. Above it, the **message line** (two rows) shows what this
+turn brought (see [Messages](#messages)). Prompts and look mode use the same line.
 
 Below the map, the **status bar** shows, from left to right:
 
@@ -237,6 +250,25 @@ count; then it shortens the moon's phase to its picture, and only then drops it;
 temperature, the region, then the year of the date, then the date. The weather, the time, your
 burden, your hunger, your status effects (the least urgent first), your hit points, and the name
 of the level stay longest. Parts come back as soon as there is room.
+
+## Messages
+
+The message line shows the messages of this turn, everything said since you last acted, one
+after another, wrapped at the ends of words. Rows they leave free show earlier messages, one a
+row; those from before the last turn are dimmed. A message repeated in a row is shown once with
+a count, as in `You open the door. (×2)`.
+
+When a turn says more than the two rows hold, the line shows what fits followed by `--more--`
+and waits: `Space` or `Enter` shows the rest, a page at a time, and `Esc` skips what is left of
+this turn's messages. Until then no other key does anything (a key you hold down never turns
+the page), so nothing happens that you have not read. A rest or a long dig counts as one turn
+here: what was said during it, and what stopped it, shows the same way. Both keys can be rebound in their own group in Controls
+(skipping has no key until you bind one; `Esc` always skips). A screen that opens by itself,
+such as someone answering you, comes first: `--more--` waits beneath it until it closes.
+
+`M` opens the **message history**: every message the game keeps (the last 200), the newest at
+the bottom, where it opens. The up and down keys scroll it a line at a time, `<` and `>` (or
+`PageUp` and `PageDown`) a screenful; `Esc`, `Enter`, or `M` closes it. It takes no time.
 
 ## Character
 

@@ -85,6 +85,7 @@
 mod actor;
 mod ai;
 mod bleed;
+mod buff;
 mod carry;
 mod dev;
 mod dig;
@@ -94,6 +95,7 @@ mod eat;
 mod equip;
 mod experience;
 mod fight;
+mod free_blow;
 mod hash;
 mod hearing;
 mod hunger;
@@ -121,6 +123,7 @@ pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
 pub use experience::{Discovered, Progress};
 pub use fight::{Cause, Death};
+pub use free_blow::FreeBlows;
 pub(crate) use hash::fnv1a;
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
@@ -332,6 +335,9 @@ pub struct World {
     /// What the player's kills earned them during the current action (not saved): said after
     /// the attack's own messages.
     news: Vec<String>,
+    /// While the player strikes a free blow in another's turn (not saved): what is said
+    /// meanwhile, to join the news (`free_blow.rs`).
+    held: Option<Vec<String>>,
     /// Traps sprung since this world was created or loaded (not saved): a rest perceives every
     /// turn in which one went off (a teleport moves someone farther than a step).
     sprung: u64,
@@ -381,12 +387,26 @@ impl World {
 
     /// Starts a new run of `scenario` as `character` (spec §8 "Character creation"); without
     /// one, as the scenario's character, or if it names none, with the eyes and stats it gives.
-    /// `seed` defaults to the scenario's seed.
+    /// `seed` defaults to the scenario's seed. The character's name is the run's default
+    /// ([`character::default_name`](crate::character::default_name)).
     pub fn with_character(
         content: Arc<Content>,
         scenario: &str,
         seed: Option<u64>,
         character: Option<&CharacterSpec>,
+    ) -> Result<Self, WorldError> {
+        Self::with_character_named(content, scenario, seed, character, None)
+    }
+
+    /// [`World::with_character`], the character named `name` (checked by
+    /// [`character::check_name`](crate::character::check_name)); `None` gives the run's default
+    /// name. A run without a character has no name either.
+    pub fn with_character_named(
+        content: Arc<Content>,
+        scenario: &str,
+        seed: Option<u64>,
+        character: Option<&CharacterSpec>,
+        name: Option<&str>,
     ) -> Result<Self, WorldError> {
         let def = content
             .scenario(scenario)
@@ -398,7 +418,14 @@ impl World {
         let chosen = character.or(def.character.as_ref());
         let (stats, vision, hp_base, skills, character, weapon_skills) = match chosen {
             Some(spec) => {
-                let s = (spec.start(&content, seed, def.start)).map_err(WorldError::Character)?;
+                let mut s =
+                    (spec.start(&content, seed, def.start)).map_err(WorldError::Character)?;
+                s.character.name = match name {
+                    Some(name) => crate::character::check_name(name)
+                        .map_err(WorldError::Character)?
+                        .to_string(),
+                    None => crate::character::default_name(&content, def, seed, spec),
+                };
                 let character = Some(s.character);
                 (
                     s.stats,
@@ -476,6 +503,7 @@ impl World {
             talk: Talk::default(),
             satiation: content.hunger().map(|h| Satiation::new(h.start)),
             stance: CombatStance::Neutral,
+            free_blows: FreeBlows::default(),
         };
         player.hp = player.max_hp(&content);
         crate::rot::made_at(&mut player.inventory, &content, def.start);
@@ -571,6 +599,7 @@ impl World {
             said: 0,
             fallen: Vec::new(),
             news: Vec::new(),
+            held: None,
             sprung: 0,
             found: 0,
             mutters: Vec::new(),
@@ -656,6 +685,7 @@ impl World {
             death: self.state.death.as_ref(),
             experience: self.state.experience,
             quests: &self.state.quests,
+            messages: &self.state.messages,
             snapshot: &self.perception,
         }
     }
@@ -767,8 +797,13 @@ impl World {
         self.say(text);
     }
 
-    /// Logs a message; it stops a rest.
+    /// Logs a message; it stops a rest. While the player strikes in another's turn (a free blow,
+    /// `free_blow.rs`), it is held instead, to be said with the news after that turn's reports.
     fn say(&mut self, text: impl Into<String>) {
+        if let Some(held) = &mut self.held {
+            held.push(text.into());
+            return;
+        }
         self.note(text);
         self.said += 1;
     }
@@ -790,6 +825,9 @@ impl World {
 
     /// Phase 1. Returns what the action cost.
     fn player_acts(&mut self, action: &Action, events: &mut Vec<Event>) -> Spent {
+        if let Some(refused) = self.refuse_blocked(action) {
+            return refused;
+        }
         let here = self.player_pos();
         // Whether the action was done, and what kind of action it was for its cost (the same on
         // any level: taking stairs ends on another).
@@ -882,11 +920,15 @@ mod blood_tests;
 #[cfg(test)]
 mod branch_tests;
 #[cfg(test)]
+mod buff_tests;
+#[cfg(test)]
 mod burden_tests;
 #[cfg(test)]
 mod character_tests;
 #[cfg(test)]
 mod cost_tests;
+#[cfg(test)]
+mod damage_tests;
 #[cfg(test)]
 mod dig_tests;
 #[cfg(test)]
@@ -901,6 +943,8 @@ mod equip_tests;
 mod experience_tests;
 #[cfg(test)]
 mod fight_tests;
+#[cfg(test)]
+mod free_blow_tests;
 #[cfg(test)]
 mod gem_tests;
 #[cfg(test)]

@@ -14,9 +14,13 @@ status in status order; `Effects::add` applies the stacking rule, `penalty`, `re
 `is_valid_for`; `Effect::until_tick`/`until_eases`/`advance` are the timer math: ticks bank
 `seconds × severity` degree-seconds). `world/status.rs` applies them: `World::afflict(actor,
 status, severity, by, events)` (**the one way to give an actor a status**: food poisoning
-from what the player eats (#137), traps, diseases call it), `World::cure(actor, means, events)` (eating
+from what the player eats (#137), traps, diseases call it; a status with a `damage_type`
+(poisoned: poison) meets the actor's resistance there as a dose, docs/dev/combat.md "Damage
+types": immune refuses it, else `damage::resist` on the severity), `World::cure(actor, means, events)` (eating
 a remedy, an object with `cures`, `world/eat.rs::remedy`, which says what ended at once; the Heal
-skill's bandage, #132), `World::after_blow` (wounds by `combat::big_hit` and criticals, then `on_hit`
+skill's bandage, #132), `World::after_blow` (wounds by `combat::big_hit` and criticals, of the
+kinds the status's `wound.from` names, `Wound::caused_by(blow.kind)`: bleeding from slashing
+and piercing; then `on_hit`
 with one gameplay draw per chance below 100), `World::healing_rate` (min of the statuses'
 `regen`, × resting for the player while `World::resting`, none for a Starving player, × a
 special room's `regen`, × (100 + the regeneration affixes of what the actor wears and wields) %),
@@ -34,6 +38,35 @@ the rest loop keeps them from the turns it does not perceive). Presentation read
 (`Actor::regen` counts hundredths of a second at the normal pace). The dev
 action `afflict:ID` (`Action::Afflict`) gives the player a degree, for tests and captures. Tests:
 `status.rs`, `content/status.rs`, `world/status_tests.rs`.
+
+Buffs, hexes, and cooldowns (spec §8 "Status effects"; #227, design
+`docs/design/progression.md` §4.1 B1) are statuses too, with four more optional fields
+(`StatusDef`): `combat` (`CombatBonus { to_hit, damage, dodge, parry }`, the stances' numbers
+and ranges), `cost` (percent of every price, `COST_PERCENT` 100 to 1000: slows only, so
+`World::out_of_view_for` stays exact), `blocks` (`Vec<ActionKind>`, ids from `data/actions.toml`),
+and `follows` (`Option<StatusId>`, resolved after the whole file, `resolve_follows`: no chain back
+to itself; a status with it must end; nothing follows into or out of the disease status,
+checked in `Content::load_diseases`). `penalty` takes positive numbers too (a raise). Each field
+has one reader: `Effects::sharpen` in `Actor::stanced` (every attack profile, after the stance),
+`Effects::defence` in `Actor::defence`, `Effects::slow` in `World::burdened` (after the burden
+and Bloated), and `Effects::blocking` in `World::refuse_blocked` (`world/buff.rs`, the first line
+of `player_acts`: `kind_of` maps the player's action to its `ActionKind`, a step by what it would
+do (`move_kind`); a new `Action` variant gets an arm there, `None` for what is no action in the
+world) and in `Ability::unavailable` (`Unavailable::While(status)`, reason "you are <name>", id
+`while:<status>`, after an ability's own reasons). Endings go through one place,
+`World::ended(id, effects, events)` (`world/buff.rs`), from `live` (worn off: `drop_spent`
+returns the effects) and `cure`: it pushes the player's end events, afflicts each `follows` at
+one degree with the ended effect's `by`, and calls `keep_hp_within_max` (now the larger of
+`lasting_max_hp` and `max_hp`, so the hit points a raised Toughness allowed fall back as the
+raise ends, while a passing penalty still keeps them). A cooldown is a status with `eases` and no
+tick; the class abilities (I1–I4) give theirs with `afflict(player, status, 1, player)` and add
+`Unavailable::While(cooldown)` in `Ability::unavailable` while it lasts. Creature AI does not read
+`blocks` yet (no creature status blocks anything). Built-in example: `raging` (penalty St +2, To
++2, In −2; `blocks = ["read"]`; `follows = "exhausted"`) and `exhausted` (St −1), reached only by
+`afflict:raging` until the barbarian's table. Tests: `world/buff_tests.rs` (custom statuses on
+built-in content: combat on the player and a creature, slows and time, refusals and the greyed
+shield bash, the rage's whole course, cures followed, saves and replays), the parse tests in
+`content/status.rs`, `Effects` in `status.rs`.
 
 Diseases (spec §8 "Checks", "Diseases"; M24, #139) build on status effects: every disease shows
 as one umbrella status, Diseased (`data/diseases.toml`'s `status`, `Content::disease_status`; it

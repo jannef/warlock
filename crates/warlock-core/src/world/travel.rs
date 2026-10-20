@@ -5,8 +5,8 @@
 //! the dispatch lines.
 
 use super::{
-    Actor, ActorId, ActorKind, LevelState, Mind, Patrol, Shop, Spent, Talk, World, WorldError,
-    WorldState,
+    Actor, ActorId, ActorKind, FreeBlows, LevelState, Mind, Patrol, Shop, Spent, Talk, World,
+    WorldError, WorldState,
 };
 use crate::action::{AttackKind, Event};
 use crate::burden;
@@ -113,6 +113,12 @@ impl World {
         }
         let player = self.state.player;
         let fleeing = self.flees(player, to);
+        // Stepping away from beside a hostile opportunist, they are struck as they turn to go
+        // (`free_blow.rs`), and may not live to take the step.
+        if !self.step_away(player, to, events) {
+            let onto = self.state.current().terrain[to];
+            return Spent::Turn(self.step_price(player, self.content.terrain(onto), fleeing));
+        }
         // Ice there may give way (then it is a step into the water); climbing out onto it from
         // the water takes longer.
         let footing = self.tread(player, from, to);
@@ -447,6 +453,7 @@ pub(super) fn instantiate_level(
             talk: Talk::default(),
             satiation: None,
             stance: CombatStance::Neutral,
+            free_blows: FreeBlows::default(),
         };
         actor.hp = actor.max_hp(content);
         crate::rot::made_at(&mut actor.inventory, content, state.time);

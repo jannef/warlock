@@ -3,7 +3,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 
-const CAPACITY: usize = 200;
+/// How many messages the log keeps: older ones drop off its front (the message history says so).
+pub const CAPACITY: usize = 200;
 
 /// One logged message. Repeats of the same text in a row are folded into one entry.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

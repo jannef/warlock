@@ -27,6 +27,15 @@
 //! and the `bash` dice of a blow with it (spec §8 "Weapon skills": the shield bash). A weapon or
 //! a missile may have `penetration`: that much of a target's Protection it ignores.
 //!
+//! Damage types (spec §8 "Damage types"): every weapon (and a shield that bashes) names the
+//! kind of damage it does (`damage_type`, an id in `data/damage_types.toml`, or two: a sword's
+//! `["slashing", "piercing"]` does whichever is better against its target), and may name the
+//! `verb` its blows are said with ("cleaves") instead of the kind's; a weapon or a missile may
+//! add damage of another kind (`added = { type = "fire", damage = "1d4" }`: the flaming arrow).
+//! Anything worn or held may `resist` kinds in percent (`resist = { cold = 20 }`), and armour
+//! with Protection may stand better or worse against a physical kind (`protects = { slashing =
+//! 1, piercing = -1 }`).
+//!
 //! Every weapon names its weapon skill (`category`, an id in `data/weapon_skills.toml`; spec §8
 //! "Weapon skills"): a skill of role `melee` for what is wielded in a hand, `launcher` for a
 //! missile weapon, `thrown` for what is only thrown (a rock).
@@ -68,6 +77,7 @@
 use super::action::check_cost;
 use super::affix::{ItemKind, MAX_ITEM_LEVEL};
 use super::creature::CreatureDef;
+use super::damage_type::TypeNames;
 use super::hunger::Food;
 use super::item_class::{ItemClassDef, ItemClassId};
 use super::light::LightId;
@@ -77,15 +87,17 @@ use super::particles::ParticleEmitter;
 use super::scroll::{ReadSpec, Reading};
 use super::slot::SlotDef;
 use super::weapon_skill::{Role, WeaponSkillId, WeaponSkillTable};
-use super::{Content, ContentError, CreatureId};
+use super::{Content, ContentError, CreatureId, DamageTypeId};
 use crate::color::Rgb;
 use crate::combat::{Attack, CRITS, DEFAULT_CRIT, DEFAULT_THREAT, THREATS};
+use crate::damage::{Kinds, MAX_RESISTANCE, MIN_RESISTANCE, Rider};
 use crate::dice::Dice;
 use crate::door::Key;
 use crate::item_parts::ItemPart;
 use crate::object::Stack;
 use crate::time::{DAY, Duration};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 /// The largest Defence bonus one object may give, and the largest `to_hit` either way.
 pub const MAX_BONUS: i32 = 20;
@@ -210,6 +222,23 @@ pub(super) struct ObjectSpec {
     /// missile weapon, ammunition).
     #[serde(default)]
     pub penetration: i32,
+    /// The kind of damage a weapon does (spec §8 "Damage types"), or two of which a blow does
+    /// the better: `damage_type = "slashing"`, `["slashing", "piercing"]`. A shield's is its
+    /// bash's.
+    pub damage_type: Option<TypeNames>,
+    /// What a blow with a weapon does to its target, instead of its damage type's verb:
+    /// "cleaves".
+    pub verb: Option<String>,
+    /// Damage of another kind a weapon, a missile weapon, or ammunition adds to every hit:
+    /// `added = { type = "fire", damage = "1d4" }`.
+    pub added: Option<AddedSpec>,
+    /// What it resists while worn or held, in percent per damage type: `resist = { cold = 20 }`.
+    #[serde(default)]
+    pub resist: BTreeMap<String, i32>,
+    /// How its Protection stands against each physical kind, more or less than its
+    /// `protection`: `protects = { slashing = 1, piercing = -1 }`.
+    #[serde(default)]
+    pub protects: BTreeMap<String, i32>,
     /// The weapon skill a weapon trains and draws on (`data/weapon_skills.toml`).
     pub category: Option<String>,
     /// How far a missile weapon shoots, or a throwing weapon (anything else with a range) is
@@ -323,6 +352,16 @@ pub struct ObjectDef {
     /// How much of a target's Protection an attack with it ignores (a weapon, a missile weapon,
     /// ammunition: a shot's is its launcher's and its ammunition's together). Rules only.
     pub penetration: i32,
+    /// What a blow with it does to its target, if it says ("cleaves"); else its damage type's
+    /// verb, else "hits" (spec §8 "Damage types").
+    pub verb: Option<String>,
+    /// Damage of another kind every hit with it adds (a weapon's, a missile weapon's, or
+    /// ammunition's: a shot adds the launcher's and the ammunition's).
+    pub added: Option<Rider>,
+    /// What it resists while worn or held, in percent per damage type (spec §8 "Damage types").
+    pub resist: Vec<(DamageTypeId, i32)>,
+    /// How its Protection stands against each physical kind, more or less than `protection`.
+    pub protects: Vec<(DamageTypeId, i32)>,
     /// Its weapon skill: a weapon's `category` (`None` for anything else, and without
     /// `data/weapon_skills.toml`).
     pub skill: Option<WeaponSkillId>,
@@ -371,6 +410,38 @@ pub struct ObjectDef {
     pub read: Option<Reading>,
 }
 
+/// Damage of another kind an attack with the object adds, as data writes it: `added = { type =
+/// "fire", damage = "1d4" }`.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AddedSpec {
+    #[serde(rename = "type")]
+    pub kind: String,
+    pub damage: Dice,
+}
+
+impl AddedSpec {
+    /// The rider it names: a damage type that is no physical kind (Protection never soaks
+    /// added damage), with dice that can do harm.
+    fn resolve(&self, content: &Content) -> Result<Rider, String> {
+        let kind = (content.damage_type_id(&self.kind))
+            .ok_or_else(|| format!("`added`: unknown damage type `{}`", self.kind))?;
+        if content.damage_type(kind).physical {
+            return Err(format!(
+                "`added`: `{}` is physical; added damage is of another kind (fire, cold, ...)",
+                self.kind
+            ));
+        }
+        if self.damage.min() < 0 || self.damage.max() < 1 {
+            return Err("`added`: `damage` must be dice that can do harm, e.g. \"1d4\"".into());
+        }
+        Ok(Rider {
+            kind,
+            dice: self.damage,
+        })
+    }
+}
+
 /// How a burning object burns where it lies: the light it gives, and for how long.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Burning {
@@ -416,6 +487,10 @@ impl ObjectDef {
             shield: 0,
             bash: None,
             penetration: 0,
+            verb: None,
+            added: None,
+            resist: Vec::new(),
+            protects: Vec::new(),
             skill: None,
             range: None,
             reloads: false,
@@ -538,6 +613,7 @@ impl ObjectSpec {
     pub(super) fn resolve(
         self,
         file: &str,
+        content: &Content,
         classes: &[ItemClassDef],
         parts: impl Fn(&[PartEntry]) -> Result<Vec<Part>, String>,
         light: impl Fn(&str) -> Option<LightId>,
@@ -599,7 +675,17 @@ impl ObjectSpec {
                 return Err(err(format!("`{field}` must not be empty")));
             }
         }
-        let attack = self.attack().map_err(err)?;
+        // A weapon names its kind of damage; a shield's names its bash's, else bare hands'.
+        let armed = self.damage.is_some() || self.bash.is_some();
+        let kinds = content
+            .resolve_kinds(self.damage_type.as_ref())
+            .map_err(err)?;
+        if !kinds.is_empty() && !armed {
+            return Err(err(
+                "`damage_type` is for weapons (`damage`) and shields that `bash`".into(),
+            ));
+        }
+        let attack = self.attack(kinds).map_err(err)?;
         self.check_defence().map_err(err)?;
         self.check_protection(slots).map_err(err)?;
         self.check_ranged().map_err(err)?;
@@ -608,10 +694,44 @@ impl ObjectSpec {
             (None, _) => None,
             (Some(damage), shield) if shield > 0 => Some(Attack {
                 damage,
-                ..Attack::unarmed()
+                kinds: if kinds.is_empty() {
+                    Attack::unarmed(content.unarmed_damage()).kinds
+                } else {
+                    kinds
+                },
+                ..Attack::unarmed(None)
             }),
             (Some(_), _) => return Err(err("`bash` is for shields (`shield`)".into())),
         };
+        if self.verb.as_ref().is_some_and(|v| v.trim().is_empty()) {
+            return Err(err("`verb` must not be empty".into()));
+        }
+        if self.verb.is_some() && !armed {
+            return Err(err(
+                "`verb` is for weapons (`damage`) and shields that `bash`".into(),
+            ));
+        }
+        let added = match &self.added {
+            None => None,
+            Some(_) if self.damage.is_none() && self.ammo.is_none() => {
+                return Err(err(
+                    "`added` is for weapons (`damage`) and ammunition (`ammo`)".into(),
+                ));
+            }
+            Some(spec) => Some(spec.resolve(content).map_err(err)?),
+        };
+        let percent = MIN_RESISTANCE..=MAX_RESISTANCE;
+        let resist =
+            (content.resolve_per_kind("resist", &self.resist, percent, false)).map_err(err)?;
+        if !resist.is_empty() && self.slot.is_none() {
+            return Err(err("`resist` is for things worn or held (`slot`)".into()));
+        }
+        let protects =
+            (content.resolve_per_kind("protects", &self.protects, -MAX_BONUS..=MAX_BONUS, true))
+                .map_err(err)?;
+        if !protects.is_empty() && self.protection == 0 {
+            return Err(err("`protects` is for armour with `protection`".into()));
+        }
         let burning = match (&self.light, self.burns) {
             (None, None) => None,
             (Some(id), Some(seconds)) => {
@@ -654,7 +774,7 @@ impl ObjectSpec {
         let read = self
             .read
             .clone()
-            .map(ReadSpec::resolve)
+            .map(|r| r.resolve(content))
             .transpose()
             .map_err(err)?;
         if read.is_some() && (self.slot.is_some() || self.food.is_some() || self.flies()) {
@@ -692,6 +812,10 @@ impl ObjectSpec {
             shield: self.shield,
             bash,
             penetration: self.penetration,
+            verb: self.verb,
+            added,
+            resist,
+            protects,
             skill,
             range: self.range,
             reloads: self.reloads,
@@ -837,8 +961,8 @@ impl ObjectSpec {
     }
 
     /// The weapon it is, from `damage` and the fields that go with it: only something that is
-    /// worn or wielded is a weapon, and a missile weapon must be one.
-    fn attack(&self) -> Result<Option<Attack>, String> {
+    /// worn or wielded is a weapon, and a missile weapon must be one. Its blows do `kinds`.
+    fn attack(&self, kinds: Kinds) -> Result<Option<Attack>, String> {
         let Some(damage) = self.damage else {
             let weapon_only = [
                 ("threat", self.threat.is_some()),
@@ -886,6 +1010,7 @@ impl ObjectSpec {
             threat,
             crit,
             strength: self.strength,
+            kinds,
         }))
     }
 
@@ -1081,6 +1206,10 @@ mod tests {
             shield: 0,
             bash: None,
             penetration: 0,
+            verb: None,
+            added: None,
+            resist: Vec::new(),
+            protects: Vec::new(),
             skill: None,
             range: None,
             reloads: false,

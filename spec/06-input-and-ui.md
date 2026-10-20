@@ -10,18 +10,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - Symbol commands (`<`, `>`, `?`) are bound by **logical key**, so they work on non-US layouts.
 - Bindings live in the settings file. The `?` help (the controls list, read-only) is generated from
   the binding table, so it is always accurate. Every key is rebindable (below).
-- **Screens**: the main menu, New run and its character creation steps, pause menu, Settings,
+- **Screens**: the main menu, the saved characters, New run and its character creation steps, pause menu, Settings,
   Controls, help, the inventory, the equipment screen and its choice of what goes in a slot, an
   item's description, the character screen, the Skills screen, the weapon skills screen, the quest
-  log, choosing what to pick up, drop, throw, or eat, the dialogue screen, and the death screen
-  are modal
+  log, the message history, choosing what to pick up, drop, throw, or eat, the dialogue screen, and
+  the death screen are modal
   screens on one stack. Opening
   a screen puts it on top; Esc or Back closes it and returns to the screen below as it was left.
   While any screen is open it receives every key press, the run (if any) stays visible beneath
   it, and no game time passes but for what is chosen on a screen (picking up, dropping, wearing,
   wielding, eating), which is done as it is chosen and takes its time. Prompts in the message
   line (a direction to open, close, kick, or bash, to dig, or to chat, how long to rest, look
-  mode, aiming a shot or a throw) are not screens.
+  mode, aiming a shot or a throw, `--more--`) are not screens.
 - **The dialog**: every question the game asks first (quitting, a step onto a known trap, a
   shop's way out and its offers) is one dialog screen given its content: a title (on its
   frame), the question, and its options, each a label (`Pay 47 gold and leave`, `Stay`), a role
@@ -48,12 +48,26 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `read:LETTER:X,Y`), `Aim again` (decline: back to aiming, on the same target), and `Don't read
   it` (cancel, selected first). The rules never ask.
 - **Main menu** (drawn in glyphs; the game opens on it unless `--scenario`, `--new`, `--replay`,
-  `--record`, or `--capture` name what to run): Continue (only if a save exists), New run
-  (scenario list from content, optional seed, then character creation), Settings, Controls,
-  Quit.
+  `--record`, or `--capture` name what to run): Continue (only if a character is saved: it
+  resumes the one played last, and names them), Characters (likewise), New run (scenario list
+  from content, optional seed, then character creation), Settings, Controls, Quit.
+- **Characters** (#218, §7 "Saves"): every saved character, the one played last first: the name,
+  race and class, and level, and for the selected one where they are and when they were last
+  played (wall-clock, in UTC). Up/Down choose, Enter resumes the one selected, the Erase key
+  (`Delete`) deletes it after the one dialog ("Delete Brakka's save? The character is gone for
+  good."; Keep is selected first), Esc goes back. A save whose summary cannot be read is listed
+  by its file's id; one that cannot be resumed is kept as unusable and leaves the list, and the
+  main menu says why.
 - **Character creation** (§8 "Character creation"): after the scenario and seed, New run asks for
   a **race**, a **gender**, and a **class**, one screen each and in that order (race first: it
-  is the biggest choice and sets the player's eyes), then shows a **summary**. Each step lists
+  is the biggest choice and sets the player's eyes), then a **name**, then shows a **summary**.
+  The Name step is a text field (the game's): every key types what it types, literally (`j` and
+  `k` too), as long as the font draws it and the name has room (20 characters; no space first);
+  the `Context::Text` commands, rebindable like every key, accept (Enter), erase the last
+  character (Backspace, Delete), put in one of the race's names for the gender, from the run's
+  seed (Tab; never the one shown; again for another), and back out (Esc, always). Held keys type
+  and erase again but never accept. An empty field shows, dimmed, the name accepting it gives:
+  the race's first random name. Each choice step lists
   its options in data order with a `>` marker, the selected option's one-line description, and
   for races and classes their stat adjustments as written in data, dice included
   (`St 1d3+1  Dx −1`), for races their vision, and for both how fast levels come, in words
@@ -63,7 +77,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   **Random** row, rolled from the run seed and how often Random was pressed there. Up/Down (or
   `k`/`j`) choose, Enter goes on, Esc goes back a step as it was left. A step opens on the
   choice made there before going back, else on the scenario's character's, else on the first
-  option. The summary lists Start the run, then Race, Gender, and Class with their choices (Enter
+  option; the Name step opens on what was typed there before going back, else empty. The summary
+  lists Start the run, then Name, Race, Gender, and Class with their choices (Enter
   on one returns to that step as it was left; the steps after it close), the character's age,
   birthday, and birth sign on one line (`Age 27 · born 3 Seedtide 1417 · year of the Fire
   Manticore`; the sign on a line of its own when the panel is too narrow), the six starting
@@ -72,7 +87,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   columns when there are more than six, down the first, then the second; below the scores, as
   `Appraise 11 · Disable device 16 · …`, when the panel is too narrow), the vision, and the
   scenario and seed; "other" names the stat it raised. The
-  player does not choose the age, the birthday, or the sign. Starting replaces any saved run. Content without races or classes skips
+  player does not choose the age, the birthday, or the sign. Starting makes a new character with
+  a save of its own: it never touches another character's (§7 "Saves"). Content without races or classes skips
   character creation: New run starts the scenario as it is.
 - **Pause menu**: Esc during a run (when no prompt is open) opens it, drawn in glyphs:
   Resume, Settings, Controls, Save and quit to menu, Quit (which saves). No game time passes while
@@ -86,13 +102,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   and are written immediately.
 - **Every key is a command in its context** (#159): play (the map, the direction prompts, look
   mode), aiming (next and previous target, shoot or throw: `Tab`, none, Enter), the rest prompt
-  (`h`, `d`, `n`), menus and screens (up, down, left, right: the arrows and `k` `j` `h` `l`;
+  (`h`, `d`, `n`), `--more--` (the next messages: Space and Enter; skip the rest: no key of its
+  own, as Esc always skips), menus and screens (up, down, left, right: the arrows and `k` `j` `h` `l`;
   choose: Enter; back: no key of its own, as Esc always backs out; erase a character or reset a
   key: Delete, Backspace; on the pick-up and drop lists mark: Space, mark everything: `,`; on
   every item list the next and previous page: `>` and PageDown, `<` and PageUp), info pages (a
   digit, `Tab`; Shift+`Tab` the previous), dialogs (yes, no), and the developer keys (§9). A key is unique within its context only,
   so `Tab` is next target while aiming and next page on an info screen; a mode or screen with a
-  context of its own reads it first (the rest prompt and aiming before play's keys). Two kinds of
+  context of its own reads it first (the rest prompt, `--more--`, and aiming before play's keys). Two kinds of
   keys are fixed: Esc, which always cancels a prompt, backs out of every screen, and opens the
   pause menu, and the letters and digits that name the rows of a list (stacks, slots, topics).
   Hints (screen footers, the prompts, the status bar's `? controls`, the welcome line's
@@ -104,8 +121,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   key." or "... (was Kick)."), so the table never holds a conflict; a command left without a key
   shows as none and is saved as an empty list. Fixed commands never lose their key: Esc (cancel,
   which opens the pause menu) is refused with a reason, and so is the last key of the commands
-  that reach Controls from anywhere (up, down, and choose on the menus), so no binding, settings
-  file, or keymap can lock the player out. Delete resets a command, "Reset all keys" resets
+  that reach Controls from anywhere (up, down, and choose on the menus) and of the one that
+  accepts a text field (a new character's name), so no binding, settings file, or keymap can lock
+  the player out. Text fields have a context of their own (accept, erase, random, back): a key
+  bound there edits, every other key types. Delete resets a command, "Reset all keys" resets
   everything, and so does `--reset-keys` on the command line (saved at once; the game then starts
   as usual).
 - **Keymaps**: "Export keys…" in Controls writes every command's keys, by context, with a format
@@ -201,8 +220,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   in words
   (`magic::describe`: "Long blade, for the main hand", "Damage 1d8; criticals on 20–24, ×2
   damage", "Shoots up to 15 cells", "Needs Strength 14 to draw", "Quick to strike", "Pierces
-  armour" (never how much), "Armour +2", "Protection 3", "Dexterity adds at most +4 to Defence
-  while worn", "Breaks on a hit 30% of the time"), and for
+  armour" (never how much), "Armour +2", "Protection 3", or with per-kind adjustments
+  "Protection 3 (+1 against slashing, −1 against piercing)", "Dexterity adds at most +4 to
+  Defence while worn", "Breaks on a hit 30% of the time"; damage types (§8): the kinds a
+  weapon does on a line of their own, "Slashing or piercing damage", "Adds 1d4 fire damage",
+  "Resists cold 20%", "Vulnerable to fire 20%"; affixes once identified, "Flaming: adds 1d4
+  fire damage", "of Warmth: +20% cold resistance"), and for
   a magic or rare item either "Unidentified: what its magic does is unknown, though it works all
   the same." or its item level and each affix, "Prefix  Sharp: +2 damage", "Suffix  of Celerity:
   attacks faster" (affix magnitudes are item properties and shown; speed only in words; global
@@ -235,8 +258,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   parry in Defence; a weapon's `attack_cost` how long a blow takes); being worn changes neither
   sight, noise, nor speed (its weight does, as part of the load), but for what a magic item's
   affixes do while it is worn or wielded (§8 "Magic items").
-- **Character** (`@`): who the player is, as far as they know it: their name (the player
-  creature's, "You"), their race, gender, and class (`Race    Dwarf`; "other" with the stat it
+- **Character** (`@`): who the player is, as far as they know it: their name (the character's,
+  as typed; without a character the player creature's, "You"), their race, gender, and class (`Race    Dwarf`; "other" with the stat it
   raised), their age today, birthday, and birth sign as on the summary (when the run has a
   character), their score in each stat (§8 "Stats") in display order with its abbreviation and
   full name (`St  Strength  12`; as it is now, with what magic items they wear add; a score a
@@ -248,7 +271,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   "Combat") and Protection beside it on the same row (`Pv  Protection  3`; the total only),
   their combat stance by name (`Stance  Neutral`; §8 "Stances"), the status effects
   they suffer, by name, when there are any (`Status  Bleeding, Poisoned`; never how severe or for
-  how long), the diseases they know they have, by name, on a row of their own below (`Diseased
+  how long), what they resist, in words only, a row per word when there is anything to tell
+  (`Immune to  poison`, `Resistant to  fire, cold`, `Vulnerable to  acid`, kinds in damage type
+  order; never a percentage; §8 "Damage types"), the diseases they know they have, by name, on a row of their own below (`Diseased
   Filth fever, red ache`; one that has not progressed yet is only "Diseased"; never a timer or a
   check; §8 "Diseases"), their weight (their own plus what they carry, and their burden when they have one:
   `Weight 98.4 kg (you 70 kg, carrying 28.4 kg, burdened)`), and, dimmer, the weights at which
@@ -273,9 +298,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     item: the menu's groups, in that order), what it asks for (`Aim`: nothing, or a direction;
     a target and an item from the pack join with the first ability that needs one), its action
     cost (an `ActionKind`), who has it, and whether it can be used now and why not
-    (`Unavailable`: "you hold no shield", "not usable yet"). `PerceptionView::abilities` lists
-    the player's, in menu order, each with why it cannot be used now. Every ability is a normal
-    core `Action` with replay text, so replays record it as that action.
+    (`Unavailable`: "you hold no shield", "not usable yet", or while a status lasts that blocks
+    its kind of action or is its cooldown, "you are winded", §8 "Status effects").
+    `PerceptionView::abilities` lists the player's, in menu order, each with why it cannot be
+    used now. Every ability is a normal core `Action` with replay text, so replays record it as
+    that action.
   - **What there is**: the shield bash (§8 "Weapon skills"), which everyone has and can use
     while holding a shield to bash with; and each skill used as an action (`kind = "action"`,
     §8 "Skills") the player is trained in, listed but never available until its use comes (it
@@ -330,16 +357,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   names (`1 Char · 2 Inventory · 3 Equip · 4 Skills · 5 Weapons · 6 Quests`), else all by their
   short names, else the current page by its name and the others by their keys alone.
 - **Death screen** (§8 "Combat"): when the player dies, the death screen opens over the run as it
-  ended, in place of any other screen, and the run's save is deleted (permadeath): `Y O U   D I E
-  D`, then who killed them ("Killed by a kobold", or "Killed by something you did not see" when
+  ended, in place of any other screen, and the character's save is deleted, and no other's
+  (permadeath): `Y O U   D I E D`, then who lies here ("Here lies Brakka,", with a character; the
+  next line then begins in lower case), who killed them ("Killed by a kobold", or "Killed by something you did not see" when
   they did not see it), the status effect that did (its `death` line: "Bled to death"; a
   disease kills by Diseased: "Died of disease"), or what, when neither did (§8 "Hunger":
   "Starved to death", "Choked to death on a food ration"; §8 "Traps": "Killed by a fireball
   trap"), where
   (the level's name), when (the date and time), and after how many turns, and the level they
   had reached ("You had reached level 3."). It takes every key press; Enter or Esc returns to
-  the main menu (no Continue: nothing is
-  left to continue). A run that has ended is never saved again, by any trigger.
+  the main menu (Continue only for another saved character: nothing of this one is left to
+  continue). A run that has ended is never saved again, by any trigger.
 - **Weight**: every object and every creature (the player included) has a weight in grams. An
   actor weighs its creature's base weight plus everything it carries; the rules know every
   actor's weight (what it carries decides its burden, §8 "Burden"), but the player is shown only
@@ -398,21 +426,42 @@ developer notes (CLAUDE.md, `docs/dev/`).
   digs (replay text `dig:E`), any other command cancels. With no digging tool ready nothing is
   asked: the rules say so at once ("You have no digging tool ready."). Digging goes on turn
   after turn like a rest and stops for the same reasons.
-- **Messages**: the last two show in the message line; the same text logged again in a row folds
-  into one entry with a count (`You open the door. (×2)`). Heard sounds are logged only when they
-  are news (§5 "Hearing"), so a patrol walking back and forth out of sight gives one message per
-  pass, not one a turn.
+- **Messages**: the message line (two rows) shows this turn's messages, those logged since the
+  player last acted, running on one after another and wrapped at word boundaries (a word longer
+  than a row is split where the row ends); rows they leave free show earlier messages, one a row,
+  the latest lowest. The same text logged again in a row folds into one entry with a count (`You
+  open the door. (×2)`), news again when it is logged again. Heard sounds are logged only when
+  they are news (§5 "Hearing"), so a patrol walking back and forth out of sight gives one message
+  per pass, not one a turn.
+- **`--more--`** (#207, ADOM-style): when this turn's messages do not fit the message line, it
+  shows what fits followed by `--more--` and waits: the next-messages key (Space and Enter by
+  default) shows the next page, the skip key (no default key; Esc always does it) skips the rest
+  of this turn's messages, leaving the last page shown. A single message too long for the line is
+  split across pages. While it waits no other key acts, and a held key's repeats never turn a
+  page; a screen open over the run (the dialogue screen) keeps its keys, and `--more--` waits
+  beneath it. A rest or another long action shows what stopped it the same way. Presentation only:
+  the rules, replays, and dumps never see pages; captures show the first page.
+- **Message history** (`M`, ADOM's Ctrl-P; #207): a screen of every message the log keeps (the
+  last 200, which it says at the top), oldest first, the newest at the bottom, each wrapped to the
+  panel (further lines indented). It opens on the newest; the up and down keys scroll a line, the
+  list page keys (`>`/PageDown, `<`/PageUp) a panel's height; Esc, Enter, or `M` closes it. It
+  reads the message log of the perception snapshot, takes no time, and is no info page (those
+  are about the character).
 - **Attacks** (§8 "Combat") are reported when the player perceives them: they see the attacker
   or the target, or are the target. Messages say what came of an attack and never carry a number:
-  a hit ("The kobold hits you.", "The giant rat bites the kobold."; with a natural attack, its
-  verb), a confirmed critical ("The kobold hits you hard!"), a miss, and why it missed when the
+  a hit, said with the verb of the kind of damage the blow did (§8 "Damage types": "The kobold
+  stabs you." with a spear, "You slash the giant rat." with a sword, "The kobold cleaves you."
+  with an axe, which names its own verb; bare hands "hit", a natural attack has its own verb:
+  "The giant rat bites the kobold."), a confirmed critical ("The kobold stabs you hard!"), a miss, and why it missed when the
   player saw both ends ("The kobold misses you." for a plain miss; "You dodge the kobold's
   spear.", "The kobold's spear glances off your armour.", "You block the kobold's spear with your
   shield.", "You parry the kobold's spear.", "Your sword glances off the cave beetle's shell."),
   a hit Protection soaked to nothing, naming what took it when the player saw both ends (the
   natural armour, or the worn piece with the most Protection: "Your sword glances off the cave
   beetle's shell.", "The kobold's spear glances off your chain mail shirt."; else "Something
-  hits you but does no harm."), a shot ("The kobold archer shoots the giant rat."), and a death ("The giant rat dies.", "You
+  hits you but does no harm."), a hit resisted to nothing (§8 "Damage types": "The fireball
+  does the salamander no harm.", "Your torch does the salamander no harm."; else "... but does
+  no harm."), a shot ("The kobold archer shoots the giant rat."), and a death ("The giant rat dies.", "You
   die..."). Spells are announced ("The kobold shaman casts a spell at you."). An end the player
   does not see is
   "something" ("Something hits you.", "The kobold misses something."), and a miss is then just

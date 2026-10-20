@@ -78,6 +78,10 @@ Build the engine and framework, not the game. Everything built is production qua
   hit points, regeneration, stats, attack and moving speed, carrying, stealth, light). Loot on
   generated levels' floors, in vaults, and dropped by creatures; found unidentified (rarity
   known, affixes not, effects applying); an item description screen (§8 "Magic items")
+- Damage types (#151): every blow, burst, bolt, fall, and plunge is slashing, piercing,
+  bludgeoning, fire, cold, electricity, acid, or poison (a data list); Protection soaks the
+  physical kinds only, by kind; creatures and gear resist kinds in percent; a flaming arrow and
+  magic weapons add damage of another kind; only cuts and stabs bleed (§8 "Damage types")
 - Digging (M19): walls of terrain that breaks give way to a digging tool (a pick-axe, a mattock)
   ready in a new Tool equipment slot, turn after turn like a rest, by the tool's power and the
   digger's Strength against the wall's hardness, and to explosions stronger than they are hard;
@@ -131,8 +135,7 @@ Build the engine and framework, not the game. Everything built is production qua
   paying, selling, and theft; one in the courtyard, now and then one in the Depths (§7 "Shops")
 
 **Out of scope for now**: magic (spells are announced, nothing is damaged; only traps burst into
-fireballs and lightning), damage types (a flaming arrow does an arrow's damage, a fireball no more
-than its dice), rules that use stats beyond combat, burden, and kicking doors in (ability checks,
+fireballs and lightning, and scrolls cast them), rules that use stats beyond combat, burden, and kicking doors in (ability checks,
 saving throws, training stats), levels and experience, digging down or up, creatures that dig,
 what a class gives beyond starting stats, hit points, skills, weapon skills, and fighting
 styles (equipment, spells), active uses of skills (picking locks, healing, and the like), item effects

@@ -38,7 +38,9 @@ pub(super) fn traps(content: &Content) -> String {
                 "Whoever steps on it is moved to a free place on the level".into()
             }
         };
-        let damage = t.effect.damage().map_or("—".to_string(), |d| d.to_string());
+        let damage = (t.effect.damage()).map_or("—".to_string(), |d| {
+            super::damage::typed_dice(content, d, t.effect.damage_kind())
+        });
         let goes_off = match t.charges {
             None => "every time".to_string(),
             Some(1) => "once".to_string(),

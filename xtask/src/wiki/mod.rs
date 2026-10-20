@@ -17,6 +17,7 @@ mod calendar;
 mod character;
 mod combat;
 mod creatures;
+mod damage;
 mod dialogue;
 mod digging;
 mod doors;
@@ -153,6 +154,9 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("ammunition.md", combat::ammunition),
         ("armour.md", combat::armour),
         ("piercing.md", combat::piercing),
+        ("damage-types.md", damage::damage_types),
+        ("damage-weapons.md", damage::weapon_kinds),
+        ("damage-armour.md", damage::armour_kinds),
         ("stances.md", combat::stances),
         ("hit-chances.md", combat::hit_chances),
         ("threats.md", combat::threats),
@@ -228,7 +232,7 @@ mod tests {
             "{traps}"
         );
         assert!(
-            traps.contains("| 3d6 | once | Explosion, very loud |"),
+            traps.contains("| 3d6 fire | once | Explosion, very loud |"),
             "{traps}"
         );
         assert!(traps.contains("| Pit `^` |") && !traps.contains("to_hit"));
@@ -238,7 +242,9 @@ mod tests {
             "{scrolls}"
         );
         assert!(
-            scrolls.contains("| 3d6 | 10 cells | Explosion, very loud | item level 3 | 150 gold |"),
+            scrolls.contains(
+                "| 3d6 fire | 10 cells | Explosion, very loud | item level 3 | 150 gold |"
+            ),
             "{scrolls}"
         );
         assert!(scrolls.contains("| Scroll of identify `?` | Identifies one unidentified item"));
@@ -676,6 +682,15 @@ mod tests {
             "which creatures poison stays hidden"
         );
         assert!(statuses.contains("| Diseased | no | Any disease, once it shows | Nothing |"));
+        // Buffs and cooldowns: a raise, what it keeps you from, and what follows it.
+        for row in [
+            "| Raging | yes, \"raging\" | — | Nothing |",
+            "| Strength +2, Toughness +2, Intelligence \u{2212}2 | — | You cannot read; Exhausted \
+             follows it |",
+            "| Exhausted | no | The end of Raging | Nothing |",
+        ] {
+            assert!(statuses.contains(row), "{row} in {statuses}");
+        }
         let diseases = text("diseases.md");
         for row in [
             "| Filth fever | Some creatures' bites | Toughness, 54% | 1d3 days | Every day | \

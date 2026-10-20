@@ -87,6 +87,23 @@
 #              picks, war hammers, stilettos, crossbow bolts). Never shown as a number
 # Within a category of Defence only the best bonus counts.
 #
+# Damage types (spec §8 "Damage types"; damage_types.toml):
+#   damage_type the kind of damage a weapon does (`"slashing"`), or two of which a blow does
+#              whichever is better against its target (`["slashing", "piercing"]`: the kind it
+#              resists least, then the one its armour stands least against); a launcher's is its
+#              shots', a shield's its bash's (bludgeoning without one). Every built-in weapon
+#              names one; a weapon that names none does untyped damage, soaked like any blow
+#   verb       what a blow with it does to its target instead of the kind's verb ("cleaves":
+#              "The kobold cleaves you.", "You cleave the kobold.")
+#   added      damage of another kind every hit with it adds: { type = "fire", damage = "1d4" }
+#              (the flaming arrow; a shot adds the launcher's and the ammunition's), rolled after
+#              the weapon's own dice and never soaked by armour; the type is no physical kind
+#   resist     what it resists while worn or held, in percent per kind (-100 to 75):
+#              { cold = 20 }; every piece adds up, capped at 75
+#   protects   how its Protection stands against each physical kind, more or less than
+#              `protection`: { slashing = 1, piercing = -1 } (chain mail turns a blade well and
+#              a point badly); armour with protection only
+#
 # Weapon skills (spec §8 "Weapon skills"):
 #   category   the weapon skill a weapon trains and draws on (an id in weapon_skills.toml; every
 #              weapon names one): a melee skill for what is wielded in a hand, a launcher skill

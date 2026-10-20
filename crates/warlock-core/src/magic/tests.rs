@@ -371,6 +371,7 @@ fn descriptions_say_base_stats_and_known_affixes_in_words() {
             "Long sword · steel blade, leather grip · 1.8 kg",
             "Long blade, for the main hand",
             "Damage 1d8; criticals on 20–24, ×2 damage",
+            "Slashing or piercing damage",
         ]
     );
     let mut sword = item(
@@ -437,6 +438,7 @@ fn descriptions_say_base_stats_and_known_affixes_in_words() {
         [
             "Bow, readied as a missile weapon; shoots arrows",
             "Damage 1d8+2 a shot; criticals on 22–24, ×3 damage",
+            "Piercing damage",
             "Needs Strength 14 to draw",
             "Shoots up to 15 cells",
         ]
@@ -447,7 +449,7 @@ fn descriptions_say_base_stats_and_known_affixes_in_words() {
         [
             "Worn: body",
             "Armour +2",
-            "Protection 3",
+            "Protection 3 (+1 against slashing, −1 against piercing)",
             "Dexterity adds at most +4 to Defence while worn",
         ]
     );

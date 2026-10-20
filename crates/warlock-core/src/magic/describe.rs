@@ -115,6 +115,8 @@ pub fn phrase(rolled: &Rolled<'_>, kind: ItemKind, content: &Content) -> String 
         Effect::ToHit => every(format!("+{v} to hit")),
         Effect::Damage => every(format!("+{v} damage")),
         Effect::ExtraDamage => format!("adds 1d{v} damage"),
+        Effect::Elemental => format!("adds 1d{v} {} damage", kind_name(rolled, content)),
+        Effect::Resistance => format!("+{v}% {} resistance", kind_name(rolled, content)),
         Effect::Threat => every(format!("criticals threaten on {v} more {}", rolls(v))),
         Effect::Crit => every(format!("+{v} to the critical damage multiplier")),
         Effect::AttackSpeed if local => format!("attacks {}", faster(v)),
@@ -151,6 +153,14 @@ pub fn phrase(rolled: &Rolled<'_>, kind: ItemKind, content: &Content) -> String 
             None => format!("+{v} to a skill"),
         },
     }
+}
+
+/// The damage type a typed affix names ("fire"); "some kind of" for one that names none.
+fn kind_name(rolled: &Rolled<'_>, content: &Content) -> String {
+    (rolled.def.damage_type).map_or_else(
+        || "some kind of".to_string(),
+        |k| content.damage_type(k).name.clone(),
+    )
 }
 
 /// How much faster, in words: speed numbers stay hidden.
@@ -192,6 +202,13 @@ pub fn base_stats(def: &ObjectDef, content: &Content) -> Vec<String> {
             "Damage {}{shot}; criticals on {critical}, ×{} damage",
             attack.damage, attack.crit
         ));
+        // Its kinds of damage (spec §8 "Damage types"): "Slashing or piercing damage".
+        let kinds: Vec<&str> = (attack.kinds.iter())
+            .map(|k| content.damage_type(k).name.as_str())
+            .collect();
+        if !kinds.is_empty() {
+            out.push(format!("{} damage", capitalized(&kinds.join(" or "))));
+        }
         if let Some(strength) = attack.strength {
             out.push(format!("Needs Strength {strength} to draw"));
         }
@@ -218,6 +235,10 @@ pub fn base_stats(def: &ObjectDef, content: &Content) -> Vec<String> {
     if def.reloads {
         out.push("Reloaded after every shot".into());
     }
+    if let Some(added) = &def.added {
+        let kind = &content.damage_type(added.kind).name;
+        out.push(format!("Adds {} {kind} damage", added.dice));
+    }
     // How much armour it ignores stays hidden, as the soak does: only that it does.
     if def.penetration > 0 {
         out.push("Pierces armour".into());
@@ -229,7 +250,39 @@ pub fn base_stats(def: &ObjectDef, content: &Content) -> Vec<String> {
         out.push(format!("Armour +{}", def.armour));
     }
     if def.protection > 0 {
-        out.push(format!("Protection {}", def.protection));
+        let against: Vec<String> = (def.protects.iter())
+            .map(|&(k, more)| {
+                let sign = if more < 0 { "\u{2212}" } else { "+" };
+                format!(
+                    "{sign}{} against {}",
+                    more.abs(),
+                    content.damage_type(k).name
+                )
+            })
+            .collect();
+        if against.is_empty() {
+            out.push(format!("Protection {}", def.protection));
+        } else {
+            out.push(format!(
+                "Protection {} ({})",
+                def.protection,
+                against.join(", ")
+            ));
+        }
+    }
+    let resists: Vec<String> = (def.resist.iter())
+        .filter(|&&(_, p)| p > 0)
+        .map(|&(k, p)| format!("{} {p}%", content.damage_type(k).name))
+        .collect();
+    if !resists.is_empty() {
+        out.push(format!("Resists {}", resists.join(", ")));
+    }
+    let weak: Vec<String> = (def.resist.iter())
+        .filter(|&&(_, p)| p < 0)
+        .map(|&(k, p)| format!("{} {}%", content.damage_type(k).name, -p))
+        .collect();
+    if !weak.is_empty() {
+        out.push(format!("Vulnerable to {}", weak.join(", ")));
     }
     if def.shield > 0 {
         out.push(format!("Shield +{}", def.shield));

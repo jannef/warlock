@@ -1,0 +1,16 @@
+# The message line and the message history (#207).
+
+# The message history (`M`): every message the log keeps, the newest at the bottom, the note on what
+# it keeps at the top; the old hermit's long answer wrapped with its further lines indented.
+[[golden]]
+name = "message-history"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:SE*3 chat:SE ask:SE:quest-rats"
+screen = "messages"
+
+# `--more--`: the old hermit's answer is longer than the message line, so it shows what fits and
+# waits, `--more--` after it (captures show the first page).
+[[golden]]
+name = "more-prompt"
+scenario = "showcase"
+actions = "move:N*3 open:N move:N*2 move:E*67 open:S move:S*4 move:SE*3 chat:SE ask:SE:quest-rats"

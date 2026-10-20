@@ -46,7 +46,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     weapon's and the ammunition's together; a throw: the thrown weapon's); on anything else
     (gloves, rings, amulets, helmets) they are **global**: every attack. Effects on the item itself
     (Armour, Protection, Shield, Parry, `max_dex`, weight) are local (the Hardened prefix adds
-    to an armour's Protection, which adds up with every other piece's). The rest are global: the six stats,
+    to an armour's Protection, which adds up with every other piece's). An `elemental` affix
+    (Flaming, Freezing; §8 "Damage types") is an attack effect too: its die of its kind rides on
+    every roll of the damage, after the weapon's own added damage, one die per kind (the sides
+    add up); a `resistance` affix (of the Salamander, of Warmth) is global: its percentage adds
+    to the wearer's, capped with the rest at 75. The rest are global: the six stats,
     maximum hit points, regeneration, Dodge (stacks), Deflection and natural armour (the best
     counts, with the creature's own), moving speed, carrying limit, stealth (quieter footsteps,
     §5 "Hearing"), **light** (the wearer carries the brightest light among its glowing items,

@@ -48,8 +48,8 @@ pub(super) fn scrolls(content: &Content) -> String {
                     ),
                 };
                 let damage = match &spell.cast {
-                    Cast::Burst(b) => b.damage.to_string(),
-                    Cast::Bolt(b) => b.damage.to_string(),
+                    Cast::Burst(b) => super::damage::typed_dice(content, b.damage, b.kind),
+                    Cast::Bolt(b) => super::damage::typed_dice(content, b.damage, b.kind),
                 };
                 (
                     what,

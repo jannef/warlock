@@ -37,6 +37,8 @@
 //!   ("The giant rat bleeds to death."); look mode shows those that show.
 //! - **Cures**: [`World::cure`] ends what a named means cures (`cured_by`: a bandage stops the
 //!   bleeding; diseases list their own), for the Heal skill (#132), potions, and priests to use.
+//! - **Endings**: a status that ends, worn off or cured, may be followed by another (`follows`;
+//!   buffs, hexes, and cooldowns are `world/buff.rs`).
 
 use super::fight::Harm;
 use super::{ActorId, Spent, World, disease, rot};
@@ -46,7 +48,7 @@ use crate::content::Effect as ItemEffect;
 use crate::content::{Affliction, Content, DiseaseId, OnHit, StatusId};
 use crate::hunger::Hunger;
 use crate::stats::Stat;
-use crate::status::Added;
+use crate::status::{Added, Effect};
 use crate::time::{Duration, GameTime};
 
 /// What happened to an actor at one moment while time passed.
@@ -61,7 +63,10 @@ struct Moment {
 
 impl World {
     /// Actor `id` comes to suffer `severity` degrees of status `status`, caused by `by` (if
-    /// anyone): added to what it has by the status's stacking rule. The player is told when it
+    /// anyone): added to what it has by the status's stacking rule. A status that is a kind of
+    /// damage (poison; spec §8 "Damage types") meets the actor's resistance to it: an immune
+    /// actor never suffers it, and a resistance takes its share off the dose (rounded to the
+    /// nearest, half up; a dose shrunk to nothing is no dose). The player is told when it
     /// begins.
     pub(crate) fn afflict(
         &mut self,
@@ -72,6 +77,17 @@ impl World {
         events: &mut Vec<Event>,
     ) {
         let def = self.content.status(status);
+        let severity = match def.damage_type {
+            None => severity,
+            Some(kind) => {
+                let percent = self.resistances_of(id).get(Some(kind));
+                let dose = crate::damage::resist(i32::from(severity), percent);
+                match u16::try_from(dose) {
+                    Ok(dose) if dose > 0 => dose,
+                    _ => return,
+                }
+            }
+        };
         let Some(actor) = self.state.actors.get_mut(&id) else {
             return;
         };
@@ -86,12 +102,12 @@ impl World {
     }
 
     /// Cures actor `id` with `cure`, a means named in the statuses' and diseases' `cured_by`
-    /// (`bandage`, `remove_disease`): every status of its that the means cures ends, and every
-    /// disease (showing or not). Returns whether any did. Eating a remedy applies its cures
-    /// (`world/eat.rs`); the Heal skill's bandaging (#132), potions, and priests will too.
+    /// (`bandage`, `remove_disease`): every status of its that the means cures ends (and what
+    /// `follows` it begins), and every disease (showing or not). Returns whether any did. Eating
+    /// a remedy applies its cures (`world/eat.rs`); the Heal skill's bandaging (#132), potions,
+    /// and priests will too.
     pub(crate) fn cure(&mut self, id: ActorId, cure: &str, events: &mut Vec<Event>) -> bool {
         let content = self.content.clone();
-        let player = self.state.player;
         let Some(actor) = self.state.actors.get_mut(&id) else {
             return false;
         };
@@ -104,16 +120,13 @@ impl World {
             .map(|i| i.disease)
             .filter(|&d| cures(&content.disease(d).cured_by))
             .collect();
+        let ended: Vec<Effect> = (cured.iter())
+            .filter_map(|&status| actor.effects.get(status).copied())
+            .collect();
         for &status in &cured {
             actor.effects.remove(status);
-            if id == player {
-                events.push(Event::Status {
-                    actor: id,
-                    status,
-                    began: false,
-                });
-            }
         }
+        self.ended(id, &ended, events);
         for &disease in &healed {
             self.end_disease(id, disease, events);
         }
@@ -152,7 +165,9 @@ impl World {
     }
 
     /// `target` took `blow`, dealt by `by` (none for a trap's, spec §8 "Traps"), and lives: the
-    /// statuses its wound causes (bleeding from a big hit or a confirmed critical).
+    /// statuses its wound causes (bleeding from a big hit or a confirmed critical, of a kind
+    /// that wounds that way: slashing and piercing bleed, a club and a fireball do not; spec §8
+    /// "Damage types").
     pub(super) fn wounded(
         &mut self,
         target: ActorId,
@@ -166,10 +181,10 @@ impl World {
         };
         let critical = matches!(blow.strike, Strike::Hit { critical: true });
         let big = combat::big_hit(blow.damage, victim.max_hp(&content));
-        // Every blow wounds alike for now. Weapon categories (#134) will let only cutting and
-        // piercing ones bleed, and bloodless creatures (#127's `blood = "none"`) will not.
         for (status, def) in content.status_ids() {
-            let degrees = def.wound.map_or(0, |w| w.degrees(critical, big));
+            let degrees = (def.wound.as_ref())
+                .filter(|w| w.caused_by(blow.kind))
+                .map_or(0, |w| w.degrees(critical, big));
             if degrees > 0 {
                 self.afflict(target, status, degrees, by, events);
             }
@@ -325,13 +340,7 @@ impl World {
             if starved > 0 && self.hurt(id, starved, Harm::Starving(when), events) {
                 return;
             }
-            if id == self.state.player {
-                events.extend(spent.into_iter().map(|status| Event::Status {
-                    actor: id,
-                    status,
-                    began: false,
-                }));
-            }
+            self.ended(id, &spent, events);
             if let Some(before) = hunger {
                 self.hunger_news(before);
             }

@@ -11,17 +11,21 @@
 //! (`render::lighting`), composited after the map is placed and before free glyphs are lit.
 //! [`dev`] adds the developer overlays (reveal mode is the one exception that reads ground truth).
 //!
+//! The message line shows this turn's messages, a page at a time at `--more--` ([`more`]).
+//!
 //! Menus, character creation ([`chargen_screen`]), settings, controls, the `?` help, the
 //! inventory, choosing what to pick up or drop ([`object_screen`]), the equipment screen and its
 //! choice of what goes in a slot ([`equipment_screen`]), the character screen
-//! ([`character_screen`]), the weapon skills screen ([`weapon_skills_screen`]), the dialogue
-//! screen ([`dialogue_screen`]), and the death screen ([`death_screen`]) are screens on one stack
+//! ([`character_screen`]), the weapon skills screen ([`weapon_skills_screen`]), the message
+//! history ([`messages_screen`]), the dialogue screen ([`dialogue_screen`]), and the death screen
+//! ([`death_screen`]) are screens on one stack
 //! ([`screens`]): opened by [`Screens::open`], fed key presses by `input::route_keys`, and drawn
 //! by [`draw`], the one system that writes the UI console.
 
 mod abilities_screen;
 mod blood;
 mod character_screen;
+mod characters_screen;
 mod chargen_screen;
 mod controls_screen;
 mod death_screen;
@@ -36,8 +40,11 @@ mod glyphs;
 mod info_tabs;
 mod look;
 mod menu;
+mod messages_screen;
 mod missiles;
+pub(crate) mod more;
 mod motion;
+mod name_screen;
 mod new_run_screen;
 mod object_screen;
 mod paged_list;
@@ -151,6 +158,10 @@ impl Plugin for UiPlugin {
                         .run_if(resource_exists::<Game>),
                     (screens::refresh, screens::converse, screens::on_death)
                         .chain()
+                        .after(SimSet)
+                        .before(draw)
+                        .run_if(resource_exists::<Game>),
+                    more::wait
                         .after(SimSet)
                         .before(draw)
                         .run_if(resource_exists::<Game>),
@@ -461,7 +472,8 @@ fn remembered(c: Rgb) -> Rgb {
 }
 
 /// The message line, or the prompt of the input mode; look mode and aiming describe the cell
-/// under the cursor (its blood only if `blood` is shown).
+/// under the cursor (its blood only if `blood` is shown). Outside the prompts it shows this
+/// turn's messages, a page at a time at `--more--` ([`more`]).
 fn draw_messages(
     console: &mut Console,
     game: &Game,
@@ -524,19 +536,7 @@ fn draw_messages(
         console.print(1, 1, &prompt, TEXT_DIM);
         return;
     }
-    let turn = game.world.turn();
-    let recent: Vec<_> = game
-        .world
-        .messages()
-        .iter()
-        .rev()
-        .take(MESSAGE_ROWS as usize)
-        .collect();
-    for (row, msg) in recent.iter().rev().enumerate() {
-        let color = if msg.turn + 1 >= turn { TEXT } else { TEXT_DIM };
-        let text = msg.display_with(|id| message_key(bindings, id));
-        console.print(1, row as i32, &text, color);
-    }
+    more::draw(console, game, mode, bindings);
 }
 
 /// A key a message names by its command's id ([`warlock_core::messages::key`]), as bound: `?`

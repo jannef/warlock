@@ -11,5 +11,6 @@ slot = "missile_weapon"
 launches = "stone"
 damage = "1d4"
 category = "slings"
+damage_type = "bludgeoning"
 range = 9
 kind = "launcher"

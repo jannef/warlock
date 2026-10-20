@@ -10,6 +10,7 @@ mod anim;
 mod calendar;
 mod class;
 mod creature;
+mod damage_type;
 mod dialogue;
 mod disease;
 mod dungeon;
@@ -24,6 +25,7 @@ mod item_class;
 mod level;
 mod light;
 mod material;
+mod names;
 mod object;
 mod overworld;
 pub(crate) mod part;
@@ -51,7 +53,7 @@ mod weather;
 
 pub use action::{ActionCosts, ActionKind, BASE_TURN, COSTS, NORMAL_COST, price};
 pub use affix::{
-    AffixDef, AffixKind, Affixes, Effect, ItemKind, MAX_ITEM_LEVEL, MAX_PER_KIND, MAX_SPEED,
+    AffixDef, AffixKind, Affixes, Effect, Group, ItemKind, MAX_ITEM_LEVEL, MAX_PER_KIND, MAX_SPEED,
     Rarity, Tier,
 };
 pub use anim::GlyphAnim;
@@ -61,6 +63,7 @@ pub use creature::{
     Budge, Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, NORMAL_SPEED, NaturalAttack,
     OnEat, SPEEDS,
 };
+pub use damage_type::{DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES};
 pub use dialogue::{
     Dialogue, DialogueId, MAX_LINE, MAX_REPLY, MAX_TOPICS, MUTTER_CHANCES, Mutter, Speaker, Topic,
 };
@@ -93,6 +96,7 @@ pub use level::{
 };
 pub use light::{Dips, Drift, HueDrift, LightId, LightPreset, MAX_LIGHT_RADIUS, Stability};
 pub use material::{MAX_MATERIAL_VALUE, MaterialDef, MaterialId};
+pub use names::{NameLists, Names};
 pub use object::{
     MAX_BONUS, MAX_DIG, MAX_PLACED, MAX_VALUE, ObjectDef, ObjectId, article, counted, weapon_noun,
 };
@@ -118,10 +122,12 @@ pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use status::{
-    Affliction, Healing, MAX_REGEN, MAX_SEVERITY, OnHit, Penalty, Stacking, StatusDef, StatusId,
-    Wound,
+    Affliction, COST_PERCENT, CombatBonus, Healing, MAX_REGEN, MAX_SEVERITY, OnHit, Penalty,
+    Stacking, StatusDef, StatusId, Wound,
 };
-pub use terrain::{Breakable, Freeze, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId};
+pub use terrain::{
+    Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
+};
 pub use trap::{MAX_CHARGES, Trap, TrapDef, TrapEffect, TrapId, TrapNoise};
 pub use vault::Vault;
 pub use vision::VisionProfile;
@@ -353,7 +359,8 @@ struct LegendFile {
 /// `data/lights.toml`, `data/vision.toml`, `data/factions.toml`, `data/dungeons.toml`,
 /// `data/calendar.toml`, `data/sky.toml`, `data/materials/`, `data/parts.toml`, `data/objects/`,
 /// `data/gems.toml`, `data/weather.toml`, `data/actions.toml`, `data/slots.toml`, `data/sizes.toml`,
-/// `data/races.toml`, `data/classes.toml`, `data/skills.toml`, `data/horoscope.toml`,
+/// `data/races.toml`, `data/names.toml`, `data/classes.toml`, `data/skills.toml`,
+/// `data/horoscope.toml`,
 /// `data/effects.toml`, `data/room_effects.toml`, `data/weapon_skills.toml`, `data/stances.toml`,
 /// `data/status.toml`, `data/diseases.toml`, `data/dialogue.toml`, `data/quests.toml`,
 /// `data/traps.toml`, and `data/shops.toml` are optional (without effects, spell effects are not
@@ -367,6 +374,7 @@ struct LegendFile {
 /// weather file the sky is always clear; without an actions file every action costs 1000;
 /// without a slots file nothing can be worn or wielded; without races or classes there is no
 /// character to choose, and scenarios give the player's eyes and stats themselves; without
+/// names a character told none is nameless (`character::NAMELESS`); without
 /// skills nobody is trained in anything; without a horoscope, characters are born under no sign;
 /// without room effects there are no special rooms; without weapon skills nobody has any, and
 /// weapons name no category; without statuses nothing ails anyone, and resting heals twice as
@@ -381,6 +389,8 @@ pub struct Content {
     ice: Vec<(u16, TerrainId)>,
     creatures: Vec<CreatureDef>,
     creature_ids: BTreeMap<String, CreatureId>,
+    /// Damage types (`data/damage_types.toml`), in file order; none without the file.
+    damage_types: Vec<DamageTypeDef>,
     materials: Vec<MaterialDef>,
     material_ids: BTreeMap<String, MaterialId>,
     /// Part names (`data/parts.toml`), in file order.
@@ -417,6 +427,8 @@ pub struct Content {
     actions: ActionCosts,
     skills: SkillBook,
     races: Races,
+    /// Names offered to new characters, by race (`data/names.toml`): flavour, not fingerprinted.
+    names: Names,
     classes: Vec<ClassDef>,
     experience: Experience,
     horoscope: Option<Horoscope>,
@@ -461,6 +473,7 @@ impl Content {
             ice: Vec::new(),
             creatures: Vec::new(),
             creature_ids: BTreeMap::new(),
+            damage_types: Vec::new(),
             materials: Vec::new(),
             material_ids: BTreeMap::new(),
             parts: Vec::new(),
@@ -488,6 +501,7 @@ impl Content {
             actions: ActionCosts::default(),
             skills: SkillBook::default(),
             races: Races::default(),
+            names: Names::default(),
             classes: Vec::new(),
             experience: Experience::default(),
             horoscope: None,
@@ -538,13 +552,20 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.skills = SkillBook::parse(path, text)?;
         }
+        let path = "data/damage_types.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.damage_types = damage_type::parse(path, text)?;
+        }
         // The affix table: optional, so loot without it is always normal.
         if files.table("affixes").next().is_some() {
             let light = |id: &str| content.light_id(id);
             let skill = |id: &str| content.skill_id(id);
             let has_skills = !content.skills().is_empty();
+            let damage = |id: &str| content.damage_type_id(id);
+            let has_types = !content.damage_types().is_empty();
             let table = files.table("affixes");
-            content.affixes = affix::parse(table, light, (skill, has_skills))?;
+            let typed = (damage, has_types);
+            content.affixes = affix::parse(table, light, (skill, has_skills), typed)?;
         }
         let path = "data/stances.toml";
         if let Some(text) = files.get_optional(path) {
@@ -557,6 +578,10 @@ impl Content {
             let skill_id = |id: &str| content.skill_id(id);
             let weapons = &content.weapon_skills;
             content.races = Races::parse(path, text, has_vision, size_index, skill_id, weapons)?;
+        }
+        let path = "data/names.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.names = Names::parse(path, text, |id| content.race(id).is_some())?;
         }
         let path = "data/classes.toml";
         if let Some(text) = files.get_optional(path) {
@@ -765,7 +790,24 @@ impl Content {
                 muffle: spec
                     .muffle
                     .or((spec.walkable || spec.transparent).then_some(0)),
-                freeze: spec.freeze,
+                freeze: match &spec.freeze {
+                    None => None,
+                    Some(f) => {
+                        let kind = match &f.damage_type {
+                            None => None,
+                            Some(name) => Some(self.damage_type_id(name).ok_or_else(|| {
+                                ContentError::new(
+                                    path,
+                                    format!(
+                                        "terrain `{}`: `freeze`: unknown damage type `{name}`",
+                                        spec.id
+                                    ),
+                                )
+                            })?),
+                        };
+                        Some(f.resolve(kind))
+                    }
+                },
                 ice: spec.ice,
                 breaks,
                 face: resolve(&spec.face)?,
@@ -948,9 +990,17 @@ impl Content {
                     .filter(|&s| Some(s) != self.disease_status)?;
                 Some((found, self.status(found).max))
             };
-            let attack = (spec.attack.clone())
-                .map(|a| a.resolve(status, |id| self.disease_id(id)))
+            let kinds = (spec.attack.as_ref())
+                .map(|a| self.resolve_kinds(a.damage_type.as_ref()))
                 .transpose()
+                .map_err(|m| err(format!("creature `{}`: attack: {m}", spec.id)))?;
+            let attack = (spec.attack.clone())
+                .zip(kinds)
+                .map(|(a, kinds)| a.resolve(status, |id| self.disease_id(id), kinds))
+                .transpose()
+                .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
+            let percent = crate::damage::MIN_RESISTANCE..=crate::damage::IMMUNE;
+            let resist = (self.resolve_per_kind("resist", &spec.resist, percent, false))
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
             let stats = Stats::from_data(&spec.stats, &spec.potential)
                 .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
@@ -977,6 +1027,7 @@ impl Content {
                 skills,
                 attack,
                 weapon_skills,
+                resist,
                 faction: self.creature_faction(&spec).map_err(err)?,
                 vision: self.vision_index(&spec.vision).ok_or_else(|| {
                     err(format!(
@@ -1065,7 +1116,7 @@ impl Content {
         let Some(text) = files.get_optional(path) else {
             return Ok(());
         };
-        let (healing, list) = status::parse(path, text)?;
+        let (healing, list) = status::parse(path, text, |id| self.damage_type_id(id))?;
         for (i, def) in list.iter().enumerate() {
             let id = u16::try_from(i).map_err(|_| ContentError::new(path, "too many statuses"))?;
             self.status_ids.insert(def.id.clone(), StatusId(id));
@@ -1094,13 +1145,25 @@ impl Content {
                 || def.eases.is_some()
                 || def.wound.is_some()
                 || !def.cured_by.is_empty()
+                || def.follows.is_some()
             {
                 return Err(ContentError::new(
                     path,
                     format!(
                         "status `{}`: the status diseases show as lasts while they do: no \
-                         `tick`, `eases`, `wound`, or `cured_by` (cure the diseases instead)",
+                         `tick`, `eases`, `wound`, `cured_by`, or `follows` (cure the diseases \
+                         instead)",
                         def.id
+                    ),
+                ));
+            }
+            if let Some(other) = self.statuses.iter().find(|s| s.follows == Some(status)) {
+                return Err(ContentError::new(
+                    path,
+                    format!(
+                        "status `{}`: follows `{}`, the status diseases show as (only diseases \
+                         give it)",
+                        other.id, def.id
                     ),
                 ));
             }
@@ -1204,6 +1267,7 @@ impl Content {
             };
             let (mut def, lit_as) = spec.resolve(
                 path,
+                self,
                 &self.item_classes,
                 |entries| {
                     part::resolve(
@@ -1511,10 +1575,12 @@ impl Content {
     }
 
     /// A stable hash (64-bit FNV-1a) of the ordered terrain, creature, level, light, dungeon,
-    /// object, slot, skill, room effect, weapon skill, status, disease, trap, and shop ids.
+    /// object, slot, skill, room effect, weapon skill, status, disease, trap, damage type, and
+    /// shop ids.
     ///
     /// `TerrainId`, `CreatureId`, `LightId`, `ObjectId`, `SlotId`, `SkillId`, `RoomEffectId`,
-    /// `WeaponSkillId`, `StatusId`, `DiseaseId`, `TrapId`, and `ShopId` are indices, so a save
+    /// `WeaponSkillId`, `StatusId`, `DiseaseId`, `TrapId`, `DamageTypeId`, and `ShopId` are
+    /// indices, so a save
     /// is only meaningful for content with the same ids in the same order; saves record this
     /// fingerprint to detect a mismatch.
     pub fn fingerprint(&self) -> u64 {
@@ -1524,7 +1590,7 @@ impl Content {
                 hash = (hash ^ u64::from(b)).wrapping_mul(0x0000_0100_0000_01b3);
             }
         };
-        let groups: [Vec<&str>; 14] = [
+        let groups: &[Vec<&str>] = &[
             self.terrain.iter().map(|t| t.id.as_str()).collect(),
             self.creatures.iter().map(|c| c.id.as_str()).collect(),
             self.levels.keys().map(String::as_str).collect(),
@@ -1542,6 +1608,7 @@ impl Content {
             self.statuses.iter().map(|s| s.id.as_str()).collect(),
             self.diseases.iter().map(|d| d.id.as_str()).collect(),
             self.traps.iter().map(|t| t.id.as_str()).collect(),
+            self.damage_types.iter().map(|t| t.id.as_str()).collect(),
             (self.shops.iter().flat_map(|s| s.defs()))
                 .map(|d| d.id.as_str())
                 .collect(),
@@ -1598,6 +1665,96 @@ impl Content {
 
     pub fn creature_defs(&self) -> &[CreatureDef] {
         &self.creatures
+    }
+
+    /// The damage types (spec §8 "Damage types"), in file order (by [`DamageTypeId`]); empty
+    /// without `data/damage_types.toml`, and then nothing is typed.
+    pub fn damage_types(&self) -> &[DamageTypeDef] {
+        &self.damage_types
+    }
+
+    pub fn damage_type(&self, id: DamageTypeId) -> &DamageTypeDef {
+        &self.damage_types[usize::from(id.0)]
+    }
+
+    pub fn damage_type_id(&self, name: &str) -> Option<DamageTypeId> {
+        let i = self.damage_types.iter().position(|t| t.id == name)?;
+        u8::try_from(i).ok().map(DamageTypeId)
+    }
+
+    /// The kind of damage bare hands, kicks, and shield bashes do (the type marked `unarmed`),
+    /// if content names one.
+    pub fn unarmed_damage(&self) -> Option<DamageTypeId> {
+        let i = self.damage_types.iter().position(|t| t.unarmed)?;
+        u8::try_from(i).ok().map(DamageTypeId)
+    }
+
+    /// Whether damage of `kind` is physical, which Protection soaks (untyped damage counts as
+    /// physical: it is soaked as every blow was before damage had types).
+    pub fn is_physical(&self, kind: Option<DamageTypeId>) -> bool {
+        kind.is_none_or(|k| self.damage_type(k).physical)
+    }
+
+    /// The kinds `names` name (`damage_type` in data: one or two type ids), checked; none
+    /// named is an untyped attack (soaked and wounding as every blow did before damage had
+    /// types; the built-in data names one everywhere, a test checks).
+    pub(crate) fn resolve_kinds(
+        &self,
+        names: Option<&damage_type::TypeNames>,
+    ) -> Result<crate::damage::Kinds, String> {
+        use crate::damage::{Kinds, MAX_KINDS};
+        let Some(names) = names else {
+            return Ok(Kinds::NONE);
+        };
+        if self.damage_types.is_empty() {
+            return Err("`damage_type` needs data/damage_types.toml".into());
+        }
+        let mut kinds = Vec::new();
+        for name in names.names() {
+            let id = self
+                .damage_type_id(name)
+                .ok_or_else(|| format!("unknown damage type `{name}`"))?;
+            if kinds.contains(&id) {
+                return Err(format!("`damage_type` names `{name}` twice"));
+            }
+            kinds.push(id);
+        }
+        if kinds.is_empty() {
+            return Err("`damage_type` names no type".into());
+        }
+        Kinds::of(&kinds).ok_or_else(|| format!("`damage_type` names at most {MAX_KINDS} types"))
+    }
+
+    /// The percentages per kind `map` gives (`resist = { fire = 25 }` on a creature or an
+    /// object; `protects = { slashing = 1 }` on armour, `physical` only), checked against
+    /// `range`.
+    pub(crate) fn resolve_per_kind(
+        &self,
+        field: &str,
+        map: &BTreeMap<String, i32>,
+        range: std::ops::RangeInclusive<i32>,
+        physical: bool,
+    ) -> Result<Vec<(DamageTypeId, i32)>, String> {
+        let mut out = Vec::new();
+        for (name, value) in map {
+            let id = self
+                .damage_type_id(name)
+                .ok_or_else(|| format!("`{field}`: unknown damage type `{name}`"))?;
+            if physical && !self.damage_type(id).physical {
+                return Err(format!("`{field}`: `{name}` is no physical damage type"));
+            }
+            if !range.contains(value) {
+                return Err(format!(
+                    "`{field}`: `{name}` must be {} to {}",
+                    range.start(),
+                    range.end()
+                ));
+            }
+            out.push((id, *value));
+        }
+        // In damage type order, whatever order the file wrote them in.
+        out.sort_by_key(|(id, _)| *id);
+        Ok(out)
     }
 
     pub fn object(&self, id: ObjectId) -> &ObjectDef {
@@ -1922,6 +2079,12 @@ impl Content {
     /// The race with id `id`.
     pub fn race(&self, id: &str) -> Option<&RaceDef> {
         self.races.list.iter().find(|r| r.id == id)
+    }
+
+    /// The names offered to new characters, by race and gender (`data/names.toml`; none without
+    /// the file).
+    pub fn names(&self) -> &Names {
+        &self.names
     }
 
     /// The classes of `data/classes.toml`, in the order offered (none without the file).
@@ -2785,6 +2948,16 @@ mod tests {
                 "elf", "half_elf", "human", "dwarf", "halfling", "gnome", "half_orc"
             ]
         );
+        // Every race offers names to every gender, and every scenario names its character.
+        for race in &content.races().list {
+            for gender in crate::character::Gender::ALL {
+                let names = content.names().offered(&race.id, gender);
+                assert!(names.len() >= 10, "{} {gender:?}: {names:?}", race.id);
+            }
+        }
+        for scenario in content.scenarios() {
+            assert!(scenario.character_name.is_some(), "{}", scenario.id);
+        }
         let classes: Vec<&str> = content.classes().iter().map(|c| c.id.as_str()).collect();
         assert_eq!(
             classes,

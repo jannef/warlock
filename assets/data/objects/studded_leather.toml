@@ -10,6 +10,7 @@ value = 80
 slot = "body"
 armour = 2
 protection = 1
+resist = { acid = 10 }
 max_dex = 5
 kind = "body"
 level = 2
