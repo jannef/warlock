@@ -18,9 +18,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   meat, the forest two food rations and three apples (§8 "Hunger"). Every built-in scenario has a
   character with normal eyes: the showcase a human female thief, the arena a halfling male thief,
   the courtyard a human female druid, the depths and the vast level a human male warrior, the forest
-  a human female ranger, the world a human male ranger.
-- **Saves**: suspend-only. One save per run, written on quit and by periodic autosave; loading
-  continues the run. Dev builds add named snapshots. Format: a versioned envelope (magic, format
+  a human female ranger, the world a human male ranger. The `character` table may name them
+  (`name = "Tamsin"`, up to 20 characters): the name a run of the scenario told none gives its own
+  character (§8 "Character creation"); every built-in scenario names its own (Tamsin, Pip, Rowena,
+  Aldric and Roderick, Maren, Osric, Garrick, Bram).
+- **Saves**: suspend-only. One save per character, written as a run starts, on quit, and by
+  periodic autosave; loading continues the run. Dev builds add named snapshots. Format: a versioned envelope (magic, format
   version, game version) around a JSON payload, gzip-compressed with a pure-Rust backend, written
   atomically (temp file + rename). Before 1.0, incompatible saves are rejected with a clear message;
   from 1.0 on, saves are migrated. The format version is bumped once per release by the
@@ -39,7 +42,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   none), what every actor carries, and what each creature has in mind (where it last saw a
   hostile or heard a noise to look into, and the post it left; §8 "Creature behavior"; saves
   without it load with every creature calm), every actor's stats, scores and
-  potentials (§8 "Stats"), the player's character (race, gender, and class,
+  potentials (§8 "Stats"), the player's character (name, race, gender, and class,
   the stat the gender raised, birth date, and birth sign; §8 "Character creation"),
   what every actor wears and wields (which inventory stack is in which slot, §6
   "Equipment"), every actor's hit points (what it has left, what its race and
@@ -82,19 +85,29 @@ developer notes (CLAUDE.md, `docs/dev/`).
   §7 "Shops"), and a dev weather override while
   it lasts (§5 "Weather"; none otherwise, so saves without one load as they are). The weather
   itself is not saved, nor the temperature under the open sky: they follow from the seed and the
-  clock. The save is `run.sav` in the
-  platform data directory. quitting from the pause menu saves (closing the window saves too), autosave runs every 50 turns
-  and on level change, and a save that cannot be read is renamed `run.sav.bad`, never deleted, while
-  a new run starts. Starting resumes the save unless `--new` is given. **Permadeath**: when the
-  player dies the save is deleted, and a run that has ended is never saved again (every trigger
-  that would save it deletes the save instead; on the web nothing is kept for the page being
-  hidden). Dev snapshots: `F5` saves and `F9` loads `snapshots/quick.sav` (debug builds or
-  `--dev`).
+  clock. **One save per character**: each character's save is `saves/<id>.sav` in the platform
+  data directory, its id a slug of the name and the lowest free number (`brakka-1`; a second
+  Brakka is `brakka-2`), and beside it `saves/<id>.toml`, what the list of saved characters shows
+  (name, race, class, level, place, and when last played, wall-clock time, shown in UTC), so the
+  list reads no save. The run in progress knows its id, and every way of saving writes that
+  character's files only: a run starting (so a new character is listed at once), quitting from the
+  pause menu (closing the window saves too), autosave every 50 turns and on level change, the web
+  page-hide save, and the dev snapshots. A new run never touches another character's save. The
+  main menu's Continue resumes the character played last, and starting without the menu resumes it
+  unless `--new` is given; the Characters screen lists them all (§6) to resume one or delete it.
+  A save that cannot be read is renamed `<id>.sav.bad` when resuming it fails, never deleted, and
+  the list no longer shows it. **Permadeath**: when the player dies that character's save (its
+  summary and snapshot too) is deleted, and no other character's; a run that has ended is never
+  saved again (every trigger that would save it deletes the save instead; on the web nothing is
+  kept for the page being hidden). Dev snapshots: `F5` saves and `F9` loads `snapshots/<id>.sav`,
+  the character's own (debug builds or `--dev`). A save of the single-save layout before this
+  (`run.sav`) is left where it is, never read: the next release's format version rejects it
+  anyway.
   **File locations and portable mode** (`paths.rs` decides them all): per folder, an explicit
   `--config-dir` / `--save-dir` wins, then `--portable DIR`, then a `warlock-data` folder next to
   the game (the executable's folder; on macOS, the folder holding `Warlock.app`, never inside the
   bundle), then the platform's standard folders. A portable folder is laid out `config/`
-  (`settings.toml`, key bindings; `warlock-keys.toml`, exported keys), `data/` (`run.sav`, `snapshots/`), `logs/` (logs, crash reports).
+  (`settings.toml`, key bindings; `warlock-keys.toml`, exported keys), `data/` (`saves/`, `snapshots/`), `logs/` (logs, crash reports).
   `--portable` alone uses (and creates) `warlock-data` next to the game. A portable folder that
   cannot be written is reported on stderr and in Settings > Files, and the game runs on: what is
   there is read, writes fail with their usual messages. `warlock --paths` prints each location with
@@ -108,13 +121,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `NAME.bak-<time>`, never overwritten; an error stops the move with every file complete in one
   place; `--dry-run` prints the plan only. It refuses while another Warlock runs (every running game
   holds a shared lock on `logs/.in-use`).
-  On the web the files are `localStorage` keys `warlock/run.sav`, `warlock/run.sav.bad`,
-  `warlock/snapshots/quick.sav`, and `warlock/settings.toml`, the save bytes base64-encoded, with the
-  same envelope and checks. The same triggers save (autosave, level change, quit), and so does the page
+  On the web the files are `localStorage` keys `warlock/saves/<id>.sav`, `warlock/saves/<id>.toml`,
+  `warlock/saves/<id>.sav.bad`, `warlock/snapshots/<id>.sav`, and `warlock/settings.toml`, the bytes
+  base64-encoded, with the same envelope and checks; the list of saved characters comes from the
+  keys under `warlock/saves/`. The same triggers save (autosave, level change, quit), and so does the page
   being hidden or closed (`visibilitychange` to hidden, `pagehide`); main menu Continue works after a
   reload. Storage that is unavailable (some privacy modes) turns saving off with a warning in the log;
   a write that fails (quota) shows a message in the message line; neither panics.
 - **Settings**: a separate file in the platform config directory.
-- **Replays**: JSON action logs with a header (game version, scenario, seed, character) and
-  per-turn state hashes.
+- **Replays**: JSON action logs with a header (game version, scenario, seed, character, the
+  character's name) and per-turn state hashes; a replay without a name gives the character the
+  run's default name, so older replays load.
 - **Dumps**: JSON simulation state plus ASCII layers.

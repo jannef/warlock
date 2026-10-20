@@ -8,7 +8,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
 
 ```
 warlock --scenario showcase --seed 42                     # play a named scenario
-warlock --scenario depths --character dwarf,female,warrior # ... as a chosen character
+warlock --scenario depths --character dwarf,female,warrior --name Brakka # ... as a chosen character
 warlock --replay runs/doors.json \
         --freeze-time 1.5 --window 1280x720 --scale 1 \
         --capture out.png                                 # reproducible screenshot, then exit
@@ -62,11 +62,13 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   action, e.g. `wait*10`); `hash` is the
   FNV-1a 64 hash of the
   canonical JSON encoding of `WorldState` after the step. Verification reports the first
-  diverging step. `--replay` takes its scenario, seed, and character from the file; `--record`
-  rewrites its file after every action (including replayed steps). `--character
+  diverging step. `--replay` takes its scenario, seed, character, and name from the file;
+  `--record` rewrites its file after every action (including replayed steps). `--character
   RACE,GENDER,CLASS`, like `--seed`, shapes the run that `--scenario`, `--new`, `--record`, or
   `--capture` starts (and `warlock-cli dump` and `replay --create`); without it, the scenario's
-  character.
+  character. `--name NAME` names that character (up to 20 characters; without it the scenario's
+  name for its own character, else one of the race's names from the seed, §8 "Character
+  creation"). Replays record the name (`"name"`, beside `"character"`).
 - Dump layers: `view`, `fov`, `memory` (terrain, the top object of each known pile, and known
   traps over them), `light`
   (perceived brightness of each visible cell as a digit, `0` dark to `9` fully lit or brighter),
@@ -83,7 +85,7 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   its thresholds, and what they weigh, `carried 4.2 kg (unburdened: burdened over 14 kg,
   strained over 28 kg, overloaded over 42 kg), total weight 74.2 kg`),
   `equipment` (the player's slots by letter, `c Body: a leather jerkin (b)`, `-` when empty),
-  `stats` (the player's race, gender, and class, `Race Dwarf`, their age, birthday, and
+  `stats` (the player's name, race, gender, and class, `Name Brakka`, `Race Dwarf`, their age, birthday, and
   sign, `Age 27`, `Born 3 Seedtide 1417`, `Sign Fire Manticore`, then their own scores as
   the rules read them, `Strength 12`, then their status effects by name, `Effects Bleeding,
   Diseased`, then the diseases they know they have, `Diseases filth fever`), `skills` (the player's trained skills in skill order, `Stealth 17`),
@@ -125,7 +127,7 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   `identified`, and `magic`: `{level, name, affixes: [{id, tier, value}]}` once identified, else
   null; an unpaid stack with its price, `unpaid`), equipment (by slot id: letter, object, count), weight, burden (`burden: {level,
   limit}`, the limit in grams), character
-  (`{race, gender, class, raised, age, born: {year, month, day}, sign: {animal, element}}` or
+  (`{name, race, gender, class, raised, age, born: {year, month, day}, sign: {animal, element}}` or
   null), scores (`stats`, by stat id), trained skills (`skills`, by skill id with their values),
   status effects (`effects`, by id), the diseases they know they have (`diseases`, by id),
   weapon skills and fighting styles (`weapon_skills`, by skill id: `{rank, progress}`, the
