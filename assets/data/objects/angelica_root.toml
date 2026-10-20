@@ -9,5 +9,5 @@ material = "plant"
 weight = 40
 value = 30
 stackable = true
-food = { nutrition = 20, turns = 1 }
+food = { nutrition = 20, turns = 1, keeps = "30d", lasts = "60d" }
 cures = ["remove_disease"]

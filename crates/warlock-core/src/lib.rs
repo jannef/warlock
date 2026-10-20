@@ -36,6 +36,7 @@ pub mod object;
 pub mod perception;
 pub mod replay;
 pub mod rng;
+pub mod rot;
 pub mod save;
 mod sight;
 pub mod skills;

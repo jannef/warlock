@@ -95,9 +95,12 @@
 #              on top of its pile, `flight` while it flies
 #
 # Food (spec §8 "Hunger"; eat with `E`):
-#   food       { nutrition = N, turns = T }: the nutrition points it gives (1 to 100000; a human
-#              burns 1440 a day, hunger.toml) and the turns of eating it takes (1 to 100, each the
-#              `eat` action); never on things worn, wielded, shot, thrown, or burned
+#   food       { nutrition = N, turns = T, keeps = "5d", lasts = "10d" }: the nutrition points it
+#              gives (1 to 100000; a human burns 1440 a day, hunger.toml), the turns of eating it
+#              takes (1 to 100, each the `eat` action), and its shelf life in whole hours or days:
+#              how long after it was made it `keeps` (1h or more; old past half of it, rotten
+#              after it) and `lasts` (longer than it keeps, at most 3600d; then it has rotted
+#              away); never on things worn, wielded, shot, thrown, or burned
 #   cures      a remedy (food only): what eating it cures, means that statuses and diseases name
 #              in their `cured_by` (status.toml, diseases.toml): `cures = ["remove_disease"]`
 #              ends every disease at once, shown or not (spec §8 "Diseases")

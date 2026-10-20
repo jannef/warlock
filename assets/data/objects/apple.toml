@@ -7,4 +7,4 @@ material = "plant"
 weight = 150
 value = 1
 stackable = true
-food = { nutrition = 150, turns = 1 }
+food = { nutrition = 150, turns = 1, keeps = "14d", lasts = "28d" }

@@ -10,6 +10,7 @@ use crate::character::CharacterSpec;
 use crate::content::ContentFiles;
 use crate::hunger::Hunger;
 use crate::replay::Replay;
+use crate::rot::Stage as Age;
 use crate::stats::Stat;
 
 /// The built-in hunger file, to edit for a test.
@@ -130,7 +131,7 @@ fn hunger(w: &World) -> Hunger {
     w.perception().own_hunger().expect("the player hungers")
 }
 
-/// Whether the player is sick from what they ate: poisoned (`[corpses] sickness`).
+/// Whether the player is sick from what they ate: poisoned (`sickness`).
 fn sick(w: &World) -> bool {
     let poisoned = w.content().status_id("poisoned").expect("poison");
     w.state.player().effects.get(poisoned).is_some()
@@ -511,11 +512,14 @@ fn corpses_rot_and_then_are_gone_from_the_floor_and_the_pack() {
     let corpse = object(&w, "rat_corpse");
     let at = Pos::new(2, 1);
     let lying = |w: &World| w.state.current().objects_at(at).to_vec();
-    assert_eq!(w.rot(&lying(&w)[0]), Some(Rot::Fresh));
-    run(&mut w, "skip:7h");
-    assert_eq!(w.rot(&lying(&w)[0]), Some(Rot::Fresh));
+    assert_eq!(w.stage(&lying(&w)[0]), Some(Age::Fresh));
+    run(&mut w, "skip:3h");
+    assert_eq!(w.stage(&lying(&w)[0]), Some(Age::Fresh));
+    // Old past half of the 8 hours it keeps (fine to eat), then rotten.
     run(&mut w, "skip:1h");
-    assert_eq!(w.rot(&lying(&w)[0]), Some(Rot::Rotten));
+    assert_eq!(w.stage(&lying(&w)[0]), Some(Age::Old));
+    run(&mut w, "skip:4h");
+    assert_eq!(w.stage(&lying(&w)[0]), Some(Age::Rotten));
     // A day and a half after the death it is gone.
     run(&mut w, "skip:28h");
     assert!(lying(&w).iter().all(|s| s.object != corpse));
@@ -526,7 +530,7 @@ fn corpses_rot_and_then_are_gone_from_the_floor_and_the_pack() {
     assert_eq!(w.perception().own_weight().carried, 4000);
     run(&mut w, "skip:36h wait");
     assert_eq!(count_of(&w.state.player().inventory, corpse), 0);
-    assert!(said(&w, "Your giant rat corpse rots away."));
+    assert!(said(&w, "Your giant rat corpse has rotted away."));
 }
 
 #[test]
@@ -543,8 +547,11 @@ fn a_fresh_corpse_feeds_by_size_and_does_what_its_creature_says() {
 
 #[test]
 fn a_rotten_corpse_makes_you_vomit_or_sick() {
-    for (vomit, vomited) in [("rotten_vomit = 100", true), ("rotten_vomit = 0", false)] {
-        let content = content_with(&[("rotten_vomit = 50", vomit)]);
+    for (vomit, vomited) in [
+        ("[rotten]\nvomit = 100", true),
+        ("[rotten]\nvomit = 0", false),
+    ] {
+        let content = content_with(&[("[rotten]\nvomit = 50", vomit)]);
         let mut w = world_in(&content, "pantry");
         let corpse = object(&w, "kobold_corpse");
         let died = GameTime::from_seconds(w.time().seconds() - 10 * 3600);
@@ -578,8 +585,11 @@ fn a_rotten_corpse_makes_you_vomit_or_sick() {
 fn a_rotten_corpse_kept_down_may_give_grave_rot() {
     // Rotten food carries grave rot (spec §8 "Diseases"): kept down, the eater makes a check to
     // resist it; vomited, it never comes to that.
-    for (vomit, vomited) in [("rotten_vomit = 100", true), ("rotten_vomit = 0", false)] {
-        let content = content_with(&[("rotten_vomit = 50", vomit)]);
+    for (vomit, vomited) in [
+        ("[rotten]\nvomit = 100", true),
+        ("[rotten]\nvomit = 0", false),
+    ] {
+        let content = content_with(&[("[rotten]\nvomit = 50", vomit)]);
         let rot = content.disease_id("grave_rot").expect("grave rot");
         let caught = (0..20u64).filter(|&seed| {
             let mut w = World::new(content.clone(), "pantry", Some(seed)).expect("world");

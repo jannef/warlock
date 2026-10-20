@@ -15,19 +15,21 @@
 //! and feeds nothing. A remedy (food with `cures`, `data/objects.toml`) then cures what it
 //! names, as [`World::cure`] does (a disease remedy ends every disease, spec §8 "Diseases").
 //!
+//! **Rotten food** (spec §8 "Hunger"; food rots by its age, `world/rot.rs`): eating any food
+//! past its keeping is risky (vomiting, else sickness and exposure to the diseases rotten food
+//! carries, [`World::expose_to`], and then it feeds). Old food is as good as fresh.
+//!
 //! **Corpses**: a creature that dies leaves one on top of its pile ([`World::leave_corpse`]), its
-//! death time in the stack. A corpse rots: rotten after `rotten_hours`, gone after `gone_hours`
-//! ([`World::rot_away`], from the level the player is on and from their pack). Eating a rotten
-//! one is risky (vomiting, else sickness and exposure to the diseases rotten food carries,
-//! [`World::expose_to`], and then it feeds); a fresh one feeds by its
+//! death time in the stack, from which it rots like any food. A fresh one feeds by its
 //! creature's size and does what its creature's `on_eat` says, in this order, each draw from the
 //! gameplay stream: its message, a chance to vomit, a chance per stat to raise it (up to its
-//! potential), healing, harm, and extra nutrition. The player learns what a corpse does only by
-//! eating it.
+//! potential), healing, harm, and extra nutrition; a rotten one has lost all of that. The player
+//! learns what a corpse does only by eating it.
 //!
-//! **Sickness**: harm from what was eaten is degrees of the status `[corpses] sickness` names
-//! (poisoned: spec §8 "Status effects"), given through [`World::afflict`], the one way to give a
-//! status; it costs hit points as time passes and may kill ("Died of poison").
+//! **Sickness**: harm from what was eaten is degrees of the status `sickness` names
+//! (`data/hunger.toml`: poisoned, spec §8 "Status effects"), given through [`World::afflict`],
+//! the one way to give a status; it costs hit points as time passes and may kill ("Died of
+//! poison").
 
 use super::{Actor, Cause, Ended, Spent, World};
 use crate::action::{DiseaseNews, Event, Letters, Meal, letter};
@@ -37,33 +39,14 @@ use crate::stats::Stat;
 use crate::time::GameTime;
 use std::cell::Cell;
 
-/// A meal under way: where the food is, one of it as it lay when the meal began (its object and,
-/// a corpse, when its creature died; food is never magic), and the turns it takes.
+/// A meal under way: where the food is, the food as it lay when the meal began (its object and
+/// when it was made; food is never magic), and the turns it takes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct Dish {
     meal: Meal,
     object: ObjectId,
     died: Option<GameTime>,
     turns: u32,
-}
-
-impl Dish {
-    /// One of the food, as it lay when the meal began.
-    fn food(&self) -> Stack {
-        match self.died {
-            Some(died) => Stack::corpse(self.object, died),
-            None => Stack::one(self.object),
-        }
-    }
-}
-
-/// How a corpse is, by its age.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Rot {
-    Fresh,
-    Rotten,
-    /// Rotted away: it is gone.
-    Gone,
 }
 
 /// What the player feels when a corpse raises `stat`.
@@ -79,11 +62,6 @@ fn rise_news(stat: Stat) -> &'static str {
 }
 
 impl World {
-    /// How `stack` has rotted by now: `None` for anything that is no corpse.
-    pub(crate) fn rot(&self, stack: &Stack) -> Option<Rot> {
-        rot_at(&self.content, stack, self.state.time)
-    }
-
     /// The player sets out to eat `meal`. Refused, taking no time, when nobody hungers, or there
     /// is no such stack, or it is not food.
     pub(super) fn eat(&mut self, meal: Meal) -> Spent {
@@ -149,14 +127,14 @@ impl World {
     }
 
     /// The last turn of a meal is done: one of the food is eaten (from where it lay, or the first
-    /// like it there if the pile changed meanwhile), and it feeds and does what it does.
+    /// like it there if the pile changed meanwhile), and it feeds and does what it does: rotten
+    /// food, by its age now, what rotten food does.
     fn finish(&mut self, dish: Dish, events: &mut Vec<Event>) {
         let burden = self.load_of(self.state.player).burden();
-        let food = dish.food();
-        if !self.take_one(dish.meal, &food) {
+        let Some(food) = self.take_one(&dish) else {
             self.say("There is nothing left to eat.");
             return;
-        }
+        };
         let content = self.content.clone();
         let Some(before) = self.player_hunger() else {
             return;
@@ -165,16 +143,15 @@ impl World {
         self.say(format!("You eat the {}.", def.name));
         self.ate_goods(dish.meal, &food);
         let nutrition = def.food.map_or(0, |f| f.nutrition) as i32;
-        match (def.corpse, self.rot(&food)) {
-            (Some(_), Some(Rot::Rotten | Rot::Gone)) => {
-                self.eat_rotten(nutrition, food.object, events);
-            }
-            (Some(creature), _) => {
+        let rotten = self.stage(&food).is_some_and(|s| s.is_rotten());
+        match def.corpse {
+            _ if rotten => self.eat_rotten(nutrition, food.object, events),
+            Some(creature) => {
                 let on_eat = content.creature(creature).on_eat.clone();
                 let on_eat = on_eat.unwrap_or_default();
                 self.eat_fresh(nutrition, food.object, on_eat, events);
             }
-            (None, _) => self.feed(nutrition, food.object),
+            None => self.feed(nutrition, food.object),
         }
         self.remedy(&def.cures, events);
         if self.state.death.is_none() {
@@ -183,42 +160,46 @@ impl World {
         }
     }
 
-    /// Takes one of `food` from where `meal` says: the stack there if it is still that food, else
-    /// the first stack like it there. Returns whether there was one.
-    fn take_one(&mut self, meal: Meal, food: &Stack) -> bool {
-        let same = |s: &Stack| s.object == food.object && s.died == food.died;
+    /// Takes one of `dish`'s food from where its meal says: the stack there if it is still that
+    /// food, else the first stack like it there (of the same age if there is one: corpses do not
+    /// join). Returns the one taken, with its age, if there was one.
+    fn take_one(&mut self, dish: &Dish) -> Option<Stack> {
+        let same = |s: &Stack| s.object == dish.object && s.died == dish.died;
+        let like = |s: &Stack| s.object == dish.object;
         let find = |stacks: &[Stack], i: usize| {
-            (stacks.get(i).filter(|s| same(s)).map(|_| i)).or_else(|| stacks.iter().position(same))
+            (stacks.get(i).filter(|s| same(s)).map(|_| i))
+                .or_else(|| stacks.iter().position(same))
+                .or_else(|| stacks.get(i).filter(|s| like(s)).map(|_| i))
+                .or_else(|| stacks.iter().position(like))
         };
-        match meal {
+        match dish.meal {
             Meal::Pack(i) => {
                 let player = self.player_mut();
-                let Some(at) = find(&player.inventory, i) else {
-                    return false;
-                };
+                let at = find(&player.inventory, i)?;
+                let one = player.inventory[at].single();
                 if player.inventory[at].count > 1 {
                     player.inventory[at].count -= 1;
                 } else {
                     player.inventory.remove(at);
                     player.equipment.after_removal(Letters::of([at]));
                 }
+                Some(one)
             }
             Meal::Floor(i) => {
                 let here = self.player_pos();
                 let level = self.state.current_mut();
                 let mut pile = level.objects_at(here).to_vec();
-                let Some(at) = find(&pile, i) else {
-                    return false;
-                };
+                let at = find(&pile, i)?;
+                let one = pile[at].single();
                 if pile[at].count > 1 {
                     pile[at].count -= 1;
                 } else {
                     pile.remove(at);
                 }
                 level.set_pile(here, pile);
+                Some(one)
             }
         }
-        true
     }
 
     /// A fresh corpse feeds by its size and does what its creature's `on_eat` says (module docs).
@@ -264,18 +245,18 @@ impl World {
     /// the diseases rotten food carries (grave rot), and then feeds them.
     fn eat_rotten(&mut self, nutrition: i32, what: ObjectId, events: &mut Vec<Event>) {
         let content = self.content.clone();
-        let Some(corpses) = content.hunger().and_then(|h| h.corpses.as_ref()) else {
+        let Some(rotten) = content.hunger().map(|h| &h.rotten) else {
             return;
         };
         self.say(format!(
             "Ugh! The {} was rotten.",
             content.object(what).name
         ));
-        if corpses.rotten_vomit > 0 && self.state.rng.chance(u32::from(corpses.rotten_vomit)) {
+        if rotten.vomit > 0 && self.state.rng.chance(u32::from(rotten.vomit)) {
             self.vomit();
             return;
         }
-        let degrees = corpses.rotten_harm.roll(&mut self.state.rng);
+        let degrees = rotten.harm.roll(&mut self.state.rng);
         self.sicken(degrees, events);
         // Rotten food may carry a disease (grave rot): a check to resist it (spec §8 "Diseases").
         self.expose_to(self.state.player, "rotten_food");
@@ -311,13 +292,12 @@ impl World {
         }
     }
 
-    /// What the player ate makes them sick: `degrees` of the status `[corpses] sickness` names
-    /// (none for 0 or less), given through [`World::afflict`]. Its beginning is said at once ("You
-    /// feel sick."), in order with the meal's other messages.
+    /// What the player ate makes them sick: `degrees` of the status `sickness` names
+    /// (`data/hunger.toml`; none for 0 or less), given through [`World::afflict`]. Its beginning
+    /// is said at once ("You feel sick."), in order with the meal's other messages.
     fn sicken(&mut self, degrees: i32, events: &mut Vec<Event>) {
-        let sickness = (self.content.hunger())
-            .and_then(|h| h.corpses.as_ref())
-            .and_then(|c| self.content.status_id(c.sickness.as_deref()?));
+        let sickness =
+            (self.content.hunger()).and_then(|h| self.content.status_id(h.sickness.as_deref()?));
         let (Some(status), Ok(degrees @ 1..)) = (sickness, u16::try_from(degrees)) else {
             return;
         };
@@ -393,69 +373,4 @@ impl World {
         object::add_to_pile(&mut pile, &[Stack::corpse(corpse, died)], &content);
         level.set_pile(actor.pos, pile);
     }
-
-    /// Corpses that have rotted away are gone: from the piles of the level the player is on, and
-    /// from their pack ("Your kobold corpse rots away.", logged without stopping a rest). Checked
-    /// as perception runs; corpses elsewhere go when the player comes back.
-    pub(super) fn rot_away(&mut self) {
-        let content = self.content.clone();
-        let now = self.state.time;
-        if content.hunger().and_then(|h| h.corpses.as_ref()).is_none() {
-            return;
-        }
-        let gone = |s: &Stack| rot_at(&content, s, now) == Some(Rot::Gone);
-        let level = self.state.current_mut();
-        let cells: Vec<_> = (level.objects.iter())
-            .filter(|(_, pile)| pile.iter().any(gone))
-            .map(|(p, _)| *p)
-            .collect();
-        for p in cells {
-            let pile: Vec<Stack> = level
-                .objects_at(p)
-                .iter()
-                .filter(|s| !gone(s))
-                .cloned()
-                .collect();
-            level.set_pile(p, pile);
-        }
-        let inventory = &self.state.player().inventory;
-        let rotted =
-            Letters::of((inventory.iter().enumerate()).filter_map(|(i, s)| gone(s).then_some(i)));
-        if rotted.is_empty() {
-            return;
-        }
-        let names: Vec<String> = (rotted.iter())
-            .map(|i| content.object(inventory[i].object).name.clone())
-            .collect();
-        let player = self.player_mut();
-        let mut i = 0;
-        player.inventory.retain(|_| {
-            let keep = !rotted.contains(i);
-            i += 1;
-            keep
-        });
-        player.equipment.after_removal(rotted);
-        for name in names {
-            self.note(format!("Your {name} rots away."));
-        }
-    }
-}
-
-/// How `stack` has rotted at `now`, by the corpse rules of `content`: `None` for anything that is
-/// no corpse (or without corpse rules).
-pub(crate) fn rot_at(
-    content: &crate::content::Content,
-    stack: &Stack,
-    now: GameTime,
-) -> Option<Rot> {
-    let died = stack.died?;
-    let corpses = content.hunger()?.corpses.as_ref()?;
-    let age = now.since(died);
-    Some(if age >= corpses.gone {
-        Rot::Gone
-    } else if age >= corpses.rotten {
-        Rot::Rotten
-    } else {
-        Rot::Fresh
-    })
 }
