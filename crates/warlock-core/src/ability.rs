@@ -18,8 +18,7 @@
 //! [`PerceptionView::abilities`]: crate::perception::PerceptionView::abilities
 
 use crate::action::Action;
-use crate::content::SkillDef;
-use crate::content::{ActionKind, Content, StatusId};
+use crate::content::{ActionKind, Content, SkillDef, StatusId};
 use crate::geom::Dir;
 use crate::skills::{Effect, SkillId};
 use crate::world::Actor;
