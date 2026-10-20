@@ -1,9 +1,11 @@
 //! Skills (spec §8 "Skills"): what each does and trains on, what it gives by value, who trains
-//! it, and the provisional increase curve.
+//! it, the provisional increase curve, and the odds of stealing (spec §8 "Stealing").
 
 use super::burden::factor;
+use super::combat::percent;
 use std::fmt::Write as _;
 use warlock_core::burden::Burden;
+use warlock_core::check::{CONTEST_WAYS, contest_ways};
 use warlock_core::content::Content;
 use warlock_core::dice::Dice;
 use warlock_core::skills::{Effect, SkillId};
@@ -58,6 +60,7 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Travel => "quicker journeys on the overworld",
         Effect::Bargain => "better prices in shops",
         Effect::Kick => "more Strength for kicking doors in",
+        Effect::Steal => "stealing at all, and better",
     }
 }
 
@@ -82,6 +85,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Travel => "journeys",
             Effect::Bargain => "prices",
             Effect::Kick => "kicking doors in",
+            Effect::Steal => "stealing",
         };
         let _ = write!(out, " {name}: {what} |");
     }
@@ -94,7 +98,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             let n = b.at(value);
             let cell = match b.effect {
                 _ if n == 0 => "—".to_string(),
-                Effect::Dodge | Effect::Search | Effect::Spot => format!("+{n}"),
+                Effect::Dodge | Effect::Search | Effect::Spot | Effect::Steal => format!("+{n}"),
                 Effect::SearchReach => format!("+{n} cell{}", if n == 1 { "" } else { "s" }),
                 Effect::Kick => format!("+{n} Strength"),
                 Effect::Quiet | Effect::Travel => format!("\u{2212}{n}%"),
@@ -150,6 +154,25 @@ pub(super) fn skill_grants(content: &Content) -> String {
     out.push_str("\n| Class | Trains |\n|---|---|\n");
     for c in content.classes() {
         let _ = writeln!(out, "| {} | {} |", c.name, list(&c.skills));
+    }
+    out
+}
+
+/// How often a theft goes unnoticed (spec §8 "Stealing"), by the thief's edge: their Dexterity
+/// modifier plus what their Steal skill gives, less the victim's Willpower modifier. The
+/// contest's dice are the same on both sides, so only the difference counts.
+pub(super) fn stealing(_content: &Content) -> String {
+    let mut out = String::from("| Your edge | Unnoticed | Caught |\n|:---:|:---:|:---:|\n");
+    for edge in -6..=10 {
+        let won = contest_ways(edge, 0);
+        let sign = if edge < 0 { "\u{2212}" } else { "+" };
+        let _ = writeln!(
+            out,
+            "| {sign}{} | {} | {} |",
+            edge.abs(),
+            percent(won, CONTEST_WAYS),
+            percent(CONTEST_WAYS - won, CONTEST_WAYS)
+        );
     }
     out
 }

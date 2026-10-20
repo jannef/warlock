@@ -158,7 +158,7 @@ impl World {
     }
 
     /// The creature the player sees on `at`, if any.
-    fn seen_creature_at(&self, at: Pos) -> Option<ActorId> {
+    pub(super) fn seen_creature_at(&self, at: Pos) -> Option<ActorId> {
         let level = &self.state.current_level;
         let actor = self.state.actor_at(level, at)?;
         (actor.kind == ActorKind::Creature && self.perception.sees_actors_at(at))

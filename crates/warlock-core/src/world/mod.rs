@@ -113,6 +113,7 @@ mod shoot;
 mod shop;
 mod spell;
 mod status;
+mod steal;
 mod talk;
 mod train;
 mod trap;
@@ -825,6 +826,7 @@ impl World {
             Action::Rest(goal) => return self.start_rest(*goal),
             Action::Chat(dir) => return self.chat(*dir, events),
             Action::Ask { dir, topic } => return self.ask(*dir, topic, events),
+            Action::Steal(dir) => return self.steal(*dir),
             Action::Eat(meal) => return self.eat(*meal),
             Action::Read { item, target } => return self.read(*item, *target, events),
             Action::Dig(dir) => return self.start_dig(*dir),
@@ -949,6 +951,8 @@ mod speed_tests;
 mod stats_tests;
 #[cfg(test)]
 mod status_tests;
+#[cfg(test)]
+mod steal_tests;
 #[cfg(test)]
 mod style_tests;
 #[cfg(test)]

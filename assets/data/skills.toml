@@ -22,8 +22,8 @@
 #                 something hidden in passing), "dodge" (an attack that missed because you dodged
 #                 it), "burdened" (an
 #                 action, not waiting, while your load slows you), "travel" (a journey: a step on
-#                 the overworld), "kick" (a kick at a closed door). Only the player trains, for
-#                 now.
+#                 the overworld), "steal" (an attempt to steal from someone, whatever comes of
+#                 it), "kick" (a kick at a closed door). Only the player trains, for now.
 #   benefit       what it gives, by its value: a list of { effect = EFFECT, ... } growing either
 #                 by `steps` (one for each value reached, then one more for every `every` points
 #                 past the last) or by a `curve` of [value, effect] points from value 0 (straight
@@ -38,7 +38,9 @@
 #                 (percent less time a journey on the overworld takes), "bargain" (percent better
 #                 prices in shops, together with Presence at most half; shops.toml), "kick"
 #                 (points added to the Strength a kick at a closed door is rolled against, at most
-#                 40). The percent effects stay within 0 to 100.
+#                 40), "steal" (points added to stealing from someone, at most 20; trained, a
+#                 skill with it lets you steal at all: steal.toml). The percent effects stay
+#                 within 0 to 100.
 #
 # The player sees their own trained skills and their values, never a benefit's number, a mark, or
 # a chance (the wiki describes them as rules).
@@ -201,6 +203,10 @@ id = "steal"
 name = "Steal"
 description = "Lifting a purse or a trinket without being noticed."
 kind = "action"
+mark = [{ on = "steal", chance = 50 }]
+# Stealing (spec §8 "Stealing"; the abilities menu's Steal, steal.toml): trained at all, you can
+# steal; added to your Dexterity against the victim's Willpower, +8 at 100, +12 at 200.
+benefit = [{ effect = "steal", curve = [[0, 0], [100, 8], [200, 12]] }]
 
 [[skill]]
 id = "stealth"
