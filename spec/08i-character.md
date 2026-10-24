@@ -333,7 +333,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     6, 9, …) brings one pick, a `Due { level, talents, rolls }` in `Progress::due` (lowest level
     first; several levels in one turn queue theirs), handed out by `World::level_up` from
     `grant_xp`. **Nothing is banked**: while a pick is due `World::apply` refuses every other
-    action ("You must choose a talent first."), so the level-up screen (to come, #236), the
+    action ("You must choose a talent first."), so the level-up screen (§6 "Level-up"), the
     CLI, and replays spend it alike with `Action::Talent { id, choice }` (`talent:hardy`,
     `talent:weapon_focus:long_blades`; no time, recorded) and the level's skill rolls with
     `Action::Advance` (`advance:stealth`, "Skills" above); the dev `levelup:auto` takes the
@@ -341,6 +341,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
     nothing can be spent on (no talent the player may take: a run without talents, every
     talent they qualify for held, with no skill roll left that might open one) is dropped, so a
     level never waits for the impossible.
+  - **Creation picks** (`world/creation.rs`; #236): a character the player chose (a run with
+    its starting kit: New run, `--character`, `--name`, `--talents`) picks `[levels]
+    creation_talents` talents (2) at creation and its class's `creation_talents` more (the bard,
+    the lucky class: 1). They are a choice due at level 1 while the run is made, spent at once
+    by `World::start_run` on the picks `CharacterSpec::talents` names (`id` or `id:choice`, in
+    order, each checked like a level's pick: an unknown, refused, missing, or extra pick fails
+    the start), else on the **Random** picks: one by one, a talent the character may take then,
+    uniformly, and a choice of it, from the stream `character/talents/<race>,<gender>,<class>`
+    (a pure function of the seed and the character). What was taken is recorded in the
+    character's `talents` (saves, replays: `character.talents`), and nothing is said. A run on
+    the scenario's own character without the kit (a dev launch, tests, walks) picks none, and a
+    replay without `talents` starts as it did before. Prerequisites see the run as it starts
+    (scores, skills, the class's level 1 abilities, the sign's gifts), and picks may chain
+    (Healthy, then Fast healer). Character creation's Talents step (§6 "New run") reads the run
+    drafted (`World::draft`, `creation_offers`, `random_creation`). The humans' extra pick is
+    their racial Versatile's (to come, H5).
   - **Prerequisites** (`Needs`; all must hold at the pick and are never checked again: a score
     lowered later keeps the talent): other talents at a rank (a talent with a choice may be
     needed only by one of the same choice, taken for the same), stat **scores** (the stored

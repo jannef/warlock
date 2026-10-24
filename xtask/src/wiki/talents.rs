@@ -37,6 +37,20 @@ pub(super) fn talents(content: &Content) -> String {
     out
 }
 
+/// The talents each class picks at creation (spec §8 "Talents"): everyone's and the class's
+/// more, by class name.
+pub(super) fn creation(content: &Content) -> String {
+    let base = content.experience().creation_talents();
+    let mut out = String::from("| Class | Talents at creation |\n|---|---:|\n");
+    let mut classes: Vec<_> = content.classes().iter().collect();
+    classes.sort_by(|a, b| a.name.cmp(&b.name));
+    for class in classes {
+        let n = base.saturating_add(class.creation_talents);
+        let _ = writeln!(out, "| {} | {n} |", class.name);
+    }
+    out
+}
+
 /// The classes' level tables (spec §8 "Class abilities"), in the order New run offers them:
 /// each class with a table, its bonus talent picks, and every level's ability with its rule.
 pub(super) fn class_levels(content: &Content) -> String {

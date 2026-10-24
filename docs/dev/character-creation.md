@@ -36,7 +36,10 @@ Some(&spec))` as another, `World::with_character_named(.., name)` named, and
 `World::start_run(.., kit)` with the starting kit or without (below); `WorldState::character`
 (the `Character`, saved, hashed) and `PerceptionView::character` (the player knows it;
 `PerceptionView::time` for their age). Replays record the spec, the name (`Replay::name`), and
-whether the run started with the kit (`Replay::kit`). The summary and the character screen show
+whether the run started with the kit (`Replay::kit`). A run with the kit also takes its creation talents
+(`CharacterSpec::talents`, else the Random picks; the Talents step after the class,
+`ui/chargen_talents_screen.rs`, and `--talents`; `docs/dev/progression.md` "Creation picks"),
+and the summary's Talents row names them. The summary and the character screen show
 final scores only: never dice, a breakdown, a modifier, or a potential (the step screens and the
 wiki show adjustments as written in data; the wiki also gives the modifiers and the races'
 potentials exactly). Balance is not a goal; classes only adjust starting scores, give hit
@@ -76,7 +79,7 @@ plays no part). `CharacterSpec::start` names the character with draw 0 (else `NA
 "Wanderer"); a run told no name (`with_character`, a replay or command line without one) gets
 `character::default_name`: the scenario's `character_name` for its own character, else draw 0. The
 CLI and the game take `--name`; the `stats` dump layer starts `Name Brakka` and the JSON
-`character` has `name`. Character creation's Name step (`ui/name_screen.rs`, after the class) is
+`character` has `name`. Character creation's Name step (`ui/name_screen.rs`, after the Talents step) is
 the game's text field: typed text is literal, `Context::Text` edits it (`docs/dev/screens.md`); an
 empty field gives draw 0 (`Draft::name`), and the summary starts the run with the name
 (`MenuChoice::NewRun { name, .. }`). The name is shown on the character screen, the summary, the

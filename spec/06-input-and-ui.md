@@ -13,8 +13,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Screens**: the main menu, the saved characters, New run and its character creation steps, pause menu, Settings,
   Controls, help, the inventory, the equipment screen and its choice of what goes in a slot, an
   item's description, the character screen, the Skills screen, the weapon skills screen, the quest
-  log, the message history, choosing what to pick up, drop, throw, or eat, the dialogue screen, and
-  the death screen are modal
+  log, the Talents page, the message history, choosing what to pick up, drop, throw, or eat, the
+  dialogue screen, the level-up screen, and the death screen are modal
   screens on one stack. Opening
   a screen puts it on top; Esc or Back closes it and returns to the screen below as it was left.
   While any screen is open it receives every key press, the run (if any) stays visible beneath
@@ -66,7 +66,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
   main menu says why.
 - **Character creation** (§8 "Character creation"): after the scenario and seed, New run asks for
   a **race**, a **gender**, and a **class**, one screen each and in that order (race first: it
-  is the biggest choice and sets the player's eyes), then a **name**, then shows a **summary**.
+  is the biggest choice and sets the player's eyes), then the **talents**, then a **name**, then
+  shows a **summary**. The Talents step (#236; `--screen chargen-talents`; §8 "Talents",
+  "Creation picks") lists, as the one paged list grouped by tree, the talents the character
+  drafted so far may take (the run as it would start), each with the start of its description
+  and the selected one's whole description below, under a **Chance** group with **Random** (the
+  character's Random picks, the ones a run started without picks gets; the cursor starts there)
+  and, once every pick is marked, **Done**. A letter, or Enter on the `>` row, marks a talent
+  (`*`) or unmarks it (and the picks that needed it); one with several choices lists them in its
+  place (Esc back); marking may list a talent the marks open (Healthy, then Fast healer); with
+  every pick marked, the step goes on to the name. The frame says how many are left (`Choose
+  your talents (4 of 5): 2 left`). Esc goes back to the class, the marks remembered where they
+  still hold.
   Right after the race comes **Born under the stars** (§8 "Birth sign"; `--screen sign`), which
   chooses nothing: the birth date, the sign, and the age ("You were born on 3 Seedtide 1419, in
   the year of the Metal Manticore. You are 25 years old."), the animal's and the element's lines
@@ -97,8 +108,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   choice made there before going back, else on the scenario's character's, else on the first
   option; the Name step opens on what was typed there before going back, else empty. The summary
   lists Start the run, then Name, Race, Sign (`Metal Manticore`, with a lucky day's title:
-  `Metal Manticore, the Iron Scourge`; Enter on it returns to the reveal), Gender, and Class with
-  their choices (Enter on one returns to that step as it was left; the steps after it close),
+  `Metal Manticore, the Iron Scourge`; Enter on it returns to the reveal), Gender, Class, and Talents
+  (`Healthy, Lean`; "chosen by chance" with none marked) with their choices (Enter on one returns to that step as it was left; the steps after it close),
   the character's age,
   birthday, and birth sign on one line (`Age 27 · born 3 Seedtide 1417 · year of the Fire
   Manticore`; the sign on a line of its own when the panel is too narrow), the six starting
@@ -295,7 +306,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   full name (`St  Strength  12`; as it is now, with what magic items they wear add; a score a
   status effect or stat damage lowers shows lowered, in a muted red; §8 "Status effects",
   "Diseases"), their level and experience (`Lv  Level  3`, `XP  Experience
-  85 / 120`, the total alone at the highest level; §8 "Experience"), their hit points (`HP  Hit
+  85 / 120`, the total alone at the highest level; §8 "Experience"), how many talents they have
+  (`Talents  7`: picked, and the sign's; not the class's abilities; §8 "Talents"), their hit points (`HP  Hit
   points  18/24`) with their mana beside them on the same row (`MP  Mana  5/12`; §8 "Mana"), Defence
   (`Dv  Defence  15`; the total only, as its Dexterity part would give away a modifier; §8
   "Combat") and Protection beside it on the same row (`Pv  Protection  3`; the total only),
@@ -401,12 +413,36 @@ developer notes (CLAUDE.md, `docs/dev/`).
   most six lines). Read-only: quests are not abandoned (the owner's decision). `q`, Enter, or Esc
   closes it.
   The character screen, the inventory, the equipment screen, the Skills screen, the weapon
-  skills screen, and the quest log are the numbered info pages 1 to 6: on one of them, a digit,
+  skills screen, the quest log, and the Talents page are the numbered info pages 1 to 7: on one of them, a digit,
   Tab, or Shift+Tab replaces it with another, and the tab line on its bottom
   border names them, each after its key: by their names where the panel is wide enough
   (`1 Character · 2 Inventory · …`), else the current page by its name and the others by short
-  names (`1 Char · 2 Inventory · 3 Equip · 4 Skills · 5 Weapons · 6 Quests`), else all by their
-  short names, else the current page by its name and the others by their keys alone.
+  names (`1 Char · 2 Inventory · 3 Equip · 4 Skills · 5 Weapons · 6 Quests · 7 Tal`), else all by
+  their short names, else the current page by its name and the others by their keys alone.
+- **Talents** (page 7, its own command `talents`, unbound by default; #236; §8 "Talents"): the
+  player's talents ("Your talents"), by tree in tree order, each with its rank when it has
+  several (`Keen ears 1/2`) and, for those not picked, where it came from (`(class)`, `(birth
+  sign)`); then, dimmer, "Other talents": every other talent the player could still pick (not
+  given, not held to its last rank), by tree, with what its next rank needs below it (`Needs:
+  Toughness 13, Healthy`; each part met in the normal colour, each part not met dimmed;
+  `Needs: nothing`). The class's coming abilities are not listed. ↑↓ choose (the list
+  scrolls), the selected talent's description shows below; words only, never a rule's number.
+  Read-only; its key, Enter, or Esc closes it. 72 wide.
+- **Level-up** (#236; §8 "Talents", "Skills"): a level's choices open the level-up screen by
+  itself at the end of the turn they come in (`screens::on_level_up`; also on resuming a run
+  with choices due; the death screen wins), and it cannot be left until they are made: Esc only
+  says what is left ("You have 3 skill rolls to spend.", "You must choose a talent first.") in
+  the panel. Its frame names the level and what is left (`Level 3 · Skill rolls 3 · Talent 1`);
+  several levels in one turn are one sequence, the lowest first, the footer naming the next
+  (`Level 3 next`). The steps, each the one paged list, skipping those with nothing to choose:
+  the **skill rolls** (the trained skills with their values and meters, as on the Skills
+  screen), a **bonus talent** of the class's trees, then the level's **talent**, listing only
+  the talents that may be taken now, by tree, each with its next rank (`1/3`) and the start of
+  its description, the selected one's whole description below. A talent with several choices
+  (Apprentice, Weapon focus) lists them in its place (Esc back). A letter, or Enter on the `>`
+  row, is that choice's action (`advance:athletics`, `talent:hardy`, `talent:apprentice:stealth`):
+  the screen closes, the action is applied and recorded like any other, and the screen opens
+  again on what is left. No new keys: the list commands. Never a die, a mark, or a chance.
 - **Death screen** (§8 "Combat"): when the player dies, the death screen opens over the run as it
   ended, in place of any other screen, and the character's save is deleted, and no other's
   (permadeath): `Y O U   D I E D`, then who lies here ("Here lies Brakka,", with a character; the
